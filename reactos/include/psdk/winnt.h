@@ -761,10 +761,15 @@ extern "C++" { \
 #define MAXDWORD  0xffffffff
 #define MAXLONGLONG (0x7fffffffffffffffLL)
 
-/* Multiplication and Shift Operations. Note: we don't use inline
-   asm functions, the compiler can optimize this better. */
-#define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
-#define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+/* 32 to 64 bit multiplication. GCC is really bad at optimizing the native math */
+#if defined(_M_IX86) && defined(__GNUC__) && \
+    !defined(MIDL_PASS)&& !defined(RC_INVOKED) && !defined(_M_CEE_PURE)
+ #define Int32x32To64(a,b) __emul(a,b)
+ #define UInt32x32To64(a,b) __emulu(a,b)
+#else
+ #define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
+ #define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+#endif
 
 #if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE)
 /* Use native math */
@@ -1709,10 +1714,6 @@ extern "C++" { \
 #define THREAD_BASE_PRIORITY_MAX    2
 #define THREAD_BASE_PRIORITY_MIN    (-2)
 #define THREAD_BASE_PRIORITY_IDLE    (-15)
-
-#define PROCESS_SET_LIMITED_INFORMATION 0x2000
-#define THREAD_RESUME 0x1000
-
 /*
  * To prevent gcc compiler warnings, bracket these defines when initialising
  * a  SID_IDENTIFIER_AUTHORITY, eg.
