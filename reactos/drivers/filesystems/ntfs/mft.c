@@ -558,7 +558,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
         IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
         IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
         /* Index root is always resident. */
-        IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRootCtx->Record.Resident.ValueLength);
+        IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
         ReleaseAttributeContext(IndexRootCtx);
 
         DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
