@@ -1,0 +1,292 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+/* Menus */
+
+IDM_MDIFRAME MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Spustit...", ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Ukončit", ID_FILE_EXIT
+    END
+    POPUP "&Zobrazení"
+    BEGIN
+        MENUITEM "Panel &nástrojů", ID_VIEW_TOOL_BAR
+        MENUITEM "Panel &extra", ID_VIEW_EXTRA_BAR
+        MENUITEM "L&išta disků", ID_VIEW_DRIVE_BAR
+        MENUITEM "&Boční panel", ID_VIEW_SIDE_BAR
+        MENUITEM "&Stavový řádek", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat\tF5", ID_REFRESH
+        MENUITEM "&Celá obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "SDI", ID_VIEW_SDI
+    END
+    POPUP "&Okno"
+    BEGIN
+        MENUITEM "&Nové Okno", ID_WINDOW_NEW
+        MENUITEM "&Kaskádovat\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "&Uspořádat vodorovně", ID_WINDOW_TILE_HORZ
+        MENUITEM "U&spořádat svisle\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Us&pořádat automaticky", ID_WINDOW_AUTOSORT
+        MENUITEM "Usp&ořádat symboly", ID_WINDOW_ARRANGE
+    END
+    POPUP "&Nástroje"
+    BEGIN
+        MENUITEM "&Možnosti", ID_TOOLS_OPTIONS
+    END
+    POPUP "Ná&pověda"
+    BEGIN
+        MENUITEM "&Průzkumník &FAQ", ID_EXPLORER_FAQ
+        MENUITEM "O P&růzkumníku", ID_ABOUT_EXPLORER
+        MENUITEM "&O operačním systému", ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Nastavení", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Správce úloh", ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&O Průzkumníku", ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Otevřít ovládání hlasitosti", ID_TRAY_VOLUME
+        MENUITEM "&Upravit vlastnosti zvuku", ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Zobrazit skryté ikony", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Z&obrazit ikonu tlačítka", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Nastavit upozornění", ID_CONFIG_NOTIFYAREA
+        MENUITEM "N&astavit datum a čas", ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&O Průzkumníku", ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Spustit...", ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Ukončit", ID_FILE_EXIT
+    END
+    POPUP "&Zobrazení"
+    BEGIN
+        MENUITEM "Panel &nástrojů", ID_VIEW_TOOL_BAR
+        MENUITEM "&Boční panel", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Stavový řádek", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat\tF5", ID_REFRESH
+        MENUITEM "Celá obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI", ID_VIEW_MDI
+    END
+    POPUP "&Nástroje"
+    BEGIN
+        MENUITEM "&Nastavení", ID_TOOLS_OPTIONS
+    END
+    POPUP "Ná&pověda"
+    BEGIN
+        MENUITEM "Průzkumník &FAQ", ID_EXPLORER_FAQ
+        MENUITEM "O &Průzkumníku", ID_ABOUT_EXPLORER
+        MENUITEM "O &Operačním systému", ID_ABOUT_WINDOWS
+    END
+END
+
+/* Dialogs */
+
+IDD_EXECUTE DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Spustit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL "&Příkaz:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
+    EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL "Jako &symbol", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
+    DEFPUSHBUTTON "&Spustit", 1, 158, 6, 47, 14
+    PUSHBUTTON "&Storno", 2, 158, 23, 47, 14
+    PUSHBUTTON "Ná&pověda", 254, 158, 43, 47, 14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Hledat program v nabídce Start"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "&Filtr:", IDC_STATIC, 7, 9, 18, 8
+    EDITTEXT IDC_FILTER, 34, 7, 100, 14, ES_AUTOHSCROLL
+    CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
+    PUSHBUTTON "&Vyhledat", IDC_CHECK_ENTRIES, 143, 7, 50, 14
+END
+
+IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vlastnosti plochy"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Prosím zvolte si způsob zarovnání ikon:", IDC_STATIC, 7, 7, 166, 8
+    CONTROL "vlevo/n. d.", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
+    CONTROL "vlevo/n. p.", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
+    CONTROL "vpravo/n. l.", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
+    CONTROL "vpravo/d. d.", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 25, 46, 44
+    CONTROL "vlevo/dole n.", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
+    CONTROL "vlevo/dole p.", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
+    CONTROL "vpravo/d. l.", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
+    CONTROL "vpravo/d. n.", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 73, 46, 44
+    CONTROL "na okraji d.", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 121, 46, 44
+    CONTROL "na okraji", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
+    CONTROL "dokola", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
+    CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 121, 46, 44
+//    CONTROL "Zobrazit verzi", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 91, 10
+END
+
+IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vlastnosti panelu úloh"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "&Zobrazit čas", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 52, 10
+    CONTROL "&Skrýt neaktivní ikony", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
+    PUSHBUTTON "&Upozornění...", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
+END
+
+IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Vlastnosti nabídky Start"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Nastavení ikon v oblasti upozorňování"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 194, 31
+    LTEXT "&Text popisku:", IDC_LABEL1, 7, 44, 40, 8
+    EDITTEXT IDC_NOTIFY_TOOLTIP, 58, 42, 143, 14, ES_AUTOHSCROLL
+    LTEXT "&Název okna:", IDC_LABEL2, 7, 63, 44, 8
+    EDITTEXT IDC_NOTIFY_TITLE, 58, 60, 143, 14, ES_AUTOHSCROLL
+    LTEXT "&Cesta:", IDC_LABEL3, 7, 81, 80, 8
+    EDITTEXT IDC_NOTIFY_MODULE, 58, 78, 143, 14, ES_AUTOHSCROLL
+    GROUPBOX "&Zobrazení", IDC_LABEL4, 7, 96, 157, 28
+    CONTROL "z&obrazit", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 45, 10
+    CONTROL "&skrýt", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 66, 108, 29, 10
+    CONTROL "&automaticky", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 104, 108, 55, 10
+    ICON "", IDC_PICTURE, 173, 101, 21, 20
+    LTEXT "&Poslední změna:", IDC_LABEL6, 7, 132, 60, 8
+    EDITTEXT IDC_LAST_CHANGE, 59, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
+    CONTROL "zob&razit skryté", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 158, 57, 10
+    DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
+    PUSHBUTTON "&Storno", IDCANCEL, 151, 153, 50, 14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Volba MDI / SDI módu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Prosím zvolte si Vámi upřednostňovaný způsob zobrazení oken Průzkumníka:", IDC_STATIC, 7, 7, 160, 8
+    CONTROL "&MDI (Mnoho dokumentový interface)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 125, 10
+    CONTROL "&SDI (Jedno dokumentový interface)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 125, 10
+    CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
+    CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
+    CONTROL "&Otevírat složky v novém okně", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 135, 10
+    LTEXT "Toto nastavení bude použito jako výchozí pro všechna okna Průzkumníka.", IDC_STATIC, 7, 111, 174, 22
+    DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
+    PUSHBUTTON "&Storno", IDCANCEL, 106, 136, 50, 14
+END
+
+IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "O ReactOS Průzkumníku"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS Průzkumník", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
+    LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
+    LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
+    LTEXT "http://www.sky.franken.de/explorer/", IDC_WWW, 17, 84, 129, 8
+    CONTROL "&OK", IDOK, "Button", BS_OWNERDRAW | BS_FLAT | WS_GROUP, 154, 90, 38, 12
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE "ReactOS Průzkumník"
+    IDS_START "Start"
+    IDS_LOGOFF "Odhlásit se..."
+    IDS_SHUTDOWN "Vypnout..."
+    IDS_RESTART "Restartovat..."
+    IDS_LAUNCH "Spustit..."
+    IDS_START_HELP "Nápověda"
+    IDS_SEARCH_FILES "Hledat"
+    IDS_DOCUMENTS "Dokumenty"
+    IDS_FAVORITES "Oblíbené"
+    IDS_PROGRAMS "Programy"
+    IDS_SETTINGS "Nastavení"
+    IDS_EXPLORE "Prozkoumat"
+    IDS_EMPTY "(Prázdné)"
+    IDS_RECENT "Nedávné dokumenty"
+    IDS_ADMIN "Systémové nástroje"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STARTMENU "Nabídka Start"
+    IDS_MINIMIZE_ALL "minimalizovat všechna okna"
+    IDS_DESKTOP_NUM "Plocha %d"
+    IDS_VOLUME "Hlasitost"
+    IDS_ITEMS_CUR "současné položky"
+    IDS_ITEMS_CONFIGURED "nastavení"
+    IDS_ITEMS_VISIBLE "viditelné"
+    IDS_ITEMS_HIDDEN "skryté"
+    IDS_NOTIFY_SHOW "zobrazit"
+    IDS_NOTIFY_HIDE "skrýt"
+    IDS_NOTIFY_AUTOHIDE "skrývat automaticky"
+    IDS_SHOW_HIDDEN_ICONS "Zobrazit skryté ikony"
+    IDS_HIDE_ICONS "Skrýt ikony"
+    IDS_TERMINATE "Ukončit ReactOS Průzkumníka"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORK "Síť"
+    IDS_CONNECTIONS "Síťové spojení"
+    IDS_DRIVES "Disky"
+    IDS_SEARCH_COMPUTER "Hledat počítač"
+    IDS_SETTINGS_MENU "Nastavení"
+    IDS_CONTROL_PANEL "Ovládací panel"
+    IDS_PRINTERS "Tiskárny"
+    IDS_BROWSE "Prohlížet soubory"
+    IDS_SEARCH_PRG "Hledat programy"
+    IDS_ALL_USERS "Všichni uživatelé\\"
+    IDS_SEARCH "Hledat"
+    IDS_ABOUT_EXPLORER "&O Průzkumníku"
+    IDS_LAUNCH_MANY_PROGRAMS "Bylo vybráno více programů.\nPřejete si je spustit všechny?"
+    IDS_DESKTOPBAR_SETTINGS "Nastavení plochy"
+    IDS_DESKTOP "Plocha"
+    IDS_TASKBAR "Panel úloh"
+    IDS_NAMECOLUMN "Název"
+    IDS_PATHCOLUMN "Cesta"
+    IDS_MENUCOLUMN "Menu path"
+END

@@ -1,36 +1,70 @@
-PROJECT(SHELL)
 
-set_cpp(WITH_RUNTIME)
+add_subdirectory(notifyhook)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
+set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
+
+add_definitions(
+    -DWIN32
+    -D__WINDRES__)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 list(APPEND SOURCE
-    desktop.cpp
-    dragdrop.cpp
+    shell/mainframe.cpp
+    shell/unixfs.cpp
+    shell/ntobjfs.cpp
+    shell/filechild.cpp
+    shell/shellfs.cpp
+    shell/fatfs.cpp
+    shell/pane.cpp
+    shell/regfs.cpp
+    shell/webchild.cpp
+    shell/entries.cpp
+    shell/shellbrowser.cpp
+    shell/winfs.cpp
+    dialogs/searchprogram.cpp
+    dialogs/settings.cpp
+    taskbar/taskbar.cpp
+    taskbar/favorites.cpp
+    taskbar/quicklaunch.cpp
+    taskbar/desktopbar.cpp
+    taskbar/startmenu.cpp
+    taskbar/traynotify.cpp
+    services/shellservices.cpp
+    desktop/desktop.cpp
     explorer.cpp
-    rshell.cpp
-    settings.cpp
-    shellservice.cpp
-    startctxmnu.cpp
-    startmnu.cpp
-    startmnusite.cpp
-    startup.cpp
-    taskband.cpp
-    taskswnd.cpp
-    tbsite.cpp
-    trayntfy.cpp
-    trayprop.cpp
-    traywnd.cpp
-	util.cpp
-    precomp.h)
+    utility/xs-native.cpp
+    utility/shellclasses.cpp
+    utility/dragdropimpl.cpp
+    utility/utility.cpp
+    utility/xmlstorage.cpp
+    utility/window.cpp
+    utility/shellbrowserimpl.cpp
+    precomp.h) #    utility/shelltests.cpp
 
-add_executable(explorer ${SOURCE} explorer.rc)
+if(ARCH STREQUAL "i386")
+    list(APPEND I386_SOURCE i386-stub-win32.c)
+endif()
 
-target_link_libraries(explorer uuid atlnew wine)
+add_executable(explorer_old
+    ${SOURCE}
+    ${I386_SOURCE}
+    services/startup.c
+    explorer.rc)
 
-set_module_type(explorer win32gui UNICODE)
-add_importlibs(explorer advapi32 gdi32 user32 comctl32 ole32 oleaut32 shell32 browseui shlwapi shdocvw version uxtheme msvcrt kernel32 ntdll)
+target_link_libraries(explorer_old comsupp wine uuid)
+set_module_type(explorer_old win32gui UNICODE)
+add_importlibs(explorer_old advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
+add_pch(explorer_old precomp.h SOURCE)
+add_dependencies(explorer_old psdk)
+add_cd_file(TARGET explorer_old DESTINATION reactos FOR all)
+add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)
 
-add_pch(explorer precomp.h SOURCE)
+if(NOT MSVC)
+    add_compile_flags("-Wno-error=narrowing")
 
-add_cd_file(TARGET explorer DESTINATION reactos FOR all)
+    # GCC bug #59472
+    if(LTCG)
+        add_target_link_flags(explorer "-Wno-error")
+    endif()
+endif()
