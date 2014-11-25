@@ -17,7 +17,7 @@
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
 #define DISKREADBUFFER     HEX(8E000) /* Buffer to store data read in from the disk via the BIOS */
-#define MEMORY_MARGIN      HEX(9C000) /* Highest usable address */
+#define MEMORY_MARGIN      HEX(9A000) /* Highest usable address */
 /* 9F000- 9FFFF is reserved for the EBDA */
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
