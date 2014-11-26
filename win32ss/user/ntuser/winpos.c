@@ -327,6 +327,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    /* If this is popup window, try to activate the owner first. */
    if ((Wnd->style & WS_POPUP) && (WndTo = Wnd->spwndOwner))
    {
+      ERR("WPAOW Popup with Owner\n");
       WndTo = UserGetAncestor( WndTo, GA_ROOT );
       if (can_activate_window(WndTo)) goto done;
    }
@@ -336,18 +337,41 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    WndTo = Wnd;
    for (;;)
    {
-      if (!(WndTo = WndTo->spwndNext)) break;
-      if (can_activate_window( WndTo )) break;
+      if (!(WndTo = WndTo->spwndNext))  break;
+      if (can_activate_window( WndTo )) goto done;
+   }
+
+   /*
+      Fixes wine win.c:test_SetParent last ShowWindow test after popup dies.
+      Check for previous active window to bring to top.
+   */
+   if (Wnd) 
+   {
+      WndTo = Wnd->head.pti->MessageQueue->spwndActivePrev;
+      if (can_activate_window( WndTo )) goto done;
+   }
+
+   // Find any window to bring to top. Works Okay for wine.
+   WndTo = UserGetDesktopWindow();
+   WndTo = WndTo->spwndChild;
+   for (;;)
+   {
+      if (WndTo == Wnd)
+      {
+         WndTo = NULL;
+         break;
+      }
+      if (can_activate_window( WndTo )) goto done;
+      if (!(WndTo = WndTo->spwndNext))  break;
    }
 
 done:
-
    if (WndTo) UserRefObjectCo(WndTo, &Ref);
 
-   if (!gpqForeground || Wnd == gpqForeground->spwndActive)
+   if ((gpqForeground && !gpqForeground->spwndActive) || Wnd == gpqForeground->spwndActive)
    {
       /* ReactOS can pass WndTo = NULL to co_IntSetForegroundWindow and returns FALSE. */
-      //ERR("WinPosActivateOtherWindow Set FG 0x%p\n",WndTo);
+      //ERR("WinPosActivateOtherWindow Set FG 0x%p hWnd %p\n",WndTo, WndTo ? WndTo->head.h : 0);
       if (co_IntSetForegroundWindow(WndTo))
       {
          if (WndTo) UserDerefObjectCo(WndTo);

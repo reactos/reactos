@@ -235,7 +235,7 @@ typedef Desktop DesktopRef;
 #endif
 
 
-#define	DESKTOP_COUNT	2
+#define	DESKTOP_COUNT	4
 
 struct Desktops : public vector<DesktopRef>
 {

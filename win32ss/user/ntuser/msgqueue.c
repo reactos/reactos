@@ -1450,7 +1450,10 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
     else
     {
-        pwndMsg = co_WinPosWindowFromPoint(pwndMsg, &msg->pt, &hittest, FALSE);
+        /*
+           Start with null window. See wine win.c:test_mouse_input:WM_COMMAND tests.
+        */
+        pwndMsg = co_WinPosWindowFromPoint( NULL, &msg->pt, &hittest, FALSE);
     }
 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);

@@ -145,8 +145,8 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	TCHAR QuickLaunchBand[] = _T("Quicklaunch");
 	rbBand.lpText = QuickLaunchBand;
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cx = 100;
-	rbBand.cxMinChild = 100;
+	rbBand.cx = 150;
+	rbBand.cxMinChild = 150;
 	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -451,7 +451,9 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_SWITCH_DESKTOP_1:
-	  case ID_SWITCH_DESKTOP_1+1: {
+          case ID_SWITCH_DESKTOP_1+1:
+	  case ID_SWITCH_DESKTOP_1+2:
+	  case ID_SWITCH_DESKTOP_1+3: {
 		int desktop_idx = id - ID_SWITCH_DESKTOP_1;
 
 		g_Globals._desktops.SwitchToDesktop(desktop_idx);

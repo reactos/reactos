@@ -12,16 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
-C_ASSERT(sizeof(FIX) == sizeof(LONG));
-#define FIX2LONG(x) (((x) + 8) >> 4)
-#define LONG2FIX(x) ((x) << 4)
-
-#define FLOATOBJ_Equal _FLOATOBJ_Equal
-#define FLOATOBJ_GetLong _FLOATOBJ_GetLong
-#define FLOATOBJ_GetFix _FLOATOBJ_GetFix
-#define FLOATOBJ_IsLong _FLOATOBJ_IsLong
-#define FLOATOBJ_Equal0 _FLOATOBJ_Equal0
-#define FLOATOBJ_Equal1 _FLOATOBJ_Equal1
+#define DOES_VALUE_OVERFLOW_LONG(x) \
+    (((__int64)((long)(x))) != (x))
 
 /** Inline helper functions ***************************************************/
 
@@ -297,76 +289,153 @@ XFORMOBJ_iInverse(
     return XFORMOBJ_UpdateAccel(pxoDst);
 }
 
+
+/*!
+ * \brief Transforms fix-point coordinates in an array of POINTL structures using
+ *        the transformation matrix from the XFORMOBJ.
+ *
+ * \param pxo - Pointer to the XFORMOBJ
+ *
+ * \param cPoints - Number of coordinates to transform
+ *
+ * \param pptIn - Pointer to an array of POINTL structures containing the
+ *        source coordinates.
+ *
+ * \param pptOut - Pointer to an array of POINTL structures, receiving the
+ *        transformed coordinates. Can be the same as pptIn.
+ *
+ * \return TRUE if the operation was successful, FALSE if any of the calculations
+ *         caused an integer overflow.
+ *
+ * \note If the function returns FALSE, it might still have written to the
+ *       output buffer. If pptIn and pptOut are equal, the source coordinates
+ *       might have been partly overwritten!
+ */
 static
-VOID
+BOOL
 NTAPI
-XFORMOBJ_vXformFixPoints(
-    IN XFORMOBJ  *pxo,
-    IN ULONG  cPoints,
-    IN PPOINTL  pptIn,
-    OUT PPOINTL  pptOut)
+XFORMOBJ_bXformFixPoints(
+    _In_ XFORMOBJ *pxo,
+    _In_ ULONG cPoints,
+    _In_reads_(cPoints) PPOINTL pptIn,
+    _Out_writes_(cPoints) PPOINTL pptOut)
 {
     PMATRIX pmx;
     INT i;
     FLOATOBJ fo1, fo2;
     FLONG flAccel;
+    LONG lM11, lM12, lM21, lM22, lTemp;
+    register LONGLONG llx, lly;
 
     pmx = XFORMOBJ_pmx(pxo);
     flAccel = pmx->flAccel;
 
     if ((flAccel & (XFORM_SCALE|XFORM_UNITY)) == (XFORM_SCALE|XFORM_UNITY))
     {
-        /* Identity transformation, nothing todo */
+        /* Identity transformation, nothing to do */
     }
     else if (flAccel & XFORM_INTEGER)
     {
         if (flAccel & XFORM_UNITY)
         {
-            /* 1-scale integer transform */
-            LONG lM12 = FLOATOBJ_GetLong(&pmx->efM12);
-            LONG lM21 = FLOATOBJ_GetLong(&pmx->efM21);
+            /* 1-scale integer transform, get the off-diagonal elements */
+            if (!FLOATOBJ_bConvertToLong(&pmx->efM12, &lM12) ||
+                !FLOATOBJ_bConvertToLong(&pmx->efM21, &lM21))
+            {
+                NT_ASSERT(FALSE);
+                return FALSE;
+            }
 
             i = cPoints - 1;
             do
             {
-                LONG x = pptIn[i].x + pptIn[i].y * lM21;
-                LONG y = pptIn[i].y + pptIn[i].x * lM12;
-                pptOut[i].y = y;
-                pptOut[i].x = x;
+                /* Calculate x in 64 bit and check for overflow */
+                llx = Int32x32To64(pptIn[i].y, lM21) + pptIn[i].x;
+                if (DOES_VALUE_OVERFLOW_LONG(llx))
+                {
+                    return FALSE;
+                }
+
+                /* Calculate y in 64 bit and check for overflow */
+                lly = Int32x32To64(pptIn[i].x, lM12) + pptIn[i].y;
+                if (DOES_VALUE_OVERFLOW_LONG(lly))
+                {
+                    return FALSE;
+                }
+
+                /* Write back the results */
+                pptOut[i].x = (LONG)llx;
+                pptOut[i].y = (LONG)lly;
             }
             while (--i >= 0);
         }
         else if (flAccel & XFORM_SCALE)
         {
-            /* Diagonal integer transform */
-            LONG lM11 = FLOATOBJ_GetLong(&pmx->efM11);
-            LONG lM22 = FLOATOBJ_GetLong(&pmx->efM22);
+            /* Diagonal integer transform, get the diagonal elements */
+            if (!FLOATOBJ_bConvertToLong(&pmx->efM11, &lM11) ||
+                !FLOATOBJ_bConvertToLong(&pmx->efM22, &lM22))
+            {
+                NT_ASSERT(FALSE);
+                return FALSE;
+            }
 
             i = cPoints - 1;
             do
             {
-                pptOut[i].x = pptIn[i].x * lM11;
-                pptOut[i].y = pptIn[i].y * lM22;
+                /* Calculate x in 64 bit and check for overflow */
+                llx = Int32x32To64(pptIn[i].x, lM11);
+                if (DOES_VALUE_OVERFLOW_LONG(llx))
+                {
+                    return FALSE;
+                }
+
+                /* Calculate y in 64 bit and check for overflow */
+                lly = Int32x32To64(pptIn[i].y, lM22);
+                if (DOES_VALUE_OVERFLOW_LONG(lly))
+                {
+                    return FALSE;
+                }
+
+                /* Write back the results */
+                pptOut[i].x = (LONG)llx;
+                pptOut[i].y = (LONG)lly;
             }
             while (--i >= 0);
         }
         else
         {
             /* Full integer transform */
-            LONG lM11 = FLOATOBJ_GetLong(&pmx->efM11);
-            LONG lM12 = FLOATOBJ_GetLong(&pmx->efM12);
-            LONG lM21 = FLOATOBJ_GetLong(&pmx->efM21);
-            LONG lM22 = FLOATOBJ_GetLong(&pmx->efM22);
+            if (!FLOATOBJ_bConvertToLong(&pmx->efM11, &lM11) ||
+                !FLOATOBJ_bConvertToLong(&pmx->efM12, &lM12) ||
+                !FLOATOBJ_bConvertToLong(&pmx->efM21, &lM21) ||
+                !FLOATOBJ_bConvertToLong(&pmx->efM22, &lM22))
+            {
+                NT_ASSERT(FALSE);
+                return FALSE;
+            }
 
             i = cPoints - 1;
             do
             {
-                LONG x;
-                x  = pptIn[i].x * lM11;
-                x += pptIn[i].y * lM21;
-                pptOut[i].y  = pptIn[i].y * lM22;
-                pptOut[i].y += pptIn[i].x * lM12;
-                pptOut[i].x = x;
+                /* Calculate x in 64 bit and check for overflow */
+                llx  = Int32x32To64(pptIn[i].x, lM11);
+                llx += Int32x32To64(pptIn[i].y, lM21);
+                if (DOES_VALUE_OVERFLOW_LONG(llx))
+                {
+                    return FALSE;
+                }
+
+                /* Calculate y in 64 bit and check for overflow */
+                lly  = Int32x32To64(pptIn[i].y, lM22);
+                lly += Int32x32To64(pptIn[i].x, lM12);
+                if (DOES_VALUE_OVERFLOW_LONG(lly))
+                {
+                    return FALSE;
+                }
+
+                /* Write back the results */
+                pptOut[i].x = (LONG)llx;
+                pptOut[i].y = (LONG)lly;
             }
             while (--i >= 0);
         }
@@ -377,12 +446,35 @@ XFORMOBJ_vXformFixPoints(
         i = cPoints - 1;
         do
         {
+            /* Calculate x in 64 bit and check for overflow */
             fo1 = pmx->efM21;
             FLOATOBJ_MulLong(&fo1, pptIn[i].y);
+            if (!FLOATOBJ_bConvertToLong(&fo1, &lTemp))
+            {
+                return FALSE;
+            }
+            llx = (LONGLONG)pptIn[i].x + lTemp;
+            if (DOES_VALUE_OVERFLOW_LONG(llx))
+            {
+                return FALSE;
+            }
+
+            /* Calculate y in 64 bit and check for overflow */
             fo2 = pmx->efM12;
             FLOATOBJ_MulLong(&fo2, pptIn[i].x);
-            pptOut[i].x = pptIn[i].x + FLOATOBJ_GetLong(&fo1);
-            pptOut[i].y = pptIn[i].y + FLOATOBJ_GetLong(&fo2);
+            if (!FLOATOBJ_bConvertToLong(&fo2, &lTemp))
+            {
+                return FALSE;
+            }
+            lly = (LONGLONG)pptIn[i].y + lTemp;
+            if (DOES_VALUE_OVERFLOW_LONG(lly))
+            {
+                return FALSE;
+            }
+
+            /* Write back the results */
+            pptOut[i].x = (LONG)llx;
+            pptOut[i].y = (LONG)lly;
         }
         while (--i >= 0);
     }
@@ -394,10 +486,17 @@ XFORMOBJ_vXformFixPoints(
         {
             fo1 = pmx->efM11;
             FLOATOBJ_MulLong(&fo1, pptIn[i].x);
-            pptOut[i].x = FLOATOBJ_GetLong(&fo1);
+            if (!FLOATOBJ_bConvertToLong(&fo1, &pptOut[i].x))
+            {
+                return FALSE;
+            }
+
             fo2 = pmx->efM22;
             FLOATOBJ_MulLong(&fo2, pptIn[i].y);
-            pptOut[i].y = FLOATOBJ_GetLong(&fo2);
+            if (!FLOATOBJ_bConvertToLong(&fo2, &pptOut[i].y))
+            {
+                return FALSE;
+            }
         }
         while (--i >= 0);
     }
@@ -407,10 +506,21 @@ XFORMOBJ_vXformFixPoints(
         i = cPoints - 1;
         do
         {
+            /* Calculate x as FLOATOBJ */
             MulAddLong(&fo1, &pmx->efM11, pptIn[i].x, &pmx->efM21, pptIn[i].y);
+
+            /* Calculate y as FLOATOBJ */
             MulAddLong(&fo2, &pmx->efM12, pptIn[i].x, &pmx->efM22, pptIn[i].y);
-            pptOut[i].x = FLOATOBJ_GetLong(&fo1);
-            pptOut[i].y = FLOATOBJ_GetLong(&fo2);
+
+            if (!FLOATOBJ_bConvertToLong(&fo1, &pptOut[i].x))
+            {
+                return FALSE;
+            }
+
+            if (!FLOATOBJ_bConvertToLong(&fo2, &pptOut[i].y))
+            {
+                return FALSE;
+            }
         }
         while (--i >= 0);
     }
@@ -421,11 +531,24 @@ XFORMOBJ_vXformFixPoints(
         i = cPoints - 1;
         do
         {
-            pptOut[i].x += pmx->fxDx;
-            pptOut[i].y += pmx->fxDy;
+            llx = (LONGLONG)pptOut[i].x + pmx->fxDx;
+            if (DOES_VALUE_OVERFLOW_LONG(llx))
+            {
+                return FALSE;
+            }
+            pptOut[i].x = (LONG)llx;
+
+            lly = (LONGLONG)pptOut[i].y + pmx->fxDy;
+            if (DOES_VALUE_OVERFLOW_LONG(lly))
+            {
+                return FALSE;
+            }
+            pptOut[i].y = (LONG)lly;
         }
         while (--i >= 0);
     }
+
+    return TRUE;
 }
 
 /** Public functions **********************************************************/
@@ -534,7 +657,10 @@ XFORMOBJ_bApplyXform(
     }
 
     /* Do the actual fixpoint transformation */
-    XFORMOBJ_vXformFixPoints(pxo, cPoints, pvIn, pvOut);
+    if (!XFORMOBJ_bXformFixPoints(pxo, cPoints, pvIn, pvOut))
+    {
+        return FALSE;
+    }
 
     /* Convert POINTFIX to POINTL? */
     if (iMode == XF_INV_FXTOL || iMode == XF_INV_LTOL || iMode == XF_LTOL)
