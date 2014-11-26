@@ -14,6 +14,8 @@ class CMainWindow
     HWND m_hMainWnd;
     HWND m_hStatusBar;
     HWND m_hToolBar;
+    HIMAGELIST m_ToolbarhImageList;
+    HMENU m_hMenu;
     int m_CmdShow;
 
 private:
@@ -29,6 +31,10 @@ private:
     BOOL CreateToolBar();
     BOOL CreateStatusBar();
     BOOL StatusBarLoadString(HWND hStatusBar, INT PartId, HINSTANCE hInstance, UINT uID);
+    BOOL MainWndMenuHint(WORD CmdId,
+                         const MENU_HINT *HintArray,
+                         DWORD HintsCount,
+                         UINT DefHintId);
 
 public:
     CMainWindow(void);
@@ -37,7 +43,6 @@ public:
     BOOL Initialize(LPCTSTR lpCaption, int nCmdShow);
     INT Run();
     VOID Uninitialize();
-
 
 };
 

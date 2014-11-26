@@ -19,12 +19,12 @@ wWinMain(HINSTANCE hThisInstance,
     int Ret = 1;
 
     /* Check if the app is already running */
-    hMutex = CreateMutexW(NULL, TRUE, L"devmgmt_mutex");
+    hMutex = CreateMutexW(NULL, TRUE, L"devmgmt_mutex2");
     if (hMutex == NULL || GetLastError() == ERROR_ALREADY_EXISTS)
     {
         /* Cleanup and exit */
-        if (hMutex) CloseHandle(hMutex);
-        return 0;
+        //if (hMutex) CloseHandle(hMutex);
+        //return 0;
     }
 
     /* Store the global values */
@@ -40,8 +40,7 @@ wWinMain(HINSTANCE hThisInstance,
     if (szAppName.LoadStringW(g_hInstance, IDS_APPNAME))
     {
         /* Initialize the main window */
-        if (MainWindow.Initialize(szAppName,
-                                  nCmdShow))
+        if (MainWindow.Initialize(szAppName, nCmdShow))
         {
             /* Run the application */
             Ret = MainWindow.Run();

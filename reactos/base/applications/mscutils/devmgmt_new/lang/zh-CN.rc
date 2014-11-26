@@ -48,12 +48,12 @@ BEGIN
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE "这个程序是自由软件；你可以在自由软件基金会(FSF)的 GNU LGPL 协议下重新发布或修改它；也适用于这个协议的版本 2，或(在您看来)任何更新的版本。\r\n\r\n这个程序在希望其有用的愿望中发布，但没有任何保证；也不意味着性能保证或对某特定用途的适用性。请查看 GNU GPL 许可协议以了解更多细节。\r\n\r\n您应该已经收到了一份和这个程序一起的 GNU GPL 协议的副本；如果没有，请写信给自由软件基金会(FSF)：51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "属性"
   IDS_TOOLTIP_REFRESH   "刷新"
@@ -62,7 +62,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "ReactOS 设备管理器"
   IDS_HINT_BLANK        " "

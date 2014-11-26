@@ -19,12 +19,15 @@
 #define IDR_MAINMENU        102
 #define IDR_POPUP           103
 #define IDC_DEVBYTYPE       104
+#define IDC_DEVBYCONN       105
+#define IDC_RESBYTYPE       106
+#define IDC_RESBYCONN       107
+#define IDC_SHOWHIDDEN      108
 
 /* tooltips */
 #define IDS_TOOLTIP_PROP    6000
 #define IDS_TOOLTIP_REFRESH 6001
 #define IDS_TOOLTIP_HELP    6002
-#define IDS_TOOLTIP_EXIT    6003
 
 /* button bitmaps */
 #define IDB_PROP            10000
@@ -34,7 +37,6 @@
 #define TBICON_PROP         0
 #define TBICON_REFRESH      1
 #define TBICON_HELP         2
-#define TBICON_EXIT         3
 
 /* about box info */
 #define IDD_ABOUTBOX        200
@@ -50,6 +52,11 @@
 #define IDS_HINT_HELP           20004
 #define IDS_HINT_ABOUT          20005
 #define IDS_HINT_EXIT           20006
+
+#define IDS_HINT_DEV_BY_TYPE    20020
+#define IDS_HINT_DEV_BY_CONN    20021
+#define IDS_HINT_RES_BY_TYPE    20022
+#define IDS_HINT_RES_BY_CONN    20023
 
 /* system menu hints */
 #define IDS_HINT_SYS_RESTORE    21001

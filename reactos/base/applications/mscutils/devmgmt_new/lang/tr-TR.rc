@@ -1,4 +1,6 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/*
+ * TRANSLATOR: 2013 - Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -16,14 +18,14 @@ BEGIN
         END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Türe Göre Aygıtlar",                IDC_DEVBYTYPE, CHECKED
-        MENUITEM "&Bağlantıya Göre Aygıtlar",          IDC_STATIC, GRAYED
-        MENUITEM "T&üre Göre Kaynaklar",               IDC_STATIC, GRAYED
-        MENUITEM "B&ağlantıya Göre Kaynaklar",         IDC_STATIC, GRAYED
+        MENUITEM "&Türe Göre Aygıtları Kümele",        IDC_DEVBYTYPE, CHECKED
+        MENUITEM "&Bağlantıya Göre Aygıtları Kümele",  IDC_STATIC, GRAYED
+        MENUITEM "T&üre Göre Kaynakları Kümele",       IDC_STATIC, GRAYED
+        MENUITEM "B&ağlantıya Göre Kaynakları Kümele", IDC_STATIC, GRAYED
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...",                        IDC_ABOUT
+        MENUITEM "&Hakkında",                          IDC_ABOUT
     END
 END
 
@@ -36,22 +38,22 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Aygıt Yöneticisi Üzerine"
+CAPTION "Aygıt Yöneticisi Hakkında"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Aygıt Yöneticisi - Sürüm: 0.1\nTelif Hakkı: 2006\nGed Murphy (gedmurphy@gmail.com) ile.", IDC_STATIC, 48, 7, 130, 30
-    PUSHBUTTON "Tamam", IDOK, 75, 162, 44, 15
+    LTEXT "Aygıt Yöneticisi - Sürüm: 0.1\nTelif Hakkı: 2006\nGed Murphy (gedmurphy@gmail.com) eliyle yazılmıştır.", IDC_STATIC, 48, 7, 130, 30
+    PUSHBUTTON "Kapat", IDOK, 75, 162, 44, 15
     ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu izlence özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Umûmî Kamu Ruhsatı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (Orası size bağlı.) koşulları altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu izlence, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bu izlencenin HİÇBİR GÜVENCESİ YOKTUR, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN demek istenilen güvencesi bile. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu izlenceyle birlikte GNU Umûmî Kamu Ruhsatı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu yazılım özgürdür, yâni bu yazılımı Özgür Yazılım Vakfı'nın yayınladığı GNU Umûmî Kamu Ruhsatı'nın 2. sürümü veyâ daha sonraki sürümleri altında yeniden dağıtabilir veyâ değiştirebilirsiniz.\r\n\r\nBu yazılım, kullanışlı olabileceği beklentisiyle dağıtılmıştır ancak bilhassa SATILABİLİRLİK ve BELİRLİ BİR AMACA UYGUNLUK açısından olmak üzere bu yazılımın HİÇBİR GÜVENCESİ YOKTUR. Daha çok bilgi için GNU Umûmî Kamu Ruhsatı'na bakınız.\r\n\r\nBu yazılımla birlikte GNU Umûmî Kamu Ruhsatı'nın bir sûretine de iye olmanız gerekir, eğer yoksa Özgür Yazılım Vakfı A.Ş.'ne (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TOOLTIP_PROP      "Husûsiyetler"
     IDS_TOOLTIP_REFRESH   "Yenile"
@@ -60,19 +62,20 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPNAME           "Aygıt Yöneticisi"
     IDS_HINT_BLANK        " "
-    IDS_HINT_EXIT         " İzlenceden çıkar."
+    IDS_HINT_EXIT         " Yazılımdan çıkar."
     IDS_HINT_REFRESH      " Hizmet dizelgesini yeniler."
-    IDS_HINT_PROP         " Seçilen için husûsiyetler penceresini açar."
-    IDS_HINT_HELP         " Yardım penceresini açar."
-    IDS_HINT_ABOUT        " Aygıt Yöneticisi üzerine."
-    IDS_HINT_SYS_RESTORE  " Bu pencereyi eski boyutlarına döndürür."
-    IDS_HINT_SYS_MOVE     " Bu pencereyi devindirir."
-    IDS_HINT_SYS_SIZE     " Bu pencerenin boyutlarını değiştirir."
-    IDS_HINT_SYS_MINIMIZE " Bu pencereyi simge durumuna küçültür."
-    IDS_HINT_SYS_MAXIMIZE " Bu pencereyi, bu görüntülüğü kaplatana dek genişletir."
-    IDS_HINT_SYS_CLOSE    " Bu pencereyi kapatır."
+    IDS_HINT_PROP         " Seçilen öğenin husûsiyetlerini gösterir."
+    IDS_HINT_HELP         " Yardım konularını açar."
+    IDS_HINT_ABOUT        " Aygıt Yöneticisi hakkında bilgi görüntüler."
+
+    IDS_HINT_SYS_RESTORE  " Pencerenin boyutlarını, eski durumuna döndürür."
+    IDS_HINT_SYS_MOVE     " Pencerenin konumunu değiştirir."
+    IDS_HINT_SYS_SIZE     " Pencerenin boyutlarını değiştirir."
+    IDS_HINT_SYS_MINIMIZE " Pencereyi, simge durumuna küçültür."
+    IDS_HINT_SYS_MAXIMIZE " Pencereyle görüntülüğü kaplatır."
+    IDS_HINT_SYS_CLOSE    " Pencereyi kapatır."
 END

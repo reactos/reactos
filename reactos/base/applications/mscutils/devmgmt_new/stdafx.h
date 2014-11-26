@@ -6,6 +6,8 @@
 #include <setupapi.h>
 #include <cfgmgr32.h>
 #include <commctrl.h>
+#include <Cfgmgr32.h>
+#include <devguid.h>
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
 

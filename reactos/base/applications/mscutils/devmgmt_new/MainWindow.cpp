@@ -1,6 +1,18 @@
-#include "StdAfx.h"
+/*
+* PROJECT:     ReactOS Device Manager
+* LICENSE:     GPL - See COPYING in the top level directory
+* FILE:        base/applications/mscutils/devmgmt/deviceview.cpp
+* PURPOSE:     Implements main window
+* COPYRIGHT:   Copyright 2014 Ged Murphy <gedmurphy@gmail.com>
+*
+*/
+
+#include "stdafx.h"
 #include "devmgmt.h"
 #include "MainWindow.h"
+
+
+/* DATA *****************************************************/
 
 /* menu hints */
 static const MENU_HINT MainMenuHintTable[] =
@@ -12,7 +24,13 @@ static const MENU_HINT MainMenuHintTable[] =
     {IDC_REFRESH,  IDS_HINT_REFRESH},
     {IDC_PROP,     IDS_HINT_PROP},
 
-    {IDC_ABOUT,    IDS_HINT_ABOUT}
+    {IDC_ABOUT,    IDS_HINT_ABOUT},
+
+    {IDC_DEVBYTYPE, IDS_HINT_DEV_BY_TYPE},
+    {IDC_DEVBYCONN, IDS_HINT_DEV_BY_CONN},
+    {IDC_RESBYTYPE, IDS_HINT_RES_BY_TYPE},
+    {IDC_RESBYCONN, IDS_HINT_RES_BY_TYPE}
+
 };
 
 /* system menu hints */
@@ -27,8 +45,10 @@ static const MENU_HINT SystemMenuHintTable[] =
 };
 
 
+/* PUBLIC METHODS **********************************************/
 
 CMainWindow::CMainWindow(void) :
+    m_ToolbarhImageList(NULL),
     m_hMainWnd(NULL),
     m_hStatusBar(NULL),
     m_hToolBar(NULL),
@@ -39,6 +59,116 @@ CMainWindow::CMainWindow(void) :
 
 CMainWindow::~CMainWindow(void)
 {
+    /* Destroy any previous list */
+    if (m_ToolbarhImageList) ImageList_Destroy(m_ToolbarhImageList);
+}
+
+BOOL
+CMainWindow::Initialize(LPCTSTR lpCaption,
+                        int nCmdShow)
+{
+    CAtlString szCaption;
+    WNDCLASSEXW wc = {0};
+
+    /* Store the show window value */
+    m_CmdShow = nCmdShow;
+
+    /* Setup the window class struct */
+    wc.cbSize = sizeof(WNDCLASSEXW);
+    wc.lpfnWndProc = MainWndProc;
+    wc.hInstance = g_hInstance;
+    wc.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
+    wc.lpszClassName = m_szMainWndClass;
+    wc.hIconSm = (HICON)LoadImage(g_hInstance,
+                                  MAKEINTRESOURCE(IDI_MAIN_ICON),
+                                  IMAGE_ICON,
+                                  16,
+                                  16,
+                                  LR_SHARED);
+
+    /* Register the window */
+    if (RegisterClassExW(&wc))
+    {
+        /* Create the main window and store the info pointer */
+        m_hMainWnd = CreateWindowExW(WS_EX_WINDOWEDGE,
+                                     m_szMainWndClass,
+                                     lpCaption,
+                                     WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+                                     CW_USEDEFAULT,
+                                     CW_USEDEFAULT,
+                                     600,
+                                     450,
+                                     NULL,
+                                     NULL,
+                                     g_hInstance,
+                                     this);
+        if (m_hMainWnd)
+        {
+            m_hMenu = GetMenu(m_hMainWnd);
+        }
+    }
+
+    /* Return creation result */
+    return !!(m_hMainWnd);
+}
+
+VOID
+CMainWindow::Uninitialize()
+{
+    /* Unregister the window class */
+    UnregisterClassW(m_szMainWndClass, g_hInstance);
+}
+
+INT
+CMainWindow::Run()
+{
+    MSG Msg;
+
+    /* Pump the message queue */
+    while (GetMessageW(&Msg, NULL, 0, 0 ) != 0)
+    {
+        TranslateMessage(&Msg);
+        DispatchMessageW(&Msg);
+    }
+
+    return 0;
+}
+
+
+/* PRIVATE METHODS **********************************************/
+
+
+BOOL
+CMainWindow::MainWndMenuHint(WORD CmdId,
+                             const MENU_HINT *HintArray,
+                             DWORD HintsCount,
+                             UINT DefHintId)
+{
+    BOOL Found = FALSE;
+    const MENU_HINT *LastHint;
+    UINT HintId = DefHintId;
+
+    LastHint = HintArray + HintsCount;
+    while (HintArray != LastHint)
+    {
+        if (HintArray->CmdId == CmdId)
+        {
+            HintId = HintArray->HintId;
+            Found = TRUE;
+            break;
+        }
+        HintArray++;
+    }
+
+    StatusBarLoadString(m_hStatusBar,
+                        SB_SIMPLEID,
+                        g_hInstance,
+                        HintId);
+
+    return Found;
 }
 
 BOOL
@@ -59,7 +189,7 @@ CMainWindow::CreateToolBar()
         {15, 0, TBSTATE_ENABLED, BTNS_SEP, {0}, 0, 0},
     };
 
-    /* Get the number of buttons */
+    /* Calculate the number of buttons */
     NumButtons = sizeof(ToolbarButtons) / sizeof(ToolbarButtons[0]);
 
     /* Create the toolbar window */
@@ -72,70 +202,68 @@ CMainWindow::CreateToolBar()
                                  (HMENU)IDC_TOOLBAR,
                                  g_hInstance,
                                  NULL);
-    if (m_hToolBar)
+    if (m_hToolBar == NULL) return FALSE;
+
+    /* Don't show clipped buttons */
+    SendMessageW(m_hToolBar,
+                    TB_SETEXTENDEDSTYLE,
+                    0,
+                    TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+
+    /* Set the struct size, the toobar needs this... */
+    SendMessageW(m_hToolBar,
+                    TB_BUTTONSTRUCTSIZE,
+                    sizeof(ToolbarButtons[0]),
+                    0);
+
+    /* Create the toolbar icon image list */
+    m_ToolbarhImageList = ImageList_Create(16,
+                                           16,
+                                           ILC_MASK | ILC_COLOR24,
+                                           NumButtons,
+                                           0);
+    if (m_ToolbarhImageList == NULL) return FALSE;
+
+    /* Set the index endpoints */
+    StartResource = IDB_PROP;
+    EndResource = IDB_REFRESH;
+
+    /* Add all icons to the image list */
+    for (UINT i = StartResource; i <= EndResource; i++)
     {
-        /* Don't show clipped buttons */
-        SendMessageW(m_hToolBar,
-                     TB_SETEXTENDEDSTYLE,
-                     0,
-                     TBSTYLE_EX_HIDECLIPPEDBUTTONS);
-
-        /* Set the struct size, the toobar needs this... */
-        SendMessageW(m_hToolBar,
-                     TB_BUTTONSTRUCTSIZE,
-                     sizeof(ToolbarButtons[0]),
-                     0);
-
-        /* Create the toolbar icon image list */
-        hImageList = ImageList_Create(16,
-                                      16,
-                                      ILC_MASK | ILC_COLOR24,
-                                      NumButtons,
-                                      0);
-        if (hImageList)
+        /* Load the image resource */
+        hBitmap = (HBITMAP)LoadImage(g_hInstance,
+                                        MAKEINTRESOURCE(i),
+                                        IMAGE_BITMAP,
+                                        16,
+                                        16,
+                                        LR_LOADTRANSPARENT);
+        if (hBitmap)
         {
-            /* Set the index endpoints */
-            StartResource = IDB_PROP;
-            EndResource = IDB_REFRESH;
+            /* Add it to the image list */
+            ImageList_AddMasked(m_ToolbarhImageList,
+                                hBitmap,
+                                RGB(255, 0, 128));
 
-            /* Add all icons to the image list */
-            for (UINT i = StartResource; i <= EndResource; i++)
-            {
-                /* Load the image resource */
-                hBitmap = (HBITMAP)LoadImage(g_hInstance,
-                                             MAKEINTRESOURCE(i),
-                                             IMAGE_BITMAP,
-                                             16,
-                                             16,
-                                             LR_LOADTRANSPARENT);
-                if (hBitmap)
-                {
-                    /* Add it to the image list */
-                    ImageList_AddMasked(hImageList,
-                                        hBitmap,
-                                        RGB(255, 0, 128));
-
-                    /* Delete the bitmap */
-                    DeleteObject(hBitmap);
-                }
-            }
-
-            /* Set the new image list */
-            hImageList = (HIMAGELIST)SendMessageW(m_hToolBar,
-                                                  TB_SETIMAGELIST,
-                                                  0,
-                                                  (LPARAM)hImageList);
-
-            /* Destroy any previous list */
-            if (hImageList) ImageList_Destroy(hImageList);
-
-            /* Add the buttons */
-            bRet = (BOOL)SendMessageW(m_hToolBar,
-                                      TB_ADDBUTTONS,
-                                      NumButtons,
-                                      (LPARAM)ToolbarButtons);
+            /* Delete the bitmap */
+            DeleteObject(hBitmap);
         }
     }
+
+    /* Set the new image list */
+    hImageList = (HIMAGELIST)SendMessageW(m_hToolBar,
+                                          TB_SETIMAGELIST,
+                                          0,
+                                          (LPARAM)m_ToolbarhImageList);
+
+    /* Destroy any previous list */
+    if (hImageList) ImageList_Destroy(hImageList);
+
+    /* Add the buttons */
+    bRet = (BOOL)SendMessageW(m_hToolBar,
+                                TB_ADDBUTTONS,
+                                NumButtons,
+                                (LPARAM)ToolbarButtons);
 
     return bRet;
 }
@@ -159,10 +287,10 @@ CMainWindow::CreateStatusBar()
     if (m_hStatusBar)
     {
         /* Set the width */
-        bRet = (BOOL)SendMessage(m_hStatusBar,
-                                 SB_SETPARTS,
-                                 sizeof(StatWidths) / sizeof(INT),
-                                 (LPARAM)StatWidths);
+        bRet = (BOOL)SendMessageW(m_hStatusBar,
+                                  SB_SETPARTS,
+                                  sizeof(StatWidths) / sizeof(INT),
+                                  (LPARAM)StatWidths);
     }
 
     return bRet;
@@ -182,9 +310,9 @@ CMainWindow::StatusBarLoadString(IN HWND hStatusBar,
     {
         /* Send the message to the status bar */
         bRet = (BOOL)SendMessageW(hStatusBar,
-                                 SB_SETTEXT,
-                                 (WPARAM)PartId,
-                                 (LPARAM)szMessage.GetBuffer());
+                                  SB_SETTEXT,
+                                  (WPARAM)PartId,
+                                  (LPARAM)szMessage.GetBuffer());
     }
 
     return bRet;
@@ -202,23 +330,19 @@ CMainWindow::OnCreate(HWND hwnd)
     m_hMainWnd = hwnd;
 
     /* Create the toolbar */
-    if (CreateToolBar())
+    if (CreateToolBar() && CreateStatusBar())
     {
-        /* Create the statusbar */
-        if (CreateStatusBar())
+        /* Create the device view object */
+        m_DeviceView = new CDeviceView(m_hMainWnd);
+
+        /* Initialize it */
+        if (m_DeviceView->Initialize())
         {
-            /* Create the device view object */
-            m_DeviceView = new CDeviceView(m_hMainWnd);
+            /* Display the window according to the user request */
+            ShowWindow(hwnd, m_CmdShow);
 
-            /* Initialize it */
-            if (m_DeviceView->Initialize())
-            {
-                /* Display the window according to the user request */
-                ShowWindow(hwnd, m_CmdShow);
-
-                /* Set as handled */
-                RetCode = 0;
-            }
+            /* Set as handled */
+            RetCode = 0;
         }
     }
 
@@ -263,6 +387,31 @@ CMainWindow::OnSize()
 LRESULT
 CMainWindow::OnNotify(LPARAM lParam)
 {
+    LPNMHDR NmHdr = (LPNMHDR)lParam;
+
+    switch (NmHdr->code)
+    {
+        case TVN_DELETEITEMW:
+        {
+            LPNMTREEVIEW NmTreeView = (LPNMTREEVIEW)lParam;
+
+            NmTreeView->action = NmTreeView->action;
+
+            break;
+        }
+
+        case NM_DBLCLK:
+        {
+            m_DeviceView->DisplayPropertySheet();
+            break;
+        }
+
+        case NM_RETURN:
+        {
+            m_DeviceView->DisplayPropertySheet();
+            break;
+        }
+    }
 
     return 0;
 }
@@ -299,13 +448,69 @@ CMainWindow::OnCommand(WPARAM wParam,
             break;
         }
 
+        case IDC_DEVBYTYPE:
+        {
+            m_DeviceView->SetDeviceListType(DevicesByType);
+            CheckMenuRadioItem(m_hMenu,
+                               IDC_DEVBYTYPE,
+                               IDC_RESBYCONN,
+                               IDC_DEVBYTYPE,
+                               MF_BYCOMMAND);
+            m_DeviceView->Refresh();
+        }
+        break;
+
+        case IDC_DEVBYCONN:
+        {
+            m_DeviceView->SetDeviceListType(DevicesByConnection);
+            CheckMenuRadioItem(m_hMenu,
+                               IDC_DEVBYTYPE,
+                               IDC_RESBYCONN,
+                               IDC_DEVBYCONN,
+                               MF_BYCOMMAND);
+            m_DeviceView->Refresh();
+        }
+        break;
+
+        case IDC_SHOWHIDDEN:
+        {
+            UINT CurCheckState, NewCheckState;
+            
+            /* Get the current state */
+            CurCheckState = GetMenuState(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND);
+
+            /* Inform the device view of the change */
+            if (CurCheckState == MF_CHECKED)
+            {
+                NewCheckState = MF_UNCHECKED;
+                m_DeviceView->ShowHiddenDevices(FALSE);
+            }
+            else if (CurCheckState == MF_UNCHECKED)
+            {
+                NewCheckState = MF_CHECKED;
+                m_DeviceView->ShowHiddenDevices(TRUE);
+            }
+            else
+            {
+                ATLASSERT(FALSE);
+                break;
+            }
+
+            /* Set the new check state */
+            CheckMenuItem(m_hMenu, IDC_SHOWHIDDEN, MF_BYCOMMAND | NewCheckState);
+
+            /* Refresh the device view */
+            m_DeviceView->Refresh();
+            break;
+        }
+
         case IDC_ABOUT:
         {
-            /* Blow my own trumpet */
+            /* Apportion blame */
             MessageBoxW(m_hMainWnd,
-                        L"ReactOS Device Manager\r\nCopyright Ged Murphy 2011",
+                        L"ReactOS Device Manager\r\nCopyright Ged Murphy 2014",
                         L"About",
-                        MB_OK);
+                        MB_OK | MB_APPLMODAL);
 
             /* Set focus back to the treeview */
             m_DeviceView->SetFocus();
@@ -361,7 +566,7 @@ CMainWindow::MainWndProc(HWND hwnd,
     pThis = (CMainWindow *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     /* Check for an invalid pointer */
-    if (!pThis)
+    if (pThis == NULL)
     {
         /* Check that this isn't a create message */
         if (msg != WM_CREATE)
@@ -406,6 +611,25 @@ CMainWindow::MainWndProc(HWND hwnd,
             break;
         }
 
+        case WM_MENUSELECT:
+        {
+            if (pThis->m_hStatusBar != NULL)
+            {
+                if (!pThis->MainWndMenuHint(LOWORD(wParam),
+                                     MainMenuHintTable,
+                                     sizeof(MainMenuHintTable) / sizeof(MainMenuHintTable[0]),
+                                     IDS_HINT_BLANK))
+                {
+                    pThis->MainWndMenuHint(LOWORD(wParam),
+                                    SystemMenuHintTable,
+                                    sizeof(SystemMenuHintTable) / sizeof(SystemMenuHintTable[0]),
+                                    IDS_HINT_BLANK);
+                }
+            }
+
+            break;
+        }
+
         case WM_COMMAND:
         {
             /* Handle the command message */
@@ -438,74 +662,4 @@ HandleDefaultMessage:
     }
 
     return RetCode;
-}
-
-BOOL
-CMainWindow::Initialize(LPCTSTR lpCaption,
-                        int nCmdShow)
-{
-    CAtlString szCaption;
-    WNDCLASSEXW wc = {0};
-
-    /* Store the show window value */
-    m_CmdShow = nCmdShow;
-
-    /* Setup the window class struct */
-    wc.cbSize = sizeof(WNDCLASSEXW);
-    wc.lpfnWndProc = MainWndProc;
-    wc.hInstance = g_hInstance;
-    wc.hIcon = LoadIcon(g_hInstance, MAKEINTRESOURCEW(IDI_MAIN_ICON));
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpszMenuName = MAKEINTRESOURCEW(IDR_MAINMENU);
-    wc.lpszClassName = m_szMainWndClass;
-    wc.hIconSm = (HICON)LoadImage(g_hInstance,
-                                  MAKEINTRESOURCE(IDI_MAIN_ICON),
-                                  IMAGE_ICON,
-                                  16,
-                                  16,
-                                  LR_SHARED);
-
-    /* Register the window */
-    if (RegisterClassExW(&wc))
-    {
-        /* Create the main window and store the info pointer */
-        m_hMainWnd = CreateWindowExW(WS_EX_WINDOWEDGE,
-                                     m_szMainWndClass,
-                                     lpCaption,
-                                     WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-                                     CW_USEDEFAULT,
-                                     CW_USEDEFAULT,
-                                     600,
-                                     450,
-                                     NULL,
-                                     NULL,
-                                     g_hInstance,
-                                     this);
-    }
-
-    /* Return creation result */
-    return !!(m_hMainWnd);
-}
-
-VOID
-CMainWindow::Uninitialize()
-{
-    /* Unregister the window class */
-    UnregisterClassW(m_szMainWndClass, g_hInstance);
-}
-
-INT
-CMainWindow::Run()
-{
-    MSG Msg;
-
-    /* Pump the message queue */
-    while (GetMessageW(&Msg, NULL, 0, 0 ) != 0)
-    {
-        TranslateMessage(&Msg);
-        DispatchMessageW(&Msg);
-    }
-
-    return 0;
 }

@@ -1,6 +1,6 @@
 /*
- * Spanish Language resource file
- * Traducido por: Javier Remacha <2007-12-21> e Ismael Ferreras Morezuelas <2014-11-07>
+ *Spanish Language resource file
+ * Traducido por: Javier Remacha 2007-12-21
  */
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -38,22 +38,22 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Acerca del Administrador de dispositivos"
+CAPTION "Acerca del Gestor de Dispositivos"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Administrador de dispositivos v0.1\nCopyright (C) 2006\ncreado por Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Gestor de Dispositivos v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Cerrar", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como fueron publicados por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Propiedades"
   IDS_TOOLTIP_REFRESH   "Actualizar"
@@ -62,7 +62,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Gestor de Dispositivos de ReactOS"
   IDS_HINT_BLANK        " "

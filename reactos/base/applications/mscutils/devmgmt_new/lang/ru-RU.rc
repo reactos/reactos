@@ -12,18 +12,18 @@ BEGIN
   BEGIN
     MENUITEM "Печать",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Свойства",                 IDC_PROP, GRAYED
+    MENUITEM "Свойства",              IDC_PROP, GRAYED
   END
   POPUP "Вид"
   BEGIN
-    MENUITEM "Устройства по типу",       IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Устройства по подключению",IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по типу",          IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по подключению",   IDC_STATIC, GRAYED
+    MENUITEM "Устройства по типу",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Устройства по подключению",   IDC_STATIC, GRAYED
+    MENUITEM "Ресурсы по типу",       IDC_STATIC, GRAYED
+    MENUITEM "Ресурсы по подключению", IDC_STATIC, GRAYED
   END
   POPUP "Справка"
   BEGIN
-    MENUITEM "О программе",              IDC_ABOUT
+    MENUITEM "О программе",                   IDC_ABOUT
   END
 END
 
@@ -31,7 +31,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Свойства",                 IDC_PROP, GRAYED
+    MENUITEM "Свойства",              IDC_PROP, GRAYED
   END
 END
 
@@ -46,12 +46,12 @@ BEGIN
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Свойства"
   IDS_TOOLTIP_REFRESH   "Обновить"
@@ -60,7 +60,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Диспетчер устройств ReactOS"
   IDS_HINT_BLANK        " "
@@ -68,9 +68,9 @@ BEGIN
   IDS_HINT_REFRESH      " Обновить список."
   IDS_HINT_PROP         " Открыть свойства для выбранного элемента."
   IDS_HINT_HELP         " Показать окно справки."
-  IDS_HINT_ABOUT        " О Диспетчере устройств ReactOS ."
+  IDS_HINT_ABOUT        " О ReactOS Device Manager."
 
-  IDS_HINT_SYS_RESTORE  " Восстановить нормальный размер этого окна."
+  IDS_HINT_SYS_RESTORE  " Востановить нормальный размер этого окна."
   IDS_HINT_SYS_MOVE     " Переместить это окно."
   IDS_HINT_SYS_SIZE     " Изменить размер этого окна."
   IDS_HINT_SYS_MINIMIZE " Свернуть это окно в значок."
