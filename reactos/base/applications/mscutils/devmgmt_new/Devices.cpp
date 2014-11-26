@@ -11,6 +11,9 @@
 #include "devmgmt.h"
 #include "Devices.h"
 
+
+/* PUBLIC METHODS *****************************************/
+
 CDevices::CDevices(void) :
     m_bInitialized(FALSE),
     m_RootImageIndex(-1)
@@ -133,7 +136,7 @@ CDevices::GetDevice(
     _In_ DEVINST Device,
     _Out_writes_(DeviceNameSize) LPWSTR DeviceName,
     _In_ DWORD DeviceNameSize,
-    _Out_ LPWSTR *DeviceId,
+    _Outptr_ LPWSTR *DeviceId,
     _Out_ PINT ClassImage,
     _Out_ LPBOOL IsUnknown,
     _Out_ LPBOOL IsHidden
@@ -146,6 +149,7 @@ CDevices::GetDevice(
 
     *DeviceId = NULL;
 
+    /* Get the length of the device id string */
     cr = CM_Get_Device_ID_Size(&ulLength, Device, 0);
     if (cr == CR_SUCCESS)
     {
@@ -166,6 +170,7 @@ CDevices::GetDevice(
         }
     }
 
+    /* Make sure we got the string */
     if (*DeviceId == NULL)
         return FALSE;
 
@@ -180,8 +185,10 @@ CDevices::GetDevice(
                                            0);
     if (cr == CR_SUCCESS)
     {
+        /* Convert the string to a proper guid */
         CLSIDFromString(ClassGuidString, &ClassGuid);
 
+        /* Check if this is a hidden device */
         if ((IsEqualGUID(ClassGuid, GUID_DEVCLASS_LEGACYDRIVER) ||
             IsEqualGUID(ClassGuid, GUID_DEVCLASS_VOLUME)))
         {
@@ -195,13 +202,12 @@ CDevices::GetDevice(
         *IsUnknown = TRUE;
     }
 
-
+    /* Get the image for the class this device is in */
     SetupDiGetClassImageIndex(&m_ImageListData,
                               &ClassGuid,
                               ClassImage);
 
-    
-
+    /* Get the description for the device */
     ulLength = DeviceNameSize * sizeof(WCHAR);
     cr = CM_Get_DevNode_Registry_PropertyW(Device,
                                           CM_DRP_FRIENDLYNAME,
@@ -221,6 +227,7 @@ CDevices::GetDevice(
 
     }
 
+    /* Cleanup if something failed */
     if (cr != CR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, *DeviceId);
@@ -346,7 +353,7 @@ CDevices::EnumDevicesForClass(
     _Out_ LPBOOL MoreItems,
     _Out_ LPTSTR DeviceName,
     _In_ DWORD DeviceNameSize,
-    _Out_ LPTSTR *DeviceId
+    _Outptr_ LPTSTR *DeviceId
     )
 {
     SP_DEVINFO_DATA DeviceInfoData;

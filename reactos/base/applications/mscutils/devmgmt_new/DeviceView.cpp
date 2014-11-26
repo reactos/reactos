@@ -95,6 +95,8 @@ CDeviceView::Initialize()
 BOOL
 CDeviceView::Uninitialize()
 {
+    EmptyDeviceView();
+
     (VOID)m_Devices->Uninitialize();
 
     return TRUE;
@@ -186,12 +188,8 @@ unsigned int __stdcall CDeviceView::ListDevicesThread(void *Param)
 {
     CDeviceView *This = (CDeviceView *)Param;
 
-    /* Check if there are any items in the tree */
-    if (TreeView_GetRoot(This->m_hTreeView) != NULL)
-    {
-        /* Delete all the items */
-        (VOID)TreeView_DeleteAllItems(This->m_hTreeView);
-    }
+    /* Clear any existing data */
+    This->EmptyDeviceView();
 
     /* Reset the tree root */
     This->m_hTreeRoot = NULL;
@@ -514,4 +512,67 @@ CDeviceView::InsertIntoTreeView(
     tvins.hParent = hParent;
 
     return TreeView_InsertItem(m_hTreeView, &tvins);
+}
+
+VOID
+CDeviceView::RecurseDeviceView(
+    _In_ HTREEITEM hParentItem
+    )
+{
+    HTREEITEM hItem;
+    TVITEMW tvItem;
+
+    /* Check if this node has any children */
+    hItem = TreeView_GetChild(m_hTreeView, hParentItem);
+    if (hItem == NULL) return;
+
+    /* The lParam contains the device id */
+    tvItem.hItem = hItem;
+    tvItem.mask = TVIF_PARAM;
+
+    if (TreeView_GetItem(m_hTreeView, &tvItem) &&
+        tvItem.lParam != NULL)
+    {
+        /* Free the device id */
+        HeapFree(GetProcessHeap(), 0, (LPVOID)tvItem.lParam);
+    }
+
+    /* This node may have its own children */
+    RecurseDeviceView(hItem);
+
+    for (;;)
+    {
+        /* Get the next item at this level */
+        hItem = TreeView_GetNextSibling(m_hTreeView, hItem);
+        if (hItem == NULL) break;
+
+        tvItem.hItem = hItem;
+        tvItem.mask = TVIF_PARAM;
+
+        if (TreeView_GetItem(m_hTreeView, &tvItem))
+        {
+            if (tvItem.lParam != NULL)
+                HeapFree(GetProcessHeap(), 0, (LPVOID)tvItem.lParam);
+        }
+
+        /* This node may have its own children */
+        RecurseDeviceView(hItem);
+    }
+}
+
+
+VOID
+CDeviceView::EmptyDeviceView()
+{
+    HTREEITEM hItem;
+
+    /* Check if there are any items in the tree */
+    hItem = TreeView_GetRoot(m_hTreeView);
+    if (hItem == NULL) return;
+
+    /* Free all the Device Ids */
+    RecurseDeviceView(hItem);
+
+    /* Delete all the items */
+    (VOID)TreeView_DeleteAllItems(m_hTreeView);
 }

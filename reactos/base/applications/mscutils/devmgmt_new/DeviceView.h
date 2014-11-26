@@ -81,5 +81,12 @@ private:
         _In_ INT DevImage,
         _In_ UINT OverlayImage
         );
+
+    VOID RecurseDeviceView(
+        _In_ HTREEITEM hParentItem
+        );
+
+    VOID EmptyDeviceView(
+        );
 };
 

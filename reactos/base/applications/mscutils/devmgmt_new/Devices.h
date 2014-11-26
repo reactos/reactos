@@ -42,7 +42,7 @@ public:
         _In_ DEVINST Device,
         _Out_writes_(DeviceNameSize) LPTSTR DeviceName,
         _In_ DWORD DeviceNameSize,
-        _Out_ LPTSTR *DeviceId,
+        _Outptr_ LPTSTR *DeviceId,
         _Out_ PINT ClassImage,
         _Out_ LPBOOL IsUnknown,
         _Out_ LPBOOL IsHidden
@@ -67,7 +67,7 @@ public:
         _Out_ LPBOOL MoreItems,
         _Out_writes_(DeviceNameSize)  LPTSTR DeviceName,
         _In_ DWORD DeviceNameSize,
-        _Out_ LPTSTR *DeviceId
+        _Outptr_ LPTSTR *DeviceId
         );
 
     BOOL GetDeviceStatus(
