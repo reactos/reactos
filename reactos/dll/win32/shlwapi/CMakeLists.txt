@@ -1,4 +1,6 @@
 
+project(SHELL)
+
 add_definitions(
     -D__WINESRC__
     -D_SHLWAPI_)

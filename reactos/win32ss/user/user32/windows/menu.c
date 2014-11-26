@@ -2038,7 +2038,7 @@ UINT MenuDrawMenuBar( HDC hDC, LPRECT lprect, HWND hwnd,
 static BOOL MENU_InitPopup( HWND hwndOwner, HMENU hmenu, UINT flags )
 {
     MENU *menu;
-    DWORD ex_style = 0;
+    DWORD ex_style = WS_EX_TOOLWINDOW;
     ROSMENUINFO MenuInfo;
 
     TRACE("owner=%p hmenu=%p\n", hwndOwner, hmenu);

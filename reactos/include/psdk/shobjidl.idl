@@ -4040,3 +4040,154 @@ library ShellObjects
         interface IShellItem2;
     }
 }
+
+enum _OPPROGDLGF
+{
+    OPPROGDLG_DEFAULT = 0,
+    OPPROGDLG_ENABLEPAUSE = 0x80,
+    OPPROGDLG_ALLOWUNDO = 0x100,
+    OPPROGDLG_DONTDISPLAYSOURCEPATH = 0x200,
+    OPPROGDLG_DONTDISPLAYDESTPATH = 0x400,
+    OPPROGDLG_NOMULTIDAYESTIMATES = 0x800,
+    OPPROGDLG_DONTDISPLAYLOCATIONS = 0x1000
+};
+typedef DWORD OPPROGDLGF;
+
+enum _PDMODE
+{
+    PDM_DEFAULT = 0,
+    PDM_RUN = 0x1,
+    PDM_PREFLIGHT = 0x2,
+    PDM_UNDOING = 0x4,
+    PDM_ERRORSBLOCKING = 0x8,
+    PDM_INDETERMINATE = 0x10
+};
+typedef DWORD PDMODE;
+
+typedef enum PDOPSTATUS
+{
+    PDOPS_RUNNING = 1,
+    PDOPS_PAUSED = 2,
+    PDOPS_CANCELLED = 3,
+    PDOPS_STOPPED = 4,
+    PDOPS_ERRORS = 5
+} 	PDOPSTATUS;
+
+typedef enum _SPACTION
+{
+    SPACTION_NONE = 0,
+    SPACTION_MOVING = 1,
+    SPACTION_COPYING = 2,
+    SPACTION_RECYCLING = 3,
+    SPACTION_APPLYINGATTRIBS = 4,
+    SPACTION_DOWNLOADING = 5,
+    SPACTION_SEARCHING_INTERNET = 6,
+    SPACTION_CALCULATING = 7,
+    SPACTION_UPLOADING = 8,
+    SPACTION_SEARCHING_FILES = 9,
+    SPACTION_DELETING = 10,
+    SPACTION_RENAMING = 11,
+    SPACTION_FORMATTING = 12,
+    SPACTION_COPY_MOVING = 13
+} 	SPACTION;
+
+[
+    uuid(0C9FB851-E5C9-43EB-A370-F0677B13874C),
+    object,
+    pointer_default(unique)
+]
+interface IOperationsProgressDialog : IUnknown
+{
+     HRESULT StartProgressDialog(
+         [in] HWND hwndOwner,
+         [in] OPPROGDLGF flags);
+     HRESULT StopProgressDialog();
+     HRESULT SetOperation(
+         [in] SPACTION action);
+     HRESULT SetMode(
+         [in] PDMODE mode);
+     HRESULT UpdateProgress(
+        [in] ULONGLONG ullPointsCurrent,
+        [in] ULONGLONG ullPointsTotal,
+        [in] ULONGLONG ullSizeCurrent,
+        [in] ULONGLONG ullSizeTotal,
+        [in] ULONGLONG ullItemsCurrent,
+        [in] ULONGLONG ullItemsTotal);
+     HRESULT UpdateLocations(
+         [in, optional] IShellItem *psiSource,
+         [in, optional] IShellItem *psiTarget,
+         [in, optional] IShellItem *psiItem);
+     HRESULT ResetTimer();
+     HRESULT PauseTimer();
+     HRESULT ResumeTimer();
+     HRESULT GetMilliseconds(
+         [out] ULONGLONG *pullElapsed, 
+         [out] ULONGLONG *pullRemaining);
+     HRESULT GetOperationStatus(
+         [out] PDOPSTATUS *popstatus);
+};
+
+[
+    uuid(947aab5f-0a5c-4c13-b4d6-4bf7836fc9f8),
+    object,
+    pointer_default(unique)
+]
+interface IFileOperation : IUnknown
+{
+     HRESULT Advise(
+         [in] IFileOperationProgressSink *pfops, 
+         [out] DWORD *pdwCookie);
+     HRESULT Unadvise(
+         [in] DWORD dwCookie);
+     HRESULT SetOperationFlags(
+         [in] DWORD dwOperationFlags);
+     HRESULT SetProgressMessage(
+         [in] LPCWSTR pszMessage);
+     HRESULT SetProgressDialog(
+         [in] IOperationsProgressDialog *popd);
+     HRESULT SetProperties(
+         [in] IPropertyChangeArray *pproparray);
+     HRESULT SetOwnerWindow(
+         [in] HWND hwndOwner);
+     HRESULT ApplyPropertiesToItem(
+         [in] IShellItem *psiItem);
+     HRESULT ApplyPropertiesToItems(
+         [in] IUnknown *punkItems);
+     HRESULT RenameItem(
+         [in] IShellItem *psiItem, 
+         [in] LPCWSTR pszNewName,
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT RenameItems(
+         [in] IUnknown *pUnkItems,
+         [in] LPCWSTR pszNewName);
+     HRESULT MoveItem(
+         [in] IShellItem *psiItem, 
+         [in] IShellItem *psiDestinationFolder, 
+         [in] LPCWSTR pszNewName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT MoveItems(
+         [in] IUnknown *punkItems,
+         [in] IShellItem *psiDestinationFolder);
+     HRESULT CopyItem(
+         [in] IShellItem *psiItem, 
+         [in] IShellItem *psiDestinationFolder, 
+         [in] LPCWSTR pszCopyName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT CopyItems(
+         [in] IUnknown *punkItems, 
+         [in] IShellItem *psiDestinationFolder);
+     HRESULT DeleteItem(
+         [in] IShellItem *psiItem, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT DeleteItems(
+         [in] IUnknown *punkItems);
+     HRESULT NewItem(
+         [in] IShellItem *psiDestinationFolder, 
+         [in] DWORD dwFileAttributes, 
+         [in] LPCWSTR pszName, 
+         [in] LPCWSTR pszTemplateName, 
+         [in] IFileOperationProgressSink *pfopsItem);
+     HRESULT PerformOperations();
+     HRESULT GetAnyOperationsAborted(
+         [out] BOOL *pfAnyOperationsAborted);
+};

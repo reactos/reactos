@@ -22,6 +22,7 @@
 
 #define IDM_FILE_CLOSE                   0xA021
 #define IDM_FILE_EXPLORE_MENU            0xA027
+#define IDM_BACKSPACE                    0xA032
 #define IDM_EXPLORE_ITEM_FIRST           0xA470
 #define IDM_EXPLORE_ITEM_LAST            0xA570
 #define IDM_FILE_EXPLORE_SEP             0xA028
@@ -85,6 +86,7 @@
 #define IDS_GOBUTTONLABEL        12656
 #define IDS_GOBUTTONTIPTEMPLATE  12657
 #define IDS_SEARCHLABEL          12897
+#define IDS_STANDARD_TOOLBAR     12624
 #define IDS_ADDRESSBANDLABEL     12902
 #define IDS_FOLDERSLABEL         12919
 #define IDS_HISTORYTEXT          13169

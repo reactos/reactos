@@ -109,6 +109,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Setup",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Setup","DriverCachePath",0x00020002,"%SystemRoot%\Driver Cache"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\SharedDlls",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellServiceObjectDelayLoad",,0x00000012
 
 ; FIXME - usetup doesn't handle extra paths
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce","",0x00000000,"cmd /c md ""%programfiles%\Internet Explorer\"" && move %windir%\iexplore.exe ""%programfiles%\Internet Explorer\"" && ""%programfiles%\Internet Explorer\iexplore.exe"" /RegServer"

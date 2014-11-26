@@ -4717,7 +4717,17 @@ typedef struct {
     _In_ PFNDSAENUMCALLBACK pfnCB,
     _In_opt_ void *pData);
 
+  WINCOMMCTRLAPI
+  VOID
+  WINAPI
+  DSA_EnumCallback(
+    _In_ HDSA hdsa,
+    _In_ PFNDSAENUMCALLBACK enumProc,
+    _In_opt_ LPVOID lParam);
+
   WINCOMMCTRLAPI PVOID WINAPI DSA_GetItemPtr(_In_ HDSA hdsa, int i);
+
+  WINCOMMCTRLAPI BOOL WINAPI DSA_DeleteAllItems(_In_ HDSA hdsa);
 
   WINCOMMCTRLAPI
   int

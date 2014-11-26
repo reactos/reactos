@@ -24,10 +24,9 @@ Implements the toolbar band of a cabinet window
 
 #include "precomp.h"
 
-/*
-TODO:
-  **Fix GetBandInfo to calculate size correctly
-*/
+/* FIXME, I can't include windowsx because it conflicts with some #defines */
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 class CToolsBand :
     public CWindowImpl<CToolsBand, CWindow, CControlWinTraits>,
@@ -38,12 +37,12 @@ class CToolsBand :
     public IPersistStream
 {
 private:
-    IDockingWindowSite          *fDockSite;
+    CComPtr<IDockingWindowSite> fDockSite;
     GUID                        fExecCommandCategory;
     CComPtr<IOleCommandTarget>  fExecCommandTarget;
 public:
     CToolsBand();
-    ~CToolsBand();
+    virtual ~CToolsBand();
 public:
     // *** IDeskBand methods ***
     virtual HRESULT STDMETHODCALLTYPE GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi);
@@ -96,37 +95,53 @@ END_COM_MAP()
 };
 
 CToolsBand::CToolsBand()
+    : fDockSite(NULL)
 {
-    fDockSite = NULL;
 }
 
 CToolsBand::~CToolsBand()
 {
-    if (fDockSite)
-        fDockSite->Release();
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO* pdbi)
 {
+    RECT actualRect;
+    POINTL actualSize;
+    POINTL idealSize;
+    POINTL maxSize;
+    POINTL itemSize;
+
+    ::GetWindowRect(m_hWnd, &actualRect);
+    actualSize.x = actualRect.right - actualRect.left;
+    actualSize.y = actualRect.bottom - actualRect.top;
+
+    /* Obtain the ideal size, to be used as min and max */
+    SendMessageW(m_hWnd, TB_AUTOSIZE, 0, 0);
+    SendMessageW(m_hWnd, TB_GETMAXSIZE, 0, reinterpret_cast<LPARAM>(&maxSize));
+
+    idealSize = maxSize;
+    SendMessageW(m_hWnd, TB_GETIDEALSIZE, FALSE, reinterpret_cast<LPARAM>(&idealSize));
+
+    /* Obtain the button size, to be used as the integral size */
+    DWORD size = SendMessageW(m_hWnd, TB_GETBUTTONSIZE, 0, 0);
+    itemSize.x = GET_X_LPARAM(size);
+    itemSize.y = GET_Y_LPARAM(size);
+
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
-        pdbi->ptMinSize.x = 400;
-        pdbi->ptMinSize.y = 38;
+        pdbi->ptMinSize = idealSize;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
     {
-        pdbi->ptMaxSize.x = 0;
-        pdbi->ptMaxSize.y = 0;
+        pdbi->ptMaxSize = maxSize;
     }
     if (pdbi->dwMask & DBIM_INTEGRAL)
     {
-        pdbi->ptIntegral.x = 0;
-        pdbi->ptIntegral.y = 0;
+        pdbi->ptIntegral = itemSize;
     }
     if (pdbi->dwMask & DBIM_ACTUAL)
     {
-        pdbi->ptActual.x = 400;
-        pdbi->ptActual.y = 38;
+        pdbi->ptActual = actualSize;
     }
     if (pdbi->dwMask & DBIM_TITLE)
         wcscpy(pdbi->wszTitle, L"");
@@ -185,55 +200,80 @@ static const int moveToImageIndex = 44;
 static const int copyToImageIndex = 45;
 static const int folderOptionsImageIndex = 46;
 
+enum StandardToolbarButtons {
+    BtnIdx_Back = 0,
+    BtnIdx_Forward,
+    BtnIdx_Up,
+    BtnIdx_Search,
+    BtnIdx_Folders,
+    BtnIdx_MoveTo,
+    BtnIdx_CopyTo,
+    BtnIdx_Delete,
+    BtnIdx_Undo,
+    BtnIdx_Views,
+    BtnIdx_Stop,
+    BtnIdx_Refresh,
+    BtnIdx_Home,
+    BtnIdx_MapDrive,
+    BtnIdx_Disconnect,
+    BtnIdx_Favorites,
+    BtnIdx_History,
+    BtnIdx_FullScreen,
+    BtnIdx_Properties,
+    BtnIdx_Cut,
+    BtnIdx_Copy,
+    BtnIdx_Paste,
+    BtnIdx_FolderOptions,
+};
+
 const int numShownButtons = 13;
 const int numHiddenButtons = 13;
 TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
 {
-    {backImageIndex, gBackCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Back")},
-    {forwardImageIndex, gForwardCommandID, TBSTATE_ENABLED, BTNS_DROPDOWN, {0}, 0, (INT_PTR)_T("Forward")},
-    {upImageIndex, gUpLevelCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Up")},
-    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
-    {searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Search")},
-    {foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Folders")},
-    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
-    {moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Move To")},
-    {copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy To")},
-    {deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Delete")},
-    {undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Undo")},
-    {6, -1, TBSTATE_ENABLED, BTNS_SEP},
-    {viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, {0}, 0, (INT_PTR)_T("Views")},
+    { backImageIndex, IDM_GOTO_BACK, TBSTATE_ENABLED, BTNS_DROPDOWN | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Back },
+    { forwardImageIndex, IDM_GOTO_FORWARD, TBSTATE_ENABLED, BTNS_DROPDOWN, { 0 }, 0,          BtnIdx_Forward },
+    { upImageIndex, IDM_GOTO_UPONELEVEL, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0,                 BtnIdx_Up },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { searchImageIndex, gSearchCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Search },
+    { foldersImageIndex, gFoldersCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Folders },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { moveToImageIndex, gMoveToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MoveTo },
+    { copyToImageIndex, gCopyToCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_CopyTo },
+    { deleteImageIndex, gDeleteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Delete },
+    { undoImageIndex, gUndoCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Undo },
+    { 6, -1, TBSTATE_ENABLED, BTNS_SEP },
+    { viewsImageIndex, gViewsCommandID, TBSTATE_ENABLED, BTNS_WHOLEDROPDOWN, { 0 }, 0, BtnIdx_Views },
 
-    {0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Stop")},
-    {0, gRefreshCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Refresh")},
-    {0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Home")},
-    {mapDriveImageIndex, gMapDriveCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Map Drive")},
-    {disconnectImageIndex, gDisconnectCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Disconnect")},
-    {favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, {0}, 0, (INT_PTR)_T("Favorites")},
-    {0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("History")},
-    {0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Full Screen")},
-    {propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Properties")},
-    {cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Cut")},
-    {copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Copy")},
-    {pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Paste")},
-    {folderOptionsImageIndex, gFolderOptionsCommandID, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, (INT_PTR)_T("Folder Options")},
+    { 0, gStopCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Stop },
+    { 0, IDM_VIEW_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Refresh },
+    { 0, gHomeCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Home },
+    { mapDriveImageIndex, IDM_TOOLS_MAPNETWORKDRIVE, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_MapDrive },
+    { disconnectImageIndex, IDM_TOOLS_DISCONNECTNETWORKDRIVE, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Disconnect },
+    { favoritesImageIndex, gFavoritesCommandID, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_SHOWTEXT, { 0 }, 0, BtnIdx_Favorites },
+    { 0, gHistoryCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_History },
+    { 0, gFullScreenCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FullScreen },
+    { propertiesImageIndex, gPropertiesCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Properties },
+    { cutImageIndex, gCutCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Cut },
+    { copyImageIndex, gCopyCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Copy },
+    { pasteImageIndex, gPasteCommandID, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_Paste },
+    { folderOptionsImageIndex, IDM_TOOLS_FOLDEROPTIONS, TBSTATE_ENABLED, BTNS_BUTTON, { 0 }, 0, BtnIdx_FolderOptions },
 };
 
-HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
-{
+HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     HWND                    parentWindow;
     IOleWindow              *oleWindow;
     HWND                    toolbar;
     HRESULT                 hResult;
 
-    if (fDockSite != NULL)
-        fDockSite->Release();
+    if(fDockSite) fDockSite.Release();
+
     if (pUnkSite == NULL)
         return S_OK;
-    hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fDockSite));
-    if (FAILED(hResult))
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fDockSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     parentWindow = NULL;
-    hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
     if (SUCCEEDED(hResult))
     {
         oleWindow->GetWindow(&parentWindow);
@@ -242,36 +282,54 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite)
     if (!::IsWindow(parentWindow))
         return E_FAIL;
 
-    toolbar = CreateWindowEx(TBSTYLE_EX_DOUBLEBUFFER, TOOLBARCLASSNAMEW, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-                    WS_CLIPCHILDREN | TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
-                    CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP, 0, 0, 500, 20, parentWindow, NULL,
-                    _AtlBaseModule.GetModuleInstance(), 0);
+    toolbar = CreateWindowEx(
+                    TBSTYLE_EX_DOUBLEBUFFER,
+                    TOOLBARCLASSNAMEW, NULL,
+                    WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+                    TBSTYLE_TOOLTIPS | TBSTYLE_TRANSPARENT | TBSTYLE_REGISTERDROP | TBSTYLE_LIST | TBSTYLE_FLAT |
+                    CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_NORESIZE | CCS_TOP,
+                    0, 0, 500, 20, parentWindow, NULL, _AtlBaseModule.GetModuleInstance(), 0);
     if (toolbar == NULL)
         return E_FAIL;
     SubclassWindow(toolbar);
+    SendMessage(TB_ADDSTRINGW, (WPARAM) GetModuleHandle(L"browseui.dll"), IDS_STANDARD_TOOLBAR);
 
     SendMessage(WM_USER + 100, GetSystemMetrics(SM_CXEDGE) / 2, 0);
     SendMessage(TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     SendMessage(TB_SETMAXTEXTROWS, 1, 0);
-    SendMessage(TB_SETEXTENDEDSTYLE, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS,
-        TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
+    SendMessage(TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_MIXEDBUTTONS | TBSTYLE_EX_DRAWDDARROWS);
 
     HINSTANCE shell32Instance = GetModuleHandle(_T("shell32.dll"));
-    HBITMAP imageBitmap = reinterpret_cast<HBITMAP>(
+    HBITMAP imgNormal = reinterpret_cast<HBITMAP>(
         LoadImage(shell32Instance, MAKEINTRESOURCE(214),
             IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
 
-    DIBSECTION bitmapInfo;
-    GetObjectW(imageBitmap, sizeof(bitmapInfo), &bitmapInfo);
-    HIMAGELIST imageList = ImageList_Create(bitmapInfo.dsBm.bmHeight, bitmapInfo.dsBm.bmHeight, ILC_COLOR32, 4, 4);
+    HBITMAP imgHot = reinterpret_cast<HBITMAP>(
+        LoadImage(shell32Instance, MAKEINTRESOURCE(215),
+        IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_CREATEDIBSECTION));
 
-    ImageList_Add(imageList, imageBitmap, NULL);
-    DeleteObject(imageBitmap);
+    if (imgNormal && imgHot)
+    {
+        BITMAP bitmapInfo;
+        GetObjectW(imgNormal, sizeof(bitmapInfo), &bitmapInfo);
+        HIMAGELIST himlNormal = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
+        ImageList_Add(himlNormal, imgNormal, NULL);
 
-    SendMessage(TB_SETIMAGELIST, 0, (LPARAM)imageList);
+        GetObjectW(imgHot, sizeof(bitmapInfo), &bitmapInfo);
+        HIMAGELIST himlHot = ImageList_Create(bitmapInfo.bmHeight, bitmapInfo.bmHeight, ILC_COLOR32, 4, 4);
+        ImageList_Add(himlHot, imgHot, NULL);
+
+        SendMessage(TB_SETIMAGELIST, 0, (LPARAM) himlNormal);
+        SendMessage(TB_SETHOTIMAGELIST, 0, (LPARAM) himlHot);
+    }
 
     SendMessage(TB_ADDBUTTONSW, numShownButtons, (LPARAM)&tbButtonsAdd);
 
+    if (imgNormal)
+        DeleteObject(imgNormal);
+    if (imgHot)
+        DeleteObject(imgHot);
+    
     return hResult;
 }
 
@@ -305,6 +363,8 @@ HRESULT STDMETHODCALLTYPE CToolsBand::CloseDW(DWORD dwReserved)
 
     m_hWnd = NULL;
 
+    if (fDockSite) fDockSite.Release();
+
     return S_OK;
 }
 
@@ -327,12 +387,12 @@ HRESULT STDMETHODCALLTYPE CToolsBand::ShowDW(BOOL fShow)
 
 HRESULT STDMETHODCALLTYPE CToolsBand::HasFocusIO()
 {
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    return E_NOTIMPL;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CToolsBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
@@ -381,21 +441,6 @@ LRESULT CToolsBand::OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
 
 HRESULT CreateToolsBar(REFIID riid, void **ppv)
 {
-    CComObject<CToolsBand>                  *theMenuBar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theMenuBar = new CComObject<CToolsBand>);
-    if (theMenuBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theMenuBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CToolsBand>(riid, ppv);
 }
 

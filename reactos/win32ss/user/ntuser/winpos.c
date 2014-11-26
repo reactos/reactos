@@ -1830,7 +1830,10 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-      if (Window->spwndParent == UserGetDesktopWindow())
+       if (Window->spwndParent == UserGetDesktopWindow() &&
+           Window->spwndOwner == NULL &&
+           (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
+            (Window->ExStyle & WS_EX_APPWINDOW)))
          co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
 
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );

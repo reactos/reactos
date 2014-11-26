@@ -8,6 +8,7 @@
 #define IDD_LOCKED_DLG       104
 #define IDD_UNLOCK_DLG       105
 #define IDD_SHUTDOWN_DLG     108
+#define IDD_SHUTDOWN_SHELL   109
 
 #define IDC_LOGOFF               1001
 #define IDC_USERNAME             1002

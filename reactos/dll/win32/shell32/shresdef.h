@@ -24,7 +24,27 @@
 #define IDA_SHELLVIEW 1
 
 /* Bitmaps */
-#define IDB_REACTOS 131
+#define IDB_REACTOS                 131
+#define IDB_SHELL_IEXPLORE_LG       204
+#define IDB_SHELL_IEXPLORE_LG_HOT   205
+#define IDB_SHELL_IEXPLORE_SM       206
+#define IDB_SHELL_IEXPLORE_SM_HOT   207
+#define IDB_SHELL_EXPLORER_LG       214
+#define IDB_SHELL_EXPLORER_LG_HOT   215
+#define IDB_SHELL_EXPLORER_SM       216
+#define IDB_SHELL_EXPLORER_SM_HOT   217
+#define IDB_SHELL_EDIT_LG           225
+#define IDB_SHELL_EDIT_LG_HOT       226
+#define IDB_SHELL_EDIT_SM           227
+#define IDB_SHELL_EDIT_SM_HOT       228
+#define IDB_SHELL_GO                230
+#define IDB_SHELL_GO_HOT            231
+#define IDB_SHELL_BRANDBAND_SM_HI   240
+/*#define IDB_SHELL_BRANDBAND_MD_HI   241
+#define IDB_SHELL_BRANDBAND_LG_HI   242
+#define IDB_SHELL_BRANDBAND_SM_LO   245
+#define IDB_SHELL_BRANDBAND_MD_LO   246
+#define IDB_SHELL_BRANDBAND_LG_LO   247*/
 
 /* Strings */
 
@@ -181,6 +201,8 @@
 #define IDS_INSERT               330
 #define IDS_DESCRIPTION          331
 #define IDS_COPY_OF              332
+
+#define IDS_MENU_EMPTY           34561
 
 /* Note: those strings are referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME 8964
@@ -472,6 +494,8 @@
 #define FCIDM_SHVIEW_INSERT          0x701A
 #define FCIDM_SHVIEW_UNDO            0x701B
 #define FCIDM_SHVIEW_INSERTLINK      0x701C
+#define FCIDM_SHVIEW_COPYTO          0x701E
+#define FCIDM_SHVIEW_MOVETO          0x701F
 #define FCIDM_SHVIEW_SELECTALL       0x7021
 #define FCIDM_SHVIEW_INVERTSELECTION 0x7022
 

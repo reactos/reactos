@@ -14,32 +14,6 @@
 /*
  * @unimplemented
  */
-DWORD WINAPI
-ShellShutdownDialog(
-    HWND   hParent,
-    LPWSTR lpUsername,
-    BOOL   bHideLogoff)
-{
-    UNREFERENCED_PARAMETER(hParent);
-    UNREFERENCED_PARAMETER(lpUsername);
-    UNREFERENCED_PARAMETER(bHideLogoff);
-
-    /* Return values:
-     * 0x00: Cancelled/Help
-     * 0x01: Log off user
-     * 0x02: Shutdown
-     * 0x04: Reboot
-     * 0x10: Standby
-     * 0x40: Hibernate
-     */
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL WINAPI
 WlxIsLockOk(
     PVOID pWlxContext)

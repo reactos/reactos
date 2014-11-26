@@ -1,3 +1,4 @@
+PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
 
@@ -20,8 +21,10 @@ list(APPEND SOURCE
     browseui.cpp
     browseuiord.cpp
     commonbrowser.cpp
+    desktopipc.cpp
     globalfoldersettings.cpp
     internettoolbar.cpp
+    parsecmdline.cpp
     regtreeoptions.cpp
     shellbrowser.cpp
     toolsband.cpp
@@ -51,3 +54,15 @@ if(NOT MSVC)
         add_target_link_flags(browseui "-Wl,--allow-multiple-definition")
     endif()
 endif()
+
+add_custom_command(TARGET browseui POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy 
+     "$<TARGET_FILE:browseui>"
+     "$<TARGET_FILE_DIR:filebrowser>/$<TARGET_FILE_NAME:browseui>" 
+  COMMENT "Copying to output directory")
+
+add_custom_command(TARGET browseui POST_BUILD 
+  COMMAND "${CMAKE_COMMAND}" -E copy 
+     "$<TARGET_FILE:browseui>"
+     "$<TARGET_FILE_DIR:filebrowser>/$<TARGET_FILE_NAME:browseui>" 
+  COMMENT "Copying to output directory")

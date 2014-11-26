@@ -219,7 +219,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                 {
                    TRACE("System Hot key Id %d Key %d\n",pHotKey->id, wVk );
                    UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
-                   //ptiLastInput = pWnd->head.pti;
+                   co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                    bWinHotkeyActive = FALSE;
                    return FALSE;
                 }

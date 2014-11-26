@@ -95,6 +95,7 @@ AddReg=Classes
 11,,shell32.dll,3
 11,,softpub.dll,1
 11,,sti.dll,1
+11,,stobject.dll,1
 11,,urlmon.dll,3
 11,,vbscript.dll,1
 11,,windowscodecs.dll,1

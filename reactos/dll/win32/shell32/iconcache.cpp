@@ -37,6 +37,9 @@ typedef struct
 
 static HDPA        sic_hdpa = 0;
 
+static HIMAGELIST ShellSmallIconList;
+static HIMAGELIST ShellBigIconList;
+
 namespace
 {
 extern CRITICAL_SECTION SHELL32_SicCS;
@@ -746,7 +749,7 @@ BOOL PidlToSicIndex (
 
     TRACE("sf=%p pidl=%p %s\n", sh, pidl, bBigIcon?"Big":"Small");
 
-    if (SUCCEEDED (sh->GetUIObjectOf(0, 1, &pidl, IID_IExtractIconW, 0, (void **)&ei)))
+    if (SUCCEEDED (sh->GetUIObjectOf(0, 1, &pidl, IID_NULL_PPV_ARG(IExtractIconW, &ei))))
     {
       if (SUCCEEDED(ei->GetIconLocation(uFlags, szIconFile, MAX_PATH, &iSourceIndex, &dwFlags)))
       {

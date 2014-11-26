@@ -20,29 +20,22 @@
 
 #pragma once
 
-static const int gBackCommandID = 0xa121;
-static const int gForwardCommandID = 0xa122;
-static const int gUpLevelCommandID = 0xa022;
 static const int gSearchCommandID = 1003;
 static const int gFoldersCommandID = 1004;
-static const int gMoveToCommandID = 0x701f;
-static const int gCopyToCommandID = 0x701e;
-static const int gDeleteCommandID = 0x7011;
-static const int gUndoCommandID = 0x701b;
-static const int gViewsCommandID = 0x7031;
+static const int gMoveToCommandID = FCIDM_SHVIEW_MOVETO;
+static const int gCopyToCommandID = FCIDM_SHVIEW_COPYTO;
+static const int gDeleteCommandID = FCIDM_SHVIEW_DELETE;
+static const int gUndoCommandID = FCIDM_SHVIEW_UNDO;
+static const int gViewsCommandID = FCIDM_SHVIEW_AUTOARRANGE;
 static const int gStopCommandID = 1010;
-static const int gRefreshCommandID = 0xa220;
 static const int gHomeCommandID = 1012;
-static const int gMapDriveCommandID = 41089;
-static const int gDisconnectCommandID = 41090;
 static const int gFavoritesCommandID = 1015;
 static const int gHistoryCommandID = 1016;
 static const int gFullScreenCommandID = 1017;
-static const int gPropertiesCommandID = 0x7013;
-static const int gCutCommandID = 0x7018;
-static const int gCopyCommandID = 0x7019;
-static const int gPasteCommandID = 0x701a;
-static const int gFolderOptionsCommandID = 41251;
+static const int gPropertiesCommandID = FCIDM_SHVIEW_PROPERTIES;
+static const int gCutCommandID = FCIDM_SHVIEW_CUT;
+static const int gCopyCommandID = FCIDM_SHVIEW_COPY;
+static const int gPasteCommandID = FCIDM_SHVIEW_INSERT;
 
 class CMenuCallback :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -52,7 +45,7 @@ private:
     CComPtr<IShellMenu>             fFavoritesMenu;
 public:
     CMenuCallback();
-    ~CMenuCallback();
+    virtual ~CMenuCallback();
 
     HRESULT STDMETHODCALLTYPE GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject);
 public:
@@ -96,11 +89,14 @@ public:
     HWND                                    fToolbarWindow;
     DWORD                                   fAdviseCookie;
     CComPtr<IBandProxy>                     fBandProxy;
+    BOOL                                    fSizing;
+    POINT                                   fStartPosition;
+    LONG                                    fStartHeight;
 public:
     CInternetToolbar();
-    ~CInternetToolbar();
+    virtual ~CInternetToolbar();
     void AddDockItem(IUnknown *newItem, int bandID, int flags);
-    HRESULT ReserveBorderSpace();
+    HRESULT ReserveBorderSpace(LONG maxHeight = -1);
     HRESULT CreateMenuBar(IShellMenu **menuBar);
     HRESULT CreateBrandBand(IUnknown **logoBar);
     HRESULT CreateToolsBar(IUnknown **toolsBar);
@@ -196,24 +192,31 @@ public:
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetCursor(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
+    LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     BEGIN_MSG_MAP(CInternetToolbar)
-        COMMAND_ID_HANDLER(gBackCommandID, OnTravelBack)
-        COMMAND_ID_HANDLER(gForwardCommandID, OnTravelForward)
-        COMMAND_ID_HANDLER(gUpLevelCommandID, OnUpLevel)
+        COMMAND_ID_HANDLER(IDM_GOTO_BACK, OnTravelBack)
+        COMMAND_ID_HANDLER(IDM_GOTO_FORWARD, OnTravelForward)
+        COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnUpLevel)
         COMMAND_ID_HANDLER(gSearchCommandID, OnSearch)
         COMMAND_ID_HANDLER(gFoldersCommandID, OnFolders)
         COMMAND_RANGE_HANDLER(0x7000, 0x7fff, OnForwardToCommandTarget)
         NOTIFY_HANDLER(0, TBN_DROPDOWN, OnMenuDropDown)
         NOTIFY_HANDLER(0, TBN_QUERYINSERT, OnQueryInsert)
         NOTIFY_HANDLER(0, TBN_QUERYDELETE, OnQueryDelete)
-        MESSAGE_HANDLER(WM_COMMAND, OnNavigateCommand)
+        MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
         NOTIFY_CODE_HANDLER(TTN_NEEDTEXTW, OnTipText)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLDown)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLUp)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
     END_MSG_MAP()
 
     DECLARE_REGISTRY_RESOURCEID(IDR_INTERNETTOOLBAR)

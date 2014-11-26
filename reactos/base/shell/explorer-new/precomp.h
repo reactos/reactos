@@ -1,6 +1,8 @@
 #ifndef _EXPLORER_PRECOMP__H_
 #define _EXPLORER_PRECOMP__H_
 
+#define WIN7_COMPAT_MODE 0
+
 #include <stdio.h>
 #include <tchar.h>
 
@@ -16,6 +18,9 @@
 #include <wingdi.h>
 #include <winnls.h>
 #include <wincon.h>
+#include <atlbase.h>
+#include <atlcom.h>
+#include <atlwin.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
@@ -23,68 +28,39 @@
 #include <shlguid_undoc.h>
 #include <uxtheme.h>
 #include <strsafe.h>
+#include <undocuser.h>
+#include <undocshell.h>
+#include <rosctrls.h>
 
 #include "tmschema.h"
 #include "resource.h"
 #include "comcsup.h"
 
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
+
 /* dynamic imports due to lack of support in msvc linker libs */
-typedef INT (APIENTRY *REGSHELLHOOK)(HWND, DWORD);
+typedef INT(APIENTRY *REGSHELLHOOK)(HWND, DWORD);
 #ifdef UNICODE
 #define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempW"
-typedef BOOL (APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
+typedef BOOL(APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
 #else
 #define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempA"
 typedef BOOL (APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCSTR, UINT);
 #endif
-typedef HRESULT (APIENTRY *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
+typedef HRESULT(APIENTRY *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
 typedef void (APIENTRY *RUNFILEDLG)(HWND, HICON, LPCWSTR, LPCWSTR, LPCWSTR, UINT);
 typedef void (APIENTRY *EXITWINDLG)(HWND);
-typedef HRESULT (APIENTRY *SHWINHELP)(HWND, LPWSTR, UINT, DWORD);
+typedef HRESULT(APIENTRY *SHWINHELP)(HWND, LPWSTR, UINT, DWORD);
 
 /* Constants for RunFileDlg */
 #define RFF_CALCDIRECTORY   0x04    /* Calculates the working directory from the file name. */
 
-static __inline ULONG
-Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
-{
-    char szMsg[512];
-    char *szMsgStart;
-    const char *fname;
-    va_list vl;
-    ULONG uRet;
-
-    fname = strrchr(filename, '\\');
-    if (fname == NULL)
-    {
-        fname = strrchr(filename, '/');
-        if (fname != NULL)
-            fname++;
-    }
-    else
-        fname++;
-
-    if (fname == NULL)
-        fname = filename;
-
-    szMsgStart = szMsg + sprintf(szMsg, "%s:%d: ", fname, line);
-
-    va_start(vl, lpFormat);
-    uRet = (ULONG)vsprintf(szMsgStart, lpFormat, vl);
-    va_end(vl);
-
-    OutputDebugStringA(szMsg);
-
-    return uRet;
-}
-
 #define ASSERT(cond) \
     do if (!(cond)) { \
         Win32DbgPrint(__FILE__, __LINE__, "ASSERTION %s FAILED!\n", #cond); \
-    } while (0)
-
-#define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
+        } while (0)
 
 extern HINSTANCE hExplorerInstance;
 extern HMODULE hUser32;
@@ -98,33 +74,33 @@ extern DRAWCAPTEMP DrawCapTemp;
 
 typedef struct _DROPTARGET_CALLBACKS
 {
-    HRESULT (*OnDragEnter)(IN IDropTarget *pDropTarget,
-                           IN PVOID Context,
-                           IN const FORMATETC *Format,
-                           IN DWORD grfKeyState,
-                           IN POINTL pt,
-                           IN OUT DWORD *pdwEffect);
-    HRESULT (*OnDragOver)(IN IDropTarget *pDropTarget,
+    HRESULT(*OnDragEnter)(IN IDropTarget *pDropTarget,
                           IN PVOID Context,
+                          IN const FORMATETC *Format,
                           IN DWORD grfKeyState,
                           IN POINTL pt,
                           IN OUT DWORD *pdwEffect);
-    HRESULT (*OnDragLeave)(IN IDropTarget *pDropTarget,
-                           IN PVOID Context);
-    HRESULT (*OnDrop)(IN IDropTarget *pDropTarget,
-                      IN PVOID Context,
-                      IN const FORMATETC *Format,
-                      IN DWORD grfKeyState,
-                      IN POINTL pt,
-                      IN OUT DWORD *pdwEffect);
+    HRESULT(*OnDragOver)(IN IDropTarget *pDropTarget,
+                         IN PVOID Context,
+                         IN DWORD grfKeyState,
+                         IN POINTL pt,
+                         IN OUT DWORD *pdwEffect);
+    HRESULT(*OnDragLeave)(IN IDropTarget *pDropTarget,
+                          IN PVOID Context);
+    HRESULT(*OnDrop)(IN IDropTarget *pDropTarget,
+                     IN PVOID Context,
+                     IN const FORMATETC *Format,
+                     IN DWORD grfKeyState,
+                     IN POINTL pt,
+                     IN OUT DWORD *pdwEffect);
 } DROPTARGET_CALLBACKS, *PDROPTARGET_CALLBACKS;
 
 IDropTarget *
 CreateDropTarget(IN HWND hwndTarget,
-                 IN DWORD nSupportedFormats,
-                 IN const FORMATETC *Formats  OPTIONAL,
-                 IN PVOID Context  OPTIONAL,
-                 IN const DROPTARGET_CALLBACKS *Callbacks  OPTIONAL);
+IN DWORD nSupportedFormats,
+IN const FORMATETC *Formats  OPTIONAL,
+IN PVOID Context  OPTIONAL,
+IN const DROPTARGET_CALLBACKS *Callbacks  OPTIONAL);
 
 /*
  * explorer.c
@@ -134,37 +110,44 @@ CreateDropTarget(IN HWND hwndTarget,
 
 LONG
 SetWindowStyle(IN HWND hWnd,
-               IN LONG dwStyleMask,
-               IN LONG dwStyle);
+IN LONG dwStyleMask,
+IN LONG dwStyle);
 
 LONG
 SetWindowExStyle(IN HWND hWnd,
-                 IN LONG dwStyleMask,
-                 IN LONG dwStyle);
+IN LONG dwStyleMask,
+IN LONG dwStyle);
 
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,
-              IN LPCTSTR lpMenuName);
+IN LPCTSTR lpMenuName);
 
 HMENU
 FindSubMenu(IN HMENU hMenu,
-            IN UINT uItem,
-            IN BOOL fByPosition);
+IN UINT uItem,
+IN BOOL fByPosition);
 
 BOOL
 GetCurrentLoggedOnUserName(OUT LPTSTR szBuffer,
-                           IN DWORD dwBufferSize);
+IN DWORD dwBufferSize);
 
 BOOL
 FormatMenuString(IN HMENU hMenu,
-                 IN UINT uPosition,
-                 IN UINT uFlags,
-                 ...);
+IN UINT uPosition,
+IN UINT uFlags,
+...);
 
 BOOL
 GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCTSTR lpSubKey,
-                       IN LPCTSTR lpValue);
+IN LPCTSTR lpSubKey,
+IN LPCTSTR lpValue);
+
+/*
+ *  rshell.c
+ */
+
+HRESULT WINAPI
+_CStartMenu_Constructor(REFIID riid, void **ppv);
 
 /*
  * traywnd.c
@@ -172,39 +155,25 @@ GetExplorerRegValueSet(IN HKEY hKey,
 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
 
-typedef HMENU (*PCREATECTXMENU)(IN HWND hWndOwner,
-                                IN PVOID *ppcmContext,
-                                IN PVOID Context  OPTIONAL);
-typedef VOID (*PCTXMENUCOMMAND)(IN HWND hWndOwner,
-                                IN UINT uiCmdId,
-                                IN PVOID pcmContext  OPTIONAL,
-                                IN PVOID Context  OPTIONAL);
-
-typedef struct _TRAYWINDOW_CTXMENU
-{
-    PCREATECTXMENU CreateCtxMenu;
-    PCTXMENUCOMMAND CtxMenuCommand;
-} TRAYWINDOW_CTXMENU, *PTRAYWINDOW_CTXMENU;
-
 extern const GUID IID_IShellDesktopTray;
 
 #define INTERFACE ITrayWindow
-DECLARE_INTERFACE_(ITrayWindow,IUnknown)
+DECLARE_INTERFACE_(ITrayWindow, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG, Release) (THIS) PURE;
     /*** ITrayWindow methods ***/
-    STDMETHOD_(HRESULT,Open) (THIS) PURE;
-    STDMETHOD_(HRESULT,Close) (THIS) PURE;
-    STDMETHOD_(HWND,GetHWND) (THIS) PURE;
-    STDMETHOD_(BOOL,IsSpecialHWND) (THIS_ HWND hWnd) PURE;
-    STDMETHOD_(BOOL,IsHorizontal) (THIS) PURE;
-    STDMETHOD_(HFONT,GetCaptionFonts) (THIS_ HFONT *phBoldCaption) PURE;
-    STDMETHOD_(HWND,DisplayProperties) (THIS) PURE;
-    STDMETHOD_(BOOL,ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
-    STDMETHOD_(BOOL,Lock) (THIS_ BOOL bLock) PURE;
+    STDMETHOD_(HRESULT, Open) (THIS) PURE;
+    STDMETHOD_(HRESULT, Close) (THIS) PURE;
+    STDMETHOD_(HWND, GetHWND) (THIS) PURE;
+    STDMETHOD_(BOOL, IsSpecialHWND) (THIS_ HWND hWnd) PURE;
+    STDMETHOD_(BOOL, IsHorizontal) (THIS) PURE;
+    STDMETHOD_(HFONT, GetCaptionFonts) (THIS_ HFONT *phBoldCaption) PURE;
+    STDMETHOD_(HWND, DisplayProperties) (THIS) PURE;
+    STDMETHOD_(BOOL, ExecContextMenuCmd) (THIS_ UINT uiCmd) PURE;
+    STDMETHOD_(BOOL, Lock) (THIS_ BOOL bLock) PURE;
 };
 #undef INTERFACE
 
@@ -231,8 +200,7 @@ RegisterTrayWindowClass(VOID);
 VOID
 UnregisterTrayWindowClass(VOID);
 
-ITrayWindow *
-CreateTrayWindow(VOID);
+HRESULT CreateTrayWindow(ITrayWindow ** ppTray);
 
 VOID
 TrayProcessMessages(IN OUT ITrayWindow *Tray);
@@ -245,23 +213,24 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray);
  */
 
 /* Structure to hold non-default options*/
-typedef struct _ADVANCED_SETTINGS {
+typedef struct _ADVANCED_SETTINGS
+{
     BOOL bShowSeconds;
 } ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
 
 extern ADVANCED_SETTINGS AdvancedSettings;
-extern const TCHAR szAdvancedSettingsKey[];
+extern const TCHAR szAdvancedSettingsKey [];
 
 VOID
 LoadAdvancedSettings(VOID);
 
 BOOL
 SaveSettingDword(IN PCTSTR pszKeyName,
-                 IN PCTSTR pszValueName,
-                 IN DWORD dwValue);
+IN PCTSTR pszValueName,
+IN DWORD dwValue);
 
 /*
- * startup.c
+ * startup.cpp
  */
 
 int
@@ -275,7 +244,7 @@ VOID
 DisplayTrayProperties(IN HWND hwndOwner);
 
 /*
- * desktop.c
+ * desktop.cpp
  */
 HANDLE
 DesktopCreateWindow(IN OUT ITrayWindow *Tray);
@@ -284,21 +253,21 @@ VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop);
 
 /*
- * taskband.c
+ * taskband.cpp
  */
 
 /* Internal Task Band CLSID */
 extern const GUID CLSID_ITaskBand;
 
 #define INTERFACE ITaskBand
-DECLARE_INTERFACE_(ITaskBand,IUnknown)
+DECLARE_INTERFACE_(ITaskBand, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG, Release) (THIS) PURE;
     /*** ITaskBand methods ***/
-    STDMETHOD_(HRESULT,GetRebarBandID)(THIS_ DWORD *pdwBandID) PURE;
+    STDMETHOD_(HRESULT, GetRebarBandID)(THIS_ DWORD *pdwBandID) PURE;
 };
 #undef INTERFACE
 
@@ -315,24 +284,24 @@ ITaskBand *
 CreateTaskBand(IN OUT ITrayWindow *Tray);
 
 /*
- * tbsite.c
+ * tbsite.cpp
  */
 
 #define INTERFACE ITrayBandSite
-DECLARE_INTERFACE_(ITrayBandSite,IUnknown)
+DECLARE_INTERFACE_(ITrayBandSite, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG, Release) (THIS) PURE;
     /*** IBandSiteStreamCallback ***/
-    STDMETHOD_(HRESULT,OnLoad)(THIS_ IStream *pStm, REFIID riid, PVOID *pvObj) PURE;
-    STDMETHOD_(HRESULT,OnSave)(THIS_ IUnknown *pUnk, IStream *pStm) PURE;
+    STDMETHOD_(HRESULT, OnLoad)(THIS_ IStream *pStm, REFIID riid, PVOID *pvObj) PURE;
+    STDMETHOD_(HRESULT, OnSave)(THIS_ IUnknown *pUnk, IStream *pStm) PURE;
     /*** ITrayBandSite methods ***/
-    STDMETHOD_(HRESULT,IsTaskBand) (THIS_ IUnknown *punk) PURE;
-    STDMETHOD_(HRESULT,ProcessMessage) (THIS_ HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) PURE;
-    STDMETHOD_(HRESULT,AddContextMenus) (THIS_ HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags, IContextMenu **ppcm) PURE;
-    STDMETHOD_(HRESULT,Lock) (THIS_ BOOL bLock) PURE;
+    STDMETHOD_(HRESULT, IsTaskBand) (THIS_ IUnknown *punk) PURE;
+    STDMETHOD_(HRESULT, ProcessMessage) (THIS_ HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) PURE;
+    STDMETHOD_(HRESULT, AddContextMenus) (THIS_ HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags, IContextMenu **ppcm) PURE;
+    STDMETHOD_(HRESULT, Lock) (THIS_ BOOL bLock) PURE;
 };
 #undef INTERFACE
 
@@ -353,22 +322,22 @@ DECLARE_INTERFACE_(ITrayBandSite,IUnknown)
 
 ITrayBandSite *
 CreateTrayBandSite(IN OUT ITrayWindow *Tray,
-                   OUT HWND *phWndRebar,
-                   OUT HWND *phWndTaskSwitch);
+OUT HWND *phWndRebar,
+OUT HWND *phWndTaskSwitch);
 
 /*
- * startmnu.c
+ * startmnu.cpp
  */
 
-extern const TRAYWINDOW_CTXMENU StartMenuBtnCtxMenu;
+HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 #define INTERFACE IStartMenuSite
-DECLARE_INTERFACE_(IStartMenuSite,IUnknown)
+DECLARE_INTERFACE_(IStartMenuSite, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG, Release) (THIS) PURE;
     /*** IStartMenuSite ***/
 };
 #undef INTERFACE
@@ -383,14 +352,21 @@ DECLARE_INTERFACE_(IStartMenuSite,IUnknown)
 
 IMenuPopup*
 CreateStartMenu(IN ITrayWindow *Tray,
-                OUT IMenuBand **ppMenuBand,
-                IN HBITMAP hbmBanner  OPTIONAL,
-                IN BOOL bSmallIcons);
+OUT IMenuBand **ppMenuBand,
+IN HBITMAP hbmBanner  OPTIONAL,
+IN BOOL bSmallIcons);
 
 HRESULT
 UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
-                IN HBITMAP hbmBanner  OPTIONAL,
-                IN BOOL bSmallIcons);
+IN HBITMAP hbmBanner  OPTIONAL,
+IN BOOL bSmallIcons);
+
+/*
+* startmnusite.cpp
+*/
+
+HRESULT 
+CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 /*
  * trayntfy.c
@@ -417,16 +393,14 @@ UnregisterTrayNotifyWndClass(VOID);
 
 HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
-                    IN BOOL bHideClock);
+IN BOOL bHideClock);
 
 VOID
-TrayNotify_NotifyMsg(IN HWND hwnd,
-                     IN WPARAM wParam,
-                     IN LPARAM lParam);
+TrayNotify_NotifyMsg(IN WPARAM wParam,
+IN LPARAM lParam);
 
 BOOL
-TrayNotify_GetClockRect(IN HWND hwnd,
-                        OUT PRECT rcClock);
+TrayNotify_GetClockRect(OUT PRECT rcClock);
 
 /*
  * taskswnd.c
@@ -443,6 +417,12 @@ UnregisterTaskSwitchWndClass(VOID);
 
 HWND
 CreateTaskSwitchWnd(IN HWND hWndParent,
-                    IN OUT ITrayWindow *Tray);
+IN OUT ITrayWindow *Tray);
+
+HRESULT
+Tray_OnStartMenuDismissed();
+
+HRESULT
+IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2);
 
 #endif /* _EXPLORER_PRECOMP__H_ */

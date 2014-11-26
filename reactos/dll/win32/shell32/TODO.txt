@@ -1,5 +1,0 @@
-toolband
-basebar
-menuband
-menubandsite
-menudeskbar

@@ -25,6 +25,29 @@ toolbar, and address band for an explorer window
 
 #include "precomp.h"
 
+/* FIXME, I can't include windowsx because it conflicts with some #defines */
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+
+#define USE_CUSTOM_MENUBAND 1
+HMODULE g_hRShell = NULL;
+
+#if 1
+// TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
+
+IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
+CLSID CLSID_MergedFolder = { 0x26FDC864, 0xBE88, 0x46E7, { 0x92, 0x35, 0x03, 0x2D, 0x8E, 0xA5, 0x16, 0x2E } };
+
+interface IAugmentedShellFolder : public IShellFolder
+{
+    virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetNameSpaceID(LPCITEMIDLIST, LPGUID) = 0;
+    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG, LPGUID, IShellFolder **) = 0;
+    virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG, PULONG) = 0;
+};
+
+#endif
+
 // navigation controls and menubar just send a message to parent window
 /*
 TODO:
@@ -66,6 +89,73 @@ extern HRESULT CreateToolsBar(REFIID riid, void **ppv);
 extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
 extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
+
+typedef HRESULT(WINAPI * PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
+typedef HRESULT(WINAPI * PMERGEDFOLDER_CONSTRUCTOR)(REFIID riid, void **ppv);
+
+HMODULE hRShell = NULL;
+PMERGEDFOLDER_CONSTRUCTOR pCMergedFolder_Constructor = NULL;
+PMENUBAND_CONSTRUCTOR     pCMenuBand_Constructor = NULL;
+
+HRESULT IUnknown_HasFocusIO(IUnknown * punk)
+{
+    CComPtr<IInputObject> pio;
+    HRESULT hr;
+    hr = punk->QueryInterface(IID_PPV_ARG(IInputObject, &pio));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return pio->HasFocusIO();
+}
+
+HRESULT IUnknown_TranslateAcceleratorIO(IUnknown * punk, MSG * pmsg)
+{
+    CComPtr<IInputObject> pio;
+    HRESULT hr;
+    if (!punk)
+        return E_FAIL;
+    hr = punk->QueryInterface(IID_PPV_ARG(IInputObject, &pio));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+    return pio->TranslateAcceleratorIO(pmsg);
+}
+
+HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
+{
+    CComPtr<IWinEventHandler> menuWinEventHandler;
+    HRESULT hResult = punk->QueryInterface(IID_PPV_ARG(IWinEventHandler, &menuWinEventHandler));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = menuWinEventHandler->IsWindowOwner(hWnd);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    if (hResult == S_OK)
+        return menuWinEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
+    return S_FALSE;
+}
+
+HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow)
+{
+    CComPtr<IDockingWindow> dockingWindow;
+    HRESULT hResult = punk->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = dockingWindow->ShowDW(fShow);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    return S_OK;
+}
+
+HRESULT IUnknown_CloseDW(IUnknown * punk, DWORD dwReserved)
+{
+    CComPtr<IDockingWindow> dockingWindow;
+    HRESULT hResult = punk->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = dockingWindow->CloseDW(dwReserved);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    return S_OK;
+}
 
 class CInternetToolbar;
 
@@ -150,32 +240,20 @@ CDockSite::~CDockSite()
 
 HRESULT CDockSite::Initialize(IUnknown *containedBand, CInternetToolbar *browser, HWND hwnd, int bandID, int flags)
 {
-    CComPtr<IObjectWithSite>                site;
-    CComPtr<IOleWindow>                     oleWindow;
-    CComPtr<IDeskBand>                      deskBand;
     TCHAR                                   textBuffer[40];
     REBARBANDINFOW                          bandInfo;
     HRESULT                                 hResult;
 
-    hResult = containedBand->QueryInterface(IID_IObjectWithSite, reinterpret_cast<void **>(&site));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = containedBand->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = containedBand->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(&deskBand));
-    if (FAILED(hResult))
-        return hResult;
     fContainedBand = containedBand;
     fToolbar = browser;
     fRebarWindow = hwnd;
     fBandID = bandID;
     fFlags = flags;
-    hResult = site->SetSite(static_cast<IOleWindow *>(this));
-    if (FAILED(hResult))
+    hResult = IUnknown_SetSite(containedBand, static_cast<IOleWindow *>(this));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = oleWindow->GetWindow(&fChildWindow);
-    if (FAILED(hResult))
+    hResult = IUnknown_GetWindow(containedBand, &fChildWindow);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
     memset(&bandInfo, 0, sizeof(bandInfo));
@@ -195,8 +273,8 @@ HRESULT CDockSite::GetRBBandInfo(REBARBANDINFOW &bandInfo)
     CComPtr<IDeskBand>                      deskBand;
     HRESULT                                 hResult;
 
-    hResult = fContainedBand->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(&deskBand));
-    if (FAILED(hResult))
+    hResult = fContainedBand->QueryInterface(IID_PPV_ARG(IDeskBand, &deskBand));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
     fDeskBandInfo.dwMask = DBIM_BKCOLOR | DBIM_MODEFLAGS | DBIM_TITLE | DBIM_ACTUAL |
@@ -309,7 +387,7 @@ HRESULT STDMETHODCALLTYPE CDockSite::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
                 bandInfo.lpText = textBuffer;
                 bandInfo.cch = sizeof(textBuffer) / sizeof(TCHAR);
                 hResult = GetRBBandInfo(bandInfo);
-                if (FAILED(hResult))
+                if (FAILED_UNEXPECTEDLY(hResult))
                     return hResult;
                 index = (int)SendMessage(fRebarWindow, RB_IDTOINDEX, fBandID, 0);
                 SendMessage(fRebarWindow, RB_SETBANDINFOW, index, (LPARAM)&bandInfo);
@@ -321,15 +399,10 @@ HRESULT STDMETHODCALLTYPE CDockSite::Exec(const GUID *pguidCmdGroup, DWORD nCmdI
 
 HRESULT STDMETHODCALLTYPE CDockSite::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
-    HRESULT                                 hResult;
-
     if (IsEqualIID(guidService, SID_SMenuBandParent))
         return this->QueryInterface(riid, ppvObject);
-    hResult = fToolbar->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
-        return hResult;
-    return serviceProvider->QueryService(guidService, riid, ppvObject);
+
+    return fToolbar->QueryService(guidService, riid, ppvObject);
 }
 
 CMenuCallback::CMenuCallback()
@@ -338,6 +411,120 @@ CMenuCallback::CMenuCallback()
 
 CMenuCallback::~CMenuCallback()
 {
+}
+
+static HRESULT BindToDesktop(LPCITEMIDLIST pidl, IShellFolder ** ppsfResult)
+{
+    HRESULT hr;
+    CComPtr<IShellFolder> psfDesktop;
+
+    *ppsfResult = NULL;
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
+
+    hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, ppsfResult));
+
+    return hr;
+}
+
+static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * ppidl)
+{
+    HRESULT hr;
+    LPITEMIDLIST pidlUserFavorites;
+    LPITEMIDLIST pidlCommonFavorites;
+    CComPtr<IShellFolder> psfUserFavorites;
+    CComPtr<IShellFolder> psfCommonFavorites;
+    CComPtr<IAugmentedShellFolder> pasf;
+
+    if (ppsfFavorites)
+        *ppsfFavorites = NULL;
+    
+    if (ppidl)
+        *ppidl = NULL;
+
+    hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidlUserFavorites);
+    if (FAILED(hr))
+    {
+        WARN("Failed to get the USER favorites folder. Trying to run with just the COMMON one.\n");
+
+        hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &pidlCommonFavorites);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        TRACE("COMMON favorites obtained.\n");
+        *ppidl = pidlCommonFavorites;
+        hr = BindToDesktop(pidlCommonFavorites, ppsfFavorites);
+        return hr;
+    }
+
+    hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_FAVORITES, &pidlCommonFavorites);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        WARN("Failed to get the COMMON favorites folder. Will use only the USER contents.\n");
+        *ppidl = pidlCommonFavorites;
+        hr = BindToDesktop(pidlUserFavorites, ppsfFavorites);
+        return hr;
+    }
+
+    TRACE("Both COMMON and USER favorites folders obtained, merging them...\n");
+
+    hr = BindToDesktop(pidlUserFavorites, &psfUserFavorites);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = BindToDesktop(pidlCommonFavorites, &psfCommonFavorites);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+#if 1
+    if (!hRShell)
+    {
+        hRShell = GetModuleHandle(L"rshell.dll");
+        if (!hRShell)
+            hRShell = LoadLibrary(L"rshell.dll");
+    }
+
+    if (!pCMergedFolder_Constructor)
+        pCMergedFolder_Constructor = (PMERGEDFOLDER_CONSTRUCTOR) GetProcAddress(hRShell, "CMergedFolder_Constructor");
+
+    if (pCMergedFolder_Constructor)
+    {
+        hr = pCMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+    }
+    else
+    {
+        hr = E_FAIL;
+    }
+#else
+    hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+#endif
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        *ppsfFavorites = psfUserFavorites.Detach();
+        *ppidl = pidlUserFavorites;
+        ILFree(pidlCommonFavorites);
+        return hr;
+    }
+
+    hr = pasf->AddNameSpace(NULL, psfUserFavorites, pidlUserFavorites, 0xFF00);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->AddNameSpace(NULL, psfCommonFavorites, pidlCommonFavorites, 0);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pasf->QueryInterface(IID_PPV_ARG(IShellFolder, ppsfFavorites));
+    pasf.Release();
+
+    // TODO: obtain the folder's PIDL
+
+    ILFree(pidlCommonFavorites);
+    ILFree(pidlUserFavorites);
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, void **ppvObject)
@@ -360,43 +547,70 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
     if (psmd->uId != FCIDM_MENU_FAVORITES)
         return E_FAIL;
 
+    // create favorites menu
+    hResult = psmd->punk->QueryInterface(IID_PPV_ARG(IShellMenu, &parentMenu));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    hResult = parentMenu->GetMenu(&parentHMenu, &ownerWindow, NULL);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    favoritesHMenu = GetSubMenu(parentHMenu, 3);
+    if (favoritesHMenu == NULL)
+        return E_FAIL;
+
     if (fFavoritesMenu.p == NULL)
     {
-        // create favorites menu
-        hResult = psmd->punk->QueryInterface(IID_IShellMenu, reinterpret_cast<void **>(&parentMenu));
-        if (FAILED(hResult))
-            return hResult;
-        hResult = parentMenu->GetMenu(&parentHMenu, &ownerWindow, NULL);
-        if (FAILED(hResult))
-            return hResult;
-        favoritesHMenu = GetSubMenu(parentHMenu, 3);
-        if (favoritesHMenu == NULL)
-            return E_FAIL;
+#if USE_CUSTOM_MENUBAND
+        if (!hRShell)
+        {
+            hRShell = GetModuleHandle(L"rshell.dll");
+            if (!hRShell)
+                hRShell = LoadLibrary(L"rshell.dll");
+        }
+
+        if (!pCMenuBand_Constructor)
+            pCMenuBand_Constructor = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hRShell, "CMenuBand_Constructor");
+
+        if (pCMenuBand_Constructor)
+        {
+            hResult = pCMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &newMenu));
+        }
+        else
+        {
+            hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
+                IID_PPV_ARG(IShellMenu, &newMenu));
+        }
+#else
         hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-            IID_IShellMenu, reinterpret_cast<void **>(&newMenu));
-        if (FAILED(hResult))
+            IID_PPV_ARG(IShellMenu, &newMenu));
+#endif
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = newMenu->Initialize(this, FCIDM_MENU_FAVORITES, -1, SMINIT_VERTICAL | SMINIT_CACHED);
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = newMenu->SetMenu(favoritesHMenu, ownerWindow, SMSET_TOP | SMSET_DONTOWN);
-        if (FAILED(hResult))
-            return hResult;
-        hResult = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &favoritesPIDL);
-        if (FAILED(hResult))
-            return hResult;
-        hResult = SHBindToFolder(favoritesPIDL, &favoritesFolder);
-        if (FAILED(hResult))
-            return hResult;
+
         RegCreateKeyEx(HKEY_CURRENT_USER, szFavoritesKey,
                 0, NULL, 0, KEY_READ | KEY_WRITE, NULL, &orderRegKey, &disposition);
-        hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | 0x18);
-        ILFree(favoritesPIDL);
-        if (SUCCEEDED(hResult))
-            fFavoritesMenu.Attach(newMenu.Detach());
+
+        hResult = GetFavoritesFolder(&favoritesFolder, &favoritesPIDL);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+
+        hResult = newMenu->SetShellFolder(favoritesFolder, favoritesPIDL, orderRegKey, SMSET_BOTTOM | SMINIT_CACHED | SMINV_ID);
+        if (favoritesPIDL)
+            ILFree(favoritesPIDL);
+
+        if (FAILED(hResult))
+            return hResult;
+            
+        fFavoritesMenu = newMenu;
     }
-    if (fFavoritesMenu.p == NULL)
-        return E_FAIL;
+
+    hResult = fFavoritesMenu->SetMenu(favoritesHMenu, ownerWindow, SMSET_TOP | SMSET_DONTOWN);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
     return fFavoritesMenu->QueryInterface(riid, ppvObject);
 }
 
@@ -434,7 +648,11 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
             return GetObject(psmd, *reinterpret_cast<IID *>(wParam), reinterpret_cast<void **>(lParam));
         case SMC_GETSFOBJECT:
             break;
+        case SMC_EXEC:
+            PostMessageW(psmd->hwnd, WM_COMMAND, psmd->uId, 0);
+            break;
         case SMC_SFEXEC:
+            SHInvokeDefaultCommand(psmd->hwnd, psmd->psf, psmd->pidlItem);
             break;
         case SMC_SFSELECTITEM:
             break;
@@ -470,7 +688,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
         case 49:
             break;
         case 0x10000000:
-            break;
+            return S_OK;
     }
     return S_FALSE;
 }
@@ -484,6 +702,8 @@ CInternetToolbar::CInternetToolbar()
     fMenuCallback = new CComObject<CMenuCallback>();
     fToolbarWindow = NULL;
     fAdviseCookie = 0;
+
+    fMenuCallback->AddRef();
 }
 
 CInternetToolbar::~CInternetToolbar()
@@ -492,126 +712,134 @@ CInternetToolbar::~CInternetToolbar()
 
 void CInternetToolbar::AddDockItem(IUnknown *newItem, int bandID, int flags)
 {
-    CDockSite           *newSite;
+    CComPtr<CDockSite> newSite;
 
     newSite = new CComObject<CDockSite>;
-    newSite->AddRef();
     newSite->Initialize(newItem, this, fMainReBar, bandID, flags);
 }
 
-HRESULT CInternetToolbar::ReserveBorderSpace()
+HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
 {
     CComPtr<IDockingWindowSite>             dockingWindowSite;
     RECT                                    availableBorderSpace;
-    RECT                                    neededBorderSpace;
-    HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&dockingWindowSite));
-    if (FAILED(hResult))
+    HRESULT hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = dockingWindowSite->GetBorderDW(static_cast<IDockingWindow *>(this), &availableBorderSpace);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    SendMessage(fMainReBar, RB_SIZETORECT, RBSTR_CHANGERECT, reinterpret_cast<LPARAM>(&availableBorderSpace));
-    neededBorderSpace.left = 0;
-    neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
-    if (!fLocked)
-        neededBorderSpace.top += 3;
-    neededBorderSpace.right = 0;
-    neededBorderSpace.bottom = 0;
-    hResult = dockingWindowSite->SetBorderSpaceDW(static_cast<IDockingWindow *>(this), &neededBorderSpace);
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
+
+    if (availableBorderSpace.top > maxHeight)
+    {
+        availableBorderSpace.top = maxHeight;
+    }
+
+    return ResizeBorderDW(&availableBorderSpace, fSite, FALSE);
 }
 
-HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **menuBar)
+HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 {
-    CComPtr<IOleCommandTarget>              siteCommandTarget;
-    CComPtr<IOleWindow>                     oleWindow;
-    CComPtr<IOleCommandTarget>              commandTarget;
+    CComPtr<IShellMenu>                     menubar;
     CComPtr<IShellMenuCallback>             callback;
     VARIANT                                 menuOut;
     HWND                                    ownerWindow;
     HRESULT                                 hResult;
 
-    hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-        IID_IShellMenu, reinterpret_cast<void **>(menuBar));
-    if (FAILED(hResult))
+    if (!pMenuBar)
+        return E_POINTER;
+
+    *pMenuBar = NULL;
+
+    hResult = E_FAIL;
+#if USE_CUSTOM_MENUBAND
+    if (!g_hRShell) g_hRShell = GetModuleHandleW(L"rshell.dll");
+    
+    if (!g_hRShell) g_hRShell = LoadLibraryW(L"rshell.dll");
+
+    if (g_hRShell)
+    {
+        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(g_hRShell, "CMenuBand_Constructor");
+        if (func)
+        {
+            hResult = func(IID_PPV_ARG(IShellMenu, &menubar));
+        }
+    }
+#endif
+
+    if (FAILED_UNEXPECTEDLY(hResult))
+    {
+        hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
+            IID_PPV_ARG(IShellMenu, &menubar));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+    
+    hResult = fMenuCallback->QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fMenuCallback->QueryInterface(IID_IShellMenuCallback, reinterpret_cast<void **>(&callback));
-    if (FAILED(hResult))
+
+    hResult = menubar->Initialize(callback, -1, ANCESTORDEFAULT, SMINIT_HORIZONTAL | SMINIT_TOPLEVEL);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = (*menuBar)->Initialize(callback, -1, ANCESTORDEFAULT, SMINIT_HORIZONTAL | SMINIT_TOPLEVEL);
-    if (FAILED(hResult))
+
+    // Set Menu
+    {
+        hResult = IUnknown_Exec(fSite, CGID_Explorer, 0x35, 0, NULL, &menuOut);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+
+        if (V_VT(&menuOut) != VT_INT_PTR || V_INTREF(&menuOut) == NULL)
+            return E_FAIL;
+
+        hResult = IUnknown_GetWindow(fSite, &ownerWindow);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+
+        HMENU hMenuBar = (HMENU) V_INTREF(&menuOut);
+
+        // FIXME: Figure out the proper way to do this.
+        HMENU hMenuFavs = GetSubMenu(hMenuBar, 3);
+        if (hMenuFavs)
+        {
+            DeleteMenu(hMenuFavs, IDM_FAVORITES_EMPTY, MF_BYCOMMAND);
+        }
+
+        hResult = menubar->SetMenu(hMenuBar, ownerWindow, SMSET_DONTOWN);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+
+    hResult = IUnknown_Exec(menubar, CGID_MenuBand, 3, 1, NULL, NULL);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = fSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = oleWindow->GetWindow(&ownerWindow);
-    if (FAILED(hResult))
-        return hResult;
-    hResult = fSite->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&siteCommandTarget));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = siteCommandTarget->Exec(&CGID_Explorer, 0x35, 0, NULL, &menuOut);
-    if (FAILED(hResult))
-        return hResult;
-    if (V_VT(&menuOut) != VT_INT_PTR || V_INTREF(&menuOut) == NULL)
-        return E_FAIL;
-    hResult = (*menuBar)->SetMenu((HMENU)V_INTREF(&menuOut), ownerWindow, SMSET_DONTOWN);
-    if (FAILED(hResult))
-        return hResult;
-    hResult = (*menuBar)->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&commandTarget));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = commandTarget->Exec(&CGID_MenuBand, 3, 1, NULL, NULL);
-    if (FAILED(hResult))
-        return hResult;
+
+    *pMenuBar = menubar.Detach();
+
     return S_OK;
 }
 
 HRESULT CInternetToolbar::CreateBrandBand(IUnknown **logoBar)
 {
-    CComPtr<IUnknown>                       tempBand;
-    HRESULT                                 hResult;
-
 #if 1
-    hResult = ::CreateBrandBand(IID_IUnknown, reinterpret_cast<void **>(logoBar));
+    return ::CreateBrandBand(IID_PPV_ARG(IUnknown, logoBar));
 #else
-    hResult = CoCreateInstance(CLSID_BrandBand, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown,
-        reinterpret_cast<void **>(logoBar));
+    return CoCreateInstance(CLSID_BrandBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, logoBar));
 #endif
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
 }
 
 HRESULT CInternetToolbar::CreateToolsBar(IUnknown **toolsBar)
 {
-    HRESULT                                 hResult;
-
-    hResult = ::CreateToolsBar(IID_IUnknown, reinterpret_cast<void **>(toolsBar));
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
+    return ::CreateToolsBar(IID_PPV_ARG(IUnknown, toolsBar));
 }
 
 HRESULT CInternetToolbar::CreateAddressBand(IUnknown **toolsBar)
 {
-    CComPtr<IAddressBand>                   addressBand;
-    HRESULT                                 hResult;
-
 #if 1
-    hResult = ::CreateAddressBand(IID_IUnknown, reinterpret_cast<void **>(toolsBar));
+    return ::CreateAddressBand(IID_PPV_ARG(IUnknown, toolsBar));
 #else
-    hResult = CoCreateInstance(CLSID_SH_AddressBand, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown,
-        reinterpret_cast<void **>(toolsBar));
+    return CoCreateInstance(CLSID_SH_AddressBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, toolsBar));
 #endif
-    if (FAILED(hResult))
-        return hResult;
-    hResult = (*toolsBar)->QueryInterface(IID_IAddressBand, reinterpret_cast<void **>(&addressBand));
-    return S_OK;
 }
 
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
@@ -642,6 +870,8 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
             }
         }
         hResult = ReserveBorderSpace();
+
+        // TODO: refresh view menu?
     }
     return S_OK;
 }
@@ -662,11 +892,11 @@ HRESULT CInternetToolbar::CommandStateChanged(bool newValue, int commandID)
             break;
         case 1:
             // forward
-            hResult = SetState(&CLSID_CommonButtons, gForwardCommandID, newValue ? TBSTATE_ENABLED : 0);
+            hResult = SetState(&CLSID_CommonButtons, IDM_GOTO_FORWARD, newValue ? TBSTATE_ENABLED : 0);
             break;
         case 2:
             // back
-            hResult = SetState(&CLSID_CommonButtons, gBackCommandID, newValue ? TBSTATE_ENABLED : 0);
+            hResult = SetState(&CLSID_CommonButtons, IDM_GOTO_BACK, newValue ? TBSTATE_ENABLED : 0);
             break;
     }
     return hResult;
@@ -677,17 +907,17 @@ HRESULT CInternetToolbar::CreateAndInitBandProxy()
     CComPtr<IServiceProvider>               serviceProvider;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = serviceProvider->QueryService(SID_IBandProxy, IID_IBandProxy, reinterpret_cast<void **>(&fBandProxy));
-    if (FAILED(hResult))
+    hResult = serviceProvider->QueryService(SID_IBandProxy, IID_PPV_ARG(IBandProxy, &fBandProxy));
+    if (FAILED_UNEXPECTEDLY(hResult))
     {
-        hResult = CreateBandProxy(IID_IBandProxy, reinterpret_cast<void **>(&fBandProxy));
-        if (FAILED(hResult))
+        hResult = CreateBandProxy(IID_PPV_ARG(IBandProxy, &fBandProxy));
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = fBandProxy->SetSite(fSite);
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     }
     return S_OK;
@@ -700,12 +930,46 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::UIActivateIO(BOOL fActivate, LPMSG l
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::HasFocusIO()
 {
-    return E_NOTIMPL;
+    HRESULT hr = S_FALSE;
+
+    if (fMenuBar)
+        hr = IUnknown_HasFocusIO(fMenuBar);
+    if (hr != S_FALSE)
+        return hr;
+
+    if (fControlsBar)
+        hr = IUnknown_HasFocusIO(fControlsBar);
+    if (hr != S_FALSE)
+        return hr;
+
+    if (fNavigationBar)
+        hr = IUnknown_HasFocusIO(fNavigationBar);
+    if (hr != S_FALSE)
+        return hr;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    return E_NOTIMPL;
+    HRESULT hr = S_FALSE;
+
+    if (fMenuBar)
+        hr = IUnknown_TranslateAcceleratorIO(fMenuBar, lpMsg);
+    if (hr == S_OK)
+        return hr;
+
+    if (fControlsBar)
+        hr = IUnknown_TranslateAcceleratorIO(fControlsBar, lpMsg);
+    if (hr == S_OK)
+        return hr;
+
+    if (fNavigationBar)
+        hr = IUnknown_TranslateAcceleratorIO(fNavigationBar, lpMsg);
+    if (hr == S_OK)
+        return hr;
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetWindow(HWND *lphwnd)
@@ -723,25 +987,112 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::ContextSensitiveHelp(BOOL fEnterMode
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::ShowDW(BOOL fShow)
 {
-    CComPtr<IDockingWindow>     dockingWindow;
     HRESULT                     hResult;
 
     // show the bar here
-    hResult = ReserveBorderSpace();
-    hResult = fMenuBar->QueryInterface(IID_IDockingWindow, reinterpret_cast<void **>(&dockingWindow));
-    hResult = dockingWindow->ShowDW(fShow);
+    if (fShow)
+    {
+        hResult = ReserveBorderSpace();
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+
+    if (fMenuBar)
+    {
+        hResult = IUnknown_ShowDW(fMenuBar, fShow);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+
+    if (fControlsBar)
+    {
+        hResult = IUnknown_ShowDW(fControlsBar, fShow);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+    if (fNavigationBar)
+    {
+        hResult = IUnknown_ShowDW(fNavigationBar, fShow);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+    if (fLogoBar)
+    {
+        hResult = IUnknown_ShowDW(fLogoBar, fShow);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
     return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::CloseDW(DWORD dwReserved)
 {
-    return E_NOTIMPL;
+    HRESULT                     hResult;
+
+    if (fMenuBar)
+    {
+        hResult = IUnknown_CloseDW(fMenuBar, dwReserved);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        ReleaseCComPtrExpectZero(fMenuBar);
+    }
+    if (fControlsBar)
+    {
+        hResult = IUnknown_CloseDW(fControlsBar, dwReserved);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        ReleaseCComPtrExpectZero(fControlsBar);
+    }
+    if (fNavigationBar)
+    {
+        hResult = IUnknown_CloseDW(fNavigationBar, dwReserved);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        ReleaseCComPtrExpectZero(fNavigationBar);
+    }
+    if (fLogoBar)
+    {
+        hResult = IUnknown_CloseDW(fLogoBar, dwReserved);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+        ReleaseCComPtrExpectZero(fLogoBar);
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::ResizeBorderDW(LPCRECT prcBorder,
     IUnknown *punkToolbarSite, BOOL fReserved)
 {
-    return E_NOTIMPL;
+    RECT neededBorderSpace;
+    RECT availableBorderSpace = *prcBorder;
+
+    SendMessage(fMainReBar, RB_SIZETORECT, RBSTR_CHANGERECT, reinterpret_cast<LPARAM>(&availableBorderSpace));
+
+    // RBSTR_CHANGERECT does not seem to set the proper size in the rect.
+    // Let's make sure we fetch the actual size properly.
+    GetWindowRect(fMainReBar, &availableBorderSpace);
+    neededBorderSpace.left = 0;
+    neededBorderSpace.top = availableBorderSpace.bottom - availableBorderSpace.top;
+    if (!fLocked)
+        neededBorderSpace.top += 3;
+    neededBorderSpace.right = 0;
+    neededBorderSpace.bottom = 0;
+
+    CComPtr<IDockingWindowSite> dockingWindowSite;
+    
+    HRESULT hResult = fSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &dockingWindowSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    hResult = dockingWindowSite->RequestBorderSpaceDW(static_cast<IDockingWindow *>(this), &neededBorderSpace);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    hResult = dockingWindowSite->SetBorderSpaceDW(static_cast<IDockingWindow *>(this), &neededBorderSpace);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetClassID(CLSID *pClassID)
@@ -778,47 +1129,45 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     CComPtr<IUnknown>                       logoBar;
     CComPtr<IUnknown>                       toolsBar;
     CComPtr<IUnknown>                       navigationBar;
-    CComPtr<IOleWindow>                     menuOleWindow;
-    CComPtr<IOleWindow>                     toolbarOleWindow;
-    CComPtr<IOleWindow>                     navigationOleWindow;
     HRESULT                                 hResult;
 
+    /* Create and attach the menubar to the rebar */
     hResult = CreateMenuBar(&menuBar);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    AddDockItem(menuBar, ITBBID_MENUBAND,
-        CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
+    AddDockItem(menuBar, ITBBID_MENUBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
 
-    hResult = menuBar->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&menuOleWindow));
-    hResult = menuOleWindow->GetWindow(&fMenuBandWindow);
+    hResult = IUnknown_GetWindow(menuBar, &fMenuBandWindow);
     fMenuBar.Attach(menuBar.Detach());                  // transfer the ref count
 
+    // FIXME: The ros Rebar does not properly support fixed-size items such as the brandband,
+    // and it will put them in their own row, sized to take up the whole row.
+#if 0
+    /* Create and attach the brand/logo to the rebar */
     hResult = CreateBrandBand(&logoBar);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    AddDockItem(logoBar, ITBBID_BRANDBAND,
-        CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
+    AddDockItem(logoBar, ITBBID_BRANDBAND, CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
     fLogoBar.Attach(logoBar.Detach());                  // transfer the ref count
+#endif
 
+    /* Create and attach the standard toolbar to the rebar */
     hResult = CreateToolsBar(&toolsBar);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    AddDockItem(toolsBar, ITBBID_TOOLSBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS);
+    AddDockItem(toolsBar, ITBBID_TOOLSBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
     fControlsBar.Attach(toolsBar.Detach());             // transfer the ref count
-    hResult = fControlsBar->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&toolbarOleWindow));
-    if (FAILED(hResult))
-        return hResult;
-    hResult = toolbarOleWindow->GetWindow(&fToolbarWindow);
-    if (FAILED(hResult))
+    hResult = IUnknown_GetWindow(fControlsBar, &fToolbarWindow);
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
+    /* Create and attach the address/navigation toolbar to the rebar */
     hResult = CreateAddressBand(&navigationBar);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NEWBANDALWAYS);
-    hResult = navigationBar->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&navigationOleWindow));
-    hResult = navigationOleWindow->GetWindow(&fNavigationWindow);
+    AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
     fNavigationBar.Attach(navigationBar.Detach());
+    hResult = IUnknown_GetWindow(fNavigationBar, &fNavigationWindow);
 
     return S_OK;
 }
@@ -836,22 +1185,28 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryStatus(const GUID *pguidCmdGrou
                     prgCmds->cmdf = OLECMDF_SUPPORTED;
                     break;
                 case ITID_TOOLBARBANDSHOWN: // toolbar visibility
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
+                    if (fControlsBar)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_ADDRESSBANDSHOWN: // address bar visibility
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
+                    if (fNavigationBar)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_LINKSBANDSHOWN:   // links bar visibility
                     prgCmds->cmdf = 0;
                     break;
                 case ITID_MENUBANDSHOWN:    // Menubar band visibility
-                    prgCmds->cmdf = 0;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
+                    if (fMenuBar)
+                        prgCmds->cmdf |= OLECMDF_LATCHED;
                     break;
                 case ITID_AUTOHIDEENABLED:  // Auto hide enabled/disabled
                     prgCmds->cmdf = 0;
                     break;
                 case ITID_CUSTOMIZEENABLED: // customize enabled
-                    prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
+                    prgCmds->cmdf = OLECMDF_SUPPORTED;
                     break;
                 case ITID_TOOLBARLOCKED:    // lock toolbars
                     prgCmds->cmdf = OLECMDF_SUPPORTED | OLECMDF_ENABLED;
@@ -955,9 +1310,11 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetCommandTarget(IUnknown *theTarget
 {
     HRESULT                                 hResult;
 
+    TRACE("SetCommandTarget %p category %s param %d\n", theTarget, wine_dbgstr_guid(category), param14);
+
     fCommandTarget.Release();
-    hResult = theTarget->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&fCommandTarget));
-    if (FAILED(hResult))
+    hResult = theTarget->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &fCommandTarget));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     fCommandCategory = *category;
     return S_OK;
@@ -1051,7 +1408,6 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
     HWND                                    ownerWindow;
     HWND                                    dockContainer;
     HRESULT                                 hResult;
-    DWORD                                   style;
 
     if (pUnkSite == NULL)
     {
@@ -1063,11 +1419,11 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
     else
     {
         // get window handle of owner
-        hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
-        if (FAILED(hResult))
+        hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = oleWindow->GetWindow(&ownerWindow);
-        if (FAILED(hResult))
+        if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         if (ownerWindow == NULL)
             return E_FAIL;
@@ -1081,17 +1437,19 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
         SubclassWindow(dockContainer);
 
         // create rebar in dock container
-        style = WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | RBS_VARHEIGHT |
-            RBS_BANDBORDERS | RBS_REGISTERDROP | RBS_AUTOSIZE | CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_TOP;
-        fMainReBar = CreateWindow(REBARCLASSNAMEW, NULL, style,
+        DWORD style = WS_VISIBLE | WS_BORDER | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN |
+                      RBS_VARHEIGHT | RBS_BANDBORDERS | RBS_REGISTERDROP | RBS_AUTOSIZE | RBS_DBLCLKTOGGLE |
+                      CCS_NODIVIDER | CCS_NOPARENTALIGN | CCS_TOP;
+        DWORD exStyle = WS_EX_LEFT | WS_EX_LTRREADING | WS_EX_RIGHTSCROLLBAR | WS_EX_TOOLWINDOW;
+        fMainReBar = CreateWindowEx(exStyle, REBARCLASSNAMEW, NULL, style,
                             0, 0, 700, 60, dockContainer, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
         if (fMainReBar == NULL)
             return E_FAIL;
 
         // take advice to watch events
-        hResult = pUnkSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+        hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
         hResult = serviceProvider->QueryService(
-            SID_SShellBrowser, IID_IBrowserService, reinterpret_cast<void **>(&browserService));
+            SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
         hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
     }
     return S_OK;
@@ -1119,43 +1477,58 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryService(REFGUID guidService, RE
         if (fBandProxy.p == NULL)
         {
             hResult = CreateAndInitBandProxy();
-            if (FAILED(hResult))
+            if (FAILED_UNEXPECTEDLY(hResult))
                 return hResult;
         }
         return fBandProxy->QueryInterface(riid, ppvObject);
     }
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
-        return hResult;
-    return serviceProvider->QueryService(guidService, riid, ppvObject);
+    return IUnknown_QueryService(fSite, guidService, riid, ppvObject);
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::OnWinEvent(
     HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    CComPtr<IWinEventHandler>               menuWinEventHandler;
     HRESULT                                 hResult;
 
-    if (fMenuBar.p != NULL)
+    if (fMenuBar)
     {
-        hResult = fMenuBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
-        return menuWinEventHandler->OnWinEvent(fMenuBandWindow, uMsg, wParam, lParam, theResult);
+        hResult = IUnknown_RelayWinEvent(fMenuBar, hWnd, uMsg, wParam, lParam, theResult);
+        if (hResult != S_FALSE)
+            return hResult;
     }
-    return E_FAIL;
+
+    if (fNavigationBar)
+    {
+        hResult = IUnknown_RelayWinEvent(fNavigationBar, hWnd, uMsg, wParam, lParam, theResult);
+        if (hResult != S_FALSE)
+            return hResult;
+    }
+
+    if (fLogoBar)
+    {
+        hResult = IUnknown_RelayWinEvent(fLogoBar, hWnd, uMsg, wParam, lParam, theResult);
+        if (hResult != S_FALSE)
+            return hResult;
+    }
+
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::IsWindowOwner(HWND hWnd)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::AddBand(IUnknown *punk)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::EnumBands(UINT uBand, DWORD *pdwBandID)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
@@ -1165,35 +1538,40 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryBand(DWORD dwBandID,
     if (ppstb == NULL)
         return E_POINTER;
     if (dwBandID == ITBBID_MENUBAND && fMenuBar.p != NULL)
-        return fMenuBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(ppstb));
-    if (dwBandID == ITBBID_BRANDBAND && fLogoBar.p != NULL)
-        return fLogoBar->QueryInterface(IID_IDeskBand, reinterpret_cast<void **>(ppstb));
+        return fMenuBar->QueryInterface(IID_PPV_ARG(IDeskBand, ppstb));
+    //if (dwBandID == ITBBID_BRANDBAND && fLogoBar.p != NULL)
+    //    return fLogoBar->QueryInterface(IID_PPV_ARG(IDeskBand, ppstb));
     *ppstb = NULL;
     return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::RemoveBand(DWORD dwBandID)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetBandObject(DWORD dwBandID, REFIID riid, void **ppv)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::SetBandSiteInfo(const BANDSITEINFO *pbsinfo)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
 {
+    UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
@@ -1203,12 +1581,12 @@ LRESULT CInternetToolbar::OnTravelBack(WORD wNotifyCode, WORD wID, HWND hWndCtl,
     CComPtr<IWebBrowser>                    webBrowser;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = serviceProvider->QueryService(SID_SShellBrowser,
-        IID_IWebBrowser, reinterpret_cast<void **>(&webBrowser));
-    if (FAILED(hResult))
+        IID_PPV_ARG(IWebBrowser, &webBrowser));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = webBrowser->GoBack();
     return 1;
@@ -1220,12 +1598,12 @@ LRESULT CInternetToolbar::OnTravelForward(WORD wNotifyCode, WORD wID, HWND hWndC
     CComPtr<IWebBrowser>                    webBrowser;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = serviceProvider->QueryService(
-        SID_SShellBrowser, IID_IWebBrowser, reinterpret_cast<void **>(&webBrowser));
-    if (FAILED(hResult))
+        SID_SShellBrowser, IID_PPV_ARG(IWebBrowser, &webBrowser));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = webBrowser->GoForward();
     return 1;
@@ -1236,8 +1614,8 @@ LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
     CComPtr<IOleCommandTarget>              oleCommandTarget;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&oleCommandTarget));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = oleCommandTarget->Exec(&CGID_ShellBrowser, IDM_GOTO_UPONELEVEL, 0, NULL, NULL);
     return 1;
@@ -1260,14 +1638,14 @@ LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
     commandInfo.nShow = SW_SHOWNORMAL;
 
     hResult = CoCreateInstance(CLSID_ShellSearchExt, NULL, CLSCTX_INPROC_SERVER,
-        IID_IContextMenu, reinterpret_cast<void **>(&contextMenu));
-    if (FAILED(hResult))
+        IID_PPV_ARG(IContextMenu, &contextMenu));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
-    hResult = contextMenu->QueryInterface(IID_IObjectWithSite, reinterpret_cast<void **>(&objectWithSite));
-    if (FAILED(hResult))
+    hResult = contextMenu->QueryInterface(IID_PPV_ARG(IObjectWithSite, &objectWithSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = objectWithSite->SetSite(fSite);
-    if (FAILED(hResult))
+    if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = contextMenu->InvokeCommand(&commandInfo);
     hResult = objectWithSite->SetSite(NULL);
@@ -1279,8 +1657,8 @@ LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
     CComPtr<IOleCommandTarget>              oleCommandTarget;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&oleCommandTarget));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     hResult = oleCommandTarget->Exec(&CGID_Explorer, 0x23, 0, NULL, NULL);
     return 1;
@@ -1323,14 +1701,14 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
     ::MapWindowPoints(fToolbarWindow, NULL, reinterpret_cast<POINT *>(&bounds), 2);
     switch (notifyInfo->iItem)
     {
-        case gBackCommandID:
+        case IDM_GOTO_BACK:
             newMenu = CreatePopupMenu();
-            hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+            hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
             hResult = serviceProvider->QueryService(
-                SID_SShellBrowser, IID_IBrowserService, reinterpret_cast<void **>(&browserService));
+                SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->InsertMenuEntries(browserService, newMenu, 0, 1, 9, TLMENUF_BACK);
-            hResult = browserService->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&commandTarget));
+            hResult = browserService->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &commandTarget));
             commandInfo.cmdID = 0x1d;
             hResult = commandTarget->QueryStatus(&CGID_Explorer, 1, &commandInfo, NULL);
             if ((commandInfo.cmdf & (OLECMDF_ENABLED | OLECMDF_LATCHED)) == OLECMDF_ENABLED &&
@@ -1353,14 +1731,13 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
                 hResult = travelLog->Travel(browserService, -selectedItem);
             DestroyMenu(newMenu);
             break;
-        case gForwardCommandID:
+        case IDM_GOTO_FORWARD:
             newMenu = CreatePopupMenu();
-            hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-            hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_IBrowserService,
-                reinterpret_cast<void **>(&browserService));
+            hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+            hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->InsertMenuEntries(browserService, newMenu, 0, 1, 9, TLMENUF_FORE);
-            hResult = browserService->QueryInterface(IID_IOleCommandTarget, reinterpret_cast<void **>(&commandTarget));
+            hResult = browserService->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &commandTarget));
             commandInfo.cmdID = 0x1d;
             hResult = commandTarget->QueryStatus(&CGID_Explorer, 1, &commandInfo, NULL);
             if ((commandInfo.cmdf & (OLECMDF_ENABLED | OLECMDF_LATCHED)) == OLECMDF_ENABLED &&
@@ -1392,7 +1769,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
             V_INTREF(&inValue) = reinterpret_cast<INT *>(&bounds);
 
             if (fCommandTarget.p != NULL)
-                hResult = fCommandTarget->Exec(&fCommandCategory, 0x7031, 1, &inValue, &outValue);
+                hResult = fCommandTarget->Exec(&fCommandCategory, FCIDM_SHVIEW_AUTOARRANGE, 1, &inValue, &outValue);
             // pvaOut is VT_I4 with value 0x403
             break;
     }
@@ -1407,20 +1784,6 @@ LRESULT CInternetToolbar::OnQueryInsert(UINT idControl, NMHDR *pNMHDR, BOOL &bHa
 LRESULT CInternetToolbar::OnQueryDelete(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
     return 1;
-}
-
-LRESULT CInternetToolbar::OnNavigateCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    CComPtr<IWinEventHandler>               winEventHandler;
-    LRESULT                                 theResult;
-    HRESULT                                 hResult;
-
-    hResult = fNavigationBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&winEventHandler));
-    hResult = winEventHandler->OnWinEvent(m_hWnd, uMsg, wParam, lParam, &theResult);
-    if (SUCCEEDED(hResult))
-        return theResult;
-    bHandled = FALSE;
-    return 0;
 }
 
 LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1469,6 +1832,19 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
         default:
             break;
     }
+    
+    // TODO: Implement show/hide toolbars
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, FALSE);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, FALSE);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
+    SHEnableMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
+
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_STANDARDBUTTONS, fControlsBar != NULL);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_ADDRESSBAR, fNavigationBar != NULL);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LINKSBAR, FALSE);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_CUSTOMIZE, FALSE);
+    SHCheckMenuItem(contextMenu, IDM_TOOLBARS_LOCKTOOLBARS, fLocked);
+
     // TODO: use GetSystemMetrics(SM_MENUDROPALIGNMENT) to determine menu alignment
     command = TrackPopupMenu(contextMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD,
                 clickLocation.x, clickLocation.y, 0, m_hWnd, NULL);
@@ -1487,6 +1863,8 @@ LRESULT CInternetToolbar::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam,
             SendMessage(fToolbarWindow, TB_CUSTOMIZE, 0, 0);
             break;
     }
+
+    DestroyMenu(contextMenuBar);
     return 1;
 }
 
@@ -1528,15 +1906,15 @@ LRESULT CInternetToolbar::OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
 
     if (nID != 0)
     {
-        if (nID == (UINT)gBackCommandID || nID == (UINT)gForwardCommandID)
+        if (nID == (UINT)IDM_GOTO_BACK || nID == (UINT)IDM_GOTO_FORWARD)
         {
             // TODO: Should this call QueryService?
-            hResult = fSite->QueryInterface(IID_IBrowserService, reinterpret_cast<void **>(&browserService));
+            hResult = fSite->QueryInterface(IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->GetToolTipText(browserService,
-                (nID == (UINT)gBackCommandID) ? TLOG_BACK : TLOG_FORE,
+                (nID == (UINT)IDM_GOTO_BACK) ? TLOG_BACK : TLOG_FORE,
                 0, tempString, 299);
-            if (FAILED(hResult))
+            if (FAILED_UNEXPECTEDLY(hResult))
             {
                 bHandled = FALSE;
                 return 0;
@@ -1552,46 +1930,93 @@ LRESULT CInternetToolbar::OnTipText(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
     return 0;
 }
 
+LRESULT CInternetToolbar::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    LRESULT theResult;
+    HRESULT hResult;
+
+    hResult = OnWinEvent((HWND) lParam, uMsg, wParam, lParam, &theResult);
+
+    bHandled = hResult == S_OK;
+
+    return FAILED_UNEXPECTEDLY(hResult) ? 0 : theResult;
+}
 LRESULT CInternetToolbar::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    NMHDR                                   *notifyHeader;
-    CComPtr<IWinEventHandler>               menuWinEventHandler;
-    LRESULT                                 theResult;
-    HRESULT                                 hResult;
+    NMHDR   *notifyHeader;
+    LRESULT theResult;
+    HRESULT hResult;
 
-    notifyHeader = (NMHDR *)lParam;
-    if (fMenuBar.p != NULL && notifyHeader->hwndFrom == fMenuBandWindow)
-    {
-        hResult = fMenuBar->QueryInterface(IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
-        hResult = menuWinEventHandler->OnWinEvent(fMenuBandWindow, uMsg, wParam, lParam, &theResult);
-        return theResult;
-    }
-    if (fNavigationBar.p != NULL && notifyHeader->hwndFrom == fNavigationWindow)
-    {
-        hResult = fNavigationBar->QueryInterface(
-            IID_IWinEventHandler, reinterpret_cast<void **>(&menuWinEventHandler));
-        hResult = menuWinEventHandler->OnWinEvent(m_hWnd, uMsg, wParam, lParam, &theResult);
-        return theResult;
-    }
+    notifyHeader = reinterpret_cast<NMHDR *>(lParam);
+
+    hResult = OnWinEvent(notifyHeader->hwndFrom, uMsg, wParam, lParam, &theResult);
+
+    bHandled = hResult == S_OK;
+
+    return FAILED_UNEXPECTEDLY(hResult) ? 0 : theResult;
+}
+
+LRESULT CInternetToolbar::OnLDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (fLocked)
+        return 0;
+
+    if (wParam & MK_CONTROL)
+        return 0;
+
+    fSizing = TRUE;
+
+    DWORD msgp = GetMessagePos();
+    
+    fStartPosition.x = GET_X_LPARAM(msgp);
+    fStartPosition.y = GET_Y_LPARAM(msgp);
+    
+    RECT rc;
+    GetWindowRect(m_hWnd, &rc);
+
+    fStartHeight = rc.bottom - rc.top;
+
+    SetCapture();
+
+    bHandled = TRUE;
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnMouseMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (!fSizing)
+        return 0;
+
+    DWORD msgp = GetMessagePos();
+
+    POINT pt;
+    pt.x = GET_X_LPARAM(msgp);
+    pt.y = GET_Y_LPARAM(msgp);
+
+    ReserveBorderSpace(fStartHeight - fStartPosition.y + pt.y);
+
+    bHandled = TRUE;
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (!fSizing)
+        return 0;
+
+    OnMouseMove(uMsg, wParam, lParam, bHandled);
+
+    fSizing = FALSE;
+
+    ReleaseCapture();
+
     return 0;
 }
 
 HRESULT CreateInternetToolbar(REFIID riid, void **ppv)
 {
-    CComObject<CInternetToolbar>            *theToolbar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theToolbar = new CComObject<CInternetToolbar>);
-    if (theToolbar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theToolbar->QueryInterface (riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theToolbar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CInternetToolbar>(riid, ppv);
 }

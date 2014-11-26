@@ -43,7 +43,7 @@ typedef struct CPanel
 } CPanel;
 
 
-CPlApplet *Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel);
-CPlApplet *Control_UnloadApplet(CPlApplet* applet);
+EXTERN_C CPlApplet *Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel);
+EXTERN_C CPlApplet *Control_UnloadApplet(CPlApplet* applet);
 
 #endif /* __WINE_SHELL_CPANEL_H */

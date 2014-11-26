@@ -23,6 +23,7 @@
 #include <exdispid.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
+#include <undocshell.h>
 #include <wine/debug.h>
 
 #include "resource.h"
@@ -38,6 +39,7 @@
 #include "commonbrowser.h"
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
+#include <stdio.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 

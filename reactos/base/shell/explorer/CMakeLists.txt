@@ -46,18 +46,18 @@ if(ARCH STREQUAL "i386")
     list(APPEND I386_SOURCE i386-stub-win32.c)
 endif()
 
-add_executable(explorer
+add_executable(explorer_old
     ${SOURCE}
     ${I386_SOURCE}
     services/startup.c
     explorer.rc)
 
-target_link_libraries(explorer comsupp wine uuid)
-set_module_type(explorer win32gui UNICODE)
-add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
-add_pch(explorer precomp.h SOURCE)
-add_dependencies(explorer psdk)
-add_cd_file(TARGET explorer DESTINATION reactos FOR all)
+target_link_libraries(explorer_old comsupp wine uuid)
+set_module_type(explorer_old win32gui UNICODE)
+add_importlibs(explorer_old advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
+add_pch(explorer_old precomp.h SOURCE)
+add_dependencies(explorer_old psdk)
+add_cd_file(TARGET explorer_old DESTINATION reactos FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)
 
 if(NOT MSVC)
@@ -65,6 +65,6 @@ if(NOT MSVC)
 
     # GCC bug #59472
     if(LTCG)
-        add_target_link_flags(explorer "-Wno-error")
+        add_target_link_flags(explorer_old "-Wno-error")
     endif()
 endif()

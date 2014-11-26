@@ -7,7 +7,7 @@ HKCR
 			val 'InfoTip' = e '@%%SystemRoot%%\system32\SHELL32.dll,-22913'
 			val 'IntroText' = e '@%%SystemRoot%%\system32\SHELL32.dll,-31751'
 			val 'LocalizedString' = e '@%%SystemRoot%%\system32\SHELL32.dll,-9216'
-			DefaultIcon = e '%%SystemRoot%%\Explorer.exe,0'
+			DefaultIcon = e '%%SystemRoot%%\system32\SHELL32.dll,-16'
 			InprocServer32 = s '%MODULE%'
 			{
 				val ThreadingModel = s 'Apartment'
