@@ -39,7 +39,7 @@ BEGIN
     BEGIN
         MENUITEM "Εξερεύνηση &FAQ...", ID_EXPLORER_FAQ
         MENUITEM "&Σχετικά με τον εξερευνητή", ID_ABOUT_EXPLORER
-        MENUITEM "&Σχετικά με το Reactos", ID_ABOUT_WINDOWS
+        MENUITEM "&Σχετικά με το ReactOS", ID_ABOUT_WINDOWS
     END
 END
 
@@ -102,7 +102,7 @@ BEGIN
     BEGIN
         MENUITEM "Εξερεύνηση &FAQ", ID_EXPLORER_FAQ
         MENUITEM "&Σχετικά με τον εξερευνητή", ID_ABOUT_EXPLORER
-        MENUITEM "&Σχετικά με το Reactos", ID_ABOUT_WINDOWS
+        MENUITEM "&Σχετικά με το ReactOS", ID_ABOUT_WINDOWS
     END
 END
 

@@ -1855,11 +1855,6 @@ SetStartBtnImage:
                 break;
             }
 
-            if (IsThemeBackgroundPartiallyTransparent(TaskbarTheme, partId, 0))
-            {
-                DrawThemeParentBackground(m_hWnd, hdc, &rect);
-            }
-
             DrawThemeBackground(TaskbarTheme, hdc, partId, 0, &rect, 0);
         }
 
