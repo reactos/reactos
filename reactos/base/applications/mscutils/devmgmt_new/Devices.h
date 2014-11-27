@@ -44,8 +44,8 @@ public:
         _In_ DWORD DeviceNameSize,
         _Outptr_ LPTSTR *DeviceId,
         _Out_ PINT ClassImage,
-        _Out_ LPBOOL IsUnknown,
-        _Out_ LPBOOL IsHidden
+        _Out_ PULONG Status,
+        _Out_ PULONG ProblemNumber
         );
 
     BOOL EnumClasses(
@@ -55,9 +55,7 @@ public:
         _In_ DWORD ClassNameSize,
         _Out_writes_(ClassDescSize) LPWSTR ClassDesc,
         _In_ DWORD ClassDescSize,
-        _Out_ PINT ClassImage,
-        _Out_ LPBOOL IsUnknown,
-        _Out_ LPBOOL IsHidden
+        _Out_ PINT ClassImage
         );
 
     BOOL EnumDevicesForClass(
@@ -67,7 +65,9 @@ public:
         _Out_ LPBOOL MoreItems,
         _Out_writes_(DeviceNameSize)  LPTSTR DeviceName,
         _In_ DWORD DeviceNameSize,
-        _Outptr_ LPTSTR *DeviceId
+        _Outptr_ LPTSTR *DeviceId,
+        _Out_ PULONG Status,
+        _Out_ PULONG ProblemNumber
         );
 
     BOOL GetDeviceStatus(
@@ -86,7 +86,6 @@ private:
 
     BOOL CreateRootDevice(
         );
-
 
     DWORD ConvertResourceDescriptorToString(
         _Inout_z_ LPWSTR ResourceDescriptor,

@@ -105,10 +105,6 @@ CMainWindow::Initialize(LPCTSTR lpCaption,
                                      NULL,
                                      g_hInstance,
                                      this);
-        if (m_hMainWnd)
-        {
-            m_hMenu = GetMenu(m_hMainWnd);
-        }
     }
 
     /* Return creation result */
@@ -169,6 +165,38 @@ CMainWindow::MainWndMenuHint(WORD CmdId,
                         HintId);
 
     return Found;
+}
+
+BOOL
+CMainWindow::UpdateDevicesDisplay(ListDevices List)
+{
+    UINT CheckId;
+    BOOL bSuccess;
+
+    /* Set the new type*/
+    m_DeviceView->SetDeviceListType(List);
+
+    /* Get the menu item id */
+    switch (List)
+    {
+        case DevicesByType: CheckId = IDC_DEVBYTYPE; break;
+        case DevicesByConnection: CheckId = IDC_DEVBYCONN; break;
+        case ResourcesByType: CheckId = IDC_RESBYTYPE; break;
+        case ResourcesByConnection: CheckId = IDC_RESBYCONN; break;
+        default: ATLASSERT(FALSE); break;
+    }
+
+    /* Set the new check item */
+    bSuccess = CheckMenuRadioItem(m_hMenu,
+                                  IDC_DEVBYTYPE,
+                                  IDC_RESBYCONN,
+                                  CheckId,
+                                  MF_BYCOMMAND);
+
+    /* Refresh the view */
+    m_DeviceView->Refresh();
+
+    return TRUE;
 }
 
 BOOL
@@ -329,15 +357,20 @@ CMainWindow::OnCreate(HWND hwnd)
     /* Store the window handle */
     m_hMainWnd = hwnd;
 
+    /* Get the menu handle */
+    m_hMenu = GetMenu(m_hMainWnd);
+
     /* Create the toolbar */
     if (CreateToolBar() && CreateStatusBar())
     {
         /* Create the device view object */
-        m_DeviceView = new CDeviceView(m_hMainWnd);
+        m_DeviceView = new CDeviceView(m_hMainWnd, DevicesByType);
 
         /* Initialize it */
         if (m_DeviceView->Initialize())
         {
+            UpdateDevicesDisplay(DevicesByType);
+
             /* Display the window according to the user request */
             ShowWindow(hwnd, m_CmdShow);
 
@@ -450,27 +483,15 @@ CMainWindow::OnCommand(WPARAM wParam,
 
         case IDC_DEVBYTYPE:
         {
-            m_DeviceView->SetDeviceListType(DevicesByType);
-            CheckMenuRadioItem(m_hMenu,
-                               IDC_DEVBYTYPE,
-                               IDC_RESBYCONN,
-                               IDC_DEVBYTYPE,
-                               MF_BYCOMMAND);
-            m_DeviceView->Refresh();
+            UpdateDevicesDisplay(DevicesByType);
+            break;
         }
-        break;
 
         case IDC_DEVBYCONN:
         {
-            m_DeviceView->SetDeviceListType(DevicesByConnection);
-            CheckMenuRadioItem(m_hMenu,
-                               IDC_DEVBYTYPE,
-                               IDC_RESBYCONN,
-                               IDC_DEVBYCONN,
-                               MF_BYCOMMAND);
-            m_DeviceView->Refresh();
+            UpdateDevicesDisplay(DevicesByConnection);
+            break;
         }
-        break;
 
         case IDC_SHOWHIDDEN:
         {

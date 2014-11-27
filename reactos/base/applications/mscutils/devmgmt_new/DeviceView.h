@@ -19,15 +19,16 @@ class CDeviceView : public CDevices
     ListDevices m_ListDevices;
 
     HIMAGELIST m_ImageList;
-    //HDEVINFO m_hDevInfo;
-
     HTREEITEM m_hTreeRoot;
 
     BOOL m_ShowHidden;
-    BOOL m_ShowUnknown;
 
 public:
-    CDeviceView(HWND hMainWnd);
+    CDeviceView(
+        HWND hMainWnd,
+        ListDevices List
+        );
+
     ~CDeviceView(void);
 
     BOOL Initialize();
@@ -52,11 +53,6 @@ public:
     VOID ShowHiddenDevices(_In_ BOOL ShowHidden)
     {
         m_ShowHidden = ShowHidden;
-    }
-
-    VOID ShowUnknownDevices(BOOL ShowUnknown)
-    {
-        m_ShowUnknown = ShowUnknown;
     }
 
 private:

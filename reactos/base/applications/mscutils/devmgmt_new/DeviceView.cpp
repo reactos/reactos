@@ -35,16 +35,16 @@ typedef INT_PTR(WINAPI *pDevicePropertiesExW)(HWND,LPCWSTR,LPCWSTR,DWORD,BOOL);
 /* PUBLIC METHODS *************************************/
 
 CDeviceView::CDeviceView(
-    HWND hMainWnd
+    HWND hMainWnd,
+    ListDevices List
     ) :
     m_Devices(NULL),
     m_hMainWnd(hMainWnd),
     m_hTreeView(NULL),
     m_hPropertyDialog(NULL),
     m_hShortcutMenu(NULL),
-    m_ListDevices(DevicesByType),
-    m_ShowHidden(FALSE),
-    m_ShowUnknown(TRUE)
+    m_ListDevices(List),
+    m_ShowHidden(FALSE)
 {
     m_Devices = new CDevices();
 }
@@ -85,8 +85,8 @@ CDeviceView::Initialize()
                                     m_ImageList,
                                     TVSIL_NORMAL);
 
-        /* Display the devices */
-        Refresh();
+        /* Give the treeview arrows instead of +/- boxes (on Win7) */
+        SetWindowTheme(m_hTreeView, L"explorer", NULL);
     }
 
     return !!(m_hTreeView);
@@ -224,9 +224,6 @@ CDeviceView::ListDevicesByType()
     INT ClassIndex;
     INT ClassImage;
     LPTSTR DeviceId = NULL;
-    
-    BOOL IsUnknown = FALSE;
-    BOOL IsHidden = FALSE;
     BOOL bSuccess;
 
 
@@ -255,12 +252,8 @@ CDeviceView::ListDevicesByType()
                                           CLASS_NAME_LEN,
                                           ClassDescription,
                                           CLASS_DESC_LEN,
-                                          &ClassImage,
-                                          &IsUnknown,
-                                          &IsHidden);
-        if (bSuccess &&
-            (IsUnknown == FALSE || (IsUnknown && m_ShowUnknown)) &&
-            (IsHidden == FALSE || (IsHidden && m_ShowHidden)))
+                                          &ClassImage);
+        if (bSuccess)
         {
             BOOL bDevSuccess, AddedParent;
             HANDLE Handle = NULL;
@@ -268,7 +261,8 @@ CDeviceView::ListDevicesByType()
             INT DeviceIndex = 0;
             BOOL MoreItems = FALSE;
             BOOL DeviceHasProblem = FALSE;
-            ULONG DeviceStatus, ProblemNumber;
+            ULONG DeviceStatus = 0;
+            ULONG ProblemNumber = 0;
             ULONG OverlayImage = 0;
 
             AddedParent = FALSE;
@@ -282,9 +276,35 @@ CDeviceView::ListDevicesByType()
                                                              &MoreItems,
                                                              DeviceName,
                                                              DEVICE_NAME_LEN,
-                                                             &DeviceId);
+                                                             &DeviceId,
+                                                             &DeviceStatus,
+                                                             &ProblemNumber);
                 if (bDevSuccess)
                 {
+                    /* Check if this is a hidden device */
+                    if (DeviceStatus & DN_NO_SHOW_IN_DM)
+                    {
+                        if (m_ShowHidden == FALSE)
+                        {
+                            DeviceIndex++;
+                            continue;
+                        }
+                    }
+
+                    /* Check if the device has a problem */
+                    if (DeviceStatus & DN_HAS_PROBLEM)
+                    {
+                        DeviceHasProblem = TRUE;
+                        OverlayImage = 1;
+                    }
+
+                    /* The disabled overlay takes precidence over the problem overlay */
+                    if (ProblemNumber == CM_PROB_HARDWARE_DISABLED)
+                    {
+                        OverlayImage = 2;
+                    }
+
+
                     /* We have a device, we're gonna need to add the parent first */
                     if (AddedParent == FALSE)
                     {
@@ -297,26 +317,6 @@ CDeviceView::ListDevicesByType()
 
                         /* Don't add it again */
                         AddedParent = TRUE;
-                    }
-
-                    /* Get the status of the device */
-                    if (m_Devices->GetDeviceStatus(DeviceId,
-                                                   &DeviceStatus,
-                                                   &ProblemNumber))
-                    {
-                        /* Check if the device has a problem */
-                        if (DeviceStatus & DN_HAS_PROBLEM)
-                        {
-                            DeviceHasProblem = TRUE;
-                            OverlayImage = 1;
-                        }
-
-                        /* The disabled overlay takes precidence over the problem overlay */
-                        if (ProblemNumber == CM_PROB_DISABLED ||
-                            ProblemNumber == CM_PROB_HARDWARE_DISABLED)
-                        {
-                            OverlayImage = 2;
-                        }
                     }
 
                     /* Add the device under the class item */
@@ -414,6 +414,9 @@ CDeviceView::RecurseChildDevices(
     INT ClassImage;
     BOOL IsUnknown = FALSE;
     BOOL IsHidden = FALSE;
+    ULONG DeviceStatus = 0;
+    ULONG ProblemNumber = 0;
+    UINT OverlayImage = 0;
     BOOL bSuccess;
 
     /* Check if the parent has any child devices */
@@ -426,20 +429,38 @@ CDeviceView::RecurseChildDevices(
                                     DEVICE_NAME_LEN,
                                     &DeviceId,
                                     &ClassImage,
-                                    &IsUnknown,
-                                    &IsHidden);
+                                    &DeviceStatus,
+                                    &ProblemNumber);
     if (bSuccess)
     {
-        /* Add this device to the tree under its parent */
-        hDevItem = InsertIntoTreeView(hParentTreeItem,
-                                        DeviceName,
-                                        (LPARAM)DeviceId,
-                                        ClassImage,
-                                        0);
-        if (hDevItem)
+        /* Check if this is a hidden device */
+        if ((m_ShowHidden == TRUE) || (!(DeviceStatus & DN_NO_SHOW_IN_DM)))
         {
-            /* Check if this child has any children itself */
-            RecurseChildDevices(Device, hDevItem);
+            /* Check if the device has a problem */
+            if (DeviceStatus & DN_HAS_PROBLEM)
+            {
+                OverlayImage = 1;
+            }
+
+            /* The disabled overlay takes precidence over the problem overlay */
+            if (ProblemNumber == CM_PROB_HARDWARE_DISABLED)
+            {
+                OverlayImage = 2;
+            }
+
+            /* Add this device to the tree under its parent */
+            hDevItem = InsertIntoTreeView(hParentTreeItem,
+                                          DeviceName,
+                                          (LPARAM)DeviceId,
+                                          ClassImage,
+                                          0);
+
+
+            if (hDevItem)
+            {
+                /* Check if this child has any children itself */
+                RecurseChildDevices(Device, hDevItem);
+            }
         }
     }
 
@@ -456,10 +477,30 @@ CDeviceView::RecurseChildDevices(
                                         DEVICE_NAME_LEN,
                                         &DeviceId,
                                         &ClassImage,
-                                        &IsUnknown,
-                                        &IsHidden);
+                                        &DeviceStatus,
+                                        &ProblemNumber);
         if (bSuccess)
         {
+            /* Check if this is a hidden device */
+            if (DeviceStatus & DN_NO_SHOW_IN_DM)
+            {
+                if (m_ShowHidden == FALSE)
+                    continue;
+            }
+
+            /* Check if the device has a problem */
+            if (DeviceStatus & DN_HAS_PROBLEM)
+            {
+                OverlayImage = 1;
+            }
+
+            /* The disabled overlay takes precidence over the problem overlay */
+            if (ProblemNumber == CM_PROB_HARDWARE_DISABLED)
+            {
+                OverlayImage = 2;
+            }
+
+
             /* Add this device to the tree under its parent */
             hDevItem = InsertIntoTreeView(hParentTreeItem,
                                             DeviceName,
@@ -530,6 +571,7 @@ CDeviceView::RecurseDeviceView(
     tvItem.hItem = hItem;
     tvItem.mask = TVIF_PARAM;
 
+    /* Get the item data */
     if (TreeView_GetItem(m_hTreeView, &tvItem) &&
         tvItem.lParam != NULL)
     {
@@ -546,9 +588,11 @@ CDeviceView::RecurseDeviceView(
         hItem = TreeView_GetNextSibling(m_hTreeView, hItem);
         if (hItem == NULL) break;
 
+        /* The lParam contains the device id */
         tvItem.hItem = hItem;
         tvItem.mask = TVIF_PARAM;
 
+        /* Get the item data and free the device id */
         if (TreeView_GetItem(m_hTreeView, &tvItem))
         {
             if (tvItem.lParam != NULL)

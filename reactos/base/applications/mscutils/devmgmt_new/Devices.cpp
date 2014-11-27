@@ -138,14 +138,15 @@ CDevices::GetDevice(
     _In_ DWORD DeviceNameSize,
     _Outptr_ LPWSTR *DeviceId,
     _Out_ PINT ClassImage,
-    _Out_ LPBOOL IsUnknown,
-    _Out_ LPBOOL IsHidden
+    _Out_ PULONG Status,
+    _Out_ PULONG ProblemNumber
     )
 {
     WCHAR ClassGuidString[MAX_GUID_STRING_LEN];
     GUID ClassGuid;
     ULONG ulLength;
     CONFIGRET cr;
+    BOOL bSuccess;
 
     *DeviceId = NULL;
 
@@ -153,11 +154,13 @@ CDevices::GetDevice(
     cr = CM_Get_Device_ID_Size(&ulLength, Device, 0);
     if (cr == CR_SUCCESS)
     {
+        /* We alloc heap here because this will be stored in the lParam of the TV */
         *DeviceId = (LPWSTR)HeapAlloc(GetProcessHeap(),
                                       0,
                                       (ulLength + 1) * sizeof(WCHAR));
         if (*DeviceId)
         {
+            /* Now get the actual device id */
             cr = CM_Get_Device_IDW(Device,
                                    *DeviceId,
                                    ulLength + 1,
@@ -175,6 +178,15 @@ CDevices::GetDevice(
         return FALSE;
 
 
+    /* Get the current status of the device */
+    bSuccess = GetDeviceStatus(*DeviceId, Status, ProblemNumber);
+    if (bSuccess == FALSE)
+    {
+        HeapFree(GetProcessHeap(), 0, *DeviceId);
+        *DeviceId = NULL;
+        return FALSE;
+    }
+
     /* Get the class guid for this device */
     ulLength = MAX_GUID_STRING_LEN * sizeof(WCHAR);
     cr = CM_Get_DevNode_Registry_PropertyW(Device,
@@ -187,20 +199,13 @@ CDevices::GetDevice(
     {
         /* Convert the string to a proper guid */
         CLSIDFromString(ClassGuidString, &ClassGuid);
-
-        /* Check if this is a hidden device */
-        if ((IsEqualGUID(ClassGuid, GUID_DEVCLASS_LEGACYDRIVER) ||
-            IsEqualGUID(ClassGuid, GUID_DEVCLASS_VOLUME)))
-        {
-            *IsHidden = TRUE;
-        }
     }
     else
     {
         /* It's a device with no driver */
         ClassGuid = GUID_DEVCLASS_UNKNOWN;
-        *IsUnknown = TRUE;
     }
+
 
     /* Get the image for the class this device is in */
     SetupDiGetClassImageIndex(&m_ImageListData,
@@ -245,9 +250,7 @@ CDevices::EnumClasses(
     _In_ DWORD ClassNameSize,
     _Out_writes_(ClassDescSize) LPWSTR ClassDesc,
     _In_ DWORD ClassDescSize,
-    _Out_ PINT ClassImage,
-    _Out_ LPBOOL IsUnknown,
-    _Out_ LPBOOL IsHidden
+    _Out_ PINT ClassImage
     )
 {
     DWORD RequiredSize, Type, Size;
@@ -258,8 +261,6 @@ CDevices::EnumClasses(
     ClassName[0] = UNICODE_NULL;
     ClassDesc[0] = UNICODE_NULL;
     *ClassImage = -1;
-    *IsUnknown = FALSE;
-    *IsHidden = FALSE;
 
     /* Get the next class in the list */
     cr = CM_Enumerate_Classes(ClassIndex,
@@ -332,16 +333,6 @@ CDevices::EnumClasses(
                                     ClassGuid,
                                     ClassImage);
 
-    /* Check if this is an unknown device */
-    *IsUnknown = IsEqualGUID(*ClassGuid, GUID_DEVCLASS_UNKNOWN);
-
-    /* Check if this is one of the classes we hide by default */
-    if (IsEqualGUID(*ClassGuid, GUID_DEVCLASS_LEGACYDRIVER) ||
-        IsEqualGUID(*ClassGuid, GUID_DEVCLASS_VOLUME))
-    {
-        *IsHidden = TRUE;
-    }
-
     return TRUE;
 }
 
@@ -353,7 +344,9 @@ CDevices::EnumDevicesForClass(
     _Out_ LPBOOL MoreItems,
     _Out_ LPTSTR DeviceName,
     _In_ DWORD DeviceNameSize,
-    _Outptr_ LPTSTR *DeviceId
+    _Outptr_ LPTSTR *DeviceId,
+    _Out_ PULONG Status,
+    _Out_ PULONG ProblemNumber
     )
 {
     SP_DEVINFO_DATA DeviceInfoData;
@@ -454,7 +447,6 @@ CDevices::EnumDevicesForClass(
                                            NULL);
     if (bSuccess == FALSE) goto Quit;
 
-
     /* Skip the root device */
     if (*DeviceId != NULL &&
         wcscmp(*DeviceId, L"HTREE\\ROOT\\0") == 0)
@@ -462,6 +454,12 @@ CDevices::EnumDevicesForClass(
         bSuccess = FALSE;
         goto Quit;
     }
+
+
+    /* Get the current status of the device */
+    bSuccess = GetDeviceStatus(*DeviceId, Status, ProblemNumber);
+    if (bSuccess == FALSE) goto Quit;
+
 
     /* Get the device's friendly name */
     bSuccess = SetupDiGetDeviceRegistryPropertyW(hDevInfo,
@@ -551,7 +549,6 @@ Cleanup:
 
     return bSuccess;
 }
-
 
 DWORD
 CDevices::ConvertResourceDescriptorToString(
