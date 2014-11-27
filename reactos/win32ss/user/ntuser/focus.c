@@ -178,7 +178,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
    //ERR("SendActivateMessage Old -> %x, New -> %x\n", OldTID, NewTID);
 
    if (!(pti->TIF_flags & TIF_INACTIVATEAPPMSG) &&
-        (!WindowPrev || OldTID != NewTID) )
+        (OldTID != NewTID) )
    {
       PWND cWindow;
       HWND *List, *phWnd;
@@ -266,56 +266,6 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
       Window->state &= ~WNDS_NONCPAINT;
 
       UserDerefObjectCo(Window);
-   }
-
-   OldTID = WindowPrev ? IntGetWndThreadId(WindowPrev) : NULL;
-   NewTID = Window ? IntGetWndThreadId(Window) : NULL;
-   ptiOld = WindowPrev ? WindowPrev->head.pti : NULL;
-   ptiNew = Window ? Window->head.pti : NULL;
-
-   //ERR("SendActivateMessage WindowPrev -> %x, Old -> %x, New -> %x\n", WindowPrev, OldTID, NewTID);
-
-   if (!(pti->TIF_flags & TIF_INACTIVATEAPPMSG) &&
-        (OldTID != NewTID) )
-   {
-      PWND cWindow;
-      HWND *List, *phWnd;
-
-      List = IntWinListChildren(UserGetDesktopWindow());
-      if ( List )
-      {
-         if ( OldTID )
-         {
-            ptiOld->TIF_flags |= TIF_INACTIVATEAPPMSG;
-            // Note: Do not set pci flags, this does crash!
-            for (phWnd = List; *phWnd; ++phWnd)
-            {
-               cWindow = ValidateHwndNoErr(*phWnd);
-               if (cWindow && cWindow->head.pti == ptiOld)
-               {  // FALSE if the window is being deactivated,
-                  // ThreadId that owns the window being activated.
-                 co_IntSendMessageNoWait(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
-               }
-            }
-            ptiOld->TIF_flags &= ~TIF_INACTIVATEAPPMSG;
-         }
-         if ( NewTID )
-         {  //// Prevents a resource crash due to reentrance!
-            InAAPM = TRUE;
-            pti->TIF_flags |= TIF_INACTIVATEAPPMSG;
-            ////
-            for (phWnd = List; *phWnd; ++phWnd)
-            {
-               cWindow = ValidateHwndNoErr(*phWnd);
-               if (cWindow && cWindow->head.pti == ptiNew)
-               { // TRUE if the window is being activated,
-                 // ThreadId that owns the window being deactivated.
-                 co_IntSendMessageNoWait(*phWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
-               }
-            }
-         }
-         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
-      }
    }
    return InAAPM;
 }
