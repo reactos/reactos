@@ -503,6 +503,27 @@ VfatCreateFile(
         }
 
         pFcb = DeviceExt->VolumeFcb;
+
+        if (pFcb->OpenHandleCount == 0)
+        {
+            IoSetShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
+                             Stack->Parameters.Create.ShareAccess,
+                             FileObject,
+                             &pFcb->FCBShareAccess);
+        }
+        else
+        {
+            Status = IoCheckShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
+                                        Stack->Parameters.Create.ShareAccess,
+                                        FileObject,
+                                        &pFcb->FCBShareAccess,
+                                        FALSE);
+            if (!NT_SUCCESS(Status))
+            {
+                return Status;
+            }
+        }
+
         vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
         DeviceExt->OpenHandleCount++;
 
