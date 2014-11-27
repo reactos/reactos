@@ -23,18 +23,20 @@
 #include <atlwin.h>
 #include <shellapi.h>
 #include <shlobj.h>
-#include <shlobj_undoc.h>
 #include <shlwapi.h>
-#include <shlguid_undoc.h>
 #include <uxtheme.h>
 #include <strsafe.h>
+
 #include <undocuser.h>
+#include <shlobj_undoc.h>
+#include <shlguid_undoc.h>
 #include <undocshell.h>
+
 #include <rosctrls.h>
+#include <shellutils.h>
 
 #include "tmschema.h"
 #include "resource.h"
-#include "comcsup.h"
 
 #include <wine/debug.h>
 

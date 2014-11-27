@@ -24,8 +24,9 @@
 #include <shobjidl.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <shlwapi_undoc.h>
 #include <stdio.h>
+
+#include <browseui_undoc.h>
 
 int _tmain(int argc, _TCHAR* argv[])
 {

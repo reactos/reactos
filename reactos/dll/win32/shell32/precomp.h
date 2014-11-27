@@ -17,11 +17,8 @@
 #include <wincon.h>
 #include <commdlg.h>
 #include <ddeml.h>
-#include <shlguid_undoc.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <shlobj_undoc.h>
-#include <shlwapi_undoc.h>
 #include <recyclebin.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
@@ -30,13 +27,18 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <powrprof.h>
-#include <undocshell.h>
 
-//#include "base/shell/explorer-new/todo.h"
-//#include "dlgs.h"
+#include <comctl32_undoc.h>
+#include <shlguid_undoc.h>
+#include <shlobj_undoc.h>
+#include <shlwapi_undoc.h>
+#include <undocshell.h>
+#include <browseui_undoc.h>
+
+#include <shellutils.h>
+
 #include "wine/pidl.h"
 #include "debughlp.h"
-#include "undocshell.h"
 #include "wine/shell32_main.h"
 #include "shresdef.h"
 #include "cpanel.h"

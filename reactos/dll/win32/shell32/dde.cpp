@@ -21,7 +21,6 @@
 #include "precomp.h"
 #include <ddeml.h>
 #include <strsafe.h>
-#include <shlwapi_undoc.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shelldde);
 

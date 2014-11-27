@@ -22,8 +22,6 @@
 
 #include <shdeprecated.h>
 
-#include "undoc.h"
-
 /*****************************************************************************
  ** ITrayBandSite ************************************************************
  *****************************************************************************/
@@ -79,7 +77,7 @@ public:
         if (ppvObj == NULL)
             return E_POINTER;
 
-        if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IBandSiteStreamCallback))
+        if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IBandSiteHelper))
         {
             // return IBandSiteStreamCallback's IUnknown
             *ppvObj = static_cast<IBandSiteStreamCallback*>(this);
@@ -296,8 +294,8 @@ public:
         if (ContextMenu == NULL)
         {
             /* Cache the context menu so we don't need to CoCreateInstance all the time... */
-            hRet = CoCreateInstance(CLSID_IShellBandSiteMenu, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellService, &pSs));
-            TRACE("CoCreateInstance(CLSID_IShellBandSiteMenu) for IShellService returned: 0x%x\n", hRet);
+            hRet = CoCreateInstance(CLSID_BandSiteMenu, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellService, &pSs));
+            TRACE("CoCreateInstance(CLSID_BandSiteMenu) for IShellService returned: 0x%x\n", hRet);
             if (!SUCCEEDED(hRet))
                 return hRet;
 

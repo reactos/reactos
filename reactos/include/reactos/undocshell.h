@@ -141,6 +141,8 @@ DWORD WINAPI SHNetConnectionDialog(
 #define CWM_STATECHANGE       (WM_USER + 10)
 #define CWM_GETPATH           (WM_USER + 12)
 
+#define WM_GETISHELLBROWSER CWM_GETISHELLBROWSER
+
 /* CWM_TESTPATH types */
 #define CWTP_ISEQUAL  0
 #define CWTP_ISCHILD  1
@@ -522,12 +524,6 @@ DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 
-/* Shell Desktop functions */
-
-#define WM_GETISHELLBROWSER (WM_USER+7)
-
-BOOL WINAPI SHDesktopMessageLoop(HANDLE);
-
 #define CSIDL_FOLDER_MASK	0x00ff
 
 /* Utility functions */
@@ -614,367 +610,262 @@ static __inline void DbgDumpMenu(HMENU hmenu)
     DbgDumpMenuInternal(hmenu, padding, 0);
 }
 
-#if 1
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (DbgPrint("Unexpected failure %08x.\n", hr), TRUE))
-#else
-#define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
-#endif
+
+/*****************************************************************************
+ * Shell32 resources
+ */
+// these resources are in shell32.dll
+#define IDB_GOBUTTON_NORMAL			0x0e6
+#define IDB_GOBUTTON_HOT			0x0e7
+
+// band ids in internet toolbar
+#define ITBBID_MENUBAND				1
+#define ITBBID_BRANDBAND			5
+#define ITBBID_TOOLSBAND			2
+#define ITBBID_ADDRESSBAND			4
+
+// commands in the CGID_PrivCITCommands command group handled by the internet toolbar
+// there seems to be some support for hiding the menubar and an auto hide feature that are
+// unavailable in the UI
+#define ITID_TEXTLABELS				3
+#define ITID_TOOLBARBANDSHOWN		4
+#define ITID_ADDRESSBANDSHOWN		5
+#define ITID_LINKSBANDSHOWN			6
+#define ITID_MENUBANDSHOWN			12
+#define ITID_AUTOHIDEENABLED		13
+#define ITID_CUSTOMIZEENABLED		20
+#define ITID_TOOLBARLOCKED			27
+
+// commands in the CGID_BrandCmdGroup command group handled by the brand band
+#define BBID_STARTANIMATION			1
+#define BBID_STOPANIMATION			2
+
+// undocumented flags for IShellMenu::SetShellFolder
+#define SMSET_UNKNOWN08				0x08
+#define SMSET_UNKNOWN10				0x10
+
+void WINAPI ShellDDEInit(BOOL bInit);
+DWORD WINAPI WinList_Init(void);
+
+IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR);
+
+/*****************************************************************************
+ * Shell Link
+ */
+#include <pshpack1.h>
+
+typedef struct tagSHELL_LINK_HEADER
+{
+    /* The size of this structure (always 0x0000004C) */
+    DWORD dwSize;
+    /* CLSID = class identifier (always 00021401-0000-0000-C000-000000000046) */
+    CLSID clsid;
+    /* Flags (SHELL_LINK_DATA_FLAGS) */
+    DWORD dwFlags;
+    /* Informations about the link target: */
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeLow; /* only the least significant 32 bits */
+    /* The index of an icon (signed?) */
+    DWORD nIconIndex;
+    /* The expected window state of an application launched by the link */
+    DWORD nShowCommand;
+    /* The keystrokes used to launch the application */
+    WORD wHotKey;
+    /* Reserved (must be zero) */
+    WORD wReserved1;
+    DWORD dwReserved2;
+    DWORD dwReserved3;
+} SHELL_LINK_HEADER, *LPSHELL_LINK_HEADER;
+
+/*****************************************************************************
+ * SHELL_LINK_INFOA/W
+ * If cbHeaderSize == 0x0000001C then use SHELL_LINK_INFOA
+ * If cbHeaderSize >= 0x00000024 then use SHELL_LINK_INFOW
+ */
+typedef struct tagSHELL_LINK_INFOA
+{
+    /* Size of the link info data */
+    DWORD cbSize;
+    /* Size of this structure (ANSI: = 0x0000001C) */
+    DWORD cbHeaderSize;
+    /* Specifies which fields are present/populated (SLI_*) */
+    DWORD dwFlags;
+    /* Offset of the VolumeID field (SHELL_LINK_INFO_VOLUME_ID) */
+    DWORD cbVolumeIDOffset;
+    /* Offset of the LocalBasePath field (ANSI, NULL-terminated string) */
+    DWORD cbLocalBasePathOffset;
+    /* Offset of the CommonNetworkRelativeLink field (SHELL_LINK_INFO_CNR_LINK) */
+    DWORD cbCommonNetworkRelativeLinkOffset;
+    /* Offset of the CommonPathSuffix field (ANSI, NULL-terminated string) */
+    DWORD cbCommonPathSuffixOffset;
+} SHELL_LINK_INFOA, *LPSHELL_LINK_INFOA;
+
+typedef struct tagSHELL_LINK_INFOW
+{
+    /* Size of the link info data */
+    DWORD cbSize;
+    /* Size of this structure (Unicode: >= 0x00000024) */
+    DWORD cbHeaderSize;
+    /* Specifies which fields are present/populated (SLI_*) */
+    DWORD dwFlags;
+    /* Offset of the VolumeID field (SHELL_LINK_INFO_VOLUME_ID) */
+    DWORD cbVolumeIDOffset;
+    /* Offset of the LocalBasePath field (ANSI, NULL-terminated string) */
+    DWORD cbLocalBasePathOffset;
+    /* Offset of the CommonNetworkRelativeLink field (SHELL_LINK_INFO_CNR_LINK) */
+    DWORD cbCommonNetworkRelativeLinkOffset;
+    /* Offset of the CommonPathSuffix field (ANSI, NULL-terminated string) */
+    DWORD cbCommonPathSuffixOffset;
+    /* Offset of the LocalBasePathUnicode field (Unicode, NULL-terminated string) */
+    DWORD cbLocalBasePathUnicodeOffset;
+    /* Offset of the CommonPathSuffixUnicode field (Unicode, NULL-terminated string) */
+    DWORD cbCommonPathSuffixUnicodeOffset;
+} SHELL_LINK_INFOW, *LPSHELL_LINK_INFOW;
+
+/* VolumeID, LocalBasePath, LocalBasePathUnicode(cbHeaderSize >= 0x24) are present */
+#define SLI_VALID_LOCAL   0x00000001
+/* CommonNetworkRelativeLink is present */
+#define SLI_VALID_NETWORK 0x00000002
+
+/*****************************************************************************
+ * SHELL_LINK_INFO_VOLUME_IDA/W
+ * If cbVolumeLabelOffset != 0x00000014 (should be 0x00000010) then use 
+ * SHELL_LINK_INFO_VOLUME_IDA
+ * If cbVolumeLabelOffset == 0x00000014 then use SHELL_LINK_INFO_VOLUME_IDW
+ */
+typedef struct tagSHELL_LINK_INFO_VOLUME_IDA
+{
+    /* Size of the VolumeID field (> 0x00000010) */
+    DWORD cbSize;
+    /* Drive type of the drive the link target is stored on (DRIVE_*) */
+    DWORD dwDriveType;
+    /* Serial number of the volume the link target is stored on */
+    DWORD nDriveSerialNumber;
+    /* Offset of the volume label (ANSI, NULL-terminated string).
+       Must be != 0x00000014 (see tagSHELL_LINK_INFO_VOLUME_IDW) */
+    DWORD cbVolumeLabelOffset;
+} SHELL_LINK_INFO_VOLUME_IDA, *LPSHELL_LINK_INFO_VOLUME_IDA;
+
+typedef struct tagSHELL_LINK_INFO_VOLUME_IDW
+{
+    /* Size of the VolumeID field (> 0x00000010) */
+    DWORD cbSize;
+    /* Drive type of the drive the link target is stored on (DRIVE_*) */
+    DWORD dwDriveType;
+    /* Serial number of the volume the link target is stored on */
+    DWORD nDriveSerialNumber;
+    /* Offset of the volume label (ANSI, NULL-terminated string).
+       If the value of this field is 0x00000014, ignore it and use
+       cbVolumeLabelUnicodeOffset! */
+    DWORD cbVolumeLabelOffset;
+    /* Offset of the volume label (Unicode, NULL-terminated string).
+       If the value of the VolumeLabelOffset field is not 0x00000014,
+       this field must be ignored (==> it doesn't exists ==> ANSI). */
+    DWORD cbVolumeLabelUnicodeOffset;
+} SHELL_LINK_INFO_VOLUME_IDW, *LPSHELL_LINK_INFO_VOLUME_IDW;
+
+/*****************************************************************************
+ * SHELL_LINK_INFO_CNR_LINKA/W (CNR = Common Network Relative)
+ * If cbNetNameOffset == 0x00000014 then use SHELL_LINK_INFO_CNR_LINKA
+ * If cbNetNameOffset > 0x00000014 then use SHELL_LINK_INFO_CNR_LINKW
+ */
+typedef struct tagSHELL_LINK_INFO_CNR_LINKA
+{
+    /* Size of the CommonNetworkRelativeLink field (>= 0x00000014) */
+    DWORD cbSize;
+    /* Specifies which fields are present/populated (SLI_CNR_*) */
+    DWORD dwFlags;
+    /* Offset of the NetName field (ANSI, NULL–terminated string) */
+    DWORD cbNetNameOffset;
+    /* Offset of the DeviceName field (ANSI, NULL–terminated string) */
+    DWORD cbDeviceNameOffset;
+    /* Type of the network provider (WNNC_NET_* defined in winnetwk.h) */
+    DWORD dwNetworkProviderType;
+} SHELL_LINK_INFO_CNR_LINKA, *LPSHELL_LINK_INFO_CNR_LINKA;
+
+typedef struct tagSHELL_LINK_INFO_CNR_LINKW
+{
+    /* Size of the CommonNetworkRelativeLink field (>= 0x00000014) */
+    DWORD cbSize;
+    /* Specifies which fields are present/populated (SLI_CNR_*) */
+    DWORD dwFlags;
+    /* Offset of the NetName field (ANSI, NULL–terminated string) */
+    DWORD cbNetNameOffset;
+    /* Offset of the DeviceName field (ANSI, NULL–terminated string) */
+    DWORD cbDeviceNameOffset;
+    /* Type of the network provider (WNNC_NET_* defined in winnetwk.h) */
+    DWORD dwNetworkProviderType;
+    /* Offset of the NetNameUnicode field (Unicode, NULL–terminated string) */
+    DWORD cbNetNameUnicodeOffset;
+    /* Offset of the DeviceNameUnicode field (Unicode, NULL–terminated string) */
+    DWORD cbDeviceNameUnicodeOffset;
+} SHELL_LINK_INFO_CNR_LINKW, *LPSHELL_LINK_INFO_CNR_LINKW;
+
+/* DeviceName is present */
+#define SLI_CNR_VALID_DEVICE   0x00000001
+/* NetworkProviderType is present */
+#define SLI_CNR_VALID_NET_TYPE 0x00000002
+
+/*****************************************************************************
+ * Shell Link Extra Data (IShellLinkDataList)
+ */
+typedef struct tagEXP_TRACKER
+{
+    /* .cbSize = 0x00000060, .dwSignature = 0xa0000003 */
+    DATABLOCK_HEADER dbh;
+    /* Length >= 0x00000058 */
+    DWORD nLength;
+    /* Must be 0x00000000 */
+    DWORD nVersion;
+    /* NetBIOS name (ANSI, unused bytes are set to zero) */
+    CHAR szMachineID[16]; /* "variable" >= 16 (?) */
+    /* Some GUIDs for the Link Tracking service (from the FS?) */
+    GUID guidDroidVolume;
+    GUID guidDroidObject;
+    GUID guidDroidBirthVolume;
+    GUID guidDroidBirthObject;
+} EXP_TRACKER, *LPEXP_TRACKER;
+
+typedef struct tagEXP_SHIM
+{
+    /* .cbSize >= 0x00000088, .dwSignature = 0xa0000008 */
+    DATABLOCK_HEADER dbh;
+    /* Name of a shim layer to apply (Unicode, unused bytes are set to zero) */
+    WCHAR szwLayerName[64]; /* "variable" >= 64 */
+} EXP_SHIM, *LPEXP_SHIM;
+
+typedef struct tagEXP_KNOWN_FOLDER
+{
+    /* .cbSize = 0x0000001c, .dwSignature = 0xa000000b */
+    DATABLOCK_HEADER dbh;
+    /* A GUID value that identifies a known folder */
+    GUID guidKnownFolder;
+    /* Specifies the location of the ItemID of the first child
+       segment of the IDList specified by guidKnownFolder */
+    DWORD cbOffset;
+} EXP_KNOWN_FOLDER, *LPEXP_KNOWN_FOLDER;
+
+typedef struct tagEXP_VISTA_ID_LIST
+{
+    /* .cbSize >= 0x0000000a, .dwSignature = 0xa000000c */
+    DATABLOCK_HEADER dbh;
+    /* Specifies an alternate IDList that can be used instead 
+       of the "normal" IDList (SLDF_HAS_ID_LIST) */
+    /* LPITEMIDLIST pIDList; (variable) */
+} EXP_VISTA_ID_LIST, *LPEXP_VISTA_ID_LIST;
+
+#define EXP_TRACKER_SIG       0xa0000003
+#define EXP_SHIM_SIG          0xa0000008
+#define EXP_KNOWN_FOLDER_SIG  0xa000000b
+#define EXP_VISTA_ID_LIST_SIG 0xa000000c
+
+#include <poppack.h>
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
-
-#ifdef __cplusplus
-template <class Base>
-class CComDebugObject : public Base
-{
-public:
-    CComDebugObject(void * = NULL)
-    {
-#if DEBUG_CCOMOBJECT_CREATION
-        DbgPrint("%S, this=%08p\n", __FUNCTION__, static_cast<Base*>(this));
-#endif
-        _pAtlModule->Lock();
-    }
-
-    virtual ~CComDebugObject()
-    {
-        this->FinalRelease();
-        _pAtlModule->Unlock();
-    }
-
-    STDMETHOD_(ULONG, AddRef)()
-    {
-        int rc = this->InternalAddRef();
-#if DEBUG_CCOMOBJECT_REFCOUNTING
-        DbgPrint("%s, RefCount is now %d(--)! \n", __FUNCTION__, rc);
-#endif
-        return rc;
-    }
-
-    STDMETHOD_(ULONG, Release)()
-    {
-        int rc = this->InternalRelease();
-
-#if DEBUG_CCOMOBJECT_REFCOUNTING
-        DbgPrint("%s, RefCount is now %d(--)! \n", __FUNCTION__, rc);
-#endif
-
-        if (rc == 0)
-        {
-#if DEBUG_CCOMOBJECT_DESTRUCTION
-            DbgPrint("%s, RefCount reached 0 Deleting!\n", __FUNCTION__);
-#endif
-            delete this;
-        }
-        return rc;
-    }
-
-    STDMETHOD(QueryInterface)(REFIID iid, void **ppvObject)
-    {
-        return this->_InternalQueryInterface(iid, ppvObject);
-    }
-
-    static HRESULT WINAPI CreateInstance(CComDebugObject<Base> **pp)
-    {
-        CComDebugObject<Base>				*newInstance;
-        HRESULT								hResult;
-
-        ATLASSERT(pp != NULL);
-        if (pp == NULL)
-            return E_POINTER;
-
-        hResult = E_OUTOFMEMORY;
-        newInstance = NULL;
-        ATLTRY(newInstance = new CComDebugObject<Base>());
-        if (newInstance != NULL)
-        {
-            newInstance->SetVoid(NULL);
-            newInstance->InternalFinalConstructAddRef();
-            hResult = newInstance->_AtlInitialConstruct();
-            if (SUCCEEDED(hResult))
-                hResult = newInstance->FinalConstruct();
-            if (SUCCEEDED(hResult))
-                hResult = newInstance->_AtlFinalConstruct();
-            newInstance->InternalFinalConstructRelease();
-            if (hResult != S_OK)
-            {
-                delete newInstance;
-                newInstance = NULL;
-            }
-        }
-        *pp = newInstance;
-        return hResult;
-    }
-};
-
-#ifdef DEBUG_CCOMOBJECT
-#   define _CComObject CComDebugObject
-#else
-#   define _CComObject CComObject
-#endif
-
-template<class T>
-void ReleaseCComPtrExpectZero(CComPtr<T>& cptr, BOOL forceRelease = FALSE)
-{
-    if (cptr.p != NULL)
-    {
-        int nrc = cptr->Release();
-        if (nrc > 0)
-        {
-            DbgPrint("WARNING: Unexpected RefCount > 0 (%d)!\n", nrc);
-            if (forceRelease)
-            {
-                while (nrc > 0)
-                {
-                    nrc = cptr->Release();
-                }
-            }
-        }
-        cptr.Detach();
-    }
-}
-
-template<class T, class R>
-HRESULT inline ShellDebugObjectCreator(REFIID riid, R ** ppv)
-{
-    CComPtr<T>       obj;
-    HRESULT          hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new CComDebugObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
-}
-
-template<class T, class R>
-HRESULT inline ShellObjectCreator(REFIID riid, R ** ppv)
-{
-    CComPtr<T>       obj;
-    HRESULT          hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-        return hResult;
-    return S_OK;
-}
-
-template<class T, class R>
-HRESULT inline ShellObjectCreatorInit(REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize();
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T>
-HRESULT inline ShellObjectCreatorInit(REFIID riid, void ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<IUnknown>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize();
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, void ** ppv)
-{
-    CComPtr<T>  obj;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, ppv);
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1);
-    if (FAILED(hResult))
-        return hResult;
-
-    return S_OK;
-}
-
-template<class T, class T1, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class T3, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2, initArg3);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class T3, class T4, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2, initArg3, initArg4);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-
-template<class T, class T1, class T2, class T3, class T4, class T5, class R>
-HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, T4 initArg4, T5 initArg5, REFIID riid, R ** ppv)
-{
-    CComPtr<T>  obj;
-    CComPtr<R>  result;
-    HRESULT     hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY(obj = new _CComObject<T>);
-    if (obj.p == NULL)
-        return E_OUTOFMEMORY;
-    hResult = obj->QueryInterface(riid, reinterpret_cast<void **>(&result));
-    if (FAILED(hResult))
-        return hResult;
-
-    hResult = obj->Initialize(initArg1, initArg2, initArg3, initArg4, initArg5);
-    if (FAILED(hResult))
-        return hResult;
-
-    *ppv = result.Detach();
-
-    return S_OK;
-}
-#endif /* __cplusplus */
 
 #endif /* __WINE_UNDOCSHELL_H */

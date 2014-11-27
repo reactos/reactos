@@ -22,8 +22,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
-BOOL WINAPI SetShellWindowEx(HWND, HWND);
-
 #define SHDESK_TAG 0x4b534544
 
 static const WCHAR szProgmanClassName [] = L"Progman";

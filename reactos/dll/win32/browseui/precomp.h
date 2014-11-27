@@ -24,6 +24,8 @@
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <undocshell.h>
+#include <shellutils.h>
+#include <browseui_undoc.h>
 #include <wine/debug.h>
 
 #include "resource.h"

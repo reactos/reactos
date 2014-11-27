@@ -19,7 +19,7 @@
  */
 
 #include "precomp.h"
-#include <shlwapi_undoc.h>
+#include <browseui_undoc.h>
 
 DWORD WINAPI _WinList_Init(void);
 void WINAPI _ShellDDEInit(BOOL bInit);

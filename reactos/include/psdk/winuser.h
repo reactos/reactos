@@ -4280,8 +4280,6 @@ BOOL WINAPI DragDetect(_In_ HWND, _In_ POINT);
 DWORD WINAPI DragObject(_In_ HWND, _In_ HWND, _In_ UINT, _In_ ULONG_PTR, _In_opt_ HCURSOR);
 BOOL WINAPI DrawAnimatedRects(_In_opt_ HWND, _In_ int, _In_ LPCRECT, _In_ LPCRECT);
 BOOL WINAPI DrawCaption(_In_ HWND, _In_ HDC, _In_ LPCRECT, _In_ UINT);
-BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
-BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
 BOOL WINAPI DrawEdge(_In_ HDC, _Inout_ LPRECT, _In_ UINT, _In_ UINT);
 BOOL WINAPI DrawFocusRect(_In_ HDC, _In_ LPCRECT);
 BOOL WINAPI DrawFrameControl(_In_ HDC, _Inout_ LPRECT, _In_ UINT, _In_ UINT);
