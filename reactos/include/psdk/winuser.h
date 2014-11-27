@@ -5432,7 +5432,6 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define DlgDirListComboBox DlgDirListComboBoxW
 #define DlgDirSelectComboBoxEx DlgDirSelectComboBoxExW
 #define DlgDirSelectEx DlgDirSelectExW
-#define DrawCaptionTemp DrawCaptionTempW
 #define DrawState DrawStateW
 #define DrawText DrawTextW
 #define DrawTextEx DrawTextExW
@@ -5599,7 +5598,6 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define DlgDirListComboBox DlgDirListComboBoxA
 #define DlgDirSelectComboBoxEx DlgDirSelectComboBoxExA
 #define DlgDirSelectEx DlgDirSelectExA
-#define DrawCaptionTemp DrawCaptionTempA
 #define DrawState DrawStateA
 #define DrawText DrawTextA
 #define DrawTextEx DrawTextExA
