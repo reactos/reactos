@@ -148,8 +148,11 @@ IN LPCTSTR lpValue);
  *  rshell.c
  */
 
-HRESULT WINAPI
-_CStartMenu_Constructor(REFIID riid, void **ppv);
+HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv);
+HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
+BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
+DWORD WINAPI _WinList_Init(void);
+void WINAPI _ShellDDEInit(BOOL bInit);
 
 /*
  * traywnd.c
@@ -230,6 +233,12 @@ BOOL
 SaveSettingDword(IN PCTSTR pszKeyName,
 IN PCTSTR pszValueName,
 IN DWORD dwValue);
+
+/*
+ * shellservice.cpp
+ */
+HRESULT InitShellServices(HDPA * phdpa);
+HRESULT ShutdownShellServices(HDPA hdpa);
 
 /*
  * startup.cpp

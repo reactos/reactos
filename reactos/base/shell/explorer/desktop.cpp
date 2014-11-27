@@ -20,9 +20,6 @@
 
 #include "precomp.h"
 
-HANDLE WINAPI _SHCreateDesktop(IShellDesktopTray *ShellDesk);
-BOOL WINAPI _SHDesktopMessageLoop(HANDLE hDesktop);
-
 class CDesktopThread
 {
     HANDLE hEvent;

@@ -20,9 +20,6 @@
 
 #include "precomp.h"
 
-extern HRESULT InitShellServices(HDPA * phdpa);
-extern HRESULT ShutdownShellServices(HDPA hdpa);
-
 static int CALLBACK InitializeAllCallback(void* pItem, void* pData)
 {
     IOleCommandTarget * pOct = reinterpret_cast<IOleCommandTarget *>(pItem);

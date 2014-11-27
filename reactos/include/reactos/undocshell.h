@@ -649,6 +649,8 @@ DWORD WINAPI WinList_Init(void);
 
 IStream* WINAPI SHGetViewStream(LPCITEMIDLIST, DWORD, LPCTSTR, LPCTSTR, LPCTSTR);
 
+EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
+
 /*****************************************************************************
  * Shell Link
  */

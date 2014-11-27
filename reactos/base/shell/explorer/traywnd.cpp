@@ -21,9 +21,6 @@
 #include "precomp.h"
 #include <commoncontrols.h>
 
-extern HRESULT InitShellServices(HDPA * phdpa);
-extern HRESULT ShutdownShellServices(HDPA hdpa);
-
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)

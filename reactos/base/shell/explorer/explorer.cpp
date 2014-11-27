@@ -21,9 +21,6 @@
 #include "precomp.h"
 #include <browseui_undoc.h>
 
-DWORD WINAPI _WinList_Init(void);
-void WINAPI _ShellDDEInit(BOOL bInit);
-
 HINSTANCE hExplorerInstance;
 HMODULE hUser32;
 HANDLE hProcessHeap;

@@ -40,8 +40,6 @@
 
 #include "precomp.h"
 
-EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
-
 #define INVALID_RUNCMD_RETURN -1
 /**
  * This function runs the specified command in the specified dir.
