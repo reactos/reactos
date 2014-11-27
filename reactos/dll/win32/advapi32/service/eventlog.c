@@ -1243,10 +1243,9 @@ ElfReportEventW(DWORD param1,
                 DWORD param9,
                 DWORD param10,
                 DWORD param11,
-                DWORD param12
-)
+                DWORD param12)
 {
-return TRUE;
+    return TRUE;
 }
 
 HANDLE WINAPI
@@ -1254,11 +1253,11 @@ ElfRegisterEventSourceW(DWORD param1,
                         DWORD param2,
                         DWORD param3)
 {
-return (HANDLE)1;
+    return (HANDLE)1;
 }
 
 BOOL WINAPI
 ElfDeregisterEventSource(IN HANDLE hEventLog)
 {
-return TRUE;
+    return TRUE;
 }
