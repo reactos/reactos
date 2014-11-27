@@ -186,7 +186,7 @@
 @ stub ElfClearEventLogFileA
 @ stub ElfClearEventLogFileW
 @ stub ElfCloseEventLog
-@ stub ElfDeregisterEventSource
+@ stdcall ElfDeregisterEventSource(long)
 @ stub ElfFlushEventLog
 @ stub ElfNumberOfRecords
 @ stub ElfOldestRecord
@@ -197,10 +197,10 @@
 @ stub ElfReadEventLogA
 @ stub ElfReadEventLogW
 @ stub ElfRegisterEventSourceA
-@ stub ElfRegisterEventSourceW
+@ stdcall ElfRegisterEventSourceW(ptr ptr ptr)
 @ stub ElfReportEventA
 @ stub ElfReportEventAndSourceW
-@ stub ElfReportEventW
+@ stdcall ElfReportEventW(long long long long ptr long long ptr ptr ptr ptr ptr)
 @ stdcall EnableTrace(long long long ptr double) ntdll.EtwEnableTrace
 @ stdcall EncryptFileA(str)
 @ stdcall EncryptFileW(wstr)

@@ -1231,3 +1231,34 @@ ReportEventW(IN HANDLE hEventLog,
     return TRUE;
 }
 
+BOOL WINAPI
+ElfReportEventW(DWORD param1,
+                DWORD param2,
+                DWORD param3,
+                DWORD param4,
+                DWORD param5,
+                DWORD param6,
+                DWORD param7,
+                DWORD param8,
+                DWORD param9,
+                DWORD param10,
+                DWORD param11,
+                DWORD param12
+)
+{
+return TRUE;
+}
+
+HANDLE WINAPI
+ElfRegisterEventSourceW(DWORD param1,
+                        DWORD param2,
+                        DWORD param3)
+{
+return (HANDLE)1;
+}
+
+BOOL WINAPI
+ElfDeregisterEventSource(IN HANDLE hEventLog)
+{
+return TRUE;
+}
