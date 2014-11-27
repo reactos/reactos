@@ -925,6 +925,8 @@ VfatDismountVolume(
     PLIST_ENTRY NextEntry;
     PVFATFCB Fcb;
     PFILE_OBJECT FileObject;
+    ULONG eocMark;
+    NTSTATUS Status;
 
     DPRINT("VfatDismountVolume(%p)\n", IrpContext);
 
@@ -949,6 +951,18 @@ VfatDismountVolume(
     FsRtlNotifyVolumeEvent(IrpContext->Stack->FileObject, FSRTL_VOLUME_DISMOUNT);
 
     ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
+
+    if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
+    {
+        /* Set clean shutdown bit */
+        Status = GetNextCluster(DeviceExt, 1, &eocMark);
+        if (NT_SUCCESS(Status))
+        {
+            eocMark |= DeviceExt->CleanShutBitMask;
+            if (NT_SUCCESS(WriteCluster(DeviceExt, 1, eocMark)))
+                DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
+        }
+    }
 
     /* Flush volume & files */
     VfatFlushVolume(DeviceExt, (PVFATFCB)FileObject->FsContext);
