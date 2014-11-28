@@ -9,14 +9,6 @@
 #include <win32k.h>
 // DBG_DEFAULT_CHANNEL(UserShutdown);
 
-// Client Shutdown messages
-#define MCS_SHUTDOWNTIMERS  1
-#define MCS_QUERYENDSESSION 2
-// Client Shutdown returns
-#define MCSR_GOODFORSHUTDOWN  1
-#define MCSR_SHUTDOWNFINISHED 2
-#define MCSR_DONOTSHUTDOWN    3
-
 /*
  * Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
  * CSRSS sends WM_CLIENTSHUTDOWN messages to top-level windows, and it is our job
