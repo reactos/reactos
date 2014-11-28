@@ -130,6 +130,7 @@ list(APPEND SOURCE
     user/ntuser/prop.c
     user/ntuser/scrollbar.c
     user/ntuser/session.c
+    user/ntuser/shutdown.c
     user/ntuser/simplecall.c
     user/ntuser/sysparams.c
     user/ntuser/timer.c
