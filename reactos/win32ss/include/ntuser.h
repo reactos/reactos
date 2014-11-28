@@ -2601,14 +2601,14 @@ NtUserProcessConnect(
     OUT PUSERCONNECT pUserConnect,
     IN  DWORD dwSize); // sizeof(USERCONNECT)
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserQueryInformationThread(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5);
+    IN HANDLE ThreadHandle,
+    IN USERTHREADINFOCLASS ThreadInformationClass,
+    OUT PVOID ThreadInformation,
+    IN ULONG ThreadInformationLength
+);
 
 DWORD
 NTAPI

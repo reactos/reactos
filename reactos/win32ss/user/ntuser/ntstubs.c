@@ -754,17 +754,15 @@ NtUserProcessConnect(
   return STATUS_UNSUCCESSFUL;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
-NtUserQueryInformationThread(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5)
+NtUserQueryInformationThread(IN HANDLE ThreadHandle,
+                             IN USERTHREADINFOCLASS ThreadInformationClass,
+                             OUT PVOID ThreadInformation,
+                             IN ULONG ThreadInformationLength)
 {
     STUB;
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 DWORD

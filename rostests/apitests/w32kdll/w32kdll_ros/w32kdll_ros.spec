@@ -484,7 +484,7 @@
 @ stdcall NtUserPostThreadMessage(long long long long)
 @ stdcall NtUserPrintWindow(ptr ptr long)
 @ stdcall NtUserProcessConnect(ptr ptr long)
-@ stdcall NtUserQueryInformationThread(long long long long long)
+@ stdcall NtUserQueryInformationThread(ptr long ptr long)
 @ stdcall NtUserQueryInputContext(long long)
 @ stdcall NtUserQuerySendMessage(long)
 @ stdcall NtUserQueryUserCounters(long long long long long)
