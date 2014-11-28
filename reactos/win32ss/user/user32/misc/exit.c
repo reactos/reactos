@@ -86,4 +86,38 @@ ExitWindowsEx(UINT uFlags,
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+EndTask(HWND hWnd,
+        BOOL fShutDown,
+        BOOL fForce)
+{
+    USER_API_MESSAGE ApiMessage;
+    PUSER_END_TASK EndTaskRequest = &ApiMessage.Data.EndTaskRequest;
+
+    UNREFERENCED_PARAMETER(fShutDown);
+
+    // EndTaskRequest->LastError = ERROR_SUCCESS;
+    EndTaskRequest->WndHandle = hWnd;
+    EndTaskRequest->Force = fForce;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpEndTask),
+                        sizeof(*EndTaskRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        UserSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    if (EndTaskRequest->LastError != ERROR_SUCCESS)
+        UserSetLastError(EndTaskRequest->LastError);
+
+    return EndTaskRequest->Success;
+}
+
 /* EOF */

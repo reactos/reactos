@@ -42,6 +42,14 @@ typedef struct _USER_EXIT_REACTOS
     DWORD Reserved;
 } USER_EXIT_REACTOS, *PUSER_EXIT_REACTOS;
 
+typedef struct _USER_END_TASK
+{
+    DWORD LastError;
+    HWND  WndHandle;
+    BOOL  Force;
+    BOOL  Success;
+} USER_END_TASK, *PUSER_END_TASK;
+
 typedef struct _USER_GET_THREAD_CONSOLE_DESKTOP
 {
     ULONG_PTR ThreadId;
@@ -71,6 +79,7 @@ typedef struct _USER_API_MESSAGE
     union
     {
         USER_EXIT_REACTOS ExitReactosRequest;
+        USER_END_TASK EndTaskRequest;
         USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
