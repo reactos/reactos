@@ -17,8 +17,7 @@
 /* GLOBALS ********************************************************************/
 
 static BOOLEAN ServicesProcessIdValid = FALSE;
-static ULONG_PTR ServicesProcessId = 0;
-
+ULONG_PTR ServicesProcessId = 0;
 ULONG_PTR LogonProcessId = 0;
 
 /* PUBLIC SERVER APIS *********************************************************/
@@ -36,7 +35,7 @@ CSR_API(SrvRegisterLogonProcess)
     }
     else
     {
-        if (ApiMessage->Header.ClientId.UniqueProcess != (HANDLE)LogonProcessId)
+        if (ApiMessage->Header.ClientId.UniqueProcess != UlongToHandle(LogonProcessId))
         {
             DPRINT1("Current logon process 0x%x, can't deregister from process 0x%x\n",
                     LogonProcessId, ApiMessage->Header.ClientId.UniqueProcess);

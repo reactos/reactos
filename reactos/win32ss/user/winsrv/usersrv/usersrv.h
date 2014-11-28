@@ -38,6 +38,7 @@
 /* Globals */
 extern HINSTANCE UserServerDllInstance;
 extern HANDLE UserServerHeap;
+extern ULONG_PTR ServicesProcessId;
 extern ULONG_PTR LogonProcessId;
 
 #endif /* __USERSRV_H__ */
