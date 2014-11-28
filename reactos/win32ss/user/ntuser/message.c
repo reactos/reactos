@@ -500,11 +500,6 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
                 return Status;
             }
         }
-        if (KernelModeMsg->message == WM_COPYDATA)
-        {
-           // Only the current process or thread can free the message lParam pointer.
-           return STATUS_SUCCESS;
-        }
         ExFreePool((PVOID) KernelModeMsg->lParam);
     }
 
@@ -1417,11 +1412,6 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
 CLEANUP:
     if (Window) UserDerefObjectCo(Window);
-    // Current Thread and it's a Copy Data message, then free kernel memory.
-    if ( !ptiSendTo && Msg == WM_COPYDATA )
-    {
-       ExFreePool((PVOID) lParam);
-    }
     END_CLEANUP;
 }
 
