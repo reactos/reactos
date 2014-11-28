@@ -40,7 +40,7 @@
  * - This ends the processing for the first ExitWindowsEx() call from WinLogon.
  *   Execution continues in WinLogon, which calls ExitWindowsEx() again to
  *   terminate COM processes in the interactive user's session.
- * - WinLogon stops impersonating the interactive user (whos processes are
+ * - WinLogon stops impersonating the interactive user (whose processes are
  *   all dead by now). and enters log-out state
  * - If the ExitWindowsEx() request was for a logoff, WinLogon sends a SAS
  *   event (to display the "press ctrl+alt+del") to the GINA. WinLogon then
@@ -77,31 +77,6 @@ ExitWindowsEx(UINT uFlags,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
                                  sizeof(USER_EXIT_REACTOS));
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI
-RegisterServicesProcess(DWORD ServicesProcessId)
-{
-    NTSTATUS Status;
-    USER_API_MESSAGE ApiMessage;
-
-    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = ServicesProcessId;
-
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
-                                 sizeof(USER_REGISTER_SERVICES_PROCESS));
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));

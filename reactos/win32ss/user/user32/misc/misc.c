@@ -40,59 +40,6 @@ UserSetLastNTError(IN NTSTATUS Status)
 }
 
 
-/*
- * @implemented
- */
-BOOL
-WINAPI
-RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
-{
-    gfLogonProcess = NtUserxRegisterLogonProcess(dwProcessId, bRegister);
-
-    if (gfLogonProcess)
-    {
-        NTSTATUS Status;
-        USER_API_MESSAGE ApiMessage;
-
-        ApiMessage.Data.RegisterLogonProcessRequest.ProcessId = dwProcessId;
-        ApiMessage.Data.RegisterLogonProcessRequest.Register = bRegister;
-
-        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     NULL,
-                                     CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
-                                     sizeof(USER_REGISTER_LOGON_PROCESS));
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("Failed to register logon process with CSRSS\n");
-            SetLastError(RtlNtStatusToDosError(Status));
-            // return FALSE;
-        }
-    }
-
-    return gfLogonProcess;
-}
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
-{
-    return NtUserSetLogonNotifyWindow(Wnd);
-}
-
-/*
- * @implemented
- */
-BOOL WINAPI
-UpdatePerUserSystemParameters(
-    DWORD dwReserved,
-    BOOL bEnable)
-{
-    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
-}
-
 PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
