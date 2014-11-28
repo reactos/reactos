@@ -1,28 +1,9 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
  * PURPOSE:         Misc
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
- * UPDATE HISTORY:
- *      19-11-2003  Created
  */
 
 /* INCLUDES ******************************************************************/
@@ -34,6 +15,30 @@
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+WINAPI
+UserSetLastError(IN DWORD dwErrCode)
+{
+    /*
+     * Equivalent of SetLastError in kernel32, but without breaking
+     * into the debugger nor checking whether the last old error is
+     * the same as the one we are going to set.
+     */
+    NtCurrentTeb()->LastErrorValue = dwErrCode;
+}
+
+VOID
+WINAPI
+UserSetLastNTError(IN NTSTATUS Status)
+{
+    /*
+     * Equivalent of BaseSetLastNTError in kernel32, but using
+     * UserSetLastError: convert from NT to Win32, then set.
+     */
+    UserSetLastError(RtlNtStatusToDosError(Status));
+}
+
 
 /*
  * @implemented

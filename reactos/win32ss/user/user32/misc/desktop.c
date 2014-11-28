@@ -548,7 +548,23 @@ WINAPI
 GetThreadDesktop(
   DWORD dwThreadId)
 {
-  return NtUserGetThreadDesktop(dwThreadId, 0);
+    USER_API_MESSAGE ApiMessage;
+    PUSER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest = &ApiMessage.Data.GetThreadConsoleDesktopRequest;
+
+    GetThreadConsoleDesktopRequest->ThreadId = dwThreadId;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpGetThreadConsoleDesktop),
+                        sizeof(*GetThreadConsoleDesktopRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        UserSetLastNTError(ApiMessage.Status);
+        return NULL;
+    }
+
+    return NtUserGetThreadDesktop(dwThreadId,
+                                  (DWORD)GetThreadConsoleDesktopRequest->ConsoleDesktop);
 }
 
 
