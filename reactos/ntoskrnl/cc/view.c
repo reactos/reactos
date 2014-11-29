@@ -909,6 +909,9 @@ CcFlushCache (
     NTSTATUS Status;
     KIRQL oldIrql;
 
+    CCTRACE(CC_API_DEBUG, "SectionObjectPointers=%p FileOffset=%p Length=%lu\n",
+        SectionObjectPointers, FileOffset, Length);
+
     DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %lu, IoStatus 0x%p)\n",
            SectionObjectPointers, FileOffset, Length, IoStatus);
 
@@ -1209,6 +1212,9 @@ CcGetFileObjectFromSectionPtrs (
     IN PSECTION_OBJECT_POINTERS SectionObjectPointers)
 {
     PROS_SHARED_CACHE_MAP SharedCacheMap;
+
+    CCTRACE(CC_API_DEBUG, "SectionObjectPointers=%p\n", SectionObjectPointers);
+
     if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
     {
         SharedCacheMap = SectionObjectPointers->SharedCacheMap;

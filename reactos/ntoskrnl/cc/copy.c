@@ -26,6 +26,7 @@ typedef enum _CC_COPY_OPERATION
     CcOperationZero
 } CC_COPY_OPERATION;
 
+ULONG CcRosTraceLevel = 0;
 ULONG CcFastMdlReadWait;
 ULONG CcFastMdlReadNotPossible;
 ULONG CcFastReadNotPossible;
@@ -339,6 +340,8 @@ CcCanIWrite (
     IN BOOLEAN Wait,
     IN BOOLEAN Retrying)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p BytesToWrite=%lu Wait=%d Retrying=%d\n",
+        FileObject, BytesToWrite, Wait, Retrying);
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -356,6 +359,9 @@ CcCopyRead (
     OUT PVOID Buffer,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu Wait=%d\n",
+        FileObject, FileOffset->QuadPart, Length, Wait);
+
     DPRINT("CcCopyRead(FileObject 0x%p, FileOffset %I64x, "
            "Length %lu, Wait %u, Buffer 0x%p, IoStatus 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait,
@@ -384,6 +390,9 @@ CcCopyWrite (
 {
     IO_STATUS_BLOCK IoStatus;
 
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu Wait=%d Buffer=%p\n",
+        FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
+
     DPRINT("CcCopyWrite(FileObject 0x%p, FileOffset %I64x, "
            "Length %lu, Wait %u, Buffer 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
@@ -410,6 +419,9 @@ CcDeferWrite (
     IN ULONG BytesToWrite,
     IN BOOLEAN Retrying)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p PostRoutine=%p Context1=%p Context2=%p BytesToWrite=%lu Retrying=%d\n",
+        FileObject, PostRoutine, Context1, Context2, BytesToWrite, Retrying);
+
     UNIMPLEMENTED;
 }
 
@@ -426,6 +438,9 @@ CcFastCopyRead (
     OUT PVOID Buffer,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%lu Length=%lu PageCount=%lu Buffer=%p\n",
+        FileObject, FileOffset, Length, PageCount, Buffer);
+
     UNIMPLEMENTED;
 }
 /*
@@ -439,6 +454,9 @@ CcFastCopyWrite (
     IN ULONG Length,
     IN PVOID Buffer)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%lu Length=%lu Buffer=%p\n",
+        FileObject, FileOffset, Length, Buffer);
+
     UNIMPLEMENTED;
 }
 
@@ -473,6 +491,9 @@ CcZeroData (
     ULONG i;
     IO_STATUS_BLOCK Iosb;
     KEVENT Event;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p StartOffset=%I64u EndOffset=%I64u Wait=%d\n",
+        FileObject, StartOffset->QuadPart, EndOffset->QuadPart, Wait);
 
     DPRINT("CcZeroData(FileObject 0x%p, StartOffset %I64x, EndOffset %I64x, "
            "Wait %u)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,

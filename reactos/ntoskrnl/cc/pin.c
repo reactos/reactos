@@ -59,6 +59,8 @@ CcMapData (
 
     if (ReadOffset % VACB_MAPPING_GRANULARITY + Length > VACB_MAPPING_GRANULARITY)
     {
+        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+            FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
@@ -70,6 +72,8 @@ CcMapData (
                               &Vacb);
     if (!NT_SUCCESS(Status))
     {
+        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+            FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
@@ -78,12 +82,16 @@ CcMapData (
         if (!(Flags & MAP_WAIT))
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+            CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+                FileObject, FileOffset, Length, Flags);
             return FALSE;
         }
 
         if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
+            CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+                FileObject, FileOffset, Length, Flags);
             return FALSE;
         }
     }
@@ -93,6 +101,8 @@ CcMapData (
     if (iBcb == NULL)
     {
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+        CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
+            FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
@@ -106,6 +116,8 @@ CcMapData (
     iBcb->RefCount = 1;
     *pBcb = (PVOID)iBcb;
 
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> TRUE Bcb=%p\n",
+        FileObject, FileOffset, Length, Flags, iBcb);
     return TRUE;
 }
 
@@ -121,6 +133,9 @@ CcPinMappedData (
     IN	ULONG Flags,
     OUT	PVOID * Bcb)
 {
+    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
+        FileObject, FileOffset, Length, Flags);
+
     /* no-op for current implementation. */
     return TRUE;
 }
@@ -138,6 +153,9 @@ CcPinRead (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
+    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
+        FileObject, FileOffset, Length, Flags);
+
     if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
     {
         if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
@@ -162,6 +180,9 @@ CcPreparePinWrite (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
+    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Zero=%d Flags=0x%lx\n",
+        FileObject, FileOffset, Length, Zero, Flags);
+
     /*
      * FIXME: This is function is similar to CcPinRead, but doesn't
      * read the data if they're not present. Instead it should just
@@ -182,6 +203,10 @@ CcSetDirtyPinnedData (
     IN PLARGE_INTEGER Lsn)
 {
     PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n",
+        Bcb, Lsn);
+
     iBcb->Dirty = TRUE;
 }
 
@@ -194,6 +219,8 @@ CcUnpinData (
     IN PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
 
     CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
                      iBcb->Vacb,
@@ -215,6 +242,8 @@ CcUnpinDataForThread (
     IN	PVOID Bcb,
     IN	ERESOURCE_THREAD ResourceThreadId)
 {
+    CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
+
     UNIMPLEMENTED;
 }
 
@@ -227,6 +256,9 @@ CcRepinBcb (
     IN	PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
+
     iBcb->RefCount++;
 }
 
@@ -241,6 +273,8 @@ CcUnpinRepinnedBcb (
     IN	PIO_STATUS_BLOCK IoStatus)
 {
     PINTERNAL_BCB iBcb = Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p WriteThrough=%d\n", Bcb, WriteThrough);
 
     IoStatus->Status = STATUS_SUCCESS;
     if (--iBcb->RefCount == 0)

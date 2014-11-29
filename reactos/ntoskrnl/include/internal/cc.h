@@ -1,5 +1,46 @@
 #pragma once
 
+//
+// Define this if you want debugging support
+//
+#define _CC_DEBUG_                                      0x00
+
+//
+// These define the Debug Masks Supported
+//
+#define CC_API_DEBUG                                    0x01
+
+//
+// Debug/Tracing support
+//
+#if _CC_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define CCTRACE(x, ...)                                     \
+    {                                                       \
+        DbgPrintEx("%s [%.16s] - ",                         \
+                   __FUNCTION__,                            \
+                   PsGetCurrentProcess()->ImageFileName);   \
+        DbgPrintEx(__VA_ARGS__);                            \
+    }
+#else
+#define CCTRACE(x, ...)                                     \
+    if (x & CcRosTraceLevel)                                \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
+#endif
+#else
+#define CCTRACE(x, fmt, ...) DPRINT(fmt, ##__VA_ARGS__)
+#endif
+
+//
+// Global Cc Data
+//
+extern ULONG CcRosTraceLevel;
+
 typedef struct _PF_SCENARIO_ID
 {
     WCHAR ScenName[30];
