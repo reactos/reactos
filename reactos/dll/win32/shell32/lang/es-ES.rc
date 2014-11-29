@@ -709,7 +709,7 @@ BEGIN
     IDS_MYPICTURES "Mis imágenes"
     IDS_PROGRAM_FILES_COMMON "Archivos de programa\\Archivos comunes"
     IDS_COMMON_DOCUMENTS "Documentos"
-    IDS_ADMINTOOLS "Menú Inicio\\Programas\\Accesorios\\Herramientas del sistema"
+    IDS_ADMINTOOLS "Menú Inicio\\Programas\\Herramientas Administrativas"
     IDS_COMMON_MUSIC "Documentos\\Mi música"
     IDS_COMMON_PICTURES "Documentos\\Mis imágenes"
     IDS_COMMON_VIDEO "Documentos\\Mis vídeos"

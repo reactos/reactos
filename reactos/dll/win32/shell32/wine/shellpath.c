@@ -665,12 +665,14 @@ typedef enum _CSIDL_Type {
     CSIDL_Type_SystemX86Path,
 } CSIDL_Type;
 
+#if WIN32_WINNT >= 0x0600
 #define CSIDL_CONTACTS         0x0043
 #define CSIDL_DOWNLOADS        0x0047
 #define CSIDL_LINKS            0x004d
 #define CSIDL_APPDATA_LOCALLOW 0x004e
 #define CSIDL_SAVED_GAMES      0x0062
 #define CSIDL_SEARCHES         0x0063
+#endif
 
 typedef struct
 {
@@ -698,7 +700,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Programs,
         CSIDL_Type_User,
         ProgramsW,
-        Start_Menu_ProgramsW
+        MAKEINTRESOURCEW(IDS_PROGRAMS)
     },
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
@@ -722,25 +724,25 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Favorites,
         CSIDL_Type_User,
         FavoritesW,
-        FavoritesW
+        MAKEINTRESOURCEW(IDS_FAVORITES)
     },
     { /* 0x07 - CSIDL_STARTUP */
         &FOLDERID_Startup,
         CSIDL_Type_User,
         StartUpW,
-        Start_Menu_StartupW
+        MAKEINTRESOURCEW(IDS_STARTUP)
     },
     { /* 0x08 - CSIDL_RECENT */
         &FOLDERID_Recent,
         CSIDL_Type_User,
         RecentW,
-        RecentW
+        MAKEINTRESOURCEW(IDS_RECENT)
     },
     { /* 0x09 - CSIDL_SENDTO */
         &FOLDERID_SendTo,
         CSIDL_Type_User,
         SendToW,
-        SendToW
+        MAKEINTRESOURCEW(IDS_SENDTO)
     },
     { /* 0x0a - CSIDL_BITBUCKET - Recycle Bin */
         &FOLDERID_RecycleBinFolder,
@@ -752,7 +754,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_StartMenu,
         CSIDL_Type_User,
         Start_MenuW,
-        Start_MenuW
+        MAKEINTRESOURCEW(IDS_STARTMENU)
     },
     { /* 0x0c - CSIDL_MYDOCUMENTS */
         &GUID_NULL,
@@ -800,37 +802,37 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_NetHood,
         CSIDL_Type_User,
         NetHoodW,
-        NetHoodW
+        MAKEINTRESOURCEW(IDS_NETHOOD)
     },
     { /* 0x14 - CSIDL_FONTS */
         &FOLDERID_Fonts,
         CSIDL_Type_WindowsPath,
         FontsW,
-        FontsW
+        MAKEINTRESOURCEW(IDS_FONTS)
     },
     { /* 0x15 - CSIDL_TEMPLATES */
         &FOLDERID_Templates,
         CSIDL_Type_User,
         TemplatesW,
-        TemplatesW
+        MAKEINTRESOURCEW(IDS_TEMPLATES)
     },
     { /* 0x16 - CSIDL_COMMON_STARTMENU */
         &FOLDERID_CommonStartMenu,
         CSIDL_Type_AllUsers,
         Common_Start_MenuW,
-        Start_MenuW
+        MAKEINTRESOURCEW(IDS_STARTMENU)
     },
     { /* 0x17 - CSIDL_COMMON_PROGRAMS */
         &FOLDERID_CommonPrograms,
         CSIDL_Type_AllUsers,
         Common_ProgramsW,
-        Start_Menu_ProgramsW
+        MAKEINTRESOURCEW(IDS_PROGRAMS)
     },
     { /* 0x18 - CSIDL_COMMON_STARTUP */
         &FOLDERID_CommonStartup,
         CSIDL_Type_AllUsers,
         Common_StartUpW,
-        Start_Menu_StartupW
+        MAKEINTRESOURCEW(IDS_STARTUP)
     },
     { /* 0x19 - CSIDL_COMMON_DESKTOPDIRECTORY */
         &FOLDERID_PublicDesktop,
@@ -842,19 +844,19 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_RoamingAppData,
         CSIDL_Type_User,
         AppDataW,
-        Application_DataW
+        MAKEINTRESOURCEW(IDS_APPDATA)
     },
     { /* 0x1b - CSIDL_PRINTHOOD */
         &FOLDERID_PrintHood,
         CSIDL_Type_User,
         PrintHoodW,
-        PrintHoodW
+        MAKEINTRESOURCEW(IDS_PRINTHOOD)
     },
     { /* 0x1c - CSIDL_LOCAL_APPDATA */
         &FOLDERID_LocalAppData,
         CSIDL_Type_User,
         Local_AppDataW,
-        Local_Settings_Application_DataW
+        MAKEINTRESOURCEW(IDS_LOCAL_APPDATA)
     },
     { /* 0x1d - CSIDL_ALTSTARTUP */
         &GUID_NULL,
@@ -872,31 +874,31 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Favorites,
         CSIDL_Type_AllUsers,
         Common_FavoritesW,
-        FavoritesW
+        MAKEINTRESOURCEW(IDS_FAVORITES)
     },
     { /* 0x20 - CSIDL_INTERNET_CACHE */
         &FOLDERID_InternetCache,
         CSIDL_Type_User,
         CacheW,
-        Local_Settings_Temporary_Internet_FilesW
+        MAKEINTRESOURCEW(IDS_INTERNET_CACHE)
     },
     { /* 0x21 - CSIDL_COOKIES */
         &FOLDERID_Cookies,
         CSIDL_Type_User,
         CookiesW,
-        CookiesW
+        MAKEINTRESOURCEW(IDS_COOKIES)
     },
     { /* 0x22 - CSIDL_HISTORY */
         &FOLDERID_History,
         CSIDL_Type_User,
         HistoryW,
-        Local_Settings_HistoryW
+        MAKEINTRESOURCEW(IDS_HISTORY)
     },
     { /* 0x23 - CSIDL_COMMON_APPDATA */
         &FOLDERID_ProgramData,
         CSIDL_Type_AllUsers,
         Common_AppDataW,
-        Application_DataW
+        MAKEINTRESOURCEW(IDS_APPDATA)
     },
     { /* 0x24 - CSIDL_WINDOWS */
         &FOLDERID_Windows,
@@ -914,7 +916,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_ProgramFiles,
         CSIDL_Type_CurrVer,
         ProgramFilesDirW,
-        Program_FilesW
+        MAKEINTRESOURCEW(IDS_PROGRAM_FILES)
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
@@ -944,7 +946,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_ProgramFilesCommon,
         CSIDL_Type_CurrVer,
         CommonFilesDirW,
-        Program_Files_Common_FilesW
+        MAKEINTRESOURCEW(IDS_PROGRAM_FILES_COMMON)
     },
     { /* 0x2c - CSIDL_PROGRAM_FILES_COMMONX86 */
         &FOLDERID_ProgramFilesCommonX86,
@@ -956,25 +958,25 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_CommonTemplates,
         CSIDL_Type_AllUsers,
         Common_TemplatesW,
-        TemplatesW
+        MAKEINTRESOURCEW(IDS_TEMPLATES)
     },
     { /* 0x2e - CSIDL_COMMON_DOCUMENTS */
         &FOLDERID_PublicDocuments,
         CSIDL_Type_AllUsers,
         Common_DocumentsW,
-        DocumentsW
+        MAKEINTRESOURCEW(IDS_PERSONAL)
     },
     { /* 0x2f - CSIDL_COMMON_ADMINTOOLS */
         &FOLDERID_CommonAdminTools,
         CSIDL_Type_AllUsers,
         Common_Administrative_ToolsW,
-        Start_Menu_Admin_ToolsW
+        MAKEINTRESOURCEW(IDS_ADMINTOOLS)
     },
     { /* 0x30 - CSIDL_ADMINTOOLS */
         &FOLDERID_AdminTools,
         CSIDL_Type_User,
         Administrative_ToolsW,
-        Start_Menu_Admin_ToolsW
+        MAKEINTRESOURCEW(IDS_ADMINTOOLS)
     },
     { /* 0x31 - CSIDL_CONNECTIONS */
         &FOLDERID_ConnectionsFolder,
@@ -1004,19 +1006,19 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_PublicMusic,
         CSIDL_Type_AllUsers,
         CommonMusicW,
-        MusicW
+        MAKEINTRESOURCEW(IDS_COMMON_MUSIC)
     },
     { /* 0x36 - CSIDL_COMMON_PICTURES */
         &FOLDERID_PublicPictures,
         CSIDL_Type_AllUsers,
         CommonPicturesW,
-        PicturesW
+        MAKEINTRESOURCEW(IDS_COMMON_PICTURES)
     },
     { /* 0x37 - CSIDL_COMMON_VIDEO */
         &FOLDERID_PublicVideos,
         CSIDL_Type_AllUsers,
         CommonVideoW,
-        VideosW
+        MAKEINTRESOURCEW(IDS_COMMON_VIDEO)
     },
     { /* 0x38 - CSIDL_RESOURCES */
         &FOLDERID_ResourceDir,
@@ -1060,6 +1062,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         NULL,
         NULL
     },
+#if WIN32_WINNT >= 0x0600
     { /* 0x3f */
         &FOLDERID_AddNewPrograms,
         CSIDL_Type_Disallowed,
@@ -1372,6 +1375,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         NULL,
         NULL
     }
+#endif
 };
 
 static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest);
@@ -1546,7 +1550,7 @@ static HRESULT _SHGetDefaultValue(HANDLE hToken, BYTE folder, LPWSTR pszPath)
             }
             else
             {
-                FIXME("(%d,%s), LoadString failed, missing translation?\n", folder,
+                ERR("(%d,%s), LoadString failed, missing translation?\n", folder,
                       debugstr_w(pszPath));
                 hr = E_FAIL;
             }
@@ -2288,12 +2292,14 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_MYPICTURES,
      CSIDL_FONTS,
      CSIDL_ADMINTOOLS,
+#if WIN32_WINNT >= 0x0600
      CSIDL_CONTACTS,
      CSIDL_DOWNLOADS,
      CSIDL_LINKS,
      CSIDL_APPDATA_LOCALLOW,
      CSIDL_SAVED_GAMES,
      CSIDL_SEARCHES
+#endif
     };
     WCHAR userShellFolderPath[MAX_PATH], shellFolderPath[MAX_PATH];
     LPCWSTR pUserShellFolderPath, pShellFolderPath;
