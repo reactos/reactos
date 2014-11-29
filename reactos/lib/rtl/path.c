@@ -609,6 +609,7 @@ RtlGetFullPathName_Ustr(
             ASSERT(FileNameBuffer[1] == L':');
             ASSERT(IS_PATH_SEPARATOR(FileNameBuffer[2]));
 
+            FileNameBuffer[0] = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
             Prefix = FileNameBuffer;
             PrefixLength = 3 * sizeof(WCHAR);
             Source += 3;
@@ -623,6 +624,7 @@ RtlGetFullPathName_Ustr(
             if (RtlUpcaseUnicodeChar(FileNameBuffer[0]) != RtlUpcaseUnicodeChar(CurDirName->Buffer[0]) ||
                 CurDirName->Buffer[1] != L':')
             {
+                FileNameBuffer[0] = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
                 EnvVarNameBuffer[0] = L'=';
                 EnvVarNameBuffer[1] = FileNameBuffer[0];
                 EnvVarNameBuffer[2] = L':';
