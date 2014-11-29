@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * ReactOS Spanish Keyboard Layout
  * Copyright (C) 2003 ReactOS
  * License: LGPL, see: LGPL.txt
@@ -195,12 +195,12 @@ ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x5C, VK_RWIN | KBDEXT }, // Tecla windows derecha
   { 0x5D, VK_APPS | KBDEXT }, // Tecla menu aplicacion derecha
   { 0x5F, VK_SLEEP | KBDEXT }, // Tecla Sleep
-  { 0x65, VK_BROWSER_SEARCH | KBDEXT }, // Pagina de búsqueda en el navegador de internet
+  { 0x65, VK_BROWSER_SEARCH | KBDEXT }, // Pagina de bÃºsqueda en el navegador de internet
   { 0x66, VK_BROWSER_FAVORITES | KBDEXT }, // Favoritos, tengo que esperar a que el tcp/ip
   { 0x67, VK_BROWSER_REFRESH | KBDEXT }, // Refrescar el navegador de internet
   { 0x68, VK_BROWSER_STOP | KBDEXT }, // Stop en el navegador de internet
   { 0x69, VK_BROWSER_FORWARD | KBDEXT }, // Adelante en el navegador de internet
-  { 0x6A, VK_BROWSER_BACK | KBDEXT }, // Atrás en el navegador de internet
+  { 0x6A, VK_BROWSER_BACK | KBDEXT }, // AtrÃ¡s en el navegador de internet
   { 0x6B, VK_LAUNCH_APP1 | KBDEXT }, // Tecla Mi pc
   { 0x6C, VK_LAUNCH_MAIL | KBDEXT }, // Abrir programa de e-mail
   { 0x6D, VK_LAUNCH_MEDIA_SELECT | KBDEXT }, // Abrir reproductor multimedia
@@ -238,11 +238,11 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '8',         0, {'8', '('} },
   { '9',         0, {'9', ')'} },
   { '0',         0, {'0', '='} },
-  { VK_OEM_3,    CAPLOK,   {0x00F1, 0x00D1} }, // ñÑ
+  { VK_OEM_3,    CAPLOK,   {0x00F1, 0x00D1} }, // Ã±Ã‘
 
   /* Specials */
   /* Ctrl-_ generates ES */
-  { VK_OEM_6	 ,0, {0x00a1, 0x00bf} }, // ¡¿
+  { VK_OEM_6	 ,0, {0x00a1, 0x00bf} }, // Â¡Â¿
   { VK_OEM_4       ,0, {0x0027, '?'}    }, //'?
   { VK_OEM_COMMA   ,0, {',',    ';'}    },
   { VK_OEM_PERIOD  ,0, {'.',    ':'}    },
@@ -299,19 +299,22 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 /* Normal, shifted, control, Alt+Gr */
   { '1', 		0, {'1',      '!',      WCH_NONE,  0x00a6}  }, // 1!|
   { '2', 		0, {'2',  	'"',      WCH_NONE,  '@'}     }, // 2"@
-  { '3', 		0, {'3', 	0x00B7,   WCH_NONE,  '#'}     }, // 3·#
-  { '6', 		0, {'6', 	'&',      WCH_NONE,  0x00AC}  }, // 6&¬
-  { 'E', 		CAPLOK,   {'e', 	'E',      0x05,  0x20AC}  }, // eE€
+  { '3', 		0, {'3', 	0x00B7,   WCH_NONE,  '#'}     }, // 3Â·#
+  { L'4', 		0, {L'4', 	L'$',     WCH_NONE, WCH_DEAD} }, // 4$~
+  { VK_EMPTY, 	0, {WCH_NONE, WCH_NONE, WCH_NONE, L'~'}   }, // 4$~
+  { L'5', 		0, {L'5', 	L'%',     WCH_NONE, L'â‚¬'}     }, // 5%â‚¬
+  { '6', 		0, {'6', 	'&',      WCH_NONE,  0x00AC}  }, // 6&Â¬
+  { 'E', 		CAPLOK,   {'e', 	'E',      0x05,  0x20AC}  }, // eEâ‚¬
   { VK_OEM_PLUS,  0, {'+',      '*', 	    WCH_NONE,  0x005d}  }, // +*]
-  { VK_OEM_2,  	0, {0x00e7,   0x00c7,   WCH_NONE,  '}'}     }, // çÇ}
+  { VK_OEM_2,  	0, {0x00e7,   0x00c7,   WCH_NONE,  '}'}     }, // Ã§Ã‡}
 
-  { VK_OEM_7,  	0, {WCH_DEAD,   WCH_DEAD, WCH_NONE,  '{'} }, //  ´¨{
-  { VK_EMPTY, 	0, {0xB4,       0xA8,     WCH_NONE,  WCH_NONE} },  //  ´¨{
+  { VK_OEM_7,  	0, {WCH_DEAD,   WCH_DEAD, WCH_NONE,  '{'} }, //  Â´Â¨{
+  { VK_EMPTY, 	0, {0xB4,       0xA8,     WCH_NONE,  WCH_NONE} },  //  Â´Â¨{
 
   { VK_OEM_1,  	0, {WCH_DEAD,   WCH_DEAD, WCH_NONE,  0x5B}    }, // `^[
   { VK_EMPTY,  	0, {0x60,       0x5e,     WCH_NONE,  WCH_NONE}  }, // `^[
 
-  { VK_OEM_5,  	0, {0x00BA,   0x00AA,   WCH_NONE,  0x005c}  }, // çÇ}
+  { VK_OEM_5,  	0, {0x00BA,   0x00AA,   WCH_NONE,  0x005c}  }, // Ã§Ã‡}
   { 0, 0 }
 };
 
@@ -344,17 +347,17 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 #define DEADTRANS(ch, accent, comp, flags) MAKELONG(ch, accent), comp, flags //no funciona
 ROSDATA DEADKEY  deadkey[] =
 {
-            //*´*
-            { DEADTRANS(L'a', 0xb4, 0xE1, 0x00) }, // letra a con ´
-            { DEADTRANS(L'A', 0xb4, 0xC1, 0x00) }, // letra A con ´
-            { DEADTRANS(L'e', 0xb4, 0xE9, 0x00) }, // letra e con ´
-            { DEADTRANS(L'E', 0xb4, 0xC9, 0x00) }, // letra E con ´
-            { DEADTRANS(L'i', 0xb4, 0xED, 0x00) }, // letra i con ´
-            { DEADTRANS(L'I', 0xb4, 0xCD, 0x00) }, // letra I con ´
-            { DEADTRANS(L'o', 0xb4, 0xF3, 0x00) }, // letra o con ´
-            { DEADTRANS(L'O', 0xb4, 0xD3, 0x00) }, // letra O con ´
-            { DEADTRANS(L'u', 0xb4, 0xFA, 0x00) }, // letra u con ´
-            { DEADTRANS(L'U', 0xb4, 0xDA, 0x00) }, // letra U con ´
+            //*Â´*
+            { DEADTRANS(L'a', 0xb4, 0xE1, 0x00) }, // letra a con Â´
+            { DEADTRANS(L'A', 0xb4, 0xC1, 0x00) }, // letra A con Â´
+            { DEADTRANS(L'e', 0xb4, 0xE9, 0x00) }, // letra e con Â´
+            { DEADTRANS(L'E', 0xb4, 0xC9, 0x00) }, // letra E con Â´
+            { DEADTRANS(L'i', 0xb4, 0xED, 0x00) }, // letra i con Â´
+            { DEADTRANS(L'I', 0xb4, 0xCD, 0x00) }, // letra I con Â´
+            { DEADTRANS(L'o', 0xb4, 0xF3, 0x00) }, // letra o con Â´
+            { DEADTRANS(L'O', 0xb4, 0xD3, 0x00) }, // letra O con Â´
+            { DEADTRANS(L'u', 0xb4, 0xFA, 0x00) }, // letra u con Â´
+            { DEADTRANS(L'U', 0xb4, 0xDA, 0x00) }, // letra U con Â´
             //*`*
             { DEADTRANS(L'a', 0x60, 0xE0, 0x00) }, // letra a con `
             { DEADTRANS(L'A', 0x60, 0xC0, 0x00) }, // letra A con `
@@ -377,33 +380,40 @@ ROSDATA DEADKEY  deadkey[] =
             { DEADTRANS(L'O', 0x5E, 0xD4, 0x00) }, // letra O con ^
             { DEADTRANS(L'u', 0x5E, 0xFB, 0x00) }, // letra u con ^
             { DEADTRANS(L'U', 0x5E, 0xDB, 0x00) }, // letra U con ^
-            //*¨*
-            { DEADTRANS(L'a', 0xA8, 0xE4, 0x00) }, // letra a con ¨
-            { DEADTRANS(L'A', 0xA8, 0xC4, 0x00) }, // letra A con ¨
-            { DEADTRANS(L'e', 0xA8, 0xEB, 0x00) }, // letra e con ¨
-            { DEADTRANS(L'E', 0xA8, 0xCB, 0x00) }, // letra E con ¨
-            { DEADTRANS(L'i', 0xA8, 0xEF, 0x00) }, // letra i con ¨
-            { DEADTRANS(L'I', 0xA8, 0xCF, 0x00) }, // letra I con ¨
-            { DEADTRANS(L'o', 0xA8, 0xF6, 0x00) }, // letra o con ¨
-            { DEADTRANS(L'O', 0xA8, 0xD6, 0x00) }, // letra O con ¨
-            { DEADTRANS(L'u', 0xA8, 0xFC, 0x00) }, // letra u con ¨
-            { DEADTRANS(L'U', 0xA8, 0xDC, 0x00) }, // letra U con ¨
+            //*Â¨*
+            { DEADTRANS(L'a', 0xA8, 0xE4, 0x00) }, // letra a con Â¨
+            { DEADTRANS(L'A', 0xA8, 0xC4, 0x00) }, // letra A con Â¨
+            { DEADTRANS(L'e', 0xA8, 0xEB, 0x00) }, // letra e con Â¨
+            { DEADTRANS(L'E', 0xA8, 0xCB, 0x00) }, // letra E con Â¨
+            { DEADTRANS(L'i', 0xA8, 0xEF, 0x00) }, // letra i con Â¨
+            { DEADTRANS(L'I', 0xA8, 0xCF, 0x00) }, // letra I con Â¨
+            { DEADTRANS(L'o', 0xA8, 0xF6, 0x00) }, // letra o con Â¨
+            { DEADTRANS(L'O', 0xA8, 0xD6, 0x00) }, // letra O con Â¨
+            { DEADTRANS(L'u', 0xA8, 0xFC, 0x00) }, // letra u con Â¨
+            { DEADTRANS(L'U', 0xA8, 0xDC, 0x00) }, // letra U con Â¨
+            //*~*
+            { DEADTRANS(L'a', 0x7e, 0xe3, 0x00) }, // Ã£
+            { DEADTRANS(L'A', 0x7e, 0xc3, 0x00) }, // Ãƒ
+            { DEADTRANS(L'n', 0x7e, 0xf1, 0x00) }, // Ã±
+            { DEADTRANS(L'N', 0x7e, 0xd1, 0x00) }, // Ã‘
+            { DEADTRANS(L'o', 0x7e, 0xf5, 0x00) }, // Ãµ
+            { DEADTRANS(L'O', 0x7e, 0xd5, 0x00) }, // Ã•
             { 0, 0, 0}
 };
 
 ROSDATA VSC_LPWSTR key_names[] = {
   { 0x00, L"" },
-  { 0x01, L"Escape" },
-  { 0x0e, L"Borrar" },
-  { 0x0f, L"Tabulador" },
+  { 0x01, L"Esc" },
+  { 0x0e, L"Retroceso" },
+  { 0x0f, L"Tab" },
   { 0x1c, L"Intro" },
   { 0x1d, L"Ctrl" },
-  { 0x2a, L"Shift" },
-  { 0x36, L"Shift derecho" },
-  { 0x37, L"* numerico" },
+  { 0x2a, L"MayÃºs" },
+  { 0x36, L"MayÃºs der." },
+  { 0x37, L"* num" },
   { 0x38, L"Alt" },
   { 0x39, L"Espacio" },
-  { 0x3a, L"Bloqueo mayusculas" },
+  { 0x3a, L"Bloq mayÃºs" },
   { 0x3b, L"F1" },
   { 0x3c, L"F2" },
   { 0x3d, L"F3" },
@@ -415,7 +425,7 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x43, L"F9" },
   { 0x44, L"F10" },
   { 0x45, L"Pausa" },
-  { 0x46, L"Bloqueo de scroll" },
+  { 0x46, L"Bloqueo despl." },
   { 0x47, L"Num 7" },
   { 0x48, L"Num 8" },
   { 0x49, L"Num 9" },
@@ -428,8 +438,8 @@ ROSDATA VSC_LPWSTR key_names[] = {
   { 0x50, L"Num 2" },
   { 0x51, L"Num 3" },
   { 0x52, L"Num 0" },
-  { 0x53, L"Borrardo numerico" },
-  { 0x54, L"Peticion de sistema" },
+  { 0x53, L"Supr numÃ©r." },
+  { 0x54, L"Pet sist" },
   { 0x57, L"F11" },
   { 0x58, L"F12" },
   { 0x7c, L"F13" },
@@ -448,28 +458,28 @@ ROSDATA VSC_LPWSTR key_names[] = {
 };
 
 ROSDATA VSC_LPWSTR extended_key_names[] = {
-  { 0x1c, L"Intro numerico" },
-  { 0x1d, L"Ctrl derecho" },
-  { 0x35, L"/ numerica" },
-  { 0x37, L"Imprimir pantalla" },
-  { 0x38, L"Alt derecho" },
-  { 0x45, L"Bloqueo numerico" },
-  { 0x46, L"Interrumpir" },
+  { 0x1c, L"Intro num" },
+  { 0x1d, L"Ctrl der." },
+  { 0x35, L"/ num." },
+  { 0x37, L"Impr pant." },
+  { 0x38, L"Alt der." },
+  { 0x45, L"Bloq num" },
+  { 0x46, L"Int" },
   { 0x47, L"Inicio" },
   { 0x48, L"Arriba" },
-  { 0x49, L"Subir pagina" },
+  { 0x49, L"RepÃ¡g" },
   { 0x4b, L"Izquierda" },
   { 0x4c, L"Centrar" },
   { 0x4d, L"Derecha" },
   { 0x4f, L"Fin" },
   { 0x50, L"Abajo" },
-  { 0x51, L"Bajar pagina" },
-  { 0x52, L"Insertar" },
-  { 0x53, L"Borrar" },
+  { 0x51, L"AvpÃ¡g" },
+  { 0x52, L"Ins" },
+  { 0x53, L"Supr" },
   { 0x54, L"<ReactOS>" },
   { 0x55, L"Ayuda" },
-  { 0x5b, L"Windows izquierda" },
-  { 0x5c, L"Windows derecha" },
+  { 0x5b, L"Windows izq." },
+  { 0x5c, L"Windows der." },
   { 0, NULL },
 };
 
@@ -477,7 +487,7 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
     L"\x00b4"	L"Agudo",
     L"\x0060"	L"Grave",
     L"\x005e"	L"Circunflejo",
-	L"\x00A8"	L"Dieresis",
+	L"\x00A8"	L"DiÃ©resis",
     NULL
 };
 
