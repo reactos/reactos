@@ -466,8 +466,8 @@ NtfsAttachFCBToFileObject(PNTFS_VCB Vcb,
         CcInitializeCacheMap(FileObject,
                              (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
                              FALSE,
-                             NULL,
-                             NULL);
+                             &(NtfsGlobalData->CacheMgrCallbacks),
+                             Fcb);
 
         Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
