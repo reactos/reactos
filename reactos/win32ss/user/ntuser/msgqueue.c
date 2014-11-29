@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Message queues
- * FILE:             subsystems/win32/win32k/ntuser/msgqueue.c
+ * FILE:             win32ss/user/ntuser/msgqueue.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
                      Alexandre Julliard
                      Maarten Lankhorst
@@ -751,6 +751,8 @@ co_MsqDispatchOneSentMessage(PTHREADINFO pti)
    BOOL Ret;
    LRESULT Result = 0;
 
+   ASSERT(pti == PsGetCurrentThreadWin32Thread());
+
    if (IsListEmpty(&pti->SentMessagesListHead))
    {
       return(FALSE);
@@ -1098,7 +1100,8 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
    KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
-   Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
+   Timeout.QuadPart = Int32x32To64(-10000,uTimeout); // Pass SMTO test with a TO of 0x80000000.
+   TRACE("Timeout val %lld\n",Timeout.QuadPart)
 
    /* FIXME: Increase reference counter of sender's message queue here */
 
@@ -1181,7 +1184,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
          TRACE("MsqSendMessage (blocked) timed out 1\n");
       }
-      while (co_MsqDispatchOneSentMessage(ptirec))
+      while (co_MsqDispatchOneSentMessage(pti))
          ;
    }
    else
