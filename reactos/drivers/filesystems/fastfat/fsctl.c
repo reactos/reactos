@@ -977,6 +977,9 @@ VfatDismountVolume(
 
     /* Mark we're being dismounted */
     DeviceExt->Flags |= VCB_DISMOUNT_PENDING;
+#ifndef ENABLE_SWAPOUT
+    IrpContext->DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
+#endif
 
     ExReleaseResourceLite(&DeviceExt->FatResource);
 

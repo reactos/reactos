@@ -7,6 +7,9 @@
 #include <pseh/pseh2.h>
 
 #define USE_ROS_CC_AND_FS
+#ifndef _MSC_VER
+#define ENABLE_SWAPOUT
+#endif
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))

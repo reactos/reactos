@@ -82,10 +82,12 @@ VfatCloseFile(
         vfatDestroyCCB(pCcb);
     }
 
+#ifdef ENABLE_SWAPOUT
     if (DeviceExt->OpenHandleCount == 0)
     {
         VfatCheckForDismount(DeviceExt, FALSE);
     }
+#endif
 
     return Status;
 }

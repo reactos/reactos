@@ -110,10 +110,12 @@ VfatCleanupFile(
         ExReleaseResourceLite(&pFcb->MainResource);
     }
 
+#ifdef ENABLE_SWAPOUT
     if (DeviceExt->Flags & VCB_DISMOUNT_PENDING)
     {
         VfatCheckForDismount(DeviceExt, FALSE);
     }
+#endif
 
     return STATUS_SUCCESS;
 }
