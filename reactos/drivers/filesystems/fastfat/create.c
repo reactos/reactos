@@ -526,6 +526,7 @@ VfatCreateFile(
 
         vfatAttachFCBToFileObject(DeviceExt, pFcb, FileObject);
         DeviceExt->OpenHandleCount++;
+        pFcb->OpenHandleCount++;
 
         Irp->IoStatus.Information = FILE_OPENED;
         return STATUS_SUCCESS;
