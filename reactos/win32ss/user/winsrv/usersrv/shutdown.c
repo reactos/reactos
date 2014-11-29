@@ -919,6 +919,21 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 }
 
 
+ULONG
+NTAPI
+UserClientShutdown(IN PCSR_PROCESS CsrProcess,
+                   IN ULONG Flags,
+                   IN BOOLEAN FirstPhase)
+{
+    DPRINT1("UserClientShutdown(0x%p, 0x%x, %s)\n",
+            CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase");
+
+    UNIMPLEMENTED;
+
+    return CsrShutdownNonCsrProcess;
+}
+
+
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvExitWindowsEx)

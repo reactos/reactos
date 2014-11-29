@@ -60,6 +60,7 @@
  * - when every environment subsystem has gone to bed, the SM actually initiates
  *   the kernel and executive shutdown by calling NtShutdownSystem.
  */
+
 /*
  * @implemented
  */
@@ -71,7 +72,7 @@ ExitWindowsEx(UINT uFlags,
     USER_API_MESSAGE ApiMessage;
 
     ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
-    ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
+    // ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -79,7 +80,7 @@ ExitWindowsEx(UINT uFlags,
                                  sizeof(USER_EXIT_REACTOS));
     if (!NT_SUCCESS(Status))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        UserSetLastNTError(Status);
         return FALSE;
     }
 

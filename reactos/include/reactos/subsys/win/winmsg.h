@@ -38,8 +38,9 @@ typedef enum _USERSRV_API_NUMBER
 
 typedef struct _USER_EXIT_REACTOS
 {
-    UINT Flags;
-    DWORD Reserved;
+    DWORD LastError;
+    UINT  Flags;
+    BOOL  Success;
 } USER_EXIT_REACTOS, *PUSER_EXIT_REACTOS;
 
 typedef struct _USER_END_TASK

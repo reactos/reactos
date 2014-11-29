@@ -151,7 +151,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     UserServerHeap = RtlGetProcessHeap();
 
     /* Initialize the video */
-    NtUserInitialize(0, NULL, NULL); //
+    NtUserInitialize(0, NULL, NULL);
     PrivateCsrssManualGuiCheck(0);
 
     /* Setup the DLL Object */
@@ -166,7 +166,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
     LoadedServerDll->HardErrorCallback = UserServerHardError;
-    LoadedServerDll->ShutdownProcessCallback = NULL;
+    LoadedServerDll->ShutdownProcessCallback = UserClientShutdown;
 
     UserServerDllInstance = LoadedServerDll->ServerHandle;
 

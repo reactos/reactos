@@ -24,6 +24,8 @@ ConsoleClientShutdown(IN PCSR_PROCESS CsrProcess,
 {
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
 
+    UNIMPLEMENTED;
+
     if ( ProcessData->ConsoleHandle != NULL ||
          ProcessData->HandleTable   != NULL )
     {

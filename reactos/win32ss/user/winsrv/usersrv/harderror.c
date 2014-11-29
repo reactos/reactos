@@ -510,7 +510,7 @@ UserpMessageBox(
 }
 
 VOID
-WINAPI
+NTAPI
 UserServerHardError(
     IN PCSR_THREAD ThreadData,
     IN PHARDERROR_MSG Message)
