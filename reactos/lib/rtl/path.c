@@ -487,6 +487,7 @@ RtlGetFullPathName_Ustr(
 
     PCUNICODE_STRING    CurDirName;
     UNICODE_STRING      EnvVarName, EnvVarValue;
+    WCHAR CurDrive, NewDrive;
     WCHAR EnvVarNameBuffer[4];
 
     ULONG  PrefixCut    = 0;    // Where the path really starts (after the skipped prefix)
@@ -614,7 +615,9 @@ RtlGetFullPathName_Ustr(
             ASSERT(FileNameBuffer[1] == L':');
             ASSERT(IS_PATH_SEPARATOR(FileNameBuffer[2]));
 
-            Prefix = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
+            NewDrive = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
+
+            Prefix = NewDrive;
             PrefixLength = 3 * sizeof(WCHAR);
             Source += 3;
             SourceLength -= 3 * sizeof(WCHAR);
@@ -625,8 +628,6 @@ RtlGetFullPathName_Ustr(
 
         case RtlPathTypeDriveRelative:      /* c:foo   */
         {
-            WCHAR CurDrive, NewDrive;
-
             Source += 2;
             SourceLength -= 2 * sizeof(WCHAR);
 
