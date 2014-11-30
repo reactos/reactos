@@ -598,38 +598,48 @@ RtlGetFullPathName_Ustr(
     switch (*PathType)
     {
         case RtlPathTypeUncAbsolute:        /* \\foo   */
+        {
             PrefixCut = RtlpSkipUNCPrefix(FileNameBuffer);
             break;
+        }
 
         case RtlPathTypeLocalDevice:        /* \\.\foo */
+        {
             PrefixCut = 4;
             break;
+        }
 
         case RtlPathTypeDriveAbsolute:      /* c:\foo  */
+        {
             ASSERT(FileNameBuffer[1] == L':');
             ASSERT(IS_PATH_SEPARATOR(FileNameBuffer[2]));
 
-            FileNameBuffer[0] = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
-            Prefix = FileNameBuffer;
+            Prefix = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
             PrefixLength = 3 * sizeof(WCHAR);
             Source += 3;
             SourceLength -= 3 * sizeof(WCHAR);
 
             PrefixCut = 3;
             break;
+        }
 
         case RtlPathTypeDriveRelative:      /* c:foo   */
+        {
+            WCHAR CurDrive, NewDrive;
+
             Source += 2;
             SourceLength -= 2 * sizeof(WCHAR);
-            if (RtlUpcaseUnicodeChar(FileNameBuffer[0]) != RtlUpcaseUnicodeChar(CurDirName->Buffer[0]) ||
-                CurDirName->Buffer[1] != L':')
+
+            CurDrive = RtlUpcaseUnicodeChar(CurDirName->Buffer[0]);
+            NewDrive = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
+
+            if ((NewDrive != CurDrive) || CurDirName->Buffer[1] != L':')
             {
-                FileNameBuffer[0] = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
                 EnvVarNameBuffer[0] = L'=';
-                EnvVarNameBuffer[1] = FileNameBuffer[0];
+                EnvVarNameBuffer[1] = NewDrive;
                 EnvVarNameBuffer[2] = L':';
                 EnvVarNameBuffer[3] = UNICODE_NULL;
-    
+
                 EnvVarName.Length = 3 * sizeof(WCHAR);
                 EnvVarName.MaximumLength = EnvVarName.Length + sizeof(WCHAR);
                 EnvVarName.Buffer = EnvVarNameBuffer;
@@ -670,7 +680,7 @@ RtlGetFullPathName_Ustr(
                     default:
                         DPRINT1("RtlQueryEnvironmentVariable_U returned 0x%08lx\n", Status);
 
-                        EnvVarNameBuffer[0] = FileNameBuffer[0];
+                        EnvVarNameBuffer[0] = NewDrive;
                         EnvVarNameBuffer[1] = L':';
                         EnvVarNameBuffer[2] = L'\\';
                         EnvVarNameBuffer[3] = UNICODE_NULL;
@@ -686,8 +696,10 @@ RtlGetFullPathName_Ustr(
             }
             /* Fall through */
             DPRINT("RtlPathTypeDriveRelative - Using fall-through to RtlPathTypeRelative\n");
+        }
 
         case RtlPathTypeRelative:           /* foo     */
+        {
             Prefix       = CurDirName->Buffer;
             PrefixLength = CurDirName->Length;
             if (CurDirName->Buffer[1] != L':')
@@ -699,8 +711,10 @@ RtlGetFullPathName_Ustr(
                 PrefixCut = 3;
             }
             break;
+        }
 
         case RtlPathTypeRooted:             /* \xxx    */
+        {
             if (CurDirName->Buffer[1] == L':')
             {
                 // The path starts with "C:\"
@@ -719,8 +733,10 @@ RtlGetFullPathName_Ustr(
                 Prefix = CurDirName->Buffer;
             }
             break;
+        }
 
         case RtlPathTypeRootLocalDevice:    /* \\.     */
+        {
             Prefix       = DeviceRootString.Buffer;
             PrefixLength = DeviceRootString.Length;
             Source += 3;
@@ -728,6 +744,7 @@ RtlGetFullPathName_Ustr(
 
             PrefixCut = 4;
             break;
+        }
 
         case RtlPathTypeUnknown:
             goto Quit;
