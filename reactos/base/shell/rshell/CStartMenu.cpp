@@ -415,59 +415,6 @@ static HRESULT GetProgramsFolder(IShellFolder ** ppsfStartMenu)
     return GetMergedFolder(CSIDL_PROGRAMS, CSIDL_COMMON_PROGRAMS, ppsfStartMenu);
 }
 
-static void DumpIdList(LPCITEMIDLIST pcidl)
-{
-    DbgPrint("Begin IDList Dump\n");
-
-    for (; pcidl != NULL; pcidl = ILGetNext(pcidl))
-    {
-        int i;
-        int cb = pcidl->mkid.cb;
-        BYTE * sh = (BYTE*) &(pcidl->mkid);
-        if (cb == 0) // ITEMIDLISTs are terminatedwith a null SHITEMID.
-            break;
-        DbgPrint("Begin SHITEMID (cb=%d)\n", cb);
-        if ((cb & 3) != 0)
-            DbgPrint(" - WARNING: cb is not a multiple of 4\n");
-        for (i = 0; (i + 4) <= cb; i += 4)
-        {
-            DbgPrint(" - abID[%08x]: %02x %02x %02x %02x\n",
-                     i,
-                     sh[i + 0],
-                     sh[i + 1],
-                     sh[i + 2],
-                     sh[i + 3]);
-        }
-        if (i < cb)
-        {
-            cb -= i;
-            if (cb == 3)
-            {
-                DbgPrint(" - abID[%08x]: %02x %02x %02x --\n",
-                         i,
-                         sh[i + 0],
-                         sh[i + 1],
-                         sh[i + 2]);
-            }
-            else if (cb == 2)
-            {
-                DbgPrint(" - abID[%08x]: %02x %02x -- --\n",
-                         i,
-                         sh[i + 0],
-                         sh[i + 1]);
-            }
-            else if (cb == 1)
-            {
-                DbgPrint(" - abID[%08x]: %02x -- -- --\n",
-                         i,
-                         sh[i + 0]);
-            }
-        }
-        DbgPrint("End SHITEMID\n");
-    }
-    DbgPrint("End IDList Dump.\n");
-}
-
 extern "C"
 HRESULT WINAPI
 CStartMenu_Constructor(REFIID riid, void **ppv)
