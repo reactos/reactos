@@ -81,7 +81,7 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
     if (ppdev->cPdevRefs == 0)
     {
         /* Do we have a surface? */
-        if(ppdev->pSurface)
+        if (ppdev->pSurface)
         {
             /* Release the surface and let the driver free it */
             SURFACE_ShareUnlockSurface(ppdev->pSurface);
@@ -212,20 +212,18 @@ PDEVOBJ_pSurface(
 {
     HSURF hsurf;
 
-    /* Check if we already have a surface */
-    if (ppdev->pSurface)
-    {
-        /* Increment reference count */
-        GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
-    }
-    else
+    /* Check if there is no surface for this PDEV yet */
+    if (ppdev->pSurface == NULL)
     {
         /* Call the drivers DrvEnableSurface */
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
 
-        /* Lock the surface */
+        /* Get a reference to the surface */
         ppdev->pSurface = SURFACE_ShareLockSurface(hsurf);
     }
+
+    /* Increment reference count */
+    GDIOBJ_vReferenceObjectByPointer(&ppdev->pSurface->BaseObject);
 
     DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
