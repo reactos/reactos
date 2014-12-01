@@ -90,14 +90,6 @@ BOOL WINAPI _UserSoundSentry(VOID)
     return TRUE;
 }
 
-// From win32ss/user/win32csr/dllmain.c
-VOID
-WINAPI
-PrivateCsrssManualGuiCheck(LONG Check)
-{
-    NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
-}
-
 ULONG
 NTAPI
 CreateSystemThreads(PVOID pParam)
@@ -152,7 +144,6 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
 
     /* Initialize the video */
     NtUserInitialize(0, NULL, NULL);
-    PrivateCsrssManualGuiCheck(0);
 
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = USERSRV_FIRST_API_NUMBER;

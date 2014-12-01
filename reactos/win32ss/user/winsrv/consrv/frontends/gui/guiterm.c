@@ -27,11 +27,6 @@
 #define PM_DESTROY_CONSOLE      (WM_APP + 2)
 
 
-/* Not defined in any header file */
-extern VOID NTAPI PrivateCsrssManualGuiCheck(LONG Check);
-// See winsrv/usersrv/init.c line 234
-
-
 /* GLOBALS ********************************************************************/
 
 typedef struct _GUI_INIT_INFO
@@ -170,8 +165,6 @@ GuiConsoleInputThread(PVOID Data)
 
                 DPRINT("PM_CREATE_CONSOLE -- creating window\n");
 
-                PrivateCsrssManualGuiCheck(-1); // co_AddGuiApp
-
                 NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
                                             GUI_CONWND_CLASS,
                                             Console->Title.Buffer,
@@ -187,7 +180,6 @@ GuiConsoleInputThread(PVOID Data)
                 if (NewWindow == NULL)
                 {
                     DPRINT1("Failed to create a new console window\n");
-                    PrivateCsrssManualGuiCheck(+1); // RemoveGuiApp
                     continue;
                 }
 
@@ -260,7 +252,6 @@ GuiConsoleInputThread(PVOID Data)
                 if (GuiData->hWindow == NULL) continue;
 
                 DestroyWindow(GuiData->hWindow);
-                PrivateCsrssManualGuiCheck(+1); // RemoveGuiApp
 
                 NtSetEvent(GuiData->hGuiTermEvent, NULL);
 

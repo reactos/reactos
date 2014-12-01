@@ -292,10 +292,6 @@ NtUserCallOneParam(
          /* FIXME: Should use UserEnterShared */
          RETURN(UserEnumClipboardFormats(Param));
 
-      case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
-          IntUserManualGuiCheck(Param);
-          RETURN(TRUE);
-
       case ONEPARAM_ROUTINE_GETCURSORPOS:
       {
           BOOL Ret = TRUE;

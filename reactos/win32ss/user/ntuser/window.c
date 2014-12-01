@@ -619,6 +619,12 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    IntDestroyScrollBars(Window);
 
+   if (Window->pcls->atomClassName == gaGuiConsoleWndClass)
+   {
+       /* Count only console windows manually */
+       co_IntUserManualGuiCheck(FALSE);
+   }
+
    /* dereference the class */
    IntDereferenceClass(Window->pcls,
                        Window->head.pti->pDeskInfo,
@@ -2311,6 +2317,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
         /* ShowWindow won't activate child windows */
         co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
       }
+   }
+
+   if (Class->atomClassName == gaGuiConsoleWndClass)
+   {
+       /* Count only console windows manually */
+       co_IntUserManualGuiCheck(TRUE);
    }
 
    TRACE("co_UserCreateWindowEx(): Created window %p\n", hWnd);
