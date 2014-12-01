@@ -87,10 +87,6 @@ NtUserCallNoParam(DWORD Routine)
          Result = (DWORD_PTR)IntUninitMessagePumpHook();
          break;
 
-      case NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO:
-         Result = (DWORD_PTR)MsqGetMessageExtraInfo();
-         break;
-
       case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
          RETURN( (DWORD_PTR)IntMsqClearWakeMask());
 
