@@ -688,7 +688,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
         case 49:
             break;
         case 0x10000000:
-            return S_OK;
+            break;
     }
     return S_FALSE;
 }

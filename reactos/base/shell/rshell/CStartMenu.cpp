@@ -24,7 +24,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
 
 // TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
-IID IID_IAugmentedShellFolder  = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
+IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
 IID IID_IAugmentedShellFolder2 = { 0x8DB3B3F4, 0x6CFE, 0x11D1, { 0x8A, 0xE9, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0 } };
 IID IID_IAugmentedShellFolder3 = { 0x4F755EA8, 0x247D, 0x479B, { 0x91, 0x81, 0x22, 0x7D, 0x09, 0xC2, 0xE0, 0x01 } };
 CLSID CLSID_MergedFolder = { 0x26FDC864, 0xBE88, 0x46E7, { 0x92, 0x35, 0x03, 0x2D, 0x8E, 0xA5, 0x16, 0x2E } };
@@ -74,7 +74,7 @@ private:
     CComPtr<IDeskBar> m_pDeskBar;
     CComPtr<ITrayPriv> m_pTrayPriv;
     CComPtr<IShellFolder> m_psfPrograms;
-    
+
     LPITEMIDLIST m_pidlPrograms;
 
     HRESULT OnInitMenu()
@@ -163,9 +163,9 @@ private:
 
 #if USE_SYSTEM_MENUBAND
         hr = CoCreateInstance(CLSID_MenuBand,
-            NULL,
-            CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IShellMenu, &pShellMenu));
+                              NULL,
+                              CLSCTX_INPROC_SERVER,
+                              IID_PPV_ARG(IShellMenu, &pShellMenu));
 #else
         hr = CMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &pShellMenu));
 #endif
@@ -303,8 +303,8 @@ public:
             break;
         case 0x10000000: // _FilterPIDL from CMenuSFToolbar
             if (psmd->psf->CompareIDs(0, psmd->pidlItem, m_pidlPrograms) == 0)
-                return S_FALSE;
-            return S_OK;
+                return S_OK;
+            return S_FALSE;
         }
 
         return S_FALSE;
@@ -327,7 +327,7 @@ HRESULT BindToDesktop(LPCITEMIDLIST pidl, IShellFolder ** ppsfResult)
     return hr;
 }
 
-static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
+static HRESULT GetMergedFolder(int folder1, int folder2, IShellFolder ** ppsfStartMenu)
 {
     HRESULT hr;
     LPITEMIDLIST pidlUserStartMenu;
@@ -338,12 +338,12 @@ static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
 
     *ppsfStartMenu = NULL;
 
-    hr = SHGetSpecialFolderLocation(NULL, CSIDL_STARTMENU, &pidlUserStartMenu);
+    hr = SHGetSpecialFolderLocation(NULL, folder1, &pidlUserStartMenu);
     if (FAILED(hr))
     {
         WARN("Failed to get the USER start menu folder. Trying to run with just the COMMON one.\n");
 
-        hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_STARTMENU, &pidlCommonStartMenu);
+        hr = SHGetSpecialFolderLocation(NULL, folder2, &pidlCommonStartMenu);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -352,9 +352,12 @@ static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
         ILFree(pidlCommonStartMenu);
         return hr;
     }
-
-    hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_STARTMENU, &pidlCommonStartMenu);
+#if MERGE_FOLDERS
+    hr = SHGetSpecialFolderLocation(NULL, folder2, &pidlCommonStartMenu);
     if (FAILED_UNEXPECTEDLY(hr))
+#else
+    else
+#endif
     {
         WARN("Failed to get the COMMON start menu folder. Will use only the USER contents.\n");
         hr = BindToDesktop(pidlUserStartMenu, ppsfStartMenu);
@@ -400,6 +403,69 @@ static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
     ILFree(pidlUserStartMenu);
 
     return hr;
+}
+
+static HRESULT GetStartMenuFolder(IShellFolder ** ppsfStartMenu)
+{
+    return GetMergedFolder(CSIDL_STARTMENU, CSIDL_COMMON_STARTMENU, ppsfStartMenu);
+}
+
+static HRESULT GetProgramsFolder(IShellFolder ** ppsfStartMenu)
+{
+    return GetMergedFolder(CSIDL_PROGRAMS, CSIDL_COMMON_PROGRAMS, ppsfStartMenu);
+}
+
+static void DumpIdList(LPCITEMIDLIST pcidl)
+{
+    DbgPrint("Begin IDList Dump\n");
+
+    for (; pcidl != NULL; pcidl = ILGetNext(pcidl))
+    {
+        int i;
+        int cb = pcidl->mkid.cb;
+        BYTE * sh = (BYTE*) &(pcidl->mkid);
+        if (cb == 0) // ITEMIDLISTs are terminatedwith a null SHITEMID.
+            break;
+        DbgPrint("Begin SHITEMID (cb=%d)\n", cb);
+        if ((cb & 3) != 0)
+            DbgPrint(" - WARNING: cb is not a multiple of 4\n");
+        for (i = 0; (i + 4) <= cb; i += 4)
+        {
+            DbgPrint(" - abID[%08x]: %02x %02x %02x %02x\n",
+                     i,
+                     sh[i + 0],
+                     sh[i + 1],
+                     sh[i + 2],
+                     sh[i + 3]);
+        }
+        if (i < cb)
+        {
+            cb -= i;
+            if (cb == 3)
+            {
+                DbgPrint(" - abID[%08x]: %02x %02x %02x --\n",
+                         i,
+                         sh[i + 0],
+                         sh[i + 1],
+                         sh[i + 2]);
+            }
+            else if (cb == 2)
+            {
+                DbgPrint(" - abID[%08x]: %02x %02x -- --\n",
+                         i,
+                         sh[i + 0],
+                         sh[i + 1]);
+            }
+            else if (cb == 1)
+            {
+                DbgPrint(" - abID[%08x]: %02x -- -- --\n",
+                         i,
+                         sh[i + 0]);
+            }
+        }
+        DbgPrint("End SHITEMID\n");
+    }
+    DbgPrint("End IDList Dump.\n");
 }
 
 extern "C"
@@ -460,24 +526,44 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     pShellMenu->Initialize(pCallback, (UINT) -1, 0, SMINIT_TOPLEVEL | SMINIT_VERTICAL);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    
+
     hr = GetStartMenuFolder(&psf);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
-    if (FAILED(hr))
     {
-        WARN("USER Programs folder not found.");
-        hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_PROGRAMS, &pidlProgramsAbsolute);
-        if (FAILED_UNEXPECTEDLY(hr))
+        hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
+        if (FAILED(hr))
+        {
+            WARN("USER Programs folder not found.");
+            hr = SHGetSpecialFolderLocation(NULL, CSIDL_COMMON_PROGRAMS, &pidlProgramsAbsolute);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
+
+        LPCITEMIDLIST pcidlPrograms;
+        CComPtr<IShellFolder> psfParent;
+        STRRET str;
+        TCHAR szDisplayName[MAX_PATH];
+
+        hr = SHBindToParent(pidlProgramsAbsolute, IID_PPV_ARG(IShellFolder, &psfParent), &pcidlPrograms);
+        if (FAILED(hr))
+            return hr;
+
+        hr = psfParent->GetDisplayNameOf(pcidlPrograms, SHGDN_NORMAL, &str);
+        if (FAILED(hr))
+            return hr;
+
+        StrRetToBuf(&str, pcidlPrograms, szDisplayName, _countof(szDisplayName));
+        ILFree((LPITEMIDLIST)pcidlPrograms);
+        ILFree(pidlProgramsAbsolute);
+
+        hr = psf->ParseDisplayName(NULL, NULL, szDisplayName, NULL, &pidlPrograms, NULL);
+        if (FAILED(hr))
             return hr;
     }
 
-    pidlPrograms = ILClone(ILFindLastID(pidlProgramsAbsolute));
-    ILFree(pidlProgramsAbsolute);
-
-    hr = psf->BindToObject(pidlPrograms, NULL, IID_PPV_ARG(IShellFolder, &psfPrograms));
+    hr = GetProgramsFolder(&psfPrograms);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

@@ -1289,7 +1289,7 @@ HRESULT CMenuSFToolbar::FillToolbar(BOOL clearFirst)
         INT index = 0;
         INT indexOpen = 0;
 
-        if (m_menuBand->_CallCBWithItemPidl(item, 0x10000000, 0, 0) == S_OK)
+        if (m_menuBand->_CallCBWithItemPidl(item, 0x10000000, 0, 0) == S_FALSE)
         {
             STRRET sr = { STRRET_CSTR, { 0 } };
 
