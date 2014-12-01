@@ -21,6 +21,7 @@
 
 extern IID IID_IAugmentedShellFolder;
 extern IID IID_IAugmentedShellFolder2;
+extern IID IID_IAugmentedShellFolder3;
 extern CLSID CLSID_MergedFolder;
 
 interface IAugmentedShellFolder : public IShellFolder
@@ -36,33 +37,35 @@ interface IAugmentedShellFolder2 : public IAugmentedShellFolder
     virtual HRESULT STDMETHODCALLTYPE UnWrapIDList(LPCITEMIDLIST, LONG, IShellFolder **, LPITEMIDLIST *, LPITEMIDLIST *, LONG *) = 0;
 };
 
-/* No idea what QUERYNAMESPACEINFO struct contains -- the prototype comes from the PDB info
+/* No idea what QUERYNAMESPACEINFO struct contains, yet */
+struct QUERYNAMESPACEINFO
+{
+    BYTE unknown[1];
+};
+
 interface IAugmentedShellFolder3 : public IAugmentedShellFolder2
 {
     virtual HRESULT STDMETHODCALLTYPE QueryNameSpace2(ULONG, QUERYNAMESPACEINFO *) = 0;
 };
-*/
 
 class CEnumMergedFolder;
 
 class CMergedFolder :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    //public IStorage,    
-    public IAugmentedShellFolder2,     // -- undocumented
-    //public IAugmentedShellFolder3,     // -- undocumented
+    public IPersistFolder2,
+    public IAugmentedShellFolder3     // -- undocumented
     //public IShellService,              // -- undocumented
     //public ITranslateShellChangeNotify,// -- undocumented
-    public IPersistFolder2
+    //public IStorage,
     //public IPersistPropertyBag,
     //public IShellIconOverlay,          // -- undocumented
     //public ICompositeFolder,           // -- undocumented
     //public IItemNameLimits,            // -- undocumented
-
 {
 private:
     CComPtr<IShellFolder> m_UserLocal;
-    CComPtr<IShellFolder> m_AllUSers;
+    CComPtr<IShellFolder> m_AllUsers;
     CComPtr<CEnumMergedFolder> m_EnumSource;
 
     LPITEMIDLIST m_UserLocalPidl;
@@ -86,7 +89,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder,  IAugmentedShellFolder)
         COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder2, IAugmentedShellFolder2)
-        //COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder3,     IAugmentedShellFolder3)
+        COM_INTERFACE_ENTRY_IID(IID_IAugmentedShellFolder3, IAugmentedShellFolder3)
         //COM_INTERFACE_ENTRY_IID(IID_IStorage,                   IStorage)
         //COM_INTERFACE_ENTRY_IID(IID_IShellService,              IShellService)
         //COM_INTERFACE_ENTRY_IID(IID_ITranslateShellChangeNotify,ITranslateShellChangeNotify)
@@ -202,4 +205,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE QueryNameSpace(ULONG dwUnknown, LPGUID lpGuid, IShellFolder ** ppsf);
     virtual HRESULT STDMETHODCALLTYPE EnumNameSpace(ULONG dwUnknown, PULONG lpUnknown);
     virtual HRESULT STDMETHODCALLTYPE UnWrapIDList(LPCITEMIDLIST pcidl, LONG lUnknown, IShellFolder ** ppsf, LPITEMIDLIST * ppidl1, LPITEMIDLIST *ppidl2, LONG * lpUnknown);
+
+    // IAugmentedShellFolder3
+    virtual HRESULT STDMETHODCALLTYPE QueryNameSpace2(ULONG, QUERYNAMESPACEINFO *);
 };

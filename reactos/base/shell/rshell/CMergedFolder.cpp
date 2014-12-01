@@ -30,6 +30,8 @@ struct LocalPidlInfo
     BOOL shared;
     IShellFolder * parent;
     LPITEMIDLIST pidl;
+    LPITEMIDLIST pidl2;
+    LPCWSTR parseName;
 };
 
 class CEnumMergedFolder :
@@ -66,6 +68,7 @@ public:
     HRESULT SetSources(IShellFolder * userLocal, IShellFolder * allUSers);
     HRESULT Begin(HWND hwndOwner, SHCONTF flags);
     HRESULT FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, LocalPidlInfo * pinfo);
+    HRESULT FindByName(HWND hwndOwner, LPCWSTR strParsingName, LocalPidlInfo * pinfo);
 
     virtual HRESULT STDMETHODCALLTYPE Next(
         ULONG celt,
@@ -96,6 +99,9 @@ CEnumMergedFolder::~CEnumMergedFolder()
 int  CEnumMergedFolder::DsaDeleteCallback(LocalPidlInfo * info)
 {
     ILFree(info->pidl);
+    if (info->pidl2)
+        ILFree(info->pidl2);
+    CoTaskMemFree((LPVOID)info->parseName);
     return 0;
 }
     
@@ -118,7 +124,8 @@ HRESULT CEnumMergedFolder::SetSources(IShellFolder * userLocal, IShellFolder * a
 HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
 {
     HRESULT hr;
-    
+    LPITEMIDLIST pidl = NULL;
+
     if (m_hDsa && m_HwndOwner == hwndOwner && m_Flags == flags)
     {
         return Reset();
@@ -127,16 +134,14 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
     TRACE("Search conditions changed, recreating list...\n");
 
     CComPtr<IEnumIDList> userLocal;
-    CComPtr<IEnumIDList> allUSers;
+    CComPtr<IEnumIDList> allUsers;
+
     hr = m_UserLocalFolder->EnumObjects(hwndOwner, flags, &userLocal);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    hr = m_AllUSersFolder->EnumObjects(hwndOwner, flags, &allUSers);
+    hr = m_AllUSersFolder->EnumObjects(hwndOwner, flags, &allUsers);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        userLocal = NULL;
         return hr;
-    }
 
     if (!m_hDsa)
     {
@@ -147,112 +152,102 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
     DSA_DeleteAllItems(m_hDsa);
     m_hDsaCount = 0;
 
-    HRESULT hr1 = S_OK;
-    HRESULT hr2 = S_OK;
-    LPITEMIDLIST pidl1 = NULL;
-    LPITEMIDLIST pidl2 = NULL;
-    int order = 0;
-    do
+    TRACE("Loading Local entries...\n");
+    for (;;)
     {
-        if (order <= 0)
-        {
-            if (hr1 == S_OK)
-            {
-                hr1 = userLocal->Next(1, &pidl1, NULL);
-                if (FAILED_UNEXPECTEDLY(hr1))
-                    return hr1;
-            }
-            else
-            {
-                pidl1 = NULL;
-            }
-        }
-        if (order >= 0)
-        {
-            if (hr2 == S_OK)
-            {
-                hr2 = allUSers->Next(1, &pidl2, NULL);
-                if (FAILED_UNEXPECTEDLY(hr2))
-                    return hr2;
-            }
-            else
-            {
-                pidl2 = NULL;
-            }
-        }
+        hr = userLocal->Next(1, &pidl, NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-        if (hr1 == S_OK && hr2 == S_OK)
-        {
-            LPWSTR name1;
-            LPWSTR name2;
-            STRRET str1 = { STRRET_WSTR };
-            STRRET str2 = { STRRET_WSTR };
-            hr = m_UserLocalFolder->GetDisplayNameOf(pidl1, SHGDN_FORPARSING | SHGDN_INFOLDER, &str1);
-            if (FAILED(hr))
-                return hr;
-            hr = m_AllUSersFolder->GetDisplayNameOf(pidl2, SHGDN_FORPARSING | SHGDN_INFOLDER, &str2);
-            if (FAILED(hr))
-                return hr;
-            StrRetToStrW(&str1, pidl1, &name1);
-            StrRetToStrW(&str2, pidl2, &name2);
-            order = StrCmpW(name1, name2);
-
-            TRACE("Both sources are S_OK, comparison between %S and %S returns %d\n", name1, name2, order);
-
-            CoTaskMemFree(name1);
-            CoTaskMemFree(name2);
-        }
-        else if (hr1 == S_OK)
-        {
-            order = -1;
-
-            TRACE("Both sources are S_OK, forcing %d\n", order);
-        }
-        else if (hr2 == S_OK)
-        {
-            order = 1;
-
-            TRACE("Both sources are S_OK, forcing %d\n", order);
-        }
-        else
-        {
-            TRACE("None of the sources\n");
+        if (hr == S_FALSE)
             break;
-        }
 
-        LocalPidlInfo info = { FALSE };
-        if (order < 0)
-        {
-            info.parent = m_UserLocalFolder;
-            info.pidl = ILClone(pidl1);
-            ILFree(pidl1);
-        }
-        else if (order > 0)
-        {
-            info.parent = m_AllUSersFolder;
-            info.pidl = ILClone(pidl2);
-            ILFree(pidl2);
-        }
-        else // if (order == 0)
-        {
-            info.shared = TRUE;
-            info.parent = m_UserLocalFolder;
-            info.pidl = ILClone(pidl1);
-            ILFree(pidl1);
-            ILFree(pidl2);
-        }
+        LPWSTR name;
+        STRRET str = { STRRET_WSTR };
+        hr = m_UserLocalFolder->GetDisplayNameOf(pidl, SHGDN_FORPARSING | SHGDN_INFOLDER, &str);
+        if (FAILED(hr))
+            return hr;
+        StrRetToStrW(&str, pidl, &name);
 
-        TRACE("Inserting item %d with parent %p and pidl { cb=%d }\n", m_hDsaCount, info.parent, info.pidl->mkid.cb);
+        LocalPidlInfo info = {
+            FALSE,
+            m_UserLocalFolder,
+            ILClone(pidl),
+            NULL,
+            name
+        };
+
+        ILFree(pidl);
+
+        TRACE("Inserting item %d with name %S\n", m_hDsaCount, name);
         int idx = DSA_InsertItem(m_hDsa, DSA_APPEND, &info);
         TRACE("New index: %d\n", idx);
 
         m_hDsaCount++;
+    }
 
-    } while (hr1 == S_OK || hr2 == S_OK);
+    TRACE("Loading Common entries...\n");
+    for (;;)
+    {
+        hr = allUsers->Next(1, &pidl, NULL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        if (hr == S_FALSE)
+            break;
+
+        LPWSTR name;
+        STRRET str = { STRRET_WSTR };
+        hr = m_AllUSersFolder->GetDisplayNameOf(pidl, SHGDN_FORPARSING | SHGDN_INFOLDER, &str);
+        if (FAILED(hr))
+            return hr;
+        StrRetToStrW(&str, pidl, &name);
+
+        LocalPidlInfo info = {
+            FALSE,
+            m_AllUSersFolder,
+            ILClone(pidl),
+            NULL,
+            name
+        };
+
+        ILFree(pidl);
+
+        BOOL bShared = FALSE;
+        for (int i = 0; i < (int)m_hDsaCount; i++)
+        {
+            LocalPidlInfo *pInfo = (LocalPidlInfo *) DSA_GetItemPtr(m_hDsa, i);
+
+            int order = CompareStringW(GetThreadLocale(), NORM_IGNORECASE,
+                                   pInfo->parseName, lstrlenW(pInfo->parseName),
+                                   info.parseName, lstrlenW(info.parseName));
+            switch (order)
+            {
+            case CSTR_EQUAL:
+                TRACE("Item name already exists! Marking '%S' as shared ...\n", name);
+                bShared = TRUE;
+                pInfo->shared = TRUE;
+                pInfo->pidl2 = info.pidl;
+                CoTaskMemFree(name);
+                break;
+            default:
+                continue;
+            }
+        }
+
+        if (!bShared)
+        {
+            TRACE("Inserting item %d with name %S\n", m_hDsaCount, name);
+            int idx = DSA_InsertItem(m_hDsa, DSA_APPEND, &info);
+            TRACE("New index: %d\n", idx);
+
+            m_hDsaCount++;
+        }
+    }
 
     m_HwndOwner = hwndOwner;
     m_Flags = flags;
-        
+
     return Reset();
 }
 
@@ -269,21 +264,19 @@ HRESULT CEnumMergedFolder::FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, L
 
     for (int i = 0; i < (int)m_hDsaCount; i++)
     {
-        LocalPidlInfo * tinfo = (LocalPidlInfo *)DSA_GetItemPtr(m_hDsa, i);
-        if (!tinfo)
+        LocalPidlInfo * pInfo = (LocalPidlInfo *) DSA_GetItemPtr(m_hDsa, i);
+        if (!pInfo)
             return E_FAIL;
+        
+        TRACE("Comparing with item at %d with parent %p and pidl { cb=%d }\n", i, pInfo->parent, pInfo->pidl->mkid.cb);
 
-        LocalPidlInfo info = *tinfo;
-
-        TRACE("Comparing with item at %d with parent %p and pidl { cb=%d }\n", i, info.parent, info.pidl->mkid.cb);
-
-        hr = info.parent->CompareIDs(0, info.pidl, pcidl);
+        hr = pInfo->parent->CompareIDs(0, pInfo->pidl, pcidl);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         if (hr == S_OK)
         {
-            *pinfo = info;
+            *pinfo = *pInfo;
             return S_OK;
         }
         else
@@ -296,12 +289,45 @@ HRESULT CEnumMergedFolder::FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, L
     return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 }
 
+HRESULT CEnumMergedFolder::FindByName(HWND hwndOwner, LPCWSTR strParsingName, LocalPidlInfo * pinfo)
+{
+    if (!m_hDsa)
+    {
+        Begin(hwndOwner, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS);
+    }
+
+    TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDsaCount);
+
+    for (int i = 0; i < (int) m_hDsaCount; i++)
+    {
+        LocalPidlInfo * pInfo = (LocalPidlInfo *) DSA_GetItemPtr(m_hDsa, i);
+        if (!pInfo)
+            return E_FAIL;
+
+        int order = CompareStringW(GetThreadLocale(), NORM_IGNORECASE,
+                                   pInfo->parseName, lstrlenW(pInfo->parseName),
+                                   strParsingName, lstrlenW(strParsingName));
+        switch (order)
+        {
+        case CSTR_EQUAL:
+            *pinfo = *pInfo;
+            return S_OK;
+        default:
+            continue;
+        }
+    }
+
+    TRACE("Pidl not found\n");
+    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+}
+
 HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Next(
     ULONG celt,
     LPITEMIDLIST *rgelt,
     ULONG *pceltFetched)
 {
-    if (pceltFetched) *pceltFetched = 0;
+    if (pceltFetched)
+        *pceltFetched = 0;
 
     if (m_hDsaIndex == m_hDsaCount)
         return S_FALSE;
@@ -323,7 +349,8 @@ HRESULT STDMETHODCALLTYPE CEnumMergedFolder::Next(
         m_hDsaIndex++;
         if (m_hDsaIndex == m_hDsaCount)
         {
-            if (pceltFetched) *pceltFetched = i;
+            if (pceltFetched)
+                *pceltFetched = i;
             return (i == (int)celt) ? S_OK : S_FALSE;
         }
     }
@@ -361,7 +388,7 @@ HRESULT WINAPI CMergedFolder_Constructor(REFIID riid, LPVOID *ppv)
 
 CMergedFolder::CMergedFolder() :
     m_UserLocal(NULL),
-    m_AllUSers(NULL),
+    m_AllUsers(NULL),
     m_EnumSource(NULL),
     m_UserLocalPidl(NULL),
     m_AllUsersPidl(NULL),
@@ -384,7 +411,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::AddNameSpace(LPGUID lpGuid, IShellFolde
         return E_NOTIMPL;
     }
 
-    TRACE("AddNameSpace %p %p\n", m_UserLocal.p, m_AllUSers.p);
+    TRACE("AddNameSpace %p %p\n", m_UserLocal.p, m_AllUsers.p);
     
     // FIXME: Use a DSA to store the list of merged namespaces, together with their related info (psf, pidl, ...)
     // For now, assume only 2 will ever be used, and ignore all the other data.
@@ -395,14 +422,14 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::AddNameSpace(LPGUID lpGuid, IShellFolde
         return S_OK;
     }
 
-    if (m_AllUSers)
+    if (m_AllUsers)
         return E_FAIL;
 
-    m_AllUSers = psf;
+    m_AllUsers = psf;
     m_AllUsersPidl = ILClone(pcidl);
 
     m_EnumSource = new CComObject<CEnumMergedFolder>();
-    return m_EnumSource->SetSources(m_UserLocal, m_AllUSers);
+    return m_EnumSource->SetSources(m_UserLocal, m_AllUsers);
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::GetNameSpaceID(LPCITEMIDLIST pcidl, LPGUID lpGuid)
@@ -440,45 +467,33 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::ParseDisplayName(
 {
     HRESULT hr;
     LocalPidlInfo info;
-    LPITEMIDLIST pidl;
 
-    if (!ppidl) return E_FAIL;
+    if (!ppidl)
+        return E_FAIL;
 
-    if (pchEaten) *pchEaten = 0;
-    if (pdwAttributes) *pdwAttributes = 0;
+    if (pchEaten)
+        *pchEaten = 0;
+
+    if (pdwAttributes)
+        *pdwAttributes = 0;
 
     TRACE("ParseDisplayName name=%S\n", lpszDisplayName);
 
-    hr = m_UserLocal->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, &pidl, pdwAttributes);
-    if (SUCCEEDED(hr))
+    hr = m_EnumSource->FindByName(hwndOwner, lpszDisplayName, &info);
+    if (FAILED(hr))
     {
-        TRACE("ParseDisplayName result local\n");
-        hr = m_EnumSource->FindPidlInList(hwndOwner, pidl, &info);
-        if (SUCCEEDED(hr))
-        {
-            ILFree(pidl);
-            *ppidl = ILClone(info.pidl);
-            return hr;
-        }
+        return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
-    hr = m_AllUSers->ParseDisplayName(hwndOwner, pbcReserved, lpszDisplayName, pchEaten, &pidl, pdwAttributes);
-    if (SUCCEEDED(hr))
-    {
-        TRACE("ParseDisplayName result common\n");
-        hr = m_EnumSource->FindPidlInList(hwndOwner, pidl, &info);
-        if (SUCCEEDED(hr))
-        {
-            ILFree(pidl);
-            *ppidl = ILClone(info.pidl);
-            return hr;
-        }
-    }
+    *ppidl = ILClone(info.pidl);
 
-    if (ppidl) *ppidl = NULL;
-    if (pchEaten) *pchEaten = 0;
-    if (pdwAttributes) *pdwAttributes = 0;
-    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+    if (pchEaten)
+        *pchEaten = lstrlenW(info.parseName);
+
+    if (pdwAttributes)
+        *pdwAttributes = info.parent->GetAttributesOf(1, (LPCITEMIDLIST*)ppidl, pdwAttributes);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::EnumObjects(
@@ -514,14 +529,16 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     if (riid != IID_IShellFolder)
         return E_FAIL;
 
+    // Construct a child MergedFolder and return it
     CComPtr<IShellFolder> fld1;
     CComPtr<IShellFolder> fld2;
 
+    // In shared folders, the user one takes precedence over the common one, so it will always be on pidl1
     hr = m_UserLocal->BindToObject(info.pidl, pbcReserved, IID_PPV_ARG(IShellFolder, &fld1));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = m_AllUSers->BindToObject(info.pidl, pbcReserved, IID_PPV_ARG(IShellFolder, &fld2));
+    hr = m_AllUsers->BindToObject(info.pidl2, pbcReserved, IID_PPV_ARG(IShellFolder, &fld2));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -538,7 +555,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = pasf->AddNameSpace(NULL, fld2, info.pidl, 0x0000);
+    hr = pasf->AddNameSpace(NULL, fld2, info.pidl2, 0x0000);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -783,6 +800,13 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetDetailsOf(
 HRESULT STDMETHODCALLTYPE CMergedFolder::MapColumnToSCID(
     UINT iColumn,
     SHCOLUMNID *pscid)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+// IAugmentedShellFolder3
+HRESULT STDMETHODCALLTYPE CMergedFolder::QueryNameSpace2(ULONG, QUERYNAMESPACEINFO *)
 {
     UNIMPLEMENTED;
     return E_NOTIMPL;
