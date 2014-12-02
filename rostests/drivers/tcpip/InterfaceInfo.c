@@ -102,6 +102,7 @@ START_TEST(InterfaceInfo)
         trace("\tIndex %lu, name %S\n", pInterfaceInfo->Adapter[i].Index, pInterfaceInfo->Adapter[i].Name);
     }
 
-    HeapFree(GetProcessHeap(), 0, pInterfaceInfo);
+    if (pInterfaceInfo != &InterfaceInfo)
+        HeapFree(GetProcessHeap(), 0, pInterfaceInfo);
     CloseHandle(FileHandle);
 }
