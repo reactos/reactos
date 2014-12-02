@@ -1,7 +1,7 @@
 
 add_subdirectory(apitests)
 #add_subdirectory(dibtests)
-#add_subdirectory(drivers)
+add_subdirectory(drivers)
 #add_subdirectory(dxtest)
 add_subdirectory(kmtests)
 #add_subdirectory(regtests)
