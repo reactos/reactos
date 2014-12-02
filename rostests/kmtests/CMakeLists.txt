@@ -132,7 +132,7 @@ add_dependencies(kmtest_drivers
     example_drv
     iodeviceobject_drv
     iohelper_drv
-    tcpip_test_drv)
+    tcpip_drv)
 
 add_custom_target(kmtest_all)
 add_dependencies(kmtest_all kmtest_drivers kmtest)
