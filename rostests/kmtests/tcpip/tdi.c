@@ -39,35 +39,8 @@ TestProviderInfo(void)
             RTL_CONSTANT_STRING(L"\\Device\\Tcp"),
             STATUS_SUCCESS, STATUS_SUCCESS,
             {
-                0x0002,             // Version
-                0x3FFFFFFF,         // MaxSendSize
-                0,                  // MaxConnectionUserData
-                65515,              // MaxDatagramSize
-                TDI_SERVICE_CONNECTION_MODE |
-                    TDI_SERVICE_ORDERLY_RELEASE |
-                    TDI_SERVICE_CONNECTIONLESS_MODE |
-                    TDI_SERVICE_ERROR_FREE_DELIVERY |
-                    TDI_SERVICE_BROADCAST_SUPPORTED |
-                    TDI_SERVICE_DELAYED_ACCEPTANCE |
-                    TDI_SERVICE_EXPEDITED_DATA |
-                    TDI_SERVICE_NO_ZERO_LENGTH |
-                    TDI_SERVICE_DGRAM_CONNECTION |
-                    TDI_SERVICE_FORCE_ACCESS_CHECK |
-                    TDI_SERVICE_DIRECT_ACCEPT |
-                    TDI_SERVICE_ADDRESS_SECURITY |
-                    TDI_SERVICE_NO_PUSH,                  // ServiceFlags
-                1,                  // MinimumLookaheadData
-                65535,              // MaximumLookaheadData
-                0,                  // NumberOfResources
-                {{0}}               // StartTime
-            }
-        },
-        {
-            RTL_CONSTANT_STRING(L"\\Device\\Udp"),
-            STATUS_SUCCESS, STATUS_SUCCESS,
-            {
-                0x0002,             // Version
-                0x3FFFFFFF,         // MaxSendSize
+                0x0100,             // Version
+                0xFFFFFFFF,         // MaxSendSize
                 0,                  // MaxConnectionUserData
                 65507,              // MaxDatagramSize
                 TDI_SERVICE_CONNECTION_MODE |
@@ -80,8 +53,40 @@ TestProviderInfo(void)
                     TDI_SERVICE_NO_ZERO_LENGTH |
                     TDI_SERVICE_DGRAM_CONNECTION |
                     TDI_SERVICE_FORCE_ACCESS_CHECK |
-                    TDI_SERVICE_DIRECT_ACCEPT |
-                    TDI_SERVICE_ADDRESS_SECURITY,   // ServiceFlags
+                    TDI_SERVICE_SEND_AND_DISCONNECT |
+                    TDI_SERVICE_ACCEPT_LOCAL_ADDR |
+                    TDI_SERVICE_ADDRESS_SECURITY |
+                    TDI_SERVICE_PREPOST_RECVS |
+                    TDI_SERVICE_NO_PUSH,    // ServiceFlags
+                1,                  // MinimumLookaheadData
+                65535,              // MaximumLookaheadData
+                0,                  // NumberOfResources
+                {{0}}               // StartTime
+            }
+        },
+        {
+            RTL_CONSTANT_STRING(L"\\Device\\Udp"),
+            STATUS_SUCCESS, STATUS_SUCCESS,
+            {
+                0x0100,             // Version
+                0xFFFFFFFF,         // MaxSendSize
+                0,                  // MaxConnectionUserData
+                65507,              // MaxDatagramSize
+                TDI_SERVICE_CONNECTION_MODE |
+                    TDI_SERVICE_ORDERLY_RELEASE |
+                    TDI_SERVICE_CONNECTIONLESS_MODE |
+                    TDI_SERVICE_ERROR_FREE_DELIVERY |
+                    TDI_SERVICE_BROADCAST_SUPPORTED |
+                    TDI_SERVICE_DELAYED_ACCEPTANCE |
+                    TDI_SERVICE_EXPEDITED_DATA |
+                    TDI_SERVICE_NO_ZERO_LENGTH |
+                    TDI_SERVICE_DGRAM_CONNECTION |
+                    TDI_SERVICE_FORCE_ACCESS_CHECK |
+                    TDI_SERVICE_SEND_AND_DISCONNECT |
+                    TDI_SERVICE_ACCEPT_LOCAL_ADDR |
+                    TDI_SERVICE_ADDRESS_SECURITY |
+                    TDI_SERVICE_PREPOST_RECVS |
+                    TDI_SERVICE_NO_PUSH,   // ServiceFlags
                 1,                  // MinimumLookaheadData
                 65535,              // MaximumLookaheadData
                 0,                  // NumberOfResources
@@ -96,10 +101,10 @@ TestProviderInfo(void)
             RTL_CONSTANT_STRING(L"\\Device\\RawIp"),
             STATUS_SUCCESS, STATUS_SUCCESS,
             {
-                0x0002,             // Version
-                0x3FFFFFFF,         // MaxSendSize
+                0x0100,             // Version
+                0xFFFFFFFF,         // MaxSendSize
                 0,                  // MaxConnectionUserData
-                65515,              // MaxDatagramSize
+                65507,              // MaxDatagramSize
                 TDI_SERVICE_CONNECTION_MODE |
                     TDI_SERVICE_ORDERLY_RELEASE |
                     TDI_SERVICE_CONNECTIONLESS_MODE |
@@ -110,8 +115,11 @@ TestProviderInfo(void)
                     TDI_SERVICE_NO_ZERO_LENGTH |
                     TDI_SERVICE_DGRAM_CONNECTION |
                     TDI_SERVICE_FORCE_ACCESS_CHECK |
-                    TDI_SERVICE_DIRECT_ACCEPT |
-                    TDI_SERVICE_ADDRESS_SECURITY,   // ServiceFlags
+                    TDI_SERVICE_SEND_AND_DISCONNECT |
+                    TDI_SERVICE_ACCEPT_LOCAL_ADDR |
+                    TDI_SERVICE_ADDRESS_SECURITY |
+                    TDI_SERVICE_PREPOST_RECVS |
+                    TDI_SERVICE_NO_PUSH,   // ServiceFlags
                 1,                  // MinimumLookaheadData
                 65535,              // MaximumLookaheadData
                 0,                  // NumberOfResources
@@ -120,7 +128,7 @@ TestProviderInfo(void)
         },
         {
             RTL_CONSTANT_STRING(L"\\Device\\IPMULTICAST"),
-            STATUS_OBJECT_NAME_NOT_FOUND,
+            STATUS_SUCCESS, STATUS_INVALID_PARAMETER,
         },
     };
     ULONG i;
