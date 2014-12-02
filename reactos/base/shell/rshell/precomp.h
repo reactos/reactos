@@ -17,9 +17,9 @@
 #pragma warning(disable:4512) // assignment operator could not be gernerated
 #endif
 
-#define USE_SYSTEM_MENUDESKBAR 1
-#define USE_SYSTEM_MENUSITE 1
-#define USE_SYSTEM_MENUBAND 1
+#define USE_SYSTEM_MENUDESKBAR 0
+#define USE_SYSTEM_MENUSITE 0
+#define USE_SYSTEM_MENUBAND 0
 #define USE_SYSTEM_MERGED_FOLDERS 0
 
 #define MERGE_FOLDERS 1
