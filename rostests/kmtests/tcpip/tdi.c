@@ -9,8 +9,8 @@
 #include <tdikrnl.h>
 
 static
-NTAPI
 NTSTATUS
+NTAPI
 IrpCompletionRoutine(
     _In_ PDEVICE_OBJECT    DeviceObject,
     _In_ PIRP              Irp,
