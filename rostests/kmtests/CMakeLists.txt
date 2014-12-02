@@ -7,6 +7,7 @@ include_directories(include)
 add_subdirectory(example)
 add_subdirectory(kernel32)
 add_subdirectory(ntos_io)
+add_subdirectory(tcpip)
 
 list(APPEND COMMON_SOURCE
     example/GuardedMemory.c
@@ -108,6 +109,7 @@ list(APPEND KMTEST_SOURCE
     example/Example_user.c
     kernel32/FindFile_user.c
     ntos_io/IoDeviceObject_user.c
+    tcpip/TcpIp_user.c
     ${COMMON_SOURCE}
 
     kmtest/kmtest.rc)
@@ -129,7 +131,8 @@ add_dependencies(kmtest_drivers
     kmtest_drv
     example_drv
     iodeviceobject_drv
-    iohelper_drv)
+    iohelper_drv
+    tcpip_test_drv)
 
 add_custom_target(kmtest_all)
 add_dependencies(kmtest_all kmtest_drivers kmtest)
