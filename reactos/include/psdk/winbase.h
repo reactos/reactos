@@ -2724,6 +2724,8 @@ BOOL WINAPI MoveFileA(_In_ LPCSTR, _In_ LPCSTR);
 BOOL WINAPI MoveFileW(_In_ LPCWSTR, _In_ LPCWSTR);
 BOOL WINAPI MoveFileExA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ DWORD);
 BOOL WINAPI MoveFileExW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ DWORD);
+BOOL WINAPI MoveFileWithProgressA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_ DWORD);
+BOOL WINAPI MoveFileWithProgressW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_ DWORD);
 int WINAPI MulDiv(_In_ int, _In_ int, _In_ int);
 BOOL WINAPI NotifyChangeEventLog(_In_ HANDLE, _In_ HANDLE);
 BOOL WINAPI ObjectCloseAuditAlarmA(_In_ LPCSTR, _In_ PVOID, _In_ BOOL);
@@ -3378,6 +3380,7 @@ typedef PCACTCTXW PCACTCTX;
 #define lstrlen lstrlenW
 #define MoveFile MoveFileW
 #define MoveFileEx MoveFileExW
+#define MoveFileWithProgress MoveFileWithProgressW
 #define ObjectCloseAuditAlarm ObjectCloseAuditAlarmW
 #define ObjectDeleteAuditAlarm ObjectDeleteAuditAlarmW
 #define ObjectOpenAuditAlarm ObjectOpenAuditAlarmW
@@ -3585,6 +3588,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define lstrlen lstrlenA
 #define MoveFile MoveFileA
 #define MoveFileEx MoveFileExA
+#define MoveFileWithProgress MoveFileWithProgressA
 #define ObjectCloseAuditAlarm ObjectCloseAuditAlarmA
 #define ObjectDeleteAuditAlarm ObjectDeleteAuditAlarmA
 #define ObjectOpenAuditAlarm ObjectOpenAuditAlarmA
