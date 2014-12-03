@@ -2611,6 +2611,32 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
+    LRESULT DoExitWindows()
+    {
+        ExitWindowsDialog(m_hWnd);
+        return 0;
+    }
+
+    LRESULT OnDoExitWindows(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        /* 
+         * TWM_DOEXITWINDOWS is send by the CDesktopBrowserr to us to 
+         * show the shutdown dialog
+         */
+        return DoExitWindows();
+    }
+
+    LRESULT OnSysCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam == SC_CLOSE)
+        {
+            return DoExitWindows();
+        }
+
+        bHandled = FALSE;
+        return TRUE;
+    }
+
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = FALSE;
@@ -2675,13 +2701,7 @@ HandleTrayContextMenu:
 
             case IDM_SHUTDOWN:
             {
-                HINSTANCE hShell32;
-                EXITWINDLG ExitWinDlg;
-
-                hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-                ExitWinDlg = (EXITWINDLG) GetProcAddress(hShell32, (LPCSTR) 60);
-
-                ExitWinDlg(m_hWnd);
+                DoExitWindows();
                 break;
             }
             }
@@ -2794,6 +2814,7 @@ HandleTrayContextMenu:
         /*MESSAGE_HANDLER(WM_DESTROY, OnDestroy)*/
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
+        MESSAGE_HANDLER(WM_SYSCOMMAND, OnSysCommand)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
@@ -2813,6 +2834,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_NCMOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
+        MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
