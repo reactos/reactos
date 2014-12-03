@@ -41,6 +41,7 @@
 #include "commonbrowser.h"
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
+#include "explorerband.h"
 #include <stdio.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);

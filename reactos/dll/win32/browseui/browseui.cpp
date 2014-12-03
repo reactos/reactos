@@ -38,6 +38,7 @@ OBJECT_ENTRY(CLSID_CCommonBrowser, CCommonBrowser)
 OBJECT_ENTRY(CLSID_GlobalFolderSettings, CGlobalFolderSettings)
 OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
 OBJECT_ENTRY(CLSID_CRegTreeOptions, CRegTreeOptions)
+OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
 END_OBJECT_MAP()
 
 CBrowseUIModule                             gModule;

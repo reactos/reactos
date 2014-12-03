@@ -24,6 +24,8 @@
 #include <htiframe.h>
 #include <strsafe.h>
 
+#define USE_CUSTOM_EXPLORERBAND 1
+
 extern "C"
 BOOL WINAPI Shell_GetImageLists(
     _Out_  HIMAGELIST *phiml,
@@ -1179,9 +1181,24 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     hResult = GetBaseBar(vertical, (IUnknown **)&theBaseBar);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+
+#if USE_CUSTOM_EXPLORERBAND
+    TRACE("ShowBand called for CLSID %s, vertical=%d...\n", wine_dbgstr_guid(&classID), vertical);
+    if (IsEqualCLSID(CLSID_ExplorerBand, classID))
+    {
+        TRACE("CLSID_ExplorerBand requested, building internal band.\n");
+        hResult = CExplorerBand_Constructor(IID_PPV_ARG(IUnknown, &newBand));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
+    else
+#endif
+    {
+        TRACE("A different CLSID requested, using CoCreateInstance.\n");
+        hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return hResult;
+    }
     hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -1199,6 +1216,7 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     hResult = dockingWindow->ShowDW(TRUE);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
     return S_OK;
 }
 
