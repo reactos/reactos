@@ -24,6 +24,14 @@ extern "C" {
 #endif /* defined(__cplusplus) */
 
 /****************************************************************************
+ * Taskbar WM_COMMAND identifiers
+ */
+
+#define TWM_DOEXITWINDOWS (WM_USER + 342)
+#define TWM_CYCLEFOCUS (WM_USER + 348)
+
+
+/****************************************************************************
  *	IDList Functions
  */
 BOOL WINAPI ILGetDisplayName(

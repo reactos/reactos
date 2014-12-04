@@ -388,9 +388,6 @@ BOOL CDesktopBrowser::MessageLoop()
     return TRUE;
 }
 
-#define TWM_DOEXITWINDOWS (WM_USER + 342)
-#define TWM_CYCLEFOCUS (WM_USER + 348)
-
 LRESULT CDesktopBrowser::_NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HWND hwndTray;

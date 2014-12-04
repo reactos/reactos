@@ -157,7 +157,6 @@ void WINAPI _ShellDDEInit(BOOL bInit);
  */
 
 #define TWM_OPENSTARTMENU (WM_USER + 260)
-#define TWM_DOEXITWINDOWS (WM_USER + 342)
 
 extern const GUID IID_IShellDesktopTray;
 
