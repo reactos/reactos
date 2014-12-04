@@ -46,7 +46,7 @@ private:
     LPITEMIDLIST pidlDesktopDirectory;
     LPITEMIDLIST pidlDesktop;
 
-    LRESULT CDesktopBrowser::_NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT _NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
     CDesktopBrowser();
@@ -421,6 +421,8 @@ LRESULT CDesktopBrowser::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam)
         case FCIDM_DESKBROWSER_REFRESH:
             break;
     }
+
+    return 0;
 }
 
 LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
