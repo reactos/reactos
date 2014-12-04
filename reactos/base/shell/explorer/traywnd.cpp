@@ -3029,59 +3029,59 @@ public:
     {
         HMENU menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCE(IDM_TRAYWND));
 
-        if (menubase)
+        if (!menubase)
+            return HRESULT_FROM_WIN32(GetLastError());
+
+        int count = ::GetMenuItemCount(menubase);
+
+        for (int i = 0; i < count; i++)
         {
-            int count = ::GetMenuItemCount(menubase);
+            WCHAR label[128];
 
-            for (int i = 0; i < count; i++)
-            {
-                WCHAR label[128];
+            MENUITEMINFOW mii = { 0 };
+            mii.cbSize = sizeof(mii);
+            mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS 
+                | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
+            mii.dwTypeData = label;
+            mii.cch = _countof(label);
+            ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
 
-                MENUITEMINFOW mii = { 0 };
-                mii.cbSize = sizeof(mii);
-                mii.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_CHECKMARKS 
-                    | MIIM_DATA | MIIM_STRING | MIIM_BITMAP | MIIM_FTYPE;
-                mii.dwTypeData = label;
-                mii.cch = _countof(label);
-                ::GetMenuItemInfoW(menubase, i, TRUE, &mii);
+            TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
 
-                TRACE("Adding item %d label %S type %d\n", mii.wID, mii.dwTypeData, mii.fType);
+            mii.fType |= MFT_RADIOCHECK;
 
-                mii.fType |= MFT_RADIOCHECK;
-
-                ::InsertMenuItemW(hPopup, i + 1, TRUE, &mii);
-            }
-
-            ::DestroyMenu(menubase);
-
-            if (SHRestricted(REST_CLASSICSHELL) != 0)
-            {
-                DeleteMenu(hPopup,
-                           ID_LOCKTASKBAR,
-                           MF_BYCOMMAND);
-            }
-
-            CheckMenuItem(hPopup,
-                          ID_LOCKTASKBAR,
-                          MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
-
-            if (TrayWnd->TrayBandSite != NULL)
-            {
-                if (SUCCEEDED(TrayWnd->TrayBandSite->AddContextMenus(
-                    hPopup,
-                    0,
-                    ID_SHELL_CMD_FIRST,
-                    ID_SHELL_CMD_LAST,
-                    CMF_NORMAL,
-                    &pcm)))
-                {
-                    return S_OK;
-                }
-            }
-
+            ::InsertMenuItemW(hPopup, i + 1, TRUE, &mii);
         }
 
-        return E_FAIL;
+        ::DestroyMenu(menubase);
+
+        if (SHRestricted(REST_CLASSICSHELL) != 0)
+        {
+            DeleteMenu(hPopup,
+                       ID_LOCKTASKBAR,
+                       MF_BYCOMMAND);
+        }
+
+        CheckMenuItem(hPopup,
+                      ID_LOCKTASKBAR,
+                      MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
+
+        if (TrayWnd->TrayBandSite != NULL)
+        {
+            if (FAILED(TrayWnd->TrayBandSite->AddContextMenus(
+                hPopup,
+                0,
+                ID_SHELL_CMD_FIRST,
+                ID_SHELL_CMD_LAST,
+                CMF_NORMAL,
+                &pcm)))
+            {
+                WARN("AddContextMenus failed.\n");
+                pcm = NULL;
+            }
+        }
+
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE

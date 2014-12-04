@@ -288,11 +288,11 @@ public:
         IN UINT uFlags,
         OUT IContextMenu **ppcm)
     {
-        IShellService *pSs;
-        HRESULT hRet;
-
         if (ContextMenu == NULL)
         {
+            HRESULT hRet;
+            CComPtr<IShellService> pSs;
+
             /* Cache the context menu so we don't need to CoCreateInstance all the time... */
             hRet = CoCreateInstance(CLSID_BandSiteMenu, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellService, &pSs));
             TRACE("CoCreateInstance(CLSID_BandSiteMenu) for IShellService returned: 0x%x\n", hRet);
@@ -302,13 +302,10 @@ public:
             hRet = pSs->SetOwner((IBandSite*)this);
             if (!SUCCEEDED(hRet))
             {
-                pSs->Release();
                 return hRet;
             }
 
             hRet = pSs->QueryInterface(IID_PPV_ARG(IContextMenu, &ContextMenu));
-
-            pSs->Release();
 
             if (!SUCCEEDED(hRet))
                 return hRet;
@@ -321,12 +318,7 @@ public:
         }
 
         /* Add the menu items */
-        return ContextMenu->QueryContextMenu(
-            hmenu,
-            indexMenu,
-            idCmdFirst,
-            idCmdLast,
-            uFlags);
+        return ContextMenu->QueryContextMenu(hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
     }
 
     virtual HRESULT STDMETHODCALLTYPE Lock(
