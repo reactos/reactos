@@ -67,7 +67,7 @@ CSR_API(SrvRegisterConsoleVDM)
                                  NULL);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Error: Impossible to create a shared section ; Status = %lu\n", Status);
+            DPRINT1("Error: Impossible to create a shared section, Status = 0x%08lx\n", Status);
             goto Quit;
         }
 
@@ -88,7 +88,7 @@ CSR_API(SrvRegisterConsoleVDM)
                                     PAGE_READWRITE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+            DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
             NtClose(Console->VDMBufferSection);
             goto Quit;
         }
@@ -111,7 +111,7 @@ CSR_API(SrvRegisterConsoleVDM)
                                     PAGE_READWRITE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+            DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
             NtUnmapViewOfSection(NtCurrentProcess(), Console->VDMBuffer);
             NtClose(Console->VDMBufferSection);
             goto Quit;

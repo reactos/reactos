@@ -162,7 +162,7 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to create a shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to create a shared section, Status = 0x%08lx\n", Status);
         NtClose(NewBuffer->ClientMutex);
         NtClose(NewBuffer->Mutex);
         ConsoleFreeHeap(NewBuffer->BitMapInfo);
@@ -187,7 +187,7 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         NtClose(NewBuffer->hSection);
         NtClose(NewBuffer->ClientMutex);
         NtClose(NewBuffer->Mutex);
@@ -214,7 +214,7 @@ GRAPHICS_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         NtUnmapViewOfSection(NtCurrentProcess(), NewBuffer->BitMap);
         NtClose(NewBuffer->hSection);
         NtClose(NewBuffer->ClientMutex);

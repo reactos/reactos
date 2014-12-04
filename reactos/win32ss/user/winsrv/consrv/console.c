@@ -990,7 +990,7 @@ CSR_API(SrvAttachConsole)
                                            Length, &Length);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("SrvAttachConsole - Cannot retrieve basic process info, Status = %lu\n", Status);
+            DPRINT1("SrvAttachConsole - Cannot retrieve basic process info, Status = 0x%08lx\n", Status);
             return Status;
         }
 

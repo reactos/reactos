@@ -254,7 +254,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to create a shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to create a shared section, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -270,7 +270,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to map the shared section ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to map the shared section, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -365,7 +365,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
                                0, 0, DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Impossible to duplicate section handle for client ; Status = %lu\n", Status);
+        DPRINT1("Error: Impossible to duplicate section handle for client, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -401,7 +401,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             Status = _SEH2_GetExceptionCode();
-            DPRINT1("GuiConsoleShowConsoleProperties - Caught an exception, Status = %08X\n", Status);
+            DPRINT1("GuiConsoleShowConsoleProperties - Caught an exception, Status = 0x%08lx\n", Status);
         }
         _SEH2_END;
     }
@@ -442,7 +442,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                                0, 0, DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error when mapping client handle, Status = %lu\n", Status);
+        DPRINT1("Error when mapping client handle, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -459,7 +459,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error when mapping view of file, Status = %lu\n", Status);
+        DPRINT1("Error when mapping view of file, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -536,7 +536,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
-        DPRINT1("GuiApplyUserSettings - Caught an exception, Status = %08X\n", Status);
+        DPRINT1("GuiApplyUserSettings - Caught an exception, Status = 0x%08lx\n", Status);
     }
     _SEH2_END;
 
@@ -588,7 +588,7 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
                                0, 0, DUPLICATE_SAME_ACCESS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error when mapping client handle, Status = %lu\n", Status);
+        DPRINT1("Error when mapping client handle, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -605,7 +605,7 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
                                 PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error when mapping view of file, Status = %lu\n", Status);
+        DPRINT1("Error when mapping view of file, Status = 0x%08lx\n", Status);
         goto Quit;
     }
 
@@ -720,7 +720,7 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
-        DPRINT1("GuiApplyUserSettings - Caught an exception, Status = %08X\n", Status);
+        DPRINT1("GuiApplyUserSettings - Caught an exception, Status = 0x%08lx\n", Status);
     }
     _SEH2_END;
 
