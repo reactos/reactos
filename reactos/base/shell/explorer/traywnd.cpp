@@ -40,6 +40,19 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 #define AUTOHIDE_SHOWN 2
 #define AUTOHIDE_HIDING 3
 
+#define IDHK_RUN 0x1f4
+#define IDHK_MINIMIZE_ALL 0x1f5
+#define IDHK_RESTORE_ALL 0x1f6
+#define IDHK_HELP 0x1f7
+#define IDHK_EXPLORE 0x1f8
+#define IDHK_FIND 0x1f9
+#define IDHK_FIND_COMPUTER 0x1fa
+#define IDHK_NEXT_TASK 0x1fb
+#define IDHK_PREV_TASK 0x1fc
+#define IDHK_SYS_PROPERTIES 0x1fd
+#define IDHK_DESKTOP 0x1fe
+#define IDHK_PAGER 0x1ff
+
 static LONG TrayWndCount = 0;
 
 static const WCHAR szTrayWndClass [] = TEXT("Shell_TrayWnd");
@@ -199,19 +212,6 @@ public:
 
         if (InterlockedDecrement(&TrayWndCount) == 0)
             PostQuitMessage(0);
-    }
-
-    BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
-    {
-        WCHAR szParams[MAX_PATH];
-
-        StringCbCopy(szParams, sizeof(szParams),
-                     TEXT("shell32.dll,Control_RunDLL "));
-        if (FAILED_UNEXPECTEDLY(StringCbCat(szParams, sizeof(szParams),
-            applet)))
-            return FALSE;
-
-        return (ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), szParams, NULL, SW_SHOWDEFAULT) > (HINSTANCE) 32);
     }
 
     /*
@@ -1577,6 +1577,20 @@ SetStartBtnImage:
             AutoHideState = AUTOHIDE_HIDING;
             SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
         }
+
+        RegisterHotKey(m_hWnd, IDHK_RUN, MOD_WIN, 'R');
+        RegisterHotKey(m_hWnd, IDHK_MINIMIZE_ALL, MOD_WIN, 'M');
+        RegisterHotKey(m_hWnd, IDHK_RESTORE_ALL, MOD_WIN|MOD_SHIFT, 'M');
+        RegisterHotKey(m_hWnd, IDHK_HELP, MOD_WIN, VK_F1);
+        RegisterHotKey(m_hWnd, IDHK_EXPLORE, MOD_WIN, 'E');
+        RegisterHotKey(m_hWnd, IDHK_FIND, MOD_WIN, 'F');
+        RegisterHotKey(m_hWnd, IDHK_FIND_COMPUTER, MOD_WIN|MOD_CONTROL, 'F');
+        RegisterHotKey(m_hWnd, IDHK_NEXT_TASK, MOD_WIN, VK_TAB);
+        RegisterHotKey(m_hWnd, IDHK_PREV_TASK, MOD_WIN|MOD_SHIFT, VK_TAB);
+        RegisterHotKey(m_hWnd, IDHK_SYS_PROPERTIES, MOD_WIN, VK_PAUSE);
+        RegisterHotKey(m_hWnd, IDHK_DESKTOP, MOD_WIN, 'D');
+        RegisterHotKey(m_hWnd, IDHK_PAGER, MOD_WIN, 'B');
+
         return TRUE;
     }
 
@@ -1789,7 +1803,8 @@ SetStartBtnImage:
             break;
 
         case ID_SHELL_CMD_ADJUST_DAT:
-            LaunchCPanel(NULL, TEXT("timedate.cpl"));
+            //FIXME: Use SHRunControlPanel
+            ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
             break;
 
         default:
@@ -2581,7 +2596,10 @@ HandleTrayContextMenu:
             ptClick.x = MAKEPOINTS(lParam).x;
             ptClick.y = MAKEPOINTS(lParam).y;
             if (PtInRect(&rcClock, ptClick))
-                LaunchCPanel(NULL, TEXT("timedate.cpl"));
+            {
+                //FIXME: use SHRunControlPanel
+                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+            }
         }
         return TRUE;
     }
@@ -2637,6 +2655,70 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
+    HRESULT ExecResourceCmd(int id)
+    {
+        WCHAR szCommand[256];
+        WCHAR *pszParameters;
+
+        if (!LoadString(hExplorerInstance,
+                        id,
+                        szCommand,
+                        sizeof(szCommand) / sizeof(szCommand[0])))
+        {
+            return E_FAIL;
+        }
+
+        pszParameters = wcschr(szCommand, L'>');
+        if (!pszParameters)
+            return E_FAIL;
+
+        *pszParameters = 0;
+        pszParameters++;
+
+        ShellExecuteW(m_hWnd, NULL, szCommand, pszParameters, NULL, 0);
+        return S_OK;
+    }
+
+    LRESULT OnHotkey(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        switch (wParam)
+        {
+        case IDHK_RUN:
+            DisplayRunFileDlg();
+            break;
+        case IDHK_HELP:
+            ExecResourceCmd(IDS_HELP_COMMAND);
+            break;
+        case IDHK_EXPLORE:
+            ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1); 
+            break;
+        case IDHK_FIND:
+            SHFindFiles(NULL, NULL);
+            break;
+        case IDHK_FIND_COMPUTER:
+            SHFindComputer(NULL, NULL);
+            break;
+        case IDHK_SYS_PROPERTIES:
+            //FIXME: Use SHRunControlPanel
+            ShellExecuteW(m_hWnd, NULL, L"sysdm.cpl", NULL, NULL, SW_NORMAL);
+            break;
+        case IDHK_NEXT_TASK:
+            break;
+        case IDHK_PREV_TASK:
+            break;
+        case IDHK_MINIMIZE_ALL:
+            break;
+        case IDHK_RESTORE_ALL:
+            break;
+        case IDHK_DESKTOP:
+            break;
+        case IDHK_PAGER:
+            break;
+        }
+
+        return 0;
+    }
+
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = FALSE;
@@ -2653,44 +2735,20 @@ HandleTrayContextMenu:
             {
                 /* FIXME: Handle these commands as well */
             case IDM_TASKBARANDSTARTMENU:
-
                 DisplayProperties();
                 break;
 
             case IDM_SEARCH:
+                SHFindFiles(NULL, NULL);
                 break;
 
             case IDM_HELPANDSUPPORT:
-            {
-                /* TODO: Implement properly */
-
-                LPCWSTR strSite = L"https://www.reactos.org/";
-
-                /* TODO: Make localizable */
-                LPCWSTR strCaption = L"Sorry";
-                LPCWSTR strMessage = L"ReactOS could not browse to '%s' (error %d). Please make sure there is a web browser installed.";
-                WCHAR tmpMessage[512];
-
-                /* TODO: Read from the registry */
-                LPCWSTR strVerb = NULL; /* default */
-                LPCWSTR strPath = strSite;
-                LPCWSTR strParams = NULL;
-
-                /* The return value is defined as HINSTANCE for backwards compatibility only, the cast is needed */
-                int result = (int) ShellExecuteW(m_hWnd, strVerb, strPath, strParams, NULL, SW_SHOWNORMAL);
-                if (result <= 32)
-                {
-                    StringCchPrintfW(tmpMessage, 512, strMessage, strSite, result);
-                    MessageBoxExW(m_hWnd, tmpMessage, strCaption, MB_OK, 0);
-                }
+                ExecResourceCmd(IDS_HELP_COMMAND);
                 break;
-            }
 
             case IDM_RUN:
-            {
                 DisplayRunFileDlg();
                 break;
-            }
 
                 /* FIXME: Handle these commands as well */
             case IDM_SYNCHRONIZE:
@@ -2700,10 +2758,8 @@ HandleTrayContextMenu:
                 break;
 
             case IDM_SHUTDOWN:
-            {
                 DoExitWindows();
                 break;
-            }
             }
         }
         return Ret;
@@ -2835,6 +2891,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
+        MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
@@ -2878,16 +2935,6 @@ HandleTrayContextMenu:
 
             if (!Ret || Ret == -1)
                 break;
-
-            if (Msg.message == WM_HOTKEY)
-            {
-                switch (Msg.wParam)
-                {
-                case IDHK_RUN: /* Win+R */
-                    DisplayRunFileDlg();
-                    break;
-                }
-            }
 
             if (StartMenuBand == NULL ||
                 StartMenuBand->IsMenuMessage(&Msg) != S_OK)

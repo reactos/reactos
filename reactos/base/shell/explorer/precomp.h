@@ -108,8 +108,6 @@ IN const DROPTARGET_CALLBACKS *Callbacks  OPTIONAL);
  * explorer.c
  */
 
-#define IDHK_RUN 1 /* Win+R */
-
 LONG
 SetWindowStyle(IN HWND hWnd,
 IN LONG dwStyleMask,

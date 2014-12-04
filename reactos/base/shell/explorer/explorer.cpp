@@ -182,9 +182,6 @@ StartWithDesktop(IN HINSTANCE hInstance)
 
     if (Tray != NULL)
     {
-#if !WIN7_COMPAT_MODE
-        RegisterHotKey(NULL, IDHK_RUN, MOD_WIN, 'R');
-#endif
         TrayMessageLoop(Tray);
 #if !WIN7_COMPAT_MODE
         HideMinimizedWindows(FALSE);

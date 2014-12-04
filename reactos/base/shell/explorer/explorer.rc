@@ -25,6 +25,12 @@ IDB_TASKBARPROP_NOLOCK_GROUP_QL BITMAP "res/nolock_group_ql.bmp"
 
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 
+STRINGTABLE
+BEGIN
+    //IDS_HELP_COMMAND "helpctr.exe>-FromStartHelp"
+    IDS_HELP_COMMAND "https://www.reactos.org/"
+END
+
 /* UTF-8 */
 #pragma code_page(65001)
 
