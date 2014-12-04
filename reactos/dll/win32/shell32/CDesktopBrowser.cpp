@@ -35,6 +35,7 @@ class CDesktopBrowser :
 {
 public:
     DWORD Tag;
+    HACCEL m_hAccel;
 private:
     HWND hWnd;
     HWND hWndShellView;
@@ -44,6 +45,9 @@ private:
     CComPtr<IShellBrowser> DefaultShellBrowser;
     LPITEMIDLIST pidlDesktopDirectory;
     LPITEMIDLIST pidlDesktop;
+
+    LRESULT CDesktopBrowser::_NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 public:
     CDesktopBrowser();
     ~CDesktopBrowser();
@@ -51,8 +55,9 @@ public:
     HWND FindDesktopListView ();
     BOOL CreateDeskWnd();
     HWND DesktopGetWindowControl(IN UINT id);
+    LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam);
-    static BOOL MessageLoop();
+    BOOL MessageLoop();
 
     // *** IOleWindow methods ***
     virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND *lphwnd);
@@ -252,7 +257,9 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::EnableModelessSB(BOOL fEnable)
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::TranslateAcceleratorSB(LPMSG lpmsg, WORD wID)
 {
-    return S_FALSE;
+    if (!::TranslateAcceleratorW(hWnd, m_hAccel, lpmsg))
+        return S_FALSE;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
@@ -370,12 +377,50 @@ BOOL CDesktopBrowser::MessageLoop()
     {
         if (bRet != -1)
         {
-            TranslateMessage(&Msg);
-            DispatchMessageW(&Msg);
+            if (DesktopView->TranslateAcceleratorW(&Msg) != S_OK)
+            {
+                TranslateMessage(&Msg);
+                DispatchMessage(&Msg);
+            }
         }
     }
 
     return TRUE;
+}
+
+#define TWM_DOEXITWINDOWS (WM_USER + 342)
+#define TWM_CYCLEFOCUS (WM_USER + 348)
+
+LRESULT CDesktopBrowser::_NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hwndTray;
+    HRESULT hres;
+
+    hres = this->ShellDesk->GetTrayWindow(&hwndTray);
+
+    if (SUCCEEDED(hres))
+        PostMessageW(hwndTray, uMsg, wParam, lParam);
+
+    return 0;
+}
+
+LRESULT CDesktopBrowser::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case FCIDM_DESKBROWSER_CLOSE:
+            return _NotifyTray(TWM_DOEXITWINDOWS, 0, 0);
+        case FCIDM_DESKBROWSER_FOCUS:
+            if (GetKeyState(VK_SHIFT))
+                return _NotifyTray(TWM_CYCLEFOCUS, 1, 0xFFFFFFFF);
+            else
+                return _NotifyTray(TWM_CYCLEFOCUS, 1, 1);
+        case FCIDM_DESKBROWSER_SEARCH:
+            SHFindFiles(NULL, NULL);
+            break;
+        case FCIDM_DESKBROWSER_REFRESH:
+            break;
+    }
 }
 
 LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
@@ -445,6 +490,9 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
 
                 if (!pThis->CreateDeskWnd())
                     WARN("Could not create the desktop view control!\n");
+
+                pThis->m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(3));
+
                 break;
             }
 
@@ -476,6 +524,8 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                 SHOnCWMCommandLine((HANDLE)lParam);
                 break;
 
+            case WM_COMMAND:
+                return pThis->OnCommand(uMsg, wParam, lParam);
             default:
 DefMsgHandler:
                 Ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);

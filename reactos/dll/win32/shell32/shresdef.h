@@ -22,6 +22,7 @@
 
 /* Accelerators */
 #define IDA_SHELLVIEW 1
+#define IDA_DESKBROWSER 3
 
 /* Bitmaps */
 #define IDB_REACTOS                 131
@@ -484,6 +485,12 @@
 #define IDR_AVI_FILECOPY     161
 #define IDR_AVI_FILENUKE     163
 #define IDR_AVI_FILEDELETE   164
+
+/* Desktop Browser commands */
+#define FCIDM_DESKBROWSER_CLOSE      0xA004
+#define FCIDM_DESKBROWSER_FOCUS      0xA030
+#define FCIDM_DESKBROWSER_SEARCH     0xA085
+#define FCIDM_DESKBROWSER_REFRESH    0xA220
 
 /* Shell view commands */
 #define FCIDM_SHVIEW_ARRANGE         0x7001
