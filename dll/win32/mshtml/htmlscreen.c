@@ -34,25 +34,22 @@ static HRESULT WINAPI HTMLScreen_QueryInterface(IHTMLScreen *iface, REFIID riid,
 {
     HTMLScreen *This = impl_from_IHTMLScreen(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLScreen_iface;
     }else if(IsEqualGUID(&IID_IHTMLScreen, riid)) {
-        TRACE("(%p)->(IID_IHTMLScreen %p)\n", This, ppv);
         *ppv = &This->IHTMLScreen_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLScreen_AddRef(IHTMLScreen *iface)
@@ -83,24 +80,22 @@ static ULONG WINAPI HTMLScreen_Release(IHTMLScreen *iface)
 static HRESULT WINAPI HTMLScreen_GetTypeInfoCount(IHTMLScreen *iface, UINT *pctinfo)
 {
     HTMLScreen *This = impl_from_IHTMLScreen(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLScreen_GetTypeInfo(IHTMLScreen *iface, UINT iTInfo,
         LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLScreen *This = impl_from_IHTMLScreen(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLScreen_GetIDsOfNames(IHTMLScreen *iface, REFIID riid,
         LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
     HTMLScreen *This = impl_from_IHTMLScreen(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames, cNames,
+            lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLScreen_Invoke(IHTMLScreen *iface, DISPID dispIdMember,
@@ -108,8 +103,8 @@ static HRESULT WINAPI HTMLScreen_Invoke(IHTMLScreen *iface, DISPID dispIdMember,
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLScreen *This = impl_from_IHTMLScreen(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid, lcid, wFlags,
+            pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLScreen_get_colorDepth(IHTMLScreen *iface, LONG *p)

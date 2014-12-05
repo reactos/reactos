@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -48,16 +48,13 @@ NTSTATUS
 NTAPI
 MiCreatePebOrTeb(IN PEPROCESS Process,
                  IN ULONG Size,
-                 OUT PULONG_PTR Base)
+                 OUT PULONG_PTR BaseAddress)
 {
-    PETHREAD Thread = PsGetCurrentThread();
     PMMVAD_LONG Vad;
     NTSTATUS Status;
-    ULONG RandomCoeff;
-    ULONG_PTR StartAddress, EndAddress;
+    ULONG_PTR HighestAddress, RandomBase;
+    ULONG AlignedSize;
     LARGE_INTEGER CurrentTime;
-    TABLE_SEARCH_RESULT Result = TableFoundNode;
-    PMMADDRESS_NODE Parent;
 
     /* Allocate a VAD */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
@@ -70,6 +67,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->u.VadFlags.PrivateMemory = TRUE;
     Vad->u.VadFlags.Protection = MM_READWRITE;
     Vad->u.VadFlags.NoChange = TRUE;
+    Vad->u1.Parent = NULL;
 
     /* Setup the secondary flags to make it a secured, writable, long VAD */
     Vad->u2.LongFlags2 = 0;
@@ -77,85 +75,51 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Vad->u2.VadFlags2.LongVad = TRUE;
     Vad->u2.VadFlags2.ReadOnly = FALSE;
 
-    /* Lock the process address space */
-    KeAcquireGuardedMutex(&Process->AddressCreationLock);
-
-    /* Check if this is a PEB creation */
-    if (Size == sizeof(PEB))
-    {
-        /* Start at the highest valid address */
-        StartAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
-
-        /* Select the random coefficient */
-        KeQueryTickCount(&CurrentTime);
-        CurrentTime.LowPart &= ((64 * _1KB) >> PAGE_SHIFT) - 1;
-        if (CurrentTime.LowPart <= 1) CurrentTime.LowPart = 2;
-        RandomCoeff = CurrentTime.LowPart << PAGE_SHIFT;
-
-        /* Select the highest valid address minus the random coefficient */
-        StartAddress -= RandomCoeff;
-        EndAddress = StartAddress + ROUND_TO_PAGES(Size) - 1;
-
-        /* Try to find something below the random upper margin */
-        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 EndAddress,
-                                                 PAGE_SIZE,
-                                                 &Process->VadRoot,
-                                                 Base,
-                                                 &Parent);
-    }
-
-    /* Check for success. TableFoundNode means nothing free. */
-    if (Result == TableFoundNode)
-    {
-        /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
-        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                                 (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
-                                                 PAGE_SIZE,
-                                                 &Process->VadRoot,
-                                                 Base,
-                                                 &Parent);
-        /* Bail out, if still nothing free was found */
-        if (Result == TableFoundNode)
-        {
-            ExFreePoolWithTag(Vad, 'ldaV');
-            return STATUS_NO_MEMORY;
-        }
-    }
-
-    /* Validate that it came from the VAD ranges */
-    ASSERT(*Base >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
-
-    /* Build the rest of the VAD now */
-    Vad->StartingVpn = (*Base) >> PAGE_SHIFT;
-    Vad->EndingVpn = ((*Base) + Size - 1) >> PAGE_SHIFT;
-    Vad->u3.Secured.StartVpn = *Base;
-    Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
-    Vad->u1.Parent = NULL;
-
-    /* FIXME: Should setup VAD bitmap */
-    Status = STATUS_SUCCESS;
-
-    /* Pretend as if we own the working set */
-    MiLockProcessWorkingSetUnsafe(Process, Thread);
-
-    /* Insert the VAD */
-    ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
-    Process->VadRoot.NodeHint = Vad;
     Vad->ControlArea = NULL; // For Memory-Area hack
     Vad->FirstPrototypePte = NULL;
-    DPRINT("VAD: %p\n", Vad);
-    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *Base, Process->ImageFileName);
-    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 
-    /* Release the working set */
-    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+    /* Check if this is a PEB creation */
+    ASSERT(sizeof(TEB) != sizeof(PEB));
+    if (Size == sizeof(PEB))
+    {
+        /* Create a random value to select one page in a 64k region */
+        KeQueryTickCount(&CurrentTime);
+        CurrentTime.LowPart &= (_64K / PAGE_SIZE) - 1;
 
-    /* Release the address space lock */
-    KeReleaseGuardedMutex(&Process->AddressCreationLock);
+        /* Calculate a random base address */
+        RandomBase = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
+        RandomBase -= CurrentTime.LowPart << PAGE_SHIFT;
 
-    /* Return the status */
-    return Status;
+        /* Make sure the base address is not too high */
+        AlignedSize = ROUND_TO_PAGES(Size);
+        if ((RandomBase + AlignedSize) > (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1)
+        {
+            RandomBase = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1 - AlignedSize;
+        }
+
+        /* Calculate the highest allowed address */
+        HighestAddress = RandomBase + AlignedSize - 1;
+    }
+    else
+    {
+        HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
+    }
+
+    *BaseAddress = 0;
+    Status = MiInsertVadEx((PMMVAD)Vad,
+                           BaseAddress,
+                           BYTES_TO_PAGES(Size),
+                           HighestAddress,
+                           PAGE_SIZE,
+                           MEM_TOP_DOWN);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Vad, 'ldaV');
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -333,7 +297,6 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         StackPtes = BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE);
         StackPages = BYTES_TO_PAGES(KERNEL_LARGE_STACK_COMMIT);
-
     }
     else
     {

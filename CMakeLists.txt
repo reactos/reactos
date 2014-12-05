@@ -1,9 +1,14 @@
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.12)
 
 if(POLICY CMP0017)
     # Shadow cmake provided modules
     cmake_policy(SET CMP0017 OLD)
+endif()
+
+if(POLICY CMP0026)
+    # Allow use of the LOCATION property
+    cmake_policy(SET CMP0026 OLD)
 endif()
 
 project(REACTOS)
@@ -137,7 +142,7 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if((CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS") AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    if(CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS")
         set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
     else()
         set(PCH 0 CACHE BOOL "Whether to use precompiled headers")
@@ -221,7 +226,11 @@ else()
     add_subdirectory(include/reactos/mc)
     add_subdirectory(include/asm)
 
-    include(cmake/baseaddress.cmake)
+    if(NO_ROSSYM)
+        include(cmake/baseaddress_dwarf.cmake)
+    else()
+        include(cmake/baseaddress.cmake)
+    endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
     set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")

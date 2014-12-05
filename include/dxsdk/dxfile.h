@@ -260,7 +260,10 @@ DEFINE_GUID(TID_DXFILEHeader,               0x3d82ab43, 0x62da, 0x11cf, 0xab, 0x
 
 /* DirectX File errors */
 #define _FACDD  0x876
+
+#ifndef MAKE_DDHRESULT
 #define MAKE_DDHRESULT( code )  MAKE_HRESULT( 1, _FACDD, code )
+#endif
 
 #define DXFILE_OK   0
 

@@ -109,7 +109,7 @@ BEGIN
     IDS_NET_REPAIR "Исправить"
     IDS_NET_CREATELINK "Создать ярлык"
     IDS_NET_DELETE "Удалить"
-    IDS_NET_RENAME "Rename"
+    IDS_NET_RENAME "Переименовать"
     IDS_NET_PROPERTIES "Свойства"
     IDS_FORMAT_BIT "%u бит/с"
     IDS_FORMAT_KBIT "%u Кбит/с"

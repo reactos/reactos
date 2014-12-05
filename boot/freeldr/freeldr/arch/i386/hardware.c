@@ -1788,7 +1788,51 @@ PcHwIdle(VOID)
     /*
      * No futher processing here.
      * Optionally implement HLT instruction handling.
-     */
+   */
 }
+
+VOID
+FrLdrCheckCpuCompatiblity(VOID)
+{
+    INT CpuInformation[4] = {-1};
+    ULONG NumberOfIds;
+
+    /* Check if the processor first supports ID 1 */
+    __cpuid(CpuInformation, 0);
+
+    NumberOfIds = CpuInformation[0];
+
+    if (NumberOfIds == 0)
+    {
+        FrLdrBugCheckWithMessage(MISSING_HARDWARE_REQUIREMENTS,
+                                 __FILE__,
+                                 __LINE__,
+                                 "ReactOS requires the CPUID instruction to return "
+                                 "more than one supported ID.\n\n");
+    }
+
+    /* NumberOfIds will be greater than 1 if the processor is new enough. */
+    if (NumberOfIds == 1)
+    {
+        INT ProcessorFamily;
+
+        /* Get information. */
+        __cpuid(CpuInformation, 1);
+
+        ProcessorFamily = (CpuInformation[0] >> 8) & 0xF;
+
+        /* If it's Family 4 or lower, bugcheck. */
+        if(ProcessorFamily < 5)
+        {
+            FrLdrBugCheckWithMessage(MISSING_HARDWARE_REQUIREMENTS,
+                                     __FILE__,
+                                     __LINE__,
+                                     "Processor is too old (family %u < 5)\n"
+                                     "ReactOS requires a Pentium-level processor or newer.",
+                                     ProcessorFamily);
+        }
+    }
+}
+
 
 /* EOF */

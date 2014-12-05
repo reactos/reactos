@@ -4,7 +4,7 @@
 [Section]
 Name = WinBoard
 Version = 4.2.7b
-Licence = GPLv3
+License = GPLv3
 Description = WinBoard is a graphical chessboard for the Windows/ReactOS that can serve as a user interface for GNU Chess, Crafty, and other chess engines, for the Internet chess servers, and for electronic mail correspondence chess.
 Size = 5.93 MB
 Category = 4
@@ -36,7 +36,7 @@ Description = WinBoard este o tablă de șah grafică pentru Windows/ReactOS ce 
 Size = 5,93 Mo
 
 [Section.041f]
-Licence = GPL 3. sürüm
+License = GPL 3. sürüm
 Description = WinBoard, Umûmî Ağ satranç sunucularına ve postayla yazışmalı satranca GNU Chess, Crafty ve başka satranç motorlarını bir kullanıcı arayüzü olarak sunabilen, Windows/ReactOS için bir çizgelik satranç tahtasıdır.
 Size = 5,93 MB
 

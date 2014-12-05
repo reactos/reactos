@@ -94,8 +94,7 @@ VOID
 NTAPI
 FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
-    /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
 }
 
 /*++
@@ -147,8 +146,7 @@ BOOLEAN
 NTAPI
 FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
-    /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -170,7 +168,6 @@ VOID
 NTAPI
 FsRtlUninitializeOplock(IN POPLOCK Oplock)
 {
-    /* Unimplemented */
-    KeBugCheck(FILE_SYSTEM);
+    UNIMPLEMENTED;
 }
 

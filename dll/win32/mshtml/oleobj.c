@@ -354,7 +354,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
                     (void**)&uihandler2);
             if(SUCCEEDED(hres)) {
                 hres = IDocHostUIHandler2_GetOverrideKeyPath(uihandler2, &override_key_path, 0);
-                if(hres == S_OK && override_key_path && override_key_path[0]) {
+                if(hres == S_OK && override_key_path) {
                     if(override_key_path[0]) {
                         /*FIXME: use override_key_path */
                         FIXME("override_key_path = %s\n", debugstr_w(override_key_path));

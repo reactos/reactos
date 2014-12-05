@@ -4,7 +4,7 @@
 [Section]
 Name = LBreakout2
 Version = 2.4.1
-Licence = GPL
+License = GPL
 Description = Breakout Clone using SDL libs.
 Size = 3.03 MB
 Category = 4

@@ -12,6 +12,9 @@
 
 #include <msafd.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msafd);
+
 int
 WSPAPI
 WSPEventSelect(
@@ -103,28 +106,31 @@ WSPEventSelect(
 				   NULL,
 				   0);
 
-    AFD_DbgPrint(MID_TRACE,("AFD: %x\n", Status));
+    TRACE("AFD: %x\n", Status);
 
     /* Wait for return */
     if (Status == STATUS_PENDING) {
-	WaitForSingleObject(SockEvent, INFINITE);
+        WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Waited\n"));
+    TRACE("Waited\n");
 
     NtClose( SockEvent );
 
     if (Status != STATUS_SUCCESS)
+    {
+        ERR("Got status 0x%08x.\n", Status);
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
+    }
 
-    AFD_DbgPrint(MID_TRACE,("Closed event\n"));
+    TRACE("Closed event\n");
 
     /* Set Socket Data*/
     Socket->EventObject = hEventObject;
     Socket->NetworkEvents = lNetworkEvents;
 
-    AFD_DbgPrint(MID_TRACE,("Leaving\n"));
+    TRACE("Leaving\n");
 
     return 0;
 }
@@ -144,14 +150,14 @@ WSPEnumNetworkEvents(
     NTSTATUS					Status;
     HANDLE                                  SockEvent;
 
-    AFD_DbgPrint(MID_TRACE,("Called (lpNetworkEvents %x)\n", lpNetworkEvents));
+    TRACE("Called (lpNetworkEvents %x)\n", lpNetworkEvents);
 
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
 			    NULL, 1, FALSE );
 
     if( !NT_SUCCESS(Status) ) {
-	AFD_DbgPrint(MID_TRACE,("Could not make an event %x\n", Status));
-	return -1;
+        ERR("Could not make an event %x\n", Status);
+        return -1;
     }
 
     /* Get the Socket Structure associate to this Socket*/
@@ -177,60 +183,60 @@ WSPEnumNetworkEvents(
 				   NULL,
 				   0);
 
-    AFD_DbgPrint(MID_TRACE,("AFD: %x\n", Status));
+    TRACE("AFD: %x\n", Status);
 
     /* Wait for return */
     if (Status == STATUS_PENDING) {
-	WaitForSingleObject(SockEvent, INFINITE);
-	Status = IOSB.Status;
+        WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Waited\n"));
+    TRACE("Waited\n");
 
     NtClose( SockEvent );
 
     if (Status != STATUS_SUCCESS)
+    {
+        ERR("Status 0x%08x", Status);
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
+    }
 
-    AFD_DbgPrint(MID_TRACE,("Closed event\n"));
-    AFD_DbgPrint(MID_TRACE,("About to touch struct at %x (%d)\n",
-			    lpNetworkEvents, sizeof(*lpNetworkEvents)));
+    TRACE("Closed event\n");
+    TRACE("About to touch struct at %x (%d)\n", lpNetworkEvents, sizeof(*lpNetworkEvents));
 
     lpNetworkEvents->lNetworkEvents = 0;
 
-    AFD_DbgPrint(MID_TRACE,("Zeroed struct\n"));
-
     /* Set Events to wait for */
     if (EnumReq.PollEvents & AFD_EVENT_RECEIVE) {
-	lpNetworkEvents->lNetworkEvents |= FD_READ;
-	lpNetworkEvents->iErrorCode[FD_READ_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_READ_BIT]);
+        lpNetworkEvents->lNetworkEvents |= FD_READ;
+        lpNetworkEvents->iErrorCode[FD_READ_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_READ_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_SEND) {
-	lpNetworkEvents->lNetworkEvents |= FD_WRITE;
-	lpNetworkEvents->iErrorCode[FD_WRITE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_WRITE_BIT]);
+        lpNetworkEvents->lNetworkEvents |= FD_WRITE;
+        lpNetworkEvents->iErrorCode[FD_WRITE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_WRITE_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_OOB_RECEIVE) {
         lpNetworkEvents->lNetworkEvents |= FD_OOB;
-	lpNetworkEvents->iErrorCode[FD_OOB_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_OOB_BIT]);
+        lpNetworkEvents->iErrorCode[FD_OOB_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_OOB_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_ACCEPT) {
-	lpNetworkEvents->lNetworkEvents |= FD_ACCEPT;
-	lpNetworkEvents->iErrorCode[FD_ACCEPT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_ACCEPT_BIT]);
+        lpNetworkEvents->lNetworkEvents |= FD_ACCEPT;
+        lpNetworkEvents->iErrorCode[FD_ACCEPT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_ACCEPT_BIT]);
     }
 
     if (EnumReq.PollEvents &
-	(AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL)) {
+            (AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL)) {
         lpNetworkEvents->lNetworkEvents |= FD_CONNECT;
-	lpNetworkEvents->iErrorCode[FD_CONNECT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CONNECT_BIT]);
+        lpNetworkEvents->iErrorCode[FD_CONNECT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CONNECT_BIT]);
     }
 
     if (EnumReq.PollEvents &
 	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) {
-	lpNetworkEvents->lNetworkEvents |= FD_CLOSE;
-	lpNetworkEvents->iErrorCode[FD_CLOSE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CLOSE_BIT]);
+        lpNetworkEvents->lNetworkEvents |= FD_CLOSE;
+        lpNetworkEvents->iErrorCode[FD_CLOSE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CLOSE_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_QOS) {
@@ -239,11 +245,11 @@ WSPEnumNetworkEvents(
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_GROUP_QOS) {
-	lpNetworkEvents->lNetworkEvents |= FD_GROUP_QOS;
-	lpNetworkEvents->iErrorCode[FD_GROUP_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_GROUP_QOS_BIT]);
+        lpNetworkEvents->lNetworkEvents |= FD_GROUP_QOS;
+        lpNetworkEvents->iErrorCode[FD_GROUP_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_GROUP_QOS_BIT]);
     }
 
-    AFD_DbgPrint(MID_TRACE,("Leaving\n"));
+    TRACE("Leaving\n");
 
     return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, NULL);
 }

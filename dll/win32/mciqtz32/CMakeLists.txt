@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(mciqtz32.dll mciqtz32.spec)
 
 list(APPEND SOURCE

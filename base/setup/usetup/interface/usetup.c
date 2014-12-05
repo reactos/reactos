@@ -930,17 +930,14 @@ IntroPage(PINPUT_RECORD Ir)
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
             return INSTALL_INTRO_PAGE;
-            break;
         }
         else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R') /* R */
         {
             return REPAIR_INTRO_PAGE;
-            break;
         }
         else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'L') /* R */
         {
             return LICENSE_PAGE;
-            break;
         }
     }
 
@@ -965,7 +962,6 @@ LicensePage(PINPUT_RECORD Ir)
         if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)  /* ENTER */
         {
             return INTRO_PAGE;
-            break;
         }
     }
 
@@ -2761,7 +2757,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 #if 0
             else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
             {
-                PartEntry->PartInfo[PartNum].PartitionType = PARTITION_EXT2;
+                PartEntry->PartitionType = PARTITION_EXT2;
                 DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
             }
 #endif

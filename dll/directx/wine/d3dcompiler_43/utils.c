@@ -800,31 +800,6 @@ void free_declaration(struct hlsl_ir_var *decl)
     d3dcompiler_free(decl);
 }
 
-BOOL add_func_parameter(struct list *list, struct parse_parameter *param, const struct source_location *loc)
-{
-    struct hlsl_ir_var *decl = d3dcompiler_alloc(sizeof(*decl));
-
-    if (!decl)
-    {
-        ERR("Out of memory.\n");
-        return FALSE;
-    }
-    decl->node.type = HLSL_IR_VAR;
-    decl->node.data_type = param->type;
-    decl->node.loc = *loc;
-    decl->name = param->name;
-    decl->semantic = param->semantic;
-    decl->modifiers = param->modifiers;
-
-    if (!add_declaration(hlsl_ctx.cur_scope, decl, FALSE))
-    {
-        free_declaration(decl);
-        return FALSE;
-    }
-    list_add_tail(list, &decl->node.entry);
-    return TRUE;
-}
-
 struct hlsl_type *new_hlsl_type(const char *name, enum hlsl_type_class type_class,
         enum hlsl_base_type base_type, unsigned dimx, unsigned dimy)
 {
@@ -1969,7 +1944,7 @@ const char *debug_modifiers(DWORD modifiers)
 
 static const char *debug_node_type(enum hlsl_ir_node_type type)
 {
-    const char *names[] =
+    static const char * const names[] =
     {
         "HLSL_IR_VAR",
         "HLSL_IR_ASSIGNMENT",
@@ -2075,7 +2050,7 @@ static void debug_dump_ir_constant(const struct hlsl_ir_constant *constant)
 
 static const char *debug_expr_op(const struct hlsl_ir_expr *expr)
 {
-    static const char *op_names[] =
+    static const char * const op_names[] =
     {
         "~",
         "!",

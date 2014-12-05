@@ -13,7 +13,7 @@ BEGIN
     AUTOCHECKBOX "&Beragadó billentyûk használata", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Beállítások", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "FilterKeys", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Use FilterKeys if you want Reactos to ignore brief or repeated keystrokes, or slow the repeat rate.",
+    LTEXT "Use FilterKeys if you want ReactOS to ignore brief or repeated keystrokes, or slow the repeat rate.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Use &FilterKeys", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "B&eállítások", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -32,7 +32,7 @@ CAPTION "Hang"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "HangFigyelõ", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Ezt a funkciót akkor használja, ha szeretné, hogy a Reactos látható figyelmeztetéseket küldjön olyankor, amikor a rendszer hangjelzést ad.",
+    LTEXT "Ezt a funkciót akkor használja, ha szeretné, hogy a ReactOS látható figyelmeztetéseket küldjön olyankor, amikor a rendszer hangjelzést ad.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&HangFigyelõ használata", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "User the following warning:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -50,7 +50,7 @@ CAPTION "Képernyõ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Nagy kontraszt", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Ha azt szeretné, hogy a Reactos olyan színeket használjon, amelyek a könnyû olvasást teszik lehetõvé, akkor válassza ki ezt a lehetõséget.",
+    LTEXT "Ha azt szeretné, hogy a ReactOS olyan színeket használjon, amelyek a könnyû olvasást teszik lehetõvé, akkor válassza ki ezt a lehetõséget.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "&Nagy kontraszt használata", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Bellítások", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

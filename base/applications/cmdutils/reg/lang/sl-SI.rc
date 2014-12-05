@@ -1,14 +1,14 @@
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Sintaksa ukaza:\n\nREG [ ADD | DELETE | QUERY ]\nREG ukaz /?\n"
-    STRING_ADD_USAGE "REG ADD ime_ključa [/v ime_vrednosti | /ve] [/t vrsta] [/s ločilo] [/d podatki] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE ime_ključa [/v ime_vrednosti | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY ime_ključa [/v ime_vrednosti | /ve] [/s]\n"
-    STRING_SUCCESS "Operacija se je uspešno izvedla\n"
-    STRING_INVALID_KEY "Napaka: Napačno ime ključa\n"
-    STRING_INVALID_CMDLINE "Napaka: Napačen parameter v ukazni vrstici\n"
-    STRING_NO_REMOTE "Napaka: Na morem dodati ključa na oddaljen računalnik\n"
-    STRING_CANNOT_FIND "Napaka: Sistem ni našel zahtevanega ključa ali vrednosti\n"
-END
+{
+    STRING_USAGE, "Sintaksa ukaza:\n\nREG [ ADD | DELETE | QUERY ]\nREG ukaz /?\n"
+    STRING_ADD_USAGE, "REG ADD ime_ključa [/v ime_vrednosti | /ve] [/t vrsta] [/s ločilo] [/d podatki] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE ime_ključa [/v ime_vrednosti | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY ime_ključa [/v ime_vrednosti | /ve] [/s]\n"
+    STRING_SUCCESS, "Operacija se je uspešno izvedla\n"
+    STRING_INVALID_KEY, "Napaka: Napačno ime ključa\n"
+    STRING_INVALID_CMDLINE, "Napaka: Napačen parameter v ukazni vrstici\n"
+    STRING_NO_REMOTE, "Napaka: Na morem dodati ključa na oddaljen računalnik\n"
+    STRING_CANNOT_FIND, "Napaka: Sistem ni našel zahtevanega ključa ali vrednosti\n"
+}

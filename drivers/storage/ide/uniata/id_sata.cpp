@@ -968,6 +968,12 @@ UniataAhciDetect(
     KdPrint2((PRINT_PREFIX "\n"));
 
     /* get the number of HW channels */
+    
+    /* CAP.NOP sometimes indicate the index of the last enabled
+     * port, at other times, that of the last possible port, so
+     * determining the maximum port number requires looking at
+     * both CAP.NOP and PI.
+     */
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
     deviceExtension->AHCI_PI = PI;
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));

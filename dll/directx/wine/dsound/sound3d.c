@@ -121,6 +121,7 @@ static inline D3DVECTOR VectorBetweenTwoPoints (const D3DVECTOR *a, const D3DVEC
 	return c;
 }
 
+#ifndef __REACTOS__
 /* calculates the length of vector's projection on another vector */
 static inline D3DVALUE ProjectVector (const D3DVECTOR *a, const D3DVECTOR *p)
 {
@@ -131,6 +132,7 @@ static inline D3DVALUE ProjectVector (const D3DVECTOR *a, const D3DVECTOR *p)
               p->y, p->z, result);
 	return result;
 }
+#endif
 
 /*******************************************************************************
  *              3D Buffer and Listener mixing
@@ -147,6 +149,9 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 	D3DVALUE flAngle;
 	D3DVECTOR vLeft;
 	/* doppler shift related stuff */
+#if 0
+	D3DVALUE flFreq, flBufferVel, flListenerVel;
+#endif
 
 	TRACE("(%p)\n",dsb);
 
@@ -245,17 +250,13 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 	TRACE("panning: Angle = %f rad, lPan = %d\n", flAngle, dsb->volpan.lPan);
 
 	/* FIXME: Doppler Effect disabled since i have no idea which frequency to change and how to do it */
-if(0)
-{
-	D3DVALUE flFreq, flBufferVel, flListenerVel;
+#if 0	
 	/* doppler shift*/
-	if (!VectorMagnitude(&dsb->ds3db_ds3db.vVelocity) && !VectorMagnitude(&dsb->device->ds3dl.vVelocity))
+	if ((VectorMagnitude(&ds3db_ds3db.vVelocity) == 0) && (VectorMagnitude(&dsb->device->ds3dl.vVelocity) == 0))
 	{
 		TRACE("doppler: Buffer and Listener don't have velocities\n");
 	}
-	else if (!(dsb->ds3db_ds3db.vVelocity.x == dsb->device->ds3dl.vVelocity.x &&
-	           dsb->ds3db_ds3db.vVelocity.y == dsb->device->ds3dl.vVelocity.y &&
-	           dsb->ds3db_ds3db.vVelocity.z == dsb->device->ds3dl.vVelocity.z))
+	else if (ds3db_ds3db.vVelocity != dsb->device->ds3dl.vVelocity)
 	{
 		/* calculate length of ds3db_ds3db.vVelocity component which causes Doppler Effect
 		   NOTE: if buffer moves TOWARDS the listener, it's velocity component is NEGATIVE
@@ -268,13 +269,14 @@ if(0)
 		/* formula taken from Gianicoli D.: Physics, 4th edition: */
 		/* FIXME: replace dsb->freq with appropriate frequency ! */
 		flFreq = dsb->freq * ((DEFAULT_VELOCITY + flListenerVel)/(DEFAULT_VELOCITY + flBufferVel));
-		TRACE("doppler: Buffer velocity (component) = %f, Listener velocity (component) = %f => Doppler shift: %d Hz -> %f Hz\n",
-		      flBufferVel, flListenerVel, dsb->freq, flFreq);
+		TRACE("doppler: Buffer velocity (component) = %lf, Listener velocity (component) = %lf => Doppler shift: %ld Hz -> %lf Hz\n", flBufferVel, flListenerVel,
+		      dsb->freq, flFreq);
 		/* FIXME: replace following line with correct frequency setting ! */
 		dsb->freq = flFreq;
 		DSOUND_RecalcFormat(dsb);
+		DSOUND_MixToTemporary(dsb, 0, dsb->buflen);
 	}
-}
+#endif	
 	
 	/* time for remix */
 	DSOUND_RecalcVolPan(&dsb->volpan);
@@ -287,7 +289,7 @@ static void DSOUND_Mix3DBuffer(IDirectSoundBufferImpl *dsb)
 	DSOUND_Calc3DBuffer(dsb);
 }
 
-static void DSOUND_ChangeListener(IDirectSoundBufferImpl *ds3dl)
+static void DSOUND_ChangeListener(IDirectSound3DListenerImpl *ds3dl)
 {
 	int i;
 	TRACE("(%p)\n",ds3dl);
@@ -304,54 +306,52 @@ static void DSOUND_ChangeListener(IDirectSoundBufferImpl *ds3dl)
 /*******************************************************************************
  *              IDirectSound3DBuffer
  */
-static inline IDirectSoundBufferImpl *impl_from_IDirectSound3DBuffer(IDirectSound3DBuffer *iface)
-{
-    return CONTAINING_RECORD(iface, IDirectSoundBufferImpl, IDirectSound3DBuffer_iface);
-}
 
 /* IUnknown methods */
-static HRESULT WINAPI IDirectSound3DBufferImpl_QueryInterface(IDirectSound3DBuffer *iface,
-        REFIID riid, void **ppobj)
+static HRESULT WINAPI IDirectSound3DBufferImpl_QueryInterface(
+	LPDIRECTSOUND3DBUFFER iface, REFIID riid, LPVOID *ppobj)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
 
-    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
-
-    return IDirectSoundBuffer8_QueryInterface(&This->IDirectSoundBuffer8_iface, riid, ppobj);
+	TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
+	return IDirectSoundBuffer_QueryInterface((LPDIRECTSOUNDBUFFER8)This->dsb, riid, ppobj);
 }
 
-static ULONG WINAPI IDirectSound3DBufferImpl_AddRef(IDirectSound3DBuffer *iface)
+static ULONG WINAPI IDirectSound3DBufferImpl_AddRef(LPDIRECTSOUND3DBUFFER iface)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-    ULONG ref = InterlockedIncrement(&This->ref3D);
+    IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+    ULONG ref = InterlockedIncrement(&(This->ref));
 
     TRACE("(%p) ref was %d\n", This, ref - 1);
 
     if(ref == 1)
-        InterlockedIncrement(&This->numIfaces);
+        InterlockedIncrement(&This->dsb->numIfaces);
 
     return ref;
 }
 
-static ULONG WINAPI IDirectSound3DBufferImpl_Release(IDirectSound3DBuffer *iface)
+static ULONG WINAPI IDirectSound3DBufferImpl_Release(LPDIRECTSOUND3DBUFFER iface)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-    ULONG ref = InterlockedDecrement(&This->ref3D);
-
+    IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+    ULONG ref = InterlockedDecrement(&(This->ref));
     TRACE("(%p) ref was %d\n", This, ref + 1);
 
-    if (!ref && !InterlockedDecrement(&This->numIfaces))
-        secondarybuffer_destroy(This);
-
+    if (!ref) {
+        This->dsb->ds3db = NULL;
+        if (!InterlockedDecrement(&This->dsb->numIfaces))
+            secondarybuffer_destroy(This->dsb);
+        HeapFree(GetProcessHeap(), 0, This);
+        TRACE("(%p) released\n", This);
+    }
     return ref;
 }
 
 /* IDirectSound3DBuffer methods */
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetAllParameters(IDirectSound3DBuffer *iface,
-	DS3DBUFFER *lpDs3dBuffer)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetAllParameters(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPDS3DBUFFER lpDs3dBuffer)
 {
-	IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
 	TRACE("(%p,%p)\n",This,lpDs3dBuffer);
 
 	if (lpDs3dBuffer == NULL) {
@@ -365,103 +365,109 @@ static HRESULT WINAPI IDirectSound3DBufferImpl_GetAllParameters(IDirectSound3DBu
 	}
 	
 	TRACE("returning: all parameters\n");
-	*lpDs3dBuffer = This->ds3db_ds3db;
+	*lpDs3dBuffer = This->dsb->ds3db_ds3db;
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetConeAngles(IDirectSound3DBuffer *iface,
-        DWORD *lpdwInsideConeAngle, DWORD *lpdwOutsideConeAngle)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetConeAngles(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPDWORD lpdwInsideConeAngle,
+	LPDWORD lpdwOutsideConeAngle)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Inside Cone Angle = %d degrees; Outside Cone Angle = %d degrees\n",
-            This->ds3db_ds3db.dwInsideConeAngle, This->ds3db_ds3db.dwOutsideConeAngle);
-    *lpdwInsideConeAngle = This->ds3db_ds3db.dwInsideConeAngle;
-    *lpdwOutsideConeAngle = This->ds3db_ds3db.dwOutsideConeAngle;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Inside Cone Angle = %d degrees; Outside Cone Angle = %d degrees\n",
+		This->dsb->ds3db_ds3db.dwInsideConeAngle, This->dsb->ds3db_ds3db.dwOutsideConeAngle);
+	*lpdwInsideConeAngle = This->dsb->ds3db_ds3db.dwInsideConeAngle;
+	*lpdwOutsideConeAngle = This->dsb->ds3db_ds3db.dwOutsideConeAngle;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetConeOrientation(IDirectSound3DBuffer *iface,
-        D3DVECTOR *lpvConeOrientation)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetConeOrientation(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPD3DVECTOR lpvConeOrientation)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Cone Orientation vector = (%f,%f,%f)\n",
-            This->ds3db_ds3db.vConeOrientation.x,
-            This->ds3db_ds3db.vConeOrientation.y,
-            This->ds3db_ds3db.vConeOrientation.z);
-    *lpvConeOrientation = This->ds3db_ds3db.vConeOrientation;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Cone Orientation vector = (%f,%f,%f)\n",
+		This->dsb->ds3db_ds3db.vConeOrientation.x,
+		This->dsb->ds3db_ds3db.vConeOrientation.y,
+		This->dsb->ds3db_ds3db.vConeOrientation.z);
+	*lpvConeOrientation = This->dsb->ds3db_ds3db.vConeOrientation;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetConeOutsideVolume(IDirectSound3DBuffer *iface,
-        LONG *lplConeOutsideVolume)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetConeOutsideVolume(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPLONG lplConeOutsideVolume)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Cone Outside Volume = %d\n", This->ds3db_ds3db.lConeOutsideVolume);
-    *lplConeOutsideVolume = This->ds3db_ds3db.lConeOutsideVolume;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Cone Outside Volume = %d\n", This->dsb->ds3db_ds3db.lConeOutsideVolume);
+	*lplConeOutsideVolume = This->dsb->ds3db_ds3db.lConeOutsideVolume;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetMaxDistance(IDirectSound3DBuffer *iface,
-        D3DVALUE *lpfMaxDistance)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetMaxDistance(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPD3DVALUE lpfMaxDistance)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Max Distance = %f\n", This->ds3db_ds3db.flMaxDistance);
-    *lpfMaxDistance = This->ds3db_ds3db.flMaxDistance;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Max Distance = %f\n", This->dsb->ds3db_ds3db.flMaxDistance);
+	*lpfMaxDistance = This->dsb->ds3db_ds3db.flMaxDistance;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetMinDistance(IDirectSound3DBuffer *iface,
-        D3DVALUE *lpfMinDistance)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetMinDistance(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPD3DVALUE lpfMinDistance)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Min Distance = %f\n", This->ds3db_ds3db.flMinDistance);
-    *lpfMinDistance = This->ds3db_ds3db.flMinDistance;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Min Distance = %f\n", This->dsb->ds3db_ds3db.flMinDistance);
+	*lpfMinDistance = This->dsb->ds3db_ds3db.flMinDistance;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetMode(IDirectSound3DBuffer *iface,
-        DWORD *lpdwMode)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetMode(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPDWORD lpdwMode)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Mode = %d\n", This->ds3db_ds3db.dwMode);
-    *lpdwMode = This->ds3db_ds3db.dwMode;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Mode = %d\n", This->dsb->ds3db_ds3db.dwMode);
+	*lpdwMode = This->dsb->ds3db_ds3db.dwMode;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetPosition(IDirectSound3DBuffer *iface,
-        D3DVECTOR *lpvPosition)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetPosition(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPD3DVECTOR lpvPosition)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Position vector = (%f,%f,%f)\n", This->ds3db_ds3db.vPosition.x,
-            This->ds3db_ds3db.vPosition.y, This->ds3db_ds3db.vPosition.z);
-    *lpvPosition = This->ds3db_ds3db.vPosition;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Position vector = (%f,%f,%f)\n",
+		This->dsb->ds3db_ds3db.vPosition.x,
+		This->dsb->ds3db_ds3db.vPosition.y,
+		This->dsb->ds3db_ds3db.vPosition.z);
+	*lpvPosition = This->dsb->ds3db_ds3db.vPosition;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_GetVelocity(IDirectSound3DBuffer *iface,
-        D3DVECTOR *lpvVelocity)
+static HRESULT WINAPI IDirectSound3DBufferImpl_GetVelocity(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPD3DVECTOR lpvVelocity)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("returning: Velocity vector = (%f,%f,%f)\n", This->ds3db_ds3db.vVelocity.x,
-            This->ds3db_ds3db.vVelocity.y, This->ds3db_ds3db.vVelocity.z);
-    *lpvVelocity = This->ds3db_ds3db.vVelocity;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("returning: Velocity vector = (%f,%f,%f)\n",
+		This->dsb->ds3db_ds3db.vVelocity.x,
+		This->dsb->ds3db_ds3db.vVelocity.y,
+		This->dsb->ds3db_ds3db.vVelocity.z);
+	*lpvVelocity = This->dsb->ds3db_ds3db.vVelocity;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetAllParameters(IDirectSound3DBuffer *iface,
-	const DS3DBUFFER *lpcDs3dBuffer, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetAllParameters(
+	LPDIRECTSOUND3DBUFFER iface,
+	LPCDS3DBUFFER lpcDs3dBuffer,
+	DWORD dwApply)
 {
-	IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
 	DWORD status = DSERR_INVALIDPARAM;
-
 	TRACE("(%p,%p,%x)\n",iface,lpcDs3dBuffer,dwApply);
 
 	if (lpcDs3dBuffer == NULL) {
@@ -475,152 +481,163 @@ static HRESULT WINAPI IDirectSound3DBufferImpl_SetAllParameters(IDirectSound3DBu
 	}
 
 	TRACE("setting: all parameters; dwApply = %d\n", dwApply);
-	This->ds3db_ds3db = *lpcDs3dBuffer;
+	This->dsb->ds3db_ds3db = *lpcDs3dBuffer;
 
 	if (dwApply == DS3D_IMMEDIATE)
 	{
-		DSOUND_Mix3DBuffer(This);
+		DSOUND_Mix3DBuffer(This->dsb);
 	}
-	This->ds3db_need_recalc = TRUE;
+	This->dsb->ds3db_need_recalc = TRUE;
 	status = DS_OK;
 
 	return status;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetConeAngles(IDirectSound3DBuffer *iface,
-        DWORD dwInsideConeAngle, DWORD dwOutsideConeAngle, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetConeAngles(
+	LPDIRECTSOUND3DBUFFER iface,
+	DWORD dwInsideConeAngle,
+	DWORD dwOutsideConeAngle,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: Inside Cone Angle = %d; Outside Cone Angle = %d; dwApply = %d\n",
-            dwInsideConeAngle, dwOutsideConeAngle, dwApply);
-    This->ds3db_ds3db.dwInsideConeAngle = dwInsideConeAngle;
-    This->ds3db_ds3db.dwOutsideConeAngle = dwOutsideConeAngle;
-    if (dwApply == DS3D_IMMEDIATE)
-        DSOUND_Mix3DBuffer(This);
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: Inside Cone Angle = %d; Outside Cone Angle = %d; dwApply = %d\n",
+		dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+	This->dsb->ds3db_ds3db.dwInsideConeAngle = dwInsideConeAngle;
+	This->dsb->ds3db_ds3db.dwOutsideConeAngle = dwOutsideConeAngle;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetConeOrientation(IDirectSound3DBuffer *iface,
-        D3DVALUE x, D3DVALUE y, D3DVALUE z, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetConeOrientation(
+	LPDIRECTSOUND3DBUFFER iface,
+	D3DVALUE x, D3DVALUE y, D3DVALUE z,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: Cone Orientation vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
-    This->ds3db_ds3db.vConeOrientation.x = x;
-    This->ds3db_ds3db.vConeOrientation.y = y;
-    This->ds3db_ds3db.vConeOrientation.z = z;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: Cone Orientation vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
+	This->dsb->ds3db_ds3db.vConeOrientation.x = x;
+	This->dsb->ds3db_ds3db.vConeOrientation.y = y;
+	This->dsb->ds3db_ds3db.vConeOrientation.z = z;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetConeOutsideVolume(IDirectSound3DBuffer *iface,
-        LONG lConeOutsideVolume, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetConeOutsideVolume(
+	LPDIRECTSOUND3DBUFFER iface,
+	LONG lConeOutsideVolume,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: ConeOutsideVolume = %d; dwApply = %d\n", lConeOutsideVolume, dwApply);
-    This->ds3db_ds3db.lConeOutsideVolume = lConeOutsideVolume;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: ConeOutsideVolume = %d; dwApply = %d\n", lConeOutsideVolume, dwApply);
+	This->dsb->ds3db_ds3db.lConeOutsideVolume = lConeOutsideVolume;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetMaxDistance(IDirectSound3DBuffer *iface,
-        D3DVALUE fMaxDistance, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetMaxDistance(
+	LPDIRECTSOUND3DBUFFER iface,
+	D3DVALUE fMaxDistance,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: MaxDistance = %f; dwApply = %d\n", fMaxDistance, dwApply);
-    This->ds3db_ds3db.flMaxDistance = fMaxDistance;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: MaxDistance = %f; dwApply = %d\n", fMaxDistance, dwApply);
+	This->dsb->ds3db_ds3db.flMaxDistance = fMaxDistance;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetMinDistance(IDirectSound3DBuffer *iface,
-        D3DVALUE fMinDistance, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetMinDistance(
+	LPDIRECTSOUND3DBUFFER iface,
+	D3DVALUE fMinDistance,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: MinDistance = %f; dwApply = %d\n", fMinDistance, dwApply);
-    This->ds3db_ds3db.flMinDistance = fMinDistance;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: MinDistance = %f; dwApply = %d\n", fMinDistance, dwApply);
+	This->dsb->ds3db_ds3db.flMinDistance = fMinDistance;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetMode(IDirectSound3DBuffer *iface, DWORD dwMode,
-        DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetMode(
+	LPDIRECTSOUND3DBUFFER iface,
+	DWORD dwMode,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: Mode = %d; dwApply = %d\n", dwMode, dwApply);
-    This->ds3db_ds3db.dwMode = dwMode;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: Mode = %d; dwApply = %d\n", dwMode, dwApply);
+	This->dsb->ds3db_ds3db.dwMode = dwMode;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetPosition(IDirectSound3DBuffer *iface, D3DVALUE x,
-        D3DVALUE y, D3DVALUE z, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetPosition(
+	LPDIRECTSOUND3DBUFFER iface,
+	D3DVALUE x, D3DVALUE y, D3DVALUE z,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: Position vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
-    This->ds3db_ds3db.vPosition.x = x;
-    This->ds3db_ds3db.vPosition.y = y;
-    This->ds3db_ds3db.vPosition.z = z;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: Position vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
+	This->dsb->ds3db_ds3db.vPosition.x = x;
+	This->dsb->ds3db_ds3db.vPosition.y = y;
+	This->dsb->ds3db_ds3db.vPosition.z = z;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DBufferImpl_SetVelocity(IDirectSound3DBuffer *iface,
-        D3DVALUE x, D3DVALUE y, D3DVALUE z, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DBufferImpl_SetVelocity(
+	LPDIRECTSOUND3DBUFFER iface,
+	D3DVALUE x, D3DVALUE y, D3DVALUE z,
+	DWORD dwApply)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DBuffer(iface);
-
-    TRACE("setting: Velocity vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
-    This->ds3db_ds3db.vVelocity.x = x;
-    This->ds3db_ds3db.vVelocity.y = y;
-    This->ds3db_ds3db.vVelocity.z = z;
-    if (dwApply == DS3D_IMMEDIATE)
-    {
-        This->ds3db_need_recalc = FALSE;
-        DSOUND_Mix3DBuffer(This);
-    }
-    This->ds3db_need_recalc = TRUE;
-    return DS_OK;
+	IDirectSound3DBufferImpl *This = (IDirectSound3DBufferImpl *)iface;
+	TRACE("setting: Velocity vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
+	This->dsb->ds3db_ds3db.vVelocity.x = x;
+	This->dsb->ds3db_ds3db.vVelocity.y = y;
+	This->dsb->ds3db_ds3db.vVelocity.z = z;
+	if (dwApply == DS3D_IMMEDIATE)
+	{
+		This->dsb->ds3db_need_recalc = FALSE;
+		DSOUND_Mix3DBuffer(This->dsb);
+	}
+	This->dsb->ds3db_need_recalc = TRUE;
+	return DS_OK;
 }
 
-const IDirectSound3DBufferVtbl ds3dbvt =
+static const IDirectSound3DBufferVtbl ds3dbvt =
 {
 	/* IUnknown methods */
 	IDirectSound3DBufferImpl_QueryInterface,
@@ -647,60 +664,129 @@ const IDirectSound3DBufferVtbl ds3dbvt =
 	IDirectSound3DBufferImpl_SetVelocity,
 };
 
+HRESULT IDirectSound3DBufferImpl_Create(
+	IDirectSoundBufferImpl *dsb,
+	IDirectSound3DBufferImpl **pds3db)
+{
+	IDirectSound3DBufferImpl *ds3db;
+	TRACE("(%p,%p)\n",dsb,pds3db);
+
+	ds3db = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(*ds3db));
+
+	if (ds3db == NULL) {
+		WARN("out of memory\n");
+		*pds3db = 0;
+		return DSERR_OUTOFMEMORY;
+	}
+
+	ds3db->ref = 0;
+	ds3db->dsb = dsb;
+	ds3db->lpVtbl = &ds3dbvt;
+
+	ds3db->dsb->ds3db_ds3db.dwSize = sizeof(DS3DBUFFER);
+	ds3db->dsb->ds3db_ds3db.vPosition.x = 0.0;
+	ds3db->dsb->ds3db_ds3db.vPosition.y = 0.0;
+	ds3db->dsb->ds3db_ds3db.vPosition.z = 0.0;
+	ds3db->dsb->ds3db_ds3db.vVelocity.x = 0.0;
+	ds3db->dsb->ds3db_ds3db.vVelocity.y = 0.0;
+	ds3db->dsb->ds3db_ds3db.vVelocity.z = 0.0;
+	ds3db->dsb->ds3db_ds3db.dwInsideConeAngle = DS3D_DEFAULTCONEANGLE;
+	ds3db->dsb->ds3db_ds3db.dwOutsideConeAngle = DS3D_DEFAULTCONEANGLE;
+	ds3db->dsb->ds3db_ds3db.vConeOrientation.x = 0.0;
+	ds3db->dsb->ds3db_ds3db.vConeOrientation.y = 0.0;
+	ds3db->dsb->ds3db_ds3db.vConeOrientation.z = 0.0;
+	ds3db->dsb->ds3db_ds3db.lConeOutsideVolume = DS3D_DEFAULTCONEOUTSIDEVOLUME;
+	ds3db->dsb->ds3db_ds3db.flMinDistance = DS3D_DEFAULTMINDISTANCE;
+	ds3db->dsb->ds3db_ds3db.flMaxDistance = DS3D_DEFAULTMAXDISTANCE;
+	ds3db->dsb->ds3db_ds3db.dwMode = DS3DMODE_NORMAL;
+
+	ds3db->dsb->ds3db_need_recalc = TRUE;
+
+	*pds3db = ds3db;
+	return S_OK;
+}
+
+HRESULT IDirectSound3DBufferImpl_Destroy(
+    IDirectSound3DBufferImpl *pds3db)
+{
+    TRACE("(%p)\n",pds3db);
+
+    while (IDirectSound3DBufferImpl_Release((LPDIRECTSOUND3DBUFFER)pds3db) > 0);
+
+    return S_OK;
+}
 
 /*******************************************************************************
  *	      IDirectSound3DListener
  */
-static inline IDirectSoundBufferImpl *impl_from_IDirectSound3DListener(IDirectSound3DListener *iface)
-{
-    return CONTAINING_RECORD(iface, IDirectSoundBufferImpl, IDirectSound3DListener_iface);
-}
-
 
 /* IUnknown methods */
-static HRESULT WINAPI IDirectSound3DListenerImpl_QueryInterface(IDirectSound3DListener *iface,
-        REFIID riid, void **ppobj)
+static HRESULT WINAPI IDirectSound3DListenerImpl_QueryInterface(
+	LPDIRECTSOUND3DLISTENER iface, REFIID riid, LPVOID *ppobj)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 
-        TRACE("(%p,%s,%p)\n", iface, debugstr_guid(riid), ppobj);
+	TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppobj);
 
-        return IDirectSoundBuffer_QueryInterface(&This->IDirectSoundBuffer8_iface, riid, ppobj);
+	if (ppobj == NULL) {
+		WARN("invalid parameter\n");
+		return E_INVALIDARG;
+	}
+
+	*ppobj = NULL;  /* assume failure */
+
+	if ( IsEqualGUID(riid, &IID_IUnknown) ||
+	     IsEqualGUID(riid, &IID_IDirectSound3DListener ) ) {
+                IDirectSound3DListener_AddRef((LPDIRECTSOUND3DLISTENER)This);
+		*ppobj = This;
+		return S_OK;
+	}
+
+	if ( IsEqualGUID(riid, &IID_IDirectSoundBuffer) ) {
+                *ppobj = &This->device->primary->IDirectSoundBuffer8_iface;
+                IDirectSoundBuffer8_AddRef(&This->device->primary->IDirectSoundBuffer8_iface);
+                return S_OK;
+	}
+
+        FIXME( "Unknown IID %s\n", debugstr_guid( riid ) );
+	return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IDirectSound3DListenerImpl_AddRef(IDirectSound3DListener *iface)
+static ULONG WINAPI IDirectSound3DListenerImpl_AddRef(LPDIRECTSOUND3DLISTENER iface)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-    ULONG ref = InterlockedIncrement(&This->ref3D);
+    IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
+    ULONG ref = InterlockedIncrement(&(This->ref));
 
     TRACE("(%p) ref was %d\n", This, ref - 1);
 
     if(ref == 1)
-        InterlockedIncrement(&This->numIfaces);
+        InterlockedIncrement(&This->device->primary->numIfaces);
 
     return ref;
 }
 
-static ULONG WINAPI IDirectSound3DListenerImpl_Release(IDirectSound3DListener *iface)
+static ULONG WINAPI IDirectSound3DListenerImpl_Release(LPDIRECTSOUND3DLISTENER iface)
 {
-    IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-    ULONG ref;
+    IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
+    ULONG ref = InterlockedDecrement(&(This->ref));
+    TRACE("(%p) ref was %d\n", This, ref + 1);
 
-    ref = capped_refcount_dec(&This->ref3D);
-    if(!ref)
-        capped_refcount_dec(&This->numIfaces);
-
-    TRACE("(%p) ref is now %d\n", This, ref);
-
+    if (!ref) {
+        This->device->listener = 0;
+        if (!InterlockedDecrement(&This->device->primary->numIfaces))
+            primarybuffer_destroy(This->device->primary);
+        HeapFree(GetProcessHeap(), 0, This);
+        TRACE("(%p) released\n", This);
+    }
     return ref;
 }
 
 /* IDirectSound3DListener methods */
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetAllParameter(IDirectSound3DListener *iface,
-        DS3DLISTENER *lpDS3DL)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetAllParameter(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPDS3DLISTENER lpDS3DL)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("(%p,%p)\n",This,lpDS3DL);
 
 	if (lpDS3DL == NULL) {
@@ -718,31 +804,32 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_GetAllParameter(IDirectSound3DL
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetDistanceFactor(IDirectSound3DListener *iface,
-        D3DVALUE *lpfDistanceFactor)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetDistanceFactor(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPD3DVALUE lpfDistanceFactor)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("returning: Distance Factor = %f\n", This->device->ds3dl.flDistanceFactor);
 	*lpfDistanceFactor = This->device->ds3dl.flDistanceFactor;
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetDopplerFactor(IDirectSound3DListener *iface,
-        D3DVALUE *lpfDopplerFactor)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetDopplerFactor(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPD3DVALUE lpfDopplerFactor)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("returning: Doppler Factor = %f\n", This->device->ds3dl.flDopplerFactor);
 	*lpfDopplerFactor = This->device->ds3dl.flDopplerFactor;
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetOrientation(IDirectSound3DListener *iface,
-        D3DVECTOR *lpvOrientFront, D3DVECTOR *lpvOrientTop)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetOrientation(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPD3DVECTOR lpvOrientFront,
+	LPD3DVECTOR lpvOrientTop)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("returning: OrientFront vector = (%f,%f,%f); OrientTop vector = (%f,%f,%f)\n", This->device->ds3dl.vOrientFront.x,
 	This->device->ds3dl.vOrientFront.y, This->device->ds3dl.vOrientFront.z, This->device->ds3dl.vOrientTop.x, This->device->ds3dl.vOrientTop.y,
 	This->device->ds3dl.vOrientTop.z);
@@ -751,41 +838,42 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_GetOrientation(IDirectSound3DLi
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetPosition(IDirectSound3DListener *iface,
-        D3DVECTOR *lpvPosition)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetPosition(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPD3DVECTOR lpvPosition)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("returning: Position vector = (%f,%f,%f)\n", This->device->ds3dl.vPosition.x, This->device->ds3dl.vPosition.y, This->device->ds3dl.vPosition.z);
 	*lpvPosition = This->device->ds3dl.vPosition;
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetRolloffFactor(IDirectSound3DListener *iface,
-        D3DVALUE *lpfRolloffFactor)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetRolloffFactor(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPD3DVALUE lpfRolloffFactor)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("returning: RolloffFactor = %f\n", This->device->ds3dl.flRolloffFactor);
 	*lpfRolloffFactor = This->device->ds3dl.flRolloffFactor;
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_GetVelocity(IDirectSound3DListener *iface,
-        D3DVECTOR *lpvVelocity)
+static HRESULT WINAPI IDirectSound3DListenerImpl_GetVelocity(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPD3DVECTOR lpvVelocity)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("returning: Velocity vector = (%f,%f,%f)\n", This->device->ds3dl.vVelocity.x, This->device->ds3dl.vVelocity.y, This->device->ds3dl.vVelocity.z);
 	*lpvVelocity = This->device->ds3dl.vVelocity;
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetAllParameters(IDirectSound3DListener *iface,
-        const DS3DLISTENER *lpcDS3DL, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetAllParameters(
+	LPDIRECTSOUND3DLISTENER iface,
+	LPCDS3DLISTENER lpcDS3DL,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: all parameters; dwApply = %d\n", dwApply);
 	This->device->ds3dl = *lpcDS3DL;
 	if (dwApply == DS3D_IMMEDIATE)
@@ -797,11 +885,12 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetAllParameters(IDirectSound3D
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetDistanceFactor(IDirectSound3DListener *iface,
-        D3DVALUE fDistanceFactor, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetDistanceFactor(
+	LPDIRECTSOUND3DLISTENER iface,
+	D3DVALUE fDistanceFactor,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: Distance Factor = %f; dwApply = %d\n", fDistanceFactor, dwApply);
 	This->device->ds3dl.flDistanceFactor = fDistanceFactor;
 	if (dwApply == DS3D_IMMEDIATE)
@@ -813,11 +902,12 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetDistanceFactor(IDirectSound3
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetDopplerFactor(IDirectSound3DListener *iface,
-        D3DVALUE fDopplerFactor, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetDopplerFactor(
+	LPDIRECTSOUND3DLISTENER iface,
+	D3DVALUE fDopplerFactor,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: Doppler Factor = %f; dwApply = %d\n", fDopplerFactor, dwApply);
 	This->device->ds3dl.flDopplerFactor = fDopplerFactor;
 	if (dwApply == DS3D_IMMEDIATE)
@@ -829,12 +919,13 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetDopplerFactor(IDirectSound3D
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetOrientation(IDirectSound3DListener *iface,
-        D3DVALUE xFront, D3DVALUE yFront, D3DVALUE zFront, D3DVALUE xTop, D3DVALUE yTop,
-        D3DVALUE zTop, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetOrientation(
+	LPDIRECTSOUND3DLISTENER iface,
+	D3DVALUE xFront, D3DVALUE yFront, D3DVALUE zFront,
+	D3DVALUE xTop, D3DVALUE yTop, D3DVALUE zTop,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: Front vector = (%f,%f,%f); Top vector = (%f,%f,%f); dwApply = %d\n",
 	xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
 	This->device->ds3dl.vOrientFront.x = xFront;
@@ -852,11 +943,12 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetOrientation(IDirectSound3DLi
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetPosition(IDirectSound3DListener *iface,
-        D3DVALUE x, D3DVALUE y, D3DVALUE z, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetPosition(
+	LPDIRECTSOUND3DLISTENER iface,
+	D3DVALUE x, D3DVALUE y, D3DVALUE z,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: Position vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
 	This->device->ds3dl.vPosition.x = x;
 	This->device->ds3dl.vPosition.y = y;
@@ -870,11 +962,12 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetPosition(IDirectSound3DListe
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetRolloffFactor(IDirectSound3DListener *iface,
-        D3DVALUE fRolloffFactor, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetRolloffFactor(
+	LPDIRECTSOUND3DLISTENER iface,
+	D3DVALUE fRolloffFactor,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: Rolloff Factor = %f; dwApply = %d\n", fRolloffFactor, dwApply);
 	This->device->ds3dl.flRolloffFactor = fRolloffFactor;
 	if (dwApply == DS3D_IMMEDIATE)
@@ -886,11 +979,12 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetRolloffFactor(IDirectSound3D
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_SetVelocity(IDirectSound3DListener *iface,
-        D3DVALUE x, D3DVALUE y, D3DVALUE z, DWORD dwApply)
+static HRESULT WINAPI IDirectSound3DListenerImpl_SetVelocity(
+	LPDIRECTSOUND3DLISTENER iface,
+	D3DVALUE x, D3DVALUE y, D3DVALUE z,
+	DWORD dwApply)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("setting: Velocity vector = (%f,%f,%f); dwApply = %d\n", x, y, z, dwApply);
 	This->device->ds3dl.vVelocity.x = x;
 	This->device->ds3dl.vVelocity.y = y;
@@ -904,16 +998,16 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_SetVelocity(IDirectSound3DListe
 	return DS_OK;
 }
 
-static HRESULT WINAPI IDirectSound3DListenerImpl_CommitDeferredSettings(IDirectSound3DListener *iface)
+static HRESULT WINAPI IDirectSound3DListenerImpl_CommitDeferredSettings(
+	LPDIRECTSOUND3DLISTENER iface)
 {
-        IDirectSoundBufferImpl *This = impl_from_IDirectSound3DListener(iface);
-
+	IDirectSound3DListenerImpl *This = (IDirectSound3DListenerImpl *)iface;
 	TRACE("\n");
 	DSOUND_ChangeListener(This);
 	return DS_OK;
 }
 
-const IDirectSound3DListenerVtbl ds3dlvt =
+static const IDirectSound3DListenerVtbl ds3dlvt =
 {
 	/* IUnknown methods */
 	IDirectSound3DListenerImpl_QueryInterface,
@@ -936,3 +1030,46 @@ const IDirectSound3DListenerVtbl ds3dlvt =
 	IDirectSound3DListenerImpl_SetVelocity,
 	IDirectSound3DListenerImpl_CommitDeferredSettings,
 };
+
+HRESULT IDirectSound3DListenerImpl_Create(
+	DirectSoundDevice * device,
+	IDirectSound3DListenerImpl ** ppdsl)
+{
+	IDirectSound3DListenerImpl *pdsl;
+	TRACE("(%p,%p)\n",device,ppdsl);
+
+	pdsl = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(*pdsl));
+
+	if (pdsl == NULL) {
+		WARN("out of memory\n");
+		*ppdsl = 0;
+		return DSERR_OUTOFMEMORY;
+	}
+
+	pdsl->ref = 0;
+	pdsl->lpVtbl = &ds3dlvt;
+
+	pdsl->device = device;
+
+	pdsl->device->ds3dl.dwSize = sizeof(DS3DLISTENER);
+	pdsl->device->ds3dl.vPosition.x = 0.0;
+	pdsl->device->ds3dl.vPosition.y = 0.0;
+	pdsl->device->ds3dl.vPosition.z = 0.0;
+	pdsl->device->ds3dl.vVelocity.x = 0.0;
+	pdsl->device->ds3dl.vVelocity.y = 0.0;
+	pdsl->device->ds3dl.vVelocity.z = 0.0;
+	pdsl->device->ds3dl.vOrientFront.x = 0.0;
+	pdsl->device->ds3dl.vOrientFront.y = 0.0;
+	pdsl->device->ds3dl.vOrientFront.z = 1.0;
+	pdsl->device->ds3dl.vOrientTop.x = 0.0;
+	pdsl->device->ds3dl.vOrientTop.y = 1.0;
+	pdsl->device->ds3dl.vOrientTop.z = 0.0;
+	pdsl->device->ds3dl.flDistanceFactor = DS3D_DEFAULTDISTANCEFACTOR;
+	pdsl->device->ds3dl.flRolloffFactor = DS3D_DEFAULTROLLOFFFACTOR;
+	pdsl->device->ds3dl.flDopplerFactor = DS3D_DEFAULTDOPPLERFACTOR;
+
+	pdsl->device->ds3dl_need_recalc = TRUE;
+
+	*ppdsl = pdsl;
+	return S_OK;
+}

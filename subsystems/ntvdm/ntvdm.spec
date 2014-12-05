@@ -1,6 +1,6 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; NTVDM Registers exports ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM Registers ;;
+;;;;;;;;;;;;;;;;;;;;;
 
 @ stdcall getAF()
 @ stdcall getAH()
@@ -90,9 +90,9 @@
 @ stdcall setZF(long)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; NTVDM CCPU MIPS exports ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM CCPU MIPS Compatibility ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 @ stdcall c_getAF()  getAF
 @ stdcall c_getAH()  getAH
@@ -179,9 +179,9 @@
 @ stdcall c_setZF(long)  setZF
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; NTVDM DOS-32 Emulation exports ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM DOS-32 Emulation ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 @ stdcall demClientErrorEx(long long long)
 @ stdcall demFileDelete(ptr)
@@ -200,9 +200,9 @@
 ;@ stdcall demWOWLFNInit
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; NTVDM Miscellaneous exports ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NTVDM Miscellaneous ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
 
 @ stdcall MGetVdmPointer(long long long)
 @ stdcall Sim32pGetVDMPointer(long long)
@@ -212,8 +212,15 @@
 ;@ stdcall VdmUnmapFlat(long long ptr long)  ; Not exported on x86
 
 @ stdcall call_ica_hw_interrupt(long long long)
+@ stdcall VDDReserveIrqLine(long long)
+@ stdcall VDDReleaseIrqLine(long long)
+
 @ stdcall VDDInstallIOHook(long long ptr ptr)
 @ stdcall VDDDeInstallIOHook(long long ptr)
+
+@ stdcall VDDRequestDMA(long long ptr long)
+@ stdcall VDDQueryDMA(long long ptr)
+@ stdcall VDDSetDMA(long long long ptr)
 
 @ stdcall VDDSimulate16()
 @ stdcall host_simulate()   VDDSimulate16

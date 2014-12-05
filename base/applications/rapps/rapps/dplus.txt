@@ -4,7 +4,7 @@
 [Section]
 Name = D+ Browser
 Version = 0.5b
-Licence = GPLv3
+License = GPLv3
 Description = DPlus is a graphical web browser with an emphasis on security, performance and portability. It is based on Dillo and it is forked from Dillo-Win32 project.
 Size = 1.36 MB
 Category = 5
@@ -22,6 +22,6 @@ Size = 1,36 Mo
 
 [Section.041f]
 Name = D+ Tarayıcı
-Licence = GPL 3. sürüm
+License = GPL 3. sürüm
 Description = DPlus; güvenlik, başarım ve taşınabilirlik üzerine bir vurguyla, çizgelik bir Umûmî Ağ tarayıcısıdır. Dillo tabanlıdır ve Dillo-Win32 tasarısından çatallanmıştır.
 Size = 1,36 MB

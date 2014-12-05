@@ -10,25 +10,133 @@
 
 #define NDEBUG
 
-#include "emulator.h"
-#include "callback.h"
-#include "bop.h"
+/* For BIOS Version number */
+#include <reactos/buildno.h>
 
-#include "../bios.h"
-#include "../rom.h"
+#include "emulator.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_CF
+#include "cpu/bop.h"
+#include "int32.h"
+
+#include <bios/bios.h>
+#include <bios/rom.h>
 #include "bios32.h"
 #include "bios32p.h"
 #include "kbdbios32.h"
 #include "vidbios32.h"
+#include "moubios32.h"
 
 #include "io.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
-#include "hardware/timer.h"
+#include "hardware/pit.h"
+
+/* Extra PSDK/NDK Headers */
+#include <ndk/kefuncs.h>
 
 /* PRIVATE VARIABLES **********************************************************/
 
 CALLBACK16 BiosContext;
+
+/*
+
+Bochs BIOS, see rombios.h
+=========================
+
+// model byte 0xFC = AT
+#define SYS_MODEL_ID     0xFC
+#define SYS_SUBMODEL_ID  0x00
+#define BIOS_REVISION    1
+#define BIOS_CONFIG_TABLE 0xe6f5
+
+#ifndef BIOS_BUILD_DATE
+#  define BIOS_BUILD_DATE "06/23/99"
+#endif
+
+// 1K of base memory used for Extended Bios Data Area (EBDA)
+// EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
+#define EBDA_SEG           0x9FC0
+#define EBDA_SIZE          1              // In KiB
+#define BASE_MEM_IN_K   (640 - EBDA_SIZE)
+
+
+See rombios.c
+=============
+
+ROM BIOS compatibility entry points:
+===================================
+$e05b ; POST Entry Point
+$e2c3 ; NMI Handler Entry Point
+$e3fe ; INT 13h Fixed Disk Services Entry Point
+$e401 ; Fixed Disk Parameter Table
+$e6f2 ; INT 19h Boot Load Service Entry Point
+$e6f5 ; Configuration Data Table
+$e729 ; Baud Rate Generator Table
+$e739 ; INT 14h Serial Communications Service Entry Point
+$e82e ; INT 16h Keyboard Service Entry Point
+$e987 ; INT 09h Keyboard Service Entry Point
+$ec59 ; INT 13h Diskette Service Entry Point
+$ef57 ; INT 0Eh Diskette Hardware ISR Entry Point
+$efc7 ; Diskette Controller Parameter Table
+$efd2 ; INT 17h Printer Service Entry Point
+$f045 ; INT 10 Functions 0-Fh Entry Point
+$f065 ; INT 10h Video Support Service Entry Point
+$f0a4 ; MDA/CGA Video Parameter Table (INT 1Dh)
+$f841 ; INT 12h Memory Size Service Entry Point
+$f84d ; INT 11h Equipment List Service Entry Point
+$f859 ; INT 15h System Services Entry Point
+$fa6e ; Character Font for 320x200 & 640x200 Graphics (lower 128 characters)
+$fe6e ; INT 1Ah Time-of-day Service Entry Point
+$fea5 ; INT 08h System Timer ISR Entry Point
+$fef3 ; Initial Interrupt Vector Offsets Loaded by POST
+$ff53 ; IRET Instruction for Dummy Interrupt Handler
+$ff54 ; INT 05h Print Screen Service Entry Point
+$fff0 ; Power-up Entry Point
+$fff5 ; ASCII Date ROM was built - 8 characters in MM/DD/YY
+$fffe ; System Model ID
+
+*/
+
+/*
+ * See Ralf Brown: http://www.ctyme.com/intr/rb-1594.htm#Table515
+ * for more information.
+ */
+#define BIOS_MODEL      0xFC // PC-AT
+#define BIOS_SUBMODEL   0x01 // AT models 319,339 8 MHz, Enh Keyb, 3.5"
+#define BIOS_REVISION   0x00
+// FIXME: Find a nice PS/2 486 + 487 BIOS combination!
+
+/*
+ * WARNING! For compatibility purposes the string "IBM" should be at F000:E00E .
+ * Some programs alternatively look at "COPR. IBM" that is at F000:E008 .
+ */
+static const CHAR BiosCopyright[] = "0000000 NTVDM IBM Compatible 486 32-bit BIOS Copyright (C) ReactOS Team 1996-2014";
+static const CHAR BiosVersion[]   = "ReactOS NTVDM 32-bit BIOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")";
+static const CHAR BiosDate[]      = "06/17/13";
+
+C_ASSERT(sizeof(BiosCopyright)-1 <= 0x5B); // Ensures that we won't overflow on the POST Code starting at F000:E05B
+C_ASSERT(sizeof(BiosDate)-1      == 0x08);
+
+/* 16-bit bootstrap code at F000:FFF0 */
+static BYTE Bootstrap[] =
+{
+    0xEA,                   // jmp far ptr
+    0x5B, 0xE0, 0x00, 0xF0, // F000:E05B
+};
+
+/*
+ * Normally at F000:E05B there is the POST that finally calls the bootstrap
+ * interrupt. It should also check the value of Bda->SoftReset. Since we do
+ * all the POST in 32 bit from the start, we just place there the bootstrap
+ * interrupt call.
+ */
+static BYTE PostCode[] =
+{
+    LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_RESET,  // Call BIOS POST
+    0xCD, 0x19,                                             // INT 0x19, the bootstrap loader interrupt
+//  LOBYTE(EMULATOR_BOP), HIBYTE(EMULATOR_BOP), BOP_UNSIMULATE
+};
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -43,6 +151,29 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
 {
     switch (getAH())
     {
+        /* OS Hooks for Multitasking */
+        case 0x80:  // Device Open
+        case 0x81:  // Device Close
+        case 0x82:  // Program Termination
+        case 0x90:  // Device Busy
+        case 0x91:  // Device POST
+        {
+            /* Return success by default */
+            setAH(0x00);
+            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            break;
+        }
+
+        /* Keyboard intercept */
+        case 0x4F:
+        {
+            /* CF should be set but let's just set it again just in case */
+            /* Do not modify AL (the hardware scan code), but set CF to continue processing */
+            // setCF(1);
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Wait */
         case 0x86:
         {
@@ -51,7 +182,11 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
              * See Ralf Brown: http://www.ctyme.com/intr/rb-1525.htm
              * for more information.
              */
-            Sleep(MAKELONG(getDX(), getCX()));
+            LARGE_INTEGER TimeOut;
+            TimeOut.QuadPart = MAKELONG(getDX(), getCX()) * -10LL;
+
+            // HACK: For now, use the NT API (time in hundreds of nanoseconds).
+            NtDelayExecution(FALSE, &TimeOut);
 
             /* Clear CF */
             Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
@@ -112,6 +247,15 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Switch to Protected Mode */
+        case 0x89:
+        {
+            DPRINT1("BIOS INT 15h, AH=89h \"Switch to Protected Mode\" is UNIMPLEMENTED");
+
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+            break;
+        }
+
         /* Get Configuration */
         case 0xC0:
         {
@@ -127,12 +271,75 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
             break;
         }
 
+        /* Return Extended-Bios Data-Area Segment Address (PS) */
+        case 0xC1:
+        {
+            // Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            // setES(???);
+
+            UNIMPLEMENTED;
+
+            /* We do not support EBDA yet */
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+            break;
+        }
+
+        /* Pointing Device BIOS Interface (PS) */
+        case 0xC2:
+        {
+            BiosMousePs2Interface(Stack);
+            break;
+        }
+
         default:
         {
             DPRINT1("BIOS Function INT 15h, AH = 0x%02X NOT IMPLEMENTED\n",
                     getAH());
         }
     }
+}
+
+static VOID WINAPI BiosRomBasic(LPWORD Stack)
+{
+    /* ROM Basic is unsupported, display a message to the user */
+    DisplayMessage(L"NTVDM doesn't support ROM Basic. The VDM is closing.");
+
+    /* Stop the VDM */
+    EmulatorTerminate();
+    return;
+}
+
+
+VOID DosBootsectorInitialize(VOID);
+
+static VOID WINAPI BiosBootstrapLoader(LPWORD Stack)
+{
+    /*
+     * In real BIOSes one loads the bootsector read from a diskette
+     * or from a disk, copy it to 0000:7C00 and then boot it.
+     * Since we are 32-bit VM and we hardcode our DOS at the moment,
+     * just call the DOS 32-bit initialization code.
+     */
+
+    DPRINT("BiosBootstrapLoader -->\n");
+
+    /* Load DOS */
+    DosBootsectorInitialize();
+
+    /*
+     * Position CPU to 0000:7C00 to boot the OS.
+     *
+     * Since we are called via the INT32 mechanism, we need to correctly set
+     * CS:IP, not by changing the current one (otherwise the interrupt could
+     * not be clean up and return properly), but by changing the CS:IP in the
+     * stack, so that when the interrupt returns, the modified CS:IP is popped
+     * off the stack and the CPU is correctly repositioned.
+     */
+    Stack[STACK_CS] = 0x0000;
+    Stack[STACK_IP] = 0x7C00;
+
+    DPRINT("<-- BiosBootstrapLoader\n");
 }
 
 static VOID WINAPI BiosTimeService(LPWORD Stack)
@@ -232,7 +439,7 @@ static VOID WINAPI BiosHandleMasterPicIRQ(LPWORD Stack)
     IOWriteB(PIC_MASTER_CMD, PIC_OCW3_READ_ISR /* == 0x0B */);
     IrqNumber = IOReadB(PIC_MASTER_CMD);
 
-    DPRINT("Master - IrqNumber = 0x%x\n", IrqNumber);
+    DPRINT("Master - IrqNumber = 0x%02X\n", IrqNumber);
 
     PicIRQComplete(Stack);
 }
@@ -244,7 +451,7 @@ static VOID WINAPI BiosHandleSlavePicIRQ(LPWORD Stack)
     IOWriteB(PIC_SLAVE_CMD, PIC_OCW3_READ_ISR /* == 0x0B */);
     IrqNumber = IOReadB(PIC_SLAVE_CMD);
 
-    DPRINT("Slave - IrqNumber = 0x%x\n", IrqNumber);
+    DPRINT("Slave - IrqNumber = 0x%02X\n", IrqNumber);
 
     PicIRQComplete(Stack);
 }
@@ -259,8 +466,8 @@ static VOID WINAPI BiosTimerIrq(LPWORD Stack)
      * because some programs may hook only BIOS_SYS_TIMER_INTERRUPT
      * for their purpose...
      */
-    /** EmulatorInterrupt(BIOS_SYS_TIMER_INTERRUPT); **/
     Int32Call(&BiosContext, BIOS_SYS_TIMER_INTERRUPT);
+    // BiosSystemTimerInterrupt(Stack);
     PicIRQComplete(Stack);
 }
 
@@ -295,20 +502,23 @@ static VOID BiosHwSetup(VOID)
     IOWriteB(PIC_SLAVE_DATA , 0xFF);
 
 
-    /* Initialize PIT Counter 0 */
+    /* Initialize PIT Counter 0 - Mode 2, 16bit binary count */
+    // NOTE: Some BIOSes set it to Mode 3 instead.
     IOWriteB(PIT_COMMAND_PORT, 0x34);
+    // 18.2Hz refresh rate
     IOWriteB(PIT_DATA_PORT(0), 0x00);
     IOWriteB(PIT_DATA_PORT(0), 0x00);
 
-    /* Initialize PIT Counter 1 */
-    IOWriteB(PIT_COMMAND_PORT, 0x74);
-    IOWriteB(PIT_DATA_PORT(1), 0x00);
-    IOWriteB(PIT_DATA_PORT(1), 0x00);
+    /* Initialize PIT Counter 1 - Mode 2, 8bit binary count */
+    IOWriteB(PIT_COMMAND_PORT, 0x54);
+    // DRAM refresh every 15ms: http://www.cs.dartmouth.edu/~spl/Academic/Organization/docs/PC%20Timer%208253.html
+    IOWriteB(PIT_DATA_PORT(1),   18);
 
-    /* Initialize PIT Counter 2 */
-    IOWriteB(PIT_COMMAND_PORT, 0xB4);
-    IOWriteB(PIT_DATA_PORT(2), 0x00);
-    IOWriteB(PIT_DATA_PORT(2), 0x00);
+    /* Initialize PIT Counter 2 - Mode 3, 16bit binary count */
+    IOWriteB(PIT_COMMAND_PORT, 0xB6);
+    // Count for 440Hz
+    IOWriteB(PIT_DATA_PORT(2), 0x97);
+    IOWriteB(PIT_DATA_PORT(2), 0x0A);
 
     EnableHwIRQ(0, BiosTimerIrq);
 }
@@ -340,6 +550,8 @@ static VOID InitializeBiosInt32(VOID)
     RegisterBiosInt32(BIOS_EQUIPMENT_INTERRUPT, BiosEquipmentService    );
     RegisterBiosInt32(BIOS_MEMORY_SIZE        , BiosGetMemorySize       );
     RegisterBiosInt32(BIOS_MISC_INTERRUPT     , BiosMiscService         );
+    RegisterBiosInt32(BIOS_ROM_BASIC          , BiosRomBasic            );
+    RegisterBiosInt32(BIOS_BOOTSTRAP_LOADER   , BiosBootstrapLoader     );
     RegisterBiosInt32(BIOS_TIME_INTERRUPT     , BiosTimeService         );
     RegisterBiosInt32(BIOS_SYS_TIMER_INTERRUPT, BiosSystemTimerInterrupt);
 
@@ -351,24 +563,12 @@ static VOID InitializeBiosInt32(VOID)
     ((PULONG)BaseAddress)[0x49] = (ULONG)NULL;
 }
 
-static VOID InitializeBiosInfo(VOID)
-{
-    Bct->Length         = sizeof(*Bct);
-    Bct->Model          = 0xFC; // PC-AT; see http://www.ctyme.com/intr/rb-1594.htm#Table515
-    Bct->SubModel       = 0x00;
-    Bct->BiosRevision   = 0x01;
-    Bct->BiosFeature[0] = 0x64; // At the moment we don't support "INT 15/AH=4Fh called upon INT 09h" nor "wait for external event (INT 15/AH=41h) supported"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
-    Bct->BiosFeature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
-    Bct->BiosFeature[2] = 0x00;
-    Bct->BiosFeature[3] = 0x00;
-    Bct->BiosFeature[4] = 0x00;
-}
-
 static VOID InitializeBiosData(VOID)
 {
     UCHAR Low, High;
 
     /* Initialize the BDA contents */
+    RtlZeroMemory(Bda, sizeof(*Bda));
     Bda->EquipmentList = BIOS_EQUIPMENT_LIST;
 
     /*
@@ -382,14 +582,34 @@ static VOID InitializeBiosData(VOID)
     Bda->MemorySize = MAKEWORD(Low, High);
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+static VOID InitializeBiosInfo(VOID)
+{
+    RtlZeroMemory(Bct, sizeof(*Bct));
+
+    Bct->Length     = sizeof(*Bct);
+    Bct->Model      = BIOS_MODEL;
+    Bct->SubModel   = BIOS_SUBMODEL;
+    Bct->Revision   = BIOS_REVISION;
+    Bct->Feature[0] = 0x70; // At the moment we don't support "wait for external event (INT 15/AH=41h)", we also don't have any "extended BIOS area allocated (usually at top of RAM)"; see http://www.ctyme.com/intr/rb-1594.htm#Table510
+    Bct->Feature[1] = 0x00; // We don't support anything from here; see http://www.ctyme.com/intr/rb-1594.htm#Table511
+    Bct->Feature[2] = 0x00;
+    Bct->Feature[3] = 0x00;
+    Bct->Feature[4] = 0x00;
+}
+
+
 
 /*
  * The BIOS POST (Power On-Self Test)
  */
-BOOLEAN Bios32Initialize(VOID)
+VOID
+Bios32Post(VOID)
 {
+#if 0
     BOOLEAN Success;
+#endif
+
+    DPRINT("Bios32Post\n");
 
     /* Initialize the stack */
     // That's what says IBM... (stack at 30:00FF going downwards)
@@ -405,22 +625,100 @@ BOOLEAN Bios32Initialize(VOID)
     InitializeBiosData();
     InitializeBiosInfo();
 
+    /*
+     * Initialize IVT and hardware
+     */
+
     /* Register the BIOS 32-bit Interrupts */
     InitializeBiosInt32();
 
     /* Initialize platform hardware (PIC/PIT chips, ...) */
     BiosHwSetup();
 
+    /* Initialize the Keyboard, Video and Mouse BIOS */
+    if (!KbdBios32Initialize() || !VidBios32Initialize() || !MouseBios32Initialize())
+    {
+        // return FALSE;
+
+        /* Stop the VDM */
+        EmulatorTerminate();
+        return;
+    }
+
+#if 0
     /* Initialize the Keyboard and Video BIOS */
-    if (!KbdBios32Initialize() || !VidBios32Initialize()) return FALSE;
+    if (!KbdBiosInitialize() || !VidBiosInitialize())
+    {
+        /* Stop the VDM */
+        EmulatorTerminate();
+        return;
+    }
+#endif
 
     ///////////// MUST BE DONE AFTER IVT INITIALIZATION !! /////////////////////
 
+#if 0
     /* Load some ROMs */
     Success = LoadRom("boot.bin", (PVOID)0xE0000, NULL);
     DPRINT1("Test ROM loading %s ; GetLastError() = %u\n", Success ? "succeeded" : "failed", GetLastError());
+#endif
 
     SearchAndInitRoms(&BiosContext);
+
+    /*
+     * End of the 32-bit POST portion. We then fall back into 16-bit where
+     * the rest of the POST code is executed, typically calling INT 19h
+     * to boot up the OS.
+     */
+}
+
+static VOID WINAPI Bios32ResetBop(LPWORD Stack)
+{
+    DPRINT("Bios32ResetBop\n");
+
+    /* Disable interrupts */
+    setIF(0);
+
+    // FIXME: Check the word at 0040h:0072h (Bda->SoftReset) and do one of the
+    // following actions:
+    // - if the word is 1234h, perform a warm reboot (aka. Ctrl-Alt-Del);
+    // - if the word is 0000h, perform a cold reboot (aka. Reset).
+
+    /* Do the POST */
+    Bios32Post();
+
+    /* Enable interrupts */
+    setIF(1);
+}
+
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN Bios32Initialize(VOID)
+{
+    /*
+     * Initialize BIOS32 static data
+     */
+
+    /* Bootstrap code */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE05B), PostCode , sizeof(PostCode ));
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF0), Bootstrap, sizeof(Bootstrap));
+
+    /* System BIOS Copyright */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE000), BiosCopyright, sizeof(BiosCopyright)-1);
+
+    /* System BIOS Version */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xE080), BiosVersion, sizeof(BiosVersion)-1);
+    // FIXME: or E061, or E100 ??
+
+    /* System BIOS Date */
+    RtlCopyMemory(SEG_OFF_TO_PTR(0xF000, 0xFFF5), BiosDate, sizeof(BiosDate)-1);
+
+    /* System BIOS Model (same as Bct->Model) */
+    *(PBYTE)(SEG_OFF_TO_PTR(0xF000, 0xFFFE)) = BIOS_MODEL;
+
+    /* Redefine our POST function */
+    RegisterBop(BOP_RESET, Bios32ResetBop);
 
     /* We are done */
     return TRUE;
@@ -428,6 +726,7 @@ BOOLEAN Bios32Initialize(VOID)
 
 VOID Bios32Cleanup(VOID)
 {
+    MouseBios32Cleanup();
     VidBios32Cleanup();
     KbdBios32Cleanup();
 }

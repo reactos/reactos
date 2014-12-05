@@ -172,7 +172,7 @@ typedef struct _THRDESKHEAD
 typedef struct _PROCDESKHEAD
 {
   HEAD;
-  DWORD hTaskWow;
+  DWORD_PTR hTaskWow;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } PROCDESKHEAD, *PPROCDESKHEAD;
@@ -521,18 +521,24 @@ typedef struct _CLS
     INT cbclsExtra;
     INT cbwndExtra;
     HINSTANCE hModule;
+#ifdef NEW_CURSORICON
+    struct _CURICON_OBJECT* spicn;
+    struct _CURICON_OBJECT* spcur;
+#else
     HANDLE hIcon; /* FIXME - Use pointer! */
-    //PCURSOR spicn;
     HANDLE hCursor; /* FIXME - Use pointer! */
-    //PCURSOR spcur;
+#endif
     HBRUSH hbrBackground;
     PWSTR lpszMenuName;     // kernel use
     PSTR lpszAnsiClassName; // "
+#ifdef NEW_CURSORICON
+    struct _CURICON_OBJECT* spicnSm;
+#else
     HANDLE hIconSm; /* FIXME - Use pointer! */
-    //PCURSOR spicnSm;
 
     //// ReactOS dosn't suppot cache icons.
     HICON hIconSmIntern; /* Internal small icon, derived from hIcon */
+#endif
     ////
     UINT Unicode : 1; // !CSF_ANSIPROC
     UINT Global : 1;  // CS_GLOBALCLASS or CSF_SERVERSIDEPROC
@@ -2290,7 +2296,8 @@ enum ThreadStateRoutines
     THREADSTATE_GETINPUTSTATE,
     THREADSTATE_UPTIMELASTREAD,
     THREADSTATE_FOREGROUNDTHREAD,
-    THREADSTATE_GETCURSOR
+    THREADSTATE_GETCURSOR,
+    THREADSTATE_GETMESSAGEEXTRAINFO
 };
 
 DWORD_PTR
@@ -2595,14 +2602,14 @@ NtUserProcessConnect(
     OUT PUSERCONNECT pUserConnect,
     IN  DWORD dwSize); // sizeof(USERCONNECT)
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserQueryInformationThread(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5);
+    IN HANDLE ThreadHandle,
+    IN USERTHREADINFOCLASS ThreadInformationClass,
+    OUT PVOID ThreadInformation,
+    IN ULONG ThreadInformationLength
+);
 
 DWORD
 NTAPI
@@ -3369,8 +3376,6 @@ typedef struct tagKMDDELPARAM
  */
 
 #define NOPARAM_ROUTINE_ISCONSOLEMODE         0xffff0001
-#define NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO   0xffff0005
-#define ONEPARAM_ROUTINE_CSRSS_GUICHECK       0xffff0008
 #define ONEPARAM_ROUTINE_SWITCHCARETSHOWING   0xfffe0008
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e

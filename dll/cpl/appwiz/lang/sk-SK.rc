@@ -9,8 +9,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vytvoriù linku"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1", -1, 115, 15, 160, 24
-	LTEXT "Text2", -1, 115, 35, 160, 17
+    LTEXT "Text1", -1, 115, 15, 160, 24
+    LTEXT "Text2", -1, 115, 35, 160, 17
 END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -18,9 +18,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vytvoriù linku"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Text1",-1,10,0,225,40
-	LTEXT "Text2",-1,10,40,120,20
-	LTEXT "Text3",-1,10,55,120,20
+    LTEXT "Text1",-1,10,0,225,40
+    LTEXT "Text2",-1,10,40,120,20
+    LTEXT "Text3",-1,10,55,120,20
 END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
@@ -28,11 +28,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vytvoriù odkaz"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Tento sprievodca V·m pomÙûe vytvoriù odkazy na miestne alebo\nsieùovÈ programy, s˙bory, prieËinky, poËÌtaËe, alebo internetovÈ\nadresy.", -1, 120, 15, 200, 30
-  LTEXT "Zadajte umiestnenie poloûky:", -1, 120, 50, 120, 10
-  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "&Prehæad·vaù...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Kliknite na tlaËidlo œalej pre pokraËovanie.", -1, 120, 97, 162, 10
+    LTEXT "Tento sprievodca V·m pomÙûe vytvoriù odkazy na miestne alebo\nsieùovÈ programy, s˙bory, prieËinky, poËÌtaËe, alebo internetovÈ\nadresy.", -1, 120, 15, 200, 30
+    LTEXT "Zadajte umiestnenie poloûky:", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "&Prehæad·vaù...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Kliknite na tlaËidlo œalej pre pokraËovanie.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -40,24 +40,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Select a Title for the Program"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&NapÌöte n·zov pre tento odkaz:", -1, 120, 15, 150, 10
-  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Kliknite na tlaËidlo DokonËiù pre vytvorenie odkazu.", -1, 118, 97, 178, 17
+    LTEXT "&NapÌöte n·zov pre tento odkaz:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Kliknite na tlaËidlo DokonËiù pre vytvorenie odkazu.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Pridaù alebo odstr·niù programy"
-	IDS_CPLSYSTEMDESCRIPTION "NastavÌ programy a vytvorÌ odkazy."
+    IDS_CPLSYSTEMNAME "Pridaù alebo odstr·niù programy"
+    IDS_CPLSYSTEMDESCRIPTION "NastavÌ programy a vytvorÌ odkazy."
     IDS_CREATE_SHORTCUT "Vytvoriù odkaz"
     IDS_ERROR_NOT_FOUND "S˙bor %s nebol n·jden˝."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Downloading..."
-    IDS_INSTALLING      "Installing..."
-    IDS_INVALID_SHA     "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+    IDS_DOWNLOADING "Downloading..."
+    IDS_INSTALLING "Installing..."
+    IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

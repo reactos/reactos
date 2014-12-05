@@ -18,11 +18,24 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-//#include "windef.h"
-//#include "oleacc.h"
+#include <windef.h>
+#include <oleacc.h>
+
+#include "resource.h"
 
 1 TYPELIB "oleacc_classes.tlb"
 1 WINE_REGISTRY "oleacc_classes.rgs"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define WINE_FILEDESCRIPTION_STR "Wine OLE Accessibility"
+#define WINE_FILENAME_STR "oleacc.dll"
+#define WINE_FILEVERSION 7,0,0,0
+#define WINE_FILEVERSION_STR "7.0.0.0"
+#define WINE_PRODUCTVERSION 6,1,7600,16385
+#define WINE_PRODUCTVERSION_STR "6.1.6700.16385"
+
+#include <wine/wine_common_ver.rc>
 
 #ifdef LANGUAGE_EN_US
     #include "lang/oleacc_En.rc"

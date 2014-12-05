@@ -1670,8 +1670,8 @@ typedef struct {
 extern HAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH (&HalDispatchTable)
 #else
-extern PHAL_DISPATCH HalDispatchTable;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(HalDispatchTable)
+extern PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH HalDispatchTable
 #endif
 

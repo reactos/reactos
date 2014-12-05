@@ -68,6 +68,8 @@ BOOL FASTCALL MessageInit(VOID);
 VOID FASTCALL MessageCleanup(VOID);
 
 /* definitions for misc.c */
+VOID WINAPI UserSetLastError(IN DWORD dwErrCode);
+VOID WINAPI UserSetLastNTError(IN NTSTATUS Status);
 PCALLPROCDATA FASTCALL ValidateCallProc(HANDLE hCallProc);
 PWND FASTCALL ValidateHwnd(HWND hwnd);
 PWND FASTCALL ValidateHwndOrDesk(HWND hwnd);

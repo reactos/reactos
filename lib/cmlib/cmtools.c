@@ -44,7 +44,7 @@ CmComparePackedNames(
 {
     ULONG i;
 
-    if (NamePacked == TRUE)
+    if (NamePacked)
     {
         PUCHAR PackedName = (PUCHAR)Name;
 
@@ -153,7 +153,7 @@ CmCopyPackedName(
     ASSERT(Name != 0);
     ASSERT(NameLength != 0);
 
-    if (NamePacked == TRUE)
+    if (NamePacked)
     {
         NameLength *= sizeof(WCHAR);
         CharCount = min(BufferLength, NameLength) / sizeof(WCHAR);

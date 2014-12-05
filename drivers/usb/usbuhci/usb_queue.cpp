@@ -151,13 +151,6 @@ CUSBQueue::AddQueueHead(
          //
          m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
     }
-    else if (Request->GetTransferType() == USB_ENDPOINT_TYPE_INTERRUPT)
-    {
-         //
-         // use full speed queue
-         //
-         m_Hardware->GetQueueHead(UHCI_INTERRUPT_QUEUE, &QueueHead);
-    }
 
     //
     // FIXME support isochronous

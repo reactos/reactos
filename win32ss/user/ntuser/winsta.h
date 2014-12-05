@@ -35,7 +35,7 @@ typedef struct _WINSTATION_OBJECT
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;
-extern PPROCESSINFO LogonProcess;
+extern HANDLE gpidLogon;
 extern HWND hwndSAS;
 extern UNICODE_STRING gustrWindowStationsDir;
 

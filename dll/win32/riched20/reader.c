@@ -699,7 +699,7 @@ static void _RTFGetToken2(RTF_Info *info)
 
 /*
  * Read the next character from the input.  This handles setting the
- * current line and position-within-line variables.  Those variable are
+ * current line and position-within-line variables.  Those variables are
  * set correctly whether lines end with CR, LF, or CRLF (the last being
  * the tricky case).
  *

@@ -461,10 +461,6 @@ typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
 typedef unsigned long ULONG, *PULONG;
 
-typedef CONST UCHAR *PCUCHAR;
-typedef CONST USHORT *PCUSHORT;
-typedef CONST ULONG *PCULONG;
-
 typedef double DOUBLE;
 
 /* Signed Types */
@@ -800,6 +796,26 @@ typedef struct _GROUP_AFFINITY {
  #define RTL_CONST_CAST(type) (type)
 #endif
 
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE) \
+extern "C++" { \
+  inline _ENUMTYPE operator|(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) | ((int)b)); } \
+  inline _ENUMTYPE &operator|=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+  inline _ENUMTYPE operator&(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) & ((int)b)); } \
+  inline _ENUMTYPE &operator&=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+  inline _ENUMTYPE operator~(_ENUMTYPE a) { return _ENUMTYPE(~((int)a)); } \
+  inline _ENUMTYPE operator^(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) ^ ((int)b)); } \
+  inline _ENUMTYPE &operator^=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE)
+#endif
+
+#define COMPILETIME_OR_2FLAGS(a,b)          ((UINT)(a)|(UINT)(b))
+#define COMPILETIME_OR_3FLAGS(a,b,c)        ((UINT)(a)|(UINT)(b)|(UINT)(c))
+#define COMPILETIME_OR_4FLAGS(a,b,c,d)      ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d))
+#define COMPILETIME_OR_5FLAGS(a,b,c,d,e)    ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d)|(UINT)(e))
+
 /* Type Limits */
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f
@@ -812,10 +828,15 @@ typedef struct _GROUP_AFFINITY {
 #define MAXULONG  0xffffffff
 #define MAXLONGLONG (0x7fffffffffffffffLL)
 
-/* Multiplication and Shift Operations. Note: we don't use inline
-   asm functions, the compiler can optimize this better. */
-#define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
-#define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+/* 32 to 64 bit multiplication. GCC is really bad at optimizing the native math */
+#if defined(_M_IX86) && defined(__GNUC__) && \
+    !defined(MIDL_PASS)&& !defined(RC_INVOKED) && !defined(_M_CEE_PURE)
+ #define Int32x32To64(a,b) __emul(a,b)
+ #define UInt32x32To64(a,b) __emulu(a,b)
+#else
+ #define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
+ #define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+#endif
 
 #if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE)
 /* Use native math */
@@ -1401,8 +1422,22 @@ typedef struct _GROUP_AFFINITY {
 #define LOCALE_NEUTRAL            MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT)
 #define LOCALE_INVARIANT          MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
 
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+typedef NTSTATUS *PNTSTATUS;
+
+#ifndef __SECSTATUS_DEFINED__
+typedef long SECURITY_STATUS;
+#define __SECSTATUS_DEFINED__
+#endif
+
 /* Physical Addresses are always treated as 64-bit wide */
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
+
+#define TIME LARGE_INTEGER
+#define _TIME _LARGE_INTEGER
+#define PTIME PLARGE_INTEGER
+#define LowTime LowPart
+#define HighTime HighPart
 
 /* Used to store a non-float 8 byte aligned structure */
 typedef struct _QUAD
@@ -1413,6 +1448,17 @@ typedef struct _QUAD
         double DoNotUseThisField;
     } DUMMYUNIONNAME;
 } QUAD, *PQUAD, UQUAD, *PUQUAD;
+
+#if (_WIN32_WINNT >= 0x0600) || (defined(__cplusplus) && defined(WINDOWS_ENABLE_CPLUSPLUS))
+typedef CONST UCHAR *PCUCHAR;
+typedef CONST USHORT *PCUSHORT;
+typedef CONST ULONG *PCULONG;
+typedef CONST UQUAD *PCUQUAD;
+typedef CONST SCHAR *PCSCHAR;
+#endif /* (/_WIN32_WINNT >= 0x0600) */
+#if (_WIN32_WINNT >= 0x0600)
+typedef CONST NTSTATUS *PCNTSTATUS;
+#endif /* (/_WIN32_WINNT >= 0x0600) */
 
 /* String Types */
 typedef struct _STRING {
@@ -1528,6 +1574,8 @@ typedef struct _OBJECT_ATTRIBUTES64 {
 } OBJECT_ATTRIBUTES64, *POBJECT_ATTRIBUTES64;
 typedef CONST OBJECT_ATTRIBUTES64 *PCOBJECT_ATTRIBUTES64;
 
+#define OBJ_HANDLE_TAGBITS      0x00000003L
+
 /* Values for the Attributes member */
 #define OBJ_INHERIT             0x00000002L
 #define OBJ_PERMANENT           0x00000010L
@@ -1561,6 +1609,37 @@ typedef CONST OBJECT_ATTRIBUTES64 *PCOBJECT_ATTRIBUTES64;
 #define RTL_INIT_OBJECT_ATTRIBUTES(n, a) \
     RTL_CONSTANT_OBJECT_ATTRIBUTES(n, a)
 
+#ifdef _MSC_VER
+ #pragma warning(push)
+ #pragma warning(disable:4214) /* Bit fields of other types than int */
+#endif /* _MSC_VER */
+typedef struct _RTL_BALANCED_NODE
+{
+    _ANONYMOUS_UNION union
+    {
+        struct _RTL_BALANCED_NODE *Children[2];
+        _ANONYMOUS_STRUCT struct
+        {
+            struct _RTL_BALANCED_NODE *Left;
+            struct _RTL_BALANCED_NODE *Right;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+    _ANONYMOUS_UNION union
+    {
+        UCHAR Red : 1;
+        UCHAR Balance : 2;
+        ULONG_PTR ParentValue;
+    } DUMMYUNIONNAME2;
+} RTL_BALANCED_NODE, *PRTL_BALANCED_NODE;
+#ifdef _MSC_VER
+ #pragma warning(pop)
+#endif /* _MSC_VER */
+
+#define RTL_BALANCED_NODE_RESERVED_PARENT_MASK 3
+#define RTL_BALANCED_NODE_GET_PARENT_POINTER(Node) \
+    ((PRTL_BALANCED_NODE)((Node)->ParentValue & \
+                          ~RTL_BALANCED_NODE_RESERVED_PARENT_MASK))
+
 /* Product Types */
 typedef enum _NT_PRODUCT_TYPE {
   NtProductWinNt = 1,
@@ -1582,6 +1661,34 @@ typedef enum _WAIT_TYPE {
   WaitAll,
   WaitAny
 } WAIT_TYPE;
+
+#ifndef MIDL_PASS
+FORCEINLINE
+VOID
+ListEntry32To64(
+    _In_ PLIST_ENTRY32 ListEntry32,
+    _Out_ PLIST_ENTRY64 ListEntry64)
+{
+    ListEntry64->Flink = ListEntry32->Flink;
+    ListEntry64->Blink = ListEntry32->Blink;
+}
+
+FORCEINLINE
+VOID
+ListEntry64To32(
+    _In_ PLIST_ENTRY64 ListEntry64,
+    _Out_ PLIST_ENTRY32 ListEntry32)
+{
+    /* ASSERT without ASSERT or intrinsics ... */
+    if (((ListEntry64->Flink >> 32) != 0) ||
+        ((ListEntry64->Blink >> 32) != 0))
+    {
+        (VOID)*(volatile LONG*)(LONG_PTR)-1;
+    }
+    ListEntry32->Flink = ListEntry64->Flink & 0xFFFFFFFF;
+    ListEntry32->Blink = ListEntry64->Blink & 0xFFFFFFFF;
+}
+#endif /* !MIDL_PASS */
 
 #ifdef __cplusplus
 } // extern "C"

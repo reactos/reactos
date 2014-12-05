@@ -17,7 +17,8 @@
  */
 
 #include <windef.h>
-//#include "iccvid_private.h"
+
+#include "iccvid_private.h"
 
 #ifdef LANGUAGE_DA_DK
     #include "lang/iccvid_Da.rc"

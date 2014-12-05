@@ -40,7 +40,7 @@
  * - This ends the processing for the first ExitWindowsEx() call from WinLogon.
  *   Execution continues in WinLogon, which calls ExitWindowsEx() again to
  *   terminate COM processes in the interactive user's session.
- * - WinLogon stops impersonating the interactive user (whos processes are
+ * - WinLogon stops impersonating the interactive user (whose processes are
  *   all dead by now). and enters log-out state
  * - If the ExitWindowsEx() request was for a logoff, WinLogon sends a SAS
  *   event (to display the "press ctrl+alt+del") to the GINA. WinLogon then
@@ -60,6 +60,7 @@
  * - when every environment subsystem has gone to bed, the SM actually initiates
  *   the kernel and executive shutdown by calling NtShutdownSystem.
  */
+
 /*
  * @implemented
  */
@@ -71,7 +72,7 @@ ExitWindowsEx(UINT uFlags,
     USER_API_MESSAGE ApiMessage;
 
     ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
-    ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
+    // ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -79,36 +80,45 @@ ExitWindowsEx(UINT uFlags,
                                  sizeof(USER_EXIT_REACTOS));
     if (!NT_SUCCESS(Status))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        UserSetLastNTError(Status);
         return FALSE;
     }
 
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
-BOOL WINAPI
-RegisterServicesProcess(DWORD ServicesProcessId)
+BOOL
+WINAPI
+EndTask(HWND hWnd,
+        BOOL fShutDown,
+        BOOL fForce)
 {
-    NTSTATUS Status;
     USER_API_MESSAGE ApiMessage;
+    PUSER_END_TASK EndTaskRequest = &ApiMessage.Data.EndTaskRequest;
 
-    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = ServicesProcessId;
+    UNREFERENCED_PARAMETER(fShutDown);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
-                                 sizeof(USER_REGISTER_SERVICES_PROCESS));
-    if (!NT_SUCCESS(Status))
+    // EndTaskRequest->LastError = ERROR_SUCCESS;
+    EndTaskRequest->WndHandle = hWnd;
+    EndTaskRequest->Force = fForce;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpEndTask),
+                        sizeof(*EndTaskRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        UserSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
-    return TRUE;
+    if (EndTaskRequest->LastError != ERROR_SUCCESS)
+        UserSetLastError(EndTaskRequest->LastError);
+
+    return EndTaskRequest->Success;
 }
 
 /* EOF */

@@ -7,4 +7,3 @@ add_definitions(
 
 add_library(atlnew atlbase.cpp atlcore.cpp)
 add_dependencies(atlnew psdk)
-

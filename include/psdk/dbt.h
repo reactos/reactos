@@ -1,6 +1,8 @@
 #ifndef _DBT_H
 #define _DBT_H
 
+#include "winuser.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,6 +20,7 @@ extern "C" {
 #define DBT_DEVTYP_PORT	3
 #define DBT_DEVTYP_NET	4
 #define DBT_DEVTYP_DEVICEINTERFACE  5
+#define DBT_DEVTYP_HANDLE  6
 #define DBT_APPYBEGIN 0
 #define DBT_APPYEND 1
 #define DBT_DEVNODES_CHANGED 7
@@ -99,18 +102,37 @@ typedef struct _DEV_BROADCAST_VOLUME {
 	DWORD dbcv_unitmask;
 	WORD dbcv_flags;
 } DEV_BROADCAST_VOLUME,*PDEV_BROADCAST_VOLUME;
-typedef struct _DEV_BROADCAST_DEVICEINTERFACE {
+typedef struct _DEV_BROADCAST_DEVICEINTERFACE_A {
     DWORD dbcc_size;
     DWORD dbcc_devicetype;
     DWORD dbcc_reserved;
     GUID dbcc_classguid;
-    TCHAR dbcc_name[1];
-} DEV_BROADCAST_DEVICEINTERFACE, *PDEV_BROADCAST_DEVICEINTERFACE;
+    CHAR dbcc_name[1];
+} DEV_BROADCAST_DEVICEINTERFACE_A, *PDEV_BROADCAST_DEVICEINTERFACE_A;
+typedef struct _DEV_BROADCAST_DEVICEINTERFACE_W {
+    DWORD dbcc_size;
+    DWORD dbcc_devicetype;
+    DWORD dbcc_reserved;
+    GUID dbcc_classguid;
+    WCHAR dbcc_name[1];
+} DEV_BROADCAST_DEVICEINTERFACE_W, *PDEV_BROADCAST_DEVICEINTERFACE_W;
+typedef struct _DEV_BROADCAST_HANDLE {
+    DWORD      dbch_size;
+    DWORD      dbch_devicetype;
+    DWORD      dbch_reserved;
+    HANDLE     dbch_handle;
+    HDEVNOTIFY dbch_hdevnotify;
+    GUID       dbch_eventguid;
+    LONG       dbch_nameoffset;
+    BYTE       dbch_data[1];
+} DEV_BROADCAST_HANDLE, *PDEV_BROADCAST_HANDLE;
 
 #ifdef UNICODE
 typedef DEV_BROADCAST_PORT_W DEV_BROADCAST_PORT, *PDEV_BROADCAST_PORT;
+typedef DEV_BROADCAST_DEVICEINTERFACE_W DEV_BROADCAST_DEVICEINTERFACE, *PDEV_BROADCAST_DEVICEINTERFACE;
 #else
 typedef DEV_BROADCAST_PORT_A DEV_BROADCAST_PORT, *PDEV_BROADCAST_PORT;
+typedef DEV_BROADCAST_DEVICEINTERFACE_A DEV_BROADCAST_DEVICEINTERFACE, *PDEV_BROADCAST_DEVICEINTERFACE;
 #endif
 
 #ifdef __cplusplus

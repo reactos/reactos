@@ -1,14 +1,14 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "La syntaxe de cette commande est :\n\nREG [ ADD | DELETE | QUERY ]\nREG commande /?\n"
-    STRING_ADD_USAGE "REG ADD nom_de_clé [/v nom_de_valeur | /ve] [/t type] [/s séparateur] [/d données] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE nom_de_clé [/v nom_de_valeur | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY nom_de_clé [/v nom_de_valeur | /ve] [/s]\n"
-    STRING_SUCCESS "L'opération s'est terminée avec succès\n"
-    STRING_INVALID_KEY "Erreur : nom de clé non valable\n"
-    STRING_INVALID_CMDLINE "Erreur : paramètre de ligne de commande non valable\n"
-    STRING_NO_REMOTE "Erreur : impossible d'ajouter des clés à une machine distante\n"
-    STRING_CANNOT_FIND "Erreur : le système n'a pas pu trouver la clé ou la valeur de registre spécifiée\n"
-END
+{
+    STRING_USAGE, "La syntaxe de cette commande est :\n\nREG [ ADD | DELETE | QUERY ]\nREG commande /?\n"
+    STRING_ADD_USAGE, "REG ADD nom_de_clé [/v nom_de_valeur | /ve] [/t type] [/s séparateur] [/d données] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nom_de_clé [/v nom_de_valeur | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nom_de_clé [/v nom_de_valeur | /ve] [/s]\n"
+    STRING_SUCCESS, "L'opération s'est terminée avec succès\n"
+    STRING_INVALID_KEY, "Erreur : nom de clé non valable\n"
+    STRING_INVALID_CMDLINE, "Erreur : paramètre de ligne de commande non valable\n"
+    STRING_NO_REMOTE, "Erreur : impossible d'ajouter des clés à une machine distante\n"
+    STRING_CANNOT_FIND, "Erreur : le système n'a pas pu trouver la clé ou la valeur de registre spécifiée\n"
+}

@@ -145,6 +145,13 @@ struct fvf_declaration
     DWORD fvf;
 };
 
+enum d3d9_device_state
+{
+    D3D9_DEVICE_STATE_OK,
+    D3D9_DEVICE_STATE_LOST,
+    D3D9_DEVICE_STATE_NOT_RESET,
+};
+
 struct d3d9_device
 {
     IDirect3DDevice9Ex IDirect3DDevice9Ex_iface;
@@ -163,8 +170,8 @@ struct d3d9_device
     UINT index_buffer_size;
     UINT index_buffer_pos;
 
+    LONG device_state;
     BOOL in_destruction;
-    BOOL not_reset;
     BOOL in_scene;
 };
 
@@ -191,12 +198,11 @@ struct d3d9_volume
     IDirect3DVolume9 IDirect3DVolume9_iface;
     struct d3d9_resource resource;
     struct wined3d_volume *wined3d_volume;
-    IUnknown *container;
-    IUnknown *forwardReference;
+    struct d3d9_texture *texture;
 };
 
-void volume_init(struct d3d9_volume *volume, struct wined3d_volume *wined3d_volume,
-        const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+void volume_init(struct d3d9_volume *volume, struct d3d9_texture *texture,
+        struct wined3d_volume *wined3d_volume, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d9_swapchain
 {
@@ -214,14 +220,17 @@ struct d3d9_surface
     IDirect3DSurface9 IDirect3DSurface9_iface;
     struct d3d9_resource resource;
     struct wined3d_surface *wined3d_surface;
+    struct list rtv_entry;
+    struct wined3d_rendertarget_view *wined3d_rtv;
     IDirect3DDevice9Ex *parent_device;
     IUnknown *container;
-    IUnknown *forwardReference;
+    struct d3d9_texture *texture;
     BOOL getdc_supported;
 };
 
-void surface_init(struct d3d9_surface *surface, struct wined3d_surface *wined3d_surface,
-        struct d3d9_device *device, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+struct wined3d_rendertarget_view *d3d9_surface_get_rendertarget_view(struct d3d9_surface *surface) DECLSPEC_HIDDEN;
+void surface_init(struct d3d9_surface *surface, IUnknown *container_parent,
+        struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface) DECLSPEC_HIDDEN;
 
 struct d3d9_vertexbuffer
@@ -256,6 +265,7 @@ struct d3d9_texture
     struct d3d9_resource resource;
     struct wined3d_texture *wined3d_texture;
     IDirect3DDevice9Ex *parent_device;
+    struct list rtv_list;
 };
 
 HRESULT cubetexture_init(struct d3d9_texture *texture, struct d3d9_device *device,

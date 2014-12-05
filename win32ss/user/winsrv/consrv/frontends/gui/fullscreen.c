@@ -181,7 +181,7 @@ GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData)
 
     /* Switch to full-screen or to windowed mode */
     FullScreen = !GuiData->GuiInfo.FullScreen;
-    DPRINT1("GuiConsoleSwitchFullScreen - Switch to %s ...\n",
+    DPRINT("GuiConsoleSwitchFullScreen - Switch to %s ...\n",
             (FullScreen ? "full-screen" : "windowed mode"));
 
     SwitchFullScreen(GuiData, FullScreen);

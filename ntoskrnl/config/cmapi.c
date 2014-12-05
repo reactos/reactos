@@ -1514,13 +1514,104 @@ CmpQueryFlagsInformation(
     return STATUS_SUCCESS;
 }
 
+static
+NTSTATUS
+CmpQueryNameInformation(
+    _In_ PCM_KEY_CONTROL_BLOCK Kcb,
+    _Out_opt_ PKEY_NAME_INFORMATION KeyNameInfo,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength)
+{
+    ULONG NeededLength;
+    PCM_KEY_CONTROL_BLOCK CurrentKcb;
+
+    NeededLength = 0;
+    CurrentKcb = Kcb;
+
+    /* Count the needed buffer size */
+    while (CurrentKcb)
+    {
+        if (CurrentKcb->NameBlock->Compressed)
+            NeededLength += CmpCompressedNameSize(CurrentKcb->NameBlock->Name, CurrentKcb->NameBlock->NameLength);
+        else
+            NeededLength += CurrentKcb->NameBlock->NameLength;
+
+        NeededLength += sizeof(OBJ_NAME_PATH_SEPARATOR);
+
+        CurrentKcb = CurrentKcb->ParentKcb;
+    }
+
+    _SEH2_TRY
+    {
+        *ResultLength = NeededLength + FIELD_OFFSET(KEY_NAME_INFORMATION, Name[0]);
+        if (Length < *ResultLength)
+            return STATUS_BUFFER_TOO_SMALL;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Do the real copy */
+    KeyNameInfo->NameLength = 0;
+    CurrentKcb = Kcb;
+
+    _SEH2_TRY
+    {
+        while (CurrentKcb)
+        {
+            ULONG NameLength;
+
+            if (CurrentKcb->NameBlock->Compressed)
+            {
+                NameLength = CmpCompressedNameSize(CurrentKcb->NameBlock->Name, CurrentKcb->NameBlock->NameLength);
+                /* Copy the compressed name */
+                CmpCopyCompressedName(&KeyNameInfo->Name[(NeededLength - NameLength)/sizeof(WCHAR)],
+                                      NameLength,
+                                      CurrentKcb->NameBlock->Name,
+                                      CurrentKcb->NameBlock->NameLength);
+            }
+            else
+            {
+                NameLength = CurrentKcb->NameBlock->NameLength;
+                /* Otherwise, copy the raw name */
+                RtlCopyMemory(&KeyNameInfo->Name[(NeededLength - NameLength)/sizeof(WCHAR)],
+                              CurrentKcb->NameBlock->Name,
+                              NameLength);
+            }
+
+            NeededLength -= NameLength;
+            NeededLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
+            /* Add path separator */
+            KeyNameInfo->Name[NeededLength/sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
+            KeyNameInfo->NameLength += NameLength + sizeof(OBJ_NAME_PATH_SEPARATOR);
+
+            CurrentKcb = CurrentKcb->ParentKcb;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* Make sure we copied everything */
+    ASSERT(NeededLength == 0);
+    ASSERT(KeyNameInfo->Name[0] == OBJ_NAME_PATH_SEPARATOR);
+
+    /* We're done */
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 NTAPI
-CmQueryKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
-           IN KEY_INFORMATION_CLASS KeyInformationClass,
-           IN PVOID KeyInformation,
-           IN ULONG Length,
-           IN PULONG ResultLength)
+CmQueryKey(_In_ PCM_KEY_CONTROL_BLOCK Kcb,
+           _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+           _Out_opt_ PVOID KeyInformation,
+           _In_ ULONG Length,
+           _Out_ PULONG ResultLength)
 {
     NTSTATUS Status;
     PHHIVE Hive;
@@ -1588,12 +1679,12 @@ CmQueryKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                               ResultLength);
             break;
 
-        /* Unsupported class for now */
         case KeyNameInformation:
-
-            /* Print message and fail */
-            DPRINT1("Unsupported class: %d!\n", KeyInformationClass);
-            Status = STATUS_NOT_IMPLEMENTED;
+            /* Call the internal API */
+            Status = CmpQueryNameInformation(Kcb,
+                                             KeyInformation,
+                                             Length,
+                                             ResultLength);
             break;
 
         /* Illegal classes */
@@ -2097,7 +2188,7 @@ CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
                         /* Count the current hash entry if it is in use */
                         SubKeys++;
                     }
-                    else if ((CachedKcb->RefCount == 0) && (RemoveEmptyCacheEntries == TRUE))
+                    else if ((CachedKcb->RefCount == 0) && (RemoveEmptyCacheEntries != FALSE))
                     {
                         /* Remove the current key from the delayed close list */
                         CmpRemoveFromDelayedClose(CachedKcb);

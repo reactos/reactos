@@ -104,34 +104,23 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Naam alias"
     IDS_ALLOWED_PURPOSE_ALL "<Alle>"
     IDS_ALLOWED_PURPOSE_NONE "<Geen>"
-    IDS_WARN_REMOVE_MY "U kunt niet langer berichten ontcijferen of ondertekenen met dit certificaat.\n\
-Weet u zeker dat u dit certificaat wilt verwijderen?"
-    IDS_WARN_REMOVE_PLURAL_MY "U kunt niet langer berichten ontcijferen of ondertekenen met deze certificaten.\n\
-Weet u zeker dat u deze certificaten wilt verwijderen?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met dit certificaat.\n\
-Weet u zeker dat u dit certificaat wilt verwijderen?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met deze certificaten.\n\
-Weet u zeker dat u deze certificaten wilt verwijderen?"
-    IDS_WARN_REMOVE_CA "Certificaten uitgegeven door deze certificaten autoriteit zullen niet meer vertrouwd worden.\n\
-Weet u zeker dat u dit certificaat wilt verwijderen?"
-    IDS_WARN_REMOVE_PLURAL_CA "Certificaten uitgegeven door deze certificaten autoriteiten zullen niet meer vertrouwd worden.\n\
-Weet u zeker dat u deze certificaten wilt verwijderen?"
-    IDS_WARN_REMOVE_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteit, alsmede enige certificatie autoriteit die hij verstrekt, zullen niet meer vertrouwd worden.\n\
-Weet u zeker dat u dit vertrouwde basic certificaat wilt verwijderen?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteiten, alsmede enige certificatie autoriteit die zij verstrekken, zullen niet meer vertrouwd worden.\n\
-Weet u zeker dat u deze vertrouwde basic certificaten wilt verwijderen?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software ondertekend door deze uitgever zal niet meer vertrouwd worden.\n\
-Weet u zeker dat u dit certificaat wilt verwijderen?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software ondertekend door deze uitgevers zal niet meer vertrouwd worden.\n\
-Weet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_MY "U kunt niet langer berichten ontcijferen of ondertekenen met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_MY "U kunt niet langer berichten ontcijferen of ondertekenen met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_CA "Certificaten uitgegeven door deze certificaten autoriteit zullen niet meer vertrouwd worden.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certificaten uitgegeven door deze certificaten autoriteiten zullen niet meer vertrouwd worden.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteit, alsmede enige certificatie autoriteit die hij verstrekt, zullen niet meer vertrouwd worden.\nWeet u zeker dat u dit vertrouwde basic certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteiten, alsmede enige certificatie autoriteit die zij verstrekken, zullen niet meer vertrouwd worden.\nWeet u zeker dat u deze vertrouwde basic certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software ondertekend door deze uitgever zal niet meer vertrouwd worden.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software ondertekend door deze uitgevers zal niet meer vertrouwd worden.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
     IDS_WARN_REMOVE_DEFAULT "Weet u zeker dat u dit certificaat wilt verwijderen?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Weet u zeker dat u deze certificaten wilt verwijderen?"
     IDS_CERT_MGR "Certificaten"
     IDS_FRIENDLY_NAME_NONE "<Geen>"
     IDS_PURPOSE_SERVER_AUTH "Bewijst de identiteit van een remote computer"
     IDS_PURPOSE_CLIENT_AUTH "Bewijst uw identiteit aan een remote computer"
-    IDS_PURPOSE_CODE_SIGNING "Bewijst dat de software kwam van de software uitgever\n\
-Beschermt software tegen wijzigingen na publicatie"
+    IDS_PURPOSE_CODE_SIGNING "Bewijst dat de software kwam van de software uitgever\nBeschermt software tegen wijzigingen na publicatie"
     IDS_PURPOSE_EMAIL_PROTECTION "Beschermt e-mail berichten"
     IDS_PURPOSE_IPSEC "Staat beveiligde communicatie over het Internet toe"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Laat data ondertekend worden met de huidige tijd"
@@ -289,10 +278,8 @@ CAPTION "Certificaat importeerhulp"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welkom bij de certificaat importeerhulp", IDC_IMPORT_TITLE, 115,7,195,30
-  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten uit een bestand in een certificaatkluis te importeren.\n\
-\n\
-Een certificaat kan gebruikt worden om u of de computer waarmee u communiceert te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Een certificaatkluis bevat een verzameling van certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten.\n\
-Klik Volgende om verder te gaan.",
+  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten uit een bestand in een certificaatkluis te importeren.\n\n\
+Een certificaat kan gebruikt worden om u of de computer waarmee u communiceert te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Een certificaatkluis bevat een verzameling van certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten.\nKlik Volgende om verder te gaan.",
     -1, 115,40,195,120
 END
 
@@ -305,11 +292,11 @@ BEGIN
   PUSHBUTTON "Bladeren...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Noot: De volgende bestandsformaten kunnen meer dan één certificaat, certificaat terugroeplijst of certificaat vertrouwenslijst bevatten:",
     -1, 21,30,265,16
-  LTEXT "Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (.p7b)",
+  LTEXT "Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (*.p7b)",
     -1, 31,53,265,10
-  LTEXT "Persoonlijke informatie uitwisseling/PKCS #12 (.pfx, .p12)",
+  LTEXT "Persoonlijke informatie uitwisseling/PKCS #12 (*.pfx; *.p12)",
     -1, 31,68,265,10
-  LTEXT "Microsoft seriële certificatenopslag (.sst)",
+  LTEXT "Microsoft seriële certificatenopslag (*.sst)",
     -1, 31,83,265,10
 END
 
@@ -380,8 +367,7 @@ CAPTION "Certificaat Exporteerhulp"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welkom bij de Certificaat exporteerhulp", IDC_EXPORT_TITLE, 115,7,195,30
-  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten van een certificaatkluis naar een bestand te exporteren.\n\
-\n\
+  LTEXT "Deze wizard helpt u certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten van een certificaatkluis naar een bestand te exporteren.\n\n\
 Een certificaat kan gebruikt worden om u of de computer waarmee u communiceert te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Een certificaatkluis bevat een verzameling van certificaten, lijsten van herroepen certificaten en lijsten van vertrouwde certificaten.",
     -1, 115,40,195,120
 END
@@ -414,15 +400,15 @@ CAPTION "Certificaat Exporteerhulp"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Selecteer het formaat dat u wilt gebruiken:", -1, 21,1,195,10
-  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
+  AUTORADIOBUTTON "&DER-encoded X.509 (*.cer)",
     IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
-  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer)",
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (*.cer):",
     IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
-  AUTORADIOBUTTON "&Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (.p7b)",
+  AUTORADIOBUTTON "&Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (*.p7b)",
     IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "Neem &alle certificaten in het certificatiepad op indien mogelijk",
     IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
-  AUTORADIOBUTTON "&Persoonlijke informatie uitwisseling/PKCS #12 (.pfx)",
+  AUTORADIOBUTTON "&Persoonlijke informatie uitwisseling/PKCS #12 (*.pfx)",
     IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Nee&m alle certificaten in het certificatiepad op indien mogelijk",
     IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED

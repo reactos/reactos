@@ -242,6 +242,10 @@ xmlSchemaNewMinLengthFacet(int value)
     }
     ret->type = XML_SCHEMA_FACET_MINLENGTH;
     ret->val = xmlSchemaNewValue(XML_SCHEMAS_NNINTEGER);
+    if (ret->val == NULL) {
+        xmlFree(ret);
+	return(NULL);
+    }
     ret->val->value.decimal.lo = value;
     return (ret);
 }
@@ -3844,13 +3848,14 @@ _xmlSchemaDateAdd (xmlSchemaValPtr dt, xmlSchemaValPtr dur)
 	     * Coverity detected an overrun in daysInMonth
 	     * of size 12 at position 12 with index variable "((r)->mon - 1)"
 	     */
-	    if (tmon < 0)
-	        tmon = 0;
+	    if (tmon < 1)
+	        tmon = 1;
 	    if (tmon > 12)
 	        tmon = 12;
             tempdays += MAX_DAYINMONTH(tyr, tmon);
             carry = -1;
-        } else if (tempdays > (long) MAX_DAYINMONTH(r->year, r->mon)) {
+        } else if (VALID_YEAR(r->year) && VALID_MONTH(r->mon) &&
+                   tempdays > (long) MAX_DAYINMONTH(r->year, r->mon)) {
             tempdays = tempdays - MAX_DAYINMONTH(r->year, r->mon);
             carry = 1;
         } else
@@ -4929,7 +4934,7 @@ xmlSchemaCompareValues(xmlSchemaValPtr x, xmlSchemaValPtr y) {
 
     if (y->type == XML_SCHEMAS_STRING)
 	yws = XML_SCHEMA_WHITESPACE_PRESERVE;
-    else if (x->type == XML_SCHEMAS_NORMSTRING)
+    else if (y->type == XML_SCHEMAS_NORMSTRING)
         yws = XML_SCHEMA_WHITESPACE_REPLACE;
     else
         yws = XML_SCHEMA_WHITESPACE_COLLAPSE;
@@ -5644,7 +5649,7 @@ xmlSchemaFormatFloat(double number, char buffer[], int buffersize)
  * @val: the precomputed value
  * @retValue: the returned value
  *
- * Get a the cononical lexical representation of the value.
+ * Get the canonical lexical representation of the value.
  * The caller has to FREE the returned retValue.
  *
  * WARNING: Some value types are not supported yet, resulting
@@ -6066,7 +6071,7 @@ xmlSchemaGetCanonValue(xmlSchemaValPtr val, const xmlChar **retValue)
  * @retValue: the returned value
  * @ws: the whitespace type of the value
  *
- * Get a the cononical representation of the value.
+ * Get the canonical representation of the value.
  * The caller has to free the returned @retValue.
  *
  * Returns 0 if the value could be built, 1 if the value type is

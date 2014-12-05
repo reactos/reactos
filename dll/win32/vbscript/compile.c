@@ -1649,11 +1649,10 @@ static HRESULT compile_class(compile_ctx_t *ctx, class_decl_t *class_decl)
             return E_OUTOFMEMORY;
 
         class_desc->props[i].is_public = prop_decl->is_public;
+        class_desc->props[i].is_array = prop_decl->is_array;
 
-        if(prop_decl->is_array) {
-            class_desc->props[i].is_array = TRUE;
+        if(prop_decl->is_array)
             class_desc->array_cnt++;
-        }
     }
 
     if(class_desc->array_cnt) {

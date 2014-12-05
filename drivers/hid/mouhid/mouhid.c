@@ -1239,8 +1239,6 @@ DriverEntry(
     /* FIXME check for parameters 'UseOnlyMice', 'TreatAbsoluteAsRelative', 'TreatAbsolutePointerAsAbsolute' */
 
     /* initialize driver object */
-    DriverObject->DriverUnload = MouHid_Unload;
-    DriverObject->DriverExtension->AddDevice = MouHid_AddDevice;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = MouHid_Create;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = MouHid_Close;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = MouHid_Flush;

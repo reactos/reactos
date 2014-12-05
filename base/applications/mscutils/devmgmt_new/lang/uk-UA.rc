@@ -52,12 +52,12 @@ BEGIN
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE "Це вільне програмне забезпечення; Ви можете розповсюджувати її та змінювати, дотримуючись умови Відкритої ліцензійної угоди GNU, опублікованої Фондом вільного програмного забезпечення; або редакції 2 Угоди, або будь-якої редакції, випущеної пізніше.\r\n\r\nЦя програма розповсюджується в надії на те, що вона виявиться корисною, але БЕЗ БУДЬ-ЯКИХ ГАРАНТІЙ, включаючи УЯВНОЮ ГАРАНТІЄЮ ЯКОСТІ або ПРИДАТНОСТІ для певних цілей. Подробиці містяться у Відкритій ліцензійній угоді GNU.\r\n\r\nРазом з цією програмою повинен поширюватися примірник Відкритої ліцензійної угоди GNU. Якщо він відсутній, повідомте про це в Фонд вільного програмного забезпечення (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Властивості"
   IDS_TOOLTIP_REFRESH   "Оновити"
@@ -66,7 +66,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Диспетчер пристроїв ReactOS"
   IDS_HINT_BLANK        " "

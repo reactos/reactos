@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #ifdef NEWCC
-#include "../cache/newcc.h"
+#include <cache/newcc.h>
 #endif
 #define NDEBUG
 #include <debug.h>
@@ -191,7 +191,7 @@ PopShutdownSystem(IN POWER_ACTION SystemAction)
     /* Note should notify caller of NtPowerInformation(PowerShutdownNotification) */
 
     /* Unload symbols */
-    DPRINT1("It's the final countdown...%lx\n", SystemAction);
+    DPRINT("It's the final countdown...%lx\n", SystemAction);
     DbgUnLoadImageSymbols(NULL, (PVOID)-1, 0);
 
     /* Run the thread on the boot processor */
@@ -264,37 +264,37 @@ PopGracefulShutdown(IN PVOID Context)
     }
 
     /* First, the HAL handles any "end of boot" special functionality */
-    DPRINT1("HAL shutting down\n");
+    DPRINT("HAL shutting down\n");
     HalEndOfBoot();
 
     /* In this step, the I/O manager does first-chance shutdown notification */
-    DPRINT1("I/O manager shutting down in phase 0\n");
+    DPRINT("I/O manager shutting down in phase 0\n");
     IoShutdownSystem(0);
 
     /* In this step, all workers are killed and hives are flushed */
-    DPRINT1("Configuration Manager shutting down\n");
+    DPRINT("Configuration Manager shutting down\n");
     CmShutdownSystem();
 
     /* Note that modified pages should be written here (MiShutdownSystem) */
 #ifdef NEWCC
-	/* Flush all user files before we start shutting down IO */
-	/* This is where modified pages are written back by the IO manager */
-	CcShutdownSystem();
+    /* Flush all user files before we start shutting down IO */
+    /* This is where modified pages are written back by the IO manager */
+    CcShutdownSystem();
 #endif
 
     /* In this step, the I/O manager does last-chance shutdown notification */
-    DPRINT1("I/O manager shutting down in phase 1\n");
+    DPRINT("I/O manager shutting down in phase 1\n");
     IoShutdownSystem(1);
     CcWaitForCurrentLazyWriterActivity();
 
     /* Note that here, we should broadcast the power IRP to devices */
 
     /* In this step, the HAL disables any wake timers */
-    DPRINT1("Disabling wake timers\n");
+    DPRINT("Disabling wake timers\n");
     HalSetWakeEnable(FALSE);
 
     /* And finally the power request is sent */
-    DPRINT1("Taking the system down\n");
+    DPRINT("Taking the system down\n");
     PopShutdownSystem(PopAction.Action);
 }
 

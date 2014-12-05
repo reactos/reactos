@@ -52,9 +52,9 @@ void AddProcess(ULONG Index);
 void UpdateProcesses();
 void gethmsfromlargeint(LARGE_INTEGER largeint, DWORD *dwHours, DWORD *dwMinutes, DWORD *dwSeconds);
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
-void CommaSeparateNumberString(LPWSTR strNumber, int nMaxCount);
+void CommaSeparateNumberString(LPWSTR strNumber, ULONG nMaxCount);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
-BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCount);
+BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount);
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 int ProcessRunning(ULONG ProcessId);
 
@@ -141,7 +141,7 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /*
          * Subclass the process list control so we can intercept WM_ERASEBKGND
          */
-        OldProcessListWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hProcessPageListCtrl, GWLP_WNDPROC, (LONG_PTR)ProcessListWndProc);
+        OldProcessListWndProc = (WNDPROC)SetWindowLongPtrW(hProcessPageListCtrl, GWLP_WNDPROC, (LONG_PTR)ProcessListWndProc);
 
 #ifdef RUN_PROC_PAGE
         /* Start our refresh thread */
@@ -245,7 +245,7 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
             Index = PerfDataGetProcessIndex(pData->ProcessId);
             ColumnIndex = pnmdi->item.iSubItem;
 
-            PerfDataGetText(Index, ColumnIndex, pnmdi->item.pszText, pnmdi->item.cchTextMax);
+            PerfDataGetText(Index, ColumnIndex, pnmdi->item.pszText, (ULONG)pnmdi->item.cchTextMax);
 
             break;
 
@@ -290,7 +290,7 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
     }
 }
 
-void CommaSeparateNumberString(LPWSTR strNumber, int nMaxCount)
+void CommaSeparateNumberString(LPWSTR strNumber, ULONG nMaxCount)
 {
     WCHAR  temp[260];
     UINT   i, j, k;
@@ -530,7 +530,7 @@ void AddProcess(ULONG Index)
     }
 }
 
-BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCount)
+BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCount)
 {
     IO_COUNTERS    iocounters;
     LARGE_INTEGER  time;
@@ -541,6 +541,8 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCoun
         wsprintfW(lpText, L"%lu", PerfDataGetProcessId(Index));
     if (ColumnDataHints[ColumnIndex] == COLUMN_USERNAME)
         PerfDataGetUserName(Index, lpText, nMaxCount);
+    if (ColumnDataHints[ColumnIndex] == COLUMN_COMMANDLINE)
+        PerfDataGetCommandLine(Index, lpText, nMaxCount);
     if (ColumnDataHints[ColumnIndex] == COLUMN_SESSIONID)
         wsprintfW(lpText, L"%lu", PerfDataGetSessionId(Index));
     if (ColumnDataHints[ColumnIndex] == COLUMN_CPUUSAGE)
@@ -751,6 +753,12 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     {
         PerfDataGetUserName(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
         PerfDataGetUserName(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
+        ret = _wcsicmp(text1, text2);
+    }
+    else if (TaskManagerSettings.SortColumn == COLUMN_COMMANDLINE)
+    {
+        PerfDataGetCommandLine(IndexParam1, text1, sizeof (text1) / sizeof (*text1));
+        PerfDataGetCommandLine(IndexParam2, text2, sizeof (text2) / sizeof (*text2));
         ret = _wcsicmp(text1, text2);
     }
     else if (TaskManagerSettings.SortColumn == COLUMN_SESSIONID)

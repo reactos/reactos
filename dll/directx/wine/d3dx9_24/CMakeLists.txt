@@ -1,7 +1,6 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(d3dx9_24.dll d3dx9_24.spec)
 
 list(APPEND SOURCE

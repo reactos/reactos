@@ -1791,7 +1791,7 @@ interface nsIDOMHTMLSelectElement : nsIDOMHTMLElement
     nsresult Item(uint32_t index, nsIDOMNode **_retval);
     nsresult NamedItem(const nsAString *name, nsIDOMNode **_retval);
     nsresult Add(nsIDOMHTMLElement *element, nsIVariant *before);
-    nsresult Remove(int32_t index);
+    nsresult select_Remove(int32_t index);
     nsresult GetSelectedIndex(int32_t *aSelectedIndex);
     nsresult SetSelectedIndex(int32_t aSelectedIndex);
     nsresult GetValue(nsAString *aValue);
@@ -2072,6 +2072,44 @@ interface nsIDOMHTMLTableRowElement : nsIDOMHTMLElement
 
 [
     object,
+    uuid(1fb22137-c231-4eae-9ca4-557bb0852d89),
+    local
+]
+interface nsIDOMHTMLTableCellElement : nsIDOMHTMLElement
+{
+    nsresult GetCellIndex(int32_t *aCellIndex);
+    nsresult GetAbbr(nsAString *aAbbr);
+    nsresult SetAbbr(const nsAString *aAbbr);
+    nsresult GetAlign(nsAString *aAlign);
+    nsresult SetAlign(const nsAString *aAlign);
+    nsresult GetAxis(nsAString *aAxis);
+    nsresult SetAxis(const nsAString *aAxis);
+    nsresult GetBgColor(nsAString *aBgColor);
+    nsresult SetBgColor(const nsAString *aBgColor);
+    nsresult GetCh(nsAString *aCh);
+    nsresult SetCh(const nsAString *aCh);
+    nsresult GetChOff(nsAString *aChOff);
+    nsresult SetChOff(const nsAString *aChOff);
+    nsresult GetColSpan(int32_t *aColSpan);
+    nsresult SetColSpan(int32_t aColSpan);
+    nsresult GetHeaders(nsAString *aHeaders);
+    nsresult SetHeaders(const nsAString *aHeaders);
+    nsresult GetHeight(nsAString *aHeight);
+    nsresult SetHeight(const nsAString *aHeight);
+    nsresult GetNoWrap(bool *aNoWrap);
+    nsresult SetNoWrap(bool aNoWrap);
+    nsresult GetRowSpan(int32_t *aRowSpan);
+    nsresult SetRowSpan(int32_t aRowSpan);
+    nsresult GetScope(nsAString *aScope);
+    nsresult SetScope(const nsAString *aScope);
+    nsresult GetVAlign(nsAString *aVAlign);
+    nsresult SetVAlign(const nsAString *aVAlign);
+    nsresult GetWidth(nsAString *aWidth);
+    nsresult SetWidth(const nsAString *aWidth);
+}
+
+[
+    object,
     uuid(21ffbe98-51f5-499e-8d6f-612ae798c1e1),
     local
 ]
@@ -2178,23 +2216,6 @@ interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
     nsresult GetValidationMessage(nsAString *aValidationMessage);
     nsresult CheckValidity(bool *_retval);
     nsresult SetCustomValidity(const nsAString *error);
-}
-
-[
-    object,
-    uuid(f85e1b05-6dc4-442d-bea8-7cf551f9bc9f),
-    local
-]
-interface nsIDOMHTMLParamElement : nsIDOMHTMLElement
-{
-    nsresult GetName(nsAString *aName);
-    nsresult SetName(const nsAString *aName);
-    nsresult GetType(nsAString *aType);
-    nsresult SetType(const nsAString *aType);
-    nsresult GetValue(nsAString *aValue);
-    nsresult SetValue(const nsAString *aValue);
-    nsresult GetValueType(nsAString *aValueType);
-    nsresult SetValueType(const nsAString *aValueType);
 }
 
 [

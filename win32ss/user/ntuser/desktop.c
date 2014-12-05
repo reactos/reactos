@@ -25,6 +25,10 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* GLOBALS *******************************************************************/
 
+/* These can be changed via csrss startup, these are defaults */
+DWORD gdwDesktopSectionSize = 512;
+DWORD gdwNOIOSectionSize    = 128; // A guess, for one or more of the first three system desktops.
+
 /* Currently active desktop */
 PDESKTOP gpdeskInputDesktop = NULL;
 HDC ScreenDeviceContext = NULL;
@@ -469,7 +473,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
    }
    else
    {
-       ERR("Got handle: %p\n", Ret);
+       TRACE("Got handle: %p\n", Ret);
    }
 
    return Ret;
@@ -662,9 +666,15 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
           {
               return TRUE;
           }
+#ifdef NEW_CURSORICON
+          pcurNew->CURSORF_flags |= CURSORF_CURRENT;
+#endif
           pcurOld = UserSetCursor(pcurNew, FALSE);
           if (pcurOld)
           {
+#ifdef NEW_CURSORICON
+               pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
+#endif
                UserDereferenceObject(pcurOld);
           }
           return TRUE;
@@ -752,19 +762,19 @@ VOID APIENTRY
 UserRedrawDesktop()
 {
     PWND Window = NULL;
-    HRGN hRgn;
+    PREGION Rgn;
 
     Window = UserGetDesktopWindow();
-    hRgn = IntSysCreateRectRgnIndirect(&Window->rcWindow);
+    Rgn = IntSysCreateRectpRgnIndirect(&Window->rcWindow);
 
     IntInvalidateWindows( Window,
-                            hRgn,
+                             Rgn,
                        RDW_FRAME |
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
 
-    GreDeleteObject(hRgn);
+    REGION_Delete(Rgn);
 }
 
 
@@ -806,12 +816,17 @@ HWND* FASTCALL
 UserBuildShellHookHwndList(PDESKTOP Desktop)
 {
    ULONG entries=0;
+   PLIST_ENTRY ListEntry;
    PSHELL_HOOK_WINDOW Current;
    HWND* list;
 
    /* FIXME: If we save nb elements in desktop, we dont have to loop to find nb entries */
-   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+   ListEntry = Desktop->ShellHookWindows.Flink;
+   while (ListEntry != &Desktop->ShellHookWindows)
+   {
+      ListEntry = ListEntry->Flink;
       entries++;
+   }
 
    if (!entries) return NULL;
 
@@ -820,8 +835,13 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
    {
       HWND* cursor = list;
 
-      LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+      ListEntry = Desktop->ShellHookWindows.Flink;
+      while (ListEntry != &Desktop->ShellHookWindows)
+      {
+         Current = CONTAINING_RECORD(ListEntry, SHELL_HOOK_WINDOW, ListEntry);
+         ListEntry = ListEntry->Flink;
          *cursor++ = Current->hWnd;
+      }
 
       *cursor = NULL; /* Nullterm list */
    }
@@ -930,10 +950,14 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
    PDESKTOP Desktop = pti->rpdesk;
+   PLIST_ENTRY ListEntry;
    PSHELL_HOOK_WINDOW Current;
 
-   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+   ListEntry = Desktop->ShellHookWindows.Flink;
+   while (ListEntry != &Desktop->ShellHookWindows)
    {
+      Current = CONTAINING_RECORD(ListEntry, SHELL_HOOK_WINDOW, ListEntry);
+      ListEntry = ListEntry->Flink;
       if (Current->hWnd == hWnd)
       {
          RemoveEntryList(&Current->ListEntry);
@@ -1174,7 +1198,7 @@ static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta)
 {
     PVOID DesktopHeapSystemBase = NULL;
-    ULONG_PTR HeapSize = 400 * 1024;
+    ULONG_PTR HeapSize = gdwDesktopSectionSize * 1024;
     SIZE_T DesktopInfoSize;
     ULONG i;
 
@@ -1677,7 +1701,7 @@ NtUserSwitchDesktop(HDESK hdesk)
     * is the logon application itself
     */
    if((pdesk->rpwinstaParent->Flags & WSS_LOCKED) &&
-      LogonProcess != PsGetCurrentProcessWin32Process())
+      gpidLogon != PsGetCurrentProcessId())
    {
       ObDereferenceObject(pdesk);
       ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);

@@ -2281,9 +2281,9 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 /*
  * @implemented
  */
+#if 0
 DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
-#if 0
     InterfaceIndexTable *indexTable;
     IFInfo ifInfo;
     int i;
@@ -2470,16 +2470,8 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
     free(indexTable);
 
     return NO_ERROR;
-#else
-    if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
-    if (!pAdapterAddresses || *pOutBufLen == 0)
-      return ERROR_BUFFER_OVERFLOW;
-    if (Reserved) return ERROR_INVALID_PARAMETER;
-
-    FIXME(":stub\n");
-    return ERROR_NO_DATA;
-#endif
 }
+#endif
 
 /*
  * @unimplemented

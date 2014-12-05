@@ -16,6 +16,7 @@
 #include <winbase.h>
 #include <winuser.h>
 #include <wincon.h>
+#include <strsafe.h>
 
 #include "help.h"
 #include "resource.h"
@@ -135,9 +136,8 @@ int wmain(int argc, WCHAR* argv[])
     /*
      * Run "<command> /?" in the current command processor.
      */
-    wcsncpy(CmdLine, argv[1], CMDLINE_LENGTH - wcslen(CmdLine));
-    wcsncat(CmdLine, L" /?" , CMDLINE_LENGTH - wcslen(CmdLine));
-
+    StringCbPrintfW(CmdLine, sizeof(CmdLine), L"%ls /?", argv[1]);
+    
     _flushall();
     return _wsystem(CmdLine);
 }

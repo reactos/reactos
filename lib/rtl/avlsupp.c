@@ -96,7 +96,7 @@ RtlpFindAvlTableNodeOrParent(IN PRTL_AVL_TABLE Table,
 
 FORCEINLINE
 VOID
-RtlPromoteAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
+RtlpPromoteAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
 {
     PRTL_BALANCED_LINKS ParentNode, SuperParentNode;
     PRTL_BALANCED_LINKS *SwapNode1, *SwapNode2;
@@ -139,7 +139,7 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
     if (RtlBalance(ChildNode) == Balance)
     {
         /* This performs the rotation described in Knuth A8-A10 for Case 1 */
-        RtlPromoteAvlTreeNode(ChildNode);
+        RtlpPromoteAvlTreeNode(ChildNode);
 
         /* The nodes are now balanced */
         RtlSetBalance(ChildNode, RtlBalancedAvlTree);
@@ -155,8 +155,8 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
                         RtlLeftChildAvl(ChildNode) : RtlRightChildAvl(ChildNode);
 
         /* Do the double-rotation described in Knuth A8-A10 for Case 2 */
-        RtlPromoteAvlTreeNode(SubChildNode);
-        RtlPromoteAvlTreeNode(SubChildNode);
+        RtlpPromoteAvlTreeNode(SubChildNode);
+        RtlpPromoteAvlTreeNode(SubChildNode);
 
         /* Was the sub-child sharing the same balance as the node? */
         if (RtlBalance(SubChildNode) == Balance)
@@ -194,7 +194,7 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
      * The case that remains is that the child was already balanced, so this is
      * This is the rotation required for Case 3 in Knuth A8-A10
      */
-    RtlPromoteAvlTreeNode(ChildNode);
+    RtlpPromoteAvlTreeNode(ChildNode);
 
     /* Now the child has the opposite weight of the node */
     RtlSetBalance(ChildNode, -Balance);

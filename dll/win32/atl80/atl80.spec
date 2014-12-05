@@ -43,8 +43,8 @@
 55 stub AtlUnRegisterTypeLib
 56 stdcall AtlLoadTypeLib(long wstr ptr ptr)
 58 stdcall AtlModuleAddTermFunc(ptr ptr long)
-59 stub AtlAxCreateControlLic
-60 stub AtlAxCreateControlLicEx
+59 stdcall AtlAxCreateControlLic(wstr long ptr ptr wstr)
+60 stdcall AtlAxCreateControlLicEx(wstr long ptr ptr ptr ptr ptr wstr)
 61 stdcall AtlCreateRegistrar(ptr)
 62 stub AtlWinModuleRegisterClassExW
 63 stub AtlWinModuleRegisterClassExA

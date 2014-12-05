@@ -13,10 +13,10 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "int32.h"
 
 #include "vidbios32.h"
-#include "../vidbios.h"
+#include <bios/vidbios.h>
 #include "bios32p.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/

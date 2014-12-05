@@ -19,9 +19,18 @@ IntGetProp(PWND Window, ATOM Atom)
    int i;
 
    ListEntry = Window->PropListHead.Flink;
+
    for (i = 0; i < Window->PropListItems; i++ )
    {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+
+      if (ListEntry == NULL)
+      {
+          ERR("Corrupted (or uninitialized?) property list for window %p. Prop count %d. Atom %d.\n",
+              Window, Window->PropListItems, Atom);
+          return NULL;
+      }
+
       if (Property->Atom == Atom)
       {
          return(Property);
@@ -84,16 +93,14 @@ IntRemoveWindowProp(PWND Window)
 {
    PLIST_ENTRY ListEntry;
    PPROPERTY Property;
-   int i, Count = Window->PropListItems;
 
-   ListEntry = Window->PropListHead.Flink;
-   for (i = 0; i < Count; i++ )
+   while (!IsListEmpty(&Window->PropListHead))
    {
-      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
-      ListEntry = ListEntry->Flink;
-      RemoveEntryList(&Property->PropListEntry);
-      UserHeapFree(Property);
-      Window->PropListItems--;
+       ListEntry = Window->PropListHead.Flink;
+       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+       RemoveEntryList(&Property->PropListEntry);
+       UserHeapFree(Property);
+       Window->PropListItems--;
    }
    return;
 }

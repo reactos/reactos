@@ -358,7 +358,6 @@ BaseCreateStack(HANDLE hProcess,
     NTSTATUS Status;
     PIMAGE_NT_HEADERS Headers;
     ULONG_PTR Stack;
-    BOOLEAN UseGuard;
     ULONG PageSize, Dummy, AllocationGranularity;
     SIZE_T StackReserveHeader, StackCommitHeader, GuardPageSize, GuaranteedStackCommit;
     DPRINT("BaseCreateStack (hProcess: %p, Max: %lx, Current: %lx)\n",
@@ -426,18 +425,6 @@ BaseCreateStack(HANDLE hProcess,
     /* Update the Stack Position */
     Stack += StackReserve - StackCommit;
 
-    /* Check if we will need a guard page */
-    if (StackReserve > StackCommit)
-    {
-        Stack -= PageSize;
-        StackCommit += PageSize;
-        UseGuard = TRUE;
-    }
-    else
-    {
-        UseGuard = FALSE;
-    }
-
     /* Allocate memory for the stack */
     Status = NtAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
@@ -457,25 +444,21 @@ BaseCreateStack(HANDLE hProcess,
     InitialTeb->StackLimit = (PVOID)Stack;
 
     /* Create a guard page */
-    if (UseGuard)
+    GuardPageSize = PageSize;
+    Status = NtProtectVirtualMemory(hProcess,
+                                    (PVOID*)&Stack,
+                                    &GuardPageSize,
+                                    PAGE_GUARD | PAGE_READWRITE,
+                                    &Dummy);
+    if (!NT_SUCCESS(Status))
     {
-        /* Set the guard page */
-        GuardPageSize = PAGE_SIZE;
-        Status = NtProtectVirtualMemory(hProcess,
-                                        (PVOID*)&Stack,
-                                        &GuardPageSize,
-                                        PAGE_GUARD | PAGE_READWRITE,
-                                        &Dummy);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failure to set guard page\n");
-            return Status;
-        }
-
-        /* Update the Stack Limit keeping in mind the Guard Page */
-        InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit +
-                                         GuardPageSize);
+        DPRINT1("Failure to set guard page\n");
+        return Status;
     }
+
+    /* Update the Stack Limit keeping in mind the Guard Page */
+    InitialTeb->StackLimit = (PVOID)((ULONG_PTR)InitialTeb->StackLimit +
+                                     GuardPageSize);
 
     /* We are done! */
     return STATUS_SUCCESS;

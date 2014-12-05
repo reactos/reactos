@@ -581,12 +581,17 @@ HRESULT WINAPI LoadRegTypeLib(
             TLIBATTR *attr;
 
             res = ITypeLib_GetLibAttr(*ppTLib, &attr);
-            if (res == S_OK && (attr->wMajorVerNum != wVerMajor || attr->wMinorVerNum < wVerMinor))
+            if (res == S_OK)
             {
+                BOOL mismatch = attr->wMajorVerNum != wVerMajor || attr->wMinorVerNum < wVerMinor;
                 ITypeLib_ReleaseTLibAttr(*ppTLib, attr);
-                ITypeLib_Release(*ppTLib);
-                *ppTLib = NULL;
-                res = TYPE_E_LIBNOTREGISTERED;
+
+                if (mismatch)
+                {
+                    ITypeLib_Release(*ppTLib);
+                    *ppTLib = NULL;
+                    res = TYPE_E_LIBNOTREGISTERED;
+                }
             }
         }
     }
@@ -872,6 +877,24 @@ HRESULT WINAPI RegisterTypeLib(
     return res;
 }
 
+static void TLB_unregister_interface(GUID *guid, REGSAM flag)
+{
+    WCHAR subKeyName[50];
+    HKEY subKey;
+
+    /* the path to the type */
+    get_interface_key( guid, subKeyName );
+
+    /* Delete its bits */
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, subKeyName, 0, KEY_WRITE | flag, &subKey) != ERROR_SUCCESS)
+        return;
+
+    RegDeleteKeyW(subKey, ProxyStubClsidW);
+    RegDeleteKeyW(subKey, ProxyStubClsid32W);
+    RegDeleteKeyW(subKey, TypeLibW);
+    RegCloseKey(subKey);
+    RegDeleteKeyExW(HKEY_CLASSES_ROOT, subKeyName, flag, 0);
+}
 
 /******************************************************************************
  *	UnRegisterTypeLib	[OLEAUT32.186]
@@ -897,7 +920,6 @@ HRESULT WINAPI UnRegisterTypeLib(
     DWORD i = 0;
     BOOL deleteOtherStuff;
     HKEY key = NULL;
-    HKEY subKey = NULL;
     TYPEATTR* typeAttr = NULL;
     TYPEKIND kind;
     ITypeInfo* typeInfo = NULL;
@@ -956,19 +978,16 @@ HRESULT WINAPI UnRegisterTypeLib(
         if ((kind == TKIND_INTERFACE && (typeAttr->wTypeFlags & TYPEFLAG_FOLEAUTOMATION)) ||
             kind == TKIND_DISPATCH)
         {
-            /* the path to the type */
-            get_interface_key( &typeAttr->guid, subKeyName );
+            BOOL is_wow64;
+            REGSAM opposite = (sizeof(void*) == 8 ? KEY_WOW64_32KEY : KEY_WOW64_64KEY);
 
-            /* Delete its bits */
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, subKeyName, 0, KEY_WRITE, &subKey) != ERROR_SUCCESS)
-                goto enddeleteloop;
+            TLB_unregister_interface(&typeAttr->guid, 0);
 
-            RegDeleteKeyW(subKey, ProxyStubClsidW);
-            RegDeleteKeyW(subKey, ProxyStubClsid32W);
-            RegDeleteKeyW(subKey, TypeLibW);
-            RegCloseKey(subKey);
-            subKey = NULL;
-            RegDeleteKeyW(HKEY_CLASSES_ROOT, subKeyName);
+            /* unregister TLBs into the opposite registry view, too */
+            if(opposite == KEY_WOW64_32KEY ||
+               (IsWow64Process(GetCurrentProcess(), &is_wow64) && is_wow64)) {
+                TLB_unregister_interface(&typeAttr->guid, opposite);
+            }
         }
 
 enddeleteloop:
@@ -1014,7 +1033,6 @@ enddeleteloop:
 end:
     SysFreeString(tlibPath);
     if (typeLib) ITypeLib_Release(typeLib);
-    if (subKey) RegCloseKey(subKey);
     if (key) RegCloseKey(key);
     return result;
 }
@@ -1571,61 +1589,6 @@ static void dump_TLBImplType(const TLBImplType * impl, UINT n)
     }
 }
 
-static void dump_Variant(const VARIANT * pvar)
-{
-    SYSTEMTIME st;
-
-    TRACE("%p->{%s%s", pvar, debugstr_VT(pvar), debugstr_VF(pvar));
-
-    if (pvar)
-    {
-      if (V_ISBYREF(pvar) || V_TYPE(pvar) == VT_UNKNOWN ||
-          V_TYPE(pvar) == VT_DISPATCH || V_TYPE(pvar) == VT_RECORD)
-      {
-        TRACE(",%p", V_BYREF(pvar));
-      }
-      else if (V_ISARRAY(pvar) || V_ISVECTOR(pvar))
-      {
-        TRACE(",%p", V_ARRAY(pvar));
-      }
-      else switch (V_TYPE(pvar))
-      {
-      case VT_I1:   TRACE(",%d", V_I1(pvar)); break;
-      case VT_UI1:  TRACE(",%d", V_UI1(pvar)); break;
-      case VT_I2:   TRACE(",%d", V_I2(pvar)); break;
-      case VT_UI2:  TRACE(",%d", V_UI2(pvar)); break;
-      case VT_INT:
-      case VT_I4:   TRACE(",%d", V_I4(pvar)); break;
-      case VT_UINT:
-      case VT_UI4:  TRACE(",%d", V_UI4(pvar)); break;
-      case VT_I8:   TRACE(",0x%08x,0x%08x", (ULONG)(V_I8(pvar) >> 32),
-                          (ULONG)(V_I8(pvar) & 0xffffffff)); break;
-      case VT_UI8:  TRACE(",0x%08x,0x%08x", (ULONG)(V_UI8(pvar) >> 32),
-                          (ULONG)(V_UI8(pvar) & 0xffffffff)); break;
-      case VT_R4:   TRACE(",%3.3e", V_R4(pvar)); break;
-      case VT_R8:   TRACE(",%3.3e", V_R8(pvar)); break;
-      case VT_BOOL: TRACE(",%s", V_BOOL(pvar) ? "TRUE" : "FALSE"); break;
-      case VT_BSTR: TRACE(",%s", debugstr_w(V_BSTR(pvar))); break;
-      case VT_CY:   TRACE(",0x%08x,0x%08x", V_CY(pvar).s.Hi,
-                           V_CY(pvar).s.Lo); break;
-      case VT_DATE:
-        if(!VariantTimeToSystemTime(V_DATE(pvar), &st))
-          TRACE(",<invalid>");
-        else
-          TRACE(",%04d/%02d/%02d %02d:%02d:%02d", st.wYear, st.wMonth, st.wDay,
-                st.wHour, st.wMinute, st.wSecond);
-        break;
-      case VT_ERROR:
-      case VT_VOID:
-      case VT_USERDEFINED:
-      case VT_EMPTY:
-      case VT_NULL:  break;
-      default:       TRACE(",?"); break;
-      }
-    }
-    TRACE("}\n");
-}
-
 static void dump_DispParms(const DISPPARAMS * pdp)
 {
     unsigned int index;
@@ -1643,7 +1606,7 @@ static void dump_DispParms(const DISPPARAMS * pdp)
     {
         TRACE("args:\n");
         for (index = 0; index < pdp->cArgs; index++)
-            dump_Variant( &pdp->rgvarg[index] );
+            TRACE("  [%d] %s\n", index, debugstr_variant(pdp->rgvarg+index));
     }
 }
 
@@ -6832,8 +6795,7 @@ DispCallFunc(
             args[argspos++] = V_UI4(arg);
             break;
         }
-        TRACE("arg %u: type %d\n",i,prgvt[i]);
-        dump_Variant(arg);
+        TRACE("arg %u: type %s %s\n", i, debugstr_vt(prgvt[i]), debugstr_variant(arg));
     }
 
     switch (vtReturn)
@@ -6873,7 +6835,7 @@ DispCallFunc(
         return DISP_E_BADCALLEE;
     }
     if (vtReturn != VT_VARIANT) V_VT(pvargResult) = vtReturn;
-    TRACE("retval: "); dump_Variant(pvargResult);
+    TRACE("retval: %s\n", debugstr_variant(pvargResult));
     return S_OK;
 
 #elif defined(__x86_64__)
@@ -6922,8 +6884,7 @@ DispCallFunc(
             args[argspos++] = V_UI8(arg);
             break;
         }
-        TRACE("arg %u: type %d\n",i,prgvt[i]);
-        dump_Variant(arg);
+        TRACE("arg %u: type %s %s\n", i, debugstr_vt(prgvt[i]), debugstr_variant(arg));
     }
 
     switch (vtReturn)
@@ -6950,7 +6911,7 @@ DispCallFunc(
     }
     heap_free( args );
     if (vtReturn != VT_VARIANT) V_VT(pvargResult) = vtReturn;
-    TRACE("retval: "); dump_Variant(pvargResult);
+    TRACE("retval: %s\n", debugstr_variant(pvargResult));
     return S_OK;
 
 #else
@@ -7145,7 +7106,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                 }
                 else if (src_arg)
                 {
-                    dump_Variant(src_arg);
+                    TRACE("%s\n", debugstr_variant(src_arg));
 
                     if(rgvt[i]!=V_VT(src_arg))
                     {
@@ -7222,9 +7183,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
 
                         if (FAILED(hres))
                         {
-                            ERR("failed to convert param %d to %s%s from %s%s\n", i,
-                                debugstr_vt(rgvt[i]), debugstr_vf(rgvt[i]),
-                                debugstr_VT(src_arg), debugstr_VF(src_arg));
+                            ERR("failed to convert param %d to %s from %s\n", i,
+                                debugstr_vt(rgvt[i]), debugstr_variant(src_arg));
                             break;
                         }
                         prgpvarg[i] = &rgvarg[i];
@@ -7316,11 +7276,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     continue;
                 else if (wParamFlags & PARAMFLAG_FRETVAL)
                 {
-                    if (TRACE_ON(ole))
-                    {
-                        TRACE("[retval] value: ");
-                        dump_Variant(prgpvarg[i]);
-                    }
+                    TRACE("[retval] value: %s\n", debugstr_variant(prgpvarg[i]));
 
                     if (pVarResult)
                     {
@@ -7409,8 +7365,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
             }
             if (V_VT(&varresult) != VT_ERROR)
             {
-                TRACE("varresult value: ");
-                dump_Variant(&varresult);
+                TRACE("varresult value: %s\n", debugstr_variant(&varresult));
 
                 if (pVarResult)
                 {

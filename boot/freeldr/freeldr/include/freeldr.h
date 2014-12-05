@@ -121,5 +121,6 @@
 VOID BootMain(LPSTR CmdLine);
 VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem);
 VOID RunLoader(VOID);
+VOID FrLdrCheckCpuCompatiblity(VOID);
 
 #endif  /* __FREELDR_H */

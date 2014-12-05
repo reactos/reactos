@@ -461,7 +461,7 @@ xmlNanoHTTPSend(xmlNanoHTTPCtxtPtr ctxt, const char *xmt_ptr, int outlen)
 
     if ((ctxt->state & XML_NANO_HTTP_WRITE) && (xmt_ptr != NULL)) {
         while (total_sent < outlen) {
-            int nsent = send(ctxt->fd, xmt_ptr + total_sent,
+            int nsent = send(ctxt->fd, SEND_ARG2_CAST (xmt_ptr + total_sent),
                              outlen - total_sent, 0);
 
             if (nsent > 0)
@@ -1003,6 +1003,7 @@ xmlNanoHTTPConnectAttempt(struct sockaddr *addr)
             0) {
             /* Solaris error code */
             __xmlIOErr(XML_FROM_HTTP, 0, "getsockopt failed\n");
+            closesocket(s);
             return INVALID_SOCKET;
         }
 #endif
@@ -1121,7 +1122,7 @@ xmlNanoHTTPConnectHost(const char *host, int port)
 #endif
 #if !defined(HAVE_GETADDRINFO) || !defined(_WIN32)
     {
-	h = gethostbyname (host);
+	h = gethostbyname (GETHOSTBYNAME_ARG_CAST host);
 	if (h == NULL) {
 
 /*
@@ -1362,15 +1363,15 @@ xmlNanoHTTPMethodRedir(const char *URL, const char *method, const char *input,
     xmlNanoHTTPInit();
 
 retry:
-    if (redirURL == NULL)
+    if (redirURL == NULL) {
 	ctxt = xmlNanoHTTPNewCtxt(URL);
-    else {
+	if (ctxt == NULL)
+	    return(NULL);
+    } else {
 	ctxt = xmlNanoHTTPNewCtxt(redirURL);
+	if (ctxt == NULL)
+	    return(NULL);
 	ctxt->location = xmlMemStrdup(redirURL);
-    }
-
-    if ( ctxt == NULL ) {
-	return ( NULL );
     }
 
     if ((ctxt->protocol == NULL) || (strcmp(ctxt->protocol, "http"))) {

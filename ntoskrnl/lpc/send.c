@@ -744,6 +744,9 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
         }
     }
 
+    /* This flag is undocumented. Remove it before continuing */
+    LocalLpcRequest.u2.s2.Type &= ~0x4000;
+
     /* Check if this is an LPC Request */
     if (LpcpGetMessageType(&LocalLpcRequest) == LPC_REQUEST)
     {

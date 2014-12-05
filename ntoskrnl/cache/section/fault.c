@@ -77,7 +77,7 @@ rmaps, so each mapping should be immediately followed by an rmap addition.
 #include "newmm.h"
 #define NDEBUG
 #include <debug.h>
-#include "../mm/ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #define DPRINTC DPRINT
 

@@ -4,7 +4,7 @@
 [Section]
 Name = Off By One Browser
 Version = 3.5d
-Licence = Freeware
+License = Freeware
 Description = The Off By One Browser is a very small and fast web browser with full HTML 3.2 support.
 Size = 1010.89 kB
 Category = 5
@@ -35,13 +35,13 @@ Description = Off By One Browser is een uiterst kleine en snelle web browser met
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Un navigator web foarte mic și rapid compatibil cu HTML 3.2.
 Size = 1010,89 ko
 
 [Section.041f]
 Name = Off By One Tarayıcı
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Off By One Tarayıcı, eksiksiz HTML 3.2 desteğiyle çok küçük ve hızlı bir Umûmî Ağ tarayıcısıdır.
 Size = 1010,89 KB
 

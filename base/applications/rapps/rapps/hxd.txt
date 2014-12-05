@@ -5,7 +5,7 @@
 [Section]
 Name = HxD
 Version = 1.7.7.0
-Licence = Freeware
+License = Freeware
 Description = A good hex editor. You need 7-Zip or a similar Utility to extract it.
 Size = 852 kB
 Category = 7
@@ -26,13 +26,13 @@ Description = Dobry edytor Hex. Do wypakowania pliku potrzebny jest program arch
 Description = Un buon editor hexadecimale. Necessita 7-Zip o un programma simile per estrarlo.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Un bun editor hexazecimal. E necesar un utilitar de dezarhivare de tip ZIP.
 Size = 859 ko
 URLDownload = http://mh-nexus.de/downloads/HxDSetupROM.zip
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = İyi bir onaltılık düzenleyici. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
 Size = 853 KB
 URLDownload = http://mh-nexus.de/downloads/HxDSetupTR.zip

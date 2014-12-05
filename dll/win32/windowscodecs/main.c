@@ -103,6 +103,92 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
     }
 }
 
+HRESULT configure_write_source(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *source, const WICRect *prc,
+    const WICPixelFormatGUID *format,
+    INT width, INT height, double xres, double yres)
+{
+    HRESULT hr=S_OK;
+    WICPixelFormatGUID src_format, dst_format;
+
+    if (width == 0 || height == 0)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    hr = IWICBitmapSource_GetPixelFormat(source, &src_format);
+    if (FAILED(hr)) return hr;
+
+    if (!format)
+    {
+        dst_format = src_format;
+
+        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &dst_format);
+        if (FAILED(hr)) return hr;
+
+        format = &dst_format;
+    }
+
+    if (!IsEqualGUID(&src_format, format))
+    {
+        /* FIXME: should use WICConvertBitmapSource to convert */
+        ERR("format %s unsupported\n", debugstr_guid(&src_format));
+        return E_FAIL;
+    }
+
+    if (xres == 0.0 || yres == 0.0)
+    {
+        hr = IWICBitmapSource_GetResolution(source, &xres, &yres);
+        if (FAILED(hr)) return hr;
+        hr = IWICBitmapFrameEncode_SetResolution(iface, xres, yres);
+        if (FAILED(hr)) return hr;
+    }
+
+    return hr;
+}
+
+HRESULT write_source(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *source, const WICRect *prc,
+    const WICPixelFormatGUID *format, UINT bpp,
+    INT width, INT height)
+{
+    HRESULT hr=S_OK;
+    WICRect rc;
+    UINT stride;
+    BYTE* pixeldata;
+
+    if (!prc)
+    {
+        UINT src_width, src_height;
+        hr = IWICBitmapSource_GetSize(source, &src_width, &src_height);
+        if (FAILED(hr)) return hr;
+        rc.X = 0;
+        rc.Y = 0;
+        rc.Width = src_width;
+        rc.Height = src_height;
+        prc = &rc;
+    }
+
+    if (prc->Width != width || prc->Height <= 0)
+        return E_INVALIDARG;
+
+    stride = (bpp * width + 7)/8;
+
+    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
+    if (!pixeldata) return E_OUTOFMEMORY;
+
+    hr = IWICBitmapSource_CopyPixels(source, prc, stride,
+        stride*prc->Height, pixeldata);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
+            stride*prc->Height, pixeldata);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pixeldata);
+
+    return hr;
+}
+
 void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride)
 {
     UINT x, y;

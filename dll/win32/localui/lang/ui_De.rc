@@ -16,13 +16,20 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
  */
-
-#include "localui.h"
 
 #pragma code_page(65001)
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_LOCALPORT "Lokaler Anschluss"
+    IDS_INVALIDNAME "'%s' ist kein gültiger Anschlussname"
+    IDS_PORTEXISTS "Der Anschluss %s existiert bereits"
+    IDS_NOTHINGTOCONFIG "Dieser Anschluss besitzt keine zu konfigurierenden Optionen"
+}
 
 ADDPORT_DIALOG DIALOG 6, 18, 245, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
@@ -47,12 +54,3 @@ BEGIN
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Abbrechen", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
 END
-
-
-STRINGTABLE
-{
-    IDS_LOCALPORT "Lokaler Anschluss"
-    IDS_INVALIDNAME "'%s' ist kein gültiger Anschlussname"
-    IDS_PORTEXISTS "Der Anschluss %s existiert bereits"
-    IDS_NOTHINGTOCONFIG "Dieser Anschluss besitzt keine zu konfigurierenden Optionen"
-}

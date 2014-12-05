@@ -139,7 +139,7 @@ extern "C" {
 #ifdef _M_IX86
 #define __SYMBOL(_Name) "_"#_Name
 #define __IMPORTSYMBOL(_Name) "__imp__"#_Name
-#define __IMPORTNAME(_Name) _imp__##_Name
+#define __IMPORTNAME(_Name) __imp__##_Name
 #else
 #define __SYMBOL(_Name) #_Name
 #define __IMPORTSYMBOL(_Name) "__imp_"#_Name

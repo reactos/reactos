@@ -25,7 +25,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    IDS_NAME            "WINE-MS-RLE"
-    IDS_DESCRIPTION     "Codecul video Wine MS-RLE"
-    IDS_ABOUT           "Codecul video Wine MS-RLE\nCopyright 2002 by Michael Günnewig"
+	IDS_NAME	"WINE-MS-RLE"
+	IDS_DESCRIPTION	"Codecul video Wine MS-RLE"
+	IDS_ABOUT       "Codecul video Wine MS-RLE\nCopyright 2002 by Michael Günnewig"
 }

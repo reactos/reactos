@@ -12,6 +12,7 @@
 
 #include "mouse.h"
 #include "ps2.h"
+// #include "pic.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -27,6 +28,8 @@ static ULONG ButtonState;
 static SHORT HorzCounter;
 static SHORT VertCounter;
 static CHAR ScrollCounter;
+
+static BYTE PS2Port = 1;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -56,15 +59,15 @@ static VOID MouseReset(VOID)
     MouseId = 0;
 
     /* Send the Basic Assurance Test success code and the device ID */
-    KeyboardQueuePush(MOUSE_BAT_SUCCESS);
-    KeyboardQueuePush(MouseId);
+    PS2QueuePush(PS2Port, MOUSE_BAT_SUCCESS);
+    PS2QueuePush(PS2Port, MouseId);
 }
 
 #if 0
 static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 {
     /* Clear the packet */
-    ZeroMemory(Packet, sizeof(MOUSE_PACKET));
+    RtlZeroMemory(Packet, sizeof(*Packet));
 
     Packet->Flags |= MOUSE_ALWAYS_SET;
 
@@ -116,34 +119,32 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 }
 #endif
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID MouseUpdatePosition(PCOORD NewPosition)
+/*static*/ VOID MouseUpdatePosition(PCOORD NewPosition)
 {
     /* Update the counters */
-    HorzCounter += ((NewPosition->X - Position.X) * WidthMm * Resolution) / WidthPixels;
+    HorzCounter += ((NewPosition->X - Position.X) * WidthMm  * Resolution) / WidthPixels;
     VertCounter += ((NewPosition->Y - Position.Y) * HeightMm * Resolution) / HeightPixels;
 
     /* Update the position */
     Position = *NewPosition;
 }
 
-VOID MouseUpdateButtons(ULONG NewButtonState)
+/*static*/ VOID MouseUpdateButtons(ULONG NewButtonState)
 {
     ButtonState = NewButtonState;
 }
 
-VOID MouseScroll(LONG Direction)
+/*static*/ VOID MouseScroll(LONG Direction)
 {
     ScrollCounter += Direction;
 }
 
-COORD MouseGetPosition(VOID)
+/*static*/ COORD MouseGetPosition(VOID)
 {
     return Position;
 }
 
-VOID MouseCommand(BYTE Command)
+static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
 {
     switch (Command)
     {
@@ -151,7 +152,7 @@ VOID MouseCommand(BYTE Command)
         case 0xE6:
         {
             Scaling = FALSE;
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -159,7 +160,7 @@ VOID MouseCommand(BYTE Command)
         case 0xE7:
         {
             Scaling = TRUE;
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -185,7 +186,7 @@ VOID MouseCommand(BYTE Command)
             MouseResetCounters();
             Mode = MOUSE_STREAMING_MODE;
 
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -205,9 +206,9 @@ VOID MouseCommand(BYTE Command)
                 /* Restore the previous mode */
                 MouseResetCounters();
                 Mode = PreviousMode;
-                KeyboardQueuePush(MOUSE_ACK);
+                PS2QueuePush(PS2Port, MOUSE_ACK);
             }
-            else KeyboardQueuePush(MOUSE_ERROR);
+            else PS2QueuePush(PS2Port, MOUSE_ERROR);
 
             break;
         }
@@ -224,7 +225,7 @@ VOID MouseCommand(BYTE Command)
             MouseResetCounters();
             Mode = MOUSE_WRAP_MODE;
 
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -234,15 +235,15 @@ VOID MouseCommand(BYTE Command)
             MouseResetCounters();
             Mode = MOUSE_REMOTE_MODE;
 
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
         /* Get Mouse ID */
         case 0xF2:
         {
-            KeyboardQueuePush(MOUSE_ACK);
-            KeyboardQueuePush(MouseId);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
+            PS2QueuePush(PS2Port, MouseId);
             break;
         }
 
@@ -258,7 +259,7 @@ VOID MouseCommand(BYTE Command)
         case 0xF4:
         {
             Reporting = TRUE;
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -266,7 +267,7 @@ VOID MouseCommand(BYTE Command)
         case 0xF5:
         {
             Reporting = FALSE;
-            KeyboardQueuePush(MOUSE_ACK);
+            PS2QueuePush(PS2Port, MOUSE_ACK);
             break;
         }
 
@@ -297,12 +298,30 @@ VOID MouseCommand(BYTE Command)
         /* Unknown command */
         default:
         {
-            KeyboardQueuePush(MOUSE_ERROR);
+            PS2QueuePush(PS2Port, MOUSE_ERROR);
         }
     }
 }
 
-BOOLEAN MouseInit(VOID)
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
+{
+extern COORD DosNewPosition;
+extern WORD  DosButtonState;
+
+    // FIXME: Sync our private data
+    MouseUpdatePosition(&MouseEvent->dwMousePosition);
+    MouseUpdateButtons(MouseEvent->dwButtonState);
+
+    // HACK: Bypass PS/2 and instead, notify the MOUSE.COM driver directly
+    DosNewPosition = MouseEvent->dwMousePosition;
+    DosButtonState = LOWORD(MouseEvent->dwButtonState);
+
+    // PS2QueuePush(PS2Port, Data);
+}
+
+BOOLEAN MouseInit(BYTE PS2Connector)
 {
     HWND hWnd;
     HDC hDC;
@@ -323,6 +342,10 @@ BOOLEAN MouseInit(VOID)
 
     /* Release the device context */
     ReleaseDC(hWnd, hDC);
+
+    /* Finish to plug the mouse to the specified PS/2 port */
+    PS2Port = PS2Connector;
+    PS2SetDeviceCmdProc(PS2Port, NULL, MouseCommand);
 
     MouseReset();
     return TRUE;

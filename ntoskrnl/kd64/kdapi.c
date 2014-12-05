@@ -721,7 +721,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     ASSERT(Data->Length == sizeof(CONTEXT));
 
     /* Make sure that this is a valid request */
-    if ((State->Processor < KeNumberProcessors) && (KdpContextSent == TRUE))
+    if ((State->Processor < KeNumberProcessors) && (KdpContextSent != FALSE))
     {
         /* Check if the request is for this CPU */
         if (State->Processor == KeGetCurrentPrcb()->Number)

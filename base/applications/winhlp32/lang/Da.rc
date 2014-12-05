@@ -25,8 +25,6 @@
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Filer" {
@@ -46,12 +44,6 @@ MAIN_MENU MENU
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
-   POPUP	"Help always visible"
-   BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -59,14 +51,46 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Hjælp" {
    MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
    MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Information...", MNID_HELP_ABOUT
  }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Notat...",            MNID_CTXT_ANNOTATE
+		MENUITEM "Kopier",              MNID_CTXT_COPY
+		MENUITEM "Udskriv...",          MNID_CTXT_PRINT
+		POPUP    "Skrifttype"
+		BEGIN
+			MENUITEM "Lille",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Stor",        MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Wine Hjælp"
+STID_WHERROR, 		"FEJL"
+STID_WARNING,  		"ADVARSEL"
+STID_INFO,  		"Information"
+STID_NOT_IMPLEMENTED, 	"Ikke implementeret"
+STID_HLPFILE_ERROR_s, 	"Fejl ved indlæsning af filen `%s'"
+STID_INDEX, 		"&Indhold"
+STID_CONTENTS,		"Summary"
+STID_BACK, 		"&Tilbage"
+STID_ALL_FILES, 	"Alle filer (*.*)"
+STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan ikke finde '%s'. Vil du selv finde filen?"
+STID_NO_RICHEDIT	"Kan ikke finde en 'richedit' implementering... Afbryder"
+STID_PSH_INDEX,		"Help topics: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
@@ -84,44 +108,3 @@ CAPTION "Søg"
 {
     LTEXT  "Er ikke blevet implementeret endnu", -1, 10, 10, 180, 150
 }
-
-/* Strings */
-STRINGTABLE
-{
-STID_WINE_HELP, 	"Wine Hjælp"
-STID_WHERROR, 		"FEJL"
-STID_WARNING,  		"ADVARSEL"
-STID_INFO,  		"Information"
-STID_NOT_IMPLEMENTED, 	"Ikke implementeret"
-STID_HLPFILE_ERROR_s, 	"Fejl ved indlæsning af filen `%s'"
-STID_INDEX, 		"&Indhold"
-STID_CONTENTS,		"Summary"
-STID_BACK, 		"&Tilbage"
-STID_ALL_FILES, 	"Alle filer (*.*)"
-STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Kan ikke finde '%s'. Vil du selv finde filen?"
-STID_NO_RICHEDIT	"Kan ikke finde en 'richedit' implementering... Afbryder"
-}
-
-CONTEXT_MENU MENU
-BEGIN
-        POPUP ""
-        BEGIN
-                MENUITEM "Notat...",           MNID_CTXT_ANNOTATE
-                MENUITEM "Kopier",             MNID_CTXT_COPY
-                MENUITEM "Udskriv...",         MNID_CTXT_PRINT
-                POPUP    "Skrifttype"
-                BEGIN
-                        MENUITEM "Lille",      MNID_CTXT_FONTS_SMALL
-                        MENUITEM "Normal",     MNID_CTXT_FONTS_NORMAL
-                        MENUITEM "Stor",       MNID_CTXT_FONTS_LARGE
-                END
-                POPUP   "Bevar Hjælp øverst"
-                BEGIN
-                        MENUITEM "Standard",   MNID_CTXT_HELP_DEFAULT
-                        MENUITEM "Synlig",     MNID_CTXT_HELP_VISIBLE
-                        MENUITEM "Usynlig",    MNID_CTXT_HELP_NONVISIBLE
-                END
-                MENUITEM "Benyt systemfarver", MNID_CTXT_SYSTEM_COLORS
-        END
-END

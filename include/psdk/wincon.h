@@ -228,7 +228,7 @@ typedef struct _KEY_EVENT_RECORD {
     WORD wVirtualScanCode;
     union {
         WCHAR UnicodeChar;
-        CHAR AsciiChar;
+        CHAR  AsciiChar;
     } uChar;
     DWORD dwControlKeyState;
 }
@@ -236,18 +236,26 @@ typedef struct _KEY_EVENT_RECORD {
 /* gcc's alignment is not what win32 expects */
 PACKED
 #endif
-KEY_EVENT_RECORD;
+KEY_EVENT_RECORD, *PKEY_EVENT_RECORD;
 
 typedef struct _MOUSE_EVENT_RECORD {
     COORD dwMousePosition;
     DWORD dwButtonState;
     DWORD dwControlKeyState;
     DWORD dwEventFlags;
-} MOUSE_EVENT_RECORD;
+} MOUSE_EVENT_RECORD, *PMOUSE_EVENT_RECORD;
 
-typedef struct _WINDOW_BUFFER_SIZE_RECORD { COORD dwSize; } WINDOW_BUFFER_SIZE_RECORD;
-typedef struct _MENU_EVENT_RECORD { UINT dwCommandId; } MENU_EVENT_RECORD,*PMENU_EVENT_RECORD;
-typedef struct _FOCUS_EVENT_RECORD { BOOL bSetFocus; } FOCUS_EVENT_RECORD;
+typedef struct _WINDOW_BUFFER_SIZE_RECORD {
+    COORD dwSize;
+} WINDOW_BUFFER_SIZE_RECORD, *PWINDOW_BUFFER_SIZE_RECORD;
+
+typedef struct _MENU_EVENT_RECORD {
+    UINT dwCommandId;
+} MENU_EVENT_RECORD, *PMENU_EVENT_RECORD;
+
+typedef struct _FOCUS_EVENT_RECORD {
+    BOOL bSetFocus;
+} FOCUS_EVENT_RECORD, *PFOCUS_EVENT_RECORD;
 
 typedef struct _INPUT_RECORD {
     WORD EventType;
@@ -258,7 +266,7 @@ typedef struct _INPUT_RECORD {
         MENU_EVENT_RECORD MenuEvent;
         FOCUS_EVENT_RECORD FocusEvent;
     } Event;
-} INPUT_RECORD,*PINPUT_RECORD;
+} INPUT_RECORD, *PINPUT_RECORD;
 
 #if (_WIN32_WINNT >= 0x0600)
 typedef struct _CONSOLE_HISTORY_INFO {

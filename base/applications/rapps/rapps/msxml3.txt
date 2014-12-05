@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft XML 3
 Version = 3.0
-Licence = Unknown
+License = Unknown
 Description = MSXML3 is needed for some MSI Installers. Contains: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1.85 MB
 Category = 14
@@ -13,44 +13,44 @@ URLDownload = ftp://ftp.uni-rostock.de/pub/tools/microsoft/XML/US/msxml3.msi
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
+License = Unbekannt
 Description = MSXML3 wird von einigen MSI Installern benötigt. Beinhaltet: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.040a]
-Licence = Desconocida
+License = Desconocida
 Description = MSXML3 para varios instaladores MSI. Incluye: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.040c]
-Licence = Inconnue
+License = Inconnue
 Description = MSXML3 est nécessaire pour certains installateurs MSI. Contient: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1,85 Mo
 
 [Section.0410]
-Licence = Sconosciuto
+License = Sconosciuto
 Description = MSXML3 è necessario per alcuni installatori MSI. Contiene: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.0413]
-Licence = Ongekend
+License = Ongekend
 Description = MSXML3 is nodig voor bepaalde MSI installaties. Bevat: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.0415]
-Licence = Nieznana
+License = Nieznana
 Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera MSXML3. Zawiera: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.0418]
-Licence = Nespecificată
+License = Nespecificată
 Description = MSXML3 este necesar unor Instalatori MSI. Conține: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1,85 Mo
 
 [Section.041f]
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = MSXML3, birtakım Microsoft Yükleyicileri için gereklidir. Şunları içerir: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1,85 MB
 
 [Section.0422]
-Licence = Невідома
+License = Невідома
 Description = MSXML3 необхідна для декотрих MSI інсталяторів. включає: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.0813]
-Licence = Ongekend
+License = Ongekend
 Description = MSXML3 is nodig voor bepaalde MSI installaties. Bevat: msxml3.dll, msxml3a.dll, msxml3r.dll.

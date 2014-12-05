@@ -551,3 +551,253 @@ CreateEnhMetaFileW(
     UNIMPLEMENTED;
     return 0;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+DeleteEnhMetaFile(
+    HENHMETAFILE	a0
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+EnumEnhMetaFile(
+    HDC		hdc,
+    HENHMETAFILE	hmf,
+    ENHMFENUMPROC	callback,
+    LPVOID		data,
+    CONST RECT	*lpRect
+)
+{
+    if(!lpRect && hdc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetEnhMetaFileBits(
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPBYTE		a2
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HENHMETAFILE
+WINAPI
+SetEnhMetaFileBits(
+    UINT		a0,
+    CONST BYTE	*a1
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetEnhMetaFileHeader(
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPENHMETAHEADER	a2
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+WINAPI
+GetEnhMetaFilePaletteEntries(
+    HENHMETAFILE	a0,
+    UINT		a1,
+    LPPALETTEENTRY	a2
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PlayEnhMetaFile(
+    HDC		a0,
+    HENHMETAFILE	a1,
+    CONST RECT	*a2
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PlayEnhMetaFileRecord(
+    HDC			a0,
+    LPHANDLETABLE		a1,
+    CONST ENHMETARECORD	*a2,
+    UINT			a3
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+IsValidEnhMetaRecord(
+    DWORD	a0,
+    DWORD	a1
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+IsValidEnhMetaRecordOffExt(
+    DWORD	a0,
+    DWORD	a1,
+    DWORD	a2,
+    DWORD	a3
+)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+
+}
+
+/*
+ * @unimplemented
+ */
+HENHMETAFILE
+WINAPI
+GdiConvertEnhMetaFile(HENHMETAFILE hmf)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HENHMETAFILE
+WINAPI
+GdiCreateLocalEnhMetaFile(HENHMETAFILE hmo)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiComment(
+    HDC		hDC,
+    UINT		bytes,
+    CONST BYTE	*buffer
+)
+{
+#if 0
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_EMF)
+    {
+        PLDC pLDC = GdiGetLDC(hDC);
+        if ( !pLDC )
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+        }
+        if (pLDC->iType == LDC_EMFLDC)
+        {
+            // Wine port
+            return EMFDRV_GdiComment( hDC, bytes, buffer );
+        }
+    }
+#endif
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+GetEnhMetaFilePixelFormat(
+    HENHMETAFILE			hemf,
+    UINT				cbBuffer,
+    PIXELFORMATDESCRIPTOR	*ppfd
+)
+{
+    ENHMETAHEADER pemh;
+
+    if(GetEnhMetaFileHeader(hemf, sizeof(ENHMETAHEADER), &pemh))
+    {
+        if(pemh.bOpenGL)
+        {
+            if(pemh.cbPixelFormat)
+            {
+                memcpy((void*)ppfd, UlongToPtr(pemh.offPixelFormat), cbBuffer );
+                return(pemh.cbPixelFormat);
+            }
+        }
+    }
+    return(0);
+}

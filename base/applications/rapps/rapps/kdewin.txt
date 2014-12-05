@@ -4,7 +4,7 @@
 [Section]
 Name = K Desktop Environment
 Version = 1.0.0
-Licence = GPL
+License = GPL
 Description = KDE for Windows.
 Size = 2.16 MB
 Category = 15

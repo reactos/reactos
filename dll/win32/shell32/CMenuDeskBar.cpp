@@ -116,7 +116,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryService(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(THIS_ LPUNKNOWN lpUnknown, BOOL bFocus)
+HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(THIS_ IUnknown * lpUnknown, BOOL bFocus)
 {
     return S_OK;
 }

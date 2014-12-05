@@ -11,7 +11,8 @@ PUBLIC _memmove
 .code
 
 _memcpy:
-_memmove:
+FUNC _memmove
+	FPO 0, 3, 5, 2, 1, FRAME_NONFPO
 	push ebp
 	mov ebp, esp
 	
@@ -116,5 +117,6 @@ _memmove:
 	dec esi
 	dec edi
 	jmp .L8
+ENDFUNC
 
 END

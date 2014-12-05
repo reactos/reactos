@@ -43,37 +43,37 @@
 @ stdcall DbgUiStopDebugging(ptr)
 @ stdcall DbgUiWaitStateChange(ptr ptr)
 @ stdcall DbgUserBreakPoint()
-# EtwControlTraceA
-# EtwControlTraceW
-# EtwCreateTraceInstanceId
-# EtwEnableTrace
-# EtwEnumerateTraceGuids
-# EtwFlushTraceA
-# EtwFlushTraceW
-# EtwGetTraceEnableFlags
-# EtwGetTraceEnableLevel
-# EtwGetTraceLoggerHandle
-# EtwNotificationRegistrationA
-# EtwNotificationRegistrationW
-# EtwQueryAllTracesA
-# EtwQueryAllTracesW
-# EtwQueryTraceA
-# EtwQueryTraceW
-# EtwReceiveNotificationsA
-# EtwReceiveNotificationsW
-# EtwRegisterTraceGuidsA
-# EtwRegisterTraceGuidsW
-# EtwStartTraceA
-# EtwStartTraceW
-# EtwStopTraceA
-# EtwStopTraceW
-# EtwTraceEvent
-# EtwTraceEventInstance
-# EtwTraceMessage
-# EtwTraceMessageVa
-# EtwUnregisterTraceGuids
-# EtwUpdateTraceA
-# EtwUpdateTraceW
+@ stdcall EtwControlTraceA(double str ptr long)
+@ stdcall EtwControlTraceW(double wstr ptr long)
+@ stdcall -stub EtwCreateTraceInstanceId(ptr ptr)
+@ stdcall EtwEnableTrace(long long long ptr double)
+@ stdcall -stub EtwEnumerateTraceGuids(ptr long ptr)
+@ stdcall -stub EtwFlushTraceA(double str ptr)
+@ stdcall -stub EtwFlushTraceW(double wstr ptr)
+@ stdcall EtwGetTraceEnableFlags(double)
+@ stdcall EtwGetTraceEnableLevel(double)
+@ stdcall EtwGetTraceLoggerHandle(ptr)
+@ stdcall -stub EtwNotificationRegistrationA(ptr long ptr long long)
+@ stdcall -stub EtwNotificationRegistrationW(ptr long ptr long long)
+@ stdcall EtwQueryAllTracesA(ptr long ptr)
+@ stdcall EtwQueryAllTracesW(ptr long ptr)
+@ stdcall -stub EtwQueryTraceA(double str ptr)
+@ stdcall -stub EtwQueryTraceW(double wstr ptr)
+@ stdcall -stub EtwReceiveNotificationsA() # FIXME prototype
+@ stdcall -stub EtwReceiveNotificationsW() # FIXME prototype
+@ stdcall EtwRegisterTraceGuidsA(ptr ptr ptr long ptr str str ptr)
+@ stdcall EtwRegisterTraceGuidsW(ptr ptr ptr long ptr wstr wstr ptr)
+@ stdcall EtwStartTraceA(ptr str ptr)
+@ stdcall EtwStartTraceW(ptr wstr ptr)
+@ stdcall -stub EtwStopTraceA(double str ptr)
+@ stdcall -stub EtwStopTraceW(double wstr ptr)
+@ stdcall EtwTraceEvent(double ptr)
+@ stdcall -stub EtwTraceEventInstance(double ptr ptr ptr)
+@ varargs EtwTraceMessage(ptr long ptr long)
+@ stdcall -stub EtwTraceMessageVa(double long ptr long ptr)
+@ stdcall EtwUnregisterTraceGuids(double)
+@ stdcall -stub EtwUpdateTraceA(double str ptr)
+@ stdcall -stub EtwUpdateTraceW(double wstr ptr)
 # EtwpGetTraceBuffer
 # EtwpSetHWConfigFunction
 @ stdcall -arch=i386 KiFastSystemCall()
@@ -630,8 +630,8 @@
 @ stdcall RtlFirstFreeAce(ptr ptr)
 @ stdcall RtlFlushSecureMemoryCache(ptr ptr)
 @ stdcall RtlFormatCurrentUserKeyPath(ptr)
-@ stdcall RtlFormatMessage(ptr long long long long ptr ptr long)
-@ stdcall RtlFormatMessageEx(ptr long long long long ptr ptr long long)
+@ stdcall RtlFormatMessage(ptr long long long long ptr ptr long ptr)
+@ stdcall RtlFormatMessageEx(ptr long long long long ptr ptr long ptr long)
 @ stdcall RtlFreeActivationContextStack(ptr)
 @ stdcall RtlFreeAnsiString(long)
 @ stdcall RtlFreeHandle(ptr ptr)

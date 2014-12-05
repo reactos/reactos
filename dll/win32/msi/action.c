@@ -1650,6 +1650,8 @@ static BOOL process_state_property(MSIPACKAGE* package, int level,
 {
     LPWSTR override;
     MSIFEATURE *feature;
+    BOOL remove = !strcmpW(property, szRemove);
+    BOOL reinstall = !strcmpW(property, szReinstall);
 
     override = msi_dup_property( package->db, property );
     if (!override)
@@ -1657,18 +1659,18 @@ static BOOL process_state_property(MSIPACKAGE* package, int level,
 
     LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
-        if (strcmpW( property, szRemove ) && !is_feature_selected( feature, level ))
+        if (feature->Level <= 0)
             continue;
 
-        if (!strcmpW(property, szReinstall)) state = feature->Installed;
+        if (reinstall)
+            state = (feature->Installed == INSTALLSTATE_ABSENT ? INSTALLSTATE_UNKNOWN : feature->Installed);
+        else if (remove)
+            state = (feature->Installed == INSTALLSTATE_ABSENT ? INSTALLSTATE_UNKNOWN : INSTALLSTATE_ABSENT);
 
         if (!strcmpiW( override, szAll ))
         {
-            if (feature->Installed != state)
-            {
-                feature->Action = state;
-                feature->ActionRequest = state;
-            }
+            feature->Action = state;
+            feature->ActionRequest = state;
         }
         else
         {
@@ -1682,11 +1684,8 @@ static BOOL process_state_property(MSIPACKAGE* package, int level,
                 if ((ptr2 && strlenW(feature->Feature) == len && !strncmpW(ptr, feature->Feature, len))
                     || (!ptr2 && !strcmpW(ptr, feature->Feature)))
                 {
-                    if (feature->Installed != state)
-                    {
-                        feature->Action = state;
-                        feature->ActionRequest = state;
-                    }
+                    feature->Action = state;
+                    feature->ActionRequest = state;
                     break;
                 }
                 if (ptr2)
@@ -1823,6 +1822,8 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         {
             FeatureList *fl;
 
+            if (!is_feature_selected( feature, level )) continue;
+
             LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
             {
                 if (fl->feature->Attributes & msidbFeatureAttributesFollowParent &&
@@ -1846,8 +1847,6 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         TRACE("examining feature %s (level %d installed %d request %d action %d)\n",
               debugstr_w(feature->Feature), feature->Level, feature->Installed,
               feature->ActionRequest, feature->Action);
-
-        if (!is_feature_selected( feature, level )) continue;
 
         /* features with components that have compressed files are made local */
         LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
@@ -2340,6 +2339,8 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
     static const WCHAR szPrimaryVolumeSpaceAvailable[] =
         {'P','r','i','m','a','r','y','V','o','l','u','m','e','S','p','a','c','e',
          'A','v','a','i','l','a','b','l','e',0};
+    static const WCHAR szOutOfNoRbDiskSpace[] =
+        {'O','u','t','O','f','N','o','R','b','D','i','s','k','S','p','a','c','e',0};
     MSICOMPONENT *comp;
     MSIQUERY *view;
     WCHAR *level, *primary_key, *primary_folder;
@@ -2416,6 +2417,7 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
 
     /* FIXME: check volume disk space */
     msi_set_property( package->db, szOutOfDiskSpace, szZero, -1 );
+    msi_set_property( package->db, szOutOfNoRbDiskSpace, szZero, -1 );
 
     return MSI_SetFeatureStates(package);
 }
@@ -3907,7 +3909,9 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
     else
     {
         FIXME("poorly handled shortcut format, advertised shortcut\n");
-        IShellLinkW_SetPath(sl,comp->FullKeypath);
+        path = resolve_keypath( package, comp );
+        IShellLinkW_SetPath( sl, path );
+        msi_free( path );
     }
 
     if (!MSI_RecordIsNull(row,6))
@@ -4875,6 +4879,8 @@ static UINT ACTION_PublishFeatures(MSIPACKAGE *package)
         INT size;
         BOOL absent = FALSE;
         MSIRECORD *uirow;
+
+        if (feature->Level <= 0) continue;
 
         if (feature->Action != INSTALLSTATE_LOCAL &&
             feature->Action != INSTALLSTATE_SOURCE &&
@@ -7734,7 +7740,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     static const WCHAR szDisableRollback[] = {'D','I','S','A','B','L','E','R','O','L','L','B','A','C','K',0};
     static const WCHAR szAction[] = {'A','C','T','I','O','N',0};
     static const WCHAR szInstall[] = {'I','N','S','T','A','L','L',0};
-    WCHAR *reinstall, *remove, *patch;
+    WCHAR *reinstall, *remove, *patch, *productcode;
     BOOL ui_exists;
     UINT rc;
 
@@ -7802,6 +7808,15 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     msi_parse_command_line( package, szCommandLine, FALSE );
     msi_adjust_privilege_properties( package );
     msi_set_context( package );
+
+    productcode = msi_dup_property( package->db, szProductCode );
+    if (strcmpiW( productcode, package->ProductCode ))
+    {
+        TRACE( "product code changed %s -> %s\n", debugstr_w(package->ProductCode), debugstr_w(productcode) );
+        msi_free( package->ProductCode );
+        package->ProductCode = productcode;
+    }
+    else msi_free( productcode );
 
     if (msi_get_property_int( package->db, szDisableRollback, 0 ))
     {

@@ -5,7 +5,7 @@
 [Section]
 Name = Pengupop
 Version = 2.2.3
-Licence = GPL
+License = GPL
 Description = The purpose of this game is to shoot colored orbs into your playfield, so they form groups of three or more.
 Size = 384 kB
 Category = 4 

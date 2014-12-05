@@ -138,6 +138,68 @@ HRESULT replace_node_by_html(nsIDOMHTMLDocument *nsdoc, nsIDOMNode *nsnode, cons
     return hres;
 }
 
+nsresult get_elem_attr_value(nsIDOMHTMLElement *nselem, const WCHAR *name, nsAString *val_str, const PRUnichar **val)
+{
+    nsAString name_str;
+    nsresult nsres;
+
+    nsAString_InitDepend(&name_str, name);
+    nsAString_Init(val_str, NULL);
+    nsres = nsIDOMHTMLElement_GetAttribute(nselem, &name_str, val_str);
+    nsAString_Finish(&name_str);
+    if(NS_FAILED(nsres)) {
+        ERR("GetAttribute(%s) failed: %08x\n", debugstr_w(name), nsres);
+        nsAString_Finish(val_str);
+        return nsres;
+    }
+
+    nsAString_GetData(val_str, val);
+    return NS_OK;
+}
+
+HRESULT elem_string_attr_getter(HTMLElement *elem, const WCHAR *name, BOOL use_null, BSTR *p)
+{
+    const PRUnichar *val;
+    nsAString val_str;
+    nsresult nsres;
+    HRESULT hres = S_OK;
+
+    nsres = get_elem_attr_value(elem->nselem, name, &val_str, &val);
+    if(NS_FAILED(nsres))
+        return E_FAIL;
+
+    TRACE("%s: returning %s\n", debugstr_w(name), debugstr_w(val));
+
+    if(*val || !use_null) {
+        *p = SysAllocString(val);
+        if(!*p)
+            hres = E_OUTOFMEMORY;
+    }else {
+        *p = NULL;
+    }
+    nsAString_Finish(&val_str);
+    return hres;
+}
+
+HRESULT elem_string_attr_setter(HTMLElement *elem, const WCHAR *name, const WCHAR *value)
+{
+    nsAString name_str, val_str;
+    nsresult nsres;
+
+    nsAString_InitDepend(&name_str, name);
+    nsAString_InitDepend(&val_str, value);
+    nsres = nsIDOMHTMLElement_SetAttribute(elem->nselem, &name_str, &val_str);
+    nsAString_Finish(&name_str);
+    nsAString_Finish(&val_str);
+
+    if(NS_FAILED(nsres)) {
+        WARN("SetAttribute failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+
 typedef struct
 {
     DispatchEx dispex;
@@ -771,30 +833,53 @@ static HRESULT WINAPI HTMLElement_get_onselectstart(IHTMLElement *iface, VARIANT
 static HRESULT WINAPI HTMLElement_scrollIntoView(IHTMLElement *iface, VARIANT varargStart)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&varargStart));
-    return E_NOTIMPL;
+    cpp_bool start = TRUE;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&varargStart));
+
+    switch(V_VT(&varargStart)) {
+    case VT_EMPTY:
+    case VT_ERROR:
+	break;
+    case VT_BOOL:
+	start = V_BOOL(&varargStart) != VARIANT_FALSE;
+	break;
+    default:
+	FIXME("Unsupported argument %s\n", debugstr_variant(&varargStart));
+    }
+
+    if(!This->nselem) {
+	FIXME("Unsupported for comments\n");
+	return E_NOTIMPL;
+    }
+
+    nsres = nsIDOMHTMLElement_ScrollIntoView(This->nselem, start, 1);
+    assert(nsres == NS_OK);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_contains(IHTMLElement *iface, IHTMLElement *pChild,
                                            VARIANT_BOOL *pfResult)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    HTMLElement *child;
-    cpp_bool result;
-    nsresult nsres;
+    cpp_bool result = FALSE;
 
     TRACE("(%p)->(%p %p)\n", This, pChild, pfResult);
 
-    child = unsafe_impl_from_IHTMLElement(pChild);
-    if(!child) {
-        ERR("not our element\n");
-        return E_FAIL;
-    }
+    if(pChild) {
+        HTMLElement *child;
+        nsresult nsres;
 
-    nsres = nsIDOMNode_Contains(This->node.nsnode, child->node.nsnode, &result);
-    if(NS_FAILED(nsres)) {
-        ERR("failed\n");
-        return E_FAIL;
+        child = unsafe_impl_from_IHTMLElement(pChild);
+        if(!child) {
+            ERR("not our element\n");
+            return E_FAIL;
+        }
+
+        nsres = nsIDOMNode_Contains(This->node.nsnode, child->node.nsnode, &result);
+        assert(nsres == NS_OK);
     }
 
     *pfResult = result ? VARIANT_TRUE : VARIANT_FALSE;
@@ -804,8 +889,10 @@ static HRESULT WINAPI HTMLElement_contains(IHTMLElement *iface, IHTMLElement *pC
 static HRESULT WINAPI HTMLElement_get_sourceIndex(IHTMLElement *iface, LONG *p)
 {
     HTMLElement *This = impl_from_IHTMLElement(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_elem_source_index(This, p);
 }
 
 static HRESULT WINAPI HTMLElement_get_recordNumber(IHTMLElement *iface, VARIANT *p)
@@ -1547,37 +1634,26 @@ HRESULT HTMLElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
 {
     HTMLElement *This = impl_from_HTMLDOMNode(iface);
 
-    *ppv =  NULL;
-
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLElement_iface;
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
         *ppv = &This->IHTMLElement_iface;
     }else if(IsEqualGUID(&IID_IHTMLElement, riid)) {
-        TRACE("(%p)->(IID_IHTMLElement %p)\n", This, ppv);
         *ppv = &This->IHTMLElement_iface;
     }else if(IsEqualGUID(&IID_IHTMLElement2, riid)) {
-        TRACE("(%p)->(IID_IHTMLElement2 %p)\n", This, ppv);
         *ppv = &This->IHTMLElement2_iface;
     }else if(IsEqualGUID(&IID_IHTMLElement3, riid)) {
-        TRACE("(%p)->(IID_IHTMLElement3 %p)\n", This, ppv);
         *ppv = &This->IHTMLElement3_iface;
     }else if(IsEqualGUID(&IID_IHTMLElement4, riid)) {
-        TRACE("(%p)->(IID_IHTMLElement4 %p)\n", This, ppv);
         *ppv = &This->IHTMLElement4_iface;
     }else if(IsEqualGUID(&IID_IConnectionPointContainer, riid)) {
-        TRACE("(%p)->(IID_IConnectionPointContainer %p)\n", This, ppv);
         *ppv = &This->cp_container.IConnectionPointContainer_iface;
+    }else {
+        return HTMLDOMNode_QI(&This->node, riid, ppv);
     }
 
-    if(*ppv) {
-        IHTMLElement_AddRef(&This->IHTMLElement_iface);
-        return S_OK;
-    }
-
-    return HTMLDOMNode_QI(&This->node, riid, ppv);
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 void HTMLElement_destructor(HTMLDOMNode *iface)
@@ -1896,25 +1972,23 @@ static HRESULT WINAPI HTMLFiltersCollection_QueryInterface(IHTMLFiltersCollectio
 {
     HTMLFiltersCollection *This = impl_from_IHTMLFiltersCollection(iface);
 
-    TRACE("%p %s %p\n", This, debugstr_guid( riid ), ppv );
+    TRACE("%p %s %p\n", This, debugstr_mshtml_guid(riid), ppv );
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLFiltersCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLFiltersCollection, riid)) {
         TRACE("(%p)->(IID_IHTMLFiltersCollection %p)\n", This, ppv);
         *ppv = &This->IHTMLFiltersCollection_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        FIXME("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLFiltersCollection_AddRef(IHTMLFiltersCollection *iface)
@@ -2082,31 +2156,24 @@ static HRESULT WINAPI HTMLAttributeCollection_QueryInterface(IHTMLAttributeColle
 {
     HTMLAttributeCollection *This = impl_from_IHTMLAttributeCollection(iface);
 
-    *ppv = NULL;
-
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLAttributeCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLAttributeCollection, riid)) {
-        TRACE("(%p)->(IID_IHTMLAttributeCollection %p)\n", This, ppv);
         *ppv = &This->IHTMLAttributeCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLAttributeCollection2, riid)) {
-        TRACE("(%p)->(IID_IHTMLAttributeCollection2 %p)\n", This, ppv);
         *ppv = &This->IHTMLAttributeCollection2_iface;
     }else if(IsEqualGUID(&IID_IHTMLAttributeCollection3, riid)) {
-        TRACE("(%p)->(IID_IHTMLAttributeCollection3 %p)\n", This, ppv);
         *ppv = &This->IHTMLAttributeCollection3_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLAttributeCollection_AddRef(IHTMLAttributeCollection *iface)

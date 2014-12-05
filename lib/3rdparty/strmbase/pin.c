@@ -21,8 +21,6 @@
 
 #include "strmbase_private.h"
 
-static const IPinVtbl InputPin_Vtbl;
-static const IPinVtbl OutputPin_Vtbl;
 static const IMemInputPinVtbl MemInputPin_Vtbl;
 
 typedef HRESULT (*SendPinFunc)( IPin *to, LPVOID arg );
@@ -71,7 +69,6 @@ static HRESULT SendFurther( IPin *from, SendPinFunc fnMiddle, LPVOID arg, SendPi
     hr = IPin_QueryInternalConnections( from, NULL, &amount );
     if (hr != E_NOTIMPL && amount)
         FIXME("Use QueryInternalConnections!\n");
-     hr = S_OK;
 
     pin_info.pFilter = NULL;
     hr = IPin_QueryPinInfo( from, &pin_info );
@@ -391,11 +388,7 @@ ULONG WINAPI BaseOutputPinImpl_Release(IPin * iface)
 
     if (!refCount)
     {
-        FreeMediaType(&This->pin.mtCurrent);
-        if (This->pAllocator)
-            IMemAllocator_Release(This->pAllocator);
-        This->pAllocator = NULL;
-        CoTaskMemFree(This);
+        BaseOutputPin_Destroy(This);
         return 0;
     }
     return refCount;
@@ -549,28 +542,6 @@ HRESULT WINAPI BaseOutputPinImpl_EndFlush(IPin * iface)
 
     return E_UNEXPECTED;
 }
-
-static const IPinVtbl OutputPin_Vtbl =
-{
-    BaseOutputPinImpl_QueryInterface,
-    BasePinImpl_AddRef,
-    BaseOutputPinImpl_Release,
-    BaseOutputPinImpl_Connect,
-    BaseOutputPinImpl_ReceiveConnection,
-    BaseOutputPinImpl_Disconnect,
-    BasePinImpl_ConnectedTo,
-    BasePinImpl_ConnectionMediaType,
-    BasePinImpl_QueryPinInfo,
-    BasePinImpl_QueryDirection,
-    BasePinImpl_QueryId,
-    BasePinImpl_QueryAccept,
-    BasePinImpl_EnumMediaTypes,
-    BasePinImpl_QueryInternalConnections,
-    BaseOutputPinImpl_EndOfStream,
-    BaseOutputPinImpl_BeginFlush,
-    BaseOutputPinImpl_EndFlush,
-    BasePinImpl_NewSegment
-};
 
 HRESULT WINAPI BaseOutputPinImpl_GetDeliveryBuffer(BaseOutputPin *This, IMediaSample ** ppSample, REFERENCE_TIME * tStart, REFERENCE_TIME * tStop, DWORD dwFlags)
 {
@@ -839,16 +810,21 @@ HRESULT WINAPI BaseOutputPin_Construct(const IPinVtbl *OutputPin_Vtbl, LONG outp
     return E_FAIL;
 }
 
+HRESULT WINAPI BaseOutputPin_Destroy(BaseOutputPin *This)
+{
+    FreeMediaType(&This->pin.mtCurrent);
+    if (This->pAllocator)
+        IMemAllocator_Release(This->pAllocator);
+    This->pAllocator = NULL;
+    CoTaskMemFree(This);
+    return S_OK;
+}
+
 /*** Input Pin implementation ***/
 
 static inline BaseInputPin *impl_BaseInputPin_from_IPin( IPin *iface )
 {
     return CONTAINING_RECORD(iface, BaseInputPin, pin.IPin_iface);
-}
-
-static inline BaseInputPin *impl_BaseInputPin_from_BasePin( BasePin *iface )
-{
-    return CONTAINING_RECORD(iface, BaseInputPin, pin);
 }
 
 HRESULT WINAPI BaseInputPinImpl_QueryInterface(IPin * iface, REFIID riid, LPVOID * ppv)
@@ -890,12 +866,7 @@ ULONG WINAPI BaseInputPinImpl_Release(IPin * iface)
 
     if (!refCount)
     {
-        FreeMediaType(&This->pin.mtCurrent);
-        if (This->pAllocator)
-            IMemAllocator_Release(This->pAllocator);
-        This->pAllocator = NULL;
-        This->pin.IPin_iface.lpVtbl = NULL;
-        CoTaskMemFree(This);
+        BaseInputPin_Destroy(This);
         return 0;
     }
     else
@@ -1049,28 +1020,6 @@ HRESULT WINAPI BaseInputPinImpl_NewSegment(IPin * iface, REFERENCE_TIME tStart, 
 
     return SendFurther( iface, deliver_newsegment, &args, NULL );
 }
-
-static const IPinVtbl InputPin_Vtbl =
-{
-    BaseInputPinImpl_QueryInterface,
-    BasePinImpl_AddRef,
-    BaseInputPinImpl_Release,
-    BaseInputPinImpl_Connect,
-    BaseInputPinImpl_ReceiveConnection,
-    BasePinImpl_Disconnect,
-    BasePinImpl_ConnectedTo,
-    BasePinImpl_ConnectionMediaType,
-    BasePinImpl_QueryPinInfo,
-    BasePinImpl_QueryDirection,
-    BasePinImpl_QueryId,
-    BaseInputPinImpl_QueryAccept,
-    BasePinImpl_EnumMediaTypes,
-    BasePinImpl_QueryInternalConnections,
-    BaseInputPinImpl_EndOfStream,
-    BaseInputPinImpl_BeginFlush,
-    BaseInputPinImpl_EndFlush,
-    BaseInputPinImpl_NewSegment
-};
 
 /*** IMemInputPin implementation ***/
 
@@ -1262,4 +1211,15 @@ HRESULT BaseInputPin_Construct(const IPinVtbl *InputPin_Vtbl, LONG inputpin_size
 
     CoTaskMemFree(pPinImpl);
     return E_FAIL;
+}
+
+HRESULT WINAPI BaseInputPin_Destroy(BaseInputPin *This)
+{
+    FreeMediaType(&This->pin.mtCurrent);
+    if (This->pAllocator)
+        IMemAllocator_Release(This->pAllocator);
+    This->pAllocator = NULL;
+    This->pin.IPin_iface.lpVtbl = NULL;
+    CoTaskMemFree(This);
+    return S_OK;
 }

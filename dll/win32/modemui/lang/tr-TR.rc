@@ -105,10 +105,10 @@ BEGIN
     CONTROL "", 1042, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 18, 200, 58
     CONTROL "", 1041, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 84, 200, 58
     PUSHBUTTON "&Çevirge Sorgula", 1096, 138, 149, 75, 14
-    AUTOCHECKBOX "&Bir Kayda Kaydet", 1020, 18, 187, 98, 10
+    AUTOCHECKBOX "&Bir Kayda Sakla", 1020, 18, 187, 98, 10
     PUSHBUTTON "&Kaydı Göster", 1094, 138, 184, 75, 14, WS_DISABLED
     GROUPBOX "Çevirge Bilgisi", 1047, 10, 6, 217, 164
-    GROUPBOX "Kaydetme", -1, 10, 173, 217, 32
+    GROUPBOX "Saklama", -1, 10, 173, 217, 32
 END
 
 IDD_PLEASE_WAIT DIALOGEX 0, 0, 195, 72
@@ -275,7 +275,7 @@ BEGIN
     302 "Belgegeçer"
     303 "Ses"
     304 "Yok"
-    320 "Ülke/bölge ayârı şimdikileştirilmiş."
+    320 "Ülke ya da bölge ayârı şimdikileştirilmiş."
     340 "Çevirge"
     341 "Çevirge Ayarları"
     342 "Çevirge Adresi"
@@ -331,7 +331,7 @@ BEGIN
     556 "Alman Ulusluk (1TR6) (Seyrek kullanılır.)"
     557 "Fransız Ulusluk (VN3) (Seyrek kullanılır.)"
     558 "Belçika Ulusluk (Seyrek kullanılır.)"
-    559 "Avusturalya Ulusluk (Seyrek kullanılır.)"
+    559 "Avustralya Ulusluk (Seyrek kullanılır.)"
     560 "Bilinmeyen anahtar"
     570 "Bu çevirge için ISDN yapılandırması bitirilmemiş.\n\nLütfen bu çevirgeyi kullanmadan önce\nISDN sekmesinde bilgiyi doldurunuz."
     600 "PPP   (56 Kbit/sn, GSM)"

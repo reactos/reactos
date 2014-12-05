@@ -246,7 +246,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_UP "Aufwärts"
+    IDS_UP "Übergeordneter Ordner"
 END
 
 STRINGTABLE
@@ -254,3 +254,10 @@ BEGIN
     IDS_BACK "Zurück"
     IDS_FORWARD "Vorwärts"
 END
+
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Zurück|Vorwärts|Übergeordneter Ordner|Suchen|Ordner|Verschieben nach|Kopieren nach|Löschen|Rückgängig|Ansicht|Stop|Aktualisieren|Startseite|Netzlaufwerk verbinden|Netzlaufwerk trennen|Favoriten|Verlauf|Vollbild|Eigenschaften|Ausschneiden|Kopieren|Einfügen|Ordneroptionen||"
+END
+

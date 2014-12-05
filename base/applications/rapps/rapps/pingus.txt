@@ -5,7 +5,7 @@
 [Section]
 Name = Pingus
 Version = 0.7.6
-Licence = GPL
+License = GPL
 Description = Pingus is a free Lemmings-like puzzle game.
 Size = 16.0 MB
 Category = 4

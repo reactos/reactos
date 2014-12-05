@@ -39,7 +39,7 @@ static HRESULT WINAPI wrapper_QueryInterface(IUnknown *iface, REFIID riid, void 
 {
     iface_wrapper_t *This = impl_from_IUnknown(iface);
 
-    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     return IUnknown_QueryInterface(This->ref_unk, riid, ppv);
 }

@@ -1586,7 +1586,7 @@ MMixerHandleAlternativeMixers(
         MMixerIsTopologyPinReserved(Topology, Index, &Reserved);
 
         /* check if it has already been reserved */
-        if (Reserved == TRUE)
+        if (Reserved)
         {
             /* pin has already been reserved */
             continue;
@@ -1644,7 +1644,7 @@ MMixerSetupFilter(
     IN LPMIXER_DATA MixerData,
     IN PULONG DeviceCount)
 {
-    MIXER_STATUS Status;
+    MIXER_STATUS Status = MM_STATUS_SUCCESS;
     PTOPOLOGY Topology;
     ULONG NodeIndex;
     LPMIXER_INFO MixerInfo = NULL;

@@ -1,0 +1,51 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+IDD_POWER_METER DIALOGEX 0, 0, 252, 218 
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Energieanzeige"
+FONT 8, "Ms Shell Dlg"
+BEGIN
+    CONTROL "Energiestand", 1001, BUTTON, BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
+    CONTROL "Symbol in der &Taskleiste anzeigen", 1002, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 123, 10
+    CONTROL "&Details für jede Batterie anzeigen", 1002, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 129, 6, 123, 10
+    CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178
+END
+
+STRINGTABLE
+BEGIN
+    //Power related strings
+    IDS_PWR_PROPERTIES        "&Energieverwaltungseigenschaften einstellen"
+    IDS_PWR_METER             "Batterieanzeige ö&ffnen"
+    IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
+    IDS_PWR_PERCENT_REMAINING "%1!u!%% verbleibend"
+    IDS_PWR_CHARGING          " (wird aufgeladen)"
+    IDS_PWR_UNKNOWN_REMAINING "Unbekannt verbleibend"
+    IDS_PWR_AC "Mit Wechselstrom"
+    IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! Stunden (%3!u!%%) verbleibend"
+    IDS_PWR_MINUTES_REMAINING "%1!u! Min. (%2!u!%%) verbleibend"
+
+    //Hotplug related strings
+    IDS_HOTPLUG_REMOVE_1 "Hardware sicher entfernen"
+    IDS_HOTPLUG_REMOVE_2 "&Hardware sicher entfernen"
+    IDS_HOTPLUG_REMOVE_3 "%s entfernen"
+    IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
+    IDS_HOTPLUG_COMMA ", "
+    IDS_HOTPLUG_DRIVE " - Laufwerk (%s)"
+    IDS_HOTPLUG_DRIVES " - Laufwerke (%s)"
+    IDS_HOTPLUG_A "A:"
+    IDS_HOTPLUG_REQUIERES "Diese Hardware erfordert \"Sicheres Entfernen\""
+    IDS_HOTPLUG_CLICK "Klicken Sie auf dieses Symbol, und wählen Sie die zu entfernende Hardware, bevor Sie diese Hardware entfernen."
+
+    //Volume related strings
+    IDS_VOL_VOLUME "Lautstärke"
+    IDS_VOL_ADJUST "&Audioeigenschaften einstellen"
+    IDS_VOL_OPEN "&Lautstärkeregelung öffnen"
+    IDS_VOL_RUN "SNDVOL32.EXE"
+    IDS_VOL_MUTED "Lautstärke (ausgeschaltet)"
+
+    //Keyboard-Mouse related strings
+    IDS_KEYS_STICKY "Einrastfunktion"
+    IDS_KEYS_MOUSE "Tastaturmaus"
+    IDS_KEYS_FILTER "Anschlagverzögerung"
+END

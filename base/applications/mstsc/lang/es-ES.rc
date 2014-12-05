@@ -1,4 +1,4 @@
-/* Spanish Language resource file. Traducido por: Javier Remacha 2007-12-22 */
+/* Spanish Language resource file. Traducido por: Javier Remacha 2007-12-22 e Ismael Ferreras Morezuelas 2014-11-07 */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -14,11 +14,11 @@ BEGIN
     LTEXT "Nombre de usuario:", IDC_STATIC, 47, 58, 70, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_NAMEEDIT, 110, 55, 110, 14, WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Guardar", IDC_SAVE, 60, 139, 50, 14 //67
-    PUSHBUTTON "Guardar Como...", IDC_SAVEAS, 115, 139, 58,14 //123, 50
+    PUSHBUTTON "&Guardar", IDC_SAVE, 60, 139, 50, 14 //67
+    PUSHBUTTON "Guardar &como...", IDC_SAVEAS, 115, 139, 58,14 //123, 50
     PUSHBUTTON "Abrir...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Guardar esta configuración o abrir una existente", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Guarde la configuración de conexión actual en un archivo RDP o abra una ya existente.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
@@ -29,7 +29,7 @@ BEGIN
     GROUPBOX "Colores", IDC_STATIC, 7, 83, 228, 85
     ICON "", IDC_REMICON, 15, 19, 20, 20
     ICON "", IDC_COLORSICON, 15, 98, 20, 20
-    LTEXT "Elija el tamaño de su escritorio remoto. Arrastre el control deslizante hacia el extremo derecho para el modo de pantalla completa", IDC_STATIC, 53, 18, 175, 26 //22
+    LTEXT "Elija el tamaño de su escritorio remoto. Para utilizar el modo de pantalla completa, arrastre el control deslizante hacia el extremo derecho.", IDC_STATIC, 53, 18, 175, 26 //22
     CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 45, 124, 17
     COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10
@@ -41,7 +41,7 @@ END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Conexión a Escritorio Remoto"
+CAPTION "Conexión a Escritorio remoto"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Conectar", IDOK, 147, 245, 50, 14
@@ -54,12 +54,12 @@ BEGIN
     IDS_TAB_GENERAL "General"
     IDS_TAB_DISPLAY "Pantalla"
     IDS_256COLORS "256 Colores"
-    IDS_HIGHCOLOR15 "32,768 Colores (15 bit)"
-    IDS_HIGHCOLOR16 "65,536 Colores (16 bit)"
-    IDS_HIGHCOLOR24 "16,777,216 Colores (24 bit)"
-    IDS_PIXEL "%lux%lu Pixels"
-    IDS_FULLSCREEN "Pantalla Completa"
+    IDS_HIGHCOLOR15 "32,768 colores (15 bit)"
+    IDS_HIGHCOLOR16 "65,536 colores (16 bit)"
+    IDS_HIGHCOLOR24 "16,777,216 colores (24 bit)"
+    IDS_PIXEL "%lux%lu píxeles"
+    IDS_FULLSCREEN "Pantalla completa"
     IDS_BROWSESERVER "<Buscar más...>"
-    IDS_HEADERTEXT1 "Escritorio Remoto"
-    IDS_HEADERTEXT2 "Conexión"
+    IDS_HEADERTEXT1 "Conexión a escritorio"
+    IDS_HEADERTEXT2 "Remoto"
 END

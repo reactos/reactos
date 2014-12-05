@@ -108,15 +108,19 @@ NpInitializeSecurity(IN PNP_CCB Ccb,
         return Status;
     }
 
-    ClientContext = ExAllocatePoolWithTag(PagedPool, sizeof(*ClientContext), NPFS_CLIENT_SEC_CTX_TAG);
+    ClientContext = ExAllocatePoolWithQuotaTag(PagedPool | POOL_QUOTA_FAIL_INSTEAD_OF_RAISE,
+                                               sizeof(*ClientContext),
+                                               NPFS_CLIENT_SEC_CTX_TAG);
     Ccb->ClientContext = ClientContext;
     if (!ClientContext) return STATUS_INSUFFICIENT_RESOURCES;
 
     Status = SeCreateClientSecurity(Thread, &Ccb->ClientQos, 0, ClientContext);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(Ccb->ClientContext);
+        Ccb->ClientContext = NULL;
+    }
 
-    ExFreePool(Ccb->ClientContext);
-    Ccb->ClientContext = NULL;
     return Status;
 }
 
@@ -127,7 +131,6 @@ NpGetClientSecurityContext(IN ULONG NamedPipeEnd,
                            IN PETHREAD Thread,
                            IN PSECURITY_CLIENT_CONTEXT *Context)
 {
-   
     PSECURITY_CLIENT_CONTEXT NewContext;
     NTSTATUS Status;
     PAGED_CODE();

@@ -137,7 +137,7 @@ HGLRC
 IntGetCurrentRC(void)
 {
     struct Opengl32_ThreadData* data = TlsGetValue(OglTlsIndex);
-    return data->hglrc;
+    return data ? data->hglrc : NULL;
 }
 
 static inline

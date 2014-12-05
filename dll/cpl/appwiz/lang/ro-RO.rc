@@ -30,11 +30,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Asistent pentru creare de scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Acest asistent vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
-    LTEXT       "Scrieți adresa elementului:", -1, 120, 50, 120, 10
-    EDITTEXT                   IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-    PUSHBUTTON  "Spe&cificare…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT       "Apăsați „Înainte” pentru a continua.", -1, 120, 97, 162, 10
+    LTEXT "Acest asistent vă va ajuta în crearea unei scurtături\ncătre adrese din Internet, calculatoare, dosare, fișiere\nlocale sau din rețea.", -1, 120, 15, 200, 30
+    LTEXT "Scrieți adresa elementului:", -1, 120, 50, 120, 10
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    PUSHBUTTON "Spe&cificare…",  IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Apăsați „Înainte” pentru a continua.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -42,24 +42,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Asistent pentru creare de scurtătură"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT     "Scrieți un n&ume pentru scurtătură:", -1, 120, 15, 150, 10
-    EDITTEXT                   IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-    LTEXT     "Apăsați „Sfârșit” pentru a crea scurtătura.", -1, 118, 97, 178, 17
+    LTEXT "Scrieți un n&ume pentru scurtătură:", -1, 120, 15, 150, 10
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    LTEXT "Apăsați „Sfârșit” pentru a crea scurtătura.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME         "Gestionar de programe"
-    IDS_CPLSYSTEMDESCRIPTION  "Instalează programe și crează scurtături."
-    IDS_CREATE_SHORTCUT       "Asistent pentru creare de scurtătură"
-    IDS_ERROR_NOT_FOUND       "Elementul „%s” nu poate fi localizat."
+    IDS_CPLSYSTEMNAME "Gestionar de programe"
+    IDS_CPLSYSTEMDESCRIPTION "Instalează programe și crează scurtături."
+    IDS_CREATE_SHORTCUT "Asistent pentru creare de scurtătură"
+    IDS_ERROR_NOT_FOUND "Elementul „%s” nu poate fi localizat."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Se descarcă…"
-    IDS_INSTALLING      "Se instalează…"
-    IDS_INVALID_SHA     "Suma de verificare a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
+    IDS_DOWNLOADING "Se descarcă…"
+    IDS_INSTALLING "Se instalează…"
+    IDS_INVALID_SHA "Suma de verificare a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

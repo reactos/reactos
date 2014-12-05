@@ -22,6 +22,7 @@ list(APPEND SOURCE
     ldr/ldrutils.c
     rtl/libsupp.c
     rtl/version.c
+    etw/trace.c
     include/ntdll.h)
 
 if(ARCH STREQUAL "i386")
@@ -53,15 +54,7 @@ if(MSVC)
     add_target_link_flags(ntdll "/RELEASE")
 endif()
 
-target_link_libraries(ntdll
-                      rtl
-                      ntdllsys
-                      libcntpr
-                      uuid
-                      ${PSEH_LIB})
-
+target_link_libraries(ntdll rtl ntdllsys libcntpr uuid ${PSEH_LIB})
 add_pch(ntdll include/ntdll.h SOURCE)
 add_dependencies(ntdll ntstatus asm)
-
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
-

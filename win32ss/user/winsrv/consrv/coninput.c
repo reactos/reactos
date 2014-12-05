@@ -363,7 +363,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
         Buffer = ReadConsoleRequest->Buffer;
     }
 
-    DPRINT1("Calling ConDrvReadConsole(%wZ)\n", &ExeName);
+    DPRINT("Calling ConDrvReadConsole(%wZ)\n", &ExeName);
     Status = ConDrvReadConsole(InputBuffer->Header.Console,
                                InputBuffer,
                                &ExeName,
@@ -372,7 +372,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
                                &ReadControl,
                                ReadConsoleRequest->NumBytes / CharSize, // NrCharactersToRead
                                &NrCharactersRead);
-    DPRINT1("ConDrvReadConsole returned (%d ; Status = 0x%08x)\n",
+    DPRINT("ConDrvReadConsole returned (%d ; Status = 0x%08x)\n",
            NrCharactersRead, Status);
 
     // ReadConsoleRequest->ControlKeyState = ReadControl.dwControlKeyState;

@@ -40,7 +40,7 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Bu aygıt düzgün çalışıyor."
     IDS_DEV_NOT_CONFIGURED "Bu aygıt doğru yapılandırılmamış."
-    IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki %1 veri yolu türü bildirdiğinden dolayı ReactOS bu aygıt için sürücüyü yükleyemedi."
+    IDS_DEV_DEVLOADER_FAILED "Bilgisayar, iki %1 veriyolu türü bildirdiğinden dolayı ReactOS bu aygıt için sürücüyü yükleyemedi."
     IDS_DEV_DEVLOADER_FAILED2 "Bu aygıt için %1 aygıt yükleyicisi/yükleyicileri aygıt sürücüsünü yükleyemedi."
     IDS_DEV_OUT_OF_MEMORY "Bu aygıt için sürücü kötü olabilir veyâ dizgeniz, bellekte veyâ başka kaynaklarda yavaş çalışıyor olabilir."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Sürücülerinin kötü olabilmesinden veyâ değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün çalışmıyor."
@@ -84,7 +84,7 @@ BEGIN
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS, bu donanım için aygıt sürücüsünü başlatamıyor."
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS, bellekte şimdi bile aygıt sürücüsünün bir önceki kopyası olduğundan dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS, bu donanım için aygıt sürücüsünü yükleyemiyor. Sürücü bozulmuş ya da eksik olabilir."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterindeki hizmet dizini bilgisinin eksik ya da yanlış kaydedildiğinden dolayı bu donanıma erişemiyor."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS, bu donanımın, değer defterindeki hizmet dizini bilgisinin eksik ya da yanlış saklandığından dolayı bu donanıma erişemiyor."
     IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS, bu donanım için aygıt sürücüsünü başarıyla yükledi ancak donanım aygıtını bulamıyor."
     IDS_DEV_DUPLICATE_DEVICE "ReactOS, dizgede bir kopya aygıtın önceden çalışıyor olmasından dolayı bu donanım için aygıt sürücüsünü yükleyemiyor."
     IDS_DEV_FAILED_POST_START "ReactOS, bu aygıtı, sorunlar bildirdiğinden dolayı durdurdu."
@@ -111,7 +111,7 @@ BEGIN
     IDS_PROP_CSCONFIGFLAGS "CSConfig İmleri"
     IDS_PROP_EJECTIONRELATIONS "Çıkarma İlişkileri"
     IDS_PROP_REMOVALRELATIONS "Kaldırma İlişkileri"
-    IDS_PROP_BUSRELATIONS "Veri Yolu İlişkileri"
+    IDS_PROP_BUSRELATIONS "Veriyolu İlişkileri"
     IDS_PROP_DEVUPPERFILTERS "Üst Aygıt Süzgeçleri"
     IDS_PROP_DEVLOWERFILTERS "Alt Aygıt Süzgeçleri"
     IDS_PROP_CLASSUPPERFILTERS "Üst Sınıf Süzgeçleri"
@@ -226,7 +226,7 @@ BEGIN
     LTEXT "Kaynak Ayarları:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
-            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
+            LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
 
 IDD_DEVICEPOWER DIALOGEX 0, 0, 252, 218

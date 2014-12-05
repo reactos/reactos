@@ -7,7 +7,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/uext2.def)
 
 add_library(uext2 SHARED ${SOURCE})
-
 set_module_type(uext2 nativedll)
 target_link_libraries(uext2 ext2lib)
 add_importlibs(uext2 ntdll)

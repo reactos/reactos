@@ -347,7 +347,7 @@ static HRESULT GetFilterInfo(IMoniker *pMoniker, GUID *pclsid, VARIANT *pvar)
 
     if (SUCCEEDED(hr))
     {
-        hr = CLSIDFromString(V_UNION(pvar, bstrVal), pclsid);
+        hr = CLSIDFromString(V_BSTR(pvar), pclsid);
         VariantClear(pvar);
         V_VT(pvar) = VT_BSTR;
     }
@@ -356,8 +356,7 @@ static HRESULT GetFilterInfo(IMoniker *pMoniker, GUID *pclsid, VARIANT *pvar)
         hr = IPropertyBag_Read(pPropBagCat, wszFriendlyName, pvar, NULL);
 
     if (SUCCEEDED(hr))
-        TRACE("Moniker = %s - %s\n", debugstr_guid(pclsid),
-              debugstr_w(V_UNION(pvar, bstrVal)));
+        TRACE("Moniker = %s - %s\n", debugstr_guid(pclsid), debugstr_w(V_BSTR(pvar)));
 
     if (pPropBagCat)
         IPropertyBag_Release(pPropBagCat);
@@ -430,8 +429,7 @@ static HRESULT GetSplitter(MediaDetImpl *This)
             continue;
         }
 
-        hr = IGraphBuilder_AddFilter(This->graph, splitter,
-                                     V_UNION(&var, bstrVal));
+        hr = IGraphBuilder_AddFilter(This->graph, splitter, V_BSTR(&var));
         VariantClear(&var);
         This->splitter = splitter;
         if (FAILED(hr))

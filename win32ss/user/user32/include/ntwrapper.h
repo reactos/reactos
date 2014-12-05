@@ -788,7 +788,7 @@ EXTINLINE BOOL NtUserxSetForegroundWindow(HWND hWnd)
 
 EXTINLINE LPARAM NtUserxGetMessageExtraInfo(VOID)
 {
-  return (LPARAM)NtUserCallNoParam(NOPARAM_ROUTINE_GETMESSAGEEXTRAINFO);
+  return (LPARAM)NtUserGetThreadState(THREADSTATE_GETMESSAGEEXTRAINFO);
 }
 
 EXTINLINE BOOL NtUserxSwitchCaretShowing(THRDCARETINFO* CaretInfo)

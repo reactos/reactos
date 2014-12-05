@@ -96,7 +96,6 @@ void InitIconOverlays(void)
     WCHAR szName[MAX_PATH];
     WCHAR szValue[100];
     CLSID clsid;
-    IShellIconOverlayIdentifier * Overlay;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return;
@@ -131,12 +130,13 @@ void InitIconOverlays(void)
             dwSize = sizeof(szValue) / sizeof(WCHAR);
             if (RegGetValueW(hKey, szName, NULL, RRF_RT_REG_SZ, NULL, szValue, &dwSize) == ERROR_SUCCESS)
             {
+                CComPtr<IShellIconOverlayIdentifier> Overlay;
 
                 CLSIDFromString(szValue, &clsid);
-                dwResult = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, IID_IUnknown, (LPVOID*)&Overlay);
+                dwResult = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellIconOverlayIdentifier, &Overlay));
                 if (dwResult == S_OK)
                 {
-                    Handlers[NumIconOverlayHandlers] = Overlay;
+                    Handlers[NumIconOverlayHandlers] = Overlay.Detach();
                     NumIconOverlayHandlers++;
                 }
             }
@@ -200,7 +200,7 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
 IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
-    IExtractIconW *extractIcon;
+    CComPtr<IExtractIconW> extractIcon;
     GUID const * riid;
     int icon_idx;
     UINT flags;
@@ -241,15 +241,15 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
         {
             static const WCHAR szFull[] = {'F','u','l','l',0};
             static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
-            IEnumIDList *EnumIDList = NULL;
+            CComPtr<IEnumIDList> EnumIDList;
             CoInitialize(NULL);
 
-            IShellFolder2 *psfRecycleBin = NULL;
-            IShellFolder *psfDesktop = NULL;
+            CComPtr<IShellFolder2> psfRecycleBin;
+            CComPtr<IShellFolder> psfDesktop;
             hr = SHGetDesktopFolder(&psfDesktop);
 
             if (SUCCEEDED(hr))
-                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_IShellFolder2, (void**) &psfRecycleBin);
+                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_PPV_ARG(IShellFolder2, &psfRecycleBin));
             if (SUCCEEDED(hr))
                 hr = psfRecycleBin->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &EnumIDList);
 
@@ -262,13 +262,6 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             } else {
                 iconname = szEmpty;
             }
-
-            if (psfDesktop)
-                psfDesktop->Release();
-            if (psfRecycleBin)
-                psfRecycleBin->Release();
-            if (EnumIDList)
-                EnumIDList->Release();
         }
 
         if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
@@ -397,7 +390,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 
                 if (SUCCEEDED(SHGetDesktopFolder(&dsf)))
                 {
-                    HRESULT hr = dsf->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST*)&pidl, IID_IShellLinkW, NULL, (LPVOID *)&psl);
+                    HRESULT hr = dsf->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST*) &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
 
                     if (SUCCEEDED(hr))
                     {
@@ -418,7 +411,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             initIcon->SetNormalIcon(wTemp, icon_idx);
     }
 
-    return extractIcon;
+    return extractIcon.Detach();
 }
 
 /**************************************************************************
@@ -426,8 +419,8 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 */
 IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
 {
-    IExtractIconW *extractIconW;
-    IExtractIconA *extractIconA;
+    CComPtr<IExtractIconW> extractIconW;
+    CComPtr<IExtractIconA> extractIconA;
     HRESULT hr;
 
     extractIconW = IExtractIconW_Constructor(pidl);
@@ -435,8 +428,7 @@ IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
         return NULL;
 
     hr = extractIconW->QueryInterface(IID_PPV_ARG(IExtractIconA, &extractIconA));
-    extractIconW->Release();
     if (FAILED(hr))
         return NULL;
-    return extractIconA;
+    return extractIconA.Detach();
 }

@@ -251,6 +251,23 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         Status = STATUS_INVALID_PARAMETER;
     }
 
+    /* Attempt to dismount formatted volume */
+    LockStatus = NtFsControlFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &Iosb,
+                                 FSCTL_DISMOUNT_VOLUME,
+                                 NULL,
+                                 0,
+                                 NULL,
+                                 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("Failed to umount volume (Status: 0x%x)\n", LockStatus);
+    }
+
+
     LockStatus = NtFsControlFile(FileHandle,
                                  NULL,
                                  NULL,

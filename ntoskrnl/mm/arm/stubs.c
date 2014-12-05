@@ -474,7 +474,6 @@ VOID
 NTAPI
 MmDeleteVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address,
-                       IN BOOLEAN FreePage,
                        OUT PBOOLEAN WasDirty,
                        OUT PPFN_NUMBER Page)
 {

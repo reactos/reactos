@@ -4,7 +4,7 @@
 [Section]
 Name = Mozilla Firefox 3.0
 Version = 3.0.19
-Licence = MPL/GPL/LGPL
+License = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
 Size = 7.16 MB
 Category = 5

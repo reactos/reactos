@@ -9,6 +9,11 @@ if(NOT DEFINED SEPARATE_DBG)
     set(SEPARATE_DBG FALSE)
 endif()
 
+# Dwarf based builds (no rsym)
+if(NOT DEFINED NO_ROSSYM)
+    set(NO_ROSSYM FALSE)
+endif()
+
 if(NOT DEFINED USE_PSEH3)
     set(USE_PSEH3 1)
 endif()
@@ -25,6 +30,10 @@ if(USE_DUMMY_PSEH)
     add_definitions(-D_USE_DUMMY_PSEH=1)
 endif()
 
+if(STACK_PROTECTOR)
+    add_compile_flags(${MODULE} "-fstack-protector-all")
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 if(GCC_VERSION VERSION_GREATER 4.7)
@@ -36,6 +45,16 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
+    set(CMAKE_CREATE_WIN32_EXE "")
+    set(CMAKE_C_COMPILE_OPTIONS_PIC "")
+    set(CMAKE_CXX_COMPILE_OPTIONS_PIC "")
+    set(CMAKE_C_COMPILE_OPTIONS_PIE "")
+    set(CMAKE_CXX_COMPILE_OPTIONS_PIE "")
+    set(CMAKE_SHARED_LIBRARY_C_FLAGS "")
+    set(CMAKE_SHARED_LIBRARY_CXX_FLAGS "")
+    set(CMAKE_ASM_FLAGS_DEBUG "")
+    set(CMAKE_C_FLAGS_DEBUG "")
+    set(CMAKE_CXX_FLAGS_DEBUG "")
 endif()
 
 if(DBG)
@@ -55,13 +74,13 @@ set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
 
-if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT SEPARATE_DBG))
     add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
 endif()
 
 # Debugging
 if(SEPARATE_DBG)
-    add_compile_flags("-gdwarf-2 -g2")
+    add_compile_flags("-gdwarf-2 -ggdb")
 else()
     add_compile_flags("-gdwarf-2 -gstrict-dwarf")
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
@@ -184,6 +203,14 @@ if(SEPARATE_DBG)
         "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
         "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
         "${OBJCOPY} --strip-debug <TARGET>")
+elseif(NO_ROSSYM)
+    # Dwarf-based build
+    message(STATUS "Generating a dwarf-based build (no rsym)")
+    set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 else()
     # Normal rsym build
     get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
@@ -258,6 +285,10 @@ function(set_module_type_toolchain MODULE TYPE)
             add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
         endif()
     endif()
+    
+    if(STACK_PROTECTOR)
+        target_link_libraries(${MODULE} gcc_ssp)
+    endif()
 endfunction()
 
 function(add_delay_importlibs _module)
@@ -296,14 +327,8 @@ endfunction()
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
-    # Do we also want to add importlib targets?
-    if(${ARGC} GREATER 2)
-        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
-            set(__add_importlib TRUE)
-        else()
-            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
-        endif()
-    endif()
+    
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;WITH_RELAY" "" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -313,13 +338,17 @@ function(spec2def _dllname _spec_file)
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
+    if (__spec2def_WITH_RELAY)
+        set(__with_relay_arg "--with-tracing")
+    endif()
+
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-    if(__add_importlib)
+    if(__spec2def_ADD_IMPORTLIB)
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
     endif()
 endfunction()
@@ -361,7 +390,7 @@ if(PCH)
         # Include the gch in the specified source files, skipping the pch file itself
         list(REMOVE_ITEM ${_sources} ${_pch})
         foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${_pch_final_name}")
+            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}")
             set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
         endforeach()
     endmacro()
@@ -375,7 +404,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
 
     add_custom_command(
         OUTPUT ${_object_file}
-        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm -D__ASM__ -c ${_asm_file}
+        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm -I${REACTOS_SOURCE_DIR}/boot/freeldr -D__ASM__ -c ${_asm_file}
         DEPENDS ${_asm_file})
 
     add_custom_command(

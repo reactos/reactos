@@ -310,11 +310,9 @@ IopLogWorker(IN PVOID Parameter)
             /* We do, query its name */
             Status = ObQueryNameString(LogEntry->DeviceObject,
                                        ObjectNameInfo,
-                                       sizeof(OBJECT_NAME_INFORMATION) +
-                                       100 -
-                                       DriverNameLength,
+                                       sizeof(Buffer),
                                        &ReturnedLength);
-            if ((!NT_SUCCESS(Status)) || !(ObjectNameInfo->Name.Length))
+            if (!NT_SUCCESS(Status) || (ObjectNameInfo->Name.Length == 0))
             {
                 /* Setup an empty name */
                 ObjectNameInfo->Name.Length = 0;
@@ -371,6 +369,7 @@ IopLogWorker(IN PVOID Parameter)
         {
             ExFreePool(PoolObjectNameInfo);
             PoolObjectNameInfo = NULL;
+            ObjectNameInfo = (POBJECT_NAME_INFORMATION)&Buffer;
         }
 
         /* Go to the next string buffer position */

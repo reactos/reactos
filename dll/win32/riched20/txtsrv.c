@@ -250,7 +250,7 @@ DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetText(ITextServices *iface, BSTR *p
          return E_OUTOFMEMORY;
 
       ME_CursorFromCharOfs(This->editor, 0, &start);
-      ME_GetTextW(This->editor, bstr, length, &start, INT_MAX, FALSE);
+      ME_GetTextW(This->editor, bstr, length, &start, INT_MAX, FALSE, FALSE);
       *pbstrText = bstr;
    } else {
       *pbstrText = NULL;

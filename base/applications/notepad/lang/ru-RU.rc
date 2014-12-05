@@ -103,7 +103,7 @@ BEGIN
     COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Кодировка:", 0x155, 5, 2, 41, 12
     COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Вариант:", 0x156, 5, 20, 41, 12
+    LTEXT "Конец строки:", 0x156, 5, 20, 50, 12
 END
 
 /* Dialog 'Go To' */
@@ -113,7 +113,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Перейти к строке"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
-    LTEXT "Номер строки:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    LTEXT "Номер строки:", 0x155, 5, 12, 49, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
     PUSHBUTTON "Отмена", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -150,24 +150,24 @@ BEGIN
     STRING_UNTITLED "Без заголовка"
     STRING_ALL_FILES "Все файлы (*.*)"
     STRING_TEXT_FILES_TXT "Текстовые файлы (*.txt)"
-    STRING_TOOLARGE "Файл '%s' слишком большой для блокнота.\n \
-Используйте другой редактор."
-    STRING_NOTEXT "Вы не ввели никакого текста. \
-\nВведите что-нибудь и попробуйте еще."
-    STRING_DOESNOTEXIST "Файл '%s'\nне существует\n\n \
+    STRING_TOOLARGE "Файл '%s' слишком велик.\n\
+Воспользуйтесь другим текстовым редактором."
+    STRING_NOTEXT "Вы не ввели текст.\n\
+Введите что-нибудь и попробуйте еще."
+    STRING_DOESNOTEXIST "Файл '%s'\nне существует\n\n\
 Хотите создать новый файл?"
-    STRING_NOTSAVED "Файл '%s'\nбыл изменен\n\n \
+    STRING_NOTSAVED "Файл '%s'\nбыл изменен\n\n\
 Хотите сохранить изменения?"
     STRING_NOTFOUND "'%s' не найден."
     STRING_OUT_OF_MEMORY "Недостаточно памяти для завершения этой операции. \
 \nЗакройте одно или несколько приложений и повторите попытку."
     STRING_CANNOTFIND "Невозможно найти '%s'"
     STRING_ANSI "ANSI"
-    STRING_UNICODE "Юникод"
-    STRING_UNICODE_BE "Юникод (big endian)"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (big endian)"
     STRING_UTF8 "UTF-8"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
-    STRING_CR "Макинтош (CR)"
+    STRING_CR "Macintosh (CR)"
     STRING_LINE_COLUMN "Строка %d, столбец %d"
 END

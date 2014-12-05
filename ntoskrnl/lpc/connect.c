@@ -139,7 +139,11 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                      PreviousMode,
                                      NULL,
                                      (PVOID *)&Port);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to reference port '%wZ': 0x%lx\n", PortName, Status);
+        return Status;
+    }
 
     /* This has to be a connection port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) != LPCP_CONNECTION_PORT)
@@ -352,7 +356,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
     ConnectMessage->SectionToMap = SectionToMap;
 
     /* Set the data for the connection request message */
-    Message->Request.u1.s1.DataLength = (CSHORT)ConnectionInfoLength + 
+    Message->Request.u1.s1.DataLength = (CSHORT)ConnectionInfoLength +
                                          sizeof(LPCP_CONNECTION_MESSAGE);
     Message->Request.u1.s1.TotalLength = sizeof(LPCP_MESSAGE) +
                                          Message->Request.u1.s1.DataLength;

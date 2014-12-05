@@ -325,41 +325,59 @@ TDI_STATUS InfoTdiSetInformationEx
 
     switch (ID->toi_class)
     {
-       case INFO_CLASS_PROTOCOL:
-          if (ID->toi_type == INFO_TYPE_ADDRESS_OBJECT)
-          {
-              if ((EntityListContext = GetContext(ID->toi_entity)))
-                   return SetAddressFileInfo(ID, EntityListContext, Buffer, BufferSize);
-              else
-                   return TDI_INVALID_PARAMETER;
-          }
-
-	  switch (ID->toi_id)
-          {
-	      case IP_MIB_ARPTABLE_ENTRY_ID:
-                 if (ID->toi_type != INFO_TYPE_PROVIDER)
-                     return TDI_INVALID_PARAMETER;
-
-                 if (ID->toi_entity.tei_entity == AT_ENTITY)
-                     if ((EntityListContext = GetContext(ID->toi_entity)))
-                         return InfoTdiSetArptableMIB(EntityListContext,
-                                                      Buffer, BufferSize);
-                     else
-                         return TDI_INVALID_PARAMETER;
-                 else if (ID->toi_entity.tei_entity == CL_NL_ENTITY ||
-                          ID->toi_entity.tei_entity == CO_NL_ENTITY)
-                     if ((EntityListContext = GetContext(ID->toi_entity)))
-	                return InfoTdiSetRoute(EntityListContext, Buffer, BufferSize);
-                     else
+        case INFO_CLASS_PROTOCOL:
+        {
+            switch (ID->toi_type)
+            {
+                case INFO_TYPE_ADDRESS_OBJECT:
+                {
+                    if ((EntityListContext = GetContext(ID->toi_entity)))
+                        return SetAddressFileInfo(ID, EntityListContext, Buffer, BufferSize);
+                    else
                         return TDI_INVALID_PARAMETER;
-                 else
-                     return TDI_INVALID_PARAMETER;
+                }
+                case INFO_TYPE_CONNECTION:
+                {
+                    PADDRESS_FILE AddressFile = GetContext(ID->toi_entity);
+                    if (AddressFile == NULL)
+                        return TDI_INVALID_PARAMETER;
+                    return SetConnectionInfo(ID, AddressFile->Connection, Buffer, BufferSize);
+                }
+                case INFO_TYPE_PROVIDER:
+                {
+                    switch (ID->toi_id)
+                    {
+                        case IP_MIB_ARPTABLE_ENTRY_ID:
+                            if (ID->toi_type != INFO_TYPE_PROVIDER)
+                                return TDI_INVALID_PARAMETER;
 
-              default:
-                return TDI_INVALID_REQUEST;
-	  }
+                            if (ID->toi_entity.tei_entity == AT_ENTITY)
+                                if ((EntityListContext = GetContext(ID->toi_entity)))
+                                    return InfoTdiSetArptableMIB(EntityListContext, Buffer,
+                                        BufferSize);
+                                else
+                                    return TDI_INVALID_PARAMETER;
+                            else if (ID->toi_entity.tei_entity == CL_NL_ENTITY
+                                || ID->toi_entity.tei_entity == CO_NL_ENTITY)
+                                if ((EntityListContext = GetContext(ID->toi_entity)))
+                                    return InfoTdiSetRoute(EntityListContext, Buffer, BufferSize);
+                                else
+                                    return TDI_INVALID_PARAMETER;
+                            else
+                                return TDI_INVALID_PARAMETER;
 
-       default:
-          return TDI_INVALID_REQUEST;
+                        default:
+                            return TDI_INVALID_REQUEST;
+                    }
+                }
+                default:
+                    DbgPrint("TCPIP: IOCTL_TCP_SET_INFORMATION_EX - Unrecognized information type for INFO_CLASS_PROTOCOL: %#x.\n", ID->toi_type);
+                    return TDI_INVALID_PARAMETER;
+            }
+            break;
+        }
+        default:
+            DbgPrint("TCPIP: IOCTL_TCP_SET_INFORMATION_EX - Unrecognized information class %#x.\n", ID->toi_class);
+            return TDI_INVALID_REQUEST;
     }
 }

@@ -4,7 +4,7 @@
 [Section]
 Name = ScummVM
 Version = 1.7.0
-Licence = GPL
+License = GPL
 Description = Software that reproduce the working of graphical engine for videogames (Sam and Max, Day of the Tentacle, etc.) on ReactOS.
 Size = 6.9 MB
 Category = 4

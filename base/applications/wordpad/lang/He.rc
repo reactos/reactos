@@ -18,8 +18,6 @@
  * Translated by Baruch Rutman 2013
  */
 
-#include "wordpad.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -83,9 +81,9 @@ BEGIN
     POPUP "עיצוב"
     BEGIN
         MENUITEM "גופן...",                     ID_FONTSETTINGS
-        MENUITEM "&Bullet points",               ID_BULLET
-        MENUITEM "פסקה...",                ID_PARAFORMAT
-        MENUITEM "&Tabs...",                     ID_TABSTOPS
+        MENUITEM "&Bullet points",              ID_BULLET
+        MENUITEM "פסקה...",               ID_PARAFORMAT
+        MENUITEM "&Tabs...",                    ID_TABSTOPS
         POPUP "רקע"
         BEGIN
             MENUITEM "מערכת\tCtrl+1",         ID_BACK_1
@@ -102,12 +100,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "גזור",                ID_EDIT_CUT
-        MENUITEM "העתק",               ID_EDIT_COPY
-        MENUITEM "הדבק",              ID_EDIT_PASTE
+        MENUITEM "גזור",                 ID_EDIT_CUT
+        MENUITEM "העתק",                ID_EDIT_COPY
+        MENUITEM "הדבק",                ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Bullet points",      ID_BULLET
-        MENUITEM "פיסקה...",       ID_PARAFORMAT
+        MENUITEM "פיסקה...",            ID_PARAFORMAT
     END
 END
 
@@ -115,95 +113,24 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "שחור",      ID_COLOR_BLACK
+        MENUITEM "שחור",       ID_COLOR_BLACK
         MENUITEM "Maroon",     ID_COLOR_MAROON
-        MENUITEM "ירוק",      ID_COLOR_GREEN
-        MENUITEM "ירוק זית",      ID_COLOR_OLIVE
+        MENUITEM "ירוק",       ID_COLOR_GREEN
+        MENUITEM "ירוק זית",     ID_COLOR_OLIVE
         MENUITEM "Navy",       ID_COLOR_NAVY
-        MENUITEM "סגול",     ID_COLOR_PURPLE
+        MENUITEM "סגול",    ID_COLOR_PURPLE
         MENUITEM "Teal",       ID_COLOR_TEAL
-        MENUITEM "אפור",       ID_COLOR_GRAY
-        MENUITEM "כסוף",     ID_COLOR_SILVER
-        MENUITEM "אדום",        ID_COLOR_RED
-        MENUITEM "ירוק ליים",       ID_COLOR_LIME
-        MENUITEM "צהוב",     ID_COLOR_YELLOW
-        MENUITEM "כחול",       ID_COLOR_BLUE
-        MENUITEM "פוקסיה",    ID_COLOR_FUCHSIA
+        MENUITEM "אפור",      ID_COLOR_GRAY
+        MENUITEM "כסוף",    ID_COLOR_SILVER
+        MENUITEM "אדום",       ID_COLOR_RED
+        MENUITEM "ירוק ליים",      ID_COLOR_LIME
+        MENUITEM "צהוב",    ID_COLOR_YELLOW
+        MENUITEM "כחול",      ID_COLOR_BLUE
+        MENUITEM "פוקסיה",   ID_COLOR_FUCHSIA
         MENUITEM "Aqua",       ID_COLOR_AQUA
-        MENUITEM "לבן",      ID_COLOR_WHITE
-        MENUITEM "אוטומטי",  ID_COLOR_AUTOMATIC
+        MENUITEM "לבן",     ID_COLOR_WHITE
+        MENUITEM "אוטומטי", ID_COLOR_AUTOMATIC
     END
-END
-
-IDD_DATETIME DIALOG 30, 20, 130, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "תאריך ושעה"
-FONT 10, "MS Sans Serif"
-BEGIN
-    LTEXT        "תצורות זמינות",-1,3,2,100,15
-    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
-    PUSHBUTTON   "אישור",IDOK,87,12,40,12
-    PUSHBUTTON   "ביטול",IDCANCEL,87,26,40,12
-END
-
-IDD_NEWFILE DIALOG 30, 20, 140, 80
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "חדש"
-FONT 10, "MS Sans Serif"
-BEGIN
-    LTEXT        "סוג המסמך החדש",-1,3,2,100,15
-    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
-    PUSHBUTTON   "אישור",IDOK,97,12,40,12
-    PUSHBUTTON   "ביטול",IDCANCEL,97,26,40,12
-END
-
-IDD_PARAFORMAT DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "עיצוב פסקה"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "ריווח", -1, 10, 10, 120, 68
-    LTEXT "שמאל", -1, 15, 22, 40, 13
-    EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "ימין", -1, 15, 40, 40, 13
-    EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "שורה ראשונה", -1, 15, 58, 40, 13
-    EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "יישור", -1, 15, 87, 40, 13
-    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
-    PUSHBUTTON "אישור", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "ביטול", IDCANCEL, 137, 33, 50, 15
-END
-
-IDD_TABSTOPS DIALOG 30, 20, 200, 110
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "טאבים"
-FONT 8, "MS SHell DLg"
-BEGIN
-    GROUPBOX "Tab stops", -1, 10, 10, 120, 90
-    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "הוסף", ID_TAB_ADD, 20, 80, 45, 15
-    PUSHBUTTON "הסר", ID_TAB_DEL, 72, 80, 45, 15
-    PUSHBUTTON "אישור", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "ביטול", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "הסר הכל", ID_TAB_EMPTY, 137, 51, 50, 15
-END
-
-IDD_FORMATOPTS DIALOG 0, 0, 280, 110
-STYLE DS_SYSMODAL
-CAPTION ""
-FONT 8, "MS Shell Dlg"
-BEGIN
-    GROUPBOX "גלישת שורות", -1, 10, 10, 130, 85
-    RADIOBUTTON "ללא גלישת שורות", IDC_PAGEFMT_WN, 18, 25, 117, 15
-    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 18, 45, 117, 15
-    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "סרגלי כלים", -1, 150, 10, 120, 85
-    CHECKBOX "סרגל כלים", IDC_PAGEFMT_TB, 160, 20, 80, 15
-    CHECKBOX "סרגל עיצוב", IDC_PAGEFMT_FB, 160, 38, 80, 15
-    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 160, 56, 80, 15
-    CHECKBOX "שורת מצב", IDC_PAGEFMT_SB, 160, 74, 80, 15
-    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
 STRINGTABLE
@@ -215,7 +142,7 @@ BEGIN
     STRING_NEWFILE_RICHTEXT,       "מסמך טקסט עשיר"
     STRING_NEWFILE_TXT,            "מסמך טקסט"
     STRING_NEWFILE_TXT_UNICODE,    "מסמך טקסט (יוניקוד)"
-    STRING_PRINTER_FILES_PRN,      "Printer files (*.PRN)"
+    STRING_PRINTER_FILES_PRN,      "Printer files (*.prn)"
 END
 
 STRINGTABLE
@@ -265,4 +192,75 @@ BEGIN
     STRING_OPEN_ACCESS_DENIED,        "You do not have access to open the file."
     STRING_PRINTING_NOT_IMPLEMENTED,  "Printing not implemented"
     STRING_MAX_TAB_STOPS,             "Cannot add more than 32 tab stops."
+END
+
+IDD_DATETIME DIALOG 30, 20, 130, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "תאריך ושעה"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "תצורות זמינות",-1,3,2,100,15
+    LISTBOX      IDC_DATETIME,3,12,80,65,LBS_NOINTEGRALHEIGHT | LBS_NOTIFY
+    DEFPUSHBUTTON "אישור",IDOK,87,12,40,12
+    PUSHBUTTON   "ביטול",IDCANCEL,87,26,40,12
+END
+
+IDD_NEWFILE DIALOG 30, 20, 140, 80
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "חדש"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "סוג המסמך החדש",-1,3,2,100,15
+    LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
+    DEFPUSHBUTTON "אישור",IDOK,97,12,40,12
+    PUSHBUTTON   "ביטול",IDCANCEL,97,26,40,12
+END
+
+IDD_PARAFORMAT DIALOG 30, 20, 220, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "עיצוב פסקה"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "ריווח", -1, 10, 10, 140, 68
+    LTEXT "שמאל", -1, 15, 22, 60, 13
+    EDITTEXT IDC_PARA_LEFT, 75, 20, 65, 13
+    LTEXT "ימין", -1, 15, 40, 60, 13
+    EDITTEXT IDC_PARA_RIGHT, 75, 38, 65, 13
+    LTEXT "שורה ראשונה", -1, 15, 58, 60, 13
+    EDITTEXT IDC_PARA_FIRST, 75, 56, 65, 13
+    LTEXT "יישור", -1, 15, 87, 60, 13
+    COMBOBOX IDC_PARA_ALIGN, 75, 85, 65, 60, CBS_DROPDOWNLIST
+    DEFPUSHBUTTON "אישור", IDOK, 160, 15, 50, 15
+    PUSHBUTTON "ביטול", IDCANCEL, 160, 33, 50, 15
+END
+
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "טאבים"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Tab stops", -1, 10, 10, 120, 90
+    COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
+    DEFPUSHBUTTON "הוסף", ID_TAB_ADD, 20, 80, 45, 15
+    PUSHBUTTON "הסר", ID_TAB_DEL, 72, 80, 45, 15
+    PUSHBUTTON "אישור", IDOK, 135, 15, 58, 15
+    PUSHBUTTON "ביטול", IDCANCEL, 135, 33, 58, 15
+    PUSHBUTTON "הסר הכל", ID_TAB_EMPTY, 135, 51, 58, 15
+END
+
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
+STYLE DS_SYSMODAL
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "גלישת שורות", -1, 5, 10, 145, 85
+    RADIOBUTTON "ללא גלישת שורות", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "Wrap text by the &window border", IDC_PAGEFMT_WW, 10, 45, 138, 15
+    RADIOBUTTON "Wrap text by the &margin", IDC_PAGEFMT_WM, 10, 65, 138, 15
+    GROUPBOX "סרגלי כלים", -1, 155, 10, 115, 85
+    CHECKBOX "סרגל כלים", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "סרגל עיצוב", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    CHECKBOX "&Ruler", IDC_PAGEFMT_RU, 165, 56, 80, 15
+    CHECKBOX "שורת מצב", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

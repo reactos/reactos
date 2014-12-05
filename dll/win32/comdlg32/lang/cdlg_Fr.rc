@@ -34,6 +34,7 @@ Voulez-vous le remplacer ?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Le chemin d'accès n'existe pas"
     IDS_FILENOTEXISTING     "Le fichier n'existe pas"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Enregistrer"
     IDS_SAVE_AS     "Enregistrer"
     IDS_OPEN_FILE   "Ouvrir le fichier"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

@@ -13,8 +13,7 @@
 #include "emulator.h"
 #include "vddsup.h"
 
-#include "bop.h"
-
+#include "cpu/bop.h"
 #include <isvbop.h>
 
 typedef VOID (WINAPI *VDD_PROC)(VOID);
@@ -30,7 +29,7 @@ typedef struct _VDD_MODULE
 // TODO: Maybe use a linked list.
 // But the number of elements must be <= MAXUSHORT (MAXWORD)
 #define MAX_VDD_MODULES 0xFF + 1
-VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
+static VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
 
 // Valid handles of VDD DLLs start at 1 and finish at MAX_VDD_MODULES
 #define ENTRY_TO_HANDLE(Entry)  ((Entry)  + 1)
@@ -39,7 +38,7 @@ VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-USHORT GetNextFreeVDDEntry(VOID)
+static USHORT GetNextFreeVDDEntry(VOID)
 {
     USHORT Entry = MAX_VDD_MODULES;
     for (Entry = 0; Entry < sizeof(VDDList)/sizeof(VDDList[0]); ++Entry)
@@ -49,7 +48,7 @@ USHORT GetNextFreeVDDEntry(VOID)
     return Entry;
 }
 
-VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
+static VOID WINAPI ThirdPartyVDDBop(LPWORD Stack)
 {
     /* Get the Function Number and skip it */
     BYTE FuncNum = *(PBYTE)SEG_OFF_TO_PTR(getCS(), getIP());
@@ -232,7 +231,7 @@ Quit:
     }
 }
 
-BOOL LoadInstallableVDD(VOID)
+static BOOL LoadInstallableVDD(VOID)
 {
 #define ERROR_MEMORYVDD L"Insufficient memory to load installable Virtual Device Drivers."
 #define ERROR_REGVDD    L"Virtual Device Driver format in the registry is invalid."

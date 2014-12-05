@@ -540,13 +540,6 @@ MmFindGap(
 
 VOID
 NTAPI
-MmMapMemoryArea(PVOID BaseAddress,
-                SIZE_T Length,
-                ULONG Consumer,
-                ULONG Protection);
-
-VOID
-NTAPI
 MiRosCheckMemoryAreas(
    PMMSUPPORT AddressSpace);
 
@@ -726,7 +719,7 @@ MmPageFault(
 
 VOID
 NTAPI
-MiInitializeSpecialPool();
+MiInitializeSpecialPool(VOID);
 
 BOOLEAN
 NTAPI
@@ -737,6 +730,11 @@ MmUseSpecialPool(
 BOOLEAN
 NTAPI
 MmIsSpecialPoolAddress(
+    IN PVOID P);
+
+BOOLEAN
+NTAPI
+MmIsSpecialPoolAddressFree(
     IN PVOID P);
 
 PVOID
@@ -1158,7 +1156,6 @@ NTAPI
 MmDeleteVirtualMapping(
     struct _EPROCESS *Process,
     PVOID Address,
-    BOOLEAN FreePage,
     BOOLEAN* WasDirty,
     PPFN_NUMBER Page
 );

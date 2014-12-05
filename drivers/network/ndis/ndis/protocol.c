@@ -424,7 +424,7 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
-        
+
         if (NdisStatus != NDIS_STATUS_PENDING) {
             MiniWorkItemComplete(Adapter, NdisWorkItemSend);
         }
@@ -451,7 +451,7 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
                 NdisStatus = NDIS_STATUS_PENDING;
             }
         }
-        
+
         if (NdisStatus != NDIS_STATUS_PENDING) {
             MiniWorkItemComplete(Adapter, NdisWorkItemSend);
         }
@@ -602,7 +602,7 @@ ProSendPackets(
      else
      {
        if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
-       {  
+       {
           for (i = 0; i < NumberOfPackets; i++)
           {
              NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
@@ -978,14 +978,14 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
 
     if (!NT_SUCCESS(NtStatus))
     {
-        NDIS_DbgPrint(MIN_TRACE, ("Performing global bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
+        NDIS_DbgPrint(MID_TRACE, ("Performing global bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
         KeyInformation = NULL;
 
         CurrentEntry = AdapterListHead.Flink;
     }
     else
     {
-        NDIS_DbgPrint(MIN_TRACE, ("Performing standard bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
+        NDIS_DbgPrint(MID_TRACE, ("Performing standard bind for protocol '%wZ'\n", &ProtocolCharacteristics->Name));
 
         DataPtr = (WCHAR*)KeyInformation->Data;
     }
@@ -1028,7 +1028,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
             /* It wasn't in the global miniport list, so skip the bind entry */
             goto next;
         }
-        
+
         /* Make sure this device isn't already bound to this protocol */
         if (LocateAdapterBindingByName(Protocol, &DeviceName))
         {
@@ -1074,10 +1074,10 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protoc
             if(BindHandler)
             {
                 BindHandler(Status, BindContext, &DeviceName, &RegistryPath, 0);
-                NDIS_DbgPrint(MIN_TRACE, ("%wZ's BindAdapter handler returned 0x%x for %wZ\n", &ProtocolCharacteristics->Name, *Status, &DeviceName));
+                NDIS_DbgPrint(MID_TRACE, ("%wZ's BindAdapter handler returned 0x%x for %wZ\n", &ProtocolCharacteristics->Name, *Status, &DeviceName));
             }
             else
-                NDIS_DbgPrint(MIN_TRACE, ("No protocol bind handler specified\n"));
+                NDIS_DbgPrint(MID_TRACE, ("No protocol bind handler specified\n"));
         }
 
     next:
@@ -1190,7 +1190,7 @@ NdisRegisterProtocol(
 
   InitializeListHead(&Protocol->AdapterListHead);
 
-  /* We must set this before the call to ndisBindMiniportsToProtocol because the protocol's 
+  /* We must set this before the call to ndisBindMiniportsToProtocol because the protocol's
    * BindAdapter handler might need it */
 
   *NdisProtocolHandle = Protocol;

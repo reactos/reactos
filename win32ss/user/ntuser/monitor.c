@@ -258,7 +258,11 @@ UserUpdateMonitorSize(IN HDEV hDev)
     }
 
     /* ...and create new one */
-    pMonitor->hrgnMonitor = IntSysCreateRectRgnIndirect(&pMonitor->rcMonitor);
+    pMonitor->hrgnMonitor = NtGdiCreateRectRgn(
+        pMonitor->rcMonitor.left,
+        pMonitor->rcMonitor.top,
+        pMonitor->rcMonitor.right,
+        pMonitor->rcMonitor.bottom);
     if (pMonitor->hrgnMonitor)
         IntGdiSetRegionOwner(pMonitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 

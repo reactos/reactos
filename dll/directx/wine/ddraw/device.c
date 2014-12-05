@@ -242,7 +242,7 @@ static ULONG WINAPI d3d_device_inner_Release(IUnknown *iface)
         if (This->vertex_buffer)
             wined3d_buffer_decref(This->vertex_buffer);
 
-        wined3d_device_set_render_target(This->wined3d_device, 0, NULL, FALSE);
+        wined3d_device_set_rendertarget_view(This->wined3d_device, 0, NULL, FALSE);
 
         /* Release the wined3d device. This won't destroy it. */
         if (!wined3d_device_decref(This->wined3d_device))
@@ -1794,11 +1794,8 @@ static HRESULT WINAPI d3d_device2_GetCurrentViewport(IDirect3DDevice2 *iface, ID
 
 static BOOL validate_surface_palette(struct ddraw_surface *surface)
 {
-    return !(surface->surface_desc.u4.ddpfPixelFormat.dwFlags
-            & (DDPF_PALETTEINDEXED1 | DDPF_PALETTEINDEXED2
-            | DDPF_PALETTEINDEXED4 | DDPF_PALETTEINDEXED8
-            | DDPF_PALETTEINDEXEDTO8))
-            || wined3d_surface_get_palette(surface->wined3d_surface);
+    return !format_is_paletteindexed(&surface->surface_desc.u4.ddpfPixelFormat)
+            || surface->palette;
 }
 
 static HRESULT d3d_device_set_render_target(struct d3d_device *device,
@@ -1817,8 +1814,8 @@ static HRESULT d3d_device_set_render_target(struct d3d_device *device,
         return DDERR_INVALIDPARAMS;
     }
 
-    if (FAILED(hr = wined3d_device_set_render_target(device->wined3d_device,
-            0, target->wined3d_surface, FALSE)))
+    if (FAILED(hr = wined3d_device_set_rendertarget_view(device->wined3d_device,
+            0, ddraw_surface_get_rendertarget_view(target), FALSE)))
         return hr;
 
     IUnknown_AddRef(rt_iface);
@@ -2941,16 +2938,19 @@ static HRESULT WINAPI d3d_device3_SetLightState(IDirect3DDevice3 *iface,
     wined3d_mutex_lock();
     if (state == D3DLIGHTSTATE_MATERIAL)
     {
-        struct d3d_material *m = ddraw_get_object(&device->handle_table, value - 1, DDRAW_HANDLE_MATERIAL);
-        if (!m)
+        if (value)
         {
-            WARN("Invalid material handle.\n");
-            wined3d_mutex_unlock();
-            return DDERR_INVALIDPARAMS;
-        }
+            struct d3d_material *m;
 
-        TRACE(" activating material %p.\n", m);
-        material_activate(m);
+            if (!(m = ddraw_get_object(&device->handle_table, value - 1, DDRAW_HANDLE_MATERIAL)))
+            {
+                WARN("Invalid material handle.\n");
+                wined3d_mutex_unlock();
+                return DDERR_INVALIDPARAMS;
+            }
+
+            material_activate(m);
+        }
 
         device->material = value;
     }
@@ -3564,15 +3564,11 @@ static HRESULT WINAPI d3d_device7_DrawPrimitive_FPUPreserve(IDirect3DDevice7 *if
 
 static void setup_lighting(const struct d3d_device *device, DWORD fvf, DWORD flags)
 {
-    BOOL enable;
+    BOOL enable = TRUE;
 
     /* Ignore the D3DFVF_XYZRHW case here, wined3d takes care of that */
-    if (flags & D3DDP_DONOTLIGHT)
+    if (!device->material || !(fvf & D3DFVF_NORMAL) || (flags & D3DDP_DONOTLIGHT))
         enable = FALSE;
-    else if (!(fvf & D3DFVF_NORMAL))
-        enable = FALSE;
-    else
-        enable = TRUE;
 
     wined3d_device_set_render_state(device->wined3d_device, WINED3D_RS_LIGHTING, enable);
 }
@@ -4440,8 +4436,8 @@ static HRESULT WINAPI d3d_device3_DrawIndexedPrimitiveVB(IDirect3DDevice3 *iface
  * are passed in the Centers and Radii arrays, the results are passed back
  * in the ReturnValues array. Return values are either completely visible,
  * partially visible or completely invisible.
- * The return value consist of a combination of D3DCLIP_* flags, or it's
- * 0 if the sphere is completely visible(according to the SDK, not checked)
+ * The return value consists of a combination of D3DCLIP_* flags, or is
+ * 0 if the sphere is completely visible (according to the SDK, not checked)
  *
  * Version 3 and 7
  *
@@ -4732,7 +4728,7 @@ static HRESULT WINAPI d3d_device3_SetTexture(IDirect3DDevice3 *iface,
             }
         }
 
-        /* Arg 1/2 are already set to WINED3DTA_TEXTURE/WINED3DTA_CURRENT in case of D3DTBLEND_MODULATE */
+        /* Args 1 and 2 are already set to WINED3DTA_TEXTURE/WINED3DTA_CURRENT in case of D3DTBLEND_MODULATE */
         if (tex_alpha)
             wined3d_device_set_texture_stage_state(device->wined3d_device,
                     0, WINED3D_TSS_ALPHA_OP, WINED3D_TOP_SELECT_ARG1);
@@ -6046,7 +6042,7 @@ static void copy_mipmap_chain(struct d3d_device *device, struct ddraw_surface *d
  *
  * Returns:
  *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if DestTex or SrcTex are NULL, broken coordinates or anything unexpected.
+ *  DDERR_INVALIDPARAMS if dst_texture or src_texture is NULL, broken coordinates or anything unexpected.
  *
  *
  *****************************************************************************/
@@ -6759,13 +6755,13 @@ enum wined3d_depth_buffer_type d3d_device_update_depth_stencil(struct d3d_device
     if (!depthStencil)
     {
         TRACE("Setting wined3d depth stencil to NULL\n");
-        wined3d_device_set_depth_stencil(device->wined3d_device, NULL);
+        wined3d_device_set_depth_stencil_view(device->wined3d_device, NULL);
         return WINED3D_ZB_FALSE;
     }
 
     dsi = impl_from_IDirectDrawSurface7(depthStencil);
-    TRACE("Setting wined3d depth stencil to %p (wined3d %p)\n", dsi, dsi->wined3d_surface);
-    wined3d_device_set_depth_stencil(device->wined3d_device, dsi->wined3d_surface);
+    wined3d_device_set_depth_stencil_view(device->wined3d_device,
+            ddraw_surface_get_rendertarget_view(dsi));
 
     IDirectDrawSurface7_Release(depthStencil);
     return WINED3D_ZB_TRUE;
@@ -6818,8 +6814,8 @@ static HRESULT d3d_device_init(struct d3d_device *device, struct ddraw *ddraw,
     wined3d_device_incref(ddraw->wined3d_device);
 
     /* Render to the back buffer */
-    hr = wined3d_device_set_render_target(ddraw->wined3d_device, 0, target->wined3d_surface, TRUE);
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_device_set_rendertarget_view(ddraw->wined3d_device,
+            0, ddraw_surface_get_rendertarget_view(target), TRUE)))
     {
         ERR("Failed to set render target, hr %#x.\n", hr);
         ddraw_handle_table_destroy(&device->handle_table);

@@ -4,7 +4,7 @@
 [Section]
 Name = PuTTY
 Version = 0.63
-Licence = MIT
+License = MIT
 Description = A free SSH, Telnet, rlogin, and raw TCP client.
 Size = 1.78 MB
 Category = 5

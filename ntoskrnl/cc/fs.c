@@ -38,6 +38,10 @@ CcGetDirtyPages (
     IN PVOID Context2)
 {
     LARGE_INTEGER i;
+
+    CCTRACE(CC_API_DEBUG, "LogHandle=%p DirtyPageRoutine=%p Context1=%p Context2=%p\n",
+        LogHandle, DirtyPageRoutine, Context1, Context2);
+
     UNIMPLEMENTED;
     i.QuadPart = 0;
     return i;
@@ -52,6 +56,9 @@ CcGetFileObjectFromBcb (
     IN PVOID Bcb)
 {
     PINTERNAL_BCB iBcb = (PINTERNAL_BCB)Bcb;
+
+    CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
+
     return iBcb->Vacb->SharedCacheMap->FileObject;
 }
 
@@ -65,6 +72,9 @@ CcGetLsnForFileObject (
     OUT PLARGE_INTEGER OldestLsn OPTIONAL)
 {
     LARGE_INTEGER i;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p\n", FileObject);
+
     UNIMPLEMENTED;
     i.QuadPart = 0;
     return i;
@@ -85,6 +95,9 @@ CcInitializeCacheMap (
     ASSERT(FileObject);
     ASSERT(FileSizes);
 
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileSizes=%p PinAccess=%d CallBacks=%p LazyWriterContext=%p\n",
+        FileObject, FileSizes, PinAccess, CallBacks, LazyWriterContext);
+
     /* Call old ROS cache init function */
     CcRosInitializeFileCache(FileObject,
                              FileSizes,
@@ -100,6 +113,8 @@ NTAPI
 CcIsThereDirtyData (
     IN PVPB Vpb)
 {
+    CCTRACE(CC_API_DEBUG, "Vpb=%p\n", Vpb);
+
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -115,6 +130,9 @@ CcPurgeCacheSection (
     IN ULONG Length,
     IN BOOLEAN UninitializeCacheMaps)
 {
+    CCTRACE(CC_API_DEBUG, "SectionObjectPointer=%p\n FileOffset=%p Length=%lu UninitializeCacheMaps=%d",
+        SectionObjectPointer, FileOffset, Length, UninitializeCacheMaps);
+
     //UNIMPLEMENTED;
     return FALSE;
 }
@@ -134,6 +152,9 @@ CcSetFileSizes (
     PROS_VACB current;
     LIST_ENTRY FreeListHead;
     NTSTATUS Status;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileSizes=%p\n",
+        FileObject, FileSizes);
 
     DPRINT("CcSetFileSizes(FileObject 0x%p, FileSizes 0x%p)\n",
            FileObject, FileSizes);
@@ -222,6 +243,9 @@ CcSetLogHandleForFile (
     IN PVOID LogHandle,
     IN PFLUSH_TO_LSN FlushToLsnRoutine)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p LogHandle=%p FlushToLsnRoutine=%p\n",
+        FileObject, LogHandle, FlushToLsnRoutine);
+
     UNIMPLEMENTED;
 }
 
@@ -236,6 +260,9 @@ CcUninitializeCacheMap (
     IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL)
 {
     NTSTATUS Status;
+
+    CCTRACE(CC_API_DEBUG, "FileObject=%p TruncateSize=%p UninitializeCompleteEvent=%p\n",
+        FileObject, TruncateSize, UninitializeCompleteEvent);
 
     Status = CcRosReleaseFileCache(FileObject);
     if (UninitializeCompleteEvent)

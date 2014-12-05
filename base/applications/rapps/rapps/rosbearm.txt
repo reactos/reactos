@@ -4,7 +4,7 @@
 [Section]
 Name = ReactOS Build Environment ARM Addon
 Version = 1.0
-Licence = GPL
+License = GPL
 Description = Allows you to build the ReactOS ARM Source. For more instructions see ReactOS wiki.
 Size = 11.15 MB
 Category = 7

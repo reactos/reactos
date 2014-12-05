@@ -530,15 +530,19 @@ static HRESULT WINAPI HTMLStyle5_get_maxHeight(IHTMLStyle5 *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle5_put_minWidth(IHTMLStyle5 *iface, VARIANT v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle5(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_nsstyle_attr_var(This->nsstyle, STYLEID_MIN_WIDTH, &v, ATTR_FIX_PX);
 }
 
 static HRESULT WINAPI HTMLStyle5_get_minWidth(IHTMLStyle5 *iface, VARIANT *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle5(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_MIN_WIDTH, p, 0);
 }
 
 static HRESULT WINAPI HTMLStyle5_put_maxWidth(IHTMLStyle5 *iface, VARIANT v)

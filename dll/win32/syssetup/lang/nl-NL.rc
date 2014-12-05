@@ -5,8 +5,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welkom bij de Reactos installatiewizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Deze wizard zal Reactos op je computer installeren. De wizard heeft informatie over jou en jouw computer nodig om Reactos correct in te stellen.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Welkom bij de ReactOS installatiewizard.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Deze wizard zal ReactOS op je computer installeren. De wizard heeft informatie over jou en jouw computer nodig om ReactOS correct in te stellen.", IDC_STATIC, 115, 40, 195, 100
     LTEXT "Klik op Volgende om voort te gaan met de installatie.", IDC_STATIC, 115, 169, 195, 17
 END
 

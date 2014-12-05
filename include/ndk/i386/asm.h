@@ -476,6 +476,7 @@ Author:
 #define EFLAGS_VIP                              0x100000
 #define EFLAG_SIGN                              0x8000
 #define EFLAG_ZERO                              0x4000
+#define EFLAGS_ID                               0x200000
 #define EFLAG_SELECT                            (EFLAG_SIGN + EFLAG_ZERO)
 #endif
 #define EFLAGS_USER_SANITIZE                    0x3F4DD7

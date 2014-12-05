@@ -85,6 +85,12 @@ static VOID PicWriteCommand(BYTE Port, BYTE Value)
             /* Otherwise, clear all of them */
             Pic->InServiceRegister = 0;
         }
+
+        if (MasterPic.IntRequestRegister || SlavePic.IntRequestRegister)
+        {
+            /* Signal the next IRQ */
+            EmulatorInterruptSignal();
+        }
     }
 }
 
@@ -154,7 +160,7 @@ static VOID PicWriteData(BYTE Port, BYTE Value)
     Pic->Initialization = FALSE;
 }
 
-static BYTE WINAPI PicReadPort(ULONG Port)
+static BYTE WINAPI PicReadPort(USHORT Port)
 {
     switch (Port)
     {
@@ -174,7 +180,7 @@ static BYTE WINAPI PicReadPort(ULONG Port)
     return 0;
 }
 
-static VOID WINAPI PicWritePort(ULONG Port, BYTE Data)
+static VOID WINAPI PicWritePort(USHORT Port, BYTE Data)
 {
     switch (Port)
     {
@@ -250,31 +256,11 @@ VOID PicInterruptRequest(BYTE Number)
 
 BYTE PicGetInterrupt(VOID)
 {
-    INT i, j;
+    INT i;
 
-    /* Search interrupts by priority */
+    /* Search the master PIC interrupts by priority */
     for (i = 0; i < 8; i++)
     {
-        /* Check if this line is cascaded to the slave PIC */
-        if ((i == 2)
-            && MasterPic.CascadeRegister & (1 << 2)
-            && SlavePic.Slave
-            && (SlavePic.CascadeRegister == 2))
-        {
-            /* Search the slave PIC interrupts by priority */
-            for (j = 0; j < 8; j++) if ((j != 1) && SlavePic.IntRequestRegister & (1 << j))
-            {
-                /* Clear the IRR flag */
-                SlavePic.IntRequestRegister &= ~(1 << j);
-
-                /* Set the ISR flag, unless AEOI is enabled */
-                if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= (1 << j);
-    
-                /* Return the interrupt number */
-                return SlavePic.IntOffset + j;
-            }
-        }
-
         if (MasterPic.IntRequestRegister & (1 << i))
         {
             /* Clear the IRR flag */
@@ -285,6 +271,30 @@ BYTE PicGetInterrupt(VOID)
 
             /* Return the interrupt number */
             return MasterPic.IntOffset + i;
+        }
+    }
+
+    /* Search the slave PIC interrupts by priority */
+    for (i = 0; i < 8; i++)
+    {
+        if (SlavePic.IntRequestRegister & (1 << i))
+        {
+            /* Clear the IRR flag */
+            SlavePic.IntRequestRegister &= ~(1 << i);
+
+            if ((i == 1) && SlavePic.CascadeRegisterSet)
+            {
+                /* This interrupt is routed to the master PIC */
+                return MasterPic.IntOffset + SlavePic.CascadeRegister;
+            }
+            else
+            {
+                /* Set the ISR flag, unless AEOI is enabled */
+                if (!SlavePic.AutoEoi) SlavePic.InServiceRegister |= (1 << i);
+
+                /* Return the interrupt number */
+                return SlavePic.IntOffset + i;
+            }
         }
     }
     
@@ -337,6 +347,26 @@ call_ica_hw_interrupt(INT  ms,
     {
         PicInterruptRequest(InterruptNumber);
     }
+}
+
+WORD
+WINAPI
+VDDReserveIrqLine(IN HANDLE hVdd,
+                  IN WORD   IrqLine)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0xFFFF;
+}
+
+BOOL
+WINAPI
+VDDReleaseIrqLine(IN HANDLE hVdd,
+                  IN WORD   IrqLine)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
 }
 
 /* EOF */

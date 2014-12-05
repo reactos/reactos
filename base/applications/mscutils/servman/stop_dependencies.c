@@ -163,6 +163,8 @@ AddServiceNamesToStop(HWND hServiceListBox,
                          LB_ADDSTRING,
                          0,
                          (LPARAM)lpServiceConfig->lpDisplayName);
+
+            HeapFree(GetProcessHeap(), 0, lpServiceConfig);
         }
 
         /* Move onto the next string */

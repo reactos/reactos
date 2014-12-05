@@ -34,6 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "경로가 존재하지 않습니다."
     IDS_FILENOTEXISTING     "파일이 존재하지 않습니다"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "저장"
     IDS_SAVE_AS     "다른 이름으로 저장"
     IDS_OPEN_FILE   "파일 열기"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

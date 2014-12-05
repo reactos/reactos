@@ -6,12 +6,13 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/cryptlib)
 
 list(APPEND SOURCE
-     ksecdd.c
-     dispatch.c
-     random.c
-     stubs.c
-     ksecdd.rc
-     ${CMAKE_CURRENT_BINARY_DIR}/ksecdd.def)
+    ksecdd.c
+    dispatch.c
+    crypt.c
+    random.c
+    stubs.c
+    ksecdd.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ksecdd.def)
 
 add_library(ksecdd SHARED ${SOURCE})
 target_link_libraries(ksecdd cryptlib pseh)

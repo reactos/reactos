@@ -139,6 +139,21 @@ BEGIN
     DEFPUSHBUTTON "Tamam", IDOK, 115, 179, 50, 14
 END
 
+IDD_SHUTDOWN_SHELL DIALOGEX 0, 0, 275, 146
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Oturumu Kapat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
+    LTEXT "&Bilgisayarınızın ne yapmasını istiyorsunuz?", IDC_STATIC, 39, 57, 167, 10
+    COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL
+    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
+    DEFPUSHBUTTON "Tamam", IDOK, 80, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "İptal", IDCANCEL, 143, 122, 55, 14
+    PUSHBUTTON "&Yardım", IDHELP, 204, 122, 55, 14
+END
+
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Hoşgeldiniz!"
@@ -146,7 +161,7 @@ BEGIN
     IDS_PRESSCTRLALTDELETE "Oturum açmak için Denetim, Seçenek ve Silme düğmelerine birlikte basınız."
     IDS_ASKFORUSER "Kullanıcı Adı: "
     IDS_ASKFORPASSWORD "Şifre: "
-    IDS_FORCELOGOFF "Bu, şimdiki kullanıcının oturumunu kapatacak ve tüm kaydedilmemiş bilgiler yitirilecek. Sürdürülsün mü?"
+    IDS_FORCELOGOFF "Bu, şimdiki kullanıcının oturumunu kapatacak ve tüm saklanmış bilgiler yitirilecek. Sürdürülsün mü?"
     IDS_LOCKMSG "Yalnızca %s ve bir yönetici bu bilgisayarın kilidini açabilir."
     IDS_LOGONMSG "%s olarak oturum açtınız."
     IDS_LOGONDATE "Oturum Açma Zamânı: %s %s"
@@ -154,7 +169,7 @@ BEGIN
     IDS_LOCKEDWRONGPASSWORD "Şifre yanlış. Lütfen şifrenizi yeniden giriniz. Şifrelerdeki harfler doğru büyük-küçük ayrımı kullanılarak yazılmalıdır."
     IDS_LOCKEDWRONGUSER "Bu bilgisayar kilitli. Yalnızca %s\\%s ve bir yönetici bu bilgisayarın kilidini açabilir."
     IDS_CHANGEPWDTITLE "Şifre Değştirme"
-    IDS_NONMATCHINGPASSWORDS "Yazıdığınız şifreler birbiriyle uyuşmuyor. İki metin kutusuna aynı şifreyi yazınız."
+    IDS_NONMATCHINGPASSWORDS "Yazıdığınız şifreler birbiriyle uyuşmuyor. İki metin kutusunda aynı şifreyi yazınız."
     IDS_PASSWORDCHANGED "Şifreniz değiştirildi."
     IDS_LOGONTITLE "Oturum Açma İletisi"
     IDS_LOGONWRONGUSERORPWD "Dizge oturumunuzu açamadı. Kullanıcı adınızın ve etki alanının doğru olduğundan emin olunuz, sonra şifrenizi yeniden yazınız. Şifrelerdeki harfler doğru büyük-küçük ayrımı kullanılarak yazılmalıdır."
@@ -176,5 +191,5 @@ BEGIN
     IDS_SHUTDOWN_SHUTDOWN_DESC "Şimdiki oturumunuzu sonlandırır ve dizgeyi kapatır, böylece gücü güvenli olarak kapatbilirsiniz."
     IDS_SHUTDOWN_RESTART_DESC "Şimdiki oturumunuzu sonlandırır dizgeyi yeniden başlatır."
     IDS_SHUTDOWN_SLEEP_DESC "Dizgeyi uyku kipine geçirir."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Şimdiki oturumu kaydeder ve bilgisayarı kapatır."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Şimdiki oturumu saklar ve bilgisayarı kapatır."
 END

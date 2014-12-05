@@ -5,7 +5,7 @@
 [Section]
 Name = Rocks'n'Diamonds
 Version = 3.3.1.2
-Licence = GPL v2
+License = GPL v2
 Description = Arcade style game for UNIX, Mac OS X, Windows and DOS in the tradition of: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC). You need a ZIP decompression program to install it.
 Size = 2.42 MB
 Category = 4
@@ -27,6 +27,6 @@ Description = Un joc de tip arcadă pentru UNIX, Mac OS X, Windows și DOS; resp
 Size = 2,42 Mo
 
 [Section.041f]
-Licence = GPL 2. sürüm
+License = GPL 2. sürüm
 Description = "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC) gelenekleri içinde; UNIX, Mac OS X, Windows ve DOS için atari oyun salonu türünde oyun. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 2,42 MB

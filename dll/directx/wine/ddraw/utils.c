@@ -730,57 +730,35 @@ DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf)
     TRACE("( ");
     DDRAW_dump_pixelformat_flag(pf->dwFlags);
     if (pf->dwFlags & DDPF_FOURCC)
-    {
-        TRACE(", dwFourCC code '%c%c%c%c' (0x%08x) - %d bits per pixel",
+        TRACE(", dwFourCC code '%c%c%c%c' (0x%08x) - %u bits per pixel",
                 (unsigned char)( pf->dwFourCC     &0xff),
                 (unsigned char)((pf->dwFourCC>> 8)&0xff),
                 (unsigned char)((pf->dwFourCC>>16)&0xff),
                 (unsigned char)((pf->dwFourCC>>24)&0xff),
                 pf->dwFourCC,
-                pf->u1.dwYUVBitCount
-        );
-    }
+                pf->u1.dwYUVBitCount);
     if (pf->dwFlags & DDPF_RGB)
     {
-        const char *cmd;
-        TRACE(", RGB bits: %d, ", pf->u1.dwRGBBitCount);
-        switch (pf->u1.dwRGBBitCount)
-        {
-        case 4: cmd = "%1lx"; break;
-        case 8: cmd = "%02lx"; break;
-        case 16: cmd = "%04lx"; break;
-        case 24: cmd = "%06lx"; break;
-        case 32: cmd = "%08lx"; break;
-        default: ERR("Unexpected bit depth!\n"); cmd = "%d"; break;
-        }
-        TRACE(" R "); TRACE(cmd, pf->u2.dwRBitMask);
-        TRACE(" G "); TRACE(cmd, pf->u3.dwGBitMask);
-        TRACE(" B "); TRACE(cmd, pf->u4.dwBBitMask);
+        TRACE(", RGB bits: %u, R 0x%08x G 0x%08x B 0x%08x",
+                pf->u1.dwRGBBitCount,
+                pf->u2.dwRBitMask,
+                pf->u3.dwGBitMask,
+                pf->u4.dwBBitMask);
         if (pf->dwFlags & DDPF_ALPHAPIXELS)
-        {
-            TRACE(" A "); TRACE(cmd, pf->u5.dwRGBAlphaBitMask);
-        }
+            TRACE(" A 0x%08x", pf->u5.dwRGBAlphaBitMask);
         if (pf->dwFlags & DDPF_ZPIXELS)
-        {
-            TRACE(" Z "); TRACE(cmd, pf->u5.dwRGBZBitMask);
-        }
+            TRACE(" Z 0x%08x", pf->u5.dwRGBZBitMask);
     }
     if (pf->dwFlags & DDPF_ZBUFFER)
-    {
-        TRACE(", Z bits : %d", pf->u1.dwZBufferBitDepth);
-    }
+        TRACE(", Z bits: %u", pf->u1.dwZBufferBitDepth);
     if (pf->dwFlags & DDPF_ALPHA)
-    {
-        TRACE(", Alpha bits : %d", pf->u1.dwAlphaBitDepth);
-    }
+        TRACE(", Alpha bits: %u", pf->u1.dwAlphaBitDepth);
     if (pf->dwFlags & DDPF_BUMPDUDV)
-    {
-        const char *cmd = "%08lx";
-        TRACE(", Bump bits: %d, ", pf->u1.dwBumpBitCount);
-        TRACE(" U "); TRACE(cmd, pf->u2.dwBumpDuBitMask);
-        TRACE(" V "); TRACE(cmd, pf->u3.dwBumpDvBitMask);
-        TRACE(" L "); TRACE(cmd, pf->u4.dwBumpLuminanceBitMask);
-    }
+        TRACE(", Bump bits: %u, U 0x%08x V 0x%08x L 0x%08x",
+                pf->u1.dwBumpBitCount,
+                pf->u2.dwBumpDuBitMask,
+                pf->u3.dwBumpDvBitMask,
+                pf->u4.dwBumpLuminanceBitMask);
     TRACE(")\n");
 }
 

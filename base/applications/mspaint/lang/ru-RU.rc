@@ -72,7 +72,7 @@ BEGIN
         MENUITEM "Модернизированный вид", IDM_COLORSMODERNPALETTE
         MENUITEM "Старый вид", IDM_COLORSOLDPALETTE
     END
-    POPUP "&?"
+    POPUP "&Справка"
     BEGIN
         MENUITEM "&Вызов справки", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
@@ -180,7 +180,7 @@ BEGIN
     IDS_INFOTITLE "Paint для ReactOS"
     IDS_INFOTEXT "Paint для ReactOS распространяется под лицензией GNU Lesser General Public License (LGPL, см. www.gnu.org)"
     IDS_SAVEPROMPTTEXT "Сохранить изменения в %s?"
-    IDS_DEFAULTFILENAME "Без_имени.bmp"
+    IDS_DEFAULTFILENAME "Безымянный.bmp"
     IDS_MINIATURETITLE "Эскиз"
     IDS_TOOLTIP1 "Выделение произвольной области"
     IDS_TOOLTIP2 "Выделение"

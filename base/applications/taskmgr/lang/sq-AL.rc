@@ -317,6 +317,7 @@ BEGIN
     CONTROL "Shkruan I/O Bytes", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "I/O te tjere", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "I/O Byte te tjere", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -412,6 +413,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O Lexo Bytes"
     IDS_TAB_IOWRITESBYTES "I/O Shkruaj Bytes"
     IDS_TAB_IOOTHERBYTES "I/O te tjere Bytes"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "Zgjidh kolonat..."
     IDS_MENU_16BITTASK "&Shfaq 16-bit tasks"
     IDS_MENU_WINDOWS "Dritare"
@@ -435,7 +437,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "E pamundur ndryshimi i prioritetit"
     IDS_MSG_WARNINGCHANGEPRIORITY "KUJDES: Ndryshimi i klases se prioritetit te ketij procesi mund te \nsjell rrezultate te padeshirushme ne stabilitetin e sistemit. Jeni i sigurt\nper ndryshimin e klases se prioriteteve?"
     IDS_MSG_TRAYICONCPUUSAGE "Perdorimi i CPU: %d%%"
-    IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Perdorimi i  Mem: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Perdorimi i CPU: %3d%%"
     IDS_STATUS_PROCESSES "Proceset: %d"
     IDS_NOT_RESPONDING "Nuk pergjigjet"

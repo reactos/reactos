@@ -504,6 +504,13 @@ DoQuery(
     DirContext.ShortNameU.Buffer = ShortNameBuffer;
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
 
+    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
+                                        (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+    {
+        ExReleaseResourceLite(&pFcb->MainResource);
+        return VfatQueueRequest(IrpContext);
+    }
+
     while ((Status == STATUS_SUCCESS) && (BufferLength > 0))
     {
         Status = FindFile(IrpContext->DeviceExt,
@@ -579,6 +586,7 @@ DoQuery(
         IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
     }
 
+    ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
     ExReleaseResourceLite(&pFcb->MainResource);
 
     return Status;

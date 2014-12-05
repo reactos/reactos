@@ -22,7 +22,7 @@ const struct builtin_class_descr DESKTOP_builtin_class =
   WC_DESKTOP,           /* name */
   CS_DBLCLKS,           /* style */
   NULL,                 /* procA (winproc is Unicode only) */
-  (WNDPROC) DesktopWndProc,       /* procW */
+  DesktopWndProc,       /* procW */
   0,                    /* extra */
   IDC_ARROW,            /* cursor */
   (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
@@ -330,7 +330,10 @@ RealSystemParametersInfoA(UINT uiAction,
           }
 
           Ret = NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, uiParam, pvParam, fWinIni);
-          RtlFreeUnicodeString(&ustrWallpaper);
+
+          if (pvParam)
+            RtlFreeUnicodeString(&ustrWallpaper);
+
           return Ret;
       }
     }
@@ -545,7 +548,23 @@ WINAPI
 GetThreadDesktop(
   DWORD dwThreadId)
 {
-  return NtUserGetThreadDesktop(dwThreadId, 0);
+    USER_API_MESSAGE ApiMessage;
+    PUSER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest = &ApiMessage.Data.GetThreadConsoleDesktopRequest;
+
+    GetThreadConsoleDesktopRequest->ThreadId = dwThreadId;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpGetThreadConsoleDesktop),
+                        sizeof(*GetThreadConsoleDesktopRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        UserSetLastNTError(ApiMessage.Status);
+        return NULL;
+    }
+
+    return NtUserGetThreadDesktop(dwThreadId,
+                                  (DWORD)GetThreadConsoleDesktopRequest->ConsoleDesktop);
 }
 
 
@@ -607,7 +626,7 @@ OpenDesktopW(
                              GetProcessWindowStation(),
                              0);
 
-  if( fInherit == TRUE )
+  if( fInherit )
   {
       ObjectAttributes.Attributes |= OBJ_INHERIT;
   }

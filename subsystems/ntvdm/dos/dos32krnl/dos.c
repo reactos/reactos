@@ -12,13 +12,16 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "cpu/cpu.h"
+#include "int32.h"
 
 #include "dos.h"
 #include "dos/dem.h"
 
 #include "bios/bios.h"
-#include "registers.h"
+
+#include "io.h"
+#include "hardware/ps2.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -400,21 +403,31 @@ static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
     Mcb->OwnerPsp = NewOwner;
 }
 
-static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
+static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
+                                    LPCSTR ProgramName)
 {
     PCHAR Ptr, DestBuffer = NULL;
     ULONG TotalSize = 0;
     WORD DestSegment;
 
-    Ptr = (PCHAR)Environment;
-
-    /* Calculate the size of the environment block */
-    while (*Ptr)
+    /* If we have an environment strings list, compute its size */
+    if (Environment)
     {
-        TotalSize += strlen(Ptr) + 1;
-        Ptr += strlen(Ptr) + 1;
+        /* Calculate the size of the environment block */
+        Ptr = (PCHAR)Environment;
+        while (*Ptr) Ptr += strlen(Ptr) + 1;
+        TotalSize = (ULONG_PTR)Ptr - (ULONG_PTR)Environment;
     }
+    else
+    {
+        /* Empty environment string */
+        TotalSize = 1;
+    }
+    /* Add the final environment block NULL-terminator */
     TotalSize++;
+
+    /* Add the two bytes for the program name tag */
+    TotalSize += 2;
 
     /* Add the string buffer size */
     TotalSize += strlen(ProgramName) + 1;
@@ -423,24 +436,30 @@ static WORD DosCopyEnvironmentBlock(LPCVOID Environment, LPCSTR ProgramName)
     DestSegment = DosAllocateMemory((WORD)((TotalSize + 0x0F) >> 4), NULL);
     if (!DestSegment) return 0;
 
-    Ptr = (PCHAR)Environment;
-
     DestBuffer = (PCHAR)SEG_OFF_TO_PTR(DestSegment, 0);
-    while (*Ptr)
+
+    /* If we have an environment strings list, copy it */
+    if (Environment)
     {
-        /* Copy the string */
-        strcpy(DestBuffer, Ptr);
+        Ptr = (PCHAR)Environment;
+        while (*Ptr)
+        {
+            /* Copy the string and NULL-terminate it */
+            strcpy(DestBuffer, Ptr);
+            DestBuffer += strlen(Ptr);
+            *(DestBuffer++) = '\0';
 
-        /* Advance to the next string */
-        DestBuffer += strlen(Ptr);
-        Ptr += strlen(Ptr) + 1;
-
-        /* Put a zero after the string */
-        *(DestBuffer++) = 0;
+            /* Move to the next string */
+            Ptr += strlen(Ptr) + 1;
+        }
     }
-
-    /* Set the final zero */
-    *(DestBuffer++) = 0;
+    else
+    {
+        /* Empty environment string */
+        *(DestBuffer++) = '\0';
+    }
+    /* NULL-terminate the environment block */
+    *(DestBuffer++) = '\0';
 
     /* Store the special program name tag */
     *(DestBuffer++) = LOBYTE(DOS_PROGRAM_NAME_TAG);
@@ -857,7 +876,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(PspSegment);
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
-    ZeroMemory(PspBlock, sizeof(DOS_PSP));
+    RtlZeroMemory(PspBlock, sizeof(*PspBlock));
 
     /* Set the exit interrupt */
     PspBlock->Exit[0] = 0xCD; // int 0x20
@@ -901,7 +920,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
 DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
                         IN LPCSTR ExecutablePath,
                         IN LPCSTR CommandLine,
-                        IN PVOID Environment,
+                        IN LPCSTR Environment OPTIONAL,
                         OUT PDWORD StackLocation OPTIONAL,
                         OUT PDWORD EntryPoint OPTIONAL)
 {
@@ -921,7 +940,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             LoadType,
             ExecutablePath,
             CommandLine,
-            Environment,
+            Environment ? Environment : "n/a",
             StackLocation,
             EntryPoint);
 
@@ -1012,7 +1031,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         /* Check if at least the lowest allocation was successful */
         if (Segment == 0)
         {
-            Result = ERROR_NOT_ENOUGH_MEMORY;
+            Result = DosLastError;
             goto Cleanup;
         }
 
@@ -1053,14 +1072,14 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             setES(Segment);
 
             /* Set the stack to the location from the header */
-            EmulatorSetStack(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss,
-                             Header->e_sp);
+            setSS(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss);
+            setSP(Header->e_sp);
 
             /* Execute */
             CurrentPsp = Segment;
             DiskTransferArea = MAKELONG(0x80, Segment);
-            EmulatorExecute(Segment + Header->e_cs + (sizeof(DOS_PSP) >> 4),
-                            Header->e_ip);
+            CpuExecute(Segment + Header->e_cs + (sizeof(DOS_PSP) >> 4),
+                       Header->e_ip);
         }
     }
     else
@@ -1081,7 +1100,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         Segment = DosAllocateMemory(MaxAllocSize, NULL);
         if (Segment == 0)
         {
-            Result = ERROR_ARENA_TRASHED;
+            Result = DosLastError;
             goto Cleanup;
         }
 
@@ -1107,7 +1126,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             setES(Segment);
 
             /* Set the stack to the last word of the segment */
-            EmulatorSetStack(Segment, 0xFFFE);
+            setSS(Segment);
+            setSP(0xFFFE);
 
             /*
              * Set the value on the stack to 0, so that a near return
@@ -1118,7 +1138,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             /* Execute */
             CurrentPsp = Segment;
             DiskTransferArea = MAKELONG(0x80, Segment);
-            EmulatorExecute(Segment, 0x100);
+            CpuExecute(Segment, 0x100);
         }
     }
 
@@ -1144,7 +1164,7 @@ Cleanup:
 
 DWORD DosStartProcess(IN LPCSTR ExecutablePath,
                       IN LPCSTR CommandLine,
-                      IN PVOID Environment)
+                      IN LPCSTR Environment OPTIONAL)
 {
     DWORD Result;
 
@@ -1160,9 +1180,15 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     /* Attach to the console */
     VidBiosAttachToConsole(); // FIXME: And in fact, attach the full NTVDM UI to the console
 
+    // HACK: Simulate a ENTER key release scancode on the PS/2 port because
+    // some apps expect to read a key release scancode (> 0x80) when they
+    // are started.
+    IOWriteB(PS2_CONTROL_PORT, 0xD2);     // Next write is for the first PS/2 port
+    IOWriteB(PS2_DATA_PORT, 0x80 | 0x1C); // ENTER key release
+
     /* Start simulation */
     SetEvent(VdmTaskEvent);
-    EmulatorSimulate();
+    CpuSimulate();
 
     /* Detach from the console */
     VidBiosDetachFromConsole(); // FIXME: And in fact, detach the full NTVDM UI from the console
@@ -1200,8 +1226,8 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
     }
 
     /* Set up the startup info structure */
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOA));
-    StartupInfo.cb = sizeof(STARTUPINFOA);
+    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
 
     /* Create the process */
     if (!CreateProcessA(ProgramName,
@@ -1226,7 +1252,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
         case SCS_WOW_BINARY:
         {
             /* Clear the structure */
-            ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+            RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
             /* Initialize the structure members */
             CommandInfo.TaskId = SessionId;
@@ -1341,7 +1367,7 @@ Done:
         if (CurrentPsp == SYSTEM_PSP)
         {
             ResetEvent(VdmTaskEvent);
-            EmulatorUnsimulate();
+            CpuUnsimulate();
         }
     }
 
@@ -1358,7 +1384,7 @@ Done:
         GetNextVDMCommand(&CommandInfo);
 
         /* Clear the structure */
-        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
+        RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
 
         /* Update the VDM state of the task */
         CommandInfo.TaskId = SessionId;
@@ -1371,8 +1397,8 @@ Done:
     DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
 
     /* Return control to the parent process */
-    EmulatorExecute(HIWORD(PspBlock->TerminateAddress),
-                    LOWORD(PspBlock->TerminateAddress));
+    CpuExecute(HIWORD(PspBlock->TerminateAddress),
+               LOWORD(PspBlock->TerminateAddress));
 }
 
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
@@ -1402,15 +1428,18 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
             {
                 /* Console input */
                 InfoWord |= 1 << 0;
+
+                /* It is a device */
+                InfoWord |= 1 << 7;
             }
             else if (Handle == DosSystemFileTable[DOS_OUTPUT_HANDLE].Handle)
             {
                 /* Console output */
                 InfoWord |= 1 << 1;
-            }
 
-            /* It is a device */
-            InfoWord |= 1 << 7;
+                /* It is a device */
+                InfoWord |= 1 << 7;
+            }
 
             /* Return the device information word */
             setDX(InfoWord);
@@ -1749,7 +1778,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x25:
         {
             ULONG FarPointer = MAKELONG(getDX(), getDS());
-            DPRINT1("Setting interrupt 0x%x ...\n", getAL());
+            DPRINT1("Setting interrupt 0x%02X to %04X:%04X ...\n",
+                    getAL(), HIWORD(FarPointer), LOWORD(FarPointer));
 
             /* Write the new far pointer to the IDT */
             ((PULONG)BaseAddress)[getAL()] = FarPointer;
@@ -1834,8 +1864,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                  * Return DOS OEM number:
                  * 0x00 for IBM PC-DOS
                  * 0x02 for packaged MS-DOS
+                 * 0xFF for NT DOS
                  */
-                setBH(0x02);
+                setBH(0xFF);
             }
 
             if (LOBYTE(PspBlock->DosVersion) >= 5 && getAL() == 0x01)
@@ -2573,6 +2604,14 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Get Extended Error Information */
+        case 0x59:
+        {
+            DPRINT1("INT 21h, AH = 59h, BX = %04Xh - Get Extended Error Information is UNIMPLEMENTED\n",
+                    getBX());
+            break;
+        }
+
         /* Create Temporary File */
         case 0x5A:
         {
@@ -2769,6 +2808,10 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Extended Open/Create */
         case 0x6C:
         {
+            WORD FileHandle;
+            WORD CreationStatus;
+            WORD ErrorCode;
+
             /* Check for AL == 00 */
             if (getAL() != 0x00)
             {
@@ -2777,10 +2820,31 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 break;
             }
 
-            // TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // FIXME: Extend and merge DosOpenFile and DosCreateFile into
-            // a single wrapper around CreateFileA, which acts as:
-            // http://www.ctyme.com/intr/rb-3179.htm
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-3179.htm
+             * for the full detailed description.
+             *
+             * WARNING: BH contains some extended flags that are NOT SUPPORTED.
+             */
+
+            ErrorCode = DosCreateFileEx(&FileHandle,
+                                        &CreationStatus,
+                                        (LPCSTR)SEG_OFF_TO_PTR(getDS(), getSI()),
+                                        getBL(),
+                                        getDL(),
+                                        getCX());
+
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                setCX(CreationStatus);
+                setAX(FileHandle);
+            }
+            else
+            {
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                setAX(ErrorCode);
+            }
 
             break;
         }
@@ -2803,7 +2867,7 @@ VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 
     /* Stop the VDM task */
     ResetEvent(VdmTaskEvent);
-    EmulatorUnsimulate();
+    CpuUnsimulate();
 }
 
 VOID WINAPI DosFastConOut(LPWORD Stack)
@@ -2859,7 +2923,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     WCHAR Buffer[256];
 
     /* Clear the current directory buffer */
-    ZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
+    RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
 
     /* Get the current directory */
     if (!GetCurrentDirectoryA(MAX_PATH, CurrentDirectory))

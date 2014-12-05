@@ -898,7 +898,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     if (PreviousMode == KernelMode)
     {
         /* Check if this is a first-chance exception */
-        if (FirstChance == TRUE)
+        if (FirstChance != FALSE)
         {
             /* Break into the debugger for the first time */
             if (KiDebugRoutine(TrapFrame,
@@ -1097,6 +1097,7 @@ DECLSPEC_NORETURN
 VOID
 NTAPI
 KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
+                                 IN ULONG Flags,
                                  IN ULONG_PTR Address,
                                  IN ULONG ParameterCount,
                                  IN ULONG_PTR Parameter1,
@@ -1108,7 +1109,7 @@ KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
 
     /* Build the exception record */
     ExceptionRecord.ExceptionCode = Code;
-    ExceptionRecord.ExceptionFlags = 0;
+    ExceptionRecord.ExceptionFlags = Flags;
     ExceptionRecord.ExceptionRecord = NULL;
     ExceptionRecord.ExceptionAddress = (PVOID)Address;
     ExceptionRecord.NumberParameters = ParameterCount;

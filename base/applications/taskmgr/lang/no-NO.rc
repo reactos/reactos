@@ -315,6 +315,7 @@ BEGIN
     CONTROL "I/O skrevne byte", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 70, 10
     CONTROL "I/O Annet", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "I/O Andre byte", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O Leser Byte"
     IDS_TAB_IOWRITESBYTES "I/O Skriver Byte"
     IDS_TAB_IOOTHERBYTES "I/O Annet Byte"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Velg kolonner..."
     IDS_MENU_16BITTASK "&Vis 16-biter oppgave"
     IDS_MENU_WINDOWS "&Vinduer"
@@ -433,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Ikke i stand til endre prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "ADVARSEL: Endring av prioritet klasse av denne prosess kan\nforutsake uønsket resultat inkluderer systemet kan bli ustabilt. Er du\nsikker på at du vil endre prioritet klassen?"
     IDS_MSG_TRAYICONCPUUSAGE "Prosessorbruk: %d%%"
-    IDS_STATUS_MEMUSAGE "Tildelt minne: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Tildelt minne: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Prosessorbruk: %3d%%"
     IDS_STATUS_PROCESSES "Prosesser: %d"
     IDS_NOT_RESPONDING "Ingen reaksjon"

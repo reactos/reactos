@@ -170,7 +170,7 @@ AddInputEvents(PCONSOLE Console,
         Status = STATUS_SUCCESS;
     }
 
-    if (SetWaitEvent) SetEvent(Console->InputBuffer.ActiveEvent);
+    if (SetWaitEvent) NtSetEvent(Console->InputBuffer.ActiveEvent, NULL);
 
 Done:
     if (NumEventsWritten) *NumEventsWritten = i;
@@ -198,16 +198,24 @@ NTSTATUS NTAPI
 ConDrvInitInputBuffer(IN PCONSOLE Console,
                       IN ULONG InputBufferSize)
 {
-    SECURITY_ATTRIBUTES SecurityAttributes;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
     ConSrvInitObject(&Console->InputBuffer.Header, INPUT_BUFFER, Console);
 
-    SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-    SecurityAttributes.lpSecurityDescriptor = NULL;
-    SecurityAttributes.bInheritHandle = TRUE;
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_INHERIT,
+                               NULL,
+                               NULL);
 
-    Console->InputBuffer.ActiveEvent = CreateEventW(&SecurityAttributes, TRUE, FALSE, NULL);
-    if (Console->InputBuffer.ActiveEvent == NULL) return STATUS_UNSUCCESSFUL;
+    Status = NtCreateEvent(&Console->InputBuffer.ActiveEvent, EVENT_ALL_ACCESS,
+                           &ObjectAttributes, NotificationEvent, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        return STATUS_UNSUCCESSFUL;
+        // return Status;
+    }
 
     Console->InputBuffer.InputBufferSize = InputBufferSize;
     InitializeListHead(&Console->InputBuffer.InputEvents);

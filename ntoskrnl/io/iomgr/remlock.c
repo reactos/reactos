@@ -100,7 +100,7 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
             TrackingBlock = ExAllocatePoolWithTag(NonPagedPool, sizeof(IO_REMOVE_LOCK_TRACKING_BLOCK), Lock->Dbg.AllocateTag);
             if (!TrackingBlock)
             {
-                /* Keep count of failures for lock release and missing tags */ 
+                /* Keep count of failures for lock release and missing tags */
                 InterlockedIncrement(&(Lock->Dbg.LowMemoryCount));
             }
             else

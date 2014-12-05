@@ -16,20 +16,6 @@
 
 #include "rosip.h"
 
-static const char * const tcp_state_str[] = {
-  "CLOSED",      
-  "LISTEN",      
-  "SYN_SENT",    
-  "SYN_RCVD",    
-  "ESTABLISHED", 
-  "FIN_WAIT_1",  
-  "FIN_WAIT_2",  
-  "CLOSE_WAIT",  
-  "CLOSING",     
-  "LAST_ACK",    
-  "TIME_WAIT"   
-};
-
 extern NPAGED_LOOKASIDE_LIST TdiBucketLookasideList;
 
 static

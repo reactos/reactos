@@ -318,6 +318,10 @@ WinMain(
 
     hAppInstance = hInstance;
 
+    /* Make us critical */
+    RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    RtlSetThreadIsCritical(TRUE, NULL, FALSE);
+
     if (!RegisterLogonProcess(GetCurrentProcessId(), TRUE))
     {
         ERR("WL: Could not register logon process\n");
@@ -352,6 +356,13 @@ WinMain(
     if (!InitKeyboardLayouts())
     {
         ERR("WL: Could not preload keyboard layouts\n");
+        NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
+        ExitProcess(1);
+    }
+
+    if (!StartRpcServer())
+    {
+        ERR("WL: Could not start the RPC server\n");
         NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED, 0, 0, NULL, OptionOk, &HardErrorResponse);
         ExitProcess(1);
     }

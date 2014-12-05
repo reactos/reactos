@@ -83,7 +83,7 @@ void CompleteSwitch(BOOL doSwitch)
       {
          HWND hwnd = windowList[selectedWindow];
                   
-         GetWindowTextW(hwnd, windowText, 1023);
+         GetWindowTextW(hwnd, windowText, _countof(windowText));
 
          TRACE("[ATbot] CompleteSwitch Switching to 0x%08x (%ls)\n", hwnd, windowText);
 
@@ -103,9 +103,9 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
    if (!IsWindowVisible(window))
             return TRUE;
 
-   GetClassNameW(window,windowText,4095);
-   if ((wcscmp(L"Shell_TrayWnd",windowText)==0) ||
-       (wcscmp(L"Progman",windowText)==0) )
+   GetClassNameW(window, windowText, _countof(windowText));
+   if ((wcscmp(L"Shell_TrayWnd", windowText)==0) ||
+       (wcscmp(L"Progman", windowText)==0) )
             return TRUE;
       
    // First try to get the big icon assigned to the window
@@ -194,7 +194,7 @@ void OnPaint(HWND hWnd)
    HPEN hPen;
    HFONT dcFont;
    COLORREF cr;
-   int nch = GetWindowTextW(windowList[selectedWindow], windowText, 1023);
+   int nch = GetWindowTextW(windowList[selectedWindow], windowText, _countof(windowText));
 
    dialogDC = BeginPaint(hWnd, &paint);
    {
@@ -373,7 +373,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
          }
          TRACE("DoAppSwitch VK_ESCAPE 1 Count %d windowCount %d\n",Count,windowCount);
          hwnd = windowList[Count];
-         GetWindowTextW(hwnd, Text, 1023);
+         GetWindowTextW(hwnd, Text, _countof(Text));
          TRACE("[ATbot] Switching to 0x%08x (%ls)\n", hwnd, Text);
          MakeWindowActive(hwnd);
          Esc = TRUE;
@@ -456,7 +456,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
                       Count = windowCount - 1;
                 }
                 hwnd = windowList[Count];
-                GetWindowTextW(hwnd, Text, 1023);
+                GetWindowTextW(hwnd, Text, _countof(Text));
                 MakeWindowActive(hwnd);
              }
           }
@@ -522,7 +522,7 @@ LRESULT WINAPI SwitchWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
          return TRUE;
 
       case WM_SHOWWINDOW:
-         if (wParam == TRUE)
+         if (wParam)
          {
             PrepareWindow();
             ati = (PALTTABINFO)GetWindowLongPtrW(hWnd, 0);

@@ -1520,19 +1520,6 @@ MUI_ERROR csCZErrorEntries[] =
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
     },
     {
-        //ERROR_NOT_BEHIND_EXTENDED,
-        "Nen¡ mo§n‚ vytvoýit odd¡l za rozç¡ýenìm odd¡lem.\n"
-        "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
-    },
-    {
-        //ERROR_EXTENDED_NOT_LAST,
-        "Rozç¡ýenì odd¡l mus¡ bìt v§dy posledn¡ odd¡l\n"
-        "v tabulce odd¡l….\n"
-        "\n"
-        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy."
-    },
-    {
         NULL,
         NULL
     }

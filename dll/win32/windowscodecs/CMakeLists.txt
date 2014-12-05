@@ -20,7 +20,6 @@ if(MSVC)
 endif()
 
 spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
-
 add_rpcproxy_files(windowscodecs_wincodec.idl)
 
 list(APPEND SOURCE

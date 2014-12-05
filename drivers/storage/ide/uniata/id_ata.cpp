@@ -1692,7 +1692,7 @@ IssueIdentify(
                 deviceExtension->FullIdentifyData.NVCache_Version
                 ));
 
-        KdPrint2((PRINT_PREFIX "R-rate %#x\n",
+        KdPrint2((PRINT_PREFIX "R-rate %d\n",
                 deviceExtension->FullIdentifyData.NominalMediaRotationRate
                 ));
 
@@ -4020,8 +4020,13 @@ AtapiEnableInterrupts(
         }
         chan->ChannelCtrlFlags &= ~CTRFLAGS_INTR_DISABLED;
     } else {
-        AtapiWritePort1(chan, IDX_IO2_o_Control,
+        if(deviceExtension->HwFlags & UNIATA_AHCI) {
+            // keep interrupts disabled
+            UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_IE, 0);
+        } else {
+            AtapiWritePort1(chan, IDX_IO2_o_Control,
                                IDE_DC_DISABLE_INTERRUPTS /*| IDE_DC_A_4BIT*/ );
+        }
     }
     return;
 } // end AtapiEnableInterrupts()
@@ -5071,9 +5076,9 @@ continue_err:
                     if(AtaReq->retry < MAX_RETRIES) {
 //fallback_pio:
                         if(!(deviceExtension->HwFlags & UNIATA_AHCI)) {
-                            AtaReq->Flags &= ~REQ_FLAG_DMA_OPERATION;
+                            //AtaReq->Flags &= ~REQ_FLAG_DMA_OPERATION;
+                            // Downrate will happen in AtapiDmaReinit(), try UDMA-2 for HDD only
                             AtaReq->Flags |= REQ_FLAG_FORCE_DOWNRATE;
-//                        LunExt->DeviceFlags |= DFLAGS_FORCE_DOWNRATE;
                         }
                         AtaReq->ReqState = REQ_STATE_QUEUED;
                         goto reenqueue_req;
@@ -5093,6 +5098,7 @@ continue_err:
                ((error >> 4) == SCSI_SENSE_HARDWARE_ERROR)) {
                 if(AtaReq->retry < MAX_RETRIES) {
 //fallback_pio:
+                    // Downrate will happen in AtapiDmaReinit(), use PIO immediately for ATAPI
                     AtaReq->Flags &= ~REQ_FLAG_DMA_OPERATION;
                     AtaReq->Flags |= REQ_FLAG_FORCE_DOWNRATE;
 //                        LunExt->DeviceFlags |= DFLAGS_FORCE_DOWNRATE;
@@ -5449,6 +5455,7 @@ IntrPrepareResetController:
             chan->ChannelCtrlFlags &= ~CTRFLAGS_DMA_OPERATION;
             goto CompleteRequest;
         }
+continue_read_drq:
         // Ensure that this is a read command.
         if (srb->SrbFlags & SRB_FLAGS_DATA_IN) {
 
@@ -5489,7 +5496,6 @@ IntrPrepareResetController:
                         }
                     }
                 }
-
             } else {
                 KdPrint2((PRINT_PREFIX 
                           "IdeIntr: Read %#x Dwords\n", wordCount/2));
@@ -5580,6 +5586,12 @@ IntrPrepareResetController:
 
                     status = SRB_STATUS_SUCCESS;
                     goto CompleteRequest;
+                }
+            } else {
+                if(!atapiDev && !DataOverrun && (srb->SrbFlags & SRB_FLAGS_DATA_IN) &&
+                    (statusByte == (IDE_STATUS_IDLE | IDE_STATUS_DRQ))) {
+                    KdPrint2((PRINT_PREFIX "  HDD read data ready \n"));
+                    goto continue_read_drq;
                 }
             }
         }
@@ -6689,6 +6701,7 @@ IdeReadWrite(
     // Adjust buffer address and words left count.
     AtaReq->WordsLeft -= wordCount;
     AtaReq->DataBuffer += wordCount;
+    AtaReq->WordsTransfered += wordCount;
 
     // Wait for interrupt.
     return SRB_STATUS_PENDING;

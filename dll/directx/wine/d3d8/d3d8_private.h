@@ -153,6 +153,13 @@ struct FvfToDecl
     struct d3d8_vertex_declaration *declaration;
 };
 
+enum d3d8_device_state
+{
+    D3D8_DEVICE_STATE_OK,
+    D3D8_DEVICE_STATE_LOST,
+    D3D8_DEVICE_STATE_NOT_RESET,
+};
+
 struct d3d8_device
 {
     /* IUnknown fields */
@@ -175,13 +182,18 @@ struct d3d8_device
     UINT                   index_buffer_size;
     UINT                   index_buffer_pos;
 
+    LONG device_state;
     /* Avoids recursion with nested ReleaseRef to 0 */
     BOOL                    inDestruction;
-    BOOL lost;
 };
 
 HRESULT device_init(struct d3d8_device *device, struct d3d8 *parent, struct wined3d *wined3d, UINT adapter,
         D3DDEVTYPE device_type, HWND focus_window, DWORD flags, D3DPRESENT_PARAMETERS *parameters) DECLSPEC_HIDDEN;
+
+static inline struct d3d8_device *impl_from_IDirect3DDevice8(IDirect3DDevice8 *iface)
+{
+    return CONTAINING_RECORD(iface, struct d3d8_device, IDirect3DDevice8_iface);
+}
 
 struct d3d8_resource
 {
@@ -202,12 +214,11 @@ struct d3d8_volume
     IDirect3DVolume8 IDirect3DVolume8_iface;
     struct d3d8_resource resource;
     struct wined3d_volume *wined3d_volume;
-    IUnknown *container;
-    IUnknown *forwardReference;
+    struct d3d8_texture *texture;
 };
 
-void volume_init(struct d3d8_volume *volume, struct wined3d_volume *wined3d_volume,
-        const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+void volume_init(struct d3d8_volume *volume, struct d3d8_texture *texture,
+        struct wined3d_volume *wined3d_volume, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 
 struct d3d8_swapchain
 {
@@ -225,17 +236,16 @@ struct d3d8_surface
     IDirect3DSurface8 IDirect3DSurface8_iface;
     struct d3d8_resource resource;
     struct wined3d_surface *wined3d_surface;
+    struct list rtv_entry;
+    struct wined3d_rendertarget_view *wined3d_rtv;
     IDirect3DDevice8 *parent_device;
-
-    /* The surface container */
-    IUnknown                    *container;
-
-    /* If set forward refcounting to this object */
-    IUnknown                    *forwardReference;
+    IUnknown *container;
+    struct d3d8_texture *texture;
 };
 
-void surface_init(struct d3d8_surface *surface, struct wined3d_surface *wined3d_surface,
-        struct d3d8_device *device, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
+struct wined3d_rendertarget_view *d3d8_surface_get_rendertarget_view(struct d3d8_surface *surface) DECLSPEC_HIDDEN;
+void surface_init(struct d3d8_surface *surface, IUnknown *container_parent,
+        struct wined3d_surface *wined3d_surface, const struct wined3d_parent_ops **parent_ops) DECLSPEC_HIDDEN;
 struct d3d8_surface *unsafe_impl_from_IDirect3DSurface8(IDirect3DSurface8 *iface) DECLSPEC_HIDDEN;
 
 struct d3d8_vertexbuffer
@@ -270,6 +280,7 @@ struct d3d8_texture
     struct d3d8_resource resource;
     struct wined3d_texture *wined3d_texture;
     IDirect3DDevice8 *parent_device;
+    struct list rtv_list;
 };
 
 HRESULT cubetexture_init(struct d3d8_texture *texture, struct d3d8_device *device,

@@ -303,7 +303,7 @@ PspDestroyQuotaBlock(
 NTSTATUS
 NTAPI
 PspSetQuotaLimits(
-    _In_ HANDLE ProcessHandle,
+    _In_ PEPROCESS Process,
     _In_ ULONG Unused,
     _In_ PVOID QuotaLimits,
     _In_ ULONG QuotaLimitsLength,

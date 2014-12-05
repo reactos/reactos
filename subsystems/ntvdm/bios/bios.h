@@ -17,10 +17,24 @@
 
 /* DEFINES ********************************************************************/
 
+/* BOP Identifiers */
+#define BOP_RESET       0x00    // Windows NTVDM (SoftPC) BIOS calls BOP 0x00
+                                // to let the virtual machine initialize itself
+                                // the IVT and its hardware.
+#define BOP_EQUIPLIST   0x11
+#define BOP_GETMEMSIZE  0x12
+
+
+
+
 #define BDA_SEGMENT     0x40
 #define BIOS_SEGMENT    0xF000
 
-#define BIOS_EQUIPMENT_LIST     0x2C // HACK: Disable FPU for now
+// HACK: Disable FPU for now because it is not fully ready yet for being used
+// by all applications (e.g. QBasic runtime would use the native FPU if the bit
+// is set, but then subsequently fails, unless the FPU bit is unset in that case
+// QBasic uses its emulated FPU).
+#define BIOS_EQUIPMENT_LIST 0x2C    // Bit1: FPU, Bit 2: Mouse
 
 #pragma pack(push, 1)
 
@@ -84,7 +98,7 @@ typedef struct
     BYTE Reserved5[2];                          // 0x90
     BYTE Reserved6[2];                          // 0x92
     BYTE Reserved7[2];                          // 0x94
-    WORD Reserved8;                             // 0x96
+    WORD KeybdStatusFlags;                      // 0x96
     DWORD Reserved9;                            // 0x98
     DWORD Reserved10;                           // 0x9c
     DWORD Reserved11[2];                        // 0xa0
@@ -111,8 +125,8 @@ typedef struct _BIOS_CONFIG_TABLE
     WORD    Length;                             // 0x00
     BYTE    Model;                              // 0x02
     BYTE    SubModel;                           // 0x03
-    BYTE    BiosRevision;                       // 0x04
-    BYTE    BiosFeature[5];                     // 0x05 -- 0x09
+    BYTE    Revision;                           // 0x04
+    BYTE    Feature[5];                         // 0x05 -- 0x09
     // Other BIOSes may extend this table. We don't.
 } BIOS_CONFIG_TABLE, *PBIOS_CONFIG_TABLE;
 

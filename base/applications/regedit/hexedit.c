@@ -62,7 +62,7 @@ static UINT ClipboardFormatID = 0;
 #define HEHT_ASCIIDUMP      (0x6)
 #define HEHT_RIGHTMARGIN    (0x7)
 
-INT_PTR CALLBACK HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 ATOM
 WINAPI
@@ -75,7 +75,7 @@ RegisterHexEditorClass(HINSTANCE hInstance)
     ZeroMemory(&WndClass, sizeof(WNDCLASSEXW));
     WndClass.cbSize = sizeof(WNDCLASSEXW);
     WndClass.style = CS_DBLCLKS;
-    WndClass.lpfnWndProc = (WNDPROC)HexEditWndProc;
+    WndClass.lpfnWndProc = HexEditWndProc;
     WndClass.cbWndExtra = sizeof(PHEXEDIT_DATA);
     WndClass.hInstance = hInstance;
     WndClass.hCursor = LoadCursorW(NULL, IDC_IBEAM);
@@ -1415,13 +1415,13 @@ HEXEDIT_WM_CONTEXTMENU(PHEXEDIT_DATA hed, INT x, INT y)
     PostMessageW(hed->hWndSelf, WM_NULL, 0, 0);
 }
 
-INT_PTR CALLBACK
+LRESULT CALLBACK
 HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PHEXEDIT_DATA hed;
     POINTS p;
 
-    hed = (PHEXEDIT_DATA)(LONG_PTR)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
+    hed = (PHEXEDIT_DATA)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
     switch(uMsg)
     {
     case WM_ERASEBKGND:

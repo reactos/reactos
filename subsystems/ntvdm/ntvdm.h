@@ -41,12 +41,30 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
 /* FUNCTIONS ******************************************************************/
 
 #ifndef STANDALONE
+extern BOOLEAN AcceptCommands;
+extern HANDLE CommandThread;
 extern ULONG SessionId;
 #endif
 
 extern HANDLE VdmTaskEvent;
 
+// Command line of NTVDM
+extern INT     NtVdmArgc;
+extern WCHAR** NtVdmArgv;
+
+
+/*
+ * Interface functions
+ */
 VOID DisplayMessage(LPCWSTR Format, ...);
+
+/*static*/ VOID
+CreateVdmMenu(HANDLE ConOutHandle);
+/*static*/ VOID
+DestroyVdmMenu(VOID);
+
+VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent);
+VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent);
 
 #endif // _NTVDM_H_
 

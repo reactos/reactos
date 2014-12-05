@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * fast486.h
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -75,14 +75,15 @@
 #define FAST486_DR4_RESERVED 0xFFFF1FF0
 #define FAST486_DR5_RESERVED 0x0000DC00
 
-#define FAST486_IDT_TASK_GATE       0x5
-#define FAST486_IDT_INT_GATE        0x6
-#define FAST486_IDT_TRAP_GATE       0x7
-#define FAST486_IDT_INT_GATE_32     0xE
-#define FAST486_IDT_TRAP_GATE_32    0xF
-
-#define FAST486_LDT_SIGNATURE 0x02
-#define FAST486_TSS_SIGNATURE 0x09
+#define FAST486_LDT_SIGNATURE       0x02
+#define FAST486_TASK_GATE_SIGNATURE 0x05
+#define FAST486_IDT_INT_GATE        0x06
+#define FAST486_IDT_TRAP_GATE       0x07
+#define FAST486_TSS_SIGNATURE       0x09
+#define FAST486_BUSY_TSS_SIGNATURE  0x0B
+#define FAST486_CALL_GATE_SIGNATURE 0x0C
+#define FAST486_IDT_INT_GATE_32     0x0E
+#define FAST486_IDT_TRAP_GATE_32    0x0F
 
 #define FAST486_PREFIX_SEG      (1 << 0)
 #define FAST486_PREFIX_OPSIZE   (1 << 1)
@@ -90,6 +91,20 @@
 #define FAST486_PREFIX_LOCK     (1 << 3)
 #define FAST486_PREFIX_REPNZ    (1 << 4)
 #define FAST486_PREFIX_REP      (1 << 5)
+
+#define FAST486_FPU_DEFAULT_CONTROL 0x037F
+
+#define FAST486_PAGE_SIZE 4096
+#define FAST486_CACHE_SIZE 32
+
+/*
+ * These are condiciones sine quibus non that should be respected, because
+ * otherwise when fetching DWORDs you would read extra garbage bytes
+ * (by reading outside of the prefetch buffer). The prefetch cache must
+ * also not cross a page boundary.
+ */
+C_ASSERT((FAST486_CACHE_SIZE >= sizeof(DWORD))
+         && (FAST486_CACHE_SIZE <= FAST486_PAGE_SIZE));
 
 struct _FAST486_STATE;
 typedef struct _FAST486_STATE FAST486_STATE, *PFAST486_STATE;
@@ -155,14 +170,6 @@ typedef enum _FAST486_EXCEPTIONS
     FAST486_EXCEPTION_MC = 0x12
 } FAST486_EXCEPTIONS, *PFAST486_EXCEPTIONS;
 
-typedef enum _FAST486_INT_STATUS
-{
-    FAST486_INT_NONE = 0,
-    FAST486_INT_EXECUTE = 1,
-    FAST486_INT_SIGNAL = 2,
-    FAST486_INT_DELAYED = 3
-} FAST486_INT_STATUS, *PFAST486_INT_STATUS;
-
 typedef
 VOID
 (NTAPI *FAST486_MEM_READ_PROC)
@@ -188,7 +195,7 @@ VOID
 (NTAPI *FAST486_IO_READ_PROC)
 (
     PFAST486_STATE State,
-    ULONG Port,
+    USHORT Port,
     PVOID Buffer,
     ULONG DataCount,
     UCHAR DataSize
@@ -199,17 +206,10 @@ VOID
 (NTAPI *FAST486_IO_WRITE_PROC)
 (
     PFAST486_STATE State,
-    ULONG Port,
+    USHORT Port,
     PVOID Buffer,
     ULONG DataCount,
     UCHAR DataSize
-);
-
-typedef
-VOID
-(NTAPI *FAST486_IDLE_PROC)
-(
-    PFAST486_STATE State
 );
 
 typedef
@@ -259,22 +259,21 @@ typedef struct _FAST486_SEG_REG
     ULONG Base;
 } FAST486_SEG_REG, *PFAST486_SEG_REG;
 
-typedef struct
+typedef struct _FAST486_LDT_REG
 {
     USHORT Selector;
     ULONG Base;
     ULONG Limit;
-} FAST486_LDT_REG;
+} FAST486_LDT_REG, *PFAST486_LDT_REG;
 
-typedef struct
+typedef struct _FAST486_TASK_REG
 {
     USHORT Selector;
     ULONG Base;
     ULONG Limit;
-    BOOLEAN Busy;
 } FAST486_TASK_REG, *PFAST486_TASK_REG;
 
-#pragma pack(push, 1)
+#include <pshpack1.h>
 
 typedef struct
 {
@@ -348,7 +347,7 @@ typedef struct
 /* Verify the structure size */
 C_ASSERT(sizeof(FAST486_IDT_ENTRY) == sizeof(ULONGLONG));
 
-#pragma pack(pop)
+#include <poppack.h>
 
 typedef struct _FAST486_TABLE_REG
 {
@@ -420,6 +419,7 @@ typedef struct _FAST486_FPU_DATA_REG
 {
     ULONGLONG Mantissa;
     USHORT Exponent;
+    UCHAR Sign;
 } FAST486_FPU_DATA_REG, *PFAST486_FPU_DATA_REG;
 
 typedef union _FAST486_FPU_STATUS_REG
@@ -471,7 +471,6 @@ struct _FAST486_STATE
     FAST486_MEM_WRITE_PROC MemWriteCallback;
     FAST486_IO_READ_PROC IoReadCallback;
     FAST486_IO_WRITE_PROC IoWriteCallback;
-    FAST486_IDLE_PROC IdleCallback;
     FAST486_BOP_PROC BopCallback;
     FAST486_INT_ACK_PROC IntAckCallback;
     FAST486_REG GeneralRegs[FAST486_NUM_GEN_REGS];
@@ -487,13 +486,21 @@ struct _FAST486_STATE
     ULONG ExceptionCount;
     ULONG PrefixFlags;
     FAST486_SEG_REGS SegmentOverride;
-    FAST486_INT_STATUS IntStatus;
-    UCHAR PendingIntNum;
+    BOOLEAN Halted;
+    BOOLEAN IntSignaled;
+    BOOLEAN DoNotInterrupt;
     PULONG Tlb;
+#ifndef FAST486_NO_PREFETCH
+    BOOLEAN PrefetchValid;
+    ULONG PrefetchAddress;
+    UCHAR PrefetchCache[FAST486_CACHE_SIZE];
+#endif
+#ifndef FAST486_NO_FPU
     FAST486_FPU_DATA_REG FpuRegisters[FAST486_NUM_FPU_REGS];
     FAST486_FPU_STATUS_REG FpuStatus;
     FAST486_FPU_CONTROL_REG FpuControl;
     USHORT FpuTag;
+#endif
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -505,7 +512,6 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_MEM_WRITE_PROC MemWriteCallback,
                   FAST486_IO_READ_PROC   IoReadCallback,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
-                  FAST486_IDLE_PROC      IdleCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
                   PULONG                 Tlb);
@@ -533,10 +539,6 @@ Fast486StepOut(PFAST486_STATE State);
 VOID
 NTAPI
 Fast486DumpState(PFAST486_STATE State);
-
-VOID
-NTAPI
-Fast486Interrupt(PFAST486_STATE State, UCHAR Number);
 
 VOID
 NTAPI

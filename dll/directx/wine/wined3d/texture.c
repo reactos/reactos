@@ -23,6 +23,7 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struct wined3d_texture_ops *texture_ops,
         UINT layer_count, UINT level_count, const struct wined3d_resource_desc *desc, struct wined3d_device *device,
@@ -51,9 +52,17 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
             desc->multisample_type, desc->multisample_quality, desc->usage, desc->pool,
             desc->width, desc->height, desc->depth, 0, parent, parent_ops, resource_ops)))
     {
+        static unsigned int once;
+
+        if ((desc->format == WINED3DFMT_DXT1 || desc->format == WINED3DFMT_DXT2 || desc->format == WINED3DFMT_DXT3
+                || desc->format == WINED3DFMT_DXT4 || desc->format == WINED3DFMT_DXT5)
+                && !(format->flags & WINED3DFMT_FLAG_TEXTURE) && !once++)
+            ERR_(winediag)("The application tried to create a DXTn texture, but the driver does not support them.\n");
+
         WARN("Failed to initialize resource, returning %#x\n", hr);
         return hr;
     }
+    wined3d_resource_update_draw_binding(&texture->resource);
 
     texture->texture_ops = texture_ops;
     texture->sub_resources = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
@@ -133,6 +142,12 @@ static void wined3d_texture_cleanup(struct wined3d_texture *texture)
     wined3d_texture_unload_gl_texture(texture);
     HeapFree(GetProcessHeap(), 0, texture->sub_resources);
     resource_cleanup(&texture->resource);
+}
+
+void wined3d_texture_set_swapchain(struct wined3d_texture *texture, struct wined3d_swapchain *swapchain)
+{
+    texture->swapchain = swapchain;
+    wined3d_resource_update_draw_binding(&texture->resource);
 }
 
 void wined3d_texture_set_dirty(struct wined3d_texture *texture)
@@ -466,8 +481,14 @@ void wined3d_texture_apply_state_changes(struct wined3d_texture *texture,
 
 ULONG CDECL wined3d_texture_incref(struct wined3d_texture *texture)
 {
-    ULONG refcount = InterlockedIncrement(&texture->resource.ref);
+    ULONG refcount;
 
+    TRACE("texture %p, swapchain %p.\n", texture, texture->swapchain);
+
+    if (texture->swapchain)
+        return wined3d_swapchain_incref(texture->swapchain);
+
+    refcount = InterlockedIncrement(&texture->resource.ref);
     TRACE("%p increasing refcount to %u.\n", texture, refcount);
 
     return refcount;
@@ -475,8 +496,14 @@ ULONG CDECL wined3d_texture_incref(struct wined3d_texture *texture)
 
 ULONG CDECL wined3d_texture_decref(struct wined3d_texture *texture)
 {
-    ULONG refcount = InterlockedDecrement(&texture->resource.ref);
+    ULONG refcount;
 
+    TRACE("texture %p, swapchain %p.\n", texture, texture->swapchain);
+
+    if (texture->swapchain)
+        return wined3d_swapchain_decref(texture->swapchain);
+
+    refcount = InterlockedDecrement(&texture->resource.ref);
     TRACE("%p decreasing refcount to %u.\n", texture, refcount);
 
     if (!refcount)
@@ -494,16 +521,6 @@ struct wined3d_resource * CDECL wined3d_texture_get_resource(struct wined3d_text
     TRACE("texture %p.\n", texture);
 
     return &texture->resource;
-}
-
-DWORD CDECL wined3d_texture_set_priority(struct wined3d_texture *texture, DWORD priority)
-{
-    return resource_set_priority(&texture->resource, priority);
-}
-
-DWORD CDECL wined3d_texture_get_priority(const struct wined3d_texture *texture)
-{
-    return resource_get_priority(&texture->resource);
 }
 
 /* Context activation is done by the caller */
@@ -734,17 +751,15 @@ static void texture2d_sub_resource_add_dirty_region(struct wined3d_resource *sub
     struct wined3d_surface *surface = surface_from_resource(sub_resource);
 
     surface_prepare_map_memory(surface);
-    surface_load_location(surface, surface->map_binding);
-    surface_invalidate_location(surface, ~surface->map_binding);
+    surface_load_location(surface, surface->resource.map_binding);
+    surface_invalidate_location(surface, ~surface->resource.map_binding);
 }
 
 static void texture2d_sub_resource_cleanup(struct wined3d_resource *sub_resource)
 {
     struct wined3d_surface *surface = surface_from_resource(sub_resource);
 
-    surface_set_texture_target(surface, 0, 0);
-    surface_set_container(surface, NULL);
-    wined3d_surface_decref(surface);
+    wined3d_surface_destroy(surface);
 }
 
 static const struct wined3d_texture_ops texture2d_ops =
@@ -753,6 +768,16 @@ static const struct wined3d_texture_ops texture2d_ops =
     texture2d_sub_resource_add_dirty_region,
     texture2d_sub_resource_cleanup,
 };
+
+static ULONG texture_resource_incref(struct wined3d_resource *resource)
+{
+    return wined3d_texture_incref(wined3d_texture_from_resource(resource));
+}
+
+static ULONG texture_resource_decref(struct wined3d_resource *resource)
+{
+    return wined3d_texture_decref(wined3d_texture_from_resource(resource));
+}
 
 static void wined3d_texture_unload(struct wined3d_resource *resource)
 {
@@ -774,6 +799,8 @@ static void wined3d_texture_unload(struct wined3d_resource *resource)
 
 static const struct wined3d_resource_ops texture_resource_ops =
 {
+    texture_resource_incref,
+    texture_resource_decref,
     wined3d_texture_unload,
 };
 
@@ -877,14 +904,14 @@ static HRESULT cubetexture_init(struct wined3d_texture *texture, const struct wi
             UINT idx = j * texture->level_count + i;
             struct wined3d_surface *surface;
 
-            if (FAILED(hr = wined3d_surface_create(texture, &surface_desc, surface_flags, &surface)))
+            if (FAILED(hr = wined3d_surface_create(texture, &surface_desc,
+                    cube_targets[j], i, j, surface_flags, &surface)))
             {
                 WARN("Failed to create surface, hr %#x.\n", hr);
                 wined3d_texture_cleanup(texture);
                 return hr;
             }
 
-            surface_set_texture_target(surface, cube_targets[j], i);
             texture->sub_resources[idx] = &surface->resource;
             TRACE("Created surface level %u @ %p.\n", i, surface);
         }
@@ -1031,14 +1058,14 @@ static HRESULT texture_init(struct wined3d_texture *texture, const struct wined3
     {
         struct wined3d_surface *surface;
 
-        if (FAILED(hr = wined3d_surface_create(texture, &surface_desc, surface_flags, &surface)))
+        if (FAILED(hr = wined3d_surface_create(texture, &surface_desc,
+                texture->target, i, 0, surface_flags, &surface)))
         {
             WARN("Failed to create surface, hr %#x.\n", hr);
             wined3d_texture_cleanup(texture);
             return hr;
         }
 
-        surface_set_texture_target(surface, texture->target, i);
         texture->sub_resources[i] = &surface->resource;
         TRACE("Created surface level %u @ %p.\n", i, surface);
         /* Calculate the next mipmap level. */
@@ -1065,9 +1092,7 @@ static void texture3d_sub_resource_cleanup(struct wined3d_resource *sub_resource
 {
     struct wined3d_volume *volume = volume_from_resource(sub_resource);
 
-    /* Cleanup the container. */
-    volume_set_container(volume, NULL);
-    wined3d_volume_decref(volume);
+    wined3d_volume_destroy(volume);
 }
 
 static const struct wined3d_texture_ops texture3d_ops =

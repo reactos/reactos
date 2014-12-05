@@ -309,7 +309,7 @@ CsrInsertThread(IN PCSR_PROCESS Process,
                                       sizeof(ThreadInfo),
                                       NULL);
     if (!NT_SUCCESS(Status)) return Status;
-    if (ThreadInfo == TRUE) return STATUS_THREAD_IS_TERMINATING;
+    if (ThreadInfo) return STATUS_THREAD_IS_TERMINATING;
 
     /* Insert it into the Regular List */
     InsertTailList(&Process->ThreadList, &Thread->Link);

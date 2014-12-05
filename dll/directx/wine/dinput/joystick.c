@@ -404,7 +404,6 @@ void _dump_DIDEVCAPS(const DIDEVCAPS *lpDIDevCaps)
     TRACE("dwFlags: %08x\n", lpDIDevCaps->dwFlags);
     TRACE("dwDevType: %08x %s\n", lpDIDevCaps->dwDevType,
           lpDIDevCaps->dwDevType == DIDEVTYPE_DEVICE ? "DIDEVTYPE_DEVICE" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_DEVICE ? "DIDEVTYPE_DEVICE" :
           lpDIDevCaps->dwDevType == DIDEVTYPE_MOUSE ? "DIDEVTYPE_MOUSE" :
           lpDIDevCaps->dwDevType == DIDEVTYPE_KEYBOARD ? "DIDEVTYPE_KEYBOARD" :
           lpDIDevCaps->dwDevType == DIDEVTYPE_JOYSTICK ? "DIDEVTYPE_JOYSTICK" :

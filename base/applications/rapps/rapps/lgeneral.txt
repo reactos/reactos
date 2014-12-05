@@ -4,7 +4,7 @@
 [Section]
 Name = LGeneral
 Version = 1.1
-Licence = GPL
+License = GPL
 Description = Panzer General Clone using SDL libs.
 Size = 1.92 MB
 Category = 4

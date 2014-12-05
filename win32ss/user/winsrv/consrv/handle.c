@@ -521,20 +521,59 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
         return Status;
     }
 
-    /* Duplicate the Input Event */
+    /* Duplicate the Initialization Events */
     Status = NtDuplicateObject(NtCurrentProcess(),
-                               Console->InputBuffer.ActiveEvent,
+                               Console->InitEvents[INIT_SUCCESS],
                                ProcessData->Process->ProcessHandle,
-                               &ProcessData->InputWaitHandle,
+                               &ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS],
                                EVENT_ALL_ACCESS, 0, 0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
         ConSrvFreeHandlesTable(ProcessData);
         ConSrvDeleteConsole(Console);
         ProcessData->ConsoleHandle = NULL;
         return Status;
     }
+
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_FAILURE],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_FAILURE],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
+        NtClose(ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+        ConSrvFreeHandlesTable(ProcessData);
+        ConSrvDeleteConsole(Console);
+        ProcessData->ConsoleHandle = NULL;
+        return Status;
+    }
+
+    /* Duplicate the Input Event */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InputBuffer.ActiveEvent,
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleInitInfo->ConsoleStartInfo->InputWaitHandle,
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InputWaitHandle) failed: %lu\n", Status);
+        NtClose(ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_FAILURE]);
+        NtClose(ConsoleInitInfo->ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+        ConSrvFreeHandlesTable(ProcessData);
+        ConSrvDeleteConsole(Console);
+        ProcessData->ConsoleHandle = NULL;
+        return Status;
+    }
+
+    /* Mark the process as having a console */
+    ProcessData->ConsoleApp = TRUE;
+    ProcessData->Process->Flags |= CsrProcessIsConsoleApp;
+
+    /* Return the console handle to the caller */
+    ConsoleInitInfo->ConsoleStartInfo->ConsoleHandle = ProcessData->ConsoleHandle;
 
     /* Insert the process into the processes list of the console */
     InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
@@ -554,7 +593,8 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                      BOOLEAN CreateNewHandlesTable,
                      PHANDLE pInputHandle,
                      PHANDLE pOutputHandle,
-                     PHANDLE pErrorHandle)
+                     PHANDLE pErrorHandle,
+                     PCONSOLE_START_INFO ConsoleStartInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE Console;
@@ -599,19 +639,56 @@ ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
         }
     }
 
+    /* Duplicate the Initialization Events */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_SUCCESS],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleStartInfo->InitEvents[INIT_SUCCESS],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_SUCCESS]) failed: %lu\n", Status);
+        ConSrvFreeHandlesTable(ProcessData);
+        ProcessData->ConsoleHandle = NULL;
+        goto Quit;
+    }
+
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               Console->InitEvents[INIT_FAILURE],
+                               ProcessData->Process->ProcessHandle,
+                               &ConsoleStartInfo->InitEvents[INIT_FAILURE],
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject(InitEvents[INIT_FAILURE]) failed: %lu\n", Status);
+        NtClose(ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
+        ConSrvFreeHandlesTable(ProcessData);
+        ProcessData->ConsoleHandle = NULL;
+        goto Quit;
+    }
+
     /* Duplicate the Input Event */
     Status = NtDuplicateObject(NtCurrentProcess(),
                                Console->InputBuffer.ActiveEvent,
                                ProcessData->Process->ProcessHandle,
-                               &ProcessData->InputWaitHandle,
+                               &ConsoleStartInfo->InputWaitHandle,
                                EVENT_ALL_ACCESS, 0, 0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        DPRINT1("NtDuplicateObject(InputWaitHandle) failed: %lu\n", Status);
+        NtClose(ConsoleStartInfo->InitEvents[INIT_FAILURE]);
+        NtClose(ConsoleStartInfo->InitEvents[INIT_SUCCESS]);
         ConSrvFreeHandlesTable(ProcessData); // NOTE: Always free the handles table.
         ProcessData->ConsoleHandle = NULL;
         goto Quit;
     }
+
+    /* Mark the process as having a console */
+    ProcessData->ConsoleApp = TRUE;
+    ProcessData->Process->Flags |= CsrProcessIsConsoleApp;
+
+    /* Return the console handle to the caller */
+    ConsoleStartInfo->ConsoleHandle = ProcessData->ConsoleHandle;
 
     /* Insert the process into the processes list of the console */
     InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
@@ -630,74 +707,78 @@ Quit:
     return Status;
 }
 
-VOID
+NTSTATUS
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
     PCONSOLE Console;
+    PCONSOLE_PROCESS_DATA ConsoleLeaderProcess;
 
     DPRINT("ConSrvRemoveConsole\n");
 
-    // RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    /* Mark the process as not having a console anymore */
+    ProcessData->ConsoleApp = FALSE;
+    ProcessData->Process->Flags &= ~CsrProcessIsConsoleApp;
 
     /* Validate and lock the console */
-    if (ConSrvValidateConsole(&Console,
-                              ProcessData->ConsoleHandle,
-                              CONSOLE_RUNNING, TRUE))
+    if (!ConSrvValidateConsole(&Console,
+                               ProcessData->ConsoleHandle,
+                               CONSOLE_RUNNING, TRUE))
     {
-        /* Retrieve the console leader process */
-        PCONSOLE_PROCESS_DATA ConsoleLeaderProcess = ConSrvGetConsoleLeaderProcess(Console);
-
-        DPRINT("ConSrvRemoveConsole - Locking OK\n");
-
-        /* Close all console handles and free the handles table */
-        ConSrvFreeHandlesTable(ProcessData);
-
-        /* Detach the process from the console */
-        ProcessData->ConsoleHandle = NULL;
-
-        /* Remove the process from the console's list of processes */
-        RemoveEntryList(&ProcessData->ConsoleLink);
-
-        /* Check whether the console should send a last close notification */
-        if (Console->NotifyLastClose)
-        {
-            /* If we are removing the process which wants the last close notification... */
-            if (ProcessData == Console->NotifiedLastCloseProcess)
-            {
-                /* ... just reset the flag and the pointer... */
-                Console->NotifyLastClose = FALSE;
-                Console->NotifiedLastCloseProcess = NULL;
-            }
-            /*
-             * ... otherwise, if we are removing the console leader process
-             * (that cannot be the process wanting the notification, because
-             * the previous case already dealt with it)...
-             */
-            else if (ProcessData == ConsoleLeaderProcess)
-            {
-                /*
-                 * ... reset the flag first (so that we avoid multiple notifications)
-                 * and then send the last close notification.
-                 */
-                Console->NotifyLastClose = FALSE;
-                ConSrvConsoleCtrlEvent(CTRL_LAST_CLOSE_EVENT, Console->NotifiedLastCloseProcess);
-
-                /* Only now, reset the pointer */
-                Console->NotifiedLastCloseProcess = NULL;
-            }
-        }
-
-        /* Update the internal info of the terminal */
-        TermRefreshInternalInfo(Console);
-
-        /* Release the console */
-        DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
-        ConSrvReleaseConsole(Console, TRUE);
-        //CloseHandle(ProcessData->InputWaitHandle);
-        //ProcessData->InputWaitHandle = NULL;
+        // FIXME: Find another status code
+        return STATUS_UNSUCCESSFUL;
     }
 
-    // RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    DPRINT("ConSrvRemoveConsole - Locking OK\n");
+
+    /* Retrieve the console leader process */
+    ConsoleLeaderProcess = ConSrvGetConsoleLeaderProcess(Console);
+
+    /* Close all console handles and free the handles table */
+    ConSrvFreeHandlesTable(ProcessData);
+
+    /* Detach the process from the console */
+    ProcessData->ConsoleHandle = NULL;
+
+    /* Remove the process from the console's list of processes */
+    RemoveEntryList(&ProcessData->ConsoleLink);
+
+    /* Check whether the console should send a last close notification */
+    if (Console->NotifyLastClose)
+    {
+        /* If we are removing the process which wants the last close notification... */
+        if (ProcessData == Console->NotifiedLastCloseProcess)
+        {
+            /* ... just reset the flag and the pointer... */
+            Console->NotifyLastClose = FALSE;
+            Console->NotifiedLastCloseProcess = NULL;
+        }
+        /*
+         * ... otherwise, if we are removing the console leader process
+         * (that cannot be the process wanting the notification, because
+         * the previous case already dealt with it)...
+         */
+        else if (ProcessData == ConsoleLeaderProcess)
+        {
+            /*
+             * ... reset the flag first (so that we avoid multiple notifications)
+             * and then send the last close notification.
+             */
+            Console->NotifyLastClose = FALSE;
+            ConSrvConsoleCtrlEvent(CTRL_LAST_CLOSE_EVENT, Console->NotifiedLastCloseProcess);
+
+            /* Only now, reset the pointer */
+            Console->NotifiedLastCloseProcess = NULL;
+        }
+    }
+
+    /* Update the internal info of the terminal */
+    TermRefreshInternalInfo(Console);
+
+    /* Release the console */
+    DPRINT("ConSrvRemoveConsole - Decrement Console->ReferenceCount = %lu\n", Console->ReferenceCount);
+    ConSrvReleaseConsole(Console, TRUE);
+
+    return STATUS_SUCCESS;
 }
 
 

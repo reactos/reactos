@@ -194,19 +194,6 @@ HRESULT WINAPI CloseINFEngine(HINF hInf)
 }
 
 /***********************************************************************
- *           DllMain (ADVPACK.@)
- */
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    TRACE("(%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
-
-    if (fdwReason == DLL_PROCESS_ATTACH)
-        DisableThreadLibraryCalls(hinstDLL);
-
-    return TRUE;
-}
-
-/***********************************************************************
  *              IsNTAdmin	(ADVPACK.@)
  *
  * Checks if the user has admin privileges.

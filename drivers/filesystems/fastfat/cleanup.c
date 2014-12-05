@@ -24,6 +24,7 @@ VfatCleanupFile(
     PVFAT_IRP_CONTEXT IrpContext)
 {
     PVFATFCB pFcb;
+    PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
     PFILE_OBJECT FileObject = IrpContext->FileObject;
 
     DPRINT("VfatCleanupFile(DeviceExt %p, FileObject %p)\n",
@@ -63,6 +64,7 @@ VfatCleanupFile(
                            FileObject->FsContext2);
 
         pFcb->OpenHandleCount--;
+        DeviceExt->OpenHandleCount--;
 
         if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) &&
             FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
@@ -107,6 +109,13 @@ VfatCleanupFile(
         ExReleaseResourceLite(&pFcb->PagingIoResource);
         ExReleaseResourceLite(&pFcb->MainResource);
     }
+
+#ifdef ENABLE_SWAPOUT
+    if (DeviceExt->Flags & VCB_DISMOUNT_PENDING)
+    {
+        VfatCheckForDismount(DeviceExt, FALSE);
+    }
+#endif
 
     return STATUS_SUCCESS;
 }

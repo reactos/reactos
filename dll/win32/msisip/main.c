@@ -85,6 +85,7 @@ HRESULT WINAPI DllRegisterServer(void)
     prov.pwszVerifyFuncName = verifyIndirectData;
     prov.pwszRemoveFuncName = removeSignedDataMsg;
     prov.pwszIsFunctionNameFmt2 = isMyTypeOfFile;
+    prov.pwszGetCapFuncName = NULL;
     return CryptSIPAddProvider(&prov) ? S_OK : S_FALSE;
 }
 

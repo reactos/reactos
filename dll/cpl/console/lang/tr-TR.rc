@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -141,7 +141,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Husûsiyetleri Yalnızca Şimdiki Pencereye Uygula", IDC_RADIO_APPLY_CURRENT,
             "Button", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 12, 207, 10
-    CONTROL "H&usûsiyetleri Aynı Başlıktaki Gelecek Pencereler İçin Kaydet", IDC_RADIO_APPLY_ALL,
+    CONTROL "H&usûsiyetleri Aynı Başlıktaki Gelecek Pencereler İçin Sakla", IDC_RADIO_APPLY_ALL,
             "Button", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 31, 207, 10
     PUSHBUTTON "Tamam", IDOK, 58, 58, 50, 14, WS_VISIBLE
     PUSHBUTTON "İptal", IDCANCEL, 114, 58, 50, 14, WS_VISIBLE

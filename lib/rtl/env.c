@@ -535,7 +535,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
    }
 
    Value->Length = 0;
-   if (SysEnvUsed == TRUE)
+   if (SysEnvUsed)
       RtlAcquirePebLock();
 
    wcs = Environment;
@@ -573,7 +573,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
                Status = STATUS_BUFFER_TOO_SMALL;
             }
 
-            if (SysEnvUsed == TRUE)
+            if (SysEnvUsed)
                RtlReleasePebLock();
 
             return(Status);
@@ -582,7 +582,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
       wcs++;
    }
 
-   if (SysEnvUsed == TRUE)
+   if (SysEnvUsed)
       RtlReleasePebLock();
 
    DPRINT("Return STATUS_VARIABLE_NOT_FOUND: %wZ\n", Name);

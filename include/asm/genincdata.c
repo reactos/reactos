@@ -74,7 +74,7 @@ __attribute__ ((section(".asmdef")))
 
 ASMGENDATA Table[] =
 {
-#if defined (_M_IX86) || defined (M_AMD64)
+#if defined (_M_IX86) || defined (_M_AMD64)
 /* PORTABLE CONSTANTS ********************************************************/
 #include "ksx.template.h"
 #endif

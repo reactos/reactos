@@ -20,9 +20,11 @@ list(APPEND SOURCE
 
 add_library(uniata SHARED ${SOURCE} idedma.rc)
 
-
 if(NOT MSVC)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-unused-but-set-variable -Wno-narrowing")
+    add_target_compile_flags(uniata "-Wno-narrowing")
+    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        add_target_compile_flags(uniata "-Wno-unused-but-set-variable")
+    endif()
 endif()
 
 add_pch(uniata stdafx.h SOURCE)

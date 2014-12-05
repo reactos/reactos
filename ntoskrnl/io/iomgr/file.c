@@ -404,6 +404,27 @@ IopParseDevice(IN PVOID ParseObject,
     /* Check if we can simply use a dummy file */
     UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
 
+    /* FIXME: Small hack still exists, have to check why...
+     * This is triggered multiple times by usetup and then once per boot.
+     */
+    if (ExpInTextModeSetup &&
+        !(DirectOpen) &&
+        !(RemainingName->Length) &&
+        !(OpenPacket->RelatedFileObject) &&
+        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
+        (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
+        !(UseDummyFile))
+    {
+        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
+        DesiredAccess & ~(SYNCHRONIZE |
+                          FILE_READ_ATTRIBUTES |
+                          READ_CONTROL |
+                          ACCESS_SYSTEM_SECURITY |
+                          WRITE_OWNER |
+                          WRITE_DAC));
+        DirectOpen = TRUE;
+    }
+
     /* Check if this is a direct open */
     if (!(RemainingName->Length) &&
         !(OpenPacket->RelatedFileObject) &&
@@ -416,26 +437,6 @@ IopParseDevice(IN PVOID ParseObject,
         !(UseDummyFile))
     {
         /* Remember this for later */
-        DirectOpen = TRUE;
-    }
-
-    /* FIXME: Small hack still exists, have to check why...
-     * This is triggered multiple times by usetup and then once per boot.
-     */
-    if (!(DirectOpen) &&
-        !(RemainingName->Length) &&
-        !(OpenPacket->RelatedFileObject) &&
-        ((wcsstr(CompleteName->Buffer, L"Harddisk")) ||
-         (wcsstr(CompleteName->Buffer, L"Floppy"))) &&
-        !(UseDummyFile))
-    {
-        DPRINT1("Using IopParseDevice() hack. Requested invalid attributes: %lx\n",
-        DesiredAccess & ~(SYNCHRONIZE |
-                          FILE_READ_ATTRIBUTES |
-                          READ_CONTROL |
-                          ACCESS_SYSTEM_SECURITY |
-                          WRITE_OWNER |
-                          WRITE_DAC));
         DirectOpen = TRUE;
     }
 
@@ -1600,6 +1601,8 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (OpenPacket.ParseCheck != TRUE)
     {
         /* Parse failed */
+        DPRINT("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n",
+               ObjectAttributes->ObjectName, Status);
         return Status;
     }
     else
@@ -1822,6 +1825,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
+                DPRINT1("Invalid parameter: ExtraCreateParameters == 0!\n");
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1835,6 +1839,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 (CreateOptions & ~FILE_VALID_PIPE_OPTION_FLAGS))
             {
                 /* Invalid named pipe create */
+                DPRINT1("Invalid named pipe create\n");
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1843,6 +1848,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             /* Make sure we have extra parameters */
             if (!ExtraCreateParameters)
             {
+                DPRINT1("Invalid parameter: ExtraCreateParameters == 0!\n");
                 return STATUS_INVALID_PARAMETER;
             }
 
@@ -1853,6 +1859,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 (CreateOptions & ~FILE_VALID_MAILSLOT_OPTION_FLAGS))
             {
                 /* Invalid mailslot create */
+                DPRINT1("Invalid mailslot create\n");
                 return STATUS_INVALID_PARAMETER;
             }
         }
@@ -1956,6 +1963,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
             if (!OpenPacket->EaBuffer)
             {
                 ExFreePool(OpenPacket);
+                DPRINT1("Failed to allocate open packet EA buffer\n");
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
@@ -2096,7 +2104,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     }
 
     /* Check if we were 100% successful */
-    if ((OpenPacket->ParseCheck == TRUE) && (OpenPacket->FileObject))
+    if ((OpenPacket->ParseCheck != FALSE) && (OpenPacket->FileObject))
     {
         /* Dereference the File Object */
         ObDereferenceObject(OpenPacket->FileObject);
@@ -2367,7 +2375,7 @@ IoFastQueryNetworkAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                                 DesiredAccess,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE)
+    if (OpenPacket.ParseCheck == FALSE)
     {
         /* Parse failed */
         IoStatus->Status = Status;
@@ -3180,7 +3188,7 @@ NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
                                 DELETE,
                                 &OpenPacket,
                                 &Handle);
-    if (OpenPacket.ParseCheck != TRUE) return Status;
+    if (OpenPacket.ParseCheck == FALSE) return Status;
 
     /* Retrn the Io status */
     return OpenPacket.FinalStatus;

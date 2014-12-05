@@ -1,0 +1,296 @@
+/* TRANSLATOR : Ardit Dani (Ard1t) (ardit.dani@gmail.com) 
+ * DATE OF TR:  29-11-2013
+*/
+
+LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
+
+/* Menus */
+
+IDM_MDIFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Ekzekuto...", ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "D&il", ID_FILE_EXIT
+    END
+    POPUP "&Shfaq"
+    BEGIN
+        MENUITEM "&Toolbar", ID_VIEW_TOOL_BAR
+        MENUITEM "&Extra Bar", ID_VIEW_EXTRA_BAR
+        MENUITEM "&Drivebar", ID_VIEW_DRIVE_BAR
+        MENUITEM "S&ide Bar", ID_VIEW_SIDE_BAR
+        MENUITEM "&Statusi Bar", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Rifresko\tF5", ID_REFRESH
+        MENUITEM "Ekran i plote\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "SDI", ID_VIEW_SDI
+    END
+    POPUP "&Dritare"
+    BEGIN
+        MENUITEM "Dritare e re", ID_WINDOW_NEW
+        MENUITEM "Ujevare\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "Afro &Horizontalisht", ID_WINDOW_TILE_HORZ
+        MENUITEM "Afro &Vertikalisht\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Organizoni Automatikisht", ID_WINDOW_AUTOSORT
+        MENUITEM "Organizoni Simbolet", ID_WINDOW_ARRANGE
+    END
+    POPUP "&Vegla"
+    BEGIN
+        MENUITEM "&Opsione", ID_TOOLS_OPTIONS
+    END
+    POPUP "&Ndihmë"
+    BEGIN
+        MENUITEM "Exploro &FAQ...", ID_EXPLORER_FAQ
+        MENUITEM "&Rreth Ekslorerit...", ID_ABOUT_EXPLORER
+        MENUITEM "Rreth &OS...", ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Konfigurimet...", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Menaxheri i detyrave...", ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Rreth Ekslorerit...", ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Hap kontrollin e volumit", ID_TRAY_VOLUME
+        MENUITEM "Rrugullo rekuizitën e volumit", ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Shfaq ikonat e fshehura", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Shfaq ikonat &Butonat", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Konfiguro notifikacionet...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Rrugullo Data/&Ora...", ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&Rreth Explorer...", ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Ekzekuto...", ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Mbyll", ID_FILE_EXIT
+    END
+    POPUP "&Vëzhgo"
+    BEGIN
+        MENUITEM "&Toolbari", ID_VIEW_TOOL_BAR
+        MENUITEM "S&ide Bar", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Status Bar", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Rifresko\tF5", ID_REFRESH
+        MENUITEM "Ekran i Plote\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI", ID_VIEW_MDI
+    END
+    POPUP "&Vegla"
+    BEGIN
+        MENUITEM "&Opsione", ID_TOOLS_OPTIONS
+    END
+    POPUP "&Ndihmë"
+    BEGIN
+        MENUITEM "Ekslorerues &FAQ...", ID_EXPLORER_FAQ
+        MENUITEM "&Rreth Exploruesit...", ID_ABOUT_EXPLORER
+        MENUITEM "Rreth &OS...", ID_ABOUT_WINDOWS
+    END
+END
+
+/* Dialogs */
+
+IDD_EXECUTE DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ekzekuto"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
+    CONTROL "&Comanda:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
+    EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL "Si &Simbol", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
+    DEFPUSHBUTTON "&OK", 1, 158, 6, 47, 14
+    PUSHBUTTON "&Anulo", 2, 158, 23, 47, 14
+    PUSHBUTTON "&Ndihmë", 254, 158, 43, 47, 14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Kerko Programin në Startmenu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "&Filter:", IDC_STATIC, 7, 9, 18, 8
+    EDITTEXT IDC_FILTER, 34, 7, 100, 14, ES_AUTOHSCROLL
+    CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
+    PUSHBUTTON "&Kontrollo Elementet", IDC_CHECK_ENTRIES, 143, 7, 50, 14
+END
+
+IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tiparet e Desktop"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ju lutem zgjidhni preferencen e algorithmit per ikona tuaja:", IDC_STATIC, 7, 7, 166, 8
+    CONTROL "left/top dwn", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
+    CONTROL "left/top right", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
+    CONTROL "right/top left", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
+    CONTROL "rig./top dwn", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 25, 46, 44
+    CONTROL "left/bot. up", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
+    CONTROL "left/bot. right", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
+    CONTROL "right/bot. left", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
+    CONTROL "rig./bot. up", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 73, 46, 44
+    CONTROL "border down", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 121, 46, 44
+    CONTROL "border H/V", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
+    CONTROL "round about", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
+    CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 121, 46, 44
+//    CONTROL "Display &Version Number", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 91, 10
+END
+
+IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tiparet e Taskbar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Shfaq orën", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 52, 10
+    CONTROL "&Fshih ikonat jo aktive", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
+    PUSHBUTTON "&Njoftime...", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
+END
+
+IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tiparet e Start Menu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Konfigurimi i ikonave"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 194, 31
+    LTEXT "&Teksti i ndihmes Text:", IDC_LABEL1, 7, 44, 40, 8
+    EDITTEXT IDC_NOTIFY_TOOLTIP, 58, 42, 143, 14, ES_AUTOHSCROLL
+    LTEXT "Titulli i dritares:", IDC_LABEL2, 7, 63, 44, 8
+    EDITTEXT IDC_NOTIFY_TITLE, 58, 60, 143, 14, ES_AUTOHSCROLL
+    LTEXT "Rruga e moduleve:", IDC_LABEL3, 7, 81, 43, 8
+    EDITTEXT IDC_NOTIFY_MODULE, 58, 78, 143, 14, ES_AUTOHSCROLL
+    GROUPBOX "Modaliteti i Hapjes", IDC_LABEL4, 7, 96, 157, 28
+    CONTROL "&shfaq", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 33, 10
+    CONTROL "&Fsheh", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 66, 108, 29, 10
+    CONTROL "fshih a&tomatikisht", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 112, 108, 43, 10
+    ICON "", IDC_PICTURE, 173, 101, 21, 20
+    LTEXT "&Ndryshimi i fundit:", IDC_LABEL6, 7, 132, 43, 8
+    EDITTEXT IDC_LAST_CHANGE, 59, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
+    CONTROL "Shfaq te fshehurat", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 56, 10
+    DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
+    PUSHBUTTON "&Anulo", IDCANCEL, 151, 153, 50, 14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Zgjidh modelin e Eksplorerit"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Ju lutem zgjidhni ndërfaqen e përdoruesit te preferuar për Explorer:", IDC_STATIC, 7, 7, 160, 8
+    CONTROL "&MDI (Ndërfaqja e dokumenteve te shumte)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 124, 10
+    CONTROL "&SDI (Ndërfaqja e dokumenteve tek)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
+    CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
+    CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
+    CONTROL "Hap nën-skedat ne një dritare të re", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 135, 10
+    LTEXT "Kjo vendosje do të përdoret si parazgjedhje për të gjitha dritaret Explorer në të ardhmen.", IDC_STATIC, 7, 111, 174, 22
+    DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
+    PUSHBUTTON "&Anulo", IDCANCEL, 106, 136, 50, 14
+END
+
+IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rreth ReactOS Explorer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
+    LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
+    LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
+    LTEXT "http://www.sky.franken.de/explorer/", IDC_WWW, 17, 84, 129, 8
+    CONTROL "&OK", IDOK, "Button", BS_OWNERDRAW | BS_FLAT | WS_GROUP, 154, 90, 38, 12
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE "ReactOS Explorer"
+    IDS_START "Fillo"
+    IDS_LOGOFF "Dil..."
+    IDS_SHUTDOWN "Fik..."
+    IDS_RESTART "Rifillo..."
+    IDS_LAUNCH "Fillo..."
+    IDS_START_HELP "Ndihmë"
+    IDS_SEARCH_FILES "Kërko..."
+    IDS_DOCUMENTS "Dokumentat e Mi"
+    IDS_FAVORITES "Preferuarat"
+    IDS_PROGRAMS "Programet"
+    IDS_SETTINGS "Konfigurimet"
+    IDS_EXPLORE "Eksploro"
+    IDS_EMPTY "(Bosh)"
+    IDS_RECENT "Dokumentet e Fundit"
+    IDS_ADMIN "Administrimi"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STARTMENU "Menu Fillimi"
+    IDS_MINIMIZE_ALL "Minimizo te gjitha dritaret"
+    IDS_DESKTOP_NUM "Desktopi %d"
+    IDS_VOLUME "Volumi"
+    IDS_ITEMS_CUR "Artikuj Aktual"
+    IDS_ITEMS_CONFIGURED "Konfigurimi"
+    IDS_ITEMS_VISIBLE "I dukshëm"
+    IDS_ITEMS_HIDDEN "Fshehur"
+    IDS_NOTIFY_SHOW "Shfaq"
+    IDS_NOTIFY_HIDE "Fsheh"
+    IDS_NOTIFY_AUTOHIDE "Fshih Automatikisht"
+    IDS_SHOW_HIDDEN_ICONS "Shfaq ikonat e fshehura"
+    IDS_HIDE_ICONS "Fshih ikonat"
+    IDS_TERMINATE "Përfundo ROS Explorer"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORK "Networku"
+    IDS_CONNECTIONS "Lidhja e Networkut"
+    IDS_DRIVES "Driverat"
+    IDS_SEARCH_COMPUTER "Kërko ne kompjuter..."
+    IDS_SETTINGS_MENU "Konfigurim Menu"
+    IDS_CONTROL_PANEL "Paneli i Kontrollit"
+    IDS_PRINTERS "Printerat"
+    IDS_BROWSE "Kërko Dokumenta"
+    IDS_SEARCH_PRG "Kërko Programin..."
+    IDS_ALL_USERS "Të gjith Përdoruesit\\"
+    IDS_SEARCH "Kërko"
+    IDS_ABOUT_EXPLORER "&Rreth Explorerit..."
+    IDS_LAUNCH_MANY_PROGRAMS "Ju keni zgjedhur më shumë se një program.\nAJeni i sigurt që ju dëshironi për të nisur të gjithë ata?"
+    IDS_DESKTOPBAR_SETTINGS "Konfigurimet e Desktopit"
+    IDS_DESKTOP "Desktopi"
+    IDS_TASKBAR "Taskbari"
+    IDS_NAMECOLUMN "Emri"
+    IDS_PATHCOLUMN "Rruga"
+    IDS_MENUCOLUMN "Rruga Menu"
+END

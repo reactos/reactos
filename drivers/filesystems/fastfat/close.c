@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/close.c
+ * FILE:             drivers/filesystems/fastfat/close.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  */
@@ -41,8 +41,7 @@ VfatCloseFile(
 
     if (pFcb->Flags & FCB_IS_VOLUME)
     {
-        DPRINT1("Volume\n");
-        pFcb->RefCount--;
+        DPRINT("Volume\n");
         FileObject->FsContext2 = NULL;
     }
     else
@@ -51,7 +50,7 @@ VfatCloseFile(
         {
             if (pFcb->Flags & FCB_DELETE_PENDING)
             {
-                VfatDelEntry(DeviceExt, pFcb);
+                VfatDelEntry(DeviceExt, pFcb, NULL);
 
                 FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
                                             &(DeviceExt->NotifyList),
@@ -76,11 +75,19 @@ VfatCloseFile(
     FileObject->FsContext2 = NULL;
     FileObject->FsContext = NULL;
     FileObject->SectionObjectPointer = NULL;
+    DeviceExt->OpenHandleCount--;
 
     if (pCcb)
     {
         vfatDestroyCCB(pCcb);
     }
+
+#ifdef ENABLE_SWAPOUT
+    if (DeviceExt->OpenHandleCount == 0)
+    {
+        VfatCheckForDismount(DeviceExt, FALSE);
+    }
+#endif
 
     return Status;
 }

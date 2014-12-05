@@ -153,21 +153,32 @@ struct thunkCode
 class CWndProcThunk
 {
 public:
-	thunkCode								m_thunk;
+	thunkCode								*m_pthunk;
 	_AtlCreateWndData						cd;
 public:
+
+    CWndProcThunk()
+    {
+        m_pthunk = (thunkCode*)VirtualAlloc(NULL, sizeof(thunkCode), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    }
+
+    ~CWndProcThunk()
+    {
+        VirtualFree(m_pthunk, 0, MEM_RELEASE);
+    }
+
 	BOOL Init(WNDPROC proc, void *pThis)
 	{
-		m_thunk.m_mov = 0x042444C7;
-		m_thunk.m_this = PtrToUlong(pThis);
-		m_thunk.m_jmp = 0xe9;
-		m_thunk.m_relproc = DWORD(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(this) + sizeof(thunkCode)));
+		m_pthunk->m_mov = 0x042444C7;
+		m_pthunk->m_this = PtrToUlong(pThis);
+		m_pthunk->m_jmp = 0xe9;
+		m_pthunk->m_relproc = DWORD(reinterpret_cast<char *>(proc) - (reinterpret_cast<char *>(m_pthunk) + sizeof(thunkCode)));
 		return TRUE;
 	}
 
 	WNDPROC GetWNDPROC()
 	{
-		return reinterpret_cast<WNDPROC>(&m_thunk);
+		return reinterpret_cast<WNDPROC>(m_pthunk);
 	}
 };
 
@@ -684,6 +695,10 @@ public:																														\
 		switch(dwMsgMapID)																									\
 		{																													\
 		case 0:
+
+#define ALT_MSG_MAP(map)																		\
+            break;																				\
+        case map:
 
 #define END_MSG_MAP()																			\
 			break;																				\

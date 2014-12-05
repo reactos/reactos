@@ -1,0 +1,146 @@
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDM_TRAYWND MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Zamânı Ayarla", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Bildirimleri Husûsileştir...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "&Pencereleri Basamakla", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "P&encereleri Yatay Olarak Döşe", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Pe&ncereleri Dikey Olarak Döşe", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Masaüstünü Göster", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Geri Al", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "G&örev Yöneticisi", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "Gö&rev Çubuğunu Kilitle", ID_LOCKTASKBAR
+        MENUITEM "&Husûsiyetler", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&İzlenceler", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Boş)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Yer İmleri", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Boş)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Belgeler", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Boş)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Ayarlar", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Denetim Masası", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Güvenlik...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Ağ Bağlantıları", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Yazıcılar ve Belgegeçerler", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "G&örev Çubuğu ve Başlat Seçkesi", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        POPUP "A&ra", IDM_SEARCH
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Yar&dım ve Destek", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Çalıştır...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Eşle", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Oturumu Kapat: %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Ba&ğlantıyı Kes...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "B&ilgisayarı Ayır", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Kapat...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Görev Çubuğu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "Görev Çubuğu Görünümü", IDC_STATIC, 6, 6, 240, 104
+    CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
+    AUTOCHECKBOX "&Görev Çubuğunu Kilitle", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "G&örev Çubuğunu Kendiliğinden Gizle", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "Gö&rev Çubuğunu Pencerelerin Üstünde Tut", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Benzer Görev Çubuğu Düğmelerini Öbekleştir", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
+    AUTOCHECKBOX "&Hızlı Başlat'ı Göster", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Başlat Seçkesi"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    AUTORADIOBUTTON "&Başlat Seçkesi", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
+    LTEXT "Bu seçke türü; size dizinlerinize, sık kullanılan izlencelere ve aramaya kolay erişim verir.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
+    PUSHBUTTON "&Husûsileştir...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 53, 14, WS_DISABLED
+    AUTORADIOBUTTON "&Geleneklik Başlat Seçkesi", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
+    LTEXT "Bu seçke türü, size geleneklik görünümü ve geleneklik işlevliliği sağlar.", -1, 20, 57, 150, 24, WS_DISABLED
+    PUSHBUTTON "H&usûsileştir...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 44, 53, 14, WS_DISABLED
+    GROUPBOX "Gizlilik", IDC_STATIC, 7, 100, 238, 42
+    AUTOCHECKBOX "&Son Zamanlarda Açılan Kütüklerin Bir Dizelgesini Sakla ve Görüntüle", IDC_TASKBARPROP_RECENTFILES, 14, 114, 224, 10, WS_DISABLED
+    AUTOCHECKBOX "S&on Zamanlarda Açılan Yazılımların Bir Dizelgesini Sakla ve Görüntüle", IDC_TASKBARPROP_RECENTFOLDERS, 14, 128, 224, 10, WS_DISABLED
+END
+
+IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Bildirim Alanı"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21, WS_DISABLED
+    GROUPBOX "Simgeler", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
+    LTEXT "Son zamanlarda tıklamadığınız simgeleri gizleyerek bildirim alanını düzenli tutabilirsiniz.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "E&dilgin Simgeleri Gizle", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
+    PUSHBUTTON "&Husûsileştir...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
+    GROUPBOX "Dizge Simgeleri", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
+    LTEXT "Sürekli göstermek için dizge simgelerini seçiniz:", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "&Saat", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "S&es Düzeyi", IDC_TASKBARPROP_VOLUME, 13, 139, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Ağ", IDC_TASKBARPROP_NETWORK, 13, 152, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Güç", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
+END
+
+IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Araç Çubukları"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Görev çubuğuna eklemek için araç çubuklarını seçiniz:", IDC_STATIC, 7, 7, 223, 12, WS_DISABLED
+    CONTROL "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32", WS_BORDER | WS_TABSTOP | WS_DISABLED, 7, 20, 236, 160, WS_EX_CLIENTEDGE
+END
+
+IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Gelişmiş"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX "Gelişmiş Seçenekler", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "&Sâniyeleri Göster", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "&Pencere Ön İzlemelerini Göster", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_START "Başlat"
+    IDS_PROPERTIES "&Husûsiyetler"
+    IDS_OPEN_ALL_USERS "&Tüm Kullanıcılar'da Aç"
+    IDS_EXPLORE_ALL_USERS "T&üm Kullanıcılar'da Araştır"
+    IDS_STARTUP_ERROR "Dizge, değer defterinin, bozuk ya da olmadığından gezgini başlatamadı."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Görev Çubuğu ve Başlat Seçkesi"
+END

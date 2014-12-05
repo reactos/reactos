@@ -28,6 +28,9 @@ CcMdlRead (
     OUT PIO_STATUS_BLOCK IoStatus
     )
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu\n",
+        FileObject, FileOffset->QuadPart, Length);
+
     UNIMPLEMENTED;
 }
 
@@ -173,5 +176,8 @@ CcPrepareMdlWrite (
     OUT PMDL * MdlChain,
     OUT PIO_STATUS_BLOCK IoStatus)
 {
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu\n",
+        FileObject, FileOffset->QuadPart, Length);
+
     UNIMPLEMENTED;
 }

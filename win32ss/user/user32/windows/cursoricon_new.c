@@ -241,56 +241,45 @@ static BOOL bmi_has_alpha( const BITMAPINFO *info, const void *bits )
  *
  * Create the alpha bitmap for a 32-bpp icon that has an alpha channel.
  */
-static HBITMAP create_alpha_bitmap(
- _In_      HBITMAP color,
- _In_opt_  const BITMAPINFO *src_info,
- _In_opt_  const void *color_bits )
+static
+HBITMAP
+create_alpha_bitmap(
+    _In_opt_  HBITMAP color,
+    _In_opt_  BITMAPINFO *src_info,
+    _In_opt_  const void *color_bits,
+    _In_ LONG width,
+    _In_ LONG height)
 {
     HBITMAP alpha = NULL, hbmpOld;
-    BITMAPINFO *info = NULL;
     HDC hdc = NULL, hdcScreen;
-    void *bits = NULL;
     unsigned char *ptr;
-    int i;
-    LONG width, height;
-    BITMAP bm;
-
-    if (!GetObjectW( color, sizeof(bm), &bm ))
-        return NULL;
-    if (bm.bmBitsPixel != 32)
-        return NULL;
+    void *bits = NULL;
+    size_t size;
 
     hdcScreen = CreateDCW(DISPLAYW, NULL, NULL, NULL);
-    if(!hdcScreen)
+    if (!hdcScreen)
         return NULL;
-    if(GetDeviceCaps(hdcScreen, BITSPIXEL) != 32)
-        goto done;
     hdc = CreateCompatibleDC(hdcScreen);
-    if(!hdc)
-        goto done;
-    
-    if(src_info)
+    if (!hdc)
     {
-        WORD bpp;
-        DWORD compr;
-        int size;
-        
-        if(!bmi_has_alpha(src_info, color_bits))
-            goto done;
-        
-        if(!DIB_GetBitmapInfo(&src_info->bmiHeader, &width, &height, &bpp, &compr))
-            goto done;
-        if(bpp != 32)
-            goto done;
-        
-        size = get_dib_image_size(width, height, bpp);
-        bits = HeapAlloc(GetProcessHeap(), 0, size);
-        if(!bits)
-            goto done;
-        CopyMemory(bits, color_bits, size);
+        DeleteDC(hdcScreen);
+        return NULL;
     }
-    else
+
+    if (color)
     {
+        BITMAP bm;
+        BITMAPINFO *info = NULL;
+
+        TRACE("Creating alpha bitmap from existing bitmap.\n");
+    
+        if (!GetObjectW( color, sizeof(bm), &bm ))
+            goto done;
+        if (bm.bmBitsPixel != 32)
+            goto done;
+        
+        size = get_dib_image_size(bm.bmWidth, bm.bmHeight, 32);
+
         info = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(BITMAPINFO, bmiColors[256]));
         if(!info)
             goto done;
@@ -300,54 +289,124 @@ static HBITMAP create_alpha_bitmap(
         info->bmiHeader.biPlanes = 1;
         info->bmiHeader.biBitCount = 32;
         info->bmiHeader.biCompression = BI_RGB;
-        info->bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * 4;
+        info->bmiHeader.biSizeImage = size;
         info->bmiHeader.biXPelsPerMeter = 0;
         info->bmiHeader.biYPelsPerMeter = 0;
         info->bmiHeader.biClrUsed = 0;
         info->bmiHeader.biClrImportant = 0;
         
-        bits = HeapAlloc(GetProcessHeap(), 0, info->bmiHeader.biSizeImage);
+        bits = HeapAlloc(GetProcessHeap(), 0, size);
+        if(!bits)
+        {
+            HeapFree(GetProcessHeap(), 0, info);
+            goto done;
+        }
+        if(!GetDIBits( hdc, color, 0, bm.bmHeight, bits, info, DIB_RGB_COLORS ))
+        {
+            HeapFree(GetProcessHeap(), 0, info);
+            goto done;
+        }
+        if (!bmi_has_alpha( info, bits ))
+        {
+            HeapFree(GetProcessHeap(), 0, info);
+            goto done;
+        }
+
+        /* pre-multiply by alpha */
+        for (ptr = bits; ptr < ((BYTE*)bits + size); ptr += 4)
+        {
+            unsigned int alpha = ptr[3];
+            ptr[0] = (ptr[0] * alpha) / 255;
+            ptr[1] = (ptr[1] * alpha) / 255;
+            ptr[2] = (ptr[2] * alpha) / 255;
+        }
+
+        /* Directly create a 32-bits DDB (thanks to undocumented CreateDIBitmap flag). */
+        alpha = CreateDIBitmap(hdc, NULL, CBM_INIT | 2, bits, info, DIB_RGB_COLORS);
+
+        HeapFree(GetProcessHeap(), 0, info);
+    }
+    else
+    {
+        WORD bpp;
+        DWORD compr;
+        LONG orig_width, orig_height;
+
+        TRACE("Creating alpha bitmap from bitmap info.\n");
+
+        if(!bmi_has_alpha(src_info, color_bits))
+            goto done;
+
+        if(!DIB_GetBitmapInfo(&src_info->bmiHeader, &orig_width, &orig_height, &bpp, &compr))
+            goto done;
+        if(bpp != 32)
+            goto done;
+
+        size = get_dib_image_size(orig_width, orig_height, bpp);
+        bits = HeapAlloc(GetProcessHeap(), 0, size);
         if(!bits)
             goto done;
-        if(!GetDIBits( hdc, color, 0, bm.bmHeight, bits, info, DIB_RGB_COLORS ))
-            goto done;
-        if (!bmi_has_alpha( info, bits ))
-            goto done;
-        width = bm.bmWidth;
-        height = bm.bmHeight;
-    }
+        CopyMemory(bits, color_bits, size);
+        /* pre-multiply by alpha */
+        for (ptr = bits; ptr < ((BYTE*)bits + size); ptr += 4)
+        {
+            unsigned int alpha = ptr[3];
+            ptr[0] = (ptr[0] * alpha) / 255;
+            ptr[1] = (ptr[1] * alpha) / 255;
+            ptr[2] = (ptr[2] * alpha) / 255;
+        }
 
-    /* pre-multiply by alpha */
-    for (i = 0, ptr = bits; i < width * height; i++, ptr += 4)
-    {
-        unsigned int alpha = ptr[3];
-        ptr[0] = ptr[0] * alpha / 255;
-        ptr[1] = ptr[1] * alpha / 255;
-        ptr[2] = ptr[2] * alpha / 255;
+        /* Create the bitmap. Set the bitmap info to have the right width and height */
+        if(src_info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+        {
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcWidth = width;
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcHeight = height;
+        }
+        else
+        {
+            src_info->bmiHeader.biWidth = width;
+            src_info->bmiHeader.biHeight = height;
+        }
+        /* Directly create a 32-bits DDB (thanks to undocumented CreateDIBitmap flag). */
+        alpha = CreateDIBitmap(hdcScreen, NULL, 2, NULL, src_info, DIB_RGB_COLORS);
+        /* Restore values */
+        if(src_info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+        {
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcWidth = orig_width;
+            ((BITMAPCOREHEADER*)&src_info->bmiHeader)->bcHeight = orig_height;
+        }
+        else
+        {
+            src_info->bmiHeader.biWidth = orig_width;
+            src_info->bmiHeader.biHeight = orig_height;
+        }
+        if(!alpha)
+            goto done;
+        hbmpOld = SelectObject(hdc, alpha);
+        if(!hbmpOld)
+        {
+            DeleteObject(alpha);
+            alpha = NULL;
+            goto done;
+        }
+        if(!StretchDIBits( hdc, 0, 0, width, height,
+                   0, 0, orig_width, orig_height,
+                   bits, src_info, DIB_RGB_COLORS, SRCCOPY ))
+        {
+            SelectObject(hdc, hbmpOld);
+            hbmpOld = NULL;
+            DeleteObject(alpha);
+            alpha = NULL;
+        }
+        else
+        {
+            SelectObject(hdc, hbmpOld);
+        }
     }
-    
-    /* Create the bitmap */
-    alpha = CreateCompatibleBitmap(hdcScreen, bm.bmWidth, bm.bmHeight);
-    if(!alpha)
-        goto done;
-    hbmpOld = SelectObject(hdc, alpha);
-    if(!hbmpOld)
-        goto done;
-    if(!StretchDIBits( hdc, 0, 0, bm.bmWidth, bm.bmHeight,
-               0, 0, width, height,
-               bits, src_info ? src_info : info, DIB_RGB_COLORS, SRCCOPY ))
-    {
-        SelectObject(hdc, hbmpOld);
-        hbmpOld = NULL;
-        DeleteObject(alpha);
-        alpha = NULL;
-    }
-    SelectObject(hdc, hbmpOld);
 
 done:
     DeleteDC(hdcScreen);
-    if(hdc) DeleteDC( hdc );
-    if(info) HeapFree( GetProcessHeap(), 0, info );
+    DeleteDC( hdc );
     if(bits) HeapFree(GetProcessHeap(), 0, bits);
     
     TRACE("Returning 0x%08x.\n", alpha); 
@@ -377,7 +436,6 @@ typedef struct
 
 #include "poppack.h"
 
-static
 const CURSORICONFILEDIRENTRY*
 get_best_icon_file_entry(
     _In_ const CURSORICONFILEDIR* dir,
@@ -393,10 +451,11 @@ get_best_icon_file_entry(
     WORD i;
     const CURSORICONFILEDIRENTRY* entry;
 
+    /* Check our file is what it claims to be */
     if ( dwFileSize < sizeof(*dir) )
         return NULL;
 
-    if ( dwFileSize < (sizeof(*dir) + sizeof(dir->idEntries[0])*(dir->idCount-1)) )
+    if (dwFileSize < FIELD_OFFSET(CURSORICONFILEDIR, idEntries[dir->idCount]))
         return NULL;
 
     /* 
@@ -418,7 +477,8 @@ get_best_icon_file_entry(
         fakeEntry = &fakeDir->idEntries[i];
         entry = &dir->idEntries[i];
         /* Take this as an occasion to perform a size check */
-        if((entry->dwDIBOffset + entry->dwDIBSize) > dwFileSize)
+        if ((entry->dwDIBOffset > dwFileSize)
+                || ((entry->dwDIBOffset + entry->dwDIBSize) > dwFileSize))
         {
             ERR("Corrupted icon file?.\n");
             HeapFree(GetProcessHeap(), 0, fakeDir);
@@ -440,7 +500,10 @@ get_best_icon_file_entry(
         /* Let's assume there's always one plane */
         fakeEntry->wPlanes = 1;
         /* We must get the bitcount from the BITMAPINFOHEADER itself */
-        fakeEntry->wBitCount = ((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biBitCount;
+        if (((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biSize == sizeof(BITMAPCOREHEADER))
+            fakeEntry->wBitCount = ((BITMAPCOREHEADER *)((char *)dir + entry->dwDIBOffset))->bcBitCount;
+        else
+            fakeEntry->wBitCount = ((BITMAPINFOHEADER *)((char *)dir + entry->dwDIBOffset))->biBitCount;
         fakeEntry->dwBytesInRes = entry->dwDIBSize;
         fakeEntry->wResId = i + 1;
     }
@@ -457,6 +520,33 @@ get_best_icon_file_entry(
 
     /* We found it */
     return &dir->idEntries[i-1];
+}
+
+DWORD
+get_best_icon_file_offset(
+    _In_ const LPBYTE dir,
+    _In_ DWORD dwFileSize,
+    _In_ int cxDesired,
+    _In_ int cyDesired,
+    _In_ BOOL bIcon,
+    _In_ DWORD fuLoad,
+    _Out_ POINT *ptHotSpot
+)
+{
+    const CURSORICONFILEDIRENTRY *entry;
+
+    entry = get_best_icon_file_entry((CURSORICONFILEDIR *) dir, dwFileSize, cxDesired, cyDesired, bIcon, fuLoad);
+
+    if(ptHotSpot)
+    {
+        ptHotSpot->x = entry->xHotspot;
+        ptHotSpot->y = entry->yHotspot;
+    }
+
+    if(entry)
+        return entry->dwDIBOffset;
+
+    return 0;
 }
     
     
@@ -569,8 +659,7 @@ static BOOL CURSORICON_GetCursorDataFromBMI(
                   pvColor, pbmiCopy, DIB_RGB_COLORS, SRCCOPY))
             goto done;
         pdata->bpp = GetDeviceCaps(hdcScreen, BITSPIXEL);
-        if(pdata->bpp == 32)
-            pdata->hbmAlpha = create_alpha_bitmap(pdata->hbmColor, pbmiCopy, pvColor);
+        pdata->hbmAlpha = create_alpha_bitmap(NULL, pbmiCopy, pvColor, pdata->cx, pdata->cy);
         
         /* Now convert the info to monochrome for the mask bits */
         if (pbmiCopy->bmiHeader.biSize != sizeof(BITMAPCOREHEADER))
@@ -671,7 +760,7 @@ static BOOL CURSORICON_GetCursorDataFromIconInfo(
         pCursorData->cx = bm.bmWidth;
         pCursorData->cy = bm.bmHeight;
         if(pCursorData->bpp == 32)
-            pCursorData->hbmAlpha = create_alpha_bitmap(pCursorData->hbmColor, NULL, NULL);
+            pCursorData->hbmAlpha = create_alpha_bitmap(pCursorData->hbmColor, NULL, NULL, 0, 0);
     }
     else
     {
@@ -1260,12 +1349,12 @@ CURSORICON_LoadFromFileW(
     cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
     
     /* Do the dance */
-    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)&bits[entry->dwDIBOffset]))
+    if(!CURSORICON_GetCursorDataFromBMI(&cursorData, (BITMAPINFO*)(&bits[entry->dwDIBOffset])))
         goto end;
     
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
     if(!hCurIcon)
-        goto end_error;
+        goto end;
     
     /* Tell win32k */
     if(!NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData))
@@ -1283,6 +1372,7 @@ end_error:
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
+    UnmapViewOfFile(bits);
     
     return NULL;
 }
@@ -1339,27 +1429,37 @@ CURSORICON_LoadImageW(
         }
         else
             RtlInitUnicodeString(&ustrRsrc, lpszName);
-        
-        /* Prepare the module name string */
-        ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
-        /* Get it */
-        do
+
+        /* Get the module name string */
+        while (TRUE)
         {
-            DWORD ret = GetModuleFileNameW(hinst, ustrModule.Buffer, size);
+            DWORD ret;
+            ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, size*sizeof(WCHAR));
+            if (!ustrModule.Buffer)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return NULL;
+            }
+            ret = GetModuleFileNameW(hinst, ustrModule.Buffer, size);
             if(ret == 0)
             {
                 HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
                 return NULL;
             }
-            if(ret < size)
+
+            /* This API is completely broken... */
+            if (ret == size)
             {
-                ustrModule.Length = ret*sizeof(WCHAR);
-                ustrModule.MaximumLength = size*sizeof(WCHAR);
-                break;
+                HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
+                size *= 2;
+                continue;
             }
-            size *= 2;
-            ustrModule.Buffer = HeapReAlloc(GetProcessHeap(), 0, ustrModule.Buffer, size*sizeof(WCHAR));
-        } while(TRUE);
+
+            ustrModule.Buffer[ret] = UNICODE_NULL;
+            ustrModule.Length = ret * sizeof(WCHAR);
+            ustrModule.MaximumLength = size * sizeof(WCHAR);
+            break;
+        }
         
         /* Ask win32k */
         param.bIcon = bIcon;
@@ -1681,83 +1781,60 @@ CURSORICON_CopyImage(
 {
     HICON ret = NULL;
     ICONINFO ii;
+    CURSORDATA CursorData;
     
-    if(fuFlags & LR_COPYFROMRESOURCE)
+    if (fuFlags & LR_COPYFROMRESOURCE)
     {
         /* Get the icon module/resource names */
         UNICODE_STRING ustrModule;
         UNICODE_STRING ustrRsrc;
-        PVOID pvBuf;
         HMODULE hModule;
         
-        ustrModule.MaximumLength = MAX_PATH * sizeof(WCHAR);
-        ustrRsrc.MaximumLength = 256;
+        ustrModule.MaximumLength = 0;
+        ustrRsrc.MaximumLength = 0;
         
+        /* Get the buffer size */
+        if (!NtUserGetIconInfo(hicon, NULL, &ustrModule, &ustrRsrc, NULL, FALSE))
+        {
+            return NULL;
+        }
+
         ustrModule.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrModule.MaximumLength);
-        if(!ustrModule.Buffer)
+        if (!ustrModule.Buffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return NULL;
         }
-        /* Keep track of the buffer for the resource, NtUserGetIconInfo might overwrite it */
-        pvBuf = HeapAlloc(GetProcessHeap(), 0, ustrRsrc.MaximumLength);
-        if(!pvBuf)
-        {
-            HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return NULL;
-        }
-        ustrRsrc.Buffer = pvBuf;
         
-        do
+        if (ustrRsrc.MaximumLength)
         {
-            if (!NtUserGetIconInfo(hicon, NULL, &ustrModule, &ustrRsrc, NULL, FALSE))
+            ustrRsrc.Buffer = HeapAlloc(GetProcessHeap(), 0, ustrRsrc.MaximumLength);
+            if (!ustrRsrc.Buffer)
             {
                 HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-                HeapFree(GetProcessHeap(), 0, pvBuf);
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
                 return NULL;
             }
-            
-            if (ustrModule.Length && (ustrRsrc.Length || IS_INTRESOURCE(ustrRsrc.Buffer)))
-            {
-                /* Buffers were big enough */
-                break;
-            }
-            
-            /* Find which buffer were too small */
-            if (!ustrModule.Length)
-            {
-                PWSTR newBuffer;
-                ustrModule.MaximumLength *= 2;
-                newBuffer = HeapReAlloc(GetProcessHeap(), 0, ustrModule.Buffer, ustrModule.MaximumLength);
-                if(!ustrModule.Buffer)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto leave;
-                }
-                ustrModule.Buffer = newBuffer;
-            }
-            
-            if (!ustrRsrc.Length)
-            {
-                ustrRsrc.MaximumLength *= 2;
-                pvBuf = HeapReAlloc(GetProcessHeap(), 0, ustrRsrc.Buffer, ustrRsrc.MaximumLength);
-                if(!pvBuf)
-                {
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto leave;
-                }
-                ustrRsrc.Buffer = pvBuf;
-            }
-        } while(TRUE);
+        }
+
+        if (!NtUserGetIconInfo(hicon, NULL, &ustrModule, &ustrRsrc, NULL, FALSE))
+        {
+            HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
+            if (!IS_INTRESOURCE(ustrRsrc.Buffer))
+                HeapFree(GetProcessHeap(), 0, ustrRsrc.Buffer);
+            return NULL;
+        }
         
         /* NULL-terminate our strings */
-        ustrModule.Buffer[ustrModule.Length/sizeof(WCHAR)] = 0;
-        if(!IS_INTRESOURCE(ustrRsrc.Buffer))
-            ustrRsrc.Buffer[ustrRsrc.Length/sizeof(WCHAR)] = 0;
+        ustrModule.Buffer[ustrModule.Length/sizeof(WCHAR)] = UNICODE_NULL;
+        if (!IS_INTRESOURCE(ustrRsrc.Buffer))
+            ustrRsrc.Buffer[ustrRsrc.Length/sizeof(WCHAR)] = UNICODE_NULL;
         
+        TRACE("Got module %S, resource %p (%S).\n", ustrModule.Buffer,
+            ustrRsrc.Buffer, IS_INTRESOURCE(ustrRsrc.Buffer) ? L"" : ustrRsrc.Buffer);
+
         /* Get the module handle */
-        if(!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
+        if (!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
         {
             /* This should never happen */
             ERR("Invalid handle?.\n");
@@ -1766,14 +1843,21 @@ CURSORICON_CopyImage(
         }
         
         /* Call the relevant function */
-        ret = CURSORICON_LoadImageW(hModule, ustrRsrc.Buffer, cxDesired, cyDesired, fuFlags & LR_DEFAULTSIZE, bIcon);
+        ret = CURSORICON_LoadImageW(
+            hModule,
+            ustrRsrc.Buffer,
+            cxDesired,
+            cyDesired,
+            fuFlags & (LR_DEFAULTSIZE | LR_SHARED),
+            bIcon);
         
         FreeLibrary(hModule);
         
         /* If we're here, that means that the passed icon is shared. Don't destroy it, even if LR_COPYDELETEORG is specified */
     leave:
         HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
-        HeapFree(GetProcessHeap(), 0, pvBuf);
+        if (!IS_INTRESOURCE(ustrRsrc.Buffer))
+            HeapFree(GetProcessHeap(), 0, ustrRsrc.Buffer);
         
         TRACE("Returning 0x%08x.\n", ret);
         
@@ -1781,24 +1865,40 @@ CURSORICON_CopyImage(
     }
     
     /* This is a regular copy */
-    if(fuFlags & ~LR_COPYDELETEORG)
+    if (fuFlags & ~(LR_COPYDELETEORG | LR_SHARED))
         FIXME("Unimplemented flags: 0x%08x\n", fuFlags);
     
-    if(!GetIconInfo(hicon, &ii))
+    if (!GetIconInfo(hicon, &ii))
     {
         ERR("GetIconInfo failed.\n");
         return NULL;
     }
+
+    /* This is CreateIconIndirect with the LR_SHARED coat added */
+    if  (!CURSORICON_GetCursorDataFromIconInfo(&CursorData, &ii))
+        goto Leave;
+
+    if (fuFlags & LR_SHARED)
+        CursorData.CURSORF_flags |= CURSORF_LRSHARED;
+
+    ret = NtUserxCreateEmptyCurObject(FALSE);
+    if (!ret)
+        goto Leave;
+
+    if (!NtUserSetCursorIconData(ret, NULL, NULL, &CursorData))
+    {
+        NtUserDestroyCursor(ret, TRUE);
+        goto Leave;
+    }
     
-    ret = CreateIconIndirect(&ii);
-    
+Leave:
     DeleteObject(ii.hbmMask);
-    if(ii.hbmColor) DeleteObject(ii.hbmColor);
+    if (ii.hbmColor) DeleteObject(ii.hbmColor);
     
-    if(ret && (fuFlags & LR_COPYDELETEORG))
+    if (ret && (fuFlags & LR_COPYDELETEORG))
         DestroyIcon(hicon);
     
-    return hicon;
+    return ret;
 }
 
 NTSTATUS WINAPI
@@ -2196,7 +2296,7 @@ int WINAPI LookupIconIdFromDirectoryEx(
     
     /* No inferior or equal depth available. Get the smallest bigger one */
     BitCount = 0xFFFF;
-    iIndex = 0;
+    iIndex = -1;
     for(i = 0; i < dir->idCount; i++)
     {
         entry = &dir->idEntries[i];
@@ -2222,8 +2322,10 @@ int WINAPI LookupIconIdFromDirectoryEx(
             BitCount = entry->wBitCount;
         }
     }
+    if (iIndex >= 0)
+        return dir->idEntries[iIndex].wResId;
     
-    return dir->idEntries[iIndex].wResId;
+    return 0;
 }
 
 HICON WINAPI CreateIcon(

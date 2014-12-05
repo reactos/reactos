@@ -25,6 +25,7 @@ list(APPEND SOURCE
     misc/exit.c
     misc/exticon.c
     misc/imm.c
+    misc/logon.c
     misc/misc.c
     misc/object.c
     misc/resources.c

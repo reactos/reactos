@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -519,7 +519,7 @@ MiSessionInitializeWorkingSetList(VOID)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Check if we need a page table */
-    if (AllocatedPageTable == TRUE)
+    if (AllocatedPageTable != FALSE)
     {
         /* Get a zeroed colored zero page */
         Color = MI_GET_NEXT_COLOR();

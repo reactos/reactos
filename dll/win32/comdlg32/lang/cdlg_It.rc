@@ -34,6 +34,7 @@ Sovrascriverlo?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Il percorso specificato non esiste"
     IDS_FILENOTEXISTING     "Il file non esiste"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Salva"
     IDS_SAVE_AS     "Salva con nome"
     IDS_OPEN_FILE   "Apri file"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

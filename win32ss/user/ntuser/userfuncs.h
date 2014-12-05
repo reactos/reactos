@@ -2,7 +2,7 @@
 
 FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
 {
-   return ValidateHandle(hMenu, TYPE_MENU);
+   return UserGetObject(gHandleTable, hMenu, TYPE_MENU);
 }
 
 #define ASSERT_REFS_CO(_obj_) \
@@ -106,12 +106,12 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd);
 VOID FASTCALL co_DestroyThreadWindows(struct _ETHREAD *Thread);
 HWND FASTCALL UserGetShellWindow(VOID);
 HDC FASTCALL UserGetDCEx(PWND Window OPTIONAL, HANDLE ClipRegion, ULONG Flags);
-BOOLEAN FASTCALL co_UserDestroyWindow(PWND Wnd);
+BOOLEAN co_UserDestroyWindow(PVOID Object);
 PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type);
 
 /*************** MENU.C ***************/
 
-HMENU FASTCALL UserCreateMenu(BOOL PopupMenu);
+HMENU FASTCALL UserCreateMenu(PDESKTOP Desktop, BOOL PopupMenu);
 BOOL FASTCALL UserSetMenuDefaultItem(PMENU Menu, UINT uItem, UINT fByPos);
 BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 

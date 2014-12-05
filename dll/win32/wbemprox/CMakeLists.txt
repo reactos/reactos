@@ -14,6 +14,7 @@ list(APPEND SOURCE
     qualifier.c
     query.c
     reg.c
+    security.c
     service.c
     services.c
     table.c

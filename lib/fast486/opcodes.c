@@ -2,7 +2,7 @@
  * Fast486 386/486 CPU Emulation Library
  * opcodes.c
  *
- * Copyright (C) 2013 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
+ * Copyright (C) 2014 Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -38,118 +38,119 @@
 FAST486_OPCODE_HANDLER_PROC
 Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
 {
-    Fast486OpcodeAddByteModrm,
+    Fast486OpcodeAddByteModrm,          /* 0x00 - 0x03 */
     Fast486OpcodeAddModrm,
     Fast486OpcodeAddByteModrm,
     Fast486OpcodeAddModrm,
-    Fast486OpcodeAddAl,
-    Fast486OpcodeAddEax,
-    Fast486OpcodePushEs,
-    Fast486OpcodePopEs,
-    Fast486OpcodeOrByteModrm,
+    Fast486OpcodeAddAl,                 /* 0x04 */
+    Fast486OpcodeAddEax,                /* 0x05 */
+    Fast486OpcodePushEs,                /* 0x06 */
+    Fast486OpcodePopEs,                 /* 0x07 */
+    Fast486OpcodeOrByteModrm,           /* 0x08 - 0x0B */
     Fast486OpcodeOrModrm,
     Fast486OpcodeOrByteModrm,
     Fast486OpcodeOrModrm,
-    Fast486OpcodeOrAl,
-    Fast486OpcodeOrEax,
-    Fast486OpcodePushCs,
-    Fast486OpcodeExtended,
-    Fast486OpcodeAdcByteModrm,
+    Fast486OpcodeOrAl,                  /* 0x0C */
+    Fast486OpcodeOrEax,                 /* 0x0D */
+    Fast486OpcodePushCs,                /* 0x0E */
+    Fast486OpcodeExtended,              /* 0x0F */
+    Fast486OpcodeAdcByteModrm,          /* 0x10 - 0x13 */
     Fast486OpcodeAdcModrm,
     Fast486OpcodeAdcByteModrm,
     Fast486OpcodeAdcModrm,
-    Fast486OpcodeAdcAl,
-    Fast486OpcodeAdcEax,
-    Fast486OpcodePushSs,
-    Fast486OpcodePopSs,
-    Fast486OpcodeSbbByteModrm,
+    Fast486OpcodeAdcAl,                 /* 0x14 */
+    Fast486OpcodeAdcEax,                /* 0x15 */
+    Fast486OpcodePushSs,                /* 0x16 */
+    Fast486OpcodePopSs,                 /* 0x17 */
+    Fast486OpcodeSbbByteModrm,          /* 0x18 - 0x1B */
     Fast486OpcodeSbbModrm,
     Fast486OpcodeSbbByteModrm,
     Fast486OpcodeSbbModrm,
-    Fast486OpcodeSbbAl,
-    Fast486OpcodeSbbEax,
-    Fast486OpcodePushDs,
-    Fast486OpcodePopDs,
-    Fast486OpcodeAndByteModrm,
+    Fast486OpcodeSbbAl,                 /* 0x1C */
+    Fast486OpcodeSbbEax,                /* 0x1D */
+    Fast486OpcodePushDs,                /* 0x1E */
+    Fast486OpcodePopDs,                 /* 0x1F */
+    Fast486OpcodeAndByteModrm,          /* 0x20 - 0x23 */
     Fast486OpcodeAndModrm,
     Fast486OpcodeAndByteModrm,
     Fast486OpcodeAndModrm,
-    Fast486OpcodeAndAl,
-    Fast486OpcodeAndEax,
-    Fast486OpcodePrefix,
-    Fast486OpcodeDaa,
-    Fast486OpcodeCmpSubByteModrm,
+    Fast486OpcodeAndAl,                 /* 0x24 */
+    Fast486OpcodeAndEax,                /* 0x25 */
+    Fast486OpcodePrefix,                /* 0x26 */
+    Fast486OpcodeDaa,                   /* 0x27 */
+    Fast486OpcodeCmpSubByteModrm,       /* 0x28 - 0x2B */
     Fast486OpcodeCmpSubModrm,
     Fast486OpcodeCmpSubByteModrm,
     Fast486OpcodeCmpSubModrm,
-    Fast486OpcodeCmpSubAl,
-    Fast486OpcodeCmpSubEax,
-    Fast486OpcodePrefix,
-    Fast486OpcodeDas,
-    Fast486OpcodeXorByteModrm,
+    Fast486OpcodeCmpSubAl,              /* 0x2C */
+    Fast486OpcodeCmpSubEax,             /* 0x2D */
+    Fast486OpcodePrefix,                /* 0x2E */
+    Fast486OpcodeDas,                   /* 0x2F */
+    Fast486OpcodeXorByteModrm,          /* 0x30 - 0x33 */
     Fast486OpcodeXorModrm,
     Fast486OpcodeXorByteModrm,
     Fast486OpcodeXorModrm,
-    Fast486OpcodeXorAl,
-    Fast486OpcodeXorEax,
-    Fast486OpcodePrefix,
-    Fast486OpcodeAaa,
-    Fast486OpcodeCmpSubByteModrm,
+    Fast486OpcodeXorAl,                 /* 0x34 */
+    Fast486OpcodeXorEax,                /* 0x35 */
+    Fast486OpcodePrefix,                /* 0x36 */
+    Fast486OpcodeAaa,                   /* 0x37 */
+    Fast486OpcodeCmpSubByteModrm,       /* 0x38 - 0x3B */
     Fast486OpcodeCmpSubModrm,
     Fast486OpcodeCmpSubByteModrm,
     Fast486OpcodeCmpSubModrm,
-    Fast486OpcodeCmpSubAl,
-    Fast486OpcodeCmpSubEax,
+    Fast486OpcodeCmpSubAl,              /* 0x3C */
+    Fast486OpcodeCmpSubEax,             /* 0x3D */
+    Fast486OpcodePrefix,                /* 0x3E */
+    Fast486OpcodeAas,                   /* 0x3F */
+    Fast486OpcodeIncrement,             /* 0x40 - 0x47 */
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeIncrement,
+    Fast486OpcodeDecrement,             /* 0x48 - 0x4F */
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodeDecrement,
+    Fast486OpcodePushReg,               /* 0x50 - 0x57 */
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePushReg,
+    Fast486OpcodePopReg,                /* 0x58 - 0x5F */
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePopReg,
+    Fast486OpcodePushAll,               /* 0x60 */
+    Fast486OpcodePopAll,                /* 0x61 */
+    Fast486OpcodeBound,                 /* 0x62 */
+    Fast486OpcodeArpl,                  /* 0x63 */
+    Fast486OpcodePrefix,                /* 0x64 - 0x67 */
     Fast486OpcodePrefix,
-    Fast486OpcodeAas,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeIncrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodeDecrement,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePushReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePopReg,
-    Fast486OpcodePushAll,
-    Fast486OpcodePopAll,
-    Fast486OpcodeBound,
-    Fast486OpcodeArpl,
     Fast486OpcodePrefix,
     Fast486OpcodePrefix,
-    Fast486OpcodePrefix,
-    Fast486OpcodePrefix,
-    Fast486OpcodePushImm,
-    Fast486OpcodeImulModrmImm,
-    Fast486OpcodePushByteImm,
-    Fast486OpcodeImulModrmImm,
-    Fast486OpcodeIns,
-    Fast486OpcodeIns,
-    Fast486OpcodeOuts,
-    Fast486OpcodeOuts,
+    Fast486OpcodePushImm,               /* 0x68 */
+    Fast486OpcodeImulModrmImm,          /* 0x69 */
+    Fast486OpcodePushByteImm,           /* 0x6A */
+    Fast486OpcodeImulModrmImm,          /* 0x6B */
+    Fast486OpcodeIns,                   /* 0x6C */
+    Fast486OpcodeIns,                   /* 0x6D */
+    Fast486OpcodeOuts,                  /* 0x6E */
+    Fast486OpcodeOuts,                  /* 0x6F */
+    Fast486OpcodeShortConditionalJmp,   /* 0x70 - 0x7F */
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
@@ -165,55 +166,55 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
     Fast486OpcodeShortConditionalJmp,
-    Fast486OpcodeShortConditionalJmp,
-    Fast486OpcodeGroup8082,
-    Fast486OpcodeGroup81,
-    Fast486OpcodeGroup8082,
-    Fast486OpcodeGroup83,
-    Fast486OpcodeTestByteModrm,
-    Fast486OpcodeTestModrm,
-    Fast486OpcodeXchgByteModrm,
-    Fast486OpcodeXchgModrm,
-    Fast486OpcodeMovByteModrm,
-    Fast486OpcodeMovModrm,
-    Fast486OpcodeMovByteModrm,
-    Fast486OpcodeMovModrm,
-    Fast486OpcodeMovStoreSeg,
-    Fast486OpcodeLea,
-    Fast486OpcodeMovLoadSeg,
-    Fast486OpcodeGroup8F,
-    Fast486OpcodeNop,
+    Fast486OpcodeGroup8082,             /* 0x80 */
+    Fast486OpcodeGroup81,               /* 0x81 */
+    Fast486OpcodeGroup8082,             /* 0x82 */
+    Fast486OpcodeGroup83,               /* 0x83 */
+    Fast486OpcodeTestByteModrm,         /* 0x84 */
+    Fast486OpcodeTestModrm,             /* 0x85 */
+    Fast486OpcodeXchgByteModrm,         /* 0x86 */
+    Fast486OpcodeXchgModrm,             /* 0x87 */
+    Fast486OpcodeMovByteModrm,          /* 0x88 */
+    Fast486OpcodeMovModrm,              /* 0x89 */
+    Fast486OpcodeMovByteModrm,          /* 0x8A */
+    Fast486OpcodeMovModrm,              /* 0x8B */
+    Fast486OpcodeMovStoreSeg,           /* 0x8C */
+    Fast486OpcodeLea,                   /* 0x8D */
+    Fast486OpcodeMovLoadSeg,            /* 0x8E */
+    Fast486OpcodeGroup8F,               /* 0x8F */
+    Fast486OpcodeNop,                   /* 0x90 */
+    Fast486OpcodeExchangeEax,           /* 0x91 - 0x97 */
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
     Fast486OpcodeExchangeEax,
-    Fast486OpcodeExchangeEax,
-    Fast486OpcodeCwde,
-    Fast486OpcodeCdq,
-    Fast486OpcodeCallAbs,
-    Fast486OpcodeWait,
-    Fast486OpcodePushFlags,
-    Fast486OpcodePopFlags,
-    Fast486OpcodeSahf,
-    Fast486OpcodeLahf,
-    Fast486OpcodeMovAlOffset,
-    Fast486OpcodeMovEaxOffset,
-    Fast486OpcodeMovOffsetAl,
-    Fast486OpcodeMovOffsetEax,
-    Fast486OpcodeMovs,
-    Fast486OpcodeMovs,
-    Fast486OpcodeCmps,
-    Fast486OpcodeCmps,
-    Fast486OpcodeTestAl,
-    Fast486OpcodeTestEax,
-    Fast486OpcodeStos,
-    Fast486OpcodeStos,
-    Fast486OpcodeLods,
-    Fast486OpcodeLods,
-    Fast486OpcodeScas,
-    Fast486OpcodeScas,
+    Fast486OpcodeCwde,                  /* 0x98 */
+    Fast486OpcodeCdq,                   /* 0x99 */
+    Fast486OpcodeCallAbs,               /* 0x9A */
+    Fast486OpcodeWait,                  /* 0x9B */
+    Fast486OpcodePushFlags,             /* 0x9C */
+    Fast486OpcodePopFlags,              /* 0x9D */
+    Fast486OpcodeSahf,                  /* 0x9E */
+    Fast486OpcodeLahf,                  /* 0x9F */
+    Fast486OpcodeMovAlOffset,           /* 0xA0 */
+    Fast486OpcodeMovEaxOffset,          /* 0xA1 */
+    Fast486OpcodeMovOffsetAl,           /* 0xA2 */
+    Fast486OpcodeMovOffsetEax,          /* 0xA3 */
+    Fast486OpcodeMovs,                  /* 0xA4 */
+    Fast486OpcodeMovs,                  /* 0xA5 */
+    Fast486OpcodeCmps,                  /* 0xA6 */
+    Fast486OpcodeCmps,                  /* 0xA7 */
+    Fast486OpcodeTestAl,                /* 0xA8 */
+    Fast486OpcodeTestEax,               /* 0xA9 */
+    Fast486OpcodeStos,                  /* 0xAA */
+    Fast486OpcodeStos,                  /* 0xAB */
+    Fast486OpcodeLods,                  /* 0xAC */
+    Fast486OpcodeLods,                  /* 0xAD */
+    Fast486OpcodeScas,                  /* 0xAE */
+    Fast486OpcodeScas,                  /* 0xAF */
+    Fast486OpcodeMovByteRegImm,         /* 0xB0 - 0xB7 */
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
@@ -221,7 +222,7 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
     Fast486OpcodeMovByteRegImm,
-    Fast486OpcodeMovByteRegImm,
+    Fast486OpcodeMovRegImm,             /* 0xB8 - 0xBF */
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
@@ -229,74 +230,84 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
     Fast486OpcodeMovRegImm,
-    Fast486OpcodeMovRegImm,
-    Fast486OpcodeGroupC0,
-    Fast486OpcodeGroupC1,
-    Fast486OpcodeRet,
-    Fast486OpcodeRet,
-    Fast486OpcodeLdsLes,
-    Fast486OpcodeLdsLes,
-    Fast486OpcodeGroupC6,
-    Fast486OpcodeGroupC7,
-    Fast486OpcodeEnter,
-    Fast486OpcodeLeave,
-    Fast486OpcodeRetFar,
-    Fast486OpcodeRetFar,
-    Fast486OpcodeInt,
-    Fast486OpcodeInt,
-    Fast486OpcodeInt,
-    Fast486OpcodeIret,
-    Fast486OpcodeGroupD0,
+    Fast486OpcodeGroupC0,               /* 0xC0 */
+    Fast486OpcodeGroupC1,               /* 0xC1 */
+    Fast486OpcodeRet,                   /* 0xC2 */
+    Fast486OpcodeRet,                   /* 0xC3 */
+    Fast486OpcodeLdsLes,                /* 0xC4 */
+    Fast486OpcodeLdsLes,                /* 0xC5 */
+    Fast486OpcodeGroupC6,               /* 0xC6 */
+    Fast486OpcodeGroupC7,               /* 0xC7 */
+    Fast486OpcodeEnter,                 /* 0xC8 */
+    Fast486OpcodeLeave,                 /* 0xC9 */
+    Fast486OpcodeRetFar,                /* 0xCA */
+    Fast486OpcodeRetFar,                /* 0xCB */
+    Fast486OpcodeInt,                   /* 0xCC */
+    Fast486OpcodeInt,                   /* 0xCD */
+    Fast486OpcodeInt,                   /* 0xCE */
+    Fast486OpcodeIret,                  /* 0xCF */
+    Fast486OpcodeGroupD0,               /* 0xD0 - 0xD3 */
     Fast486OpcodeGroupD1,
     Fast486OpcodeGroupD2,
     Fast486OpcodeGroupD3,
-    Fast486OpcodeAam,
-    Fast486OpcodeAad,
-    Fast486OpcodeSalc,
-    Fast486OpcodeXlat,
-    Fast486FpuOpcodeD8,
+    Fast486OpcodeAam,                   /* 0xD4 */
+    Fast486OpcodeAad,                   /* 0xD5 */
+    Fast486OpcodeSalc,                  /* 0xD6 */
+    Fast486OpcodeXlat,                  /* 0xD7 */
+    Fast486FpuOpcodeD8DC,               /* 0xD8 - 0xDF */
     Fast486FpuOpcodeD9,
     Fast486FpuOpcodeDA,
     Fast486FpuOpcodeDB,
-    Fast486FpuOpcodeDC,
+    Fast486FpuOpcodeD8DC,
     Fast486FpuOpcodeDD,
     Fast486FpuOpcodeDE,
     Fast486FpuOpcodeDF,
+    Fast486OpcodeLoop,                  /* 0xE0 - 0xE2 */
     Fast486OpcodeLoop,
     Fast486OpcodeLoop,
-    Fast486OpcodeLoop,
-    Fast486OpcodeJecxz,
-    Fast486OpcodeInByte,
-    Fast486OpcodeIn,
-    Fast486OpcodeOutByte,
-    Fast486OpcodeOut,
-    Fast486OpcodeCall,
-    Fast486OpcodeJmp,
-    Fast486OpcodeJmpAbs,
-    Fast486OpcodeShortJump,
-    Fast486OpcodeInByte,
-    Fast486OpcodeIn,
-    Fast486OpcodeOutByte,
-    Fast486OpcodeOut,
-    Fast486OpcodePrefix,
-    NULL, // Invalid
-    Fast486OpcodePrefix,
-    Fast486OpcodePrefix,
-    Fast486OpcodeHalt,
-    Fast486OpcodeComplCarry,
-    Fast486OpcodeGroupF6,
-    Fast486OpcodeGroupF7,
-    Fast486OpcodeClearCarry,
-    Fast486OpcodeSetCarry,
-    Fast486OpcodeClearInt,
-    Fast486OpcodeSetInt,
-    Fast486OpcodeClearDir,
-    Fast486OpcodeSetDir,
-    Fast486OpcodeGroupFE,
-    Fast486OpcodeGroupFF,
+    Fast486OpcodeJecxz,                 /* 0xE3 */
+    Fast486OpcodeInByte,                /* 0xE4 */
+    Fast486OpcodeIn,                    /* 0xE5 */
+    Fast486OpcodeOutByte,               /* 0xE6 */
+    Fast486OpcodeOut,                   /* 0xE7 */
+    Fast486OpcodeCall,                  /* 0xE8 */
+    Fast486OpcodeJmp,                   /* 0xE9 */
+    Fast486OpcodeJmpAbs,                /* 0xEA */
+    Fast486OpcodeShortJump,             /* 0xEB */
+    Fast486OpcodeInByte,                /* 0xEC */
+    Fast486OpcodeIn,                    /* 0xED */
+    Fast486OpcodeOutByte,               /* 0xEE */
+    Fast486OpcodeOut,                   /* 0xEF */
+    Fast486OpcodePrefix,                /* 0xF0 */
+    Fast486OpcodeInvalid,               /* 0xF1 */  // Invalid opcode -- ICEBP/INT01 opcode
+    Fast486OpcodePrefix,                /* 0xF2 */
+    Fast486OpcodePrefix,                /* 0xF3 */
+    Fast486OpcodeHalt,                  /* 0xF4 */
+    Fast486OpcodeComplCarry,            /* 0xF5 */
+    Fast486OpcodeGroupF6,               /* 0xF6 */
+    Fast486OpcodeGroupF7,               /* 0xF7 */
+    Fast486OpcodeClearCarry,            /* 0xF8 */
+    Fast486OpcodeSetCarry,              /* 0xF9 */
+    Fast486OpcodeClearInt,              /* 0xFA */
+    Fast486OpcodeSetInt,                /* 0xFB */
+    Fast486OpcodeClearDir,              /* 0xFC */
+    Fast486OpcodeSetDir,                /* 0xFD */
+    Fast486OpcodeGroupFE,               /* 0xFE */
+    Fast486OpcodeGroupFF,               /* 0xFF */
 };
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+FAST486_OPCODE_HANDLER(Fast486OpcodeInvalid)
+{
+    /*
+     * This is not a valid opcode.
+     * Well, not totally: see http://www.rcollins.org/secrets/opcodes/ICEBP.html
+     * for more details.
+     */
+    DPRINT1("FAST486 -- Calling ICEBP opcode\n");
+    Fast486Exception(State, FAST486_EXCEPTION_UD);
+}
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePrefix)
 {
@@ -453,10 +464,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePrefix)
 
         /* Throw an exception */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIncrement)
@@ -488,9 +496,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIncrement)
     State->Flags.Zf = (Value == 0);
     State->Flags.Af = ((Value & 0x0F) == 0);
     State->Flags.Pf = Fast486CalculateParity(LOBYTE(Value));
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeDecrement)
@@ -522,9 +527,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDecrement)
     State->Flags.Zf = (Value == 0);
     State->Flags.Af = ((Value & 0x0F) == 0x0F);
     State->Flags.Pf = Fast486CalculateParity(LOBYTE(Value));
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushReg)
@@ -535,7 +537,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushReg)
     ASSERT((Opcode & 0xF8) == 0x50);
 
     /* Call the internal function */
-    return Fast486StackPush(State, State->GeneralRegs[Opcode & 0x07].Long);
+    Fast486StackPush(State, State->GeneralRegs[Opcode & 0x07].Long);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
@@ -550,25 +552,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopReg)
     ASSERT((Opcode & 0xF8) == 0x58);
 
     /* Call the internal function */
-    if (!Fast486StackPop(State, &Value)) return FALSE;
+    if (!Fast486StackPop(State, &Value)) return;
 
     /* Store the value */
     if (Size) State->GeneralRegs[Opcode & 0x07].Long = Value;
     else State->GeneralRegs[Opcode & 0x07].LowWord = Value;
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeNop)
 {
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
-    {
-        /* Idle cycle */
-        State->IdleCallback(State);
-    }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeExchangeEax)
@@ -599,8 +591,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeExchangeEax)
         State->GeneralRegs[Reg].LowWord = State->GeneralRegs[FAST486_REG_EAX].LowWord;
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Value;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeShortConditionalJmp)
@@ -618,7 +608,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortConditionalJmp)
     if (!Fast486FetchByte(State, (PUCHAR)&Offset))
     {
         /* An exception occurred */
-        return FALSE;
+        return;
     }
 
     switch ((Opcode & 0x0F) >> 1)
@@ -697,9 +687,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortConditionalJmp)
             State->InstPtr.Long &= 0xFFFF;
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeClearCarry)
@@ -711,12 +698,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearCarry)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Clear CF and return success */
     State->Flags.Cf = FALSE;
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSetCarry)
@@ -728,12 +714,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetCarry)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Set CF and return success*/
     State->Flags.Cf = TRUE;
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeComplCarry)
@@ -745,12 +730,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeComplCarry)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Toggle CF and return success */
     State->Flags.Cf = !State->Flags.Cf;
-    return TRUE;
+    return;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeClearInt)
@@ -762,14 +747,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearInt)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Check IOPL */
-        if (State->Flags.Iopl >= State->SegmentRegs[FAST486_REG_CS].Dpl)
+        if (State->Flags.Iopl >= Fast486GetCurrentPrivLevel(State))
         {
             /* Clear the interrupt flag */
             State->Flags.If = FALSE;
@@ -778,7 +763,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearInt)
         {
             /* General Protection Fault */
             Fast486Exception(State, FAST486_EXCEPTION_GP);
-            return FALSE;
+            return;
         }
     }
     else
@@ -786,9 +771,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearInt)
         /* Just clear the interrupt flag */
         State->Flags.If = FALSE;
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSetInt)
@@ -800,14 +782,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetInt)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
         /* Check IOPL */
-        if (State->Flags.Iopl >= State->SegmentRegs[FAST486_REG_CS].Dpl)
+        if (State->Flags.Iopl >= Fast486GetCurrentPrivLevel(State))
         {
             /* Set the interrupt flag */
             State->Flags.If = TRUE;
@@ -816,7 +798,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetInt)
         {
             /* General Protection Fault */
             Fast486Exception(State, FAST486_EXCEPTION_GP);
-            return FALSE;
+            return;
         }
     }
     else
@@ -824,9 +806,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetInt)
         /* Just set the interrupt flag */
         State->Flags.If = TRUE;
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeClearDir)
@@ -838,12 +817,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeClearDir)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
-    /* Clear DF and return success */
+    /* Clear DF */
     State->Flags.Df = FALSE;
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSetDir)
@@ -855,12 +833,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSetDir)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
-    /* Set DF and return success*/
+    /* Set DF */
     State->Flags.Df = TRUE;
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
@@ -872,21 +849,18 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeHalt)
     if (State->PrefixFlags)
     {
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Privileged instructions can only be executed under CPL = 0 */
     if (State->SegmentRegs[FAST486_REG_CS].Dpl != 0)
     {
         Fast486Exception(State, FAST486_EXCEPTION_GP);
-        return FALSE;
+        return;
     }
 
     /* Halt */
-    // TODO: Halt the CPU until an interrupt occurs, using IdleCallback if needed.
-
-    /* Return success */
-    return TRUE;
+    State->Halted = TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeInByte)
@@ -903,7 +877,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInByte)
         if (!Fast486FetchByte(State, &Data))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Set the port number to the parameter */
@@ -920,8 +894,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInByte)
 
     /* Store the result in AL */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Data;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
@@ -943,7 +915,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
         if (!Fast486FetchByte(State, &Data))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Set the port number to the parameter */
@@ -975,8 +947,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIn)
         /* Store the value in AX */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Data;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeOutByte)
@@ -993,7 +963,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOutByte)
         if (!Fast486FetchByte(State, &Data))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Set the port number to the parameter */
@@ -1010,8 +980,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOutByte)
 
     /* Write the byte to the I/O port */
     State->IoWriteCallback(State, Port, &Data, 1, sizeof(UCHAR));
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
@@ -1033,7 +1001,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         if (!Fast486FetchByte(State, &Data))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Set the port number to the parameter */
@@ -1061,8 +1029,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOut)
         /* Write a word to the I/O port */
         State->IoWriteCallback(State, Port, &Data, 1, sizeof(USHORT));
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeShortJump)
@@ -1079,7 +1045,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortJump)
     if (!Fast486FetchByte(State, (PUCHAR)&Offset))
     {
         /* An exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Move the instruction pointer */
@@ -1090,8 +1056,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeShortJump)
         /* Clear the top half of EIP */
         State->InstPtr.Long &= 0xFFFF;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovRegImm)
@@ -1112,7 +1076,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovRegImm)
         if (!Fast486FetchDword(State, &Value))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Store the value in the register */
@@ -1126,14 +1090,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovRegImm)
         if (!Fast486FetchWord(State, &Value))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Store the value in the register */
         State->GeneralRegs[Opcode & 0x07].LowWord = Value;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteRegImm)
@@ -1147,14 +1109,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteRegImm)
     {
         /* Invalid prefix */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Fetch the byte */
     if (!Fast486FetchByte(State, &Value))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (Opcode & 0x04)
@@ -1167,8 +1129,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteRegImm)
         /* AL, CL, DL or BL */
         State->GeneralRegs[Opcode & 0x03].LowByte = Value;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAddByteModrm)
@@ -1186,7 +1146,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -1195,7 +1155,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1211,10 +1171,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddByteModrm)
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
@@ -1234,7 +1194,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -1248,7 +1208,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1264,10 +1224,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -1279,7 +1239,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1295,10 +1255,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmWordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
 }
 
@@ -1314,13 +1274,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1337,8 +1297,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddAl)
 
     /* Write back the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
@@ -1359,7 +1317,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1385,7 +1343,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1403,8 +1361,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAddEax)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
@@ -1422,7 +1378,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -1431,7 +1387,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1445,10 +1401,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrByteModrm)
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
@@ -1468,7 +1424,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -1482,7 +1438,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1496,10 +1452,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -1511,7 +1467,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1525,10 +1481,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmWordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
 }
 
@@ -1544,13 +1500,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1565,8 +1521,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrAl)
 
     /* Write back the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
@@ -1587,7 +1541,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1611,7 +1565,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1627,8 +1581,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOrEax)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
@@ -1646,7 +1598,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -1655,7 +1607,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1669,10 +1621,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndByteModrm)
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
@@ -1692,7 +1644,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -1706,7 +1658,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1720,10 +1672,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -1735,7 +1687,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1749,10 +1701,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmWordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
 }
 
@@ -1769,7 +1721,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndAl)
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1784,8 +1736,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndAl)
 
     /* Write back the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
@@ -1806,7 +1756,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1830,7 +1780,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1846,8 +1796,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAndEax)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
@@ -1865,7 +1813,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -1874,7 +1822,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -1888,10 +1836,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorByteModrm)
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
@@ -1911,7 +1859,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -1925,7 +1873,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1939,10 +1887,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -1954,7 +1902,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -1968,10 +1916,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      Opcode & FAST486_OPCODE_WRITE_REG,
+                                      Result);
     }
 }
 
@@ -1987,13 +1935,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -2008,8 +1956,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorAl)
 
     /* Write back the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
@@ -2030,7 +1976,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2054,7 +2000,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2070,8 +2016,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXorEax)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
@@ -2089,7 +2033,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -2098,7 +2042,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
     /* Calculate the result */
     Result = FirstValue & SecondValue;
@@ -2109,9 +2053,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestByteModrm)
     State->Flags.Zf = (Result == 0);
     State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
-
-    /* The result is discarded */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
@@ -2131,7 +2072,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -2145,7 +2086,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2168,7 +2109,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2181,9 +2122,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestModrm)
         State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
-
-    /* The result is discarded */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeTestAl)
@@ -2198,13 +2136,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -2216,9 +2154,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestAl)
     State->Flags.Zf = (Result == 0);
     State->Flags.Sf = ((Result & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Result);
-
-    /* The result is discarded */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
@@ -2239,7 +2174,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2260,7 +2195,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2273,9 +2208,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeTestEax)
         State->Flags.Sf = ((Result & SIGN_FLAG_WORD) != 0);
         State->Flags.Pf = Fast486CalculateParity(Result);
     }
-
-    /* The result is discarded */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeXchgByteModrm)
@@ -2293,7 +2225,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -2302,7 +2234,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Write the value from the register to the R/M */
@@ -2312,20 +2244,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgByteModrm)
                                        FirstValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Write the value from the R/M to the register */
-    if (!Fast486WriteModrmByteOperands(State,
-                                       &ModRegRm,
-                                       TRUE,
-                                       SecondValue))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
-
-    return TRUE;
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  TRUE,
+                                  SecondValue);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
@@ -2345,7 +2271,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -2359,7 +2285,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write the value from the register to the R/M */
@@ -2369,18 +2295,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
                                             FirstValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write the value from the R/M to the register */
-        if (!Fast486WriteModrmDwordOperands(State,
-                                            &ModRegRm,
-                                            TRUE,
-                                            SecondValue))
-        {
-            /* Exception occurred */
-            return FALSE;
-        }
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       TRUE,
+                                       SecondValue);
     }
     else
     {
@@ -2392,7 +2314,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write the value from the register to the R/M */
@@ -2402,28 +2324,21 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXchgModrm)
                                            FirstValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write the value from the R/M to the register */
-        if (!Fast486WriteModrmWordOperands(State,
-                                           &ModRegRm,
-                                           TRUE,
-                                           SecondValue))
-        {
-            /* Exception occurred */
-            return FALSE;
-        }
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      TRUE,
+                                      SecondValue);
     }
-
-    /* The result is discarded */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushEs)
 {
     /* Call the internal API */
-    return Fast486StackPush(State, State->SegmentRegs[FAST486_REG_ES].Selector);
+    Fast486StackPush(State, State->SegmentRegs[FAST486_REG_ES].Selector);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePopEs)
@@ -2433,17 +2348,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopEs)
     if (!Fast486StackPop(State, &NewSelector))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Call the internal API */
-    return Fast486LoadSegment(State, FAST486_REG_ES, LOWORD(NewSelector));
+    Fast486LoadSegment(State, FAST486_REG_ES, LOWORD(NewSelector));
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushCs)
 {
     /* Call the internal API */
-    return Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector);
+    Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
@@ -2461,7 +2376,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -2470,7 +2385,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -2490,10 +2405,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcByteModrm)
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
@@ -2513,7 +2428,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -2527,7 +2442,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2547,10 +2462,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -2562,7 +2477,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2582,10 +2497,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmWordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
 
 }
@@ -2602,13 +2517,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -2629,8 +2544,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcAl)
 
     /* Write back the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
@@ -2651,7 +2564,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2681,7 +2594,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2703,14 +2616,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAdcEax)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushSs)
 {
     /* Call the internal API */
-    return Fast486StackPush(State, State->SegmentRegs[FAST486_REG_SS].Selector);
+    Fast486StackPush(State, State->SegmentRegs[FAST486_REG_SS].Selector);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePopSs)
@@ -2720,11 +2631,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopSs)
     if (!Fast486StackPop(State, &NewSelector))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Call the internal API */
-    return Fast486LoadSegment(State, FAST486_REG_SS, LOWORD(NewSelector));
+    if (Fast486LoadSegment(State, FAST486_REG_SS, LOWORD(NewSelector)))
+    {
+        /* Inhibit all interrupts until the next instruction */
+        State->DoNotInterrupt = TRUE;
+    }
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
@@ -2743,7 +2658,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -2752,7 +2667,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check if this is the instruction that writes to R/M */
@@ -2775,10 +2690,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbByteModrm)
     State->Flags.Pf = Fast486CalculateParity(Result);
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
@@ -2799,7 +2714,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -2813,7 +2728,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
                                            &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Check if this is the instruction that writes to R/M */
@@ -2836,10 +2751,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -2851,7 +2766,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Check if this is the instruction that writes to R/M */
@@ -2874,10 +2789,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbModrm)
         State->Flags.Pf = Fast486CalculateParity(Result);
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                             &ModRegRm,
-                                             Opcode & FAST486_OPCODE_WRITE_REG,
-                                             Result);
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      Opcode & FAST486_OPCODE_WRITE_REG,
+                                      Result);
     }
 }
 
@@ -2894,13 +2809,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -2917,9 +2832,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbAl)
 
     /* Write back the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
-
-    return TRUE;
-
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
@@ -2941,7 +2853,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2967,7 +2879,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -2985,15 +2897,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSbbEax)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
     }
-
-    return TRUE;
-
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushDs)
 {
     /* Call the internal API */
-    return Fast486StackPush(State, State->SegmentRegs[FAST486_REG_DS].Selector);
+    Fast486StackPush(State, State->SegmentRegs[FAST486_REG_DS].Selector);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePopDs)
@@ -3003,11 +2912,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopDs)
     if (!Fast486StackPop(State, &NewSelector))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Call the internal API */
-    return Fast486LoadSegment(State, FAST486_REG_DS, LOWORD(NewSelector));
+    Fast486LoadSegment(State, FAST486_REG_DS, LOWORD(NewSelector));
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeDaa)
@@ -3049,8 +2958,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDaa)
     State->Flags.Sf = (Value & SIGN_FLAG_BYTE) != 0;
     State->Flags.Zf = (Value == 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
@@ -3068,7 +2975,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -3077,7 +2984,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check if this is the instruction that writes to R/M */
@@ -3103,15 +3010,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubByteModrm)
     if (!(Opcode & 0x10))
     {
         /* Write back the result */
-        return Fast486WriteModrmByteOperands(State,
-                                             &ModRegRm,
-                                             Opcode & FAST486_OPCODE_WRITE_REG,
-                                             Result);
-    }
-    else
-    {
-        /* Discard the result */
-        return TRUE;
+        Fast486WriteModrmByteOperands(State,
+                                      &ModRegRm,
+                                      Opcode & FAST486_OPCODE_WRITE_REG,
+                                      Result);
     }
 }
 
@@ -3132,7 +3034,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -3146,7 +3048,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Check if this is the instruction that writes to R/M */
@@ -3172,15 +3074,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         if (!(Opcode & 0x10))
         {
             /* Write back the result */
-            return Fast486WriteModrmDwordOperands(State,
-                                                  &ModRegRm,
-                                                  Opcode & FAST486_OPCODE_WRITE_REG,
-                                                  Result);
-        }
-        else
-        {
-            /* Discard the result */
-            return TRUE;
+            Fast486WriteModrmDwordOperands(State,
+                                           &ModRegRm,
+                                           Opcode & FAST486_OPCODE_WRITE_REG,
+                                           Result);
         }
     }
     else
@@ -3193,7 +3090,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Check if this is the instruction that writes to R/M */
@@ -3219,15 +3116,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubModrm)
         if (!(Opcode & 0x10))
         {
             /* Write back the result */
-            return Fast486WriteModrmWordOperands(State,
-                                                 &ModRegRm,
-                                                 Opcode & FAST486_OPCODE_WRITE_REG,
-                                                 Result);
-        }
-        else
-        {
-            /* Discard the result */
-            return TRUE;
+            Fast486WriteModrmWordOperands(State,
+                                          &ModRegRm,
+                                          Opcode & FAST486_OPCODE_WRITE_REG,
+                                          Result);
         }
     }
 }
@@ -3244,13 +3136,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubAl)
     {
         /* This opcode doesn't take any prefixes */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -3271,8 +3163,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubAl)
         /* Write back the result */
         State->GeneralRegs[FAST486_REG_EAX].LowByte = Result;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
@@ -3293,7 +3183,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
         if (!Fast486FetchDword(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -3323,7 +3213,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
         if (!Fast486FetchWord(State, &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Calculate the result */
@@ -3345,8 +3235,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmpSubEax)
             State->GeneralRegs[FAST486_REG_EAX].LowWord = Result;
         }
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeDas)
@@ -3388,8 +3276,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeDas)
     State->Flags.Sf = (Value & SIGN_FLAG_BYTE) != 0;
     State->Flags.Zf = (Value == 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAaa)
@@ -3417,8 +3303,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAaa)
 
     /* Keep only the lowest 4 bits of AL */
     State->GeneralRegs[FAST486_REG_EAX].LowByte &= 0x0F;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAas)
@@ -3446,8 +3330,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAas)
 
     /* Keep only the lowest 4 bits of AL */
     State->GeneralRegs[FAST486_REG_EAX].LowByte &= 0x0F;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushAll)
@@ -3471,7 +3353,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushAll)
             if (!Fast486StackPush(State, Size ? SavedEsp.Long : SavedEsp.LowWord))
             {
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
         }
         else
@@ -3481,12 +3363,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushAll)
                                               : State->GeneralRegs[i].LowWord))
             {
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
         }
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePopAll)
@@ -3508,7 +3388,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopAll)
         if (!Fast486StackPop(State, &Value))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Don't modify ESP */
@@ -3518,8 +3398,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopAll)
             else State->GeneralRegs[i].LowWord = LOWORD(Value);
         }
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
@@ -3537,14 +3415,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!ModRegRm.Memory)
     {
         /* Invalid */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Check for the segment override */
@@ -3565,7 +3443,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
                                            (PULONG)&LowerBound))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         if (!Fast486ReadMemory(State,
@@ -3576,14 +3454,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
                                sizeof(ULONG)))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         if ((Index < LowerBound) || (Index > UpperBound))
         {
             /* Out of bounds */
             Fast486Exception(State, FAST486_EXCEPTION_BR);
-            return FALSE;
         }
     }
     else
@@ -3597,7 +3474,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
                                           (PUSHORT)&LowerBound))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         if (!Fast486ReadMemory(State,
@@ -3608,18 +3485,15 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeBound)
                                sizeof(USHORT)))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         if ((Index < LowerBound) || (Index > UpperBound))
         {
             /* Out of bounds */
             Fast486Exception(State, FAST486_EXCEPTION_BR);
-            return FALSE;
         }
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
@@ -3634,7 +3508,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
     {
         /* Cannot be used in real mode or with a LOCK prefix */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     TOGGLE_ADSIZE(AddressSize);
@@ -3643,7 +3517,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Read the operands */
@@ -3653,7 +3527,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check if the RPL needs adjusting */
@@ -3667,13 +3541,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeArpl)
         State->Flags.Zf = TRUE;
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, SecondValue);
+        Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, SecondValue);
     }
     else
     {
         /* Clear ZF */
         State->Flags.Zf = FALSE;
-        return TRUE;
     }
 }
 
@@ -3694,11 +3567,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushImm)
         if (!Fast486FetchDword(State, &Data))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Call the internal API */
-        return Fast486StackPush(State, Data);
+        Fast486StackPush(State, Data);
     }
     else
     {
@@ -3707,11 +3580,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushImm)
         if (!Fast486FetchWord(State, (PUSHORT)&Data))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Call the internal API */
-        return Fast486StackPush(State, Data);
+        Fast486StackPush(State, Data);
     }
 }
 
@@ -3733,7 +3606,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (Opcode == 0x6B)
@@ -3744,7 +3617,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
         if (!Fast486FetchByte(State, (PUCHAR)&Byte))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         Multiplier = (LONG)Byte;
@@ -3759,7 +3632,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
             if (!Fast486FetchDword(State, (PULONG)&Dword))
             {
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
 
             Multiplier = Dword;
@@ -3772,7 +3645,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
             if (!Fast486FetchWord(State, (PUSHORT)&Word))
             {
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
 
             Multiplier = (LONG)Word;
@@ -3791,7 +3664,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
                                            (PULONG)&Multiplicand))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Multiply */
@@ -3801,10 +3674,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
         State->Flags.Cf = State->Flags.Of = ((Product < MINLONG) || (Product > MAXLONG));
 
         /* Write-back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              TRUE,
-                                              (ULONG)((LONG)Product));
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       TRUE,
+                                       (ULONG)((LONG)Product));
     }
     else
     {
@@ -3818,7 +3691,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
                                           (PUSHORT)&Multiplicand))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Multiply */
@@ -3828,10 +3701,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeImulModrmImm)
         State->Flags.Cf = State->Flags.Of = ((Product < MINSHORT) || (Product > MAXSHORT));
 
         /* Write-back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                             &ModRegRm,
-                                             TRUE,
-                                             (USHORT)((SHORT)Product));
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      TRUE,
+                                      (USHORT)((SHORT)Product));
     }
 }
 
@@ -3845,11 +3718,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushByteImm)
     if (!Fast486FetchByte(State, (PUCHAR)&Data))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Call the internal API */
-    return Fast486StackPush(State, Data);
+    Fast486StackPush(State, Data);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
@@ -3867,7 +3740,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadModrmByteOperands(State,
@@ -3876,17 +3749,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovByteModrm)
                                       &SecondValue))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
     else Result = FirstValue;
 
     /* Write back the result */
-    return Fast486WriteModrmByteOperands(State,
-                                         &ModRegRm,
-                                         Opcode & FAST486_OPCODE_WRITE_REG,
-                                         Result);
+    Fast486WriteModrmByteOperands(State,
+                                  &ModRegRm,
+                                  Opcode & FAST486_OPCODE_WRITE_REG,
+                                  Result);
 
 }
 
@@ -3907,7 +3780,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check the operand size */
@@ -3921,17 +3794,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
         else Result = FirstValue;
 
         /* Write back the result */
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              Opcode & FAST486_OPCODE_WRITE_REG,
-                                              Result);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       Opcode & FAST486_OPCODE_WRITE_REG,
+                                       Result);
     }
     else
     {
@@ -3943,17 +3816,17 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
                                           &SecondValue))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         if (Opcode & FAST486_OPCODE_WRITE_REG) Result = SecondValue;
         else Result = FirstValue;
 
         /* Write back the result */
-        return Fast486WriteModrmWordOperands(State,
-                                             &ModRegRm,
-                                             Opcode & FAST486_OPCODE_WRITE_REG,
-                                             Result);
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      Opcode & FAST486_OPCODE_WRITE_REG,
+                                      Result);
     }
 }
 
@@ -3974,29 +3847,29 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovStoreSeg)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (ModRegRm.Register >= FAST486_NUM_SEG_REGS)
     {
         /* Invalid */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (OperandSize)
     {
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              FALSE,
-                                              State->SegmentRegs[ModRegRm.Register].Selector);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       FALSE,
+                                       State->SegmentRegs[ModRegRm.Register].Selector);
     }
     else
     {
-        return Fast486WriteModrmWordOperands(State,
-                                             &ModRegRm,
-                                             FALSE,
-                                             State->SegmentRegs[ModRegRm.Register].Selector);
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      FALSE,
+                                      State->SegmentRegs[ModRegRm.Register].Selector);
     }
 }
 
@@ -4017,7 +3890,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLea)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* The second operand must be memory */
@@ -4025,23 +3898,23 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLea)
     {
         /* Invalid */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     /* Write the address to the register */
     if (OperandSize)
     {
-        return Fast486WriteModrmDwordOperands(State,
-                                              &ModRegRm,
-                                              TRUE,
-                                              ModRegRm.MemoryAddress);
+        Fast486WriteModrmDwordOperands(State,
+                                       &ModRegRm,
+                                       TRUE,
+                                       ModRegRm.MemoryAddress);
     }
     else
     {
-        return Fast486WriteModrmWordOperands(State,
-                                             &ModRegRm,
-                                             TRUE,
-                                             ModRegRm.MemoryAddress);
+        Fast486WriteModrmWordOperands(State,
+                                      &ModRegRm,
+                                      TRUE,
+                                      ModRegRm.MemoryAddress);
 
     }
 }
@@ -4063,7 +3936,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if ((ModRegRm.Register >= FAST486_NUM_SEG_REGS)
@@ -4071,7 +3944,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
     {
         /* Invalid */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (OperandSize)
@@ -4081,10 +3954,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
         if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Selector))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
-        return Fast486LoadSegment(State, ModRegRm.Register, LOWORD(Selector));
+        if (!Fast486LoadSegment(State, ModRegRm.Register, LOWORD(Selector)))
+        {
+            /* Exception occurred */
+            return;
+        }
     }
     else
     {
@@ -4093,10 +3970,20 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
         if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
-        return Fast486LoadSegment(State, ModRegRm.Register, Selector);
+        if (!Fast486LoadSegment(State, ModRegRm.Register, Selector))
+        {
+            /* Exception occurred */
+            return;
+        }
+    }
+
+    if ((INT)ModRegRm.Register == FAST486_REG_SS)
+    {
+        /* Inhibit all interrupts until the next instruction */
+        State->DoNotInterrupt = TRUE;
     }
 }
 
@@ -4127,8 +4014,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCwde)
         (State->GeneralRegs[FAST486_REG_EAX].LowByte & SIGN_FLAG_BYTE)
         ? 0xFF : 0x00;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeCdq)
@@ -4155,8 +4040,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCdq)
         (State->GeneralRegs[FAST486_REG_EAX].LowWord & SIGN_FLAG_WORD)
         ? 0xFFFF : 0x0000;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
@@ -4177,7 +4060,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
         if (!Fast486FetchDword(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
     }
     else
@@ -4185,7 +4068,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
         if (!Fast486FetchWord(State, (PUSHORT)&Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
     }
 
@@ -4193,43 +4076,48 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
     if (!Fast486FetchWord(State, &Segment))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
+    }
+
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        if (!Fast486ProcessGate(State, Segment, Offset, TRUE))
+        {
+            /* Gate processed or exception occurred */
+            return;
+        }
     }
 
     /* Push the current code segment selector */
     if (!Fast486StackPush(State, State->SegmentRegs[FAST486_REG_CS].Selector))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Push the current value of the instruction pointer */
     if (!Fast486StackPush(State, State->InstPtr.Long))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Load the new CS */
     if (!Fast486LoadSegment(State, FAST486_REG_CS, Segment))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Load new (E)IP */
     if (Size) State->InstPtr.Long = Offset;
     else State->InstPtr.LowWord = LOWORD(Offset);
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeWait)
 {
     // TODO: NOT IMPLEMENTED
     UNIMPLEMENTED;
-
-    return FALSE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
@@ -4244,12 +4132,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
     {
         /* Call the VM86 monitor */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-        return FALSE;
+        return;
     }
 
     /* Push the flags */
-    if (Size) return Fast486StackPush(State, State->Flags.Long);
-    else return Fast486StackPush(State, LOWORD(State->Flags.Long));
+    if (Size) Fast486StackPush(State, State->Flags.Long);
+    else Fast486StackPush(State, LOWORD(State->Flags.Long));
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
@@ -4265,7 +4153,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
     if (!Fast486StackPop(State, &NewFlags.Long))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check for VM86 mode when IOPL is not 3 */
@@ -4273,7 +4161,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
     {
         /* Call the VM86 monitor */
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-        return FALSE;
+        return;
     }
 
     State->Flags.Cf = NewFlags.Cf;
@@ -4289,8 +4177,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
 
     if (Cpl == 0) State->Flags.Iopl = NewFlags.Iopl;
     if (Cpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSahf)
@@ -4305,8 +4191,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSahf)
     /* Restore the reserved bits of FLAGS */
     State->Flags.AlwaysSet = TRUE;
     State->Flags.Reserved0 = State->Flags.Reserved1 = FALSE;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLahf)
@@ -4316,8 +4200,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLahf)
 
     /* Set AH to the low-order byte of FLAGS */
     State->GeneralRegs[FAST486_REG_EAX].HighByte = LOBYTE(State->Flags.Long);
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeRet)
@@ -4335,11 +4217,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRet)
     if (Opcode == 0xC2)
     {
         /* Fetch the number of bytes to pop after the return */
-        if (!Fast486FetchWord(State, &BytesToPop)) return FALSE;
+        if (!Fast486FetchWord(State, &BytesToPop)) return;
     }
 
     /* Pop the return address */
-    if (!Fast486StackPop(State, &ReturnAddress)) return FALSE;
+    if (!Fast486StackPop(State, &ReturnAddress)) return;
 
     /* Return to the calling procedure, and if necessary, pop the parameters */
     if (Size)
@@ -4352,8 +4234,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRet)
         State->InstPtr.LowWord = LOWORD(ReturnAddress);
         State->GeneralRegs[FAST486_REG_ESP].LowWord += BytesToPop;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
@@ -4374,7 +4254,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!ModRegRm.Memory)
@@ -4391,8 +4271,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
             if (!Fast486FetchByte(State, &BopCode))
             {
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
+
+#ifndef FAST486_NO_PREFETCH
+            /* Invalidate the prefetch since BOP handlers can alter the memory */
+            State->PrefetchValid = FALSE;
+#endif
 
             /* Call the BOP handler */
             State->BopCallback(State, BopCode);
@@ -4403,18 +4288,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
              * changes the CS:IP, the interrupt handler won't execute and the
              * stack pointer will never be restored.
              */
-            if (State->IntStatus == FAST486_INT_EXECUTE)
-            {
-                State->IntStatus = FAST486_INT_DELAYED;
-            }
+            State->DoNotInterrupt = TRUE;
 
-            /* Return success */
-            return TRUE;
+            return;
         }
 
         /* Invalid */
         Fast486Exception(State, FAST486_EXCEPTION_UD);
-        return FALSE;
+        return;
     }
 
     if (!Fast486ReadMemory(State,
@@ -4426,7 +4307,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
                            OperandSize ? 6 : 4))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (OperandSize)
@@ -4438,10 +4319,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
         State->GeneralRegs[ModRegRm.Register].Long = Offset;
 
         /* Load the segment */
-        return Fast486LoadSegment(State,
-                                  (Opcode == 0xC4)
-                                  ? FAST486_REG_ES : FAST486_REG_DS,
-                                  Segment);
+        Fast486LoadSegment(State,
+                           (Opcode == 0xC4)
+                           ? FAST486_REG_ES : FAST486_REG_DS,
+                           Segment);
     }
     else
     {
@@ -4452,10 +4333,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLdsLes)
         State->GeneralRegs[ModRegRm.Register].LowWord = Offset;
 
         /* Load the segment */
-        return Fast486LoadSegment(State,
-                                  (Opcode == 0xC4)
-                                  ? FAST486_REG_ES : FAST486_REG_DS,
-                                  Segment);
+        Fast486LoadSegment(State,
+                           (Opcode == 0xC4)
+                           ? FAST486_REG_ES : FAST486_REG_DS,
+                           Segment);
     }
 }
 
@@ -4476,20 +4357,20 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeEnter)
     if (!Fast486FetchWord(State, &FrameSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     if (!Fast486FetchByte(State, &NestingLevel))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Push EBP */
     if (!Fast486StackPush(State, State->GeneralRegs[FAST486_REG_EBP].Long))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Save ESP */
@@ -4518,8 +4399,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeEnter)
     /* Reserve space for the frame */
     if (Size) State->GeneralRegs[FAST486_REG_ESP].Long -= (ULONG)FrameSize;
     else State->GeneralRegs[FAST486_REG_ESP].LowWord -= FrameSize;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
@@ -4538,7 +4417,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
         State->GeneralRegs[FAST486_REG_ESP].Long = State->GeneralRegs[FAST486_REG_EBP].Long;
 
         /* Pop the saved base pointer from the stack */
-        return Fast486StackPop(State, &State->GeneralRegs[FAST486_REG_EBP].Long);
+        Fast486StackPop(State, &State->GeneralRegs[FAST486_REG_EBP].Long);
     }
     else
     {
@@ -4551,9 +4430,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
         if (Fast486StackPop(State, &Value))
         {
             State->GeneralRegs[FAST486_REG_EBP].LowWord = LOWORD(Value);
-            return TRUE;
         }
-        else return FALSE;
     }
 }
 
@@ -4573,28 +4450,85 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
     if (Opcode == 0xCA)
     {
         /* Fetch the number of bytes to pop after the return */
-        if (!Fast486FetchWord(State, &BytesToPop)) return FALSE;
+        if (!Fast486FetchWord(State, &BytesToPop)) return;
     }
 
     /* Pop the offset */
     if (!Fast486StackPop(State, &Offset))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Pop the segment */
     if (!Fast486StackPop(State, &Segment))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Load the new CS */
     if (!Fast486LoadSegment(State, FAST486_REG_CS, Segment))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
+    }
+
+    if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
+    {
+        INT i;
+        INT OldCpl = Fast486GetCurrentPrivLevel(State);
+        ULONG StackPtr;
+        ULONG StackSel;
+        
+        if (GET_SEGMENT_RPL(Segment) > OldCpl)
+        {
+            /* Pop ESP */
+            if (!Fast486StackPop(State, &StackPtr))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Pop SS */
+            if (!Fast486StackPop(State, &StackSel))
+            {
+                /* Exception */
+                return;
+            }
+        }
+
+        /* Update the CPL */
+        State->Cpl = GET_SEGMENT_RPL(Segment);
+
+        if (State->Cpl > OldCpl)
+        {
+            /* Load new SS */
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Set ESP */
+            if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
+            else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
+
+            /* Check segment security */
+            for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
+            {
+                /* Don't check CS or SS */
+                if ((i == FAST486_REG_CS) || (i == FAST486_REG_SS)) continue;
+
+                if ((State->Cpl > State->SegmentRegs[i].Dpl)
+                    && (!State->SegmentRegs[i].Executable
+                    || !State->SegmentRegs[i].DirConf))
+                {
+                    /* Load the NULL descriptor in the segment */
+                    if (!Fast486LoadSegment(State, i, 0)) return;
+                }
+            }
+        }
     }
 
     /* Load new (E)IP, and if necessary, pop the parameters */
@@ -4608,40 +4542,45 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
         State->InstPtr.LowWord = LOWORD(Offset);
         State->GeneralRegs[FAST486_REG_ESP].LowWord += BytesToPop;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
 {
     UCHAR IntNum;
-    FAST486_IDT_ENTRY IdtEntry;
+
+    /* Check for V86 mode */
+    if (State->Flags.Vm && (State->Flags.Iopl != 3))
+    {
+        /* Call the V86 monitor */
+        Fast486Exception(State, FAST486_EXCEPTION_GP);
+        return;
+    }
 
     switch (Opcode)
     {
-        case 0xCC:
+        case 0xCC:  // INT 3
         {
             /* This is the INT3 instruction */
             IntNum = 3;
             break;
         }
 
-        case 0xCD:
+        case 0xCD:  // INT xx
         {
             /* Fetch the interrupt number */
             if (!Fast486FetchByte(State, &IntNum))
             {
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
 
             break;
         }
 
-        case 0xCE:
+        case 0xCE:  // INTO
         {
             /* Don't do anything if OF is cleared */
-            if (!State->Flags.Of) return TRUE;
+            if (!State->Flags.Of) return;
 
             /* Exception #OF */
             IntNum = FAST486_EXCEPTION_OF;
@@ -4656,24 +4595,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeInt)
         }
     }
 
-    /* Get the interrupt vector */
-    if (!Fast486GetIntVector(State, IntNum, &IdtEntry))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
-
     /* Perform the interrupt */
-    if (!Fast486InterruptInternal(State,
-                                  IdtEntry.Selector,
-                                  MAKELONG(IdtEntry.Offset, IdtEntry.OffsetHigh),
-                                  IdtEntry.Type))
-    {
-        /* Exception occurred */
-        return FALSE;
-    }
-
-    return TRUE;
+    Fast486PerformInterrupt(State, IntNum);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
@@ -4689,31 +4612,42 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
     NO_LOCK_PREFIX();
     TOGGLE_OPSIZE(Size);
 
+    /* Check if this is a nested task return */
+    if (State->Flags.Nt && (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE))
+    {
+        /* Clear the NT flag of the current task */
+        State->Flags.Nt = FALSE;
+
+        /* Switch to the old task */
+        Fast486TaskSwitch(State, FAST486_TASK_RETURN, 0);
+        return;
+    }
+
     /* Pop EIP */
     if (!Fast486StackPop(State, &InstPtr))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Pop CS */
     if (!Fast486StackPop(State, &CodeSel))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Pop EFLAGS */
     if (!Fast486StackPop(State, &NewFlags.Long))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
-        INT Cpl = Fast486GetCurrentPrivLevel(State);
+        INT OldCpl = Fast486GetCurrentPrivLevel(State);
 
         if (State->Flags.Vm)
         {
@@ -4729,7 +4663,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
                 if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel))
                 {
                     /* Exception occurred */
-                    return FALSE;
+                    return;
                 }
 
                 /* Set the new flags */
@@ -4742,18 +4676,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             {
                 /* Call the VM86 monitor */
                 Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-                return FALSE;
+                return;
             }
 
-            return TRUE;
-        }
-
-        if (State->Flags.Nt)
-        {
-            /* Nested task return */
-
-            UNIMPLEMENTED;
-            return FALSE;
+            return;
         }
 
         if (NewFlags.Vm)
@@ -4761,13 +4687,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             /* Return to VM86 mode */
             ULONG Es, Ds, Fs, Gs;
 
-            /* Pop ESP, SS, ES, FS, GS */
-            if (!Fast486StackPop(State, &StackPtr)) return FALSE;
-            if (!Fast486StackPop(State, &StackSel)) return FALSE;
-            if (!Fast486StackPop(State, &Es)) return FALSE;
-            if (!Fast486StackPop(State, &Ds)) return FALSE;
-            if (!Fast486StackPop(State, &Fs)) return FALSE;
-            if (!Fast486StackPop(State, &Gs)) return FALSE;
+            /* Pop ESP, SS, ES, DS, FS, GS */
+            if (!Fast486StackPop(State, &StackPtr)) return;
+            if (!Fast486StackPop(State, &StackSel)) return;
+            if (!Fast486StackPop(State, &Es)) return;
+            if (!Fast486StackPop(State, &Ds)) return;
+            if (!Fast486StackPop(State, &Fs)) return;
+            if (!Fast486StackPop(State, &Gs)) return;
 
             /* Set the new IP */
             State->InstPtr.Long = LOWORD(InstPtr);
@@ -4778,54 +4704,46 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
             State->Flags.AlwaysSet = State->Flags.Vm = TRUE;
 
             /* Load the new segments */
-            if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel)) return FALSE;
-            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel)) return FALSE;
-            if (!Fast486LoadSegment(State, FAST486_REG_ES, Es)) return FALSE;
-            if (!Fast486LoadSegment(State, FAST486_REG_DS, Ds)) return FALSE;
-            if (!Fast486LoadSegment(State, FAST486_REG_FS, Fs)) return FALSE;
-            if (!Fast486LoadSegment(State, FAST486_REG_GS, Gs)) return FALSE;
+            if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel)) return;
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel)) return;
+            if (!Fast486LoadSegment(State, FAST486_REG_ES, Es)) return;
+            if (!Fast486LoadSegment(State, FAST486_REG_DS, Ds)) return;
+            if (!Fast486LoadSegment(State, FAST486_REG_FS, Fs)) return;
+            if (!Fast486LoadSegment(State, FAST486_REG_GS, Gs)) return;
 
-            return TRUE;
+            return;
         }
 
         /* Load the new CS */
         if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Set EIP */
         if (Size) State->InstPtr.Long = InstPtr;
         else State->InstPtr.LowWord = LOWORD(InstPtr);
 
-        if (GET_SEGMENT_RPL(CodeSel) > Cpl)
+        if (GET_SEGMENT_RPL(CodeSel) > OldCpl)
         {
             /* Pop ESP */
             if (!Fast486StackPop(State, &StackPtr))
             {
                 /* Exception */
-                return FALSE;
+                return;
             }
 
             /* Pop SS */
             if (!Fast486StackPop(State, &StackSel))
             {
                 /* Exception */
-                return FALSE;
+                return;
             }
-
-            /* Load new SS */
-            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
-            {
-                /* Exception */
-                return FALSE;
-            }
-
-            /* Set ESP */
-            if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
-            else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
         }
+
+        /* Update the CPL */
+        State->Cpl = GET_SEGMENT_RPL(CodeSel);
 
         /* Set the new flags */
         if (Size) State->Flags.Long = NewFlags.Long & PROT_MODE_FLAGS_MASK;
@@ -4833,13 +4751,21 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
         State->Flags.AlwaysSet = TRUE;
 
         /* Set additional flags */
-        if (Cpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
-        if (Cpl == 0) State->Flags.Iopl = NewFlags.Iopl;
+        if (OldCpl <= State->Flags.Iopl) State->Flags.If = NewFlags.If;
+        if (OldCpl == 0) State->Flags.Iopl = NewFlags.Iopl;
 
-        if (GET_SEGMENT_RPL(CodeSel) > Cpl)
+        if (State->Cpl > OldCpl)
         {
-            /* Update the CPL */
-            Cpl = Fast486GetCurrentPrivLevel(State);
+            /* Load new SS */
+            if (!Fast486LoadSegment(State, FAST486_REG_SS, StackSel))
+            {
+                /* Exception */
+                return;
+            }
+
+            /* Set ESP */
+            if (Size) State->GeneralRegs[FAST486_REG_ESP].Long = StackPtr;
+            else State->GeneralRegs[FAST486_REG_ESP].LowWord = LOWORD(StackPtr);
 
             /* Check segment security */
             for (i = 0; i < FAST486_NUM_SEG_REGS; i++)
@@ -4847,12 +4773,12 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
                 /* Don't check CS or SS */
                 if ((i == FAST486_REG_CS) || (i == FAST486_REG_SS)) continue;
 
-                if ((Cpl > State->SegmentRegs[i].Dpl)
+                if ((State->Cpl > State->SegmentRegs[i].Dpl)
                     && (!State->SegmentRegs[i].Executable
                     || !State->SegmentRegs[i].DirConf))
                 {
                     /* Load the NULL descriptor in the segment */
-                    if (!Fast486LoadSegment(State, i, 0)) return FALSE;
+                    if (!Fast486LoadSegment(State, i, 0)) return;
                 }
             }
         }
@@ -4863,7 +4789,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
         {
             /* Invalid */
             Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, 0);
-            return FALSE;
+            return;
         }
 
         /* Set new EIP */
@@ -4873,7 +4799,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
         if (!Fast486LoadSegment(State, FAST486_REG_CS, CodeSel))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Set the new flags */
@@ -4881,8 +4807,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
         else State->Flags.LowWord = NewFlags.LowWord & REAL_MODE_FLAGS_MASK;
         State->Flags.AlwaysSet = TRUE;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
@@ -4896,7 +4820,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
     if (!Fast486FetchByte(State, &Base))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Check if the base is zero */
@@ -4904,7 +4828,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
     {
         /* Divide error */
         Fast486Exception(State, FAST486_EXCEPTION_DE);
-        return FALSE;
+        return;
     }
 
     /* Adjust */
@@ -4916,8 +4840,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAam)
     State->Flags.Zf = (Value == 0);
     State->Flags.Sf = ((Value & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeAad)
@@ -4931,7 +4853,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAad)
     if (!Fast486FetchByte(State, &Base))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Adjust */
@@ -4943,8 +4865,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeAad)
     State->Flags.Zf = (Value == 0);
     State->Flags.Sf = ((Value & SIGN_FLAG_BYTE) != 0);
     State->Flags.Pf = Fast486CalculateParity(Value);
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeXlat)
@@ -4956,7 +4876,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXlat)
 
     /* Read a byte from DS:[(E)BX + AL] */
     if (!Fast486ReadMemory(State,
-                           FAST486_REG_DS,
+                           (State->PrefixFlags & FAST486_PREFIX_SEG)
+                           ? State->SegmentOverride : FAST486_REG_DS,
                            (AddressSize ? State->GeneralRegs[FAST486_REG_EBX].Long
                                         : State->GeneralRegs[FAST486_REG_EBX].LowWord)
                            + State->GeneralRegs[FAST486_REG_EAX].LowByte,
@@ -4965,14 +4886,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeXlat)
                            sizeof(UCHAR)))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Set AL to the result */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = Value;
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
@@ -4995,8 +4913,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
         /* Additional rule for LOOPNZ */
         if (State->Flags.Zf) Condition = FALSE;
     }
-
-    if (Opcode == 0xE1)
+    else if (Opcode == 0xE1)
     {
         /* Additional rule for LOOPZ */
         if (!State->Flags.Zf) Condition = FALSE;
@@ -5006,7 +4923,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
     if (!Fast486FetchByte(State, (PUCHAR)&Offset))
     {
         /* An exception occurred */
-        return FALSE;
+        return;
     }
 
     if (Condition)
@@ -5015,8 +4932,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLoop)
         if (Size) State->InstPtr.Long += Offset;
         else State->InstPtr.LowWord += Offset;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
@@ -5038,7 +4953,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
     if (!Fast486FetchByte(State, (PUCHAR)&Offset))
     {
         /* An exception occurred */
-        return FALSE;
+        return;
     }
 
     if (Condition)
@@ -5047,8 +4962,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJecxz)
         if (Size) State->InstPtr.Long += Offset;
         else State->InstPtr.LowWord += Offset;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
@@ -5069,14 +4982,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
         if (!Fast486FetchDword(State, (PULONG)&Offset))
         {
             /* An exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Push the current value of the instruction pointer */
         if (!Fast486StackPush(State, State->InstPtr.Long))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Move the instruction pointer */
@@ -5090,21 +5003,19 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCall)
         if (!Fast486FetchWord(State, (PUSHORT)&Offset))
         {
             /* An exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Push the current value of the instruction pointer */
         if (!Fast486StackPush(State, State->InstPtr.Long))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Move the instruction pointer */
         State->InstPtr.LowWord += Offset;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
@@ -5125,7 +5036,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
         if (!Fast486FetchDword(State, (PULONG)&Offset))
         {
             /* An exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Move the instruction pointer */
@@ -5139,7 +5050,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
         if (!Fast486FetchWord(State, (PUSHORT)&Offset))
         {
             /* An exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Move the instruction pointer */
@@ -5148,8 +5059,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmp)
         /* Clear the top half of EIP */
         State->InstPtr.Long &= 0xFFFF;
     }
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
@@ -5170,7 +5079,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
         if (!Fast486FetchDword(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
     }
     else
@@ -5178,7 +5087,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
         if (!Fast486FetchWord(State, (PUSHORT)&Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
     }
 
@@ -5186,20 +5095,27 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeJmpAbs)
     if (!Fast486FetchWord(State, &Segment))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
+    }
+
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
+    {
+        if (!Fast486ProcessGate(State, Segment, Offset, FALSE))
+        {
+            /* Gate processed or exception occurred */
+            return;
+        }
     }
 
     /* Load the new CS */
     if (!Fast486LoadSegment(State, FAST486_REG_CS, Segment))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Load new EIP */
     State->InstPtr.Long = Offset;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovAlOffset)
@@ -5217,7 +5133,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovAlOffset)
         if (!Fast486FetchDword(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
     }
     else
@@ -5227,20 +5143,20 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovAlOffset)
         if (!Fast486FetchWord(State, &WordOffset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         Offset = (ULONG)WordOffset;
     }
 
     /* Read from memory */
-    return Fast486ReadMemory(State,
-                             (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                             State->SegmentOverride : FAST486_REG_DS,
-                             Offset,
-                             FALSE,
-                             &State->GeneralRegs[FAST486_REG_EAX].LowByte,
-                             sizeof(UCHAR));
+    Fast486ReadMemory(State,
+                      (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                      State->SegmentOverride : FAST486_REG_DS,
+                      Offset,
+                      FALSE,
+                      &State->GeneralRegs[FAST486_REG_EAX].LowByte,
+                      sizeof(UCHAR));
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
@@ -5262,29 +5178,29 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
         if (!Fast486FetchDword(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Read from memory */
         if (OperandSize)
         {
-            return Fast486ReadMemory(State,
-                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                     State->SegmentOverride : FAST486_REG_DS,
-                                     Offset,
-                                     FALSE,
-                                     &State->GeneralRegs[FAST486_REG_EAX].Long,
-                                     sizeof(ULONG));
+            Fast486ReadMemory(State,
+                              (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                              State->SegmentOverride : FAST486_REG_DS,
+                              Offset,
+                              FALSE,
+                              &State->GeneralRegs[FAST486_REG_EAX].Long,
+                              sizeof(ULONG));
         }
         else
         {
-            return Fast486ReadMemory(State,
-                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                     State->SegmentOverride : FAST486_REG_DS,
-                                     Offset,
-                                     FALSE,
-                                     &State->GeneralRegs[FAST486_REG_EAX].LowWord,
-                                     sizeof(USHORT));
+            Fast486ReadMemory(State,
+                              (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                              State->SegmentOverride : FAST486_REG_DS,
+                              Offset,
+                              FALSE,
+                              &State->GeneralRegs[FAST486_REG_EAX].LowWord,
+                              sizeof(USHORT));
         }
     }
     else
@@ -5294,29 +5210,29 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovEaxOffset)
         if (!Fast486FetchWord(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Read from memory */
         if (OperandSize)
         {
-            return Fast486ReadMemory(State,
-                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                     State->SegmentOverride : FAST486_REG_DS,
-                                     Offset,
-                                     FALSE,
-                                     &State->GeneralRegs[FAST486_REG_EAX].Long,
-                                     sizeof(ULONG));
+            Fast486ReadMemory(State,
+                              (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                              State->SegmentOverride : FAST486_REG_DS,
+                              Offset,
+                              FALSE,
+                              &State->GeneralRegs[FAST486_REG_EAX].Long,
+                              sizeof(ULONG));
         }
         else
         {
-            return Fast486ReadMemory(State,
-                                     (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                     State->SegmentOverride : FAST486_REG_DS,
-                                     Offset,
-                                     FALSE,
-                                     &State->GeneralRegs[FAST486_REG_EAX].LowWord,
-                                     sizeof(USHORT));
+            Fast486ReadMemory(State,
+                              (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                              State->SegmentOverride : FAST486_REG_DS,
+                              Offset,
+                              FALSE,
+                              &State->GeneralRegs[FAST486_REG_EAX].LowWord,
+                              sizeof(USHORT));
         }
     }
 }
@@ -5336,7 +5252,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetAl)
         if (!Fast486FetchDword(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
     }
     else
@@ -5346,19 +5262,19 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetAl)
         if (!Fast486FetchWord(State, &WordOffset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         Offset = (ULONG)WordOffset;
     }
 
     /* Write to memory */
-    return Fast486WriteMemory(State,
-                             (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                             State->SegmentOverride : FAST486_REG_DS,
-                             Offset,
-                             &State->GeneralRegs[FAST486_REG_EAX].LowByte,
-                             sizeof(UCHAR));
+    Fast486WriteMemory(State,
+                      (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                      State->SegmentOverride : FAST486_REG_DS,
+                      Offset,
+                      &State->GeneralRegs[FAST486_REG_EAX].LowByte,
+                      sizeof(UCHAR));
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetEax)
@@ -5380,27 +5296,27 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetEax)
         if (!Fast486FetchDword(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write to memory */
         if (OperandSize)
         {
-            return Fast486WriteMemory(State,
-                                      (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                      State->SegmentOverride : FAST486_REG_DS,
-                                      Offset,
-                                      &State->GeneralRegs[FAST486_REG_EAX].Long,
-                                      sizeof(ULONG));
+            Fast486WriteMemory(State,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                               State->SegmentOverride : FAST486_REG_DS,
+                               Offset,
+                               &State->GeneralRegs[FAST486_REG_EAX].Long,
+                               sizeof(ULONG));
         }
         else
         {
-            return Fast486WriteMemory(State,
-                                      (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                      State->SegmentOverride : FAST486_REG_DS,
-                                      Offset,
-                                      &State->GeneralRegs[FAST486_REG_EAX].LowWord,
-                                      sizeof(USHORT));
+            Fast486WriteMemory(State,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                               State->SegmentOverride : FAST486_REG_DS,
+                               Offset,
+                               &State->GeneralRegs[FAST486_REG_EAX].LowWord,
+                               sizeof(USHORT));
         }
     }
     else
@@ -5410,33 +5326,38 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetEax)
         if (!Fast486FetchWord(State, &Offset))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write to memory */
         if (OperandSize)
         {
-            return Fast486WriteMemory(State,
-                                      (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                      State->SegmentOverride : FAST486_REG_DS,
-                                      Offset,
-                                      &State->GeneralRegs[FAST486_REG_EAX].Long,
-                                      sizeof(ULONG));
+            Fast486WriteMemory(State,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                               State->SegmentOverride : FAST486_REG_DS,
+                               Offset,
+                               &State->GeneralRegs[FAST486_REG_EAX].Long,
+                               sizeof(ULONG));
         }
         else
         {
-            return Fast486WriteMemory(State,
-                                      (State->PrefixFlags & FAST486_PREFIX_SEG) ?
-                                      State->SegmentOverride : FAST486_REG_DS,
-                                      Offset,
-                                      &State->GeneralRegs[FAST486_REG_EAX].LowWord,
-                                      sizeof(USHORT));
+            Fast486WriteMemory(State,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG) ?
+                               State->SegmentOverride : FAST486_REG_DS,
+                               Offset,
+                               &State->GeneralRegs[FAST486_REG_EAX].LowWord,
+                               sizeof(USHORT));
         }
     }
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeSalc)
 {
+    /*
+     * See: http://www.rcollins.org/secrets/opcodes/SALC.html
+     * for more information.
+     */
+
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xD6);
 
@@ -5444,8 +5365,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeSalc)
 
     /* Set all the bits of AL to CF */
     State->GeneralRegs[FAST486_REG_EAX].LowByte = State->Flags.Cf ? 0xFF : 0x00;
-
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
@@ -5468,13 +5387,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
         Segment = State->SegmentOverride;
     }
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         if ((AddressSize && (State->GeneralRegs[FAST486_REG_ECX].Long == 0))
             || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
         {
             /* Do nothing */
-            return TRUE;
+            return;
         }
     }
 
@@ -5492,7 +5411,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
                            DataSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Write to the destination operand */
@@ -5504,7 +5423,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
                             DataSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Increment/decrement ESI and EDI */
@@ -5536,7 +5455,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
     }
 
     // FIXME: This method is slow!
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         if (AddressSize)
         {
@@ -5555,9 +5474,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovs)
             }
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
@@ -5588,7 +5504,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
             || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
         {
             /* Do nothing */
-            return TRUE;
+            return;
         }
     }
 
@@ -5610,7 +5526,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
                            DataSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Read from the second source operand */
@@ -5623,7 +5539,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
                            DataSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -5704,9 +5620,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCmps)
             State->InstPtr = State->SavedInstPtr;
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
@@ -5726,7 +5639,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
     if (Opcode == 0xAA) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         UCHAR Block[STRING_BLOCK_SIZE];
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
@@ -5790,7 +5703,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
                 else State->GeneralRegs[FAST486_REG_ECX].LowWord = LOWORD(Count);
 
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
 
             if (!State->Flags.Df)
@@ -5825,7 +5738,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
                                 DataSize))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Increment/decrement EDI */
@@ -5840,9 +5753,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeStos)
             else State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
@@ -5869,13 +5779,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
     if (Opcode == 0xAC) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
                                   : State->GeneralRegs[FAST486_REG_ECX].LowWord;
 
         /* If the count is 0, do nothing */
-        if (Count == 0) return TRUE;
+        if (Count == 0) return;
 
         /* Only the last entry will be loaded */
         if (!State->Flags.Df)
@@ -5904,7 +5814,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
                            DataSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Increment/decrement ESI */
@@ -5918,9 +5828,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLods)
         if (!State->Flags.Df) State->GeneralRegs[FAST486_REG_ESI].LowWord += DataSize;
         else State->GeneralRegs[FAST486_REG_ESI].LowWord -= DataSize;
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
@@ -5946,7 +5853,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
             || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
         {
             /* Do nothing */
-            return TRUE;
+            return; 
         }
     }
 
@@ -5968,7 +5875,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
                            DataSize))
     {
         /* Exception occurred */
-        return FALSE;
+        return;
     }
 
     /* Calculate the result */
@@ -6033,9 +5940,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
             State->InstPtr = State->SavedInstPtr;
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
@@ -6055,7 +5959,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
     if (Opcode == 0x6C) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         UCHAR Block[STRING_BLOCK_SIZE];
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
@@ -6121,7 +6025,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
                 else State->GeneralRegs[FAST486_REG_ECX].LowWord = LOWORD(Count);
 
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
 
             if (!State->Flags.Df)
@@ -6159,7 +6063,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
                                 DataSize))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Increment/decrement EDI */
@@ -6174,9 +6078,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIns)
             else State->GeneralRegs[FAST486_REG_EDI].LowWord -= DataSize;
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
@@ -6196,7 +6097,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
     if (Opcode == 0x6E) DataSize = sizeof(UCHAR);
     else DataSize = OperandSize ? sizeof(ULONG) : sizeof(USHORT);
 
-    if (State->PrefixFlags & FAST486_PREFIX_REP)
+    if (State->PrefixFlags & (FAST486_PREFIX_REP | FAST486_PREFIX_REPNZ))
     {
         UCHAR Block[STRING_BLOCK_SIZE];
         ULONG Count = AddressSize ? State->GeneralRegs[FAST486_REG_ECX].Long
@@ -6214,8 +6115,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
             if (!AddressSize)
             {
                 ULONG MaxBytes = State->Flags.Df
-                                 ? (ULONG)State->GeneralRegs[FAST486_REG_EDI].LowWord
-                                 : (0x10000 - (ULONG)State->GeneralRegs[FAST486_REG_EDI].LowWord);
+                                 ? (ULONG)State->GeneralRegs[FAST486_REG_ESI].LowWord
+                                 : (0x10000 - (ULONG)State->GeneralRegs[FAST486_REG_ESI].LowWord);
 
                 Processed = min(Processed, MaxBytes / DataSize);
                 if (Processed == 0) Processed = 1;
@@ -6223,9 +6124,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
             /* Read from memory */
             if (!Fast486ReadMemory(State,
-                                   FAST486_REG_ES,
-                                   AddressSize ? State->GeneralRegs[FAST486_REG_EDI].Long
-                                               : State->GeneralRegs[FAST486_REG_EDI].LowWord,
+                                   (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                   ? State->SegmentOverride : FAST486_REG_DS,
+                                   AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
+                                               : State->GeneralRegs[FAST486_REG_ESI].LowWord,
                                    FALSE,
                                    Block,
                                    Processed * DataSize))
@@ -6235,16 +6137,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
                 else State->GeneralRegs[FAST486_REG_ECX].LowWord = LOWORD(Count);
 
                 /* Exception occurred */
-                return FALSE;
+                return;
             }
 
             if (State->Flags.Df)
             {
                 ULONG i, j;
 
-                /* Reduce EDI by the number of bytes to transfer */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long -= Processed * DataSize;
-                else State->GeneralRegs[FAST486_REG_EDI].LowWord -= Processed * DataSize;
+                /* Reduce ESI by the number of bytes to transfer */
+                if (AddressSize) State->GeneralRegs[FAST486_REG_ESI].Long -= Processed * DataSize;
+                else State->GeneralRegs[FAST486_REG_ESI].LowWord -= Processed * DataSize;
 
                 /* Reverse the block data */
                 for (i = 0; i < Processed / 2; i++)
@@ -6268,9 +6170,9 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
             if (!State->Flags.Df)
             {
-                /* Increase EDI by the number of bytes transfered */
-                if (AddressSize) State->GeneralRegs[FAST486_REG_EDI].Long += Processed * DataSize;
-                else State->GeneralRegs[FAST486_REG_EDI].LowWord += Processed * DataSize;
+                /* Increase ESI by the number of bytes transfered */
+                if (AddressSize) State->GeneralRegs[FAST486_REG_ESI].Long += Processed * DataSize;
+                else State->GeneralRegs[FAST486_REG_ESI].LowWord += Processed * DataSize;
             }
 
             /* Reduce the total count by the number processed in this run */
@@ -6287,7 +6189,8 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
 
         /* Read from the source operand */
         if (!Fast486ReadMemory(State,
-                               FAST486_REG_DS,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG)
+                               ? State->SegmentOverride : FAST486_REG_DS,
                                AddressSize ? State->GeneralRegs[FAST486_REG_ESI].Long
                                            : State->GeneralRegs[FAST486_REG_ESI].LowWord,
                                FALSE,
@@ -6295,7 +6198,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
                                DataSize))
         {
             /* Exception occurred */
-            return FALSE;
+            return;
         }
 
         /* Write to the I/O port */
@@ -6317,7 +6220,6 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeOuts)
             else State->GeneralRegs[FAST486_REG_ESI].LowWord -= DataSize;
         }
     }
-
-    /* Return success */
-    return TRUE;
 }
+
+/* EOF */

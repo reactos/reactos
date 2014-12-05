@@ -22,8 +22,6 @@
 
 LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Tiedosto" {
@@ -43,12 +41,6 @@ MAIN_MENU MENU
    MENUITEM "&Aseta...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
-   POPUP	"Help always visible"
-   BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "History",		MNID_OPTS_HISTORY
   POPUP    "Fonts"
   BEGIN
@@ -56,17 +48,29 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Ohje" {
    MENUITEM "&Ohjeen käyttö", MNID_HELP_HELPON
    MENUITEM "&Aina päällimmäisenä", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "T&ietoja...", MNID_HELP_ABOUT
  }
 }
 
-/* Strings */
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Copy",                MNID_CTXT_COPY
+		MENUITEM "Print...",            MNID_CTXT_PRINT
+		POPUP    "Fonts"
+		BEGIN
+			MENUITEM "Small",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Large",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
 STRINGTABLE
 {
@@ -83,4 +87,21 @@ STID_ALL_FILES, 	"Kaikki tiedostot (*.*)"
 STID_HELP_FILES_HLP, 	"Ohjetiedostot (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_PSH_INDEX,		"Help topics: "
+}
+
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Search"
+{
+    LTEXT  "Not yet implemented", -1, 10, 10, 180, 150
 }

@@ -6,7 +6,7 @@
     name="ReactOS.Explorer"
     type="win32"
 />
-<description>ROS Explorer</description>
+<description>This is ReactOS Explorer</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

@@ -4,10 +4,22 @@
 
 typedef unsigned int (__stdcall *__MSVC__MsiCustomActionEntryPoint)(unsigned int);
 
-__inline unsigned int CUSTOMPROC_wrapper(__MSVC__MsiCustomActionEntryPoint proc, unsigned int handle)
+static
+__declspec(naked)
+unsigned int
+__cdecl
+CUSTOMPROC_wrapper(__MSVC__MsiCustomActionEntryPoint proc, unsigned int handle)
 {
-#pragma message("warning: CUSTOMPROC_wrapper might not be correct")
-    return proc(handle);
+    __asm
+    {
+        push ebp
+        mov ebp, esp
+        push dword ptr [ebp + 12]
+        mov eax, dword ptr [ebp + 8]
+        call eax
+        leave
+        ret
+    }
 }
 
 #endif

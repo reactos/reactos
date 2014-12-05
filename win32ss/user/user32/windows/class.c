@@ -67,7 +67,7 @@ ClassNameToVersion(
                                                    ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION,
                                                   &SectionName,
                                                   &KeyedData );
- 
+
    if (NT_SUCCESS(Status) && KeyedData.ulDataFormatVersion == 1)
    {
       struct dll_redirect *dll = KeyedData.lpSectionBase;
@@ -165,7 +165,7 @@ Real_VersionRegisterClass(
 Error_Exit:
    if ( Ret || !hLibModule )
    {
-      if ( phLibModule ) *phLibModule = hLibModule;  
+      if ( phLibModule ) *phLibModule = hLibModule;
    }
    else
    {
@@ -173,7 +173,7 @@ Error_Exit:
       FreeLibrary(hLibModule);
       SetLastError(save_error);
    }
-                                  
+
    return Ret;
 }
 
@@ -269,7 +269,7 @@ VersionRegisterClass(
 Error_Exit:
    if ( Ret || !hLibModule )
    {
-      if ( phLibModule ) *phLibModule = hLibModule;  
+      if ( phLibModule ) *phLibModule = hLibModule;
    }
    else
    {
@@ -712,7 +712,19 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
             case GCW_ATOM:
                 Ret = (ULONG_PTR)Class->atomClassName;
                 break;
+#ifdef NEW_CURSORICON
+            case GCLP_HCURSOR:
+                Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spcur))->h : 0;
+                break;
 
+            case GCLP_HICON:
+                Ret = Class->spicn ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicn))->h : 0;
+                break;
+
+            case GCLP_HICONSM:
+                Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicnSm))->h : 0;
+                break;
+#else
             case GCLP_HCURSOR:
                 /* FIXME - get handle from pointer to CURSOR object */
                 Ret = (ULONG_PTR)Class->hCursor;
@@ -727,6 +739,7 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
                 /* FIXME - get handle from pointer to ICON object */
                 Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
                 break;
+#endif
 
             case GCLP_WNDPROC:
                 Ret = IntGetClsWndProc(Wnd, Class, TRUE);
@@ -790,6 +803,19 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
                 Ret = (ULONG_PTR)Class->atomClassName;
                 break;
 
+#ifdef NEW_CURSORICON
+            case GCLP_HCURSOR:
+                Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spcur))->h : 0;
+                break;
+
+            case GCLP_HICON:
+                Ret = Class->spicn ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicn))->h : 0;
+                break;
+
+            case GCLP_HICONSM:
+                Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicnSm))->h : 0;
+                break;
+#else
             case GCLP_HCURSOR:
                 /* FIXME - get handle from pointer to CURSOR object */
                 Ret = (ULONG_PTR)Class->hCursor;
@@ -804,6 +830,7 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
                 /* FIXME - get handle from pointer to ICON object */
                 Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
                 break;
+#endif
 
             case GCLP_WNDPROC:
                 Ret = IntGetClsWndProc(Wnd, Class, FALSE);
@@ -1022,7 +1049,7 @@ GetClassNameA(
 {
     WCHAR tmpbuf[MAX_ATOM_LEN + 1];
     int len;
-  
+
     if (nMaxCount <= 0) return 0;
     if (!GetClassNameW( hWnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
     RtlUnicodeToMultiByteN( lpClassName, nMaxCount - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
@@ -1256,7 +1283,7 @@ RealGetWindowClassA(
 {
     WCHAR tmpbuf[MAX_ATOM_LEN + 1];
     UINT len;
-  
+
     if ((INT)cchType <= 0) return 0;
     if (!RealGetWindowClassW( hwnd, tmpbuf, sizeof(tmpbuf)/sizeof(WCHAR) )) return 0;
     RtlUnicodeToMultiByteN( pszType, cchType - 1, (PULONG)&len, tmpbuf, strlenW(tmpbuf) * sizeof(WCHAR) );
@@ -1472,6 +1499,7 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
       WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
    }
 */
+   RtlInitEmptyAnsiString(&AnsiMenuName, NULL, 0);
    if (WndClass.lpszMenuName != NULL)
    {
       if (!IS_INTRESOURCE(WndClass.lpszMenuName))

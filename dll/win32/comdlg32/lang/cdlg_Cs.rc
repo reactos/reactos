@@ -34,6 +34,7 @@ Chcete ho přepsat novým?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Adresář neexistuje"
     IDS_FILENOTEXISTING     "Soubor neexistuje"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Uložit"
     IDS_SAVE_AS     "Ulož pod jménem"
     IDS_OPEN_FILE   "Otevřít soubor"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

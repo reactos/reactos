@@ -75,6 +75,7 @@ typedef struct _DESKTOP *PDESKTOP;
 #include "user/ntuser/win32.h"
 #include "user/ntuser/object.h"
 #include "user/ntuser/ntuser.h"
+#include "user/ntuser/shutdown.h"
 #include "user/ntuser/cursoricon.h"
 #include "user/ntuser/accelerator.h"
 #include "user/ntuser/hook.h"

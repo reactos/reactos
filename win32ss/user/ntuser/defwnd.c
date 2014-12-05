@@ -7,7 +7,6 @@
  */
 
 #include <win32k.h>
-
 #include <windowsx.h>
 
 DBG_DEFAULT_CHANNEL(UserDefwnd);
@@ -31,91 +30,6 @@ DBG_DEFAULT_CHANNEL(UserDefwnd);
  (((hit) == HTTOP) || ((hit) == HTTOPLEFT) || ((hit) == HTTOPRIGHT))
 #define ON_BOTTOM_BORDER(hit) \
  (((hit) == HTBOTTOM) || ((hit) == HTBOTTOMLEFT) || ((hit) == HTBOTTOMRIGHT))
-
-// Client Shutdown messages
-#define MCS_SHUTDOWNTIMERS  1
-#define MCS_QUERYENDSESSION 2
-// Client Shutdown returns
-#define MCSR_GOODFORSHUTDOWN  1
-#define MCSR_SHUTDOWNFINISHED 2
-#define MCSR_DONOTSHUTDOWN    3
-
-/*
- * Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
- * Apparently CSRSS sends out messages to do this w/o going into win32k internals.
- */
-static
-LRESULT FASTCALL
-IntClientShutdown(
-   PWND pWindow,
-   WPARAM wParam,
-   LPARAM lParam
-)
-{
-   LPARAM lParams;
-   BOOL KillTimers;
-   INT i;
-   LRESULT lResult = MCSR_GOODFORSHUTDOWN;
-   HWND *List;
-
-   lParams = wParam & (ENDSESSION_LOGOFF|ENDSESSION_CRITICAL|ENDSESSION_CLOSEAPP);
-   KillTimers = wParam & MCS_SHUTDOWNTIMERS ? TRUE : FALSE;
-/*
-   First, send end sessions to children.
- */
-   List = IntWinListChildren(pWindow);
-
-   if (List)
-   {
-      for (i = 0; List[i]; i++)
-      {
-          PWND WndChild;
-
-          if (!(WndChild = UserGetWindowObject(List[i])))
-             continue;
-
-          if (wParam & MCS_QUERYENDSESSION)
-          {
-             if (!co_IntSendMessage(WndChild->head.h, WM_QUERYENDSESSION, 0, lParams))
-             {
-                lResult = MCSR_DONOTSHUTDOWN;
-                break;
-             }
-          }
-          else
-          {
-             co_IntSendMessage(WndChild->head.h, WM_ENDSESSION, KillTimers, lParams);
-             if (KillTimers)
-             {
-                DestroyTimersForWindow(WndChild->head.pti, WndChild);
-             }
-             lResult = MCSR_SHUTDOWNFINISHED;
-          }
-      }
-      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
-   }
-   if (List && (lResult == MCSR_DONOTSHUTDOWN)) return lResult;
-/*
-   Send to the caller.
- */
-   if (wParam & MCS_QUERYENDSESSION)
-   {
-      if (!co_IntSendMessage(pWindow->head.h, WM_QUERYENDSESSION, 0, lParams))
-      {
-         lResult = MCSR_DONOTSHUTDOWN;
-      }
-   }
-   else
-   {
-      co_IntSendMessage(pWindow->head.h, WM_ENDSESSION, KillTimers, lParams);
-      if (KillTimers)
-      {
-         DestroyTimersForWindow(pWindow->head.pti, pWindow);
-      }
-      lResult = MCSR_SHUTDOWNFINISHED;
-   }
-   return lResult;
-}
 
 HBRUSH FASTCALL
 DefWndControlColor(HDC hDC, UINT ctlType)
@@ -387,7 +301,11 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    RECT sizingRect, mouseRect, origRect, unmodRect;
    HDC hdc;
    LONG hittest = (LONG)(wParam & 0x0f);
+#ifdef NEW_CURSORICON
+   PCURICON_OBJECT DragCursor = NULL, OldCursor = NULL;
+#else
    HCURSOR hDragCursor = 0, hOldCursor = 0;
+#endif
    POINT minTrack, maxTrack;
    POINT capturePoint, pt;
    ULONG Style, ExStyle;
@@ -495,13 +413,35 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    hdc = UserGetDCEx( pWndParent, 0, DCX_CACHE );
-
+#ifdef NEW_CURSORICON
+   if (iconic)
+   {
+       DragCursor = pwnd->pcls->spicn;
+       if (DragCursor)
+       {
+           UserReferenceObject(DragCursor);
+       }
+       else
+       {
+           HCURSOR CursorHandle = (HCURSOR)co_IntSendMessage( UserHMGetHandle(pwnd), WM_QUERYDRAGICON, 0, 0 );
+           if (CursorHandle)
+           {
+               DragCursor = UserGetCurIconObject(CursorHandle);
+           }
+           else
+           {
+               iconic = FALSE;
+           }
+       }
+   }
+#else
    if ( iconic ) /* create a cursor for dragging */
    {
-      hDragCursor = pwnd->pcls->hIcon;;
+      hDragCursor = pwnd->pcls->hIcon;
       if ( !hDragCursor ) hDragCursor = (HCURSOR)co_IntSendMessage( UserHMGetHandle(pwnd), WM_QUERYDRAGICON, 0, 0 );
       if ( !hDragCursor ) iconic = FALSE;
    }
+#endif
 
    /* repaint the window before moving it around */
    co_UserRedrawWindow( pwnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
@@ -558,14 +498,17 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 	  if ( !moved )
 	  {
 	      moved = TRUE;
-
-              if ( iconic ) /* ok, no system popup tracking */
-              {
-                 hOldCursor = IntSetCursor(hDragCursor);
-                 UserShowCursor( TRUE );
-              }
-              else if(!DragFullWindows)
-                 UserDrawMovingFrame( hdc, &sizingRect, thickframe );
+          if ( iconic ) /* ok, no system popup tracking */
+          {
+#ifdef NEW_CURSORICON
+              OldCursor = UserSetCursor(DragCursor, FALSE);
+#else
+              hOldCursor = IntSetCursor(hDragCursor);
+#endif
+              UserShowCursor( TRUE );
+          }
+          else if(!DragFullWindows)
+             UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	  }
 
 	  if (msg.message == WM_KEYDOWN) UserSetCursorPos(pt.x, pt.y, 0, 0, FALSE);
@@ -644,10 +587,22 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    {
       if ( moved ) /* restore cursors, show icon title later on */
       {
-	  UserShowCursor( FALSE );
-	  IntSetCursor( hOldCursor );
+          UserShowCursor( FALSE );
+#ifdef NEW_CURSORICON
+          OldCursor = UserSetCursor(OldCursor, FALSE);
+#else
+          IntSetCursor( hOldCursor );
+#endif
       }
+#ifdef NEW_CURSORICON
+      /* It could be that the cursor was already changed while we were proceeding,
+       * so we must unreference whatever cursor was current at the time we restored the old one.
+       * Maybe it is DragCursor, but maybe it is another one and DragCursor got already freed.
+       */
+      UserDereferenceObject(OldCursor);
+#else
       IntDestroyCursor( hDragCursor, FALSE );
+#endif
    }
    else if ( moved && !DragFullWindows )
       UserDrawMovingFrame( hdc, &sizingRect, thickframe );
@@ -875,6 +830,7 @@ IntDefWindowProc(
          }
       }
       break;
+
       case WM_CLIENTSHUTDOWN:
          return IntClientShutdown(Wnd, wParam, lParam);
 
@@ -990,6 +946,19 @@ IntDefWindowProc(
          hDC = IntBeginPaint(Wnd, &Ps);
          if (hDC)
          {
+#ifdef NEW_CURSORICON
+             if (((Wnd->style & WS_MINIMIZE) != 0) && (Wnd->pcls->spicn))
+             {
+                 RECT ClientRect;
+                 INT x, y;
+
+                 ERR("Doing Paint and Client area is empty!\n");
+                 IntGetClientRect(Wnd, &ClientRect);
+                 x = (ClientRect.right - ClientRect.left - UserGetSystemMetrics(SM_CXICON)) / 2;
+                 y = (ClientRect.bottom - ClientRect.top - UserGetSystemMetrics(SM_CYICON)) / 2;
+                 UserDrawIconEx(hDC, x, y, Wnd->pcls->spicn, 0, 0, 0, 0, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE);
+             }
+#else
              HICON hIcon;
              if (((Wnd->style & WS_MINIMIZE) != 0) && (hIcon = Wnd->pcls->hIcon))
              {
@@ -1002,7 +971,9 @@ IntDefWindowProc(
                  x = (ClientRect.right - ClientRect.left - UserGetSystemMetrics(SM_CXICON)) / 2;
                  y = (ClientRect.bottom - ClientRect.top - UserGetSystemMetrics(SM_CYICON)) / 2;
                  UserDrawIconEx( hDC, x, y, pIcon, 0, 0, 0, 0, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE );
+                 UserDereferenceObject(pIcon);
              }
+#endif
              IntEndPaint(Wnd, &Ps);
          }
          return (0);
@@ -1010,16 +981,20 @@ IntDefWindowProc(
 
       case WM_SYNCPAINT:
       {
-         HRGN hRgn;
+         PREGION Rgn;
          Wnd->state &= ~WNDS_SYNCPAINTPENDING;
          ERR("WM_SYNCPAINT\n");
-         hRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         if (co_UserGetUpdateRgn(Wnd, hRgn, FALSE) != NULLREGION)
+         Rgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+         if (Rgn)
          {
-            if (!wParam) wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
-            co_UserRedrawWindow(Wnd, NULL, hRgn, wParam);
+             if (co_UserGetUpdateRgn(Wnd, Rgn, FALSE) != NULLREGION)
+             {
+                if (!wParam)
+                    wParam = (RDW_ERASENOW | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN);
+                co_UserRedrawWindow(Wnd, NULL, Rgn, wParam);
+             }
+             REGION_Delete(Rgn);
          }
-         GreDeleteObject(hRgn);
          return 0;
       }
 
@@ -1092,23 +1067,43 @@ IntDefWindowProc(
    return lResult;
 }
 
-HICON FASTCALL NC_IconForWindow( PWND pWnd )
+PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
 {
-   HICON hIcon = 0;
+    PCURICON_OBJECT pIcon = NULL;
+    HICON hIcon;
    // First thing to do, init the Window Logo icons.
    if (!gpsi->hIconSmWindows) co_IntSetWndIcons();
 
-   if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
+   //FIXME: Some callers use this function as if it returns a boolean saying "this window has an icon".
+   //FIXME: Hence we must return a pointer with no reference count.
+   //FIXME: This is bad and we should feel bad.
+
+   hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
    if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp);
+#ifdef NEW_CURSORICON
+   if (!hIcon && pWnd->pcls->spicnSm)
+       return pWnd->pcls->spicnSm;
+   if (!hIcon && pWnd->pcls->spicn)
+       return pWnd->pcls->spicn;
+#else
    if (!hIcon) hIcon = pWnd->pcls->hIconSm;
    if (!hIcon) hIcon = pWnd->pcls->hIcon;
+#endif
 
-   if (!hIcon && pWnd->style & DS_MODALFRAME)
+   if (!hIcon && (pWnd->style & DS_MODALFRAME))
    {
       if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
       if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
    }
-   return hIcon;
+   if (hIcon)
+   {
+       pIcon = UserGetCurIconObject(hIcon);
+       if (pIcon)
+       {
+           UserDereferenceObject(pIcon);
+       }
+   }
+   return pIcon;
 }
 
 DWORD FASTCALL

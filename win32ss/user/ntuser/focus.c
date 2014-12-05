@@ -25,6 +25,9 @@ IsFGLocked(VOID)
    return (gppiLockSFW || guSFWLockCount);
 }
 
+/*
+  Get capture window via foreground Queue.
+*/
 HWND FASTCALL
 IntGetCaptureWindow(VOID)
 {
@@ -175,7 +178,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
    //ERR("SendActivateMessage Old -> %x, New -> %x\n", OldTID, NewTID);
 
    if (!(pti->TIF_flags & TIF_INACTIVATEAPPMSG) &&
-        (!WindowPrev || OldTID != NewTID) )
+        (OldTID != NewTID) )
    {
       PWND cWindow;
       HWND *List, *phWnd;
@@ -247,10 +250,17 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                                MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, Window->style & WS_MINIMIZE),
                               (LPARAM)(WindowPrev ? UserHMGetHandle(WindowPrev) : 0));
 
-      if (!Window->spwndOwner && !IntGetParent(Window))
+      if (Window->spwndParent == UserGetDesktopWindow() &&
+          Window->spwndOwner == NULL &&
+          (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
+           (Window->ExStyle & WS_EX_APPWINDOW)))
       {
          // FIXME lParam; The value is TRUE if the window is in full-screen mode, or FALSE otherwise.
          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (WPARAM) UserHMGetHandle(Window), FALSE);
+      }
+      else
+      {
+          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, 0, FALSE);
       }
 
       Window->state &= ~WNDS_NONCPAINT;
@@ -575,7 +585,7 @@ co_IntMouseActivateWindow(PWND Wnd)
       }
       return FALSE;
    }
-   ERR("Mouse Active\n");
+   TRACE("Mouse Active\n");
    co_IntSetForegroundAndFocusWindow(Wnd, TRUE);
    return TRUE;
 }
@@ -701,7 +711,7 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
         (Wnd && !VerifyWnd(Wnd)) ||
         ThreadQueue != pti->MessageQueue )
    {
-      ERR("SetActiveWindow: Summery ERROR, active state changed!\n");
+      ERR("SetActiveWindow: Summary ERROR, active state changed!\n");
       return FALSE;
    }
 
@@ -763,7 +773,7 @@ UserSetActiveWindow(PWND Wnd)
   }
   /*
      Yes your eye are not deceiving you~!
-  
+
      First part of wines Win.c test_SetActiveWindow:
 
      flush_events( TRUE );
@@ -937,6 +947,7 @@ co_UserSetCapture(HWND hWnd)
    {
       if (Window->head.pti->MessageQueue != ThreadQueue)
       {
+         ERR("Window Thread dos not match Current!\n");
          return NULL;
       }
    }
@@ -957,13 +968,10 @@ co_UserSetCapture(HWND hWnd)
    {
       if (ThreadQueue->MenuOwner && Window) ThreadQueue->QF_flags |= QF_CAPTURELOCKED;
 
-      //co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
       co_IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
 
       ThreadQueue->QF_flags &= ~QF_CAPTURELOCKED;
    }
-
-   ThreadQueue->spwndCapture = Window;
 
    if (hWnd == NULL) // Release mode.
    {

@@ -1,0 +1,205 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+/* Bitmaps */
+IDB_DRIVEBAR BITMAP "res/drivebar.bmp"
+IDB_LOGOV BITMAP "res/logov.bmp"
+IDB_LOGOV256 BITMAP "res/logov256.bmp"
+IDB_LOGOV16 BITMAP "res/logov16.bmp"
+IDB_ICON_ALIGN_0 BITMAP "res/icoalig0.bmp"
+IDB_ICON_ALIGN_1 BITMAP "res/icoalig1.bmp"
+IDB_ICON_ALIGN_2 BITMAP "res/icoalig2.bmp"
+IDB_ICON_ALIGN_3 BITMAP "res/icoalig3.bmp"
+IDB_ICON_ALIGN_4 BITMAP "res/icoalig4.bmp"
+IDB_ICON_ALIGN_5 BITMAP "res/icoalig5.bmp"
+IDB_ICON_ALIGN_6 BITMAP "res/icoalig6.bmp"
+IDB_ICON_ALIGN_7 BITMAP "res/icoalig7.bmp"
+IDB_ICON_ALIGN_8 BITMAP "res/icoalig8.bmp"
+IDB_ICON_ALIGN_9 BITMAP "res/icoalig9.bmp"
+IDB_ICON_ALIGN_10 BITMAP "res/icoali10.bmp"
+IDB_MDI BITMAP "res/mdi.bmp"
+IDB_SDI BITMAP "res/sdi.bmp"
+
+/* Accelerators */
+
+IDA_EXPLORER ACCELERATORS
+BEGIN
+    "S", ID_VIEW_FULLSCREEN, VIRTKEY, SHIFT, CONTROL, NOINVERT
+    VK_F5, ID_REFRESH, VIRTKEY, NOINVERT
+    "X", ID_FILE_EXIT, VIRTKEY, ALT, NOINVERT
+END
+
+IDA_SEARCH_PROGRAM ACCELERATORS
+BEGIN
+    VK_F5, ID_REFRESH, VIRTKEY, NOINVERT
+END
+
+IDA_TRAYNOTIFY ACCELERATORS
+BEGIN
+    VK_F5, ID_REFRESH, VIRTKEY, NOINVERT
+END
+
+/* Icons */
+
+/* Icon with lowest ID value placed first to ensure application icon
+ * remains consistent on all systems. */
+IDI_COMPUTER ICON "res/computer.ico"
+IDI_EXPLORER ICON "res/explorer.ico"
+IDI_STARTMENU ICON "res/startmenu.ico"
+IDI_LOGOFF ICON "res/logoff.ico"
+IDI_SHUTDOWN ICON "res/shutdown.ico"
+IDI_RESTART ICON "res/restart.ico"
+IDI_ARROW ICON "res/arrow.ico"
+IDI_ARROW_SELECTED ICON "res/arrowsel.ico"
+IDI_APPICON ICON "res/appicon.ico"
+IDI_FLOATING ICON "res/floating.ico"
+IDI_REACTOS_BIG ICON "res/ros-big.ico"
+IDI_CONFIG ICON "res/config.ico"
+IDI_DOCUMENTS ICON "res/documents.ico"
+IDI_FAVORITES ICON "res/favorites.ico"
+IDI_INFO ICON "res/info.ico"
+IDI_APPS ICON "res/apps.ico"
+IDI_SEARCH ICON "res/search.ico"
+IDI_ACTION ICON "res/action.ico"
+IDI_FOLDER ICON "res/folder.ico"
+IDI_SEARCH_DOC ICON "res/search-doc.ico"
+IDI_PRINTER ICON "res/printer.ico"
+IDI_NETWORK ICON "res/network.ico"
+IDI_REACTOS ICON "res/reactos.ico"
+IDI_SPEAKER ICON "res/speaker.ico"
+IDI_DOT ICON "res/dot.ico"
+IDI_DOT_TRANS ICON "res/dot_trans.ico"
+IDI_DOT_RED ICON "res/dot_red.ico"
+IDI_ARROW_UP ICON "res/arrow_up.ico"
+IDI_ARROW_DOWN ICON "res/arrow_dwn.ico"
+IDI_NOTIFY_L ICON "res/notify_l.ico"
+IDI_NOTIFY_R ICON "res/notify_r.ico"
+IDI_MINIMIZE ICON "res/minimize.ico"
+IDI_CONTROLPAN ICON "res/control-panel.ico"
+IDI_DESKSETTING ICON "res/desktop-settings.ico"
+IDI_NETCONNS ICON "res/network-conns.ico"
+IDI_ADMIN ICON "res/administration.ico"
+IDI_RECENT ICON "res/recent-documents.ico"
+
+#ifndef ROSSHELL
+IDB_IMAGES BITMAP "res/images.bmp"
+IDB_TOOLBAR BITMAP "res/toolbar.bmp"
+#endif
+
+#ifndef __REACTOS__
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_VERSION_STR ""
+#ifdef UNICODE
+    IDS_EXPLORER_VERSION_STR "ROS Explorer%0s"
+#else
+    IDS_EXPLORER_VERSION_STR "ROS Explorer Ansi%0s"
+#endif
+END
+#endif
+
+#ifndef _DEBUG
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
+#endif
+
+#ifdef LANGUAGE_BG_BG
+    #include "explorer-bg.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "explorer-de.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "explorer-el.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "explorer-en.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "explorer-es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "explorer-fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "explorer-hu.rc"
+#endif
+#ifdef LANGUAGE_ID_ID
+    #include "explorer-id.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "explorer-it.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "explorer-ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "explorer-ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "explorer-nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "explorer-no.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "explorer-pt.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "explorer-sk.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "explorer-sv.rc"
+#endif
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_CS_CZ
+    #include "explorer-cz.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "explorer-he.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "explorer-pl.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "explorer-ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "explorer-ru.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "explorer-sq.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "explorer-uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "explorer-zh.rc"
+#endif
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Explorer"
+#define REACTOS_STR_INTERNAL_NAME     "explorer"
+#define REACTOS_STR_ORIGINAL_FILENAME "explorer.exe"
+#include <reactos/version.rc>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+#define IDS_VERSION_STR          5000
+#define IDS_EXPLORER_VERSION_STR 5001
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_VERSION_STR REACTOS_STR_PRODUCT_VERSION
+    IDS_EXPLORER_VERSION_STR "ReactOS %s Explorer"
+END

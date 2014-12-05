@@ -51,7 +51,7 @@ ClearLineBuffer(PTEXTMODE_SCREEN_BUFFER Buff);
 
 NTSTATUS
 CONSOLE_SCREEN_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                                 IN OUT PCONSOLE Console,
+                                 IN PCONSOLE Console,
                                  IN PCONSOLE_SCREEN_BUFFER_VTBL Vtbl,
                                  IN SIZE_T Size);
 VOID
@@ -60,11 +60,14 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer);
 
 NTSTATUS
 TEXTMODE_BUFFER_Initialize(OUT PCONSOLE_SCREEN_BUFFER* Buffer,
-                           IN OUT PCONSOLE Console,
+                           IN PCONSOLE Console,
+                           IN HANDLE ProcessHandle,
                            IN PTEXTMODE_BUFFER_INFO TextModeInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PTEXTMODE_SCREEN_BUFFER NewBuffer = NULL;
+
+    UNREFERENCED_PARAMETER(ProcessHandle);
 
     if (Console == NULL || Buffer == NULL || TextModeInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -294,7 +297,7 @@ ConioResizeBuffer(PCONSOLE Console,
     Buffer = ConsoleAllocHeap(HEAP_ZERO_MEMORY, Size.X * Size.Y * sizeof(CHAR_INFO));
     if (!Buffer) return STATUS_NO_MEMORY;
 
-    DPRINT1("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
+    DPRINT("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->ScreenBufferSize.X, ScreenBuffer->ScreenBufferSize.Y, Size.X, Size.Y);
     OldBuffer = ScreenBuffer->Buffer;
 
     for (CurrentY = 0; CurrentY < ScreenBuffer->ScreenBufferSize.Y && CurrentY < Size.Y; CurrentY++)

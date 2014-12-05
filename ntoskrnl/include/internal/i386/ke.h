@@ -504,6 +504,7 @@ VOID
 NTAPI
 KiDispatchExceptionFromTrapFrame(
     IN NTSTATUS Code,
+    IN ULONG Flags,
     IN ULONG_PTR Address,
     IN ULONG ParameterCount,
     IN ULONG_PTR Parameter1,
@@ -623,7 +624,7 @@ KiDispatchException0Args(IN NTSTATUS Code,
                          IN PKTRAP_FRAME TrapFrame)
 {
     /* Helper for exceptions with no arguments */
-    KiDispatchExceptionFromTrapFrame(Code, Address, 0, 0, 0, 0, TrapFrame);
+    KiDispatchExceptionFromTrapFrame(Code, 0, Address, 0, 0, 0, 0, TrapFrame);
 }
 
 //
@@ -638,7 +639,7 @@ KiDispatchException1Args(IN NTSTATUS Code,
                          IN PKTRAP_FRAME TrapFrame)
 {
     /* Helper for exceptions with no arguments */
-    KiDispatchExceptionFromTrapFrame(Code, Address, 1, P1, 0, 0, TrapFrame);
+    KiDispatchExceptionFromTrapFrame(Code, 0, Address, 1, P1, 0, 0, TrapFrame);
 }
 
 //
@@ -654,7 +655,7 @@ KiDispatchException2Args(IN NTSTATUS Code,
                          IN PKTRAP_FRAME TrapFrame)
 {
     /* Helper for exceptions with no arguments */
-    KiDispatchExceptionFromTrapFrame(Code, Address, 2, P1, P2, 0, TrapFrame);
+    KiDispatchExceptionFromTrapFrame(Code, 0, Address, 2, P1, P2, 0, TrapFrame);
 }
 
 //

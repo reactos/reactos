@@ -64,7 +64,7 @@ vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
 
     /* Check if we should print it or not */
     if ((ComponentId != MAXULONG) &&
-        (NtQueryDebugFilterState(ComponentId, Level)) != TRUE)
+        (NtQueryDebugFilterState(ComponentId, Level)) != (NTSTATUS)TRUE)
     {
         /* This message is masked */
         return STATUS_SUCCESS;

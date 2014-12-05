@@ -261,7 +261,7 @@ CreateSysMenu(HWND hWnd)
     if (hMenu != NULL)
     {
         mii.cbSize = sizeof(mii);
-        mii.fMask = MIIM_STRING;   
+        mii.fMask = MIIM_STRING;
         mii.dwTypeData = szMenuStringBack;
         mii.cch = sizeof(szMenuStringBack)/sizeof(WCHAR);
 
@@ -286,7 +286,7 @@ SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 {
     INPUT_RECORD er;
 
-    DPRINT1("Menu item ID: %d\n", CmdId);
+    DPRINT("Menu item ID: %d\n", CmdId);
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -627,9 +627,8 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
      */
     if (FaceName != GuiData->GuiInfo.FaceName)
     {
-        SIZE_T Length = min(wcslen(FaceName) + 1, LF_FACESIZE); // wcsnlen
         wcsncpy(GuiData->GuiInfo.FaceName, FaceName, LF_FACESIZE);
-        GuiData->GuiInfo.FaceName[Length] = L'\0'; // NULL-terminate
+        GuiData->GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
     }
     GuiData->GuiInfo.FontFamily = FontFamily;
     GuiData->GuiInfo.FontSize   = FontSize;
@@ -664,7 +663,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     {
         DPRINT1("GuiConsoleNcCreate: InitFonts failed\n");
         GuiData->hWindow = NULL;
-        SetEvent(GuiData->hGuiInitEvent);
+        NtSetEvent(GuiData->hGuiInitEvent, NULL);
         return FALSE;
     }
 
@@ -687,12 +686,16 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)GuiData);
 
-    SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    if (GuiData->IsWindowVisible)
+    {
+        SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
+    }
+
     // FIXME: HACK: Potential HACK for CORE-8129; see revision 63595.
     //CreateSysMenu(GuiData->hWindow);
 
     DPRINT("OnNcCreate - setting start event\n");
-    SetEvent(GuiData->hGuiInitEvent);
+    NtSetEvent(GuiData->hGuiInitEvent, NULL);
 
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
@@ -712,7 +715,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
     WORD ActivationState = LOWORD(wParam);
 
-    DPRINT1("WM_ACTIVATE - ActivationState = %d\n");
+    DPRINT("WM_ACTIVATE - ActivationState = %d\n");
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )
@@ -1049,6 +1052,9 @@ OnPaint(PGUI_CONSOLE_DATA GuiData)
     PAINTSTRUCT ps;
     RECT rcPaint;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     BeginPaint(GuiData->hWindow, &ps);
     if (ps.hdc != NULL &&
         ps.rcPaint.left < ps.rcPaint.right &&
@@ -1096,6 +1102,9 @@ static VOID
 OnPaletteChanged(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = GuiData->ActiveBuffer;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
 
     // See WM_PALETTECHANGED message
     // if ((HWND)wParam == hWnd) break;
@@ -1307,6 +1316,9 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
     PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
+
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
@@ -1432,7 +1444,11 @@ OnNcDestroy(HWND hWnd)
 {
     PGUI_CONSOLE_DATA GuiData = GuiGetGuiData(hWnd);
 
-    KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+    if (GuiData->IsWindowVisible)
+    {
+        KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+    }
+
     GetSystemMenu(hWnd, TRUE);
 
     if (GuiData)
@@ -1785,7 +1801,7 @@ GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 Copy(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
@@ -1815,7 +1831,7 @@ GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 static VOID
 Paste(PGUI_CONSOLE_DATA GuiData)
 {
-    if (OpenClipboard(GuiData->hWindow) == TRUE)
+    if (OpenClipboard(GuiData->hWindow))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = GuiData->ActiveBuffer;
 
@@ -1868,6 +1884,9 @@ static VOID
 OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     PCONSRV_CONSOLE Console = GuiData->Console;
+
+    /* Do nothing if the window is hidden */
+    if (!GuiData->IsWindowVisible) return;
 
     if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
 
@@ -2192,6 +2211,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SETCURSOR:
         {
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) goto Default;
+
             /*
              * The message was sent because we are manually triggering a change.
              * Check whether the mouse is indeed present on this console window
@@ -2264,6 +2286,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_CONTEXTMENU:
         {
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) break;
+
             if (DefWindowProcW(hWnd /*GuiData->hWindow*/, WM_NCHITTEST, 0, lParam) == HTCLIENT)
             {
                 HMENU hMenu = CreatePopupMenu();
@@ -2391,6 +2416,9 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             DWORD Width, Height;
             UINT  WidthUnit, HeightUnit;
+
+            /* Do nothing if the window is hidden */
+            if (!GuiData->IsWindowVisible) break;
 
             GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
 

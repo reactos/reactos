@@ -74,28 +74,18 @@ co_IntGraphicsCheck(BOOL Create)
 
 VOID
 FASTCALL
-IntUserManualGuiCheck(LONG Check)
+co_IntUserManualGuiCheck(BOOL Create)
 {
-   PPROCESSINFO W32Data;
+   PPROCESSINFO W32Data = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
+   W32Data->W32PF_flags |= W32PF_MANUALGUICHECK;
 
-   W32Data = PsGetCurrentProcessWin32Process();
-   if (0 == Check)
+   if (Create)
    {
-      W32Data->W32PF_flags |= W32PF_MANUALGUICHECK;
-   }
-   else if (0 < Check)
-   {
-      if (! (W32Data->W32PF_flags & W32PF_CREATEDWINORDC))
-      {
-         co_AddGuiApp(W32Data);
-      }
+       co_AddGuiApp(W32Data);
    }
    else
    {
-      if (W32Data->W32PF_flags & W32PF_CREATEDWINORDC)
-      {
-         RemoveGuiApp(W32Data);
-      }
+       RemoveGuiApp(W32Data);
    }
 }
 

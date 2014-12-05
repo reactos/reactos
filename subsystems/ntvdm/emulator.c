@@ -11,31 +11,34 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+
+#include "cpu/callback.h"
+#include "cpu/cpu.h"
+#include "cpu/bop.h"
+#include <isvbop.h>
+
+#include "int32.h"
 
 #include "clock.h"
 #include "bios/rom.h"
 #include "hardware/cmos.h"
+#include "hardware/dma.h"
+#include "hardware/keyboard.h"
+#include "hardware/mouse.h"
 #include "hardware/pic.h"
 #include "hardware/ps2.h"
-#include "hardware/speaker.h"
-#include "hardware/timer.h"
-#include "hardware/vga.h"
+#include "hardware/sound/speaker.h"
+#include "hardware/pit.h"
+#include "hardware/video/vga.h"
 
-#include "bop.h"
 #include "vddsup.h"
 #include "io.h"
 
-#include <isvbop.h>
+/* Extra PSDK/NDK Headers */
+#include <ndk/psfuncs.h>
+#include <ndk/mmfuncs.h>
 
 /* PRIVATE VARIABLES **********************************************************/
-
-FAST486_STATE EmulatorContext;
-BOOLEAN CpuSimulate = FALSE;
-
-/* No more than 'MaxCpuCallLevel' recursive CPU calls are allowed */
-static const INT MaxCpuCallLevel = 32;
-static INT CpuCallLevel = 0;
 
 LPVOID  BaseAddress = NULL;
 BOOLEAN VdmRunning  = TRUE;
@@ -61,6 +64,75 @@ LPCWSTR ExceptionName[] =
 #define BOP_DEBUGGER    0x56    // Break into the debugger from a 16-bit app
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static inline VOID
+EmulatorMoveMemory(OUT VOID UNALIGNED *Destination,
+                   IN const VOID UNALIGNED *Source,
+                   IN SIZE_T Length)
+{
+#if 1
+    /*
+     * We use a switch here to detect small moves of memory, as these
+     * constitute the bulk of our moves.
+     * Using RtlMoveMemory for all these small moves would be slow otherwise.
+     */
+    switch (Length)
+    {
+        case 0:
+            return;
+
+        case sizeof(UCHAR):
+            *(PUCHAR)Destination = *(PUCHAR)Source;
+            return;
+
+        case sizeof(USHORT):
+            *(PUSHORT)Destination = *(PUSHORT)Source;
+            return;
+
+        case sizeof(ULONG):
+            *(PULONG)Destination = *(PULONG)Source;
+            return;
+
+        case sizeof(ULONGLONG):
+            *(PULONGLONG)Destination = *(PULONGLONG)Source;
+            return;
+
+        default:
+#if defined(__GNUC__)
+            __builtin_memmove(Destination, Source, Length);
+#else
+            RtlMoveMemory(Destination, Source, Length);
+#endif
+    }
+
+#else // defined(_MSC_VER)
+
+    PUCHAR Dest = (PUCHAR)Destination;
+    PUCHAR Src  = (PUCHAR)Source;
+
+    SIZE_T Count, NewSize = Length;
+
+    /* Move dword */
+    Count   = NewSize >> 2; // NewSize / sizeof(ULONG);
+    NewSize = NewSize  & 3; // NewSize % sizeof(ULONG);
+    __movsd(Dest, Src, Count);
+    Dest += Count << 2; // Count * sizeof(ULONG);
+    Src  += Count << 2;
+
+    /* Move word */
+    Count   = NewSize >> 1; // NewSize / sizeof(USHORT);
+    NewSize = NewSize  & 1; // NewSize % sizeof(USHORT);
+    __movsw(Dest, Src, Count);
+    Dest += Count << 1; // Count * sizeof(USHORT);
+    Src  += Count << 1;
+
+    /* Move byte */
+    Count   = NewSize; // NewSize / sizeof(UCHAR);
+    // NewSize = NewSize; // NewSize % sizeof(UCHAR);
+    __movsb(Dest, Src, Count);
+
+#endif
+}
 
 VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
@@ -93,7 +165,7 @@ VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer
     }
 
     /* Read the data from the virtual address space and store it in the buffer */
-    RtlCopyMemory(Buffer, REAL_TO_PHYS(Address), Size);
+    EmulatorMoveMemory(Buffer, REAL_TO_PHYS(Address), Size);
 }
 
 VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
@@ -114,7 +186,7 @@ VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffe
     if ((Address + Size) >= ROM_AREA_START && (Address < ROM_AREA_END)) return;
 
     /* Read the data from the buffer and store it in the virtual address space */
-    RtlCopyMemory(REAL_TO_PHYS(Address), Buffer, Size);
+    EmulatorMoveMemory(REAL_TO_PHYS(Address), Buffer, Size);
 
     /*
      * Check if we modified the VGA memory.
@@ -169,66 +241,18 @@ VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
                    Opcode[8],
                    Opcode[9]);
 
+    Fast486DumpState(&EmulatorContext);
+
     /* Stop the VDM */
     EmulatorTerminate();
     return;
 }
 
-// FIXME: This function assumes 16-bit mode!!!
-VOID EmulatorExecute(WORD Segment, WORD Offset)
-{
-    /* Tell Fast486 to move the instruction pointer */
-    Fast486ExecuteAt(&EmulatorContext, Segment, Offset);
-}
-
-VOID EmulatorStep(VOID)
-{
-    /* Dump the state for debugging purposes */
-    // Fast486DumpState(&EmulatorContext);
-
-    /* Execute the next instruction */
-    Fast486StepInto(&EmulatorContext);
-}
-
-VOID EmulatorSimulate(VOID)
-{
-    if (CpuCallLevel > MaxCpuCallLevel)
-    {
-        DisplayMessage(L"Too many CPU levels of recursion (%d, expected maximum %d)",
-                       CpuCallLevel, MaxCpuCallLevel);
-
-        /* Stop the VDM */
-        EmulatorTerminate();
-        return;
-    }
-    CpuCallLevel++;
-
-    CpuSimulate = TRUE;
-    while (VdmRunning && CpuSimulate) ClockUpdate();
-
-    CpuCallLevel--;
-    if (CpuCallLevel < 0) CpuCallLevel = 0;
-
-    /* This takes into account for reentrance */
-    CpuSimulate = TRUE;
-}
-
-VOID EmulatorUnsimulate(VOID)
-{
-    /* Stop simulation */
-    CpuSimulate = FALSE;
-}
-
 VOID EmulatorTerminate(VOID)
 {
     /* Stop the VDM */
+    CpuUnsimulate(); // Halt the CPU
     VdmRunning = FALSE;
-}
-
-VOID EmulatorInterrupt(BYTE Number)
-{
-    /* Call the Fast486 API */
-    Fast486Interrupt(&EmulatorContext, Number);
 }
 
 VOID EmulatorInterruptSignal(VOID)
@@ -248,19 +272,14 @@ static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
     DebugBreak();
 }
 
-static VOID WINAPI EmulatorUnsimulateBop(LPWORD Stack)
-{
-    EmulatorUnsimulate();
-}
-
-static BYTE WINAPI Port61hRead(ULONG Port)
+static BYTE WINAPI Port61hRead(USHORT Port)
 {
     return Port61hState;
 }
 
-static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
+static VOID WINAPI Port61hWrite(USHORT Port, BYTE Data)
 {
-    // BOOLEAN SpeakerChange = FALSE;
+    // BOOLEAN SpeakerStateChange = FALSE;
     BYTE OldPort61hState = Port61hState;
 
     /* Only the four lowest bytes can be written */
@@ -269,19 +288,18 @@ static VOID WINAPI Port61hWrite(ULONG Port, BYTE Data)
     if ((OldPort61hState ^ Port61hState) & 0x01)
     {
         DPRINT("PIT 2 Gate %s\n", Port61hState & 0x01 ? "on" : "off");
-        // SpeakerChange = TRUE;
+        PitSetGate(2, !!(Port61hState & 0x01));
+        // SpeakerStateChange = TRUE;
     }
-
-    PitSetGate(2, !!(Port61hState & 0x01));
 
     if ((OldPort61hState ^ Port61hState) & 0x02)
     {
         /* There were some change for the speaker... */
         DPRINT("Speaker %s\n", Port61hState & 0x02 ? "on" : "off");
-        // SpeakerChange = TRUE;
+        // SpeakerStateChange = TRUE;
     }
-    // if (SpeakerChange) SpeakerChange();
-    SpeakerChange();
+    // if (SpeakerStateChange) SpeakerChange(Port61hState);
+    SpeakerChange(Port61hState);
 }
 
 static VOID WINAPI PitChan0Out(LPVOID Param, BOOLEAN State)
@@ -314,7 +332,7 @@ static VOID WINAPI PitChan1Out(LPVOID Param, BOOLEAN State)
 
 static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 {
-    // BYTE OldPort61hState = Port61hState;
+    BYTE OldPort61hState = Port61hState;
 
 #if 0
     if (State)
@@ -330,46 +348,127 @@ static VOID WINAPI PitChan2Out(LPVOID Param, BOOLEAN State)
 #else
     Port61hState = (Port61hState & 0xDF) | (State << 5);
 #endif
-    DPRINT("Speaker PIT out\n");
-    // if ((OldPort61hState ^ Port61hState) & 0x20)
-        // SpeakerChange();
+
+    if ((OldPort61hState ^ Port61hState) & 0x20)
+    {
+        DPRINT("PitChan2Out -- Port61hState changed\n");
+        SpeakerChange(Port61hState);
+    }
+}
+
+
+static DWORD
+WINAPI
+PumpConsoleInput(LPVOID Parameter)
+{
+    HANDLE ConsoleInput = (HANDLE)Parameter;
+    INPUT_RECORD InputRecord;
+    DWORD Count;
+
+    while (VdmRunning)
+    {
+        /* Make sure the task event is signaled */
+        WaitForSingleObject(VdmTaskEvent, INFINITE);
+
+        /* Wait for an input record */
+        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
+        {
+            DWORD LastError = GetLastError();
+            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
+            return LastError;
+        }
+
+        ASSERT(Count != 0);
+
+        /* Check the event type */
+        switch (InputRecord.EventType)
+        {
+            /*
+             * Hardware events
+             */
+            case KEY_EVENT:
+                KeyboardEventHandler(&InputRecord.Event.KeyEvent);
+                break;
+
+            case MOUSE_EVENT:
+                MouseEventHandler(&InputRecord.Event.MouseEvent);
+                break;
+
+            case WINDOW_BUFFER_SIZE_EVENT:
+                ScreenEventHandler(&InputRecord.Event.WindowBufferSizeEvent);
+                break;
+
+            /*
+             * Interface events
+             */
+            case MENU_EVENT:
+                MenuEventHandler(&InputRecord.Event.MenuEvent);
+                break;
+
+            case FOCUS_EVENT:
+                FocusEventHandler(&InputRecord.Event.FocusEvent);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    return 0;
+}
+
+static VOID EnableExtraHardware(HANDLE ConsoleInput)
+{
+    DWORD ConInMode;
+
+    if (GetConsoleMode(ConsoleInput, &ConInMode))
+    {
+#if 0
+        // GetNumberOfConsoleMouseButtons();
+        // GetSystemMetrics(SM_CMOUSEBUTTONS);
+        // GetSystemMetrics(SM_MOUSEPRESENT);
+        if (MousePresent)
+        {
+#endif
+            /* Support mouse input events if there is a mouse on the system */
+            ConInMode |= ENABLE_MOUSE_INPUT;
+#if 0
+        }
+        else
+        {
+            /* Do not support mouse input events if there is no mouse on the system */
+            ConInMode &= ~ENABLE_MOUSE_INPUT;
+        }
+#endif
+
+        SetConsoleMode(ConsoleInput, ConInMode);
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID DumpMemory(VOID)
+static VOID
+DumpMemoryRaw(HANDLE hFile)
 {
-    static ULONG DumpNumber = 0;
+    PVOID  Buffer;
+    SIZE_T Size;
 
-    HANDLE hFile;
-    WCHAR  FileName[MAX_PATH];
+    /* Dump the VM memory */
+    SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+    Buffer = REAL_TO_PHYS(NULL);
+    Size   = MAX_ADDRESS - (ULONG_PTR)(NULL);
+    WriteFile(hFile, Buffer, Size, &Size, NULL);
+}
 
+static VOID
+DumpMemoryTxt(HANDLE hFile)
+{
 #define LINE_SIZE   75 + 2
     ULONG  i;
     PBYTE  Ptr1, Ptr2;
     CHAR   LineBuffer[LINE_SIZE];
     PCHAR  Line;
     SIZE_T LineSize;
-
-    /* Build a suitable file name */
-    _snwprintf(FileName, MAX_PATH, L"memdump%lu.txt", DumpNumber);
-    ++DumpNumber;
-
-    /* Always create the dump file */
-    hFile = CreateFileW(FileName,
-                        GENERIC_WRITE,
-                        0,
-                        NULL,
-                        CREATE_ALWAYS,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
-
-    if (hFile == INVALID_HANDLE_VALUE)
-    {
-        DPRINT1("Error when creating '%S' for memory dumping, GetLastError() = %u\n",
-                FileName, GetLastError());
-        return;
-    }
 
     /* Dump the VM memory */
     SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
@@ -412,45 +511,123 @@ VOID DumpMemory(VOID)
         LineSize = Line - LineBuffer;
         WriteFile(hFile, LineBuffer, LineSize, &LineSize, NULL);
     }
+}
+
+VOID DumpMemory(BOOLEAN TextFormat)
+{
+    static ULONG DumpNumber = 0;
+
+    HANDLE hFile;
+    WCHAR  FileName[MAX_PATH];
+
+    /* Build a suitable file name */
+    _snwprintf(FileName, MAX_PATH,
+               L"memdump%lu.%s",
+               DumpNumber,
+               TextFormat ? L"txt" : L"dat");
+    ++DumpNumber;
+
+    DPRINT1("Creating memory dump file '%S'...\n", FileName);
+
+    /* Always create the dump file */
+    hFile = CreateFileW(FileName,
+                        GENERIC_WRITE,
+                        0,
+                        NULL,
+                        CREATE_ALWAYS,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("Error when creating '%S' for memory dumping, GetLastError() = %u\n",
+                FileName, GetLastError());
+        return;
+    }
+
+    /* Dump the VM memory in the chosen format */
+    if (TextFormat)
+        DumpMemoryTxt(hFile);
+    else
+        DumpMemoryRaw(hFile);
 
     /* Close the file */
     CloseHandle(hFile);
-}
 
-DWORD WINAPI PumpConsoleInput(LPVOID Parameter);
+    DPRINT1("Memory dump done\n");
+}
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
-    /* Allocate memory for the 16-bit address space */
-    BaseAddress = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_ADDRESS);
+#ifdef STANDALONE
+
+    /* Allocate 16 MB memory for the 16-bit address space */
+    BaseAddress = HeapAlloc(GetProcessHeap(), /*HEAP_ZERO_MEMORY*/ 0, MAX_ADDRESS);
     if (BaseAddress == NULL)
     {
         wprintf(L"FATAL: Failed to allocate VDM memory.\n");
         return FALSE;
     }
 
+#else
+
+    NTSTATUS Status;
+    SIZE_T MemorySize = MAX_ADDRESS; // See: kernel32/client/vdm.c!BaseGetVdmConfigInfo
+
+    /*
+     * The reserved region starts from the very first page.
+     * We need to commit the reserved first 16 MB virtual address.
+     */
+    BaseAddress = (PVOID)1; // NULL has another signification for NtAllocateVirtualMemory
+
+    /*
+     * Since to get NULL, we allocated from 0x1, account for this.
+     * See also: kernel32/client/proc.c!CreateProcessInternalW
+     */
+    MemorySize -= 1;
+
+    /* Commit the reserved memory */
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &MemorySize,
+                                     MEM_COMMIT,
+                                     PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        wprintf(L"FATAL: Failed to commit VDM memory, Status 0x%08lx\n", Status);
+        return FALSE;
+    }
+
+    ASSERT(BaseAddress == NULL);
+
+#endif
+
+    /*
+     * For diagnostics purposes, we fill the memory with INT 0x03 codes
+     * so that if a program wants to execute random code in memory, we can
+     * retrieve the exact CS:IP where the problem happens.
+     */
+    RtlFillMemory(BaseAddress, MAX_ADDRESS, 0xCC);
+
     /* Initialize I/O ports */
     /* Initialize RAM */
+
+    /* Initialize the CPU */
 
     /* Initialize the internal clock */
     if (!ClockInitialize())
     {
         wprintf(L"FATAL: Failed to initialize the clock\n");
+        EmulatorCleanup();
         return FALSE;
     }
 
     /* Initialize the CPU */
-    Fast486Initialize(&EmulatorContext,
-                      EmulatorReadMemory,
-                      EmulatorWriteMemory,
-                      EmulatorReadIo,
-                      EmulatorWriteIo,
-                      NULL,
-                      EmulatorBiosOperation,
-                      EmulatorIntAcknowledge,
-                      NULL /* TODO: Use a TLB */);
+    CpuInitialize();
 
     /* Initialize DMA */
+    DmaInitialize();
 
     /* Initialize the PIC, the PIT, the CMOS and the PC Speaker */
     PicInitialize();
@@ -472,8 +649,14 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     SetConsoleMode(ConsoleInput, ENABLE_PROCESSED_INPUT /* | ENABLE_WINDOW_INPUT */);
     // SetConsoleMode(ConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
 
-    /* Initialize the PS2 port */
-    PS2Initialize(ConsoleInput);
+    /**/EnableExtraHardware(ConsoleInput);/**/
+
+    /* Initialize the PS/2 port */
+    PS2Initialize();
+
+    /* Initialize the keyboard and mouse and connect them to their PS/2 ports */
+    KeyboardInit(0);
+    MouseInit(1);
 
     /**************** ATTACH INPUT WITH CONSOLE *****************/
     /* Start the input thread */
@@ -481,6 +664,7 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     if (InputThread == NULL)
     {
         DisplayMessage(L"Failed to create the console input thread.");
+        EmulatorCleanup();
         return FALSE;
     }
     /************************************************************/
@@ -489,13 +673,14 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
     if (!VgaInitialize(ConsoleOutput))
     {
         DisplayMessage(L"Failed to initialize VGA support.");
+        EmulatorCleanup();
         return FALSE;
     }
 
     /* Initialize the software callback system and register the emulator BOPs */
-    InitializeCallbacks();
+    InitializeInt32();
     RegisterBop(BOP_DEBUGGER  , EmulatorDebugBreakBop);
-    RegisterBop(BOP_UNSIMULATE, EmulatorUnsimulateBop);
+    // RegisterBop(BOP_UNSIMULATE, CpuUnsimulateBop);
 
     /* Initialize VDD support */
     VDDSupInitialize();
@@ -505,6 +690,11 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
 VOID EmulatorCleanup(VOID)
 {
+#ifndef STANDALONE
+    NTSTATUS Status;
+    SIZE_T MemorySize = MAX_ADDRESS;
+#endif
+
     VgaCleanup();
 
     /* Close the input thread handle */
@@ -518,10 +708,32 @@ VOID EmulatorCleanup(VOID)
     // PitCleanup();
     // PicCleanup();
 
-    // Fast486Cleanup();
+    // DmaCleanup();
+
+    CpuCleanup();
+
+#ifdef STANDALONE
 
     /* Free the memory allocated for the 16-bit address space */
     if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
+
+#else
+
+    /* The reserved region starts from the very first page */
+    // BaseAddress = (PVOID)1;
+
+    /* Since to get NULL, we allocated from 0x1, account for this */
+    MemorySize -= 1;
+
+    Status = NtFreeVirtualMemory(NtCurrentProcess(),
+                                 &BaseAddress,
+                                 &MemorySize,
+                                 MEM_DECOMMIT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NTVDM: Failed to decommit VDM memory, Status 0x%08lx\n", Status);
+    }
+#endif
 }
 
 
@@ -530,7 +742,7 @@ VOID
 WINAPI
 VDDSimulate16(VOID)
 {
-    EmulatorSimulate();
+    CpuSimulate();
 }
 
 VOID

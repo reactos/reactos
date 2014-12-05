@@ -156,7 +156,7 @@ typedef enum
 } CAPTIONBUTTON;
 
 /*
-The following values specify all possible vutton states
+The following values specify all possible button states
 Note that not all of them are documented but it is easy to 
 find them by opening a theme file
 */
@@ -219,7 +219,7 @@ PWND_CONTEXT ThemeGetWndContext(HWND hWnd);
 
 extern HINSTANCE hDllInst;
 extern ATOM atWindowTheme;
-extern ATOM atWndContrext;
+extern ATOM atWndContext;
 extern BOOL gbThemeHooksActive;
 extern PTHEME_FILE ActiveThemeFile;
 

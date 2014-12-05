@@ -60,9 +60,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING     "Ściąganie..."
-    IDS_INSTALLING      "Instalowanie..."
-    IDS_INVALID_SHA     "Nieoczekiwana suma kontrolna ściągniętego pliku. Przerwanie instalacji uszkodzonego pliku."
+    IDS_DOWNLOADING "Ściąganie..."
+    IDS_INSTALLING "Instalowanie..."
+    IDS_INVALID_SHA "Nieoczekiwana suma kontrolna ściągniętego pliku. Przerwanie instalacji uszkodzonego pliku."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

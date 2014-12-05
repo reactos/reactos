@@ -296,6 +296,7 @@ typedef struct _KEY_FULL_INFORMATION
 
 typedef struct _KEY_NAME_INFORMATION
 {
+    ULONG NameLength;
     WCHAR Name[1];
 } KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
 
@@ -416,6 +417,16 @@ typedef struct _PLUGPLAY_EVENT_BLOCK
 //
 // Plug and Play Control Classes
 //
+
+//Class 0x09
+typedef struct _PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA
+{
+    UNICODE_STRING DeviceInstance;
+    LPGUID FilterGuid;
+    ULONG Flags;
+    PVOID Buffer;
+    ULONG BufferSize;
+} PLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA, *PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA;
 
 //Class 0x0A
 typedef struct _PLUGPLAY_CONTROL_PROPERTY_DATA

@@ -61,12 +61,12 @@ int clzll(uint64_t x) /* {{{ */
 
   if (x == 0) return(64);
   n = 0;
-  if (x <= 0x00000000FFFFFFFFL) {n = n + 32; x = x << 32;}
-  if (x <= 0x0000FFFFFFFFFFFFL) {n = n + 16; x = x << 16;}
-  if (x <= 0x00FFFFFFFFFFFFFFL) {n = n + 8; x = x << 8;}
-  if (x <= 0x0FFFFFFFFFFFFFFFL) {n = n + 4; x = x << 4;}
-  if (x <= 0x3FFFFFFFFFFFFFFFL) {n = n + 2; x = x << 2;}
-  if (x <= 0x7FFFFFFFFFFFFFFFL) {n = n + 1;}
+  if (x <= MK_UINT64(0x00000000FFFFFFFF)) {n = n + 32; x = x << 32;}
+  if (x <= MK_UINT64(0x0000FFFFFFFFFFFF)) {n = n + 16; x = x << 16;}
+  if (x <= MK_UINT64(0x00FFFFFFFFFFFFFF)) {n = n + 8; x = x << 8;}
+  if (x <= MK_UINT64(0x0FFFFFFFFFFFFFFF)) {n = n + 4; x = x << 4;}
+  if (x <= MK_UINT64(0x3FFFFFFFFFFFFFFF)) {n = n + 2; x = x << 2;}
+  if (x <= MK_UINT64(0x7FFFFFFFFFFFFFFF)) {n = n + 1;}
   return n;
 }
 /* }}} */

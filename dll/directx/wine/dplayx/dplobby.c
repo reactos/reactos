@@ -2027,6 +2027,7 @@ HRESULT dplobby_create( REFIID riid, void **ppv )
     obj->IDirectPlayLobby3_iface.lpVtbl = &dpl3_vt;
     obj->IDirectPlayLobby3A_iface.lpVtbl = &dpl3A_vt;
     obj->numIfaces = 1;
+    obj->msgtid = 0;
     obj->ref = 0;
     obj->refA = 0;
     obj->ref2 = 0;

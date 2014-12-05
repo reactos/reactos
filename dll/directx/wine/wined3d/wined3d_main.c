@@ -254,10 +254,10 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             int TmpVideoMemorySize = atoi(buffer);
             if(TmpVideoMemorySize > 0)
             {
-                wined3d_settings.emulated_textureram = TmpVideoMemorySize *1024*1024;
-                TRACE("Use %iMB = %d byte for emulated_textureram\n",
+                wined3d_settings.emulated_textureram = (UINT64)TmpVideoMemorySize *1024*1024;
+                TRACE("Use %iMiB = 0x%s bytes for emulated_textureram\n",
                         TmpVideoMemorySize,
-                        wined3d_settings.emulated_textureram);
+                        wine_dbgstr_longlong(wined3d_settings.emulated_textureram));
             }
             else
                 ERR("VideoMemorySize is %i but must be >0\n", TmpVideoMemorySize);

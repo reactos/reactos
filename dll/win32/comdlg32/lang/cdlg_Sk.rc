@@ -34,6 +34,7 @@ Do you want to replace it?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Cesta neexistuje"
     IDS_FILENOTEXISTING     "Súbor neexistuje"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Uložiť"
     IDS_SAVE_AS     "Uložiť ako"
     IDS_OPEN_FILE   "Otvoriť súbor"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

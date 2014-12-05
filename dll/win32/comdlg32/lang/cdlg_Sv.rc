@@ -34,6 +34,7 @@ Vill du ersätta den?"
                                                / : < > |"
     IDS_PATHNOTEXISTING     "Sökvägen finns inte"
     IDS_FILENOTEXISTING     "Filen finns inte"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -135,6 +136,7 @@ STRINGTABLE
     IDS_SAVE        "Spara"
     IDS_SAVE_AS     "Spara som"
     IDS_OPEN_FILE   "Öppna fil"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

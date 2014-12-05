@@ -170,6 +170,10 @@ static HRESULT WINAPI ddraw_palette_SetEntries(IDirectDrawPalette *iface,
 
     wined3d_mutex_lock();
     hr = wined3d_palette_set_entries(palette->wineD3DPalette, flags, start, count, entries);
+
+    if (SUCCEEDED(hr) && palette->flags & DDPCAPS_PRIMARYSURFACE)
+        ddraw_surface_update_frontbuffer(palette->ddraw->primary, NULL, FALSE);
+
     wined3d_mutex_unlock();
 
     return hr;

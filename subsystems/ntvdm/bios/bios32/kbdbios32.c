@@ -11,10 +11,11 @@
 #define NDEBUG
 
 #include "emulator.h"
-#include "callback.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
+#include "int32.h"
 
 #include "kbdbios32.h"
-#include "../kbdbios.h"
+#include <bios/kbdbios.h>
 #include "bios32p.h"
 
 #include "io.h"
@@ -194,11 +195,38 @@ static VOID WINAPI BiosKeyboardService(LPWORD Stack)
 // Keyboard IRQ 1
 static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
 {
+    BOOLEAN SkipScanCode;
     BYTE ScanCode, VirtualKey;
     WORD Character;
 
-    /* Get the scan code and virtual key code */
-    ScanCode = IOReadB(PS2_DATA_PORT);
+    /*
+     * Get the scan code from the PS/2 port, then call the
+     * INT 15h, AH=4Fh Keyboard Intercept function to try to
+     * translate the scan code. CF must be set before the call.
+     * In return, if CF is set we continue processing the scan code
+     * stored in AL, and if not, we skip it.
+     */
+    BYTE CF;
+    WORD AX;
+    CF = getCF();
+    AX = getAX();
+
+    setCF(1);
+    setAL(IOReadB(PS2_DATA_PORT));
+    setAH(0x4F);
+    Int32Call(&BiosContext, BIOS_MISC_INTERRUPT);
+
+    /* Retrieve the modified scan code in AL */
+    SkipScanCode = (getCF() == 0);
+    ScanCode = getAL();
+
+    setAX(AX);
+    setCF(CF);
+
+    /* Check whether CF is clear. If so, skip the scan code. */
+    if (SkipScanCode) goto Quit;
+
+    /* Get the corresponding virtual key code */
     VirtualKey = MapVirtualKey(ScanCode & 0x7F, MAPVK_VSC_TO_VK);
 
     /* Check if this is a key press or release */
@@ -255,6 +283,10 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     if (BiosKeyboardMap[VK_CAPITAL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CAPSLOCK;
     if (BiosKeyboardMap[VK_INSERT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_INSERT;
 
+    DPRINT("BiosKeyboardIrq - Character = 0x%X, ScanCode = 0x%X, KeybdShiftFlags = 0x%X\n",
+           Character, ScanCode, Bda->KeybdShiftFlags);
+
+Quit:
     PicIRQComplete(Stack);
 }
 
@@ -270,17 +302,17 @@ BOOLEAN KbdBios32Initialize(VOID)
     Bda->KeybdBufferEnd   = Bda->KeybdBufferStart + BIOS_KBD_BUFFER_SIZE * sizeof(WORD);
     Bda->KeybdBufferHead  = Bda->KeybdBufferTail = Bda->KeybdBufferStart;
 
-    // FIXME: Fill the keyboard buffer with invalid values, for diagnostic purposes...
-    RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)), BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
+    // FIXME: Fill the keyboard buffer with invalid values for diagnostic purposes...
+    RtlFillMemory(((LPVOID)((ULONG_PTR)Bda + Bda->KeybdBufferStart)),
+                  BIOS_KBD_BUFFER_SIZE * sizeof(WORD), 'A');
 
-    /* Register the BIOS 32-bit Interrupts */
-
-    /* Initialize software vector handlers */
+    /*
+     * Register the BIOS 32-bit Interrupts:
+     * - Software vector handler
+     * - HW vector interrupt
+     */
     RegisterBiosInt32(BIOS_KBD_INTERRUPT, BiosKeyboardService);
-
-    /* Set up the HW vector interrupts */
     EnableHwIRQ(1, BiosKeyboardIrq);
-    // EnableHwIRQ(12, BiosMouseIrq);
 
     return TRUE;
 }

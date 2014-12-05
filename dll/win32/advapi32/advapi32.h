@@ -39,7 +39,7 @@
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
-#include "crypt/crypt.h"
+#include "wine/crypt.h"
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS
@@ -177,5 +177,17 @@ typedef struct _NTMARTA
 extern NTMARTA NtMartaStatic;
 
 DWORD CheckNtMartaPresent(VOID);
+
+/* heap allocation helpers */
+static void *heap_alloc( size_t len ) __WINE_ALLOC_SIZE(1);
+static inline void *heap_alloc( size_t len )
+{
+    return HeapAlloc( GetProcessHeap(), 0, len );
+}
+
+static inline BOOL heap_free( void *mem )
+{
+    return HeapFree( GetProcessHeap(), 0, mem );
+}
 
 #endif /* __ADVAPI32_H */

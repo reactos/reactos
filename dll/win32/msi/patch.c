@@ -37,54 +37,57 @@ static BOOL match_language( MSIPACKAGE *package, LANGID langid )
 
 static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform )
 {
-    WCHAR *package_product, *transform_product, *template = NULL;
-    UINT ret = ERROR_FUNCTION_FAILED;
+    MSISUMMARYINFO *si = MSI_GetSummaryInformationW( transform, 0 );
+    UINT valid_flags = 0, wanted_flags = 0;
 
-    package_product = msi_dup_property( package->db, szProductCode );
-    transform_product = msi_get_suminfo_product( transform );
+    if (si) wanted_flags = msi_suminfo_get_int32( si, PID_CHARCOUNT );
+    TRACE("validation flags %x\n", wanted_flags);
 
-    TRACE("package = %s transform = %s\n", debugstr_w(package_product), debugstr_w(transform_product));
+    if (wanted_flags & ~(MSITRANSFORM_VALIDATE_PRODUCT|MSITRANSFORM_VALIDATE_LANGUAGE))
+        FIXME("unsupported validation flags %x\n", wanted_flags);
 
-    if (!transform_product || strstrW( transform_product, package_product ))
+    if (wanted_flags & MSITRANSFORM_VALIDATE_PRODUCT)
     {
-        MSISUMMARYINFO *si;
+        WCHAR *package_product = msi_dup_property( package->db, szProductCode );
+        WCHAR *transform_product = msi_get_suminfo_product( transform );
+
+        TRACE("package = %s transform = %s\n", debugstr_w(package_product), debugstr_w(transform_product));
+
+        if (!transform_product || strstrW( transform_product, package_product ))
+        {
+            valid_flags |= MSITRANSFORM_VALIDATE_PRODUCT;
+        }
+        msi_free( transform_product );
+        msi_free( package_product );
+    }
+    if (wanted_flags & MSITRANSFORM_VALIDATE_LANGUAGE)
+    {
+        WCHAR *template;
         const WCHAR *p;
 
-        si = MSI_GetSummaryInformationW( transform, 0 );
         if (!si)
         {
             ERR("no summary information!\n");
             goto end;
         }
-        template = msi_suminfo_dup_string( si, PID_TEMPLATE );
-        if (!template)
+        if (!(template = msi_suminfo_dup_string( si, PID_TEMPLATE )))
         {
             ERR("no template property!\n");
-            msiobj_release( &si->hdr );
-            goto end;
-        }
-        if (!template[0])
-        {
-            ret = ERROR_SUCCESS;
-            msiobj_release( &si->hdr );
             goto end;
         }
         TRACE("template: %s\n", debugstr_w(template));
-        p = strchrW( template, ';' );
-        if (p && match_language( package, atoiW( p + 1 ) ))
+        if (!template[0] || ((p = strchrW( template, ';' )) && match_language( package, atoiW( p + 1 ) )))
         {
-            TRACE("applicable transform\n");
-            ret = ERROR_SUCCESS;
+            valid_flags |= MSITRANSFORM_VALIDATE_LANGUAGE;
         }
-        /* FIXME: check platform */
-        msiobj_release( &si->hdr );
+        msi_free( template );
     }
 
 end:
-    msi_free( transform_product );
-    msi_free( package_product );
-    msi_free( template );
-    return ret;
+    msiobj_release( &si->hdr );
+    if (valid_flags & ~wanted_flags) return ERROR_FUNCTION_FAILED;
+    TRACE("applicable transform\n");
+    return ERROR_SUCCESS;
 }
 
 static UINT apply_substorage_transform( MSIPACKAGE *package, MSIDATABASE *patch_db, LPCWSTR name )

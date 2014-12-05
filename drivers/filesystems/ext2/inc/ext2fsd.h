@@ -60,7 +60,7 @@ typedef unsigned char   BYTE;
 extern Ext2Data				Ext2GlobalData;
 
 // try-finally simulation
-#define try_return(S)	{ S; goto try_exit; }
+#define try_return(...) { __VA_ARGS__; goto try_exit; }
 #define try_return1(S)	{ S; goto try_exit1; }
 #define try_return2(S)	{ S; goto try_exit2; }
 
@@ -119,10 +119,10 @@ extern Ext2Data				Ext2GlobalData;
 
 #ifdef EXT2_POOL_WITH_TAG
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
-		ExAllocatePoolWithTag( PoolType, NumberOfBytes, '2txE' ) 
+		ExAllocatePoolWithTag( PoolType, NumberOfBytes, '2txE' )
 #else
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
-		ExAllocatePool( PoolType, NumberOfBytes ) 
+		ExAllocatePool( PoolType, NumberOfBytes )
 #endif
 
 
@@ -227,7 +227,7 @@ extern Ext2Data				Ext2GlobalData;
 }
 
 #else
-	#define DebugTrace( TYPE, X, Y ) 
+	#define DebugTrace( TYPE, X, Y )
 	#define DebugTraceState( STR, X1, X2, X3 )
 	#define AssertFCB( PtrFCB )
 	#define AssertVCB( PtrVCB )

@@ -261,13 +261,13 @@
 #define HAVE_VSPRINTF 1
 
 /* Define to 1 if you have the <zlib.h> header file. */
-#define HAVE_ZLIB_H
+#define HAVE_ZLIB_H 1
 
 /* Define to 1 if you have the `_stat' function. */
 #define HAVE__STAT 1
 
 /* Whether __va_copy() is available */
-/* #undef HAVE___VA_COPY */
+#define HAVE___VA_COPY 1
 
 /* Define as const if the declaration of iconv() needs const. */
 /* #undef ICONV_CONST */
@@ -304,7 +304,7 @@
 /* #undef SUPPORT_IP6 */
 
 /* Version number of package */
-#define VERSION "2.9.0"
+#define VERSION "2.9.2"
 
 /* Determine what socket length (socklen_t) data type is */
 #define XML_SOCKLEN_T int
@@ -340,3 +340,6 @@
 #if defined(_MSC_VER)
 #undef GetModuleHandleA
 #endif
+
+#define SEND_ARG2_CAST
+#define GETHOSTBYNAME_ARG_CAST

@@ -90,14 +90,6 @@ BOOL WINAPI _UserSoundSentry(VOID)
     return TRUE;
 }
 
-// From win32ss/user/win32csr/dllmain.c
-VOID
-WINAPI
-PrivateCsrssManualGuiCheck(LONG Check)
-{
-    NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
-}
-
 ULONG
 NTAPI
 CreateSystemThreads(PVOID pParam)
@@ -121,8 +113,15 @@ CSR_API(SrvActivateDebugger)
 
 CSR_API(SrvGetThreadConsoleDesktop)
 {
+    PUSER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.GetThreadConsoleDesktopRequest;
+
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+
+    /* Return nothing for the moment... */
+    GetThreadConsoleDesktopRequest->ConsoleDesktop = NULL;
+
+    /* Always succeeds */
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvDeviceEvent)
@@ -144,8 +143,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     UserServerHeap = RtlGetProcessHeap();
 
     /* Initialize the video */
-    NtUserInitialize(0, NULL, NULL); //
-    PrivateCsrssManualGuiCheck(0);
+    NtUserInitialize(0, NULL, NULL);
 
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = USERSRV_FIRST_API_NUMBER;
@@ -159,7 +157,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
     LoadedServerDll->HardErrorCallback = UserServerHardError;
-    LoadedServerDll->ShutdownProcessCallback = NULL;
+    LoadedServerDll->ShutdownProcessCallback = UserClientShutdown;
 
     UserServerDllInstance = LoadedServerDll->ServerHandle;
 

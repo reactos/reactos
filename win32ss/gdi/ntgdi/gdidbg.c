@@ -85,6 +85,7 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"UserProcess", DbgChUserProcess},
     {L"UserProp", DbgChUserProp},
     {L"UserScrollbar", DbgChUserScrollbar},
+    {L"UserShutdown", DbgChUserShutdown},
     {L"UserSysparams", DbgChUserSysparams},
     {L"UserTimer", DbgChUserTimer},
     {L"UserThread", DbgChUserThread},
@@ -324,12 +325,12 @@ DbgGdiHTIntegrityCheck()
 				r = 0;
 				DPRINT1("Used entry has KernelData == 0\n");
 			}
-			if (pEntry->KernelData <= MmHighestUserAddress)
+			else if (pEntry->KernelData <= MmHighestUserAddress)
 			{
 				r = 0;
 				DPRINT1("Used entry invalid KernelData\n");
 			}
-			if (((POBJ)(pEntry->KernelData))->hHmgr != Handle)
+			else if (((POBJ)(pEntry->KernelData))->hHmgr != Handle)
 			{
 				r = 0;
 				DPRINT1("Used entry %lu, has invalid hHmg %p (expected: %p)\n",
@@ -595,6 +596,16 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     DBG_CHANNEL *ChannelEntry;
     UINT iLevel, iChannel;
 
+    /* Special treatment for the "all" channel */
+    if (wcscmp(channel, L"all") == 0)
+    {
+        for (iChannel = 0; iChannel < DbgChCount; iChannel++)
+        {
+            DbgAddDebugChannel(ppi, DbgChannels[iChannel].Name, level, op);
+        }
+        return TRUE;
+    }
+
     ChannelEntry = (DBG_CHANNEL*)bsearch(channel,
                                          DbgChannels,
                                          DbgChCount,
@@ -606,7 +617,7 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     }
 
     iChannel = ChannelEntry->Id;
-    ASSERT(iChannel >= 0 && iChannel < DbgChCount);
+    ASSERT(iChannel < DbgChCount);
 
     if(level == NULL || *level == L'\0' ||wcslen(level) == 0 )
         iLevel = MAX_LEVEL;

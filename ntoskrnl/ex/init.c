@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* This is the size that we can expect from the win 2003 loader */
+#define LOADER_PARAMETER_EXTENSION_MIN_SIZE \
+    RTL_SIZEOF_THROUGH_FIELD(LOADER_PARAMETER_EXTENSION, AcpiTableSize)
+
 /* Temporary hack */
 BOOLEAN
 NTAPI
@@ -668,52 +672,52 @@ ExpInitSystemPhase1(VOID)
         DPRINT1("Executive: Event Pair initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize mutants */
     if (ExpInitializeMutantImplementation() == FALSE)
     {
         DPRINT1("Executive: Mutant initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize callbacks */
     if (ExpInitializeCallbacks() == FALSE)
     {
         DPRINT1("Executive: Callback initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize semaphores */
     if (ExpInitializeSemaphoreImplementation() == FALSE)
     {
         DPRINT1("Executive: Semaphore initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize timers */
     if (ExpInitializeTimerImplementation() == FALSE)
     {
         DPRINT1("Executive: Timer initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize profiling */
     if (ExpInitializeProfileImplementation() == FALSE)
     {
         DPRINT1("Executive: Profile initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize UUIDs */
     ExpInitUuids();
-    
+
     /* Initialize keyed events */
     if (ExpInitializeKeyedEventImplementation() == FALSE)
     {
         DPRINT1("Executive: Keyed event initialization failed\n");
         return FALSE;
     }
-    
+
     /* Initialize Win32K */
     if (ExpWin32kInit() == FALSE)
     {
@@ -759,8 +763,8 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Get the loader extension */
     Extension = LoaderBlock->Extension;
 
-    /* Validate the size (larger structures are OK, we'll just ignore them) */
-    if (Extension->Size < sizeof(LOADER_PARAMETER_EXTENSION)) return FALSE;
+    /* Validate the size (Windows 2003 loader doesn't provide more) */
+    if (Extension->Size < LOADER_PARAMETER_EXTENSION_MIN_SIZE) return FALSE;
 
     /* Don't validate upper versions */
     if (Extension->MajorVersion > VER_PRODUCTMAJORVERSION) return TRUE;
@@ -1956,7 +1960,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvEnableDisplayString(TRUE);
 
     /* Launch initial process */
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+    DPRINT("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
 
@@ -1998,7 +2002,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Free the boot buffer */
     ExFreePoolWithTag(InitBuffer, TAG_INIT);
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+    DPRINT("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 }
 
 VOID

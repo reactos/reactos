@@ -34,6 +34,7 @@ Czy chcesz go zastąpić?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Katalog nie istnieje"
     IDS_FILENOTEXISTING     "Plik nie istnieje"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Zapisz"
     IDS_SAVE_AS     "Zapisz jako"
     IDS_OPEN_FILE   "Otwórz plik"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

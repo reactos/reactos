@@ -78,6 +78,9 @@
 #ifdef LANGUAGE_SQ_AL
     #include "lang/winmm_Sq.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/winmm_Tr.rc"
+#endif
 //#include "winmm_Hu.rc"
 #ifdef LANGUAGE_UK_UA
     #include "lang/winmm_Uk.rc"

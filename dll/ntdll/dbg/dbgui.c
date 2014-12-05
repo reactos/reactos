@@ -66,6 +66,9 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
     LPDEBUG_EVENT DebugEvent = Win32DebugEvent;
     HANDLE ThreadHandle;
+    HANDLE ProcessHandle;
+    PTEB Teb;
+    PVOID Pointer;
 
     /* Write common data */
     DebugEvent->dwProcessId = (DWORD)WaitStateChange->
@@ -256,13 +259,31 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                 NtClose(ThreadHandle);
             }
 
-            /* Check if we got thread information */
+            /* If we got thread information, open the process */
             if (NT_SUCCESS(Status))
             {
-                /* Save the image name from the TIB */
-                DebugEvent->u.LoadDll.lpImageName =
-                    ((PTEB)ThreadBasicInfo.TebBaseAddress)->
-                    NtTib.ArbitraryUserPointer;
+                Status = NtOpenProcess(&ProcessHandle,
+                                       PROCESS_VM_READ,
+                                       &ObjectAttributes,
+                                       &WaitStateChange->AppClientId);
+            }
+
+            if (NT_SUCCESS(Status))
+            {
+                /* Read the image name from the TIB */
+                Teb = ThreadBasicInfo.TebBaseAddress;
+                Status = NtReadVirtualMemory(ProcessHandle,
+                                             &Teb->NtTib.ArbitraryUserPointer,
+                                             &Pointer,
+                                             sizeof(Pointer),
+                                             NULL);
+                NtClose(ProcessHandle);
+            }
+
+            if (NT_SUCCESS(Status))
+            {
+                /* If everything was successful, set the image name */
+                DebugEvent->u.LoadDll.lpImageName = Pointer;
             }
             else
             {

@@ -54,7 +54,7 @@ done:
 HRESULT process_get_owner( IWbemClassObject *obj, IWbemClassObject *in, IWbemClassObject **out )
 {
     VARIANT user, domain, retval;
-    IWbemClassObject *sig;
+    IWbemClassObject *sig, *out_params = NULL;
     HRESULT hr;
 
     TRACE("%p, %p, %p\n", obj, in, out);
@@ -62,29 +62,40 @@ HRESULT process_get_owner( IWbemClassObject *obj, IWbemClassObject *in, IWbemCla
     hr = create_signature( class_processW, method_getownerW, PARAM_OUT, &sig );
     if (hr != S_OK) return hr;
 
-    hr = IWbemClassObject_SpawnInstance( sig, 0, out );
-    if (hr != S_OK)
+    if (out)
     {
-        IWbemClassObject_Release( sig );
-        return hr;
+        hr = IWbemClassObject_SpawnInstance( sig, 0, &out_params );
+        if (hr != S_OK)
+        {
+            IWbemClassObject_Release( sig );
+            return hr;
+        }
     }
     VariantInit( &user );
     VariantInit( &domain );
     hr = get_owner( &user, &domain, &retval );
     if (hr != S_OK) goto done;
-    if (!V_UI4( &retval ))
+    if (out_params)
     {
-        hr = IWbemClassObject_Put( *out, param_userW, 0, &user, CIM_STRING );
-        if (hr != S_OK) goto done;
-        hr = IWbemClassObject_Put( *out, param_domainW, 0, &domain, CIM_STRING );
-        if (hr != S_OK) goto done;
+        if (!V_UI4( &retval ))
+        {
+            hr = IWbemClassObject_Put( out_params, param_userW, 0, &user, CIM_STRING );
+            if (hr != S_OK) goto done;
+            hr = IWbemClassObject_Put( out_params, param_domainW, 0, &domain, CIM_STRING );
+            if (hr != S_OK) goto done;
+        }
+        hr = IWbemClassObject_Put( out_params, param_returnvalueW, 0, &retval, CIM_UINT32 );
     }
-    hr = IWbemClassObject_Put( *out, param_returnvalueW, 0, &retval, CIM_UINT32 );
 
 done:
     VariantClear( &user );
     VariantClear( &domain );
     IWbemClassObject_Release( sig );
-    if (hr != S_OK) IWbemClassObject_Release( *out );
+    if (hr == S_OK && out)
+    {
+        *out = out_params;
+        IWbemClassObject_AddRef( out_params );
+    }
+    if (out_params) IWbemClassObject_Release( out_params );
     return hr;
 }

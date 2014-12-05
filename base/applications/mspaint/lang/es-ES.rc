@@ -4,6 +4,7 @@
  * FILE:       base/applications/mspaint/lang/es-ES.rc
  * PURPOSE:    Spanish Language resource file
  * TRANSLATOR: Gabriel Ilardi
+ * PROOFREAD:  Ismael Ferreras Morezuelas
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -45,9 +46,9 @@ BEGIN
         MENUITEM "Barra de estado", IDM_VIEWSTATUSBAR, CHECKED
         MENUITEM "Barra de formato del texto", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Zoom"
+        POPUP "Ampliación"
         BEGIN
-            POPUP "Definido por el usuario"
+            POPUP "Definida por el usuario"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -66,7 +67,7 @@ BEGIN
     POPUP "&Imagen"
     BEGIN
         MENUITEM "Rotar/Invertir...\tCtrl+R", IDM_IMAGEROTATEMIRROR
-        MENUITEM "Stretch/Skew...\tCtrl+W", IDM_IMAGESTRETCHSKEW
+        MENUITEM "Estirar/Inclinar...\tCtrl+W", IDM_IMAGESTRETCHSKEW
         MENUITEM "Recortar", IDM_IMAGECROP
         MENUITEM "Invertir colores\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atributos...\tCtrl+E", IDM_IMAGEATTRIBUTES
@@ -77,8 +78,8 @@ BEGIN
     BEGIN
         MENUITEM "Editar paleta...", IDM_COLORSEDITPALETTE
         MENUITEM SEPARATOR
-        MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
-        MENUITEM "Old palette", IDM_COLORSOLDPALETTE
+        MENUITEM "Paleta moderna", IDM_COLORSMODERNPALETTE
+        MENUITEM "Paleta antigua", IDM_COLORSOLDPALETTE
     END
     POPUP "Ay&uda"
     BEGIN
@@ -134,21 +135,21 @@ CAPTION "Atributos"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 48, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 128, 40, 35, 12
-    LTEXT "Ancho:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
-    LTEXT "Alto:", IDD_ATTRIBUTESTEXT2, 85, 42, 23, 10
-    LTEXT "Fecha modificación:", IDD_ATTRIBUTESTEXT3, 10, 5, 80, 10
-    LTEXT "Espacio en disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Resolución:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Anchura:", IDD_ATTRIBUTESTEXT1, 10, 42, 30, 10
+    LTEXT "Altura:", IDD_ATTRIBUTESTEXT2, 101, 42, 23, 10
+    LTEXT "Fecha modificación:", IDD_ATTRIBUTESTEXT3, 3, 5, 67, 10, SS_RIGHT
+    LTEXT "Espacio en disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10, SS_RIGHT
+    LTEXT "Resolución:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10, SS_RIGHT
     LTEXT "No disponible", IDD_ATTRIBUTESTEXT6, 73, 5, 80, 10
     LTEXT "No disponible", IDD_ATTRIBUTESTEXT7, 73, 15, 80, 10
     LTEXT "No disponible", IDD_ATTRIBUTESTEXT8, 73, 25, 80, 10
     GROUPBOX "Unidades ", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "Pulgadas", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 60, 69, 35, 10
-    AUTORADIOBUTTON "Píxeles", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
+    AUTORADIOBUTTON "Centímetros", IDD_ATTRIBUTESRB2, 60, 69, 51, 10
+    AUTORADIOBUTTON "Píxeles", IDD_ATTRIBUTESRB3, 120, 69, 42, 10
     GROUPBOX "Colores ", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "Blanco y negro", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
-    AUTORADIOBUTTON "Colores", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    AUTORADIOBUTTON "En color", IDD_ATTRIBUTESRB5, 92, 100, 40, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
     PUSHBUTTON "Predefinido", IDD_ATTRIBUTESSTANDARD, 170, 40, 48, 14
@@ -157,9 +158,9 @@ END
 IDD_STRETCHSKEW DIALOGEX 100, 100, 225, 150
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Stretch and skew image"
+CAPTION "Estirar e inclinar imagen"
 BEGIN
-    GROUPBOX "Stretch", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
+    GROUPBOX "Estirar", IDD_STRETCHSKEWGROUPSTRETCH, 6, 6, 158, 66
     ICON IDI_HORZSTRETCH, IDD_STRETCHSKEWICONHSTRETCH, 12, 18, 32, 32
     LTEXT "Horizontal:", IDD_STRETCHSKEWTEXTHSTRETCH, 45, 24, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSTRETCH, 90, 23, 32, 12
@@ -168,15 +169,15 @@ BEGIN
     LTEXT "Vertical:", IDD_STRETCHSKEWTEXTVSTRETCH, 45, 49, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSTRETCH, 90, 48, 32, 12
     LTEXT "%", IDD_STRETCHSKEWTEXTVPERCENT, 125, 49, 15, 10
-    GROUPBOX "Skew", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
+    GROUPBOX "Inclinar", IDD_STRETCHSKEWGROUPSKEW, 6, 76, 158, 66
     ICON IDI_HORZSKEW, IDD_STRETCHSKEWICONHSKEW, 12, 88, 32, 32
     LTEXT "Horizontal:", IDD_STRETCHSKEWTEXTHSKEW, 45, 94, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITHSKEW, 90, 93, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
+    LTEXT "grados", IDD_STRETCHSKEWTEXTHDEG, 125, 94, 30, 10
     ICON IDI_VERTSKEW, IDD_STRETCHSKEWICONVSKEW, 12, 113, 32, 32
     LTEXT "Vertical:", IDD_STRETCHSKEWTEXTVSKEW, 45, 119, 40, 10
     EDITTEXT IDD_STRETCHSKEWEDITVSKEW, 90, 118, 32, 12
-    LTEXT "degrees", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
+    LTEXT "grados", IDD_STRETCHSKEWTEXTVDEG, 125, 119, 30, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 170, 8, 48, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 170, 24, 48, 14
 END
@@ -186,8 +187,8 @@ BEGIN
     IDS_PROGRAMNAME "Paint"
     IDS_WINDOWTITLE "%s - Paint"
     IDS_INFOTITLE "Paint para ReactOS"
-    IDS_INFOTEXT "Paint para ReactOS is available under the GNU Lesser General Public License (LGPL, ver www.gnu.org)"
-    IDS_SAVEPROMPTTEXT "¿Guardar cambios cambios a %s?"
+    IDS_INFOTEXT "Paint para ReactOS está disponible bajo los términos de la GNU Lesser General Public License (LGPL, ver www.gnu.org)"
+    IDS_SAVEPROMPTTEXT "¿Guardar cambios a %s?"
     IDS_DEFAULTFILENAME "Sin titulo.bmp"
     IDS_MINIATURETITLE "Miniatura"
     IDS_TOOLTIP1 "Selección de forma libre"
@@ -209,9 +210,9 @@ BEGIN
     IDS_OPENFILTER "Archivos de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos los archivos (*.*)\1*.*\1"
     IDS_SAVEFILTER "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE "%d bytes"
-    IDS_PRINTRES "%d x %d pixels por metro"
-    IDS_INTNUMBERS "Please enter integral numbers only!"
-    IDS_PERCENTAGE "The percentage must be between 1 and 500."
-    IDS_ANGLE "The angle must be between -89 and 89."
-    IDS_LOADERRORTEXT "The file %s could not be loaded."
+    IDS_PRINTRES "%d x %d píxeles/m"
+    IDS_INTNUMBERS "Sólo se admiten números sin decimales."
+    IDS_PERCENTAGE "El porcentaje debe de estar entre 1 y 500."
+    IDS_ANGLE "El ángulo debe de estar entre -89 y 89."
+    IDS_LOADERRORTEXT "No se pudo cargar el archivo %s."
 END

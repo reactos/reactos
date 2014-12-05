@@ -12,9 +12,7 @@ add_definitions(
     -DPROXY_CLSID=CLSID_PSFactoryBuffer)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(oleaut32.dll oleaut32.spec ADD_IMPORTLIB)
-
 add_rpcproxy_files(oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 list(APPEND SOURCE
@@ -48,6 +46,12 @@ add_library(oleaut32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_oaidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32_ocidl_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(oleaut32 mingwex)
+    #FIXME: http://llvm.org/bugs/show_bug.cgi?id=19027
+    set_property(SOURCE vartype.c APPEND_STRING PROPERTY COMPILE_FLAGS " -no-integrated-as")
+endif()
 
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)

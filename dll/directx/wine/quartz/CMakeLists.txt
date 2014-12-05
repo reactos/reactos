@@ -42,7 +42,6 @@ add_library(quartz SHARED
     version.rc)
 
 add_idl_headers(quartz_idlheader fil_data.idl)
-
 add_typelib(control_tlb.idl)
 
 list(APPEND quartz_rc_deps
@@ -51,7 +50,6 @@ list(APPEND quartz_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/quartz_strmif.rgs)
 
 set_source_files_properties(version.rc PROPERTIES OBJECT_DEPENDS "${quartz_rc_deps}")
-
 set_module_type(quartz win32dll)
 target_link_libraries(quartz strmbase strmiids uuid dxguid wine ${PSEH_LIB})
 add_importlibs(quartz dsound msacm32 msvfw32 ole32 oleaut32 shlwapi rpcrt4 user32 gdi32 advapi32 msvcrt kernel32 ntdll)

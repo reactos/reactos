@@ -41,17 +41,6 @@ add_library(setupapi SHARED
 set_module_type(setupapi win32dll UNICODE)
 target_link_libraries(setupapi uuid wine ${PSEH_LIB})
 add_delay_importlibs(setupapi shell32 winspool wintrust)
-
-add_importlibs(setupapi
-    msvcrt
-    gdi32
-    comctl32
-    advapi32
-    user32
-    rpcrt4
-    version
-    kernel32
-    ntdll)
-
+add_importlibs(setupapi gdi32 comctl32 advapi32 user32 rpcrt4 version msvcrt kernel32 ntdll)
 add_pch(setupapi setupapi_private.h SOURCE)
 add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)

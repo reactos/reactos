@@ -24,8 +24,8 @@ list(APPEND SOURCE
 
 add_library(ext2fs SHARED ${SOURCE})
 
-if(NOT MSVC)
-    add_compile_flags("-Wno-unused-but-set-variable")
+if((NOT MSVC) AND (NOT CMAKE_C_COMPILER_ID STREQUAL "Clang"))
+    add_target_compile_flags(ext2fs "-Wno-unused-but-set-variable")
 endif()
 
 target_link_libraries(ext2fs ${PSEH_LIB})

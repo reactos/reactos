@@ -919,6 +919,21 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 }
 
 
+ULONG
+NTAPI
+UserClientShutdown(IN PCSR_PROCESS CsrProcess,
+                   IN ULONG Flags,
+                   IN BOOLEAN FirstPhase)
+{
+    DPRINT1("UserClientShutdown(0x%p, 0x%x, %s)\n",
+            CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase");
+
+    UNIMPLEMENTED;
+
+    return CsrShutdownNonCsrProcess;
+}
+
+
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvExitWindowsEx)
@@ -940,8 +955,33 @@ CSR_API(SrvExitWindowsEx)
 
 CSR_API(SrvEndTask)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    PUSER_END_TASK EndTaskRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.EndTaskRequest;
+
+    // FIXME: This is HACK-plemented!!
+    DPRINT1("SrvEndTask is HACKPLEMENTED!!\n");
+
+    SendMessageW(EndTaskRequest->WndHandle, WM_CLOSE, 0, 0);
+    // PostMessageW(EndTaskRequest->WndHandle, WM_CLOSE, 0, 0);
+
+    if (IsWindow(EndTaskRequest->WndHandle))
+    {
+        if (EndTaskRequest->Force)
+        {
+            EndTaskRequest->Success = DestroyWindow(EndTaskRequest->WndHandle);
+            EndTaskRequest->LastError = GetLastError();
+        }
+        else
+        {
+            EndTaskRequest->Success = FALSE;
+        }
+    }
+    else
+    {
+        EndTaskRequest->LastError = ERROR_SUCCESS;
+        EndTaskRequest->Success = TRUE;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 CSR_API(SrvLogon)

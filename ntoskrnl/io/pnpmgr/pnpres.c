@@ -115,7 +115,7 @@ IopFindPortResource(
 
    ASSERT(IoDesc->Type == CmDesc->Type);
    ASSERT(IoDesc->Type == CmResourceTypePort);
-    
+
    /* HACK */
    if (IoDesc->u.Port.Alignment == 0) IoDesc->u.Port.Alignment = 1;
 
@@ -132,11 +132,12 @@ IopFindPortResource(
         }
         else
         {
-            DPRINT1("Satisfying port requirement with 0x%I64x (length: 0x%x)\n", Start, CmDesc->u.Port.Length);
+            DPRINT("Satisfying port requirement with 0x%I64x (length: 0x%x)\n", Start, CmDesc->u.Port.Length);
             return TRUE;
         }
    }
 
+   DPRINT1("IopFindPortResource failed!\n");
    return FALSE;
 }
 
@@ -251,7 +252,7 @@ IopFixupResourceListWithRequirements(
             PCM_PARTIAL_RESOURCE_LIST PartialList = (*ResourceList) ? &(*ResourceList)->List[0].PartialResourceList : NULL;
             PIO_RESOURCE_DESCRIPTOR IoDesc = &ResList->Descriptors[ii];
             BOOLEAN Matched = FALSE;
-            
+
             /* Skip alternates if we don't need one */
             if (!AlternateRequired && (IoDesc->Option & IO_RESOURCE_ALTERNATIVE))
             {
@@ -386,7 +387,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypePort:
                         /* Find an available port range */
                         if (!IopFindPortResource(IoDesc, &NewDesc))
@@ -398,7 +399,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypeMemory:
                         /* Find an available memory range */
                         if (!IopFindMemoryResource(IoDesc, &NewDesc))
@@ -410,7 +411,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypeBusNumber:
                         /* Find an available bus address range */
                         if (!IopFindBusNumberResource(IoDesc, &NewDesc))
@@ -422,7 +423,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     case CmResourceTypeDma:
                         /* Find an available DMA channel */
                         if (!IopFindDmaResource(IoDesc, &NewDesc))
@@ -433,7 +434,7 @@ IopFixupResourceListWithRequirements(
                             FoundResource = FALSE;
                         }
                         break;
-                        
+
                     default:
                         DPRINT1("Unsupported resource type: %x\n", IoDesc->Type);
                         FoundResource = FALSE;
@@ -825,7 +826,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       ULONG OldLength = 0;
 
       ASSERT(DeviceNode->ResourceListTranslated);
-      
+
       RtlInitUnicodeString(&TranslatedSuffix, L".Translated");
       RtlInitUnicodeString(&RawSuffix, L".Raw");
 
@@ -837,17 +838,17 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
       {
           ASSERT(OldLength);
-          
+
           NameU.Buffer = ExAllocatePool(PagedPool, OldLength + TranslatedSuffix.Length);
           if (!NameU.Buffer)
           {
               ZwClose(PnpMgrLevel2);
               return STATUS_INSUFFICIENT_RESOURCES;
           }
-          
+
           NameU.Length = 0;
           NameU.MaximumLength = (USHORT)OldLength + TranslatedSuffix.Length;
-          
+
           Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
                                        DevicePropertyPhysicalDeviceObjectName,
                                        NameU.MaximumLength,
@@ -871,7 +872,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
           /* This should never happen */
           ASSERT(FALSE);
       }
-      
+
       NameU.Length = (USHORT)OldLength;
 
       RtlAppendUnicodeStringToString(&NameU, &RawSuffix);
@@ -972,12 +973,12 @@ IopTranslateDeviceResources(
                   DPRINT1("Failed to translate port resource (Start: 0x%I64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
                }
-                
+
                if (AddressSpace == 0)
                {
                    DPRINT1("Guessed incorrect address space: 1 -> 0\n");
 
-                   /* FIXME: I think all other CM_RESOURCE_PORT_XXX flags are 
+                   /* FIXME: I think all other CM_RESOURCE_PORT_XXX flags are
                     * invalid for this state but I'm not 100% sure */
                    DescriptorRaw->Flags =
                    DescriptorTranslated->Flags = CM_RESOURCE_PORT_MEMORY;
@@ -993,7 +994,7 @@ IopTranslateDeviceResources(
                   DescriptorRaw->u.Interrupt.Vector,
                   (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
                   &DescriptorTranslated->u.Interrupt.Affinity);
-                
+
                if (!DescriptorTranslated->u.Interrupt.Vector)
                {
                    Status = STATUS_UNSUCCESSFUL;

@@ -25,7 +25,9 @@
 @ stdcall BaseInitAppcompatCacheSupport()
 @ stdcall BaseIsAppcompatInfrastructureDisabled() IsShimInfrastructureDisabled
 @ stdcall BaseProcessInitPostImport() ; missing in Win 7
+;@ stdcall -arch=x86_64 BaseProcessStart()
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) ;check
+;@ stdcall -arch=x86_64 BaseThreadStart()
 @ stdcall BaseUpdateAppcompatCache(long long long)
 @ stdcall BasepCheckBadapp(long ptr long long long long long long long)
 @ stdcall BasepCheckWinSaferRestrictions(long long long long long long)
@@ -60,6 +62,7 @@
 @ stdcall CompareStringA(long long str long str long)
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
+;@ stdcall -arch=x86_64 ConsoleIMERoutine()
 @ stdcall ConsoleMenuControl(long long long)
 @ stdcall ContinueDebugEvent(long long long)
 @ stdcall ConvertDefaultLocale (long)
@@ -108,7 +111,7 @@
 @ stdcall CreateRemoteThread(long ptr long ptr long long ptr)
 @ stdcall CreateSemaphoreA(ptr long long str)
 @ stdcall CreateSemaphoreW(ptr long long wstr)
-@ stdcall CreateSocketHandle()
+@ stdcall -i386 CreateSocketHandle()
 @ stdcall CreateTapePartition(long long long long)
 @ stdcall CreateThread(ptr long ptr long long ptr)
 @ stdcall CreateTimerQueue ()
@@ -116,6 +119,7 @@
 @ stdcall CreateToolhelp32Snapshot(long long)
 @ stdcall CreateWaitableTimerA(ptr long str)
 @ stdcall CreateWaitableTimerW(ptr long wstr)
+;@ stdcall -arch=x86_64 CtrlRoutine()
 @ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
 @ stdcall DebugActiveProcessStop(long)
@@ -321,11 +325,11 @@
 @ stdcall GetCurrentConsoleFont(long long ptr)
 @ stdcall GetCurrentDirectoryA(long ptr)
 @ stdcall GetCurrentDirectoryW(long ptr)
-@ stdcall GetCurrentProcess()
-@ stdcall GetCurrentProcessId()
+@ stdcall -norelay GetCurrentProcess()
+@ stdcall -norelay GetCurrentProcessId()
 @ stdcall GetCurrentProcessorNumber() ntdll.RtlGetCurrentProcessorNumber
-@ stdcall GetCurrentThread()
-@ stdcall GetCurrentThreadId()
+@ stdcall -norelay GetCurrentThread()
+@ stdcall -norelay GetCurrentThreadId()
 @ stdcall GetDateFormatA(long long ptr str ptr long)
 @ stdcall GetDateFormatW(long long ptr wstr ptr long)
 @ stdcall GetDefaultCommConfigA(str ptr long)
@@ -364,7 +368,7 @@
 @ stdcall GetFullPathNameW(wstr long ptr ptr)
 @ stdcall GetGeoInfoA(long long ptr long long)
 @ stdcall GetGeoInfoW(long long ptr long long)
-@ stdcall GetHandleContext(long) ; missing on x64
+@ stdcall -i386 GetHandleContext(long) ; missing on x64
 @ stdcall GetHandleInformation(long ptr)
 @ stdcall GetLargePageMinimum()
 @ stdcall GetLargestConsoleWindowSize(long)
@@ -418,7 +422,7 @@
 @ stdcall GetProcAddress(long str)
 @ stdcall GetProcessAffinityMask(long ptr ptr)
 @ stdcall GetProcessHandleCount(long ptr)
-@ stdcall GetProcessHeap()
+@ stdcall -norelay GetProcessHeap()
 @ stdcall GetProcessHeaps(long ptr)
 @ stdcall GetProcessId(long)
 @ stdcall GetProcessIdOfThread(ptr)
@@ -678,7 +682,7 @@
 @ stdcall QueryPerformanceFrequency(ptr)
 @ stdcall QueueUserAPC(ptr long long)
 @ stdcall QueueUserWorkItem(ptr ptr long)
-@ stdcall RaiseException(long long long ptr)
+@ stdcall -norelay RaiseException(long long long ptr)
 @ stdcall ReOpenFile(ptr long long long)
 @ stdcall ReadConsoleA(long ptr long ptr ptr)
 @ stdcall ReadConsoleInputA(long ptr long ptr)
@@ -722,11 +726,22 @@
 @ stdcall ResetWriteWatch(ptr long)
 @ stdcall RestoreLastError(long) ntdll.RtlRestoreLastWin32Error
 @ stdcall ResumeThread(long)
+@ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long) ntdll.RtlAddFunctionTable
 @ stdcall -register RtlCaptureContext(ptr) ntdll.RtlCaptureContext
 @ stdcall RtlCaptureStackBackTrace(long long ptr ptr) ntdll.RtlCaptureStackBackTrace
+@ stdcall -arch=x86_64 RtlCompareMemory(ptr ptr ptr) ntdll.RtlCompareMemory
+@ stdcall -arch=x86_64 RtlCopyMemory(ptr ptr ptr) ntdll.memcpy
+@ stdcall -arch=x86_64 RtlDeleteFunctionTable(ptr) ntdll.RtlDeleteFunctionTable
 @ stdcall RtlFillMemory(ptr long long) ntdll.RtlFillMemory
+@ stdcall -arch=x86_64 RtlInstallFunctionTableCallback(double double long ptr ptr ptr) ntdll.RtlInstallFunctionTableCallback
+@ stdcall -arch=x86_64 RtlLookupFunctionEntry(ptr ptr ptr) ntdll.RtlLookupFunctionEntry
 @ stdcall RtlMoveMemory(ptr ptr long) ntdll.RtlMoveMemory
+@ stdcall -arch=x86_64 RtlPcToFileHeader(ptr ptr) ntdll.RtlPcToFileHeader
+@ stdcall -arch=x86_64 RtlRaiseException(ptr) ntdll.RtlRaiseException
+@ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr) ntdll.RtlRestoreContext
 @ stdcall RtlUnwind(ptr ptr ptr long) ntdll.RtlUnwind
+@ stdcall -arch=x86_64 RtlUnwindEx(ptr ptr ptr ptr ptr ptr) ntdll.RtlUnwindEx
+@ stdcall -arch=x86_64 RtlVirtualUnwind(ptr ptr ptr long) ntdll.RtlVirtualUnwind
 @ stdcall RtlZeroMemory(ptr long) ntdll.RtlZeroMemory
 @ stdcall ScrollConsoleScreenBufferA(long ptr ptr ptr ptr)
 @ stdcall ScrollConsoleScreenBufferW(long ptr ptr ptr ptr)
@@ -794,6 +809,7 @@
 @ stdcall SetFileApisToOEM()
 @ stdcall SetFileAttributesA(str long)
 @ stdcall SetFileAttributesW(wstr long)
+;@ stdcall -stub SetFileCompletionNotificationModes(ptr long); 2K3 SP2 has it!
 @ stdcall SetFilePointer(long long ptr long)
 @ stdcall SetFilePointerEx(long double ptr long)
 @ stdcall SetFileShortNameA(long str)
@@ -802,7 +818,7 @@
 @ stdcall SetFileValidData(long double)
 @ stdcall SetFirmwareEnvironmentVariableA(str str ptr long)
 @ stdcall SetFirmwareEnvironmentVariableW(wstr wstr ptr long)
-@ stdcall SetHandleContext(long long) ; missing in Win 7 x64
+@ stdcall -i386 SetHandleContext(long long) ; missing in Win 7 x64
 @ stdcall SetHandleCount(long)
 @ stdcall SetHandleInformation(long long long)
 @ stdcall SetInformationJobObject(long long ptr long)
@@ -868,8 +884,8 @@
 @ stdcall Thread32Next(long ptr)
 @ stdcall TlsAlloc()
 @ stdcall TlsFree(long)
-@ stdcall TlsGetValue(long)
-@ stdcall TlsSetValue(long ptr)
+@ stdcall -norelay TlsGetValue(long)
+@ stdcall -norelay TlsSetValue(long ptr)
 @ stdcall Toolhelp32ReadProcessMemory(long ptr ptr long ptr)
 @ stdcall TransactNamedPipe(long ptr long ptr long ptr ptr)
 @ stdcall TransmitCommChar(long long)
@@ -947,11 +963,15 @@
 @ stdcall WriteProfileStringW(wstr wstr wstr)
 @ stdcall WriteTapemark(ptr long long long)
 @ stdcall ZombifyActCtx(ptr)
+@ stdcall -arch=x86_64 __C_specific_handler() ntdll.__C_specific_handler
+@ stdcall -arch=x86_64 __chkstk() ntdll.__chkstk
+;@ stdcall -arch=x86_64 __misaligned_access() ntdll.__misaligned_access
 @ stdcall _hread(long ptr long)
 @ stdcall _hwrite(long ptr long)
 @ stdcall _lclose(long)
 @ stdcall _lcreat(str long)
 @ stdcall _llseek(long long long)
+@ stdcall -arch=x86_64 _local_unwind() ntdll._local_unwind
 @ stdcall _lopen(str long)
 @ stdcall _lread(long ptr long) _hread
 @ stdcall _lwrite(long ptr long) _hwrite
@@ -973,17 +993,12 @@
 @ stdcall lstrlen(str) lstrlenA
 @ stdcall lstrlenA(str)
 @ stdcall lstrlenW(wstr)
+;@ stdcall -arch=x86_64 uaw_lstrcmpW(wstr wstr)
+;@ stdcall -arch=x86_64 uaw_lstrcmpiW(wstr wstr)
+;@ stdcall -arch=x86_64 uaw_lstrlenW(wstr)
+;@ stdcall -arch=x86_64 uaw_wcschr(wstr long)
+;@ stdcall -arch=x86_64 uaw_wcscpy(ptr wstr)
+;@ stdcall -arch=x86_64 uaw_wcsicmp(wstr wstr)
+;@ stdcall -arch=x86_64 uaw_wcslen(wstr)
+;@ stdcall -arch=x86_64 uaw_wcsrchr(wstr long)
 
-@ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long) ntdll.RtlAddFunctionTable
-@ stdcall -arch=x86_64 RtlCompareMemory(ptr ptr ptr) ntdll.RtlCompareMemory
-@ stdcall -arch=x86_64 RtlCopyMemory(ptr ptr ptr) ntdll.memcpy
-@ stdcall -arch=x86_64 RtlDeleteFunctionTable(ptr) ntdll.RtlDeleteFunctionTable
-@ stdcall -arch=x86_64 RtlInstallFunctionTableCallback(double double long ptr ptr ptr) ntdll.RtlInstallFunctionTableCallback
-@ stdcall -arch=x86_64 RtlLookupFunctionEntry(ptr ptr ptr) ntdll.RtlLookupFunctionEntry
-@ stdcall -arch=x86_64 RtlPcToFileHeader(ptr ptr) ntdll.RtlPcToFileHeader
-@ stdcall -arch=x86_64 RtlRaiseException(ptr) ntdll.RtlRaiseException
-@ stdcall -arch=x86_64 RtlRestoreContext(ptr ptr) ntdll.RtlRestoreContext
-@ stdcall -arch=x86_64 RtlUnwindEx(ptr ptr ptr ptr ptr ptr) ntdll.RtlUnwindEx
-@ stdcall -arch=x86_64 RtlVirtualUnwind(ptr ptr ptr long) ntdll.RtlVirtualUnwind
-
-@ stdcall GetTickCount64() ; FOR WINE

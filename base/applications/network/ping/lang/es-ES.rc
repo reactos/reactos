@@ -1,0 +1,38 @@
+/* Spanish Language resource file.
+ * Translated by: Ismael Ferreras Morezuelas <2014-11-07> */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nUso: ping [-t] [-n cuenta] [-l tamaño] [-w tiempo_de_espera] nombre_de_destino\n\n\
+Opciones:\n\
+    -t             Hacer ping al host especificado hasta que se detenga;\n\
+                   para detener, presione Ctrl+C.\n\
+    -n cuenta      Número de solicitudes de eco a enviar.\n\
+    -l tamaño      Tamaño de búfer a enviar.\n\
+    -w t_espera    Tiempo de espera en milisegundos para cada respuesta.\n\n\0"
+
+    IDS_PING_WITH_BYTES "\nHaciendo ping a %1 [%2] con %3!d! bytes de datos:\n\n\0"
+    IDS_PING_STATISTICS "\nEstadísticas de ping para %1:\n\0"
+    IDS_PACKETS_SENT_RECEIVED_LOST "    Paquetes: enviados = %1!d!, recibidos = %2!d!, perdidos = %3!d! (%4!d!%% perdidos),\n\0"
+    IDS_APPROXIMATE_ROUND_TRIP "Tiempos aproximados de ida y vuelta en milisegundos:\n\0"
+    IDS_MIN_MAX_AVERAGE "    Mínimo = %1, Máximo = %2, Media = %3\n\0"
+    IDS_NOT_ENOUGH_RESOURCES "No hay suficientes recursos libres disponibles.\n\0"
+    IDS_UNKNOWN_HOST "No se pudo encontrar el host %1.\n\0"
+    IDS_SETSOCKOPT_FAILED "setsockopt ha fallado (%1!d!).\n\0"
+    IDS_COULD_NOT_CREATE_SOCKET "No se pudo iniciar el socket (#%1!d!).\n\0"
+    IDS_COULD_NOT_INIT_WINSOCK "No se pudo iniciar winsock dll.\n\0"
+    IDS_DEST_MUST_BE_SPECIFIED "Debe especificar el nombre o dirección IP del destino.\n\0"
+    IDS_BAD_PARAMETER "El parámetro %1 no es válido.\n\0"
+    IDS_BAD_OPTION_FORMAT "El formato de opción %1 no es válido.\n\0"
+    IDS_BAD_OPTION "La opción %1 no es válida.\n\0"
+    IDS_BAD_VALUE_OPTION_L "El valor para la opción -l no es válido, debe de estar entre 0 y %1!d!.\n\0"
+    IDS_REPLY_FROM "Respuesta desde %1: bytes=%2!d! tiempo%3%4 TTL=%5!d!\n\0"
+    IDS_DEST_UNREACHABLE "Host de destino inaccesible.\n\0"
+    IDS_COULD_NOT_TRANSMIT "No se ha podido transmitir ningún dato (%1!d!).\n\0"
+    IDS_COULD_NOT_RECV "No se ha podido recibir ningún dato (%1!d!).\n\0"
+    IDS_REQUEST_TIMEOUT "La petición ha caducado.\n\0"
+    IDS_MS "ms\0"
+    IDS_1MS "1ms\0"
+END

@@ -1,0 +1,402 @@
+TOPSRCDIR = ../..
+TOPOBJDIR = ../..
+SRCDIR    = .
+
+MODULE    = explorer.exe
+APPMODE   = gui
+IMPORTS   = shell32 comctl32 msimg32 ole32 user32 gdi32 kernel32 advapi32 oleaut32
+EXTRADEFS = -D__WINE__ -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -D__MINGW32__ -DCINTERFACE
+EXTRA_OBJS = notifyhook.dll
+EXTRALIBS = $(LIBUUID)
+
+C_SRCS = \
+	services/startup.c \
+	utility/splitpath.c
+
+CPP_SRCS = \
+	explorer.cpp \
+	desktop/desktop.cpp \
+	utility/shellclasses.cpp \
+	utility/utility.cpp \
+	utility/window.cpp \
+	utility/dragdropimpl.cpp \
+	utility/shellbrowserimpl.cpp \
+	utility/xmlstorage.cpp \
+	utility/xmlstorage.cpp \
+	utility/xs-native.cpp
+	shell/entries.cpp \
+	shell/winfs.cpp \
+	shell/unixfs.cpp \
+	shell/shellfs.cpp \
+	shell/mainframe.cpp \
+	shell/filechild.cpp \
+	shell/pane.cpp \
+	shell/shellbrowser.cpp \
+	shell/ntobjfs.cpp \
+	shell/regfs.cpp \
+	shell/fatfs.cpp \
+	shell/webchild.cpp \
+	services/shellservices.cpp \
+	taskbar/desktopbar.cpp \
+	taskbar/taskbar.cpp \
+	taskbar/startmenu.cpp \
+	taskbar/traynotify.cpp \
+	taskbar/quicklaunch.cpp \
+	taskbar/favorites.cpp \
+	dialogs/searchprogram.cpp \
+	dialogs/settings.cpp
+
+RC_SRCS = explorer_intres.rc
+EXTRARCFLAGS = -D__WRC__ -D_WIN32
+
+
+# Global rules for building a Winelib program     -*-Makefile-*-
+#
+# Each individual makefile should define the following variables:
+# MODULE       : name of the main module being built
+# APPMODE      : program mode (cui,gui,cuiw,guiw)
+# EXTRALIBS    : extra libraries to link in (optional)
+# EXTRADEFS    : extra symbol definitions, like -DWINELIB (optional)
+#
+# plus all variables required by the global Make.rules.in
+#
+
+DEFS        = -D_REENTRANT -fPIC $(EXTRADEFS)
+LDDLLFLAGS  = -Wl,-Bsymbolic,-z,defs
+ALL_OBJS    = $(OBJS) $(MODULE).dbg.o
+ALL_LIBS    = $(LIBWINE) $(EXTRALIBS) $(LIBPORT) $(LDFLAGS) $(LIBS)
+BASEMODULE  = $(MODULE:.exe=)
+TESTIMPORTS = $(DELAYIMPORTS) $(IMPORTS)
+RUNTESTFLAGS= -q -P wine -T $(TOPOBJDIR) $(PLTESTPROGRAM:%=-p %)
+
+
+# Global rules shared by all makefiles     -*-Makefile-*-
+#
+# Each individual makefile must define the following variables:
+# TOPSRCDIR    : top-level source directory
+# TOPOBJDIR    : top-level object directory
+# SRCDIR       : source directory for this module
+# MODULE       : name of the module being built
+#
+# Each individual makefile may define the following additional variables:
+# C_SRCS       : C sources for the module
+# CPP_SRCS     : C++ sources for the module
+# C_SRCS16     : 16-bit C sources for the module
+# RC_SRCS      : resource source files
+# EXTRA_SRCS   : extra source files for make depend
+# EXTRA_OBJS   : extra object files
+# IMPORTS      : dlls to import
+# DELAYIMPORTS : dlls to import in delayed mode
+# SUBDIRS      : subdirectories that contain a Makefile
+# EXTRASUBDIRS : subdirectories that do not contain a Makefile
+# INSTALLSUBDIRS : subdirectories to run make install/uninstall into
+
+# First some useful definitions
+
+SHELL     = /bin/sh
+CC        = gcc
+CXX       = g++
+CPP       = gcc -E
+#CFLAGS    = -g -O2
+CFLAGS    = -g
+CPPFLAGS  = 
+LIBS      = -lm -lstdc++
+YACC      = bison -y
+LEX       = flex
+LEXLIB    = -lfl
+EXEEXT    = 
+OBJEXT    = o
+LIBEXT    = so
+DLLEXT    = .so
+IMPLIBEXT = def
+LDSHARED  = $(CC) -shared $(SONAME:%=-Wl,-soname,%)
+DLLTOOL   = false
+DLLWRAP   = 
+AR        = ar rc
+RANLIB    = ranlib
+STRIP     = strip
+WINDRES   = mingw32-windres
+LN        = ln
+LN_S      = ln -s
+TOOLSDIR  = $(TOPOBJDIR)
+AS        = as
+LD        = ld
+LDFLAGS   = 
+LDCOMBINE = $(LD) -r
+RM        = rm -f
+MV        = mv
+LINT      = 
+LINTFLAGS = 
+INCLUDES     = -I$(SRCDIR) -I. -I$(TOPSRCDIR)/include -I$(TOPOBJDIR)/include $(EXTRAINCL)
+EXTRACFLAGS  = -mpreferred-stack-boundary=2 -fno-strict-aliasing -gstabs+ -Wpointer-arith
+ALLCFLAGS    = $(INCLUDES) $(DEFS) $(EXTRACFLAGS) $(CPPFLAGS) $(CFLAGS)
+ALLLINTFLAGS = $(INCLUDES) $(DEFS) $(LINTFLAGS)
+MKINSTALLDIRS= $(TOPSRCDIR)/tools/mkinstalldirs -m 755
+WINAPI_CHECK = $(TOPSRCDIR)/tools/winapi_check/winapi_check
+WINEWRAPPER  = $(TOPSRCDIR)/tools/winewrapper
+C2MAN        = $(TOPSRCDIR)/tools/c2man.pl
+RUNTEST      = $(TOPSRCDIR)/tools/runtest
+WINEBUILD    = $(TOOLSDIR)/tools/winebuild/winebuild
+MAKEDEP      = $(TOOLSDIR)/tools/makedep
+WRC          = $(TOOLSDIR)/tools/wrc/wrc
+WMC          = $(TOOLSDIR)/tools/wmc/wmc
+WIDL         = $(TOOLSDIR)/tools/widl/widl
+RC           = $(WRC)
+RC16         = $(WRC)
+RCFLAGS      = --nostdinc $(INCLUDES) $(EXTRARCFLAGS)
+RC16FLAGS    = -O res16 $(RCFLAGS)
+LDPATH       = LD_LIBRARY_PATH="$(TOOLSDIR)/libs/unicode:$$LD_LIBRARY_PATH"
+DLLDIR       = $(TOPOBJDIR)/dlls
+LIBDIR       = $(TOPOBJDIR)/libs
+LIBPORT      = -L$(TOPOBJDIR)/libs/port -lwine_port
+LIBUNICODE   = -L$(TOPOBJDIR)/libs/unicode -lwine_unicode
+LIBUUID      = -L$(TOPOBJDIR)/libs/uuid -lwine_uuid
+LIBWINE      = -L$(TOPOBJDIR)/libs/wine -lwine
+
+
+
+# Installation infos
+
+INSTALL         = /usr/bin/install -c $(INSTALL_FLAGS)
+INSTALL_PROGRAM = ${INSTALL} $(INSTALL_PROGRAM_FLAGS)
+INSTALL_SCRIPT  = ${INSTALL} $(INSTALL_SCRIPT_FLAGS)
+INSTALL_DATA    = ${INSTALL} -m 644 $(INSTALL_DATA_FLAGS)
+prefix          = /usr/local
+exec_prefix     = ${prefix}
+bindir          = ${exec_prefix}/bin
+libdir          = ${exec_prefix}/lib
+datadir         = ${prefix}/share
+infodir         = ${prefix}/info
+mandir          = ${prefix}/man
+sysconfdir      = ${prefix}/etc
+includedir      = ${prefix}/include/wine
+dlldir          = ${exec_prefix}/lib/wine
+prog_manext     = 1
+api_manext      = 3w
+conf_manext     = 5
+CLEAN_FILES     = *.o *.a *.so *.ln *.$(LIBEXT) \\\#*\\\# *~ *% .\\\#* *.bak *.orig *.rej \
+                  *.flc *.spec.c *.spec.def *.dbg.c y.tab.c y.tab.h lex.yy.c core */*.o
+
+OBJS = $(C_SRCS:.c=.o) $(CPP_SRCS:.cpp=.o) $(EXTRA_OBJS)
+
+RCOBJS = $(RC_SRCS:.rc=.res.o)
+LINTS  = $(C_SRCS:.c=.ln) $(CPP_SRCS:.cpp=.ln)
+
+# Implicit rules
+
+.SUFFIXES: .mc .rc .mc.rc .res .res.o .coff .spec .spec.c .spec.def .ok
+
+.c.o:
+	$(CC) -c $(ALLCFLAGS) -o $@ $<
+
+.cpp.o:
+	$(CXX) -c $(ALLCFLAGS) -o $@ $<
+
+.s.o:
+	$(AS) -o $@ $<
+
+.mc.mc.rc:
+	$(LDPATH) $(WMC) -i -U -H /dev/null -o $@ $<
+
+.rc.res:
+	$(LDPATH) $(RC) $(RCFLAGS) -fo$@ $<
+
+.res.res.o:
+	$(WINDRES) -i $< -o $@
+
+.rc.coff:
+	$(WINDRES) -i $<  -o $@
+
+.spec.spec.c:
+	$(WINEBUILD) $(DEFS) -o $@ --main-module $(MODULE) --spec $<
+
+.spec.spec.def:
+	$(WINEBUILD) $(DEFS) -o $@ --def $<
+
+.c.ln:
+	$(LINT) -c $(ALLLINTFLAGS) $< || ( $(RM) $@ && exit 1 )
+
+.c.ok:
+	$(RUNTEST) $(RUNTESTFLAGS) $< && touch $@
+
+# 'all' target first in case the enclosing Makefile didn't define any target
+
+all: Makefile
+
+filter:
+	@$(TOPSRCDIR)/tools/winapi/make_filter --make $(MAKE) all
+
+.PHONY: all filter
+
+# Rule for main module debug channels
+
+$(MODULE).dbg.c: $(C_SRCS) $(CPP_SRCS) $(C_SRCS16) $(WINEBUILD)
+	$(WINEBUILD) $(DEFS) -o $@ --debug -C$(SRCDIR) $(C_SRCS) $(CPP_SRCS) $(C_SRCS16)
+
+# Rule to rebuild the tools
+
+$(MAKEDEP):
+	cd $(TOOLSDIR)/tools && $(MAKE) `basename $@`
+
+# Rules for makefile
+
+Makefile: Makefile.in $(TOPSRCDIR)/configure
+	@echo Makefile is older than $?, please rerun $(TOPSRCDIR)/configure
+	@exit 1
+
+# Rule for linting
+
+$(MODULE).ln : $(LINTS)
+	if test "$(LINTS)" ; \
+	then \
+		$(LINT) $(ALLLINTFLAGS) -o$(MODULE) $(LINTS) ; \
+	        $(MV) llib-l$(MODULE).ln $(MODULE).ln ; \
+	else \
+		$(LINT) $(ALLLINTFLAGS) -C$(MODULE) /dev/null ; \
+	fi
+
+lint:: $(MODULE).ln
+
+# Rules for Windows API checking
+
+winapi_check:: dummy
+	$(WINAPI_CHECK) $(WINAPI_CHECK_FLAGS) $(WINAPI_CHECK_EXTRA_FLAGS) .
+
+.PHONY: winapi_check
+
+# Rules for dependencies
+
+$(SUBDIRS:%=%/__depend__): $(MAKEDEP) dummy
+	cd `dirname $@` && $(MAKE) depend
+
+depend: $(MAKEDEP) $(SUBDIRS:%=%/__depend__)
+	$(MAKEDEP) $(INCLUDES) -C$(SRCDIR) $(C_SRCS) $(CPP_SRCS) $(C_SRCS16) $(RC_SRCS) $(RC_SRCS16) $(MC_SRCS) $(IDL_SRCS) $(EXTRA_SRCS)
+
+.PHONY: depend $(SUBDIRS:%=%/__depend__)
+
+# Rules for cleaning
+
+$(SUBDIRS:%=%/__clean__): dummy
+	cd `dirname $@` && $(MAKE) clean
+
+$(SUBDIRS:%=%/__testclean__): dummy
+	cd `dirname $@` && $(MAKE) testclean
+
+$(EXTRASUBDIRS:%=%/__clean__): dummy
+	-cd `dirname $@` && $(RM) $(CLEAN_FILES)
+
+testclean:: $(SUBDIRS:%=%/__testclean__)
+
+clean:: $(SUBDIRS:%=%/__clean__) $(EXTRASUBDIRS:%=%/__clean__)
+	$(RM) $(CLEAN_FILES) $(RC_SRCS:.rc=.res) $(RC_SRCS16:.rc=.res) $(MC_SRCS:.mc=.mc.rc) $(PROGRAMS)
+
+.PHONY: clean testclean $(SUBDIRS:%=%/__clean__) $(SUBDIRS:%=%/__testclean__) $(EXTRASUBDIRS:%=%/__clean__)
+
+# Rules for installing
+
+$(SUBDIRS:%=%/__install__): dummy
+	cd `dirname $@` && $(MAKE) install
+
+$(SUBDIRS:%=%/__install-lib__): dummy
+	cd `dirname $@` && $(MAKE) install-lib
+
+$(SUBDIRS:%=%/__install-dev__): dummy
+	cd `dirname $@` && $(MAKE) install-dev
+
+$(SUBDIRS:%=%/__uninstall__): dummy
+	cd `dirname $@` && $(MAKE) uninstall
+
+install:: $(INSTALLSUBDIRS:%=%/__install__)
+
+uninstall:: $(INSTALLSUBDIRS:%=%/__uninstall__)
+
+.PHONY: install install-lib install-dev uninstall \
+	$(SUBDIRS:%=%/__install__) $(SUBDIRS:%=%/__uninstall__) \
+	$(SUBDIRS:%=%/__install-lib__) $(SUBDIRS:%=%/__install-dev__)
+
+# Rules for checking that no imports are missing
+
+$(SUBDIRS:%=%/__checklink__): dummy
+	@cd `dirname $@` && $(MAKE) checklink
+
+.PHONY: checklink $(SUBDIRS:%=%/__checklink__)
+
+# Rules for testing
+
+$(SUBDIRS:%=%/__test__): dummy
+	@cd `dirname $@` && $(MAKE) test
+
+$(SUBDIRS:%=%/__crosstest__): dummy
+	@cd `dirname $@` && $(MAKE) crosstest
+
+.PHONY: check test crosstest $(SUBDIRS:%=%/__test__) $(SUBDIRS:%=%/__crosstest__)
+
+# Misc. rules
+
+$(RC_SRCS:.rc=.res) $(RC_SRCS16:.rc=.res): $(WRC)
+
+$(MC_SRCS:.mc=.mc.rc): $(WMC)
+
+$(IDL_SRCS:.idl=.h): $(WIDL)
+
+$(SUBDIRS): dummy
+	@cd $@ && $(MAKE)
+
+dummy:
+
+.PHONY: dummy $(SUBDIRS)
+
+# End of global rules
+
+all: $(MODULE)$(DLLEXT) $(BASEMODULE)$(EXEEXT)
+
+# Rule for main module spec file
+
+$(MODULE).spec.c: $(RC_SRCS:.rc=.res) $(ALL_OBJS) $(WINEBUILD)
+	$(WINEBUILD) $(DEFS) -o $@ --exe $(MODULE) $(APPMODE:%=--exe-mode %) $(RC_SRCS:.rc=.res) $(ALL_OBJS) -L$(DLLDIR) $(DELAYIMPORTS:%=-d%) $(IMPORTS:%=-l%)
+
+# Rules for .so main module
+
+$(MODULE).so: $(MODULE).spec.o $(ALL_OBJS) Makefile.in
+	$(LDSHARED) $(LDDLLFLAGS) $(MODULE).spec.o $(ALL_OBJS) -o $@ $(ALL_LIBS) -lc
+
+$(BASEMODULE): $(WINEWRAPPER)
+	$(RM) $@ && $(LN_S) $(WINEWRAPPER) $@
+
+# Rules for .exe main module
+
+$(MODULE): $(ALL_OBJS) $(RCOBJS) Makefile.in
+	$(CC) $(ALL_OBJS) $(RCOBJS) -o $@ $(DELAYIMPORTS:%=-l%) $(IMPORTS:%=-l%) $(ALL_LIBS)
+
+# Rules for testing
+
+check test:: $(SUBDIRS:%=%/__test__)
+
+$(TESTRESULTS): $(MODULE)$(DLLEXT)
+
+# Rules for installation
+
+.PHONY: install_prog install_prog.so uninstall_prog uninstall_prog.so
+
+install_prog.so: $(MODULE).so dummy
+	$(MKINSTALLDIRS) $(dlldir)
+	$(INSTALL_PROGRAM) $(MODULE).so $(dlldir)/$(MODULE).so
+
+install_prog: $(MODULE) dummy
+	$(MKINSTALLDIRS) $(bindir)
+	$(INSTALL_PROGRAM) $(MODULE) $(bindir)/$(MODULE)
+
+uninstall_prog.so: dummy
+	$(RM) $(dlldir)/$(MODULE).so
+
+uninstall_prog: dummy
+	$(RM) $(bindir)/$(MODULE)
+
+install:: install_prog$(DLLEXT)
+
+uninstall:: uninstall_prog$(DLLEXT)
+
+clean::
+	$(RM) $(BASEMODULE) $(MODULE)
+
+### Dependencies:

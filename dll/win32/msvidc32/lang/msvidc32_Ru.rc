@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "msvidc32_private.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -26,5 +24,5 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_NAME "MS-CRAM"
-    IDS_DESCRIPTION "Видео кодер Wine Video 1"
+    IDS_DESCRIPTION "Видео кодек Wine Video 1"
 }

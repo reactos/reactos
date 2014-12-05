@@ -4,7 +4,7 @@
 [Section]
 Name = Mozilla Thunderbird
 Version = 3.1.20
-Licence = MPL/GPL/LGPL
+License = MPL/GPL/LGPL
 Description = The most popular and one of the best free Mail Clients out there.
 Size = 9.06 MB
 Category = 5

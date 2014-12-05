@@ -308,9 +308,10 @@ ConnectConsole(IN PWSTR SessionDir,
     /* Nothing to do if this is not a console app */
     if (!ConnectInfo->IsConsoleApp) return TRUE;
 
-#ifdef USE_CONSOLE_INIT_HANDLES
     /* Wait for the connection to finish */
-    Status = NtWaitForMultipleObjects(2, ConnectInfo->ConsoleStartInfo.Events,
+    // Is ConnectInfo->ConsoleStartInfo.InitEvents aligned on handle boundary ????
+    Status = NtWaitForMultipleObjects(MAX_INIT_EVENTS,
+                                      ConnectInfo->ConsoleStartInfo.InitEvents,
                                       WaitAny, FALSE, NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -318,15 +319,13 @@ ConnectConsole(IN PWSTR SessionDir,
         return FALSE;
     }
 
-    NtClose(ConnectInfo->ConsoleStartInfo.Events[0]);
-    NtClose(ConnectInfo->ConsoleStartInfo.Events[1]);
-
-    if (Status != STATUS_SUCCESS)
+    NtClose(ConnectInfo->ConsoleStartInfo.InitEvents[INIT_SUCCESS]);
+    NtClose(ConnectInfo->ConsoleStartInfo.InitEvents[INIT_FAILURE]);
+    if (Status != INIT_SUCCESS)
     {
         NtCurrentPeb()->ProcessParameters->ConsoleHandle = NULL;
         return FALSE;
     }
-#endif
 
     return TRUE;
 }

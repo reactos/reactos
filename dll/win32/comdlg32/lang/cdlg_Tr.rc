@@ -1,7 +1,7 @@
 /*
  * Resources for Common Dialogs
  *
- * Copyrights: 2006 Fatih Aşıcı; 2013 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı; 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@ Onu değiştirmek ister misiniz?"
                           / : < > |"
     IDS_PATHNOTEXISTING     "Kütük yolu yok."
     IDS_FILENOTEXISTING     "Kütük yok."
+    IDS_INVALID_FOLDERNAME  "Seçim dizin olmayan bir nesne içeriyor."
 }
 
 STRINGTABLE
@@ -130,11 +131,12 @@ STRINGTABLE /* Color names */
 STRINGTABLE
 {
     IDS_FONT_SIZE   "%1!d! ile %2!d! punto arasında bir yazı tipi büyüklüğü seçiniz."
-    IDS_SAVE_BUTTON "&Kaydet"
-    IDS_SAVE_IN     "K&aydetme Yeri:"
-    IDS_SAVE        "Kaydet"
-    IDS_SAVE_AS     "Ayrı Kaydet"
+    IDS_SAVE_BUTTON "&Sakla"
+    IDS_SAVE_IN     "S&aklama Yeri:"
+    IDS_SAVE        "Sakla"
+    IDS_SAVE_AS     "Ayrı Sakla"
     IDS_OPEN_FILE   "Kütük Aç"
+    IDS_SELECT_FOLDER "Dizin Seç"
 }
 
 /*
@@ -165,7 +167,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ayrı Kaydet"
+CAPTION "Ayrı Sakla"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Kütük Adı:", stc3, 6, 6, 76, 9
@@ -178,7 +180,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "&Sürücüler:", stc4, 110, 104, 92, 9
  COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Ayrı Kaydet", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Ayrı Sakla", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "İptal", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Yardım", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "Y&alnızca Okunur", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP

@@ -259,6 +259,10 @@ extern PWLSESSION WLSession;
 BOOL
 CreateUserEnvironment(IN PWLSESSION Session);
 
+/* rpcserver.c */
+BOOL
+StartRpcServer(VOID);
+
 /* sas.c */
 BOOL
 SetDefaultLanguage(IN BOOL UserProfile);

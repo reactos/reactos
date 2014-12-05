@@ -154,8 +154,6 @@ static ULONG WINAPI d3d_vertex_buffer7_Release(IDirect3DVertexBuffer7 *iface)
                 0, &curVB, &offset, &stride);
         if (curVB == buffer->wineD3DVertexBuffer)
             wined3d_device_set_stream_source(buffer->ddraw->wined3d_device, 0, NULL, 0, 0);
-        if (curVB)
-            wined3d_buffer_decref(curVB); /* For the GetStreamSource */
 
         wined3d_vertex_declaration_decref(buffer->wineD3DVertexDeclaration);
         wined3d_buffer_decref(buffer->wineD3DVertexBuffer);

@@ -37,9 +37,6 @@ typedef struct {
 
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 static const WCHAR toUTCStringW[] = {'t','o','U','T','C','S','t','r','i','n','g',0};
 static const WCHAR toGMTStringW[] = {'t','o','G','M','T','S','t','r','i','n','g',0};

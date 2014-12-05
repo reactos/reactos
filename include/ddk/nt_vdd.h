@@ -42,17 +42,38 @@ VDDTerminateVDM(VOID);
 
 
 /*
+ * IRQ services
+ */
+
+WORD
+WINAPI
+VDDReserveIrqLine
+(
+    IN HANDLE hVdd,
+    IN WORD   IrqLine
+);
+
+BOOL
+WINAPI
+VDDReleaseIrqLine
+(
+    IN HANDLE hVdd,
+    IN WORD   IrqLine
+);
+
+
+/*
  * I/O Port services
  */
 
-typedef VOID (*PFNVDD_INB)   (WORD iport, PBYTE data);
-typedef VOID (*PFNVDD_INW)   (WORD iport, PWORD data);
-typedef VOID (*PFNVDD_INSB)  (WORD iport, PBYTE data, WORD count);
-typedef VOID (*PFNVDD_INSW)  (WORD iport, PWORD data, WORD count);
-typedef VOID (*PFNVDD_OUTB)  (WORD iport, BYTE  data);
-typedef VOID (*PFNVDD_OUTW)  (WORD iport, WORD  data);
-typedef VOID (*PFNVDD_OUTSB) (WORD iport, PBYTE data, WORD count);
-typedef VOID (*PFNVDD_OUTSW) (WORD iport, PWORD data, WORD count);
+typedef VOID (WINAPI *PFNVDD_INB)   (WORD iport, PBYTE data);
+typedef VOID (WINAPI *PFNVDD_INW)   (WORD iport, PWORD data);
+typedef VOID (WINAPI *PFNVDD_INSB)  (WORD iport, PBYTE data, WORD count);
+typedef VOID (WINAPI *PFNVDD_INSW)  (WORD iport, PWORD data, WORD count);
+typedef VOID (WINAPI *PFNVDD_OUTB)  (WORD iport, BYTE  data);
+typedef VOID (WINAPI *PFNVDD_OUTW)  (WORD iport, WORD  data);
+typedef VOID (WINAPI *PFNVDD_OUTSB) (WORD iport, PBYTE data, WORD count);
+typedef VOID (WINAPI *PFNVDD_OUTSW) (WORD iport, PWORD data, WORD count);
 
 typedef struct _VDD_IO_HANDLERS
 {
@@ -76,19 +97,69 @@ BOOL
 WINAPI
 VDDInstallIOHook
 (
-    HANDLE            hVdd,
-    WORD              cPortRange,
-    PVDD_IO_PORTRANGE pPortRange,
-    PVDD_IO_HANDLERS  IOhandler
+    IN HANDLE            hVdd,
+    IN WORD              cPortRange,
+    IN PVDD_IO_PORTRANGE pPortRange,
+    IN PVDD_IO_HANDLERS  IOhandler
 );
 
 VOID
 WINAPI
 VDDDeInstallIOHook
 (
-    HANDLE            hVdd,
-    WORD              cPortRange,
-    PVDD_IO_PORTRANGE pPortRange
+    IN HANDLE            hVdd,
+    IN WORD              cPortRange,
+    IN PVDD_IO_PORTRANGE pPortRange
+);
+
+
+/*
+ * DMA services
+ */
+
+typedef struct _VDD_DMA_INFO
+{
+    WORD    addr;
+    WORD    count;
+    WORD    page;
+    BYTE    status;
+    BYTE    mode;
+    BYTE    mask;
+} VDD_DMA_INFO, *PVDD_DMA_INFO;
+
+#define VDD_DMA_ADDR    0x01
+#define VDD_DMA_COUNT   0x02
+#define VDD_DMA_PAGE    0x04
+#define VDD_DMA_STATUS  0x08
+#define VDD_DMA_ALL     (VDD_DMA_ADDR | VDD_DMA_COUNT | VDD_DMA_PAGE | VDD_DMA_STATUS)
+
+DWORD
+WINAPI
+VDDRequestDMA
+(
+    IN HANDLE    hVdd,
+    IN WORD      iChannel,
+    IN OUT PVOID Buffer,
+    IN DWORD     length
+);
+
+BOOL
+WINAPI
+VDDQueryDMA
+(
+    IN HANDLE        hVdd,
+    IN WORD          iChannel,
+    IN PVDD_DMA_INFO pDmaInfo
+);
+
+BOOL
+WINAPI
+VDDSetDMA
+(
+    IN HANDLE        hVdd,
+    IN WORD          iChannel,
+    IN WORD          fDMA,
+    IN PVDD_DMA_INFO pDmaInfo
 );
 
 

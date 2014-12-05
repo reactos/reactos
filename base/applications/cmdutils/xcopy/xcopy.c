@@ -119,7 +119,7 @@ static int __cdecl XCOPY_wprintf(const WCHAR *format, ...) {
      */
 
     if (!output_bufW) output_bufW = HeapAlloc(GetProcessHeap(), 0,
-                                              MAX_WRITECONSOLE_SIZE);
+                                              MAX_WRITECONSOLE_SIZE*sizeof(WCHAR));
     if (!output_bufW) {
       WINE_FIXME("Out of memory - could not allocate 2 x 64K buffers\n");
       return 0;
@@ -667,7 +667,7 @@ static WCHAR *skip_whitespace(WCHAR *p)
    Example: 'XCOPY "c:\DIR A" "c:DIR B\"' is OK. */
 static int find_end_of_word(const WCHAR *word, WCHAR **end)
 {
-    BOOL in_quotes = 0;
+    BOOL in_quotes = FALSE;
     const WCHAR *ptr = word;
     for (;;) {
         for (; *ptr != '\0' && *ptr != '"' &&
@@ -783,19 +783,20 @@ static int XCOPY_ParseCommandLine(WCHAR *suppliedsource,
                           BOOL       isError = FALSE;
                           memset(&st, 0x00, sizeof(st));
 
-                          /* Parse the arg : Month */
+                          /* Microsoft xcopy's usage message implies that the date
+                           * format depends on the locale, but that is false.
+                           * It is hardcoded to month-day-year.
+                           */
                           st.wMonth = _wtol(pos);
                           while (*pos && isdigit(*pos)) pos++;
                           if (*pos++ != '-') isError = TRUE;
 
-                          /* Parse the arg : Day */
                           if (!isError) {
                               st.wDay = _wtol(pos);
                               while (*pos && isdigit(*pos)) pos++;
                               if (*pos++ != '-') isError = TRUE;
                           }
 
-                          /* Parse the arg : Year */
                           if (!isError) {
                               st.wYear = _wtol(pos);
                               while (*pos && isdigit(*pos)) pos++;

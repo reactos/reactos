@@ -170,11 +170,11 @@ HRESULT STDMETHODCALLTYPE CBrandBand::SetSite(IUnknown* pUnkSite)
     }
 
     // get window handle of parent
-    hResult = pUnkSite->QueryInterface(IID_IDockingWindowSite, reinterpret_cast<void **>(&fSite));
-    if (FAILED(hResult))
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IDockingWindowSite, &fSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     parentWindow = NULL;
-    hResult = pUnkSite->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
     if (SUCCEEDED(hResult))
         hResult = oleWindow->GetWindow(&parentWindow);
     if (!::IsWindow(parentWindow))
@@ -188,16 +188,16 @@ HRESULT STDMETHODCALLTYPE CBrandBand::SetSite(IUnknown* pUnkSite)
     SubclassWindow(hwnd);
 
     // take advice to watch events
-    hResult = pUnkSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
+    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
     if (SUCCEEDED(hResult))
     {
         hResult = serviceProvider->QueryService(
-            SID_SBrandBand, IID_IProfferService, reinterpret_cast<void **>(&profferService));
+            SID_SBrandBand, IID_PPV_ARG(IProfferService, &profferService));
         if (SUCCEEDED(hResult))
             hResult = profferService->ProfferService(SID_SBrandBand,
                 static_cast<IServiceProvider *>(this), &fProfferCookie);
         hResult = serviceProvider->QueryService(SID_SShellBrowser,
-            IID_IBrowserService, reinterpret_cast<void **>(&browserService));
+            IID_PPV_ARG(IBrowserService, &browserService));
         if (SUCCEEDED(hResult))
             hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
     }
@@ -355,8 +355,8 @@ HRESULT STDMETHODCALLTYPE CBrandBand::QueryService(REFGUID guidService, REFIID r
 
     if (IsEqualIID(guidService, SID_SBrandBand))
         return this->QueryInterface(riid, ppvObject);
-    hResult = fSite->QueryInterface(IID_IServiceProvider, reinterpret_cast<void **>(&serviceProvider));
-    if (FAILED(hResult))
+    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+    if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     return serviceProvider->QueryService(guidService, riid, ppvObject);
 }
@@ -470,20 +470,5 @@ LRESULT CBrandBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
 HRESULT CreateBrandBand(REFIID riid, void **ppv)
 {
-    CComObject<CBrandBand>                  *theMenuBar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theMenuBar = new CComObject<CBrandBand>);
-    if (theMenuBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theMenuBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CBrandBand>(riid, ppv);
 }

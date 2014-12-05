@@ -13,7 +13,7 @@
 
 #include "ntvdm.h"
 
-/**/ #include "callback.h" /**/
+/**/ #include "int32.h" /**/
 
 /* DEFINES ********************************************************************/
 
@@ -192,11 +192,31 @@ BOOL IsConsoleHandle(HANDLE hHandle);
 WORD DosOpenHandle(HANDLE Handle);
 HANDLE DosGetRealHandle(WORD DosHandle);
 
-WORD DosCreateFile(LPWORD Handle, LPCSTR FilePath, WORD CreationFlags, WORD Attributes);
-WORD DosOpenFile(LPWORD Handle, LPCSTR FilePath, BYTE AccessShareModes);
-WORD DosReadFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesRead);
-WORD DosWriteFile(WORD FileHandle, LPVOID Buffer, WORD Count, LPWORD BytesWritten);
-WORD DosSeekFile(WORD FileHandle, LONG Offset, BYTE Origin, LPDWORD NewOffset);
+WORD DosCreateFileEx(LPWORD Handle,
+                     LPWORD CreationStatus,
+                     LPCSTR FilePath,
+                     BYTE AccessShareModes,
+                     WORD CreateActionFlags,
+                     WORD Attributes);
+WORD DosCreateFile(LPWORD Handle,
+                   LPCSTR FilePath,
+                   DWORD CreationDisposition,
+                   WORD Attributes);
+WORD DosOpenFile(LPWORD Handle,
+                 LPCSTR FilePath,
+                 BYTE AccessShareModes);
+WORD DosReadFile(WORD FileHandle,
+                 LPVOID Buffer,
+                 WORD Count,
+                 LPWORD BytesRead);
+WORD DosWriteFile(WORD FileHandle,
+                  LPVOID Buffer,
+                  WORD Count,
+                  LPWORD BytesWritten);
+WORD DosSeekFile(WORD FileHandle,
+                 LONG Offset,
+                 BYTE Origin,
+                 LPDWORD NewOffset);
 BOOL DosFlushFileBuffers(WORD FileHandle);
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
@@ -204,7 +224,7 @@ DWORD DosLoadExecutable(
     IN DOS_EXEC_TYPE LoadType,
     IN LPCSTR ExecutablePath,
     IN LPCSTR CommandLine,
-    IN PVOID Environment,
+    IN LPCSTR Environment OPTIONAL,
     OUT PDWORD StackLocation OPTIONAL,
     OUT PDWORD EntryPoint OPTIONAL
 );
@@ -213,16 +233,13 @@ WORD DosCreateProcess(
     LPCSTR ProgramName,
     PDOS_EXEC_PARAM_BLOCK Parameters
 );
-DWORD DosStartProcess(IN LPCSTR ExecutablePath,
-                      IN LPCSTR CommandLine,
-                      IN PVOID Environment);
+DWORD DosStartProcess(
+    IN LPCSTR ExecutablePath,
+    IN LPCSTR CommandLine,
+    IN LPCSTR Environment OPTIONAL
+);
 VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
-
-VOID WINAPI DosInt20h(LPWORD Stack);
-VOID WINAPI DosInt21h(LPWORD Stack);
-VOID WINAPI DosBreakInterrupt(LPWORD Stack);
-VOID WINAPI DosInt2Fh(LPWORD Stack);
 
 BOOLEAN DosKRNLInitialize(VOID);
 

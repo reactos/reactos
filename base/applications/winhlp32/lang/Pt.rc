@@ -27,8 +27,6 @@
 
 #pragma code_page(65001)
 
-/* Menu */
-
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 MAIN_MENU MENU
@@ -50,12 +48,6 @@ MAIN_MENU MENU
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
  POPUP "&Opções" {
-   POPUP	"Ajuda sempre visível"
-   BEGIN
-     MENUITEM "Padrão",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visível",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Invisível",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Histórico",		MNID_OPTS_HISTORY
   POPUP    "Fontes"
   BEGIN
@@ -63,14 +55,62 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Usar cores do sistema",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
    MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Informações...", MNID_HELP_ABOUT
  }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Anotação...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Copiar",                MNID_CTXT_COPY
+		MENUITEM "Imprimir...",            MNID_CTXT_PRINT
+		POPUP    "Fontes"
+		BEGIN
+			MENUITEM "Pequeno",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Ajuda Wine"
+STID_WHERROR, 		"ERRO"
+STID_WARNING,  		"AVISO"
+STID_INFO,  		"Informação"
+STID_NOT_IMPLEMENTED, 	"Não implementado"
+STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do arquivo de ajuda '%s'"
+STID_INDEX, 		"&Conteúdo"
+STID_CONTENTS,		"Sumário"
+STID_BACK, 		"&Voltar"
+STID_ALL_FILES, 	"Todos os arquivos (*.*)"
+STID_HELP_FILES_HLP, 	"Arquivos de ajuda (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Não é possível encontrar '%s'. Deseja procurar este arquivo você mesmo?"
+STID_NO_RICHEDIT	"Não foi possível encontrar uma implementação do richedit... Abortando"
+STID_PSH_INDEX,		"Tópicos de ajuda: "
+}
+
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Índice"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Procura"
+{
+    LTEXT  "Ainda não implementado", -1, 10, 10, 180, 150
 }
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
@@ -94,12 +134,6 @@ MAIN_MENU MENU
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
  POPUP "&Opções" {
-   POPUP	"Ajuda sempre visível"
-   BEGIN
-     MENUITEM "Omissão",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visível",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Invisível",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Histórico",		MNID_OPTS_HISTORY
   POPUP    "Tipos de Letra"
   BEGIN
@@ -107,57 +141,29 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Usar cores do sistema",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
    MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Informações...", MNID_HELP_ABOUT
  }
 }
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
-
-IDD_INDEX DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Índice"
-{
-    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-}
-
-IDD_SEARCH DIALOG 0, 0, 200, 190
-STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Shell Dlg"
-CAPTION "Procura"
-{
-    LTEXT  "Ainda não implementado", -1, 10, 10, 180, 150
-}
-
-/* Strings */
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
-
-STRINGTABLE
-{
-STID_WINE_HELP, 	"Ajuda Wine"
-STID_WHERROR, 		"ERRO"
-STID_WARNING,  		"AVISO"
-STID_INFO,  		"Informação"
-STID_NOT_IMPLEMENTED, 	"Não implementado"
-STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do arquivo de ajuda '%s'"
-STID_INDEX, 		"&Conteúdo"
-STID_CONTENTS,		"Sumário"
-STID_BACK, 		"&Voltar"
-STID_ALL_FILES, 	"Todos os arquivos (*.*)"
-STID_HELP_FILES_HLP, 	"Arquivos de ajuda (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Não é possível encontrar '%s'. Deseja procurar este arquivo você mesmo?"
-STID_NO_RICHEDIT	"Não foi possível encontrar uma implementação do richedit... Abortando"
-STID_PSH_INDEX,		"Tópicos de ajuda: "
-}
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Anotação...",         MNID_CTXT_ANNOTATE
+		MENUITEM "Copiar",              MNID_CTXT_COPY
+		MENUITEM "Imprimir...",         MNID_CTXT_PRINT
+		POPUP    "Tipos de letra"
+		BEGIN
+			MENUITEM "Pequeno",     MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Grande",      MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
 
 STRINGTABLE
 {
@@ -177,54 +183,18 @@ STID_NO_RICHEDIT	"Não foi possível encontrar uma implementação do richedit..
 STID_PSH_INDEX,		"Tópicos de ajuda: "
 }
 
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Índice"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
 
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
-
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Anotação...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Copiar",                MNID_CTXT_COPY
-		MENUITEM "Imprimir...",            MNID_CTXT_PRINT
-		POPUP    "Fontes"
-		BEGIN
-			MENUITEM "Pequeno",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Ajuda sempre visível"
-		BEGIN
-			MENUITEM "Padrão",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Visível",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Invisível", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Usar cores do sistema",   MNID_CTXT_SYSTEM_COLORS
-	END
-END
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
-
-CONTEXT_MENU MENU
-BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Anotação...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Copiar",                MNID_CTXT_COPY
-		MENUITEM "Imprimir...",            MNID_CTXT_PRINT
-		POPUP    "Tipos de letra"
-		BEGIN
-			MENUITEM "Pequeno",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Ajuda sempre visível"
-		BEGIN
-			MENUITEM "Omissão",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Visível",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Invisível", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Usar cores do sistema",   MNID_CTXT_SYSTEM_COLORS
-	END
-END
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Procura"
+{
+    LTEXT  "Ainda não implementado", -1, 10, 10, 180, 150
+}

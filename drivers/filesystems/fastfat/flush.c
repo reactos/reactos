@@ -52,6 +52,9 @@ VfatFlushVolume(
     PLIST_ENTRY ListEntry;
     PVFATFCB Fcb;
     NTSTATUS Status, ReturnStatus = STATUS_SUCCESS;
+    PIRP Irp;
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
 
     DPRINT("VfatFlushVolume(DeviceExt %p, FatFcb %p)\n", DeviceExt, VolumeFcb);
 
@@ -99,7 +102,34 @@ VfatFlushVolume(
     Status = VfatFlushFile(DeviceExt, Fcb);
     ExReleaseResourceLite(&DeviceExt->FatResource);
 
-    /* FIXME: Flush the buffers from storage device */
+    /* Prepare an IRP to flush device buffers */
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_FLUSH_BUFFERS,
+                                       DeviceExt->StorageDevice,
+                                       NULL, 0, NULL, &Event,
+                                       &IoStatusBlock);
+    if (Irp != NULL)
+    {
+        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+        Status = IoCallDriver(DeviceExt->StorageDevice, Irp);
+        if (Status == STATUS_PENDING)
+        {
+            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = Irp->IoStatus.Status;
+        }
+
+        /* Ignore device not supporting flush operation */
+        if (Status == STATUS_INVALID_DEVICE_REQUEST)
+        {
+            DPRINT1("Flush not supported, ignored\n");
+            Status = STATUS_SUCCESS;
+
+        }
+    }
+    else
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     if (!NT_SUCCESS(Status))
     {

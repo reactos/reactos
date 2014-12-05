@@ -1375,6 +1375,8 @@ xmlXPtrEval(const xmlChar *str, xmlXPathContextPtr ctx) {
 	return(NULL);
 
     ctxt = xmlXPathNewParserContext(str, ctx);
+    if (ctxt == NULL)
+	return(NULL);
     ctxt->xptr = 1;
     xmlXPtrEvalXPointer(ctxt);
 
@@ -1807,6 +1809,8 @@ xmlXPtrStartPointFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	 */
 	tmp = xmlXPtrNewLocationSetNodeSet(obj->nodesetval);
 	xmlXPathFreeObject(obj);
+	if (tmp == NULL)
+            XP_ERROR(XPATH_MEMORY_ERROR)
 	obj = tmp;
     }
 
@@ -1901,10 +1905,16 @@ xmlXPtrEndPointFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	 */
 	tmp = xmlXPtrNewLocationSetNodeSet(obj->nodesetval);
 	xmlXPathFreeObject(obj);
+	if (tmp == NULL)
+            XP_ERROR(XPATH_MEMORY_ERROR)
 	obj = tmp;
     }
 
     newset = xmlXPtrLocationSetCreate(NULL);
+    if (newset == NULL) {
+	xmlXPathFreeObject(obj);
+        XP_ERROR(XPATH_MEMORY_ERROR);
+    }
     oldset = (xmlLocationSetPtr) obj->user;
     if (oldset != NULL) {
 	int i;
@@ -2049,6 +2059,8 @@ xmlXPtrRangeFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	 */
 	tmp = xmlXPtrNewLocationSetNodeSet(set->nodesetval);
 	xmlXPathFreeObject(set);
+	if (tmp == NULL)
+            XP_ERROR(XPATH_MEMORY_ERROR)
 	set = tmp;
     }
     oldset = (xmlLocationSetPtr) set->user;
@@ -2057,6 +2069,10 @@ xmlXPtrRangeFunction(xmlXPathParserContextPtr ctxt, int nargs) {
      * The loop is to compute the covering range for each item and add it
      */
     newset = xmlXPtrLocationSetCreate(NULL);
+    if (newset == NULL) {
+	xmlXPathFreeObject(set);
+        XP_ERROR(XPATH_MEMORY_ERROR);
+    }
     for (i = 0;i < oldset->locNr;i++) {
 	xmlXPtrLocationSetAdd(newset,
 		xmlXPtrCoveringRange(ctxt, oldset->locTab[i]));
@@ -2195,6 +2211,8 @@ xmlXPtrRangeInsideFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	 */
 	tmp = xmlXPtrNewLocationSetNodeSet(set->nodesetval);
 	xmlXPathFreeObject(set);
+	if (tmp == NULL)
+	     XP_ERROR(XPATH_MEMORY_ERROR)
 	set = tmp;
     }
     oldset = (xmlLocationSetPtr) set->user;
@@ -2203,6 +2221,10 @@ xmlXPtrRangeInsideFunction(xmlXPathParserContextPtr ctxt, int nargs) {
      * The loop is to compute the covering range for each item and add it
      */
     newset = xmlXPtrLocationSetCreate(NULL);
+    if (newset == NULL) {
+	xmlXPathFreeObject(set);
+        XP_ERROR(XPATH_MEMORY_ERROR);
+    }
     for (i = 0;i < oldset->locNr;i++) {
 	xmlXPtrLocationSetAdd(newset,
 		xmlXPtrInsideRange(ctxt, oldset->locTab[i]));
@@ -2461,8 +2483,6 @@ xmlXPtrMatchString(const xmlChar *string, xmlNodePtr start, int startindex,
         ((*end)->type == XML_NAMESPACE_DECL) || (endindex == NULL))
 	return(-1);
     cur = start;
-    if (cur == NULL)
-	return(-1);
     pos = startindex - 1;
     stringlen = xmlStrlen(string);
 
@@ -2798,6 +2818,10 @@ xmlXPtrStringRangeFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 
     set = valuePop(ctxt);
     newset = xmlXPtrLocationSetCreate(NULL);
+    if (newset == NULL) {
+	xmlXPathFreeObject(set);
+        XP_ERROR(XPATH_MEMORY_ERROR);
+    }
     if (set->nodesetval == NULL) {
         goto error;
     }
@@ -2809,6 +2833,8 @@ xmlXPtrStringRangeFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	 */
 	tmp = xmlXPtrNewLocationSetNodeSet(set->nodesetval);
 	xmlXPathFreeObject(set);
+	if (tmp == NULL)
+	     XP_ERROR(XPATH_MEMORY_ERROR)
 	set = tmp;
     }
     oldset = (xmlLocationSetPtr) set->user;

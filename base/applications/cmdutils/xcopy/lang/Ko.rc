@@ -1,26 +1,27 @@
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
-    STRING_INVPARM "올바르지 않은 매개변수 '%1' -  xcopy /?로 도움말을 보시오\n"
-    STRING_PAUSE "<enter> 를 누르면 복사가 시작될 것입니다\n"
-    STRING_SIMCOPY "%1!d! 파일이 복사될 것입니다\n"
-    STRING_COPY "%1!d! 파일이 복사되었습니다\n"
-    STRING_QISDIR "'%1'이 복사할 파일이나 디렉토리?\n\
+{
+    STRING_INVPARMS, "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
+    STRING_INVPARM,  "올바르지 않은 매개변수 '%1' -  xcopy /?로 도움말을 보시오\n"
+    STRING_PAUSE,    "<enter> 를 누르면 복사가 시작될 것입니다\n"
+    STRING_SIMCOPY,  "%1!d! 파일이 복사될 것입니다\n"
+    STRING_COPY,     "%1!d! 파일이 복사되었습니다\n"
+    STRING_QISDIR,   "'%1'이 복사할 파일이나 디렉토리?\n\
                      입니까?\n\
                      (F - 파일, D - 디렉토리)\n"
-    STRING_SRCPROMPT "%1? (예|아니오)\n"
-    STRING_OVERWRITE "%1를 덮어쓰겠습니까? (예|아니오|모두)\n"
-    STRING_COPYFAIL "Copying of '%1' to '%2' failed with r/c %3!d!\n"
-    STRING_OPENFAIL "'%1' 열기 실패\n"
-    STRING_READFAIL "'%1를 읽지 못했습니다'\n"
-    STRING_YES_CHAR "Y"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "A"
-    STRING_FILE_CHAR "F"
-    STRING_DIR_CHAR "D"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (예|아니오)\n"
+    STRING_OVERWRITE,"%1를 덮어쓰겠습니까? (예|아니오|모두)\n"
+    STRING_COPYFAIL, "Copying of '%1' to '%2' failed with r/c %3!d!\n"
+    STRING_OPENFAIL, "'%1' 열기 실패\n"
+    STRING_READFAIL, "'%1를 읽지 못했습니다'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
 "XCOPY - 원본 파일이나 디렉토리 구조를 목적지로 복사\n\
 \n\
 문법:\n\
@@ -52,4 +53,5 @@ Where:\n\
 [/D | /D:m-d-y] 지정된 날짜 후에 수정되거나 새로운 파일 복사.\n\
 \t\tI만약 어떠한 날짜도 지정되지 않으면,오직 원본보다\n\
 \t\t대상이 오래된 것만 복사\n\n"
-END
+
+}

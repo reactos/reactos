@@ -57,6 +57,8 @@ typedef struct
     DWORD  proxyEnabled;
     LPWSTR proxy;
     LPWSTR proxyBypass;
+    LPWSTR proxyUsername;
+    LPWSTR proxyPassword;
 } proxyinfo_t;
 
 static ULONG max_conns = 2, max_1_0_conns = 4;
@@ -245,9 +247,11 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
                 return FALSE;
 
-#ifndef __REACTOS__
-            URLCacheContainers_CreateDefaults();
-#endif
+            if(!init_urlcache())
+            {
+                TlsFree(g_dwTlsErrIndex);
+                return FALSE;
+            }
 
             WININET_hModule = hinstDLL;
             break;
@@ -277,6 +281,15 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
     }
     return TRUE;
+}
+
+/***********************************************************************
+ *		DllInstall (WININET.@)
+ */
+HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
+{
+    FIXME("(%x %s): stub\n", bInstall, debugstr_w(cmdline));
+    return S_OK;
 }
 
 /***********************************************************************
@@ -454,6 +467,8 @@ static void FreeProxyInfo( proxyinfo_t *lpwpi )
 {
     heap_free(lpwpi->proxy);
     heap_free(lpwpi->proxyBypass);
+    heap_free(lpwpi->proxyUsername);
+    heap_free(lpwpi->proxyPassword);
 }
 
 static proxyinfo_t *global_proxy;
@@ -467,6 +482,50 @@ static void free_global_proxy( void )
         heap_free( global_proxy );
     }
     LeaveCriticalSection( &WININET_cs );
+}
+
+static BOOL parse_proxy_url( proxyinfo_t *info, const WCHAR *url )
+{
+    static const WCHAR fmt[] = {'%','s',':','%','u',0};
+    WCHAR hostname[INTERNET_MAX_HOST_NAME_LENGTH] = {0};
+    WCHAR username[INTERNET_MAX_USER_NAME_LENGTH] = {0};
+    WCHAR password[INTERNET_MAX_PASSWORD_LENGTH] = {0};
+    URL_COMPONENTSW uc;
+
+    memset( &uc, 0, sizeof(uc) );
+    uc.dwStructSize      = sizeof(uc);
+    uc.lpszHostName      = hostname;
+    uc.dwHostNameLength  = INTERNET_MAX_HOST_NAME_LENGTH;
+    uc.lpszUserName      = username;
+    uc.dwUserNameLength  = INTERNET_MAX_USER_NAME_LENGTH;
+    uc.lpszPassword      = password;
+    uc.dwPasswordLength  = INTERNET_MAX_PASSWORD_LENGTH;
+
+    if (!InternetCrackUrlW( url, 0, 0, &uc )) return FALSE;
+    if (!hostname[0])
+    {
+        if (!(info->proxy = heap_strdupW( url ))) return FALSE;
+        info->proxyUsername = NULL;
+        info->proxyPassword = NULL;
+        return TRUE;
+    }
+    if (!(info->proxy = heap_alloc( (strlenW(hostname) + 12) * sizeof(WCHAR) ))) return FALSE;
+    sprintfW( info->proxy, fmt, hostname, uc.nPort );
+
+    if (!username[0]) info->proxyUsername = NULL;
+    else if (!(info->proxyUsername = heap_strdupW( username )))
+    {
+        heap_free( info->proxy );
+        return FALSE;
+    }
+    if (!password[0]) info->proxyPassword = NULL;
+    else if (!(info->proxyPassword = heap_strdupW( password )))
+    {
+        heap_free( info->proxyUsername );
+        heap_free( info->proxy );
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /***********************************************************************
@@ -488,6 +547,8 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
     LPCSTR envproxy;
     LONG ret;
 
+    memset( lpwpi, 0, sizeof(*lpwpi) );
+
     EnterCriticalSection( &WININET_cs );
     if (global_proxy)
     {
@@ -498,7 +559,10 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
     LeaveCriticalSection( &WININET_cs );
 
     if ((ret = RegOpenKeyW( HKEY_CURRENT_USER, szInternetSettings, &key )))
+    {
+        FreeProxyInfo( lpwpi );
         return ret;
+    }
 
     len = sizeof(DWORD);
     if (RegQueryValueExW( key, szProxyEnable, NULL, &type, (BYTE *)&lpwpi->proxyEnabled, &len ) || type != REG_DWORD)
@@ -506,6 +570,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
         lpwpi->proxyEnabled = 0;
         if((ret = RegSetValueExW( key, szProxyEnable, 0, REG_DWORD, (BYTE *)&lpwpi->proxyEnabled, sizeof(DWORD) )))
         {
+            FreeProxyInfo( lpwpi );
             RegCloseKey( key );
             return ret;
         }
@@ -513,8 +578,6 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
 
     if (!(envproxy = getenv( "http_proxy" )) || lpwpi->proxyEnabled)
     {
-        TRACE("Proxy is enabled.\n");
-
         /* figure out how much memory the proxy setting takes */
         if (!RegQueryValueExW( key, szProxyServer, NULL, &type, NULL, &len ) && len && (type == REG_SZ))
         {
@@ -524,6 +587,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
             if (!(szProxy = heap_alloc(len)))
             {
                 RegCloseKey( key );
+                FreeProxyInfo( lpwpi );
                 return ERROR_OUTOFMEMORY;
             }
             RegQueryValueExW( key, szProxyServer, NULL, &type, (BYTE*)szProxy, &len );
@@ -535,17 +599,21 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
                 p += lstrlenW( szHttp );
                 lstrcpyW( szProxy, p );
             }
-            p = strchrW( szProxy, ' ' );
+            p = strchrW( szProxy, ';' );
             if (p) *p = 0;
 
+            FreeProxyInfo( lpwpi );
             lpwpi->proxy = szProxy;
+            lpwpi->proxyBypass = NULL;
 
-            TRACE("http proxy = %s\n", debugstr_w(lpwpi->proxy));
+            TRACE("http proxy (from registry) = %s\n", debugstr_w(lpwpi->proxy));
         }
         else
         {
             TRACE("No proxy server settings in registry.\n");
+            FreeProxyInfo( lpwpi );
             lpwpi->proxy = NULL;
+            lpwpi->proxyBypass = NULL;
         }
     }
     else if (envproxy)
@@ -554,18 +622,33 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
 
         len = MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, NULL, 0 );
         if (!(envproxyW = heap_alloc(len * sizeof(WCHAR))))
+        {
+            RegCloseKey( key );
             return ERROR_OUTOFMEMORY;
+        }
         MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, envproxyW, len );
 
-        lpwpi->proxyEnabled = 1;
-        lpwpi->proxy = envproxyW;
-
-        TRACE("http proxy (from environment) = %s\n", debugstr_w(lpwpi->proxy));
+        FreeProxyInfo( lpwpi );
+        if (parse_proxy_url( lpwpi, envproxyW ))
+        {
+            TRACE("http proxy (from environment) = %s\n", debugstr_w(lpwpi->proxy));
+            lpwpi->proxyEnabled = 1;
+            lpwpi->proxyBypass = NULL;
+        }
+        else
+        {
+            WARN("failed to parse http_proxy value %s\n", debugstr_w(envproxyW));
+            lpwpi->proxyEnabled = 0;
+            lpwpi->proxy = NULL;
+            lpwpi->proxyBypass = NULL;
+        }
+        heap_free( envproxyW );
     }
 
-    lpwpi->proxyBypass = NULL;
     if (lpwpi->proxyEnabled)
     {
+        TRACE("Proxy is enabled.\n");
+
         if (!(envproxy = getenv( "no_proxy" )))
         {
             /* figure out how much memory the proxy setting takes */
@@ -580,32 +663,40 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
                 }
                 RegQueryValueExW( key, szProxyOverride, NULL, &type, (BYTE*)szProxy, &len );
 
+                heap_free( lpwpi->proxyBypass );
                 lpwpi->proxyBypass = szProxy;
 
-                TRACE("http proxy bypass = %s\n", debugstr_w(lpwpi->proxyBypass));
+                TRACE("http proxy bypass (from registry) = %s\n", debugstr_w(lpwpi->proxyBypass));
             }
             else
             {
+                heap_free( lpwpi->proxyBypass );
+                lpwpi->proxyBypass = NULL;
+
                 TRACE("No proxy bypass server settings in registry.\n");
             }
         }
-        else if (envproxy)
+        else
         {
             WCHAR *envproxyW;
 
             len = MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, NULL, 0 );
             if (!(envproxyW = heap_alloc(len * sizeof(WCHAR))))
+            {
+                RegCloseKey( key );
                 return ERROR_OUTOFMEMORY;
+            }
             MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, envproxyW, len );
 
+            heap_free( lpwpi->proxyBypass );
             lpwpi->proxyBypass = envproxyW;
 
             TRACE("http proxy bypass (from environment) = %s\n", debugstr_w(lpwpi->proxyBypass));
         }
     }
+    else TRACE("Proxy is disabled.\n");
 
     RegCloseKey( key );
-
     return ERROR_SUCCESS;
 }
 
@@ -614,56 +705,21 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
  */
 static BOOL INTERNET_ConfigureProxy( appinfo_t *lpwai )
 {
-    proxyinfo_t wpi = {0};
+    proxyinfo_t wpi;
 
     if (INTERNET_LoadProxySettings( &wpi ))
         return FALSE;
 
     if (wpi.proxyEnabled)
     {
-        WCHAR proxyurl[INTERNET_MAX_URL_LENGTH];
-        WCHAR username[INTERNET_MAX_USER_NAME_LENGTH];
-        WCHAR password[INTERNET_MAX_PASSWORD_LENGTH];
-        WCHAR hostname[INTERNET_MAX_HOST_NAME_LENGTH];
-        URL_COMPONENTSW UrlComponents;
+        TRACE("http proxy = %s bypass = %s\n", debugstr_w(lpwai->proxy), debugstr_w(lpwai->proxyBypass));
 
-        UrlComponents.dwStructSize = sizeof UrlComponents;
-        UrlComponents.dwSchemeLength = 0;
-        UrlComponents.lpszHostName = hostname;
-        UrlComponents.dwHostNameLength = INTERNET_MAX_HOST_NAME_LENGTH;
-        UrlComponents.lpszUserName = username;
-        UrlComponents.dwUserNameLength = INTERNET_MAX_USER_NAME_LENGTH;
-        UrlComponents.lpszPassword = password;
-        UrlComponents.dwPasswordLength = INTERNET_MAX_PASSWORD_LENGTH;
-        UrlComponents.dwUrlPathLength = 0;
-        UrlComponents.dwExtraInfoLength = 0;
-
-        if(InternetCrackUrlW(wpi.proxy, 0, 0, &UrlComponents))
-        {
-            static const WCHAR szFormat[] = { 'h','t','t','p',':','/','/','%','s',':','%','u',0 };
-
-            if(UrlComponents.nPort == INTERNET_INVALID_PORT_NUMBER)
-                UrlComponents.nPort = INTERNET_DEFAULT_HTTP_PORT;
-            sprintfW(proxyurl, szFormat, hostname, UrlComponents.nPort);
-
-            lpwai->accessType = INTERNET_OPEN_TYPE_PROXY;
-            lpwai->proxy = heap_strdupW(proxyurl);
-            lpwai->proxyBypass = heap_strdupW(wpi.proxyBypass);
-            if (UrlComponents.dwUserNameLength)
-            {
-                lpwai->proxyUsername = heap_strdupW(UrlComponents.lpszUserName);
-                lpwai->proxyPassword = heap_strdupW(UrlComponents.lpszPassword);
-            }
-
-            TRACE("http proxy = %s bypass = %s\n", debugstr_w(lpwai->proxy), debugstr_w(lpwai->proxyBypass));
-            FreeProxyInfo(&wpi);
-            return TRUE;
-        }
-        else
-        {
-            TRACE("Failed to parse proxy: %s\n", debugstr_w(wpi.proxy));
-            lpwai->proxy = NULL;
-        }
+        lpwai->accessType    = INTERNET_OPEN_TYPE_PROXY;
+        lpwai->proxy         = wpi.proxy;
+        lpwai->proxyBypass   = wpi.proxyBypass;
+        lpwai->proxyUsername = wpi.proxyUsername;
+        lpwai->proxyPassword = wpi.proxyPassword;
+        return TRUE;
     }
 
     lpwai->accessType = INTERNET_OPEN_TYPE_DIRECT;
@@ -1198,11 +1254,10 @@ BOOL WINAPI InternetGetConnectedStateExA(LPDWORD lpdwStatus, LPSTR lpszConnectio
     rc = InternetGetConnectedStateExW(lpdwStatus,lpwszConnectionName, dwNameLen,
                                       dwReserved);
     if (rc && lpwszConnectionName)
-    {
         WideCharToMultiByte(CP_ACP,0,lpwszConnectionName,-1,lpszConnectionName,
                             dwNameLen, NULL, NULL);
-        heap_free(lpwszConnectionName);
-    }
+
+    heap_free(lpwszConnectionName);
     return rc;
 }
 
@@ -2008,7 +2063,7 @@ BOOL WINAPI InternetCanonicalizeUrlA(LPCSTR lpszUrl, LPSTR lpszBuffer,
 {
     HRESULT hr;
 
-    TRACE("(%s, %p, %p, 0x%08x) bufferlength: %d\n", debugstr_a(lpszUrl), lpszBuffer,
+    TRACE("(%s, %p, %p, 0x%08x) buffer length: %d\n", debugstr_a(lpszUrl), lpszBuffer,
         lpdwBufferLength, dwFlags, lpdwBufferLength ? *lpdwBufferLength : -1);
 
     dwFlags = convert_url_canonicalization_flags(dwFlags);
@@ -2034,7 +2089,7 @@ BOOL WINAPI InternetCanonicalizeUrlW(LPCWSTR lpszUrl, LPWSTR lpszBuffer,
 {
     HRESULT hr;
 
-    TRACE("(%s, %p, %p, 0x%08x) bufferlength: %d\n", debugstr_w(lpszUrl), lpszBuffer,
+    TRACE("(%s, %p, %p, 0x%08x) buffer length: %d\n", debugstr_w(lpszUrl), lpszBuffer,
           lpdwBufferLength, dwFlags, lpdwBufferLength ? *lpdwBufferLength : -1);
 
     dwFlags = convert_url_canonicalization_flags(dwFlags);
@@ -2302,6 +2357,34 @@ BOOL WINAPI InternetReadFileExW(HINTERNET hFile, LPINTERNET_BUFFERSW lpBuffer,
     return res == ERROR_SUCCESS;
 }
 
+static BOOL get_proxy_autoconfig_url( char *buf, DWORD buflen )
+{
+#if defined(MAC_OS_X_VERSION_10_6) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+
+    CFDictionaryRef settings = CFNetworkCopySystemProxySettings();
+    const void *ref;
+    BOOL ret = FALSE;
+
+    if (!settings) return FALSE;
+
+    if (!(ref = CFDictionaryGetValue( settings, kCFNetworkProxiesProxyAutoConfigURLString )))
+    {
+        CFRelease( settings );
+        return FALSE;
+    }
+    if (CFStringGetCString( ref, buf, buflen, kCFStringEncodingASCII ))
+    {
+        TRACE( "returning %s\n", debugstr_a(buf) );
+        ret = TRUE;
+    }
+    CFRelease( settings );
+    return ret;
+#else
+    FIXME( "no support on this platform\n" );
+    return FALSE;
+#endif
+}
+
 static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL unicode)
 {
     /* FIXME: This function currently handles more options than it should. Options requiring
@@ -2385,15 +2468,19 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
     }
 
     case INTERNET_OPTION_PER_CONNECTION_OPTION: {
+        char url[INTERNET_MAX_URL_LENGTH + 1];
         INTERNET_PER_CONN_OPTION_LISTW *con = buffer;
         INTERNET_PER_CONN_OPTION_LISTA *conA = buffer;
         DWORD res = ERROR_SUCCESS, i;
         proxyinfo_t pi;
+        BOOL have_url;
         LONG ret;
 
         TRACE("Getting global proxy info\n");
         if((ret = INTERNET_LoadProxySettings(&pi)))
             return ret;
+
+        have_url = get_proxy_autoconfig_url(url, sizeof(url));
 
         FIXME("INTERNET_OPTION_PER_CONNECTION_OPTION stub\n");
 
@@ -2412,6 +2499,9 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
                     optionW->Value.dwValue = PROXY_TYPE_PROXY;
                 else
                     optionW->Value.dwValue = PROXY_TYPE_DIRECT;
+                if (have_url)
+                    /* native includes PROXY_TYPE_DIRECT even if PROXY_TYPE_PROXY is set */
+                    optionW->Value.dwValue |= PROXY_TYPE_DIRECT|PROXY_TYPE_AUTO_PROXY_URL;
                 break;
 
             case INTERNET_PER_CONN_PROXY_SERVER:
@@ -2429,7 +2519,18 @@ static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL u
                 break;
 
             case INTERNET_PER_CONN_AUTOCONFIG_URL:
+                if (!have_url)
+                    optionW->Value.pszValue = NULL;
+                else if (unicode)
+                    optionW->Value.pszValue = heap_strdupAtoW(url);
+                else
+                    optionA->Value.pszValue = heap_strdupA(url);
+                break;
+
             case INTERNET_PER_CONN_AUTODISCOVERY_FLAGS:
+                optionW->Value.dwValue = AUTO_PROXY_FLAG_ALWAYS_DETECT;
+                break;
+
             case INTERNET_PER_CONN_AUTOCONFIG_SECONDARY_URL:
             case INTERNET_PER_CONN_AUTOCONFIG_RELOAD_DELAY_MINS:
             case INTERNET_PER_CONN_AUTOCONFIG_LAST_DETECT_TIME:
@@ -2848,7 +2949,7 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         unsigned int i;
         proxyinfo_t pi;
 
-        INTERNET_LoadProxySettings(&pi);
+        if (INTERNET_LoadProxySettings(&pi)) return FALSE;
 
         for (i = 0; i < con->dwOptionCount; i++) {
             INTERNET_PER_CONN_OPTIONW *option = con->pOptions + i;
@@ -3772,7 +3873,7 @@ LPSTR INTERNET_GetResponseBuffer(void)
 
 LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
 {
-    // ReactOS: use select instead of poll
+    /* ReactOS: use select instead of poll */
     fd_set infd;
     struct timeval tv;
     BOOL bSuccess = FALSE;
@@ -3790,7 +3891,7 @@ LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
     {
         if (select(0, &infd, NULL, NULL, &tv) > 0)
         {
-            if (recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
+            if (sock_recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
             {
                 INTERNET_SetLastError(ERROR_FTP_TRANSFER_IN_PROGRESS);
                 goto lend;

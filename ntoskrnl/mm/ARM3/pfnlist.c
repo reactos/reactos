@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #if DBG
 #define ASSERT_LIST_INVARIANT(x) \
@@ -64,6 +64,59 @@ ULONG MI_PFN_CURRENT_USAGE;
 CHAR MI_PFN_CURRENT_PROCESS_NAME[16] = "None yet";
 
 /* FUNCTIONS ******************************************************************/
+
+static
+VOID
+MiIncrementAvailablePages(
+    VOID)
+{
+    /* Increment available pages */
+    MmAvailablePages++;
+
+    /* Check if we've reached the configured low memory threshold */
+    if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Clear the event, because now we're ABOVE the threshold */
+        KeClearEvent(MiLowMemoryEvent);
+    }
+    else if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Otherwise check if we reached the high threshold and signal the event */
+        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
+    }
+}
+
+static
+VOID
+MiDecrementAvailablePages(
+    VOID)
+{
+    ASSERT(MmAvailablePages > 0);
+
+    /* See if we hit any thresholds */
+    if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Clear the high memory event */
+        KeClearEvent(MiHighMemoryEvent);
+    }
+    else if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Signal the low memory event */
+        KeSetEvent(MiLowMemoryEvent, 0, FALSE);
+    }
+
+    /* One less page */
+    MmAvailablePages--;
+    if (MmAvailablePages < MmMinimumFreePages)
+    {
+        /* FIXME: Should wake up the MPW and working set manager, if we had one */
+
+        DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
+
+        /* Call RosMm and see if it can release any pages for us */
+        MmRebalanceMemoryConsumers();
+    }
+}
 
 VOID
 NTAPI
@@ -195,28 +248,8 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     Entry->u1.Flink = Entry->u2.Blink = 0;
     ASSERT_LIST_INVARIANT(ListHead);
 
-    /* See if we hit any thresholds */
-    if (MmAvailablePages == MmHighMemoryThreshold)
-    {
-        /* Clear the high memory event */
-        KeClearEvent(MiHighMemoryEvent);
-    }
-    else if (MmAvailablePages == MmLowMemoryThreshold)
-    {
-        /* Signal the low memory event */
-        KeSetEvent(MiLowMemoryEvent, 0, FALSE);
-    }
-
-    /* One less page */
-    if (--MmAvailablePages < MmMinimumFreePages)
-    {
-        /* FIXME: Should wake up the MPW and working set manager, if we had one */
-
-        DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
-
-        /* Call RosMm and see if it can release any pages for us */
-        MmRebalanceMemoryConsumers();
-    }
+    /* Decrement number of available pages */
+    MiDecrementAvailablePages();
 
 #if MI_TRACE_PFNS
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
@@ -253,31 +286,12 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
         /* Get the exact list */
         ListHead = &MmStandbyPageListByPriority[Pfn->u4.Priority];
 
-        /* See if we hit any thresholds */
-        if (MmAvailablePages == MmHighMemoryThreshold)
-        {
-            /* Clear the high memory event */
-            KeClearEvent(MiHighMemoryEvent);
-        }
-        else if (MmAvailablePages == MmLowMemoryThreshold)
-        {
-            /* Signal the low memory event */
-            KeSetEvent(MiLowMemoryEvent, 0, FALSE);
-        }
+        /* Decrement number of available pages */
+        MiDecrementAvailablePages();
 
         /* Decrease transition page counter */
         ASSERT(Pfn->u3.e1.PrototypePte == 1); /* Only supported ARM3 case */
         MmTransitionSharedPages--;
-
-        /* One less page */
-        if (--MmAvailablePages < MmMinimumFreePages)
-        {
-            /* FIXME: Should wake up the MPW and working set manager, if we had one */
-            DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
-
-            /* Call RosMm and see if it can release any pages for us */
-            MmRebalanceMemoryConsumers();
-        }
     }
     else if (ListHead == &MmModifiedPageListHead)
     {
@@ -442,28 +456,8 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     /* ReactOS Hack */
     Pfn1->OriginalPte.u.Long = 0;
 
-    /* See if we hit any thresholds */
-    if (MmAvailablePages == MmHighMemoryThreshold)
-    {
-        /* Clear the high memory event */
-        KeClearEvent(MiHighMemoryEvent);
-    }
-    else if (MmAvailablePages == MmLowMemoryThreshold)
-    {
-        /* Signal the low memory event */
-        KeSetEvent(MiLowMemoryEvent, 0, FALSE);
-    }
-
-    /* One less page */
-    if (--MmAvailablePages < MmMinimumFreePages)
-    {
-        /* FIXME: Should wake up the MPW and working set manager, if we had one */
-
-        DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
-
-        /* Call RosMm and see if it can release any pages for us */
-        MmRebalanceMemoryConsumers();
-    }
+    /* Decrement number of available pages */
+    MiDecrementAvailablePages();
 
 #if MI_TRACE_PFNS
     //ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
@@ -664,20 +658,8 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     Pfn1->u4.InPageError = 0;
     Pfn1->u4.AweAllocation = 0;
 
-    /* Increase available pages */
-    MmAvailablePages++;
-
-    /* Check if we've reached the configured low memory threshold */
-    if (MmAvailablePages == MmLowMemoryThreshold)
-    {
-        /* Clear the event, because now we're ABOVE the threshold */
-        KeClearEvent(MiLowMemoryEvent);
-    }
-    else if (MmAvailablePages == MmHighMemoryThreshold)
-    {
-        /* Otherwise check if we reached the high threshold and signal the event */
-        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
-    }
+    /* Increment number of available pages */
+    MiIncrementAvailablePages();
 
     /* Get the page color */
     Color = PageFrameIndex & MmSecondaryColorMask;
@@ -732,7 +714,7 @@ MiInsertStandbyListAtFront(IN PFN_NUMBER PageFrameIndex)
     PMMPFN Pfn1, Pfn2;
 
     /* Make sure the lock is held */
-    DPRINT1("Inserting page: %lx into standby list !\n", PageFrameIndex);
+    DPRINT("Inserting page: %lx into standby list !\n", PageFrameIndex);
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Make sure the PFN is valid */
@@ -779,20 +761,8 @@ MiInsertStandbyListAtFront(IN PFN_NUMBER PageFrameIndex)
     /* Move the page onto its new location */
     Pfn1->u3.e1.PageLocation = StandbyPageList;
 
-    /* One more page on the system */
-    MmAvailablePages++;
-
-    /* Check if we've reached the configured low memory threshold */
-    if (MmAvailablePages == MmLowMemoryThreshold)
-    {
-        /* Clear the event, because now we're ABOVE the threshold */
-        KeClearEvent(MiLowMemoryEvent);
-    }
-    else if (MmAvailablePages == MmHighMemoryThreshold)
-    {
-        /* Otherwise check if we reached the high threshold and signal the event */
-        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
-    }
+    /* Increment number of available pages */
+    MiIncrementAvailablePages();
 }
 
 VOID
@@ -919,20 +889,8 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     /* For zero/free pages, we also have to handle the colored lists */
     if (ListName <= StandbyPageList)
     {
-        /* One more page on the system */
-        MmAvailablePages++;
-
-        /* Check if we've reached the configured low memory threshold */
-        if (MmAvailablePages == MmLowMemoryThreshold)
-        {
-            /* Clear the event, because now we're ABOVE the threshold */
-            KeClearEvent(MiLowMemoryEvent);
-        }
-        else if (MmAvailablePages == MmHighMemoryThreshold)
-        {
-            /* Otherwise check if we reached the high threshold and signal the event */
-            KeSetEvent(MiHighMemoryEvent, 0, FALSE);
-        }
+        /* Increment number of available pages */
+        MiIncrementAvailablePages();
 
         /* Sanity checks */
         ASSERT(ListName == ZeroedPageList);
@@ -1162,54 +1120,6 @@ MiInitializeAndChargePfn(OUT PPFN_NUMBER PageFrameIndex,
     return STATUS_SUCCESS;
 }
 
-PFN_NUMBER
-NTAPI
-MiAllocatePfn(IN PMMPTE PointerPte,
-              IN ULONG Protection)
-{
-    KIRQL OldIrql;
-    PFN_NUMBER PageFrameIndex;
-    MMPTE TempPte;
-
-    /* Sanity check that we aren't passed a valid PTE */
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-
-    /* Make an empty software PTE */
-    MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
-
-    /* Lock the PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-    /* Check if we're running low on pages */
-    if (MmAvailablePages < 128)
-    {
-        DPRINT1("Warning, running low on memory: %lu pages left\n", MmAvailablePages);
-
-        //MiEnsureAvailablePageOrWait(NULL, OldIrql);
-
-        /* Call RosMm and see if it can release any pages for us */
-        MmRebalanceMemoryConsumers();
-    }
-
-    /* Grab a page */
-    ASSERT_LIST_INVARIANT(&MmFreePageListHead);
-    ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
-    PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
-
-    /* Write the software PTE */
-    MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-    PointerPte->u.Soft.Protection |= Protection;
-
-    /* Initialize its PFN entry */
-    MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
-
-    /* Release the PFN lock and return the page */
-    ASSERT_LIST_INVARIANT(&MmFreePageListHead);
-    ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    return PageFrameIndex;
-}
-
 VOID
 NTAPI
 MiDecrementShareCount(IN PMMPFN Pfn1,
@@ -1261,7 +1171,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
             TempPte.u.Soft.Prototype = 0;
             TempPte.u.Soft.Protection = Pfn1->OriginalPte.u.Soft.Protection;
             MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-            DPRINT1("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
+            DPRINT("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
         }
 
         /* Put the page in transition */
@@ -1273,7 +1183,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
         if (Pfn1->u3.e2.ReferenceCount == 1)
         {
             /* Is there still a PFN for this page? */
-            if (MI_IS_PFN_DELETED(Pfn1) == TRUE)
+            if (MI_IS_PFN_DELETED(Pfn1))
             {
                 /* Clear the last reference */
                 Pfn1->u3.e2.ReferenceCount = 0;

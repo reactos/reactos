@@ -14,7 +14,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 #define MI_MAPPED_COPY_PAGES  14
 #define MI_POOL_COPY_BYTES    512
@@ -774,10 +774,10 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     PFN_NUMBER MdlBuffer[(sizeof(MDL) / sizeof(PFN_NUMBER)) + MI_MAPPED_COPY_PAGES + 1];
     PMDL Mdl = (PMDL)MdlBuffer;
     SIZE_T TotalSize, CurrentSize, RemainingSize;
-    volatile BOOLEAN FailedInProbe = FALSE, FailedInMapping = FALSE, FailedInMoving;
-    volatile BOOLEAN PagesLocked;
+    volatile BOOLEAN FailedInProbe = FALSE;
+    volatile BOOLEAN PagesLocked = FALSE;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
-    volatile PVOID MdlAddress;
+    volatile PVOID MdlAddress = NULL;
     KAPC_STATE ApcState;
     BOOLEAN HaveBadAddress;
     ULONG_PTR BadAddress;
@@ -808,11 +808,10 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
         KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
 
         //
-        // Reset state for this pass
+        // Check state for this pass
         //
-        MdlAddress = NULL;
-        PagesLocked = FALSE;
-        FailedInMoving = FALSE;
+        ASSERT(MdlAddress == NULL);
+        ASSERT(PagesLocked == FALSE);
         ASSERT(FailedInProbe == FALSE);
 
         //
@@ -847,35 +846,47 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             MmInitializeMdl(Mdl, CurrentAddress, CurrentSize);
             MmProbeAndLockPages(Mdl, PreviousMode, IoReadAccess);
             PagesLocked = TRUE;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END
 
-            //
-            // Now map the pages
-            //
-            MdlAddress = MmMapLockedPagesSpecifyCache(Mdl,
-                                                      KernelMode,
-                                                      MmCached,
-                                                      NULL,
-                                                      FALSE,
-                                                      HighPagePriority);
-            if (!MdlAddress)
-            {
-                //
-                // Use our SEH handler to pick this up
-                //
-                FailedInMapping = TRUE;
-                ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
-            }
+        /* Detach from source process */
+        KeUnstackDetachProcess(&ApcState);
 
-            //
-            // Now let go of the source and grab to the target process
-            //
-            KeUnstackDetachProcess(&ApcState);
-            KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
+        if (Status != STATUS_SUCCESS)
+        {
+            goto Exit;
+        }
 
+        //
+        // Now map the pages
+        //
+        MdlAddress = MmMapLockedPagesSpecifyCache(Mdl,
+                                                  KernelMode,
+                                                  MmCached,
+                                                  NULL,
+                                                  FALSE,
+                                                  HighPagePriority);
+        if (!MdlAddress)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto Exit;
+        }
+
+        //
+        // Grab to the target process
+        //
+        KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
+
+        _SEH2_TRY
+        {
             //
             // Check if this is our first time through
             //
-            if ((CurrentAddress == SourceAddress) && (PreviousMode != KernelMode))
+            if ((CurrentTargetAddress == TargetAddress) && (PreviousMode != KernelMode))
             {
                 //
                 // Catch a failure here
@@ -896,58 +907,27 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             //
             // Now do the actual move
             //
-            FailedInMoving = TRUE;
             RtlCopyMemory(CurrentTargetAddress, MdlAddress, CurrentSize);
         }
         _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(),
                                         &HaveBadAddress,
                                         &BadAddress))
         {
+            *ReturnSize = BufferSize - RemainingSize;
             //
-            // Detach from whoever we may be attached to
+            // Check if we failed during the probe
             //
-            KeUnstackDetachProcess(&ApcState);
-
-            //
-            // Check if we had mapped the pages
-            //
-            if (MdlAddress) MmUnmapLockedPages(MdlAddress, Mdl);
-
-            //
-            // Check if we had locked the pages
-            //
-            if (PagesLocked) MmUnlockPages(Mdl);
-
-            //
-            // Check if we hit working set quota
-            //
-            if (_SEH2_GetExceptionCode() == STATUS_WORKING_SET_QUOTA)
-            {
-                //
-                // Return the error
-                //
-                _SEH2_YIELD(return STATUS_WORKING_SET_QUOTA);
-            }
-
-            //
-            // Check if we failed during the probe or mapping
-            //
-            if ((FailedInProbe) || (FailedInMapping))
+            if (FailedInProbe)
             {
                 //
                 // Exit
                 //
                 Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
             }
-
-            //
-            // Otherwise, we failed  probably during the move
-            //
-            *ReturnSize = BufferSize - RemainingSize;
-            if (FailedInMoving)
+            else
             {
                 //
+                // Othewise we failed during the move.
                 // Check if we know exactly where we stopped copying
                 //
                 if (HaveBadAddress)
@@ -957,30 +937,32 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
                     //
                     *ReturnSize = BadAddress - (ULONG_PTR)SourceAddress;
                 }
+                //
+                // Return partial copy
+                //
+                Status = STATUS_PARTIAL_COPY;
             }
-
-            //
-            // Return partial copy
-            //
-            Status = STATUS_PARTIAL_COPY;
         }
         _SEH2_END;
+
+        /* Detach from target process */
+        KeUnstackDetachProcess(&ApcState);
 
         //
         // Check for SEH status
         //
-        if (Status != STATUS_SUCCESS) return Status;
-
-        //
-        // Detach from target
-        //
-        KeUnstackDetachProcess(&ApcState);
+        if (Status != STATUS_SUCCESS)
+        {
+            goto Exit;
+        }
 
         //
         // Unmap and unlock
         //
         MmUnmapLockedPages(MdlAddress, Mdl);
+        MdlAddress = NULL;
         MmUnlockPages(Mdl);
+        PagesLocked = FALSE;
 
         //
         // Update location and size
@@ -990,11 +972,18 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
         CurrentTargetAddress = (PVOID)((ULONG_PTR)CurrentTargetAddress + CurrentSize);
     }
 
+Exit:
+    if (MdlAddress != NULL)
+        MmUnmapLockedPages(MdlAddress, Mdl);
+    if (PagesLocked)
+        MmUnlockPages(Mdl);
+
     //
     // All bytes read
     //
-    *ReturnSize = BufferSize;
-    return STATUS_SUCCESS;
+    if (Status == STATUS_SUCCESS)
+        *ReturnSize = BufferSize;
+    return Status;
 }
 
 NTSTATUS
@@ -1009,7 +998,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
 {
     UCHAR StackBuffer[MI_POOL_COPY_BYTES];
     SIZE_T TotalSize, CurrentSize, RemainingSize;
-    volatile BOOLEAN FailedInProbe = FALSE, FailedInMoving, HavePoolAddress = FALSE;
+    volatile BOOLEAN FailedInProbe = FALSE, HavePoolAddress = FALSE;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
     PVOID PoolAddress;
     KAPC_STATE ApcState;
@@ -1017,6 +1006,9 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
     ULONG_PTR BadAddress;
     NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
+
+    DPRINT("Copying %Iu bytes from process %p (address %p) to process %p (Address %p)\n",
+        BufferSize, SourceProcess, SourceAddress, TargetProcess, TargetAddress);
 
     //
     // Calculate the maximum amount of data to move
@@ -1061,11 +1053,9 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
         //
         KeStackAttachProcess(&SourceProcess->Pcb, &ApcState);
 
-        //
-        // Reset state for this pass
-        //
-        FailedInMoving = FALSE;
+        /* Check that state is sane */
         ASSERT(FailedInProbe == FALSE);
+        ASSERT(Status == STATUS_SUCCESS);
 
         //
         // Protect user-mode copy
@@ -1097,17 +1087,61 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             // Do the copy
             //
             RtlCopyMemory(PoolAddress, CurrentAddress, CurrentSize);
+        }
+        _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(),
+                                        &HaveBadAddress,
+                                        &BadAddress))
+        {
+            *ReturnSize = BufferSize - RemainingSize;
 
             //
-            // Now let go of the source and grab to the target process
+            // Check if we failed during the probe
             //
-            KeUnstackDetachProcess(&ApcState);
-            KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
+            if (FailedInProbe)
+            {
+                //
+                // Exit
+                //
+                Status = _SEH2_GetExceptionCode();
+            }
+            else
+            {
+                //
+                // We failed during the move.
+                // Check if we know exactly where we stopped copying
+                //
+                if (HaveBadAddress)
+                {
+                    //
+                    // Return the exact number of bytes copied
+                    //
+                    *ReturnSize = BadAddress - (ULONG_PTR)SourceAddress;
+                }
+                //
+                // Return partial copy
+                //
+                Status = STATUS_PARTIAL_COPY;
+            }
+        }
+        _SEH2_END
 
+        /* Let go of the source */
+        KeUnstackDetachProcess(&ApcState);
+
+        if (Status != STATUS_SUCCESS)
+        {
+            goto Exit;
+        }
+
+        /* Grab the target process */
+        KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
+
+        _SEH2_TRY
+        {
             //
             // Check if this is our first time through
             //
-            if ((CurrentAddress == SourceAddress) && (PreviousMode != KernelMode))
+            if ((CurrentTargetAddress == TargetAddress) && (PreviousMode != KernelMode))
             {
                 //
                 // Catch a failure here
@@ -1128,23 +1162,13 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             //
             // Now do the actual move
             //
-            FailedInMoving = TRUE;
             RtlCopyMemory(CurrentTargetAddress, PoolAddress, CurrentSize);
         }
         _SEH2_EXCEPT(MiGetExceptionInfo(_SEH2_GetExceptionInformation(),
                                         &HaveBadAddress,
                                         &BadAddress))
         {
-            //
-            // Detach from whoever we may be attached to
-            //
-            KeUnstackDetachProcess(&ApcState);
-
-            //
-            // Check if we had allocated pool
-            //
-            if (HavePoolAddress) ExFreePoolWithTag(PoolAddress, 'VmRw');
-
+            *ReturnSize = BufferSize - RemainingSize;
             //
             // Check if we failed during the probe
             //
@@ -1154,16 +1178,11 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
                 // Exit
                 //
                 Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
             }
-
-            //
-            // Otherwise, we failed, probably during the move
-            //
-            *ReturnSize = BufferSize - RemainingSize;
-            if (FailedInMoving)
+            else
             {
                 //
+                // Otherwise we failed during the move.
                 // Check if we know exactly where we stopped copying
                 //
                 if (HaveBadAddress)
@@ -1173,24 +1192,26 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
                     //
                     *ReturnSize = BadAddress - (ULONG_PTR)SourceAddress;
                 }
+                //
+                // Return partial copy
+                //
+                Status = STATUS_PARTIAL_COPY;
             }
-
-            //
-            // Return partial copy
-            //
-            Status = STATUS_PARTIAL_COPY;
         }
         _SEH2_END;
-
-        //
-        // Check for SEH status
-        //
-        if (Status != STATUS_SUCCESS) return Status;
 
         //
         // Detach from target
         //
         KeUnstackDetachProcess(&ApcState);
+
+        //
+        // Check for SEH status
+        //
+        if (Status != STATUS_SUCCESS)
+        {
+            goto Exit;
+        }
 
         //
         // Update location and size
@@ -1201,16 +1222,19 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
                                        CurrentSize);
     }
 
+Exit:
     //
     // Check if we had allocated pool
     //
-    if (HavePoolAddress) ExFreePoolWithTag(PoolAddress, 'VmRw');
+    if (HavePoolAddress)
+        ExFreePoolWithTag(PoolAddress, 'VmRw');
 
     //
     // All bytes read
     //
-    *ReturnSize = BufferSize;
-    return STATUS_SUCCESS;
+    if (Status == STATUS_SUCCESS)
+        *ReturnSize = BufferSize;
+    return Status;
 }
 
 NTSTATUS
@@ -4280,12 +4304,12 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     PMEMORY_AREA MemoryArea;
-    PFN_NUMBER PageCount;
     PMMVAD Vad = NULL, FoundVad;
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
     PVOID PBaseAddress;
-    ULONG_PTR PRegionSize, StartingAddress, EndingAddress, HighestAddress;
+    ULONG_PTR PRegionSize, StartingAddress, EndingAddress;
+    ULONG_PTR HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PETHREAD CurrentThread = PsGetCurrentThread();
@@ -4295,7 +4319,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     MMPTE TempPte;
     PMMPTE PointerPte, PointerPde, LastPte;
     TABLE_SEARCH_RESULT Result;
-    PMMADDRESS_NODE Parent;
     PAGED_CODE();
 
     /* Check for valid Zero bits */
@@ -4520,7 +4543,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // This is a blind commit, all we need is the region size
             //
             PRegionSize = ROUND_TO_PAGES(PRegionSize);
-            PageCount = BYTES_TO_PAGES(PRegionSize);
             EndingAddress = 0;
             StartingAddress = 0;
 
@@ -4539,13 +4561,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                     goto FailPathNoLock;
                 }
             }
-            else
-            {
-                //
-                // Use the highest VAD address as maximum
-                //
-                HighestAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS;
-            }
         }
         else
         {
@@ -4555,8 +4570,8 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // fall based on the aligned address and the passed in region size
             //
             EndingAddress = ((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
-            StartingAddress = ROUND_DOWN((ULONG_PTR)PBaseAddress, _64K);
-            PageCount = BYTES_TO_PAGES(EndingAddress - StartingAddress);
+            PRegionSize = EndingAddress + 1 - ROUND_DOWN((ULONG_PTR)PBaseAddress, _64K);
+            StartingAddress = (ULONG_PTR)PBaseAddress;
         }
 
         //
@@ -4570,132 +4585,31 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             goto FailPathNoLock;
         }
 
-        Vad->u.LongFlags = 0;
+        RtlZeroMemory(Vad, sizeof(MMVAD_LONG));
         if (AllocationType & MEM_COMMIT) Vad->u.VadFlags.MemCommit = 1;
         Vad->u.VadFlags.Protection = ProtectionMask;
         Vad->u.VadFlags.PrivateMemory = 1;
-        Vad->u.VadFlags.CommitCharge = AllocationType & MEM_COMMIT ? PageCount : 0;
-
-        //
-        // Lock the address space and make sure the process isn't already dead
-        //
-        AddressSpace = MmGetCurrentAddressSpace();
-        MmLockAddressSpace(AddressSpace);
-        if (Process->VmDeleted)
-        {
-            Status = STATUS_PROCESS_IS_TERMINATING;
-            goto FailPath;
-        }
-
-        //
-        // Did we have a base address? If no, find a valid address that is 64KB
-        // aligned in the VAD tree. Otherwise, make sure that the address range
-        // which was passed in isn't already conflicting with an existing address
-        // range.
-        //
-        if (!PBaseAddress)
-        {
-            /* Which way should we search? */
-            if ((AllocationType & MEM_TOP_DOWN) || Process->VmTopDown)
-            {
-                /* Find an address top-down */
-                Result = MiFindEmptyAddressRangeDownTree(PRegionSize,
-                                                         HighestAddress,
-                                                         _64K,
-                                                         &Process->VadRoot,
-                                                         &StartingAddress,
-                                                         &Parent);
-            }
-            else
-            {
-                /* Find an address bottom-up */
-                Result = MiFindEmptyAddressRangeInTree(PRegionSize,
-                                                       _64K,
-                                                       &Process->VadRoot,
-                                                       &Parent,
-                                                       &StartingAddress);
-            }
-
-            if (Result == TableFoundNode)
-            {
-                Status = STATUS_NO_MEMORY;
-                goto FailPath;
-            }
-
-            //
-            // Now we know where the allocation ends. Make sure it doesn't end up
-            // somewhere in kernel mode.
-            //
-            ASSERT(StartingAddress != 0);
-            ASSERT(StartingAddress < (ULONG_PTR)MM_HIGHEST_USER_ADDRESS);
-            EndingAddress = (StartingAddress + PRegionSize - 1) | (PAGE_SIZE - 1);
-            ASSERT(EndingAddress > StartingAddress);
-            if (EndingAddress > HighestAddress)
-            {
-                Status = STATUS_NO_MEMORY;
-                goto FailPath;
-            }
-        }
-        else
-        {
-            /* Make sure it doesn't conflict with an existing allocation */
-            Result = MiCheckForConflictingNode(StartingAddress >> PAGE_SHIFT,
-                                               EndingAddress >> PAGE_SHIFT,
-                                               &Process->VadRoot,
-                                               &Parent);
-            if (Result == TableFoundNode)
-            {
-                //
-                // The address specified is in conflict!
-                //
-                Status = STATUS_CONFLICTING_ADDRESSES;
-                goto FailPath;
-            }
-        }
-
-        //
-        // Write out the VAD fields for this allocation
-        //
-        Vad->StartingVpn = StartingAddress >> PAGE_SHIFT;
-        Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
-
-        //
-        // FIXME: Should setup VAD bitmap
-        //
-        Status = STATUS_SUCCESS;
-
-        //
-        // Lock the working set and insert the VAD into the process VAD tree
-        //
-        MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
         Vad->ControlArea = NULL; // For Memory-Area hack
-        Process->VadRoot.NodeHint = Vad;
-        MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
 
         //
-        // Make sure the actual region size is at least as big as the
-        // requested region size and update the value
+        // Insert the VAD
         //
-        ASSERT(PRegionSize <= (EndingAddress + 1 - StartingAddress));
-        PRegionSize = (EndingAddress + 1 - StartingAddress);
-
-        //
-        // Update the virtual size of the process, and if this is now the highest
-        // virtual size we have ever seen, update the peak virtual size to reflect
-        // this.
-        //
-        Process->VirtualSize += PRegionSize;
-        if (Process->VirtualSize > Process->PeakVirtualSize)
+        Status = MiInsertVadEx(Vad,
+                               &StartingAddress,
+                               PRegionSize,
+                               HighestAddress,
+                               MM_VIRTMEM_GRANULARITY,
+                               AllocationType);
+        if (!NT_SUCCESS(Status))
         {
-            Process->PeakVirtualSize = Process->VirtualSize;
+            DPRINT1("Failed to insert the VAD!\n");
+            goto FailPathNoLock;
         }
 
         //
-        // Release address space and detach and dereference the target process if
+        // Detach and dereference the target process if
         // it was different from the current process
         //
-        MmUnlockAddressSpace(AddressSpace);
         if (Attached) KeUnstackDetachProcess(&ApcState);
         if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
@@ -5110,7 +5024,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     PMEMORY_AREA MemoryArea;
     SIZE_T PRegionSize;
     PVOID PBaseAddress;
-    LONG_PTR CommitReduction = 0;
+    LONG_PTR AlreadyDecommitted, CommitReduction = 0;
     ULONG_PTR StartingAddress, EndingAddress;
     PMMVAD Vad;
     NTSTATUS Status;
@@ -5506,13 +5420,15 @@ FinalPath:
     // Decommit the PTEs for the range plus the actual backing pages for the
     // range, then reduce that amount from the commit charge in the VAD
     //
+    AlreadyDecommitted = MiDecommitPages((PVOID)StartingAddress,
+                                         MiAddressToPte(EndingAddress),
+                                         Process,
+                                         Vad);
     CommitReduction = MiAddressToPte(EndingAddress) -
                       MiAddressToPte(StartingAddress) +
                       1 -
-                      MiDecommitPages((PVOID)StartingAddress,
-                                      MiAddressToPte(EndingAddress),
-                                      Process,
-                                      Vad);
+                      AlreadyDecommitted;
+
     ASSERT(CommitReduction >= 0);
     Vad->u.VadFlags.CommitCharge -= CommitReduction;
     ASSERT(Vad->u.VadFlags.CommitCharge >= 0);

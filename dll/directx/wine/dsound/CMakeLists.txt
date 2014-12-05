@@ -5,7 +5,6 @@ add_definitions(
     -D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 spec2def(dsound.dll dsound.spec ADD_IMPORTLIB)
 
 add_library(dsound SHARED
@@ -25,5 +24,10 @@ add_library(dsound SHARED
 
 set_module_type(dsound win32dll)
 target_link_libraries(dsound dxguid uuid wine)
-add_importlibs(dsound winmm ole32 advapi32 user32 msvcrt kernel32 ntdll)
+
+if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    target_link_libraries(dsound mingwex)
+endif()
+
+add_importlibs(dsound winmm advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET dsound DESTINATION reactos/system32 FOR all)

@@ -729,6 +729,26 @@ typedef struct _GROUP_AFFINITY {
  #define RTL_CONST_CAST(type) (type)
 #endif
 
+#ifdef __cplusplus
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE) \
+extern "C++" { \
+  inline _ENUMTYPE operator|(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) | ((int)b)); } \
+  inline _ENUMTYPE &operator|=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) |= ((int)b)); } \
+  inline _ENUMTYPE operator&(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) & ((int)b)); } \
+  inline _ENUMTYPE &operator&=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) &= ((int)b)); } \
+  inline _ENUMTYPE operator~(_ENUMTYPE a) { return _ENUMTYPE(~((int)a)); } \
+  inline _ENUMTYPE operator^(_ENUMTYPE a, _ENUMTYPE b) { return _ENUMTYPE(((int)a) ^ ((int)b)); } \
+  inline _ENUMTYPE &operator^=(_ENUMTYPE &a, _ENUMTYPE b) { return (_ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
+}
+#else
+#define DEFINE_ENUM_FLAG_OPERATORS(_ENUMTYPE)
+#endif
+
+#define COMPILETIME_OR_2FLAGS(a,b)          ((UINT)(a)|(UINT)(b))
+#define COMPILETIME_OR_3FLAGS(a,b,c)        ((UINT)(a)|(UINT)(b)|(UINT)(c))
+#define COMPILETIME_OR_4FLAGS(a,b,c,d)      ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d))
+#define COMPILETIME_OR_5FLAGS(a,b,c,d,e)    ((UINT)(a)|(UINT)(b)|(UINT)(c)|(UINT)(d)|(UINT)(e))
+
 /* Type Limits */
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f
@@ -741,10 +761,15 @@ typedef struct _GROUP_AFFINITY {
 #define MAXDWORD  0xffffffff
 #define MAXLONGLONG (0x7fffffffffffffffLL)
 
-/* Multiplication and Shift Operations. Note: we don't use inline
-   asm functions, the compiler can optimize this better. */
-#define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
-#define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+/* 32 to 64 bit multiplication. GCC is really bad at optimizing the native math */
+#if defined(_M_IX86) && defined(__GNUC__) && \
+    !defined(MIDL_PASS)&& !defined(RC_INVOKED) && !defined(_M_CEE_PURE)
+ #define Int32x32To64(a,b) __emul(a,b)
+ #define UInt32x32To64(a,b) __emulu(a,b)
+#else
+ #define Int32x32To64(a,b) (((__int64)(long)(a))*((__int64)(long)(b)))
+ #define UInt32x32To64(a,b) ((unsigned __int64)(unsigned int)(a)*(unsigned __int64)(unsigned int)(b))
+#endif
 
 #if defined(MIDL_PASS)|| defined(RC_INVOKED) || defined(_M_CEE_PURE)
 /* Use native math */
@@ -1424,21 +1449,6 @@ typedef struct _GROUP_AFFINITY {
 #define ACE_OBJECT_TYPE_PRESENT           0x00000001
 #define ACE_INHERITED_OBJECT_TYPE_PRESENT 0x00000002
 
-#ifdef __cplusplus
-#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
-extern "C++" { \
-    inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)|((int)b)); } \
-    inline ENUMTYPE operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
-    inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)&((int)b)); } \
-    inline ENUMTYPE operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
-    inline ENUMTYPE operator ~ (ENUMTYPE a) { return (ENUMTYPE)(~((int)a)); } \
-    inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)^((int)b)); } \
-    inline ENUMTYPE operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
-}
-#else
-# define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
-#endif
-
 /* also in ddk/ntifs.h */
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -1704,6 +1714,10 @@ extern "C++" { \
 #define THREAD_BASE_PRIORITY_MAX    2
 #define THREAD_BASE_PRIORITY_MIN    (-2)
 #define THREAD_BASE_PRIORITY_IDLE    (-15)
+
+#define PROCESS_SET_LIMITED_INFORMATION 0x2000
+#define THREAD_RESUME 0x1000
+
 /*
  * To prevent gcc compiler warnings, bracket these defines when initialising
  * a  SID_IDENTIFIER_AUTHORITY, eg.
@@ -2969,7 +2983,7 @@ typedef struct _FLOATING_SAVE_AREA {
   DWORD ErrorSelector;
   DWORD DataOffset;
   DWORD DataSelector;
-  BYTE RegisterArea[80];
+  BYTE RegisterArea[SIZE_OF_80387_REGISTERS];
   DWORD Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 

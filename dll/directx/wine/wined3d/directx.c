@@ -29,9 +29,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_perf);
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 #define WINE_DEFAULT_VIDMEM (64 * 1024 * 1024)
 #define DEFAULT_REFRESH_RATE 0
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
+#endif
 
 /* The driver names reflect the lowest GPU supported
  * by a certain driver, so DRIVER_AMD_R300 supports
@@ -69,6 +74,19 @@ enum wined3d_gl_vendor
     GL_VENDOR_FGLRX,
     GL_VENDOR_MESA,
     GL_VENDOR_NVIDIA,
+};
+
+enum wined3d_d3d_level
+{
+    WINED3D_D3D_LEVEL_5,
+    WINED3D_D3D_LEVEL_6,
+    WINED3D_D3D_LEVEL_7,
+    WINED3D_D3D_LEVEL_8,
+    WINED3D_D3D_LEVEL_9_SM2,
+    WINED3D_D3D_LEVEL_9_SM3,
+    WINED3D_D3D_LEVEL_10,
+    WINED3D_D3D_LEVEL_11,
+    WINED3D_D3D_LEVEL_COUNT
 };
 
 /* The d3d device ID */
@@ -138,6 +156,7 @@ static const struct wined3d_extension_map gl_extension_map[] =
     {"GL_ARB_texture_rectangle",            ARB_TEXTURE_RECTANGLE         },
     {"GL_ARB_texture_rg",                   ARB_TEXTURE_RG                },
     {"GL_ARB_timer_query",                  ARB_TIMER_QUERY               },
+    {"GL_ARB_uniform_buffer_object",        ARB_UNIFORM_BUFFER_OBJECT     },
     {"GL_ARB_vertex_array_bgra",            ARB_VERTEX_ARRAY_BGRA         },
     {"GL_ARB_vertex_blend",                 ARB_VERTEX_BLEND              },
     {"GL_ARB_vertex_buffer_object",         ARB_VERTEX_BUFFER_OBJECT      },
@@ -389,11 +408,13 @@ fail:
 }
 
 /* Adjust the amount of used texture memory */
-unsigned int adapter_adjust_memory(struct wined3d_adapter *adapter, int amount)
+UINT64 adapter_adjust_memory(struct wined3d_adapter *adapter, INT64 amount)
 {
-    adapter->UsedTextureRam += amount;
-    TRACE("Adjusted adapter memory by %d to %d.\n", amount, adapter->UsedTextureRam);
-    return adapter->UsedTextureRam;
+    adapter->vram_bytes_used += amount;
+    TRACE("Adjusted used adapter memory by 0x%s to 0x%s.\n",
+            wine_dbgstr_longlong(amount),
+            wine_dbgstr_longlong(adapter->vram_bytes_used));
+    return adapter->vram_bytes_used;
 }
 
 static void wined3d_adapter_cleanup(struct wined3d_adapter *adapter)
@@ -436,7 +457,7 @@ static BOOL test_arb_vs_offset_limit(const struct wined3d_gl_info *gl_info)
 {
     GLuint prog;
     BOOL ret = FALSE;
-    const char *testcode =
+    static const char testcode[] =
         "!!ARBvp1.0\n"
         "PARAM C[66] = { program.env[0..65] };\n"
         "ADDRESS A0;"
@@ -650,7 +671,7 @@ static BOOL match_broken_nv_clip(const struct wined3d_gl_info *gl_info, const ch
     GLuint prog;
     BOOL ret = FALSE;
     GLint pos;
-    const char *testcode =
+    static const char testcode[] =
         "!!ARBvp1.0\n"
         "OPTION NV_vertex_program2;\n"
         "MOV result.clip[0], 0.0;\n"
@@ -787,7 +808,7 @@ static BOOL match_broken_arb_fog(const struct wined3d_gl_info *gl_info, const ch
     float color[4] = {0.0f, 1.0f, 0.0f, 0.0f};
     GLuint prog;
     GLint err_pos;
-    static const char *program_code =
+    static const char program_code[] =
         "!!ARBfp1.0\n"
         "OPTION ARB_fog_linear;\n"
         "MOV result.color, {1.0, 0.0, 0.0, 0.0};\n"
@@ -1267,6 +1288,8 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX765M,    "NVIDIA GeForce GTX 765M",          DRIVER_NVIDIA_GEFORCE6,  2048},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX770M,    "NVIDIA GeForce GTX 770M",          DRIVER_NVIDIA_GEFORCE6,  3072},
     {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX770,     "NVIDIA GeForce GTX 770",           DRIVER_NVIDIA_GEFORCE6,  2048},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX780,     "NVIDIA GeForce GTX 780",           DRIVER_NVIDIA_GEFORCE6,  3072},
+    {HW_VENDOR_NVIDIA,     CARD_NVIDIA_GEFORCE_GTX780TI,   "NVIDIA GeForce GTX 780 Ti",        DRIVER_NVIDIA_GEFORCE6,  3072},
 
     /* AMD cards */
     {HW_VENDOR_AMD,        CARD_AMD_RAGE_128PRO,           "ATI Rage Fury",                    DRIVER_AMD_RAGE_128PRO,  16  },
@@ -1299,9 +1322,16 @@ static const struct gpu_description gpu_description_table[] =
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD6700,         "AMD Radeon HD 6700 Series",        DRIVER_AMD_R600,         1024},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD6800,         "AMD Radeon HD 6800 Series",        DRIVER_AMD_R600,         1024},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD6900,         "AMD Radeon HD 6900 Series",        DRIVER_AMD_R600,         2048},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7660D,        "AMD Radeon HD 7660D",              DRIVER_AMD_R600,         2048},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7700,         "AMD Radeon HD 7700 Series",        DRIVER_AMD_R600,         1024},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7800,         "AMD Radeon HD 7800 Series",        DRIVER_AMD_R600,         2048},
     {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD7900,         "AMD Radeon HD 7900 Series",        DRIVER_AMD_R600,         2048},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD8600M,        "AMD Radeon HD 8600M Series",       DRIVER_AMD_R600,         1024},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD8670,         "AMD Radeon HD 8670",               DRIVER_AMD_R600,         2048},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_HD8770,         "AMD Radeon HD 8770",               DRIVER_AMD_R600,         2048},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_R3,             "AMD Radeon HD 8400 / R3 Series",   DRIVER_AMD_R600,         2048},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_R7,             "AMD Radeon(TM) R7 Graphics",       DRIVER_AMD_R600,         2048},
+    {HW_VENDOR_AMD,        CARD_AMD_RADEON_R9,             "AMD Radeon R9 290",                DRIVER_AMD_R600,         4096},
 
     /* VMware */
     {HW_VENDOR_VMWARE,     CARD_VMWARE_SVGA3D,             "VMware SVGA 3D (Microsoft Corporation - WDDM)",             DRIVER_VMWARE,        1024},
@@ -1364,33 +1394,56 @@ static const struct driver_version_information *get_driver_version_info(enum win
     return NULL;
 }
 
+static const struct gpu_description *get_gpu_description(enum wined3d_pci_vendor vendor,
+        enum wined3d_pci_device device)
+{
+    unsigned int i;
+
+    for (i = 0; i < (sizeof(gpu_description_table) / sizeof(*gpu_description_table)); ++i)
+    {
+        if (vendor == gpu_description_table[i].vendor && device == gpu_description_table[i].card)
+            return &gpu_description_table[i];
+    }
+
+    return NULL;
+}
+
 static void init_driver_info(struct wined3d_driver_info *driver_info,
         enum wined3d_pci_vendor vendor, enum wined3d_pci_device device)
 {
     OSVERSIONINFOW os_version;
     WORD driver_os_version;
-    unsigned int i;
-    enum wined3d_display_driver driver = DRIVER_UNKNOWN;
+    enum wined3d_display_driver driver;
     enum wined3d_driver_model driver_model;
     const struct driver_version_information *version_info;
+    const struct gpu_description *gpu_desc;
 
-    if (wined3d_settings.pci_vendor_id != PCI_VENDOR_NONE)
+    if (driver_info->vendor != PCI_VENDOR_NONE || driver_info->device != PCI_DEVICE_NONE)
     {
-        TRACE("Overriding PCI vendor ID with 0x%04x.\n", wined3d_settings.pci_vendor_id);
-        vendor = wined3d_settings.pci_vendor_id;
+        static unsigned int once;
+
+        TRACE("GPU override %04x:%04x.\n", wined3d_settings.pci_vendor_id, wined3d_settings.pci_device_id);
+
+        driver_info->vendor = wined3d_settings.pci_vendor_id;
+        if (driver_info->vendor == PCI_VENDOR_NONE)
+            driver_info->vendor = vendor;
+
+        driver_info->device = wined3d_settings.pci_device_id;
+        if (driver_info->device == PCI_DEVICE_NONE)
+            driver_info->device = device;
+
+        if (get_gpu_description(driver_info->vendor, driver_info->device))
+        {
+            vendor = driver_info->vendor;
+            device = driver_info->device;
+        }
+        else if (!once++)
+            ERR_(winediag)("Invalid GPU override %04x:%04x specified, ignoring.\n",
+                    driver_info->vendor, driver_info->device);
     }
+
     driver_info->vendor = vendor;
-
-    if (wined3d_settings.pci_device_id != PCI_DEVICE_NONE)
-    {
-        TRACE("Overriding PCI device ID with 0x%04x.\n", wined3d_settings.pci_device_id);
-        device = wined3d_settings.pci_device_id;
-    }
     driver_info->device = device;
-
-    /* Set a default amount of video memory (64 MB). In general this code isn't used unless the user
-     * overrides the pci ids to a card which is not in our database. */
-    driver_info->vidmem = WINE_DEFAULT_VIDMEM;
 
     memset(&os_version, 0, sizeof(os_version));
     os_version.dwOSVersionInfoSize = sizeof(os_version);
@@ -1450,25 +1503,25 @@ static void init_driver_info(struct wined3d_driver_info *driver_info,
         }
     }
 
-    /* When we reach this stage we always have a vendor or device id (it can be a default one).
-     * This means that unless the ids are overridden, we will always find a GPU description. */
-    for (i = 0; i < (sizeof(gpu_description_table) / sizeof(gpu_description_table[0])); i++)
+    if ((gpu_desc = get_gpu_description(driver_info->vendor, driver_info->device)))
     {
-        if (vendor == gpu_description_table[i].vendor && device == gpu_description_table[i].card)
-        {
-            TRACE("Found card %04x:%04x in driver DB.\n", vendor, device);
-
-            driver_info->description = gpu_description_table[i].description;
-            driver_info->vidmem = gpu_description_table[i].vidmem * 1024*1024;
-            driver = gpu_description_table[i].driver;
-            break;
-        }
+        driver_info->description = gpu_desc->description;
+        driver_info->vram_bytes = (UINT64)gpu_desc->vidmem * 1024 * 1024;
+        driver = gpu_desc->driver;
+    }
+    else
+    {
+        ERR("Card %04x:%04x not found in driver DB.\n", vendor, device);
+        driver_info->description = "Direct3D HAL";
+        driver_info->vram_bytes = WINE_DEFAULT_VIDMEM;
+        driver = DRIVER_UNKNOWN;
     }
 
     if (wined3d_settings.emulated_textureram)
     {
-        TRACE("Overriding amount of video memory with %u bytes.\n", wined3d_settings.emulated_textureram);
-        driver_info->vidmem = wined3d_settings.emulated_textureram;
+        TRACE("Overriding amount of video memory with 0x%s bytes.\n",
+                wine_dbgstr_longlong(wined3d_settings.emulated_textureram));
+        driver_info->vram_bytes = wined3d_settings.emulated_textureram;
     }
 
     /* Try to obtain driver version information for the current Windows version. This fails in
@@ -1484,8 +1537,8 @@ static void init_driver_info(struct wined3d_driver_info *driver_info,
      * - the gpu is not in our database (can happen when the user overrides the vendor_id / device_id)
      *   This could be an indication that our database is not up to date, so this should be fixed.
      */
-    version_info = get_driver_version_info(driver, driver_model);
-    if (version_info)
+    if ((version_info = get_driver_version_info(driver, driver_model))
+            || (version_info = get_driver_version_info(driver, DRIVER_MODEL_NT5X)))
     {
         driver_info->name = version_info->driver_name;
         driver_info->version_high = MAKEDWORD_VERSION(driver_os_version, version_info->version);
@@ -1493,23 +1546,11 @@ static void init_driver_info(struct wined3d_driver_info *driver_info,
     }
     else
     {
-        version_info = get_driver_version_info(driver, DRIVER_MODEL_NT5X);
-        if (version_info)
-        {
-            driver_info->name = version_info->driver_name;
-            driver_info->version_high = MAKEDWORD_VERSION(driver_os_version, version_info->version);
-            driver_info->version_low = MAKEDWORD_VERSION(version_info->subversion, version_info->build);
-        }
-        else
-        {
-            driver_info->description = "Direct3D HAL";
-            driver_info->name = "Display";
-            driver_info->version_high = MAKEDWORD_VERSION(driver_os_version, 15);
-            driver_info->version_low = MAKEDWORD_VERSION(8, 6); /* Nvidia RIVA TNT, arbitrary */
-
-            FIXME("Unable to find a driver/device info for vendor_id=%#x device_id=%#x for driver_model=%d\n",
-                    vendor, device, driver_model);
-        }
+        ERR("No driver version info found for device %04x:%04x, driver model %#x.\n",
+                vendor, device, driver_model);
+        driver_info->name = "Display";
+        driver_info->version_high = MAKEDWORD_VERSION(driver_os_version, 15);
+        driver_info->version_low = MAKEDWORD_VERSION(8, 6); /* Nvidia RIVA TNT, arbitrary */
     }
 
     TRACE("Reporting (fake) driver version 0x%08x-0x%08x.\n",
@@ -1636,703 +1677,561 @@ static enum wined3d_pci_vendor wined3d_guess_card_vendor(const char *gl_vendor_s
     return HW_VENDOR_NVIDIA;
 }
 
-static UINT d3d_level_from_gl_info(const struct wined3d_gl_info *gl_info)
+static const struct wined3d_shader_backend_ops *select_shader_backend(const struct wined3d_gl_info *gl_info);
+static const struct fragment_pipeline *select_fragment_implementation(const struct wined3d_gl_info *gl_info, const struct wined3d_shader_backend_ops *shader_backend_ops);
+
+static enum wined3d_d3d_level d3d_level_from_gl_info(const struct wined3d_gl_info *gl_info)
 {
-    UINT level = 0;
+    struct shader_caps shader_caps;
+    struct fragment_caps fragment_caps;
+    const struct wined3d_shader_backend_ops *shader_backend;
+    const struct fragment_pipeline *fragment_pipeline;
 
-    if (gl_info->supported[ARB_MULTITEXTURE])
-        level = 6;
-    if (gl_info->supported[ARB_TEXTURE_COMPRESSION]
-            && gl_info->supported[ARB_TEXTURE_CUBE_MAP]
-            && gl_info->supported[ARB_TEXTURE_ENV_DOT3])
-        level = 7;
-    if (level == 7 && gl_info->supported[ARB_MULTISAMPLE]
-            && gl_info->supported[ARB_TEXTURE_BORDER_CLAMP])
-        level = 8;
-    if (level == 8 && gl_info->supported[ARB_FRAGMENT_PROGRAM]
-            && gl_info->supported[ARB_VERTEX_SHADER])
-        level = 9;
-    if (level == 9 && gl_info->supported[EXT_GPU_SHADER4])
-        level = 10;
+    shader_backend = select_shader_backend(gl_info);
+    shader_backend->shader_get_caps(gl_info, &shader_caps);
 
-    return level;
+    if (shader_caps.vs_version >= 5)
+        return WINED3D_D3D_LEVEL_11;
+    if (shader_caps.vs_version == 4)
+    {
+        /* No backed supports SM 5 at the moment */
+        if (gl_info->glsl_version >= MAKEDWORD_VERSION(4, 00))
+            return WINED3D_D3D_LEVEL_11;
+        return WINED3D_D3D_LEVEL_10;
+    }
+    if (shader_caps.vs_version == 3)
+    {
+        /* Wine can not use SM 4 on mesa drivers as the necessary functionality is not exposed
+         * on compatibility contexts */
+        if (gl_info->glsl_version >= MAKEDWORD_VERSION(1, 30))
+            return WINED3D_D3D_LEVEL_10;
+        return WINED3D_D3D_LEVEL_9_SM3;
+    }
+    if (shader_caps.vs_version == 2)
+        return WINED3D_D3D_LEVEL_9_SM2;
+    if (shader_caps.vs_version == 1)
+        return WINED3D_D3D_LEVEL_8;
+
+    fragment_pipeline = select_fragment_implementation(gl_info, shader_backend);
+    fragment_pipeline->get_caps(gl_info, &fragment_caps);
+
+    if (fragment_caps.TextureOpCaps & WINED3DTEXOPCAPS_DOTPRODUCT3)
+        return WINED3D_D3D_LEVEL_7;
+    if (fragment_caps.MaxSimultaneousTextures > 1)
+        return WINED3D_D3D_LEVEL_6;
+
+    return WINED3D_D3D_LEVEL_5;
 }
 
-static enum wined3d_pci_device select_card_nvidia_binary(const struct wined3d_gl_info *gl_info,
-        const char *gl_renderer)
+static const struct wined3d_renderer_table
 {
-    UINT d3d_level = d3d_level_from_gl_info(gl_info);
-    unsigned int i;
-
-    if (d3d_level >= 10)
-    {
-        static const struct
-        {
-            const char *renderer;
-            enum wined3d_pci_device id;
-        }
-        cards[] =
-        {
-            {"GTX 770M",    CARD_NVIDIA_GEFORCE_GTX770M},   /* Geforce 700 - midend high mobile */
-            {"GTX 770",     CARD_NVIDIA_GEFORCE_GTX770},    /* Geforce 700 - highend */
-            {"GTX 765M",    CARD_NVIDIA_GEFORCE_GTX765M},   /* Geforce 700 - midend high mobile */
-            {"GTX 760",     CARD_NVIDIA_GEFORCE_GTX760},    /* Geforce 700 - midend high  */
-            {"GTX 750 Ti",  CARD_NVIDIA_GEFORCE_GTX750TI},  /* Geforce 700 - midend */
-            {"GTX 750",     CARD_NVIDIA_GEFORCE_GTX750},    /* Geforce 700 - midend */
-            {"GTX 680",     CARD_NVIDIA_GEFORCE_GTX680},    /* Geforce 600 - highend */
-            {"GTX 670MX",   CARD_NVIDIA_GEFORCE_GTX670MX},  /* Geforce 600 - highend */
-            {"GTX 670",     CARD_NVIDIA_GEFORCE_GTX670},    /* Geforce 600 - midend high */
-            {"GTX 660 Ti",  CARD_NVIDIA_GEFORCE_GTX660TI},  /* Geforce 600 - midend high */
-            {"GTX 660M",    CARD_NVIDIA_GEFORCE_GTX660M},   /* Geforce 600 - midend high mobile */
-            {"GTX 660",     CARD_NVIDIA_GEFORCE_GTX660},    /* Geforce 600 - midend high */
-            {"GTX 650 Ti",  CARD_NVIDIA_GEFORCE_GTX650TI},  /* Geforce 600 - lowend */
-            {"GTX 650",     CARD_NVIDIA_GEFORCE_GTX650},    /* Geforce 600 - lowend */
-            {"GT 650M",     CARD_NVIDIA_GEFORCE_GT650M},    /* Geforce 600 - midend mobile */
-            {"GT 640M",     CARD_NVIDIA_GEFORCE_GT640M},    /* Geforce 600 - midend mobile */
-            {"GT 630M",     CARD_NVIDIA_GEFORCE_GT630M},    /* Geforce 600 - midend mobile */
-            {"GT 630",      CARD_NVIDIA_GEFORCE_GT630},     /* Geforce 600 - lowend */
-            {"GT 610",      CARD_NVIDIA_GEFORCE_GT610},     /* Geforce 600 - lowend */
-            {"GTX 580",     CARD_NVIDIA_GEFORCE_GTX580},    /* Geforce 500 - highend */
-            {"GTX 570",     CARD_NVIDIA_GEFORCE_GTX570},    /* Geforce 500 - midend high */
-            {"GTX 560 Ti",  CARD_NVIDIA_GEFORCE_GTX560TI},  /* Geforce 500 - midend */
-            {"GTX 560",     CARD_NVIDIA_GEFORCE_GTX560},    /* Geforce 500 - midend */
-            {"GT 555M",     CARD_NVIDIA_GEFORCE_GT555M},    /* Geforce 500 - midend mobile */
-            {"GTX 550 Ti",  CARD_NVIDIA_GEFORCE_GTX550},    /* Geforce 500 - midend */
-            {"GT 540M",     CARD_NVIDIA_GEFORCE_GT540M},    /* Geforce 500 - midend mobile */
-            {"GT 520",      CARD_NVIDIA_GEFORCE_GT520},     /* Geforce 500 - lowend */
-            {"GTX 480",     CARD_NVIDIA_GEFORCE_GTX480},    /* Geforce 400 - highend */
-            {"GTX 470",     CARD_NVIDIA_GEFORCE_GTX470},    /* Geforce 400 - midend high */
-            {"GTX 465",     CARD_NVIDIA_GEFORCE_GTX465},    /* Geforce 400 - midend */
-            {"GTX 460M",    CARD_NVIDIA_GEFORCE_GTX460M},   /* Geforce 400 - highend mobile */
-            {"GTX 460",     CARD_NVIDIA_GEFORCE_GTX460},    /* Geforce 400 - midend */
-            {"GTS 450",     CARD_NVIDIA_GEFORCE_GTS450},    /* Geforce 400 - midend low */
-            {"GT 440",      CARD_NVIDIA_GEFORCE_GT440},     /* Geforce 400 - lowend */
-            {"GT 430",      CARD_NVIDIA_GEFORCE_GT430},     /* Geforce 400 - lowend */
-            {"GT 420",      CARD_NVIDIA_GEFORCE_GT420},     /* Geforce 400 - lowend */
-            {"410M",        CARD_NVIDIA_GEFORCE_410M},      /* Geforce 400 - lowend mobile */
-            {"GT 330",      CARD_NVIDIA_GEFORCE_GT330},     /* Geforce 300 - highend */
-            {"GTS 360M",    CARD_NVIDIA_GEFORCE_GTS350M},   /* Geforce 300 - highend mobile */
-            {"GTS 350M",    CARD_NVIDIA_GEFORCE_GTS350M},   /* Geforce 300 - highend mobile */
-            {"GT 330M",     CARD_NVIDIA_GEFORCE_GT325M},    /* Geforce 300 - midend mobile */
-            {"GT 325M",     CARD_NVIDIA_GEFORCE_GT325M},    /* Geforce 300 - midend mobile */
-            {"GT 320M",     CARD_NVIDIA_GEFORCE_GT320M},    /* Geforce 300 - midend mobile */
-            {"320M",        CARD_NVIDIA_GEFORCE_320M},      /* Geforce 300 - midend mobile */
-            {"315M",        CARD_NVIDIA_GEFORCE_315M},      /* Geforce 300 - midend mobile */
-            {"GTX 295",     CARD_NVIDIA_GEFORCE_GTX280},    /* Geforce 200 - highend */
-            {"GTX 285",     CARD_NVIDIA_GEFORCE_GTX280},    /* Geforce 200 - highend */
-            {"GTX 280",     CARD_NVIDIA_GEFORCE_GTX280},    /* Geforce 200 - highend */
-            {"GTX 275",     CARD_NVIDIA_GEFORCE_GTX275},    /* Geforce 200 - midend high */
-            {"GTX 260",     CARD_NVIDIA_GEFORCE_GTX260},    /* Geforce 200 - midend */
-            {"GT 240",      CARD_NVIDIA_GEFORCE_GT240},     /* Geforce 200 - midend */
-            {"GT 220",      CARD_NVIDIA_GEFORCE_GT220},     /* Geforce 200 - lowend */
-            {"Geforce 310", CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
-            {"Geforce 305", CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
-            {"Geforce 210", CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
-            {"G 210",       CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
-            {"GTS 250",     CARD_NVIDIA_GEFORCE_9800GT},    /* Geforce 9 - highend / Geforce 200 - midend */
-            {"GTS 150",     CARD_NVIDIA_GEFORCE_9800GT},    /* Geforce 9 - highend / Geforce 200 - midend */
-            {"9800",        CARD_NVIDIA_GEFORCE_9800GT},    /* Geforce 9 - highend / Geforce 200 - midend */
-            {"GT 140",      CARD_NVIDIA_GEFORCE_9600GT},    /* Geforce 9 - midend */
-            {"9600",        CARD_NVIDIA_GEFORCE_9600GT},    /* Geforce 9 - midend */
-            {"GT 130",      CARD_NVIDIA_GEFORCE_9500GT},    /* Geforce 9 - midend low / Geforce 200 - low */
-            {"GT 120",      CARD_NVIDIA_GEFORCE_9500GT},    /* Geforce 9 - midend low / Geforce 200 - low */
-            {"9500",        CARD_NVIDIA_GEFORCE_9500GT},    /* Geforce 9 - midend low / Geforce 200 - low */
-            {"9400M",       CARD_NVIDIA_GEFORCE_9400M},     /* Geforce 9 - lowend */
-            {"9400",        CARD_NVIDIA_GEFORCE_9400GT},    /* Geforce 9 - lowend */
-            {"9300",        CARD_NVIDIA_GEFORCE_9300},      /* Geforce 9 - lowend low */
-            {"9200",        CARD_NVIDIA_GEFORCE_9200},      /* Geforce 9 - lowend low */
-            {"9100",        CARD_NVIDIA_GEFORCE_9200},      /* Geforce 9 - lowend low */
-            {"G 100",       CARD_NVIDIA_GEFORCE_9200},      /* Geforce 9 - lowend low */
-            {"8800 GTX",    CARD_NVIDIA_GEFORCE_8800GTX},   /* Geforce 8 - highend high */
-            {"8800",        CARD_NVIDIA_GEFORCE_8800GTS},   /* Geforce 8 - highend */
-            {"8600M",       CARD_NVIDIA_GEFORCE_8600MGT},   /* Geforce 8 - midend mobile */
-            {"8600 M",      CARD_NVIDIA_GEFORCE_8600MGT},   /* Geforce 8 - midend mobile */
-            {"8700",        CARD_NVIDIA_GEFORCE_8600GT},    /* Geforce 8 - midend */
-            {"8600",        CARD_NVIDIA_GEFORCE_8600GT},    /* Geforce 8 - midend */
-            {"8500",        CARD_NVIDIA_GEFORCE_8400GS},    /* Geforce 8 - mid-lowend */
-            {"8400",        CARD_NVIDIA_GEFORCE_8400GS},    /* Geforce 8 - mid-lowend */
-            {"8300",        CARD_NVIDIA_GEFORCE_8300GS},    /* Geforce 8 - lowend */
-            {"8200",        CARD_NVIDIA_GEFORCE_8300GS},    /* Geforce 8 - lowend */
-            {"8100",        CARD_NVIDIA_GEFORCE_8300GS},    /* Geforce 8 - lowend */
-        };
-
-        for (i = 0; i < sizeof(cards) / sizeof(*cards); ++i)
-        {
-            if (strstr(gl_renderer, cards[i].renderer))
-                return cards[i].id;
-        }
-        return PCI_DEVICE_NONE;
-    }
-
-    /* Both the GeforceFX, 6xxx and 7xxx series support D3D9. The last two types have more
-     * shader capabilities, so we use the shader capabilities to distinguish between FX and 6xxx/7xxx.
-     */
-    if (d3d_level >= 9 && gl_info->supported[NV_VERTEX_PROGRAM3])
-    {
-        static const struct
-        {
-            const char *renderer;
-            enum wined3d_pci_device id;
-        }
-        cards[] =
-        {
-            {"Quadro FX 5", CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
-            {"Quadro FX 4", CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
-            {"7950",        CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
-            {"7900",        CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
-            {"7800",        CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
-            {"7700",        CARD_NVIDIA_GEFORCE_7600},      /* Geforce 7 - midend */
-            {"7600",        CARD_NVIDIA_GEFORCE_7600},      /* Geforce 7 - midend */
-            {"7400",        CARD_NVIDIA_GEFORCE_7400},      /* Geforce 7 - lower medium */
-            {"7300",        CARD_NVIDIA_GEFORCE_7300},      /* Geforce 7 - lowend */
-            {"6800",        CARD_NVIDIA_GEFORCE_6800},      /* Geforce 6 - highend */
-            {"6700",        CARD_NVIDIA_GEFORCE_6600GT},    /* Geforce 6 - midend */
-            {"6610",        CARD_NVIDIA_GEFORCE_6600GT},    /* Geforce 6 - midend */
-            {"6600",        CARD_NVIDIA_GEFORCE_6600GT},    /* Geforce 6 - midend */
-        };
-
-        for (i = 0; i < sizeof(cards) / sizeof(*cards); ++i)
-        {
-            if (strstr(gl_renderer, cards[i].renderer))
-                return cards[i].id;
-        }
-        return PCI_DEVICE_NONE;
-    }
-
-    if (d3d_level >= 9)
-    {
-        /* GeforceFX - highend */
-        if (strstr(gl_renderer, "5800")
-                || strstr(gl_renderer, "5900")
-                || strstr(gl_renderer, "5950")
-                || strstr(gl_renderer, "Quadro FX"))
-        {
-            return CARD_NVIDIA_GEFORCEFX_5800;
-        }
-
-        /* GeforceFX - midend */
-        if (strstr(gl_renderer, "5600")
-                || strstr(gl_renderer, "5650")
-                || strstr(gl_renderer, "5700")
-                || strstr(gl_renderer, "5750"))
-        {
-            return CARD_NVIDIA_GEFORCEFX_5600;
-        }
-
-        /* GeforceFX - lowend */
-        return CARD_NVIDIA_GEFORCEFX_5200; /* GeforceFX 5100/5200/5250/5300/5500 */
-    }
-
-    if (d3d_level >= 8)
-    {
-        if (strstr(gl_renderer, "GeForce4 Ti") || strstr(gl_renderer, "Quadro4"))
-        {
-            return CARD_NVIDIA_GEFORCE4_TI4200; /* Geforce4 Ti4200/Ti4400/Ti4600/Ti4800, Quadro4 */
-        }
-
-        return CARD_NVIDIA_GEFORCE3; /* Geforce3 standard/Ti200/Ti500, Quadro DCC */
-    }
-
-    if (d3d_level >= 7)
-    {
-        if (strstr(gl_renderer, "GeForce4 MX"))
-        {
-            return CARD_NVIDIA_GEFORCE4_MX; /* MX420/MX440/MX460/MX4000 */
-        }
-
-        if (strstr(gl_renderer, "GeForce2 MX") || strstr(gl_renderer, "Quadro2 MXR"))
-        {
-            return CARD_NVIDIA_GEFORCE2_MX; /* Geforce2 standard/MX100/MX200/MX400, Quadro2 MXR */
-        }
-
-        if (strstr(gl_renderer, "GeForce2") || strstr(gl_renderer, "Quadro2"))
-        {
-            return CARD_NVIDIA_GEFORCE2; /* Geforce2 GTS/Pro/Ti/Ultra, Quadro2 */
-        }
-
-        return CARD_NVIDIA_GEFORCE; /* Geforce 256/DDR, Quadro */
-    }
-
-    if (strstr(gl_renderer, "TNT2"))
-    {
-        return CARD_NVIDIA_RIVA_TNT2; /* Riva TNT2 standard/M64/Pro/Ultra */
-    }
-
-    return CARD_NVIDIA_RIVA_TNT; /* Riva TNT, Vanta */
+    const char *renderer;
+    enum wined3d_pci_device id;
 }
-
-static enum wined3d_pci_device select_card_amd_binary(const struct wined3d_gl_info *gl_info,
-        const char *gl_renderer)
+cards_nvidia_binary[] =
 {
-    UINT d3d_level = d3d_level_from_gl_info(gl_info);
-
-    /* See http://developer.amd.com/drivers/pc_vendor_id/Pages/default.aspx
-     *
-     * Beware: renderer string do not match exact card model,
-     * eg HD 4800 is returned for multiple cards, even for RV790 based ones. */
-    if (d3d_level >= 10)
-    {
-        unsigned int i;
-
-        static const struct
-        {
-            const char *renderer;
-            enum wined3d_pci_device id;
-        }
-        cards[] =
-        {
-            /* Southern Islands */
-            {"HD 7900", CARD_AMD_RADEON_HD7900},
-            {"HD 7800", CARD_AMD_RADEON_HD7800},
-            {"HD 7700", CARD_AMD_RADEON_HD7700},
-            /* Northern Islands */
-            {"HD 6970", CARD_AMD_RADEON_HD6900},
-            {"HD 6900", CARD_AMD_RADEON_HD6900},
-            {"HD 6800", CARD_AMD_RADEON_HD6800},
-            {"HD 6770M",CARD_AMD_RADEON_HD6600M},
-            {"HD 6750M",CARD_AMD_RADEON_HD6600M},
-            {"HD 6700", CARD_AMD_RADEON_HD6700},
-            {"HD 6670", CARD_AMD_RADEON_HD6600},
-            {"HD 6630M",CARD_AMD_RADEON_HD6600M},
-            {"HD 6600M",CARD_AMD_RADEON_HD6600M},
-            {"HD 6600", CARD_AMD_RADEON_HD6600},
-            {"HD 6570", CARD_AMD_RADEON_HD6600},
-            {"HD 6500M",CARD_AMD_RADEON_HD6600M},
-            {"HD 6500", CARD_AMD_RADEON_HD6600},
-            {"HD 6400", CARD_AMD_RADEON_HD6400},
-            {"HD 6300", CARD_AMD_RADEON_HD6300},
-            {"HD 6200", CARD_AMD_RADEON_HD6300},
-            /* Evergreen */
-            {"HD 5870", CARD_AMD_RADEON_HD5800},    /* Radeon EG CYPRESS PRO */
-            {"HD 5850", CARD_AMD_RADEON_HD5800},    /* Radeon EG CYPRESS XT */
-            {"HD 5800", CARD_AMD_RADEON_HD5800},    /* Radeon EG CYPRESS HD58xx generic renderer string */
-            {"HD 5770", CARD_AMD_RADEON_HD5700},    /* Radeon EG JUNIPER XT */
-            {"HD 5750", CARD_AMD_RADEON_HD5700},    /* Radeon EG JUNIPER LE */
-            {"HD 5700", CARD_AMD_RADEON_HD5700},    /* Radeon EG JUNIPER HD57xx generic renderer string */
-            {"HD 5670", CARD_AMD_RADEON_HD5600},    /* Radeon EG REDWOOD XT */
-            {"HD 5570", CARD_AMD_RADEON_HD5600},    /* Radeon EG REDWOOD PRO mapped to HD5600 series */
-            {"HD 5550", CARD_AMD_RADEON_HD5600},    /* Radeon EG REDWOOD LE mapped to HD5600 series */
-            {"HD 5450", CARD_AMD_RADEON_HD5400},    /* Radeon EG CEDAR PRO */
-            {"HD 5000", CARD_AMD_RADEON_HD5600},    /* Defaulting to HD 5600 */
-            /* R700 */
-            {"HD 4890", CARD_AMD_RADEON_HD4800},    /* Radeon RV790 */
-            {"HD 4870", CARD_AMD_RADEON_HD4800},    /* Radeon RV770 */
-            {"HD 4850", CARD_AMD_RADEON_HD4800},    /* Radeon RV770 */
-            {"HD 4830", CARD_AMD_RADEON_HD4800},    /* Radeon RV770 */
-            {"HD 4800", CARD_AMD_RADEON_HD4800},    /* Radeon RV7xx HD48xx generic renderer string */
-            {"HD 4770", CARD_AMD_RADEON_HD4700},    /* Radeon RV740 */
-            {"HD 4700", CARD_AMD_RADEON_HD4700},    /* Radeon RV7xx HD47xx generic renderer string */
-            {"HD 4670", CARD_AMD_RADEON_HD4600},    /* Radeon RV730 */
-            {"HD 4650", CARD_AMD_RADEON_HD4600},    /* Radeon RV730 */
-            {"HD 4600", CARD_AMD_RADEON_HD4600},    /* Radeon RV730 */
-            {"HD 4550", CARD_AMD_RADEON_HD4350},    /* Radeon RV710 */
-            {"HD 4350", CARD_AMD_RADEON_HD4350},    /* Radeon RV710 */
-            /* R600/R700 integrated */
-            {"HD 4200M", CARD_AMD_RADEON_HD4200M},
-            {"HD 3300", CARD_AMD_RADEON_HD3200},
-            {"HD 3200", CARD_AMD_RADEON_HD3200},
-            {"HD 3100", CARD_AMD_RADEON_HD3200},
-            /* R600 */
-            {"HD 3870", CARD_AMD_RADEON_HD2900},    /* HD2900/HD3800 - highend */
-            {"HD 3850", CARD_AMD_RADEON_HD2900},    /* HD2900/HD3800 - highend */
-            {"HD 2900", CARD_AMD_RADEON_HD2900},    /* HD2900/HD3800 - highend */
-            {"HD 3830", CARD_AMD_RADEON_HD2600},    /* China-only midend */
-            {"HD 3690", CARD_AMD_RADEON_HD2600},    /* HD2600/HD3600 - midend */
-            {"HD 3650", CARD_AMD_RADEON_HD2600},    /* HD2600/HD3600 - midend */
-            {"HD 2600", CARD_AMD_RADEON_HD2600},    /* HD2600/HD3600 - midend */
-            {"HD 3470", CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
-            {"HD 3450", CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
-            {"HD 3430", CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
-            {"HD 3400", CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
-            {"HD 2400", CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
-            {"HD 2350", CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
-        };
-
-        for (i = 0; i < sizeof(cards) / sizeof(*cards); ++i)
-        {
-            if (strstr(gl_renderer, cards[i].renderer))
-                return cards[i].id;
-        }
-        return PCI_DEVICE_NONE;
-    }
-
-    if (d3d_level >= 9)
-    {
-        /* Radeon R5xx */
-        if (strstr(gl_renderer, "X1600")
-                || strstr(gl_renderer, "X1650")
-                || strstr(gl_renderer, "X1800")
-                || strstr(gl_renderer, "X1900")
-                || strstr(gl_renderer, "X1950"))
-        {
-            return CARD_AMD_RADEON_X1600;
-        }
-
-        /* Radeon R4xx + X1300/X1400/X1450/X1550/X2300/X2500/HD2300 (lowend R5xx)
-         * Note X2300/X2500/HD2300 are R5xx GPUs with a 2xxx naming but they are still DX9-only */
-        if (strstr(gl_renderer, "X700")
-                || strstr(gl_renderer, "X800")
-                || strstr(gl_renderer, "X850")
-                || strstr(gl_renderer, "X1300")
-                || strstr(gl_renderer, "X1400")
-                || strstr(gl_renderer, "X1450")
-                || strstr(gl_renderer, "X1550")
-                || strstr(gl_renderer, "X2300")
-                || strstr(gl_renderer, "X2500")
-                || strstr(gl_renderer, "HD 2300")
-                )
-        {
-            return CARD_AMD_RADEON_X700;
-        }
-
-        /* Radeon Xpress Series - onboard, DX9b, Shader 2.0, 300-400 MHz */
-        if (strstr(gl_renderer, "Radeon Xpress"))
-        {
-            return CARD_AMD_RADEON_XPRESS_200M;
-        }
-    }
-    return PCI_DEVICE_NONE;
-}
-
-static enum wined3d_pci_device select_card_intel(const struct wined3d_gl_info *gl_info,
-        const char *gl_renderer)
+    /* Direct 3D 11 */
+    {"GTX 780 Ti",                  CARD_NVIDIA_GEFORCE_GTX780TI},  /* Geforce 700 - highend */
+    {"GTX 780",                     CARD_NVIDIA_GEFORCE_GTX780},    /* Geforce 700 - highend */
+    {"GTX 770M",                    CARD_NVIDIA_GEFORCE_GTX770M},   /* Geforce 700 - midend high mobile */
+    {"GTX 770",                     CARD_NVIDIA_GEFORCE_GTX770},    /* Geforce 700 - highend */
+    {"GTX 765M",                    CARD_NVIDIA_GEFORCE_GTX765M},   /* Geforce 700 - midend high mobile */
+    {"GTX 760",                     CARD_NVIDIA_GEFORCE_GTX760},    /* Geforce 700 - midend high  */
+    {"GTX 750 Ti",                  CARD_NVIDIA_GEFORCE_GTX750TI},  /* Geforce 700 - midend */
+    {"GTX 750",                     CARD_NVIDIA_GEFORCE_GTX750},    /* Geforce 700 - midend */
+    {"GTX 680",                     CARD_NVIDIA_GEFORCE_GTX680},    /* Geforce 600 - highend */
+    {"GTX 670MX",                   CARD_NVIDIA_GEFORCE_GTX670MX},  /* Geforce 600 - highend */
+    {"GTX 670",                     CARD_NVIDIA_GEFORCE_GTX670},    /* Geforce 600 - midend high */
+    {"GTX 660 Ti",                  CARD_NVIDIA_GEFORCE_GTX660TI},  /* Geforce 600 - midend high */
+    {"GTX 660M",                    CARD_NVIDIA_GEFORCE_GTX660M},   /* Geforce 600 - midend high mobile */
+    {"GTX 660",                     CARD_NVIDIA_GEFORCE_GTX660},    /* Geforce 600 - midend high */
+    {"GTX 650 Ti",                  CARD_NVIDIA_GEFORCE_GTX650TI},  /* Geforce 600 - lowend */
+    {"GTX 650",                     CARD_NVIDIA_GEFORCE_GTX650},    /* Geforce 600 - lowend */
+    {"GT 650M",                     CARD_NVIDIA_GEFORCE_GT650M},    /* Geforce 600 - midend mobile */
+    {"GT 640M",                     CARD_NVIDIA_GEFORCE_GT640M},    /* Geforce 600 - midend mobile */
+    {"GT 630M",                     CARD_NVIDIA_GEFORCE_GT630M},    /* Geforce 600 - midend mobile */
+    {"GT 630",                      CARD_NVIDIA_GEFORCE_GT630},     /* Geforce 600 - lowend */
+    {"GT 610",                      CARD_NVIDIA_GEFORCE_GT610},     /* Geforce 600 - lowend */
+    {"GTX 580",                     CARD_NVIDIA_GEFORCE_GTX580},    /* Geforce 500 - highend */
+    {"GTX 570",                     CARD_NVIDIA_GEFORCE_GTX570},    /* Geforce 500 - midend high */
+    {"GTX 560 Ti",                  CARD_NVIDIA_GEFORCE_GTX560TI},  /* Geforce 500 - midend */
+    {"GTX 560",                     CARD_NVIDIA_GEFORCE_GTX560},    /* Geforce 500 - midend */
+    {"GT 555M",                     CARD_NVIDIA_GEFORCE_GT555M},    /* Geforce 500 - midend mobile */
+    {"GTX 550 Ti",                  CARD_NVIDIA_GEFORCE_GTX550},    /* Geforce 500 - midend */
+    {"GT 540M",                     CARD_NVIDIA_GEFORCE_GT540M},    /* Geforce 500 - midend mobile */
+    {"GT 520",                      CARD_NVIDIA_GEFORCE_GT520},     /* Geforce 500 - lowend */
+    {"GTX 480",                     CARD_NVIDIA_GEFORCE_GTX480},    /* Geforce 400 - highend */
+    {"GTX 470",                     CARD_NVIDIA_GEFORCE_GTX470},    /* Geforce 400 - midend high */
+    /* Direct 3D 10 */
+    {"GTX 465",                     CARD_NVIDIA_GEFORCE_GTX465},    /* Geforce 400 - midend */
+    {"GTX 460M",                    CARD_NVIDIA_GEFORCE_GTX460M},   /* Geforce 400 - highend mobile */
+    {"GTX 460",                     CARD_NVIDIA_GEFORCE_GTX460},    /* Geforce 400 - midend */
+    {"GTS 450",                     CARD_NVIDIA_GEFORCE_GTS450},    /* Geforce 400 - midend low */
+    {"GT 440",                      CARD_NVIDIA_GEFORCE_GT440},     /* Geforce 400 - lowend */
+    {"GT 430",                      CARD_NVIDIA_GEFORCE_GT430},     /* Geforce 400 - lowend */
+    {"GT 420",                      CARD_NVIDIA_GEFORCE_GT420},     /* Geforce 400 - lowend */
+    {"410M",                        CARD_NVIDIA_GEFORCE_410M},      /* Geforce 400 - lowend mobile */
+    {"GT 330",                      CARD_NVIDIA_GEFORCE_GT330},     /* Geforce 300 - highend */
+    {"GTS 360M",                    CARD_NVIDIA_GEFORCE_GTS350M},   /* Geforce 300 - highend mobile */
+    {"GTS 350M",                    CARD_NVIDIA_GEFORCE_GTS350M},   /* Geforce 300 - highend mobile */
+    {"GT 330M",                     CARD_NVIDIA_GEFORCE_GT325M},    /* Geforce 300 - midend mobile */
+    {"GT 325M",                     CARD_NVIDIA_GEFORCE_GT325M},    /* Geforce 300 - midend mobile */
+    {"GT 320M",                     CARD_NVIDIA_GEFORCE_GT320M},    /* Geforce 300 - midend mobile */
+    {"320M",                        CARD_NVIDIA_GEFORCE_320M},      /* Geforce 300 - midend mobile */
+    {"315M",                        CARD_NVIDIA_GEFORCE_315M},      /* Geforce 300 - midend mobile */
+    {"GTX 295",                     CARD_NVIDIA_GEFORCE_GTX280},    /* Geforce 200 - highend */
+    {"GTX 285",                     CARD_NVIDIA_GEFORCE_GTX280},    /* Geforce 200 - highend */
+    {"GTX 280",                     CARD_NVIDIA_GEFORCE_GTX280},    /* Geforce 200 - highend */
+    {"GTX 275",                     CARD_NVIDIA_GEFORCE_GTX275},    /* Geforce 200 - midend high */
+    {"GTX 260",                     CARD_NVIDIA_GEFORCE_GTX260},    /* Geforce 200 - midend */
+    {"GT 240",                      CARD_NVIDIA_GEFORCE_GT240},     /* Geforce 200 - midend */
+    {"GT 220",                      CARD_NVIDIA_GEFORCE_GT220},     /* Geforce 200 - lowend */
+    {"GeForce 310",                 CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
+    {"GeForce 305",                 CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
+    {"GeForce 210",                 CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
+    {"G 210",                       CARD_NVIDIA_GEFORCE_210},       /* Geforce 200 - lowend */
+    {"GTS 250",                     CARD_NVIDIA_GEFORCE_9800GT},    /* Geforce 9 - highend / Geforce 200 - midend */
+    {"GTS 150",                     CARD_NVIDIA_GEFORCE_9800GT},    /* Geforce 9 - highend / Geforce 200 - midend */
+    {"9800",                        CARD_NVIDIA_GEFORCE_9800GT},    /* Geforce 9 - highend / Geforce 200 - midend */
+    {"GT 140",                      CARD_NVIDIA_GEFORCE_9600GT},    /* Geforce 9 - midend */
+    {"9600",                        CARD_NVIDIA_GEFORCE_9600GT},    /* Geforce 9 - midend */
+    {"GT 130",                      CARD_NVIDIA_GEFORCE_9500GT},    /* Geforce 9 - midend low / Geforce 200 - low */
+    {"GT 120",                      CARD_NVIDIA_GEFORCE_9500GT},    /* Geforce 9 - midend low / Geforce 200 - low */
+    {"9500",                        CARD_NVIDIA_GEFORCE_9500GT},    /* Geforce 9 - midend low / Geforce 200 - low */
+    {"9400M",                       CARD_NVIDIA_GEFORCE_9400M},     /* Geforce 9 - lowend */
+    {"9400",                        CARD_NVIDIA_GEFORCE_9400GT},    /* Geforce 9 - lowend */
+    {"9300",                        CARD_NVIDIA_GEFORCE_9300},      /* Geforce 9 - lowend low */
+    {"9200",                        CARD_NVIDIA_GEFORCE_9200},      /* Geforce 9 - lowend low */
+    {"9100",                        CARD_NVIDIA_GEFORCE_9200},      /* Geforce 9 - lowend low */
+    {"G 100",                       CARD_NVIDIA_GEFORCE_9200},      /* Geforce 9 - lowend low */
+    {"8800 GTX",                    CARD_NVIDIA_GEFORCE_8800GTX},   /* Geforce 8 - highend high */
+    {"8800",                        CARD_NVIDIA_GEFORCE_8800GTS},   /* Geforce 8 - highend */
+    {"8600M",                       CARD_NVIDIA_GEFORCE_8600MGT},   /* Geforce 8 - midend mobile */
+    {"8600 M",                      CARD_NVIDIA_GEFORCE_8600MGT},   /* Geforce 8 - midend mobile */
+    {"8700",                        CARD_NVIDIA_GEFORCE_8600GT},    /* Geforce 8 - midend */
+    {"8600",                        CARD_NVIDIA_GEFORCE_8600GT},    /* Geforce 8 - midend */
+    {"8500",                        CARD_NVIDIA_GEFORCE_8400GS},    /* Geforce 8 - mid-lowend */
+    {"8400",                        CARD_NVIDIA_GEFORCE_8400GS},    /* Geforce 8 - mid-lowend */
+    {"8300",                        CARD_NVIDIA_GEFORCE_8300GS},    /* Geforce 8 - lowend */
+    {"8200",                        CARD_NVIDIA_GEFORCE_8300GS},    /* Geforce 8 - lowend */
+    {"8100",                        CARD_NVIDIA_GEFORCE_8300GS},    /* Geforce 8 - lowend */
+    /* Direct 3D 9 SM3 */
+    {"Quadro FX 5",                 CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
+    {"Quadro FX 4",                 CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
+    {"7950",                        CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
+    {"7900",                        CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
+    {"7800",                        CARD_NVIDIA_GEFORCE_7800GT},    /* Geforce 7 - highend */
+    {"7700",                        CARD_NVIDIA_GEFORCE_7600},      /* Geforce 7 - midend */
+    {"7600",                        CARD_NVIDIA_GEFORCE_7600},      /* Geforce 7 - midend */
+    {"7400",                        CARD_NVIDIA_GEFORCE_7400},      /* Geforce 7 - lower medium */
+    {"7300",                        CARD_NVIDIA_GEFORCE_7300},      /* Geforce 7 - lowend */
+    {"6800",                        CARD_NVIDIA_GEFORCE_6800},      /* Geforce 6 - highend */
+    {"6700",                        CARD_NVIDIA_GEFORCE_6600GT},    /* Geforce 6 - midend */
+    {"6610",                        CARD_NVIDIA_GEFORCE_6600GT},    /* Geforce 6 - midend */
+    {"6600",                        CARD_NVIDIA_GEFORCE_6600GT},    /* Geforce 6 - midend */
+    /* Direct 3D 9 SM2 */
+    {"Quadro FX",                   CARD_NVIDIA_GEFORCEFX_5800},    /* GeforceFX - highend */
+    {"5950",                        CARD_NVIDIA_GEFORCEFX_5800},    /* GeforceFX - highend */
+    {"5900",                        CARD_NVIDIA_GEFORCEFX_5800},    /* GeforceFX - highend */
+    {"5800",                        CARD_NVIDIA_GEFORCEFX_5800},    /* GeforceFX - highend */
+    {"5750",                        CARD_NVIDIA_GEFORCEFX_5600},    /* GeforceFX - midend */
+    {"5700",                        CARD_NVIDIA_GEFORCEFX_5600},    /* GeforceFX - midend */
+    {"5650",                        CARD_NVIDIA_GEFORCEFX_5600},    /* GeforceFX - midend */
+    {"5600",                        CARD_NVIDIA_GEFORCEFX_5600},    /* GeforceFX - midend */
+    {"5500",                        CARD_NVIDIA_GEFORCEFX_5200},    /* GeforceFX - lowend */
+    {"5300",                        CARD_NVIDIA_GEFORCEFX_5200},    /* GeforceFX - lowend */
+    {"5250",                        CARD_NVIDIA_GEFORCEFX_5200},    /* GeforceFX - lowend */
+    {"5200",                        CARD_NVIDIA_GEFORCEFX_5200},    /* GeforceFX - lowend */
+    {"5100",                        CARD_NVIDIA_GEFORCEFX_5200},    /* GeforceFX - lowend */
+    /* Direct 3D 8 */
+    {"Quadro4",                     CARD_NVIDIA_GEFORCE4_TI4200},
+    {"GeForce4 Ti",                 CARD_NVIDIA_GEFORCE4_TI4200},   /* Geforce4 Ti4200/Ti4400/Ti4600/Ti4800 */
+    /* Direct 3D 7 */
+    {"GeForce4 MX",                 CARD_NVIDIA_GEFORCE4_MX},       /* MX420/MX440/MX460/MX4000 */
+    {"Quadro2 MXR",                 CARD_NVIDIA_GEFORCE2_MX},
+    {"GeForce2 MX",                 CARD_NVIDIA_GEFORCE2_MX},       /* Geforce2 standard/MX100/MX200/MX400 */
+    {"Quadro2",                     CARD_NVIDIA_GEFORCE2},
+    {"GeForce2",                    CARD_NVIDIA_GEFORCE2},          /* Geforce2 GTS/Pro/Ti/Ultra */
+    /* Direct 3D 6 */
+    {"TNT2",                        CARD_NVIDIA_RIVA_TNT2},         /* Riva TNT2 standard/M64/Pro/Ultra */
+},
+/* See http://developer.amd.com/resources/hardware-drivers/ati-catalyst-pc-vendor-id-1002-li/
+ *
+ * Beware: renderer string do not match exact card model,
+ * eg HD 4800 is returned for multiple cards, even for RV790 based ones. */
+cards_amd_binary[] =
 {
-    unsigned int i;
-
-    static const struct
-    {
-        const char *renderer;
-        enum wined3d_pci_device id;
-    }
-    cards[] =
-    {
-        /* Haswell */
-        {"Haswell Mobile",              CARD_INTEL_HWM},
-        /* Ivybridge */
-        {"Ivybridge Server",            CARD_INTEL_IVBS},
-        {"Ivybridge Mobile",            CARD_INTEL_IVBM},
-        {"Ivybridge Desktop",           CARD_INTEL_IVBD},
-        /* Sandybridge */
-        {"Sandybridge Server",          CARD_INTEL_SNBS},
-        {"Sandybridge Mobile",          CARD_INTEL_SNBM},
-        {"Sandybridge Desktop",         CARD_INTEL_SNBD},
-        /* Ironlake */
-        {"Ironlake Mobile",             CARD_INTEL_ILKM},
-        {"Ironlake Desktop",            CARD_INTEL_ILKD},
-        /* G4x */
-        {"B43",                         CARD_INTEL_B43},
-        {"G41",                         CARD_INTEL_G41},
-        {"G45",                         CARD_INTEL_G45},
-        {"Q45",                         CARD_INTEL_Q45},
-        {"Integrated Graphics Device",  CARD_INTEL_IGD},
-        {"GM45",                        CARD_INTEL_GM45},
-        /* i965 */
-        {"965GME",                      CARD_INTEL_965GME},
-        {"965GM",                       CARD_INTEL_965GM},
-        {"X3100",                       CARD_INTEL_965GM},  /* MacOS */
-        {"946GZ",                       CARD_INTEL_946GZ},
-        {"965G",                        CARD_INTEL_965G},
-        {"965Q",                        CARD_INTEL_965Q},
-        /* i945 */
-        {"Pineview M",                  CARD_INTEL_PNVM},
-        {"Pineview G",                  CARD_INTEL_PNVG},
-        {"IGD",                         CARD_INTEL_PNVG},
-        {"Q33",                         CARD_INTEL_Q33},
-        {"G33",                         CARD_INTEL_G33},
-        {"Q35",                         CARD_INTEL_Q35},
-        {"945GME",                      CARD_INTEL_945GME},
-        {"945GM",                       CARD_INTEL_945GM},
-        {"GMA 950",                     CARD_INTEL_945GM},  /* MacOS */
-        {"945G",                        CARD_INTEL_945G},
-        /* i915 */
-        {"915GM",                       CARD_INTEL_915GM},
-        {"E7221G",                      CARD_INTEL_E7221G},
-        {"915G",                        CARD_INTEL_915G},
-        /* i8xx */
-        {"865G",                        CARD_INTEL_865G},
-        {"845G",                        CARD_INTEL_845G},
-        {"855GM",                       CARD_INTEL_855GM},
-        {"830M",                        CARD_INTEL_830M},
-    };
-
-    for (i = 0; i < sizeof(cards) / sizeof(*cards); ++i)
-    {
-        if (strstr(gl_renderer, cards[i].renderer))
-            return cards[i].id;
-    }
-
-    return PCI_DEVICE_NONE;
-}
-
-static enum wined3d_pci_device select_card_amd_mesa(const struct wined3d_gl_info *gl_info,
-        const char *gl_renderer)
+    /* Southern Islands */
+    {"HD 7900",                     CARD_AMD_RADEON_HD7900},
+    {"HD 7800",                     CARD_AMD_RADEON_HD7800},
+    {"HD 7700",                     CARD_AMD_RADEON_HD7700},
+    /* Northern Islands */
+    {"HD 6970",                     CARD_AMD_RADEON_HD6900},
+    {"HD 6900",                     CARD_AMD_RADEON_HD6900},
+    {"HD 6800",                     CARD_AMD_RADEON_HD6800},
+    {"HD 6770M",                    CARD_AMD_RADEON_HD6600M},
+    {"HD 6750M",                    CARD_AMD_RADEON_HD6600M},
+    {"HD 6700",                     CARD_AMD_RADEON_HD6700},
+    {"HD 6670",                     CARD_AMD_RADEON_HD6600},
+    {"HD 6630M",                    CARD_AMD_RADEON_HD6600M},
+    {"HD 6600M",                    CARD_AMD_RADEON_HD6600M},
+    {"HD 6600",                     CARD_AMD_RADEON_HD6600},
+    {"HD 6570",                     CARD_AMD_RADEON_HD6600},
+    {"HD 6500M",                    CARD_AMD_RADEON_HD6600M},
+    {"HD 6500",                     CARD_AMD_RADEON_HD6600},
+    {"HD 6400",                     CARD_AMD_RADEON_HD6400},
+    {"HD 6300",                     CARD_AMD_RADEON_HD6300},
+    {"HD 6200",                     CARD_AMD_RADEON_HD6300},
+    /* Evergreen */
+    {"HD 5870",                     CARD_AMD_RADEON_HD5800},    /* Radeon EG CYPRESS PRO */
+    {"HD 5850",                     CARD_AMD_RADEON_HD5800},    /* Radeon EG CYPRESS XT */
+    {"HD 5800",                     CARD_AMD_RADEON_HD5800},    /* Radeon EG CYPRESS HD58xx generic renderer string */
+    {"HD 5770",                     CARD_AMD_RADEON_HD5700},    /* Radeon EG JUNIPER XT */
+    {"HD 5750",                     CARD_AMD_RADEON_HD5700},    /* Radeon EG JUNIPER LE */
+    {"HD 5700",                     CARD_AMD_RADEON_HD5700},    /* Radeon EG JUNIPER HD57xx generic renderer string */
+    {"HD 5670",                     CARD_AMD_RADEON_HD5600},    /* Radeon EG REDWOOD XT */
+    {"HD 5570",                     CARD_AMD_RADEON_HD5600},    /* Radeon EG REDWOOD PRO mapped to HD5600 series */
+    {"HD 5550",                     CARD_AMD_RADEON_HD5600},    /* Radeon EG REDWOOD LE mapped to HD5600 series */
+    {"HD 5450",                     CARD_AMD_RADEON_HD5400},    /* Radeon EG CEDAR PRO */
+    {"HD 5000",                     CARD_AMD_RADEON_HD5600},    /* Defaulting to HD 5600 */
+    /* R700 */
+    {"HD 4890",                     CARD_AMD_RADEON_HD4800},    /* Radeon RV790 */
+    {"HD 4870",                     CARD_AMD_RADEON_HD4800},    /* Radeon RV770 */
+    {"HD 4850",                     CARD_AMD_RADEON_HD4800},    /* Radeon RV770 */
+    {"HD 4830",                     CARD_AMD_RADEON_HD4800},    /* Radeon RV770 */
+    {"HD 4800",                     CARD_AMD_RADEON_HD4800},    /* Radeon RV7xx HD48xx generic renderer string */
+    {"HD 4770",                     CARD_AMD_RADEON_HD4700},    /* Radeon RV740 */
+    {"HD 4700",                     CARD_AMD_RADEON_HD4700},    /* Radeon RV7xx HD47xx generic renderer string */
+    {"HD 4670",                     CARD_AMD_RADEON_HD4600},    /* Radeon RV730 */
+    {"HD 4650",                     CARD_AMD_RADEON_HD4600},    /* Radeon RV730 */
+    {"HD 4600",                     CARD_AMD_RADEON_HD4600},    /* Radeon RV730 */
+    {"HD 4550",                     CARD_AMD_RADEON_HD4350},    /* Radeon RV710 */
+    {"HD 4350",                     CARD_AMD_RADEON_HD4350},    /* Radeon RV710 */
+    /* R600/R700 integrated */
+    {"HD 4200M",                    CARD_AMD_RADEON_HD4200M},
+    {"HD 3300",                     CARD_AMD_RADEON_HD3200},
+    {"HD 3200",                     CARD_AMD_RADEON_HD3200},
+    {"HD 3100",                     CARD_AMD_RADEON_HD3200},
+    /* R600 */
+    {"HD 3870",                     CARD_AMD_RADEON_HD2900},    /* HD2900/HD3800 - highend */
+    {"HD 3850",                     CARD_AMD_RADEON_HD2900},    /* HD2900/HD3800 - highend */
+    {"HD 2900",                     CARD_AMD_RADEON_HD2900},    /* HD2900/HD3800 - highend */
+    {"HD 3830",                     CARD_AMD_RADEON_HD2600},    /* China-only midend */
+    {"HD 3690",                     CARD_AMD_RADEON_HD2600},    /* HD2600/HD3600 - midend */
+    {"HD 3650",                     CARD_AMD_RADEON_HD2600},    /* HD2600/HD3600 - midend */
+    {"HD 2600",                     CARD_AMD_RADEON_HD2600},    /* HD2600/HD3600 - midend */
+    {"HD 3470",                     CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
+    {"HD 3450",                     CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
+    {"HD 3430",                     CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
+    {"HD 3400",                     CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
+    {"HD 2400",                     CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
+    {"HD 2350",                     CARD_AMD_RADEON_HD2350},    /* HD2350/HD2400/HD3400 - lowend */
+    /* Radeon R5xx */
+    {"X1950",                       CARD_AMD_RADEON_X1600},
+    {"X1900",                       CARD_AMD_RADEON_X1600},
+    {"X1800",                       CARD_AMD_RADEON_X1600},
+    {"X1650",                       CARD_AMD_RADEON_X1600},
+    {"X1600",                       CARD_AMD_RADEON_X1600},
+    /* Radeon R4xx + X1300/X1400/X1450/X1550/X2300/X2500/HD2300 (lowend R5xx)
+     * Note X2300/X2500/HD2300 are R5xx GPUs with a 2xxx naming but they are still DX9-only */
+    {"HD 2300",                     CARD_AMD_RADEON_X700},
+    {"X2500",                       CARD_AMD_RADEON_X700},
+    {"X2300",                       CARD_AMD_RADEON_X700},
+    {"X1550",                       CARD_AMD_RADEON_X700},
+    {"X1450",                       CARD_AMD_RADEON_X700},
+    {"X1400",                       CARD_AMD_RADEON_X700},
+    {"X1300",                       CARD_AMD_RADEON_X700},
+    {"X850",                        CARD_AMD_RADEON_X700},
+    {"X800",                        CARD_AMD_RADEON_X700},
+    {"X700",                        CARD_AMD_RADEON_X700},
+    /* Radeon Xpress Series - onboard, DX9b, Shader 2.0, 300-400 MHz */
+    {"Radeon Xpress",               CARD_AMD_RADEON_XPRESS_200M},
+},
+cards_intel[] =
 {
-    unsigned int i;
-
-    /* 20101109 - These are never returned by current Gallium radeon
-     * drivers: R700, RV790, R680, RV535, RV516, R410, RS485, RV360, RV351.
-     *
-     * These are returned but not handled: RC410, RV380. */
-    static const struct
-    {
-        const char *renderer;
-        enum wined3d_pci_device id;
-    }
-    cards[] =
-    {
-        /* Southern Islands */
-        {"TAHITI",      CARD_AMD_RADEON_HD7900},
-        {"PITCAIRN",    CARD_AMD_RADEON_HD7800},
-        {"CAPE VERDE",  CARD_AMD_RADEON_HD7700},
-        /* Northern Islands */
-        {"CAYMAN",      CARD_AMD_RADEON_HD6900},
-        {"BARTS",       CARD_AMD_RADEON_HD6800},
-        {"TURKS",       CARD_AMD_RADEON_HD6600},
-        {"SUMO2",       CARD_AMD_RADEON_HD6410D},   /* SUMO2 first, because we do a strstr(). */
-        {"SUMO",        CARD_AMD_RADEON_HD6550D},
-        {"CAICOS",      CARD_AMD_RADEON_HD6400},
-        {"PALM",        CARD_AMD_RADEON_HD6300},
-        /* Evergreen */
-        {"HEMLOCK",     CARD_AMD_RADEON_HD5900},
-        {"CYPRESS",     CARD_AMD_RADEON_HD5800},
-        {"JUNIPER",     CARD_AMD_RADEON_HD5700},
-        {"REDWOOD",     CARD_AMD_RADEON_HD5600},
-        {"CEDAR",       CARD_AMD_RADEON_HD5400},
-        /* R700 */
-        {"R700",        CARD_AMD_RADEON_HD4800},
-        {"RV790",       CARD_AMD_RADEON_HD4800},
-        {"RV770",       CARD_AMD_RADEON_HD4800},
-        {"RV740",       CARD_AMD_RADEON_HD4700},
-        {"RV730",       CARD_AMD_RADEON_HD4600},
-        {"RV710",       CARD_AMD_RADEON_HD4350},
-        /* R600/R700 integrated */
-        {"RS880",       CARD_AMD_RADEON_HD4200M},
-        {"RS780",       CARD_AMD_RADEON_HD3200},
-        /* R600 */
-        {"R680",        CARD_AMD_RADEON_HD2900},
-        {"R600",        CARD_AMD_RADEON_HD2900},
-        {"RV670",       CARD_AMD_RADEON_HD2900},
-        {"RV635",       CARD_AMD_RADEON_HD2600},
-        {"RV630",       CARD_AMD_RADEON_HD2600},
-        {"RV620",       CARD_AMD_RADEON_HD2350},
-        {"RV610",       CARD_AMD_RADEON_HD2350},
-        /* R500 */
-        {"R580",        CARD_AMD_RADEON_X1600},
-        {"R520",        CARD_AMD_RADEON_X1600},
-        {"RV570",       CARD_AMD_RADEON_X1600},
-        {"RV560",       CARD_AMD_RADEON_X1600},
-        {"RV535",       CARD_AMD_RADEON_X1600},
-        {"RV530",       CARD_AMD_RADEON_X1600},
-        {"RV516",       CARD_AMD_RADEON_X700},
-        {"RV515",       CARD_AMD_RADEON_X700},
-        /* R400 */
-        {"R481",        CARD_AMD_RADEON_X700},
-        {"R480",        CARD_AMD_RADEON_X700},
-        {"R430",        CARD_AMD_RADEON_X700},
-        {"R423",        CARD_AMD_RADEON_X700},
-        {"R420",        CARD_AMD_RADEON_X700},
-        {"R410",        CARD_AMD_RADEON_X700},
-        {"RV410",       CARD_AMD_RADEON_X700},
-        /* Radeon Xpress - onboard, DX9b, Shader 2.0, 300-400 MHz */
-        {"RS740",       CARD_AMD_RADEON_XPRESS_200M},
-        {"RS690",       CARD_AMD_RADEON_XPRESS_200M},
-        {"RS600",       CARD_AMD_RADEON_XPRESS_200M},
-        {"RS485",       CARD_AMD_RADEON_XPRESS_200M},
-        {"RS482",       CARD_AMD_RADEON_XPRESS_200M},
-        {"RS480",       CARD_AMD_RADEON_XPRESS_200M},
-        {"RS400",       CARD_AMD_RADEON_XPRESS_200M},
-        /* R300 */
-        {"R360",        CARD_AMD_RADEON_9500},
-        {"R350",        CARD_AMD_RADEON_9500},
-        {"R300",        CARD_AMD_RADEON_9500},
-        {"RV370",       CARD_AMD_RADEON_9500},
-        {"RV360",       CARD_AMD_RADEON_9500},
-        {"RV351",       CARD_AMD_RADEON_9500},
-        {"RV350",       CARD_AMD_RADEON_9500},
-    };
-
-    for (i = 0; i < sizeof(cards) / sizeof(*cards); ++i)
-    {
-        if (strstr(gl_renderer, cards[i].renderer))
-            return cards[i].id;
-    }
-
-    return PCI_DEVICE_NONE;
-}
-
-static enum wined3d_pci_device select_card_nvidia_mesa(const struct wined3d_gl_info *gl_info,
-        const char *gl_renderer)
+    /* Haswell */
+    {"Haswell Mobile",              CARD_INTEL_HWM},
+    /* Ivybridge */
+    {"Ivybridge Server",            CARD_INTEL_IVBS},
+    {"Ivybridge Mobile",            CARD_INTEL_IVBM},
+    {"Ivybridge Desktop",           CARD_INTEL_IVBD},
+    /* Sandybridge */
+    {"Sandybridge Server",          CARD_INTEL_SNBS},
+    {"Sandybridge Mobile",          CARD_INTEL_SNBM},
+    {"Sandybridge Desktop",         CARD_INTEL_SNBD},
+    /* Ironlake */
+    {"Ironlake Mobile",             CARD_INTEL_ILKM},
+    {"Ironlake Desktop",            CARD_INTEL_ILKD},
+    /* G4x */
+    {"B43",                         CARD_INTEL_B43},
+    {"G41",                         CARD_INTEL_G41},
+    {"G45",                         CARD_INTEL_G45},
+    {"Q45",                         CARD_INTEL_Q45},
+    {"Integrated Graphics Device",  CARD_INTEL_IGD},
+    {"GM45",                        CARD_INTEL_GM45},
+    /* i965 */
+    {"965GME",                      CARD_INTEL_965GME},
+    {"965GM",                       CARD_INTEL_965GM},
+    {"X3100",                       CARD_INTEL_965GM},  /* MacOS */
+    {"946GZ",                       CARD_INTEL_946GZ},
+    {"965G",                        CARD_INTEL_965G},
+    {"965Q",                        CARD_INTEL_965Q},
+    /* i945 */
+    {"Pineview M",                  CARD_INTEL_PNVM},
+    {"Pineview G",                  CARD_INTEL_PNVG},
+    {"IGD",                         CARD_INTEL_PNVG},
+    {"Q33",                         CARD_INTEL_Q33},
+    {"G33",                         CARD_INTEL_G33},
+    {"Q35",                         CARD_INTEL_Q35},
+    {"945GME",                      CARD_INTEL_945GME},
+    {"945GM",                       CARD_INTEL_945GM},
+    {"GMA 950",                     CARD_INTEL_945GM},  /* MacOS */
+    {"945G",                        CARD_INTEL_945G},
+    /* i915 */
+    {"915GM",                       CARD_INTEL_915GM},
+    {"E7221G",                      CARD_INTEL_E7221G},
+    {"915G",                        CARD_INTEL_915G},
+    /* i8xx */
+    {"865G",                        CARD_INTEL_865G},
+    {"845G",                        CARD_INTEL_845G},
+    {"855GM",                       CARD_INTEL_855GM},
+    {"830M",                        CARD_INTEL_830M},
+},
+/* 20101109 - These are never returned by current Gallium radeon
+ * drivers: R700, RV790, R680, RV535, RV516, R410, RS485, RV360, RV351.
+ *
+ * These are returned but not handled: RC410, RV380. */
+cards_amd_mesa[] =
 {
-    unsigned int i;
-
-    static const struct
-    {
-        const char *renderer;
-        enum wined3d_pci_device id;
-    }
-    cards[] =
-    {
-        /* Maxwell */
-        {"NV117",   CARD_NVIDIA_GEFORCE_GTX750},
-        /* Kepler */
-        {"NVE6",    CARD_NVIDIA_GEFORCE_GTX770M},
-        {"NVE4",    CARD_NVIDIA_GEFORCE_GTX680},
-        /* Fermi */
-        {"NVD9",    CARD_NVIDIA_GEFORCE_GT520},
-        {"NVCF",    CARD_NVIDIA_GEFORCE_GTX550},
-        {"NVCE",    CARD_NVIDIA_GEFORCE_GTX560},
-        {"NVC8",    CARD_NVIDIA_GEFORCE_GTX570},
-        {"NVC4",    CARD_NVIDIA_GEFORCE_GTX460},
-        {"NVC3",    CARD_NVIDIA_GEFORCE_GT440},
-        {"NVC1",    CARD_NVIDIA_GEFORCE_GT420},
-        {"NVC0",    CARD_NVIDIA_GEFORCE_GTX480},
-        /* Tesla */
-        {"NVAF",    CARD_NVIDIA_GEFORCE_GT320M},
-        {"NVAC",    CARD_NVIDIA_GEFORCE_8200},
-        {"NVAA",    CARD_NVIDIA_GEFORCE_8200},
-        {"NVA8",    CARD_NVIDIA_GEFORCE_210},
-        {"NVA5",    CARD_NVIDIA_GEFORCE_GT220},
-        {"NVA3",    CARD_NVIDIA_GEFORCE_GT240},
-        {"NVA0",    CARD_NVIDIA_GEFORCE_GTX280},
-        {"NV98",    CARD_NVIDIA_GEFORCE_9200},
-        {"NV96",    CARD_NVIDIA_GEFORCE_9400GT},
-        {"NV94",    CARD_NVIDIA_GEFORCE_9600GT},
-        {"NV92",    CARD_NVIDIA_GEFORCE_9800GT},
-        {"NV86",    CARD_NVIDIA_GEFORCE_8500GT},
-        {"NV84",    CARD_NVIDIA_GEFORCE_8600GT},
-        {"NV50",    CARD_NVIDIA_GEFORCE_8800GTX},
-        /* Curie */
-        {"NV68",    CARD_NVIDIA_GEFORCE_6200},      /* 7050 */
-        {"NV67",    CARD_NVIDIA_GEFORCE_6200},      /* 7000M */
-        {"NV63",    CARD_NVIDIA_GEFORCE_6200},      /* 7100 */
-        {"NV4E",    CARD_NVIDIA_GEFORCE_6200},      /* 6100 Go / 6150 Go */
-        {"NV4C",    CARD_NVIDIA_GEFORCE_6200},      /* 6150SE */
-        {"NV4B",    CARD_NVIDIA_GEFORCE_7600},
-        {"NV4A",    CARD_NVIDIA_GEFORCE_6200},
-        {"NV49",    CARD_NVIDIA_GEFORCE_7800GT},    /* 7900 */
-        {"NV47",    CARD_NVIDIA_GEFORCE_7800GT},
-        {"NV46",    CARD_NVIDIA_GEFORCE_7400},
-        {"NV45",    CARD_NVIDIA_GEFORCE_6800},
-        {"NV44",    CARD_NVIDIA_GEFORCE_6200},
-        {"NV43",    CARD_NVIDIA_GEFORCE_6600GT},
-        {"NV42",    CARD_NVIDIA_GEFORCE_6800},
-        {"NV41",    CARD_NVIDIA_GEFORCE_6800},
-        {"NV40",    CARD_NVIDIA_GEFORCE_6800},
-        /* Rankine */
-        {"NV38",    CARD_NVIDIA_GEFORCEFX_5800},    /* FX 5950 Ultra */
-        {"NV36",    CARD_NVIDIA_GEFORCEFX_5800},    /* FX 5700/5750 */
-        {"NV35",    CARD_NVIDIA_GEFORCEFX_5800},    /* FX 5900 */
-        {"NV34",    CARD_NVIDIA_GEFORCEFX_5200},
-        {"NV31",    CARD_NVIDIA_GEFORCEFX_5600},
-        {"NV30",    CARD_NVIDIA_GEFORCEFX_5800},
-        /* Kelvin */
-        {"nv28",    CARD_NVIDIA_GEFORCE4_TI4200},
-        {"nv25",    CARD_NVIDIA_GEFORCE4_TI4200},
-        {"nv20",    CARD_NVIDIA_GEFORCE3},
-        /* Celsius */
-        {"nv1F",    CARD_NVIDIA_GEFORCE4_MX},       /* GF4 MX IGP */
-        {"nv1A",    CARD_NVIDIA_GEFORCE2},          /* GF2 IGP */
-        {"nv18",    CARD_NVIDIA_GEFORCE4_MX},
-        {"nv17",    CARD_NVIDIA_GEFORCE4_MX},
-        {"nv16",    CARD_NVIDIA_GEFORCE2},
-        {"nv15",    CARD_NVIDIA_GEFORCE2},
-        {"nv11",    CARD_NVIDIA_GEFORCE2_MX},
-        {"nv10",    CARD_NVIDIA_GEFORCE},
-        /* Fahrenheit */
-        {"nv05",    CARD_NVIDIA_RIVA_TNT2},
-        {"nv04",    CARD_NVIDIA_RIVA_TNT},
-        {"nv03",    CARD_NVIDIA_RIVA_128},
-    };
-
-    for (i = 0; i < sizeof(cards) / sizeof(*cards); ++i)
-    {
-        if (strstr(gl_renderer, cards[i].renderer))
-            return cards[i].id;
-    }
-    return PCI_DEVICE_NONE;
-}
-
-static enum wined3d_pci_device select_card_vmware(const struct wined3d_gl_info *gl_info, const char *gl_renderer)
+    /* Sea Islands */
+    {"HAWAII",                      CARD_AMD_RADEON_R9    },
+    {"KAVERI",                      CARD_AMD_RADEON_R7    },
+    {"KABINI",                      CARD_AMD_RADEON_R3    },
+    {"BONAIRE",                     CARD_AMD_RADEON_HD8770},
+    /* Southern Islands */
+    {"OLAND",                       CARD_AMD_RADEON_HD8670},
+    {"HAINAN",                      CARD_AMD_RADEON_HD8600M},
+    {"TAHITI",                      CARD_AMD_RADEON_HD7900},
+    {"PITCAIRN",                    CARD_AMD_RADEON_HD7800},
+    {"CAPE VERDE",                  CARD_AMD_RADEON_HD7700},
+    /* Northern Islands */
+    {"ARUBA",                       CARD_AMD_RADEON_HD7660D},
+    {"CAYMAN",                      CARD_AMD_RADEON_HD6900},
+    {"BARTS",                       CARD_AMD_RADEON_HD6800},
+    {"TURKS",                       CARD_AMD_RADEON_HD6600},
+    {"SUMO2",                       CARD_AMD_RADEON_HD6410D},   /* SUMO2 first, because we do a strstr(). */
+    {"SUMO",                        CARD_AMD_RADEON_HD6550D},
+    {"CAICOS",                      CARD_AMD_RADEON_HD6400},
+    {"PALM",                        CARD_AMD_RADEON_HD6300},
+    /* Evergreen */
+    {"HEMLOCK",                     CARD_AMD_RADEON_HD5900},
+    {"CYPRESS",                     CARD_AMD_RADEON_HD5800},
+    {"JUNIPER",                     CARD_AMD_RADEON_HD5700},
+    {"REDWOOD",                     CARD_AMD_RADEON_HD5600},
+    {"CEDAR",                       CARD_AMD_RADEON_HD5400},
+    /* R700 */
+    {"R700",                        CARD_AMD_RADEON_HD4800},
+    {"RV790",                       CARD_AMD_RADEON_HD4800},
+    {"RV770",                       CARD_AMD_RADEON_HD4800},
+    {"RV740",                       CARD_AMD_RADEON_HD4700},
+    {"RV730",                       CARD_AMD_RADEON_HD4600},
+    {"RV710",                       CARD_AMD_RADEON_HD4350},
+    /* R600/R700 integrated */
+    {"RS880",                       CARD_AMD_RADEON_HD4200M},
+    {"RS780",                       CARD_AMD_RADEON_HD3200},
+    /* R600 */
+    {"R680",                        CARD_AMD_RADEON_HD2900},
+    {"R600",                        CARD_AMD_RADEON_HD2900},
+    {"RV670",                       CARD_AMD_RADEON_HD2900},
+    {"RV635",                       CARD_AMD_RADEON_HD2600},
+    {"RV630",                       CARD_AMD_RADEON_HD2600},
+    {"RV620",                       CARD_AMD_RADEON_HD2350},
+    {"RV610",                       CARD_AMD_RADEON_HD2350},
+    /* R500 */
+    {"R580",                        CARD_AMD_RADEON_X1600},
+    {"R520",                        CARD_AMD_RADEON_X1600},
+    {"RV570",                       CARD_AMD_RADEON_X1600},
+    {"RV560",                       CARD_AMD_RADEON_X1600},
+    {"RV535",                       CARD_AMD_RADEON_X1600},
+    {"RV530",                       CARD_AMD_RADEON_X1600},
+    {"RV516",                       CARD_AMD_RADEON_X700},
+    {"RV515",                       CARD_AMD_RADEON_X700},
+    /* R400 */
+    {"R481",                        CARD_AMD_RADEON_X700},
+    {"R480",                        CARD_AMD_RADEON_X700},
+    {"R430",                        CARD_AMD_RADEON_X700},
+    {"R423",                        CARD_AMD_RADEON_X700},
+    {"R420",                        CARD_AMD_RADEON_X700},
+    {"R410",                        CARD_AMD_RADEON_X700},
+    {"RV410",                       CARD_AMD_RADEON_X700},
+    /* Radeon Xpress - onboard, DX9b, Shader 2.0, 300-400 MHz */
+    {"RS740",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RS690",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RS600",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RS485",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RS482",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RS480",                       CARD_AMD_RADEON_XPRESS_200M},
+    {"RS400",                       CARD_AMD_RADEON_XPRESS_200M},
+    /* R300 */
+    {"R360",                        CARD_AMD_RADEON_9500},
+    {"R350",                        CARD_AMD_RADEON_9500},
+    {"R300",                        CARD_AMD_RADEON_9500},
+    {"RV370",                       CARD_AMD_RADEON_9500},
+    {"RV360",                       CARD_AMD_RADEON_9500},
+    {"RV351",                       CARD_AMD_RADEON_9500},
+    {"RV350",                       CARD_AMD_RADEON_9500},
+},
+cards_nvidia_mesa[] =
 {
-    if (strstr(gl_renderer, "SVGA3D"))
-        return CARD_VMWARE_SVGA3D;
-
-    return PCI_DEVICE_NONE;
-}
+    /* Maxwell */
+    {"NV117",                       CARD_NVIDIA_GEFORCE_GTX750},
+    /* Kepler */
+    {"NVF1",                        CARD_NVIDIA_GEFORCE_GTX780TI},
+    {"NVF0",                        CARD_NVIDIA_GEFORCE_GTX780},
+    {"NVE6",                        CARD_NVIDIA_GEFORCE_GTX770M},
+    {"NVE4",                        CARD_NVIDIA_GEFORCE_GTX680},
+    /* Fermi */
+    {"NVD9",                        CARD_NVIDIA_GEFORCE_GT520},
+    {"NVCF",                        CARD_NVIDIA_GEFORCE_GTX550},
+    {"NVCE",                        CARD_NVIDIA_GEFORCE_GTX560},
+    {"NVC8",                        CARD_NVIDIA_GEFORCE_GTX570},
+    {"NVC4",                        CARD_NVIDIA_GEFORCE_GTX460},
+    {"NVC3",                        CARD_NVIDIA_GEFORCE_GT440},
+    {"NVC1",                        CARD_NVIDIA_GEFORCE_GT420},
+    {"NVC0",                        CARD_NVIDIA_GEFORCE_GTX480},
+    /* Tesla */
+    {"NVAF",                        CARD_NVIDIA_GEFORCE_GT320M},
+    {"NVAC",                        CARD_NVIDIA_GEFORCE_8200},
+    {"NVAA",                        CARD_NVIDIA_GEFORCE_8200},
+    {"NVA8",                        CARD_NVIDIA_GEFORCE_210},
+    {"NVA5",                        CARD_NVIDIA_GEFORCE_GT220},
+    {"NVA3",                        CARD_NVIDIA_GEFORCE_GT240},
+    {"NVA0",                        CARD_NVIDIA_GEFORCE_GTX280},
+    {"NV98",                        CARD_NVIDIA_GEFORCE_9200},
+    {"NV96",                        CARD_NVIDIA_GEFORCE_9400GT},
+    {"NV94",                        CARD_NVIDIA_GEFORCE_9600GT},
+    {"NV92",                        CARD_NVIDIA_GEFORCE_9800GT},
+    {"NV86",                        CARD_NVIDIA_GEFORCE_8500GT},
+    {"NV84",                        CARD_NVIDIA_GEFORCE_8600GT},
+    {"NV50",                        CARD_NVIDIA_GEFORCE_8800GTX},
+    /* Curie */
+    {"NV68",                        CARD_NVIDIA_GEFORCE_6200},      /* 7050 */
+    {"NV67",                        CARD_NVIDIA_GEFORCE_6200},      /* 7000M */
+    {"NV63",                        CARD_NVIDIA_GEFORCE_6200},      /* 7100 */
+    {"NV4E",                        CARD_NVIDIA_GEFORCE_6200},      /* 6100 Go / 6150 Go */
+    {"NV4C",                        CARD_NVIDIA_GEFORCE_6200},      /* 6150SE */
+    {"NV4B",                        CARD_NVIDIA_GEFORCE_7600},
+    {"NV4A",                        CARD_NVIDIA_GEFORCE_6200},
+    {"NV49",                        CARD_NVIDIA_GEFORCE_7800GT},    /* 7900 */
+    {"NV47",                        CARD_NVIDIA_GEFORCE_7800GT},
+    {"NV46",                        CARD_NVIDIA_GEFORCE_7400},
+    {"NV45",                        CARD_NVIDIA_GEFORCE_6800},
+    {"NV44",                        CARD_NVIDIA_GEFORCE_6200},
+    {"NV43",                        CARD_NVIDIA_GEFORCE_6600GT},
+    {"NV42",                        CARD_NVIDIA_GEFORCE_6800},
+    {"NV41",                        CARD_NVIDIA_GEFORCE_6800},
+    {"NV40",                        CARD_NVIDIA_GEFORCE_6800},
+    /* Rankine */
+    {"NV38",                        CARD_NVIDIA_GEFORCEFX_5800},    /* FX 5950 Ultra */
+    {"NV36",                        CARD_NVIDIA_GEFORCEFX_5800},    /* FX 5700/5750 */
+    {"NV35",                        CARD_NVIDIA_GEFORCEFX_5800},    /* FX 5900 */
+    {"NV34",                        CARD_NVIDIA_GEFORCEFX_5200},
+    {"NV31",                        CARD_NVIDIA_GEFORCEFX_5600},
+    {"NV30",                        CARD_NVIDIA_GEFORCEFX_5800},
+    /* Kelvin */
+    {"nv28",                        CARD_NVIDIA_GEFORCE4_TI4200},
+    {"nv25",                        CARD_NVIDIA_GEFORCE4_TI4200},
+    {"nv20",                        CARD_NVIDIA_GEFORCE3},
+    /* Celsius */
+    {"nv1F",                        CARD_NVIDIA_GEFORCE4_MX},       /* GF4 MX IGP */
+    {"nv1A",                        CARD_NVIDIA_GEFORCE2},          /* GF2 IGP */
+    {"nv18",                        CARD_NVIDIA_GEFORCE4_MX},
+    {"nv17",                        CARD_NVIDIA_GEFORCE4_MX},
+    {"nv16",                        CARD_NVIDIA_GEFORCE2},
+    {"nv15",                        CARD_NVIDIA_GEFORCE2},
+    {"nv11",                        CARD_NVIDIA_GEFORCE2_MX},
+    {"nv10",                        CARD_NVIDIA_GEFORCE},
+    /* Fahrenheit */
+    {"nv05",                        CARD_NVIDIA_RIVA_TNT2},
+    {"nv04",                        CARD_NVIDIA_RIVA_TNT},
+    {"nv03",                        CARD_NVIDIA_RIVA_128},
+},
+cards_vmware[] =
+{
+    {"SVGA3D",                      CARD_VMWARE_SVGA3D},
+};
 
 static const struct gl_vendor_selection
 {
     enum wined3d_gl_vendor gl_vendor;
     const char *description;        /* Description of the card selector i.e. Apple OS/X Intel */
-    enum wined3d_pci_device (*select_card)(const struct wined3d_gl_info *gl_info, const char *gl_renderer);
+    const struct wined3d_renderer_table *cards; /* To be used as cards[], pointer to the first member in an array */
+    size_t cards_size;              /* Number of entries in the array above */
 }
 amd_gl_vendor_table[] =
 {
-    {GL_VENDOR_APPLE,   "Apple OSX AMD/ATI binary driver",  select_card_amd_binary},
-    {GL_VENDOR_FGLRX,   "AMD/ATI binary driver",            select_card_amd_binary},
-    {GL_VENDOR_MESA,    "Mesa AMD/ATI driver",              select_card_amd_mesa},
+    {GL_VENDOR_APPLE,   "Apple OSX AMD/ATI binary driver",  cards_amd_binary,       ARRAY_SIZE(cards_amd_binary)},
+    {GL_VENDOR_FGLRX,   "AMD/ATI binary driver",            cards_amd_binary,       ARRAY_SIZE(cards_amd_binary)},
+    {GL_VENDOR_MESA,    "Mesa AMD/ATI driver",              cards_amd_mesa,         ARRAY_SIZE(cards_amd_mesa)},
 },
 nvidia_gl_vendor_table[] =
 {
-    {GL_VENDOR_APPLE,   "Apple OSX NVidia binary driver",   select_card_nvidia_binary},
-    {GL_VENDOR_MESA,    "Mesa Nouveau driver",              select_card_nvidia_mesa},
-    {GL_VENDOR_NVIDIA,  "Nvidia binary driver",             select_card_nvidia_binary},
+    {GL_VENDOR_APPLE,   "Apple OSX NVidia binary driver",   cards_nvidia_binary,    ARRAY_SIZE(cards_nvidia_binary)},
+    {GL_VENDOR_MESA,    "Mesa Nouveau driver",              cards_nvidia_mesa,      ARRAY_SIZE(cards_nvidia_mesa)},
+    {GL_VENDOR_NVIDIA,  "Nvidia binary driver",             cards_nvidia_binary,    ARRAY_SIZE(cards_nvidia_binary)},
 },
 vmware_gl_vendor_table[] =
 {
-    {GL_VENDOR_MESA,    "VMware driver",                    select_card_vmware},
+    {GL_VENDOR_MESA,    "VMware driver",                    cards_vmware,           ARRAY_SIZE(cards_vmware)},
 },
 intel_gl_vendor_table[] =
 {
-    {GL_VENDOR_APPLE,   "Apple OSX Intel binary driver",    select_card_intel},
-    {GL_VENDOR_MESA,    "Mesa Intel driver",                select_card_intel},
+    {GL_VENDOR_APPLE,   "Apple OSX Intel binary driver",    cards_intel,            ARRAY_SIZE(cards_intel)},
+    {GL_VENDOR_MESA,    "Mesa Intel driver",                cards_intel,            ARRAY_SIZE(cards_intel)},
 };
 
-static enum wined3d_pci_device select_card_fallback_nvidia(const struct wined3d_gl_info *gl_info)
+static const enum wined3d_pci_device
+card_fallback_nvidia[] =
 {
-    UINT d3d_level = d3d_level_from_gl_info(gl_info);
-    if (d3d_level >= 10)
-        return CARD_NVIDIA_GEFORCE_8800GTX;
-    if (d3d_level >= 9 && gl_info->supported[NV_VERTEX_PROGRAM3])
-        return CARD_NVIDIA_GEFORCE_6800;
-    if (d3d_level >= 9)
-        return CARD_NVIDIA_GEFORCEFX_5800;
-    if (d3d_level >= 8)
-        return CARD_NVIDIA_GEFORCE3;
-    if (d3d_level >= 7)
-        return CARD_NVIDIA_GEFORCE;
-    if (d3d_level >= 6)
-        return CARD_NVIDIA_RIVA_TNT;
-    return CARD_NVIDIA_RIVA_128;
-}
-
-static enum wined3d_pci_device select_card_fallback_amd(const struct wined3d_gl_info *gl_info)
+    CARD_NVIDIA_RIVA_128,           /* D3D5 */
+    CARD_NVIDIA_RIVA_TNT,           /* D3D6 */
+    CARD_NVIDIA_GEFORCE,            /* D3D7 */
+    CARD_NVIDIA_GEFORCE3,           /* D3D8 */
+    CARD_NVIDIA_GEFORCEFX_5800,     /* D3D9_SM2 */
+    CARD_NVIDIA_GEFORCE_6800,       /* D3D9_SM3 */
+    CARD_NVIDIA_GEFORCE_8800GTX,    /* D3D10 */
+    CARD_NVIDIA_GEFORCE_GTX470,     /* D3D11 */
+},
+card_fallback_amd[] =
 {
-    UINT d3d_level = d3d_level_from_gl_info(gl_info);
-    if (d3d_level >= 10)
-        return CARD_AMD_RADEON_HD2900;
-    if (d3d_level >= 9)
-        return CARD_AMD_RADEON_9500;
-    if (d3d_level >= 8)
-        return CARD_AMD_RADEON_8500;
-    if (d3d_level >= 7)
-        return CARD_AMD_RADEON_7200;
-    return CARD_AMD_RAGE_128PRO;
-}
-
-static enum wined3d_pci_device select_card_fallback_intel(const struct wined3d_gl_info *gl_info)
+    CARD_AMD_RAGE_128PRO,           /* D3D5 */
+    CARD_AMD_RAGE_128PRO,           /* D3D6 */
+    CARD_AMD_RADEON_7200,           /* D3D7 */
+    CARD_AMD_RADEON_8500,           /* D3D8 */
+    CARD_AMD_RADEON_9500,           /* D3D9_SM2 */
+    CARD_AMD_RADEON_X1600,          /* D3D9_SM3 */
+    CARD_AMD_RADEON_HD2900,         /* D3D10 */
+    CARD_AMD_RADEON_HD5600,         /* D3D11 */
+},
+card_fallback_intel[] =
 {
-    UINT d3d_level = d3d_level_from_gl_info(gl_info);
-    if (d3d_level >= 10)
-        return CARD_INTEL_G45;
-    return CARD_INTEL_915G;
-}
+    CARD_INTEL_915G,                /* D3D5 */
+    CARD_INTEL_915G,                /* D3D6 */
+    CARD_INTEL_915G,                /* D3D7 */
+    CARD_INTEL_915G,                /* D3D8 */
+    CARD_INTEL_915G,                /* D3D9_SM2 */
+    CARD_INTEL_915G,                /* D3D9_SM3 */
+    CARD_INTEL_G45,                 /* D3D10 */
+    CARD_INTEL_IVBD,                /* D3D11 */
+};
+C_ASSERT(ARRAY_SIZE(card_fallback_nvidia)  == WINED3D_D3D_LEVEL_COUNT);
+C_ASSERT(ARRAY_SIZE(card_fallback_amd)     == WINED3D_D3D_LEVEL_COUNT);
+C_ASSERT(ARRAY_SIZE(card_fallback_intel)   == WINED3D_D3D_LEVEL_COUNT);
 
 static enum wined3d_pci_device select_card_handler(const struct gl_vendor_selection *table,
-        unsigned int table_size, enum wined3d_gl_vendor gl_vendor,
-        const struct wined3d_gl_info *gl_info, const char *gl_renderer)
+        unsigned int table_size, enum wined3d_gl_vendor gl_vendor, const char *gl_renderer)
 {
-    unsigned int i;
+    unsigned int i, j;
 
     for (i = 0; i < table_size; ++i)
     {
@@ -2340,7 +2239,13 @@ static enum wined3d_pci_device select_card_handler(const struct gl_vendor_select
             continue;
 
         TRACE("Applying card selector \"%s\".\n", table[i].description);
-        return table[i].select_card(gl_info, gl_renderer);
+
+        for (j = 0; j < table[i].cards_size; ++j)
+        {
+            if (strstr(gl_renderer, table[i].cards[j].renderer))
+                return table[i].cards[j].id;
+        }
+        return PCI_DEVICE_NONE;
     }
     FIXME("Couldn't find a suitable card selector for GL vendor %04x (using GL_RENDERER %s)\n",
             gl_vendor, debugstr_a(gl_renderer));
@@ -2354,22 +2259,22 @@ static const struct
     const char *description;        /* Description of the card selector i.e. Apple OS/X Intel */
     const struct gl_vendor_selection *gl_vendor_selection;
     unsigned int gl_vendor_count;
-    enum wined3d_pci_device (*select_card_fallback)(const struct wined3d_gl_info *gl_info);
+    const enum wined3d_pci_device *card_fallback; /* An array with D3D_LEVEL_COUNT elements */
 }
 card_vendor_table[] =
 {
     {HW_VENDOR_AMD,         "AMD",      amd_gl_vendor_table,
             sizeof(amd_gl_vendor_table) / sizeof(*amd_gl_vendor_table),
-            select_card_fallback_amd},
+            card_fallback_amd},
     {HW_VENDOR_NVIDIA,      "Nvidia",   nvidia_gl_vendor_table,
             sizeof(nvidia_gl_vendor_table) / sizeof(*nvidia_gl_vendor_table),
-            select_card_fallback_nvidia},
+            card_fallback_nvidia},
     {HW_VENDOR_VMWARE,      "VMware",   vmware_gl_vendor_table,
             sizeof(vmware_gl_vendor_table) / sizeof(*vmware_gl_vendor_table),
-            select_card_fallback_amd},
+            card_fallback_amd},
     {HW_VENDOR_INTEL,       "Intel",    intel_gl_vendor_table,
             sizeof(intel_gl_vendor_table) / sizeof(*intel_gl_vendor_table),
-            select_card_fallback_intel},
+            card_fallback_intel},
 };
 
 
@@ -2427,6 +2332,7 @@ static enum wined3d_pci_device wined3d_guess_card(const struct wined3d_gl_info *
      * memory can be overruled using a registry setting. */
 
     unsigned int i;
+    enum wined3d_d3d_level d3d_level = d3d_level_from_gl_info(gl_info);
     enum wined3d_pci_device device;
 
     for (i = 0; i < (sizeof(card_vendor_table) / sizeof(*card_vendor_table)); ++i)
@@ -2436,12 +2342,12 @@ static enum wined3d_pci_device wined3d_guess_card(const struct wined3d_gl_info *
 
         TRACE("Applying card selector \"%s\".\n", card_vendor_table[i].description);
         device = select_card_handler(card_vendor_table[i].gl_vendor_selection,
-                card_vendor_table[i].gl_vendor_count, *gl_vendor, gl_info, gl_renderer);
+                card_vendor_table[i].gl_vendor_count, *gl_vendor, gl_renderer);
         if (device != PCI_DEVICE_NONE)
             return device;
 
         TRACE("Unrecognized renderer %s, falling back to default.\n", debugstr_a(gl_renderer));
-        return card_vendor_table[i].select_card_fallback(gl_info);
+        return card_vendor_table[i].card_fallback[d3d_level];
     }
 
     FIXME("No card selector available for card vendor %04x (using GL_RENDERER %s).\n",
@@ -2449,7 +2355,7 @@ static enum wined3d_pci_device wined3d_guess_card(const struct wined3d_gl_info *
 
     /* Default to generic Nvidia hardware based on the supported OpenGL extensions. */
     *card_vendor = HW_VENDOR_NVIDIA;
-    return select_card_fallback_nvidia(gl_info);
+    return card_fallback_nvidia[d3d_level];
 }
 
 static const struct wined3d_vertex_pipe_ops *select_vertex_implementation(const struct wined3d_gl_info *gl_info,
@@ -2563,6 +2469,9 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
     gl_info->limits.buffers = 1;
     gl_info->limits.textures = 1;
     gl_info->limits.texture_coords = 1;
+    gl_info->limits.vertex_uniform_blocks = 0;
+    gl_info->limits.geometry_uniform_blocks = 0;
+    gl_info->limits.fragment_uniform_blocks = 0;
     gl_info->limits.fragment_samplers = 1;
     gl_info->limits.vertex_samplers = 0;
     gl_info->limits.combined_samplers = gl_info->limits.fragment_samplers + gl_info->limits.vertex_samplers;
@@ -2739,6 +2648,19 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
         gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &gl_max);
         gl_info->limits.glsl_vs_float_constants = gl_max / 4;
         TRACE("Max ARB_VERTEX_SHADER float constants: %u.\n", gl_info->limits.glsl_vs_float_constants);
+
+        if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+        {
+            gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_VERTEX_UNIFORM_BLOCKS, &gl_max);
+            gl_info->limits.vertex_uniform_blocks = min(gl_max, WINED3D_MAX_CBS);
+            TRACE("Max vertex uniform blocks: %u (%d).\n", gl_info->limits.vertex_uniform_blocks, gl_max);
+        }
+    }
+    if (gl_info->supported[ARB_GEOMETRY_SHADER4] && gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+    {
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_GEOMETRY_UNIFORM_BLOCKS, &gl_max);
+        gl_info->limits.geometry_uniform_blocks = min(gl_max, WINED3D_MAX_CBS);
+        TRACE("Max geometry uniform blocks: %u (%d).\n", gl_info->limits.geometry_uniform_blocks, gl_max);
     }
     if (gl_info->supported[ARB_FRAGMENT_SHADER])
     {
@@ -2748,6 +2670,20 @@ static void wined3d_adapter_init_limits(struct wined3d_gl_info *gl_info)
         gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &gl_max);
         gl_info->limits.glsl_varyings = gl_max;
         TRACE("Max GLSL varyings: %u (%u 4 component varyings).\n", gl_max, gl_max / 4);
+
+        if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+        {
+            gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &gl_max);
+            gl_info->limits.fragment_uniform_blocks = min(gl_max, WINED3D_MAX_CBS);
+            TRACE("Max fragment uniform blocks: %u (%d).\n", gl_info->limits.fragment_uniform_blocks, gl_max);
+        }
+    }
+    if (gl_info->supported[ARB_UNIFORM_BUFFER_OBJECT])
+    {
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_COMBINED_UNIFORM_BLOCKS, &gl_max);
+        TRACE("Max combined uniform blocks: %d.\n", gl_max);
+        gl_info->gl_ops.gl.p_glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &gl_max);
+        TRACE("Max uniform buffer bindings: %d.\n", gl_max);
     }
 
     if (gl_info->supported[NV_LIGHT_MAX_EXPONENT])
@@ -3481,7 +3417,7 @@ HRESULT CDECL wined3d_get_adapter_identifier(const struct wined3d *wined3d,
     memcpy(&identifier->device_identifier, &IID_D3DDEVICE_D3DUID, sizeof(identifier->device_identifier));
     identifier->whql_level = (flags & WINED3DENUM_NO_WHQL_LEVEL) ? 0 : 1;
     memcpy(&identifier->adapter_luid, &adapter->luid, sizeof(identifier->adapter_luid));
-    identifier->video_memory = adapter->TextureRam;
+    identifier->video_memory = min(~(SIZE_T)0, adapter->vram_bytes);
 
     return WINED3D_OK;
 }
@@ -4021,6 +3957,21 @@ HRESULT CDECL wined3d_check_device_format(const struct wined3d *wined3d, UINT ad
     }
 
     return WINED3D_OK;
+}
+
+UINT CDECL wined3d_calculate_format_pitch(const struct wined3d *wined3d, UINT adapter_idx,
+        enum wined3d_format_id format_id, UINT width)
+{
+    const struct wined3d_gl_info *gl_info;
+
+    TRACE("wined3d %p, adapter_idx %u, format_id %s, width %u.\n",
+            wined3d, adapter_idx, debug_d3dformat(format_id), width);
+
+    if (adapter_idx >= wined3d->adapter_count)
+        return ~0u;
+
+    gl_info = &wined3d->adapters[adapter_idx].gl_info;
+    return wined3d_format_calculate_pitch(wined3d_get_format(gl_info, format_id), width);
 }
 
 HRESULT CDECL wined3d_check_device_format_conversion(const struct wined3d *wined3d, UINT adapter_idx,
@@ -4663,7 +4614,7 @@ HRESULT CDECL wined3d_get_device_caps(const struct wined3d *wined3d, UINT adapte
                                         WINEDDFXCAPS_BLTSHRINKX             |
                                         WINEDDFXCAPS_BLTSHRINKXN            |
                                         WINEDDFXCAPS_BLTSHRINKY             |
-                                        WINEDDFXCAPS_BLTSHRINKXN            |
+                                        WINEDDFXCAPS_BLTSHRINKYN            |
                                         WINEDDFXCAPS_BLTSTRETCHX            |
                                         WINEDDFXCAPS_BLTSTRETCHXN           |
                                         WINEDDFXCAPS_BLTSTRETCHY            |
@@ -5169,9 +5120,9 @@ static BOOL wined3d_adapter_init(struct wined3d_adapter *adapter, UINT ordinal)
         return FALSE;
     }
 
-    adapter->TextureRam = adapter->driver_info.vidmem;
-    adapter->UsedTextureRam = 0;
-    TRACE("Emulating %u MB of texture ram.\n", adapter->TextureRam / (1024 * 1024));
+    adapter->vram_bytes = adapter->driver_info.vram_bytes;
+    adapter->vram_bytes_used = 0;
+    TRACE("Emulating 0x%s bytes of video ram.\n", wine_dbgstr_longlong(adapter->vram_bytes));
 
     display_device.cb = sizeof(display_device);
     EnumDisplayDevicesW(NULL, ordinal, &display_device, 0);
@@ -5197,9 +5148,9 @@ static void wined3d_adapter_init_nogl(struct wined3d_adapter *adapter, UINT ordi
     adapter->driver_info.name = "Display";
     adapter->driver_info.description = "WineD3D DirectDraw Emulation";
     if (wined3d_settings.emulated_textureram)
-        adapter->TextureRam = wined3d_settings.emulated_textureram;
+        adapter->vram_bytes = wined3d_settings.emulated_textureram;
     else
-        adapter->TextureRam = 128 * 1024 * 1024;
+        adapter->vram_bytes = 128 * 1024 * 1024;
 
     initPixelFormatsNoGL(&adapter->gl_info);
 

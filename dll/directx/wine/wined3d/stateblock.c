@@ -537,6 +537,11 @@ void state_cleanup(struct wined3d_state *state)
     if (!(state->flags & WINED3D_STATE_NO_REF))
         state_unbind_resources(state);
 
+    for (counter = 0; counter < MAX_ACTIVE_LIGHTS; ++counter)
+    {
+        state->lights[counter] = NULL;
+    }
+
     for (counter = 0; counter < LIGHTMAP_SIZE; ++counter)
     {
         struct list *e1, *e2;
@@ -1113,6 +1118,8 @@ static void state_init_default(struct wined3d_state *state, const struct wined3d
     }}};
 
     TRACE("state %p, gl_info %p.\n", state, gl_info);
+
+    state->gl_primitive_type = ~0u;
 
     /* Set some of the defaults for lights, transforms etc */
     state->transforms[WINED3D_TS_PROJECTION] = identity;

@@ -52,7 +52,7 @@ StartDebugHotKeys(VOID)
     }
     UserRegisterHotKey(PWND_BOTTOM, IDHK_SHIFTF12, MOD_SHIFT, vk);
     UserRegisterHotKey(PWND_BOTTOM, IDHK_F12, 0, vk);
-    ERR("Start up the debugger hotkeys!! Should see this once!\n");
+    TRACE("Start up the debugger hotkeys!! If you see this you eneabled debugprints. Congrats!\n");
 }
 
 /*
@@ -212,14 +212,14 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         if (!bIsDown)
         {
             /* WIN and F12 keys are not hardcoded here. See comments on top of this file. */
-            if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive == TRUE)
+            if (pHotKey->id == IDHK_WINKEY && bWinHotkeyActive)
             {
                 pWnd = ValidateHwndNoErr(InputWindowStation->ShellWindow);
                 if (pWnd)
                 {
                    TRACE("System Hot key Id %d Key %d\n",pHotKey->id, wVk );
                    UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
-                   //ptiLastInput = pWnd->head.pti;
+                   co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                    bWinHotkeyActive = FALSE;
                    return FALSE;
                 }
@@ -248,8 +248,8 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                if (pHotKey->pWnd == PWND_BOTTOM)
                {
                    if (gpqForeground != NULL)
-                   { 
-                      pWnd = gpqForeground->spwndFocus; 
+                   {
+                      pWnd = gpqForeground->spwndFocus;
                    }
                    else
                       return FALSE;
@@ -354,7 +354,7 @@ DefWndSetHotKey(PWND pWnd, WPARAM wParam)
             pHotKey = pHotKey->pNext;
         }
     }
-    
+
     pHotKey = gphkFirst;
     pLink = &gphkFirst;
     while (pHotKey)

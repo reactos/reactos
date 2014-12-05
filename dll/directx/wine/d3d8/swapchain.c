@@ -88,10 +88,14 @@ static HRESULT WINAPI d3d8_swapchain_Present(IDirect3DSwapChain8 *iface,
         const RGNDATA *dirty_region)
 {
     struct d3d8_swapchain *swapchain = impl_from_IDirect3DSwapChain8(iface);
+    struct d3d8_device *device = impl_from_IDirect3DDevice8(swapchain->parent_device);
     HRESULT hr;
 
     TRACE("iface %p, src_rect %s, dst_rect %s, dst_window_override %p, dirty_region %p.\n",
             iface, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect), dst_window_override, dirty_region);
+
+    if (device->device_state != D3D8_DEVICE_STATE_OK)
+        return D3DERR_DEVICELOST;
 
     wined3d_mutex_lock();
     hr = wined3d_swapchain_present(swapchain->wined3d_swapchain, src_rect,

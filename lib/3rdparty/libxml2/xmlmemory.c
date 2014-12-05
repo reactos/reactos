@@ -313,7 +313,7 @@ xmlMemMalloc(size_t size)
 void *
 xmlReallocLoc(void *ptr,size_t size, const char * file, int line)
 {
-    MEMHDR *p;
+    MEMHDR *p, *tmp;
     unsigned long number;
 #ifdef DEBUG_MEMORY
     size_t oldsize;
@@ -344,10 +344,12 @@ xmlReallocLoc(void *ptr,size_t size, const char * file, int line)
 #endif
     xmlMutexUnlock(xmlMemMutex);
 
-    p = (MEMHDR *) realloc(p,RESERVE_SIZE+size);
-    if (!p) {
+    tmp = (MEMHDR *) realloc(p,RESERVE_SIZE+size);
+    if (!tmp) {
+	 free(p);
 	 goto error;
     }
+    p = tmp;
     if (xmlMemTraceBlockAt == ptr) {
 	xmlGenericError(xmlGenericErrorContext,
 			"%p : Realloced(%lu -> %lu) Ok\n",
@@ -512,10 +514,7 @@ xmlMemStrdupLoc(const char *str, const char *file, int line)
 
     if (xmlMemStopAtBlock == p->mh_number) xmlMallocBreakpoint();
 
-    if (s != NULL)
-      strcpy(s,str);
-    else
-      goto error;
+    strcpy(s,str);
 
     TEST_POINT
 
@@ -583,13 +582,15 @@ xmlMemBlocks(void) {
 static void
 xmlMemContentShow(FILE *fp, MEMHDR *p)
 {
-    int i,j,k,len = p->mh_size;
-    const char *buf = (const char *) HDR_2_CLIENT(p);
+    int i,j,k,len;
+    const char *buf;
 
     if (p == NULL) {
 	fprintf(fp, " NULL");
 	return;
     }
+    len = p->mh_size;
+    buf = (const char *) HDR_2_CLIENT(p);
 
     for (i = 0;i < len;i++) {
         if (buf[i] == 0) break;

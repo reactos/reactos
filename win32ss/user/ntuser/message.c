@@ -213,7 +213,10 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 break;
 
             case WM_COPYDATA:
-                Size = sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
+                {
+                COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
+                Size = sizeof(COPYDATASTRUCT) + cds->cbData;
+                }
                 break;
 
             default:
@@ -497,7 +500,6 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
                 return Status;
             }
         }
-
         ExFreePool((PVOID) KernelModeMsg->lParam);
     }
 
@@ -652,7 +654,6 @@ IntDispatchMessage(PMSG pMsg)
     LRESULT retval = 0;
     PTHREADINFO pti;
     PWND Window = NULL;
-    HRGN hrgn;
     BOOL DoCallBack = TRUE;
 
     if (pMsg->hwnd)
@@ -743,11 +744,12 @@ IntDispatchMessage(PMSG pMsg)
 
     if (pMsg->message == WM_PAINT)
     {
+        PREGION Rgn;
         Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
-        hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
-        co_UserGetUpdateRgn( Window, hrgn, TRUE );
-        GreDeleteObject(hrgn);
+        Rgn = IntSysCreateRectpRgn( 0, 0, 0, 0 );
+        co_UserGetUpdateRgn( Window, Rgn, TRUE );
+        REGION_Delete(Rgn);
     }
 
     return retval;
@@ -794,6 +796,12 @@ co_IntPeekMessage( PMSG Msg,
         KeQueryTickCount(&LargeTickCount);
         pti->timeLast = LargeTickCount.u.LowPart;
         pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+
+        // Post mouse moves while looping through peek messages.
+        if (pti->MessageQueue->QF_flags & QF_MOUSEMOVED)
+        {
+           IntCoalesceMouseMove(pti);
+        }
 
         /* Dispatch sent messages here. */
         while ( co_MsqDispatchOneSentMessage(pti) )
@@ -852,17 +860,6 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Check for hardware events. */
-        if ((ProcessMask & QS_MOUSE) &&
-            co_MsqPeekMouseMove( pti,
-                                 RemoveMessages,
-                                 Window,
-                                 MsgFilterMin,
-                                 MsgFilterMax,
-                                 Msg ))
-        {
-            return TRUE;
-        }
-
         if ((ProcessMask & QS_INPUT) &&
             co_MsqPeekHardwareMessage( pti,
                                        RemoveMessages,
@@ -1091,7 +1088,7 @@ UserPostThreadMessage( PTHREADINFO pti,
 
     KeQueryTickCount(&LargeTickCount);
     Message.time = MsqCalculateMessageTime(&LargeTickCount);
-    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+    MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
     return TRUE;
 }
 
@@ -1198,7 +1195,7 @@ UserPostMessage( HWND Wnd,
         Window = UserGetWindowObject(Wnd);
         if ( !Window )
         {
-            ERR("UserPostMessage: Invalid handle 0x%p!\n",Wnd);
+            ERR("UserPostMessage: Invalid handle 0x%p Msg %d!\n",Wnd,Msg);
             return FALSE;
         }
 
@@ -1222,7 +1219,7 @@ UserPostMessage( HWND Wnd,
         }
         else
         {
-            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0);
+            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
         }
     }
     return TRUE;
@@ -1677,7 +1674,7 @@ CLEANUP:
     END_CLEANUP;
 }
 
-
+#if 0
 /*
   This HACK function posts a message if the destination's message queue belongs to
   another thread, otherwise it sends the message. It does not support broadcast
@@ -1721,6 +1718,7 @@ co_IntPostOrSendMessage( HWND hWnd,
 
     return (LRESULT)Result;
 }
+#endif
 
 static LRESULT FASTCALL
 co_IntDoSendMessage( HWND hWnd,
@@ -2019,7 +2017,7 @@ NtUserPostThreadMessage(DWORD idThread,
                         WPARAM wParam,
                         LPARAM lParam)
 {
-    BOOL ret;
+    BOOL ret = FALSE;
     PETHREAD peThread;
     PTHREADINFO pThread;
     NTSTATUS Status;
@@ -2087,7 +2085,7 @@ NtUserGetMessage(PMSG pMsg,
 
     UserLeave();
 
-    if (Ret == TRUE)
+    if (Ret)
     {
         _SEH2_TRY
         {
@@ -2882,6 +2880,13 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
 
     TRACE("WFII: ppi %p\n", W32Process);
     TRACE("WFII: waiting for %p\n", Handles[1] );
+
+    /*
+     * We must add a refcount to our current PROCESSINFO,
+     * because anything could happen (including process death) we're leaving win32k
+     */
+    IntReferenceProcessInfo(W32Process);
+
     do
     {
         UserLeave();
@@ -2935,6 +2940,7 @@ WaitExit:
        pti->pClientInfo->dwTIFlags = pti->TIF_flags;
     }
     W32Process->W32PF_flags &= ~W32PF_WAITFORINPUTIDLE;
+    IntDereferenceProcessInfo(W32Process);
     ObDereferenceObject(Process);
     UserLeave();
     return Status;

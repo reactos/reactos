@@ -172,6 +172,10 @@ struct DeviceInfo /* Element of DeviceInfoSet.ListHead */
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
 
+    /* Device property page provider data */
+    HMODULE hmodDevicePropPageProvider;
+    PVOID pDevicePropPageProvider;
+
     /* Variable size array (contains data for instanceId, UniqueId, DeviceDescription) */
     WCHAR Data[ANYSIZE_ARRAY];
 };
@@ -199,6 +203,10 @@ struct DeviceInfoSet /* HDEVINFO */
 
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
+
+    /* Class property page provider data */
+    HMODULE hmodClassPropPageProvider;
+    PVOID pClassPropPageProvider;
 
     /* Contains the name of the remote computer ('\\COMPUTERNAME' for example),
      * or NULL if related to local machine. Points into szData field at the

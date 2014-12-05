@@ -1973,13 +1973,6 @@ MiUnlinkPageFromList(
     IN PMMPFN Pfn
 );
 
-PFN_NUMBER
-NTAPI
-MiAllocatePfn(
-    IN PMMPTE PointerPte,
-    IN ULONG Protection
-);
-
 VOID
 NTAPI
 MiInitializePfn(
@@ -2150,6 +2143,16 @@ MiInsertVad(
     IN PMMVAD Vad,
     IN PEPROCESS Process
 );
+
+NTSTATUS
+NTAPI
+MiInsertVadEx(
+    _Inout_ PMMVAD Vad,
+    _In_ ULONG_PTR *BaseAddress,
+    _In_ SIZE_T ViewSize,
+    _In_ ULONG_PTR HighestAddress,
+    _In_ ULONG_PTR Alignment,
+    _In_ ULONG AllocationType);
 
 VOID
 NTAPI

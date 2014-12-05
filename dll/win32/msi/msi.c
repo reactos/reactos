@@ -2841,7 +2841,9 @@ static INSTALLSTATE MSI_GetComponentPath(LPCWSTR szProduct, LPCWSTR szComponent,
     if (state == INSTALLSTATE_LOCAL && !*path)
         state = INSTALLSTATE_NOTUSED;
 
-    msi_strcpy_to_awstring(path, -1, lpPathBuf, pcchBuf);
+    if (msi_strcpy_to_awstring(path, -1, lpPathBuf, pcchBuf) == ERROR_MORE_DATA)
+        state = INSTALLSTATE_MOREDATA;
+
     msi_free(path);
     return state;
 }
@@ -3355,6 +3357,7 @@ static UINT MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
     HKEY hkey;
     DWORD sz;
     UINT rc;
+    INSTALLSTATE state;
 
     rc = MSIREG_OpenUserComponentsKey(szComponent, &hkey, FALSE);
     if (rc != ERROR_SUCCESS)
@@ -3369,13 +3372,16 @@ static UINT MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
     MsiDecomposeDescriptorW(info, product, feature, component, &sz);
 
     if (!szProduct)
-        rc = MSI_GetComponentPath(product, component, lpPathBuf, pcchPathBuf);
+        state = MSI_GetComponentPath(product, component, lpPathBuf, pcchPathBuf);
     else
-        rc = MSI_GetComponentPath(szProduct, component, lpPathBuf, pcchPathBuf);
+        state = MSI_GetComponentPath(szProduct, component, lpPathBuf, pcchPathBuf);
 
     msi_free( info );
 
-    if (rc != INSTALLSTATE_LOCAL)
+    if (state == INSTALLSTATE_MOREDATA)
+        return ERROR_MORE_DATA;
+
+    if (state != INSTALLSTATE_LOCAL)
         return ERROR_FILE_NOT_FOUND;
 
     return ERROR_SUCCESS;

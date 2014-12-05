@@ -4,7 +4,7 @@
 [Section]
 Name = Snoopy
 Version = 1.0
-Licence = Freeware
+License = Freeware
 Description = The original C64 Snoopy remake.
 Size = 704 kB
 Category = 4
@@ -20,11 +20,11 @@ URLSite = http://www.blueskied.com/spiele-spielen/snoopy.htm
 Description = Il remake del gioco Snoopy per Commodore 64.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Recrearea jocului Snoppy (original pe C64).
 Size = 704 ko
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Özgün C64 Snoopy'in yeniden yapılmışı.
 Size = 704 KB

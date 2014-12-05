@@ -12,6 +12,237 @@ DBG_DEFAULT_CHANNEL(UserObj);
 //int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 
+/* Forward declarations */
+static PVOID AllocThreadObject(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* HandleOwner)
+{
+    PTHROBJHEAD ObjHead;
+
+    UNREFERENCED_PARAMETER(pDesk);
+
+    ASSERT(Size > sizeof(*ObjHead));
+    ASSERT(pti != NULL);
+
+    ObjHead = UserHeapAlloc(Size);
+    if (!ObjHead)
+        return NULL;
+
+    RtlZeroMemory(ObjHead, Size);
+
+    ObjHead->pti = pti;
+    IntReferenceThreadInfo(pti);
+    *HandleOwner = pti;
+    /* It's a thread object, but it still count as one for the process */
+    pti->ppi->UserHandleCount++;
+
+    return ObjHead;
+}
+
+static void FreeThreadObject(
+    _In_ PVOID Object)
+{
+    PTHROBJHEAD ObjHead = (PTHROBJHEAD)Object;
+    PTHREADINFO pti = ObjHead->pti;
+
+    UserHeapFree(ObjHead);
+
+    pti->ppi->UserHandleCount--;
+    IntDereferenceThreadInfo(pti);
+}
+
+static PVOID AllocDeskThreadObject(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* HandleOwner)
+{
+    PTHRDESKHEAD ObjHead;
+
+    ASSERT(Size > sizeof(*ObjHead));
+    ASSERT(pti != NULL);
+
+    if (!pDesk)
+        pDesk = pti->rpdesk;
+
+    ObjHead = DesktopHeapAlloc(pDesk, Size);
+    if (!ObjHead)
+        return NULL;
+
+    RtlZeroMemory(ObjHead, Size);
+
+    ObjHead->pSelf = ObjHead;
+    ObjHead->rpdesk = pDesk;
+    ObjHead->pti = pti;
+    IntReferenceThreadInfo(pti);
+    *HandleOwner = pti;
+    /* It's a thread object, but it still count as one for the process */
+    pti->ppi->UserHandleCount++;
+
+    return ObjHead;
+}
+
+static void FreeDeskThreadObject(
+    _In_ PVOID Object)
+{
+    PTHRDESKHEAD ObjHead = (PTHRDESKHEAD)Object;
+    PDESKTOP pDesk = ObjHead->rpdesk;
+    PTHREADINFO pti = ObjHead->pti;
+
+    DesktopHeapFree(pDesk, Object);
+
+    pti->ppi->UserHandleCount--;
+    IntDereferenceThreadInfo(pti);
+}
+
+static PVOID AllocDeskProcObject(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* HandleOwner)
+{
+    PPROCDESKHEAD ObjHead;
+    PPROCESSINFO ppi;
+
+    ASSERT(Size > sizeof(*ObjHead));
+    ASSERT(pDesk != NULL);
+    ASSERT(pti != NULL);
+
+    ObjHead = DesktopHeapAlloc(pDesk, Size);
+    if (!ObjHead)
+        return NULL;
+
+    RtlZeroMemory(ObjHead, Size);
+
+    ppi = pti->ppi;
+
+    ObjHead->pSelf = ObjHead;
+    ObjHead->rpdesk = pDesk;
+    ObjHead->hTaskWow = (DWORD_PTR)ppi;
+    ppi->UserHandleCount++;
+    IntReferenceProcessInfo(ppi);
+    *HandleOwner = ppi;
+
+    return ObjHead;
+}
+
+static void FreeDeskProcObject(
+    _In_ PVOID Object)
+{
+    PPROCDESKHEAD ObjHead = (PPROCDESKHEAD)Object;
+    PDESKTOP pDesk = ObjHead->rpdesk;
+    PPROCESSINFO ppi = (PPROCESSINFO)ObjHead->hTaskWow;
+
+    ppi->UserHandleCount--;
+    IntDereferenceProcessInfo(ppi);
+
+    DesktopHeapFree(pDesk, Object);
+}
+
+static PVOID AllocProcMarkObject(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* HandleOwner)
+{
+    PPROCMARKHEAD ObjHead;
+    PPROCESSINFO ppi = pti->ppi;
+
+    UNREFERENCED_PARAMETER(pDesk);
+
+    ASSERT(Size > sizeof(*ObjHead));
+
+    ObjHead = UserHeapAlloc(Size);
+    if (!ObjHead)
+        return NULL;
+
+    RtlZeroMemory(ObjHead, Size);
+
+    ObjHead->ppi = ppi;
+    IntReferenceProcessInfo(ppi);
+    *HandleOwner = ppi;
+    ppi->UserHandleCount++;
+
+    return ObjHead;
+}
+
+void FreeProcMarkObject(
+    _In_ PVOID Object)
+{
+    PPROCESSINFO ppi = ((PPROCMARKHEAD)Object)->ppi;
+
+    UserHeapFree(Object);
+
+    ppi->UserHandleCount--;
+    IntDereferenceProcessInfo(ppi);
+}
+
+static PVOID AllocSysObject(
+    _In_ PDESKTOP pDesk,
+    _In_ PTHREADINFO pti,
+    _In_ SIZE_T Size,
+    _Out_ PVOID* ObjectOwner)
+{
+    PVOID Object;
+
+    UNREFERENCED_PARAMETER(pDesk);
+    UNREFERENCED_PARAMETER(pti);
+
+    ASSERT(Size > sizeof(HEAD));
+
+    Object = UserHeapAlloc(Size);
+    if (!Object)
+        return NULL;
+
+    *ObjectOwner = NULL;
+
+    RtlZeroMemory(Object, Size);
+    return Object;
+}
+
+static void FreeSysObject(
+    _In_ PVOID Object)
+{
+    UserHeapFree(Object);
+}
+
+static const struct
+{
+    PVOID   (*ObjectAlloc)(PDESKTOP, PTHREADINFO, SIZE_T, PVOID*);
+    BOOLEAN (*ObjectDestroy)(PVOID);
+    void    (*ObjectFree)(PVOID);
+} ObjectCallbacks[TYPE_CTYPES] =
+{
+    { NULL,                     NULL,                       NULL },                 /* TYPE_FREE */
+    { AllocDeskThreadObject,    co_UserDestroyWindow,       FreeDeskThreadObject }, /* TYPE_WINDOW */
+    { AllocDeskProcObject,      UserDestroyMenuObject,      FreeDeskProcObject },   /* TYPE_MENU */
+#ifndef NEW_CURSORICON
+    { AllocProcMarkObject,      /*UserCursorCleanup*/NULL,  FreeProcMarkObject },   /* TYPE_CURSOR */
+#else
+    { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeCurIconObject },    /* TYPE_CURSOR */
+#endif
+    { AllocSysObject,           /*UserSetWindowPosCleanup*/NULL, FreeSysObject },   /* TYPE_SETWINDOWPOS */
+    { AllocDeskThreadObject,    IntRemoveHook,              FreeDeskThreadObject }, /* TYPE_HOOK */
+    { AllocSysObject,           /*UserClipDataCleanup*/NULL,FreeSysObject },        /* TYPE_CLIPDATA */
+    { AllocDeskProcObject,      DestroyCallProc,            FreeDeskProcObject },   /* TYPE_CALLPROC */
+    { AllocProcMarkObject,      UserDestroyAccelTable,      FreeProcMarkObject },   /* TYPE_ACCELTABLE */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_DDEACCESS */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_DDECONV */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_DDEXACT */
+    { AllocSysObject,           /*UserMonitorCleanup*/NULL, FreeSysObject },        /* TYPE_MONITOR */
+    { AllocSysObject,           /*UserKbdLayoutCleanup*/NULL,FreeSysObject },       /* TYPE_KBDLAYOUT */
+    { AllocSysObject,           /*UserKbdFileCleanup*/NULL, FreeSysObject },        /* TYPE_KBDFILE */
+    { AllocThreadObject,        IntRemoveEvent,             FreeThreadObject },     /* TYPE_WINEVENTHOOK */
+    { AllocSysObject,           /*UserTimerCleanup*/NULL,   FreeSysObject },        /* TYPE_TIMER */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_INPUTCONTEXT */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_HIDDATA */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_DEVICEINFO */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_TOUCHINPUTINFO */
+    { NULL,                     NULL,                       NULL },                 /* TYPE_GESTUREINFOOBJ */
+};
+
 #if DBG
 
 void DbgUserDumpHandleTable()
@@ -27,7 +258,7 @@ void DbgUserDumpHandleTable()
 
     memset(HandleCounts, 0, sizeof(HandleCounts));
 
-    /* First of all count the number of handles per tpe */
+    /* First of all count the number of handles per type */
     ppiList = gppiList;
     while (ppiList)
     {
@@ -96,7 +327,6 @@ __inline static HANDLE entry_to_handle(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY
 __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
-   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
    TRACE("handles used %lu\n", gpsi->cHandleEntries);
 
    if (ht->freelist)
@@ -105,7 +335,6 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       ht->freelist = entry->ptr;
 
       gpsi->cHandleEntries++;
-      ppi->UserHandleCount++;
       return entry;
    }
 
@@ -137,7 +366,6 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
    entry->generation = 1;
 
    gpsi->cHandleEntries++;
-   ppi->UserHandleCount++;
 
    return entry;
 }
@@ -151,13 +379,33 @@ VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes)
    ht->allocated_handles = bytes / sizeof(USER_HANDLE_ENTRY);
 }
 
+
 __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY entry)
 {
-   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
    void *ret;
 
 #if DBG
-   ppi->DbgHandleCount[entry->type]--;
+   {
+       PPROCESSINFO ppi;
+       switch (entry->type)
+       {
+           case TYPE_WINDOW:
+           case TYPE_HOOK:
+           case TYPE_WINEVENTHOOK:
+               ppi = ((PTHREADINFO)entry->pi)->ppi;
+               break;
+           case TYPE_MENU:
+           case TYPE_CURSOR:
+           case TYPE_CALLPROC:
+           case TYPE_ACCELTABLE:
+               ppi = entry->pi;
+               break;
+           default:
+               ppi = NULL;
+       }
+       if (ppi)
+           ppi->DbgHandleCount[entry->type]--;
+   }
 #endif
 
    ret = entry->ptr;
@@ -168,46 +416,16 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ht->freelist  = entry;
 
    gpsi->cHandleEntries--;
-   ppi->UserHandleCount--;
 
    return ret;
 }
 
-static __inline PVOID
-UserHandleOwnerByType(HANDLE_TYPE type)
-{
-    PVOID pi;
-
-    switch (type)
-    {
-        case TYPE_WINDOW:
-        case TYPE_INPUTCONTEXT:
-            pi = GetW32ThreadInfo();
-            break;
-
-        case TYPE_MENU:
-        case TYPE_CURSOR:
-        case TYPE_HOOK:
-        case TYPE_CALLPROC:
-        case TYPE_ACCELTABLE:
-        case TYPE_SETWINDOWPOS:
-            pi = GetW32ProcessInfo();
-            break;
-
-        case TYPE_MONITOR:
-            pi = NULL; /* System */
-            break;
-
-        default:
-            pi = NULL;
-            break;
-    }
-
-    return pi;
-}
-
 /* allocate a user handle for a given object */
-HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, HANDLE_TYPE type )
+HANDLE UserAllocHandle(
+    _Inout_ PUSER_HANDLE_TABLE ht,
+    _In_ PVOID object,
+    _In_ HANDLE_TYPE type,
+    _In_ PVOID HandleOwner)
 {
    PUSER_HANDLE_ENTRY entry = alloc_user_entry(ht);
    if (!entry)
@@ -215,7 +433,7 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, HANDLE_TYPE type )
    entry->ptr  = object;
    entry->type = type;
    entry->flags = 0;
-   entry->pi = UserHandleOwnerByType(type);
+   entry->pi = HandleOwner;
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
 
@@ -322,82 +540,41 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 {
    HANDLE hi;
    PVOID Object;
-   PPROCESSINFO ppi;
-   BOOL dt;
-   PDESKTOP rpdesk = pDesktop;
+   PVOID ObjectOwner;
 
-   /* We could get the desktop for the new object from the pti however this is 
-    * not always the case for example when creating a new desktop window for 
-    * the desktop thread*/
+   /* Some sanity checks. Other checks will be made in the allocator */
+   ASSERT(type < TYPE_CTYPES);
+   ASSERT(type != TYPE_FREE);
+   ASSERT(ht != NULL);
 
-   if (!pti) pti = GetW32ThreadInfo();
-   if (!pDesktop) rpdesk = pti->rpdesk;
-   ppi = pti->ppi;
-
-   switch (type)
+   /* Allocate the object */
+   ASSERT(ObjectCallbacks[type].ObjectAlloc != NULL);
+   Object = ObjectCallbacks[type].ObjectAlloc(pDesktop, pti, size, &ObjectOwner);
+   if (!Object)
    {
-      case TYPE_WINDOW:
-      case TYPE_MENU:
-      case TYPE_HOOK:
-      case TYPE_CALLPROC:
-      case TYPE_INPUTCONTEXT:
-         Object = DesktopHeapAlloc(rpdesk, size);
-         dt = TRUE;
-         break;
-
-      default:
-         Object = UserHeapAlloc(size);
-         dt = FALSE;
-         break;
+       ERR("User object allocation failed. Out of memory!\n");
+       return NULL;
    }
 
-   if (!Object)
-      return NULL;
-
-
-   hi = UserAllocHandle(ht, Object, type );
-   if (!hi)
+   hi = UserAllocHandle(ht, Object, type, ObjectOwner);
+   if (hi == NULL)
    {
-      if (dt)
-         DesktopHeapFree(rpdesk, Object);
-      else
-         UserHeapFree(Object);
-      return NULL;
+       ERR("Out of user handles!\n");
+       ObjectCallbacks[type].ObjectFree(Object);
+       return NULL;
    }
 
 #if DBG
-   ppi->DbgHandleCount[type]++;
+   if (pti)
+       pti->ppi->DbgHandleCount[type]++;
 #endif
 
-   RtlZeroMemory(Object, size);
-
-   switch (type)
-   {
-        case TYPE_WINDOW:
-        case TYPE_HOOK:
-        case TYPE_INPUTCONTEXT:
-            ((PTHRDESKHEAD)Object)->rpdesk = rpdesk;
-            ((PTHRDESKHEAD)Object)->pSelf = Object;
-        case TYPE_WINEVENTHOOK:
-            ((PTHROBJHEAD)Object)->pti = pti;
-            break;
-
-        case TYPE_MENU:
-        case TYPE_CALLPROC:
-            ((PPROCDESKHEAD)Object)->rpdesk = rpdesk;
-            ((PPROCDESKHEAD)Object)->pSelf = Object;
-            break;
-
-        case TYPE_CURSOR:
-            ((PPROCMARKHEAD)Object)->ppi = ppi;
-            break;
-
-        default:
-            break;
-   }
-   /* Now set default headers. */
+   /* Give this object its identity. */
    ((PHEAD)Object)->h = hi;
-   ((PHEAD)Object)->cLockObj = 2; // We need this, because we create 2 refs: handle and pointer!
+
+   /* The caller will get a locked object.
+    * Note: with the reference from the handle, that makes two */
+   UserReferenceObject(Object);
 
    if (h)
       *h = hi;
@@ -407,46 +584,43 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 
 BOOL
 FASTCALL
-UserDereferenceObject(PVOID object)
+UserDereferenceObject(PVOID Object)
 {
-  PUSER_HANDLE_ENTRY entry;
-  HANDLE_TYPE type;
+    PHEAD ObjHead = (PHEAD)Object;
 
-  ASSERT(((PHEAD)object)->cLockObj >= 1);
+    ASSERT(ObjHead->cLockObj >= 1);
 
-  if ((INT)--((PHEAD)object)->cLockObj <= 0)
-  {
-     entry = handle_to_entry(gHandleTable, ((PHEAD)object)->h );
+    if (--ObjHead->cLockObj == 0)
+    {
+        PUSER_HANDLE_ENTRY entry;
+        HANDLE_TYPE type;
 
-     if (!entry)
-     {
-        ERR("Warning! Dereference Object without ENTRY! Obj -> %p\n", object);
-        return FALSE;
-     }
-     TRACE("Warning! Dereference to zero! Obj -> %p\n", object);
+        entry = handle_to_entry(gHandleTable, ObjHead->h);
 
-     ((PHEAD)object)->cLockObj = 0;
+        ASSERT(entry != NULL);
+        /* The entry should be marked as in deletion */
+        ASSERT(entry->flags & HANDLEENTRY_INDESTROY);
 
-     if (!(entry->flags & HANDLEENTRY_INDESTROY))
+        type = entry->type;
+        ASSERT(type != TYPE_FREE);
+        ASSERT(type < TYPE_CTYPES);
+
+        /* We can now get rid of everything */
+        free_user_entry(gHandleTable, entry );
+
+#if 0
+        /* Call the object destructor */
+        ASSERT(ObjectCallbacks[type].ObjectCleanup != NULL);
+        ObjectCallbacks[type].ObjectCleanup(Object);
+#endif
+
+        /* And free it */
+        ASSERT(ObjectCallbacks[type].ObjectFree != NULL);
+        ObjectCallbacks[type].ObjectFree(Object);
+
         return TRUE;
-
-     type = entry->type;
-     free_user_entry(gHandleTable, entry );
-
-     switch (type)
-     {
-        case TYPE_WINDOW:
-        case TYPE_MENU:
-        case TYPE_HOOK:
-        case TYPE_CALLPROC:
-        case TYPE_INPUTCONTEXT:
-           return DesktopHeapFree(((PTHRDESKHEAD)object)->rpdesk, object);
-
-        default:
-           return UserHeapFree(object);
-     }
-  }
-  return FALSE;
+    }
+    return FALSE;
 }
 
 BOOL
@@ -516,16 +690,17 @@ UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type)
     return object;
 }
 
+#ifndef NEW_CURSORICON
 VOID
 FASTCALL
 UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
 {
     PUSER_HANDLE_ENTRY entry = handle_to_entry(gHandleTable, ((PHEAD)obj)->h );
     PPROCESSINFO ppi, oldppi;
-    
+
     /* This must be called with a valid object */
     ASSERT(entry);
-    
+
     /* For now, only supported for CursorIcon object */
     switch(type)
     {
@@ -540,60 +715,60 @@ UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
             return;
     }
 
-    oldppi->UserHandleCount--;
-    ppi->UserHandleCount++;
 #if DBG
     oldppi->DbgHandleCount[type]--;
     ppi->DbgHandleCount[type]++;
 #endif
+
+    oldppi->UserHandleCount--;
+    IntDereferenceProcessInfo(oldppi);
+    ppi->UserHandleCount++;
+    IntReferenceProcessInfo(ppi);
 }
+#endif
 
-
-HANDLE FASTCALL ValidateHandleNoErr(HANDLE handle, HANDLE_TYPE type)
+BOOLEAN
+UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 {
-   if (handle) return (PWND)UserGetObjectNoErr(gHandleTable, handle, type);
-   return NULL;
-}
+    int i;
+    PUSER_HANDLE_ENTRY Entry;
+    BOOLEAN Ret = TRUE;
 
-PVOID FASTCALL ValidateHandle(HANDLE handle, HANDLE_TYPE type)
-{
-  PVOID pObj;
-  DWORD dwError = 0;
-  if (handle) 
-  {
-      pObj = UserGetObjectNoErr(gHandleTable, handle, type);
-      if (!pObj)
-      {
-          switch (type)
-          {  
-              case TYPE_WINDOW:
-                  dwError = ERROR_INVALID_WINDOW_HANDLE;
-                  break;
-              case TYPE_MENU:
-                  dwError = ERROR_INVALID_MENU_HANDLE;
-                  break;
-              case TYPE_CURSOR:
-                  dwError = ERROR_INVALID_CURSOR_HANDLE;
-                  break;
-              case TYPE_SETWINDOWPOS:
-                  dwError = ERROR_INVALID_DWP_HANDLE;
-                  break;
-              case TYPE_HOOK:
-                  dwError = ERROR_INVALID_HOOK_HANDLE;
-                  break;
-              case TYPE_ACCELTABLE:
-                  dwError = ERROR_INVALID_ACCEL_HANDLE;
-                  break;
-              default:
-                  dwError = ERROR_INVALID_HANDLE;
-                  break;
-          }
-          EngSetLastError(dwError);
-          return NULL;
-      }
-      return pObj;
-  }
-  return NULL;
+    /* Sweep the whole handle table */
+    for (i = 0; i < Table->allocated_handles; i++)
+    {
+        Entry = &Table->handles[i];
+
+        if (Entry->pi != Owner)
+            continue;
+
+        /* Do not destroy if it's already been done */
+        if (Entry->flags & HANDLEENTRY_INDESTROY)
+            continue;
+
+#ifndef NEW_CURSORICON
+        /* Spcial case for cursors until cursoricon_new is there */
+        if (Entry->type == TYPE_CURSOR)
+        {
+            UserReferenceObject(Entry->ptr);
+            if (!IntDestroyCurIconObject(Entry->ptr, Owner))
+            {
+                Ret = FALSE;
+            }
+            continue;
+        }
+#endif
+
+        /* Call destructor */
+        if (!ObjectCallbacks[Entry->type].ObjectDestroy(Entry->ptr))
+        {
+            ERR("Failed destructing object %p, type %u.\n", Entry->ptr, Entry->type);
+            /* Don't return immediately, we must continue destroying the other objects */
+            Ret = FALSE;
+        }
+    }
+
+    return Ret;
 }
       
 /*

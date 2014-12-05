@@ -34,6 +34,7 @@
 #include <scsi.h>
 #include <ntddscsi.h>
 #include <ntdddisk.h>
+#include <mountdev.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -2877,8 +2878,20 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           break;
 
       default:
-          if ('M' == (Stack->Parameters.DeviceIoControl.IoControlCode >> 16)) {
-            DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          if (DEVICE_TYPE_FROM_CTL_CODE(Stack->Parameters.DeviceIoControl.IoControlCode) == MOUNTDEVCONTROLTYPE)
+          {
+            switch (Stack->Parameters.DeviceIoControl.IoControlCode)
+            {
+            case IOCTL_MOUNTDEV_QUERY_DEVICE_NAME:
+                DPRINT1("Got unexpected IOCTL_MOUNTDEV_QUERY_DEVICE_NAME\n");
+                break;
+            case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
+                DPRINT1("Got unexpected IOCTL_MOUNTDEV_QUERY_UNIQUE_ID\n");
+                break;
+            default:
+                DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+                break;
+            }
           } else {
             DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
           }

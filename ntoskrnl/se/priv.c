@@ -446,7 +446,7 @@ SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
         PrivilegeSet->PrivilegeCount += Privileges->PrivilegeCount;
 
         /* Free the old privilege set if it was allocated */
-        if (AccessState->PrivilegesAllocated == TRUE)
+        if (AccessState->PrivilegesAllocated != FALSE)
             ExFreePool(AuxData->PrivilegeSet);
 
         /* Now we are using an allocated privilege set */

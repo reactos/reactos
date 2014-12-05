@@ -1496,7 +1496,7 @@ inet_addr(IN  CONST CHAR FAR* cp)
 
     p = (PCHAR)cp;
 
-    if (!p || !WSAINITIALIZED)
+    if (!p)
     {
         WSASetLastError(WSAEFAULT);
         return INADDR_NONE;

@@ -1,4 +1,7 @@
-/* 2011.10.19 - Fulea Ștefan: minor changes */
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -14,28 +17,28 @@ BEGIN
     BEGIN
         MENUITEM "Co&nectare la…", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Pornește", ID_START, GRAYED
+        MENUITEM "P&ornește", ID_START, GRAYED
         MENUITEM "&Oprește", ID_STOP, GRAYED
-        MENUITEM "&Suspendă", ID_PAUSE, GRAYED
-        MENUITEM "Contin&uă", ID_RESUME, GRAYED
+        MENUITEM "S&uspendă", ID_PAUSE, GRAYED
+        MENUITEM "&Continuă", ID_RESUME, GRAYED
         MENUITEM "&Repornește", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Împrospătea&ză", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Mo&dificare…", ID_EDIT, GRAYED
-        MENUITEM "&Creare…", ID_CREATE, GRAYED
+        MENUITEM "Cre&are…", ID_CREATE, GRAYED
         MENUITEM "&Eliminare…", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Propr&ietăți…", ID_PROP, GRAYED
+        MENUITEM "&Proprietăți…", ID_PROP, GRAYED
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Pictograme m&ari", ID_VIEW_LARGE
-        MENUITEM "Pictograme m&ici", ID_VIEW_SMALL
+        MENUITEM "D&ale", ID_VIEW_LARGE
+        MENUITEM "&Pictograme", ID_VIEW_SMALL
         MENUITEM "&Listă", ID_VIEW_LIST
         MENUITEM "&Detalii", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
-        MENUITEM "&Particularizare…", ID_VIEW_CUST, GRAYED
+        MENUITEM "Pa&rticularizare…", ID_VIEW_CUST, GRAYED
     END
     POPUP "&?"
     BEGIN
@@ -48,10 +51,10 @@ IDR_POPUP MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Pornește", ID_START, GRAYED
+        MENUITEM "P&ornește", ID_START, GRAYED
         MENUITEM "&Oprește", ID_STOP, GRAYED
-        MENUITEM "&Suspendă", ID_PAUSE, GRAYED
-        MENUITEM "Contin&uă", ID_RESUME, GRAYED
+        MENUITEM "S&uspendă", ID_PAUSE, GRAYED
+        MENUITEM "&Continuă", ID_RESUME, GRAYED
         MENUITEM "&Repornește", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Împrospătea&ză", ID_REFRESH
@@ -59,7 +62,7 @@ BEGIN
         MENUITEM "Mo&dificare…", ID_EDIT, GRAYED
         MENUITEM "&Eliminare…", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Propr&ietăți…", ID_PROP, GRAYED
+        MENUITEM "&Proprietăți…", ID_PROP, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Manual…", ID_HELP
     END
@@ -86,10 +89,10 @@ BEGIN
     EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
     EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
     COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
-    PUSHBUTTON "&Pornește", IDC_START, 6, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "P&ornește", IDC_START, 6, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "&Oprește", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "&Suspendă", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "Contin&uă", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "S&uspendă", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "&Continuă", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
     LTEXT "Nume serviciu:", IDC_STATIC, 4, 11, 53, 11
     LTEXT "Nume afișat:", IDC_STATIC, 4, 29, 53, 11
     LTEXT "Descriere:", IDC_STATIC, 4, 51, 53, 11
@@ -100,7 +103,7 @@ BEGIN
     LTEXT "Aici se pot specifica parametrii de pornire aplicabili lansării serviciului.", IDC_STATIC, 6, 177, 240, 15
     LTEXT "Parametri de pornire:", IDC_STATIC, 6, 200, 68, 11
     EDITTEXT IDC_START_PARAM, 78, 199, 168, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "&Editare", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+    PUSHBUTTON "Mo&dificare", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6, 6, 253, 225
@@ -150,7 +153,7 @@ BEGIN
     LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
     EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL |
              WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
-    PUSHBUTTON "&Da", IDOK, 26, 129, 54, 13
+    PUSHBUTTON "D&a", IDOK, 26, 129, 54, 13
     DEFPUSHBUTTON "N&u", IDCANCEL, 102, 129, 54, 13
 END
 
@@ -163,7 +166,7 @@ BEGIN
     LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
     LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
     LTEXT "Doriți oprirea acestor servicii?", IDC_STATIC, 15, 110, 150, 10
-    DEFPUSHBUTTON "&Da", IDOK, 60, 129, 54, 14
+    DEFPUSHBUTTON "D&a", IDOK, 60, 129, 54, 14
     PUSHBUTTON "N&u", IDCANCEL, 120, 129, 54, 14
 END
 

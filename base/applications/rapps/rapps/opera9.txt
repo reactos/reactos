@@ -4,7 +4,7 @@
 [Section]
 Name = Opera
 Version = 9.64
-Licence = Freeware
+License = Freeware
 Description = The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.
 Size = 7.21 MB
 Category = 5
@@ -35,7 +35,7 @@ Description = De populaire Opera Browser met vele gevorderde mogelijkheden, incl
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Navigatorul popular Opera cu multe funcționalități avansate incluzând poștă electronică și un client de BitTorrent.
 Size = 7,21 Mo
 
@@ -43,7 +43,7 @@ Size = 7,21 Mo
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = Bir posta ve BitTorrent istemcisini kapsayan birçok gelişmiş husûsiyetle, tutulan Opera Tarayıcı.
 Size = 7,21 MB
 

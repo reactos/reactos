@@ -18,10 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-//#include "winbase.h"
-#include "winuser.h"
-//#include "winnls.h"
+#include <windef.h>
+#include <winuser.h>
+
 #include "credui_resources.h"
 
 /* @makedep: banner.bmp */

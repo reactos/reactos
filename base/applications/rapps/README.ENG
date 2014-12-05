@@ -1,3 +1,5 @@
+For more information for RAPPS, see: https://www.reactos.org/wiki/RAPPS
+
 ADDING DOWNLOADABLE PROGRAMMS
 
 For an each programm would be creacted an INI alike syntax.
@@ -12,7 +14,7 @@ The File Overview:
 Name = program name
 RegName = Name in registry
 Version = 1.1.1
-Licence = GPL
+License = GPL
 Description = Description
 Size = 10 mb
 Category = 5

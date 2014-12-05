@@ -56,7 +56,6 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType ) {
                                         FCB->Recv.Window,
                                         FCB->Recv.Size,
                                         FCB->AddressFrom,
-                                        &FCB->ReceiveIrp.Iosb,
                                         PacketSocketRecvComplete,
                                         FCB);
 

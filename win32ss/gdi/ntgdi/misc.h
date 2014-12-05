@@ -24,7 +24,6 @@ extern HGDIOBJ StockObjects[];
 extern SHORT gusLanguageID;
 
 SHORT FASTCALL UserGetLanguageID(VOID);
-VOID FASTCALL IntUserManualGuiCheck(LONG Check);
 PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
 VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);
 
@@ -162,15 +161,3 @@ BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
-
-#define LIST_FOR_EACH(elem, list, type, field) \
-    for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
-         &(elem)->field != (list) && ((&((elem)->field)) != NULL); \
-         (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
-
-#define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
-    for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
-         (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
-         &(cursor)->field != (list); \
-         (cursor) = (cursor2), \
-         (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))

@@ -270,6 +270,7 @@ GetServiceList(PMAIN_WND_INFO Info,
         HeapFree(ProcessHeap,
                      0,
                      Info->pAllServices);
+        Info->pAllServices = NULL;
     }
 
     ScHandle = OpenSCManager(NULL,
@@ -319,7 +320,7 @@ GetServiceList(PMAIN_WND_INFO Info,
     if (ScHandle)
         CloseServiceHandle(ScHandle);
 
-    if (!bRet)
+    if (!bRet && Info->pAllServices)
     {
         HeapFree(ProcessHeap,
                  0,

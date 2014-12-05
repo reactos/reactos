@@ -102,6 +102,7 @@ __security_init_cookie (void)
 
 __declspec(noreturn) void __cdecl __report_gsfailure (ULONG_PTR);
 
+#ifndef _MSC_VER
 __declspec(noreturn) void __cdecl
 __report_gsfailure (ULONG_PTR StackCookie)
 {
@@ -147,4 +148,4 @@ __report_gsfailure (ULONG_PTR StackCookie)
   TerminateProcess (GetCurrentProcess (), STATUS_STACK_BUFFER_OVERRUN);
   abort();
 }
-
+#endif /* !_MSC_VER */

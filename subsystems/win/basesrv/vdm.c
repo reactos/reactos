@@ -576,7 +576,7 @@ CSR_API(BaseSrvCheckVDM)
     BOOLEAN NewConsoleRecord = FALSE;
 
     /* Don't do anything if the VDM has been disabled in the registry */
-    if (!BaseSrvIsVdmAllowed()) return STATUS_ACCESS_DENIED;
+    if (!BaseSrvIsVdmAllowed()) return STATUS_VDM_DISALLOWED;
 
     /* Validate the message buffers */
     if (!CsrValidateMessageBuffer(ApiMessage,

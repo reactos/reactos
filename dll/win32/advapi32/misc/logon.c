@@ -105,6 +105,10 @@ CreateProcessAsUserA(HANDLE hToken,
     PROCESS_ACCESS_TOKEN AccessToken;
     NTSTATUS Status;
 
+    TRACE("%p %s %s %p %p %d 0x%08x %p %s %p %p\n", hToken, debugstr_a(lpApplicationName),
+        debugstr_a(lpCommandLine), lpProcessAttributes, lpThreadAttributes, bInheritHandles,
+        dwCreationFlags, lpEnvironment, debugstr_a(lpCurrentDirectory), lpStartupInfo, lpProcessInformation);
+
     /* Create the process with a suspended main thread */
     if (!CreateProcessA(lpApplicationName,
                         lpCommandLine,
@@ -117,6 +121,7 @@ CreateProcessAsUserA(HANDLE hToken,
                         lpStartupInfo,
                         lpProcessInformation))
     {
+        ERR("CreateProcessA failed! GLE: %d\n", GetLastError());
         return FALSE;
     }
 
@@ -130,6 +135,8 @@ CreateProcessAsUserA(HANDLE hToken,
                                      sizeof(AccessToken));
     if (!NT_SUCCESS (Status))
     {
+        ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+        TerminateProcess(lpProcessInformation->hProcess, Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
@@ -163,6 +170,10 @@ CreateProcessAsUserW(HANDLE hToken,
     PROCESS_ACCESS_TOKEN AccessToken;
     NTSTATUS Status;
 
+    TRACE("%p %s %s %p %p %d 0x%08x %p %s %p %p\n", hToken, debugstr_w(lpApplicationName),
+        debugstr_w(lpCommandLine), lpProcessAttributes, lpThreadAttributes, bInheritHandles,
+        dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory), lpStartupInfo, lpProcessInformation);
+
     /* Create the process with a suspended main thread */
     if (!CreateProcessW(lpApplicationName,
                         lpCommandLine,
@@ -175,6 +186,7 @@ CreateProcessAsUserW(HANDLE hToken,
                         lpStartupInfo,
                         lpProcessInformation))
     {
+        ERR("CreateProcessW failed! GLE: %d\n", GetLastError());
         return FALSE;
     }
 
@@ -188,6 +200,8 @@ CreateProcessAsUserW(HANDLE hToken,
                                      sizeof(AccessToken));
     if (!NT_SUCCESS (Status))
     {
+        ERR("NtSetInformationProcess failed: 0x%08x\n", Status);
+        TerminateProcess(lpProcessInformation->hProcess, Status);
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
@@ -199,30 +213,6 @@ CreateProcessAsUserW(HANDLE hToken,
     }
 
     return TRUE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
-CreateProcessWithLogonW(LPCWSTR lpUsername,
-                        LPCWSTR lpDomain,
-                        LPCWSTR lpPassword,
-                        DWORD dwLogonFlags,
-                        LPCWSTR lpApplicationName,
-                        LPWSTR lpCommandLine,
-                        DWORD dwCreationFlags,
-                        LPVOID lpEnvironment,
-                        LPCWSTR lpCurrentDirectory,
-                        LPSTARTUPINFOW lpStartupInfo,
-                        LPPROCESS_INFORMATION lpProcessInformation)
-{
-    FIXME("%s %s %s 0x%08x %s %s 0x%08x %p %s %p %p stub\n", debugstr_w(lpUsername), debugstr_w(lpDomain),
-    debugstr_w(lpPassword), dwLogonFlags, debugstr_w(lpApplicationName),
-    debugstr_w(lpCommandLine), dwCreationFlags, lpEnvironment, debugstr_w(lpCurrentDirectory),
-    lpStartupInfo, lpProcessInformation);
-
-    return FALSE;
 }
 
 /*

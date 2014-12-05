@@ -1825,11 +1825,17 @@ static HRESULT WINAPI domdoc_createEntityReference(
 xmlChar* tagName_to_XPath(const BSTR tagName)
 {
     xmlChar *query, *tmp;
+    static const xmlChar everything[] = "/descendant::node()";
     static const xmlChar mod_pre[] = "*[local-name()='";
     static const xmlChar mod_post[] = "']";
     static const xmlChar prefix[] = "descendant::";
     const WCHAR *tokBegin, *tokEnd;
     int len;
+
+    /* Special case - empty tagname - means select all nodes,
+       except document itself. */
+    if (!*tagName)
+        return xmlStrdup(everything);
 
     query = xmlStrdup(prefix);
 

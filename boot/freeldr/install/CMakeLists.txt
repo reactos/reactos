@@ -4,5 +4,4 @@ add_executable(installfreeldr EXCLUDE_FROM_ALL
     volume.c)
 
 set_module_type(installfreeldr win32cui)
-
 add_importlibs(installfreeldr msvcrt kernel32)

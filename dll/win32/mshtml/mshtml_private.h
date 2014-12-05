@@ -129,6 +129,7 @@ typedef struct event_target_t event_target_t;
     XDIID(DispHTMLStyle) \
     XDIID(DispHTMLStyleElement) \
     XDIID(DispHTMLStyleSheet) \
+    XDIID(DispHTMLStyleSheetRulesCollection) \
     XDIID(DispHTMLStyleSheetsCollection) \
     XDIID(DispHTMLTable) \
     XDIID(DispHTMLTableCell) \
@@ -157,6 +158,7 @@ typedef struct event_target_t event_target_t;
     XIID(IHTMLDocument5) \
     XIID(IHTMLDOMAttribute) \
     XIID(IHTMLDOMChildrenCollection) \
+    XIID(IHTMLDOMImplementation) \
     XIID(IHTMLDOMNode) \
     XIID(IHTMLDOMNode2) \
     XIID(IHTMLDOMTextNode) \
@@ -188,6 +190,7 @@ typedef struct event_target_t event_target_t;
     XIID(IHTMLObjectElement) \
     XIID(IHTMLObjectElement2) \
     XIID(IHTMLOptionElement) \
+    XIID(IHTMLOptionElementFactory) \
     XIID(IHTMLPluginsCollection) \
     XIID(IHTMLRect) \
     XIID(IHTMLScreen) \
@@ -202,6 +205,7 @@ typedef struct event_target_t event_target_t;
     XIID(IHTMLStyle6) \
     XIID(IHTMLStyleElement) \
     XIID(IHTMLStyleSheet) \
+    XIID(IHTMLStyleSheetRulesCollection) \
     XIID(IHTMLStyleSheetsCollection) \
     XIID(IHTMLTable) \
     XIID(IHTMLTable2) \
@@ -338,6 +342,7 @@ typedef struct {
 } global_prop_t;
 
 typedef struct {
+    DispatchEx dispex;
     IHTMLOptionElementFactory IHTMLOptionElementFactory_iface;
 
     LONG ref;
@@ -750,6 +755,8 @@ struct HTMLDocumentNode {
     BOOL content_ready;
     event_target_t *body_event_target;
 
+    IHTMLDOMImplementation *dom_implementation;
+
     ICatInformation *catmgr;
     nsDocumentEventListener *nsevent_listener;
     BOOL *event_vector;
@@ -780,6 +787,7 @@ HRESULT HTMLLocation_Create(HTMLInnerWindow*,HTMLLocation**) DECLSPEC_HIDDEN;
 IOmNavigator *OmNavigator_Create(void) DECLSPEC_HIDDEN;
 HRESULT HTMLScreen_Create(IHTMLScreen**) DECLSPEC_HIDDEN;
 HRESULT create_history(HTMLInnerWindow*,OmHistory**) DECLSPEC_HIDDEN;
+HRESULT create_dom_implementation(IHTMLDOMImplementation**) DECLSPEC_HIDDEN;
 
 HRESULT create_storage(IHTMLStorage**) DECLSPEC_HIDDEN;
 
@@ -845,7 +853,6 @@ void nsACString_Finish(nsACString*) DECLSPEC_HIDDEN;
 
 BOOL nsAString_Init(nsAString*,const PRUnichar*) DECLSPEC_HIDDEN;
 void nsAString_InitDepend(nsAString*,const PRUnichar*) DECLSPEC_HIDDEN;
-void nsAString_SetData(nsAString*,const PRUnichar*) DECLSPEC_HIDDEN;
 UINT32 nsAString_GetData(const nsAString*,const PRUnichar**) DECLSPEC_HIDDEN;
 void nsAString_Finish(nsAString*) DECLSPEC_HIDDEN;
 HRESULT return_nsstr(nsresult,nsAString*,BSTR*) DECLSPEC_HIDDEN;
@@ -976,6 +983,11 @@ HRESULT wrap_iface(IUnknown*,IUnknown*,IUnknown**) DECLSPEC_HIDDEN;
 IHTMLElementCollection *create_all_collection(HTMLDOMNode*,BOOL) DECLSPEC_HIDDEN;
 IHTMLElementCollection *create_collection_from_nodelist(HTMLDocumentNode*,nsIDOMNodeList*) DECLSPEC_HIDDEN;
 IHTMLElementCollection *create_collection_from_htmlcol(HTMLDocumentNode*,nsIDOMHTMLCollection*) DECLSPEC_HIDDEN;
+HRESULT get_elem_source_index(HTMLElement*,LONG*) DECLSPEC_HIDDEN;
+
+nsresult get_elem_attr_value(nsIDOMHTMLElement*,const WCHAR*,nsAString*,const PRUnichar**) DECLSPEC_HIDDEN;
+HRESULT elem_string_attr_getter(HTMLElement*,const WCHAR*,BOOL,BSTR*) DECLSPEC_HIDDEN;
+HRESULT elem_string_attr_setter(HTMLElement*,const WCHAR*,const WCHAR*) DECLSPEC_HIDDEN;
 
 /* commands */
 typedef struct {
@@ -1043,7 +1055,7 @@ void remove_target_tasks(LONG) DECLSPEC_HIDDEN;
 HRESULT set_task_timer(HTMLInnerWindow*,DWORD,BOOL,IDispatch*,LONG*) DECLSPEC_HIDDEN;
 HRESULT clear_task_timer(HTMLInnerWindow*,BOOL,DWORD) DECLSPEC_HIDDEN;
 
-const char *debugstr_variant(const VARIANT*) DECLSPEC_HIDDEN;
+const char *debugstr_mshtml_guid(const GUID*) DECLSPEC_HIDDEN;
 
 DEFINE_GUID(CLSID_AboutProtocol, 0x3050F406, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_JSProtocol, 0x3050F3B2, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);

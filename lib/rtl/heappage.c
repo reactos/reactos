@@ -236,7 +236,7 @@ RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
     if (Flags & HEAP_NO_SERIALIZE)
     {
         /* More complex scenario */
-        if (!RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE))
+        if (!RtlTryEnterHeapLock(DphRoot->HeapCritSect, TRUE))
         {
             if (!DphRoot->nRemoteLockAcquired)
             {

@@ -1153,7 +1153,7 @@ static DWORD FTPFILE_ReadFile(object_header_t *hdr, void *buffer, DWORD size, DW
         return ERROR_INTERNET_DISCONNECTED;
 
     /* FIXME: FTP should use NETCON_ stuff */
-    res = recv(file->nDataSocket, buffer, size, MSG_WAITALL);
+    res = sock_recv(file->nDataSocket, buffer, size, MSG_WAITALL);
     *read = res>0 ? res : 0;
 
     error = res >= 0 ? ERROR_SUCCESS : INTERNET_ERROR_BASE; /* FIXME */
@@ -1178,7 +1178,7 @@ static DWORD FTPFILE_WriteFile(object_header_t *hdr, const void *buffer, DWORD s
     ftp_file_t *lpwh = (ftp_file_t*) hdr;
     int res;
 
-    res = send(lpwh->nDataSocket, buffer, size, 0);
+    res = sock_send(lpwh->nDataSocket, buffer, size, 0);
 
     *written = res>0 ? res : 0;
     return res >= 0 ? ERROR_SUCCESS : sock_get_error(errno);
@@ -1192,7 +1192,7 @@ static void FTP_ReceiveRequestData(ftp_file_t *file, BOOL first_notif)
 
     TRACE("%p\n", file);
 
-    available = recv(file->nDataSocket, buffer, sizeof(buffer), MSG_PEEK);
+    available = sock_recv(file->nDataSocket, buffer, sizeof(buffer), MSG_PEEK);
 
     if(available != -1) {
         iar.dwResult = (DWORD_PTR)file->hdr.hInternet;
@@ -1235,7 +1235,7 @@ static DWORD FTPFILE_QueryDataAvailable(object_header_t *hdr, DWORD *available, 
 
         *available = 0;
 
-        retval = recv(file->nDataSocket, &byte, 1, MSG_PEEK);
+        retval = sock_recv(file->nDataSocket, &byte, 1, MSG_PEEK);
         if(retval > 0) {
             task_header_t *task;
 
@@ -2274,7 +2274,7 @@ BOOL WINAPI FtpCommandW( HINTERNET hConnect, BOOL fExpectResponse, DWORD dwFlags
     TRACE("Sending (%s) len(%d)\n", cmd, len);
     while ((nBytesSent < len) && (nRC != -1))
     {
-        nRC = send(lpwfs->sndSocket, cmd + nBytesSent, len - nBytesSent, 0);
+        nRC = sock_send(lpwfs->sndSocket, cmd + nBytesSent, len - nBytesSent, 0);
         if (nRC != -1)
         {
             nBytesSent += nRC;
@@ -2641,7 +2641,7 @@ static BOOL FTP_SendCommandA(INT nSocket, FTP_COMMAND ftpCmd, LPCSTR lpszParam,
 	TRACE("Sending (%s) len(%d)\n", buf, len);
 	while((nBytesSent < len) && (nRC != -1))
 	{
-		nRC = send(nSocket, buf+nBytesSent, len - nBytesSent, 0);
+		nRC = sock_send(nSocket, buf+nBytesSent, len - nBytesSent, 0);
 		nBytesSent += nRC;
 	}
     heap_free(buf);
@@ -3221,7 +3221,7 @@ static BOOL FTP_SendData(ftp_session_t *lpwfs, INT nDataSocket, HANDLE hFile)
 
         nLen = DATA_PACKET_SIZE < nBytesToSend ?
             DATA_PACKET_SIZE : nBytesToSend;
-        nRC  = send(nDataSocket, lpszBuffer, nLen, 0);
+        nRC  = sock_send(nDataSocket, lpszBuffer, nLen, 0);
 
         if (nRC != -1)
         {
@@ -3326,7 +3326,7 @@ static BOOL FTP_RetrieveFileData(ftp_session_t *lpwfs, INT nDataSocket, HANDLE h
 
     while (nRC != -1)
     {
-        nRC = recv(nDataSocket, lpszBuffer, DATA_PACKET_SIZE, 0);
+        nRC = sock_recv(nDataSocket, lpszBuffer, DATA_PACKET_SIZE, 0);
         if (nRC != -1)
         {
             /* other side closed socket. */

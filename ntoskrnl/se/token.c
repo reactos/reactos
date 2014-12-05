@@ -108,6 +108,8 @@ SepCompareTokens(IN PTOKEN FirstToken,
         }
 
         /* FIXME: Check if every privilege that is present in either token is also present in the other one */
+        DPRINT1("FIXME: Pretending tokens are equal!\n");
+        IsEqual = TRUE;
     }
 
     *Equal = IsEqual;
@@ -231,7 +233,39 @@ SeExchangePrimaryToken(PEPROCESS Process,
     PAGED_CODE();
 
     if (NewToken->TokenType != TokenPrimary) return(STATUS_BAD_TOKEN_TYPE);
-    if (NewToken->TokenInUse) return(STATUS_TOKEN_ALREADY_IN_USE);
+    if (NewToken->TokenInUse)
+    {
+        BOOLEAN IsEqual;
+        NTSTATUS Status;
+
+        /* Maybe we're trying to set the same token */
+        OldToken = PsReferencePrimaryToken(Process);
+        if (OldToken == NewToken)
+        {
+            /* So it's a nop. */
+            *OldTokenP = OldToken;
+            return STATUS_SUCCESS;
+        }
+
+        Status = SepCompareTokens(OldToken, NewToken, &IsEqual);
+        if (!NT_SUCCESS(Status))
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return Status;
+        }
+
+        if (!IsEqual)
+        {
+            *OldTokenP = NULL;
+            PsDereferencePrimaryToken(OldToken);
+            return STATUS_TOKEN_ALREADY_IN_USE;
+        }
+        /* Silently return STATUS_SUCCESS but do not set the new token,
+         * as it's already in use elsewhere. */
+        *OldTokenP = OldToken;
+        return STATUS_SUCCESS;
+    }
 
     /* Mark new token in use */
     NewToken->TokenInUse = 1;
@@ -537,13 +571,13 @@ SeIsTokenChild(IN PTOKEN Token,
     ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
 
     /* Get the ID */
-    ProcessLuid = ProcessToken->TokenId;
+    ProcessLuid = ProcessToken->AuthenticationId;
 
     /* Dereference the token */
     ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
 
     /* Get our LUID */
-    CallerLuid = Token->TokenId;
+    CallerLuid = Token->AuthenticationId;
 
     /* Compare the LUIDs */
     if (RtlEqualLuid(&CallerLuid, &ProcessLuid)) *IsChild = TRUE;
@@ -1875,8 +1909,20 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                                 ExFreePoolWithTag(Token->DefaultDacl, TAG_TOKEN_ACL);
                             }
 
-                            /* Set the new dacl */
-                            Token->DefaultDacl = CapturedAcl;
+                            Token->DefaultDacl = ExAllocatePoolWithTag(PagedPool,
+                                                                       CapturedAcl->AclSize,
+                                                                       TAG_TOKEN_ACL);
+                            if (!Token->DefaultDacl)
+                            {
+                                ExFreePoolWithTag(CapturedAcl, TAG_ACL);
+                                Status = STATUS_NO_MEMORY;
+                            }
+                            else
+                            {
+                                /* Set the new dacl */
+                                RtlCopyMemory(Token->DefaultDacl, CapturedAcl, CapturedAcl->AclSize);
+                                ExFreePoolWithTag(CapturedAcl, TAG_ACL);
+                            }
                         }
                     }
                     else

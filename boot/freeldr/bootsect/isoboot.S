@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
-#include "../freeldr/include/arch/pc/x86common.h"
+#include <freeldr/include/arch/pc/x86common.h>
 
 .code16
 

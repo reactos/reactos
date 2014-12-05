@@ -202,7 +202,7 @@ User32CreateWindowEx(DWORD dwExStyle,
                 return (HWND)0;
             }
         }
-        
+
         /* Copy it to a LARGE_STRING */
         lstrClassName.Buffer = ClassName.Buffer;
         lstrClassName.Length = ClassName.Length;
@@ -219,7 +219,7 @@ User32CreateWindowEx(DWORD dwExStyle,
         NTSTATUS Status;
         PSTR AnsiBuffer = WindowName.Buffer;
         ULONG AnsiLength = WindowName.Length;
-        
+
         WindowName.Length = 0;
         WindowName.MaximumLength = AnsiLength * sizeof(WCHAR);
         WindowName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -311,7 +311,7 @@ cleanup:
         {
             RtlFreeUnicodeString(&ClassName);
         }
-        
+
         RtlFreeLargeString(&WindowName);
     }
 
@@ -343,7 +343,7 @@ CreateWindowExA(DWORD dwExStyle,
 
     if (!RegisterDefaultClasses)
     {
-       ERR("CreateWindowExA RegisterSystemControls\n");
+       TRACE("CreateWindowExA RegisterSystemControls\n");
        RegisterSystemControls();
     }
 
@@ -488,7 +488,7 @@ CreateWindowExW(DWORD dwExStyle,
            WARN("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
            return NULL;
         }
-        
+
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
         */
@@ -680,7 +680,7 @@ User32EnumWindows(HDESK hDesktop,
     if (!dwCount)
     {
        if (!dwThreadId)
-          return FALSE; 
+          return FALSE;
        else
           return TRUE;
     }
@@ -692,7 +692,7 @@ User32EnumWindows(HDESK hDesktop,
         /* FIXME I'm only getting NULLs from Thread Enumeration, and it's
          * probably because I'm not doing it right in NtUserBuildHwndList.
          * Once that's fixed, we shouldn't have to check for a NULL HWND
-         * here 
+         * here
          * This is now fixed in revision 50205. (jt)
          */
         if (!pHwnd[i]) /* don't enumerate a NULL HWND */
@@ -907,7 +907,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 {
     HWND Ret = NULL;
     PWND Ancestor, Wnd;
-    
+
     Wnd = ValidateHwnd(hwnd);
     if (!Wnd)
         return NULL;
@@ -960,7 +960,7 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
        lpRect->bottom = GetSystemMetrics(SM_CYMINIMIZED);
        return TRUE;
     }
-    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
+    if ( hWnd != GetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
     {
 /*        lpRect->left = lpRect->top = 0;
         lpRect->right = Wnd->rcClient.right - Wnd->rcClient.left;
@@ -977,7 +977,7 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 /* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
         lpRect->right = GetSystemMetrics(SM_CXSCREEN);
         lpRect->bottom = GetSystemMetrics(SM_CYSCREEN);
-*/    } 
+*/    }
     return TRUE;
 }
 
@@ -1103,7 +1103,7 @@ GetWindow(HWND hWnd,
                 if (Wnd->spwndPrev != NULL)
                     FoundWnd = DesktopPtrToUser(Wnd->spwndPrev);
                 break;
-   
+
             case GW_CHILD:
                 if (Wnd->spwndChild != NULL)
                     FoundWnd = DesktopPtrToUser(Wnd->spwndChild);
@@ -1370,7 +1370,7 @@ GetWindowThreadProcessId(HWND hWnd,
     if (!pWnd) return Ret;
 
     ti = pWnd->head.pti;
- 
+
     if (ti)
     {
         if (ti == GetW32ThreadInfo())

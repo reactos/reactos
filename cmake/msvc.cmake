@@ -82,6 +82,15 @@ if(MSVC_IDE)
     endif()
 endif()
 
+if(NOT DEFINED RUNTIME_CHECKS)
+    set(RUNTIME_CHECKS FALSE)
+endif()
+
+if(RUNTIME_CHECKS)
+    add_definitions(-D__RUNTIME_CHECKS__)
+    add_compile_flags("/RTC1")
+endif()
+
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
@@ -224,6 +233,11 @@ function(set_module_type_toolchain MODULE TYPE)
     elseif(${TYPE} STREQUAL "wdmdriver")
         add_target_link_flags(${MODULE} "/DRIVER:WDM")
     endif()
+
+    if(RUNTIME_CHECKS)
+        target_link_libraries(${MODULE} runtmchk)
+    endif()
+
 endfunction()
 
 # Define those for having real libraries
@@ -283,7 +297,6 @@ function(generate_import_lib _libname _dllname _spec_file)
     else()
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
         add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file})
-        add_dependencies(${_libname} ${_def_file})
         # set correct "link rule"
         set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
     endif()
@@ -354,7 +367,7 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
 
     add_custom_command(
         OUTPUT ${_temp_file}
-        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
+        COMMAND ${CMAKE_C_COMPILER} /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm /I${REACTOS_SOURCE_DIR}/boot/freeldr /D__ASM__ /D_USE_ML /EP /c ${_asm_file} > ${_temp_file}
         DEPENDS ${_asm_file})
 
     if(ARCH STREQUAL "arm")

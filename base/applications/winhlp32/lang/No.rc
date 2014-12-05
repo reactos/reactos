@@ -20,8 +20,6 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
-/* Menu */
-
 MAIN_MENU MENU
 {
  POPUP "&Fil" {
@@ -41,12 +39,6 @@ MAIN_MENU MENU
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Innstillinger" {
-   POPUP	"Synlighet"
-   BEGIN
-     MENUITEM "Standard",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Synlig",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Ikke synlig",	MNID_OPTS_HELP_NONVISIBLE
-  END
   MENUITEM "Historikk",		MNID_OPTS_HISTORY
   POPUP    "Skriftstørrelse"
   BEGIN
@@ -54,14 +46,46 @@ MAIN_MENU MENU
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Stor",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Bruk systemfarger",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Hjelp" {
    MENUITEM "&Hjelp til Hjelp", MNID_HELP_HELPON
    MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
-   MENUITEM SEPARATOR
    MENUITEM "&Informasjon...", MNID_HELP_ABOUT
  }
+}
+
+CONTEXT_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Kommentar...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Kopier",                MNID_CTXT_COPY
+		MENUITEM "Skriv ut...",            MNID_CTXT_PRINT
+		POPUP    "Skriftstørrelse"
+		BEGIN
+			MENUITEM "Liten",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Stor",       MNID_CTXT_FONTS_LARGE
+		END
+	END
+END
+
+STRINGTABLE
+{
+STID_WINE_HELP, 	"Hjelp"
+STID_WHERROR, 		"FEIL"
+STID_WARNING,  		"ADVARSEL"
+STID_INFO,  		"Informasjon"
+STID_NOT_IMPLEMENTED, 	"Ikke implementert"
+STID_HLPFILE_ERROR_s, 	"Klarte ikke lese hjelpefilen «%s»"
+STID_INDEX, 		"&Innhold"
+STID_CONTENTS,		"&Oppsummering"
+STID_BACK, 		"Til&bake"
+STID_ALL_FILES, 	"Alle filer (*.*)"
+STID_HELP_FILES_HLP, 	"Hjelp-filer (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Klarte ikke finne «%s». Vil du finne filen selv?"
+STID_NO_RICHEDIT	"Klarte ikke finne richedit; avbryter"
+STID_PSH_INDEX,		"Emner i Hjelp: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
@@ -79,45 +103,3 @@ CAPTION "Søk"
 {
     LTEXT  "Ikke laget ennå", -1, 10, 10, 180, 150
 }
-
-/* Strings */
-STRINGTABLE
-{
-STID_WINE_HELP, 	"Hjelp"
-STID_WHERROR, 		"FEIL"
-STID_WARNING,  		"ADVARSEL"
-STID_INFO,  		"Informasjon"
-STID_NOT_IMPLEMENTED, 	"Ikke implementert"
-STID_HLPFILE_ERROR_s, 	"Klarte ikke lese hjelpefilen «%s»"
-STID_INDEX, 		"&Innhold"
-STID_CONTENTS, 		"&Oppsummering"
-STID_BACK, 		"Til&bake"
-STID_ALL_FILES, 	"Alle filer (*.*)"
-STID_HELP_FILES_HLP, 	"Hjelp-filer (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Klarte ikke finne «%s». Vil du finne filen selv?"
-STID_NO_RICHEDIT	"Klarte ikke finne richedit; avbryter"
-STID_PSH_INDEX,		"Emner i Hjelp: "
-}
-
-CONTEXT_MENU MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM "Kommentar...",       MNID_CTXT_ANNOTATE
-        MENUITEM "Kopier",                MNID_CTXT_COPY
-        MENUITEM "Skriv ut...",            MNID_CTXT_PRINT
-        POPUP    "Skriftstørrelse"
-        BEGIN
-            MENUITEM "Liten",       MNID_CTXT_FONTS_SMALL
-            MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-            MENUITEM "Stor",       MNID_CTXT_FONTS_LARGE
-        END
-        POPUP   "Synlighet"
-        BEGIN
-            MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
-            MENUITEM "Synlig",     MNID_CTXT_HELP_VISIBLE
-            MENUITEM "Ikke synlig", MNID_CTXT_HELP_NONVISIBLE
-        END
-        MENUITEM "Bruk systemfarger",   MNID_CTXT_SYSTEM_COLORS
-    END
-END

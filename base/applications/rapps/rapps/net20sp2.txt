@@ -4,7 +4,7 @@
 [Section]
 Name = Microsoft .NET Framework Version 2.0 Service Pack 2
 Version = 2.0SP2
-Licence = Unknown
+License = Unknown
 Description = Microsoft .NET Framework Version 2.0 Service Pack 2.
 Size = 23.84 MB
 Category = 14
@@ -35,13 +35,13 @@ Description = Microsoft .NET Framework Wersja 2.0 Service Pack 2.
 URLSite = http://www.microsoft.com/pl-PL/download/details.aspx?id=1639
 
 [Section.0418]
-Licence = Nespecificată
+License = Nespecificată
 Description = Platforma Microsoft .NET versiunea 2.0 - Service Pack 2.
 Size = 23,84 Mo
 
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Hizmet Paketi 2
-Licence = Bilinmiyor
+License = Bilinmiyor
 Description = Microsoft .NET Çatısı Sürüm 2.0 - Hizmet Paketi 2
 Size = 23,84 MB
 URLSite = http://www.microsoft.com/tr-TR/download/details.aspx?id=1639

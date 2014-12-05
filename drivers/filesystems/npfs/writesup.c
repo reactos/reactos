@@ -15,7 +15,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
                  IN ULONG Mode,
@@ -57,9 +57,9 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
     {
         DataSize = DataEntry->DataSize;
 
-        IoStack = IoGetCurrentIrpStackLocation( DataEntry->Irp);
+        IoStack = IoGetCurrentIrpStackLocation(DataEntry->Irp);
 
-        if (IoStack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL && 
+        if (IoStack->MajorFunction == IRP_MJ_FILE_SYSTEM_CONTROL &&
             IoStack->Parameters.FileSystemControl.FsControlCode == FSCTL_PIPE_INTERNAL_READ_OVFLOW &&
             (DataSize < OutBufferSize || MoreProcessing))
         {
@@ -76,7 +76,7 @@ NpWriteDataQueue(IN PNP_DATA_QUEUE WriteQueue,
         {
             DataEntry->Irp->Overlay.AllocationSize.QuadPart = 0;
         }
-        
+
         BufferSize = *BytesNotWritten;
         if (BufferSize >= DataSize) BufferSize = DataSize;
 

@@ -385,7 +385,7 @@ typedef struct _OPEN_PACKET
 typedef struct _LOAD_UNLOAD_PARAMS
 {
     NTSTATUS Status;
-    PUNICODE_STRING ServiceName;
+    PCUNICODE_STRING RegistryPath;
     WORK_QUEUE_ITEM WorkItem;
     KEVENT Event;
     PDRIVER_OBJECT DriverObject;
@@ -1058,6 +1058,7 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
+                IN PCUNICODE_STRING ServiceName,
                 PLDR_DATA_TABLE_ENTRY ModuleObject,
                 OUT PDRIVER_OBJECT *pDriverObject);
 
@@ -1082,10 +1083,11 @@ IopLoadServiceModule(
     OUT PLDR_DATA_TABLE_ENTRY *ModuleObject
 );
 
-VOID
+NTSTATUS
 NTAPI
 IopLoadUnloadDriver(
-    IN OUT PLOAD_UNLOAD_PARAMS LoadParams
+    _In_opt_ PCUNICODE_STRING RegistryPath,
+    _Inout_ PDRIVER_OBJECT *DriverObject
 );
 
 NTSTATUS
@@ -1275,6 +1277,8 @@ extern ULONG IopNumTriageDumpDataBlocks;
 extern PVOID IopTriageDumpDataBlocks[64];
 extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
 extern PDRIVER_OBJECT IopRootDriverObject;
+extern KSPIN_LOCK IopDeviceRelationsSpinLock;
+extern LIST_ENTRY IopDeviceRelationsRequestList;
 
 //
 // Inlined Functions

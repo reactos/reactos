@@ -25,10 +25,11 @@ typedef struct _ROSRGNDATA
 PROSRGNDATA FASTCALL REGION_AllocRgnWithHandle(INT n);
 PROSRGNDATA FASTCALL REGION_AllocUserRgnWithHandle(INT n);
 VOID FASTCALL REGION_UnionRectWithRgn(ROSRGNDATA *rgn, const RECTL *rect);
+INT FASTCALL REGION_SubtractRectFromRgn(PREGION prgnDest, PREGION prgnSrc, const RECTL *prcl);
 INT FASTCALL REGION_GetRgnBox(PROSRGNDATA Rgn, RECTL *pRect);
 BOOL FASTCALL REGION_RectInRegion(PROSRGNDATA Rgn, const RECTL *rc);
 BOOL FASTCALL REGION_PtInRegion(PREGION, INT, INT);
-BOOL FASTCALL REGION_CropAndOffsetRegion(PROSRGNDATA rgnDst, PROSRGNDATA rgnSrc, const RECTL *rect, const POINT *off);
+INT FASTCALL REGION_CropAndOffsetRegion(PROSRGNDATA rgnDst, PROSRGNDATA rgnSrc, const RECTL *rect, const POINT *off);
 VOID FASTCALL REGION_SetRectRgn(PROSRGNDATA pRgn, INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
 VOID NTAPI REGION_vCleanup(PVOID ObjectBody);
 
@@ -40,8 +41,8 @@ VOID FASTCALL IntGdiReleaseRaoRgn(PDC);
 VOID FASTCALL IntGdiReleaseVisRgn(PDC);
 
 INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
-BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
-HRGN FASTCALL IntCreatePolyPolygonRgn(PPOINT, PULONG, INT, INT);
+BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );
+BOOL FASTCALL IntSetPolyPolygonRgn(PPOINT, PULONG, INT, INT, PREGION);
 INT FASTCALL IntGdiOffsetRgn(PROSRGNDATA,INT,INT);
 BOOL FASTCALL IntRectInRegion(HRGN,LPRECTL);
 
@@ -49,12 +50,8 @@ INT FASTCALL IntGdiCombineRgn(PROSRGNDATA, PROSRGNDATA, PROSRGNDATA, INT);
 INT FASTCALL REGION_Complexity(PROSRGNDATA);
 PROSRGNDATA FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
 VOID FASTCALL RGNOBJAPI_Unlock(PROSRGNDATA);
-HRGN FASTCALL IntSysCreateRectRgn(INT,INT,INT,INT);
 PROSRGNDATA FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
 BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
-
-#define IntSysCreateRectRgnIndirect(prc) \
-  IntSysCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 
 #define IntSysCreateRectpRgnIndirect(prc) \
   IntSysCreateRectpRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)

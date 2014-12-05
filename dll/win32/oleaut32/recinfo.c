@@ -166,7 +166,7 @@ static ULONG WINAPI IRecordInfoImpl_Release(IRecordInfo *iface)
         int i;
         for(i=0; i<This->n_vars; i++)
             SysFreeString(This->fields[i].name);
-        HeapFree(GetProcessHeap(), 0, This->name);
+        SysFreeString(This->name);
         HeapFree(GetProcessHeap(), 0, This->fields);
         ITypeInfo_Release(This->pTypeInfo);
         HeapFree(GetProcessHeap(), 0, This);

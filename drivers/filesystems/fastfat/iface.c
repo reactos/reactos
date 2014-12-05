@@ -99,6 +99,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = VfatShutdown;
     DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_PNP] = VfatBuildRequest;

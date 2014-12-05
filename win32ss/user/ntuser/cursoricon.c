@@ -144,12 +144,16 @@ static BOOLEAN FASTCALL
 ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
 {
     PPROCESSINFO Win32Process;
+    PLIST_ENTRY ListEntry;
     PCURICON_PROCESS Current;
 
     Win32Process = PsGetCurrentProcessWin32Process();
 
-    LIST_FOR_EACH(Current, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
+    ListEntry = CurIcon->ProcessList.Flink;
+    while (ListEntry != &CurIcon->ProcessList)
     {
+        Current = CONTAINING_RECORD(ListEntry, CURICON_PROCESS, ListEntry);
+        ListEntry = ListEntry->Flink;
         if (Current->Process == Win32Process)
         {
             /* Already registered for this process */
@@ -165,6 +169,7 @@ ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
     }
     InsertHeadList(&CurIcon->ProcessList, &Current->ListEntry);
     Current->Process = Win32Process;
+    IntReferenceProcessInfo(Win32Process);
 
     return TRUE;
 }
@@ -173,10 +178,14 @@ PCURICON_OBJECT FASTCALL
 IntFindExistingCurIconObject(HMODULE hModule,
                              HRSRC hRsrc, LONG cx, LONG cy)
 {
+    PLIST_ENTRY ListEntry;
     PCURICON_OBJECT CurIcon;
 
-    LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
+    ListEntry = gCurIconList.Flink;
+    while (ListEntry != &gCurIconList)
     {
+        CurIcon = CONTAINING_RECORD(ListEntry, CURICON_OBJECT, ListEntry);
+        ListEntry = ListEntry->Flink;
 
         // if (NT_SUCCESS(UserReferenceObjectByPointer(Object, TYPE_CURSOR))) // <- huh????
 //      UserReferenceObject(  CurIcon);
@@ -209,7 +218,13 @@ IntCreateCurIconHandle(BOOLEAN Anim)
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
 
-    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, TYPE_CURSOR, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(
+        gHandleTable,
+        NULL,
+        GetW32ThreadInfo(),
+        &hCurIcon,
+        TYPE_CURSOR,
+        sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {
@@ -241,7 +256,8 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
     PSYSTEM_CURSORINFO CurInfo;
     HBITMAP bmpMask, bmpColor;
     BOOLEAN Ret, bListEmpty, bFound = FALSE;
-    PCURICON_PROCESS Current = NULL;
+    PLIST_ENTRY ListEntry;
+    PCURICON_PROCESS Current;
 
     /* For handles created without any data (error handling) */
     if(IsListEmpty(&CurIcon->ProcessList))
@@ -249,12 +265,16 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
 
     /* Now find this process in the list of processes referencing this object and
        remove it from that list */
-    LIST_FOR_EACH(Current, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
+    ListEntry = CurIcon->ProcessList.Flink;
+    while (ListEntry != &CurIcon->ProcessList)
     {
+        Current = CONTAINING_RECORD(ListEntry, CURICON_PROCESS, ListEntry);
+        ListEntry = ListEntry->Flink;
         if (Current->Process == ppi)
         {
             bFound = TRUE;
             bListEmpty = RemoveEntryList(&Current->ListEntry);
+            IntDereferenceProcessInfo(ppi);
             break;
         }
     }
@@ -315,19 +335,6 @@ emptyList:
     Ret = UserDeleteObject(CurIcon->Self, TYPE_CURSOR);
 
     return Ret;
-}
-
-VOID FASTCALL
-IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
-{
-    PCURICON_OBJECT CurIcon, tmp;
-
-    /* Run through the list of icon objects */
-    LIST_FOR_EACH_SAFE(CurIcon, tmp, &gCurIconList, CURICON_OBJECT, ListEntry)
-    {
-        UserReferenceObject(CurIcon);
-        IntDestroyCurIconObject(CurIcon, Win32Process);
-    }
 }
 
 HCURSOR FASTCALL

@@ -70,6 +70,9 @@
 #ifdef LANGUAGE_RO_RO
     #include "lang/crypt32_Ro.rc"
 #endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/crypt32_Ru.rc"
+#endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/crypt32_Sq.rc"
 #endif

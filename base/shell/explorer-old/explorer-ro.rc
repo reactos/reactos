@@ -1,0 +1,292 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+/* Menus */
+
+IDM_MDIFRAME MENU
+BEGIN
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "E&xecutare…", ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire", ID_FILE_EXIT
+    END
+    POPUP "&Afișare"
+    BEGIN
+        MENUITEM "&Butoane standard", ID_VIEW_TOOL_BAR
+        MENUITEM "But&oane suplimentare", ID_VIEW_EXTRA_BAR
+        MENUITEM "Butoane &unități-stocare", ID_VIEW_DRIVE_BAR
+        MENUITEM "Panou &lateral", ID_VIEW_SIDE_BAR
+        MENUITEM "B&ară de stare", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Împ&rospătează\tF5", ID_REFRESH
+        MENUITEM "Pe &tot ecranul\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI", ID_VIEW_SDI
+    END
+    POPUP "F&ereastră"
+    BEGIN
+        MENUITEM "Fereastră &Nouă", ID_WINDOW_NEW
+        MENUITEM "Aranjare în &cascadă\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "Aranjări &orizontale", ID_WINDOW_TILE_HORZ
+        MENUITEM "Aranjări &verticale\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Aranjare &automată", ID_WINDOW_AUTOSORT
+        MENUITEM "Aranjare s&imboluri", ID_WINDOW_ARRANGE
+    END
+    POPUP "I&nstrumente"
+    BEGIN
+        MENUITEM "&Opțiuni", ID_TOOLS_OPTIONS
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "Întrebări &frecvente…", ID_EXPLORER_FAQ
+        MENUITEM "&Despre Explorator…", ID_ABOUT_EXPLORER
+        MENUITEM "Despre &SO…", ID_ABOUT_WINDOWS
+    END
+END
+
+IDM_DESKTOPBAR MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Preferințe…", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Gestionar de activități…", ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Despre Explorator…", ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Deschide &reglaj de volum", ID_TRAY_VOLUME
+        MENUITEM "&Configurare sunet și dispozitive audio", ID_VOLUME_PROPERTIES
+    END
+END
+
+IDM_NOTIFYAREA MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Arată pictogramele ascunse", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Arată &butonul pictogramă", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Configurare notificări…", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Ajustare &Dată/Oră…", ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&Despre Explorator…", ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_SDIFRAME MENU
+BEGIN
+    POPUP "&Fișier"
+    BEGIN
+        MENUITEM "E&xecutare…", ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "I&eșire", ID_FILE_EXIT
+    END
+    POPUP "&Afișare"
+    BEGIN
+        MENUITEM "&Butoane standard", ID_VIEW_TOOL_BAR
+        MENUITEM "&Panou &lateral", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "B&ară de stare", ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Împ&rospătează\tF5", ID_REFRESH
+        MENUITEM "Pe &tot ecranul\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&MDI", ID_VIEW_MDI
+    END
+    POPUP "I&nstrumente"
+    BEGIN
+        MENUITEM "&Opțiuni", ID_TOOLS_OPTIONS
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "Întrebări &frecvente…", ID_EXPLORER_FAQ
+        MENUITEM "&Despre Explorator…", ID_ABOUT_EXPLORER
+        MENUITEM "Despre &SO…", ID_ABOUT_WINDOWS
+    END
+END
+
+/* Dialogs */
+
+IDD_EXECUTE DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Executare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL "&Comanda:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
+    EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    CONTROL "Ca sim&bol", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
+    DEFPUSHBUTTON "Con&firmă", 1, 158, 6, 47, 14
+    PUSHBUTTON "A&nulează", 2, 158, 23, 47, 14
+    PUSHBUTTON "&Manual…", 254, 158, 43, 47, 14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Cautare program în meniul Pornire"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "&Filtru:", IDC_STATIC, 7, 9, 18, 8
+    EDITTEXT IDC_FILTER, 34, 7, 100, 14, ES_AUTOHSCROLL
+    CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
+            LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
+    PUSHBUTTON "&Caută", IDC_CHECK_ENTRIES, 143, 7, 50, 14
+END
+
+IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ordinea pe birou"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Alegeți modul de ordonare a pictogramelor:", IDC_STATIC, 7, 7, 196, 8
+    CONTROL "c. stâng-sus", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
+    CONTROL "r. stâng-sus", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
+    CONTROL "r. drept-sus", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
+    CONTROL "c. drept-sus", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 25, 46, 44
+    CONTROL "c. stâng-jos", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
+    CONTROL "r. stâng-jos", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
+    CONTROL "r. drept-jos", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
+    CONTROL "c. drept-jos", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 73, 46, 44
+    CONTROL "c. laterale", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 121, 46, 44
+    CONTROL "colțare sus", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
+    CONTROL "împrejur", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
+    CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 121, 46, 44
+//    CONTROL "Display &Version Number", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 91, 10
+END
+
+IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Bara de activități"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Arată &ceas", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 52, 10
+    CONTROL "&Ascunde notificatoarele inactive", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
+    PUSHBUTTON "&Notificări…", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
+END
+
+IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Meniul Pornire"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Preferințe pentru pictograme de notificare"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 194, 31
+    LTEXT "&Text indiciu:", IDC_LABEL1, 7, 44, 45, 8
+    EDITTEXT IDC_NOTIFY_TOOLTIP, 58, 42, 143, 14, ES_AUTOHSCROLL
+    LTEXT "T&itlu fereastră:", IDC_LABEL2, 7, 63, 47, 8
+    EDITTEXT IDC_NOTIFY_TITLE, 58, 60, 143, 14, ES_AUTOHSCROLL
+    LTEXT "Cale &modul:", IDC_LABEL3, 7, 81, 43, 8
+    EDITTEXT IDC_NOTIFY_MODULE, 58, 78, 143, 14, ES_AUTOHSCROLL
+    GROUPBOX "Mod &de afișare", IDC_LABEL4, 7, 96, 157, 28
+    CONTROL "&expus", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 33, 10
+    CONTROL "&ascuns", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 66, 108, 40, 10
+    CONTROL "a&utomat", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 112, 108, 43, 10
+    ICON "", IDC_PICTURE, 173, 101, 21, 20
+    LTEXT "M&odificat acum:", IDC_LABEL6, 7, 132, 51, 8
+    EDITTEXT IDC_LAST_CHANGE, 59, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
+    CONTROL "E&xpune pictogramele ascunse", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 80, 10
+    DEFPUSHBUTTON "Con&firmă", IDOK, 91, 153, 50, 14, WS_GROUP
+    PUSHBUTTON "A&nulează", IDCANCEL, 151, 153, 50, 14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 214, 157
+STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Opțiuni Explorator"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT "Specificați tipul interfeței pentru Explorator:", IDC_STATIC, 7, 7, 190, 8
+    CONTROL "&MDI (Interfață de Documente Multiple)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 180, 10
+    CONTROL "&SDI (Interfață de Document Solitar)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 180, 10
+    CONTROL 190, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
+    CONTROL 190, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
+    CONTROL "&Deschide subdosarele în ferestre separate", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 180, 10
+    LTEXT "Aceste opțiuni vor fi mai departe utilizate ca implicite pentru toate ferestrele Exploratorului.", IDC_STATIC, 7, 111, 174, 22
+    DEFPUSHBUTTON "Con&firmă", IDOK, 29, 136, 50, 14, WS_GROUP
+    PUSHBUTTON "A&nulează", IDCANCEL, 106, 136, 50, 14
+END
+
+IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Despre Explorator ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
+    LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
+    LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
+    LTEXT "http://www.sky.franken.de/explorer/", IDC_WWW, 17, 84, 129, 8
+    CONTROL "Î&nchide", IDOK, "Button", BS_OWNERDRAW | BS_FLAT | WS_GROUP, 154, 90, 38, 12
+END
+
+/* String Tables */
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE "Explorator ReactOS"
+    IDS_START "Pornire"
+    IDS_LOGOFF "Deautentificare…"
+    IDS_SHUTDOWN "Închidere calculator…"
+    IDS_RESTART "Repornire calculator…"
+    IDS_LAUNCH "Executare…"
+    IDS_START_HELP "Manuale de utilizare"
+    IDS_SEARCH_FILES "Fișier…"
+    IDS_DOCUMENTS "Documentele mele"
+    IDS_FAVORITES "Favorite"
+    IDS_PROGRAMS "Programe"
+    IDS_SETTINGS "Configurare"
+    IDS_EXPLORE "Explorator"
+    IDS_EMPTY "(gol)"
+    IDS_RECENT "Documente recente"
+    IDS_ADMIN "Administrare"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_STARTMENU "Meniul Pornire"
+    IDS_MINIMIZE_ALL "Minimizarea tuturor ferestrelor"
+    IDS_DESKTOP_NUM "Spațiu de lucru %d"
+    IDS_VOLUME "Volum"
+    IDS_ITEMS_CUR "Elemente curente"
+    IDS_ITEMS_CONFIGURED "Configurare"
+    IDS_ITEMS_VISIBLE "Vizibile"
+    IDS_ITEMS_HIDDEN "Ascuns"
+    IDS_NOTIFY_SHOW "Arată"
+    IDS_NOTIFY_HIDE "Ascunde"
+    IDS_NOTIFY_AUTOHIDE "Autoascunde"
+    IDS_SHOW_HIDDEN_ICONS "Expune pictogramele ascunse"
+    IDS_HIDE_ICONS "Ascunde pictogramele"
+    IDS_TERMINATE "Închide Explorator ROS"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORK "Rețea"
+    IDS_CONNECTIONS "Conexuni în rețea"
+    IDS_DRIVES "Unități"
+    IDS_SEARCH_COMPUTER "Calculator…"
+    IDS_SETTINGS_MENU "Meniu configurare"
+    IDS_CONTROL_PANEL "Panoul de control"
+    IDS_PRINTERS "Imprimante"
+    IDS_BROWSE "Răsfoire prin fișiere"
+    IDS_SEARCH_PRG "Program…"
+    IDS_ALL_USERS "Toți utilizatorii\\"
+    IDS_SEARCH "Căutare"
+    IDS_ABOUT_EXPLORER "&Despre Explorator…"
+    IDS_LAUNCH_MANY_PROGRAMS "Ați ales mai mult de un program.\nSigur doriți să le porniți pe toate?"
+    IDS_DESKTOPBAR_SETTINGS "Configurare birou"
+    IDS_DESKTOP "Birou"
+    IDS_TASKBAR "Bară de activități"
+    IDS_NAMECOLUMN "Nume"
+    IDS_PATHCOLUMN "Cale"
+    IDS_MENUCOLUMN "Cale meniu"
+END

@@ -9,6 +9,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM,    "Vidage &Mémoire"
-    IDS_VDM_QUIT   ,    "&Quitter la ReactOS VDM"
+    IDS_VDM_DUMPMEM_TXT,    "Vidage Mémoire (&Texte)"
+    IDS_VDM_DUMPMEM_BIN,    "Vidage Mémoire (&Binaire)"
+    IDS_VDM_QUIT       ,    "&Quitter la ReactOS VDM"
 END

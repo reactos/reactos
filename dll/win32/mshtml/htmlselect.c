@@ -392,8 +392,14 @@ static HRESULT WINAPI HTMLSelectElement_add(IHTMLSelectElement *iface, IHTMLElem
 static HRESULT WINAPI HTMLSelectElement_remove(IHTMLSelectElement *iface, LONG index)
 {
     HTMLSelectElement *This = impl_from_IHTMLSelectElement(iface);
-    FIXME("(%p)->(%d)\n", This, index);
-    return E_NOTIMPL;
+    nsresult nsres;
+    TRACE("(%p)->(%d)\n", This, index);
+    nsres = nsIDOMHTMLSelectElement_select_Remove(This->nsselect, index);
+    if(NS_FAILED(nsres)) {
+        ERR("Remove failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLSelectElement_put_length(IHTMLSelectElement *iface, LONG v)

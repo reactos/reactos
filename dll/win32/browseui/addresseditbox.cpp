@@ -40,8 +40,9 @@ TODO:
 */
 
 CAddressEditBox::CAddressEditBox() :
-        fEditWindow(NULL, this, 1),
-        fComboBoxExWindow(NULL, this, 2)
+    fCombobox(NULL, this, 1),
+    fEditWindow(NULL, this, 1),
+    fSite(NULL)
 {
 }
 
@@ -67,9 +68,22 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Refresh(long param8)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Init(HWND comboboxEx, HWND editControl, long param14, IUnknown *param18)
 {
-    fComboBoxExWindow.SubclassWindow(comboboxEx);
+    CComPtr<IBrowserService> browserService;
+
+    fCombobox.SubclassWindow(comboboxEx);
     fEditWindow.SubclassWindow(editControl);
-    return S_OK;
+    fSite = param18;
+
+    SHAutoComplete(fEditWindow.m_hWnd, SHACF_FILESYSTEM | SHACF_URLALL | SHACF_USETAB);
+
+    // take advice to watch events
+    HRESULT hResult = IUnknown_QueryService(param18, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
+    if (SUCCEEDED(hResult))
+    {
+        hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
+    }
+
+    return hResult;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
@@ -79,12 +93,129 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::SetCurrentDir(long paramC)
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
 {
-    return E_NOTIMPL;
+    ULONG eaten;
+    ULONG attributes;
+    HRESULT hr;
+    HWND topLevelWindow;
+
+    CComPtr<IShellBrowser> pisb;
+    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPWSTR input;
+    int inputLength = GetWindowTextLength(fCombobox.m_hWnd) + 2;
+
+    input = new WCHAR[inputLength];
+    GetWindowText(fCombobox.m_hWnd, input, inputLength);
+
+    LPWSTR address;
+    int addressLength = ExpandEnvironmentStrings(input, NULL, 0);
+
+    if (addressLength <= 0)
+    {
+        address = input;
+    }
+    else
+    {
+        addressLength += 2;
+        address = new WCHAR[addressLength];
+        if (!ExpandEnvironmentStrings(input, address, addressLength))
+        {
+            delete[] address;
+            address = input;
+        }
+    }
+
+    CComPtr<IShellFolder> psfDesktop;
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (SUCCEEDED(hr))
+    {
+        hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+    }
+
+    if (address != input)
+        delete [] address;
+    delete [] input;
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Execute(long paramC)
 {
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    /* 
+     * Parse the path is it wasn't parsed
+     */
+    if (!pidlLastParsed)
+        ParseNow(0);
+
+    if (!pidlLastParsed)
+        return E_FAIL;
+
+    /* 
+     * Get the IShellBrowser and IBrowserService interfaces of the shell browser 
+     */
+    CComPtr<IShellBrowser> pisb;
+    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IBrowserService> pbs;
+    pisb->QueryInterface(IID_PPV_ARG(IBrowserService, &pbs));
+    if (FAILED(hr))
+        return hr;
+
+    /*
+     * Get the current pidl of the shellbrowser and check if it is the same with the parsed one
+     */
+    PIDLIST_ABSOLUTE pidl;
+    hr = pbs->GetPidl(&pidl);
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IShellFolder> psf;
+    hr = SHGetDesktopFolder(&psf);
+    if (FAILED(hr))
+        return hr;
+
+    hr = psf->CompareIDs(0, pidl, pidlLastParsed);
+
+    SHFree(pidl);
+    if (hr == 0)
+        return S_OK;
+
+    /* 
+     * Attempt to browse to the parsed pidl 
+     */
+    hr = pisb->BrowseObject(pidlLastParsed, 0);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    /* 
+     * Browsing to the pidl failed so it's not a folder. So invoke its defaule command.
+     */
+    HWND topLevelWindow;
+    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
+    if (FAILED(hr))
+        return hr;
+
+    LPCITEMIDLIST pidlChild;
+    CComPtr<IShellFolder> sf;
+    hr = SHBindToParent(pidlLastParsed, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+    if (FAILED(hr))
+        return hr;
+
+    hr = SHInvokeDefaultCommand(topLevelWindow, sf, pidlChild);
+    if (FAILED(hr))
+        return hr;
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(long paramC)
@@ -95,13 +226,38 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(long paramC)
 HRESULT STDMETHODCALLTYPE CAddressEditBox::OnWinEvent(
     HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    // handle fill of listbox here
-    return E_NOTIMPL;
+    LPNMHDR hdr;
+
+    *theResult = 0;
+
+    switch (uMsg)
+    {
+    case WM_NOTIFY:
+        hdr = (LPNMHDR) lParam;
+        if (hdr->code == CBEN_ENDEDIT)
+        {
+            NMCBEENDEDITW *endEdit = (NMCBEENDEDITW*) lParam;
+            if (endEdit->iWhy == CBENF_RETURN)
+            {
+                Execute(0);
+            }
+            else if (endEdit->iWhy == CBENF_ESCAPE)
+            {
+                /* Reset the contents of the combo box */
+            }
+        }
+        break;
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::IsWindowOwner(HWND hWnd)
 {
-    return E_NOTIMPL;
+    if (fCombobox.m_hWnd == hWnd)
+        return S_OK;
+    if (fEditWindow.m_hWnd == hWnd)
+        return S_OK;
+    return S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::QueryStatus(
@@ -135,8 +291,16 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    // on navigate complete, change edit section of combobox
-    return E_NOTIMPL;
+    if (pDispParams == NULL)
+        return E_INVALIDARG;
+
+    switch (dispIdMember)
+    {
+    case DISPID_NAVIGATECOMPLETE2:
+    case DISPID_DOCUMENTCOMPLETE:
+        pidlLastParsed = NULL;
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CAddressEditBox::GetClassID(CLSID *pClassID)
@@ -169,20 +333,5 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetSizeMax(ULARGE_INTEGER *pcbSize)
 
 HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
 {
-    CComObject<CAddressEditBox>             *theMenuBar;
-    HRESULT                                 hResult;
-
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-    ATLTRY (theMenuBar = new CComObject<CAddressEditBox>);
-    if (theMenuBar == NULL)
-        return E_OUTOFMEMORY;
-    hResult = theMenuBar->QueryInterface(riid, reinterpret_cast<void **>(ppv));
-    if (FAILED(hResult))
-    {
-        delete theMenuBar;
-        return hResult;
-    }
-    return S_OK;
+    return ShellObjectCreator<CAddressEditBox>(riid, ppv);
 }

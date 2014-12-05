@@ -4,7 +4,7 @@
 [Section]
 Name = 7-Zip
 Version = 9.34a
-Licence = LGPL
+License = LGPL
 Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
 Size = 1.14 MB
 Category = 12
@@ -34,6 +34,9 @@ Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, 
 [Section.0418]
 Description = Un utilitar de arhivare a fișierelor, compatibil cu 7zip, zip, tar, rar și multe alte formate de arhive.
 Size = 1,14 Mo
+
+[Section.0419]
+Description = Утилита для создания и открытия 7zip, zip, tar, rar и других архивных файлов.
 
 [Section.041f]
 Description = 7zip, zip, tar, rar ve başka birçok belgelik biçimi destekli bir kütük belgelikleme aracı.

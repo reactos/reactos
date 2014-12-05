@@ -21,31 +21,10 @@ import "dxgi.idl";
 [
     object,
     local,
-    uuid(a07ad9ab-fb01-4574-8bfb-0a70a7373f04)
-]
-interface IWineDXGIFactory : IDXGIFactory1
-{
-    struct wined3d *get_wined3d();
-}
-
-[
-    object,
-    local,
-    uuid(ab1de34c-2963-4ffd-8493-40f580e510e5)
-]
-interface IWineDXGIAdapter : IDXGIAdapter1
-{
-    UINT get_ordinal();
-}
-
-[
-    object,
-    local,
     uuid(3e1ff30b-c951-48c3-b010-0fb49f3dca71)
 ]
 interface IWineDXGIDevice : IDXGIDevice
 {
-    struct wined3d_device *get_wined3d_device();
     HRESULT create_surface(
         [in] const DXGI_SURFACE_DESC *desc,
         [in] DXGI_USAGE usage,

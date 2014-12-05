@@ -4,7 +4,7 @@
 [Section]
 Name = OpenOffice 2.4
 Version = 2.4.3
-Licence = LGPL
+License = LGPL
 Description = The open source office suite.
 Size = 113 MB
 Category = 6

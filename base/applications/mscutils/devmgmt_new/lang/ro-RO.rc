@@ -45,12 +45,12 @@ BEGIN
   EDITTEXT                IDC_LICENSE_EDIT, 8, 47, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE "Această aplicație este publică; fiind permisă modificarea și/sau (re)distribuția sa în termenii Licenței Publice Generale GNU publicată de Free Software Foundation; sau versiunea 2 a Licenței, sau (la alegere) a oricărei versiuni ulterioare.\r\n\r\nAceastă aplicație este distribuită doar în speranța de a fi utilă, FĂRĂ însă NICI O GARANȚIE; nici măcar cu garanția implicită a VANDABILITĂȚII sau a UTILITĂȚII ÎNTR-UN SCOP ANUME. Pentru mai multe detalii consultați Licența Publică Generală GNU.\r\n\r\nPuteți vedea această licență aici:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDe asemenea puteți consulta traduceri neoficiale ale acestei licențe aici:\r\nhttp://www.gnu.org/licenses/translations.html"
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Proprietăți"
   IDS_TOOLTIP_REFRESH   "Împrospătare"
@@ -59,7 +59,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME           "Gestionar de dispozitive ReactOS"
   IDS_HINT_BLANK        " "

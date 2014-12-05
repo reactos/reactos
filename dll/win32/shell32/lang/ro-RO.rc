@@ -1,10 +1,11 @@
 /* Ștefan Fulea (stefan dot fulea at mail dot md) */
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 MENU_001 MENU
 BEGIN
-    MENUITEM "Pictograme m&ari", FCIDM_SHVIEW_BIGICON
-    MENUITEM "Pictograme m&ici", FCIDM_SHVIEW_SMALLICON
+    MENUITEM "D&ale", FCIDM_SHVIEW_BIGICON
+    MENUITEM "&Pictograme", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalii", FCIDM_SHVIEW_REPORTVIEW
 END
@@ -16,8 +17,8 @@ BEGIN
     BEGIN
         POPUP "&Afișare"
         BEGIN
-            MENUITEM "Pictograme m&ari", FCIDM_SHVIEW_BIGICON
-            MENUITEM "Pictograme m&ici", FCIDM_SHVIEW_SMALLICON
+            MENUITEM "D&ale", FCIDM_SHVIEW_BIGICON
+            MENUITEM "&Pictograme", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Listă", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detailii", FCIDM_SHVIEW_REPORTVIEW
         END
@@ -25,9 +26,9 @@ BEGIN
         POPUP "&Ordonare"
         BEGIN
             MENUITEM "După &nume", 0x30  /* column 0 */
-            MENUITEM "După &tip", 0x32  /* column 2 */
-            MENUITEM "După &mărime", 0x31  /* ... */
-            MENUITEM "După &dată", 0x33
+            MENUITEM "După tip&uri", 0x32  /* column 2 */
+            MENUITEM "După &mărimi", 0x31  /* ... */
+            MENUITEM "După &date", 0x33
             MENUITEM SEPARATOR
             MENUITEM "&Automată", FCIDM_SHVIEW_AUTOARRANGE
         END
@@ -93,7 +94,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Mesaj"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Da", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "D&a", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Da pentru t&oate", IDC_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "N&u", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "A&nulează", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
@@ -157,22 +158,22 @@ BEGIN
     ICON "", 14000, 8, 8, 21, 20, WS_VISIBLE
     EDITTEXT 14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Tip țintă:", 14004, 8, 38, 68, 10
+    LTEXT "Tipul destinației:", 14004, 8, 38, 68, 10
     EDITTEXT 14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Locație țintă:", 14006, 8, 55, 68, 10
+    LTEXT "Locația destinației:", 14006, 8, 55, 68, 10
     EDITTEXT 14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Ț&intă:", 14008, 8, 71, 68, 10
+    LTEXT "D&estinația:", 14008, 8, 71, 68, 10
     EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "P&ornire în:", 14010, 8, 98, 68, 10
+    LTEXT "C&alea de lansare:", 14010, 8, 98, 68, 10
     EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
-    LTEXT "&Taste rapide:", 14014, 8, 117, 68, 10
+    LTEXT "Taste &rapide:", 14014, 8, 117, 68, 10
     CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
     LTEXT "E&xecuție:", 14016, 8, 136, 68, 10
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "&Comentariu:", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Găsire țintă…", 14020, 9, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Deschide loc. destinației", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON "&Pictogramă…", 14021, 84, 172, 70, 14, ES_LEFT
     PUSHBUTTON "A&vansate…", 14022, 159, 172, 70, 14, ES_LEFT
 END
@@ -449,8 +450,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWIND
 CAPTION "Confirmare înlocuire fișier"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Da", IDYES, 20, 122, 60, 14
-    PUSHBUTTON "Da pentru &toate", 12807, 85, 122, 60, 14
+    DEFPUSHBUTTON "D&a", IDYES, 20, 122, 60, 14
+    PUSHBUTTON "Da pentru t&oate", 12807, 85, 122, 60, 14
     PUSHBUTTON "N&u", IDNO, 150, 122, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 215, 122, 60, 14
     ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
@@ -642,21 +643,21 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS "Instrumente administrative"
 
     /* context menus */
-    IDS_VIEW_LARGE "Pictograme &mari"
-    IDS_VIEW_SMALL "Pictograme m&ici"
+    IDS_VIEW_LARGE "D&ale"
+    IDS_VIEW_SMALL "&Pictograme"
     IDS_VIEW_LIST "&Listă"
     IDS_VIEW_DETAILS "&Detalii"
     IDS_SELECT "Selectează"
-    IDS_OPEN "Deschide"
+    IDS_OPEN "&Deschide"
     IDS_CREATELINK "Creează sc&urtătură"
-    IDS_COPY "Copiază"
-    IDS_DELETE "Șterge"
-    IDS_PROPERTIES "Proprietăți"
-    IDS_CUT "Decupează"
-    IDS_RESTORE "Restabilește"
-    IDS_FORMATDRIVE "Formatare…"
-    IDS_RENAME "Redenumește"
-    IDS_INSERT "Inserează"
+    IDS_COPY "&Copiază"
+    IDS_DELETE "Șt&erge"
+    IDS_PROPERTIES "&Proprietăți"
+    IDS_CUT "&Decupează"
+    IDS_RESTORE "&Restabilește"
+    IDS_FORMATDRIVE "F&ormatare…"
+    IDS_RENAME "Rede&numește"
+    IDS_INSERT "Inserea&ză"
 
     IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Eroare de permisiune."
     IDS_CREATEFOLDER_CAPTION "Eroare la crearea unui nou dosar"
@@ -698,9 +699,9 @@ BEGIN
     IDS_MYMUSIC "Audio"
     IDS_MYVIDEO "Video"
     IDS_DESKTOPDIRECTORY "Birou"
-    IDS_NETHOOD "Rețele"
-    IDS_TEMPLATES "Șabloane"
-    IDS_APPDATA "Date aplicații"
+    IDS_NETHOOD "Retele"
+    IDS_TEMPLATES "Sabloane"
+    IDS_APPDATA "Date aplicatii"
     IDS_PRINTHOOD "Imprimante"
     IDS_LOCAL_APPDATA "Preferinte locale\\Date aplicatii"
     IDS_INTERNET_CACHE "Preferinte locale\\Fisiere de Internet temporare"

@@ -85,3 +85,12 @@ BEGIN
     LTEXT "Нажмите ""Готово"" для завершения мастера.", IDC_STATIC, 120, 174, 179, 11
     LTEXT "Неизвестное устройство", IDC_DEVICE, 148, 53, 147, 12
 END
+
+STRINGTABLE
+BEGIN
+    IDS_INSTALLWIZARDTITLE "Мастер нового оборудования"
+    IDS_UPDATEWIZARDTITLE "Мастер обновления драйверов"
+    IDS_CHSOURCE_TITLE "Выберите настройки поиска и установки"
+    IDS_SEARCHDRV_TITLE "Поиск..."
+    IDS_INSTALLDRV_TITLE "Установка..."
+END

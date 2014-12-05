@@ -315,6 +315,7 @@ BEGIN
     CONTROL "В/И байтове за писане", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 127, 65, 10
     CONTROL "Други В/И", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 138, 115, 10
     CONTROL "Други В/И байтове", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 149, 115, 10
+    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 125, 160, 65, 10
 END
 
 /* String Tables */
@@ -410,6 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "В/И прочетени байтове"
     IDS_TAB_IOWRITESBYTES "В/И записани байтове"
     IDS_TAB_IOOTHERBYTES "В/И други байтове"
+    IDS_TAB_COMMANDLINE "Command Line"
     IDS_MENU_SELECTCOLUMNS "&Избор на стълбове..."
     IDS_MENU_16BITTASK "&Показване на 16битови задачи"
     IDS_MENU_WINDOWS "&Прозорци"
@@ -433,7 +435,7 @@ BEGIN
     IDS_MSG_UNABLECHANGEPRIORITY "Невъзможно намаляване на първенство"
     IDS_MSG_WARNINGCHANGEPRIORITY "ВНИМАНИЕ: Промяната на първенството на това действие може да\nпричини нежелани последствия, включително неустойчивост на системата. Сигурен ли сте, \nче искате да смените старшинството?"
     IDS_MSG_TRAYICONCPUUSAGE "Заетост на ЦПУ: %d%%"
-    IDS_STATUS_MEMUSAGE "Заета памет: %dK / %dK"
+    IDS_STATUS_MEMUSAGE "Заета памет: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "Заетост на ЦПУ: %3d%%"
     IDS_STATUS_PROCESSES "Действия: %d"
     IDS_NOT_RESPONDING "Не отговаря"

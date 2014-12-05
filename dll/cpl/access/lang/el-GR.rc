@@ -11,7 +11,7 @@ BEGIN
     AUTOCHECKBOX "Χρήση &Ασύγχρονων πλήκτρων", IDC_STICKY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Ρυθμίσεις", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "Φίλτρο πλήκτρων", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Χρησιμοποιήστε το Φίλτρο πλήκτρων, αν θέλετε το Reactos να αγνοήσει την επανάληψη χαρακτήρων, ή αν μειώσει το ρυθμό επανάληψης.",
+    LTEXT "Χρησιμοποιήστε το Φίλτρο πλήκτρων, αν θέλετε το ReactOS να αγνοήσει την επανάληψη χαρακτήρων, ή αν μειώσει το ρυθμό επανάληψης.",
           -1, PROPSHEETPADDING(2), LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Χρήση &Φίλτρου πλήκτρων", IDC_FILTER_BOX, PROPSHEETPADDING(2), LABELLINE(13) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "Ρ&υθμίσεις", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(13) + 2, PROPSHEETPADDING(15), 14
@@ -30,7 +30,7 @@ CAPTION "Ήχος"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Οπτική ένδειξη ήχου", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Χρησιμοποιήστε την Οπτική ένδειξη ήχου, αν θέλετε το Reactos να χρησιμοποιεί οπτικές ενδείξεις όταν το σύστημά σας παράγει ήχο.",
+    LTEXT "Χρησιμοποιήστε την Οπτική ένδειξη ήχου, αν θέλετε το ReactOS να χρησιμοποιεί οπτικές ενδείξεις όταν το σύστημά σας παράγει ήχο.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Χρήση Οπτικής ένδειξης ήχου", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     LTEXT "Επιλογή οπτικής προειδοποίησης", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
@@ -48,7 +48,7 @@ CAPTION "Οθόνη"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Αντιθέσεις", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Χρησιμοποιήστε αυτήν την επιλογή, αν θέλετε το Reactos να χρησιμοποιεί χρώμαμτα και γραμματοσειρές σχεδιασμένα για εύκολη ανάγνωση.",
+    LTEXT "Χρησιμοποιήστε αυτήν την επιλογή, αν θέλετε το ReactOS να χρησιμοποιεί χρώμαμτα και γραμματοσειρές σχεδιασμένα για εύκολη ανάγνωση.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
     AUTOCHECKBOX "Με αντιθέσεις", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "&Ρυθμίσεις", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14

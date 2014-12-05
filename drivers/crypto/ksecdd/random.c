@@ -9,10 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include "ksecdd.h"
-#include <ndk/exfuncs.h>
-#include <ndk/kefuncs.h>
-#include <pseh/pseh2.h>
-#include <md4.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -67,10 +63,10 @@ KsecReadMachineSpecificCounters(
         /* Read the TSC value */
         MachineSpecificCounters->Tsc = __rdtsc();
     }
-
+#if 0 // FIXME: investigate what the requirements are for these
     /* Read the CPU event counter MSRs */
-    MachineSpecificCounters->Ctr0 = __readmsr(0x12);
-    MachineSpecificCounters->Ctr1 = __readmsr(0x13);
+    //MachineSpecificCounters->Ctr0 = __readmsr(0x12);
+    //MachineSpecificCounters->Ctr1 = __readmsr(0x13);
 
     /* Check if this is an MMX capable CPU */
     if (ExIsProcessorFeaturePresent(PF_MMX_INSTRUCTIONS_AVAILABLE))
@@ -79,6 +75,7 @@ KsecReadMachineSpecificCounters(
         MachineSpecificCounters->Pmc0 = __readpmc(0);
         MachineSpecificCounters->Pmc1 = __readpmc(1);
     }
+#endif
 #else
     #error Implement me!
 #endif

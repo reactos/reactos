@@ -36,18 +36,33 @@ typedef enum _USERSRV_API_NUMBER
 } USERSRV_API_NUMBER, *PUSERSRV_API_NUMBER;
 
 
-typedef struct
+typedef struct _USER_EXIT_REACTOS
 {
-    UINT Flags;
-    DWORD Reserved;
+    DWORD LastError;
+    UINT  Flags;
+    BOOL  Success;
 } USER_EXIT_REACTOS, *PUSER_EXIT_REACTOS;
 
-typedef struct
+typedef struct _USER_END_TASK
+{
+    DWORD LastError;
+    HWND  WndHandle;
+    BOOL  Force;
+    BOOL  Success;
+} USER_END_TASK, *PUSER_END_TASK;
+
+typedef struct _USER_GET_THREAD_CONSOLE_DESKTOP
+{
+    ULONG_PTR ThreadId;
+    HANDLE ConsoleDesktop;
+} USER_GET_THREAD_CONSOLE_DESKTOP, *PUSER_GET_THREAD_CONSOLE_DESKTOP;
+
+typedef struct _USER_REGISTER_SERVICES_PROCESS
 {
     ULONG_PTR ProcessId;
 } USER_REGISTER_SERVICES_PROCESS, *PUSER_REGISTER_SERVICES_PROCESS;
 
-typedef struct
+typedef struct _USER_REGISTER_LOGON_PROCESS
 {
     ULONG_PTR ProcessId;
     BOOL Register;
@@ -65,6 +80,8 @@ typedef struct _USER_API_MESSAGE
     union
     {
         USER_EXIT_REACTOS ExitReactosRequest;
+        USER_END_TASK EndTaskRequest;
+        USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
     } Data;

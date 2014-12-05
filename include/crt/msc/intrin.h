@@ -587,6 +587,16 @@ void __ud2(void);
 #if (_MSC_VER >= 1700)
 __declspec(noreturn) void __fastfail(unsigned int Code);
 #pragma intrinsic(__fastfail)
+#else
+__declspec(noreturn) __forceinline
+void __fastfail(unsigned int Code)
+{
+    __asm
+    {
+        mov ecx, Code
+        int 29h
+    }
+}
 #endif
 #endif
 #if defined(_M_ARM)
@@ -641,7 +651,6 @@ void  __forceinline __invlpg_fixed(void * Address)
 #elif defined(_M_AMD64)
 void __invlpg(void * Address);
 #pragma intrinsic(__invlpg)
-#elif defined(_M_AMD64)
 unsigned __int64 __readcr0(void);
 #pragma intrinsic(__readcr0)
 unsigned __int64 __readcr2(void);

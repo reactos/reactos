@@ -400,7 +400,6 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
     {
         return;
     }
-    ThemeInitDrawContext(&context, hwnd, 0);
 
 #ifndef ROS_SUCKS
     /* The scrollbar rect is in screen coordinates */
@@ -410,6 +409,8 @@ SCROLL_HandleScrollEvent( HWND hwnd, INT nBar, UINT msg, POINT pt)
     if ((SCROLL_trackHitTest == SCROLL_NOWHERE) && (msg != WM_LBUTTONDOWN))
 		  return;
     
+    ThemeInitDrawContext(&context, hwnd, 0);
+
     hwndOwner = (nBar == SB_CTL) ? GetParent(hwnd) : hwnd;
     hwndCtl   = (nBar == SB_CTL) ? hwnd : 0;
 

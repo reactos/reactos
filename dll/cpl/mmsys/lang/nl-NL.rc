@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Geluiden"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Een geluidsschema is een verzameling geluiden die worden toegepast op Reactos- en programmagebeurtenissen. U kunt een bestaand schema slecteren of een aangepast schema opslaan.", -1, 8, 7, 230, 40
+    LTEXT "Een geluidsschema is een verzameling geluiden die worden toegepast op ReactOS- en programmagebeurtenissen. U kunt een bestaand schema slecteren of een aangepast schema opslaan.", -1, 8, 7, 230, 40
     LTEXT "Geluid&sschema:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Opslaan als...", IDC_SAVEAS_BTN, 104, 70, 65, 15

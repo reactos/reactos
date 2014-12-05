@@ -69,8 +69,6 @@ static ULONG WINAPI IDirectMusicDownloadedInstrumentImpl_AddRef(LPDIRECTMUSICDOW
 
     TRACE("(%p)->(): new ref = %u\n", iface, ref);
 
-    DMUSIC_LockModule();
-
     return ref;
 }
 
@@ -85,9 +83,8 @@ static ULONG WINAPI IDirectMusicDownloadedInstrumentImpl_Release(LPDIRECTMUSICDO
     {
         HeapFree(GetProcessHeap(), 0, This->data);
         HeapFree(GetProcessHeap(), 0, This);
+        DMUSIC_UnlockModule();
     }
-
-    DMUSIC_UnlockModule();
 
     return ref;
 }
@@ -122,6 +119,7 @@ static HRESULT DMUSIC_CreateDirectMusicDownloadedInstrumentImpl(IDirectMusicDown
     object->ref = 1;
 
     *instrument = &object->IDirectMusicDownloadedInstrument_iface;
+    DMUSIC_LockModule();
 
     return S_OK;
 }

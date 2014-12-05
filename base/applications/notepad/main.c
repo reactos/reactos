@@ -321,7 +321,7 @@ LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         }
     }
-    return CallWindowProc( (WNDPROC)Globals.EditProc, hWnd, msg, wParam, lParam);
+    return CallWindowProc( Globals.EditProc, hWnd, msg, wParam, lParam);
 }
 
 /***********************************************************************

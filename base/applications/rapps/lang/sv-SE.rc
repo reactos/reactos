@@ -154,7 +154,7 @@ BEGIN
     IDS_AINFO_DESCRIPTION "\nBeskrivning: "
     IDS_AINFO_SIZE "\nStorlek: "
     IDS_AINFO_URLSITE "\nHemsida: "
-    IDS_AINFO_LICENCE "\nLicens: "
+    IDS_AINFO_LICENSE "\nLicens: "
 END
 
 STRINGTABLE

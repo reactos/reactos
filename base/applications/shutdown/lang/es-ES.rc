@@ -1,103 +1,106 @@
+/* Spanish Language resource file.
+ * Translated by: Ismael Ferreras Morezuelas <2014-11-07> */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* Dialog */
 IDD_GUI DIALOGEX 0, 0, 240, 255
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Remote Shutdown"
+CAPTION "Apagado remoto"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&OK", IDC_OK, 125, 232, 50, 14
-    PUSHBUTTON "&Cancel", IDC_CANCEL, 178, 232, 50, 14
-    LTEXT "Co&mputers:", IDC_STATIC, 9, 9, 35, 36
+    DEFPUSHBUTTON "&Aceptar", IDC_OK, 125, 232, 50, 14
+    PUSHBUTTON "&Cancelar", IDC_CANCEL, 178, 232, 50, 14
+    LTEXT "&Equipos:", IDC_STATIC, 9, 9, 35, 36
     LISTBOX IDC_COMPUTER_LIST, 8, 19, 162, 55
-    PUSHBUTTON "&Add...", IDC_ADD_SYSTEM, 179, 19, 50, 14
-    PUSHBUTTON "&Remove", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
-    PUSHBUTTON "&Browse...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
-    LTEXT "Action", IDC_ACTION, 11, 81, 20, 14
+    PUSHBUTTON "&Añadir...", IDC_ADD_SYSTEM, 179, 19, 50, 14
+    PUSHBUTTON "&Eliminar", IDC_REMOVE_SYSTEM, 179, 36, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Examinar...", IDC_BROWSE_SYSTEM, 179, 53, 50, 14
+    LTEXT "Acción", IDC_ACTION, 11, 81, 20, 14
     COMBOBOX IDC_ACTION_TYPE, 37, 79, 129, 14, WS_TABSTOP | CBS_DROPDOWN
-    CHECKBOX "Warn users", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
-    LTEXT "Display warning for", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
+    CHECKBOX "Avisar a los usuarios", IDC_WARN_USERS, 175, 79, 55, 14, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "Mostrar la advertencia durante", IDC_SHOW_WARN_ONE, 11, 99, 65, 14
     EDITTEXT IDC_SHOW_WARN, 78, 97, 41, 14
-    LTEXT "second(s)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 5, 114, 224, 114
-    LTEXT "Reason:", IDC_STATIC, 16, 130, 27, 8
-    CHECKBOX "Planned", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    LTEXT "segundo(s)", IDC_SHOW_WARN_TWO, 124, 99, 32, 10
+    GROUPBOX "Rastreador de sucesos de apagado", IDC_STATIC, 5, 114, 224, 114
+    LTEXT "Razón:", IDC_STATIC, 16, 130, 27, 8
+    CHECKBOX "Planeado", IDC_PLANNED, 175, 130, 40, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_REASON_CODE, 17, 142, 198, 13, WS_TABSTOP | CBS_DROPDOWN
-    LTEXT "Comm&ent:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
+    LTEXT "Co&mentario:", IDC_COMMENT_CAPTION, 16, 159, 38, 8
     EDITTEXT IDC_COMMENT_TEXT, 17, 171, 198, 50, WS_VSCROLL
 END
 
 /* Information and error messages */
 STRINGTABLE
 BEGIN
-    IDS_USAGE "ReactOS Shutdown Utility\n\
+    IDS_USAGE "Utilidad de apagado de ReactOS\n\
 \n\
-Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
-       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\
+Uso: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
+     [/m \\\\equipo][/t xxx][/d [p|u:]xx:yy [/c ""comentario""]]\n\
 \n\
-    No arguments or /?    Display this help.\n\
-    /i      Show the graphical user interface (GUI). This option must be the\n\
-            first one.\n\
-    /l      Log off on the local system only. Cannot be used with /m or /d.\n\
-    /s      Shutdown the computer.\n\
-    /r      Restart the computer.\n\
-    /g      Restart the computer and restart all the registered applications.\n\
-    /a      Cancel a delayed shutdown. Can only be used during the delay\n\
-            period.\n\
-    /p      Shutdown the local computer without any timeout or warning. Can be\n\
-            used with /d or /f.\n\
-    /h      Hibernate the local computer. Usable with /f.\n\
-    /e      Document the reason for the unexpected computer shutdown.\n\
-    /m \\\\computer  Specify the target computer (UNC/IP address).\n\
-    /t xxx  Set the timeout period to xxx seconds before shutting down.\n\
-            The valid range starts from 0 to 315360000 (10 years),\n\
-            30 being the default value.\n\
-    /c ""comment""  Comment on the reason for shutdown or restart.\n\
-            512 characters maximum allowed.\n\
-    /f      Force running applications to close without warning users. If you\n\
-            do not specify any other parameter, this option will also log off.\n\
-    /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n\
-            p indicates that the shutdown or the restart is planned.\n\
-            u indicates that the reason is defined by the user.\n\
-            If neither p nor u are specified, the shutdown or the restart are\n\
-            not planned.\n\
-            xx is the major reason code (positive integer smaller than 256).\n\
-            yy is the minor reason code (positive integer smaller than 65536).\n"
+    Sin argumentos o con /?    Muestra esta ayuda.\n\
+    /i      Muestra la interfaz gráfica de usuario (GUI).\n\
+            Esta opción debe ser la primera.\n\
+    /l      Cierrar sesión en el equipo local. No funciona con /m o /d.\n\
+    /s      Apaga el equipo.\n\
+    /r      Reinicia el equipo.\n\
+    /g      Reiniciar el equipo junto con todas las aplicaciones registradas.\n\
+    /a      Cancela un apagado retrasado. Sólo se puede utilizar durante\n\
+            la cuanta atrás, pero no más tarde.\n\
+    /p      Apaga el equipo local sin esperas o avisos.\n\
+            Se puede usar junto con /d o /f.\n\
+    /h      Hiberna el equipo local. Se puede usar junto con /f.\n\
+    /e      Documenta la razón por apagado no planeado.\n\
+    /m \\\\equipo  Especifica el equipo remoto de destino (dirección UNC/IP).\n\
+    /t xxx  Establece el tiempo de espera a xxx segundos antes de apagar.\n\
+            El rango válido es de 0 a 315360000 (10 años),\n\
+            con 30 siendo el valor por defecto.\n\
+    /c ""comentario""  Comenta la razón de apagado o reinicio.\n\
+            Sólo se permiten hasta 512 caracteres.\n\
+    /f      Fuerza el cierre de aplicaciones sin avisar a los usuarios.\n\
+            Si no se especifica ningún otro parámetro también cerrará sesión.\n\
+    /d [p|u:]xx:yy  Da un código de razón para el apagado o reinicio.\n\
+            p indica que el apagado o reinicio estaba planeado.\n\
+            u indica que la razón está definida por el usuario.\n\
+            Si no se especifica ni p ni la u, el apagado se\n\
+            marca como no planeado.\n\
+            Donde xx es el código de razón mayor (entero positivo menor que 256).\n\
+            Donde yy es el código de razón mayor (entero positivo menor que 65536).\n"
 
-    IDS_ERROR_SHUTDOWN_REBOOT "ERROR: Unable to shutdown and restart at the same time.\n"
-    IDS_ERROR_TIMEOUT "ERROR: Timeout value of %u is out of bounds (0-315360000).\n"
-    IDS_ERROR_ABORT "ERROR: Unable to abort the shutdown of the system.\n"
-    IDS_ERROR_LOGOFF "ERROR: Unable to logoff the system.\n"
-    IDS_ERROR_SHUTDOWN "ERROR: Unable to shutdown the system.\n"
-    IDS_ERROR_RESTART "ERROR: Unable to restart the system.\n"
-    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: Comment length exceeds maximum character limit set by the system.\n"
-    IDS_ERROR_HIBERNATE "ERROR: Unable to send system into hibernation mode.\n"
-    IDS_ERROR_HIBERNATE_LOCAL "ERROR: Hibernation mode cannot be started remotely.\n"
-    IDS_ERROR_HIBERNATE_ENABLED "ERROR: Hibernation mode is not enabled.\n"
-    IDS_ERROR_DIALOG_CAPTION "Remote Shutdown"
-    IDS_ERROR_DIALOG_INIT "Unable to display the graphical user interface."
+    IDS_ERROR_SHUTDOWN_REBOOT "ERROR: No se puede apagar y reiniciar a la vez.\n"
+    IDS_ERROR_TIMEOUT "ERROR: El valor de tiempo de espera de %u está fuera del rango permitido (0-315360000).\n"
+    IDS_ERROR_ABORT "ERROR: No se ha podido cancelar el apagado del equipo.\n"
+    IDS_ERROR_LOGOFF "ERROR: No se ha podido cerrar sesión en el equipo.\n"
+    IDS_ERROR_SHUTDOWN "ERROR: No se ha podido apagar el equipo.\n"
+    IDS_ERROR_RESTART "ERROR: No se ha podido reiniciar el equipo.\n"
+    IDS_ERROR_MAX_COMMENT_LENGTH "ERROR: La longitud del comentario excede el límite de palabras especificado por el equipo.\n"
+    IDS_ERROR_HIBERNATE "ERROR: No se ha podido poner el sistema en el modo de hibernación.\n"
+    IDS_ERROR_HIBERNATE_LOCAL "ERROR: No se ha podido activar de forma remota el modo de hibernación.\n"
+    IDS_ERROR_HIBERNATE_ENABLED "ERROR: No está activado el modo de hibernación.\n"
+    IDS_ERROR_DIALOG_CAPTION "Apagado remoto"
+    IDS_ERROR_DIALOG_INIT "No se pudo mostrar la interfaz gráfica de usuario."
 END
 
 /* Remote shutdown action strings */
 STRINGTABLE
 BEGIN
-    IDS_ACTION_SHUTDOWN "Shutdown the system"
-    IDS_ACTION_RESTART "Restart the system"
-    IDS_ACTION_UNEXPECTED_SHUTDOWN "Annotate the unexpected shutdown"
+    IDS_ACTION_SHUTDOWN "Apagar el equipo"
+    IDS_ACTION_RESTART "Reiniciar el equipo"
+    IDS_ACTION_UNEXPECTED_SHUTDOWN "Anotar las razones del apagado"
 END
 
 /* Remote shutdown reason strings */
 STRINGTABLE
 BEGIN
-    IDS_REASON_OTHER "Other"
-    IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Maintenance"
+    IDS_REASON_OTHER "Otra"
+    IDS_REASON_HARDWARE_MAINTENANCE "Hardware: Mantenimiento"
     IDS_REASON_HARDWARE_INSTALL "Hardware: Installation"
-    IDS_REASON_OS_RECOVER "Operating System: Recovery"
-    IDS_REASON_OS_RECONFIGURE "Operating System: Reconfigure"
-    IDS_REASON_APP_MAINTENANCE "Application: Maintenance"
-    IDS_REASON_APP_INSTALL "Application: Installation"
-    IDS_REASON_APP_UNRESPONSIVE "Application: Unresponsive"
-    IDS_REASON_APP_UNSTABLE "Application: Unstable"
-    IDS_REASON_SECURITY "Security Issue"
-    IDS_REASON_NETWORK "Loss of network connectivity"
+    IDS_REASON_OS_RECOVER "Sistema operativo: Recuperación"
+    IDS_REASON_OS_RECONFIGURE "Sistema operativo: Reconfiguración"
+    IDS_REASON_APP_MAINTENANCE "Aplicación: Mantenimiento"
+    IDS_REASON_APP_INSTALL "Aplicación: Instalación"
+    IDS_REASON_APP_UNRESPONSIVE "Aplicación: No responde"
+    IDS_REASON_APP_UNSTABLE "Aplicación: Inestable"
+    IDS_REASON_SECURITY "Problema de seguridad"
+    IDS_REASON_NETWORK "Pérdida de conectividad de red"
 END

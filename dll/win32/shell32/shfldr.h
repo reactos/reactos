@@ -52,7 +52,7 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
 HRESULT SHELL32_CompareIDs (IShellFolder * iface, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
-static int __inline SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
+static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
     return sprintf(str, "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
             guid.Data1, guid.Data2, guid.Data3,
@@ -60,7 +60,7 @@ static int __inline SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
             guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 }
 
-static int __inline SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
+static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 {
     static const WCHAR fmtW[] =
      { '{','%','0','8','l','x','-','%','0','4','x','-','%','0','4','x','-',

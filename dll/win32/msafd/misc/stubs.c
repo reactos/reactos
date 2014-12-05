@@ -10,6 +10,9 @@
 
 #include <msafd.h>
 
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(msafd);
+
 INT
 WSPAPI
 WSPAddressToString(
@@ -20,7 +23,7 @@ WSPAddressToString(
     IN OUT  LPDWORD lpdwAddressStringLength,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return 0;
 }
@@ -31,7 +34,7 @@ WSPAPI
 WSPCancelBlockingCall(
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return 0;
 }
@@ -45,7 +48,7 @@ WSPDuplicateSocket(
     OUT LPWSAPROTOCOL_INFOW lpProtocolInfo,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return 0;
 }
@@ -61,7 +64,7 @@ WSPGetOverlappedResult(
     OUT LPDWORD lpdwFlags,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return FALSE;
 }
@@ -75,7 +78,7 @@ WSPGetQOSByName(
     OUT     LPQOS lpQOS,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return FALSE;
 }
@@ -94,7 +97,7 @@ WSPJoinLeaf(
     IN  DWORD dwFlags,
     OUT LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return (SOCKET)0;
 }
@@ -109,7 +112,7 @@ WSPStringToAddress(
     IN OUT  LPINT lpAddressLength,
     OUT     LPINT lpErrno)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return 0;
 }

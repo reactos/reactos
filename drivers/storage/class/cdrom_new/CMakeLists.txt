@@ -10,15 +10,12 @@ list(APPEND SOURCE
     cdrom.h)
 
 add_library(cdrom_new SHARED ${SOURCE})
-
 target_link_libraries(cdrom_new libcntpr wdmguid)
 
-if(ARCH STREQUAL "i386")
+if((ARCH STREQUAL "i386") AND (NOT MSVC))
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    if(NOT MSVC)
-        #add_target_compile_flags(cdrom_new "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
-    endif()
+    #add_target_compile_flags(cdrom_new "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format -Wno-unused-variable -Wno-pointer-sign")
 endif()
 
 set_module_type(cdrom_new kernelmodedriver)

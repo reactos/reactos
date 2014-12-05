@@ -1968,7 +1968,12 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
         case S_SECTINFO_V3:
         case S_SUBSECTINFO_V3:
         case S_ENTRYPOINT_V3:
+        case 0x113e:
         case 0x1139:
+        case 0x1141:
+        case 0x1142:
+        case 0x1143:
+        case 0x1144:
             TRACE("Unsupported symbol id %x\n", sym->generic.id);
             break;
 
@@ -2219,7 +2224,7 @@ static void pdb_free_file(struct pdb_file_info* pdb_file)
     HeapFree(GetProcessHeap(), 0, pdb_file->stream_dict);
 }
 
-static BOOL pdb_load_stream_name_table(struct pdb_file_info* pdb_file, const char* str, unsigned cb)
+static void pdb_load_stream_name_table(struct pdb_file_info* pdb_file, const char* str, unsigned cb)
 {
     DWORD*      pdw;
     DWORD*      ok_bits;
@@ -2232,7 +2237,7 @@ static BOOL pdb_load_stream_name_table(struct pdb_file_info* pdb_file, const cha
     count = *pdw++;
 
     pdb_file->stream_dict = HeapAlloc(GetProcessHeap(), 0, (numok + 1) * sizeof(struct pdb_stream_name) + cb);
-    if (!pdb_file->stream_dict) return FALSE;
+    if (!pdb_file->stream_dict) return;
     cpstr = (char*)(pdb_file->stream_dict + numok + 1);
     memcpy(cpstr, str, cb);
 
@@ -2242,7 +2247,7 @@ static BOOL pdb_load_stream_name_table(struct pdb_file_info* pdb_file, const cha
     if (*pdw++ != 0)
     {
         FIXME("unexpected value\n");
-        return -1;
+        return;
     }
 
     for (i = j = 0; i < count; i++)
@@ -2258,7 +2263,6 @@ static BOOL pdb_load_stream_name_table(struct pdb_file_info* pdb_file, const cha
     /* add sentinel */
     pdb_file->stream_dict[numok].name = NULL;
     pdb_file->fpoext_stream = -1;
-    return j == numok && i == count;
 }
 
 static unsigned pdb_get_stream_by_name(const struct pdb_file_info* pdb_file, const char* name)
@@ -2900,8 +2904,8 @@ struct zvalue
     struct hash_table_elt       elt;
 };
 
-#define PEV_ERROR(pev, msg)       snprintf((pev)->error, sizeof((pev)->error), "%s", (msg)),FALSE
-#define PEV_ERROR1(pev, msg, pmt) snprintf((pev)->error, sizeof((pev)->error), (msg), (pmt)),FALSE
+#define PEV_ERROR(pev, msg)       snprintf((pev)->error, sizeof((pev)->error), "%s", (msg))
+#define PEV_ERROR1(pev, msg, pmt) snprintf((pev)->error, sizeof((pev)->error), (msg), (pmt))
 
 #if 0
 static void pev_dump_stack(struct pevaluator* pev)

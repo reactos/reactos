@@ -86,17 +86,6 @@ void* WINAPI Direct3DShaderValidatorCreate9(void)
     return NULL;
 }
 
-/*******************************************************************
- *       DllMain
- */
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
-{
-    if (reason == DLL_PROCESS_ATTACH)
-        DisableThreadLibraryCalls(inst);
-
-    return TRUE;
-}
-
 /***********************************************************************
  *              D3DPERF_BeginEvent (D3D9.@)
  */

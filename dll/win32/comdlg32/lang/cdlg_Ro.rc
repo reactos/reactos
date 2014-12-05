@@ -4,7 +4,7 @@
  * Copyright 1999 Bertho Stultiens
  * Copyright 1999 Klaas van Gend
  * Copyright 2008 Michael Stefaniuc
- *           2012 Fulea Ștefan
+ *           2012 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@ Doriți să îl suprascrieți?"
                           / : < > |"
     IDS_PATHNOTEXISTING         "Calea nu există"
     IDS_FILENOTEXISTING         "Fișierul nu există"
+    IDS_INVALID_FOLDERNAME  "Selecția nu conține un dosar"
 }
 
 STRINGTABLE
@@ -66,7 +67,7 @@ Introduceți un număr între 1 și %d."
     PD32_OUT_OF_MEMORY      "Memorie insuficientă."
     PD32_GENERIC_ERROR      "S-a produs o eroare."
     PD32_DRIVER_UNKNOWN     "Modulul pilot de imprimantă este necunoscut."
-    PD32_NO_DEVICES         "Este necesară instalarea unei imprimante înainte de a putea efectua activități aferente imprimantei ca spre exemplu accesarea opțiunilor de pagină sau imprimarea unui document. Instalați o imprimantă apoi reîncercați."
+    PD32_NO_DEVICES         "Este necesară instalarea unei imprimante înainte de a putea efectua activități aferente imprimantei (cum ar fi accesarea opțiunilor de pagină sau imprimarea unui document). Instalați o imprimantă apoi reîncercați."
 
     PD32_DEFAULT_PRINTER                  "Imprimantă implicită; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d documente sunt în coadă"
@@ -138,6 +139,7 @@ STRINGTABLE
     IDS_SAVE        "Păstrare"
     IDS_SAVE_AS     "Păstrare în:"
     IDS_OPEN_FILE   "Deschidere fișier"
+    IDS_SELECT_FOLDER "Selecează dosar"
 }
 
 /*
@@ -242,10 +244,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Font"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "F&ont:",       stc1 ,6,3,90,9
+    LTEXT           "N&ume font:",       stc1 ,6,3,90,9
     COMBOBOX                        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&Stil font:",  stc2 ,108,3,60,9
+    LTEXT           "Stil f&ont:",  stc2 ,108,3,60,9
     COMBOBOX                        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "Mă&rime:",     stc3,179,3,32,9
@@ -257,13 +259,13 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Manual…",     pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "Efecte",       grp1,6,72,84,36,WS_GROUP
     CHECKBOX        "&Tăiat",       chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX        "S&ubliniat",   chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    CHECKBOX        "Su&bliniat",   chx2, 10,94,78,10, BS_AUTOCHECKBOX
     LTEXT           "&Culoare:",    stc4 ,6,114,80,9
     COMBOBOX                        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                                     CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Mostră",       grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",     stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt:",     stc7 ,98,114,40,9
+    LTEXT           "Sist&em de scriere:", stc7 ,98,114,40,9
     COMBOBOX                        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
                                     CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -281,13 +283,13 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT                                  706, 295,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  RTEXT          "&Verde:",                 727/*1095*/,262,140,30,10
  EDITTEXT                                  707, 295,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- RTEXT          "&Albastru:",              728 /*1096*/,262,154,30,10
+ RTEXT          "Al&bastru:",              728 /*1096*/,262,154,30,10
  EDITTEXT                                  708, 295,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  RTEXT          "N&uanță:",                723 /*1091*/,194,126,40,10
  EDITTEXT                                  703, 236,124,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- RTEXT          "Sa&turație:",             724 /*1092*/,194,140,40,10
+ RTEXT          "S&aturație:",             724 /*1092*/,194,140,40,10
  EDITTEXT                                  704, 236,138,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- RTEXT          "&Strălucire:",            725 /*1093*/,194,154,40,10
+ RTEXT          "St&rălucire:",            725 /*1093*/,194,154,40,10
  EDITTEXT                                  705, 236,152,18,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL        "",                        720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL        "",                        721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28

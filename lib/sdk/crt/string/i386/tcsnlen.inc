@@ -5,7 +5,8 @@
 PUBLIC _tcsnlen
 .code
 
-_tcsnlen:
+FUNC _tcsnlen
+    FPO 0, 2, 1, 1, 0, FRAME_FPO
     push edi
     mov edi, [esp + 8]
     mov ecx, [esp + 12]
@@ -26,6 +27,7 @@ _tcsnlen:
 .L1:
     pop edi
     ret
+ENDFUNC
 
 END
 /* EOF */

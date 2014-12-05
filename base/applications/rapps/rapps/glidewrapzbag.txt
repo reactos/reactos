@@ -4,7 +4,7 @@
 [Section]
 Name = GlidewrapZbag
 Version = 0.84c
-Licence = Freeware
+License = Freeware
 Description = glidewrapper needed to run Diablo 2 on ReactOS.
 Size = 249.02 kB
 Category = 3
@@ -32,12 +32,12 @@ Description = glidewrapper is nodig om Diablo2 te gebruiken op ReactOS.
 Description = glidewrapper jest potrzebny do uruchomienia Diablo2 w ReactOS-ie.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Glide wrapper, necesar pentru a executa Diablo 2 în ReactOS.
 Size = 249,02 ko
 
 [Section.041f]
-Licence = Ücretsiz
+License = Ücretsiz
 Description = glidewrapper, ReactOS'ta Diablo 2'yi çalıştırmak için gereklidir.
 Size = 249,02 KB
 

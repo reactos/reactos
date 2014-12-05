@@ -20,8 +20,6 @@
 
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN DosInitialize(IN LPCSTR DosKernelFileNames);
-
 DWORD
 WINAPI
 demClientErrorEx

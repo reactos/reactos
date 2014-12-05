@@ -44,12 +44,12 @@ BEGIN
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Properti"
   IDS_TOOLTIP_REFRESH   "Segarkan"
@@ -58,7 +58,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "Manajer Device ReactOS"
   IDS_HINT_BLANK        " "

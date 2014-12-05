@@ -71,7 +71,7 @@ CSR_API(BaseSrvCreateProcess)
     HANDLE ProcessHandle, ThreadHandle;
     PCSR_THREAD CsrThread;
     PCSR_PROCESS Process;
-    ULONG Flags = 0, VdmPower = 0, DebugFlags = 0;
+    ULONG Flags = 0, DebugFlags = 0, VdmPower = 0;
 
     /* Get the current client thread */
     CsrThread = CsrGetClientThread();
@@ -82,6 +82,13 @@ CSR_API(BaseSrvCreateProcess)
     /* Extract the flags out of the process handle */
     Flags = (ULONG_PTR)CreateProcessRequest->ProcessHandle & 3;
     CreateProcessRequest->ProcessHandle = (HANDLE)((ULONG_PTR)CreateProcessRequest->ProcessHandle & ~3);
+
+    /* Some things should be done if this is a VDM process */
+    if (CreateProcessRequest->VdmBinaryType)
+    {
+        /* We need to set the VDM power later on */
+        VdmPower = 1;
+    }
 
     /* Duplicate the process handle */
     Status = NtDuplicateObject(Process->ProcessHandle,
@@ -112,10 +119,9 @@ CSR_API(BaseSrvCreateProcess)
         return Status;
     }
 
-    /* See if this is a VDM process */
+    /* If this is a VDM process, request VDM power */
     if (VdmPower)
     {
-        /* Request VDM powers */
         Status = NtSetInformationProcess(ProcessHandle,
                                          ProcessWx86Information,
                                          &VdmPower,

@@ -14,7 +14,7 @@
 
 HINSTANCE hApplet = NULL;
 
-static LONG start_params(const WCHAR *params)
+static LONG start_params(const WCHAR *params, HWND hwnd_parent)
 {
     static const WCHAR install_geckoW[] = {'i','n','s','t','a','l','l','_','g','e','c','k','o',0};
     static const WCHAR install_monoW[] = {'i','n','s','t','a','l','l','_','m','o','n','o',0};
@@ -23,12 +23,12 @@ static LONG start_params(const WCHAR *params)
         return FALSE;
 
     if(!strcmpW(params, install_geckoW)) {
-        install_addon(ADDON_GECKO);
+        install_addon(ADDON_GECKO, hwnd_parent);
         return TRUE;
     }
 
     if(!strcmpW(params, install_monoW)) {
-        install_addon(ADDON_MONO);
+        install_addon(ADDON_MONO, hwnd_parent);
         return TRUE;
     }
 
@@ -51,7 +51,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
             return 1;
 
         case CPL_STARTWPARMSW:
-            return start_params((const WCHAR *)lParam2);
+            return start_params((const WCHAR *)lParam2, hwndCPl);
 
         case CPL_INQUIRE:
             CPlInfo = (CPLINFO*)lParam2;

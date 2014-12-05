@@ -28,8 +28,8 @@ BEGIN
     END
     POPUP "Вид"
     BEGIN
-        MENUITEM "Крупные", ID_VIEW_LARGE
-        MENUITEM "Мелкие", ID_VIEW_SMALL
+        MENUITEM "Крупные значки", ID_VIEW_LARGE
+        MENUITEM "Мелкие значки", ID_VIEW_SMALL
         MENUITEM "Список", ID_VIEW_LIST
         MENUITEM "Таблица", ID_VIEW_DETAILS
         MENUITEM SEPARATOR
@@ -160,7 +160,7 @@ BEGIN
     ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
     LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
     LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
-    LTEXT "Do you want to stop these services?", IDC_STATIC, 15, 110, 150, 10
+    LTEXT "Вы хотите остановить эти службы?", IDC_STATIC, 15, 110, 150, 10
     DEFPUSHBUTTON "Да", IDOK, 60, 129, 54, 14
     PUSHBUTTON "Нет", IDCANCEL, 120, 129, 54, 14
 END

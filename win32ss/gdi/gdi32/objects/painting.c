@@ -709,6 +709,62 @@ FloodFill(
     return ExtFloodFill(hDC, nXStart, nYStart, crFill, FLOODFILLBORDER);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+BitBlt(
+    HDC hdcDest, /* handle to destination DC */
+    int nXOriginDest, /* x-coord of destination upper-left corner */
+    int nYOriginDest, /* y-coord of destination upper-left corner */
+    int nWidthDest, /* width of destination rectangle */
+    int nHeightDest, /* height of destination rectangle */
+    HDC hdcSrc, /* handle to source DC */
+    int nXSrc, /* x-coordinate of source upper-left corner */
+    int nYSrc, /* y-coordinate of source upper-left corner */
+    DWORD dwRop) /* raster operation code */
+{
+    /* use patBlt for no source blt  Like windows does */
+    if (!ROP_USES_SOURCE(dwRop))
+    {
+        return PatBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, dwRop);
+    }
+
+    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hdcSrc, nXSrc,
+        nYSrc, dwRop, 0, 0);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+StretchBlt(
+    HDC hdcDest, /* handle to destination DC */
+    int nXOriginDest, /* x-coord of destination upper-left corner */
+    int nYOriginDest, /* y-coord of destination upper-left corner */
+    int nWidthDest, /* width of destination rectangle */
+    int nHeightDest, /* height of destination rectangle */
+    HDC hdcSrc, /* handle to source DC */
+    int nXOriginSrc, /* x-coord of source upper-left corner */
+    int nYOriginSrc, /* y-coord of source upper-left corner */
+    int nWidthSrc, /* width of source rectangle */
+    int nHeightSrc, /* height of source rectangle */
+    DWORD dwRop) /* raster operation code */
+
+{
+    if ((nWidthDest != nWidthSrc) || (nHeightDest != nHeightSrc))
+    {
+        return NtGdiStretchBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hdcSrc,
+            nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc, dwRop, 0);
+    }
+
+    return NtGdiBitBlt(hdcDest, nXOriginDest, nYOriginDest, nWidthDest, nHeightDest, hdcSrc,
+        nXOriginSrc, nYOriginSrc, dwRop, 0, 0);
+}
+
 
 /*
  * @implemented
@@ -772,4 +828,78 @@ PlgBlt(
                        xMask,
                        yMask,
                        GetBkColor(hdcSrc));
+}
+
+BOOL
+WINAPI
+GdiAlphaBlend(
+    HDC hDCDst,
+    int DstX,
+    int DstY,
+    int DstCx,
+    int DstCy,
+    HDC hDCSrc,
+    int SrcX,
+    int SrcY,
+    int SrcCx,
+    int SrcCy,
+    BLENDFUNCTION BlendFunction)
+{
+    if ( hDCSrc == NULL ) return FALSE;
+
+    if (GDI_HANDLE_GET_TYPE(hDCSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
+
+    return NtGdiAlphaBlend(
+               hDCDst,
+               DstX,
+               DstY,
+               DstCx,
+               DstCy,
+               hDCSrc,
+               SrcX,
+               SrcY,
+               SrcCx,
+               SrcCy,
+               BlendFunction,
+               0 );
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiTransparentBlt(IN HDC hdcDst,
+                  IN INT xDst,
+                  IN INT yDst,
+                  IN INT cxDst,
+                  IN INT cyDst,
+                  IN HDC hdcSrc,
+                  IN INT xSrc,
+                  IN INT ySrc,
+                  IN INT cxSrc,
+                  IN INT cySrc,
+                  IN UINT TransColor
+                 )
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, (COLORREF)TransColor);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GdiGradientFill(
+    IN HDC hdc,
+    IN PTRIVERTEX pVertex,
+    IN ULONG nVertex,
+    IN PVOID pMesh,
+    IN ULONG nMesh,
+    IN ULONG ulMode)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nMesh, ulMode);
 }

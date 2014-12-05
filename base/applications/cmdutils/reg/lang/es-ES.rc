@@ -1,14 +1,14 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "La sintaxis de este comando es:\n\nREG [ ADD | DELETE | QUERY ]\nREG comando /?\n"
-    STRING_ADD_USAGE "REG ADD nombre_clave [/v nombre_valor | /ve] [/t tipo] [/s separador] [/d datos] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE nombre_clave [/v nombre_valor | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY nombre_clave [/v nombre_valor | /ve] [/s]\n"
-    STRING_SUCCESS "La operación finalizó con éxito\n"
-    STRING_INVALID_KEY "Error: nombre de clave no válido\n"
-    STRING_INVALID_CMDLINE "Error: parámetros de línea de comandos inválidos\n"
-    STRING_NO_REMOTE "Error: No se puede agregar claves al equipo remoto\n"
-    STRING_CANNOT_FIND "Error: El sistema no pudo encontrar la clave o el valor del Registro especificado\n"
-END
+{
+    STRING_USAGE, "La sintaxis de este comando es:\n\nREG [ ADD | DELETE | QUERY ]\nREG comando /?\n"
+    STRING_ADD_USAGE, "REG ADD nombre_clave [/v nombre_valor | /ve] [/t tipo] [/s separador] [/d datos] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nombre_clave [/v nombre_valor | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nombre_clave [/v nombre_valor | /ve] [/s]\n"
+    STRING_SUCCESS, "La operación finalizó con éxito\n"
+    STRING_INVALID_KEY, "Error: nombre de clave no válido\n"
+    STRING_INVALID_CMDLINE, "Error: parámetros de línea de comandos inválidos\n"
+    STRING_NO_REMOTE, "Error: No se puede agregar claves al equipo remoto\n"
+    STRING_CANNOT_FIND, "Error: El sistema no pudo encontrar la clave o el valor del Registro especificado\n"
+}

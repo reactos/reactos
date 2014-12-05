@@ -1,6 +1,10 @@
 #ifndef _UNDOCUSER_H
 #define _UNDOCUSER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* defined(__cplusplus) */
+
 /* Built in class atoms */
 #define WC_MENU       (MAKEINTATOM(0x8000))
 #define WC_DESKTOP    (MAKEINTATOM(0x8001))
@@ -32,6 +36,7 @@
 #define WM_COPYGLOBALDATA   0x00000049
 #define WM_LOGONNOTIFY      0x0000004C
 #define WM_KEYF1            0x0000004D
+#define WM_KLUDGEMINRECT    0x0000008B
 #define WM_NCUAHDRAWCAPTION 0x000000AE
 #define WM_NCUAHDRAWFRAME   0x000000AF
 #define WM_SYSTIMER         0x00000118
@@ -102,6 +107,11 @@
 #define LN_MESSAGE_BEEP       0x9
 #define LN_START_SCREENSAVE   0xA
 
+//
+// Undocumented flags for DrawCaptionTemp
+//
+#define DC_NOSENDMSG 0x2000
+
 #define STARTF_SCRNSAVER 0x80000000
 
 #define CW_USEDEFAULT16 ((short)0x8000)
@@ -133,6 +143,18 @@ LONG WINAPI CsrBroadcastSystemMessageExW(DWORD dwflags,
 BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl);
 HWND WINAPI GetTaskmanWindow(VOID);
 HWND WINAPI GetProgmanWindow(VOID);
+BOOL WINAPI SetShellWindow(HWND);
+BOOL WINAPI SetShellWindowEx(HWND, HWND);
+
+BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
+BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
+
+#ifdef UNICODE
+#define DrawCaptionTemp DrawCaptionTempW
+#else
+#define DrawCaptionTemp DrawCaptionTempA
+#endif
+
 
 //
 // User api hook
@@ -203,5 +225,9 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 #endif
 
 BOOL WINAPI UnregisterUserApiHook(VOID);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* defined(__cplusplus) */
 
 #endif

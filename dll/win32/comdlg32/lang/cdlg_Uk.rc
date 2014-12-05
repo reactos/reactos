@@ -34,6 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "Шлях не існує"
     IDS_FILENOTEXISTING     "Файл не існує"
+    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
 }
 
 STRINGTABLE
@@ -136,6 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Зберегти"
     IDS_SAVE_AS     "Зберегти як"
     IDS_OPEN_FILE   "Відкрити файл"
+    IDS_SELECT_FOLDER "Select Folder"
 }
 
 /*

@@ -361,6 +361,8 @@ SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject)
 
         Status = SampRemoveMemberFromGroup(GroupObject,
                                            UserObject->RelativeId);
+        if (Status == STATUS_MEMBER_NOT_IN_GROUP)
+            Status = STATUS_SUCCESS;
 
         SampCloseDbObject(GroupObject);
 
@@ -369,6 +371,13 @@ SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject)
             goto done;
         }
     }
+
+    /* Remove all groups from the Groups attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
 
 done:
     if (GroupsBuffer != NULL)

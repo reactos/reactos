@@ -560,7 +560,7 @@ void DIB_TransparentBltToVGA(int x, int y, int w, int h, void *b, int Source_lDe
             pb++;
         }
 
-        if (edgePixel == TRUE)
+        if (edgePixel)
         {
             b1 = *pb;
             if(b1 != trans) vgaPutPixel(x2, j, b1);

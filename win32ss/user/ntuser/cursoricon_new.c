@@ -63,9 +63,9 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
         return NULL;
     }
 
-    if(UserObjectInDestroy(hCurIcon))
+    if (UserObjectInDestroy(hCurIcon))
     {
-        ERR("Requesting destroyed cursor.\n");
+        WARN("Requesting invalid/destroyed cursor.\n");
         EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
@@ -133,7 +133,7 @@ IntCreateCurIconHandle(BOOLEAN Animated)
     CurIcon = UserCreateObject(
         gHandleTable,
         NULL,
-        NULL,
+        GetW32ThreadInfo(),
         &hCurIcon,
         TYPE_CURSOR,
         Animated ? sizeof(ACON) : sizeof(CURICON_OBJECT));
@@ -149,35 +149,54 @@ IntCreateCurIconHandle(BOOLEAN Animated)
     return hCurIcon;
 }
 
-BOOLEAN FASTCALL
-IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOLEAN bForce)
+BOOLEAN
+IntDestroyCurIconObject(
+    _In_ PVOID Object)
 {
-    if(CurIcon->CURSORF_flags & CURSORF_CURRENT)
+    PCURICON_OBJECT CurIcon = Object;
+
+    /* Try finding it in its process cache */
+    if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
     {
-        /* Mark the object as destroyed, and fail, as per tests */
-        TRACE("Cursor is current, marking as destroyed.\n");
-        UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
-        return FALSE;
+        PPROCESSINFO ppi;
+
+        ppi = CurIcon->head.ppi;
+        if (ppi->pCursorCache == CurIcon)
+        {
+            ppi->pCursorCache = CurIcon->pcurNext;
+            UserDereferenceObject(CurIcon);
+        }
+        else
+        {
+            PCURICON_OBJECT CacheCurIcon = ppi->pCursorCache;
+            while (CacheCurIcon)
+            {
+                if (CacheCurIcon->pcurNext == CurIcon)
+                {
+                    CacheCurIcon->pcurNext = CurIcon->pcurNext;
+                    break;
+                }
+                CacheCurIcon = CacheCurIcon->pcurNext;
+            }
+
+            /* We must have found it! */
+            ASSERT(CacheCurIcon != NULL);
+            UserDereferenceObject(CurIcon);
+        }
     }
 
-    if(CurIcon->head.ppi != PsGetCurrentProcessWin32Process())
-    {
-        /* This object doesn't belong to the current process */
-        WARN("Trying to delete foreign cursor!\n");
-        UserDereferenceObject(CurIcon);
-        EngSetLastError(ERROR_DESTROY_OBJECT_OF_OTHER_THREAD);
-        return FALSE;
-    }
+    /* We just mark the handle as being destroyed.
+     * Deleting all the stuff will be deferred to the actual struct free. */
+    UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+    return TRUE;
+}
+
+void
+FreeCurIconObject(
+    _In_ PVOID Object)
+{
+    PCURICON_OBJECT CurIcon = Object;
     
-    /* Do not destroy it if it is shared. (And we're not forced to) */
-    if((CurIcon->CURSORF_flags & CURSORF_LRSHARED) && !bForce)
-    {
-        /* Tests show this is a valid call */
-        WARN("Trying to destroy shared cursor!\n");
-        UserDereferenceObject(CurIcon);
-        return TRUE;
-    }
-
     if(!(CurIcon->CURSORF_flags & CURSORF_ACON))
     {
         HBITMAP bmpMask = CurIcon->hbmMask;
@@ -210,7 +229,10 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOLEAN bForce)
         UINT i;
 
         for(i = 0; i < AniCurIcon->cpcur; i++)
-            IntDestroyCurIconObject(AniCurIcon->aspcur[i], TRUE);
+        {
+            UserDereferenceObject(AniCurIcon->aspcur[i]);
+            IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
+        }
         ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
     }
 
@@ -224,87 +246,22 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOLEAN bForce)
         CurIcon->atomModName = 0;
     }
 
-    /* We were given a pointer, no need to keep the reference any longer! */
-    UserDereferenceObject(CurIcon);
-    return UserDeleteObject(CurIcon->head.h, TYPE_CURSOR);
+    /* Finally free the thing */
+    FreeProcMarkObject(CurIcon);
 }
 
 VOID FASTCALL
-IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
+IntCleanupCurIconCache(PPROCESSINFO Win32Process)
 {
     PCURICON_OBJECT CurIcon;
 
     /* Run through the list of icon objects */
-    while(Win32Process->pCursorCache)
+    while (Win32Process->pCursorCache)
     {
         CurIcon = Win32Process->pCursorCache;
         Win32Process->pCursorCache = CurIcon->pcurNext;
-        /* One ref for the handle, one for the list,
-         * and potentially one from an other process via SetCursor */
-        ASSERT(CurIcon->head.cLockObj <= 3);
-        IntDestroyCurIconObject(CurIcon, TRUE);
+        UserDereferenceObject(CurIcon);
     }
-}
-
-HCURSOR FASTCALL
-IntSetCursor(
-    HCURSOR hCursor)
-{
-    PCURICON_OBJECT pcurOld, pcurNew;
-    HCURSOR hOldCursor = NULL;
-
-    if (hCursor)
-    {
-        pcurNew = UserGetCurIconObject(hCursor);
-        if (!pcurNew)
-        {
-            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
-            goto leave;
-        }
-        pcurNew->CURSORF_flags |= CURSORF_CURRENT;
-    }
-    else
-    {
-        pcurNew = NULL;
-    }
-
-    pcurOld = UserSetCursor(pcurNew, FALSE);
-    if (pcurOld)
-    {
-        hOldCursor = pcurOld->head.h;
-        pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-        if(UserObjectInDestroy(hOldCursor))
-        {
-            /* Destroy it once and for all */
-            IntDestroyCurIconObject(pcurOld, TRUE);
-            hOldCursor = NULL;
-        }
-        else
-        {
-            UserDereferenceObject(pcurOld);
-        }
-    }
-leave:
-    return hOldCursor;
-}
-
-BOOL FASTCALL
-IntDestroyCursor(
-  HANDLE hCurIcon,
-  BOOL bForce)
-{
-    PCURICON_OBJECT CurIcon;
-    BOOL ret;
-
-    if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
-    {
-        return(FALSE);
-    }
-
-    ret = IntDestroyCurIconObject(CurIcon, bForce);
-    /* Note: IntDestroyCurIconObject will remove our reference for us! */
-
-    return ret;
 }
 
 /*
@@ -404,16 +361,18 @@ NtUserGetIconInfo(
         /* Get the module name from the atom table */
         _SEH2_TRY
         {
-            if (BufLen > (lpModule->MaximumLength * sizeof(WCHAR)))
+            BufLen += sizeof(WCHAR);
+            if (BufLen > (lpModule->MaximumLength))
             {
                 lpModule->Length = 0;
+                lpModule->MaximumLength = BufLen;
             }
             else
             {
                 ProbeForWrite(lpModule->Buffer, lpModule->MaximumLength, 1);
-                BufLen = lpModule->MaximumLength * sizeof(WCHAR);
+                BufLen = lpModule->MaximumLength;
                 RtlQueryAtomInAtomTable(gAtomTable, CurIcon->atomModName, NULL, NULL, lpModule->Buffer, &BufLen);
-                lpModule->Length = BufLen/sizeof(WCHAR);
+                lpModule->Length = BufLen;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -442,15 +401,18 @@ NtUserGetIconInfo(
             {
                 lpResName->Buffer = CurIcon->strName.Buffer;
                 lpResName->Length = 0;
+                lpResName->MaximumLength = 0;
             }
-            else if (lpResName->MaximumLength < CurIcon->strName.Length)
+            else if (lpResName->MaximumLength < CurIcon->strName.MaximumLength)
             {
                 lpResName->Length = 0;
+                lpResName->MaximumLength = CurIcon->strName.MaximumLength;
             }
             else
             {
-                ProbeForWrite(lpResName->Buffer, lpResName->MaximumLength * sizeof(WCHAR), 1);
-                RtlCopyMemory(lpResName->Buffer, CurIcon->strName.Buffer, lpResName->Length);
+                ProbeForWrite(lpResName->Buffer, lpResName->MaximumLength, 1);
+                RtlCopyMemory(lpResName->Buffer, CurIcon->strName.Buffer, CurIcon->strName.Length);
+                lpResName->Length = CurIcon->strName.Length;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -690,27 +652,54 @@ NtUserDestroyCursor(
   _In_   HANDLE hCurIcon,
   _In_   BOOL bForce)
 {
-    PCURICON_OBJECT CurIcon;
     BOOL ret;
-    DECLARE_RETURN(BOOL);
+    PCURICON_OBJECT CurIcon = NULL;
 
-    TRACE("Enter NtUserDestroyCursorIcon\n");
+    TRACE("Enter NtUserDestroyCursorIcon (%p, %u)\n", hCurIcon, bForce);
     UserEnterExclusive();
 
-    if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
+    CurIcon = UserGetCurIconObject(hCurIcon);
+    if (!CurIcon)
     {
-        RETURN(FALSE);
+        ret = FALSE;
+        goto leave;
     }
 
-    ret = IntDestroyCurIconObject(CurIcon, bForce);
-    /* Note: IntDestroyCurIconObject will remove our reference for us! */
+    if (!bForce)
+    {
+        /* Maybe we have good reasons not to destroy this object */
+        if (CurIcon->head.ppi != PsGetCurrentProcessWin32Process())
+        {
+            /* No way, you're not touching my cursor */
+            ret = FALSE;
+            goto leave;
+        }
 
-    RETURN(ret);
+        if (CurIcon->CURSORF_flags & CURSORF_CURRENT)
+        {
+            WARN("Trying to delete current cursor!\n");
+            ret = FALSE;
+            goto leave;
+        }
 
-CLEANUP:
-    TRACE("Leave NtUserDestroyCursorIcon, ret=%i\n",_ret_);
+        if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+        {
+            WARN("Trying to delete shared cursor.\n");
+            /* This one is not an error */
+            ret = TRUE;
+            goto leave;
+        }
+    }
+
+    /* Destroy the handle */
+    ret = IntDestroyCurIconObject(CurIcon);
+
+leave:
+    if (CurIcon)
+        UserDereferenceObject(CurIcon);
+    TRACE("Leave NtUserDestroyCursorIcon, ret=%i\n", ret);
     UserLeave();
-    END_CLEANUP;
+    return ret;
 }
 
 
@@ -870,7 +859,7 @@ NtUserSetCursor(
     PCURICON_OBJECT pcurOld, pcurNew;
     HCURSOR hOldCursor = NULL;
 
-    TRACE("Enter NtUserSetCursor\n");
+    TRACE("Enter NtUserSetCursor: %p\n", hCursor);
     UserEnterExclusive();
 
     if (hCursor)
@@ -892,17 +881,11 @@ NtUserSetCursor(
     if (pcurOld)
     {
         hOldCursor = pcurOld->head.h;
-        pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-        if(UserObjectInDestroy(hOldCursor))
-        {
-            /* Destroy it once and for all */
-            IntDestroyCurIconObject(pcurOld, TRUE);
+        /* See if it was destroyed in the meantime */
+        if (UserObjectInDestroy(hOldCursor))
             hOldCursor = NULL;
-        }
-        else
-        {
-            UserDereferenceObject(pcurOld);
-        }
+        pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
+        UserDereferenceObject(pcurOld);
     }
 
 leave:
@@ -1088,7 +1071,10 @@ done:
         for(i = 0; i < numFrames; i++)
         {
             if(AniCurIcon->aspcur[i])
-                IntDestroyCurIconObject(AniCurIcon->aspcur[i], TRUE);
+            {
+                UserDereferenceObject(AniCurIcon->aspcur[i]);
+                IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
+            }
         }
         AniCurIcon->cicur = 0;
         AniCurIcon->cpcur = 0;
@@ -1189,6 +1175,27 @@ UserDrawIconEx(
         if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
         return FALSE;
     }
+
+    /* Fix width parameter, if needed */
+    if (!cxWidth)
+    {
+        if(diFlags & DI_DEFAULTSIZE)
+            cxWidth = is_icon(pIcon) ? 
+                UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
+        else
+            cxWidth = pIcon->cx;
+    }
+
+    /* Fix height parameter, if needed */
+    if (!cyHeight)
+    {
+        if(diFlags & DI_DEFAULTSIZE)
+            cyHeight = is_icon(pIcon) ? 
+                UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
+        else
+            cyHeight = pIcon->cy;
+    }
+
     /* Calculate destination rectangle */
     RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
     IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
@@ -1212,26 +1219,6 @@ UserDrawIconEx(
     
     /* Set source rect */
     RECTL_vSetRect(&rcSrc, 0, 0, pIcon->cx, pIcon->cy);
-
-    /* Fix width parameter, if needed */
-    if (!cxWidth)
-    {
-        if(diFlags & DI_DEFAULTSIZE)
-            cxWidth = is_icon(pIcon) ? 
-                UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
-        else
-            cxWidth = pIcon->cx;
-    }
-    
-    /* Fix height parameter, if needed */
-    if (!cyHeight)
-    {
-        if(diFlags & DI_DEFAULTSIZE)
-            cyHeight = is_icon(pIcon) ? 
-                UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
-        else
-            cyHeight = pIcon->cy;
-    }
 
     /* Should we render off-screen? */
     bOffScreen = hbrFlickerFreeDraw && 

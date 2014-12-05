@@ -78,12 +78,14 @@ CmpDoFlushNextHive(_In_  BOOLEAN ForceFlush,
             else
             {
                 /* Do the sync */
-                DPRINT1("Flushing: %wZ\n", &CmHive->FileFullPath);
-                DPRINT1("Handle: %p\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
+                DPRINT("Flushing: %wZ\n", &CmHive->FileFullPath);
+                DPRINT("Handle: %p\n", CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
                 Status = HvSyncHive(&CmHive->Hive);
                 if(!NT_SUCCESS(Status))
                 {
                     /* Let them know we failed */
+                    DPRINT1("Failed to flush %wZ on handle %p (status 0x%08lx)\n",
+                        &CmHive->FileFullPath,  CmHive->FileHandles[HFILE_TYPE_PRIMARY], Status);
                     *Error = TRUE;
                     Result = FALSE;
                     break;

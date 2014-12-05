@@ -59,7 +59,7 @@ struct _reg_driver
 
 static reg_driver* reg_driver_list = NULL;
 
-/* This one is a macro such that it works for both ASCII and Unicode */
+/* This one is a macro in order to work for both ASCII and Unicode */
 #define fourcc_to_string(str, fcc) do { \
 	(str)[0] = LOBYTE(LOWORD(fcc)); \
 	(str)[1] = HIBYTE(LOWORD(fcc)); \

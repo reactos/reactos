@@ -90,8 +90,9 @@ extern void LoadSettings(void)
         }
 
         RegQueryValueEx(hKey, _T("Advanced"), NULL, &type, (LPBYTE)&dwAdvanChecked, &size);
+
         if(dwAdvanChecked == TRUE)
-            SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, (dwAdvanChecked ? MF_CHECKED : MF_UNCHECKED), 0);
+            SendDlgItemMessage(hCharmapDlg, IDC_CHECK_ADVANCED, BM_CLICK, MF_CHECKED, 0);
 
     RegCloseKey(hKey);
     }

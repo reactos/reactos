@@ -160,7 +160,7 @@ MiniIsBusy(
     {
        Busy = TRUE;
     }
-    else if (Type == NdisWorkItemResetRequested && 
+    else if (Type == NdisWorkItemResetRequested &&
              Adapter->NdisMiniportBlock.ResetStatus == NDIS_STATUS_PENDING)
     {
        Busy = TRUE;
@@ -340,7 +340,7 @@ MiniIndicateReceivePacket(
                                              &NdisBufferVA,
                                              &FirstBufferLength,
                                              &TotalBufferLength);
-                
+
                 HeaderSize = NDIS_GET_PACKET_HEADER_SIZE(PacketArray[i]);
 
                 LookAheadSize = TotalBufferLength - HeaderSize;
@@ -352,12 +352,12 @@ MiniIndicateReceivePacket(
                     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
                     return;
                 }
-                
+
                 CopyBufferChainToBuffer(LookAheadBuffer,
                                         NdisBuffer,
                                         HeaderSize,
                                         LookAheadSize);
-                
+
                 NDIS_DbgPrint(MID_TRACE, ("Indicating packet to protocol's legacy Receive handler\n"));
                 (*AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)(
                      AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
@@ -367,7 +367,7 @@ MiniIndicateReceivePacket(
                      LookAheadBuffer,
                      LookAheadSize,
                      TotalBufferLength - HeaderSize);
-                
+
                 ExFreePool(LookAheadBuffer);
             }
         }
@@ -506,7 +506,7 @@ MiniRequestComplete(
     Adapter->NdisMiniportBlock.PendingRequest = NULL;
     KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     KeLowerIrql(OldIrql);
-    
+
     MiniWorkItemComplete(Adapter, NdisWorkItemRequest);
 }
 
@@ -558,7 +558,7 @@ MiniSendComplete(
         Status);
 
     KeLowerIrql(OldIrql);
-    
+
     MiniWorkItemComplete(Adapter, NdisWorkItemSend);
 }
 
@@ -702,7 +702,7 @@ MiniLocateDevice(
     KeAcquireSpinLock(&AdapterListLock, &OldIrql);
     {
         CurrentEntry = AdapterListHead.Flink;
-        
+
         while (CurrentEntry != &AdapterListHead)
         {
             Adapter = CONTAINING_RECORD(CurrentEntry, LOGICAL_ADAPTER, ListEntry);
@@ -902,7 +902,7 @@ MiniReset(
 
        NdisMIndicateStatus(Adapter, NDIS_STATUS_RESET_END, NULL, 0);
        NdisMIndicateStatusComplete(Adapter);
-       
+
        MiniWorkItemComplete(Adapter, NdisWorkItemResetRequested);
    }
 
@@ -2608,11 +2608,11 @@ NdisMRegisterMiniport(
             case 0x00:
                 MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
                 break;
-                
+
             case 0x01:
                 MinSize = sizeof(NDIS51_MINIPORT_CHARACTERISTICS);
                 break;
-                
+
             default:
                 NDIS_DbgPrint(MIN_TRACE, ("Bad 5.x minor characteristics version.\n"));
                 return NDIS_STATUS_BAD_VERSION;
@@ -2624,7 +2624,7 @@ NdisMRegisterMiniport(
         return NDIS_STATUS_BAD_VERSION;
     }
 
-   NDIS_DbgPrint(MIN_TRACE, ("Initializing an NDIS %u.%u miniport\n", 
+   NDIS_DbgPrint(MID_TRACE, ("Initializing an NDIS %u.%u miniport\n",
                               MiniportCharacteristics->MajorNdisVersion,
                               MiniportCharacteristics->MinorNdisVersion));
 
@@ -2845,7 +2845,7 @@ NdisMSetAttributesEx(
   if (AttributeFlags & NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER)
     NDIS_DbgPrint(MIN_TRACE, ("Intermediate drivers not supported yet.\n"));
 
-  NDIS_DbgPrint(MIN_TRACE, ("Miniport attribute flags: 0x%x\n", AttributeFlags));
+  NDIS_DbgPrint(MID_TRACE, ("Miniport attribute flags: 0x%x\n", AttributeFlags));
 
   if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.AdapterShutdownHandler)
   {
@@ -3141,7 +3141,7 @@ NdisMRegisterDevice(
         NDIS_DbgPrint(MIN_TRACE, ("IoCreateDevice failed (%x)\n", Status));
         return Status;
     }
-    
+
     Status = IoCreateSymbolicLink(SymbolicName, DeviceName);
 
     if (!NT_SUCCESS(Status))

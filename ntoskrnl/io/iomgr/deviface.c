@@ -95,9 +95,13 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                ClassesKey,
                                NULL);
-    Status = ZwOpenKey(GuidKeyRealP,
-                       DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                       &ObjectAttributes);
+    Status = ZwCreateKey(GuidKeyRealP,
+                         DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         NULL);
     ZwClose(ClassesKey);
     if (!NT_SUCCESS(Status))
     {
@@ -142,9 +146,13 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                *GuidKeyRealP,
                                NULL);
-    Status = ZwOpenKey(DeviceKeyRealP,
-                       DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
-                       &ObjectAttributes);
+    Status = ZwCreateKey(DeviceKeyRealP,
+                         DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open %wZ%wZ\\%wZ\n", &BaseKeyU, &GuidString, &SubKeyName);
@@ -156,9 +164,13 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                *DeviceKeyRealP,
                                NULL);
-    Status = ZwOpenKey(InstanceKeyRealP,
-                       DesiredAccess,
-                       &ObjectAttributes);
+    Status = ZwCreateKey(InstanceKeyRealP,
+                         DesiredAccess,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to open %wZ%wZ\\%wZ%\\%wZ (%x)\n", &BaseKeyU, &GuidString, &SubKeyName, &ReferenceString, Status);
@@ -450,6 +462,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
     PKEY_BASIC_INFORMATION ReferenceBi = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION bip = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceObjectExtension;
+    PUNICODE_STRING InstanceDevicePath = NULL;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN FoundRightPDO = FALSE;
@@ -458,6 +472,29 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
     NTSTATUS Status;
 
     PAGED_CODE();
+
+    if (PhysicalDeviceObject != NULL)
+    {
+        /* Parameters must pass three border of checks */
+        DeviceObjectExtension = (PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension;
+
+        /* 1st level: Presence of a Device Node */
+        if (DeviceObjectExtension->DeviceNode == NULL)
+        {
+            DPRINT("PhysicalDeviceObject 0x%p doesn't have a DeviceNode\n", PhysicalDeviceObject);
+            return STATUS_INVALID_DEVICE_REQUEST;
+        }
+
+        /* 2nd level: Presence of an non-zero length InstancePath */
+        if (DeviceObjectExtension->DeviceNode->InstancePath.Length == 0)
+        {
+            DPRINT("PhysicalDeviceObject 0x%p's DOE has zero-length InstancePath\n", PhysicalDeviceObject);
+            return STATUS_INVALID_DEVICE_REQUEST;
+        }
+
+        InstanceDevicePath = &DeviceObjectExtension->DeviceNode->InstancePath;
+    }
+
 
     Status = IopOpenInterfaceKey(InterfaceClassGuid, KEY_ENUMERATE_SUB_KEYS, &InterfaceKey);
     if (!NT_SUCCESS(Status))
@@ -530,10 +567,46 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             /* Check if we are on the right physical device object,
             * by reading the DeviceInstance string
             */
-            DPRINT1("PhysicalDeviceObject != NULL. Case not implemented.\n");
-            //FoundRightPDO = TRUE;
-            Status = STATUS_NOT_IMPLEMENTED;
-            goto cleanup;
+            RtlInitUnicodeString(&KeyName, L"DeviceInstance");
+            Status = ZwQueryValueKey(DeviceKey, &KeyName, KeyValuePartialInformation, NULL, 0, &NeededLength);
+            if (Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                ActualLength = NeededLength;
+                PartialInfo = ExAllocatePool(NonPagedPool, ActualLength);
+                if (!PartialInfo)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto cleanup;
+                }
+
+                Status = ZwQueryValueKey(DeviceKey, &KeyName, KeyValuePartialInformation, PartialInfo, ActualLength, &NeededLength);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ZwQueryValueKey #2 failed (%x)\n", Status);
+                    ExFreePool(PartialInfo);
+                    goto cleanup;
+                }
+                if (PartialInfo->DataLength == InstanceDevicePath->Length)
+                {
+                    if (RtlCompareMemory(PartialInfo->Data, InstanceDevicePath->Buffer, InstanceDevicePath->Length) == InstanceDevicePath->Length)
+                    {
+                        /* found right pdo */
+                        FoundRightPDO = TRUE;
+                    }
+                }
+                ExFreePool(PartialInfo);
+                PartialInfo = NULL;
+                if (!FoundRightPDO)
+                {
+                    /* not yet found */
+                    continue;
+                }
+            }
+            else
+            {
+                /* error */
+                break;
+            }
         }
 
         /* Enumerate subkeys (ie the different reference strings) */
@@ -1237,7 +1310,6 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     PDEVICE_OBJECT PhysicalDeviceObject;
     PFILE_OBJECT FileObject;
     UNICODE_STRING GuidString;
-    UNICODE_STRING SymLink;
     PWCHAR StartPosition;
     PWCHAR EndPosition;
     NTSTATUS Status;
@@ -1255,8 +1327,8 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
     /* Get GUID from SymbolicLinkName */
-    StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
-    EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
+    StartPosition = wcsrchr(SymbolicLinkName->Buffer, L'{');
+    EndPosition = wcsrchr(SymbolicLinkName->Buffer, L'}');
     if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
     {
         DPRINT1("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
@@ -1264,10 +1336,6 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     }
     GuidString.Buffer = StartPosition;
     GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
-
-    SymLink.Buffer = SymbolicLinkName->Buffer;
-    SymLink.MaximumLength = SymLink.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)SymLink.Buffer);
-    DPRINT("IoSetDeviceInterfaceState('%wZ', %u)\n", SymbolicLinkName, Enable);
 
     Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
                                                  KEY_CREATE_SUB_KEY,
@@ -1315,7 +1383,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     /* Get pointer to the PDO */
     Status = IoGetDeviceObjectPointer(
-        &SymLink,
+        SymbolicLinkName,
         0, /* DesiredAccess */
         &FileObject,
         &PhysicalDeviceObject);

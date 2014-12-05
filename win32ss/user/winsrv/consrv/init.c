@@ -353,7 +353,6 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     /* Initialize the new (target) process */
     RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
     TargetProcessData->Process = TargetProcess;
-    TargetProcessData->InputWaitHandle = NULL;
     TargetProcessData->ConsoleHandle = NULL;
     TargetProcessData->ConsoleApp = FALSE;
 
@@ -435,6 +434,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Initialize the console initialization info structure */
     ConsoleInitInfo.ConsoleStartInfo = &ConnectInfo->ConsoleStartInfo;
+    ConsoleInitInfo.IsWindowVisible  = ConnectInfo->IsWindowVisible;
     ConsoleInitInfo.TitleLength      = ConnectInfo->TitleLength;
     ConsoleInitInfo.ConsoleTitle     = ConnectInfo->ConsoleTitle;
     ConsoleInitInfo.DesktopLength    = ConnectInfo->DesktopLength;
@@ -480,23 +480,16 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
         Status = ConSrvInheritConsole(ProcessData,
                                       ConnectInfo->ConsoleStartInfo.ConsoleHandle,
                                       FALSE,
-                                      NULL,  // &ConnectInfo->ConsoleStartInfo.InputHandle,
-                                      NULL,  // &ConnectInfo->ConsoleStartInfo.OutputHandle,
-                                      NULL); // &ConnectInfo->ConsoleStartInfo.ErrorHandle);
+                                      NULL, // &ConnectInfo->ConsoleStartInfo.InputHandle,
+                                      NULL, // &ConnectInfo->ConsoleStartInfo.OutputHandle,
+                                      NULL, // &ConnectInfo->ConsoleStartInfo.ErrorHandle,
+                                      &ConnectInfo->ConsoleStartInfo);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console inheritance failed\n");
             return Status;
         }
     }
-
-    /* Mark the process as having a console */
-    ProcessData->ConsoleApp = TRUE;
-    // ProcessData->Flags |= CsrProcessIsConsoleApp;
-
-    /* Return the console handle and the input wait handle to the caller */
-    ConnectInfo->ConsoleStartInfo.ConsoleHandle   = ProcessData->ConsoleHandle;
-    ConnectInfo->ConsoleStartInfo.InputWaitHandle = ProcessData->InputWaitHandle;
 
     /* Set the Property-Dialog and Control-Dispatcher handlers */
     ProcessData->PropRoutine = ConnectInfo->PropRoutine;
@@ -560,7 +553,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     LoadedServerDll->DisconnectCallback = ConSrvDisconnect;
     LoadedServerDll->NewProcessCallback = ConSrvNewProcess;
     // LoadedServerDll->HardErrorCallback = ConSrvHardError;
-    LoadedServerDll->ShutdownProcessCallback = NULL;
+    LoadedServerDll->ShutdownProcessCallback = ConsoleClientShutdown;
 
     ConSrvDllInstance = LoadedServerDll->ServerHandle;
 

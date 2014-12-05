@@ -37,7 +37,7 @@ typedef struct _EMULATOR_IO_HANDLERS
 
 typedef struct _EMULATOR_IOPORT_HANDLERS
 {
-    HANDLE hVdd; // == 0 if unused,
+    HANDLE hVdd; // == NULL if unused,
                  //    INVALID_HANDLE_VALUE if handled internally,
                  //    a valid VDD handle   if handled externally.
     union
@@ -58,19 +58,19 @@ EMULATOR_IOPORT_HANDLERS IoPortProc[EMULATOR_MAX_IOPORTS_NUM] = {{NULL}};
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 UCHAR
-IOReadB(ULONG Port)
+IOReadB(USHORT Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InB)
     {
         return IoPortProc[Port].IoHandlers.InB(Port);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.inb_handler)
     {
         UCHAR Data;
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.inb_handler((WORD)Port, &Data);
+        IoPortProc[Port].VddIoHandlers.inb_handler(Port, &Data);
         return Data;
     }
     else
@@ -82,7 +82,7 @@ IOReadB(ULONG Port)
 }
 
 VOID
-IOReadStrB(ULONG  Port,
+IOReadStrB(USHORT Port,
            PUCHAR Buffer,
            ULONG  Count)
 {
@@ -91,34 +91,33 @@ IOReadStrB(ULONG  Port,
     {
         IoPortProc[Port].IoHandlers.InsB(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.insb_handler)
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.insb_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.insb_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
-        while (Count--)
-            *Buffer++ = IOReadB(Port);
+        while (Count--) *Buffer++ = IOReadB(Port);
     }
 }
 
 VOID
-IOWriteB(ULONG Port,
-         UCHAR Buffer)
+IOWriteB(USHORT Port,
+         UCHAR  Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutB)
     {
         IoPortProc[Port].IoHandlers.OutB(Port, Buffer);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outb_handler)
     {
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outb_handler((WORD)Port, Buffer);
+        IoPortProc[Port].VddIoHandlers.outb_handler(Port, Buffer);
     }
     else
     {
@@ -128,7 +127,7 @@ IOWriteB(ULONG Port,
 }
 
 VOID
-IOWriteStrB(ULONG  Port,
+IOWriteStrB(USHORT Port,
             PUCHAR Buffer,
             ULONG  Count)
 {
@@ -137,12 +136,12 @@ IOWriteStrB(ULONG  Port,
     {
         IoPortProc[Port].IoHandlers.OutsB(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outsb_handler)
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outsb_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.outsb_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
@@ -151,19 +150,19 @@ IOWriteStrB(ULONG  Port,
 }
 
 USHORT
-IOReadW(ULONG Port)
+IOReadW(USHORT Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InW)
     {
         return IoPortProc[Port].IoHandlers.InW(Port);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.inw_handler)
     {
         USHORT Data;
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.inw_handler((WORD)Port, &Data);
+        IoPortProc[Port].VddIoHandlers.inw_handler(Port, &Data);
         return Data;
     }
     else
@@ -178,7 +177,7 @@ IOReadW(ULONG Port)
 }
 
 VOID
-IOReadStrW(ULONG   Port,
+IOReadStrW(USHORT  Port,
            PUSHORT Buffer,
            ULONG   Count)
 {
@@ -187,22 +186,21 @@ IOReadStrW(ULONG   Port,
     {
         IoPortProc[Port].IoHandlers.InsW(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.insw_handler)
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.insw_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.insw_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
-        while (Count--)
-            *Buffer++ = IOReadW(Port);
+        while (Count--) *Buffer++ = IOReadW(Port);
     }
 }
 
 VOID
-IOWriteW(ULONG  Port,
+IOWriteW(USHORT Port,
          USHORT Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
@@ -210,11 +208,11 @@ IOWriteW(ULONG  Port,
     {
         IoPortProc[Port].IoHandlers.OutW(Port, Buffer);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outw_handler)
     {
         ASSERT(Port <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outw_handler((WORD)Port, Buffer);
+        IoPortProc[Port].VddIoHandlers.outw_handler(Port, Buffer);
     }
     else
     {
@@ -225,7 +223,7 @@ IOWriteW(ULONG  Port,
 }
 
 VOID
-IOWriteStrW(ULONG   Port,
+IOWriteStrW(USHORT  Port,
             PUSHORT Buffer,
             ULONG   Count)
 {
@@ -234,12 +232,12 @@ IOWriteStrW(ULONG   Port,
     {
         IoPortProc[Port].IoHandlers.OutsW(Port, Buffer, Count);
     }
-    else if (IoPortProc[Port].hVdd > 0 &&
+    else if (IoPortProc[Port].hVdd != NULL && IoPortProc[Port].hVdd != INVALID_HANDLE_VALUE &&
              IoPortProc[Port].VddIoHandlers.outsw_handler)
     {
         ASSERT(Port  <= MAXWORD);
         ASSERT(Count <= MAXWORD);
-        IoPortProc[Port].VddIoHandlers.outsw_handler((WORD)Port, Buffer, (WORD)Count);
+        IoPortProc[Port].VddIoHandlers.outsw_handler(Port, Buffer, (WORD)Count);
     }
     else
     {
@@ -248,7 +246,7 @@ IOWriteStrW(ULONG   Port,
 }
 
 ULONG
-IOReadD(ULONG Port)
+IOReadD(USHORT Port)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.InD)
@@ -267,7 +265,7 @@ IOReadD(ULONG Port)
 }
 
 VOID
-IOReadStrD(ULONG  Port,
+IOReadStrD(USHORT Port,
            PULONG Buffer,
            ULONG  Count)
 {
@@ -278,14 +276,13 @@ IOReadStrD(ULONG  Port,
     }
     else
     {
-        while (Count--)
-            *Buffer++ = IOReadD(Port);
+        while (Count--) *Buffer++ = IOReadD(Port);
     }
 }
 
 VOID
-IOWriteD(ULONG Port,
-         ULONG Buffer)
+IOWriteD(USHORT Port,
+         ULONG  Buffer)
 {
     if (IoPortProc[Port].hVdd == INVALID_HANDLE_VALUE &&
         IoPortProc[Port].IoHandlers.OutD)
@@ -301,7 +298,7 @@ IOWriteD(ULONG Port,
 }
 
 VOID
-IOWriteStrD(ULONG  Port,
+IOWriteStrD(USHORT Port,
             PULONG Buffer,
             ULONG  Count)
 {
@@ -317,7 +314,7 @@ IOWriteStrD(ULONG  Port,
 }
 
 
-VOID RegisterIoPort(ULONG Port,
+VOID RegisterIoPort(USHORT Port,
                     EMULATOR_INB_PROC  InHandler,
                     EMULATOR_OUTB_PROC OutHandler)
 {
@@ -335,19 +332,19 @@ VOID RegisterIoPort(ULONG Port,
     IoPortProc[Port].hVdd = INVALID_HANDLE_VALUE;
 }
 
-VOID UnregisterIoPort(ULONG Port)
+VOID UnregisterIoPort(USHORT Port)
 {
     /*
      * Put automagically all the fields to zero:
      * the hVdd gets unregistered as well as all the handlers.
      */
     // IoPortProc[Port] = {NULL};
-    ZeroMemory(&IoPortProc[Port], sizeof(IoPortProc[Port]));
+    RtlZeroMemory(&IoPortProc[Port], sizeof(IoPortProc[Port]));
 }
 
 VOID WINAPI
 EmulatorReadIo(PFAST486_STATE State,
-               ULONG Port,
+               USHORT Port,
                PVOID Buffer,
                ULONG DataCount,
                UCHAR DataSize)
@@ -379,7 +376,7 @@ EmulatorReadIo(PFAST486_STATE State,
     }
     else
     {
-        PBYTE Address = (PBYTE)Buffer;
+        PUCHAR Address = (PUCHAR)Buffer;
 
         while (DataCount--)
         {
@@ -388,8 +385,8 @@ EmulatorReadIo(PFAST486_STATE State,
             UCHAR NewDataSize = DataSize;
 
             /* Read dword */
-            Count       = NewDataSize / sizeof(ULONG);
-            NewDataSize = NewDataSize % sizeof(ULONG);
+            Count       = NewDataSize >> 2; // NewDataSize / sizeof(ULONG);
+            NewDataSize = NewDataSize  & 3; // NewDataSize % sizeof(ULONG);
             while (Count--)
             {
                 *(PULONG)Address = IOReadD(CurrentPort);
@@ -398,8 +395,8 @@ EmulatorReadIo(PFAST486_STATE State,
             }
 
             /* Read word */
-            Count       = NewDataSize / sizeof(USHORT);
-            NewDataSize = NewDataSize % sizeof(USHORT);
+            Count       = NewDataSize >> 1; // NewDataSize / sizeof(USHORT);
+            NewDataSize = NewDataSize  & 1; // NewDataSize % sizeof(USHORT);
             while (Count--)
             {
                 *(PUSHORT)Address = IOReadW(CurrentPort);
@@ -408,24 +405,21 @@ EmulatorReadIo(PFAST486_STATE State,
             }
 
             /* Read byte */
-            Count       = NewDataSize / sizeof(UCHAR);
-            NewDataSize = NewDataSize % sizeof(UCHAR);
+            Count       = NewDataSize; // NewDataSize / sizeof(UCHAR);
+            // NewDataSize = NewDataSize % sizeof(UCHAR);
             while (Count--)
             {
                 *(PUCHAR)Address = IOReadB(CurrentPort);
                 CurrentPort += sizeof(UCHAR);
                 Address     += sizeof(UCHAR);
             }
-
-            ASSERT(Count == 0);
-            ASSERT(NewDataSize == 0);
         }
     }
 }
 
 VOID WINAPI
 EmulatorWriteIo(PFAST486_STATE State,
-                ULONG Port,
+                USHORT Port,
                 PVOID Buffer,
                 ULONG DataCount,
                 UCHAR DataSize)
@@ -457,7 +451,7 @@ EmulatorWriteIo(PFAST486_STATE State,
     }
     else
     {
-        PBYTE Address = (PBYTE)Buffer;
+        PUCHAR Address = (PUCHAR)Buffer;
 
         while (DataCount--)
         {
@@ -466,8 +460,8 @@ EmulatorWriteIo(PFAST486_STATE State,
             UCHAR NewDataSize = DataSize;
 
             /* Write dword */
-            Count       = NewDataSize / sizeof(ULONG);
-            NewDataSize = NewDataSize % sizeof(ULONG);
+            Count       = NewDataSize >> 2; // NewDataSize / sizeof(ULONG);
+            NewDataSize = NewDataSize  & 3; // NewDataSize % sizeof(ULONG);
             while (Count--)
             {
                 IOWriteD(CurrentPort, *(PULONG)Address);
@@ -476,8 +470,8 @@ EmulatorWriteIo(PFAST486_STATE State,
             }
 
             /* Write word */
-            Count       = NewDataSize / sizeof(USHORT);
-            NewDataSize = NewDataSize % sizeof(USHORT);
+            Count       = NewDataSize >> 1; // NewDataSize / sizeof(USHORT);
+            NewDataSize = NewDataSize  & 1; // NewDataSize % sizeof(USHORT);
             while (Count--)
             {
                 IOWriteW(CurrentPort, *(PUSHORT)Address);
@@ -486,17 +480,14 @@ EmulatorWriteIo(PFAST486_STATE State,
             }
 
             /* Write byte */
-            Count       = NewDataSize / sizeof(UCHAR);
-            NewDataSize = NewDataSize % sizeof(UCHAR);
+            Count       = NewDataSize; // NewDataSize / sizeof(UCHAR);
+            // NewDataSize = NewDataSize % sizeof(UCHAR);
             while (Count--)
             {
                 IOWriteB(CurrentPort, *(PUCHAR)Address);
                 CurrentPort += sizeof(UCHAR);
                 Address     += sizeof(UCHAR);
             }
-
-            ASSERT(Count == 0);
-            ASSERT(NewDataSize == 0);
         }
     }
 }
@@ -510,8 +501,8 @@ VDDInstallIOHook(HANDLE            hVdd,
                  PVDD_IO_PORTRANGE pPortRange,
                  PVDD_IO_HANDLERS  IOhandler)
 {
-    /* Check possible validity of the VDD handle */
-    if (hVdd == 0 || hVdd == INVALID_HANDLE_VALUE) return FALSE;
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return FALSE;
 
     /* Loop for each range of I/O ports */
     while (cPortRange--)
@@ -525,7 +516,7 @@ VDDInstallIOHook(HANDLE            hVdd,
              * Don't do anything if the I/O port is already
              * handled internally or externally.
              */
-            if (IoPortProc[i].hVdd != 0)
+            if (IoPortProc[i].hVdd != NULL)
             {
                 DPRINT1("IoPortProc[0x%X] already registered\n", i);
                 continue;
@@ -569,8 +560,8 @@ VDDDeInstallIOHook(HANDLE            hVdd,
                    WORD              cPortRange,
                    PVDD_IO_PORTRANGE pPortRange)
 {
-    /* Check possible validity of the VDD handle */
-    if (hVdd == 0 || hVdd == INVALID_HANDLE_VALUE) return;
+    /* Check validity of the VDD handle */
+    if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return;
 
     /* Loop for each range of I/O ports */
     while (cPortRange--)
@@ -594,7 +585,7 @@ VDDDeInstallIOHook(HANDLE            hVdd,
              * the hVdd gets unregistered as well as all the handlers.
              */
             // IoPortProc[i] = {NULL};
-            ZeroMemory(&IoPortProc[i], sizeof(IoPortProc[i]));
+            RtlZeroMemory(&IoPortProc[i], sizeof(IoPortProc[i]));
         }
 
         /* Go to the next range */

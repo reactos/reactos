@@ -12,12 +12,9 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include "cpu/cpu.h"
 
-#include "clock.h"
-#include "hardware/ps2.h"
-#include "hardware/vga.h"
 #include "bios/bios.h"
-#include "dos/dem.h"
 
 #include "resource.h"
 
@@ -26,18 +23,24 @@
 static HANDLE ConsoleInput  = INVALID_HANDLE_VALUE;
 static HANDLE ConsoleOutput = INVALID_HANDLE_VALUE;
 static DWORD  OrgConsoleInputMode, OrgConsoleOutputMode;
-static BOOLEAN AcceptCommands = TRUE;
-static HANDLE CommandThread = NULL;
 
-static HMENU hConsoleMenu  = NULL;
-static INT   VdmMenuPos    = -1;
-static BOOLEAN ShowPointer = FALSE;
-
+// For DOS
 #ifndef STANDALONE
+BOOLEAN AcceptCommands = TRUE;
+HANDLE CommandThread = NULL;
 ULONG SessionId = 0;
 #endif
 
 HANDLE VdmTaskEvent = NULL;
+
+// Command line of NTVDM
+INT     NtVdmArgc;
+WCHAR** NtVdmArgv;
+
+
+static HMENU hConsoleMenu  = NULL;
+static INT   VdmMenuPos    = -1;
+static BOOLEAN ShowPointer = FALSE;
 
 /*
  * Those menu helpers were taken from the GUI frontend in winsrv.dll
@@ -51,8 +54,9 @@ typedef struct _VDM_MENUITEM
 
 static const VDM_MENUITEM VdmMenuItems[] =
 {
-    { IDS_VDM_DUMPMEM, NULL, ID_VDM_DUMPMEM },
-    { IDS_VDM_QUIT   , NULL, ID_VDM_QUIT    },
+    { IDS_VDM_DUMPMEM_TXT, NULL, ID_VDM_DUMPMEM_TXT },
+    { IDS_VDM_DUMPMEM_BIN, NULL, ID_VDM_DUMPMEM_BIN },
+    { IDS_VDM_QUIT       , NULL, ID_VDM_QUIT        },
 
     { 0, NULL, 0 }      /* End of list */
 };
@@ -119,7 +123,7 @@ AppendMenuItems(HMENU hMenu,
     } while (!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
-static VOID
+/*static*/ VOID
 CreateVdmMenu(HANDLE ConOutHandle)
 {
     hConsoleMenu = ConsoleMenuControl(ConOutHandle,
@@ -132,7 +136,7 @@ CreateVdmMenu(HANDLE ConOutHandle)
     DrawMenuBar(GetConsoleWindow());
 }
 
-static VOID
+/*static*/ VOID
 DestroyVdmMenu(VOID)
 {
     UINT i = 0;
@@ -177,13 +181,48 @@ static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
 VOID
 DisplayMessage(LPCWSTR Format, ...)
 {
-    WCHAR Buffer[256];
+#ifndef WIN2K_COMPLIANT
+    WCHAR  StaticBuffer[256];
+    LPWSTR Buffer = StaticBuffer; // Use the static buffer by default.
+#else
+    WCHAR  Buffer[2048]; // Large enough. If not, increase it by hand.
+#endif
+    size_t MsgLen;
     va_list Parameters;
 
     va_start(Parameters, Format);
-    _vsnwprintf(Buffer, 256, Format, Parameters);
+
+#ifndef WIN2K_COMPLIANT
+    /*
+     * Retrieve the message length and if it is too long, allocate
+     * an auxiliary buffer; otherwise use the static buffer.
+     */
+    MsgLen = _vscwprintf(Format, Parameters) + 1; // NULL-terminated
+    if (MsgLen > sizeof(StaticBuffer)/sizeof(StaticBuffer[0]))
+    {
+        Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MsgLen * sizeof(WCHAR));
+        if (Buffer == NULL)
+        {
+            /* Allocation failed, use the static buffer and display a suitable error message */
+            Buffer = StaticBuffer;
+            Format = L"DisplayMessage()\nOriginal message is too long and allocating an auxiliary buffer failed.";
+            MsgLen = wcslen(Format);
+        }
+    }
+#else
+    MsgLen = sizeof(Buffer)/sizeof(Buffer[0]);
+#endif
+
+    /* Display the message */
+    _vsnwprintf(Buffer, MsgLen, Format, Parameters);
     DPRINT1("\n\nNTVDM Subsystem\n%S\n\n", Buffer);
     MessageBoxW(NULL, Buffer, L"NTVDM Subsystem", MB_OK);
+
+#ifndef WIN2K_COMPLIANT
+    /* Free the buffer if needed */
+    if (Buffer != StaticBuffer) HeapFree(GetProcessHeap(), 0, Buffer);
+#endif
+
     va_end(Parameters);
 }
 
@@ -196,8 +235,9 @@ ConsoleCtrlHandler(DWORD ControlType)
         case CTRL_C_EVENT:
         case CTRL_BREAK_EVENT:
         {
-            /* Call INT 23h */
-            EmulatorInterrupt(0x23);
+            /* HACK: Stop the VDM */
+            DPRINT1("Ctrl-C/Break: Stop the VDM\n");
+            EmulatorTerminate();
             break;
         }
         case CTRL_LAST_CLOSE_EVENT:
@@ -205,14 +245,18 @@ ConsoleCtrlHandler(DWORD ControlType)
             if (WaitForSingleObject(VdmTaskEvent, 0) == WAIT_TIMEOUT)
             {
                 /* Exit immediately */
+#ifndef STANDALONE
                 if (CommandThread) TerminateThread(CommandThread, 0);
+#endif
                 EmulatorTerminate();
             }
+#ifndef STANDALONE
             else
             {
                 /* Stop accepting new commands */
                 AcceptCommands = FALSE;
             }
+#endif
 
             break;
         }
@@ -328,165 +372,44 @@ ConsoleCleanup(VOID)
     if (ConsoleInput  != INVALID_HANDLE_VALUE) CloseHandle(ConsoleInput);
 }
 
-DWORD
-WINAPI
-PumpConsoleInput(LPVOID Parameter)
+VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent)
 {
-    HANDLE ConsoleInput = (HANDLE)Parameter;
-    INPUT_RECORD InputRecord;
-    DWORD Count;
-
-    while (VdmRunning)
+    switch (MenuEvent->dwCommandId)
     {
-        /* Make sure the task event is signaled */
-        WaitForSingleObject(VdmTaskEvent, INFINITE);
-
-        /* Wait for an input record */
-        if (!ReadConsoleInput(ConsoleInput, &InputRecord, 1, &Count))
-        {
-            DWORD LastError = GetLastError();
-            DPRINT1("Error reading console input (0x%p, %lu) - Error %lu\n", ConsoleInput, Count, LastError);
-            return LastError;
-        }
-
-        ASSERT(Count != 0);
-
-        /* Check the event type */
-        switch (InputRecord.EventType)
-        {
-            case KEY_EVENT:
-            case MOUSE_EVENT:
-                /* Send it to the PS/2 controller */
-                PS2Dispatch(&InputRecord);
-                break;
-
-            case MENU_EVENT:
-            {
-                switch (InputRecord.Event.MenuEvent.dwCommandId)
-                {
-                    case ID_SHOWHIDE_MOUSE:
-                        ShowHideMousePointer(ConsoleOutput, ShowPointer);
-                        ShowPointer = !ShowPointer;
-                        break;
-
-                    case ID_VDM_DUMPMEM:
-                        DumpMemory();
-                        break;
-
-                    case ID_VDM_QUIT:
-                        /* Stop the VDM */
-                        EmulatorTerminate();
-                        break;
-
-                    default:
-                        break;
-                }
-
-                break;
-            }
-
-            default:
-                break;
-        }
-    }
-
-    return 0;
-}
-
-#ifndef STANDALONE
-static DWORD
-WINAPI
-CommandThreadProc(LPVOID Parameter)
-{
-    BOOLEAN First = TRUE;
-    DWORD Result;
-    VDM_COMMAND_INFO CommandInfo;
-    CHAR CmdLine[MAX_PATH];
-    CHAR AppName[MAX_PATH];
-    CHAR PifFile[MAX_PATH];
-    CHAR Desktop[MAX_PATH];
-    CHAR Title[MAX_PATH];
-    ULONG EnvSize = 256;
-    PVOID Env = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
-
-    UNREFERENCED_PARAMETER(Parameter);
-    ASSERT(Env != NULL);
-
-    do
-    {
-        /* Clear the structure */
-        ZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-        /* Initialize the structure members */
-        CommandInfo.TaskId = SessionId;
-        CommandInfo.VDMState = VDM_FLAG_DOS;
-        CommandInfo.CmdLine = CmdLine;
-        CommandInfo.CmdLen = sizeof(CmdLine);
-        CommandInfo.AppName = AppName;
-        CommandInfo.AppLen = sizeof(AppName);
-        CommandInfo.PifFile = PifFile;
-        CommandInfo.PifLen = sizeof(PifFile);
-        CommandInfo.Desktop = Desktop;
-        CommandInfo.DesktopLen = sizeof(Desktop);
-        CommandInfo.Title = Title;
-        CommandInfo.TitleLen = sizeof(Title);
-        CommandInfo.Env = Env;
-        CommandInfo.EnvLen = EnvSize;
-
-        if (First) CommandInfo.VDMState |= VDM_FLAG_FIRST_TASK;
-
-Command:
-        if (!GetNextVDMCommand(&CommandInfo))
-        {
-            if (CommandInfo.EnvLen > EnvSize)
-            {
-                /* Expand the environment size */
-                EnvSize = CommandInfo.EnvLen;
-                Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
-
-                /* Repeat the request */
-                goto Command;
-            }
-
+        case ID_SHOWHIDE_MOUSE:
+            ShowHideMousePointer(ConsoleOutput, ShowPointer);
+            ShowPointer = !ShowPointer;
             break;
-        }
 
-        /* Start the process from the command line */
-        DPRINT1("Starting '%s' ('%s')...\n", AppName, CmdLine);
-        Result = DosStartProcess(AppName, CmdLine, Env);
-        if (Result != ERROR_SUCCESS)
-        {
-            DisplayMessage(L"Could not start '%S'. Error: %u", AppName, Result);
-            // break;
-            continue;
-        }
+        case ID_VDM_DUMPMEM_TXT:
+            DumpMemory(TRUE);
+            break;
 
-        First = FALSE;
+        case ID_VDM_DUMPMEM_BIN:
+            DumpMemory(FALSE);
+            break;
+
+        case ID_VDM_QUIT:
+            /* Stop the VDM */
+            EmulatorTerminate();
+            break;
+
+        default:
+            break;
     }
-    while (AcceptCommands);
-
-    HeapFree(GetProcessHeap(), 0, Env);
-    return 0;
 }
-#endif
+
+VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent)
+{
+    DPRINT1("Focus events not handled\n");
+}
 
 INT
 wmain(INT argc, WCHAR *argv[])
 {
 #ifdef STANDALONE
 
-    DWORD Result;
-    CHAR ApplicationName[MAX_PATH];
-    CHAR CommandLine[DOS_CMDLINE_LENGTH];
-
-    if (argc >= 2)
-    {
-        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, ApplicationName, sizeof(ApplicationName), NULL, NULL);
-
-        if (argc >= 3) WideCharToMultiByte(CP_ACP, 0, argv[2], -1, CommandLine, sizeof(CommandLine), NULL, NULL);
-        else strcpy(CommandLine, "");
-    }
-    else
+    if (argc < 2)
     {
         wprintf(L"\nReactOS Virtual DOS Machine\n\n"
                 L"Usage: NTVDM <executable> [<parameters>]\n");
@@ -512,6 +435,9 @@ wmain(INT argc, WCHAR *argv[])
     }
 
 #endif
+
+    NtVdmArgc = argc;
+    NtVdmArgv = argv;
 
     DPRINT1("\n\n\nNTVDM - Starting...\n\n\n");
 
@@ -540,43 +466,8 @@ wmain(INT argc, WCHAR *argv[])
         goto Cleanup;
     }
 
-    /* Initialize the VDM DOS kernel */
-    if (!DosInitialize(NULL))
-    {
-        wprintf(L"FATAL: Failed to initialize the VDM DOS kernel.\n");
-        goto Cleanup;
-    }
-
-#ifndef STANDALONE
-
-    /* Create the GetNextVDMCommand thread */
-    CommandThread = CreateThread(NULL, 0, &CommandThreadProc, NULL, 0, NULL);
-    if (CommandThread == NULL)
-    {
-        wprintf(L"FATAL: Failed to create the command processing thread: %d\n", GetLastError());
-        goto Cleanup;
-    }
-
-    /* Wait for the command thread to exit */
-    WaitForSingleObject(CommandThread, INFINITE);
-
-    /* Close the thread handle */
-    CloseHandle(CommandThread);
-
-#else
-
-    /* Start the process from the command line */
-    DPRINT1("Starting '%s' ('%s')...\n", ApplicationName, CommandLine);
-    Result = DosStartProcess(ApplicationName,
-                             CommandLine,
-                             GetEnvironmentStrings());
-    if (Result != ERROR_SUCCESS)
-    {
-        DisplayMessage(L"Could not start '%S'. Error: %u", ApplicationName, Result);
-        goto Cleanup;
-    }
-
-#endif
+    /* Let's go! Start simulation */
+    CpuSimulate();
 
 Cleanup:
     BiosCleanup();

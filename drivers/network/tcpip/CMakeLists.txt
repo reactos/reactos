@@ -14,6 +14,7 @@ list(APPEND SOURCE
     datalink/lan.c
     tcpip/ainfo.c
     tcpip/buffer.c
+    tcpip/cinfo.c
     tcpip/dispatch.c
     tcpip/fileobjs.c
     tcpip/iinfo.c
@@ -31,15 +32,8 @@ add_library(tcpip SHARED
     tcpip.rc
     ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def)
 
-target_link_libraries(tcpip
-    ip
-    lwip
-    ${PSEH_LIB}
-    chew)
-
+target_link_libraries(tcpip ip lwip ${PSEH_LIB} chew)
 set_module_type(tcpip kernelmodedriver)
 add_importlibs(tcpip ndis ntoskrnl hal)
-
 add_pch(tcpip include/precomp.h SOURCE)
-
 add_cd_file(TARGET tcpip DESTINATION reactos/system32/drivers FOR all)

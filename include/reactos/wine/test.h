@@ -306,7 +306,11 @@ void winetest_set_location( const char* file, int line )
 
 int broken( int condition )
 {
-    return (strcmp(winetest_platform, "windows") == 0) && condition;
+    return ((strcmp(winetest_platform, "windows") == 0)
+#ifndef USE_WINE_TODOS
+    || (strcmp(winetest_platform, "reactos") == 0)
+#endif
+    ) && condition;
 }
 
 /*
@@ -411,7 +415,11 @@ void __winetest_cdecl winetest_win_skip( const char *msg, ... )
 {
     __winetest_va_list valist;
     __winetest_va_start(valist, msg);
-    if ((strcmp(winetest_platform, "windows") == 0) || (strcmp(winetest_platform, "reactos") == 0))
+    if ((strcmp(winetest_platform, "windows") == 0)
+#ifndef USE_WINE_TODOS
+    || (strcmp(winetest_platform, "reactos") == 0)
+#endif
+    )
         winetest_vskip(msg, valist);
     else
         winetest_vok(0, msg, valist);

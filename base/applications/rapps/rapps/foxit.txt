@@ -1,0 +1,26 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Foxit Reader
+Version = 6.2.3.815
+License = Freeware
+Description = The best PDF reader next to Adobe Reader itself.
+Size = 36.0 MB
+Category = 6
+URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/6.x/6.2/enu/FoxitReader623.815_prom_enu_Setup.exe
+CDPath = none
+
+[Section.0407]
+Version = 6.1.5.0624
+Description = Neben Adobe Reader der beste PDF Reader.
+Size = 44.2 MB
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/6.x/6.1/L10N/FoxitReader615.0624_prom_L10N_Setup.exe
+
+[Section.041f]
+Version = 6.1.5.0624
+License = Ücretsiz
+Description = Adobe Okuyucu'nun kendisine yakın en iyi PDF okuyucusu.
+Size = 36,0 MB
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/6.x/6.1/L10N/FoxitReader615.0624_prom_L10N_Setup.exe

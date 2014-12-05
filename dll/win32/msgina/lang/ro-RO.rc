@@ -3,7 +3,7 @@
  * FILE:    dll/win32/msgina/lang/ro-RO.rc
  * PURPOSE: Romanian Language File for ReactOS Logon GINA DLL
  * TRANSLATORS:
- *          Petre Dumitriu
+ *          Petru Dumitriu (petrimetri at gmail dot com)
  *          Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
@@ -119,7 +119,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
     LTEXT "Sigur doriți să vă deautentificați?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "&Da", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "D&a", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "N&u", IDNO, 95, 39, 50, 14
 END
 
@@ -144,6 +144,21 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_LEGALNOTICE_TEXT, 7, 7, 266, 165, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
     DEFPUSHBUTTON "Î&nchide", IDOK, 115, 179, 50, 14
+END
+
+IDD_SHUTDOWN_SHELL DIALOGEX 0, 0, 275, 146
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Închidere ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
+    ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
+    LTEXT "&Ce doriți să se întâmple?", IDC_STATIC, 39, 57, 167, 10
+    COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL
+    LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
+    DEFPUSHBUTTON "Con&firmă", IDOK, 80, 122, 55, 14, WS_GROUP
+    PUSHBUTTON "A&nulează", IDCANCEL, 143, 122, 55, 14
+    PUSHBUTTON "&Manual…", IDHELP, 204, 122, 55, 14
 END
 
 STRINGTABLE

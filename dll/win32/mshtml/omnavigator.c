@@ -41,6 +41,148 @@ typedef struct {
     HTMLMimeTypesCollection *mime_types;
 } OmNavigator;
 
+typedef struct {
+    DispatchEx dispex;
+    IHTMLDOMImplementation IHTMLDOMImplementation_iface;
+
+    LONG ref;
+} HTMLDOMImplementation;
+
+static inline HTMLDOMImplementation *impl_from_IHTMLDOMImplementation(IHTMLDOMImplementation *iface)
+{
+    return CONTAINING_RECORD(iface, HTMLDOMImplementation, IHTMLDOMImplementation_iface);
+}
+
+static HRESULT WINAPI HTMLDOMImplementation_QueryInterface(IHTMLDOMImplementation *iface, REFIID riid, void **ppv)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IHTMLDOMImplementation, riid)) {
+        *ppv = &This->IHTMLDOMImplementation_iface;
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        WARN("Unsupported interface %s\n", debugstr_mshtml_guid(riid));
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI HTMLDOMImplementation_AddRef(IHTMLDOMImplementation *iface)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI HTMLDOMImplementation_Release(IHTMLDOMImplementation *iface)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref) {
+        release_dispex(&This->dispex);
+        heap_free(This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI HTMLDOMImplementation_GetTypeInfoCount(IHTMLDOMImplementation *iface, UINT *pctinfo)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
+}
+
+static HRESULT WINAPI HTMLDOMImplementation_GetTypeInfo(IHTMLDOMImplementation *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI HTMLDOMImplementation_GetIDsOfNames(IHTMLDOMImplementation *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames,
+            cNames, lcid, rgDispId);
+}
+
+static HRESULT WINAPI HTMLDOMImplementation_Invoke(IHTMLDOMImplementation *iface, DISPID dispIdMember,
+        REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult,
+        EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid,
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI HTMLDOMImplementation_hasFeature(IHTMLDOMImplementation *iface, BSTR feature,
+        VARIANT version, VARIANT_BOOL *pfHasFeature)
+{
+    HTMLDOMImplementation *This = impl_from_IHTMLDOMImplementation(iface);
+
+    FIXME("(%p)->(%s %s %p) returning false\n", This, debugstr_w(feature), debugstr_variant(&version), pfHasFeature);
+
+    *pfHasFeature = VARIANT_FALSE;
+    return S_OK;
+}
+
+static const IHTMLDOMImplementationVtbl HTMLDOMImplementationVtbl = {
+    HTMLDOMImplementation_QueryInterface,
+    HTMLDOMImplementation_AddRef,
+    HTMLDOMImplementation_Release,
+    HTMLDOMImplementation_GetTypeInfoCount,
+    HTMLDOMImplementation_GetTypeInfo,
+    HTMLDOMImplementation_GetIDsOfNames,
+    HTMLDOMImplementation_Invoke,
+    HTMLDOMImplementation_hasFeature
+};
+
+static const tid_t HTMLDOMImplementation_iface_tids[] = {
+    IHTMLDOMImplementation_tid,
+    0
+};
+static dispex_static_data_t HTMLDOMImplementation_dispex = {
+    NULL,
+    IHTMLDOMImplementation_tid,
+    NULL,
+    HTMLDOMImplementation_iface_tids
+};
+
+HRESULT create_dom_implementation(IHTMLDOMImplementation **ret)
+{
+    HTMLDOMImplementation *dom_implementation;
+
+    dom_implementation = heap_alloc_zero(sizeof(*dom_implementation));
+    if(!dom_implementation)
+        return E_OUTOFMEMORY;
+
+    dom_implementation->IHTMLDOMImplementation_iface.lpVtbl = &HTMLDOMImplementationVtbl;
+    dom_implementation->ref = 1;
+
+    init_dispex(&dom_implementation->dispex, (IUnknown*)&dom_implementation->IHTMLDOMImplementation_iface,
+            &HTMLDOMImplementation_dispex);
+
+    *ret = &dom_implementation->IHTMLDOMImplementation_iface;
+    return S_OK;
+}
+
 static inline OmHistory *impl_from_IOmHistory(IOmHistory *iface)
 {
     return CONTAINING_RECORD(iface, OmHistory, IOmHistory_iface);

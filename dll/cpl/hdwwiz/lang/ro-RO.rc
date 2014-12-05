@@ -3,7 +3,7 @@
  * FILE:    dll/cpl/hdwwiz/lang/ro-RO.rc
  * PURPOSE: Romanian Language File for add hardware control panel
  * TRANSLATORS:
- *          Petre Dumitriu
+ *          Petru Dumitriu (petrimetri at gmail dot com)
  *          Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
@@ -38,8 +38,8 @@ CAPTION "Asistent de adăugare a componentelor fizice"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Componenta fizică este conectată la calculator?", -1, 20, 11, 275, 8
-    AUTORADIOBUTTON "&Da, am conectat deja componenta fizică.", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "N&u, încă nu am conectat componenta fizică.", IDC_NOTCONNECTED, 29, 35, 266, 8
+    AUTORADIOBUTTON "Componenta fizică &este deja conectată.", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "Componenta fizică încă n&u a fost conectată.", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOG 0, 0, 317, 143

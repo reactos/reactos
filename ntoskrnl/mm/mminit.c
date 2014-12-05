@@ -299,36 +299,38 @@ VOID
 NTAPI
 MmMpwThreadMain(PVOID Parameter)
 {
-   NTSTATUS Status;
-   ULONG PagesWritten;
-   LARGE_INTEGER Timeout;
+    NTSTATUS Status;
+#ifndef NEWCC
+    ULONG PagesWritten;
+#endif
+    LARGE_INTEGER Timeout;
 
-   UNREFERENCED_PARAMETER(Parameter);
+    UNREFERENCED_PARAMETER(Parameter);
 
-   Timeout.QuadPart = -50000000;
+    Timeout.QuadPart = -50000000;
 
-   for(;;)
-   {
-      Status = KeWaitForSingleObject(&MpwThreadEvent,
-                                     0,
-                                     KernelMode,
-                                     FALSE,
-                                     &Timeout);
-      if (!NT_SUCCESS(Status))
-      {
-         DbgPrint("MpwThread: Wait failed\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-         return;
-      }
-
-      PagesWritten = 0;
+    for(;;)
+    {
+        Status = KeWaitForSingleObject(&MpwThreadEvent,
+                                       0,
+                                       KernelMode,
+                                       FALSE,
+                                       &Timeout);
+        if (!NT_SUCCESS(Status))
+        {
+            DbgPrint("MpwThread: Wait failed\n");
+            KeBugCheck(MEMORY_MANAGEMENT);
+            return;
+        }
 
 #ifndef NEWCC
-      // XXX arty -- we flush when evicting pages or destorying cache
-      // sections.
-      CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
+        PagesWritten = 0;
+
+        // XXX arty -- we flush when evicting pages or destorying cache
+        // sections.
+        CcRosFlushDirtyPages(128, &PagesWritten, FALSE);
 #endif
-   }
+    }
 }
 
 NTSTATUS
@@ -336,31 +338,31 @@ NTAPI
 INIT_FUNCTION
 MmInitMpwThread(VOID)
 {
-   KPRIORITY Priority;
-   NTSTATUS Status;
-   CLIENT_ID MpwThreadId;
+    KPRIORITY Priority;
+    NTSTATUS Status;
+    CLIENT_ID MpwThreadId;
 
-   KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
 
-   Status = PsCreateSystemThread(&MpwThreadHandle,
-                                 THREAD_ALL_ACCESS,
-                                 NULL,
-                                 NULL,
-                                 &MpwThreadId,
-                                 MmMpwThreadMain,
-                                 NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
+    Status = PsCreateSystemThread(&MpwThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  NULL,
+                                  NULL,
+                                  &MpwThreadId,
+                                  MmMpwThreadMain,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return(Status);
+    }
 
-   Priority = 27;
-   NtSetInformationThread(MpwThreadHandle,
-                          ThreadPriority,
-                          &Priority,
-                          sizeof(Priority));
+    Priority = 27;
+    NtSetInformationThread(MpwThreadHandle,
+                           ThreadPriority,
+                           &Priority,
+                           sizeof(Priority));
 
-   return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -430,8 +432,8 @@ MmInitSystem(IN ULONG Phase,
     // by the fault handler.
     //
     MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
-                                                sizeof(MMPTE),
-                                                '  mM');
+                          sizeof(MMPTE),
+                          '  mM');
     if (!MmSharedUserDataPte) return FALSE;
 
     //

@@ -1,6 +1,6 @@
 
 set(USE_DIBLIB FALSE)
-set(USE_NEW_CURSORICON FALSE)
+set(USE_NEW_CURSORICON TRUE)
 
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
@@ -130,6 +130,7 @@ list(APPEND SOURCE
     user/ntuser/prop.c
     user/ntuser/scrollbar.c
     user/ntuser/session.c
+    user/ntuser/shutdown.c
     user/ntuser/simplecall.c
     user/ntuser/sysparams.c
     user/ntuser/timer.c
@@ -212,8 +213,7 @@ list(APPEND SOURCE
 endif()
 
 if(KDBG)
-    list(APPEND SOURCE
-        gdi/ntgdi/gdikdbgext.c)
+    list(APPEND SOURCE gdi/ntgdi/gdikdbgext.c)
 endif()
 
 add_asm_files(win32k_asm ${ASM_SOURCE})
@@ -225,11 +225,7 @@ add_library(win32k SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/win32k.def)
 
 set_module_type(win32k kernelmodedriver)
-
-target_link_libraries(win32k
-    ${PSEH_LIB}
-    dxguid
-    libcntpr)
+target_link_libraries(win32k ${PSEH_LIB} dxguid libcntpr)
 
 if(USE_DIBLIB)
     target_link_libraries(win32k diblib)

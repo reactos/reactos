@@ -5,7 +5,7 @@
 [Section]
 Name = Super DX-Ball
 Version = 1.1
-Licence = Shareware
+License = Shareware
 Description = Super DX-Ball is a vibrant and colorful brick-breaking game.
 Size = 3.8 MB
 Category = 4
@@ -23,11 +23,11 @@ Description = Super DX-Ball è un gioco spacca blocchi vibrante e colorato
 Description = Super DX-Ball - pełna koloru i animacji gra polegająca na zbijaniu klocków.
 
 [Section.0418]
-Licence = Versiune de evaluare
+License = Versiune de evaluare
 Description = Un joc ce implică spargerea de cărămizi.
 Size = 3,8 Mo
 
 [Section.041f]
-Licence = Paylaşımlı
+License = Paylaşımlı
 Description = Super DX-Ball canlı ve renkli bir tuğla kırma oyunudur.
 Size = 3,8 MB

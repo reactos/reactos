@@ -1048,8 +1048,8 @@ static void notify_clients(EDataFlow flow, ERole role, const WCHAR *id)
         notify_clients(flow, eMultimedia, id);
 }
 
-static int notify_if_changed(EDataFlow flow, ERole role, HKEY key,
-        const WCHAR *val_name, WCHAR *old_val, IMMDevice *def_dev)
+static BOOL notify_if_changed(EDataFlow flow, ERole role, HKEY key,
+                              const WCHAR *val_name, WCHAR *old_val, IMMDevice *def_dev)
 {
     WCHAR new_val[64], *id;
     DWORD size;
@@ -1064,7 +1064,7 @@ static int notify_if_changed(EDataFlow flow, ERole role, HKEY key,
                 hr = IMMDevice_GetId(def_dev, &id);
                 if(FAILED(hr)){
                     ERR("GetId failed: %08x\n", hr);
-                    return 0;
+                    return FALSE;
                 }
             }else
                 id = NULL;
@@ -1073,23 +1073,23 @@ static int notify_if_changed(EDataFlow flow, ERole role, HKEY key,
             old_val[0] = 0;
             CoTaskMemFree(id);
 
-            return 1;
+            return TRUE;
         }
 
         /* system default -> system default, noop */
-        return 0;
+        return FALSE;
     }
 
     if(!lstrcmpW(old_val, new_val)){
         /* set by user -> same value */
-        return 0;
+        return FALSE;
     }
 
     if(new_val[0] != 0){
         /* set by user -> different value */
         notify_clients(flow, role, new_val);
         memcpy(old_val, new_val, sizeof(new_val));
-        return 1;
+        return TRUE;
     }
 
     /* set by user -> system default */
@@ -1097,7 +1097,7 @@ static int notify_if_changed(EDataFlow flow, ERole role, HKEY key,
         hr = IMMDevice_GetId(def_dev, &id);
         if(FAILED(hr)){
             ERR("GetId failed: %08x\n", hr);
-            return 0;
+            return FALSE;
         }
     }else
         id = NULL;
@@ -1106,7 +1106,7 @@ static int notify_if_changed(EDataFlow flow, ERole role, HKEY key,
     old_val[0] = 0;
     CoTaskMemFree(id);
 
-    return 1;
+    return TRUE;
 }
 
 static DWORD WINAPI notif_thread_proc(void *user)
@@ -1325,10 +1325,10 @@ static HRESULT WINAPI MMDevPropStore_GetCount(IPropertyStore *iface, DWORD *npro
     *nprops = 0;
     do {
         DWORD len = sizeof(buffer)/sizeof(*buffer);
-        if (RegEnumKeyExW(propkey, i, buffer, &len, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        if (RegEnumValueW(propkey, i, buffer, &len, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
         i++;
-    } while (0);
+    } while (1);
     RegCloseKey(propkey);
     TRACE("Returning %i\n", i);
     *nprops = i;
@@ -1351,16 +1351,16 @@ static HRESULT WINAPI MMDevPropStore_GetAt(IPropertyStore *iface, DWORD prop, PR
     if (FAILED(hr))
         return hr;
 
-    if (RegEnumKeyExW(propkey, prop, buffer, &len, NULL, NULL, NULL, NULL) != ERROR_SUCCESS
-        || len <= 40)
+    if (RegEnumValueW(propkey, prop, buffer, &len, NULL, NULL, NULL, NULL) != ERROR_SUCCESS
+        || len <= 39)
     {
         WARN("GetAt %u failed\n", prop);
         return E_INVALIDARG;
     }
     RegCloseKey(propkey);
-    buffer[39] = 0;
+    buffer[38] = 0;
     CLSIDFromString(buffer, &key->fmtid);
-    key->pid = atoiW(&buffer[40]);
+    key->pid = atoiW(&buffer[39]);
     return S_OK;
 }
 

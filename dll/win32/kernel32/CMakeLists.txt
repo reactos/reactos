@@ -106,7 +106,6 @@ set_subsystem(kernel32 console)
 ################# END  HACK #################
 
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
-
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)

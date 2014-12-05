@@ -158,6 +158,13 @@ typedef struct _CONSOLE_PROPERTIES
     UINT uCodePage;
 } CONSOLE_PROPERTIES;
 
+enum
+{
+    INIT_SUCCESS, // STATUS_WAIT_0
+    INIT_FAILURE, // STATUS_WAIT_1
+    MAX_INIT_EVENTS
+};
+
 typedef struct _CONSOLE_START_INFO
 {
     HANDLE ConsoleHandle;
@@ -165,7 +172,7 @@ typedef struct _CONSOLE_START_INFO
     HANDLE InputHandle;
     HANDLE OutputHandle;
     HANDLE ErrorHandle;
-    HANDLE Events[2];
+    HANDLE InitEvents[MAX_INIT_EVENTS];
 
     CONSOLE_PROPERTIES;
 } CONSOLE_START_INFO, *PCONSOLE_START_INFO;

@@ -4,7 +4,7 @@
 [Section]
 Name = AbiWord
 Version = 2.6.8
-Licence = GPL
+License = GPL
 Description = Word processor.
 Size = 5.64 MB
 Category = 6

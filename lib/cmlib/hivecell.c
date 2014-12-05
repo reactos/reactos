@@ -71,6 +71,7 @@ HvGetCell(
    PHHIVE RegistryHive,
    HCELL_INDEX CellIndex)
 {
+   ASSERT(CellIndex != HCELL_NIL);
    return (PVOID)(HvpGetCellHeader(RegistryHive, CellIndex) + 1);
 }
 

@@ -1277,6 +1277,12 @@ typedef DWORD (WINAPI *APPLICATION_RECOVERY_CALLBACK)(PVOID);
 #define MAKEINTATOM(i) (LPTSTR)((ULONG_PTR)((WORD)(i)))
 #endif
 
+typedef DWORD
+(WINAPI *PFE_IMPORT_FUNC)(
+  _Out_writes_bytes_to_(*ulLength, *ulLength) PBYTE pbData,
+  _In_opt_ PVOID pvCallbackContext,
+  _Inout_ PULONG ulLength);
+
 /* Functions */
 #ifndef UNDER_CE
 int APIENTRY WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int);
@@ -2718,6 +2724,8 @@ BOOL WINAPI MoveFileA(_In_ LPCSTR, _In_ LPCSTR);
 BOOL WINAPI MoveFileW(_In_ LPCWSTR, _In_ LPCWSTR);
 BOOL WINAPI MoveFileExA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_ DWORD);
 BOOL WINAPI MoveFileExW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_ DWORD);
+BOOL WINAPI MoveFileWithProgressA(_In_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_ DWORD);
+BOOL WINAPI MoveFileWithProgressW(_In_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_ DWORD);
 int WINAPI MulDiv(_In_ int, _In_ int, _In_ int);
 BOOL WINAPI NotifyChangeEventLog(_In_ HANDLE, _In_ HANDLE);
 BOOL WINAPI ObjectCloseAuditAlarmA(_In_ LPCSTR, _In_ PVOID, _In_ BOOL);
@@ -3142,6 +3150,7 @@ BOOL WINAPI WinLoadTrustProvider(GUID*);
 BOOL WINAPI Wow64DisableWow64FsRedirection(PVOID*);
 BOOLEAN WINAPI Wow64EnableWow64FsRedirection(_In_ BOOLEAN);
 BOOL WINAPI Wow64RevertWow64FsRedirection(PVOID);
+DWORD WINAPI WriteEncryptedFileRaw(_In_ PFE_IMPORT_FUNC, _In_opt_ PVOID, _In_ PVOID);
 BOOL WINAPI WriteFile(HANDLE,LPCVOID,DWORD,LPDWORD,LPOVERLAPPED);
 BOOL WINAPI WriteFileEx(HANDLE,LPCVOID,DWORD,LPOVERLAPPED,LPOVERLAPPED_COMPLETION_ROUTINE);
 BOOL WINAPI WriteFileGather(HANDLE,FILE_SEGMENT_ELEMENT*,DWORD,LPDWORD,LPOVERLAPPED);
@@ -3371,6 +3380,7 @@ typedef PCACTCTXW PCACTCTX;
 #define lstrlen lstrlenW
 #define MoveFile MoveFileW
 #define MoveFileEx MoveFileExW
+#define MoveFileWithProgress MoveFileWithProgressW
 #define ObjectCloseAuditAlarm ObjectCloseAuditAlarmW
 #define ObjectDeleteAuditAlarm ObjectDeleteAuditAlarmW
 #define ObjectOpenAuditAlarm ObjectOpenAuditAlarmW
@@ -3578,6 +3588,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define lstrlen lstrlenA
 #define MoveFile MoveFileA
 #define MoveFileEx MoveFileExA
+#define MoveFileWithProgress MoveFileWithProgressA
 #define ObjectCloseAuditAlarm ObjectCloseAuditAlarmA
 #define ObjectDeleteAuditAlarm ObjectDeleteAuditAlarmA
 #define ObjectOpenAuditAlarm ObjectOpenAuditAlarmA

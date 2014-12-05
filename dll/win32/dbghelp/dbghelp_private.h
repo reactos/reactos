@@ -391,12 +391,14 @@ struct module_format
     } u;
 };
 
+#ifdef __REACTOS__
 struct symt_idx_to_ptr
 {
     struct hash_table_elt hash_elt;
     DWORD idx;
     const struct symt *sym;
 };
+#endif
 
 extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
 struct module

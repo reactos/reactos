@@ -834,7 +834,7 @@ static ULONG WINAPI FileAsyncReaderPin_Release(IPin * iface)
         CloseHandle(This->hFile);
         This->csList.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->csList);
-        CoTaskMemFree(This);
+        BaseOutputPin_Destroy(&This->pin);
         return 0;
     }
     return refCount;

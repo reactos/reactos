@@ -44,7 +44,7 @@ typedef struct tagDCE
 INIT_FUNCTION NTSTATUS NTAPI InitDCEImpl(VOID);
 PDCE FASTCALL DceAllocDCE(PWND Window, DCE_TYPE Type);
 HWND FASTCALL IntWindowFromDC(HDC hDc);
-PDCE FASTCALL DceFreeDCE(PDCE dce, BOOLEAN Force);
+void FASTCALL DceFreeDCE(PDCE dce, BOOLEAN Force);
 void FASTCALL DceEmptyCache(void);
 VOID FASTCALL DceResetActiveDCEs(PWND Window);
 void FASTCALL DceFreeClassDCE(HDC);

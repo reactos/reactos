@@ -7,10 +7,12 @@ IDI_MAIN_ICON   ICON    "res/computer.ico"
 IDB_ROOT_IMAGE  BITMAP  "res/root.bmp"
 
 /* main toolbar icons */
-IDB_PROP    BITMAP "res/properties.bmp"
-IDB_REFRESH BITMAP "res/refresh.bmp"
-IDB_HELP    BITMAP "res/help.bmp"
-IDB_EXIT    BITMAP "res/exit.bmp"
+IDB_PROP    BITMAP DISCARDABLE "res/properties.bmp"
+IDB_REFRESH BITMAP DISCARDABLE "res/refresh.bmp"
+IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
+IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
+
+//#include "lang/en-US.rc"
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
@@ -75,9 +77,6 @@ IDB_EXIT    BITMAP "res/exit.bmp"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
-#endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/sq-AL.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"

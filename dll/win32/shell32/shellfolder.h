@@ -42,7 +42,7 @@ DECLARE_INTERFACE_(ISFHelper,IUnknown)
     STDMETHOD(GetUniqueName)(THIS_ LPWSTR  lpName, UINT  uLen) PURE;
     STDMETHOD(AddFolder)(THIS_ HWND  hwnd, LPCWSTR  lpName, LPITEMIDLIST * ppidlOut) PURE;
     STDMETHOD(DeleteItems)(THIS_ UINT  cidl, LPCITEMIDLIST * apidl) PURE;
-    STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl, bool bCopy) PURE;
+    STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl, BOOL bCopy) PURE;
 };
 #undef INTERFACE
 

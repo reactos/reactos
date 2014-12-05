@@ -93,21 +93,6 @@
 #define ACE_OBJECT_TYPE_PRESENT           0x00000001
 #define ACE_INHERITED_OBJECT_TYPE_PRESENT 0x00000002
 
-#ifdef __cplusplus
-#define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) \
-extern "C++" { \
-    inline ENUMTYPE operator | (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)|((int)b)); } \
-    inline ENUMTYPE operator |= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) |= ((int)b)); } \
-    inline ENUMTYPE operator & (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)&((int)b)); } \
-    inline ENUMTYPE operator &= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) &= ((int)b)); } \
-    inline ENUMTYPE operator ~ (ENUMTYPE a) { return (ENUMTYPE)(~((int)a)); } \
-    inline ENUMTYPE operator ^ (ENUMTYPE a, ENUMTYPE b) { return ENUMTYPE(((int)a)^((int)b)); } \
-    inline ENUMTYPE operator ^= (ENUMTYPE &a, ENUMTYPE b) { return (ENUMTYPE &)(((int &)a) ^= ((int)b)); } \
-}
-#else
-# define DEFINE_ENUM_FLAG_OPERATORS(ENUMTYPE) /* */
-#endif
-
 /* also in ddk/ntifs.h */
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -373,6 +358,10 @@ extern "C++" { \
 #define THREAD_BASE_PRIORITY_MAX    2
 #define THREAD_BASE_PRIORITY_MIN    (-2)
 #define THREAD_BASE_PRIORITY_IDLE    (-15)
+
+#define PROCESS_SET_LIMITED_INFORMATION 0x2000
+#define THREAD_RESUME 0x1000
+
 /*
  * To prevent gcc compiler warnings, bracket these defines when initialising
  * a  SID_IDENTIFIER_AUTHORITY, eg.
@@ -1638,7 +1627,7 @@ typedef struct _FLOATING_SAVE_AREA {
   DWORD ErrorSelector;
   DWORD DataOffset;
   DWORD DataSelector;
-  BYTE RegisterArea[80];
+  BYTE RegisterArea[SIZE_OF_80387_REGISTERS];
   DWORD Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 

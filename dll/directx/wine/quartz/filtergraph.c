@@ -801,7 +801,7 @@ static HRESULT GetFilterInfo(IMoniker* pMoniker, VARIANT* pvar)
         hr = IPropertyBag_Read(pPropBagCat, wszFriendlyName, pvar, NULL);
 
     if (SUCCEEDED(hr))
-        TRACE("Moniker = %s\n", debugstr_w(V_UNION(pvar, bstrVal)));
+        TRACE("Moniker = %s\n", debugstr_w(V_BSTR(pvar)));
 
     if (pPropBagCat)
         IPropertyBag_Release(pPropBagCat);
@@ -1050,7 +1050,7 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
             }
         }
 
-        hr = IFilterGraph2_AddFilter(iface, pfilter, V_UNION(&var, bstrVal));
+        hr = IFilterGraph2_AddFilter(iface, pfilter, V_BSTR(&var));
         if (FAILED(hr)) {
             WARN("Unable to add filter (%x)\n", hr);
             IBaseFilter_Release(pfilter);
@@ -1384,7 +1384,7 @@ static HRESULT WINAPI FilterGraph2_Render(IFilterGraph2 *iface, IPin *ppinOut)
                 goto error;
             }
 
-            hr = IFilterGraph2_AddFilter(iface, pfilter, V_UNION(&var, bstrVal));
+            hr = IFilterGraph2_AddFilter(iface, pfilter, V_BSTR(&var));
             if (FAILED(hr)) {
                 WARN("Unable to add filter (%x)\n", hr);
                 IBaseFilter_Release(pfilter);
@@ -1424,10 +1424,10 @@ static HRESULT WINAPI FilterGraph2_Render(IFilterGraph2 *iface, IPin *ppinOut)
                 IPin_Release(ppinfilter);
 
                 if (FAILED(hr)) {
-                    WARN("Unable to connect %s to renderer (%x)\n", debugstr_w(V_UNION(&var, bstrVal)), hr);
+                    WARN("Unable to connect %s to renderer (%x)\n", debugstr_w(V_BSTR(&var)), hr);
                     goto error;
                 }
-                TRACE("Connected, recursing %s\n",  debugstr_w(V_UNION(&var, bstrVal)));
+                TRACE("Connected, recursing %s\n",  debugstr_w(V_BSTR(&var)));
 
                 VariantClear(&var);
 

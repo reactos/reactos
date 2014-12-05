@@ -125,11 +125,11 @@ extern BOOLEAN KdDebuggerEnabled;
 extern BOOLEAN KdDebuggerNotPresent;
 #define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
 #else
-extern BOOLEAN *KdDebuggerEnabled;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(KdDebuggerEnabled)
+extern BOOLEAN *KdDebuggerEnabled;
 #define KD_DEBUGGER_ENABLED (*KdDebuggerEnabled)
-extern BOOLEAN *KdDebuggerNotPresent;
 __CREATE_NTOS_DATA_IMPORT_ALIAS(KdDebuggerNotPresent)
+extern BOOLEAN *KdDebuggerNotPresent;
 #define KD_DEBUGGER_NOT_PRESENT (*KdDebuggerNotPresent)
 #endif
 

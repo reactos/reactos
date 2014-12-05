@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -47,7 +47,7 @@ MmZeroPageThread(VOID)
     /* Get the discardable sections to free them */
     MiFindInitializationCode(&StartAddress, &EndAddress);
     if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
+    DPRINT("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 
     /* Set our priority to 0 */
     Thread->BasePriority = 0;

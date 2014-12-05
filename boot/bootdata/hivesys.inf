@@ -672,6 +672,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Text",0x00000000,"Bengali"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
 
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout File",0x00000000,"kbdinben.dll"
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout Text",0x00000000,"Bengali"
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout File",0x00000000,"kbdinguj.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Text",0x00000000,"Gujarati"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5097"
@@ -1266,7 +1270,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","MAILSLOT",0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","NUL",0x00000000,"\Device\Null"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PIPE",0x00000000,"\Device\NamedPipe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PRN",0x00000000,"\DosDevices\LPT1"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x00000000,"\Device\Mup"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x00000000,"\Device\Mup"
 
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
@@ -1438,10 +1442,18 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","File",0x00020000,"%SystemRoot%\system32\config\AppEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","Retention",0x00010003,604800
+
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","File",0x00020000,"%SystemRoot%\system32\config\SecEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","Retention",0x00010003,604800
+
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","File",0x00020000,"%SystemRoot%\system32\config\SysEvent.Evt"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","Retention",0x00010003,604800
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupported",0x00010001,0x00000007
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
@@ -1470,6 +1482,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters","ConnectMultiplePorts",0x00010001,1
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
 
+; Kernel Security Support Provider Interface Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ImagePath",0x00020000,"system32\drivers\ksecdd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Type",0x00010001,0x00000001
+
 ; MPU-401 MIDI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ServiceType",0x00010001,0x00000001
@@ -1494,13 +1513,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Type",0x00010001,0x00000002
 
 ; Multiple UNC provider driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
 
 ; NDIS driver - the only boot-start network driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ErrorControl",0x00010001,0x00000001
@@ -1623,12 +1642,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Type",0x00010001,0x00000001
 
 ; MountMgr driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ErrorControl",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Group",0x00000000,"Boot Bus Extender"
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ImagePath",0x00020000,"system32\drivers\mountmgr.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Start",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Tag",0x00010001,0x00000008
-;HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ImagePath",0x00020000,"system32\drivers\mountmgr.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Tag",0x00010001,0x00000008
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Type",0x00010001,0x00000001
 
 ; ACPI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\acpi","ErrorControl",0x00010001,0x00000001
@@ -1826,12 +1845,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","101300D6101880D6",0x000
 ; Plug and Play manager
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","DisplayName",0x00000000,"Plug and Play"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Description",0x00000000,"Detects hardware changes and installs needed software if possible"
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Group",0x00000000,"PlugPlay"
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\umpnpmgr.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k DcomLaunch"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\umpnpmgr.dll"
 
 ; RPC service
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","DisplayName",0x00000000,"Remote Procedure Call"
@@ -1966,7 +1986,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Tag",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VGA\Device0","VgaCompatible",0x00010001,1
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","VgaCompatible",0x00010001,1
 
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.VRefresh",0x00010001,1

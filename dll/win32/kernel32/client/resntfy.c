@@ -41,7 +41,7 @@ CreateMemoryResourceNotification(IN MEMORY_RESOURCE_NOTIFICATION_TYPE Notificati
     InitializeObjectAttributes(&ObjectAttributes,
                                &EventName,
                                0,
-                               BaseGetNamedObjectDirectory(),
+                               NULL,
                                NULL);
 
     Status = NtOpenEvent(&hEvent,

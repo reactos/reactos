@@ -44,12 +44,12 @@ BEGIN
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_PROP      "Eigenschaften"
   IDS_TOOLTIP_REFRESH   "Aktualisieren"
@@ -58,7 +58,7 @@ BEGIN
 END
 
 /* Hints */
-STRINGTABLE
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME "ReactOS Geräte-Manager"
   IDS_HINT_BLANK        " "

@@ -1,27 +1,28 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
-BEGIN
-    STRING_INVPARMS "Недопустимое число параметров - попробуйте 'xcopy /?' для получения\n\
+{
+    STRING_INVPARMS, "Недопустимое число параметров - попробуйте 'xcopy /?' для получения\n\
 подробного описания.\n"
-    STRING_INVPARM "Недопустимый параметр '%1' - попробуйте 'xcopy /?' для получения подробного\n\
+    STRING_INVPARM,  "Недопустимый параметр '%1' - попробуйте 'xcopy /?' для получения подробного\n\
 описания.\n"
-    STRING_PAUSE "Нажмите на клавишу <Enter>, чтобы начать копирование.\n"
-    STRING_SIMCOPY "%1!d! файл(ов) было бы скопировано.\n"
-    STRING_COPY "%1!d! файл(ов) скопировано.\n"
-    STRING_QISDIR "'%1' является файлом или папкой?\n\
+    STRING_PAUSE,    "Нажмите на клавишу <Enter>, чтобы начать копирование.\n"
+    STRING_SIMCOPY,  "%1!d! файл(ов) было бы скопировано.\n"
+    STRING_COPY,     "%1!d! файл(ов) скопировано.\n"
+    STRING_QISDIR,   "'%1' является файлом или папкой?\n\
                      (F - Файл, D - Папка)\n"
-    STRING_SRCPROMPT "%1? (Yes|No)\n"
-    STRING_OVERWRITE "Переписать %1? (Yes|No|All)\n"
-    STRING_COPYFAIL "При копировании '%1' в '%2' произошла ошибка: %3!d!\n"
-    STRING_OPENFAIL "Невозможно открыть '%1'\n"
-    STRING_READFAIL "При чтении '%1' произошла ошибка\n"
-    STRING_YES_CHAR "Y"
-    STRING_NO_CHAR "N"
-    STRING_ALL_CHAR "A"
-    STRING_FILE_CHAR "F"
-    STRING_DIR_CHAR "D"
-    STRING_HELP
+    STRING_SRCPROMPT,"%1? (Yes|No)\n"
+    STRING_OVERWRITE,"Переписать %1? (Yes|No|All)\n"
+    STRING_COPYFAIL, "При копировании '%1' в '%2' произошла ошибка: %3!d!\n"
+    STRING_OPENFAIL, "Невозможно открыть '%1'\n"
+    STRING_READFAIL, "При чтении '%1' произошла ошибка\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
 "Копирование файлов и структур каталогов.\n\
 \n\
 Синтаксис:\n\
@@ -54,4 +55,5 @@ XCOPY источник [целевой_объект] [/I] [/S] [/Q] [/F] [/L] [/
 /D | /D:m-d-y Копирование файлов, измененных не ранее указанной даты.\n\
               Если дата не указана, заменяются только конечные файлы,\n\
               более старые, чем исходные.\n"
-END
+
+}

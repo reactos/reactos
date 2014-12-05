@@ -1,14 +1,14 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 STRINGTABLE
-BEGIN
-    STRING_USAGE "Programmer kjøres som følger:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
-    STRING_ADD_USAGE "REG ADD nøkkelnavn [/v verdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
-    STRING_DELETE_USAGE "REG DELETE nøkkelnavn [/v verdi | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE "REG QUERY nøkkelnavn [/v verdi | /ve] [/s]\n"
-    STRING_SUCCESS "Operasjonen ble utført\n"
-    STRING_INVALID_KEY "Feil: Ugyldig nøkkelnavn\n"
-    STRING_INVALID_CMDLINE "Feil: Ugyldige parametere på kommandolinjen\n"
-    STRING_NO_REMOTE "Feil: Kan ikke legge til nøkler på ekstern maskin\n"
-    STRING_CANNOT_FIND "Feil: Systemet klarte ikke finne den angitte registernøkkelen eller -verdien\n"
-END
+{
+    STRING_USAGE, "Programmer kjøres som følger:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
+    STRING_ADD_USAGE, "REG ADD nøkkelnavn [/v verdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nøkkelnavn [/v verdi | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nøkkelnavn [/v verdi | /ve] [/s]\n"
+    STRING_SUCCESS, "Operasjonen ble utført\n"
+    STRING_INVALID_KEY, "Feil: Ugyldig nøkkelnavn\n"
+    STRING_INVALID_CMDLINE, "Feil: Ugyldige parametere på kommandolinjen\n"
+    STRING_NO_REMOTE, "Feil: Kan ikke legge til nøkler på ekstern maskin\n"
+    STRING_CANNOT_FIND, "Feil: Systemet klarte ikke finne den angitte registernøkkelen eller -verdien\n"
+}

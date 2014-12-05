@@ -13,7 +13,7 @@
 #include <debug.h>
 
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include <mm/ARM3/miarm.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -180,7 +180,6 @@ VOID
 NTAPI
 MmDeleteVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address,
-                       IN BOOLEAN FreePage,
                        OUT PBOOLEAN WasDirty,
                        OUT PPFN_NUMBER Page)
 {

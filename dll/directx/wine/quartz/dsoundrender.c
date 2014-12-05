@@ -225,7 +225,7 @@ end:
 
 static HRESULT DSoundRender_HandleEndOfStream(DSoundRenderImpl *This)
 {
-    while (1)
+    while (This->renderer.filter.state == State_Running)
     {
         DWORD pos1, pos2;
         DSoundRender_UpdatePositions(This, &pos1, &pos2);
@@ -236,8 +236,8 @@ static HRESULT DSoundRender_HandleEndOfStream(DSoundRenderImpl *This)
         LeaveCriticalSection(&This->renderer.filter.csFilter);
         LeaveCriticalSection(&This->renderer.csRenderLock);
         WaitForSingleObject(This->blocked, 10);
-        EnterCriticalSection(&This->renderer.filter.csFilter);
         EnterCriticalSection(&This->renderer.csRenderLock);
+        EnterCriticalSection(&This->renderer.filter.csFilter);
         This->in_loop = 0;
     }
 

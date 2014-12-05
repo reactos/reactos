@@ -52,13 +52,24 @@ BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
 */
 
 /*************************************************************************
- * SHLWAPI_DupSharedHandle
+ * @   [SHLWAPI.11]
  *
- * Internal implementation of SHLWAPI_11.
+ * Copy a sharable memory handle from one process to another.
+ *
+ * PARAMS
+ * hShared     [I] Shared memory handle to duplicate
+ * dwSrcProcId [I] ID of the process owning hShared
+ * dwDstProcId [I] ID of the process wanting the duplicated handle
+ * dwAccess    [I] Desired DuplicateHandle() access
+ * dwOptions   [I] Desired DuplicateHandle() options
+ *
+ * RETURNS
+ * Success: A handle suitable for use by the dwDstProcId process.
+ * Failure: A NULL handle.
+ *
  */
-static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
-                                      DWORD dwSrcProcId, DWORD dwAccess,
-                                      DWORD dwOptions)
+HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwSrcProcId, DWORD dwDstProcId,
+                          DWORD dwAccess, DWORD dwOptions)
 {
   HANDLE hDst, hSrc;
   DWORD dwMyProcId = GetCurrentProcessId();
@@ -84,7 +95,7 @@ static HANDLE SHLWAPI_DupSharedHandle(HANDLE hShared, DWORD dwDstProcId,
     if (hSrc)
     {
       /* Make handle available to dest process */
-      if (!DuplicateHandle(hDst, hShared, hSrc, &hRet,
+      if (!DuplicateHandle(hSrc, hShared, hDst, &hRet,
                            dwAccess, 0, dwOptions | DUPLICATE_SAME_ACCESS))
         hRet = NULL;
 
@@ -148,9 +159,8 @@ HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
 
     /* Release view. All further views mapped will be opaque */
     UnmapViewOfFile(pMapped);
-    hRet = SHLWAPI_DupSharedHandle(hMap, dwProcId,
-                                   GetCurrentProcessId(), FILE_MAP_ALL_ACCESS,
-                                   DUPLICATE_SAME_ACCESS);
+    hRet = SHMapHandle(hMap, GetCurrentProcessId(), dwProcId,
+                       FILE_MAP_ALL_ACCESS, DUPLICATE_SAME_ACCESS);
   }
 
   CloseHandle(hMap);
@@ -179,8 +189,8 @@ PVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
   TRACE("(%p %d)\n", hShared, dwProcId);
 
   /* Get handle to shared memory for current process */
-  hDup = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
-                                 FILE_MAP_ALL_ACCESS, 0);
+  hDup = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(), FILE_MAP_ALL_ACCESS, 0);
+
   /* Get View */
   pMapped = MapViewOfFile(hDup, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
   CloseHandle(hDup);
@@ -230,37 +240,10 @@ BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
   TRACE("(%p %d)\n", hShared, dwProcId);
 
   /* Get a copy of the handle for our process, closing the source handle */
-  hClose = SHLWAPI_DupSharedHandle(hShared, dwProcId, GetCurrentProcessId(),
-                                   FILE_MAP_ALL_ACCESS,DUPLICATE_CLOSE_SOURCE);
+  hClose = SHMapHandle(hShared, dwProcId, GetCurrentProcessId(),
+                       FILE_MAP_ALL_ACCESS,DUPLICATE_CLOSE_SOURCE);
   /* Close local copy */
   return CloseHandle(hClose);
-}
-
-/*************************************************************************
- * @   [SHLWAPI.11]
- *
- * Copy a sharable memory handle from one process to another.
- *
- * PARAMS
- * hShared     [I] Shared memory handle to duplicate
- * dwDstProcId [I] ID of the process wanting the duplicated handle
- * dwSrcProcId [I] ID of the process owning hShared
- * dwAccess    [I] Desired DuplicateHandle() access
- * dwOptions   [I] Desired DuplicateHandle() options
- *
- * RETURNS
- * Success: A handle suitable for use by the dwDstProcId process.
- * Failure: A NULL handle.
- *
- */
-HANDLE WINAPI SHMapHandle(HANDLE hShared, DWORD dwDstProcId, DWORD dwSrcProcId,
-                          DWORD dwAccess, DWORD dwOptions)
-{
-  HANDLE hRet;
-
-  hRet = SHLWAPI_DupSharedHandle(hShared, dwDstProcId, dwSrcProcId,
-                                 dwAccess, dwOptions);
-  return hRet;
 }
 
 /*************************************************************************

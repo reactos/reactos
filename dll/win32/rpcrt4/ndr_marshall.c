@@ -1479,7 +1479,7 @@ static void EmbeddedPointerFree(PMIDL_STUB_MESSAGE pStubMsg,
         unsigned char *memptr = membase + *(const SHORT*)&info[0];
         unsigned char *saved_memory = pStubMsg->Memory;
 
-        pStubMsg->Memory = pMemory;
+        pStubMsg->Memory = membase;
         PointerFree(pStubMsg, *(unsigned char**)memptr, info+4);
         pStubMsg->Memory = saved_memory;
       }
