@@ -672,6 +672,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Text",0x00000000,"Bengali"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000445","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
 
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout File",0x00000000,"kbdinben.dll"
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout Text",0x00000000,"Bengali"
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000845","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5135"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout File",0x00000000,"kbdinguj.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Text",0x00000000,"Gujarati"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000447","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5097"
