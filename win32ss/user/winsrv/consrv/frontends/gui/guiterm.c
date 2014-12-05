@@ -226,8 +226,6 @@ GuiConsoleInputThread(PVOID Data)
                 }
 
                 continue;
-
-                continue;
             }
 
             case PM_DESTROY_CONSOLE:
@@ -254,7 +252,6 @@ GuiConsoleInputThread(PVOID Data)
                 if (GuiData->hWindow == NULL) continue;
 
                 DestroyWindow(GuiData->hWindow);
-                PrivateCsrssManualGuiCheck(+1); // RemoveGuiApp
 
                 NtSetEvent(GuiData->hGuiTermEvent, NULL);
 
@@ -489,7 +486,6 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
                   NULL, SynchronizationEvent, FALSE);
     NtCreateEvent(&GuiData->hGuiTermEvent, EVENT_ALL_ACCESS,
                   NULL, SynchronizationEvent, FALSE);
-    GuiData->hGuiTermEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     DPRINT("GUI - Checkpoint\n");
 

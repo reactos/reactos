@@ -513,10 +513,6 @@ ConSrvDisconnect(PCSR_PROCESS Process)
     {
         DPRINT("ConSrvDisconnect - calling ConSrvRemoveConsole\n");
         ConSrvRemoveConsole(ProcessData);
-
-        /* Mark the process as not having a console anymore */
-        ProcessData->ConsoleApp = FALSE;
-        Process->Flags &= ~CsrProcessIsConsoleApp;
     }
 
     RtlDeleteCriticalSection(&ProcessData->HandleTableLock);
