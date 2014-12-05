@@ -57,6 +57,11 @@
 #define IDM_HELP_ISTHISCOPYLEGAL         0xA104
 #define IDM_HELP_ABOUT                   0xA102
 
+#define IDM_TASKBAR_TOOLBARS                268
+#define IDM_TASKBAR_TOOLBARS_DESKTOP          3
+#define IDM_TASKBAR_TOOLBARS_QUICKLAUNCH      4
+#define IDM_TASKBAR_TOOLBARS_NEW              1
+
 #define IDM_GOTO_TRAVEL_FIRST       0xA141
 #define IDM_GOTO_TRAVEL_LAST        0xA151
 #define IDM_GOTO_TRAVEL_SEP         IDM_GOTO_TRAVEL_FIRST
