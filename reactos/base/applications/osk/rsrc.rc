@@ -39,11 +39,15 @@ IDI_TOP       ICON "res/top.ico"
 IDI_RIGHT     ICON "res/right.ico"
 IDI_BOTTOM    ICON "res/bottom.ico"
 
+#include <reactos/manifest_exe.rc>
 
 // UTF-8
 #pragma code_page(65001)
 #ifdef LANGUAGE_AR_DZ
     #include "lang/ar-DZ.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
