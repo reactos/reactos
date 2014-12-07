@@ -646,4 +646,57 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+NtfsReadFCBAttribute(PNTFS_VCB Vcb,
+                     PNTFS_FCB pFCB,
+                     ULONG Type, 
+                     PCWSTR Name,
+                     ULONG NameLength,
+                     PVOID * Data)
+{
+    NTSTATUS Status;
+    PFILE_RECORD_HEADER FileRecord;
+    PNTFS_ATTR_CONTEXT AttrCtxt;
+    ULONGLONG AttrLength;
+
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                       Vcb->NtfsInfo.BytesPerFileRecord,
+                                       TAG_NTFS);
+    if (FileRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(Vcb, NTFS_FILE_BITMAP, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    Status = FindAttribute(Vcb, FileRecord, Type, Name, NameLength, &AttrCtxt);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    AttrLength = AttributeDataLength(&AttrCtxt->Record);
+    *Data = ExAllocatePoolWithTag(NonPagedPool, AttrLength, TAG_NTFS);
+    if (*Data == NULL)
+    {
+        ReleaseAttributeContext(AttrCtxt);
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ReadAttribute(Vcb, AttrCtxt, 0, *Data, AttrLength);
+
+    ReleaseAttributeContext(AttrCtxt);
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

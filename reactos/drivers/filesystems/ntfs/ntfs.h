@@ -615,6 +615,14 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pFCB,
                   const PWSTR pFileName);
 
+NTSTATUS
+NtfsReadFCBAttribute(PNTFS_VCB Vcb,
+                     PNTFS_FCB pFCB,
+                     ULONG Type, 
+                     PCWSTR Name,
+                     ULONG NameLength,
+                     PVOID * Data);
+
 
 /* finfo.c */
 

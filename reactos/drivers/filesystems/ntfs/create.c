@@ -245,21 +245,43 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return STATUS_NOT_A_DIRECTORY;
         }
 
-        /* Properly handle reparse points:
-         * - likely overwrite FO name
-         * - return STATUS_REPARSE to IO manager
-         * - Do we have to attach reparse data to Irp->Tail.Overlay.AuxiliaryBuffer?
-         * See: http://www.osronline.com/showThread.cfm?link=6623
-         *
+        /*
          * If it is a reparse point & FILE_OPEN_REPARSE_POINT, then allow opening it
          * as a normal file.
+         * Otherwise, attempt to read reparse data and hand them to the Io manager
+         * with status reparse to force a reparse.
          */
         if (NtfsFCBIsReparsePoint(Fcb) &&
             ((RequestedOptions & FILE_OPEN_REPARSE_POINT) != FILE_OPEN_REPARSE_POINT))
         {
-            DPRINT1("Reparse point not handled!\n");
+            if (Fcb->Entry.Extended.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                Status = NtfsReadFCBAttribute(DeviceExt, Fcb,
+                                              AttributeReparsePoint, L"", 0,
+                                              (PVOID *)&Irp->Tail.Overlay.AuxiliaryBuffer);
+                if (NT_SUCCESS(Status))
+                {
+                    PREPARSE_DATA_BUFFER ReparseData;
+
+                    ReparseData = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+                    if (ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
+                    {
+                        Status = STATUS_REPARSE;
+                    }
+                    else
+                    {
+                        Status = STATUS_FILE_CORRUPT_ERROR;
+                        ExFreePoolWithTag(ReparseData, TAG_NTFS);
+                    }
+                }
+            }
+            else
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+            }
+
             NtfsCloseFile(DeviceExt, FileObject);
-            return STATUS_NOT_IMPLEMENTED;
+            return Status;
         }
 
         /* HUGLY HACK: remain RO so far... */
