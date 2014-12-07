@@ -245,6 +245,23 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return STATUS_NOT_A_DIRECTORY;
         }
 
+        /* Properly handle reparse points:
+         * - likely overwrite FO name
+         * - return STATUS_REPARSE to IO manager
+         * - Do we have to attach reparse data to Irp->Tail.Overlay.AuxiliaryBuffer?
+         * See: http://www.osronline.com/showThread.cfm?link=6623
+         *
+         * If it is a reparse point & FILE_OPEN_REPARSE_POINT, then allow opening it
+         * as a normal file.
+         */
+        if (NtfsFCBIsReparsePoint(Fcb) &&
+            ((RequestedOptions & FILE_OPEN_REPARSE_POINT) != FILE_OPEN_REPARSE_POINT))
+        {
+            DPRINT1("Reparse point not handled!\n");
+            NtfsCloseFile(DeviceExt, FileObject);
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
         /* HUGLY HACK: remain RO so far... */
         if (RequestedDisposition == FILE_OVERWRITE ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
