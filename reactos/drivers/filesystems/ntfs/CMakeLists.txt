@@ -4,6 +4,7 @@ list(APPEND SOURCE
     blockdev.c
     close.c
     create.c
+    devctl.c
     dirctl.c
     dispatch.c
     fastio.c

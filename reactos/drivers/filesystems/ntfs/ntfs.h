@@ -519,6 +519,14 @@ NtfsFsdCreate(PDEVICE_OBJECT DeviceObject,
               PIRP Irp);
 
 
+/* devctl.c */
+
+DRIVER_DISPATCH NtfsFsdDeviceControl;
+NTSTATUS NTAPI
+NtfsFsdDeviceControl(PDEVICE_OBJECT DeviceObject,
+                     PIRP Irp);
+
+
 /* dirctl.c */
 
 DRIVER_DISPATCH NtfsFsdDirectoryControl;
