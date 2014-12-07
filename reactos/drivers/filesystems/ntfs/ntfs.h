@@ -565,6 +565,9 @@ BOOLEAN
 NtfsFCBIsDirectory(PNTFS_FCB Fcb);
 
 BOOLEAN
+NtfsFCBIsReparsePoint(PNTFS_FCB Fcb);
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb);
 
 VOID

@@ -125,6 +125,13 @@ NtfsFCBIsDirectory(PNTFS_FCB Fcb)
 
 
 BOOLEAN
+NtfsFCBIsReparsePoint(PNTFS_FCB Fcb)
+{
+    return ((Fcb->Entry.FileAttributes & NTFS_FILE_TYPE_REPARSE) == NTFS_FILE_TYPE_REPARSE);
+}
+
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb)
 {
     return (wcscmp(Fcb->PathName, L"\\") == 0);
