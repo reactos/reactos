@@ -1586,6 +1586,14 @@ Language=English
 An initialization failure occurred while attempting to boot from the RAM disk.
 .
 
+MessageId=0xF9
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_RETURNED_STATUS_REPARSE_FOR_VOLUME_OPEN
+Language=English
+STATUS_REPARSE was returned from a FSD when trying to open a volume.
+.
+
 MessageId=0xFA
 Severity=Success
 Facility=System
