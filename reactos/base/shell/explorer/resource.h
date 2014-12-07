@@ -17,6 +17,14 @@
 
 #define IDB_STARTMENU 101
 
+#define IDA_TASKBAR 251
+
+#define IDMA_START 305
+#define IDMA_CYCLE_FOCUS 41008
+#define IDMA_SEARCH 41093
+#define IDMA_RESTORE_OPEN 416
+#define IDMA_MINIMIZE_ALL 419
+
 #define ID_SHELL_CMD_FIRST              0xF
 #define ID_SHELL_CMD_LAST               0x7FEF
 #define ID_SHELL_CMD_PROPERTIES         (ID_SHELL_CMD_LAST + 1)
