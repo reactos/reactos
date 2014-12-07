@@ -1717,7 +1717,7 @@ MUI_STRING csCZStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTyp %-3u%s                      %6lu %s"},
+    "%c%c %c %sTyp %-3u%s                     %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,

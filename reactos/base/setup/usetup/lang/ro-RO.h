@@ -1786,7 +1786,7 @@ MUI_STRING roROStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "de pe Discul %lu (%I64u %s), Port=%hu, Magistrala=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTip %-3u%s                       %6lu %s"},
+    "%c%c %c %sTip %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Discul %lu  (Port=%hu, Magistrala=%hu, Id=%hu) de tip %S"},
     {STRING_HDDINFOUNK6,

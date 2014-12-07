@@ -1757,7 +1757,7 @@ MUI_STRING nlNLStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "op Schijf %lu (%I64u %s), Poort=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sType %-3u%s                       %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Schijf %lu  (Poort=%hu, Bus=%hu, Id=%hu) op %S"},
     {STRING_HDDINFOUNK6,

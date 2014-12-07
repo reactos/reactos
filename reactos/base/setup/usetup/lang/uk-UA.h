@@ -1718,7 +1718,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на Жорсткому диску %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sType %-3u%s                       %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,

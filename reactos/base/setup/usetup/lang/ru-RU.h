@@ -1713,7 +1713,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на жестком диске %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sЗапись %-3u%s                       %6lu %s"},
+    "%c%c %c %sЗапись %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Жесткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) на %S"},
     {STRING_HDDINFOUNK6,

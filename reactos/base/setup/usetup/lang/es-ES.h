@@ -1718,7 +1718,7 @@ MUI_STRING esESStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "en Disco duro %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTipo %-3u%s                       %6lu %s"},
+    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %S"},
     {STRING_HDDINFOUNK6,

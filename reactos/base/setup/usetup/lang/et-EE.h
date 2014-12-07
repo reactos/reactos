@@ -1709,7 +1709,7 @@ MUI_STRING etEEStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "K‰vaketas %lu (%I64u %s), Port=%hu, Siin=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTÅÅp %-3u%s                       %6lu %s"},
+    "%c%c %c %sTÅÅp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  K‰vaketas %lu  (Port=%hu, Siin=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,

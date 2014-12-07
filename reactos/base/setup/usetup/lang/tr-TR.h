@@ -1696,7 +1696,7 @@ MUI_STRING trTRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "özerinde: SÉbit Disk %lu (%I64u %s), Giriü=%hu, Veriyolu=%hu, Kimlik=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTÅr  %-3u%s                       %6lu %s"},
+    "%c%c %c %sTÅr  %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  SÉbit Disk %lu  (Giriü=%hu, Veriyolu=%hu, Kimlik=%hu), %S Åzerinde"},
     {STRING_HDDINFOUNK6,

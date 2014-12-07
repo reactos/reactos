@@ -1722,7 +1722,7 @@ MUI_STRING frFRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "sur Disque dur %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sType %-3u%s                       %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disque dur %lu  (Port=%hu, Bus=%hu, Id=%hu) sur %S"},
     {STRING_HDDINFOUNK6,

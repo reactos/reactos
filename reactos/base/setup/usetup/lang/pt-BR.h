@@ -1748,7 +1748,7 @@ MUI_STRING ptBRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "em Disco %lu (%I64u %s), Porta=%hu, Barramento=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTipo %-3u%s                       %6lu %s"},
+    "%c%c %c %sTipo %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Disco %lu  (Porta=%hu, Barramento=%hu, Id=%hu) em %S"},
     {STRING_HDDINFOUNK6,
