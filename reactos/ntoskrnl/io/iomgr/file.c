@@ -162,6 +162,107 @@ IopCheckDeviceAndDriver(IN POPEN_PACKET OpenPacket,
     }
 }
 
+VOID
+NTAPI
+IopDoNameTransmogrify(IN PIRP Irp,
+                      IN PFILE_OBJECT FileObject,
+                      IN PREPARSE_DATA_BUFFER DataBuffer)
+{
+    PWSTR Buffer;
+    USHORT Length;
+    USHORT RequiredLength;
+    PWSTR NewBuffer;
+
+    PAGED_CODE();
+
+    ASSERT(Irp->IoStatus.Status == STATUS_REPARSE);
+    ASSERT(Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT);
+    ASSERT(Irp->Tail.Overlay.AuxiliaryBuffer != NULL);
+    ASSERT(DataBuffer != NULL);
+    ASSERT(DataBuffer->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT);
+    ASSERT(DataBuffer->ReparseDataLength < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+    ASSERT(DataBuffer->Reserved < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+
+    /* First of all, validate data */
+    if (DataBuffer->ReparseDataLength < REPARSE_DATA_BUFFER_HEADER_SIZE ||
+        (DataBuffer->SymbolicLinkReparseBuffer.PrintNameLength +
+         DataBuffer->SymbolicLinkReparseBuffer.SubstituteNameLength +
+         FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer.PathBuffer[0])) > MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+    {
+        Irp->IoStatus.Status = STATUS_IO_REPARSE_DATA_INVALID;
+    }
+
+    /* Everything went right */
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* Compute buffer & length */
+        Buffer = (PWSTR)((ULONG_PTR)DataBuffer->MountPointReparseBuffer.PathBuffer +
+                                    DataBuffer->MountPointReparseBuffer.SubstituteNameOffset);
+        Length = DataBuffer->MountPointReparseBuffer.SubstituteNameLength;
+
+        /* Check we don't overflow */
+        if ((MAXUSHORT - DataBuffer->Reserved) <= (Length + sizeof(UNICODE_NULL)))
+        {
+            Irp->IoStatus.Status = STATUS_IO_REPARSE_DATA_INVALID;
+        }
+        else
+        {
+            /* Compute how much mem we'll need */
+            RequiredLength = DataBuffer->Reserved + Length + sizeof(UNICODE_NULL);
+
+            /* Check if FileObject can already hold what we need */
+            if (FileObject->FileName.MaximumLength >= RequiredLength)
+            {
+                NewBuffer = FileObject->FileName.Buffer;
+            }
+            else
+            {
+                /* Allocate otherwise */
+                NewBuffer = ExAllocatePoolWithTag(PagedPool, RequiredLength, TAG_IO_NAME);
+                if (NewBuffer == NULL)
+                {
+                     Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+                }
+            }
+        }
+    }
+
+    /* Everything went right */
+    if (NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* Copy reserved */
+        if (DataBuffer->Reserved)
+        {
+            RtlMoveMemory((PWSTR)((ULONG_PTR)NewBuffer + Length),
+                          (PWSTR)((ULONG_PTR)FileObject->FileName.Buffer + FileObject->FileName.Length - DataBuffer->Reserved),
+                          DataBuffer->Reserved);
+        }
+
+        /* Then, buffer */
+        if (Length)
+        {
+            RtlCopyMemory(NewBuffer, Buffer, Length);
+        }
+
+        /* And finally replace buffer if new one was allocated */
+        FileObject->FileName.Length = RequiredLength - sizeof(UNICODE_NULL);
+        if (NewBuffer != FileObject->FileName.Buffer)
+        {
+            if (FileObject->FileName.Buffer)
+            {
+                ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+            }
+
+            FileObject->FileName.Buffer = NewBuffer;
+            FileObject->FileName.MaximumLength = RequiredLength;
+            FileObject->FileName.Buffer[RequiredLength / sizeof(WCHAR) - 1] = UNICODE_NULL;
+        }
+    }
+
+    /* We don't need them anymore - it was allocated by the driver */
+    ExFreePool(DataBuffer);
+}
+
 NTSTATUS
 NTAPI
 IopParseDevice(IN PVOID ParseObject,
@@ -205,6 +306,23 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* Validate the open packet */
     if (!IopValidateOpenPacket(OpenPacket)) return STATUS_OBJECT_TYPE_MISMATCH;
+
+    /* Valide reparse point in case we traversed a mountpoint */
+    if (OpenPacket->TraversedMountPoint)
+    {
+        /* This is a reparse point we understand */
+        ASSERT(OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT);
+
+        /* Make sure we're dealing with correct DO */
+        if (OriginalDeviceObject->DeviceType != FILE_DEVICE_DISK &&
+            OriginalDeviceObject->DeviceType != FILE_DEVICE_CD_ROM &&
+            OriginalDeviceObject->DeviceType != FILE_DEVICE_VIRTUAL_DISK &&
+            OriginalDeviceObject->DeviceType != FILE_DEVICE_TAPE)
+        {
+            OpenPacket->FinalStatus = STATUS_IO_REPARSE_DATA_INVALID;
+            return STATUS_IO_REPARSE_DATA_INVALID;
+        }
+    }
 
     /* Check if we have a related file object */
     if (OpenPacket->RelatedFileObject)
@@ -404,6 +522,7 @@ IopParseDevice(IN PVOID ParseObject,
     /* Check if we can simply use a dummy file */
     UseDummyFile = ((OpenPacket->QueryOnly) || (OpenPacket->DeleteOnly));
 
+#if 1
     /* FIXME: Small hack still exists, have to check why...
      * This is triggered multiple times by usetup and then once per boot.
      */
@@ -424,6 +543,7 @@ IopParseDevice(IN PVOID ParseObject,
                           WRITE_DAC));
         DirectOpen = TRUE;
     }
+#endif
 
     /* Check if this is a direct open */
     if (!(RemainingName->Length) &&
@@ -482,6 +602,12 @@ IopParseDevice(IN PVOID ParseObject,
             /* Get the attached device */
             DeviceObject = IoGetAttachedDevice(DeviceObject);
         }
+    }
+
+    /* If we traversed a mount point, reset the information */
+    if (OpenPacket->TraversedMountPoint)
+    {
+        OpenPacket->TraversedMountPoint = FALSE;
     }
 
     /* Check if this is a secure FSD */
@@ -740,6 +866,26 @@ IopParseDevice(IN PVOID ParseObject,
         ASSERT(!Irp->PendingReturned);
         ASSERT(!Irp->MdlAddress);
 
+        /* Handle name change if required */
+        if (Status == STATUS_REPARSE)
+        {
+            /* Check this is a mount point */
+            if (OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                PREPARSE_DATA_BUFFER ReparseData;
+
+                /* Reparse point attributes were passed by the driver in the auxiliary buffer */
+                ASSERT(Irp->Tail.Overlay.AuxiliaryBuffer != NULL);
+                ReparseData = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+
+                ASSERT(ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT);
+                ASSERT(ReparseData->ReparseDataLength < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+                ASSERT(ReparseData->Reserved < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+
+                IopDoNameTransmogrify(Irp, FileObject, ReparseData);
+            }
+        }
+
         /* Completion happens at APC_LEVEL */
         KeRaiseIrql(APC_LEVEL, &OldIrql);
 
@@ -805,7 +951,90 @@ IopParseDevice(IN PVOID ParseObject,
     }
     else if (Status == STATUS_REPARSE)
     {
-        /* FIXME: We don't handle this at all! */
+        if (OpenPacket->Information == IO_REPARSE ||
+            OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+        {
+            /* Update CompleteName with reparse info which got updated in IopDoNameTransmogrify() */
+            if (CompleteName->MaximumLength < FileObject->FileName.Length)
+            {
+                PWSTR NewCompleteName;
+
+                /* Allocate a new buffer for the string */
+                NewCompleteName = ExAllocatePoolWithTag(PagedPool, FileObject->FileName.Length, TAG_IO_NAME);
+                if (NewCompleteName == NULL)
+                {
+                    OpenPacket->FinalStatus = STATUS_INSUFFICIENT_RESOURCES;
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                /* Release the old one */
+                if (CompleteName->Buffer != NULL)
+                {
+                    ExFreePoolWithTag(CompleteName->Buffer, TAG_IO_NAME);
+                }
+
+                /* And setup the new one */
+                CompleteName->Buffer = NewCompleteName;
+                CompleteName->MaximumLength = FileObject->FileName.Length;
+            }
+
+            /* Copy our new complete name */
+            RtlCopyUnicodeString(CompleteName, &FileObject->FileName);
+
+            if (OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                OpenPacket->RelatedFileObject = NULL;
+            }
+        }
+
+        /* Check if we have a name */
+        if (FileObject->FileName.Length)
+        {
+            /* Free it */
+            ExFreePoolWithTag(FileObject->FileName.Buffer, TAG_IO_NAME);
+            FileObject->FileName.Length = 0;
+        }
+
+        /* Clear its device object */
+        FileObject->DeviceObject = NULL;
+
+        /* Clear the file object in the open packet */
+        OpenPacket->FileObject = NULL;
+
+        /* Dereference the file object */
+        if (!UseDummyFile) ObDereferenceObject(FileObject);
+
+        /* Dereference the device object */
+        IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+
+        /* Unless the driver cancelled the open, dereference the VPB */
+        if (Vpb != NULL) IopDereferenceVpbAndFree(Vpb);
+
+        if (OpenPacket->Information != IO_REMOUNT)
+        {
+            OpenPacket->RelatedFileObject = NULL;
+
+            /* Inform we traversed a mount point for later attempt */
+            if (OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                OpenPacket->TraversedMountPoint = 1;
+            }
+
+            /* In case we override checks, but got this on volume open, fail hard */
+            if (OpenPacket->Override)
+            {
+                KeBugCheckEx(DRIVER_RETURNED_STATUS_REPARSE_FOR_VOLUME_OPEN,
+                             (ULONG_PTR)OriginalDeviceObject,
+                             (ULONG_PTR)DeviceObject,
+                             (ULONG_PTR)CompleteName,
+                             OpenPacket->Information);
+            }
+
+            /* Return to IO/OB so that information can be upgraded */
+            return STATUS_REPARSE;
+        }
+
+        /* FIXME: At that point, we should loop again and reattempt an opening */
         ASSERT(FALSE);
     }
 

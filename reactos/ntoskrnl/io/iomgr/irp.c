@@ -264,9 +264,15 @@ IopCompleteRequest(IN PKAPC Apc,
         if ((Irp->IoStatus.Status == STATUS_REPARSE) &&
             (Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT))
         {
-            /* We should never get this yet */
-            UNIMPLEMENTED_DBGBREAK("Reparse support not yet present!\n");
-            return;
+            PREPARSE_DATA_BUFFER ReparseData;
+
+            ReparseData = (PREPARSE_DATA_BUFFER)*SystemArgument2;
+
+            ASSERT(ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT);
+            ASSERT(ReparseData->ReparseDataLength < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+            ASSERT(ReparseData->Reserved < MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+
+            IopDoNameTransmogrify(Irp, FileObject, ReparseData);
         }
     }
 
