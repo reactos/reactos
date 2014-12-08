@@ -280,6 +280,8 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
                 Status = STATUS_NOT_IMPLEMENTED;
             }
 
+            Irp->IoStatus.Information = ((Status == STATUS_REPARSE) ? Fcb->Entry.Extended.ReparseTag : 0);
+
             NtfsCloseFile(DeviceExt, FileObject);
             return Status;
         }
