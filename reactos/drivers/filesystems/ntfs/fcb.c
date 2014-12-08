@@ -675,7 +675,7 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = ReadFileRecord(Vcb, NTFS_FILE_BITMAP, FileRecord);
+    Status = ReadFileRecord(Vcb, pFCB->MFTIndex, FileRecord);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(FileRecord, TAG_NTFS);
