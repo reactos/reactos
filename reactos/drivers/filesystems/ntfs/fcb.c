@@ -399,6 +399,7 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
 {
     WCHAR pathName[MAX_PATH];
     PFILENAME_ATTRIBUTE FileName;
+    PSTANDARD_INFORMATION StdInfo;
     PNTFS_FCB rcFCB;
 
     DPRINT1("NtfsMakeFCBFromDirEntry(%p, %p, %wZ, %p, %p)\n", Vcb, DirectoryFCB, Name, Record, fileFCB);
@@ -433,6 +434,12 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
     rcFCB->RFCB.FileSize.QuadPart = FileName->DataSize;
     rcFCB->RFCB.ValidDataLength.QuadPart = FileName->DataSize;
     rcFCB->RFCB.AllocationSize.QuadPart = FileName->AllocatedSize;
+
+    StdInfo = GetStandardInformationFromRecord(Record);
+    if (StdInfo != NULL)
+    {
+        rcFCB->Entry.FileAttributes |= StdInfo->FileAttribute;
+    }
 
     NtfsFCBInitializeCache(Vcb, rcFCB);
     rcFCB->RefCount = 1;
