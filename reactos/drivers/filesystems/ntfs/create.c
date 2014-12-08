@@ -254,33 +254,26 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         if (NtfsFCBIsReparsePoint(Fcb) &&
             ((RequestedOptions & FILE_OPEN_REPARSE_POINT) != FILE_OPEN_REPARSE_POINT))
         {
-            if (Fcb->Entry.Extended.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
-            {
-                Status = NtfsReadFCBAttribute(DeviceExt, Fcb,
-                                              AttributeReparsePoint, L"", 0,
-                                              (PVOID *)&Irp->Tail.Overlay.AuxiliaryBuffer);
-                if (NT_SUCCESS(Status))
-                {
-                    PREPARSE_DATA_BUFFER ReparseData;
+            PREPARSE_DATA_BUFFER ReparseData = NULL;
 
-                    ReparseData = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
-                    if (ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
-                    {
-                        Status = STATUS_REPARSE;
-                    }
-                    else
-                    {
-                        Status = STATUS_FILE_CORRUPT_ERROR;
-                        ExFreePoolWithTag(ReparseData, TAG_NTFS);
-                    }
+            Status = NtfsReadFCBAttribute(DeviceExt, Fcb,
+                                          AttributeReparsePoint, L"", 0,
+                                          (PVOID *)&Irp->Tail.Overlay.AuxiliaryBuffer);
+            if (NT_SUCCESS(Status))
+            {
+                ReparseData = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+                if (ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    Status = STATUS_REPARSE;
+                }
+                else
+                {
+                    Status = STATUS_NOT_IMPLEMENTED;
+                    ExFreePoolWithTag(ReparseData, TAG_NTFS);
                 }
             }
-            else
-            {
-                Status = STATUS_NOT_IMPLEMENTED;
-            }
 
-            Irp->IoStatus.Information = ((Status == STATUS_REPARSE) ? Fcb->Entry.Extended.ReparseTag : 0);
+            Irp->IoStatus.Information = ((Status == STATUS_REPARSE) ? ReparseData->ReparseTag : 0);
 
             NtfsCloseFile(DeviceExt, FileObject);
             return Status;
