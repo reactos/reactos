@@ -1245,6 +1245,7 @@ IofCompleteRequest(IN PIRP Irp,
     PIRP MasterIrp;
     ULONG Flags;
     NTSTATUS ErrorCode = STATUS_SUCCESS;
+    PREPARSE_DATA_BUFFER DataBuffer;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Completing IRP %p\n",
             __FUNCTION__,
@@ -1373,8 +1374,24 @@ IofCompleteRequest(IN PIRP Irp,
         return;
     }
 
-    /* We don't support this yet */
-    ASSERT(Irp->IoStatus.Status != STATUS_REPARSE);
+    /* Check whether we have to reparse */
+    if (Irp->IoStatus.Status == STATUS_REPARSE)
+    {
+        if (Irp->IoStatus.Information > IO_REMOUNT)
+        {
+            /* If that's a reparse tag we understand, save the buffer from deletion */
+            if (Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT)
+            {
+                ASSERT(Irp->Tail.Overlay.AuxiliaryBuffer != NULL);
+                DataBuffer = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+                Irp->Tail.Overlay.AuxiliaryBuffer = NULL;
+            }
+            else
+            {
+                Irp->IoStatus.Status = STATUS_IO_REPARSE_TAG_NOT_HANDLED;
+            }
+        }
+    }
 
     /* Check if we have an auxiliary buffer */
     if (Irp->Tail.Overlay.AuxiliaryBuffer)
@@ -1428,13 +1445,20 @@ IofCompleteRequest(IN PIRP Irp,
     Mdl = Irp->MdlAddress;
     while (Mdl)
     {
-		MmUnlockPages(Mdl);
+        MmUnlockPages(Mdl);
         Mdl = Mdl->Next;
     }
 
     /* Check if we should exit because of a Deferred I/O (page 168) */
     if ((Irp->Flags & IRP_DEFER_IO_COMPLETION) && !(Irp->PendingReturned))
     {
+        /* Restore the saved reparse buffer for the caller */
+        if (Irp->IoStatus.Status == STATUS_REPARSE &&
+            Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT)
+        {
+            Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)DataBuffer;
+        }
+
         /*
          * Return without queuing the completion APC, since the caller will
          * take care of doing its own optimized completion at PASSIVE_LEVEL.
@@ -1462,7 +1486,7 @@ IofCompleteRequest(IN PIRP Irp,
         /* Queue it */
         KeInsertQueueApc(&Irp->Tail.Apc,
                          FileObject,
-                         NULL, /* This is used for REPARSE stuff */
+                         DataBuffer,
                          PriorityBoost);
     }
     else
@@ -1483,7 +1507,7 @@ IofCompleteRequest(IN PIRP Irp,
             /* Queue it */
             KeInsertQueueApc(&Irp->Tail.Apc,
                              FileObject,
-                             NULL, /* This is used for REPARSE stuff */
+                             DataBuffer,
                              PriorityBoost);
         }
         else
