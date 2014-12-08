@@ -104,7 +104,23 @@ NtfsDumpFileNameAttribute(PNTFS_ATTR_RECORD Attribute)
 //    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
 
     FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
-    DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
+    DbgPrint(" (%x) '%.*S' ", FileNameAttr->NameType, FileNameAttr->NameLength, FileNameAttr->Name);
+    DbgPrint(" '%x' ", FileNameAttr->FileAttributes);
+}
+
+
+static
+VOID
+NtfsDumpStandardInformationAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PSTANDARD_INFORMATION StandardInfoAttr;
+
+    DbgPrint("  $STANDARD_INFORMATION ");
+
+//    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
+
+    StandardInfoAttr = (PSTANDARD_INFORMATION)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+    DbgPrint(" '%x' ", StandardInfoAttr->FileAttribute);
 }
 
 
@@ -182,7 +198,7 @@ NtfsDumpAttribute(PNTFS_ATTR_RECORD Attribute)
             break;
 
         case AttributeStandardInformation:
-            DbgPrint("  $STANDARD_INFORMATION ");
+            NtfsDumpStandardInformationAttribute(Attribute);
             break;
 
         case AttributeAttributeList:
