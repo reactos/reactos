@@ -465,6 +465,9 @@ DecodeRun(PUCHAR DataRun,
 VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
 
+PSTANDARD_INFORMATION
+GetStandardInformationFromRecord(PFILE_RECORD_HEADER FileRecord);
+
 PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
 

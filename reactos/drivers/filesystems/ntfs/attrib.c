@@ -330,6 +330,28 @@ GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType)
     return NULL;
 }
 
+PSTANDARD_INFORMATION
+GetStandardInformationFromRecord(PFILE_RECORD_HEADER FileRecord)
+{
+    PNTFS_ATTR_RECORD Attribute;
+    PSTANDARD_INFORMATION StdInfo;
+
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeStandardInformation)
+        {
+            StdInfo = (PSTANDARD_INFORMATION)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+            return StdInfo;
+        }
+
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+    }
+
+    return NULL;
+}
+
 PFILENAME_ATTRIBUTE
 GetBestFileNameFromRecord(PFILE_RECORD_HEADER FileRecord)
 {
