@@ -47,13 +47,12 @@ CreateStartMenu(IN ITrayWindow *Tray,
                 IN BOOL bSmallIcons)
 {
     HRESULT hr;
-    IObjectWithSite *pOws = NULL;
-    IMenuPopup *pMp = NULL;
-    IUnknown *pSms = NULL;
-    IMenuBand *pMb = NULL;
-    IInitializeObject *pIo;
-    IUnknown *pUnk = NULL;
-    IBandSite *pBs = NULL;
+    CComPtr<IMenuPopup> pMp;
+    CComPtr<IUnknown> pSms;
+    CComPtr<IMenuBand> pMb;
+    CComPtr<IInitializeObject> pIo;
+    CComPtr<IUnknown> pUnk;
+    CComPtr<IBandSite> pBs;
     DWORD dwBandId = 0;
 
     hr = CreateStartMenuSite(Tray, IID_PPV_ARG(IUnknown, &pSms));
@@ -70,95 +69,47 @@ CreateStartMenu(IN ITrayWindow *Tray,
     hr = _CStartMenu_Constructor(IID_PPV_ARG(IMenuPopup, &pMp));
 #endif
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("CoCreateInstance failed: %x\n", hr);
-        goto cleanup;
-    }
-
-    hr = pMp->QueryInterface(IID_PPV_ARG(IObjectWithSite, &pOws));
-    if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IMenuPopup_QueryInterface failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     /* Set the menu site so we can handle messages */
-    hr = pOws->SetSite(pSms);
+    hr = IUnknown_SetSite(pMp, pSms);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IObjectWithSite_SetSite failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     /* Initialize the menu object */
     hr = pMp->QueryInterface(IID_PPV_ARG(IInitializeObject, &pIo));
     if (SUCCEEDED(hr))
-    {
         hr = pIo->Initialize();
-        pIo->Release();
-    }
     else
         hr = S_OK;
 
     /* Everything is initialized now. Let's get the IMenuBand interface. */
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IMenuPopup_QueryInterface failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     hr = pMp->GetClient(&pUnk);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IMenuPopup_GetClient failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     hr = pUnk->QueryInterface(IID_PPV_ARG(IBandSite, &pBs));
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IUnknown_QueryInterface pBs failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     /* Finally we have the IBandSite interface, there's only one
        band in it that apparently provides the IMenuBand interface */
     hr = pBs->EnumBands(0, &dwBandId);
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IBandSite_EnumBands failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     hr = pBs->GetBandObject(dwBandId, IID_PPV_ARG(IMenuBand, &pMb));
     if (FAILED_UNEXPECTEDLY(hr))
-    {
-        TRACE("IBandSite_GetBandObject failed: %x\n", hr);
-        goto cleanup;
-    }
+        return NULL;
 
     UpdateStartMenu(pMp,
                     hbmBanner,
                     bSmallIcons);
 
-cleanup:
-    if (SUCCEEDED(hr))
-        *ppMenuBand = pMb;
-    else if (pMb != NULL)
-        pMb->Release();
+    *ppMenuBand = pMb.Detach();
 
-    if (pBs != NULL)
-        pBs->Release();
-    if (pUnk != NULL)
-        pUnk->Release();
-    if (pOws != NULL)
-        pOws->Release();
-    if (pMp != NULL)
-        pMp->Release();
-    if (pSms != NULL)
-        pSms->Release();
-
-    if (FAILED_UNEXPECTEDLY(hr))
-        return NULL;
-    return pMp;
+    return pMp.Detach();
 }
