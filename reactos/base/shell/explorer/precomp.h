@@ -56,15 +56,23 @@ extern HKEY hkExplorer;
  * explorer.c
  */
 
+static inline 
 LONG
 SetWindowStyle(IN HWND hWnd,
 IN LONG dwStyleMask,
-IN LONG dwStyle);
+IN LONG dwStyle)
+{
+    return SHSetWindowBits(hWnd, GWL_STYLE, dwStyleMask, dwStyle);
+}
 
+static inline
 LONG
 SetWindowExStyle(IN HWND hWnd,
 IN LONG dwStyleMask,
-IN LONG dwStyle);
+IN LONG dwStyle)
+{
+    return SHSetWindowBits(hWnd, GWL_EXSTYLE, dwStyleMask, dwStyle);
+}
 
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,
