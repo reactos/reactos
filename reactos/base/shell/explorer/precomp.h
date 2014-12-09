@@ -28,6 +28,7 @@
 #include <strsafe.h>
 
 #include <undocuser.h>
+#include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <undocshell.h>
@@ -42,33 +43,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
 
-/* dynamic imports due to lack of support in msvc linker libs */
-typedef INT(APIENTRY *REGSHELLHOOK)(HWND, DWORD);
-#ifdef UNICODE
-#define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempW"
-typedef BOOL(APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
-#else
-#define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempA"
-typedef BOOL (APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCSTR, UINT);
-#endif
-typedef HRESULT(APIENTRY *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
-typedef void (APIENTRY *RUNFILEDLG)(HWND, HICON, LPCWSTR, LPCWSTR, LPCWSTR, UINT);
-typedef void (APIENTRY *EXITWINDLG)(HWND);
-typedef HRESULT(APIENTRY *SHWINHELP)(HWND, LPWSTR, UINT, DWORD);
-
-/* Constants for RunFileDlg */
-#define RFF_CALCDIRECTORY   0x04    /* Calculates the working directory from the file name. */
-
 #define ASSERT(cond) \
     do if (!(cond)) { \
         Win32DbgPrint(__FILE__, __LINE__, "ASSERTION %s FAILED!\n", #cond); \
         } while (0)
 
 extern HINSTANCE hExplorerInstance;
-extern HMODULE hUser32;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
-extern DRAWCAPTEMP DrawCapTemp;
 
 /*
  * dragdrop.c

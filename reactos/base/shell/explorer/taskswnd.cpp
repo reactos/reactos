@@ -1312,18 +1312,7 @@ public:
 
         TRACE("ShellHookMsg got assigned number %d\n", ShellHookMsg);
 
-        HMODULE hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-        if (hShell32 != NULL)
-        {
-            REGSHELLHOOK RegShellHook;
-
-            /* RegisterShellHook */
-            RegShellHook = (REGSHELLHOOK) GetProcAddress(hShell32, (LPCSTR) ((LONG) 181));
-            if (RegShellHook != NULL)
-            {
-                RegShellHook(m_hWnd, 3); /* 1 if no NT! We're targeting NT so we don't care! */
-            }
-        }
+        RegisterShellHook(m_hWnd, 3); /* 1 if no NT! We're targeting NT so we don't care! */
 
         RefreshWindowList();
 
@@ -1338,25 +1327,10 @@ public:
 
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        HMODULE hShell32;
-
         IsDestroying = TRUE;
 
         /* Unregister the shell hook */
-        hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-        if (hShell32 != NULL)
-        {
-            REGSHELLHOOK RegShellHook;
-
-            /* RegisterShellHook */
-            RegShellHook = (REGSHELLHOOK) GetProcAddress(hShell32,
-                (LPCSTR) ((LONG) 181));
-            if (RegShellHook != NULL)
-            {
-                RegShellHook(m_hWnd,
-                    FALSE);
-            }
-        }
+        RegisterShellHook(m_hWnd, FALSE);
 
         CloseThemeData(TaskBandTheme);
         DeleteAllTasks();

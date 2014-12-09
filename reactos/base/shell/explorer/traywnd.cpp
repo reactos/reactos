@@ -1364,16 +1364,13 @@ DefSize:
         if (hIconStart != NULL)
             Flags |= DC_ICON;
 
-        if (DrawCapTemp != NULL)
-        {
-            Ret = DrawCapTemp(NULL,
-                              hDC,
-                              &rcButton,
-                              hStartBtnFont,
-                              hIconStart,
-                              szStartCaption,
-                              Flags);
-        }
+        DrawCaptionTemp(NULL,
+                        hDC,
+                        &rcButton,
+                        hStartBtnFont,
+                        hIconStart,
+                        szStartCaption,
+                        Flags);
 
         SelectObject(hDC,
                      hbmpOld);
@@ -1926,8 +1923,6 @@ SetStartBtnImage:
 
     DWORD WINAPI RunFileDlgThread()
     {
-        HINSTANCE hShell32;
-        RUNFILEDLG RunFileDlg;
         HWND hwnd;
         RECT posRect;
 
@@ -1947,9 +1942,6 @@ SetStartBtnImage:
                               NULL);
 
         hwndRunFileDlgOwner = hwnd;
-
-        hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-        RunFileDlg = (RUNFILEDLG) GetProcAddress(hShell32, (LPCSTR) 61);
 
         RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
 

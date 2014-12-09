@@ -83,26 +83,11 @@ public:
         IN IShellFolder *pShellFolder,
         IN LPCITEMIDLIST pidl)
     {
-        HMODULE hShlwapi;
         HRESULT ret = S_FALSE;
 
         TRACE("ITrayPriv::Execute\n");
 
-        hShlwapi = GetModuleHandle(TEXT("SHLWAPI.DLL"));
-        if (hShlwapi != NULL)
-        {
-            SHINVDEFCMD SHInvokeDefCmd;
-
-            /* SHInvokeDefaultCommand */
-            SHInvokeDefCmd = (SHINVDEFCMD) GetProcAddress(hShlwapi,
-                                                          (LPCSTR) ((LONG) 279));
-            if (SHInvokeDefCmd != NULL)
-            {
-                ret = SHInvokeDefCmd(Tray->GetHWND(),
-                                     pShellFolder,
-                                     pidl);
-            }
-        }
+        ret = SHInvokeDefaultCommand(Tray->GetHWND(), pShellFolder, pidl);
 
         return ret;
     }
