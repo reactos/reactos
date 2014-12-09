@@ -53,40 +53,6 @@ extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
 
 /*
- * dragdrop.c
- */
-
-typedef struct _DROPTARGET_CALLBACKS
-{
-    HRESULT(*OnDragEnter)(IN IDropTarget *pDropTarget,
-                          IN PVOID Context,
-                          IN const FORMATETC *Format,
-                          IN DWORD grfKeyState,
-                          IN POINTL pt,
-                          IN OUT DWORD *pdwEffect);
-    HRESULT(*OnDragOver)(IN IDropTarget *pDropTarget,
-                         IN PVOID Context,
-                         IN DWORD grfKeyState,
-                         IN POINTL pt,
-                         IN OUT DWORD *pdwEffect);
-    HRESULT(*OnDragLeave)(IN IDropTarget *pDropTarget,
-                          IN PVOID Context);
-    HRESULT(*OnDrop)(IN IDropTarget *pDropTarget,
-                     IN PVOID Context,
-                     IN const FORMATETC *Format,
-                     IN DWORD grfKeyState,
-                     IN POINTL pt,
-                     IN OUT DWORD *pdwEffect);
-} DROPTARGET_CALLBACKS, *PDROPTARGET_CALLBACKS;
-
-IDropTarget *
-CreateDropTarget(IN HWND hwndTarget,
-IN DWORD nSupportedFormats,
-IN const FORMATETC *Formats  OPTIONAL,
-IN PVOID Context  OPTIONAL,
-IN const DROPTARGET_CALLBACKS *Callbacks  OPTIONAL);
-
-/*
  * explorer.c
  */
 
