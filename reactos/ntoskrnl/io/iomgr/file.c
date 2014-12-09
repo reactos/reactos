@@ -870,7 +870,7 @@ IopParseDevice(IN PVOID ParseObject,
         if (Status == STATUS_REPARSE)
         {
             /* Check this is a mount point */
-            if (OpenPacket->Information == IO_REPARSE_TAG_MOUNT_POINT)
+            if (Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT)
             {
                 PREPARSE_DATA_BUFFER ReparseData;
 
