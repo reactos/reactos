@@ -626,14 +626,23 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
     InputBuffer = (PNTFS_FILE_RECORD_INPUT_BUFFER)Irp->AssociatedIrp.SystemBuffer;
 
     MFTRecord = InputBuffer->FileReferenceNumber.QuadPart;
-    Status = ReadFileRecord(DeviceExt, MFTRecord, FileRecord);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed reading record: %I64x\n", MFTRecord);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        return Status;
-    }
+    DPRINT1("Requesting: %I64x\n", MFTRecord);
 
+    do
+    {
+        Status = ReadFileRecord(DeviceExt, MFTRecord, FileRecord);
+        if (NT_SUCCESS(Status))
+        {
+            if (FileRecord->Flags & FRH_IN_USE)
+            {
+                break;
+            }
+        }
+
+        --MFTRecord;
+    } while (TRUE);
+
+    DPRINT1("Returning: %I64x\n", MFTRecord);
     OutputBuffer = (PNTFS_FILE_RECORD_OUTPUT_BUFFER)Irp->AssociatedIrp.SystemBuffer;
     OutputBuffer->FileReferenceNumber.QuadPart = MFTRecord;
     OutputBuffer->FileRecordLength = DeviceExt->NtfsInfo.BytesPerFileRecord;
