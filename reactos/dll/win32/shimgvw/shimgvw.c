@@ -76,24 +76,13 @@ static void pSaveImageAs(HWND hwnd)
     OPENFILENAMEW sfn;
     ImageCodecInfo *codecInfo;
     WCHAR szSaveFileName[MAX_PATH];
-    WCHAR szFilterMask[2048];
+    WCHAR *szFilterMask;
     GUID rawFormat;
     UINT num;
     UINT size;
     UINT sizeRemain;
     UINT j;
     WCHAR *c;
-
-    ZeroMemory(szSaveFileName, sizeof(szSaveFileName));
-    ZeroMemory(szFilterMask, sizeof(szFilterMask));
-    ZeroMemory(&sfn, sizeof(sfn));
-    sfn.lStructSize = sizeof(sfn);
-    sfn.hwndOwner   = hwnd;
-    sfn.hInstance   = hInstance;
-    sfn.lpstrFile   = szSaveFileName;
-    sfn.lpstrFilter = szFilterMask;
-    sfn.nMaxFile    = MAX_PATH;
-    sfn.Flags       = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
     GdipGetImageEncodersSize(&num, &size);
     codecInfo = malloc(size);
@@ -106,7 +95,36 @@ static void pSaveImageAs(HWND hwnd)
     GdipGetImageEncoders(num, size, codecInfo);
     GdipGetImageRawFormat(image, &rawFormat);
 
-    sizeRemain = sizeof(szFilterMask);
+    sizeRemain = 0;
+
+    for (j = 0; j < num; ++j)
+    {
+        // Every pair needs space for the Description, twice the Extensions, 1 char for the space, 2 for the braces and 2 for the NULL terminators.
+        sizeRemain = sizeRemain + (((wcslen(codecInfo[j].FormatDescription) + (wcslen(codecInfo[j].FilenameExtension) * 2) + 5) * sizeof(WCHAR)));
+    }
+
+    /* Add two more chars for the last terminator */
+    sizeRemain = sizeRemain + (sizeof(WCHAR) * 2);
+
+    szFilterMask = malloc(sizeRemain);
+    if (!szFilterMask)
+    {
+        DPRINT1("cannot allocate memory for filter mask in pSaveImageAs()");
+        free(codecInfo);
+        return;
+    }
+
+    ZeroMemory(szSaveFileName, sizeof(szSaveFileName));
+    ZeroMemory(szFilterMask, sizeRemain);
+    ZeroMemory(&sfn, sizeof(sfn));
+    sfn.lStructSize = sizeof(sfn);
+    sfn.hwndOwner   = hwnd;
+    sfn.hInstance   = hInstance;
+    sfn.lpstrFile   = szSaveFileName;
+    sfn.lpstrFilter = szFilterMask;
+    sfn.nMaxFile    = MAX_PATH;
+    sfn.Flags       = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+
     c = szFilterMask;
 
     for (j = 0; j < num; ++j)
@@ -137,6 +155,7 @@ static void pSaveImageAs(HWND hwnd)
         }
     }
 
+    free(szFilterMask);
     free(codecInfo);
 }
 
