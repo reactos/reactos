@@ -135,7 +135,7 @@ DWORD WINAPI _WinList_Init(void)
         }
     }
 
-    hFallback = GetModuleHandleW(L"shdocvw.dll");
+    hFallback = LoadLibraryW(L"shdocvw.dll");
 
     if (hFallback)
     {
