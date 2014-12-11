@@ -322,6 +322,13 @@ pFreeFileList(SHIMGVW_FILENODE *root)
 }
 
 static VOID
+ImageView_UpdateWindow(HWND hwnd)
+{
+    InvalidateRect(hwnd, NULL, FALSE);
+    UpdateWindow(hwnd);
+}
+
+static VOID
 ImageView_DrawImage(HWND hwnd)
 {
     GpGraphics *graphics;
@@ -561,9 +568,17 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 break;
                 case IDC_ROT1:
+                {
+                    GdipImageRotateFlip(image, Rotate270FlipNone);
+                    ImageView_UpdateWindow(hwnd);
+                }
 
                 break;
                 case IDC_ROT2:
+                {
+                    GdipImageRotateFlip(image, Rotate90FlipNone);
+                    ImageView_UpdateWindow(hwnd);
+                }
 
                 break;
             }
