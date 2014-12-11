@@ -650,6 +650,8 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
 
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
 
+    Irp->IoStatus.Information = FIELD_OFFSET(NTFS_FILE_RECORD_OUTPUT_BUFFER, FileRecordBuffer) + DeviceExt->NtfsInfo.BytesPerFileRecord;
+
     return STATUS_SUCCESS;
 }
 
@@ -699,6 +701,8 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
+    Irp->IoStatus.Information = 0;
+
     switch (Stack->MinorFunction)
     {
         case IRP_MN_KERNEL_CALL:
@@ -727,7 +731,6 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
     }
 
     Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
