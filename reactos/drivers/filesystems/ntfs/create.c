@@ -186,6 +186,12 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_INVALID_PARAMETER;
     }
 
+    if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
+    {
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     FileObject = Stack->FileObject;
 
     if (RequestedDisposition == FILE_CREATE ||
