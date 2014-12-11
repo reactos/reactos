@@ -272,55 +272,31 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite)
     {
-        HRESULT hRet = E_FAIL;
+        HRESULT hRet;
+        HWND hwndSite;
 
         TRACE("ITaskBand::SetSite(0x%p)\n", pUnkSite);
 
-        /* Release the current site */
-        if (m_Site != NULL)
+        hRet = IUnknown_GetWindow(pUnkSite, &hwndSite);
+        if (FAILED(hRet))
         {
-            m_Site->Release();
+            TRACE("Querying site window failed: 0x%x\n", hRet);
+            return hRet;
         }
 
-        m_Site = NULL;
-        m_hWnd = NULL;
+        TRACE("CreateTaskSwitchWnd(Parent: 0x%p)\n", hwndSite);
 
-        if (pUnkSite != NULL)
+        HWND hwndTaskSwitch = CreateTaskSwitchWnd(hwndSite, m_Tray);
+        if (!hwndTaskSwitch)
         {
-            CComPtr<IOleWindow> OleWindow;
-
-            /* Check if the site supports IOleWindow */
-            hRet = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
-            if (SUCCEEDED(hRet))
-            {
-                HWND hWndParent = NULL;
-
-                hRet = OleWindow->GetWindow(&hWndParent);
-                if (SUCCEEDED(hRet))
-                {
-                    /* Attempt to create the task switch window */
-
-                    TRACE("CreateTaskSwitchWnd(Parent: 0x%p)\n", hWndParent);
-                    m_hWnd = CreateTaskSwitchWnd(hWndParent, m_Tray);
-                    if (m_hWnd != NULL)
-                    {
-                        m_Site = pUnkSite;
-                        hRet = S_OK;
-                    }
-                    else
-                    {
-                        TRACE("CreateTaskSwitchWnd() failed!\n");
-                        hRet = E_FAIL;
-                    }
-                }
-            }
-            else
-            {
-                TRACE("Querying IOleWindow failed: 0x%x\n", hRet);
-            }
+            ERR("CreateTaskSwitchWnd failed");
+            return E_FAIL;
         }
 
-        return hRet;
+        m_Site = pUnkSite;
+        m_hWnd = hwndTaskSwitch;
+
+        return S_OK;
     }
 
     virtual HRESULT STDMETHODCALLTYPE GetSite(

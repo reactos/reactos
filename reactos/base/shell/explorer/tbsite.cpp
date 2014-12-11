@@ -350,23 +350,9 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE AddBand(IN IUnknown *punk)
     {
-        IOleCommandTarget *pOct;
-        HRESULT hRet;
-
-        hRet = punk->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &pOct));
-        if (SUCCEEDED(hRet))
-        {
-            /* Send the DBID_DELAYINIT command to initialize the band to be added */
-            /* FIXME: Should be delayed */
-            pOct->Exec(
-                &IID_IDeskBand,
-                DBID_DELAYINIT,
-                0,
-                NULL,
-                NULL);
-
-            pOct->Release();
-        }
+        /* Send the DBID_DELAYINIT command to initialize the band to be added */
+        /* FIXME: Should be delayed */
+        IUnknown_Exec(punk, IID_IDeskBand, DBID_DELAYINIT, 0, NULL, NULL);
 
         return m_BandSite->AddBand(punk);
     }
