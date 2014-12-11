@@ -352,65 +352,27 @@ ImageView_DrawImage(HWND hwnd)
     {
         FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
-        if ((rect.right == uImgWidth)&&(rect.bottom == uImgHeight))
+        if ((rect.right >= uImgWidth)&&(rect.bottom >= uImgHeight))
         {
-            x = 0, y = 0, width = rect.right, height = rect.bottom;
-        }
-        else if ((rect.right >= uImgWidth)&&(rect.bottom >= uImgHeight))
-        {
-            x = (rect.right/2)-(uImgWidth/2);
-            y = (rect.bottom/2)-(uImgHeight/2);
             width = uImgWidth;
             height = uImgHeight;
         }
-        else if ((rect.right < uImgWidth)||(rect.bottom < uImgHeight))
+        else
         {
-            if (rect.bottom < uImgHeight)
-            {
-                height = rect.bottom;
-                width = uImgWidth*(UINT)rect.bottom/uImgHeight;
-                x = (rect.right/2)-(width/2);
-                y = (rect.bottom/2)-(height/2);
-            }
-            if (rect.right < uImgWidth)
+            height = uImgHeight * (UINT)rect.right / uImgWidth;
+            if (height <= rect.bottom)
             {
                 width = rect.right;
-                height = uImgHeight*(UINT)rect.right/uImgWidth;
-                x = (rect.right/2)-(width/2);
-                y = (rect.bottom/2)-(height/2);
             }
-            if ((height > rect.bottom)||(width > rect.right))
+            else
             {
-                for (;;)
-                {
-                    if (((int)width - 1 < 0)||((int)height - 1 < 0)) break;
-                    width -= 1;
-                    height -= 1;
-                    y = (rect.bottom/2)-(height/2);
-                    x = (rect.right/2)-(width/2);
-                    if ((height < rect.bottom)&&(width < rect.right)) break;
-                }
+                width = uImgWidth * (UINT)rect.bottom / uImgHeight;
+                height = rect.bottom;
             }
         }
-        else if ((rect.right <= uImgWidth)&&(rect.bottom <= uImgHeight))
-        {
-            height = uImgHeight*(UINT)rect.right/uImgWidth;
-            y = (rect.bottom/2)-(height/2);
-            width = rect.right;
 
-            if ((height > rect.bottom)||(width > rect.right))
-            {
-                for (;;)
-                {
-                    if (((int)width - 1 < 0)||((int)height - 1 < 0)) break;
-                    width -= 1;
-                    height -= 1;
-                    y = (rect.bottom/2)-(height/2);
-                    x = (rect.right/2)-(width/2);
-                    if ((height < rect.bottom)&&(width < rect.right)) break;
-                }
-            }
-        }
+        y = (rect.bottom / 2) - (height / 2);
+        x = (rect.right / 2) - (width / 2);
 
         DPRINT("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d\n", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
         Rectangle(hdc, x - 1, y - 1, x + width + 1, y + height + 1);
