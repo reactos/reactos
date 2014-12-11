@@ -10,5 +10,5 @@ list(APPEND SOURCE
 add_library(shimgvw SHARED ${SOURCE})
 set_module_type(shimgvw win32dll)
 target_link_libraries(shimgvw wine)
-add_importlibs(shimgvw advapi32 comctl32 user32 gdi32 gdiplus comdlg32 msvcrt kernel32 ntdll)
+add_importlibs(shimgvw advapi32 comctl32 user32 gdi32 gdiplus comdlg32 shlwapi msvcrt kernel32 ntdll)
 add_cd_file(TARGET shimgvw DESTINATION reactos/system32 FOR all)

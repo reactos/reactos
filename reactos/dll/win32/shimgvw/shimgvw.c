@@ -26,6 +26,7 @@
 #include <gdiplus.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <shlwapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -35,6 +36,7 @@
 
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
+SHIMGVW_FILENODE *currentFile;
 GpImage *image;
 WNDPROC PrevProc = NULL;
 
@@ -157,6 +159,166 @@ static void pSaveImageAs(HWND hwnd)
 
     free(szFilterMask);
     free(codecInfo);
+}
+
+static VOID
+pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
+{
+    WCHAR szTitleBuf[800];
+    WCHAR szResStr[512];
+    WCHAR *c;
+
+    if (node)
+    {
+        c = wcsrchr(node->FileName, '\\');
+        if (c)
+        {
+            c++;
+        }
+        
+        LoadStringW(hInstance, IDS_APPTITLE, szResStr, 512);
+        StringCbPrintfExW(szTitleBuf, 800, NULL, NULL, 0, L"%ls%ls%ls", szResStr, L" - ", c);
+        SetWindowTextW(hwnd, szTitleBuf);
+
+        if (image)
+        {
+            GdipDisposeImage(image);
+        }
+
+        pLoadImage(node->FileName);
+        InvalidateRect(hDispWnd, NULL, TRUE);
+        UpdateWindow(hDispWnd);
+    }
+}
+
+static SHIMGVW_FILENODE*
+pBuildFileList(LPWSTR szFirstFile)
+{
+    HANDLE hFindHandle;
+    WCHAR *extension;
+    WCHAR szSearchPath[MAX_PATH];
+    WCHAR szSearchMask[MAX_PATH];
+    WCHAR szFileTypes[MAX_PATH];
+    WIN32_FIND_DATAW findData;
+    SHIMGVW_FILENODE *currentNode;
+    SHIMGVW_FILENODE *root;
+    SHIMGVW_FILENODE *conductor;
+    ImageCodecInfo *codecInfo;
+    UINT num;
+    UINT size;
+    UINT j;
+
+
+    wcscpy(szSearchPath, szFirstFile);
+    PathRemoveFileSpecW(szSearchPath);
+
+    GdipGetImageDecodersSize(&num, &size);
+    codecInfo = malloc(size);
+    if (!codecInfo)
+    {
+        DPRINT1("malloc() failed in pLoadFileList()\n");
+        return NULL;
+    }
+
+    GdipGetImageDecoders(num, size, codecInfo);
+
+    root = malloc(sizeof(SHIMGVW_FILENODE));
+    if (!root)
+    {
+        DPRINT1("malloc() failed in pLoadFileList()\n");
+        free(codecInfo);
+        return NULL;
+    }
+
+    conductor = root;
+
+    for (j = 0; j < num; ++j)
+    {
+        StringCbPrintfExW(szFileTypes, MAX_PATH, NULL, NULL, 0, L"%ls", codecInfo[j].FilenameExtension);
+        
+        extension = wcstok(szFileTypes, L";");
+        while (extension != NULL)
+        {
+            StringCbPrintfExW(szSearchMask, MAX_PATH, NULL, NULL, 0, L"%ls%ls%ls", szSearchPath, L"\\", extension);
+
+            hFindHandle = FindFirstFileW(szSearchMask, &findData);
+            if (hFindHandle != INVALID_HANDLE_VALUE)
+            {
+                do
+                {
+                    StringCbPrintfExW(conductor->FileName, MAX_PATH, NULL, NULL, 0, L"%ls%ls%ls", szSearchPath, L"\\", findData.cFileName);
+
+                    // compare the name of the requested file with the one currently found.
+                    // if the name matches, the current node is returned by the function.
+                    if (wcscmp(szFirstFile, conductor->FileName) == 0)
+                    {
+                        currentNode = conductor;
+                    }
+
+                    conductor->Next = malloc(sizeof(SHIMGVW_FILENODE));
+
+                    // if malloc fails, make circular what we have and return it
+                    if (!conductor->Next)
+                    {
+                        DPRINT1("malloc() failed in pLoadFileList()\n");
+                        
+                        conductor->Next = root;
+                        root->Prev = conductor;
+
+                        FindClose(hFindHandle);
+                        free(codecInfo);
+                        return conductor;
+                    }
+
+                    conductor->Next->Prev = conductor;
+                    conductor = conductor->Next;
+                }
+                while (FindNextFileW(hFindHandle, &findData) != 0);
+
+                FindClose(hFindHandle);
+            }
+
+            extension = wcstok(NULL, L";");
+        }
+    }
+
+    // we now have a node too much in the list. In case the requested file was not found,
+    // we use this node to store the name of it, otherwise we free it.
+    if (currentNode == NULL)
+    {
+        StringCbPrintfExW(conductor->FileName, MAX_PATH, NULL, NULL, 0, L"%ls", szFirstFile);
+        currentNode = conductor;
+    }
+    else
+    {
+        conductor = conductor->Prev;
+        free(conductor->Next);
+    }
+
+    // link the last node with the first one to make the list circular
+    conductor->Next = root;
+    root->Prev = conductor;
+    conductor = currentNode;
+
+    free(codecInfo);
+
+    return conductor;
+}
+
+static VOID
+pFreeFileList(SHIMGVW_FILENODE *root)
+{
+    SHIMGVW_FILENODE *conductor;
+
+    root->Prev->Next = NULL;
+    root->Prev = NULL;
+
+    while (root)
+    {
+        conductor = root;
+        root = conductor->Next;
+        free(conductor);
+    }
 }
 
 static VOID
@@ -410,9 +572,17 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             switch (wParam)
             {
                 case IDC_PREV:
+                {
+                    currentFile = currentFile->Prev;
+                    pLoadImageFromNode(currentFile, hwnd);
+                }
 
                 break;
                 case IDC_NEXT:
+                {
+                    currentFile = currentFile->Next;
+                    pLoadImageFromNode(currentFile, hwnd);
+                }
 
                 break;
                 case IDC_ZOOMP:
@@ -522,6 +692,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     ULONG_PTR gdiplusToken;
     WNDCLASS WndClass = {0};
     TCHAR szBuf[512];
+    WCHAR szInitialFile[MAX_PATH];
     HWND hMainWnd;
     MSG msg;
 
@@ -560,6 +731,16 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             0, 0, NULL, NULL, hInstance, NULL);
 
+    // make sure the path has no quotes on it
+    wcscpy(szInitialFile, szFileName);
+    PathUnquoteSpacesW(szInitialFile);
+
+    currentFile = pBuildFileList(szInitialFile);
+    if (currentFile)
+    {
+        pLoadImageFromNode(currentFile, hMainWnd);
+    }
+
     // Show it
     ShowWindow(hMainWnd, SW_SHOW);
     UpdateWindow(hMainWnd);
@@ -570,6 +751,8 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    pFreeFileList(currentFile);
 
     if (image)
         GdipDisposeImage(image);
