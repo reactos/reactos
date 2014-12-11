@@ -37,16 +37,16 @@ class CTaskBand :
     public IWinEventHandler,
     public IOleCommandTarget
 {
-    CComPtr<ITrayWindow> Tray;
-    CComPtr<IUnknown> punkSite;
+    CComPtr<ITrayWindow> m_Tray;
+    CComPtr<IUnknown> m_Site;
 
-    HWND hWnd;
-    DWORD dwBandID;
+    HWND m_hWnd;
+    DWORD m_BandID;
 
 public:
     CTaskBand() :
-        hWnd(NULL),
-        dwBandID(0)
+        m_hWnd(NULL),
+        m_BandID(0)
     {
 
     }
@@ -56,10 +56,10 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetRebarBandID(
         OUT DWORD *pdwBandID)
     {
-        if (dwBandID != (DWORD) -1)
+        if (m_BandID != (DWORD) -1)
         {
             if (pdwBandID != NULL)
-                *pdwBandID = dwBandID;
+                *pdwBandID = m_BandID;
 
             return S_OK;
         }
@@ -77,10 +77,10 @@ public:
                  knows the parent window of the Rebar control it creates when
                  calling ITaskBarClient::SetDeskBarSite()! However, once we
                  created a window we return the task switch window! */
-        if (hWnd != NULL)
-            *phwnd = hWnd;
+        if (m_hWnd != NULL)
+            *phwnd = m_hWnd;
         else
-            *phwnd = Tray->GetHWND();
+            *phwnd = m_Tray->GetHWND();
 
         TRACE("ITaskBand::GetWindow(0x%p->0x%p)\n", phwnd, *phwnd);
 
@@ -125,9 +125,9 @@ public:
         IN DWORD dwViewMode,
         IN OUT DESKBANDINFO *pdbi)
     {
-        TRACE("ITaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, hWnd);
+        TRACE("ITaskBand::GetBandInfo(0x%x,0x%x,0x%p) hWnd=0x%p\n", dwBandID, dwViewMode, pdbi, m_hWnd);
 
-        if (hWnd != NULL)
+        if (m_hWnd != NULL)
         {
             /* The task band never has a title */
             pdbi->dwMask &= ~DBIM_TITLE;
@@ -164,7 +164,7 @@ public:
 
             /* Save the band ID for future use in case we need to check whether a given band
                is the task band */
-            this->dwBandID = dwBandID;
+            m_BandID = dwBandID;
 
             TRACE("H: %d, Min: %d,%d, Integral.y: %d Actual: %d,%d\n", (dwViewMode & DBIF_VIEWMODE_VERTICAL) == 0,
                 pdbi->ptMinSize.x, pdbi->ptMinSize.y, pdbi->ptIntegral.y,
@@ -277,17 +277,17 @@ public:
         TRACE("ITaskBand::SetSite(0x%p)\n", pUnkSite);
 
         /* Release the current site */
-        if (punkSite != NULL)
+        if (m_Site != NULL)
         {
-            punkSite->Release();
+            m_Site->Release();
         }
 
-        punkSite = NULL;
-        hWnd = NULL;
+        m_Site = NULL;
+        m_hWnd = NULL;
 
         if (pUnkSite != NULL)
         {
-            IOleWindow *OleWindow;
+            CComPtr<IOleWindow> OleWindow;
 
             /* Check if the site supports IOleWindow */
             hRet = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &OleWindow));
@@ -295,31 +295,29 @@ public:
             {
                 HWND hWndParent = NULL;
 
-                hRet = OleWindow->GetWindow(
-                    &hWndParent);
+                hRet = OleWindow->GetWindow(&hWndParent);
                 if (SUCCEEDED(hRet))
                 {
                     /* Attempt to create the task switch window */
 
                     TRACE("CreateTaskSwitchWnd(Parent: 0x%p)\n", hWndParent);
-                    hWnd = CreateTaskSwitchWnd(hWndParent, Tray);
-                    if (hWnd != NULL)
+                    m_hWnd = CreateTaskSwitchWnd(hWndParent, m_Tray);
+                    if (m_hWnd != NULL)
                     {
-                        punkSite = pUnkSite;
+                        m_Site = pUnkSite;
                         hRet = S_OK;
                     }
                     else
                     {
                         TRACE("CreateTaskSwitchWnd() failed!\n");
-                        OleWindow->Release();
                         hRet = E_FAIL;
                     }
                 }
-                else
-                    OleWindow->Release();
             }
             else
+            {
                 TRACE("Querying IOleWindow failed: 0x%x\n", hRet);
+            }
         }
 
         return hRet;
@@ -331,9 +329,9 @@ public:
     {
         TRACE("ITaskBand::GetSite(0x%p,0x%p)\n", riid, ppvSite);
 
-        if (punkSite != NULL)
+        if (m_Site != NULL)
         {
-            return punkSite->QueryInterface(riid, ppvSite);
+            return m_Site->QueryInterface(riid, ppvSite);
         }
 
         *ppvSite = NULL;
@@ -356,8 +354,8 @@ public:
     virtual HRESULT STDMETHODCALLTYPE ContainsWindow(
         IN HWND hWnd)
     {
-        if (hWnd == hWnd ||
-            IsChild(hWnd, hWnd))
+        if (hWnd == m_hWnd ||
+            IsChild(m_hWnd, hWnd))
         {
             TRACE("ITaskBand::ContainsWindow(0x%p) returns S_OK\n", hWnd);
             return S_OK;
@@ -374,15 +372,15 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE IsWindowOwner(HWND hWnd)
     {
-        return (hWnd == this->hWnd) ? S_OK : S_FALSE;
+        return (hWnd == m_hWnd) ? S_OK : S_FALSE;
     }
 
     /*****************************************************************************/
 
     HRESULT STDMETHODCALLTYPE _Init(IN OUT ITrayWindow *tray)
     {
-        Tray = tray;
-        dwBandID = (DWORD) -1;
+        m_Tray = tray;
+        m_BandID = (DWORD) -1;
         return S_OK;
     }
 

@@ -36,15 +36,15 @@ class CTrayBandSite :
 {
     volatile LONG m_RefCount;
 
-    CComPtr<ITrayWindow> Tray;
+    CComPtr<ITrayWindow> m_Tray;
 
-    CComPtr<IUnknown> punkInner;
-    CComPtr<IBandSite> BandSite;
-    CComPtr<ITaskBand> TaskBand;
-    CComPtr<IWinEventHandler> WindowEventHandler;
-    CComPtr<IContextMenu> ContextMenu;
+    CComPtr<IUnknown> m_Inner;
+    CComPtr<IBandSite> m_BandSite;
+    CComPtr<ITaskBand> m_TaskBand;
+    CComPtr<IWinEventHandler> m_WindowEventHandler;
+    CComPtr<IContextMenu> m_ContextMenu;
 
-    HWND hWndRebar;
+    HWND m_Rebar;
 
     union
     {
@@ -92,9 +92,9 @@ public:
             *ppvObj = NULL;
             return E_NOINTERFACE;
         }
-        else if (punkInner != NULL)
+        else if (m_Inner != NULL)
         {
-            return punkInner->QueryInterface(riid, ppvObj);
+            return m_Inner->QueryInterface(riid, ppvObj);
         }
         else
         {
@@ -109,7 +109,7 @@ public:
 public:
     CTrayBandSite() :
         m_RefCount(0),
-        hWndRebar(NULL)
+        m_Rebar(NULL)
     {
     }
 
@@ -150,10 +150,10 @@ public:
             {
                 if (IsEqualGUID(clsid, CLSID_ITaskBand))
                 {
-                    ASSERT(TaskBand != NULL);
+                    ASSERT(m_TaskBand != NULL);
                     /* We're trying to load the task band! Let's create it... */
 
-                    hRet = TaskBand->QueryInterface(
+                    hRet = m_TaskBand->QueryInterface(
                         riid,
                         pvObj);
                     if (SUCCEEDED(hRet))
@@ -200,11 +200,9 @@ public:
         return E_NOTIMPL;
     }
 
-    virtual HRESULT STDMETHODCALLTYPE IsTaskBand(
-        IN IUnknown *punk)
+    virtual HRESULT STDMETHODCALLTYPE IsTaskBand(IN IUnknown *punk)
     {
-        return IsSameObject((IUnknown *) BandSite,
-            punk);
+        return IsSameObject(m_BandSite, punk);
     }
 
     virtual HRESULT STDMETHODCALLTYPE ProcessMessage(
@@ -216,7 +214,7 @@ public:
     {
         HRESULT hRet;
 
-        ASSERT(hWndRebar != NULL);
+        ASSERT(m_Rebar != NULL);
 
         /* Custom task band behavior */
         switch (uMsg)
@@ -225,7 +223,7 @@ public:
         {
             const NMHDR *nmh = (const NMHDR *) lParam;
 
-            if (nmh->hwndFrom == hWndRebar)
+            if (nmh->hwndFrom == m_Rebar)
             {
                 switch (nmh->code)
                 {
@@ -256,11 +254,11 @@ public:
         }
 
         /* Forward to the shell's IWinEventHandler interface to get the default shell behavior! */
-        if (!WindowEventHandler)
+        if (!m_WindowEventHandler)
             return E_FAIL;
 
         /*TRACE("Calling IWinEventHandler::ProcessMessage(0x%p, 0x%x, 0x%p, 0x%p, 0x%p) hWndRebar=0x%p\n", hWnd, uMsg, wParam, lParam, plResult, hWndRebar);*/
-        hRet = WindowEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, plResult);
+        hRet = m_WindowEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, plResult);
 
 #if 0
         if (FAILED(hRet))
@@ -288,7 +286,7 @@ public:
         IN UINT uFlags,
         OUT IContextMenu **ppcm)
     {
-        if (ContextMenu == NULL)
+        if (m_ContextMenu == NULL)
         {
             HRESULT hRet;
             CComPtr<IShellService> pSs;
@@ -305,7 +303,7 @@ public:
                 return hRet;
             }
 
-            hRet = pSs->QueryInterface(IID_PPV_ARG(IContextMenu, &ContextMenu));
+            hRet = pSs->QueryInterface(IID_PPV_ARG(IContextMenu, &m_ContextMenu));
 
             if (!SUCCEEDED(hRet))
                 return hRet;
@@ -313,22 +311,21 @@ public:
 
         if (ppcm != NULL)
         {
-            ContextMenu->AddRef();
-            *ppcm = ContextMenu;
+            m_ContextMenu->AddRef();
+            *ppcm = m_ContextMenu;
         }
 
         /* Add the menu items */
-        return ContextMenu->QueryContextMenu(hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+        return m_ContextMenu->QueryContextMenu(hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
     }
 
-    virtual HRESULT STDMETHODCALLTYPE Lock(
-        IN BOOL bLock)
+    virtual HRESULT STDMETHODCALLTYPE Lock(IN BOOL bLock)
     {
         BOOL bPrevLocked = Locked;
         BANDSITEINFO bsi;
         HRESULT hRet;
 
-        ASSERT(BandSite != NULL);
+        ASSERT(m_BandSite != NULL);
 
         if (bPrevLocked != bLock)
         {
@@ -337,7 +334,7 @@ public:
             bsi.dwMask = BSIM_STYLE;
             bsi.dwStyle = (Locked ? BSIS_LOCKED | BSIS_NOGRIPPER : BSIS_AUTOGRIPPER);
 
-            hRet = BandSite->SetBandSiteInfo(&bsi);
+            hRet = m_BandSite->SetBandSiteInfo(&bsi);
             if (SUCCEEDED(hRet))
             {
                 hRet = Update();
@@ -351,8 +348,7 @@ public:
 
     /*******************************************************************/
 
-    virtual HRESULT STDMETHODCALLTYPE AddBand(
-        IN IUnknown *punk)
+    virtual HRESULT STDMETHODCALLTYPE AddBand(IN IUnknown *punk)
     {
         IOleCommandTarget *pOct;
         HRESULT hRet;
@@ -372,17 +368,14 @@ public:
             pOct->Release();
         }
 
-        return BandSite->AddBand(
-            punk);
+        return m_BandSite->AddBand(punk);
     }
 
     virtual HRESULT STDMETHODCALLTYPE EnumBands(
         IN UINT uBand,
         OUT DWORD *pdwBandID)
     {
-        return BandSite->EnumBands(
-            uBand,
-            pdwBandID);
+        return m_BandSite->EnumBands(uBand, pdwBandID);
     }
 
     virtual HRESULT STDMETHODCALLTYPE QueryBand(
@@ -395,7 +388,7 @@ public:
         HRESULT hRet;
         IDeskBand *pstb = NULL;
 
-        hRet = BandSite->QueryBand(
+        hRet = m_BandSite->QueryBand(
             dwBandID,
             &pstb,
             pdwState,
@@ -404,7 +397,7 @@ public:
 
         if (SUCCEEDED(hRet))
         {
-            hRet = IsSameObject(pstb, TaskBand);
+            hRet = IsSameObject(pstb, m_TaskBand);
             if (hRet == S_OK)
             {
                 /* Add the BSSF_UNDELETEABLE flag to pdwState because the task bar band shouldn't be deletable */
@@ -431,13 +424,13 @@ public:
         IN DWORD dwMask,
         IN DWORD dwState)
     {
-        return BandSite->SetBandState(dwBandID, dwMask, dwState);
+        return m_BandSite->SetBandState(dwBandID, dwMask, dwState);
     }
 
     virtual HRESULT STDMETHODCALLTYPE RemoveBand(
         IN DWORD dwBandID)
     {
-        return BandSite->RemoveBand(dwBandID);
+        return m_BandSite->RemoveBand(dwBandID);
     }
 
     virtual HRESULT STDMETHODCALLTYPE GetBandObject(
@@ -445,27 +438,26 @@ public:
         IN REFIID riid,
         OUT VOID **ppv)
     {
-        return BandSite->GetBandObject(dwBandID, riid, ppv);
+        return m_BandSite->GetBandObject(dwBandID, riid, ppv);
     }
 
     virtual HRESULT STDMETHODCALLTYPE SetBandSiteInfo(
         IN const BANDSITEINFO *pbsinfo)
     {
-        return BandSite->SetBandSiteInfo(pbsinfo);
+        return m_BandSite->SetBandSiteInfo(pbsinfo);
     }
 
     virtual HRESULT STDMETHODCALLTYPE GetBandSiteInfo(
         IN OUT BANDSITEINFO *pbsinfo)
     {
-        return BandSite->GetBandSiteInfo(pbsinfo);
+        return m_BandSite->GetBandSiteInfo(pbsinfo);
     }
 
     virtual BOOL HasTaskBand()
     {
-        ASSERT(TaskBand != NULL);
+        ASSERT(m_TaskBand != NULL);
 
-        return SUCCEEDED(TaskBand->GetRebarBandID(
-            NULL));
+        return SUCCEEDED(m_TaskBand->GetRebarBandID(NULL));
     }
 
     virtual HRESULT AddTaskBand()
@@ -490,7 +482,7 @@ public:
 #else
         if (!HasTaskBand())
         {
-            return BandSite->AddBand(TaskBand);
+            return m_BandSite->AddBand(m_TaskBand);
         }
 
         return S_OK;
@@ -499,27 +491,15 @@ public:
 
     virtual HRESULT Update()
     {
-        IOleCommandTarget *pOct;
-        HRESULT hRet;
-
-        hRet = punkInner->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &pOct));
-        if (SUCCEEDED(hRet))
-        {
-            /* Send the DBID_BANDINFOCHANGED command to update the band site */
-            hRet = pOct->Exec(
-                &IID_IDeskBand,
+        return IUnknown_Exec(m_Inner,
+                IID_IDeskBand,
                 DBID_BANDINFOCHANGED,
                 0,
                 NULL,
                 NULL);
-
-            pOct->Release();
-        }
-
-        return hRet;
     }
 
-    virtual VOID BroadcastOleCommandExec(const GUID *pguidCmdGroup,
+    virtual VOID BroadcastOleCommandExec(REFGUID pguidCmdGroup,
         DWORD nCmdID,
         DWORD nCmdExecOpt,
         VARIANTARG *pvaIn,
@@ -530,13 +510,13 @@ public:
         UINT uBand = 0;
 
         /* Enumerate all bands */
-        while (SUCCEEDED(BandSite->EnumBands(uBand, &dwBandID)))
+        while (SUCCEEDED(m_BandSite->EnumBands(uBand, &dwBandID)))
         {
-            if (SUCCEEDED(BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IOleCommandTarget, &pOct))))
+            if (SUCCEEDED(m_BandSite->GetBandObject(dwBandID, IID_PPV_ARG(IOleCommandTarget, &pOct))))
             {
                 /* Execute the command */
                 pOct->Exec(
-                    pguidCmdGroup,
+                    &pguidCmdGroup,
                     nCmdID,
                     nCmdExecOpt,
                     pvaIn,
@@ -552,23 +532,20 @@ public:
     virtual HRESULT FinishInit()
     {
         /* Broadcast the DBID_FINISHINIT command */
-        BroadcastOleCommandExec(&IID_IDeskBand, DBID_FINISHINIT, 0, NULL, NULL);
+        BroadcastOleCommandExec(IID_IDeskBand, DBID_FINISHINIT, 0, NULL, NULL);
 
         return S_OK;
     }
 
-    virtual HRESULT Show(
-        IN BOOL bShow)
+    virtual HRESULT Show(IN BOOL bShow)
     {
-        IDeskBarClient *pDbc;
+        CComPtr<IDeskBarClient> pDbc;
         HRESULT hRet;
 
-        hRet = BandSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDbc));
+        hRet = m_BandSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDbc));
         if (SUCCEEDED(hRet))
         {
-            hRet = pDbc->UIActivateDBC(
-                bShow ? DBC_SHOW : DBC_HIDE);
-            pDbc->Release();
+            hRet = pDbc->UIActivateDBC(bShow ? DBC_SHOW : DBC_HIDE);
         }
 
         return hRet;
@@ -576,30 +553,27 @@ public:
 
     virtual HRESULT LoadFromStream(IN OUT IStream *pStm)
     {
-        IPersistStream *pPStm;
+        CComPtr<IPersistStream> pPStm;
         HRESULT hRet;
 
-        ASSERT(BandSite != NULL);
+        ASSERT(m_BandSite != NULL);
 
         /* We implement the undocumented COM interface IBandSiteStreamCallback
            that the shell will query so that we can intercept and custom-load
            the task band when it finds the task band's CLSID (which is internal).
            This way we can prevent the shell from attempting to CoCreateInstance
            the (internal) task band, resulting in a failure... */
-        hRet = BandSite->QueryInterface(IID_PPV_ARG(IPersistStream, &pPStm));
+        hRet = m_BandSite->QueryInterface(IID_PPV_ARG(IPersistStream, &pPStm));
         if (SUCCEEDED(hRet))
         {
-            hRet = pPStm->Load(
-                pStm);
+            hRet = pPStm->Load(pStm);
             TRACE("->Load() returned 0x%x\n", hRet);
-            pPStm->Release();
         }
 
         return hRet;
     }
 
-    virtual IStream *
-        GetUserBandsStream(IN DWORD grfMode)
+    virtual IStream * GetUserBandsStream(IN DWORD grfMode)
     {
         HKEY hkStreams;
         IStream *Stream = NULL;
@@ -619,8 +593,7 @@ public:
         return Stream;
     }
 
-    virtual IStream *
-        GetDefaultBandsStream(IN DWORD grfMode)
+    virtual IStream * GetDefaultBandsStream(IN DWORD grfMode)
     {
         HKEY hkStreams;
         IStream *Stream = NULL;
@@ -679,46 +652,46 @@ public:
 
     HRESULT _Init(IN OUT ITrayWindow *tray, OUT HWND *phWndRebar, OUT HWND *phwndTaskSwitch)
     {
-        IDeskBarClient *pDbc;
-        IDeskBand *pDb;
-        IOleWindow *pOw;
+        CComPtr<IDeskBarClient> pDbc;
+        CComPtr<IDeskBand> pDb;
+        CComPtr<IOleWindow> pOw;
         HRESULT hRet;
 
         *phWndRebar = NULL;
         *phwndTaskSwitch = NULL;
 
-        Tray = tray;
+        m_Tray = tray;
 
         /* Create a RebarBandSite provided by the shell */
         hRet = CoCreateInstance(CLSID_RebarBandSite,
             static_cast<IBandSite*>(this),
             CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IUnknown, &punkInner));
+            IID_PPV_ARG(IUnknown, &m_Inner));
         if (!SUCCEEDED(hRet))
         {
             return hRet;
         }
 
-        hRet = punkInner->QueryInterface(IID_PPV_ARG(IBandSite, &BandSite));
+        hRet = m_Inner->QueryInterface(IID_PPV_ARG(IBandSite, &m_BandSite));
         if (!SUCCEEDED(hRet))
         {
             return hRet;
         }
 
-        hRet = punkInner->QueryInterface(IID_PPV_ARG(IWinEventHandler, &WindowEventHandler));
+        hRet = m_Inner->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_WindowEventHandler));
         if (!SUCCEEDED(hRet))
         {
             return hRet;
         }
 
-        TaskBand = CreateTaskBand(Tray);
-        if (TaskBand != NULL)
+        m_TaskBand = CreateTaskBand(m_Tray);
+        if (m_TaskBand != NULL)
         {
             /* Add the task band to the site */
-            hRet = BandSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDbc));
+            hRet = m_BandSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pDbc));
             if (SUCCEEDED(hRet))
             {
-                hRet = TaskBand->QueryInterface(IID_PPV_ARG(IOleWindow, &pOw));
+                hRet = m_TaskBand->QueryInterface(IID_PPV_ARG(IOleWindow, &pOw));
                 if (SUCCEEDED(hRet))
                 {
                     /* We cause IDeskBarClient to create the rebar control by passing the new
@@ -730,16 +703,14 @@ public:
                     if (SUCCEEDED(hRet))
                     {
                         /* The Rebar control is now created, we can query the window handle */
-                        hRet = pDbc->GetWindow(&hWndRebar);
+                        hRet = pDbc->GetWindow(&m_Rebar);
 
                         if (SUCCEEDED(hRet))
                         {
                             /* We need to manually remove the RBS_BANDBORDERS style! */
-                            SetWindowStyle(hWndRebar, RBS_BANDBORDERS, 0);
+                            SetWindowStyle(m_Rebar, RBS_BANDBORDERS, 0);
                         }
                     }
-
-                    pOw->Release();
                 }
 
                 if (SUCCEEDED(hRet))
@@ -751,7 +722,7 @@ public:
                     /* FIXME: We need to set the mode (and update) whenever the user docks
                               the tray window to another monitor edge! */
 
-                    if (!Tray->IsHorizontal())
+                    if (!m_Tray->IsHorizontal())
                         dwMode = DBIF_VIEWMODE_VERTICAL;
 
                     hRet = pDbc->SetModeDBC(dwMode);
@@ -768,14 +739,12 @@ public:
             hRet = AddTaskBand();
             if (SUCCEEDED(hRet))
             {
-                hRet = TaskBand->QueryInterface(IID_PPV_ARG(IDeskBand, &pDb));
+                hRet = m_TaskBand->QueryInterface(IID_PPV_ARG(IDeskBand, &pDb));
                 if (SUCCEEDED(hRet))
                 {
                     hRet = pDb->GetWindow(phwndTaskSwitch);
                     if (!SUCCEEDED(hRet))
                         *phwndTaskSwitch = NULL;
-
-                    pDb->Release();
                 }
             }
 
@@ -790,7 +759,7 @@ public:
                 TRUE);
         }
 
-        *phWndRebar = hWndRebar;
+        *phWndRebar = m_Rebar;
 
         return S_OK;
     }

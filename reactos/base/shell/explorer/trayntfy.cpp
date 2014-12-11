@@ -41,13 +41,13 @@ class CNotifyToolbar :
 {
     static const int ICON_SIZE = 16;
 
-    HIMAGELIST SysIcons;
-    int VisibleButtonCount;
+    HIMAGELIST m_ImageList;
+    int m_VisibleButtonCount;
 
 public:
     CNotifyToolbar() :
-        SysIcons(NULL),
-        VisibleButtonCount(0)
+        m_ImageList(NULL),
+        m_VisibleButtonCount(0)
     {
     }
 
@@ -57,7 +57,7 @@ public:
 
     int GetVisibleButtonCount()
     {
-        return VisibleButtonCount;
+        return m_VisibleButtonCount;
     }
 
     int FindItemByIconData(IN CONST NOTIFYICONDATA *iconData, NOTIFYICONDATA ** pdata)
@@ -114,7 +114,7 @@ public:
 
         if (iconData->uFlags & NIF_ICON)
         {
-            tbBtn.iBitmap = ImageList_AddIcon(SysIcons, iconData->hIcon);
+            tbBtn.iBitmap = ImageList_AddIcon(m_ImageList, iconData->hIcon);
         }
 
         if (iconData->uFlags & NIF_TIP)
@@ -122,7 +122,7 @@ public:
             StringCchCopy(notifyItem->szTip, _countof(notifyItem->szTip), iconData->szTip);
         }
 
-        VisibleButtonCount++;
+        m_VisibleButtonCount++;
         if (iconData->uFlags & NIF_STATE)
         {
             notifyItem->dwState &= ~iconData->dwStateMask;
@@ -130,7 +130,7 @@ public:
             if (notifyItem->dwState & NIS_HIDDEN)
             {
                 tbBtn.fsState |= TBSTATE_HIDDEN;
-                VisibleButtonCount--;
+                m_VisibleButtonCount--;
             }
 
         }
@@ -165,7 +165,7 @@ public:
         if (iconData->uFlags & NIF_ICON)
         {
             tbbi.dwMask |= TBIF_IMAGE;
-            tbbi.iImage = ImageList_AddIcon(SysIcons, iconData->hIcon);
+            tbbi.iImage = ImageList_AddIcon(m_ImageList, iconData->hIcon);
         }
 
         if (iconData->uFlags & NIF_TIP)
@@ -182,12 +182,12 @@ public:
                 if (iconData->dwState & NIS_HIDDEN)
                 {
                     tbbi.fsState |= TBSTATE_HIDDEN;
-                    VisibleButtonCount--;
+                    m_VisibleButtonCount--;
                 }
                 else
                 {
                     tbbi.fsState &= ~TBSTATE_HIDDEN;
-                    VisibleButtonCount++;
+                    m_VisibleButtonCount++;
                 }
             }
 
@@ -362,8 +362,8 @@ public:
 
         SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
-        SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
-        SetImageList(SysIcons);
+        m_ImageList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
+        SetImageList(m_ImageList);
 
         SetButtonSize(ICON_SIZE, ICON_SIZE);
     }

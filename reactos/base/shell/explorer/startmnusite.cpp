@@ -33,8 +33,7 @@ class CStartMenuSite :
     public IOleCommandTarget,
     public IMenuPopup
 {
-    CComPtr<ITrayWindow> Tray;
-    CComPtr<IMenuPopup> StartMenuPopup;
+    CComPtr<ITrayWindow> m_Tray;
 
 public:
     CStartMenuSite()
@@ -65,7 +64,7 @@ public:
     {
         TRACE("ITrayPriv::GetWindow\n");
 
-        *phwnd = Tray->GetHWND();
+        *phwnd = m_Tray->GetHWND();
         if (*phwnd != NULL)
             return S_OK;
 
@@ -87,7 +86,7 @@ public:
 
         TRACE("ITrayPriv::Execute\n");
 
-        ret = SHInvokeDefaultCommand(Tray->GetHWND(), pShellFolder, pidl);
+        ret = SHInvokeDefaultCommand(m_Tray->GetHWND(), pShellFolder, pidl);
 
         return ret;
     }
@@ -375,7 +374,7 @@ public:
 
     HRESULT Initialize(IN ITrayWindow *tray)
     {
-        Tray = tray;
+        m_Tray = tray;
         return S_OK;
     }
 

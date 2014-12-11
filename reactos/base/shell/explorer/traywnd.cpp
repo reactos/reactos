@@ -63,6 +63,295 @@ static const WCHAR szTrayWndClass [] = TEXT("Shell_TrayWnd");
 
 const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
+class CStartButton
+    : public CContainedWindow
+{
+    HIMAGELIST m_ImageList;
+    SIZE       m_Size;
+    HFONT      m_Font;
+    HBITMAP    m_Bitmap;
+
+public:
+    CStartButton(CMessageMap *pObject, DWORD dwMsgMapID)
+        : CContainedWindow(pObject, dwMsgMapID)
+    {
+    }
+
+    virtual ~CStartButton()
+    {
+        if (m_ImageList != NULL)
+            ImageList_Destroy(m_ImageList);
+
+        if (m_Font != NULL)
+            DeleteObject(m_Font);
+
+        if (m_Bitmap != NULL)
+            DeleteObject(m_Bitmap);
+    }
+
+    HFONT GetFont()
+    {
+        return m_Font;
+    }
+
+    SIZE GetSize()
+    {
+        return m_Size;
+    }
+
+    VOID UpdateSize()
+    {
+        SIZE Size = { 0, 0 };
+
+        if (m_ImageList == NULL ||
+            !SendMessage(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
+        {
+            Size.cx = GetSystemMetrics(SM_CXEDGE);
+            Size.cy = GetSystemMetrics(SM_CYEDGE);
+
+            if (m_Bitmap == NULL)
+            {
+                m_Bitmap = (HBITMAP) SendMessage(BM_GETIMAGE, IMAGE_BITMAP, 0);
+            }
+
+            if (m_Bitmap != NULL)
+            {
+                BITMAP bmp;
+
+                if (GetObject(m_Bitmap, sizeof(bmp), &bmp) != 0)
+                {
+                    Size.cx += bmp.bmWidth;
+                    Size.cy += max(bmp.bmHeight, GetSystemMetrics(SM_CYCAPTION));
+                }
+                else
+                {
+                    /* Huh?! Shouldn't happen... */
+                    goto DefSize;
+                }
+            }
+            else
+            {
+DefSize:
+                Size.cx += GetSystemMetrics(SM_CXMINIMIZED);
+                Size.cy += GetSystemMetrics(SM_CYCAPTION);
+            }
+        }
+
+        /* Save the size of the start button */
+        m_Size = Size;
+    }
+
+    BOOL CreateImageList()
+    {
+        HICON hIconStart;
+        SIZE IconSize;
+
+        if (m_ImageList != NULL)
+            return TRUE;
+
+        IconSize.cx = GetSystemMetrics(SM_CXSMICON);
+        IconSize.cy = GetSystemMetrics(SM_CYSMICON);
+
+        /* Load the start button icon and create a image list for it */
+        hIconStart = (HICON) LoadImage(hExplorerInstance,
+                                       MAKEINTRESOURCE(IDI_START),
+                                       IMAGE_ICON,
+                                       IconSize.cx,
+                                       IconSize.cy,
+                                       LR_SHARED | LR_DEFAULTCOLOR);
+
+        if (hIconStart != NULL)
+        {
+            m_ImageList = ImageList_Create(IconSize.cx,
+                                           IconSize.cy,
+                                           ILC_COLOR32 | ILC_MASK,
+                                           1,
+                                           1);
+            if (m_ImageList != NULL)
+            {
+                int s = ImageList_ReplaceIcon(m_ImageList, -1, hIconStart);
+                if (s >= 0)
+                {
+                    return TRUE;
+                }
+
+                /* Failed to add the icon! */
+                ImageList_Destroy(m_ImageList);
+                m_ImageList = NULL;
+            }
+        }
+
+        return FALSE;
+    }
+
+    HBITMAP CreateBitmap()
+    {
+        WCHAR szStartCaption[32];
+        HFONT hFontOld;
+        HDC hDC = NULL;
+        HDC hDCScreen = NULL;
+        SIZE Size, SmallIcon;
+        HBITMAP hbmpOld, hbmp = NULL;
+        HBITMAP hBitmap = NULL;
+        HICON hIconStart;
+        BOOL Ret;
+        UINT Flags;
+        RECT rcButton;
+
+        /* NOTE: this is the backwards compatibility code that is used if the
+        Common Controls Version 6.0 are not available! */
+
+        if (!LoadString(hExplorerInstance,
+            IDS_START,
+            szStartCaption,
+            sizeof(szStartCaption) / sizeof(szStartCaption[0])))
+        {
+            return NULL;
+        }
+
+        /* Load the start button icon */
+        SmallIcon.cx = GetSystemMetrics(SM_CXSMICON);
+        SmallIcon.cy = GetSystemMetrics(SM_CYSMICON);
+        hIconStart = (HICON) LoadImage(hExplorerInstance,
+                                       MAKEINTRESOURCE(IDI_START),
+                                       IMAGE_ICON,
+                                       SmallIcon.cx,
+                                       SmallIcon.cy,
+                                       LR_SHARED | LR_DEFAULTCOLOR);
+
+        hDCScreen = GetDC(NULL);
+        if (hDCScreen == NULL)
+            goto Cleanup;
+
+        hDC = CreateCompatibleDC(hDCScreen);
+        if (hDC == NULL)
+            goto Cleanup;
+
+        hFontOld = (HFONT) SelectObject(hDC, m_Font);
+
+        Ret = GetTextExtentPoint32(hDC,
+                                   szStartCaption,
+                                   _tcslen(szStartCaption),
+                                   &Size);
+
+        SelectObject(hDC, hFontOld);
+        if (!Ret)
+            goto Cleanup;
+
+        /* Make sure the height is at least the size of a caption icon. */
+        if (hIconStart != NULL)
+            Size.cx += SmallIcon.cx + 4;
+        Size.cy = max(Size.cy, SmallIcon.cy);
+
+        /* Create the bitmap */
+        hbmp = CreateCompatibleBitmap(hDCScreen,
+                                      Size.cx,
+                                      Size.cy);
+        if (hbmp == NULL)
+            goto Cleanup;
+
+        /* Caluclate the button rect */
+        rcButton.left = 0;
+        rcButton.top = 0;
+        rcButton.right = Size.cx;
+        rcButton.bottom = Size.cy;
+
+        /* Draw the button */
+        hbmpOld = (HBITMAP) SelectObject(hDC, hbmp);
+
+        Flags = DC_TEXT | DC_INBUTTON;
+        if (hIconStart != NULL)
+            Flags |= DC_ICON;
+
+        DrawCaptionTemp(NULL,
+                        hDC,
+                        &rcButton,
+                        m_Font,
+                        hIconStart,
+                        szStartCaption,
+                        Flags);
+
+        SelectObject(hDC, hbmpOld);
+
+        if (!Ret)
+            goto Cleanup;
+
+        /* We successfully created the bitmap! */
+        hBitmap = hbmp;
+        hbmp = NULL;
+
+Cleanup:
+        if (hDCScreen != NULL)
+        {
+            ReleaseDC(NULL, hDCScreen);
+        }
+
+        if (hbmp != NULL)
+            DeleteObject(hbmp);
+
+        if (hDC != NULL)
+            DeleteDC(hDC);
+
+        return hBitmap;
+    }
+
+    VOID Initialize()
+    {
+        NONCLIENTMETRICS ncm;
+
+        SetWindowTheme(m_hWnd, L"Start", NULL);
+
+        if (m_Font == NULL)
+        {
+            /* Get the system fonts, we use the caption font, always bold, though. */
+            ncm.cbSize = sizeof(ncm);
+            if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
+            {
+                ncm.lfCaptionFont.lfWeight = FW_BOLD;
+                m_Font = CreateFontIndirect(&ncm.lfCaptionFont);
+            }
+        }
+
+        SendMessage(WM_SETFONT, (WPARAM) m_Font, FALSE);
+
+        BUTTON_IMAGELIST bil;
+
+        /* Try to set the start button image. this requires the Common
+        Controls 6.0 to be present (XP and later) */
+        bil.himl = m_ImageList;
+        bil.margin.left = bil.margin.right = 1;
+        bil.margin.top = bil.margin.bottom = 1;
+        bil.uAlign = BUTTON_IMAGELIST_ALIGN_LEFT;
+
+        if (SendMessage(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
+        {
+            /* We're using the image list, remove the BS_BITMAP style and
+            don't center it horizontally */
+            SetWindowStyle(m_hWnd, BS_BITMAP | BS_RIGHT, 0);
+        }
+        else
+        {
+            /* Fall back to the deprecated method on older systems that don't
+            support Common Controls 6.0 */
+            ImageList_Destroy(m_ImageList);
+            m_ImageList = NULL;
+
+            HBITMAP hbmOld;
+
+            m_Bitmap = CreateBitmap();
+            if (m_Bitmap != NULL)
+            {
+                hbmOld = (HBITMAP) SendMessage(BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) m_Bitmap);
+
+                if (hbmOld != NULL)
+                    DeleteObject(hbmOld);
+            }
+        }
+
+        UpdateSize();
+    }
+};
+
 class CTrayWindow :
     public CComCoClass<CTrayWindow>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -70,48 +359,42 @@ class CTrayWindow :
     public ITrayWindow,
     public IShellDesktopTray
 {
-    CContainedWindow StartButton;
+    CStartButton m_StartButton;
 
-    HTHEME TaskbarTheme;
-    HWND hWndDesktop;
+    CComPtr<IMenuBand>  m_StartMenuBand;
+    CComPtr<IMenuPopup> m_StartMenuPopup;
 
-    IImageList * himlStartBtn;
-    SIZE StartBtnSize;
-    HFONT hStartBtnFont;
-    HFONT hCaptionFont;
+    HTHEME m_Theme;
 
-    HWND hwndRebar;
-    HWND hwndTaskSwitch;
-    HWND hwndTrayNotify;
+    HFONT m_CaptionFont;
+    HFONT m_Font;
 
-    DWORD Position;
-    HMONITOR Monitor;
-    HMONITOR PreviousMonitor;
-    DWORD DraggingPosition;
-    HMONITOR DraggingMonitor;
+    HWND m_DesktopWnd;
+    HWND m_Rebar;
+    HWND m_TaskSwitch;
+    HWND m_TrayNotify;
 
-    RECT rcTrayWnd[4];
-    RECT rcNewPosSize;
-    SIZE TraySize;
+    DWORD    m_Position;
+    HMONITOR m_Monitor;
+    HMONITOR m_PreviousMonitor;
+    DWORD    m_DraggingPosition;
+    HMONITOR m_DraggingMonitor;
 
-    NONCLIENTMETRICS ncm;
-    HFONT hFont;
+    RECT m_TrayRects[4];
+    SIZE m_TraySize;
 
-    CComPtr<IMenuBand> StartMenuBand;
-    CComPtr<IMenuPopup> StartMenuPopup;
-    HBITMAP hbmStartMenu;
+    HWND m_TrayPropertiesOwner;
+    HWND m_RunFileDlgOwner;
 
-    HWND hwndTrayPropertiesOwner;
-    HWND hwndRunFileDlgOwner;
+    UINT m_AutoHideState;
+    SIZE m_AutoHideOffset;
+    TRACKMOUSEEVENT m_MouseTrackingInfo;
 
-    UINT AutoHideState;
-    SIZE AutoHideOffset;
-    TRACKMOUSEEVENT MouseTrackingInfo;
-
-    HDPA hdpaShellServices;
+    HDPA m_ShellServices;
 
 public:
-    CComPtr<ITrayBandSite> TrayBandSite;
+    CComPtr<ITrayBandSite> m_TrayBandSite;
+
     union
     {
         DWORD Flags;
@@ -132,82 +415,55 @@ public:
 
 public:
     CTrayWindow() :
-        StartButton(this, 1),
-        TaskbarTheme(NULL),
-        hWndDesktop(NULL),
-        himlStartBtn(NULL),
-        hStartBtnFont(NULL),
-        hCaptionFont(NULL),
-        hwndRebar(NULL),
-        hwndTaskSwitch(NULL),
-        hwndTrayNotify(NULL),
-        Position(0),
-        Monitor(NULL),
-        PreviousMonitor(NULL),
-        DraggingPosition(0),
-        DraggingMonitor(NULL),
-        hFont(NULL),
-        hbmStartMenu(NULL),
-        hwndTrayPropertiesOwner(NULL),
-        hwndRunFileDlgOwner(NULL),
-        AutoHideState(NULL),
-        hdpaShellServices(NULL),
+        m_StartButton(this, 1),
+        m_Theme(NULL),
+        m_CaptionFont(NULL),
+        m_Font(NULL),
+        m_DesktopWnd(NULL),
+        m_Rebar(NULL),
+        m_TaskSwitch(NULL),
+        m_TrayNotify(NULL),
+        m_Position(0),
+        m_Monitor(NULL),
+        m_PreviousMonitor(NULL),
+        m_DraggingPosition(0),
+        m_DraggingMonitor(NULL),
+        m_TrayPropertiesOwner(NULL),
+        m_RunFileDlgOwner(NULL),
+        m_AutoHideState(NULL),
+        m_ShellServices(NULL),
         Flags(0)
     {
-        ZeroMemory(&StartBtnSize, sizeof(StartBtnSize));
-        ZeroMemory(&rcTrayWnd, sizeof(rcTrayWnd));
-        ZeroMemory(&rcNewPosSize, sizeof(rcNewPosSize));
-        ZeroMemory(&TraySize, sizeof(TraySize));
-        ZeroMemory(&ncm, sizeof(ncm));
-        ZeroMemory(&AutoHideOffset, sizeof(AutoHideOffset));
-        ZeroMemory(&MouseTrackingInfo, sizeof(MouseTrackingInfo));
+        ZeroMemory(&m_TrayRects, sizeof(m_TrayRects));
+        ZeroMemory(&m_TraySize, sizeof(m_TraySize));
+        ZeroMemory(&m_AutoHideOffset, sizeof(m_AutoHideOffset));
+        ZeroMemory(&m_MouseTrackingInfo, sizeof(m_MouseTrackingInfo));
     }
 
     virtual ~CTrayWindow()
     {
-        (void) InterlockedExchangePointer((PVOID*) &m_hWnd, NULL);
-
-
-        if (hdpaShellServices != NULL)
+        if (m_ShellServices != NULL)
         {
-            ShutdownShellServices(hdpaShellServices);
-            hdpaShellServices = NULL;
+            ShutdownShellServices(m_ShellServices);
+            m_ShellServices = NULL;
         }
 
-        if (himlStartBtn != NULL)
+        if (m_CaptionFont != NULL)
         {
-            himlStartBtn->Release();
-            himlStartBtn = NULL;
+            DeleteObject(m_CaptionFont);
+            m_CaptionFont = NULL;
         }
 
-        if (hCaptionFont != NULL)
+        if (m_Font != NULL)
         {
-            DeleteObject(hCaptionFont);
-            hCaptionFont = NULL;
+            DeleteObject(m_Font);
+            m_Font = NULL;
         }
 
-        if (hStartBtnFont != NULL)
+        if (m_Theme)
         {
-            DeleteObject(hStartBtnFont);
-            hStartBtnFont = NULL;
-        }
-
-        if (hFont != NULL)
-        {
-            DeleteObject(hFont);
-            hFont = NULL;
-        }
-
-        if (hbmStartMenu != NULL)
-        {
-            DeleteObject(hbmStartMenu);
-            hbmStartMenu = NULL;
-        }
-
-        if (TaskbarTheme)
-        {
-            CloseThemeData(TaskbarTheme);
-            TaskbarTheme = NULL;
+            CloseThemeData(m_Theme);
+            m_Theme = NULL;
         }
 
         if (InterlockedDecrement(&TrayWndCount) == 0)
@@ -220,13 +476,14 @@ public:
 
     BOOL UpdateNonClientMetrics()
     {
+        NONCLIENTMETRICS ncm;
         ncm.cbSize = sizeof(ncm);
         if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
         {
-            if (hFont != NULL)
-                DeleteObject(hFont);
+            if (m_Font != NULL)
+                DeleteObject(m_Font);
 
-            hFont = CreateFontIndirect(&ncm.lfMessageFont);
+            m_Font = CreateFontIndirect(&ncm.lfMessageFont);
             return TRUE;
         }
 
@@ -235,9 +492,9 @@ public:
 
     VOID SetWindowsFont()
     {
-        if (hwndTrayNotify != NULL)
+        if (m_TrayNotify != NULL)
         {
-            SendMessage(hwndTrayNotify, WM_SETFONT, (WPARAM) hFont, TRUE);
+            SendMessage(m_TrayNotify, WM_SETFONT, (WPARAM) m_Font, TRUE);
         }
     }
 
@@ -369,7 +626,7 @@ GetPrimaryRect:
                                    OUT RECT *pRect)
     {
         if (pTraySize == NULL)
-            pTraySize = &TraySize;
+            pTraySize = &m_TraySize;
 
         *pRect = *pScreen;
 
@@ -381,14 +638,12 @@ GetPrimaryRect:
         MakeTrayRectWithSize(Position, pTraySize, pRect);
     }
 
-    BOOL
-        IsPosHorizontal()
+    BOOL IsPosHorizontal()
     {
-        return Position == ABE_TOP || Position == ABE_BOTTOM;
+        return m_Position == ABE_TOP || m_Position == ABE_BOTTOM;
     }
 
-    HMONITOR
-        CalculateValidSize(
+    HMONITOR CalculateValidSize(
         IN DWORD Position,
         IN OUT RECT *pRect)
     {
@@ -446,8 +701,7 @@ GetPrimaryRect:
 #endif
 
 
-    DWORD
-        GetDraggingRectFromPt(
+    DWORD GetDraggingRectFromPt(
         IN POINT pt,
         OUT RECT *pRect,
         OUT HMONITOR *phMonitor)
@@ -525,28 +779,25 @@ GetPrimaryScreenRect:
                    ScreenOffset.cx,
                    ScreenOffset.cy);
 
-        hMonNew = GetMonitorFromRect(
-            &rcTrayWnd[Pos]);
+        RECT rcPos = m_TrayRects[Pos];
+
+        hMonNew = GetMonitorFromRect(&rcPos);
         if (hMon != hMonNew)
         {
             SIZE szTray;
 
             /* Recalculate the rectangle, we're dragging to another monitor.
                We don't need to recalculate the rect on single monitor systems. */
-            szTray.cx = rcTrayWnd[Pos].right - rcTrayWnd[Pos].left;
-            szTray.cy = rcTrayWnd[Pos].bottom - rcTrayWnd[Pos].top;
+            szTray.cx = rcPos.right - rcPos.left;
+            szTray.cy = rcPos.bottom - rcPos.top;
 
-            GetTrayRectFromScreenRect(
-                Pos,
-                &rcScreen,
-                &szTray,
-                pRect);
+            GetTrayRectFromScreenRect(Pos, &rcScreen, &szTray, pRect);
             if (AutoHide)
             {
-                pRect->left += AutoHideOffset.cx;
-                pRect->right += AutoHideOffset.cx;
-                pRect->top += AutoHideOffset.cy;
-                pRect->bottom += AutoHideOffset.cy;
+                pRect->left += m_AutoHideOffset.cx;
+                pRect->right += m_AutoHideOffset.cx;
+                pRect->top += m_AutoHideOffset.cy;
+                pRect->bottom += m_AutoHideOffset.cy;
             }
             hMon = hMonNew;
         }
@@ -554,13 +805,13 @@ GetPrimaryScreenRect:
         {
             /* The user is dragging the tray window on the same monitor. We don't need
                to recalculate the rectangle */
-            *pRect = rcTrayWnd[Pos];
+            *pRect = rcPos;
             if (AutoHide)
             {
-                pRect->left += AutoHideOffset.cx;
-                pRect->right += AutoHideOffset.cx;
-                pRect->top += AutoHideOffset.cy;
-                pRect->bottom += AutoHideOffset.cy;
+                pRect->left += m_AutoHideOffset.cx;
+                pRect->right += m_AutoHideOffset.cx;
+                pRect->top += m_AutoHideOffset.cy;
+                pRect->bottom += m_AutoHideOffset.cy;
             }
         }
 
@@ -569,8 +820,7 @@ GetPrimaryScreenRect:
         return Pos;
     }
 
-    DWORD
-        GetDraggingRectFromRect(
+    DWORD GetDraggingRectFromRect(
         IN OUT RECT *pRect,
         OUT HMONITOR *phMonitor)
     {
@@ -588,9 +838,7 @@ GetPrimaryScreenRect:
             phMonitor);
     }
 
-    VOID
-        ChangingWinPos(
-        IN OUT LPWINDOWPOS pwp)
+    VOID ChangingWinPos(IN OUT LPWINDOWPOS pwp)
     {
         RECT rcTray;
 
@@ -602,33 +850,33 @@ GetPrimaryScreenRect:
             rcTray.bottom = rcTray.top + pwp->cy;
             if (AutoHide)
             {
-                rcTray.left -= AutoHideOffset.cx;
-                rcTray.right -= AutoHideOffset.cx;
-                rcTray.top -= AutoHideOffset.cy;
-                rcTray.bottom -= AutoHideOffset.cy;
+                rcTray.left -= m_AutoHideOffset.cx;
+                rcTray.right -= m_AutoHideOffset.cx;
+                rcTray.top -= m_AutoHideOffset.cy;
+                rcTray.bottom -= m_AutoHideOffset.cy;
             }
 
             if (!EqualRect(&rcTray,
-                &rcTrayWnd[DraggingPosition]))
+                &m_TrayRects[m_DraggingPosition]))
             {
                 /* Recalculate the rectangle, the user dragged the tray
                    window to another monitor or the window was somehow else
                    moved or resized */
-                DraggingPosition = GetDraggingRectFromRect(
+                m_DraggingPosition = GetDraggingRectFromRect(
                     &rcTray,
-                    &DraggingMonitor);
-                //rcTrayWnd[DraggingPosition] = rcTray;
+                    &m_DraggingMonitor);
+                //m_TrayRects[DraggingPosition] = rcTray;
             }
 
             //Monitor = CalculateValidSize(
             //                                                   DraggingPosition,
             //                                                   &rcTray);
 
-            Monitor = DraggingMonitor;
-            Position = DraggingPosition;
+            m_Monitor = m_DraggingMonitor;
+            m_Position = m_DraggingPosition;
             IsDragging = FALSE;
 
-            rcTrayWnd[Position] = rcTray;
+            m_TrayRects[m_Position] = rcTray;
             goto ChangePos;
         }
         else if (GetWindowRect(m_hWnd, &rcTray))
@@ -647,9 +895,7 @@ GetPrimaryScreenRect:
                     rcTray.bottom = rcTray.top + pwp->cy;
                 }
 
-                Position = GetDraggingRectFromRect(
-                    &rcTray,
-                    &Monitor);
+                m_Position = GetDraggingRectFromRect(&rcTray, &m_Monitor);
 
                 if (!(pwp->flags & (SWP_NOMOVE | SWP_NOSIZE)))
                 {
@@ -658,48 +904,47 @@ GetPrimaryScreenRect:
                     szWnd.cx = pwp->cx;
                     szWnd.cy = pwp->cy;
 
-                    MakeTrayRectWithSize(Position, &szWnd, &rcTray);
+                    MakeTrayRectWithSize(m_Position, &szWnd, &rcTray);
                 }
 
                 if (AutoHide)
                 {
-                    rcTray.left -= AutoHideOffset.cx;
-                    rcTray.right -= AutoHideOffset.cx;
-                    rcTray.top -= AutoHideOffset.cy;
-                    rcTray.bottom -= AutoHideOffset.cy;
+                    rcTray.left -= m_AutoHideOffset.cx;
+                    rcTray.right -= m_AutoHideOffset.cx;
+                    rcTray.top -= m_AutoHideOffset.cy;
+                    rcTray.bottom -= m_AutoHideOffset.cy;
                 }
-                rcTrayWnd[Position] = rcTray;
+                m_TrayRects[m_Position] = rcTray;
             }
             else
             {
                 /* If the user isn't resizing the tray window we need to make sure the
                    new size or position is valid. this is to prevent changes to the window
                    without user interaction. */
-                rcTray = rcTrayWnd[Position];
+                rcTray = m_TrayRects[m_Position];
             }
 
 ChangePos:
-            TraySize.cx = rcTray.right - rcTray.left;
-            TraySize.cy = rcTray.bottom - rcTray.top;
+            m_TraySize.cx = rcTray.right - rcTray.left;
+            m_TraySize.cy = rcTray.bottom - rcTray.top;
 
             if (AutoHide)
             {
-                rcTray.left += AutoHideOffset.cx;
-                rcTray.right += AutoHideOffset.cx;
-                rcTray.top += AutoHideOffset.cy;
-                rcTray.bottom += AutoHideOffset.cy;
+                rcTray.left += m_AutoHideOffset.cx;
+                rcTray.right += m_AutoHideOffset.cx;
+                rcTray.top += m_AutoHideOffset.cy;
+                rcTray.bottom += m_AutoHideOffset.cy;
             }
 
             pwp->flags &= ~(SWP_NOMOVE | SWP_NOSIZE);
             pwp->x = rcTray.left;
             pwp->y = rcTray.top;
-            pwp->cx = TraySize.cx;
-            pwp->cy = TraySize.cy;
+            pwp->cx = m_TraySize.cx;
+            pwp->cy = m_TraySize.cy;
         }
     }
 
-    VOID
-        ApplyClipping(IN BOOL Clip)
+    VOID ApplyClipping(IN BOOL Clip)
     {
         RECT rcClip, rcWindow;
         HRGN hClipRgn;
@@ -714,7 +959,7 @@ ChangePos:
             {
                 rcClip = rcWindow;
 
-                GetScreenRect(Monitor, &rcClip);
+                GetScreenRect(m_Monitor, &rcClip);
 
                 if (!IntersectRect(&rcClip, &rcClip, &rcWindow))
                 {
@@ -742,29 +987,25 @@ ChangePos:
         RECT rcTray, rcWorkArea;
 
         /* If monitor has changed then fix the previous monitors work area */
-        if (PreviousMonitor != Monitor)
+        if (m_PreviousMonitor != m_Monitor)
         {
-            GetScreenRect(
-                PreviousMonitor,
-                &rcWorkArea);
+            GetScreenRect(m_PreviousMonitor, &rcWorkArea);
             SystemParametersInfo(SPI_SETWORKAREA,
                                  1,
                                  &rcWorkArea,
                                  SPIF_SENDCHANGE);
         }
 
-        rcTray = rcTrayWnd[Position];
+        rcTray = m_TrayRects[m_Position];
 
-        GetScreenRect(
-            Monitor,
-            &rcWorkArea);
-        PreviousMonitor = Monitor;
+        GetScreenRect(m_Monitor, &rcWorkArea);
+        m_PreviousMonitor = m_Monitor;
 
         /* If AutoHide is false then change the workarea to exclude the area that
            the taskbar covers. */
         if (!AutoHide)
         {
-            switch (Position)
+            switch (m_Position)
             {
             case ABE_TOP:
                 rcWorkArea.top = rcTray.bottom;
@@ -792,17 +1033,15 @@ ChangePos:
     {
         RECT rcTray;
 
-        rcTray = rcTrayWnd[Position];
+        rcTray = m_TrayRects[m_Position];
 
         if (AutoHide)
         {
-            rcTray.left += AutoHideOffset.cx;
-            rcTray.right += AutoHideOffset.cx;
-            rcTray.top += AutoHideOffset.cy;
-            rcTray.bottom += AutoHideOffset.cy;
+            rcTray.left += m_AutoHideOffset.cx;
+            rcTray.right += m_AutoHideOffset.cx;
+            rcTray.top += m_AutoHideOffset.cy;
+            rcTray.bottom += m_AutoHideOffset.cy;
         }
-
-        //    TRACE("CheckTray: %d: %d,%d,%d,%d\n", Position, rcTray.left, rcTray.top, rcTray.right, rcTray.bottom);
 
         /* Move the tray window */
         SetWindowPos(NULL,
@@ -827,14 +1066,14 @@ ChangePos:
         RECT Rect;
     } TW_STRUCKRECTS2, *PTW_STUCKRECTS2;
 
-    VOID
-        RegLoadSettings()
+    VOID RegLoadSettings()
     {
         DWORD Pos;
         TW_STRUCKRECTS2 sr;
         RECT rcScreen;
         SIZE WndSize, EdgeSize, DlgFrameSize;
         DWORD cbSize = sizeof(sr);
+        SIZE StartBtnSize = m_StartButton.GetSize();
 
         EdgeSize.cx = GetSystemMetrics(SM_CXEDGE);
         EdgeSize.cy = GetSystemMetrics(SM_CYEDGE);
@@ -857,12 +1096,12 @@ ChangePos:
             /* FIXME: Are there more flags? */
 
 #if WIN7_COMPAT_MODE
-            Position = ABE_LEFT;
+            m_Position = ABE_LEFT;
 #else
             if (sr.Position > ABE_BOTTOM)
-                Position = ABE_BOTTOM;
+                m_Position = ABE_BOTTOM;
             else
-                Position = sr.Position;
+                m_Position = sr.Position;
 #endif
 
             /* Try to find out which monitor the tray window was located on last.
@@ -876,7 +1115,7 @@ ChangePos:
         }
         else
         {
-            Position = ABE_BOTTOM;
+            m_Position = ABE_BOTTOM;
             AlwaysOnTop = TRUE;
 
             /* Use the minimum size of the taskbar, we'll use the start
@@ -921,7 +1160,7 @@ ChangePos:
             WndSize.cy = sr.Size.cy;
 
         /* Save the calculated size */
-        TraySize = WndSize;
+        m_TraySize = WndSize;
 
         /* Calculate all docking rectangles. We need to do this here so they're
            initialized and dragging the tray window to another position gives
@@ -933,19 +1172,17 @@ ChangePos:
             GetTrayRectFromScreenRect(
                 Pos,
                 &rcScreen,
-                &TraySize,
-                &rcTrayWnd[Pos]);
-            //        TRACE("rcTrayWnd[%d(%d)]: %d,%d,%d,%d\n", Pos, Position, rcTrayWnd[Pos].left, rcTrayWnd[Pos].top, rcTrayWnd[Pos].right, rcTrayWnd[Pos].bottom);
+                &m_TraySize,
+                &m_TrayRects[Pos]);
+            //        TRACE("m_TrayRects[%d(%d)]: %d,%d,%d,%d\n", Pos, Position, m_TrayRects[Pos].left, m_TrayRects[Pos].top, m_TrayRects[Pos].right, m_TrayRects[Pos].bottom);
         }
 
         /* Determine which monitor we are on. It shouldn't matter which docked
            position rectangle we use */
-        Monitor = GetMonitorFromRect(
-            &rcTrayWnd[ABE_LEFT]);
+        m_Monitor = GetMonitorFromRect(&m_TrayRects[ABE_LEFT]);
     }
 
-    UINT
-        TrackMenu(
+    UINT TrackMenu(
         IN HMENU hMenu,
         IN POINT *ppt OPTIONAL,
         IN HWND hwndExclude OPTIONAL,
@@ -1063,54 +1300,7 @@ ChangePos:
         return hr;
     }
 
-
-    VOID UpdateStartButton(IN HBITMAP hbmStart OPTIONAL)
-    {
-        SIZE Size = { 0, 0 };
-
-        if (himlStartBtn == NULL ||
-            !StartButton.SendMessage(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
-        {
-            Size.cx = GetSystemMetrics(SM_CXEDGE);
-            Size.cy = GetSystemMetrics(SM_CYEDGE);
-
-            if (hbmStart == NULL)
-            {
-                hbmStart = (HBITMAP) StartButton.SendMessage(BM_GETIMAGE, IMAGE_BITMAP, 0);
-            }
-
-            if (hbmStart != NULL)
-            {
-                BITMAP bmp;
-
-                if (GetObject(hbmStart,
-                    sizeof(bmp),
-                    &bmp) != 0)
-                {
-                    Size.cx += bmp.bmWidth;
-                    Size.cy += max(bmp.bmHeight,
-                                   GetSystemMetrics(SM_CYCAPTION));
-                }
-                else
-                {
-                    /* Huh?! Shouldn't happen... */
-                    goto DefSize;
-                }
-            }
-            else
-            {
-DefSize:
-                Size.cx += GetSystemMetrics(SM_CXMINIMIZED);
-                Size.cy += GetSystemMetrics(SM_CYCAPTION);
-            }
-        }
-
-        /* Save the size of the start button */
-        StartBtnSize = Size;
-    }
-
-    VOID
-        AlignControls(IN PRECT prcClient OPTIONAL)
+    VOID AlignControls(IN PRECT prcClient OPTIONAL)
     {
         RECT rcClient;
         SIZE TraySize, StartSize;
@@ -1118,7 +1308,7 @@ DefSize:
         BOOL Horizontal;
         HDWP dwp;
 
-        UpdateStartButton(NULL);
+        m_StartButton.UpdateSize();
         if (prcClient != NULL)
         {
             rcClient = *prcClient;
@@ -1140,15 +1330,15 @@ DefSize:
             return;
 
         /* Limit the Start button width to the client width, if neccessary */
-        StartSize = StartBtnSize;
+        StartSize = m_StartButton.GetSize();
         if (StartSize.cx > rcClient.right)
             StartSize.cx = rcClient.right;
 
-        if (StartButton.m_hWnd != NULL)
+        if (m_StartButton.m_hWnd != NULL)
         {
             /* Resize and reposition the button */
             dwp = DeferWindowPos(dwp,
-                                 StartButton.m_hWnd,
+                                 m_StartButton.m_hWnd,
                                  NULL,
                                  0,
                                  0,
@@ -1171,8 +1361,8 @@ DefSize:
             TraySize.cy = 0;
         }
 
-        if (hwndTrayNotify != NULL &&
-            SendMessage(hwndTrayNotify,
+        if (m_TrayNotify != NULL &&
+            SendMessage(m_TrayNotify,
             TNWM_GETMINIMUMSIZE,
             (WPARAM) Horizontal,
             (LPARAM) &TraySize))
@@ -1184,7 +1374,7 @@ DefSize:
                 ptTrayNotify.y = rcClient.bottom - TraySize.cy;
 
             dwp = DeferWindowPos(dwp,
-                                 hwndTrayNotify,
+                                 m_TrayNotify,
                                  NULL,
                                  ptTrayNotify.x,
                                  ptTrayNotify.y,
@@ -1196,12 +1386,12 @@ DefSize:
         }
 
         /* Resize/Move the rebar control */
-        if (hwndRebar != NULL)
+        if (m_Rebar != NULL)
         {
             POINT ptRebar = { 0, 0 };
             SIZE szRebar;
 
-            SetWindowStyle(hwndRebar, CCS_VERT, Horizontal ? 0 : CCS_VERT);
+            SetWindowStyle(m_Rebar, CCS_VERT, Horizontal ? 0 : CCS_VERT);
 
             if (Horizontal)
             {
@@ -1217,7 +1407,7 @@ DefSize:
             }
 
             dwp = DeferWindowPos(dwp,
-                                 hwndRebar,
+                                 m_Rebar,
                                  NULL,
                                  ptRebar.x,
                                  ptRebar.y,
@@ -1229,186 +1419,24 @@ DefSize:
         if (dwp != NULL)
             EndDeferWindowPos(dwp);
 
-        if (hwndTaskSwitch != NULL)
+        if (m_TaskSwitch != NULL)
         {
             /* Update the task switch window configuration */
-            SendMessage(hwndTaskSwitch,
-                        TSWM_UPDATETASKBARPOS,
-                        0,
-                        0);
+            SendMessage(m_TaskSwitch, TSWM_UPDATETASKBARPOS, 0, 0);
         }
-    }
-
-    BOOL
-        CreateStartBtnImageList()
-    {
-        HICON hIconStart;
-        SIZE IconSize;
-
-        if (himlStartBtn != NULL)
-            return TRUE;
-
-        IconSize.cx = GetSystemMetrics(SM_CXSMICON);
-        IconSize.cy = GetSystemMetrics(SM_CYSMICON);
-
-        /* Load the start button icon and create a image list for it */
-        hIconStart = (HICON) LoadImage(hExplorerInstance,
-                                       MAKEINTRESOURCE(IDI_START),
-                                       IMAGE_ICON,
-                                       IconSize.cx,
-                                       IconSize.cy,
-                                       LR_SHARED | LR_DEFAULTCOLOR);
-
-        if (hIconStart != NULL)
-        {
-            himlStartBtn = (IImageList*) ImageList_Create(IconSize.cx,
-                                                          IconSize.cy,
-                                                          ILC_COLOR32 | ILC_MASK,
-                                                          1,
-                                                          1);
-            if (himlStartBtn != NULL)
-            {
-                int s;
-                himlStartBtn->ReplaceIcon(-1, hIconStart, &s);
-                if (s >= 0)
-                {
-                    return TRUE;
-                }
-
-                /* Failed to add the icon! */
-                himlStartBtn->Release();
-                himlStartBtn = NULL;
-            }
-        }
-
-        return FALSE;
-    }
-
-    HBITMAP CreateStartButtonBitmap()
-    {
-        WCHAR szStartCaption[32];
-        HFONT hFontOld;
-        HDC hDC = NULL;
-        HDC hDCScreen = NULL;
-        SIZE Size, SmallIcon;
-        HBITMAP hbmpOld, hbmp = NULL;
-        HBITMAP hBitmap = NULL;
-        HICON hIconStart;
-        BOOL Ret;
-        UINT Flags;
-        RECT rcButton;
-
-        /* NOTE: this is the backwards compatibility code that is used if the
-                 Common Controls Version 6.0 are not available! */
-
-        if (!LoadString(hExplorerInstance,
-            IDS_START,
-            szStartCaption,
-            sizeof(szStartCaption) / sizeof(szStartCaption[0])))
-        {
-            return NULL;
-        }
-
-        /* Load the start button icon */
-        SmallIcon.cx = GetSystemMetrics(SM_CXSMICON);
-        SmallIcon.cy = GetSystemMetrics(SM_CYSMICON);
-        hIconStart = (HICON) LoadImage(hExplorerInstance,
-                                       MAKEINTRESOURCE(IDI_START),
-                                       IMAGE_ICON,
-                                       SmallIcon.cx,
-                                       SmallIcon.cy,
-                                       LR_SHARED | LR_DEFAULTCOLOR);
-
-        hDCScreen = GetDC(NULL);
-        if (hDCScreen == NULL)
-            goto Cleanup;
-
-        hDC = CreateCompatibleDC(hDCScreen);
-        if (hDC == NULL)
-            goto Cleanup;
-
-        hFontOld = (HFONT) SelectObject(hDC, hStartBtnFont);
-
-        Ret = GetTextExtentPoint32(hDC,
-                                   szStartCaption,
-                                   _tcslen(szStartCaption),
-                                   &Size);
-
-        SelectObject(hDC,
-                     hFontOld);
-        if (!Ret)
-            goto Cleanup;
-
-        /* Make sure the height is at least the size of a caption icon. */
-        if (hIconStart != NULL)
-            Size.cx += SmallIcon.cx + 4;
-        Size.cy = max(Size.cy, SmallIcon.cy);
-
-        /* Create the bitmap */
-        hbmp = CreateCompatibleBitmap(hDCScreen,
-                                      Size.cx,
-                                      Size.cy);
-        if (hbmp == NULL)
-            goto Cleanup;
-
-        /* Caluclate the button rect */
-        rcButton.left = 0;
-        rcButton.top = 0;
-        rcButton.right = Size.cx;
-        rcButton.bottom = Size.cy;
-
-        /* Draw the button */
-        hbmpOld = (HBITMAP) SelectObject(hDC, hbmp);
-
-        Flags = DC_TEXT | DC_INBUTTON;
-        if (hIconStart != NULL)
-            Flags |= DC_ICON;
-
-        DrawCaptionTemp(NULL,
-                        hDC,
-                        &rcButton,
-                        hStartBtnFont,
-                        hIconStart,
-                        szStartCaption,
-                        Flags);
-
-        SelectObject(hDC,
-                     hbmpOld);
-
-        if (!Ret)
-            goto Cleanup;
-
-        /* We successfully created the bitmap! */
-        hBitmap = hbmp;
-        hbmp = NULL;
-
-Cleanup:
-        if (hDCScreen != NULL)
-        {
-            ReleaseDC(NULL,
-                      hDCScreen);
-        }
-
-        if (hbmp != NULL)
-            DeleteObject(hbmp);
-
-        if (hDC != NULL)
-            DeleteDC(hDC);
-
-        return hBitmap;
     }
 
     LRESULT OnThemeChanged()
     {
-        if (TaskbarTheme)
-            CloseThemeData(TaskbarTheme);
+        if (m_Theme)
+            CloseThemeData(m_Theme);
 
         if (IsThemeActive())
-            TaskbarTheme = OpenThemeData(m_hWnd, L"TaskBar");
+            m_Theme = OpenThemeData(m_hWnd, L"TaskBar");
         else
-            TaskbarTheme = NULL;
+            m_Theme = NULL;
 
-        if (TaskbarTheme)
+        if (m_Theme)
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
         }
@@ -1444,34 +1472,25 @@ Cleanup:
             szStartCaption[0] = TEXT('\0');
         }
 
-        if (hStartBtnFont == NULL || hCaptionFont == NULL)
+        if (m_CaptionFont == NULL)
         {
             NONCLIENTMETRICS ncm;
 
             /* Get the system fonts, we use the caption font,
                always bold, though. */
             ncm.cbSize = sizeof(ncm);
-            if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
-                sizeof(ncm),
-                &ncm,
-                FALSE))
+            if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, FALSE))
             {
-                if (hCaptionFont == NULL)
+                if (m_CaptionFont == NULL)
                 {
                     ncm.lfCaptionFont.lfWeight = FW_NORMAL;
-                    hCaptionFont = CreateFontIndirect(&ncm.lfCaptionFont);
-                }
-
-                if (hStartBtnFont == NULL)
-                {
-                    ncm.lfCaptionFont.lfWeight = FW_BOLD;
-                    hStartBtnFont = CreateFontIndirect(&ncm.lfCaptionFont);
+                    m_CaptionFont = CreateFontIndirect(&ncm.lfCaptionFont);
                 }
             }
         }
-
+        
         /* Create the Start button */
-        StartButton.SubclassWindow(CreateWindowEx(
+        m_StartButton.SubclassWindow(CreateWindowEx(
             0,
             WC_BUTTON,
             szStartCaption,
@@ -1485,75 +1504,30 @@ Cleanup:
             (HMENU) IDC_STARTBTN,
             hExplorerInstance,
             NULL));
-        if (StartButton.m_hWnd)
+
+        if (m_StartButton.m_hWnd)
         {
-            SetWindowTheme(StartButton.m_hWnd, L"Start", NULL);
-            StartButton.SendMessage(WM_SETFONT, (WPARAM) hStartBtnFont, FALSE);
-
-            if (CreateStartBtnImageList())
-            {
-                BUTTON_IMAGELIST bil;
-
-                /* Try to set the start button image. this requires the Common
-                   Controls 6.0 to be present (XP and later) */
-                bil.himl = (HIMAGELIST) himlStartBtn;
-                bil.margin.left = bil.margin.right = 1;
-                bil.margin.top = bil.margin.bottom = 1;
-                bil.uAlign = BUTTON_IMAGELIST_ALIGN_LEFT;
-
-                if (!StartButton.SendMessage(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
-                {
-                    /* Fall back to the deprecated method on older systems that don't
-                       support Common Controls 6.0 */
-                    himlStartBtn->Release();
-                    himlStartBtn = NULL;
-
-                    goto SetStartBtnImage;
-                }
-
-                /* We're using the image list, remove the BS_BITMAP style and
-                   don't center it horizontally */
-                SetWindowStyle(StartButton.m_hWnd, BS_BITMAP | BS_RIGHT, 0);
-
-                UpdateStartButton(NULL);
-            }
-            else
-            {
-                HBITMAP hbmStart, hbmOld;
-
-SetStartBtnImage:
-                hbmStart = CreateStartButtonBitmap();
-                if (hbmStart != NULL)
-                {
-                    UpdateStartButton(hbmStart);
-
-                    hbmOld = (HBITMAP) StartButton.SendMessage(BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbmStart);
-
-                    if (hbmOld != NULL)
-                        DeleteObject(hbmOld);
-                }
-            }
+            m_StartButton.Initialize();
         }
 
         /* Load the saved tray window settings */
         RegLoadSettings();
 
         /* Create and initialize the start menu */
-        hbmStartMenu = LoadBitmap(hExplorerInstance,
-                                  MAKEINTRESOURCE(IDB_STARTMENU));
-        StartMenuPopup = CreateStartMenu(this, &StartMenuBand, hbmStartMenu, 0);
+        HBITMAP hbmBanner = LoadBitmap(hExplorerInstance, MAKEINTRESOURCE(IDB_STARTMENU));
+        m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, 0);
 
         /* Load the tray band site */
-        if (TrayBandSite != NULL)
+        if (m_TrayBandSite != NULL)
         {
-            TrayBandSite.Release();
+            m_TrayBandSite.Release();
         }
 
-        TrayBandSite = CreateTrayBandSite(this, &hwndRebar, &hwndTaskSwitch);
-        SetWindowTheme(hwndRebar, L"TaskBar", NULL);
+        m_TrayBandSite = CreateTrayBandSite(this, &m_Rebar, &m_TaskSwitch);
+        SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         /* Create the tray notification window */
-        hwndTrayNotify = CreateTrayNotifyWnd(this, HideClock);
+        m_TrayNotify = CreateTrayNotifyWnd(this, HideClock);
 
         if (UpdateNonClientMetrics())
         {
@@ -1567,11 +1541,11 @@ SetStartBtnImage:
         AlignControls(
             NULL);
 
-        InitShellServices(&(hdpaShellServices));
+        InitShellServices(&(m_ShellServices));
 
         if (AutoHide)
         {
-            AutoHideState = AUTOHIDE_HIDING;
+            m_AutoHideState = AUTOHIDE_HIDING;
             SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
         }
 
@@ -1617,8 +1591,8 @@ SetStartBtnImage:
             WS_BORDER | WS_THICKFRAME;
 
         ZeroMemory(&rcWnd, sizeof(rcWnd));
-        if (Position != (DWORD) -1)
-            rcWnd = rcTrayWnd[Position];
+        if (m_Position != (DWORD) -1)
+            rcWnd = m_TrayRects[m_Position];
 
         if (!Create(NULL, rcWnd, NULL, dwStyle, dwExStyle))
             return E_FAIL;
@@ -1647,7 +1621,7 @@ SetStartBtnImage:
     BOOL STDMETHODCALLTYPE IsSpecialHWND(IN HWND hWnd)
     {
         return (m_hWnd == hWnd ||
-                (hWndDesktop != NULL && m_hWnd == hWndDesktop));
+                (m_DesktopWnd != NULL && m_hWnd == m_DesktopWnd));
     }
 
     BOOL STDMETHODCALLTYPE
@@ -1659,9 +1633,9 @@ SetStartBtnImage:
     HFONT STDMETHODCALLTYPE GetCaptionFonts(OUT HFONT *phBoldCaption OPTIONAL)
     {
         if (phBoldCaption != NULL)
-            *phBoldCaption = hStartBtnFont;
+            *phBoldCaption = m_StartButton.GetFont();
 
-        return hCaptionFont;
+        return m_CaptionFont;
     }
 
     DWORD WINAPI TrayPropertiesThread()
@@ -1669,7 +1643,7 @@ SetStartBtnImage:
         HWND hwnd;
         RECT posRect;
 
-        GetWindowRect(StartButton.m_hWnd, &posRect);
+        GetWindowRect(m_StartButton.m_hWnd, &posRect);
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
                               NULL,
@@ -1683,11 +1657,11 @@ SetStartBtnImage:
                               NULL,
                               NULL);
 
-        hwndTrayPropertiesOwner = hwnd;
+        m_TrayPropertiesOwner = hwnd;
 
         DisplayTrayProperties(hwnd);
 
-        hwndTrayPropertiesOwner = NULL;
+        m_TrayPropertiesOwner = NULL;
         DestroyWindow();
 
         return 0;
@@ -1704,11 +1678,11 @@ SetStartBtnImage:
     {
         HWND hTrayProp;
 
-        if (hwndTrayPropertiesOwner)
+        if (m_TrayPropertiesOwner)
         {
-            hTrayProp = GetLastActivePopup(hwndTrayPropertiesOwner);
+            hTrayProp = GetLastActivePopup(m_TrayPropertiesOwner);
             if (hTrayProp != NULL &&
-                hTrayProp != hwndTrayPropertiesOwner)
+                hTrayProp != m_TrayPropertiesOwner)
             {
                 SetForegroundWindow(hTrayProp);
                 return NULL;
@@ -1822,10 +1796,9 @@ SetStartBtnImage:
         {
             Locked = bLock;
 
-            if (TrayBandSite != NULL)
+            if (m_TrayBandSite != NULL)
             {
-                if (!SUCCEEDED(TrayBandSite->Lock(
-                    bLock)))
+                if (!SUCCEEDED(m_TrayBandSite->Lock(bLock)))
                 {
                     /* Reset?? */
                     Locked = bPrevLock;
@@ -1844,10 +1817,10 @@ SetStartBtnImage:
 
         GetClientRect(&rect);
 
-        if (TaskbarTheme)
+        if (m_Theme)
         {
             GetClientRect(&rect);
-            switch (Position)
+            switch (m_Position)
             {
             case ABE_LEFT:
                 partId = TBP_BACKGROUNDLEFT;
@@ -1864,7 +1837,7 @@ SetStartBtnImage:
                 break;
             }
 
-            DrawThemeBackground(TaskbarTheme, hdc, partId, 0, &rect, 0);
+            DrawThemeBackground(m_Theme, hdc, partId, 0, &rect, 0);
         }
 
         return TRUE;
@@ -1874,7 +1847,7 @@ SetStartBtnImage:
     {
         HDC hdc = (HDC) wParam;
 
-        if (!TaskbarTheme)
+        if (!m_Theme)
         {
             bHandled = FALSE;
             return 0;
@@ -1894,7 +1867,7 @@ SetStartBtnImage:
 
         hdc = GetDCEx(m_hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_PARENTCLIP);
 
-        switch (Position)
+        switch (m_Position)
         {
         case ABE_LEFT:
             backoundPart = TBP_SIZINGBARLEFT;
@@ -1915,7 +1888,7 @@ SetStartBtnImage:
             break;
         }
 
-        DrawThemeBackground(TaskbarTheme, hdc, backoundPart, 0, &rect, 0);
+        DrawThemeBackground(m_Theme, hdc, backoundPart, 0, &rect, 0);
 
         ReleaseDC(m_hWnd, hdc);
         return 0;
@@ -1926,7 +1899,7 @@ SetStartBtnImage:
         HWND hwnd;
         RECT posRect;
 
-        GetWindowRect(StartButton.m_hWnd, &posRect);
+        GetWindowRect(m_StartButton.m_hWnd, &posRect);
 
         hwnd = CreateWindowEx(0,
                               WC_STATIC,
@@ -1941,11 +1914,11 @@ SetStartBtnImage:
                               NULL,
                               NULL);
 
-        hwndRunFileDlgOwner = hwnd;
+        m_RunFileDlgOwner = hwnd;
 
         RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
 
-        hwndRunFileDlgOwner = NULL;
+        m_RunFileDlgOwner = NULL;
         ::DestroyWindow(hwnd);
 
         return 0;
@@ -1960,11 +1933,11 @@ SetStartBtnImage:
     void DisplayRunFileDlg()
     {
         HWND hRunDlg;
-        if (hwndRunFileDlgOwner)
+        if (m_RunFileDlgOwner)
         {
-            hRunDlg = GetLastActivePopup(hwndRunFileDlgOwner);
+            hRunDlg = GetLastActivePopup(m_RunFileDlgOwner);
             if (hRunDlg != NULL &&
-                hRunDlg != hwndRunFileDlgOwner)
+                hRunDlg != m_RunFileDlgOwner)
             {
                 SetForegroundWindow(hRunDlg);
                 return;
@@ -1976,15 +1949,15 @@ SetStartBtnImage:
 
     void PopupStartMenu()
     {
-        if (StartMenuPopup != NULL)
+        if (m_StartMenuPopup != NULL)
         {
             POINTL pt;
             RECTL rcExclude;
             DWORD dwFlags = 0;
 
-            if (GetWindowRect(StartButton.m_hWnd, (RECT*) &rcExclude))
+            if (GetWindowRect(m_StartButton.m_hWnd, (RECT*) &rcExclude))
             {
-                switch (Position)
+                switch (m_Position)
                 {
                 case ABE_BOTTOM:
                     pt.x = rcExclude.left;
@@ -2004,12 +1977,9 @@ SetStartBtnImage:
                     break;
                 }
 
-                StartMenuPopup->Popup(
-                    &pt,
-                    &rcExclude,
-                    dwFlags);
+                m_StartMenuPopup->Popup(&pt, &rcExclude, dwFlags);
 
-                StartButton.SendMessageW(BM_SETSTATE, TRUE, 0);
+                m_StartButton.SendMessageW(BM_SETSTATE, TRUE, 0);
             }
         }
     }
@@ -2019,13 +1989,13 @@ SetStartBtnImage:
         RECT rcCurrent;
         POINT pt;
         BOOL over;
-        UINT state = AutoHideState;
+        UINT state = m_AutoHideState;
 
         GetCursorPos(&pt);
         GetWindowRect(m_hWnd, &rcCurrent);
         over = PtInRect(&rcCurrent, pt);
 
-        if (StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
+        if (m_StartButton.SendMessage( BM_GETSTATE, 0, 0) != BST_UNCHECKED)
         {
             over = TRUE;
         }
@@ -2035,13 +2005,13 @@ SetStartBtnImage:
             if (state == AUTOHIDE_HIDING)
             {
                 TRACE("AutoHide cancelling hide.\n");
-                AutoHideState = AUTOHIDE_SHOWING;
+                m_AutoHideState = AUTOHIDE_SHOWING;
                 SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
             }
             else if (state == AUTOHIDE_HIDDEN)
             {
                 TRACE("AutoHide starting show.\n");
-                AutoHideState = AUTOHIDE_SHOWING;
+                m_AutoHideState = AUTOHIDE_SHOWING;
                 SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_SHOW, NULL);
             }
         }
@@ -2050,13 +2020,13 @@ SetStartBtnImage:
             if (state == AUTOHIDE_SHOWING)
             {
                 TRACE("AutoHide cancelling show.\n");
-                AutoHideState = AUTOHIDE_HIDING;
+                m_AutoHideState = AUTOHIDE_HIDING;
                 SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
             }
             else if (state == AUTOHIDE_SHOWN)
             {
                 TRACE("AutoHide starting hide.\n");
-                AutoHideState = AUTOHIDE_HIDING;
+                m_AutoHideState = AUTOHIDE_HIDING;
                 SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_DELAY_HIDE, NULL);
             }
 
@@ -2066,44 +2036,44 @@ SetStartBtnImage:
 
     void ProcessAutoHide()
     {
-        RECT rc = rcTrayWnd[Position];
-        INT w = TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
-        INT h = TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
+        RECT rc = m_TrayRects[m_Position];
+        INT w = m_TraySize.cx - GetSystemMetrics(SM_CXBORDER) * 2 - 1;
+        INT h = m_TraySize.cy - GetSystemMetrics(SM_CYBORDER) * 2 - 1;
 
-        TRACE("AutoHide Timer received for %u, rc=(%d, %d, %d, %d), w=%d, h=%d.\n", AutoHideState, rc.left, rc.top, rc.right, rc.bottom, w, h);
+        TRACE("AutoHide Timer received for %u, rc=(%d, %d, %d, %d), w=%d, h=%d.\n", m_AutoHideState, rc.left, rc.top, rc.right, rc.bottom, w, h);
 
-        switch (AutoHideState)
+        switch (m_AutoHideState)
         {
         case AUTOHIDE_HIDING:
-            switch (Position)
+            switch (m_Position)
             {
             case ABE_LEFT:
-                AutoHideOffset.cy = 0;
-                AutoHideOffset.cx -= AUTOHIDE_SPEED_HIDE;
-                if (AutoHideOffset.cx < -w)
-                    AutoHideOffset.cx = -w;
+                m_AutoHideOffset.cy = 0;
+                m_AutoHideOffset.cx -= AUTOHIDE_SPEED_HIDE;
+                if (m_AutoHideOffset.cx < -w)
+                    m_AutoHideOffset.cx = -w;
                 break;
             case ABE_TOP:
-                AutoHideOffset.cx = 0;
-                AutoHideOffset.cy -= AUTOHIDE_SPEED_HIDE;
-                if (AutoHideOffset.cy < -h)
-                    AutoHideOffset.cy = -h;
+                m_AutoHideOffset.cx = 0;
+                m_AutoHideOffset.cy -= AUTOHIDE_SPEED_HIDE;
+                if (m_AutoHideOffset.cy < -h)
+                    m_AutoHideOffset.cy = -h;
                 break;
             case ABE_RIGHT:
-                AutoHideOffset.cy = 0;
-                AutoHideOffset.cx += AUTOHIDE_SPEED_HIDE;
-                if (AutoHideOffset.cx > w)
-                    AutoHideOffset.cx = w;
+                m_AutoHideOffset.cy = 0;
+                m_AutoHideOffset.cx += AUTOHIDE_SPEED_HIDE;
+                if (m_AutoHideOffset.cx > w)
+                    m_AutoHideOffset.cx = w;
                 break;
             case ABE_BOTTOM:
-                AutoHideOffset.cx = 0;
-                AutoHideOffset.cy += AUTOHIDE_SPEED_HIDE;
-                if (AutoHideOffset.cy > h)
-                    AutoHideOffset.cy = h;
+                m_AutoHideOffset.cx = 0;
+                m_AutoHideOffset.cy += AUTOHIDE_SPEED_HIDE;
+                if (m_AutoHideOffset.cy > h)
+                    m_AutoHideOffset.cy = h;
                 break;
             }
 
-            if (AutoHideOffset.cx != w && AutoHideOffset.cy != h)
+            if (m_AutoHideOffset.cx != w && m_AutoHideOffset.cy != h)
             {
                 SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
                 break;
@@ -2112,58 +2082,58 @@ SetStartBtnImage:
             /* fallthrough */
         case AUTOHIDE_HIDDEN:
 
-            switch (Position)
+            switch (m_Position)
             {
             case ABE_LEFT:
-                AutoHideOffset.cx = -w;
-                AutoHideOffset.cy = 0;
+                m_AutoHideOffset.cx = -w;
+                m_AutoHideOffset.cy = 0;
                 break;
             case ABE_TOP:
-                AutoHideOffset.cx = 0;
-                AutoHideOffset.cy = -h;
+                m_AutoHideOffset.cx = 0;
+                m_AutoHideOffset.cy = -h;
                 break;
             case ABE_RIGHT:
-                AutoHideOffset.cx = w;
-                AutoHideOffset.cy = 0;
+                m_AutoHideOffset.cx = w;
+                m_AutoHideOffset.cy = 0;
                 break;
             case ABE_BOTTOM:
-                AutoHideOffset.cx = 0;
-                AutoHideOffset.cy = h;
+                m_AutoHideOffset.cx = 0;
+                m_AutoHideOffset.cy = h;
                 break;
             }
 
             KillTimer(TIMER_ID_AUTOHIDE);
-            AutoHideState = AUTOHIDE_HIDDEN;
+            m_AutoHideState = AUTOHIDE_HIDDEN;
             break;
 
         case AUTOHIDE_SHOWING:
-            if (AutoHideOffset.cx >= AUTOHIDE_SPEED_SHOW)
+            if (m_AutoHideOffset.cx >= AUTOHIDE_SPEED_SHOW)
             {
-                AutoHideOffset.cx -= AUTOHIDE_SPEED_SHOW;
+                m_AutoHideOffset.cx -= AUTOHIDE_SPEED_SHOW;
             }
-            else if (AutoHideOffset.cx <= -AUTOHIDE_SPEED_SHOW)
+            else if (m_AutoHideOffset.cx <= -AUTOHIDE_SPEED_SHOW)
             {
-                AutoHideOffset.cx += AUTOHIDE_SPEED_SHOW;
-            }
-            else
-            {
-                AutoHideOffset.cx = 0;
-            }
-
-            if (AutoHideOffset.cy >= AUTOHIDE_SPEED_SHOW)
-            {
-                AutoHideOffset.cy -= AUTOHIDE_SPEED_SHOW;
-            }
-            else if (AutoHideOffset.cy <= -AUTOHIDE_SPEED_SHOW)
-            {
-                AutoHideOffset.cy += AUTOHIDE_SPEED_SHOW;
+                m_AutoHideOffset.cx += AUTOHIDE_SPEED_SHOW;
             }
             else
             {
-                AutoHideOffset.cy = 0;
+                m_AutoHideOffset.cx = 0;
             }
 
-            if (AutoHideOffset.cx != 0 || AutoHideOffset.cy != 0)
+            if (m_AutoHideOffset.cy >= AUTOHIDE_SPEED_SHOW)
+            {
+                m_AutoHideOffset.cy -= AUTOHIDE_SPEED_SHOW;
+            }
+            else if (m_AutoHideOffset.cy <= -AUTOHIDE_SPEED_SHOW)
+            {
+                m_AutoHideOffset.cy += AUTOHIDE_SPEED_SHOW;
+            }
+            else
+            {
+                m_AutoHideOffset.cy = 0;
+            }
+
+            if (m_AutoHideOffset.cx != 0 || m_AutoHideOffset.cy != 0)
             {
                 SetTimer(TIMER_ID_AUTOHIDE, AUTOHIDE_INTERVAL_ANIMATING, NULL);
                 break;
@@ -2173,16 +2143,16 @@ SetStartBtnImage:
         case AUTOHIDE_SHOWN:
 
             KillTimer(TIMER_ID_AUTOHIDE);
-            AutoHideState = AUTOHIDE_SHOWN;
+            m_AutoHideState = AUTOHIDE_SHOWN;
             break;
         }
 
-        rc.left += AutoHideOffset.cx;
-        rc.right += AutoHideOffset.cx;
-        rc.top += AutoHideOffset.cy;
-        rc.bottom += AutoHideOffset.cy;
+        rc.left += m_AutoHideOffset.cx;
+        rc.right += m_AutoHideOffset.cx;
+        rc.top += m_AutoHideOffset.cy;
+        rc.bottom += m_AutoHideOffset.cy;
 
-        TRACE("AutoHide Changing position to (%d, %d, %d, %d) and state=%u.\n", rc.left, rc.top, rc.right, rc.bottom, AutoHideState);
+        TRACE("AutoHide Changing position to (%d, %d, %d, %d) and state=%u.\n", rc.left, rc.top, rc.right, rc.bottom, m_AutoHideState);
         SetWindowPos(NULL, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, SWP_NOACTIVATE | SWP_NOZORDER);
     }
 
@@ -2202,7 +2172,7 @@ SetStartBtnImage:
 
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (hwndTrayNotify)
+        if (m_TrayNotify)
         {
             TrayNotify_NotifyMsg(wParam, lParam);
         }
@@ -2211,7 +2181,7 @@ SetStartBtnImage:
 
     LRESULT OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (!TaskbarTheme)
+        if (!m_Theme)
         {
             bHandled = FALSE;
             return 0;
@@ -2255,7 +2225,7 @@ SetStartBtnImage:
 
             /* Depending on the position of the tray window, allow only
             changing the border next to the monitor working area */
-            switch (Position)
+            switch (m_Position)
             {
             case ABE_TOP:
                 if (pt.y > rcClient.bottom)
@@ -2293,21 +2263,18 @@ SetStartBtnImage:
         if (!Locked && GetCursorPos(&ptCursor))
         {
             IsDragging = TRUE;
-            DraggingPosition = GetDraggingRectFromPt(
-                ptCursor,
-                pRect,
-                &DraggingMonitor);
+            m_DraggingPosition = GetDraggingRectFromPt(ptCursor, pRect, &m_DraggingMonitor);
         }
         else
         {
-            *pRect = rcTrayWnd[Position];
+            *pRect = m_TrayRects[m_Position];
 
             if (AutoHide)
             {
-                pRect->left += AutoHideOffset.cx;
-                pRect->right += AutoHideOffset.cx;
-                pRect->top += AutoHideOffset.cy;
-                pRect->bottom += AutoHideOffset.cy;
+                pRect->left += m_AutoHideOffset.cx;
+                pRect->right += m_AutoHideOffset.cx;
+                pRect->top += m_AutoHideOffset.cy;
+                pRect->bottom += m_AutoHideOffset.cy;
             }
         }
         return TRUE;
@@ -2319,18 +2286,18 @@ SetStartBtnImage:
 
         if (!Locked)
         {
-            CalculateValidSize(Position, pRect);
+            CalculateValidSize(m_Position, pRect);
         }
         else
         {
-            *pRect = rcTrayWnd[Position];
+            *pRect = m_TrayRects[m_Position];
 
             if (AutoHide)
             {
-                pRect->left += AutoHideOffset.cx;
-                pRect->right += AutoHideOffset.cx;
-                pRect->top += AutoHideOffset.cy;
-                pRect->bottom += AutoHideOffset.cy;
+                pRect->left += m_AutoHideOffset.cx;
+                pRect->right += m_AutoHideOffset.cx;
+                pRect->top += m_AutoHideOffset.cy;
+                pRect->bottom += m_AutoHideOffset.cy;
             }
         }
         return TRUE;
@@ -2436,15 +2403,12 @@ SetStartBtnImage:
                 uId = TrackMenu(
                     hSysMenu,
                     NULL,
-                    StartButton.m_hWnd,
-                    Position != ABE_TOP,
+                    m_StartButton.m_hWnd,
+                    m_Position != ABE_TOP,
                     FALSE);
                 if (uId != 0)
                 {
-                    SendMessage(m_hWnd,
-                                WM_SYSCOMMAND,
-                                (WPARAM) uId,
-                                0);
+                    SendMessage(m_hWnd, WM_SYSCOMMAND, (WPARAM) uId, 0);
                 }
             }
 
@@ -2485,23 +2449,23 @@ SetStartBtnImage:
         if (pt.x != -1 || pt.y != -1)
             ppt = &pt;
         else
-            hWndExclude = StartButton.m_hWnd;
+            hWndExclude = m_StartButton.m_hWnd;
 
-        if ((HWND) wParam == StartButton.m_hWnd)
+        if ((HWND) wParam == m_StartButton.m_hWnd)
         {
             /* Make sure we can't track the context menu if the start
             menu is currently being shown */
-            if (!(StartButton.SendMessage(BM_GETSTATE, 0, 0) & BST_PUSHED))
+            if (!(m_StartButton.SendMessage(BM_GETSTATE, 0, 0) & BST_PUSHED))
             {
                 CComPtr<IContextMenu> ctxMenu;
                 StartMenuBtnCtxMenuCreator(this, m_hWnd, &ctxMenu);
-                TrackCtxMenu(ctxMenu, ppt, hWndExclude, Position == ABE_BOTTOM, this);
+                TrackCtxMenu(ctxMenu, ppt, hWndExclude, m_Position == ABE_BOTTOM, this);
             }
         }
         else
         {
             /* See if the context menu should be handled by the task band site */
-            if (ppt != NULL && TrayBandSite != NULL)
+            if (ppt != NULL && m_TrayBandSite != NULL)
             {
                 HWND hWndAtPt;
                 POINT ptClient = *ppt;
@@ -2511,19 +2475,18 @@ SetStartBtnImage:
 
                 hWndAtPt = ChildWindowFromPoint(m_hWnd, ptClient);
                 if (hWndAtPt != NULL &&
-                    (hWndAtPt == hwndRebar || IsChild(hwndRebar,
-                    hWndAtPt)))
+                    (hWndAtPt == m_Rebar || IsChild(m_Rebar, hWndAtPt)))
                 {
                     /* Check if the user clicked on the task switch window */
                     ptClient = *ppt;
-                    MapWindowPoints(NULL, hwndRebar, &ptClient, 1);
+                    MapWindowPoints(NULL, m_Rebar, &ptClient, 1);
 
-                    hWndAtPt = ChildWindowFromPointEx(hwndRebar, ptClient, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
-                    if (hWndAtPt == hwndTaskSwitch)
+                    hWndAtPt = ChildWindowFromPointEx(m_Rebar, ptClient, CWP_SKIPINVISIBLE | CWP_SKIPDISABLED);
+                    if (hWndAtPt == m_TaskSwitch)
                         goto HandleTrayContextMenu;
 
                     /* Forward the message to the task band site */
-                    TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret);
+                    m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret);
                 }
                 else
                     goto HandleTrayContextMenu;
@@ -2549,18 +2512,18 @@ HandleTrayContextMenu:
 
         HRESULT hr = E_FAIL;
 
-        if (TrayBandSite)
+        if (m_TrayBandSite)
         {
-            hr = TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret);
+            hr = m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret);
             if (SUCCEEDED(hr))
                 return Ret;
         }
 
-        if (TrayBandSite == NULL || FAILED(hr))
+        if (m_TrayBandSite == NULL || FAILED(hr))
         {
             const NMHDR *nmh = (const NMHDR *) lParam;
 
-            if (nmh->hwndFrom == hwndTrayNotify)
+            if (nmh->hwndFrom == m_TrayNotify)
             {
                 switch (nmh->code)
                 {
@@ -2605,13 +2568,13 @@ HandleTrayContextMenu:
     LRESULT OnOpenStartMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HWND hwndStartMenu;
-        HRESULT hr = IUnknown_GetWindow((IUnknown*) StartMenuPopup, &hwndStartMenu);
+        HRESULT hr = IUnknown_GetWindow(m_StartMenuPopup, &hwndStartMenu);
         if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
 
         if (IsWindowVisible(hwndStartMenu))
         {
-            StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
+            m_StartMenuPopup->OnSelect(MPOS_CANCELLEVEL);
         }
         else
         {
@@ -2715,13 +2678,13 @@ HandleTrayContextMenu:
     {
         LRESULT Ret = FALSE;
 
-        if ((HWND) lParam == StartButton.m_hWnd)
+        if ((HWND) lParam == m_StartButton.m_hWnd)
         {
             PopupStartMenu();
             return FALSE;
         }
 
-        if (TrayBandSite == NULL || FAILED_UNEXPECTEDLY(TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret)))
+        if (m_TrayBandSite == NULL || FAILED_UNEXPECTEDLY(m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret)))
         {
             switch (LOWORD(wParam))
             {
@@ -2808,7 +2771,7 @@ HandleTrayContextMenu:
             szWindow.cy - szTarget.cx,
         };
 
-        switch (Position)
+        switch (m_Position)
         {
         case ABE_LEFT:
             szWindow.cx = szActual.cx + borders.cx;
@@ -2836,7 +2799,7 @@ HandleTrayContextMenu:
     DECLARE_WND_CLASS_EX(szTrayWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTrayWindow)
-        if (StartMenuBand != NULL)
+        if (m_StartMenuBand != NULL)
         {
             MSG Msg;
             LRESULT lRet;
@@ -2846,7 +2809,7 @@ HandleTrayContextMenu:
             Msg.wParam = wParam;
             Msg.lParam = lParam;
 
-            if (StartMenuBand->TranslateMenuMessage(&Msg, &lRet) == S_OK)
+            if (m_StartMenuBand->TranslateMenuMessage(&Msg, &lRet) == S_OK)
             {
                 return lRet;
             }
@@ -2895,18 +2858,13 @@ HandleTrayContextMenu:
 
         /* FIXME: We should keep a reference here... */
 
-        while (PeekMessage(&Msg,
-            NULL,
-            0,
-            0,
-            PM_REMOVE))
+        while (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE))
         {
             if (Msg.message == WM_QUIT)
                 break;
 
-            if (StartMenuBand == NULL ||
-                StartMenuBand->IsMenuMessage(
-                &Msg) != S_OK)
+            if (m_StartMenuBand == NULL ||
+                m_StartMenuBand->IsMenuMessage(&Msg) != S_OK)
             {
                 TranslateMessage(&Msg);
                 DispatchMessage(&Msg);
@@ -2921,15 +2879,15 @@ HandleTrayContextMenu:
 
         /* FIXME: We should keep a reference here... */
 
-        while (1)
+        while (true)
         {
             Ret = GetMessage(&Msg, NULL, 0, 0);
 
             if (!Ret || Ret == -1)
                 break;
 
-            if (StartMenuBand == NULL ||
-                StartMenuBand->IsMenuMessage(&Msg) != S_OK)
+            if (m_StartMenuBand == NULL ||
+                m_StartMenuBand->IsMenuMessage(&Msg) != S_OK)
             {
                 TranslateMessage(&Msg);
                 DispatchMessage(&Msg);
@@ -2965,7 +2923,7 @@ HandleTrayContextMenu:
     {
         TRACE("IShellDesktopTray::RegisterDesktopWindow(0x%p)\n", hWndDesktop);
 
-        this->hWndDesktop = hWndDesktop;
+        m_DesktopWnd = hWndDesktop;
         return S_OK;
     }
 
@@ -2977,13 +2935,13 @@ HandleTrayContextMenu:
 
     virtual HRESULT RaiseStartButton()
     {
-        StartButton.SendMessageW(BM_SETSTATE, FALSE, 0);
+        m_StartButton.SendMessageW(BM_SETSTATE, FALSE, 0);
         return S_OK;
     }
 
     void _Init()
     {
-        Position = (DWORD) -1;
+        m_Position = (DWORD) -1;
     }
 
     DECLARE_NOT_AGGREGATABLE(CTrayWindow)
@@ -3058,9 +3016,9 @@ public:
                       ID_LOCKTASKBAR,
                       MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
 
-        if (TrayWnd->TrayBandSite != NULL)
+        if (TrayWnd->m_TrayBandSite != NULL)
         {
-            if (FAILED(TrayWnd->TrayBandSite->AddContextMenus(
+            if (FAILED(TrayWnd->m_TrayBandSite->AddContextMenus(
                 hPopup,
                 0,
                 ID_SHELL_CMD_FIRST,

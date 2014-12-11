@@ -1,7 +1,7 @@
 #ifndef _EXPLORER_PRECOMP__H_
 #define _EXPLORER_PRECOMP__H_
 
-#define WIN7_COMPAT_MODE 0
+#define WIN7_COMPAT_MODE 1
 
 #include <stdio.h>
 #include <tchar.h>
