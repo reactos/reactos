@@ -451,6 +451,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     lpttt = (LPTOOLTIPTEXT)lParam;
                     idButton = (UINT)lpttt->hdr.idFrom;
+                    lpttt->hinst = hInstance;
 
                     switch (idButton)
                     {
