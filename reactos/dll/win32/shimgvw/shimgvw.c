@@ -646,8 +646,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             RECT rc;
             SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
-            SendMessage(hToolBar, TB_GETITEMRECT, 1, (LPARAM)&rc);
-            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam)-1, HIWORD(lParam)-rc.bottom, TRUE);
+            GetWindowRect(hToolBar, &rc);
+            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam) - 1, HIWORD(lParam) - (rc.bottom - rc.top) - 1, TRUE);
             return 0L;
         }
         case WM_DESTROY:
