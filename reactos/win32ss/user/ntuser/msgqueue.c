@@ -1488,7 +1488,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (hittest != HTCLIENT)
         {
             message += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-            msg->wParam = hittest;
+            msg->wParam = hittest; // Caution! This might break wParam check in DblClk.
         }
         else
         {
@@ -1522,7 +1522,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         {
            if ((msg->message == clk_msg.message) &&
                (msg->hwnd == clk_msg.hwnd) &&
-               (msg->wParam == clk_msg.wParam) &&
+               // Only worry about XButton wParam.
+               (msg->message != WM_XBUTTONDOWN || GET_XBUTTON_WPARAM(msg->wParam) == GET_XBUTTON_WPARAM(clk_msg.wParam)) &&
                ((msg->time - clk_msg.time) < (ULONG)gspv.iDblClickTime) &&
                (abs(msg->pt.x - clk_msg.pt.x) < UserGetSystemMetrics(SM_CXDOUBLECLK)/2) &&
                (abs(msg->pt.y - clk_msg.pt.y) < UserGetSystemMetrics(SM_CYDOUBLECLK)/2))

@@ -3830,6 +3830,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                     /* Else, end menu tracking */
                     fRemove = MENU_ButtonDown(&mt, hmenu, wFlags);
                     fEndMenu = !fRemove;
+                    if (msg.message == WM_LBUTTONDBLCLK) fEndMenu = TRUE; // Must exit or loop forever!
                     break;
 
                 case WM_RBUTTONUP:
