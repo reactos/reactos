@@ -69,7 +69,6 @@ class CStartButton
     HIMAGELIST m_ImageList;
     SIZE       m_Size;
     HFONT      m_Font;
-    HBITMAP    m_Bitmap;
 
 public:
     CStartButton(CMessageMap *pObject, DWORD dwMsgMapID)
@@ -84,9 +83,6 @@ public:
 
         if (m_Font != NULL)
             DeleteObject(m_Font);
-
-        if (m_Bitmap != NULL)
-            DeleteObject(m_Bitmap);
     }
 
     HFONT GetFont()
@@ -99,26 +95,26 @@ public:
         return m_Size;
     }
 
-    VOID UpdateSize()
+    VOID UpdateSize(IN HBITMAP hbmStart = NULL)
     {
         SIZE Size = { 0, 0 };
 
         if (m_ImageList == NULL ||
-            !SendMessage(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
+            !SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
         {
             Size.cx = GetSystemMetrics(SM_CXEDGE);
             Size.cy = GetSystemMetrics(SM_CYEDGE);
 
-            if (m_Bitmap == NULL)
+            if (hbmStart == NULL)
             {
-                m_Bitmap = (HBITMAP) SendMessage(BM_GETIMAGE, IMAGE_BITMAP, 0);
+                hbmStart = (HBITMAP) SendMessageW(BM_GETIMAGE, IMAGE_BITMAP, 0);
             }
 
-            if (m_Bitmap != NULL)
+            if (hbmStart != NULL)
             {
                 BITMAP bmp;
 
-                if (GetObject(m_Bitmap, sizeof(bmp), &bmp) != 0)
+                if (GetObject(hbmStart, sizeof(bmp), &bmp) != 0)
                 {
                     Size.cx += bmp.bmWidth;
                     Size.cy += max(bmp.bmHeight, GetSystemMetrics(SM_CYCAPTION));
@@ -160,28 +156,27 @@ DefSize:
                                        IconSize.cy,
                                        LR_SHARED | LR_DEFAULTCOLOR);
 
-        if (hIconStart != NULL)
-        {
-            m_ImageList = ImageList_Create(IconSize.cx,
-                                           IconSize.cy,
-                                           ILC_COLOR32 | ILC_MASK,
-                                           1,
-                                           1);
-            if (m_ImageList != NULL)
-            {
-                int s = ImageList_ReplaceIcon(m_ImageList, -1, hIconStart);
-                if (s >= 0)
-                {
-                    return TRUE;
-                }
+        if (hIconStart == NULL)
+            return FALSE;
 
-                /* Failed to add the icon! */
-                ImageList_Destroy(m_ImageList);
-                m_ImageList = NULL;
-            }
+        m_ImageList = ImageList_Create(IconSize.cx,
+                                        IconSize.cy,
+                                        ILC_COLOR32 | ILC_MASK,
+                                        1, 1);
+        if (m_ImageList == NULL)
+            return FALSE;
+
+        int s = ImageList_ReplaceIcon(m_ImageList, -1, hIconStart);
+        if (s < 0)
+        {
+            /* Failed to add the icon! */
+            ImageList_Destroy(m_ImageList);
+            m_ImageList = NULL;
+
+            return FALSE;
         }
 
-        return FALSE;
+        return TRUE;
     }
 
     HBITMAP CreateBitmap()
@@ -314,41 +309,43 @@ Cleanup:
 
         SendMessage(WM_SETFONT, (WPARAM) m_Font, FALSE);
 
-        BUTTON_IMAGELIST bil;
-
-        /* Try to set the start button image. this requires the Common
-        Controls 6.0 to be present (XP and later) */
-        bil.himl = m_ImageList;
-        bil.margin.left = bil.margin.right = 1;
-        bil.margin.top = bil.margin.bottom = 1;
-        bil.uAlign = BUTTON_IMAGELIST_ALIGN_LEFT;
-
-        if (SendMessage(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
+        if (CreateImageList())
         {
-            /* We're using the image list, remove the BS_BITMAP style and
-            don't center it horizontally */
-            SetWindowStyle(m_hWnd, BS_BITMAP | BS_RIGHT, 0);
-        }
-        else
-        {
+            BUTTON_IMAGELIST bil;
+
+            /* Try to set the start button image. this requires the Common
+            Controls 6.0 to be present (XP and later) */
+            bil.himl = m_ImageList;
+            bil.margin.left = bil.margin.right = 1;
+            bil.margin.top = bil.margin.bottom = 1;
+            bil.uAlign = BUTTON_IMAGELIST_ALIGN_LEFT;
+
+            if (SendMessageW(BCM_SETIMAGELIST, 0, (LPARAM) &bil))
+            {
+                /* We're using the image list, remove the BS_BITMAP style and
+                don't center it horizontally */
+                SetWindowStyle(m_hWnd, BS_BITMAP | BS_RIGHT, 0);
+
+                UpdateSize();
+                return;
+            }
+
             /* Fall back to the deprecated method on older systems that don't
             support Common Controls 6.0 */
             ImageList_Destroy(m_ImageList);
             m_ImageList = NULL;
-
-            HBITMAP hbmOld;
-
-            m_Bitmap = CreateBitmap();
-            if (m_Bitmap != NULL)
-            {
-                hbmOld = (HBITMAP) SendMessage(BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) m_Bitmap);
-
-                if (hbmOld != NULL)
-                    DeleteObject(hbmOld);
-            }
         }
 
-        UpdateSize();
+        HBITMAP hbmStart = CreateBitmap();
+        if (hbmStart != NULL)
+        {
+            UpdateSize(hbmStart);
+
+            HBITMAP hbmOld = (HBITMAP) SendMessageW(BM_SETIMAGE, IMAGE_BITMAP, (LPARAM) hbmStart);
+
+            if (hbmOld != NULL)
+                DeleteObject(hbmOld);
+        }
     }
 };
 
@@ -1538,8 +1535,7 @@ ChangePos:
         CheckTrayWndPosition();
 
         /* Align all controls on the tray window */
-        AlignControls(
-            NULL);
+        AlignControls(NULL);
 
         InitShellServices(&(m_ShellServices));
 
