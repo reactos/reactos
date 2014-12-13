@@ -4,6 +4,11 @@
 
 #define IDC_MYICON 2
 #define IDNEXT     3
+#define IDCOPY   4
+
+#define IDI_NEXT 11
+#define IDI_PREV 12
+#define IDI_COPY 13
 
 #define IDD_EVENTVWR_DIALOG   102
 #define IDD_PROGRESSBOX       150
@@ -72,6 +77,8 @@
 #define IDS_COLUMNUSER      306
 #define IDS_COLUMNCOMPUTER  307
 #define IDS_COLUMNEVENTDATA 308
+
+#define IDS_COPY          400
 
 #define IDS_NONE          320
 #define IDS_NOT_AVAILABLE 321

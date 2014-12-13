@@ -1438,6 +1438,56 @@ DisplayEvent(HWND hDlg)
     }
 }
 
+VOID
+CopyEventEntry(HWND hWnd)
+{
+    const SIZE_T entrySize = 2056;
+    WCHAR output[4130], tmpHeader[512];
+    WCHAR szEventType[MAX_PATH];
+    WCHAR szSource[MAX_PATH];
+    WCHAR szCategory[MAX_PATH];
+    WCHAR szEventID[MAX_PATH];
+    WCHAR szDate[MAX_PATH];
+    WCHAR szTime[MAX_PATH];
+    WCHAR szUser[MAX_PATH];
+    WCHAR szComputer[MAX_PATH];
+    WCHAR evtDesc[entrySize];
+    HGLOBAL hMem;
+
+    if (!OpenClipboard(hWnd))
+        return;
+
+    /* First, empty the clipboard before we begin to use it */
+    EmptyClipboard();
+
+    /* Get the formatted text needed to place the content into */
+    LoadStringW(hInst, IDS_COPY, tmpHeader, sizeof(tmpHeader) / sizeof(WCHAR));
+
+    /* Grabs all the information and get it ready for the clipboard */
+    GetDlgItemText(hWnd, IDC_EVENTTYPESTATIC, szEventType, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTSOURCESTATIC, szSource, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTCATEGORYSTATIC, szCategory, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTIDSTATIC, szEventID, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTDATESTATIC, szDate, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTTIMESTATIC, szTime, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTUSERSTATIC, szUser, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, MAX_PATH);
+    GetDlgItemText(hWnd, IDC_EVENTTEXTEDIT, evtDesc, entrySize);
+
+    /* Consolidate the information into on big piece */
+    wsprintfW(output, tmpHeader, szEventType, szSource, szCategory, szEventID, szDate, szTime, szUser, szComputer, evtDesc);
+
+    /* Sort out the memory needed to write to the clipboard */
+    hMem = GlobalAlloc(GMEM_MOVEABLE, entrySize);
+    memcpy(GlobalLock(hMem), output, entrySize);
+    GlobalUnlock(hMem);
+
+    /* Write the final content to the clipboard */
+    SetClipboardData(CF_UNICODETEXT, hMem);
+
+    /* Close the clipboard once we're done with it */
+    CloseClipboard();
+}
 
 static
 INT_PTR CALLBACK
@@ -1458,6 +1508,18 @@ StatusMessageWindowProc(IN HWND hwndDlg,
     return FALSE;
 }
 
+static
+VOID
+InitDetailsDlg(HWND hDlg)
+{
+    HANDLE nextIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_NEXT), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    HANDLE prevIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_PREV), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    HANDLE copyIcon = LoadImage(hInst, MAKEINTRESOURCE(IDI_COPY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+
+    SendMessage(GetDlgItem(hDlg, IDNEXT), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)nextIcon);
+    SendMessage(GetDlgItem(hDlg, IDPREVIOUS), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)prevIcon);
+    SendMessage(GetDlgItem(hDlg, IDCOPY), BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)copyIcon);
+}
 
 // Message handler for event details box.
 INT_PTR CALLBACK
@@ -1468,6 +1530,8 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
         case WM_INITDIALOG:
+            InitDetailsDlg(hDlg);
+
             // Show event info on dialog box
             DisplayEvent(hDlg);
             return (INT_PTR)TRUE;
@@ -1492,6 +1556,10 @@ EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                     // Show event info on dialog box
                     DisplayEvent(hDlg);
+                    return (INT_PTR)TRUE;
+
+                case IDCOPY:
+                    CopyEventEntry(hDlg);
                     return (INT_PTR)TRUE;
 
                 case IDC_BYTESRADIO:

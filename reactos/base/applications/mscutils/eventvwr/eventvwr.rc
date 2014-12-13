@@ -18,6 +18,11 @@ IDI_WARNINGICON ICON "res/warning.ico"
 IDI_INFORMATIONICON ICON "res/info.ico"
 IDI_ERRORICON ICON "res/error.ico"
 
+/* Event Navigation */
+IDI_NEXT ICON "res/next_event.ico"
+IDI_PREV ICON "res/prev_event.ico"
+IDI_COPY ICON "res/copy.ico"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
