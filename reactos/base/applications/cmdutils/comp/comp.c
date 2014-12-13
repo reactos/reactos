@@ -33,52 +33,70 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define STRBUF 1024
 
 /* getline:  read a line, return length */
-INT GetLine(char *line, FILE *in)
+INT GetBuff(char *buff, FILE *in)
 {
-    if (fgets(line, STRBUF, in) == NULL)
-        return 0;
-    else
-        return strlen(line);
+    return fread(buff, 1, STRBUF, in);
+}
+
+INT FileSize(FILE * fd) {
+    INT result = -1;
+    if (fseek(fd, 0, SEEK_END) == 0 && (result = ftell(fd)) != -1)
+    {
+        //restoring file pointer
+        rewind(fd);
+    }
+    return result;
 }
 
 /* print program usage */
 VOID Usage(VOID)
 {
     _tprintf(_T("\nCompares the contents of two files or sets of files.\n\n"
-                "COMP [data1] [data2]\n\n"
+                "COMP [/L] [/A] [data1] [data2]\n\n"
                 "  data1      Specifies location and name of first file to compare.\n"
-                "  data2      Specifies location and name of second file to compare.\n"));
+                "  data2      Specifies location and name of second file to compare.\n"
+                "  /A         Display differences in ASCII characters.\n"
+                "  /L         Display line numbers for differences.\n"));
 }
 
 
 int _tmain (int argc, TCHAR *argv[])
 {
     INT i;
-    FILE *fp1, *fp2;           // file pointers
-    PTCHAR Line1 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
-    PTCHAR Line2 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
-    TCHAR File1[_MAX_PATH],    // file paths
-          File2[_MAX_PATH];
-    BOOL bMatch = TRUE,        // files match
-         bAscii = FALSE,       // /A switch
+    // file pointers
+    FILE *fp1 = NULL;
+    FILE *fp2 = NULL;
+    INT BufLen1, BufLen2;
+    PTCHAR Buff1 = NULL;
+    PTCHAR Buff2 = NULL;
+    TCHAR File1[_MAX_PATH + 1],    // file paths
+          File2[_MAX_PATH + 1];
+    BOOL bAscii = FALSE,       // /A switch
          bLineNos = FALSE;     // /L switch
+    UINT  LineNumber;
+    UINT  Offset;
+    INT  FileSizeFile1;
+    INT  FileSizeFile2;
+    INT  NumberOfOptions = 0;
+    INT  FilesOK = 1;
+    INT Status = EXIT_SUCCESS;
 
     /* parse command line for options */
     for (i = 1; i < argc; i++)
     {
         if (argv[i][0] == '/')
         {
-            --argc;
             switch (argv[i][1]) {
                case 'A': bAscii = TRUE;
-                         _tprintf(_T("/a not Supported\n")); (void)bAscii;   /*FIXME: needs adding */
+                         NumberOfOptions++;
                          break;
                case 'L': bLineNos = TRUE;
-                         _tprintf(_T("/l not supported\n")); (void)bLineNos; /*FIXME: needs adding */
+                         NumberOfOptions++;
                          break;
                case '?': Usage();
                          return EXIT_SUCCESS;
@@ -90,92 +108,137 @@ int _tmain (int argc, TCHAR *argv[])
         }
     }
 
-    switch (argc)
+    if (argc - NumberOfOptions == 3)
     {
-        case 1 :
-                 _tprintf(_T("Name of first file to compare: "));
-                 fgets(File1, _MAX_PATH, stdin);
-                 for (i=0; i<_MAX_PATH; i++)
-                 {
-                     if (File1[i] == '\n')
-                     {
-                         File1[i] = '\0';
-                         break;
-                     }
-                 }
-
-                 _tprintf(_T("Name of second file to compare: "));
-                 fgets(File2, _MAX_PATH, stdin);
-                 for (i=0; i<_MAX_PATH; i++)
-                 {
-                     if (File2[i] == '\n')
-                     {
-                         File2[i] = '\0';
-                         break;
-                     }
-                 }
-                 break;
-        case 2 :
-                 _tcsncpy(File1, argv[1], _MAX_PATH);
-                 _tprintf(_T("Name of second file to compare: "));
-                 fgets(File2, _MAX_PATH, stdin);
-                 for (i=0; i<_MAX_PATH; i++)
-                 {
-                     if (File2[i] == '\n')
-                     {
-                         File2[i] = '\0';
-                         break;
-                     }
-                 }
-                 break;
-        case 3 :
-                 _tcsncpy(File1, argv[1], _MAX_PATH);
-                 _tcsncpy(File2, argv[2], _MAX_PATH);
-                 break;
-        default :
-                  _tprintf(_T("Bad command line syntax\n"));
-                  return EXIT_FAILURE;
-                  break;
+        _tcsncpy(File1, argv[1 + NumberOfOptions], _MAX_PATH);
+        _tcsncpy(File2, argv[2 + NumberOfOptions], _MAX_PATH);
+    } else {
+        _tprintf(_T("Bad command line syntax\n"));
+        return EXIT_FAILURE;
+    }
+    
+    Buff1 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
+    if (Buff1 == NULL)
+    {
+        _tprintf(_T("Can't get free memory for Buff1\n"));
+        return EXIT_FAILURE;
     }
 
+    Buff2 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
+    if (Buff2 == NULL)
+    {
+        _tprintf(_T("Can't get free memory for Buff2\n"));
+        Status = EXIT_FAILURE;
+        goto Cleanup;
+    }
 
-
-    if ((fp1 = fopen(File1, "r")) == NULL)
+    if ((fp1 = fopen(File1, "rb")) == NULL)
     {
         _tprintf(_T("Can't find/open file: %s\n"), File1);
-        return EXIT_FAILURE;
+        Status = EXIT_FAILURE;
+        goto Cleanup;
     }
-    if ((fp2 = fopen(File2, "r")) == NULL)
+    if ((fp2 = fopen(File2, "rb")) == NULL)
     {
         _tprintf(_T("Can't find/open file: %s\n"), File2);
-        fclose(fp1);
-        return EXIT_FAILURE;
+        Status = EXIT_FAILURE;
+        goto Cleanup;
     }
 
 
     _tprintf(_T("Comparing %s and %s...\n"), File1, File2);
 
-    while ((GetLine(Line1, fp1) != 0) &&
-           (GetLine(Line2, fp2) != 0))
+    FileSizeFile1 = FileSize(fp1);
+    if (FileSizeFile1 == -1) 
     {
-        // LineCount++;
-        while ((*Line1 != '\0') && (*Line2 != '\0'))
-        {
-            if (*Line1 != *Line2)
-            {
-                bMatch = FALSE;
-                break;
-            }
-            Line1++, Line2++;
-        }
+        _tprintf(_T("Can't determine size of file: %s\n"), File1);
+        Status = EXIT_FAILURE;
+        goto Cleanup;
     }
 
-    bMatch ? _tprintf(_T("Files compare OK\n")) : _tprintf(_T("Files are different sizes.\n"));
+    FileSizeFile2 = FileSize(fp2);
+    if (FileSizeFile2 == -1) 
+    {
+        _tprintf(_T("Can't determine size of file: %s\n"), File2);
+        Status = EXIT_FAILURE;
+        goto Cleanup;
+    }
 
-    fclose(fp1);
-    fclose(fp2);
+    if (FileSizeFile1 != FileSizeFile2)
+    {
+        _tprintf(_T("Files are different sizes.\n"));
+        Status = EXIT_FAILURE;
+        goto Cleanup;
+    }
 
+    LineNumber = 1;
+    Offset = 0;
+    while (1) 
+    {
+        BufLen1 = GetBuff(Buff1, fp1);
+        BufLen2 = GetBuff(Buff2, fp2);
 
-    return EXIT_SUCCESS;
+        if (ferror(fp1) || ferror(fp2)) 
+        {
+            _tprintf(_T("Files read error.\n"));
+            Status = EXIT_FAILURE;
+            goto Cleanup;
+        }
+
+        if (!BufLen1 && !BufLen2) 
+            break;
+
+        assert(BufLen1 == BufLen2);
+        for (i = 0; i < BufLen1; i++) 
+        {
+            if (Buff1[i] != Buff2[i])
+            {
+                FilesOK = 0;
+
+                //Reporting here a mismatch
+                if (bLineNos) 
+                {
+                    _tprintf(_T("Compare error at LINE %d\n"), LineNumber);
+                }
+                else
+                {
+                    _tprintf(_T("Compare error at OFFSET %d\n"), Offset);
+                }
+                
+                if (bAscii)
+                {
+                    _tprintf(_T("file1 = %c\n"), Buff1[i]);
+                    _tprintf(_T("file2 = %c\n"), Buff2[i]);
+                }
+                else
+                {
+                    _tprintf(_T("file1 = %X\n"), Buff1[i]);
+                    _tprintf(_T("file2 = %X\n"), Buff2[i]);
+                }
+
+                Offset++;
+
+                if (Buff1[i] == '\n')
+                    LineNumber++;
+            }
+         }
+    }
+
+    if (FilesOK)
+        _tprintf(_T("Files compare OK\n"));
+    
+Cleanup:
+
+    if(fp1)
+        fclose(fp1);
+    if(fp2)
+        fclose(fp2);
+
+    if(Buff1)
+        free(Buff1);
+    if(Buff2)
+        free(Buff2);
+
+    return Status;
 }
 /* EOF */
