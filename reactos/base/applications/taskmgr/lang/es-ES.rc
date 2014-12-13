@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Advertencia del Administrador de tareas"
     IDS_MSG_WARNINGTERMINATING "ADVERTENCIA: Si finaliza un proceso puede obtener resultados no\ndeseados como la pérdida de datos y la inestabilidad del sistema. El\nproceso no tendrá tiempo para guardar su estado o datos\nantes de cerrarse. ¿Está seguro que desea continuar?"
     IDS_MSG_UNABLETERMINATEPRO "No se pudo finalizar el proceso"
+    IDS_MSG_CLOSESYSTEMPROCESS "Éste es un proceso crítico para el sistema. El administrador de tareas no terminará este proceso."
     IDS_MSG_UNABLECHANGEPRIORITY "No se pudo cambiar la prioridad"
     IDS_MSG_WARNINGCHANGEPRIORITY "Advertencia: El cambio de prioridad en ciertos procesos podría provocar la inestabilidad del sistema.\n¿Seguro que desea cambiar la prioridad?"
     IDS_MSG_TRAYICONCPUUSAGE "Promedio CPU: %d%%"

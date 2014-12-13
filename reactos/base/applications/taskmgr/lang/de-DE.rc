@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Warnung vom Task-Manager"
     IDS_MSG_WARNINGTERMINATING "WARNUNG: Das Abbrechen eines Prozesses kann zu\nunerwünschten Ergebnissen, einschließlich Datenverlust und\nSysteminstabilität, führen. Zustand und Daten des Prozesses\nwerden nicht mehr gespeichert. Sind Sie sicher, dass Sie\nden Prozess abbrechen möchten?"
     IDS_MSG_UNABLETERMINATEPRO "Kann den Prozess nicht beenden"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Kann die Priorität nicht ändern"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNUNG: Das Ändern der Prioritätsklasse dieses Prozesses\nkann zu unerwünschten Ergebnissen, einschl. Systeminstabilität, führen.\nSind Sie sicher, dass Sie sie ändern möchten?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU-Auslastung: %d%%"

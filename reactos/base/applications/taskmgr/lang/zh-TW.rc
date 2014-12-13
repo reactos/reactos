@@ -440,6 +440,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "工作管理員警告"
     IDS_MSG_WARNINGTERMINATING "警告: 結束程序可能導政資料遺失或系統不穩定。\n程序在結束時將不能儲存任何資料。\n你是否確定要繼續？"
     IDS_MSG_UNABLETERMINATEPRO "無法結束處理程序"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "無法更改優先順序"
     IDS_MSG_WARNINGCHANGEPRIORITY "警告: 更改此程序的優先順序可能導致系統不穩定。\n你是否確定要更改優先順序？"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情況: %d%%"

@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Task Manager Warning"
     IDS_MSG_WARNINGTERMINATING "WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"
     IDS_MSG_UNABLETERMINATEPRO "Unable to Terminate Process"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
     IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Usage: %d%%"

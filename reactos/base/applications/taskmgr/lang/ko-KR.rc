@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "작업 관리자 경고"
     IDS_MSG_WARNINGTERMINATING "경고: 프로세스를 종료하면 데이터 손실 및 시스템 불안정과\n같은 바람직하지 않은 결과를 가져올 수 있습니다. 프로세스를\n종료하기 전에 프로세스 상태나 데이터를 저장할 기회가\n없습니다.\n프로세스를 종료하시겠습니까?"
     IDS_MSG_UNABLETERMINATEPRO "프로세스를 제거할 수 없음"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "우선 순위를 바꿀 수 없음"
     IDS_MSG_WARNINGCHANGEPRIORITY "경고: 이 프로세스의 우선 순위 클래스를 변경하면 시스템 불안정을 포함하여\n예기치 않은 결과를 초래할 수도 있습니다.\n우선 순위 클래스를 변경하시겠습니까?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 사용: %d%%"

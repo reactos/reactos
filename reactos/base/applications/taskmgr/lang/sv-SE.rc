@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Aktivitetshanteraren varning"
     IDS_MSG_WARNINGTERMINATING "VARNING: Ett avslutande av en process kan orsaka\noönskade effekter och påverka systemets stabilitet. Processen\nkommer inte att ges chans att spara sitt arbete innan\nden avslutas. Är du säker på att du vill avsluta processen?"
     IDS_MSG_UNABLETERMINATEPRO "Kunde inte avsluta processen"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Kunde inte ändra prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "VARNING: Ändring av prioritetsklassen hos den här processen kan\norsaka oönskade effekter och påverka systemets stabilitet. Är du\nsäker på att du vill ändra prioritetsklassen?"
     IDS_MSG_TRAYICONCPUUSAGE "Processoranvändning: %d%%"

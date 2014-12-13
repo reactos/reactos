@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Görev Yöneticisi Uyarısı"
     IDS_MSG_WARNINGTERMINATING "UYARI: Bir işlemin sonlandırılması, veri\nyitimi ve dizge kararsızlığını içeren istenmeyen sonuçlara neden\nolabilir. İşlem sonlandırılmadan önce durumunu veyâ verisini\nsaklama fırsatı verilmeyecektir. İşlemi\nsonlandırmak istediğinizden emin misiniz?"
     IDS_MSG_UNABLETERMINATEPRO "İşlem Sonlandırmanın Yapılamaması"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Önceliğin Değiştirilememesi"
     IDS_MSG_WARNINGCHANGEPRIORITY "UYARI: Bu işlemin öncelik sınıfının değiştirilmesi, dizge\nkararsızlığını içeren istenmeyen sonuçlara neden olabilir. Öncelik \nsınıfını değiştirmek istediğinizden emin misiniz?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU Kullanımı: %%%d"

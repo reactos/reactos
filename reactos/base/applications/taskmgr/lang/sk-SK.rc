@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Upozornenie Správcu úloh"
     IDS_MSG_WARNINGTERMINATING "UPOZORNENIE: Ukončenie procesu môže mať nežiadúce\ndôsledky vrátane nestability systému.\nStav alebo údaje o procese sa nebudú dať\npred ukončením uložiť.\nNaozaj chcete proces ukončiť?"
     IDS_MSG_UNABLETERMINATEPRO "Proces sa nedá ukončiť."
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Priorita sa nedá zmeniť."
     IDS_MSG_WARNINGCHANGEPRIORITY "UPOZORNENIE: Zmena triedy priority procesu môže mať\nnežiadúce dôsledky vrátane nestability systému.\nNaozaj chcete zmeniť triedu priority procesu?"
     IDS_MSG_TRAYICONCPUUSAGE "Využitie procesora: %d%%"

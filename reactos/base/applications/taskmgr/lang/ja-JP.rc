@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "タスク マネージャの警告"
     IDS_MSG_WARNINGTERMINATING "警告: プロセスを終了すると、データが失われたり、システムが\n不安定になったりするなどの、予期しない結果になることがあります。\nプロセスを終了する前に、状態またはデータを保存するかどうかの\n確認メッセージは表示されません。プロセスを終了しますか?"
     IDS_MSG_UNABLETERMINATEPRO "プロセスを終了できません"
+    IDS_MSG_CLOSESYSTEMPROCESS "このプロセスは危機的なシステムプロセスです。タスクマネジャはこのプロセスを終了してはならない。"
     IDS_MSG_UNABLECHANGEPRIORITY "優先度を変更できません"
     IDS_MSG_WARNINGCHANGEPRIORITY "警告: このプロセスの優先度クラスを変更すると、システムが不安定に\nなるなど、予期しない結果になることがあります。\n優先度クラスを変更しますか?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用率: %d%%"
