@@ -46,6 +46,7 @@ void ProcessPage_OnEndProcess(void)
         LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);
         LoadStringW(hInst, IDS_MSG_CLOSESYSTEMPROCESS, strErrorText, 256);
         MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONWARNING|MB_TOPMOST);
+        CloseHandle(hProcess);
         return;
     }
 
@@ -53,7 +54,10 @@ void ProcessPage_OnEndProcess(void)
     LoadStringW(hInst, IDS_MSG_WARNINGTERMINATING, strErrorText, 256);
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
     if (MessageBoxW(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING|MB_TOPMOST) != IDYES)
+    {
+        if (hProcess) CloseHandle(hProcess);
         return;
+    }
 
     /* no such process or not enough privileges to open its token */
     if (!hProcess)
@@ -82,7 +86,7 @@ BOOL IsCriticalProcess(HANDLE hProcess)
 
     /* return early if the process handle does not exist */
     if (!hProcess)
-      return FALSE;
+        return FALSE;
 
     /* the important system processes that we don't want to let the user
        kill come marked as critical, this simplifies the check greatly.
@@ -97,8 +101,8 @@ BOOL IsCriticalProcess(HANDLE hProcess)
                                        NULL);
 
     if (NT_SUCCESS(status) && BreakOnTermination)
-      return TRUE;
-    
+        return TRUE;
+
     return FALSE;
 }
 
@@ -122,13 +126,17 @@ void ProcessPage_OnEndProcessTree(void)
         LoadStringW(hInst, IDS_MSG_UNABLETERMINATEPRO, szTitle, 256);
         LoadStringW(hInst, IDS_MSG_CLOSESYSTEMPROCESS, strErrorText, 256);
         MessageBoxW(hMainWnd, strErrorText, szTitle, MB_OK|MB_ICONWARNING|MB_TOPMOST);
+        CloseHandle(hProcess);
         return;
     }
 
     LoadStringW(hInst, IDS_MSG_WARNINGTERMINATING, strErrorText, 256);
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);
     if (MessageBoxW(hMainWnd, strErrorText, szTitle, MB_YESNO|MB_ICONWARNING) != IDYES)
+    {
+        if (hProcess) CloseHandle(hProcess);
         return;
+    }
 
     if (!hProcess)
     {
