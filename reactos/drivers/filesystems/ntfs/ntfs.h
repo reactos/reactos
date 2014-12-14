@@ -62,6 +62,7 @@ typedef struct _NTFS_INFO
     ULONG SectorsPerCluster;
     ULONG BytesPerCluster;
     ULONGLONG SectorCount;
+    ULONGLONG ClusterCount;
     ULARGE_INTEGER MftStart;
     ULARGE_INTEGER MftMirrStart;
     ULONG BytesPerFileRecord;

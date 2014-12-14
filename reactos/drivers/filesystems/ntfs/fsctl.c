@@ -226,6 +226,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsInfo->SectorsPerCluster = BootSector->BPB.SectorsPerCluster;
     NtfsInfo->BytesPerCluster = BootSector->BPB.BytesPerSector * BootSector->BPB.SectorsPerCluster;
     NtfsInfo->SectorCount = BootSector->EBPB.SectorCount;
+    NtfsInfo->ClusterCount = DeviceExt->NtfsInfo.SectorCount / (ULONGLONG)DeviceExt->NtfsInfo.SectorsPerCluster;
 
     NtfsInfo->MftStart.QuadPart = BootSector->EBPB.MftLocation;
     NtfsInfo->MftMirrStart.QuadPart = BootSector->EBPB.MftMirrLocation;
@@ -547,7 +548,7 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
 
     DataBuffer->VolumeSerialNumber.QuadPart = DeviceExt->NtfsInfo.SerialNumber;
     DataBuffer->NumberSectors.QuadPart = DeviceExt->NtfsInfo.SectorCount;
-    DataBuffer->TotalClusters.QuadPart = DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster;
+    DataBuffer->TotalClusters.QuadPart = DeviceExt->NtfsInfo.ClusterCount;
     DataBuffer->FreeClusters.QuadPart = NtfsGetFreeClusters(DeviceExt);
     DataBuffer->TotalReserved.QuadPart = 0LL; // FIXME
     DataBuffer->BytesPerSector = DeviceExt->NtfsInfo.BytesPerSector;
@@ -664,6 +665,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION Stack;
     PVOLUME_BITMAP_BUFFER BitmapBuffer;
+    LONGLONG StartingLcn;
 
     DPRINT1("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
 
@@ -711,6 +713,13 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     {
         DPRINT1("Invalid buffer! %p %p\n", Stack->Parameters.FileSystemControl.Type3InputBuffer, BitmapBuffer);
         return Status;
+    }
+
+    StartingLcn = ((PSTARTING_LCN_INPUT_BUFFER)Stack->Parameters.FileSystemControl.Type3InputBuffer)->StartingLcn.QuadPart;
+    if (StartingLcn > DeviceExt->NtfsInfo.ClusterCount)
+    {
+        DPRINT1("Requested bitmap start beyond partition end: %I64x %I64x\n", DeviceExt->NtfsInfo.ClusterCount, StartingLcn);
+        return STATUS_INVALID_PARAMETER;
     }
 
     UNIMPLEMENTED;
