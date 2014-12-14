@@ -666,6 +666,11 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
     PIO_STACK_LOCATION Stack;
     PVOLUME_BITMAP_BUFFER BitmapBuffer;
     LONGLONG StartingLcn;
+    PFILE_RECORD_HEADER BitmapRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONGLONG TotalClusters;
+    ULONGLONG ToCopy;
+    BOOLEAN Overflow = FALSE;
 
     DPRINT1("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
 
@@ -722,8 +727,59 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         return STATUS_INVALID_PARAMETER;
     }
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Round down to a multiple of 8 */
+    StartingLcn = StartingLcn & ~7;
+    TotalClusters = DeviceExt->NtfsInfo.ClusterCount - StartingLcn;
+    ToCopy = TotalClusters / 8;
+    if ((ToCopy + FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer)) > Stack->Parameters.FileSystemControl.OutputBufferLength)
+    {
+        DPRINT1("Buffer too small: %x, needed: %x\n", Stack->Parameters.FileSystemControl.OutputBufferLength, (ToCopy + FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer)));
+        Overflow = TRUE;
+        ToCopy = Stack->Parameters.FileSystemControl.OutputBufferLength - FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
+    }
+
+    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                         DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                         TAG_NTFS);
+    if (BitmapRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed reading volume bitmap: %lx\n", Status);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return Status;
+    }
+
+    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed find $DATA for bitmap: %lx\n", Status);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return Status;
+    }
+
+    BitmapBuffer->StartingLcn.QuadPart = StartingLcn;
+    BitmapBuffer->BitmapSize.QuadPart = ToCopy * 8;
+
+    Irp->IoStatus.Information = FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
+    _SEH2_TRY
+    {
+        Irp->IoStatus.Information += ReadAttribute(DeviceExt, DataContext, StartingLcn / 8, (PCHAR)BitmapBuffer->Buffer, ToCopy);
+        Status = (Overflow ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    ReleaseAttributeContext(DataContext);
+    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+
+    return STATUS_SUCCESS;
 }
 
 
