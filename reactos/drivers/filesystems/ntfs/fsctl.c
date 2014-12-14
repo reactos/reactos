@@ -661,7 +661,57 @@ NTSTATUS
 GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
                 PIRP Irp)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION Stack;
+    PVOLUME_BITMAP_BUFFER BitmapBuffer;
+
     DPRINT1("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (Stack->Parameters.FileSystemControl.InputBufferLength < sizeof(STARTING_LCN_INPUT_BUFFER))
+    {
+        DPRINT1("Invalid input! %d\n", Stack->Parameters.FileSystemControl.InputBufferLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (Stack->Parameters.FileSystemControl.OutputBufferLength < sizeof(VOLUME_BITMAP_BUFFER))
+    {
+        DPRINT1("Invalid output! %d\n", Stack->Parameters.FileSystemControl.OutputBufferLength);
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    BitmapBuffer = NtfsGetUserBuffer(Irp);
+    if (Irp->RequestorMode == UserMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Stack->Parameters.FileSystemControl.Type3InputBuffer,
+                         Stack->Parameters.FileSystemControl.InputBufferLength,
+                         sizeof(CHAR));
+            ProbeForWrite(BitmapBuffer, Stack->Parameters.FileSystemControl.OutputBufferLength,
+                          sizeof(CHAR));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        if (Stack->Parameters.FileSystemControl.Type3InputBuffer == NULL ||
+            BitmapBuffer == NULL)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer! %p %p\n", Stack->Parameters.FileSystemControl.Type3InputBuffer, BitmapBuffer);
+        return Status;
+    }
 
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

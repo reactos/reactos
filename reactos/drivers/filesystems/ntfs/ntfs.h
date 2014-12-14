@@ -2,6 +2,7 @@
 #define NTFS_H
 
 #include <ntifs.h>
+#include <pseh/pseh2.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
@@ -728,6 +729,9 @@ NtfsIsIrpTopLevel(PIRP Irp);
 PNTFS_IRP_CONTEXT
 NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
                        PIRP Irp);
+
+PVOID
+NtfsGetUserBuffer(PIRP Irp);
 
 #if 0
 BOOLEAN

@@ -112,4 +112,17 @@ NtfsFileFlagsToAttributes(ULONG NtfsAttributes,
         *FileAttributes = FILE_ATTRIBUTE_NORMAL;
 }
 
+PVOID
+NtfsGetUserBuffer(PIRP Irp)
+{
+    if (Irp->MdlAddress != NULL)
+    {
+        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
+    }
+    else
+    {
+        return Irp->UserBuffer;
+    }
+}
+
 /* EOF */
