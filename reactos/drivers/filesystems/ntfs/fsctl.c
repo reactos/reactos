@@ -658,6 +658,18 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
 
 static
 NTSTATUS
+GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
+                PIRP Irp)
+{
+    DPRINT1("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
+
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+static
+NTSTATUS
 NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
                   PIRP Irp)
 {
@@ -677,6 +689,10 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
 
         case FSCTL_GET_NTFS_FILE_RECORD:
             Status = GetNtfsFileRecord(DeviceExt, Irp);
+            break;
+
+        case FSCTL_GET_VOLUME_BITMAP:
+            Status = GetVolumeBitmap(DeviceExt, Irp);
             break;
 
         default:
