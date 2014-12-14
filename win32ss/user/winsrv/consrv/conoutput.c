@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/conoutput.c
+ * FILE:            consrv/conoutput.c
  * PURPOSE:         General Console Output Functions
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -44,7 +44,7 @@ CSR_API(SrvInvalidateBitMapRect)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* In text-mode only, draw the VDM buffer if present */
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
+    if (GetType(Buffer) == TEXTMODE_BUFFER && Buffer->Header.Console->VDMBuffer)
     {
         PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
 

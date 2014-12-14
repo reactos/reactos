@@ -1,7 +1,7 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/handle.h
+ * FILE:            consrv/handle.h
  * PURPOSE:         Console I/O Handles functions
  * PROGRAMMERS:     David Welch
  *                  Jeffrey Morlan
