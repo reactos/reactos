@@ -597,14 +597,15 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
 /*
  * NOTE: This function is strongly inspired by ConDrvWriteConsoleOutput...
+ * FIXME: This function MUST be moved into consrv/conoutput.c because only
+ * consrv knows how to manipulate VDM screenbuffers.
  */
 NTSTATUS NTAPI
 ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
                             IN PTEXTMODE_SCREEN_BUFFER Buffer,
                             IN PCHAR_CELL CharInfo/*Buffer*/,
                             IN COORD CharInfoSize,
-                            IN OUT PSMALL_RECT WriteRegion,
-                            IN BOOLEAN DrawRegion)
+                            IN PSMALL_RECT WriteRegion)
 {
     SHORT X, Y;
     SMALL_RECT ScreenBuffer;
@@ -649,10 +650,6 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
             ++CurCharInfo;
         }
     }
-
-    if (DrawRegion) TermDrawRegion(Console, &CapturedWriteRegion);
-
-    *WriteRegion = CapturedWriteRegion;
 
     return STATUS_SUCCESS;
 }
