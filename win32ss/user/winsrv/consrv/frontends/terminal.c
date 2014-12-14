@@ -649,6 +649,21 @@ ConSrvTermWriteStream(IN OUT PTERMINAL This,
 
 
 
+VOID
+ConioDrawConsole(PCONSRV_CONSOLE Console)
+{
+    SMALL_RECT Region;
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
+
+    if (!ActiveBuffer) return;
+
+    ConioInitRect(&Region, 0, 0,
+                  ActiveBuffer->ViewSize.Y - 1,
+                  ActiveBuffer->ViewSize.X - 1);
+    TermDrawRegion(Console, &Region);
+    // Console->FrontEndIFace.Vtbl->DrawRegion(&Console->FrontEndIFace, &Region);
+}
+
 static VOID NTAPI
 ConSrvTermDrawRegion(IN OUT PTERMINAL This,
                 SMALL_RECT* Region)

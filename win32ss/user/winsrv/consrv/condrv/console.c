@@ -297,7 +297,6 @@ ConDrvRegisterTerminal(IN PCONSOLE Console,
 
     /* Copy buffer contents to screen */
     // Terminal.Draw();
-    // ConioDrawConsole(Console);
 
     DPRINT("Terminal initialization done\n");
     return STATUS_SUCCESS;

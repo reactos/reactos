@@ -494,7 +494,8 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
 
     /* Make sure ReadRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedReadRegion, &ScreenBuffer, &CapturedReadRegion))
     {
         /*
@@ -557,7 +558,8 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -625,7 +627,8 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -1154,7 +1157,8 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
 
     /* Make sure the source rectangle is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, ScrollRectangle))
     {
         return STATUS_SUCCESS;

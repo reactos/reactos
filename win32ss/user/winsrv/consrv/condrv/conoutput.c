@@ -159,20 +159,6 @@ ConDrvDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     CONSOLE_SCREEN_BUFFER_Destroy(Buffer);
 }
 
-VOID
-ConioDrawConsole(PCONSOLE Console)
-{
-    SMALL_RECT Region;
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
-
-    if (ActiveBuffer)
-    {
-        ConioInitRect(&Region, 0, 0,
-                      ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
-        TermDrawRegion(Console, &Region);
-    }
-}
-
 static VOID
 ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
