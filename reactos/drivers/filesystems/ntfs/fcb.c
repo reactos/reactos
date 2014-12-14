@@ -220,7 +220,8 @@ NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
         Fcb = CONTAINING_RECORD(current_entry, NTFS_FCB, FcbListEntry);
 
         DPRINT("Comparing '%S' and '%S'\n", FileName, Fcb->PathName);
-        if (_wcsicmp(FileName, Fcb->PathName) == 0)
+        if ((Fcb->Flags & FCB_IS_OPEN_BY_ID) != FCB_IS_OPEN_BY_ID &&
+            _wcsicmp(FileName, Fcb->PathName) == 0)
         {
             Fcb->RefCount++;
             KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -228,6 +229,38 @@ NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
         }
 
         //FIXME: need to compare against short name in FCB here
+
+        current_entry = current_entry->Flink;
+    }
+
+    KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+
+    return NULL;
+}
+
+
+PNTFS_FCB
+NtfsGrabFCBFromTableById(PNTFS_VCB Vcb,
+                         ULONGLONG Id)
+{
+    KIRQL oldIrql;
+    PNTFS_FCB Fcb;
+    PLIST_ENTRY current_entry;
+
+    KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
+
+    current_entry = Vcb->FcbListHead.Flink;
+    while (current_entry != &Vcb->FcbListHead)
+    {
+        Fcb = CONTAINING_RECORD(current_entry, NTFS_FCB, FcbListEntry);
+
+        if ((Fcb->Flags & FCB_IS_OPEN_BY_ID) == FCB_IS_OPEN_BY_ID &&
+            Fcb->MFTIndex == Id)
+        {
+            Fcb->RefCount++;
+            KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
+            return Fcb;
+        }
 
         current_entry = current_entry->Flink;
     }
@@ -410,18 +443,26 @@ NtfsMakeFCBFromDirEntry(PNTFS_VCB Vcb,
         return STATUS_OBJECT_NAME_NOT_FOUND; // Not sure that's the best here
     }
 
-    if (Name->Buffer[0] != 0 && wcslen(DirectoryFCB->PathName) +
-        sizeof(WCHAR) + Name->Length / sizeof(WCHAR) > MAX_PATH)
+    if (DirectoryFCB && Name)
     {
-        return STATUS_OBJECT_NAME_INVALID;
-    }
+        if (Name->Buffer[0] != 0 && wcslen(DirectoryFCB->PathName) +
+            sizeof(WCHAR) + Name->Length / sizeof(WCHAR) > MAX_PATH)
+        {
+            return STATUS_OBJECT_NAME_INVALID;
+        }
 
-    wcscpy(pathName, DirectoryFCB->PathName);
-    if (!NtfsFCBIsRoot(DirectoryFCB))
-    {
-        wcscat(pathName, L"\\");
+        wcscpy(pathName, DirectoryFCB->PathName);
+        if (!NtfsFCBIsRoot(DirectoryFCB))
+        {
+            wcscat(pathName, L"\\");
+        }
+        wcscat(pathName, Name->Buffer);
     }
-    wcscat(pathName, Name->Buffer);
+    else
+    {
+        RtlCopyMemory(pathName, FileName->Name, FileName->NameLength * sizeof (WCHAR));
+        pathName[FileName->NameLength] = UNICODE_NULL;
+    }
 
     rcFCB = NtfsCreateFCB(pathName, Vcb);
     if (!rcFCB)
@@ -653,6 +694,42 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+NtfsGetFCBForFileById(PNTFS_VCB Vcb,
+                      PNTFS_FCB *pFCB,
+                      ULONGLONG Id)
+{
+    NTSTATUS Status;
+    PFILE_RECORD_HEADER FileRecord;
+
+    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                       Vcb->NtfsInfo.BytesPerFileRecord,
+                                       TAG_NTFS);
+    if (FileRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(Vcb, Id, FileRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return Status;
+    }
+
+    if ((FileRecord->Flags & FRH_IN_USE) != FRH_IN_USE)
+    {
+        ExFreePoolWithTag(FileRecord, TAG_NTFS);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = NtfsMakeFCBFromDirEntry(Vcb, NULL, NULL, FileRecord, Id, pFCB);
+
+    ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    return Status;
+}
 
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,

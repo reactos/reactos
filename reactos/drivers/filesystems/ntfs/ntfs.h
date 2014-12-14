@@ -416,6 +416,7 @@ typedef struct _NTFS_ATTR_CONTEXT
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
+#define FCB_IS_OPEN_BY_ID       0x0008
 #define MAX_PATH                260
 
 typedef struct _FCB
@@ -599,6 +600,10 @@ PNTFS_FCB
 NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
                      PCWSTR FileName);
 
+PNTFS_FCB
+NtfsGrabFCBFromTableById(PNTFS_VCB Vcb,
+                         ULONGLONG Id);
+
 NTSTATUS
 NtfsFCBInitializeCache(PNTFS_VCB Vcb,
                        PNTFS_FCB Fcb);
@@ -619,6 +624,11 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
                   const PWSTR pFileName);
+
+NTSTATUS
+NtfsGetFCBForFileById(PNTFS_VCB Vcb,
+                      PNTFS_FCB *pFCB,
+                      ULONGLONG Id);
 
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,
