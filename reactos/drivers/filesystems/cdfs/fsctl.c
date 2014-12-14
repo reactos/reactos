@@ -453,34 +453,25 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExt;
-    PDEVICE_OBJECT DeviceToVerify;
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status;
     CDINFO CdInfo;
-
     PLIST_ENTRY Entry;
     PFCB Fcb;
+    PVPB VpbToVerify;
 
     DPRINT1 ("CdfsVerifyVolume() called\n");
-
-#if 0
-    if (DeviceObject != CdfsGlobalData->DeviceObject)
-    {
-        DPRINT1("DeviceObject != CdfsGlobalData->DeviceObject\n");
-        return(STATUS_INVALID_DEVICE_REQUEST);
-    }
-#endif
 
     DeviceExt = DeviceObject->DeviceExtension;
 
     Stack = IoGetCurrentIrpStackLocation (Irp);
-    DeviceToVerify = Stack->Parameters.VerifyVolume.DeviceObject;
+    VpbToVerify = Stack->Parameters.VerifyVolume.Vpb;
 
     FsRtlEnterFileSystem();
     ExAcquireResourceExclusiveLite (&DeviceExt->VcbResource,
         TRUE);
 
-    if (!(DeviceToVerify->Flags & DO_VERIFY_VOLUME))
+    if (!(VpbToVerify->RealDevice->Flags & DO_VERIFY_VOLUME))
     {
         DPRINT1 ("Volume has been verified!\n");
         ExReleaseResourceLite (&DeviceExt->VcbResource);
@@ -488,14 +479,14 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
         return STATUS_SUCCESS;
     }
 
-    DPRINT1 ("Device object %p  Device to verify %p\n", DeviceObject, DeviceToVerify);
+    DPRINT1("Device object %p  Device to verify %p\n", DeviceObject, VpbToVerify->RealDevice);
 
-    Status = CdfsGetVolumeData (DeviceToVerify,
+    Status = CdfsGetVolumeData(VpbToVerify->RealDevice,
         &CdInfo);
     if (NT_SUCCESS(Status) &&
-        CdInfo.SerialNumber == DeviceToVerify->Vpb->SerialNumber &&
-        CdInfo.VolumeLabelLength == DeviceToVerify->Vpb->VolumeLabelLength &&
-        !wcsncmp (CdInfo.VolumeLabel, DeviceToVerify->Vpb->VolumeLabel, CdInfo.VolumeLabelLength))
+        CdInfo.SerialNumber == VpbToVerify->SerialNumber &&
+        CdInfo.VolumeLabelLength == VpbToVerify->VolumeLabelLength &&
+        !wcsncmp(CdInfo.VolumeLabel, VpbToVerify->VolumeLabel, CdInfo.VolumeLabelLength))
     {
         DPRINT1 ("Same volume!\n");
 
@@ -520,7 +511,7 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
         Status = STATUS_WRONG_VOLUME;
     }
 
-    DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
+    VpbToVerify->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
 
     ExReleaseResourceLite (&DeviceExt->VcbResource);
     FsRtlExitFileSystem();
