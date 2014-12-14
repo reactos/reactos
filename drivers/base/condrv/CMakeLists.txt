@@ -1,17 +1,15 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
-## spec2def(condrv.sys condrv.spec ADD_IMPORTLIB)
-
 list(APPEND SOURCE
     condrv.c
     control.c
+    dispatch.c
     condrv.h)
 
 add_library(condrv SHARED
     ${SOURCE}
     condrv.rc)
-    # ${CMAKE_CURRENT_BINARY_DIR}/condrv.def)
 
 set_module_type(condrv kernelmodedriver)
 target_link_libraries(condrv ${PSEH_LIB})
