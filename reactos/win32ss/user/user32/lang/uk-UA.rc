@@ -50,7 +50,7 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "&Закрити\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
-    MENUITEM "Нас&тупний\tCtrl+F6", SC_NEXTWINDOW
+    MENUITEM "Нас&тупне вікно\tCtrl+F6", SC_NEXTWINDOW
 END
 
 /* Strings */
