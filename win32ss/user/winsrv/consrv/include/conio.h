@@ -217,13 +217,13 @@ typedef struct _TERMINAL_VTBL
     /* Interface used only for text-mode screen buffers */
 
     NTSTATUS (NTAPI *ReadStream)(IN OUT PTERMINAL This,
-                                /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
-                                IN BOOLEAN Unicode,
-                                /**PWCHAR Buffer,**/
-                                OUT PVOID Buffer,
-                                IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
-                                IN ULONG NumCharsToRead,
-                                OUT PULONG NumCharsRead OPTIONAL);
+                                 IN BOOLEAN Unicode,
+                                 /**PWCHAR Buffer,**/
+                                 OUT PVOID Buffer,
+                                 IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                                 IN PVOID Parameter OPTIONAL,
+                                 IN ULONG NumCharsToRead,
+                                 OUT PULONG NumCharsRead OPTIONAL);
     NTSTATUS (NTAPI *WriteStream)(IN OUT PTERMINAL This,
                                   PTEXTMODE_SCREEN_BUFFER Buff,
                                   PWCHAR Buffer,

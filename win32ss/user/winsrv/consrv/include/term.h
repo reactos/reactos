@@ -10,9 +10,9 @@
 
 /* Macros used to call functions in the TERMINAL_VTBL virtual table */
 
-#define TermReadStream(Console, ExeName, /**/ Unicode, /**/ Buffer, ReadControl, NumCharsToRead, NumCharsRead) \
-    (Console)->TermIFace.Vtbl->ReadStream(&(Console)->TermIFace, (ExeName), /**/ (Unicode), /**/ \
-                                           (Buffer), (ReadControl), (NumCharsToRead), (NumCharsRead))
+#define TermReadStream(Console, /**/ Unicode, /**/ Buffer, ReadControl, Parameter, NumCharsToRead, NumCharsRead) \
+    (Console)->TermIFace.Vtbl->ReadStream(&(Console)->TermIFace, /**/ (Unicode), /**/ \
+                                           (Buffer), (ReadControl), (Parameter), (NumCharsToRead), (NumCharsRead))
 
 #define TermWriteStream(Console, ScreenBuffer, Buffer, Length, Attrib) \
     (Console)->TermIFace.Vtbl->WriteStream(&(Console)->TermIFace, (ScreenBuffer), (Buffer), \

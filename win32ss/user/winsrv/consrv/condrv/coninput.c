@@ -238,10 +238,10 @@ ConDrvDeinitInputBuffer(IN PCONSOLE Console)
 NTSTATUS NTAPI
 ConDrvReadConsole(IN PCONSOLE Console,
                   IN PCONSOLE_INPUT_BUFFER InputBuffer,
-                  /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
                   IN BOOLEAN Unicode,
                   OUT PVOID Buffer,
                   IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                  IN PVOID Parameter OPTIONAL,
                   IN ULONG NumCharsToRead,
                   OUT PULONG NumCharsRead OPTIONAL)
 {
@@ -260,10 +260,10 @@ ConDrvReadConsole(IN PCONSOLE Console,
 
     /* Call the line-discipline */
     return TermReadStream(Console,
-                          ExeName,
                           Unicode,
                           Buffer,
                           ReadControl,
+                          Parameter,
                           NumCharsToRead,
                           NumCharsRead);
 }

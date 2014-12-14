@@ -296,17 +296,18 @@ ConSrvTermDeinitTerminal(IN OUT PTERMINAL This)
 
 static NTSTATUS NTAPI
 ConSrvTermReadStream(IN OUT PTERMINAL This,
-                     /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
                      IN BOOLEAN Unicode,
                      /**PWCHAR Buffer,**/
                      OUT PVOID Buffer,
                      IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                     IN PVOID Parameter OPTIONAL,
                      IN ULONG NumCharsToRead,
                      OUT PULONG NumCharsRead OPTIONAL)
 {
     PFRONTEND FrontEnd = This->Data;
     PCONSRV_CONSOLE Console = FrontEnd->Console;
     PCONSOLE_INPUT_BUFFER InputBuffer = &Console->InputBuffer;
+    PUNICODE_STRING ExeName = Parameter;
 
     // STATUS_PENDING : Wait if more to read ; STATUS_SUCCESS : Don't wait.
     NTSTATUS Status = STATUS_PENDING;
