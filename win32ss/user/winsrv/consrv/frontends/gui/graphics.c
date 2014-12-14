@@ -131,7 +131,7 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 
     if (Buffer->BitMap == NULL) return;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     rcFramebuffer->left   = Buffer->ViewOrigin.X * 1 + rcView->left;
     rcFramebuffer->top    = Buffer->ViewOrigin.Y * 1 + rcView->top;

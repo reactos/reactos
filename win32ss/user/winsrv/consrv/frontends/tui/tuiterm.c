@@ -291,7 +291,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
 #endif
 
-            if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            if (ConDrvValidateConsoleUnsafe((PCONSOLE)ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 MSG Message;
                 Message.hwnd = hWnd;
@@ -307,7 +307,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_ACTIVATE:
         {
-            if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            if (ConDrvValidateConsoleUnsafe((PCONSOLE)ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 if (LOWORD(wParam) != WA_INACTIVE)
                 {

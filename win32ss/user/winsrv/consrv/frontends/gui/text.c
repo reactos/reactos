@@ -354,7 +354,7 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
 
     if (Buffer->Buffer == NULL) return;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     rcFramebuffer->left   = Buffer->ViewOrigin.X * GuiData->CharWidth  + rcView->left;
     rcFramebuffer->top    = Buffer->ViewOrigin.Y * GuiData->CharHeight + rcView->top;
