@@ -9,16 +9,32 @@
 //
 #include <windows.h>
 #include <stdio.h>
+//#include <stdarg.h>
+
+#include "resource.h"
 
 #define STR_MAX 2048
-
-const wchar_t *HELP = L"\nGraphically displays the folder structure of a drive or path.  \n\nTREE [drive:][path] [/F] [/A]\n\n   /F   Display the names of the files in each folder.\n\n\n";
-const wchar_t *INVALID = L"No subfolders exist";
 
 static void DrawTree(const wchar_t* strPath, const WIN32_FIND_DATA *arrFolder, const size_t szArr, UINT width, const wchar_t *prevLine, BOOL drawfolder);
 static void GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine);
 
 BOOL bShowFiles = FALSE;  //if this flag is set to true, files will also be listed
+BOOL bUseAscii = FALSE; //if this flag is true, ASCII characters will be used instead of UNICODE ones
+
+/*
+ * This takes strings from a resource string table
+ * and outputs it to the console.
+ */
+VOID PrintResourceString(INT resID, ...)
+{
+    WCHAR tmpBuffer[STR_MAX];
+    va_list arg_ptr;
+
+    va_start(arg_ptr, resID);
+    LoadStringW(GetModuleHandle(NULL), resID, tmpBuffer, STR_MAX);
+    vfwprintf(stdout, tmpBuffer, arg_ptr);
+    va_end(arg_ptr);
+}
 
 /**
 * @name: HasSubFolder
@@ -101,10 +117,17 @@ static void DrawTree(const wchar_t* strPath, const WIN32_FIND_DATA *arrFolder, c
         for(j=0;j<width-1;++j)
         {
             //if the previous line has '├' or '│' then the current line will add '│' to continue the connecting line
-            if((BYTE)prevLine[j] == 195 || (BYTE)prevLine[j] == 179)
+            if((BYTE)prevLine[j] == 195 || (BYTE)prevLine[j] == 179 || (BYTE)prevLine[j] == L'+' || (BYTE)prevLine[j] == L'|')
             {
-                wchar_t a[]={179,0};
-                wcscat(consoleOut,a);
+                if (bUseAscii)
+                {
+                    wchar_t a[]={179,0};
+                    wcscat(consoleOut,a);
+                }
+                else
+                {
+                    wcscat(consoleOut,L"|");
+                }
             }
             else
             {
@@ -117,14 +140,20 @@ static void DrawTree(const wchar_t* strPath, const WIN32_FIND_DATA *arrFolder, c
             if(drawfolder)
             {
                 // will add '├───Folder name
-                wsprintf(str, L"%c%c%c%c%s", 195, 196, 196, 196, (wchar_t*)arrFolder[i].cFileName);
+                if (bUseAscii)
+                    wsprintf(str, L"+---%s", (wchar_t*)arrFolder[i].cFileName);
+                else
+                    wsprintf(str, L"%c%c%c%c%s", 195, 196, 196, 196, (wchar_t*)arrFolder[i].cFileName);
             }
             else
             {
                 if(bHasSubFolder)
                 {
                     // will add '│   FileNamw'  //thie line is added to connect the belowfolder sub structure
-                    wsprintf(str,L"%c   %s", 179, (wchar_t*)arrFolder[i].cFileName);
+                    if (bUseAscii)
+                        wsprintf(str,L"|   %s", (wchar_t*)arrFolder[i].cFileName);
+                    else
+                        wsprintf(str,L"%c   %s", 179, (wchar_t*)arrFolder[i].cFileName);
                 }
                 else
                 {
@@ -138,14 +167,20 @@ static void DrawTree(const wchar_t* strPath, const WIN32_FIND_DATA *arrFolder, c
             if(drawfolder)
             {
                 // '└───Folder name'
-                wsprintf(str, L"%c%c%c%c%s", 192, 196, 196, 196, (wchar_t*)arrFolder[i].cFileName);
+                if (bUseAscii)
+                    wsprintf(str, L"\\---%s", (wchar_t*)arrFolder[i].cFileName);
+                else
+                    wsprintf(str, L"%c%c%c%c%s", 192, 196, 196, 196, (wchar_t*)arrFolder[i].cFileName);
             }
             else
             {
                 if(bHasSubFolder)
                 {
                     // '│   FileName'
-                    wsprintf(str,L"%c   %s", 179, (wchar_t*)arrFolder[i].cFileName);
+                    if (bUseAscii)
+                        wsprintf(str,L"|   %s", (wchar_t*)arrFolder[i].cFileName);
+                    else
+                        wsprintf(str,L"%c   %s", 179, (wchar_t*)arrFolder[i].cFileName);
                 }
                 else
                 {
@@ -279,14 +314,21 @@ int wmain( int argc, wchar_t *argv[])
     
     for(i = 1; i < argc; ++i)   //parse the command line
     {
-        if(wcscmp(argv[i], L"/?") == 0)
+        if (argv[i][0] == L'-' || argv[i][0] == L'/')
         {
-            wprintf(HELP);  //will print help and exit after
-            return 0;
-        } 
-        else if(wcscmp(argv[i],L"/F")==0 || wcscmp(argv[i],L"/f")==0)
-        {
-            bShowFiles=TRUE;  //if set to true, will populate all the files within the folder structure
+            switch (towlower(argv[i][1]))
+            {
+            case L'?':
+                PrintResourceString(IDS_USAGE); //will print help and exit after
+                return 0;
+            case L'f':
+                bShowFiles=TRUE;  //if set to true, will populate all the files within the folder structure
+                break;
+            case L'a':
+                bUseAscii=TRUE;
+                break;
+            default:break;
+            }
         }
         else
         {
@@ -294,16 +336,16 @@ int wmain( int argc, wchar_t *argv[])
             BOOL b=SetCurrentDirectoryW(argv[i]);  //will set the current directory for this executable
             if(b==FALSE)
             {
-                wprintf(INVALID);
+                PrintResourceString(IDS_NO_SUBDIRECTORIES);
                 return 1;
             }
         }
     }
 
-    wprintf(L"Folder PATH listing\n");
+    PrintResourceString(IDS_FOLDER_PATH);
 
     GetVolumeInformation(NULL, NULL, 0, &dwSerial, NULL, NULL, NULL, 0);
-    wprintf(L"Volume serial number is %x:%x\n", dwSerial >> 16, dwSerial & 0xffff);
+    PrintResourceString(IDS_VOL_SERIAL,  dwSerial >> 16, dwSerial & 0xffff);
 
     sz = GetCurrentDirectory(1, &t);  //get the buffer size
     strPath = (wchar_t*)malloc(sizeof(wchar_t) * sz);     //must not return before calling delete[]

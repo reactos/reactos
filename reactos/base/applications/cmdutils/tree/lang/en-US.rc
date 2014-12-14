@@ -1,0 +1,12 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Visually displays the folder structure of a drive or path.\n\n\
+TREE [drive:][path] [/F] [/A]\n\n\
+\t/F   Display the names of the files in each folder.\n\
+\t/A   Use ASCII instead of extended characters.\n"
+    IDS_NO_SUBDIRECTORIES "No subdirectories exist"
+    IDS_FOLDER_PATH "Folder PATH Listing\n"
+    IDS_VOL_SERIAL "Volume serial number is %x:%x\n"
+END
