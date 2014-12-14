@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/gui/fullscreen.c
+ * FILE:            consrv/frontends/gui/fullscreen.c
  * PURPOSE:         GUI Terminal Full-screen Mode
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -177,7 +177,7 @@ GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData)
     PCONSRV_CONSOLE Console = GuiData->Console;
     BOOL FullScreen;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     /* Switch to full-screen or to windowed mode */
     FullScreen = !GuiData->GuiInfo.FullScreen;

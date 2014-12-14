@@ -288,7 +288,7 @@ SendMenuEvent(PCONSRV_CONSOLE Console, UINT CmdId)
 
     DPRINT("Menu item ID: %d\n", CmdId);
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     er.EventType = MENU_EVENT;
     er.Event.MenuEvent.dwCommandId = CmdId;
@@ -753,7 +753,7 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     PCONSRV_CONSOLE Console = GuiData->Console;
     INPUT_RECORD er;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     er.EventType = FOCUS_EVENT;
     er.Event.FocusEvent.bSetFocus = SetFocus;
@@ -1151,7 +1151,7 @@ OnKey(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     PCONSRV_CONSOLE Console = GuiData->Console;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     ActiveBuffer = GuiData->ActiveBuffer;
 
@@ -1321,7 +1321,7 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
 
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     Buff = GuiData->ActiveBuffer;
 
@@ -1423,7 +1423,7 @@ OnClose(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSRV_CONSOLE Console = GuiData->Console;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE))
         return TRUE;
 
     // TODO: Prompt for termination ? (Warn the user about possible apps running in this console)
@@ -1525,7 +1525,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         goto Quit;
     }
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE))
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE))
     {
         Err = TRUE;
         goto Quit;
@@ -1856,7 +1856,7 @@ OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
     DWORD windx, windy;
     UINT  WidthUnit, HeightUnit;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     ActiveBuffer = GuiData->ActiveBuffer;
 
@@ -1888,7 +1888,7 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
     /* Do nothing if the window is hidden */
     if (!GuiData->IsWindowVisible) return;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     if ((GuiData->WindowSizeLock == FALSE) &&
         (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
@@ -1998,7 +1998,7 @@ OnScroll(PGUI_CONSOLE_DATA GuiData, UINT uMsg, WPARAM wParam)
     int old_pos, Maximum;
     PSHORT pShowXY;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return 0;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return 0;
 
     Buff = GuiData->ActiveBuffer;
 

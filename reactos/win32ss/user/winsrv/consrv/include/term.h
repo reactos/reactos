@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/include/term.h
+ * FILE:            consrv/include/term.h
  * PURPOSE:         Internal Frontend Interface
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -10,9 +10,9 @@
 
 /* Macros used to call functions in the TERMINAL_VTBL virtual table */
 
-#define TermReadStream(Console, ExeName, /**/ Unicode, /**/ Buffer, ReadControl, NumCharsToRead, NumCharsRead) \
-    (Console)->TermIFace.Vtbl->ReadStream(&(Console)->TermIFace, (ExeName), /**/ (Unicode), /**/ \
-                                           (Buffer), (ReadControl), (NumCharsToRead), (NumCharsRead))
+#define TermReadStream(Console, /**/ Unicode, /**/ Buffer, ReadControl, Parameter, NumCharsToRead, NumCharsRead) \
+    (Console)->TermIFace.Vtbl->ReadStream(&(Console)->TermIFace, /**/ (Unicode), /**/ \
+                                           (Buffer), (ReadControl), (Parameter), (NumCharsToRead), (NumCharsRead))
 
 #define TermWriteStream(Console, ScreenBuffer, Buffer, Length, Attrib) \
     (Console)->TermIFace.Vtbl->WriteStream(&(Console)->TermIFace, (ScreenBuffer), (Buffer), \

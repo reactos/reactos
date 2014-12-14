@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Driver DLL
- * FILE:            win32ss/user/winsrv/consrv/condrv/text.c
+ * FILE:            consrv/condrv/text.c
  * PURPOSE:         Console Output Functions for text-mode screen-buffers
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -494,7 +494,8 @@ ConDrvReadConsoleOutput(IN PCONSOLE Console,
 
     /* Make sure ReadRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedReadRegion, &ScreenBuffer, &CapturedReadRegion))
     {
         /*
@@ -557,7 +558,8 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -597,14 +599,15 @@ ConDrvWriteConsoleOutput(IN PCONSOLE Console,
 
 /*
  * NOTE: This function is strongly inspired by ConDrvWriteConsoleOutput...
+ * FIXME: This function MUST be moved into consrv/conoutput.c because only
+ * consrv knows how to manipulate VDM screenbuffers.
  */
 NTSTATUS NTAPI
 ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
                             IN PTEXTMODE_SCREEN_BUFFER Buffer,
                             IN PCHAR_CELL CharInfo/*Buffer*/,
                             IN COORD CharInfoSize,
-                            IN OUT PSMALL_RECT WriteRegion,
-                            IN BOOLEAN DrawRegion)
+                            IN PSMALL_RECT WriteRegion)
 {
     SHORT X, Y;
     SMALL_RECT ScreenBuffer;
@@ -624,7 +627,8 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&CapturedWriteRegion, &ScreenBuffer, &CapturedWriteRegion))
     {
         /*
@@ -649,10 +653,6 @@ ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
             ++CurCharInfo;
         }
     }
-
-    if (DrawRegion) TermDrawRegion(Console, &CapturedWriteRegion);
-
-    *WriteRegion = CapturedWriteRegion;
 
     return STATUS_SUCCESS;
 }
@@ -1157,7 +1157,8 @@ ConDrvScrollConsoleScreenBuffer(IN PCONSOLE Console,
 
     /* Make sure the source rectangle is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0,
-                  Buffer->ScreenBufferSize.Y - 1, Buffer->ScreenBufferSize.X - 1);
+                  Buffer->ScreenBufferSize.Y - 1,
+                  Buffer->ScreenBufferSize.X - 1);
     if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, ScrollRectangle))
     {
         return STATUS_SUCCESS;

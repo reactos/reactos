@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/tui/tuiterm.c
+ * FILE:            consrv/frontends/tui/tuiterm.c
  * PURPOSE:         TUI Terminal Front-End - Virtual Consoles...
  * PROGRAMMERS:     David Welch
  *                  Gé van Geldorp
@@ -291,7 +291,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
 #endif
 
-            if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            if (ConDrvValidateConsoleUnsafe((PCONSOLE)ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 MSG Message;
                 Message.hwnd = hWnd;
@@ -307,7 +307,7 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_ACTIVATE:
         {
-            if (ConDrvValidateConsoleUnsafe(ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
+            if (ConDrvValidateConsoleUnsafe((PCONSOLE)ActiveConsole->Console, CONSOLE_RUNNING, TRUE))
             {
                 if (LOWORD(wParam) != WA_INACTIVE)
                 {
@@ -327,9 +327,9 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 static DWORD NTAPI
-TuiConsoleThread(PVOID Data)
+TuiConsoleThread(PVOID Param)
 {
-    PTUI_CONSOLE_DATA TuiData = (PTUI_CONSOLE_DATA)Data;
+    PTUI_CONSOLE_DATA TuiData = (PTUI_CONSOLE_DATA)Param;
     PCONSRV_CONSOLE Console = TuiData->Console;
     HWND NewWindow;
     MSG msg;
@@ -482,7 +482,7 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
         DPRINT1("CONSRV: Failed to create TUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
-    // Console->FrontEndIFace.Data = (PVOID)TuiData;
+    // Console->FrontEndIFace.Context = (PVOID)TuiData;
     TuiData->Console = Console;
     TuiData->hWindow = NULL;
 
@@ -530,8 +530,8 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
     LeaveCriticalSection(&ActiveVirtConsLock);
 
     /* Finally, initialize the frontend structure */
-    This->Data = TuiData;
-    This->OldData = NULL;
+    This->Context  = TuiData;
+    This->Context2 = NULL;
 
     return STATUS_SUCCESS;
 }
@@ -540,7 +540,7 @@ static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
     // PCONSRV_CONSOLE Console = This->Console;
-    PTUI_CONSOLE_DATA TuiData = This->Data; // Console->FrontEndIFace.Data;
+    PTUI_CONSOLE_DATA TuiData = This->Context; // Console->FrontEndIFace.Context;
 
     /* Close the notification window */
     DestroyWindow(TuiData->hWindow);
@@ -571,8 +571,8 @@ TuiDeinitFrontEnd(IN OUT PFRONTEND This)
     /* Switch to the next console */
     if (NULL != ActiveConsole) ConioDrawConsole(ActiveConsole->Console);
 
-    // Console->FrontEndIFace.Data = NULL;
-    This->Data = NULL;
+    // Console->FrontEndIFace.Context = NULL;
+    This->Context = NULL;
     DeleteCriticalSection(&TuiData->Lock);
     ConsoleFreeHeap(TuiData);
 }
@@ -723,7 +723,7 @@ TuiChangeIcon(IN OUT PFRONTEND This,
 static HWND NTAPI
 TuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
-    PTUI_CONSOLE_DATA TuiData = This->Data;
+    PTUI_CONSOLE_DATA TuiData = This->Context;
     return TuiData->hWindow;
 }
 
@@ -845,9 +845,9 @@ TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
     if (!TuiInit(ConsoleInfo->CodePage)) return STATUS_UNSUCCESSFUL;
 
     /* Finally, initialize the frontend structure */
-    FrontEnd->Vtbl    = &TuiVtbl;
-    FrontEnd->Data    = NULL;
-    FrontEnd->OldData = NULL;
+    FrontEnd->Vtbl     = &TuiVtbl;
+    FrontEnd->Context  = NULL;
+    FrontEnd->Context2 = NULL;
 
     return STATUS_SUCCESS;
 }
@@ -856,7 +856,7 @@ NTSTATUS NTAPI
 TuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd)
 {
     if (FrontEnd == NULL) return STATUS_INVALID_PARAMETER;
-    if (FrontEnd->Data)   TuiDeinitFrontEnd(FrontEnd);
+    if (FrontEnd->Context) TuiDeinitFrontEnd(FrontEnd);
 
     return STATUS_SUCCESS;
 }

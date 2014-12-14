@@ -1,7 +1,7 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/popup.c
+ * FILE:            consrv/popup.c
  * PURPOSE:         Console popup windows
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *

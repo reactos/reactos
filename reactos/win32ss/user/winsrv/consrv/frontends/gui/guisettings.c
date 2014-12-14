@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guisettings.c
+ * FILE:            consrv/frontends/gui/guisettings.c
  * PURPOSE:         GUI Terminal Front-End Settings Management
  * PROGRAMMERS:     Johannes Anderwald
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -238,7 +238,7 @@ GuiConsoleShowConsoleProperties(PGUI_CONSOLE_DATA GuiData,
 
     DPRINT("GuiConsoleShowConsoleProperties entered\n");
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     /*
      * Create a memory section to share with the applet, and map it.
@@ -429,7 +429,7 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     PTERMINAL_INFO TermInfo = NULL;
     PGUI_CONSOLE_INFO GuiInfo = NULL;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     /* Get the console leader process, our client */
     ProcessData = ConSrvGetConsoleLeaderProcess(Console);
@@ -575,7 +575,7 @@ GuiApplyWindowsConsoleSettings(PGUI_CONSOLE_DATA GuiData,
     SIZE_T Length;
 #endif
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     /* Get the console leader process, our client */
     ProcessData = ConSrvGetConsoleLeaderProcess(Console);

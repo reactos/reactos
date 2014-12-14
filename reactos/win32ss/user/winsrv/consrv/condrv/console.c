@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Driver DLL
- * FILE:            win32ss/user/winsrv/consrv/condrv/console.c
+ * FILE:            consrv/condrv/console.c
  * PURPOSE:         Console Management Functions
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
@@ -297,7 +297,6 @@ ConDrvRegisterTerminal(IN PCONSOLE Console,
 
     /* Copy buffer contents to screen */
     // Terminal.Draw();
-    // ConioDrawConsole(Console);
 
     DPRINT("Terminal initialization done\n");
     return STATUS_SUCCESS;

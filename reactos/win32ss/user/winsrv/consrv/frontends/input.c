@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/input.c
+ * FILE:            consrv/frontends/input.c
  * PURPOSE:         Common Front-Ends Input functions
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -71,7 +71,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
 
     INPUT_RECORD er;
 
-    if (NULL == Console)
+    if (Console == NULL)
     {
         DPRINT1("No Active Console!\n");
         return;
@@ -169,7 +169,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
             }
         }
 
-        ConioDrawConsole((PCONSOLE)Console);
+        ConioDrawConsole(Console);
         return;
     }
 

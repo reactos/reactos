@@ -2,7 +2,8 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            consrv/include/conio_winsrv.h
- * PURPOSE:         Public Console I/O Interface
+ * PURPOSE:         Public Console I/O Interface - Offers wrap-up structures
+ *                  over the console objects exposed by the console driver.
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -116,8 +117,8 @@ struct _FRONTEND
     NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);
 
     struct _CONSRV_CONSOLE* Console;   /* Console to which the frontend is attached to */
-    PVOID Data;                 /* Private data  */
-    PVOID OldData;              /* Reserved      */
+    PVOID Context;              /* Private context */
+    PVOID Context2;             /* Private context */
 };
 
 /* PauseFlags values (internal only) */
@@ -217,9 +218,11 @@ ConioProcessInputEvent(PCONSRV_CONSOLE Console,
 
 /* conoutput.c */
 PCHAR_INFO ConioCoordToPointer(PTEXTMODE_SCREEN_BUFFER Buff, ULONG X, ULONG Y);
-VOID ConioDrawConsole(PCONSOLE /*PCONSRV_CONSOLE*/ Console);
 NTSTATUS ConioResizeBuffer(PCONSOLE /*PCONSRV_CONSOLE*/ Console,
                            PTEXTMODE_SCREEN_BUFFER ScreenBuffer,
                            COORD Size);
+
+/* terminal.c */
+VOID ConioDrawConsole(PCONSRV_CONSOLE Console);
 
 /* EOF */

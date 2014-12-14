@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Driver DLL
- * FILE:            win32ss/user/winsrv/consrv/condrv/conoutput.c
+ * FILE:            consrv/condrv/conoutput.c
  * PURPOSE:         General Console Output Functions
  * PROGRAMMERS:     Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
@@ -64,8 +64,6 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
     }
     else if (Buffer->Header.Type == SCREEN_BUFFER)
     {
-        // TODO: Free Buffer->Data
-
         /* Free the palette handle */
         if (Buffer->PaletteHandle != NULL) DeleteObject(Buffer->PaletteHandle);
 
@@ -159,20 +157,6 @@ ConDrvDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
     CONSOLE_SCREEN_BUFFER_Destroy(Buffer);
 }
 
-VOID
-ConioDrawConsole(PCONSOLE Console)
-{
-    SMALL_RECT Region;
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
-
-    if (ActiveBuffer)
-    {
-        ConioInitRect(&Region, 0, 0,
-                      ActiveBuffer->ViewSize.Y - 1, ActiveBuffer->ViewSize.X - 1);
-        TermDrawRegion(Console, &Region);
-    }
-}
-
 static VOID
 ConioSetActiveScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
@@ -215,13 +199,6 @@ ConDrvGetActiveScreenBuffer(IN PCONSOLE Console)
 /* PUBLIC DRIVER APIS *********************************************************/
 
 NTSTATUS NTAPI
-ConDrvWriteConsoleOutputVDM(IN PCONSOLE Console,
-                            IN PTEXTMODE_SCREEN_BUFFER Buffer,
-                            IN PCHAR_CELL CharInfo/*Buffer*/,
-                            IN COORD CharInfoSize,
-                            IN OUT PSMALL_RECT WriteRegion,
-                            IN BOOLEAN DrawRegion);
-NTSTATUS NTAPI
 ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
                            IN PCONSOLE_SCREEN_BUFFER Buffer,
                            IN PSMALL_RECT Region)
@@ -231,19 +208,6 @@ ConDrvInvalidateBitMapRect(IN PCONSOLE Console,
 
     /* Validity check */
     ASSERT(Console == Buffer->Header.Console);
-
-    /* In text-mode only, draw the VDM buffer if present */
-    if (GetType(Buffer) == TEXTMODE_BUFFER)
-    {
-        PTEXTMODE_SCREEN_BUFFER TextBuffer = (PTEXTMODE_SCREEN_BUFFER)Buffer;
-
-        /*Status =*/ ConDrvWriteConsoleOutputVDM(Buffer->Header.Console,
-                                                 TextBuffer,
-                                                 Console->VDMBuffer,
-                                                 Console->VDMBufferSize,
-                                                 Region,
-                                                 FALSE);
-    }
 
     /* If the output buffer is the current one, redraw the correct portion of the screen */
     if (Buffer == Console->ActiveBuffer) TermDrawRegion(Console, Region);

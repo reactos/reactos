@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/gui/guiterm.c
+ * FILE:            consrv/frontends/gui/guiterm.c
  * PURPOSE:         GUI Terminal Front-End
  * PROGRAMMERS:     Gé van Geldorp
  *                  Johannes Anderwald
@@ -138,9 +138,9 @@ VOID
 CreateSysMenu(HWND hWnd);
 
 static DWORD NTAPI
-GuiConsoleInputThread(PVOID Data)
+GuiConsoleInputThread(PVOID Param)
 {
-    PHANDLE GraphicsStartupEvent = (PHANDLE)Data;
+    PHANDLE GraphicsStartupEvent = (PHANDLE)Param;
     LONG WindowCount = 0;
     MSG msg;
 
@@ -348,12 +348,12 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     PGUI_CONSOLE_DATA GuiData;
     GUI_CONSOLE_INFO  TermInfo;
 
-    if (This == NULL || Console == NULL || This->OldData == NULL)
+    if (This == NULL || Console == NULL || This->Context2 == NULL)
         return STATUS_INVALID_PARAMETER;
 
     ASSERT(This->Console == Console);
 
-    GuiInitInfo = This->OldData;
+    GuiInitInfo = This->Context2;
 
     if (GuiInitInfo->ConsoleInfo == NULL || GuiInitInfo->ConsoleStartInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -368,7 +368,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
         DPRINT1("CONSRV: Failed to create GUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
-    ///// /* HACK */ Console->FrontEndIFace.Data = (PVOID)GuiData; /* HACK */
+    ///// /* HACK */ Console->FrontEndIFace.Context = (PVOID)GuiData; /* HACK */
     GuiData->Console      = Console;
     GuiData->ActiveBuffer = Console->ActiveBuffer;
     GuiData->hWindow = NULL;
@@ -472,9 +472,9 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
     // TODO: Retrieve the selection mode via the registry.
 
     /* Finally, finish to initialize the frontend structure */
-    This->Data = GuiData;
-    if (This->OldData) ConsoleFreeHeap(This->OldData);
-    This->OldData = NULL;
+    This->Context  = GuiData;
+    if (This->Context2) ConsoleFreeHeap(This->Context2);
+    This->Context2 = NULL;
 
     /*
      * We need to wait until the GUI has been fully initialized
@@ -512,7 +512,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
 static VOID NTAPI
 GuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     DPRINT("Send PM_DESTROY_CONSOLE message and wait on hGuiTermEvent...\n");
     PostThreadMessageW(dwInputThreadId, PM_DESTROY_CONSOLE, 0, (LPARAM)GuiData);
@@ -534,7 +534,7 @@ GuiDeinitFrontEnd(IN OUT PFRONTEND This)
         DestroyIcon(GuiData->hIconSm);
     }
 
-    This->Data = NULL;
+    This->Context = NULL;
     DeleteCriticalSection(&GuiData->Lock);
     ConsoleFreeHeap(GuiData);
 
@@ -545,7 +545,7 @@ static VOID NTAPI
 GuiDrawRegion(IN OUT PFRONTEND This,
               SMALL_RECT* Region)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Do nothing if the window is hidden */
     if (!GuiData->IsWindowVisible) return;
@@ -562,7 +562,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
                PWCHAR Buffer,
                UINT Length)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     PCONSOLE_SCREEN_BUFFER Buff;
     SHORT CursorEndX, CursorEndY;
     RECT ScrollRect;
@@ -619,7 +619,7 @@ GuiWriteStream(IN OUT PFRONTEND This,
 /* static */ VOID NTAPI
 GuiRingBell(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Emit an error beep sound */
     SendNotifyMessage(GuiData->hWindow, PM_CONSOLE_BEEP, 0, 0);
@@ -629,7 +629,7 @@ static BOOL NTAPI
 GuiSetCursorInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Do nothing if the window is hidden */
     if (!GuiData->IsWindowVisible) return TRUE;
@@ -648,7 +648,7 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
                  SHORT OldCursorX,
                  SHORT OldCursorY)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Do nothing if the window is hidden */
     if (!GuiData->IsWindowVisible) return TRUE;
@@ -667,7 +667,7 @@ GuiSetScreenInfo(IN OUT PFRONTEND This,
 static VOID NTAPI
 GuiResizeTerminal(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Resize the window to the user's values */
     PostMessageW(GuiData->hWindow, PM_RESIZE_TERMINAL, 0, 0);
@@ -676,7 +676,7 @@ GuiResizeTerminal(IN OUT PFRONTEND This)
 static VOID NTAPI
 GuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     HPALETTE hPalette;
 
@@ -720,7 +720,7 @@ static VOID NTAPI
 GuiReleaseScreenBuffer(IN OUT PFRONTEND This,
                        IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /*
      * If we were notified to release a screen buffer that is not actually
@@ -767,7 +767,7 @@ GuiSetMouseCursor(IN OUT PFRONTEND This,
 static VOID NTAPI
 GuiRefreshInternalInfo(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Update the console leader information held by the window */
     SetConWndConsoleLeaderCID(GuiData);
@@ -789,7 +789,7 @@ GuiRefreshInternalInfo(IN OUT PFRONTEND This)
 static VOID NTAPI
 GuiChangeTitle(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     // PostMessageW(GuiData->hWindow, PM_CONSOLE_SET_TITLE, 0, 0);
     SetWindowText(GuiData->hWindow, GuiData->Console->Title.Buffer);
 }
@@ -798,7 +798,7 @@ static BOOL NTAPI
 GuiChangeIcon(IN OUT PFRONTEND This,
               HICON IconHandle)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     HICON hIcon, hIconSm;
 
     if (IconHandle == NULL)
@@ -842,7 +842,7 @@ GuiChangeIcon(IN OUT PFRONTEND This,
 static HWND NTAPI
 GuiGetConsoleWindowHandle(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     return GuiData->hWindow;
 }
 
@@ -850,7 +850,7 @@ static VOID NTAPI
 GuiGetLargestConsoleWindowSize(IN OUT PFRONTEND This,
                                PCOORD pSize)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer;
     RECT WorkArea;
     LONG width, height;
@@ -893,7 +893,7 @@ static BOOL NTAPI
 GuiGetSelectionInfo(IN OUT PFRONTEND This,
                     PCONSOLE_SELECTION_INFO pSelectionInfo)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     if (pSelectionInfo == NULL) return FALSE;
 
@@ -909,7 +909,7 @@ GuiSetPalette(IN OUT PFRONTEND This,
               HPALETTE PaletteHandle,
               UINT PaletteUsage)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     HPALETTE OldPalette;
 
     // if (GetType(GuiData->ActiveBuffer) != GRAPHICS_BUFFER) return FALSE;
@@ -934,7 +934,7 @@ GuiSetPalette(IN OUT PFRONTEND This,
 static ULONG NTAPI
 GuiGetDisplayMode(IN OUT PFRONTEND This)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     ULONG DisplayMode = 0;
 
     if (GuiData->GuiInfo.FullScreen)
@@ -949,7 +949,7 @@ static BOOL NTAPI
 GuiSetDisplayMode(IN OUT PFRONTEND This,
                   ULONG NewMode)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     BOOL FullScreen;
 
     if (NewMode & ~(CONSOLE_FULLSCREEN_MODE | CONSOLE_WINDOWED_MODE))
@@ -972,7 +972,7 @@ static INT NTAPI
 GuiShowMouseCursor(IN OUT PFRONTEND This,
                    BOOL Show)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     if (GuiData->IsWindowVisible)
     {
@@ -991,7 +991,7 @@ static BOOL NTAPI
 GuiSetMouseCursor(IN OUT PFRONTEND This,
                   HCURSOR CursorHandle)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     /* Do nothing if the window is hidden */
     if (!GuiData->IsWindowVisible) return TRUE;
@@ -1013,7 +1013,7 @@ GuiMenuControl(IN OUT PFRONTEND This,
                UINT CmdIdLow,
                UINT CmdIdHigh)
 {
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
 
     GuiData->CmdIdLow  = CmdIdLow ;
     GuiData->CmdIdHigh = CmdIdHigh;
@@ -1031,7 +1031,7 @@ GuiSetMenuClose(IN OUT PFRONTEND This,
      * for more information.
      */
 
-    PGUI_CONSOLE_DATA GuiData = This->Data;
+    PGUI_CONSOLE_DATA GuiData = This->Context;
     HMENU hSysMenu = GetSystemMenu(GuiData->hWindow, FALSE);
 
     if (hSysMenu == NULL) return FALSE;
@@ -1100,9 +1100,9 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
     GuiInitInfo->IsWindowVisible  = ConsoleInitInfo->IsWindowVisible;
 
     /* Finally, initialize the frontend structure */
-    FrontEnd->Vtbl    = &GuiVtbl;
-    FrontEnd->Data    = NULL;
-    FrontEnd->OldData = GuiInitInfo;
+    FrontEnd->Vtbl     = &GuiVtbl;
+    FrontEnd->Context  = NULL;
+    FrontEnd->Context2 = GuiInitInfo;
 
     return STATUS_SUCCESS;
 }
@@ -1112,8 +1112,8 @@ GuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd)
 {
     if (FrontEnd == NULL) return STATUS_INVALID_PARAMETER;
 
-    if (FrontEnd->Data)    GuiDeinitFrontEnd(FrontEnd);
-    if (FrontEnd->OldData) ConsoleFreeHeap(FrontEnd->OldData);
+    if (FrontEnd->Context ) GuiDeinitFrontEnd(FrontEnd);
+    if (FrontEnd->Context2) ConsoleFreeHeap(FrontEnd->Context2);
 
     return STATUS_SUCCESS;
 }

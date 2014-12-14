@@ -31,11 +31,11 @@ DummyDeinitTerminal(IN OUT PTERMINAL This)
 
 static NTSTATUS NTAPI
 DummyReadStream(IN OUT PTERMINAL This,
-                /**/IN PUNICODE_STRING ExeName /**/OPTIONAL/**/,/**/
                 IN BOOLEAN Unicode,
                 /**PWCHAR Buffer,**/
                 OUT PVOID Buffer,
                 IN OUT PCONSOLE_READCONSOLE_CONTROL ReadControl,
+                IN PVOID Parameter OPTIONAL,
                 IN ULONG NumCharsToRead,
                 OUT PULONG NumCharsRead OPTIONAL)
 {

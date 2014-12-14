@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/frontends/gui/graphics.c
+ * FILE:            consrv/frontends/gui/graphics.c
  * PURPOSE:         GUI Terminal Front-End - Support for graphics-mode screen-buffers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -131,7 +131,7 @@ GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
 
     if (Buffer->BitMap == NULL) return;
 
-    if (!ConDrvValidateConsoleUnsafe(Console, CONSOLE_RUNNING, TRUE)) return;
+    if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
     rcFramebuffer->left   = Buffer->ViewOrigin.X * 1 + rcView->left;
     rcFramebuffer->top    = Buffer->ViewOrigin.Y * 1 + rcView->top;

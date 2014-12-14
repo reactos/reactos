@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/console.c
+ * FILE:            consrv/console.c
  * PURPOSE:         Console Management Functions
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan
@@ -738,7 +738,7 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
 
     /* Deinit the ConSrv terminal */
     // FIXME!!
-    // ConSrvDeinitTerminal(&Terminal); // &ConSrvConsole->Console->TermIFace
+    // ConSrvDeinitTerminal(&Terminal);
 }
 
 
