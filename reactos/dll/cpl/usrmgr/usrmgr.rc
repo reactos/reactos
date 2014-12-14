@@ -21,6 +21,12 @@ IDI_GROUP ICON "resources/group.ico"
 
 #include <reactos/manifest_dll.rc>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -33,12 +39,8 @@ IDI_GROUP ICON "resources/group.ico"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
-
-/* UTF-8 */
-#pragma code_page(65001)
-
-#ifdef LANGUAGE_CS_CZ
-    #include "lang/cs-CZ.rc"
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"

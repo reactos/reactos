@@ -45,13 +45,13 @@ BEGIN
     LTEXT "", IDC_USER_GENERAL_NAME, 7, 12, 112, 8
     LTEXT "Nombre completo:", -1, 7, 46, 63, 8
     EDITTEXT IDC_USER_GENERAL_FULL_NAME, 77, 43, 168, 13, ES_AUTOHSCROLL
-    LTEXT "DescripciÛn:", -1, 7, 64, 63, 8
+    LTEXT "Descripci√≥n:", -1, 7, 64, 63, 8
     EDITTEXT IDC_USER_GENERAL_DESCRIPTION, 77, 61, 168, 13, ES_AUTOHSCROLL
-    AUTOCHECKBOX "El usuario debe cambiar la contraseÒa en el siguiente inicio de sesiÛn", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 210, 10
-    AUTOCHECKBOX "El usuario no puede cambiar la contraseÒa", IDC_USER_GENERAL_CANNOT_CHANGE, 7, 95, 210, 10
-    AUTOCHECKBOX "La contraseÒa nunca caduca", IDC_USER_GENERAL_NEVER_EXPIRES, 7, 108, 210, 10
+    AUTOCHECKBOX "El usuario debe cambiar la contrase√±a en el siguiente inicio de sesi√≥n", IDC_USER_GENERAL_FORCE_CHANGE, 7, 82, 210, 10
+    AUTOCHECKBOX "El usuario no puede cambiar la contrase√±a", IDC_USER_GENERAL_CANNOT_CHANGE, 7, 95, 210, 10
+    AUTOCHECKBOX "La contrase√±a nunca caduca", IDC_USER_GENERAL_NEVER_EXPIRES, 7, 108, 210, 10
     AUTOCHECKBOX "Cuenta deshabilitada", IDC_USER_GENERAL_DISABLED, 7, 121, 210, 10
-    AUTOCHECKBOX "La cuenta est· bloqueada", IDC_USER_GENERAL_LOCKED, 7, 134, 210, 10
+    AUTOCHECKBOX "La cuenta est√° bloqueada", IDC_USER_GENERAL_LOCKED, 7, 134, 210, 10
 END
 
 IDD_USER_MEMBERSHIP DIALOGEX 0, 0, 252, 223
@@ -74,7 +74,7 @@ BEGIN
     GROUPBOX "Perfil de usuario ", -1, 7, 7, 238, 54
     LTEXT "Ruta de acceso al perfil:", -1, 16, 22, 55, 8
     EDITTEXT IDC_USER_PROFILE_PATH, 78, 19, 160, 13, ES_AUTOHSCROLL
-    LTEXT "Archivo de comandos de inicio de sesiÛn:", -1, 16, 40, 55, 8
+    LTEXT "Archivo de comandos de inicio de sesi√≥n:", -1, 16, 40, 55, 8
     EDITTEXT IDC_USER_PROFILE_SCRIPT, 78, 37, 160, 13, ES_AUTOHSCROLL
     GROUPBOX "Carpeta particular ", -1, 7, 68, 238, 54
     AUTORADIOBUTTON "Ruta de acceso local:", IDC_USER_PROFILE_LOCAL, 16, 83, 60, 10
@@ -92,24 +92,24 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_GROUP_GENERAL_NAME, 7, 12, 112, 8
-    LTEXT "DescripciÛn:", -1, 7, 45, 46, 8
+    LTEXT "Descripci√≥n:", -1, 7, 45, 46, 8
     EDITTEXT IDC_GROUP_GENERAL_DESCRIPTION, 65, 42, 180, 13, ES_AUTOHSCROLL
     LTEXT "Miembros:", -1, 7, 63, 45, 8
     CONTROL "", IDC_GROUP_GENERAL_MEMBERS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 74, 238, 117, WS_EX_CLIENTEDGE
-    PUSHBUTTON "AÒadir...", IDC_GROUP_GENERAL_ADD, 7, 197, 50, 14
+    PUSHBUTTON "A√±adir...", IDC_GROUP_GENERAL_ADD, 7, 197, 50, 14
     PUSHBUTTON "Quitar", IDC_GROUP_GENERAL_REMOVE, 61, 197, 50, 14, WS_DISABLED
 END
 
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 267, 74
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Cambiar contraseÒa"
+CAPTION "Cambiar contrase√±a"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_EDIT_PASSWORD1, 107, 7, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT "Nueva contraseÒa:", -1, 7, 10, 96, 8
+    RTEXT "Nueva contrase√±a:", -1, 7, 10, 96, 8
     EDITTEXT IDC_EDIT_PASSWORD2, 107, 25, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT "Confirmar la contraseÒa:", -1, 7, 28, 96, 8
+    RTEXT "Confirmar la contrase√±a:", -1, 7, 28, 96, 8
     DEFPUSHBUTTON "Aceptar", IDOK, 156, 53, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 210, 53, 50, 14
 END
@@ -124,14 +124,14 @@ BEGIN
     EDITTEXT IDC_USER_NEW_FULL_NAME, 107, 25, 153, 14, ES_AUTOHSCROLL
     RTEXT "Nombre completo:", -1, 7, 28, 96, 8
     EDITTEXT IDC_USER_NEW_DESCRIPTION, 107, 43, 153, 14, ES_AUTOHSCROLL
-    RTEXT "DescripciÛn:", -1, 7, 46, 96, 8
+    RTEXT "Descripci√≥n:", -1, 7, 46, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD1, 107, 67, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT "ContraseÒa:", -1, 7, 70, 96, 8
+    RTEXT "Contrase√±a:", -1, 7, 70, 96, 8
     EDITTEXT IDC_USER_NEW_PASSWORD2, 107, 85, 153, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    RTEXT "Confirmar la contraseÒa:", -1, 7, 88, 96, 8
-    AUTOCHECKBOX "El usuario debe cambiar la contraseÒa en el siguiente inicio de sesiÛn", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
-    AUTOCHECKBOX "El usuario no puede cambiar la contraseÒa", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
-    AUTOCHECKBOX "La contraseÒa nunca caduca", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
+    RTEXT "Confirmar la contrase√±a:", -1, 7, 88, 96, 8
+    AUTOCHECKBOX "El usuario debe cambiar la contrase√±a en el siguiente inicio de sesi√≥n", IDC_USER_NEW_FORCE_CHANGE, 7, 109, 200, 10
+    AUTOCHECKBOX "El usuario no puede cambiar la contrase√±a", IDC_USER_NEW_CANNOT_CHANGE, 7, 123, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "La contrase√±a nunca caduca", IDC_USER_NEW_NEVER_EXPIRES, 7, 137, 200, 10, WS_DISABLED
     AUTOCHECKBOX "Cuenta deshabilitada", IDC_USER_NEW_DISABLED, 7, 151, 200, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 156, 179, 50, 14, WS_DISABLED
     PUSHBUTTON "Cancelar", IDCANCEL, 210, 179, 50, 14
@@ -145,7 +145,7 @@ BEGIN
     EDITTEXT IDC_GROUP_NEW_NAME, 107, 7, 153, 14, ES_AUTOHSCROLL
     RTEXT "Nombre del grupo:", -1, 7, 10, 96, 8
     EDITTEXT IDC_GROUP_NEW_DESCRIPTION, 107, 25, 153, 14, ES_AUTOHSCROLL
-    RTEXT "DescripciÛn:", -1, 7, 28, 96, 8
+    RTEXT "Descripci√≥n:", -1, 7, 28, 96, 8
     DEFPUSHBUTTON "Aceptar", IDOK, 156, 53, 50, 14, WS_DISABLED
     PUSHBUTTON "Cancelar", IDCANCEL, 210, 53, 50, 14
 END
@@ -172,7 +172,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "AÒadir miembro", IDM_GROUP_ADD_MEMBER, GRAYED
+        MENUITEM "A√±adir miembro", IDM_GROUP_ADD_MEMBER, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Borrar", IDM_GROUP_DELETE
         MENUITEM "Renombrar", IDM_GROUP_RENAME
@@ -189,7 +189,7 @@ BEGIN
     END
     POPUP ""
     BEGIN
-        MENUITEM "Cambiar contraseÒa", IDM_USER_CHANGE_PASSWORD
+        MENUITEM "Cambiar contrase√±a", IDM_USER_CHANGE_PASSWORD
         MENUITEM SEPARATOR
         MENUITEM "Borrar", IDM_USER_DELETE
         MENUITEM "Renombrar", IDM_USER_RENAME
@@ -210,5 +210,5 @@ STRINGTABLE
 BEGIN
     IDS_NAME "Nombre"
     IDS_FULLNAME "Nombre completo"
-    IDS_DESCRIPTION "DescripciÛn"
+    IDS_DESCRIPTION "Descripci√≥n"
 END
