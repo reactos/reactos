@@ -225,38 +225,40 @@ calc_t calc;
 
 static void load_config(void)
 {
-    TCHAR buf[32];
     DWORD tmp;
-#if _WIN32_WINNT >= 0x0500
     HKEY hKey;
-#endif
+    
+    /* If no settings are found in the registry, then use the default options */
+    calc.layout = CALC_LAYOUT_STANDARD;
+    calc.usesep = FALSE;
 
-    /* Try to load last selected layout */
-    GetProfileString(TEXT("SciCalc"), TEXT("layout"), TEXT("0"), buf, SIZEOF(buf));
-    if (_stscanf(buf, TEXT("%lu"), &calc.layout) != 1)
-        calc.layout = CALC_LAYOUT_STANDARD;
+    /* Get the configuration based on what version of Windows that's being used */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) 
+    {
+        /* Try to load last selected layout */
+        tmp = sizeof(calc.layout);
+        if (RegQueryValueEx(hKey, TEXT("layout"), NULL, NULL, (LPBYTE)&calc.layout, &tmp) != ERROR_SUCCESS)
+            calc.layout = CALC_LAYOUT_STANDARD;
 
-    /* Try to load last selected formatting option */
-    GetProfileString(TEXT("SciCalc"), TEXT("UseSep"), TEXT("0"), buf, SIZEOF(buf));
-    if (_stscanf(buf, TEXT("%lu"), &tmp) != 1)
-        calc.usesep = FALSE;
-    else
-        calc.usesep = (tmp == 1) ? TRUE : FALSE;
+        /* Try to load last selected formatting option */
+        tmp = sizeof(calc.usesep);
+        if (RegQueryValueEx(hKey, TEXT("UseSep"), NULL, NULL, (LPBYTE)&calc.usesep, &tmp) != ERROR_SUCCESS)
+            calc.usesep = FALSE;
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
 
     /* memory is empty at startup */
     calc.is_memory = FALSE;
 
-#if _WIN32_WINNT >= 0x0500
     /* empty these values */
     calc.sDecimal[0] = TEXT('\0');
     calc.sThousand[0] = TEXT('\0');
 
     /* try to open the registry */
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     TEXT("Control Panel\\International"),
-                     0,
-                     KEY_QUERY_VALUE,
-                     &hKey) == ERROR_SUCCESS) {
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\International"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
         /* get these values (ignore errors) */
         tmp = sizeof(calc.sDecimal);
         RegQueryValueEx(hKey, TEXT("sDecimal"), NULL, NULL, (LPBYTE)calc.sDecimal, &tmp);
@@ -277,20 +279,24 @@ static void load_config(void)
     /* get the string lengths */
     calc.sDecimal_len = _tcslen(calc.sDecimal);
     calc.sThousand_len = _tcslen(calc.sThousand);
-#else
-    /* acquire regional settings */
-    calc.sDecimal_len  = GetProfileString(TEXT("intl"), TEXT("sDecimal"), TEXT("."), calc.sDecimal, SIZEOF(calc.sDecimal));
-    calc.sThousand_len = GetProfileString(TEXT("intl"), TEXT("sThousand"), TEXT(","), calc.sThousand, SIZEOF(calc.sThousand));
-#endif
 }
 
 static void save_config(void)
 {
-    TCHAR buf[32];
+    HKEY hKey;
+    DWORD sepValue;
 
-    _stprintf(buf, TEXT("%lu"), calc.layout);
-    WriteProfileString(TEXT("SciCalc"), TEXT("layout"), buf);
-    WriteProfileString(TEXT("SciCalc"), TEXT("UseSep"), (calc.usesep==TRUE) ? TEXT("1") : TEXT("0"));
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS )
+    {
+        return;
+    }
+    
+    sepValue = (calc.usesep) ? 1 : 0;
+
+    RegSetValueEx(hKey, TEXT("layout"), 0, REG_DWORD, (const BYTE*)&calc.layout, sizeof(calc.layout));
+    RegSetValueEx(hKey, TEXT("UseSep"), 0, REG_DWORD, (const BYTE*)&sepValue, sizeof(sepValue));
+
+    RegCloseKey(hKey);
 }
 
 static LRESULT post_key_press(LPARAM lParam, WORD idc)
@@ -657,7 +663,33 @@ static void update_menu(HWND hwnd)
     HMENU        hMenu = GetSubMenu(GetMenu(hwnd), 1);
     unsigned int x;
 
-    for (x=0; x<SIZEOF(upd); x++) {
+    /* Sets the state of the layout in the menu based on the configuration file */
+    if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
+    {
+        CheckMenuRadioItem(GetMenu(hwnd),
+                           IDM_VIEW_STANDARD,
+                           IDM_VIEW_CONVERSION,
+                           IDM_VIEW_SCIENTIFIC,
+                           MF_BYCOMMAND);
+    }
+    else if (calc.layout == CALC_LAYOUT_CONVERSION)
+    {
+        CheckMenuRadioItem(GetMenu(hwnd),
+                           IDM_VIEW_STANDARD,
+                           IDM_VIEW_CONVERSION,
+                           IDM_VIEW_CONVERSION,
+                           MF_BYCOMMAND);
+    }
+    else
+    {
+        CheckMenuRadioItem(GetMenu(hwnd),
+                           IDM_VIEW_STANDARD,
+                           IDM_VIEW_CONVERSION,
+                           IDM_VIEW_STANDARD,
+                           MF_BYCOMMAND);
+    }
+
+    for (x=3; x<SIZEOF(upd); x++) {
         if (*(upd[x].sel) != upd[x].idc) {
             CheckMenuItem(hMenu, upd[x].idm, MF_BYCOMMAND|MF_UNCHECKED);
             SendMessage((HWND)GetDlgItem(hwnd,upd[x].idc),BM_SETCHECK,FALSE,0L);
@@ -1225,6 +1257,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     unsigned int x;
     RECT         rc;
+    HMENU        hMenu;
 
     switch (msg) {
     case WM_DRAWITEM:
@@ -1258,6 +1291,11 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         /* set our calc icon */
         SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_BIG)));
         SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_SMALL)));
+
+        /* Sets the state of the option to group digits */
+        hMenu = GetSubMenu(GetMenu(hWnd), 1);
+        CheckMenuItem(hMenu, IDM_VIEW_GROUP, (calc.usesep ? MF_CHECKED : MF_UNCHECKED));
+
         /* update text for decimal button */
         SendDlgItemMessage(hWnd, IDC_BUTTON_DOT, WM_SETTEXT, (WPARAM)0, (LPARAM)calc.sDecimal);
         /* Fill combo box for conversion */
@@ -1312,18 +1350,36 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             calc.action = IDM_VIEW_STANDARD;
             DestroyWindow(hWnd);
             save_config();
+
+            CheckMenuRadioItem(GetMenu(hWnd),
+                               IDM_VIEW_STANDARD,
+                               IDM_VIEW_CONVERSION,
+                               IDM_VIEW_STANDARD,
+                               MF_BYCOMMAND);
             return TRUE;
         case IDM_VIEW_SCIENTIFIC:
             calc.layout = CALC_LAYOUT_SCIENTIFIC;
             calc.action = IDM_VIEW_SCIENTIFIC;
             DestroyWindow(hWnd);
             save_config();
+
+            CheckMenuRadioItem(GetMenu(hWnd),
+                               IDM_VIEW_STANDARD,
+                               IDM_VIEW_CONVERSION,
+                               IDM_VIEW_SCIENTIFIC,
+                               MF_BYCOMMAND);
             return TRUE;
         case IDM_VIEW_CONVERSION:
             calc.layout = CALC_LAYOUT_CONVERSION;
             calc.action = IDM_VIEW_CONVERSION;
             DestroyWindow(hWnd);
             save_config();
+
+            CheckMenuRadioItem(GetMenu(hWnd),
+                               IDM_VIEW_STANDARD,
+                               IDM_VIEW_CONVERSION,
+                               IDM_VIEW_CONVERSION,
+                               MF_BYCOMMAND);
             return TRUE;
         case IDM_VIEW_HEX:
         case IDM_VIEW_DEC:
@@ -1715,8 +1771,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
         /* ignore hwnd: dialogs are already visible! */
         if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
             dwLayout = IDD_DIALOG_SCIENTIFIC;
-        else
-        if (calc.layout == CALC_LAYOUT_CONVERSION)
+        else if (calc.layout == CALC_LAYOUT_CONVERSION)
             dwLayout = IDD_DIALOG_CONVERSION;
         else
             dwLayout = IDD_DIALOG_STANDARD;
