@@ -139,7 +139,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 {
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
-    
+
     TCHAR progtitle[1000];
     TCHAR resstr[100];
     HMENU menu;
@@ -150,7 +150,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     int i;
     TCHAR tooltips[16][30];
     HDC hDC;
-    
+
     TCHAR *c;
     TCHAR sfnFilename[1000];
     TCHAR sfnFiletitle[256];
@@ -202,7 +202,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
     _stprintf(progtitle, resstr, filename);
     LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, SIZEOF(miniaturetitle));
-    
+
     /* create main window */
     hwnd =
         CreateWindowEx(0, _T("MainWindow"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544,
@@ -240,8 +240,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* creating the 16 bitmap radio buttons and setting the bitmap */
 
 
-    /* 
-     * FIXME: Unintentionally there is a line above the tool bar (hidden by y-offset). 
+    /*
+     * FIXME: Unintentionally there is a line above the tool bar (hidden by y-offset).
      * To prevent cropping of the buttons height has been increased from 200 to 205
      */
     hToolbar =
@@ -254,7 +254,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     ImageList_AddMasked(hImageList, tempBm, 0xff00ff);
     DeleteObject(tempBm);
     SendMessage(hToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-    
+
     for(i = 0; i < 16; i++)
     {
         TBBUTTON tbbutton;
@@ -272,7 +272,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         tbbutton.iBitmap   = i;
         SendMessage(hToolbar, TB_ADDBUTTONS, 1, (LPARAM) &tbbutton);
     }
-    
+
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_PEN, MAKELONG(TRUE, 0));
     SendMessage(hToolbar, TB_SETMAXTEXTROWS, 0, 0);
     SendMessage(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(25, 25));

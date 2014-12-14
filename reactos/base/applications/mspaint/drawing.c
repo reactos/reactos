@@ -128,7 +128,7 @@ Replace(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF fg, COLORREF bg, L
 {
     LONG a, b, x, y;
     b = max(1, max(abs(x2 - x1), abs(y2 - y1)));
-    
+
     for(a = 0; a <= b; a++)
         for(y = (y1 * (b - a) + y2 * a) / b - radius + 1;
             y < (y1 * (b - a) + y2 * a) / b + radius + 1; y++)
@@ -142,7 +142,7 @@ void
 Airbrush(HDC hdc, LONG x, LONG y, COLORREF color, LONG r)
 {
     LONG a, b;
-    
+
     for(b = -r; b <= r; b++)
         for(a = -r; a <= r; a++)
             if ((a * a + b * b <= r * r) && (rand() % 4 == 0))
@@ -195,7 +195,7 @@ Brush(HDC hdc, LONG x1, LONG y1, LONG x2, LONG y2, COLORREF color, LONG style)
         case 10:
         case 11:
         {
-            POINT offsTop[] = {{4, -3}, {2, -2}, {0, 0}, 
+            POINT offsTop[] = {{4, -3}, {2, -2}, {0, 0},
                                {-3, -3}, {-2, -2}, {-1, 0}};
             POINT offsBtm[] = {{-3, 4}, {-2, 2}, {-1, 1},
                                {4, 4}, {2, 2}, {0, 1}};
