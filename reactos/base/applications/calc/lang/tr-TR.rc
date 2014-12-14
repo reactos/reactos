@@ -332,8 +332,8 @@ BEGIN
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
@@ -364,8 +364,8 @@ BEGIN
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
@@ -397,8 +397,8 @@ BEGIN
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "&Ölçünlü", IDM_VIEW_STANDARD
+        MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED

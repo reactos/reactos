@@ -330,8 +330,8 @@ BEGIN
     END
     POPUP "Vis"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vitenskapelig", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Vitenskapelig", IDM_VIEW_SCIENTIFIC
         MENUITEM "Konvertering", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Heksadesimalt\tF5", IDM_VIEW_HEX, CHECKED
@@ -362,8 +362,8 @@ BEGIN
     END
     POPUP "Vis"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vitenskapelig", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Vitenskapelig", IDM_VIEW_SCIENTIFIC
         MENUITEM "konvertering", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Heksadesimalt\tF5", IDM_VIEW_HEX, CHECKED
@@ -395,8 +395,8 @@ BEGIN
     END
     POPUP "Vis"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Vitenskapelig", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Vitenskapelig", IDM_VIEW_SCIENTIFIC
         MENUITEM "Konvertering", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Siffergruppering", IDM_VIEW_GROUP, CHECKED

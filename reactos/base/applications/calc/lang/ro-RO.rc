@@ -331,8 +331,8 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
+        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
         MENUITEM "Con&versie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexazecimal\tF5", IDM_VIEW_HEX, CHECKED
@@ -363,8 +363,8 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
+        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
         MENUITEM "Con&versie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "&Hexazecimal\tF5", IDM_VIEW_HEX, CHECKED
@@ -396,8 +396,8 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Mod st&andard", IDM_VIEW_STANDARD
+        MENUITEM "Mod știi&nțific", IDM_VIEW_SCIENTIFIC
         MENUITEM "Con&versie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifre", IDM_VIEW_GROUP, CHECKED

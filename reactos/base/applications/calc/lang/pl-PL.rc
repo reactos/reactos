@@ -339,8 +339,8 @@ BEGIN
     END
     POPUP "Wygląd"
     BEGIN
-        MENUITEM "Standardowy", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Naukowy", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standardowy", IDM_VIEW_STANDARD
+        MENUITEM "Naukowy", IDM_VIEW_SCIENTIFIC
         MENUITEM "Przeliczanie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Szesnastkowy\tF5", IDM_VIEW_HEX, CHECKED
@@ -371,8 +371,8 @@ BEGIN
     END
     POPUP "Wygląd"
     BEGIN
-        MENUITEM "Standardowy", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Naukowy", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standardowy", IDM_VIEW_STANDARD
+        MENUITEM "Naukowy", IDM_VIEW_SCIENTIFIC
         MENUITEM "Przeliczanie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Szesnastkowo\tF5", IDM_VIEW_HEX, CHECKED
@@ -404,8 +404,8 @@ BEGIN
     END
     POPUP "Wygląd"
     BEGIN
-        MENUITEM "Standardowy", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Naukowy", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standardowy", IDM_VIEW_STANDARD
+        MENUITEM "Naukowy", IDM_VIEW_SCIENTIFIC
         MENUITEM "Przeliczanie", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Grupowanie cyfr", IDM_VIEW_GROUP, CHECKED

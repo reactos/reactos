@@ -338,8 +338,8 @@ BEGIN
     END
     POPUP "Вигляд"
     BEGIN
-        MENUITEM "Звичайний", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Науковий", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Звичайний", IDM_VIEW_STANDARD
+        MENUITEM "Науковий", IDM_VIEW_SCIENTIFIC
         MENUITEM "Перетворення", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Шістнадцятковий\tF5", IDM_VIEW_HEX, CHECKED
@@ -370,8 +370,8 @@ BEGIN
     END
     POPUP "Вигляд"
     BEGIN
-        MENUITEM "Звичайний", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Науковий", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Звичайний", IDM_VIEW_STANDARD
+        MENUITEM "Науковий", IDM_VIEW_SCIENTIFIC
         MENUITEM "Перетворення", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Шістнадцятковий\tF5", IDM_VIEW_HEX, CHECKED
@@ -403,8 +403,8 @@ BEGIN
     END
     POPUP "Вигляд"
     BEGIN
-        MENUITEM "Звичайний", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Науковий", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Звичайний", IDM_VIEW_STANDARD
+        MENUITEM "Науковий", IDM_VIEW_SCIENTIFIC
         MENUITEM "Перетворення", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Кількість цифр у групі", IDM_VIEW_GROUP, CHECKED
