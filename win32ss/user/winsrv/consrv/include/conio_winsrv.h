@@ -117,8 +117,8 @@ struct _FRONTEND
     NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);
 
     struct _CONSRV_CONSOLE* Console;   /* Console to which the frontend is attached to */
-    PVOID Data;                 /* Private data  */
-    PVOID OldData;              /* Reserved      */
+    PVOID Context;              /* Private context */
+    PVOID Context2;             /* Private context */
 };
 
 /* PauseFlags values (internal only) */

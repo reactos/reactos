@@ -230,7 +230,7 @@ ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
     /* Initialize the ConSrv terminal */
     Terminal->Vtbl = &ConSrvTermVtbl;
     // Terminal->Console will be initialized by ConDrvRegisterTerminal
-    Terminal->Data = FrontEnd; /* We store the frontend pointer in the terminal private data */
+    Terminal->Context = FrontEnd; /* We store the frontend pointer in the terminal private context */
 
     return STATUS_SUCCESS;
 }
@@ -239,10 +239,10 @@ NTSTATUS NTAPI
 ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PFRONTEND FrontEnd = Terminal->Data;
+    PFRONTEND FrontEnd = Terminal->Context;
 
     /* Reset the ConSrv terminal */
-    Terminal->Data = NULL;
+    Terminal->Context = NULL;
     Terminal->Vtbl = NULL;
 
     /* Unload the frontend */
@@ -263,7 +263,7 @@ ConSrvTermInitTerminal(IN OUT PTERMINAL This,
                        IN PCONSOLE Console)
 {
     NTSTATUS Status;
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
 
     /* Initialize the console pointer for our frontend */
     FrontEnd->Console = Console;
@@ -286,7 +286,7 @@ ConSrvTermInitTerminal(IN OUT PTERMINAL This,
 static VOID NTAPI
 ConSrvTermDeinitTerminal(IN OUT PTERMINAL This)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     FrontEnd->Vtbl->DeinitFrontEnd(FrontEnd);
 }
 
@@ -304,7 +304,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
                      IN ULONG NumCharsToRead,
                      OUT PULONG NumCharsRead OPTIONAL)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     PCONSRV_CONSOLE Console = FrontEnd->Console;
     PCONSOLE_INPUT_BUFFER InputBuffer = &Console->InputBuffer;
     PUNICODE_STRING ExeName = Parameter;
@@ -637,7 +637,7 @@ ConSrvTermWriteStream(IN OUT PTERMINAL This,
                       DWORD Length,
                       BOOL Attrib)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     return ConioWriteConsole(FrontEnd,
                              Buff,
                              Buffer,
@@ -668,7 +668,7 @@ static VOID NTAPI
 ConSrvTermDrawRegion(IN OUT PTERMINAL This,
                 SMALL_RECT* Region)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     FrontEnd->Vtbl->DrawRegion(FrontEnd, Region);
 }
 
@@ -676,7 +676,7 @@ static BOOL NTAPI
 ConSrvTermSetCursorInfo(IN OUT PTERMINAL This,
                    PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     return FrontEnd->Vtbl->SetCursorInfo(FrontEnd, ScreenBuffer);
 }
 
@@ -686,7 +686,7 @@ ConSrvTermSetScreenInfo(IN OUT PTERMINAL This,
                    SHORT OldCursorX,
                    SHORT OldCursorY)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     return FrontEnd->Vtbl->SetScreenInfo(FrontEnd,
                                          ScreenBuffer,
                                          OldCursorX,
@@ -696,14 +696,14 @@ ConSrvTermSetScreenInfo(IN OUT PTERMINAL This,
 static VOID NTAPI
 ConSrvTermResizeTerminal(IN OUT PTERMINAL This)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     FrontEnd->Vtbl->ResizeTerminal(FrontEnd);
 }
 
 static VOID NTAPI
 ConSrvTermSetActiveScreenBuffer(IN OUT PTERMINAL This)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     FrontEnd->Vtbl->SetActiveScreenBuffer(FrontEnd);
 }
 
@@ -711,7 +711,7 @@ static VOID NTAPI
 ConSrvTermReleaseScreenBuffer(IN OUT PTERMINAL This,
                          IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     FrontEnd->Vtbl->ReleaseScreenBuffer(FrontEnd, ScreenBuffer);
 }
 
@@ -719,7 +719,7 @@ static VOID NTAPI
 ConSrvTermGetLargestConsoleWindowSize(IN OUT PTERMINAL This,
                                  PCOORD pSize)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     FrontEnd->Vtbl->GetLargestConsoleWindowSize(FrontEnd, pSize);
 }
 
@@ -728,7 +728,7 @@ ConSrvTermSetPalette(IN OUT PTERMINAL This,
                 HPALETTE PaletteHandle,
                 UINT PaletteUsage)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     return FrontEnd->Vtbl->SetPalette(FrontEnd, PaletteHandle, PaletteUsage);
 }
 
@@ -736,7 +736,7 @@ static INT NTAPI
 ConSrvTermShowMouseCursor(IN OUT PTERMINAL This,
                      BOOL Show)
 {
-    PFRONTEND FrontEnd = This->Data;
+    PFRONTEND FrontEnd = This->Context;
     return FrontEnd->Vtbl->ShowMouseCursor(FrontEnd, Show);
 }
 

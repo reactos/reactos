@@ -273,7 +273,7 @@ struct _TERMINAL
 {
     PTERMINAL_VTBL Vtbl;        /* Virtual table */
     struct _CONSOLE* Console;   /* Console to which the terminal is attached to */
-    PVOID Data;                 /* Private data  */
+    PVOID Context;              /* Private context */
 };
 
 /*

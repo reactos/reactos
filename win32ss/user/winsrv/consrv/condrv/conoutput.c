@@ -64,8 +64,6 @@ CONSOLE_SCREEN_BUFFER_Destroy(IN OUT PCONSOLE_SCREEN_BUFFER Buffer)
     }
     else if (Buffer->Header.Type == SCREEN_BUFFER)
     {
-        // TODO: Free Buffer->Data
-
         /* Free the palette handle */
         if (Buffer->PaletteHandle != NULL) DeleteObject(Buffer->PaletteHandle);
 
