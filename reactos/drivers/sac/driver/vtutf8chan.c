@@ -1088,7 +1088,7 @@ VTUTF8ChannelOEcho(IN PSAC_CHANNEL Channel,
     /* Return success if there's nothing to echo */
     if (!(Size / sizeof(WCHAR))) return Status;
 
-    /* Start with the input string*/
+    /* Start with the input string */
     pwch = (PWCHAR)String;
 
     /* First, figure out how much is outside of the block length alignment */
