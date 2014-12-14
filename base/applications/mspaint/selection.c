@@ -25,8 +25,8 @@
 /* FUNCTIONS ********************************************************/
 
 LPCTSTR cursors[9] = { /* action to mouse cursor lookup table */
-    IDC_SIZEALL, 
-    
+    IDC_SIZEALL,
+
     IDC_SIZENWSE, IDC_SIZENS, IDC_SIZENESW,
     IDC_SIZEWE,               IDC_SIZEWE,
     IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE
@@ -66,7 +66,7 @@ ColorKeyedMaskBlt(HDC hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, 
     HBITMAP hTempBm;
     HBRUSH hTempBrush;
     HBITMAP hTempMask;
-    
+
     hTempDC = CreateCompatibleDC(hdcSrc);
     hTempDC2 = CreateCompatibleDC(hdcSrc);
     hTempBm = CreateCompatibleBitmap(hTempDC, nWidth, nHeight);
@@ -280,7 +280,7 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     if (activeTool == TOOL_TEXT)
                     {
-                        
+                        // FIXME: What to do?
                     }
                     else
                     {

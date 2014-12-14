@@ -1556,6 +1556,7 @@ PrintPartitionData(
                     MUIGetString(STRING_HDDINFOUNK5),
                     (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                     (PartEntry->DriveLetter == 0) ? '-' : ':',
+                    PartEntry->BootIndicator ? '*' : ' ',
                     PartEntry->LogicalPartition ? "  " : "",
                     PartEntry->PartitionType,
                     PartEntry->LogicalPartition ? "" : "  ",
@@ -1565,9 +1566,10 @@ PrintPartitionData(
         else
         {
             sprintf(LineBuffer,
-                    "%c%c  %s%-24s%s      %6lu %s",
+                    "%c%c %c %s%-24s%s     %6lu %s",
                     (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                     (PartEntry->DriveLetter == 0) ? '-' : ':',
+                    PartEntry->BootIndicator ? '*' : ' ',
                     PartEntry->LogicalPartition ? "  " : "",
                     PartType,
                     PartEntry->LogicalPartition ? "" : "  ",
@@ -2383,7 +2385,7 @@ DPRINT1("Convert existing partition entry\n");
         PartEntry->FormatState = Unformatted;
         PartEntry->AutoCreate = AutoCreate;
         PartEntry->New = TRUE;
-        PartEntry->BootIndicator = FALSE; /* FIXME */
+        PartEntry->BootIndicator = FALSE;
 
 DPRINT1("First Sector: %I64u\n", PartEntry->StartSector.QuadPart);
 DPRINT1("Last Sector: %I64u\n", PartEntry->StartSector.QuadPart + PartEntry->SectorCount.QuadPart - 1);
@@ -2418,7 +2420,7 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
         NewPartEntry->New = TRUE;
         NewPartEntry->FormatState = Unformatted;
-        NewPartEntry->BootIndicator = FALSE; /* FIXME */
+        NewPartEntry->BootIndicator = FALSE;
 
         PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
         PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
@@ -2500,7 +2502,7 @@ DPRINT1("Convert existing partition entry\n");
         PartEntry->FormatState = Formatted;
         PartEntry->AutoCreate = FALSE;
         PartEntry->New = FALSE;
-        PartEntry->BootIndicator = FALSE; /* FIXME */
+        PartEntry->BootIndicator = FALSE;
 
         if (PartEntry->StartSector.QuadPart < 1450560)
         {
@@ -2543,7 +2545,7 @@ DPRINT1("Add new partition entry\n");
 
         NewPartEntry->New = FALSE;
         NewPartEntry->FormatState = Formatted;
-        NewPartEntry->BootIndicator = FALSE; /* FIXME */
+        NewPartEntry->BootIndicator = FALSE;
 
         if (NewPartEntry->StartSector.QuadPart < 1450560)
         {

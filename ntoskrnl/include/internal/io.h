@@ -1210,6 +1210,14 @@ IoChangeFileObjectFilterContext(
     IN BOOLEAN Define
 );
 
+VOID
+NTAPI
+IopDoNameTransmogrify(
+    IN PIRP Irp,
+    IN PFILE_OBJECT FileObject,
+    IN PREPARSE_DATA_BUFFER DataBuffer
+);
+
 //
 // I/O Timer Routines
 //

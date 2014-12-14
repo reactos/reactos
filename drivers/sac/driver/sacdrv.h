@@ -1397,8 +1397,8 @@ typedef enum _VT_ANSI_ATTRIBUTES
     AlteronateFont5,
     AlteronateFont6,
     AlternateFont7,
-    AlternatEfont8,
-    Alternatefont9,
+    AlternateFont8,
+    AlternateFont9,
 
     //
     // Additional attributes (not supported)

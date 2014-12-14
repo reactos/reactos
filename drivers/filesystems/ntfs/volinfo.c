@@ -70,7 +70,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     }
 
     BitmapDataSize = AttributeDataLength(&DataContext->Record);
-    ASSERT((BitmapDataSize * 8) >= (DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster));
+    ASSERT((BitmapDataSize * 8) >= DeviceExt->NtfsInfo.ClusterCount);
     BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, DeviceExt->NtfsInfo.BytesPerSector), TAG_NTFS);
     if (BitmapData == NULL)
     {
@@ -86,11 +86,11 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
     }
     ReleaseAttributeContext(DataContext);
 
-    DPRINT1("Total clusters: %I64x\n", DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster);
+    DPRINT1("Total clusters: %I64x\n", DeviceExt->NtfsInfo.ClusterCount);
     DPRINT1("Total clusters in bitmap: %I64x\n", BitmapDataSize * 8);
-    DPRINT1("Diff in size: %I64d B\n", ((BitmapDataSize * 8) - (DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster)) * DeviceExt->NtfsInfo.SectorsPerCluster * DeviceExt->NtfsInfo.BytesPerSector);
+    DPRINT1("Diff in size: %I64d B\n", ((BitmapDataSize * 8) - DeviceExt->NtfsInfo.ClusterCount) * DeviceExt->NtfsInfo.SectorsPerCluster * DeviceExt->NtfsInfo.BytesPerSector);
 
-    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster);
+    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.ClusterCount);
     FreeClusters = RtlNumberOfClearBits(&Bitmap);
 
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
@@ -198,7 +198,7 @@ NtfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
     DeviceExt = DeviceObject->DeviceExtension;
 
     FsSizeInfo->AvailableAllocationUnits.QuadPart = NtfsGetFreeClusters(DeviceExt);
-    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster;
+    FsSizeInfo->TotalAllocationUnits.QuadPart = DeviceExt->NtfsInfo.ClusterCount;
     FsSizeInfo->SectorsPerAllocationUnit = DeviceExt->NtfsInfo.SectorsPerCluster;
     FsSizeInfo->BytesPerSector = DeviceExt->NtfsInfo.BytesPerSector;
 

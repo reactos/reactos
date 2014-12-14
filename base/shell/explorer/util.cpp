@@ -30,50 +30,6 @@ IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2)
     return (punk1 == punk2) ? S_OK : S_FALSE;
 }
 
-LONG
-SetWindowStyle(IN HWND hWnd,
-               IN LONG dwStyleMask,
-               IN LONG dwStyle)
-{
-    LONG PrevStyle, Style;
-
-    ASSERT((~dwStyleMask & dwStyle) == 0);
-
-    PrevStyle = GetWindowLong(hWnd, GWL_STYLE);
-    if (PrevStyle != 0 &&
-        (PrevStyle & dwStyleMask) != dwStyle)
-    {
-        Style = PrevStyle & ~dwStyleMask;
-        Style |= dwStyle;
-
-        PrevStyle = SetWindowLong(hWnd, GWL_STYLE, Style);
-    }
-
-    return PrevStyle;
-}
-
-LONG
-SetWindowExStyle(IN HWND hWnd,
-                 IN LONG dwStyleMask,
-                 IN LONG dwStyle)
-{
-    LONG PrevStyle, Style;
-
-    ASSERT((~dwStyleMask & dwStyle) == 0);
-
-    PrevStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-    if (PrevStyle != 0 &&
-        (PrevStyle & dwStyleMask) != dwStyle)
-    {
-        Style = PrevStyle & ~dwStyleMask;
-        Style |= dwStyle;
-
-        PrevStyle = SetWindowLong(hWnd, GWL_EXSTYLE, Style);
-    }
-
-    return PrevStyle;
-}
-
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,
               IN LPCTSTR lpMenuName)

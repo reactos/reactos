@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Paralajmerim i Task Manager"
     IDS_MSG_WARNINGTERMINATING "KUJDES: Nderprerja e nje procesi mund te japi rezultat te pa \ndeshiruar perfshirje ne humbjen e informacioneve the paqendrueshmeri te sistemit.\nProcesi nuk ju jep shansin per te ruajtur gjendjen apo\ninformacionet perpara se te nderprehet. Jeni i sigurt qe doni te\nnderpreni procesin?"
     IDS_MSG_UNABLETERMINATEPRO "E pamundur nderprerja e procesit"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "E pamundur ndryshimi i prioritetit"
     IDS_MSG_WARNINGCHANGEPRIORITY "KUJDES: Ndryshimi i klases se prioritetit te ketij procesi mund te \nsjell rrezultate te padeshirushme ne stabilitetin e sistemit. Jeni i sigurt\nper ndryshimin e klases se prioriteteve?"
     IDS_MSG_TRAYICONCPUUSAGE "Perdorimi i CPU: %d%%"

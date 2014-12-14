@@ -434,6 +434,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Avertissement du Gestionnaire des tâches"
     IDS_MSG_WARNINGTERMINATING "ATTENTION : Terminer un processus peut causer des effets indésirables\nincluant une perte de donnée ou une instabilité du système.\nLe processus n'aura pas la chance de sauvegarder son état\nou les données avant de terminer.\nÊtes-vous sûr de vouloir terminer le processus ?"
     IDS_MSG_UNABLETERMINATEPRO "Impossible de terminer le processus"
+    IDS_MSG_CLOSESYSTEMPROCESS "C'est un processus critique du système. Le gestionnaire de tâche ne le terminera pas."
     IDS_MSG_UNABLECHANGEPRIORITY "Impossible de changer la priorité"
     IDS_MSG_WARNINGCHANGEPRIORITY "ATTENTION : Changer la priorité du processus peut causer des\neffets indésirables comme l'instabilité du système.\nÊtes-vous sûr de vouloir changer la priorité ?"
     IDS_MSG_TRAYICONCPUUSAGE "UC utilisée : %d%%"

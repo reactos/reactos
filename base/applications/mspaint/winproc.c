@@ -440,7 +440,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
 
-            // mouse events used for drawing   
+            // mouse events used for drawing
 
         case WM_SETCURSOR:
             if (hwnd == hImageArea)

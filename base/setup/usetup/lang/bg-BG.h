@@ -1724,7 +1724,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "на твърд диск %lu (%I64u %s), Извод=%hu, Шина=%hu, ОУ=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sвид %-3u%s                       %6lu %s"},
+    "%c%c %c %sвид %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  твърд диск %lu  (Извод=%hu, Шина=%hu, ОУ=%hu) на %S"},
     {STRING_HDDINFOUNK6,

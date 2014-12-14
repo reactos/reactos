@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Oppgavebehandler advarsel"
     IDS_MSG_WARNINGTERMINATING "ADVARSEL: Avsluttes en prosess kan forutsake uønsket\nresultat inkluderer miste av data og systemet kan bli ustabilt. \nprosessen vil ikke kunne gjenopprette sin tilstand eller \ndata slik de var før avslutting. Er du sikker på at du vil\navslutte prosessen?"
     IDS_MSG_UNABLETERMINATEPRO "Ikke i stand til å avslutte prosess"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Ikke i stand til endre prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "ADVARSEL: Endring av prioritet klasse av denne prosess kan\nforutsake uønsket resultat inkluderer systemet kan bli ustabilt. Er du\nsikker på at du vil endre prioritet klassen?"
     IDS_MSG_TRAYICONCPUUSAGE "Prosessorbruk: %d%%"

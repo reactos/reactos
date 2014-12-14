@@ -330,8 +330,8 @@ BEGIN
     END
     POPUP "Affichage"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientifique", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Scientifique", IDM_VIEW_SCIENTIFIC
         MENUITEM "Conversion", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hexadécimal\tF5", IDM_VIEW_HEX, CHECKED
@@ -362,8 +362,8 @@ BEGIN
     END
     POPUP "Affichage"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientifique", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Scientifique", IDM_VIEW_SCIENTIFIC
         MENUITEM "Conversion", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Hexadécimal\tF5", IDM_VIEW_HEX, CHECKED
@@ -395,8 +395,8 @@ BEGIN
     END
     POPUP "Affichage"
     BEGIN
-        MENUITEM "Standard", IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Scientifique", IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Standard", IDM_VIEW_STANDARD
+        MENUITEM "Scientifique", IDM_VIEW_SCIENTIFIC
         MENUITEM "Conversion", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "Grouper les chiffres", IDM_VIEW_GROUP, CHECKED

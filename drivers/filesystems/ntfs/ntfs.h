@@ -2,6 +2,7 @@
 #define NTFS_H
 
 #include <ntifs.h>
+#include <pseh/pseh2.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
@@ -61,6 +62,7 @@ typedef struct _NTFS_INFO
     ULONG SectorsPerCluster;
     ULONG BytesPerCluster;
     ULONGLONG SectorCount;
+    ULONGLONG ClusterCount;
     ULARGE_INTEGER MftStart;
     ULARGE_INTEGER MftMirrStart;
     ULONG BytesPerFileRecord;
@@ -414,6 +416,7 @@ typedef struct _NTFS_ATTR_CONTEXT
 #define FCB_CACHE_INITIALIZED   0x0001
 #define FCB_IS_VOLUME_STREAM    0x0002
 #define FCB_IS_VOLUME           0x0004
+#define FCB_IS_OPEN_BY_ID       0x0008
 #define MAX_PATH                260
 
 typedef struct _FCB
@@ -464,6 +467,9 @@ DecodeRun(PUCHAR DataRun,
 
 VOID
 NtfsDumpFileAttributes(PFILE_RECORD_HEADER FileRecord);
+
+PSTANDARD_INFORMATION
+GetStandardInformationFromRecord(PFILE_RECORD_HEADER FileRecord);
 
 PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType);
@@ -519,6 +525,14 @@ NtfsFsdCreate(PDEVICE_OBJECT DeviceObject,
               PIRP Irp);
 
 
+/* devctl.c */
+
+DRIVER_DISPATCH NtfsFsdDeviceControl;
+NTSTATUS NTAPI
+NtfsFsdDeviceControl(PDEVICE_OBJECT DeviceObject,
+                     PIRP Irp);
+
+
 /* dirctl.c */
 
 DRIVER_DISPATCH NtfsFsdDirectoryControl;
@@ -565,6 +579,9 @@ BOOLEAN
 NtfsFCBIsDirectory(PNTFS_FCB Fcb);
 
 BOOLEAN
+NtfsFCBIsReparsePoint(PNTFS_FCB Fcb);
+
+BOOLEAN
 NtfsFCBIsRoot(PNTFS_FCB Fcb);
 
 VOID
@@ -582,6 +599,10 @@ NtfsAddFCBToTable(PNTFS_VCB Vcb,
 PNTFS_FCB
 NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
                      PCWSTR FileName);
+
+PNTFS_FCB
+NtfsGrabFCBFromTableById(PNTFS_VCB Vcb,
+                         ULONGLONG Id);
 
 NTSTATUS
 NtfsFCBInitializeCache(PNTFS_VCB Vcb,
@@ -603,6 +624,19 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
                   PNTFS_FCB *pParentFCB,
                   PNTFS_FCB *pFCB,
                   const PWSTR pFileName);
+
+NTSTATUS
+NtfsGetFCBForFileById(PNTFS_VCB Vcb,
+                      PNTFS_FCB *pFCB,
+                      ULONGLONG Id);
+
+NTSTATUS
+NtfsReadFCBAttribute(PNTFS_VCB Vcb,
+                     PNTFS_FCB pFCB,
+                     ULONG Type, 
+                     PCWSTR Name,
+                     ULONG NameLength,
+                     PVOID * Data);
 
 
 /* finfo.c */
@@ -706,6 +740,9 @@ NtfsIsIrpTopLevel(PIRP Irp);
 PNTFS_IRP_CONTEXT
 NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
                        PIRP Irp);
+
+PVOID
+NtfsGetUserBuffer(PIRP Irp);
 
 #if 0
 BOOLEAN

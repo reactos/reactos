@@ -22,10 +22,8 @@
 #include <browseui_undoc.h>
 
 HINSTANCE hExplorerInstance;
-HMODULE hUser32;
 HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
-DRAWCAPTEMP DrawCapTemp = NULL;
 
 class CExplorerModule : public CComModule
 {
@@ -137,14 +135,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
 
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
+
     LoadAdvancedSettings();
-
-    hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
-    if (hUser32 != NULL)
-    {
-        DrawCapTemp = (DRAWCAPTEMP) GetProcAddress(hUser32, PROC_NAME_DRAWCAPTIONTEMP);
-    }
-
     InitCommonControls();
     OleInitialize(NULL);
 

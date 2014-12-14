@@ -26,6 +26,7 @@
 #include <gdiplus.h>
 #include <tchar.h>
 #include <strsafe.h>
+#include <shlwapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -35,6 +36,7 @@
 
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
+SHIMGVW_FILENODE *currentFile;
 GpImage *image;
 WNDPROC PrevProc = NULL;
 
@@ -76,24 +78,13 @@ static void pSaveImageAs(HWND hwnd)
     OPENFILENAMEW sfn;
     ImageCodecInfo *codecInfo;
     WCHAR szSaveFileName[MAX_PATH];
-    WCHAR szFilterMask[2048];
+    WCHAR *szFilterMask;
     GUID rawFormat;
     UINT num;
     UINT size;
     UINT sizeRemain;
     UINT j;
     WCHAR *c;
-
-    ZeroMemory(szSaveFileName, sizeof(szSaveFileName));
-    ZeroMemory(szFilterMask, sizeof(szFilterMask));
-    ZeroMemory(&sfn, sizeof(sfn));
-    sfn.lStructSize = sizeof(sfn);
-    sfn.hwndOwner   = hwnd;
-    sfn.hInstance   = hInstance;
-    sfn.lpstrFile   = szSaveFileName;
-    sfn.lpstrFilter = szFilterMask;
-    sfn.nMaxFile    = MAX_PATH;
-    sfn.Flags       = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
     GdipGetImageEncodersSize(&num, &size);
     codecInfo = malloc(size);
@@ -106,7 +97,36 @@ static void pSaveImageAs(HWND hwnd)
     GdipGetImageEncoders(num, size, codecInfo);
     GdipGetImageRawFormat(image, &rawFormat);
 
-    sizeRemain = sizeof(szFilterMask);
+    sizeRemain = 0;
+
+    for (j = 0; j < num; ++j)
+    {
+        // Every pair needs space for the Description, twice the Extensions, 1 char for the space, 2 for the braces and 2 for the NULL terminators.
+        sizeRemain = sizeRemain + (((wcslen(codecInfo[j].FormatDescription) + (wcslen(codecInfo[j].FilenameExtension) * 2) + 5) * sizeof(WCHAR)));
+    }
+
+    /* Add two more chars for the last terminator */
+    sizeRemain = sizeRemain + (sizeof(WCHAR) * 2);
+
+    szFilterMask = malloc(sizeRemain);
+    if (!szFilterMask)
+    {
+        DPRINT1("cannot allocate memory for filter mask in pSaveImageAs()");
+        free(codecInfo);
+        return;
+    }
+
+    ZeroMemory(szSaveFileName, sizeof(szSaveFileName));
+    ZeroMemory(szFilterMask, sizeRemain);
+    ZeroMemory(&sfn, sizeof(sfn));
+    sfn.lStructSize = sizeof(sfn);
+    sfn.hwndOwner   = hwnd;
+    sfn.hInstance   = hInstance;
+    sfn.lpstrFile   = szSaveFileName;
+    sfn.lpstrFilter = szFilterMask;
+    sfn.nMaxFile    = MAX_PATH;
+    sfn.Flags       = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+
     c = szFilterMask;
 
     for (j = 0; j < num; ++j)
@@ -137,7 +157,175 @@ static void pSaveImageAs(HWND hwnd)
         }
     }
 
+    free(szFilterMask);
     free(codecInfo);
+}
+
+static VOID
+pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
+{
+    WCHAR szTitleBuf[800];
+    WCHAR szResStr[512];
+    WCHAR *c;
+
+    if (node)
+    {
+        c = wcsrchr(node->FileName, '\\');
+        if (c)
+        {
+            c++;
+        }
+        
+        LoadStringW(hInstance, IDS_APPTITLE, szResStr, 512);
+        StringCbPrintfExW(szTitleBuf, 800, NULL, NULL, 0, L"%ls%ls%ls", szResStr, L" - ", c);
+        SetWindowTextW(hwnd, szTitleBuf);
+
+        if (image)
+        {
+            GdipDisposeImage(image);
+        }
+
+        pLoadImage(node->FileName);
+        InvalidateRect(hDispWnd, NULL, TRUE);
+        UpdateWindow(hDispWnd);
+    }
+}
+
+static SHIMGVW_FILENODE*
+pBuildFileList(LPWSTR szFirstFile)
+{
+    HANDLE hFindHandle;
+    WCHAR *extension;
+    WCHAR szSearchPath[MAX_PATH];
+    WCHAR szSearchMask[MAX_PATH];
+    WCHAR szFileTypes[MAX_PATH];
+    WIN32_FIND_DATAW findData;
+    SHIMGVW_FILENODE *currentNode;
+    SHIMGVW_FILENODE *root;
+    SHIMGVW_FILENODE *conductor;
+    ImageCodecInfo *codecInfo;
+    UINT num;
+    UINT size;
+    UINT j;
+
+
+    wcscpy(szSearchPath, szFirstFile);
+    PathRemoveFileSpecW(szSearchPath);
+
+    GdipGetImageDecodersSize(&num, &size);
+    codecInfo = malloc(size);
+    if (!codecInfo)
+    {
+        DPRINT1("malloc() failed in pLoadFileList()\n");
+        return NULL;
+    }
+
+    GdipGetImageDecoders(num, size, codecInfo);
+
+    root = malloc(sizeof(SHIMGVW_FILENODE));
+    if (!root)
+    {
+        DPRINT1("malloc() failed in pLoadFileList()\n");
+        free(codecInfo);
+        return NULL;
+    }
+
+    conductor = root;
+
+    for (j = 0; j < num; ++j)
+    {
+        StringCbPrintfExW(szFileTypes, MAX_PATH, NULL, NULL, 0, L"%ls", codecInfo[j].FilenameExtension);
+        
+        extension = wcstok(szFileTypes, L";");
+        while (extension != NULL)
+        {
+            StringCbPrintfExW(szSearchMask, MAX_PATH, NULL, NULL, 0, L"%ls%ls%ls", szSearchPath, L"\\", extension);
+
+            hFindHandle = FindFirstFileW(szSearchMask, &findData);
+            if (hFindHandle != INVALID_HANDLE_VALUE)
+            {
+                do
+                {
+                    StringCbPrintfExW(conductor->FileName, MAX_PATH, NULL, NULL, 0, L"%ls%ls%ls", szSearchPath, L"\\", findData.cFileName);
+
+                    // compare the name of the requested file with the one currently found.
+                    // if the name matches, the current node is returned by the function.
+                    if (wcscmp(szFirstFile, conductor->FileName) == 0)
+                    {
+                        currentNode = conductor;
+                    }
+
+                    conductor->Next = malloc(sizeof(SHIMGVW_FILENODE));
+
+                    // if malloc fails, make circular what we have and return it
+                    if (!conductor->Next)
+                    {
+                        DPRINT1("malloc() failed in pLoadFileList()\n");
+                        
+                        conductor->Next = root;
+                        root->Prev = conductor;
+
+                        FindClose(hFindHandle);
+                        free(codecInfo);
+                        return conductor;
+                    }
+
+                    conductor->Next->Prev = conductor;
+                    conductor = conductor->Next;
+                }
+                while (FindNextFileW(hFindHandle, &findData) != 0);
+
+                FindClose(hFindHandle);
+            }
+
+            extension = wcstok(NULL, L";");
+        }
+    }
+
+    // we now have a node too much in the list. In case the requested file was not found,
+    // we use this node to store the name of it, otherwise we free it.
+    if (currentNode == NULL)
+    {
+        StringCbPrintfExW(conductor->FileName, MAX_PATH, NULL, NULL, 0, L"%ls", szFirstFile);
+        currentNode = conductor;
+    }
+    else
+    {
+        conductor = conductor->Prev;
+        free(conductor->Next);
+    }
+
+    // link the last node with the first one to make the list circular
+    conductor->Next = root;
+    root->Prev = conductor;
+    conductor = currentNode;
+
+    free(codecInfo);
+
+    return conductor;
+}
+
+static VOID
+pFreeFileList(SHIMGVW_FILENODE *root)
+{
+    SHIMGVW_FILENODE *conductor;
+
+    root->Prev->Next = NULL;
+    root->Prev = NULL;
+
+    while (root)
+    {
+        conductor = root;
+        root = conductor->Next;
+        free(conductor);
+    }
+}
+
+static VOID
+ImageView_UpdateWindow(HWND hwnd)
+{
+    InvalidateRect(hwnd, NULL, FALSE);
+    UpdateWindow(hwnd);
 }
 
 static VOID
@@ -171,65 +359,27 @@ ImageView_DrawImage(HWND hwnd)
     {
         FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
-        if ((rect.right == uImgWidth)&&(rect.bottom == uImgHeight))
+        if ((rect.right >= uImgWidth)&&(rect.bottom >= uImgHeight))
         {
-            x = 0, y = 0, width = rect.right, height = rect.bottom;
-        }
-        else if ((rect.right >= uImgWidth)&&(rect.bottom >= uImgHeight))
-        {
-            x = (rect.right/2)-(uImgWidth/2);
-            y = (rect.bottom/2)-(uImgHeight/2);
             width = uImgWidth;
             height = uImgHeight;
         }
-        else if ((rect.right < uImgWidth)||(rect.bottom < uImgHeight))
+        else
         {
-            if (rect.bottom < uImgHeight)
-            {
-                height = rect.bottom;
-                width = uImgWidth*(UINT)rect.bottom/uImgHeight;
-                x = (rect.right/2)-(width/2);
-                y = (rect.bottom/2)-(height/2);
-            }
-            if (rect.right < uImgWidth)
+            height = uImgHeight * (UINT)rect.right / uImgWidth;
+            if (height <= rect.bottom)
             {
                 width = rect.right;
-                height = uImgHeight*(UINT)rect.right/uImgWidth;
-                x = (rect.right/2)-(width/2);
-                y = (rect.bottom/2)-(height/2);
             }
-            if ((height > rect.bottom)||(width > rect.right))
+            else
             {
-                for (;;)
-                {
-                    if (((int)width - 1 < 0)||((int)height - 1 < 0)) break;
-                    width -= 1;
-                    height -= 1;
-                    y = (rect.bottom/2)-(height/2);
-                    x = (rect.right/2)-(width/2);
-                    if ((height < rect.bottom)&&(width < rect.right)) break;
-                }
+                width = uImgWidth * (UINT)rect.bottom / uImgHeight;
+                height = rect.bottom;
             }
         }
-        else if ((rect.right <= uImgWidth)&&(rect.bottom <= uImgHeight))
-        {
-            height = uImgHeight*(UINT)rect.right/uImgWidth;
-            y = (rect.bottom/2)-(height/2);
-            width = rect.right;
 
-            if ((height > rect.bottom)||(width > rect.right))
-            {
-                for (;;)
-                {
-                    if (((int)width - 1 < 0)||((int)height - 1 < 0)) break;
-                    width -= 1;
-                    height -= 1;
-                    y = (rect.bottom/2)-(height/2);
-                    x = (rect.right/2)-(width/2);
-                    if ((height < rect.bottom)&&(width < rect.right)) break;
-                }
-            }
-        }
+        y = (rect.bottom / 2) - (height / 2);
+        x = (rect.right / 2) - (width / 2);
 
         DPRINT("x = %d\ny = %d\nWidth = %d\nHeight = %d\n\nrect.right = %d\nrect.bottom = %d\n\nuImgWidth = %d\nuImgHeight = %d\n", x, y, width, height, rect.right, rect.bottom, uImgWidth, uImgHeight);
         Rectangle(hdc, x - 1, y - 1, x + width + 1, y + height + 1);
@@ -391,9 +541,17 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             switch (wParam)
             {
                 case IDC_PREV:
+                {
+                    currentFile = currentFile->Prev;
+                    pLoadImageFromNode(currentFile, hwnd);
+                }
 
                 break;
                 case IDC_NEXT:
+                {
+                    currentFile = currentFile->Next;
+                    pLoadImageFromNode(currentFile, hwnd);
+                }
 
                 break;
                 case IDC_ZOOMP:
@@ -410,9 +568,17 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 break;
                 case IDC_ROT1:
+                {
+                    GdipImageRotateFlip(image, Rotate270FlipNone);
+                    ImageView_UpdateWindow(hwnd);
+                }
 
                 break;
                 case IDC_ROT2:
+                {
+                    GdipImageRotateFlip(image, Rotate90FlipNone);
+                    ImageView_UpdateWindow(hwnd);
+                }
 
                 break;
             }
@@ -432,6 +598,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     lpttt = (LPTOOLTIPTEXT)lParam;
                     idButton = (UINT)lpttt->hdr.idFrom;
+                    lpttt->hinst = hInstance;
 
                     switch (idButton)
                     {
@@ -479,8 +646,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             RECT rc;
             SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
-            SendMessage(hToolBar, TB_GETITEMRECT, 1, (LPARAM)&rc);
-            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam)-1, HIWORD(lParam)-rc.bottom, TRUE);
+            GetWindowRect(hToolBar, &rc);
+            MoveWindow(hDispWnd, 1, 1, LOWORD(lParam) - 1, HIWORD(lParam) - (rc.bottom - rc.top) - 1, TRUE);
             return 0L;
         }
         case WM_DESTROY:
@@ -502,6 +669,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     ULONG_PTR gdiplusToken;
     WNDCLASS WndClass = {0};
     TCHAR szBuf[512];
+    WCHAR szInitialFile[MAX_PATH];
     HWND hMainWnd;
     MSG msg;
 
@@ -540,6 +708,16 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             0, 0, NULL, NULL, hInstance, NULL);
 
+    // make sure the path has no quotes on it
+    wcscpy(szInitialFile, szFileName);
+    PathUnquoteSpacesW(szInitialFile);
+
+    currentFile = pBuildFileList(szInitialFile);
+    if (currentFile)
+    {
+        pLoadImageFromNode(currentFile, hMainWnd);
+    }
+
     // Show it
     ShowWindow(hMainWnd, SW_SHOW);
     UpdateWindow(hMainWnd);
@@ -550,6 +728,8 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    pFreeFileList(currentFile);
 
     if (image)
         GdipDisposeImage(image);

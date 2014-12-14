@@ -45,7 +45,7 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
 {
     UNREFERENCED_PARAMETER(DeviceObject);
 
-    DPRINT("NtfsGetStandardInformation() called\n");
+    DPRINT1("NtfsGetStandardInformation(%p, %p, %p, %p)\n", Fcb, DeviceObject, StandardInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_STANDARD_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
@@ -75,7 +75,7 @@ NtfsGetPositionInformation(PFILE_OBJECT FileObject,
                            PFILE_POSITION_INFORMATION PositionInfo,
                            PULONG BufferLength)
 {
-    DPRINT("NtfsGetPositionInformation() called\n");
+    DPRINT1("NtfsGetPositionInformation(%p, %p, %p)\n", FileObject, PositionInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_POSITION_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
@@ -101,7 +101,7 @@ NtfsGetBasicInformation(PFILE_OBJECT FileObject,
 {
     PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
 
-    DPRINT("NtfsGetBasicInformation() called\n");
+    DPRINT1("NtfsGetBasicInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, BasicInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
@@ -135,7 +135,7 @@ NtfsGetNameInformation(PFILE_OBJECT FileObject,
     UNREFERENCED_PARAMETER(FileObject);
     UNREFERENCED_PARAMETER(DeviceObject);
 
-    DPRINT("NtfsGetNameInformation() called\n");
+    DPRINT1("NtfsGetNameInformation(%p, %p, %p, %p, %p)\n", FileObject, Fcb, DeviceObject, NameInfo, BufferLength);
 
     ASSERT(NameInfo != NULL);
     ASSERT(Fcb != NULL);
@@ -175,7 +175,7 @@ NtfsGetInternalInformation(PNTFS_FCB Fcb,
                            PFILE_INTERNAL_INFORMATION InternalInfo,
                            PULONG BufferLength)
 {
-    DPRINT("NtfsGetInternalInformation() called\n");
+    DPRINT1("NtfsGetInternalInformation(%p, %p, %p)\n", Fcb, InternalInfo, BufferLength);
 
     ASSERT(InternalInfo);
     ASSERT(Fcb);
@@ -199,6 +199,8 @@ NtfsGetNetworkOpenInformation(PNTFS_FCB Fcb,
                               PULONG BufferLength)
 {
     PFILENAME_ATTRIBUTE FileName = &Fcb->Entry;
+
+    DPRINT1("NtfsGetNetworkOpenInformation(%p, %p, %p, %p)\n", Fcb, DeviceExt, NetworkInfo, BufferLength);
 
     if (*BufferLength < sizeof(FILE_NETWORK_OPEN_INFORMATION))
         return(STATUS_BUFFER_OVERFLOW);
@@ -233,7 +235,7 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
     ULONG BufferLength;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("NtfsQueryInformation() called\n");
+    DPRINT1("NtfsQueryInformation(%p, %p)\n", DeviceObject, Irp);
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
     FileInformationClass = Stack->Parameters.QueryFile.FileInformationClass;
@@ -289,11 +291,12 @@ NtfsFsdQueryInformation(PDEVICE_OBJECT DeviceObject,
 
         case FileAlternateNameInformation:
         case FileAllInformation:
+            DPRINT1("Unimplemented information class %u\n", FileInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
         default:
-            DPRINT("Unimplemented information class %u\n", FileInformationClass);
+            DPRINT1("Unimplemented information class %u\n", FileInformationClass);
             Status = STATUS_INVALID_PARAMETER;
     }
 

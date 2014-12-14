@@ -80,6 +80,7 @@ NTSTATUS
 NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
              PWSTR FileName,
+             BOOLEAN OpenById,
              PNTFS_FCB * FoundFCB)
 {
     PNTFS_FCB ParentFcb;
@@ -87,55 +88,81 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
+    DPRINT1("NtfsOpenFile(%p, %p, %S, %u, %p)\n", DeviceExt, FileObject, (!OpenById ? FileName : NULL), OpenById, FoundFCB);
 
     *FoundFCB = NULL;
 
-    if (FileObject->RelatedFileObject)
+    if (OpenById)
     {
-        DPRINT("Converting relative filename to absolute filename\n");
+        ULONGLONG Id = (*(PULONGLONG)FileName) & NTFS_MFT_MASK;
 
-        Status = NtfsMakeAbsoluteFilename(FileObject->RelatedFileObject,
-                                          FileName,
-                                          &AbsFileName);
-        FileName = AbsFileName;
-        if (!NT_SUCCESS(Status))
+        DPRINT1("Will attempt to open by id: %I64x\n", Id);
+
+        Fcb = NtfsGrabFCBFromTableById(DeviceExt,
+                                       Id);
+        if (Fcb == NULL)
         {
-            return Status;
-        }
+            Status = NtfsGetFCBForFileById(DeviceExt,
+                                           &Fcb,
+                                           Id);
+            if (!NT_SUCCESS (Status))
+            {
+                DPRINT("Could not make a new FCB, status: %x\n", Status);
 
-        return STATUS_UNSUCCESSFUL;
+                return Status;
+            }
+
+            Fcb->Flags |= FCB_IS_OPEN_BY_ID;
+        }
     }
-
-    //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
-
-    DPRINT("PathName to open: %S\n", FileName);
-
-    /*  try first to find an existing FCB in memory  */
-    DPRINT("Checking for existing FCB in memory\n");
-    Fcb = NtfsGrabFCBFromTable(DeviceExt,
-                               FileName);
-    if (Fcb == NULL)
+    else
     {
-        DPRINT("No existing FCB found, making a new one if file exists.\n");
-        Status = NtfsGetFCBForFile(DeviceExt,
-                                   &ParentFcb,
-                                   &Fcb,
-                                   FileName);
-        if (ParentFcb != NULL)
+        if (FileObject->RelatedFileObject)
         {
-            NtfsReleaseFCB(DeviceExt,
-                           ParentFcb);
+            DPRINT("Converting relative filename to absolute filename\n");
+
+            Status = NtfsMakeAbsoluteFilename(FileObject->RelatedFileObject,
+                                              FileName,
+                                              &AbsFileName);
+            FileName = AbsFileName;
+            if (!NT_SUCCESS(Status))
+            {
+                return Status;
+            }
+
+            return STATUS_UNSUCCESSFUL;
         }
 
-        if (!NT_SUCCESS (Status))
+        //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
+
+        DPRINT("PathName to open: %S\n", FileName);
+
+        /*  try first to find an existing FCB in memory  */
+        DPRINT("Checking for existing FCB in memory\n");
+        Fcb = NtfsGrabFCBFromTable(DeviceExt,
+                                   FileName);
+        if (Fcb == NULL)
         {
-            DPRINT("Could not make a new FCB, status: %x\n", Status);
+            DPRINT("No existing FCB found, making a new one if file exists.\n");
+            Status = NtfsGetFCBForFile(DeviceExt,
+                                       &ParentFcb,
+                                       &Fcb,
+                                       FileName);
+            if (ParentFcb != NULL)
+            {
+                NtfsReleaseFCB(DeviceExt,
+                               ParentFcb);
+            }
 
-            if (AbsFileName)
-                ExFreePool(AbsFileName);
+            if (!NT_SUCCESS (Status))
+            {
+                DPRINT("Could not make a new FCB, status: %x\n", Status);
 
-            return Status;
+                if (AbsFileName)
+                    ExFreePool(AbsFileName);
+
+                return Status;
+            }
         }
     }
 
@@ -186,6 +213,12 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_INVALID_PARAMETER;
     }
 
+    if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
+    {
+        UNIMPLEMENTED;
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     FileObject = Stack->FileObject;
 
     if (RequestedDisposition == FILE_CREATE ||
@@ -193,6 +226,12 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         RequestedDisposition == FILE_SUPERSEDE)
     {
         return STATUS_ACCESS_DENIED;
+    }
+
+    if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID &&
+        FileObject->FileName.Length != sizeof(ULONGLONG))
+    {
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* This a open operation for the volume itself */
@@ -220,6 +259,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     Status = NtfsOpenFile(DeviceExt,
                           FileObject,
                           FileObject->FileName.Buffer,
+                          ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID),
                           &Fcb);
 
     if (NT_SUCCESS(Status))
@@ -243,6 +283,40 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         {
             NtfsCloseFile(DeviceExt, FileObject);
             return STATUS_NOT_A_DIRECTORY;
+        }
+
+        /*
+         * If it is a reparse point & FILE_OPEN_REPARSE_POINT, then allow opening it
+         * as a normal file.
+         * Otherwise, attempt to read reparse data and hand them to the Io manager
+         * with status reparse to force a reparse.
+         */
+        if (NtfsFCBIsReparsePoint(Fcb) &&
+            ((RequestedOptions & FILE_OPEN_REPARSE_POINT) != FILE_OPEN_REPARSE_POINT))
+        {
+            PREPARSE_DATA_BUFFER ReparseData = NULL;
+
+            Status = NtfsReadFCBAttribute(DeviceExt, Fcb,
+                                          AttributeReparsePoint, L"", 0,
+                                          (PVOID *)&Irp->Tail.Overlay.AuxiliaryBuffer);
+            if (NT_SUCCESS(Status))
+            {
+                ReparseData = (PREPARSE_DATA_BUFFER)Irp->Tail.Overlay.AuxiliaryBuffer;
+                if (ReparseData->ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    Status = STATUS_REPARSE;
+                }
+                else
+                {
+                    Status = STATUS_NOT_IMPLEMENTED;
+                    ExFreePoolWithTag(ReparseData, TAG_NTFS);
+                }
+            }
+
+            Irp->IoStatus.Information = ((Status == STATUS_REPARSE) ? ReparseData->ReparseTag : 0);
+
+            NtfsCloseFile(DeviceExt, FileObject);
+            return Status;
         }
 
         /* HUGLY HACK: remain RO so far... */

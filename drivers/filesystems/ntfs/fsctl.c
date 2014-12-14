@@ -226,6 +226,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsInfo->SectorsPerCluster = BootSector->BPB.SectorsPerCluster;
     NtfsInfo->BytesPerCluster = BootSector->BPB.BytesPerSector * BootSector->BPB.SectorsPerCluster;
     NtfsInfo->SectorCount = BootSector->EBPB.SectorCount;
+    NtfsInfo->ClusterCount = DeviceExt->NtfsInfo.SectorCount / (ULONGLONG)DeviceExt->NtfsInfo.SectorsPerCluster;
 
     NtfsInfo->MftStart.QuadPart = BootSector->EBPB.MftLocation;
     NtfsInfo->MftMirrStart.QuadPart = BootSector->EBPB.MftMirrLocation;
@@ -547,7 +548,7 @@ GetNfsVolumeData(PDEVICE_EXTENSION DeviceExt,
 
     DataBuffer->VolumeSerialNumber.QuadPart = DeviceExt->NtfsInfo.SerialNumber;
     DataBuffer->NumberSectors.QuadPart = DeviceExt->NtfsInfo.SectorCount;
-    DataBuffer->TotalClusters.QuadPart = DeviceExt->NtfsInfo.SectorCount / DeviceExt->NtfsInfo.SectorsPerCluster;
+    DataBuffer->TotalClusters.QuadPart = DeviceExt->NtfsInfo.ClusterCount;
     DataBuffer->FreeClusters.QuadPart = NtfsGetFreeClusters(DeviceExt);
     DataBuffer->TotalReserved.QuadPart = 0LL; // FIXME
     DataBuffer->BytesPerSector = DeviceExt->NtfsInfo.BytesPerSector;
@@ -626,20 +627,157 @@ GetNtfsFileRecord(PDEVICE_EXTENSION DeviceExt,
     InputBuffer = (PNTFS_FILE_RECORD_INPUT_BUFFER)Irp->AssociatedIrp.SystemBuffer;
 
     MFTRecord = InputBuffer->FileReferenceNumber.QuadPart;
-    Status = ReadFileRecord(DeviceExt, MFTRecord, FileRecord);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed reading record: %I64x\n", MFTRecord);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        return Status;
-    }
+    DPRINT1("Requesting: %I64x\n", MFTRecord);
 
+    do
+    {
+        Status = ReadFileRecord(DeviceExt, MFTRecord, FileRecord);
+        if (NT_SUCCESS(Status))
+        {
+            if (FileRecord->Flags & FRH_IN_USE)
+            {
+                break;
+            }
+        }
+
+        --MFTRecord;
+    } while (TRUE);
+
+    DPRINT1("Returning: %I64x\n", MFTRecord);
     OutputBuffer = (PNTFS_FILE_RECORD_OUTPUT_BUFFER)Irp->AssociatedIrp.SystemBuffer;
     OutputBuffer->FileReferenceNumber.QuadPart = MFTRecord;
     OutputBuffer->FileRecordLength = DeviceExt->NtfsInfo.BytesPerFileRecord;
     RtlCopyMemory(OutputBuffer->FileRecordBuffer, FileRecord, DeviceExt->NtfsInfo.BytesPerFileRecord);
 
     ExFreePoolWithTag(FileRecord, TAG_NTFS);
+
+    Irp->IoStatus.Information = FIELD_OFFSET(NTFS_FILE_RECORD_OUTPUT_BUFFER, FileRecordBuffer) + DeviceExt->NtfsInfo.BytesPerFileRecord;
+
+    return STATUS_SUCCESS;
+}
+
+
+static
+NTSTATUS
+GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
+                PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION Stack;
+    PVOLUME_BITMAP_BUFFER BitmapBuffer;
+    LONGLONG StartingLcn;
+    PFILE_RECORD_HEADER BitmapRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONGLONG TotalClusters;
+    ULONGLONG ToCopy;
+    BOOLEAN Overflow = FALSE;
+
+    DPRINT1("GetVolumeBitmap(%p, %p)\n", DeviceExt, Irp);
+
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (Stack->Parameters.FileSystemControl.InputBufferLength < sizeof(STARTING_LCN_INPUT_BUFFER))
+    {
+        DPRINT1("Invalid input! %d\n", Stack->Parameters.FileSystemControl.InputBufferLength);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (Stack->Parameters.FileSystemControl.OutputBufferLength < sizeof(VOLUME_BITMAP_BUFFER))
+    {
+        DPRINT1("Invalid output! %d\n", Stack->Parameters.FileSystemControl.OutputBufferLength);
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    BitmapBuffer = NtfsGetUserBuffer(Irp);
+    if (Irp->RequestorMode == UserMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Stack->Parameters.FileSystemControl.Type3InputBuffer,
+                         Stack->Parameters.FileSystemControl.InputBufferLength,
+                         sizeof(CHAR));
+            ProbeForWrite(BitmapBuffer, Stack->Parameters.FileSystemControl.OutputBufferLength,
+                          sizeof(CHAR));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        if (Stack->Parameters.FileSystemControl.Type3InputBuffer == NULL ||
+            BitmapBuffer == NULL)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer! %p %p\n", Stack->Parameters.FileSystemControl.Type3InputBuffer, BitmapBuffer);
+        return Status;
+    }
+
+    StartingLcn = ((PSTARTING_LCN_INPUT_BUFFER)Stack->Parameters.FileSystemControl.Type3InputBuffer)->StartingLcn.QuadPart;
+    if (StartingLcn > DeviceExt->NtfsInfo.ClusterCount)
+    {
+        DPRINT1("Requested bitmap start beyond partition end: %I64x %I64x\n", DeviceExt->NtfsInfo.ClusterCount, StartingLcn);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Round down to a multiple of 8 */
+    StartingLcn = StartingLcn & ~7;
+    TotalClusters = DeviceExt->NtfsInfo.ClusterCount - StartingLcn;
+    ToCopy = TotalClusters / 8;
+    if ((ToCopy + FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer)) > Stack->Parameters.FileSystemControl.OutputBufferLength)
+    {
+        DPRINT1("Buffer too small: %x, needed: %x\n", Stack->Parameters.FileSystemControl.OutputBufferLength, (ToCopy + FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer)));
+        Overflow = TRUE;
+        ToCopy = Stack->Parameters.FileSystemControl.OutputBufferLength - FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
+    }
+
+    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                         DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                         TAG_NTFS);
+    if (BitmapRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(DeviceExt, NTFS_FILE_BITMAP, BitmapRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed reading volume bitmap: %lx\n", Status);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return Status;
+    }
+
+    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed find $DATA for bitmap: %lx\n", Status);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return Status;
+    }
+
+    BitmapBuffer->StartingLcn.QuadPart = StartingLcn;
+    BitmapBuffer->BitmapSize.QuadPart = ToCopy * 8;
+
+    Irp->IoStatus.Information = FIELD_OFFSET(VOLUME_BITMAP_BUFFER, Buffer);
+    _SEH2_TRY
+    {
+        Irp->IoStatus.Information += ReadAttribute(DeviceExt, DataContext, StartingLcn / 8, (PCHAR)BitmapBuffer->Buffer, ToCopy);
+        Status = (Overflow ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    ReleaseAttributeContext(DataContext);
+    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
 
     return STATUS_SUCCESS;
 }
@@ -668,6 +806,10 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
             Status = GetNtfsFileRecord(DeviceExt, Irp);
             break;
 
+        case FSCTL_GET_VOLUME_BITMAP:
+            Status = GetVolumeBitmap(DeviceExt, Irp);
+            break;
+
         default:
             DPRINT1("Invalid user request: %x\n", Stack->Parameters.FileSystemControl.FsControlCode);
             Status = STATUS_INVALID_DEVICE_REQUEST;
@@ -689,6 +831,8 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
     DPRINT1("NtfsFileSystemControl() called\n");
 
     Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    Irp->IoStatus.Information = 0;
 
     switch (Stack->MinorFunction)
     {
@@ -718,7 +862,6 @@ NtfsFsdFileSystemControl(PDEVICE_OBJECT DeviceObject,
     }
 
     Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 

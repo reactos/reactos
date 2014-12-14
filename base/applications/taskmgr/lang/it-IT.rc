@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Segnalazione di Task Manager"
     IDS_MSG_WARNINGTERMINATING "ATTENZIONE: Arrestare un processo può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema. \nIl processo non potrà salvare il prorio stato o i dati\nprima del suo arresto.\nSei sicuro di voler procedere?"
     IDS_MSG_UNABLETERMINATEPRO "Impossibile arrestare il Processo"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Impossibile cambiare la Priorità"
     IDS_MSG_WARNINGCHANGEPRIORITY "ATTENZIONE: La modifica della classe di priorità può provocare\n effetti indesiderati compresa la perdita di dati o l'instabilità del sistema.\nSei sicuro di voler procedere?"
     IDS_MSG_TRAYICONCPUUSAGE "Uso CPU: %d%%"

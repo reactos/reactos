@@ -28,6 +28,7 @@
 #include <strsafe.h>
 
 #include <undocuser.h>
+#include <shlwapi_undoc.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <undocshell.h>
@@ -42,81 +43,36 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
 
-/* dynamic imports due to lack of support in msvc linker libs */
-typedef INT(APIENTRY *REGSHELLHOOK)(HWND, DWORD);
-#ifdef UNICODE
-#define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempW"
-typedef BOOL(APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCWSTR, UINT);
-#else
-#define PROC_NAME_DRAWCAPTIONTEMP "DrawCaptionTempA"
-typedef BOOL (APIENTRY *DRAWCAPTEMP)(HWND, HDC, const RECT*, HFONT, HICON, LPCSTR, UINT);
-#endif
-typedef HRESULT(APIENTRY *SHINVDEFCMD)(HWND, IShellFolder*, LPCITEMIDLIST);
-typedef void (APIENTRY *RUNFILEDLG)(HWND, HICON, LPCWSTR, LPCWSTR, LPCWSTR, UINT);
-typedef void (APIENTRY *EXITWINDLG)(HWND);
-typedef HRESULT(APIENTRY *SHWINHELP)(HWND, LPWSTR, UINT, DWORD);
-
-/* Constants for RunFileDlg */
-#define RFF_CALCDIRECTORY   0x04    /* Calculates the working directory from the file name. */
-
 #define ASSERT(cond) \
     do if (!(cond)) { \
         Win32DbgPrint(__FILE__, __LINE__, "ASSERTION %s FAILED!\n", #cond); \
         } while (0)
 
 extern HINSTANCE hExplorerInstance;
-extern HMODULE hUser32;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
-extern DRAWCAPTEMP DrawCapTemp;
-
-/*
- * dragdrop.c
- */
-
-typedef struct _DROPTARGET_CALLBACKS
-{
-    HRESULT(*OnDragEnter)(IN IDropTarget *pDropTarget,
-                          IN PVOID Context,
-                          IN const FORMATETC *Format,
-                          IN DWORD grfKeyState,
-                          IN POINTL pt,
-                          IN OUT DWORD *pdwEffect);
-    HRESULT(*OnDragOver)(IN IDropTarget *pDropTarget,
-                         IN PVOID Context,
-                         IN DWORD grfKeyState,
-                         IN POINTL pt,
-                         IN OUT DWORD *pdwEffect);
-    HRESULT(*OnDragLeave)(IN IDropTarget *pDropTarget,
-                          IN PVOID Context);
-    HRESULT(*OnDrop)(IN IDropTarget *pDropTarget,
-                     IN PVOID Context,
-                     IN const FORMATETC *Format,
-                     IN DWORD grfKeyState,
-                     IN POINTL pt,
-                     IN OUT DWORD *pdwEffect);
-} DROPTARGET_CALLBACKS, *PDROPTARGET_CALLBACKS;
-
-IDropTarget *
-CreateDropTarget(IN HWND hwndTarget,
-IN DWORD nSupportedFormats,
-IN const FORMATETC *Formats  OPTIONAL,
-IN PVOID Context  OPTIONAL,
-IN const DROPTARGET_CALLBACKS *Callbacks  OPTIONAL);
 
 /*
  * explorer.c
  */
 
+static inline 
 LONG
 SetWindowStyle(IN HWND hWnd,
 IN LONG dwStyleMask,
-IN LONG dwStyle);
+IN LONG dwStyle)
+{
+    return SHSetWindowBits(hWnd, GWL_STYLE, dwStyleMask, dwStyle);
+}
 
+static inline
 LONG
 SetWindowExStyle(IN HWND hWnd,
 IN LONG dwStyleMask,
-IN LONG dwStyle);
+IN LONG dwStyle)
+{
+    return SHSetWindowBits(hWnd, GWL_EXSTYLE, dwStyleMask, dwStyle);
+}
 
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,

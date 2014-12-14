@@ -65,6 +65,6 @@ TextEditWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         default:
             return DefWindowProc(hwnd, message, wParam, lParam);
     }
-    
+
     return 0;
 }

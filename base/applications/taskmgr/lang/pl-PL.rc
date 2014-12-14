@@ -440,6 +440,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Ostrzeżenie Menedżera zadań"
     IDS_MSG_WARNINGTERMINATING "UWAGA: Zakończenie procesu może przynieść niepożądane skutki, w tym również doprowadzić do utraty danych i niestabilności systemu.\nProces nie będzie miał szansy na zapisane danych.\nCzy na pewno chcesz zakończyć?"
     IDS_MSG_UNABLETERMINATEPRO "Nie można zakończyć tego procesu"
+    IDS_MSG_CLOSESYSTEMPROCESS "Jest to krytyczny proces systemowy. Menedżer zadań nie zakończy tego procesu."
     IDS_MSG_UNABLECHANGEPRIORITY "Nie można zmienić priorytetu"
     IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu może przynieść\nniepożądane skutki, w tym również niestabilność systemu.\nCzy na pewno chcesz zmieni priorytet?"
     IDS_MSG_TRAYICONCPUUSAGE "Użycie procesora: %d%%"

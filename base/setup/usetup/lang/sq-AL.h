@@ -1715,7 +1715,7 @@ MUI_STRING sqALStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "on Harddisku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTipi %-3u%s                       %6lu %s"},
+    "%c%c %c %sTipi %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisku %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,

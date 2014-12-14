@@ -33,8 +33,7 @@ class CStartMenuSite :
     public IOleCommandTarget,
     public IMenuPopup
 {
-    CComPtr<ITrayWindow> Tray;
-    CComPtr<IMenuPopup> StartMenuPopup;
+    CComPtr<ITrayWindow> m_Tray;
 
 public:
     CStartMenuSite()
@@ -65,7 +64,7 @@ public:
     {
         TRACE("ITrayPriv::GetWindow\n");
 
-        *phwnd = Tray->GetHWND();
+        *phwnd = m_Tray->GetHWND();
         if (*phwnd != NULL)
             return S_OK;
 
@@ -83,26 +82,11 @@ public:
         IN IShellFolder *pShellFolder,
         IN LPCITEMIDLIST pidl)
     {
-        HMODULE hShlwapi;
         HRESULT ret = S_FALSE;
 
         TRACE("ITrayPriv::Execute\n");
 
-        hShlwapi = GetModuleHandle(TEXT("SHLWAPI.DLL"));
-        if (hShlwapi != NULL)
-        {
-            SHINVDEFCMD SHInvokeDefCmd;
-
-            /* SHInvokeDefaultCommand */
-            SHInvokeDefCmd = (SHINVDEFCMD) GetProcAddress(hShlwapi,
-                                                          (LPCSTR) ((LONG) 279));
-            if (SHInvokeDefCmd != NULL)
-            {
-                ret = SHInvokeDefCmd(Tray->GetHWND(),
-                                     pShellFolder,
-                                     pidl);
-            }
-        }
+        ret = SHInvokeDefaultCommand(m_Tray->GetHWND(), pShellFolder, pidl);
 
         return ret;
     }
@@ -390,7 +374,7 @@ public:
 
     HRESULT Initialize(IN ITrayWindow *tray)
     {
-        Tray = tray;
+        m_Tray = tray;
         return S_OK;
     }
 

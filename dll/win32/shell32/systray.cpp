@@ -50,8 +50,8 @@ static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, DWORD n
     data.lpData = pnotify_data;
 
     for(hwnd = 0; (hwnd = FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL)); )
-        if ((unicode ? SendMessageW : SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
-            ret = TRUE;
+        if ((unicode ? SendMessageTimeoutW : SendMessageTimeoutA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data, SMTO_BLOCK|SMTO_ABORTIFHUNG, 4000, (PDWORD_PTR)&ret))
+            return ret;
 
     return ret;
 }

@@ -6,7 +6,6 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
 list(APPEND SOURCE
     desktop.cpp
-    dragdrop.cpp
     explorer.cpp
     rshell.cpp
     settings.cpp

@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Aviso do 'Gerenciador de tarefas'"
     IDS_MSG_WARNINGTERMINATING "AVISO: o encerramento de um processo pode causar\nefeitos indesejáveis, como perda de dados e\ninstabilidade do sistema. O processo não terá como\nsalvar seu estado e os dados antes de ser encerrado.\nTem certeza de que deseja encerrá-lo?"
     IDS_MSG_UNABLETERMINATEPRO "Não é possível finalizar o processo"
+    IDS_MSG_CLOSESYSTEMPROCESS "Este é um processo crítico do sistema. O Gerenciador de tarefas não irá encerrar este processo"
     IDS_MSG_UNABLECHANGEPRIORITY "Não é possível alterar a prioridade"
     IDS_MSG_WARNINGCHANGEPRIORITY "AVISO: a alteração da classe de prioridade do processo\npode causar efeitos indesejáveis, inclusive a instabilidade do sistema. Tem\ncerteza de que deseja alterar a classe de prioridade?"
     IDS_MSG_TRAYICONCPUUSAGE "Uso de CPU: %d%%"

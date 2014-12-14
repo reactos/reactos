@@ -26,8 +26,21 @@ InitFontSizeList(HWND hWnd)
     {
         if (SetupFindFirstLine(hInf, _T("Font Sizes"), NULL, &Context))
         {
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDPI"),
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Hardware Profiles\\Current\\Software\\Fonts"),
                              0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                dwSize = MAX_PATH;
+                dwType = REG_DWORD;
+
+                if (!RegQueryValueEx(hKey, _T("LogPixels"), NULL,
+                                    &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+                {
+                    dwValue = 0;
+                }
+
+                RegCloseKey(hKey);
+            }
+
             for (;;)
             {
                 TCHAR Buffer[LINE_LEN];
@@ -41,23 +54,17 @@ InitFontSizeList(HWND hWnd)
                     if (i != CB_ERR)
                         SendMessage(hFontSize, CB_SETITEMDATA, (WPARAM)i, (LPARAM)ci);
 
-                    dwSize = MAX_PATH;
-                    dwType = REG_DWORD;
-
-                    if (RegQueryValueEx(hKey, _T("LogPixels"), NULL,
-                                        &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS)
+                    if ((int)dwValue == ci)
                     {
-                        if ((int)dwValue == ci)
-                        {
-                            SendMessage(hFontSize, CB_SETCURSEL, (WPARAM)i, 0);
-                            SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_CUSTOM), Desc);
-                        }
+                        SendMessage(hFontSize, CB_SETCURSEL, (WPARAM)i, 0);
+                        SetWindowText(GetDlgItem(hWnd, IDC_FONTSIZE_CUSTOM), Desc);
                     }
+                    else
+                        SendMessage(hFontSize, CB_SETCURSEL, 0, 0);
                 }
 
                 if (!SetupFindNextLine(&Context, &Context))
                 {
-                    RegCloseKey(hKey);
                     break;
                 }
             }

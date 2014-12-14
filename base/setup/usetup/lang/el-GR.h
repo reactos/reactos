@@ -1736,7 +1736,7 @@ MUI_STRING elGRStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "©«¦ ©¡¢ž¨æ ›å©¡¦ %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sType %-3u%s                       %6lu %s"},
+    "%c%c %c %sType %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  ‘¡¢ž¨æª ›å©¡¦ª %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,

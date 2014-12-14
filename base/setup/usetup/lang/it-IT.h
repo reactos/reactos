@@ -1713,7 +1713,7 @@ MUI_STRING itITStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "su Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %sTipo %-3u%s                       %6lu %s"},
+    "%c%c %c %sTipo %-3u%s                       %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) su %S"},
     {STRING_HDDINFOUNK6,

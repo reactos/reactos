@@ -379,6 +379,7 @@ $if (_NTIFS_)
 #define ExDisableResourceBoost ExDisableResourceBoostLite
 
 VOID
+NTAPI
 ExInitializePushLock(
   _Out_ PEX_PUSH_LOCK PushLock);
 $endif (_NTIFS_)

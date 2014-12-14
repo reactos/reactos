@@ -1719,7 +1719,7 @@ MUI_STRING plPLStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na Dysku Twardym %lu (%I64u %s), Port=%hu, Szyna=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %s09Typ %-3u%s                       %6lu %s"},
+    "%c%c %c %s09Typ %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  Dysk Twardy %lu  (Port=%hu, Szyna=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,

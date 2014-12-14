@@ -29,23 +29,23 @@ class CStartMenuBtnCtxMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu
 {
-    HWND hWndOwner;
-    CComPtr<ITrayWindow> TrayWnd;
-    CComPtr<IContextMenu> pcm;
-    CComPtr<IShellFolder> psf;
-    LPITEMIDLIST pidl;
+    CComPtr<ITrayWindow>  m_TrayWnd;
+    CComPtr<IContextMenu> m_Inner;
+    CComPtr<IShellFolder> m_Folder;
+
+    HWND m_Owner;
+    LPITEMIDLIST m_FolderPidl;
 
     HRESULT CreateContextMenuFromShellFolderPidl(HMENU hPopup)
     {
-        CComPtr<IContextMenu> pcm;
         HRESULT hRet;
 
-        hRet = psf->GetUIObjectOf(hWndOwner, 1, (LPCITEMIDLIST *) &pidl, IID_NULL_PPV_ARG(IContextMenu, &pcm));
+        hRet = m_Folder->GetUIObjectOf(m_Owner, 1, (LPCITEMIDLIST *) &m_FolderPidl, IID_NULL_PPV_ARG(IContextMenu, &m_Inner));
         if (SUCCEEDED(hRet))
         {
             if (hPopup != NULL)
             {
-                hRet = pcm->QueryContextMenu(
+                hRet = m_Inner->QueryContextMenu(
                     hPopup,
                     0,
                     ID_SHELL_CMD_FIRST,
@@ -84,7 +84,7 @@ class CStartMenuBtnCtxMenu :
         if (!SHRestricted(REST_NOCOMMONGROUPS))
         {
             /* Check if we should add menu items for the common start menu */
-            hRet = SHGetFolderPath(hWndOwner,
+            hRet = SHGetFolderPath(m_Owner,
                                    CSIDL_COMMON_STARTMENU,
                                    NULL,
                                    SHGFP_TYPE_CURRENT,
@@ -133,8 +133,8 @@ class CStartMenuBtnCtxMenu :
 public:
     HRESULT Initialize(ITrayWindow * pTrayWnd, IN HWND hWndOwner)
     {
-        this->TrayWnd = pTrayWnd;
-        this->hWndOwner = hWndOwner;
+        m_TrayWnd = pTrayWnd;
+        m_Owner = hWndOwner;
         return S_OK;
     }
 
@@ -150,21 +150,21 @@ public:
         HRESULT hRet;
 
         psfDesktop = NULL;
-        pcm = NULL;
+        m_Inner = NULL;
 
-        pidlStart = SHCloneSpecialIDList(hWndOwner, CSIDL_STARTMENU, TRUE);
+        pidlStart = SHCloneSpecialIDList(m_Owner, CSIDL_STARTMENU, TRUE);
 
         if (pidlStart != NULL)
         {
-            pidl = ILClone(ILFindLastID(pidlStart));
+            m_FolderPidl = ILClone(ILFindLastID(pidlStart));
             ILRemoveLastID(pidlStart);
 
-            if (pidl != NULL)
+            if (m_FolderPidl != NULL)
             {
                 hRet = SHGetDesktopFolder(&psfDesktop);
                 if (SUCCEEDED(hRet))
                 {
-                    hRet = psfDesktop->BindToObject(pidlStart, NULL, IID_PPV_ARG(IShellFolder, &psf));
+                    hRet = psfDesktop->BindToObject(pidlStart, NULL, IID_PPV_ARG(IShellFolder, &m_Folder));
                     if (SUCCEEDED(hRet))
                     {
                         CreateContextMenuFromShellFolderPidl(hPopup);
@@ -192,21 +192,21 @@ public:
 
                 /* Setup and invoke the shell command */
                 cmici.cbSize = sizeof(cmici);
-                cmici.hwnd = hWndOwner;
+                cmici.hwnd = m_Owner;
                 cmici.lpVerb = MAKEINTRESOURCEA(uiCmdId - ID_SHELL_CMD_FIRST);
                 cmici.nShow = SW_NORMAL;
 
                 /* FIXME: Support Unicode!!! */
-                if (SHGetPathFromIDListA(pidl, szDir))
+                if (SHGetPathFromIDListA(m_FolderPidl, szDir))
                 {
                     cmici.lpDirectory = szDir;
                 }
 
-                pcm->InvokeCommand(&cmici);
+                m_Inner->InvokeCommand(&cmici);
             }
             else
             {
-                TrayWnd->ExecContextMenuCmd(uiCmdId);
+                m_TrayWnd->ExecContextMenuCmd(uiCmdId);
             }
         }
         return S_OK;
@@ -228,18 +228,18 @@ public:
 
     virtual ~CStartMenuBtnCtxMenu()
     {
-        if (pidl)
-            ILFree(pidl);
+        if (m_FolderPidl)
+            ILFree(m_FolderPidl);
     }
 
     BEGIN_COM_MAP(CStartMenuBtnCtxMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
 };
-HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu)
+HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * m_TrayWnd, IN HWND m_Owner, IContextMenu ** ppCtxMenu)
 {
     CStartMenuBtnCtxMenu * mnu = new CComObject<CStartMenuBtnCtxMenu>();
-    mnu->Initialize(TrayWnd, hWndOwner);
+    mnu->Initialize(m_TrayWnd, m_Owner);
     *ppCtxMenu = mnu;
     return S_OK;
 }

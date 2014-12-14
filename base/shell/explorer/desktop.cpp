@@ -22,9 +22,9 @@
 
 class CDesktopThread
 {
-    HANDLE hEvent;
-    HANDLE hDesktop;
-    CComPtr<ITrayWindow> Tray;
+    HANDLE m_hEvent;
+    HANDLE m_hDesktop;
+    CComPtr<ITrayWindow> m_Tray;
 
     DWORD DesktopThreadProc()
     {
@@ -34,7 +34,7 @@ class CDesktopThread
 
         OleInitialize(NULL);
 
-        hRet = Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
+        hRet = m_Tray->QueryInterface(IID_PPV_ARG(IShellDesktopTray, &pSdt));
         if (!SUCCEEDED(hRet))
             return 1;
 
@@ -42,7 +42,7 @@ class CDesktopThread
         if (hDesktop == NULL)
             return 1;
 
-        if (!SetEvent(hEvent))
+        if (!SetEvent(m_hEvent))
         {
             /* Failed to notify that we initialized successfully, kill ourselves
             to make the main thread wake up! */
@@ -64,9 +64,9 @@ class CDesktopThread
 
 public:
     CDesktopThread() :
-        hEvent(NULL),
-        hDesktop(NULL),
-        Tray(NULL)
+        m_hEvent(NULL),
+        m_hDesktop(NULL),
+        m_Tray(NULL)
     {
     }
 
@@ -75,28 +75,28 @@ public:
         HANDLE hThread;
         HANDLE Handles[2];
 
-        Tray = pTray;
+        m_Tray = pTray;
 
-        hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (!hEvent)
+        m_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        if (!m_hEvent)
             return NULL;
 
         hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (PVOID)this, 0, NULL);
         if (!hThread)
         {
-            CloseHandle(hEvent);
+            CloseHandle(m_hEvent);
             return NULL;
         }
 
         Handles[0] = hThread;
-        Handles[1] = hEvent;
+        Handles[1] = m_hEvent;
 
         for (;;)
         {
             DWORD WaitResult = MsgWaitForMultipleObjects(_countof(Handles), Handles, FALSE, INFINITE, QS_ALLEVENTS);
             if (WaitResult == WAIT_OBJECT_0 + _countof(Handles))
             {
-                TrayProcessMessages(Tray);
+                TrayProcessMessages(m_Tray);
             }
             else if (WaitResult != WAIT_FAILED && WaitResult != WAIT_OBJECT_0)
             {
@@ -105,9 +105,10 @@ public:
         }
 
         CloseHandle(hThread);
-        CloseHandle(hEvent);
+        CloseHandle(m_hEvent);
 
-        return hDesktop;
+        // FIXME: Never assigned, will always return default value (NULL).
+        return m_hDesktop;
     }
 
     void Destroy()

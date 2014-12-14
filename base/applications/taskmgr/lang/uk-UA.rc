@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Попередження диспетчера завдань"
     IDS_MSG_WARNINGTERMINATING "УВАГА! Припинення процесу може призвести до \nнебажаних наслідків, включаючи втрату даних і \nнестабільну роботу системи. Процес не зможе \nзберегти свій стан або дані перед припиненням. \nВи дійсно бажаєте припинити процес?"
     IDS_MSG_UNABLETERMINATEPRO "Неможливо завершити процес"
+    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
     IDS_MSG_UNABLECHANGEPRIORITY "Неможливо змінити пріоритет"
     IDS_MSG_WARNINGCHANGEPRIORITY "УВАГА! Зміна класу пріоритету цього процесу може призвести до \nнебажаних наслідків, включаючи нестабільну роботу \nсистеми.  Ви дійсно бажаєте змінити пріоритет класу?"
     IDS_MSG_TRAYICONCPUUSAGE "Використання ЦП: %d%%"

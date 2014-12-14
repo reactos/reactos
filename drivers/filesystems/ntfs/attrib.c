@@ -104,7 +104,23 @@ NtfsDumpFileNameAttribute(PNTFS_ATTR_RECORD Attribute)
 //    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
 
     FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
-    DbgPrint(" '%.*S' ", FileNameAttr->NameLength, FileNameAttr->Name);
+    DbgPrint(" (%x) '%.*S' ", FileNameAttr->NameType, FileNameAttr->NameLength, FileNameAttr->Name);
+    DbgPrint(" '%x' ", FileNameAttr->FileAttributes);
+}
+
+
+static
+VOID
+NtfsDumpStandardInformationAttribute(PNTFS_ATTR_RECORD Attribute)
+{
+    PSTANDARD_INFORMATION StandardInfoAttr;
+
+    DbgPrint("  $STANDARD_INFORMATION ");
+
+//    DbgPrint(" Length %lu  Offset %hu ", Attribute->Resident.ValueLength, Attribute->Resident.ValueOffset);
+
+    StandardInfoAttr = (PSTANDARD_INFORMATION)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+    DbgPrint(" '%x' ", StandardInfoAttr->FileAttribute);
 }
 
 
@@ -182,7 +198,7 @@ NtfsDumpAttribute(PNTFS_ATTR_RECORD Attribute)
             break;
 
         case AttributeStandardInformation:
-            DbgPrint("  $STANDARD_INFORMATION ");
+            NtfsDumpStandardInformationAttribute(Attribute);
             break;
 
         case AttributeAttributeList:
@@ -306,6 +322,28 @@ GetFileNameFromRecord(PFILE_RECORD_HEADER FileRecord, UCHAR NameType)
             {
                 return Name;
             }
+        }
+
+        Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);
+    }
+
+    return NULL;
+}
+
+PSTANDARD_INFORMATION
+GetStandardInformationFromRecord(PFILE_RECORD_HEADER FileRecord)
+{
+    PNTFS_ATTR_RECORD Attribute;
+    PSTANDARD_INFORMATION StdInfo;
+
+    Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
+    while (Attribute < (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+           Attribute->Type != AttributeEnd)
+    {
+        if (Attribute->Type == AttributeStandardInformation)
+        {
+            StdInfo = (PSTANDARD_INFORMATION)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
+            return StdInfo;
         }
 
         Attribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Attribute + Attribute->Length);

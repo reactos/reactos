@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Upozornění správce úloh"
     IDS_MSG_WARNINGTERMINATING "Upozornění: ukončení procesu může způsobit nevratné škody,\nnapř.: ztrátu dat nebo nestability systému. \nProcesu nebude poskytnuta šance k uložení jeho stavu nebo\ndat předtím, než bude ukončen. Jste si jisti\ns ukončením procesu?"
     IDS_MSG_UNABLETERMINATEPRO "Není možné ukončit proces"
+    IDS_MSG_CLOSESYSTEMPROCESS "Toto je důležitý systémový proces. Správce úloh tento proces neukončí."
     IDS_MSG_UNABLECHANGEPRIORITY "Není možné změnit prioritu"
     IDS_MSG_WARNINGCHANGEPRIORITY "Upozornění: Změna priority procesu může\nzpůsobit nestabilitu systému a jiné nepředvídatelné problémy. Jste si jisti\nse změnou priority procesu?"
     IDS_MSG_TRAYICONCPUUSAGE "Využití CPU: %d%%"

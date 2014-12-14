@@ -88,6 +88,7 @@ HKLM,"SOFTWARE\Microsoft\Active Setup\Installed Components\{de5aed00-a4bf-11d1-9
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","DevicePath",0x00020002,"%SystemRoot%\inf"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","MediaPathUnexpanded",0x00020000,"%SystemRoot%\Media"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","WallPaperDir",0x00020002,"%SystemRoot%\Web\Wallpaper"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Applets",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls",,0x00000012

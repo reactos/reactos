@@ -5,7 +5,7 @@
  * PURPOSE:     Defines the resource ids and other stuff
  * PROGRAMMERS: Benedikt Freisen
  */
- 
+
 /* DEFINES **********************************************************/
 
 #define HISTORYSIZE 11

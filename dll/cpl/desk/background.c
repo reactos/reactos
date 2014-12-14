@@ -78,6 +78,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     SHFILEINFO sfi;
     HIMAGELIST himl;
     TCHAR wallpaperFilename[MAX_PATH];
+    TCHAR originalWallpaper[MAX_PATH];
     DWORD bufferSize = sizeof(wallpaperFilename);
     TCHAR buffer[MAX_PATH];
     DWORD varType = REG_SZ;
@@ -132,6 +133,27 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
         result = RegQueryValueEx(regKey, TEXT("Wallpaper"), 0, &varType, (LPBYTE)wallpaperFilename, &bufferSize);
         if ((result == ERROR_SUCCESS) && (_tcslen(wallpaperFilename) > 0))
         {
+            bufferSize = sizeof(originalWallpaper);
+            result = RegQueryValueEx(regKey, TEXT("OriginalWallpaper"), 0, &varType, (LPBYTE)originalWallpaper, &bufferSize);
+
+            /* If Wallpaper and OriginalWallpaper are the same, try to retrieve ConvertedWallpaper and use it instead of Wallpaper */
+            if ((result == ERROR_SUCCESS) && (_tcslen(originalWallpaper) > 0) && (_tcsicmp(wallpaperFilename, originalWallpaper) == 0))
+            {
+                bufferSize = sizeof(originalWallpaper);
+                result = RegQueryValueEx(regKey, TEXT("ConvertedWallpaper"), 0, &varType, (LPBYTE)originalWallpaper, &bufferSize);
+
+                if ((result == ERROR_SUCCESS) && (_tcslen(originalWallpaper) > 0))
+                {
+                    hr = StringCbCopy(wallpaperFilename, sizeof(wallpaperFilename), originalWallpaper);
+                }
+
+                if (FAILED(hr))
+                {
+                    RegCloseKey(regKey);
+                    return;
+                }
+            }
+
             /* Allow environment variables in file name */
             if (ExpandEnvironmentStrings(wallpaperFilename, buffer, MAX_PATH))
             {

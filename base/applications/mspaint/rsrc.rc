@@ -5,7 +5,7 @@
  * PURPOSE:     Managing the resources
  * PROGRAMMERS: Benedikt Freisen
  */
- 
+
 /* INCLUDES *********************************************************/
 
 #include <windef.h>

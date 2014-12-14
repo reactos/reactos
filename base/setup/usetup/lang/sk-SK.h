@@ -1723,7 +1723,7 @@ MUI_STRING skSKStrings[] =
     {STRING_HDINFOPARTEXISTS,
     "na pevnom disku %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
-    "%c%c  %styp %-3u%s                       %6lu %s"},
+    "%c%c %c %styp %-3u%s                      %6lu %s"},
     {STRING_HDINFOPARTSELECT,
     "%6lu %s  pevnì disk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %S"},
     {STRING_HDDINFOUNK6,

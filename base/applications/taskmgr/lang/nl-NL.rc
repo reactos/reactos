@@ -432,6 +432,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Waarschuwing van Taakbeheer"
     IDS_MSG_WARNINGTERMINATING "Waarschuwing: het beëindigen van een proces kan tot\nonverwachte resultaten leiden, zoals verlies van gegevens\nof een instabiel systeem, omdat de status of de gegevens\nniet meer kunnen worden opgeslagen. Weet u zeker dat\nu het proces wilt beëindigen?"
     IDS_MSG_UNABLETERMINATEPRO "Kan het proces niet beëindigen"
+    IDS_MSG_CLOSESYSTEMPROCESS "Dit is een cruciaal systeemproces. Taakbeheer zal dit proces niet beëindigen."
     IDS_MSG_UNABLECHANGEPRIORITY "Kan de prioriteit niet wijzigen"
     IDS_MSG_WARNINGCHANGEPRIORITY "Waarschuwing: het wijzigen van de prioriteitsklasse van dit proces\nkan ongewenste resultaten hebben, zoals een instabiel systeem. Weet u\nzeker dat u de prioriteitsklasse wilt wijzigen?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU-gebruik: %d%%"

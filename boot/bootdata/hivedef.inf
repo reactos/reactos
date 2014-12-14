@@ -1812,6 +1812,11 @@ HKCU,"SOFTWARE",,0x00000012
 HKCU,"SOFTWARE\Policies",,0x00000012
 HKCU,"SOFTWARE\Microsoft",,0x00000012
 
+; ReactOS Calculator
+HKCU,"SOFTWARE\Microsoft\Calc",,0x00000012
+HKCU,"SOFTWARE\Microsoft\Calc","layout",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Calc","UseSep",0x00010001,0x00000001
+
 ; DirectX version report as DirectX 9.0
 HKCU,"SOFTWARE\Microsoft\DirectX","Debug",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\DirectX","InstalledVersion",0x00000001,0x00,0x00,0x00,0x09,0x00,0x00,0x00,0x00

@@ -438,6 +438,7 @@ BEGIN
     IDS_MSG_TASKMGRWARNING "Avertisment"
     IDS_MSG_WARNINGTERMINATING "Terminarea forțată a unui proces poate duce la pierderi\nde date sau la instabilitatea sistemului. Procesului nu i\nse va permite îndeplinirea formalităților de închidere.\nSigur doriți terminarea forțată a procesului?"
     IDS_MSG_UNABLETERMINATEPRO "Procesul nu poate fi oprit"
+    IDS_MSG_CLOSESYSTEMPROCESS "Acesta este un proces critic de sistem. Gestionarul de aplicații nu va opri acest proces."
     IDS_MSG_UNABLECHANGEPRIORITY "Nu se poate schimba prioritatea"
     IDS_MSG_WARNINGCHANGEPRIORITY "Schimbarea priorității poate duce la efecte colaterale\nprecum instabilitatea sistemului.\nSigur doriți schimbarea priorității procesului?"
     IDS_MSG_TRAYICONCPUUSAGE "Utilizare procesor: %d%%"
