@@ -108,8 +108,6 @@ struct _CONSOLE_SCREEN_BUFFER
 //  WORD   ScreenDefaultAttrib;         /* Default screen char attribute */
 //  WORD   PopupDefaultAttrib;          /* Default popup char attribute */
     USHORT Mode;                        /* Output buffer modes */
-
-    // PVOID Data;                         /* Private data for the frontend to use */
 };
 
 
@@ -259,7 +257,7 @@ typedef struct _TERMINAL_VTBL
     INT   (NTAPI *ShowMouseCursor)(IN OUT PTERMINAL This,
                                    BOOL Show);
 
-#if 0 // Possible future front-end interface
+#if 0 // Possible future terminal interface
     BOOL (NTAPI *GetTerminalProperty)(IN OUT PTERMINAL This,
                                       ULONG Flag,
                                       PVOID Info,
@@ -274,7 +272,7 @@ typedef struct _TERMINAL_VTBL
 struct _TERMINAL
 {
     PTERMINAL_VTBL Vtbl;        /* Virtual table */
-    struct _CONSOLE* Console;   /* Console to which the frontend is attached to */
+    struct _CONSOLE* Console;   /* Console to which the terminal is attached to */
     PVOID Data;                 /* Private data  */
 };
 

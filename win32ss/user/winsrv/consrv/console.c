@@ -738,7 +738,7 @@ ConSrvDeleteConsole(PCONSRV_CONSOLE Console)
 
     /* Deinit the ConSrv terminal */
     // FIXME!!
-    // ConSrvDeinitTerminal(&Terminal); // &ConSrvConsole->Console->TermIFace
+    // ConSrvDeinitTerminal(&Terminal);
 }
 
 
