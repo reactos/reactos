@@ -33,12 +33,13 @@ typedef struct
     ULONG ProcessId;
 } PROCESS_PAGE_LIST_ITEM, *LPPROCESS_PAGE_LIST_ITEM;
 
-HWND hProcessPage;                        /* Process List Property Page */
+HWND hProcessPage;                      /* Process List Property Page */
 
-HWND hProcessPageListCtrl;                /* Process ListCtrl Window */
+HWND hProcessPageListCtrl;              /* Process ListCtrl Window */
 HWND hProcessPageHeaderCtrl;            /* Process Header Control */
-HWND hProcessPageEndProcessButton;        /* Process End Process button */
+HWND hProcessPageEndProcessButton;      /* Process End Process button */
 HWND hProcessPageShowAllProcessesButton;/* Process Show All Processes checkbox */
+BOOL bProcessPageSelectionMade = FALSE; /* Is item in ListCtrl selected */
 
 static int  nProcessPageWidth;
 static int  nProcessPageHeight;
@@ -102,6 +103,15 @@ DWORD GetSelectedProcessId(void)
     return 0;
 }
 
+void ProcessPageUpdate(void)
+{
+    /* Enable or disable the "End Process" button */
+    if (ListView_GetSelectedCount(hProcessPageListCtrl))
+        EnableWindow(hProcessPageEndProcessButton, TRUE);
+    else
+        EnableWindow(hProcessPageEndProcessButton, FALSE);
+}
+
 INT_PTR CALLBACK
 ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -147,6 +157,10 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /* Start our refresh thread */
         hProcessThread = CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, &dwProcessThread);
 #endif
+
+        /* Refresh controls */
+        ProcessPageUpdate();
+
         return TRUE;
 
     case WM_DESTROY:
@@ -230,11 +244,9 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
     {
         switch (pnmh->code)
         {
-        #if 0
         case LVN_ITEMCHANGED:
             ProcessPageUpdate();
             break;
-        #endif
 
         case LVN_GETDISPINFO:
 
@@ -466,6 +478,20 @@ void UpdateProcesses()
     }
 
     SendMessage(hProcessPageListCtrl, WM_SETREDRAW, TRUE, 0);
+
+    /* Select first item if any */
+    if ((ListView_GetNextItem(hProcessPageListCtrl, -1, LVNI_SELECTED | LVNI_FOCUSED) == -1) && 
+        (ListView_GetItemCount(hProcessPageListCtrl) > 0) && !bProcessPageSelectionMade)
+    {
+        ListView_SetItemState(hProcessPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
+        bProcessPageSelectionMade = TRUE;
+    }
+    /*
+    else
+    {
+        bProcessPageSelectionMade = FALSE;
+    }
+    */
 }
 
 BOOL ProcessRunning(ULONG ProcessId) 
