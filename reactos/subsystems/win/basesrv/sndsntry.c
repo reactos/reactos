@@ -50,7 +50,7 @@ FirstSoundSentry(VOID)
                                         0,
                                         (PVOID*)&NewSoundSentry);
     }
-    
+
     /* Set it as the callback for the future, and call it */
     _UserSoundSentry = NewSoundSentry;
     return _UserSoundSentry();

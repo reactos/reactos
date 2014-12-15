@@ -8,6 +8,9 @@
 
 #pragma once
 
+/* appcompat.c */
+CSR_API(BaseSrvCheckApplicationCompatibility);
+
 /* dosdev.c */
 VOID BaseInitDefineDosDevice(VOID);
 VOID BaseCleanupDefineDosDevice(VOID);

@@ -1,8 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+
 spec2def(basesrv.dll basesrv.spec)
 
 list(APPEND SOURCE
+    appcompat.c
     dosdev.c
     init.c
     proc.c

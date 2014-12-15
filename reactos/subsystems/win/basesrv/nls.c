@@ -51,7 +51,7 @@ BASESRV_KERNEL_IMPORTS BaseSrvKernel32Imports[10] =
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 BaseSrvDelayLoadKernel32(VOID)
 {

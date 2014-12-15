@@ -364,7 +364,7 @@ BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECOR
     RtlMoveMemory(&CommandInfo->StartupInfo,
                   CheckVdmRequest->StartupInfo,
                   sizeof(STARTUPINFOA));
- 
+
     /* Allocate memory for the desktop */
     if (CheckVdmRequest->DesktopLen != 0)
     {
@@ -1000,7 +1000,7 @@ CSR_API(BaseSrvGetNextVDMCommand)
             DosRecord->ExitCode = GetNextVdmCommandRequest->ExitCode;
 
             /* Update the VDM state */
-            DosRecord->State = VDM_READY; 
+            DosRecord->State = VDM_READY;
 
             /* Notify all waiting threads that the task is finished */
             NtSetEvent(DosRecord->ServerEvent, NULL);
