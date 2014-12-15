@@ -198,6 +198,7 @@ static NTSTATUS
 NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
                                 PFILE_RECORD_HEADER FileRecord,
                                 PNTFS_ATTR_CONTEXT DataContext,
+                                ULONGLONG MFTIndex,
                                 PFILE_FULL_DIRECTORY_INFORMATION Info,
                                 ULONG BufferLength)
 {
@@ -229,7 +230,7 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     Info->EndOfFile.QuadPart = FileName->AllocatedSize;
     Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
 
-//  Info->FileIndex=;
+    Info->FileIndex = MFTIndex;
     Info->EaSize = 0;
 
     return STATUS_SUCCESS;
@@ -240,6 +241,7 @@ static NTSTATUS
 NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
                                 PFILE_RECORD_HEADER FileRecord,
                                 PNTFS_ATTR_CONTEXT DataContext,
+                                ULONGLONG MFTIndex,
                                 PFILE_BOTH_DIR_INFORMATION Info,
                                 ULONG BufferLength)
 {
@@ -285,7 +287,7 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     Info->EndOfFile.QuadPart = FileName->AllocatedSize;
     Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
 
-//  Info->FileIndex=;
+    Info->FileIndex = MFTIndex;
     Info->EaSize = 0;
 
     return STATUS_SUCCESS;
@@ -437,6 +439,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                     Status = NtfsGetFullDirectoryInformation(DeviceExtension,
                                                              FileRecord,
                                                              DataContext,
+                                                             MFTRecord,
                                                              (PFILE_FULL_DIRECTORY_INFORMATION)Buffer,
                                                              BufferLength);
                     break;
@@ -445,6 +448,7 @@ NtfsQueryDirectory(PNTFS_IRP_CONTEXT IrpContext)
                     Status = NtfsGetBothDirectoryInformation(DeviceExtension,
                                                              FileRecord,
                                                              DataContext,
+                                                             MFTRecord,
                                                              (PFILE_BOTH_DIR_INFORMATION)Buffer,
                                                              BufferLength);
                     break;
