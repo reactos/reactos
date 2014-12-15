@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Startup and Recovery", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Environment Variables", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Environment Variables", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

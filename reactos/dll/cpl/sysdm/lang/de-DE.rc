@@ -26,7 +26,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS-Homepage</A> besuchen", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 100, 10
+    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS-Homepage</A> besuchen", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "&Lizenz anzeigen...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -57,16 +57,16 @@ BEGIN
     LTEXT "Administratorrechte werden für die meisten dieser Einstellungen benötigt.", IDC_STATIC, 12, 5, 242, 8
     GROUPBOX "Leistung", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Mit Leistungsoptionen können Sie einstellen, wie Programme Speicher benutzen sollen. Diese Einstellungen beeinflussen die Leistung ihres Computers.", IDC_STATIC, 16, 29, 210, 24
-    PUSHBUTTON "Einstellungen", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "Einstellungen", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Benutzerprofile", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Desktop-Einstellungen bezüglich der Anmeldung.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Einstellungen", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Einstellungen", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Starten und Wiederherstellen", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Start- und Wiederherstellungseinstellungen regeln, wie der Computer gestartet werden soll und was passieren soll, wenn ein Fehler auftritt.", IDC_STATIC, 16, 144, 210, 27
-    PUSHBUTTON "Einstellungen", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "Systemeinstellungen", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
-    PUSHBUTTON "Umgebungsvariablen", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "Fehler melden", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "Einstellungen", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "Systemeinstellungen", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Umgebungsvariablen", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Fehler melden", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

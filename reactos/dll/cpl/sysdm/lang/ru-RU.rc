@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 204, 220, 10
+    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "&Лицензия...", IDC_LICENCE, 170, 200, 78, 14
 END
 
@@ -48,16 +48,16 @@ BEGIN
     LTEXT "Для изменения этих параметров требуются права Администратора.", IDC_STATIC, 12, 5, 253, 8
     GROUPBOX "Быстродействие", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Визуальные эффекты, использование процессора, оперативной и виртуальной памяти.", IDC_STATIC, 16, 29, 210, 20
-    PUSHBUTTON "&Параметры", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "&Параметры", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Профили пользователей", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Параметры рабочего стола, относящиеся ко входу в систему.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Параметры", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Параметры", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Загрузка и восстановление", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Загрузка и восстановление системы, отладочная информация.", IDC_STATIC, 16, 144, 210, 20
-    PUSHBUTTON "&Параметры", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "&Параметры", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "Настройки системы", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "П&еременные среды", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Отчет об ошибках", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

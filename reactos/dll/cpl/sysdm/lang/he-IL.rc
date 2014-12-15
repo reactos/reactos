@@ -57,8 +57,8 @@ BEGIN
     GROUPBOX "הפעלה ושחזור", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "הגדרות", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "הגדרות מערכת", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "משתני סביבה", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "הגדרות מערכת", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "משתני סביבה", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "דווח שגיאות", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

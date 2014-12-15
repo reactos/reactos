@@ -60,8 +60,8 @@ BEGIN
     GROUPBOX "Spuštění a zotavení systému", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Možnosti spuštění a zotavení říkají počítači, jak se spustit a co dělat, jestliže jej chyba donutí zastavit.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Nastavení", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Nastavení systému", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Proměnné prostředí", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON "Nastavení systému", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Proměnné prostředí", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Hlášení chyb", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

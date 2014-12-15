@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 180, 93, 10
+    CONTROL "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "&Προβολή άδειας...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Εκκίνηση και αποκατάσταση", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Η Εκκίνηση και αποκατάσταση ρυθμίζει το πώς θα ξεκινά ο υπολογιστής αλλά και τον τρόπο αντιμετόπησης σφαλμάτων που θα τον κάνουν να σταματήσει.", IDC_STATIC, 16, 144, 210, 24
     PUSHBUTTON "Ρ&υθμίσεις", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "&Μεταβλητές περιβάλλοντος", IDC_ENVVAR, 70, 192, 96, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Μεταβλητές περιβάλλοντος", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Αναφο&ρά σφαλμάτων", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

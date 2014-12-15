@@ -57,8 +57,8 @@ BEGIN
     GROUPBOX "Start och återställning", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Start och återställning ställer in hur din dator ska starta och hur den ska bete sig om den stöter på ett fel.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Inställningar", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Miljövariabler", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Miljövariabler", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Felrapportering", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

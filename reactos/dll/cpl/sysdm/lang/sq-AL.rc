@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Fillim dhe Rimëkëmbje", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Opsionet e Fillimit dhe shërimit udhëzojnë kompjuterin tuaj se si të filloi dhe çfarë të bëjë, nëse gabimet e shkaktojn kompjuterin tuaj për të ndaluar.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Cilësimet", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "Cilësime Sistemi", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Mjedis Variablël", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "Cilësime Sistemi", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Mjedis Variablël", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Raporto Gabimet", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

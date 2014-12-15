@@ -57,8 +57,8 @@ BEGIN
     GROUPBOX "Indítás és helyreállítás", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Az indítási és helyreállítási beállításokkal adhatja meg operációs rendszerének, hogy hogyan induljon el, és hogy mit tegyen, ha egy hiba miatt leáll számítógépe.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Környezeti változók", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Környezeti változók", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

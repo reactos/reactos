@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Opstart og Gendannelse", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Opstart og Gendannelse fortæller din computer hvordan den skal starte og hvad den skal gøre hvis en kritisk fejl opstår som får din computer til at stoppe.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Miljø Variabler", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Miljø Variabler", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

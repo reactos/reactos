@@ -26,7 +26,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Odwiedź <A HREF=""http://www.reactos.org/"">Stronę domową ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 123, 10
+    CONTROL "Odwiedź <A HREF=""http://www.reactos.org/"">Stronę domową ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "Wyświetl &licencję...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -57,16 +57,16 @@ BEGIN
     LTEXT "Aby móc przeprowadzić większość tych zmian, musisz zalogować się jako administrator.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Wydajność", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Efekty wizualne, planowanie użycia procesora, wykorzystanie pamięci i pamięć wirtualna.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON "&Ustawienia", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "&Ustawienia", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Profile użytkownika", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Ustawienia pulpitu powiązane z logowaniem użytkownika.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "U&stawienia", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "U&stawienia", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Uruchamianie i odzyskiwanie", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Informacje o uruchamianiu systemu, awariach systemu i debugowaniu.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON "Us&tawienia", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "Ustawienia systemowe", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
-    PUSHBUTTON "Z&mienne środowiskowe", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "&Raportowanie błędów", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "Us&tawienia", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "Ustawienia systemowe", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Z&mienne środowiskowe", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "&Raportowanie błędów", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

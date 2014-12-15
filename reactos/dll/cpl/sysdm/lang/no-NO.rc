@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Oppstart og gjenoppretting", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Oppstart og gjenoppretting forteller hvordan man kan få startet og hva som lagde problemet med din datamaskin.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Innstillinger", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Miljøvariabler", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Miljøvariabler", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Feil rapporteringer", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

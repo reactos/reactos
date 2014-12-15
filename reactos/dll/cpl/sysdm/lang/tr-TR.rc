@@ -57,8 +57,8 @@ BEGIN
     GROUPBOX "Başlangıç ve Kurtarma", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Başlangıç ve kurtarma seçenekleri, bilgisayarınıza, ne biçimde açılacağını ve bir yanlışlık bilgisayarınızın durmasına neden olduğunda ne yapacağını bildirir.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Aya&rlar", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "&Dizge Ayarları", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "&Ortam Değişkenleri", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "&Dizge Ayarları", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Ortam Değişkenleri", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Ya&nlışlık Bildirimi", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

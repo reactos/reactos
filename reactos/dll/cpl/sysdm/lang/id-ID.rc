@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Kunjungi <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 10
+    CONTROL "Kunjungi <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "Lihat &lisensi...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -48,16 +48,16 @@ BEGIN
     LTEXT "Administrator privileges are required for most of these settings.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Performance", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Performance options control how applications use memory, which affects the speed of your computer.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON "Settings", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "Settings", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "User Profiles", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Desktop settings related to your logon", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Settings", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Settings", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Startup and Recovery", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Environment Variables", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Environment Variables", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

@@ -25,7 +25,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Navštívte <A HREF=""http://www.reactos.org/"">domovskú stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 165, 10
+    CONTROL "Navštívte <A HREF=""http://www.reactos.org/"">domovskú stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "Zobraziť &licenciu...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -56,16 +56,16 @@ BEGIN
     LTEXT "Na vykonanie väčšiny z týchto zmien sú potrebné privilégia správcu.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Výkon", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Nastavením možností výkonu môžete kontrolovať, ako majú aplikácie využívať pamäť. Tieto nastavenia ovplyvňujú rýchlosť práce počítača.", IDC_STATIC, 16, 29, 210, 24
-    PUSHBUTTON "&Nastavenie", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "&Nastavenie", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Používateľské profily", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Nastavenie pracovnej plochy súvisiace s prihlásením", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Spúšťanie a obnovovanie", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Možnosti spustenia a obnovenia systému upravujú, ako má byť počítač spustený a čo má urobiť, ak nejaká chyba zapríčiní zlyhanie systému.", IDC_STATIC, 16, 144, 210, 27
-    PUSHBUTTON "Na&stavenie", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "&Premenné prostredia", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "&Hlásenie chýb", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "Na&stavenie", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Premenné prostredia", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "&Hlásenie chýb", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

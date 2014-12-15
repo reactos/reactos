@@ -64,9 +64,9 @@ BEGIN
     GROUPBOX "Pornire și Recuperare", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Aceste opțiuni determină modul în care sistemul se deschide, acțiunile în caz de eroare, și alte informații de depanare.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Opți&uni…", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "&Configurare sistem…", IDC_SYSSETTINGS, 6, 192, 78, 15
-    PUSHBUTTON "&Variabile de mediu…", IDC_ENVVAR, 89, 192, 78, 15
-    PUSHBUTTON "&Raportare erori…", IDC_ERRORREPORT, 172, 192, 78, 15
+    PUSHBUTTON "&Configurare sistem…", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Variabile de mediu…", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "&Raportare erori…", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106

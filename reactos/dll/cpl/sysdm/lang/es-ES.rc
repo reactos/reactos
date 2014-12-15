@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Visite <A HREF=""http://www.reactos.org/"">Página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 110, 10
+    CONTROL "Visite <A HREF=""http://www.reactos.org/"">Página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "Ver &licencia...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -57,8 +57,8 @@ BEGIN
     GROUPBOX "Inicio y recuperación ", IDC_STATIC, 6, 140, 244, 52
     LTEXT "Inicio de sistema, error de sistema e información de depuración.", IDC_STATIC, 16, 153, 210, 19
     PUSHBUTTON "Configuración", IDC_STAREC, 194, 171, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15//FIXME
-    PUSHBUTTON "Variables de entorno", IDC_ENVVAR, 84, 201, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 201, 80, 15
+    PUSHBUTTON "Variables de entorno", IDC_ENVVAR, 88, 201, 80, 15
     PUSHBUTTON "Informe de errores", IDC_ERRORREPORT, 170, 201, 80, 15
 END
 
@@ -185,7 +185,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Unidad  [etiqueta de volumen]", IDC_STATIC, 12, 3, 96, 16
     LTEXT "Tamaño del archivo de paginación (MB)", IDC_STATIC, 115, 3, 96, 16
-    LISTBOX IDC_PAGEFILELIST, 10, 20, 204, 48, LBS_NOTIFY | LBS_USETABSTOPS
+    LISTBOX IDC_PAGEFILELIST, 10, 20, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Tamaño del archivo de paginación para la unidad ", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Unidad:", IDC_STATIC, 20, 80, 25, 8
     LTEXT "", IDC_DRIVE, 88, 81, 100, 9

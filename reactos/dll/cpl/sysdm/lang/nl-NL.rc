@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Opstart- en herstelinstellingen", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Met de opstart- en herstelinstellingen bepaalt u hoe de computer wordt opgestart en wat er moet gebeuren wanneer een fout ervoor zorgt dat de computer vastloopt.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Settings", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Omgevingsvariabelen", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Omgevingsvariabelen", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Error Reporting", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

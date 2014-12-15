@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "起動と回復", IDC_STATIC, 6, 131, 244, 52
     LTEXT "起動と回復オプションではコンピュータの起動方法と、コンピュータが停止するエラーが 発生した場合、どう処理するかを設定します。", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "設定", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "システムの設定", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "環境変数", IDC_ENVVAR, 85, 192, 80, 15
+    PUSHBUTTON "システムの設定", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "環境変数", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "エラー報告", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 

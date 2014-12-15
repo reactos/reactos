@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Посетете <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 10
+    CONTROL "Посетете <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "&Разрешителното", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -55,9 +55,9 @@ BEGIN
     GROUPBOX "Пускане и възстановяване", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Изборите за пускане и възстановяване казват на компютъра ви как да се пусне и какво да прави, в случай на грешка, която да го накара да спре.", IDC_STATIC, 16, 144, 210, 24
     PUSHBUTTON "Настройки", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Променливи на средата", IDC_ENVVAR, 64, 192, 90, 15
-    PUSHBUTTON "Докладване на грешки", IDC_ERRORREPORT, 160, 192, 90, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Променливи на средата", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Докладване на грешки", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
