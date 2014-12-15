@@ -1419,6 +1419,27 @@ IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
    }
 }
 
+PWND FASTCALL
+co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
+{
+   PWND Ret;
+   PWND Child, OwnerWnd;
+
+   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
+   {
+      OwnerWnd = Child->spwndOwner;
+      if(!OwnerWnd)
+         continue;
+
+      if(OwnerWnd == Owner)
+      {
+         Ret = Child;
+         return Ret;
+      }
+   }
+   return NULL;
+}
+
 BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT last)
 {
     MSG clk_msg;
