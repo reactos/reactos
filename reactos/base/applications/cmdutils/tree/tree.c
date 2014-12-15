@@ -5,11 +5,9 @@
  * PROGRAMMERS:    Asif Bahrainwala (asif_bahrainwala@hotmail.com)
  */
 
-// Tree.cpp : Defines the entry point for the console application.
-//
-#include <windows.h>
 #include <stdio.h>
 //#include <stdarg.h>
+#include <windows.h>
 
 #include "resource.h"
 
