@@ -1,31 +1,31 @@
-1 stub -noname stub1
-2 stub -noname stub2
-3 stub -noname stub3
-4 stub -noname stub4
-5 stub -noname stub5
-6 stub -noname stub6
-7 stub -noname stub7
-8 stub -noname stub8
-9 stub -noname stub9
-10 stub -noname stub10
-11 stub -noname stub11
-12 stub -noname stub12
-13 stub -noname stub13
-14 stub -noname stub14
-15 stub -noname stub15
-16 stub -noname stub16
-17 stub -noname stub17
-18 stub -noname stub18
-19 stub -noname stub19
-20 stub -noname stub20
-21 stub -noname stub21
-22 stub -noname stub22
-23 stub -noname stub23
-24 stub -noname stub24
-25 stub -noname stub25
-26 stub -noname stub26
-27 stub -noname stub27
-28 stub -noname stub28
+1 stub -noname ShellGetUserList   ; (long long long)
+2 stub -noname ShellStatusHostEnd ; (long)
+3 stub -noname ShellIsFriendlyUIActive ; ()
+4 stub -noname ShellIsSuspendAllowed   ; ()
+5 stub -noname ShellIsRemoteConnectionsEnabled ; ()
+6 stub -noname ShellEnableFriendlyUI    ; (long)
+7 stub -noname ShellEnableMultipleUsers ; (long)
+8 stub -noname ShellEnableRemoteConnections ; (long)
+9 stub -noname ShellTurnOffDialog ; (long)
+10 stub -noname ShellIsMultipleUsersEnabled ; ()
+11 stub -noname ShellACPIPowerButtonPressed ; (long long long)
+12 stub -noname ShellIsSingleUserNoPassword ; (wstr wstr)
+13 stub -noname ShellStatusHostShuttingDown ; ()
+14 stub -noname ShellNotifyThemeUserChange  ; (long long)
+15 stub -noname ShellSwitchWhenInteractiveReady ; (long long)
+16 stub -noname ShellDimScreen ; (ptr ptr)
+17 stub -noname ShellInstallAccountFilterData ; ()
+18 stub -noname ShellStatusHostBegin ; (long)
+19 stub -noname ShellIsUserInteractiveLogonAllowed ; (long)
+20 stub -noname ShellSwitchUser ; (long)
+21 stub -noname ShellReturnToWelcome ; (long)
+22 stub -noname ShellStatusHostPowerEvent ; ()
+23 stub -noname ShellStartCredentialServer ; (wstr long long long)
+24 stub -noname ShellAcquireLogonMutex ; ()
+25 stub -noname ShellReleaseLogonMutex ; (long)
+26 stub -noname ShellSignalShutdown    ; ()
+27 stub -noname ShellStatusHostHide    ; ()
+28 stub -noname ShellStatusHostShow    ; ()
 @ stdcall ShellShutdownDialog(ptr wstr long)
 @ stdcall WlxActivateUserShell(ptr wstr wstr ptr)
 @ stdcall WlxDisconnectNotify(ptr)
@@ -42,7 +42,7 @@
 @ stdcall WlxLogoff(ptr)
 @ stdcall WlxNegotiate(long ptr)
 @ stdcall WlxNetworkProviderLoad(ptr ptr)
-@ stub WlxReconnectNotify
+@ stub WlxReconnectNotify ; (long)
 @ stdcall WlxRemoveStatusMessage(ptr)
 @ stdcall WlxScreenSaverNotify(ptr ptr)
 @ stdcall WlxShutdown(ptr long)
