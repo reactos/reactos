@@ -1440,7 +1440,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     pwndDesktop = UserGetDesktopWindow();
     MessageQueue = pti->MessageQueue;
     CurInfo = IntGetSysCursorInfo();
-    pwndMsg = ValidateHwndNoErr(msg->hwnd);
+    pwndPopUP = pwndMsg = ValidateHwndNoErr(msg->hwnd);
     clk_msg = MessageQueue->msgDblClk;
     pDesk = pwndDesktop->head.rpdesk;
 
@@ -1457,6 +1457,27 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
            Start with null window. See wine win.c:test_mouse_input:WM_COMMAND tests.
         */
         pwndMsg = co_WinPosWindowFromPoint( NULL, &msg->pt, &hittest, FALSE);
+        //
+        // CORE-6129, Override if a diabled window with a visible popup was selected.
+        //
+        if (pwndPopUP && pwndPopUP->style & WS_DISABLED)
+        {
+           TRACE("window disabled\n");
+           pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pwndPopUP);
+           if ( pwndPopUP &&
+                pwndPopUP->style & WS_POPUP &&
+                pwndPopUP->style & WS_VISIBLE &&
+                (pwndPopUP->head.pti->MessageQueue != gpqForeground ||
+                 pwndPopUP->head.pti->MessageQueue->spwndActive != pwndPopUP) &&
+              //pwndPopUP != pwndPopUP->head.rpdesk->pDeskInfo->spwndShell needs testing.
+                pwndPopUP != ValidateHwndNoErr(InputWindowStation->ShellWindow) )
+           {
+               TRACE("Found Popup!\n");
+               UserDereferenceObject(pwndMsg);
+               pwndMsg = pwndPopUP;
+               UserReferenceObject(pwndMsg);
+           }
+        }
     }
 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);

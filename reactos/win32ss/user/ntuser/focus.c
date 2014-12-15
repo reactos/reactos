@@ -534,62 +534,6 @@ co_IntSetForegroundAndFocusWindow(
    return Ret && fgRet;
 }
 
-/*
-  Revision 7888, activate modal dialog when clicking on a disabled window.
-*/
-HWND FASTCALL
-IntFindChildWindowToOwner(PWND Root, PWND Owner)
-{
-   HWND Ret;
-   PWND Child, OwnerWnd;
-
-   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
-   {
-      OwnerWnd = Child->spwndOwner;
-      if(!OwnerWnd)
-         continue;
-
-      if(OwnerWnd == Owner)
-      {
-         Ret = Child->head.h;
-         return Ret;
-      }
-   }
-   return NULL;
-}
-
-BOOL FASTCALL
-co_IntMouseActivateWindow(PWND Wnd)
-{
-   HWND Top;
-   USER_REFERENCE_ENTRY Ref;
-   ASSERT_REFS_CO(Wnd);
-
-   if (Wnd->style & WS_DISABLED)
-   {
-      BOOL Ret;
-      PWND TopWnd;
-      PWND DesktopWindow = UserGetDesktopWindow();
-      if (DesktopWindow)
-      {
-         ERR("Window Diabled\n");
-         Top = IntFindChildWindowToOwner(DesktopWindow, Wnd);
-         if ((TopWnd = ValidateHwndNoErr(Top)))
-         {
-            UserRefObjectCo(TopWnd, &Ref);
-            Ret = co_IntMouseActivateWindow(TopWnd);
-            UserDerefObjectCo(TopWnd);
-
-            return Ret;
-         }
-      }
-      return FALSE;
-   }
-   TRACE("Mouse Active\n");
-   co_IntSetForegroundAndFocusWindow(Wnd, TRUE);
-   return TRUE;
-}
-
 BOOL FASTCALL
 co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
 {
@@ -760,6 +704,13 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
    //ERR("co_IntSetActiveWindow Exit\n");
    if (Wnd) Wnd->state &= ~WNDS_BEINGACTIVATED;
    return (ThreadQueue->spwndActive == Wnd);
+}
+
+BOOL FASTCALL
+co_IntMouseActivateWindow(PWND Wnd)
+{
+   TRACE("Mouse Active\n");
+   return co_IntSetForegroundAndFocusWindow(Wnd, TRUE);
 }
 
 BOOL FASTCALL
