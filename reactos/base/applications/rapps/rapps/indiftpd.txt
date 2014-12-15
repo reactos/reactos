@@ -23,7 +23,7 @@ Description = IndiFTPD è un server FTP autonomo che funziona come un unico eseg
 Description = IndiFTPD to samodzielny serwer FTP składający sie z jednego pliku wykonywalnego. Zaprojektowany z myślą o użytkownikach, którzy nie chcą instalować / konfigurować serwera w systemie (lub nie mają uprawnień) i chcą szybko uruchomić serwer FTP.
 
 [Section.0418]
-Description = IndiFTPD este un server FTP de sine stătător, într-un singur executabil. A fost gândit pentru situațiile în care un utilizator nu dorește instalarea/configurarea unui server în sistem (sau nu deține privelegiile necesare) însă dorește obținerea rapidă a unui server funcțional.
+Description = IndiFTPD este un server FTP de sine stătător, într-un singur executabil. Este adresat situațiilor în care nu este posibilă sau nu se dorește instalarea/configurarea unui server în sistem, însă este necesară obținerea rapidă a unui server funcțional.
 Size = 556 ko
 
 [Section.041f]

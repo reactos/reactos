@@ -15,6 +15,11 @@ CDPath = none
 [Section.0407]
 Description = Ein Paket von mehr als 180 Utilities für Windows.
 
+[Section.0418]
+Licence = Gratuită
+Description = Un pachet cu peste 180 de utilitare.
+Size = 20,2 Mo
+
 [Section.041f]
 License = Ücretsiz
 Description = Windows için 180 araçtan daha çoğunun bir paketi.

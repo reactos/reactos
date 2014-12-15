@@ -20,7 +20,7 @@ Description = Compilador BASIC de código abierto. El lenguaje BASIC es compatib
 
 [Section.040c]
 Description = Compilateur BASIC open source. La syntaxe du BASIC est compatible avec le QBASIC.
-Size = 7,4 Mo
+Size = 9,0 Mo
 
 [Section.0410]
 Description = Compilatore BASIC open source. La sintassi del BASIC è compatibile con il QBASIC.
@@ -30,11 +30,11 @@ Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
 
 [Section.0418]
 Description = Compilator (cu surse deschise) BASIC. Sintaxa BASIC este compatibilă cu QBASIC.
-Size = 7,4 Mo
+Size = 9,0 Mo
 
 [Section.041f]
 Description = Açık kaynak BASIC derleyicisi. Bu BASIC söz dizimi, QBASIC ile uyumludur.
-Size = 7,4 MB
+Size = 9,0 MB
 
 [Section.0422]
 Description = Відкритий компілятор BASIC. Синтаксис сумісний з QBASIC.
