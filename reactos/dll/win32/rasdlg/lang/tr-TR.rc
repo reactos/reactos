@@ -165,13 +165,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS, ne denli bilgi gönderiliyor ve alınıyor olduğuna bağlı olarak aygıtları kendiliğinden çevirebilir ve erteleyebilir.", 1085, 9, 7, 253, 30
     GROUPBOX "Kendiliğinden Çevirme", -1, 6, 38, 249, 71
-    LTEXT "Bu bağlantı aşağıdaki koşulların ikisiyle karşılaştığında başka bir geçek çevir:", 1083, 16, 51, 237, 16, NOT WS_GROUP
+    LTEXT "Bu bağlantı aşağıdaki şartların ikisiyle karşılaştığında başka bir geçek çevir:", 1083, 16, 51, 237, 16, NOT WS_GROUP
     LTEXT "&En Az Etknlik:", -1, 16, 73, 100, 8
     COMBOBOX 1079, 117, 70, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "E&n Az Süre:", 1084, 16, 92, 99, 8, NOT WS_GROUP
     COMBOBOX 1080, 117, 89, 90, 162, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     GROUPBOX "Kendiliğinden Erteleme", -1, 6, 113, 248, 81
-    LTEXT "Aşağıdaki koşulların ikisiyle karşılaştığında bu bağlantı için kullanılan tüm aygıtları ertele:", 1086, 16, 127, 230, 18, NOT WS_GROUP
+    LTEXT "Aşağıdaki şartların ikisiyle karşılaştığında bu bağlantı için kullanılan tüm aygıtları ertele:", 1086, 16, 127, 230, 18, NOT WS_GROUP
     LTEXT "&Şundan Daha Çok Etkinlik Yok:", -1, 16, 150, 92, 8
     COMBOBOX 1081, 115, 146, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "En &Az Süre:", 1087, 16, 168, 92, 8, NOT WS_GROUP
@@ -690,7 +690,7 @@ BEGIN
     EDITTEXT 1287, 141, 84, 69, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "Ye&niden Çevirme Girişimleri Arasındaki Süre:", 1301, 16, 103, 123, 8
     COMBOBOX 1292, 141, 101, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "&Ertelemeden Önceki Boşta Kalma Süresi:", 1299, 16, 120, 123, 8
+    LTEXT "&Ertelemeden Önce Boşta Kalma Süresi:", 1299, 16, 120, 123, 8
     COMBOBOX 1291, 141, 116, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
     AUTOCHECKBOX "&Geçek Kesilmişse Yeniden Çevir", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
     GROUPBOX "Çoklu Aygıtlar", 1288, 7, 156, 213, 32
@@ -769,7 +769,7 @@ BEGIN
     LTEXT "Çe&virme Girişimleri Arasındaki Sâniyeler:", 1351, 16, 38, 140, 8, NOT WS_GROUP
     EDITTEXT 1342, 158, 36, 56, 14, ES_AUTOHSCROLL
     GROUPBOX "Bağantı Türü", 1343, 9, 63, 213, 56, WS_GROUP
-    LTEXT "&Ertelemeden Önceki Boşta Kalma Sâniyeleri:", 1350, 28, 88, 124, 8, NOT WS_GROUP
+    LTEXT "&Ertelemeden Önce Boşta Kalma Sâniyeleri:", 1350, 28, 88, 124, 8, NOT WS_GROUP
     AUTORADIOBUTTON "&İsteğe Bağlı Arama Bağlantısı", 1347, 16, 78, 135, 10, WS_GROUP
     AUTORADIOBUTTON "&Kalıcı Bağlantı", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
     EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
@@ -1246,98 +1246,98 @@ END
 
 559 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Services"
+CAPTION "Hizmetler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Select the services running on your network that Internet users can access.", -1, 7, 5, 216, 22
-    LTEXT "Services:", -1, 7, 27, 143, 8
+    LTEXT "&Umûmî Ağ kullanıcılarının erişebildiği ağınızda çalışan hizmetleri seçiniz.", -1, 7, 5, 216, 22
+    LTEXT "Hizmetler:", -1, 7, 27, 143, 8
     CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
-    PUSHBUTTON "A&dd...", 1561, 7, 197, 67, 14
-    PUSHBUTTON "Edi&t...", 1563, 80, 197, 67, 14
-    PUSHBUTTON "D&elete", 1562, 153, 197, 67, 14
+    PUSHBUTTON "&Ekle...", 1561, 7, 197, 67, 14
+    PUSHBUTTON "&Düzenle...", 1563, 80, 197, 67, 14
+    PUSHBUTTON "&Sil", 1562, 153, 197, 67, 14
 END
 
 560 DIALOGEX 6, 18, 240, 88
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Initial Connection"
+CAPTION "İlk Bağlantı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Yes", 6, 68, 68, 50, 14
-    PUSHBUTTON "&No", 7, 125, 68, 50, 14
+    DEFPUSHBUTTON "&Evet", 6, 68, 68, 50, 14
+    PUSHBUTTON "&Hayır", 7, 125, 68, 50, 14
     ICON 32516, 1575, 7, 7, 20, 20
     LTEXT "", 1576, 40, 7, 190, 33
-    AUTOCHECKBOX "&Don't display this reminder again", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Bu Anımsatmayı Bir Daha Gösterme", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
 END
 
 567 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type the name of your service in the following text box. If you leave the text box blank, ReactOS will automatically detect and configure your service when you connect.", -1, 10, 7, 301, 25
-    LTEXT "&Service name (optional):", -1, 22, 32, 229, 8
+    LTEXT "Aşağıdaki metin kutusuna hizmetinizin adını yazınız. Metin kutusunu boş bırakırsanız ReactOS, bağlandığınızda hizmetinizi kendiliğinden algılayacak ve yapılandıracaktır.", -1, 10, 7, 301, 25
+    LTEXT "&Hizmet Adı (Seçimlik):", -1, 22, 32, 229, 8
     EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
 END
 
 568 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Service name:", 1686, 7, 5, 217, 10
+    LTEXT "&Hizmet Adı:", 1686, 7, 5, 217, 10
     EDITTEXT 1594, 7, 17, 217, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 9, 196, 215, 8
+    AUTOCHECKBOX "&Bağlandığında Bildirim Alanında Simge Göster", 1120, 9, 196, 215, 8
 END
 
 569 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Security"
+CAPTION "Güvenlik"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Security options", 1580, 8, 4, 213, 151
-    AUTORADIOBUTTON "&Typical (recommended settings)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
-    AUTORADIOBUTTON "A&dvanced (custom settings)", 1541, 14, 100, 197, 8, BS_NOTIFY
-    LTEXT "&Validate my identity as follows:", 1537, 26, 29, 183, 8, NOT WS_GROUP
+    GROUPBOX "Güvenlik Seçenekleri", 1580, 8, 4, 213, 151
+    AUTORADIOBUTTON "&Tipik (Önerilen Ayarlar)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
+    AUTORADIOBUTTON "&Gelişmiş (Husûsî Ayarlar)", 1541, 14, 100, 197, 8, BS_NOTIFY
+    LTEXT "&Kimliğimi Aşağıdaki Gibi Onayla:", 1537, 26, 29, 183, 8, NOT WS_GROUP
     COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "A&utomatically use my ReactOS logon name and  password (and domain if any)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Requ&ire data encryption (disconnect if none)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
-    LTEXT "Using these settings requires a knowledge of security protocols.", 1539, 26, 111, 136, 20
-    PUSHBUTTON "&Settings...", 1180, 151, 134, 60, 14
-    PUSHBUTTON "I&PSec Settings...", 1598, 126, 163, 85, 14
+    AUTOCHECKBOX "&ReactOS Oturum Açma Adımı ve Şifremi Kendiliğinden Kullan (Eğer Varsa Etki Alanını Da)", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Veri Sıkıştırmasını Gerektir (Eğer Yoksa Bağlantıyı Kes)", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
+    LTEXT "Bu ayarları kullanmak güvenlik iletişim kâidelerinin bir bilgisini gerektirir.", 1539, 26, 111, 136, 20
+    PUSHBUTTON "&Ayarlar...", 1180, 151, 134, 60, 14
+    PUSHBUTTON "&IPSec Ayarları...", 1598, 126, 163, 85, 14
 END
 
 570 DIALOGEX 0, 0, 265, 126
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "IPSec Settings"
+CAPTION "IPSec Ayarları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", 1, 151, 104, 50, 14
-    PUSHBUTTON "Cancel", 2, 207, 104, 50, 14
-    AUTOCHECKBOX "&Use pre-shared key for authentication", 1604, 21, 15, 217, 10
-    LTEXT "&Key:", 1602, 20, 31, 44, 12
+    DEFPUSHBUTTON "Tamam", 1, 151, 104, 50, 14
+    PUSHBUTTON "İptal", 2, 207, 104, 50, 14
+    AUTOCHECKBOX "&Kimlik Doğrulaması İçin Önceden Paylaşılan Anahtar Kullan", 1604, 21, 15, 217, 10
+    LTEXT "&Anahtar:", 1602, 20, 31, 44, 12
     EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "Allow certificiates from my user store in addition to machine certificates", 1606, 20, 50, 242, 13, WS_DISABLED
-    AUTOCHECKBOX "Use a specific certificate", 1607, 20, 67, 239, 10, WS_DISABLED
-    PUSHBUTTON "Select", 1608, 31, 84, 50, 14, WS_DISABLED
+    AUTOCHECKBOX "&Makine Onay Belgelerinin Yanında Kullanıcı Depomdan Onay Belgelerine İzin Ver", 1606, 20, 50, 242, 13, WS_DISABLED
+    AUTOCHECKBOX "&Belirli Bir Onay Belgesi Kullan", 1607, 20, 67, 239, 10, WS_DISABLED
+    PUSHBUTTON "&Seç", 1608, 31, 84, 50, 14, WS_DISABLED
     COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 571 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Security Logging"
+CAPTION "Güvenlik Kaydetmesi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Logging Options:", -1, 6, 8, 216, 47
-    AUTOCHECKBOX "Log unsuccessful &inbound connection attempts", 1642, 14, 22, 201, 10
-    AUTOCHECKBOX "Log successful &outbound connections", 1641, 14, 37, 200, 10
-    GROUPBOX "Log file options:", -1, 7, 64, 215, 91
-    LTEXT "&Name:", -1, 14, 78, 199, 8
+    GROUPBOX "Kaydetme Seçenekleri", -1, 6, 8, 216, 47
+    AUTOCHECKBOX "&Gelen Başarısız Bağlantı Girişimlerini Kaydet", 1642, 14, 22, 201, 10
+    AUTOCHECKBOX "G&iden Başarılı Bağlantıları Kaydet", 1641, 14, 37, 200, 10
+    GROUPBOX "Kayıt Kütüğü Seçenekleri", -1, 7, 64, 215, 91
+    LTEXT "&Ad:", -1, 14, 78, 199, 8
     EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
-    PUSHBUTTON "&Browse...", 1639, 153, 108, 60, 14
-    LTEXT "&Size limit:", -1, 14, 133, 67, 8
+    PUSHBUTTON "G&öz At...", 1639, 153, 108, 60, 14
+    LTEXT "&Boyut Hududu:", -1, 14, 133, 67, 8
     EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT "KB", -1, 140, 133, 20, 8
-    PUSHBUTTON "&Restore Defaults", 1643, 135, 197, 85, 14
+    PUSHBUTTON "Ö&n Tanımlıları Geri Getir", 1643, 135, 197, 85, 14
 END
 
 572 DIALOGEX 0, 0, 230, 215
@@ -1345,15 +1345,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ICMP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Internet Control Message Protocol (ICMP) allows the computers on a network to share error and status information. Select the requests for information from the Internet that this computer will respond to:", -1, 7, 5, 215, 37
+    LTEXT "&Umûmî Ağ Denetim İleti İletişim Kâidesi (ICMP) yanlışlık ve durum bilgisi paylaşmak için bir ağdaki bilgisayarlara izin verir. Şuna yanıt vereceği bu bilgisayarın Umûmî Ağ'dan bilgi için istekleri seçiniz:", -1, 7, 5, 215, 37
     CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
-    GROUPBOX "Description:", -1, 7, 153, 215, 55
+    GROUPBOX "Tanım", -1, 7, 153, 215, 55
     LTEXT "", 1645, 14, 171, 199, 32
 END
 
 574 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", 575, 7, 60, 213, 100
@@ -1361,410 +1361,410 @@ END
 
 577 DIALOGEX 0, 0, 312, 144
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type the name of the ISP in the following text box.", 1681, 10, 3, 296, 11
-    LTEXT "N&ame:", 1690, 18, 20, 127, 10
+    LTEXT "Aşağıdaki metin kutusuna ISP'nin adını yazınız.", 1681, 10, 3, 296, 11
+    LTEXT "&Ad:", 1690, 18, 20, 127, 10
     EDITTEXT 1680, 17, 32, 222, 14, ES_AUTOHSCROLL
-    LTEXT "The name you type here will be the name of the connection you are creating.", 1683, 17, 52, 282, 42
+    LTEXT "Buraya yazdığınız ad oluşturuyor olduğunuz bağlantının adı olacaktır.", 1683, 17, 52, 282, 42
 END
 
 580 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "&Automatic selection", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Point to Point Tunneling Protocol (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Layer 2 Tunneling Protocol (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Kendiliğinden Seçim", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Noktadan Noktaya Tünel İletişim Kâidesi (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "K&atman 2 Tünel İletişim Kâidesi (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 1420 DIALOGEX 0, 0, 265, 108
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Bağlan: %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "D&ial:", 1412, 14, 63, 86, 8
+    LTEXT "&Çevir:", 1412, 14, 63, 86, 8
     COMBOBOX 1416, 104, 60, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 80, 248, 1
-    DEFPUSHBUTTON "&Dial", 1590, 9, 87, 60, 14
-    PUSHBUTTON "Cancel", 1591, 72, 87, 60, 14
-    PUSHBUTTON "Pr&operties", 1107, 135, 87, 60, 14
-    PUSHBUTTON "&Help", 1592, 198, 87, 60, 14
+    DEFPUSHBUTTON "Ç&evir", 1590, 9, 87, 60, 14
+    PUSHBUTTON "İptal", 1591, 72, 87, 60, 14
+    PUSHBUTTON "&Husûsiyetler", 1107, 135, 87, 60, 14
+    PUSHBUTTON "&Yardım", 1592, 198, 87, 60, 14
 END
 
 1421 DIALOGEX 0, 0, 265, 223
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Bağlan: %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "&User name:", 1413, 10, 61, 90, 8
+    LTEXT "&Kullanıcı Adı:", 1413, 10, 61, 90, 8
     EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
-    LTEXT "&Password:", 1112, 11, 81, 90, 8
+    LTEXT "&Şifre:", 1112, 11, 81, 90, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
-    AUTOCHECKBOX "&Save this user name and password for the following users:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Me o&nly", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "&Anyone who uses this computer", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kullanıcı Adını ve Şifreyi Kaydet:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Yalnızca Ben", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
-    LTEXT "D&ial:", 1412, 14, 161, 87, 8
+    LTEXT "&Çevir:", 1412, 14, 161, 87, 8
     COMBOBOX 1416, 104, 157, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Dialing &from:", 1415, 14, 178, 88, 8
+    LTEXT "Ş&uradan Çevir:", 1415, 14, 178, 88, 8
     COMBOBOX 1414, 104, 175, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Dialing &Rules", 1108, 193, 175, 65, 14
+    PUSHBUTTON "Ç&evirme Kâideleri", 1108, 193, 175, 65, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 196, 248, 1
-    DEFPUSHBUTTON "&Dial", 1590, 9, 202, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 1591, 72, 202, 60, 14
-    PUSHBUTTON "Pr&operties", 1107, 135, 202, 60, 14
-    PUSHBUTTON "&Help", 1592, 198, 202, 60, 14
+    DEFPUSHBUTTON "Çe&vir", 1590, 9, 202, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 1591, 72, 202, 60, 14
+    PUSHBUTTON "&Husûsiyetler", 1107, 135, 202, 60, 14
+    PUSHBUTTON "Ya&rdım", 1592, 198, 202, 60, 14
 END
 
 1422 DIALOGEX 0, 0, 265, 242
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Connect %1"
+CAPTION "Bağlan: %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-    LTEXT "&User name:", 1413, 10, 67, 91, 8
+    LTEXT "&Kullanıcı Adı:", 1413, 10, 67, 91, 8
     EDITTEXT 1104, 104, 63, 154, 14, ES_AUTOHSCROLL
-    LTEXT "&Password:", 1112, 10, 85, 92, 8
+    LTEXT "&Şifre:", 1112, 10, 85, 92, 8
     EDITTEXT 1103, 104, 82, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "Do&main:", 1110, 10, 104, 92, 8
+    LTEXT "&Etki Alanı:", 1110, 10, 104, 92, 8
     EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
-    AUTOCHECKBOX "&Save this user name and password for the following users:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Me o&nly", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "&Anyone who uses this computer", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kullanıcı Adını ve Şifreyi Kaydet:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Yalnızca Ben", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
-    LTEXT "D&ial:", 1412, 14, 182, 87, 8
+    LTEXT "&Çevir:", 1412, 14, 182, 87, 8
     COMBOBOX 1416, 104, 178, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Dialing &from:", 1415, 14, 198, 87, 8
+    LTEXT "Ş&uradan Çevir:", 1415, 14, 198, 87, 8
     COMBOBOX 1414, 104, 195, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    PUSHBUTTON "Dialing &Rules", 1108, 193, 195, 65, 14
+    PUSHBUTTON "Çe&virme Kâideleri", 1108, 193, 195, 65, 14
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 215, 248, 1
-    DEFPUSHBUTTON "&Dial", 1590, 8, 221, 60, 14, WS_GROUP
+    DEFPUSHBUTTON "Çev&ir", 1590, 8, 221, 60, 14, WS_GROUP
     PUSHBUTTON "Cancel", 1591, 71, 221, 60, 14
-    PUSHBUTTON "Pr&operties", 1107, 134, 221, 60, 14
-    PUSHBUTTON "&Help", 1592, 198, 221, 60, 14
+    PUSHBUTTON "&Husûsiyetler", 1107, 134, 221, 60, 14
+    PUSHBUTTON "Ya&rdım", 1592, 198, 221, 60, 14
 END
 
 1425 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Host name or IP address of destination (such as reactos.org or 145.52.0.1):", 1430, 7, 5, 217, 18
+    LTEXT "&Varışın anabilgisayar adı ya da IP adresi (reactos.org ya da 145.52.0.1 gibi.):", 1430, 7, 5, 217, 18
     EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
-    GROUPBOX "First connect", 1431, 9, 48, 213, 78
-    LTEXT "ReactOS can first connect the public network, such as the Internet, before trying to establish this virtual connection.", 1432, 17, 63, 199, 24
-    AUTOCHECKBOX "&Dial another connection first:", 1428, 19, 89, 183, 10
+    GROUPBOX "İlk Bağlantı", 1431, 9, 48, 213, 78
+    LTEXT "Bu farazî bağlantıyı kurmak için denemeden önce ReactOS, Umûmî Ağ gibi umûmî ağa ilk kez bağlayabilir.", 1432, 17, 63, 199, 24
+    AUTOCHECKBOX "&İlk Kez Başka Bir Bağlantı Çevir:", 1428, 19, 89, 183, 10
     COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 10, 192, 213, 13
+    AUTOCHECKBOX "&Bağlandığında Bildirim Alanında Simge Göster", 1120, 10, 192, 213, 13
 END
 
 1426 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "Options"
+CAPTION "Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Dialing options", 1289, 8, 7, 214, 56
-    AUTOCHECKBOX "&Display progress while connecting", 1284, 16, 17, 199, 10
-    AUTOCHECKBOX "&Prompt for name and password, certificate, etc.", 1554, 16, 32, 199, 10
-    AUTOCHECKBOX "Include &ReactOS logon domain", 1555, 16, 47, 178, 10
-    GROUPBOX "Redialing options", 1290, 8, 68, 214, 89
-    LTEXT "&Redial attempts:", 1300, 16, 81, 121, 8
+    GROUPBOX "Çevirme Seçenekleri", 1289, 8, 7, 214, 56
+    AUTOCHECKBOX "&Bağlanırken İlerlemeyi Göster", 1284, 16, 17, 199, 10
+    AUTOCHECKBOX "&Ad ve Şifre, Onay Belgesi Ve Benzeri İçin Sor", 1554, 16, 32, 199, 10
+    AUTOCHECKBOX "&ReactOS Oturum Açma Etki Alanını İçer", 1555, 16, 47, 178, 10
+    GROUPBOX "Yeniden Çevirme Seçenekleri", 1290, 8, 68, 214, 89
+    LTEXT "&Yeniden Çevirme Girişimleri:", 1300, 16, 81, 121, 8
     EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT "&Time between redial attempts:", 1301, 16, 99, 121, 8
+    LTEXT "Y&eniden Çevirme Girişimleri Arasındaki Süre:", 1301, 16, 99, 121, 8
     COMBOBOX 1292, 141, 95, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Idle ti&me before hanging up:", 1299, 16, 117, 121, 8
+    LTEXT "Er&telemeden Önce Boşta Kalma Süresi:", 1299, 16, 117, 121, 8
     COMBOBOX 1291, 141, 113, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Redial if &line is dropped", 1286, 16, 138, 199, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "&Geçek Kesilmişse Yeniden Çevir", 1286, 16, 138, 199, 10, BS_TOP | BS_MULTILINE
 END
 
 1427 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type the host name or Internet Protocol (IP) address of the computer to which you are connecting.", -1, 10, 6, 275, 16
-    LTEXT "&Host name or IP address (for example, reactos.org or 145.52.0.1 ):", -1, 21, 28, 277, 11
+    LTEXT "Bağlanıyor olduğunuz bilgisayarın anabilgisayar adını ya da Umûmî Ağ İletişim Kâidesi adresini yazınız.", -1, 10, 6, 275, 16
+    LTEXT "&Anabilgisayar adı ya da IP adresi (Örnek: reactos.org ya da 145.52.0.1):", -1, 21, 28, 277, 11
     EDITTEXT 1433, 21, 42, 275, 14, ES_AUTOHSCROLL
 END
 
 1428 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS can automatically dial the initial connection to the Internet or other public network, before establishing the virtual connection.", -1, 10, 6, 275, 24
-    AUTORADIOBUTTON "&Do not dial the initial connection.", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Automatically dial this initial connection:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "ReactOS, farazî bağlantıyı kurmadan önce Umûmî Ağ'a ya da başka umûmî ağa ilk bağlantıyı kendiliğinden çevirebilir.", -1, 10, 6, 275, 24
+    AUTORADIOBUTTON "&İlk Bağlantıyı Çevirme", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Bu İlk Bağlantıyı Kendiliğinden Çevir:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 1436 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Select a device:", 1597, 8, 5, 213, 8
+    LTEXT "&Bir aygıt seçiniz:", 1597, 8, 5, 213, 8
     COMBOBOX 1437, 7, 17, 217, 166, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
-    AUTOCHECKBOX "Sho&w icon in notification area when connected", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "C&onfigure...", 1130, 160, 34, 60, 14
+    AUTOCHECKBOX "B&ağlandığında Bildirim Alanında Simge Göster", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "&Yapılandır...", 1130, 160, 34, 60, 14
 END
 
 1448 DIALOGEX 10, 20, 265, 71
 STYLE DS_SHELLFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Network Connections"
+CAPTION "Ağ Bağlantıları"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "C&hoose a network connection:", 1456, 7, 7, 251, 10
+    LTEXT "&Bir ağ bağlantısı seçiniz:", 1456, 7, 7, 251, 10
     COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-    DEFPUSHBUTTON "&Connect...", 1449, 7, 50, 60, 14
-    PUSHBUTTON "Cancel", 1455, 70, 50, 60, 14
-    PUSHBUTTON "&New...", 1459, 134, 50, 60, 14
-    PUSHBUTTON "P&roperties", 1460, 198, 50, 60, 14
+    DEFPUSHBUTTON "B&ağlan...", 1449, 7, 50, 60, 14
+    PUSHBUTTON "İptal", 1455, 70, 50, 60, 14
+    PUSHBUTTON "&Yeni...", 1459, 134, 50, 60, 14
+    PUSHBUTTON "&Husûsiyetler", 1460, 198, 50, 60, 14
 END
 
 1466 DIALOGEX 6, 18, 265, 262
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sample text", 1469, 7, 7, 251, 8
+    LTEXT "Örnek Metin", 1469, 7, 7, 251, 8
     EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Add", 1471, 77, 36, 60, 14
-    PUSHBUTTON "&Replace", 1472, 141, 36, 60, 14
-    LTEXT "Sample text", 1473, 7, 57, 193, 8
+    PUSHBUTTON "&Ekle", 1471, 77, 36, 60, 14
+    PUSHBUTTON "&Değiştir", 1472, 141, 36, 60, 14
+    LTEXT "Örnek Metin", 1473, 7, 57, 193, 8
     LISTBOX 1474, 7, 68, 193, 145, WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
-    PUSHBUTTON "&Down", 1476, 206, 86, 51, 14, BS_BITMAP
-    PUSHBUTTON "D&elete", 1477, 141, 215, 60, 14
+    PUSHBUTTON "&Aşağı", 1476, 206, 86, 51, 14, BS_BITMAP
+    PUSHBUTTON "&Sil", 1477, 141, 215, 60, 14
     CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
-    PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 196, 242, 60, 14
+    PUSHBUTTON "Tamam", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 196, 242, 60, 14
 END
 
 1467 DIALOGEX 6, 18, 263, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sample text", 1469, 7, 7, 197, 8
+    LTEXT "Örnek Metin", 1469, 7, 7, 197, 8
     EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Add", 1471, 76, 36, 60, 14
-    PUSHBUTTON "&Replace", 1472, 141, 36, 60, 14
-    LTEXT "Sample text", 1473, 7, 57, 193, 8
+    PUSHBUTTON "&Ekle", 1471, 76, 36, 60, 14
+    PUSHBUTTON "&Değiştir", 1472, 141, 36, 60, 14
+    LTEXT "Örnek Metin", 1473, 7, 57, 193, 8
     LISTBOX 1474, 7, 68, 193, 135, WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&Up", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
-    PUSHBUTTON "&Down", 1476, 206, 86, 51, 14, BS_BITMAP
-    PUSHBUTTON "D&elete", 1477, 141, 204, 60, 14
-    AUTOCHECKBOX "Sample text", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 196, 242, 60, 14
+    PUSHBUTTON "&Yukarı", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+    PUSHBUTTON "&Aşağı", 1476, 206, 86, 51, 14, BS_BITMAP
+    PUSHBUTTON "&Sil", 1477, 141, 204, 60, 14
+    AUTOCHECKBOX "Örnek Metin", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
+    PUSHBUTTON "Tamam", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 196, 242, 60, 14
 END
 
 1468 DIALOGEX 6, 18, 263, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sample text", 1469, 7, 5, 249, 8
+    LTEXT "Örnek Metin", 1469, 7, 5, 249, 8
     EDITTEXT 1470, 7, 17, 249, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Add", 1471, 132, 36, 60, 14
-    PUSHBUTTON "&Replace", 1472, 196, 36, 60, 14
-    LTEXT "Sample text", 1473, 7, 55, 251, 8
+    PUSHBUTTON "&Ekle", 1471, 132, 36, 60, 14
+    PUSHBUTTON "&Değiştir", 1472, 196, 36, 60, 14
+    LTEXT "Örnek Metin", 1473, 7, 55, 251, 8
     LISTBOX 1474, 7, 68, 249, 140, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "D&elete", 1477, 196, 214, 60, 14, WS_GROUP
+    PUSHBUTTON "&Sil", 1477, 196, 214, 60, 14, WS_GROUP
     CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
-    PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 196, 242, 60, 14
+    PUSHBUTTON "Tamam", 1, 132, 242, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 196, 242, 60, 14
 END
 
 1469 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Dial-up to &private network.", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Connect to a private network &through the Internet.", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Connect directly to another computer.", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Connect to the network via b&roadband", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
-    LTEXT "Connect using my phone line (modem or ISDN).", -1, 45, 21, 156, 8
-    LTEXT "Create a Virtual Private Network (VPN) connection or tunnel through the internet.", -1, 45, 46, 266, 8
-    LTEXT "Connect using my serial, parallel, or infrared port.", -1, 45, 71, 266, 8
-    LTEXT "Connect through my broadband connection.", -1, 45, 95, 266, 8
+    AUTORADIOBUTTON "&Şahsî Ağı Çevir", 1488, 24, 9, 116, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Umûmî Ağ'dan Şahsî Bir Ağa Bağlan", 1489, 24, 34, 206, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Başka Bir Bilgisayara Doğrudan Bağlan", 1490, 24, 59, 157, 10, NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Geniş Bant Yoluyla Ağa Bağlan", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
+    LTEXT "Telefon Geçeğimi (Çevirge ya da ISDN) Kullanarak Bağlan", -1, 45, 21, 156, 8
+    LTEXT "Umûmî Ağ'dan Bir Farazî Şahsî Ağ (VPN) Bağlantısı ya da Bir Tünel Oluştur", -1, 45, 46, 266, 8
+    LTEXT "Dizilik, Koşut ya da Kızıl Ötesi Girişimi Kullanarak Bağlan", -1, 45, 71, 266, 8
+    LTEXT "Geniş Bant Bağlantımdan Bağlan", -1, 45, 95, 266, 8
 END
 
 1480 DIALOGEX 0, 0, 230, 61
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Phone Number Editor"
+CAPTION "Telefon Numarası Düzenleyicisi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Please enter the new phone number:", 1481, 7, 7, 218, 8
+    LTEXT "&Lütfen yeni telefon numarasını giriniz:", 1481, 7, 7, 218, 8
     EDITTEXT 1482, 7, 17, 217, 15, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", 1, 99, 40, 60, 14
-    PUSHBUTTON "Cancel", 2, 163, 40, 60, 14
+    DEFPUSHBUTTON "Tamam", 1, 99, 40, 60, 14
+    PUSHBUTTON "İptal", 2, 163, 40, 60, 14
 END
 
 1481 DIALOGEX 0, 0, 321, 157
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Yeni Bağlantı Yardımcısı"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Type an ISP account name and password, then write down this information and store it in a safe place. (If you have forgotten an existing account name or password, contact your ISP.)", 1689, 10, 4, 308, 25
-    LTEXT "&User name:", 1636, 23, 35, 89, 15
+    LTEXT "Bir ISP hesap adı ve şifresi yazınız, sonra bu bilgiyi yazınız ve onu güvenli bir yerde saklayınız. (Var olan bir hesap adını veyâ şifreyi unuttuysanız ISP'nizle iletişime geçiniz.)", 1689, 10, 4, 308, 25
+    LTEXT "&Kullanıcı Adı:", 1636, 23, 35, 89, 15
     EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
-    LTEXT "&Password:", 1637, 23, 55, 90, 13
+    LTEXT "&Şifre:", 1637, 23, 55, 90, 13
     EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirm password:", 1638, 23, 74, 88, 13
+    LTEXT "Ş&ifreyi Doğrula:", 1638, 23, 74, 88, 13
     EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "U&se this account  name and password when anyone connects to the Internet from this computer", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "&Make this the default Internet connection", 1595, 23, 112, 288, 14
-    AUTOCHECKBOX "&Turn on Internet Connection Firewall for this connection", 1682, 23, 133, 290, 14
+    AUTOCHECKBOX "&Biri Bu Bilgisayardan Umûmî Ağ'a Bağlandığında Bu Hesap Adını ve Bu Şifreyi Kullan", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "B&unu Ön Tanımlı Umûmî Ağ Bağlantısı Yap", 1595, 23, 112, 288, 14
+    AUTOCHECKBOX "Bu B&ağlantı İçin Umûmî Ağ Bağlantısı Güvenlik Duvarı'nı Aç", 1682, 23, 133, 290, 14
 END
 
 1660 DIALOGEX 0, 0, 258, 78
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Internet Connection Firewall"
+CAPTION "Umûmî Ağ Bağlantısı Güvenlik Duvarı"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 32515, -1, 7, 7, 20, 20
-    LTEXT "Turning off the Internet Connection Firewall could expose your computer to unauthorized access over the Internet. Are you sure you want to turn it off?", -1, 44, 5, 212, 24
-    AUTOCHECKBOX "&Do not show this dialog again", 1662, 42, 40, 210, 10
-    DEFPUSHBUTTON "&Yes", 6, 74, 60, 50, 14
-    PUSHBUTTON "&No", 7, 128, 60, 50, 14
+    LTEXT "Umûmî Ağ Bağlantısı Güvenlik Duvarı'nı kapatmak bilgisayarınızı Umûmî Ağ üzerinden yetkisiz erişimle karşı karşıya getirebilir. Onu kapatmayı istediğinizden emin misiniz?", -1, 44, 5, 212, 24
+    AUTOCHECKBOX "&Bu İletiyi Bir Daha Gösterme", 1662, 42, 40, 210, 10
+    DEFPUSHBUTTON "&Evet", 6, 74, 60, 50, 14
+    PUSHBUTTON "&Hayır", 7, 128, 60, 50, 14
 END
 
 7000 DIALOGEX 0, 0, 215, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&User name:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
+    LTEXT "&Kullanıcı Adı:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
     EDITTEXT 7001, 101, 7, 108, 14, ES_AUTOHSCROLL
-    LTEXT "&Full name:", -1, 7, 26, 90, 12
+    LTEXT "&Tüm Ad:", -1, 7, 26, 90, 12
     EDITTEXT 7002, 101, 25, 108, 14, ES_AUTOHSCROLL
-    LTEXT "&Password:", -1, 7, 44, 90, 12
+    LTEXT "&Şifre:", -1, 7, 44, 90, 12
     EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    LTEXT "&Confirm password:", -1, 7, 62, 91, 12
+    LTEXT "Ş&ifreyi Doğrula:", -1, 7, 62, 91, 12
     EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    PUSHBUTTON "OK", 1, 84, 82, 60, 14
-    PUSHBUTTON "Cancel", 2, 149, 82, 60, 14
+    PUSHBUTTON "Tamam", 1, 84, 82, 60, 14
+    PUSHBUTTON "İptal", 2, 149, 82, 60, 14
 END
 
 7005 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Callback"
+CAPTION "Geri Arama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "&Do not allow callback", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "All&ow the caller to set the callback number", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Al&ways use the following callback number:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Geri Aramaya İzin Verme", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "G&eri Arama Numarasını Ayarlamayak İçin Arayıcıya İzin Ver", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Sürekli Aşağıdaki Geri Arama Numarasını Kullan:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     EDITTEXT 7008, 19, 49, 204, 14, ES_AUTOHSCROLL | WS_GROUP
 END
 
 7010 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "General"
+CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Incoming connections", -1, 7, 4, 214, 110, WS_GROUP
-    LTEXT "Allow incoming connections on these devices.", -1, 17, 17, 195, 8
-    LTEXT "&Devices:", -1, 17, 29, 29, 8
+    GROUPBOX "Gelen Bağlantılar", -1, 7, 4, 214, 110, WS_GROUP
+    LTEXT "Bu aygıtlar üzerinde gelen bağlantılara izin ver.", -1, 17, 17, 195, 8
+    LTEXT "&Aygıtlar:", -1, 17, 29, 29, 8
     CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
-    AUTOCHECKBOX "&Enable multilink", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    PUSHBUTTON "P&roperties", 7013, 145, 94, 65, 14, WS_GROUP
-    GROUPBOX "Virtual private network", -1, 6, 122, 214, 49, WS_GROUP
-    AUTOCHECKBOX "Allo&w others to make private connections to my computer by tunneling through the Internet or other network", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTOCHECKBOX "&Show icon in notification area when connected", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Çoklu Bağlantıyı Etkinleştir", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    PUSHBUTTON "&Husûsiyetler", 7013, 145, 94, 65, 14, WS_GROUP
+    GROUPBOX "Farazî Şahsî Ağ", -1, 6, 122, 214, 49, WS_GROUP
+    AUTOCHECKBOX "&Umûmî Ağ'dan ya da Başka Ağlardan Bilgisayarıma Tünellemeyle Şahsî Bağlantılar Yapmak İçin Başkalarına İzin Ver", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Bağlandığında Bildirim Alanında Simge Göster", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 END
 
 7016 DIALOGEX 0, 0, 265, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming TCP/IP Properties"
+CAPTION "Gelen TCP/IP Husûsiyetleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Network access", -1, 6, 5, 252, 32
-    AUTOCHECKBOX "Allow &callers to access my local area network", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
-    GROUPBOX "TCP/IP address assignment", -1, 6, 42, 250, 122
-    AUTORADIOBUTTON "&Assign TCP/IP addresses automatically using DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "S&pecify TCP/IP addresses", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
-    LTEXT "&From:", -1, 29, 88, 53, 8
+    GROUPBOX "Ağ Erişimi", -1, 6, 5, 252, 32
+    AUTOCHECKBOX "&Yerli Alan Ağ'ıma Erişmek İçin Arayıcılara İzin Ver", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+    GROUPBOX "TCP/IP Adres Ataması", -1, 6, 42, 250, 122
+    AUTORADIOBUTTON "&TCP/IP Adreslerini DHCP Kullanarak Kendiliğinden Ata", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "T&CP/IP Adreslerini Belirle", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
+    LTEXT "&Şuradan:", -1, 29, 88, 53, 8
     CONTROL "", 7018, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 85, 103, 13
-    LTEXT "&To:", -1, 29, 105, 53, 8
+    LTEXT "Ş&uraya:", -1, 29, 105, 53, 8
     CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
-    LTEXT "Total:", -1, 29, 124, 53, 10
+    LTEXT "Toplam:", -1, 29, 124, 53, 10
     LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Allo&w calling computer to specify its own IP address", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "OK", 1, 133, 169, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 197, 169, 60, 14
+    AUTOCHECKBOX "&Kendi IP Adresini Belirlemek İçin Arama Bilgisayarına İzin Ver", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "Tamam", 1, 133, 169, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 197, 169, 60, 14
 END
 
 7025 DIALOGEX 0, 0, 250, 157
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming IPX Properties"
+CAPTION "Gelen IPX Husûsiyetleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Network access", -1, 8, 6, 234, 32
-    AUTOCHECKBOX "Allow &callers to access my local area network", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
-    GROUPBOX "Network number assignment", -1, 8, 43, 234, 87
-    AUTOCHECKBOX "&Assign same network number to all computers", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "Assi&gn network numbers automatically", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "&Specify network numbers:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    GROUPBOX "Ağ Erişimi", -1, 8, 6, 234, 32
+    AUTOCHECKBOX "&Yerli Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+    GROUPBOX "Ağ Numarası Ataması", -1, 8, 43, 234, 87
+    AUTOCHECKBOX "&Tüm Bilgisayarlara Aynı Ağ Numarası Ata", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "&Ağ Numaralarını Kendiliğinden Ata", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "A&ğ Numaralarını Belirle:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
     EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
-    AUTOCHECKBOX "Allo&w callers to specify their own node numbers", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
-    DEFPUSHBUTTON "OK", 1, 116, 136, 60, 14, WS_GROUP
-    PUSHBUTTON "Cancel", 2, 181, 136, 60, 14
+    AUTOCHECKBOX "&Kendi Düğüm Numaralarını Belirlemek İçin Arayıcılara İzin Ver", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
+    DEFPUSHBUTTON "Tamam", 1, 116, 136, 60, 14, WS_GROUP
+    PUSHBUTTON "İptal", 2, 181, 136, 60, 14
 END
 
 7033 DIALOGEX 0, 0, 220, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming Protocol Properties"
+CAPTION "Gelen İletişim Kâidesi Husûsiyetleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTOCHECKBOX "Allow &callers to access my local area network", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
-    DEFPUSHBUTTON "OK", 1, 86, 30, 60, 14
-    PUSHBUTTON "Cancel", 2, 151, 30, 60, 14
+    AUTOCHECKBOX "&Yerli Alan Ağıma Erişmek İçin Arayıcılara İzin Ver", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON "Tamam", 1, 86, 30, 60, 14
+    PUSHBUTTON "İptal", 2, 151, 30, 60, 14
 END
 
 7035 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Networking"
+CAPTION "Ağ Kurma"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Network components:", -1, 7, 7, 217, 9
+    LTEXT "&Ağ Bileşenleri:", -1, 7, 7, 217, 9
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Install...", 7037, 9, 110, 67, 14, WS_GROUP
-    PUSHBUTTON "&Uninstall", 7038, 80, 110, 67, 14, WS_GROUP
-    PUSHBUTTON "P&roperties", 7039, 153, 110, 67, 14, WS_GROUP
-    GROUPBOX "Description", -1, 7, 138, 213, 69
-    LTEXT "<protocol description>", 7040, 17, 150, 193, 48
+    PUSHBUTTON "&Kur...", 7037, 9, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "Ka&ldır", 7038, 80, 110, 67, 14, WS_GROUP
+    PUSHBUTTON "&Husûsiyetler", 7039, 153, 110, 67, 14, WS_GROUP
+    GROUPBOX "Tanım", -1, 7, 138, 213, 69
+    LTEXT "<İletişim Kâidesi Tanımı>", 7040, 17, 150, 193, 48
 END
 
 7042 DIALOGEX 0, 0, 230, 215
 STYLE DS_SHELLFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Users"
+CAPTION "Kullanıcılar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Users allowed to connect:", -1, 7, 5, 213, 8
+    LTEXT "&Bağlanmaya İzin Verilen Kullanıcılar:", -1, 7, 5, 213, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&New...", 7044, 7, 107, 67, 14, WS_GROUP
-    PUSHBUTTON "&Delete", 7045, 80, 107, 67, 14, WS_GROUP
-    PUSHBUTTON "P&roperties", 7046, 153, 107, 67, 14, WS_GROUP
-    AUTOCHECKBOX "Re&quire all users to secure their passwords and data.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX "Al&ways allow directly connected devices such as palmtop computers to connect without providing a password.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-    LTEXT "Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 9, 126, 212, 23
+    PUSHBUTTON "&Yeni...", 7044, 7, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "&Sil", 7045, 80, 107, 67, 14, WS_GROUP
+    PUSHBUTTON "&Husûsiyetler", 7046, 153, 107, 67, 14, WS_GROUP
+    AUTOCHECKBOX "&Onların Şifrelerini ve Verilerini Korumak İçin Tüm Kullanıcıları Gerektir", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "B&ir Şifre Sağlanmadan Bağlanmak İçin Avuçiçi Bilgisayarlar Gibi Doğrudan Bağlanan Aygıtlara İzin Ver", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+    LTEXT "Edilgin bir kullanıcı hesâbı gibi diğer etkenlerin bir kullanıcının bağlanma yeteneğini etkileyebileceğini göz önünde bulundurunuz.", -1, 9, 126, 212, 23
 END
 
 7049 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the check box next to each user who should be allowed a connection to this computer.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
-    LTEXT "&Users allowed to connect:", -1, 10, 28, 275, 8
+    LTEXT "Bu bilgisayara bir bağlantıya izin verilmesi gereken tüm kullanıcıların bitişiğindeki kutucukları imleyiniz. Edilgin bir kullanıcı hesâbı gibi diğer etkenlerin bir kullanıcının bağlanma yeteneğini etkileyebileceğini göz önünde bulundurunuz.", -1, 10, 1, 275, 27
+    LTEXT "&Bağlanmaya İzin Verilen Kullanıcılar:", -1, 10, 28, 275, 8
     CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
-    PUSHBUTTON "&Add...", 7044, 10, 122, 65, 14, WS_GROUP
-    PUSHBUTTON "&Remove", 7045, 79, 122, 65, 14, WS_GROUP
-    PUSHBUTTON "&Properties", 7046, 147, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Ekle...", 7044, 10, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Sil", 7045, 79, 122, 65, 14, WS_GROUP
+    PUSHBUTTON "&Husûsiyetler", 7046, 147, 122, 65, 14, WS_GROUP
 END
 
 7050 DIALOGEX 0, 0, 317, 143

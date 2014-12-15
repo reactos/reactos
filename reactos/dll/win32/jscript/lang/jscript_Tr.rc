@@ -39,7 +39,7 @@ STRINGTABLE
     IDS_INVALID_CONTINUE    "Döngü dışında ""continue"" olamaz."
     IDS_LABEL_REDEFINED     "Etiket yeniden tanımlandı."
     IDS_LABEL_NOT_FOUND     "Etiket bulunamadı."
-    IDS_DISABLED_CC         "Koşullu derleme kapalı."
+    IDS_DISABLED_CC         "Şartlı derleme kapalı."
     IDS_NOT_FUNC            "İşleç bekleniyordu."
     IDS_NOT_DATE            """[nesne]"" bir zaman nesnesi değil."
     IDS_NOT_NUM             "Sayı bekleniyordu."

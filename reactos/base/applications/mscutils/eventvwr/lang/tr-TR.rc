@@ -127,15 +127,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\n\
-Event Source:   %s\n\
-Event Category: %s\n\
-Event ID:       %s\n\
-Date:           %s\n\
-Time:           %s\n\
-User:           %s\n\
-Computer:       %s\n\
-Description:\n%s"
+    IDS_COPY "Olay Türü:      %s\n\
+Olay Kaynağı:   %s\n\
+Olay Ulamı:     %s\n\
+Olay Kimliği:   %s\n\
+Târih:          %s\n\
+Saat:           %s\n\
+Kullanıcı:      %s\n\
+Bilgisayar:     %s\n\
+Tanım:\n%s"
 END
 
 STRINGTABLE

@@ -1,0 +1,54 @@
+/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+IDD_POWER_METER DIALOGEX 0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Güç Ölçücüsü"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Güç Durumu", 1001, BUTTON, BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189 
+    CONTROL "&Görev Çubuğunda Sürekli Simge Göster", 1002, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10 
+    CONTROL "&Tüm Piller İçin Ayrıntıları Göster", 1003, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
+    CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
+END
+
+STRINGTABLE
+BEGIN
+    //Power related strings
+    IDS_PWR_PROPERTIES        "&Güç Husûsiyetlerini Düzenle"
+    IDS_PWR_METER             "G&üç Ölçücüsünü Aç"
+    IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
+    IDS_PWR_PERCENT_REMAINING "%%%1!u! kaldı."
+    IDS_PWR_CHARGING          " (Yükleniyor)"
+    IDS_PWR_UNKNOWN_REMAINING "Bilinmeyen kalan."
+    IDS_PWR_AC "Dalgalı akımda."
+    IDS_PWR_HOURS_REMAINING "%1!u!.%2!02u! saat (%%%3!u!) kalan"
+    IDS_PWR_MINUTES_REMAINING "%1!u! dakîka (%%%2!u!) kalan"
+
+    //Hotplug related strings
+    IDS_HOTPLUG_REMOVE_1 "Donanımı Güvenli Kaldır"
+    IDS_HOTPLUG_REMOVE_2 "&Donanımı Güvenli Kaldır"
+    IDS_HOTPLUG_REMOVE_3 "%s Donanımını Güvenli Kaldır"
+    IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
+    IDS_HOTPLUG_COMMA ", "
+    IDS_HOTPLUG_DRIVE " - Sürücü (%s)"
+    IDS_HOTPLUG_DRIVES " - Sürücüler (%s)"
+    IDS_HOTPLUG_A "A:"
+    IDS_HOTPLUG_REQUIERES "Bu donanım ""Güvenli Kaldır""mayı destekliyor."
+    IDS_HOTPLUG_CLICK "Bu donanımı kaldırmadan önce bu simgenin üzerine tıklayınız ve kaldırmak istediğiniz donanımı seçiniz."
+
+    //Volume related strings
+    IDS_VOL_VOLUME "Ses Düzeyi"
+    IDS_VOL_ADJUST "&Ses Husûsiyetlerini Düzenle"
+    IDS_VOL_OPEN "&Ses Düzeyi Denetimini Aç"
+    IDS_VOL_RUN "SNDVOL32.EXE"
+    IDS_VOL_MUTED "Ses Düzeyi (Sessiz)"
+
+    //Keyboard-Mouse related strings
+    IDS_KEYS_STICKY "Yapışkan Düğmeler"
+    IDS_KEYS_MOUSE "Fâre Düğmeleri"
+    IDS_KEYS_FILTER "Süzgeç Düğmeleri"
+END
+

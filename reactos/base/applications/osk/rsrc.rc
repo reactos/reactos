@@ -73,5 +73,7 @@ IDI_BOTTOM    ICON "res/bottom.ico"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
-
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 /* EOF */
