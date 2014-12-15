@@ -1429,7 +1429,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     MOUSEHOOKSTRUCT hook;
     BOOL eatMsg = FALSE;
 
-    PWND pwndMsg, pwndDesktop;
+    PWND pwndMsg, pwndDesktop, pwndPopUP;
     PUSER_MESSAGE_QUEUE MessageQueue;
     PTHREADINFO pti;
     PSYSTEM_CURSORINFO CurInfo;
