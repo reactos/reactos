@@ -444,6 +444,7 @@ typedef struct _FCB
     ULONG Flags;
 
     ULONGLONG MFTIndex;
+    USHORT LinkCount;
 
     FILENAME_ATTRIBUTE Entry;
 
