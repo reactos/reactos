@@ -158,7 +158,7 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hProcessThread = CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, &dwProcessThread);
 #endif
 
-        /* Refresh controls */
+        /* Refresh page */
         ProcessPageUpdate();
 
         return TRUE;
@@ -433,6 +433,8 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
                 wsprintfW(text, szProcesses, OldProcessCount);
                 SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)text);
             }
+
+            ProcessPageUpdate();
         }
     }
     return 0;
@@ -480,7 +482,7 @@ void UpdateProcesses()
     SendMessage(hProcessPageListCtrl, WM_SETREDRAW, TRUE, 0);
 
     /* Select first item if any */
-    if ((ListView_GetNextItem(hProcessPageListCtrl, -1, LVNI_SELECTED | LVNI_FOCUSED) == -1) && 
+    if ((ListView_GetNextItem(hProcessPageListCtrl, -1, LVNI_FOCUSED | LVNI_SELECTED) == -1) && 
         (ListView_GetItemCount(hProcessPageListCtrl) > 0) && !bProcessPageSelectionMade)
     {
         ListView_SetItemState(hProcessPageListCtrl, 0, LVIS_FOCUSED | LVIS_SELECTED, LVIS_FOCUSED | LVIS_SELECTED);
