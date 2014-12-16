@@ -88,8 +88,8 @@ DllMain(HANDLE hDll,
         LPVOID lpReserved)
 {
     NTSTATUS Status;
-    ULONG Dummy;
-    ULONG DummySize = sizeof(Dummy);
+    BASESRV_API_CONNECTINFO ConnectInfo;
+    ULONG ConnectInfoSize = sizeof(ConnectInfo);
     WCHAR SessionDir[256];
 
     DPRINT("DllMain(hInst %p, dwReason %lu)\n",
@@ -133,11 +133,11 @@ DllMain(HANDLE hDll,
                          WIN_OBJ_DIR);
             }
 
-            /* Connect to the base server */
+            /* Connect to the Base Server */
             Status = CsrClientConnectToServer(SessionDir,
                                               BASESRV_SERVERDLL_INDEX,
-                                              &Dummy,
-                                              &DummySize,
+                                              &ConnectInfo,
+                                              &ConnectInfoSize,
                                               &BaseRunningInServerProcess);
             if (!NT_SUCCESS(Status))
             {

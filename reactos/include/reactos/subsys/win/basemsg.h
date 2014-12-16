@@ -53,19 +53,14 @@ typedef enum _BASESRV_API_NUMBER
     BasepMaxApiNumber
 } BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
 
-
 typedef struct _BASESRV_API_CONNECTINFO
 {
-    ULONG  ExpectedVersion;
-    HANDLE DefaultObjectDirectory;
-    ULONG  WindowsVersion;
-    ULONG  CurrentVersion;
-    ULONG  DebugFlags;
-    WCHAR  WindowsDirectory[MAX_PATH];
-    WCHAR  WindowsSystemDirectory[MAX_PATH];
+    ULONG DebugFlags;
 } BASESRV_API_CONNECTINFO, *PBASESRV_API_CONNECTINFO;
 
-#define BASESRV_VERSION 0x10000
+#if defined(_M_IX86)
+C_ASSERT(sizeof(BASESRV_API_CONNECTINFO) == 0x04);
+#endif
 
 
 typedef struct _BASE_SXS_CREATEPROCESS_MSG
