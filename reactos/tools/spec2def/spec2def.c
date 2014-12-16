@@ -879,7 +879,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Go to next token */
             if (!(pc = NextToken(pc)))
             {
-                fprintf(stderr, "fail4\n");
+                fprintf(stderr, "error: line %d, expected token\n", nLine);
                 return -13;
             }
 
