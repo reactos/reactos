@@ -392,23 +392,9 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
     HICON hiconLarge=0;
     HICON hiconSmall=0;
     UINT ret;
-    static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
 
-    if (!PrivateExtractIconExW)
-    {
-        HMODULE hUser32 = GetModuleHandleA("user32");
-        PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
-    }
-
-    if (PrivateExtractIconExW)
-    {
-        PrivateExtractIconExW(sSourceFile, dwSourceIndex, &hiconLarge, &hiconSmall, 1);
-    }
-    else
-    {
-        PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, 0);
-        PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, 0);
-    }
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, LR_COPYFROMRESOURCE);
+    PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, LR_COPYFROMRESOURCE);
 
     if ( !hiconLarge ||  !hiconSmall)
     {
