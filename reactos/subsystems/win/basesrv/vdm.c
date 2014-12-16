@@ -228,11 +228,14 @@ VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
     RtlFreeHeap(BaseSrvHeap, 0, CommandInfo);
 }
 
-VOID NTAPI BaseSrvCleanupVdmRecords(ULONG ProcessId)
+VOID
+NTAPI
+BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
 {
-    PLIST_ENTRY i;
+    ULONG ProcessId = HandleToUlong(CsrProcess->ClientId.UniqueProcess);
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
     PVDM_DOS_RECORD DosRecord;
+    PLIST_ENTRY i;
 
     /* Enter the critical section */
     RtlEnterCriticalSection(&DosCriticalSection);

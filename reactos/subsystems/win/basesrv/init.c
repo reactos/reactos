@@ -599,8 +599,8 @@ VOID
 NTAPI
 BaseClientDisconnectRoutine(IN PCSR_PROCESS CsrProcess)
 {
-    /* Cleanup the VDM console records */
-    BaseSrvCleanupVdmRecords(HandleToUlong(CsrProcess->ClientId.UniqueProcess));
+    /* Cleanup VDM resources */
+    BaseSrvCleanupVDMResources(CsrProcess);
 }
 
 CSR_SERVER_DLL_INIT(ServerDllInitialization)

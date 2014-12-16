@@ -49,7 +49,7 @@ ULONG NTAPI GetNextDosSesId(VOID);
 BOOLEAN NTAPI BaseSrvIsVdmAllowed(VOID);
 NTSTATUS NTAPI BaseSrvCreatePairWaitHandles(PHANDLE ServerEvent, PHANDLE ClientEvent);
 VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo);
-VOID NTAPI BaseSrvCleanupVdmRecords(ULONG ProcessId);
+VOID NTAPI BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess);
 BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECORD DosRecord);
 NTSTATUS NTAPI BaseSrvFillCommandInfo(
     PVDM_COMMAND_INFO CommandInfo,
