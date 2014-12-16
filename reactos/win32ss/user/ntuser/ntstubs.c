@@ -761,8 +761,39 @@ NtUserQueryInformationThread(IN HANDLE ThreadHandle,
                              OUT PVOID ThreadInformation,
                              IN ULONG ThreadInformationLength)
 {
-    STUB;
-    return STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PETHREAD Thread;
+
+    /* Allow only CSRSS to perform this operation */
+    if (PsGetCurrentProcess() != gpepCSRSS)
+        return STATUS_ACCESS_DENIED;
+
+    UserEnterExclusive();
+
+    /* Get the Thread */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_QUERY_INFORMATION,
+                                       *PsThreadType,
+                                       UserMode,
+                                       (PVOID)&Thread,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) goto Quit;
+
+    switch (ThreadInformationClass)
+    {
+        default:
+        {
+            STUB;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+    }
+
+    ObDereferenceObject(Thread);
+
+Quit:
+    UserLeave();
+    return Status;
 }
 
 DWORD
@@ -861,20 +892,63 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                            IN ULONG ThreadInformationLength)
 
 {
-    if (ThreadInformationClass == UserThreadInitiateShutdown)
+    NTSTATUS Status = STATUS_SUCCESS;
+    PETHREAD Thread;
+
+    /* Allow only CSRSS to perform this operation */
+    if (PsGetCurrentProcess() != gpepCSRSS)
+        return STATUS_ACCESS_DENIED;
+
+    UserEnterExclusive();
+
+    /* Get the Thread */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_SET_INFORMATION,
+                                       *PsThreadType,
+                                       UserMode,
+                                       (PVOID)&Thread,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) goto Quit;
+
+    switch (ThreadInformationClass)
     {
-        ERR("Shutdown initiated\n");
-    }
-    else if (ThreadInformationClass == UserThreadEndShutdown)
-    {
-        ERR("Shutdown ended\n");
-    }
-    else
-    {
-        STUB;
+        case UserThreadInitiateShutdown:
+        {
+            ERR("Shutdown initiated\n");
+            STUB;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+
+        case UserThreadEndShutdown:
+        {
+            ERR("Shutdown ended\n");
+            STUB;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+
+        case UserThreadCsrApiPort:
+        {
+            ERR("Set CSR API Port for Win32k\n");
+            STUB;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
+
+        default:
+        {
+            STUB;
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        }
     }
 
-    return STATUS_SUCCESS;
+    ObDereferenceObject(Thread);
+
+Quit:
+    UserLeave();
+    return Status;
 }
 
 DWORD
