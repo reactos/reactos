@@ -22,7 +22,7 @@ typedef enum _BASESRV_API_NUMBER
     BasepCreateThread,
     BasepGetTempFile,
     BasepExitProcess,
-    BasepDebugProcess,
+    BasepDebugProcess,  // Deprecated
     BasepCheckVDM,
     BasepUpdateVDMEntry,
     BasepGetNextVDMCommand,
@@ -46,7 +46,7 @@ typedef enum _BASESRV_API_NUMBER
     BasepNlsUpdateCacheCount,
     BasepSetTermsrvClientTimeZone,
     BasepSxsCreateActivationContext,
-    BasepUnknown,
+    BasepDebugProcessStop, // Alias to BasepDebugProcess, deprecated
     BasepRegisterThread,
     BasepNlsGetUserInfo,
 
@@ -72,7 +72,7 @@ typedef struct _BASE_SXS_CREATEPROCESS_MSG
 {
     ULONG Flags;
     ULONG ProcessParameterFlags;
-    HANDLE FileHandle;    
+    HANDLE FileHandle;
     UNICODE_STRING SxsWin32ExePath;
     UNICODE_STRING SxsNtExePath;
     SIZE_T OverrideManifestOffset;

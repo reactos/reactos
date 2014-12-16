@@ -420,11 +420,12 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
          ConnectionInfoLength == NULL ||
         *ConnectionInfoLength != sizeof(*ConnectInfo) )
     {
-        DPRINT1("CONSRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), wanted %lu\n",
+        DPRINT1("CONSRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), expected %lu\n",
                 ConnectionInfo,
                 ConnectionInfoLength,
                 ConnectionInfoLength ? *ConnectionInfoLength : (ULONG)-1,
                 sizeof(*ConnectInfo));
+
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -500,9 +501,9 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
 VOID
 NTAPI
-ConSrvDisconnect(PCSR_PROCESS Process)
+ConSrvDisconnect(IN PCSR_PROCESS CsrProcess)
 {
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
 
     /**************************************************************************
      * This function is called whenever a new process (GUI or CUI) is destroyed.

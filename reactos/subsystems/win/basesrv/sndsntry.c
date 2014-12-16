@@ -15,7 +15,7 @@
 
 /* GLOBALS ********************************************************************/
 
-typedef BOOL (WINAPI *PUSER_SOUND_SENTRY)(VOID);
+typedef BOOL (NTAPI *PUSER_SOUND_SENTRY)(VOID);
 BOOL NTAPI FirstSoundSentry(VOID);
 
 static PUSER_SOUND_SENTRY _UserSoundSentry = FirstSoundSentry;

@@ -29,7 +29,6 @@ CSR_API(BaseSrvRegisterThread);
 CSR_API(BaseSrvSxsCreateActivationContext);
 CSR_API(BaseSrvSetTermsrvAppInstallMode);
 CSR_API(BaseSrvSetTermsrvClientTimeZone);
-CSR_API(BaseSrvUnknown);
 
 /* sndsntry.c */
 CSR_API(BaseSrvSoundSentryNotification);
@@ -49,6 +48,16 @@ CSR_API(BaseSrvRegisterWowExec);
 CSR_API(BaseSrvRefreshIniFileMapping);
 
 /* nls.c */
+VOID
+NTAPI
+BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData);
+
+NTSTATUS
+NTAPI
+BaseSrvNlsConnect(IN PCSR_PROCESS CsrProcess,
+                  IN OUT PVOID  ConnectionInfo,
+                  IN OUT PULONG ConnectionInfoLength);
+
 CSR_API(BaseSrvNlsSetUserInfo);
 CSR_API(BaseSrvNlsSetMultipleUserInfo);
 CSR_API(BaseSrvNlsCreateSection);

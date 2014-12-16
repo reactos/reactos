@@ -61,7 +61,7 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_AP
     BaseSrvNlsUpdateCacheCount,
     BaseSrvSetTermsrvClientTimeZone,
     BaseSrvSxsCreateActivationContext,
-    BaseSrvUnknown,
+    BaseSrvDebugProcess,
     BaseSrvRegisterThread,
     BaseSrvNlsGetUserInfo,
 };
@@ -96,7 +96,7 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMB
     TRUE,   // BaseSrvNlsUpdateCacheCount
     TRUE,   // BaseSrvSetTermsrvClientTimeZone
     TRUE,   // BaseSrvSxsCreateActivationContext
-    TRUE,   // BaseSrvUnknown
+    FALSE,  // BaseSrvDebugProcess
     TRUE,   // BaseSrvRegisterThread
     TRUE,   // BaseSrvNlsGetUserInfo
 };
@@ -136,7 +136,7 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
     "BaseNlsUpdateCacheCount",
     "BaseSetTermsrvClientTimeZone",
     "BaseSxsCreateActivationContext",
-    "BaseUnknown",
+    "BaseSrvDebugProcessStop",
     "BaseRegisterThread",
     "BaseNlsGetUserInfo",
 };
@@ -570,12 +570,37 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     LoadedServerDll->SharedSection = BaseStaticServerData;
 }
 
+NTSTATUS
+NTAPI
+BaseClientConnectRoutine(IN PCSR_PROCESS CsrProcess,
+                         IN OUT PVOID  ConnectionInfo,
+                         IN OUT PULONG ConnectionInfoLength)
+{
+    PBASESRV_API_CONNECTINFO ConnectInfo = (PBASESRV_API_CONNECTINFO)ConnectionInfo;
+
+    if ( ConnectionInfo       == NULL ||
+         ConnectionInfoLength == NULL ||
+        *ConnectionInfoLength != sizeof(*ConnectInfo) )
+    {
+        DPRINT1("BASESRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), expected %lu\n",
+                ConnectionInfo,
+                ConnectionInfoLength,
+                ConnectionInfoLength ? *ConnectionInfoLength : (ULONG)-1,
+                sizeof(*ConnectInfo));
+
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Do the NLS connection */
+    return BaseSrvNlsConnect(CsrProcess, ConnectionInfo, ConnectionInfoLength);
+}
+
 VOID
 NTAPI
-BaseSrvDisconnect(PCSR_PROCESS Process)
+BaseClientDisconnectRoutine(IN PCSR_PROCESS CsrProcess)
 {
     /* Cleanup the VDM console records */
-    BaseSrvCleanupVdmRecords(HandleToUlong(Process->ClientId.UniqueProcess));
+    BaseSrvCleanupVdmRecords(HandleToUlong(CsrProcess->ClientId.UniqueProcess));
 }
 
 CSR_SERVER_DLL_INIT(ServerDllInitialization)
@@ -589,8 +614,8 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
     LoadedServerDll->NameTable = BaseServerApiNameTable;
 #endif
     LoadedServerDll->SizeOfProcessData = 0;
-    LoadedServerDll->ConnectCallback = NULL;
-    LoadedServerDll->DisconnectCallback = BaseSrvDisconnect;
+    LoadedServerDll->ConnectCallback = BaseClientConnectRoutine;
+    LoadedServerDll->DisconnectCallback = BaseClientDisconnectRoutine;
     LoadedServerDll->ShutdownProcessCallback = NULL;
 
     BaseSrvDllInstance = LoadedServerDll->ServerHandle;

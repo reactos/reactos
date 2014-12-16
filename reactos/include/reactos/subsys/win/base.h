@@ -13,7 +13,7 @@
 
 typedef
 BOOL
-(CALLBACK * BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(
+(CALLBACK *BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(
     HANDLE NewProcessId,
     HANDLE SourceThreadId,
     DWORD dwUnknown,
@@ -134,8 +134,6 @@ typedef struct _BASE_STATIC_SERVER_DATA
 #ifndef _WIN64
 C_ASSERT(sizeof(BASE_STATIC_SERVER_DATA) == 0x1AC8);
 #endif
-
-VOID WINAPI BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData);
 
 #endif // _BASE_H
 

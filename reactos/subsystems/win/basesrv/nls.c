@@ -108,7 +108,7 @@ BaseSrvDelayLoadKernel32(VOID)
 }
 
 VOID
-WINAPI
+NTAPI
 BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData)
 {
     /* Initialize the lock */
@@ -128,6 +128,16 @@ BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData)
 
     /* Get the LCID */
     NtQueryDefaultLocale(0, &pNlsRegUserInfo->UserLocaleId);
+}
+
+NTSTATUS
+NTAPI
+BaseSrvNlsConnect(IN PCSR_PROCESS CsrProcess,
+                  IN OUT PVOID  ConnectionInfo,
+                  IN OUT PULONG ConnectionInfoLength)
+{
+    /* Does nothing */
+    return STATUS_SUCCESS;
 }
 
 /* PUBLIC SERVER APIS *********************************************************/

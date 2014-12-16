@@ -18,8 +18,8 @@
 
 CSR_API(BaseSrvDebugProcess)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Deprecated */
+    return STATUS_UNSUCCESSFUL;
 }
 
 CSR_API(BaseSrvRegisterThread)
@@ -27,6 +27,7 @@ CSR_API(BaseSrvRegisterThread)
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
+
 CSR_API(BaseSrvSxsCreateActivationContext)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
@@ -40,12 +41,6 @@ CSR_API(BaseSrvSetTermsrvAppInstallMode)
 }
 
 CSR_API(BaseSrvSetTermsrvClientTimeZone)
-{
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CSR_API(BaseSrvUnknown)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
