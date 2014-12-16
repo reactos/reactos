@@ -54,6 +54,7 @@ static const WCHAR EVENTLOG_BASE_KEY[]       = L"SYSTEM\\CurrentControlSet\\Serv
 #define EVENT_PARAMETER_MESSAGE_FILE    L"ParameterMessageFile"
 
 #define MAX_LOADSTRING 255
+#define ENTRY_SIZE 2056
 
 /* Globals */
 HINSTANCE hInst;                            /* current instance */
@@ -723,7 +724,7 @@ QueryEventMessages(LPWSTR lpMachineName,
                        0,
                        szTitleTemplate, szTitle, lpLogName); /* i = number of characters written */
     /* lpComputerName can be NULL here if no records was read */
-    dwMaxLength = cchRemaining;
+    dwMaxLength = (DWORD)cchRemaining;
     if (!lpComputerName)
         GetComputerNameW(lpTitleTemplateEnd, &dwMaxLength);
     else
@@ -880,7 +881,7 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
     WCHAR *KeyPath;
     WCHAR szModuleName[MAX_PATH];
     DWORD cbData;
-    DWORD cbKeyPath;
+    SIZE_T cbKeyPath;
 
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
@@ -916,7 +917,7 @@ GetDisplayNameID(IN LPCWSTR lpLogName)
     WCHAR *KeyPath;
     DWORD dwMessageID = 0;
     DWORD cbData;
-    DWORD cbKeyPath;
+    SIZE_T cbKeyPath;
 
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
@@ -1444,7 +1445,6 @@ DisplayEvent(HWND hDlg)
 VOID
 CopyEventEntry(HWND hWnd)
 {
-    const SIZE_T entrySize = 2056;
     WCHAR output[4130], tmpHeader[512];
     WCHAR szEventType[MAX_PATH];
     WCHAR szSource[MAX_PATH];
@@ -1454,7 +1454,7 @@ CopyEventEntry(HWND hWnd)
     WCHAR szTime[MAX_PATH];
     WCHAR szUser[MAX_PATH];
     WCHAR szComputer[MAX_PATH];
-    WCHAR evtDesc[entrySize];
+    WCHAR evtDesc[ENTRY_SIZE];
     HGLOBAL hMem;
 
     if (!OpenClipboard(hWnd))
@@ -1475,14 +1475,14 @@ CopyEventEntry(HWND hWnd)
     GetDlgItemText(hWnd, IDC_EVENTTIMESTATIC, szTime, MAX_PATH);
     GetDlgItemText(hWnd, IDC_EVENTUSERSTATIC, szUser, MAX_PATH);
     GetDlgItemText(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, MAX_PATH);
-    GetDlgItemText(hWnd, IDC_EVENTTEXTEDIT, evtDesc, entrySize);
+    GetDlgItemText(hWnd, IDC_EVENTTEXTEDIT, evtDesc, ENTRY_SIZE);
 
     /* Consolidate the information into on big piece */
     wsprintfW(output, tmpHeader, szEventType, szSource, szCategory, szEventID, szDate, szTime, szUser, szComputer, evtDesc);
 
     /* Sort out the memory needed to write to the clipboard */
-    hMem = GlobalAlloc(GMEM_MOVEABLE, entrySize);
-    memcpy(GlobalLock(hMem), output, entrySize);
+    hMem = GlobalAlloc(GMEM_MOVEABLE, ENTRY_SIZE);
+    memcpy(GlobalLock(hMem), output, ENTRY_SIZE);
     GlobalUnlock(hMem);
 
     /* Write the final content to the clipboard */
