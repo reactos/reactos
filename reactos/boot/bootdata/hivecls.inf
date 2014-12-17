@@ -37,6 +37,7 @@ HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.e
 HKCR,".386","",0x00000000,"vxdfile"
 HKCR,".vxd","",0x00000000,"vxdfile"
 HKCR,"vxdfile","",0x00000000,"Virtual Device Driver"
+HKCR,"vxdfile","NoOpen",0x00000000,""
 HKCR,"vxdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-157"
 
 ; Animated Cursors
@@ -86,6 +87,7 @@ HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
 ; Dynamic Link Libraries
 HKCR,".dll","",0x00000000,"dllfile"
 HKCR,"dllfile","",0x00000000,"Dynamic Link Library"
+HKCR,"dllfile","NoOpen",0x00000000,""
 HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-163"
 HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
@@ -260,6 +262,7 @@ HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C
 ; System-Files
 HKCR,".sys","",0x00000000,"sysfile"
 HKCR,"sysfile","",0x00000000,"System File"
+HKCR,"sysfile","NoOpen",0x00000000,""
 HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-171"
 HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 

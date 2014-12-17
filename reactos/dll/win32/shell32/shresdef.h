@@ -288,16 +288,17 @@
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
+#define IDD_NOOPEN       27
 
 /* Not used dialogs */
-#define IDD_FILE_COPY            27
-#define IDD_SHUTDOWN             28
-#define IDD_LOG_OFF              29
-#define IDD_DISCONNECT           30
-#define IDD_CONFIRM_FILE_REPLACE 31
-#define IDD_AUTOPLAY1            32
-#define IDD_MIXED_CONTENT1       33
-#define IDD_MIXED_CONTENT2       34
+#define IDD_FILE_COPY            28
+#define IDD_SHUTDOWN             29
+#define IDD_LOG_OFF              30
+#define IDD_DISCONNECT           31
+#define IDD_CONFIRM_FILE_REPLACE 32
+#define IDD_AUTOPLAY1            33
+#define IDD_MIXED_CONTENT1       34
+#define IDD_MIXED_CONTENT2       35
 
 /* Icons */
 #define IDI_SHELL_DOCUMENT           1

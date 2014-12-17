@@ -57,6 +57,7 @@ class COpenWithList
         static HICON GetIcon(SApp *pApp);
         static BOOL Execute(SApp *pApp, LPCWSTR pwszFilePath);
         static BOOL IsHidden(SApp *pApp);
+        inline BOOL IsNoOpen(VOID) { return m_bNoOpen; }
         BOOL LoadRecommended(LPCWSTR pwszFilePath);
         BOOL SetDefaultHandler(SApp *pApp, LPCWSTR pwszFilename);
 
@@ -775,12 +776,14 @@ class COpenWithDialog
         COpenWithDialog(const OPENASINFO *pInfo, COpenWithList *pAppList);
         ~COpenWithDialog();
         static INT_PTR CALLBACK DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        BOOL IsNoOpen(HWND hwnd);
 
     private:
         VOID Init(HWND hwnd);
         VOID AddApp(COpenWithList::SApp *pApp, BOOL bSelected);
         VOID Browse();
         VOID Accept();
+        static BOOL CALLBACK NoOpenDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
         COpenWithList::SApp *GetCurrentApp();
 
         const OPENASINFO *m_pInfo;
@@ -790,10 +793,11 @@ class COpenWithDialog
         HTREEITEM m_hRecommend;
         HTREEITEM m_hOther;
         HIMAGELIST m_hImgList;
+        BOOL m_bNoOpen;
 };
 
 COpenWithDialog::COpenWithDialog(const OPENASINFO *pInfo, COpenWithList *pAppList = NULL):
-    m_pInfo(pInfo), m_pAppList(pAppList), m_hImgList(NULL)
+    m_pInfo(pInfo), m_pAppList(pAppList), m_hImgList(NULL), m_bNoOpen(FALSE)
 {
     if (!m_pAppList)
     {
@@ -810,6 +814,53 @@ COpenWithDialog::~COpenWithDialog()
         delete m_pAppList;
     if (m_hImgList)
         ImageList_Destroy(m_hImgList);
+}
+
+BOOL CALLBACK COpenWithDialog::NoOpenDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+    switch(Message)
+    {
+        case WM_INITDIALOG:
+        {
+            return TRUE;
+        }
+        case WM_CLOSE:
+            EndDialog(hwnd, IDNO);
+            break;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDYES:
+                    EndDialog(hwnd, IDYES);
+                break;
+                case IDNO:
+                    EndDialog(hwnd, IDNO);
+                break;
+            }
+        break;
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
+BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
+{
+    /* Only do the actual check if the file type has the 'NoOpen' flag. */
+    if (m_bNoOpen)
+    {
+        int dReturnValue = DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_NOOPEN), hwnd, NoOpenDlgProc);
+        
+        if (dReturnValue == IDNO)
+            return TRUE;
+        else if (dReturnValue == -1)
+        {
+            ERR("IsNoOpen failed to load the dialog box.");
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
 
 VOID COpenWithDialog::AddApp(COpenWithList::SApp *pApp, BOOL bSelected)
@@ -923,6 +974,10 @@ VOID COpenWithDialog::Init(HWND hwnd)
         /* Load applications from registry */
         m_pAppList->Load();
         m_pAppList->LoadRecommended(m_pInfo->pcszFile);
+
+        /* Determine if the type of file can be opened directly from the shell */
+        if (m_pAppList->IsNoOpen() != FALSE)
+            m_bNoOpen = TRUE;
 
         /* Init treeview */
         m_hTreeView = GetDlgItem(hwnd, 14002);
@@ -1394,6 +1449,9 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
         ERR("Failed to create dialog\n");
         return E_FAIL;
     }
+
+    if (pDialog.IsNoOpen(hwndParent))
+        return S_OK;
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
 
