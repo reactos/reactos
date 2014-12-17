@@ -186,17 +186,6 @@ UnloadAppInitDlls()
     }
 }
 
-BOOL
-InitThread(VOID)
-{
-   return TRUE;
-}
-
-VOID
-CleanupThread(VOID)
-{
-}
-
 PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
 {
     User32CallWindowProcFromKernel,
@@ -250,7 +239,8 @@ ClientThreadSetup(VOID)
     // CsrConnectToUser, we'll pretend we "did something" here. Then the rest will
     // continue as normal.
     //
-    //UNIMPLEMENTED;
+
+    UNIMPLEMENTED;
     return TRUE;
 }
 
@@ -274,9 +264,7 @@ Init(VOID)
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
    RtlInitializeCriticalSection(&gcsUserApiHook);
-   gfServerProcess = FALSE; // FIXME HAX! Used in CsrClientConnectToServer(,,,,&gfServerProcess);
 
-   //CsrClientConnectToServer(L"\\Windows", 0, NULL, 0, &gfServerProcess);
    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
 
    /* Allocate an index for user32 thread local data. */
@@ -288,9 +276,7 @@ Init(VOID)
          if (MenuInit())
          {
             InitializeCriticalSection(&U32AccelCacheLock);
-            GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
             LoadAppInitDlls();
-
             return TRUE;
          }
          MessageCleanup();
@@ -304,13 +290,12 @@ Init(VOID)
 VOID
 Cleanup(VOID)
 {
-   DeleteCriticalSection(&U32AccelCacheLock);
-   MenuCleanup();
-   MessageCleanup();
-   DeleteFrameBrushes();
-   UnloadAppInitDlls();
-   GdiDllInitialize(NULL, DLL_PROCESS_DETACH, NULL);
-   TlsFree(User32TlsIndex);
+    DeleteCriticalSection(&U32AccelCacheLock);
+    MenuCleanup();
+    MessageCleanup();
+    DeleteFrameBrushes();
+    UnloadAppInitDlls();
+    TlsFree(User32TlsIndex);
 }
 
 INT WINAPI
@@ -319,57 +304,90 @@ DllMain(
    IN ULONG dwReason,
    IN PVOID reserved)
 {
-   switch (dwReason)
-   {
-      case DLL_PROCESS_ATTACH:
-         User32Instance = hInstanceDll;
-         if (!RegisterClientPFN())
-         {
-             return FALSE;
-         }
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+        {
 
-         if (!Init())
-            return FALSE;
-         if (!InitThread())
-         {
+#define WIN_OBJ_DIR L"\\Windows"
+#define SESSION_DIR L"\\Sessions"
+
+            NTSTATUS Status;
+            USERSRV_API_CONNECTINFO ConnectInfo; // USERCONNECT
+            ULONG ConnectInfoSize = sizeof(ConnectInfo);
+            WCHAR SessionDir[256];
+
+            /* Cache the PEB and Session ID */
+            PPEB Peb = NtCurrentPeb();
+            ULONG SessionId = Peb->SessionId; // gSessionId
+
+            /* Don't bother us for each thread */
+            DisableThreadLibraryCalls(hInstanceDll);
+
+            /* Setup the Object Directory path */
+            if (!SessionId)
+            {
+                /* Use the raw path */
+                wcscpy(SessionDir, WIN_OBJ_DIR);
+            }
+            else
+            {
+                /* Use the session path */
+                swprintf(SessionDir,
+                         L"%ws\\%ld%ws",
+                         SESSION_DIR,
+                         SessionId,
+                         WIN_OBJ_DIR);
+            }
+
+            /* Connect to the USER Server */
+            Status = CsrClientConnectToServer(SessionDir,
+                                              USERSRV_SERVERDLL_INDEX,
+                                              &ConnectInfo,
+                                              &ConnectInfoSize,
+                                              &gfServerProcess);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Failed to connect to CSR (Status %lx)\n", Status);
+                return FALSE;
+            }
+
+            User32Instance = hInstanceDll;
+
+            if (!RegisterClientPFN())
+                return FALSE;
+
+            if (!Init())
+                return FALSE;
+
+            break;
+        }
+
+        case DLL_PROCESS_DETACH:
+        {
+            if (hImmInstance)
+                FreeLibrary(hImmInstance);
+
             Cleanup();
-            return FALSE;
-         }
-         break;
+            break;
+        }
+    }
 
-      case DLL_THREAD_ATTACH:
-         if (!InitThread())
-            return FALSE;
-         break;
-
-      case DLL_THREAD_DETACH:
-         CleanupThread();
-         break;
-
-      case DLL_PROCESS_DETACH:
-         if (hImmInstance) FreeLibrary(hImmInstance);
-         CleanupThread();
-         Cleanup();
-         break;
-   }
-
-   return TRUE;
+    /* Finally init GDI */
+    return GdiDllInitialize(hInstanceDll, dwReason, reserved);
 }
 
-
+// FIXME: This function seems to be unused...
 VOID
 FASTCALL
 GetConnected(VOID)
 {
   USERCONNECT UserCon;
-//  ERR("GetConnected\n");
 
   if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
   if (gpsi && g_ppi) return;
-// FIXME HAX: Due to the "Dll Initialization Bug" we have to call this too.
-  GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
   NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,

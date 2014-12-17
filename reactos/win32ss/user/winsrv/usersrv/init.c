@@ -24,6 +24,9 @@ HINSTANCE UserServerDllInstance = NULL;
 HANDLE ghPowerRequestEvent;
 HANDLE ghMediaRequestEvent;
 
+/* Copy of CSR Port handle for win32k */
+HANDLE CsrApiPort = NULL;
+
 /* Memory */
 HANDLE UserServerHeap = NULL;   // Our own heap.
 
@@ -140,17 +143,35 @@ UserClientConnect(IN PCSR_PROCESS CsrProcess,
                   IN OUT PVOID  ConnectionInfo,
                   IN OUT PULONG ConnectionInfoLength)
 {
+    NTSTATUS Status;
+    // PUSERCONNECT
+    PUSERSRV_API_CONNECTINFO ConnectInfo = (PUSERSRV_API_CONNECTINFO)ConnectionInfo;
+
     DPRINT1("UserClientConnect\n");
 
-#if 0
-    // NTSTATUS Status = STATUS_SUCCESS;
-    PBASESRV_API_CONNECTINFO ConnectInfo = (PBASESRV_API_CONNECTINFO)ConnectionInfo;
+    /* Check if we don't have an API port yet */
+    if (CsrApiPort == NULL)
+    {
+        /* Query the API port and save it globally */
+        CsrApiPort = CsrQueryApiPort();
 
+        /* Inform win32k about the API port */
+        Status = NtUserSetInformationThread(NtCurrentThread(),
+                                            UserThreadCsrApiPort,
+                                            &CsrApiPort,
+                                            sizeof(CsrApiPort));
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* Check connection info validity */
     if ( ConnectionInfo       == NULL ||
          ConnectionInfoLength == NULL ||
         *ConnectionInfoLength != sizeof(*ConnectInfo) )
     {
-        DPRINT1("BASESRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), expected %lu\n",
+        DPRINT1("USERSRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), expected %lu\n",
                 ConnectionInfo,
                 ConnectionInfoLength,
                 ConnectionInfoLength ? *ConnectionInfoLength : (ULONG)-1,
@@ -158,9 +179,14 @@ UserClientConnect(IN PCSR_PROCESS CsrProcess,
 
         return STATUS_INVALID_PARAMETER;
     }
-#else
-    return STATUS_SUCCESS;
-#endif
+
+    /* Pass the request to win32k */
+    ConnectInfo->dwDispatchCount = 0; // gDispatchTableValues;
+    Status = NtUserProcessConnect(CsrProcess->ProcessHandle,
+                                  ConnectInfo,
+                                  *ConnectionInfoLength);
+
+    return Status;
 }
 
 CSR_SERVER_DLL_INIT(UserServerDllInitialization)

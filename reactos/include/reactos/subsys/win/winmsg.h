@@ -35,6 +35,15 @@ typedef enum _USERSRV_API_NUMBER
     UserpMaxApiNumber
 } USERSRV_API_NUMBER, *PUSERSRV_API_NUMBER;
 
+/* The USERCONNECT structure is defined in win32ss/include/ntuser.h */
+#define _USERSRV_API_CONNECTINFO    _USERCONNECT
+#define  USERSRV_API_CONNECTINFO     USERCONNECT
+#define PUSERSRV_API_CONNECTINFO    PUSERCONNECT
+
+#if defined(_M_IX86)
+C_ASSERT(sizeof(USERSRV_API_CONNECTINFO) == 0x124);
+#endif
+
 
 typedef struct _USER_EXIT_REACTOS
 {

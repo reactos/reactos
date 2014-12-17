@@ -513,7 +513,7 @@ NtUserConsoleControl(
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Allow only Console Server to perform this operation (via CSRSS) */
-    if (gpepCSRSS != PsGetCurrentProcess())
+    if (PsGetCurrentProcess() != gpepCSRSS)
         return STATUS_ACCESS_DENIED;
 
     UserEnterExclusive();
@@ -931,7 +931,8 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         {
             ERR("Set CSR API Port for Win32k\n");
             STUB;
-            Status = STATUS_NOT_IMPLEMENTED;
+            // Return success to make usersrv happy.
+            Status = STATUS_SUCCESS;
             break;
         }
 

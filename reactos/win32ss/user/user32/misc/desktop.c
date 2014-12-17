@@ -128,7 +128,6 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 int WINAPI
 RealGetSystemMetrics(int nIndex)
 {
-  //GetConnected();
   //FIXME("Global Server Data -> %x\n",gpsi);
   if (nIndex < 0 || nIndex >= SM_CMETRICS) return 0;
   return gpsi->aiSysMet[nIndex];

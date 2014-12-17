@@ -1022,6 +1022,7 @@ typedef struct _SHAREDINFO
   WNDMSG      DefWindowSpecMsgs;
 } SHAREDINFO, *PSHAREDINFO;
 
+/* See also the USERSRV_API_CONNECTINFO #define in include/reactos/subsys/win/winmsg.h */
 typedef struct _USERCONNECT
 {
   ULONG ulVersion;
@@ -1032,6 +1033,11 @@ typedef struct _USERCONNECT
 
 // WinNT 5.0 compatible user32 / win32k
 #define USER_VERSION    MAKELONG(0x0000, 0x0005)
+
+#if defined(_M_IX86)
+C_ASSERT(sizeof(USERCONNECT) == 0x124);
+#endif
+
 
 typedef struct tagGETCLIPBDATA
 {
