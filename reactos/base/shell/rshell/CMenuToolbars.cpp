@@ -384,6 +384,8 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 
     SubclassWindow(Create(hwndParent, tbStyles, tbExStyles));
 
+    SetWindowTheme(m_hWnd, L"", L"");
+
     // If needed, create the pager.
     if (m_usePager)
     {
