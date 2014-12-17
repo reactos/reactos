@@ -11,22 +11,22 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "退出(&E)", IDM_EXIT
     END
-    POPUP "&Play"
+    POPUP "&播放"
     BEGIN
-        MENUITEM "Play/&Pause\tCtrl+P", IDC_PLAY
-        MENUITEM "St&op\tCtrl+S", IDC_STOP
+        MENUITEM "播放/&暂停\tCtrl+P", IDC_PLAY
+        MENUITEM "停&止\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "Repea&t\tCtrl+T", IDM_REPEAT
+        MENUITEM "重&复\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&View"
+    POPUP "&视图"
     BEGIN
-        MENUITEM "Single-Window &Mode", IDM_SWITCHVIEW
+        MENUITEM "单窗 &模式", IDM_SWITCHVIEW
     END
-    POPUP "&Device"
+    POPUP "&设备"
     BEGIN
-        MENUITEM "&Properties", IDM_DEVPROPS
+        MENUITEM "&属性", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&Volume Control", IDM_VOLUMECTL
+        MENUITEM "&音量控制", IDM_VOLUMECTL
     END
     POPUP "帮助(&H)"
     BEGIN
@@ -55,6 +55,6 @@ BEGIN
     IDS_TOOLTIP_FORWARD "向前跳过"
     IDS_APPTITLE "ReactOS 多媒体播放器"
     IDS_PLAY "播放"
-    IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
+    IDS_DEFAULTMCIERRMSG "该错误没有可用的描述."
+    IDS_UNKNOWNFILEEXT "该设备类型从给定的文件扩展名无法断定."
 END
