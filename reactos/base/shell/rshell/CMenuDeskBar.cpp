@@ -89,13 +89,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus)
 {
-    CComPtr<IInputObjectSite> ios;
-
-    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObjectSite, &ios));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return ios->OnFocusChangeIS(punkObj, fSetFocus);
+    return IUnknown_OnFocusChangeIS(m_Client, punkObj, fSetFocus);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
@@ -177,24 +171,12 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::UIActivateIO(BOOL fActivate, LPMSG lpMsg
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::HasFocusIO()
 {
-    CComPtr<IInputObject> io;
-
-    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return io->HasFocusIO();
+    return IUnknown_HasFocusIO(m_Client);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    CComPtr<IInputObject> io;
-
-    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return io->TranslateAcceleratorIO(lpMsg);
+    return IUnknown_TranslateAcceleratorIO(m_Client, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
@@ -564,20 +546,15 @@ BOOL CMenuDeskBar::_IsSubMenuParent(HWND hwnd)
     while (popup)
     {
         HRESULT hr;
-        CComPtr<IOleWindow> window;
-
-        hr = popup->QueryInterface(IID_PPV_ARG(IOleWindow, &window));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return FALSE;
-
         HWND parent;
 
-        hr = window->GetWindow(&parent);
-        if (SUCCEEDED(hr) && hwnd == parent)
+        hr = IUnknown_GetWindow(popup, &parent);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+        if (hwnd == parent)
             return TRUE;
 
-        popup = NULL;
-        hr = IUnknown_GetSite(window, IID_PPV_ARG(IMenuPopup, &popup));
+        hr = IUnknown_GetSite(popup, IID_PPV_ARG(IMenuPopup, &popup));
         if (FAILED(hr))
             return FALSE;
     }
