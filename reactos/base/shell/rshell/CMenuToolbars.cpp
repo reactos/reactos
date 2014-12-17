@@ -32,13 +32,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuToolbars);
 
-extern "C"
-HRESULT WINAPI SHGetImageList(
-    _In_   int iImageList,
-    _In_   REFIID riid,
-    _Out_  void **ppv
-    );
-
 // FIXME: Enable if/when wine comctl supports this flag properly
 #define USE_TBSTYLE_EX_VERTICAL 0
 
