@@ -20,6 +20,10 @@
 
 HINSTANCE UserServerDllInstance = NULL;
 
+/* Handles for Power and Media events. Used by both usersrv and win32k. */
+HANDLE ghPowerRequestEvent;
+HANDLE ghMediaRequestEvent;
+
 /* Memory */
 HANDLE UserServerHeap = NULL;   // Our own heap.
 
@@ -84,7 +88,7 @@ PCHAR UserServerApiNameTable[UserpMaxApiNumber - USERSRV_FIRST_API_NUMBER] =
 /* FUNCTIONS ******************************************************************/
 
 // PUSER_SOUND_SENTRY. Used in basesrv.dll
-BOOL WINAPI _UserSoundSentry(VOID)
+BOOL NTAPI _UserSoundSentry(VOID)
 {
     // TODO: Do something.
     return TRUE;
@@ -130,6 +134,35 @@ CSR_API(SrvDeviceEvent)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+UserClientConnect(IN PCSR_PROCESS CsrProcess,
+                  IN OUT PVOID  ConnectionInfo,
+                  IN OUT PULONG ConnectionInfoLength)
+{
+    DPRINT1("UserClientConnect\n");
+
+#if 0
+    // NTSTATUS Status = STATUS_SUCCESS;
+    PBASESRV_API_CONNECTINFO ConnectInfo = (PBASESRV_API_CONNECTINFO)ConnectionInfo;
+
+    if ( ConnectionInfo       == NULL ||
+         ConnectionInfoLength == NULL ||
+        *ConnectionInfoLength != sizeof(*ConnectInfo) )
+    {
+        DPRINT1("BASESRV: Connection failed - ConnectionInfo = 0x%p ; ConnectionInfoLength = 0x%p (%lu), expected %lu\n",
+                ConnectionInfo,
+                ConnectionInfoLength,
+                ConnectionInfoLength ? *ConnectionInfoLength : (ULONG)-1,
+                sizeof(*ConnectInfo));
+
+        return STATUS_INVALID_PARAMETER;
+    }
+#else
+    return STATUS_SUCCESS;
+#endif
+}
+
 CSR_SERVER_DLL_INIT(UserServerDllInitialization)
 {
 /*** From win32csr... ***/
@@ -142,9 +175,6 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     /* Initialize the memory */
     UserServerHeap = RtlGetProcessHeap();
 
-    /* Initialize the video */
-    NtUserInitialize(0, NULL, NULL);
-
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = USERSRV_FIRST_API_NUMBER;
     LoadedServerDll->HighestApiSupported = UserpMaxApiNumber;
@@ -154,7 +184,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->NameTable = UserServerApiNameTable;
 #endif
     LoadedServerDll->SizeOfProcessData = 0;
-    LoadedServerDll->ConnectCallback = NULL;
+    LoadedServerDll->ConnectCallback = UserClientConnect;
     LoadedServerDll->DisconnectCallback = NULL;
     LoadedServerDll->HardErrorCallback = UserServerHardError;
     LoadedServerDll->ShutdownProcessCallback = UserClientShutdown;
@@ -175,9 +205,45 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
             NtClose(ServerThread);
         }
         else
+        {
             DPRINT1("Cannot start Raw Input Thread!\n");
+        }
     }
 /*** END - From win32csr... ***/
+
+    /* Create the power request event */
+    Status = NtCreateEvent(&ghPowerRequestEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Power request event creation failed with Status 0x%08x\n", Status);
+        return Status;
+    }
+
+    /* Create the media request event */
+    Status = NtCreateEvent(&ghMediaRequestEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Media request event creation failed with Status 0x%08x\n", Status);
+        return Status;
+    }
+
+    /* Initialize the kernel mode subsystem */
+    Status = NtUserInitialize(USER_VERSION,
+                              ghPowerRequestEvent,
+                              ghMediaRequestEvent);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtUserInitialize failed with Status 0x%08x\n", Status);
+        return Status;
+    }
 
     /* All done */
     return STATUS_SUCCESS;

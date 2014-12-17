@@ -21,11 +21,13 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+
 /* Undocumented user definitions */
 #include <undocuser.h>
 
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>

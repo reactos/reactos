@@ -697,7 +697,7 @@ UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
 {
     /* Make sure that the first syscall is NtUserInitialize */
     /* too bad this fails */
-    //ASSERT(gbInitialized);
+    // ASSERT(gpepCSRSS);
 
     UserDbgAssertThreadInfo(TRUE);
 

@@ -9,7 +9,7 @@
 #pragma once
 
 /* init.c */
-BOOL WINAPI _UserSoundSentry(VOID);
+BOOL NTAPI _UserSoundSentry(VOID);
 CSR_API(SrvCreateSystemThreads);
 CSR_API(SrvActivateDebugger);
 CSR_API(SrvGetThreadConsoleDesktop);

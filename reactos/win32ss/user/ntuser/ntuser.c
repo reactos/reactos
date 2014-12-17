@@ -17,7 +17,6 @@ ATOM AtomMessage; // Window Message atom.
 ATOM AtomWndObj;  // Window Object atom.
 ATOM AtomLayer;   // Window Layer atom.
 ATOM AtomFlashWndState; // Window Flash State atom.
-BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 PEPROCESS gpepCSRSS = NULL;
@@ -98,9 +97,7 @@ InitVideo();
 
 NTSTATUS
 NTAPI
-UserInitialize(
-  HANDLE  hPowerRequestEvent,
-  HANDLE  hMediaRequestEvent)
+UserInitialize(VOID)
 {
     static const DWORD wPattern55AA[] = /* 32 bit aligned */
     { 0x55555555, 0xaaaaaaaa, 0x55555555, 0xaaaaaaaa,
@@ -153,7 +150,7 @@ UserInitialize(
 }
 
 /*
-    Called from win32csr.
+ * Called from usersrv.
  */
 NTSTATUS
 APIENTRY
@@ -167,27 +164,26 @@ NtUserInitialize(
     TRACE("Enter NtUserInitialize(%lx, %p, %p)\n",
           dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
 
-    /* Check the Windows version */
-    if (dwWinVersion != 0)
+    /* Check if we are already initialized */
+    if (gpepCSRSS)
+        return STATUS_UNSUCCESSFUL;
+
+    /* Check Windows USER subsystem version */
+    if (dwWinVersion != USER_VERSION)
     {
+        // FIXME: Should bugcheck!
         return STATUS_UNSUCCESSFUL;
     }
 
     /* Acquire exclusive lock */
     UserEnterExclusive();
 
-    /* Check if we are already initialized */
-    if (gbInitialized)
-    {
-        UserLeave();
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    /* Save EPROCESS of CSRSS */
+    /* Save the EPROCESS of CSRSS */
     gpepCSRSS = PsGetCurrentProcess();
 
-// Initialize Power Request List.
-// Initialize Media Change.
+// Initialize Power Request List (use hPowerRequestEvent).
+// Initialize Media Change (use hMediaRequestEvent).
+
 // InitializeGreCSRSS();
 // {
 //    Startup DxGraphics.
@@ -196,10 +192,7 @@ NtUserInitialize(
 // }
 
     /* Initialize USER */
-    Status = UserInitialize(hPowerRequestEvent, hMediaRequestEvent);
-
-    /* Set us as initialized */
-    gbInitialized = TRUE;
+    Status = UserInitialize();
 
     /* Return */
     UserLeave();

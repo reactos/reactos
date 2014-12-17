@@ -1030,6 +1030,9 @@ typedef struct _USERCONNECT
   SHAREDINFO siClient;
 } USERCONNECT, *PUSERCONNECT;
 
+// WinNT 5.0 compatible user32 / win32k
+#define USER_VERSION    MAKELONG(0x0000, 0x0005)
+
 typedef struct tagGETCLIPBDATA
 {
   UINT uFmtRet;

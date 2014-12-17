@@ -890,7 +890,6 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                            IN USERTHREADINFOCLASS ThreadInformationClass,
                            IN PVOID ThreadInformation,
                            IN ULONG ThreadInformationLength)
-
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PETHREAD Thread;

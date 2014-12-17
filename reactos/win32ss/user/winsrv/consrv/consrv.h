@@ -22,7 +22,6 @@
 #include <wincon.h>
 
 #define NTOS_MODE_USER
-#include <ndk/exfuncs.h>
 #include <ndk/mmfuncs.h>
 
 /* CONSOLE Headers */

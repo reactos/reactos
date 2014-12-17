@@ -9,6 +9,9 @@
 #ifndef __USERSRV_H__
 #define __USERSRV_H__
 
+/* Main header */
+#include "../winsrv.h"
+
 /* PSDK/NDK Headers */
 #include <stdarg.h>
 
@@ -16,21 +19,7 @@
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
 
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-#include <winuser.h>
-
-#define NTOS_MODE_USER
-#include <ndk/obfuncs.h>
-#include <ndk/psfuncs.h>
-#include <ndk/rtlfuncs.h>
-
-/* Public Win32K Headers */
-#include <ntuser.h>
-
-/* CSRSS Header */
-#include <csr/csrsrv.h>
+// #define NTOS_MODE_USER
 
 /* USER Headers */
 #include <win/winmsg.h>
