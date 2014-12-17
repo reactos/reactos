@@ -19,11 +19,6 @@
  */
 #pragma once
 
-extern IID IID_IAugmentedShellFolder;
-extern IID IID_IAugmentedShellFolder2;
-extern IID IID_IAugmentedShellFolder3;
-extern CLSID CLSID_MergedFolder;
-
 interface IAugmentedShellFolder : public IShellFolder
 {
     virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
