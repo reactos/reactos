@@ -29,13 +29,6 @@ Implements the navigation band of the cabinet window
 
 HRESULT CreateAddressEditBox(REFIID riid, void **ppv);
 
-extern "C"
-HRESULT WINAPI SHGetImageList(
-    _In_   int iImageList,
-    _In_   REFIID riid,
-    _Out_  void **ppv
-    );
-
 /*
 TODO:
 ****Add command handler for show/hide Go button to OnWinEvent
@@ -283,13 +276,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::ShowDW(BOOL fShow)
 HRESULT STDMETHODCALLTYPE CAddressBand::QueryStatus(
     const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[  ], OLECMDTEXT *pCmdText)
 {
-    CComPtr<IOleCommandTarget>              oleCommandTarget;
-    HRESULT                                 hResult;
-
-    hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    return oleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
+    return IUnknown_QueryStatus(fAddressEditBox, *pguidCmdGroup, cCmds, prgCmds, pCmdText);
 }
 
 HRESULT STDMETHODCALLTYPE CAddressBand::Exec(const GUID *pguidCmdGroup,
@@ -329,15 +316,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::TranslateAcceleratorIO(LPMSG lpMsg)
 
 HRESULT STDMETHODCALLTYPE CAddressBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    CComPtr<IInputObjectSite>               inputObjectSite;
-    HRESULT                                 hResult;
-
     if (fActivate)
     {
-        hResult = fSite->QueryInterface(IID_PPV_ARG(IInputObjectSite, &inputObjectSite));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        hResult = inputObjectSite->OnFocusChangeIS(static_cast<IDeskBand *>(this), fActivate);
+        IUnknown_OnFocusChangeIS(fSite, static_cast<IDeskBand *>(this), fActivate);
         SetFocus();
     }
     return S_OK;

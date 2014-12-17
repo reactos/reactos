@@ -540,6 +540,8 @@ BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 #define SMC_EXEC 4
 INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
 
+HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
+
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 {
