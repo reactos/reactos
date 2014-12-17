@@ -1,8 +1,8 @@
-/*
+/* 
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * PURPOSE:          Interface to csrss
- * FILE:             subsys/win32k/include/csr.h
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Interface to CSRSS / USERSRV
+ * FILE:             subsystems/win32/win32k/ntuser/csr.h
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
 
@@ -12,9 +12,5 @@ extern PEPROCESS CsrProcess;
 
 NTSTATUS FASTCALL CsrInit(void);
 NTSTATUS FASTCALL co_CsrNotify(PCSR_API_MESSAGE Request);
-NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
-NTSTATUS WINAPI CsrInsertObject(HANDLE ObjectHandle,
-                                 ACCESS_MASK DesiredAccess,
-                                 PHANDLE Handle);
 
 /* EOF */
