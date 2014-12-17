@@ -27,6 +27,6 @@ target_link_libraries(winsrv consrv usersrv)
 target_link_libraries(winsrv win32ksys libcntpr ${PSEH_LIB} ${CONSRV_TARGET_LINK_LIBS})
 
 add_delay_importlibs(winsrv advapi32 ${CONSRV_DELAY_IMPORT_LIBS})
-add_importlibs(winsrv csrsrv gdi32 user32 kernel32 ntdll ${CONSRV_IMPORT_LIBS})
+add_importlibs(winsrv csrsrv gdi32 user32 kernel32 ntdll ${CONSRV_IMPORT_LIBS} ${USERSRV_IMPORT_LIBS})
 add_dependencies(winsrv bugcodes)
 add_cd_file(TARGET winsrv DESTINATION reactos/system32 FOR all)
