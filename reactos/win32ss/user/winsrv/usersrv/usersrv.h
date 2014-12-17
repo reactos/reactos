@@ -21,6 +21,9 @@
 
 // #define NTOS_MODE_USER
 
+/* BASE Header */
+#include <win/base.h>
+
 /* USER Headers */
 #include <win/winmsg.h>
 

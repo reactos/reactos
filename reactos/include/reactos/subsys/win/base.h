@@ -15,11 +15,13 @@ typedef
 BOOL
 (CALLBACK *BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(
     HANDLE NewProcessId,
-    HANDLE SourceThreadId,
-    DWORD dwUnknown,
-    ULONG CreateFlags);
+    HANDLE ParentThreadId,
+    ULONG  dwUnknown,
+    ULONG  CreateFlags);
 
-NTSTATUS WINAPI BaseSetProcessCreateNotify(BASE_PROCESS_CREATE_NOTIFY_ROUTINE);
+VOID
+NTAPI
+BaseSetProcessCreateNotify(IN BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc);
 
 typedef struct _NLS_USER_INFO
 {

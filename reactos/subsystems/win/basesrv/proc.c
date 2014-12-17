@@ -14,6 +14,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+/* User notification procedure to be called when a process is created */
+static BASE_PROCESS_CREATE_NOTIFY_ROUTINE UserNotifyProcessCreate = NULL;
+
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(BaseSrvDebugProcess)
@@ -167,7 +172,14 @@ CSR_API(BaseSrvCreateProcess)
         return Status;
     }
 
-    /* FIXME: Should notify user32 */
+    /* Call the user notification procedure */
+    if (UserNotifyProcessCreate)
+    {
+        UserNotifyProcessCreate(CreateProcessRequest->ClientId.UniqueProcess,
+                                Process->ClientId.UniqueThread,
+                                0,
+                                Flags);
+    }
 
     /* Check if this is a VDM process */
     if (CreateProcessRequest->VdmBinaryType)
@@ -295,12 +307,12 @@ CSR_API(BaseSrvSetProcessShutdownParam)
 
 /* PUBLIC API *****************************************************************/
 
-NTSTATUS
+VOID
 NTAPI
 BaseSetProcessCreateNotify(IN BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc)
 {
-    DPRINT("BASESRV: %s(%08lx) called\n", __FUNCTION__, ProcessCreateNotifyProc);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Set the user notification procedure to be called when a process is created */
+    UserNotifyProcessCreate = ProcessCreateNotifyProc;
 }
 
 /* EOF */

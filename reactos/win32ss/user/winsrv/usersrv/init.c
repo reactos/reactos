@@ -261,6 +261,9 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
         return Status;
     }
 
+    /* Set the process creation notify routine for BASE */
+    BaseSetProcessCreateNotify(NtUserNotifyProcessCreate);
+
     /* Initialize the kernel mode subsystem */
     Status = NtUserInitialize(USER_VERSION,
                               ghPowerRequestEvent,
