@@ -23,7 +23,6 @@
 class CDesktopThread
 {
     HANDLE m_hEvent;
-    HANDLE m_hDesktop;
     CComPtr<ITrayWindow> m_Tray;
 
     DWORD DesktopThreadProc()
@@ -65,12 +64,11 @@ class CDesktopThread
 public:
     CDesktopThread() :
         m_hEvent(NULL),
-        m_hDesktop(NULL),
         m_Tray(NULL)
     {
     }
 
-    HANDLE Initialize(IN OUT ITrayWindow *pTray)
+    HRESULT Initialize(IN OUT ITrayWindow *pTray)
     {
         HANDLE hThread;
         HANDLE Handles[2];
@@ -79,13 +77,13 @@ public:
 
         m_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
         if (!m_hEvent)
-            return NULL;
+            return E_FAIL;
 
         hThread = CreateThread(NULL, 0, s_DesktopThreadProc, (PVOID)this, 0, NULL);
         if (!hThread)
         {
             CloseHandle(m_hEvent);
-            return NULL;
+            return E_FAIL;
         }
 
         Handles[0] = hThread;
@@ -107,36 +105,33 @@ public:
         CloseHandle(hThread);
         CloseHandle(m_hEvent);
 
-        // FIXME: Never assigned, will always return default value (NULL).
-        return m_hDesktop;
+        return S_OK;
     }
 
     void Destroy()
     {
         return;
     }
-
-} * g_pDesktopWindowInstance;
+};
 
 HANDLE
 DesktopCreateWindow(IN OUT ITrayWindow *Tray)
 {
-    if (!g_pDesktopWindowInstance)
-    {
-        g_pDesktopWindowInstance = new CDesktopThread();
-    }
-    
-    if (!g_pDesktopWindowInstance)
-        return NULL;
+    CDesktopThread* pDesktopThread = new CDesktopThread();
 
-    return g_pDesktopWindowInstance->Initialize(Tray);
+    HRESULT hres = pDesktopThread->Initialize(Tray);
+    if(FAILED_UNEXPECTEDLY(hres))
+    {
+        delete pDesktopThread;
+        return NULL;
+    }
+
+    return pDesktopThread;
 }
 
 VOID
 DesktopDestroyShellWindow(IN HANDLE hDesktop)
 {
-    if (g_pDesktopWindowInstance)
-    {
-        g_pDesktopWindowInstance->Destroy();
-    }
+    CDesktopThread* pDesktopThread = reinterpret_cast<CDesktopThread*>(hDesktop);
+    pDesktopThread->Destroy();
 }

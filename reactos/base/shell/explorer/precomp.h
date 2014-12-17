@@ -296,33 +296,9 @@ OUT HWND *phWndTaskSwitch);
 
 HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
-#define INTERFACE IStartMenuSite
-DECLARE_INTERFACE_(IStartMenuSite, IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT, QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG, AddRef) (THIS) PURE;
-    STDMETHOD_(ULONG, Release) (THIS) PURE;
-    /*** IStartMenuSite ***/
-};
-#undef INTERFACE
-
-#if defined(COBJMACROS)
-/*** IUnknown methods ***/
-#define IStartMenuSite_QueryInterface(p,a,b)             (p)->lpVtbl->QueryInterface(p,a,b)
-#define IStartMenuSite_AddRef(p)                         (p)->lpVtbl->AddRef(p)
-#define IStartMenuSite_Release(p)                        (p)->lpVtbl->Release(p)
-/*** IStartMenuSite methods ***/
-#endif
-
 IMenuPopup*
 CreateStartMenu(IN ITrayWindow *Tray,
 OUT IMenuBand **ppMenuBand,
-IN HBITMAP hbmBanner  OPTIONAL,
-IN BOOL bSmallIcons);
-
-HRESULT
-UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
 IN HBITMAP hbmBanner  OPTIONAL,
 IN BOOL bSmallIcons);
 
@@ -350,6 +326,8 @@ CreateStartMenuSite(IN OUT ITrayWindow *Tray, const IID & riid, PVOID * ppv);
 
 #define NTNWM_REALIGN   (0x1)
 
+class CTrayNotifyWnd;
+
 BOOL
 RegisterTrayNotifyWndClass(VOID);
 
@@ -357,15 +335,14 @@ VOID
 UnregisterTrayNotifyWndClass(VOID);
 
 HWND
-CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
-IN BOOL bHideClock);
+CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow, IN BOOL bHideClock, CTrayNotifyWnd** ppTrayNotify);
 
 VOID
-TrayNotify_NotifyMsg(IN WPARAM wParam,
+TrayNotify_NotifyMsg(CTrayNotifyWnd* pTrayNotify, IN WPARAM wParam,
 IN LPARAM lParam);
 
 BOOL
-TrayNotify_GetClockRect(OUT PRECT rcClock);
+TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock);
 
 /*
  * taskswnd.c
@@ -385,7 +362,7 @@ CreateTaskSwitchWnd(IN HWND hWndParent,
 IN OUT ITrayWindow *Tray);
 
 HRESULT
-Tray_OnStartMenuDismissed();
+Tray_OnStartMenuDismissed(ITrayWindow* Tray);
 
 HRESULT
 IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2);

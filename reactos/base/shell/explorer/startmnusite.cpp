@@ -20,14 +20,9 @@
 
 #include "precomp.h"
 
-/*****************************************************************************
- ** IStartMenuSite ***********************************************************
- *****************************************************************************/
-
 class CStartMenuSite :
     public CComCoClass<CStartMenuSite>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IStartMenuSite,
     public IServiceProvider,
     public ITrayPriv,
     public IOleCommandTarget,
@@ -364,7 +359,7 @@ public:
     {
         if (!fSet)
         {
-            return Tray_OnStartMenuDismissed();
+            return Tray_OnStartMenuDismissed(m_Tray);
         }
 
         return S_OK;

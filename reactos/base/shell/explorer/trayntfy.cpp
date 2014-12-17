@@ -1561,25 +1561,24 @@ public:
     }
 };
 
-static CTrayNotifyWnd * g_Instance;
-
-HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock)
+HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock, CTrayNotifyWnd** ppinstance)
 {
+    CTrayNotifyWnd * pTrayNotify = new CTrayNotifyWnd();
     // TODO: Destroy after the window is destroyed
-    g_Instance = new CTrayNotifyWnd();
+    *ppinstance = pTrayNotify;
 
-    return g_Instance->_Init(Tray, bHideClock);
+    return pTrayNotify->_Init(Tray, bHideClock);
 }
 
 VOID
-TrayNotify_NotifyMsg(WPARAM wParam, LPARAM lParam)
+TrayNotify_NotifyMsg(CTrayNotifyWnd* pTrayNotify, WPARAM wParam, LPARAM lParam)
 {
     BOOL bDummy;
-    g_Instance->NotifyMsg(0, wParam, lParam, bDummy);
+    pTrayNotify->NotifyMsg(0, wParam, lParam, bDummy);
 }
 
 BOOL
-TrayNotify_GetClockRect(OUT PRECT rcClock)
+TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock)
 {
-    return g_Instance->GetClockRect(rcClock);
+    return pTrayNotify->GetClockRect(rcClock);
 }

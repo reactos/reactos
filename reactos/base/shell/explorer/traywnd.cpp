@@ -371,6 +371,8 @@ class CTrayWindow :
     HWND m_TaskSwitch;
     HWND m_TrayNotify;
 
+    CTrayNotifyWnd* m_TrayNotifyInstance;
+
     DWORD    m_Position;
     HMONITOR m_Monitor;
     HMONITOR m_PreviousMonitor;
@@ -1524,7 +1526,7 @@ ChangePos:
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         /* Create the tray notification window */
-        m_TrayNotify = CreateTrayNotifyWnd(this, HideClock);
+        m_TrayNotify = CreateTrayNotifyWnd(this, HideClock, &m_TrayNotifyInstance);
 
         if (UpdateNonClientMetrics())
         {
@@ -2170,7 +2172,7 @@ ChangePos:
     {
         if (m_TrayNotify)
         {
-            TrayNotify_NotifyMsg(wParam, lParam);
+            TrayNotify_NotifyMsg(m_TrayNotifyInstance, wParam, lParam);
         }
         return TRUE;
     }
@@ -2541,7 +2543,7 @@ HandleTrayContextMenu:
         /* We should forward mouse messages to child windows here.
         Right now, this is only clock double-click */
         RECT rcClock;
-        if (TrayNotify_GetClockRect(&rcClock))
+        if (TrayNotify_GetClockRect(m_TrayNotifyInstance, &rcClock))
         {
             POINT ptClick;
             ptClick.x = MAKEPOINTS(lParam).x;
@@ -3091,15 +3093,6 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
     return S_OK;
 }
 
-CTrayWindow * g_TrayWindow;
-
-HRESULT
-Tray_OnStartMenuDismissed()
-{
-    return g_TrayWindow->RaiseStartButton();
-}
-
-
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray)
 {
     CComPtr<CTrayWindow> Tray = new CComObject<CTrayWindow>();
@@ -3108,19 +3101,27 @@ HRESULT CreateTrayWindow(ITrayWindow ** ppTray)
 
     Tray->_Init();
     Tray->Open();
-    g_TrayWindow = Tray;
 
     *ppTray = (ITrayWindow *) Tray;
 
     return S_OK;
 }
 
-VOID TrayProcessMessages(ITrayWindow *)
+HRESULT
+Tray_OnStartMenuDismissed(ITrayWindow* Tray)
 {
-    g_TrayWindow->TrayProcessMessages();
+    CTrayWindow * TrayWindow = static_cast<CTrayWindow *>(Tray);
+    return TrayWindow->RaiseStartButton();
 }
 
-VOID TrayMessageLoop(ITrayWindow *)
+VOID TrayProcessMessages(ITrayWindow *Tray)
 {
-    g_TrayWindow->TrayMessageLoop();
+    CTrayWindow * TrayWindow = static_cast<CTrayWindow *>(Tray);
+    TrayWindow->TrayProcessMessages();
+}
+
+VOID TrayMessageLoop(ITrayWindow *Tray)
+{
+    CTrayWindow * TrayWindow = static_cast<CTrayWindow *>(Tray);
+    TrayWindow->TrayMessageLoop();
 }
