@@ -282,7 +282,7 @@ IsConsoleApp(VOID)
 static BOOLEAN
 ConnectConsole(IN PWSTR SessionDir,
                IN PCONSRV_API_CONNECTINFO ConnectInfo,
-               OUT PBOOLEAN IsServerProcess)
+               OUT PBOOLEAN InServerProcess)
 {
     NTSTATUS Status;
     ULONG ConnectInfoSize = sizeof(*ConnectInfo);
@@ -295,7 +295,7 @@ ConnectConsole(IN PWSTR SessionDir,
                                       CONSRV_SERVERDLL_INDEX,
                                       ConnectInfo,
                                       &ConnectInfoSize,
-                                      IsServerProcess);
+                                      InServerProcess);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to connect to the Console Server (Status %lx)\n", Status);
@@ -303,7 +303,7 @@ ConnectConsole(IN PWSTR SessionDir,
     }
 
     /* Nothing to do for server-to-server */
-    if (*IsServerProcess) return TRUE;
+    if (*InServerProcess) return TRUE;
 
     /* Nothing to do if this is not a console app */
     if (!ConnectInfo->IsConsoleApp) return TRUE;
@@ -338,7 +338,7 @@ ConDllInitialize(IN ULONG Reason,
 {
     NTSTATUS Status;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
-    BOOLEAN IsServerProcess;
+    BOOLEAN InServerProcess = FALSE;
     CONSRV_API_CONNECTINFO ConnectInfo;
     LCID lcid;
 
@@ -507,14 +507,14 @@ ConDllInitialize(IN ULONG Reason,
     /* Connect to the Console Server */
     if (!ConnectConsole(SessionDir,
                         &ConnectInfo,
-                        &IsServerProcess))
+                        &InServerProcess))
     {
         // DPRINT1("Failed to connect to the Console Server (Status %lx)\n", Status);
         return FALSE;
     }
 
     /* If we are not doing server-to-server init and if this is a console app... */
-    if (!IsServerProcess && ConnectInfo.IsConsoleApp)
+    if (!InServerProcess && ConnectInfo.IsConsoleApp)
     {
         /* ... set the handles that we got */
         if (Parameters->ConsoleHandle == NULL)

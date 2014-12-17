@@ -17,8 +17,7 @@
 /* GLOBALS *******************************************************************/
 
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
-
-BOOLEAN BaseRunningInServerProcess;
+BOOLEAN BaseRunningInServerProcess = FALSE;
 
 WCHAR BaseDefaultPathBuffer[6140];
 
@@ -117,7 +116,7 @@ DllMain(HANDLE hDll,
             /* Initialize default path to NULL */
             RtlInitUnicodeString(&BaseDefaultPath, NULL);
 
-            /* Setup the right Object Directory path */
+            /* Setup the Object Directory path */
             if (!SessionId)
             {
                 /* Use the raw path */
