@@ -1021,103 +1021,146 @@ REGION_LPTODP(
     if (IntGdiCombineRgn(prgnDest, prgnSrc, NULL, RGN_COPY) == ERROR)
         return FALSE;
 
-    return REGION_bXformRgn(prgnDest, &pdc->dclevel.mxWorldToDevice);
+    return REGION_bXformRgn(prgnDest, DC_pmxWorldToDevice(pdc));
 }
 
 BOOL
-FASTCALL
-IntGdiPaintRgn(
-    PDC dc,
-    PREGION Rgn)
+IntGdiFillRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn,
+    _In_ BRUSHOBJ *pbo)
 {
-    PREGION VisRgn;
-    XCLIPOBJ ClipRegion;
-    BOOL bRet = FALSE;
-    POINTL BrushOrigin;
-    SURFACE *psurf;
-    PDC_ATTR pdcattr;
+    PREGION prgnClip;
+    XCLIPOBJ xcoClip;
+    BOOL bRet;
+    PSURFACE psurf;
+    DWORD rop2Fg;
+    MIX mix;
 
-    if ((dc == NULL) || (Rgn == NULL))
-        return FALSE;
+    NT_ASSERT((pdc != NULL) && (prgn != NULL));
 
-    pdcattr = dc->pdcattr;
+    psurf = pdc->dclevel.pSurface;
+    if (psurf == NULL)
+    {
+        return TRUE;
+    }
 
-    ASSERT(!(pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY)));
-
-    VisRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
-    if (VisRgn == NULL)
+    prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (prgnClip == NULL)
     {
         return FALSE;
     }
 
-    // Transform region into device co-ords
-    if (!REGION_LPTODP(dc, VisRgn, Rgn) ||
-        IntGdiOffsetRgn(VisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
+    /* Transform region into device coordinates */
+    if (!REGION_LPTODP(pdc, prgnClip, prgn) ||
+        IntGdiOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y) == ERROR)
     {
-        REGION_Delete(VisRgn);
+        REGION_Delete(prgnClip);
         return FALSE;
     }
 
-    if (dc->prgnRao)
-        IntGdiCombineRgn(VisRgn, VisRgn, dc->prgnRao, RGN_AND);
+    /* Intersect with the system or RAO region */
+    if (pdc->prgnRao)
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnRao, RGN_AND);
+    else
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnVis, RGN_AND);
 
-    IntEngInitClipObj(&ClipRegion);
-    IntEngUpdateClipRegion(&ClipRegion,
-                           VisRgn->rdh.nCount,
-                           VisRgn->Buffer,
-                           &VisRgn->rdh.rcBound );
+    IntEngInitClipObj(&xcoClip);
+    IntEngUpdateClipRegion(&xcoClip,
+                           prgnClip->rdh.nCount,
+                           prgnClip->Buffer,
+                           &prgnClip->rdh.rcBound );
 
-    BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
-    BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
-    psurf = dc->dclevel.pSurface;
-    /* FIXME: Handle psurf == NULL !!!! */
+    /* Get the FG rop and create a MIX based on the BK mode */
+    rop2Fg = pdc->pdcattr->jROP2;
+    mix = rop2Fg | (pdc->pdcattr->jBkMode == OPAQUE ? rop2Fg : R2_NOP) << 8;
 
+    /* Call the internal function */
     bRet = IntEngPaint(&psurf->SurfObj,
-                       &ClipRegion.ClipObj,
-                       &dc->eboFill.BrushObject,
-                       &BrushOrigin,
-                       0xFFFF); // FIXME: Don't know what to put here
+                       &xcoClip.ClipObj,
+                       pbo,
+                       &pdc->pdcattr->ptlBrushOrigin,
+                       mix);
 
-    REGION_Delete(VisRgn);
-    IntEngFreeClipResources(&ClipRegion);
+    REGION_Delete(prgnClip);
+    IntEngFreeClipResources(&xcoClip);
 
     // Fill the region
     return bRet;
 }
 
 BOOL
+FASTCALL
+IntGdiPaintRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn)
+{
+    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc);
+
+    return IntGdiFillRgn(pdc, prgn, &pdc->eboFill.BrushObject);
+}
+
+BOOL
 APIENTRY
 NtGdiFillRgn(
-    HDC hDC,
-    HRGN hRgn,
-    HBRUSH hBrush)
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ HBRUSH hbrush)
 {
-    HBRUSH oldhBrush;
-    PREGION rgn;
-    PRECTL r;
+    PDC pdc;
+    PREGION prgn;
+    PBRUSH pbrFill;
+    EBRUSHOBJ eboFill;
+    BOOL bResult;
 
-    rgn = RGNOBJAPI_Lock(hRgn, NULL);
-    if (rgn == NULL)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
     {
+        ERR("Failed to lock hdc %p\n", hdc);
         return FALSE;
     }
 
-    oldhBrush = NtGdiSelectBrush(hDC, hBrush);
-    if (oldhBrush == NULL)
+    /* Check if the DC has no surface (empty mem or info DC) */
+    if (pdc->dclevel.pSurface == NULL)
     {
-        RGNOBJAPI_Unlock(rgn);
+        DC_UnlockDc(pdc);
+        return TRUE;
+    }
+
+    /* Lock the region */
+    prgn = RGNOBJAPI_Lock(hrgn, NULL);
+    if (prgn == NULL)
+    {
+        ERR("Failed to lock hrgn %p\n", hrgn);
+        DC_UnlockDc(pdc);
         return FALSE;
     }
 
-    for (r = rgn->Buffer; r < rgn->Buffer + rgn->rdh.nCount; r++)
+    /* Lock the brush */
+    pbrFill = BRUSH_ShareLockBrush(hbrush);
+    if (pbrFill == NULL)
     {
-        NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
+        ERR("Failed to lock hbrush %p\n", hbrush);
+        RGNOBJAPI_Unlock(prgn);
+        DC_UnlockDc(pdc);
+        return FALSE;
     }
 
-    RGNOBJAPI_Unlock(rgn);
-    NtGdiSelectBrush(hDC, oldhBrush);
+    /* Initialize the brush object */
+    /// \todo Check parameters
+    EBRUSHOBJ_vInit(&eboFill, pbrFill, pdc->dclevel.pSurface, 0x00FFFFFF, 0, NULL);
 
-    return TRUE;
+    /* Call the internal function */
+    bResult = IntGdiFillRgn(pdc, prgn, &eboFill.BrushObject);
+
+    /* Cleanup locks */
+    BRUSH_ShareUnlockBrush(pbrFill);
+    RGNOBJAPI_Unlock(prgn);
+    DC_UnlockDc(pdc);
+
+    return bResult;
 }
 
 BOOL
