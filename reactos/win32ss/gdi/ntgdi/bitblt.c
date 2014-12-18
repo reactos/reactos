@@ -1053,7 +1053,7 @@ IntGdiFillRgn(
 
     /* Transform region into device coordinates */
     if (!REGION_LPTODP(pdc, prgnClip, prgn) ||
-        REGION_iOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y) == ERROR)
+        !REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
     {
         REGION_Delete(prgnClip);
         return FALSE;

@@ -514,7 +514,7 @@ REGION_CopyRegion(
     PREGION dst,
     PREGION src)
 {
-    /* Only copy if source and dest are equal */
+    /* Only copy if source and dest are not equal */
     if (dst != src)
     {
         /* Check if we need to increase our buffer */
@@ -1867,31 +1867,31 @@ REGION_bMakeFrameRegion(
     else
     {
         /* Move the source region to the bottom-right */
-        REGION_iOffsetRgn(prgnSrc, cx, cy);
+        REGION_bOffsetRgn(prgnSrc, cx, cy);
 
         /* Intersect with the source region (this crops the top-left frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region to the bottom-left */
-        REGION_iOffsetRgn(prgnSrc, -2 * cx, 0);
+        REGION_bOffsetRgn(prgnSrc, -2 * cx, 0);
 
         /* Intersect with the source region (this crops the top-right frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region to the top-left */
-        REGION_iOffsetRgn(prgnSrc, 0, -2 * cy);
+        REGION_bOffsetRgn(prgnSrc, 0, -2 * cy);
 
         /* Intersect with the source region (this crops the bottom-right frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region to the top-right  */
-        REGION_iOffsetRgn(prgnSrc, 2 * cx, 0);
+        REGION_bOffsetRgn(prgnSrc, 2 * cx, 0);
 
         /* Intersect with the source region (this crops the bottom-left frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region back to the original position */
-        REGION_iOffsetRgn(prgnSrc, -cx, cy);
+        REGION_bOffsetRgn(prgnSrc, -cx, cy);
 
         /* Finally subtract the cropped region from the source */
         REGION_SubtractRegion(prgnDest, prgnSrc, prgnDest);
@@ -1961,7 +1961,7 @@ REGION_bXformRgn(
         if (pmx->flAccel & XFORM_UNITY)
         {
             /* Just offset the region */
-            return REGION_iOffsetRgn(prgn, (pmx->fxDx + 8) / 16, (pmx->fxDy + 8) / 16) != ERROR;
+            return REGION_bOffsetRgn(prgn, (pmx->fxDx + 8) / 16, (pmx->fxDy + 8) / 16);
         }
         else
         {
@@ -2584,40 +2584,93 @@ REGION_SetRectRgn(
     }
 }
 
-INT
+BOOL
 FASTCALL
-REGION_iOffsetRgn(
-    PREGION rgn,
-    INT XOffset,
-    INT YOffset)
+REGION_bOffsetRgn(
+    _Inout_ PREGION prgn,
+    _In_ INT cx,
+    _In_ INT cy)
 {
-    if (XOffset || YOffset)
+    PRECTL prcl;
+    UINT i;
+
+    NT_ASSERT(prgn != NULL);
+
+    /* Check for trivial case */
+    if ((cx == 0) && (cy == 0))
     {
-        int nbox = rgn->rdh.nCount;
-        PRECTL pbox = rgn->Buffer;
+        return TRUE;
+    }
 
-        if (nbox && pbox)
+    /* Check for empty regions, we ignore the offset values here */
+    if (prgn->rdh.nCount == 0)
+    {
+        return TRUE;
+    }
+
+    /* Make sure the offset is within the legal range */
+    if ((cx > MAX_COORD) || (cx < MIN_COORD) ||
+        (cy > MAX_COORD) || (cy < MIN_COORD))
+    {
+        return FALSE;
+    }
+
+    /* Are we moving right? */
+    if (cx > 0)
+    {
+        /* Check if we stay inside the bounds on the right side */
+        if (prgn->rdh.rcBound.right > (MAX_COORD - cx))
         {
-            while (nbox--)
-            {
-                pbox->left += XOffset;
-                pbox->right += XOffset;
-                pbox->top += YOffset;
-                pbox->bottom += YOffset;
-                pbox++;
-            }
-
-            if (rgn->Buffer != &rgn->rdh.rcBound)
-            {
-                rgn->rdh.rcBound.left += XOffset;
-                rgn->rdh.rcBound.right += XOffset;
-                rgn->rdh.rcBound.top += YOffset;
-                rgn->rdh.rcBound.bottom += YOffset;
-            }
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Check if we stay inside the bounds on the left side */
+        if (prgn->rdh.rcBound.left < (MIN_COORD - cx))
+        {
+            return FALSE;
         }
     }
 
-    return REGION_Complexity(rgn);
+    /* Are we moving down? */
+    if (cy > 0)
+    {
+        /* Check if we stay inside the bounds on the right side */
+        if (prgn->rdh.rcBound.bottom > (MAX_COORD - cy))
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Check if we stay inside the bounds on the left side */
+        if (prgn->rdh.rcBound.top < (MIN_COORD - cy))
+        {
+            return FALSE;
+        }
+    }
+
+    /* Loop to move the rects */
+    prcl = prgn->Buffer;
+    for (i = 0; i < prgn->rdh.nCount; i++)
+    {
+        prcl[i].left += cx;
+        prcl[i].right += cx;
+        prcl[i].top += cy;
+        prcl[i].bottom += cy;
+    }
+
+    /* Finally update the bounds rect */
+    if (prgn->Buffer != &prgn->rdh.rcBound)
+    {
+        prgn->rdh.rcBound.left += cx;
+        prgn->rdh.rcBound.right += cx;
+        prgn->rdh.rcBound.top += cy;
+        prgn->rdh.rcBound.bottom += cy;
+    }
+
+    return TRUE;
 }
 
 /***********************************************************************
@@ -3786,7 +3839,14 @@ NtGdiOffsetRgn(
         return ERROR;
     }
 
-    ret = REGION_iOffsetRgn(rgn, XOffset, YOffset);
+    if (!REGION_bOffsetRgn(rgn, XOffset, YOffset))
+    {
+        ret = ERROR;
+    }
+    else
+    {
+        ret = REGION_Complexity(rgn);
+    }
 
     RGNOBJAPI_Unlock(rgn);
     return ret;

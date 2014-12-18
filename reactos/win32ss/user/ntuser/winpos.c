@@ -1762,7 +1762,7 @@ co_WinPosSetWindowPos(
          }
          else if(VisBefore)
          {
-            REGION_iOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
+            REGION_bOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
          }
 
          /* Calculate the non client area for resizes, as this is used in the copy region */
@@ -1779,7 +1779,7 @@ co_WinPosSetWindowPos(
              }
              else if(VisBeforeJustClient)
              {
-                 REGION_iOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
+                 REGION_bOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
              }
          }
       }
@@ -1864,7 +1864,7 @@ co_WinPosSetWindowPos(
       }
       else if(VisAfter)
       {
-         REGION_iOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
+         REGION_bOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
       }
 
       /*
@@ -1905,9 +1905,9 @@ co_WinPosSetWindowPos(
             PREGION RgnUpdate = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
             if (RgnUpdate)
             {
-                REGION_iOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
+                REGION_bOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
                 IntGdiCombineRgn(CopyRgn, CopyRgn, RgnUpdate, RGN_DIFF);
-                REGION_iOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
+                REGION_bOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
                 RGNOBJAPI_Unlock(RgnUpdate);
             }
          }
@@ -1939,7 +1939,7 @@ co_WinPosSetWindowPos(
            * to create a copy of CopyRgn and pass that. We need CopyRgn later
            */
             IntGdiCombineRgn(DcRgnObj, CopyRgn, NULL, RGN_COPY);
-            REGION_iOffsetRgn(DcRgnObj, NewWindowRect.left, NewWindowRect.top);
+            REGION_bOffsetRgn(DcRgnObj, NewWindowRect.left, NewWindowRect.top);
             RGNOBJAPI_Unlock(DcRgnObj);
             Dc = UserGetDCEx( Window,
                               DcRgn,
@@ -1992,7 +1992,7 @@ co_WinPosSetWindowPos(
 
                 PWND Parent = Window->spwndParent;
 
-                REGION_iOffsetRgn( DirtyRgn,
+                REGION_bOffsetRgn( DirtyRgn,
                                 Window->rcWindow.left,
                                 Window->rcWindow.top);
                 if ( (Window->style & WS_CHILD) &&
@@ -2027,7 +2027,7 @@ co_WinPosSetWindowPos(
          if (ExposedRgn)
          {
              RgnType = IntGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
-             REGION_iOffsetRgn(ExposedRgn,
+             REGION_bOffsetRgn(ExposedRgn,
                                OldWindowRect.left - NewWindowRect.left,
                                OldWindowRect.top  - NewWindowRect.top);
 

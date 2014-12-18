@@ -62,7 +62,13 @@ GreCreatePolyPolygonRgn(
     _In_ ULONG cPolygons,
     _In_ INT iMode);
 
-INT FASTCALL REGION_iOffsetRgn(PREGION,INT,INT);
+BOOL
+FASTCALL
+REGION_bOffsetRgn(
+    _Inout_ PREGION prgn,
+    _In_ INT cx,
+    _In_ INT cy);
+
 BOOL FASTCALL IntRectInRegion(HRGN,LPRECTL);
 
 INT FASTCALL IntGdiCombineRgn(PREGION, PREGION, PREGION, INT);

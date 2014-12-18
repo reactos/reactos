@@ -779,7 +779,10 @@ NtGdiGetRandomRgn(
         {
             ret = IntGdiCombineRgn(prgnDest, prgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
             if ((ret == 1) && (iCode == SYSRGN))
-                REGION_iOffsetRgn(prgnDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+            {
+                /// \todo FIXME This is not really correct, since we already modified the region
+                ret = REGION_bOffsetRgn(prgnDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+            }
             REGION_UnlockRgn(prgnDest);
         }
         else
