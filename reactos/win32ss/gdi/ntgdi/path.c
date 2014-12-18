@@ -1280,11 +1280,11 @@ PATH_PathToRegion(
     }
 
     /* Fill the region with the strokes */
-    Ret = IntSetPolyPolygonRgn(pPath->pPoints,
-                               pNumPointsInStroke,
-                               numStrokes,
-                               nPolyFillMode,
-                               Rgn);
+    Ret = REGION_SetPolyPolygonRgn(Rgn,
+                                   pPath->pPoints,
+                                   pNumPointsInStroke,
+                                   numStrokes,
+                                   nPolyFillMode);
 
     /* Free memory for number-of-points-in-stroke array */
     ExFreePoolWithTag(pNumPointsInStroke, TAG_PATH);

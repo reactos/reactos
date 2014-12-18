@@ -42,7 +42,24 @@ VOID FASTCALL IntGdiReleaseVisRgn(PDC);
 
 INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
 BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );
-BOOL FASTCALL IntSetPolyPolygonRgn(PPOINT, PULONG, INT, INT, PREGION);
+
+BOOL
+FASTCALL
+REGION_SetPolyPolygonRgn(
+    _Inout_ PREGION prgn,
+    _In_ const POINT *ppt,
+    _In_ const ULONG *pcPoints,
+    _In_ ULONG cPolygons,
+    _In_ INT iMode);
+
+HRGN
+NTAPI
+GreCreatePolyPolygonRgn(
+    _In_ const POINT *ppt,
+    _In_ const ULONG *pcPoints,
+    _In_ ULONG cPolygons,
+    _In_ INT iMode);
+
 INT FASTCALL IntGdiOffsetRgn(PREGION,INT,INT);
 BOOL FASTCALL IntRectInRegion(HRGN,LPRECTL);
 

@@ -597,7 +597,7 @@ REGION_SetExtents(
 
 // FIXME: This function needs review and testing
 /***********************************************************************
- *           REGION_CropAndOffsetRegion
+ *           REGION_CropRegion
  */
 INT
 FASTCALL
@@ -3020,7 +3020,7 @@ REGION_PtsToRegion(
 }
 
 /***********************************************************************
- *     REGION_CreateEDGE_TABLE
+ *     REGION_CreateETandAET
  *
  *     This routine creates the edge table for
  *     scan converting polygons.
@@ -3061,7 +3061,7 @@ REGION_CreateETandAET(
     INT iSLLBlock = 0;
     INT dy;
 
-    /*  Initialize the Active Edge Table */
+    /* Initialize the Active Edge Table */
     AET->next = (EDGE_TABLE_ENTRY *)NULL;
     AET->back = (EDGE_TABLE_ENTRY *)NULL;
     AET->nextWETE = (EDGE_TABLE_ENTRY *)NULL;
@@ -3132,12 +3132,12 @@ REGION_CreateETandAET(
 
 BOOL
 FASTCALL
-IntSetPolyPolygonRgn(
-    POINT *Pts,
-    PULONG Count,
-    INT nbpolygons,
-    INT mode,
-    PREGION Rgn)
+REGION_SetPolyPolygonRgn(
+    _Inout_ PREGION prgn,
+    _In_ const POINT *ppt,
+    _In_ const ULONG *pcPoints,
+    _In_ ULONG cPolygons,
+    _In_ INT iMode)
 {
     EDGE_TABLE_ENTRY *pAET;               /* Active Edge Table        */
     INT y;                                /* Current scanline         */
@@ -3153,33 +3153,35 @@ IntSetPolyPolygonRgn(
     INT fixWAET = FALSE;
     POINTBLOCK FirstPtBlock, *curPtBlock; /* PtBlock buffers          */
     POINTBLOCK *tmpPtBlock;
-    INT numFullPtBlocks = 0;
-    INT poly, total;
+    UINT numFullPtBlocks = 0;
+    UINT poly, total;
 
-    if (mode == 0 || mode > 2) return 0;
+    /* Check if iMode is valid */
+    if ((iMode != ALTERNATE) && (iMode != WINDING))
+        return FALSE;
 
     /* Special case a rectangle */
-    if (((nbpolygons == 1) && ((*Count == 4) ||
-         ((*Count == 5) && (Pts[4].x == Pts[0].x) && (Pts[4].y == Pts[0].y)))) &&
-        (((Pts[0].y == Pts[1].y) &&
-          (Pts[1].x == Pts[2].x) &&
-          (Pts[2].y == Pts[3].y) &&
-          (Pts[3].x == Pts[0].x)) ||
-         ((Pts[0].x == Pts[1].x) &&
-          (Pts[1].y == Pts[2].y) &&
-          (Pts[2].x == Pts[3].x) &&
-          (Pts[3].y == Pts[0].y))))
+    if (((cPolygons == 1) && ((pcPoints[0] == 4) ||
+         ((pcPoints[0] == 5) && (ppt[4].x == ppt[0].x) && (ppt[4].y == ppt[0].y)))) &&
+        (((ppt[0].y == ppt[1].y) &&
+          (ppt[1].x == ppt[2].x) &&
+          (ppt[2].y == ppt[3].y) &&
+          (ppt[3].x == ppt[0].x)) ||
+         ((ppt[0].x == ppt[1].x) &&
+          (ppt[1].y == ppt[2].y) &&
+          (ppt[2].x == ppt[3].x) &&
+          (ppt[3].y == ppt[0].y))))
     {
-        REGION_SetRectRgn(Rgn,
-                          min(Pts[0].x, Pts[2].x),
-                          min(Pts[0].y, Pts[2].y),
-                          max(Pts[0].x, Pts[2].x),
-                          max(Pts[0].y, Pts[2].y));
+        REGION_SetRectRgn(prgn,
+                          min(ppt[0].x, ppt[2].x),
+                          min(ppt[0].y, ppt[2].y),
+                          max(ppt[0].x, ppt[2].x),
+                          max(ppt[0].y, ppt[2].y));
         return TRUE;
     }
 
-    for (poly = total = 0; poly < nbpolygons; poly++)
-        total += Count[poly];
+    for (poly = total = 0; poly < cPolygons; poly++)
+        total += pcPoints[poly];
 
     pETEs = ExAllocatePoolWithTag(PagedPool,
                                   sizeof(EDGE_TABLE_ENTRY) * total,
@@ -3190,11 +3192,11 @@ IntSetPolyPolygonRgn(
     }
 
     pts = FirstPtBlock.pts;
-    REGION_CreateETandAET(Count, nbpolygons, Pts, &ET, &AET, pETEs, &SLLBlock);
+    REGION_CreateETandAET(pcPoints, cPolygons, ppt, &ET, &AET, pETEs, &SLLBlock);
     pSLL = ET.scanlines.next;
     curPtBlock = &FirstPtBlock;
 
-    if (mode != WINDING)
+    if (iMode != WINDING)
     {
         /*  For each scanline */
         for (y = ET.ymin; y < ET.ymax; y++)
@@ -3305,7 +3307,7 @@ IntSetPolyPolygonRgn(
     }
 
     REGION_FreeStorage(SLLBlock.next);
-    REGION_PtsToRegion(numFullPtBlocks, iPts, &FirstPtBlock, Rgn);
+    REGION_PtsToRegion(numFullPtBlocks, iPts, &FirstPtBlock, prgn);
 
     for (curPtBlock = FirstPtBlock.next; --numFullPtBlocks >= 0;)
     {
@@ -3316,6 +3318,42 @@ IntSetPolyPolygonRgn(
 
     ExFreePoolWithTag(pETEs, TAG_REGION);
     return TRUE;
+}
+
+HRGN
+NTAPI
+GreCreatePolyPolygonRgn(
+    _In_ const POINT *ppt,
+    _In_ const ULONG *pcPoints,
+    _In_ ULONG cPolygons,
+    _In_ INT iMode)
+{
+    PREGION prgn;
+    HRGN hrgn;
+
+    /* Allocate a new region */
+    prgn = REGION_AllocUserRgnWithHandle(0);
+    if (prgn == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    /* Call the internal function and check for success */
+    if (REGION_SetPolyPolygonRgn(prgn, ppt, pcPoints, cPolygons, iMode))
+    {
+        /* Success, get the handle and unlock the region */
+        hrgn = prgn->BaseObject.hHmgr;
+        RGNOBJAPI_Unlock(prgn);
+    }
+    else
+    {
+        /* Failure, delete the region */
+        REGION_Delete(prgn);
+        hrgn = NULL;
+    }
+
+    return hrgn;
 }
 
 BOOL

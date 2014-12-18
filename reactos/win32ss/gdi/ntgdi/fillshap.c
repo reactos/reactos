@@ -458,26 +458,13 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     /* Special handling for GdiPolyPolyRgn */
     if (iFunc == GdiPolyPolyRgn)
     {
-        PREGION Rgn;
-        HRGN hRgn;
+        INT iMode = (INT)(UINT_PTR)hDC;
+        HRGN hrgn;
 
-        Rgn = REGION_AllocUserRgnWithHandle(0);
-        if (!Rgn)
-        {
-            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            ExFreePoolWithTag(pTemp, TAG_SHAPE);
-            return 0;
-        }
-        hRgn = Rgn->BaseObject.hHmgr;
-        if (!IntSetPolyPolygonRgn(SafePoints, SafeCounts, Count, hDC ? 1 : 2, Rgn))
-        {
-            /* EngSetLastError ? */
-            GreDeleteObject(hRgn);
-            hRgn = NULL;
-        }
-        RGNOBJAPI_Unlock(Rgn);
+        hrgn = GreCreatePolyPolygonRgn(SafePoints, SafeCounts, Count, iMode);
+
         ExFreePoolWithTag(pTemp, TAG_SHAPE);
-        return (ULONG_PTR)hRgn;
+        return (ULONG_PTR)hrgn;
     }
 
     dc = DC_LockDc(hDC);
