@@ -599,7 +599,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
        * so we must unreference whatever cursor was current at the time we restored the old one.
        * Maybe it is DragCursor, but maybe it is another one and DragCursor got already freed.
        */
-      UserDereferenceObject(OldCursor);
+      if (OldCursor) UserDereferenceObject(OldCursor);
 #else
       IntDestroyCursor( hDragCursor, FALSE );
 #endif
