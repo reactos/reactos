@@ -2274,51 +2274,47 @@ REGION_AllocUserRgnWithHandle(
     return prgn;
 }
 
+static
 VOID
-NTAPI
 REGION_vSyncRegion(
-    PREGION pRgn)
+    PREGION prgn)
 {
-    PRGN_ATTR pRgn_Attr = NULL;
+    PRGN_ATTR prgnattr;
 
-    if (pRgn && pRgn->prgnattr != &pRgn->rgnattr)
+    NT_ASSERT(prgn != NULL);
+    NT_ASSERT(prgn->prgnattr != NULL);
+    NT_ASSERT((prgn->prgnattr == &prgn->rgnattr) ||
+              (prgn->prgnattr->AttrFlags & ATTR_RGN_VALID));
+
+    /* Get the region attribute and check if it's dirty (modified) */
+    prgnattr = prgn->prgnattr;
+    if (prgnattr->AttrFlags & ATTR_RGN_DIRTY)
     {
-        pRgn_Attr = GDIOBJ_pvGetObjectAttr(&pRgn->BaseObject);
+        NT_ASSERT(GreGetObjectOwner(prgn->BaseObject.hHmgr) == GDI_OBJ_HMGR_POWNED);
+        NT_ASSERT(prgnattr != &prgn->rgnattr);
 
-        if ( pRgn_Attr )
+        if (prgnattr->iComplexity == NULLREGION)
         {
-            _SEH2_TRY
-            {
-                if ( !(pRgn_Attr->AttrFlags & ATTR_CACHED) )
-                {
-                    if ( pRgn_Attr->AttrFlags & (ATTR_RGN_VALID|ATTR_RGN_DIRTY) )
-                    {
-                        switch (pRgn_Attr->iComplexity)
-                        {
-                            case NULLREGION:
-                                EMPTY_REGION( pRgn );
-                                break;
-
-                            case SIMPLEREGION:
-                                REGION_SetRectRgn( pRgn,
-                                pRgn_Attr->Rect.left,
-                                pRgn_Attr->Rect.top,
-                                pRgn_Attr->Rect.right,
-                                pRgn_Attr->Rect.bottom );
-                                break;
-                        }
-                        pRgn_Attr->AttrFlags &= ~ATTR_RGN_DIRTY;
-                    }
-                }
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                (VOID)0;
-            }
-            _SEH2_END;
+            EMPTY_REGION(prgn);
+        }
+        else if (prgnattr->iComplexity == SIMPLEREGION)
+        {
+            REGION_SetRectRgn(prgn,
+                              prgnattr->Rect.left,
+                              prgnattr->Rect.top,
+                              prgnattr->Rect.right,
+                              prgnattr->Rect.bottom);
+        }
+        else
+        {
+            /* Should not happen, region attribute is corrupted! */
+            DPRINT1("Region attribute is corrupted, ignoring\n");
+            NT_ASSERT(FALSE);
         }
     }
 
+    /* Reset the flags */
+    prgnattr->AttrFlags &= ~(ATTR_RGN_DIRTY | ATTR_RGN_VALID);
 }
 
 PREGION
@@ -2344,35 +2340,27 @@ RGNOBJAPI_Lock(
 VOID
 FASTCALL
 RGNOBJAPI_Unlock(
-    PREGION pRgn)
+    PREGION prgn)
 {
-    PRGN_ATTR pRgn_Attr;
+    PRGN_ATTR prgnattr;
 
-    if (pRgn && GreGetObjectOwner(pRgn->BaseObject.hHmgr) == GDI_OBJ_HMGR_POWNED)
+    NT_ASSERT(prgn != NULL);
+    NT_ASSERT(prgn->prgnattr != NULL);
+
+    /* Get the region attribute and check if it's user mode */
+    prgnattr = prgn->prgnattr;
+    if (prgnattr != &prgn->rgnattr)
     {
-        pRgn_Attr = GDIOBJ_pvGetObjectAttr(&pRgn->BaseObject);
-
-        if ( pRgn_Attr )
-        {
-            _SEH2_TRY
-            {
-                if ( pRgn_Attr->AttrFlags & ATTR_RGN_VALID )
-                {
-                    pRgn_Attr->iComplexity = REGION_Complexity( pRgn );
-                    pRgn_Attr->Rect.left   = pRgn->rdh.rcBound.left;
-                    pRgn_Attr->Rect.top    = pRgn->rdh.rcBound.top;
-                    pRgn_Attr->Rect.right  = pRgn->rdh.rcBound.right;
-                    pRgn_Attr->Rect.bottom = pRgn->rdh.rcBound.bottom;
-                }
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                (VOID)0;
-            }
-            _SEH2_END;
-        }
+        NT_ASSERT(GreGetObjectOwner(prgn->BaseObject.hHmgr) == GDI_OBJ_HMGR_POWNED);
+        prgnattr->iComplexity = REGION_Complexity(prgn);
+        prgnattr->Rect.left   = prgn->rdh.rcBound.left;
+        prgnattr->Rect.top    = prgn->rdh.rcBound.top;
+        prgnattr->Rect.right  = prgn->rdh.rcBound.right;
+        prgnattr->Rect.bottom = prgn->rdh.rcBound.bottom;
+        prgnattr->AttrFlags |= ATTR_RGN_VALID;
     }
-    REGION_UnlockRgn(pRgn);
+
+    REGION_UnlockRgn(prgn);
 }
 
 /*
@@ -2403,6 +2391,7 @@ IntSysCreateRectpRgn(
     /* Initialize it */
     prgn->Buffer = &prgn->rdh.rcBound;
     prgn->prgnattr = &prgn->rgnattr;
+    prgn->prgnattr->AttrFlags = ATTR_RGN_VALID;
     REGION_SetRectRgn(prgn, LeftRect, TopRect, RightRect, BottomRect);
 
     return prgn;
@@ -3522,19 +3511,19 @@ NtGdiCombineRgn(
 
     /* HACK: Sync usermode attributes */
     REGION_vSyncRegion(aprgn[0]);
-    REGION_vSyncRegion(aprgn[1]);
-    if (aprgn[2]) REGION_vSyncRegion(aprgn[2]);
+    if (aprgn[1] != aprgn[0])
+        REGION_vSyncRegion(aprgn[1]);
+    if ((aprgn[2] != NULL) && (aprgn[2] != aprgn[0]) && (aprgn[2] != aprgn[1]))
+        REGION_vSyncRegion(aprgn[2]);
 
     /* Call the internal function */
     iResult = IntGdiCombineRgn(aprgn[0], aprgn[1], aprgn[2], iMode);
 
-    /// FIXME: need to sync user attr back
-
-    /* Cleanup and return */
-    REGION_UnlockRgn(aprgn[0]);
-    REGION_UnlockRgn(aprgn[1]);
-    if (aprgn[2])
-        REGION_UnlockRgn(aprgn[2]);
+    /* Unlock and return */
+    RGNOBJAPI_Unlock(aprgn[0]);
+    RGNOBJAPI_Unlock(aprgn[1]);
+    if (aprgn[2] != NULL)
+        RGNOBJAPI_Unlock(aprgn[2]);
 
     return iResult;
 }
