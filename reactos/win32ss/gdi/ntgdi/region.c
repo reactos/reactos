@@ -1840,7 +1840,7 @@ REGION_CreateSimpleFrameRgn(
 
 BOOL
 FASTCALL
-REGION_CreateFrameRgn(
+GreCreateFrameRgn(
     HRGN hDest,
     HRGN hSrc,
     INT x,
@@ -3745,72 +3745,6 @@ NtGdiExtCreateRegion(
     return hRgn;
 }
 
-BOOL
-APIENTRY
-NtGdiFillRgn(
-    HDC hDC,
-    HRGN hRgn,
-    HBRUSH hBrush)
-{
-    HBRUSH oldhBrush;
-    PREGION rgn;
-    PRECTL r;
-
-    rgn = RGNOBJAPI_Lock(hRgn, NULL);
-    if (rgn == NULL)
-    {
-        return FALSE;
-    }
-
-    oldhBrush = NtGdiSelectBrush(hDC, hBrush);
-    if (oldhBrush == NULL)
-    {
-        RGNOBJAPI_Unlock(rgn);
-        return FALSE;
-    }
-
-    for (r = rgn->Buffer; r < rgn->Buffer + rgn->rdh.nCount; r++)
-    {
-        NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
-    }
-
-    RGNOBJAPI_Unlock(rgn);
-    NtGdiSelectBrush(hDC, oldhBrush);
-
-    return TRUE;
-}
-
-BOOL
-APIENTRY
-NtGdiFrameRgn(
-    HDC hDC,
-    HRGN hRgn,
-    HBRUSH hBrush,
-    INT Width,
-    INT Height)
-{
-    HRGN FrameRgn;
-    BOOL Ret;
-
-    FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-    if (FrameRgn == NULL)
-    {
-        return FALSE;
-    }
-
-    if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
-    {
-        GreDeleteObject(FrameRgn);
-        return FALSE;
-    }
-
-    Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
-
-    GreDeleteObject(FrameRgn);
-    return Ret;
-}
-
-
 INT
 APIENTRY
 NtGdiGetRgnBox(
@@ -3949,46 +3883,6 @@ NtGdiSetRectRgn(
 
     RGNOBJAPI_Unlock(rgn);
     return TRUE;
-}
-
-HRGN
-APIENTRY
-NtGdiUnionRectWithRgn(
-    HRGN hDest,
-    const RECTL *UnsafeRect)
-{
-    RECTL SafeRect = { 0 };
-    PREGION Rgn;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    Rgn = RGNOBJAPI_Lock(hDest, NULL);
-    if (Rgn == NULL)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return NULL;
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForRead(UnsafeRect, sizeof(RECT), 1);
-        SafeRect = *UnsafeRect;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        RGNOBJAPI_Unlock(Rgn);
-        SetLastNtError(Status);
-        return NULL;
-    }
-
-    REGION_UnionRectWithRgn(Rgn, &SafeRect);
-    RGNOBJAPI_Unlock(Rgn);
-    return hDest;
 }
 
 /*!

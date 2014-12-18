@@ -1012,6 +1012,71 @@ NtGdiPolyPatBlt(
 
 BOOL
 APIENTRY
+NtGdiFillRgn(
+    HDC hDC,
+    HRGN hRgn,
+    HBRUSH hBrush)
+{
+    HBRUSH oldhBrush;
+    PREGION rgn;
+    PRECTL r;
+
+    rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    if (rgn == NULL)
+    {
+        return FALSE;
+    }
+
+    oldhBrush = NtGdiSelectBrush(hDC, hBrush);
+    if (oldhBrush == NULL)
+    {
+        RGNOBJAPI_Unlock(rgn);
+        return FALSE;
+    }
+
+    for (r = rgn->Buffer; r < rgn->Buffer + rgn->rdh.nCount; r++)
+    {
+        NtGdiPatBlt(hDC, r->left, r->top, r->right - r->left, r->bottom - r->top, PATCOPY);
+    }
+
+    RGNOBJAPI_Unlock(rgn);
+    NtGdiSelectBrush(hDC, oldhBrush);
+
+    return TRUE;
+}
+
+BOOL
+APIENTRY
+NtGdiFrameRgn(
+    HDC hDC,
+    HRGN hRgn,
+    HBRUSH hBrush,
+    INT Width,
+    INT Height)
+{
+    HRGN FrameRgn;
+    BOOL Ret;
+
+    FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+    if (FrameRgn == NULL)
+    {
+        return FALSE;
+    }
+
+    if (!GreCreateFrameRgn(FrameRgn, hRgn, Width, Height))
+    {
+        GreDeleteObject(FrameRgn);
+        return FALSE;
+    }
+
+    Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
+
+    GreDeleteObject(FrameRgn);
+    return Ret;
+}
+
+BOOL
+APIENTRY
 NtGdiInvertRgn(
     HDC hDC,
     HRGN hRgn)
