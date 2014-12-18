@@ -1838,118 +1838,107 @@ REGION_CreateSimpleFrameRgn(
     return TRUE;
 }
 
+static
 BOOL
-FASTCALL
-GreCreateFrameRgn(
-    HRGN hDest,
-    HRGN hSrc,
-    INT x,
-    INT y)
+REGION_bMakeFrameRegion(
+    _Inout_ PREGION prgnDest,
+    _In_ PREGION prgnSrc,
+    _In_ INT cx,
+    _In_ INT cy)
 {
-    PREGION srcObj, destObj;
-    PRECTL rc;
-    ULONG i;
 
-    srcObj = RGNOBJAPI_Lock(hSrc, NULL);
-    if (srcObj == NULL)
+    if (!REGION_NOT_EMPTY(prgnSrc))
     {
         return FALSE;
     }
 
-    if (!REGION_NOT_EMPTY(srcObj))
+    if (!REGION_CopyRegion(prgnDest, prgnSrc))
     {
-        RGNOBJAPI_Unlock(srcObj);
         return FALSE;
     }
 
-    destObj = RGNOBJAPI_Lock(hDest, NULL);
-    if (destObj == NULL)
+    if (REGION_Complexity(prgnSrc) == SIMPLEREGION)
     {
-        RGNOBJAPI_Unlock(srcObj);
-        return FALSE;
-    }
-
-    EMPTY_REGION(destObj);
-    if (!REGION_CopyRegion(destObj, srcObj))
-    {
-        RGNOBJAPI_Unlock(destObj);
-        RGNOBJAPI_Unlock(srcObj);
-        return FALSE;
-    }
-
-    if (REGION_Complexity(srcObj) == SIMPLEREGION)
-    {
-        if (!REGION_CreateSimpleFrameRgn(destObj, x, y))
+        if (!REGION_CreateSimpleFrameRgn(prgnDest, cx, cy))
         {
-            EMPTY_REGION(destObj);
-            RGNOBJAPI_Unlock(destObj);
-            RGNOBJAPI_Unlock(srcObj);
             return FALSE;
         }
     }
     else
     {
-        /* Original region moved to right */
-        rc = srcObj->Buffer;
-        for (i = 0; i < srcObj->rdh.nCount; i++)
-        {
-            rc->left += x;
-            rc->right += x;
-            rc++;
-        }
+        /* Move the source region to the bottom-right */
+        IntGdiOffsetRgn(prgnSrc, cx, cy);
 
-        REGION_IntersectRegion(destObj, destObj, srcObj);
+        /* Intersect with the source region (this crops the top-left frame) */
+        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Original region moved to left */
-        rc = srcObj->Buffer;
-        for (i = 0; i < srcObj->rdh.nCount; i++)
-        {
-            rc->left -= 2 * x;
-            rc->right -= 2 * x;
-            rc++;
-        }
+        /* Move the source region to the bottom-left */
+        IntGdiOffsetRgn(prgnSrc, -2 * cx, 0);
 
-        REGION_IntersectRegion(destObj, destObj, srcObj);
+        /* Intersect with the source region (this crops the top-right frame) */
+        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Original region moved down */
-        rc = srcObj->Buffer;
-        for (i = 0; i < srcObj->rdh.nCount; i++)
-        {
-            rc->left += x;
-            rc->right += x;
-            rc->top += y;
-            rc->bottom += y;
-            rc++;
-        }
+        /* Move the source region to the top-left */
+        IntGdiOffsetRgn(prgnSrc, 0, -2 * cy);
 
-        REGION_IntersectRegion(destObj, destObj, srcObj);
+        /* Intersect with the source region (this crops the bottom-right frame) */
+        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Original region moved up */
-        rc = srcObj->Buffer;
-        for (i = 0; i < srcObj->rdh.nCount; i++)
-        {
-            rc->top -= 2 * y;
-            rc->bottom -= 2 * y;
-            rc++;
-        }
+        /* Move the source region to the top-right  */
+        IntGdiOffsetRgn(prgnSrc, 2 * cx, 0);
 
-        REGION_IntersectRegion(destObj, destObj, srcObj);
+        /* Intersect with the source region (this crops the bottom-left frame) */
+        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Restore the original region */
-        rc = srcObj->Buffer;
-        for (i = 0; i < srcObj->rdh.nCount; i++)
-        {
-            rc->top += y;
-            rc->bottom += y;
-            rc++;
-        }
+        /* Move the source region back to the original position */
+        IntGdiOffsetRgn(prgnSrc, -cx, cy);
 
-        REGION_SubtractRegion(destObj, srcObj, destObj);
+        /* Finally subtract the cropped region from the source */
+        REGION_SubtractRegion(prgnDest, prgnSrc, prgnDest);
     }
 
-    RGNOBJAPI_Unlock(destObj);
-    RGNOBJAPI_Unlock(srcObj);
     return TRUE;
+}
+
+HRGN
+FASTCALL
+GreCreateFrameRgn(
+    HRGN hrgn,
+    INT cx,
+    INT cy)
+{
+    PREGION prgnFrame, prgnSrc;
+    HRGN hrgnFrame;
+
+    /* Allocate a new region */
+    prgnFrame = REGION_AllocUserRgnWithHandle(1);
+    if (prgnFrame == NULL)
+    {
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    /* Lock the source region */
+    prgnSrc = RGNOBJAPI_Lock(hrgn, NULL);
+    if (prgnSrc == NULL)
+    {
+        REGION_Delete(prgnFrame);
+        return FALSE;
+    }
+
+    if (REGION_bMakeFrameRegion(prgnFrame, prgnSrc, cx, cy))
+    {
+        hrgnFrame = prgnFrame->BaseObject.hHmgr;
+        RGNOBJAPI_Unlock(prgnFrame);
+    }
+    else
+    {
+        REGION_Delete(prgnFrame);
+        hrgnFrame = NULL;
+    }
+
+    RGNOBJAPI_Unlock(prgnSrc);
+    return hrgnFrame;
 }
 
 

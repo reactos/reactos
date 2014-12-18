@@ -53,11 +53,10 @@ VOID FASTCALL RGNOBJAPI_Unlock(PREGION);
 PREGION FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
 BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
 
-BOOL
+HRGN
 FASTCALL
 GreCreateFrameRgn(
-    HRGN hDest,
-    HRGN hSrc,
+    HRGN hrgn,
     INT x,
     INT y);
 

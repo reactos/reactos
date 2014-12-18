@@ -1048,31 +1048,25 @@ NtGdiFillRgn(
 BOOL
 APIENTRY
 NtGdiFrameRgn(
-    HDC hDC,
-    HRGN hRgn,
-    HBRUSH hBrush,
-    INT Width,
-    INT Height)
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ HBRUSH hbrush,
+    _In_ INT xWidth,
+    _In_ INT yHeight)
 {
-    HRGN FrameRgn;
-    BOOL Ret;
+    HRGN hrgnFrame;
+    BOOL bResult;
 
-    FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-    if (FrameRgn == NULL)
+    hrgnFrame = GreCreateFrameRgn(hrgn, xWidth, yHeight);
+    if (hrgnFrame == NULL)
     {
         return FALSE;
     }
 
-    if (!GreCreateFrameRgn(FrameRgn, hRgn, Width, Height))
-    {
-        GreDeleteObject(FrameRgn);
-        return FALSE;
-    }
+    bResult = NtGdiFillRgn(hdc, hrgnFrame, hbrush);
 
-    Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
-
-    GreDeleteObject(FrameRgn);
-    return Ret;
+    GreDeleteObject(hrgnFrame);
+    return bResult;
 }
 
 BOOL
