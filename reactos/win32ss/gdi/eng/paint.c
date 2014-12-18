@@ -3,13 +3,34 @@
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Paint Functions
  * FILE:              subsys/win32k/eng/paint.c
- * PROGRAMER:         Jason Filby
+ * PROGRAMERS:        Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                    Jason Filby
  */
 
 #include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
+
+const BYTE gajRop2ToRop3[16] =
+{
+    0x00, //  1: R2_BLACK        0
+    0x05, //  2: R2_NOTMERGEPEN  DPon
+    0x0A, //  3: R2_MASKNOTPEN   DPna
+    0x0F, //  4: R2_NOTCOPYPEN   Pn
+    0x50, //  5: R2_MASKPENNOT   PDna
+    0x55, //  6: R2_NOT          Dn
+    0x5A, //  7: R2_XORPEN       DPx
+    0x5F, //  8: R2_NOTMASKPEN   DPan
+    0xA0, //  9: R2_MASKPEN      DPa
+    0xA5, // 10: R2_NOTXORPEN    PDxn
+    0xAA, // 11: R2_NOP          D
+    0xAF, // 12: R2_MERGENOTPEN  DPno
+    0xF0, // 13: R2_COPYPEN      P
+    0xF5, // 14: R2_MERGEPENNOT  PDno
+    0xFA, // 15: R2_MERGEPEN     DPo
+    0xFF, // 16: R2_WHITE        1
+};
 
 BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
 {
@@ -28,87 +49,57 @@ BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
   return TRUE;
 }
 
-BOOL APIENTRY
-EngPaintRgn(SURFOBJ *pso, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
-            BRUSHOBJ *BrushObj, POINTL *BrushPoint)
+BOOL
+APIENTRY
+EngPaint(
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ __in_data_source(USER_MODE) MIX mix)
 {
-  RECT_ENUM RectEnum;
-  BOOL EnumMore;
-  ULONG i;
+    ROP4 rop4;
 
-  ASSERT(pso);
-  ASSERT(ClipRegion);
+    /* Convert the MIX, consisting of 2 ROP2 codes into a ROP4 */
+    rop4 = MIX_TO_ROP4(mix);
 
-  DPRINT("ClipRegion->iMode:%u, ClipRegion->iDComplexity: %u\n Color: %lu", ClipRegion->iMode, ClipRegion->iDComplexity, iColor);
-  switch(ClipRegion->iMode) {
+    /* Sanity checks */
+    NT_ASSERT(!ROP4_USES_SOURCE(rop4));
+    NT_ASSERT(!ROP4_USES_MASK(rop4));
 
-    case TC_RECTANGLES:
+    /* Forward the call to Eng/DrvBitBlt */
+    return IntEngBitBlt(pso,
+                        NULL,
+                        NULL,
+                        pco,
+                        NULL,
+                        &pco->rclBounds,
+                        NULL,
+                        NULL,
+                        pbo,
+                        pptlBrushOrg,
+                        rop4);
+}
 
-    /* Rectangular clipping can be handled without enumeration.
-       Note that trivial clipping is not possible, since the clipping
-       region defines the area to fill */
+BOOL
+APIENTRY
+IntEngPaint(
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ __in_data_source(USER_MODE) MIX mix)
+{
+    SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
 
-    if (ClipRegion->iDComplexity == DC_RECT)
+    /* Is the surface's Paint function hooked? */
+    if ((pso->iType != STYPE_BITMAP) && (psurf->flags & HOOK_PAINT))
     {
-      FillSolid(pso, &(ClipRegion->rclBounds), iColor);
-    } else {
-
-      /* Enumerate all the rectangles and draw them */
-      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
-
-      do {
-        EnumMore = CLIPOBJ_bEnum(ClipRegion, sizeof(RectEnum), (PVOID) &RectEnum);
-        for (i = 0; i < RectEnum.c; i++) {
-          FillSolid(pso, RectEnum.arcl + i, iColor);
-        }
-      } while (EnumMore);
+        /* Call the driver's DrvPaint */
+        return GDIDEVFUNCS(pso).Paint(pso, pco, pbo, pptlBrushOrg, mix);
     }
 
-    return(TRUE);
-
-    default:
-       return(FALSE);
-  }
+    return EngPaint(pso, pco, pbo, pptlBrushOrg, mix);
 }
 
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-EngPaint(IN SURFOBJ *pso,
-	 IN CLIPOBJ *ClipRegion,
-	 IN BRUSHOBJ *Brush,
-	 IN POINTL *BrushOrigin,
-	 IN MIX  Mix)
-{
-  BOOLEAN ret;
-
-  // FIXME: We only support a brush's solid color attribute
-  ret = EngPaintRgn(pso, ClipRegion, Brush->iSolidColor, Mix, Brush, BrushOrigin);
-
-  return ret;
-}
-
-BOOL APIENTRY
-IntEngPaint(IN SURFOBJ *pso,
-            IN CLIPOBJ *ClipRegion,
-            IN BRUSHOBJ *Brush,
-            IN POINTL *BrushOrigin,
-            IN MIX  Mix)
-{
-  SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
-  BOOL ret;
-
-  DPRINT("pso->iType == %u\n", pso->iType);
-  /* Is the surface's Paint function hooked? */
-  if((pso->iType!=STYPE_BITMAP) && (psurf->flags & HOOK_PAINT))
-  {
-    // Call the driver's DrvPaint
-    ret = GDIDEVFUNCS(pso).Paint(
-      pso, ClipRegion, Brush, BrushOrigin, Mix);
-    return ret;
-  }
-  return EngPaint(pso, ClipRegion, Brush, BrushOrigin, Mix );
-
-}
 /* EOF */
