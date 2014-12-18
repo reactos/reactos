@@ -9,3 +9,5 @@ GdiGetClipBox(
 VOID FASTCALL GdiSelectVisRgn(HDC hdc, PREGION prgn);
 INT FASTCALL IntGdiExtSelectClipRgn (PDC dc, PREGION prgn, int fnMode);
 VOID FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
+VOID FASTCALL IntGdiReleaseRaoRgn(PDC);
+VOID FASTCALL IntGdiReleaseVisRgn(PDC);

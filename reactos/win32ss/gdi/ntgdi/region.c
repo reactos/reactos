@@ -2264,70 +2264,6 @@ REGION_Delete(PREGION pRgn)
     GDIOBJ_vDeleteObject(&pRgn->BaseObject);
 }
 
-VOID
-FASTCALL
-IntGdiReleaseRaoRgn(PDC pDC)
-{
-    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
-    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-    pDC->fs |= DC_FLAG_DIRTY_RAO;
-    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
-    RECTL_vSetEmptyRect(&pDC->erclClip);
-    REGION_Delete(pDC->prgnRao);
-    pDC->prgnRao = NULL;
-}
-
-VOID
-FASTCALL
-IntGdiReleaseVisRgn(PDC pDC)
-{
-    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
-    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-    pDC->fs |= DC_FLAG_DIRTY_RAO;
-    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
-    RECTL_vSetEmptyRect(&pDC->erclClip);
-    REGION_Delete(pDC->prgnVis);
-    pDC->prgnVis = prgnDefault;
-}
-
-VOID
-FASTCALL
-IntUpdateVisRectRgn(PDC pDC, PREGION pRgn)
-{
-    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
-    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-    PDC_ATTR pdcattr;
-    RECTL rcl;
-
-    if (Entry->Flags & GDI_ENTRY_VALIDATE_VIS)
-    {
-        pdcattr = pDC->pdcattr;
-
-        pdcattr->VisRectRegion.iComplexity = REGION_Complexity(pRgn);
-
-        if (pRgn && pdcattr->VisRectRegion.iComplexity != NULLREGION)
-        {
-            rcl.left   = pRgn->rdh.rcBound.left;
-            rcl.top    = pRgn->rdh.rcBound.top;
-            rcl.right  = pRgn->rdh.rcBound.right;
-            rcl.bottom = pRgn->rdh.rcBound.bottom;
-
-            rcl.left   -= pDC->erclWindow.left;
-            rcl.top    -= pDC->erclWindow.top;
-            rcl.right  -= pDC->erclWindow.left;
-            rcl.bottom -= pDC->erclWindow.top;
-        }
-        else
-        {
-            RECTL_vSetEmptyRect(&rcl);
-        }
-
-        pdcattr->VisRectRegion.Rect = rcl;
-
-        Entry->Flags &= ~GDI_ENTRY_VALIDATE_VIS;
-    }
-}
-
 BOOL
 FASTCALL
 IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
@@ -3616,6 +3552,8 @@ NtGdiEqualRgn(
     PRECTL tRect1, tRect2;
     ULONG i;
     BOOL bRet = FALSE;
+
+    /// FIXME: need to use GDIOBJ_LockMultipleObjects
 
     rgn1 = RGNOBJAPI_Lock(hSrcRgn1, NULL);
     if (rgn1 == NULL)

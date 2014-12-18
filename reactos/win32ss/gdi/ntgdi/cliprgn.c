@@ -13,6 +13,32 @@
 
 VOID
 FASTCALL
+IntGdiReleaseRaoRgn(PDC pDC)
+{
+    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    pDC->fs |= DC_FLAG_DIRTY_RAO;
+    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
+    RECTL_vSetEmptyRect(&pDC->erclClip);
+    REGION_Delete(pDC->prgnRao);
+    pDC->prgnRao = NULL;
+}
+
+VOID
+FASTCALL
+IntGdiReleaseVisRgn(PDC pDC)
+{
+    INT Index = GDI_HANDLE_GET_INDEX(pDC->BaseObject.hHmgr);
+    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+    pDC->fs |= DC_FLAG_DIRTY_RAO;
+    Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
+    RECTL_vSetEmptyRect(&pDC->erclClip);
+    REGION_Delete(pDC->prgnVis);
+    pDC->prgnVis = prgnDefault;
+}
+
+VOID
+FASTCALL
 GdiSelectVisRgn(
     HDC hdc,
     PREGION prgn)

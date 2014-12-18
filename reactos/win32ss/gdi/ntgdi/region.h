@@ -8,14 +8,18 @@ typedef struct _REGION
 {
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
-  BASEOBJECT    BaseObject;
+  BASEOBJECT BaseObject;
   PRGN_ATTR prgnattr;
   RGN_ATTR rgnattr;
 
   RGNDATAHEADER rdh;
-  RECTL        *Buffer;
+  RECTL *Buffer;
 } REGION, *PREGION;
 
+/* Globals ********************************************************************/
+
+extern PREGION prgnDefault;
+extern HRGN hrgnDefault;
 
 /* Functions ******************************************************************/
 
@@ -32,16 +36,8 @@ BOOL FASTCALL REGION_PtInRegion(PREGION, INT, INT);
 INT FASTCALL REGION_CropRegion(PREGION rgnDst, PREGION rgnSrc, const RECTL *rect);
 VOID FASTCALL REGION_SetRectRgn(PREGION pRgn, INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
 VOID NTAPI REGION_vCleanup(PVOID ObjectBody);
-
-extern PREGION prgnDefault;
-extern HRGN        hrgnDefault;
-
 VOID FASTCALL REGION_Delete(PREGION);
-VOID FASTCALL IntGdiReleaseRaoRgn(PDC);
-VOID FASTCALL IntGdiReleaseVisRgn(PDC);
-
 INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
-BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );
 
 BOOL
 FASTCALL
@@ -97,3 +93,6 @@ REGION_UnlockRgn(PREGION prgn)
 {
     GDIOBJ_vUnlockObject(&prgn->BaseObject);
 }
+
+// FIXME: move this
+BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );
