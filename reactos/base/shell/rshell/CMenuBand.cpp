@@ -699,6 +699,14 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 {
     *theResult = 0;
 
+    if (uMsg == WM_WININICHANGE && wParam == SPI_SETFLATMENU)
+    {
+        BOOL bFlatMenus;
+        SystemParametersInfo(SPI_GETFLATMENU, 0, &bFlatMenus, 0);
+        AdjustForTheme(bFlatMenus);
+        return S_OK;
+    }
+
     if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
     {
         return m_staticToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
@@ -1121,6 +1129,11 @@ HRESULT CMenuBand::_MenuBarMouseUp(HWND hwnd, INT item)
 HRESULT CMenuBand::_HasSubMenu()
 {
     return m_popupBar ? S_OK : S_FALSE;
+}
+
+HRESULT CMenuBand::AdjustForTheme(BOOL bFlatStyle)
+{
+    return IUnknown_QueryServiceExec(m_site, SID_SMenuPopup, &CGID_MenuDeskBar, 4, bFlatStyle, NULL, NULL);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)

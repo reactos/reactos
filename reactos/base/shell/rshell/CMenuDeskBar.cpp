@@ -25,8 +25,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
-const static GUID CGID_MenuDeskBar = { 0x5C9F0A12, 0x959E, 0x11D0, { 0xA3, 0xA4, 0x00, 0xA0, 0xC9, 0x08, 0x26, 0x36 } };
-
 extern "C"
 HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
 {
@@ -110,7 +108,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nC
         case 3: // load complete
             return S_OK;
         case 4: // set font metrics
-            return S_OK;
+            return _AdjustForTheme(nCmdexecopt);
         }
     }
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
@@ -692,4 +690,20 @@ LRESULT CMenuDeskBar::_OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     }
 #endif
     return 0;
+}
+
+LRESULT CMenuDeskBar::_OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam == SPI_SETFLATMENU)
+        return _OnNotify(uMsg, wParam, lParam, bHandled);
+
+    return 0;
+}
+
+HRESULT CMenuDeskBar::_AdjustForTheme(BOOL bFlatStyle)
+{
+    DWORD style = bFlatStyle ? WS_BORDER : WS_CLIPCHILDREN|WS_DLGFRAME;
+    DWORD mask = WS_BORDER|WS_CLIPCHILDREN|WS_DLGFRAME;
+    SHSetWindowBits(m_hWnd, GWL_STYLE, mask, style);
+    return S_OK;
 }

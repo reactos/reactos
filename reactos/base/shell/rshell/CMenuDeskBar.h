@@ -70,6 +70,7 @@ public:
         MESSAGE_HANDLER(WM_ACTIVATE, _OnActivate)
         MESSAGE_HANDLER(WM_ACTIVATEAPP, _OnAppActivate)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, _OnMouseActivate)
+        MESSAGE_HANDLER(WM_WININICHANGE , _OnWinIniChange)
     END_MSG_MAP()
 
     BEGIN_COM_MAP(CMenuDeskBar)
@@ -136,7 +137,9 @@ private:
     LRESULT _OnActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT _OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT _OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
+    HRESULT _AdjustForTheme(BOOL bFlatStyle);
     BOOL _IsSubMenuParent(HWND hwnd);
     HRESULT _CloseBar();
 };

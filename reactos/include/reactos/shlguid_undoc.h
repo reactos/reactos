@@ -112,12 +112,15 @@ DEFINE_GUID(IID_IAugmentedShellFolder,     0x91EA3F8C, 0xC99B, 0x11D0, 0x98, 0x1
 DEFINE_GUID(IID_IAugmentedShellFolder2,    0x8DB3B3F4, 0x6CFE, 0x11D1, 0x8A, 0xE9, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0);
 DEFINE_GUID(IID_IAugmentedShellFolder3,    0x4F755EA8, 0x247D, 0x479B, 0x91, 0x81, 0x22, 0x7D, 0x09, 0xC2, 0xE0, 0x01);
 
+DEFINE_GUID(CGID_MenuDeskBar,              0x5C9F0A12, 0x959E, 0x11D0, 0xA3, 0xA4, 0x00, 0xA0, 0xC9, 0x08, 0x26, 0x36);
+
 #define CGID_IExplorerToolbar IID_IExplorerToolbar
 #define SID_IExplorerToolbar IID_IExplorerToolbar
 #define SID_ITargetFrame2 IID_ITargetFrame2
 #define SID_IWebBrowserApp IID_IWebBrowserApp
 #define CGID_IDeskBand IID_IDeskBand
 #define CGID_MenuBand CLSID_MenuBand
+
 #define SID_STravelLogCursor IID_ITravelLogStg
 #define SID_IBandSite IID_IBandSite
 #define SID_IFolderView IID_IFolderView

@@ -200,6 +200,8 @@ public:
     HRESULT _MenuBarMouseUp(HWND hwnd, INT item);
     HRESULT _HasSubMenu();
 
+    HRESULT AdjustForTheme(BOOL bFlatStyle);
+
     BOOL UseBigIcons()
     {
         return m_useBigIcons;

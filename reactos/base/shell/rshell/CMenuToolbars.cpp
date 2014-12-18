@@ -383,6 +383,9 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 
     SetWindowTheme(m_hWnd, L"", L"");
 
+    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+    m_menuBand->AdjustForTheme(m_useFlatMenus);
+
     // If needed, create the pager.
     if (m_usePager)
     {
