@@ -212,13 +212,13 @@ CombineRgn(HRGN  hDest,
     if ( !Ret ||
             !pRgn_Attr_Dest ||
             !pRgn_Attr_Src1 ||
-            pRgn_Attr_Src1->Flags > SIMPLEREGION )
+            pRgn_Attr_Src1->iComplexity > SIMPLEREGION )
         return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
 
     /* Handle COPY and use only src1. */
     if ( CombineMode == RGN_COPY )
     {
-        switch (pRgn_Attr_Src1->Flags)
+        switch (pRgn_Attr_Src1->iComplexity)
         {
         case NULLREGION:
             Ret = SetRectRgn( hDest, 0, 0, 0, 0);
@@ -245,7 +245,7 @@ CombineRgn(HRGN  hDest,
     Ret = GdiGetHandleUserData((HGDIOBJ) hSrc2, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Src2);
     if ( !Ret ||
             !pRgn_Attr_Src2 ||
-            pRgn_Attr_Src2->Flags > SIMPLEREGION )
+            pRgn_Attr_Src2->iComplexity > SIMPLEREGION )
         return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
 
     /* All but AND. */
@@ -270,14 +270,14 @@ CombineRgn(HRGN  hDest,
                 return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
             }
             /* Now handle DIFF. */
-            if ( pRgn_Attr_Src1->Flags == NULLREGION )
+            if ( pRgn_Attr_Src1->iComplexity == NULLREGION )
             {
                 if (SetRectRgn( hDest, 0, 0, 0, 0))
                     return NULLREGION;
                 goto ERROR_Exit;
             }
 
-            if ( pRgn_Attr_Src2->Flags != NULLREGION )
+            if ( pRgn_Attr_Src2->iComplexity != NULLREGION )
             {
                 Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
 
@@ -295,9 +295,9 @@ CombineRgn(HRGN  hDest,
         }
         else /* Handle OR or XOR. */
         {
-            if ( pRgn_Attr_Src1->Flags == NULLREGION )
+            if ( pRgn_Attr_Src1->iComplexity == NULLREGION )
             {
-                if ( pRgn_Attr_Src2->Flags != NULLREGION )
+                if ( pRgn_Attr_Src2->iComplexity != NULLREGION )
                 {
                     /* Src1 null and not NULL, set from src2. */
                     Ret = SetRectRgn( hDest,
@@ -315,7 +315,7 @@ CombineRgn(HRGN  hDest,
                 goto ERROR_Exit;
             }
             /* Src1 is not NULL. */
-            if ( pRgn_Attr_Src2->Flags != NULLREGION )
+            if ( pRgn_Attr_Src2->iComplexity != NULLREGION )
             {
                 if ( CombineMode != RGN_OR ) /* Filter XOR, so go K. */
                     return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
@@ -350,8 +350,8 @@ CombineRgn(HRGN  hDest,
     }
 
     /* Handle AND.  */
-    if ( pRgn_Attr_Src1->Flags != NULLREGION &&
-            pRgn_Attr_Src2->Flags != NULLREGION )
+    if ( pRgn_Attr_Src1->iComplexity != NULLREGION &&
+            pRgn_Attr_Src2->iComplexity != NULLREGION )
     {
         Complexity = ComplexityFromRects( &pRgn_Attr_Src1->Rect, &pRgn_Attr_Src2->Rect);
 
@@ -491,13 +491,13 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
 
     if (( x1 == x2) || (y1 == y2))
     {
-        pRgn_Attr->Flags = NULLREGION;
+        pRgn_Attr->iComplexity = NULLREGION;
         pRgn_Attr->Rect.left = pRgn_Attr->Rect.top =
                                    pRgn_Attr->Rect.right = pRgn_Attr->Rect.bottom = 0;
     }
     else
     {
-        pRgn_Attr->Flags = SIMPLEREGION;
+        pRgn_Attr->iComplexity = SIMPLEREGION;
         pRgn_Attr->Rect.left   = x1;
         pRgn_Attr->Rect.top    = y1;
         pRgn_Attr->Rect.right  = x2;
@@ -642,7 +642,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
                     !(pEntry->Flags & GDI_ENTRY_VALIDATE_VIS) )
             {
                 if (!hrgn ||
-                        (hrgn && pRgn_Attr && pRgn_Attr->Flags <= SIMPLEREGION) )
+                        (hrgn && pRgn_Attr && pRgn_Attr->iComplexity <= SIMPLEREGION) )
                 {
                     if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSEXTSELCLPRGN)) <= GDIBATCHBUFSIZE)
                     {
@@ -655,7 +655,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
 
                         if ( hrgn && pRgn_Attr )
                         {
-                            Ret = pRgn_Attr->Flags;
+                            Ret = pRgn_Attr->iComplexity;
 
                             if ( pDc_Attr->VisRectRegion.Rect.left   >= pRgn_Attr->Rect.right  ||
                                     pDc_Attr->VisRectRegion.Rect.top    >= pRgn_Attr->Rect.bottom ||
@@ -670,7 +670,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
                         }
                         else
                         {
-                            Ret = pDc_Attr->VisRectRegion.Flags;
+                            Ret = pDc_Attr->VisRectRegion.iComplexity;
                             pgO->fnMode |= 0x80000000; // Set no hrgn mode.
                         }
                         pTeb->GdiTebBatch.Offset += sizeof(GDIBSEXTSELCLPRGN);
@@ -763,7 +763,7 @@ GetRgnBox(HRGN hrgn,
     //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
     return NtGdiGetRgnBox(hrgn, prcOut);
 
-    if (Rgn_Attr->Flags == NULLREGION)
+    if (Rgn_Attr->iComplexity == NULLREGION)
     {
         prcOut->left   = 0;
         prcOut->top    = 0;
@@ -772,12 +772,12 @@ GetRgnBox(HRGN hrgn,
     }
     else
     {
-        if (Rgn_Attr->Flags != SIMPLEREGION)
+        if (Rgn_Attr->iComplexity != SIMPLEREGION)
             return NtGdiGetRgnBox(hrgn, prcOut);
         /* WARNING! prcOut is never checked newbies! */
         RtlCopyMemory( prcOut, &Rgn_Attr->Rect, sizeof(RECT));
     }
-    return Rgn_Attr->Flags;
+    return Rgn_Attr->iComplexity;
 }
 
 /*
@@ -875,10 +875,10 @@ OffsetRgn( HRGN hrgn,
 //  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
     return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
-    if ( pRgn_Attr->Flags == NULLREGION)
-        return pRgn_Attr->Flags;
+    if ( pRgn_Attr->iComplexity == NULLREGION)
+        return pRgn_Attr->iComplexity;
 
-    if ( pRgn_Attr->Flags != SIMPLEREGION)
+    if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
     nLeftRect   = pRgn_Attr->Rect.left;
@@ -911,7 +911,7 @@ OffsetRgn( HRGN hrgn,
             pRgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
         }
     }
-    return pRgn_Attr->Flags;
+    return pRgn_Attr->iComplexity;
 }
 
 /*
@@ -929,10 +929,10 @@ PtInRegion(IN HRGN hrgn,
     //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
     return NtGdiPtInRegion(hrgn,x,y);
 
-    if ( pRgn_Attr->Flags == NULLREGION)
+    if ( pRgn_Attr->iComplexity == NULLREGION)
         return FALSE;
 
-    if ( pRgn_Attr->Flags != SIMPLEREGION)
+    if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiPtInRegion(hrgn,x,y);
 
     return INRECT( pRgn_Attr->Rect, x, y);
@@ -953,10 +953,10 @@ RectInRegion(HRGN hrgn,
     //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
     return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 
-    if ( pRgn_Attr->Flags == NULLREGION)
+    if ( pRgn_Attr->iComplexity == NULLREGION)
         return FALSE;
 
-    if ( pRgn_Attr->Flags != SIMPLEREGION)
+    if ( pRgn_Attr->iComplexity != SIMPLEREGION)
         return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 
     /* swap the coordinates to make right >= left and bottom >= top */
@@ -1019,7 +1019,7 @@ SetRectRgn(HRGN hrgn,
     if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
     {
         Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
-        Rgn_Attr->Flags = NULLREGION;
+        Rgn_Attr->iComplexity = NULLREGION;
         Rgn_Attr->Rect.left = Rgn_Attr->Rect.top =
                                   Rgn_Attr->Rect.right = Rgn_Attr->Rect.bottom = 0;
         return TRUE;
@@ -1042,7 +1042,7 @@ SetRectRgn(HRGN hrgn,
     }
 
     Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY ;
-    Rgn_Attr->Flags = SIMPLEREGION;
+    Rgn_Attr->iComplexity = SIMPLEREGION;
     return TRUE;
 }
 

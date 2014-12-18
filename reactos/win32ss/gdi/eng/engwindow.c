@@ -52,7 +52,7 @@ IntEngWndUpdateClipObj(
     XCLIPOBJ* Clip,
     PWND Window)
 {
-    PROSRGNDATA visRgn;
+    PREGION visRgn;
 
     TRACE("IntEngWndUpdateClipObj\n");
 

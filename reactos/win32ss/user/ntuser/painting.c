@@ -1309,7 +1309,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    PWND Window;
    RECTL Rect;
    INT RegionType;
-   PROSRGNDATA RgnData;
+   PREGION RgnData;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 

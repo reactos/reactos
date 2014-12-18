@@ -273,7 +273,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE /* Must match win32k/include/gdiobj.h *
 typedef struct _RGN_ATTR
 {
     ULONG AttrFlags;
-    ULONG Flags;     /* Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION */
+    ULONG iComplexity;     /* Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION */
     RECTL Rect;
 } RGN_ATTR,*PRGN_ATTR;
 
