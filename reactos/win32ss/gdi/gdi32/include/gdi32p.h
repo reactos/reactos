@@ -398,6 +398,21 @@ GdiGetDcAttr(HDC hdc)
     return pdcattr;
 }
 
+FORCEINLINE
+PRGN_ATTR
+GdiGetRgnAttr(HRGN hrgn)
+{
+    PRGN_ATTR prgnattr;
+
+    /* Get the region attribute */
+    if (!GdiGetHandleUserData(hrgn, GDILoObjType_LO_REGION_TYPE, (PVOID*)&prgnattr))
+    {
+        return NULL;
+    }
+
+    return prgnattr;
+}
+
 #ifdef _M_IX86
 FLOATL FASTCALL EFtoF(EFLOAT_S * efp);
 #define FOtoF(pfo) EFtoF((EFLOAT_S*)pfo)
