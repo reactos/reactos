@@ -294,10 +294,9 @@ NtGdiIntersectClipRect(
     if (pdc->dclevel.prgnClip != NULL)
     {
         /* We have a region, crop it */
-        iComplexity = REGION_CropAndOffsetRegion(pdc->dclevel.prgnClip,
-                                                 pdc->dclevel.prgnClip,
-                                                 &rect,
-                                                 NULL);
+        iComplexity = REGION_CropRegion(pdc->dclevel.prgnClip,
+                                        pdc->dclevel.prgnClip,
+                                        &rect);
     }
     else
     {

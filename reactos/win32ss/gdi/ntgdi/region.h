@@ -29,7 +29,7 @@ INT FASTCALL REGION_SubtractRectFromRgn(PREGION prgnDest, PREGION prgnSrc, const
 INT FASTCALL REGION_GetRgnBox(PREGION Rgn, RECTL *pRect);
 BOOL FASTCALL REGION_RectInRegion(PREGION Rgn, const RECTL *rc);
 BOOL FASTCALL REGION_PtInRegion(PREGION, INT, INT);
-INT FASTCALL REGION_CropAndOffsetRegion(PREGION rgnDst, PREGION rgnSrc, const RECTL *rect, const POINT *off);
+INT FASTCALL REGION_CropRegion(PREGION rgnDst, PREGION rgnSrc, const RECTL *rect);
 VOID FASTCALL REGION_SetRectRgn(PREGION pRgn, INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
 VOID NTAPI REGION_vCleanup(PVOID ObjectBody);
 
