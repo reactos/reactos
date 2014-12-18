@@ -1759,80 +1759,92 @@ REGION_SubtractRectFromRgn(
     return REGION_Complexity(prgnDest);
 }
 
+static
 BOOL
-FASTCALL
-REGION_CreateSimpleFrameRgn(
-    PREGION rgn,
-    INT x,
-    INT y)
+REGION_bMakeSimpleFrameRgn(
+    _Inout_ PREGION prgn,
+    _In_ PRECTL prclSrc,
+    _In_ INT cx,
+    _In_ INT cy)
 {
-    RECTL rc[4];
-    PRECTL prc;
+    RECTL arcl[4];
+    UINT i;
 
-    if ((x != 0) || (y != 0))
+    NT_ASSERT((cx >= 0) && (cy >= 0));
+    NT_ASSERT((prclSrc->bottom > prclSrc->top) &&
+              (prclSrc->right > prclSrc->left));
+
+    /* Start with an empty region */
+    EMPTY_REGION(prgn);
+
+    /* Check for the case where the frame covers the whole rect */
+    if (((prclSrc->bottom - prclSrc->top) <= cy * 2) ||
+        ((prclSrc->right - prclSrc->left) <= cx * 2))
     {
-        prc = rc;
+        prgn->rdh.rcBound = *prclSrc;
+        prgn->Buffer[0] = *prclSrc;
+        prgn->rdh.nCount = 1;
+        return TRUE;
+    }
 
-        if ((rgn->rdh.rcBound.bottom - rgn->rdh.rcBound.top > y * 2) &&
-            (rgn->rdh.rcBound.right - rgn->rdh.rcBound.left > x * 2))
+    i = 0;
+
+    if (cy != 0)
+    {
+        /* Top rectangle */
+        arcl[i].left = prclSrc->left;
+        arcl[i].top = prclSrc->top;
+        arcl[i].right = prclSrc->right;
+        arcl[i].bottom = prclSrc->top + cy;
+        i++;
+    }
+
+    if (cx != 0)
+    {
+        /* Left rectangle */
+        arcl[i].left = prclSrc->left;
+        arcl[i].top = prclSrc->top + cy;
+        arcl[i].right = prclSrc->left + cx;
+        arcl[i].bottom = prclSrc->bottom - cy;
+        i++;
+
+        /* Right rectangle */
+        arcl[i].left = prclSrc->right - cx;
+        arcl[i].top = prclSrc->top + cy;
+        arcl[i].right = prclSrc->right;
+        arcl[i].bottom = prclSrc->bottom - cy;
+        i++;
+    }
+
+    if (cy != 0)
+    {
+        /* Bottom rectangle */
+        arcl[i].left = prclSrc->left;
+        arcl[i].top = prclSrc->bottom - cy;
+        arcl[i].right = prclSrc->right;
+        arcl[i].bottom = prclSrc->bottom;
+        i++;
+    }
+
+    if (i != 0)
+    {
+        /* The frame results in a complex region. rcBounds remains
+           the same, though. */
+        prgn->rdh.nCount = i;
+        NT_ASSERT(prgn->rdh.nCount > 1);
+        prgn->rdh.nRgnSize = prgn->rdh.nCount * sizeof(RECT);
+        NT_ASSERT(prgn->Buffer == &prgn->rdh.rcBound);
+        prgn->Buffer = ExAllocatePoolWithTag(PagedPool,
+                                            prgn->rdh.nRgnSize,
+                                            TAG_REGION);
+        if (prgn->Buffer == NULL)
         {
-            if (y != 0)
-            {
-                /* Top rectangle */
-                prc->left = rgn->rdh.rcBound.left;
-                prc->top = rgn->rdh.rcBound.top;
-                prc->right = rgn->rdh.rcBound.right;
-                prc->bottom = prc->top + y;
-                prc++;
-            }
-
-            if (x != 0)
-            {
-                /* Left rectangle */
-                prc->left = rgn->rdh.rcBound.left;
-                prc->top = rgn->rdh.rcBound.top + y;
-                prc->right = prc->left + x;
-                prc->bottom = rgn->rdh.rcBound.bottom - y;
-                prc++;
-
-                /* Right rectangle */
-                prc->left = rgn->rdh.rcBound.right - x;
-                prc->top = rgn->rdh.rcBound.top + y;
-                prc->right = rgn->rdh.rcBound.right;
-                prc->bottom = rgn->rdh.rcBound.bottom - y;
-                prc++;
-            }
-
-            if (y != 0)
-            {
-                /* Bottom rectangle */
-                prc->left = rgn->rdh.rcBound.left;
-                prc->top = rgn->rdh.rcBound.bottom - y;
-                prc->right = rgn->rdh.rcBound.right;
-                prc->bottom = rgn->rdh.rcBound.bottom;
-                prc++;
-            }
+            prgn->rdh.nRgnSize = 0;
+            return FALSE;
         }
 
-        if (prc != rc)
-        {
-            /* The frame results in a complex region. rcBounds remains
-               the same, though. */
-            rgn->rdh.nCount = (DWORD)(prc - rc);
-            ASSERT(rgn->rdh.nCount > 1);
-            rgn->rdh.nRgnSize = rgn->rdh.nCount * sizeof(RECT);
-            rgn->Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                rgn->rdh.nRgnSize,
-                                                TAG_REGION);
-            if (rgn->Buffer == NULL)
-            {
-                rgn->rdh.nRgnSize = 0;
-                return FALSE;
-            }
-
-            _PRAGMA_WARNING_SUPPRESS(__WARNING_MAYBE_UNINIT_VAR) // rc is initialized
-            COPY_RECTS(rgn->Buffer, rc, rgn->rdh.nCount);
-        }
+        _PRAGMA_WARNING_SUPPRESS(__WARNING_MAYBE_UNINIT_VAR) // arcl is initialized
+        COPY_RECTS(prgn->Buffer, arcl, prgn->rdh.nCount);
     }
 
     return TRUE;
@@ -1842,60 +1854,83 @@ static
 BOOL
 REGION_bMakeFrameRegion(
     _Inout_ PREGION prgnDest,
-    _In_ PREGION prgnSrc,
+    _Inout_ PREGION prgnSrc,
     _In_ INT cx,
     _In_ INT cy)
 {
+    /* Handle negative cx / cy */
+    cx = abs(cx);
+    cy = abs(cy);
 
+    /* Check border size (the cast is necessary to catch cx/cy == INT_MIN!) */
+    if (((UINT)cx > MAX_COORD) || ((UINT)cy > MAX_COORD))
+    {
+        return FALSE;
+    }
+
+    /* Fail on empty source region */
     if (!REGION_NOT_EMPTY(prgnSrc))
     {
         return FALSE;
     }
 
+    /* Handle trivial case */
+    if ((cx == 0) && (cy == 0))
+    {
+        EMPTY_REGION(prgnDest);
+        return TRUE;
+    }
+
+    /* Handle simple source region */
+    if (REGION_Complexity(prgnSrc) == SIMPLEREGION)
+    {
+        return REGION_bMakeSimpleFrameRgn(prgnDest, &prgnSrc->rdh.rcBound, cx, cy);
+    }
+
+    /* Check if we can move the region to create the frame region */
+    if ((prgnSrc->rdh.rcBound.left < (MIN_COORD + cx)) ||
+        (prgnSrc->rdh.rcBound.top < (MIN_COORD + cy)) ||
+        (prgnSrc->rdh.rcBound.right > (MAX_COORD - cx)) ||
+        (prgnSrc->rdh.rcBound.bottom > (MAX_COORD - cy)))
+    {
+        return FALSE;
+    }
+
+    /* Copy the source region */
     if (!REGION_CopyRegion(prgnDest, prgnSrc))
     {
         return FALSE;
     }
 
-    if (REGION_Complexity(prgnSrc) == SIMPLEREGION)
-    {
-        if (!REGION_CreateSimpleFrameRgn(prgnDest, cx, cy))
-        {
-            return FALSE;
-        }
-    }
-    else
-    {
-        /* Move the source region to the bottom-right */
-        REGION_bOffsetRgn(prgnSrc, cx, cy);
+    /* Move the source region to the bottom-right */
+    NT_VERIFY(REGION_bOffsetRgn(prgnSrc, cx, cy));
 
-        /* Intersect with the source region (this crops the top-left frame) */
-        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
+    /* Intersect with the source region (this crops the top-left frame) */
+    REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Move the source region to the bottom-left */
-        REGION_bOffsetRgn(prgnSrc, -2 * cx, 0);
+    /* Move the source region to the bottom-left */
+    NT_VERIFY(REGION_bOffsetRgn(prgnSrc, -2 * cx, 0));
 
-        /* Intersect with the source region (this crops the top-right frame) */
-        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
+    /* Intersect with the source region (this crops the top-right frame) */
+    REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Move the source region to the top-left */
-        REGION_bOffsetRgn(prgnSrc, 0, -2 * cy);
+    /* Move the source region to the top-left */
+    NT_VERIFY(REGION_bOffsetRgn(prgnSrc, 0, -2 * cy));
 
-        /* Intersect with the source region (this crops the bottom-right frame) */
-        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
+    /* Intersect with the source region (this crops the bottom-right frame) */
+    REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Move the source region to the top-right  */
-        REGION_bOffsetRgn(prgnSrc, 2 * cx, 0);
+    /* Move the source region to the top-right  */
+    NT_VERIFY(REGION_bOffsetRgn(prgnSrc, 2 * cx, 0));
 
-        /* Intersect with the source region (this crops the bottom-left frame) */
-        REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
+    /* Intersect with the source region (this crops the bottom-left frame) */
+    REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
-        /* Move the source region back to the original position */
-        REGION_bOffsetRgn(prgnSrc, -cx, cy);
+    /* Move the source region back to the original position */
+    NT_VERIFY(REGION_bOffsetRgn(prgnSrc, -cx, cy));
 
-        /* Finally subtract the cropped region from the source */
-        REGION_SubtractRegion(prgnDest, prgnSrc, prgnDest);
-    }
+    /* Finally subtract the cropped region from the source */
+    REGION_SubtractRegion(prgnDest, prgnSrc, prgnDest);
 
     return TRUE;
 }
