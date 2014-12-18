@@ -57,7 +57,7 @@ GdiSelectVisRgn(
     ASSERT(prgn != NULL);
 
     IntGdiCombineRgn(dc->prgnVis, prgn, NULL, RGN_COPY);
-    IntGdiOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    REGION_iOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
 
     DC_UnlockDc(dc);
 }
@@ -365,9 +365,9 @@ int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,
 
     if(dc->dclevel.prgnClip != NULL)
     {
-        Result = IntGdiOffsetRgn(dc->dclevel.prgnClip,
-                                XOffset,
-                                YOffset);
+        Result = REGION_iOffsetRgn(dc->dclevel.prgnClip,
+                                   XOffset,
+                                   YOffset);
         dc->fs |= DC_FLAG_DIRTY_RAO;
     }
     else
@@ -572,7 +572,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
     }
 
 
-    IntGdiOffsetRgn(pDC->prgnRao, pDC->ptlDCOrig.x, pDC->ptlDCOrig.y);
+    REGION_iOffsetRgn(pDC->prgnRao, pDC->ptlDCOrig.x, pDC->ptlDCOrig.y);
 
     RtlCopyMemory(&pDC->erclClip,
                 &pDC->prgnRao->rdh.rcBound,
@@ -590,7 +590,7 @@ CLIPPING_UpdateGCRegion(PDC pDC)
                            pDC->prgnRao->Buffer,
                            &pDC->erclClip);
 
-    IntGdiOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
+    REGION_iOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
 }
 
 /* EOF */

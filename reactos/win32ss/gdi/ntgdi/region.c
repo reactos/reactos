@@ -1867,31 +1867,31 @@ REGION_bMakeFrameRegion(
     else
     {
         /* Move the source region to the bottom-right */
-        IntGdiOffsetRgn(prgnSrc, cx, cy);
+        REGION_iOffsetRgn(prgnSrc, cx, cy);
 
         /* Intersect with the source region (this crops the top-left frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region to the bottom-left */
-        IntGdiOffsetRgn(prgnSrc, -2 * cx, 0);
+        REGION_iOffsetRgn(prgnSrc, -2 * cx, 0);
 
         /* Intersect with the source region (this crops the top-right frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region to the top-left */
-        IntGdiOffsetRgn(prgnSrc, 0, -2 * cy);
+        REGION_iOffsetRgn(prgnSrc, 0, -2 * cy);
 
         /* Intersect with the source region (this crops the bottom-right frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region to the top-right  */
-        IntGdiOffsetRgn(prgnSrc, 2 * cx, 0);
+        REGION_iOffsetRgn(prgnSrc, 2 * cx, 0);
 
         /* Intersect with the source region (this crops the bottom-left frame) */
         REGION_IntersectRegion(prgnDest, prgnDest, prgnSrc);
 
         /* Move the source region back to the original position */
-        IntGdiOffsetRgn(prgnSrc, -cx, cy);
+        REGION_iOffsetRgn(prgnSrc, -cx, cy);
 
         /* Finally subtract the cropped region from the source */
         REGION_SubtractRegion(prgnDest, prgnSrc, prgnDest);
@@ -1961,7 +1961,7 @@ REGION_bXformRgn(
         if (pmx->flAccel & XFORM_UNITY)
         {
             /* Just offset the region */
-            return IntGdiOffsetRgn(prgn, (pmx->fxDx + 8) / 16, (pmx->fxDy + 8) / 16) != ERROR;
+            return REGION_iOffsetRgn(prgn, (pmx->fxDx + 8) / 16, (pmx->fxDy + 8) / 16) != ERROR;
         }
         else
         {
@@ -2586,7 +2586,7 @@ REGION_SetRectRgn(
 
 INT
 FASTCALL
-IntGdiOffsetRgn(
+REGION_iOffsetRgn(
     PREGION rgn,
     INT XOffset,
     INT YOffset)
@@ -3786,7 +3786,7 @@ NtGdiOffsetRgn(
         return ERROR;
     }
 
-    ret = IntGdiOffsetRgn(rgn, XOffset, YOffset);
+    ret = REGION_iOffsetRgn(rgn, XOffset, YOffset);
 
     RGNOBJAPI_Unlock(rgn);
     return ret;

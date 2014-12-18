@@ -779,7 +779,7 @@ NtGdiGetRandomRgn(
         {
             ret = IntGdiCombineRgn(prgnDest, prgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
             if ((ret == 1) && (iCode == SYSRGN))
-                IntGdiOffsetRgn(prgnDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+                REGION_iOffsetRgn(prgnDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
             REGION_UnlockRgn(prgnDest);
         }
         else

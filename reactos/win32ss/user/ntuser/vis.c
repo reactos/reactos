@@ -81,9 +81,9 @@ VIS_ComputeVisibleRegion(
                   PREGION SiblingClipRgn = RGNOBJAPI_Lock(CurrentSibling->hrgnClip, NULL);
                   if (SiblingClipRgn)
                   {
-                      IntGdiOffsetRgn(ClipRgn, -CurrentSibling->rcWindow.left, -CurrentSibling->rcWindow.top);
+                      REGION_iOffsetRgn(ClipRgn, -CurrentSibling->rcWindow.left, -CurrentSibling->rcWindow.top);
                       IntGdiCombineRgn(ClipRgn, ClipRgn, SiblingClipRgn, RGN_AND);
-                      IntGdiOffsetRgn(ClipRgn, CurrentSibling->rcWindow.left, CurrentSibling->rcWindow.top);
+                      REGION_iOffsetRgn(ClipRgn, CurrentSibling->rcWindow.left, CurrentSibling->rcWindow.top);
                       RGNOBJAPI_Unlock(SiblingClipRgn);
                   }
                }
@@ -113,9 +113,9 @@ VIS_ComputeVisibleRegion(
                PREGION CurrentRgnClip = RGNOBJAPI_Lock(CurrentWindow->hrgnClip, NULL);
                if (CurrentRgnClip)
                {
-                   IntGdiOffsetRgn(ClipRgn, -CurrentWindow->rcWindow.left, -CurrentWindow->rcWindow.top);
+                   REGION_iOffsetRgn(ClipRgn, -CurrentWindow->rcWindow.left, -CurrentWindow->rcWindow.top);
                    IntGdiCombineRgn(ClipRgn, ClipRgn, CurrentRgnClip, RGN_AND);
-                   IntGdiOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
+                   REGION_iOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
                    RGNOBJAPI_Unlock(CurrentRgnClip);
                }
             }
@@ -131,9 +131,9 @@ VIS_ComputeVisibleRegion(
       PREGION WndRgnClip = RGNOBJAPI_Lock(Wnd->hrgnClip, NULL);
       if (WndRgnClip)
       {
-          IntGdiOffsetRgn(VisRgn, -Wnd->rcWindow.left, -Wnd->rcWindow.top);
+          REGION_iOffsetRgn(VisRgn, -Wnd->rcWindow.left, -Wnd->rcWindow.top);
           IntGdiCombineRgn(VisRgn, VisRgn, WndRgnClip, RGN_AND);
-          IntGdiOffsetRgn(VisRgn, Wnd->rcWindow.left, Wnd->rcWindow.top);
+          REGION_iOffsetRgn(VisRgn, Wnd->rcWindow.left, Wnd->rcWindow.top);
           RGNOBJAPI_Unlock(WndRgnClip);
       }
    }
@@ -160,9 +160,9 @@ co_VIS_WindowLayoutChanged(
            return;
 
        IntGdiCombineRgn(TempRgn, NewlyExposed, NULL, RGN_COPY);
-       IntGdiOffsetRgn(TempRgn,
-                       Wnd->rcWindow.left - Parent->rcClient.left,
-                       Wnd->rcWindow.top - Parent->rcClient.top);
+       REGION_iOffsetRgn(TempRgn,
+                         Wnd->rcWindow.left - Parent->rcClient.left,
+                         Wnd->rcWindow.top - Parent->rcClient.top);
 
        UserRefObjectCo(Parent, &Ref);
        co_UserRedrawWindow(Parent, NULL, TempRgn,

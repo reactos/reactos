@@ -460,13 +460,13 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
        PREGION RgnClip = RGNOBJAPI_Lock(Wnd->hrgnClip, NULL);
        if (RgnClip)
        {
-           IntGdiOffsetRgn( Rgn,
-                            -Wnd->rcWindow.left,
-                            -Wnd->rcWindow.top);
+           REGION_iOffsetRgn(Rgn,
+                             -Wnd->rcWindow.left,
+                             -Wnd->rcWindow.top);
            RgnType = IntGdiCombineRgn(Rgn, Rgn, RgnClip, RGN_AND);
-           IntGdiOffsetRgn( Rgn,
-                            Wnd->rcWindow.left,
-                            Wnd->rcWindow.top);
+           REGION_iOffsetRgn(Rgn,
+                             Wnd->rcWindow.left,
+                             Wnd->rcWindow.top);
            RGNOBJAPI_Unlock(RgnClip);
        }
    }
@@ -682,7 +682,7 @@ co_UserRedrawWindow(
           }
           else
           {
-              IntGdiOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
+              REGION_iOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
           }
       }
       else if (UpdateRect != NULL)
@@ -690,7 +690,7 @@ co_UserRedrawWindow(
          if (!RECTL_bIsEmptyRect(UpdateRect))
          {
             TmpRgn = IntSysCreateRectpRgnIndirect(UpdateRect);
-            IntGdiOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
+            REGION_iOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
          }
       }
       else if ((Flags & (RDW_INVALIDATE | RDW_FRAME)) == (RDW_INVALIDATE | RDW_FRAME) ||
@@ -1229,7 +1229,7 @@ co_UserGetUpdateRgn(PWND Window, PREGION Rgn, BOOL bErase)
     IntIntersectWithParents(Window, &Rect);
     REGION_SetRectRgn(Rgn, Rect.left, Rect.top, Rect.right, Rect.bottom);
     RegionType = IntGdiCombineRgn(Rgn, Rgn, UpdateRgn, RGN_AND);
-    IntGdiOffsetRgn(Rgn, -Window->rcClient.left, -Window->rcClient.top);
+    REGION_iOffsetRgn(Rgn, -Window->rcClient.left, -Window->rcClient.top);
     RGNOBJAPI_Unlock(UpdateRgn);
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
@@ -1565,7 +1565,7 @@ UserScrollDC(
 
       /* Substract the part of the dest that was visible in source */
       IntGdiCombineRgn(RgnTmp, RgnTmp, pDC->prgnVis, RGN_AND);
-      IntGdiOffsetRgn(RgnTmp, dx, dy);
+      REGION_iOffsetRgn(RgnTmp, dx, dy);
       Result = IntGdiCombineRgn(RgnOwn, RgnOwn, RgnTmp, RGN_DIFF);
 
       /* DO NOT Unlock DC while messing with prgnVis! */
@@ -1851,7 +1851,7 @@ NtUserScrollWindowEx(
              RgnWinupd = IntSysCreateRectpRgn( 0, 0, 0, 0);
              IntGdiCombineRgn( RgnWinupd, RgnTemp, 0, RGN_COPY);
           }
-          IntGdiOffsetRgn(RgnTemp, dx, dy);
+          REGION_iOffsetRgn(RgnTemp, dx, dy);
           IntGdiCombineRgn(RgnTemp, RgnTemp, RgnClip, RGN_AND);
           if (hrgnUpdate)
               IntGdiCombineRgn( RgnWinupd, RgnWinupd, RgnTemp, RGN_OR );

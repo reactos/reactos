@@ -873,7 +873,7 @@ DceResetActiveDCEs(PWND Window)
 
             if (NULL != dc->dclevel.prgnClip)
             {
-               IntGdiOffsetRgn(dc->dclevel.prgnClip, DeltaX, DeltaY);
+               REGION_iOffsetRgn(dc->dclevel.prgnClip, DeltaX, DeltaY);
                dc->fs |= DC_FLAG_DIRTY_RAO;
             }
             if (NULL != pDCE->hrgnClip)

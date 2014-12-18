@@ -1440,7 +1440,7 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
             TRACE("skip all the topmost windows\n");
             /* skip all the topmost windows */
             while (List[i] &&
-                   (ChildObject = ValidateHwndNoErr(List[i])) &&  
+                   (ChildObject = ValidateHwndNoErr(List[i])) &&
                    (ChildObject->ExStyle & WS_EX_TOPMOST)) i++;
          }
       }
@@ -1532,9 +1532,9 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
    POINT pt;
 
    /* Finally make sure that all coordinates are valid */
-   if (WinPos->x < -32768) WinPos->x = -32768;   
+   if (WinPos->x < -32768) WinPos->x = -32768;
    else if (WinPos->x > 32767) WinPos->x = 32767;
-   if (WinPos->y < -32768) WinPos->y = -32768;   
+   if (WinPos->y < -32768) WinPos->y = -32768;
    else if (WinPos->y > 32767) WinPos->y = 32767;
 
    WinPos->cx = max(WinPos->cx, 0);
@@ -1762,10 +1762,10 @@ co_WinPosSetWindowPos(
          }
          else if(VisBefore)
          {
-            IntGdiOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
+            REGION_iOffsetRgn(VisBefore, -Window->rcWindow.left, -Window->rcWindow.top);
          }
 
-         /* Calculate the non client area for resizes, as this is used in the copy region */ 
+         /* Calculate the non client area for resizes, as this is used in the copy region */
          if (!(WinPos.flags & SWP_NOSIZE))
          {
              VisBeforeJustClient = VIS_ComputeVisibleRegion(Window, TRUE, FALSE,
@@ -1779,7 +1779,7 @@ co_WinPosSetWindowPos(
              }
              else if(VisBeforeJustClient)
              {
-                 IntGdiOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
+                 REGION_iOffsetRgn(VisBeforeJustClient, -Window->rcWindow.left, -Window->rcWindow.top);
              }
          }
       }
@@ -1864,7 +1864,7 @@ co_WinPosSetWindowPos(
       }
       else if(VisAfter)
       {
-         IntGdiOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
+         REGION_iOffsetRgn(VisAfter, -Window->rcWindow.left, -Window->rcWindow.top);
       }
 
       /*
@@ -1905,9 +1905,9 @@ co_WinPosSetWindowPos(
             PREGION RgnUpdate = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
             if (RgnUpdate)
             {
-                IntGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
+                REGION_iOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
                 IntGdiCombineRgn(CopyRgn, CopyRgn, RgnUpdate, RGN_DIFF);
-                IntGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
+                REGION_iOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
                 RGNOBJAPI_Unlock(RgnUpdate);
             }
          }
@@ -1939,7 +1939,7 @@ co_WinPosSetWindowPos(
            * to create a copy of CopyRgn and pass that. We need CopyRgn later
            */
             IntGdiCombineRgn(DcRgnObj, CopyRgn, NULL, RGN_COPY);
-            IntGdiOffsetRgn(DcRgnObj, NewWindowRect.left, NewWindowRect.top);
+            REGION_iOffsetRgn(DcRgnObj, NewWindowRect.left, NewWindowRect.top);
             RGNOBJAPI_Unlock(DcRgnObj);
             Dc = UserGetDCEx( Window,
                               DcRgn,
@@ -1992,7 +1992,7 @@ co_WinPosSetWindowPos(
 
                 PWND Parent = Window->spwndParent;
 
-                IntGdiOffsetRgn( DirtyRgn,
+                REGION_iOffsetRgn( DirtyRgn,
                                 Window->rcWindow.left,
                                 Window->rcWindow.top);
                 if ( (Window->style & WS_CHILD) &&
@@ -2027,9 +2027,9 @@ co_WinPosSetWindowPos(
          if (ExposedRgn)
          {
              RgnType = IntGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
-             IntGdiOffsetRgn( ExposedRgn,
-                             OldWindowRect.left - NewWindowRect.left,
-                             OldWindowRect.top  - NewWindowRect.top);
+             REGION_iOffsetRgn(ExposedRgn,
+                               OldWindowRect.left - NewWindowRect.left,
+                               OldWindowRect.top  - NewWindowRect.top);
 
              if (VisAfter != NULL)
                 RgnType = IntGdiCombineRgn(ExposedRgn, ExposedRgn, VisAfter, RGN_DIFF);
