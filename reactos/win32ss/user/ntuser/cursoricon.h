@@ -31,8 +31,8 @@ typedef struct tagACON
     USHORT atomModName;
     USHORT rt;
     ULONG CURSORF_flags;
-    INT cpcur;
-    INT cicur;
+    UINT cpcur;
+    UINT cicur;
     PCURICON_OBJECT * aspcur;
     DWORD * aicur;
     INT * ajifRate;

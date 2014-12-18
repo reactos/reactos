@@ -128,8 +128,8 @@ UserDrawWindowFrame(HDC hdc,
    HBRUSH hbrush = NtGdiSelectBrush( hdc, gpsi->hbrGray );
    NtGdiPatBlt( hdc, rect->left, rect->top, rect->right - rect->left - width, height, PATINVERT );
    NtGdiPatBlt( hdc, rect->left, rect->top + height, width, rect->bottom - rect->top - height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->right - 1, rect->top, -width, rect->bottom - rect->top - height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -(LONG)height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->right - 1, rect->top, -(LONG)width, rect->bottom - rect->top - height, PATINVERT );
    NtGdiSelectBrush( hdc, hbrush );
 }
 
@@ -1023,7 +1023,7 @@ IntDefWindowProc(
           return (DefWndHandleWindowPosChanging(Wnd, (WINDOWPOS*)lParam));
       }
 
-      case WM_WINDOWPOSCHANGED: 
+      case WM_WINDOWPOSCHANGED:
       {
           return (DefWndHandleWindowPosChanged(Wnd, (WINDOWPOS*)lParam));
       }

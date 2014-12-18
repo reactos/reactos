@@ -5,7 +5,7 @@
  * FILE:             subsys/win32k/ntuser/prop.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
- 
+
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserProp);
 
@@ -16,7 +16,7 @@ IntGetProp(PWND Window, ATOM Atom)
 {
    PLIST_ENTRY ListEntry;
    PPROPERTY Property;
-   int i;
+   UINT i;
 
    ListEntry = Window->PropListHead.Flink;
 
