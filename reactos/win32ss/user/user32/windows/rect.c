@@ -218,8 +218,8 @@ SubtractRect(LPRECT lprcDst,
     {
         if(lprcDst->top == tempRect.top)
             lprcDst->top = tempRect.bottom;
-        else if(lprcDst->right == tempRect.right)
-            lprcDst->right = tempRect.left;
+        else if(lprcDst->bottom == tempRect.bottom)
+            lprcDst->bottom = tempRect.top;
     }
 
     return(TRUE);
