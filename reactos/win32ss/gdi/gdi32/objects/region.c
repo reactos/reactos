@@ -189,21 +189,36 @@ MirrorRgnDC(HDC hdc, HRGN hRgn, HRGN *phRgn)
 
 FORCEINLINE
 ULONG
-SetRectRgnEx(
-    HRGN hrgn,
-    PRGN_ATTR prgnattr,
-    INT xLeft,
-    INT yTop,
-    INT xRight,
-    INT yBottom)
+IntSetNullRgn(
+    _Inout_ PRGN_ATTR prgnattr)
 {
-    if (!SetRectRgn(hrgn, xLeft, yTop, xRight, yBottom))
-    {
-        return ERROR;
-    }
+    prgnattr->iComplexity = NULLREGION;
+    prgnattr->AttrFlags |= ATTR_RGN_DIRTY;
+    return NULLREGION;
+}
 
-    return prgnattr->iComplexity;
+FORCEINLINE
+ULONG
+IntSetRectRgn(
+    _Inout_ PRGN_ATTR prgnattr,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
+{
+    ASSERT(xLeft <= xRight);
+    ASSERT(yTop <= yBottom);
 
+    if ((xLeft == xRight) || (yTop == yBottom))
+        return IntSetNullRgn(prgnattr);
+
+    prgnattr->iComplexity = SIMPLEREGION;
+    prgnattr->Rect.left = xLeft;
+    prgnattr->Rect.top = yTop;
+    prgnattr->Rect.right = xRight;
+    prgnattr->Rect.bottom = yBottom;
+    prgnattr->AttrFlags |= ATTR_RGN_DIRTY;
+    return SIMPLEREGION;
 }
 
 /*
@@ -240,17 +255,16 @@ CombineRgn(
         if (prngattrSrc1->iComplexity == NULLREGION)
         {
             /* The dest region is a NULLREGION, too */
-            return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+            return IntSetNullRgn(prngattrDest);
         }
 
         /* We already know that the source region cannot be complex, so
            create a rect region from the bounds of the source rect */
-        return SetRectRgnEx(hrgnDest,
-                            prngattrDest,
-                            prngattrSrc1->Rect.left,
-                            prngattrSrc1->Rect.top,
-                            prngattrSrc1->Rect.right,
-                            prngattrSrc1->Rect.bottom);
+        return IntSetRectRgn(prngattrDest,
+                             prngattrSrc1->Rect.left,
+                             prngattrSrc1->Rect.top,
+                             prngattrSrc1->Rect.right,
+                             prngattrSrc1->Rect.bottom);
     }
 
     /* For all other operations we need hrgnSrc2 */
@@ -270,23 +284,22 @@ CombineRgn(
             (prngattrSrc2->iComplexity == NULLREGION))
         {
             /* Result is also a NULLREGION */
-            return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+            return IntSetNullRgn(prngattrDest);
         }
 
         /* Get the intersection of the 2 rects */
         if (!IntersectRect(&rcTemp, &prngattrSrc1->Rect, &prngattrSrc2->Rect))
         {
             /* The rects do not intersect, result is a NULLREGION */
-            return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+            return IntSetNullRgn(prngattrDest);
         }
 
         /* Use the intersection of the rects */
-        return SetRectRgnEx(hrgnDest,
-                            prngattrDest,
-                            rcTemp.left,
-                            rcTemp.top,
-                            rcTemp.right,
-                            rcTemp.bottom);
+        return IntSetRectRgn(prngattrDest,
+                             rcTemp.left,
+                             rcTemp.top,
+                             rcTemp.right,
+                             rcTemp.bottom);
     }
 
     /* Handle RGN_DIFF */
@@ -296,7 +309,7 @@ CombineRgn(
         if (prngattrSrc1->iComplexity == NULLREGION)
         {
             /* The result is a NULLREGION as well */
-            return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+            return IntSetNullRgn(prngattrDest);
         }
 
         /* Get the intersection of the 2 rects */
@@ -304,12 +317,11 @@ CombineRgn(
             !IntersectRect(&rcTemp, &prngattrSrc1->Rect, &prngattrSrc2->Rect))
         {
             /* The rects do not intersect, dest equals source 1 */
-            return SetRectRgnEx(hrgnDest,
-                                prngattrDest,
-                                prngattrSrc1->Rect.left,
-                                prngattrSrc1->Rect.top,
-                                prngattrSrc1->Rect.right,
-                                prngattrSrc1->Rect.bottom);
+            return IntSetRectRgn(prngattrDest,
+                                 prngattrSrc1->Rect.left,
+                                 prngattrSrc1->Rect.top,
+                                 prngattrSrc1->Rect.right,
+                                 prngattrSrc1->Rect.bottom);
         }
 
         /* We need to check is whether we can subtract the rects. For that
@@ -319,7 +331,7 @@ CombineRgn(
         if (!SubtractRect(&rcTemp, &prngattrSrc1->Rect, &rcTemp))
         {
             /* The result is a NULLREGION */
-            return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+            return IntSetNullRgn(prngattrDest);
         }
 
         /* Now check if the result of SubtractRect matches the source 1 rect.
@@ -330,12 +342,11 @@ CombineRgn(
         if (!EqualRect(&rcTemp, &prngattrSrc1->Rect))
         {
             /* We got a properly subtracted rect, so use it. */
-            return SetRectRgnEx(hrgnDest,
-                                prngattrDest,
-                                rcTemp.left,
-                                rcTemp.top,
-                                rcTemp.right,
-                                rcTemp.bottom);
+            return IntSetRectRgn(prngattrDest,
+                                 rcTemp.left,
+                                 rcTemp.top,
+                                 rcTemp.right,
+                                 rcTemp.bottom);
         }
 
         /* The result would be a complex region, go to win32k */
@@ -352,28 +363,26 @@ CombineRgn(
             if (prngattrSrc2->iComplexity == NULLREGION)
             {
                 /* Both are NULLREGIONs, result is also a NULLREGION */
-                return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+                return IntSetNullRgn(prngattrDest);
             }
 
             /* The result is equal to source 2 */
-            return SetRectRgnEx(hrgnDest,
-                                prngattrDest,
-                                prngattrSrc2->Rect.left,
-                                prngattrSrc2->Rect.top,
-                                prngattrSrc2->Rect.right,
-                                prngattrSrc2->Rect.bottom );
+            return IntSetRectRgn(prngattrDest,
+                                 prngattrSrc2->Rect.left,
+                                 prngattrSrc2->Rect.top,
+                                 prngattrSrc2->Rect.right,
+                                 prngattrSrc2->Rect.bottom );
         }
 
         /* Check if only source 2 is a NULLREGION */
         if (prngattrSrc2->iComplexity == NULLREGION)
         {
             /* The result is equal to source 1 */
-            return SetRectRgnEx(hrgnDest,
-                                prngattrDest,
-                                prngattrSrc1->Rect.left,
-                                prngattrSrc1->Rect.top,
-                                prngattrSrc1->Rect.right,
-                                prngattrSrc1->Rect.bottom);
+            return IntSetRectRgn(prngattrDest,
+                                 prngattrSrc1->Rect.left,
+                                 prngattrSrc1->Rect.top,
+                                 prngattrSrc1->Rect.right,
+                                 prngattrSrc1->Rect.bottom);
         }
 
         /* Do the rects have the same x extent */
@@ -388,17 +397,16 @@ CombineRgn(
                 if (iCombineMode == RGN_OR)
                 {
                     /* The result is equal to source 1 */
-                    return SetRectRgnEx(hrgnDest,
-                                        prngattrDest,
-                                        prngattrSrc1->Rect.left,
-                                        prngattrSrc1->Rect.top,
-                                        prngattrSrc1->Rect.right,
-                                        prngattrSrc1->Rect.bottom );
+                    return IntSetRectRgn(prngattrDest,
+                                         prngattrSrc1->Rect.left,
+                                         prngattrSrc1->Rect.top,
+                                         prngattrSrc1->Rect.right,
+                                         prngattrSrc1->Rect.bottom );
                 }
                 else
                 {
                     /* XORing with itself yields an empty region */
-                    return SetRectRgn(hrgnDest, 0, 0, 0, 0) ? NULLREGION : ERROR;
+                    return IntSetNullRgn(prngattrDest);
                 }
             }
 
@@ -414,34 +422,31 @@ CombineRgn(
             if (iCombineMode == RGN_OR)
             {
                 /* Use the maximum extent of both rects combined */
-                return SetRectRgnEx(hrgnDest,
-                                    prngattrDest,
-                                    prngattrSrc1->Rect.left,
-                                    min(prngattrSrc1->Rect.top, prngattrSrc2->Rect.top),
-                                    prngattrSrc1->Rect.right,
-                                    max(prngattrSrc1->Rect.bottom, prngattrSrc2->Rect.bottom));
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     min(prngattrSrc1->Rect.top, prngattrSrc2->Rect.top),
+                                     prngattrSrc1->Rect.right,
+                                     max(prngattrSrc1->Rect.bottom, prngattrSrc2->Rect.bottom));
             }
 
             /* Check if the rects are adjacent */
             if (prngattrSrc2->Rect.bottom == prngattrSrc1->Rect.top)
             {
                 /* The result is the combined rects */
-                return SetRectRgnEx(hrgnDest,
-                                    prngattrDest,
-                                    prngattrSrc1->Rect.left,
-                                    prngattrSrc2->Rect.top,
-                                    prngattrSrc1->Rect.right,
-                                    prngattrSrc1->Rect.bottom );
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     prngattrSrc2->Rect.top,
+                                     prngattrSrc1->Rect.right,
+                                     prngattrSrc1->Rect.bottom );
             }
             else if (prngattrSrc2->Rect.top == prngattrSrc1->Rect.bottom)
             {
                 /* The result is the combined rects */
-                return SetRectRgnEx(hrgnDest,
-                                    prngattrDest,
-                                    prngattrSrc1->Rect.left,
-                                    prngattrSrc1->Rect.top,
-                                    prngattrSrc1->Rect.right,
-                                    prngattrSrc2->Rect.bottom );
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     prngattrSrc1->Rect.top,
+                                     prngattrSrc1->Rect.right,
+                                     prngattrSrc2->Rect.bottom );
             }
 
             /* When we are here, this is RGN_XOR and the rects overlap */
@@ -464,34 +469,31 @@ CombineRgn(
             if (iCombineMode == RGN_OR)
             {
                 /* Use the maximum extent of both rects combined */
-                return SetRectRgnEx(hrgnDest,
-                                    prngattrDest,
-                                    min(prngattrSrc1->Rect.left, prngattrSrc2->Rect.left),
-                                    prngattrSrc1->Rect.top,
-                                    max(prngattrSrc1->Rect.right, prngattrSrc2->Rect.right),
-                                    prngattrSrc1->Rect.bottom);
+                return IntSetRectRgn(prngattrDest,
+                                     min(prngattrSrc1->Rect.left, prngattrSrc2->Rect.left),
+                                     prngattrSrc1->Rect.top,
+                                     max(prngattrSrc1->Rect.right, prngattrSrc2->Rect.right),
+                                     prngattrSrc1->Rect.bottom);
             }
 
             /* Check if the rects are adjacent */
             if (prngattrSrc2->Rect.right == prngattrSrc1->Rect.left)
             {
                 /* The result is the combined rects */
-                return SetRectRgnEx(hrgnDest,
-                                    prngattrDest,
-                                    prngattrSrc2->Rect.left,
-                                    prngattrSrc1->Rect.top,
-                                    prngattrSrc1->Rect.right,
-                                    prngattrSrc1->Rect.bottom );
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc2->Rect.left,
+                                     prngattrSrc1->Rect.top,
+                                     prngattrSrc1->Rect.right,
+                                     prngattrSrc1->Rect.bottom );
             }
             else if (prngattrSrc2->Rect.left == prngattrSrc1->Rect.right)
             {
                 /* The result is the combined rects */
-                return SetRectRgnEx(hrgnDest,
-                                    prngattrDest,
-                                    prngattrSrc1->Rect.left,
-                                    prngattrSrc1->Rect.top,
-                                    prngattrSrc2->Rect.right,
-                                    prngattrSrc1->Rect.bottom );
+                return IntSetRectRgn(prngattrDest,
+                                     prngattrSrc1->Rect.left,
+                                     prngattrSrc1->Rect.top,
+                                     prngattrSrc2->Rect.right,
+                                     prngattrSrc1->Rect.bottom );
             }
 
             /* When we are here, this is RGN_XOR and the rects overlap */
@@ -510,12 +512,11 @@ CombineRgn(
                     (prngattrSrc1->Rect.bottom >= prngattrSrc2->Rect.bottom))
                 {
                     /* Rect 1 contains rect 2, use it */
-                    return SetRectRgnEx(hrgnDest,
-                                        prngattrDest,
-                                        prngattrSrc1->Rect.left,
-                                        prngattrSrc1->Rect.top,
-                                        prngattrSrc1->Rect.right,
-                                        prngattrSrc1->Rect.bottom );
+                    return IntSetRectRgn(prngattrDest,
+                                         prngattrSrc1->Rect.left,
+                                         prngattrSrc1->Rect.top,
+                                         prngattrSrc1->Rect.right,
+                                         prngattrSrc1->Rect.bottom );
                 }
             }
             else
@@ -526,12 +527,11 @@ CombineRgn(
                     (prngattrSrc2->Rect.bottom >= prngattrSrc1->Rect.bottom))
                 {
                     /* Rect 2 contains rect 1, use it */
-                    return SetRectRgnEx(hrgnDest,
-                                        prngattrDest,
-                                        prngattrSrc2->Rect.left,
-                                        prngattrSrc2->Rect.top,
-                                        prngattrSrc2->Rect.right,
-                                        prngattrSrc2->Rect.bottom );
+                    return IntSetRectRgn(prngattrDest,
+                                         prngattrSrc2->Rect.left,
+                                         prngattrSrc2->Rect.top,
+                                         prngattrSrc2->Rect.right,
+                                         prngattrSrc2->Rect.bottom );
                 }
             }
         }
@@ -1154,44 +1154,54 @@ SelectClipRgn(
  */
 BOOL
 WINAPI
-SetRectRgn(HRGN hrgn,
-           int nLeftRect,
-           int nTopRect,
-           int nRightRect,
-           int nBottomRect)
+SetRectRgn(
+    _In_ HRGN hrgn,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    PRGN_ATTR Rgn_Attr;
+    PRGN_ATTR prngattr;
 
-    //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
-    return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
-
-    if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
+    /* Try to get the region attribute */
+    prngattr = GdiGetRgnAttr(hrgn);
+    if (prngattr == NULL)
     {
-        Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY;
-        Rgn_Attr->iComplexity = NULLREGION;
-        Rgn_Attr->Rect.left = Rgn_Attr->Rect.top =
-                                  Rgn_Attr->Rect.right = Rgn_Attr->Rect.bottom = 0;
+        return NtGdiSetRectRgn(hrgn, xLeft, yTop, xRight, yBottom);
+    }
+
+    /* check for NULL region */
+    if ((xLeft == xRight) || (yTop == yBottom))
+    {
+        IntSetNullRgn(prngattr);
         return TRUE;
     }
 
-    Rgn_Attr->Rect.left   = nLeftRect;
-    Rgn_Attr->Rect.top    = nTopRect;
-    Rgn_Attr->Rect.right  = nRightRect;
-    Rgn_Attr->Rect.bottom = nBottomRect;
-
-    if(nLeftRect > nRightRect)
+    if (xLeft > xRight)
     {
-        Rgn_Attr->Rect.left   = nRightRect;
-        Rgn_Attr->Rect.right  = nLeftRect;
+        prngattr->Rect.left   = xRight;
+        prngattr->Rect.right  = xLeft;
     }
-    if(nTopRect > nBottomRect)
+    else
     {
-        Rgn_Attr->Rect.top    = nBottomRect;
-        Rgn_Attr->Rect.bottom = nTopRect;
+        prngattr->Rect.left   = xLeft;
+        prngattr->Rect.right  = xRight;
     }
 
-    Rgn_Attr->AttrFlags |= ATTR_RGN_DIRTY ;
-    Rgn_Attr->iComplexity = SIMPLEREGION;
+    if (yTop > yBottom)
+    {
+        prngattr->Rect.top    = yBottom;
+        prngattr->Rect.bottom = yTop;
+    }
+    else
+    {
+        prngattr->Rect.top    = yTop;
+        prngattr->Rect.bottom = yBottom;
+    }
+
+    prngattr->AttrFlags |= ATTR_RGN_DIRTY ;
+    prngattr->iComplexity = SIMPLEREGION;
+
     return TRUE;
 }
 
