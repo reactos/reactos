@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Messages
- * FILE:             subsystems/win32/win32k/ntuser/message.c
+ * FILE:             win32ss/user/ntuser/message.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
@@ -1248,7 +1248,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
                                 UINT uTimeout,
                                 ULONG_PTR *uResult )
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PWND Window = NULL;
     PMSGMEMORY MsgMemoryEntry;
     INT lParamBufferSize;
@@ -1389,7 +1389,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
            (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
            !MsqIsHung(ptiSendTo)); // FIXME: Set window hung and add to a list.
 
-    if (STATUS_TIMEOUT == Status)
+    if (Status == STATUS_TIMEOUT)
     {
 /*
  *  MSDN says:
