@@ -724,34 +724,43 @@ NtUserProcessConnect(
     PUSERCONNECT pUserConnect,
     DWORD Size)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
-  TRACE("NtUserProcessConnect\n");
-  if (pUserConnect && ( Size == sizeof(USERCONNECT) ))
-  {
-     PPROCESSINFO W32Process;
-     UserEnterShared();
-     GetW32ThreadInfo();
-     W32Process = PsGetCurrentProcessWin32Process();
-     _SEH2_TRY
-     {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PPROCESSINFO W32Process;
+
+    TRACE("NtUserProcessConnect\n");
+
+    if ( pUserConnect == NULL ||
+         Size         != sizeof(*pUserConnect) )
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    UserEnterShared();
+
+    W32Process = PsGetCurrentProcessWin32Process();
+    _SEH2_TRY
+    {
+        // FIXME: Check that pUserConnect->ulVersion == USER_VERSION;
+
         pUserConnect->siClient.psi = gpsi;
         pUserConnect->siClient.aheList = gHandleTable;
-        pUserConnect->siClient.ulSharedDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
-                                               (ULONG_PTR)W32Process->HeapMappings.UserMapping;
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
+        pUserConnect->siClient.ulSharedDelta =
+            (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
+            (ULONG_PTR)W32Process->HeapMappings.UserMapping;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
         Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END
-     if (!NT_SUCCESS(Status))
-     {
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
         SetLastNtError(Status);
-     }
-     UserLeave();
-     return Status;
-  }
-  return STATUS_UNSUCCESSFUL;
+    }
+
+    UserLeave();
+    return Status;
 }
 
 NTSTATUS

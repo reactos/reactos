@@ -2521,9 +2521,9 @@ BOOL
 NTAPI
 NtUserNotifyProcessCreate(
     HANDLE NewProcessId,
-    HANDLE SourceThreadId,
-    DWORD dwUnknown,
-    ULONG CreateFlags);
+    HANDLE ParentThreadId,
+    ULONG  dwUnknown,
+    ULONG  CreateFlags);
 
 VOID
 NTAPI

@@ -240,6 +240,8 @@ ClientThreadSetup(VOID)
     // continue as normal.
     //
 
+    GetConnected();
+
     UNIMPLEMENTED;
     return TRUE;
 }
@@ -247,44 +249,53 @@ ClientThreadSetup(VOID)
 BOOL
 Init(VOID)
 {
-   USERCONNECT UserCon;
+    NTSTATUS Status;
+    USERCONNECT UserCon;
 
-   /* Set PEB data */
-   NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
-   NtCurrentPeb()->PostProcessInitRoutine = NULL;
+    TRACE("user32::Init()\n");
 
-   NtUserProcessConnect( NtCurrentProcess(),
-                         &UserCon,
-                         sizeof(USERCONNECT));
+    /* Set PEB data */
+    NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
+    NtCurrentPeb()->PostProcessInitRoutine = NULL;
 
-   g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
-   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-   gpsi = SharedPtrToUser(UserCon.siClient.psi);
-   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-   gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+    /* Minimal setup of the connect info structure */
+    UserCon.ulVersion = USER_VERSION;
 
-   RtlInitializeCriticalSection(&gcsUserApiHook);
+    /* Connect to win32k */
+    Status = NtUserProcessConnect(NtCurrentProcess(),
+                                  &UserCon,
+                                  sizeof(UserCon));
+    if (!NT_SUCCESS(Status)) return FALSE;
 
-   //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
+    /* Retrieve data */
+    g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
+    g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+    gpsi = SharedPtrToUser(UserCon.siClient.psi);
+    gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
+    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
-   /* Allocate an index for user32 thread local data. */
-   User32TlsIndex = TlsAlloc();
-   if (User32TlsIndex != TLS_OUT_OF_INDEXES)
-   {
-      if (MessageInit())
-      {
-         if (MenuInit())
-         {
+    RtlInitializeCriticalSection(&gcsUserApiHook);
+
+    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
+
+    /* Allocate an index for user32 thread local data */
+    User32TlsIndex = TlsAlloc();
+    if (User32TlsIndex == TLS_OUT_OF_INDEXES)
+        return FALSE;
+
+    if (MessageInit())
+    {
+        if (MenuInit())
+        {
             InitializeCriticalSection(&U32AccelCacheLock);
             LoadAppInitDlls();
             return TRUE;
-         }
-         MessageCleanup();
-      }
-      TlsFree(User32TlsIndex);
-   }
+        }
+        MessageCleanup();
+    }
 
-   return FALSE;
+    TlsFree(User32TlsIndex);
+    return FALSE;
 }
 
 VOID
@@ -323,6 +334,9 @@ DllMain(
 
             /* Don't bother us for each thread */
             DisableThreadLibraryCalls(hInstanceDll);
+
+            /* Minimal setup of the connect info structure */
+            ConnectInfo.ulVersion = USER_VERSION;
 
             /* Setup the Object Directory path */
             if (!SessionId)
@@ -373,32 +387,40 @@ DllMain(
         }
     }
 
-    /* Finally init GDI */
+    /* Finally, initialize GDI */
     return GdiDllInitialize(hInstanceDll, dwReason, reserved);
 }
 
-// FIXME: This function seems to be unused...
+// FIXME: This function IS A BIIG HACK!!
 VOID
 FASTCALL
 GetConnected(VOID)
 {
-  USERCONNECT UserCon;
+    NTSTATUS Status;
+    USERCONNECT UserCon;
 
-  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
-     NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
+    TRACE("user32::GetConnected()\n");
 
-  if (gpsi && g_ppi) return;
+    if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
+        NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
-  NtUserProcessConnect( NtCurrentProcess(),
-                         &UserCon,
-                         sizeof(USERCONNECT));
+    if (gpsi && g_ppi) return;
 
-  g_ppi = GetWin32ClientInfo()->ppi;
-  g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-  gpsi = SharedPtrToUser(UserCon.siClient.psi);
-  gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-  gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+    /* Minimal setup of the connect info structure */
+    UserCon.ulVersion = USER_VERSION;
 
+    /* Connect to win32k */
+    Status = NtUserProcessConnect(NtCurrentProcess(),
+                                  &UserCon,
+                                  sizeof(UserCon));
+    if (!NT_SUCCESS(Status)) return;
+
+    /* Retrieve data */
+    g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
+    g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+    gpsi = SharedPtrToUser(UserCon.siClient.psi);
+    gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
+    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 }
 
 NTSTATUS
