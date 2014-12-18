@@ -791,7 +791,7 @@ GuiChangeTitle(IN OUT PFRONTEND This)
 {
     PGUI_CONSOLE_DATA GuiData = This->Context;
     // PostMessageW(GuiData->hWindow, PM_CONSOLE_SET_TITLE, 0, 0);
-    SetWindowText(GuiData->hWindow, GuiData->Console->Title.Buffer);
+    SetWindowTextW(GuiData->hWindow, GuiData->Console->Title.Buffer);
 }
 
 static BOOL NTAPI
