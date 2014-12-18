@@ -1898,14 +1898,14 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     MENUITEMINFOW mii = { 0 };
     HMENU hSubmenu = (HMENU) wParam;
 
-    DbgPrint("OnInitMenuPopup lParam=%d\n", lParam);
+    TRACE("OnInitMenuPopup lParam=%d\n", lParam);
     
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_SUBMENU;
 
     if (!GetMenuItemInfoW(this->m_hMenu, lParam, TRUE, &mii))
     {
-        DbgPrint("OnInitMenuPopup GetMenuItemInfoW failed!\n");
+        TRACE("OnInitMenuPopup GetMenuItemInfoW failed!\n");
         return FALSE;
     }
 
@@ -1913,11 +1913,11 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 
     if (mii.hSubMenu != hSubmenu)
     {
-        DbgPrint("OnInitMenuPopup submenu does not match!!!!\n");
+        TRACE("OnInitMenuPopup submenu does not match!!!!\n");
         return FALSE;
     }
 
-    DbgPrint("OnInitMenuPopup id=%d\n", menuItemId);
+    TRACE("OnInitMenuPopup id=%d\n", menuItemId);
 
     switch (menuItemId)
     {

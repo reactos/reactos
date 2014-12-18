@@ -55,7 +55,7 @@ static BOOL Dde_OnConnect(HSZ hszTopic, HSZ hszService)
     DdeQueryStringW(dwDDEInst, hszTopic, szTopic, _countof(szTopic), CP_WINUNICODE);
     DdeQueryStringW(dwDDEInst, hszService, szService, _countof(szService), CP_WINUNICODE);
 
-    DbgPrint("Dde_OnConnect: topic=%S, service=%S\n", szTopic, szService);
+    TRACE("Dde_OnConnect: topic=%S, service=%S\n", szTopic, szService);
 
     return TRUE;
 }
@@ -68,7 +68,7 @@ static void Dde_OnConnectConfirm(HCONV hconv, HSZ hszTopic, HSZ hszService)
     DdeQueryStringW(dwDDEInst, hszTopic, szTopic, _countof(szTopic), CP_WINUNICODE);
     DdeQueryStringW(dwDDEInst, hszService, szService, _countof(szService), CP_WINUNICODE);
 
-    DbgPrint("Dde_OnConnectConfirm: hconv=%p, topic=%S, service=%S\n", hconv, szTopic, szService);
+    TRACE("Dde_OnConnectConfirm: hconv=%p, topic=%S, service=%S\n", hconv, szTopic, szService);
 }
 
 static BOOL Dde_OnWildConnect(HSZ hszTopic, HSZ hszService)
@@ -79,7 +79,7 @@ static BOOL Dde_OnWildConnect(HSZ hszTopic, HSZ hszService)
     DdeQueryStringW(dwDDEInst, hszTopic, szTopic, _countof(szTopic), CP_WINUNICODE);
     DdeQueryStringW(dwDDEInst, hszService, szService, _countof(szService), CP_WINUNICODE);
 
-    DbgPrint("Dde_OnWildConnect: topic=%S, service=%S\n", szTopic, szService);
+    TRACE("Dde_OnWildConnect: topic=%S, service=%S\n", szTopic, szService);
 
     return FALSE;
 }
@@ -92,7 +92,7 @@ static HDDEDATA Dde_OnRequest(UINT uFmt, HCONV hconv, HSZ hszTopic, HSZ hszItem)
     DdeQueryStringW(dwDDEInst, hszTopic, szTopic, _countof(szTopic), CP_WINUNICODE);
     DdeQueryStringW(dwDDEInst, hszItem, szItem, _countof(szItem), CP_WINUNICODE);
 
-    DbgPrint("Dde_OnRequest: uFmt=%d, hconv=%p, topic=%S, item=%S\n", hconv, szTopic, szItem);
+    TRACE("Dde_OnRequest: uFmt=%d, hconv=%p, topic=%S, item=%S\n", hconv, szTopic, szItem);
 
     return NULL;
 }
@@ -139,7 +139,7 @@ static DWORD Dde_OnExecute(HCONV hconv, HSZ hszTopic, HDDEDATA hdata)
 
     DdeUnaccessData(hdata);
 
-    DbgPrint("Dde_OnExecute: hconv=%p, topic=%S, command=%S\n", hconv, szTopic, pszCommand);
+    TRACE("Dde_OnExecute: hconv=%p, topic=%S, command=%S\n", hconv, szTopic, pszCommand);
 
     /*
     [ViewFolder("%l", %I, %S)]    -- Open a folder in standard mode
@@ -260,7 +260,7 @@ static DWORD Dde_OnExecute(HCONV hconv, HSZ hszTopic, HDDEDATA hdata)
         UnknownParameter = StrToIntW(cmd);
     }
 
-    DbgPrint("Parse end: cmd=%S, S=%d, pidl=%p, path=%S\n", Command, UnknownParameter, IdList, Path);
+    TRACE("Parse end: cmd=%S, S=%d, pidl=%p, path=%S\n", Command, UnknownParameter, IdList, Path);
 
     // Find handler in list
     for (int i = 0; i < HandlerListLength; i++)
@@ -279,7 +279,7 @@ static DWORD Dde_OnExecute(HCONV hconv, HSZ hszTopic, HDDEDATA hdata)
 
 static void Dde_OnDisconnect(HCONV hconv)
 {
-    DbgPrint("Dde_OnDisconnect: hconv=%p\n", hconv);
+    TRACE("Dde_OnDisconnect: hconv=%p\n", hconv);
 }
 
 static HDDEDATA CALLBACK DdeCallback(
@@ -311,7 +311,7 @@ static HDDEDATA CALLBACK DdeCallback(
     case XTYP_REGISTER:
         return NULL;
     default:
-        DbgPrint("DdeCallback: unknown uType=%d\n", uType);
+        WARN("DdeCallback: unknown uType=%d\n", uType);
         return NULL;
     }
 }
@@ -329,7 +329,7 @@ static HDDEDATA CALLBACK DdeCallback(
  */
 EXTERN_C void WINAPI ShellDDEInit(BOOL bInit)
 {
-    DbgPrint("ShellDDEInit bInit = %s\n", bInit ? "TRUE" : "FALSE");
+    TRACE("ShellDDEInit bInit = %s\n", bInit ? "TRUE" : "FALSE");
 
     if (bInit && !bInitialized)
     {

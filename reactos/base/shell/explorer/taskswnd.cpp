@@ -1131,7 +1131,6 @@ public:
 
                 if (Horizontal)
                 {
-                    DbgPrint("HORIZONTAL!\n");
                     TBMETRICS tbm = { 0 };
                     tbm.cbSize = sizeof(tbm);
                     tbm.dwMask = TBMF_BUTTONSPACING;
@@ -1145,7 +1144,6 @@ public:
                 }
                 else
                 {
-                    DbgPrint("VERTICAL!\n");
                     uiBtnsPerLine = 1;
                     uiRows = m_ButtonCount;
                 }

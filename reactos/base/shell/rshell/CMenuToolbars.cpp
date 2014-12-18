@@ -73,9 +73,6 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             //return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr), theResult);
             return S_OK;
 
-        case NM_RCLICK:
-            return OnContextMenu(reinterpret_cast<LPNMMOUSE>(hdr));
-
         case NM_CUSTOMDRAW:
             return OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), theResult);
 
@@ -770,7 +767,7 @@ HRESULT CMenuToolbarBase::TrackContextMenu(IContextMenu* contextMenu, POINT pt)
 HRESULT CMenuToolbarBase::BeforeCancelPopup()
 {
     m_cancelingPopup = TRUE;
-    DbgPrint("BeforeCancelPopup\n");
+    TRACE("BeforeCancelPopup\n");
     return S_OK;
 }
 
@@ -797,12 +794,29 @@ HRESULT CMenuToolbarBase::ProcessClick(INT iItem)
 
     TRACE("Executing...\n");
 
-    return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+    return m_menuBand->_MenuItemSelect(MPOS_EXECUTE);
 }
 
-HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex)
+HRESULT CMenuToolbarBase::ProcessContextMenu(INT iItem)
+{
+    INT index;
+    DWORD_PTR data;
+
+    GetDataFromId(iItem, &index, &data);
+
+    DWORD pos = GetMessagePos();
+    POINT pt = { GET_X_LPARAM(pos), GET_Y_LPARAM(pos) };
+
+    return InternalContextMenu(iItem, index, data, pt);
+}
+
+HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex, BOOL isLButton)
 {
     TBBUTTON btn;
+
+    GetButton(iIndex, &btn);
+    if (!isLButton)
+        return ProcessContextMenu(btn.idCommand);
 
     if ((m_initFlags & SMINIT_VERTICAL) 
         || m_popupBar
@@ -812,7 +826,6 @@ HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex)
         return S_OK;
     }
 
-    GetButton(iIndex, &btn);
     return ProcessClick(btn.idCommand);
 }
 
@@ -840,17 +853,6 @@ HRESULT CMenuToolbarBase::PrepareExecuteItem(INT iItem)
 HRESULT CMenuToolbarBase::ExecuteItem()
 {
     return InternalExecuteItem(m_executeItem, m_executeItem, m_executeData);
-}
-
-HRESULT CMenuToolbarBase::OnContextMenu(NMMOUSE * rclick)
-{
-    INT iItem = rclick->dwItemSpec;
-    INT index = rclick->dwHitInfo;
-    DWORD_PTR data = rclick->dwItemData;
-
-    GetDataFromId(iItem, &index, &data);
-
-    return InternalContextMenu(iItem, index, data, rclick->pt);
 }
 
 HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)

@@ -96,9 +96,10 @@ public:
 
     HRESULT KillPopupTimer();
 
-    HRESULT MenuBarMouseDown(INT iIndex);
+    HRESULT MenuBarMouseDown(INT iIndex, BOOL isLButton);
     HRESULT MenuBarMouseUp(INT iIndex);
     HRESULT ProcessClick(INT iItem);
+    HRESULT ProcessContextMenu(INT iItem);
     HRESULT BeforeCancelPopup();
 
 protected:
@@ -121,7 +122,6 @@ private:
     HRESULT UpdateImageLists();
 
     HRESULT OnPagerCalcSize(LPNMPGCALCSIZE csize);
-    HRESULT OnContextMenu(NMMOUSE * rclick);
     HRESULT OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResult);
     HRESULT OnGetInfoTip(NMTBGETINFOTIP * tip);
 

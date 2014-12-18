@@ -519,7 +519,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
             }
 
             case WM_EXPLORER_OPEN_NEW_WINDOW:
-                DbgPrint("Proxy Desktop message 1035 received.\n");
+                TRACE("Proxy Desktop message 1035 received.\n");
                 SHOnCWMCommandLine((HANDLE)lParam);
                 break;
 

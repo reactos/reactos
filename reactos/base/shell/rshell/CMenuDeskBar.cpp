@@ -372,7 +372,9 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         y = rcWorkArea.bottom - cy;
     }
 
-    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
+    int flags = SWP_SHOWWINDOW | SWP_NOACTIVATE;
+
+    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, flags);
 
     m_ShowFlags = dwFlags;
     m_Shown = true;
