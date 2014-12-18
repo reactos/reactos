@@ -405,43 +405,109 @@ typedef struct _SCANLINE_LISTBLOCK
 #define LARGE_COORDINATE  0x7fffffff /* FIXME */
 #define SMALL_COORDINATE  0x80000000
 
-/*
- *   Check to see if there is enough memory in the present region.
- */
-static __inline INT xmemcheck(PREGION reg, PRECTL *rect, PRECTL *firstrect)
+static
+BOOL
+REGION_bGrowBufferSize(
+    _Inout_ PREGION prgn,
+    _In_ UINT cRects)
 {
-    if ((reg->rdh.nCount+1) * sizeof(RECT) >= reg->rdh.nRgnSize)
+    ULONG cjNewSize;
+    PVOID pvBuffer;
+    NT_ASSERT(cRects > 0);
+
+    /* Make sure we don't overflow */
+    if (cRects > MAXULONG / sizeof(RECTL))
     {
-        PRECTL temp;
-        DWORD NewSize = 2 * reg->rdh.nRgnSize;
-
-        if (NewSize < (reg->rdh.nCount + 1) * sizeof(RECT))
-        {
-            NewSize = (reg->rdh.nCount + 1) * sizeof(RECT);
-        }
-
-        temp = ExAllocatePoolWithTag(PagedPool, NewSize, TAG_REGION);
-        if (temp == NULL)
-        {
-            return 0;
-        }
-
-        /* Copy the rectangles */
-        COPY_RECTS(temp, *firstrect, reg->rdh.nCount);
-
-        reg->rdh.nRgnSize = NewSize;
-        if (*firstrect != &reg->rdh.rcBound)
-        {
-            ExFreePoolWithTag(*firstrect, TAG_REGION);
-        }
-
-        *firstrect = temp;
-        *rect = (*firstrect) + reg->rdh.nCount;
+        return FALSE;
     }
-    return 1;
+
+    /* Calculate new buffer size */
+    cjNewSize = cRects * sizeof(RECTL);
+
+    /* Avoid allocating too often, by duplicating the old buffer size
+       Note: we don't do an overflow check, since the old size will never
+       get that large before running out of memory. */
+    if (2 * prgn->rdh.nRgnSize > cjNewSize)
+    {
+        cjNewSize = 2 * prgn->rdh.nRgnSize;
+    }
+
+    /* Allocate the new buffer */
+    pvBuffer = ExAllocatePoolWithTag(PagedPool, cjNewSize, TAG_REGION);
+    if (pvBuffer == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Copy the rects into the new buffer */
+    COPY_RECTS(pvBuffer, prgn->Buffer, prgn->rdh.nCount);
+
+    /* Free the old buffer */
+    if (prgn->Buffer != &prgn->rdh.rcBound)
+    {
+        ExFreePoolWithTag(prgn->Buffer, TAG_REGION);
+    }
+
+    /* Set the new buffer */
+    prgn->Buffer = pvBuffer;
+    prgn->rdh.nRgnSize = cjNewSize;
+
+    return TRUE;
 }
 
-#define MEMCHECK(reg, rect, firstrect) xmemcheck(reg,&(rect),(PRECTL *)&(firstrect))
+static __inline
+BOOL
+REGION_bEnsureBufferSize(
+    _Inout_ PREGION prgn,
+    _In_ UINT cRects)
+{
+    /* Check if the current region size is too small */
+    if (cRects > prgn->rdh.nRgnSize / sizeof(RECTL))
+    {
+        /* Allocate a new buffer */
+        return REGION_bGrowBufferSize(prgn, cRects);
+    }
+
+    return TRUE;
+}
+
+FORCEINLINE
+VOID
+REGION_vAddRect(
+    _Inout_ PREGION prgn,
+    _In_ LONG left,
+    _In_ LONG top,
+    _In_ LONG right,
+    _In_ LONG bottom)
+{
+    PRECTL prcl;
+    NT_ASSERT((prgn->rdh.nCount + 1) * sizeof(RECT) <= prgn->rdh.nRgnSize);
+
+    prcl = &prgn->Buffer[prgn->rdh.nCount];
+    prcl->left = left;
+    prcl->top = top;
+    prcl->right = right;
+    prcl->bottom = bottom;
+    prgn->rdh.nCount++;
+}
+
+static __inline
+BOOL
+REGION_bAddRect(
+    _Inout_ PREGION prgn,
+    _In_ LONG left,
+    _In_ LONG top,
+    _In_ LONG right,
+    _In_ LONG bottom)
+{
+    if (!REGION_bEnsureBufferSize(prgn, prgn->rdh.nCount + 1))
+    {
+        return FALSE;
+    }
+
+    REGION_vAddRect(prgn, left, top, right, bottom);
+    return TRUE;
+}
 
 typedef VOID (FASTCALL *overlapProcp)(PREGION, PRECT, PRECT, PRECT, PRECT, INT, INT);
 typedef VOID (FASTCALL *nonOverlapProcp)(PREGION, PRECT, PRECT, INT, INT);
@@ -1180,10 +1246,7 @@ REGION_IntersectO(
     INT     top,
     INT     bottom)
 {
-    INT       left, right;
-    RECTL     *pNextRect;
-
-    pNextRect = pReg->Buffer + pReg->rdh.nCount;
+    INT left, right;
 
     while ((r1 != r1End) && (r2 != r2End))
     {
@@ -1197,13 +1260,10 @@ REGION_IntersectO(
          * right next to each other. Since that should never happen... */
         if (left < right)
         {
-            MEMCHECK(pReg, pNextRect, pReg->Buffer);
-            pNextRect->left = left;
-            pNextRect->top = top;
-            pNextRect->right = right;
-            pNextRect->bottom = bottom;
-            pReg->rdh.nCount += 1;
-            pNextRect++;
+            if (!REGION_bAddRect(pReg, left, top, right, bottom))
+            {
+                return;
+            }
         }
 
         /* Need to advance the pointers. Shift the one that extends
@@ -1290,23 +1350,52 @@ REGION_UnionNonO(
     INT     top,
     INT     bottom)
 {
-    RECTL *pNextRect;
-
-    pNextRect = pReg->Buffer + pReg->rdh.nCount;
-
-    while (r != rEnd)
+    if (r != rEnd)
     {
-        MEMCHECK(pReg, pNextRect, pReg->Buffer);
-        pNextRect->left = r->left;
-        pNextRect->top = top;
-        pNextRect->right = r->right;
-        pNextRect->bottom = bottom;
-        pReg->rdh.nCount += 1;
-        pNextRect++;
-        r++;
+        if (!REGION_bEnsureBufferSize(pReg, pReg->rdh.nCount + (rEnd - r)))
+        {
+            return;
+        }
+
+        do
+        {
+            REGION_vAddRect(pReg, r->left, top, r->right, bottom);
+            r++;
+        }
+        while (r != rEnd);
     }
 
     return;
+}
+
+static __inline
+BOOL
+REGION_bMergeRect(
+    _Inout_ PREGION prgn,
+    _In_ LONG left,
+    _In_ LONG top,
+    _In_ LONG right,
+    _In_ LONG bottom)
+{
+    if ((prgn->rdh.nCount != 0) &&
+        (prgn->Buffer[prgn->rdh.nCount - 1].top == top) &&
+        (prgn->Buffer[prgn->rdh.nCount - 1].bottom == bottom) &&
+        (prgn->Buffer[prgn->rdh.nCount - 1].right >= left))
+    {
+        if (prgn->Buffer[prgn->rdh.nCount - 1].right < right)
+        {
+            prgn->Buffer[prgn->rdh.nCount - 1].right = right;
+        }
+    }
+    else
+    {
+        if (!REGION_bAddRect(prgn, left, top, right, bottom))
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 /*!
@@ -1333,42 +1422,17 @@ REGION_UnionO (
     INT     top,
     INT     bottom)
 {
-    RECTL *pNextRect;
-
-    pNextRect = pReg->Buffer + pReg->rdh.nCount;
-
-#define MERGERECT(r) \
-    if ((pReg->rdh.nCount != 0) &&  \
-        ((pNextRect-1)->top == top) &&  \
-        ((pNextRect-1)->bottom == bottom) &&  \
-        ((pNextRect-1)->right >= r->left))  \
-    {  \
-        if ((pNextRect-1)->right < r->right)  \
-        {  \
-            (pNextRect-1)->right = r->right;  \
-        }  \
-    }  \
-    else  \
-    {  \
-        MEMCHECK(pReg, pNextRect, pReg->Buffer);  \
-        pNextRect->top = top;  \
-        pNextRect->bottom = bottom;  \
-        pNextRect->left = r->left;  \
-        pNextRect->right = r->right;  \
-        pReg->rdh.nCount += 1;  \
-        pNextRect += 1;  \
-    }  \
-    r++;
-
     while ((r1 != r1End) && (r2 != r2End))
     {
         if (r1->left < r2->left)
         {
-            MERGERECT(r1);
+            REGION_bMergeRect(pReg, r1->left, top, r1->right, bottom);
+            r1++;
         }
         else
         {
-            MERGERECT(r2);
+            REGION_bMergeRect(pReg, r2->left, top, r2->right, bottom);
+            r2++;
         }
     }
 
@@ -1376,7 +1440,8 @@ REGION_UnionO (
     {
         do
         {
-            MERGERECT(r1);
+            REGION_bMergeRect(pReg, r1->left, top, r1->right, bottom);
+            r1++;
         }
         while (r1 != r1End);
     }
@@ -1384,7 +1449,8 @@ REGION_UnionO (
     {
         while (r2 != r2End)
         {
-            MERGERECT(r2);
+            REGION_bMergeRect(pReg, r2->left, top, r2->right, bottom);
+            r2++;
         }
     }
 
@@ -1497,20 +1563,19 @@ REGION_SubtractNonO1(
     INT     top,
     INT     bottom)
 {
-    RECTL *pNextRect;
-
-    pNextRect = pReg->Buffer + pReg->rdh.nCount;
-
-    while (r != rEnd)
+    if (r != rEnd)
     {
-        MEMCHECK(pReg, pNextRect, pReg->Buffer);
-        pNextRect->left = r->left;
-        pNextRect->top = top;
-        pNextRect->right = r->right;
-        pNextRect->bottom = bottom;
-        pReg->rdh.nCount += 1;
-        pNextRect++;
-        r++;
+        if (!REGION_bEnsureBufferSize(pReg, pReg->rdh.nCount + (rEnd - r)))
+        {
+            return;
+        }
+
+        do
+        {
+            REGION_vAddRect(pReg, r->left, top, r->right, bottom);
+            r++;
+        }
+        while (r != rEnd);
     }
 
     return;
@@ -1540,11 +1605,9 @@ REGION_SubtractO(
     INT     top,
     INT     bottom)
 {
-    RECTL *pNextRect;
     INT left;
 
     left = r1->left;
-    pNextRect = pReg->Buffer + pReg->rdh.nCount;
 
     while ((r1 != r1End) && (r2 != r2End))
     {
@@ -1576,13 +1639,11 @@ REGION_SubtractO(
         {
             /* Left part of subtrahend covers part of minuend: add uncovered
              * part of minuend to region and skip to next subtrahend. */
-            MEMCHECK(pReg, pNextRect, pReg->Buffer);
-            pNextRect->left = left;
-            pNextRect->top = top;
-            pNextRect->right = r2->left;
-            pNextRect->bottom = bottom;
-            pReg->rdh.nCount += 1;
-            pNextRect++;
+            if (!REGION_bAddRect(pReg, left, top, r2->left, bottom))
+            {
+                return;
+            }
+
             left = r2->right;
             if (left >= r1->right)
             {
@@ -1602,13 +1663,10 @@ REGION_SubtractO(
             /* Minuend used up: add any remaining piece before advancing. */
             if (r1->right > left)
             {
-                MEMCHECK(pReg, pNextRect, pReg->Buffer);
-                pNextRect->left = left;
-                pNextRect->top = top;
-                pNextRect->right = r1->right;
-                pNextRect->bottom = bottom;
-                pReg->rdh.nCount += 1;
-                pNextRect++;
+                if (!REGION_bAddRect(pReg, left, top, r1->right, bottom))
+                {
+                    return;
+                }
             }
 
             r1++;
@@ -1617,21 +1675,25 @@ REGION_SubtractO(
         }
     }
 
-    /* Add remaining minuend rectangles to region. */
-    while (r1 != r1End)
+    /* Make sure the buffer is large enough for all remaining operations */
+    if (r1 != r1End)
     {
-        MEMCHECK(pReg, pNextRect, pReg->Buffer);
-        pNextRect->left = left;
-        pNextRect->top = top;
-        pNextRect->right = r1->right;
-        pNextRect->bottom = bottom;
-        pReg->rdh.nCount += 1;
-        pNextRect++;
-        r1++;
-        if (r1 != r1End)
+        if (!REGION_bEnsureBufferSize(pReg, pReg->rdh.nCount + (r1End - r1)))
         {
-            left = r1->left;
+            return;
         }
+
+        /* Add remaining minuend rectangles to region. */
+        do
+        {
+            REGION_vAddRect(pReg, left, top, r1->right, bottom);
+            r1++;
+            if (r1 != r1End)
+            {
+                left = r1->left;
+            }
+        }
+        while (r1 != r1End);
     }
 
     return;
