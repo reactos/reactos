@@ -3853,39 +3853,6 @@ NtGdiGetRgnBox(
     return ret;
 }
 
-BOOL
-APIENTRY
-NtGdiInvertRgn(
-    HDC hDC,
-    HRGN hRgn)
-{
-    PREGION RgnData;
-    ULONG i;
-    PRECTL rc;
-
-    RgnData = RGNOBJAPI_Lock(hRgn, NULL);
-    if (RgnData == NULL)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    rc = RgnData->Buffer;
-    for (i = 0; i < RgnData->rdh.nCount; i++)
-    {
-
-        if (!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
-        {
-            RGNOBJAPI_Unlock(RgnData);
-            return FALSE;
-        }
-        rc++;
-    }
-
-    RGNOBJAPI_Unlock(RgnData);
-    return TRUE;
-}
-
 INT
 APIENTRY
 NtGdiOffsetRgn(
