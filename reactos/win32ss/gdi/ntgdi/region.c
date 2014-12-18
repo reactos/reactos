@@ -1941,64 +1941,137 @@ GreCreateFrameRgn(
     return hrgnFrame;
 }
 
-
-static
 BOOL
 FASTCALL
-REGION_LPTODP(
-    _In_ PDC  dc,
-    _Inout_ PREGION RgnDest,
-    _In_ PREGION RgnSrc)
+REGION_bXformRgn(
+    _Inout_ PREGION prgn,
+    _In_ PMATRIX pmx)
 {
-    RECTL *pCurRect, *pEndRect;
-    RECTL tmpRect;
-    PDC_ATTR pdcattr;
+    XFORMOBJ xo;
+    ULONG i, j, cjSize;
+    PPOINT ppt;
+    PULONG pcPoints;
+    RECT rect;
+    BOOL bResult;
 
-    if (dc == NULL)
-        return FALSE;
-    pdcattr = dc->pdcattr;
-
-    if (pdcattr->iMapMode == MM_TEXT) // Requires only a translation
+    /* Check if this is a scaling only matrix (off-diagonal elements are 0 */
+    if (pmx->flAccel & XFORM_SCALE)
     {
-        if (IntGdiCombineRgn(RgnDest, RgnSrc, 0, RGN_COPY) == ERROR)
+        /* Check if this is a translation only matrix */
+        if (pmx->flAccel & XFORM_UNITY)
+        {
+            /* Just offset the region */
+            return IntGdiOffsetRgn(prgn, (pmx->fxDx + 8) / 16, (pmx->fxDy + 8) / 16) != ERROR;
+        }
+        else
+        {
+            /* Initialize the xform object */
+            XFORMOBJ_vInit(&xo, pmx);
+
+            /* Scaling can move the rects out of the coordinate space, so
+             * we first need to check whether we can apply the transformation
+             * on the bounds rect without modifying the region */
+            if (!XFORMOBJ_bApplyXform(&xo, XF_LTOL, 2, &prgn->rdh.rcBound, &rect))
+            {
+                return FALSE;
+            }
+
+            /* Apply the xform to the rects in the region */
+            if (!XFORMOBJ_bApplyXform(&xo,
+                                      XF_LTOL,
+                                      prgn->rdh.nCount * 2,
+                                      prgn->Buffer,
+                                      prgn->Buffer))
+            {
+                /* This can not happen, since we already checked the bounds! */
+                NT_ASSERT(FALSE);
+            }
+
+            /* Reset bounds */
+            RECTL_vSetEmptyRect(&prgn->rdh.rcBound);
+
+            /* Loop all rects in the region */
+            for (i = 0; i < prgn->rdh.nCount; i++)
+            {
+                /* Make sure the rect is well-ordered after the xform */
+                RECTL_vMakeWellOrdered(&prgn->Buffer[i]);
+
+                /* Update bounds */
+                RECTL_bUnionRect(&prgn->rdh.rcBound,
+                                 &prgn->rdh.rcBound,
+                                 &prgn->Buffer[i]);
+            }
+
+            /* Loop all rects in the region */
+            for (i = 0; i < prgn->rdh.nCount - 1; i++)
+            {
+                for (j = i; i < prgn->rdh.nCount; i++)
+                {
+                    NT_ASSERT(prgn->Buffer[i].top < prgn->Buffer[i].bottom);
+                    NT_ASSERT(prgn->Buffer[j].top >= prgn->Buffer[i].top);
+                }
+            }
+
+            return TRUE;
+        }
+    }
+    else
+    {
+        /* Allocate a buffer for the polygons */
+        cjSize = prgn->rdh.nCount * (4 * sizeof(POINT) + sizeof(ULONG));
+        ppt = ExAllocatePoolWithTag(PagedPool, cjSize, GDITAG_REGION);
+        if (ppt == NULL)
+        {
             return FALSE;
-
-        IntGdiOffsetRgn(RgnDest,
-                        pdcattr->ptlViewportOrg.x - pdcattr->ptlWindowOrg.x,
-                        pdcattr->ptlViewportOrg.y - pdcattr->ptlWindowOrg.y);
-        return TRUE;
-    }
-
-    EMPTY_REGION(RgnDest);
-
-    pEndRect = RgnSrc->Buffer + RgnSrc->rdh.nCount;
-    for (pCurRect = RgnSrc->Buffer; pCurRect < pEndRect; pCurRect++)
-    {
-        tmpRect = *pCurRect;
-        tmpRect.left = XLPTODP(pdcattr, tmpRect.left);
-        tmpRect.top = YLPTODP(pdcattr, tmpRect.top);
-        tmpRect.right = XLPTODP(pdcattr, tmpRect.right);
-        tmpRect.bottom = YLPTODP(pdcattr, tmpRect.bottom);
-
-        if (tmpRect.left > tmpRect.right)
-        {
-            INT tmp = tmpRect.left;
-            tmpRect.left = tmpRect.right;
-            tmpRect.right = tmp;
         }
 
-        if (tmpRect.top > tmpRect.bottom)
+        /* Fill the buffer with the rects */
+        pcPoints = (PULONG)&ppt[4 * prgn->rdh.nCount];
+        for (i = 0; i < prgn->rdh.nCount; i++)
         {
-            INT tmp = tmpRect.top;
-            tmpRect.top = tmpRect.bottom;
-            tmpRect.bottom = tmp;
+            /* Make sure the rect is within the legal range */
+            pcPoints[i] = 4;
+            ppt[4 * i + 0].x = prgn->Buffer[i].left;
+            ppt[4 * i + 0].y = prgn->Buffer[i].top;
+            ppt[4 * i + 1].x = prgn->Buffer[i].right;
+            ppt[4 * i + 1].y = prgn->Buffer[i].top;
+            ppt[4 * i + 2].x = prgn->Buffer[i].right;
+            ppt[4 * i + 2].y = prgn->Buffer[i].bottom;
+            ppt[4 * i + 3].x = prgn->Buffer[i].left;
+            ppt[4 * i + 3].y = prgn->Buffer[i].bottom;
         }
 
-        REGION_UnionRectWithRgn(RgnDest, &tmpRect);
+        /* Initialize the xform object */
+        XFORMOBJ_vInit(&xo, pmx);
+
+        /* Apply the xform to the rects in the buffer */
+        if (!XFORMOBJ_bApplyXform(&xo,
+                                  XF_LTOL,
+                                  prgn->rdh.nCount * 2,
+                                  ppt,
+                                  ppt))
+        {
+            /* This means, there were coordinates that would go outside of
+               the coordinate space after the transformation */
+            ExFreePoolWithTag(ppt, GDITAG_REGION);
+            return FALSE;
+        }
+
+        /* Now use the polygons to create a polygon region */
+        bResult = REGION_SetPolyPolygonRgn(prgn,
+                                           ppt,
+                                           pcPoints,
+                                           prgn->rdh.nCount,
+                                           WINDING);
+
+        /* Free the polygon buffer */
+        ExFreePoolWithTag(ppt, GDITAG_REGION);
+
+        return bResult;
     }
 
-    return TRUE;
 }
+
 
 PREGION
 FASTCALL
@@ -2385,66 +2458,6 @@ IntGdiGetRgnBox(
     return ret;
 }
 
-BOOL
-FASTCALL
-IntGdiPaintRgn(
-    PDC dc,
-    PREGION Rgn)
-{
-    PREGION VisRgn;
-    XCLIPOBJ ClipRegion;
-    BOOL bRet = FALSE;
-    POINTL BrushOrigin;
-    SURFACE *psurf;
-    PDC_ATTR pdcattr;
-
-    if ((dc == NULL) || (Rgn == NULL))
-        return FALSE;
-
-    pdcattr = dc->pdcattr;
-
-    ASSERT(!(pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY)));
-
-    VisRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
-    if (VisRgn == NULL)
-    {
-        return FALSE;
-    }
-
-    // Transform region into device co-ords
-    if (!REGION_LPTODP(dc, VisRgn, Rgn) ||
-        IntGdiOffsetRgn(VisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
-    {
-        REGION_Delete(VisRgn);
-        return FALSE;
-    }
-
-    if (dc->prgnRao)
-        IntGdiCombineRgn(VisRgn, VisRgn, dc->prgnRao, RGN_AND);
-
-    IntEngInitClipObj(&ClipRegion);
-    IntEngUpdateClipRegion(&ClipRegion,
-                           VisRgn->rdh.nCount,
-                           VisRgn->Buffer,
-                           &VisRgn->rdh.rcBound );
-
-    BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
-    BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
-    psurf = dc->dclevel.pSurface;
-    /* FIXME: Handle psurf == NULL !!!! */
-
-    bRet = IntEngPaint(&psurf->SurfObj,
-                       &ClipRegion.ClipObj,
-                       &dc->eboFill.BrushObject,
-                       &BrushOrigin,
-                       0xFFFF); // FIXME: Don't know what to put here
-
-    REGION_Delete(VisRgn);
-    IntEngFreeClipResources(&ClipRegion);
-
-    // Fill the region
-    return bRet;
-}
 
 BOOL
 FASTCALL
@@ -3204,8 +3217,10 @@ REGION_SetPolyPolygonRgn(
                  * are in the Winding active edge table. */
                 if (pWETE == pAET)
                 {
-                    pts->x = pAET->bres.minor_axis,  pts->y = y;
-                    pts++, iPts++;
+                    pts->x = pAET->bres.minor_axis;
+                    pts->y = y;
+                    pts++;
+                    iPts++;
 
                     /* Send out the buffer */
                     if (iPts == NUMPTSTOBUFFER)
@@ -3245,7 +3260,7 @@ REGION_SetPolyPolygonRgn(
     REGION_FreeStorage(SLLBlock.next);
     REGION_PtsToRegion(numFullPtBlocks, iPts, &FirstPtBlock, prgn);
 
-    for (curPtBlock = FirstPtBlock.next; --numFullPtBlocks >= 0;)
+    for (curPtBlock = FirstPtBlock.next; numFullPtBlocks-- > 0;)
     {
         tmpPtBlock = curPtBlock->next;
         ExFreePoolWithTag(curPtBlock, TAG_REGION);

@@ -41,6 +41,12 @@ INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
 
 BOOL
 FASTCALL
+REGION_bXformRgn(
+    _Inout_ PREGION prgn,
+    _In_ PMATRIX pmx);
+
+BOOL
+FASTCALL
 REGION_SetPolyPolygonRgn(
     _Inout_ PREGION prgn,
     _In_ const POINT *ppt,

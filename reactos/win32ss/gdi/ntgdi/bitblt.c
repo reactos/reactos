@@ -1010,6 +1010,81 @@ NtGdiPolyPatBlt(
     return Ret;
 }
 
+static
+BOOL
+FASTCALL
+REGION_LPTODP(
+    _In_ PDC pdc,
+    _Inout_ PREGION prgnDest,
+    _In_ PREGION prgnSrc)
+{
+    if (IntGdiCombineRgn(prgnDest, prgnSrc, NULL, RGN_COPY) == ERROR)
+        return FALSE;
+
+    return REGION_bXformRgn(prgnDest, &pdc->dclevel.mxWorldToDevice);
+}
+
+BOOL
+FASTCALL
+IntGdiPaintRgn(
+    PDC dc,
+    PREGION Rgn)
+{
+    PREGION VisRgn;
+    XCLIPOBJ ClipRegion;
+    BOOL bRet = FALSE;
+    POINTL BrushOrigin;
+    SURFACE *psurf;
+    PDC_ATTR pdcattr;
+
+    if ((dc == NULL) || (Rgn == NULL))
+        return FALSE;
+
+    pdcattr = dc->pdcattr;
+
+    ASSERT(!(pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY)));
+
+    VisRgn = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (VisRgn == NULL)
+    {
+        return FALSE;
+    }
+
+    // Transform region into device co-ords
+    if (!REGION_LPTODP(dc, VisRgn, Rgn) ||
+        IntGdiOffsetRgn(VisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
+    {
+        REGION_Delete(VisRgn);
+        return FALSE;
+    }
+
+    if (dc->prgnRao)
+        IntGdiCombineRgn(VisRgn, VisRgn, dc->prgnRao, RGN_AND);
+
+    IntEngInitClipObj(&ClipRegion);
+    IntEngUpdateClipRegion(&ClipRegion,
+                           VisRgn->rdh.nCount,
+                           VisRgn->Buffer,
+                           &VisRgn->rdh.rcBound );
+
+    BrushOrigin.x = pdcattr->ptlBrushOrigin.x;
+    BrushOrigin.y = pdcattr->ptlBrushOrigin.y;
+    psurf = dc->dclevel.pSurface;
+    /* FIXME: Handle psurf == NULL !!!! */
+
+    bRet = IntEngPaint(&psurf->SurfObj,
+                       &ClipRegion.ClipObj,
+                       &dc->eboFill.BrushObject,
+                       &BrushOrigin,
+                       0xFFFF); // FIXME: Don't know what to put here
+
+    REGION_Delete(VisRgn);
+    IntEngFreeClipResources(&ClipRegion);
+
+    // Fill the region
+    return bRet;
+}
+
 BOOL
 APIENTRY
 NtGdiFillRgn(
