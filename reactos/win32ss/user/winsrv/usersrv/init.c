@@ -210,7 +210,11 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->NameTable = UserServerApiNameTable;
 #endif
     LoadedServerDll->SizeOfProcessData = 0;
+#if 0
     LoadedServerDll->ConnectCallback = UserClientConnect;
+#else
+    LoadedServerDll->ConnectCallback = NULL;
+#endif
     LoadedServerDll->DisconnectCallback = NULL;
     LoadedServerDll->HardErrorCallback = UserServerHardError;
     LoadedServerDll->ShutdownProcessCallback = UserClientShutdown;

@@ -240,7 +240,7 @@ ClientThreadSetup(VOID)
     // continue as normal.
     //
 
-    GetConnected();
+    // GetConnected();
 
     UNIMPLEMENTED;
     return TRUE;
@@ -320,6 +320,8 @@ DllMain(
         case DLL_PROCESS_ATTACH:
         {
 
+#if 0
+
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
 
@@ -365,6 +367,10 @@ DllMain(
                 ERR("Failed to connect to CSR (Status %lx)\n", Status);
                 return FALSE;
             }
+
+#else
+    gfServerProcess = FALSE;
+#endif
 
             User32Instance = hInstanceDll;
 
