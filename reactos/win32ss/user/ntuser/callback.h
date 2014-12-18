@@ -71,3 +71,4 @@ co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs);
 HANDLE FASTCALL co_IntCopyImage(HANDLE,UINT,INT,INT,UINT);
 
 BOOL FASTCALL co_IntSetWndIcons(VOID);
+VOID FASTCALL co_IntDeliverUserAPC(VOID);

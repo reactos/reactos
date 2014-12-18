@@ -1132,17 +1132,22 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
    /* We can't access the Message anymore since it could have already been deleted! */
 
-   if(Block)
+   if (Block)
    {
+      PVOID WaitObjects[2];
+
+      WaitObjects[0] = &CompletionEvent;       // Wait 0
+      WaitObjects[1] = ptirec->pEThread;       // Wait 1
+
       UserLeaveCo();
 
       /* Don't process messages sent to the thread */
-      WaitStatus = KeWaitForSingleObject(&CompletionEvent, UserRequest, UserMode,
-                                         FALSE, (uTimeout ? &Timeout : NULL));
+      WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
+                                            UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
 
       UserEnterCo();
 
-      if(WaitStatus == STATUS_TIMEOUT)
+      if (WaitStatus == STATUS_TIMEOUT || WaitStatus == STATUS_USER_APC)
       {
          /* Look up if the message has not yet dispatched, if so
             make sure it can't pass a result and it must not set the completion event anymore */
@@ -1182,7 +1187,27 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             Entry = Entry->Flink;
          }
 
-         TRACE("MsqSendMessage (blocked) timed out 1\n");
+         TRACE("MsqSendMessage (blocked) timed out 1 Status %p\n",WaitStatus);
+
+       }
+      // Receiving thread passed on and left us hanging with issues still pending.
+      if ( WaitStatus == STATUS_WAIT_1 )
+      {
+         ERR("Bk Receiving Thread woken up dead!\n");
+         Entry = pti->DispatchingMessagesHead.Flink;
+         while (Entry != &pti->DispatchingMessagesHead)
+         {
+            if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
+                  == Message)
+            {
+               Message->CompletionEvent = NULL;
+               Message->Result = NULL;
+               RemoveEntryList(&Message->DispatchingListEntry);
+               Message->DispatchingListEntry.Flink = NULL;
+               break;
+            }
+            Entry = Entry->Flink;
+         }
       }
       while (co_MsqDispatchOneSentMessage(pti))
          ;
@@ -1204,7 +1229,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
          UserEnterCo();
 
-         if(WaitStatus == STATUS_TIMEOUT)
+         if (WaitStatus == STATUS_TIMEOUT || WaitStatus == STATUS_USER_APC)
          {
             /* Look up if the message has not yet been dispatched, if so
                make sure it can't pass a result and it must not set the completion event anymore */
@@ -1244,13 +1269,14 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                Entry = Entry->Flink;
             }
 
-            TRACE("MsqSendMessage timed out 2\n");
+            TRACE("MsqSendMessage timed out 2 Status %p\n",WaitStatus);
+ 
             break;
          }
          // Receiving thread passed on and left us hanging with issues still pending.
          if ( WaitStatus == STATUS_WAIT_2 )
          {
-            ERR("Receiving Thread woken up dead!\n");
+            ERR("NB Receiving Thread woken up dead!\n");
             Entry = pti->DispatchingMessagesHead.Flink;
             while (Entry != &pti->DispatchingMessagesHead)
             {
@@ -1272,8 +1298,21 @@ co_MsqSendMessage(PTHREADINFO ptirec,
       while (NT_SUCCESS(WaitStatus) && WaitStatus == STATUS_WAIT_1);
    }
 
-   if(WaitStatus != STATUS_TIMEOUT)
-      if (uResult) *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+   if ( WaitStatus == STATUS_USER_APC )
+   {
+     // The current thread is dying!
+     TRACE("User APC\n");
+     co_IntDeliverUserAPC();
+     ERR("User APC Returned\n"); // Should not see this message.
+   }
+
+   if (WaitStatus != STATUS_TIMEOUT)
+   {
+      if (uResult)
+      {
+         *uResult = (STATUS_WAIT_0 == WaitStatus ? Result : -1);
+      }
+   }
 
    return WaitStatus;
 }
@@ -1972,6 +2011,11 @@ co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
                                 FALSE,
                                 NULL );
    UserEnterCo();
+   if ( ret == STATUS_USER_APC )
+   {
+      TRACE("MWFNW User APC\n");
+      co_IntDeliverUserAPC();
+   }
    return ret;
 }
 

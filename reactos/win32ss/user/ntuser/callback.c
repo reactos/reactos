@@ -1100,4 +1100,24 @@ co_IntSetWndIcons(VOID)
    return TRUE;
 }
 
+VOID FASTCALL
+co_IntDeliverUserAPC(VOID)
+{
+   NTSTATUS Status;
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_DELIVERUSERAPC,
+                               0,
+                               0,
+                               NULL,
+                               NULL);
+
+
+   UserEnterCo();
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Delivering User APC callback failed!\n");
+   }   
+}
 /* EOF */

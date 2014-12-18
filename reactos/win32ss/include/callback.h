@@ -13,7 +13,8 @@
 #define USER32_CALLBACK_GETCHARSETINFO        (9)
 #define USER32_CALLBACK_COPYIMAGE             (10)
 #define USER32_CALLBACK_SETWNDICONS           (11)
-#define USER32_CALLBACK_MAXIMUM               (11)
+#define USER32_CALLBACK_DELIVERUSERAPC        (12)
+#define USER32_CALLBACK_MAXIMUM               (12)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -138,4 +139,6 @@ NTSTATUS WINAPI
 User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32DeliverUserAPC(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */
