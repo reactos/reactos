@@ -329,6 +329,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Arbiters\ReservedResources","PCStandard",
 00,00,00,00,00,00,f0,ff,00,00,00,00,ff,ff,ff,ff,00,00,00,00
 
 HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","NtfsDisable8dot3NameCreation",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","NtfsMftZoneReservation",0x00010003,1
 HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win31FileSystem",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win95TruncatedExtensions",0x00010001,1
 
