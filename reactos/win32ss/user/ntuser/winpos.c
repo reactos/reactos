@@ -345,7 +345,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
       Fixes wine win.c:test_SetParent last ShowWindow test after popup dies.
       Check for previous active window to bring to top.
    */
-   if (Wnd) 
+   if (Wnd)
    {
       WndTo = Wnd->head.pti->MessageQueue->spwndActivePrev;
       if (can_activate_window( WndTo )) goto done;
@@ -1902,13 +1902,13 @@ co_WinPosSetWindowPos(
          /* No use in copying bits which are in the update region. */
          if (Window->hrgnUpdate != NULL)
          {
-            PREGION RgnUpdate = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
+            PREGION RgnUpdate = REGION_LockRgn(Window->hrgnUpdate);
             if (RgnUpdate)
             {
                 REGION_bOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
                 IntGdiCombineRgn(CopyRgn, CopyRgn, RgnUpdate, RGN_DIFF);
                 REGION_bOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
-                RGNOBJAPI_Unlock(RgnUpdate);
+                REGION_UnlockRgn(RgnUpdate);
             }
          }
 
@@ -1927,7 +1927,7 @@ co_WinPosSetWindowPos(
                   OldWindowRect.top != NewWindowRect.top)
          {
              HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-             PREGION DcRgnObj = RGNOBJAPI_Lock(DcRgn, NULL);
+             PREGION DcRgnObj = REGION_LockRgn(DcRgn);
 
           /*
            * Small trick here: there is no function to bitblt a region. So
@@ -1940,7 +1940,7 @@ co_WinPosSetWindowPos(
            */
             IntGdiCombineRgn(DcRgnObj, CopyRgn, NULL, RGN_COPY);
             REGION_bOffsetRgn(DcRgnObj, NewWindowRect.left, NewWindowRect.top);
-            RGNOBJAPI_Unlock(DcRgnObj);
+            REGION_UnlockRgn(DcRgnObj);
             Dc = UserGetDCEx( Window,
                               DcRgn,
                               DCX_WINDOW|DCX_CACHE|DCX_INTERSECTRGN|DCX_CLIPSIBLINGS|DCX_KEEPCLIPRGN);

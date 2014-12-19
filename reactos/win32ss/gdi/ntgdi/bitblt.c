@@ -1130,7 +1130,7 @@ NtGdiFillRgn(
     }
 
     /* Lock the region */
-    prgn = RGNOBJAPI_Lock(hrgn, NULL);
+    prgn = REGION_LockRgn(hrgn);
     if (prgn == NULL)
     {
         ERR("Failed to lock hrgn %p\n", hrgn);
@@ -1143,7 +1143,7 @@ NtGdiFillRgn(
     if (pbrFill == NULL)
     {
         ERR("Failed to lock hbrush %p\n", hbrush);
-        RGNOBJAPI_Unlock(prgn);
+        REGION_UnlockRgn(prgn);
         DC_UnlockDc(pdc);
         return FALSE;
     }
@@ -1157,7 +1157,7 @@ NtGdiFillRgn(
 
     /* Cleanup locks */
     BRUSH_ShareUnlockBrush(pbrFill);
-    RGNOBJAPI_Unlock(prgn);
+    REGION_UnlockRgn(prgn);
     DC_UnlockDc(pdc);
 
     return bResult;
@@ -1197,7 +1197,7 @@ NtGdiInvertRgn(
     ULONG i;
     PRECTL rc;
 
-    RgnData = RGNOBJAPI_Lock(hRgn, NULL);
+    RgnData = REGION_LockRgn(hRgn);
     if (RgnData == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -1210,13 +1210,13 @@ NtGdiInvertRgn(
 
         if (!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
         {
-            RGNOBJAPI_Unlock(RgnData);
+            REGION_UnlockRgn(RgnData);
             return FALSE;
         }
         rc++;
     }
 
-    RGNOBJAPI_Unlock(RgnData);
+    REGION_UnlockRgn(RgnData);
     return TRUE;
 }
 

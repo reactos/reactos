@@ -534,7 +534,7 @@ IntDumpRegion(HRGN hRgn)
 {
     PREGION Data;
 
-    Data = RGNOBJAPI_Lock(hRgn, NULL);
+    Data = REGION_LockRgn(hRgn);
     if (Data == NULL)
     {
         DbgPrint("IntDumpRegion called with invalid region!\n");
@@ -549,7 +549,7 @@ IntDumpRegion(HRGN hRgn)
              Data->rdh.rcBound.bottom,
              Data->rdh.iType);
 
-    RGNOBJAPI_Unlock(Data);
+    REGION_UnlockRgn(Data);
 }
 #endif /* Not NDEBUG */
 
@@ -1768,7 +1768,7 @@ REGION_XorRegion(
     trb = REGION_AllocRgnWithHandle(srb->rdh.nCount + 1);
     if (trb == NULL)
     {
-        RGNOBJAPI_Unlock(tra);
+        REGION_UnlockRgn(tra);
         GreDeleteObject(htra);
         return;
     }
@@ -1777,8 +1777,8 @@ REGION_XorRegion(
     REGION_SubtractRegion(tra, sra, srb);
     REGION_SubtractRegion(trb, srb, sra);
     REGION_UnionRegion(dr, tra, trb);
-    RGNOBJAPI_Unlock(tra);
-    RGNOBJAPI_Unlock(trb);
+    REGION_UnlockRgn(tra);
+    REGION_UnlockRgn(trb);
 
     GreDeleteObject(htra);
     GreDeleteObject(htrb);
@@ -2016,7 +2016,7 @@ GreCreateFrameRgn(
     }
 
     /* Lock the source region */
-    prgnSrc = RGNOBJAPI_Lock(hrgn, NULL);
+    prgnSrc = REGION_LockRgn(hrgn);
     if (prgnSrc == NULL)
     {
         REGION_Delete(prgnFrame);
@@ -2026,7 +2026,7 @@ GreCreateFrameRgn(
     if (REGION_bMakeFrameRegion(prgnFrame, prgnSrc, cx, cy))
     {
         hrgnFrame = prgnFrame->BaseObject.hHmgr;
-        RGNOBJAPI_Unlock(prgnFrame);
+        REGION_UnlockRgn(prgnFrame);
     }
     else
     {
@@ -2034,7 +2034,7 @@ GreCreateFrameRgn(
         hrgnFrame = NULL;
     }
 
-    RGNOBJAPI_Unlock(prgnSrc);
+    REGION_UnlockRgn(prgnSrc);
     return hrgnFrame;
 }
 
@@ -2319,28 +2319,23 @@ REGION_vSyncRegion(
 
 PREGION
 FASTCALL
-RGNOBJAPI_Lock(
-    HRGN hRgn,
-    PRGN_ATTR *ppRgn_Attr)
+REGION_LockRgn(
+    _In_ HRGN hrgn)
 {
-    PREGION pRgn;
+    PREGION prgn;
 
-    pRgn = REGION_LockRgn(hRgn);
-    if (pRgn == NULL)
+    prgn = GDIOBJ_LockObject(hrgn, GDIObjType_RGN_TYPE);
+    if (prgn == NULL)
         return NULL;
 
-    REGION_vSyncRegion(pRgn);
-
-    if (ppRgn_Attr)
-        *ppRgn_Attr = pRgn->prgnattr;
-
-    return pRgn;
+    REGION_vSyncRegion(prgn);
+    return prgn;
 }
 
 VOID
 FASTCALL
-RGNOBJAPI_Unlock(
-    PREGION prgn)
+REGION_UnlockRgn(
+    _In_ PREGION prgn)
 {
     PRGN_ATTR prgnattr;
 
@@ -2360,7 +2355,7 @@ RGNOBJAPI_Unlock(
         prgnattr->AttrFlags |= ATTR_RGN_VALID;
     }
 
-    REGION_UnlockRgn(prgn);
+    GDIOBJ_vUnlockObject(&prgn->BaseObject);
 }
 
 /*
@@ -2431,12 +2426,13 @@ IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
     PRGN_ATTR prgnattr;
     PPROCESSINFO ppi;
 
-    prgn = RGNOBJAPI_Lock(hRgn, &prgnattr);
+    prgn = REGION_LockRgn(hRgn);
     if (prgn == NULL)
     {
         return FALSE;
     }
 
+    prgnattr = prgn->prgnattr;
     if (prgnattr != &prgn->rgnattr)
     {
         GDIOBJ_vSetObjectAttr(&prgn->BaseObject, NULL);
@@ -2445,7 +2441,7 @@ IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
         GdiPoolFree(ppi->pPoolRgnAttr, prgnattr);
     }
 
-    RGNOBJAPI_Unlock(prgn);
+    REGION_UnlockRgn(prgn);
 
     return GreSetObjectOwner(hRgn, OwnerMask);
 }
@@ -2532,14 +2528,14 @@ IntGdiGetRgnBox(
     PREGION Rgn;
     DWORD ret;
 
-    Rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    Rgn = REGION_LockRgn(hRgn);
     if (Rgn == NULL)
     {
         return ERROR;
     }
 
     ret = REGION_GetRgnBox(Rgn, pRect);
-    RGNOBJAPI_Unlock(Rgn);
+    REGION_UnlockRgn(Rgn);
 
     return ret;
 }
@@ -3434,7 +3430,7 @@ GreCreatePolyPolygonRgn(
     {
         /* Success, get the handle and unlock the region */
         hrgn = prgn->BaseObject.hHmgr;
-        RGNOBJAPI_Unlock(prgn);
+        REGION_UnlockRgn(prgn);
     }
     else
     {
@@ -3455,14 +3451,14 @@ IntRectInRegion(
     PREGION Rgn;
     BOOL Ret;
 
-    Rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    Rgn = REGION_LockRgn(hRgn);
     if (Rgn == NULL)
     {
         return ERROR;
     }
 
     Ret = REGION_RectInRegion(Rgn, rc);
-    RGNOBJAPI_Unlock(Rgn);
+    REGION_UnlockRgn(Rgn);
     return Ret;
 }
 
@@ -3493,7 +3489,7 @@ NtGdiCombineRgn(
         (hrgnSrc1 == NULL) ||
         ((iMode != RGN_COPY) && (hrgnSrc2 == NULL)))
     {
-        DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
+        DPRINT1("NtGdiCombineRgn invalid parameters: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
         return ERROR;
     }
@@ -3504,7 +3500,7 @@ NtGdiCombineRgn(
     ahrgn[2] = iMode != RGN_COPY ? hrgnSrc2 : NULL;
     if (!GDIOBJ_bLockMultipleObjects(3, (HGDIOBJ*)ahrgn, (PVOID*)aprgn, GDIObjType_RGN_TYPE))
     {
-        DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
+        DPRINT1("NtGdiCombineRgn failed to lock regions: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
         return ERROR;
     }
@@ -3520,10 +3516,10 @@ NtGdiCombineRgn(
     iResult = IntGdiCombineRgn(aprgn[0], aprgn[1], aprgn[2], iMode);
 
     /* Unlock and return */
-    RGNOBJAPI_Unlock(aprgn[0]);
-    RGNOBJAPI_Unlock(aprgn[1]);
+    REGION_UnlockRgn(aprgn[0]);
+    REGION_UnlockRgn(aprgn[1]);
     if (aprgn[2] != NULL)
-        RGNOBJAPI_Unlock(aprgn[2]);
+        REGION_UnlockRgn(aprgn[2]);
 
     return iResult;
 }
@@ -3565,7 +3561,7 @@ NtGdiCreateRectRgn(
     hRgn = pRgn->BaseObject.hHmgr;
 
     REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
-    RGNOBJAPI_Unlock(pRgn);
+    REGION_UnlockRgn(pRgn);
 
     DPRINT("Returning %p.\n", hRgn);
 
@@ -3692,7 +3688,7 @@ NtGdiCreateRoundRectRgn(
         REGION_UnionRectWithRgn(obj, &rect);
     }
 
-    RGNOBJAPI_Unlock(obj);
+    REGION_UnlockRgn(obj);
     return hrgn;
 }
 
@@ -3702,23 +3698,46 @@ NtGdiEqualRgn(
     HRGN  hSrcRgn1,
     HRGN  hSrcRgn2)
 {
+    HRGN ahrgn[2];
+    PREGION aprgn[2];
     PREGION rgn1, rgn2;
     PRECTL tRect1, tRect2;
     ULONG i;
     BOOL bRet = FALSE;
 
-    /// FIXME: need to use GDIOBJ_LockMultipleObjects
-
-    rgn1 = RGNOBJAPI_Lock(hSrcRgn1, NULL);
-    if (rgn1 == NULL)
-        return ERROR;
-
-    rgn2 = RGNOBJAPI_Lock(hSrcRgn2, NULL);
-    if (rgn2 == NULL)
+    /* Check if we got 2 regions */
+    if ((hSrcRgn1 == NULL) || (hSrcRgn2 == NULL))
     {
-        RGNOBJAPI_Unlock(rgn1);
-        return ERROR;
+        return FALSE;
     }
+
+    /* Check if these are the same regions */
+    if (hSrcRgn1 == hSrcRgn2)
+    {
+        /* Make sure this region is valid */
+        if ((GDI_HANDLE_GET_TYPE(hSrcRgn1) == GDILoObjType_LO_REGION_TYPE) &&
+            GreIsHandleValid(hSrcRgn1))
+        {
+            return TRUE;
+        }
+        return FALSE;
+    }
+
+    /* Lock both regions */
+    ahrgn[0] = hSrcRgn1;
+    ahrgn[1] = hSrcRgn2;
+    if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahrgn, (PVOID*)aprgn, GDIObjType_RGN_TYPE))
+    {
+        DPRINT1("NtGdiEqualRgn failed to lock regions: %p, %p\n",
+                hSrcRgn1, hSrcRgn2);
+        return FALSE;
+    }
+
+    REGION_vSyncRegion(aprgn[0]);
+    REGION_vSyncRegion(aprgn[1]);
+
+    rgn1 = aprgn[0];
+    rgn2 = aprgn[1];
 
     if (rgn1->rdh.nCount != rgn2->rdh.nCount)
         goto exit;
@@ -3753,8 +3772,8 @@ NtGdiEqualRgn(
     bRet = TRUE;
 
 exit:
-    RGNOBJAPI_Unlock(rgn1);
-    RGNOBJAPI_Unlock(rgn2);
+    REGION_UnlockRgn(rgn1);
+    REGION_UnlockRgn(rgn2);
     return bRet;
 }
 
@@ -3854,12 +3873,12 @@ NtGdiExtCreateRegion(
     if (!NT_SUCCESS(Status))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        RGNOBJAPI_Unlock(Region);
+        REGION_UnlockRgn(Region);
         GreDeleteObject(hRgn);
         return NULL;
     }
 
-    RGNOBJAPI_Unlock(Region);
+    REGION_UnlockRgn(Region);
 
     return hRgn;
 }
@@ -3875,14 +3894,14 @@ NtGdiGetRgnBox(
     DWORD ret;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    Rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    Rgn = REGION_LockRgn(hRgn);
     if (Rgn == NULL)
     {
         return ERROR;
     }
 
     ret = REGION_GetRgnBox(Rgn, &SafeRect);
-    RGNOBJAPI_Unlock(Rgn);
+    REGION_UnlockRgn(Rgn);
     if (ret == ERROR)
     {
         return ret;
@@ -3918,7 +3937,7 @@ NtGdiOffsetRgn(
 
     DPRINT("NtGdiOffsetRgn: hRgn %p Xoffs %d Yoffs %d rgn %p\n", hRgn, XOffset, YOffset, rgn );
 
-    rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    rgn = REGION_LockRgn(hRgn);
     if (rgn == NULL)
     {
         DPRINT("NtGdiOffsetRgn: hRgn error\n");
@@ -3934,7 +3953,7 @@ NtGdiOffsetRgn(
         ret = REGION_Complexity(rgn);
     }
 
-    RGNOBJAPI_Unlock(rgn);
+    REGION_UnlockRgn(rgn);
     return ret;
 }
 
@@ -3948,13 +3967,13 @@ NtGdiPtInRegion(
     PREGION prgn;
     BOOL ret;
 
-    prgn = RGNOBJAPI_Lock(hRgn, NULL);
+    prgn = REGION_LockRgn(hRgn);
     if (prgn == NULL)
         return FALSE;
 
     ret = REGION_PtInRegion(prgn, X, Y);
 
-    RGNOBJAPI_Unlock(prgn);
+    REGION_UnlockRgn(prgn);
     return ret;
 }
 
@@ -3999,7 +4018,7 @@ NtGdiSetRectRgn(
 {
     PREGION rgn;
 
-    rgn = RGNOBJAPI_Lock(hRgn, NULL);
+    rgn = REGION_LockRgn(hRgn);
     if (rgn == NULL)
     {
         return 0; // Per documentation
@@ -4007,7 +4026,7 @@ NtGdiSetRectRgn(
 
     REGION_SetRectRgn(rgn, LeftRect, TopRect, RightRect, BottomRect);
 
-    RGNOBJAPI_Unlock(rgn);
+    REGION_UnlockRgn(rgn);
     return TRUE;
 }
 
@@ -4033,7 +4052,7 @@ NtGdiGetRegionData(
     PREGION prgn;
 
     /* Lock the region */
-    prgn = RGNOBJAPI_Lock(hrgn, NULL);
+    prgn = REGION_LockRgn(hrgn);
     if (prgn == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -4074,7 +4093,7 @@ NtGdiGetRegionData(
     }
 
     /* Unlock the region and return the size */
-    RGNOBJAPI_Unlock(prgn);
+    REGION_UnlockRgn(prgn);
     return cjSize;
 }
 

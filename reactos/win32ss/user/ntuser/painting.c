@@ -314,15 +314,15 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    {
       if (Wnd->hrgnUpdate)
       {
-          PREGION RgnUpdate = RGNOBJAPI_Lock(Wnd->hrgnUpdate, NULL);
+          PREGION RgnUpdate = REGION_LockRgn(Wnd->hrgnUpdate);
           if (RgnUpdate)
           {
               if (!IntValidateParent(Wnd, RgnUpdate, Recurse))
               {
-                  RGNOBJAPI_Unlock(RgnUpdate);
+                  REGION_UnlockRgn(RgnUpdate);
                   return;
               }
-              RGNOBJAPI_Unlock(RgnUpdate);
+              REGION_UnlockRgn(RgnUpdate);
           }
       }
 
@@ -457,7 +457,7 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
    }
    else
    {
-       PREGION RgnClip = RGNOBJAPI_Lock(Wnd->hrgnClip, NULL);
+       PREGION RgnClip = REGION_LockRgn(Wnd->hrgnClip);
        if (RgnClip)
        {
            REGION_bOffsetRgn(Rgn,
@@ -467,7 +467,7 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
            REGION_bOffsetRgn(Rgn,
                              Wnd->rcWindow.left,
                              Wnd->rcWindow.top);
-           RGNOBJAPI_Unlock(RgnClip);
+           REGION_UnlockRgn(RgnClip);
        }
    }
 
@@ -514,11 +514,11 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
             IntGdiSetRegionOwner(Wnd->hrgnUpdate, GDI_OBJ_HMGR_PUBLIC);
          }
 
-         RgnUpdate = RGNOBJAPI_Lock(Wnd->hrgnUpdate, NULL);
+         RgnUpdate = REGION_LockRgn(Wnd->hrgnUpdate);
          if (RgnUpdate)
          {
              RgnType = IntGdiCombineRgn(RgnUpdate, RgnUpdate, Rgn, RGN_OR);
-             RGNOBJAPI_Unlock(RgnUpdate);
+             REGION_UnlockRgn(RgnUpdate);
              if (RgnType == NULLREGION)
              {
                 IntGdiSetRegionOwner(Wnd->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
@@ -547,12 +547,12 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
 
          if (Wnd->hrgnUpdate != NULL)
          {
-             PREGION RgnUpdate = RGNOBJAPI_Lock(Wnd->hrgnUpdate, NULL);
+             PREGION RgnUpdate = REGION_LockRgn(Wnd->hrgnUpdate);
 
              if (RgnUpdate)
              {
                  RgnType = IntGdiCombineRgn(RgnUpdate, RgnUpdate, Rgn, RGN_DIFF);
-                 RGNOBJAPI_Unlock(RgnUpdate);
+                 REGION_UnlockRgn(RgnUpdate);
 
                  if(RgnType == NULLREGION)
                  {
@@ -1221,7 +1221,7 @@ co_UserGetUpdateRgn(PWND Window, PREGION Rgn, BOOL bErase)
         return NULLREGION;
     }
 
-    UpdateRgn = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
+    UpdateRgn = REGION_LockRgn(Window->hrgnUpdate);
     if (!UpdateRgn)
        return ERROR;
 
@@ -1230,7 +1230,7 @@ co_UserGetUpdateRgn(PWND Window, PREGION Rgn, BOOL bErase)
     REGION_SetRectRgn(Rgn, Rect.left, Rect.top, Rect.right, Rect.bottom);
     RegionType = IntGdiCombineRgn(Rgn, Rgn, UpdateRgn, RGN_AND);
     REGION_bOffsetRgn(Rgn, -Window->rcClient.left, -Window->rcClient.top);
-    RGNOBJAPI_Unlock(UpdateRgn);
+    REGION_UnlockRgn(UpdateRgn);
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
    {
@@ -1278,14 +1278,14 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 CLEANUP:
    if (Rgn && (_ret_ != ERROR))
    {
-       PREGION TheRgn = RGNOBJAPI_Lock(hRgn, NULL);
+       PREGION TheRgn = REGION_LockRgn(hRgn);
        if (!TheRgn)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            _ret_ = ERROR;
        }
        IntGdiCombineRgn(TheRgn, Rgn, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(TheRgn);
+       REGION_UnlockRgn(TheRgn);
    }
 
    if (Rgn)
@@ -1336,10 +1336,10 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       }
       else
       {
-         RgnData = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
+         RgnData = REGION_LockRgn(Window->hrgnUpdate);
          ASSERT(RgnData != NULL);
          RegionType = REGION_GetRgnBox(RgnData, &Rect);
-         RGNOBJAPI_Unlock(RgnData);
+         REGION_UnlockRgn(RgnData);
 
          if (RegionType != ERROR && RegionType != NULLREGION)
             RECTL_bIntersectRect(&Rect, &Rect, &Window->rcClient);
@@ -1453,14 +1453,14 @@ NtUserRedrawWindow(
            RETURN(FALSE);
        }
 
-       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       RgnTemp = REGION_LockRgn(hrgnUpdate);
        if (!RgnTemp)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            RETURN(FALSE);
        }
        IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(RgnTemp);
+       REGION_UnlockRgn(RgnTemp);
    }
 
    UserRefObjectCo(Wnd, &Ref);
@@ -1549,7 +1549,7 @@ UserScrollDC(
        if (hrgnUpdate)
        {
            NT_ASSERT(RgnUpdate == NULL);
-           RgnUpdate = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+           RgnUpdate = REGION_LockRgn(hrgnUpdate);
            if (!RgnUpdate)
            {
                DC_UnlockDc(pDC);
@@ -1592,7 +1592,7 @@ UserScrollDC(
 
       if (hrgnUpdate)
       {
-         RGNOBJAPI_Unlock(RgnUpdate);
+         REGION_UnlockRgn(RgnUpdate);
       }
       else if (!RgnUpdate)
       {
@@ -1786,14 +1786,14 @@ NtUserScrollWindowEx(
 
    if (hrgnUpdate)
    {
-       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       RgnTemp = REGION_LockRgn(hrgnUpdate);
        if (!RgnTemp)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            RETURN(ERROR);
        }
        IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(RgnTemp);
+       REGION_UnlockRgn(RgnTemp);
    }
 
    /* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
@@ -1941,14 +1941,14 @@ CLEANUP:
    if (hrgnUpdate && (_ret_ != ERROR))
    {
        /* Give everything back to the caller */
-       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       RgnTemp = REGION_LockRgn(hrgnUpdate);
        /* The handle should still be valid */
        ASSERT(RgnTemp);
        if (RgnWinupd)
            IntGdiCombineRgn(RgnTemp, RgnUpdate, RgnWinupd, RGN_OR);
        else
            IntGdiCombineRgn(RgnTemp, RgnUpdate, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(RgnTemp);
+       REGION_UnlockRgn(RgnTemp);
    }
 
    if (RgnWinupd)

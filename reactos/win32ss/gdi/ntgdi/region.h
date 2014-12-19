@@ -39,6 +39,16 @@ VOID NTAPI REGION_vCleanup(PVOID ObjectBody);
 VOID FASTCALL REGION_Delete(PREGION);
 INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
 
+PREGION
+FASTCALL
+REGION_LockRgn(
+    _In_ HRGN hrgn);
+
+VOID
+FASTCALL
+REGION_UnlockRgn(
+    _In_ PREGION prgn);
+
 BOOL
 FASTCALL
 REGION_bXformRgn(
@@ -73,8 +83,6 @@ BOOL FASTCALL IntRectInRegion(HRGN,LPRECTL);
 
 INT FASTCALL IntGdiCombineRgn(PREGION, PREGION, PREGION, INT);
 INT FASTCALL REGION_Complexity(PREGION);
-PREGION FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
-VOID FASTCALL RGNOBJAPI_Unlock(PREGION);
 PREGION FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
 BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
 
@@ -91,20 +99,6 @@ GreCreateFrameRgn(
 PREGION
 FASTCALL
 IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
-
-FORCEINLINE
-PREGION
-REGION_LockRgn(HRGN hrgn)
-{
-    return GDIOBJ_LockObject(hrgn, GDIObjType_RGN_TYPE);
-}
-
-FORCEINLINE
-VOID
-REGION_UnlockRgn(PREGION prgn)
-{
-    GDIOBJ_vUnlockObject(&prgn->BaseObject);
-}
 
 // FIXME: move this
 BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );

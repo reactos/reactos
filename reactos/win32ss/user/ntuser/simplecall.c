@@ -169,8 +169,8 @@ NtUserCallOneParam(
              if (count == 0) count = 8;
 
              psmwp = (PSMWP) UserCreateObject( gHandleTable,
-                                               NULL, 
-                                               NULL, 
+                                               NULL,
+                                               NULL,
                                               (PHANDLE)&hDwp,
                                                TYPE_SETWINDOWPOS,
                                                sizeof(SMWP));
@@ -780,11 +780,11 @@ NtUserCallHwndParamLock(
    {
       case TWOPARAM_ROUTINE_VALIDATERGN:
       {
-          PREGION Rgn = RGNOBJAPI_Lock((HRGN)Param, NULL);
+          PREGION Rgn = REGION_LockRgn((HRGN)Param);
           if (Rgn)
           {
               Ret = (DWORD)co_UserRedrawWindow( Window, NULL, Rgn, RDW_VALIDATE);
-              RGNOBJAPI_Unlock(Rgn);
+              REGION_UnlockRgn(Rgn);
           }
           break;
       }

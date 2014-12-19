@@ -78,13 +78,13 @@ VIS_ComputeVisibleRegion(
                /* Combine it with the window region if available */
                if (CurrentSibling->hrgnClip && !(CurrentSibling->style & WS_MINIMIZE))
                {
-                  PREGION SiblingClipRgn = RGNOBJAPI_Lock(CurrentSibling->hrgnClip, NULL);
+                  PREGION SiblingClipRgn = REGION_LockRgn(CurrentSibling->hrgnClip);
                   if (SiblingClipRgn)
                   {
                       REGION_bOffsetRgn(ClipRgn, -CurrentSibling->rcWindow.left, -CurrentSibling->rcWindow.top);
                       IntGdiCombineRgn(ClipRgn, ClipRgn, SiblingClipRgn, RGN_AND);
                       REGION_bOffsetRgn(ClipRgn, CurrentSibling->rcWindow.left, CurrentSibling->rcWindow.top);
-                      RGNOBJAPI_Unlock(SiblingClipRgn);
+                      REGION_UnlockRgn(SiblingClipRgn);
                   }
                }
                IntGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
@@ -110,13 +110,13 @@ VIS_ComputeVisibleRegion(
             /* Combine it with the window region if available */
             if (CurrentWindow->hrgnClip && !(CurrentWindow->style & WS_MINIMIZE))
             {
-               PREGION CurrentRgnClip = RGNOBJAPI_Lock(CurrentWindow->hrgnClip, NULL);
+               PREGION CurrentRgnClip = REGION_LockRgn(CurrentWindow->hrgnClip);
                if (CurrentRgnClip)
                {
                    REGION_bOffsetRgn(ClipRgn, -CurrentWindow->rcWindow.left, -CurrentWindow->rcWindow.top);
                    IntGdiCombineRgn(ClipRgn, ClipRgn, CurrentRgnClip, RGN_AND);
                    REGION_bOffsetRgn(ClipRgn, CurrentWindow->rcWindow.left, CurrentWindow->rcWindow.top);
-                   RGNOBJAPI_Unlock(CurrentRgnClip);
+                   REGION_UnlockRgn(CurrentRgnClip);
                }
             }
             IntGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
@@ -128,13 +128,13 @@ VIS_ComputeVisibleRegion(
 
    if (Wnd->hrgnClip && !(Wnd->style & WS_MINIMIZE))
    {
-      PREGION WndRgnClip = RGNOBJAPI_Lock(Wnd->hrgnClip, NULL);
+      PREGION WndRgnClip = REGION_LockRgn(Wnd->hrgnClip);
       if (WndRgnClip)
       {
           REGION_bOffsetRgn(VisRgn, -Wnd->rcWindow.left, -Wnd->rcWindow.top);
           IntGdiCombineRgn(VisRgn, VisRgn, WndRgnClip, RGN_AND);
           REGION_bOffsetRgn(VisRgn, Wnd->rcWindow.left, Wnd->rcWindow.top);
-          RGNOBJAPI_Unlock(WndRgnClip);
+          REGION_UnlockRgn(WndRgnClip);
       }
    }
 

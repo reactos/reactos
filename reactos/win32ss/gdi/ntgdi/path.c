@@ -2723,7 +2723,7 @@ NtGdiPathToRegion(HDC  hDC)
         if (PATH_PathToRegion(pPath, pdcattr->jFillMode, Rgn))
         {
             PATH_EmptyPath(pPath);
-            RGNOBJAPI_Unlock(Rgn);
+            REGION_UnlockRgn(Rgn);
         }
         else
         {
