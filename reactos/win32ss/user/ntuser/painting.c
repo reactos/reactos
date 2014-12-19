@@ -1490,6 +1490,7 @@ UserScrollDC(
    INT dy,
    const RECTL *prcScroll,
    const RECTL *prcClip,
+   HRGN hrgnUpdate,
    PREGION RgnUpdate,
    RECTL *prcUpdate)
 {
@@ -1535,15 +1536,26 @@ UserScrollDC(
 
    /* Calculate the region that was invalidated by moving or
       could not be copied, because it was not visible */
-   if (RgnUpdate || prcUpdate)
+   if (RgnUpdate || hrgnUpdate || prcUpdate)
    {
       PREGION RgnOwn, RgnTmp;
 
       pDC = DC_LockDc(hDC);
       if (!pDC)
       {
-         return FALSE;
+         return ERROR;
       }
+
+       if (hrgnUpdate)
+       {
+           NT_ASSERT(RgnUpdate == NULL);
+           RgnUpdate = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+           if (!RgnUpdate)
+           {
+               DC_UnlockDc(pDC);
+               return ERROR;
+           }
+       }
 
       /* Begin with the shifted and then clipped scroll rect */
       rcDst = rcScroll;
@@ -1578,7 +1590,11 @@ UserScrollDC(
          REGION_GetRgnBox(RgnOwn, prcUpdate);
       }
 
-      if (!RgnUpdate)
+      if (hrgnUpdate)
+      {
+         RGNOBJAPI_Unlock(RgnUpdate);
+      }
+      else if (!RgnUpdate)
       {
          REGION_Delete(RgnOwn);
       }
@@ -1609,7 +1625,6 @@ NtUserScrollDC(
    RECTL rcScroll, rcClip, rcUpdate;
    NTSTATUS Status = STATUS_SUCCESS;
    DWORD Result;
-   PREGION RgnUpdate = NULL;
 
    TRACE("Enter NtUserScrollDC\n");
    UserEnterExclusive();
@@ -1642,19 +1657,13 @@ NtUserScrollDC(
       RETURN(FALSE);
    }
 
-   if (hrgnUpdate)
-   {
-       RgnUpdate = RGNOBJAPI_Lock(hrgnUpdate, NULL);
-       if (!RgnUpdate)
-           RETURN(FALSE);
-   }
-
    Result = UserScrollDC( hDC,
                           dx,
                           dy,
                           prcUnsafeScroll? &rcScroll : 0,
                           prcUnsafeClip? &rcClip : 0,
-                          RgnUpdate,
+                          hrgnUpdate,
+                          NULL,
                           prcUnsafeUpdate? &rcUpdate : NULL);
    if(Result == ERROR)
    {
@@ -1684,8 +1693,6 @@ NtUserScrollDC(
    RETURN(TRUE);
 
 CLEANUP:
-   if (RgnUpdate)
-       RGNOBJAPI_Unlock(RgnUpdate);
    TRACE("Leave NtUserScrollDC, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1824,6 +1831,7 @@ NtUserScrollWindowEx(
                           dy,
                           &rcScroll,
                           &rcClip,
+                          NULL,
                           RgnUpdate,
                           prcUnsafeUpdate? &rcUpdate : NULL);
 
