@@ -40,10 +40,10 @@
 40 stdcall EnableThemeDialogTexture(ptr long)
 41 stdcall EnableTheming(long)
 42 stdcall GetCurrentThemeName(wstr long wstr long wstr long)
-43 stub -noname ClassicGetSystemMetrics
-44 stub -noname ClassicSystemParametersInfoA
-45 stub -noname ClassicSystemParametersInfoW
-46 stub -noname ClassicAdjustWindowRectEx
+43 stdcall -noname ClassicGetSystemMetrics(long)
+44 stdcall -noname ClassicSystemParametersInfoA(long long ptr long)
+45 stdcall -noname ClassicSystemParametersInfoW(long long ptr long)
+46 stdcall -noname ClassicAdjustWindowRectEx(ptr long long long)
 47 stdcall DrawThemeBackgroundEx(ptr ptr long long ptr ptr)
 48 stub -noname GetThemeParseErrorInfo
 49 stdcall GetThemeAppProperties()
