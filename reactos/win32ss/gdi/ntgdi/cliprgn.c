@@ -350,41 +350,59 @@ NtGdiIntersectClipRect(
     return iComplexity;
 }
 
-int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,
-                       int  XOffset,
-                       int  YOffset)
+INT
+APIENTRY
+NtGdiOffsetClipRgn(
+    _In_ HDC hdc,
+    _In_ INT xOffset,
+    _In_ INT yOffset)
 {
-    INT Result;
-    DC *dc;
+    INT iComplexity;
+    PDC pdc;
+    POINTL apt[2];
 
-    if(!(dc = DC_LockDc(hDC)))
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 
-    if(dc->dclevel.prgnClip != NULL)
+    /* Check if we have a clip region */
+    if (pdc->dclevel.prgnClip != NULL)
     {
-        if (!REGION_bOffsetRgn(dc->dclevel.prgnClip,
-                               XOffset,
-                               YOffset))
+        /* Convert coordinates into device space. Note that we need to convert
+           2 coordinates to account for rotation / shear / offset */
+        apt[0].x = 0;
+        apt[0].y = 0;
+        apt[1].x = xOffset;
+        apt[1].y = yOffset;
+        IntLPtoDP(pdc, &apt, 2);
+
+        /* Offset the clip region */
+        if (!REGION_bOffsetRgn(pdc->dclevel.prgnClip,
+                               apt[1].x - apt[0].x,
+                               apt[1].y - apt[0].y))
         {
-            Result = ERROR;
+            iComplexity = ERROR;
         }
         else
         {
-            Result = REGION_Complexity(dc->dclevel.prgnClip);
+            iComplexity = REGION_Complexity(pdc->dclevel.prgnClip);
         }
 
-        dc->fs |= DC_FLAG_DIRTY_RAO;
+        /* Mark the RAO region as dirty */
+        pdc->fs |= DC_FLAG_DIRTY_RAO;
     }
     else
     {
-        Result = NULLREGION;
+        /* NULL means no clipping, i.e. the "whole" region */
+        iComplexity = SIMPLEREGION;
     }
 
-    DC_UnlockDc(dc);
-    return Result;
+    /* Unlock the DC and return the complexity */
+    DC_UnlockDc(pdc);
+    return iComplexity;
 }
 
 BOOL APIENTRY NtGdiPtVisible(HDC  hDC,
@@ -472,6 +490,7 @@ IntGdiSetMetaRgn(PDC pDC)
     {
         if ( pDC->dclevel.prgnClip )
         {
+            // preferably REGION_IntersectRegion
             Ret = IntGdiCombineRgn(pDC->dclevel.prgnMeta, pDC->dclevel.prgnMeta, pDC->dclevel.prgnClip, RGN_AND);
             if (Ret != ERROR)
             {
