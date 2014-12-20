@@ -172,7 +172,7 @@ BEGIN
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&Finalizar processo", IDC_ENDPROCESS, 171, 189, 69, 14
     CONTROL "&Mostrar processos de todos os usuários", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 136, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 140, 10
 END
 
 /* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
@@ -295,18 +295,18 @@ BEGIN
     CONTROL "&Uso de CPU", IDC_CPUUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 50, 53, 10
     CONTROL "&Tempo de CPU", IDC_CPUTIME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 61, 61, 10
     CONTROL "U&so de memória", IDC_MEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 72, 63, 10
-    CONTROL "Inter&valo de uso de memória", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 102, 10
+    CONTROL "Inter&valo de uso de memória", IDC_MEMORYUSAGEDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 83, 110, 10
     CONTROL "&Pico do uso de memória", IDC_PEAKMEMORYUSAGE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 94, 89, 10
     CONTROL "&Falhas de página", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 68, 10
     CONTROL "&Objetos USER", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
     CONTROL "Leituras de E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 61, 10
     CONTROL "Bytes de leitura de E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 86, 10
-    CONTROL "Ide&ntificação de sessão", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 50, 10
+    CONTROL "Ide&ntificação de sessão", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 90, 10
     CONTROL "Nome de usu&ário", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 65, 10
-    CONTROL "Intervalo de fal&has de página", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 28, 103, 10
-    CONTROL "Tamanho da &memória virtual", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 39, 83, 10
-    CONTROL "&Reserva de memória paginável", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 50, 111, 10
-    CONTROL "R&eserva de memória não-paginável", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 61, 123, 10
+    CONTROL "Intervalo de fal&has de página", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 28, 110, 10
+    CONTROL "Tamanho da &memória virtual", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 39, 110, 10
+    CONTROL "&Reserva de memória paginável", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 50, 110, 10
+    CONTROL "R&eserva de memória não-paginável", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 61, 125, 10
     CONTROL "Prioridade &básica", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 72, 67, 10
     CONTROL "&Contagem de identificadores", IDC_HANDLECOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 83, 103, 10
     CONTROL "Contagem &de segmentos", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 123, 94, 91, 10

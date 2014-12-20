@@ -302,11 +302,11 @@ BEGIN
     CONTROL "Err&ores de página", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 80, 10 // 53
     CONTROL "O&bjetos de USUARIO", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 80, 10 // 62
     CONTROL "Lecturas de E/S", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 70, 10 // 49
-    CONTROL "Bytes de lectura de E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 85, 10
+    CONTROL "Bytes de lectura de E/S", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 90, 10
     CONTROL "I&d. de sesión", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 65, 10 // 50
     CONTROL "&Nombre de usuario", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 75, 10 // 51
-    CONTROL "Diferencia de erro&res de página", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 28, 120, 10 // 107, 60
-    CONTROL "Tamaño de la memoria &virtual", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 39, 120, 10 // 107, 60
+    CONTROL "Diferencia de erro&res de página", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 28, 115, 10 // 107, 60
+    CONTROL "Tamaño de la memoria &virtual", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 39, 115, 10 // 107, 60
     CONTROL "B&loque paginado", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 50, 67, 10 // 107, 53
     CONTROL "Blo&que no paginado", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 61, 115, 10 // 107
     CONTROL "P&rioridad base", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 72, 80, 10 // 107

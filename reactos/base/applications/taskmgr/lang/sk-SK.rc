@@ -302,10 +302,10 @@ BEGIN
     CONTROL "C&hyby stránkovania pamäte", IDC_PAGEFAULTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 105, 102, 10
     CONTROL "O&bjekty USER", IDC_USEROBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 116, 62, 10
     CONTROL "Vstup a výstup - čítanie", IDC_IOREADS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 127, 92, 10
-    CONTROL "Vstup a výstup - prečítané bajty", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 112, 10
+    CONTROL "Vstup a výstup - prečítané bajty", IDC_IOREADBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 138, 115, 10
     CONTROL "&Identifikácia relácie", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 73, 10
     CONTROL "&Meno používateľa", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 71, 10
-    CONTROL "Rozdiel &chýb stránkovania pamäte", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 28, 120, 10
+    CONTROL "Rozdiel &chýb stránkovania pamäte", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 28, 125, 10
     CONTROL "V&eľkosť virtuálnej pamäte", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 39, 97, 10
     CONTROL "Stránkovaný &fond", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 50, 73, 10
     CONTROL "Nes&tránkovaný fond", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 61, 77, 10
@@ -314,7 +314,7 @@ BEGIN
     CONTROL "&Počet vlákien", IDC_THREADCOUNT, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 94, 59, 10
     CONTROL "Objekty &GDI", IDC_GDIOBJECTS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 105, 55, 10
     CONTROL "Vstup a výstup - zápis", IDC_IOWRITES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 116, 92, 10
-    CONTROL "Vstup a výstup - zapísané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 127, 112, 10
+    CONTROL "Vstup a výstup - zapísané bajty", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 127, 115, 10
     CONTROL "Vstup a výstup - iné", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 138, 77, 10
     CONTROL "Vstup a výstup - iné bajty", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 149, 97, 10
     CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 130, 160, 95, 10
