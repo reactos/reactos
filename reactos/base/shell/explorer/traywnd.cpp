@@ -102,8 +102,8 @@ public:
         if (m_ImageList == NULL ||
             !SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
         {
-            Size.cx = GetSystemMetrics(SM_CXEDGE);
-            Size.cy = GetSystemMetrics(SM_CYEDGE);
+            Size.cx = 2 * GetSystemMetrics(SM_CXEDGE);
+            Size.cy = 2 * GetSystemMetrics(SM_CYEDGE);
 
             if (hbmStart == NULL)
             {
