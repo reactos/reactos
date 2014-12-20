@@ -572,6 +572,20 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
         hr = QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
         pObj = pDt;
     }
+    else if(IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
+    {
+        LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
+        pObj = IExtractIconA_Constructor(pidlItem);
+        SHFree(pidlItem);
+        hr = S_OK;
+    }
+    else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1))
+    {
+        LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
+        pObj = IExtractIconW_Constructor(pidlItem);
+        SHFree(pidlItem);
+        hr = S_OK;
+    }
     else
         hr = E_NOINTERFACE;
 
