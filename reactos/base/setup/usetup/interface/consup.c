@@ -134,6 +134,19 @@ CONSOLE_Flush(VOID)
     return FlushConsoleInputBuffer(StdInput);
 }
 
+VOID
+CONSOLE_GetCursorXY(
+    PSHORT x,
+    PSHORT y)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+
+    *x = csbi.dwCursorPosition.X;
+    *y = csbi.dwCursorPosition.Y;
+}
+
 SHORT
 CONSOLE_GetCursorX(VOID)
 {

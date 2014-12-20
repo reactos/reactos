@@ -153,6 +153,7 @@ typedef enum _PAGE_NUMBER
     QUIT_PAGE,
     FLUSH_PAGE,
     REBOOT_PAGE,		/* virtual page */
+    RECOVERY_PAGE,		/* virtual page */
 } PAGE_NUMBER, *PPAGE_NUMBER;
 #endif
 

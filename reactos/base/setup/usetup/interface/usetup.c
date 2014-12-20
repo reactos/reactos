@@ -30,6 +30,7 @@
 
 #include "bootsup.h"
 #include "chkdsk.h"
+#include "cmdcons.h"
 #include "format.h"
 #include "drivesup.h"
 #include "settings.h"
@@ -989,7 +990,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
         }
         else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')  /* R */
         {
-            return INTRO_PAGE;
+            return RECOVERY_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
@@ -4133,7 +4134,7 @@ RunUSetup(VOID)
     CONSOLE_SetCursorType(TRUE, FALSE);
 
     Page = START_PAGE;
-    while (Page != REBOOT_PAGE)
+    while (Page != REBOOT_PAGE && Page != RECOVERY_PAGE)
     {
         CONSOLE_ClearScreen();
         CONSOLE_Flush();
@@ -4281,10 +4282,14 @@ RunUSetup(VOID)
                 Page = QuitPage(&Ir);
                 break;
 
+            case RECOVERY_PAGE:
             case REBOOT_PAGE:
                 break;
         }
     }
+
+    if (Page == RECOVERY_PAGE)
+        RecoveryConsole();
 
     FreeConsole();
 

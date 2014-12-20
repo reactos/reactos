@@ -79,6 +79,11 @@ CONSOLE_ConOutPuts(
 BOOL
 CONSOLE_Flush(VOID);
 
+VOID
+CONSOLE_GetCursorXY(
+    PSHORT x,
+    PSHORT y);
+
 SHORT
 CONSOLE_GetCursorX(VOID);
 
