@@ -1,239 +1,258 @@
+/* Russian language resource file by Petr Akhlamov (petr-akhlamov@yandex.ru) */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
  
 /* Menus */
  
 IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
-   POPUP "", 264,MFT_STRING,MFS_ENABLED
-   BEGIN
-       MENUITEM "&Обычные кнопки", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
-       MENUITEM "&Адресная строка", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
-       MENUITEM "&Ссылки", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
-       MENUITEM "", -1, MFT_SEPARATOR
-       MENUITEM "Закрепить панели инструментов", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
-       MENUITEM "&Настройка...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
-       MENUITEM "&Text Labels", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
-       MENUITEM "&Кнопка Переход", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
-   END
+  POPUP "", 264,MFT_STRING,MFS_ENABLED
+  BEGIN
+      MENUITEM "&Обычные кнопки", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+      MENUITEM "&Адресная строка", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+      MENUITEM "&Ссылки", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
+      MENUITEM "", -1, MFT_SEPARATOR
+      MENUITEM "Закрепить панели инструментов", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+      MENUITEM "&Настройка...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+      MENUITEM "&Текст кнопки", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+      MENUITEM "&Кнопка Переход", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+  END
 END
  
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-   POPUP "&Файл", FCIDM_MENU_FILE
-   BEGIN
-       MENUITEM "", -1, MFT_SEPARATOR
-       MENUITEM "&Закрыть", IDM_FILE_CLOSE
-   END
-   POPUP "&Правка", FCIDM_MENU_EDIT
-   BEGIN
-       MENUITEM "", -1, MFT_SEPARATOR
-   END
-   POPUP "&Вид", FCIDM_MENU_VIEW
-   BEGIN
-       POPUP "&Панели инструментов", IDM_VIEW_TOOLBARS
-       BEGIN
-           MENUITEM "", -1, MFT_SEPARATOR
-       END
-       MENUITEM "Строка &состояния", IDM_VIEW_STATUSBAR
-       POPUP "&Панели обозревателя", IDM_VIEW_EXPLORERBAR
-       BEGIN
-           MENUITEM "&Поиск\tCtrl+E", IDM_EXPLORERBAR_SEARCH
-           MENUITEM "&Избранное\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
-           MENUITEM "&Медиа", IDM_EXPLORERBAR_MEDIA
-           MENUITEM "&Журнал\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-           MENUITEM "П&апки", IDM_EXPLORERBAR_FOLDERS
-           MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
-       END
-       MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-       POPUP "П&ереход", FCIDM_MENU_EXPLORE
-       BEGIN
-           MENUITEM "&Назад\tAlt+Стрелка влево", IDM_GOTO_BACK
-           MENUITEM "&Вперед\tAlt+Стрелка вправо", IDM_GOTO_FORWARD
-           MENUITEM "&Вверх", IDM_GOTO_UPONELEVEL
-           MENUITEM "", -1, MFT_SEPARATOR
-           MENUITEM "&Домой\tAlt+Home", IDM_GOTO_HOMEPAGE
-       END
-       MENUITEM "&Обновить", IDM_VIEW_REFRESH
-   END
-   POPUP "И&збранное", FCIDM_MENU_FAVORITES
-   BEGIN
-       MENUITEM "&Добавить в избранное...", IDM_FAVORITES_ADDTOFAVORITES
-       MENUITEM "&Упорядочить избранное...", IDM_FAVORITES_ORGANIZEFAVORITES
-       MENUITEM "", -1, MFT_SEPARATOR
-       MENUITEM "(пусто)", IDM_FAVORITES_EMPTY
-   END
-   POPUP "&Сервис", FCIDM_MENU_TOOLS
-   BEGIN
-       MENUITEM "Подключить &сетевой диск...", IDM_TOOLS_MAPNETWORKDRIVE
-       MENUITEM "&Отключить сетевой диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
-       MENUITEM "&Синхронизировать...", IDM_TOOLS_SYNCHRONIZE
-       MENUITEM "", -1, MFT_SEPARATOR
-       MENUITEM "&Свойства папки ...", IDM_TOOLS_FOLDEROPTIONS
-   END
-   POPUP "&Справка", FCIDM_MENU_HELP
-   BEGIN
-       MENUITEM "&Легальна ли эта копия ReactOS?", IDM_HELP_ISTHISCOPYLEGAL
-       MENUITEM "&О ReactOS", IDM_HELP_ABOUT
-   END
+  POPUP "&Файл", FCIDM_MENU_FILE
+  BEGIN
+      MENUITEM "", -1, MFT_SEPARATOR
+      MENUITEM "&Закрыть", IDM_FILE_CLOSE
+  END
+  POPUP "&Правка", FCIDM_MENU_EDIT
+  BEGIN
+      MENUITEM "", -1, MFT_SEPARATOR
+  END
+  POPUP "&Вид", FCIDM_MENU_VIEW
+  BEGIN
+      POPUP "&Панели инструментов", IDM_VIEW_TOOLBARS
+      BEGIN
+          MENUITEM "", -1, MFT_SEPARATOR
+      END
+      MENUITEM "Строка &состояния", IDM_VIEW_STATUSBAR
+      POPUP "&Панели обозревателя", IDM_VIEW_EXPLORERBAR
+      BEGIN
+          MENUITEM "&Поиск\tCtrl+E", IDM_EXPLORERBAR_SEARCH
+          MENUITEM "&Избранное\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
+          MENUITEM "&Медиа", IDM_EXPLORERBAR_MEDIA
+          MENUITEM "&Журнал\tCtrl+H", IDM_EXPLORERBAR_HISTORY
+          MENUITEM "П&апки", IDM_EXPLORERBAR_FOLDERS
+          MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
+      END
+      MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+      POPUP "П&ереход", FCIDM_MENU_EXPLORE
+      BEGIN
+          MENUITEM "&Назад\tAlt+Стрелка влево", IDM_GOTO_BACK
+          MENUITEM "&Вперед\tAlt+Стрелка вправо", IDM_GOTO_FORWARD
+          MENUITEM "&Вверх", IDM_GOTO_UPONELEVEL
+          MENUITEM "", -1, MFT_SEPARATOR
+          MENUITEM "&Домой\tAlt+Home", IDM_GOTO_HOMEPAGE
+      END
+      MENUITEM "&Обновить", IDM_VIEW_REFRESH
+  END
+  POPUP "И&збранное", FCIDM_MENU_FAVORITES
+  BEGIN
+      MENUITEM "&Добавить в избранное...", IDM_FAVORITES_ADDTOFAVORITES
+      MENUITEM "&Упорядочить избранное...", IDM_FAVORITES_ORGANIZEFAVORITES
+      MENUITEM "", -1, MFT_SEPARATOR
+      MENUITEM "(пусто)", IDM_FAVORITES_EMPTY
+  END
+  POPUP "&Сервис", FCIDM_MENU_TOOLS
+  BEGIN
+      MENUITEM "Подключить &сетевой диск...", IDM_TOOLS_MAPNETWORKDRIVE
+      MENUITEM "&Отключить сетевой диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+      MENUITEM "&Синхронизировать...", IDM_TOOLS_SYNCHRONIZE
+      MENUITEM "", -1, MFT_SEPARATOR
+      MENUITEM "&Свойства папки ...", IDM_TOOLS_FOLDEROPTIONS
+  END
+  POPUP "&Справка", FCIDM_MENU_HELP
+  BEGIN
+      MENUITEM "&Лицензионное соглашение", IDM_HELP_ISTHISCOPYLEGAL
+      MENUITEM "&О ReactOS", IDM_HELP_ABOUT
+  END
 END
- 
+
+IDM_TASKBAR_TOOLBARS MENUEX
+BEGIN
+	POPUP "&Панели инструментов", -1, MFT_STRING, MFS_ENABLED, 0
+	BEGIN
+		MENUITEM "&Рабочий стол", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Быстрый запуск", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
+		MENUITEM "&Создать панель инструментов...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+	END
+END
+
 /* Dialogs */
  
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-   LTEXT "Te&xt options:", -1, 4, 2, 48, 15
-   COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-   LTEXT "Ico&n options:", -1, 4, 20, 48, 15
-   COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Te&xt options:", -1, 4, 2, 48, 15
+  COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "Ico&n options:", -1, 4, 20, 48, 15
+  COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
  
 /* Accelerators */
  
 IDR_ACCELERATORS ACCELERATORS
 BEGIN
-   VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
-   VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
-   "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
-   VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
-   "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
-   "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
-   VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
-   VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
-   VK_BACK, 41010, NOINVERT, VIRTKEY
-   "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
-   "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
-   "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
-   "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
+  VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
+  VK_F5, IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+  "R", IDM_VIEW_REFRESH, VIRTKEY, CONTROL, NOINVERT
+  VK_HOME, IDM_GOTO_HOMEPAGE, VIRTKEY, ALT, NOINVERT
+  "D", IDM_FAVORITES_ADDTOFAVORITES, VIRTKEY, CONTROL, NOINVERT
+  "B", IDM_FAVORITES_ORGANIZEFAVORITES, VIRTKEY, CONTROL, NOINVERT
+  VK_LEFT, IDM_GOTO_BACK, VIRTKEY, ALT
+  VK_RIGHT, IDM_GOTO_FORWARD, VIRTKEY, ALT
+  VK_BACK, 41010, NOINVERT, VIRTKEY
+  "W", IDM_FILE_CLOSE, VIRTKEY, CONTROL, NOINVERT
+  "E", IDM_EXPLORERBAR_SEARCH, VIRTKEY, CONTROL, NOINVERT
+  "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
+  "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
 END
  
 /* Strings */
  
 STRINGTABLE
 BEGIN
-   800 "Contains commands for manipulating the selected items."
+  800 "Команды работы с выделенными объектами."
 END
  
 STRINGTABLE
 BEGIN
-   864 "Contains edit commands."
+  864 "Команды для редактирования."
 END
  
 STRINGTABLE
 BEGIN
-   928 "Contains commands for manipulating the view."
+  928 "Команды для управления отображением."
 END
  
 STRINGTABLE
 BEGIN
-   992 "Contains tools commands."
+  992 "Служебные команды."
 END
  
 STRINGTABLE
 BEGIN
-   1056 "Contains commands for displaying Help."
+  1056 "Команды для просмотра справки."
 END
  
 STRINGTABLE
 BEGIN
-   9025 "Закрыть окно."
-   9026 "Вверх."
+  9025 "Закрыть окно."
+  9026 "Вверх."
 END
  
 STRINGTABLE
 BEGIN
-   9121 "Подключить сетевой диск."
-   9122 "Отключить сетевой диск."
+  9121 "Подключить сетевой диск."
+  9122 "Отключить сетевой диск."
 END
  
 STRINGTABLE
 BEGIN
-   9250 "Displays program information, version number, and copyright."
-   9252 "Displays information for debugging."
+  9250 "Отображение сведений о программе, номере версии и авторских правах."
+  9252 "Отображение сведений для отладки."
 END
  
 STRINGTABLE
 BEGIN
-   9281 "Перейти на предыдущую страницу."
-   9282 "Перейти на следующую страницу."
-   9283 "Enables you to change settings."
-   9285 "Перейти на домашнюю страницу."
+  9281 "Перейти на предыдущую страницу."
+  9282 "Перейти на следующую страницу."
+  9283 "Применить измененные настройки."
+  9285 "Перейти на домашнюю страницу."
 END
  
 STRINGTABLE
 BEGIN
-   9362 "Открыть папку Избранное."
-   9363 "Добавить в избранное."
+  9362 "Открыть папку Избранное."
+  9363 "Добавить в избранное."
 END
  
 STRINGTABLE
 BEGIN
-   9505 "Показать или спрятать панели."
-   9506 "Отобразить строку состояния."
-   9508 "Отобразить обычные кнопки."
-   9509 "Отобразить адресную строку."
-   9510 "Displays the Quick Links bar."
-   9516 "Закрепить панель инструментов."
+  9505 "Показать или спрятать панели."
+  9506 "Отобразить строку состояния."
+  9508 "Отобразить обычные кнопки."
+  9509 "Отобразить адресную строку."
+  9510 "Отобразить панель ссылок."
+  9516 "Закрепить панель инструментов."
 END
  
 STRINGTABLE
 BEGIN
-   9533 "Настройка панели инструментов."
+  9533 "Настройка панели инструментов."
 END
  
 STRINGTABLE
 BEGIN
-   9552 "Shows or hides an Explorer bar."
-   9553 "Shows the Search bar."
-   9554 "Shows the Favorites bar."
-   9555 "Shows the History bar."
-   9557 "Shows the Folders bar."
-   9559 "Shows the Media Bar."
+  9552 "Отобразить или скрыть панели обозревателя"
+  9553 "Отобразить панель поиска"
+  9554 "Отобразить панель избранного"
+  9555 "Отобразить панель истории"
+  9557 "Отобразить панель папок"
+  9559 "Отобразить панель медиа"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_SMALLICONS "Мелкие значки"
-   IDS_LARGEICONS "Крупные значки"
-   IDS_SHOWTEXTLABELS "Текст кнопки"
+  IDS_SMALLICONS "Мелкие значки"
+  IDS_LARGEICONS "Крупные значки"
+  IDS_SHOWTEXTLABELS "Текст кнопки"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_NOTEXTLABELS "Без подписей к кнопкам"
-   IDS_SELECTIVETEXTONRIGHT "Выборочно текст справа"
+  IDS_NOTEXTLABELS "Без подписей к кнопкам"
+  IDS_SELECTIVETEXTONRIGHT "Выборочно текст справа"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_GOBUTTONLABEL "|Переход||"
-   IDS_GOBUTTONTIPTEMPLATE "Перейти в ""%s"""
+  IDS_GOBUTTONLABEL "|Переход||"
+  IDS_GOBUTTONTIPTEMPLATE "Перейти в ""%s"""
 END
  
 STRINGTABLE
 BEGIN
-   IDS_SEARCHLABEL "Поиск"
-   IDS_ADDRESSBANDLABEL "А&дрес"
+  IDS_SEARCHLABEL "Поиск"
+  IDS_ADDRESSBANDLABEL "А&дрес"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_FOLDERSLABEL "Папки"
+  IDS_FOLDERSLABEL "Папки"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_HISTORYTEXT "&История\tCtrl+H"
+  IDS_HISTORYTEXT "&История\tCtrl+H"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_UP "Вверх"
+  IDS_UP "Вверх"
 END
  
 STRINGTABLE
 BEGIN
-   IDS_BACK "Назад"
-   IDS_FORWARD "Вперед"
+  IDS_BACK "Назад"
+  IDS_FORWARD "Вперед"
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_STANDARD_TOOLBAR, "|Назад|Вперед|Вверх|Поиск|Папки|Переместить в|Копировать в|Удалить|Отменить|Вид|Остановить|Обновить|Домой|Подключить диск|Отключить|Избранное|Журнал|Во весь экран|Свойства|Вырезать|Копировать|Вставить|Свойства папки||"
 END
