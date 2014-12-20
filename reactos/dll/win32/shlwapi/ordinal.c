@@ -5307,3 +5307,10 @@ DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid)
 
     return ret;
 }
+
+#ifdef __REACTOS__
+DWORD WINAPI SHGetAllAccessSA(void)
+{
+    return 0;
+}
+#endif

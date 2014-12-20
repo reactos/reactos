@@ -204,7 +204,7 @@
 204 stdcall -noname SHIsChildOrSelf(long long)
 205 stdcall -noname SHGetValueGoodBootA(long str str ptr ptr ptr)
 206 stdcall -noname SHGetValueGoodBootW(long wstr wstr ptr ptr ptr)
-#207 stub -noname IContextMenu_Invoke
+207 stub -noname IContextMenu_Invoke
 208 stdcall -noname FDSA_Initialize(long long ptr ptr long)
 209 stdcall -noname FDSA_Destroy(ptr)
 210 stdcall -noname FDSA_InsertItem(ptr long ptr)
@@ -223,16 +223,16 @@
 223 stdcall -noname SHGlobalCounterGetValue(long)
 224 stdcall -noname SHGlobalCounterIncrement(long)
 225 stdcall -noname SHStripMneumonicW(wstr)
-#226 stub -noname ZoneCheckPathA
-#227 stub -noname ZoneCheckPathW
-#228 stub -noname ZoneCheckUrlA
-#229 stub -noname ZoneCheckUrlW
-#230 stub -noname ZoneCheckUrlExA
+226 stub -noname ZoneCheckPathA
+227 stub -noname ZoneCheckPathW
+228 stub -noname ZoneCheckUrlA
+229 stub -noname ZoneCheckUrlW
+230 stub -noname ZoneCheckUrlExA
 231 stdcall -noname ZoneCheckUrlExW(wstr ptr long long long long long long)
-#232 stub -noname ZoneCheckUrlExCacheA
-#233 stub -noname ZoneCheckUrlExCacheW
-#234 stub -noname ZoneCheckHost
-#235 stub -noname ZoneCheckHostEx
+232 stub -noname ZoneCheckUrlExCacheA
+233 stub -noname ZoneCheckUrlExCacheW
+234 stub -noname ZoneCheckHost
+235 stub -noname ZoneCheckHostEx
 236 stdcall -noname SHPinDllOfCLSID(ptr)
 237 stdcall -noname SHRegisterClassW(ptr)
 238 stdcall -noname SHUnregisterClassesA(ptr ptr long)
@@ -243,38 +243,38 @@
 243 stdcall -noname StopWatchA(long str long long long)
 244 stdcall -noname StopWatchW(long wstr long long long)
 245 stdcall -noname StopWatch_TimerHandler(ptr ptr long ptr)
-#246 stub -noname StopWatch_CheckMsg
+246 stub -noname StopWatch_CheckMsg
 247 stdcall -noname StopWatch_MarkFrameStart(str)
-#248 stub -noname StopWatch_MarkSameFrameStart
+248 stub -noname StopWatch_MarkSameFrameStart
 249 stdcall -noname StopWatch_MarkJavaStop(wstr ptr long)
 250 stdcall -noname GetPerfTime()
-#251 stub -noname StopWatch_DispatchTime
+251 stub -noname StopWatch_DispatchTime
 252 stdcall -noname StopWatch_SetMsgLastLocation(long)
-#253 stub -noname StopWatchExA
-#254 stub -noname StopWatchExW
-#255 stub -noname EventTraceHandler
+253 stub -noname StopWatchExA
+254 stub -noname StopWatchExW
+255 stub -noname EventTraceHandler
 256 stdcall -noname IUnknown_GetSite(ptr ptr ptr)
 257 stdcall -noname SHCreateWorkerWindowA(long ptr long long ptr long)
-#258 stub -noname SHRegisterWaitForSingleObject
-#259 stub -noname SHUnregisterWait
+258 stub -noname SHRegisterWaitForSingleObject
+259 stub -noname SHUnregisterWait
 260 stdcall -noname SHQueueUserWorkItem(long long long long long long long)
-#261 stub -noname SHCreateTimerQueue
-#262 stub -noname SHDeleteTimerQueue
+261 stub -noname SHCreateTimerQueue
+262 stub -noname SHDeleteTimerQueue
 263 stdcall -noname SHSetTimerQueueTimer(long ptr ptr long long str long)
-#264 stub -noname SHChangeTimerQueueTimer
-#265 stub -noname SHCancelTimerQueueTimer
+264 stub -noname SHChangeTimerQueueTimer
+265 stub -noname SHCancelTimerQueueTimer
 266 stdcall -noname SHRestrictionLookup(long wstr ptr ptr)
 267 stdcall -noname SHWeakQueryInterface(long long long long)
 268 stdcall -noname SHWeakReleaseInterface(long long)
 269 stdcall -noname GUIDFromStringA(str ptr)
 270 stdcall -noname GUIDFromStringW(wstr ptr)
 271 stdcall -noname SHGetRestriction(wstr wstr wstr)
-#272 stub -noname SHSetThreadPoolLimits
-#273 stub -noname SHTerminateThreadPool
-#274 stub -noname RegisterGlobalHotkeyW
-#275 stub -noname RegisterGlobalHotkeyA
+272 stub -noname SHSetThreadPoolLimits
+273 stub -noname SHTerminateThreadPool
+274 stub -noname RegisterGlobalHotkeyW
+275 stub -noname RegisterGlobalHotkeyA
 276 stdcall -noname WhichPlatform()
-#277 stub -noname SHDialogBox
+277 stub -noname SHDialogBox
 278 stdcall -noname SHCreateWorkerWindowW(long long long long long long)
 279 stdcall -noname SHInvokeDefaultCommand(ptr ptr ptr)
 280 stdcall -noname SHRegGetIntW(ptr wstr long)
@@ -285,16 +285,16 @@
 285 stdcall -noname IConnectionPoint_OnChanged(ptr long)
 286 varargs -noname IUnknown_CPContainerInvokeParam(ptr ptr long ptr long)
 287 stdcall -noname IUnknown_CPContainerOnChanged(ptr long)
-#288 stub -noname IUnknown_CPContainerInvokeIndirect
+288 stub -noname IUnknown_CPContainerInvokeIndirect
 289 stdcall -noname PlaySoundWrapW(wstr long long)
-#290 stub -noname SHMirrorIcon
+290 stub -noname SHMirrorIcon
 291 stdcall -noname SHMessageBoxCheckExA(ptr ptr ptr ptr ptr long str)
 292 stdcall -noname SHMessageBoxCheckExW(ptr ptr ptr ptr ptr long wstr)
-#293 stub -noname SHCancelUserWorkItems
+293 stub -noname SHCancelUserWorkItems
 294 stdcall -noname SHGetIniStringW(wstr wstr ptr long wstr)
 295 stdcall -noname SHSetIniStringW(wstr ptr wstr wstr)
-#296 stub -noname CreateURLFileContentsW
-#297 stub -noname CreateURLFileContentsA
+296 stub -noname CreateURLFileContentsW
+297 stub -noname CreateURLFileContentsA
 298 stdcall -noname WritePrivateProfileStringWrapW(wstr wstr wstr wstr) kernel32.WritePrivateProfileStringW
 299 stdcall -noname ExtTextOutWrapW(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
 300 stdcall -noname CreateFontWrapW(long long long long long long long long long long long long long wstr) gdi32.CreateFontW
@@ -313,8 +313,8 @@
 313 stdcall -noname SHGetFileInfoWrapW(ptr long ptr long long)
 314 stdcall -noname RegisterClassExWrapW(ptr) user32.RegisterClassExW
 315 stdcall -noname GetClassInfoExWrapW(long wstr ptr) user32.GetClassInfoExW
-#316 stub -noname IShellFolder_GetDisplayNameOf
-#317 stub -noname IShellFolder_ParseDisplayName
+316 stub -noname IShellFolder_GetDisplayNameOf
+317 stub -noname IShellFolder_ParseDisplayName
 318 stdcall -noname DragQueryFileWrapW(long long wstr long)
 319 stdcall -noname FindWindowExWrapW(long long wstr wstr) user32.FindWindowExW
 320 stdcall -noname RegisterMIMETypeForExtensionA(str str)
@@ -345,8 +345,8 @@
 345 stdcall -noname SHAnsiToAnsi(str ptr long)
 346 stdcall -noname SHUnicodeToUnicode(wstr ptr long)
 347 stdcall -noname RegDeleteValueWrapW(long wstr) advapi32.RegDeleteValueW
-#348 stub -noname SHGetFileDescriptionW
-#349 stub -noname SHGetFileDescriptionA
+348 stub -noname SHGetFileDescriptionW
+349 stub -noname SHGetFileDescriptionA
 350 stdcall -noname GetFileVersionInfoSizeWrapW(wstr ptr)
 351 stdcall -noname GetFileVersionInfoWrapW(wstr long long ptr)
 352 stdcall -noname VerQueryValueWrapW(ptr wstr ptr ptr)
@@ -371,20 +371,20 @@
 371 stdcall -noname DdeInitializeWrapW(ptr ptr long long) user32.DdeInitializeW
 372 stdcall -noname DdeCreateStringHandleWrapW(long ptr long) user32.DdeCreateStringHandleW
 373 stdcall -noname DdeQueryStringWrapW(long ptr wstr long long) user32.DdeQueryStringW
-#374 stub -noname SHCheckDiskForMediaA
-#375 stub -noname SHCheckDiskForMediaW
+374 stub -noname SHCheckDiskForMediaA
+375 stub -noname SHCheckDiskForMediaW
 376 stdcall -noname MLGetUILanguage() kernel32.GetUserDefaultUILanguage
 377 stdcall -noname MLLoadLibraryA(str long long)
 378 stdcall -noname MLLoadLibraryW(wstr long long)
-#379 stub -noname Shell_GetCachedImageIndexWrapW
-#380 stub -noname Shell_GetCachedImageIndexWrapA
-#381 stub -noname AssocCopyVerbs
+379 stub -noname Shell_GetCachedImageIndexWrapW
+380 stub -noname Shell_GetCachedImageIndexWrapA
+381 stub -noname AssocCopyVerbs
 382 stdcall -noname ZoneComputePaneSize(ptr)
-#383 stub -noname ZoneConfigureW
-#384 stub -noname SHRestrictedMessageBox
-#385 stub -noname SHLoadRawAccelerators
-#386 stub -noname SHQueryRawAccelerator
-#387 stub -noname SHQueryRawAcceleratorMsg
+383 stub -noname ZoneConfigureW
+384 stub -noname SHRestrictedMessageBox
+385 stub -noname SHLoadRawAccelerators
+386 stub -noname SHQueryRawAccelerator
+387 stub -noname SHQueryRawAcceleratorMsg
 388 varargs -noname ShellMessageBoxWrapW(long long wstr wstr long)
 389 stdcall -noname GetSaveFileNameWrapW(ptr)
 390 stdcall -noname WNetRestoreConnectionWrapW(long wstr)
@@ -392,10 +392,10 @@
 392 stdcall -noname EndDialogWrap(ptr ptr) user32.EndDialog
 393 stdcall -noname CreateDialogIndirectParamWrapW(long ptr long ptr long) user32.CreateDialogIndirectParamW
 394 stdcall -noname SHChangeNotifyWrap(long long ptr ptr)
-#395 stub -noname MLWinHelpA
-#396 stub -noname MLHtmlHelpA
-#397 stub -noname MLWinHelpW
-#398 stub -noname MLHtmlHelpW
+395 stub -noname MLWinHelpA
+396 stub -noname MLHtmlHelpA
+397 stub -noname MLWinHelpW
+398 stub -noname MLHtmlHelpW
 399 stdcall -noname StrCpyNXA(ptr str long)
 400 stdcall -noname StrCpyNXW(ptr wstr long)
 401 stdcall -noname PageSetupDlgWrapW(ptr)
@@ -404,21 +404,21 @@
 404 stdcall -noname IShellFolder_EnumObjects(ptr ptr long ptr) SHIShellFolder_EnumObjects
 405 stdcall -noname MLBuildResURLA(str ptr long str ptr long)
 406 stdcall -noname MLBuildResURLW(wstr ptr long wstr ptr long)
-#407 stub -noname AssocMakeProgid
-#408 stub -noname AssocMakeShell
-#409 stub -noname AssocMakeApplicationByKeyW
-#410 stub -noname AssocMakeApplicationByKeyA
-#411 stub -noname AssocMakeFileExtsToApplicationW
-#412 stub -noname AssocMakeFileExtsToApplicationA
+407 stub -noname AssocMakeProgid
+408 stub -noname AssocMakeShell
+409 stub -noname AssocMakeApplicationByKeyW
+410 stub -noname AssocMakeApplicationByKeyA
+411 stub -noname AssocMakeFileExtsToApplicationW
+412 stub -noname AssocMakeFileExtsToApplicationA
 413 stdcall -noname SHGetMachineInfo(long)
-#414 stub -noname SHHtmlHelpOnDemandW
-#415 stub -noname SHHtmlHelpOnDemandA
+414 stub -noname SHHtmlHelpOnDemandW
+415 stub -noname SHHtmlHelpOnDemandA
 416 stdcall -noname SHWinHelpOnDemandW(long wstr long ptr long)
 417 stdcall -noname SHWinHelpOnDemandA(long str long ptr long)
 418 stdcall -noname MLFreeLibrary(long)
 419 stdcall -noname SHFlushSFCacheWrap()
-#420 stub SHLWAPI_420 # CMemStream::Commit ??
-#421 stub -noname SHLoadPersistedDataObject
+420 stub -noname SHLWAPI_420 # CMemStream::Commit ??
+421 stub -noname SHLoadPersistedDataObject
 422 stdcall -noname SHGlobalCounterCreateNamedA(str long)
 423 stdcall -noname SHGlobalCounterCreateNamedW(wstr long)
 424 stdcall -noname SHGlobalCounterDecrement(long)
@@ -435,7 +435,7 @@
 435 stdcall -noname CLSIDFromProgIDWrap(wstr ptr) ole32.CLSIDFromProgID
 436 stdcall -noname CLSIDFromStringWrap(wstr ptr)
 437 stdcall -noname IsOS(long)
-#438 stub -noname SHLoadRegUIStringA
+438 stub -noname SHLoadRegUIStringA
 439 stdcall -noname SHLoadRegUIStringW(ptr wstr ptr long)
 440 stdcall -noname SHGetWebFolderFilePathA(str ptr long)
 441 stdcall -noname SHGetWebFolderFilePathW(wstr ptr long)
@@ -444,14 +444,14 @@
 444 stdcall -noname SHGetSystemWindowsDirectoryW(ptr long) kernel32.GetSystemWindowsDirectoryW
 445 stdcall -noname PathFileExistsAndAttributesA(str ptr)
 446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
-#447 stub -noname FixSlashesAndColonA
+447 stub -noname FixSlashesAndColonA
 448 stdcall -noname FixSlashesAndColonW(wstr)
-#449 stub -noname NextPathA
-#450 stub -noname NextPathW
-#451 stub -noname CharUpperNoDBCSA
-#452 stub -noname CharUpperNoDBCSW
-#453 stub -noname CharLowerNoDBCSA
-#454 stub -noname CharLowerNoDBCSW
+449 stub -noname NextPathA
+450 stub -noname NextPathW
+451 stub -noname CharUpperNoDBCSA
+452 stub -noname CharUpperNoDBCSW
+453 stub -noname CharLowerNoDBCSA
+454 stub -noname CharLowerNoDBCSW
 455 stdcall -noname PathIsValidCharA(long long)
 456 stdcall -noname PathIsValidCharW(long long)
 457 stdcall -noname GetLongPathNameWrapW(wstr ptr long) kernel32.GetLongPathNameW
@@ -462,108 +462,108 @@
 462 stdcall -noname UrlFixupW(wstr wstr long)
 463 stdcall -noname SHExpandEnvironmentStringsForUserA(ptr str ptr long) userenv.ExpandEnvironmentStringsForUserA
 464 stdcall -noname SHExpandEnvironmentStringsForUserW(ptr wstr ptr long) userenv.ExpandEnvironmentStringsForUserW
-#465 stub -noname PathUnExpandEnvStringsForUserA
-#466 stub -noname PathUnExpandEnvStringsForUserW
+465 stub -noname PathUnExpandEnvStringsForUserA
+466 stub -noname PathUnExpandEnvStringsForUserW
 467 stub -ordinal SHRunIndirectRegClientCommand
-#468 stub -noname RunIndirectRegCommand
-#469 stub -noname RunRegCommand
-#470 stub -noname IUnknown_ProfferServiceOld
+468 stub -noname RunIndirectRegCommand
+469 stub -noname RunRegCommand
+470 stub -noname IUnknown_ProfferServiceOld
 471 stdcall -noname SHCreatePropertyBagOnRegKey(long wstr long ptr ptr)
-#472 stub -noname SHCreatePropertyBagOnProfileSelection
-#473 stub -noname SHGetIniStringUTF7W
-#474 stub -noname SHSetIniStringUTF7W
+472 stub -noname SHCreatePropertyBagOnProfileSelection
+473 stub -noname SHGetIniStringUTF7W
+474 stub -noname SHSetIniStringUTF7W
 475 stdcall -noname GetShellSecurityDescriptor(ptr long)
 476 stdcall -noname SHGetObjectCompatFlags(ptr ptr)
-#477 stub -noname SHCreatePropertyBagOnMemory
+477 stub -noname SHCreatePropertyBagOnMemory
 478 stdcall -noname IUnknown_TranslateAcceleratorIO(ptr ptr)
 479 stdcall -noname IUnknown_UIActivateIO(ptr long ptr)
 480 stdcall -noname UrlCrackW(wstr long long ptr) wininet.InternetCrackUrlW
 481 stdcall -noname IUnknown_HasFocusIO(ptr)
-#482 stub -noname SHMessageBoxHelpA
-#483 stub -noname SHMessageBoxHelpW
+482 stub -noname SHMessageBoxHelpA
+483 stub -noname SHMessageBoxHelpW
 484 stdcall -noname IUnknown_QueryServiceExec(ptr ptr ptr long long long ptr)
-#485 stub -noname MapWin32ErrorToSTG
-#486 stub -noname ModeToCreateFileFlags
+485 stub -noname MapWin32ErrorToSTG
+486 stub -noname ModeToCreateFileFlags
 487 stdcall -ordinal SHLoadIndirectString(wstr ptr long ptr)
-#488 stub -noname SHConvertGraphicsFile
+488 stub -noname SHConvertGraphicsFile
 489 stdcall -noname GlobalAddAtomWrapW(wstr) kernel32.GlobalAddAtomW
 490 stdcall -noname GlobalFindAtomWrapW(wstr) kernel32.GlobalFindAtomW
 491 stdcall -noname SHGetShellKey(long long long)
-#492 stub -noname PrettifyFileDescriptionW
-#493 stub -noname SHPropertyBag_ReadType
-#494 stub -noname SHPropertyBag_ReadStr
-#495 stub -noname SHPropertyBag_WriteStr
+492 stub -noname PrettifyFileDescriptionW
+493 stub -noname SHPropertyBag_ReadType
+494 stub -noname SHPropertyBag_ReadStr
+495 stub -noname SHPropertyBag_WriteStr
 496 stdcall -noname SHPropertyBag_ReadLONG(ptr wstr ptr)
-#497 stub -noname SHPropertyBag_WriteLONG
-#498 stub -noname SHPropertyBag_ReadBOOLOld
-#499 stub -noname SHPropertyBag_WriteBOOL
+497 stub -noname SHPropertyBag_WriteLONG
+498 stub -noname SHPropertyBag_ReadBOOLOld
+499 stub -noname SHPropertyBag_WriteBOOL
 500 stdcall AssocGetPerceivedType(wstr ptr ptr ptr)
 501 stdcall AssocIsDangerous(wstr)
 502 stdcall AssocQueryKeyA(long long str str ptr)
 503 stdcall AssocQueryKeyW(long long wstr wstr ptr)
 504 stdcall AssocQueryStringA(long long str str ptr ptr)
-#505 stub -noname SHPropertyBag_ReadGUID
-#506 stub -noname SHPropertyBag_WriteGUID
-#507 stub -noname SHPropertyBag_ReadDWORD
-#508 stub -noname SHPropertyBag_WriteDWORD
+505 stub -noname SHPropertyBag_ReadGUID
+506 stub -noname SHPropertyBag_WriteGUID
+507 stub -noname SHPropertyBag_ReadDWORD
+508 stub -noname SHPropertyBag_WriteDWORD
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
-#510 stub -noname SHLockSharedEx
-#511 stub -noname PathFileExistsDefExtAndAttributesW
-#512 stub -ordinal IStream_ReadPidl
-#513 stub -ordinal IStream_WritePidl
+510 stub -noname SHLockSharedEx
+511 stub -noname PathFileExistsDefExtAndAttributesW
+512 stub -ordinal IStream_ReadPidl
+513 stub -ordinal IStream_WritePidl
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
 515 stdcall -ordinal SHGetViewStatePropertyBag(ptr wstr long ptr ptr)
 516 stdcall -noname SKGetValueW(long wstr wstr ptr ptr ptr)
 517 stdcall -noname SKSetValueW(long wstr wstr long ptr long)
 518 stdcall -noname SKDeleteValueW(long wstr wstr)
 519 stdcall -noname SKAllocValueW(long wstr wstr ptr ptr ptr)
-#520 stub -noname SHPropertyBag_ReadBSTR
-#521 stub -noname SHPropertyBag_ReadPOINTL
-#522 stub -noname SHPropertyBag_WritePOINTL
-#523 stub -noname SHPropertyBag_ReadRECTL
-#524 stub -noname SHPropertyBag_WriteRECTL
-#525 stub -noname SHPropertyBag_ReadPOINTS
-#526 stub -noname SHPropertyBag_WritePOINTS
-#527 stub -noname SHPropertyBag_ReadSHORT
-#528 stub -noname SHPropertyBag_WriteSHORT
-#529 stub -noname SHPropertyBag_ReadInt
-#530 stub -noname SHPropertyBag_WriteInt
-#531 stub -noname SHPropertyBag_ReadStream
-#532 stub -noname SHPropertyBag_WriteStream
-#533 stub -noname SHGetPerScreenResName
-#534 stub -noname SHPropertyBag_ReadBOOL
-#535 stub -noname SHPropertyBag_Delete
-#536 stub -noname IUnknown_QueryServicePropertyBag
-#537 stub -noname SHBoolSystemParametersInfo
+520 stub -noname SHPropertyBag_ReadBSTR
+521 stub -noname SHPropertyBag_ReadPOINTL
+522 stub -noname SHPropertyBag_WritePOINTL
+523 stub -noname SHPropertyBag_ReadRECTL
+524 stub -noname SHPropertyBag_WriteRECTL
+525 stub -noname SHPropertyBag_ReadPOINTS
+526 stub -noname SHPropertyBag_WritePOINTS
+527 stub -noname SHPropertyBag_ReadSHORT
+528 stub -noname SHPropertyBag_WriteSHORT
+529 stub -noname SHPropertyBag_ReadInt
+530 stub -noname SHPropertyBag_WriteInt
+531 stub -noname SHPropertyBag_ReadStream
+532 stub -noname SHPropertyBag_WriteStream
+533 stub -noname SHGetPerScreenResName
+534 stub -noname SHPropertyBag_ReadBOOL
+535 stub -noname SHPropertyBag_Delete
+536 stub -noname IUnknown_QueryServicePropertyBag
+537 stub -noname SHBoolSystemParametersInfo
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
-#539 stub -noname IUnknown_ShowBrowserBar
-#540 stub -noname SHInvokeCommandOnContextMenu
-#541 stub -noname SHInvokeCommandsOnContextMen
+539 stub -noname IUnknown_ShowBrowserBar
+540 stub -noname SHInvokeCommandOnContextMenu
+541 stub -noname SHInvokeCommandsOnContextMen
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
-#544 stub -noname QuerySourceCreateFromKey
-#545 stub -noname SHForwardContextMenuMsg
-#546 stub -noname IUnknown_DoContextMenuPopup
+544 stub -noname QuerySourceCreateFromKey
+545 stub -noname SHForwardContextMenuMsg
+546 stub -noname IUnknown_DoContextMenuPopup
 547 stdcall DelayLoadFailureHook(str str) kernel32.DelayLoadFailureHook
-#548 stub -noname SHAreIconsEqual
+548 stub -noname SHAreIconsEqual
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
-#550 stub -noname GetTemplateInfoFromHandle
-#551 stub -noname IShellFolder_CompareIDs
-#552 SHEvaluateSystemCommandTemplate
+550 stub -noname GetTemplateInfoFromHandle
+551 stub -noname IShellFolder_CompareIDs
+552 stub -noname SHEvaluateSystemCommandTemplate
 553 stdcall IsInternetESCEnabled()
-#554 SHGetAllAccessSA
+554 stdcall -noname SHGetAllAccessSA()
 555 stdcall AssocQueryStringByKeyA(long long ptr str ptr ptr)
-#556 SHCoExtensionAllowed
-#557 SHCoCreateExtension
-#558 SHCoExtensionCollectStats
-#559 SHGetSignatureInfo
-#560 SHWindowsPolicyGetValue
-#561 AssocGetUrlAction
-#562 SHGetPrivateProfileInt
-#563 SHGetPrivateProfileSection
-#564 SHGetPrivateProfileSectionNames
-#565 SHGetPrivateProfileString
-#566 SHGetPrivateProfileStruct
+556 stub -noname SHCoExtensionAllowed
+557 stub -noname SHCoCreateExtension
+558 stub -noname SHCoExtensionCollectStats
+559 stub -noname SHGetSignatureInfo
+560 stub -noname SHWindowsPolicyGetValue
+561 stub -noname AssocGetUrlAction
+562 stub -noname SHGetPrivateProfileInt
+563 stub -noname SHGetPrivateProfileSection
+564 stub -noname SHGetPrivateProfileSectionNames
+565 stub -noname SHGetPrivateProfileString
+566 stub -noname SHGetPrivateProfileStruct
 567 stdcall AssocQueryStringByKeyW(long long ptr wstr ptr ptr)
 568 stdcall AssocQueryStringW(long long wstr wstr ptr ptr)
 569 stdcall ChrCmpIA(long long)
@@ -772,7 +772,7 @@
 772 stdcall StrChrA(str long)
 773 stdcall StrChrIA(str long)
 774 stdcall StrChrIW(wstr long)
-#775 StrChrNIW
+775 stub StrChrNIW
 776 stdcall StrChrNW(wstr long long)
 777 stdcall StrChrW(wstr long)
 778 stdcall StrCmpIW(wstr wstr)
