@@ -174,7 +174,7 @@ BEGIN
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
     PUSHBUTTON "&Folyamat befejezése", IDC_ENDPROCESS, 165, 189, 75, 14
     CONTROL "Minden felhasználó folya&matait jelenítse meg", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 111, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 155, 10
 END
 
 /* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */

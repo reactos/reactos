@@ -172,9 +172,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_PROCESSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 233, 177
-    PUSHBUTTON "&Завершить процесс", IDC_ENDPROCESS, 162, 189, 79, 14
+    PUSHBUTTON "&Завершить процесс", IDC_ENDPROCESS, 167, 189, 74, 14
     CONTROL "&Отображать процессы всех пользователей", IDC_SHOWALLPROCESSES, "Button",
-            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 153, 10
+            BS_AUTOCHECKBOX | WS_TABSTOP, 7, 191, 158, 10
 END
 
 /* IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210 */
