@@ -230,7 +230,7 @@ BEGIN
     LTEXT "&Şifre:", 1112, 8, 79, 88, 8
     EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
-    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Kaydet:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Sakla:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Ya&lnızca Ben", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
@@ -253,7 +253,7 @@ BEGIN
     LTEXT "&Etki Alanı:", 1110, 9, 99, 91, 8
     EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
-    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Kaydet:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Sakla:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Ya&lnızca Ben", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
@@ -276,7 +276,7 @@ BEGIN
     LTEXT "&Etki Alanı:", 1110, 10, 100, 92, 8
     EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
-    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Kaydet:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Sakla:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Ya&lnızca Ben", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
@@ -300,7 +300,7 @@ BEGIN
     LTEXT "&Şifre:", 1112, 10, 81, 92, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
-    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Kaydet:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kulanıcı Adını ve Şifreyi Sakla:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "Ya&lnızca Ben", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
@@ -529,7 +529,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bu bağlantı için istediğiniz bir ad yazınız:", -1, 8, 4, 190, 8
     EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
-    LTEXT "Onu Ağ Bağlantıları dizini içine kaydetmek için Bitir'e tıklayınız.", -1, 8, 38, 193, 8
+    LTEXT "Onu Ağ Bağlantıları dizini içine saklamak için Bitir'e tıklayınız.", -1, 8, 38, 193, 8
     LTEXT "Bu bağlantıyı daha sonra düzenlemek için onu seçiniz, Kütük seçkesine tıklayınız, sonra Husûsiyetler'e tıklayınız.", -1, 8, 58, 193, 16
 END
 
@@ -825,7 +825,7 @@ BEGIN
     AUTOCHECKBOX "&Veri Sıkıştırmasını Gerektir", 1363, 27, 65, 184, 10, BS_TOP | BS_MULTILINE | WS_GROUP
     AUTOCHECKBOX "&Güçlü Veri Sıkıştırmasını Gerektir", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX "&İki Yönlü Kimlik Doğrulamasını Kullan", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
-    PUSHBUTTON "&Şifreyi Kaydetme", 1369, 59, 117, 80, 14, WS_GROUP
+    PUSHBUTTON "&Şifreyi Saklama", 1369, 59, 117, 80, 14, WS_GROUP
     PUSHBUTTON "G&elişmiş...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
     AUTOCHECKBOX "&Çevirmeden Önce Kütük ve Yazdırma Paylaşımını Algıla", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
@@ -842,7 +842,7 @@ BEGIN
     AUTOCHECKBOX "&Veri Sıkıştırmasını Gerektir", 1363, 33, 67, 165, 10, WS_GROUP
     AUTOCHECKBOX "&Güçlü Veri Sıkıştırmasını Gerektir", 1364, 48, 79, 152, 10
     AUTOCHECKBOX "Ş&imdiki Kulanıcı Adını ve Şifreyi Kullan", 1366, 31, 91, 165, 10
-    PUSHBUTTON "&Şifreyi Kaydetme", 1369, 6, 114, 100, 14, WS_GROUP
+    PUSHBUTTON "&Şifreyi Saklama", 1369, 6, 114, 100, 14, WS_GROUP
     PUSHBUTTON "G&elişmiş...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
     AUTOCHECKBOX "&Çevirmeden Önce Kütük ve Yazdırma Paylaşımını Algıla", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
 END
@@ -886,7 +886,7 @@ BEGIN
     EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Şifre:", 1397, 8, 70, 49, 8, NOT WS_GROUP
     EDITTEXT 1393, 66, 64, 143, 14, ES_PASSWORD | ES_AUTOHSCROLL
-    AUTOCHECKBOX "Ş&ifreyi Kaydet", 1391, 66, 84, 143, 10
+    AUTOCHECKBOX "Ş&ifreyi Sakla", 1391, 66, 84, 143, 10
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 98, 200, 1
     DEFPUSHBUTTON "Tamam", 1, 81, 104, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 145, 104, 60, 14
@@ -904,7 +904,7 @@ BEGIN
     EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
     LTEXT "&Etki Alanı:", 1395, 7, 108, 53, 8, NOT WS_GROUP
     EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-    AUTOCHECKBOX "K&ullanıcı Adını ve Şifreyi Kaydet", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "K&ullanıcı Adını ve Şifreyi Sakla", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON "Tamam", 1, 87, 146, 60, 14, WS_GROUP
     PUSHBUTTON "İptal", 2, 151, 146, 60, 14
     CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
@@ -1405,7 +1405,7 @@ BEGIN
     LTEXT "&Şifre:", 1112, 11, 81, 90, 8
     EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
-    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kullanıcı Adını ve Şifreyi Kaydet:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kullanıcı Adını ve Şifreyi Sakla:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Yalnızca Ben", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
@@ -1434,7 +1434,7 @@ BEGIN
     LTEXT "&Etki Alanı:", 1110, 10, 104, 92, 8
     EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
-    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kullanıcı Adını ve Şifreyi Kaydet:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTOCHECKBOX "&Aşağıdaki Kullanıcılar İçin Bu Kullanıcı Adını ve Şifreyi Sakla:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Yalnızca Ben", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
     AUTORADIOBUTTON "&Bu Bilgisayarı Kullanan Tüm Kişiler", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
     CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
@@ -1771,45 +1771,45 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the check box next to each device you want to use for incoming connections.", -1, 10, 4, 299, 10
-    LTEXT "&Connection devices:", -1, 10, 16, 275, 8
+    LTEXT "Gelen bağlantılar için kullanmak istediğiniz tüm aygıtların bitişiğindeki kutucukları imleyiniz.", -1, 10, 4, 299, 10
+    LTEXT "&Bağlantı Aygıtları:", -1, 10, 16, 275, 8
     CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
-    PUSHBUTTON "P&roperties", 7013, 243, 120, 65, 14, WS_GROUP
+    PUSHBUTTON "&Husûsiyetler", 7013, 243, 120, 65, 14, WS_GROUP
 END
 
 7051 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the check box next to each type of networking software that should be enabled for incoming connections.", -1, 10, 1, 288, 20
-    LTEXT "Networking &software:", -1, 10, 24, 274, 8
+    LTEXT "Gelen bağlantılar için etkinleştirilmesi gereken tüm ağ yazılımı türlerinin bitişiğindeki kutucukları imleyiniz.", -1, 10, 1, 288, 20
+    LTEXT "&Ağ Yazılımı:", -1, 10, 24, 274, 8
     CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
-    PUSHBUTTON "&Install...", 7037, 108, 71, 60, 14, WS_GROUP
-    PUSHBUTTON "&Uninstall", 7038, 172, 71, 60, 14, WS_GROUP
-    PUSHBUTTON "&Properties", 7039, 236, 71, 60, 14, WS_GROUP
-    LTEXT "<protocol description>", 7040, 21, 105, 273, 38
-    LTEXT "Description:", -1, 21, 95, 275, 8
+    PUSHBUTTON "&Kur...", 7037, 108, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "Ka&ldır", 7038, 172, 71, 60, 14, WS_GROUP
+    PUSHBUTTON "&Husûsiyetler", 7039, 236, 71, 60, 14, WS_GROUP
+    LTEXT "<İletişim Kâidesi Tanımı>", 7040, 21, 105, 273, 38
+    LTEXT "Tanım:", -1, 21, 95, 275, 8
 END
 
 7052 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Virtual private connections to your computer through the Internet are possible only if your computer has a known name or IP address on the Internet.", -1, 10, 4, 290, 20
-    AUTORADIOBUTTON "&Allow virtual private connections", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-    AUTORADIOBUTTON "&Do not allow virtual private connections", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-    LTEXT "Do you want to allow virtual private connections to this computer?", -1, 17, 49, 275, 8
-    LTEXT " If you allow VPN connections, ReactOS will modify the Internet Connection Firewall to allow your computer to send and receive VPN packets.", -1, 10, 25, 293, 25
+    LTEXT "Umûmî Ağ boyunca bilgisayarınıza farazî şahsî bağlantılar ancak bilgisayarınızın Umûmî Ağ'da bilinen bir adı veyâ IP adresi varsa olasıdır.", -1, 10, 4, 290, 20
+    AUTORADIOBUTTON "&Farazî Şahsî Bağlantılara İzin Ver", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+    AUTORADIOBUTTON "F&arazî Şahsî Bağlantılara İzin Verme", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "Bu bilgisayara şahsî farazî bağlantılara izin vermek istiyor musunuz?", -1, 17, 49, 275, 8
+    LTEXT "VPN bağlantılarına izin verirseniz ReactOS, VPN paketlerini göndermeye ve almaya bilgisayarınıza izin vermek için Umûmî Ağ Bağlantı Güvenlik Duvarı'nı değiştirecektir.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Device for this connection:", -1, 23, 24, 275, 8
+    LTEXT "&Bu Bağlantı İçin Aygıt:", -1, 23, 24, 275, 8
     COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Devices other than the one you select will not be affected and may be used for other purposes.", -1, 10, 4, 275, 17
-    PUSHBUTTON "&Properties", 7061, 232, 53, 65, 14, WS_GROUP
+    LTEXT "Seçtiğinizden başka aygıtlar etkilenmeyecektir ve başka amaçlar için kullanılabilir.", -1, 10, 4, 275, 17
+    PUSHBUTTON "&Husûsiyetler", 7061, 232, 53, 65, 14, WS_GROUP
 END
 
 7379 DIALOGEX 0, 0, 317, 143
@@ -1820,23 +1820,23 @@ END
 
 19900 DIALOGEX 0, 0, 156, 44
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Dial-Up Networking"
+CAPTION "Çevirmeli Ağ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 563, 19901, 10, 10, 18, 20
-    LTEXT "Waiting for services to start...", 19902, 34, 16, 120, 8
+    LTEXT "Servisleri başlatmak için bekleniyor...", 19902, 34, 16, 120, 8
 END
 
 STRINGTABLE
 BEGIN
-    187 "&No, do not dial\0"
-    188 "You (or a program) have requested information from %1. Which connection do you want to use?\0"
-    189 "Add Alternate Phone Number\0"
-    190 "Dial only first available device\0"
-    191 "Dial all devices\0"
-    192 "Dial devices only as needed\0"
-    193 "Enter a user name and password with access to the remote network domain.\0"
-    194 "Network Address Translation (NAT) is currently installed as a routing protocol,\nand must be removed before enabling Internet Connection Sharing.\nTo remove Network Address Translation, open the Routing and Remote Access Manager\nsnapin and expand the router's entry in the left pane.\nDelete the Network Address Translation routing protocol from the list of IP\nrouting protocols.\0"
+    187 "&Hayır, Çevirme\0"
+    188 "Siz (ya da bir izlence) %1'den bilgi istemiş. Hangi bağlantıyı kullanmak istersiniz?\0"
+    189 "Başka Telefon Numarası Ekle\0"
+    190 "Yalnızca Birinci Var Olan Aygıtı Çevir\0"
+    191 "Tüm Aygıtları Çevir\0"
+    192 "Yalnızca Gerekli Olan Aygıtları Çevir\0"
+    193 "Uzak ağ etki alanına erişimi olan bir kullanıcı adı ve şifre giriniz.\0"
+    194 "Ağ Adresi Çevirimi (NAT) bir yönlendirme iletişim kâidesi olarak şimdilik yüklü\nve Umûmî Ağ Bağlantı Paylaşımı'nı etkinleştirmeden önce kaldırılmalıdır.\nAğ Adresi Çevirimi'ni silmek için Yönlendirme ve Uzaktan Erişim Yöneticisi ek bileşenini açınız\nve sol bölmede yönlendiricinin girişini genişletiniz.\nIP yönlendirme iletişim kâidelerinin dizelgesinden Ağ Adresi Çevirimi yönlendirme\niletişim kâidesini siliniz.\0"
     195 "The area code must contain only the digits 0 to 9.\0"
     196 "The entry name must contain at least one non-blank character and cannot begin with a period.  Choose a different name.\0"
     197 "You must choose a value from %1 to %2 for this field.\0"
