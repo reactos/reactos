@@ -33,13 +33,14 @@
 34 stdcall -noname PathFindFileName(wstr) PathFindFileNameW
 35 stdcall -noname PathRemoveFileSpec(ptr) PathRemoveFileSpecAW # Fixme
 36 stdcall -noname PathAppend(ptr ptr) PathAppendAW # Fixme
-37 stdcall -noname PathCombine(wstr wstr wstr) PathCombineW
+37 stdcall -noname PathCombine(wstr wstr wstr) PathCombineW # FIXME: Inspect
 38 stdcall -noname PathStripPath(wstr) PathStripPathW
-39 stdcall -noname PathIsUNC(wstr) PathIsUNCW
-40 stdcall -noname PathIsRelative(wstr) PathIsRelativeW
+39 stdcall -noname PathIsUNC(wstr) PathIsUNCW # FIXME: Inspect
+40 stdcall -noname PathIsRelative(wstr) PathIsRelativeW # FIXME: Inspect
 41 stdcall IsLFNDriveA(str)
 42 stdcall IsLFNDriveW(wstr)
 43 stdcall PathIsExe(ptr) PathIsExeAW
+44 stub -noname Control_RunDLLNoFallback
 45 stdcall -noname PathFileExists(ptr) PathFileExistsAW # Fixme
 46 stdcall -noname PathMatchSpec(wstr wstr) PathMatchSpecW
 47 stdcall PathMakeUniqueName(ptr long ptr ptr ptr) PathMakeUniqueNameAW
@@ -238,7 +239,7 @@
 240 stdcall PathIsSlowA(str long)
 241 stdcall -noname SHGetUserDisplayName(wstr ptr)
 242 stdcall -noname SHGetProcessDword(long long) # FIXME: Inspect
-243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx
+243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx # FIXME: Inspect
 244 stdcall -noname SHInitRestricted(ptr ptr) # FIXME: Inspect
 245 stdcall SHTestTokenMembership(ptr ptr)
 246 stub -noname SHInvokePrivilegedFunctionW
