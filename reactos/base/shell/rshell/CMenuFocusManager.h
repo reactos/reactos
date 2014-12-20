@@ -81,6 +81,8 @@ private:
     BOOL m_movedSinceDown;
     HWND m_windowAtDown;
 
+    HWND m_PreviousForeground;
+
     // TODO: make dynamic
 #define MAX_RECURSE 20
     StackEntry m_bandStack[MAX_RECURSE];

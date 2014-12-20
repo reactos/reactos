@@ -163,6 +163,7 @@ CMenuFocusManager::CMenuFocusManager() :
     m_isLButtonDown(FALSE),
     m_movedSinceDown(FALSE),
     m_windowAtDown(NULL),
+    m_PreviousForeground(NULL),
     m_bandCount(0),
     m_menuDepth(0)
 {
@@ -704,7 +705,14 @@ HRESULT CMenuFocusManager::UpdateFocus()
         m_current = NULL;
 
     if (!m_current || m_current->type != MenuPopupEntry)
+    {
         SetMenuCapture(NULL);
+        if (old && old->type == MenuPopupEntry && m_PreviousForeground)
+        {
+            ::SetForegroundWindow(m_PreviousForeground);
+            m_PreviousForeground = NULL;
+        }
+    }
 
     if (m_current && m_current->type != TrackedMenuEntry)
     {
@@ -771,10 +779,24 @@ HRESULT CMenuFocusManager::UpdateFocus()
             hr = topMenu->mb->GetSite(IID_PPV_ARG(IServiceProvider, &bandSite));
             hr = bandSite->QueryService(SID_SMenuBandParent, IID_PPV_ARG(IOleWindow, &deskBar));
 
+            CComPtr<IOleWindow> deskBarSite;
+            hr = IUnknown_GetSite(deskBar, IID_PPV_ARG(IOleWindow, &deskBarSite));
+
+            // FIXME: Find the correct place for this
+            HWND hWndOwner;
+            deskBarSite->GetWindow(&hWndOwner);
+
+            m_PreviousForeground = ::GetForegroundWindow();
+            if (m_PreviousForeground != hWndOwner)
+                ::SetForegroundWindow(hWndOwner);
+            else
+                m_PreviousForeground = NULL;
+
             // Get the HWND of the top-level window
             HWND hWndSite;
             hr = deskBar->GetWindow(&hWndSite);
             SetMenuCapture(hWndSite);
+
         }
 
         if (!m_parent || m_parent->type == MenuBarEntry)
