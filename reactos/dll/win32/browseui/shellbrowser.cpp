@@ -591,6 +591,7 @@ public:
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -631,6 +632,7 @@ public:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_MEASUREITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
@@ -3162,6 +3164,12 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     LRESULT ret = RelayMsgToShellView(uMsg, wParam, menuIndex, bHandled);
 
     return ret;
+}
+
+LRESULT CShellBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    ::SetFocus(fCurrentShellViewWindow);
+    return 0;
 }
 
 LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
