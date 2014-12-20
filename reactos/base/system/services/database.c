@@ -1774,13 +1774,15 @@ done:
 VOID
 ScmAutoStartServices(VOID)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwError;
     PLIST_ENTRY GroupEntry;
     PLIST_ENTRY ServiceEntry;
     PSERVICE_GROUP CurrentGroup;
     PSERVICE CurrentService;
     WCHAR szSafeBootServicePath[MAX_PATH];
+    DWORD SafeBootEnabled;
     HKEY hKey;
+    DWORD dwKeySize;
     ULONG i;
 
     /*
@@ -1788,6 +1790,30 @@ ScmAutoStartServices(VOID)
      * Therefore, no need to acquire the user service start lock.
      */
     ASSERT(ScmInitialize);
+
+    /*
+     * Retrieve the SafeBoot parameter.
+     */
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot\\Option",
+                            0,
+                            KEY_READ,
+                            &hKey);
+    if (dwError == ERROR_SUCCESS)
+    {
+        dwKeySize = sizeof(SafeBootEnabled);
+        dwError = RegQueryValueExW(hKey,
+                                   L"OptionValue",
+                                   0,
+                                   NULL,
+                                   (LPBYTE)&SafeBootEnabled,
+                                   &dwKeySize);
+        RegCloseKey(hKey);
+    }
+
+    /* Default to Normal boot if the value doesn't exist */
+    if (dwError != ERROR_SUCCESS)
+        SafeBootEnabled = 0;
 
     /* Acquire the service control critical section, to synchronize starts */
     EnterCriticalSection(&ControlServiceCriticalSection);
@@ -1802,7 +1828,7 @@ ScmAutoStartServices(VOID)
         wcscpy(szSafeBootServicePath,
                L"SYSTEM\\CurrentControlSet\\Control\\SafeBoot");
 
-        switch (GetSystemMetrics(SM_CLEANBOOT))
+        switch (SafeBootEnabled)
         {
             /* NOTE: Assumes MINIMAL (1) and DSREPAIR (3) load same items */
             case 1:
@@ -1815,7 +1841,7 @@ ScmAutoStartServices(VOID)
                 break;
         }
 
-        if (GetSystemMetrics(SM_CLEANBOOT))
+        if (SafeBootEnabled != 0)
         {
             /* If key does not exist then do not assume safe mode */
             dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -2028,14 +2054,13 @@ ScmInitNamedPipeCriticalSection(VOID)
                             &hKey);
    if (dwError == ERROR_SUCCESS)
    {
-        dwKeySize = sizeof(DWORD);
+        dwKeySize = sizeof(PipeTimeout);
         RegQueryValueExW(hKey,
                          L"ServicesPipeTimeout",
                          0,
                          NULL,
                          (LPBYTE)&PipeTimeout,
                          &dwKeySize);
-
        RegCloseKey(hKey);
    }
 }
