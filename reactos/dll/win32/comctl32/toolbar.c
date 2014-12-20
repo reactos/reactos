@@ -244,9 +244,9 @@ static void TOOLBAR_TooltipSetRect(const TOOLBAR_INFO *infoPtr, const TBUTTON_IN
 
 static inline int default_top_margin(const TOOLBAR_INFO *infoPtr)
 {
-#if 0
+#ifndef __REACTOS__
     return (infoPtr->dwStyle & TBSTYLE_FLAT ? 0 : TOP_BORDER);
-#else
+#else /* r65766 */
     /* This is the behaviour in comctl32 v6 */
     return 0;
 #endif
