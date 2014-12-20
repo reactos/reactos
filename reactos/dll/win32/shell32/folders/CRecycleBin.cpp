@@ -574,6 +574,7 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
     }
     else if(IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
     {
+        // FIXME: This is not correct, it does not show the right icons
         LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
         pObj = IExtractIconA_Constructor(pidlItem);
         SHFree(pidlItem);
@@ -581,6 +582,7 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
     }
     else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1))
     {
+        // FIXME: This is not correct, it does not show the right icons
         LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
         pObj = IExtractIconW_Constructor(pidlItem);
         SHFree(pidlItem);
