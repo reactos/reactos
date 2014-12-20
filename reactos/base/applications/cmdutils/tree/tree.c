@@ -26,11 +26,13 @@ BOOL bUseAscii = FALSE; //if this flag is true, ASCII characters will be used in
 VOID PrintResourceString(INT resID, ...)
 {
     WCHAR tmpBuffer[STR_MAX];
+    CHAR tmpBufferA[STR_MAX];
     va_list arg_ptr;
 
     va_start(arg_ptr, resID);
     LoadStringW(GetModuleHandle(NULL), resID, tmpBuffer, STR_MAX);
-    vfwprintf(stdout, tmpBuffer, arg_ptr);
+    CharToOemW(tmpBuffer, tmpBufferA);
+    vfprintf(stdout, tmpBufferA, arg_ptr);
     va_end(arg_ptr);
 }
 
