@@ -31,6 +31,7 @@ target_link_libraries(rshell
 add_importlibs(rshell
     uxtheme
     shlwapi
+    advapi32
     shell32
     comctl32
     gdi32
