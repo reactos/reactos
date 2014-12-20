@@ -138,20 +138,6 @@ HRESULT ShowNetConnectionStatus(IOleCommandTarget * lpOleCmd, INetConnection * p
 
 CNetworkConnections::CNetworkConnections()
 {
-    ref = 0;
-    HRESULT hr = CoCreateInstance(CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, IID_IOleCommandTarget, (LPVOID*)&lpOleCmd);
-    if (FAILED(hr))
-    {
-        ERR("CoCreateInstance failed\n");
-        lpOleCmd = NULL;
-    }
-    else
-    {
-        hr = lpOleCmd->Exec(&CGID_ShellServiceObject, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
-        if (FAILED(hr))
-            ERR("Exec CGID_ShellServiceObject failed\n");
-    }
-
     pidlRoot = _ILCreateNetConnect();	/* my qualified pidl */
 }
 

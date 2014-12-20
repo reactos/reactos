@@ -22,6 +22,8 @@ class CSysTray :
     public CWindowImpl<CSysTray, CWindow, CMessageWndClass>,
     public IOleCommandTarget
 {
+    CComPtr<IOleCommandTarget> pctNetShell;
+
     // TODO: keep icon handlers here
 
     HWND hwndSysTray;
@@ -36,6 +38,9 @@ class CSysTray :
     HRESULT ShutdownIcons();
     HRESULT UpdateIcons();
     HRESULT ProcessIconMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    HRESULT InitNetShell();
+    HRESULT ShutdownNetShell();
 
 public:
     HRESULT NotifyIcon(INT code, UINT uId, HICON hIcon, LPCWSTR szTip);

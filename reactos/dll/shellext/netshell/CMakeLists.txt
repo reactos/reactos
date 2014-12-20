@@ -1,4 +1,6 @@
 
+project(SHELL)
+
 set_cpp(WITH_RUNTIME)
 
 if(NOT MSVC)

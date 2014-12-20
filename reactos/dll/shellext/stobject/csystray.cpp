@@ -15,10 +15,30 @@ SysTrayIconHandlers_t g_IconHandlers [] = {
 };
 const int             g_NumIcons = _countof(g_IconHandlers);
 
-const GUID CLSID_SysTray = { 0x35CEC8A3, 0x2BE6, 0x11D2, { 0x87, 0x73, 0x92, 0xE2, 0x20, 0x52, 0x41, 0x53 } };
-
 CSysTray::CSysTray() {}
 CSysTray::~CSysTray() {}
+
+HRESULT CSysTray::InitNetShell()
+{
+    HRESULT hr = CoCreateInstance(CLSID_ConnectionTray, 0, 1u, IID_PPV_ARG(IOleCommandTarget, &pctNetShell));
+    if (FAILED(hr))
+        return hr;
+
+    return pctNetShell->Exec(&CGID_ShellServiceObject,
+                             OLECMDID_NEW,
+                             OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+}
+
+HRESULT CSysTray::ShutdownNetShell()
+{
+    if (!pctNetShell)
+        return S_FALSE;
+    HRESULT hr = pctNetShell->Exec(&CGID_ShellServiceObject,
+                                   OLECMDID_SAVE,
+                                   OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    pctNetShell.Release();
+    return hr;
+}
 
 HRESULT CSysTray::InitIcons()
 {
@@ -30,7 +50,7 @@ HRESULT CSysTray::InitIcons()
             return hr;
     }
 
-    return S_OK;
+    return InitNetShell();
 }
 
 HRESULT CSysTray::ShutdownIcons()
@@ -43,7 +63,7 @@ HRESULT CSysTray::ShutdownIcons()
             return hr;
     }
 
-    return S_OK;
+    return ShutdownNetShell();
 }
 
 HRESULT CSysTray::UpdateIcons()

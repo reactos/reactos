@@ -18,6 +18,7 @@
 #include <setupapi.h>
 #include <devguid.h>
 #include <netcon.h>
+#include <shlguid_undoc.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -54,9 +55,6 @@ typedef struct tagVALUEStruct
 
 /* globals */
 extern HINSTANCE netshell_hInstance;
-extern const GUID CLSID_NetworkConnections;
-extern const GUID CLSID_LANConnectUI;
-extern const GUID CLSID_LanConnectStatusUI;
 
 /* shfldr_netconnect.c */
 HRESULT ShowNetConnectionProperties(INetConnection * pNetConnect, HWND hwnd);

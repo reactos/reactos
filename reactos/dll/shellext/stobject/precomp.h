@@ -26,6 +26,8 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <undocshell.h>
+#include <shellutils.h>
 
 #include <shellapi.h>
 
@@ -62,46 +64,3 @@ extern HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray);
 extern HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-/* --------------- Utils ------------------------------ */
-
-static __inline ULONG
-Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
-{
-    char szMsg[512];
-    char *szMsgStart;
-    const char *fname;
-    va_list vl;
-    ULONG uRet;
-
-    fname = strrchr(filename, '\\');
-    if (fname == NULL)
-    {
-        fname = strrchr(filename, '/');
-    }
-
-    if (fname == NULL)
-        fname = filename;
-    else
-        fname++;
-
-    szMsgStart = szMsg + sprintf(szMsg, "[%10lu] %s:%d: ", GetTickCount(), fname, line);
-
-    va_start(vl, lpFormat);
-    uRet = (ULONG) vsprintf(szMsgStart, lpFormat, vl);
-    va_end(vl);
-
-    OutputDebugStringA(szMsg);
-
-    return uRet;
-}
-
-#define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
-
-#if 1
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (DbgPrint("Unexpected failure %08x.\n", hr), TRUE))
-#else
-#define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
-#endif
-
