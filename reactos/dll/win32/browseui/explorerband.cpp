@@ -13,19 +13,9 @@ HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
 }
 
 CExplorerBand::CExplorerBand() :
-    m_internalBand(NULL),
-    m_internalDeskBand(NULL),
-    m_internalObjectWithSite(NULL),
-    m_internalInputObject(NULL),
-    m_internalPersistStream(NULL),
-    m_internalOleCommandTarget(NULL),
-    m_internalServiceProvider(NULL),
-    m_internalBandNavigate(NULL),
-    m_internalWinEventHandler(NULL),
-    m_internalNamespaceProxy(NULL),
-    m_internalDispatch(NULL),
     m_OnWinEventShown(FALSE)
 {
+#if 0
     HRESULT hResult = CoCreateInstance(CLSID_ExplorerBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &m_internalBand));
     if (FAILED(hResult))
     {
@@ -158,6 +148,7 @@ CExplorerBand::CExplorerBand() :
         m_internalDispatch = NULL;
         return;
     }
+#endif
 }
 
 CExplorerBand::~CExplorerBand()
