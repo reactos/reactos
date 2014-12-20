@@ -1395,3 +1395,10 @@ SHGetUserSessionId(HANDLE hHandle)
     FIXME("SHGetUserSessionId() stub\n");
     return NULL;
 }
+
+EXTERN_C
+DWORD WINAPI CheckStagingArea(VOID)
+{
+    /* Called by native explorer */
+    return 0;
+}

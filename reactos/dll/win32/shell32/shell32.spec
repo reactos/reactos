@@ -460,7 +460,7 @@
 750 stub SHGetAttributesFromDataObject
 751 stub -noname SHSimulateDropOnClsid
 752 stub -noname SHGetComputerDisplayNameW
-753 stub -noname CheckStagingArea
+753 stdcall -noname CheckStagingArea()
 754 stub -noname SHLimitInputEditWithFlags
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)
 756 stub -noname DeleteFileThumbnail
