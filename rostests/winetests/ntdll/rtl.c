@@ -1504,14 +1504,6 @@ static void test_LdrAddRefDll(void)
         return;
     }
 
-#ifndef __REACTOS__
-    if (!winetest_interactive)
-    {
-        skip("Skipping LdrAddRefDll tests. See CORE-8102\n");
-        return;
-    }
-#endif
-
     mod = LoadLibraryA("comctl32.dll");
     ok(mod != NULL, "got %p\n", mod);
     ret = FreeLibrary(mod);
