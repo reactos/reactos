@@ -1504,7 +1504,7 @@ static void test_LdrAddRefDll(void)
         return;
     }
 
-#ifdef __REACTOS__
+#ifndef __REACTOS__
     if (!winetest_interactive)
     {
         skip("Skipping LdrAddRefDll tests. See CORE-8102\n");
