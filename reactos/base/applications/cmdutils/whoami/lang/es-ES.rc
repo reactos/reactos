@@ -1,0 +1,58 @@
+/* Spanish translation by Swyter */
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "INFORMACIÓN DE USUARIO"
+    IDS_GROU_HEADER "INFORMACIÓN DE GRUPO"
+    IDS_PRIV_HEADER "INFORMACIÓN DE PRIVILEGIOS"
+    IDS_COL_USER_NAME "Nombre de usuario"
+    IDS_COL_GROUP_NAME "Nombre de grupo"
+    IDS_COL_TYPE "Tipo"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Atributos"
+    IDS_COL_PRIV_NAME "Nombre de privilegio"
+    IDS_COL_DESCRIPTION "Descripción"
+    IDS_COL_STATE "Estado"
+    IDS_TP_WELL_KNOWN_GROUP "Grupo conocido"
+    IDS_TP_ALIAS "Alias"
+    IDS_TP_LABEL "Etiqueta"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Grupo obligatorio, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Habilitado de manera predeterminada, "
+    IDS_ATTR_GROUP_ENABLED "Grupo habilitado, "
+    IDS_ATTR_GROUP_OWNER "Propietario de grupo, "
+    IDS_UNKNOWN_DESCRIPTION "¿?"
+    IDS_STATE_ENABLED "Habilitada"
+    IDS_STATE_DISABLED "Deshabilitado"
+    IDS_ERROR_UPN "ERROR: no se puede obtener el nombre principal de usuario (UPN) porque el\nusuario que ha iniciado sesión no es un usuario de dominio.\n"
+    IDS_ERROR_FQDN "ERROR: no se puede obtener el nombre distintivo completo (FQDN) porque el usuario\nque ha iniciado sesión no es un usuario de dominio.\n"
+    IDS_ERROR_VALUEXPECTED "ERROR: Sintaxis no válida. Se esperaba un valor para ""/fo"".\nEscriba ""WHOAMI /?"" para su uso.\n"
+    IDS_ERROR_VALUENOTALLOWED "ERROR: Sintaxis no válida. El valor ""%s"" no está permitido para la opción ""/fo"".\nEscriba ""WHOAMI /?"" para su uso.\n"
+    IDS_ERROR_1TIMES "ERROR: Sintaxis no válida. La opción ""%s"" no está permitida más de ""1"" veces.\nEscriba ""WHOAMI /?"" para su uso.\n"
+    IDS_ERROR_INVALIDSYNTAX "ERROR: sintaxis no válida.\nEscriba ""WHOAMI /?"" para obtener detalles de uso.\n"
+    IDS_ERROR_INVALIDARG "ERROR: Argumento u opción no válido - ""%s"".\nEscriba ""WHOAMI /?"" para su uso.\n"
+    IDS_ERROR_NH_LIST "ERROR: no se puede usar el modificador /NH con el formato LIST.\nEscriba ""WHOAMI /?"" para obtener detalles de uso.\n"
+    IDS_HELP "DESCRIPCIÓN:\n\
+             Muestra información sobre el usuario local, sus privilegios y grupos.\n\
+             Si no se añaden argumentos se mostrará el usuario y dominio actual.\n\
+             \n\
+             Los formatos disponibles para '/fo' son 'csv', 'list' y 'table'.\n\
+             Por defecto los datos se muestran en una tabla (opción 'table').\n\
+             Puedes utilizar '/nh' para ocultar los encabezados. \n\
+             \n\
+            SINTAXIS:\n\
+             whoami [/upn | /fqdn | /logonid] \n\
+             whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh] \n\
+             whoami /all [/fo <Formato>] [/nh] \n\
+             \n\
+            EJEMPLOS: \n\
+             whoami /groups /priv /nh /fo csv \n\
+             whoami /logonid \n\
+             whoami \n"
+END

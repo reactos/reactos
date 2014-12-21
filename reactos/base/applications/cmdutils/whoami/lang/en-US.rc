@@ -1,0 +1,56 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "USER INFORMATION"
+    IDS_GROU_HEADER "GROUP INFORMATION"
+    IDS_PRIV_HEADER "PRIVILEGES INFORMATION"
+    IDS_COL_USER_NAME "User Name"
+    IDS_COL_GROUP_NAME "Group Name"
+    IDS_COL_TYPE "Type"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Attributes"
+    IDS_COL_PRIV_NAME "Privilege Name"
+    IDS_COL_DESCRIPTION "Description"
+    IDS_COL_STATE "State"
+    IDS_TP_WELL_KNOWN_GROUP "Well-known group"
+    IDS_TP_ALIAS "Alias"
+    IDS_TP_LABEL "Label"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Mandatory group, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Enabled by default, "
+    IDS_ATTR_GROUP_ENABLED "Enabled group, "
+    IDS_ATTR_GROUP_OWNER "Group owner, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Enabled"
+    IDS_STATE_DISABLED "Disabled"
+    IDS_ERROR_UPN "ERROR: Unable to get User Principal Name (UPN) as the current logged-on user\nis not a domain user.\n"
+    IDS_ERROR_FQDN "ERROR: Unable to get Fully Qualified Distinguished Name (FQDN) as the current\nlogged-on user is not a domain user.\n"
+    IDS_ERROR_VALUEXPECTED "ERROR: Invalid syntax. Value expected for '/fo'.\nType ""WHOAMI /?"" for usage.\n"
+    IDS_ERROR_VALUENOTALLOWED "ERROR: Invalid syntax. '%s' value is not allowed for '/fo' option.\nType ""WHOAMI /?"" for usage.\n"
+    IDS_ERROR_1TIMES "ERROR: Invalid syntax. '%s' option is not allowed more than '1' time(s).\nType ""WHOAMI /?"" for usage.\n"
+    IDS_ERROR_INVALIDSYNTAX "ERROR: Invalid syntax.\nType ""WHOAMI /?"" for usage.\n"
+    IDS_ERROR_INVALIDARG "ERROR: Invalid argument/option - '%s'.\nType ""WHOAMI /?"" for usage.\n"
+    IDS_ERROR_NH_LIST "ERROR: /NH switch cannot be used with the LIST format.\nType ""WHOAMI /?"" for usage.\n"
+    IDS_HELP "DESCRIPTION:\n\
+             Display user, group and privileges information for the local logged-on user.\n\
+             If no arguments are provided, displays the current domain and user name.\n\
+             \n\
+             Available output formats for the '/fo' option are 'csv', 'list' and 'table'.\n\
+             Use '/nh' to hide headers. By default the data is displayed in a table.\n\
+             \n\
+            SYNTAX:\n\
+             whoami [/upn | /fqdn | /logonid] \n\
+             whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+             whoami /all [/fo <Format>] [/nh] \n\
+             \n\
+            EXAMPLES: \n\
+             whoami /groups /priv /nh /fo csv \n\
+             whoami /logonid \n\
+             whoami \n"
+END
