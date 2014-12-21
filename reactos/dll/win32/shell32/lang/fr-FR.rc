@@ -116,11 +116,11 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Cette version de ReactOS est enregistrée à:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Cette version de ReactOS est enregistrée à :", IDC_STATIC, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-    LTEXT "Mémoire physique installée:", IDC_STATIC, 35, 152, 130, 10
+    LTEXT "Mémoire physique installée :", IDC_STATIC, 35, 152, 130, 10
     LTEXT "", IDC_ABOUT_PHYSMEM, 167, 152, 88, 10
     DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
     PUSHBUTTON "", IDC_ABOUT_AUTHORS, 5, 178, 70, 14
@@ -130,7 +130,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS est une réalisation de:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS est une réalisation de :", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -156,20 +156,20 @@ BEGIN
     ICON "", 14000, 8, 8, 21, 20, WS_VISIBLE
     EDITTEXT 14001, 49, 10, 180, 14, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Type de la cible:", 14004, 8, 38, 68, 10
+    LTEXT "Type de la cible :", 14004, 8, 38, 68, 10
     EDITTEXT 14005, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Localisation de la cible:", 14006, 8, 55, 68, 10
+    LTEXT "Localisation de la cible :", 14006, 8, 55, 68, 10
     EDITTEXT 14007, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Cible:", 14008, 8, 71, 68, 10
+    LTEXT "&Cible :", 14008, 8, 71, 68, 10
     EDITTEXT 14009, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "&Démarrer dans:", 14010, 8, 98, 68, 10
+    LTEXT "&Démarrer dans :", 14010, 8, 98, 68, 10
     EDITTEXT 14011, 79, 96, 150, 14, ES_AUTOHSCROLL
-    LTEXT "&Touche de raccourci:", 14014, 8, 117, 68, 10
+    LTEXT "&Touche de raccourci :", 14014, 8, 117, 68, 10
     CONTROL "", 14015, "msctls_hotkey32", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP, 79, 115, 150, 14
-    LTEXT "&Exécuter:", 14016, 8, 136, 68, 10
+    LTEXT "&Exécuter :", 14016, 8, 136, 68, 10
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
-    LTEXT "C&ommentaire:", 14018, 8, 154, 68, 10
+    LTEXT "C&ommentaire :", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "Trouver la cible...", 14020, 9, 172, 70, 14, ES_LEFT
     PUSHBUTTON "&Changer d'icône...", 14021, 84, 172, 70, 14, ES_LEFT
@@ -196,26 +196,26 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT
-    LTEXT "Type de fichier:", 14004, 8, 40, 55, 10
+    LTEXT "Type de fichier :", 14004, 8, 40, 55, 10
     CONTROL "Dossier", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 68, 40, 160, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Localisation:", 14008, 8, 56, 55, 10
+    LTEXT "Localisation :", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "Taille:", 14010, 8, 72, 55, 10
+    LTEXT "Taille :", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "Taille sur le disque :", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Contient:", 14026, 8, 104, 55, 10
+    LTEXT "Contient :", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 120, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Créé:", 14014, 8, 128, 55, 10
+    LTEXT "Créé :", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 68, 128, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Attributs:", 14020, 8, 152, 46, 10
+    LTEXT "Attributs :", 14020, 8, 152, 46, 10
     AUTOCHECKBOX "Lectu&re-seule", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "Cac&hé", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "&Archive", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "A&vancé...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -230,14 +230,14 @@ BEGIN
     CONTROL "Fichier", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "Ouvrir avec :", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Changer...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Localisation :", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Taille :", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "Taille sur le disque :", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Créé :", 14014, 8, 131, 45, 10
@@ -251,7 +251,7 @@ BEGIN
     AUTOCHECKBOX "Lectu&re-seule", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "Cac&hé", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "&Archive", 14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "A&vancé...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -261,9 +261,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Version du fichier : ", 14000, 10, 10, 55, 10
     EDITTEXT 14001, 77, 10, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Description: ", 14002, 10, 27, 45, 10
+    LTEXT "Description : ", 14002, 10, 27, 45, 10
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+    LTEXT "Copyright : ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     GROUPBOX "Autres informations de version : ", 14006, 6, 70, 222, 115
     LTEXT "Nom de l'élément : ", 14007, 13, 82, 50, 10
@@ -280,21 +280,21 @@ BEGIN
     ICON "", 14016, 10, 3, 32, 32, WS_VISIBLE
     EDITTEXT 14000, 40, 11, 190, 14, ES_LEFT | WS_BORDER | WS_GROUP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 32, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Type:", -1, 8, 38, 95, 10
+    LTEXT "Type :", -1, 8, 38, 95, 10
     EDITTEXT 14001, 110, 38, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Système de fichiers:", -1, 8, 51, 95, 10
+    LTEXT "Système de fichiers :", -1, 8, 51, 95, 10
     EDITTEXT 14002, 110, 51, 120, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 64, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CONTROL "", 14013, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 69, 10, 10
-    LTEXT "Espace utilisé:", -1, 25, 69, 80, 10
+    LTEXT "Espace utilisé :", -1, 25, 69, 80, 10
     EDITTEXT 14003, 110, 69, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14004, 197, 69, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14014, "Static", SS_SUNKEN | SS_OWNERDRAW, 8, 82, 10, 10
-    LTEXT "Espace libre:", -1, 25, 82, 80, 10
+    LTEXT "Espace libre :", -1, 25, 82, 80, 10
     EDITTEXT 14005, 110, 82, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14006, 197, 82, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 97, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Capacité:", -1, 25, 103, 80, 10
+    LTEXT "Capacité :", -1, 25, 103, 80, 10
     EDITTEXT 14007, 110, 103, 86, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     EDITTEXT 14008, 197, 103, 33, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     CONTROL "", 14015, "Static", SS_OWNERDRAW, 70, 116, 100, 30
@@ -371,7 +371,7 @@ BEGIN
     LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 12, 211, 10
     LTEXT "Fichier :    ", 14001, 44, 25, 188, 10
     GROUPBOX "&Programmes", -1, 7, 42, 249, 187
-    CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
+    CONTROL "Programmes", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Toujours utiliser le progr&amme sélectionné pour ouvrir ce type de fichier", 14003, 20, 193, 225, 10
     PUSHBUTTON "Parcourir...", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
@@ -380,12 +380,12 @@ END
 
 IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
+CAPTION "En cours de copie..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
+    PUSHBUTTON "Annuler", 14002, 195, 14, 60, 16 
     CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
+    LTEXT "Fichier", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -608,16 +608,16 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Attention"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DOCUMENT, IDI_SHELL_DOCUMENT, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "Ce fichier peut être utilisé par le système ou par\n\
+une autre application. Modifier ce fichier peut endommager votre\n\
+système ou le rendre moins fonctionnel.\n\n\
+Êtes-vous sûr de vouloir ouvrir ce fichier ?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Oui", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "Non", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -695,10 +695,10 @@ BEGIN
     IDS_LOGOFF_PROMPT "Voulez-vous vous déconnecter ?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
-    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_ERROR "Impossible d'afficher la boîte de dialogue pour l'exécution d'un fichier (erreur interne)"
+    IDS_RUNDLG_BROWSE_ERROR "Impossible d'afficher la boîte de dialogue pour la recherche de fichier (erreur interne)"
+    IDS_RUNDLG_BROWSE_CAPTION "Parcourir"
+    IDS_RUNDLG_BROWSE_FILTER "Fichiers exécutables (*.exe)\0*.exe\0Tous les fichiers (*.*)\0*.*\0"
 
     /* shell folder path default values */
     IDS_PROGRAMS "Menu Démarrer\\Programmes"
@@ -739,8 +739,8 @@ BEGIN
     /* Open With */
     IDS_OPEN_WITH "Ouvrir avec"
     IDS_OPEN_WITH_CHOOSE "Choisir le programme..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED "Programmes recommandés :"
+    IDS_OPEN_WITH_OTHER "Auttres programmes :"
 
     IDS_SHELL_ABOUT_AUTHORS "&Auteurs"
     IDS_SHELL_ABOUT_BACK "< Précédent"
@@ -792,7 +792,7 @@ BEGIN
     IDS_FILE_DETAILSADV "Les fichiers avec l'extension '%s' sont de type '%s'. Pour modifier les paramètres qui concernent tous les fichiers '%s', cliquez sur Avancé."
     IDS_FILE_TYPES "FileTypes"
     IDS_COLUMN_EXTENSION "Extensions"
-    IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_BYTES_FORMAT "octets"
+    IDS_UNKNOWN_APP "Application inconnue"
+    IDS_EXE_DESCRIPTION "Description :"
 END
