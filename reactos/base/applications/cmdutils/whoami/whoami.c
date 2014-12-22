@@ -33,7 +33,7 @@ BOOL GetArgument(WCHAR* arg, int argc, WCHAR* argv[])
     int i;
 
     if (!arg)
-        goto BailOut;
+        return FALSE;
 
     for (i = 1; i < argc; i++)
     {
@@ -41,7 +41,6 @@ BOOL GetArgument(WCHAR* arg, int argc, WCHAR* argv[])
             return TRUE;
     }
 
-    BailOut:
     return FALSE;
 }
 
@@ -58,12 +57,16 @@ LPWSTR WhoamiGetUser(EXTENDED_NAME_FORMAT NameFormat)
     LPWSTR UsrBuf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MAX_PATH);
     ULONG UsrSiz = MAX_PATH;
 
-    if (UsrBuf && GetUserNameExW(NameFormat, UsrBuf, &UsrSiz))
+    if (UsrBuf == NULL)
+        return NULL;
+
+    if (GetUserNameExW(NameFormat, UsrBuf, &UsrSiz))
     {
         CharLowerW(UsrBuf);
         return UsrBuf;
     }
 
+    HeapFree(GetProcessHeap(), 0, UsrBuf);
     return NULL;
 }
 
@@ -103,6 +106,7 @@ VOID* WhoamiGetTokenInfo(TOKEN_INFORMATION_CLASS TokenType)
                                  &dwLength))
         {
             wprintf(L"ERROR 0x%x: could not get token information.\r\n", GetLastError());
+            WhoamiFree(pTokenInfo);
             exit(1);
         }
 
@@ -370,35 +374,33 @@ int WhoamiLogonId(void)
     LPWSTR pSidStr = 0;
     PSID pSid = 0;
 
-    if (pGroupInfo)
-    {
-        /* lets see if we can find the logon SID in that list, should be there */
-        for (dwIndex = 0; dwIndex < pGroupInfo->GroupCount; dwIndex++)
-        {
-            if ((pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID) == SE_GROUP_LOGON_ID)
-            {
-                pSid = pGroupInfo->Groups[dwIndex].Sid;
-            }
-        }
+    if (pGroupInfo == NULL)
+        return 0;
 
-        if (!pSid || !ConvertSidToStringSidW(pSid, &pSidStr))
+    /* lets see if we can find the logon SID in that list, should be there */
+    for (dwIndex = 0; dwIndex < pGroupInfo->GroupCount; dwIndex++)
+    {
+        if ((pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID) == SE_GROUP_LOGON_ID)
         {
-            wprintf(L"ERROR: Couldn't convert the logon SID to a string.\n");
-            return 1;
-        }
-        else
-        {
-            /* let's show our converted logon SID */
-            wprintf(L"%s\n", pSidStr);
+            pSid = pGroupInfo->Groups[dwIndex].Sid;
         }
     }
 
-    /* cleanup our allocations */
-    if (pSidStr)
-        LocalFree(pSidStr);
-
-    if (pGroupInfo)
+    if (pSid == 0 || !ConvertSidToStringSidW(pSid, &pSidStr))
+    {
         WhoamiFree(pGroupInfo);
+        wprintf(L"ERROR: Couldn't convert the logon SID to a string.\n");
+        return 1;
+    }
+    else
+    {
+        /* let's show our converted logon SID */
+        wprintf(L"%s\n", pSidStr);
+    }
+
+    /* cleanup our allocations */
+    LocalFree(pSidStr);
+    WhoamiFree(pGroupInfo);
 
     return 0;
 }
@@ -406,41 +408,42 @@ int WhoamiLogonId(void)
 int WhoamiUser(void)
 {
     PTOKEN_USER pUserInfo = (PTOKEN_USER) WhoamiGetTokenInfo(TokenUser);
-    LPWSTR pUserStr = WhoamiGetUser(NameSamCompatible);
+    LPWSTR pUserStr = NULL;
     LPWSTR pSidStr = NULL;
+    WhoamiTable *UserTable = NULL;
 
-    if (pUserInfo && pUserStr)
-    {
-        WhoamiTable *UserTable = WhoamiAllocTable(2, 2);
-
-        WhoamiPrintHeader(IDS_USER_HEADER);
-
-        /* set the column labels */
-        WhoamiSetTable(UserTable, WhoamiLoadRcString(IDS_COL_USER_NAME), 0, 0);
-        WhoamiSetTable(UserTable, WhoamiLoadRcString(IDS_COL_SID), 0, 1);
-
-        ConvertSidToStringSidW(pUserInfo->User.Sid, &pSidStr);
-
-        /* set the values for our single row of data */
-        WhoamiSetTable(UserTable, pUserStr, 1, 0);
-        WhoamiSetTable(UserTable, pSidStr, 1, 1);
-
-        WhoamiPrintTable(UserTable);
-    }
-    else
+    if (pUserInfo == NULL)
     {
         return 1;
     }
 
-    /* cleanup our allocations */
-    if (pSidStr)
-        LocalFree(pSidStr);
-
-    if (pUserInfo)
+    pUserStr = WhoamiGetUser(NameSamCompatible);
+    if (pUserStr == NULL)
+    {
         WhoamiFree(pUserInfo);
+        return 1;
+    }
 
-    if (pUserStr)
-        WhoamiFree(pUserStr);
+    UserTable = WhoamiAllocTable(2, 2);
+
+    WhoamiPrintHeader(IDS_USER_HEADER);
+
+    /* set the column labels */
+    WhoamiSetTable(UserTable, WhoamiLoadRcString(IDS_COL_USER_NAME), 0, 0);
+    WhoamiSetTable(UserTable, WhoamiLoadRcString(IDS_COL_SID), 0, 1);
+
+    ConvertSidToStringSidW(pUserInfo->User.Sid, &pSidStr);
+
+    /* set the values for our single row of data */
+    WhoamiSetTable(UserTable, pUserStr, 1, 0);
+    WhoamiSetTable(UserTable, pSidStr, 1, 1);
+
+    WhoamiPrintTable(UserTable);
+
+    /* cleanup our allocations */
+    LocalFree(pSidStr);
+    WhoamiFree(pUserInfo);
+    WhoamiFree(pUserStr);
 
     return 0;
 }
@@ -473,102 +476,101 @@ int WhoamiGroups(void)
     };
 
     PTOKEN_GROUPS pGroupInfo = (PTOKEN_GROUPS)WhoamiGetTokenInfo(TokenGroups);
+    UINT PrintingRow;
+    WhoamiTable *GroupTable = NULL;
 
-    if (pGroupInfo)
-    {
-        /* the header is the first (0) row, so we start in the second one (1) */
-        UINT PrintingRow = 1;
-
-        WhoamiTable *GroupTable = WhoamiAllocTable(pGroupInfo->GroupCount + 1, 4);
-
-        WhoamiPrintHeader(IDS_GROU_HEADER);
-
-        WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_GROUP_NAME), 0, 0);
-        WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_TYPE), 0, 1);
-        WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_SID), 0, 2);
-        WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_ATTRIB), 0, 3);
-
-        for (dwIndex = 0; dwIndex < pGroupInfo->GroupCount; dwIndex++)
-        {
-            LookupAccountSidW(NULL,
-                              pGroupInfo->Groups[dwIndex].Sid,
-                              (LPWSTR)&szGroupName,
-                              &cchGroupName,
-                              (LPWSTR)&szDomainName,
-                              &cchDomainName,
-                              &Use);
-
-            /* the original tool seems to limit the list to these kind of SID items */
-            if ((Use == SidTypeWellKnownGroup || Use == SidTypeAlias ||
-                Use == SidTypeLabel) && !(pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID))
-            {
-                wchar_t tmpBuffer[666];
-
-                /* looks like windows treats 0x60 as 0x7 for some reason, let's just nod and call it a day:
-                   0x60 is SE_GROUP_INTEGRITY | SE_GROUP_INTEGRITY_ENABLED
-                   0x07 is SE_GROUP_MANDATORY | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_ENABLED */
-
-                if (pGroupInfo->Groups[dwIndex].Attributes == 0x60)
-                    pGroupInfo->Groups[dwIndex].Attributes = 0x07;
-
-                /* 1- format it as DOMAIN\GROUP if the domain exists, or just GROUP if not */
-                _snwprintf((LPWSTR)&tmpBuffer,
-                           666,
-                           L"%s%s%s",
-                           szDomainName,
-                           cchDomainName ? L"\\" : L"",
-                           szGroupName);
-
-                WhoamiSetTable(GroupTable, tmpBuffer, PrintingRow, 0);
-
-                /* 2- let's find out the group type by using a simple lookup table for lack of a better method */
-                WhoamiSetTable(GroupTable, WhoamiLoadRcString(SidNameUseStr[Use]), PrintingRow, 1);
-
-                /* 3- turn that SID into text-form */
-                ConvertSidToStringSidW(pGroupInfo->Groups[dwIndex].Sid, &pSidStr);
-
-                WhoamiSetTable(GroupTable, pSidStr, PrintingRow, 2);
-
-                LocalFree(pSidStr);
-
-                /* 4- reuse that buffer for appending the attributes in text-form at the very end */
-                ZeroMemory(tmpBuffer, 666);
-
-                if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_MANDATORY)
-                    StringCchCat(tmpBuffer, 666, WhoamiLoadRcString(IDS_ATTR_GROUP_MANDATORY));
-                if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_ENABLED_BY_DEFAULT)
-                    StringCchCat(tmpBuffer, 666, WhoamiLoadRcString(IDS_ATTR_GROUP_ENABLED_BY_DEFAULT));
-                if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_ENABLED)
-                    StringCchCat(tmpBuffer, 666, WhoamiLoadRcString(IDS_ATTR_GROUP_ENABLED));
-                if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_OWNER)
-                    StringCchCat(tmpBuffer, 666, WhoamiLoadRcString(IDS_ATTR_GROUP_OWNER));
-
-                /* remove the last comma (', ' which is 2 wchars) of the buffer, let's keep it simple */
-                tmpBuffer[max(wcslen(tmpBuffer) - 2, 0)] = UNICODE_NULL;
-
-                WhoamiSetTable(GroupTable, tmpBuffer, PrintingRow, 3);
-
-                PrintingRow++;
-            }
-
-            /* reset the buffers so that we can reuse them */
-            ZeroMemory(szGroupName, 255);
-            ZeroMemory(szDomainName, 255);
-
-            cchGroupName = 255;
-            cchDomainName = 255;
-        }
-
-        WhoamiPrintTable(GroupTable);
-    }
-    else
+    if (pGroupInfo == NULL)
     {
         return 1;
     }
 
+    /* the header is the first (0) row, so we start in the second one (1) */
+    PrintingRow = 1;
+
+    GroupTable = WhoamiAllocTable(pGroupInfo->GroupCount + 1, 4);
+
+    WhoamiPrintHeader(IDS_GROU_HEADER);
+
+    WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_GROUP_NAME), 0, 0);
+    WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_TYPE), 0, 1);
+    WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_SID), 0, 2);
+    WhoamiSetTable(GroupTable, WhoamiLoadRcString(IDS_COL_ATTRIB), 0, 3);
+
+    for (dwIndex = 0; dwIndex < pGroupInfo->GroupCount; dwIndex++)
+    {
+        LookupAccountSidW(NULL,
+                          pGroupInfo->Groups[dwIndex].Sid,
+                          (LPWSTR)&szGroupName,
+                          &cchGroupName,
+                          (LPWSTR)&szDomainName,
+                          &cchDomainName,
+                          &Use);
+
+        /* the original tool seems to limit the list to these kind of SID items */
+        if ((Use == SidTypeWellKnownGroup || Use == SidTypeAlias ||
+            Use == SidTypeLabel) && !(pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_LOGON_ID))
+        {
+                wchar_t tmpBuffer[666];
+
+            /* looks like windows treats 0x60 as 0x7 for some reason, let's just nod and call it a day:
+               0x60 is SE_GROUP_INTEGRITY | SE_GROUP_INTEGRITY_ENABLED
+               0x07 is SE_GROUP_MANDATORY | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_ENABLED */
+
+            if (pGroupInfo->Groups[dwIndex].Attributes == 0x60)
+                pGroupInfo->Groups[dwIndex].Attributes = 0x07;
+
+            /* 1- format it as DOMAIN\GROUP if the domain exists, or just GROUP if not */
+            _snwprintf((LPWSTR)&tmpBuffer,
+                       _countof(tmpBuffer),
+                       L"%s%s%s",
+                       szDomainName,
+                       cchDomainName ? L"\\" : L"",
+                       szGroupName);
+
+            WhoamiSetTable(GroupTable, tmpBuffer, PrintingRow, 0);
+
+            /* 2- let's find out the group type by using a simple lookup table for lack of a better method */
+            WhoamiSetTable(GroupTable, WhoamiLoadRcString(SidNameUseStr[Use]), PrintingRow, 1);
+
+            /* 3- turn that SID into text-form */
+            ConvertSidToStringSidW(pGroupInfo->Groups[dwIndex].Sid, &pSidStr);
+
+            WhoamiSetTable(GroupTable, pSidStr, PrintingRow, 2);
+
+            LocalFree(pSidStr);
+
+            /* 4- reuse that buffer for appending the attributes in text-form at the very end */
+            ZeroMemory(tmpBuffer, sizeof(tmpBuffer));
+
+            if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_MANDATORY)
+                StringCchCat(tmpBuffer, _countof(tmpBuffer), WhoamiLoadRcString(IDS_ATTR_GROUP_MANDATORY));
+            if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_ENABLED_BY_DEFAULT)
+                StringCchCat(tmpBuffer, _countof(tmpBuffer), WhoamiLoadRcString(IDS_ATTR_GROUP_ENABLED_BY_DEFAULT));
+            if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_ENABLED)
+                StringCchCat(tmpBuffer, _countof(tmpBuffer), WhoamiLoadRcString(IDS_ATTR_GROUP_ENABLED));
+            if (pGroupInfo->Groups[dwIndex].Attributes & SE_GROUP_OWNER)
+                StringCchCat(tmpBuffer, _countof(tmpBuffer), WhoamiLoadRcString(IDS_ATTR_GROUP_OWNER));
+
+            /* remove the last comma (', ' which is 2 wchars) of the buffer, let's keep it simple */
+            tmpBuffer[max(wcslen(tmpBuffer) - 2, 0)] = UNICODE_NULL;
+
+            WhoamiSetTable(GroupTable, tmpBuffer, PrintingRow, 3);
+
+            PrintingRow++;
+        }
+
+        /* reset the buffers so that we can reuse them */
+        ZeroMemory(szGroupName, sizeof(szGroupName));
+        ZeroMemory(szDomainName, sizeof(szDomainName));
+
+        cchGroupName = 255;
+        cchDomainName = 255;
+    }
+
+    WhoamiPrintTable(GroupTable);
+
     /* cleanup our allocations */
-    if (pGroupInfo)
-        WhoamiFree((LPVOID)pGroupInfo);
+    WhoamiFree((LPVOID)pGroupInfo);
 
     return 0;
 }
@@ -576,72 +578,69 @@ int WhoamiGroups(void)
 int WhoamiPriv(void)
 {
     PTOKEN_PRIVILEGES pPrivInfo = (PTOKEN_PRIVILEGES) WhoamiGetTokenInfo(TokenPrivileges);
+    DWORD dwResult = 0, dwIndex = 0;
+    WhoamiTable *PrivTable = NULL;
 
-    if (pPrivInfo)
-    {
-        DWORD dwResult = 0, dwIndex = 0;
-
-        WhoamiTable *PrivTable = WhoamiAllocTable(pPrivInfo->PrivilegeCount + 1, 3);
-
-        WhoamiPrintHeader(IDS_PRIV_HEADER);
-
-        WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_COL_PRIV_NAME), 0, 0);
-        WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_COL_DESCRIPTION), 0, 1);
-        WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_COL_STATE), 0, 2);
-
-        for (dwIndex = 0; dwIndex < pPrivInfo->PrivilegeCount; dwIndex++)
-        {
-            PWSTR PrivName = NULL, DispName = NULL;
-            DWORD PrivNameSize = 0, DispNameSize = 0;
-            BOOL ret = FALSE;
-
-            ret = LookupPrivilegeNameW(NULL,
-                                       &pPrivInfo->Privileges[dwIndex].Luid,
-                                       NULL,
-                                       &PrivNameSize);
-
-            PrivName = HeapAlloc(GetProcessHeap(), 0, ++PrivNameSize*sizeof(WCHAR));
-
-            LookupPrivilegeNameW(NULL,
-                                 &pPrivInfo->Privileges[dwIndex].Luid,
-                                 PrivName,
-                                 &PrivNameSize);
-
-            WhoamiSetTableDyn(PrivTable, PrivName, dwIndex + 1, 0);
-
-            ret = LookupPrivilegeDisplayNameW(NULL, PrivName, NULL, &DispNameSize, &dwResult);
-
-            if (!ret || GetLastError() == ERROR_NO_SUCH_PRIVILEGE)
-            {
-                DispName = HeapAlloc(GetProcessHeap(), 0, ++DispNameSize * sizeof(WCHAR));
-
-                LookupPrivilegeDisplayNameW(NULL, PrivName, DispName, &DispNameSize, &dwResult);
-
-                //wprintf(L"DispName: %d %x '%s'\n", DispNameSize, GetLastError(), DispName);
-
-                WhoamiSetTableDyn(PrivTable, DispName, dwIndex + 1, 1);
-            }
-            else
-            {
-                WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_UNKNOWN_DESCRIPTION), dwIndex + 1, 1);
-            }
-
-            if (pPrivInfo->Privileges[dwIndex].Attributes & SE_PRIVILEGE_ENABLED)
-                WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_STATE_ENABLED),  dwIndex + 1, 2);
-            else
-                WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_STATE_DISABLED), dwIndex + 1, 2);
-        }
-
-        WhoamiPrintTable(PrivTable);
-    }
-    else
+    if (pPrivInfo == NULL)
     {
         return 1;
     }
 
+    PrivTable = WhoamiAllocTable(pPrivInfo->PrivilegeCount + 1, 3);
+
+    WhoamiPrintHeader(IDS_PRIV_HEADER);
+
+    WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_COL_PRIV_NAME), 0, 0);
+    WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_COL_DESCRIPTION), 0, 1);
+    WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_COL_STATE), 0, 2);
+
+    for (dwIndex = 0; dwIndex < pPrivInfo->PrivilegeCount; dwIndex++)
+    {
+        PWSTR PrivName = NULL, DispName = NULL;
+        DWORD PrivNameSize = 0, DispNameSize = 0;
+        BOOL ret = FALSE;
+
+        ret = LookupPrivilegeNameW(NULL,
+                                   &pPrivInfo->Privileges[dwIndex].Luid,
+                                   NULL,
+                                   &PrivNameSize);
+
+        PrivName = HeapAlloc(GetProcessHeap(), 0, ++PrivNameSize*sizeof(WCHAR));
+
+        LookupPrivilegeNameW(NULL,
+                             &pPrivInfo->Privileges[dwIndex].Luid,
+                             PrivName,
+                             &PrivNameSize);
+
+        WhoamiSetTableDyn(PrivTable, PrivName, dwIndex + 1, 0);
+
+        ret = LookupPrivilegeDisplayNameW(NULL, PrivName, NULL, &DispNameSize, &dwResult);
+
+        if (!ret || GetLastError() == ERROR_NO_SUCH_PRIVILEGE)
+        {
+            DispName = HeapAlloc(GetProcessHeap(), 0, ++DispNameSize * sizeof(WCHAR));
+
+            LookupPrivilegeDisplayNameW(NULL, PrivName, DispName, &DispNameSize, &dwResult);
+
+            //wprintf(L"DispName: %d %x '%s'\n", DispNameSize, GetLastError(), DispName);
+
+            WhoamiSetTableDyn(PrivTable, DispName, dwIndex + 1, 1);
+        }
+        else
+        {
+            WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_UNKNOWN_DESCRIPTION), dwIndex + 1, 1);
+        }
+
+        if (pPrivInfo->Privileges[dwIndex].Attributes & SE_PRIVILEGE_ENABLED)
+            WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_STATE_ENABLED),  dwIndex + 1, 2);
+        else
+            WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_STATE_DISABLED), dwIndex + 1, 2);
+    }
+
+    WhoamiPrintTable(PrivTable);
+
     /* cleanup our allocations */
-    if (pPrivInfo)
-        WhoamiFree(pPrivInfo);
+    WhoamiFree(pPrivInfo);
 
     return 0;
 }
