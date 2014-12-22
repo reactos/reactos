@@ -191,12 +191,7 @@ UserClientConnect(IN PCSR_PROCESS CsrProcess,
 
 CSR_SERVER_DLL_INIT(UserServerDllInitialization)
 {
-/*** From win32csr... ***/
-    HANDLE ServerThread;
-    CLIENT_ID ClientId;
     NTSTATUS Status;
-    UINT i;
-/*** END - From win32csr... ***/
 
     /* Initialize the memory */
     UserServerHeap = RtlGetProcessHeap();
@@ -210,36 +205,12 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->NameTable = UserServerApiNameTable;
 #endif
     LoadedServerDll->SizeOfProcessData = 0;
-#if 0
     LoadedServerDll->ConnectCallback = UserClientConnect;
-#else
-    LoadedServerDll->ConnectCallback = NULL;
-#endif
     LoadedServerDll->DisconnectCallback = NULL;
     LoadedServerDll->HardErrorCallback = UserServerHardError;
     LoadedServerDll->ShutdownProcessCallback = UserClientShutdown;
 
     UserServerDllInstance = LoadedServerDll->ServerHandle;
-
-/*** From win32csr... See r54125 ***/
-    /* Start the Raw Input Thread and the Desktop Thread */
-    for (i = 0; i < 2; ++i)
-    {
-        Status = RtlCreateUserThread(NtCurrentProcess(),
-                                     NULL, TRUE, 0, 0, 0,
-                                     CreateSystemThreads,
-                                     (PVOID)i, &ServerThread, &ClientId);
-        if (NT_SUCCESS(Status))
-        {
-            NtResumeThread(ServerThread, NULL);
-            NtClose(ServerThread);
-        }
-        else
-        {
-            DPRINT1("Cannot start Raw Input Thread!\n");
-        }
-    }
-/*** END - From win32csr... ***/
 
     /* Create the power request event */
     Status = NtCreateEvent(&ghPowerRequestEvent,
@@ -277,6 +248,32 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
         DPRINT1("NtUserInitialize failed with Status 0x%08x\n", Status);
         return Status;
     }
+
+/*** From win32csr... See r54125 ***/
+    {
+        HANDLE ServerThread;
+        CLIENT_ID ClientId;
+        UINT i;
+
+        /* Start the Raw Input Thread and the Desktop Thread */
+        for (i = 0; i < 2; ++i)
+        {
+            Status = RtlCreateUserThread(NtCurrentProcess(),
+                                         NULL, TRUE, 0, 0, 0,
+                                         CreateSystemThreads,
+                                         (PVOID)i, &ServerThread, &ClientId);
+            if (NT_SUCCESS(Status))
+            {
+                NtResumeThread(ServerThread, NULL);
+                NtClose(ServerThread);
+            }
+            else
+            {
+                DPRINT1("Cannot start Raw Input Thread!\n");
+            }
+        }
+    }
+/*** END - From win32csr... ***/
 
     /* All done */
     return STATUS_SUCCESS;
