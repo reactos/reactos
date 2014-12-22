@@ -1,0 +1,14 @@
+/* Russian translation by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Графическое представление структуры папок или пути.\n\n\
+TREE [диск:][путь] [/F] [/A]\n\n\
+\t/F   Вывод имен файлов в каждой папке.\n\
+\t/A   Использовать символы ASCII вместо символов национальных алфавитов..\n"
+    IDS_NO_SUBDIRECTORIES "Подпапки отсутствуют"
+    IDS_FOLDER_PATH "Структура папок\n"
+    IDS_VOL_SERIAL "Серийный номер тома %x:%x\n"
+END

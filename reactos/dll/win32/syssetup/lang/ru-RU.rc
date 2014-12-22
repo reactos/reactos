@@ -47,7 +47,7 @@ BEGIN
     LTEXT "&Имя компьютера:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "При установке будет создан профиль пользователя с именем Administrator Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "При установке будет создан профиль пользователя с именем Administrator. Вы можете использовать этот профиль, если вам нужно получить права администратора.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "Введите пароль администратора (не более 127 символов).", IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 96, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD

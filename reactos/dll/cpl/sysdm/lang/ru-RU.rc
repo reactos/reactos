@@ -103,9 +103,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Копия Профиля"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "из:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Из:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "в:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "В:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
     DEFPUSHBUTTON "&ОК", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 199, 30, 50, 14
@@ -116,9 +116,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Переименовать профиль"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ИЗ:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "Из:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-    LTEXT "в:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "В:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_RENPROFEDITTO, 30, 30, 160, 12
     DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 199, 30, 50, 14
@@ -145,7 +145,7 @@ END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Загрузка и востановление"
+CAPTION "Загрузка и восстановление"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Загрузка операционной системы", IDC_STATIC, 7, 12, 238, 95
@@ -156,7 +156,7 @@ BEGIN
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "секунд", IDC_STATIC, 213, 56, 25, 8
-    AUTOCHECKBOX "Отображать &варианты востановления:", IDC_STRRECREC, 14, 70, 163, 8
+    AUTOCHECKBOX "Отображать &варианты восстановления:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
@@ -210,7 +210,7 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Перемнные среды"
+CAPTION "Переменные среды"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Переменные пользователя", IDC_STATIC, 7, 12, 238, 100
@@ -262,7 +262,7 @@ BEGIN
     IDS_VARIABLE "Переменная"
     IDS_VALUE "Значение"
     IDS_NO_DUMP "(нет)"
-    IDS_MINI_DUMP "Малый дамп(64Кб)"
+    IDS_MINI_DUMP "Малый дамп (64Кб)"
     IDS_KERNEL_DUMP "Дамп ядра"
     IDS_FULL_DUMP "Полный дамп"
     IDS_USERPROFILE_NAME "Имя"
@@ -277,6 +277,6 @@ BEGIN
     IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть не меньше, чем начальный размер, который не должен превышать свободного места на выбранном диске."
     IDS_PAGEFILE_NONE "none"
     IDS_PAGEFILE_SYSTEM "system managed"
-    IDS_INFOREBOOT "You have to reboot the computer, in order to apply the changes."
+    IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."
     IDS_DEVS "\nКоманда ReactOS\n\nКоординатор проекта\n\nАлексей Брагин\n\nКоллектив разработчиков\n\nАлексей Брагин\nЭндрю Гринвуд\nАндрей Коротаев\nАрт Йеркс\nКристоф фон Виттих\nКолин Финк\nДаниэль Раймер\nДмитрий Чапышев\nЭрик Коль\nГед Мёрфи\nГрегор Брюнмар\nЭрве Поссино\nДжеймс Тэбор\nДжеффри Морлан\nЙоханнес Андервальд\nKamil Horníček\nKJK::Гиперион\nМаартен Босма\nМагнус Олсен\nМарк Пиулахс\nМаттиас Купфер\nМайк Норделл\nПитер Вард\nПьер Швейцер\nСавелий Третьяков\nСтефан Гинсберг\nСильвейн Петреоль\nТомас Блюмель\nТимо Кройцер\n\nАлекс Ионеску\nФилип Навара\nГуннар Далснес\nМартин Фукс\nРойс Митчелл III\nБрэндон Тёрнер\nБрайан Палмер\nКаспер Хорнструп\nДэвид Велч\nЭмануэль Алиберти\nГе ван Гельдорп\nГрегор Анич\nДжейсон Филби\nЙенс Коллин\nМихаэль Вирт\nНатан Вудс\nРоберт Дикенсон\nРекс Джоллифф\nVizzini\n\nРелиз-инженеры\n\nКолин Финк\nЦзылян Гуо\n\nРазработка веб-сайта\n\nКолин Финк\nЯн Блумквист Кинандер\nКлеменс Фридл\nЦзылян Гуо\n\nГрафический дизайн\n\nMindflyer\nWierd_W\n\nБлагодарности\n\nвсем участникам проекта\nКоманде Wine\n\n"
 END

@@ -140,8 +140,8 @@ BEGIN
     IDS_PROCESSSUBTITLE "Создание раздела на диске, копирование файлов, установка загрузчика"
     IDS_RESTARTTITLE "Первый этап установки закончен"
     IDS_RESTARTSUBTITLE "Первый этап закончен, для продолжения требуется перезагрузка"
-    IDS_SUMMARYTITLE "Installation Summary"
-    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_SUMMARYTITLE "Сводка"
+    IDS_SUMMARYSUBTITLE "Проверьте список параметров перед началом установки"
     IDS_ABORTSETUP "ReactOS установлен на компьютер не полностью. Если вы закроете программу установки сейчас, в дальнейшем вам придется повторить установку ReactOS. Вы уверены, что необходимо прервать установку?"
     IDS_ABORTSETUP2 "Прервать установку?"
 END

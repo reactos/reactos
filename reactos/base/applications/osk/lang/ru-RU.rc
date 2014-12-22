@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS Kernel
+ * PROJECT:         ReactOS On-Screen Keyboard
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/osk/lang/ru-RU.rc
  * PURPOSE:         On screen keyboard (Russian resources)
@@ -9,7 +9,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_NEUTRAL
 
 MAIN_DIALOG DIALOGEX DISCARDABLE 0, 0, 608, 164
-CAPTION "Клавиатура визуальный"
+CAPTION "Экранная клавиатура"
 FONT 8, "MS Shell Dlg"
 EXSTYLE WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE
 BEGIN

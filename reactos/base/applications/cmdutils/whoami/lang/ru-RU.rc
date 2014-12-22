@@ -1,0 +1,58 @@
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "Сведения о пользователе"
+    IDS_GROU_HEADER "Сведения о группах"
+    IDS_PRIV_HEADER "Сведения о привилегиях"
+    IDS_COL_USER_NAME "Пользователь"
+    IDS_COL_GROUP_NAME "Группа"
+    IDS_COL_TYPE "Тип"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Атрибуты"
+    IDS_COL_PRIV_NAME "Имя привилегии"
+    IDS_COL_DESCRIPTION "Описание"
+    IDS_COL_STATE "Состояние"
+    IDS_TP_WELL_KNOWN_GROUP "Хорошо известная группа"
+    IDS_TP_ALIAS "Псевдоним"
+    IDS_TP_LABEL "Метка"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Обязательная группа, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Включена по умолчанию, "
+    IDS_ATTR_GROUP_ENABLED "Включенная группа, "
+    IDS_ATTR_GROUP_OWNER "Владелец группы, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Включен"
+    IDS_STATE_DISABLED "Отключен"
+    IDS_ERROR_UPN "ОШИБКА: Не удается получить имя участника-пользователя (UPN), поскольку текущий\nвошедший пользователь не является пользователем домена.\n"
+    IDS_ERROR_FQDN "ОШИБКА: Не удается получить полное доменное имя (FQDN), поскольку текущий\nвошедший пользователь не является пользователем домена.\n"
+    IDS_ERROR_VALUEXPECTED "ОШИБКА: Указан недопустимый формат (/FO).\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_ERROR_VALUENOTALLOWED "ОШИБКА: Неверный синтаксис. Значение '%s' запрещено для параметра '/fo'.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_ERROR_1TIMES "ОШИБКА: Неверный синтаксис. Запрещено использовать параметр '%s' более '1' раз(а).\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_ERROR_INVALIDSYNTAX "ОШИБКА: Синтаксическая ошибка. \nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_ERROR_INVALIDARG "ОШИБКА: Неправильный параметр или аргумент - '%s'.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_ERROR_NH_LIST "ОШИБКА: Параметр /NH нельзя использовать с форматом LIST.\nВведите ""WHOAMI /?"" для получения справки по использованию.\n"
+    IDS_HELP "Описание:\n\
+    Отображает информацию об пользователе, группе и привилегиях для локально вошедших пользователей.\n\
+    Если не указано аргументов, то отображает текущий домен и текущего пользователя (домен\пользователь).\n\
+\n\
+    Доступные форматы для параметра '/fo' - 'csv', 'list' и 'table'.\n\
+    Используйте '/nh' чтобы скрыть заголовки. По умолчанию данные отображаются в таблице.\n\
+\n\
+Синтаксис:\n\
+    whoami [/upn | /fqdn | /logonid] \n\
+    whoami {[/user] [/groups] [/priv]} [/fo <формат>] [/nh] \n\
+    whoami /all [/fo <формат>] [/nh] \n\
+\n\
+Примеры:\n\
+    whoami /groups /priv /nh /fo csv \n\
+    whoami /logonid \n\
+    whoami \n"
+END
