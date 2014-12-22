@@ -27,37 +27,37 @@ BEGIN
         MENUITEM "打开...", ID_FILE_OPEN
         MENUITEM "保存", ID_FILE_SAVE, GRAYED
         MENUITEM "另存为...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "恢复...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "属性", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "退出", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&编辑(&E)"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
-        MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "复制(&C)", ID_EDIT_COPY
+        MENUITEM "粘贴插入(&P)", ID_EDIT_PASTE, GRAYED
+        MENUITEM "粘贴混合(&X)", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
-        MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
+        MENUITEM "插入文件...(&I)", ID_EDIT_INSERTFILE
+        MENUITEM "混合文件...(&M)", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "删除在当前位置之前(&B)",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "删除在当前位置之后(&A)",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "音频属性(&U)", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "效果(&S)"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "增加音量(25%)(&I)", ID_EFFECTS_INCVOL
+        MENUITEM "减少音量(&D)", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "增加速度 (100%)(&I)", ID_EFFECTS_INCSPD
+        MENUITEM "减少速度(&D)", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
-        MENUITEM "&Reverse", ID_EFFECTS_REVERSE
+        MENUITEM "添加回音(&A)", ID_EFFECTS_ECHO
+        MENUITEM "倒退(&R)", ID_EFFECTS_REVERSE
     END
-    POPUP "帮助"
+    POPUP "帮助(&?)"
     BEGIN
         MENUITEM "关于...", ID_ABOUT
     END
