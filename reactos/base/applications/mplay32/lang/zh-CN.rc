@@ -11,22 +11,22 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "退出(&E)", IDM_EXIT
     END
-    POPUP "&播放"
+    POPUP "播放(&P)"
     BEGIN
-        MENUITEM "播放/&暂停\tCtrl+P", IDC_PLAY
-        MENUITEM "停&止\tCtrl+S", IDC_STOP
+        MENUITEM "播放/暂停(&P)\tCtrl+P", IDC_PLAY
+        MENUITEM "停止(&S)\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
-        MENUITEM "重&复\tCtrl+T", IDM_REPEAT
+        MENUITEM "重复(&R)\tCtrl+T", IDM_REPEAT
     END
-    POPUP "&视图"
+    POPUP "视图(&V)"
     BEGIN
-        MENUITEM "单窗 &模式", IDM_SWITCHVIEW
+        MENUITEM "单窗模式(&M)", IDM_SWITCHVIEW
     END
-    POPUP "&设备"
+    POPUP "设备(&D)"
     BEGIN
-        MENUITEM "&属性", IDM_DEVPROPS
+        MENUITEM "属性(%P)", IDM_DEVPROPS
         MENUITEM SEPARATOR
-        MENUITEM "&音量控制", IDM_VOLUMECTL
+        MENUITEM "音量控制(&V)", IDM_VOLUMECTL
     END
     POPUP "帮助(&H)"
     BEGIN
