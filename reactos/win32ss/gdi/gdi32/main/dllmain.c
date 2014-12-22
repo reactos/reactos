@@ -18,7 +18,7 @@ extern CRITICAL_SECTION gcsClientObjLinks;
  */
 BOOL
 WINAPI
-DllMain (
+DllMain(
     HANDLE  hDll,
     DWORD   dwReason,
     LPVOID  lpReserved)
@@ -38,7 +38,7 @@ DllMain (
 
 VOID
 WINAPI
-GdiProcessSetup (VOID)
+GdiProcessSetup(VOID)
 {
     hProcessHeap = GetProcessHeap();
 
@@ -53,36 +53,62 @@ GdiProcessSetup (VOID)
     InitializeCriticalSection(&gcsClientObjLinks);
 }
 
+VOID
+WINAPI
+GdiProcessShutdown(VOID)
+{
+    DeleteCriticalSection(&gcsClientObjLinks);
+    RtlDeleteCriticalSection(&semLocal);
+}
+
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GdiDllInitialize (
+GdiDllInitialize(
     HANDLE hDll,
     DWORD dwReason,
     LPVOID lpReserved)
 {
     switch (dwReason)
     {
-    case DLL_PROCESS_ATTACH:
-        GdiProcessSetup ();
-        break;
+        case DLL_PROCESS_ATTACH:
+        {
+            /* Don't bother us for each thread */
+            // DisableThreadLibraryCalls(hDll);
 
-    case DLL_THREAD_ATTACH:
-        NtCurrentTeb()->GdiTebBatch.Offset = 0;
-        NtCurrentTeb()->GdiBatchCount = 0;
-        break;
+            /* Initialize the kernel part of GDI first */
+            if (!NtGdiInit()) return FALSE;
 
-    default:
-        return FALSE;
+            /* Now initialize ourselves */
+            GdiProcessSetup();
+            break;
+        }
+
+        case DLL_THREAD_ATTACH:
+        {
+            NtCurrentTeb()->GdiTebBatch.Offset = 0;
+            NtCurrentTeb()->GdiBatchCount = 0;
+            break;
+        }
+
+        case DLL_PROCESS_DETACH:
+        {
+            /* Cleanup */
+            GdiProcessShutdown();
+            return TRUE;
+        }
+
+        default:
+            return FALSE;
     }
 
-    // Very simple, the list will fill itself as it is needed.
-    if(!SetStockObjects)
+    /* Very simple, the list will fill itself as it is needed */
+    if (!SetStockObjects)
     {
-        RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
+        RtlZeroMemory(&stock_objects, NB_STOCK_OBJECTS); // Assume ROS is dirty
         SetStockObjects = TRUE;
     }
 
