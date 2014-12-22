@@ -31,26 +31,26 @@ BEGIN
     IDS_STATE_DISABLED "Deaktiviert"
     IDS_ERROR_UPN "FEHLER: Der UPN (User Principal Name) konnte nicht abgerufen werden, da\nder aktuelle Benutzer kein Domänenbenutzer ist.\n"
     IDS_ERROR_FQDN "FEHLER: Der FQDN (Fully Qualified Distinguished Name) konnte nicht\nabgerufen werden, da der aktuelle Benutzer kein Domänenbenutzer ist.\n"
-    IDS_ERROR_VALUEXPECTED "FEHLER: Ungültige Syntax. Wert für '/fo' erwartet.\nGeben Sie \"WHOAMI /?\" ein, um die Syntax anzuzeigen.\n"
-    IDS_ERROR_VALUENOTALLOWED "FEHLER: Das angegebene Format (/FO) ist ungültig.\nGeben Sie \"WHOAMI /?\" ein, um die Syntax anzuzeigen.\n"
-    IDS_ERROR_1TIMES "FEHLER: Ungültige Syntax. Option \"%s\" darf nicht mehr als '1' Mal verwendet werden.\nGeben Sie \"WHOAMI /?\" ein, um die Syntax anzuzeigen.\n"
-    IDS_ERROR_INVALIDSYNTAX "FEHLER: Ungültige Syntax.\nGeben Sie \"WHOAMI /?\" ein, um die Syntax anzuzeigen.\n"
-    IDS_ERROR_INVALIDARG "FEHLER: Argument/Option ungültig - '%s'.\nGeben Sie \"WHOAMI /?\" ein, um die Syntax anzuzeigen.\n"
-    IDS_ERROR_NH_LIST "FEHLER: Option /NH kann nicht mit Format LIST verwendet werden.\nGeben Sie \"WHOAMI /?\" ein, um die Syntax anzuzeigen.\n"
+    IDS_ERROR_VALUEXPECTED "FEHLER: Ungültige Syntax. Wert für '/fo' erwartet.\nGeben Sie ""WHOAMI /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_ERROR_VALUENOTALLOWED "FEHLER: Das angegebene Format (/FO) ist ungültig.\nGeben Sie ""WHOAMI /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_ERROR_1TIMES "FEHLER: Ungültige Syntax. Option ""%s"" darf nicht mehr als '1' Mal verwendet werden.\nGeben Sie ""WHOAMI /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_ERROR_INVALIDSYNTAX "FEHLER: Ungültige Syntax.\nGeben Sie ""WHOAMI /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_ERROR_INVALIDARG "FEHLER: Argument/Option ungültig - '%s'.\nGeben Sie ""WHOAMI /?"" ein, um die Syntax anzuzeigen.\n"
+    IDS_ERROR_NH_LIST "FEHLER: Option /NH kann nicht mit Format LIST verwendet werden.\nGeben Sie ""WHOAMI /?"" ein, um die Syntax anzuzeigen.\n"
     IDS_HELP "BESCHREIBUNG:\n\
-             Ermittelt Benutzername, Gruppen und Berechtigungen für den aktuellen Benutzer auf dem lokalen System.\n\
-             Ohne Parameterangabe werden die aktuelle Domäne und Benutzername angezeigt.\n\
-             \n\
-             Gültige Ausgabeformate für den '/fo' Parameter sind 'CSV', 'LIST' und 'TABLE'.\n\
-             '/nh' legt fest, dass der Spaltenheader nicht in der Ausgabe angezeigt wird. Standardmäßig werden diese in einer TABLE angezeigt.\n\
-             \n\
-            SYNTAX:\n\
-             whoami [/upn | /fqdn | /logonid] \n\
-             whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-             whoami /all [/fo <Format>] [/nh] \n\
-             \n\
-            BEISPIELE: \n\
-             whoami /groups /priv /nh /fo csv \n\
-             whoami /logonid \n\
-             whoami \n"
+    Ermittelt Benutzername, Gruppen und Berechtigungen für den aktuellen Benutzer auf dem lokalen System.\n\
+    Ohne Parameterangabe werden die aktuelle Domäne und Benutzername angezeigt.\n\
+\n\
+    Gültige Ausgabeformate für den '/fo' Parameter sind 'CSV', 'LIST' und 'TABLE'.\n\
+    '/nh' legt fest, dass der Spaltenheader nicht in der Ausgabe angezeigt wird. Standardmäßig werden diese in einer TABLE angezeigt.\n\
+\n\
+SYNTAX:\n\
+    whoami [/upn | /fqdn | /logonid] \n\
+    whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+    whoami /all [/fo <Format>] [/nh] \n\
+\n\
+BEISPIELE: \n\
+    whoami /groups /priv /nh /fo csv \n\
+    whoami /logonid \n\
+    whoami \n"
 END

@@ -39,20 +39,20 @@ BEGIN
     IDS_ERROR_INVALIDARG "ERROR: Argumento u opción no válido - ""%s"".\nEscriba ""WHOAMI /?"" para su uso.\n"
     IDS_ERROR_NH_LIST "ERROR: no se puede usar el modificador /NH con el formato LIST.\nEscriba ""WHOAMI /?"" para obtener detalles de uso.\n"
     IDS_HELP "DESCRIPCIÓN:\n\
-             Muestra información sobre el usuario local, sus privilegios y grupos.\n\
-             Si no se añaden argumentos se mostrará el usuario y dominio actual.\n\
-             \n\
-             Los formatos disponibles para '/fo' son 'csv', 'list' y 'table'.\n\
-             Por defecto los datos se muestran en una tabla (opción 'table').\n\
-             Puedes utilizar '/nh' para ocultar los encabezados. \n\
-             \n\
-            SINTAXIS:\n\
-             whoami [/upn | /fqdn | /logonid] \n\
-             whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh] \n\
-             whoami /all [/fo <Formato>] [/nh] \n\
-             \n\
-            EJEMPLOS: \n\
-             whoami /groups /priv /nh /fo csv \n\
-             whoami /logonid \n\
-             whoami \n"
+    Muestra información sobre el usuario local, sus privilegios y grupos.\n\
+    Si no se añaden argumentos se mostrará el usuario y dominio actual.\n\
+\n\
+    Los formatos disponibles para '/fo' son 'csv', 'list' y 'table'.\n\
+    Por defecto los datos se muestran en una tabla (opción 'table').\n\
+    Puedes utilizar '/nh' para ocultar los encabezados. \n\
+\n\
+SINTAXIS:\n\
+    whoami [/upn | /fqdn | /logonid] \n\
+    whoami {[/user] [/groups] [/priv]} [/fo <Formato>] [/nh] \n\
+    whoami /all [/fo <Formato>] [/nh] \n\
+\n\
+EJEMPLOS: \n\
+    whoami /groups /priv /nh /fo csv \n\
+    whoami /logonid \n\
+    whoami \n"
 END
