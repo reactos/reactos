@@ -44,18 +44,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Annuler\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "C&ouper\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copier\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "Co&ller\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Créer un &lien", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Copier vers le &dossier...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "&Déplacer vers le dossier...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "&Tout sélectionner\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Inverser la sélection", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -813,5 +813,5 @@ BEGIN
     IDS_UNKNOWN_APP "Application inconnue"
     IDS_EXE_DESCRIPTION "Description :"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(Vide)"
 END
