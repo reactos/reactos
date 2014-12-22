@@ -1,0 +1,173 @@
+LANGUAGE LANG_UZBEK, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    "^A", CMD_SELECT_ALL
+    "^C", CMD_COPY
+    "^F", CMD_SEARCH
+    "^G", CMD_GOTO
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
+    "^O", CMD_OPEN
+    "^P", CMD_PRINT
+    "^S", CMD_SAVE
+    "^V", CMD_PASTE
+    "^X", CMD_CUT
+    "^Z", CMD_UNDO
+    VK_F3, CMD_SEARCH_NEXT, VIRTKEY
+    VK_F5, CMD_TIME_DATE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Fayl"
+    BEGIN
+        MENUITEM "&Yangi\tCtrl+N", CMD_NEW
+        MENUITEM "Oc&hmoq...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Saqlamoq\tCtrl+S", CMD_SAVE
+        MENUITEM "Quyid&agicha saqlamoq...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Sahi&fa parametrlari...", CMD_PAGE_SETUP
+        MENUITEM "Chop &etmoq...\tCtrl+P", CMD_PRINT
+        MENUITEM "&Настройка принтера...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Chiq&moq", CMD_EXIT
+    END
+    POPUP "O‘&zgartirmoq"
+    BEGIN
+        MENUITEM "&Bekor qilmoq\tCtrl+Z", CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Qi&rqib olmoq\tCtrl+X", CMD_CUT
+        MENUITEM "&Nusxa ko‘chirmoq\tCtrl+C", CMD_COPY
+        MENUITEM "Qo‘s&hib qo‘ymoq\tCtrl+V", CMD_PASTE
+        MENUITEM "&Yo‘q qilmoq\tDel", CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Topmoq...", CMD_SEARCH
+        MENUITEM "K&eyingisini topmoq\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Al&mashtirmoq...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&O‘tmoq...\tCtrl+G", CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "B&archasini belgilamoq", CMD_SELECT_ALL
+        MENUITEM "Vaqt/&Sana\tF5", CMD_TIME_DATE
+    END
+    POPUP "For&matlamoq"
+    BEGIN
+        MENUITEM "So‘&zlarni ko‘chirish", CMD_WRAP
+        MENUITEM "&Shrift...", CMD_FONT
+    END
+    POPUP "Ko‘&rib chiqmoq"
+    BEGIN
+        MENUITEM "&Holat satri", CMD_STATUSBAR
+    END
+    POPUP "&Yordam"
+    BEGIN
+        MENUITEM "&Содержание", CMD_HELP_CONTENTS
+        MENUITEM "&Поиск...", CMD_HELP_SEARCH
+        MENUITEM "&Использование справки", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Bloknot h&aqida", CMD_ABOUT
+        MENUITEM "&Сведения...", CMD_ABOUT_WINE
+    END
+END
+
+/* Dialog 'Page setup' */
+DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Sahifa parametrlari"
+BEGIN
+    LTEXT "Sa&rlavha:", 0x140, 10, 07, 40, 15
+    EDITTEXT 0x141, 60, 05, 110, 12, WS_BORDER | WS_TABSTOP
+    LTEXT "Pastki kolontit&ul:", 0x142, 10, 24, 40, 15
+    EDITTEXT 0x143, 60, 22, 110, 12, WS_BORDER | WS_TABSTOP
+    GROUPBOX "Chegaralar (мм):", 0x144, 10, 43, 160, 45
+    LTEXT "C&hap:", 0x145, 20, 55, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/ 0x147, 50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "&Yuqori:", 0x148, 20, 73, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/ 0x14A, 50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "O‘&ng:", 0x14B, 100, 55, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/ 0x14D, 130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Pa&st:", 0x14E, 100, 73, 30, 10, WS_CHILD
+    EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150, 130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
+    DEFPUSHBUTTON "Ha", IDOK, 180, 3, 40, 15, WS_TABSTOP
+    PUSHBUTTON "Bekor qilmoq", IDCANCEL, 180, 21, 40, 15, WS_TABSTOP
+    PUSHBUTTON "&Справка", IDHELP, 180, 39, 40, 15, WS_TABSTOP
+END
+
+/* Dialog 'Encoding' */
+DIALOG_ENCODING DIALOGEX 0, 0, 256, 44
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Кодировка символов"
+BEGIN
+    COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Kodlash:", 0x155, 5, 2, 41, 12
+    COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT "Конец строки:", 0x156, 5, 20, 50, 12
+END
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOGEX 0, 0, 165, 50
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Qatorga o‘tish"
+BEGIN
+    EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
+    LTEXT "Q&ator raqami:", 0x155, 5, 12, 49, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
+    DEFPUSHBUTTON "O‘tmoq", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+    PUSHBUTTON "Bekor qilmoq", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "О программе Блокнот ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Блокнот ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n ", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
+    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    DEFPUSHBUTTON "Закрыть", IDOK, 114, 149, 44, 15, WS_GROUP
+    ICON IDI_NPICON, -1, 12, 9, 20, 30
+    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    STRING_LICENSE "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE
+BEGIN
+    STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
+    STRING_PAGESETUP_FOOTERVALUE "Sahifa &s" /* FIXME */
+    STRING_PAGESETUP_LEFTVALUE "20 мм" /* FIXME */
+    STRING_PAGESETUP_RIGHTVALUE "20 мм" /* FIXME */
+    STRING_PAGESETUP_TOPVALUE "25 мм" /* FIXME */
+    STRING_PAGESETUP_BOTTOMVALUE "25 мм" /* FIXME */
+    STRING_NOTEPAD "Bloknot"
+    STRING_ERROR "ОШИБКА"
+    STRING_WARNING "ВНИМАНИЕ"
+    STRING_INFO "Информация"
+    STRING_UNTITLED "Nomsiz"
+    STRING_ALL_FILES "Barcha fayllar(*.*)"
+    STRING_TEXT_FILES_TXT "Matn hujjatlari (*.txt)"
+    STRING_TOOLARGE "'%s' fayli Bloknot uchun juda katta.\n\
+Faylni o‘zgartirish uchun boshqa matn muharriridan foydalaning."
+    STRING_NOTEXT "Вы не ввели текст.\n\
+Введите что-нибудь и попробуйте еще."
+    STRING_DOESNOTEXIST "'%s'\nfaylni topa olmadi\n\n\
+Yangi fayl yaratishni istaysizmi?"
+    STRING_NOTSAVED "'%s'\nfayldagi matn o‘zgartirilgan.\n\n\
+O‘zgarishlarni saqlashni istaysizmi?"
+    STRING_NOTFOUND "'%s' ni topa olmadi."
+    STRING_OUT_OF_MEMORY "Ushbu operatsiyani tugatish uchun yetarlicha xotira mavjud emas.\
+\nMavjud xotirani ko‘paytirish uchun bir yoki bir necha dasturlarni yoping va qaytadan harakat qiling."
+    STRING_CANNOTFIND "'%s' ni topa olmadi"
+    STRING_ANSI "ANSI"
+    STRING_UNICODE "Unicode"
+    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UTF8 "UTF-8"
+    STRING_CRLF "Windows (CR + LF)"
+    STRING_LF "Unix (LF)"
+    STRING_CR "Macintosh (CR)"
+    STRING_LINE_COLUMN "Qator %d, Ustun %d"
+END
