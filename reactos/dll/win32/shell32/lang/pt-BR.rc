@@ -41,6 +41,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -795,4 +812,6 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Aplicativo desconhecido"
     IDS_EXE_DESCRIPTION "Descrição:"
+
+    IDS_MENU_EMPTY "(Empty)"
 END
