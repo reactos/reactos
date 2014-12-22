@@ -147,7 +147,7 @@ UserClientConnect(IN PCSR_PROCESS CsrProcess,
     // PUSERCONNECT
     PUSERSRV_API_CONNECTINFO ConnectInfo = (PUSERSRV_API_CONNECTINFO)ConnectionInfo;
 
-    DPRINT1("UserClientConnect\n");
+    DPRINT("UserClientConnect\n");
 
     /* Check if we don't have an API port yet */
     if (CsrApiPort == NULL)

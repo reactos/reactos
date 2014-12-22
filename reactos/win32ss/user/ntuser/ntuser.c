@@ -128,10 +128,6 @@ UserInitialize(VOID)
     Status = UserCreateThreadInfo(PsGetCurrentThread());
     if (!NT_SUCCESS(Status)) return Status;
 
-//    Callback to User32 Client Thread Setup
-
-    co_IntClientThreadSetup();
-
 // }
 // Set Global SERVERINFO Error flags.
 // Load Resources.

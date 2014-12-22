@@ -17,6 +17,7 @@ PSERVERINFO gpsi = NULL;
 ULONG_PTR g_ulSharedDelta;
 BOOLEAN gfLogonProcess  = FALSE;
 BOOLEAN gfServerProcess = FALSE;
+BOOLEAN gfFirstThread   = TRUE;
 HICON hIconSmWindows = NULL, hIconWindows = NULL;
 
 WCHAR szAppInit[KEY_LENGTH];
@@ -203,9 +204,119 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32DeliverUserAPC,
 };
 
+
+
+VOID
+WINAPI
+GdiProcessSetup(VOID);
+
+BOOL
+WINAPI
+ClientThreadSetupHelper(BOOL IsCallback)
+{
+    /*
+     * Normally we are called by win32k so the win32 thread pointers
+     * should be valid as they are set in win32k::UserCreateThreadInfo.
+     */
+    PCLIENTINFO ClientInfo = GetWin32ClientInfo();
+    BOOLEAN IsFirstThread = _InterlockedExchange8((PCHAR)&gfFirstThread, FALSE);
+
+    TRACE("In ClientThreadSetup(IsCallback == %s, gfServerProcess = %s, IsFirstThread = %s)\n",
+          IsCallback ? "TRUE" : "FALSE", gfServerProcess ? "TRUE" : "FALSE", IsFirstThread ? "TRUE" : "FALSE");
+
+    if (IsFirstThread)
+        GdiProcessSetup();
+
+    /* Check for already initialized thread, and bail out if so */
+    if (ClientInfo->CI_flags & CI_INITTHREAD)
+    {
+        ERR("ClientThreadSetup: Thread already initialized.\n");
+        return FALSE;
+    }
+
+    /*
+     * CSRSS couldn't use user32::DllMain CSR server-to-server call to connect
+     * to win32k. So it is delayed to a manually-call to ClientThreadSetup.
+     * Also this needs to be done only for the first thread (since the connection
+     * is per-process).
+     */
+    // if (gfServerProcess && IsFirstThread) // Disabling this test is a HACK!!
+    {
+        NTSTATUS Status;
+        USERCONNECT UserCon;
+
+        RtlZeroMemory(&UserCon, sizeof(UserCon));
+
+        /* Minimal setup of the connect info structure */
+        UserCon.ulVersion = USER_VERSION;
+
+        /* Connect to win32k */
+        Status = NtUserProcessConnect(NtCurrentProcess(),
+                                      &UserCon,
+                                      sizeof(UserCon));
+        if (!NT_SUCCESS(Status)) return FALSE;
+
+        /* Retrieve data */
+        g_ppi = ClientInfo->ppi; // Snapshot PI, used as pointer only!
+        g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
+        gpsi = SharedPtrToUser(UserCon.siClient.psi);
+        gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
+        gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+
+        // ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
+    }
+
+    TRACE("Checkpoint (register PFN)\n");
+    if (!RegisterClientPFN())
+    {
+        TRACE("RegisterClientPFN failed\n");
+        return FALSE;
+    }
+
+    /* Mark this thread as initialized */
+    ClientInfo->CI_flags |= CI_INITTHREAD;
+
+    /* Initialization that should be done once per process */
+    if (IsFirstThread)
+    {
+        TRACE("Checkpoint (Allocating TLS)\n");
+
+        /* Allocate an index for user32 thread local data */
+        User32TlsIndex = TlsAlloc();
+        if (User32TlsIndex == TLS_OUT_OF_INDEXES)
+            return FALSE;
+
+        // HAAAAAAAAAACK!!!!!!
+        // ASSERT(gpsi);
+        if (!gpsi) ERR("AAAAAAAAAAAHHHHHHHHHHHHHH!!!!!!!! gpsi == NULL !!!!\n");
+        if (gpsi)
+        {
+        TRACE("Checkpoint (MessageInit)\n");
+
+        if (MessageInit())
+        {
+            TRACE("Checkpoint (MenuInit)\n");
+            if (MenuInit())
+            {
+                TRACE("Checkpoint initialization done OK\n");
+                InitializeCriticalSection(&U32AccelCacheLock);
+                LoadAppInitDlls();
+                return TRUE;
+            }
+            MessageCleanup();
+        }
+
+        TlsFree(User32TlsIndex);
+        return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 BOOL
 WINAPI
 ClientThreadSetup(VOID)
@@ -221,7 +332,7 @@ ClientThreadSetup(VOID)
     // However, all the other calls are made as normal, and WINSRV.DLL loads
     // USER32.dll, the DllMain runs, and eventually the first NtUser system call is
     // made which initializes Win32k (and initializes the thread, but as mentioned
-    // above, the thread is marked as TIF_CSRSSTHREAD.
+    // above, the thread is marked as TIF_CSRSSTHREAD).
     //
     // In the DllMain of User32, there is also a CsrClientConnectToServer call to
     // server 2 (winsrv). When this is done from CSRSS, the "InServer" flag is set,
@@ -241,73 +352,74 @@ ClientThreadSetup(VOID)
     // continue as normal.
     //
 
-    // GetConnected();
-
-    UNIMPLEMENTED;
+    // return ClientThreadSetupHelper(FALSE); // Disabling this call is a HACK!!
     return TRUE;
 }
 
 BOOL
-Init(VOID)
+Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
 {
-    NTSTATUS Status;
-    USERCONNECT UserCon;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("user32::Init()\n");
-
-    /* Set PEB data */
-    NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
-    NtCurrentPeb()->PostProcessInitRoutine = NULL;
-
-    /* Minimal setup of the connect info structure */
-    UserCon.ulVersion = USER_VERSION;
-
-    /* Connect to win32k */
-    Status = NtUserProcessConnect(NtCurrentProcess(),
-                                  &UserCon,
-                                  sizeof(UserCon));
-    if (!NT_SUCCESS(Status)) return FALSE;
-
-    /* Retrieve data */
-    g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
-    g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-    gpsi = SharedPtrToUser(UserCon.siClient.psi);
-    gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+    TRACE("user32::Init(0x%p) -->\n", UserCon);
 
     RtlInitializeCriticalSection(&gcsUserApiHook);
 
-    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
+    /* Initialize callback table in PEB data */
+    NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
+    NtCurrentPeb()->PostProcessInitRoutine = NULL;
 
-    /* Allocate an index for user32 thread local data */
-    User32TlsIndex = TlsAlloc();
-    if (User32TlsIndex == TLS_OUT_OF_INDEXES)
-        return FALSE;
-
-    if (MessageInit())
+    /*
+     * Retrieve data from the connect info structure if the initializing
+     * process is not CSRSS. In case it is, this will be done from inside
+     * ClientThreadSetup.
+     */
+    // if (!gfServerProcess) // Disabling this test is a HACK!!
     {
-        if (MenuInit())
+        // FIXME: HACK!! We should fixup for the NtUserProcessConnect fixups
+        // because it was made in the context of CSRSS process and not ours!!
+        // So... as long as we don't fix that, we need to redo again a call
+        // to NtUserProcessConnect... How perverse is that?!
         {
-            InitializeCriticalSection(&U32AccelCacheLock);
-            LoadAppInitDlls();
-            return TRUE;
+            RtlZeroMemory(UserCon, sizeof(*UserCon));
+
+            /* Minimal setup of the connect info structure */
+            UserCon->ulVersion = USER_VERSION;
+
+            ERR("HACK: Hackish NtUserProcessConnect call!!\n");
+            /* Connect to win32k */
+            Status = NtUserProcessConnect(NtCurrentProcess(),
+                                          UserCon,
+                                          sizeof(*UserCon));
+            if (!NT_SUCCESS(Status)) return FALSE;
         }
-        MessageCleanup();
+
+        //
+        // We continue as we should do...
+        //
+
+        /* Retrieve data */
+        g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
+        g_ulSharedDelta = UserCon->siClient.ulSharedDelta;
+        gpsi = SharedPtrToUser(UserCon->siClient.psi);
+        gHandleTable = SharedPtrToUser(UserCon->siClient.aheList);
+        gHandleEntries = SharedPtrToUser(gHandleTable->handles);
     }
 
-    TlsFree(User32TlsIndex);
-    return FALSE;
+    TRACE("<-- user32::Init()\n");
+
+    return NT_SUCCESS(Status);
 }
 
 VOID
 Cleanup(VOID)
 {
+    UnloadAppInitDlls();
     DeleteCriticalSection(&U32AccelCacheLock);
     MenuCleanup();
     MessageCleanup();
-    DeleteFrameBrushes();
-    UnloadAppInitDlls();
     TlsFree(User32TlsIndex);
+    DeleteFrameBrushes();
 }
 
 INT WINAPI
@@ -321,8 +433,6 @@ DllMain(
         case DLL_PROCESS_ATTACH:
         {
 
-#if 0
-
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
 
@@ -335,8 +445,12 @@ DllMain(
             PPEB Peb = NtCurrentPeb();
             ULONG SessionId = Peb->SessionId; // gSessionId
 
+            TRACE("user32::DllMain\n");
+
             /* Don't bother us for each thread */
             DisableThreadLibraryCalls(hInstanceDll);
+
+            RtlZeroMemory(&ConnectInfo, sizeof(ConnectInfo));
 
             /* Minimal setup of the connect info structure */
             ConnectInfo.ulVersion = USER_VERSION;
@@ -357,6 +471,8 @@ DllMain(
                          WIN_OBJ_DIR);
             }
 
+            TRACE("Checkpoint (call CSR)\n");
+
             /* Connect to the USER Server */
             Status = CsrClientConnectToServer(SessionDir,
                                               USERSRV_SERVERDLL_INDEX,
@@ -369,16 +485,13 @@ DllMain(
                 return FALSE;
             }
 
-#else
-    gfServerProcess = FALSE;
-#endif
+            TRACE("Checkpoint (CSR called)\n");
 
             User32Instance = hInstanceDll;
 
-            if (!RegisterClientPFN())
-                return FALSE;
-
-            if (!Init())
+            /* Finish initialization */
+            TRACE("Checkpoint (call Init)\n");
+            if (!Init(&ConnectInfo))
                 return FALSE;
 
             break;
@@ -398,44 +511,13 @@ DllMain(
     return GdiDllInitialize(hInstanceDll, dwReason, reserved);
 }
 
-// FIXME: This function IS A BIIG HACK!!
-VOID
-FASTCALL
-GetConnected(VOID)
-{
-    NTSTATUS Status;
-    USERCONNECT UserCon;
-
-    TRACE("user32::GetConnected()\n");
-
-    if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
-        NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-
-    if (gpsi && g_ppi) return;
-
-    /* Minimal setup of the connect info structure */
-    UserCon.ulVersion = USER_VERSION;
-
-    /* Connect to win32k */
-    Status = NtUserProcessConnect(NtCurrentProcess(),
-                                  &UserCon,
-                                  sizeof(UserCon));
-    if (!NT_SUCCESS(Status)) return;
-
-    /* Retrieve data */
-    g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
-    g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-    gpsi = SharedPtrToUser(UserCon.siClient.psi);
-    gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
-}
-
 NTSTATUS
 WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
-  TRACE("ClientThreadSetup\n");
-  ClientThreadSetup();
+  TRACE("User32CallClientThreadSetupFromKernel -->\n");
+  ClientThreadSetupHelper(TRUE);
+  TRACE("<-- User32CallClientThreadSetupFromKernel\n");
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
 }
 

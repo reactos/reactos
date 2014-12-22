@@ -385,12 +385,19 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
         Status = STATUS_NO_MEMORY;
         goto error;
     }
+
     ptiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
     if (ptiCurrent->KeyboardLayout)
         UserReferenceObject(ptiCurrent->KeyboardLayout);
+
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
-    if (Process == gpepCSRSS) /* If this thread is owned by CSRSS, mark it as such */
-        ptiCurrent->TIF_flags |= TIF_CSRSSTHREAD;
+
+    /* CSRSS threads have some special features */
+    if (Process == gpepCSRSS)
+        ptiCurrent->TIF_flags = TIF_CSRSSTHREAD | TIF_DONTATTACHQUEUE;
+
+    // FIXME: Flag SYSTEM threads with... TIF_SYSTEMTHREAD !!
+
     ptiCurrent->pcti = &ptiCurrent->cti;
 
     /* Initialize the CLIENTINFO */
@@ -475,7 +482,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
         }
     }
 
-    /* mark the thread as fully initialized */
+    /* Mark the thread as fully initialized */
     ptiCurrent->TIF_flags |= TIF_GUITHREADINITIALIZED;
 
     if (!(ptiCurrent->ppi->W32PF_flags & (W32PF_ALLOWFOREGROUNDACTIVATE | W32PF_APPSTARTING)) &&
@@ -484,7 +491,26 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
        ptiCurrent->TIF_flags |= TIF_ALLOWFOREGROUNDACTIVATE;
     }
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
-    TRACE_CH(UserThread,"UserCreateW32Thread pti 0x%p\n",ptiCurrent);
+
+    /* Last things to do only if we are not a SYSTEM or CSRSS thread */
+    if (!(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)))
+    {
+        /* Callback to User32 Client Thread Setup */
+        TRACE_CH(UserThread,"Call co_IntClientThreadSetup...\n");
+        Status = co_IntClientThreadSetup();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR_CH(UserThread,"ClientThreadSetup failed with Status 0x%08lx\n", Status);
+            goto error;
+        }
+        TRACE_CH(UserThread,"co_IntClientThreadSetup succeeded!\n");
+    }
+    else
+    {
+        TRACE_CH(UserThread,"co_IntClientThreadSetup cannot be called...\n");
+    }
+
+    TRACE_CH(UserThread,"UserCreateW32Thread pti 0x%p\n", ptiCurrent);
     return STATUS_SUCCESS;
 
 error:
