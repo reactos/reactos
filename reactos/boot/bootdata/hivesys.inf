@@ -363,6 +363,15 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955A
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
 
+; Crash Control
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","AutoReboot",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","CrashDumpEnabled",0x00010003,3
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","DumpFile",0x00020002,"%SystemRoot%\MEMORY.DMP"
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","LogEvent",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","MinidumpDir",0x00020002,"%SystemRoot%\Minidump"
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","Overwrite",0x00010003,1
+HKLM,"SYSTEM\CurrentControlSet\Control\CrashControl","SendAlert",0x00010003,0
+
 ; Device classes key
 HKLM,"SYSTEM\CurrentControlSet\Control\DeviceClasses",,0x00000012
 
