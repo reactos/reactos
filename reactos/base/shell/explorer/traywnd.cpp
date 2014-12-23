@@ -1435,7 +1435,7 @@ ChangePos:
         else
             m_Theme = NULL;
 
-        if (m_Theme)
+        if (Locked && m_Theme)
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
         }
@@ -1443,6 +1443,7 @@ ChangePos:
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
         }
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
 
         return TRUE;
     }
@@ -1787,9 +1788,8 @@ ChangePos:
 
     BOOL STDMETHODCALLTYPE Lock(IN BOOL bLock)
     {
-        BOOL bPrevLock;
+        BOOL bPrevLock = Locked;
 
-        bPrevLock = Locked;
         if (Locked != bLock)
         {
             Locked = bLock;
@@ -1800,8 +1800,20 @@ ChangePos:
                 {
                     /* Reset?? */
                     Locked = bPrevLock;
+                    return bPrevLock;
                 }
             }
+
+            if (Locked && m_Theme)
+            {
+                SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
+            }
+            else
+            {
+                SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
+            }
+            SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+
         }
 
         return bPrevLock;
