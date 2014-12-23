@@ -277,7 +277,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
     ClientInfo->CI_flags |= CI_INITTHREAD;
 
     /* Initialization that should be done once per process */
-    if (IsFirstThread)
+    // if (IsFirstThread) // Disabling this test is a HACK!!
     {
         TRACE("Checkpoint (Allocating TLS)\n");
 
