@@ -132,7 +132,6 @@ public:
                 tbBtn.fsState |= TBSTATE_HIDDEN;
                 m_VisibleButtonCount--;
             }
-
         }
 
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
@@ -209,6 +208,12 @@ public:
             return;
 
         DeleteButton(index);
+
+        if (!(notifyItem->dwState & NIS_HIDDEN))
+        {
+            m_VisibleButtonCount--;
+        }
+
         delete notifyItem;
     }
 
