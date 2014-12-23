@@ -325,7 +325,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     return Status;
 }
 
-#if 0 
+#if 0
 //
 // Structures can be padded at the end, causing the size of the entire structure
 // minus the size of the last field, not to be equal to the offset of the last
@@ -355,7 +355,7 @@ C_ASSERT((sizeof(TEST) - sizeof(TEST_EMBEDDED)) != FIELD_OFFSET(TEST, Three));
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 NTAPI
 CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
@@ -371,7 +371,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     ApiMessage->Header.u1.s1.TotalLength = DataLength +
         sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data); // FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
     ApiMessage->Header.u1.s1.DataLength = DataLength +
-        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header);// ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) - sizeof(ApiMessage->Header); // ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
     /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;
@@ -381,7 +381,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
            ApiNumber,
            ApiMessage->Header.u1.s1.DataLength,
            ApiMessage->Header.u1.s1.TotalLength);
-                
+
     /* Check if we are already inside a CSR Server */
     if (!InsideCsrProcess)
     {
