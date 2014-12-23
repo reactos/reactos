@@ -533,12 +533,19 @@ public:
         return Ret;
     }
 
+    LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        bHandled = TRUE;
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()
@@ -1529,6 +1536,12 @@ public:
         return FALSE;
     }
 
+    LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        bHandled = TRUE;
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szTrayNotifyWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
@@ -1539,6 +1552,7 @@ public:
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu) // FIXME: This handler is not necessary in Windows
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TNWM_UPDATETIME, OnUpdateTime)
         MESSAGE_HANDLER(TNWM_SHOWCLOCK, OnShowClock)
