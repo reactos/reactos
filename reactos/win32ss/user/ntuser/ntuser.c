@@ -19,7 +19,6 @@ ATOM AtomLayer;   // Window Layer atom.
 ATOM AtomFlashWndState; // Window Flash State atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
-PEPROCESS gpepCSRSS = NULL;
 ATOM gaGuiConsoleWndClass;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -175,7 +174,7 @@ NtUserInitialize(
     UserEnterExclusive();
 
     /* Save the EPROCESS of CSRSS */
-    gpepCSRSS = PsGetCurrentProcess();
+    InitCsrProcess(/*PsGetCurrentProcess()*/);
 
 // Initialize Power Request List (use hPowerRequestEvent).
 // Initialize Media Change (use hMediaRequestEvent).

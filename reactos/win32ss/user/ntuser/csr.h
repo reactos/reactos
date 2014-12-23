@@ -1,16 +1,35 @@
 /* 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
- * PURPOSE:          Interface to CSRSS / USERSRV
+ * PURPOSE:          Interface between Win32k and USERSRV
  * FILE:             subsystems/win32/win32k/ntuser/csr.h
- * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
+ * PROGRAMER:        Hermes Belusca-Maito (hermes.belusca@sfr.fr), based on
+ *                   the original code by Ge van Geldorp (ge@gse.nl) and by
+ *                   the CSR code in NTDLL.
  */
 
 #pragma once
 
-extern PEPROCESS CsrProcess;
+/* NDK Headers */
+#include <ndk/lpcfuncs.h>
 
-NTSTATUS FASTCALL CsrInit(void);
-NTSTATUS FASTCALL co_CsrNotify(PCSR_API_MESSAGE Request);
+/* CSRSS Header */
+#include <csr/csr.h>
+#include <win/winmsg.h>
+
+extern PEPROCESS gpepCSRSS;
+extern PVOID CsrApiPort;
+
+VOID InitCsrProcess(VOID /*IN PEPROCESS CsrProcess*/);
+VOID ResetCsrProcess(VOID);
+NTSTATUS InitCsrApiPort(IN HANDLE CsrPortHandle);
+VOID ResetCsrApiPort(VOID);
+
+NTSTATUS
+NTAPI
+CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
+                    IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
+                    IN CSR_API_NUMBER ApiNumber,
+                    IN ULONG DataLength);
 
 /* EOF */

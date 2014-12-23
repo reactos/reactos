@@ -939,9 +939,13 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         case UserThreadCsrApiPort:
         {
             ERR("Set CSR API Port for Win32k\n");
-            STUB;
-            // Return success to make usersrv happy.
-            Status = STATUS_SUCCESS;
+
+            if (ThreadInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+            Status = InitCsrApiPort(*(PHANDLE)ThreadInformation);
             break;
         }
 

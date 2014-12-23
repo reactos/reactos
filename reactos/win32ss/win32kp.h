@@ -26,7 +26,10 @@
 #define DBG_ENABLE_EVENT_LOGGING 0
 #define DBG_ENABLE_SERVICE_HOOKS 0
 
-/* Misc headers  */
+/* CSRSS Interface */
+#include "user/ntuser/csr.h"
+
+/* Misc headers */
 #include "user/ntuser/win32kdebug.h"
 #include "user/ntuser/mmcopy.h"
 #include "user/ntuser/tags.h"

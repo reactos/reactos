@@ -724,18 +724,30 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     return Status;
 }
 
+
+VOID NTAPI
+DriverUnload(IN PDRIVER_OBJECT DriverObject)
+{
+    // TODO: Do more cleanup!
+
+    ResetCsrApiPort();
+    ResetCsrProcess();
+}
+
 #ifdef _M_IX86
 C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
 #endif
 
 // Return on failure
 #define NT_ROF(x) \
+{ \
     Status = (x); \
     if (!NT_SUCCESS(Status)) \
     { \
         DPRINT1("Failed '%s' (0x%lx)\n", #x, Status); \
         return Status; \
-    }
+    } \
+}
 
 /*
  * This definition doesn't work
@@ -744,8 +756,8 @@ INIT_FUNCTION
 NTSTATUS
 APIENTRY
 DriverEntry(
-    IN    PDRIVER_OBJECT    DriverObject,
-    IN    PUNICODE_STRING    RegistryPath)
+    IN PDRIVER_OBJECT  DriverObject,
+    IN PUNICODE_STRING RegistryPath)
 {
     NTSTATUS Status;
     BOOLEAN Result;
@@ -768,7 +780,9 @@ DriverEntry(
     }
 
     hModuleWin = MmPageEntireDriver(DriverEntry);
-    DPRINT("Win32k hInstance 0x%p!\n",hModuleWin);
+    DPRINT("Win32k hInstance 0x%p!\n", hModuleWin);
+
+    DriverObject->DriverUnload = DriverUnload;
 
     /* Register Object Manager Callbacks */
     CalloutData.ProcessCallout = Win32kProcessCallback;
