@@ -46,6 +46,8 @@ typedef struct _USER_MESSAGE_QUEUE
   struct _DESKTOP *Desktop;
 
   PTHREADINFO ptiSysLock;
+  ULONG_PTR   idSysLock;
+  ULONG_PTR   idSysPeek;
   PTHREADINFO ptiMouse;
   PTHREADINFO ptiKeyboard;
 
@@ -257,7 +259,7 @@ DWORD APIENTRY IntGetQueueStatus(DWORD);
 
 UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam);
 
-BOOL FASTCALL
+BOOL APIENTRY
 co_IntGetPeekMessage( PMSG pMsg,
                       HWND hWnd,
                       UINT MsgFilterMin,

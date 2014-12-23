@@ -26,9 +26,9 @@ NTSTATUS
 NTAPI
 MsqInitializeImpl(VOID)
 {
-    pgMessageLookasideList = ExAllocatePoolWithTag(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST), TAG_USRMSG);
-    if(!pgMessageLookasideList)
-        return STATUS_NO_MEMORY;
+   pgMessageLookasideList = ExAllocatePoolWithTag(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST), TAG_USRMSG);
+   if (!pgMessageLookasideList)
+      return STATUS_NO_MEMORY;
    ExInitializePagedLookasideList(pgMessageLookasideList,
                                   NULL,
                                   NULL,
@@ -732,6 +732,7 @@ MsqCreateMessage(LPMSG Msg)
       return NULL;
    }
 
+   RtlZeroMemory(Message, sizeof(Message));
    RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 
    return Message;
@@ -740,6 +741,12 @@ MsqCreateMessage(LPMSG Msg)
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
+   if (Message->pti == NULL)
+   {
+      ERR("Double Free Message\n");
+      return;
+   }
+   Message->pti = NULL;
    ExFreeToPagedLookasideList(pgMessageLookasideList, Message);
 }
 
@@ -1141,7 +1148,6 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
       UserLeaveCo();
 
-      /* Don't process messages sent to the thread */
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
                                             UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
 
@@ -1306,7 +1312,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
      ERR("User APC Returned\n"); // Should not see this message.
    }
 
-   if (WaitStatus != STATUS_TIMEOUT)
+   if ( WaitStatus != STATUS_TIMEOUT )
    {
       if (uResult)
       {
@@ -1344,18 +1350,15 @@ MsqPostMessage(PTHREADINFO pti,
    if (dwQEvent)
    {
        ERR("Post Msg; System Qeued Event Message!\n");
-       InsertHeadList(&pti->PostedMessagesListHead,
-                      &Message->ListEntry);
+       InsertHeadList(&pti->PostedMessagesListHead, &Message->ListEntry);
    }
    else if (!HardwareMessage)
    {
-       InsertTailList(&pti->PostedMessagesListHead,
-                      &Message->ListEntry);
+       InsertTailList(&pti->PostedMessagesListHead, &Message->ListEntry);
    }
    else
    {
-       InsertTailList(&MessageQueue->HardwareMessagesListHead,
-                      &Message->ListEntry);
+       InsertTailList(&MessageQueue->HardwareMessagesListHead, &Message->ListEntry);
    }
 
    if (Msg->message == WM_HOTKEY) MessageBits |= QS_HOTKEY; // Justin Case, just set it.
@@ -1669,6 +1672,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         {
             /* Remove and ignore the message */
             *RemoveMessages = TRUE;
+            TRACE("Remove and ignore the message\n");
             RETURN(FALSE);
         }
     }
@@ -1784,6 +1788,10 @@ CLEANUP:
 BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 {
     EVENTMSG Event;
+    USER_REFERENCE_ENTRY Ref;
+    PWND pWnd;
+    BOOL Ret = TRUE;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (Msg->message == WM_KEYDOWN || Msg->message == WM_SYSKEYDOWN ||
         Msg->message == WM_KEYUP || Msg->message == WM_SYSKEYUP)
@@ -1802,6 +1810,9 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         }
     }
 
+    pWnd = ValidateHwndNoErr(Msg->hwnd);
+    if (pWnd) UserRefObjectCo(pWnd, &Ref);
+
     Event.message = Msg->message;
     Event.hwnd    = Msg->hwnd;
     Event.time    = Msg->time;
@@ -1810,8 +1821,33 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     if (HIWORD(Msg->lParam) & 0x0100) Event.paramH |= 0x8000;
     co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
 
+    if (*RemoveMessages)
+    {
+        if ((Msg->message == WM_KEYDOWN) &&
+            (Msg->hwnd != IntGetDesktopWindow()))
+        {
+            /* Handle F1 key by sending out WM_HELP message */
+            if (Msg->wParam == VK_F1)
+            {
+                UserPostMessage( Msg->hwnd, WM_KEYF1, 0, 0 );
+            }
+            else if (Msg->wParam >= VK_BROWSER_BACK &&
+                     Msg->wParam <= VK_LAUNCH_APP2)
+            {
+                /* FIXME: Process keystate */
+                co_IntSendMessage(Msg->hwnd, WM_APPCOMMAND, (WPARAM)Msg->hwnd, MAKELPARAM(0, (FAPPCOMMAND_KEY | (Msg->wParam - VK_BROWSER_BACK + 1))));
+            }
+        }
+        else if (Msg->message == WM_KEYUP)
+        {
+            /* Handle VK_APPS key by posting a WM_CONTEXTMENU message */
+            if (Msg->wParam == VK_APPS && pti->MessageQueue->MenuOwner == NULL)
+                UserPostMessage( Msg->hwnd, WM_CONTEXTMENU, (WPARAM)Msg->hwnd, -1 );
+        }
+    }
+
     if (co_HOOK_CallHooks( WH_KEYBOARD,
-                           *RemoveMessages ? HC_ACTION : HC_NOREMOVE,
+                          *RemoveMessages ? HC_ACTION : HC_NOREMOVE,
                            LOWORD(Msg->wParam),
                            Msg->lParam))
     {
@@ -1820,10 +1856,15 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                            HCBT_KEYSKIPPED,
                            LOWORD(Msg->wParam),
                            Msg->lParam );
-        ERR("KeyboardMessage WH_CBT Call Hook return!\n");
-        return FALSE;
+
+        ERR("KeyboardMessage WH_KEYBOARD Call Hook return!\n");
+
+        *RemoveMessages = TRUE;
+
+        Ret = FALSE;
     }
-    return TRUE;
+    if (pWnd) UserDerefObjectCo(pWnd);
+    return Ret;
 }
 
 BOOL co_IntProcessHardwareMessage(MSG* Msg, BOOL* RemoveMessages, UINT first, UINT last)
@@ -1866,41 +1907,43 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
                          IN UINT QSflags,
                          OUT MSG* pMsg)
 {
+   BOOL AcceptMessage;
+   PUSER_MESSAGE CurrentMessage;
+   PLIST_ENTRY ListHead;
+   MSG msg;
+   ULONG_PTR idSave;
+   DWORD QS_Flags;
+   BOOL Ret = FALSE;
+   PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
-    BOOL AcceptMessage;
-    PUSER_MESSAGE CurrentMessage;
-    PLIST_ENTRY ListHead, CurrentEntry = NULL;
-    MSG msg;
-    BOOL Ret = FALSE;
-    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
+   if (!filter_contains_hw_range( MsgFilterLow, MsgFilterHigh )) return FALSE;
 
-    if (!filter_contains_hw_range( MsgFilterLow, MsgFilterHigh )) return FALSE;
+   ListHead = MessageQueue->HardwareMessagesListHead.Flink;
 
-    ListHead = &MessageQueue->HardwareMessagesListHead;
-    CurrentEntry = ListHead->Flink;
+   if (IsListEmpty(ListHead)) return FALSE;
 
-    if (IsListEmpty(CurrentEntry)) return FALSE;
+   if (!MessageQueue->ptiSysLock)
+   {
+      MessageQueue->ptiSysLock = pti;
+      pti->pcti->CTI_flags |= CTI_THREADSYSLOCK;
+   }
 
-    if (!MessageQueue->ptiSysLock)
-    {
-       MessageQueue->ptiSysLock = pti;
-       pti->pcti->CTI_flags |= CTI_THREADSYSLOCK;
-    }
+   if (MessageQueue->ptiSysLock != pti)
+   {
+      ERR("MsqPeekHardwareMessage: Thread Q is locked to another pti!\n");
+      return FALSE;
+   }
 
-    if (MessageQueue->ptiSysLock != pti)
-    {
-       ERR("MsqPeekHardwareMessage: Thread Q is locked to another pti!\n");
-       return FALSE;
-    }
+   while (ListHead != &MessageQueue->HardwareMessagesListHead)
+   {
+      CurrentMessage = CONTAINING_RECORD(ListHead, USER_MESSAGE, ListEntry);
+      ListHead = ListHead->Flink;
 
-    CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
-                                          ListEntry);
-    do
-    {
-        if (IsListEmpty(CurrentEntry)) break;
-        if (!CurrentMessage) break;
-        CurrentEntry = CurrentMessage->ListEntry.Flink;
-        if (!CurrentEntry) break; //// Fix CORE-6734 reported crash.
+      if (MessageQueue->idSysPeek == (ULONG_PTR)CurrentMessage)
+      {
+         TRACE("Skip this message due to it is in play!\n");
+         continue;
+      }
 /*
  MSDN:
  1: any window that belongs to the current thread, and any messages on the current thread's message queue whose hwnd value is NULL.
@@ -1913,33 +1956,40 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
             ( CurrentMessage->Msg.message == WM_MOUSEMOVE ) ) && // Null window for mouse moves.
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
-        {
-           msg = CurrentMessage->Msg;
+      {
+         idSave = MessageQueue->idSysPeek;
+         MessageQueue->idSysPeek = (ULONG_PTR)CurrentMessage;
 
-           UpdateKeyStateFromMsg(MessageQueue, &msg);
-           AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
+         msg = CurrentMessage->Msg;
+         QS_Flags = CurrentMessage->QS_Flags;
 
-           if (Remove)
-           {
-               RemoveEntryList(&CurrentMessage->ListEntry);
-               ClearMsgBitsMask(pti, CurrentMessage->QS_Flags);
-               MsqDestroyMessage(CurrentMessage);
-           }
+         UpdateKeyStateFromMsg(MessageQueue, &msg);
+         AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
 
-           if (AcceptMessage)
-           {
-              *pMsg = msg;
-              Ret = TRUE;
-              break;
-           }
-        }
-        CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
-    }
-    while(CurrentEntry != ListHead);
+         if (Remove)
+         {
+             if (CurrentMessage->pti != NULL)
+             {
+                RemoveEntryList(&CurrentMessage->ListEntry);
+                MsqDestroyMessage(CurrentMessage);
+             }
+             ClearMsgBitsMask(pti, QS_Flags);
+         }
 
-    MessageQueue->ptiSysLock = NULL;
-    pti->pcti->CTI_flags &= ~CTI_THREADSYSLOCK;
-    return Ret;
+         MessageQueue->idSysPeek = idSave;
+
+         if (AcceptMessage)
+         {
+            *pMsg = msg;
+            Ret = TRUE;
+            break;
+         }
+      }
+   }
+
+   MessageQueue->ptiSysLock = NULL;
+   pti->pcti->CTI_flags &= ~CTI_THREADSYSLOCK;
+   return Ret;
 }
 
 BOOLEAN APIENTRY
@@ -1951,23 +2001,19 @@ MsqPeekMessage(IN PTHREADINFO pti,
                   IN UINT QSflags,
                   OUT PMSG Message)
 {
-   PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
+   DWORD QS_Flags;
    BOOL Ret = FALSE;
 
-   CurrentEntry = pti->PostedMessagesListHead.Flink;
-   ListHead = &pti->PostedMessagesListHead;
+   ListHead = pti->PostedMessagesListHead.Flink;
 
-   if (IsListEmpty(CurrentEntry)) return FALSE;
+   if (IsListEmpty(ListHead)) return FALSE;
 
-   CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
-                                         ListEntry);
-   do
+   while(ListHead != &pti->PostedMessagesListHead)
    {
-      if (IsListEmpty(CurrentEntry)) break;
-      if (!CurrentMessage) break;
-      CurrentEntry = CurrentEntry->Flink;
+      CurrentMessage = CONTAINING_RECORD(ListHead, USER_MESSAGE, ListEntry);
+      ListHead = ListHead->Flink;
 /*
  MSDN:
  1: any window that belongs to the current thread, and any messages on the current thread's message queue whose hwnd value is NULL.
@@ -1981,20 +2027,21 @@ MsqPeekMessage(IN PTHREADINFO pti,
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
          *Message = CurrentMessage->Msg;
+         QS_Flags = CurrentMessage->QS_Flags;
 
          if (Remove)
          {
-             RemoveEntryList(&CurrentMessage->ListEntry);
-             ClearMsgBitsMask(pti, CurrentMessage->QS_Flags);
-             MsqDestroyMessage(CurrentMessage);
+             if (CurrentMessage->pti != NULL)
+             {
+                RemoveEntryList(&CurrentMessage->ListEntry);
+                MsqDestroyMessage(CurrentMessage);
+             }
+             ClearMsgBitsMask(pti, QS_Flags);
          }
          Ret = TRUE;
          break;
       }
-      CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
-                                         ListEntry);
    }
-   while (CurrentEntry != ListHead);
 
    return Ret;
 }

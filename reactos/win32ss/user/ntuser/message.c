@@ -766,7 +766,7 @@ IntDispatchMessage(PMSG pMsg)
  *   WM_PAINT messages
  *   WM_TIMER messages
  */
-BOOL FASTCALL
+BOOL APIENTRY
 co_IntPeekMessage( PMSG Msg,
                    PWND Window,
                    UINT MsgFilterMin,
@@ -952,7 +952,7 @@ co_IntWaitMessage( PWND Window,
     return FALSE;
 }
 
-BOOL FASTCALL
+BOOL APIENTRY
 co_IntGetPeekMessage( PMSG pMsg,
                       HWND hWnd,
                       UINT MsgFilterMin,

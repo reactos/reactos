@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Window event handlers
- * FILE:              subsystems/win32/win32k/ntuser/event.c
+ * FILE:              win32ss/user/ntuser/event.c
  * PROGRAMER:         James Tabor (james.tabor@rectos.org)
  */
 
@@ -153,7 +153,7 @@ IntRemoveEvent(PVOID Object)
 // Dispatch MsgQueue Event Call processor!
 //
 LRESULT
-FASTCALL
+APIENTRY
 co_EVENT_CallEvents( DWORD event,
                      HWND hwnd, 
                      UINT_PTR idObject,

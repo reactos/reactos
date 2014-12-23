@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window hooks
- * FILE:             subsystems/win32/win32k/ntuser/hook.c
+ * FILE:             win32ss/user/ntuser/hook.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   James Tabor (james.tabor@rectos.org)
  *                   Rafal Harabien (rafalh@reactos.org)
@@ -92,7 +92,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
     PLIST_ENTRY ListEntry;
     PPROCESSINFO ppiCsr;
 
-    ERR("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
+    TRACE("IntHookModuleUnloaded: iHookID=%d\n", iHookID);
 
     ppiCsr = PsGetProcessWin32Process(gpepCSRSS);
 
@@ -222,7 +222,7 @@ UserUnregisterUserApiHook(VOID)
         return FALSE;
     }
 
-    ERR("UserUnregisterUserApiHook. Server PID: %p\n", PsGetProcessId(pti->ppi->peProcess));
+    TRACE("UserUnregisterUserApiHook. Server PID: %p\n", PsGetProcessId(pti->ppi->peProcess));
 
     /* Unregister the api hook */
     gpsi->dwSRVIFlags &= ~SRVINFO_APIHOOK;
@@ -318,7 +318,7 @@ co_IntCallLowLevelHook(PHOOK Hook,
 // Dispatch MsgQueue Hook Call processor!
 //
 LRESULT
-FASTCALL
+APIENTRY
 co_CallHook( INT HookId,
              INT Code,
              WPARAM wParam,
@@ -335,14 +335,13 @@ co_CallHook( INT HookId,
     {
        case WH_JOURNALPLAYBACK:
        case WH_JOURNALRECORD:
-       case WH_KEYBOARD:
        case WH_KEYBOARD_LL:
        case WH_MOUSE_LL:
        case WH_MOUSE:
           lParam = (LPARAM)pHP->pHookStructs;
+       case WH_KEYBOARD:
           break;
     }
-
     /* The odds are high for this to be a Global call. */
     Result = co_IntCallHookProc( HookId,
                                  Code,
@@ -362,7 +361,7 @@ co_CallHook( INT HookId,
 
 static
 LRESULT
-FASTCALL
+APIENTRY
 co_HOOK_CallHookNext( PHOOK Hook,
                       INT Code,
                       WPARAM wParam,
@@ -516,7 +515,7 @@ co_IntCallDebugHook(PHOOK Hook,
 
 static
 LRESULT
-FASTCALL
+APIENTRY
 co_UserCallNextHookEx(PHOOK Hook,
                     int Code,
                     WPARAM wParam,
@@ -1080,7 +1079,7 @@ IntRemoveHook(PVOID Object)
   Win32k Kernel Space Hook Caller.
  */
 LRESULT
-FASTCALL
+APIENTRY
 co_HOOK_CallHooks( INT HookId,
                    INT Code,
                    WPARAM wParam,
@@ -1150,6 +1149,8 @@ co_HOOK_CallHooks( INT HookId,
        }
 
        Hook = CONTAINING_RECORD(pLastHead->Flink, HOOK, Chain);
+       ObReferenceObject(pti->pEThread);
+       IntReferenceThreadInfo(pti);
        UserRefObjectCo(Hook, &Ref);
 
        ClientInfo = pti->pClientInfo;
@@ -1199,6 +1200,8 @@ co_HOOK_CallHooks( INT HookId,
        pti->sphkCurrent = SaveHook;
        Hook->phkNext = NULL;
        UserDerefObjectCo(Hook);
+       IntDereferenceThreadInfo(pti);
+       ObDereferenceObject(pti->pEThread);
     }
 
     if ( Global )
@@ -1224,7 +1227,6 @@ co_HOOK_CallHooks( INT HookId,
               ERR("Invalid hook!\n");
               continue;
           }
-          UserRefObjectCo(Hook, &Ref);
 
          /* Hook->Thread is null, we hax around this with Hook->head.pti. */
           ptiHook = Hook->head.pti;
@@ -1234,6 +1236,7 @@ co_HOOK_CallHooks( INT HookId,
              TRACE("Next Hook %p, %p\n", ptiHook->rpdesk, pdo);
              continue;
           }
+          UserRefObjectCo(Hook, &Ref);
 
           if (ptiHook != pti )
           {
@@ -1251,7 +1254,9 @@ co_HOOK_CallHooks( INT HookId,
           }
           else
           { /* Make the direct call. */
-             TRACE("Local Hook calling to Thread! %d\n",HookId );
+             TRACE("Global going Local Hook calling to Thread! %d\n",HookId );
+             ObReferenceObject(pti->pEThread);
+             IntReferenceThreadInfo(pti);
              Result = co_IntCallHookProc( HookId,
                                           Code,
                                           wParam,
@@ -1261,6 +1266,8 @@ co_HOOK_CallHooks( INT HookId,
                                           Hook->offPfn,
                                           Hook->Ansi,
                                          &Hook->ModuleName);
+             IntDereferenceThreadInfo(pti);
+             ObDereferenceObject(pti->pEThread);
           }
           UserDerefObjectCo(Hook);
        }
@@ -1434,7 +1441,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
             HookId == WH_MOUSE_LL ||
             HookId == WH_SYSMSGFILTER)
        {
-           ERR("Local hook installing Global HookId: %d\n",HookId);
+           TRACE("Local hook installing Global HookId: %d\n",HookId);
            /* these can only be global */
            EngSetLastError(ERROR_GLOBAL_ONLY_HOOK);
            RETURN( NULL);
