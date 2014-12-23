@@ -240,7 +240,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
      * Also this needs to be done only for the first thread (since the connection
      * is per-process).
      */
-    // if (gfServerProcess && IsFirstThread) // Disabling this test is a HACK!!
+    if (gfServerProcess && IsFirstThread)
     {
         NTSTATUS Status;
         USERCONNECT UserCon;
@@ -269,7 +269,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
     TRACE("Checkpoint (register PFN)\n");
     if (!RegisterClientPFN())
     {
-        TRACE("RegisterClientPFN failed\n");
+        ERR("RegisterClientPFN failed\n");
         return FALSE;
     }
 
@@ -277,7 +277,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
     ClientInfo->CI_flags |= CI_INITTHREAD;
 
     /* Initialization that should be done once per process */
-    // if (IsFirstThread) // Disabling this test is a HACK!!
+    if (IsFirstThread)
     {
         TRACE("Checkpoint (Allocating TLS)\n");
 
@@ -352,7 +352,9 @@ ClientThreadSetup(VOID)
     // continue as normal.
     //
 
-    // return ClientThreadSetupHelper(FALSE); // Disabling this call is a HACK!!
+    // FIXME: Disabling this call is a HACK!! See also User32CallClientThreadSetupFromKernel...
+    // return ClientThreadSetupHelper(FALSE);
+    UNIMPLEMENTED;
     return TRUE;
 }
 
@@ -369,17 +371,25 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
     NtCurrentPeb()->KernelCallbackTable = apfnDispatch;
     NtCurrentPeb()->PostProcessInitRoutine = NULL;
 
+    // This is a HACK!! //
+    gfServerProcess = FALSE;
+    gfFirstThread   = TRUE;
+    //// End of HACK!! ///
+
     /*
      * Retrieve data from the connect info structure if the initializing
      * process is not CSRSS. In case it is, this will be done from inside
      * ClientThreadSetup.
      */
-    // if (!gfServerProcess) // Disabling this test is a HACK!!
+    if (!gfServerProcess)
     {
         // FIXME: HACK!! We should fixup for the NtUserProcessConnect fixups
         // because it was made in the context of CSRSS process and not ours!!
         // So... as long as we don't fix that, we need to redo again a call
         // to NtUserProcessConnect... How perverse is that?!
+        //
+        // HACK(2): This call is necessary since we disabled
+        // the CSR call in DllMain...
         {
             RtlZeroMemory(UserCon, sizeof(*UserCon));
 
@@ -395,7 +405,7 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
         }
 
         //
-        // We continue as we should do...
+        // We continue as we should do normally...
         //
 
         /* Retrieve data */
@@ -404,6 +414,15 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
         gpsi = SharedPtrToUser(UserCon->siClient.psi);
         gHandleTable = SharedPtrToUser(UserCon->siClient.aheList);
         gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+    }
+
+    // FIXME: Yet another hack... This call should normally not be done here, but
+    // instead in ClientThreadSetup, and in User32CallClientThreadSetupFromKernel as well.
+    ERR("HACK: Using Init-ClientThreadSetupHelper hack!!\n");
+    if (!ClientThreadSetupHelper(FALSE))
+    {
+        ERR("Init-ClientThreadSetupHelper hack failed!\n");
+        return FALSE;
     }
 
     TRACE("<-- user32::Init()\n");
@@ -436,8 +455,11 @@ DllMain(
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
 
-            NTSTATUS Status;
             USERSRV_API_CONNECTINFO ConnectInfo; // USERCONNECT
+
+#if 0 // Disabling this code is a BIG HACK!!
+
+            NTSTATUS Status;
             ULONG ConnectInfoSize = sizeof(ConnectInfo);
             WCHAR SessionDir[256];
 
@@ -487,6 +509,8 @@ DllMain(
 
             TRACE("Checkpoint (CSR called)\n");
 
+#endif
+
             User32Instance = hInstanceDll;
 
             /* Finish initialization */
@@ -516,7 +540,8 @@ WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   TRACE("User32CallClientThreadSetupFromKernel -->\n");
-  ClientThreadSetupHelper(TRUE);
+  // FIXME: Disabling this call is a HACK!! See also ClientThreadSetup...
+  // ClientThreadSetupHelper(TRUE);
   TRACE("<-- User32CallClientThreadSetupFromKernel\n");
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
 }
