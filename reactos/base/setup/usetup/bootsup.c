@@ -477,7 +477,13 @@ CreateFreeLoaderIniForReactos(
                           L"ReactOS_Debug", L"\"ReactOS (Debug)\"",
                           L"Windows2003", ArcPath,
                           L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
-
+#ifdef _WINKD_
+    /* ReactOS_VBoxDebug */
+    CreateFreeLoaderEntry(IniCache, IniSection,
+                          L"ReactOS_VBoxDebug", L"\"ReactOS (VBoxDebug)\"",
+                          L"Windows2003", ArcPath,
+                          L"/DEBUG /DEBUGPORT=VBOX /SOS");
+#endif
 #if DBG
 #ifndef _WINKD_
     /* ReactOS_KdSerial */

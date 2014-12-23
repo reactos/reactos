@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kddll/kddll.c
  * PURPOSE:         Base functions for the kernel debugger.
- * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #include "kddll.h"

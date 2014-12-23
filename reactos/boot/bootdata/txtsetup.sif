@@ -30,6 +30,7 @@ cdrom.sys=,,,,,,x,,,,,,4
 class2.sys=,,,,,,x,,,,,,4
 isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
+kdvbox.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
 i8042prt.sys=,,,,,,,,,,,,4

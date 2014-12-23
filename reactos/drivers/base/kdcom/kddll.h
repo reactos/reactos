@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            drivers/base/kddll/kddll.h
  * PURPOSE:         Base definitions for the kernel debugger.
- * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@ewactos.org)
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #ifndef _KDDLL_H_
