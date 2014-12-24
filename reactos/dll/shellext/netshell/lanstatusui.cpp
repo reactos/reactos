@@ -185,22 +185,22 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     {
         if (pContext->dwInOctets == IfEntry.dwInOctets && pContext->dwOutOctets == IfEntry.dwOutOctets && pContext->Status  != 0)
         {
-            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_IDLE), IMAGE_ICON, 32, 32, LR_SHARED);
             pContext->Status = 0;
         }
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
         {
-            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 32, 32, LR_SHARED);
             pContext->Status = 1;
         }
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
         {
-            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_REC), IMAGE_ICON, 32, 32, LR_SHARED);
             pContext->Status = 2; 
         }
         else if (pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 3)
         {
-            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANS), IMAGE_ICON, 32, 32, LR_SHARED);
             pContext->Status = 3;
         }
     }
@@ -208,7 +208,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     {
         if (pContext->Status != 4)
         {
-            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_SHARED);
             pContext->Status = 4;
         }
     }
@@ -216,7 +216,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
     {
         if (pContext->Status != 5)
         {
-            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+            hIcon = (HICON)LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_OFF), IMAGE_ICON, 32, 32, LR_SHARED);
             pContext->Status = 5;
         }
     }
@@ -239,7 +239,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         if (pProperties->dwCharacter & NCCF_SHOW_ICON)
         {
             if (hwndDlg)
-                nid.hIcon = (HICON)CopyImage(hIcon, IMAGE_ICON, 16, 16, 0);
+                nid.hIcon = (HICON)CopyImage(hIcon, IMAGE_ICON, 16, 16, LR_COPYFROMRESOURCE);
             else
                 nid.hIcon = hIcon;
 
