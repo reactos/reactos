@@ -149,6 +149,7 @@ DllRegisterServer(void)
     RegisterComponent(CLSID_MenuBand, L"Shell Menu Band");
     RegisterComponent(CLSID_MenuBandSite, L"Shell Menu Band Site");
     RegisterComponent(CLSID_MergedFolder, L"Merged Shell Folder");
+    RegisterComponent(CLSID_RebarBandSite, L"Shell Rebar Band Site");
     return S_OK;
 }
 
@@ -160,6 +161,7 @@ DllUnregisterServer(void)
     UnregisterComponent(CLSID_MenuBand);
     UnregisterComponent(CLSID_MenuBandSite);
     UnregisterComponent(CLSID_MergedFolder);
+    UnregisterComponent(CLSID_RebarBandSite);
     return S_OK;
 }
 
@@ -199,6 +201,9 @@ public:
 
         if (IsEqualCLSID(m_Clsid, CLSID_MergedFolder))
             return CMergedFolder_Constructor(riid, ppvObject);
+
+        if (IsEqualCLSID(m_Clsid, CLSID_RebarBandSite))
+            return CBandSite_Constructor(riid, ppvObject);
 
         return E_NOINTERFACE;
     }

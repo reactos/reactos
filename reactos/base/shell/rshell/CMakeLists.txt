@@ -7,6 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    CBandSite.cpp
     CDesktopBrowser.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
