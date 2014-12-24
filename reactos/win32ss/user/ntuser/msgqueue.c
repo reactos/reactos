@@ -732,7 +732,7 @@ MsqCreateMessage(LPMSG Msg)
       return NULL;
    }
 
-   RtlZeroMemory(Message, sizeof(Message));
+   RtlZeroMemory(Message, sizeof(*Message));
    RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 
    return Message;
