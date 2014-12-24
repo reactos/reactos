@@ -720,11 +720,12 @@ NtUserNotifyProcessCreate(
 NTSTATUS
 APIENTRY
 NtUserProcessConnect(
-    HANDLE Process,
-    PUSERCONNECT pUserConnect,
-    DWORD Size)
+    IN  HANDLE ProcessHandle,
+    OUT PUSERCONNECT pUserConnect,
+    IN  ULONG Size)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
+    PEPROCESS Process = NULL;
     PPROCESSINFO W32Process;
 
     TRACE("NtUserProcessConnect\n");
@@ -735,9 +736,20 @@ NtUserProcessConnect(
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* Get the process object the user handle was referencing */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_VM_OPERATION,
+                                       *PsProcessType,
+                                       UserMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
     UserEnterShared();
 
-    W32Process = PsGetCurrentProcessWin32Process();
+    /* Get Win32 process information */
+    W32Process = PsGetProcessWin32Process(Process);
+
     _SEH2_TRY
     {
         // FIXME: Check that pUserConnect->ulVersion == USER_VERSION;
@@ -755,11 +767,13 @@ NtUserProcessConnect(
     _SEH2_END;
 
     if (!NT_SUCCESS(Status))
-    {
         SetLastNtError(Status);
-    }
 
     UserLeave();
+
+    /* Dereference the process object */
+    ObDereferenceObject(Process);
+
     return Status;
 }
 

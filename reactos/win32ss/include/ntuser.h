@@ -2607,9 +2607,9 @@ NtUserPrintWindow(
 NTSTATUS
 NTAPI
 NtUserProcessConnect(
-    IN  HANDLE Process,
+    IN  HANDLE ProcessHandle,
     OUT PUSERCONNECT pUserConnect,
-    IN  DWORD dwSize); // sizeof(USERCONNECT)
+    IN  ULONG Size); // sizeof(USERCONNECT)
 
 NTSTATUS
 NTAPI
