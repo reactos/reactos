@@ -2,9 +2,6 @@ PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 

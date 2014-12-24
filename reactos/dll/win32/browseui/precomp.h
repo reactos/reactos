@@ -10,6 +10,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wincon.h>
+#include <wingdi.h>
 #include <shlobj.h>
 #include <tlogstg.h>
 #include <shlobj_undoc.h>

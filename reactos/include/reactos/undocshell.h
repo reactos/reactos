@@ -23,6 +23,13 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+#define DBIMF_NOGRIPPER         0x0800
+#define DBIMF_ALWAYSGRIPPER     0x1000
+#define DBIMF_NOMARGINS         0x2000
+#endif  // NTDDI_LONGHORN
+
 /****************************************************************************
  * Taskbar WM_COMMAND identifiers
  */
