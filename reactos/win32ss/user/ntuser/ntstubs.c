@@ -754,6 +754,7 @@ NtUserProcessConnect(
     {
         // FIXME: Check that pUserConnect->ulVersion == USER_VERSION;
 
+        ProbeForWrite(pUserConnect, sizeof(*pUserConnect), sizeof(PVOID));
         pUserConnect->siClient.psi = gpsi;
         pUserConnect->siClient.aheList = gHandleTable;
         pUserConnect->siClient.ulSharedDelta =
@@ -916,6 +917,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PETHREAD Thread;
+    HANDLE CsrPortHandle;
 
     /* Allow only CSRSS to perform this operation */
     if (PsGetCurrentProcess() != gpepCSRSS)
@@ -959,7 +961,23 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
             }
-            Status = InitCsrApiPort(*(PHANDLE)ThreadInformation);
+
+            Status = STATUS_SUCCESS;
+            _SEH2_TRY
+            {
+                ProbeForRead(ThreadInformation, sizeof(HANDLE), sizeof(PVOID));
+                CsrPortHandle = *(PHANDLE)ThreadInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            if (NT_SUCCESS(Status))
+            {
+                Status = InitCsrApiPort(CsrPortHandle);
+            }
             break;
         }
 
