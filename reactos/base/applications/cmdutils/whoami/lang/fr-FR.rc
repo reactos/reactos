@@ -1,0 +1,56 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "INFORMATIONS UTILISATEUR"
+    IDS_GROU_HEADER "INFORMATIONS GROUPE"
+    IDS_PRIV_HEADER "INFORMATIONS PRIVILEGES"
+    IDS_COL_USER_NAME "Nom d'utilisateur"
+    IDS_COL_GROUP_NAME "Nom du groupe"
+    IDS_COL_TYPE "Type"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Attributs"
+    IDS_COL_PRIV_NAME "Nom du privilège"
+    IDS_COL_DESCRIPTION "Description"
+    IDS_COL_STATE "Statut"
+    IDS_TP_WELL_KNOWN_GROUP "Groupe connu"
+    IDS_TP_ALIAS "Alias"
+    IDS_TP_LABEL "Label"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Groupe obligatoire, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Activé par défaut, "
+    IDS_ATTR_GROUP_ENABLED "Groupe activé, "
+    IDS_ATTR_GROUP_OWNER "Propriétaire du groupe, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Activé"
+    IDS_STATE_DISABLED "Désactivé"
+    IDS_ERROR_UPN "Erreur : impossible de récupérer le nom d'utilisateur principal (UPN) étant donné que l'utilisateur actuel\nn'est pas un utilisateur du domaine.\n"
+    IDS_ERROR_FQDN "Errur : impossible de récupérer Fully Qualified Distinguished Name (FQDN) as the current\nlogged-on user is not a domain user.\n"
+    IDS_ERROR_VALUEXPECTED "Erreur : syntaxe incorrecte. Une valeur est attendue pour '/fo'.\nTapez ""WHOAMI /?"" pour l'aide.\n"
+    IDS_ERROR_VALUENOTALLOWED "Erreur : syntaxe incorrecte. La valeur '%s' n'est pas autorisée pour l'option '/fo'.\nTapez ""WHOAMI /?"" pour l'aide.\n"
+    IDS_ERROR_1TIMES "Erreur : syntaxe incorrecte. L'option '%s' n'est pas autorisée plus de '1' fois.\nTapez ""WHOAMI /?"" pour l'aide.\n"
+    IDS_ERROR_INVALIDSYNTAX "Erreur : syntaxe incorrecte.\nTapez ""WHOAMI /?"" pour l'aide.\n"
+    IDS_ERROR_INVALIDARG "Erreur : Argument/option non valide - '%s'.\nTapez ""WHOAMI /?"" pour l'aide.\n"
+    IDS_ERROR_NH_LIST "Erreur : l'argument /NH ne peut pas être utilisé avec le format LIST.\nTapez ""WHOAMI /?"" pour l'aide.\n"
+    IDS_HELP "DESCRIPTION:\n\
+    Affiche les informations sur l'utilisateur, les groupes et les privilèges pour l'utilisateur actuellement connecté.\n\
+    Si aucun argument n'est fourni, affiche le domaine et le nom d'utilisateur en cours d'usage.\n\
+\n\
+    Les formats de sortie disponibles pour l'option '/fo' sont 'csv', 'list' et 'table'.\n\
+    Utilisez '/nh' pour cacher les entêtes. Par défaut, les données sont affichées dans un tableau.\n\
+\n\
+SYNTAX:\n\
+    whoami [/upn | /fqdn | /logonid] \n\
+    whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+    whoami /all [/fo <Format>] [/nh] \n\
+\n\
+EXAMPLES: \n\
+    whoami /groups /priv /nh /fo csv \n\
+    whoami /logonid \n\
+    whoami \n"
+END
