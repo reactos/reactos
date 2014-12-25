@@ -512,9 +512,10 @@ BuildReasonArray(PVOID Pointer)
 
 VOID
 WINAPI
-CreateSystemThreads(DWORD dwUnknown)
+CreateSystemThreads(DWORD Unused)
 {
-    NtUserxCreateSystemThreads(dwUnknown);
+    /* Thread call for remote processes (non-CSRSS) only */
+    NtUserxCreateSystemThreads(TRUE);
     ExitThread(0);
 }
 

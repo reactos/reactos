@@ -503,7 +503,7 @@ SetMenuContextHelpId(HMENU hmenu, DWORD dwContextHelpId)
 EXTINLINE HWND WINAPI
 SetCapture(HWND hWnd)
 {
-    return(NtUserSetCapture(hWnd));
+    return NtUserSetCapture(hWnd);
 }
 
 EXTINLINE BOOL WINAPI
@@ -541,17 +541,17 @@ EXTINLINE BOOL NtUserxDestroyCaret(VOID)
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
 }
 
-EXTINLINE VOID NtUserxMsqClearWakeMask()
+EXTINLINE VOID NtUserxMsqClearWakeMask(VOID)
 {
     NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK);
 }
 
-EXTINLINE HMENU NtUserxCreateMenu()
+EXTINLINE HMENU NtUserxCreateMenu(VOID)
 {
     return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENU);
 }
 
-EXTINLINE HMENU NtUserxCreatePopupMenu()
+EXTINLINE HMENU NtUserxCreatePopupMenu(VOID)
 {
     return (HMENU)NtUserCallNoParam(NOPARAM_ROUTINE_CREATEMENUPOPUP);
 }
@@ -566,12 +566,12 @@ EXTINLINE BOOL NtUserxReleaseCapture(VOID)
     return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_RELEASECAPTURE);
 }
 
-EXTINLINE BOOL NtUserxInitMessagePump()
+EXTINLINE BOOL NtUserxInitMessagePump(VOID)
 {
-    return NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP);
+    return (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP);
 }
 
-EXTINLINE BOOL NtUserxUnInitMessagePump()
+EXTINLINE BOOL NtUserxUnInitMessagePump(VOID)
 {
     return NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP);
 }
@@ -641,9 +641,9 @@ EXTINLINE UINT NtUserxRealizePalette(HDC hDC)
     return (UINT)NtUserCallOneParam((DWORD_PTR)hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
 }
 
-EXTINLINE VOID NtUserxCreateSystemThreads(DWORD param)
+EXTINLINE VOID NtUserxCreateSystemThreads(BOOL bRemoteProcess)
 {
-    NtUserCallOneParam(param, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    NtUserCallOneParam(bRemoteProcess, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
 }
 
 EXTINLINE HDWP NtUserxBeginDeferWindowPos(INT nNumWindows)

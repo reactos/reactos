@@ -346,8 +346,8 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_REPLYMESSAGE:
           RETURN (co_MsqReplyMessage((LRESULT) Param));
       case ONEPARAM_ROUTINE_MESSAGEBEEP:
+          /* TODO: Implement sound sentry */
           RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
-		  /* TODO: Implement sound sentry */
       case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
           RETURN(CreateSystemThreads(Param));
       case ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW:
