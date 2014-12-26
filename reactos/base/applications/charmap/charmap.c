@@ -34,6 +34,9 @@ EnumFontNames(ENUMLOGFONTEXW *lpelfe,
     HWND hwndCombo = (HWND)lParam;
     LPWSTR pszName  = lpelfe->elfLogFont.lfFaceName;
 
+    /* Skip rotated font */
+    if(pszName[0] == L'@') return 1;
+
     /* make sure font doesn't already exist in our list */
     if(SendMessageW(hwndCombo,
                     CB_FINDSTRINGEXACT,
@@ -321,7 +324,7 @@ CharMapDlgProc(HWND hDlg,
 
             ChangeMapFont(hDlg);
 
-            // Configure Richedi control for sending notification changes.
+            // Configure Richedit control for sending notification changes.
             evMask = SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_GETEVENTMASK, 0, 0);
             evMask |= ENM_CHANGE;
             SendDlgItemMessage(hDlg, IDC_TEXTBOX, EM_SETEVENTMASK, 0, (LPARAM)evMask);

@@ -14,6 +14,8 @@
 static const WCHAR szMapWndClass[] = L"FontMapWnd";
 static const WCHAR szLrgCellWndClass[] = L"LrgCellWnd";
 
+#define MAX_ROWS (0xFFFF / XCELLS) + 1 - YCELLS
+
 static
 VOID
 TagFontToCell(PCELL pCell,
@@ -377,7 +379,7 @@ OnCreate(PMAP infoPtr,
 
             SetGrid(infoPtr);
 
-            SetScrollRange(hwnd, SB_VERT, 0, 255, FALSE);
+            SetScrollRange(hwnd, SB_VERT, 0, MAX_ROWS, FALSE);
             SetScrollPos(hwnd, SB_VERT, 0, TRUE);
 
             Ret = TRUE;
@@ -423,7 +425,7 @@ OnVScroll(PMAP infoPtr,
        }
 
     infoPtr->iYStart = max(0,
-                         min(infoPtr->iYStart, 255*16));
+                         min(infoPtr->iYStart, MAX_ROWS));
 
     iYDiff = iOldYStart - infoPtr->iYStart;
     if (iYDiff)
