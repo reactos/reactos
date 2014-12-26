@@ -44,7 +44,7 @@ typedef enum _QS_ROS_TYPES
     QSRosSendMessage,
     QSRosHotKey,
     QSRosEvent,
-}QS_ROS_TYPES,*PQS_ROS_TYPES;
+} QS_ROS_TYPES, *PQS_ROS_TYPES;
 
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;
@@ -156,37 +156,37 @@ typedef struct _THREADINFO
 
 
 #define IntReferenceThreadInfo(pti) \
-  InterlockedIncrement(&(pti)->RefCount)
+    InterlockedIncrement(&(pti)->RefCount)
 
 VOID UserDeleteW32Thread(PTHREADINFO);
 
 #define IntDereferenceThreadInfo(pti) \
-  do { \
-    if(InterlockedDecrement(&(pti)->RefCount) == 0) \
+do { \
+    if (InterlockedDecrement(&(pti)->RefCount) == 0) \
     { \
-      ASSERT(((pti)->TIF_flags & (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)) == (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)); \
-      UserDeleteW32Thread(pti); \
+        ASSERT(((pti)->TIF_flags & (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)) == (TIF_INCLEANUP|TIF_DONTATTACHQUEUE)); \
+        UserDeleteW32Thread(pti); \
     } \
-  } while(0)
+} while(0)
 
 #define IntReferenceProcessInfo(ppi) \
-  InterlockedIncrement((volatile LONG*)(&(ppi)->RefCount))
+    InterlockedIncrement((volatile LONG*)(&(ppi)->RefCount))
 
 VOID UserDeleteW32Process(PPROCESSINFO);
 
 #define IntDereferenceProcessInfo(ppi) \
-  do { \
-    if(InterlockedDecrement((volatile LONG*)(&(ppi)->RefCount)) == 0) \
+do { \
+    if (InterlockedDecrement((volatile LONG*)(&(ppi)->RefCount)) == 0) \
     { \
-      ASSERT(((ppi)->W32PF_flags & W32PF_TERMINATED) != 0); \
-      UserDeleteW32Process(ppi); \
+        ASSERT(((ppi)->W32PF_flags & W32PF_TERMINATED) != 0); \
+        UserDeleteW32Process(ppi); \
     } \
-  } while(0)
+} while(0)
 
 
 typedef struct _W32HEAP_USER_MAPPING
 {
-    struct _W32HEAP_USER_MAPPING *Next;
+    struct _W32HEAP_USER_MAPPING* Next;
     PVOID KernelMapping;
     PVOID UserMapping;
     ULONG_PTR Limit;
@@ -212,63 +212,64 @@ typedef struct tagUSERSTARTUPINFO
 
 typedef struct _W32PROCESS
 {
-  PEPROCESS     peProcess;
-  DWORD         RefCount;
-  ULONG         W32PF_flags;
-  PKEVENT       InputIdleEvent;
-  DWORD         StartCursorHideTime;
-  struct _W32PROCESS * NextStart;
-  PVOID         pDCAttrList;
-  PVOID         pBrushAttrList;
-  DWORD         W32Pid;
-  LONG          GDIHandleCount;
-  LONG          UserHandleCount;
-  PEX_PUSH_LOCK GDIPushLock;  /* Locking Process during access to structure. */
-  RTL_AVL_TABLE GDIEngUserMemAllocTable;  /* Process AVL Table. */
-  LIST_ENTRY    GDIDcAttrFreeList;
-  LIST_ENTRY    GDIBrushAttrFreeList;
+    PEPROCESS     peProcess;
+    DWORD         RefCount;
+    ULONG         W32PF_flags;
+    PKEVENT       InputIdleEvent;
+    DWORD         StartCursorHideTime;
+    struct _W32PROCESS* NextStart;
+    PVOID         pDCAttrList;
+    PVOID         pBrushAttrList;
+    DWORD         W32Pid;
+    LONG          GDIHandleCount;
+    LONG          UserHandleCount;
+    PEX_PUSH_LOCK GDIPushLock;  /* Locking Process during access to structure. */
+    RTL_AVL_TABLE GDIEngUserMemAllocTable;  /* Process AVL Table. */
+    LIST_ENTRY    GDIDcAttrFreeList;
+    LIST_ENTRY    GDIBrushAttrFreeList;
 } W32PROCESS, *PW32PROCESS;
 
 #define CLIBS 32
 
 typedef struct _PROCESSINFO
 {
-  W32PROCESS;
-  PTHREADINFO ptiList;
-  PTHREADINFO ptiMainThread;
-  struct _DESKTOP* rpdeskStartup;
-  PCLS pclsPrivateList;
-  PCLS pclsPublicList;
-  PPROCESSINFO ppiNext;
-  INT cThreads;
-  HDESK hdeskStartup;
-  DWORD dwhmodLibLoadedMask;
-  HANDLE ahmodLibLoaded[CLIBS];
-  struct _WINSTATION_OBJECT *prpwinsta;
-  HWINSTA hwinsta;
-  ACCESS_MASK amwinsta;
-  DWORD dwHotkey;
-  HMONITOR hMonitor;
-  struct _CURICON_OBJECT* pCursorCache;
-  LUID luidSession;
-  USERSTARTUPINFO usi;
-  PVOID pW32Job;
-  DWORD dwLayout;
-  DWORD dwRegisteredClasses;
-  /* ReactOS */
-  FAST_MUTEX PrivateFontListLock;
-  LIST_ENTRY PrivateFontListHead;
-  FAST_MUTEX DriverObjListLock;
-  LIST_ENTRY DriverObjListHead;
-  struct tagKL* KeyboardLayout; // THREADINFO only
-  W32HEAP_USER_MAPPING HeapMappings;
-  struct _GDI_POOL *pPoolDcAttr;
-  struct _GDI_POOL *pPoolBrushAttr;
-  struct _GDI_POOL *pPoolRgnAttr;
+    W32PROCESS;
+    PTHREADINFO ptiList;
+    PTHREADINFO ptiMainThread;
+    struct _DESKTOP* rpdeskStartup;
+    PCLS pclsPrivateList;
+    PCLS pclsPublicList;
+    PPROCESSINFO ppiNext;
+    INT cThreads;
+    HDESK hdeskStartup;
+    DWORD dwhmodLibLoadedMask;
+    HANDLE ahmodLibLoaded[CLIBS];
+    struct _WINSTATION_OBJECT* prpwinsta;
+    HWINSTA hwinsta;
+    ACCESS_MASK amwinsta;
+    DWORD dwHotkey;
+    HMONITOR hMonitor;
+    struct _CURICON_OBJECT* pCursorCache;
+    LUID luidSession;
+    USERSTARTUPINFO usi;
+    PVOID pW32Job;
+    DWORD dwLayout;
+    DWORD dwRegisteredClasses;
+
+    /* ReactOS */
+    FAST_MUTEX PrivateFontListLock;
+    LIST_ENTRY PrivateFontListHead;
+    FAST_MUTEX DriverObjListLock;
+    LIST_ENTRY DriverObjListHead;
+    struct tagKL* KeyboardLayout; // THREADINFO only
+    W32HEAP_USER_MAPPING HeapMappings;
+    struct _GDI_POOL* pPoolDcAttr;
+    struct _GDI_POOL* pPoolBrushAttr;
+    struct _GDI_POOL* pPoolRgnAttr;
 
 #if DBG
-  BYTE DbgChannelLevel[DbgChCount];
-  DWORD DbgHandleCount[TYPE_CTYPES];
+    BYTE DbgChannelLevel[DbgChCount];
+    DWORD DbgHandleCount[TYPE_CTYPES];
 #endif
 } PROCESSINFO;
 
@@ -276,4 +277,3 @@ typedef struct _PROCESSINFO
 void NTAPI UserDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments);
 ULONG_PTR NTAPI UserDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult);
 #endif
-
