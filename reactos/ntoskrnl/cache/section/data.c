@@ -389,7 +389,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
         FileSizes.ValidDataLength = FileInfo.EndOfFile;
         FileSizes.FileSize = FileInfo.EndOfFile;
     }
-    DPRINT("Got %08x\n", FileSizes.ValidDataLength.u.LowPart);
+    DPRINT("Got %I64x\n", FileSizes.ValidDataLength.QuadPart);
 
     /*
     * FIXME: Revise this once a locking order for file size changes is
@@ -399,15 +399,12 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     */
     if (UMaximumSize != NULL && UMaximumSize->QuadPart)
     {
-        DPRINT("Taking maximum %x\n", UMaximumSize->LowPart);
+        DPRINT("Taking maximum %I64x\n", UMaximumSize->QuadPart);
         MaximumSize.QuadPart = UMaximumSize->QuadPart;
     }
     else
     {
-        DPRINT("Got file size %08x%08x\n",
-               FileSizes.FileSize.u.HighPart,
-               FileSizes.FileSize.u.LowPart);
-
+        DPRINT("Got file size %I64x\n", FileSizes.FileSize.QuadPart);
         MaximumSize.QuadPart = FileSizes.FileSize.QuadPart;
     }
 

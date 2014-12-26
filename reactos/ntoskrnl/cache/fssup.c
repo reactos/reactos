@@ -230,14 +230,13 @@ CcInitializeCacheMap(IN PFILE_OBJECT FileObject,
         RtlCopyMemory(&Map->Callbacks, Callbacks, sizeof(*Callbacks));
 
         /* For now ... */
-        DPRINT("FileSizes->ValidDataLength %08x%08x\n",
-               FileSizes->ValidDataLength.HighPart,
-               FileSizes->ValidDataLength.LowPart);
+        DPRINT("FileSizes->ValidDataLength %I64x\n",
+               FileSizes->ValidDataLength.QuadPart);
 
         InitializeListHead(&Map->AssociatedBcb);
         InitializeListHead(&Map->PrivateCacheMaps);
         InsertTailList(&CcpAllSharedCacheMaps, &Map->Entry);
-        DPRINT("New Map %x\n", Map);
+        DPRINT("New Map %p\n", Map);
     }
     /* We don't have a private cache map.  Link it with the shared cache map
        to serve as a held reference. When the list in the shared cache map
@@ -423,11 +422,9 @@ CcZeroData(IN PFILE_OBJECT FileObject,
     PVOID PinnedBcb, PinnedBuffer;
     PNOCC_CACHE_MAP Map = FileObject->SectionObjectPointer->SharedCacheMap;
 
-    DPRINT("S %08x%08x E %08x%08x\n",
-           StartOffset->u.HighPart,
-           StartOffset->u.LowPart,
-           EndOffset->u.HighPart,
-           EndOffset->u.LowPart);
+    DPRINT("S %I64x E %I64x\n",
+           StartOffset->QuadPart,
+           EndOffset->QuadPart);
 
     if (!Map)
     {
@@ -449,9 +446,8 @@ CcZeroData(IN PFILE_OBJECT FileObject,
             ToWrite = MIN(UpperBound.QuadPart - LowerBound.QuadPart,
                           (PAGE_SIZE - LowerBound.QuadPart) & (PAGE_SIZE - 1));
 
-            DPRINT("Zero last half %08x%08x %x\n",
-                   Target.u.HighPart,
-                   Target.u.LowPart,
+            DPRINT("Zero last half %I64x %lx\n",
+                   Target.QuadPart,
                    ToWrite);
 
             Status = MiSimpleRead(FileObject,
@@ -467,7 +463,7 @@ CcZeroData(IN PFILE_OBJECT FileObject,
                 RtlRaiseStatus(Status);
             }
 
-            DPRINT1("RtlZeroMemory(%x,%x)\n",
+            DPRINT1("RtlZeroMemory(%p, %lx)\n",
                     ZeroBuf + LowerBound.QuadPart - Target.QuadPart,
                     ToWrite);
 
@@ -494,9 +490,8 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 
         while (UpperBound.QuadPart - Target.QuadPart > PAGE_SIZE)
         {
-            DPRINT("Zero full page %08x%08x\n",
-                   Target.u.HighPart,
-                   Target.u.LowPart);
+            DPRINT("Zero full page %I64x\n",
+                   Target.QuadPart);
 
             Status = MiSimpleWrite(FileObject,
                                    &Target,
@@ -515,9 +510,8 @@ CcZeroData(IN PFILE_OBJECT FileObject,
         if (UpperBound.QuadPart > Target.QuadPart)
         {
             ToWrite = UpperBound.QuadPart - Target.QuadPart;
-            DPRINT("Zero first half %08x%08x %x\n",
-                   Target.u.HighPart,
-                   Target.u.LowPart,
+            DPRINT("Zero first half %I64x %lx\n",
+                   Target.QuadPart,
                    ToWrite);
 
             Status = MiSimpleRead(FileObject,
@@ -563,10 +557,9 @@ CcZeroData(IN PFILE_OBJECT FileObject,
         if (Bcb->FileOffset.QuadPart + Bcb->Length >= LowerBound.QuadPart &&
             Bcb->FileOffset.QuadPart < UpperBound.QuadPart)
         {
-            DPRINT("Bcb #%x (@%08x%08x)\n",
+            DPRINT("Bcb #%x (@%I64x)\n",
                    Bcb - CcCacheSections,
-                   Bcb->FileOffset.u.HighPart,
-                   Bcb->FileOffset.u.LowPart);
+                   Bcb->FileOffset.QuadPart);
 
             Target.QuadPart = MAX(Bcb->FileOffset.QuadPart,
                                   LowerBound.QuadPart);
