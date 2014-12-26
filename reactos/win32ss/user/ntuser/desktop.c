@@ -726,7 +726,7 @@ VOID NTAPI DesktopThreadMain()
        classes will be allocated from the shared heap */
     UserRegisterSystemClasses();
 
-    while(TRUE)
+    while (TRUE)
     {
         Ret = co_IntGetPeekMessage(&Msg, 0, 0, 0, PM_REMOVE, TRUE);
         if (Ret)
@@ -1892,9 +1892,9 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     TRACE("IntMapDesktopView called for desktop object 0x%p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
-    PrevLink = &ppi->HeapMappings.Next;
 
     /* Find out if another thread already mapped the desktop heap */
+    PrevLink    = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1904,7 +1904,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
             return STATUS_SUCCESS;
         }
 
-        PrevLink = &HeapMapping->Next;
+        PrevLink    = &HeapMapping->Next;
         HeapMapping = HeapMapping->Next;
     }
 

@@ -53,7 +53,7 @@ DbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
 
 static
 NTSTATUS
-CreateProcessInfo(PEPROCESS Process)
+UserCreateProcessInfo(PEPROCESS Process)
 {
     PPROCESSINFO ppiCurrent;
     NTSTATUS Status;
@@ -94,7 +94,7 @@ CreateProcessInfo(PEPROCESS Process)
 
     TRACE_CH(UserProcess,"Allocated ppi 0x%p for PID:0x%lx\n", ppiCurrent, HandleToUlong(Process->UniqueProcessId));
 
-    /* map the global heap into the process */
+    /* Map the global heap into the process */
     Offset.QuadPart = 0;
     Status = MmMapViewOfSection(GlobalUserHeapSection,
                                 PsGetCurrentProcess(),
@@ -133,14 +133,13 @@ CreateProcessInfo(PEPROCESS Process)
 
     KeInitializeEvent(ppiCurrent->InputIdleEvent, NotificationEvent, FALSE);
 
-
-    /* map the gdi handle table to user land */
+    /* Map the gdi handle table to user land */
     Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
     Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
     pParams = Process->Peb->ProcessParameters;
 
     ppiCurrent->peProcess = Process;
-    /* setup process flags */
+    /* Setup process flags */
     ppiCurrent->W32PF_flags = W32PF_THREADCONNECTED;
 
     if ( pParams &&
@@ -150,7 +149,7 @@ CreateProcessInfo(PEPROCESS Process)
        ppiCurrent->W32PF_flags |= W32PF_SCREENSAVER;
     }
 
-    // Fixme check if this process is allowed.
+    // FIXME: check if this process is allowed.
     ppiCurrent->W32PF_flags |= W32PF_ALLOWFOREGROUNDACTIVATE; // Starting application it will get toggled off.
 
     /* Create pools for GDI object attributes */
@@ -171,7 +170,7 @@ CreateProcessInfo(PEPROCESS Process)
 
 static
 NTSTATUS
-DestroyProcessInfo(PEPROCESS Process)
+UserDestroyProcessInfo(PEPROCESS Process)
 {
     PPROCESSINFO ppiCurrent, *pppi;
 
@@ -288,11 +287,11 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
     if (Create)
     {
-        Status = CreateProcessInfo(Process);
+        Status = UserCreateProcessInfo(Process);
     }
     else
     {
-        Status = DestroyProcessInfo(Process);
+        Status = UserDestroyProcessInfo(Process);
     }
 
     UserLeave();

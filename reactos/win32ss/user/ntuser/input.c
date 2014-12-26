@@ -153,7 +153,7 @@ RawInputThreadMain()
     StartTheTimers();
     UserLeave();
 
-    for(;;)
+    for (;;)
     {
         if (!ghMouseDevice)
         {
@@ -300,7 +300,7 @@ RawInputThreadMain()
  * CreateSystemThreads
  *
  * Called form dedicated thread in CSRSS. RIT is started in context of this
- * thread because it needs valid Win32 process with TEB initialized
+ * thread because it needs valid Win32 process with TEB initialized.
  */
 DWORD NTAPI
 CreateSystemThreads(UINT Type)
