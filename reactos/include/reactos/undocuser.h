@@ -124,7 +124,7 @@ extern "C" {
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
 BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable);
-BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
+BOOL WINAPI SetLogonNotifyWindow(HWND Wnd);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 DWORD_PTR WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD_PTR);

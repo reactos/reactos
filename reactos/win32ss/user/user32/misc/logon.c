@@ -78,7 +78,7 @@ RegisterLogonProcess(DWORD dwProcessId,
  */
 BOOL
 WINAPI
-SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
+SetLogonNotifyWindow(HWND Wnd)
 {
     return NtUserSetLogonNotifyWindow(Wnd);
 }

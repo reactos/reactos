@@ -1348,7 +1348,7 @@ InitializeSAS(
     }
 
     /* Register SAS window to receive SAS notifications */
-    if (!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))
+    if (!SetLogonNotifyWindow(Session->SASWindow))
     {
         ERR("WL: Failed to register SAS window\n");
         goto cleanup;
