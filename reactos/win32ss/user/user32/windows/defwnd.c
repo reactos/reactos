@@ -1505,6 +1505,7 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
+        case WM_IME_CONTROL:
         {
             HWND hwndIME;
 
@@ -1666,6 +1667,7 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
+        case WM_IME_CONTROL:
         {
             HWND hwndIME;
 
