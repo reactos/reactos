@@ -52,17 +52,17 @@ BEGIN
         MENUITEM "层叠(&C)", ID_WINDOWS_CASCADE
         MENUITEM "前置(&B)", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "关机(%U)"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "待机(&B)",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "休眠(&H)",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "关闭电源(&U)",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "重新启动(&R)",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "退出用户(&L) %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "切换用户(&S)\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "锁定计算机(&K)\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "断开连接(&D)",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "弹出计算机(&E)",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "帮助(&H)"
     BEGIN
