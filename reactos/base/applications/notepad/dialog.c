@@ -557,7 +557,11 @@ VOID DIALOG_FilePrint(VOID)
     /* Let commdlg manage copy settings */
     printer.nCopies               = (WORD)PD_USEDEVMODECOPIES;
 
-    if (!PrintDlg(&printer)) return;
+    if (!PrintDlg(&printer))
+    {
+        DeleteObject(font);
+        return;
+    }
 
     assert(printer.hDC != 0);
 
@@ -568,7 +572,11 @@ VOID DIALOG_FilePrint(VOID)
     di.lpszDatatype = NULL;
     di.fwType = 0;
 
-    if (StartDoc(printer.hDC, &di) <= 0) return;
+    if (StartDoc(printer.hDC, &di) <= 0)
+    {
+        DeleteObject(font);
+        return;
+    }
 
     /* Get the page dimensions in pixels. */
     cWidthPels = GetDeviceCaps(printer.hDC, HORZRES);
@@ -579,6 +587,8 @@ VOID DIALOG_FilePrint(VOID)
     pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(TCHAR));
     if (!pTemp)
     {
+        EndDoc(printer.hDC);
+        DeleteObject(font);
         ShowLastError();
         return;
     }
@@ -605,6 +615,11 @@ VOID DIALOG_FilePrint(VOID)
                 if (StartPage(printer.hDC) <= 0) {
                     static const TCHAR failed[] = _T("StartPage failed");
                     static const TCHAR error[] = _T("Print Error");
+                    SelectObject(printer.hDC, old_font);
+                    EndDoc(printer.hDC);
+                    DeleteDC(printer.hDC);
+                    HeapFree(GetProcessHeap(), 0, pTemp);
+                    DeleteObject(font);
                     MessageBox(Globals.hMainWnd, failed, error, MB_ICONEXCLAMATION);
                     return;
                 }
@@ -644,9 +659,12 @@ VOID DIALOG_FilePrint(VOID)
         } while (i<size);
     }
 
+    if (old_font != 0)
+        SelectObject(printer.hDC, old_font);
     EndDoc(printer.hDC);
     DeleteDC(printer.hDC);
     HeapFree(GetProcessHeap(), 0, pTemp);
+    DeleteObject(font);
 }
 
 VOID DIALOG_FilePrinterSetup(VOID)
@@ -743,7 +761,7 @@ VOID DoCreateStatusBar(VOID)
         SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
     }
 
-    // Set status bar visible or not accordind the the settings.
+    // Set status bar visiblity according to the settings.
     if (Globals.bWrapLongLines == TRUE ||
         Globals.bShowStatusBar == FALSE)
     {
@@ -758,7 +776,7 @@ VOID DoCreateStatusBar(VOID)
     }
 
     // Set check state in show status bar item.
-    if (Globals.bShowStatusBar == TRUE)
+    if (bStatusBarVisible)
     {
         CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
     }
