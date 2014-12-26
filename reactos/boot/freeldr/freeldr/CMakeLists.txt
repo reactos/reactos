@@ -169,9 +169,14 @@ if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
 endif()
 
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
+    list(APPEND FREELDR_BASE_SOURCE windows/setupldr.c)
+endif()
+
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
+    inffile/inffile.c
     rtl/libsupp.c)
 
 if(NOT MSVC)
@@ -233,62 +238,9 @@ add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR livecd NAME_ON_CD setupldr.sys)
 
-list(APPEND SETUPLDR_SOURCE inffile/inffile.c)
-
-if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
-    list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
-endif()
-
-add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
-add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
-
-if(NOT MSVC AND SEPARATE_DBG)
-    set_target_properties(setupldr_pe PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
-    set_target_properties(setupldr_pe_dbg PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
-endif()
-
-if(MSVC)
-    add_target_link_flags(setupldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
-    add_target_link_flags(setupldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
-else()
-    add_target_link_flags(setupldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
-    add_target_link_flags(setupldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
-endif()
-
-add_target_compile_definitions(setupldr_pe FREELDR_REACTOS_SETUP)
-add_target_compile_definitions(setupldr_pe_dbg FREELDR_REACTOS_SETUP)
-
-set_image_base(setupldr_pe 0x10000)
-set_subsystem(setupldr_pe native)
-set_entrypoint(setupldr_pe RealEntryPoint)
-
-set_image_base(setupldr_pe_dbg 0x10000)
-set_subsystem(setupldr_pe_dbg native)
-set_entrypoint(setupldr_pe_dbg RealEntryPoint)
-
-if(ARCH STREQUAL "i386")
-    target_link_libraries(setupldr_pe mini_hal)
-    target_link_libraries(setupldr_pe_dbg mini_hal)
-endif()
-
-target_link_libraries(setupldr_pe freeldr_common cportlib cmlib rtl libcntpr)
-target_link_libraries(setupldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
-
-if(STACK_PROTECTOR)
-    target_link_libraries(setupldr_pe gcc_ssp)
-    target_link_libraries(setupldr_pe_dbg gcc_ssp)
-elseif(RUNTIME_CHECKS)
-    target_link_libraries(setupldr_pe runtmchk)
-    target_link_libraries(setupldr_pe_dbg runtmchk)
-    add_target_link_flags(setupldr_pe "/MERGE:.rtc=.text")
-endif()
-
-add_dependencies(setupldr_pe asm)
-add_dependencies(setupldr_pe_dbg asm)
-
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    setupldr_pe
+    freeldr_pe
     ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)

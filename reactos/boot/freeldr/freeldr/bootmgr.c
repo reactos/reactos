@@ -35,9 +35,7 @@ struct
     OS_LOADING_METHOD Load;
 } OSLoadingMethods[] =
 {
-#ifdef FREELDR_REACTOS_SETUP
     {"ReactOSSetup", 0                , LoadReactOSSetup     },
-#endif
 
 #ifdef _M_IX86
     {"BootSector"  , 0                , LoadAndBootBootSector},
