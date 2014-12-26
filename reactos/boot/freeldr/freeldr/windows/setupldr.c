@@ -138,6 +138,12 @@ VOID
 LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
                  IN USHORT OperatingSystemVersion)
 {
+    ULONG_PTR SectionId;
+    PCSTR SectionName = OperatingSystem->SystemPartition;
+    CHAR  SettingsValue[80];
+    BOOLEAN HasSection;
+    CHAR  BootOptions2[256];
+    PCHAR File;
     CHAR FileName[512];
     CHAR BootPath[512];
     LPCSTR LoadOptions;
@@ -151,25 +157,74 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     LPCSTR SystemPath;
     LPCSTR SourcePaths[] =
     {
-        "\\", /* Only for floppy boot */
+        "", /* Only for floppy boot */
 #if defined(_M_IX86)
-        "\\I386\\",
+        "I386\\",
 #elif defined(_M_MPPC)
-        "\\PPC\\",
+        "PPC\\",
 #elif defined(_M_MRX000)
-        "\\MIPS\\",
+        "MIPS\\",
 #endif
-        "\\reactos\\",
+        "reactos\\",
         NULL
     };
 
-    /* Get boot path */
-    MachDiskGetBootPath(BootPath, sizeof(BootPath));
+    /* Get OS setting value */
+    SettingsValue[0] = ANSI_NULL;
+    IniOpenSection("Operating Systems", &SectionId);
+    IniReadSettingByName(SectionId, SectionName, SettingsValue, sizeof(SettingsValue));
+
+    /* Open the operating system section specified in the .ini file */
+    HasSection = IniOpenSection(SectionName, &SectionId);
+
+    UiDrawBackdrop();
+    UiDrawProgressBarCenter(1, 100, "Loading NT...");
+
+    /* Read the system path is set in the .ini file */
+    if (!HasSection ||
+        !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
+    {
+        MachDiskGetBootPath(BootPath, sizeof(BootPath));
+    }
+
+    /* Append a backslash */
+    if ((strlen(BootPath)==0) || BootPath[strlen(BootPath)] != '\\')
+        strcat(BootPath, "\\");
+
+    /* Read booting options */
+    if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions2, sizeof(BootOptions2)))
+    {
+        /* Get options after the title */
+        PCSTR p = SettingsValue;
+        while (*p == ' ' || *p == '"')
+            p++;
+        while (*p != '\0' && *p != '"')
+            p++;
+        strcpy(BootOptions2, p);
+        TRACE("BootOptions: '%s'\n", BootOptions2);
+    }
+
+    /* Check if a ramdisk file was given */
+    File = strstr(BootOptions2, "/RDPATH=");
+    if (File)
+    {
+        /* Copy the file name and everything else after it */
+        strcpy(FileName, File + 8);
+
+        /* Null-terminate */
+        *strstr(FileName, " ") = ANSI_NULL;
+
+        /* Load the ramdisk */
+        RamDiskLoadVirtualFile(FileName);
+    }
+
+    TRACE("BootPath: '%s'\n", BootPath);
 
     /* And check if we booted from floppy */
     BootFromFloppy = strstr(BootPath, "fdisk") != NULL;
 
     /* Open 'txtsetup.sif' from any of source paths */
+    File = BootPath + strlen(BootPath);
     for (i = BootFromFloppy ? 0 : 1; ; i++)
     {
         SystemPath = SourcePaths[i];
@@ -178,10 +233,10 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
             ERR("Failed to open txtsetup.sif\n");
             return;
         }
-        sprintf(FileName, "%stxtsetup.sif", SystemPath);
-        if (InfOpenFile (&InfHandle, FileName, &ErrorLine))
+        sprintf(File, "%stxtsetup.sif", SystemPath);
+        if (InfOpenFile (&InfHandle, BootPath, &ErrorLine))
         {
-            strcat(BootPath, SystemPath);
+            sprintf(File, "%s", SystemPath);
             break;
         }
     }

@@ -952,8 +952,8 @@ InfOpenFile(
     //
     // Open the .inf file
     //
-    FileId = FsOpenFile(FileName);
-    if (!FileId)
+    ret = ArcOpen((PCHAR)FileName, OpenReadOnly, &FileId);
+    if (ret != ESUCCESS)
     {
         return FALSE;
     }
