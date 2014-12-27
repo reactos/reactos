@@ -8,11 +8,11 @@
 
 class Provider
 {
-public:
-    void Flush();
-    HRESULT ValidateDeletionFlags(long lFlags);
-    HRESULT ValidateMethodFlags(long lFlags);
-    HRESULT ValidateQueryFlags(long lFlags);
+protected:
+    virtual void Flush();
+    virtual HRESULT ValidateDeletionFlags(long lFlags);
+    virtual HRESULT ValidateMethodFlags(long lFlags);
+    virtual HRESULT ValidateQueryFlags(long lFlags);
 };
 
 #endif
