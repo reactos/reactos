@@ -5,6 +5,7 @@ spec2def(framedyn.dll framedyn.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     main.c
     chstring.cpp
+    provider.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/framedyn.def)
 
 if(MSVC)

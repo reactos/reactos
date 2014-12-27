@@ -74,3 +74,7 @@
 @ stdcall ??H@YG?AVCHString@@ABV0@PBG@Z(ptr wstr) _ZplRK8CHStringPKw
 @ stdcall ??H@YG?AVCHString@@PBGABV0@@Z(wstr ptr) _ZplPKwRK8CHString
 @ stdcall ??H@YG?AVCHString@@ABV0@0@Z(ptr ptr) _ZplRK8CHStringS1_
+@ thiscall ?Flush@Provider@@MAEXXZ() _ZN8Provider5FlushEv
+@ thiscall ?ValidateDeletionFlags@Provider@@MAEJJ@Z(long) _ZN8Provider21ValidateDeletionFlagsEl
+@ thiscall ?ValidateMethodFlags@Provider@@MAEJJ@Z(long) _ZN8Provider19ValidateMethodFlagsEl
+@ thiscall ?ValidateQueryFlags@Provider@@MAEJJ@Z(long) _ZN8Provider18ValidateQueryFlagsEl
