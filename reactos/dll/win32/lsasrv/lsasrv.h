@@ -303,6 +303,13 @@ LsarpLookupPrivilegeName(PLUID Value,
                          PRPC_UNICODE_STRING *Name);
 
 NTSTATUS
+LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
+                                USHORT ClientLanguage,
+                                USHORT ClientSystemDefaultLanguage,
+                                PRPC_UNICODE_STRING *DisplayName,
+                                USHORT *LanguageReturned);
+
+NTSTATUS
 LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
                           PLUID Value);
 

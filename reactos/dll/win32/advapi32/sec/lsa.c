@@ -907,11 +907,35 @@ WINAPI
 LsaLookupPrivilegeDisplayName(IN LSA_HANDLE PolicyHandle,
                               IN PLSA_UNICODE_STRING Name,
                               OUT PLSA_UNICODE_STRING *DisplayName,
-                              OUT PSHORT LanguageReturned)
+                              OUT PUSHORT LanguageReturned)
 {
-    FIXME("LsaLookupPrivilegeDisplayName(%p %p %p %p)\n",
+    PRPC_UNICODE_STRING DisplayNameBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("LsaLookupPrivilegeDisplayName(%p %p %p %p)\n",
           PolicyHandle, Name, DisplayName, LanguageReturned);
-    return STATUS_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        Status = LsarLookupPrivilegeDisplayName(PolicyHandle,
+                                                (PRPC_UNICODE_STRING)Name,
+                                                GetUserDefaultUILanguage(),
+                                                GetSystemDefaultUILanguage(),
+                                                &DisplayNameBuffer,
+                                                LanguageReturned);
+
+        *DisplayName = (PUNICODE_STRING)DisplayNameBuffer;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (DisplayNameBuffer != NULL)
+            MIDL_user_free(DisplayNameBuffer);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 

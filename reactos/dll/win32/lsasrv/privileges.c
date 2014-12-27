@@ -118,6 +118,39 @@ LsarpLookupPrivilegeName(PLUID Value,
     return STATUS_NO_SUCH_PRIVILEGE;
 }
 
+NTSTATUS
+LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
+                                USHORT ClientLanguage,
+                                USHORT ClientSystemDefaultLanguage,
+                                PRPC_UNICODE_STRING *DisplayName,
+                                USHORT *LanguageReturned)
+{
+    PRPC_UNICODE_STRING DisplayNameBuffer;
+    UNIMPLEMENTED;
+
+    /* For now, description is equal to privilege name */
+
+    DisplayNameBuffer = MIDL_user_allocate(sizeof(RPC_UNICODE_STRING));
+    if (DisplayNameBuffer == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    DisplayNameBuffer->Length = Name->Length;
+    DisplayNameBuffer->MaximumLength = Name->MaximumLength;
+
+    DisplayNameBuffer->Buffer = MIDL_user_allocate(DisplayNameBuffer->MaximumLength);
+    if (DisplayNameBuffer->Buffer == NULL)
+    {
+        MIDL_user_free(DisplayNameBuffer);
+        return STATUS_NO_MEMORY;
+    }
+
+    wcscpy(DisplayNameBuffer->Buffer, Name->Buffer);
+
+    *DisplayName = DisplayNameBuffer;
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
