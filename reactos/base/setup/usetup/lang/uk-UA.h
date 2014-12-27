@@ -1501,8 +1501,10 @@ MUI_ERROR ukUAErrorEntries[] =
         "ENTER = Перезавантажити комп'ютер"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Недостатньо вiльного мiсця на обраному роздiлi.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Натиснiть будь-яку клавiшу для продовження.",
         NULL
     },

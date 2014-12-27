@@ -1498,8 +1498,10 @@ MUI_ERROR sqALErrorEntries[] =
         "ENTER = Ristarto kompjuterin"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Jo mjaft hapesir‰ e lir‰ n‰ particionin e p‰rzgjedhur.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Shtypni nj‰ tast cfar‰do p‰r t‰ vazhduar.",
         NULL
     },

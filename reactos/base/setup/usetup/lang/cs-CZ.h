@@ -1501,8 +1501,10 @@ MUI_ERROR csCZErrorEntries[] =
         "ENTER = Restartovat poŸ¡taŸ"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Na zvolen‚m odd¡lu nen¡ dost voln‚ho m¡sta.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
         NULL
     },

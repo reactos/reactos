@@ -1570,9 +1570,10 @@ MUI_ERROR roROErrorEntries[] =
         "ENTER = Repornire calculator"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Pe partiîia selectatÇ nu existÇ suficient\n"
-        "spaîiu liber."
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Tastaîi pentru a continua.",
         NULL
     },

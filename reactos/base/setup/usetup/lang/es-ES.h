@@ -1501,8 +1501,10 @@ MUI_ERROR esESErrorEntries[] =
         "ENTER = Reiniciar el equipo"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "No hay suficiente espacio disponible en la partici¢n seleccionada.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Presione una tecla para continuar.",
         NULL
     },

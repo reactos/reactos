@@ -1506,8 +1506,10 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "На избрания дял няма достатъчно свободно пространство.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Натиснете клавиш, за да продължите.",
         NULL
     },

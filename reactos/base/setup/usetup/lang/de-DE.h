@@ -1497,9 +1497,10 @@ MUI_ERROR deDEErrorEntries[] =
         "EINGABETASTE = Computer neu starten"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Es ist nicht genÅgend Speicherplatz auf der\n"
-        "gewÑhlten Partition vorhanden.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "Die gewÑhlten Partition ist nicht gro· genug, um ReactOS zu installieren.\n"
+        "Die Installationspartition muss mindestens %lu MB gro· sein.\n"
+        "\n"
         "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
         NULL
     },

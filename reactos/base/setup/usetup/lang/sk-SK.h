@@ -1505,8 +1505,10 @@ MUI_ERROR skSKErrorEntries[] =
         "ENTER = ReÁtart poü°taüa"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Na zvolenej part°cii nie je dostatok voñnÇho miesta.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Pokraüujte stlaüen°m ñubovoñnÇho kl†vesu.",
         NULL
     },

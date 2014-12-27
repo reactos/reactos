@@ -1481,8 +1481,10 @@ MUI_ERROR trTRErrorEntries[] =
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Seáili bîlÅmde yeterli boü alan yok.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },

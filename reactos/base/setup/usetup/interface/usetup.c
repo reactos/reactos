@@ -1425,28 +1425,18 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 }
 
 
-#if 0
 static BOOL
 IsDiskSizeValid(PPARTENTRY PartEntry)
 {
-    ULONGLONG m1, m2;
+    ULONGLONG size;
 
-    /*  check for unpartitioned space  */
-    m1 = PartEntry->UnpartitionedLength;
-    m1 = (m1 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    size = PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector;
+    size = (size + 524288) / 1048576;  /* in MBytes */
 
-    if( m1 > RequiredPartitionDiskSpace)
-    {
-        return TRUE;
-    }
-
-    /* check for partitioned space */
-    m2 = PartEntry->PartInfo[0].PartitionLength.QuadPart;
-    m2 = (m2 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if (m2 < RequiredPartitionDiskSpace)
+    if (size < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
-        DPRINT1("Partition is too small(unpartitioned: %I64u MB, partitioned: %I64u MB), required disk space is %lu MB\n", m1, m2, RequiredPartitionDiskSpace);
+        DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, RequiredPartitionDiskSpace);
         return FALSE;
     }
     else
@@ -1454,7 +1444,6 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
         return TRUE;
     }
 }
-#endif
 
 
 static PAGE_NUMBER
@@ -1513,16 +1502,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (AutoPartition)
             {
-#if 0
-                if (!IsDiskSizeValid(PartitionList->CurrentPartition))
-                {
-                    MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
-                }
-#endif
                 CreatePrimaryPartition(PartitionList,
                                        PartitionList->CurrentPartition->SectorCount.QuadPart,
                                        TRUE);
+
+                if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+                {
+                    MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                    RequiredPartitionDiskSpace);
+                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
+                }
 
                 DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
@@ -1531,13 +1520,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
-#if 0
             if (!IsDiskSizeValid(PartitionList->CurrentPartition))
             {
-                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
-#endif
+
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
             return SELECT_FILE_SYSTEM_PAGE;
@@ -1609,13 +1598,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
-#if 0
-            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
-            }
-#endif
             if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
                 continue; //return SELECT_PARTITION_PAGE;
 
@@ -1625,6 +1607,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 CreatePrimaryPartition(PartitionList,
                                        0ULL,
                                        TRUE);
+            }
+
+            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                RequiredPartitionDiskSpace);
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
 
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
