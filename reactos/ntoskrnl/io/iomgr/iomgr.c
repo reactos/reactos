@@ -273,7 +273,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DEVICE_OBJECT);
     ObjectTypeInitializer.DeleteProcedure = IopDeleteDevice;
     ObjectTypeInitializer.ParseProcedure = IopParseDevice;
-    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
     ObjectTypeInitializer.CaseInsensitive = TRUE;
     if (!NT_SUCCESS(ObCreateObjectType(&Name,
                                        &ObjectTypeInitializer,
@@ -312,7 +312,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.GenericMapping = IopFileMapping;
     ObjectTypeInitializer.CloseProcedure = IopCloseFile;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
-    ObjectTypeInitializer.SecurityProcedure = IopSecurityFile;
+    ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
     ObjectTypeInitializer.QueryNameProcedure = IopQueryNameFile;
     ObjectTypeInitializer.ParseProcedure = IopParseFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;

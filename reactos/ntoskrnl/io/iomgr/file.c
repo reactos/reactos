@@ -1310,14 +1310,14 @@ IopDeleteFile(IN PVOID ObjectBody)
 
 NTSTATUS
 NTAPI
-IopSecurityFile(IN PVOID ObjectBody,
-                IN SECURITY_OPERATION_CODE OperationCode,
-                IN PSECURITY_INFORMATION SecurityInformation,
-                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                IN OUT PULONG BufferLength,
-                IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-                IN POOL_TYPE PoolType,
-                IN OUT PGENERIC_MAPPING GenericMapping)
+IopGetSetSecurityObject(IN PVOID ObjectBody,
+                        IN SECURITY_OPERATION_CODE OperationCode,
+                        IN PSECURITY_INFORMATION SecurityInformation,
+                        IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                        IN OUT PULONG BufferLength,
+                        IN OUT PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                        IN POOL_TYPE PoolType,
+                        IN OUT PGENERIC_MAPPING GenericMapping)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;
