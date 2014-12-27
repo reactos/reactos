@@ -1,0 +1,35 @@
+[Section]
+Name = Wine Mono .NET Framework
+Version = 4.5.4
+License = GPLv2, LGPLv2, MIT, BSD, MS-PL, MPLv1.1
+Description = Wine Mono .NET Framework
+Size = 53.7 MB
+Category = 14
+URLSite = http://sourceforge.net/projects/wine/files/Wine Mono
+URLDownload = http://download.sourceforge.net/wine/Wine%20Mono/4.5.4/wine-mono-4.5.4.msi
+CDPath = none
+
+[Section.0407]
+Description = Wine Mono .NET Framework
+
+[Section.040a]
+Description = Wine Mono .NET Framework
+
+[Section.040c]
+Description = Wine Mono .NET Framework
+Size = 53,7 Mo
+
+[Section.0410]
+Description = Wine Mono .NET Framework
+
+[Section.0415]
+Description = Wine Mono .NET Framework
+
+[Section.0418]
+Description = Platforma Wine Mono .NET
+Size = 53,7 Mo
+
+[Section.041f]
+Name = Wine Mono .NET Çatısı
+Description = Wine Mono .NET Çatısı
+Size = 53,7 MB
