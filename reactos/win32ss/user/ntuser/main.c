@@ -733,10 +733,6 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
     ResetCsrProcess();
 }
 
-#ifdef _M_IX86
-C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
-#endif
-
 // Return on failure
 #define NT_ROF(x) \
 { \

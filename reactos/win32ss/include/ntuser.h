@@ -974,6 +974,10 @@ typedef struct tagSERVERINFO
     PERUSERSERVERINFO;
 } SERVERINFO, *PSERVERINFO;
 
+#ifdef _M_IX86
+C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
+#endif
+
 
 // Server event activity bits.
 #define SRV_EVENT_MENU            0x0001

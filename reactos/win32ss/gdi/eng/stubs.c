@@ -1538,16 +1538,6 @@ NtGdiIcmBrushInfo(
 }
 
 /*
- * @implemented
- */
-BOOL
-APIENTRY
-NtGdiInit(VOID)
-{
-    return TRUE;
-}
-
-/*
  * @unimplemented
  */
 ULONG

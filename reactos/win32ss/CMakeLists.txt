@@ -167,6 +167,7 @@ list(APPEND SOURCE
     gdi/ntgdi/gdiobj.c
     gdi/ntgdi/gdipool.c
     gdi/ntgdi/icm.c
+    gdi/ntgdi/init.c
     gdi/ntgdi/line.c
     gdi/ntgdi/metafile.c
     gdi/ntgdi/palette.c
