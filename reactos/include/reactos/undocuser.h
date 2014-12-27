@@ -107,12 +107,21 @@ extern "C" {
 #define LN_MESSAGE_BEEP       0x9
 #define LN_START_SCREENSAVE   0xA
 
+// From WinCE 6.0 Imm.h SDK
+// Returns for ImmProcessHotKey
+#define IPHK_HOTKEY                     0x0001
+#define IPHK_PROCESSBYIME               0x0002
+#define IPHK_CHECKCTRL                  0x0004
+#define IPHK_SKIPTHISKEY                0x0010
+
 //
 // Undocumented flags for DrawCaptionTemp
 //
 #define DC_NOSENDMSG 0x2000
 
 #define STARTF_SCRNSAVER 0x80000000
+
+#define MOD_WINLOGON_SAS 0x8000
 
 #define CW_USEDEFAULT16 ((short)0x8000)
 
