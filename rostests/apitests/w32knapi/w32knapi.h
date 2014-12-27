@@ -16,6 +16,7 @@
 #include <winddi.h>
 #include <ddrawi.h>
 #include <prntfont.h>
+#include <imm.h>
 
 /* Public Win32K Headers */
 #include <ntusrtyp.h>
