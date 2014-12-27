@@ -116,6 +116,7 @@ list(APPEND SOURCE
     user/ntuser/hook.c
     user/ntuser/hotkey.c
     user/ntuser/input.c
+    user/ntuser/ime.c
     user/ntuser/keyboard.c
     user/ntuser/kbdlayout.c
     user/ntuser/menu.c

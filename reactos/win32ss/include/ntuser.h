@@ -6,6 +6,9 @@ typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
 struct tagPOPUPMENU;
+#ifndef HIMC
+typedef HANDLE HIMC;
+#endif
 
 #define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
@@ -679,7 +682,7 @@ typedef struct _WND
     /* Size of the extra data associated with the window. */
     ULONG cbwndExtra;
     struct _WND *spwndLastActive;
-    //HIMC hImc; // Input context associated with this window.
+    HIMC hImc; // Input context associated with this window.
     LONG dwUserData;
     PVOID pActCtx;
     //PD3DMATRIX pTransForm;
@@ -863,6 +866,8 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define COLOR_LAST COLOR_MENUBAR
 #define MAX_MB_STRINGS 11
 
+#define SRVINFO_DBCSENABLED 0x0002
+#define SRVINFO_IMM32   0x0004
 #define SRVINFO_APIHOOK 0x0010
 #define SRVINFO_METRICS 0x0020
 #define SRVINFO_KBDPREF 0x0080
@@ -1613,7 +1618,7 @@ DWORD
 NTAPI
 NtUserCheckImeHotKey(
   DWORD dwUnknown1,
-  DWORD dwUnknown2);
+  LPARAM dwUnknown2);
 
 HWND NTAPI
 NtUserChildWindowFromPointEx(
