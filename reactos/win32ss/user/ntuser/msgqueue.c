@@ -1028,8 +1028,13 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
 
 NTSTATUS FASTCALL
 co_MsqSendMessage(PTHREADINFO ptirec,
-                  HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
-                  UINT uTimeout, BOOL Block, INT HookMessage,
+                  HWND Wnd,
+                  UINT Msg,
+                  WPARAM wParam,
+                  LPARAM lParam,
+                  UINT uTimeout,
+                  BOOL Block,
+                  INT HookMessage,
                   ULONG_PTR *uResult)
 {
    PTHREADINFO pti;
@@ -1790,8 +1795,14 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     EVENTMSG Event;
     USER_REFERENCE_ENTRY Ref;
     PWND pWnd;
+    UINT ImmRet;
     BOOL Ret = TRUE;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    if (Msg->message == VK_PACKET)
+    {
+       pti->wchInjected = HIWORD(Msg->wParam);
+    }
 
     if (Msg->message == WM_KEYDOWN || Msg->message == WM_SYSKEYDOWN ||
         Msg->message == WM_KEYUP || Msg->message == WM_SYSKEYUP)
@@ -1863,6 +1874,22 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
 
         Ret = FALSE;
     }
+
+    if ( pWnd && Ret && *RemoveMessages && Msg->message == WM_KEYDOWN && !(pti->TIF_flags & TIF_DISABLEIME))
+    {
+        if ( (ImmRet = IntImmProcessKey(pti->MessageQueue, pWnd, Msg->message, Msg->wParam, Msg->lParam)) )
+        {
+            if ( ImmRet & (IPHK_HOTKEY|IPHK_SKIPTHISKEY) )
+            {
+               ImmRet = 0;
+            }
+            if ( ImmRet & IPHK_PROCESSBYIME )
+            {
+               Msg->wParam = VK_PROCESSKEY;
+            }
+        }
+    }
+
     if (pWnd) UserDerefObjectCo(pWnd);
     return Ret;
 }

@@ -1098,6 +1098,26 @@ typedef struct tagCURSORDATA
 #define CURSORF_LINKED       0x0100
 #define CURSORF_CURRENT      0x0200
 
+typedef struct tagIMEINFOEX
+{
+    HKL hkl;
+    IMEINFO ImeInfo;
+    WCHAR wszUIClass[16];
+    ULONG fdwInitConvMode;
+    INT fInitOpen;
+    INT fLoadFlag;
+    DWORD dwProdVersion;
+    DWORD dwImeWinVersion;
+    WCHAR wszImeDescription[50];
+    WCHAR wszImeFile[80];
+    struct
+    {
+        INT fSysWow64Only:1;
+        INT fCUASLayer:1;
+    };
+} IMEINFOEX, *PIMEINFOEX;
+
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(
@@ -2149,7 +2169,7 @@ NtUserGetImeHotKey(
 DWORD
 NTAPI
 NtUserGetImeInfoEx(
-    DWORD dwUnknown1,
+    PIMEINFOEX pImeInfoEx,
     DWORD dwUnknown2);
 
 DWORD
@@ -2929,7 +2949,7 @@ NtUserSetImeHotKey(
 DWORD
 NTAPI
 NtUserSetImeInfoEx(
-    DWORD dwUnknown1);
+    PIMEINFOEX pImeInfoEx);
 
 DWORD
 NTAPI

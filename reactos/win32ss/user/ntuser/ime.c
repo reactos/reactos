@@ -7,7 +7,34 @@
  */
 
 #include <win32k.h>
-//DBG_DEFAULT_CHANNEL(UserMisc);
+DBG_DEFAULT_CHANNEL(UserMisc);
+
+
+UINT FASTCALL
+IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    PKL pKbdLayout;
+
+    ASSERT_REFS_CO(pWnd);
+
+    if ( Msg == WM_KEYDOWN ||
+         Msg == WM_SYSKEYDOWN ||
+         Msg == WM_KEYUP ||
+         Msg == WM_SYSKEYUP )
+    {
+       //Vk = wParam & 0xff;
+       pKbdLayout = pWnd->head.pti->KeyboardLayout;
+       if (pKbdLayout == NULL) return 0;
+       //
+       if (!(gpsi->dwSRVIFlags & SRVINFO_IMM32)) return 0;
+       // need ime.h!
+    }
+    // Call User32:
+    // Anything but BOOL!
+    //ImmRet = co_IntImmProcessKey(UserHMGetHandle(pWnd), pKbdLayout->hkl, Vk, lParam, HotKey);
+    FIXME(" is UNIMPLEMENTED.\n");
+    return 0;
+}
 
 
 DWORD
@@ -82,7 +109,7 @@ NtUserGetAppImeLevel(
 DWORD
 APIENTRY
 NtUserGetImeInfoEx(
-    DWORD dwUnknown1,
+    PIMEINFOEX pImeInfoEx,
     DWORD dwUnknown2)
 {
     STUB;
@@ -103,7 +130,7 @@ NtUserSetAppImeLevel(
 DWORD
 APIENTRY
 NtUserSetImeInfoEx(
-    DWORD dwUnknown1)
+    PIMEINFOEX pImeInfoEx)
 {
     STUB;
     return 0;

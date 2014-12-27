@@ -21,6 +21,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <imm.h>
 
 /* Undocumented user definitions */
 #include <undocuser.h>

@@ -53,6 +53,7 @@ extern PCLS SystemClassList;
 extern BOOL RegisteredSysClasses;
 
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
+typedef struct tagMENUSTATE MENUSTATE, *PMENUSTATE;
 
 #include <pshpack1.h>
 // FIXME: Move to ntuser.h
@@ -105,6 +106,7 @@ typedef struct _THREADINFO
     HDESK               hdesk;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
+    PMENUSTATE          pMenuState;
     DWORD               dwExpWinVer;
     DWORD               dwCompatFlags;
     DWORD               dwCompatFlags2;
@@ -125,7 +127,8 @@ typedef struct _THREADINFO
 
     /* Queue of messages posted to the queue. */
     LIST_ENTRY          PostedMessagesListHead; // mlPost
-    UINT                fsChangeBitsRemoved;
+    WORD                fsChangeBitsRemoved;
+    WCHAR               wchInjected;
     UINT                cWindows;
     UINT                cVisWindows;
     LIST_ENTRY          aphkStart[NB_HOOKS];
