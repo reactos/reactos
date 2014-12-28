@@ -1483,7 +1483,10 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             case IOCTL_STORAGE_CHECK_VERIFY2:
             case IOCTL_CDROM_CHECK_VERIFY:
                 
-                UNIMPLEMENTED_DBGBREAK();
+                //
+                // Just pretend it's OK, don't do more
+                //
+                Status = STATUS_SUCCESS;
                 break;
 
             case IOCTL_STORAGE_GET_MEDIA_TYPES:
