@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern ERESOURCE IopSecurityResource;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -1308,6 +1310,174 @@ IopDeleteFile(IN PVOID ObjectBody)
     }
 }
 
+PDEVICE_OBJECT
+NTAPI
+IopGetDeviceAttachmentBase(PDEVICE_OBJECT DeviceObject)
+{
+    PDEVICE_OBJECT PDO = DeviceObject;
+
+    /* Go down the stack to attempt to get the PDO */
+    for (; ((PEXTENDED_DEVOBJ_EXTENSION)PDO->DeviceObjectExtension)->AttachedTo != NULL;
+           PDO = ((PEXTENDED_DEVOBJ_EXTENSION)PDO->DeviceObjectExtension)->AttachedTo);
+
+    return PDO;
+}
+
+PDEVICE_OBJECT
+NTAPI
+IopGetDevicePDO(PDEVICE_OBJECT DeviceObject)
+{
+    KIRQL OldIrql;
+    PDEVICE_OBJECT PDO;
+
+    ASSERT(DeviceObject != NULL);
+
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+    /* Get the base DO */
+    PDO = IopGetDeviceAttachmentBase(DeviceObject);
+    /* Check whether that's really a PDO and if so, keep it */
+    if ((PDO->Flags & DO_BUS_ENUMERATED_DEVICE) != DO_BUS_ENUMERATED_DEVICE)
+    {
+        PDO = NULL;
+    }
+    else
+    {
+        ObReferenceObject(PDO);
+    }
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+
+    return PDO;
+}
+
+NTSTATUS
+NTAPI
+IopSetDeviceSecurityDescriptor(IN PDEVICE_OBJECT DeviceObject,
+                               IN PSECURITY_INFORMATION SecurityInformation,
+                               IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                               IN POOL_TYPE PoolType,
+                               IN PGENERIC_MAPPING GenericMapping)
+{
+    NTSTATUS Status;
+    PSECURITY_DESCRIPTOR OldSecurityDescriptor, CachedSecurityDescriptor, NewSecurityDescriptor;
+
+    PAGED_CODE();
+
+    /* Keep attempting till we find our old SD or fail */
+    while (TRUE)
+    {
+        KeEnterCriticalRegion();
+        ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+
+        /* Get our old SD and reference it */
+        OldSecurityDescriptor = DeviceObject->SecurityDescriptor;
+        if (OldSecurityDescriptor != NULL)
+        {
+            ObReferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+        }
+
+        ExReleaseResourceLite(&IopSecurityResource);
+        KeLeaveCriticalRegion();
+
+        /* Set the SD information */
+        NewSecurityDescriptor = OldSecurityDescriptor;
+        Status = SeSetSecurityDescriptorInfo(NULL, SecurityInformation,
+                                             SecurityDescriptor, &NewSecurityDescriptor,
+                                             PoolType, GenericMapping);
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (OldSecurityDescriptor != NULL)
+            {
+                ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+            }
+
+            break;
+        }
+
+        /* Add the new DS to the internal cache */
+        Status = ObLogSecurityDescriptor(NewSecurityDescriptor,
+                                         &CachedSecurityDescriptor, 1);
+        ExFreePool(NewSecurityDescriptor);
+        if (!NT_SUCCESS(Status))
+        {
+            ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+            break;
+        }
+
+        KeEnterCriticalRegion();
+        ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+        /* Check if someone changed it in our back */
+        if (DeviceObject->SecurityDescriptor == OldSecurityDescriptor)
+        {
+            /* We're clear, do the swap */
+            DeviceObject->SecurityDescriptor = CachedSecurityDescriptor;
+            ExReleaseResourceLite(&IopSecurityResource);
+            KeLeaveCriticalRegion();
+
+            /* And dereference old SD (twice - us + not in use) */
+            ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 2);
+
+            break;
+        }
+        ExReleaseResourceLite(&IopSecurityResource);
+        KeLeaveCriticalRegion();
+
+        /* If so, try again */
+        ObDereferenceSecurityDescriptor(OldSecurityDescriptor, 1);
+        ObDereferenceSecurityDescriptor(CachedSecurityDescriptor, 1);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IopSetDeviceSecurityDescriptors(IN PDEVICE_OBJECT UpperDeviceObject,
+                                IN PDEVICE_OBJECT PhysicalDeviceObject,
+                                IN PSECURITY_INFORMATION SecurityInformation,
+                                IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                IN POOL_TYPE PoolType,
+                                IN PGENERIC_MAPPING GenericMapping)
+{
+    PDEVICE_OBJECT CurrentDO = PhysicalDeviceObject, NextDevice;
+    NTSTATUS Status = STATUS_SUCCESS, TmpStatus;
+
+    PAGED_CODE();
+
+    ASSERT(PhysicalDeviceObject != NULL);
+
+    /* We always reference the DO we're working on */
+    ObReferenceObject(CurrentDO);
+
+    /* Go up from PDO to latest DO */
+    do
+    {
+        /* Attempt to set the new SD on it */
+        TmpStatus = IopSetDeviceSecurityDescriptor(CurrentDO, SecurityInformation,
+                                                   SecurityDescriptor, PoolType,
+                                                   GenericMapping);
+        /* Was our last one? Remember that status then */
+        if (CurrentDO == UpperDeviceObject)
+        {
+            Status = TmpStatus;
+        }
+
+        /* Try to move to the next DO (and thus, reference it) */
+        NextDevice = CurrentDO->AttachedDevice;
+        if (NextDevice)
+        {
+            ObReferenceObject(NextDevice);
+        }
+
+        /* Dereference current DO and move to the next one */
+        ObDereferenceObject(CurrentDO);
+        CurrentDO = NextDevice;
+    }
+    while (CurrentDO != NULL);
+
+    return Status;
+}
+
 NTSTATUS
 NTAPI
 IopGetSetSecurityObject(IN PVOID ObjectBody,
@@ -1385,11 +1555,34 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
             /* Return success */
             return STATUS_SUCCESS;
         }
-        else
+        else if (OperationCode == SetSecurityDescriptor)
         {
-            DPRINT1("FIXME: Set SD unimplemented for Devices\n");
+            /* Get the Physical Device Object if any */
+            PDEVICE_OBJECT PDO = IopGetDevicePDO(DeviceObject);
+
+            if (PDO != NULL)
+            {
+                /* Apply the new SD to any DO in the path from PDO to current DO */
+                Status = IopSetDeviceSecurityDescriptors(DeviceObject, PDO,
+                                                         SecurityInformation,
+                                                         SecurityDescriptor,
+                                                         PoolType, GenericMapping);
+                ObDereferenceObject(PDO);
+            }
+            else
+            {
+                /* Otherwise, just set for ourselves */
+                Status = IopSetDeviceSecurityDescriptor(DeviceObject,
+                                                        SecurityInformation,
+                                                        SecurityDescriptor,
+                                                        PoolType, GenericMapping);
+            }
+
             return STATUS_SUCCESS;
         }
+
+        /* Shouldn't happen */
+        return STATUS_SUCCESS;
     }
     else if (OperationCode == DeleteSecurityDescriptor)
     {
