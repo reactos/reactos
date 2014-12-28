@@ -3979,10 +3979,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             PIP_UNIMPLEMENTED();
             break;
         case DevicePropertyInstallState:
-        {
-            ValueName = REGSTR_VAL_CONFIGFLAGS;
+            PIP_REGISTRY_DATA(REGSTR_VAL_CONFIGFLAGS, REG_DWORD);
             break;
-        }
         case DevicePropertyResourceRequirements:
             PIP_UNIMPLEMENTED();
         case DevicePropertyAllocatedResources:
