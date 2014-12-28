@@ -393,6 +393,9 @@ IopParseDevice(IN PVOID ParseObject,
         (!(OpenPacket->RelatedFileObject) || (VolumeOpen)) &&
         !(OpenPacket->Override))
     {
+        KeEnterCriticalRegion();
+        ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+
         /* Check if a device object is being parsed  */
         if (!RemainingName->Length)
         {
@@ -503,6 +506,9 @@ IopParseDevice(IN PVOID ParseObject,
                 AccessGranted = TRUE;
             }
         }
+
+        ExReleaseResourceLite(&IopSecurityResource);
+        KeLeaveCriticalRegion();
 
         /* Check if we hold the lock */
         if (LockHeld)
