@@ -250,6 +250,25 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     //
+    // ReactOS hack (drive letter should not be hardcoded, and maybe set by mountmgr.sys)
+    //
+    {
+        ANSI_STRING AnsiPath;
+        CHAR Buffer[256];
+        UNICODE_STRING NtSystemRoot;
+        UNICODE_STRING DriveLetter = RTL_CONSTANT_STRING(L"\\??\\X:");
+
+        AnsiPath.Length = sprintf(Buffer, "X:%s", LoaderBlock->NtBootPathName);
+        AnsiPath.MaximumLength = AnsiPath.Length + 1;
+        AnsiPath.Buffer = Buffer;
+        RtlInitEmptyUnicodeString(&NtSystemRoot,
+                                  SharedUserData->NtSystemRoot,
+                                  sizeof(SharedUserData->NtSystemRoot));
+        RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
+        IoCreateSymbolicLink(&DriveLetter, &DeviceString);
+    }
+
+    //
     // We made it
     //
     return STATUS_SUCCESS;
