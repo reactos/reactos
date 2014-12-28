@@ -386,7 +386,13 @@ int WhoamiLogonId(void)
         }
     }
 
-    if (pSid == 0 || !ConvertSidToStringSidW(pSid, &pSidStr))
+    if (pSid == 0)
+    {
+        WhoamiFree(pGroupInfo);
+        wprintf(L"ERROR: Couldn't find the logon SID.\n");
+        return 1;
+    }
+    if (!ConvertSidToStringSidW(pSid, &pSidStr))
     {
         WhoamiFree(pGroupInfo);
         wprintf(L"ERROR: Couldn't convert the logon SID to a string.\n");
