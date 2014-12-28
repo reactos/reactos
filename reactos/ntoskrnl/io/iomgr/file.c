@@ -1318,7 +1318,7 @@ IopDeleteFile(IN PVOID ObjectBody)
 
 PDEVICE_OBJECT
 NTAPI
-IopGetDeviceAttachmentBase(PDEVICE_OBJECT DeviceObject)
+IopGetDeviceAttachmentBase(IN PDEVICE_OBJECT DeviceObject)
 {
     PDEVICE_OBJECT PDO = DeviceObject;
 
@@ -1331,7 +1331,7 @@ IopGetDeviceAttachmentBase(PDEVICE_OBJECT DeviceObject)
 
 PDEVICE_OBJECT
 NTAPI
-IopGetDevicePDO(PDEVICE_OBJECT DeviceObject)
+IopGetDevicePDO(IN PDEVICE_OBJECT DeviceObject)
 {
     KIRQL OldIrql;
     PDEVICE_OBJECT PDO;
