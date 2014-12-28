@@ -1551,15 +1551,30 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
         }
         else if (OperationCode == AssignSecurityDescriptor)
         {
+            Status = STATUS_SUCCESS;
+
             /* Make absolutely sure this is a device object */
             if (!(FileObject) || !(FileObject->Flags & FO_STREAM_FILE))
             {
-                /* Assign the Security Descriptor */
-                DeviceObject->SecurityDescriptor = SecurityDescriptor;
+                PSECURITY_DESCRIPTOR CachedSecurityDescriptor;
+
+                /* Add the security descriptor in cache */
+                Status = ObLogSecurityDescriptor(SecurityDescriptor, &CachedSecurityDescriptor, 1);
+                if (NT_SUCCESS(Status))
+                {
+                    KeEnterCriticalRegion();
+                    ExAcquireResourceExclusiveLite(&IopSecurityResource, TRUE);
+
+                    /* Assign the Security Descriptor */
+                    DeviceObject->SecurityDescriptor = CachedSecurityDescriptor;
+
+                    ExReleaseResourceLite(&IopSecurityResource);
+                    KeLeaveCriticalRegion();
+                }
             }
 
-            /* Return success */
-            return STATUS_SUCCESS;
+            /* Return status */
+            return Status;
         }
         else if (OperationCode == SetSecurityDescriptor)
         {
