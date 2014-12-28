@@ -44,7 +44,7 @@ typedef struct _PALETTE
     ULONG ulBlueShift;
     HDEV  hPDev;
     PALETTEENTRY apalColors[0];
-} PALETTE;
+} PALETTE, *PPALETTE;
 
 extern PALETTE gpalRGB, gpalBGR, gpalRGB555, gpalRGB565, *gppalMono, *gppalDefault;
 extern PPALETTE appalSurfaceDefault[];

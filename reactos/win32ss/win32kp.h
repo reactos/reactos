@@ -38,8 +38,8 @@
 
 /* Internal NtGdi Headers */
 typedef struct _DC *PDC;
-typedef struct _PALETTE *PPALETTE;
 #include "gdi/ntgdi/gdiobj.h"
+#include "gdi/ntgdi/palette.h"
 #include "gdi/eng/surface.h"
 #include "gdi/eng/pdevobj.h"
 #include "gdi/eng/ldevobj.h"
@@ -57,7 +57,6 @@ typedef struct _PALETTE *PPALETTE;
 #include "gdi/ntgdi/brush.h"
 #include "gdi/ntgdi/color.h"
 #include "gdi/ntgdi/bitmaps.h"
-#include "gdi/ntgdi/palette.h"
 #include "gdi/ntgdi/region.h"
 #include "gdi/ntgdi/dc.h"
 #include "gdi/ntgdi/dib.h"
@@ -74,8 +73,8 @@ typedef struct _PALETTE *PPALETTE;
 #include "reactx/ntddraw/intddraw.h"
 
 /* Internal NtUser Headers */
-typedef struct _DESKTOP *PDESKTOP;
 #include "user/ntuser/win32.h"
+#include "user/ntuser/usrheap.h"
 #include "user/ntuser/object.h"
 #include "user/ntuser/ntuser.h"
 #include "user/ntuser/shutdown.h"

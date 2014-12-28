@@ -132,6 +132,7 @@ typedef struct _DC
   PVOID       pSurfInfo;
   POINTL      ptlDoBanding;
 } DC;
+// typedef struct _DC *PDC;
 
 extern PDC defaultDCstate;
 

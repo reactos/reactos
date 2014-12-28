@@ -24,9 +24,6 @@ NTSTATUS GdiProcessDestroy(PEPROCESS Process);
 NTSTATUS GdiThreadCreate(PETHREAD Thread);
 NTSTATUS GdiThreadDestroy(PETHREAD Thread);
 
-HANDLE GlobalUserHeap = NULL;
-PVOID GlobalUserHeapSection = NULL;
-
 PSERVERINFO gpsi = NULL; // Global User Server Information.
 
 SHORT gusLanguageID;

@@ -1893,8 +1893,12 @@ IntMapDesktopView(IN PDESKTOP pdesk)
 
     ppi = PsGetCurrentProcessWin32Process();
 
-    /* Find out if another thread already mapped the desktop heap */
-    PrevLink    = &ppi->HeapMappings.Next;
+    /*
+     * Find out if another thread already mapped the desktop heap.
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
+    PrevLink = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1904,7 +1908,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
             return STATUS_SUCCESS;
         }
 
-        PrevLink    = &HeapMapping->Next;
+        PrevLink = &HeapMapping->Next;
         HeapMapping = HeapMapping->Next;
     }
 
@@ -1929,7 +1933,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     TRACE("ppi 0x%p mapped heap of desktop 0x%p\n", ppi, pdesk);
 
     /* Add the mapping */
-    HeapMapping = UserHeapAlloc(sizeof(W32HEAP_USER_MAPPING));
+    HeapMapping = UserHeapAlloc(sizeof(*HeapMapping));
     if (HeapMapping == NULL)
     {
         MmUnmapViewOfSection(PsGetCurrentProcess(), UserBase);

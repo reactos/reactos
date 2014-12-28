@@ -37,7 +37,7 @@ typedef struct _DESKTOP
     /* Thread blocking input */
     PVOID BlockInputThread;
     LIST_ENTRY ShellHookWindows;
-} DESKTOP;
+} DESKTOP, *PDESKTOP;
 
 // Desktop flags
 #define DF_TME_HOVER        0x00000400
@@ -259,6 +259,11 @@ DesktopHeapGetUserDelta(VOID)
     pheapDesktop = pti->rpdesk->pheapDesktop;
 
     W32Process = PsGetCurrentProcessWin32Process();
+
+    /*
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
     Mapping = W32Process->HeapMappings.Next;
     while (Mapping != NULL)
     {
@@ -281,6 +286,11 @@ DesktopHeapAddressToUser(PVOID lpMem)
     PPROCESSINFO W32Process;
 
     W32Process = PsGetCurrentProcessWin32Process();
+
+    /*
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
     Mapping = W32Process->HeapMappings.Next;
     while (Mapping != NULL)
     {
@@ -303,4 +313,5 @@ BOOL FASTCALL IntPaintDesktop(HDC);
 BOOL FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM, LRESULT *);
 BOOL FASTCALL UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult);
 VOID NTAPI DesktopThreadMain();
+
 /* EOF */

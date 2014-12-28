@@ -52,7 +52,6 @@ extern HANDLE hModuleWin;    // This Win32k Instance.
 extern PCLS SystemClassList;
 extern BOOL RegisteredSysClasses;
 
-typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 typedef struct tagMENUSTATE MENUSTATE, *PMENUSTATE;
 
 #include <pshpack1.h>
@@ -171,6 +170,7 @@ do { \
         UserDeleteW32Thread(pti); \
     } \
 } while(0)
+
 
 #define IntReferenceProcessInfo(ppi) \
     InterlockedIncrement((volatile LONG*)(&(ppi)->RefCount))

@@ -22,6 +22,9 @@
 #define NDEBUG
 #include <debug.h>
 
+HANDLE GlobalUserHeap = NULL;
+PVOID GlobalUserHeapSection = NULL;
+
 
 _Function_class_(RTL_HEAP_COMMIT_ROUTINE)
 _IRQL_requires_same_
@@ -63,7 +66,6 @@ IntUserHeapCommitRoutine(
     {
         SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
-        extern PVOID GlobalUserHeapSection;
 
         /* HACK: This needs to be handled during startup only... */
         ASSERT(Base == (PVOID)GlobalUserHeap);
@@ -86,8 +88,8 @@ IntUserHeapCommitRoutine(
     }
 
     /* Apply the commit address offset to the user base address */
-    Delta = (SIZE_T) ((ULONG_PTR) (*CommitAddress) - (ULONG_PTR) (Base));
-    UserCommitAddress = (PVOID) ((ULONG_PTR) (UserBase) + Delta);
+    Delta = (SIZE_T)((ULONG_PTR)(*CommitAddress) - (ULONG_PTR)Base);
+    UserCommitAddress = (PVOID)((ULONG_PTR)UserBase + Delta);
 
     /* Perform the actual commit */
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
@@ -100,8 +102,8 @@ IntUserHeapCommitRoutine(
     if (NT_SUCCESS(Status))
     {
         /* Determine the address to return */
-        Delta = (SIZE_T) ((ULONG_PTR) (UserCommitAddress) - (ULONG_PTR) (UserBase));
-        *CommitAddress = (PVOID) ((ULONG_PTR) (Base) + Delta);
+        Delta = (SIZE_T)((ULONG_PTR)UserCommitAddress - (ULONG_PTR)UserBase);
+        *CommitAddress = (PVOID)((ULONG_PTR)Base + Delta);
     }
 
     if (W32Process == NULL)
