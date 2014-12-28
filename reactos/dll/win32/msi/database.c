@@ -113,7 +113,7 @@ UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
     HRESULT r;
     IStorage *stg;
-    WCHAR decoded[MAX_STREAM_NAME_LEN];
+    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
 
     decode_streamname( stname, decoded );
     TRACE("%s -> %s\n", debugstr_w(stname), debugstr_w(decoded));

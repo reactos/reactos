@@ -56,7 +56,7 @@ static BOOL streams_set_table_size(MSISTREAMSVIEW *sv, UINT size)
 static STREAM *create_stream(MSISTREAMSVIEW *sv, LPCWSTR name, BOOL encoded, IStream *stm)
 {
     STREAM *stream;
-    WCHAR decoded[MAX_STREAM_NAME_LEN];
+    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
 
     stream = msi_alloc(sizeof(STREAM));
     if (!stream)
