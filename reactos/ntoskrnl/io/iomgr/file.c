@@ -1405,7 +1405,7 @@ IopSetDeviceSecurityDescriptor(IN PDEVICE_OBJECT DeviceObject,
         }
 
         KeEnterCriticalRegion();
-        ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+        ExAcquireResourceExclusiveLite(&IopSecurityResource, TRUE);
         /* Check if someone changed it in our back */
         if (DeviceObject->SecurityDescriptor == OldSecurityDescriptor)
         {
