@@ -167,6 +167,7 @@ add_dependencies(freeldr_common bugcodes)
 
 if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
+    target_link_libraries(freeldr_common mini_hal)
 endif()
 
 if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
