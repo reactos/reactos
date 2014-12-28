@@ -247,8 +247,8 @@ BOOLEAN
 CheckForLinuxFdiskPartitions(
     PPARTLIST List);
 
-BOOLEAN
-WritePartitionsToDisk(
+NTSTATUS
+WriteDirtyPartitions(
     PPARTLIST List);
 
 ULONG

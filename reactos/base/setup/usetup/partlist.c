@@ -2931,15 +2931,16 @@ WritePartitons(
 }
 
 
-BOOLEAN
-WritePartitionsToDisk(
+NTSTATUS
+WriteDirtyPartitions(
     PPARTLIST List)
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
+    NTSTATUS Status;
 
     if (List == NULL)
-        return TRUE;
+        return STATUS_SUCCESS;
 
     Entry = List->DiskListHead.Flink;
     while (Entry != &List->DiskListHead)
@@ -2948,13 +2949,17 @@ WritePartitionsToDisk(
 
         if (DiskEntry->Dirty == TRUE)
         {
-            WritePartitons(List, DiskEntry);
+            Status = WritePartitons(List, DiskEntry);
+            if (!NT_SUCCESS(Status))
+                return Status;
+
+            DiskEntry->Dirty = FALSE;
         }
 
         Entry = Entry->Flink;
     }
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 

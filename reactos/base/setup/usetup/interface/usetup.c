@@ -1834,6 +1834,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
+    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -1960,6 +1961,14 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
                                    SectorCount,
                                    FALSE);
 
+            Status = WriteDirtyPartitions(PartitionList);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("WriteDirtyPartitions() failed\n");
+                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                return QUIT_PAGE;
+            }
+
             return SELECT_PARTITION_PAGE;
         }
     }
@@ -1981,6 +1990,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
+    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2106,6 +2116,14 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
             CreateExtendedPartition(PartitionList,
                                     SectorCount);
 
+            Status = WriteDirtyPartitions(PartitionList);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("WriteDirtyPartitions() failed\n");
+                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                return QUIT_PAGE;
+            }
+
             return SELECT_PARTITION_PAGE;
         }
     }
@@ -2127,6 +2145,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
+    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2252,6 +2271,14 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
             CreateLogicalPartition(PartitionList,
                                    SectorCount);
 
+            Status = WriteDirtyPartitions(PartitionList);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("WriteDirtyPartitions() failed\n");
+                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                return QUIT_PAGE;
+            }
+
             return SELECT_PARTITION_PAGE;
         }
     }
@@ -2269,6 +2296,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     ULONGLONG PartSize;
     PCHAR Unit;
     PCHAR PartType;
+    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2420,6 +2448,14 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D') /* D */
         {
             DeleteCurrentPartition(PartitionList);
+
+            Status = WriteDirtyPartitions(PartitionList);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("WriteDirtyPartitions() failed\n");
+                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                return QUIT_PAGE;
+            }
 
             return SELECT_PARTITION_PAGE;
         }
@@ -2792,9 +2828,10 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
             CheckActiveBootPartition(PartitionList);
 
-            if (WritePartitionsToDisk(PartitionList) == FALSE)
+            Status = WriteDirtyPartitions(PartitionList);
+            if (!NT_SUCCESS(Status))
             {
-                DPRINT("WritePartitionsToDisk() failed\n");
+                DPRINT("WriteDirtyPartitions() failed\n");
                 MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
                 return QUIT_PAGE;
             }
@@ -3706,6 +3743,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     BOOLEAN InstallOnFloppy;
     USHORT Line = 12;
     WCHAR PathBuffer[MAX_PATH];
+    NTSTATUS Status;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -3713,9 +3751,10 @@ BootLoaderPage(PINPUT_RECORD Ir)
     CheckActiveBootPartition(PartitionList);
 
     /* Update the partition table because we may have changed the active partition */
-    if (WritePartitionsToDisk(PartitionList) == FALSE)
+    Status = WriteDirtyPartitions(PartitionList);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("WritePartitionsToDisk() failed\n");
+        DPRINT("WriteDirtyPartitions() failed\n");
         MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
