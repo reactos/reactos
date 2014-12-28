@@ -123,7 +123,7 @@ UserInitialize(VOID)
 // {
 
     /* Initialize the current thread */
-    Status = UserCreateThreadInfo(PsGetCurrentThread());
+    Status = CreateThreadCallback(PsGetCurrentThread());
     if (!NT_SUCCESS(Status)) return Status;
 
 // }
