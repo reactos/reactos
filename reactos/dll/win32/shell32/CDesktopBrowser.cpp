@@ -525,6 +525,10 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
 
             case WM_COMMAND:
                 return pThis->OnCommand(uMsg, wParam, lParam);
+
+            case WM_SETFOCUS:
+                SetFocus(pThis->hWndShellView);
+                break;
             default:
 DefMsgHandler:
                 Ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);
