@@ -140,13 +140,13 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP "ReactOS 安装程序"
-    IDS_UNKNOWN_ERROR "Unknown error"
+    IDS_UNKNOWN_ERROR "未知的错误"
     IDS_REGISTERING_COMPONENTS "请稍候，安装程序正在安装组件。"
     IDS_LOADLIBRARY_FAILED "LoadLibrary 失败: "
     IDS_GETPROCADDR_FAILED "GetProcAddr 失败: "
     IDS_REGSVR_FAILED "DllRegisterServer 失败: "
     IDS_DLLINSTALL_FAILED "DllInstall 失败: "
-    IDS_TIMEOUT "Timeout during registration"
+    IDS_TIMEOUT "在注册期间超时"
     IDS_REASON_UNKNOWN ""
     /*
      * ATTENTION: 

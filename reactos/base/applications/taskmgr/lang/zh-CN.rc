@@ -141,7 +141,7 @@ BEGIN
             MENUITEM "低(&L)", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "关系设置(&A)...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Edit Debug &Channels...", ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "编辑调试频道...(&C)", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -238,7 +238,7 @@ END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX 0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Debug Channels"
+CAPTION "调试频道"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "List2", IDC_DEBUG_CHANNELS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
@@ -248,12 +248,12 @@ END
 
 IDD_AFFINITY_DIALOG DIALOGEX 0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Processor Affinity"
+CAPTION "处理器亲和性"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "确定", IDOK, 120, 133, 50, 14
     PUSHBUTTON "取消", IDCANCEL, 174, 133, 50, 14
-    LTEXT "The Processor Affinity setting controls which CPUs the process will be allowed to execute on.", IDC_STATIC, 5, 5, 220, 16
+    LTEXT "处理器关联设置可控制 CPU 进程将获准在上执行。", IDC_STATIC, 5, 5, 220, 16
     CONTROL "CPU 0", IDC_CPU0, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 11, 28, 37, 10
     CONTROL "CPU 1", IDC_CPU1, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 41, 37, 10
     CONTROL "CPU 2", IDC_CPU2, "Button", BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP, 11, 54, 37, 10
@@ -321,7 +321,7 @@ BEGIN
     CONTROL "I/O 写入字节", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 127, 65, 10
     CONTROL "I/O 其他", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 138, 46, 10
     CONTROL "I/O 其他字节", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 149, 65, 10
-    CONTROL "Command &Line", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
+    CONTROL "命令行(&L)", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 107, 160, 65, 10
 END
 
 /* String Tables */
@@ -330,59 +330,59 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "任务管理器"
     IDC_TASKMGR "任务管理器"
-    IDS_IDLE_PROCESS "System Idle Process"
+    IDS_IDLE_PROCESS "系统空闲进程"
 END
 
 STRINGTABLE
 BEGIN
     ID_FILE_NEW "执行新程序"
-    ID_OPTIONS_ALWAYSONTOP "Task Manager remains in front of all other windows unless minimized"
-    ID_OPTIONS_MINIMIZEONUSE "Task Manager is minimized when a SwitchTo operation is performed"
-    ID_OPTIONS_HIDEWHENMINIMIZED "Hide the Task Manager when it is minimized"
-    ID_VIEW_REFRESH "Force Task Manager to update now, regardless of Update Speed setting"
-    ID_VIEW_LARGE "Displays tasks by using large icons"
-    ID_VIEW_SMALL "Displays tasks by using small icons"
-    ID_VIEW_DETAILS "Displays information about each task"
-    ID_VIEW_UPDATESPEED_HIGH "Updates the display twice per second"
-    ID_VIEW_UPDATESPEED_NORMAL "Updates the display every two seconds"
-    ID_VIEW_UPDATESPEED_LOW "Updates the display every four seconds"
+    ID_OPTIONS_ALWAYSONTOP "任务管理器仍然是所有其他窗口的前面，除非减到最小"
+    ID_OPTIONS_MINIMIZEONUSE "任务管理器最小化当执行 SwitchTo 操作时"
+    ID_OPTIONS_HIDEWHENMINIMIZED "隐藏任务管理器当它最小化时"
+    ID_VIEW_REFRESH "强制任务管理器立即更新，忽略更新速度设置"
+    ID_VIEW_LARGE "用大图标显示任务"
+    ID_VIEW_SMALL "用小图标显示任务"
+    ID_VIEW_DETAILS "显示有关每个任务的信息"
+    ID_VIEW_UPDATESPEED_HIGH "更新两次每秒显示"
+    ID_VIEW_UPDATESPEED_NORMAL "更新显示每两秒钟"
+    ID_VIEW_UPDATESPEED_LOW "更新显示每四秒钟"
 END
 
 STRINGTABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "Does not automatically update"
-    ID_WINDOWS_TILEHORIZONTALLY "Tiles the windows horizontally on the desktop"
-    ID_WINDOWS_TILEVERTICALLY "Tiles the windows vertically on the desktop"
-    ID_WINDOWS_MINIMIZE "Minimizes the windows"
-    ID_WINDOWS_MAXIMIZE "Maximizes the windows"
-    ID_WINDOWS_CASCADE "Cascades the windows diagonally on the desktop"
-    ID_WINDOWS_BRINGTOFRONT "Brings the window front, but does not switch to it"
-    ID_HELP_TOPICS "Displays Task Manager help topics"
-    ID_HELP_ABOUT "Displays program information, version number, and copyright"
-    ID_FILE_EXIT "Exits the Task Manager application"
-    ID_OPTIONS_SHOW16BITTASKS "Shows 16-bit tasks under the associated ntvdm.exe"
-    ID_VIEW_SELECTCOLUMNS "Select which columns will be visible on the Process page"
-    ID_VIEW_SHOWKERNELTIMES "Displays kernel time in the performance graphs"
-    ID_VIEW_CPUHISTORY_ONEGRAPHALL "A single history graph shows total CPU usage"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "Each CPU has its own history graph"
-    ID_APPLICATION_PAGE_SWITCHTO "Brings a task to the foreground, switch focus to that task"
+    ID_VIEW_UPDATESPEED_PAUSED "不自动更新"
+    ID_WINDOWS_TILEHORIZONTALLY "平铺在桌面上水平窗口"
+    ID_WINDOWS_TILEVERTICALLY "平铺在桌面上垂直窗口"
+    ID_WINDOWS_MINIMIZE "最小化窗口"
+    ID_WINDOWS_MAXIMIZE "最大化窗口"
+    ID_WINDOWS_CASCADE "层叠对角桌面上的窗口"
+    ID_WINDOWS_BRINGTOFRONT "将窗口前置，但不能切换到它"
+    ID_HELP_TOPICS "显示任务管理器帮助主题"
+    ID_HELP_ABOUT "显示程序信息、 版本号和版权信息"
+    ID_FILE_EXIT "退出任务管理器应用程序"
+    ID_OPTIONS_SHOW16BITTASKS "显示关联 ntvdm.exe 下的 16 位任务"
+    ID_VIEW_SELECTCOLUMNS "选择哪一列将对进程页上可见"
+    ID_VIEW_SHOWKERNELTIMES "在绩效图中显示内核时间"
+    ID_VIEW_CPUHISTORY_ONEGRAPHALL "单一历史记录图表显示出总的 CPU 使用率"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "每个 CPU 都有其自身的历史记录关系图"
+    ID_APPLICATION_PAGE_SWITCHTO "给前景带来了一项任务, 将焦点切换到该任务"
 END
 
 STRINGTABLE
 BEGIN
-    ID_ENDTASK "Tells the selected tasks to close"
-    ID_GOTOPROCESS "Switches the focus to the process of the selected task"
-    ID_RESTORE "Restores the Task Manager from its hidden state"
-    ID_PROCESS_PAGE_ENDPROCESS "Removes the process from the system"
-    ID_PROCESS_PAGE_ENDPROCESSTREE "Removes this process and all descendants from the system"
-    ID_PROCESS_PAGE_DEBUG "Attaches the debugger to this process"
-    ID_PROCESS_PAGE_SETAFFINITY "Controls which processors the process will be allowed to run on"
-    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "Sets process to the REALTIME priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "Sets process to the HIGH priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "Sets process to the ABOVE NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "Sets process to the NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "Sets process to the BELOW NORMAL priority class"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "Sets process to the LOW priority class"
+    ID_ENDTASK "告诉要关闭所选的任务"
+    ID_GOTOPROCESS "将焦点切换到所选任务的过程"
+    ID_RESTORE "从其隐藏状态恢复任务管理器"
+    ID_PROCESS_PAGE_ENDPROCESS "从系统中删除的过程"
+    ID_PROCESS_PAGE_ENDPROCESSTREE "从系统中删除此进程及其所有子体"
+    ID_PROCESS_PAGE_DEBUG "将调试器附加到该进程"
+    ID_PROCESS_PAGE_SETAFFINITY "控制这一进程将获准在上运行的处理器"
+    ID_PROCESS_PAGE_SETPRIORITY_REALTIME "将进程设置为实时优先级类"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "将进程设置为高优先级类"
+    ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL "将进程设置为高于正常优先级类"
+    ID_PROCESS_PAGE_SETPRIORITY_NORMAL "将进程设置为正常优先级类"
+    ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL "将进程设置为低于正常优先级类"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "将进程设置为低优先级类"
 END
 
 STRINGTABLE
@@ -411,13 +411,13 @@ BEGIN
     IDS_TAB_THREADS "线程数"
     IDS_TAB_USERPBJECTS "USER 对象"
     IDS_TAB_GDIOBJECTS "GDI 对象"
-    IDS_TAB_IOREADS "I/O Reads"
-    IDS_TAB_IOWRITES "I/O Writes"
-    IDS_TAB_IOOTHER "I/O Other"
-    IDS_TAB_IOREADBYTES "I/O Read Bytes"
-    IDS_TAB_IOWRITESBYTES "I/O Write Bytes"
-    IDS_TAB_IOOTHERBYTES "I/O Other Bytes"
-    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_TAB_IOREADS "I/O 读取"
+    IDS_TAB_IOWRITES "I/O 写入"
+    IDS_TAB_IOOTHER "I/O 其他"
+    IDS_TAB_IOREADBYTES "I/O 读取字节"
+    IDS_TAB_IOWRITESBYTES "I/O 写入字节"
+    IDS_TAB_IOOTHERBYTES "I/O 其他字节"
+    IDS_TAB_COMMANDLINE "命令行"
     IDS_MENU_SELECTCOLUMNS "选择列(&S)..."
     IDS_MENU_16BITTASK "显示 16 位任务(&S)"
     IDS_MENU_WINDOWS "窗口(&W)"
@@ -430,17 +430,17 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES "显示内核时间(&S)"
     IDS_CREATENEWTASK "创建新任务"
     IDS_CREATENEWTASK_DESC "任务管理器将根据您所输入的名称，为您打开相应的程序、文件夹、文档或 Internet 资源。"
-    IDS_MSG_ACCESSPROCESSAFF "Unable to Access or Set Process Affinity"
-    IDS_MSG_PROCESSONEPRO "The process must have affinity with at least one processor."
-    IDS_MSG_INVALIDOPTION "Invalid Option"
-    IDS_MSG_UNABLEDEBUGPROCESS "Unable to Debug Process"
-    IDS_MSG_WARNINGDEBUG "WARNING: Debugging this process may result in loss of data.\nAre you sure you wish to attach the debugger?"
-    IDS_MSG_TASKMGRWARNING "Task Manager Warning"
-    IDS_MSG_WARNINGTERMINATING "WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated. Are you sure you want to\nterminate the process?"
-    IDS_MSG_UNABLETERMINATEPRO "Unable to Terminate Process"
-    IDS_MSG_CLOSESYSTEMPROCESS "This is a critical system process. Task Manager will not end this process."
-    IDS_MSG_UNABLECHANGEPRIORITY "Unable to Change Priority"
-    IDS_MSG_WARNINGCHANGEPRIORITY "WARNING: Changing the priority class of this process may\ncause undesired results including system instability. Are you\nsure you want to change the priority class?"
+    IDS_MSG_ACCESSPROCESSAFF "无法访问或设置进程关联"
+    IDS_MSG_PROCESSONEPRO "该进程必须具有至少一个处理器与亲和力。"
+    IDS_MSG_INVALIDOPTION "无效的选项"
+    IDS_MSG_UNABLEDEBUGPROCESS "无法调试进程"
+    IDS_MSG_WARNINGDEBUG "警告： 调试该进程可能会导致数据丢失。\n你确定想要附加调试器？"
+    IDS_MSG_TASKMGRWARNING "任务管理器警告"
+    IDS_MSG_WARNINGTERMINATING "警告: 终止进程会导致意外的\n结果，包括丢失数据和系统不稳定。 在被\n终止前，这一进程将不给予机会保存\n其状态或数据。 确信你想\n终止该进程吗?"
+    IDS_MSG_UNABLETERMINATEPRO "无法终止进程"
+    IDS_MSG_CLOSESYSTEMPROCESS "这是一个关键的系统过程。任务管理器不会结束这一进程。"
+    IDS_MSG_UNABLECHANGEPRIORITY "无法更改优先级"
+    IDS_MSG_WARNINGCHANGEPRIORITY "警告: 改变这一进程的优先级类可能会\n导致意外的结果，包括系统不稳定。 你确定\n想更改优先级类吗?"
     IDS_MSG_TRAYICONCPUUSAGE "CPU 使用情况: %d%%"
     IDS_STATUS_MEMUSAGE "内存使用情况: %s / %s (%d%%)"
     IDS_STATUS_CPUUSAGE "CPU 使用情况: %3d%%"

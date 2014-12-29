@@ -103,7 +103,7 @@ BEGIN
     COMBOBOX ID_ENCODING, 54, 0, 156, 80, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "编码:", 0x155, 5, 2, 41, 12
     COMBOBOX ID_EOLN, 54, 18, 156, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Endlines:", 0x156, 5, 20, 41, 12
+    LTEXT "換行:", 0x156, 5, 20, 41, 12
 END
 
 /* Dialog 'Go To' */
@@ -124,7 +124,7 @@ CAPTION "关于 ReactOS 记事本"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "ReactOS 记事本 v1.0\r\n版权 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\n版权 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\n版权 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\n版权 2002 Andriy Palamarchuk\r\n ", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
+    CONTROL " ", -1, "静态", 0x50000000, 8, 48, 272, 11
     DEFPUSHBUTTON "关闭", IDOK, 114, 149, 44, 15, WS_GROUP
     ICON IDI_NPICON, -1, 12, 9, 20, 30
     EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -163,11 +163,11 @@ BEGIN
 \n请关闭一些程序施放内存后再试。"
     STRING_CANNOTFIND "找不到 '%s'"
     STRING_ANSI "ANSI"
-    STRING_UNICODE "Unicode"
-    STRING_UNICODE_BE "Unicode (big endian)"
+    STRING_UNICODE "国际码"
+    STRING_UNICODE_BE "国际码 (大端)"
     STRING_UTF8 "UTF-8"
     STRING_CRLF "Windows (CR + LF)"
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
-    STRING_LINE_COLUMN "Line %d, column %d"
+    STRING_LINE_COLUMN "线 %d, 列 %d"
 END

@@ -206,50 +206,50 @@ END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "资源列表"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
-    DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    DEFPUSHBUTTON "确定", IDOK, 27, 100, 50, 14
+    PUSHBUTTON "显示...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "资源"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "中断:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "内存:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "端口:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "设备特定的数据:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "用法", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "待定", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "共享", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "专用设备", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "专用的驱动程序", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "分界面类型:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "总线编号:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "版本:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "修订本:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
-    DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
-    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    DEFPUSHBUTTON "确定", IDOK, 92, 263, 40, 14
+    PUSHBUTTON "数据...(&D)", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
 END
 
 /* String Tables */
@@ -330,8 +330,8 @@ BEGIN
     IDS_ERR_DELETEVALUE "无法删除所有指定的值!"
     IDS_ERR_RENVAL_CAPTION "重命名值时产生错误"
     IDS_ERR_RENVAL_TOEMPTY "注册表编辑器无法重命名 %s。指定的值名为空。请键入其他名称，再试一次。"
-    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "确认项的恢复"
+    IDS_QUERY_IMPORT_HIVE_MSG "一个项将恢复在当前选定的项。\n所有值和子项此项将被都删除。\n您想继续该操作吗？"
     IDS_NEW_KEY "新项 #%d"
     IDS_NEW_VALUE "新值 #%d"
 END
@@ -355,7 +355,7 @@ BEGIN
     IDS_FLT_REGFILE "注册文件"
     IDS_FLT_REGFILES "注册文件 (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES "注册表配置单元文件 (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "Win9x/NT4 注册文件 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
@@ -396,48 +396,48 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_IMPORT_PROMPT "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-    IDS_IMPORT_OK "The keys and values contained in '%s' have been successfully added to the registry."
-    IDS_IMPORT_ERROR "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-    IDS_EXPORT_ERROR "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+    IDS_IMPORT_PROMPT "添加信息可无意中更改或删除值并导致组件停止正常工作。\n如果您不信任此 '%s' 中的信息的来源，并不将其添加到注册表。\n\n是否确实要继续?"
+    IDS_IMPORT_OK "'%s' 中包含的值和项已成功添加到注册表。"
+    IDS_IMPORT_ERROR "无法将 '%s' 导入： 打开该文件时出错。可能有磁盘或文件系统错误或文件可能不存在。"
+    IDS_EXPORT_ERROR "无法导出 '%s' ： 创建或写入文件时出错。可能有磁盘或文件系统错误。"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Bus Number"
-    IDS_INTERFACE "Interface"
-    IDS_DMA_CHANNEL "Channel"
-    IDS_DMA_PORT "Port"
-    IDS_INTERRUPT_VECTOR "Vector"
-    IDS_INTERRUPT_LEVEL "Level"
-    IDS_INTERRUPT_AFFINITY "Affinity"
-    IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
-    IDS_MEMORY_LENGTH "Length"
-    IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
-    IDS_PORT_LENGTH "Length"
-    IDS_PORT_ACCESS "Access"
-    IDS_SPECIFIC_RESERVED1 "Reserved 1"
-    IDS_SPECIFIC_RESERVED2 "Reserved 2"
-    IDS_SPECIFIC_DATASIZE "Data Size"
+    IDS_BUSNUMBER "总线编号"
+    IDS_INTERFACE "介面"
+    IDS_DMA_CHANNEL "通道"
+    IDS_DMA_PORT "端口"
+    IDS_INTERRUPT_VECTOR "矢量"
+    IDS_INTERRUPT_LEVEL "等级"
+    IDS_INTERRUPT_AFFINITY "亲和性"
+    IDS_INTERRUPT_TYPE "类型"
+    IDS_MEMORY_ADDRESS "物理地址"
+    IDS_MEMORY_LENGTH "长度"
+    IDS_MEMORY_ACCESS "捷径"
+    IDS_PORT_ADDRESS "物理地址"
+    IDS_PORT_LENGTH "长度"
+    IDS_PORT_ACCESS "捷径"
+    IDS_SPECIFIC_RESERVED1 "保留 1"
+    IDS_SPECIFIC_RESERVED2 "保留 2"
+    IDS_SPECIFIC_DATASIZE "数据大小"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PORT_PORT_IO "Port"
-    IDS_PORT_MEMORY_IO "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY "Read Only"
-    IDS_MEMORY_WRITE_ONLY "Write Only"
-    IDS_MEMORY_READ_WRITE "Read / Write"
+    IDS_PORT_PORT_IO "端口"
+    IDS_PORT_MEMORY_IO "内存"
+    IDS_INTERRUPT_EDGE_SENSITIVE "边缘敏感"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "级别敏感"
+    IDS_MEMORY_READ_ONLY "只读"
+    IDS_MEMORY_WRITE_ONLY "只写"
+    IDS_MEMORY_READ_WRITE "只读 / 只写"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED "Undefined"
-    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_UNDEFINED "未定义"
+    IDS_BUS_INTERNAL "内部"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
     IDS_BUS_MICROCHANNEL "MicroChannel"
@@ -449,11 +449,11 @@ BEGIN
     IDS_BUS_CBUS "C-Bus"
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
-    IDS_BUS_PROCESSORINTERNAL "Processor Internal"
+    IDS_BUS_PROCESSORINTERNAL "处理器内部"
     IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
     IDS_BUS_PNPISABUS "PnP-ISA Bus"
     IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+    IDS_BUS_UNKNOWNTYPE "未知的界面类型"
 END
 
 /*****************************************************************/
@@ -472,13 +472,13 @@ END
 
 IDD_LOADHIVE DIALOGEX 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
+CAPTION "加载配置单元"
 FONT 8, "Ms Shell Dlg"
 BEGIN
-    LTEXT "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT "项(&K):", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 89, 17, 50, 14
+    DEFPUSHBUTTON "确定", IDOK, 140, 17, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 89, 17, 50, 14
 END
 
 IDD_ADDFAVORITES DIALOGEX 0, 0, 186, 46

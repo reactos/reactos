@@ -92,7 +92,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "音量(&O)...", IDC_VOLUME5_BTN, 85, 145, 70, 15
     PUSHBUTTON "高级(&C)...", IDC_ADV5_BTN, 160, 145, 70, 15
-    PUSHBUTTON "测试硬件(&T...", IDC_TEST_HARDWARE, 160, 175, 70, 15
+    PUSHBUTTON "测试硬件...(&T)", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -107,7 +107,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "将方案存为"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "&将此声音方案存为(&S):", -1, 7, 7, 212, 9
+    LTEXT "将此声音方案存为(&S):", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "确定", IDOK, 93, 36, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 157, 36, 60, 14
@@ -130,7 +130,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "性能"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "这些设置控制 Windows 如何播放音频。他们能够帮助您解答有关音频方面的问题。", 8492, 34, 7, 218, 23
+    LTEXT "这些设置控制 ReactOS 如何播放音频。他们能够帮助您解答有关音频方面的问题。", 8492, 34, 7, 218, 23
     GROUPBOX "音频播放", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "硬件加速(&H):", 8495, 13, 56, 111, 14
@@ -142,8 +142,8 @@ BEGIN
     LTEXT "全", 8498, 214, 56, 21, 9
     LTEXT "好", 8499, 128, 123, 21, 10
     LTEXT "最好", 8500, 214, 123, 23, 9
-    LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 145, 227, 21
-    LTEXT "This string describes the hardware setting for the render device", 5398, 13, 78, 227, 22
+    LTEXT "此字符串描述捕获设备的硬件设置", 5399, 13, 145, 227, 21
+    LTEXT "此字符串描述呈现设备的硬件设置", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
@@ -151,7 +151,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "性能"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "这些设置控制 Windows 如何录音。可帮助您诊断与音频有关的问题。", 8492, 34, 7, 217, 20
+    LTEXT "这些设置控制 ReactOS 如何录音。可帮助您诊断与音频有关的问题。", 8492, 34, 7, 217, 20
     GROUPBOX "音频录音", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "硬件加速(&H):", 8495, 13, 46, 103, 17
@@ -163,8 +163,8 @@ BEGIN
     LTEXT "全", 8498, 217, 46, 19, 9
     LTEXT "好", 8499, 125, 103, 24, 10
     LTEXT "最好", 8500, 217, 103, 19, 9
-    LTEXT "This string describes the hardware setting for the capture device", 5399, 13, 125, 222, 21
-    LTEXT "This string describes the hardware setting for the render device", 5398, 13, 68, 218, 24
+    LTEXT "此字符串描述捕获设备的硬件设置", 5399, 13, 125, 222, 21
+    LTEXT "此字符串描述呈现设备的硬件设置", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOG 0, 0, 227, 206
@@ -177,8 +177,8 @@ BEGIN
     LTEXT "因为 ReactOS 音频服务无效因此这台计算机目前无法播放声音", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "启用ReactOS 音频(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
-    LTEXT "1. You must be an administrator to enable this service. If you are not logged on as administrator, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
-    LTEXT "2. After you enable ReactOS Audio you will have to restart the computer.", 10248, 60, 140, 150, 40
+    LTEXT "1. 您必须是管理员才能启用此服务。如果您没有以管理员身份登录，您将提示输入管理员名称和密码。", 10247, 60, 100, 150, 40
+    LTEXT "2. 您启用ReactOS音频后，必须重新启动计算机。", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
@@ -240,7 +240,7 @@ BEGIN
     IDS_CPLNAME "声音和音频设备"
     IDS_CPLDESCRIPTION "更改计算机的声音方案，或者配置扬声器和录音设备的设置"
     IDS_NO_SOUND "(无)"
-    IDS_NO_DEVICES "No Devices"
+    IDS_NO_DEVICES "没有设备"
     5825 "程序出错"
     5826 "关闭程序"
     5827 "电池严重短缺警报"
@@ -270,5 +270,5 @@ BEGIN
     5851 "「开始」菜单"
     5852 "ReactOS 注销"
     5853 "ReactOS 登录"
-    5854 "ReactOS Explorer"
+    5854 "ReactOS 浏览器"
 END

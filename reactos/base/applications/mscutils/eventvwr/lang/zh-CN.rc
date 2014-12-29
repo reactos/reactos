@@ -6,9 +6,9 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "日志(&L)"
     BEGIN
-        MENUITEM "Save &Protocol...", IDM_SAVE_PROTOCOL, GRAYED
+        MENUITEM "保存协议...(&P)", IDM_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS, GRAYED
+        MENUITEM "清除所有事件(&L)", IDM_CLEAR_EVENTS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "退出(&X)", IDM_EXIT
     END
@@ -102,8 +102,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "审核失败"
     IDS_EVENTLOG_SUCCESS "成功"
     IDS_EVENTLOG_UNKNOWN_TYPE "未知事件"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
-    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "你想要在清除之前保存此事件日志吗？"
+    IDS_SAVE_FILTER "事件日志 (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE
@@ -121,15 +121,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\n\
-Event Source:   %s\n\
-Event Category: %s\n\
-Event ID:       %s\n\
-Date:           %s\n\
-Time:           %s\n\
-User:           %s\n\
-Computer:       %s\n\
-Description:\n%s"
+    IDS_COPY "事件类型:     %s\n\
+事件源:   %s\n\
+事件类别: %s\n\
+事件 ID:       %s\n\
+日期:           %s\n\
+时间:           %s\n\
+用户:           %s\n\
+电脑:       %s\n\
+描述:\n%s"
 END
 
 STRINGTABLE

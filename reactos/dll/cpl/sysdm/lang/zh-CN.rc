@@ -57,20 +57,20 @@ BEGIN
     GROUPBOX "启动和故障恢复", IDC_STATIC, 6, 131, 244, 52
     LTEXT "启动和故障恢复选项指定计算机如何启动并设定系统失败时所需要采取的动作。", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "设置", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "系统设置", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "环境变量", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "错误报告", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "System Settings"
+CAPTION "系统设置"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Version Info", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Report as Workstation", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    LTEXT "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.", IDC_STATIC, 15, 15, 183, 41
-    PUSHBUTTON "OK", IDOK, 166, 83, 50, 14
+    GROUPBOX "版本信息", IDC_STATIC, 6, 3, 210, 73
+    CONTROL "作为工作站的报告", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    LTEXT "ReactOS建作为服务器操作系统并没有这样的报告。选中此框可更改此仅对应用程序而已。", IDC_STATIC, 15, 15, 183, 41
+    PUSHBUTTON "确定", IDOK, 166, 83, 50, 14
 END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
@@ -102,15 +102,15 @@ END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy Profile"
+CAPTION "复制配置文件"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "从:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "To:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "到:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
-    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 199, 30, 50, 14
+    DEFPUSHBUTTON "确定", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
@@ -272,13 +272,13 @@ BEGIN
     IDS_USERPROFILE_TYPE "类型"
     IDS_USERPROFILE_STATUS "状态"
     IDS_USERPROFILE_MODIFIED "修改"
-    IDS_MESSAGEBOXTITLE "System control panel applet"
-    IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
-    IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
-    IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB and must not exceed the available space on the selected drive."
-    IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size and must not exceed the available space on the selected drive."
+    IDS_MESSAGEBOXTITLE "系统控制面板小程序"
+    IDS_WARNINITIALSIZE "为分页文件的初始大小输入一个数字值。"
+    IDS_WARNMAXIMUMSIZE "为分页文件的最大大小输入一个数字值。"
+    IDS_WARNINITIALRANGE "分页文件的初始大小不得小于 2 MB，并且不得超过所选磁盘上的可用空间。"
+    IDS_WARNMAXIMUMRANGE "分页文件的最大大小不能小于其初始大小和不能超过所选磁盘上的可用空间。"
     IDS_PAGEFILE_NONE "none"
-    IDS_PAGEFILE_SYSTEM "system managed"
-    IDS_INFOREBOOT "You have to reboot the computer, in order to apply the changes."
+    IDS_PAGEFILE_SYSTEM "系统已管理"
+    IDS_INFOREBOOT "您必须重新启动计算机，才能应用更改。"
     IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
 END
