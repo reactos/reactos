@@ -18,7 +18,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "アップデート データベース(&T)", ID_RESETDB
     END
     POPUP "ヘルプ"
     BEGIN
@@ -48,7 +48,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "更新(&R)", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "アップデート データベース(&T)", ID_RESETDB
     END
 END
 
