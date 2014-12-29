@@ -1731,10 +1731,45 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
     DeviceExtension = DeviceObject->DeviceExtension;
     if (DeviceExtension->Type == RamdiskDrive)
     {
+        NTSTATUS Status;
+        PDEVICE_RELATIONS DeviceRelations;
+
         //
-        // FIXME: TODO
+        // We're a child device, only handle target device relations
         //
-        UNIMPLEMENTED_DBGBREAK();
+        if (Type != TargetDeviceRelation)
+        {
+            Status = Irp->IoStatus.Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+
+        //
+        // Allocate a buffer big enough to contain only one DO
+        //
+        DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(DeviceRelations), 'dmaR');
+        if (DeviceRelations != NULL)
+        {
+            //
+            // Reference the DO and add it to the buffer
+            //
+            ObReferenceObject(DeviceObject);
+            DeviceRelations->Objects[0] = DeviceObject;
+            DeviceRelations->Count = 1;
+            Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        //
+        // Return our processing & complete
+        //
+        Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
     }
     
     //
