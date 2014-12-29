@@ -429,6 +429,7 @@ NtGdiGetDCDword(
             break;
 
         case GdiGetEMFRestorDc:
+            SafeResult = pdc->dclevel.lSaveDepth;
             break;
 
         case GdiGetFontLanguageInfo:
