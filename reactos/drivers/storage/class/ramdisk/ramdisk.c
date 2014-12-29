@@ -1734,7 +1734,7 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
     //
     // Anything but bus relations, we don't handle
     //
-    if (Type) goto PassToNext;
+    if (Type != BusRelations) goto PassToNext;
     
     //
     // Acquire the disk list lock
