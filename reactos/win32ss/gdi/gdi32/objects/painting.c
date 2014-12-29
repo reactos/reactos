@@ -66,7 +66,13 @@ MoveToEx(
         }
     }
 #endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &pdcattr)) return FALSE;
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     if (ppt)
     {
@@ -852,33 +858,18 @@ StretchBlt(
     _In_ INT cySrc,
     _In_ DWORD dwRop)
 {
-    if ((cxDest != cxSrc) || (cyDest != cySrc))
-    {
-        return NtGdiStretchBlt(hdcDest,
-                               xDest,
-                               yDest,
-                               cxDest,
-                               cyDest,
-                               hdcSrc,
-                               xSrc,
-                               ySrc,
-                               cxSrc,
-                               cySrc,
-                               dwRop,
-                               0);
-    }
-
-    return NtGdiBitBlt(hdcDest,
-                       xDest,
-                       yDest,
-                       cxDest,
-                       cyDest,
-                       hdcSrc,
-                       xSrc,
-                       ySrc,
-                       dwRop,
-                       0,
-                       0);
+    return NtGdiStretchBlt(hdcDest,
+                           xDest,
+                           yDest,
+                           cxDest,
+                           cyDest,
+                           hdcSrc,
+                           xSrc,
+                           ySrc,
+                           cxSrc,
+                           cySrc,
+                           dwRop,
+                           0);
 }
 
 
