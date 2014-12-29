@@ -737,20 +737,9 @@ GreGetDIBitsInternal(
         Info->bmiHeader.biSizeImage = DIB_GetDIBImageBytes( Info->bmiHeader.biWidth,
                                       Info->bmiHeader.biHeight,
                                       Info->bmiHeader.biBitCount);
-        if(psurf->hSecure)
-        {
-            switch(Info->bmiHeader.biBitCount)
-            {
-            case 16:
-            case 32:
-                Info->bmiHeader.biCompression = BI_BITFIELDS;
-                break;
-            default:
-                Info->bmiHeader.biCompression = BI_RGB;
-                break;
-            }
-        }
-        else if(Info->bmiHeader.biBitCount > 8)
+
+        if ((Info->bmiHeader.biBitCount == 16) ||
+            (Info->bmiHeader.biBitCount == 32))
         {
             Info->bmiHeader.biCompression = BI_BITFIELDS;
         }
