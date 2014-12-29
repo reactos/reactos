@@ -636,7 +636,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DriveExtension->GuidString = GuidString;
         DriveExtension->DiskGuid = Input->DiskGuid;
         DriveExtension->PhysicalDeviceObject = DeviceObject;
-        DriveExtension->DeviceObject = RamdiskBusFdo;
+        DriveExtension->DeviceObject = DeviceObject;
         DriveExtension->AttachedDevice = RamdiskBusFdo;
         DriveExtension->DiskType = Input->DiskType;
         DriveExtension->DiskOptions = Input->Options;
