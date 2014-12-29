@@ -104,12 +104,13 @@ SortRects(PRECT pRect, INT nCount)
  */
 BOOL
 FASTCALL
-DeleteRegion( HRGN hRgn )
+DeleteRegion(
+    _In_ HRGN hrgn)
 {
 #if 0
     PRGN_ATTR Rgn_Attr;
 
-    if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
+    if ((GdiGetHandleUserData(hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
             ( Rgn_Attr != NULL ))
     {
         PGDIBSOBJECT pgO;
@@ -117,29 +118,32 @@ DeleteRegion( HRGN hRgn )
         pgO = GdiAllocBatchCommand(NULL, GdiBCDelRgn);
         if (pgO)
         {
-            pgO->hgdiobj = (HGDIOBJ)hRgn;
+            pgO->hgdiobj = hrgn;
             return TRUE;
         }
     }
 #endif
-    return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
+    return NtGdiDeleteObjectApp(hrgn);
 }
 
 INT
 FASTCALL
-MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
+MirrorRgnByWidth(
+    _In_ HRGN hrgn,
+    _In_ INT Width,
+    _In_ HRGN *phrgn)
 {
     INT cRgnDSize, Ret = 0;
     PRGNDATA pRgnData;
 
-    cRgnDSize = NtGdiGetRegionData(hRgn, 0, NULL);
+    cRgnDSize = NtGdiGetRegionData(hrgn, 0, NULL);
 
     if (cRgnDSize)
     {
         pRgnData = LocalAlloc(LMEM_FIXED, cRgnDSize * sizeof(LONG));
         if (pRgnData)
         {
-            if ( GetRegionData(hRgn, cRgnDSize, pRgnData) )
+            if ( GetRegionData(hrgn, cRgnDSize, pRgnData) )
             {
                 HRGN hRgnex;
                 UINT i;
@@ -160,10 +164,10 @@ MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
                 hRgnex = ExtCreateRegion(NULL, cRgnDSize , pRgnData);
                 if (hRgnex)
                 {
-                    if (phRgn) phRgn = (HRGN *)hRgnex;
+                    if (phrgn) phrgn = (HRGN *)hRgnex;
                     else
                     {
-                        CombineRgn(hRgn, hRgnex, 0, RGN_COPY);
+                        CombineRgn(hrgn, hRgnex, 0, RGN_COPY);
                         DeleteObject(hRgnex);
                     }
                     Ret = 1;
@@ -177,12 +181,16 @@ MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
 
 INT
 WINAPI
-MirrorRgnDC(HDC hdc, HRGN hRgn, HRGN *phRgn)
+MirrorRgnDC(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ HRGN *phrn)
 {
     if (!GdiIsHandleValid((HGDIOBJ) hdc) ||
-            (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return 0;
+        (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC))
+        return 0;
 
-    return MirrorRgnByWidth(hRgn, NtGdiGetDeviceWidth(hdc), phRgn);
+    return MirrorRgnByWidth(hrgn, NtGdiGetDeviceWidth(hdc), phrn);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -677,28 +685,15 @@ CreateRectRgnIndirect(
  */
 INT
 WINAPI
-ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
+ExcludeClipRect(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_ExcludeClipRect( hdc, xLeft, yTop, xRight, yBottom);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( pLDC )
-            {
-                if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExcludeClipRect( hdc, xLeft, yTop, xRight, yBottom))
-                    return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
-            }
-            else
-                SetLastError(ERROR_INVALID_HANDLE);
-            return ERROR;
-        }
-    }
-#endif
+    HANDLE_METADC(INT, ExcludeClipRect, ERROR, hdc, xLeft, yTop, xRight, yBottom);
+
     return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
 }
 
@@ -731,31 +726,16 @@ ExtCreateRegion(
  */
 INT
 WINAPI
-ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
+ExtSelectClipRgn(
+    _In_ HDC hdc,
+    _In_ HRGN hrgn,
+    _In_ INT iMode)
 {
     INT Ret;
     HRGN NewRgn = NULL;
 
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_ExtSelectClipRgn( hdc, );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( pLDC )
-            {
-                if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExtSelectClipRgn( hdc, ))
-                    return NtGdiExtSelectClipRgn(hdc, );
-            }
-            else
-                SetLastError(ERROR_INVALID_HANDLE);
-            return ERROR;
-        }
-    }
-#endif
+    HANDLE_METADC(INT, ExtSelectClipRgn, 0, hdc, hrgn, iMode);
+
 #if 0
     if ( hrgn )
     {
@@ -934,33 +914,15 @@ GetRgnBox(HRGN hrgn,
  */
 INT
 WINAPI
-IntersectClipRect(HDC hdc,
-                  int nLeftRect,
-                  int nTopRect,
-                  int nRightRect,
-                  int nBottomRect)
+IntersectClipRect(
+    _In_ HDC hdc,
+    _In_ INT nLeft,
+    _In_ INT nTop,
+    _In_ INT nRight,
+    _In_ INT nBottom)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( pLDC )
-            {
-                if (pLDC->iType != LDC_EMFLDC || EMFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect))
-                    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
-            }
-            else
-                SetLastError(ERROR_INVALID_HANDLE);
-            return ERROR;
-        }
-    }
-#endif
-    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+    HANDLE_METADC(INT, IntersectClipRect, ERROR, hdc, nLeft, nTop, nRight, nBottom);
+    return NtGdiIntersectClipRect(hdc, nLeft, nTop, nRight, nBottom);
 }
 
 /*
@@ -980,36 +942,13 @@ MirrorRgn(HWND hwnd, HRGN hrgn)
  */
 INT
 WINAPI
-OffsetClipRgn(HDC hdc,
-              int nXOffset,
-              int nYOffset)
+OffsetClipRgn(
+    HDC hdc,
+    INT nXOffset,
+    INT nYOffset)
 {
-    if (hdc == NULL)
-    {
-        SetLastError(ERROR_INVALID_HANDLE);
-        return ERROR;
-    }
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return ERROR;
-            }
-            if (pLDC->iType == LDC_EMFLDC && !EMFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset ))
-                return ERROR;
-            return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
-        }
-    }
-#endif
-    return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+    HANDLE_METADC(INT, OffsetClipRgn, ERROR, hdc, nXOffset, nYOffset);
+    return NtGdiOffsetClipRgn(hdc, nXOffset, nYOffset);
 }
 
 /*
@@ -1145,11 +1084,11 @@ RectInRegion(HRGN hrgn,
 /*
  * @implemented
  */
-int WINAPI
+int
+WINAPI
 SelectClipRgn(
-    HDC     hdc,
-    HRGN    hrgn
-)
+    _In_ HDC hdc,
+    _In_ HRGN hrgn)
 {
     return ExtSelectClipRgn(hdc, hrgn, RGN_COPY);
 }
@@ -1215,7 +1154,7 @@ SetRectRgn(
  */
 int
 WINAPI
-SetMetaRgn( HDC hDC )
+SetMetaRgn(HDC hDC)
 {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
         return NtGdiSetMetaRgn(hDC);

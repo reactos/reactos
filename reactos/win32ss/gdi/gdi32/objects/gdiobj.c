@@ -327,6 +327,12 @@ DeleteObject(HGDIOBJ hObject)
         return TRUE;
     }
 
+    /* If we have any METAFILE objects, we need to check them */
+    if (gcClientObj > 0)
+    {
+        METADC_DeleteObject(hObject);
+    }
+
     /* Switch by object type */
     switch (GDI_HANDLE_GET_TYPE(hObject))
     {

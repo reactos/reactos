@@ -66,10 +66,7 @@ Escape(
 
     if (ulObjType == GDILoObjType_LO_METADC16_TYPE)
     {
-        /* FIXME we do not support metafile */
-        UNIMPLEMENTED;
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return SP_ERROR;
+        return METADC16_Escape(hdc, nEscape, cbInput, lpvInData, lpvOutData);
     }
 
     switch (nEscape)

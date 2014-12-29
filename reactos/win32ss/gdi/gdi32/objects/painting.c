@@ -11,28 +11,8 @@ LineTo(
     _In_ INT x,
     _In_ INT y )
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_MetaParam2(hdc, META_LINETO, x, y);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if (!pLDC)
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return MFDRV_LineTo(hdc, x, y )
-                   }
-                   return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, LineTo, FALSE, hdc, x, y);
+
     return NtGdiLineTo(hdc, x, y);
 }
 
@@ -46,26 +26,9 @@ MoveToEx(
     _Out_opt_ LPPOINT ppt)
 {
     PDC_ATTR pdcattr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_MetaParam2(hdc, META_MOVETO, x, y);
-        else
-        {
-            PLDC pLDC = pdcattr->pvLDC;
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                if (!EMFDRV_MoveTo(hdc, x, y)) return FALSE;
-            }
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, MoveTo, FALSE, hdc, x, y, ppt);
+
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
@@ -110,28 +73,8 @@ Ellipse(
     _In_ INT right,
     _In_ INT bottom)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_MetaParam4(hdc, META_ELLIPSE, left, top, right, bottom );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_Ellipse(hdc, left, top, right, bottom );
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, Ellipse, FALSE, hdc, left, top, right, bottom);
+
     return NtGdiEllipse(hdc, left, top, right, bottom);
 }
 
@@ -148,28 +91,8 @@ Rectangle(
     _In_ INT right,
     _In_ INT bottom)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_MetaParam4(hdc, META_RECTANGLE, left, top, right, bottom);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_Rectangle(hdc, left, top, right, bottom);
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, Rectangle, FALSE, hdc, left, top, right, bottom);
+
     return NtGdiRectangle(hdc, left, top, right, bottom);
 }
 
@@ -188,30 +111,8 @@ RoundRect(
     _In_ INT width,
     _In_ INT height)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_MetaParam6(hdc, META_ROUNDRECT, left, top, right, bottom,
-                                     width, height  );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_RoundRect(hdc, left, top, right, bottom,
-                                         width, height );
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, RoundRect, FALSE, hdc, left, top, right, bottom, width, height);
+
     return NtGdiRoundRect(hdc, left, top, right, bottom, width, height);
 }
 
@@ -243,29 +144,8 @@ SetPixel(
     _In_ INT y,
     _In_ COLORREF crColor)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_MetaParam4(hdc, META_SETPIXEL, x, y, HIWORD(crColor),
-                                    LOWORD(crColor));
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return 0;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetPixel(hdc, x, y, crColor);
-            }
-            return 0;
-        }
-    }
-#endif
+    HANDLE_METADC(COLORREF, SetPixel, CLR_INVALID, hdc, x, y, crColor);
+
     return NtGdiSetPixel(hdc, x, y, crColor);
 }
 
@@ -298,28 +178,9 @@ FillRgn(
 
     if ((hrgn == NULL) || (hbr == NULL))
         return FALSE;
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_FillRgn(hdc, hrgn, hbr);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_FillRgn((hdc, hrgn, hbr);
-                                  }
-                                  return FALSE;
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, FillRgn, FALSE, hdc, hrgn, hbr);
+
     return NtGdiFillRgn(hdc, hrgn, hbr);
 }
 
@@ -339,28 +200,9 @@ FrameRgn(
 
     if ((hrgn == NULL) || (hbr == NULL))
         return FALSE;
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_FrameRgn(hdc, hrgn, hbr, nWidth, nHeight );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_FrameRgn(hdc, hrgn, hbr, nWidth, nHeight );
-            }
-            return FALSE;
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, FrameRgn, FALSE, hdc, hrgn, hbr, nWidth, nHeight);
+
     return NtGdiFrameRgn(hdc, hrgn, hbr, nWidth, nHeight);
 }
 
@@ -377,28 +219,9 @@ InvertRgn(
 
     if (hrgn == NULL)
         return FALSE;
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_InvertRgn(hdc, HRGN hrgn ); // Use this instead of MFDRV_MetaParam.
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_PaintInvertRgn(hdc, hrgn, EMR_INVERTRGN );
-            }
-            return FALSE;
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, InvertRgn, FALSE, hdc, hrgn);
+
     return NtGdiInvertRgn(hdc, hrgn);
 }
 
@@ -412,32 +235,7 @@ PaintRgn(
     _In_ HDC hdc,
     _In_ HRGN hrgn)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_PaintRgn(hdc, HRGN hrgn ); // Use this instead of MFDRV_MetaParam.
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_PaintInvertRgn(hdc, hrgn, EMR_PAINTRGN );
-            }
-            return FALSE;
-        }
-    }
-#endif
-// Could just use pdcattr->hbrush? No.
-    HBRUSH hbr = GetCurrentObject(hdc, OBJ_BRUSH);
-
-    return NtGdiFillRgn(hdc, hrgn, hbr);
+    return FillRgn(hdc, hrgn, GetCurrentObject(hdc, OBJ_BRUSH));
 }
 
 
@@ -451,32 +249,8 @@ PolyBezier(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            /*
-             * Since MetaFiles don't record Beziers and they don't even record
-             * approximations to them using lines.
-             */
-            return FALSE;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return FALSE; // Not supported yet.
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, PolyBezier, FALSE, hdc, apt, cpt);
+
     return NtGdiPolyPolyDraw(hdc ,(PPOINT)apt, &cpt, 1, GdiPolyBezier);
 }
 
@@ -491,28 +265,8 @@ PolyBezierTo(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return FALSE;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return FALSE; // Not supported yet.
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, PolyBezierTo, FALSE, hdc, apt, cpt);
+
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, &cpt, 1, GdiPolyBezierTo);
 }
 
@@ -528,28 +282,8 @@ PolyDraw(
     _In_reads_(cpt) const BYTE *aj,
     _In_ INT cpt)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return FALSE;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return FALSE; // Not supported yet.
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, PolyDraw, FALSE, hdc, apt, aj, cpt);
+
     return NtGdiPolyDraw(hdc, (PPOINT)apt, (PBYTE)aj, cpt);
 }
 
@@ -564,28 +298,8 @@ Polygon(
     _In_reads_(cpt) const POINT *apt,
     _In_ INT cpt)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_Polygon(hdc, apt, cpt );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_Polygon(hdc, apt, cpt );
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, Polygon, FALSE, hdc, apt, cpt);
+
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, (PULONG)&cpt, 1, GdiPolyPolygon);
 }
 
@@ -600,28 +314,8 @@ Polyline(
     _In_reads_(cpt) const POINT *apt,
     _In_ INT cpt)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_Polyline(hdc, apt, cpt);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_Polyline(hdc, apt, cpt);
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, Polyline, FALSE, hdc, apt, cpt);
+
     return NtGdiPolyPolyDraw(hdc, (PPOINT)apt, (PULONG)&cpt, 1, GdiPolyPolyLine);
 }
 
@@ -636,28 +330,8 @@ PolylineTo(
     _In_reads_(cpt) const POINT *apt,
     _In_ DWORD cpt)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return FALSE;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return FALSE; // Not supported yet.
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, PolylineTo, FALSE, hdc, apt, cpt);
+
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, &cpt, 1, GdiPolyLineTo);
 }
 
@@ -673,28 +347,8 @@ PolyPolygon(
     _In_reads_(csz) const INT *asz,
     _In_ INT csz)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_PolyPolygon(hdc, apt, asz, csz);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_PolyPolygon(hdc, apt, asz, csz );
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, PolyPolygon, FALSE, hdc, apt, asz, csz);
+
     return NtGdiPolyPolyDraw(hdc, (PPOINT)apt, (PULONG)asz, csz, GdiPolyPolygon);
 }
 
@@ -710,28 +364,11 @@ PolyPolyline(
     _In_reads_(csz) CONST DWORD *asz,
     _In_ DWORD csz)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return FALSE;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_PolyPolyline(hdc, apt, asz, csz);
-            }
-            return FALSE;
-        }
-    }
-#endif
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+        return FALSE;
+
+    HANDLE_METADC(BOOL, PolyPolyline, FALSE, hdc, apt, asz, csz);
+
     return NtGdiPolyPolyDraw(hdc , (PPOINT)apt, (PULONG)asz, csz, GdiPolyPolyLine);
 }
 
@@ -748,28 +385,8 @@ ExtFloodFill(
     _In_ COLORREF crFill,
     _In_ UINT fuFillType)
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_ExtFloodFill(hdc, xStart, yStart, crFill, fuFillType );
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_ExtFloodFill(hdc, xStart, yStart, crFill, fuFillType );
-            }
-            return FALSE;
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, ExtFloodFill, FALSE, hdc, xStart, yStart, crFill, fuFillType);
+
     return NtGdiExtFloodFill(hdc, xStart, yStart, crFill, fuFillType);
 }
 
@@ -810,6 +427,22 @@ BitBlt(
         return PatBlt(hdcDest, xDest, yDest, cx, cy, dwRop);
     }
 
+    /* For meta DCs we use StretchBlt */
+    HANDLE_METADC(BOOL,
+                  StretchBlt,
+                  FALSE,
+                  hdcDest,
+                  xDest,
+                  yDest,
+                  cx,
+                  cx,
+                  hdcSrc,
+                  xSrc,
+                  ySrc,
+                  cx,
+                  cx,
+                  dwRop);
+
     return NtGdiBitBlt(hdcDest, xDest, yDest, cx, cy, hdcSrc, xSrc, ySrc, dwRop, 0, 0);
 }
 
@@ -823,6 +456,8 @@ PatBlt(
     _In_ INT nHeight,
     _In_ DWORD dwRop)
 {
+    HANDLE_METADC(BOOL, PatBlt, FALSE, hdc, nXLeft, nYLeft, nWidth, nHeight, dwRop);
+
     /* FIXME some part need be done in user mode */
     return NtGdiPatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
 }
@@ -836,6 +471,46 @@ PolyPatBlt(
     _In_ DWORD nCount,
     _In_ DWORD dwMode)
 {
+    UINT i;
+    BOOL bResult;
+    HBRUSH hbrOld;
+
+    /* Handle meta DCs */
+    if ((GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) ||
+        (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_ALTDC_TYPE))
+    {
+        if (!GdiIsHandleValid(hdc))
+        {
+            return FALSE;
+        }
+
+        /* Save the current DC brush */
+        hbrOld = SelectObject(hdc, GetStockObject(DC_BRUSH));
+
+        /* Assume success */
+        bResult = TRUE;
+
+        /* Loop all rect */
+        for (i = 0; i < nCount; i++)
+        {
+            /* Select the brush for this rect */
+            SelectObject(hdc, pPoly[i].hBrush);
+
+            /* Do the PatBlt operation for this rect */
+            bResult &= PatBlt(hdc,
+                               pPoly[i].nXLeft,
+                               pPoly[i].nYLeft,
+                               pPoly[i].nWidth,
+                               pPoly[i].nHeight,
+                               dwRop);
+        }
+
+        /* Restore the old brush */
+        SelectObject(hdc, hbrOld);
+
+        return bResult;
+    }
+
     /* FIXME some part need be done in user mode */
     return NtGdiPolyPatBlt(hdc, dwRop, pPoly, nCount, dwMode);
 }
@@ -858,6 +533,21 @@ StretchBlt(
     _In_ INT cySrc,
     _In_ DWORD dwRop)
 {
+    HANDLE_METADC(BOOL,
+                  StretchBlt,
+                  FALSE,
+                  hdcDest,
+                  xDest,
+                  yDest,
+                  cxDest,
+                  cyDest,
+                  hdcSrc,
+                  xSrc,
+                  ySrc,
+                  cxSrc,
+                  cySrc,
+                  dwRop);
+
     return NtGdiStretchBlt(hdcDest,
                            xDest,
                            yDest,
@@ -892,6 +582,22 @@ MaskBlt(
     _In_ INT yMask,
     _In_ DWORD dwRop)
 {
+    HANDLE_METADC(BOOL,
+                  MaskBlt,
+                  FALSE,
+                  hdcDest,
+                  xDest,
+                  yDest,
+                  cx,
+                  cy,
+                  hdcSrc,
+                  xSrc,
+                  ySrc,
+                  hbmMask,
+                  xMask,
+                  yMask,
+                  dwRop);
+
     return NtGdiMaskBlt(hdcDest,
                         xDest,
                         yDest,
@@ -925,6 +631,20 @@ PlgBlt(
     _In_ INT xMask,
     _In_ INT yMask)
 {
+    HANDLE_METADC(BOOL,
+                  PlgBlt,
+                  FALSE,
+                  hdcDest,
+                  ppt,
+                  hdcSrc,
+                  xSrc,
+                  ySrc,
+                  cx,
+                  cy,
+                  hbmMask,
+                  xMask,
+                  yMask);
+
     return NtGdiPlgBlt(hdcDest,
                        (LPPOINT)ppt,
                        hdcSrc,
@@ -956,6 +676,21 @@ GdiAlphaBlend(
     if (hdcSrc == NULL ) return FALSE;
 
     if (GDI_HANDLE_GET_TYPE(hdcSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
+
+    HANDLE_METADC(BOOL,
+                  AlphaBlend,
+                  FALSE,
+                  hdcDst,
+                  xDst,
+                  yDst,
+                  cxDst,
+                  cyDst,
+                  hdcSrc,
+                  xSrc,
+                  ySrc,
+                  cxSrc,
+                  cySrc,
+                  blendfn);
 
     return NtGdiAlphaBlend(hdcDst,
                            xDst,
@@ -990,6 +725,21 @@ GdiTransparentBlt(
     _In_ INT cySrc,
     _In_ UINT crTransparent)
 {
+    HANDLE_METADC(BOOL,
+                  TransparentBlt,
+                  FALSE,
+                  hdcDst,
+                  xDst,
+                  yDst,
+                  cxDst,
+                  cyDst,
+                  hdcSrc,
+                  xSrc,
+                  ySrc,
+                  cxSrc,
+                  cySrc,
+                  crTransparent);
+
     /* FIXME some part need be done in user mode */
     return NtGdiTransparentBlt(hdcDst, xDst, yDst, cxDst, cyDst, hdcSrc, xSrc, ySrc, cxSrc, cySrc, crTransparent);
 }
@@ -1007,6 +757,8 @@ GdiGradientFill(
     _In_ ULONG nCount,
     _In_ ULONG ulMode)
 {
+    HANDLE_METADC(BOOL, GradientFill, FALSE, hdc, pVertex, nVertex, pMesh, nCount, ulMode);
+
     /* FIXME some part need be done in user mode */
     return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nCount, ulMode);
 }

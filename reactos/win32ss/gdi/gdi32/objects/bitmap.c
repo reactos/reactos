@@ -631,50 +631,21 @@ SetDIBitsToDevice(
     if (!pConvertedInfo)
         return 0;
 
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-        return MFDRV_SetDIBitsToDevice( hdc,
-                XDest,
-                YDest,
-                Width,
-                Height,
-                XSrc,
-                YSrc,
-                StartScan,
-                ScanLines,
-                Bits,
-                lpbmi,
-                ColorUse);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return 0;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetDIBitsToDevice(hdc,
-                        XDest,
-                        YDest,
-                        Width,
-                        Height,
-                        XSrc,
-                        YSrc,
-                        StartScan,
-                        ScanLines,
-                        Bits,
-                        lpbmi,
-                        ColorUse);
-            }
-            return 0;
-        }
-    }
-#endif
+    HANDLE_METADC(INT,
+                  SetDIBitsToDevice,
+                  0,
+                  hdc,
+                  XDest,
+                  YDest,
+                  Width,
+                  Height,
+                  XSrc,
+                  YSrc,
+                  StartScan,
+                  ScanLines,
+                  Bits,
+                  lpbmi,
+                  ColorUse);
 
     if ((pConvertedInfo->bmiHeader.biCompression == BI_RLE8) ||
             (pConvertedInfo->bmiHeader.biCompression == BI_RLE4))
