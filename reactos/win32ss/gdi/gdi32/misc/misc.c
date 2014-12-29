@@ -50,33 +50,35 @@ GdiFlush()
 /*
  * @unimplemented
  */
-int
+INT
 WINAPI
-Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
+Escape(
+    _In_ HDC hdc,
+    _In_ INT nEscape,
+    _In_ INT cbInput,
+    _In_ LPCSTR lpvInData,
+    _Out_ LPVOID lpvOutData)
 {
-    int retValue = SP_ERROR;
-    HGDIOBJ hObject = hdc;
-    UINT Type = 0;
-    LPVOID pUserData = NULL;
+    INT retValue = SP_ERROR;
+    ULONG ulObjType;
 
-    Type = GDI_HANDLE_GET_TYPE(hObject);
+    ulObjType = GDI_HANDLE_GET_TYPE(hdc);
 
-    if (Type == GDI_OBJECT_TYPE_METADC)
+    if (ulObjType == GDILoObjType_LO_METADC16_TYPE)
     {
         /* FIXME we do not support metafile */
         UNIMPLEMENTED;
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return SP_ERROR;
     }
-    else
+
+    switch (nEscape)
     {
-        switch (nEscape)
-        {
         case ABORTDOC:
-            /* Note Winodws check see if the handle have any user data for ABORTDOC command
-             * ReactOS copy this behavior to be compatible with windows 2003
+            /* Note: Windows checks if the handle has any user data for the ABORTDOC command
+             * ReactOS copies this behavior to be compatible with windows 2003
              */
-            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
-                    (pUserData == NULL) )
+            if (GdiGetDcAttr(hdc) == NULL)
             {
                 GdiSetLastError(ERROR_INVALID_HANDLE);
                 retValue = FALSE;
@@ -90,12 +92,11 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
         case DRAFTMODE:
         case FLUSHOUTPUT:
         case SETCOLORTABLE:
-            /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE is outdated and been replace with other api */
-            /* Note 2: Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
-             * ReactOS copy this behavior to be compatible with windows 2003
+            /* Note 1: DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE are outdated */
+            /* Note 2: Windows checks if the handle has any user data for the DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE commands
+             * ReactOS copies this behavior to be compatible with windows 2003
              */
-            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
-                    (pUserData == NULL) )
+            if (GdiGetDcAttr(hdc) == NULL)
             {
                 GdiSetLastError(ERROR_INVALID_HANDLE);
             }
@@ -103,11 +104,10 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
             break;
 
         case SETABORTPROC:
-            /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
-             * ReactOS copy this behavior to be compatible with windows 2003
+            /* Note: Windows checks if the handle has any user data for the SETABORTPROC command
+             * ReactOS copies this behavior to be compatible with windows 2003
              */
-            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
-                    (pUserData == NULL) )
+            if (GdiGetDcAttr(hdc) == NULL)
             {
                 GdiSetLastError(ERROR_INVALID_HANDLE);
                 retValue = FALSE;
@@ -117,18 +117,17 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
 
         case GETCOLORTABLE:
             retValue = GetSystemPaletteEntries(hdc, (UINT)*lpvInData, 1, (LPPALETTEENTRY)lpvOutData);
-            if ( !retValue )
+            if (!retValue)
             {
                 retValue = SP_ERROR;
             }
             break;
 
         case ENDDOC:
-            /* Note : Winodws check see if the handle have any user data for DRAFTMODE, FLUSHOUTPUT, SETCOLORTABLE command
-             * ReactOS copy this behavior to be compatible with windows 2003
+            /* Note: Windows checks if the handle has any user data for the ENDDOC command
+             * ReactOS copies this behavior to be compatible with windows 2003
              */
-            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserData)) ||
-                    (pUserData == NULL) )
+            if (GdiGetDcAttr(hdc) == NULL)
             {
                 GdiSetLastError(ERROR_INVALID_HANDLE);
                 retValue = FALSE;
@@ -136,14 +135,13 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
             retValue = EndDoc(hdc);
             break;
 
-
         case GETSCALINGFACTOR:
             /* Note GETSCALINGFACTOR is outdated have been replace by GetDeviceCaps */
-            if ( Type == GDI_OBJECT_TYPE_DC )
+            if (ulObjType == GDI_OBJECT_TYPE_DC)
             {
-                if ( lpvOutData )
+                if (lpvOutData)
                 {
-                    PPOINT ptr = (PPOINT) lpvOutData;
+                    PPOINT ptr = (PPOINT)lpvOutData;
                     ptr->x = 0;
                     ptr->y = 0;
                 }
@@ -152,46 +150,34 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
             break;
 
         case GETEXTENDEDTEXTMETRICS:
-            retValue = (int) GetETM( hdc, (EXTTEXTMETRIC *) lpvOutData) != 0;
+            retValue = GetETM(hdc, (EXTTEXTMETRIC *)lpvOutData) != 0;
             break;
 
-        case  STARTDOC:
+        case STARTDOC:
         {
-            DOCINFOA *pUserDatalpdi;
-            DOCINFOA lpdi;
+            DOCINFOA di;
 
-            /* Note : Winodws check see if the handle have any user data for STARTDOC command
-             * ReactOS copy this behavior to be compatible with windows 2003
+            /* Note: Windows checks if the handle has any user data for the STARTDOC command
+             * ReactOS copies this behavior to be compatible with windows 2003
              */
-            if ( (!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &pUserDatalpdi)) ||
-                    (pUserData == NULL) )
+            if (GdiGetDcAttr(hdc) == NULL)
             {
                 GdiSetLastError(ERROR_INVALID_HANDLE);
                 retValue = FALSE;
             }
 
-            lpdi.cbSize = sizeof(DOCINFOA);
-
-            /* NOTE lpszOutput will be store in handle userdata */
-            lpdi.lpszOutput = 0;
-
-            lpdi.lpszDatatype = 0;
-            lpdi.fwType = 0;
-            lpdi.lpszDocName = lpvInData;
+            di.cbSize = sizeof(DOCINFOA);
+            di.lpszOutput = 0;
+            di.lpszDatatype = 0;
+            di.fwType = 0;
+            di.lpszDocName = lpvInData;
 
             /* NOTE : doc for StartDocA/W at msdn http://msdn2.microsoft.com/en-us/library/ms535793(VS.85).aspx */
-            retValue = StartDocA(hdc, &lpdi);
+            retValue = StartDocA(hdc, &di);
 
-            /* StartDocA fail */
+            /* Check if StartDocA failed */
             if (retValue < 0)
             {
-                /* check see if outbuffer contain any data, if it does abort */
-                if  ( (pUserDatalpdi->lpszOutput != 0) &&
-                        ( (*(WCHAR *)pUserDatalpdi->lpszOutput) != UNICODE_NULL) )
-                {
-                    retValue = SP_APPABORT;
-                }
-                else
                 {
                     retValue = GetLastError();
 
@@ -221,13 +207,9 @@ Escape(HDC hdc, INT nEscape, INT cbInput, LPCSTR lpvInData, LPVOID lpvOutData)
         }
         break;
 
-
-
-
         default:
             UNIMPLEMENTED;
             SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        }
     }
 
     return retValue;
