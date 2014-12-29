@@ -623,8 +623,8 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         ExInitializeFastMutex(&DriveExtension->DiskListLock);
         IoInitializeRemoveLock(&DriveExtension->RemoveLock,
                               'dmaR',
-                              0,
-                              1);
+                              1,
+                              0);
         DriveExtension->DriveDeviceName = DeviceName;
         DriveExtension->SymbolicLinkName = SymbolicLinkName;
         DriveExtension->GuidString = GuidString;
@@ -2645,8 +2645,8 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
     	ExInitializeFastMutex(&DeviceExtension->DiskListLock);
         IoInitializeRemoveLock(&DeviceExtension->RemoveLock,
                                'dmaR',
-                               0,
-                               1);
+                               1,
+                               0);
     	InitializeListHead(&DeviceExtension->DiskList);
         DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
         DeviceExtension->DeviceObject = DeviceObject;
