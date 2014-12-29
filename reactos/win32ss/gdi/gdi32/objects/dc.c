@@ -1152,11 +1152,20 @@ SetBkMode(
  */
 int
 WINAPI
-GetROP2(HDC hdc)
+GetROP2(
+    _In_ HDC hdc)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-    return Dc_Attr->jROP2;
+    PDC_ATTR pdcattr;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        /* Do not set LastError here! */
+        return 0;
+    }
+
+    return pdcattr->jROP2;
 }
 
 /*
@@ -1164,18 +1173,19 @@ GetROP2(HDC hdc)
  */
 int
 WINAPI
-SetROP2(HDC hdc,
-        int fnDrawMode)
+SetROP2(
+    _In_ HDC hdc,
+    _In_ int rop2)
 {
-    PDC_ATTR Dc_Attr;
-    INT Old_ROP2;
+    PDC_ATTR pdcattr;
+    INT rop2Old;
 
 #if 0
 // Handle something other than a normal dc object.
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
     {
         if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetROP2( hdc, fnDrawMode);
+            return MFDRV_SetROP2( hdc, rop2);
         else
         {
             PLDC pLDC = GdiGetLDC(hdc);
@@ -1186,27 +1196,34 @@ SetROP2(HDC hdc,
             }
             if (pLDC->iType == LDC_EMFLDC)
             {
-                return EMFDRV_SetROP2(( hdc, fnDrawMode);
+                return EMFDRV_SetROP2(( hdc, rop2);
                                   }
                                   return FALSE;
         }
     }
 #endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+
+    /* Get the DC attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (pdcattr == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
     if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
     {
-        if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
+        if (pdcattr->ulDirty_ & DC_MODE_DIRTY)
         {
             NtGdiFlush();
-            Dc_Attr->ulDirty_ &= ~DC_MODE_DIRTY;
+            pdcattr->ulDirty_ &= ~DC_MODE_DIRTY;
         }
     }
 
-    Old_ROP2 = Dc_Attr->jROP2;
-    Dc_Attr->jROP2 = fnDrawMode;
+    rop2Old = pdcattr->jROP2;
+    pdcattr->jROP2 = (BYTE)rop2;
 
-    return Old_ROP2;
+    return rop2Old;
 }
 
 
