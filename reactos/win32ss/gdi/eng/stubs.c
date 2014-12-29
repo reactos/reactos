@@ -923,18 +923,6 @@ NtGdiGetUFI(
     return FALSE;
 }
 
-/*
- * @unimplemented
- */
-HBRUSH
-APIENTRY
-NtGdiClearBrushAttributes(
-    IN HBRUSH hbm,
-    IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
 
 /*
  * @unimplemented
@@ -1259,19 +1247,6 @@ NtGdiGetLinkedUFIs(
 /*
  * @unimplemented
  */
-HBITMAP
-APIENTRY
-NtGdiGetObjectBitmapHandle(
-    IN HBRUSH hbr,
-    OUT UINT *piUsage)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiGetMonitorID(
@@ -1408,19 +1383,6 @@ NtGdiSetupPublicCFONT(
 {
     UNIMPLEMENTED;
     return 0;
-}
-
-/*
- * @unimplemented
- */
-HBRUSH
-APIENTRY
-NtGdiSetBrushAttributes(
-    IN HBRUSH hbm,
-    IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return NULL;
 }
 
 /*

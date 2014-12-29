@@ -200,10 +200,10 @@ BRUSH_GetObject(PBRUSH pbrush, INT cjSize, LPLOGBRUSH plogbrush)
 HBRUSH
 APIENTRY
 IntGdiCreateDIBBrush(
-    CONST BITMAPINFO *BitmapInfo,
-    UINT ColorSpec,
+    const BITMAPINFO *BitmapInfo,
+    UINT uUsage,
     UINT BitmapInfoSize,
-    CONST VOID *PackedDIB)
+    const VOID* pvClient)
 {
     HBRUSH hBrush;
     PBRUSH pbrush;
@@ -217,9 +217,9 @@ IntGdiCreateDIBBrush(
         return NULL;
     }
 
-    DataPtr = (ULONG_PTR)BitmapInfo + DIB_BitmapInfoSize(BitmapInfo, ColorSpec);
+    DataPtr = (ULONG_PTR)BitmapInfo + DIB_BitmapInfoSize(BitmapInfo, uUsage);
 
-    hPattern = DIB_CreateDIBSection(NULL, BitmapInfo, ColorSpec, &pvDIBits, NULL, 0, 0);
+    hPattern = DIB_CreateDIBSection(NULL, BitmapInfo, uUsage, &pvDIBits, NULL, 0, 0);
     if (hPattern == NULL)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -241,8 +241,10 @@ IntGdiCreateDIBBrush(
     hBrush = pbrush->BaseObject.hHmgr;
 
     pbrush->flAttrs |= BR_IS_BITMAP | BR_IS_DIB;
+    if (uUsage == DIB_PAL_COLORS)
+        pbrush->flAttrs |= BR_IS_DIBPALCOLORS;
     pbrush->hbmPattern = hPattern;
-    pbrush->hbmClient = (HBITMAP)PackedDIB;
+    pbrush->hbmClient = (HBITMAP)pvClient;
     /* FIXME: Fill in the rest of fields!!! */
 
     GreSetObjectOwner(hPattern, GDI_OBJ_HMGR_PUBLIC);
@@ -458,6 +460,77 @@ NtGdiCreateSolidBrush(COLORREF Color,
                       IN OPTIONAL HBRUSH hbr)
 {
     return IntGdiCreateSolidBrush(Color);
+}
+
+HBITMAP
+APIENTRY
+NtGdiGetObjectBitmapHandle(
+    _In_ HBRUSH hbr,
+    _Out_ UINT *piUsage)
+{
+    HBITMAP hbmPattern;
+    PBRUSH pbr;
+
+    /* Lock the brush */
+    pbr = BRUSH_ShareLockBrush(hbr);
+    if (pbr == NULL)
+    {
+        DPRINT1("Could not lock brush\n");
+        return NULL;
+    }
+
+    /* Get the pattern bitmap handle */
+    hbmPattern = pbr->hbmPattern;
+
+    _SEH2_TRY
+    {
+        ProbeForWrite(piUsage, sizeof(*piUsage), sizeof(*piUsage));
+
+        /* Set usage according to flags */
+        if (pbr->flAttrs & BR_IS_DIBPALCOLORS)
+            *piUsage = DIB_PAL_COLORS;
+        else
+            *piUsage = DIB_RGB_COLORS;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Got exception!\n");
+        hbmPattern = NULL;
+    }
+    _SEH2_END;
+
+    /* Unlock the brush */
+    BRUSH_ShareUnlockBrush(pbr);
+
+    /* Return the pattern bitmap handle */
+    return hbmPattern;
+}
+
+/*
+ * @unimplemented
+ */
+HBRUSH
+APIENTRY
+NtGdiSetBrushAttributes(
+    IN HBRUSH hbm,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
+HBRUSH
+APIENTRY
+NtGdiClearBrushAttributes(
+    IN HBRUSH hbr,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 
