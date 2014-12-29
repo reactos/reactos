@@ -2024,6 +2024,131 @@ RamdiskRemoveBusDevice(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+RamdiskQueryId(IN PRAMDISK_DRIVE_EXTENSION DriveExtension,
+               IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    PWSTR OutputString = NULL;
+    ULONG StringLength;
+
+    Status = STATUS_SUCCESS;
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+
+    //
+    // Get what is being queried
+    //
+    switch (IoStackLocation->Parameters.QueryId.IdType)
+    {
+        case BusQueryDeviceID:
+
+            //
+            // Allocate a buffer long enough to receive Ramdisk\RamDisk in any case
+            // In case we don't have RAMDISK_REGISTRY_DISK, we then need two more
+            // chars to store Ramdisk\RamVolume instead
+            //
+            StringLength = 4 * (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK) + sizeof(L"Ramdisk\\RamDisk");
+            OutputString = ExAllocatePoolWithTag(PagedPool, StringLength, 'dmaR');
+            if (OutputString == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            wcsncpy(OutputString, L"Ramdisk\\", StringLength / sizeof(WCHAR));
+            if (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK)
+            {
+                wcsncat(OutputString, L"RamVolume", StringLength / sizeof(WCHAR));
+            }
+            else
+            {
+                wcsncat(OutputString, L"RamDisk", StringLength / sizeof(WCHAR));
+            }
+
+            break;
+
+        case BusQueryHardwareIDs:
+
+            //
+            // Allocate a buffer long enough to receive Ramdisk\RamDisk in any case
+            // In case we don't have RAMDISK_REGISTRY_DISK, we then need two more
+            // chars to store Ramdisk\RamVolume instead
+            // We also need an extra char, because it is required that the string
+            // is null-terminated twice
+            //
+            StringLength = 4 * (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK) +
+                           sizeof(UNICODE_NULL) + sizeof(L"Ramdisk\\RamDisk");
+            OutputString = ExAllocatePoolWithTag(PagedPool, StringLength, 'dmaR');
+            if (OutputString == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            wcsncpy(OutputString, L"Ramdisk\\", StringLength / sizeof(WCHAR));
+            if (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK)
+            {
+                wcsncat(OutputString, L"RamVolume", StringLength / sizeof(WCHAR));
+            }
+            else
+            {
+                wcsncat(OutputString, L"RamDisk", StringLength / sizeof(WCHAR));
+            }
+            OutputString[(StringLength / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+
+            break;
+
+        case BusQueryCompatibleIDs:
+
+            if (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK)
+            {
+                Status = STATUS_INVALID_DEVICE_REQUEST;
+                break;
+            }
+
+            StringLength = sizeof(L"GenDisk");
+            OutputString = ExAllocatePoolWithTag(PagedPool, StringLength, 'dmaR');
+            if (OutputString == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            wcsncpy(OutputString, L"GenDisk", StringLength / sizeof(WCHAR));
+            OutputString[(StringLength / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+
+            break;
+
+        case BusQueryInstanceID:
+
+            OutputString = ExAllocatePoolWithTag(PagedPool, DriveExtension->GuidString.MaximumLength, 'dmaR');
+            if (OutputString == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            wcsncpy(OutputString, DriveExtension->GuidString.Buffer, DriveExtension->GuidString.MaximumLength / sizeof(WCHAR));
+
+            break;
+
+        case BusQueryDeviceSerialNumber:
+            
+            //
+            // Nothing to do
+            //
+
+            break;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = (ULONG_PTR)OutputString;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
@@ -2150,7 +2275,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             //
             if (DeviceExtension->Type == RamdiskDrive)
             {
-                UNIMPLEMENTED_DBGBREAK("PnP IRP: %lx\n", Minor);
+                Status = RamdiskQueryId((PRAMDISK_DRIVE_EXTENSION)DeviceExtension, Irp);
             }
             break;
             
