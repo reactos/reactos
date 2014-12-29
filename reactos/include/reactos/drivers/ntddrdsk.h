@@ -22,6 +22,11 @@ extern "C" {
 DEFINE_GUID(RAMDISK_BOOTDISK_GUID, 0xd9b257fc, 0x684e, 0x4dcb, 0x79, 0xab, 0xf6, 0xa2, 0xcf, 0x03, 0x50, 0xb7);
 
 //
+// This guid identifies a RAM disk bus
+//
+DEFINE_GUID(GUID_BUS_TYPE_RAMDISK, 0x9d6d66a6, 0x0b0c, 0x4563, 0x90, 0x77, 0xa0, 0xe9, 0xa7, 0x95, 0x5a, 0xe4);
+
+//
 // Device Name - this string is the name of the device.  It is the name
 // that should be passed to NtOpenFile when accessing the device.
 //
