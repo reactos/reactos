@@ -63,6 +63,12 @@ DEFINE_GUID(RamdiskBusInterface,
     0x410F,
     0x80, 0xE4, 0x05, 0xF8, 0x10, 0xE7, 0xA8, 0x8A);
 
+DEFINE_GUID(RamdiskDiskInterface,
+    0x31D909F0,
+    0x2CDF,
+    0x4A20,
+    0x9E, 0xD4, 0x7D, 0x65, 0x47, 0x6C, 0xA7, 0x68);
+
 typedef struct _RAMDISK_EXTENSION
 {
     RAMDISK_DEVICE_TYPE Type;
@@ -2149,14 +2155,154 @@ RamdiskQueryId(IN PRAMDISK_DRIVE_EXTENSION DriveExtension,
 
 NTSTATUS
 NTAPI
+RamdiskQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    PDEVICE_CAPABILITIES DeviceCapabilities;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension;
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceCapabilities = IoStackLocation->Parameters.DeviceCapabilities.Capabilities;
+    DriveExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Validate our input buffer
+    //
+    if (DeviceCapabilities->Version != 1 || DeviceCapabilities->Size < sizeof(DEVICE_CAPABILITIES))
+    {
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        //
+        // And set everything we know about our capabilities
+        //
+        DeviceCapabilities->Removable = MarkRamdisksAsRemovable;
+        DeviceCapabilities->UniqueID = TRUE;
+        DeviceCapabilities->SilentInstall = TRUE;
+        DeviceCapabilities->RawDeviceOK = TRUE;
+        DeviceCapabilities->SurpriseRemovalOK = (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK);
+        DeviceCapabilities->NoDisplayInUI = TRUE;
+        Status = STATUS_SUCCESS;
+    }
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RamdiskQueryDeviceText(IN PRAMDISK_DRIVE_EXTENSION DriveExtension,
+                       IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    DEVICE_TEXT_TYPE DeviceTextType;
+    PWSTR OutputString = NULL;
+
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceTextType = IoStackLocation->Parameters.QueryDeviceText.DeviceTextType;
+    Status = STATUS_SUCCESS;
+
+    //
+    // Just copy our constants, according to the input
+    //
+    switch (DeviceTextType)
+    {
+        case DeviceTextDescription:
+
+            OutputString = ExAllocatePoolWithTag(PagedPool, sizeof(L"RamDisk"), 'dmaR');
+            if (OutputString == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            wcsncpy(OutputString, L"RamDisk", sizeof(L"RamDisk") / sizeof(WCHAR));
+
+            break;
+
+        case DeviceTextLocationInformation:
+
+            OutputString = ExAllocatePoolWithTag(PagedPool, sizeof(L"RamDisk\\0"), 'dmaR');
+            if (OutputString == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                break;
+            }
+
+            wcsncpy(OutputString, L"RamDisk\\0", sizeof(L"RamDisk\\0") / sizeof(WCHAR));
+
+            break;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = (ULONG_PTR)OutputString;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RamdiskQueryBusInformation(IN PDEVICE_OBJECT DeviceObject,
+                           IN PIRP Irp)
+{
+    PPNP_BUS_INFORMATION PnpBusInfo;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    //
+    // Allocate output memory
+    //
+    PnpBusInfo = ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), 'dmaR');
+    if (PnpBusInfo == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+    else
+    {
+        //
+        // Copy our bus GUID and set our legacy type
+        //
+        RtlCopyMemory(&PnpBusInfo->BusTypeGuid, &GUID_BUS_TYPE_RAMDISK, sizeof(GUID));
+        PnpBusInfo->LegacyBusType = PNPBus;
+        PnpBusInfo->BusNumber = 0;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = (ULONG_PTR)PnpBusInfo;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RamdiskIoCompletionRoutine(IN PDEVICE_OBJECT DeviceObject,
+                           IN PIRP Irp,
+                           IN PVOID Context)
+
+{
+    //
+    // Just set the event to unlock caller
+    //
+    KeSetEvent((PKEVENT)Context, 0, FALSE);
+
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStackLocation;
+    PIO_STACK_LOCATION IoStackLocation, NextIoStack;
     PRAMDISK_BUS_EXTENSION DeviceExtension;
     NTSTATUS Status;
     UCHAR Minor;
-    
+    KEVENT Event;
+
     //
     // Get the device extension and stack location
     //
@@ -2205,8 +2351,113 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
     switch (Minor)
     {
         case IRP_MN_START_DEVICE:
-            
-            UNIMPLEMENTED_DBGBREAK("PnP IRP: %lx\n", Minor);
+
+            if (DeviceExtension->Type == RamdiskDrive)
+            {
+                ULONG ResultLength;
+                DEVICE_INSTALL_STATE InstallState;
+                PRAMDISK_DRIVE_EXTENSION DriveExtension = (PRAMDISK_DRIVE_EXTENSION)DeviceExtension;
+
+                //
+                // If we already have a drive name, free it
+                //
+                if (DriveExtension->DriveDeviceName.Buffer)
+                {
+                    ExFreePool(DriveExtension->DriveDeviceName.Buffer);
+                }
+
+                //
+                // Register our device interface
+                //
+                if (DriveExtension->DiskType != RAMDISK_REGISTRY_DISK)
+                {
+                    Status = IoRegisterDeviceInterface(DeviceObject,
+                                                       &GUID_DEVINTERFACE_VOLUME,
+                                                       NULL,
+                                                       &DriveExtension->DriveDeviceName);
+                }
+                else
+                {
+                    Status = IoRegisterDeviceInterface(DeviceObject,
+                                                       &RamdiskDiskInterface,
+                                                       NULL,
+                                                       &DriveExtension->DriveDeviceName);
+                }
+
+                //
+                // If we were asked not to assign a drive letter or
+                // if getting a name failed, just return saying
+                // we're now started
+                //
+                if (DriveExtension->DiskOptions.NoDriveLetter ||
+                    DriveExtension->DriveDeviceName.Buffer == NULL)
+                {
+                    DriveExtension->State = RamdiskStateStarted;
+                    Irp->IoStatus.Status = Status;
+                    break;
+                }
+
+                //
+                // Now get our installation state
+                //
+                Status = IoGetDeviceProperty(DeviceObject, DevicePropertyInstallState,
+                                             sizeof(InstallState), &InstallState, &ResultLength);
+                //
+                // If querying the information failed, assume success
+                //
+                if (!NT_SUCCESS(Status))
+                {
+                    InstallState = InstallStateInstalled;
+                }
+
+                //
+                // If we were properly installed, then, enable the interface
+                //
+                if (InstallState == InstallStateInstalled)
+                {
+                    Status = IoSetDeviceInterfaceState(&DriveExtension->DriveDeviceName, TRUE);
+                }
+
+                //
+                // We're fine & up
+                //
+                DriveExtension->State = RamdiskStateStarted;
+                Irp->IoStatus.Status = Status;
+                break;
+            }
+
+            //
+            // Prepare next stack to pass it down
+            //
+            NextIoStack = IoGetNextIrpStackLocation(Irp);
+            RtlCopyMemory(NextIoStack, IoStackLocation, sizeof(IO_STACK_LOCATION));
+
+            //
+            // Initialize our notification event & our completion routine
+            //
+            KeInitializeEvent(&Event, NotificationEvent, FALSE);
+            IoSetCompletionRoutine(Irp, RamdiskIoCompletionRoutine, &Event, TRUE, TRUE, TRUE);
+
+            //
+            // Call lower driver
+            //
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                Status = Irp->IoStatus.Status;
+            }
+
+            //
+            // If it succeed to start, then, enable ourselve and we're up!
+            //
+            if (NT_SUCCESS(Status))
+            {
+                Status = IoSetDeviceInterfaceState(&DeviceExtension->DriveDeviceName, TRUE);
+                DeviceExtension->State = RamdiskStateStarted;
+            }
+
+            Irp->IoStatus.Status = Status;
             break;
             
         case IRP_MN_QUERY_STOP_DEVICE:
@@ -2286,7 +2537,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             //
             if (DeviceExtension->Type == RamdiskDrive)
             {
-                UNIMPLEMENTED_DBGBREAK("PnP IRP: %lx\n", Minor);
+                Status = RamdiskQueryBusInformation(DeviceObject, Irp);
             }
             break;
             
@@ -2302,7 +2553,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             //
             if (DeviceExtension->Type == RamdiskDrive)
             {
-                UNIMPLEMENTED_DBGBREAK("PnP IRP: %lx\n", Minor);
+                Status = RamdiskQueryDeviceText((PRAMDISK_DRIVE_EXTENSION)DeviceExtension, Irp);
             }
             break;
             
@@ -2325,7 +2576,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             //
             if (DeviceExtension->Type == RamdiskDrive)
             {
-                UNIMPLEMENTED_DBGBREAK("PnP IRP: %lx\n", Minor);
+                Status = RamdiskQueryCapabilities(DeviceObject, Irp);
             }
             break;
             
