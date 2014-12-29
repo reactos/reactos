@@ -182,7 +182,7 @@ COLORREF FASTCALL IntSetDCPenColor(HDC,COLORREF);
 
 INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
-PDC NTAPI DC_AllocDcWithHandle(VOID);
+PDC NTAPI DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType);
 BOOL NTAPI DC_bAllocDcAttr(PDC pdc);
 VOID NTAPI DC_vCleanup(PVOID ObjectBody);
 BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
@@ -205,6 +205,7 @@ BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
+HDC APIENTRY GreCreateCompatibleDC(HDC hdc, BOOL bAltDc);
 
 VOID
 NTAPI
@@ -219,7 +220,8 @@ DC_LockDc(HDC hdc)
     pdc = GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
     if (pdc)
     {
-        ASSERT(GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_DC_TYPE);
+        ASSERT((GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_DC_TYPE) ||
+               (GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_ALTDC_TYPE));
         ASSERT(pdc->dclevel.plfnt != NULL);
         ASSERT(GDI_HANDLE_GET_TYPE(((POBJ)pdc->dclevel.plfnt)->hHmgr) == GDILoObjType_LO_FONT_TYPE);
     }

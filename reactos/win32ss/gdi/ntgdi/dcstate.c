@@ -262,7 +262,7 @@ NtGdiSaveDC(
     }
 
     /* Allocate a new dc */
-    pdcSave = DC_AllocDcWithHandle();
+    pdcSave = DC_AllocDcWithHandle(GDILoObjType_LO_DC_TYPE);
     if (pdcSave == NULL)
     {
         DPRINT("Could not allocate a new DC\n");

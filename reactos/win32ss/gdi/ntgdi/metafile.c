@@ -34,23 +34,8 @@ HDC
 APIENTRY
 NtGdiCreateMetafileDC(IN HDC hdc)
 {
-   PDC pDc;
-   HDC ret = NULL;
-
-   if (hdc)
-   {
-      pDc = DC_LockDc(hdc);
-      if (pDc)
-      { // Not sure this is right for getting the HDEV handle, maybe Timo could help or just if'ed it out.
-         ret = IntGdiCreateDisplayDC(pDc->ppdev->BaseObject.hHmgr, DC_TYPE_INFO, TRUE);
-         DC_UnlockDc(pDc);
-      }
-   }
-   else
-   {
-       ret = UserGetDesktopDC(DC_TYPE_INFO, TRUE, FALSE);
-   }
-   return ret;
+    /* Call the internal function to create an alternative info DC */
+    return GreCreateCompatibleDC(hdc, TRUE);
 }
 
 /*
@@ -68,7 +53,7 @@ NtGdiCreateServerMetaFile(IN DWORD iType,
     UNIMPLEMENTED;
     return NULL;
 }
- 
+
 /*
  * @unimplemented
  */

@@ -66,10 +66,14 @@ InitDcImpl()
 
 PDC
 NTAPI
-DC_AllocDcWithHandle()
+DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType)
 {
     PDC pdc;
 
+    NT_ASSERT((eDcObjType == GDILoObjType_LO_DC_TYPE) ||
+              (eDcObjType == GDILoObjType_LO_ALTDC_TYPE));
+
+    /* Allocate the object */
     pdc = (PDC)GDIOBJ_AllocateObject(GDIObjType_DC_TYPE,
                                      sizeof(DC),
                                      BASEFLAG_LOOKASIDE);
@@ -79,6 +83,10 @@ DC_AllocDcWithHandle()
         return NULL;
     }
 
+    /* Set the actual DC type */
+    pdc->BaseObject.hHmgr = UlongToHandle(eDcObjType);
+
+    /* Insert the object */
     if (!GDIOBJ_hInsertObject(&pdc->BaseObject, GDI_OBJ_HMGR_POWNED))
     {
         DPRINT1("Could not insert DC into handle table.\n");
@@ -95,6 +103,15 @@ DC_AllocDcWithHandle()
 void
 DC_InitHack(PDC pdc)
 {
+    if (defaultDCstate == NULL)
+    {
+        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
+        ASSERT(defaultDCstate);
+        RtlZeroMemory(defaultDCstate, sizeof(DC));
+        defaultDCstate->pdcattr = &defaultDCstate->dcattr;
+        DC_vCopyState(pdc, defaultDCstate, TRUE);
+    }
+
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -327,15 +344,6 @@ DC_vInitDc(
 	pdc->dcattr.iGraphicsMode = GM_COMPATIBLE;
 	pdc->dcattr.iCS_CP = 0;
     pdc->pSurfInfo = NULL;
-
-    if (defaultDCstate == NULL)
-    {
-        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
-        ASSERT(defaultDCstate);
-        RtlZeroMemory(defaultDCstate, sizeof(DC));
-        defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-        DC_vCopyState(pdc, defaultDCstate, TRUE);
-    }
 }
 
 VOID
@@ -631,7 +639,7 @@ GreOpenDCW(
 
     DPRINT("GreOpenDCW - ppdev = %p\n", ppdev);
 
-    pdc = DC_AllocDcWithHandle();
+    pdc = DC_AllocDcWithHandle(GDILoObjType_LO_DC_TYPE);
     if (!pdc)
     {
         DPRINT1("Could not Allocate a DC\n");
@@ -755,8 +763,9 @@ NtGdiOpenDCW(
 
 HDC
 APIENTRY
-NtGdiCreateCompatibleDC(HDC hdc)
+GreCreateCompatibleDC(HDC hdc, BOOL bAltDc)
 {
+    GDILOOBJTYPE eDcObjType;
     HDC hdcNew;
     PPDEVOBJ ppdev;
     PDC pdc, pdcNew;
@@ -794,7 +803,8 @@ NtGdiCreateCompatibleDC(HDC hdc)
     }
 
     /* Allocate a new DC */
-    pdcNew = DC_AllocDcWithHandle();
+    eDcObjType = bAltDc ? GDILoObjType_LO_ALTDC_TYPE : GDILoObjType_LO_DC_TYPE;
+    pdcNew = DC_AllocDcWithHandle(eDcObjType);
     if (!pdcNew)
     {
         DPRINT1("Could not allocate a new DC\n");
@@ -804,7 +814,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
     hdcNew = pdcNew->BaseObject.hHmgr;
 
     /* Lock ppdev and initialize the new DC */
-    DC_vInitDc(pdcNew, DCTYPE_MEMORY, ppdev);
+    DC_vInitDc(pdcNew, bAltDc ? DCTYPE_INFO : DCTYPE_MEMORY, ppdev);
     /* FIXME: HACK! */
     DC_InitHack(pdcNew);
 
@@ -816,6 +826,14 @@ NtGdiCreateCompatibleDC(HDC hdc)
     DPRINT("Leave NtGdiCreateCompatibleDC hdcNew = %p\n", hdcNew);
 
     return hdcNew;
+}
+
+HDC
+APIENTRY
+NtGdiCreateCompatibleDC(HDC hdc)
+{
+    /* Call the internal function to create a normal memory DC */
+    return GreCreateCompatibleDC(hdc, FALSE);
 }
 
 BOOL
