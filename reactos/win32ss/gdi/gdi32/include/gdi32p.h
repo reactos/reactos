@@ -446,18 +446,32 @@ _lrintf(float f)
 
 HGDIOBJ
 WINAPI
-GdiInsertClientObj(
+GdiCreateClientObj(
     _In_ PVOID pvObject,
     _In_ GDILOOBJTYPE eObjType);
 
 PVOID
 WINAPI
-GdiGetClientObject(
+GdiDeleteClientObj(
+    _In_ HGDIOBJ hobj);
+
+BOOL
+WINAPI
+GdiCreateClientObjLink(
+    _In_ HGDIOBJ hobj,
+    _In_ PVOID pvObject);
+
+PVOID
+WINAPI
+GdiGetClientObjLink(
     _In_ HGDIOBJ hobj);
 
 PVOID
 WINAPI
-GdiRemoveClientObject(
+GdiRemoveClientObjLink(
     _In_ HGDIOBJ hobj);
+
+extern ULONG gcClientObj;
+
 
 /* EOF */
