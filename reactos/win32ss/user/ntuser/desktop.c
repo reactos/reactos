@@ -1849,9 +1849,13 @@ IntUnmapDesktopView(IN PDESKTOP pdesk)
     TRACE("IntUnmapDesktopView called for desktop object %p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
-    PrevLink = &ppi->HeapMappings.Next;
 
-    /* Unmap if we're the last thread using the desktop */
+    /*
+     * Unmap if we're the last thread using the desktop.
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
+    PrevLink = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {

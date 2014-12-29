@@ -15,8 +15,8 @@
 
 HANDLE hModuleWin;
 
-NTSTATUS DestroyProcessCallback(PEPROCESS Process);
-NTSTATUS NTAPI DestroyThreadCallback(PETHREAD Thread);
+NTSTATUS ExitProcessCallback(PEPROCESS Process);
+NTSTATUS NTAPI ExitThreadCallback(PETHREAD Thread);
 
 // TODO: Should be moved to some GDI header
 NTSTATUS GdiProcessCreate(PEPROCESS Process);
@@ -163,7 +163,7 @@ UserProcessCreate(PEPROCESS Process)
     ppiCurrent->peProcess = Process;
 
     /* Setup process flags */
-    ppiCurrent->W32PF_flags = W32PF_PROCESSCONNECTED;
+    ppiCurrent->W32PF_flags |= W32PF_PROCESSCONNECTED;
     if ( Process->Peb->ProcessParameters &&
          Process->Peb->ProcessParameters->WindowFlags & STARTF_SCRNSAVER )
     {
@@ -172,7 +172,7 @@ UserProcessCreate(PEPROCESS Process)
     }
 
     // FIXME: check if this process is allowed.
-    ppiCurrent->W32PF_flags |= W32PF_ALLOWFOREGROUNDACTIVATE; // Starting application it will get toggled off.
+    ppiCurrent->W32PF_flags |= W32PF_ALLOWFOREGROUNDACTIVATE; // Starting application will get it toggled off.
 
     return STATUS_SUCCESS;
 }
@@ -228,13 +228,11 @@ UserProcessDestroy(PEPROCESS Process)
 }
 
 NTSTATUS
-CreateProcessCallback(PEPROCESS Process)
+InitProcessCallback(PEPROCESS Process)
 {
-    PPROCESSINFO ppiCurrent;
     NTSTATUS Status;
-    SIZE_T ViewSize = 0;
-    LARGE_INTEGER Offset;
-    PVOID UserBase = NULL;
+    PPROCESSINFO ppiCurrent;
+    PVOID KernelMapping = NULL, UserMapping = NULL;
 
     /* We might be called with an already allocated win32 process */
     ppiCurrent = PsGetProcessWin32Process(Process);
@@ -243,6 +241,8 @@ CreateProcessCallback(PEPROCESS Process)
         /* There is no more to do for us (this is a success code!) */
         return STATUS_ALREADY_WIN32;
     }
+    // if (ppiCurrent->W32PF_flags & W32PF_PROCESSCONNECTED)
+        // return STATUS_ALREADY_WIN32;
 
     /* Allocate a new Win32 process info */
     Status = AllocW32Process(Process, &ppiCurrent);
@@ -260,27 +260,16 @@ CreateProcessCallback(PEPROCESS Process)
 #endif
 #endif
 
-    /* Map the global heap into the process */
-    Offset.QuadPart = 0;
-    Status = MmMapViewOfSection(GlobalUserHeapSection,
-                                PsGetCurrentProcess(),
-                                &UserBase,
-                                0,
-                                0,
-                                &Offset,
-                                &ViewSize,
-                                ViewUnmap,
-                                SEC_NO_CHANGE,
-                                PAGE_EXECUTE_READ); /* would prefer PAGE_READONLY, but thanks to RTL heaps... */
+    /* Map the global user heap into the process */
+    Status = MapGlobalUserHeap(Process, &KernelMapping, &UserMapping);
     if (!NT_SUCCESS(Status))
     {
         TRACE_CH(UserProcess, "Failed to map the global heap! 0x%x\n", Status);
         goto error;
     }
-    ppiCurrent->HeapMappings.Next = NULL;
-    ppiCurrent->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
-    ppiCurrent->HeapMappings.UserMapping = UserBase;
-    ppiCurrent->HeapMappings.Count = 1;
+
+    TRACE_CH(UserProcess, "InitProcessCallback -- We have KernelMapping 0x%p and UserMapping 0x%p with delta = 0x%x\n",
+           KernelMapping, UserMapping, (ULONG_PTR)KernelMapping - (ULONG_PTR)UserMapping);
 
     /* Initialize USER process info */
     Status = UserProcessCreate(Process);
@@ -305,14 +294,14 @@ CreateProcessCallback(PEPROCESS Process)
     return STATUS_SUCCESS;
 
 error:
-    ERR_CH(UserProcess, "CreateProcessCallback failed! Freeing ppi 0x%p for PID:0x%lx\n",
+    ERR_CH(UserProcess, "InitProcessCallback failed! Freeing ppi 0x%p for PID:0x%lx\n",
            ppiCurrent, HandleToUlong(Process->UniqueProcessId));
-    DestroyProcessCallback(Process);
+    ExitProcessCallback(Process);
     return Status;
 }
 
 NTSTATUS
-DestroyProcessCallback(PEPROCESS Process)
+ExitProcessCallback(PEPROCESS Process)
 {
     PPROCESSINFO ppiCurrent, *pppi;
 
@@ -352,7 +341,7 @@ DestroyProcessCallback(PEPROCESS Process)
 NTSTATUS
 APIENTRY
 Win32kProcessCallback(PEPROCESS Process,
-                      BOOLEAN Create)
+                      BOOLEAN Initialize)
 {
     NTSTATUS Status;
 
@@ -362,13 +351,13 @@ Win32kProcessCallback(PEPROCESS Process,
 
     UserEnterExclusive();
 
-    if (Create)
+    if (Initialize)
     {
-        Status = CreateProcessCallback(Process);
+        Status = InitProcessCallback(Process);
     }
     else
     {
-        Status = DestroyProcessCallback(Process);
+        Status = ExitProcessCallback(Process);
     }
 
     UserLeave();
@@ -462,7 +451,7 @@ UserThreadDestroy(PETHREAD Thread)
 }
 
 NTSTATUS NTAPI
-CreateThreadCallback(PETHREAD Thread)
+InitThreadCallback(PETHREAD Thread)
 {
     PEPROCESS Process;
     PCLIENTINFO pci;
@@ -669,15 +658,15 @@ CreateThreadCallback(PETHREAD Thread)
     return STATUS_SUCCESS;
 
 error:
-    ERR_CH(UserThread, "CreateThreadCallback failed! Freeing pti 0x%p for TID:0x%lx\n",
+    ERR_CH(UserThread, "InitThreadCallback failed! Freeing pti 0x%p for TID:0x%lx\n",
            ptiCurrent, HandleToUlong(Thread->Cid.UniqueThread));
-    DestroyThreadCallback(Thread);
+    ExitThreadCallback(Thread);
     return Status;
 }
 
 NTSTATUS
 NTAPI
-DestroyThreadCallback(PETHREAD Thread)
+ExitThreadCallback(PETHREAD Thread)
 {
     PTHREADINFO *ppti;
     PSINGLE_LIST_ENTRY psle;
@@ -843,12 +832,12 @@ Win32kThreadCallback(PETHREAD Thread,
     if (Type == PsW32ThreadCalloutInitialize)
     {
         ASSERT(PsGetThreadWin32Thread(Thread) == NULL);
-        Status = CreateThreadCallback(Thread);
+        Status = InitThreadCallback(Thread);
     }
-    else
+    else // if (Type == PsW32ThreadCalloutExit)
     {
         ASSERT(PsGetThreadWin32Thread(Thread) != NULL);
-        Status = DestroyThreadCallback(Thread);
+        Status = ExitThreadCallback(Thread);
     }
 
     UserLeave();

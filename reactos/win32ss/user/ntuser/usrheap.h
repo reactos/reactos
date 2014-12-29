@@ -22,6 +22,14 @@ UserCreateHeap(OUT PVOID *SectionObject,
                IN OUT PVOID *SystemBase,
                IN SIZE_T HeapSize);
 
+NTSTATUS
+UnmapGlobalUserHeap(IN PEPROCESS Process);
+
+NTSTATUS
+MapGlobalUserHeap(IN  PEPROCESS Process,
+                  OUT PVOID* KernelMapping,
+                  OUT PVOID* UserMapping);
+
 static __inline PVOID
 UserHeapAlloc(SIZE_T Bytes)
 {

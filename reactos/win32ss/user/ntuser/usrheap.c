@@ -227,3 +227,111 @@ UserCreateHeap(OUT PVOID *SectionObject,
 
     return pHeap;
 }
+
+NTSTATUS
+UnmapGlobalUserHeap(IN PEPROCESS Process)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PPROCESSINFO W32Process;
+    PW32HEAP_USER_MAPPING HeapMapping;
+
+    TRACE_CH(UserProcess, "IntUnmapDesktopView called for process 0x%p\n", Process);
+
+    W32Process = PsGetProcessWin32Process(Process);
+    if (W32Process == NULL)
+    {
+        ERR_CH(UserProcess, "UnmapGlobalUserHeap - We don't have a Win32 process!\n");
+        ASSERT(FALSE);
+    }
+
+    /* The first mapping entry must be the global user heap */
+    HeapMapping = &W32Process->HeapMappings;
+    ASSERT(HeapMapping->KernelMapping == (PVOID)GlobalUserHeap);
+
+    /* Unmap if we're the last thread using the global user heap */
+    if (--HeapMapping->Count == 0)
+    {
+        TRACE_CH(UserProcess, "UnmapGlobalUserHeap - Unmapping\n");
+        Status = MmUnmapViewOfSection(Process, HeapMapping->UserMapping);
+    }
+
+    return Status;
+}
+
+NTSTATUS
+MapGlobalUserHeap(IN  PEPROCESS Process,
+                  OUT PVOID* KernelMapping,
+                  OUT PVOID* UserMapping)
+{
+    NTSTATUS Status;
+    PPROCESSINFO W32Process;
+    PW32HEAP_USER_MAPPING HeapMapping;
+    PVOID UserBase = NULL;
+
+    SIZE_T ViewSize = 0;
+    LARGE_INTEGER Offset;
+
+    TRACE_CH(UserProcess, "MapGlobalUserHeap called for process 0x%p\n", Process);
+
+    W32Process = PsGetProcessWin32Process(Process);
+    if (W32Process == NULL)
+    {
+        ERR_CH(UserProcess, "MapGlobalUserHeap - We don't have a Win32 process!\n");
+        ASSERT(FALSE);
+    }
+
+    TRACE_CH(UserProcess, "MapGlobalUserHeap - We got a Win32 process, find for existing global user heap mapping...\n");
+
+    /* The first mapping entry must be the global user heap */
+    HeapMapping = &W32Process->HeapMappings;
+
+    /* Find out if another thread already mapped the global user heap */
+    if (HeapMapping->KernelMapping == (PVOID)GlobalUserHeap)
+    {
+        HeapMapping->Count++;
+
+        TRACE_CH(UserProcess, "MapGlobalUserHeap - A mapping was found, return it.\n");
+
+        *KernelMapping = HeapMapping->KernelMapping;
+        *UserMapping   = HeapMapping->UserMapping;
+
+        return STATUS_SUCCESS;
+    }
+
+    TRACE_CH(UserProcess, "MapGlobalUserHeap - No mapping was found, let's map...\n");
+
+    /* We're the first, map the global heap into the process */
+    Offset.QuadPart = 0;
+    Status = MmMapViewOfSection(GlobalUserHeapSection,
+                                Process,
+                                &UserBase,
+                                0,
+                                0,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                SEC_NO_CHANGE,
+                                PAGE_EXECUTE_READ); /* Would prefer PAGE_READONLY, but thanks to RTL heaps... */
+    if (!NT_SUCCESS(Status))
+    {
+        ERR_CH(UserProcess, "MapGlobalUserHeap - Failed to map the global heap! 0x%x\n", Status);
+        return Status;
+    }
+
+    TRACE_CH(UserProcess, "MapGlobalUserHeap -- Mapped kernel global heap 0x%p to user space at 0x%p\n",
+           GlobalUserHeap, UserBase);
+
+    /* Add the mapping */
+    HeapMapping->Next = NULL;
+    HeapMapping->KernelMapping = (PVOID)GlobalUserHeap;
+    HeapMapping->UserMapping = UserBase;
+    HeapMapping->Limit = ViewSize;
+    HeapMapping->Count = 1;
+
+    *KernelMapping = HeapMapping->KernelMapping;
+    *UserMapping   = HeapMapping->UserMapping;
+
+    return STATUS_SUCCESS;
+}
+
+/* EOF */

@@ -216,7 +216,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
 {
     /*
      * Normally we are called by win32k so the win32 thread pointers
-     * should be valid as they are set in win32k::CreateThreadCallback.
+     * should be valid as they are set in win32k::InitThreadCallback.
      */
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     BOOLEAN IsFirstThread = _InterlockedExchange8((PCHAR)&gfFirstThread, FALSE);

@@ -42,7 +42,7 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd);
 
 /*************** MAIN.C ***************/
 
-NTSTATUS NTAPI CreateThreadCallback(PETHREAD Thread);
+NTSTATUS NTAPI InitThreadCallback(PETHREAD Thread);
 
 /*************** WINSTA.C ***************/
 
