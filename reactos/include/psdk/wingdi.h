@@ -3178,7 +3178,7 @@ CreateDIBPatternBrush(
 HBRUSH
 WINAPI
 CreateDIBPatternBrushPt(
-    _In_ HGLOBAL hglbDIBPacked,
+    _In_ const VOID* pvPackedDIB,
     _In_ UINT uUsage);
 
 #define GDI_WIDTHBYTES(bits)  ((DWORD)(((bits) + 31) & (~31)) / 8)
