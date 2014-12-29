@@ -2297,7 +2297,7 @@ NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStackLocation, NextIoStack;
+    PIO_STACK_LOCATION IoStackLocation;
     PRAMDISK_BUS_EXTENSION DeviceExtension;
     NTSTATUS Status;
     UCHAR Minor;
@@ -2429,8 +2429,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             //
             // Prepare next stack to pass it down
             //
-            NextIoStack = IoGetNextIrpStackLocation(Irp);
-            RtlCopyMemory(NextIoStack, IoStackLocation, sizeof(IO_STACK_LOCATION));
+            IoCopyCurrentIrpStackLocationToNext(Irp);
 
             //
             // Initialize our notification event & our completion routine
