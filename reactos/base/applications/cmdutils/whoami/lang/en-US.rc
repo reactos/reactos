@@ -38,19 +38,19 @@ BEGIN
     IDS_ERROR_INVALIDARG "ERROR: Invalid argument/option - '%s'.\nType ""WHOAMI /?"" for usage.\n"
     IDS_ERROR_NH_LIST "ERROR: /NH switch cannot be used with the LIST format.\nType ""WHOAMI /?"" for usage.\n"
     IDS_HELP "DESCRIPTION:\n\
-    Display user, group and privileges information for the local logged-on user.\n\
-    If no arguments are provided, displays the current domain and user name.\n\
+  Display user, group and privileges information for the local logged-on user.\n\
+  If no arguments are provided, displays the current domain and user name.\n\
 \n\
-    Available output formats for the '/fo' option are 'csv', 'list' and 'table'.\n\
-    Use '/nh' to hide headers. By default the data is displayed in a table.\n\
+  Available output formats for the '/fo' option are 'csv', 'list' and 'table'.\n\
+  Use '/nh' to hide headers. By default the data is displayed in a table.\n\
 \n\
 SYNTAX:\n\
-    whoami [/upn | /fqdn | /logonid] \n\
-    whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-    whoami /all [/fo <Format>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+  whoami /all [/fo <Format>] [/nh] \n\
 \n\
 EXAMPLES: \n\
-    whoami /groups /priv /nh /fo csv \n\
-    whoami /logonid \n\
-    whoami \n"
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
 END

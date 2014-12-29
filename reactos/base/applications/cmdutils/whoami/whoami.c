@@ -15,6 +15,61 @@
 
 #include "resource.h"
 
+
+/* Unicode (W) to ANSI OEM wrapper function, as console and Unicode don't mix well, sigh */
+static void WhoamiOemConversion_printf(const WCHAR *lpSourceFormatW, ...)
+{
+    CHAR  *lpBufferA = NULL;
+    WCHAR *lpBufferW = NULL;
+
+    UINT Size;
+    va_list Args;
+
+    /* first let's find out the final output'ed length of the wprintf routine */
+    va_start(Args, lpSourceFormatW);
+
+    Size = _vscwprintf(lpSourceFormatW, Args);
+
+    va_end(Args);
+
+    /* allocate a proportional memory chunk taking into account the char width */
+    lpBufferW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (Size + 1) * sizeof(WCHAR));
+
+    if (!lpBufferW)
+        return;
+
+    /* do wprintf to this newly allocated buffer of ours */
+    va_start(Args, lpSourceFormatW);
+
+    _vsnwprintf(lpBufferW, Size, lpSourceFormatW, Args);
+
+    va_end(Args);
+
+    /* allocate a similarly sized buffer for the ANSI/OEM version of our string */
+    lpBufferA = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (Size + 1) * sizeof(CHAR));
+
+    if (!lpBufferA)
+    {
+        HeapFree(GetProcessHeap(), 0, lpBufferW);
+        return;
+    }
+
+    /* convert our Unicode/Wide char string into a proper ANSI/OEM
+       string that our console may understand, at least in theory */
+    CharToOemBuffW(lpBufferW,
+                   lpBufferA,
+                   Size);
+
+    /* print the converted OEM string into the console's output and call it a day */
+    printf("%s", lpBufferA);
+
+    /* clean everything up */
+    HeapFree(GetProcessHeap(), 0, lpBufferW);
+    HeapFree(GetProcessHeap(), 0, lpBufferA);
+}
+
+#define wprintf WhoamiOemConversion_printf
+
 BOOL NoHeader = FALSE;
 UINT NoHeaderArgCount = 0;
 UINT PrintFormatArgCount = 0;
@@ -139,7 +194,8 @@ void WhoamiPrintHeader(int HeaderId)
     while (Length--)
         wprintf(L"-");
 
-    _putws(L"\n");
+    /* _putws seems to be broken in ReactOS' CRT ??? */
+    wprintf(L"\n\n");
 }
 
 typedef struct
@@ -620,21 +676,27 @@ int WhoamiPriv(void)
 
         WhoamiSetTableDyn(PrivTable, PrivName, dwIndex + 1, 0);
 
-        ret = LookupPrivilegeDisplayNameW(NULL, PrivName, NULL, &DispNameSize, &dwResult);
 
-        if (!ret || GetLastError() == ERROR_NO_SUCH_PRIVILEGE)
+        /* try to grab the size of the string, also, beware, as this call is
+           unimplemented in ReactOS/Wine at the moment */
+
+        LookupPrivilegeDisplayNameW(NULL, PrivName, NULL, &DispNameSize, &dwResult);
+
+        DispName = HeapAlloc(GetProcessHeap(), 0, ++DispNameSize * sizeof(WCHAR));
+
+        ret = LookupPrivilegeDisplayNameW(NULL, PrivName, DispName, &DispNameSize, &dwResult);
+
+        if (ret && DispName)
         {
-            DispName = HeapAlloc(GetProcessHeap(), 0, ++DispNameSize * sizeof(WCHAR));
-
-            LookupPrivilegeDisplayNameW(NULL, PrivName, DispName, &DispNameSize, &dwResult);
-
-            //wprintf(L"DispName: %d %x '%s'\n", DispNameSize, GetLastError(), DispName);
-
+            // wprintf(L"DispName: %d %x '%s'\n", DispNameSize, GetLastError(), DispName);
             WhoamiSetTableDyn(PrivTable, DispName, dwIndex + 1, 1);
         }
         else
         {
             WhoamiSetTable(PrivTable, WhoamiLoadRcString(IDS_UNKNOWN_DESCRIPTION), dwIndex + 1, 1);
+
+            if (DispName != NULL)
+                WhoamiFree(DispName);
         }
 
         if (pPrivInfo->Privileges[dwIndex].Attributes & SE_PRIVILEGE_ENABLED)

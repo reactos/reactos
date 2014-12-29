@@ -38,19 +38,19 @@ BEGIN
     IDS_ERROR_INVALIDARG "Erreur : Argument/option non valide - '%s'.\nTapez ""WHOAMI /?"" pour l'aide.\n"
     IDS_ERROR_NH_LIST "Erreur : l'argument /NH ne peut pas être utilisé avec le format LIST.\nTapez ""WHOAMI /?"" pour l'aide.\n"
     IDS_HELP "DESCRIPTION:\n\
-    Affiche les informations sur l'utilisateur, les groupes et les privilèges pour l'utilisateur actuellement connecté.\n\
-    Si aucun argument n'est fourni, affiche le domaine et le nom d'utilisateur en cours d'usage.\n\
+  Affiche les informations sur l'utilisateur, les groupes et les privilèges pour l'utilisateur actuellement connecté.\n\
+  Si aucun argument n'est fourni, affiche le domaine et le nom d'utilisateur en cours d'usage.\n\
 \n\
-    Les formats de sortie disponibles pour l'option '/fo' sont 'csv', 'list' et 'table'.\n\
-    Utilisez '/nh' pour cacher les entêtes. Par défaut, les données sont affichées dans un tableau.\n\
+  Les formats de sortie disponibles pour l'option '/fo' sont 'csv', 'list' et 'table'.\n\
+  Utilisez '/nh' pour cacher les entêtes. Par défaut, les données sont affichées dans un tableau.\n\
 \n\
 SYNTAX:\n\
-    whoami [/upn | /fqdn | /logonid] \n\
-    whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
-    whoami /all [/fo <Format>] [/nh] \n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+  whoami /all [/fo <Format>] [/nh] \n\
 \n\
 EXAMPLES: \n\
-    whoami /groups /priv /nh /fo csv \n\
-    whoami /logonid \n\
-    whoami \n"
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
 END
