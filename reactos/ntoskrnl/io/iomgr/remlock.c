@@ -39,6 +39,8 @@ IoInitializeRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
     PAGED_CODE();
 
+    DPRINT("%s(%p 0x%08x %u %u %u)\n", __FUNCTION__, RemoveLock, AllocateTag, MaxLockedMinutes, HighWatermark, RemlockSize);
+
     ASSERT(HighWatermark < MAXLONG);
 
     /* If no lock given, nothing to do */
@@ -85,6 +87,8 @@ IoAcquireRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     LONG LockValue;
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
+
+    DPRINT("%s(%p %p %s %u %u)\n", __FUNCTION__, RemoveLock, Tag, File, Line, RemlockSize);
 
     /* Increase the lock count */
     LockValue = InterlockedIncrement(&(Lock->Common.IoCount));
@@ -153,6 +157,8 @@ IoReleaseRemoveLockEx(IN PIO_REMOVE_LOCK RemoveLock,
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
     PIO_REMOVE_LOCK_TRACKING_BLOCK *TrackingBlockLink;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
+
+    DPRINT("%s(%p %p %u)\n", __FUNCTION__, RemoveLock, Tag, RemlockSize);
 
     /* Check what kind of lock this is */
     if (RemlockSize == (sizeof(IO_REMOVE_LOCK_DBG_BLOCK) + sizeof(IO_REMOVE_LOCK_COMMON_BLOCK)))
@@ -242,6 +248,8 @@ IoReleaseRemoveLockAndWaitEx(IN PIO_REMOVE_LOCK RemoveLock,
     PIO_REMOVE_LOCK_TRACKING_BLOCK TrackingBlock;
     PEXTENDED_IO_REMOVE_LOCK Lock = (PEXTENDED_IO_REMOVE_LOCK)RemoveLock;
     PAGED_CODE();
+
+    DPRINT("%s(%p %p %u)\n", __FUNCTION__, RemoveLock, Tag, RemlockSize);
 
     /* Remove the lock and decrement the count */
     Lock->Common.Removed = TRUE;
