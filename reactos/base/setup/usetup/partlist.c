@@ -2426,6 +2426,8 @@ DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
         PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
         PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
+
+        List->CurrentPartition = NewPartEntry;
     }
 
     UpdateDiskLayout(DiskEntry);
@@ -2568,6 +2570,8 @@ DPRINT1("Add new partition entry\n");
 DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
 DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
 DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
+
+        List->CurrentPartition = NewPartEntry;
     }
 
     AddLogicalDiskSpace(DiskEntry);

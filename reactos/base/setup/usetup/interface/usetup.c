@@ -1618,7 +1618,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
-            return SELECT_FILE_SYSTEM_PAGE;
+            return INSTALL_DIRECTORY_PAGE;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'P')  /* P */
         {
@@ -1969,7 +1969,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
                 return QUIT_PAGE;
             }
 
-            return SELECT_PARTITION_PAGE;
+            return SELECT_FILE_SYSTEM_PAGE;
         }
     }
 
@@ -2279,7 +2279,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
                 return QUIT_PAGE;
             }
 
-            return SELECT_PARTITION_PAGE;
+            return SELECT_FILE_SYSTEM_PAGE;
         }
     }
 
@@ -2868,7 +2868,11 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
             DestroyFileSystemList(FileSystemList);
             FileSystemList = NULL;
-            return INSTALL_DIRECTORY_PAGE;
+
+            if (IsUnattendedSetup)
+                return INSTALL_DIRECTORY_PAGE;
+            else
+                return SELECT_PARTITION_PAGE;
         }
     }
 
