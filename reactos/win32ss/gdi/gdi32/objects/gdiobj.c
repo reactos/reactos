@@ -276,6 +276,36 @@ GetObjectW(
     return cbResult;
 }
 
+static
+BOOL
+GdiDeleteBrushOrPen(
+    HGDIOBJ hobj)
+{
+    GDILOOBJTYPE eObjectType;
+    PBRUSH_ATTR pbrattr;
+    PTEB pTeb;
+    PGDIBSOBJECT pgO;
+
+    eObjectType = GDI_HANDLE_GET_TYPE(hobj);
+
+    if ((GdiGetHandleUserData(hobj, eObjectType, (PVOID*)&pbrattr)) &&
+        (pbrattr != NULL))
+    {
+        pTeb = NtCurrentTeb();
+        if (pTeb->Win32ThreadInfo != NULL)
+        {
+            pgO = GdiAllocBatchCommand(NULL, GdiBCDelObj);
+            if (pgO)
+            {
+                /// FIXME: we need to mark the object as deleted!
+                pgO->hgdiobj = hobj;
+                return TRUE;
+            }
+        }
+    }
+
+    return NtGdiDeleteObjectApp(hobj);
+}
 
 /*
  * @implemented
@@ -284,76 +314,54 @@ BOOL
 WINAPI
 DeleteObject(HGDIOBJ hObject)
 {
-    DWORD dwType = 0;
+    /* Check if the handle is valid (FIXME: we need some special
+       sauce for the stock object flag) */
+    if (!GdiIsHandleValid(hObject))
+        return FALSE;
 
-    /* From Wine: DeleteObject does not SetLastError() on a null object */
-    if(!hObject) return FALSE;
-
-    if ((DWORD)hObject & GDI_HANDLE_STOCK_MASK)
+    /* Check if this is a stock object */
+    if ((DWORD_PTR)hObject & GDI_HANDLE_STOCK_MASK)
     {
-        // Relax! This is a normal return!
+        /* Ignore the attempt to delete a stock object */
         DPRINT("Trying to delete system object 0x%p\n", hObject);
         return TRUE;
     }
 
-    // If you dont own it?! Get OUT!
-    if(!GdiIsHandleValid(hObject)) return FALSE;
-
-    dwType = GDI_HANDLE_GET_TYPE(hObject);
-
-    if ((dwType == GDI_OBJECT_TYPE_METAFILE) ||
-        (dwType == GDI_OBJECT_TYPE_ENHMETAFILE))
-        return FALSE;
-
-    switch (dwType)
+    /* Switch by object type */
+    switch (GDI_HANDLE_GET_TYPE(hObject))
     {
-    case GDI_OBJECT_TYPE_DC:
-        return DeleteDC((HDC) hObject);
-    case GDI_OBJECT_TYPE_COLORSPACE:
-        return NtGdiDeleteColorSpace((HCOLORSPACE) hObject);
-    case GDI_OBJECT_TYPE_REGION:
-        return DeleteRegion((HRGN) hObject);
+        case GDILoObjType_LO_METAFILE16_TYPE:
+        case GDILoObjType_LO_METAFILE_TYPE:
+            return FALSE;
+
+        case GDILoObjType_LO_DC_TYPE:
+        case GDILoObjType_LO_ALTDC_TYPE:
+            return DeleteDC(hObject);
+
+        case GDILoObjType_LO_ICMLCS_TYPE:
+            return NtGdiDeleteColorSpace(hObject);
+
+        case GDILoObjType_LO_REGION_TYPE:
+            return DeleteRegion(hObject);
 #if 0
-    case GDI_OBJECT_TYPE_METADC:
-        return MFDRV_DeleteObject( hObject );
-    case GDI_OBJECT_TYPE_EMF:
-    {
-        PLDC pLDC = GdiGetLDC(hObject);
-        if ( !pLDC ) return FALSE;
-        return EMFDRV_DeleteObject( hObject );
-    }
-#endif
-    case GDI_OBJECT_TYPE_FONT:
-        break;
-
-    case GDI_OBJECT_TYPE_BRUSH:
-    case GDI_OBJECT_TYPE_EXTPEN:
-    case GDI_OBJECT_TYPE_PEN:
-    {
-        PBRUSH_ATTR Brh_Attr;
-        PTEB pTeb;
-        PGDIBSOBJECT pgO;
-
-        if ((!GdiGetHandleUserData(hObject, dwType, (PVOID*)&Brh_Attr)) ||
-            (Brh_Attr == NULL)) break;
-
-        pTeb = NtCurrentTeb();
-
-        if (pTeb->Win32ThreadInfo == NULL) break;
-
-        pgO = GdiAllocBatchCommand(NULL, GdiBCDelObj);
-        if (pgO)
+        case GDI_OBJECT_TYPE_METADC:
+            return MFDRV_DeleteObject( hObject );
+        case GDI_OBJECT_TYPE_EMF:
         {
-            pgO->hgdiobj = hObject;
-            return TRUE;
+            PLDC pLDC = GdiGetLDC(hObject);
+            if ( !pLDC ) return FALSE;
+            return EMFDRV_DeleteObject( hObject );
         }
+#endif
+        case GDILoObjType_LO_BRUSH_TYPE:
+        case GDILoObjType_LO_PEN_TYPE:
+        case GDILoObjType_LO_EXTPEN_TYPE:
+            return GdiDeleteBrushOrPen(hObject);
 
-        break;
-    }
-
-    case GDI_OBJECT_TYPE_BITMAP:
-    default:
-        break;
+        case GDILoObjType_LO_FONT_TYPE:
+        case GDILoObjType_LO_BITMAP_TYPE:
+        default:
+            break;
     }
 
     return NtGdiDeleteObjectApp(hObject);
