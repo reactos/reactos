@@ -1152,6 +1152,70 @@ SetBkMode(
  */
 int
 WINAPI
+GetROP2(HDC hdc)
+{
+    PDC_ATTR Dc_Attr;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    return Dc_Attr->jROP2;
+}
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+SetROP2(HDC hdc,
+        int fnDrawMode)
+{
+    PDC_ATTR Dc_Attr;
+    INT Old_ROP2;
+
+#if 0
+// Handle something other than a normal dc object.
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_SetROP2( hdc, fnDrawMode);
+        else
+        {
+            PLDC pLDC = GdiGetLDC(hdc);
+            if ( !pLDC )
+            {
+                SetLastError(ERROR_INVALID_HANDLE);
+                return FALSE;
+            }
+            if (pLDC->iType == LDC_EMFLDC)
+            {
+                return EMFDRV_SetROP2(( hdc, fnDrawMode);
+                                  }
+                                  return FALSE;
+        }
+    }
+#endif
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+
+    if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
+    {
+        if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
+        {
+            NtGdiFlush();
+            Dc_Attr->ulDirty_ &= ~DC_MODE_DIRTY;
+        }
+    }
+
+    Old_ROP2 = Dc_Attr->jROP2;
+    Dc_Attr->jROP2 = fnDrawMode;
+
+    return Old_ROP2;
+}
+
+
+/*
+ * @implemented
+ *
+ */
+int
+WINAPI
 GetPolyFillMode(HDC hdc)
 {
     PDC_ATTR pdcattr;

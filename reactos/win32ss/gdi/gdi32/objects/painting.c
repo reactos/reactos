@@ -735,6 +735,30 @@ BitBlt(
         nYSrc, dwRop, 0, 0);
 }
 
+BOOL
+WINAPI
+PatBlt(HDC hdc,
+       int nXLeft,
+       int nYLeft,
+       int nWidth,
+       int nHeight,
+       DWORD dwRop)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiPatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
+}
+
+BOOL
+WINAPI
+PolyPatBlt(IN HDC hdc,
+           IN DWORD rop4,
+           IN PPOLYPATBLT pPoly,
+           IN DWORD Count,
+           IN DWORD Mode)
+{
+    /* FIXME some part need be done in user mode */
+    return NtGdiPolyPatBlt(hdc, rop4, pPoly,Count,Mode);
+}
 
 /*
  * @implemented
