@@ -2905,73 +2905,281 @@ typedef DWORD (CALLBACK *LPFNDEVCAPS)(LPSTR,LPSTR,UINT,LPSTR,LPDEVMODEA);
 #define MAKEPOINTS(l) (*((POINTS*)&(l)))
 #define MAKEROP4(f,b) (DWORD)((((b)<<8)&0xFF000000)|(f))
 
-int WINAPI AbortDoc(_In_ HDC);
-BOOL WINAPI AbortPath(_In_ HDC);
-int WINAPI AddFontResourceA(LPCSTR);
-int WINAPI AddFontResourceW(LPCWSTR);
-#if (_WIN32_WINNT >= 0x0500)
+INT
+WINAPI
+AbortDoc(
+    _In_ HDC hdc);
+
+BOOL
+WINAPI
+AbortPath(
+    _In_ HDC hdc);
+
+int
+WINAPI
+AddFontResourceA(
+    _In_ LPCSTR pszFilename);
+
+int
+WINAPI
+AddFontResourceW(
+    _In_ LPCWSTR pszFilename);
 
 HANDLE
 WINAPI
 AddFontMemResourceEx(
-  _In_reads_bytes_(cjSize) PVOID pFileView,
-  _In_ DWORD cjSize,
-  _Reserved_ PVOID pvResrved,
-  _In_ DWORD* pNumFonts);
+    _In_reads_bytes_(cjSize) PVOID pvFileView,
+    _In_ DWORD cjSize,
+    _Reserved_ PVOID pvResrved,
+    _In_ DWORD* pNumFonts);
 
-int WINAPI AddFontResourceExA(_In_ LPCSTR, _In_ DWORD, _Reserved_ PVOID);
-int WINAPI AddFontResourceExW(_In_ LPCWSTR, _In_ DWORD, _Reserved_ PVOID);
+INT
+WINAPI
+AddFontResourceExA(
+    _In_ LPCSTR pszFilename,
+    _In_ DWORD fl,
+    _Reserved_ PVOID pvReserved);
 
-#endif
+INT
+WINAPI
+AddFontResourceExW(
+    _In_ LPCWSTR pszFilename,
+    _In_ DWORD fl,
+    _Reserved_ PVOID pvReserved);
 
-BOOL WINAPI AngleArc(_In_ HDC, _In_ int, _In_ int, _In_ DWORD, _In_ FLOAT, _In_ FLOAT);
+BOOL
+WINAPI
+AngleArc(
+    _In_ HDC hdc,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ DWORD dwRadius,
+    _In_ FLOAT eStartAngle,
+    _In_ FLOAT eSweepAngle);
 
 BOOL
 WINAPI
 AnimatePalette(
-  _In_ HPALETTE hPal,
-  _In_ UINT iStartIndex,
-  _In_ UINT cEntries,
-  _In_reads_(cEntries) CONST PALETTEENTRY *ppe);
+    _In_ HPALETTE hPal,
+    _In_ UINT iStartIndex,
+    _In_ UINT cEntries,
+    _In_reads_(cEntries) CONST PALETTEENTRY *ppe);
 
-BOOL WINAPI Arc(_In_ HDC, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int);
-BOOL WINAPI ArcTo(_In_ HDC, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int);
-BOOL WINAPI BeginPath(_In_ HDC);
-BOOL WINAPI BitBlt(_In_ HDC, _In_ int, _In_ int, _In_ int, _In_ int, _In_opt_ HDC, _In_ int, _In_ int, _In_ DWORD);
-BOOL WINAPI CancelDC(_In_ HDC);
+BOOL
+WINAPI
+Arc(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom,
+    _In_ INT xStartArc,
+    _In_ INT yStartArc,
+    _In_ INT xEndArc,
+    _In_ INT yEndArc);
+
+BOOL
+WINAPI
+ArcTo(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom,
+    _In_ INT xRadial1,
+    _In_ INT yRadial1,
+    _In_ INT xRadial2,
+    _In_ INT yRadial2);
+
+BOOL
+WINAPI
+BeginPath(
+    _In_ HDC hdc);
+
+BOOL
+WINAPI
+BitBlt(
+    _In_ HDC hdcDest,
+    _In_ INT xDest,
+    _In_ INT yDest,
+    _In_ INT cxDest,
+    _In_ INT cyDest,
+    _In_opt_ HDC hdcSrc,
+    _In_ INT xSrc,
+    _In_ INT ySrc,
+    _In_ DWORD dwRop);
+
+BOOL
+WINAPI
+CancelDC(
+    _In_ HDC hdc);
 
 BOOL
 WINAPI
 CheckColorsInGamut(
   _In_ HDC hdc,
-  _In_reads_(nCount) LPVOID lpRGBTriple,
-  _Out_writes_bytes_(nCount) LPVOID dlpBuffer,
+  _In_reads_(nCount) LPVOID pRGBTriple,
+  _Out_writes_bytes_(nCount) LPVOID pvBuffer,
   _In_ DWORD nCount);
 
-BOOL WINAPI Chord(_In_ HDC, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int);
-int WINAPI ChoosePixelFormat(_In_ HDC, _In_ CONST PIXELFORMATDESCRIPTOR*);
-HENHMETAFILE WINAPI CloseEnhMetaFile(_In_ HDC);
-BOOL WINAPI CloseFigure(_In_ HDC);
-HMETAFILE WINAPI CloseMetaFile(_In_ HDC);
-BOOL WINAPI ColorMatchToTarget(_In_ HDC, _In_ HDC, _In_ DWORD);
-int WINAPI CombineRgn(_In_opt_ HRGN, _In_opt_ HRGN, _In_opt_ HRGN, _In_ int);
-BOOL WINAPI CombineTransform(_Out_ LPXFORM, _In_ const XFORM*, _In_ const XFORM*);
-HENHMETAFILE WINAPI CopyEnhMetaFileA(_In_ HENHMETAFILE, _In_opt_ LPCSTR);
-HENHMETAFILE WINAPI CopyEnhMetaFileW(_In_ HENHMETAFILE, _In_opt_ LPCWSTR);
-HMETAFILE WINAPI CopyMetaFileA(_In_ HMETAFILE, _In_opt_ LPCSTR);
-HMETAFILE WINAPI CopyMetaFileW(_In_ HMETAFILE, _In_opt_ LPCWSTR);
-HBITMAP WINAPI CreateBitmap(_In_ int, _In_ int, _In_ UINT, _In_ UINT, _In_opt_ CONST VOID*);
-HBITMAP WINAPI CreateBitmapIndirect(_In_ const BITMAP*);
-HBRUSH WINAPI CreateBrushIndirect(_In_ const LOGBRUSH*);
-HCOLORSPACE WINAPI CreateColorSpaceA(_In_ LPLOGCOLORSPACEA);
-HCOLORSPACE WINAPI CreateColorSpaceW(_In_ LPLOGCOLORSPACEW);
-HBITMAP WINAPI CreateCompatibleBitmap(_In_ HDC, _In_ int, _In_ int);
-HDC WINAPI CreateCompatibleDC(_In_opt_ HDC);
-HDC WINAPI CreateDCA(_In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_opt_ const DEVMODEA*);
-HDC WINAPI CreateDCW(_In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_opt_ const DEVMODEW*);
-HBITMAP WINAPI CreateDIBitmap(_In_ HDC, _In_opt_ CONST BITMAPINFOHEADER*, _In_ DWORD, _In_opt_ CONST VOID*, _In_opt_ CONST BITMAPINFO*, _In_ UINT);
-HBRUSH WINAPI CreateDIBPatternBrush(_In_ HGLOBAL, _In_ UINT);
-HBRUSH WINAPI CreateDIBPatternBrushPt(_In_ CONST VOID*, _In_ UINT);
+BOOL
+WINAPI
+Chord(
+    _In_ HDC hdc,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom,
+    _In_ INT xRadial1,
+    _In_ INT yRadial1,
+    _In_ INT xRadial2,
+    _In_ INT yRadial2);
+
+int
+WINAPI
+ChoosePixelFormat(
+    _In_ HDC hdc,
+    _In_ const PIXELFORMATDESCRIPTOR* ppfd);
+
+HENHMETAFILE
+WINAPI
+CloseEnhMetaFile(
+    _In_ HDC hdc);
+
+BOOL
+WINAPI
+CloseFigure(
+    _In_ HDC hdc);
+
+HMETAFILE
+WINAPI
+CloseMetaFile(
+    _In_ HDC hdc);
+
+BOOL
+WINAPI
+ColorMatchToTarget(
+    _In_ HDC hdc,
+    _In_ HDC hdcTarget,
+    _In_ DWORD uAction);
+
+int
+WINAPI
+CombineRgn(
+    _In_opt_ HRGN hrgnDest,
+    _In_opt_ HRGN hrgnSrc1,
+    _In_opt_ HRGN hrgnSrc2,
+    _In_ int fnCombineMode);
+
+BOOL
+WINAPI
+CombineTransform(
+    _Out_ LPXFORM pxformResult,
+    _In_ const XFORM* pxform1,
+    _In_ const XFORM* pxform2);
+
+HENHMETAFILE
+WINAPI
+CopyEnhMetaFileA(
+    _In_ HENHMETAFILE hemfSrc,
+    _In_opt_ LPCSTR pszFile);
+
+HENHMETAFILE
+WINAPI
+CopyEnhMetaFileW(
+    _In_ HENHMETAFILE hemfSrc,
+    _In_opt_ LPCWSTR pszFile);
+
+HMETAFILE
+WINAPI
+CopyMetaFileA(
+    _In_ HMETAFILE hmfSrc,
+    _In_opt_ LPCSTR pszFile);
+
+HMETAFILE
+WINAPI
+CopyMetaFileW(
+    _In_ HMETAFILE hmfSrc,
+    _In_opt_ LPCWSTR pszFile);
+
+HBITMAP
+WINAPI
+CreateBitmap(
+    _In_ INT cx,
+    _In_ INT cy,
+    _In_ UINT cPlanes,
+    _In_ UINT cBitsPerPel,
+    _In_opt_ const VOID* pvBits);
+
+HBITMAP
+WINAPI
+CreateBitmapIndirect(
+    _In_ const BITMAP* pbm);
+
+HBRUSH
+WINAPI
+CreateBrushIndirect(
+    _In_ const LOGBRUSH* plb);
+
+HCOLORSPACE
+WINAPI
+CreateColorSpaceA(
+    _In_ LPLOGCOLORSPACEA pLogColorSpace);
+
+HCOLORSPACE
+WINAPI
+CreateColorSpaceW(
+    _In_ LPLOGCOLORSPACEW pLogColorSpace);
+
+HBITMAP
+WINAPI
+CreateCompatibleBitmap(
+    _In_ HDC hdc,
+    _In_ INT cx,
+    _In_ INT cy);
+
+HDC
+WINAPI
+CreateCompatibleDC(
+    _In_opt_ HDC hdc);
+
+HDC
+WINAPI
+CreateDCA(
+    _In_opt_ LPCSTR pszDriver,
+    _In_opt_ LPCSTR pszDevice,
+    _In_opt_ LPCSTR pszOutput,
+    _In_opt_ const DEVMODEA* pdmInit);
+
+HDC
+WINAPI
+CreateDCW(
+    _In_opt_ LPCWSTR pszDriver,
+    _In_opt_ LPCWSTR pszDevice,
+    _In_opt_ LPCWSTR psz,
+    _In_opt_ const DEVMODEW* pdmInit);
+
+HBITMAP
+WINAPI
+CreateDIBitmap(
+    _In_ HDC hdc,
+    _In_opt_ const BITMAPINFOHEADER* pbmih,
+    _In_ DWORD fdwInit,
+    _In_opt_ const VOID* pvInit,
+    _In_opt_ const BITMAPINFO* pbmi,
+    _In_ UINT uUsage);
+
+HBRUSH
+WINAPI
+CreateDIBPatternBrush(
+    _In_ HGLOBAL hglbDIBPacked,
+    _In_ UINT uUsage);
+
+HBRUSH
+WINAPI
+CreateDIBPatternBrushPt(
+    _In_ HGLOBAL hglbDIBPacked,
+    _In_ UINT uUsage);
 
 #define GDI_WIDTHBYTES(bits)  ((DWORD)(((bits) + 31) & (~31)) / 8)
 #define GDI_DIBWIDTHBYTES(bi) (DWORD)GDI_WIDTHBYTES((DWORD)(bi).biWidth * (DWORD)(bi).biBitCount)
