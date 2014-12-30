@@ -31,22 +31,22 @@ EXTERN _i386Idt:DWORD
 PUBLIC _RealEntryPoint
 _RealEntryPoint:
 
-	/* Setup segment selectors */
-	mov ax, PMODE_DS
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	mov ss, ax
+    /* Setup segment selectors */
+    mov ax, PMODE_DS
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
 
     /* Setup protected mode stack */
-	mov esp, dword ptr ds:[stack32]
+    mov esp, dword ptr ds:[stack32]
 
-	/* Load the IDT */
+    /* Load the IDT */
 #ifdef _USE_ML
     lidt fword ptr ds:[i386idtptr]
 #else
-	lidt i386idtptr
+    lidt i386idtptr
 #endif
 
     /* Continue execution */
@@ -59,10 +59,10 @@ ContinueAddress:
 _FrldrStartup:
 
     /* Store BootDrive and BootPartition */
-	mov byte ptr ds:[_FrldrBootDrive], dl
-	xor eax, eax
+    mov byte ptr ds:[_FrldrBootDrive], dl
+    xor eax, eax
     mov al, dh
-	mov dword ptr ds:[_FrldrBootPartition], eax
+    mov dword ptr ds:[_FrldrBootPartition], eax
 
     /* Patch long jump with real mode entry point */
     mov eax, dword ptr ds:[BSS_RealModeEntry]
@@ -86,20 +86,20 @@ _FrldrStartup:
     xor eax, eax
 #endif
 
-	/* GO! */
-	push eax
-	call _BootMain
+    /* GO! */
+    push eax
+    call _BootMain
 
-	/* We should never get here */
+    /* We should never get here */
 stop:
-	jmp	stop
-	nop
-	nop
+    jmp stop
+    nop
+    nop
 
 Int386_regsin:
-	.long 0
+    .long 0
 Int386_regsout:
-	.long 0
+    .long 0
 
 /*
  * int Int386(int ivec, REGS* in, REGS* out);
@@ -107,20 +107,20 @@ Int386_regsout:
 PUBLIC _Int386
 _Int386:
 
-	/* Get the function parameters */
-	mov eax, dword ptr [esp + 4]
+    /* Get the function parameters */
+    mov eax, dword ptr [esp + 4]
     mov dword ptr ds:[BSS_IntVector], eax
-	mov eax, dword ptr [esp + 8]
-	mov dword ptr [Int386_regsin], eax
-	mov eax, dword ptr [esp + 12]
-	mov dword ptr [Int386_regsout], eax
+    mov eax, dword ptr [esp + 8]
+    mov dword ptr [Int386_regsin], eax
+    mov eax, dword ptr [esp + 12]
+    mov dword ptr [Int386_regsout], eax
 
-	/* Save all registers + segment registers */
-	push ds
-	push es
-	push fs
-	push gs
-	pusha
+    /* Save all registers + segment registers */
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
 
     /* Copy input registers */
     mov esi, dword ptr [Int386_regsin]
@@ -233,17 +233,17 @@ i386CallRealMode_return:
  * bx must be set to the ID of the realmode function to call. */
 SwitchToReal:
     /* Set sane segments */
-	mov ax, PMODE_DS
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	mov ss, ax
+    mov ax, PMODE_DS
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
 
-	/* Save 32-bit stack pointer */
-	mov dword ptr [stack32], esp
+    /* Save 32-bit stack pointer */
+    mov dword ptr [stack32], esp
 
-	/* jmp to 16-bit segment to set the limit correctly */
+    /* jmp to 16-bit segment to set the limit correctly */
     .byte HEX(0ea) // jmp far RMODE_CS:switch_to_real16
 SwitchToReal16Address:
     .long 0 // receives address of switch_to_real16
@@ -251,55 +251,55 @@ SwitchToReal16Address:
     nop
 
 
-	/* 16-bit stack pointer */
+    /* 16-bit stack pointer */
 stack16:
-	.word	STACK16ADDR
+	.word STACK16ADDR
 
-	/* 32-bit stack pointer */
+    /* 32-bit stack pointer */
 stack32:
-	.long	STACKADDR
+    .long STACKADDR
 
     .align 4	/* force 4-byte alignment */
 gdt:
-	/* NULL Descriptor */
-	.word HEX(0000)
-	.word HEX(0000)
-	.word HEX(0000)
-	.word HEX(0000)
+    /* NULL Descriptor */
+   .word HEX(0000)
+   .word HEX(0000)
+   .word HEX(0000)
+   .word HEX(0000)
 
-	/* 32-bit flat CS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9A00)
-	.word HEX(00CF)
+    /* 32-bit flat CS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9A00)
+    .word HEX(00CF)
 
-	/* 32-bit flat DS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9200)
-	.word HEX(00CF)
+    /* 32-bit flat DS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9200)
+    .word HEX(00CF)
 
-	/* 16-bit real mode CS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9E00)
-	.word HEX(0000)
+    /* 16-bit real mode CS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9E00)
+    .word HEX(0000)
 
-	/* 16-bit real mode DS */
-	.word HEX(FFFF)
-	.word HEX(0000)
-	.word HEX(9200)
-	.word HEX(0000)
+    /* 16-bit real mode DS */
+    .word HEX(FFFF)
+    .word HEX(0000)
+    .word HEX(9200)
+    .word HEX(0000)
 
 /* GDT table pointer */
 gdtptr:
-	.word HEX(27)		/* Limit */
-	.long gdt			/* Base Address */
+    .word HEX(27)		/* Limit */
+    .long gdt			/* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
-	.word HEX(3ff)		/* Limit */
-	.long 0			/* Base Address */
+    .word HEX(3ff)		/* Limit */
+    .long 0			/* Base Address */
 
 PUBLIC i386idtptr
 i386idtptr:
