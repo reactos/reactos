@@ -506,7 +506,8 @@ DC_vPrepareDCsForBlit(
     /* Lock them in good order */
     if(pdcSrc)
     {
-        if((ULONG_PTR)pdcDest->ppdev->hsemDevLock >= (ULONG_PTR)pdcSrc->ppdev->hsemDevLock)
+        if((ULONG_PTR)pdcDest->ppdev->hsemDevLock >=
+           (ULONG_PTR)pdcSrc->ppdev->hsemDevLock)
         {
             pdcFirst = pdcDest;
             prcFirst = rcDest;
@@ -529,19 +530,11 @@ DC_vPrepareDCsForBlit(
         prcSecond = NULL;
     }
 
-    /* Update clipping of dest DC if needed */
-    if (pdcDest->dctype == DCTYPE_DIRECT)
-    {
-        DCE* dce = DceGetDceFromDC(pdcDest->BaseObject.hHmgr);
-        if (dce)
-            DceUpdateVisRgn(dce, dce->pwndOrg, dce->DCXFlags);
-    }
-
     if (pdcDest->fs & DC_FLAG_DIRTY_RAO)
         CLIPPING_UpdateGCRegion(pdcDest);
 
     /* Lock and update first DC */
-    if(pdcFirst->dctype == DCTYPE_DIRECT)
+    if (pdcFirst->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
         /* Update surface if needed */
@@ -551,7 +544,7 @@ DC_vPrepareDCsForBlit(
         }
     }
 
-    if(pdcFirst->dctype == DCTYPE_DIRECT)
+    if (pdcFirst->dctype == DCTYPE_DIRECT)
     {
         if (!prcFirst)
             prcFirst = &pdcFirst->erclClip;
@@ -567,9 +560,10 @@ DC_vPrepareDCsForBlit(
         return;
 
     /* Lock and update second DC */
-    if(pdcSecond->dctype == DCTYPE_DIRECT)
+    if (pdcSecond->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
+
         /* Update surface if needed */
         if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
         {
@@ -577,7 +571,7 @@ DC_vPrepareDCsForBlit(
         }
     }
 
-    if(pdcSecond->dctype == DCTYPE_DIRECT)
+    if (pdcSecond->dctype == DCTYPE_DIRECT)
     {
         if (!prcSecond)
             prcSecond = &pdcSecond->erclClip;

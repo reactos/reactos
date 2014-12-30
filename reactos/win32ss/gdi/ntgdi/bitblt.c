@@ -1025,6 +1025,81 @@ REGION_LPTODP(
 }
 
 BOOL
+APIENTRY
+IntGdiBitBltRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn,
+    _In_opt_ BRUSHOBJ *pbo,
+    _In_opt_ POINTL *pptlBrush,
+    _In_ ROP4 rop4)
+{
+    PREGION prgnClip;
+    XCLIPOBJ xcoClip;
+    BOOL bResult;
+    PSURFACE psurf;
+    NT_ASSERT((pdc != NULL) && (prgn != NULL));
+
+    /* Get the surface */
+    psurf = pdc->dclevel.pSurface;
+    if (psurf == NULL)
+    {
+        return TRUE;
+    }
+
+    /* Create an empty clip region */
+    prgnClip = IntSysCreateRectpRgn(0, 0, 0, 0);
+    if (prgnClip == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Transform given region into device coordinates */
+    if (!REGION_LPTODP(pdc, prgnClip, prgn) ||
+        !REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
+
+    /* Intersect with the system or RAO region */
+    if (pdc->prgnRao)
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnRao, RGN_AND);
+    else
+        IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnVis, RGN_AND);
+
+    /* Initialize a clip object */
+    IntEngInitClipObj(&xcoClip);
+    IntEngUpdateClipRegion(&xcoClip,
+                           prgnClip->rdh.nCount,
+                           prgnClip->Buffer,
+                           &prgnClip->rdh.rcBound);
+
+    /* Prepare the DC */
+    DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
+
+    /* Call the Eng or Drv function */
+    bResult = IntEngBitBlt(&psurf->SurfObj,
+                           NULL,
+                           NULL,
+                           &xcoClip.ClipObj,
+                           NULL,
+                           &prgnClip->rdh.rcBound,
+                           NULL,
+                           NULL,
+                           pbo,
+                           pptlBrush,
+                           rop4);
+
+    /* Cleanup */
+    DC_vFinishBlit(pdc, NULL);
+    REGION_Delete(prgnClip);
+    IntEngFreeClipResources(&xcoClip);
+
+    /* Return the result */
+    return bResult;
+}
+
+BOOL
 IntGdiFillRgn(
     _In_ PDC pdc,
     _In_ PREGION prgn,
@@ -1190,34 +1265,48 @@ NtGdiFrameRgn(
 BOOL
 APIENTRY
 NtGdiInvertRgn(
-    HDC hDC,
-    HRGN hRgn)
+    _In_ HDC hdc,
+    _In_ HRGN hrgn)
 {
-    PREGION RgnData;
-    ULONG i;
-    PRECTL rc;
+    BOOL bResult;
+    PDC pdc;
+    PREGION prgn;
 
-    RgnData = REGION_LockRgn(hRgn);
-    if (RgnData == NULL)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
-    rc = RgnData->Buffer;
-    for (i = 0; i < RgnData->rdh.nCount; i++)
+    /* Check if the DC has no surface (empty mem or info DC) */
+    if (pdc->dclevel.pSurface == NULL)
     {
-
-        if (!NtGdiPatBlt(hDC, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top, DSTINVERT))
-        {
-            REGION_UnlockRgn(RgnData);
-            return FALSE;
-        }
-        rc++;
+        /* Nothing to do, Windows returns TRUE! */
+        DC_UnlockDc(pdc);
+        return TRUE;
     }
 
-    REGION_UnlockRgn(RgnData);
-    return TRUE;
+    /* Lock the region */
+    prgn = REGION_LockRgn(hrgn);
+    if (prgn == NULL)
+    {
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    /* Call the internal function */
+    bResult = IntGdiBitBltRgn(pdc,
+                              prgn,
+                              NULL, // pbo
+                              NULL, // pptlBrush,
+                              ROP_TO_ROP4(DSTINVERT));
+
+    /* Unlock the region and DC and return the result */
+    REGION_UnlockRgn(prgn);
+    DC_UnlockDc(pdc);
+    return bResult;
 }
 
 COLORREF
