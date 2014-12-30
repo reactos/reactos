@@ -2969,6 +2969,16 @@ InstallDirectoryPage1(PWCHAR InstallDir,
     RtlCreateUnicodeString(&InstallPath,
                            InstallDir);
 
+    /* Set DestinationRootPath */
+    RtlFreeUnicodeString(&DestinationRootPath);
+    swprintf(PathBuffer,
+             L"\\Device\\Harddisk%lu\\Partition%lu",
+             DiskEntry->DiskNumber,
+             PartEntry->PartitionNumber);
+    RtlCreateUnicodeString(&DestinationRootPath,
+                           PathBuffer);
+    DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
+
     /* Create 'DestinationPath' string */
     RtlFreeUnicodeString(&DestinationPath);
     wcscpy(PathBuffer, DestinationRootPath.Buffer);
