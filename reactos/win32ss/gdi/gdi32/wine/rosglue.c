@@ -233,7 +233,6 @@ GDI_GetObjPtr(
     if (eObjType == GDILoObjType_LO_ALTDC_TYPE)
     {
         /* Object is stored as LDC */
-        __debugbreak();
         return GdiGetLDC(hobj);
     }
 
@@ -847,7 +846,8 @@ DRIVER_Dispatch(
                                                  _va_arg_n(argptr, const POINT*, 0),
                                                  _va_arg_n(argptr, DWORD, 1));
         case DCFUNC_PolyDraw:
-            __debugbreak(); // not implemented
+            DPRINT1("DCFUNC_PolyDraw not implemented\n");;
+            return FALSE;
             return physdev->funcs->pPolyDraw(physdev,
                                              _va_arg_n(argptr, const POINT*, 1),
                                              _va_arg_n(argptr, const BYTE*, 1),
@@ -861,7 +861,8 @@ DRIVER_Dispatch(
                                              _va_arg_n(argptr, const POINT*, 0),
                                              _va_arg_n(argptr, INT, 1));
         case DCFUNC_PolylineTo:
-            __debugbreak(); // not implemented
+            DPRINT1("DCFUNC_PolylineTo not implemented\n");;
+            return FALSE;
             return physdev->funcs->pPolylineTo(physdev,
                                                _va_arg_n(argptr, const POINT*, 0),
                                                _va_arg_n(argptr, INT, 1));
@@ -1175,11 +1176,10 @@ WINAPI
 METADC_DeleteDC(
     _In_ HDC hdc)
 {
-    __debugbreak();
-
     /* Only ALTDCs are supported */
     if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_ALTDC_TYPE)
     {
+        DPRINT1("Trying to delete METADC %p\n", hdc);
         return FALSE;
     }
     // FIXME call the driver?
