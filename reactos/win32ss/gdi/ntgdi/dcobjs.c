@@ -230,6 +230,7 @@ GdiSelectPalette(
         return NULL;
     }
 
+    /// FIXME: we shouldn't dereference pSurface when the PDEV is not locked
     /* Is this a valid palette for this depth? */
 	if ((!pdc->dclevel.pSurface) ||
         (BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
@@ -356,7 +357,6 @@ NtGdiSelectBitmap(
     PDC pdc;
     HBITMAP hbmpOld;
     PSURFACE psurfNew, psurfOld;
-    PREGION VisRgn;
     HDC hdcOld;
     ASSERT_NOGDILOCKS();
 
@@ -419,7 +419,7 @@ NtGdiSelectBitmap(
             return NULL;
         }
 
-        /* Check if the bitmap is compatile with the dc */
+        /* Check if the bitmap is compatible with the dc */
         if (!DC_bIsBitmapCompatible(pdc, psurfNew))
         {
             /* Dereference the bitmap, unlock the DC and fail. */
@@ -470,20 +470,15 @@ NtGdiSelectBitmap(
         SURFACE_ShareUnlockSurface(psurfOld);
     }
 
-    /* Mark the dc brushes invalid */
+    /* Mark the DC brushes invalid */
     pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
 
-    /* FIXME: Improve by using a region without a handle and selecting it */
-    VisRgn = IntSysCreateRectpRgn( 0,
-                                   0,
-                                   pdc->dclevel.sizl.cx,
-                                   pdc->dclevel.sizl.cy);
-
-    if (VisRgn)
-    {
-        GdiSelectVisRgn(hdc, VisRgn);
-        REGION_Delete(VisRgn);
-    }
+    /* Update the system region */
+    REGION_SetRectRgn(pdc->prgnVis,
+                      0,
+                      0,
+                      pdc->dclevel.sizl.cx,
+                      pdc->dclevel.sizl.cy);
 
     /* Unlock the DC */
     DC_UnlockDc(pdc);
