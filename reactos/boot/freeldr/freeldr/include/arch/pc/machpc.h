@@ -63,5 +63,6 @@ VOID PcHwIdle(VOID);
 
 extern BIOS_MEMORY_MAP PcBiosMemoryMap[];
 extern ULONG PcBiosMapCount;
+extern ULONG PcDiskReadBufferSize;
 
 /* EOF */

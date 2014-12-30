@@ -198,8 +198,8 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     while (N > 0)
     {
         Length = N;
-        if (Length > DISKREADBUFFER_SIZE)
-            Length = DISKREADBUFFER_SIZE;
+        if (Length > PcDiskReadBufferSize)
+            Length = PcDiskReadBufferSize;
         Sectors = (Length + Context->SectorSize - 1) / Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
                   Context->DriveNumber,
@@ -351,11 +351,11 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         * harddisks. So, we set the buffer to known contents first, then try to
         * read. If the BIOS reports success but the buffer contents haven't
         * changed then we fail anyway */
-    memset((PVOID) DISKREADBUFFER, 0xcd, DISKREADBUFFER_SIZE);
+    memset((PVOID) DISKREADBUFFER, 0xcd, PcDiskReadBufferSize);
     while (MachDiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
         Changed = FALSE;
-        for (i = 0; ! Changed && i < DISKREADBUFFER_SIZE; i++)
+        for (i = 0; ! Changed && i < PcDiskReadBufferSize; i++)
         {
             Changed = ((PUCHAR)DISKREADBUFFER)[i] != 0xcd;
         }
@@ -366,7 +366,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
             break;
         }
         DiskCount++;
-        memset((PVOID) DISKREADBUFFER, 0xcd, DISKREADBUFFER_SIZE);
+        memset((PVOID) DISKREADBUFFER, 0xcd, PcDiskReadBufferSize);
     }
     DiskReportError(TRUE);
     TRACE("BIOS reports %d harddisk%s\n",

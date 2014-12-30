@@ -119,7 +119,7 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     ULONGLONG SectorOffset;
 
     TotalSectors = (N + Context->SectorSize - 1) / Context->SectorSize;
-    MaxSectors   = DISKREADBUFFER_SIZE / Context->SectorSize;
+    MaxSectors   = PcDiskReadBufferSize / Context->SectorSize;
     SectorOffset = Context->SectorNumber + Context->SectorOffset;
 
     ret = 1;

@@ -40,6 +40,7 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
+ULONG PcDiskReadBufferSize;
 
 FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
 {
@@ -201,7 +202,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
        bit value at address 0x413 inside the BDA, which gives us the usable size
        in KB */
     Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
-    if (Size < MEMORY_MARGIN)
+    if (Size < DISKREADBUFFER || Size - DISKREADBUFFER < MIN_DISKREADBUFFER_SIZE)
     {
         FrLdrBugCheckWithMessage(
             MEMORY_INIT_FAILURE,
@@ -211,6 +212,12 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             "If you see this, please report to the ReactOS team!",
             Size);
     }
+    PcDiskReadBufferSize = (Size - DISKREADBUFFER) & ~0xfff;
+    if (PcDiskReadBufferSize > MAX_DISKREADBUFFER_SIZE)
+    {
+        PcDiskReadBufferSize = MAX_DISKREADBUFFER_SIZE;
+    }
+    TRACE("PcDiskReadBufferSize=0x%x\n", PcDiskReadBufferSize);
 
     /* Get the address of the Extended BIOS Data Area (EBDA).
      * Int 15h, AH=C1h
@@ -229,7 +236,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
     {
         /* Check if this is high enough */
         ULONG EbdaBase = (ULONG)Regs.w.es << 4;
-        if (EbdaBase < MEMORY_MARGIN)
+        if (EbdaBase < DISKREADBUFFER || EbdaBase - DISKREADBUFFER < MIN_DISKREADBUFFER_SIZE)
         {
             FrLdrBugCheckWithMessage(
                 MEMORY_INIT_FAILURE,
@@ -238,6 +245,11 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
                 "The location of your EBDA is 0x%lx, which is too low!\n\n"
                 "If you see this, please report to the ReactOS team!",
                 EbdaBase);
+        }
+        if (((EbdaBase - DISKREADBUFFER) & ~0xfff) < PcDiskReadBufferSize)
+        {
+            PcDiskReadBufferSize = (EbdaBase - DISKREADBUFFER) & ~0xfff;
+            TRACE("After EBDA check, PcDiskReadBufferSize=0x%x\n", PcDiskReadBufferSize);
         }
 
         /* Calculate the (max) size of the EBDA */

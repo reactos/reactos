@@ -17,14 +17,14 @@
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
 #define DISKREADBUFFER     HEX(8E000) /* Buffer to store data read in from the disk via the BIOS */
-#define MEMORY_MARGIN      HEX(9A000) /* Highest usable address */
 /* 9F000- 9FFFF is reserved for the EBDA */
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFSIZE     PAGE_SIZE /* max is sizeof(VESA_SVGA_INFO) = 512 */
 #define MAX_FREELDR_PE_SIZE (DISKREADBUFFER - FREELDR_PE_BASE)
-#define DISKREADBUFFER_SIZE (MEMORY_MARGIN - DISKREADBUFFER)
+#define MIN_DISKREADBUFFER_SIZE HEX(1000)
+#define MAX_DISKREADBUFFER_SIZE HEX(20000)
 
 /* These addresses specify the realmode "BSS section" layout */
 #define BSS_RealModeEntry        (BSS_START +  0)
