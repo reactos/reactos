@@ -12,69 +12,70 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 RTL_ATOM FASTCALL
 IntAddAtom(LPWSTR AtomName)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   PTHREADINFO pti;
-   RTL_ATOM Atom;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PTHREADINFO pti;
+    RTL_ATOM Atom;
 
-   pti = PsGetCurrentThreadWin32Thread();
-   if (pti->rpdesk == NULL)
-   {
-      SetLastNtError(Status);
-      return (RTL_ATOM)0;
-   }
+    pti = PsGetCurrentThreadWin32Thread();
+    if (pti->rpdesk == NULL)
+    {
+        SetLastNtError(Status);
+        return (RTL_ATOM)0;
+    }
 
-   Status = RtlAddAtomToAtomTable(gAtomTable, AtomName, &Atom);
+    Status = RtlAddAtomToAtomTable(gAtomTable, AtomName, &Atom);
 
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      return (RTL_ATOM)0;
-   }
-   return Atom;
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return (RTL_ATOM)0;
+    }
+    return Atom;
 }
 
 ULONG FASTCALL
 IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG cjBufSize)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   PTHREADINFO pti;
-   ULONG Size = cjBufSize;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PTHREADINFO pti;
+    ULONG Size = cjBufSize;
 
-   pti = PsGetCurrentThreadWin32Thread();
-   if (pti->rpdesk == NULL)
-   {
-      SetLastNtError(Status);
-      return 0;
-   }
+    pti = PsGetCurrentThreadWin32Thread();
+    if (pti->rpdesk == NULL)
+    {
+        SetLastNtError(Status);
+        return 0;
+    }
 
-   Status = RtlQueryAtomInAtomTable(gAtomTable, nAtom, NULL, NULL, lpBuffer, &Size);
+    Status = RtlQueryAtomInAtomTable(gAtomTable, nAtom, NULL, NULL, lpBuffer, &Size);
 
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      return 0;
-   }
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return 0;
+    }
 
-   return Size;
+    return Size;
 }
 
 RTL_ATOM FASTCALL
 IntAddGlobalAtom(LPWSTR lpBuffer, BOOL PinAtom)
 {
-   RTL_ATOM Atom;
-   NTSTATUS Status = STATUS_SUCCESS;
+    RTL_ATOM Atom;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-   Status = RtlAddAtomToAtomTable(gAtomTable, lpBuffer, &Atom);
+    Status = RtlAddAtomToAtomTable(gAtomTable, lpBuffer, &Atom);
 
-   if (!NT_SUCCESS(Status))
-   {
-      ERR("Error init Global Atom.\n");
-      return 0;
-   }
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Error init Global Atom.\n");
+        return 0;
+    }
 
-   if ( Atom && PinAtom ) RtlPinAtomInAtomTable(gAtomTable, Atom);
+    if (Atom && PinAtom)
+        RtlPinAtomInAtomTable(gAtomTable, Atom);
 
-   return Atom;
+    return Atom;
 }
 
 /*!
