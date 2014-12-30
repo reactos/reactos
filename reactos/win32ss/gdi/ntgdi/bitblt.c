@@ -9,12 +9,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(GdiBlt);
 
-#define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
-#define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
-
-#define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
-#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
-
 BOOL APIENTRY
 NtGdiAlphaBlend(
     HDC hDCDest,
@@ -1038,7 +1032,7 @@ IntGdiBitBltRgn(
     BOOL bResult;
     NT_ASSERT((pdc != NULL) && (prgn != NULL));
 
-    /* Get the surface */
+    /* Check if we have a surface */
     if (pdc->dclevel.pSurface == NULL)
     {
         return TRUE;
@@ -1052,18 +1046,27 @@ IntGdiBitBltRgn(
     }
 
     /* Transform given region into device coordinates */
-    if (!REGION_LPTODP(pdc, prgnClip, prgn) ||
-        !REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    if (!REGION_LPTODP(pdc, prgnClip, prgn))
     {
         REGION_Delete(prgnClip);
         return FALSE;
     }
 
-    /* Intersect with the system or RAO region */
+    /* Intersect with the system or RAO region (these are (atm) without DC-origin) */
     if (pdc->prgnRao)
         IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnRao, RGN_AND);
     else
         IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnVis, RGN_AND);
+
+    /* Now account for the DC-origin */
+    if (!REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
+
+    /* Prepare the DC */
+    DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
 
     /* Initialize a clip object */
     IntEngInitClipObj(&xcoClip);
@@ -1071,9 +1074,6 @@ IntGdiBitBltRgn(
                            prgnClip->rdh.nCount,
                            prgnClip->Buffer,
                            &prgnClip->rdh.rcBound);
-
-    /* Prepare the DC */
-    DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
 
     /* Call the Eng or Drv function */
     bResult = IntEngBitBlt(&pdc->dclevel.pSurface->SurfObj,
@@ -1125,18 +1125,24 @@ IntGdiFillRgn(
     }
 
     /* Transform region into device coordinates */
-    if (!REGION_LPTODP(pdc, prgnClip, prgn) ||
-        !REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    if (!REGION_LPTODP(pdc, prgnClip, prgn))
     {
         REGION_Delete(prgnClip);
         return FALSE;
     }
 
-    /* Intersect with the system or RAO region */
+    /* Intersect with the system or RAO region (these are (atm) without DC-origin) */
     if (pdc->prgnRao)
         IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnRao, RGN_AND);
     else
         IntGdiCombineRgn(prgnClip, prgnClip, pdc->prgnVis, RGN_AND);
+
+    /* Now account for the DC-origin */
+    if (!REGION_bOffsetRgn(prgnClip, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y))
+    {
+        REGION_Delete(prgnClip);
+        return FALSE;
+    }
 
     IntEngInitClipObj(&xcoClip);
     IntEngUpdateClipRegion(&xcoClip,

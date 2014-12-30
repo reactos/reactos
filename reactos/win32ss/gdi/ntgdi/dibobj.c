@@ -1109,8 +1109,6 @@ cleanup:
 }
 
 
-#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
-
 W32KAPI
 INT
 APIENTRY
