@@ -158,40 +158,32 @@ Int386_return:
  */
 PUBLIC _PxeCallApi
 _PxeCallApi:
-    push ebp
-    mov ebp, esp
-
-    pusha
-    push es
-
     /* copy entry point */
-    mov eax, [ebp + 8]
+    mov eax, [esp + 4]
     shl eax, 16
-    mov ax, [ebp + 12]
+    mov ax, [esp + 8]
     mov dword ptr ds:[BSS_PxeEntryPoint], eax
 
     /* copy function */
-    mov ax, [ebp + 16]
+    mov ax, [esp + 12]
     mov word ptr ds:[BSS_PxeFunction], ax
 
     /* convert pointer to data buffer to segment/offset */
-    mov eax, [ebp + 20]
+    mov eax, [esp + 16]
     shr eax, 4
     and eax, HEX(0f000)
     mov word ptr ds:[BSS_PxeBufferSegment], ax
-    mov eax, [ebp + 20]
+    mov eax, [esp + 16]
     and eax, HEX(0ffff)
     mov word ptr ds:[BSS_PxeBufferOffset], ax
+
+    pusha
 
     /* Set the function ID and call realmode */
     mov bx, FNID_PxeCallApi
     call i386CallRealMode
 
-    pop es
     popa
-
-    mov esp, ebp
-    pop ebp
 
     mov ax, word ptr [BSS_PxeResult]
 
