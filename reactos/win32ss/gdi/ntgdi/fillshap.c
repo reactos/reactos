@@ -931,8 +931,7 @@ GreGradientFill(
         return TRUE;
     }
 
-    psurf = pdc->dclevel.pSurface;
-    if(!psurf)
+    if (!pdc->dclevel.pSurface)
     {
         /* Memory DC with no surface selected */
         DC_UnlockDc(pdc);
@@ -962,9 +961,11 @@ GreGradientFill(
     ptlDitherOrg.x += pdc->ptlDCOrig.x;
     ptlDitherOrg.y += pdc->ptlDCOrig.y;
 
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0, 0);
-
     DC_vPrepareDCsForBlit(pdc, &rclExtent, NULL, NULL);
+
+    psurf = pdc->dclevel.pSurface;
+
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0, 0);
 
     bRet = IntEngGradientFill(&psurf->SurfObj,
                              &pdc->co.ClipObj,
@@ -1091,8 +1092,7 @@ NtGdiExtFloodFill(
         return TRUE;
     }
 
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
+    if (!dc->dclevel.pSurface)
     {
         Ret = FALSE;
         goto cleanup;
@@ -1100,28 +1100,30 @@ NtGdiExtFloodFill(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(dc);
-
-    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-        DC_vUpdateLineBrush(dc);
-
     Pt.x = XStart;
     Pt.y = YStart;
     IntLPtoDP(dc, (LPPOINT)&Pt, 1);
 
+    DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
+
+    /// FIXME: what about prgnVIS? And what about REAL clipping?
     if (dc->prgnRao)
     {
         Ret = REGION_PtInRegion(dc->prgnRao, Pt.x, Pt.y);
         if (Ret)
-            REGION_GetRgnBox(dc->prgnRao ,(LPRECT)&DestRect);
+            REGION_GetRgnBox(dc->prgnRao, (LPRECT)&DestRect);
         else
+        {
+            DC_vFinishBlit(dc, NULL);
             goto cleanup;
+        }
     }
     else
+    {
         RECTL_vSetRect(&DestRect, 0, 0, psurf->SurfObj.sizlBitmap.cx, psurf->SurfObj.sizlBitmap.cy);
+    }
 
-    DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
+    psurf = dc->dclevel.pSurface;
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);
 

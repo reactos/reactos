@@ -3366,10 +3366,10 @@ GreExtTextOutW(
     BrushOrigin.x = 0;
     BrushOrigin.y = 0;
 
-    psurf = dc->dclevel.pSurface;
-
-    if(!psurf)
-        psurf = psurfDefaultBitmap;
+    if (!dc->dclevel.pSurface)
+    {
+        goto fail;
+    }
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
@@ -3388,6 +3388,7 @@ GreExtTextOutW(
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
 
+        psurf = dc->dclevel.pSurface;
         IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
@@ -3579,12 +3580,13 @@ GreExtTextOutW(
     /* Lock blit with a dummy rect */
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
+    psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-	if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
+    if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
         DC_vUpdateBackgroundBrush(dc) ;
 
     if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)

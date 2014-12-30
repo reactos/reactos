@@ -1255,6 +1255,7 @@ IntFillRect( DC *dc,
     PDC_ATTR pdcattr;
 
     ASSERT(pbrush);
+    ASSERT_DC_PREPARED(dc);
 
     psurf = dc->dclevel.pSurface;
     if (psurf == NULL)

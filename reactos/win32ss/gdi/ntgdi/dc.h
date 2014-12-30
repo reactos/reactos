@@ -33,7 +33,10 @@ enum _DCFLAGS
     DC_FULLSCREEN        = 0x0800,
     DC_IN_CLONEPDEV      = 0x1000,
     DC_REDIRECTION       = 0x2000,
-    DC_SHAREACCESS       = 0x4000
+    DC_SHAREACCESS       = 0x4000,
+#ifdef DBG
+    DC_PREPARED          = 0x8000
+#endif
 };
 
 typedef enum _DCTYPE
@@ -96,7 +99,7 @@ typedef struct _DC
   BASEOBJECT  BaseObject;
 
   DHPDEV      dhpdev;   /* <- PDEVOBJ.hPDev DHPDEV for device. */
-  INT         dctype;
+  DCTYPE      dctype;
   INT         fs;
   PPDEVOBJ    ppdev;
   PVOID       hsem;   /* PERESOURCE aka HSEMAPHORE */
@@ -292,5 +295,7 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 
 extern _Notnull_ PBRUSH pbrDefaultBrush;
 extern _Notnull_ PSURFACE psurfDefaultBitmap;
+
+#define ASSERT_DC_PREPARED(pdc) NT_ASSERT((pdc)->fs & DC_PREPARED)
 
 #endif /* not __WIN32K_DC_H */

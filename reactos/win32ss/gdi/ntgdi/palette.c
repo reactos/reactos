@@ -673,6 +673,7 @@ NtGdiGetNearestColor(
         return CLR_INVALID;
     }
 
+    /// FIXME: shouldn't dereference pSurface while the PDEV is not locked
     if(dc->dclevel.pSurface == NULL)
         ppal = gppalMono;
     else
@@ -731,7 +732,7 @@ IntGdiRealizePalette(HDC hDC)
     PALETTE *ppalSurf, *ppalDC;
 
     pdc = DC_LockDc(hDC);
-    if(!pdc)
+    if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
@@ -742,16 +743,17 @@ IntGdiRealizePalette(HDC hDC)
         goto cleanup;
     }
 
-	if(pdc->dctype == DCTYPE_DIRECT)
-	{
-		UNIMPLEMENTED;
-		goto cleanup;
-	}
+    if (pdc->dctype == DCTYPE_DIRECT)
+    {
+        UNIMPLEMENTED;
+        goto cleanup;
+    }
 
+    /// FIXME: shouldn't dereference pSurface while the PDEV is not locked
     ppalSurf = pdc->dclevel.pSurface->ppal;
     ppalDC = pdc->dclevel.ppal;
 
-    if(!(ppalSurf->flFlags & PAL_INDEXED))
+    if (!(ppalSurf->flFlags & PAL_INDEXED))
     {
         // FIXME: Set error?
         goto cleanup;
@@ -762,7 +764,7 @@ IntGdiRealizePalette(HDC hDC)
     // FIXME: Should we resize ppalSurf if it's too small?
     realize = (ppalDC->NumColors < ppalSurf->NumColors) ? ppalDC->NumColors : ppalSurf->NumColors;
 
-    for(i=0; i<realize; i++)
+    for (i=0; i<realize; i++)
     {
         InterlockedExchange((LONG*)&ppalSurf->IndexedColors[i], *(LONG*)&ppalDC->IndexedColors[i]);
     }
@@ -993,14 +995,15 @@ GreGetSetColorTable(
         return 0;
     }
 
-    /* Get the surace from the DC */
+    /* Get the surface from the DC */
     psurf = pdc->dclevel.pSurface;
 
     /* Check if we have the default surface */
     if (psurf == NULL)
     {
         /* Use a mono palette */
-        if(!bSet) ppal = gppalMono;
+        if (!bSet)
+            ppal = gppalMono;
     }
     else if (psurf->SurfObj.iType == STYPE_BITMAP)
     {

@@ -504,7 +504,7 @@ DC_vPrepareDCsForBlit(
         DC_vUpdateTextBrush(pdcDest);
 
     /* Lock them in good order */
-    if(pdcSrc)
+    if (pdcSrc)
     {
         if((ULONG_PTR)pdcDest->ppdev->hsemDevLock >=
            (ULONG_PTR)pdcSrc->ppdev->hsemDevLock)
@@ -524,7 +524,7 @@ DC_vPrepareDCsForBlit(
     }
     else
     {
-        pdcFirst = pdcDest ;
+        pdcFirst = pdcDest;
         prcFirst = rcDest;
         pdcSecond = NULL;
         prcSecond = NULL;
@@ -537,8 +537,9 @@ DC_vPrepareDCsForBlit(
     if (pdcFirst->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
+
         /* Update surface if needed */
-        if(pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
+        if (pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
         {
             DC_vUpdateDC(pdcFirst);
         }
@@ -556,6 +557,10 @@ DC_vPrepareDCsForBlit(
                                prcFirst->bottom) ;
     }
 
+#ifdef DBG
+    pdcFirst->fs |= DC_PREPARED;
+#endif
+
     if (!pdcSecond)
         return;
 
@@ -565,7 +570,7 @@ DC_vPrepareDCsForBlit(
         EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
 
         /* Update surface if needed */
-        if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
+        if (pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
         {
             DC_vUpdateDC(pdcSecond);
         }
@@ -581,6 +586,10 @@ DC_vPrepareDCsForBlit(
                                prcSecond->right,
                                prcSecond->bottom) ;
     }
+
+#ifdef DBG
+    pdcSecond->fs |= DC_PREPARED;
+#endif
 }
 
 /* Finishes a blit for one or two DCs */
@@ -588,19 +597,25 @@ VOID
 FASTCALL
 DC_vFinishBlit(PDC pdc1, PDC pdc2)
 {
-    if(pdc1->dctype == DCTYPE_DIRECT)
+    if (pdc1->dctype == DCTYPE_DIRECT)
     {
         MouseSafetyOnDrawEnd(pdc1->ppdev);
         EngReleaseSemaphore(pdc1->ppdev->hsemDevLock);
     }
+#ifdef DBG
+    pdc1->fs &= ~DC_PREPARED;
+#endif
 
-    if(pdc2)
+    if (pdc2)
     {
-        if(pdc2->dctype == DCTYPE_DIRECT)
+        if (pdc2->dctype == DCTYPE_DIRECT)
         {
             MouseSafetyOnDrawEnd(pdc2->ppdev);
             EngReleaseSemaphore(pdc2->ppdev->hsemDevLock);
         }
+#ifdef DBG
+        pdc2->fs &= ~DC_PREPARED;
+#endif
     }
 }
 

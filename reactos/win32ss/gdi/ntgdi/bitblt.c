@@ -946,7 +946,7 @@ NtGdiPatBlt(
         return TRUE;
     }
 
-    /* Update the fill brush, if neccessary */
+    /* Update the fill brush, if necessary */
     if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(pdc);
 
@@ -1036,12 +1036,10 @@ IntGdiBitBltRgn(
     PREGION prgnClip;
     XCLIPOBJ xcoClip;
     BOOL bResult;
-    PSURFACE psurf;
     NT_ASSERT((pdc != NULL) && (prgn != NULL));
 
     /* Get the surface */
-    psurf = pdc->dclevel.pSurface;
-    if (psurf == NULL)
+    if (pdc->dclevel.pSurface == NULL)
     {
         return TRUE;
     }
@@ -1078,7 +1076,7 @@ IntGdiBitBltRgn(
     DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
 
     /* Call the Eng or Drv function */
-    bResult = IntEngBitBlt(&psurf->SurfObj,
+    bResult = IntEngBitBlt(&pdc->dclevel.pSurface->SurfObj,
                            NULL,
                            NULL,
                            &xcoClip.ClipObj,
@@ -1103,19 +1101,19 @@ BOOL
 IntGdiFillRgn(
     _In_ PDC pdc,
     _In_ PREGION prgn,
-    _In_ BRUSHOBJ *pbo)
+    _In_ PBRUSH pbrFill)
 {
     PREGION prgnClip;
     XCLIPOBJ xcoClip;
+    EBRUSHOBJ eboFill;
+    BRUSHOBJ *pbo;
     BOOL bRet;
-    PSURFACE psurf;
     DWORD rop2Fg;
     MIX mix;
-
     NT_ASSERT((pdc != NULL) && (prgn != NULL));
+    ASSERT_DC_PREPARED(pdc);
 
-    psurf = pdc->dclevel.pSurface;
-    if (psurf == NULL)
+    if (pdc->dclevel.pSurface == NULL)
     {
         return TRUE;
     }
@@ -1150,13 +1148,35 @@ IntGdiFillRgn(
     rop2Fg = pdc->pdcattr->jROP2;
     mix = rop2Fg | (pdc->pdcattr->jBkMode == OPAQUE ? rop2Fg : R2_NOP) << 8;
 
+    /* Prepare DC for blit */
+    DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
+
+    /* Check if we have a fill brush */
+    if (pbrFill != NULL)
+    {
+        /* Initialize the brush object */
+        /// \todo Check parameters
+        EBRUSHOBJ_vInit(&eboFill, pbrFill, pdc->dclevel.pSurface, 0x00FFFFFF, 0, NULL);
+        pbo = &eboFill.BrushObject;
+    }
+    else
+    {
+        /* Update the fill brush if needed */
+        if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+            DC_vUpdateFillBrush(pdc);
+
+        /* Use the DC brush object */
+        pbo = &pdc->eboFill.BrushObject;
+    }
+
     /* Call the internal function */
-    bRet = IntEngPaint(&psurf->SurfObj,
+    bRet = IntEngPaint(&pdc->dclevel.pSurface->SurfObj,
                        &xcoClip.ClipObj,
                        pbo,
                        &pdc->pdcattr->ptlBrushOrigin,
                        mix);
 
+    DC_vFinishBlit(pdc, NULL);
     REGION_Delete(prgnClip);
     IntEngFreeClipResources(&xcoClip);
 
@@ -1170,10 +1190,7 @@ IntGdiPaintRgn(
     _In_ PDC pdc,
     _In_ PREGION prgn)
 {
-    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(pdc);
-
-    return IntGdiFillRgn(pdc, prgn, &pdc->eboFill.BrushObject);
+    return IntGdiFillRgn(pdc, prgn, NULL);
 }
 
 BOOL
@@ -1186,7 +1203,6 @@ NtGdiFillRgn(
     PDC pdc;
     PREGION prgn;
     PBRUSH pbrFill;
-    EBRUSHOBJ eboFill;
     BOOL bResult;
 
     /* Lock the DC */
@@ -1223,12 +1239,8 @@ NtGdiFillRgn(
         return FALSE;
     }
 
-    /* Initialize the brush object */
-    /// \todo Check parameters
-    EBRUSHOBJ_vInit(&eboFill, pbrFill, pdc->dclevel.pSurface, 0x00FFFFFF, 0, NULL);
-
     /* Call the internal function */
-    bResult = IntGdiFillRgn(pdc, prgn, &eboFill.BrushObject);
+    bResult = IntGdiFillRgn(pdc, prgn, pbrFill);
 
     /* Cleanup locks */
     BRUSH_ShareUnlockBrush(pbrFill);
@@ -1360,6 +1372,7 @@ NtGdiSetPixel(
     EBRUSHOBJ_iSetSolidColor(pebo, iOldColor);
     pdc->pdcattr->ulDirty_ = ulDirty;
 
+    /// FIXME: we shouldn't dereference pSurface while the PDEV is not locked!
     /* Initialize an XLATEOBJ from the target surface to RGB */
     EXLATEOBJ_vInitialize(&exlo,
                           pdc->dclevel.pSurface->ppal,
@@ -1391,6 +1404,7 @@ NtGdiGetPixel(
     PDC pdc;
     ULONG ulRGBColor = CLR_INVALID;
     POINTL ptlSrc;
+    RECT rcDest;
     PSURFACE psurfSrc, psurfDest;
 
     /* Lock the DC */
@@ -1402,8 +1416,7 @@ NtGdiGetPixel(
     }
 
     /* Check if the DC has no surface (empty mem or info DC) */
-    psurfSrc = pdc->dclevel.pSurface;
-    if (psurfSrc == NULL)
+    if (pdc->dclevel.pSurface == NULL)
     {
         /* Fail! */
         goto leave;
@@ -1418,7 +1431,16 @@ NtGdiGetPixel(
     ptlSrc.x += pdc->ptlDCOrig.x;
     ptlSrc.y += pdc->ptlDCOrig.y;
 
+    rcDest.left = x;
+    rcDest.top = y;
+    rcDest.right = x + 1;
+    rcDest.bottom = y + 1;
+
+    /* Prepare DC for blit */
+    DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);
+
     /* Check if the pixel is outside the surface */
+    psurfSrc = pdc->dclevel.pSurface;
     if ((ptlSrc.x >= psurfSrc->SurfObj.sizlBitmap.cx) ||
         (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy))
     {
@@ -1463,7 +1485,9 @@ NtGdiGetPixel(
     }
 
 leave:
+
     /* Unlock the DC */
+    DC_vFinishBlit(pdc, NULL);
     DC_UnlockDc(pdc);
 
     /* Return the new RGB color or -1 on failure */
