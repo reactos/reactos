@@ -636,7 +636,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DriveExtension->GuidString = GuidString;
         DriveExtension->DiskGuid = Input->DiskGuid;
         DriveExtension->PhysicalDeviceObject = DeviceObject;
-        DriveExtension->DeviceObject = DeviceObject;
+        DriveExtension->DeviceObject = RamdiskBusFdo;
         DriveExtension->AttachedDevice = RamdiskBusFdo;
         DriveExtension->DiskType = Input->DiskType;
         DriveExtension->DiskOptions = Input->Options;
@@ -1914,7 +1914,7 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
             //
             // Save the object pointer, and move on
             //
-            *DriveDeviceObject++ = DriveExtension->DeviceObject;
+            *DriveDeviceObject++ = DriveExtension->PhysicalDeviceObject;
         }
         
         if (DriveExtension->State < RamdiskStateBusRemoved) DiskCount++;
