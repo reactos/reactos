@@ -471,7 +471,7 @@ NtGdiSelectBitmap(
     }
 
     /* Mark the DC brushes invalid */
-    pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
+    pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE | DC_FLAG_DIRTY_RAO;
 
     /* Update the system region */
     REGION_SetRectRgn(pdc->prgnVis,
