@@ -470,8 +470,9 @@ NtGdiSelectBitmap(
         SURFACE_ShareUnlockSurface(psurfOld);
     }
 
-    /* Mark the DC brushes invalid */
-    pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE | DC_FLAG_DIRTY_RAO;
+    /* Mark the DC brushes and the RAO region invalid */
+    pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
+    pdc->fs |= DC_FLAG_DIRTY_RAO;
 
     /* Update the system region */
     REGION_SetRectRgn(pdc->prgnVis,
