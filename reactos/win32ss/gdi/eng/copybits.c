@@ -146,8 +146,8 @@ EngCopyBits(
                     {
                         RECTL_bIntersectRect(&BltInfo.DestRect, prcl, DestRect);
 
-                        BltInfo.SourcePoint.x = SourcePoint->x + prcl->left - DestRect->left;
-                        BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
+                        BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
+                        BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top - DestRect->top;
 
                         if (!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
                         {
