@@ -53,6 +53,7 @@ enum _R3_ROPCODES
 
 #define ROP4_NOOP (R3_OPINDEX_NOOP | (R3_OPINDEX_NOOP << 8))
 #define ROP4_MASK (R3_OPINDEX_SRCCOPY | (R3_OPINDEX_NOOP << 8))
+#define ROP4_MASKPAINT (R3_OPINDEX_PATCOPY | (R3_OPINDEX_NOOP << 8))
 
 /* Definitions of IntEngXxx functions */
 
