@@ -162,7 +162,11 @@ static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     sizeData.ServerIPAddress = _ServerIP;
     strncpy((CHAR*)sizeData.FileName, Path, sizeof(sizeData.FileName));
     if (!CallPxe(PXENV_TFTP_GET_FSIZE, &sizeData))
+    {
+        ERR("Failed to get '%s' size\n", Path);
         return EIO;
+    }
+
     _FileSize = sizeData.FileSize;
     if (_FileSize < 1024 * 1024)
     {
