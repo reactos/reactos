@@ -46,6 +46,7 @@ UNICODE_STRING SourceRootPath;
 UNICODE_STRING SourceRootDir;
 UNICODE_STRING SourcePath;
 BOOLEAN IsUnattendedSetup = FALSE;
+BOOLEAN InstallShortcut = FALSE;
 LONG UnattendDestinationDiskNumber;
 LONG UnattendDestinationPartitionNumber;
 LONG UnattendMBRInstallType = -1;
@@ -1601,19 +1602,22 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
                 continue; //return SELECT_PARTITION_PAGE;
 
+            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                RequiredPartitionDiskSpace);
+                continue; //return SELECT_PARTITION_PAGE; /* let the user select another partition */
+            }
+
             if (PartitionList->CurrentPartition == NULL ||
                 PartitionList->CurrentPartition->IsPartitioned == FALSE)
             {
                 CreatePrimaryPartition(PartitionList,
                                        0ULL,
                                        TRUE);
-            }
+                InstallShortcut = TRUE;
 
-            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
-                                RequiredPartitionDiskSpace);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
+                return SELECT_FILE_SYSTEM_PAGE;
             }
 
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
@@ -2875,7 +2879,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             DestroyFileSystemList(FileSystemList);
             FileSystemList = NULL;
 
-            if (IsUnattendedSetup)
+            if (IsUnattendedSetup || InstallShortcut)
                 return INSTALL_DIRECTORY_PAGE;
             else
                 return SELECT_PARTITION_PAGE;
