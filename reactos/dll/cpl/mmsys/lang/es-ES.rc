@@ -154,7 +154,7 @@ BEGIN
     PUSHBUTTON "Restaurar &valores predeterminados", 5400, 9, 158, 110, 14
     LTEXT "Ninguna", 8497, 125, 46, 24, 10
     LTEXT "Completa", 8498, 217, 46, 19, 9
-    LTEXT "Bueno", 8499, 125, 103, 24, 10
+    LTEXT "Buena", 8499, 125, 103, 24, 10
     LTEXT "Óptima", 8500, 217, 103, 19, 9
     LTEXT "Este valor describe la configuración del hardware para el dispositivo de captura", 5399, 13, 125, 222, 21
     LTEXT "Este valor describe la configuración del hardware para el dispositivo de render", 5398, 13, 68, 218, 24
@@ -170,7 +170,7 @@ BEGIN
     LTEXT "Este equipo no puede reproducir sonidos porque el servicio ReactOS Audio service no esta habilitado.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Habilitar ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Notas", 10246, 58, 87, 150, 11
-    LTEXT "1. Debe tener privilegios de administrador para habilitar este servicio. Si no está registrado como administrador, se le pedirá un nombre de usuario y contraseña de administrador.", 10247, 60, 100, 150, 40
+    LTEXT "1. Debe tener privilegios administrativos para habilitar este servicio. Si no está registrado como administrador, se le pedirá un nombre de usuario y contraseña de administrador.", 10247, 60, 100, 150, 40
     LTEXT "2. Despues de habilitar ReactOS Audio necesitará reiniciar su equipo.", 10248, 60, 140, 150, 40
 END
 
@@ -230,10 +230,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Dispositivos de sonido y audio"
-    IDS_CPLDESCRIPTION "Cambie la combinación de sonidos para el equipo, o configure los parámetros para sus altavoces y dispositivos de grabación."
+    IDS_CPLNAME "Sonido y audio"
+    IDS_CPLDESCRIPTION "Cambie la combinación de sonidos del equipo, o configure sus altavoces y dispositivos de grabación."
     IDS_NO_SOUND "(Ninguno)"
-    IDS_NO_DEVICES "No Devices"
+    IDS_NO_DEVICES "Sin dispositivos"
     5825 "Error del programa"
     5826 "Cerrar programa"
     5827 "Alarma de nivel crítico de carga de batería"
@@ -260,8 +260,8 @@ BEGIN
     5848 "Notificación del sistema"
     5849 "Pregunta"
     5850 "Iniciar ReactOS"
-    5851 "Menu de Inicio"
+    5851 "Menú Inicio"
     5852 "Cierre de sesión de ReactOS"
     5853 "Inicio de sesión en ReactOS"
-    5854 "ReactOS Explorer"
+    5854 "Explorador de ReactOS"
 END

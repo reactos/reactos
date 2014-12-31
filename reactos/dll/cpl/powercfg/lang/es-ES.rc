@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
     LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.", -1, 37, 6, 209, 36
-    GROUPBOX "C&ombinaciones de energía ", -1, 6, 43, 250, 50
+    GROUPBOX "C&ombinaciones de energía", -1, 6, 43, 250, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
@@ -17,7 +17,7 @@ BEGIN
     LTEXT "Cuando el equipo está:", IDC_SAT, 12, 109, 65, 14
     LTEXT "Enchufado", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
-    LTEXT "Con baterias", IDC_SDC, 195, 110, 45, 15
+    LTEXT "Con batería", IDC_SDC, 195, 110, 45, 15
     ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
     LTEXT "Apagar &monitor:", IDC_MONITOR, 13, 148, 84, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -25,7 +25,7 @@ BEGIN
     LTEXT "Apagar los &discos duros:", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Pasar a inac&tividad:", IDC_STANDBY, 13, 191, 84, 10
+    LTEXT "&Suspender el equipo:", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "El sistema &hiberna:", IDC_HYBERNATE, 13, 212, 84, 10
@@ -72,12 +72,12 @@ CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "Seleccione la configuración de ahorro de energía que desea usar.", -1, 37, 6, 207, 20
-    GROUPBOX "Opciones ", -1, 6, 30, 250, 65
+    LTEXT "Seleccione los ajustes de ahorro energético que desee usar.", -1, 37, 6, 207, 20
+    GROUPBOX "Opciones", -1, 6, 30, 250, 65
     CONTROL "Mo&strar siempre el icono en la barra de tareas", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 230, 10
-    CONTROL "S&olicitar una contraseña cuando el equipo se active tras un tiempo de inactividad", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 56, 230, 14
-    CONTROL "&Atenuar monitor cuando esté funcionando con baterias", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 230, 10
-    GROUPBOX "Botones de encendido ", -1, 6, 101, 250, 127
+    CONTROL "S&olicitar una contraseña tras un tiempo de inactividad", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 56, 230, 14
+    CONTROL "&Atenuar monitor cuando esté funcionando con batería", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 230, 10
+    GROUPBOX "Botones de encendido", -1, 6, 101, 250, 127
     LTEXT "&Cuando cierre la tapa de mi ordenador portátil:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Cuando pr&esione el botón de encendido de mi equipo:", IDC_SPOWERBUTTON, 15, 153, 222, 10
@@ -110,7 +110,7 @@ BEGIN
     IDS_PROCENT "%i%%"
     IDS_SOUND "Sonido"
     IDS_TEXT "Texto"
-    IDS_CONFIG1 "Configuración para %1 combinación de energía"
+    IDS_CONFIG1 "Configuración para la combinación de energía %1"
     IDS_CONFIG2 "Opciones avanzadas para %1"
     IDS_SIZEBYTS "%i bytes"
     IDS_SIZEMB "%i MB"
@@ -121,9 +121,9 @@ BEGIN
     IDS_PowerActionHibernate "Hibernar"
     IDS_PowerActionShutdown "Apagar"
     IDS_PowerActionRestart "Reiniciar"
-    IDS_PowerActionShutdownOff "Apagar y quitar la corriente"
+    IDS_PowerActionShutdownOff "Apagar y desc. la corriente"
     IDS_PowerActionWarmEject "Preguntarme qué hacer"
-    IDS_PowerActionNone2 "None"
+    IDS_PowerActionNone2 "Nada"
     IDS_TIMEOUT1 "Tras 1 min"
     IDS_TIMEOUT2 "Tras 2 min"
     IDS_TIMEOUT3 "Tras 3 min"

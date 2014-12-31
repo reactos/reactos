@@ -1,4 +1,4 @@
-﻿/* Spanish translation by Samuel Serapion Vega, Javier Remacha */
+﻿/* Spanish translation by Samuel Serapion Vega, Javier Remacha and Ismael Ferreras Morezuelas */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -7,32 +7,32 @@ BEGIN
     IDS_NAME "Nombre"
     IDS_TYPE "Tipo"
     IDS_MANUFACTURER "Fabricante: %1"
-    IDS_LOCATION "Localización: %1"
-    IDS_STATUS "Estado del Dispositivo: %1"
-    IDS_UNKNOWN "Desconocido"
-    IDS_LOCATIONSTR "Localización %1!u! (%2)"
-    IDS_DEVCODE " (Codigo %1!u!)"
-    IDS_DEVCODE2 " (Codigo %2!u!)"
-    IDS_ENABLEDEVICE "Habilita este dispositivo (enable)"
-    IDS_DISABLEDEVICE "Deshabilitar este dispositivo (disable)"
+    IDS_LOCATION "Ubicación: %1"
+    IDS_STATUS "Estado del dispositivo: %1"
+    IDS_UNKNOWN "Desconocida"
+    IDS_LOCATIONSTR "Ubicación %1!u! (%2)"
+    IDS_DEVCODE " (Código %1!u!)"
+    IDS_DEVCODE2 " (Código %2!u!)"
+    IDS_ENABLEDEVICE "Habilitar este dispositivo"
+    IDS_DISABLEDEVICE "Deshabilitar este dispositivo"
     IDS_UNKNOWNDEVICE "Dispositivo desconocido"
-    IDS_NODRIVERLOADED "Ningún controlador esta instalado para este dispositivo."
+    IDS_NODRIVERLOADED "No hay ningún controlador instalado para este dispositivo."
     IDS_DEVONPARENT "en %1"
     IDS_TROUBLESHOOTDEV "&Solucionar problemas..."
-    IDS_ENABLEDEV "Habilit&e Dispositivo"
+    IDS_ENABLEDEV "Habilit&ar dispositivo"
     IDS_REINSTALLDRV "Re&instalar controlador"
     IDS_PROPERTIES "P&ropiedades"
-    IDS_UPDATEDRV "Actualize controlador..."
+    IDS_UPDATEDRV "Actualizar controlador..."
     IDS_REBOOT "&Reiniciar equipo..."
     IDS_NOTAVAILABLE "No disponible"
-    IDS_NOTDIGITALLYSIGNED "Sin Firma Digital"
+    IDS_NOTDIGITALLYSIGNED "Sin firma digital"
     IDS_NODRIVERS "Los controladores para este dispositivo o no son necesarios o ya han sido cargados."
-    IDS_RESOURCE_COLUMN "Resource type"
-    IDS_SETTING_COLUMN "Setting"
-    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_COLUMN "Tipo de recurso"
+    IDS_SETTING_COLUMN "Ajuste"
+    IDS_RESOURCE_MEMORY_RANGE "Intervalo de memoria"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "E/A range"
+    IDS_RESOURCE_PORT "Intervalo de E/A"
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
@@ -41,7 +41,7 @@ BEGIN
     IDS_DEV_NO_PROBLEM "Este dispositivo está funcionando correctamente."
     IDS_DEV_NOT_CONFIGURED "Este dispositivo no esta configurado correctamente."
     IDS_DEV_DEVLOADER_FAILED "ReactOS no podría cargar el controlador para este dispositivo porque la computadora está reportando dos %1 tipos de Bus."
-    IDS_DEV_DEVLOADER_FAILED2 "El cargador(es) de %1 no puede cargar el controlador del dispositivo."
+    IDS_DEV_DEVLOADER_FAILED2 "El cargador de %1 no puede cargar el controlador del dispositivo."
     IDS_DEV_OUT_OF_MEMORY "El controlador para este dispositivo puede estar dañado, o su sistema puede estar bajo en memoria u otros recursos."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo no está funcionando correctamente porque uno de sus controladores estan dañados, o su registro esta corrupto."
     IDS_DEV_LACKED_ARBITRATOR "El controlador para este dispositivo solicitó un recurso que ReactOS no sabe dirigir."
@@ -60,8 +60,8 @@ BEGIN
     IDS_DEV_REENUMERATION "Este dispositivo está causando un conflicto de recursos."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS no puede identificar todos los recursos que este dispositivo usa."
     IDS_DEV_UNKNOWN_RESOURCE "El archivo de información del controlador %1 está diciendo que este dispositivo hijo utiliza un recurso que el dispositivo padre no tiene o no reconoce."
-    IDS_DEV_REINSTALL  "Los controladors para este dispositivo necesitan ser reinstalados."
-    IDS_DEV_REGISTRY "Su registro puede estar corrupto."
+    IDS_DEV_REINSTALL  "Los controladorer para este dispositivo necesitan reinstalarse."
+    IDS_DEV_REGISTRY "Su Registro puede estar corrupto."
     IDS_DEV_WILL_BE_REMOVED "ReactOS esta removiendo este dispositivo."
     IDS_DEV_DISABLED "Este dispositivo no ha sido inicializado."
     IDS_DEV_DISABLED2 "Este dispositivo ha sido deshabilitado."
@@ -173,12 +173,12 @@ BEGIN
     EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Versión del controlador:", -1, 15, 67, 80, 8, SS_NOPREFIX
     EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Firmante Digital:", -1, 15, 81, 80, 8, SS_NOPREFIX
+    LTEXT "Firmante digital:", -1, 15, 81, 80, 8, SS_NOPREFIX
     EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON "&Detalles del controlador...", IDC_DRIVERDETAILS, 7, 106, 90, 15
     LTEXT "Ver detalles de los archivos del controlador.", -1, 100, 110, 150, 17, SS_NOPREFIX
-    PUSHBUTTON "&Update Driver...", IDC_UPDATEDRIVER, 7, 126, 90, 15
-    LTEXT "Update the device driver.", -1, 100, 130, 150, 17, SS_NOPREFIX
+    PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 126, 90, 15
+    LTEXT "Actualizar el controlador del dispositivo.", -1, 100, 130, 150, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
@@ -198,7 +198,7 @@ BEGIN
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Copyright:", -1, 10, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Firmante Digital:", -1, 10, 182, 60, 8
+    LTEXT "Firmante digital:", -1, 10, 182, 60, 8
     EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "Aceptar", IDOK, 167, 208, 50, 14
 END
@@ -218,12 +218,12 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Recursos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    LTEXT "Ajustes de recurso:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80

@@ -3,8 +3,9 @@
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/shell/explorer-new/lang/es-ES.rc
  * PURPOSE:    Spanish Language File for ReactOS Explorer
- * TRANSLATOR: 2007 Marc Piulachs (marc [dot] piulachs [at] codexchange [dot] net)
- * UPDATED:    July 2009 Gabriel Ilardi gabrielilardi [at] hotmail [dot] it
+ * TRANSLATOR: 2007       Marc Piulachs              (marc [dot] piulachs [at] codexchange [dot] net)
+ * UPDATED:    2009-07    Gabriel Ilardi             (gabrielilardi [at] hotmail [dot] it)
+ * UPDATED:    2014-12-31 Ismael Ferreras Morezuelas (swyterzone [plus] ros [at] gmail [dot] com)
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -14,14 +15,14 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "&Ajustar hora y fecha", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Personalizar notificaciones...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "Ventanas en ca&scada", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Ventanas en mosaico &horizontal", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Ventanas en mosaico &vertical", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Mostrar escritorio", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Deshacer", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "Administrador de tareas", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
@@ -37,19 +38,19 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&Programas", IDM_PROGRAMS
         BEGIN
-            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Vacío)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "F&avoritos", IDM_FAVORITES
         BEGIN
-            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Vacío)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Documentos", IDM_DOCUMENTS
         BEGIN
-            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+            MENUITEM "(Vacío)", -1, MFT_STRING, MFS_GRAYED
         END
         POPUP "&Configuración", IDM_SETTINGS
         BEGIN
-            MENUITEM "&Panel de Control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "&Panel de control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Seguridad...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "&Conexiones de red", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
@@ -64,7 +65,7 @@ BEGIN
         MENUITEM "&Ejecutar...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&incronizar", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Cerrar sessión de %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Cerrar sesión de %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "D&esconectar...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "De&sacoplar equipo", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "A&pagar equipo...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
@@ -76,12 +77,12 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Barra de tareas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Apariencia de la Barra de tareas ", IDC_STATIC, 6,6,240,104
+    GROUPBOX "Apariencia de la barra de tareas ", IDC_STATIC, 6,6,240,104
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
     AUTOCHECKBOX "&Bloquear la barra de tareas", IDC_TASKBARPROP_LOCK, 13,45,200,10
     AUTOCHECKBOX "Ocultar automáticam&ente la barra de tareas", IDC_TASKBARPROP_HIDE, 13,58,200,10
     AUTOCHECKBOX "Mantener la barra de tareas &siempre visible", IDC_TASKBARPROP_ONTOP, 13,71,200,10
-    AUTOCHECKBOX "&Agrupar botones similares  de la barra de tareas", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX "&Agrupar botones similares de la barra de tareas", IDC_TASKBARPROP_GROUP, 13,84,200,10
     AUTOCHECKBOX "Mostrar Inicio rápi&do", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
 END
 
@@ -94,7 +95,7 @@ BEGIN
     LTEXT "Este estilo de menú proporciona un rápido acceso a las carpetas, programas favoritos, y búsquedas.", IDC_STATIC, 20,17,150,24, WS_DISABLED
     PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
     AUTORADIOBUTTON "Menú Inicio &clásico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT "Este estilo de menú le proporciona el aspecto y funcionalidad clásicas",-1,20,57,150,24, WS_DISABLED
+    LTEXT "Este estilo de menú le proporciona el aspecto y funcionalidad clásicas.",-1,20,57,150,24, WS_DISABLED
     PUSHBUTTON "P&ersonalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
     GROUPBOX "Privacidad ",IDC_STATIC, 7,100,238,42
     AUTOCHECKBOX "Guardar y mostrar una lista de los &archivos abiertos recientemente", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
@@ -107,16 +108,16 @@ CAPTION "Area de notificación"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21, WS_DISABLED
-    GROUPBOX "Icono s", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
-    LTEXT "Puede mantener libre el área de notifación ocultando iconos que no ha usado recientemente.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
-    AUTOCHECKBOX "Ocular &iconos inactivos", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
-    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
-    GROUPBOX "Iconos de sistema ", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
-    LTEXT "Seleccione los iconos de sistema que va a mostrar de forma permanente.", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
+    GROUPBOX "Iconos", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
+    LTEXT "Puede mantener libre el área de notifación ocultando iconos que no se han usadon recientemente.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
+    AUTOCHECKBOX "Ocultar &iconos inactivos", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
+    PUSHBUTTON "&Personalizar...", IDC_TASKBARPROP_ICONCUST, 184, 70, 55, 14, WS_DISABLED
+    GROUPBOX "Iconos del sistema", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
+    LTEXT "Seleccione los iconos del sistema a mostrar de forma permanente.", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
     AUTOCHECKBOX "Re&loj", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
     AUTOCHECKBOX "&Volumen", IDC_TASKBARPROP_VOLUME, 13, 139, 200, 10, WS_DISABLED
     AUTOCHECKBOX "&Red", IDC_TASKBARPROP_NETWORK, 13, 152, 200, 10, WS_DISABLED
-    AUTOCHECKBOX "&Alimentación", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "&Energía", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
@@ -130,12 +131,12 @@ END
 
 IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced"
+CAPTION "Avanzado"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Advanced options", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
-    AUTOCHECKBOX "M&ostrar vista previa de las ventanas (miniaturas)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
+    GROUPBOX "Opciones avanzadas", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "Mostrar s&egundos", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "M&ostrar una vista previa de las ventanas (en miniatura)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 
 STRINGTABLE
@@ -144,7 +145,7 @@ BEGIN
     IDS_PROPERTIES "P&ropiedades"
     IDS_OPEN_ALL_USERS "A&brir todos los usuarios"
     IDS_EXPLORE_ALL_USERS "E&xplorar todos los usuarios"
-    IDS_STARTUP_ERROR "The system cannot start explorer because the registry is corrupted or unavailable."
+    IDS_STARTUP_ERROR "El sistema no ha podido iniciar el explorador porque el Registro se ha corrompido o no está disponible."
 END
 
 STRINGTABLE

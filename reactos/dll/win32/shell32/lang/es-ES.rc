@@ -1,3 +1,4 @@
+/* Spanish translation by ??? and Swyter */
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 MENU_001 MENU
@@ -44,18 +45,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Deshacer\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "Cor&tar\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copiar\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Pegar\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Pegar &acceso directo", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Copiar a &carpeta...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ver a carpeta...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Seleccionar &todo\tCtrl+E", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invertir selección", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -131,9 +132,9 @@ BEGIN
     LTEXT ")", IDC_STATIC, 153, 65, 5, 10
     LTEXT "Copyright 1998-", IDC_STATIC, 35, 75, 53, 10
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
-    LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
+    LTEXT " El equipo de ReactOS\0", IDC_STATIC, 105, 75, 100, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Esta versión de ReactOS está registrada a:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Esta versión de ReactOS está registrada a nombre de:", IDC_STATIC, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -147,7 +148,7 @@ IDD_ABOUT_AUTHORS DIALOGEX 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS está disponible gracias a:", IDC_STATIC, 0, 0, 180, 10
+    LTEXT "ReactOS está disponible gracias al trabajo de:", IDC_STATIC, 0, 0, 180, 10
     LISTBOX IDC_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -157,7 +158,7 @@ CAPTION "Ejecutar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 24
+    LTEXT "Escriba el nombre de un programa, carpeta, documento o recurso de Internet y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 24
     LTEXT "&Abrir:", 12305, 7, 39, 24, 10
     CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "Aceptar", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -188,7 +189,7 @@ BEGIN
     COMBOBOX 14017, 79, 134, 150, 14, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
     LTEXT "C&omentario:", 14018, 8, 154, 68, 10
     EDITTEXT 14019, 79, 152, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Buscar destino...", 14020, 9, 172, 62, 14, ES_LEFT
+    PUSHBUTTON "&Abrir ubicación...", 14020, 9, 172, 62, 14, ES_LEFT
     PUSHBUTTON "Cambiar &icono...", 14021, 76, 172, 62, 14, ES_LEFT
     PUSHBUTTON "Propiedades avan&zadas...", 14022, 144, 172, 85, 14, ES_LEFT
 END
@@ -220,7 +221,7 @@ BEGIN
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamaño:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "Tamaño en disco:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contiene:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -232,7 +233,7 @@ BEGIN
     AUTOCHECKBOX "&Sólo lectura", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "&Oculto", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "&Archivo", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "A&vanzado...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -247,14 +248,14 @@ BEGIN
     CONTROL "Archivo", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "Se abre con:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Cambiar...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Ubicación:", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamaño:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "Tamaño en disco:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Creado:", 14014, 8, 131, 45, 10
@@ -268,7 +269,7 @@ BEGIN
     AUTOCHECKBOX "&Sólo lectura", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "&Oculto", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "&Archivo", 14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "A&vanzado...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -282,7 +283,7 @@ BEGIN
     EDITTEXT 14003, 77, 27, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     LTEXT "Copyright: ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
-    GROUPBOX "Más información de la versión: ", 14006, 6, 70, 222, 115
+    GROUPBOX "Información adicional sobre la versión: ", 14006, 6, 70, 222, 115
     LTEXT "Nombre del elemento:", 14007, 13, 82, 65, 10
     LTEXT "Valor: ", 14008, 112, 82, 45, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
@@ -352,7 +353,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "¿Qué cuenta de usuario desea usar para ejecutar este programa?", -1, 10, 20, 220, 20
     CHECKBOX "Usuario actual %s", 14000, 10, 45, 150, 10
-    LTEXT "Protejer mi equipo y mis datos contra la actividad de programas sin autorización", -1, 25, 57, 200, 10, WS_DISABLED
+    LTEXT "Proteger mi equipo y mis datos contra la actividad de programas sin autorización", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Esta opción puede impedir que virus informáticos dañen su equipo o sus datos personales, pero si la selecciona es posible que el programa no funcione correctamente.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "El siguiente usuario:", 14002, 10, 100, 90, 10
     LTEXT "Usuario:", -1, 20, 118, 54, 10
@@ -367,16 +368,16 @@ END
 
 IDD_RECYCLE_BIN_PROPERTIES DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Propiedades de Papelera de reciclaje"
+CAPTION "Propiedades de la Papelera"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Configuración para la unidad seleccionada ", -1, 10, 72, 220, 70
-    RADIOBUTTON "Tamaño &Personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
+    RADIOBUTTON "Tamaño &personalizado:", 14001, 20, 90, 88, 10, WS_TABSTOP
     EDITTEXT 14002, 120, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "&Tamaño máximo(MB):", -1, 20, 105, 70, 10
-    RADIOBUTTON "&No mover archivos a la Papelera de reciclaje. Quitar los archivos inmediatamente al eliminarlos.", 14003, 20, 117, 185, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "&Mostrar cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
+    RADIOBUTTON "&No mover archivos a la Papelera. Eliminar todos los archivos de forma permanente.", 14003, 20, 117, 185, 20, BS_MULTILINE | WS_TABSTOP
+    AUTOCHECKBOX "&Mostrar un cuadro de diálogo para confirmar la eliminación", 14004, 20, 155, 200, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 284, 256
@@ -462,7 +463,7 @@ END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirmar el reemplazo de archivo"
+CAPTION "Confirmar reemplazo de archivo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Sí", IDYES, 20, 122, 60, 14
@@ -473,7 +474,7 @@ BEGIN
     LTEXT "Esta carpeta ya contiene un archivo con el nombre '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
     LTEXT "Esta carpeta ya contiene un archivo de sólo lectura con el nombre '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
     LTEXT "Esta carpeta ya contiene un archivo de sistema con el nombre '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-    LTEXT "Desea reemplazar el archivo existente", -1, 44, 35, 228, 10, SS_NOPREFIX
+    LTEXT "¿Desea reemplazar el archivo existente", -1, 44, 35, 228, 10, SS_NOPREFIX
     LTEXT "(tamaño y fecha desconocidos)", 12302, 79, 51, 198, 20, SS_NOPREFIX
     ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
     LTEXT "por este otro?", -1, 44, 75, 228, 10, SS_NOPREFIX
@@ -483,7 +484,7 @@ END
 
 IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Cerrar sesión ReactOS"
+CAPTION "Cerrar sesión de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
@@ -566,7 +567,7 @@ CAPTION "Apagar ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-    LTEXT "¿Que quieres que haga el equipo?", -1, 39, 7, 167, 10
+    LTEXT "¿Que desea que haga el equipo?", -1, 39, 7, 167, 10
     COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Mantener su sesión, manteniendo el equipo en bajo consumo con los datos aún en memoria. El equipo se restaura cuando presione una tecla o mueva el ratón.", 8225, 39, 40, 167, 37
     DEFPUSHBUTTON "Aceptar", 1, 7, 82, 60, 14, WS_GROUP
@@ -597,7 +598,7 @@ END
 
 IDD_CHECK_DISK DIALOGEX 50, 50, 240, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Comprobar disco"
+CAPTION "Comprobación de disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Iniciar", IDOK, 53, 100, 60, 14
@@ -611,7 +612,7 @@ END
 
 IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Cambiar Icono"
+CAPTION "Cambiar icono"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Archivo:", -1, 7, 14, 208, 10
@@ -625,15 +626,15 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Advertencia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DOCUMENT, IDI_SHELL_DOCUMENT, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    LTEXT "Ester archivo podría pertenecer al sistema operativo o\n\
+alguna otra aplicación. Modificar este archivo podría dañar el\n\
+sistema o comprometer su correcto funcionamiento.\n\n\
+¿Seguro que quiere abrir este archivo?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Sí", IDYES, 125, 55, 50, 14
     PUSHBUTTON "No", IDNO, 180, 55, 50, 14
 END
 
@@ -666,10 +667,10 @@ BEGIN
 
     /* special folders */
     IDS_DESKTOP "Escritorio"
-    IDS_MYCOMPUTER "Mi PC"
-    IDS_RECYCLEBIN_FOLDER_NAME "Papelera de reciclaje"
+    IDS_MYCOMPUTER "Mi equipo"
+    IDS_RECYCLEBIN_FOLDER_NAME "Papelera"
     IDS_CONTROLPANEL "Panel de control"
-    IDS_ADMINISTRATIVETOOLS "Herramientas Administrativas"
+    IDS_ADMINISTRATIVETOOLS "Herramientas administrativas"
 
     /* context menus */
     IDS_VIEW_LARGE "Iconos &grandes"
@@ -695,10 +696,10 @@ BEGIN
     IDS_DELETEITEM_TEXT "¿Seguro que desea eliminar '%1'?"
     IDS_DELETEMULTIPLE_TEXT "¿Seguro que desea eliminar estos %1 elementos?"
     IDS_DELETESELECTED_TEXT "¿Confirma que desea borrar el elemento(s) seleccionado(s)?"
-    IDS_TRASHITEM_TEXT "¿Confirma que desea enviar '%1' a la Papelera de reciclaje?"
-    IDS_TRASHFOLDER_TEXT "¿Confirma que desea enviar '%1' y todo su contenido a la Papelera de reciclaje?"
-    IDS_TRASHMULTIPLE_TEXT "¿Confirma que desea enviar %1 elementos a la Papelera de reciclaje?"
-    IDS_CANTTRASH_TEXT "El elemento '%1' no puede ser enviado a la Papelera de reciclaje. ¿En vez de ello ¿Desea borrarlo?"
+    IDS_TRASHITEM_TEXT "¿Confirma que desea enviar '%1' a la Papelera?"
+    IDS_TRASHFOLDER_TEXT "¿Confirma que desea enviar '%1' y todo su contenido a la Papelera?"
+    IDS_TRASHMULTIPLE_TEXT "¿Confirma que desea enviar %1 elementos a la Papelera?"
+    IDS_CANTTRASH_TEXT "El elemento '%1' no se puede enviar a la Papelera. ¿Desea borrarlo definitivamente?"
     IDS_OVERWRITEFILE_TEXT "Esta carpeta ya contiene un archivo con el nombre '%1'.\n\n¿Desea reemplazar el archivo existente?"
     IDS_OVERWRITEFILE_CAPTION "Confirmar el reemplazo de archivo"
     IDS_OVERWRITEFOLDER_TEXT "Esta carpeta ya contiene una carpeta con el nombre '%1'.\n\nSi los archivos de la carpeta existente tienen el mismo nombre que los\narchivos de la carpeta que está moviendo o copiando, serán\nreemplazados. ¿Desea mover o copiar la carpeta de todas formas?"
@@ -712,8 +713,8 @@ BEGIN
     IDS_LOGOFF_PROMPT "¿Desea cerrar la sesión?"
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Imposible mostrar el diálogo Ejecutar (error interno)"
-    IDS_RUNDLG_BROWSE_ERROR "Imposible mostrar el diálogo Examinar (error interno)"
+    IDS_RUNDLG_ERROR "No se pudo mostrar el diálogo Ejecutar (error interno)"
+    IDS_RUNDLG_BROWSE_ERROR "No se pudo mostrar el diálogo Examinar (error interno)"
     IDS_RUNDLG_BROWSE_CAPTION "Examinar"
     IDS_RUNDLG_BROWSE_FILTER "Archivos ejecutables (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
 
@@ -740,7 +741,7 @@ BEGIN
     IDS_MYPICTURES "Mis imágenes"
     IDS_PROGRAM_FILES_COMMON "Archivos de programa\\Archivos comunes"
     IDS_COMMON_DOCUMENTS "Documentos"
-    IDS_ADMINTOOLS "Menú Inicio\\Programas\\Herramientas Administrativas"
+    IDS_ADMINTOOLS "Menú Inicio\\Programas\\Herramientas administrativas"
     IDS_COMMON_MUSIC "Documentos\\Mi música"
     IDS_COMMON_PICTURES "Documentos\\Mis imágenes"
     IDS_COMMON_VIDEO "Documentos\\Mis vídeos"
@@ -749,56 +750,56 @@ BEGIN
 
     IDS_NEWFOLDER "Nueva carpeta"
 
-    IDS_DRIVE_FIXED "Disco Local"
+    IDS_DRIVE_FIXED "Disco local"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Unidad de red"
 
     /* Open With */
     IDS_OPEN_WITH "Abrir con"
     IDS_OPEN_WITH_CHOOSE "Elegir programa..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED "Programas recomendados:"
+    IDS_OPEN_WITH_OTHER "Otros programas:"
 
     IDS_SHELL_ABOUT_AUTHORS "&Autores"
     IDS_SHELL_ABOUT_BACK "< A&trás"
     FCIDM_SHVIEW_NEW "Nuevo"
     FCIDM_SHVIEW_NEWFOLDER "Nueva &carpeta"
     FCIDM_SHVIEW_NEWLINK "Nuevo &acceso directo"
-    IDS_FOLDER_OPTIONS "Opciones de carpetas"
-    IDS_RECYCLEBIN_LOCATION "Ubicación de la Papelera de reciclaje"
+    IDS_FOLDER_OPTIONS "Opciones de carpeta"
+    IDS_RECYCLEBIN_LOCATION "Ubicación de la Papelera"
     IDS_RECYCLEBIN_DISKSPACE "Espacio disponible"
-    IDS_EMPTY_BITBUCKET "Vaciar Papelera de reciclaje"
+    IDS_EMPTY_BITBUCKET "Vaciar Papelera"
     IDS_PICK_ICON_TITLE "Seleccione un icono"
-    IDS_PICK_ICON_FILTER "Archivos de iconos (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0All Files (*.*)\0*.*\0"
-    IDS_OPEN_WITH_FILTER "Programas (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_PICK_ICON_FILTER "Archivos de icono (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0Todos los archivos (*.*)\0*.*\0"
+    IDS_OPEN_WITH_FILTER "Programas (*.exe)\0*.exe\0Todos los archivos (*.*)\0*.*\0"
     IDS_DIRECTORY "Directorio"
     IDS_VIRTUAL_DRIVER "Controlador de dispositivo virtual"
-    IDS_BAT_FILE "Archivo por lotes ReactOS"
+    IDS_BAT_FILE "Archivo por lotes de ReactOS"
     IDS_CMD_FILE "Script de comandos ReactOS"
     IDS_COM_FILE "Aplicación DOS"
-    IDS_CPL_FILE "Elemento del Panel de Control"
+    IDS_CPL_FILE "Elemento del Panel de control"
     IDS_CUR_FILE "Cursor"
-    IDS_DLL_FILE "Extensión de la aplicación"
+    IDS_DLL_FILE "Biblioteca de aplicación"
     IDS_DRV_FILE "Controlador de dispositivo"
     IDS_EXE_FILE "Aplicación"
     IDS_FON_FILE "Archivo de fuente"
     IDS_TTF_FILE "Archivo de fuente TrueType"
     IDS_HLP_FILE "Archivo de ayuda"
-    IDS_INI_FILE "Opciones de configuración"
+    IDS_INI_FILE "Archivo de configuración"
     IDS_LNK_FILE "Acceso directo"
     IDS_SYS_FILE "Archivo del sistema"
 
     IDS_OPEN_VERB "Abrir"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_EXPLORE_VERB "Explorar"
     IDS_RUNAS_VERB "Ejecutar como ..."
     IDS_EDIT_VERB "Editar"
     IDS_FIND_VERB "Buscar"
     IDS_PRINT_VERB "Imprimir"
 
-    IDS_FILE_FOLDER "%u Archivos, %u Carpetas"
+    IDS_FILE_FOLDER "%u archivos, %u carpetas"
     IDS_PRINTERS "Impresoras"
     IDS_FONTS "Fuentes"
-    IDS_INSTALLNEWFONT "Instalar Nueva Fuente..."
+    IDS_INSTALLNEWFONT "Instalar fuente..."
 
     IDS_DEFAULT_CLUSTER_SIZE "Tamaño asignado por defecto"
     IDS_COPY_OF "Copia de"
@@ -807,11 +808,11 @@ BEGIN
 
     IDS_FILE_DETAILS "Detalles para el tipo de archivo '%s'"
     IDS_FILE_DETAILSADV "Los archivos con extensión '%s' son del tipo '%s'. Para cambiar la configuración de los archivos '%s', haga clic en Opciones avanzadas."
-    IDS_FILE_TYPES "Tipos de archivos"
+    IDS_FILE_TYPES "Tipos de archivo"
     IDS_COLUMN_EXTENSION "Extensiones"
     IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_UNKNOWN_APP "Aplicación desconocida"
+    IDS_EXE_DESCRIPTION "Descripción:"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(Vacío)"
 END

@@ -49,10 +49,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Pantalla"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Contraste alto ", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
+    GROUPBOX "Alto contraste ", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
     LTEXT "Use esta opción si desea que ReactOS use colores y letras diseñadas para una lectura más cómoda.",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(3)
-    AUTOCHECKBOX "&Utilizar Contraste alto", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
+    AUTOCHECKBOX "&Utilizar alto contraste", IDC_CONTRAST_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(20), 14
     PUSHBUTTON "C&onfiguración", IDC_CONTRAST_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17), LABELLINE(5) + 2, PROPSHEETPADDING(15), 14
     GROUPBOX "Opciones del cursor ", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(13)
     LTEXT "Mueva los controles deslizantes para cambiar la velocidad de las intermitencias del cursor y la anchura del cursor.",
@@ -242,7 +242,7 @@ CAPTION "Configuración avanzada para RepeatKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Repeat Keys", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(12)
-    LTEXT "Hacer prevalecer esta configuración de teclado sobre la del Panel de Control:",
+    LTEXT "Hacer prevalecer esta configuración de teclado sobre la del Panel de control:",
           -1, PROPSHEETPADDING(2), LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(2)
     AUTORADIOBUTTON "&Sin repetición en el teclado", IDC_REPEAT_NOREPEAT_RADIO, PROPSHEETPADDING(2), LABELLINE(3) + 6, 127, LABELLINE(1), WS_GROUP
     AUTORADIOBUTTON "&Disminuir la velocidad de repetición del teclado", IDC_REPEAT_REPEAT_RADIO, PROPSHEETPADDING(2), LABELLINE(4) + 9, 180, LABELLINE(1)

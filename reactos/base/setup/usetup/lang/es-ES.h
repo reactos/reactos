@@ -24,25 +24,25 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Por favor, seleccione el idioma a utilizar durante la instalaci¢n.",
+        "\x07  Seleccione el idioma a utilizar durante la instalaci¢n.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Luego presione ENTER.",
+        "   Luego presione INTRO.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  El idioma seleccionado ser  tambi‚n el idioma por defecto del sistema.",
+        "\x07  El idioma seleccionado tambi‚n ser  el idioma del sistema.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continuar F3 = Salir",
+        "   INTRO = Continuar F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -70,7 +70,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         6,
         11,
-        "Esta parte de la instalaci¢n copia ReactOS en su equipo y",
+        "Esta parte de la instalaci¢n copiar  ReactOS en su equipo y",
         TEXT_STYLE_NORMAL
     },
     {
@@ -82,7 +82,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  Presione ENTER para instalar ReactOS.",
+        "\x07  Presione INTRO para instalar ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -106,7 +106,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         6,
         23,
-        "Para m s informaci¢n sobre ReactOS, visite por favor:",
+        "Para m s informaci¢n sobre ReactOS, visite la Web:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -118,7 +118,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar  R = Reparar  L = Licencia  F3 = Salir",
+        "   INTRO = Continuar  R = Reparar  L = Licencia  F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -206,7 +206,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         8,
         25,
-        "\x07  Presione ENTER para instalar ReactOS.",
+        "\x07  Presione INTRO para instalar ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -218,7 +218,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   F3 = Salir",
+        "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -306,7 +306,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         8,
         19,
-        "GNU General Public License con ReactOS por favor visite",
+        "GNU General Public License con ReactOS visite:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -342,7 +342,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
     {
         0,
         0,
-        "ENTER = Regresar",
+        "INTRO = Regresar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -382,13 +382,13 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         24,
         13,
-        "Teclado:",
+        "Tipo de teclado:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         24,
         14,
-        "Disp. Teclado:",
+        "Distrib. del teclado:",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
@@ -411,7 +411,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         6,
         20,
-        "para elegir. Luego presione ENTER para cambiar a una configuraci¢n",
+        "para elegir. Luego presione INTRO para cambiar a una configuraci¢n",
         TEXT_STYLE_NORMAL
     },
     {
@@ -429,13 +429,13 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         6,
         24,
-        "de los dispostivos\" y presione ENTER.",
+        "de los dispostivos\" y presione INTRO.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continuar   F3 = Salir",
+        "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -475,7 +475,7 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         8,
         15,
-        "\x07  Presione U para actualizar el SO.",
+        "\x07  Presione U para actualizar el sistema operativo.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -493,13 +493,13 @@ static MUI_ENTRY esESRepairPageEntries[] =
     {
         8,
         21,
-        "\x07  Presione ENTER para reiniciar su equipo.",
+        "\x07  Presione INTRO para reiniciar su equipo.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Men£ inicial  U = Actualizar  R = Recuperar  ENTER = Reiniciar",
+        "ESC = Men£ inicial  U = Actualizar  R = Recuperar  INTRO = Reiniciar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -532,7 +532,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         8,
         11,
-        "Luego presione ENTER.",
+        "Luego presione INTRO.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -550,7 +550,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
+        "   INTRO = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -618,25 +618,25 @@ static MUI_ENTRY esESQuitPageEntries[] =
     {
         10,
         8,
-        "Retire el disco de la unidad A: y",
+        "Retire el disquete de la unidad A: y todos los CD-ROMs de las unidades.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "todos los CD-ROMs de la unidades.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Presione ENTER para reiniciar su equipo.",
+        "Presione INTRO para reiniciar su equipo.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Por favor, espere...",
+        "Espere un momento...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -669,7 +669,7 @@ static MUI_ENTRY esESDisplayPageEntries[] =
     {
         8,
         11,
-        "   Luego presione ENTER.",
+        "   Luego presione INTRO.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -687,7 +687,7 @@ static MUI_ENTRY esESDisplayPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
+        "   INTRO = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -715,25 +715,25 @@ static MUI_ENTRY esESSuccessPageEntries[] =
     {
         10,
         8,
-        "Retire el disco de la unidad A: y",
+        "Retire el disquete de la unidad A: y todos los",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "todos los CD-ROMs de las unidades.",
+        "CD-ROMs de sus respectivas unidades.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Presione ENTER para reiniciar su equipo.",
+        "Presione INTRO para reiniciar su equipo.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Reiniciar su equipo",
+        "   INTRO = Reiniciar su equipo",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -767,19 +767,19 @@ static MUI_ENTRY esESBootPageEntries[] =
     {
         6,
         13,
-        "Por favor inserte un disco formateado en la unidad A: y",
+        "Inserte un disquete formateado en la unidad A: y",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "presione ENTER.",
+        "presione INTRO.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER = Continuar   F3 = Salir",
+        "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -820,20 +820,20 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         8,
         13,
-        "\x07  Presione ENTER para instalar ReactOS en la partici¢n seleccionada.",
+        "\x07  Presione INTRO para instalar ReactOS en la partici¢n seleccionada.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press P to create a primary partition.",
+        "\x07  Presione P para crear una partici¢n primaria.",
 //        "\x07  Presione C para crear una nueva partici¢n.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press E to create an extended partition.",
+        "\x07  Presione E para crear una partici¢n extendida.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -845,7 +845,7 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         0,
         0,
-        "Por favor, espere...",
+        "Espere un momento...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -873,13 +873,13 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     {
         6,
         10,
-        "El instalador formatear  la partici¢n. Presione ENTER para continuar.",
+        "El instalador formatear  la partici¢n. Presione INTRO para continuar.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continuar   F3 = Salir",
+        "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS
     },
     {
@@ -931,7 +931,7 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   F3 = Salir",
+        "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -953,7 +953,7 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         0,
         12,
-        "Por favor espere mientras el Instalador de ReactOS copia",
+        "Espere un momento mientras el Instalador de ReactOS copia",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -971,7 +971,7 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 Por favor, espere...",     
+        "\xB3 Espere un momento...",     
         TEXT_TYPE_STATUS
     },
     {
@@ -993,7 +993,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         6,
         8,
-        "El programa est  instalando el cargador de arranque",
+        "A continuaci¢n el programa instalar  el cargador de arranque",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1023,7 +1023,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   F3 = Salir",
+        "   INTRO = Continuar   F3 = Salir",
         TEXT_TYPE_STATUS  | TEXT_PADDING_BIG
     },
     {
@@ -1057,7 +1057,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         8,
         11,
-        "   Luego presione ENTER.",
+        "   Luego presione INTRO.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1075,7 +1075,7 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
+        "   INTRO = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1097,19 +1097,19 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Seleccione la distribuci¢n de teclado a instalar de forma predeterminada.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Presione ARRIBA o ABAJO para seleccionar la disposici¢n del teclado",
+        "\x07  Presione ARRIBA o ABAJO para seleccionar la distribuci¢n de teclado",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    deseada. Luego presione ENTER.",
+        "    deseada. Luego presione INTRO.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1121,13 +1121,13 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         8,
         14,
-        "   la disposici¢n del teclado.",
+        "   la distribuci¢n de teclado.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
+        "   INTRO = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1191,7 +1191,7 @@ static MUI_ENTRY esESSelectFSEntries[] =
     {
         8,
         21,
-        "\x07  Presione ENTER para formatear partici¢n.",
+        "\x07  Presione INTRO para formatear partici¢n.",
         0
     },
     {
@@ -1203,7 +1203,7 @@ static MUI_ENTRY esESSelectFSEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
+        "   INTRO = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1250,7 +1250,7 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Borrar Partici¢n   ESC = Cancelar   F3 = Salir",
+        "   D = Borrar partici¢n   ESC = Cancelar   F3 = Salir",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1302,64 +1302,64 @@ MUI_ERROR esESErrorEntries[] =
         "equipo. Si cierra ahora el Instalador, necesitar \n"
         "ejecutarlo otra vez para instalar ReactOS.\n"
         "\n"
-        "  \x07  Presione ENTER para continuar con el instalador.\n"
+        "  \x07  Presione INTRO para continuar con el instalador.\n"
         "  \x07  Presione F3 para abandonar el instalador.",
-        "F3 = Salir  ENTER = Continuar"
+        "F3 = Salir  INTRO = Continuar"
     },
     {
         //ERROR_NO_HDD
         "El instalador no pudo encontrar un disco duro.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
         "El instalador no pudo encontrar su unidad fuente.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
         "El instalador fall¢ al cargar el archivo TXTSETUP.SIF.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
         "El instalador encontr¢ un archivo TXTSETUP.SIF corrupto.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
         "El instalador encontr¢ una firma incorrecta en TXTSETUP.SIF.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_DRIVE_INFORMATION
         "El instalador no pudo recibir informaci¢n del disco del sistema.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_WRITE_BOOT,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_COMPUTER,
         "El instalador fall¢ al cargar la lista de tipos de equipos.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_DISPLAY,
         "El instalador fall¢ al cargar la lista de resoluciones de pantalla.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_KEYBOARD,
         "El instalador fall¢ al cargar la lista de teclados.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "El instalador fall¢ al cargar la lista de disposiciones teclados.\n",
-        "ENTER = Reiniciar el equipo"
+        "El instalador fall¢ al cargar la lista de distribuciones de teclado.\n",
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_WARN_PARTITION,
@@ -1369,8 +1369,8 @@ MUI_ERROR esESErrorEntries[] =
         "Crear o borrar particiones puede destruir la tabla de particiones.\n"
         "\n"
         "  \x07  Presione F3 para salir del instalador.\n"
-        "  \x07  Presione ENTER para continuar.",
-        "F3= Salir  ENTER = Continuar"
+        "  \x07  Presione INTRO para continuar.",
+        "F3= Salir  INTRO = Continuar"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1382,7 +1382,7 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_DELETE_SPACE,
-        "­No puede borrar un espacio de disco sin particionar!\n"
+        "­No se puede borrar un espacio de disco sin particionar!\n"
         "\n"
         "  * Presione cualquier tecla para continuar.",
         NULL
@@ -1390,115 +1390,115 @@ MUI_ERROR esESErrorEntries[] =
     {
         //ERROR_INSTALL_BOOTCODE,
         "El instalador fall¢ al instalar el c¢digo de inicio FAT en la partici¢n del sistema.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_NO_FLOPPY,
         "No hay disco en la unidad A:.",
-        "ENTER = Continuar"
+        "INTRO = Continuar"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "El instalador fall¢ al actualizar la configuraci¢n de disposici¢n del teclado.",
-        "ENTER = Reiniciar el equipo"
+        "El instalador fall¢ al actualizar la configuraci¢n de distribuci¢n de teclado.",
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "El instalador fall¢ al actualizar la configuraci¢n de la pantalla.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_IMPORT_HIVE,
         "El instalador fall¢ al importar un archivo de la estructura.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_FIND_REGISTRY
         "El instalador fall¢ al buscar los archivos de datos registrados.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_HIVE,
         "El instalador fall¢ al crear el registro de la estructura.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
         "El instalador fall¢ al configurar el registro de inicio.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_INVALID_CABINET_INF,
         "Cabinet no tiene un archivo inf v lido.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_MISSING,
         "Cabinet no encontrado.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_SCRIPT,
         "Cabinet no tiene ning£n script de instalaci¢n.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_COPY_QUEUE,
         "El instalador fall¢ al abrir la lista de archivos a copiar.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_DIR,
         "El instalador no puede crear los directorios de instalaci¢n.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_TXTSETUP_SECTION,
         "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
         "en TXTSETUP.SIF.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CABINET_SECTION,
         "El instalador fall¢ al buscar la secci¢n 'Directorios'\n"
         "en el cabinet.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
         "El instalador no puede crear el directorio de instalaci¢n.",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_FIND_SETUPDATA,
         "El instalador fall¢ al buscar la secci¢n 'SetupData'\n"
         "en TXTSETUP.SIF.\n",
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_WRITE_PTABLE,
         "El instalador fall¢ al escribir la tabla de particiones.\n"
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_ADDING_CODEPAGE,
         "El instalador fall¢ al a¤adir el c¢digo de p ginas al registro.\n"
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
         "El instalador no pudo configurar el idioma del sistema.\n"
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
         "El instalador no ha podido agregar los layouts de teclado al registro.\n"
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_GEOID,
         "El instalador no ha podido configurar el ID geogr fico.\n"
-        "ENTER = Reiniciar el equipo"
+        "INTRO = Reiniciar el equipo"
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
@@ -1510,16 +1510,16 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "You can not create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "No es posible a¤adir una partici¢n primaria o extendida en la\n"
+        "tabla de partici¢n de este disco, ya que est  completamente llena.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Presione una tecla para continuar."
     },
     {
         //ERROR_ONLY_ONE_EXTENDED,
-        "You can not create more than one extended partition per disk.\n"
+        "No es posible crear m s de una partici¢n extendida por disco.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Presione una tecla para continuar."
     },
     {
         NULL,
@@ -1630,43 +1630,41 @@ MUI_PAGE esESPages[] =
 MUI_STRING esESStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Por favor, espere..."},
+     "   Espere un momento..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//     "   ENTER = Instalar   C = Crear Partici¢n   F3 = Salir"},
+     "   INTRO = Instalar  P = Crear primaria   E = Crear extendida   F3 = Salir"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+     "   INTRO = Instalar  C = Crear partici¢n l¢gica   F3 = Salir"},
     {STRING_DELETEPARTITION,
-     "   D = Borrar Partici¢n   F3 = Salir"},
+     "   D = Borrar partici¢n   F3 = Salir"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Instalar   D = Borrar Partici¢n   F3 = Salir"},
+     "   INTRO = Instalar   D = Borrar partici¢n   F3 = Salir"},
     {STRING_PARTITIONSIZE,
      "Tama¤o de la nueva partici¢n:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a primary partition on"},
-//     "Ha elegido crear una nueva partici¢n en"},
+     "Ha elegido crear una nueva partici¢n primaria en"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "You have chosen to create an extended partition on"},
+     "Ha elegido crear una nueva partici¢n extendida en"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
-     "You have chosen to create a logical partition on"},
+     "Ha elegido crear una nueva partici¢n l¢gica en"},
     {STRING_HDDSIZE,
-    "Por favor, introduzca el tama¤o de la nueva partici¢n en megabytes."},
+    "Escriba el tama¤o de la nueva partici¢n en megabytes."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Crear Partici¢n   ESC = Cancelar   F3 = Salir"},
+     "   INTRO = Crear partici¢n   ESC = Cancelar   F3 = Salir"},
     {STRING_PARTFORMAT,
-    "Esta Partici¢n ser  formateada a continuaci¢n."},
+    "A continuaci¢n se formatear  esta partici¢n."},
     {STRING_NONFORMATTEDPART,
-    "Ha elegido instalar ReactOS en una nueva Partici¢n o en una Partici¢n sin formato."},
+    "Ha elegido instalar ReactOS en una nueva partici¢n o en una partici¢n sin formato."},
     {STRING_INSTALLONPART,
-    "El instalador instala ReactOS en la Partici¢n"},
+    "El instalador est  instalando ReactOS en la partici¢n"},
     {STRING_CHECKINGPART,
     "El instalador est  comprobando la partici¢n seleccionada."},
     {STRING_QUITCONTINUE,
-    "F3= Salir  ENTER = Continuar"},
+    "F3 = Salir  INTRO = Continuar"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reiniciar el equipo"},
+    "INTRO = Reiniciar el equipo"},
     {STRING_TXTSETUPFAILED,
-    "El instalador fall¢ al buscar la secci¢n\nin TXTSETUP.SIF.\n"},
+    "El instalador fall¢ al buscar la secci¢n\nen TXTSETUP.SIF.\n"},
     {STRING_COPYING,
      "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
@@ -1680,29 +1678,29 @@ MUI_STRING esESStrings[] =
     {STRING_LOCALESETTINGSUPDATE,
     "   Actualizando configuraci¢n regional..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Actualizando configuraci¢n de disposici¢n del teclado..."},
+    "   Actualizando configuraci¢n de distribuci¢n de teclado..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Añadiendo informaci¢n al registro..."},
+    "   A¤adiendo informaci¢n al registro..."},
     {STRING_DONE,
-    "   Realizado..."},
+    "   Terminado..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reiniciar el equipo"},
+    "   INTRO = Reiniciar el equipo"},
     {STRING_CONSOLEFAIL1,
-    "Incapaz de abrir la consola\r\n\r\n"},
+    "No se pudo abrir la consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
     "La causa m s com£n es la utilizaci¢n de un teclado USB\r\n"},
     {STRING_CONSOLEFAIL3,
-    "Los teclados USB aun no son soportados completamente\r\n"},
+    "Todav¡a no se soportan los teclados USB por completo\r\n"},
     {STRING_FORMATTINGDISK,
-    "El instalador est  formateando su disco"},
+    "El instalador est  formateando el disco"},
     {STRING_CHECKINGDISK,
-    "El instalador est  verificando su disco"},
+    "El instalador est  verificando el disco"},
     {STRING_FORMATDISK1,
     " Formatear la partici¢n con sistema de archivos %S (formato r pido) "},
     {STRING_FORMATDISK2,
     " Formatear la partici¢n con sistema de archivos %S "},
     {STRING_KEEPFORMAT,
-    " Mantener el sistema actual de archivos (sin cambios) "},
+    " Mantener el sistema de archivos actual (sin cambios) "},
     {STRING_HDINFOPARTCREATE,
     "%I64u %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu) en %wZ."},
     {STRING_HDDINFOUNK1,
@@ -1726,15 +1724,15 @@ MUI_STRING esESStrings[] =
     {STRING_HDDINFOUNK6,
     "%6lu %s  Disco duro %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "El instalador a creado una nueva partici¢n en"},
+    "El instalador ha creado una nueva partici¢n en"},
     {STRING_UNPSPACE,
     "    %sEspacio sin particionar%s            %6lu %s"},
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Partici¢n extendida"},
     {STRING_UNFORMATTED,
-    "Nuevo (sin formato)"},
+    "Nueva (sin formato)"},
     {STRING_FORMATUNUSED,
     "Libre"},
     {STRING_FORMATUNKNOWN,
@@ -1746,6 +1744,6 @@ MUI_STRING esESStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "A¤adiendo disposici¢n de teclado"},
+    "A¤adiendo distribuci¢n de teclado"},
     {0, 0}
 };

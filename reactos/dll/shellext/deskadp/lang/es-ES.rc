@@ -19,19 +19,19 @@ BEGIN
     LTEXT "", IDC_MEMORYSIZE, 90, 92, 150, 8, SS_NOPREFIX
     LTEXT "Nombre del adaptador:", -1, 13, 104, 80, 8
     LTEXT "", IDC_ADAPTERSTRING, 90, 104, 150, 8, SS_NOPREFIX
-    LTEXT "Información del BIOS:", -1, 13, 116, 80, 8
+    LTEXT "Información de la BIOS:", -1, 13, 116, 80, 8
     LTEXT "", IDC_BIOSINFORMATION, 90, 116, 150, 8, SS_NOPREFIX
     PUSHBUTTON "&Listar todos los modos...", IDC_LISTALLMODES, 7, 139, 85, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Lista de todos los modos"
+CAPTION "Listado de todos los modos"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON "Aceptar", IDOK, 112, 115, 50, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Lista de modos válidos ", -1, 6, 7, 212, 98
+    GROUPBOX "Listado de modos válidos ", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 

@@ -10,7 +10,7 @@ BEGIN
     CONTROL "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW, 70, 10, 105, 80, 0
     CONTROL "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
-    LTEXT "&Fondo", IDC_STATIC, 8, 103, 230, 9
+    LTEXT "&Fondo de escritorio", IDC_STATIC, 8, 103, 230, 9
     PUSHBUTTON "E&xaminar...", IDC_BROWSE_BUTTON, 188, 114, 55, 15
     PUSHBUTTON "C&olor...", IDC_COLOR_BUTTON, 188, 177, 55, 15
     LTEXT "Po&sición", IDC_STATIC, 188, 138, 55, 9
@@ -27,12 +27,12 @@ BEGIN
     COMBOBOX IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "C&onfiguración", IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON "&Vista previa", IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT "&Esperar", IDC_WAITTEXT, 14, 125, 20, 9
-    EDITTEXT IDC_SCREENS_TIMEDELAY, 36, 123, 32, 13, ES_RIGHT | WS_GROUP
+    LTEXT "&Esperar", IDC_WAITTEXT, 14, 125, 25, 9, SS_RIGHT
+    EDITTEXT IDC_SCREENS_TIMEDELAY, 40, 123, 30, 13, ES_RIGHT | WS_GROUP
     CONTROL "", IDC_SCREENS_TIME, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 56, 123, 12, 13
-    LTEXT "minutos", IDC_MINTEXT, 70, 125, 26, 9
-    CONTROL "Pr&oteger con contraseña al reanudar", IDC_SCREENS_USEPASSCHK, "button",
+    LTEXT "minutos", IDC_MINTEXT, 72, 125, 25, 9
+    CONTROL "Pr&oteger sesión con contraseña", IDC_SCREENS_USEPASSCHK, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 117, 19
     GROUPBOX "Energía del monitor ", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT "Para ajustar la configuración de energía del monitor y ahorrar energía, haga clic en Energía.", IDC_STATIC, 14, 166, 146, 27
@@ -45,17 +45,17 @@ CAPTION "Apariencia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass", WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT "Visual Style", IDC_STATIC, 7, 130, 104, 9
+    LTEXT "Estilo visual", IDC_STATIC, 7, 130, 104, 9
     COMBOBOX IDC_APPEARANCE_VISUAL_STYLE, 7, 140, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Com&binación de colores", IDC_STATIC, 7, 160, 104, 9
     COMBOBOX IDC_APPEARANCE_COLORSCHEME, 7, 170, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Size", IDC_STATIC, 7, 190, 104, 9
+    LTEXT "Tamaño", IDC_STATIC, 7, 190, 104, 9
     COMBOBOX IDC_APPEARANCE_SIZE, 7, 200, 134, 90, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Efectos...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON "Opciones &avanzadas", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON "&Avanzado", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX 0, 0, 250, 239
@@ -95,7 +95,7 @@ EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
 CAPTION "Efectos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "&Usar el efecto de transición siguiente para menús e información sobre herramientas",
+    CONTROL "&Animar transiciones de menús y sugerencias emergentes",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
     COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
@@ -109,7 +109,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
     CONTROL "&Mostrar el contenido de la ventana mientras se arrastra", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
-    CONTROL "&Ocultar las letrar subrayadas de acceso rápido hasta que presione la tecla Alt",
+    CONTROL "&Ocultar el subrayado de acceso rápido hasta presionar la tecla Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
     PUSHBUTTON "Cancelar", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 172, 165, 50, 14
@@ -130,7 +130,7 @@ BEGIN
     LTEXT "Menor", 1815, 9, 137, 25, 9, NOT WS_GROUP
     LTEXT "Mayor", 1816, 93, 137, 25, 9, NOT WS_GROUP
     LTEXT "", IDC_SETTINGS_RESOLUTION_TEXT, 10, 157, 100, 10, NOT WS_GROUP | SS_CENTER
-    GROUPBOX "&Calidad de color ", 1817, 125, 127, 115, 43
+    GROUPBOX "&Profundidad de color ", 1817, 125, 127, 115, 43
     COMBOBOX IDC_SETTINGS_BPP, 131, 137, 103, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_SETTINGS_SPECTRUM, "Static", SS_OWNERDRAW | SS_SUNKEN, 131, 155, 103, 9
     PUSHBUTTON "Opciones &avanzadas", IDC_SETTINGS_ADVANCED, 170, 174, 70, 14
@@ -163,7 +163,7 @@ IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Adjuntado", ID_MENU_ATTACHED
+        MENUITEM "&Anexo", ID_MENU_ATTACHED
         MENUITEM "&Primario", ID_MENU_PRIMARY
         MENUITEM SEPARATOR
         MENUITEM "&Identificar", ID_MENU_IDENTIFY
@@ -185,8 +185,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Múltiples Monitores)"
-    IDS_UNKNOWNMONITOR "(Monitor Desconocido)"
+    IDS_MULTIPLEMONITORS "(Múltiples monitores)"
+    IDS_UNKNOWNMONITOR "(Monitor desconocido)"
     IDS_ADVANCEDTITLEFMT "%s y %s"
 END
 
@@ -218,13 +218,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INACTWIN "Ventana Inactiva"
-    IDS_ACTWIN "Ventana Activa"
+    IDS_INACTWIN "Ventana inactiva"
+    IDS_ACTWIN "Ventana activa"
     IDS_WINTEXT "Texto de la ventana"
     IDS_MESSBOX "Cuadro de mensaje"
     IDS_MESSTEXT "Texto del mensaje"
     IDS_BUTTEXT "Aceptar"
-    IDS_CLASSIC_THEME "Classic Theme"
+    IDS_CLASSIC_THEME "Tema clásico"
 END
 
 STRINGTABLE

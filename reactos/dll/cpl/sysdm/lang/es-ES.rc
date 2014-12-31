@@ -8,7 +8,7 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Sistema Operativo:", IDC_STATIC, 4, 132, 80, 9
+    LTEXT "Sistema operativo:", IDC_STATIC, 4, 132, 80, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
     LTEXT "Versión ", IDC_STATIC, 10, 153, 25, 9
     LTEXT REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Visite <A HREF=""http://www.reactos.org/"">Página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL "Visite la <A HREF=""http://www.reactos.org/"">página Web de ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "Ver &licencia...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -32,14 +32,14 @@ BEGIN
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT "El Administrador de dispositivos muestra una lista de todos los dispositivos de hardware instalados en su equipo. Puede usarlo para cambiar las propiedades de cualquier dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Administrador de dispositivos...", IDC_HARDWARE_DEVICE_MANAGER, 138, 48, 106, 15
-    GROUPBOX "Asistente de Hardware ", IDC_STATIC, 6, 79, 244, 61
+    GROUPBOX "Asistente de instalación de hardware ", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "El asistente de hardware the ayuda instalar, desinstalar, reparar, desconectar, expulsar, y configurar tu hardware.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON "&Asistente de Hardware...", IDC_HARDWARE_WIZARD, 138, 120, 106, 15
-    GROUPBOX "Perfiles de Hardware ", IDC_STATIC, 6, 149, 244, 61
+    LTEXT "El asistente de instalación de hardware ayuda instalar, desinstalar, reparar, desconectar, expulsar, y configurar dispositivos.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON "&Asistente de hardware...", IDC_HARDWARE_WIZARD, 138, 120, 106, 15
+    GROUPBOX "Perfiles de hardware ", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT "Los perfiles de hardware le ofrecen una forma de definir y almacenar diferentes configuraciones de hardware.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON "Perfiles Hard&ware...", IDC_HARDWARE_PROFILE, 138, 190, 106, 15
+    PUSHBUTTON "Perfiles de hard&ware...", IDC_HARDWARE_PROFILE, 138, 190, 106, 15
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
@@ -47,7 +47,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Debe iniciar la sesión como un Administrador para hacer la mayoría de los cambios.", IDC_STATIC, 12, 5, 236, 17
+    LTEXT "Debe iniciar la sesión como Administrador para cambiar la mayoría de las opciones contenidas en esta pestaña.", IDC_STATIC, 12, 5, 236, 17
     GROUPBOX "Rendimiento ", IDC_STATIC, 6, 27, 244, 50
     LTEXT "Efectos visuales, programación del precesador, uso de memoria y memoria virtual.", IDC_STATIC, 16, 38, 210, 17
     PUSHBUTTON "Configuración", IDC_PERFOR, 194, 57, 50, 15
@@ -57,9 +57,9 @@ BEGIN
     GROUPBOX "Inicio y recuperación ", IDC_STATIC, 6, 140, 244, 52
     LTEXT "Inicio de sistema, error de sistema e información de depuración.", IDC_STATIC, 16, 153, 210, 19
     PUSHBUTTON "Configuración", IDC_STAREC, 194, 171, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 201, 80, 15
+    PUSHBUTTON "Ajustes del sistema", IDC_SYSSETTINGS, 6, 201, 80, 15
     PUSHBUTTON "Variables de entorno", IDC_ENVVAR, 88, 201, 80, 15
-    PUSHBUTTON "Informe de errores", IDC_ERRORREPORT, 170, 201, 80, 15
+    PUSHBUTTON "Informar de errores", IDC_ERRORREPORT, 170, 201, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
@@ -67,15 +67,15 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
 CAPTION "Ajustes del sistema"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Información de la Versión ", IDC_STATIC, 6, 3, 210, 73
-    CONTROL "Informar como Estación de trabajo", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
-    LTEXT "ReactOS está diseñado como un Sistema Operativo servidor e informa como tal. Seleccione esta casilla para cambiar esto para aplicaciones.", IDC_STATIC, 15, 15, 183, 41
+    GROUPBOX "Información de la versión ", IDC_STATIC, 6, 3, 210, 73
+    CONTROL "Convertirse en equipo de escritorio", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    LTEXT "ReactOS está diseñado como un sistema operativo servidor y de forma predeterminada es tratado como tal. Seleccione esta casilla para hacer que las aplicaciones lo detecten según sus preferencias.", IDC_STATIC, 15, 15, 183, 41
     PUSHBUTTON "Aceptar", IDOK, 166, 83, 50, 14
 END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Perfiles de Hardware"
+CAPTION "Perfiles de hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
@@ -102,15 +102,15 @@ END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy Profile"
+CAPTION "Copiar perfil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "From:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT "De:", IDC_STATIC, 5, 10, 20, 8
     LTEXT "", IDC_COPYPROFILEFROM, 30, 10, 160, 10
-    LTEXT "To:", IDC_STATIC, 5, 30, 20, 8
+    LTEXT "A:", IDC_STATIC, 5, 30, 20, 8
     EDITTEXT IDC_COPYPROFILETO, 30, 30, 160, 12
-    DEFPUSHBUTTON "OK", IDOK, 199, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 199, 30, 50, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 199, 9, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 199, 30, 50, 14
 END
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
@@ -171,7 +171,7 @@ BEGIN
     AUTOCHECKBOX "&Reiniciar automáticamente", IDC_STRRECRESTART, 14, 152, 145, 10
     GROUPBOX "Escribir información de depuración ", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT "&Volcado de descarga pequeña:", IDC_STATIC, 17, 202, 150, 8
+    LTEXT "&Volcado de memoria pequeña:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "So&brescribir cualquier archivo existente", IDC_STRRECOVERWRITE, 17, 228, 150, 10
     DEFPUSHBUTTON "Aceptar", IDOK, 141, 259, 50, 14
@@ -264,7 +264,7 @@ BEGIN
     IDS_VARIABLE "Variable"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Ninguno)"
-    IDS_MINI_DUMP "Mini volcado de memoria(64KB)"
+    IDS_MINI_DUMP "Mini volcado de memoria (64KB)"
     IDS_KERNEL_DUMP "Volcado de memoria del Kernel"
     IDS_FULL_DUMP "Volcado de memoria completo"
     IDS_USERPROFILE_NAME "Nombre"
@@ -272,13 +272,13 @@ BEGIN
     IDS_USERPROFILE_TYPE "Tipo"
     IDS_USERPROFILE_STATUS "Estado"
     IDS_USERPROFILE_MODIFIED "Modificado"
-    IDS_MESSAGEBOXTITLE "Applet de sistema del panel de control"
-    IDS_WARNINITIALSIZE "Ingresar el tamaño inicial del archivo de paginación."
-    IDS_WARNMAXIMUMSIZE "Ingresar el tamaño máximo del archivo de paginación."
+    IDS_MESSAGEBOXTITLE "Applet de sistema del Panel de control"
+    IDS_WARNINITIALSIZE "Introduzca el tamaño inicial del archivo de paginación."
+    IDS_WARNMAXIMUMSIZE "Introduzca el tamaño máximo del archivo de paginación."
     IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 2 MB y no puede exceder el espacio disponible en la unidad seleccionada."
     IDS_WARNMAXIMUMRANGE "El tamaño máximo del archivo de paginación no puede ser inferior al tamaño inicial y no puede exceder el espacio disponible en la unidad seleccionada."
-    IDS_PAGEFILE_NONE "none"
-    IDS_PAGEFILE_SYSTEM "system managed"
-    IDS_INFOREBOOT "You have to reboot the computer, in order to apply the changes."
-    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributers\nWine Team\n\n"
+    IDS_PAGEFILE_NONE "ninguno"
+    IDS_PAGEFILE_SYSTEM "administrado por el sistema"
+    IDS_INFOREBOOT "Es necesario reiniciar el equipo para que se apliquen los cambios."
+    IDS_DEVS "\nEquipo de ReactOS\n\nCoordinador del proyecto\n\nAleksey Bragin\n\nEquipo de desarrollo\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nIngenieros de publicación de versión\n\nColin Finck\nZ98\n\nEquipo Web\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nEquipo multimedia\n\nMindflyer\nWierd_W\n\nqueremos agradecer especialmente el trabajo realizado por\n\ntodos los colaboradores\nEl equipo de Wine\n\n"
 END

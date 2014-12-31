@@ -1,43 +1,48 @@
+/* Spanish Language resource file
+ *
+ * Traducido por: ??? e Ismael Ferreras Morezuelas 2014-12-30
+ */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bienvenido", IDC_WELCOMETITLE, 120, 8, 195, 24
-    LTEXT "Este asistente lo ayudará a instalar un nuevo controlador de dispositivos para:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "Este asistente le ayudará a instalar un nuevo controlador de dispositivo para:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Haga clic en Siguiente para continuar.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "DISPOSITIVO DESCONOCIDO", IDC_DEVICE, 134, 36, 164, 11
-    LTEXT "¡ADVERTENCIA! ¡INSTALAR UN DISPOSITIVO PUEDE RELENTIZAR SU EQUIPO O VOLVERLO INESTABLE!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Instalar controlador automáticamente", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Instalar controlador desde una ubicación específica", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 134, 36, 164, 11
+    LTEXT "¡Advertencia! ¡Instalar un dispositivo puede ralentizar su equipo o volverlo inestable!", IDC_STATIC, 120, 59, 195, 16
+    CONTROL "Instalar un controlador automáticamente", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
+    CONTROL "Instalar un controlador específico", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "La instalación ha fallado", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "El dispositivo no pudo ser instalado porque el controlador no fue encontrado.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Haga clic en Atrás si tiene un CDROM del controlador o conoce dónde encontrar el controlador.", IDC_STATIC, 120, 98, 181, 24
+    LTEXT "El dispositivo no pudo ser instalado porque no se encontró ningún controlador compatible.", IDC_STATIC, 120, 40, 195, 19
+    LTEXT "Haga clic en Atrás si tiene un CD-ROM de controladores o conoce la ubicación del controlador en el sistema de archivos.", IDC_STATIC, 120, 98, 181, 24
     CONTROL "No volver a mostrar esta ventana", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "La instalación ha fallado", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "El dispositivo no pudo ser instalado porque ha ocurrido un error inesperado.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "DISPOSITIVO DESCONOCIDO", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "El dispositivo no se pudo instalar al producirse un error inesperado.", IDC_STATIC, 120, 40, 195, 19
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 134, 55, 164, 11
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Buscar en controlador en estas ubicaciones", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
@@ -50,47 +55,47 @@ END
 
 IDD_SEARCHDRV DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "DISPOSITIVO DESCONOCIDO", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "DISPOSITIVO DESCONOCIDO", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalación completa", IDC_FINISHTITLE, 120, 8, 195, 11
     LTEXT "Necesita reiniciar su equipo para finalizar la instalación de:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Haga clic en Finalizar parar cerrar el asistente.", IDC_STATIC, 120, 174, 179, 11
-    LTEXT "DISPOSITIVO DESCONOCIDO", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "Haga clic en Finalizar para cerrar el asistente.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de Dispositivos"
+CAPTION "Instalación de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalación completa.", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "El asistente ha finalizado la instalación del controlador para el dispositivo:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Haga clic en Finalizar parar cerrar el asistente.", IDC_STATIC, 120, 174, 179, 11
-    LTEXT "DISPOSITIVO DESCONOCIDO", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "El asistente ha terminado de instalar el controlador de dispositivo:", IDC_STATIC, 120, 32, 195, 19
+    LTEXT "Haga clic en Finalizar para cerrar el asistente.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Dispositivo desconocido", IDC_DEVICE, 148, 53, 147, 12
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New hardware wizard"
-    IDS_UPDATEWIZARDTITLE "Update driver wizard"
-    IDS_CHSOURCE_TITLE "Choose search and install options"
-    IDS_SEARCHDRV_TITLE "Searching..."
-    IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_INSTALLWIZARDTITLE "Asistente de instalación para nuevos dispositivos"
+    IDS_UPDATEWIZARDTITLE "Asistente para actualizar controladores"
+    IDS_CHSOURCE_TITLE "Elija las opciones de buscar e instalar"
+    IDS_SEARCHDRV_TITLE "Buscando..."
+    IDS_INSTALLDRV_TITLE "Instalando..."
 END

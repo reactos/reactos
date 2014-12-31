@@ -1,6 +1,7 @@
 ﻿/*
  * Spanish Language resource file
  * Traducido por: Javier Remacha 2007-12-21
+ * Corregido por: Ismael Ferrera Morezuelas 2014-12-31
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -26,7 +27,7 @@ BEGIN
         MENUITEM "Recursos por tipo", IDC_RESBYTYPE, GRAYED
         MENUITEM "Recursos por conexión", IDC_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Show hidden devices", IDC_SHOWHIDDEN
+        MENUITEM "Mostrar dispositivos ocultos", IDC_SHOWHIDDEN
     END
     POPUP "Ayuda"
     BEGIN
@@ -46,11 +47,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
-CAPTION "Acerca del Gestor de Dispositivos"
+CAPTION "Acerca del Administrador de dispositivos"
 FONT 8, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-    LTEXT "Gestor de Dispositivos v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+    LTEXT "Administrador de dispositivos v0.1\nCopyright (C) 2006\nCreado por Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
     PUSHBUTTON "Cerrar", IDOK, 75, 162, 44, 15
     ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
     EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -58,7 +59,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como fueron publicados por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
 END
 
 STRINGTABLE
@@ -72,17 +73,17 @@ END
 /* Hints */
 STRINGTABLE
 BEGIN
-    IDS_APPNAME "Gestor de Dispositivos de ReactOS"
+    IDS_APPNAME "Administrador de dispositivos de ReactOS"
     IDS_HINT_BLANK " "
-    IDS_HINT_EXIT " Cerrar el programa."
+    IDS_HINT_EXIT " Cierra el programa."
     IDS_HINT_REFRESH " Actualizar la lista de servicios."
     IDS_HINT_PROP " Abre la pestaña de propiedades de la selección actual."
     IDS_HINT_HELP " Mostrar la ventana de ayuda."
-    IDS_HINT_ABOUT " Acerca del Gestor de Dispositivos de ReactOS."
+    IDS_HINT_ABOUT " Acerca del Administrador de dispositivos de ReactOS."
     IDS_HINT_SYS_RESTORE " Devuelve esta ventana al tamaño normal."
     IDS_HINT_SYS_MOVE " Mueve esta ventana."
     IDS_HINT_SYS_SIZE " Redimensiona esta ventana."
-    IDS_HINT_SYS_MINIMIZE " Colapsa esta ventana a un icono."
-    IDS_HINT_SYS_MAXIMIZE " Expande esta ventana hasta llenar esta pantalla."
-    IDS_HINT_SYS_CLOSE " Cerrar esta ventana."
+    IDS_HINT_SYS_MINIMIZE " Contrae esta ventana en un icono."
+    IDS_HINT_SYS_MAXIMIZE " Expande esta ventana hasta ocupar la pantalla."
+    IDS_HINT_SYS_CLOSE " Cierra esta ventana."
 END

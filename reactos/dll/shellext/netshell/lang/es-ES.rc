@@ -1,3 +1,4 @@
+/* Spanish translation by ??? and Swyter */
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_NETPROPERTIES DIALOGEX 0, 0, 246, 246
@@ -54,12 +55,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Soporte"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Estado de la Conexión ", -1, 9, 8, 191, 88, BS_GROUPBOX
+    GROUPBOX "Estado de la conexión ", -1, 9, 8, 191, 88, BS_GROUPBOX
     LTEXT "Tipo de dirección:", -1, 22, 20, 80, 8
     LTEXT "Dirección IP:", -1, 22, 34, 80, 8
     LTEXT "Máscara de subred:", -1, 22, 48, 80, 8
-    LTEXT "Puerta de enlace pred:", -1, 22, 62, 80, 8
-    RTEXT "N/A", IDC_DETAILSTYPE, 110, 20, 80, 8
+    LTEXT "Puerta de enlace de red:", -1, 22, 62, 80, 8
+    RTEXT "No disponible", IDC_DETAILSTYPE, 110, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 110, 34, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 110, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 110, 62, 80, 8
@@ -98,7 +99,7 @@ BEGIN
     IDS_SHV_COLUMN_OWNER "Propietario"
     IDS_TYPE_ETHERNET "LAN o Internet de alta velocidad"
     IDS_STATUS_NON_OPERATIONAL "Deshabilitado"
-    IDS_STATUS_UNREACHABLE "No Conectado"
+    IDS_STATUS_UNREACHABLE "No conectado"
     IDS_STATUS_DISCONNECTED "Cable de red desconectado"
     IDS_STATUS_CONNECTING "Obteniendo dirección de red"
     IDS_STATUS_CONNECTED "Conectado"
@@ -115,8 +116,8 @@ BEGIN
     IDS_FORMAT_KBIT "%u KBit/s"
     IDS_FORMAT_MBIT "%u MBit/s"
     IDS_FORMAT_GBIT "%u GBit/s"
-    IDS_DURATION_DAY "%d Día %s"
-    IDS_DURATION_DAYS "%d Días %s"
+    IDS_DURATION_DAY "%d día %s"
+    IDS_DURATION_DAYS "%d días %s"
     IDS_ASSIGNED_DHCP "Asignado por DHCP"
     IDS_ASSIGNED_MANUAL "Configurado manualmente"
 END

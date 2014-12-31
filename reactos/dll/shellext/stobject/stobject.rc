@@ -23,6 +23,9 @@ IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
 #endif
