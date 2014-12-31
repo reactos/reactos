@@ -1834,7 +1834,6 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
-    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -1960,14 +1959,6 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
             CreatePrimaryPartition(PartitionList,
                                    SectorCount,
                                    FALSE);
-
-            Status = WriteDirtyPartitions(PartitionList);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("WriteDirtyPartitions() failed\n");
-                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
-                return QUIT_PAGE;
-            }
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -2145,7 +2136,6 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
     PCHAR Unit;
-    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2270,14 +2260,6 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 
             CreateLogicalPartition(PartitionList,
                                    SectorCount);
-
-            Status = WriteDirtyPartitions(PartitionList);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("WriteDirtyPartitions() failed\n");
-                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
-                return QUIT_PAGE;
-            }
 
             return SELECT_FILE_SYSTEM_PAGE;
         }
@@ -2465,6 +2447,67 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 }
 
 
+static
+VOID
+UpdatePartitionType(
+    PPARTENTRY PartEntry,
+    LPCWSTR FileSystem)
+{
+    if (wcscmp(FileSystem, L"FAT") == 0)
+    {
+        if (PartEntry->SectorCount.QuadPart < 8192)
+        {
+            /* FAT12 CHS partition (disk is smaller than 4.1MB) */
+            PartEntry->PartitionType = PARTITION_FAT_12;
+        }
+        else if (PartEntry->StartSector.QuadPart < 1450560)
+        {
+            /* Partition starts below the 8.4GB boundary ==> CHS partition */
+
+            if (PartEntry->SectorCount.QuadPart < 65536)
+            {
+                /* FAT16 CHS partition (partiton size < 32MB) */
+                PartEntry->PartitionType = PARTITION_FAT_16;
+            }
+            else if (PartEntry->SectorCount.QuadPart < 1048576)
+            {
+                /* FAT16 CHS partition (partition size < 512MB) */
+                PartEntry->PartitionType = PARTITION_HUGE;
+            }
+            else
+            {
+                /* FAT32 CHS partition (partition size >= 512MB) */
+                PartEntry->PartitionType = PARTITION_FAT32;
+            }
+        }
+        else
+        {
+            /* Partition starts above the 8.4GB boundary ==> LBA partition */
+
+            if (PartEntry->SectorCount.QuadPart < 1048576)
+            {
+                /* FAT16 LBA partition (partition size < 512MB) */
+                PartEntry->PartitionType = PARTITION_XINT13;
+            }
+            else
+            {
+                /* FAT32 LBA partition (partition size >= 512MB) */
+                PartEntry->PartitionType = PARTITION_FAT32_XINT13;
+            }
+        }
+
+        PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
+    }
+#if 0
+    else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
+    {
+        PartEntry->PartitionType = PARTITION_EXT2;
+        PartEntry->DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
+    }
+#endif
+}
+
+
 static PAGE_NUMBER
 SelectFileSystemPage(PINPUT_RECORD Ir)
 {
@@ -2475,6 +2518,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     PCHAR DiskUnit;
     PCHAR PartUnit;
     PCHAR PartType;
+    NTSTATUS Status;
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2635,6 +2679,17 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         if (UnattendFormatPartition)
         {
+            UpdatePartitionType(PartEntry,
+                                FileSystemList->Selected->FileSystem);
+
+            Status = WriteDirtyPartitions(PartitionList);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("WriteDirtyPartitions() failed (Status 0x%08lx)\n", Status);
+                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                return QUIT_PAGE;
+            }
+
             return FORMAT_PARTITION_PAGE;
         }
 
@@ -2678,6 +2733,19 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             }
             else
             {
+                UpdatePartitionType(PartEntry,
+                                    FileSystemList->Selected->FileSystem);
+
+                CheckActiveBootPartition(PartitionList);
+
+                Status = WriteDirtyPartitions(PartitionList);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT("WriteDirtyPartitions() failed (Status 0x%08lx)\n", Status);
+                    MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                    return QUIT_PAGE;
+                }
+
                 return FORMAT_PARTITION_PAGE;
             }
         }
@@ -2691,7 +2759,7 @@ static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
     WCHAR PathBuffer[MAX_PATH];
-    PDISKENTRY DiskEntry;
+//    PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     NTSTATUS Status;
 
@@ -2711,7 +2779,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    DiskEntry = PartitionList->CurrentDisk;
+//    DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
     while (TRUE)
@@ -2735,59 +2803,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         {
             CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-            if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
-            {
-                if (PartEntry->SectorCount.QuadPart < 8192)
-                {
-                    /* FAT12 CHS partition (disk is smaller than 4.1MB) */
-                    PartEntry->PartitionType = PARTITION_FAT_12;
-                }
-                else if (PartEntry->StartSector.QuadPart < 1450560)
-                {
-                    /* Partition starts below the 8.4GB boundary ==> CHS partition */
-
-                    if (PartEntry->SectorCount.QuadPart < 65536)
-                    {
-                        /* FAT16 CHS partition (partiton size < 32MB) */
-                        PartEntry->PartitionType = PARTITION_FAT_16;
-                    }
-                    else if (PartEntry->SectorCount.QuadPart < 1048576)
-                    {
-                        /* FAT16 CHS partition (partition size < 512MB) */
-                        PartEntry->PartitionType = PARTITION_HUGE;
-                    }
-                    else
-                    {
-                        /* FAT32 CHS partition (partition size >= 512MB) */
-                        PartEntry->PartitionType = PARTITION_FAT32;
-                    }
-                }
-                else
-                {
-                    /* Partition starts above the 8.4GB boundary ==> LBA partition */
-
-                    if (PartEntry->SectorCount.QuadPart < 1048576)
-                    {
-                        /* FAT16 LBA partition (partition size < 512MB) */
-                        PartEntry->PartitionType = PARTITION_XINT13;
-                    }
-                    else
-                    {
-                        /* FAT32 LBA partition (partition size >= 512MB) */
-                        PartEntry->PartitionType = PARTITION_FAT32_XINT13;
-                    }
-                }
-
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
-            }
-#if 0
-            else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
-            {
-                PartEntry->PartitionType = PARTITION_EXT2;
-                DiskEntry->LayoutBuffer->PartitionEntry[PartEntry->PartitionIndex].PartitionType = PartEntry->PartitionType;
-            }
-#endif
-            else if (!FileSystemList->Selected->FormatFunc)
+            if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
 
 #ifndef NDEBUG
@@ -2825,16 +2841,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             /* Restore the old entry */
             PartEntry = PartitionList->CurrentPartition;
 #endif
-
-            CheckActiveBootPartition(PartitionList);
-
-            Status = WriteDirtyPartitions(PartitionList);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("WriteDirtyPartitions() failed\n");
-                MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
-                return QUIT_PAGE;
-            }
 
             /* Set DestinationRootPath */
             RtlFreeUnicodeString(&DestinationRootPath);
