@@ -198,22 +198,7 @@ VOID PrintPrompt(VOID)
                     break;
 
                 case _T('V'):
-                    switch (osvi.dwPlatformId)
-                    {
-                        case VER_PLATFORM_WIN32_WINDOWS:
-                            if (osvi.dwMajorVersion == 4 &&
-                                osvi.dwMinorVersion == 1)
-                                ConOutPrintf(_T("Windows 98"));
-                            else
-                                ConOutPrintf(_T("Windows 95"));
-                            break;
-
-
-                        case VER_PLATFORM_WIN32_NT:
-                            ConOutPrintf(_T("Windows NT Version %lu.%lu"),
-                                         osvi.dwMajorVersion, osvi.dwMinorVersion);
-                            break;
-                    }
+                    PrintOSVersion();
                     break;
 
                 case _T('_'):
