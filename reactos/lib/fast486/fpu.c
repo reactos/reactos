@@ -66,7 +66,7 @@ UnsignedMult128(ULONGLONG Multiplicand,
     return LowProduct;
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuFromInteger(PFAST486_STATE State,
                       LONGLONG Value,
                       PFAST486_FPU_DATA_REG Result)
@@ -89,7 +89,7 @@ Fast486FpuFromInteger(PFAST486_STATE State,
     Result->Exponent = FPU_REAL10_BIAS + 63 - ZeroCount;
 }
 
-static BOOLEAN
+static inline BOOLEAN FASTCALL
 Fast486FpuToInteger(PFAST486_STATE State,
                     PFAST486_FPU_DATA_REG Value,
                     PLONGLONG Result)
@@ -100,7 +100,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
 
     if (FPU_IS_ZERO(Value))
     {
-        Result = 0LL;
+        *Result = 0LL;
         return TRUE;
     }
     
@@ -127,7 +127,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
             /* Check if the highest bit of the remainder is set */
             if (Remainder & (1 << (Bits - 1)))
             {
-                *Result++;
+                (*Result)++;
 
                 /* Check if all the other bits are clear */
                 if (!(Remainder & ((1 << (Bits - 1)) - 1)))
@@ -142,13 +142,13 @@ Fast486FpuToInteger(PFAST486_STATE State,
 
         case FPU_ROUND_DOWN:
         {
-            if ((Remainder != 0ULL) && Value->Sign) *Result++;
+            if ((Remainder != 0ULL) && Value->Sign) (*Result)++;
             break;
         }
 
         case FPU_ROUND_UP:
         {
-            if ((Remainder != 0ULL) && !Value->Sign) *Result++;
+            if ((Remainder != 0ULL) && !Value->Sign) (*Result)++;
             break;
         }
 
@@ -162,7 +162,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
     return TRUE;
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuFromSingleReal(PFAST486_STATE State,
                          ULONG Value,
                          PFAST486_FPU_DATA_REG Result)
@@ -183,7 +183,7 @@ Fast486FpuFromSingleReal(PFAST486_STATE State,
     }
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuFromDoubleReal(PFAST486_STATE State,
                          ULONGLONG Value,
                          PFAST486_FPU_DATA_REG Result)
@@ -204,7 +204,94 @@ Fast486FpuFromDoubleReal(PFAST486_STATE State,
     }
 }
 
-static VOID
+static inline BOOLEAN FASTCALL
+Fast486FpuToDoubleReal(PFAST486_STATE State,
+                       PFAST486_FPU_DATA_REG Value,
+                       PULONGLONG Result)
+{
+    ULONGLONG Remainder;
+    SHORT UnbiasedExp = (SHORT)Value->Exponent - FPU_REAL10_BIAS;
+
+    if (FPU_IS_ZERO(Value))
+    {
+        *Result = 0LL;
+        return TRUE;
+    }
+
+    /* Calculate the mantissa */
+    *Result = (Value->Mantissa >> 11) & ((1ULL << 52) - 1);
+
+    if (FPU_IS_NAN(Value))
+    {
+        *Result |= 0x3FF0000000000000ULL;
+        goto SetSign;
+    }
+
+    /* Check for underflow */
+    if (!FPU_IS_NORMALIZED(Value) || (UnbiasedExp < -1023))
+    {
+        State->FpuStatus.Ue = TRUE;
+        return FALSE;
+    }
+
+    /* Check for overflow */
+    if (UnbiasedExp > 1023)
+    {
+        State->FpuStatus.Oe = TRUE;
+        return FALSE;
+    }
+
+    /* Calculate the remainder */
+    Remainder = Value->Mantissa & ((1 << 11) - 1);
+
+    switch (State->FpuControl.Rc)
+    {
+        case FPU_ROUND_NEAREST:
+        {
+            /* Check if the highest bit of the remainder is set */
+            if (Remainder & (1 << 10))
+            {
+                (*Result)++;
+
+                /* Check if all the other bits are clear */
+                if (!(Remainder & ((1 << 10) - 1)))
+                {
+                    /* Round to even */
+                    *Result &= ~1;
+                }
+            }
+
+            break;
+        }
+
+        case FPU_ROUND_DOWN:
+        {
+            if ((Remainder != 0ULL) && Value->Sign) (*Result)++;
+            break;
+        }
+
+        case FPU_ROUND_UP:
+        {
+            if ((Remainder != 0ULL) && !Value->Sign) (*Result)++;
+            break;
+        }
+
+        default:
+        {
+            /* Leave it truncated */
+        }
+    }
+
+    /* Store the biased exponent */
+    *Result |= (ULONGLONG)(UnbiasedExp + FPU_REAL8_BIAS) << 52;
+
+SetSign:
+
+    if (Value->Sign) *Result |= 1ULL << 63;
+    return TRUE;
+}
+
+static inline VOID FASTCALL
 Fast486FpuAdd(PFAST486_STATE State,
               PFAST486_FPU_DATA_REG FirstOperand,
               PFAST486_FPU_DATA_REG SecondOperand,
@@ -284,7 +371,7 @@ Fast486FpuAdd(PFAST486_STATE State,
     *Result = TempResult;
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuSubtract(PFAST486_STATE State,
                    PFAST486_FPU_DATA_REG FirstOperand,
                    PFAST486_FPU_DATA_REG SecondOperand,
@@ -299,7 +386,7 @@ Fast486FpuSubtract(PFAST486_STATE State,
     Fast486FpuAdd(State, Result, FirstOperand, &NegativeSecondOperand);
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuCompare(PFAST486_STATE State,
                   PFAST486_FPU_DATA_REG FirstOperand,
                   PFAST486_FPU_DATA_REG SecondOperand)
@@ -352,7 +439,7 @@ Fast486FpuCompare(PFAST486_STATE State,
     }
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuMultiply(PFAST486_STATE State,
                    PFAST486_FPU_DATA_REG FirstOperand,
                    PFAST486_FPU_DATA_REG SecondOperand,
@@ -378,7 +465,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
     *Result = TempResult;
 }
 
-static VOID
+static inline VOID FASTCALL
 Fast486FpuDivide(PFAST486_STATE State,
                  PFAST486_FPU_DATA_REG FirstOperand,
                  PFAST486_FPU_DATA_REG SecondOperand,
@@ -399,6 +486,72 @@ Fast486FpuDivide(PFAST486_STATE State,
     // TODO: NOT IMPLEMENTED
     UNREFERENCED_PARAMETER(TempResult);
     UNIMPLEMENTED;
+}
+
+static inline VOID FASTCALL
+Fast486FpuArithmeticOperation(PFAST486_STATE State,
+                              INT Operation,
+                              PFAST486_FPU_DATA_REG SourceOperand,
+                              PFAST486_FPU_DATA_REG DestOperand)
+{
+    ASSERT(!(Operation & ~7));
+
+    /* Check the operation */
+    switch (Operation)
+    {
+        /* FADD */
+        case 0:
+        {
+            Fast486FpuAdd(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FMUL */
+        case 1:
+        {
+            Fast486FpuMultiply(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FCOM */
+        case 2:
+        /* FCOMP */
+        case 3:
+        {
+            Fast486FpuCompare(State, DestOperand, SourceOperand);
+            if (Operation == 3) Fast486FpuPop(State);
+
+            break;
+        }
+
+        /* FSUB */
+        case 4:
+        {
+            Fast486FpuSubtract(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FSUBR */
+        case 5:
+        {
+            Fast486FpuSubtract(State, SourceOperand, DestOperand, DestOperand);
+            break;
+        }
+
+        /* FDIV */
+        case 6:
+        {
+            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FDIVR */
+        case 7:
+        {
+            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
+            break;
+        }
+    }
 }
 
 #endif
@@ -497,62 +650,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8DC)
         }
     }
 
-    /* Check the operation */
-    switch (ModRegRm.Register)
-    {
-        /* FADD */
-        case 0:
-        {
-            Fast486FpuAdd(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FMUL */
-        case 1:
-        {
-            Fast486FpuMultiply(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FCOM */
-        case 2:
-        /* FCOMP */
-        case 3:
-        {
-            Fast486FpuCompare(State, DestOperand, SourceOperand);
-            if (ModRegRm.Register == 3) Fast486FpuPop(State);
-
-            break;
-        }
-
-        /* FSUB */
-        case 4:
-        {
-            Fast486FpuSubtract(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FSUBR */
-        case 5:
-        {
-            Fast486FpuSubtract(State, SourceOperand, DestOperand, DestOperand);
-            break;
-        }
-
-        /* FDIV */
-        case 6:
-        {
-            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FDIVR */
-        case 7:
-        {
-            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
-            break;
-        }
-    }
+    /* Perform the requested operation */
+    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);
 
 #endif
 }
@@ -644,62 +743,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
         return;
     }
 
-    /* Check the operation */
-    switch (ModRegRm.Register)
-    {
-        /* FIADD */
-        case 0:
-        {
-            Fast486FpuAdd(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FIMUL */
-        case 1:
-        {
-            Fast486FpuMultiply(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FICOM */
-        case 2:
-        /* FICOMP */
-        case 3:
-        {
-            Fast486FpuCompare(State, DestOperand, SourceOperand);
-            if (ModRegRm.Register == 3) Fast486FpuPop(State);
-
-            break;
-        }
-
-        /* FISUB */
-        case 4:
-        {
-            Fast486FpuSubtract(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FISUBR */
-        case 5:
-        {
-            Fast486FpuSubtract(State, SourceOperand, DestOperand, DestOperand);
-            break;
-        }
-
-        /* FIDIV */
-        case 6:
-        {
-            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FIDIVR */
-        case 7:
-        {
-            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
-            break;
-        }
-    }
+    /* Perform the requested operation */
+    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand); 
     
 #endif
 }
@@ -815,7 +860,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
             {
                 UCHAR Buffer[10];
 
-                if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY) || (FPU_GET_TAG(0) == FPU_TAG_SPECIAL))
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                 {
                     /* Fail */
                     State->FpuStatus.Ie = TRUE;
@@ -915,10 +960,174 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
     FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-#else
-    /* Do nothing */
+
+    if (ModRegRm.Memory)
+    {
+        switch (ModRegRm.Register)
+        {
+            /* FLD */
+            case 0:
+            {
+                ULONGLONG Value;
+                FAST486_FPU_DATA_REG MemoryData;
+
+                if (!Fast486ReadMemory(State,
+                                       (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                       ? State->SegmentOverride : FAST486_REG_DS,
+                                       ModRegRm.MemoryAddress,
+                                       FALSE,
+                                       &Value,
+                                       sizeof(ULONGLONG)))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                Fast486FpuFromDoubleReal(State, Value, &MemoryData);
+                Fast486FpuPush(State, &MemoryData);
+
+                break;
+            }
+
+            /* FST */
+            case 2:
+            /* FSTP */
+            case 3:
+            {
+                ULONGLONG Value;
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    /* Fail */
+                    State->FpuStatus.Ie = TRUE;
+                    return;
+                }
+
+                if (!Fast486FpuToDoubleReal(State, &FPU_ST(0), &Value))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                if (!Fast486WriteMemory(State,
+                                        (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                        ? State->SegmentOverride : FAST486_REG_DS,
+                                        ModRegRm.MemoryAddress,
+                                        &Value,
+                                        sizeof(ULONGLONG)))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                if (ModRegRm.Register == 3) Fast486FpuPop(State);
+                break;
+            }
+
+            /* FRSTOR */
+            case 4:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSAVE */
+            case 6:
+            {
+                // TODO: NOT IMPLEMENTED 
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSTSW */
+            case 7:
+            {
+                Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, State->FpuStatus.Value);
+                break;
+            }
+
+            /* Invalid */
+            default:
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+            }
+        }
+    }
+    else
+    {
+        switch (ModRegRm.Register)
+        {
+            /* FFREE */
+            case 0:
+            {
+                FPU_SET_TAG(ModRegRm.SecondRegister, FPU_TAG_EMPTY);
+                break;
+            }
+
+            /* FXCH */
+            case 1:
+            {
+                FAST486_FPU_DATA_REG Temp;
+
+                if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                    || FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+                    break;
+                }
+
+                /* Exchange */
+                Temp = FPU_ST(0);
+                FPU_ST(0) = FPU_ST(ModRegRm.SecondRegister);
+                FPU_ST(ModRegRm.SecondRegister) = Temp;
+
+                FPU_UPDATE_TAG(0);
+                FPU_UPDATE_TAG(ModRegRm.SecondRegister);
+
+                break;
+            }
+
+            /* FST */
+            case 2:
+            /* FSTP */
+            case 3:
+            {
+                FPU_ST(ModRegRm.SecondRegister) = FPU_ST(0);
+                FPU_UPDATE_TAG(ModRegRm.SecondRegister);
+
+                if (ModRegRm.Register == 3) Fast486FpuPop(State);
+                break;
+            }
+
+            /* FUCOM */
+            case 4:
+            /* FUCOMP */
+            case 5:
+            {
+                if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                    || (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY))
+                {
+                    State->FpuStatus.Ie = TRUE;
+                    return;
+                }
+
+                Fast486FpuCompare(State, &FPU_ST(0), &FPU_ST(ModRegRm.SecondRegister));
+                if (ModRegRm.Register == 5) Fast486FpuPop(State);
+
+                break;
+            }
+
+            /* Invalid */
+            default:
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+            }
+        }
+    }
+
 #endif
 }
 
@@ -991,63 +1200,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
         PopStack = TRUE;
     }
 
-    /* Check the operation */
-    switch (ModRegRm.Register)
-    {
-        /* FIADD / FADDP */
-        case 0:
-        {
-            Fast486FpuAdd(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FIMUL / FMULP */
-        case 1:
-        {
-            Fast486FpuMultiply(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FICOM / FCOMP */
-        case 2:
-        /* FICOMP / FCOMPP */
-        case 3:
-        {
-            Fast486FpuCompare(State, DestOperand, SourceOperand);
-            if (ModRegRm.Register == 3) Fast486FpuPop(State);
-
-            break;
-        }
-
-        /* FISUB / FSUBRP */
-        case 4:
-        {
-            Fast486FpuSubtract(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FISUBR / FSUBP */
-        case 5:
-        {
-            Fast486FpuSubtract(State, SourceOperand, DestOperand, DestOperand);
-            break;
-        }
-
-        /* FIDIV / FDIVRP */
-        case 6:
-        {
-            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
-            break;
-        }
-
-        /* FIDIVR / FDIVP */
-        case 7:
-        {
-            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
-            break;
-        }
-    }
-
+    /* Perform the requested operation */
+    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);  
     if (PopStack) Fast486FpuPop(State);
 
 #endif

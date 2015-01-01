@@ -34,11 +34,13 @@
                         return; \
                     }
 #define FPU_ST(i) State->FpuRegisters[(State->FpuStatus.Top + (i)) % FAST486_NUM_FPU_REGS]
-#define FPU_GET_TAG(i)  ((State->FpuTag >> ((i) * 2)) & 3)
+
+#define FPU_GET_TAG(i)      ((State->FpuTag >> ((i) * 2)) & 3)
 #define FPU_SET_TAG(i, t)   { \
                                 State->FpuTag &= ~((1 << ((i) * 2)) | (1 << (((i) * 2) + 1))); \
                                 State->FpuTag |= ((t) & 3) << ((i) * 2); \
                             }
+#define FPU_UPDATE_TAG(i)   FPU_SET_TAG((i), Fast486GetValueTag(&FPU_ST(i)))
 
 #define FPU_REAL4_BIAS 0x7F
 #define FPU_REAL8_BIAS 0x3FF
