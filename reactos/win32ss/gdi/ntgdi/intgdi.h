@@ -3,7 +3,7 @@
 #define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
 #define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
 #define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
-#define ROP_TO_ROP4(Rop) (((Rop) >> 8) & 0xFF00) | ((Rop) >> 16)
+#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
 /* Brush functions */
 

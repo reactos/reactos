@@ -1319,7 +1319,7 @@ NtGdiInvertRgn(
                               prgn,
                               NULL, // pbo
                               NULL, // pptlBrush,
-                              ROP_TO_ROP4(DSTINVERT));
+                              ROP4_DSTINVERT);
 
     /* Unlock the region and DC and return the result */
     REGION_UnlockRgn(prgn);
