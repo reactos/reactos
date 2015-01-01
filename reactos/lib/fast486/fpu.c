@@ -423,6 +423,13 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8DC)
 
 #ifndef FAST486_NO_FPU
 
+    if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+    {
+        /* Invalid operation */
+        State->FpuStatus.Ie = TRUE;
+        return;
+    }
+
     if (ModRegRm.Memory)
     {
         /* Load the source operand from memory */
@@ -459,28 +466,35 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8DC)
         }
 
         SourceOperand = &MemoryData;
+
+        /* The destination operand is ST0 */
+        DestOperand = &FPU_ST(0);
     }
     else
     {
-        /* Load the source operand from an FPU register */
-        SourceOperand = &FPU_ST(ModRegRm.SecondRegister);
-
         if (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
         {
             /* Invalid operation */
             State->FpuStatus.Ie = TRUE;
             return;
         }
-    }
 
-    /* The destination operand is always ST0 */
-    DestOperand = &FPU_ST(0);
+        if (Opcode == 0xDC)
+        {
+            /* The source operand is ST0 */
+            SourceOperand = &FPU_ST(0);
 
-    if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
-    {
-        /* Invalid operation */
-        State->FpuStatus.Ie = TRUE;
-        return;
+            /* Load the destination operand from an FPU register */
+            DestOperand = &FPU_ST(ModRegRm.SecondRegister);
+        }
+        else
+        {
+            /* Load the source operand from an FPU register */
+            SourceOperand = &FPU_ST(ModRegRm.SecondRegister);
+
+            /* The destination operand is ST0 */
+            DestOperand = &FPU_ST(0);
+        }
     }
 
     /* Check the operation */
@@ -912,6 +926,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
+    BOOLEAN PopStack = FALSE;
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -923,10 +939,117 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
     FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-#else
-    /* Do nothing */
+
+    if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+    {
+        /* Invalid operation */
+        State->FpuStatus.Ie = TRUE;
+        return;
+    }
+
+    if (ModRegRm.Memory)
+    {
+        SHORT Value;
+        FAST486_FPU_DATA_REG MemoryData;
+
+        /* Load the source operand from memory */
+        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, (PUSHORT)&Value))
+        {
+            /* Exception occurred */
+            return;
+        }
+
+        Fast486FpuFromInteger(State, (LONGLONG)Value, &MemoryData);
+        SourceOperand = &MemoryData;
+
+        /* The destination operand is ST0 */
+        DestOperand = &FPU_ST(0);
+    }
+    else
+    {
+        /* FCOMPP check */
+        if ((ModRegRm.Register == 3) && (ModRegRm.SecondRegister != 1))
+        {
+            /* Invalid */
+            Fast486Exception(State, FAST486_EXCEPTION_UD);
+            return;
+        }
+
+        /* The source operand is ST0 */
+        SourceOperand = &FPU_ST(0);
+
+        /* Load the destination operand from a register */
+        DestOperand = &FPU_ST(ModRegRm.SecondRegister);
+
+        if (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
+        {
+            /* Invalid operation */
+            State->FpuStatus.Ie = TRUE;
+            return;
+        }
+
+        PopStack = TRUE;
+    }
+
+    /* Check the operation */
+    switch (ModRegRm.Register)
+    {
+        /* FIADD / FADDP */
+        case 0:
+        {
+            Fast486FpuAdd(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FIMUL / FMULP */
+        case 1:
+        {
+            Fast486FpuMultiply(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FICOM / FCOMP */
+        case 2:
+        /* FICOMP / FCOMPP */
+        case 3:
+        {
+            Fast486FpuCompare(State, DestOperand, SourceOperand);
+            if (ModRegRm.Register == 3) Fast486FpuPop(State);
+
+            break;
+        }
+
+        /* FISUB / FSUBRP */
+        case 4:
+        {
+            Fast486FpuSubtract(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FISUBR / FSUBP */
+        case 5:
+        {
+            Fast486FpuSubtract(State, SourceOperand, DestOperand, DestOperand);
+            break;
+        }
+
+        /* FIDIV / FDIVRP */
+        case 6:
+        {
+            Fast486FpuDivide(State, DestOperand, SourceOperand, DestOperand);
+            break;
+        }
+
+        /* FIDIVR / FDIVP */
+        case 7:
+        {
+            Fast486FpuDivide(State, SourceOperand, DestOperand, DestOperand);
+            break;
+        }
+    }
+
+    if (PopStack) Fast486FpuPop(State);
+
 #endif
 }
 
