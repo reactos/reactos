@@ -259,6 +259,28 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
     return TRUE;
 }
 
+typedef DWORD (WINAPI *pThemeWait)(DWORD dwTimeout);
+typedef BOOL (WINAPI *pThemeWatch)(void);
+
+static void
+InitThemeSupport()
+{
+    HMODULE hDll = LoadLibraryW(L"shsvcs.dll");
+    pThemeWait themeWait;
+    pThemeWatch themeWatch;
+
+    if(!hDll)
+        return;
+
+    themeWait = (pThemeWait) GetProcAddress(hDll, (LPCSTR)2);
+    themeWatch = (pThemeWatch) GetProcAddress(hDll, (LPCSTR)1);
+
+    if(themeWait && themeWatch)
+    {
+        themeWait(5000);
+        themeWatch();
+    }
+}
 
 /*
  * @implemented
@@ -274,6 +296,8 @@ WlxInitialize(
     PGINA_CONTEXT pgContext;
 
     UNREFERENCED_PARAMETER(pvReserved);
+
+    InitThemeSupport();
 
     pgContext = (PGINA_CONTEXT)LocalAlloc(LMEM_FIXED | LMEM_ZEROINIT, sizeof(GINA_CONTEXT));
     if(!pgContext)
