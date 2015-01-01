@@ -334,7 +334,28 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
     field = &file->fields[line->first_field];
     GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
-    strcatW(StringLangId, Lang); // append the Language identifier from GetLocaleInfo
+
+    strcpyW(StringLangId + 8, Lang + 2);
+    // now you have e.g. Strings.07 for german neutral translations
+    for (i = 0; i < file->nb_sections; i++) // search in all sections
+    {
+        if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
+        {
+            strings_section = file->sections[i]; // select this section for further use
+            for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
+            {
+                if (line->key_field == -1) continue; // if no key then skip
+                if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
+                if (!file->fields[line->key_field].text[*len]) // if value exist
+                {
+                    field = &file->fields[line->first_field]; // then extract value and
+                    break; // no more search necessary
+                }
+            }
+        }
+    }
+
+    strcpyW(StringLangId + 8, Lang); // append the Language identifier from GetLocaleInfo
     // now you have e.g. Strings.0407 for german translations
     for (i = 0; i < file->nb_sections; i++) // search in all sections
     {
