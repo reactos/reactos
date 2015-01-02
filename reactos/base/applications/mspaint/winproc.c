@@ -806,7 +806,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     if (activeTool == TOOL_FREESEL)
                     {
                         newReversible();
-                        Poly(hDrawingDC, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE);
+                        Poly(hDrawingDC, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE);
                     }
                     break;
                 }
