@@ -254,11 +254,11 @@ Fast486OpcodeHandlers[FAST486_NUM_OPCODE_HANDLERS] =
     Fast486OpcodeAad,                   /* 0xD5 */
     Fast486OpcodeSalc,                  /* 0xD6 */
     Fast486OpcodeXlat,                  /* 0xD7 */
-    Fast486FpuOpcodeD8DC,               /* 0xD8 - 0xDF */
+    Fast486FpuOpcodeD8,                 /* 0xD8 - 0xDF */
     Fast486FpuOpcodeD9,
     Fast486FpuOpcodeDA,
     Fast486FpuOpcodeDB,
-    Fast486FpuOpcodeD8DC,
+    Fast486FpuOpcodeDC,
     Fast486FpuOpcodeDD,
     Fast486FpuOpcodeDE,
     Fast486FpuOpcodeDF,
