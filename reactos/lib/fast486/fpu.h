@@ -42,18 +42,23 @@
                             }
 #define FPU_UPDATE_TAG(i)   FPU_SET_TAG((i), Fast486GetValueTag(&FPU_ST(i)))
 
-#define FPU_REAL4_BIAS 0x7F
-#define FPU_REAL8_BIAS 0x3FF
-#define FPU_REAL10_BIAS 0x3FFF
-#define FPU_MAX_EXPONENT 0x7FFE
-#define FPU_MANTISSA_HIGH_BIT 0x8000000000000000ULL
+#define FPU_REAL4_BIAS          0x7F
+#define FPU_REAL8_BIAS          0x3FF
+#define FPU_REAL10_BIAS         0x3FFF
+#define FPU_MAX_EXPONENT        0x7FFE
+#define FPU_MANTISSA_HIGH_BIT   0x8000000000000000ULL
+#define FPU_INDEFINITE_MANTISSA 0xC000000000000000ULL
+#define FPU_REAL4_INFINITY      0x7F800000
+#define FPU_REAL4_INDEFINITE    0xFFC00000
+#define FPU_REAL8_INFINITY      0x7FF0000000000000ULL
+#define FPU_REAL8_INDEFINITE    0xFFF8000000000000ULL
 
-#define FPU_IS_NORMALIZED(x) (!FPU_IS_ZERO(x) && (((x)->Mantissa & FPU_MANTISSA_HIGH_BIT) != 0ULL))
-#define FPU_IS_ZERO(x) ((x)->Mantissa == 0ULL)
-#define FPU_IS_NAN(x) ((x)->Exponent == (FPU_MAX_EXPONENT + 1))
-#define FPU_IS_INFINITY(x) (FPU_IS_NAN(x) && (x)->Mantissa & FPU_MANTISSA_HIGH_BIT)
-#define FPU_IS_POS_INF(x) (FPU_IS_INFINITY(x) && !(x)->Sign)
-#define FPU_IS_NEG_INF(x) (FPU_IS_INFINITY(x) && (x)->Sign)
+#define FPU_IS_NORMALIZED(x)    (!FPU_IS_ZERO(x) && (((x)->Mantissa & FPU_MANTISSA_HIGH_BIT) != 0ULL))
+#define FPU_IS_ZERO(x)          ((x)->Mantissa == 0ULL)
+#define FPU_IS_NAN(x)           ((x)->Exponent == (FPU_MAX_EXPONENT + 1))
+#define FPU_IS_INFINITY(x)      (FPU_IS_NAN(x) && ((x)->Mantissa == FPU_MANTISSA_HIGH_BIT))
+#define FPU_IS_POS_INF(x)       (FPU_IS_INFINITY(x) && !(x)->Sign)
+#define FPU_IS_NEG_INF(x)       (FPU_IS_INFINITY(x) && (x)->Sign)
 
 enum
 {

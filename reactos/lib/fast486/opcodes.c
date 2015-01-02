@@ -4116,8 +4116,20 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeCallAbs)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeWait)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+#ifndef FAST486_NO_FPU
+
+    if ((!State->FpuControl.Pm && State->FpuStatus.Pe)
+        || (!State->FpuControl.Um && State->FpuStatus.Ue)
+        || (!State->FpuControl.Om && State->FpuStatus.Oe)
+        || (!State->FpuControl.Zm && State->FpuStatus.Ze)
+        || (!State->FpuControl.Dm && State->FpuStatus.De)
+        || (!State->FpuControl.Im && State->FpuStatus.Ie))
+    {
+        /* Call the #MF handler */
+        Fast486Exception(State, FAST486_EXCEPTION_MF);
+    }
+
+#endif
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
