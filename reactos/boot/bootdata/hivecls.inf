@@ -491,8 +491,8 @@ CPLFILE_OPENWITH="Ouvrir avec le Panneau de Contrôle"
 CPLFILE="Aplet Panelu Sterowania"
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
 
-; LANG_SPANISH SUBLANG_NEUTRAL (should be 000a)
-[Strings.040a]
+; LANG_SPANISH SUBLANG_NEUTRAL
+[Strings.0a]
 CPLFILE="Extensión del Panel de control"
 CPLFILE_OPENWITH="Abrir con el Panel de control"
 

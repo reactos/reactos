@@ -1856,8 +1856,8 @@ COUNTRY_ZA="South Africa"
 COUNTRY_ZM="Zambia"
 COUNTRY_ZW="Zimbabwe"
 
-; LANG_SPANISH SUBLANG_NEUTRAL (should be 000a)
-[Strings.040a]
+; LANG_SPANISH SUBLANG_NEUTRAL
+[Strings.0a]
 COUNTRY_AD="Andorra"
 COUNTRY_AE="Emiratos Árabes Unidos"
 COUNTRY_AF="Afganistán"

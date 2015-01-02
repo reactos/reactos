@@ -2279,8 +2279,8 @@ DESKTOP_SCHEME_SIZE_0="Default size"
 TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 
-; LANG_SPANISH SUBLANG_NEUTRAL (should be 000a)
-[Strings.040a]
+; LANG_SPANISH SUBLANG_NEUTRAL
+[Strings.0a]
 POWERCFG_NAME_0="Equipo doméstico o de oficina"
 POWERCFG_DESC_0="Este perfil es ideal para gran parte de los usuarios domésticos que dejan el equipo encendido todo el día."
 POWERCFG_NAME_1="Portátil"
@@ -2316,7 +2316,7 @@ DESKTOP_SCHEME_19="Tormenta"
 DESKTOP_SCHEME_20="Verde turquesa"
 DESKTOP_SCHEME_21="Trigo"
 DESKTOP_SCHEME_SIZE_0="Tamaño predeterminado"
-TEMP_DIR="%USERPROFILE%\Configuración Local\Temp"
+TEMP_DIR="%USERPROFILE%\Configuración local\Temp"
 
 
 ; LANG_FINNISH SUBLANG_NEUTRAL
