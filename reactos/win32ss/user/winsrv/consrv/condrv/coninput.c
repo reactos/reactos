@@ -212,10 +212,7 @@ ConDrvInitInputBuffer(IN PCONSOLE Console,
     Status = NtCreateEvent(&Console->InputBuffer.ActiveEvent, EVENT_ALL_ACCESS,
                            &ObjectAttributes, NotificationEvent, FALSE);
     if (!NT_SUCCESS(Status))
-    {
-        return STATUS_UNSUCCESSFUL;
-        // return Status;
-    }
+        return Status;
 
     Console->InputBuffer.InputBufferSize = InputBufferSize;
     InitializeListHead(&Console->InputBuffer.InputEvents);
