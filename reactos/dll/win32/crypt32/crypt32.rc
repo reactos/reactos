@@ -40,6 +40,8 @@
 #endif
 
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/crypt32_De.rc"
 #endif
