@@ -7,6 +7,6 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Cylinders fractal"
-    IDS_TITLE       "»o je ..."
-    IDS_TEXT        "Cylinders fractal od unC0Rr.\näpeci·lne pre systÈm ReactOS."
+    IDS_TITLE       "ƒåo je ..."
+    IDS_TEXT        "Cylinders fractal od unC0Rr.\n≈†peci√°lne pre syst√©m ReactOS."
 END

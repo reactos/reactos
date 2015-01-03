@@ -2,8 +2,12 @@
 #include <commctrl.h>
 #include "resource.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
+#include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/fi-FI.rc"
 #include "lang/fr-FR.rc"
@@ -15,4 +19,3 @@
 #include "lang/th-TH.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
-#include "lang/el-GR.rc"

@@ -1,4 +1,4 @@
-/* TRANSLATOR :  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M¬†rio Ka≈∫m¬†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  07-09-2008
  */
  
@@ -7,17 +7,17 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "SYSTEMINFO [/S systÇm [/U pouß._meno [/P [heslo]]]] [/FO form†t] [/NH]\n\n\
+IDS_USAGE, "SYSTEMINFO [/S syst‚Äöm [/U pou¬ß._meno [/P [heslo]]]] [/FO form¬†t] [/NH]\n\n\
 Description:\n\
   This command line tool enables an administrator to query for basic\n\
   system configuration information.\n\n\
 Parameter List:\n\
-  /S      systÇm                Specifies the remote system to connect to.\n\n\
-  /U      [domÇna\\]pouß°vateñ  Specifies the user context under which\n\
+  /S      syst‚Äöm                Specifies the remote system to connect to.\n\n\
+  /U      [dom‚Äöna\\]pou¬ßÀávate‚Äì  Specifies the user context under which\n\
                                 the command should execute.\n\n\
   /P      [heslo]               Specifies the password for the given\n\
                                 user context. Prompts for input if omitted.\n\n\
-  /FO     form†t                Specifies the format in which the output\n\
+  /FO     form¬†t                Specifies the format in which the output\n\
                                 is to be displayed.\n\
                                 Valid values: ""TABLE"", ""LIST"", ""CSV"".\n\n\
   /NH                           Specifies that the ""Column Header"" should\n\
@@ -34,38 +34,38 @@ Examples:\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
 IDS_HOST_NAME,               "Host Name"
-IDS_OS_NAME,                 "N†zov OS"
+IDS_OS_NAME,                 "N¬†zov OS"
 IDS_OS_VERSION,              "Verzia OS"
 IDS_BUILD,                   "Build"
 IDS_OS_BUILD_TYPE,           "OS Build typ"
-IDS_REG_OWNER,               "RegistovanÏ vlastn°k"
-IDS_REG_ORG,                 "Registrovan† organiz†cia"
+IDS_REG_OWNER,               "Registovanƒõ vlastnÀák"
+IDS_REG_ORG,                 "Registrovan¬† organiz¬†cia"
 IDS_PRODUCT_ID,              "ID produktu"
-IDS_INST_DATE,               "D†tum inÁtal†cie"
+IDS_INST_DATE,               "D¬†tum in√ßtal¬†cie"
 IDS_UP_TIME,                 "System Up Time"
 IDS_UP_TIME_FORMAT           "%u Days, %u Hours, %u Minutes, %u Seconds"
 IDS_SYS_MANUFACTURER,        "System Manufacturer"
 IDS_SYS_MODEL,               "System Model"
-IDS_SYS_TYPE,                "Typ systÇmu"
+IDS_SYS_TYPE,                "Typ syst‚Äömu"
 IDS_PROCESSORS,              "Procesor(y)"
-IDS_PROCESSORS_FORMAT,       "%u Procesor(y) nainÁtalovanÏ."
-IDS_BIOS_DATE,               "D†tum BIOSu"
+IDS_PROCESSORS_FORMAT,       "%u Procesor(y) nain√ßtalovanƒõ."
+IDS_BIOS_DATE,               "D¬†tum BIOSu"
 IDS_BIOS_VERSION,            "Verzia BIOSu"
-IDS_ROS_DIR,                 "Adres†r ReactOS"
-IDS_SYS_DIR,                 "Adres†r System"
-IDS_BOOT_DEV,                "Zav†dzacie zariadenie"
+IDS_ROS_DIR,                 "Adres¬†r ReactOS"
+IDS_SYS_DIR,                 "Adres¬†r System"
+IDS_BOOT_DEV,                "Zav¬†dzacie zariadenie"
 IDS_SYS_LOCALE,              "System Locale"
 IDS_INPUT_LOCALE,            "Input Locale"
-IDS_TIME_ZONE,               "¨asovÇ p†smo"
-IDS_TOTAL_PHYS_MEM,          "Celkov† fyzick† pamÑú"
-IDS_AVAIL_PHISICAL_MEM,      "Dostupn† fyzick† pamÑú"
-IDS_VIRT_MEM_MAX,            "Virtu†lna pamÑú: Max Size"
-IDS_VIRT_MEM_AVAIL,          "Virtu†lna pamÑú: Available"
-IDS_VIRT_MEM_INUSE,          "Virtu†lna pamÑú: In Use"
-IDS_PAGEFILE_LOC,            "Umiestnenie(a) str†nkovacieho s£boru"
-IDS_DOMAIN,                  "DomÇna"
-IDS_NETWORK_CARDS,           "Sieúov† karta(y)"
-IDS_NETWORK_CARDS_FORMAT,    "%u nainÁtalovan."
+IDS_TIME_ZONE,               "¬¨asov‚Äö p¬†smo"
+IDS_TOTAL_PHYS_MEM,          "Celkov¬† fyzick¬† pam‚Äû≈õ"
+IDS_AVAIL_PHISICAL_MEM,      "Dostupn¬† fyzick¬† pam‚Äû≈õ"
+IDS_VIRT_MEM_MAX,            "Virtu¬†lna pam‚Äû≈õ: Max Size"
+IDS_VIRT_MEM_AVAIL,          "Virtu¬†lna pam‚Äû≈õ: Available"
+IDS_VIRT_MEM_INUSE,          "Virtu¬†lna pam‚Äû≈õ: In Use"
+IDS_PAGEFILE_LOC,            "Umiestnenie(a) str¬†nkovacieho s≈Åboru"
+IDS_DOMAIN,                  "Dom‚Äöna"
+IDS_NETWORK_CARDS,           "Sie≈õov¬† karta(y)"
+IDS_NETWORK_CARDS_FORMAT,    "%u nain√ßtalovan."
 IDS_CONNECTION_NAME,         "Connection Name"
 IDS_STATUS,                  "Status"
 IDS_MEDIA_DISCONNECTED,      "Media disconnected"

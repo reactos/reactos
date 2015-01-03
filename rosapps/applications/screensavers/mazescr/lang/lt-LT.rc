@@ -4,5 +4,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Labirintas"
     IDS_TITLE       "Apie"
-    IDS_TEXT        "Nëra keièiamø parametrø."
+    IDS_TEXT        "NÄ—ra keiÄiamÅ³ parametrÅ³."
 END

@@ -22,9 +22,9 @@ BEGIN
    IDS_MENU_QUIT           "S"
    IDS_MENU_KILL_PROCESS   "A"
 
-   IDS_KILL_PROCESS        "Er du sikker på at du vil avslutte denne prosessen? (J/n)"
+   IDS_KILL_PROCESS        "Er du sikker pÃ¥ at du vil avslutte denne prosessen? (J/n)"
    IDS_KILL_PROCESS_ERR1   "Ikke mulig og avslutte denne prosessen..."
-   IDS_KILL_PROCESS_ERR2   "Ikke mulig og avslutte prosess %d (Ikke mulig og ÅpneProsess)"
+   IDS_KILL_PROCESS_ERR2   "Ikke mulig og avslutte prosess %d (Ikke mulig og Ã…pneProsess)"
 
    IDS_CTM_GENERAL_ERR1    "ctm: kan ikke bruke konsoll."
    IDS_CTM_GENERAL_ERR2    "ctm: Kan ikke GetConsoleMode() for input konsoll."

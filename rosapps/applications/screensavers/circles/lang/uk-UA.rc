@@ -10,6 +10,6 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Заставка ""Кола"""
-    IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
+    IDS_DESCRIPTION "Р—Р°СЃС‚Р°РІРєР° ""РљРѕР»Р°"""
+    IDS_TEXT        "Р¦СЏ Р·Р°СЃС‚Р°РІРєР° РЅРµ РјР°С” РЅР°Р»Р°С€С‚РѕРІСѓРІР°РЅРёС… РїР°СЂР°РјРµС‚СЂС–РІ."
 END

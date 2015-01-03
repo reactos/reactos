@@ -28,24 +28,24 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 IDM_WINEFILE MENU
 {
     POPUP "&Fil"  {
-        MENUITEM "&Åben\tEnter",                     ID_ACTIVATE
+        MENUITEM "&Ã…ben\tEnter",                     ID_ACTIVATE
         MENUITEM "&Flyt...\tF7",                     ID_FILE_MOVE
         MENUITEM "&Kopier...\tF8",                   ID_FILE_COPY
-        MENUITEM "&På klippebordet...\tF9",          118
+        MENUITEM "&PÃ¥ klippebordet...\tF9",          118
         MENUITEM "&Slet\tDel",                       ID_FILE_DELETE
-        MENUITEM "Omdøb...",                         109
+        MENUITEM "OmdÃ¸b...",                         109
         MENUITEM "&Egenskaper...\tAlt+Enter",        ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "K&omprimer...",                    119
         MENUITEM "De&komprimer...",                  120
         MENUITEM SEPARATOR
-        MENUITEM "Kø&r...",                          ID_RUN
+        MENUITEM "KÃ¸&r...",                          ID_RUN
         MENUITEM "&Udskriv...",                      102
         MENUITEM "Associer...",                      103
         MENUITEM SEPARATOR
         MENUITEM "Opr&et folder...",                 111
-        MENUITEM "S&øg...",                          104
-        MENUITEM "&Vælg filer...",                   116
+        MENUITEM "S&Ã¸g...",                          104
+        MENUITEM "&VÃ¦lg filer...",                   116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "&Afslut\tAlt+X",                   ID_FILE_EXIT
@@ -56,34 +56,34 @@ IDM_WINEFILE MENU
 
     POPUP "&Diskette"  {
         MENUITEM "&Kopier diskette...",              201
-        MENUITEM "Sæt vol&umenavn...",               202
+        MENUITEM "SÃ¦t vol&umenavn...",               202
         MENUITEM SEPARATOR
         MENUITEM "&Formater diskette...",            ID_FORMAT_DISK
 #ifdef _WIN95
         MENUITEM "Opret syste&mdiskette...",         -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "&Tilslut netværksdrev",            ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "Frakobl &netværksdrev",            ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "&Tilslut netvÃ¦rksdrev",            ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "Frakobl &netvÃ¦rksdrev",            ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Del som...",                       254
         MENUITEM "Fje&rn delt resourse...",          255
         MENUITEM SEPARATOR
-        MENUITEM "Vælg &enhed...",                   251
+        MENUITEM "VÃ¦lg &enhed...",                   251
     }
 
     POPUP "Kataloge&r"  {
-        MENUITEM "&Næste niveau\t+",                 301
-        MENUITEM "Udvid t&ræ\t*",                    302
+        MENUITEM "&NÃ¦ste niveau\t+",                 301
+        MENUITEM "Udvid t&rÃ¦\t*",                    302
         MENUITEM "Udvid &alle\tStrg+*",              303
-        MENUITEM "Kolaps &træ\t-",                   304
+        MENUITEM "Kolaps &trÃ¦\t-",                   304
         MENUITEM SEPARATOR
         MENUITEM "&Marker underelementer",           505
     }
 
     POPUP "&Vis"  {
-        MENUITEM "T&ræ og folder",                   413
-        MENUITEM "Kun tr&æ",                         411
+        MENUITEM "T&rÃ¦ og folder",                   413
+        MENUITEM "Kun tr&Ã¦",                         411
         MENUITEM "Kun &folder",                      412
         MENUITEM SEPARATOR
         MENUITEM "&Visning opdeling",                ID_VIEW_SPLIT
@@ -94,22 +94,22 @@ IDM_WINEFILE MENU
         MENUITEM SEPARATOR
         MENUITEM "&Sorter efter navn",               ID_VIEW_SORT_NAME
         MENUITEM "Sorter efter &type",               ID_VIEW_SORT_TYPE
-        MENUITEM "Sorter efter st&ørrelse",          ID_VIEW_SORT_SIZE
+        MENUITEM "Sorter efter st&Ã¸rrelse",          ID_VIEW_SORT_SIZE
         MENUITEM "Sorter efter &dato",               ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Filtrer med '&'...",               ID_VIEW_FILTER
     }
 
     POPUP "&Indstillinger"  {
-        MENUITEM "&Bekræftelse...",                  501
+        MENUITEM "&BekrÃ¦ftelse...",                  501
         MENUITEM "Skri&fttype...",                   ID_SELECT_FONT
-        MENUITEM "Tilpas &værktøjslinien...",        512
+        MENUITEM "Tilpas &vÃ¦rktÃ¸jslinien...",        512
         MENUITEM SEPARATOR
-        MENUITEM "Værk&tøjlinie",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "VÃ¦rk&tÃ¸jlinie",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "&Enhedslinie",                     ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "&Statuslinie",                     ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "F&uldskærm\tCtrl+Shift+S",         ID_VIEW_FULLSCREEN
+        MENUITEM "F&uldskÃ¦rm\tCtrl+Shift+S",         ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimer ved start",               504
@@ -119,7 +119,7 @@ IDM_WINEFILE MENU
 
     POPUP "&Sikkerhed"  {
         MENUITEM "Tilg&ang...",                     605
-        MENUITEM "&Logføring...",                   606
+        MENUITEM "&LogfÃ¸ring...",                   606
         MENUITEM "&Ejer...",                        607
     }
 
@@ -135,10 +135,10 @@ IDM_WINEFILE MENU
         MENUITEM "Opdate&r\tF5",                     ID_REFRESH
     }
 
-    POPUP "&Hjælp"  {
-        MENUITEM "Emner i &hjælp\tF1",               ID_HELP
-        MENUITEM "&Søg i hjælp...\tF1",              ID_HELP
-        MENUITEM "Br&ug af hjælp\tF1",               ID_HELP_USING
+    POPUP "&HjÃ¦lp"  {
+        MENUITEM "Emner i &hjÃ¦lp\tF1",               ID_HELP
+        MENUITEM "&SÃ¸g i hjÃ¦lp...\tF1",              ID_HELP
+        MENUITEM "Br&ug af hjÃ¦lp\tF1",               ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Information om Filbehandling...",ID_ABOUT
     }
@@ -146,7 +146,7 @@ IDM_WINEFILE MENU
 
 IDD_SELECT_DESTINATION DIALOG 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vælg destination"
+CAPTION "VÃ¦lg destination"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
@@ -190,13 +190,13 @@ BEGIN
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "&Full sti:",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Sidst ændret:",-1,7,29,59,9
+    LTEXT           "Sidst Ã¦ndret:",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Version:",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "&Ophavsret:",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Størrelse:",-1,7,62,59,9
+    LTEXT           "StÃ¸rrelse:",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     GROUPBOX        "Attributter",-1,7,79,158,46
     CONTROL         "Sk&rivebeskyttet",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
@@ -232,7 +232,7 @@ STRINGTABLE
 STRINGTABLE
 {
     IDS_COL_NAME            "Navn"
-    IDS_COL_SIZE            "Størrelse"
+    IDS_COL_SIZE            "StÃ¸rrelse"
     IDS_COL_CDATE           "C-dato"
     IDS_COL_ADATE           "A-dato"
     IDS_COL_MDATE           "M-dato"

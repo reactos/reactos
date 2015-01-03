@@ -36,7 +36,7 @@ BEGIN
     MENUITEM "Trova successivo",       -1, GRAYED
     MENUITEM "Sostituisci\tCtrl+H", -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Propriet‡ oggetto",-1, GRAYED
+    MENUITEM "Propriet√† oggetto",-1, GRAYED
     MENUITEM "Oggetto",          -1, GRAYED
   END
   POPUP "&Visualizza"
@@ -110,7 +110,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Questo programma Ë software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma Ë distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILIT¿ o UTILIZZABILIT¿ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non Ë cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
+  IDS_LICENSE "Questo programma √® software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma √® distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILIT√Ä o UTILIZZABILIT√Ä PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non √® cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
   IDS_DEFAULT_NAME      "Documento %1!u!"
   IDS_READY             " Pronto."
 END

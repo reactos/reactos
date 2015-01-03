@@ -45,7 +45,9 @@ IDB_STAR                BITMAP  DISCARDABLE     "res/star.bmp"
 
 
 // Language resources
+/* UTF-8 */
 #pragma code_page(65001)
+
 #include "lang/en-US.rc"
 #include "lang/it-IT.rc"
 #include "lang/ro-RO.rc"

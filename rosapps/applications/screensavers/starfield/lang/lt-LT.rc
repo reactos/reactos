@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        rosapps/applications/screensavers/starfield/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdşijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us)
  * DATE:        2007-09-24
  */
 
@@ -11,7 +11,7 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Şvaigşdşiø laukas"
+    IDS_DESCRIPTION "Å½vaigÅ¾dÅ¾iÅ³ laukas"
     IDS_TITLE       "Apie"
-    IDS_TEXT        "Nëra keièiamø parametrø."
+    IDS_TEXT        "NÄ—ra keiÄiamÅ³ parametrÅ³."
 END

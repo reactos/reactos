@@ -4,5 +4,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Laberinto"
     IDS_TITLE       "Acerca de"
-    IDS_TEXT        "Ninguna opción necesita ser configurada."
+    IDS_TEXT        "Ninguna opciÃ³n necesita ser configurada."
 END

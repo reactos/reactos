@@ -30,119 +30,119 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDM_WINEFILE MENU
 {
-    POPUP "&F·jl"  {
-        MENUITEM "&Megynit·s\tEnter",           ID_ACTIVATE
-        MENUITEM "¡t&helyezÈs...\tF7",          ID_FILE_MOVE
-        MENUITEM "&M·sol·s...\tF8",             ID_FILE_COPY
-        MENUITEM "&V·gÛlapon...\tF9",           118
-        MENUITEM "&TˆrlÈs\tDel",                ID_FILE_DELETE
-        MENUITEM "¡t&nevezÈs...",               109
-        MENUITEM "T&ulajdons·gok...\tAlt+Enter", ID_EDIT_PROPERTIES
+    POPUP "&F√°jl"  {
+        MENUITEM "&Megynit√°s\tEnter",           ID_ACTIVATE
+        MENUITEM "√Åt&helyez√©s...\tF7",          ID_FILE_MOVE
+        MENUITEM "&M√°sol√°s...\tF8",             ID_FILE_COPY
+        MENUITEM "&V√°g√≥lapon...\tF9",           118
+        MENUITEM "&T√∂rl√©s\tDel",                ID_FILE_DELETE
+        MENUITEM "√Åt&nevez√©s...",               109
+        MENUITEM "T&ulajdons√°gok...\tAlt+Enter", ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "&Becsomagol·s...",            119
-        MENUITEM "K&icsomagol·s...",            120
+        MENUITEM "&Becsomagol√°s...",            119
+        MENUITEM "K&icsomagol√°s...",            120
         MENUITEM SEPARATOR
-        MENUITEM "&Futtat·s...",                ID_RUN
-        MENUITEM "&Nyomtat·s...",               102
-        MENUITEM "T·rsÌt·s...",                 103
+        MENUITEM "&Futtat√°s...",                ID_RUN
+        MENUITEM "&Nyomtat√°s...",               102
+        MENUITEM "T√°rs√≠t√°s...",                 103
         MENUITEM SEPARATOR
-        MENUITEM "⁄j &mappa...",                111
-        MENUITEM "Kere&sÈs...",                 104
-        MENUITEM "F·jlok ki&v·laszt·sa...",     116
+        MENUITEM "√öj &mappa...",                111
+        MENUITEM "Kere&s√©s...",                 104
+        MENUITEM "F√°jlok ki&v√°laszt√°sa...",     116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-        MENUITEM "&KilÈpÈs\tAlt+X",             ID_FILE_EXIT
+        MENUITEM "&Kil√©p√©s\tAlt+X",             ID_FILE_EXIT
 #else
-        MENUITEM "&KilÈpÈs",                    ID_FILE_EXIT
+        MENUITEM "&Kil√©p√©s",                    ID_FILE_EXIT
 #endif
     }
 
     POPUP "&Lemez"  {
-        MENUITEM "Lemez &m·sol·sa...",          201
+        MENUITEM "Lemez &m√°sol√°sa...",          201
         MENUITEM "&Lemezcimke...",              202
         MENUITEM SEPARATOR
-        MENUITEM "&Format·l·s...",              ID_FORMAT_DISK
+        MENUITEM "&Format√°l√°s...",              ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "&Rendszerlemez kÈszÌtÈse...", -1  /*TODO*/
+        MENUITEM "&Rendszerlemez k√©sz√≠t√©se...", -1  /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "&H·lÛzati meghajtÛ csatlakoztat·sa",ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "H·lÛzati meghajtÛ lev·laszt·sa",ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "&H√°l√≥zati meghajt√≥ csatlakoztat√°sa",ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "H√°l√≥zati meghajt√≥ lev√°laszt√°sa",ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
-        MENUITEM "Megoszt·s...",                254
-        MENUITEM "Megoszt·s &megsz¸ntetÈse...", 255
+        MENUITEM "Megoszt√°s...",                254
+        MENUITEM "Megoszt√°s &megsz√ºntet√©se...", 255
         MENUITEM SEPARATOR
-        MENUITEM "MeghajtÛ ki&v·laszt·sa...",   251
+        MENUITEM "Meghajt√≥ ki&v√°laszt√°sa...",   251
     }
 
-    POPUP "&Mapp·k"  {
-        MENUITEM "&Kˆvetkezı szint\t+",         301
-        MENUITEM "&Fa kinyit·sa\t*",            302
-        MENUITEM "&Minden kinyit·sa\tStrg+*",   303
-        MENUITEM "Fa &becsuk·sa\t-",            304
+    POPUP "&Mapp√°k"  {
+        MENUITEM "&K√∂vetkez≈ë szint\t+",         301
+        MENUITEM "&Fa kinyit√°sa\t*",            302
+        MENUITEM "&Minden kinyit√°sa\tStrg+*",   303
+        MENUITEM "Fa &becsuk√°sa\t-",            304
         MENUITEM SEPARATOR
-        MENUITEM "&Gyermekek kijelˆlÈse",       505
+        MENUITEM "&Gyermekek kijel√∂l√©se",       505
     }
 
-    POPUP "&NÈzet"  {
+    POPUP "&N√©zet"  {
         MENUITEM "&Teljes",                     413
-        MENUITEM "&Kˆnyvt·rfa",                 411
-        MENUITEM "&Csak mapp·k",                412
+        MENUITEM "&K√∂nyvt√°rfa",                 411
+        MENUITEM "&Csak mapp√°k",                412
         MENUITEM SEPARATOR
-        MENUITEM "&Feloszt·s",                  ID_VIEW_SPLIT
+        MENUITEM "&Feloszt√°s",                  ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&NÈv",                        ID_VIEW_NAME
-        MENUITEM "&Minden rÈszlet",             ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&N√©v",                        ID_VIEW_NAME
+        MENUITEM "&Minden r√©szlet",             ID_VIEW_ALL_ATTRIBUTES, CHECKED
         MENUITEM "&Egyedi...",                  ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&RendezÈs nÈv szerint",       ID_VIEW_SORT_NAME
-        MENUITEM "RendezÈs k&iterjesztÈs szerint",ID_VIEW_SORT_TYPE
-        MENUITEM "RendezÈs &mÈret szerint",     ID_VIEW_SORT_SIZE
-        MENUITEM "RendezÈs &d·tum szerint",     ID_VIEW_SORT_DATE
+        MENUITEM "&Rendez√©s n√©v szerint",       ID_VIEW_SORT_NAME
+        MENUITEM "Rendez√©s k&iterjeszt√©s szerint",ID_VIEW_SORT_TYPE
+        MENUITEM "Rendez√©s &m√©ret szerint",     ID_VIEW_SORT_SIZE
+        MENUITEM "Rendez√©s &d√°tum szerint",     ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Egyedi rendezÈs &...",        ID_VIEW_FILTER
+        MENUITEM "Egyedi rendez√©s &...",        ID_VIEW_FILTER
     }
 
-    POPUP "&Be·llÌt·sok"  {
-        MENUITEM "&MegerısÌtÈs...",             501
-        MENUITEM "&Bet˚kÈszlet...",             ID_SELECT_FONT
-        MENUITEM "E&gyedi eszkˆzt·r...",        512
+    POPUP "&Be√°ll√≠t√°sok"  {
+        MENUITEM "&Meger≈ës√≠t√©s...",             501
+        MENUITEM "&Bet≈±k√©szlet...",             ID_SELECT_FONT
+        MENUITEM "E&gyedi eszk√∂zt√°r...",        512
         MENUITEM SEPARATOR
-        MENUITEM "&Eszkˆzt·r",                  ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Lemezt·r",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&¡llapotsor",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "&Eszk√∂zt√°r",                  ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Lemezt√°r",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&√Ållapotsor",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "&Teljes kÈpernyıs\tCtrl+Shift+S",ID_VIEW_FULLSCREEN
+        MENUITEM "&Teljes k√©perny≈ës\tCtrl+Shift+S",ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Programfuttat·s ut·ni &szimbÛlum",504
-        MENUITEM "Megsz¸ntetÈs a t·rol·s vÈgÈn",511
+        MENUITEM "Programfuttat√°s ut√°ni &szimb√≥lum",504
+        MENUITEM "Megsz√ºntet√©s a t√°rol√°s v√©g√©n",511
     }
 
 
-    POPUP "&Biztons·g"  {
-        MENUITEM "&Hozz·fÈrÈs...",              605
-        MENUITEM "&NaplÛz·s...",                606
+    POPUP "&Biztons√°g"  {
+        MENUITEM "&Hozz√°f√©r√©s...",              605
+        MENUITEM "&Napl√≥z√°s...",                606
         MENUITEM "&Tulajdonos...",              607
     }
 
     POPUP "&Ablakok"  {
-        MENUITEM "⁄j a&blak",                   ID_WINDOW_NEW
-        MENUITEM "LÈpcsızetes elrendezÈs\tCtrl+F5",ID_WINDOW_CASCADE
-        MENUITEM "Mozaikszer˚ elrendezÈs &vÌzszintesen",ID_WINDOW_TILE_HORZ
-        MENUITEM "Mozaikszer˚ elrendezÈs f¸&ggılegesen\tCtrl+F4",ID_WINDOW_TILE_VERT
+        MENUITEM "√öj a&blak",                   ID_WINDOW_NEW
+        MENUITEM "L√©pcs≈ëzetes elrendez√©s\tCtrl+F5",ID_WINDOW_CASCADE
+        MENUITEM "Mozaikszer≈± elrendez√©s &v√≠zszintesen",ID_WINDOW_TILE_HORZ
+        MENUITEM "Mozaikszer≈± elrendez√©s f√º&gg≈ëlegesen\tCtrl+F4",ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Automatikus elrendezÈs",      ID_WINDOW_AUTOSORT
+        MENUITEM "Automatikus elrendez√©s",      ID_WINDOW_AUTOSORT
 #endif
-        MENUITEM "&SzimbÛlum elrendezÈs",       ID_WINDOW_ARRANGE
-        MENUITEM "&FrissÌtÈs\tF5",              ID_REFRESH
+        MENUITEM "&Szimb√≥lum elrendez√©s",       ID_WINDOW_ARRANGE
+        MENUITEM "&Friss√≠t√©s\tF5",              ID_REFRESH
     }
 
     POPUP "&?"  {
-        MENUITEM "&S˙gÛ tÈmakˆrˆk\tF1",         ID_HELP
-        MENUITEM "S˙gÛ &keresÈs...\tF1",        ID_HELP
-        MENUITEM "&Haszn·lat\tF1",              ID_HELP_USING
+        MENUITEM "&S√∫g√≥ t√©mak√∂r√∂k\tF1",         ID_HELP
+        MENUITEM "S√∫g√≥ &keres√©s...\tF1",        ID_HELP
+        MENUITEM "&Haszn√°lat\tF1",              ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&Winefile-rÛl...",            ID_ABOUT
+        MENUITEM "&Winefile-r√≥l...",            ID_ABOUT
     }
 }

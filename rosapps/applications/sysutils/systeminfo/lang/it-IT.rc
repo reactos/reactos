@@ -5,7 +5,7 @@ BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S sistema [/U nomeutente [/P [password]]]] [/FO formato] [/NH]\n\n\
 Descrizione:\n\
-  Quest‡ utilit‡ permettere ad un amministratore di\n\
+  Quest√† utilit√† permettere ad un amministratore di\n\
   visualizzare alcune informazioni basilari sulla configurazione del pc.\n\n\
 Lista Parametri:\n\
   /S      sistema           Specifica il sistema remoto a cui connettersi.\n\n\

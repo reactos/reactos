@@ -10,29 +10,29 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-   IDS_APP_TITLE           "Консольний Диспетчер завдань від Aleksey Bragin <aleksey@reactos.org>"
+   IDS_APP_TITLE           "РљРѕРЅСЃРѕР»СЊРЅРёР№ Р”РёСЃРїРµС‚С‡РµСЂ Р·Р°РІРґР°РЅСЊ РІС–Рґ Aleksey Bragin <aleksey@reactos.org>"
 
    IDS_COLUMN_NUMBER       "# "
-   IDS_COLUMN_IMAGENAME    "Ім'я образу                  "
+   IDS_COLUMN_IMAGENAME    "Р†Рј'СЏ РѕР±СЂР°Р·Сѓ                  "
    IDS_COLUMN_PID          "PID  "
    IDS_COLUMN_CPU          "CPU"
-   IDS_COLUMN_MEM          "Використання пам'яті"
+   IDS_COLUMN_MEM          "Р’РёРєРѕСЂРёСЃС‚Р°РЅРЅСЏ РїР°Рј'СЏС‚С–"
    IDS_COLUMN_MEM_UNIT		"KB"
-   IDS_COLUMN_PF           "Помилок сторінки"
+   IDS_COLUMN_PF           "РџРѕРјРёР»РѕРє СЃС‚РѕСЂС–РЅРєРё"
 
-   IDS_IDLE_PROCESS        "Недіяння системи"
+   IDS_IDLE_PROCESS        "РќРµРґС–СЏРЅРЅСЏ СЃРёСЃС‚РµРјРё"
    IDS_YES                 "Y"
    IDS_NO                  "N"
 
-   IDS_MENU                "Натисніть: q - вийти, k - завершити процес"
+   IDS_MENU                "РќР°С‚РёСЃРЅС–С‚СЊ: q - РІРёР№С‚Рё, k - Р·Р°РІРµСЂС€РёС‚Рё РїСЂРѕС†РµСЃ"
    IDS_MENU_QUIT           "Q"
    IDS_MENU_KILL_PROCESS   "K"
 
-   IDS_KILL_PROCESS        "Ви впевнені, що хочете завершити цей процес? (y/n)"
-   IDS_KILL_PROCESS_ERR1   "Неможливо завершити цей процес..."
-   IDS_KILL_PROCESS_ERR2   "Неможливо завершити процес %d (неможливо виконати OpenProcess)"
+   IDS_KILL_PROCESS        "Р’Рё РІРїРµРІРЅРµРЅС–, С‰Рѕ С…РѕС‡РµС‚Рµ Р·Р°РІРµСЂС€РёС‚Рё С†РµР№ РїСЂРѕС†РµСЃ? (y/n)"
+   IDS_KILL_PROCESS_ERR1   "РќРµРјРѕР¶Р»РёРІРѕ Р·Р°РІРµСЂС€РёС‚Рё С†РµР№ РїСЂРѕС†РµСЃ..."
+   IDS_KILL_PROCESS_ERR2   "РќРµРјРѕР¶Р»РёРІРѕ Р·Р°РІРµСЂС€РёС‚Рё РїСЂРѕС†РµСЃ %d (РЅРµРјРѕР¶Р»РёРІРѕ РІРёРєРѕРЅР°С‚Рё OpenProcess)"
 
-   IDS_CTM_GENERAL_ERR1    "ctm: неможливо використовувати консоль."
-   IDS_CTM_GENERAL_ERR2    "ctm: неможливо виконати GetConsoleMode() для введення в консолі."
-   IDS_CTM_GENERAL_ERR3    "ctm: неможливо виконати GetConsoleMode() для виведення в консолі."
+   IDS_CTM_GENERAL_ERR1    "ctm: РЅРµРјРѕР¶Р»РёРІРѕ РІРёРєРѕСЂРёСЃС‚РѕРІСѓРІР°С‚Рё РєРѕРЅСЃРѕР»СЊ."
+   IDS_CTM_GENERAL_ERR2    "ctm: РЅРµРјРѕР¶Р»РёРІРѕ РІРёРєРѕРЅР°С‚Рё GetConsoleMode() РґР»СЏ РІРІРµРґРµРЅРЅСЏ РІ РєРѕРЅСЃРѕР»С–."
+   IDS_CTM_GENERAL_ERR3    "ctm: РЅРµРјРѕР¶Р»РёРІРѕ РІРёРєРѕРЅР°С‚Рё GetConsoleMode() РґР»СЏ РІРёРІРµРґРµРЅРЅСЏ РІ РєРѕРЅСЃРѕР»С–."
 END

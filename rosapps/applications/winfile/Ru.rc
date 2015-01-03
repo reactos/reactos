@@ -30,184 +30,184 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDM_WINEFILE MENU
 {
-    POPUP "&Файл"  {
-        MENUITEM "&Открыть\tEnter",             ID_ACTIVATE
-        MENUITEM "&Переместить...\tF7",         ID_FILE_MOVE
-        MENUITEM "&Копировать...\tF8",          ID_FILE_COPY
-        MENUITEM "&В буфер обмена...\tF9",      118
-        MENUITEM "&Удалить\tDel",               ID_FILE_DELETE
-        MENUITEM "Переименовать...",            109
-        MENUITEM "Свойства...\tAlt+Enter",      ID_EDIT_PROPERTIES
+    POPUP "&Р¤Р°Р№Р»"  {
+        MENUITEM "&РћС‚РєСЂС‹С‚СЊ\tEnter",             ID_ACTIVATE
+        MENUITEM "&РџРµСЂРµРјРµСЃС‚РёС‚СЊ...\tF7",         ID_FILE_MOVE
+        MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ...\tF8",          ID_FILE_COPY
+        MENUITEM "&Р’ Р±СѓС„РµСЂ РѕР±РјРµРЅР°...\tF9",      118
+        MENUITEM "&РЈРґР°Р»РёС‚СЊ\tDel",               ID_FILE_DELETE
+        MENUITEM "РџРµСЂРµРёРјРµРЅРѕРІР°С‚СЊ...",            109
+        MENUITEM "РЎРІРѕР№СЃС‚РІР°...\tAlt+Enter",      ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Архивировать...",             119
-        MENUITEM "Распаковать...",              120
+        MENUITEM "РђСЂС…РёРІРёСЂРѕРІР°С‚СЊ...",             119
+        MENUITEM "Р Р°СЃРїР°РєРѕРІР°С‚СЊ...",              120
         MENUITEM SEPARATOR
-        MENUITEM "&Запустить...",               ID_RUN
-        MENUITEM "&Печатать...",                102
-        MENUITEM "Ассоциировать...",            103
+        MENUITEM "&Р—Р°РїСѓСЃС‚РёС‚СЊ...",               ID_RUN
+        MENUITEM "&РџРµС‡Р°С‚Р°С‚СЊ...",                102
+        MENUITEM "РђСЃСЃРѕС†РёРёСЂРѕРІР°С‚СЊ...",            103
         MENUITEM SEPARATOR
-        MENUITEM "Создать директорию...",       111
-        MENUITEM "Поиск...",                    104
-        MENUITEM "&Выделить файлы...",          116
+        MENUITEM "РЎРѕР·РґР°С‚СЊ РґРёСЂРµРєС‚РѕСЂРёСЋ...",       111
+        MENUITEM "РџРѕРёСЃРє...",                    104
+        MENUITEM "&Р’С‹РґРµР»РёС‚СЊ С„Р°Р№Р»С‹...",          116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Выход\tAlt+X",                ID_FILE_EXIT
+        MENUITEM "Р’С‹С…РѕРґ\tAlt+X",                ID_FILE_EXIT
 #else
-        MENUITEM "Выход",                       ID_FILE_EXIT
+        MENUITEM "Р’С‹С…РѕРґ",                       ID_FILE_EXIT
 #endif
     }
 
-    POPUP "&Диск"  {
-        MENUITEM "&Копировать диск...",         201
-        MENUITEM "&Метка тома...",              202
+    POPUP "&Р”РёСЃРє"  {
+        MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ РґРёСЃРє...",         201
+        MENUITEM "&РњРµС‚РєР° С‚РѕРјР°...",              202
         MENUITEM SEPARATOR
-        MENUITEM "&Форматировать...",           ID_FORMAT_DISK
+        MENUITEM "&Р¤РѕСЂРјР°С‚РёСЂРѕРІР°С‚СЊ...",           ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "&Создать системный диск...",  -1   /*TODO*/
+        MENUITEM "&РЎРѕР·РґР°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Р№ РґРёСЃРє...",  -1   /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Подклю&чить сетевой диск",    ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "Отк&лючить сетевой диск",     ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "РџРѕРґРєР»СЋ&С‡РёС‚СЊ СЃРµС‚РµРІРѕР№ РґРёСЃРє",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "РћС‚Рє&Р»СЋС‡РёС‚СЊ СЃРµС‚РµРІРѕР№ РґРёСЃРє",     ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
-        MENUITEM "Сделать о&бщим как...",       254
-        MENUITEM "&Закрыть общий доступ...",    255
+        MENUITEM "РЎРґРµР»Р°С‚СЊ Рѕ&Р±С‰РёРј РєР°Рє...",       254
+        MENUITEM "&Р—Р°РєСЂС‹С‚СЊ РѕР±С‰РёР№ РґРѕСЃС‚СѓРї...",    255
         MENUITEM SEPARATOR
-        MENUITEM "&Выбрать диск...",            251
+        MENUITEM "&Р’С‹Р±СЂР°С‚СЊ РґРёСЃРє...",            251
     }
 
-    POPUP "&Папки"  {
-        MENUITEM "С&ледующий уровень\t+",       301
-        MENUITEM "&Развернуть дерево\t*",       302
-        MENUITEM "Развернуть в&сё\tStrg+*",     303
-        MENUITEM "&Свернуть дерево\t-",         304
+    POPUP "&РџР°РїРєРё"  {
+        MENUITEM "РЎ&Р»РµРґСѓСЋС‰РёР№ СѓСЂРѕРІРµРЅСЊ\t+",       301
+        MENUITEM "&Р Р°Р·РІРµСЂРЅСѓС‚СЊ РґРµСЂРµРІРѕ\t*",       302
+        MENUITEM "Р Р°Р·РІРµСЂРЅСѓС‚СЊ РІ&СЃС‘\tStrg+*",     303
+        MENUITEM "&РЎРІРµСЂРЅСѓС‚СЊ РґРµСЂРµРІРѕ\t-",         304
         MENUITEM SEPARATOR
-        MENUITEM "&Отметить ветви",             505
+        MENUITEM "&РћС‚РјРµС‚РёС‚СЊ РІРµС‚РІРё",             505
     }
 
-    POPUP "&Вид"  {
-        MENUITEM "Дерево &и папка",             413
-        MENUITEM "Только &дерево",              411
-        MENUITEM "Только &папка",               412
+    POPUP "&Р’РёРґ"  {
+        MENUITEM "Р”РµСЂРµРІРѕ &Рё РїР°РїРєР°",             413
+        MENUITEM "РўРѕР»СЊРєРѕ &РґРµСЂРµРІРѕ",              411
+        MENUITEM "РўРѕР»СЊРєРѕ &РїР°РїРєР°",               412
         MENUITEM SEPARATOR
-        MENUITEM "Раз&бить",                    ID_VIEW_SPLIT
+        MENUITEM "Р Р°Р·&Р±РёС‚СЊ",                    ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "И&мя",                        ID_VIEW_NAME
-        MENUITEM "В&се подробности о файле",    ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "&Выборочно о файле...",       ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "Р&РјСЏ",                        ID_VIEW_NAME
+        MENUITEM "Р’&СЃРµ РїРѕРґСЂРѕР±РЅРѕСЃС‚Рё Рѕ С„Р°Р№Р»Рµ",    ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Р’С‹Р±РѕСЂРѕС‡РЅРѕ Рѕ С„Р°Р№Р»Рµ...",       ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&Сортировать по имени",       ID_VIEW_SORT_NAME
-        MENUITEM "Сортировать по &типу",        ID_VIEW_SORT_TYPE
-        MENUITEM "Сортировать по &размеру",     ID_VIEW_SORT_SIZE
-        MENUITEM "Сортировать по д&ате",        ID_VIEW_SORT_DATE
+        MENUITEM "&РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ РёРјРµРЅРё",       ID_VIEW_SORT_NAME
+        MENUITEM "РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ &С‚РёРїСѓ",        ID_VIEW_SORT_TYPE
+        MENUITEM "РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ &СЂР°Р·РјРµСЂСѓ",     ID_VIEW_SORT_SIZE
+        MENUITEM "РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ Рґ&Р°С‚Рµ",        ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Сортировать по &...",         ID_VIEW_FILTER
+        MENUITEM "РЎРѕСЂС‚РёСЂРѕРІР°С‚СЊ РїРѕ &...",         ID_VIEW_FILTER
     }
 
-    POPUP "&Настройки"  {
-        MENUITEM "Под&тверждения...",           501
-        MENUITEM "&Шрифт...",                   ID_SELECT_FONT
-        MENUITEM "&Настроить панель инструментов...", 512
+    POPUP "&РќР°СЃС‚СЂРѕР№РєРё"  {
+        MENUITEM "РџРѕРґ&С‚РІРµСЂР¶РґРµРЅРёСЏ...",           501
+        MENUITEM "&РЁСЂРёС„С‚...",                   ID_SELECT_FONT
+        MENUITEM "&РќР°СЃС‚СЂРѕРёС‚СЊ РїР°РЅРµР»СЊ РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ...", 512
         MENUITEM SEPARATOR
-        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Панель &дисков",              ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "&РџР°РЅРµР»СЊ РёРЅСЃС‚СЂСѓРјРµРЅС‚РѕРІ",        ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "РџР°РЅРµР»СЊ &РґРёСЃРєРѕРІ",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&РЎС‚СЂРѕРєР° СЃРѕСЃС‚РѕСЏРЅРёСЏ",           ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "П&олный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "Рџ&РѕР»РЅС‹Р№ СЌРєСЂР°РЅ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "&Значок в список программ",   504
-        MENUITEM "Со&хранять настройки при выходе",511
+        MENUITEM "&Р—РЅР°С‡РѕРє РІ СЃРїРёСЃРѕРє РїСЂРѕРіСЂР°РјРј",   504
+        MENUITEM "РЎРѕ&С…СЂР°РЅСЏС‚СЊ РЅР°СЃС‚СЂРѕР№РєРё РїСЂРё РІС‹С…РѕРґРµ",511
     }
 
 
-    POPUP "&Безопасность"  {
-        MENUITEM "&Доступ...",                  605
-        MENUITEM "&Протоколы...",               606
-        MENUITEM "&Владелец...",                607
+    POPUP "&Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ"  {
+        MENUITEM "&Р”РѕСЃС‚СѓРї...",                  605
+        MENUITEM "&РџСЂРѕС‚РѕРєРѕР»С‹...",               606
+        MENUITEM "&Р’Р»Р°РґРµР»РµС†...",                607
     }
 
-    POPUP "&Окно"  {
-        MENUITEM "Новое &окно",                 ID_WINDOW_NEW
-        MENUITEM "Окна &каскадом\tCtrl+F5",     ID_WINDOW_CASCADE
-        MENUITEM "Окна с&верху вниз",           ID_WINDOW_TILE_HORZ
-        MENUITEM "Окна с&лева направо\tCtrl+F4",ID_WINDOW_TILE_VERT
+    POPUP "&РћРєРЅРѕ"  {
+        MENUITEM "РќРѕРІРѕРµ &РѕРєРЅРѕ",                 ID_WINDOW_NEW
+        MENUITEM "РћРєРЅР° &РєР°СЃРєР°РґРѕРј\tCtrl+F5",     ID_WINDOW_CASCADE
+        MENUITEM "РћРєРЅР° СЃ&РІРµСЂС…Сѓ РІРЅРёР·",           ID_WINDOW_TILE_HORZ
+        MENUITEM "РћРєРЅР° СЃ&Р»РµРІР° РЅР°РїСЂР°РІРѕ\tCtrl+F4",ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Расположить &автоматически",  ID_WINDOW_AUTOSORT
+        MENUITEM "Р Р°СЃРїРѕР»РѕР¶РёС‚СЊ &Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё",  ID_WINDOW_AUTOSORT
 #endif
-        MENUITEM "&Расположить",                ID_WINDOW_ARRANGE
-        MENUITEM "О&бновить\tF5",               ID_REFRESH
+        MENUITEM "&Р Р°СЃРїРѕР»РѕР¶РёС‚СЊ",                ID_WINDOW_ARRANGE
+        MENUITEM "Рћ&Р±РЅРѕРІРёС‚СЊ\tF5",               ID_REFRESH
     }
 
-    POPUP "&Справка"  {
-        MENUITEM "&Содержание\tF1",             ID_HELP
-        MENUITEM "&Поиск...\tF1",               ID_HELP
-        MENUITEM "&Использование справки\tF1",  ID_HELP_USING
+    POPUP "&РЎРїСЂР°РІРєР°"  {
+        MENUITEM "&РЎРѕРґРµСЂР¶Р°РЅРёРµ\tF1",             ID_HELP
+        MENUITEM "&РџРѕРёСЃРє...\tF1",               ID_HELP
+        MENUITEM "&РСЃРїРѕР»СЊР·РѕРІР°РЅРёРµ СЃРїСЂР°РІРєРё\tF1",  ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&О Winefile...",              ID_ABOUT
+        MENUITEM "&Рћ Winefile...",              ID_ABOUT
     }
 }
 
 IDD_SELECT_DESTINATION DIALOG 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Выберите путь назначения"
+CAPTION "Р’С‹Р±РµСЂРёС‚Рµ РїСѓС‚СЊ РЅР°Р·РЅР°С‡РµРЅРёСЏ"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "&Путь:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    CONTROL         "&РџСѓС‚СЊ:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
-    PUSHBUTTON      "Отмена", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Обзор", 254, 158, 43, 47, 14
+    PUSHBUTTON      "РћС‚РјРµРЅР°", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&РћР±Р·РѕСЂ", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "По типу файлов"
+CAPTION "РџРѕ С‚РёРїСѓ С„Р°Р№Р»РѕРІ"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "&Имя:",-1,7,8,22,10
+    LTEXT           "&РРјСЏ:",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
-    GROUPBOX        "Тип файла",-1,7,23,87,56
-    CONTROL         "&Каталоги",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+    GROUPBOX        "РўРёРї С„Р°Р№Р»Р°",-1,7,23,87,56
+    CONTROL         "&РљР°С‚Р°Р»РѕРіРё",IDC_VIEW_TYPE_DIRECTORIES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
-    CONTROL         "&Программы",IDC_VIEW_TYPE_PROGRAMS,"Button",
+    CONTROL         "&РџСЂРѕРіСЂР°РјРјС‹",IDC_VIEW_TYPE_PROGRAMS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
-    CONTROL         "&Документы",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+    CONTROL         "&Р”РѕРєСѓРјРµРЅС‚С‹",IDC_VIEW_TYPE_DOCUMENTS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
-    CONTROL         "Другие &файлы",IDC_VIEW_TYPE_OTHERS,"Button",
+    CONTROL         "Р”СЂСѓРіРёРµ &С„Р°Р№Р»С‹",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
-    CONTROL         "Показать скрытые/&системные файлы",IDC_VIEW_TYPE_HIDDEN,
+    CONTROL         "РџРѕРєР°Р·Р°С‚СЊ СЃРєСЂС‹С‚С‹Рµ/&СЃРёСЃС‚РµРјРЅС‹Рµ С„Р°Р№Р»С‹",IDC_VIEW_TYPE_HIDDEN,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
     DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,104,24,50,14
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL,104,24,50,14
 END
 
 IDD_DIALOG_PROPERTIES DIALOG  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Свойства %s"
+CAPTION "РЎРІРѕР№СЃС‚РІР° %s"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,191,29,50,14
-    LTEXT           "Имя &файла:",-1,7,7,59,9
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL,191,29,50,14
+    LTEXT           "РРјСЏ &С„Р°Р№Р»Р°:",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "&Полный путь:",-1,7,18,59,9
+    LTEXT           "&РџРѕР»РЅС‹Р№ РїСѓС‚СЊ:",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Последнее изменение:",-1,7,29,59,9
+    LTEXT           "РџРѕСЃР»РµРґРЅРµРµ РёР·РјРµРЅРµРЅРёРµ:",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Версия:",-1,7,40,59,9
+    LTEXT           "Р’РµСЂСЃРёСЏ:",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Cop&yright:",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Размер:",-1,7,62,59,9
+    LTEXT           "Р Р°Р·РјРµСЂ:",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    GROUPBOX        "Атрибуты",-1,7,79,158,46
-    CONTROL         "&Только для чтения",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
-    CONTROL         "С&крытый",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
-    CONTROL         "&Архивный",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
-    CONTROL         "&Системный",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
-    CONTROL         "С&жатый",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
-    GROUPBOX        "&Информация о версии",-1,7,129,234,79
+    GROUPBOX        "РђС‚СЂРёР±СѓС‚С‹",-1,7,79,158,46
+    CONTROL         "&РўРѕР»СЊРєРѕ РґР»СЏ С‡С‚РµРЅРёСЏ",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "РЎ&РєСЂС‹С‚С‹Р№",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "&РђСЂС…РёРІРЅС‹Р№",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&РЎРёСЃС‚РµРјРЅС‹Р№",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "РЎ&Р¶Р°С‚С‹Р№",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&РРЅС„РѕСЂРјР°С†РёСЏ Рѕ РІРµСЂСЃРёРё",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -215,37 +215,37 @@ END
 
 STRINGTABLE
 {
-    IDS_FONT_SEL_DLG_NAME   "Применение параметров настройки шрифта"
-    IDS_FONT_SEL_ERROR      "Ошибка при выборе нового шрифта."
+    IDS_FONT_SEL_DLG_NAME   "РџСЂРёРјРµРЅРµРЅРёРµ РїР°СЂР°РјРµС‚СЂРѕРІ РЅР°СЃС‚СЂРѕР№РєРё С€СЂРёС„С‚Р°"
+    IDS_FONT_SEL_ERROR      "РћС€РёР±РєР° РїСЂРё РІС‹Р±РѕСЂРµ РЅРѕРІРѕРіРѕ С€СЂРёС„С‚Р°."
 }
 
 STRINGTABLE
 {
     IDS_WINEFILE            "Winefile"
-    IDS_ERROR               "Ошибка"
-    IDS_ROOT_FS             "Корневая файловая система"
-    IDS_UNIXFS              "Основная файловая система"
-    IDS_DESKTOP             "Рабочий стол"
+    IDS_ERROR               "РћС€РёР±РєР°"
+    IDS_ROOT_FS             "РљРѕСЂРЅРµРІР°СЏ С„Р°Р№Р»РѕРІР°СЏ СЃРёСЃС‚РµРјР°"
+    IDS_UNIXFS              "РћСЃРЅРѕРІРЅР°СЏ С„Р°Р№Р»РѕРІР°СЏ СЃРёСЃС‚РµРјР°"
+    IDS_DESKTOP             "Р Р°Р±РѕС‡РёР№ СЃС‚РѕР»"
     IDS_SHELL               "Shell"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "Ещё не реализовано"
+    IDS_NO_IMPL             "Р•С‰С‘ РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅРѕ"
     IDS_WINE_FILE           "Wine File"
 }
 
 STRINGTABLE
 {
-    IDS_COL_NAME            "Имя"
-    IDS_COL_SIZE            "Размер"
-    IDS_COL_CDATE           "Дата создания"
-    IDS_COL_ADATE           "Дата последнего доступа"
-    IDS_COL_MDATE           "Дата последнего изменения"
+    IDS_COL_NAME            "РРјСЏ"
+    IDS_COL_SIZE            "Р Р°Р·РјРµСЂ"
+    IDS_COL_CDATE           "Р”Р°С‚Р° СЃРѕР·РґР°РЅРёСЏ"
+    IDS_COL_ADATE           "Р”Р°С‚Р° РїРѕСЃР»РµРґРЅРµРіРѕ РґРѕСЃС‚СѓРїР°"
+    IDS_COL_MDATE           "Р”Р°С‚Р° РїРѕСЃР»РµРґРЅРµРіРѕ РёР·РјРµРЅРµРЅРёСЏ"
     IDS_COL_IDX             "Index/Inode"
-    IDS_COL_LINKS           "Ссылки"
-    IDS_COL_ATTR            "Атрибуты"
-    IDS_COL_SEC             "Безопасность"
+    IDS_COL_LINKS           "РЎСЃС‹Р»РєРё"
+    IDS_COL_ATTR            "РђС‚СЂРёР±СѓС‚С‹"
+    IDS_COL_SEC             "Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ"
 
-    IDS_FREE_SPACE_FMT      "%1 из %2 свободно"
-    IDS_UNIT_KB             "�Z�Q"
-    IDS_UNIT_MB             "�\�Q"
-    IDS_UNIT_GB             "�S�Q"
+    IDS_FREE_SPACE_FMT      "%1 РёР· %2 СЃРІРѕР±РѕРґРЅРѕ"
+    IDS_UNIT_KB             "РZРQ"
+    IDS_UNIT_MB             "Р\РQ"
+    IDS_UNIT_GB             "РSРQ"
 }

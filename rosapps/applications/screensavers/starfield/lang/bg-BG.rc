@@ -2,7 +2,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Екранен предпазител „Зведно поле”"
-    IDS_TITLE       "За"
-    IDS_TEXT        "Няма възможност за настройки."
+    IDS_DESCRIPTION "Р•РєСЂР°РЅРµРЅ РїСЂРµРґРїР°Р·РёС‚РµР» вЂћР—РІРµРґРЅРѕ РїРѕР»РµвЂќ"
+    IDS_TITLE       "Р—Р°"
+    IDS_TEXT        "РќСЏРјР° РІСЉР·РјРѕР¶РЅРѕСЃС‚ Р·Р° РЅР°СЃС‚СЂРѕР№РєРё."
 END

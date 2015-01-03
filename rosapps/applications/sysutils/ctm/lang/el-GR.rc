@@ -10,21 +10,21 @@ BEGIN
    IDS_COLUMN_IMAGENAME    "Image name                  "
    IDS_COLUMN_PID          "PID  "
    IDS_COLUMN_CPU          "CPU"
-   IDS_COLUMN_MEM          "Χρήση μνήμης"
+   IDS_COLUMN_MEM          "Ξ§ΟΞ®ΟƒΞ· ΞΌΞ½Ξ®ΞΌΞ·Ο‚"
    IDS_COLUMN_MEM_UNIT		"KB"
    IDS_COLUMN_PF           "Page Faults"
 
-   IDS_IDLE_PROCESS        "Αδρανής διαδικασία"
+   IDS_IDLE_PROCESS        "Ξ‘Ξ΄ΟΞ±Ξ½Ξ®Ο‚ Ξ΄ΞΉΞ±Ξ΄ΞΉΞΊΞ±ΟƒΞ―Ξ±"
    IDS_YES                 "Y"
    IDS_NO                  "N"
 
-   IDS_MENU                "Πατήστε: q - έξοδος, k - τέλος διεργασίας"
+   IDS_MENU                "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ: q - Ξ­ΞΎΞΏΞ΄ΞΏΟ‚, k - Ο„Ξ­Ξ»ΞΏΟ‚ Ξ΄ΞΉΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚"
    IDS_MENU_QUIT           "Q"
    IDS_MENU_KILL_PROCESS   "K"
 
-   IDS_KILL_PROCESS        "Θέλετε να σταματήσετε αυτή τη διεργασία? (y/n)"
-   IDS_KILL_PROCESS_ERR1   "Αδύνατον να τερματιστεί η διεργασία..."
-   IDS_KILL_PROCESS_ERR2   "Αδύνατον να τερματιστεί η διεργασία %d (unable to OpenProcess)"
+   IDS_KILL_PROCESS        "ΞΞ­Ξ»ΞµΟ„Ξµ Ξ½Ξ± ΟƒΟ„Ξ±ΞΌΞ±Ο„Ξ®ΟƒΞµΟ„Ξµ Ξ±Ο…Ο„Ξ® Ο„Ξ· Ξ΄ΞΉΞµΟΞ³Ξ±ΟƒΞ―Ξ±? (y/n)"
+   IDS_KILL_PROCESS_ERR1   "Ξ‘Ξ΄ΟΞ½Ξ±Ο„ΞΏΞ½ Ξ½Ξ± Ο„ΞµΟΞΌΞ±Ο„ΞΉΟƒΟ„ΞµΞ― Ξ· Ξ΄ΞΉΞµΟΞ³Ξ±ΟƒΞ―Ξ±..."
+   IDS_KILL_PROCESS_ERR2   "Ξ‘Ξ΄ΟΞ½Ξ±Ο„ΞΏΞ½ Ξ½Ξ± Ο„ΞµΟΞΌΞ±Ο„ΞΉΟƒΟ„ΞµΞ― Ξ· Ξ΄ΞΉΞµΟΞ³Ξ±ΟƒΞ―Ξ± %d (unable to OpenProcess)"
 
    IDS_CTM_GENERAL_ERR1    "ctm: can't use console."
    IDS_CTM_GENERAL_ERR2    "ctm: can't GetConsoleMode() for input console."

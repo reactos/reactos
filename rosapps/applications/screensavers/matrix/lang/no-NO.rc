@@ -22,11 +22,11 @@ BEGIN
     CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
     LTEXT           "Raskere",IDC_STATIC,104,110,22,8
-    GROUPBOX        "&Skriftstørrelse",IDC_STATIC,7,137,127,36
+    GROUPBOX        "&SkriftstÃ¸rrelse",IDC_STATIC,7,137,127,36
     LTEXT           "Mindre",IDC_STATIC,13,153,24,8
     CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
-    LTEXT           "Større",IDC_STATIC,104,153,25,8
+    LTEXT           "StÃ¸rre",IDC_STATIC,104,153,25,8
     GROUPBOX        "&Kodet meldinger",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP

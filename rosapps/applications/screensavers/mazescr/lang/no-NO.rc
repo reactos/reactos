@@ -4,5 +4,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Maze Skjermsparer"
     IDS_TITLE       "Om"
-    IDS_TEXT        "Ingen valg trengs å settes."
+    IDS_TEXT        "Ingen valg trengs Ã¥ settes."
 END

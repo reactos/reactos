@@ -5,33 +5,33 @@ BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S System [/U Benutzername [/P [Passwort]]]] [/FO Format] [/NH]\n\n\
 Beschreibung:\n\
-  Mit diesem Programm wird die Betriebssystemkonfiguration für\n\
+  Mit diesem Programm wird die Betriebssystemkonfiguration fÃ¼r\n\
   einen lokalen Computer angezeigt.\n\n\
 Parameterliste:\n\
   /S      System              Bestimmt das Remotesystem mit dem die Verbindung\n\
                               hergestellt werden soll.\n\n\
-  /U      [Domäne\]Benutzer   Bestimmt den Benutzerkontext unter dem\n\
-                              der Befehl ausgeführt werden soll.\n\n\
-  /P      [Passwort]          Bestimmt das Kennwort für den zugewiesenen\n\
+  /U      [DomÃ¤ne\]Benutzer   Bestimmt den Benutzerkontext unter dem\n\
+                              der Befehl ausgefÃ¼hrt werden soll.\n\n\
+  /P      [Passwort]          Bestimmt das Kennwort fÃ¼r den zugewiesenen\n\
                               Benutzerkontext. Bei Auslassung, wird dieses\n\
                               angefordert.\n\n\
   /FO     Format              Bestimmt das Format in dem die Ausgabe\n\
                               angezeigt werden soll.\n\
-                              Gültige Werte: TABLE, LIST, CSV.\n\n\
+                              GÃ¼ltige Werte: TABLE, LIST, CSV.\n\n\
   /NH                         Bestimmt, dass der Spalten-Header in der\n\
                               Ausgabe nicht angezeigt werden soll.\n\
-                              Nur für Formate TABLE und CSV.\n\n\
+                              Nur fÃ¼r Formate TABLE und CSV.\n\n\
   /?                          Zeigt die Hilfemeldung an.\n\n\
 Beispiele:\n\
   SYSTEMINFO\n\
   SYSTEMINFO /?\n\
   SYSTEMINFO /S system\n\
   SYSTEMINFO /S system /U Benutzer\n\
-  SYSTEMINFO /S system /U Domäne\\Benutzer /P Passwort /FO TABLE\n\
+  SYSTEMINFO /S system /U DomÃ¤ne\\Benutzer /P Passwort /FO TABLE\n\
   SYSTEMINFO /S system /FO LIST\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
-IDS_HOST_NAME,               "Domäne"
+IDS_HOST_NAME,               "DomÃ¤ne"
 IDS_OS_NAME,                 "OS Name"
 IDS_OS_VERSION,              "OS Version: Build %u"
 IDS_BUILD,                   "Build"
@@ -51,14 +51,14 @@ IDS_BIOS_DATE,               "BIOS Datum"
 IDS_BIOS_VERSION,            "BIOS Version"
 IDS_ROS_DIR,                 "ReactOS Verzeichnis"
 IDS_SYS_DIR,                 "System Verzeichnis"
-IDS_BOOT_DEV,                "Startgerät"
+IDS_BOOT_DEV,                "StartgerÃ¤t"
 IDS_SYS_LOCALE,              "Systemgebietsschema"
 IDS_INPUT_LOCALE,            "Eingabegebietsschema"
 IDS_TIME_ZONE,               "Zeitzone"
 IDS_TOTAL_PHYS_MEM,          "Gesamter Physikalischer Speicher"
-IDS_AVAIL_PHISICAL_MEM,      "Verfügbarer Physikalischer Speicher"
-IDS_VIRT_MEM_MAX,            "Auslagerungsdatei: Max Größe"
-IDS_VIRT_MEM_AVAIL,          "Auslagerungsdatei: Verfügbar"
+IDS_AVAIL_PHISICAL_MEM,      "VerfÃ¼gbarer Physikalischer Speicher"
+IDS_VIRT_MEM_MAX,            "Auslagerungsdatei: Max GrÃ¶ÃŸe"
+IDS_VIRT_MEM_AVAIL,          "Auslagerungsdatei: VerfÃ¼gbar"
 IDS_VIRT_MEM_INUSE,          "Auslagerungsdatei: In Verwendung"
 IDS_PAGEFILE_LOC,            "Auslagerungsdateipfad(e): %s"
 IDS_DOMAIN,                  "Domain"

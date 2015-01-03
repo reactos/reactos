@@ -5,10 +5,10 @@ BEGIN
   POPUP "&Datei"
   BEGIN
     MENUITEM "&Neu...",         ID_NEW
-    MENUITEM "Ö&ffnen...",        ID_OPEN
+    MENUITEM "Ã–&ffnen...",        ID_OPEN
     MENUITEM SEPARATOR
-    MENUITEM "Sch&ließen\tStrg+F4", ID_CLOSE, GRAYED
-    MENUITEM "&Alle Schließen",      ID_CLOSEALL, GRAYED
+    MENUITEM "Sch&lieÃŸen\tStrg+F4", ID_CLOSE, GRAYED
+    MENUITEM "&Alle SchlieÃŸen",      ID_CLOSEALL, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Speichern",           ID_SAVE, GRAYED
     MENUITEM "Speichern &unter...",     ID_SAVEAS, GRAYED
@@ -22,14 +22,14 @@ BEGIN
   END
   POPUP "&Bearbeiten"
   BEGIN
-    MENUITEM "&Rückgängig",           ID_UNDO, GRAYED
+    MENUITEM "&RÃ¼ckgÃ¤ngig",           ID_UNDO, GRAYED
     MENUITEM "&Wiederholen",           ID_REDO, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Ausschneiden",            ID_CUT, GRAYED
     MENUITEM "&Kopieren",           ID_COPY, GRAYED
-    MENUITEM "&Einfügen",          ID_PASTE, GRAYED
+    MENUITEM "&EinfÃ¼gen",          ID_PASTE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Löschen",           -1, GRAYED
+    MENUITEM "&LÃ¶schen",           -1, GRAYED
     MENUITEM "Alles &markieren",     ID_SELALL, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Suchen...\tStrg+F",-1, GRAYED
@@ -46,7 +46,7 @@ BEGIN
     MENUITEM "&Lineal",          -1, CHECKED
     MENUITEM "Status&leiste",     ID_STATUSBAR, CHECKED
   END
-  POPUP "&Einfügen"
+  POPUP "&EinfÃ¼gen"
   BEGIN
     MENUITEM "&Datum und Uhrzeit...",-1, GRAYED
     MENUITEM "&Objekt...",       -1, GRAYED
@@ -54,7 +54,7 @@ BEGIN
   POPUP "&Format"
   BEGIN
     MENUITEM "&Schriftart...",        -1 GRAYED
-    MENUITEM "Aufzählungszeichen",     -1, GRAYED
+    MENUITEM "AufzÃ¤hlungszeichen",     -1, GRAYED
     MENUITEM "Absatz...",    -1, GRAYED
     MENUITEM "Tabstops...",         -1, GRAYED
   END
@@ -65,11 +65,11 @@ BEGIN
     MENUITEM "&Vertikal unterteilen",   ID_WINDOW_TILE_VERT
     MENUITEM "Symbole &anordnen",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
-    MENUITEM "Nächstes\tStrg+F6",     ID_WINDOW_NEXT
+    MENUITEM "NÃ¤chstes\tStrg+F6",     ID_WINDOW_NEXT
   END
   POPUP "&Hilfe"
   BEGIN
-    MENUITEM "&Über...",       ID_ABOUT
+    MENUITEM "&Ãœber...",       ID_ABOUT
   END
 END
 
@@ -97,7 +97,7 @@ END
 
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Über WordPad"
+CAPTION "Ãœber WordPad"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -110,7 +110,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE           "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_LICENSE           "Dieses Programm ist kostenlos; Sie kÃ¶nnen es frei verteilen mit od. ohne Ã„nderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation verÃ¶ffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spÃ¤tere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
   IDS_DEFAULT_NAME      "Dokument %1!u!"
   IDS_READY             " Fertig."
 END
@@ -128,14 +128,14 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_NEW       "Neu"
-  IDS_TOOLTIP_OPEN      "Öffnen"
+  IDS_TOOLTIP_OPEN      "Ã–ffnen"
   IDS_TOOLTIP_SAVE      "Speichern"
   IDS_TOOLTIP_PRINTPRE  "Druckansicht"
   IDS_TOOLTIP_PRINT     "Drucken"
   IDS_TOOLTIP_CUT       "Ausschneiden"
   IDS_TOOLTIP_COPY      "Kopieren"
-  IDS_TOOLTIP_PASTE     "Einfügen"
-  IDS_TOOLTIP_UNDO      "Rückgängig"
+  IDS_TOOLTIP_PASTE     "EinfÃ¼gen"
+  IDS_TOOLTIP_UNDO      "RÃ¼ckgÃ¤ngig"
   IDS_TOOLTIP_REDO      "Wiederholen"
 END
 
@@ -144,26 +144,26 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_NEW          " Erstellt iin neues Dokument."
-  IDS_HINT_OPEN         " Öffnet ein vorhandenes Dokument."
-  IDS_HINT_CLOSE        " Schließt dieses Fenster."
-  IDS_HINT_CLOSEALL     " Schliueßt alle Fenster."
+  IDS_HINT_OPEN         " Ã–ffnet ein vorhandenes Dokument."
+  IDS_HINT_CLOSE        " SchlieÃŸt dieses Fenster."
+  IDS_HINT_CLOSEALL     " SchliueÃŸt alle Fenster."
   IDS_HINT_SAVE         " Speichert das aktive Dokument."
   IDS_HINT_SAVEAS       " Speichert das aktive Dokument unter einem neuen Namen."
   IDS_HINT_PRINT        " Druckt das aktive Dokument."
   IDS_HINT_PRINTPRE     " Voransicht des gedruckten Dokumentes."
-  IDS_HINT_PAGESETUP    " Ändert Seitenlayout Einstellungen."
+  IDS_HINT_PAGESETUP    " Ã„ndert Seitenlayout Einstellungen."
   IDS_HINT_EXIT         " Beendet das Programm."
 
-  IDS_HINT_CASCADE      " Ordnet die Fenster so an, dass sie überlappen."
-  IDS_HINT_TILE_HORZ    " Ordnet die Fenster so am, dass sie nicht-überlappen."
-  IDS_HINT_TILE_VERT    " Ordnet die Fenster so am, dass sie nicht-überlappen."
-  IDS_HINT_ARRANGE      " Ordnet Symbole am Fuß des Fensters an."
-  IDS_HINT_NEXT         " Aktiviert das nächste Fenster."
+  IDS_HINT_CASCADE      " Ordnet die Fenster so an, dass sie Ã¼berlappen."
+  IDS_HINT_TILE_HORZ    " Ordnet die Fenster so am, dass sie nicht-Ã¼berlappen."
+  IDS_HINT_TILE_VERT    " Ordnet die Fenster so am, dass sie nicht-Ã¼berlappen."
+  IDS_HINT_ARRANGE      " Ordnet Symbole am FuÃŸ des Fensters an."
+  IDS_HINT_NEXT         " Aktiviert das nÃ¤chste Fenster."
 
-  IDS_HINT_SYS_RESTORE  " Dieses Fenster auf normale Größe wiederherstellen."
+  IDS_HINT_SYS_RESTORE  " Dieses Fenster auf normale GrÃ¶ÃŸe wiederherstellen."
   IDS_HINT_SYS_MOVE     " Dieses fenster bewegen."
-  IDS_HINT_SYS_SIZE     " Größe dieses Fensters verändern."
-  IDS_HINT_SYS_MINIMIZE " Dieses Fenster auf Symbolgröße verkleinern."
-  IDS_HINT_SYS_MAXIMIZE " Dieses Fenster auf Vollbildgröße vergrößern."
+  IDS_HINT_SYS_SIZE     " GrÃ¶ÃŸe dieses Fensters verÃ¤ndern."
+  IDS_HINT_SYS_MINIMIZE " Dieses Fenster auf SymbolgrÃ¶ÃŸe verkleinern."
+  IDS_HINT_SYS_MAXIMIZE " Dieses Fenster auf VollbildgrÃ¶ÃŸe vergrÃ¶ÃŸern."
 END
 

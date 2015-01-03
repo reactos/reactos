@@ -31,7 +31,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 IDM_WINEFILE MENU
 {
     POPUP "&Arkiv" {
-        MENUITEM "&÷ppna\tEnter",               ID_ACTIVATE
+        MENUITEM "&√ñppna\tEnter",               ID_ACTIVATE
         MENUITEM "&Flytta...\tF7",              ID_FILE_MOVE
         MENUITEM "&Kopiera...\tF8",             ID_FILE_COPY
         MENUITEM "&I urklipp...\tF9",           118
@@ -42,13 +42,13 @@ IDM_WINEFILE MENU
         MENUITEM "&Komprimera...",              119
         MENUITEM "Packa &upp...",               120
         MENUITEM SEPARATOR
-        MENUITEM "&Kˆr...",                     ID_RUN
+        MENUITEM "&K√∂r...",                     ID_RUN
         MENUITEM "&Skriv ut...",                102
         MENUITEM "Associera...",                103
         MENUITEM SEPARATOR
         MENUITEM "Skapa mapp...",               111
-        MENUITEM "&Sˆk...",                     104
-        MENUITEM "&V‰lj filer...",              116
+        MENUITEM "&S√∂k...",                     104
+        MENUITEM "&V√§lj filer...",              116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "&Avsluta\tAlt+X",             ID_FILE_EXIT
@@ -66,27 +66,27 @@ IDM_WINEFILE MENU
         MENUITEM "&Skapa systemdisk...", -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Anslut &n‰tverksenhet",       ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Koppla ifrÂn n‰tverksenhet", ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "Anslut &n√§tverksenhet",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Koppla ifr√•n n√§tverksenhet", ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Dela ut...",                  254
         MENUITEM "&Ta bort utdelning...",       255
         MENUITEM SEPARATOR
-        MENUITEM "&V‰lj enhet...",              251
+        MENUITEM "&V√§lj enhet...",              251
     }
 
-    POPUP "&Tr‰d" {
-        MENUITEM "&N‰sta nivÂ\t+",              301
-        MENUITEM "Utˆka &tr‰d\t*",              302
-        MENUITEM "Utˆka &alla\tCtrl+*",         303
-        MENUITEM "Kollapsa &tr‰d\t-",           304
+    POPUP "&Tr√§d" {
+        MENUITEM "&N√§sta niv√•\t+",              301
+        MENUITEM "Ut√∂ka &tr√§d\t*",              302
+        MENUITEM "Ut√∂ka &alla\tCtrl+*",         303
+        MENUITEM "Kollapsa &tr√§d\t-",           304
         MENUITEM SEPARATOR
         MENUITEM "&Markera undermappar",        505
     }
 
     POPUP "&Visa" {
-        MENUITEM "&Tr‰d och mapp",              413
-        MENUITEM "Endast tr&‰d",                  411
+        MENUITEM "&Tr√§d och mapp",              413
+        MENUITEM "Endast tr&√§d",                  411
         MENUITEM "Endast &mapp",                  412
         MENUITEM SEPARATOR
         MENUITEM "De&la",                       ID_VIEW_SPLIT
@@ -103,31 +103,31 @@ IDM_WINEFILE MENU
         MENUITEM "Sortera efter &...",          ID_VIEW_FILTER
     }
 
-    POPUP "&Inst‰llningar" {
-        MENUITEM "&Bekr‰ftelse...",             501
+    POPUP "&Inst√§llningar" {
+        MENUITEM "&Bekr√§ftelse...",             501
         MENUITEM "&Teckensnitt...",             ID_SELECT_FONT
-        MENUITEM "&Konfigurera verktygsf‰lt...", 512
+        MENUITEM "&Konfigurera verktygsf√§lt...", 512
         MENUITEM SEPARATOR
-        MENUITEM "&Verktygsf‰lt",               ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Enhetsf‰lt",                 ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "St&atusf‰lt",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "&Verktygsf√§lt",               ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Enhetsf√§lt",                 ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "St&atusf√§lt",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "H&elsk‰rm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "H&elsk√§rm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "&Minimera vid kˆrning",       504
-        MENUITEM "&Spara ‰ndringar vid st‰ngning", 511
+        MENUITEM "&Minimera vid k√∂rning",       504
+        MENUITEM "&Spara √§ndringar vid st√§ngning", 511
     }
 
-    POPUP "&S‰kerhet" {
-        MENUITEM "&≈tkomst...",                 605
+    POPUP "&S√§kerhet" {
+        MENUITEM "&√Ötkomst...",                 605
         MENUITEM "&Loggning...",                606
-        MENUITEM "&ƒgare...",                   607
+        MENUITEM "&√Ñgare...",                   607
     }
 
-    POPUP "&Fˆnster" {
-        MENUITEM "Nytt &fˆnster",               ID_WINDOW_NEW
-        MENUITEM "÷verlappande\tCtrl+F5",       ID_WINDOW_CASCADE
+    POPUP "&F√∂nster" {
+        MENUITEM "Nytt &f√∂nster",               ID_WINDOW_NEW
+        MENUITEM "√ñverlappande\tCtrl+F5",       ID_WINDOW_CASCADE
         MENUITEM "Ordna &horisontellt",         ID_WINDOW_TILE_HORZ
         MENUITEM "Ordna &vertikalt\tCtrl+F4",   ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
@@ -138,9 +138,9 @@ IDM_WINEFILE MENU
     }
 
     POPUP "&?" {
-        MENUITEM "&Hj‰lpavsnitt\tF1",           ID_HELP
-        MENUITEM "Hj‰lp &sˆk...\tF1",           ID_HELP
-        MENUITEM "&Anv‰nda hj‰lpen\tF1",        ID_HELP_USING
+        MENUITEM "&Hj√§lpavsnitt\tF1",           ID_HELP
+        MENUITEM "Hj√§lp &s√∂k...\tF1",           ID_HELP
+        MENUITEM "&Anv√§nda hj√§lpen\tF1",        ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "Information om &Winefile...", ID_ABOUT
     }
@@ -148,15 +148,15 @@ IDM_WINEFILE MENU
 
 IDD_SELECT_DESTINATION DIALOG 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "V‰lj mÂl"
+CAPTION "V√§lj m√•l"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "&Sˆkv‰g:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    CONTROL         "&S√∂kv√§g:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
     PUSHBUTTON      "Avbryt", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Bl‰ddra", 254, 158, 43, 47, 14
+    PUSHBUTTON      "&Bl√§ddra", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG 15, 13, 161, 97
@@ -175,7 +175,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
     CONTROL         "&Andra filer",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
-    CONTROL         "Visa gˆmda/&system-filer",IDC_VIEW_TYPE_HIDDEN,
+    CONTROL         "Visa g√∂mda/&system-filer",IDC_VIEW_TYPE_HIDDEN,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
     DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,104,24,50,14
@@ -183,16 +183,16 @@ END
 
 IDD_DIALOG_PROPERTIES DIALOG  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Egenskaper fˆr %s"
+CAPTION "Egenskaper f√∂r %s"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
     PUSHBUTTON      "Avbryt",IDCANCEL,191,29,50,14
     LTEXT           "&Filnamn:",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "F&ull sˆkv‰g:",-1,7,18,59,9
+    LTEXT           "F&ull s√∂kv√§g:",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Sist ‰ndrad:",-1,7,29,59,9
+    LTEXT           "Sist √§ndrad:",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Version:",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
@@ -214,8 +214,8 @@ END
 
 STRINGTABLE
 {
-    IDS_FONT_SEL_DLG_NAME   "Verkst‰ll teckensnittsinst‰llningar"
-    IDS_FONT_SEL_ERROR      "Ett fel uppstod n‰r ett nytt teckensnitt valdes."
+    IDS_FONT_SEL_DLG_NAME   "Verkst√§ll teckensnittsinst√§llningar"
+    IDS_FONT_SEL_ERROR      "Ett fel uppstod n√§r ett nytt teckensnitt valdes."
 }
 
 STRINGTABLE
@@ -227,7 +227,7 @@ STRINGTABLE
     IDS_DESKTOP             "Skrivbord"
     IDS_SHELL               "Skal"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "Inte implementerat ‰nnu"
+    IDS_NO_IMPL             "Inte implementerat √§nnu"
     IDS_WINE_FILE           "Winefile"
 }
 
@@ -239,9 +239,9 @@ STRINGTABLE
     IDS_COL_ADATE           "ADatum"
     IDS_COL_MDATE           "MDatum"
     IDS_COL_IDX             "Index/Inode"
-    IDS_COL_LINKS           "L‰nkar"
+    IDS_COL_LINKS           "L√§nkar"
     IDS_COL_ATTR            "Attribut"
-    IDS_COL_SEC             "S‰kerhet"
+    IDS_COL_SEC             "S√§kerhet"
 
     IDS_FREE_SPACE_FMT      "%1 av %2 ledigt"
     IDS_UNIT_KB             "kB"

@@ -22,17 +22,17 @@ BEGIN
     CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,48,103,62,22
     LTEXT           "Schneller",IDC_STATIC,105,110,30,8
-    GROUPBOX        "&Schriftgröße",IDC_STATIC,7,137,133,36
+    GROUPBOX        "&SchriftgrÃ¶ÃŸe",IDC_STATIC,7,137,133,36
     LTEXT           "Kleiner",IDC_STATIC,13,153,24,8
     CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,48,146,62,22
-    LTEXT           "Größer",IDC_STATIC,105,153,25,8
+    LTEXT           "GrÃ¶ÃŸer",IDC_STATIC,105,153,25,8
     GROUPBOX        "Codierte Nachrichten",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
     CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
-    PUSHBUTTON      "&Hinzufügen",IDC_ADD,280,41,44,18
+    PUSHBUTTON      "&HinzufÃ¼gen",IDC_ADD,280,41,44,18
     PUSHBUTTON      "&Entfernen",IDC_REMOVE,280,66,44,18
     CONTROL         "Nachrichten vermischen",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,90,10

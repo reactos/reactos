@@ -10,6 +10,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
@@ -18,8 +21,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/lt-LT.rc"
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
+#include "lang/ro-RO.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
-
-/* UTF-8 */
-#include "lang/ro-RO.rc"

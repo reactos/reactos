@@ -31,7 +31,7 @@ BEGIN
     CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
                     WS_BORDER,7,7,63,58
     LTEXT           "Seleccione una unidad:",-1,78,40,50,8
-    LTEXT           "Seleccione una acción:",-1,135,40,58,8
+    LTEXT           "Seleccione una acciÃ³n:",-1,135,40,58,8
     CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
                     0x1,7,71,299,10
     CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
@@ -54,21 +54,21 @@ BEGIN
     RTEXT           "Volumen",-1,7,7,24,8
     LTEXT           "Capacidad",-1,7,51,28,8
     RTEXT           "(Letra de la unidad)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
-    RTEXT           "(Tamaño del disco, Bytes)",IDC_DISKSIZEBYTES,63,51,117,10,
+    RTEXT           "(TamaÃ±o del disco, Bytes)",IDC_DISKSIZEBYTES,63,51,117,10,
                     SS_SUNKEN
-    RTEXT           "(Tamaño del disco, Clusters)",IDC_DISKSIZECLUSTERS,63,73,117,
+    RTEXT           "(TamaÃ±o del disco, Clusters)",IDC_DISKSIZECLUSTERS,63,73,117,
                     10,SS_SUNKEN
     LTEXT           "Clusters totales",-1,7,73,43,8
-    RTEXT           "(Tamaño del Cluster)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+    RTEXT           "(TamaÃ±o del Cluster)",IDC_DISKCLUSTERSIZE,63,84,117,10,
                     SS_SUNKEN
-    LTEXT           "Tamaño del Cluster",-1,7,84,36,8
+    LTEXT           "TamaÃ±o del Cluster",-1,7,84,36,8
     RTEXT           "(Cantidad de archivos)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
-    RTEXT           "(Tamaño de archivos, bytes)",IDC_FILESSIZEBYTES,267,29,117,10,
+    RTEXT           "(TamaÃ±o de archivos, bytes)",IDC_FILESSIZEBYTES,267,29,117,10,
                     SS_SUNKEN
     LTEXT           "# de archivos",-1,194,18,28,8
-    LTEXT           "Tamaño total",-1,194,29,31,8
-    LTEXT           "Tamaño en disco",-1,194,40,39,8
-    RTEXT           "(Tamaño total, bytes)",IDC_FILESSIZEONDISK,267,40,117,10,
+    LTEXT           "TamaÃ±o total",-1,194,29,31,8
+    LTEXT           "TamaÃ±o en disco",-1,194,40,39,8
+    RTEXT           "(TamaÃ±o total, bytes)",IDC_FILESSIZEONDISK,267,40,117,10,
                     SS_SUNKEN
     RTEXT           "(Files slack bytes)",IDC_FILESSLACKBYTES,267,51,117,10,
                     SS_SUNKEN
@@ -92,7 +92,7 @@ BEGIN
     RTEXT           "(Media de fragmentos por archivo)",IDC_AVERAGEFRAGS,267,73,117,
                     10,SS_SUNKEN
     LTEXT           "Media de fragmentos por archivo",-1,194,73,60,20
-    LTEXT           "XX.X% de los archivos de esta unidad están fragmentados. Es recomendable que realice una SSSSSSS defragmentación.",
+    LTEXT           "XX.X% de los archivos de esta unidad estÃ¡n fragmentados. Es recomendable que realice una SSSSSSS defragmentaciÃ³n.",
                     IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
     LTEXT           "Recomendaciones:",-1,7,96,62,8
 END
@@ -173,14 +173,14 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Organización", " "
+            VALUE "OrganizaciÃ³n", " "
             VALUE "FileDescription", "Fraginator"
-            VALUE "Versión del archivo", "1.03"
+            VALUE "VersiÃ³n del archivo", "1.03"
             VALUE "Nombre interno", "Fraginator"
-            VALUE "Copyright", "Copyright © 2000-2002 Rick Brewster"
+            VALUE "Copyright", "Copyright Â© 2000-2002 Rick Brewster"
             VALUE "Nombre original del archivo", "Fraginator.exe"
             VALUE "Nombre del producto", "Fraginator"
-            VALUE "Versión del producto", "1.03"
+            VALUE "VersiÃ³n del producto", "1.03"
         END
     END
     BLOCK "VarFileInfo"

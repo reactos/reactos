@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  30-01-2008
  */
 
@@ -6,7 +6,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Bludisko - öetriË obrazovky"
-    IDS_TITLE       "»o je ..."
-    IDS_TEXT        "Nie s˙ potrebnÈ ûiadne nastavenia."
+    IDS_DESCRIPTION "Bludisko - ≈°etriƒç obrazovky"
+    IDS_TITLE       "ƒåo je ..."
+    IDS_TEXT        "Nie s√∫ potrebn√© ≈æiadne nastavenia."
 END

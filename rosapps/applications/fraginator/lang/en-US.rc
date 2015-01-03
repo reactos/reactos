@@ -178,7 +178,7 @@ BEGIN
             VALUE "FileDescription", "Fraginator"
             VALUE "FileVersion", "1.03"
             VALUE "InternalName", "Fraginator"
-            VALUE "LegalCopyright", "Copyright © 2000-2002 Rick Brewster"
+            VALUE "LegalCopyright", "Copyright Â© 2000-2002 Rick Brewster"
             VALUE "OriginalFilename", "Fraginator.exe"
             VALUE "ProductName", "Fraginator"
             VALUE "ProductVersion", "1.03"

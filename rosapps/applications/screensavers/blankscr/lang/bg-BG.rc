@@ -3,5 +3,5 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Blank"
-    IDS_TEXT        "Няма възможност за настройки."
+    IDS_TEXT        "РќСЏРјР° РІСЉР·РјРѕР¶РЅРѕСЃС‚ Р·Р° РЅР°СЃС‚СЂРѕР№РєРё."
 END

@@ -4,5 +4,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Starfield Skjermsparer"
     IDS_TITLE       "Om"
-    IDS_TEXT        "Ingen valg trenger å settes."
+    IDS_TEXT        "Ingen valg trenger Ã¥ settes."
 END

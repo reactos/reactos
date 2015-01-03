@@ -12,50 +12,50 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Nastavenie öetriËa obrazovky Matrix"
+CAPTION "Nastavenie ≈°etriƒça obrazovky Matrix"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "&R˝chlosù dekÛdovania",IDC_STATIC,7,7,128,36
+    GROUPBOX        "&R√Ωchlos≈• dek√≥dovania",IDC_STATIC,7,7,128,36
     LTEXT           "Pomaly",IDC_STATIC,13,24,24,8
-    CONTROL         "Pos˙vaË1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
+    CONTROL         "Pos√∫vaƒç1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
-    LTEXT           "R˝chlo",IDC_STATIC,104,24,24,8
-    GROUPBOX        "&Zloûitosù öifry",IDC_STATIC,7,50,128,36
-    LTEXT           "Menöia",IDC_STATIC,13,67,24,8
-    CONTROL         "Pos˙vaË2",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
+    LTEXT           "R√Ωchlo",IDC_STATIC,104,24,24,8
+    GROUPBOX        "&Zlo≈æitos≈• ≈°ifry",IDC_STATIC,7,50,128,36
+    LTEXT           "Men≈°ia",IDC_STATIC,13,67,24,8
+    CONTROL         "Pos√∫vaƒç2",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
-    LTEXT           "V‰Ëöia",IDC_STATIC,101,67,24,8
-    GROUPBOX        "R˝chlosù zobrazovanej &spr·vy",IDC_MSGSPEEDGRP,7,93,127,36
+    LTEXT           "V√§ƒç≈°ia",IDC_STATIC,101,67,24,8
+    GROUPBOX        "R√Ωchlos≈• zobrazovanej &spr√°vy",IDC_MSGSPEEDGRP,7,93,127,36
     LTEXT           "Pomaly",IDC_STATIC,13,110,24,8
-    CONTROL         "Pos˙vaË3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
+    CONTROL         "Pos√∫vaƒç3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
-    LTEXT           "R˝chlo",IDC_STATIC,104,110,24,8
-    GROUPBOX        "&Veækosù pÌsma",IDC_STATIC,7,137,127,36
-    LTEXT           "Menöie",IDC_STATIC,13,153,24,8
-    CONTROL         "Pos˙vaË4",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
+    LTEXT           "R√Ωchlo",IDC_STATIC,104,110,24,8
+    GROUPBOX        "&Veƒækos≈• p√≠sma",IDC_STATIC,7,137,127,36
+    LTEXT           "Men≈°ie",IDC_STATIC,13,153,24,8
+    CONTROL         "Pos√∫vaƒç4",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
-    LTEXT           "V‰Ëöie",IDC_STATIC,104,153,24,8
-    GROUPBOX        "&KÛdovanÈ spr·vy",IDC_STATIC,145,7,188,142
+    LTEXT           "V√§ƒç≈°ie",IDC_STATIC,104,153,24,8
+    GROUPBOX        "&K√≥dovan√© spr√°vy",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
     CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
-    PUSHBUTTON      "Prid&aù",IDC_ADD,280,41,44,18
-    PUSHBUTTON      "O&dstr·niù",IDC_REMOVE,280,66,44,18
-    LTEXT           "Typ &pÌsma:",IDC_STATIC,151,118,40,8
+    PUSHBUTTON      "Prid&a≈•",IDC_ADD,280,41,44,18
+    PUSHBUTTON      "O&dstr√°ni≈•",IDC_REMOVE,280,66,44,18
+    LTEXT           "Typ &p√≠sma:",IDC_STATIC,151,118,40,8
     COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "&N·hodnÈ poradie spr·v",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&N√°hodn√© poradie spr√°v",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,90,10
-    CONTROL         "&TuËnÈ pÌsmo",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Tuƒçn√© p√≠smo",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,55,10
     CTEXT           "Matrix ScreenSaver www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
     DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,283,162,50,14
+    PUSHBUTTON      "Zru≈°i≈•",IDCANCEL,283,162,50,14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Matrix - öetriË obrazovky"
+    IDS_DESCRIPTION         "Matrix - ≈°etriƒç obrazovky"
 END

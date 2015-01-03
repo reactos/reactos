@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        rosapps/applications/screensavers/cylfrac/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us)
  * DATE:        2007-12-02
  */
 
@@ -13,5 +13,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Cilindrinis fraktalas"
     IDS_TITLE       "Apie"
-    IDS_TEXT        "Ekrano uþsklanda sukurta unC0Rr.\nSpecialiai ReactOS."
+    IDS_TEXT        "Ekrano uÅ¾sklanda sukurta unC0Rr.\nSpecialiai ReactOS."
 END

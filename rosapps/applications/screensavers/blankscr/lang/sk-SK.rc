@@ -7,5 +7,5 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Blank"
-    IDS_TEXT        "Nie sú potrebné žiadne nastavenia."
+    IDS_TEXT        "Nie sÃº potrebnÃ© Å¾iadne nastavenia."
 END

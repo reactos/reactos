@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Заставка ""Cylinders fractal"""
-    IDS_TITLE       "Про"
-    IDS_TEXT        "Cylinders fractal від unC0Rr.\nСпеціально для ReactOS."
+    IDS_DESCRIPTION "Р—Р°СЃС‚Р°РІРєР° ""Cylinders fractal"""
+    IDS_TITLE       "РџСЂРѕ"
+    IDS_TEXT        "Cylinders fractal РІС–Рґ unC0Rr.\nРЎРїРµС†С–Р°Р»СЊРЅРѕ РґР»СЏ ReactOS."
 END

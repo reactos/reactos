@@ -1,8 +1,8 @@
 /*
  * WineFile
- * Norwegian Bokmål Language Support
+ * Norwegian BokmÃ¥l Language Support
  *
- * Copyright 2005-2006 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005-2006 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 IDM_WINEFILE MENU
 {
     POPUP "&Fil"  {
-        MENUITEM "&Åpne\tEnter",                ID_ACTIVATE
+        MENUITEM "&Ã…pne\tEnter",                ID_ACTIVATE
         MENUITEM "&Flytt...\tF7",                ID_FILE_MOVE
         MENUITEM "&Kopier...\tF8",                ID_FILE_COPY
         MENUITEM "&I utklippstavlen...\tF9",        118
@@ -39,12 +39,12 @@ IDM_WINEFILE MENU
         MENUITEM "K&omprimer...",                119
         MENUITEM "De&komprimer...",              120
         MENUITEM SEPARATOR
-        MENUITEM "Kjø&r...",                     ID_RUN
+        MENUITEM "KjÃ¸&r...",                     ID_RUN
         MENUITEM "Skriv &ut...",                   102
         MENUITEM "Tilknytt...",                103
         MENUITEM SEPARATOR
         MENUITEM "Oppr&et katalog...",        111
-        MENUITEM "S&øk...",                  104
+        MENUITEM "S&Ã¸k...",                  104
         MENUITEM "&Velg filer...",            116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
@@ -73,10 +73,10 @@ IDM_WINEFILE MENU
     }
 
     POPUP "Kataloge&r"  {
-        MENUITEM "&Neste nivå\t+",              301
+        MENUITEM "&Neste nivÃ¥\t+",              301
         MENUITEM "Utvid t&re\t*",             302
         MENUITEM "Utvid &alle\tStrg+*",         303
-        MENUITEM "Slå sammen &tre\t-",           304
+        MENUITEM "SlÃ¥ sammen &tre\t-",           304
         MENUITEM SEPARATOR
         MENUITEM "&Marker underelementer",              505
     }
@@ -94,7 +94,7 @@ IDM_WINEFILE MENU
         MENUITEM SEPARATOR
         MENUITEM "&Sorter etter navn",               ID_VIEW_SORT_NAME
         MENUITEM "Sorter etter &type",               ID_VIEW_SORT_TYPE
-        MENUITEM "Sorter etter st&ørrelse",               ID_VIEW_SORT_SIZE
+        MENUITEM "Sorter etter st&Ã¸rrelse",               ID_VIEW_SORT_SIZE
         MENUITEM "Sorter etter &dato",               ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Filtrer med '&'...",              ID_VIEW_FILTER
@@ -103,9 +103,9 @@ IDM_WINEFILE MENU
     POPUP "&Innstillinger"  {
         MENUITEM "&Bekreftelse...",            501
         MENUITEM "Skri&ft...",                    ID_SELECT_FONT
-        MENUITEM "Tilpass &verktøylinjen...",       512
+        MENUITEM "Tilpass &verktÃ¸ylinjen...",       512
         MENUITEM SEPARATOR
-        MENUITEM "Verk&tøylinje",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Verk&tÃ¸ylinje",                    ID_VIEW_TOOL_BAR, CHECKED
         MENUITEM "Stas&jonslinje",                   ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "&Statuslinje",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
@@ -119,7 +119,7 @@ IDM_WINEFILE MENU
 
     POPUP "&Sikkerhet"  {
         MENUITEM "Tilg&ang...",                  605
-        MENUITEM "&Loggføring...",                 606
+        MENUITEM "&LoggfÃ¸ring...",                 606
         MENUITEM "&Eier...",                   607
     }
 
@@ -137,7 +137,7 @@ IDM_WINEFILE MENU
 
     POPUP "&Hjelp"  {
         MENUITEM "Emner i &hjelp\tF1",            ID_HELP
-        MENUITEM "&Søk i hjelp...\tF1",         ID_HELP
+        MENUITEM "&SÃ¸k i hjelp...\tF1",         ID_HELP
         MENUITEM "Br&uk av hjelp\tF1",             ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Informasjon om Filbehandling...",     ID_ABOUT
@@ -196,7 +196,7 @@ BEGIN
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "&Kopirett:",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Størrelse:",-1,7,62,59,9
+    LTEXT           "StÃ¸rrelse:",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     GROUPBOX        "Attributter",-1,7,79,158,46
     CONTROL         "Sk&rivebeskyttet",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
@@ -225,14 +225,14 @@ STRINGTABLE
     IDS_DESKTOP             "Skrivebord"
     IDS_SHELL               "Skall"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "Ikke implementert ennå"
+    IDS_NO_IMPL             "Ikke implementert ennÃ¥"
     IDS_WINE_FILE           "Filbehandling"
 }
 
 STRINGTABLE
 {
     IDS_COL_NAME            "Navn"
-    IDS_COL_SIZE            "Størrelse"
+    IDS_COL_SIZE            "StÃ¸rrelse"
     IDS_COL_CDATE           "C-dato"
     IDS_COL_ADATE           "A-dato"
     IDS_COL_MDATE           "M-dato"

@@ -10,29 +10,29 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "SYSTEMINFO [/S system [/U nazwa u¿ytkownika [/P [has³o]]]] [/FO format] [/NH]\n\n\
+IDS_USAGE, "SYSTEMINFO [/S system [/U nazwa uÅ¼ytkownika [/P [hasÅ‚o]]]] [/FO format] [/NH]\n\n\
 Opis:\n\
-  Ten konsolowy program umo¿liwia administratorowi sprawdzenie podstawowych\n\
+  Ten konsolowy program umoÅ¼liwia administratorowi sprawdzenie podstawowych\n\
   informacji o konfiguracji systemu.\n\n\
-Lista parametrów:\n\
-  /S      system           Wyznacza nazwê systemu zdalnego do po³¹czenia.\n\n\
-  /U      [domain\\]user   Wyznacza u¿ytkownika (domenê) z którego konta\n\
-                           komenda bêdzie wywo³ana.\n\n\
-  /P      [password]       Wyznacza has³o do u¿ytego konta u¿ytkownika\n\
-                           Program sam zapyta o has³o, jeœli nie jest podane.\n\n\
-  /FO     format           Wyznacza format w którym wyœwietlone zostan¹\n\
+Lista parametrÃ³w:\n\
+  /S      system           Wyznacza nazwÄ™ systemu zdalnego do poÅ‚Ä…czenia.\n\n\
+  /U      [domain\\]user   Wyznacza uÅ¼ytkownika (domenÄ™) z ktÃ³rego konta\n\
+                           komenda bÄ™dzie wywoÅ‚ana.\n\n\
+  /P      [password]       Wyznacza hasÅ‚o do uÅ¼ytego konta uÅ¼ytkownika\n\
+                           Program sam zapyta o hasÅ‚o, jeÅ›li nie jest podane.\n\n\
+  /FO     format           Wyznacza format w ktÃ³rym wyÅ›wietlone zostanÄ…\n\
                            informacje o systemie.\n\
-                           Dostêpne formaty: ""TABLE"", ""LIST"", ""CSV"".\n\n\
-  /NH                      Blokuje wyœwietlanie kolumny ""Column Header"" w\n\
+                           DostÄ™pne formaty: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Blokuje wyÅ›wietlanie kolumny ""Column Header"" w\n\
                            informacjach systemowych.\n\
-                           Dzia³a tylko z formatami ""TABLE"" i ""CSV"".\n\n\
-  /?                       Wyœwietla niniejszy tekst pomocy.\n\n\
-Przyk³ady:\n\
+                           DziaÅ‚a tylko z formatami ""TABLE"" i ""CSV"".\n\n\
+  /?                       WyÅ›wietla niniejszy tekst pomocy.\n\n\
+PrzykÅ‚ady:\n\
   SYSTEMINFO\n\
   SYSTEMINFO /?\n\
   SYSTEMINFO /S system\n\
-  SYSTEMINFO /S system /U nazwa u¿ytkownika\n\
-  SYSTEMINFO /S system /U domena\\nazwa u¿ytkownika /P has³o /FO TABLE\n\
+  SYSTEMINFO /S system /U nazwa uÅ¼ytkownika\n\
+  SYSTEMINFO /S system /U domena\\nazwa uÅ¼ytkownika /P hasÅ‚o /FO TABLE\n\
   SYSTEMINFO /S system /FO LIST\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
 
@@ -41,7 +41,7 @@ IDS_OS_NAME,                 "Nazwa systemu"
 IDS_OS_VERSION,              "Wersja systemu"
 IDS_BUILD,                   "Kompilacja"
 IDS_OS_BUILD_TYPE,           "Rodzaj kompilacji"
-IDS_REG_OWNER,               "U¿ytkownik"
+IDS_REG_OWNER,               "UÅ¼ytkownik"
 IDS_REG_ORG,                 "Organizacja"
 IDS_PRODUCT_ID,              "ID produktu"
 IDS_INST_DATE,               "Data instalacji"
@@ -56,23 +56,23 @@ IDS_BIOS_DATE,               "Data BIOSu"
 IDS_BIOS_VERSION,            "Wersja BIOSu"
 IDS_ROS_DIR,                 "Katalog ReactOS"
 IDS_SYS_DIR,                 "Katalog Systemowy"
-IDS_BOOT_DEV,                "Urz¹dzenie Ÿród³owe"
+IDS_BOOT_DEV,                "UrzÄ…dzenie ÅºrÃ³dÅ‚owe"
 IDS_SYS_LOCALE,              "Wersja lokalizacji"
 IDS_INPUT_LOCALE,            "Lokalizacja klawiatury"
 IDS_TIME_ZONE,               "Strefa czasowa"
-IDS_TOTAL_PHYS_MEM,          "Pamiêci fizycznej ogó³em"
-IDS_AVAIL_PHISICAL_MEM,      "Dostêpnej pamiêci fizycznej"
-IDS_VIRT_MEM_MAX,            "Pamiêci wirtualnej: maksymalnie"
-IDS_VIRT_MEM_AVAIL,          "Pamiêci wirtualnej: dostêpne"
-IDS_VIRT_MEM_INUSE,          "Pamiêci wirtualnej: w u¿yciu"
+IDS_TOTAL_PHYS_MEM,          "PamiÄ™ci fizycznej ogÃ³Å‚em"
+IDS_AVAIL_PHISICAL_MEM,      "DostÄ™pnej pamiÄ™ci fizycznej"
+IDS_VIRT_MEM_MAX,            "PamiÄ™ci wirtualnej: maksymalnie"
+IDS_VIRT_MEM_AVAIL,          "PamiÄ™ci wirtualnej: dostÄ™pne"
+IDS_VIRT_MEM_INUSE,          "PamiÄ™ci wirtualnej: w uÅ¼yciu"
 IDS_PAGEFILE_LOC,            "Lokalizacja pliku wymiany"
 IDS_DOMAIN,                  "Domena"
 IDS_NETWORK_CARDS,           "Karty sieciowe"
 IDS_NETWORK_CARDS_FORMAT,    "Zainstalowane karty NIC: %u."
-IDS_CONNECTION_NAME,         "Nazwa po³¹czenia"
+IDS_CONNECTION_NAME,         "Nazwa poÅ‚Ä…czenia"
 IDS_STATUS,                  "Stan"
-IDS_MEDIA_DISCONNECTED,      "Noœnik od³¹czony"
-IDS_DHCP_ENABLED,            "DHCP w³¹czone"
+IDS_MEDIA_DISCONNECTED,      "NoÅ›nik odÅ‚Ä…czony"
+IDS_DHCP_ENABLED,            "DHCP wÅ‚Ä…czone"
 IDS_NO,                      "Nie"
 IDS_IP_ADDRESSES,            "Adresy IP"
 

@@ -2,74 +2,74 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Αρχείο"
+  POPUP "&Ξ‘ΟΟ‡ΞµΞ―ΞΏ"
   BEGIN
-    MENUITEM "&Νέο...",         ID_NEW
-    MENUITEM "&Άνοιγμα...",        ID_OPEN
+    MENUITEM "&ΞΞ­ΞΏ...",         ID_NEW
+    MENUITEM "&Ξ†Ξ½ΞΏΞΉΞ³ΞΌΞ±...",        ID_OPEN
     MENUITEM SEPARATOR
-    MENUITEM "&Κλέισημο\tCtrl+F4", ID_CLOSE, GRAYED
-    MENUITEM "Κ&λείσημο &όλων",      ID_CLOSEALL, GRAYED
+    MENUITEM "&ΞΞ»Ξ­ΞΉΟƒΞ·ΞΌΞΏ\tCtrl+F4", ID_CLOSE, GRAYED
+    MENUITEM "Ξ&Ξ»ΞµΞ―ΟƒΞ·ΞΌΞΏ &ΟΞ»Ο‰Ξ½",      ID_CLOSEALL, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Αποθήκευση",           ID_SAVE, GRAYED
-    MENUITEM "Α&ποθήκευση &Ώς...",     ID_SAVEAS, GRAYED
+    MENUITEM "&Ξ‘Ο€ΞΏΞΈΞ®ΞΊΞµΟ…ΟƒΞ·",           ID_SAVE, GRAYED
+    MENUITEM "Ξ‘&Ο€ΞΏΞΈΞ®ΞΊΞµΟ…ΟƒΞ· &ΞΟ‚...",     ID_SAVEAS, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Π&ροεπισκόπηση εκτύπωσης",  ID_PRINTPRE, GRAYED
-    MENUITEM "&Εκτύπωση...",       ID_PRINT, GRAYED
+    MENUITEM "Ξ &ΟΞΏΞµΟ€ΞΉΟƒΞΊΟΟ€Ξ·ΟƒΞ· ΞµΞΊΟ„ΟΟ€Ο‰ΟƒΞ·Ο‚",  ID_PRINTPRE, GRAYED
+    MENUITEM "&Ξ•ΞΊΟ„ΟΟ€Ο‰ΟƒΞ·...",       ID_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Διαμόρφωση σελίδας...",  ID_PAGESETUP, GRAYED
+    MENUITEM "&Ξ”ΞΉΞ±ΞΌΟΟΟ†Ο‰ΟƒΞ· ΟƒΞµΞ»Ξ―Ξ΄Ξ±Ο‚...",  ID_PAGESETUP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Έξοδος\tAlt+F4",   ID_EXIT
+    MENUITEM "&ΞΞΎΞΏΞ΄ΞΏΟ‚\tAlt+F4",   ID_EXIT
   END
-  POPUP "&Επεξεργασία"
+  POPUP "&Ξ•Ο€ΞµΞΎΞµΟΞ³Ξ±ΟƒΞ―Ξ±"
   BEGIN
-    MENUITEM "&Αναίρεση",           ID_UNDO, GRAYED
-    MENUITEM "&Επανάληψη",           ID_REDO, GRAYED
+    MENUITEM "&Ξ‘Ξ½Ξ±Ξ―ΟΞµΟƒΞ·",           ID_UNDO, GRAYED
+    MENUITEM "&Ξ•Ο€Ξ±Ξ½Ξ¬Ξ»Ξ·ΟΞ·",           ID_REDO, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Α&ποκοπή",            ID_CUT, GRAYED
-    MENUITEM "Α&ντιγραφή",           ID_COPY, GRAYED
-    MENUITEM "Επ&ικόληση",          ID_PASTE, GRAYED
+    MENUITEM "Ξ‘&Ο€ΞΏΞΊΞΏΟ€Ξ®",            ID_CUT, GRAYED
+    MENUITEM "Ξ‘&Ξ½Ο„ΞΉΞ³ΟΞ±Ο†Ξ®",           ID_COPY, GRAYED
+    MENUITEM "Ξ•Ο€&ΞΉΞΊΟΞ»Ξ·ΟƒΞ·",          ID_PASTE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Διαγραφή",           -1, GRAYED
-    MENUITEM "Επιλογή &όλων",     ID_SELALL, GRAYED
+    MENUITEM "&Ξ”ΞΉΞ±Ξ³ΟΞ±Ο†Ξ®",           -1, GRAYED
+    MENUITEM "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® &ΟΞ»Ο‰Ξ½",     ID_SELALL, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Εύρεση...\tCtrl+F",-1, GRAYED
-    MENUITEM "Εύρεση επό&μενου",       -1, GRAYED
-    MENUITEM "Αν&τικατάσταση\tCtrl+H", -1, GRAYED
+    MENUITEM "&Ξ•ΟΟΞµΟƒΞ·...\tCtrl+F",-1, GRAYED
+    MENUITEM "Ξ•ΟΟΞµΟƒΞ· ΞµΟ€Ο&ΞΌΞµΞ½ΞΏΟ…",       -1, GRAYED
+    MENUITEM "Ξ‘Ξ½&Ο„ΞΉΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·\tCtrl+H", -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Ιδιότητες αντικειμένου",-1, GRAYED
-    MENUITEM "Αντι&κείμενο",          -1, GRAYED
+    MENUITEM "&Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚ Ξ±Ξ½Ο„ΞΉΞΊΞµΞΉΞΌΞ­Ξ½ΞΏΟ…",-1, GRAYED
+    MENUITEM "Ξ‘Ξ½Ο„ΞΉ&ΞΊΞµΞ―ΞΌΞµΞ½ΞΏ",          -1, GRAYED
   END
-  POPUP "&Προβολή"
+  POPUP "&Ξ ΟΞΏΞ²ΞΏΞ»Ξ®"
   BEGIN
-    MENUITEM "Γραμμές &εργαλείων",        -1, CHECKED
-    MENUITEM "Γραμμές &μορφοποίησης",     -1, CHECKED
-    MENUITEM "&Χάρακας",          -1, CHECKED
-    MENUITEM "Γραμμή &κατάστασης",     ID_STATUSBAR, CHECKED
+    MENUITEM "Ξ“ΟΞ±ΞΌΞΌΞ­Ο‚ &ΞµΟΞ³Ξ±Ξ»ΞµΞ―Ο‰Ξ½",        -1, CHECKED
+    MENUITEM "Ξ“ΟΞ±ΞΌΞΌΞ­Ο‚ &ΞΌΞΏΟΟ†ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·Ο‚",     -1, CHECKED
+    MENUITEM "&Ξ§Ξ¬ΟΞ±ΞΊΞ±Ο‚",          -1, CHECKED
+    MENUITEM "Ξ“ΟΞ±ΞΌΞΌΞ® &ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·Ο‚",     ID_STATUSBAR, CHECKED
   END
-  POPUP "&Εισαγωγή"
+  POPUP "&Ξ•ΞΉΟƒΞ±Ξ³Ο‰Ξ³Ξ®"
   BEGIN
-    MENUITEM "&Ημερομηνία και ώρα...",-1, GRAYED
-    MENUITEM "&Αντικείμενο...",       -1, GRAYED
+    MENUITEM "&Ξ—ΞΌΞµΟΞΏΞΌΞ·Ξ½Ξ―Ξ± ΞΊΞ±ΞΉ ΟΟΞ±...",-1, GRAYED
+    MENUITEM "&Ξ‘Ξ½Ο„ΞΉΞΊΞµΞ―ΞΌΞµΞ½ΞΏ...",       -1, GRAYED
   END
-  POPUP "&Μορφοποίηση"
+  POPUP "&ΞΞΏΟΟ†ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·"
   BEGIN
-    MENUITEM "&Γραμματοσειρά...",        -1 GRAYED
-    MENUITEM "&Στυλ κουκίδας",     -1, GRAYED
-    MENUITEM "&Παράγραφος...",    -1, GRAYED
-    MENUITEM "&Στηλοθέτες...",         -1, GRAYED
+    MENUITEM "&Ξ“ΟΞ±ΞΌΞΌΞ±Ο„ΞΏΟƒΞµΞΉΟΞ¬...",        -1 GRAYED
+    MENUITEM "&Ξ£Ο„Ο…Ξ» ΞΊΞΏΟ…ΞΊΞ―Ξ΄Ξ±Ο‚",     -1, GRAYED
+    MENUITEM "&Ξ Ξ±ΟΞ¬Ξ³ΟΞ±Ο†ΞΏΟ‚...",    -1, GRAYED
+    MENUITEM "&Ξ£Ο„Ξ·Ξ»ΞΏΞΈΞ­Ο„ΞµΟ‚...",         -1, GRAYED
   END
-  POPUP "&Παράθυρο"
+  POPUP "&Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ"
   BEGIN
-    MENUITEM "&Επικάλυψη",           ID_WINDOW_CASCADE
-    MENUITEM "&Οριζόντια τακτοποίηση", ID_WINDOW_TILE_HORZ
-    MENUITEM "&Κάθετη τακτοποίση",   ID_WINDOW_TILE_VERT
-    MENUITEM "&Τακτοποίηση εικονιδίων",     ID_WINDOW_ARRANGE
+    MENUITEM "&Ξ•Ο€ΞΉΞΊΞ¬Ξ»Ο…ΟΞ·",           ID_WINDOW_CASCADE
+    MENUITEM "&ΞΟΞΉΞ¶ΟΞ½Ο„ΞΉΞ± Ο„Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·", ID_WINDOW_TILE_HORZ
+    MENUITEM "&ΞΞ¬ΞΈΞµΟ„Ξ· Ο„Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―ΟƒΞ·",   ID_WINDOW_TILE_VERT
+    MENUITEM "&Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
-    MENUITEM "Ε&πόμενο\tCtrl+F6",     ID_WINDOW_NEXT
+    MENUITEM "Ξ•&Ο€ΟΞΌΞµΞ½ΞΏ\tCtrl+F6",     ID_WINDOW_NEXT
   END
-  POPUP "&Βοήθεια"
+  POPUP "&Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
   BEGIN
-    MENUITEM "&Πληροφορίες...",       ID_ABOUT
+    MENUITEM "&Ξ Ξ»Ξ·ΟΞΏΟ†ΞΏΟΞ―ΞµΟ‚...",       ID_ABOUT
   END
 END
 
@@ -89,20 +89,20 @@ CAPTION "New"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
-  LTEXT "Τύπος νέου εγγράφου:", IDC_STATIC, 4, 3, 72, 9
+  LTEXT "Ξ¤ΟΟ€ΞΏΟ‚ Ξ½Ξ­ΞΏΟ… ΞµΞ³Ξ³ΟΞ¬Ο†ΞΏΟ…:", IDC_STATIC, 4, 3, 72, 9
   LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
   PUSHBUTTON "&OK", IDOK, 112, 16, 44, 13
-  PUSHBUTTON "&Άκυρο", IDCANCEL, 112, 33, 44, 13
+  PUSHBUTTON "&Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 112, 33, 44, 13
 END
 
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Πληροφορίες για το WordPad"
+CAPTION "Ξ Ξ»Ξ·ΟΞΏΟ†ΞΏΟΞ―ΞµΟ‚ Ξ³ΞΉΞ± Ο„ΞΏ WordPad"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "WordPad II v0.1\nCopyright (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON "Κλείσημο", IDOK, 65, 162, 44, 15
+  PUSHBUTTON "ΞΞ»ΞµΞ―ΟƒΞ·ΞΌΞΏ", IDOK, 65, 162, 44, 15
   ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -111,15 +111,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
-  IDS_DEFAULT_NAME      "Έγγραφο %1!u!"
-  IDS_READY             " Έτοιμο."
+  IDS_DEFAULT_NAME      "ΞΞ³Ξ³ΟΞ±Ο†ΞΏ %1!u!"
+  IDS_READY             " ΞΟ„ΞΏΞΉΞΌΞΏ."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_DOC_TYPE_RICH_TEXT    "Μορφή εμπλουτισμένου κειμένου"
-  IDS_DOC_TYPE_UNICODE_TEXT "Έγγραφα κειμένου Unicode"
-  IDS_DOC_TYPE_TEXT         "Έγγραφα κειμένου"
+  IDS_DOC_TYPE_RICH_TEXT    "ΞΞΏΟΟ†Ξ® ΞµΞΌΟ€Ξ»ΞΏΟ…Ο„ΞΉΟƒΞΌΞ­Ξ½ΞΏΟ… ΞΊΞµΞΉΞΌΞ­Ξ½ΞΏΟ…"
+  IDS_DOC_TYPE_UNICODE_TEXT "ΞΞ³Ξ³ΟΞ±Ο†Ξ± ΞΊΞµΞΉΞΌΞ­Ξ½ΞΏΟ… Unicode"
+  IDS_DOC_TYPE_TEXT         "ΞΞ³Ξ³ΟΞ±Ο†Ξ± ΞΊΞµΞΉΞΌΞ­Ξ½ΞΏΟ…"
 END
 
 
@@ -127,42 +127,42 @@ END
 /* Tooltips */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_NEW       "Νέο"
-  IDS_TOOLTIP_OPEN      "Άνοιγμα"
-  IDS_TOOLTIP_SAVE      "Αποθήκευση"
-  IDS_TOOLTIP_PRINTPRE  "Προεπισκόπηση εκτύπωσης"
-  IDS_TOOLTIP_PRINT     "Εκτύπωση"
-  IDS_TOOLTIP_CUT       "Αποκοπή"
-  IDS_TOOLTIP_COPY      "Αντιγραφή"
-  IDS_TOOLTIP_PASTE     "Επικόληση"
-  IDS_TOOLTIP_UNDO      "Αναίρεση"
-  IDS_TOOLTIP_REDO      "Επανάληψη"
+  IDS_TOOLTIP_NEW       "ΞΞ­ΞΏ"
+  IDS_TOOLTIP_OPEN      "Ξ†Ξ½ΞΏΞΉΞ³ΞΌΞ±"
+  IDS_TOOLTIP_SAVE      "Ξ‘Ο€ΞΏΞΈΞ®ΞΊΞµΟ…ΟƒΞ·"
+  IDS_TOOLTIP_PRINTPRE  "Ξ ΟΞΏΞµΟ€ΞΉΟƒΞΊΟΟ€Ξ·ΟƒΞ· ΞµΞΊΟ„ΟΟ€Ο‰ΟƒΞ·Ο‚"
+  IDS_TOOLTIP_PRINT     "Ξ•ΞΊΟ„ΟΟ€Ο‰ΟƒΞ·"
+  IDS_TOOLTIP_CUT       "Ξ‘Ο€ΞΏΞΊΞΏΟ€Ξ®"
+  IDS_TOOLTIP_COPY      "Ξ‘Ξ½Ο„ΞΉΞ³ΟΞ±Ο†Ξ®"
+  IDS_TOOLTIP_PASTE     "Ξ•Ο€ΞΉΞΊΟΞ»Ξ·ΟƒΞ·"
+  IDS_TOOLTIP_UNDO      "Ξ‘Ξ½Ξ±Ξ―ΟΞµΟƒΞ·"
+  IDS_TOOLTIP_REDO      "Ξ•Ο€Ξ±Ξ½Ξ¬Ξ»Ξ·ΟΞ·"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_NEW          " Δημιοργεί ένα νέο έγγραφο."
-  IDS_HINT_OPEN         " Ανοίγει ένα υπάρχον έγγραφο."
-  IDS_HINT_CLOSE        " Κλείνει αυτό το παράθυρο."
-  IDS_HINT_CLOSEALL     " Κλείνει όλα τα παράθυρα."
-  IDS_HINT_SAVE         " Αποθηκεύει το ενεργό έγγραφο."
-  IDS_HINT_SAVEAS       " Αποθηκεύει το ενεργό έγγραφο με ένα νέο όνομα."
-  IDS_HINT_PRINT        " Εκτυπώνει το ενεργό έγγραφο."
-  IDS_HINT_PRINTPRE     " Προβάλει το εκτυπωμένο έγγραφο."
-  IDS_HINT_PAGESETUP    " Αλλάζει τις ρυθμίσεις διάταξης σελίδας."
-  IDS_HINT_EXIT         " Κλείνει την εφαρμογή."
+  IDS_HINT_NEW          " Ξ”Ξ·ΞΌΞΉΞΏΟΞ³ΞµΞ― Ξ­Ξ½Ξ± Ξ½Ξ­ΞΏ Ξ­Ξ³Ξ³ΟΞ±Ο†ΞΏ."
+  IDS_HINT_OPEN         " Ξ‘Ξ½ΞΏΞ―Ξ³ΞµΞΉ Ξ­Ξ½Ξ± Ο…Ο€Ξ¬ΟΟ‡ΞΏΞ½ Ξ­Ξ³Ξ³ΟΞ±Ο†ΞΏ."
+  IDS_HINT_CLOSE        " ΞΞ»ΞµΞ―Ξ½ΞµΞΉ Ξ±Ο…Ο„Ο Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ."
+  IDS_HINT_CLOSEALL     " ΞΞ»ΞµΞ―Ξ½ΞµΞΉ ΟΞ»Ξ± Ο„Ξ± Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ±."
+  IDS_HINT_SAVE         " Ξ‘Ο€ΞΏΞΈΞ·ΞΊΞµΟΞµΞΉ Ο„ΞΏ ΞµΞ½ΞµΟΞ³Ο Ξ­Ξ³Ξ³ΟΞ±Ο†ΞΏ."
+  IDS_HINT_SAVEAS       " Ξ‘Ο€ΞΏΞΈΞ·ΞΊΞµΟΞµΞΉ Ο„ΞΏ ΞµΞ½ΞµΟΞ³Ο Ξ­Ξ³Ξ³ΟΞ±Ο†ΞΏ ΞΌΞµ Ξ­Ξ½Ξ± Ξ½Ξ­ΞΏ ΟΞ½ΞΏΞΌΞ±."
+  IDS_HINT_PRINT        " Ξ•ΞΊΟ„Ο…Ο€ΟΞ½ΞµΞΉ Ο„ΞΏ ΞµΞ½ΞµΟΞ³Ο Ξ­Ξ³Ξ³ΟΞ±Ο†ΞΏ."
+  IDS_HINT_PRINTPRE     " Ξ ΟΞΏΞ²Ξ¬Ξ»ΞµΞΉ Ο„ΞΏ ΞµΞΊΟ„Ο…Ο€Ο‰ΞΌΞ­Ξ½ΞΏ Ξ­Ξ³Ξ³ΟΞ±Ο†ΞΏ."
+  IDS_HINT_PAGESETUP    " Ξ‘Ξ»Ξ»Ξ¬Ξ¶ΞµΞΉ Ο„ΞΉΟ‚ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ Ξ΄ΞΉΞ¬Ο„Ξ±ΞΎΞ·Ο‚ ΟƒΞµΞ»Ξ―Ξ΄Ξ±Ο‚."
+  IDS_HINT_EXIT         " ΞΞ»ΞµΞ―Ξ½ΞµΞΉ Ο„Ξ·Ξ½ ΞµΟ†Ξ±ΟΞΌΞΏΞ³Ξ®."
 
-  IDS_HINT_CASCADE      " Τακτοποιεί τα παράθυρα έτσι ώστε να καλύπτει το ένα το άλλο."
-  IDS_HINT_TILE_HORZ    " Τακτοποίση παραθύρων χωρίς επικάλυψη."
-  IDS_HINT_TILE_VERT    " Τακτοποίση παραθύρων χωρίς επικάλυψη."
-  IDS_HINT_ARRANGE      " Τακτοποιεί τα παράθυρα στο κάτω μέρος του παραθύρου."
-  IDS_HINT_NEXT         " Ενεργοποιεί το επόμενο παράθυρο."
+  IDS_HINT_CASCADE      " Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞΉΞµΞ― Ο„Ξ± Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ± Ξ­Ο„ΟƒΞΉ ΟΟƒΟ„Ξµ Ξ½Ξ± ΞΊΞ±Ξ»ΟΟ€Ο„ΞµΞΉ Ο„ΞΏ Ξ­Ξ½Ξ± Ο„ΞΏ Ξ¬Ξ»Ξ»ΞΏ."
+  IDS_HINT_TILE_HORZ    " Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―ΟƒΞ· Ο€Ξ±ΟΞ±ΞΈΟΟΟ‰Ξ½ Ο‡Ο‰ΟΞ―Ο‚ ΞµΟ€ΞΉΞΊΞ¬Ξ»Ο…ΟΞ·."
+  IDS_HINT_TILE_VERT    " Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―ΟƒΞ· Ο€Ξ±ΟΞ±ΞΈΟΟΟ‰Ξ½ Ο‡Ο‰ΟΞ―Ο‚ ΞµΟ€ΞΉΞΊΞ¬Ξ»Ο…ΟΞ·."
+  IDS_HINT_ARRANGE      " Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞΉΞµΞ― Ο„Ξ± Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ± ΟƒΟ„ΞΏ ΞΊΞ¬Ο„Ο‰ ΞΌΞ­ΟΞΏΟ‚ Ο„ΞΏΟ… Ο€Ξ±ΟΞ±ΞΈΟΟΞΏΟ…."
+  IDS_HINT_NEXT         " Ξ•Ξ½ΞµΟΞ³ΞΏΟ€ΞΏΞΉΞµΞ― Ο„ΞΏ ΞµΟ€ΟΞΌΞµΞ½ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ."
 
-  IDS_HINT_SYS_RESTORE  " Επαναφέρει το παράθυρο στο κανονικό του μέγεθος."
-  IDS_HINT_SYS_MOVE     " Μεταλινεί το παράθυρο."
-  IDS_HINT_SYS_SIZE     " Αλλάζει το μέγεθος του παραθύρου."
-  IDS_HINT_SYS_MINIMIZE " Συμπτίσει το παράθυρο σε εικονίδιο."
-  IDS_HINT_SYS_MAXIMIZE " Αναπτύσει το παράθυρο γεμίζοντας την οθόνη."
+  IDS_HINT_SYS_RESTORE  " Ξ•Ο€Ξ±Ξ½Ξ±Ο†Ξ­ΟΞµΞΉ Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ ΟƒΟ„ΞΏ ΞΊΞ±Ξ½ΞΏΞ½ΞΉΞΊΟ Ο„ΞΏΟ… ΞΌΞ­Ξ³ΞµΞΈΞΏΟ‚."
+  IDS_HINT_SYS_MOVE     " ΞΞµΟ„Ξ±Ξ»ΞΉΞ½ΞµΞ― Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ."
+  IDS_HINT_SYS_SIZE     " Ξ‘Ξ»Ξ»Ξ¬Ξ¶ΞµΞΉ Ο„ΞΏ ΞΌΞ­Ξ³ΞµΞΈΞΏΟ‚ Ο„ΞΏΟ… Ο€Ξ±ΟΞ±ΞΈΟΟΞΏΟ…."
+  IDS_HINT_SYS_MINIMIZE " Ξ£Ο…ΞΌΟ€Ο„Ξ―ΟƒΞµΞΉ Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ ΟƒΞµ ΞµΞΉΞΊΞΏΞ½Ξ―Ξ΄ΞΉΞΏ."
+  IDS_HINT_SYS_MAXIMIZE " Ξ‘Ξ½Ξ±Ο€Ο„ΟΟƒΞµΞΉ Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ Ξ³ΞµΞΌΞ―Ξ¶ΞΏΞ½Ο„Ξ±Ο‚ Ο„Ξ·Ξ½ ΞΏΞΈΟΞ½Ξ·."
 END

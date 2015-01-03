@@ -2,7 +2,7 @@
  * WineFile
  * Turkish Language Support
  *
- * Copyright 2006 Fatih Aþýcý
+ * Copyright 2006 Fatih AÅŸÄ±cÄ±
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,29 +28,29 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 IDM_WINEFILE MENU
 {
     POPUP "&Dosya"  {
-        MENUITEM "&Aç\tEnter",                  ID_ACTIVATE
-        MENUITEM "&Taþý...\tF7",                ID_FILE_MOVE
+        MENUITEM "&AÃ§\tEnter",                  ID_ACTIVATE
+        MENUITEM "&TaÅŸÄ±...\tF7",                ID_FILE_MOVE
         MENUITEM "K&opyala...\tF8",             ID_FILE_COPY
         MENUITEM "&Panodan...\tF9",             118
         MENUITEM "&Sil\tDel",                   ID_FILE_DELETE
-        MENUITEM "Ye&niden Adlandýr...",        109
-        MENUITEM "&Özellikler...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM "Ye&niden AdlandÄ±r...",        109
+        MENUITEM "&Ã–zellikler...\tAlt+Enter",   ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "S&ýkýþtýr...",                119
-        MENUITEM "Geni&þlet...",                120
+        MENUITEM "S&Ä±kÄ±ÅŸtÄ±r...",                119
+        MENUITEM "Geni&ÅŸlet...",                120
         MENUITEM SEPARATOR
-        MENUITEM "&Çalýþtýr...",                ID_RUN
-        MENUITEM "Ya&zdýr...",                  102
-        MENUITEM "Ýliþkilendir...",             103
+        MENUITEM "&Ã‡alÄ±ÅŸtÄ±r...",                ID_RUN
+        MENUITEM "Ya&zdÄ±r...",                  102
+        MENUITEM "Ä°liÅŸkilendir...",             103
         MENUITEM SEPARATOR
-        MENUITEM "&Dizin Oluþtur...",           111
+        MENUITEM "&Dizin OluÅŸtur...",           111
         MENUITEM "A&ra...",                     104
-        MENUITEM "D&osyalarý Seç...",           116
+        MENUITEM "D&osyalarÄ± SeÃ§...",           116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-        MENUITEM "&Çýkýþ\tAlt+X",                ID_FILE_EXIT
+        MENUITEM "&Ã‡Ä±kÄ±ÅŸ\tAlt+X",                ID_FILE_EXIT
 #else
-        MENUITEM "&Çýkýþ",                       ID_FILE_EXIT
+        MENUITEM "&Ã‡Ä±kÄ±ÅŸ",                       ID_FILE_EXIT
 #endif
     }
 
@@ -58,153 +58,153 @@ IDM_WINEFILE MENU
         MENUITEM "Disk K&opyala...",             201
         MENUITEM "Disk &Etiketi...",             202
         MENUITEM SEPARATOR
-        MENUITEM "Disk Bi&çimlendir...",         ID_FORMAT_DISK
+        MENUITEM "Disk Bi&Ã§imlendir...",         ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "&Sistem Diski Oluþtur...", -1 /*TODO*/
+        MENUITEM "&Sistem Diski OluÅŸtur...", -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "&Að Sürücüsüne Baðlan",       ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "Að Sürücüsüne Baðlantýyý &Kes",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "&AÄŸ SÃ¼rÃ¼cÃ¼sÃ¼ne BaÄŸlan",       ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "AÄŸ SÃ¼rÃ¼cÃ¼sÃ¼ne BaÄŸlantÄ±yÄ± &Kes",   ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
-        MENUITEM "Paylaþ...",                   254
-        MENUITEM "Paylaþýmý S&il...",           255
+        MENUITEM "PaylaÅŸ...",                   254
+        MENUITEM "PaylaÅŸÄ±mÄ± S&il...",           255
         MENUITEM SEPARATOR
-        MENUITEM "S&ürücü Seç...",              251
+        MENUITEM "S&Ã¼rÃ¼cÃ¼ SeÃ§...",              251
     }
 
     POPUP "Di&zinler"  {
         MENUITEM "&Sonraki Seviye\t+",          301
-        MENUITEM "Aðacý &Geniþlet\t*",          302
-        MENUITEM "&Tümünü Geniþlet\tStrg+*",    303
-        MENUITEM "Aðacý T&opla\t-",             304
+        MENUITEM "AÄŸacÄ± &GeniÅŸlet\t*",          302
+        MENUITEM "&TÃ¼mÃ¼nÃ¼ GeniÅŸlet\tStrg+*",    303
+        MENUITEM "AÄŸacÄ± T&opla\t-",             304
         MENUITEM SEPARATOR
-        MENUITEM "A&lt Dallarý Ýþaretle",       505
+        MENUITEM "A&lt DallarÄ± Ä°ÅŸaretle",       505
     }
 
-    POPUP "&Görünüm"  {
-        MENUITEM "A&ðaç ve Dizin",              413
-        MENUITEM "Yalnýzca &Aðaç",              411
-        MENUITEM "Yalnýzca &Dizin",             412
+    POPUP "&GÃ¶rÃ¼nÃ¼m"  {
+        MENUITEM "A&ÄŸaÃ§ ve Dizin",              413
+        MENUITEM "YalnÄ±zca &AÄŸaÃ§",              411
+        MENUITEM "YalnÄ±zca &Dizin",             412
         MENUITEM SEPARATOR
-        MENUITEM "Ay&raç",                      ID_VIEW_SPLIT
+        MENUITEM "Ay&raÃ§",                      ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Ad",                         ID_VIEW_NAME
-        MENUITEM "&Tüm Dosya Ayrýntýlarý",      ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "&Seçilmiþ Ayrýntýlar...",     ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "&TÃ¼m Dosya AyrÄ±ntÄ±larÄ±",      ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&SeÃ§ilmiÅŸ AyrÄ±ntÄ±lar...",     ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&Ada Göre Sýrala",            ID_VIEW_SORT_NAME
-        MENUITEM "&Türe Göre Sýrala",           ID_VIEW_SORT_TYPE
-        MENUITEM "&Boyuta Göre Sýrala",         ID_VIEW_SORT_SIZE
-        MENUITEM "&Tarihe Göre Sýrala",         ID_VIEW_SORT_DATE
+        MENUITEM "&Ada GÃ¶re SÄ±rala",            ID_VIEW_SORT_NAME
+        MENUITEM "&TÃ¼re GÃ¶re SÄ±rala",           ID_VIEW_SORT_TYPE
+        MENUITEM "&Boyuta GÃ¶re SÄ±rala",         ID_VIEW_SORT_SIZE
+        MENUITEM "&Tarihe GÃ¶re SÄ±rala",         ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Süzgeç &...",                 ID_VIEW_FILTER
+        MENUITEM "SÃ¼zgeÃ§ &...",                 ID_VIEW_FILTER
     }
 
-    POPUP "&Seçenekler"  {
+    POPUP "&SeÃ§enekler"  {
         MENUITEM "&Onaylama...",                501
-        MENUITEM "&Yazý Tipi...",               ID_SELECT_FONT
-        MENUITEM "Araç Çubuðunu &Özelleþtir...",  512
+        MENUITEM "&YazÄ± Tipi...",               ID_SELECT_FONT
+        MENUITEM "AraÃ§ Ã‡ubuÄŸunu &Ã–zelleÅŸtir...",  512
         MENUITEM SEPARATOR
-        MENUITEM "&Araç Çubuðu",                ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Sürücü Çubuðu",              ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Durum Çubuðu",               ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "&AraÃ§ Ã‡ubuÄŸu",                ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&SÃ¼rÃ¼cÃ¼ Ã‡ubuÄŸu",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Durum Ã‡ubuÄŸu",               ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
         MENUITEM "&Tam Ekran\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Açýlýþta &küçült",            504
-        MENUITEM "&Çýkýþta ayarlarý kaydet",    511
+        MENUITEM "AÃ§Ä±lÄ±ÅŸta &kÃ¼Ã§Ã¼lt",            504
+        MENUITEM "&Ã‡Ä±kÄ±ÅŸta ayarlarÄ± kaydet",    511
     }
 
 
-    POPUP "&Güvenlik"  {
-        MENUITEM "&Eriþim...",                  605
-        MENUITEM "&Oturum Açma...",             606
+    POPUP "&GÃ¼venlik"  {
+        MENUITEM "&EriÅŸim...",                  605
+        MENUITEM "&Oturum AÃ§ma...",             606
         MENUITEM "&Sahip...",                   607
     }
 
     POPUP "&Pencere"  {
         MENUITEM "&Yeni Pencere",               ID_WINDOW_NEW
         MENUITEM "Diz\tCtrl+F5",                ID_WINDOW_CASCADE
-        MENUITEM "&Yatay Döþe",                 ID_WINDOW_TILE_HORZ
-        MENUITEM "Di&key Döþe\tCtrl+F4",        ID_WINDOW_TILE_VERT
+        MENUITEM "&Yatay DÃ¶ÅŸe",                 ID_WINDOW_TILE_HORZ
+        MENUITEM "Di&key DÃ¶ÅŸe\tCtrl+F4",        ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Otomatik Düzenle",            ID_WINDOW_AUTOSORT
+        MENUITEM "Otomatik DÃ¼zenle",            ID_WINDOW_AUTOSORT
 #endif
-        MENUITEM "Simgeleri D&üzenle",          ID_WINDOW_ARRANGE
+        MENUITEM "Simgeleri D&Ã¼zenle",          ID_WINDOW_ARRANGE
         MENUITEM "Ye&nile\tF5",                 ID_REFRESH
     }
 
-    POPUP "&Yardým"  {
-        MENUITEM "&Yardým Konularý\tF1",        ID_HELP
-        MENUITEM "Yardýmda &Ara...\tF1",        ID_HELP
-        MENUITEM "Yardým &Kullanýmý\tF1",       ID_HELP_USING
+    POPUP "&YardÄ±m"  {
+        MENUITEM "&YardÄ±m KonularÄ±\tF1",        ID_HELP
+        MENUITEM "YardÄ±mda &Ara...\tF1",        ID_HELP
+        MENUITEM "YardÄ±m &KullanÄ±mÄ±\tF1",       ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "Winefile hakkýnda &bilgi...", ID_ABOUT
+        MENUITEM "Winefile hakkÄ±nda &bilgi...", ID_ABOUT
     }
 }
 
 IDD_SELECT_DESTINATION DIALOG 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Hedefi seç"
+CAPTION "Hedefi seÃ§"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
     CONTROL         "&Yol:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "Tamam", 1, 158, 6, 47, 14
-    PUSHBUTTON      "Ýptal", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Gözat", 254, 158, 43, 47, 14
+    PUSHBUTTON      "Ä°ptal", 2, 158, 23, 47, 14
+    PUSHBUTTON      "&GÃ¶zat", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dosya Türüne Göre"
+CAPTION "Dosya TÃ¼rÃ¼ne GÃ¶re"
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "&Ad:",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
-    GROUPBOX        "Dosya Türü",-1,7,23,87,56
+    GROUPBOX        "Dosya TÃ¼rÃ¼",-1,7,23,87,56
     CONTROL         "&Dizinler",IDC_VIEW_TYPE_DIRECTORIES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
     CONTROL         "&Programlar",IDC_VIEW_TYPE_PROGRAMS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
     CONTROL         "&Belgeler",IDC_VIEW_TYPE_DOCUMENTS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
-    CONTROL         "&Diðer dosyalar",IDC_VIEW_TYPE_OTHERS,"Button",
+    CONTROL         "&DiÄŸer dosyalar",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
-    CONTROL         "Gizli/Sistem Özellikli Dosyalarý &Göster",IDC_VIEW_TYPE_HIDDEN,
+    CONTROL         "Gizli/Sistem Ã–zellikli DosyalarÄ± &GÃ¶ster",IDC_VIEW_TYPE_HIDDEN,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,140,9
     DEFPUSHBUTTON   "Tamam",IDOK,104,7,50,14
-    PUSHBUTTON      "Ýptal",IDCANCEL,104,24,50,14
+    PUSHBUTTON      "Ä°ptal",IDCANCEL,104,24,50,14
 END
 
 IDD_DIALOG_PROPERTIES DIALOG  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "%s Özellikleri"
+CAPTION "%s Ã–zellikleri"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,191,7,50,14
-    PUSHBUTTON      "Ýptal",IDCANCEL,191,29,50,14
-    LTEXT           "&Dosya Adý:",-1,7,7,59,9
+    PUSHBUTTON      "Ä°ptal",IDCANCEL,191,29,50,14
+    LTEXT           "&Dosya AdÄ±:",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Tam &Yol:",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Son Deðiþme:",-1,7,29,59,9
+    LTEXT           "Son DeÄŸiÅŸme:",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Sürüm:",-1,7,40,59,9
+    LTEXT           "SÃ¼rÃ¼m:",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "&Telif Hakký:",-1,7,51,59,9
+    LTEXT           "&Telif HakkÄ±:",-1,7,51,59,9
     EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Boyut:",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    GROUPBOX        "Özellikler",-1,7,79,158,46
+    GROUPBOX        "Ã–zellikler",-1,7,79,158,46
     CONTROL         "&Salt Okunur",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
     CONTROL         "&Gizli",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
-    CONTROL         "&Arþiv",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&ArÅŸiv",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
     CONTROL         "&Sistem",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
-    CONTROL         "S&ýkýþýk",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
-    GROUPBOX        "S&ürüm Bilgisi",-1,7,129,234,79
+    CONTROL         "S&Ä±kÄ±ÅŸÄ±k",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "S&Ã¼rÃ¼m Bilgisi",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -212,21 +212,21 @@ END
 
 STRINGTABLE
 {
-    IDS_FONT_SEL_DLG_NAME   "Yazý tipi ayarlarý uygulanýyor"
-    IDS_FONT_SEL_ERROR      "Yeni yazý tipi seçerken hata."
+    IDS_FONT_SEL_DLG_NAME   "YazÄ± tipi ayarlarÄ± uygulanÄ±yor"
+    IDS_FONT_SEL_ERROR      "Yeni yazÄ± tipi seÃ§erken hata."
 }
 
 STRINGTABLE
 {
     IDS_WINEFILE            "Winefile"
     IDS_ERROR               "Hata"
-    IDS_ROOT_FS             "kök ds"
+    IDS_ROOT_FS             "kÃ¶k ds"
     IDS_UNIXFS              "unixfs"
-    IDS_DESKTOP             "Masaüstü"
+    IDS_DESKTOP             "MasaÃ¼stÃ¼"
     IDS_SHELL               "Kabuk"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "Henüz tamamlanmadý"
-    IDS_WINE_FILE           "Wine Dosya Yöneticisi"
+    IDS_NO_IMPL             "HenÃ¼z tamamlanmadÄ±"
+    IDS_WINE_FILE           "Wine Dosya YÃ¶neticisi"
 }
 
 STRINGTABLE
@@ -236,12 +236,12 @@ STRINGTABLE
     IDS_COL_CDATE           "OTarihi"
     IDS_COL_ADATE           "ETarihi"
     IDS_COL_MDATE           "DTarihi"
-    IDS_COL_IDX             "Ýndeks/Düðüm"
-    IDS_COL_LINKS           "Baðlantýlar"
-    IDS_COL_ATTR            "Özellikler"
-    IDS_COL_SEC             "Güvenlik"
+    IDS_COL_IDX             "Ä°ndeks/DÃ¼ÄŸÃ¼m"
+    IDS_COL_LINKS           "BaÄŸlantÄ±lar"
+    IDS_COL_ATTR            "Ã–zellikler"
+    IDS_COL_SEC             "GÃ¼venlik"
 
-    IDS_FREE_SPACE_FMT      "%1 / %2 boþ"
+    IDS_FREE_SPACE_FMT      "%1 / %2 boÅŸ"
     IDS_UNIT_KB             "kB"
     IDS_UNIT_MB             "MB"
     IDS_UNIT_GB             "GB"

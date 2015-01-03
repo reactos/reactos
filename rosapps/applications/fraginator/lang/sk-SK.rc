@@ -1,4 +1,4 @@
-/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR :  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  04-09-2008
  */
 
@@ -30,9 +30,9 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_PRIORITY_LIST,223,52,59,91,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "ZaËaù",IDC_STARTSTOP,294,7,45,15
-    PUSHBUTTON      "PomocnÌk",ID_MAIN_HELP,294,28,45,15
-    PUSHBUTTON      "UkonËiù",IDC_QUIT,294,49,45,15
+    PUSHBUTTON      "Zaƒça≈•",IDC_STARTSTOP,294,7,45,15
+    PUSHBUTTON      "Pomocn√≠k",ID_MAIN_HELP,294,28,45,15
+    PUSHBUTTON      "Ukonƒçi≈•",IDC_QUIT,294,49,45,15
     CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
                     WS_BORDER,7,7,63,58
     LTEXT           "Vyberte jednotku:",-1,78,40,50,8
@@ -48,7 +48,7 @@ END
 
 IDD_REPORT DIALOGEX  0, 0, 391, 169
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Hl·senie" //Report
+CAPTION "Hl√°senie" //Report
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Bajty",IDC_BYTES,7,148,50,14
@@ -56,50 +56,50 @@ BEGIN
     DEFPUSHBUTTON   "Megabajty",IDC_MEGABYTES,115,148,50,14
     DEFPUSHBUTTON   "Gigabajty",IDC_GIGABYTES,169,148,50,14
     DEFPUSHBUTTON   "OK",IDC_REPORTOK,334,148,50,14
-    RTEXT           "MÈdium",-1,7,7,24,8 //Volume
+    RTEXT           "M√©dium",-1,7,7,24,8 //Volume
     LTEXT           "Kapacita",-1,7,51,28,8
-    RTEXT           "(PÌsmeno jednotky)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
-    RTEXT           "(Veækosù disku, bajty)",IDC_DISKSIZEBYTES,63,51,117,10,
+    RTEXT           "(P√≠smeno jednotky)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
+    RTEXT           "(Veƒækos≈• disku, bajty)",IDC_DISKSIZEBYTES,63,51,117,10,
                     SS_SUNKEN
-    RTEXT           "(Veækosù disku, klastre)",IDC_DISKSIZECLUSTERS,63,73,117,
+    RTEXT           "(Veƒækos≈• disku, klastre)",IDC_DISKSIZECLUSTERS,63,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Klastrov spolu",-1,7,73,43,8 //Total clusters, S˙Ëet klastrov, Klastrov celkom
-    RTEXT           "(Veækosù klastra)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+    LTEXT           "Klastrov spolu",-1,7,73,43,8 //Total clusters, S√∫ƒçet klastrov, Klastrov celkom
+    RTEXT           "(Veƒækos≈• klastra)",IDC_DISKCLUSTERSIZE,63,84,117,10,
                     SS_SUNKEN
-    LTEXT           "Veækosù klastra",-1,7,84,36,8
-    RTEXT           "(PoËeù s˙borov)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
-    RTEXT           "(PoËeù s˙borov, bajty)",IDC_FILESSIZEBYTES,267,29,117,10,
+    LTEXT           "Veƒækos≈• klastra",-1,7,84,36,8
+    RTEXT           "(Poƒçe≈• s√∫borov)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
+    RTEXT           "(Poƒçe≈• s√∫borov, bajty)",IDC_FILESSIZEBYTES,267,29,117,10,
                     SS_SUNKEN
-    LTEXT           "# s˙borov",-1,194,18,28,8
-    LTEXT           "Celkov· veækosù",-1,194,29,31,8
-    LTEXT           "Veækosù disku",-1,194,40,39,8
-    RTEXT           "(Celkov· veækosù, bajty)",IDC_FILESSIZEONDISK,267,40,117,10,
+    LTEXT           "# s√∫borov",-1,194,18,28,8
+    LTEXT           "Celkov√° veƒækos≈•",-1,194,29,31,8
+    LTEXT           "Veƒækos≈• disku",-1,194,40,39,8
+    RTEXT           "(Celkov√° veƒækos≈•, bajty)",IDC_FILESSIZEONDISK,267,40,117,10,
                     SS_SUNKEN
     RTEXT           "(Files slack bytes)",IDC_FILESSLACKBYTES,267,51,117,10,
                     SS_SUNKEN
     LTEXT           "Wasted slack",-1,194,51,44,8
     RTEXT           "(Disk Free, Bytes)",IDC_DISKFREEBYTES,63,62,117,10,
                     SS_SUNKEN
-    LTEXT           "VoænÈ miesto",-1,7,62,36,8
-    RTEXT           "(FragmentovanÈ s˙bory, poËet)",IDC_FILESFRAGGED,267,62,117,
+    LTEXT           "Voƒæn√© miesto",-1,7,62,36,8
+    RTEXT           "(Fragmentovan√© s√∫bory, poƒçet)",IDC_FILESFRAGGED,267,62,117,
                     10,SS_SUNKEN
-    LTEXT           "FragmentovanÈ s˙bory",-1,194,62,52,8
-    RTEXT           "(PoËet adres·rov)",IDC_DIRSCOUNT,267,7,117,10,SS_SUNKEN
-    LTEXT           "# adres·rov",-1,194,7,48,8
-    RTEXT           "SystÈm s˙borov",-1,7,40,36,8
-    RTEXT           "(N·zov systÈmu s˙borov)",IDC_FILESYSTEM,63,40,117,10,
+    LTEXT           "Fragmentovan√© s√∫bory",-1,194,62,52,8
+    RTEXT           "(Poƒçet adres√°rov)",IDC_DIRSCOUNT,267,7,117,10,SS_SUNKEN
+    LTEXT           "# adres√°rov",-1,194,7,48,8
+    RTEXT           "Syst√©m s√∫borov",-1,7,40,36,8
+    RTEXT           "(N√°zov syst√©mu s√∫borov)",IDC_FILESYSTEM,63,40,117,10,
                     SS_SUNKEN
     RTEXT           "Volume Label",-1,7,18,44,8
     RTEXT           "(Volume Name)",IDC_VOLUMELABEL,63,18,117,10,SS_SUNKEN
     RTEXT           "Serial",-1,7,29,18,8
     RTEXT           "(Volume Serial)",IDC_VOLUMESERIAL,63,29,117,10,
                     SS_SUNKEN
-    RTEXT           "(Priemerne fragmentov na s˙bor)",IDC_AVERAGEFRAGS,267,73,117,
+    RTEXT           "(Priemerne fragmentov na s√∫bor)",IDC_AVERAGEFRAGS,267,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Priemerne fragmentov na s˙bor",-1,194,73,60,20
-    LTEXT           "XX.X% s˙borov na tejto jednotke je fragmentovan˝ch. Odpor˙Ëa sa, aby ste vykonali SSSSSSS defragment·ciu.",
+    LTEXT           "Priemerne fragmentov na s√∫bor",-1,194,73,60,20
+    LTEXT           "XX.X% s√∫borov na tejto jednotke je fragmentovan√Ωch. Odpor√∫ƒça sa, aby ste vykonali SSSSSSS defragment√°ciu.",
                     IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
-    LTEXT           "Odpor˙Ëania:",-1,7,96,62,8
+    LTEXT           "Odpor√∫ƒçania:",-1,7,96,62,8
 END
 
 
@@ -178,13 +178,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "N·zov spoloËnosti", " "
-            VALUE "Popis s˙boru", "Fraginator"
-            VALUE "Verzia s˙boru", "1.03"
-            VALUE "Vn˙torn˝ n·zov", "Fraginator"
-            VALUE "AutorskÈ pr·va", "Copyright © 2000-2002 Rick Brewster"
-            VALUE "PÙvodn˝ n·zov s˙boru", "Fraginator.exe"
-            VALUE "N·zov produktu", "Fraginator"
+            VALUE "N√°zov spoloƒçnosti", " "
+            VALUE "Popis s√∫boru", "Fraginator"
+            VALUE "Verzia s√∫boru", "1.03"
+            VALUE "Vn√∫torn√Ω n√°zov", "Fraginator"
+            VALUE "Autorsk√© pr√°va", "Copyright ¬© 2000-2002 Rick Brewster"
+            VALUE "P√¥vodn√Ω n√°zov s√∫boru", "Fraginator.exe"
+            VALUE "N√°zov produktu", "Fraginator"
             VALUE "Verzia produktu", "1.03"
         END
     END

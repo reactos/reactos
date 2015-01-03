@@ -10,74 +10,74 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Файл"
+  POPUP "&Р¤Р°Р№Р»"
   BEGIN
-    MENUITEM "&Створити...",           ID_NEW
-    MENUITEM "&Відкрити...",           ID_OPEN
+    MENUITEM "&РЎС‚РІРѕСЂРёС‚Рё...",           ID_NEW
+    MENUITEM "&Р’С–РґРєСЂРёС‚Рё...",           ID_OPEN
     MENUITEM SEPARATOR
-    MENUITEM "&Закрити\tCtrl+F4",      ID_CLOSE, GRAYED
-    MENUITEM "З&акрити все",           ID_CLOSEALL, GRAYED
+    MENUITEM "&Р—Р°РєСЂРёС‚Рё\tCtrl+F4",      ID_CLOSE, GRAYED
+    MENUITEM "Р—&Р°РєСЂРёС‚Рё РІСЃРµ",           ID_CLOSEALL, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "З&берегти",              ID_SAVE, GRAYED
-    MENUITEM "Зберегти &як...",        ID_SAVEAS, GRAYED
+    MENUITEM "Р—&Р±РµСЂРµРіС‚Рё",              ID_SAVE, GRAYED
+    MENUITEM "Р—Р±РµСЂРµРіС‚Рё &СЏРє...",        ID_SAVEAS, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Попередній перегляд",   ID_PRINTPRE, GRAYED
-    MENUITEM "Друк&...",               ID_PRINT, GRAYED
+    MENUITEM "&РџРѕРїРµСЂРµРґРЅС–Р№ РїРµСЂРµРіР»СЏРґ",   ID_PRINTPRE, GRAYED
+    MENUITEM "Р”СЂСѓРє&...",               ID_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Пара&метри сторінки...", ID_PAGESETUP, GRAYED
+    MENUITEM "РџР°СЂР°&РјРµС‚СЂРё СЃС‚РѕСЂС–РЅРєРё...", ID_PAGESETUP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "В&ихід\tAlt+F4",         ID_EXIT
+    MENUITEM "Р’&РёС…С–Рґ\tAlt+F4",         ID_EXIT
   END
-  POPUP "&Правка"
+  POPUP "&РџСЂР°РІРєР°"
   BEGIN
-    MENUITEM "&Скасувати",           ID_UNDO, GRAYED
-    MENUITEM "Пов&торити",           ID_REDO, GRAYED
+    MENUITEM "&РЎРєР°СЃСѓРІР°С‚Рё",           ID_UNDO, GRAYED
+    MENUITEM "РџРѕРІ&С‚РѕСЂРёС‚Рё",           ID_REDO, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Вирізати",            ID_CUT, GRAYED
-    MENUITEM "&Копіювати",           ID_COPY, GRAYED
-    MENUITEM "Вст&авити",            ID_PASTE, GRAYED
+    MENUITEM "&Р’РёСЂС–Р·Р°С‚Рё",            ID_CUT, GRAYED
+    MENUITEM "&РљРѕРїС–СЋРІР°С‚Рё",           ID_COPY, GRAYED
+    MENUITEM "Р’СЃС‚&Р°РІРёС‚Рё",            ID_PASTE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "О&чистити",            -1, GRAYED
-    MENUITEM "Виді&лити все",        ID_SELALL, GRAYED
+    MENUITEM "Рћ&С‡РёСЃС‚РёС‚Рё",            -1, GRAYED
+    MENUITEM "Р’РёРґС–&Р»РёС‚Рё РІСЃРµ",        ID_SELALL, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "З&найти...\tCtrl+F",   -1, GRAYED
-    MENUITEM "Зна&йти далі",         -1, GRAYED
-    MENUITEM "&Замінити\tCtrl+H",    -1, GRAYED
+    MENUITEM "Р—&РЅР°Р№С‚Рё...\tCtrl+F",   -1, GRAYED
+    MENUITEM "Р—РЅР°&Р№С‚Рё РґР°Р»С–",         -1, GRAYED
+    MENUITEM "&Р—Р°РјС–РЅРёС‚Рё\tCtrl+H",    -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Властивості об'&єкта", -1, GRAYED
-    MENUITEM "Об'єкт",               -1, GRAYED
+    MENUITEM "Р’Р»Р°СЃС‚РёРІРѕСЃС‚С– РѕР±'&С”РєС‚Р°", -1, GRAYED
+    MENUITEM "РћР±'С”РєС‚",               -1, GRAYED
   END
-  POPUP "&Вигляд"
+  POPUP "&Р’РёРіР»СЏРґ"
   BEGIN
-    MENUITEM "Панель &інструментів", -1, CHECKED
-    MENUITEM "П&анель форматування", -1, CHECKED
-    MENUITEM "&Лінійка",             -1, CHECKED
-    MENUITEM "&Рядок стану",         ID_STATUSBAR, CHECKED
+    MENUITEM "РџР°РЅРµР»СЊ &С–РЅСЃС‚СЂСѓРјРµРЅС‚С–РІ", -1, CHECKED
+    MENUITEM "Рџ&Р°РЅРµР»СЊ С„РѕСЂРјР°С‚СѓРІР°РЅРЅСЏ", -1, CHECKED
+    MENUITEM "&Р›С–РЅС–Р№РєР°",             -1, CHECKED
+    MENUITEM "&Р СЏРґРѕРє СЃС‚Р°РЅСѓ",         ID_STATUSBAR, CHECKED
   END
-  POPUP "Вст&авка"
+  POPUP "Р’СЃС‚&Р°РІРєР°"
   BEGIN
-    MENUITEM "&Дата й час...",  -1, GRAYED
-    MENUITEM "О&б'єкт...",      -1, GRAYED
+    MENUITEM "&Р”Р°С‚Р° Р№ С‡Р°СЃ...",  -1, GRAYED
+    MENUITEM "Рћ&Р±'С”РєС‚...",      -1, GRAYED
   END
-  POPUP "Фор&мат"
+  POPUP "Р¤РѕСЂ&РјР°С‚"
   BEGIN
-    MENUITEM "&Шрифт...",       -1 GRAYED
-    MENUITEM "&Маркер",         -1, GRAYED
-    MENUITEM "&Абзац...",       -1, GRAYED
-    MENUITEM "&Табуляція...",   -1, GRAYED
+    MENUITEM "&РЁСЂРёС„С‚...",       -1 GRAYED
+    MENUITEM "&РњР°СЂРєРµСЂ",         -1, GRAYED
+    MENUITEM "&РђР±Р·Р°С†...",       -1, GRAYED
+    MENUITEM "&РўР°Р±СѓР»СЏС†С–СЏ...",   -1, GRAYED
   END
-  POPUP "&Вікно"
+  POPUP "&Р’С–РєРЅРѕ"
   BEGIN
-    MENUITEM "&Каскадом",          ID_WINDOW_CASCADE
-    MENUITEM "&Горизонтально",     ID_WINDOW_TILE_HORZ
-    MENUITEM "&Вертикально",       ID_WINDOW_TILE_VERT
-    MENUITEM "Упорядкувати &значки", ID_WINDOW_ARRANGE
+    MENUITEM "&РљР°СЃРєР°РґРѕРј",          ID_WINDOW_CASCADE
+    MENUITEM "&Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕ",     ID_WINDOW_TILE_HORZ
+    MENUITEM "&Р’РµСЂС‚РёРєР°Р»СЊРЅРѕ",       ID_WINDOW_TILE_VERT
+    MENUITEM "РЈРїРѕСЂСЏРґРєСѓРІР°С‚Рё &Р·РЅР°С‡РєРё", ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
-    MENUITEM "&Наступне\tCtrl+F6", ID_WINDOW_NEXT
+    MENUITEM "&РќР°СЃС‚СѓРїРЅРµ\tCtrl+F6", ID_WINDOW_NEXT
   END
-  POPUP "&Довідка"
+  POPUP "&Р”РѕРІС–РґРєР°"
   BEGIN
-    MENUITEM "&Про програму...",   ID_ABOUT
+    MENUITEM "&РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ...",   ID_ABOUT
   END
 END
 
@@ -93,24 +93,24 @@ END
 
 
 IDD_NEWDOCSEL DIALOGEX 6,6,159,67
-CAPTION "Новий документ"
+CAPTION "РќРѕРІРёР№ РґРѕРєСѓРјРµРЅС‚"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
-  LTEXT "Тип нового документа:", IDC_STATIC, 4, 3, 72, 9
+  LTEXT "РўРёРї РЅРѕРІРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°:", IDC_STATIC, 4, 3, 72, 9
   LISTBOX IDC_LIST, 4, 16, 104, 46, WS_TABSTOP
   PUSHBUTTON "&OK", IDOK, 112, 16, 44, 13
-  PUSHBUTTON "&Скасувати", IDCANCEL, 112, 33, 44, 13
+  PUSHBUTTON "&РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 112, 33, 44, 13
 END
 
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "Про програму WordPad"
+CAPTION "РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ WordPad"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT "WordPad II v0.1\nCopyright (C) 2006\nGed Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 150, 36
-  PUSHBUTTON "Закрити", IDOK, 65, 162, 44, 15
+  PUSHBUTTON "Р—Р°РєСЂРёС‚Рё", IDOK, 65, 162, 44, 15
   ICON IDI_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 40, 174, 110, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -119,15 +119,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
-  IDS_DEFAULT_NAME      "Документ %1!u!"
-  IDS_READY             " Виконано."
+  IDS_DEFAULT_NAME      "Р”РѕРєСѓРјРµРЅС‚ %1!u!"
+  IDS_READY             " Р’РёРєРѕРЅР°РЅРѕ."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_DOC_TYPE_RICH_TEXT    "Документ у форматі RTF"
-  IDS_DOC_TYPE_UNICODE_TEXT "Текстовий документ"
-  IDS_DOC_TYPE_TEXT         "Текстовий документ у кодуванні Юнікод"
+  IDS_DOC_TYPE_RICH_TEXT    "Р”РѕРєСѓРјРµРЅС‚ Сѓ С„РѕСЂРјР°С‚С– RTF"
+  IDS_DOC_TYPE_UNICODE_TEXT "РўРµРєСЃС‚РѕРІРёР№ РґРѕРєСѓРјРµРЅС‚"
+  IDS_DOC_TYPE_TEXT         "РўРµРєСЃС‚РѕРІРёР№ РґРѕРєСѓРјРµРЅС‚ Сѓ РєРѕРґСѓРІР°РЅРЅС– Р®РЅС–РєРѕРґ"
 END
 
 
@@ -135,43 +135,43 @@ END
 /* Tooltips */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_NEW       "Створити"
-  IDS_TOOLTIP_OPEN      "Відкрити"
-  IDS_TOOLTIP_SAVE      "Зберегти"
-  IDS_TOOLTIP_PRINTPRE  "Попередній перегляд"
-  IDS_TOOLTIP_PRINT     "Друк"
-  IDS_TOOLTIP_CUT       "Вирізати"
-  IDS_TOOLTIP_COPY      "Копіювати"
-  IDS_TOOLTIP_PASTE     "Вставити"
-  IDS_TOOLTIP_UNDO      "Скасувати"
-  IDS_TOOLTIP_REDO      "Повернути"
+  IDS_TOOLTIP_NEW       "РЎС‚РІРѕСЂРёС‚Рё"
+  IDS_TOOLTIP_OPEN      "Р’С–РґРєСЂРёС‚Рё"
+  IDS_TOOLTIP_SAVE      "Р—Р±РµСЂРµРіС‚Рё"
+  IDS_TOOLTIP_PRINTPRE  "РџРѕРїРµСЂРµРґРЅС–Р№ РїРµСЂРµРіР»СЏРґ"
+  IDS_TOOLTIP_PRINT     "Р”СЂСѓРє"
+  IDS_TOOLTIP_CUT       "Р’РёСЂС–Р·Р°С‚Рё"
+  IDS_TOOLTIP_COPY      "РљРѕРїС–СЋРІР°С‚Рё"
+  IDS_TOOLTIP_PASTE     "Р’СЃС‚Р°РІРёС‚Рё"
+  IDS_TOOLTIP_UNDO      "РЎРєР°СЃСѓРІР°С‚Рё"
+  IDS_TOOLTIP_REDO      "РџРѕРІРµСЂРЅСѓС‚Рё"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_NEW          " Створення нового документа."
-  IDS_HINT_OPEN         " Відкриття існуючого документа."
-  IDS_HINT_CLOSE        " Закриття цього вікна."
-  IDS_HINT_CLOSEALL     " Закриття всіх вікон."
-  IDS_HINT_SAVE         " Збереження активного документа."
-  IDS_HINT_SAVEAS       " Збереження активного документа під новим ім'ям."
-  IDS_HINT_PRINT        " Друк активного документа."
-  IDS_HINT_PRINTPRE     " Попередній перегляд документа перед друком."
-  IDS_HINT_PAGESETUP    " Зміна параметрів сторінки."
-  IDS_HINT_EXIT         " Вихід з цієї програми."
+  IDS_HINT_NEW          " РЎС‚РІРѕСЂРµРЅРЅСЏ РЅРѕРІРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°."
+  IDS_HINT_OPEN         " Р’С–РґРєСЂРёС‚С‚СЏ С–СЃРЅСѓСЋС‡РѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°."
+  IDS_HINT_CLOSE        " Р—Р°РєСЂРёС‚С‚СЏ С†СЊРѕРіРѕ РІС–РєРЅР°."
+  IDS_HINT_CLOSEALL     " Р—Р°РєСЂРёС‚С‚СЏ РІСЃС–С… РІС–РєРѕРЅ."
+  IDS_HINT_SAVE         " Р—Р±РµСЂРµР¶РµРЅРЅСЏ Р°РєС‚РёРІРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°."
+  IDS_HINT_SAVEAS       " Р—Р±РµСЂРµР¶РµРЅРЅСЏ Р°РєС‚РёРІРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р° РїС–Рґ РЅРѕРІРёРј С–Рј'СЏРј."
+  IDS_HINT_PRINT        " Р”СЂСѓРє Р°РєС‚РёРІРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°."
+  IDS_HINT_PRINTPRE     " РџРѕРїРµСЂРµРґРЅС–Р№ РїРµСЂРµРіР»СЏРґ РґРѕРєСѓРјРµРЅС‚Р° РїРµСЂРµРґ РґСЂСѓРєРѕРј."
+  IDS_HINT_PAGESETUP    " Р—РјС–РЅР° РїР°СЂР°РјРµС‚СЂС–РІ СЃС‚РѕСЂС–РЅРєРё."
+  IDS_HINT_EXIT         " Р’РёС…С–Рґ Р· С†С–С”С— РїСЂРѕРіСЂР°РјРё."
 
-  IDS_HINT_CASCADE      " Розташування вікон з перекриттям."
-  IDS_HINT_TILE_HORZ    " Розташування вікон без перекриття."
-  IDS_HINT_TILE_VERT    " Розташування вікон без перекриття."
-  IDS_HINT_ARRANGE      " Упорядкування значків в нижній частині вікна."
-  IDS_HINT_NEXT         " Перехід до вікна наступного документа."
+  IDS_HINT_CASCADE      " Р РѕР·С‚Р°С€СѓРІР°РЅРЅСЏ РІС–РєРѕРЅ Р· РїРµСЂРµРєСЂРёС‚С‚СЏРј."
+  IDS_HINT_TILE_HORZ    " Р РѕР·С‚Р°С€СѓРІР°РЅРЅСЏ РІС–РєРѕРЅ Р±РµР· РїРµСЂРµРєСЂРёС‚С‚СЏ."
+  IDS_HINT_TILE_VERT    " Р РѕР·С‚Р°С€СѓРІР°РЅРЅСЏ РІС–РєРѕРЅ Р±РµР· РїРµСЂРµРєСЂРёС‚С‚СЏ."
+  IDS_HINT_ARRANGE      " РЈРїРѕСЂСЏРґРєСѓРІР°РЅРЅСЏ Р·РЅР°С‡РєС–РІ РІ РЅРёР¶РЅС–Р№ С‡Р°СЃС‚РёРЅС– РІС–РєРЅР°."
+  IDS_HINT_NEXT         " РџРµСЂРµС…С–Рґ РґРѕ РІС–РєРЅР° РЅР°СЃС‚СѓРїРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°."
 
-  IDS_HINT_SYS_RESTORE  " Відновлення вихідних розмірів вікна."
-  IDS_HINT_SYS_MOVE     " Зміна розташування вікна."
-  IDS_HINT_SYS_SIZE     " Зміна розмірів вікна."
-  IDS_HINT_SYS_MINIMIZE " Згортання вікна до значка."
-  IDS_HINT_SYS_MAXIMIZE " Розгортання вікна до розмірів екрана."
+  IDS_HINT_SYS_RESTORE  " Р’С–РґРЅРѕРІР»РµРЅРЅСЏ РІРёС…С–РґРЅРёС… СЂРѕР·РјС–СЂС–РІ РІС–РєРЅР°."
+  IDS_HINT_SYS_MOVE     " Р—РјС–РЅР° СЂРѕР·С‚Р°С€СѓРІР°РЅРЅСЏ РІС–РєРЅР°."
+  IDS_HINT_SYS_SIZE     " Р—РјС–РЅР° СЂРѕР·РјС–СЂС–РІ РІС–РєРЅР°."
+  IDS_HINT_SYS_MINIMIZE " Р—РіРѕСЂС‚Р°РЅРЅСЏ РІС–РєРЅР° РґРѕ Р·РЅР°С‡РєР°."
+  IDS_HINT_SYS_MAXIMIZE " Р РѕР·РіРѕСЂС‚Р°РЅРЅСЏ РІС–РєРЅР° РґРѕ СЂРѕР·РјС–СЂС–РІ РµРєСЂР°РЅР°."
 END
 

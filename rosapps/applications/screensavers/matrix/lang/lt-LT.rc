@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/screensavers/matrix/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us)
  * DATE:        2007-12-02
  */
 
@@ -13,46 +13,46 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ekrano uþsklandos nustatymai"
+CAPTION "Ekrano uÅ¾sklandos nustatymai"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Dekodavimo &greitis",IDC_STATIC,7,7,128,36
-    LTEXT           "Lëtas",IDC_STATIC,13,24,22,8
+    LTEXT           "LÄ—tas",IDC_STATIC,13,24,22,8
     CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
     LTEXT           "Greitas",IDC_STATIC,104,24,29,8
-    GROUPBOX        "Ðifro &tankumas",IDC_STATIC,7,50,128,36
-    LTEXT           "Maþas",IDC_STATIC,13,67,28,8
+    GROUPBOX        "Å ifro &tankumas",IDC_STATIC,7,50,128,36
+    LTEXT           "MaÅ¾as",IDC_STATIC,13,67,28,8
     CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
     LTEXT           "Didelis",IDC_STATIC,104,67,29,8
-    GROUPBOX        "&Praneðimo vaizdavimo greitis",IDC_MSGSPEEDGRP,7,93,127,36
-    LTEXT           "Lëtas",IDC_STATIC,13,110,22,8
+    GROUPBOX        "&PraneÅ¡imo vaizdavimo greitis",IDC_MSGSPEEDGRP,7,93,127,36
+    LTEXT           "LÄ—tas",IDC_STATIC,13,110,22,8
     CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
     LTEXT           "Greitas",IDC_STATIC,104,110,27,8
-    GROUPBOX        "Ðrifto &dydis",IDC_STATIC,7,137,127,36
-    LTEXT           "Maþas",IDC_STATIC,13,153,24,8
+    GROUPBOX        "Å rifto &dydis",IDC_STATIC,7,137,127,36
+    LTEXT           "MaÅ¾as",IDC_STATIC,13,153,24,8
     CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
     LTEXT           "Didelis",IDC_STATIC,104,153,25,8
-    GROUPBOX        "&Koduoti praneðimai",IDC_STATIC,145,7,188,142
+    GROUPBOX        "&Koduoti praneÅ¡imai",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
     CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
-    PUSHBUTTON      "&Átraukti",IDC_ADD,280,41,44,18
-    PUSHBUTTON      "&Paðalinti",IDC_REMOVE,280,66,44,18
-    CONTROL         "Atsitiktiniai praneðimai",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+    PUSHBUTTON      "&Ä®traukti",IDC_ADD,280,41,44,18
+    PUSHBUTTON      "&PaÅ¡alinti",IDC_REMOVE,280,66,44,18
+    CONTROL         "Atsitiktiniai praneÅ¡imai",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,91,10
     DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
-    PUSHBUTTON      "Atðaukti",IDCANCEL,283,162,50,14
-    LTEXT           "&Ðriftas:",IDC_STATIC,151,118,38,8
+    PUSHBUTTON      "AtÅ¡aukti",IDCANCEL,283,162,50,14
+    LTEXT           "&Å riftas:",IDC_STATIC,151,118,38,8
     COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Pus&juodis ðriftas",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Pus&juodis Å¡riftas",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,77,10
-    CTEXT           "Ekrano uþsklanda Matrica www.catch22.org.uk",IDC_ABOUT,140,
+    CTEXT           "Ekrano uÅ¾sklanda Matrica www.catch22.org.uk",IDC_ABOUT,140,
                     151,75,25
 END
 

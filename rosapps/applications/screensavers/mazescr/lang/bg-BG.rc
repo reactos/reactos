@@ -2,7 +2,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Екранен предпазител „Лабиринт”"
-    IDS_TITLE       "За..."
-    IDS_TEXT        "Няма нужда от настройки."
+    IDS_DESCRIPTION "Р•РєСЂР°РЅРµРЅ РїСЂРµРґРїР°Р·РёС‚РµР» вЂћР›Р°Р±РёСЂРёРЅС‚вЂќ"
+    IDS_TITLE       "Р—Р°..."
+    IDS_TEXT        "РќСЏРјР° РЅСѓР¶РґР° РѕС‚ РЅР°СЃС‚СЂРѕР№РєРё."
 END

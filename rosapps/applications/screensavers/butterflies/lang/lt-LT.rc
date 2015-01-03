@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        rosapps/applications/screensavers/butterflies/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" GirdÅ¾ijauskas (cman@cman.us)
  * DATE:        2007-12-02
  */
 
@@ -11,11 +11,11 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 IDD_DLG_SCREEN DIALOGEX DISCARDABLE  0, 0, 172, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ekrano uþsklandos nustatymai"
+CAPTION "Ekrano uÅ¾sklandos nustatymai"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,35,50,14
-    PUSHBUTTON      "Atðaukti",IDCANCEL,61,35,50,14
+    PUSHBUTTON      "AtÅ¡aukti",IDCANCEL,61,35,50,14
     CONTROL         "Sukioti drugelius",ROTATE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,56,15,70,8
     PUSHBUTTON      "Apie",IDABOUT,115,35,50,14
@@ -27,11 +27,11 @@ CAPTION "Apie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,48,58,56,14
-    CTEXT           "Ekrano uþsklanda Drugeliai",IDC_STATIC,7,7,135,9
+    CTEXT           "Ekrano uÅ¾sklanda Drugeliai",IDC_STATIC,7,7,135,9
     CTEXT           "Demonstracija: NeHe ",IDC_STATIC,7,20,135,8
     CTEXT           "http://nehe.gamedev.net",WEBPAGE1,7,29,135,8,SS_NOTIFY |
                     NOT WS_GROUP
-    CTEXT           "Kûrimas: tHaPuTeR",IDC_STATIC,7,38,135,8,NOT
+    CTEXT           "KÅ«rimas: tHaPuTeR",IDC_STATIC,7,38,135,8,NOT
                     WS_GROUP
     CTEXT           "http://www.thaputer.com",WEBPAGE2,7,47,135,8,SS_NOTIFY |
                     NOT WS_GROUP

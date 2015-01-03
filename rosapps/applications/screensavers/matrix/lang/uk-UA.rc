@@ -12,50 +12,50 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Параметри заставки ""Матриця"""
+CAPTION "РџР°СЂР°РјРµС‚СЂРё Р·Р°СЃС‚Р°РІРєРё ""РњР°С‚СЂРёС†СЏ"""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "&Швидкість декодування",IDC_STATIC,7,7,128,36
-    LTEXT           "Нижче",IDC_STATIC,13,24,22,8
+    GROUPBOX        "&РЁРІРёРґРєС–СЃС‚СЊ РґРµРєРѕРґСѓРІР°РЅРЅСЏ",IDC_STATIC,7,7,128,36
+    LTEXT           "РќРёР¶С‡Рµ",IDC_STATIC,13,24,22,8
     CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
-    LTEXT           "Вище",IDC_STATIC,104,24,20,8
-    GROUPBOX        "&Щільність шифру",IDC_STATIC,7,50,128,36
-    LTEXT           "Менше",IDC_STATIC,13,67,19,8
+    LTEXT           "Р’РёС‰Рµ",IDC_STATIC,104,24,20,8
+    GROUPBOX        "&Р©С–Р»СЊРЅС–СЃС‚СЊ С€РёС„СЂСѓ",IDC_STATIC,7,50,128,36
+    LTEXT           "РњРµРЅС€Рµ",IDC_STATIC,13,67,19,8
     CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
-    LTEXT           "Більше",IDC_STATIC,104,67,23,8
-    GROUPBOX        "Швидкість показу &повідомлення",IDC_MSGSPEEDGRP,7,93,127,36
-    LTEXT           "Нижче",IDC_STATIC,13,110,22,8
+    LTEXT           "Р‘С–Р»СЊС€Рµ",IDC_STATIC,104,67,23,8
+    GROUPBOX        "РЁРІРёРґРєС–СЃС‚СЊ РїРѕРєР°Р·Сѓ &РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ",IDC_MSGSPEEDGRP,7,93,127,36
+    LTEXT           "РќРёР¶С‡Рµ",IDC_STATIC,13,110,22,8
     CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
-    LTEXT           "Вище",IDC_STATIC,104,110,22,8
-    GROUPBOX        "&Розмір шрифту",IDC_STATIC,7,137,127,36
-    LTEXT           "Менший",IDC_STATIC,13,153,24,8
+    LTEXT           "Р’РёС‰Рµ",IDC_STATIC,104,110,22,8
+    GROUPBOX        "&Р РѕР·РјС–СЂ С€СЂРёС„С‚Сѓ",IDC_STATIC,7,137,127,36
+    LTEXT           "РњРµРЅС€РёР№",IDC_STATIC,13,153,24,8
     CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
-    LTEXT           "Більший",IDC_STATIC,104,153,25,8
-    GROUPBOX        "Закодовані повідомлення",IDC_STATIC,145,7,188,142
+    LTEXT           "Р‘С–Р»СЊС€РёР№",IDC_STATIC,104,153,25,8
+    GROUPBOX        "Р—Р°РєРѕРґРѕРІР°РЅС– РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
     CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
-    PUSHBUTTON      "&Додати",IDC_ADD,280,41,44,18
-    PUSHBUTTON      "В&идалити",IDC_REMOVE,280,66,44,18
-    CONTROL         "Змішати повідомлення",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+    PUSHBUTTON      "&Р”РѕРґР°С‚Рё",IDC_ADD,280,41,44,18
+    PUSHBUTTON      "Р’&РёРґР°Р»РёС‚Рё",IDC_REMOVE,280,66,44,18
+    CONTROL         "Р—РјС–С€Р°С‚Рё РїРѕРІС–РґРѕРјР»РµРЅРЅСЏ",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,85,10
     DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
-    PUSHBUTTON      "Скасувати",IDCANCEL,283,162,50,14
-    LTEXT           "&Ім'я шрифту:",IDC_STATIC,151,118,38,8
+    PUSHBUTTON      "РЎРєР°СЃСѓРІР°С‚Рё",IDCANCEL,283,162,50,14
+    LTEXT           "&Р†Рј'СЏ С€СЂРёС„С‚Сѓ:",IDC_STATIC,151,118,38,8
     COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Напів&жирний шрифт",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "РќР°РїС–РІ&Р¶РёСЂРЅРёР№ С€СЂРёС„С‚",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,46,10
-    CTEXT           "Заставка ""Матриця"" www.catch22.org.uk",IDC_ABOUT,140,
+    CTEXT           "Р—Р°СЃС‚Р°РІРєР° ""РњР°С‚СЂРёС†СЏ"" www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Заставка ""Матриця"""
+    IDS_DESCRIPTION         "Р—Р°СЃС‚Р°РІРєР° ""РњР°С‚СЂРёС†СЏ"""
 END

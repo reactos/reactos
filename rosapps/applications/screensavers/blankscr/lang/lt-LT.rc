@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        rosapps/applications/screensavers/blankscr/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
- * TRANSLATOR:  Vytis "CMan" Gird˛ijauskas (cman@cman.us)
+ * TRANSLATOR:  Vytis "CMan" Gird≈æijauskas (cman@cman.us)
  * DATE:        2007-12-02
  */
 
@@ -11,6 +11,6 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "TuËias"
-    IDS_TEXT        "NÎra keiËiam¯ parametr¯."
+    IDS_DESCRIPTION "Tu≈°ƒçias"
+    IDS_TEXT        "Nƒóra keiƒçiam≈≥ parametr≈≥."
 END

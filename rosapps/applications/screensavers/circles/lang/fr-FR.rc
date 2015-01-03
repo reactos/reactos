@@ -3,5 +3,5 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Cercles"
-    IDS_TEXT        "Il n'y a aucune option à définir."
+    IDS_TEXT        "Il n'y a aucune option Ã  dÃ©finir."
 END

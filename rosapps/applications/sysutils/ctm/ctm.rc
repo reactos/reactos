@@ -8,13 +8,14 @@
 #define REACTOS_STR_ORIGINAL_COPYRIGHT	"2003, Aleksey Bragin\0"
 #include <reactos/version.rc>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
-#include "lang/uk-UA.rc"
-#include "lang/ru-RU.rc"
 #include "lang/no-NO.rc"
-
-/* UTF-8 */
 #include "lang/ro-RO.rc"
+#include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

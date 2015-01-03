@@ -37,7 +37,7 @@ BEGIN
                     0x1,7,71,299,10
     CONTROL         "Statisk",IDC_STATUS,"Statisk",SS_LEFTNOWORDWRAP |
                     SS_SUNKEN | WS_GROUP,7,86,332,10
-    LTEXT           "Jeg er en ape, hør meg eeK",IDC_WISECRACKS,78,15,91,8
+    LTEXT           "Jeg er en ape, hÃ¸r meg eeK",IDC_WISECRACKS,78,15,91,8
     LTEXT           "100.00%",IDC_PERCENT,311,71,28,8,0,WS_EX_RIGHT
     LTEXT           "Prosess proritet:",-1,223,40,51,8
 END
@@ -55,21 +55,21 @@ BEGIN
     RTEXT           "Stasjon",-1,7,7,24,8
     LTEXT           "Kapasitet",-1,7,51,28,8
     RTEXT           "(Stasjon bokstav)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
-    RTEXT           "(Disk størrelse, Byte)",IDC_DISKSIZEBYTES,63,51,117,10,
+    RTEXT           "(Disk stÃ¸rrelse, Byte)",IDC_DISKSIZEBYTES,63,51,117,10,
                     SS_SUNKEN
-    RTEXT           "(Disk størrelse, Cluster)",IDC_DISKSIZECLUSTERS,63,73,117,
+    RTEXT           "(Disk stÃ¸rrelse, Cluster)",IDC_DISKSIZECLUSTERS,63,73,117,
                     10,SS_SUNKEN
     LTEXT           "Total clusters",-1,7,73,43,8
-    RTEXT           "(Cluster størrelse)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+    RTEXT           "(Cluster stÃ¸rrelse)",IDC_DISKCLUSTERSIZE,63,84,117,10,
                     SS_SUNKEN
-    LTEXT           "Cluster størrelse",-1,7,84,36,8
+    LTEXT           "Cluster stÃ¸rrelse",-1,7,84,36,8
     RTEXT           "(Files count)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
-    RTEXT           "(Fil størrelse, byte)",IDC_FILESSIZEBYTES,267,29,117,10,
+    RTEXT           "(Fil stÃ¸rrelse, byte)",IDC_FILESSIZEBYTES,267,29,117,10,
                     SS_SUNKEN
     LTEXT           "# filer",-1,194,18,28,8
-    LTEXT           "Total størrelse",-1,194,29,31,8
-    LTEXT           "diskstørrelse",-1,194,40,39,8
-    RTEXT           "(Total størrelse, byte)",IDC_FILESSIZEONDISK,267,40,117,10,
+    LTEXT           "Total stÃ¸rrelse",-1,194,29,31,8
+    LTEXT           "diskstÃ¸rrelse",-1,194,40,39,8
+    RTEXT           "(Total stÃ¸rrelse, byte)",IDC_FILESSIZEONDISK,267,40,117,10,
                     SS_SUNKEN
     RTEXT           "(Fil slack byte)",IDC_FILESSLACKBYTES,267,51,117,10,
                     SS_SUNKEN
@@ -93,7 +93,7 @@ BEGIN
     RTEXT           "(Average Frags Per File)",IDC_AVERAGEFRAGS,267,73,117,
                     10,SS_SUNKEN
     LTEXT           "Average fragments per file",-1,194,73,60,20
-    LTEXT           "XX.X% av disse filene på denne stasjonen er fragmentert. Det er anbefalt at du utfører en SSSSSSS defragmentasjon.",
+    LTEXT           "XX.X% av disse filene pÃ¥ denne stasjonen er fragmentert. Det er anbefalt at du utfÃ¸rer en SSSSSSS defragmentasjon.",
                     IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
     LTEXT           "Anbefalinger:",-1,7,96,62,8
 END
@@ -178,7 +178,7 @@ BEGIN
             VALUE "Filbeskrivelse", "Fraginator"
             VALUE "Filversjon", "1.03"
             VALUE "Internasjonaltnavn", "Fraginator"
-            VALUE "LegalCopyright", "enerett © 2000-2002 Rick Brewster"
+            VALUE "LegalCopyright", "enerett Â© 2000-2002 Rick Brewster"
             VALUE "Originalfilnavn", "Fraginator.exe"
             VALUE "Produktnavn", "Fraginator"
             VALUE "ProduktVersjon", "1.03"

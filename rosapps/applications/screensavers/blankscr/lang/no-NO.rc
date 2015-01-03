@@ -3,5 +3,5 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Tom skjerm"
-    IDS_TEXT        "Ingen valg trenger å settes."
+    IDS_TEXT        "Ingen valg trenger Ã¥ settes."
 END

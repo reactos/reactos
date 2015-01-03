@@ -5,19 +5,19 @@ BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S system [/U brukernavn [/P [passord]]]] [/FO format] [/NH]\n\n\
 Beskrivelse:\n\
-  Denne komando linje verktøyet gjør det mulig for en administrator å spørre om basis\n\
+  Denne komando linje verktÃ¸yet gjÃ¸r det mulig for en administrator Ã¥ spÃ¸rre om basis\n\
   system konfigurasjon informasjon.\n\n\
 Parameter liste:\n\
-  /S      system            Spesifisere eksternt system for å kunne kobles til.\n\n\
+  /S      system            Spesifisere eksternt system for Ã¥ kunne kobles til.\n\n\
   /U      [domene\\]bruker  Spesifisere brukeren sammenheng under hvilken\n\
-                            av kommando som skal kjøres.\n\n\
+                            av kommando som skal kjÃ¸res.\n\n\
   /P      [passord]         Spesifisere passord for gitt\n\
                             bruker sammenheng. Prompts for input if omitted.\n\n\
-  /FO     format            Spesifisere formatet som i utgående\n\
+  /FO     format            Spesifisere formatet som i utgÃ¥ende\n\
                             som skal vises.\n\
                             Gyldige verdier: ""TABLE"", ""LIST"", ""CSV"".\n\n\
   /NH                       Spesifisere at ""Column Header"" skal\n\
-                            ikke vises i utgående.\n\
+                            ikke vises i utgÃ¥ende.\n\
                             Gyldig for bare ""TABLE"" og ""CSV"" formater.\n\n\
   /?                        Vis denne hjelp/bruk meldingen.\n\n\
 Eksempler:\n\
@@ -55,7 +55,7 @@ IDS_INPUT_LOCALE,            "Input lokal"
 IDS_TIME_ZONE,               "Tidssone"
 IDS_TOTAL_PHYS_MEM,          "Total fysisk minne"
 IDS_AVAIL_PHISICAL_MEM,      "Tilgjengelig fysisk minne"
-IDS_VIRT_MEM_MAX,            "Virtuelt minne: Maks Størrelse"
+IDS_VIRT_MEM_MAX,            "Virtuelt minne: Maks StÃ¸rrelse"
 IDS_VIRT_MEM_AVAIL,          "Virtuelt minne: Tilgjengelig"
 IDS_VIRT_MEM_INUSE,          "Virtuelt minne: i bruk"
 IDS_PAGEFILE_LOC,            "Sidevekslingsfil lokalsjon(er)"

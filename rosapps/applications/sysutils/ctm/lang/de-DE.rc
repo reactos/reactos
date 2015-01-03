@@ -24,9 +24,9 @@ BEGIN
 
    IDS_KILL_PROCESS        "Sind Sie sicher diesen Prozess beenden zu wollen? (j/n)"
    IDS_KILL_PROCESS_ERR1   "Fehler beim Beenden des Prozesses aufgetreten..."
-   IDS_KILL_PROCESS_ERR2   "Fehler beim Beenden des Prozesses %d aufgetreten (OpenProcess unmöglich)"
+   IDS_KILL_PROCESS_ERR2   "Fehler beim Beenden des Prozesses %d aufgetreten (OpenProcess unmÃ¶glich)"
 
    IDS_CTM_GENERAL_ERR1    "ctm: Kann die Konsole nicht verwenden."
-   IDS_CTM_GENERAL_ERR2    "ctm: Kann GetConsoleMode() für die Eingabekonsole nicht verwenden."
-   IDS_CTM_GENERAL_ERR3    "ctm: Kann GetConsoleMode() für die Ausgabekonsole nicht verwenden."
+   IDS_CTM_GENERAL_ERR2    "ctm: Kann GetConsoleMode() fÃ¼r die Eingabekonsole nicht verwenden."
+   IDS_CTM_GENERAL_ERR3    "ctm: Kann GetConsoleMode() fÃ¼r die Ausgabekonsole nicht verwenden."
 END

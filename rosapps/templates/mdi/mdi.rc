@@ -4,7 +4,7 @@
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS MDI Sample Application by Robert Dickenson\0"
 #define REACTOS_STR_INTERNAL_NAME	"mdi\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"mdi.exe\0"
-#define REACTOS_STR_ORIGINAL_COPYRIGHT	"Copyright © 2002 Robert Dickenson\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT	"Copyright Â© 2002 Robert Dickenson\0"
 #include <reactos/version.rc>
 
 //Microsoft Developer Studio generated resource script.
@@ -30,7 +30,8 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
+/* UTF-8 */
+#pragma code_page(65001)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////

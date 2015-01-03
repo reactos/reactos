@@ -3,65 +3,65 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE "SYSTEMINFO [/S système [/U utilisateur [/P [motdepasse]]]] [/FO format] [/NH]\n\n\
+IDS_USAGE "SYSTEMINFO [/S systÃ¨me [/U utilisateur [/P [motdepasse]]]] [/FO format] [/NH]\n\n\
 Description :\n\
-  Cet outil en ligne de commande permet à un administrateur d'effectuer une requête sur les informations\n\
-  basiques de la configuration du système.\n\n\
+  Cet outil en ligne de commande permet Ã  un administrateur d'effectuer une requÃªte sur les informations\n\
+  basiques de la configuration du systÃ¨me.\n\n\
 Parameter List:\n\
-  /S      système          Spécifie le système distant auquel se connecter.\n\n\
-  /U      [domain\\]user   Spécifie le contexte utilisateur dans lequel\n\
-                           la commande doit être exécutée.\n\n\
-  /P      [motdepasse]     Spécifie le mot de passe pour le contexte utilisateur\n\
+  /S      systÃ¨me          SpÃ©cifie le systÃ¨me distant auquel se connecter.\n\n\
+  /U      [domain\\]user   SpÃ©cifie le contexte utilisateur dans lequel\n\
+                           la commande doit Ãªtre exÃ©cutÃ©e.\n\n\
+  /P      [motdepasse]     SpÃ©cifie le mot de passe pour le contexte utilisateur\n\
                            fourni. Le demande si ommis.\n\n\
-  /FO     format           Spécifie le format dans lequel la sortie\n\
-                           doit être affichée.\n\
+  /FO     format           SpÃ©cifie le format dans lequel la sortie\n\
+                           doit Ãªtre affichÃ©e.\n\
                            Valeurs valides: ""TABLE"", ""LIST"", ""CSV"".\n\n\
-  /NH                      Spécifie que ""L'entête de colonne"" ne doit\n\
-                           pas être affiché dans la sortie.\n\
+  /NH                      SpÃ©cifie que ""L'entÃªte de colonne"" ne doit\n\
+                           pas Ãªtre affichÃ© dans la sortie.\n\
                            Valide uniquement pour les format ""TABLE"" et ""CSV"".\n\n\
   /?                       Affiche cette aide.\n\n\
 Exemples:\n\
   SYSTEMINFO\n\
   SYSTEMINFO /?\n\
-  SYSTEMINFO /S système\n\
-  SYSTEMINFO /S système /U utilisateur\n\
-  SYSTEMINFO /S système /U domaine\\utilisateur /P motdepasse /FO TABLE\n\
-  SYSTEMINFO /S système /FO LIST\n\
-  SYSTEMINFO /S système /FO CSV /NH\n"
+  SYSTEMINFO /S systÃ¨me\n\
+  SYSTEMINFO /S systÃ¨me /U utilisateur\n\
+  SYSTEMINFO /S systÃ¨me /U domaine\\utilisateur /P motdepasse /FO TABLE\n\
+  SYSTEMINFO /S systÃ¨me /FO LIST\n\
+  SYSTEMINFO /S systÃ¨me /FO CSV /NH\n"
 
-IDS_HOST_NAME,               "Nom d'hôte"
-IDS_OS_NAME,                 "Nom du système d'exploitation"
-IDS_OS_VERSION,              "Version du système d'exploitation"
+IDS_HOST_NAME,               "Nom d'hÃ´te"
+IDS_OS_NAME,                 "Nom du systÃ¨me d'exploitation"
+IDS_OS_VERSION,              "Version du systÃ¨me d'exploitation"
 IDS_BUILD,                   "Compilation"
-IDS_OS_BUILD_TYPE,           "Type de compilation du système d'exploitation"
-IDS_REG_OWNER,               "Propriétaire enregistré"
-IDS_REG_ORG,                 "Organisation enregistrée"
+IDS_OS_BUILD_TYPE,           "Type de compilation du systÃ¨me d'exploitation"
+IDS_REG_OWNER,               "PropriÃ©taire enregistrÃ©"
+IDS_REG_ORG,                 "Organisation enregistrÃ©e"
 IDS_PRODUCT_ID,              "ID du produit"
 IDS_INST_DATE,               "Date d'installation"
 IDS_UP_TIME,                 "System Up Time"
 IDS_UP_TIME_FORMAT           "%u Days, %u Hours, %u Minutes, %u Seconds"
 IDS_SYS_MANUFACTURER,        "System Manufacturer"
 IDS_SYS_MODEL,               "System Model"
-IDS_SYS_TYPE,                "Type du système"
+IDS_SYS_TYPE,                "Type du systÃ¨me"
 IDS_PROCESSORS,              "Processeur(s)"
-IDS_PROCESSORS_FORMAT,       "%u Processeur(s) installé(s)."
+IDS_PROCESSORS_FORMAT,       "%u Processeur(s) installÃ©(s)."
 IDS_BIOS_DATE,               "Date du BIOS"
 IDS_BIOS_VERSION,            "Version du BIOS"
-IDS_ROS_DIR,                 "Répertoire ReactOS"
-IDS_SYS_DIR,                 "Répertoire système"
-IDS_BOOT_DEV,                "Périphérique de démarrage"
-IDS_SYS_LOCALE,              "Paramètre régional du système"
-IDS_INPUT_LOCALE,            "Paramètre régional de saisie"
+IDS_ROS_DIR,                 "RÃ©pertoire ReactOS"
+IDS_SYS_DIR,                 "RÃ©pertoire systÃ¨me"
+IDS_BOOT_DEV,                "PÃ©riphÃ©rique de dÃ©marrage"
+IDS_SYS_LOCALE,              "ParamÃ¨tre rÃ©gional du systÃ¨me"
+IDS_INPUT_LOCALE,            "ParamÃ¨tre rÃ©gional de saisie"
 IDS_TIME_ZONE,               "Fuseau horaire"
-IDS_TOTAL_PHYS_MEM,          "Mémoire physique totale"
-IDS_AVAIL_PHISICAL_MEM,      "Mémoire physique disponible"
-IDS_VIRT_MEM_MAX,            "Mémoire virtuelle: Taille max"
-IDS_VIRT_MEM_AVAIL,          "Mémoire virtuelle: Disponible"
-IDS_VIRT_MEM_INUSE,          "Mémoire virtuelle: Utilisée"
-IDS_PAGEFILE_LOC,            "Emplacement(s) des fichiers d'échange"
+IDS_TOTAL_PHYS_MEM,          "MÃ©moire physique totale"
+IDS_AVAIL_PHISICAL_MEM,      "MÃ©moire physique disponible"
+IDS_VIRT_MEM_MAX,            "MÃ©moire virtuelle: Taille max"
+IDS_VIRT_MEM_AVAIL,          "MÃ©moire virtuelle: Disponible"
+IDS_VIRT_MEM_INUSE,          "MÃ©moire virtuelle: UtilisÃ©e"
+IDS_PAGEFILE_LOC,            "Emplacement(s) des fichiers d'Ã©change"
 IDS_DOMAIN,                  "Domaine"
-IDS_NETWORK_CARDS,           "Carte(s) réseau"
-IDS_NETWORK_CARDS_FORMAT,    "%u installée(s)."
+IDS_NETWORK_CARDS,           "Carte(s) rÃ©seau"
+IDS_NETWORK_CARDS_FORMAT,    "%u installÃ©e(s)."
 IDS_CONNECTION_NAME,         "Connection Name"
 IDS_STATUS,                  "Status"
 IDS_MEDIA_DISCONNECTED,      "Media disconnected"

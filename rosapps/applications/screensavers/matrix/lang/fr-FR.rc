@@ -4,15 +4,15 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_CONFIG DIALOGEX DISCARDABLE  0, 0, 340, 183
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configuration de l'écran de veille Matrix"
+CAPTION "Configuration de l'Ã©cran de veille Matrix"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Vite&sse de décodage",IDC_STATIC,7,7,128,36
+    GROUPBOX        "Vite&sse de dÃ©codage",IDC_STATIC,7,7,128,36
     LTEXT           "Plus lent",IDC_STATIC,13,24,22,8
     CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
     LTEXT           "Plus rapide",IDC_STATIC,104,24,20,8
-    GROUPBOX        "&Densité de caractères",IDC_STATIC,7,50,128,36
+    GROUPBOX        "&DensitÃ© de caractÃ¨res",IDC_STATIC,7,50,128,36
     LTEXT           "Moins",IDC_STATIC,13,67,19,8
     CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
@@ -27,14 +27,14 @@ BEGIN
     CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
     LTEXT           "Plus grande",IDC_STATIC,104,153,25,8
-    GROUPBOX        "Messages codés",IDC_STATIC,145,7,188,142
+    GROUPBOX        "Messages codÃ©s",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
     CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
     PUSHBUTTON      "&Ajouter",IDC_ADD,280,41,44,18
     PUSHBUTTON      "Supp&rimer",IDC_REMOVE,280,66,44,18
-    CONTROL         "Messages aléatoires",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Messages alÃ©atoires",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,85,10
     DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,283,162,50,14
@@ -43,11 +43,11 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Gras",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,46,10
-    CTEXT           "Écran de veille Matrix www.catch22.org.uk",IDC_ABOUT,140,
+    CTEXT           "Ã‰cran de veille Matrix www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Écran de veille Matrix"
+    IDS_DESCRIPTION         "Ã‰cran de veille Matrix"
 END

@@ -11,7 +11,7 @@ BEGIN
     MENUITEM "S&ulje kaikki",           ID_CLOSEALL, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Tallenna",               ID_SAVE, GRAYED
-    MENUITEM "Tallenna &nimell‰...",    ID_SAVEAS, GRAYED
+    MENUITEM "Tallenna &nimell√§...",    ID_SAVEAS, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Tulostuksen esikatselu",  ID_PRINTPRE, GRAYED
     MENUITEM "&Tulosta...",             ID_PRINT, GRAYED
@@ -27,9 +27,9 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Leikkaa",                 ID_CUT, GRAYED
     MENUITEM "Kopioi",                  ID_COPY, GRAYED
-    MENUITEM "Liit‰",                   ID_PASTE, GRAYED
+    MENUITEM "Liit√§",                   ID_PASTE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Tyhjenn‰",                -1, GRAYED
+    MENUITEM "Tyhjenn√§",                -1, GRAYED
     MENUITEM "Valitse kaikki",          ID_SELALL, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Etsi...\tCtrl+F",         -1, GRAYED
@@ -39,16 +39,16 @@ BEGIN
     MENUITEM "Objektin ominaisuudet",   -1, GRAYED
     MENUITEM "Objekti",                 -1, GRAYED
   END
-  POPUP "N‰yt‰"
+  POPUP "N√§yt√§"
   BEGIN
-    MENUITEM "&Tyˆkalurivi",            -1, CHECKED
+    MENUITEM "&Ty√∂kalurivi",            -1, CHECKED
     MENUITEM "&Muotoilurivi",           -1, CHECKED
     MENUITEM "&Viivain",                -1, CHECKED
     MENUITEM "&Tilarivi",               ID_STATUSBAR, CHECKED
   END
-  POPUP "&Lis‰‰"
+  POPUP "&Lis√§√§"
   BEGIN
-    MENUITEM "&P‰iv‰m‰‰r‰ ja aika...",  -1, GRAYED
+    MENUITEM "&P√§iv√§m√§√§r√§ ja aika...",  -1, GRAYED
     MENUITEM "&Objekti...",             -1, GRAYED
   END
   POPUP "&Muotoile"
@@ -60,10 +60,10 @@ BEGIN
   END
   POPUP "&Ikkuna"
   BEGIN
-    MENUITEM "&Limitt‰in",              ID_WINDOW_CASCADE
+    MENUITEM "&Limitt√§in",              ID_WINDOW_CASCADE
     MENUITEM "Allekkain",               ID_WINDOW_TILE_HORZ
-    MENUITEM "Vierekk‰in",              ID_WINDOW_TILE_VERT
-    MENUITEM "&J‰rjest‰ kuvakkeet",     ID_WINDOW_ARRANGE
+    MENUITEM "Vierekk√§in",              ID_WINDOW_TILE_VERT
+    MENUITEM "&J√§rjest√§ kuvakkeet",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
     MENUITEM "Seuraava\tCtrl+F6",       ID_WINDOW_NEXT
   END
@@ -134,7 +134,7 @@ BEGIN
   IDS_TOOLTIP_PRINT     "Tulosta"
   IDS_TOOLTIP_CUT       "Leikkaa"
   IDS_TOOLTIP_COPY      "Kopioi"
-  IDS_TOOLTIP_PASTE     "Liit‰"
+  IDS_TOOLTIP_PASTE     "Liit√§"
   IDS_TOOLTIP_UNDO      "Kumoa"
   IDS_TOOLTIP_REDO      "Tee uudelleen"
 END
@@ -145,25 +145,25 @@ BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_NEW          " Luo uuden asiakirjan."
   IDS_HINT_OPEN         " Avaa aiemmin luodun asiakirjan."
-  IDS_HINT_CLOSE        " Sulkee t‰m‰n ikkunan."
+  IDS_HINT_CLOSE        " Sulkee t√§m√§n ikkunan."
   IDS_HINT_CLOSEALL     " Sulkee kaikki ikkunat."
   IDS_HINT_SAVE         " Tallentaa aktiivisen asiakirjan."
-  IDS_HINT_SAVEAS       " Tallentaa aktiivisen asiakirjan uudennimisen‰."
+  IDS_HINT_SAVEAS       " Tallentaa aktiivisen asiakirjan uudennimisen√§."
   IDS_HINT_PRINT        " Tulostaa aktiivisen asiakirjan."
-  IDS_HINT_PRINTPRE     " N‰ytt‰‰ koko sivun."
+  IDS_HINT_PRINTPRE     " N√§ytt√§√§ koko sivun."
   IDS_HINT_PAGESETUP    " Muuta sivun ulkoasun asetuksia."
-  IDS_HINT_EXIT         " Lopettaa t‰m‰n sovelluksen."
+  IDS_HINT_EXIT         " Lopettaa t√§m√§n sovelluksen."
 
-  IDS_HINT_CASCADE      " J‰rjest‰‰ ikkunat p‰‰llekk‰in."
-  IDS_HINT_TILE_HORZ    " J‰rjet‰‰ ikkunat vierekk‰in."
-  IDS_HINT_TILE_VERT    " J‰rjet‰‰ ikkunat allekkain."
-  IDS_HINT_ARRANGE      " J‰rjest‰‰ kuvakkeet ikkunan alareunaan."
+  IDS_HINT_CASCADE      " J√§rjest√§√§ ikkunat p√§√§llekk√§in."
+  IDS_HINT_TILE_HORZ    " J√§rjet√§√§ ikkunat vierekk√§in."
+  IDS_HINT_TILE_VERT    " J√§rjet√§√§ ikkunat allekkain."
+  IDS_HINT_ARRANGE      " J√§rjest√§√§ kuvakkeet ikkunan alareunaan."
   IDS_HINT_NEXT         " Aktivoi seuraavan ikkunan."
 
   IDS_HINT_SYS_RESTORE  " Palauttaa ikkunan normaaliin kokoon."
   IDS_HINT_SYS_MOVE     " Muuta ikkunan paikkaa."
   IDS_HINT_SYS_SIZE     " Muuta ikkunan kokoa."
-  IDS_HINT_SYS_MINIMIZE " Pienent‰‰ ikkunan kuvakkeeksi."
-  IDS_HINT_SYS_MAXIMIZE " Suurentaa ikkunan t‰yteen kokoon."
+  IDS_HINT_SYS_MINIMIZE " Pienent√§√§ ikkunan kuvakkeeksi."
+  IDS_HINT_SYS_MAXIMIZE " Suurentaa ikkunan t√§yteen kokoon."
 END
 

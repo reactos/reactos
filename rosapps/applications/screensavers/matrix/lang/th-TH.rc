@@ -7,43 +7,43 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Matrix ScreenSaver Configuration"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "∂Õ¥√À—  &§«“¡‡√Á«",IDC_STATIC,7,7,128,36
-    LTEXT           "·∫∫™È“",IDC_STATIC,13,24,22,8
-    CONTROL         "¿“æµËÕ‡π◊ËÕß1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
+    GROUPBOX        "‡∏ñ‡∏≠‡∏î‡∏£‡∏´‡∏±‡∏™ &‡∏Ñ‡∏ß‡∏≤‡∏°‡πÄ‡∏£‡πá‡∏ß",IDC_STATIC,7,7,128,36
+    LTEXT           "‡πÅ‡∏ö‡∏ö‡∏ä‡πâ‡∏≤",IDC_STATIC,13,24,22,8
+    CONTROL         "‡∏†‡∏≤‡∏û‡∏ï‡πà‡∏≠‡πÄ‡∏ô‡∏∑‡πà‡∏≠‡∏á1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
-    LTEXT           "·∫∫‡√Á«°«Ë“",IDC_STATIC,104,24,20,8
-    GROUPBOX        "°”Àπ¥√À—  &§«“¡Àπ“·πËπ",IDC_STATIC,7,50,128,36
-    LTEXT           "·∫∫À≈–À≈«¡",IDC_STATIC,13,67,19,8
-    CONTROL         "¿“æµËÕ‡π◊ËÕß1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
+    LTEXT           "‡πÅ‡∏ö‡∏ö‡πÄ‡∏£‡πá‡∏ß‡∏Å‡∏ß‡πà‡∏≤",IDC_STATIC,104,24,20,8
+    GROUPBOX        "‡∏Å‡∏≥‡∏´‡∏ô‡∏î‡∏£‡∏´‡∏±‡∏™ &‡∏Ñ‡∏ß‡∏≤‡∏°‡∏´‡∏ô‡∏≤‡πÅ‡∏ô‡πà‡∏ô",IDC_STATIC,7,50,128,36
+    LTEXT           "‡πÅ‡∏ö‡∏ö‡∏´‡∏•‡∏∞‡∏´‡∏•‡∏ß‡∏°",IDC_STATIC,13,67,19,8
+    CONTROL         "‡∏†‡∏≤‡∏û‡∏ï‡πà‡∏≠‡πÄ‡∏ô‡∏∑‡πà‡∏≠‡∏á1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
-    LTEXT           "‡æ‘Ë¡‡µ‘¡",IDC_STATIC,104,67,23,8
-    GROUPBOX        "&¢ÈÕ§«“¡· ¥ß§«“¡‡√Á«",IDC_MSGSPEEDGRP,7,93,127,36
-    LTEXT           "·∫∫™È“",IDC_STATIC,13,110,22,8
-    CONTROL         "¿“æµËÕ‡π◊ËÕß3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
+    LTEXT           "‡πÄ‡∏û‡∏¥‡πà‡∏°‡πÄ‡∏ï‡∏¥‡∏°",IDC_STATIC,104,67,23,8
+    GROUPBOX        "&‡∏Ç‡πâ‡∏≠‡∏Ñ‡∏ß‡∏≤‡∏°‡πÅ‡∏™‡∏î‡∏á‡∏Ñ‡∏ß‡∏≤‡∏°‡πÄ‡∏£‡πá‡∏ß",IDC_MSGSPEEDGRP,7,93,127,36
+    LTEXT           "‡πÅ‡∏ö‡∏ö‡∏ä‡πâ‡∏≤",IDC_STATIC,13,110,22,8
+    CONTROL         "‡∏†‡∏≤‡∏û‡∏ï‡πà‡∏≠‡πÄ‡∏ô‡∏∑‡πà‡∏≠‡∏á3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
-    LTEXT           "·∫∫‡√Á«°«Ë“",IDC_STATIC,104,110,22,8
-    GROUPBOX        "&¢π“¥µ—«Õ—°…√",IDC_STATIC,7,137,127,36
-    LTEXT           "¢π“¥‡≈Á°≈ß",IDC_STATIC,13,153,24,8
-    CONTROL         "¿“æµËÕ‡π◊ËÕß3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
+    LTEXT           "‡πÅ‡∏ö‡∏ö‡πÄ‡∏£‡πá‡∏ß‡∏Å‡∏ß‡πà‡∏≤",IDC_STATIC,104,110,22,8
+    GROUPBOX        "&‡∏Ç‡∏ô‡∏≤‡∏î‡∏ï‡∏±‡∏ß‡∏≠‡∏±‡∏Å‡∏©‡∏£",IDC_STATIC,7,137,127,36
+    LTEXT           "‡∏Ç‡∏ô‡∏≤‡∏î‡πÄ‡∏•‡πá‡∏Å‡∏•‡∏á",IDC_STATIC,13,153,24,8
+    CONTROL         "‡∏†‡∏≤‡∏û‡∏ï‡πà‡∏≠‡πÄ‡∏ô‡∏∑‡πà‡∏≠‡∏á3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
-    LTEXT           "¢π“¥„À≠Ë¢÷Èπ",IDC_STATIC,104,153,25,8
-    GROUPBOX        "µ—Èß√À— ¢ÈÕ§«“¡",IDC_STATIC,145,7,188,142
+    LTEXT           "‡∏Ç‡∏ô‡∏≤‡∏î‡πÉ‡∏´‡∏ç‡πà‡∏Ç‡∏∂‡πâ‡∏ô",IDC_STATIC,104,153,25,8
+    GROUPBOX        "‡∏ï‡∏±‡πâ‡∏á‡∏£‡∏´‡∏±‡∏™‡∏Ç‡πâ‡∏≠‡∏Ñ‡∏ß‡∏≤‡∏°",IDC_STATIC,145,7,188,142
     COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
-    CONTROL         "",IDC_PREVIEW,"·∫∫§ß∑’Ë",SS_LEFTNOWORDWRAP |
+    CONTROL         "",IDC_PREVIEW,"‡πÅ‡∏ö‡∏ö‡∏Ñ‡∏á‡∏ó‡∏µ‡πà",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
-    PUSHBUTTON      "&‡æ‘Ë¡",IDC_ADD,280,41,44,18
-    PUSHBUTTON      "&‡§≈◊ËÕπ¬È“¬ÕÕ°",IDC_REMOVE,280,66,44,18
-    CONTROL         "¢ÈÕ§«“¡·∫∫ ÿË¡",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+    PUSHBUTTON      "&‡πÄ‡∏û‡∏¥‡πà‡∏°",IDC_ADD,280,41,44,18
+    PUSHBUTTON      "&‡πÄ‡∏Ñ‡∏•‡∏∑‡πà‡∏≠‡∏ô‡∏¢‡πâ‡∏≤‡∏¢‡∏≠‡∏≠‡∏Å",IDC_REMOVE,280,66,44,18
+    CONTROL         "‡∏Ç‡πâ‡∏≠‡∏Ñ‡∏ß‡∏≤‡∏°‡πÅ‡∏ö‡∏ö‡∏™‡∏∏‡πà‡∏°",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,85,10
-    DEFPUSHBUTTON   "µ°≈ß",IDOK,222,162,50,14
-    PUSHBUTTON      "¬°‡≈‘°",IDCANCEL,283,162,50,14
-    LTEXT           "&™◊ËÕµ—«Õ—°…√:",IDC_STATIC,151,118,38,8
+    DEFPUSHBUTTON   "‡∏ï‡∏Å‡∏•‡∏á",IDOK,222,162,50,14
+    PUSHBUTTON      "‡∏¢‡∏Å‡πÄ‡∏•‡∏¥‡∏Å",IDCANCEL,283,162,50,14
+    LTEXT           "&‡∏ä‡∏∑‡πà‡∏≠‡∏ï‡∏±‡∏ß‡∏≠‡∏±‡∏Å‡∏©‡∏£:",IDC_STATIC,151,118,38,8
     COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "&µ—«Àπ“",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&‡∏ï‡∏±‡∏ß‡∏´‡∏ô‡∏≤",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,46,10
-    CTEXT           "‚ª√·°√¡√—°…“ÀπÈ“®Õ·∫∫‡¡∑√‘°´Ï www.catch22.org.uk",IDC_ABOUT,140,
+    CTEXT           "‡πÇ‡∏õ‡∏£‡πÅ‡∏Å‡∏£‡∏°‡∏£‡∏±‡∏Å‡∏©‡∏≤‡∏´‡∏ô‡πâ‡∏≤‡∏à‡∏≠‡πÅ‡∏ö‡∏ö‡πÄ‡∏°‡∏ó‡∏£‡∏¥‡∏Å‡∏ã‡πå www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
 END
 

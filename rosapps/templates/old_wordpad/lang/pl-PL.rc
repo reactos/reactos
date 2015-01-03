@@ -10,7 +10,7 @@ BEGIN
   POPUP "&Plik"
   BEGIN
     MENUITEM "&Nowy...",         ID_NEW
-    MENUITEM "&Otwórz...",        ID_OPEN
+    MENUITEM "&OtwÃ³rz...",        ID_OPEN
     MENUITEM SEPARATOR
     MENUITEM "Za&mknij\tCtrl+F4", ID_CLOSE, GRAYED
     MENUITEM "&Zamknij wszystkie",      ID_CLOSEALL, GRAYED
@@ -18,35 +18,35 @@ BEGIN
     MENUITEM "Zapi&sz",           ID_SAVE, GRAYED
     MENUITEM "&Zapisz jako...",     ID_SAVEAS, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Podgl¹d wydruku",  ID_PRINTPRE, GRAYED
+    MENUITEM "&PodglÄ…d wydruku",  ID_PRINTPRE, GRAYED
     MENUITEM "&Drukuj...",       ID_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Ustawienia strony...",  ID_PAGESETUP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Za&koñcz\tAlt+F4",   ID_EXIT
+    MENUITEM "Za&koÅ„cz\tAlt+F4",   ID_EXIT
   END
   POPUP "&Edycja"
   BEGIN
     MENUITEM "&Cofnij",           ID_UNDO, GRAYED
-    MENUITEM "&Ponów",           ID_REDO, GRAYED
+    MENUITEM "&PonÃ³w",           ID_REDO, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Wytnij",            ID_CUT, GRAYED
     MENUITEM "&Kopiuj",           ID_COPY, GRAYED
     MENUITEM "&Wklej",          ID_PASTE, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Wyczyœæ",           -1, GRAYED
+    MENUITEM "WyczyÅ›Ä‡",           -1, GRAYED
     MENUITEM "Zaznacz wszystko",     ID_SELALL, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&ZnajdŸ...\tCtrl+F",-1, GRAYED
-    MENUITEM "ZnajdŸ nastêpny",       -1, GRAYED
-    MENUITEM "Zamieñ\tCtrl+H", -1, GRAYED
+    MENUITEM "&ZnajdÅº...\tCtrl+F",-1, GRAYED
+    MENUITEM "ZnajdÅº nastÄ™pny",       -1, GRAYED
+    MENUITEM "ZamieÅ„\tCtrl+H", -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "W³aœciwoœci obiektu",-1, GRAYED
+    MENUITEM "WÅ‚aÅ›ciwoÅ›ci obiektu",-1, GRAYED
     MENUITEM "Obiekt",          -1, GRAYED
   END
   POPUP "Wido&k"
   BEGIN
-    MENUITEM "Pasek &narzêdzi",        -1, CHECKED
+    MENUITEM "Pasek &narzÄ™dzi",        -1, CHECKED
     MENUITEM "P&asek formatowania",     -1, CHECKED
     MENUITEM "&Linijka",          -1, CHECKED
     MENUITEM "&Pasek stanu",     ID_STATUSBAR, CHECKED
@@ -66,11 +66,11 @@ BEGIN
   POPUP "&Okno"
   BEGIN
     MENUITEM "&Kaskadowo",           ID_WINDOW_CASCADE
-    MENUITEM "&S¹siaduj¹co w poziomie", ID_WINDOW_TILE_HORZ
-    MENUITEM "S¹si&aduj¹co w pionie",   ID_WINDOW_TILE_VERT
-    MENUITEM "&Rozmieœæ ikony",     ID_WINDOW_ARRANGE
+    MENUITEM "&SÄ…siadujÄ…co w poziomie", ID_WINDOW_TILE_HORZ
+    MENUITEM "SÄ…si&adujÄ…co w pionie",   ID_WINDOW_TILE_VERT
+    MENUITEM "&RozmieÅ›Ä‡ ikony",     ID_WINDOW_ARRANGE
     MENUITEM SEPARATOR
-    MENUITEM "&Nastêpne\tCtrl+F6",     ID_WINDOW_NEXT
+    MENUITEM "&NastÄ™pne\tCtrl+F6",     ID_WINDOW_NEXT
   END
   POPUP "Pomo&c"
   BEGIN
@@ -115,7 +115,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE           "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug Twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
+  IDS_LICENSE           "Niniejszy program jest wolnym oprogramowaniem; moÅ¼esz go rozprowadzaÄ‡ dalej i/lub modyfikowaÄ‡ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez FundacjÄ™ Wolnego Oprogramowania - wedÅ‚ug wersji 2 tej Licencji lub (wedÅ‚ug Twojego wyboru) ktÃ³rejÅ› z pÃ³Åºniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejÄ…, iÅ¼ bÄ™dzie on uÅ¼yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyÅ›lnej gwarancji PRZYDATNOÅšCI HANDLOWEJ albo PRZYDATNOÅšCI DO OKREÅšLONYCH ZASTOSOWAÅƒ. W celu uzyskania bliÅ¼szych informacji siÄ™gnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoÅ›ciÄ… wraz z niniejszym programem otrzymaÅ‚eÅ› teÅ¼ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeÅ›li nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
   IDS_DEFAULT_NAME      "Dokument %1!u!"
   IDS_READY             " Gotowy."
 END
@@ -133,15 +133,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_TOOLTIP_NEW       "Nowy"
-  IDS_TOOLTIP_OPEN      "Otwórz"
+  IDS_TOOLTIP_OPEN      "OtwÃ³rz"
   IDS_TOOLTIP_SAVE      "Zapisz"
-  IDS_TOOLTIP_PRINTPRE  "Podgl¹d wydruku"
+  IDS_TOOLTIP_PRINTPRE  "PodglÄ…d wydruku"
   IDS_TOOLTIP_PRINT     "Drukuj"
   IDS_TOOLTIP_CUT       "Wytnij"
   IDS_TOOLTIP_COPY      "Kopiuj"
   IDS_TOOLTIP_PASTE     "Wklej"
   IDS_TOOLTIP_UNDO      "Cofnij"
-  IDS_TOOLTIP_REDO      "Ponów"
+  IDS_TOOLTIP_REDO      "PonÃ³w"
 END
 
 /* Hints */
@@ -149,26 +149,26 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_NEW          " Tworzy nowy dokument."
-  IDS_HINT_OPEN         " Otwiera istniej¹cy dokument."
+  IDS_HINT_OPEN         " Otwiera istniejÄ…cy dokument."
   IDS_HINT_CLOSE        " Zamyka to okno."
   IDS_HINT_CLOSEALL     " Zamyka wszystkie okna."
   IDS_HINT_SAVE         " Zapisuje na dysku aktywny dokument."
-  IDS_HINT_SAVEAS       " Zapisuje pod now¹ nazw¹ aktywny dokument."
+  IDS_HINT_SAVEAS       " Zapisuje pod nowÄ… nazwÄ… aktywny dokument."
   IDS_HINT_PRINT        " Drukuje aktywny dokument."
-  IDS_HINT_PRINTPRE     " Wyœwietla podgl¹d wydruku aktywnego dokumentu."
-  IDS_HINT_PAGESETUP    " Zmienia ustawienia uk³adu strony."
-  IDS_HINT_EXIT         " Zamyka aplikacjê."
+  IDS_HINT_PRINTPRE     " WyÅ›wietla podglÄ…d wydruku aktywnego dokumentu."
+  IDS_HINT_PAGESETUP    " Zmienia ustawienia ukÅ‚adu strony."
+  IDS_HINT_EXIT         " Zamyka aplikacjÄ™."
 
-  IDS_HINT_CASCADE      " Ustawia okna w kaskadê."
-  IDS_HINT_TILE_HORZ    " Rozmieszcza okna s¹siaduj¹co w poziomie."
-  IDS_HINT_TILE_VERT    " Rozmieszcza okna s¹siaduj¹co w pionie."
-  IDS_HINT_ARRANGE      " Porz¹dkuje ikony na dole okna."
-  IDS_HINT_NEXT         " Aktywuje nastêpne okno."
+  IDS_HINT_CASCADE      " Ustawia okna w kaskadÄ™."
+  IDS_HINT_TILE_HORZ    " Rozmieszcza okna sÄ…siadujÄ…co w poziomie."
+  IDS_HINT_TILE_VERT    " Rozmieszcza okna sÄ…siadujÄ…co w pionie."
+  IDS_HINT_ARRANGE      " PorzÄ…dkuje ikony na dole okna."
+  IDS_HINT_NEXT         " Aktywuje nastÄ™pne okno."
 
   IDS_HINT_SYS_RESTORE  " Przywraca okno do normalnego rozmiaru."
   IDS_HINT_SYS_MOVE     " Przenosi to okno."
   IDS_HINT_SYS_SIZE     " Zmienia rozmiar tego okna."
   IDS_HINT_SYS_MINIMIZE " Minimalizuje to okno do ikony."
-  IDS_HINT_SYS_MAXIMIZE " Rozszerza to okno do rozmiarów ekranu."
+  IDS_HINT_SYS_MAXIMIZE " Rozszerza to okno do rozmiarÃ³w ekranu."
 END
 

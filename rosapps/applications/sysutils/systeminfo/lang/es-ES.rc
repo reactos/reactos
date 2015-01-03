@@ -8,41 +8,41 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_USAGE, "SYSTEMINFO [/S sistema [/U usuario [/P [contraseÒa]]]] [/FO formato] [/NH]\n\n\
+IDS_USAGE, "SYSTEMINFO [/S sistema [/U usuario [/P [contrase√±a]]]] [/FO formato] [/NH]\n\n\
 Description:\n\
-  Esta herramienta de lÌnea de comandos permite a un administrador preguntar\n\
-  informaciÛn b·sica de la configuraciÛn del sistema.\n\n\
+  Esta herramienta de l√≠nea de comandos permite a un administrador preguntar\n\
+  informaci√≥n b√°sica de la configuraci√≥n del sistema.\n\n\
 Lista de Parametros:\n\
   /S      sistema             Especifica el sistema remoto al cual conectarse.\n\n\
   /U      [dominio\\]usuario  Especifica el usuario bajo el cual el comando\n\
                               debe ejecutarse.\n\n\
-  /P      [contraseÒa]        Especifica la contraseÒa de usuario.\n\
+  /P      [contrase√±a]        Especifica la contrase√±a de usuario.\n\
                               Pregunta por ella si es omitida.\n\n\
   /FO     formato             Especifica el formato en el que la salida\n\
-                              ser· mostrada.\n\
-                              Valores v·lidos: ""TABLE"", ""LIST"", ""CSV"".\n\n\
-  /NH                         Especifica que la ""Columna cabezera"" no ser·\n\
+                              ser√° mostrada.\n\
+                              Valores v√°lidos: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                         Especifica que la ""Columna cabezera"" no ser√°\n\
                               mostrada en la salida.\n\
-                              V·lido sÛlo para formatos ""TABLE"" y ""CSV"" .\n\n\
+                              V√°lido s√≥lo para formatos ""TABLE"" y ""CSV"" .\n\n\
   /?                          Muestra esta ayuda.\n\n\
 Ejemplos:\n\
   SYSTEMINFO\n\
   SYSTEMINFO /?\n\
   SYSTEMINFO /S sistema\n\
   SYSTEMINFO /S sistema /U usuario\n\
-  SYSTEMINFO /S sistema /U dominio\\usuario /P contraseÒa /FO TABLE\n\
+  SYSTEMINFO /S sistema /U dominio\\usuario /P contrase√±a /FO TABLE\n\
   SYSTEMINFO /S sistema /FO LIST\n\
   SYSTEMINFO /S sistema /FO CSV /NH\n"
 
 IDS_HOST_NAME,               "Nombre del Servidor"
 IDS_OS_NAME,                 "Nombre Sistema Operativo"
-IDS_OS_VERSION,              "VersiÛn Sistema Operativo"
-IDS_BUILD,                   "CompilaciÛn"
-IDS_OS_BUILD_TYPE,           "Tipo CompilaciÛn"
+IDS_OS_VERSION,              "Versi√≥n Sistema Operativo"
+IDS_BUILD,                   "Compilaci√≥n"
+IDS_OS_BUILD_TYPE,           "Tipo Compilaci√≥n"
 IDS_REG_OWNER,               "Propietario"
-IDS_REG_ORG,                 "OrganizaciÛn"
+IDS_REG_ORG,                 "Organizaci√≥n"
 IDS_PRODUCT_ID,              "Identificador de Producto"
-IDS_INST_DATE,               "Fecha de InstalaciÛn"
+IDS_INST_DATE,               "Fecha de Instalaci√≥n"
 IDS_UP_TIME,                 "System Up Time"
 IDS_UP_TIME_FORMAT           "%u Days, %u Hours, %u Minutes, %u Seconds"
 IDS_SYS_MANUFACTURER,        "System Manufacturer"
@@ -51,19 +51,19 @@ IDS_SYS_TYPE,                "Tipo de sistema"
 IDS_PROCESSORS,              "Procesador(es)"
 IDS_PROCESSORS_FORMAT,       "%u Procesador(es) Instalados."
 IDS_BIOS_DATE,               "Fecha BIOS"
-IDS_BIOS_VERSION,            "VersiÛn BIOS"
+IDS_BIOS_VERSION,            "Versi√≥n BIOS"
 IDS_ROS_DIR,                 "Directorio de ReactOS"
 IDS_SYS_DIR,                 "Directorio del Sistema"
 IDS_BOOT_DEV,                "Dispositivo de Inicio"
 IDS_SYS_LOCALE,              "Idioma del sistema"
 IDS_INPUT_LOCALE,            "Idioma de entrada"
 IDS_TIME_ZONE,               "Zona horario"
-IDS_TOTAL_PHYS_MEM,          "Memoria FÌsica Total"
-IDS_AVAIL_PHISICAL_MEM,      "Memoria FÌsica Disponible"
-IDS_VIRT_MEM_MAX,            "Memoria Virtual: TamaÒo M·x"
+IDS_TOTAL_PHYS_MEM,          "Memoria F√≠sica Total"
+IDS_AVAIL_PHISICAL_MEM,      "Memoria F√≠sica Disponible"
+IDS_VIRT_MEM_MAX,            "Memoria Virtual: Tama√±o M√°x"
 IDS_VIRT_MEM_AVAIL,          "Memoria Virtual: Disponible"
 IDS_VIRT_MEM_INUSE,          "Memoria Virtual: En Uso"
-IDS_PAGEFILE_LOC,            "Ruta(s) Archivo PaginaciÛn"
+IDS_PAGEFILE_LOC,            "Ruta(s) Archivo Paginaci√≥n"
 IDS_DOMAIN,                  "Dominio"
 IDS_NETWORK_CARDS,           "Tarjeta(s) de Red"
 IDS_NETWORK_CARDS_FORMAT,    "%u No Instalada."
