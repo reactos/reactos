@@ -183,6 +183,9 @@ Fast486FpuToInteger(PFAST486_STATE State,
     if (FPU_IS_NAN(Value) || !FPU_IS_NORMALIZED(Value)
         || (UnbiasedExp < 0) || (UnbiasedExp > 63))
     {
+        /* Raise an invalid operation exception */
+        State->FpuStatus.Ie = TRUE;
+
         if (State->FpuControl.Im)
         {
             *Result = 0LL;
@@ -190,7 +193,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
         }
         else
         {
-            State->FpuStatus.Ie = TRUE;
+            Fast486FpuException(State);
             return FALSE;
         }
     }
@@ -314,6 +317,9 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
     /* Check for underflow */
     if (!FPU_IS_NORMALIZED(Value) || (UnbiasedExp < -1023))
     {
+        /* Raise the underflow exception */
+        State->FpuStatus.Ue = TRUE;
+
         if (State->FpuControl.Um)
         {
             /* The result is zero due to underflow */
@@ -322,8 +328,7 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
         }
         else
         {
-            /* Raise the underflow exception */
-            State->FpuStatus.Ue = TRUE;
+            Fast486FpuException(State);
             return FALSE;
         }
     }
@@ -331,6 +336,9 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
     /* Check for overflow */
     if (UnbiasedExp > 1023)
     {
+        /* Raise the overflow exception */
+        State->FpuStatus.Oe = TRUE;
+
         if (State->FpuControl.Om)
         {
             /* The result is infinity due to overflow */
@@ -339,8 +347,7 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
         }
         else
         {
-            /* Raise the overflow exception */
-            State->FpuStatus.Oe = TRUE;
+            Fast486FpuException(State);
             return FALSE;
         }
     }
@@ -452,12 +459,16 @@ Fast486FpuAdd(PFAST486_STATE State,
     FAST486_FPU_DATA_REG SecondAdjusted = *SecondOperand;
     FAST486_FPU_DATA_REG TempResult;
 
-    if (!State->FpuControl.Dm
-        && (!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
+    if ((!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
     {
         /* Raise the denormalized exception */
         State->FpuStatus.De = TRUE;
-        return;
+
+        if (!State->FpuControl.Dm)
+        {
+            Fast486FpuException(State);
+            return;
+        }
     }
 
     /* Find the largest exponent */
@@ -503,6 +514,9 @@ Fast486FpuAdd(PFAST486_STATE State,
     {
         if (TempResult.Exponent == FPU_MAX_EXPONENT)
         {
+            /* Raise the overflow exception */
+            State->FpuStatus.Oe = TRUE;
+
             if (State->FpuControl.Om)
             {
                 /* Total overflow, return infinity */
@@ -511,8 +525,7 @@ Fast486FpuAdd(PFAST486_STATE State,
             }
             else
             {
-                /* Raise the overflow exception */
-                State->FpuStatus.Oe = TRUE;
+                Fast486FpuException(State);
                 return;
             }
         }
@@ -606,12 +619,16 @@ Fast486FpuMultiply(PFAST486_STATE State,
 {
     FAST486_FPU_DATA_REG TempResult;
 
-    if (!State->FpuControl.Dm
-        && (!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
+    if ((!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
     {
         /* Raise the denormalized exception */
         State->FpuStatus.De = TRUE;
-        return;
+
+        if (!State->FpuControl.Dm)
+        {
+            Fast486FpuException(State);
+            return;
+        }
     }
 
     UnsignedMult128(FirstOperand->Mantissa,
@@ -641,6 +658,9 @@ Fast486FpuDivide(PFAST486_STATE State,
         || (FPU_IS_INFINITY(FirstOperand) && FPU_IS_INFINITY(SecondOperand))
         || (FPU_IS_ZERO(FirstOperand) && FPU_IS_ZERO(SecondOperand)))
     {
+        /* Raise the invalid operation exception */
+        State->FpuStatus.Ie = TRUE;
+
         if (State->FpuControl.Im)
         {
             /* Return the indefinite NaN */ 
@@ -648,17 +668,16 @@ Fast486FpuDivide(PFAST486_STATE State,
             Result->Exponent = FPU_MAX_EXPONENT + 1;
             Result->Mantissa = FPU_INDEFINITE_MANTISSA;
         }
-        else
-        {
-            /* Raise the invalid operation exception */
-            State->FpuStatus.Ie = TRUE;
-        }
+        else Fast486FpuException(State);
 
         return;
     }
 
     if (FPU_IS_ZERO(SecondOperand) || FPU_IS_INFINITY(FirstOperand))
     {
+        /* Raise the division by zero exception */
+        State->FpuStatus.Ze = TRUE;
+
         if (State->FpuControl.Zm)
         {
             /* Return infinity */
@@ -666,11 +685,7 @@ Fast486FpuDivide(PFAST486_STATE State,
             Result->Exponent = FPU_MAX_EXPONENT + 1;
             Result->Mantissa = FPU_MANTISSA_HIGH_BIT;
         }
-        else
-        {
-            /* Raise the division by zero exception */
-            State->FpuStatus.Ze = TRUE;
-        }
+        else Fast486FpuException(State);
 
         return;
     }
@@ -705,13 +720,6 @@ Fast486FpuDivide(PFAST486_STATE State,
     {
         ULONG BitsToShift = 64 - CountLeadingZeros64(QuotientHigh);
 
-        if (!State->FpuControl.Pm)
-        {
-            /* Raise the precision expection */
-            State->FpuStatus.Pe = TRUE;
-            return;
-        }
-
         TempResult.Mantissa >>= BitsToShift;
         TempResult.Mantissa |= QuotientHigh << (64 - BitsToShift);
         Exponent += BitsToShift;
@@ -723,13 +731,6 @@ Fast486FpuDivide(PFAST486_STATE State,
     {
         TempResult.Mantissa >>= -(Exponent + FPU_REAL10_BIAS);
         Exponent = -FPU_REAL10_BIAS;
-
-        if ((TempResult.Mantissa == 0ULL) && !State->FpuControl.Um)
-        {
-            /* Raise the underflow exception */
-            State->FpuStatus.Ue = TRUE;
-            return;
-        }
 
         // TODO: Rounding
     }
@@ -834,6 +835,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 
     if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
     {
+        /* Raise the invalid operation exception */
+        State->FpuStatus.Ie = TRUE;
+
         if (State->FpuControl.Im)
         {
             /* Return the indefinite NaN */
@@ -843,11 +847,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 
             FPU_SET_TAG(0, FPU_TAG_SPECIAL);
         }
-        else
-        {
-            /* Raise the invalid operation exception */
-            State->FpuStatus.Ie = TRUE;
-        }
+        else Fast486FpuException(State);
 
         return;
     }
@@ -870,6 +870,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
     {
         if (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
         {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+
             if (State->FpuControl.Im)
             {
                 /* Return the indefinite NaN */
@@ -879,11 +882,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 
                 FPU_SET_TAG(0, FPU_TAG_SPECIAL);
             }
-            else
-            {
-                /* Raise the invalid operation exception */
-                State->FpuStatus.Ie = TRUE;
-            }
+            else Fast486FpuException(State);
 
             return;
         }
@@ -925,6 +924,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 
         if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
         {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+
             if (State->FpuControl.Im)
             {
                 /* Return the indefinite NaN */
@@ -934,11 +936,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 
                 FPU_SET_TAG(0, FPU_TAG_SPECIAL);
             }
-            else
-            {
-                /* Raise the invalid operation exception */
-                State->FpuStatus.Ie = TRUE;
-            }
+            else Fast486FpuException(State);
 
             return;
         }
@@ -970,6 +968,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
         if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
             || (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY))
         {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+
             if (State->FpuControl.Im)
             {
                 /* Return the indefinite NaN */
@@ -979,11 +980,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 
                 FPU_SET_TAG(ModRegRm.SecondRegister, FPU_TAG_SPECIAL);
             }
-            else
-            {
-                /* Raise the invalid operation exception */
-                State->FpuStatus.Ie = TRUE;
-            }
+            else Fast486FpuException(State);
 
             return;
         }
@@ -1124,8 +1121,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 
         if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY) || (FPU_GET_TAG(1) == FPU_TAG_EMPTY))
         {
-            /* Raise the invalid operation exception, if unmasked */
-            if (!State->FpuControl.Im) State->FpuStatus.Ie = TRUE;
+            /* Raise the invalid operation exception*/
+            State->FpuStatus.Ie = TRUE;
+
+            if (!State->FpuControl.Im) Fast486FpuException(State);
             return;
         }
 
@@ -1151,6 +1150,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 
     if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
     {
+        /* Raise the invalid operation exception */
+        State->FpuStatus.Ie = TRUE;
+
         if (State->FpuControl.Im)
         {
             /* Return the indefinite NaN */
@@ -1160,11 +1162,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 
             FPU_SET_TAG(0, FPU_TAG_SPECIAL);
         }
-        else
-        {
-            /* Raise the invalid operation exception */
-            State->FpuStatus.Ie = TRUE;
-        }
+        else Fast486FpuException(State);
 
         return;
     }
@@ -1225,10 +1223,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 
                 if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY) || (FPU_GET_TAG(0) == FPU_TAG_SPECIAL))
                 {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
                     if (!State->FpuControl.Im)
                     {
-                        /* Raise the invalid operation exception */
-                        State->FpuStatus.Ie = TRUE;
+                        Fast486FpuException(State);
                         return;
                     }
                 }
@@ -1242,7 +1242,13 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                 if ((((ULONGLONG)Temp >> 31) + 1ULL) > 1ULL)
                 {
                     State->FpuStatus.Ie = TRUE;
-                    return;
+
+                    if (State->FpuControl.Im) Temp = 0LL;
+                    else
+                    {
+                        Fast486FpuException(State);
+                        return;
+                    }
                 }
 
                 if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, (ULONG)((LONG)Temp)))
@@ -1299,6 +1305,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                 }
                 else
                 {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
                     if (State->FpuControl.Im)
                     {
                         *((PULONGLONG)Buffer) = FPU_INDEFINITE_MANTISSA;
@@ -1306,8 +1315,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                     }
                     else
                     {
-                        /* Raise the invalid operation exception */
-                        State->FpuStatus.Ie = TRUE;
+                        Fast486FpuException(State);
                         return;
                     }
                 }
@@ -1442,10 +1450,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
 
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                 {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
                     if (!State->FpuControl.Im)
                     {
-                        /* Raise the invalid operation exception */
-                        State->FpuStatus.Ie = TRUE;
+                        Fast486FpuException(State);
                         return;
                     }
                 }
@@ -1521,7 +1531,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
                 if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                     || FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
                 {
-                    if (!State->FpuControl.Im) State->FpuStatus.Ie = TRUE;
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
                     break;
                 }
 
@@ -1556,7 +1568,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
                 if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                     || (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY))
                 {
-                    if (!State->FpuControl.Im) State->FpuStatus.Ie = TRUE;
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
                     return;
                 }
 
@@ -1604,6 +1618,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 
         if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
         {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+
             if (State->FpuControl.Im)
             {
                 /* Return the indefinite NaN */
@@ -1613,11 +1630,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 
                 FPU_SET_TAG(0, FPU_TAG_SPECIAL);
             }
-            else
-            {
-                /* Raise the invalid operation exception */
-                State->FpuStatus.Ie = TRUE;
-            }
+            else Fast486FpuException(State);
 
             return;
         }
@@ -1652,8 +1665,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
             || (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY))
         {
             /* Raise the invalid operation exception, if unmasked */
-            if (!State->FpuControl.Im) State->FpuStatus.Ie = TRUE;
+            State->FpuStatus.Ie = TRUE;
 
+            if (!State->FpuControl.Im) Fast486FpuException(State);
             return;
         }
     }
@@ -1712,10 +1726,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 
                 if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY) || (FPU_GET_TAG(0) == FPU_TAG_SPECIAL))
                 {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
                     if (!State->FpuControl.Im)
                     {
-                        /* Raise the invalid operation exception */
-                        State->FpuStatus.Ie = TRUE;
+                        Fast486FpuException(State);
                         return;
                     }
                 }
@@ -1728,8 +1744,15 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                 /* Check if it can fit in a signed 16-bit integer */
                 if ((((ULONGLONG)Temp >> 15) + 1ULL) > 1ULL)
                 {
+                    /* Raise the invalid operation exception */
                     State->FpuStatus.Ie = TRUE;
-                    return;
+
+                    if (State->FpuControl.Im) Temp = 0LL;
+                    else
+                    {
+                        Fast486FpuException(State);
+                        return;
+                    }
                 }
 
                 if (!Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, (USHORT)((SHORT)Temp)))
@@ -1802,10 +1825,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                 {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
                     if (!State->FpuControl.Im)
                     {
-                        /* Raise the invalid operation exception */
-                        State->FpuStatus.Ie = TRUE;
+                        Fast486FpuException(State);
                         return;
                     }
                 }
@@ -1837,10 +1862,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 
                 if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY) || (FPU_GET_TAG(0) == FPU_TAG_SPECIAL))
                 {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
                     if (!State->FpuControl.Im)
                     {
-                        /* Raise the invalid operation exception */
-                        State->FpuStatus.Ie = TRUE;
+                        Fast486FpuException(State);
                         return;
                     }
                 }
@@ -1895,7 +1922,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                 if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                     || FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
                 {
-                    if (!State->FpuControl.Im) State->FpuStatus.Ie = TRUE;
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
                     break;
                 }
 

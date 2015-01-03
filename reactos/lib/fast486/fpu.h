@@ -33,14 +33,15 @@
                         Fast486Exception(State, FAST486_EXCEPTION_NM); \
                         return; \
                     }
-#define FPU_ST(i) State->FpuRegisters[(State->FpuStatus.Top + (i)) % FAST486_NUM_FPU_REGS]
+#define FPU_INDEX(i) ((State->FpuStatus.Top + (i)) % FAST486_NUM_FPU_REGS)
+#define FPU_ST(i)   State->FpuRegisters[FPU_INDEX(i)]
 
-#define FPU_GET_TAG(i)      ((State->FpuTag >> ((i) * 2)) & 3)
+#define FPU_GET_TAG(i)      ((State->FpuTag >> (FPU_INDEX(i) * 2)) & 3)
 #define FPU_SET_TAG(i, t)   { \
-                                State->FpuTag &= ~((1 << ((i) * 2)) | (1 << (((i) * 2) + 1))); \
-                                State->FpuTag |= ((t) & 3) << ((i) * 2); \
+                                State->FpuTag &= ~((1 << (FPU_INDEX(i) * 2)) | (1 << ((FPU_INDEX(i) * 2) + 1))); \
+                                State->FpuTag |= ((t) & 3) << (FPU_INDEX(i) * 2); \
                             }
-#define FPU_UPDATE_TAG(i)   FPU_SET_TAG((i), Fast486GetValueTag(&FPU_ST(i)))
+#define FPU_UPDATE_TAG(i)   FPU_SET_TAG((i), Fast486FpuGetValueTag(&FPU_ST(i)))
 
 #define FPU_REAL4_BIAS          0x7F
 #define FPU_REAL8_BIAS          0x3FF
