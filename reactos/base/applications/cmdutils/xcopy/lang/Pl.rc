@@ -2,19 +2,19 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_INVPARMS, "Niew³aœciwa liczba parametrów - uruchom xcopy /? aby wyœwietliæ pomoc\n"
-    STRING_INVPARM,  "Nieznany parameter '%1' -  uruchom xcopy /? aby wyœwietliæ pomoc\n"
-    STRING_PAUSE,    "Naciœnij <enter> aby rozpocz¹æ kopiowanie\n"
-    STRING_SIMCOPY,  "%1!d! plik(ów) zosta³oby skopiowanych\n"
-    STRING_COPY,     "%1!d! plik(ów) skopiowanych\n"
-    STRING_QISDIR,   "Czy '%1' jest nazw¹ pliku czy katalogu\n\
+    STRING_INVPARMS, "NiewÅ‚aÅ›ciwa liczba parametrÃ³w - uruchom xcopy /? aby wyÅ›wietliÄ‡ pomoc\n"
+    STRING_INVPARM,  "Nieznany parameter '%1' -  uruchom xcopy /? aby wyÅ›wietliÄ‡ pomoc\n"
+    STRING_PAUSE,    "NaciÅ›nij <enter> aby rozpoczÄ…Ä‡ kopiowanie\n"
+    STRING_SIMCOPY,  "%1!d! plik(Ã³w) zostaÅ‚oby skopiowanych\n"
+    STRING_COPY,     "%1!d! plik(Ã³w) skopiowanych\n"
+    STRING_QISDIR,   "Czy '%1' jest nazwÄ… pliku czy katalogu\n\
                      docelowego?\n\
                      (P - plik, K - katalog)\n"
     STRING_SRCPROMPT,"%1? (Tak|Nie)\n"
-    STRING_OVERWRITE,"Zast¹piæ %1? (Tak|Nie|Wszystkie)\n"
-    STRING_COPYFAIL, "Kopiowanie '%1' do '%2' nie powiod³o siê - kod b³êdu %3!d!\n"
-    STRING_OPENFAIL, "Nie uda³o siê otworzyæ '%1'\n"
-    STRING_READFAIL, "B³¹d podczas czytania '%1'\n"
+    STRING_OVERWRITE,"ZastÄ…piÄ‡ %1? (Tak|Nie|Wszystkie)\n"
+    STRING_COPYFAIL, "Kopiowanie '%1' do '%2' nie powiodÅ‚o siÄ™ - kod bÅ‚Ä™du %3!d!\n"
+    STRING_OPENFAIL, "Nie udaÅ‚o siÄ™ otworzyÄ‡ '%1'\n"
+    STRING_READFAIL, "BÅ‚Ä…d podczas czytania '%1'\n"
     STRING_YES_CHAR, "T"
     STRING_NO_CHAR,  "N"
     STRING_ALL_CHAR, "W"
@@ -22,35 +22,35 @@ STRINGTABLE
     STRING_DIR_CHAR, "K"
 
     STRING_HELP,
-"XCOPY - kopiuje pliki lub drzewa katalogów\n\
+"XCOPY - kopiuje pliki lub drzewa katalogÃ³w\n\
 \n\
-Sk³adnia:\n\
-XCOPY Ÿród³o [cel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+SkÅ‚adnia:\n\
+XCOPY ÅºrÃ³dÅ‚o [cel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Gdzie:\n\
 \n\
-[/I]  Je¿eli ""cel"" nie istnieje i kopiowane s¹ co najmniej dwa pliki,\n\
-\tzak³ada, ¿e ""cel"" powien byæ katalogiem\n\
+[/I]  JeÅ¼eli ""cel"" nie istnieje i kopiowane sÄ… co najmniej dwa pliki,\n\
+\tzakÅ‚ada, Å¼e ""cel"" powien byÄ‡ katalogiem\n\
 [/S]  Kopiuje katalogi i podkatalogi\n\
-[/E]  Kopiuje katalogi i podkatalogi, ³¹cznie z pustymi\n\
-[/Q]  Nie wypisuje nazw plików podczas kopiowania (tryb cichy)\n\
-[/F]  Wypisuje pe³ne œcie¿ki Ÿród³owe i docelowe podczas kopiowania\n\
-[/L]  Jedynie symuluje operacjê, pokazuj¹c pliki, które by³yby kopiowane\n\
-[/W]  Prosi o potwierdzenie przed rozpoczêciem kopiowania\n\
-[/T]  Tworzy puste katalogi, ale nie kopiuje plików\n\
-[/Y]  Zastêpuje pliki bez proœby o potwierdzenie\n\
-[/-Y] Zawsze prosi o potwierdzenie przed zast¹pieniem pliku\n\
-[/P]  Prosi o potwierdzenie przed skopiowaniem ka¿dego pliku\n\
-[/N]  Kopiuje u¿ywaj¹c krótkich nazw plików\n\
-[/U]  Kopiuje tylko pliki, które ju¿ istniej¹ w miejscu docelowym\n\
-[/R]  Zastêpuje pliki tylko do odczytu\n\
-[/H]  Kopiuje równie¿ pliki ukryte i systemowe\n\
-[/C]  Kontynuuje nawet je¿eli podczas kopiowania wyst¹pi³y b³êdy\n\
+[/E]  Kopiuje katalogi i podkatalogi, Å‚Ä…cznie z pustymi\n\
+[/Q]  Nie wypisuje nazw plikÃ³w podczas kopiowania (tryb cichy)\n\
+[/F]  Wypisuje peÅ‚ne Å›cieÅ¼ki ÅºrÃ³dÅ‚owe i docelowe podczas kopiowania\n\
+[/L]  Jedynie symuluje operacjÄ™, pokazujÄ…c pliki, ktÃ³re byÅ‚yby kopiowane\n\
+[/W]  Prosi o potwierdzenie przed rozpoczÄ™ciem kopiowania\n\
+[/T]  Tworzy puste katalogi, ale nie kopiuje plikÃ³w\n\
+[/Y]  ZastÄ™puje pliki bez proÅ›by o potwierdzenie\n\
+[/-Y] Zawsze prosi o potwierdzenie przed zastÄ…pieniem pliku\n\
+[/P]  Prosi o potwierdzenie przed skopiowaniem kaÅ¼dego pliku\n\
+[/N]  Kopiuje uÅ¼ywajÄ…c krÃ³tkich nazw plikÃ³w\n\
+[/U]  Kopiuje tylko pliki, ktÃ³re juÅ¼ istniejÄ… w miejscu docelowym\n\
+[/R]  ZastÄ™puje pliki tylko do odczytu\n\
+[/H]  Kopiuje rÃ³wnieÅ¼ pliki ukryte i systemowe\n\
+[/C]  Kontynuuje nawet jeÅ¼eli podczas kopiowania wystÄ…piÅ‚y bÅ‚Ä™dy\n\
 [/A]  Kopiuje tylko pliki z atrybutem archiwalny\n\
 [/M]  Kopiuje tylko pliki z atrybutem archiwalny i usuwa ten atrybut\n\
 [/D | /D:m-d-y] Kopiuje tylko nowe pliki lub te zmodifikowane po podanej dacie.\n\
-\t\tJe¿eli nie podano ¿adnej daty, to kopiowane s¹ pliki, które s¹\n\
-\t\tnowsze ni¿ w katalogu docelowym\n\n"
+\t\tJeÅ¼eli nie podano Å¼adnej daty, to kopiowane sÄ… pliki, ktÃ³re sÄ…\n\
+\t\tnowsze niÅ¼ w katalogu docelowym\n\n"
 
 }

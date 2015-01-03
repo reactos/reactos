@@ -2,19 +2,19 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_INVPARMS, "Ugyldigt antal parametere; brug «xcopy /?» for hjelp\n"
-    STRING_INVPARM,  "Ugyldigt parameter «%1»; brug «xcopy /?» for hjelp\n"
+    STRING_INVPARMS, "Ugyldigt antal parametere; brug Â«xcopy /?Â» for hjelp\n"
+    STRING_INVPARM,  "Ugyldigt parameter Â«%1Â»; brug Â«xcopy /?Â» for hjelp\n"
     STRING_PAUSE,    "Tryk Enter for at begynde at kopiere\n"
     STRING_SIMCOPY,  "%1!d! fil(er) vil blive kopieret\n"
     STRING_COPY,     "%1!d! fil(er) kopieret\n"
-    STRING_QISDIR,   "Er «%1» et filnavn eller katalog\n\
-                     på destinationen?\n\
+    STRING_QISDIR,   "Er Â«%1Â» et filnavn eller katalog\n\
+                     pÃ¥ destinationen?\n\
                      (F - Fil, K - Katalog)\n"
     STRING_SRCPROMPT, "%1? (Ja|Nei)\n"
-    STRING_OVERWRITE, "Overskrive «%1»? (Ja|Nei|Alle)\n"
-    STRING_COPYFAIL, "Kunne ikke kopiere «%1» til «%2»; fejlet med r/c %3!d!\n"
-    STRING_OPENFAIL, "Kunne ikke åbne «%1»\n"
-    STRING_READFAIL, "Kunne ikke læse «%1»\n"
+    STRING_OVERWRITE, "Overskrive Â«%1Â»? (Ja|Nei|Alle)\n"
+    STRING_COPYFAIL, "Kunne ikke kopiere Â«%1Â» til Â«%2Â»; fejlet med r/c %3!d!\n"
+    STRING_OPENFAIL, "Kunne ikke Ã¥bne Â«%1Â»\n"
+    STRING_READFAIL, "Kunne ikke lÃ¦se Â«%1Â»\n"
     STRING_YES_CHAR, "J"
     STRING_NO_CHAR,  "N"
     STRING_ALL_CHAR, "A"
@@ -22,10 +22,10 @@ STRINGTABLE
     STRING_DIR_CHAR, "K"
 
     STRING_HELP,
-"XCOPY - Kopierer filer eller katalogtre til en målplassering\n\
+"XCOPY - Kopierer filer eller katalogtre til en mÃ¥lplassering\n\
 \n\
 Syntaks:\n\
-XCOPY kilde [mål] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+XCOPY kilde [mÃ¥l] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 hvor:\n\
@@ -33,25 +33,25 @@ hvor:\n\
 [/I]  Antag at destinationen er et katalog hvis destinationen ikke\n\
 \tfindes og 2 eller flere filer bliver kopieret\n\
 [/S]  Kopier kataloger og underkataloger\n\
-[/E]  Kopier kataloger og underkataloger, også tomme kataloger\n\
-[/Q]  Vær stille : vis ikke filnavne under kopiering\n\
-[/F]  Fil hele kilde- og målnavn under kopiering\n\
-[/L]  Simulér operationen; vis kun, gør intet\n\
-[/W]  Spørg før koperingen starter\n\
+[/E]  Kopier kataloger og underkataloger, ogsÃ¥ tomme kataloger\n\
+[/Q]  VÃ¦r stille : vis ikke filnavne under kopiering\n\
+[/F]  Fil hele kilde- og mÃ¥lnavn under kopiering\n\
+[/L]  SimulÃ©r operationen; vis kun, gÃ¸r intet\n\
+[/W]  SpÃ¸rg fÃ¸r koperingen starter\n\
 [/T]  Lav tom katalogstruktur; kopier ikke filer\n\
-[/Y]  Spørg ikke om filer skal overskrives\n\
-[/-Y] Spørg før om filer skal overskrives\n\
-[/P]  Spørg om hver enkelt fil der skal kopieres\n\
+[/Y]  SpÃ¸rg ikke om filer skal overskrives\n\
+[/-Y] SpÃ¸rg fÃ¸r om filer skal overskrives\n\
+[/P]  SpÃ¸rg om hver enkelt fil der skal kopieres\n\
 [/N]  Kopier som korte filnavn (8.3 tegn)\n\
-[/U]  Kopier kun filer som allerede findes på destinationen\n\
+[/U]  Kopier kun filer som allerede findes pÃ¥ destinationen\n\
 [/R]  Overskriv filer som er skrivebeskyttet\n\
 [/H]  Kopier skjulte filer og systemfiler\n\
-[/C]  Fortsæt selv om det opstår fejl under kopieringen\n\
+[/C]  FortsÃ¦t selv om det opstÃ¥r fejl under kopieringen\n\
 [/A]  Kopier ikke filer som er markeret som arkiv\n\
 [/M]  Kopier kun filer som er markeret som akriv; fjerner denne markering\n\
-[/D | /D:m-d-å] Kopier kun nye filer eller dem som er ændret efter\n\
+[/D | /D:m-d-Ã¥] Kopier kun nye filer eller dem som er Ã¦ndret efter\n\
 \t\tden opgivne dato.\n\
 \t\tHvis ingen dato opgives kopieres kun de filer hvor\n\
-\t\tdestinationen er ældre end kilden\n\n"
+\t\tdestinationen er Ã¦ldre end kilden\n\n"
 
 }

@@ -2,7 +2,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Wyœwietla obecn¹ nazwê komputera.\n\nhostname"
+    IDS_USAGE "WyÅ›wietla obecnÄ… nazwÄ™ komputera.\n\nhostname"
     IDS_NOSET "Opcja hostname -s nie jest wspierana."
-    IDS_ERROR "B³¹d Win32"
+    IDS_ERROR "BÅ‚Ä…d Win32"
 END
