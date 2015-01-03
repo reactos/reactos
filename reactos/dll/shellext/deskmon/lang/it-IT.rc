@@ -8,11 +8,11 @@ BEGIN
     GROUPBOX "Tipo di Monitor", -1, 7, 3, 237, 52
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
-    PUSHBUTTON "&Propriet‡", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+    PUSHBUTTON "&Propriet√†", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
     GROUPBOX "Impostazioni del Monitor", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
     LTEXT "&Frequenza di rinfresco del Monitor:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Nascondi le modalit‡ che non possono essere visualizzate dal Monitor", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&Nascondi le modalit√† che non possono essere visualizzate dal Monitor", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE

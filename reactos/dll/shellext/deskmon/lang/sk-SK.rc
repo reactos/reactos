@@ -12,11 +12,11 @@ BEGIN
     GROUPBOX "Nastavenie monitora", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
     LTEXT "&Frekvencia obnovovania obrazovky:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Skryù reûimy, ktorÈ sa na tomto monitore nedaj˙ pouûiù", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&Skry≈• re≈æimy, ktor√© sa na tomto monitore nedaj√∫ pou≈æi≈•", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Pouûiù predvolenÈ hardvÈrovÈ nastavenie"
+    IDS_USEDEFFRQUENCY "Pou≈æi≈• predvolen√© hardv√©rov√© nastavenie"
     IDS_FREQFMT "%u Hz"
 END

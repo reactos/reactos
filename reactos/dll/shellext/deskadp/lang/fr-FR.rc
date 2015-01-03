@@ -7,13 +7,13 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Type d'adaptateur", -1, 7, 3, 237, 50
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
-    PUSHBUTTON "&Propriétés", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+    PUSHBUTTON "&PropriÃ©tÃ©s", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Informations sur l'adaptateur", -1, 7, 56, 237, 75
     LTEXT "Type de puce:", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
     LTEXT "Type de CNA:", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Taille de la mémoire:", -1, 13, 92, 58, 8
+    LTEXT "Taille de la mÃ©moire:", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
     LTEXT "Texte de l'adaptateur:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
@@ -36,12 +36,12 @@ END
 STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d by %d, %s, %s"
-    IDS_DEFREFRESHRATE "Rafraîchissement par défaut"
+    IDS_DEFREFRESHRATE "RafraÃ®chissement par dÃ©faut"
     IDES_REFRESHRATEFMT "%d Hertz"
     IDS_4BPP "16 couleurs"
     IDS_8BPP "256 couleurs"
-    IDS_15BPP "Couleurs élevées (15 bit)"
-    IDS_16BPP "Couleurs élevées (16 bit)"
+    IDS_15BPP "Couleurs Ã©levÃ©es (15 bit)"
+    IDS_16BPP "Couleurs Ã©levÃ©es (16 bit)"
     IDS_24BPP "Vraies couleurs (24 bit)"
     IDS_32BPP "Vraies couleurs (32 bit)"
 END

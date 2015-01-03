@@ -2,21 +2,21 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_MONITOR DIALOGEX 0, 0, 252, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Οθόνη"
+CAPTION "ΞΞΈΟΞ½Ξ·"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Τύπος οθόνης", -1, 7, 3, 237, 52
+    GROUPBOX "Ξ¤ΟΟ€ΞΏΟ‚ ΞΏΞΈΟΞ½Ξ·Ο‚", -1, 7, 3, 237, 52
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
-    PUSHBUTTON "&Ιδιότητες", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Ρυθμίσεις οθόνης", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "&Συχνότητα ανανέωσης οθόνης:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    PUSHBUTTON "&Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+    GROUPBOX "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ ΞΏΞΈΟΞ½Ξ·Ο‚", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "&Ξ£Ο…Ο‡Ξ½ΟΟ„Ξ·Ο„Ξ± Ξ±Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ·Ο‚ ΞΏΞΈΟΞ½Ξ·Ο‚:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Απόκρυψη μη εμφανίσιμων καταστάσεων λειτουργίας", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&Ξ‘Ο€ΟΞΊΟΟ…ΟΞ· ΞΌΞ· ΞµΞΌΟ†Ξ±Ξ½Ξ―ΟƒΞΉΞΌΟ‰Ξ½ ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ¬ΟƒΞµΟ‰Ξ½ Ξ»ΞµΞΉΟ„ΞΏΟ…ΟΞ³Ξ―Ξ±Ο‚", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Χρήση προεπιλεγμένης ρύθμισης υλικού"
+    IDS_USEDEFFRQUENCY "Ξ§ΟΞ®ΟƒΞ· Ο€ΟΞΏΞµΟ€ΞΉΞ»ΞµΞ³ΞΌΞ­Ξ½Ξ·Ο‚ ΟΟΞΈΞΌΞΉΟƒΞ·Ο‚ Ο…Ξ»ΞΉΞΊΞΏΟ"
     IDS_FREQFMT "%u Hertz"
 END
