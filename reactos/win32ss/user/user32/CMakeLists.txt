@@ -18,6 +18,7 @@ list(APPEND SOURCE
     controls/static.c
     misc/dde.c
     misc/ddeclient.c
+    misc/ddemisc.c
     misc/ddeserver.c
     misc/desktop.c
     misc/display.c
