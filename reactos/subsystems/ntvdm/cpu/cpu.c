@@ -165,6 +165,7 @@ BOOLEAN CpuInitialize(VOID)
                       EmulatorWriteIo,
                       EmulatorBiosOperation,
                       EmulatorIntAcknowledge,
+                      EmulatorFpu,
                       NULL /* TODO: Use a TLB */);
 
     /* Initialize the software callback system and register the emulator BOPs */

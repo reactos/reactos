@@ -92,6 +92,11 @@ UCHAR WINAPI EmulatorIntAcknowledge
     PFAST486_STATE State
 );
 
+VOID WINAPI EmulatorFpu
+(
+    PFAST486_STATE State
+);
+
 VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack);
 
 VOID EmulatorTerminate(VOID);

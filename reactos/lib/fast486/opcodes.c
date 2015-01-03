@@ -4125,8 +4125,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeWait)
         || (!State->FpuControl.Dm && State->FpuStatus.De)
         || (!State->FpuControl.Im && State->FpuStatus.Ie))
     {
-        /* Call the #MF handler */
-        Fast486Exception(State, FAST486_EXCEPTION_MF);
+        if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_NE)
+        {
+            /* Call the #MF handler */
+            Fast486Exception(State, FAST486_EXCEPTION_MF);
+        }
+        else
+        {
+            /* Use the external interrupt */
+            State->FpuCallback(State);
+        }
     }
 
 #endif

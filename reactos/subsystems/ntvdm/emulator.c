@@ -212,6 +212,12 @@ UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
     return PicGetInterrupt();
 }
 
+VOID WINAPI EmulatorFpu(PFAST486_STATE State)
+{
+    /* The FPU is wired to IRQ 13 */
+    PicInterruptRequest(13);
+}
+
 VOID EmulatorException(BYTE ExceptionNumber, LPWORD Stack)
 {
     WORD CodeSegment, InstructionPointer;
