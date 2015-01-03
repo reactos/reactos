@@ -1753,5 +1753,7 @@ MUI_STRING bgBGStrings[] =
     "ГБ"},
     {STRING_ADDKBLAYOUTS,
     "Добавяне на клавиатурни подредби"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

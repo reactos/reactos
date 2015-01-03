@@ -1786,5 +1786,7 @@ MUI_STRING nlNLStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Toevoegen toetsenbordindelingen"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

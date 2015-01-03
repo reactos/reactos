@@ -71,7 +71,8 @@ CreateFileSystemList(
     IN SHORT Left,
     IN SHORT Top,
     IN BOOLEAN ForceFormat,
-    IN LPCWSTR ForceFileSystem)
+    IN LPCWSTR ForceFileSystem,
+    IN UCHAR PartitionType)
 {
     PFILE_SYSTEM_LIST List;
     PFILE_SYSTEM_ITEM Item;
@@ -86,7 +87,7 @@ CreateFileSystemList(
     List->Selected = NULL;
     InitializeListHead(&List->ListHead);
 
-    HOST_CreateFileSystemList(List);
+    HOST_CreateFileSystemList(List, PartitionType);
 
     if (!ForceFormat)
     {

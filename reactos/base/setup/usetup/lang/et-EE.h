@@ -1738,5 +1738,7 @@ MUI_STRING etEEStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Klaviatuuriasetuste lisamine"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

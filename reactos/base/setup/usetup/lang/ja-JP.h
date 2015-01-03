@@ -1741,5 +1741,7 @@ MUI_STRING jaJPStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "·°ÎÞ°ÄÞ Ú²±³ÄÉ Â²¶ Á­³"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

@@ -1747,5 +1747,7 @@ MUI_STRING ukUAStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Додавання розкладок клавiатури"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

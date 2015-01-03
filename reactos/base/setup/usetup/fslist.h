@@ -57,7 +57,8 @@ CreateFileSystemList(
     IN SHORT Left,
     IN SHORT Top,
     IN BOOLEAN ForceFormat,
-    IN LPCWSTR ForceFileSystem);
+    IN LPCWSTR ForceFileSystem,
+    IN UCHAR PartitionType);
 
 VOID
 DestroyFileSystemList(

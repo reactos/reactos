@@ -1744,5 +1744,7 @@ MUI_STRING sqALStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Shtim e p‰rzgjedhjes s‰ tastier‰s"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

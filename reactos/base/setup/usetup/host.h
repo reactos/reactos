@@ -22,7 +22,8 @@ HOST_InitMemory(VOID);
 
 BOOLEAN
 HOST_CreateFileSystemList(
-    IN PFILE_SYSTEM_LIST List);
+    IN PFILE_SYSTEM_LIST List,
+    IN UCHAR PartitionType);
 
 BOOLEAN
 HOST_FormatPartition(

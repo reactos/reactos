@@ -1747,5 +1747,7 @@ MUI_STRING svSEStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "L„gger till tangentbordslayouter"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

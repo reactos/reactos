@@ -63,7 +63,7 @@ typedef struct _PARTENTRY
     BOOLEAN IsPartitioned;
 
     /* Partition is new. Table does not exist on disk yet */
-    BOOLEAN New;
+//    BOOLEAN New;
 
     /* Partition was created automatically. */
     BOOLEAN AutoCreate;

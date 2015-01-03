@@ -1751,5 +1751,7 @@ MUI_STRING frFRStrings[] =
     "Go"},
     {STRING_ADDKBLAYOUTS,
     "Ajout des dispositions clavier"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

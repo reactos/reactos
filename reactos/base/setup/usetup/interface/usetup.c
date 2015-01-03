@@ -1606,7 +1606,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             {
                 MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
                                 RequiredPartitionDiskSpace);
-                continue; //return SELECT_PARTITION_PAGE; /* let the user select another partition */
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
 
             if (PartitionList->CurrentPartition == NULL ||
@@ -1622,7 +1622,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
-            return INSTALL_DIRECTORY_PAGE;
+            return PRE_INSTALL_SELECT_FORMAT_PAGE;
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'P')  /* P */
         {
@@ -2281,7 +2281,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
     PCHAR Unit;
-    PCHAR PartType;
+    PCHAR PartType = NULL;
     NTSTATUS Status;
 
     if (PartitionList == NULL ||
@@ -2298,37 +2298,29 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
     /* Determine partition type */
-    PartType = NULL;
-    if (PartEntry->New == TRUE)
+    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
+        (PartEntry->PartitionType == PARTITION_FAT_16) ||
+        (PartEntry->PartitionType == PARTITION_HUGE) ||
+        (PartEntry->PartitionType == PARTITION_XINT13))
     {
-        PartType = MUIGetString(STRING_UNFORMATTED);
+        PartType = "FAT";
     }
-    else if (PartEntry->IsPartitioned == TRUE)
+    else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
+             (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
     {
-        if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
-            (PartEntry->PartitionType == PARTITION_FAT_16) ||
-            (PartEntry->PartitionType == PARTITION_HUGE) ||
-            (PartEntry->PartitionType == PARTITION_XINT13))
-        {
-            PartType = "FAT";
-        }
-        else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
-                 (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
-        {
-            PartType = "FAT32";
-        }
-        else if (PartEntry->PartitionType == PARTITION_EXT2)
-        {
-            PartType = "EXT2";
-        }
-        else if (PartEntry->PartitionType == PARTITION_IFS)
-        {
-            PartType = "NTFS"; /* FIXME: Not quite correct! */
-        }
-        else if (IsContainerPartition(PartEntry->PartitionType))
-        {
-            PartType = MUIGetString(STRING_EXTENDED_PARTITION);
-        }
+        PartType = "FAT32";
+    }
+    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    {
+        PartType = "EXT2";
+    }
+    else if (PartEntry->PartitionType == PARTITION_IFS)
+    {
+        PartType = "NTFS"; /* FIXME: Not quite correct! */
+    }
+    else if (IsContainerPartition(PartEntry->PartitionType))
+    {
+        PartType = MUIGetString(STRING_EXTENDED_PARTITION);
     }
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
@@ -2617,14 +2609,16 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
         PartEntry->AutoCreate = FALSE;
     }
+#if 0
     else if (PartEntry->New == TRUE)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NONFORMATTEDPART));
         CONSOLE_SetTextXY(6, 10, MUIGetString(STRING_PARTFORMAT));
     }
+#endif
     else
     {
-        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
+        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_FORMATPART));
 
         if (PartType == NULL)
         {
@@ -2661,14 +2655,12 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     if (FileSystemList == NULL)
     {
-        FileSystemList = CreateFileSystemList(6, 26, PartEntry->New, L"FAT");
+        FileSystemList = CreateFileSystemList(6, 26, TRUE, L"FAT", PARTITION_ENTRY_UNUSED);
         if (FileSystemList == NULL)
         {
             /* FIXME: show an error dialog */
             return QUIT_PAGE;
         }
-
-        /* FIXME: Add file systems to list */
     }
 
     DrawFileSystemList(FileSystemList);
@@ -2691,6 +2683,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             {
                 DPRINT1("WriteDirtyPartitions() failed (Status 0x%08lx)\n", Status);
                 MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+                DestroyFileSystemList(FileSystemList);
+                FileSystemList = NULL;
                 return QUIT_PAGE;
             }
 
@@ -2709,6 +2703,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
             {
+                DestroyFileSystemList(FileSystemList);
+                FileSystemList = NULL;
                 return QUIT_PAGE;
             }
 
@@ -2717,6 +2713,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
+            DestroyFileSystemList(FileSystemList);
+            FileSystemList = NULL;
             return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2761,6 +2759,434 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
 static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
+{
+    WCHAR PathBuffer[MAX_PATH];
+//    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+    NTSTATUS Status;
+
+#ifndef NDEBUG
+    ULONG Line;
+    ULONG i;
+    PLIST_ENTRY Entry;
+#endif
+
+    MUIDisplayPage(FORMAT_PARTITION_PAGE);
+
+    if (PartitionList == NULL ||
+        PartitionList->CurrentDisk == NULL ||
+        PartitionList->CurrentPartition == NULL)
+    {
+        /* FIXME: show an error dialog */
+        DestroyFileSystemList(FileSystemList);
+        FileSystemList = NULL;
+        return QUIT_PAGE;
+    }
+
+//    DiskEntry = PartitionList->CurrentDisk;
+    PartEntry = PartitionList->CurrentPartition;
+
+    while (TRUE)
+    {
+        if (!IsUnattendedSetup)
+        {
+            CONSOLE_ConInKey(Ir);
+        }
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir) == TRUE)
+            {
+                DestroyFileSystemList(FileSystemList);
+                FileSystemList = NULL;
+                return QUIT_PAGE;
+            }
+
+            break;
+        }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN || IsUnattendedSetup) /* ENTER */
+        {
+            CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+            if (!FileSystemList->Selected->FormatFunc)
+            {
+                DestroyFileSystemList(FileSystemList);
+                FileSystemList = NULL;
+                return QUIT_PAGE;
+            }
+
+#ifndef NDEBUG
+            CONSOLE_PrintTextXY(6, 12,
+                                "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
+                                DiskEntry->DiskSize,
+                                DiskEntry->CylinderSize,
+                                DiskEntry->TrackSize);
+
+            Line = 13;
+            DiskEntry = PartitionList->CurrentDisk;
+            Entry = DiskEntry->PartListHead.Flink;
+
+            while (Entry != &DiskEntry->PrimaryPartListHead)
+            {
+                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+
+                if (PartEntry->IsPartitioned == TRUE)
+                {
+                    CONSOLE_PrintTextXY(6, Line,
+                                        "%2u:  %2u  %c  %12I64u  %12I64u  %2u  %c",
+                                        i,
+                                        PartEntry->PartitionNumber,
+                                        PartEntry->BootIndicator ? 'A' : '-',
+                                        PartEntry->StartSector.QuadPart,
+                                        PartEntry->SectorCount.QuadPart,
+                                        PartEntry->PartitionType,
+                                        PartEntry->Dirty ? '*' : ' ');
+                    Line++;
+                }
+
+                Entry = Entry->Flink;
+            }
+
+            /* Restore the old entry */
+            PartEntry = PartitionList->CurrentPartition;
+#endif
+
+            /* Set DestinationRootPath */
+            RtlFreeUnicodeString(&DestinationRootPath);
+            swprintf(PathBuffer,
+                     L"\\Device\\Harddisk%lu\\Partition%lu",
+                     PartitionList->CurrentDisk->DiskNumber,
+                     PartitionList->CurrentPartition->PartitionNumber);
+            RtlCreateUnicodeString(&DestinationRootPath,
+                                   PathBuffer);
+            DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
+
+            if (FileSystemList->Selected->FormatFunc)
+            {
+                Status = FormatPartition(&DestinationRootPath,
+                                         FileSystemList->Selected);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("FormatPartition() failed with status 0x%08lx\n", Status);
+                    /* FIXME: show an error dialog */
+                    DestroyFileSystemList(FileSystemList);
+                    FileSystemList = NULL;
+                    return QUIT_PAGE;
+                }
+
+                PartEntry->FormatState = Formatted;
+            }
+
+#ifndef NDEBUG
+            CONSOLE_SetStatusText("   Done.  Press any key ...");
+            CONSOLE_ConInKey(Ir);
+#endif
+
+            DestroyFileSystemList(FileSystemList);
+            FileSystemList = NULL;
+
+            if (IsUnattendedSetup || InstallShortcut)
+                return INSTALL_DIRECTORY_PAGE;
+            else
+                return SELECT_PARTITION_PAGE;
+        }
+    }
+
+    return FORMAT_PARTITION_PAGE;
+}
+
+
+static ULONG
+CheckFileSystemPage(PINPUT_RECORD Ir)
+{
+    PFILE_SYSTEM_ITEM CurrentFileSystem;
+    WCHAR PathBuffer[MAX_PATH];
+    CHAR Buffer[MAX_PATH];
+    NTSTATUS Status;
+
+    /* FIXME: code duplicated in FormatPartitionPage */
+    /* Set DestinationRootPath */
+    RtlFreeUnicodeString(&DestinationRootPath);
+    swprintf(PathBuffer,
+             L"\\Device\\Harddisk%lu\\Partition%lu",
+    PartitionList->CurrentDisk->DiskNumber,
+    PartitionList->CurrentPartition->PartitionNumber);
+    RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
+    DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
+
+    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
+
+    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    /* WRONG: first filesystem is not necesseraly the one of the current partition! */
+    CurrentFileSystem = CONTAINING_RECORD(FileSystemList->ListHead.Flink, FILE_SYSTEM_ITEM, ListEntry);
+
+    if (!CurrentFileSystem->ChkdskFunc)
+    {
+        sprintf(Buffer,
+                "Setup is currently unable to check a partition formatted in %S.\n"
+                "\n"
+                "  \x07  Press ENTER to continue Setup.\n"
+                "  \x07  Press F3 to quit Setup.",
+                CurrentFileSystem->FileSystem);
+
+        PopupError(Buffer,
+                   MUIGetString(STRING_QUITCONTINUE),
+                   NULL, POPUP_WAIT_NONE);
+
+        while (TRUE)
+        {
+            CONSOLE_ConInKey(Ir);
+
+            if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00 &&
+                Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)  /* F3 */
+            {
+                if (ConfirmQuit(Ir))
+                    return QUIT_PAGE;
+                else
+                    return CHECK_FILE_SYSTEM_PAGE;
+            }
+            else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
+            {
+                return INSTALL_DIRECTORY_PAGE;
+            }
+        }
+    }
+    else
+    {
+        Status = ChkdskPartition(&DestinationRootPath, CurrentFileSystem);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
+            sprintf(Buffer, "Setup failed to verify the selected partition.\n"
+                    "(Status 0x%08lx).\n", Status);
+
+            PopupError(Buffer,
+                       MUIGetString(STRING_REBOOTCOMPUTER),
+                       Ir, POPUP_WAIT_ENTER);
+
+            return QUIT_PAGE;
+        }
+
+        return INSTALL_DIRECTORY_PAGE;
+    }
+}
+
+
+
+
+static PAGE_NUMBER
+PreInstallSelectFormatPage(PINPUT_RECORD Ir)
+{
+    PDISKENTRY DiskEntry;
+    PPARTENTRY PartEntry;
+    ULONGLONG DiskSize;
+    ULONGLONG PartSize;
+    PCHAR DiskUnit;
+    PCHAR PartUnit;
+    PCHAR PartType;
+
+    if (PartitionList == NULL ||
+        PartitionList->CurrentDisk == NULL ||
+        PartitionList->CurrentPartition == NULL)
+    {
+        /* FIXME: show an error dialog */
+        return QUIT_PAGE;
+    }
+
+    DiskEntry = PartitionList->CurrentDisk;
+    PartEntry = PartitionList->CurrentPartition;
+
+    if (PartEntry->FormatState == Formatted)
+        return INSTALL_DIRECTORY_PAGE;
+
+    /* adjust disk size */
+    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+    if (DiskSize >= 10737418240) /* 10 GB */
+    {
+        DiskSize = DiskSize / 1073741824;
+        DiskUnit = MUIGetString(STRING_GB);
+    }
+    else
+    {
+        DiskSize = DiskSize / 1048576;
+        DiskUnit = MUIGetString(STRING_MB);
+    }
+
+    /* adjust partition size */
+    PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
+    if (PartSize >= 10737418240) /* 10 GB */
+    {
+        PartSize = PartSize / 1073741824;
+        PartUnit = MUIGetString(STRING_GB);
+    }
+    else
+    {
+        PartSize = PartSize / 1048576;
+        PartUnit = MUIGetString(STRING_MB);
+    }
+
+    /* adjust partition type */
+    if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
+        (PartEntry->PartitionType == PARTITION_FAT_16) ||
+        (PartEntry->PartitionType == PARTITION_HUGE) ||
+        (PartEntry->PartitionType == PARTITION_XINT13))
+    {
+        PartType = "FAT";
+    }
+    else if ((PartEntry->PartitionType == PARTITION_FAT32) ||
+             (PartEntry->PartitionType == PARTITION_FAT32_XINT13))
+    {
+        PartType = "FAT32";
+    }
+    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    {
+        PartType = "EXT2";
+    }
+    else if (PartEntry->PartitionType == PARTITION_IFS)
+    {
+        PartType = "NTFS"; /* FIXME: Not quite correct! */
+    }
+    else if (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED)
+    {
+        PartType = MUIGetString(STRING_FORMATUNUSED);
+    }
+    else
+    {
+        PartType = MUIGetString(STRING_FORMATUNKNOWN);
+    }
+
+    if (PartEntry->AutoCreate == TRUE)
+    {
+        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
+
+#if 0
+        CONSOLE_PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
+                            PartEntry->PartitionNumber,
+                            PartSize,
+                            PartUnit,
+                            PartType);
+#endif
+
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTZEROED),
+                            DiskEntry->DiskNumber,
+                            DiskSize,
+                            DiskUnit,
+                            DiskEntry->Port,
+                            DiskEntry->Bus,
+                            DiskEntry->Id,
+                            &DiskEntry->DriverName);
+
+        CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
+
+
+        PartEntry->AutoCreate = FALSE;
+    }
+#if 0
+    else if (PartEntry->New == TRUE)
+    {
+        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NONFORMATTEDPART));
+        CONSOLE_SetTextXY(6, 10, MUIGetString(STRING_PARTFORMAT));
+    }
+#endif
+    else
+    {
+        CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
+
+        if (PartType == NULL)
+        {
+            CONSOLE_PrintTextXY(8, 10,
+                                MUIGetString(STRING_HDDINFOUNK4),
+                                (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+                                (PartEntry->DriveLetter == 0) ? '-' : ':',
+                                PartEntry->PartitionType,
+                                PartSize,
+                                PartUnit);
+        }
+        else
+        {
+            CONSOLE_PrintTextXY(8, 10,
+                                "%c%c  %s    %I64u %s",
+                                (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
+                                (PartEntry->DriveLetter == 0) ? '-' : ':',
+                                PartType,
+                                PartSize,
+                                PartUnit);
+        }
+
+        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTEXISTS),
+                            DiskEntry->DiskNumber,
+                            DiskSize,
+                            DiskUnit,
+                            DiskEntry->Port,
+                            DiskEntry->Bus,
+                            DiskEntry->Id,
+                            &DiskEntry->DriverName);
+    }
+
+    MUIDisplayPage(SELECT_FILE_SYSTEM_PAGE);
+
+    if (FileSystemList != NULL)
+    {
+        DestroyFileSystemList(FileSystemList);
+        FileSystemList = NULL;
+    }
+
+    FileSystemList = CreateFileSystemList(6, 26, FALSE, L"FAT",
+                                          PartEntry->PartitionType);
+    if (FileSystemList == NULL)
+    {
+        /* FIXME: show an error dialog */
+        return QUIT_PAGE;
+    }
+
+    DrawFileSystemList(FileSystemList);
+
+    while (TRUE)
+    {
+        CONSOLE_ConInKey(Ir);
+
+        if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+            (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3))  /* F3 */
+        {
+            if (ConfirmQuit(Ir) == TRUE)
+            {
+                return QUIT_PAGE;
+            }
+
+            break;
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
+        {
+            return SELECT_PARTITION_PAGE;
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN))  /* DOWN */
+        {
+            ScrollDownFileSystemList(FileSystemList);
+        }
+        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP))  /* UP */
+        {
+            ScrollUpFileSystemList(FileSystemList);
+        }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
+        {
+            if (FileSystemList->Selected->FormatFunc)
+            {
+                return PRE_INSTALL_FORMAT_PAGE;
+            }
+        }
+    }
+
+    return PRE_INSTALL_SELECT_FORMAT_PAGE;
+}
+
+
+static ULONG
+PreInstallFormatPage(PINPUT_RECORD Ir)
 {
     WCHAR PathBuffer[MAX_PATH];
 //    PDISKENTRY DiskEntry;
@@ -2867,8 +3293,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                     return QUIT_PAGE;
                 }
 
-                PartEntry->New = FALSE;
-
+                PartEntry->FormatState = Formatted;
             }
 
 #ifndef NDEBUG
@@ -2879,92 +3304,15 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             DestroyFileSystemList(FileSystemList);
             FileSystemList = NULL;
 
-            if (IsUnattendedSetup || InstallShortcut)
-                return INSTALL_DIRECTORY_PAGE;
-            else
-                return SELECT_PARTITION_PAGE;
+            return INSTALL_DIRECTORY_PAGE;
         }
     }
 
-    return FORMAT_PARTITION_PAGE;
+    return PRE_INSTALL_FORMAT_PAGE;
 }
 
 
-static ULONG
-CheckFileSystemPage(PINPUT_RECORD Ir)
-{
-    PFILE_SYSTEM_ITEM CurrentFileSystem;
-    WCHAR PathBuffer[MAX_PATH];
-    CHAR Buffer[MAX_PATH];
-    NTSTATUS Status;
 
-    /* FIXME: code duplicated in FormatPartitionPage */
-    /* Set DestinationRootPath */
-    RtlFreeUnicodeString(&DestinationRootPath);
-    swprintf(PathBuffer,
-             L"\\Device\\Harddisk%lu\\Partition%lu",
-    PartitionList->CurrentDisk->DiskNumber,
-    PartitionList->CurrentPartition->PartitionNumber);
-    RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
-    DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
-
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
-
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
-
-    /* WRONG: first filesystem is not necesseraly the one of the current partition! */
-    CurrentFileSystem = CONTAINING_RECORD(FileSystemList->ListHead.Flink, FILE_SYSTEM_ITEM, ListEntry);
-
-    if (!CurrentFileSystem->ChkdskFunc)
-    {
-        sprintf(Buffer,
-                "Setup is currently unable to check a partition formatted in %S.\n"
-                "\n"
-                "  \x07  Press ENTER to continue Setup.\n"
-                "  \x07  Press F3 to quit Setup.",
-                CurrentFileSystem->FileSystem);
-
-        PopupError(Buffer,
-                   MUIGetString(STRING_QUITCONTINUE),
-                   NULL, POPUP_WAIT_NONE);
-
-        while (TRUE)
-        {
-            CONSOLE_ConInKey(Ir);
-
-            if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x00 &&
-                Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)  /* F3 */
-            {
-                if (ConfirmQuit(Ir))
-                    return QUIT_PAGE;
-                else
-                    return CHECK_FILE_SYSTEM_PAGE;
-            }
-            else if (Ir->Event.KeyEvent.uChar.AsciiChar == VK_RETURN) /* ENTER */
-            {
-                return INSTALL_DIRECTORY_PAGE;
-            }
-        }
-    }
-    else
-    {
-        Status = ChkdskPartition(&DestinationRootPath, CurrentFileSystem);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("ChkdskPartition() failed with status 0x%08lx\n", Status);
-            sprintf(Buffer, "Setup failed to verify the selected partition.\n"
-                    "(Status 0x%08lx).\n", Status);
-
-            PopupError(Buffer,
-                       MUIGetString(STRING_REBOOTCOMPUTER),
-                       Ir, POPUP_WAIT_ENTER);
-
-            return QUIT_PAGE;
-        }
-
-        return INSTALL_DIRECTORY_PAGE;
-    }
-}
 
 
 static PAGE_NUMBER
@@ -4278,11 +4626,19 @@ RunUSetup(VOID)
                 break;
 
             case FORMAT_PARTITION_PAGE:
-                Page = (PAGE_NUMBER) FormatPartitionPage(&Ir);
+                Page = FormatPartitionPage(&Ir);
                 break;
 
             case CHECK_FILE_SYSTEM_PAGE:
-                Page = (PAGE_NUMBER) CheckFileSystemPage(&Ir);
+                Page = CheckFileSystemPage(&Ir);
+                break;
+
+            case PRE_INSTALL_SELECT_FORMAT_PAGE:
+                Page = PreInstallSelectFormatPage(&Ir);
+                break;
+
+            case PRE_INSTALL_FORMAT_PAGE:
+                Page = PreInstallFormatPage(&Ir);
                 break;
 
             case INSTALL_DIRECTORY_PAGE:

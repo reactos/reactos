@@ -1742,5 +1742,7 @@ MUI_STRING ruRUStrings[] =
     "ÉÅ"},
     {STRING_ADDKBLAYOUTS,
     "Adding keyboard layouts"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

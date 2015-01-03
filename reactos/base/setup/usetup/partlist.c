@@ -558,7 +558,7 @@ AddPartitionToDisk(
 
     if (IsContainerPartition(PartEntry->PartitionType))
     {
-        PartEntry->FormatState = Unformatted;
+        PartEntry->FormatState = Formatted;
 
         if (LogicalPartition == FALSE && DiskEntry->ExtendedPartition == NULL)
             DiskEntry->ExtendedPartition = PartEntry;
@@ -1499,11 +1499,7 @@ PrintPartitionData(
     {
         /* Determine partition type */
         PartType = NULL;
-        if (PartEntry->New == TRUE)
-        {
-            PartType = MUIGetString(STRING_UNFORMATTED);
-        }
-        else if (PartEntry->IsPartitioned == TRUE)
+        if (PartEntry->IsPartitioned == TRUE)
         {
             if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
                 (PartEntry->PartitionType == PARTITION_FAT_16) ||
@@ -2386,7 +2382,6 @@ DPRINT1("Convert existing partition entry\n");
         PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
         PartEntry->FormatState = Unformatted;
         PartEntry->AutoCreate = AutoCreate;
-        PartEntry->New = TRUE;
         PartEntry->BootIndicator = FALSE;
 
 DPRINT1("First Sector: %I64u\n", PartEntry->StartSector.QuadPart);
@@ -2420,7 +2415,6 @@ DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
 DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
 DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
-        NewPartEntry->New = TRUE;
         NewPartEntry->FormatState = Unformatted;
         NewPartEntry->BootIndicator = FALSE;
 
@@ -2505,7 +2499,6 @@ DPRINT1("Convert existing partition entry\n");
         PartEntry->IsPartitioned = TRUE;
         PartEntry->FormatState = Formatted;
         PartEntry->AutoCreate = FALSE;
-        PartEntry->New = FALSE;
         PartEntry->BootIndicator = FALSE;
 
         if (PartEntry->StartSector.QuadPart < 1450560)
@@ -2547,7 +2540,6 @@ DPRINT1("Add new partition entry\n");
         NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
                                              NewPartEntry->StartSector.QuadPart;
 
-        NewPartEntry->New = FALSE;
         NewPartEntry->FormatState = Formatted;
         NewPartEntry->BootIndicator = FALSE;
 

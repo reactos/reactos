@@ -1777,5 +1777,7 @@ MUI_STRING ptBRStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Adicionando leiautes de teclado"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };

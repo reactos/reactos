@@ -1737,5 +1737,7 @@ MUI_STRING enUSStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Adding keyboard layouts"},
+    {STRING_FORMATPART,
+    "Setup formats Partition"},
     {0, 0}
 };
