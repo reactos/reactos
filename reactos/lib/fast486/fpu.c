@@ -84,12 +84,14 @@ UnsignedDivMod128(ULONGLONG DividendLow,
     /* Initialize the quotient */
     *QuotientLow = *QuotientHigh = 0ULL;
 
+    /* Exit early if the dividend is lower than the divisor */
+    if ((DividendHigh == 0ULL) && (DividendLow < Divisor)) return ValueLow;
+
     /* Normalize the current divisor */
     Bits = CountLeadingZeros64(CurrentHigh);
     CurrentHigh <<= Bits;
 
-    /* Loop while the value is higher than or equal to the original divisor */
-    while ((ValueHigh > 0ULL) || (ValueLow >= Divisor))
+    while (TRUE)
     {
         /* Shift the quotient left by one bit */
         *QuotientHigh <<= 1;
@@ -109,6 +111,9 @@ UnsignedDivMod128(ULONGLONG DividendLow,
 
             /* Set the lowest bit of the quotient */
             *QuotientLow |= 1;
+
+            /* Stop if the value is lower than the original divisor */
+            if ((ValueHigh == 0ULL) && (ValueLow < Divisor)) break;
         }
 
         /* Shift the current divisor right by one bit */
