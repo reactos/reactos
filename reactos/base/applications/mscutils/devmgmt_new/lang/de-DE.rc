@@ -14,8 +14,8 @@ BEGIN
   END
   POPUP "Ansicht"
   BEGIN
-    MENUITEM "Ger‰te nach Typ",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Ger‰te nach Verbindung",   IDC_STATIC, GRAYED
+    MENUITEM "Ger√§te nach Typ",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Ger√§te nach Verbindung",   IDC_STATIC, GRAYED
     MENUITEM "Resourcen nach Typ",       IDC_STATIC, GRAYED
     MENUITEM "Resourcen nach Verbindung", IDC_STATIC, GRAYED
   END
@@ -34,19 +34,19 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "‹ber Ger‰te-Manager"
+CAPTION "√úber Ger√§te-Manager"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Ger‰te-Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
-  PUSHBUTTON "Schlieﬂen", IDOK, 75, 162, 44, 15
+  LTEXT "Ger√§te-Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  PUSHBUTTON "Schlie√üen", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Dieses Programm ist kostenlos; Sie kˆnnen es frei verteilen mit od. ohne ƒnderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation verˆffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine sp‰tere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Dieses Programm ist kostenlos; Sie k√∂nnen es frei verteilen mit od. ohne √Ñnderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation ver√∂ffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine sp√§tere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -60,18 +60,18 @@ END
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS Ger‰te-Manager"
+  IDS_APPNAME "ReactOS Ger√§te-Manager"
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Das Programm beenden."
   IDS_HINT_REFRESH      " Die Service-Liste aktualisieren."
-  IDS_HINT_PROP         " Eigenschaften-Seite f¸r die aktuelle Auswahl anzeigen."
+  IDS_HINT_PROP         " Eigenschaften-Seite f√ºr die aktuelle Auswahl anzeigen."
   IDS_HINT_HELP         " Hilfe-Fenster anzeigen."
-  IDS_HINT_ABOUT        " ‹ber ReactOS Ger‰te-Manager."
+  IDS_HINT_ABOUT        " √úber ReactOS Ger√§te-Manager."
 
-  IDS_HINT_SYS_RESTORE  " Dieses Fenster auf normale Grˆﬂe wiederherstellen."
+  IDS_HINT_SYS_RESTORE  " Dieses Fenster auf normale Gr√∂√üe wiederherstellen."
   IDS_HINT_SYS_MOVE     " Dieses Fenster verschieben."
-  IDS_HINT_SYS_SIZE     " Grˆﬂe dieses Fensters ‰ndern."
+  IDS_HINT_SYS_SIZE     " Gr√∂√üe dieses Fensters √§ndern."
   IDS_HINT_SYS_MINIMIZE " Dieses Fenster zu einem Symbol verkleinern."
-  IDS_HINT_SYS_MAXIMIZE " Dieses Fenster auf Bildschirmgrˆﬂe vergrˆﬂern."
-  IDS_HINT_SYS_CLOSE    " Dieses Fenster schlieﬂen."
+  IDS_HINT_SYS_MAXIMIZE " Dieses Fenster auf Bildschirmgr√∂√üe vergr√∂√üern."
+  IDS_HINT_SYS_CLOSE    " Dieses Fenster schlie√üen."
 END

@@ -2,26 +2,26 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "ƒtƒ@ƒCƒ‹(&F)"
+  POPUP "ãƒ•ã‚¡ã‚¤ãƒ«(&F)"
   BEGIN
-    MENUITEM "I—¹(&X)",                IDC_EXIT
+    MENUITEM "çµ‚äº†(&X)",                IDC_EXIT
   END
-  POPUP "‘€ì"
+  POPUP "æ“ä½œ"
   BEGIN
-    MENUITEM "ˆóü",                    IDC_PRINT, GRAYED
+    MENUITEM "å°åˆ·",                    IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "ƒvƒƒpƒeƒB",              IDC_PROP, GRAYED
+    MENUITEM "ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£",              IDC_PROP, GRAYED
   END
-  POPUP "•\\Ž¦"
+  POPUP "è¡¨\ç¤º"
   BEGIN
-    MENUITEM "ƒfƒoƒCƒX (Ží—Þ•Ê)",       IDC_DEVBYTYPE, CHECKED
-    MENUITEM "ƒfƒoƒCƒX (Ú‘±•Ê)",       IDC_STATIC, GRAYED
-    MENUITEM "ƒŠƒ\\[ƒX (Ží—Þ•Ê)",      IDC_STATIC, GRAYED
-    MENUITEM "ƒŠƒ\\[ƒX (Ú‘±•Ê)",      IDC_STATIC, GRAYED
+    MENUITEM "ãƒ‡ãƒã‚¤ã‚¹ (ç¨®é¡žåˆ¥)",       IDC_DEVBYTYPE, CHECKED
+    MENUITEM "ãƒ‡ãƒã‚¤ã‚¹ (æŽ¥ç¶šåˆ¥)",       IDC_STATIC, GRAYED
+    MENUITEM "ãƒªã‚½\ãƒ¼ã‚¹ (ç¨®é¡žåˆ¥)",      IDC_STATIC, GRAYED
+    MENUITEM "ãƒªã‚½\ãƒ¼ã‚¹ (æŽ¥ç¶šåˆ¥)",      IDC_STATIC, GRAYED
   END
-  POPUP "ƒwƒ‹ƒv"
+  POPUP "ãƒ˜ãƒ«ãƒ—"
   BEGIN
-    MENUITEM "ƒo[ƒWƒ‡ƒ“î•ñ",          IDC_ABOUT
+    MENUITEM "ãƒãƒ¼ã‚¸ãƒ§ãƒ³æƒ…å ±",          IDC_ABOUT
   END
 END
 
@@ -29,17 +29,17 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "ƒvƒƒpƒeƒB",              IDC_PROP, GRAYED
+    MENUITEM "ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£",              IDC_PROP, GRAYED
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "ƒfƒoƒCƒX ƒ}ƒl[ƒWƒƒ‚É‚Â‚¢‚Ä"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ ãƒžãƒãƒ¼ã‚¸ãƒ£ã«ã¤ã„ã¦"
 FONT 9, "MS UI Gothic",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "ƒfƒoƒCƒX ƒ}ƒl[ƒWƒƒ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
-  PUSHBUTTON "•Â‚¶‚é", IDOK, 75, 162, 44, 15
+  LTEXT "ãƒ‡ãƒã‚¤ã‚¹ ãƒžãƒãƒ¼ã‚¸ãƒ£ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  PUSHBUTTON "é–‰ã˜ã‚‹", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
 END
@@ -51,27 +51,27 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "ƒvƒƒpƒeƒB"
-  IDS_TOOLTIP_REFRESH   "XV"
-  IDS_TOOLTIP_HELP      "ƒwƒ‹ƒv"
-  IDS_TOOLTIP_EXIT      "I—¹"
+  IDS_TOOLTIP_PROP      "ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£"
+  IDS_TOOLTIP_REFRESH   "æ›´æ–°"
+  IDS_TOOLTIP_HELP      "ãƒ˜ãƒ«ãƒ—"
+  IDS_TOOLTIP_EXIT      "çµ‚äº†"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS ƒfƒoƒCƒX ƒ}ƒl[ƒWƒƒ"
+  IDS_APPNAME "ReactOS ãƒ‡ãƒã‚¤ã‚¹ ãƒžãƒãƒ¼ã‚¸ãƒ£"
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXIT         " ‚±‚ÌƒvƒƒOƒ‰ƒ€‚ðI—¹‚µ‚Ü‚·B"
-  IDS_HINT_REFRESH      " ƒT[ƒrƒX‚ÌƒŠƒXƒg‚ðXV‚µ‚Ü‚·B"
-  IDS_HINT_PROP         " Œ»Ý‘I‘ð‚³‚ê‚Ä‚¢‚éƒV[ƒg‚ÌƒvƒƒpƒeƒB‚ðŠJ‚«‚Ü‚·B"
-  IDS_HINT_HELP         " ƒwƒ‹ƒv ƒEƒBƒ“ƒhƒE‚ð•\\Ž¦‚µ‚Ü‚·B"
-  IDS_HINT_ABOUT        " ReactOS ƒfƒoƒCƒX ƒ}ƒl[ƒWƒƒ‚É‚Â‚¢‚Ä•\\Ž¦‚µ‚Ü‚·B"
+  IDS_HINT_EXIT         " ã“ã®ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚’çµ‚äº†ã—ã¾ã™ã€‚"
+  IDS_HINT_REFRESH      " ã‚µãƒ¼ãƒ“ã‚¹ã®ãƒªã‚¹ãƒˆã‚’æ›´æ–°ã—ã¾ã™ã€‚"
+  IDS_HINT_PROP         " ç¾åœ¨é¸æŠžã•ã‚Œã¦ã„ã‚‹ã‚·ãƒ¼ãƒˆã®ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’é–‹ãã¾ã™ã€‚"
+  IDS_HINT_HELP         " ãƒ˜ãƒ«ãƒ— ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’è¡¨\ç¤ºã—ã¾ã™ã€‚"
+  IDS_HINT_ABOUT        " ReactOS ãƒ‡ãƒã‚¤ã‚¹ ãƒžãƒãƒ¼ã‚¸ãƒ£ã«ã¤ã„ã¦è¡¨\ç¤ºã—ã¾ã™ã€‚"
 
-  IDS_HINT_SYS_RESTORE  " ‚±‚ÌƒEƒBƒ“ƒhƒE‚ð’Êí‚Ì‘å‚«‚³‚É•œŒ³‚µ‚Ü‚·B"
-  IDS_HINT_SYS_MOVE     " ‚±‚ÌƒEƒBƒ“ƒhƒE‚ðˆÚ“®‚µ‚Ü‚·B"
-  IDS_HINT_SYS_SIZE     " ‚±‚ÌƒEƒBƒ“ƒhƒE‚Ì‘å‚«‚³‚ð•ÏX‚µ‚Ü‚·B"
-  IDS_HINT_SYS_MINIMIZE " ‚±‚ÌƒEƒBƒ“ƒhƒE‚ðƒAƒCƒRƒ“‚ÉÜ‚è‚½‚½‚Ý‚Ü‚·B"
-  IDS_HINT_SYS_MAXIMIZE " ‚±‚ÌƒEƒBƒ“ƒhƒE‚ð‰æ–Ê‚¢‚Á‚Ï‚¢‚ÉŠJ‚«‚Ü‚·B"
-  IDS_HINT_SYS_CLOSE    " ‚±‚ÌƒEƒBƒ“ƒhƒE‚ð•Â‚¶‚Ü‚·B"
+  IDS_HINT_SYS_RESTORE  " ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’é€šå¸¸ã®å¤§ãã•ã«å¾©å…ƒã—ã¾ã™ã€‚"
+  IDS_HINT_SYS_MOVE     " ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç§»å‹•ã—ã¾ã™ã€‚"
+  IDS_HINT_SYS_SIZE     " ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å¤§ãã•ã‚’å¤‰æ›´ã—ã¾ã™ã€‚"
+  IDS_HINT_SYS_MINIMIZE " ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ã‚¢ã‚¤ã‚³ãƒ³ã«æŠ˜ã‚ŠãŸãŸã¿ã¾ã™ã€‚"
+  IDS_HINT_SYS_MAXIMIZE " ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’ç”»é¢ã„ã£ã±ã„ã«é–‹ãã¾ã™ã€‚"
+  IDS_HINT_SYS_CLOSE    " ã“ã®ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚’é–‰ã˜ã¾ã™ã€‚"
 END

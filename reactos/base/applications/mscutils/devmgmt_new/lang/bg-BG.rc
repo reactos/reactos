@@ -2,26 +2,26 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&Файл"
+  POPUP "&Р¤Р°Р№Р»"
   BEGIN
-    MENUITEM "Из&ход",                   IDC_EXIT
+    MENUITEM "РР·&С…РѕРґ",                   IDC_EXIT
   END
-  POPUP "Действие"
+  POPUP "Р”РµР№СЃС‚РІРёРµ"
   BEGIN
-    MENUITEM "Отпечатване",                   IDC_PRINT, GRAYED
+    MENUITEM "РћС‚РїРµС‡Р°С‚РІР°РЅРµ",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Свойства",              IDC_PROP, GRAYED
+    MENUITEM "РЎРІРѕР№СЃС‚РІР°",              IDC_PROP, GRAYED
   END
-  POPUP "Изглед"
+  POPUP "РР·РіР»РµРґ"
   BEGIN
-    MENUITEM "Устройствата според вид",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Устройствата според свързването",   IDC_STATIC, GRAYED
-    MENUITEM "Средствата според вида",       IDC_STATIC, GRAYED
-    MENUITEM "Средствата според свързването", IDC_STATIC, GRAYED
+    MENUITEM "РЈСЃС‚СЂРѕР№СЃС‚РІР°С‚Р° СЃРїРѕСЂРµРґ РІРёРґ",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "РЈСЃС‚СЂРѕР№СЃС‚РІР°С‚Р° СЃРїРѕСЂРµРґ СЃРІСЉСЂР·РІР°РЅРµС‚Рѕ",   IDC_STATIC, GRAYED
+    MENUITEM "РЎСЂРµРґСЃС‚РІР°С‚Р° СЃРїРѕСЂРµРґ РІРёРґР°",       IDC_STATIC, GRAYED
+    MENUITEM "РЎСЂРµРґСЃС‚РІР°С‚Р° СЃРїРѕСЂРµРґ СЃРІСЉСЂР·РІР°РЅРµС‚Рѕ", IDC_STATIC, GRAYED
   END
-  POPUP "Помощ"
+  POPUP "РџРѕРјРѕС‰"
   BEGIN
-    MENUITEM "За",                   IDC_ABOUT
+    MENUITEM "Р—Р°",                   IDC_ABOUT
   END
 END
 
@@ -29,12 +29,12 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Свойства",              IDC_PROP, GRAYED
+    MENUITEM "РЎРІРѕР№СЃС‚РІР°",              IDC_PROP, GRAYED
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "За управителя на устройствата"
+CAPTION "Р—Р° СѓРїСЂР°РІРёС‚РµР»СЏ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -51,27 +51,27 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Свойства"
-  IDS_TOOLTIP_REFRESH   "Опресняване"
-  IDS_TOOLTIP_HELP      "Помощ"
-  IDS_TOOLTIP_EXIT      "Изход"
+  IDS_TOOLTIP_PROP      "РЎРІРѕР№СЃС‚РІР°"
+  IDS_TOOLTIP_REFRESH   "РћРїСЂРµСЃРЅСЏРІР°РЅРµ"
+  IDS_TOOLTIP_HELP      "РџРѕРјРѕС‰"
+  IDS_TOOLTIP_EXIT      "РР·С…РѕРґ"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Управител на устройствата на РеактОС"
+  IDS_APPNAME "РЈРїСЂР°РІРёС‚РµР» РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ"
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXIT         " Излиза от приложението."
-  IDS_HINT_REFRESH      " Опреснява списъка на услугите."
-  IDS_HINT_PROP         " Отваря лист за свойства за текущия избор."
-  IDS_HINT_HELP         " Показва помощен прозорец."
-  IDS_HINT_ABOUT        " За управителя на устрйствата на РеактОС."
+  IDS_HINT_EXIT         " РР·Р»РёР·Р° РѕС‚ РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ."
+  IDS_HINT_REFRESH      " РћРїСЂРµСЃРЅСЏРІР° СЃРїРёСЃСЉРєР° РЅР° СѓСЃР»СѓРіРёС‚Рµ."
+  IDS_HINT_PROP         " РћС‚РІР°СЂСЏ Р»РёСЃС‚ Р·Р° СЃРІРѕР№СЃС‚РІР° Р·Р° С‚РµРєСѓС‰РёСЏ РёР·Р±РѕСЂ."
+  IDS_HINT_HELP         " РџРѕРєР°Р·РІР° РїРѕРјРѕС‰РµРЅ РїСЂРѕР·РѕСЂРµС†."
+  IDS_HINT_ABOUT        " Р—Р° СѓРїСЂР°РІРёС‚РµР»СЏ РЅР° СѓСЃС‚СЂР№СЃС‚РІР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ."
 
-  IDS_HINT_SYS_RESTORE  " Възстановява прозореца до обичайния му рамер."
-  IDS_HINT_SYS_MOVE     " Премества прозореца."
-  IDS_HINT_SYS_SIZE     " Преоразмерява прозореца."
-  IDS_HINT_SYS_MINIMIZE " Свива прозореца в значка."
-  IDS_HINT_SYS_MAXIMIZE " Разгръща прозореца, докато запълни целия екран."
-  IDS_HINT_SYS_CLOSE    " Затваря прозореца."
+  IDS_HINT_SYS_RESTORE  " Р’СЉР·СЃС‚Р°РЅРѕРІСЏРІР° РїСЂРѕР·РѕСЂРµС†Р° РґРѕ РѕР±РёС‡Р°Р№РЅРёСЏ РјСѓ СЂР°РјРµСЂ."
+  IDS_HINT_SYS_MOVE     " РџСЂРµРјРµСЃС‚РІР° РїСЂРѕР·РѕСЂРµС†Р°."
+  IDS_HINT_SYS_SIZE     " РџСЂРµРѕСЂР°Р·РјРµСЂСЏРІР° РїСЂРѕР·РѕСЂРµС†Р°."
+  IDS_HINT_SYS_MINIMIZE " РЎРІРёРІР° РїСЂРѕР·РѕСЂРµС†Р° РІ Р·РЅР°С‡РєР°."
+  IDS_HINT_SYS_MAXIMIZE " Р Р°Р·РіСЂСЉС‰Р° РїСЂРѕР·РѕСЂРµС†Р°, РґРѕРєР°С‚Рѕ Р·Р°РїСЉР»РЅРё С†РµР»РёСЏ РµРєСЂР°РЅ."
+  IDS_HINT_SYS_CLOSE    " Р—Р°С‚РІР°СЂСЏ РїСЂРѕР·РѕСЂРµС†Р°."
 END

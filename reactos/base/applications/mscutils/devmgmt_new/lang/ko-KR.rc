@@ -5,39 +5,39 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "ÆÄÀÏ(&F)"
+  POPUP "íŒŒì¼(&F)"
   BEGIN
-    MENUITEM "Á¾·á(&X)",                   IDC_EXIT
+    MENUITEM "ì¢…ë£Œ(&X)",                   IDC_EXIT
   END
-  POPUP "¾×¼Ç"
+  POPUP "ì•¡ì…˜"
   BEGIN
-    MENUITEM "ÇÁ¸°Æ®",                   IDC_PRINT, GRAYED
+    MENUITEM "í”„ë¦°íŠ¸",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "¼Ó¼º",              IDC_PROP, GRAYED
+    MENUITEM "ì†ì„±",              IDC_PROP, GRAYED
   END
-  POPUP "º¸±â"
+  POPUP "ë³´ê¸°"
   BEGIN
     MENUITEM "Devices by type",         IDC_DEVBYTYPE, CHECKED
     MENUITEM "Devices by connection",   IDC_STATIC, GRAYED
     MENUITEM "Resources by type",       IDC_STATIC, GRAYED
     MENUITEM "Resources by connection", IDC_STATIC, GRAYED
   END
-  POPUP "µµ¿ò¸»"
+  POPUP "ë„ì›€ë§"
   BEGIN
-    MENUITEM "Á¤º¸",                   IDC_ABOUT
+    MENUITEM "ì •ë³´",                   IDC_ABOUT
   END
 END
 
 IDR_POPUP MENU
 BEGIN
-  POPUP "ÆË¾÷"
+  POPUP "íŒì—…"
   BEGIN
-    MENUITEM "¼Ó¼º",              IDC_PROP, GRAYED
+    MENUITEM "ì†ì„±",              IDC_PROP, GRAYED
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "ÀåÄ¡ °ü¸®ÀÚ¿¡ ´ëÇÏ¿©"
+CAPTION "ìž¥ì¹˜ ê´€ë¦¬ìžì— ëŒ€í•˜ì—¬"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -54,27 +54,27 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "¼Ó¼º"
-  IDS_TOOLTIP_REFRESH   "»õ·Î °íÄ§"
-  IDS_TOOLTIP_HELP      "µµ¿ò¸»"
-  IDS_TOOLTIP_EXIT      "Á¾·á"
+  IDS_TOOLTIP_PROP      "ì†ì„±"
+  IDS_TOOLTIP_REFRESH   "ìƒˆë¡œ ê³ ì¹¨"
+  IDS_TOOLTIP_HELP      "ë„ì›€ë§"
+  IDS_TOOLTIP_EXIT      "ì¢…ë£Œ"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS ÀåÄ¡ °ü¸®ÀÚ"
+  IDS_APPNAME "ReactOS ìž¥ì¹˜ ê´€ë¦¬ìž"
   IDS_HINT_BLANK        " "
-  IDS_HINT_EXIT         " ÇÁ·Î±×·¥À» Á¾·áÇÕ´Ï´Ù."
-  IDS_HINT_REFRESH      " ¼­ºñ½º ¸®½ºÆ®¸¦ »õ·Î °íÄ¨´Ï´Ù."
-  IDS_HINT_PROP         " ¼±ÅÃÇÑ Ç×¸ñÀÇ ¼Ó¼º Ã¢À» ¿±´Ï´Ù."
-  IDS_HINT_HELP         " µµ¿ò¸»À» ¿±´Ï´Ù."
-  IDS_HINT_ABOUT        " ReactOS ÀåÄ¡ °ü¸®ÀÚ¿¡ ´ëÇØ."
+  IDS_HINT_EXIT         " í”„ë¡œê·¸ëž¨ì„ ì¢…ë£Œí•©ë‹ˆë‹¤."
+  IDS_HINT_REFRESH      " ì„œë¹„ìŠ¤ ë¦¬ìŠ¤íŠ¸ë¥¼ ìƒˆë¡œ ê³ ì¹©ë‹ˆë‹¤."
+  IDS_HINT_PROP         " ì„ íƒí•œ í•­ëª©ì˜ ì†ì„± ì°½ì„ ì—½ë‹ˆë‹¤."
+  IDS_HINT_HELP         " ë„ì›€ë§ì„ ì—½ë‹ˆë‹¤."
+  IDS_HINT_ABOUT        " ReactOS ìž¥ì¹˜ ê´€ë¦¬ìžì— ëŒ€í•´."
 
-  IDS_HINT_SYS_RESTORE  " ÀÌ Ã¢À» º¸Åë Å©±â·Î ¬Ãã´Ï´Ù."
-  IDS_HINT_SYS_MOVE     " Ã¢À» ¿òÁ÷ÀÔ´Ï´Ù."
-  IDS_HINT_SYS_SIZE     " Ã¢ÀÇ Å©±â¸¦ º¯°æÇÕ´Ï´Ù."
-  IDS_HINT_SYS_MINIMIZE " ÀÌ Ã¢À» ¾ÆÀÌÄÜÀ¸·Î ¸¸µì´Ï´Ù."
-  IDS_HINT_SYS_MAXIMIZE " ÀÌ Ã¢À» ÃÖ´ë Å©±â·Î ¬Ãã´Ï´Ù."
-  IDS_HINT_SYS_CLOSE    " Ã¢À» ´Ý½À´Ï´Ù."
+  IDS_HINT_SYS_RESTORE  " ì´ ì°½ì„ ë³´í†µ í¬ê¸°ë¡œ ë§Ÿì¶¤ë‹ˆë‹¤."
+  IDS_HINT_SYS_MOVE     " ì°½ì„ ì›€ì§ìž…ë‹ˆë‹¤."
+  IDS_HINT_SYS_SIZE     " ì°½ì˜ í¬ê¸°ë¥¼ ë³€ê²½í•©ë‹ˆë‹¤."
+  IDS_HINT_SYS_MINIMIZE " ì´ ì°½ì„ ì•„ì´ì½˜ìœ¼ë¡œ ë§Œë“­ë‹ˆë‹¤."
+  IDS_HINT_SYS_MAXIMIZE " ì´ ì°½ì„ ìµœëŒ€ í¬ê¸°ë¡œ ë§Ÿì¶¤ë‹ˆë‹¤."
+  IDS_HINT_SYS_CLOSE    " ì°½ì„ ë‹«ìŠµë‹ˆë‹¤."
 END

@@ -12,7 +12,8 @@ IDB_REFRESH BITMAP DISCARDABLE "res/refresh.bmp"
 IDB_HELP    BITMAP DISCARDABLE "res/help.bmp"
 IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 
-//#include "lang/en-US.rc"
+// UTF-8
+#pragma code_page(65001)
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
@@ -32,6 +33,9 @@ IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/id-ID.rc"
 #endif
@@ -47,22 +51,6 @@ IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/sk-SK.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/sv-SE.rc"
-#endif
-#ifdef LANGUAGE_TH_TH
-    #include "lang/th-TH.rc"
-#endif
-
-// UTF-8
-#pragma code_page(65001)
-
-#ifdef LANGUAGE_HE_IL
-    #include "lang/he-IL.rc"
-#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
@@ -74,6 +62,15 @@ IDB_EXIT    BITMAP DISCARDABLE "res/exit.bmp"
 #endif
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/th-TH.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"

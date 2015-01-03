@@ -12,7 +12,7 @@ BEGIN
   BEGIN
     MENUITEM "&Salir",                   IDC_EXIT
   END
-  POPUP "Acci髇"
+  POPUP "Acci贸n"
   BEGIN
     MENUITEM "Imprimir",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
@@ -21,9 +21,9 @@ BEGIN
   POPUP "Ver"
   BEGIN
     MENUITEM "Dispositivos por tipo",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispositivos por conexi髇",   IDC_STATIC, GRAYED
+    MENUITEM "Dispositivos por conexi贸n",   IDC_STATIC, GRAYED
     MENUITEM "Recursos por tipo",       IDC_STATIC, GRAYED
-    MENUITEM "Recursos por conexi髇", IDC_STATIC, GRAYED
+    MENUITEM "Recursos por conexi贸n", IDC_STATIC, GRAYED
   END
   POPUP "Ayuda"
   BEGIN
@@ -52,7 +52,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los t閞minos de la GNU General Public License tal y como fueron publicados por la Free Software Foundation; ya sea la versi髇 2 de la Licencia, o (bajo tu discreci髇) cualquier versi髇 posterior.\r\n\r\nEste programa se distribuye con el fin de ser 鷗il, pero viene SIN NINGUNA GARANT虯; sin tan siquiera la garant韆 impl韈ita de COMERCIALIZACI覰 o la de IDONEIDAD PARA UN PROP覵ITO CONCRETO. Para m醩 informaci髇 lee la GNU General Public License.\r\n\r\nDeber韆s de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
+  IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los t茅rminos de la GNU General Public License tal y como fueron publicados por la Free Software Foundation; ya sea la versi贸n 2 de la Licencia, o (bajo tu discreci贸n) cualquier versi贸n posterior.\r\n\r\nEste programa se distribuye con el fin de ser 煤til, pero viene SIN NINGUNA GARANT脥A; sin tan siquiera la garant铆a impl铆cita de COMERCIALIZACI脫N o la de IDONEIDAD PARA UN PROP脫SITO CONCRETO. Para m谩s informaci贸n lee la GNU General Public License.\r\n\r\nDeber铆as de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
 END
 
 STRINGTABLE DISCARDABLE
@@ -70,11 +70,11 @@ BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Cerrar el programa."
   IDS_HINT_REFRESH      " Actualizar la lista de servicios."
-  IDS_HINT_PROP         " Abre la pesta馻 de propiedades de la selecci髇 actual."
+  IDS_HINT_PROP         " Abre la pesta帽a de propiedades de la selecci贸n actual."
   IDS_HINT_HELP         " Mostrar la ventana de ayuda."
   IDS_HINT_ABOUT        " Acerca del Administrador de dispositivos de ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Devuelve esta ventana al tama駉 normal."
+  IDS_HINT_SYS_RESTORE  " Devuelve esta ventana al tama帽o normal."
   IDS_HINT_SYS_MOVE     " Mueve esta ventana."
   IDS_HINT_SYS_SIZE     " Redimensiona esta ventana."
   IDS_HINT_SYS_MINIMIZE " Contrae esta ventana en un icono."
