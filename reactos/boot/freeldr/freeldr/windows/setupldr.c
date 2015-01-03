@@ -296,7 +296,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     /* Close the inf file */
     InfCloseFile(InfHandle);
 
-    /* Load ReactOS */
+    /* Load ReactOS Setup */
     LoadAndBootWindowsCommon(_WIN32_WINNT_WS03,
                              LoaderBlock,
                              BootOptions,

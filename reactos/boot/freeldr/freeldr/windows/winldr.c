@@ -603,13 +603,12 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     BOOLEAN Status;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
 
-    // Get OS setting value
+    /* Get OS setting value */
     SettingsValue[0] = ANSI_NULL;
     IniOpenSection("Operating Systems", &SectionId);
     IniReadSettingByName(SectionId, SectionName, SettingsValue, sizeof(SettingsValue));
 
-    // Open the operating system section
-    // specified in the .ini file
+    /* Open the operating system section specified in the .ini file */
     HasSection = IniOpenSection(SectionName, &SectionId);
 
     UiDrawBackdrop();
@@ -780,13 +779,6 @@ LoadAndBootWindowsCommon(
 #ifndef _M_AMD64
     WinLdrpDumpArcDisks(LoaderBlockVA);
 #endif
-
-    //FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
-    //while (1) {};
-    /*asm(".intel_syntax noprefix\n");
-        asm("test1:\n");
-        asm("jmp test1\n");
-    asm(".att_syntax\n");*/
 
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);

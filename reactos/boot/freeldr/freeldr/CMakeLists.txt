@@ -53,9 +53,9 @@ list(APPEND FREELDR_COMMON_SOURCE
     fs/fs.c
     fs/iso.c
     fs/ntfs.c
-    inifile/ini_init.c
-    inifile/inifile.c
-    inifile/parse.c
+    lib/inifile/ini_init.c
+    lib/inifile/inifile.c
+    lib/inifile/parse.c
     mm/meminit.c
     mm/mm.c
     mm/heap.c
@@ -177,8 +177,8 @@ endif()
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
-    inffile/inffile.c
-    rtl/libsupp.c)
+    lib/inffile/inffile.c
+    lib/rtl/libsupp.c)
 
 if(NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
