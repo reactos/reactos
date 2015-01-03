@@ -43,11 +43,11 @@ VOID* FsGetDeviceSpecific(ULONG FileId);
 ULONG FsGetDeviceId(ULONG FileId);
 VOID FsInit(VOID);
 
-LONG ArcClose(ULONG FileId);
-LONG ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information);
-LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
-LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
-LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
+ARC_STATUS ArcClose(ULONG FileId);
+ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information);
+ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
+ARC_STATUS ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
+ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 
 VOID    FileSystemError(PCSTR ErrorString);
 PFILE    FsOpenFile(PCSTR FileName);

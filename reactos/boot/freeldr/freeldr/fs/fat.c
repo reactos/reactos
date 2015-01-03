@@ -1397,7 +1397,7 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
     return TRUE;
 }
 
-LONG FatClose(ULONG FileId)
+ARC_STATUS FatClose(ULONG FileId)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1407,7 +1407,7 @@ LONG FatClose(ULONG FileId)
     return ESUCCESS;
 }
 
-LONG FatGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS FatGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1423,7 +1423,7 @@ LONG FatGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     PFAT_VOLUME_INFO FatVolume;
     FAT_FILE_INFO TempFileInfo;
@@ -1465,7 +1465,7 @@ LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-LONG FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     BOOLEAN ret;
@@ -1484,7 +1484,7 @@ LONG FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         return EIO;
 }
 
-LONG FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 

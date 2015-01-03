@@ -21,7 +21,7 @@ ULONG gRamDiskOffset;
 
 /* FUNCTIONS ******************************************************************/
 
-static LONG RamDiskClose(ULONG FileId)
+static ARC_STATUS RamDiskClose(ULONG FileId)
 {
     //
     // Nothing to do
@@ -29,7 +29,7 @@ static LONG RamDiskClose(ULONG FileId)
     return ESUCCESS;
 }
 
-static LONG RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+static ARC_STATUS RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     //
     // Give current seek offset and ram disk size to caller
@@ -41,7 +41,7 @@ static LONG RamDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information
     return ESUCCESS;
 }
 
-static LONG RamDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS RamDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     //
     // Always return success, as contents are already in memory
@@ -49,7 +49,7 @@ static LONG RamDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-static LONG RamDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+static ARC_STATUS RamDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PVOID StartAddress;
 
@@ -76,7 +76,7 @@ static LONG RamDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
-static LONG RamDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+static ARC_STATUS RamDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     //
     // Only accept absolute mode now

@@ -755,7 +755,7 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
     return TRUE;
 }
 
-LONG NtfsClose(ULONG FileId)
+ARC_STATUS NtfsClose(ULONG FileId)
 {
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -765,7 +765,7 @@ LONG NtfsClose(ULONG FileId)
     return ESUCCESS;
 }
 
-LONG NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -781,7 +781,7 @@ LONG NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-LONG NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     PNTFS_VOLUME_INFO Volume;
     PNTFS_FILE_HANDLE FileHandle;
@@ -828,7 +828,7 @@ LONG NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-LONG NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
     ULONGLONG BytesRead64;
@@ -848,7 +848,7 @@ LONG NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         return EIO;
 }
 
-LONG NtfsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS NtfsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
 

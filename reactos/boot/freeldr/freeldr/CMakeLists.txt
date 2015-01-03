@@ -40,7 +40,6 @@ list(APPEND FREELDR_COMMON_SOURCE
     options.c
     oslist.c
     version.c
-    arcemul/time.c
     cache/blocklist.c
     cache/cache.c
     comm/rs232.c

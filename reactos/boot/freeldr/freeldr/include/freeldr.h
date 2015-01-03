@@ -55,7 +55,7 @@
 #endif
 
 /* internal headers */
-#include <arcemul.h>
+// #include <arcemul.h>
 #include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>

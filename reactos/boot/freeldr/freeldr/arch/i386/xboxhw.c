@@ -109,7 +109,7 @@ typedef struct tagDISKCONTEXT
 } DISKCONTEXT;
 
 static
-LONG
+ARC_STATUS
 DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -119,7 +119,7 @@ DiskClose(ULONG FileId)
 }
 
 static
-LONG
+ARC_STATUS
 DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -132,7 +132,7 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 }
 
 static
-LONG
+ARC_STATUS
 DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
@@ -185,7 +185,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 }
 
 static
-LONG
+ARC_STATUS
 DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -219,7 +219,7 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 }
 
 static
-LONG
+ARC_STATUS
 DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);

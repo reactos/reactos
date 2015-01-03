@@ -73,6 +73,31 @@ typedef enum _CONFIGURATION_CLASS
     MaximumClass
 } CONFIGURATION_CLASS;
 
+// enum CONFIGURATION_TYPE is defined in ntddk.h
+
+typedef struct _CONFIGURATION_COMPONENT
+{
+    CONFIGURATION_CLASS Class;
+    CONFIGURATION_TYPE Type;
+    IDENTIFIER_FLAG Flags;
+    USHORT Version;
+    USHORT Revision;
+    ULONG Key;
+    ULONG AffinityMask;
+    ULONG ConfigurationDataLength;
+    ULONG IdentifierLength;
+    LPSTR Identifier;
+} CONFIGURATION_COMPONENT, *PCONFIGURATION_COMPONENT;
+
+typedef struct _CONFIGURATION_COMPONENT_DATA
+{
+    struct _CONFIGURATION_COMPONENT_DATA *Parent;
+    struct _CONFIGURATION_COMPONENT_DATA *Child;
+    struct _CONFIGURATION_COMPONENT_DATA *Sibling;
+    CONFIGURATION_COMPONENT ComponentEntry;
+    PVOID ConfigurationData;
+} CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
+
 typedef enum _TYPE_OF_MEMORY
 {
     LoaderExceptionBlock,
@@ -166,29 +191,6 @@ typedef struct _ARC_DISK_SIGNATURE
     BOOLEAN Reserved;
     CHAR GptSignature[16];
 } ARC_DISK_SIGNATURE, *PARC_DISK_SIGNATURE;
-
-typedef struct _CONFIGURATION_COMPONENT
-{
-    CONFIGURATION_CLASS Class;
-    CONFIGURATION_TYPE Type;
-    IDENTIFIER_FLAG Flags;
-    USHORT Version;
-    USHORT Revision;
-    ULONG Key;
-    ULONG AffinityMask;
-    ULONG ConfigurationDataLength;
-    ULONG IdentifierLength;
-    LPSTR Identifier;
-} CONFIGURATION_COMPONENT, *PCONFIGURATION_COMPONENT;
-
-typedef struct _CONFIGURATION_COMPONENT_DATA
-{
-    struct _CONFIGURATION_COMPONENT_DATA *Parent;
-    struct _CONFIGURATION_COMPONENT_DATA *Child;
-    struct _CONFIGURATION_COMPONENT_DATA *Sibling;
-    CONFIGURATION_COMPONENT ComponentEntry;
-    PVOID ConfigurationData;
-} CONFIGURATION_COMPONENT_DATA, *PCONFIGURATION_COMPONENT_DATA;
 
 typedef struct _ARC_DISK_INFORMATION
 {
@@ -497,9 +499,41 @@ typedef struct tagFILEINFORMATION
     CHAR Filename[32];
 } FILEINFORMATION;
 
-typedef LONG (*ARC_CLOSE)(ULONG FileId);
-typedef LONG (*ARC_GET_FILE_INFORMATION)(ULONG FileId, FILEINFORMATION* Information);
-typedef LONG (*ARC_OPEN)(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
-typedef LONG (*ARC_READ)(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
-typedef LONG (*ARC_SEEK)(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
+typedef
+ARC_STATUS
+(*ARC_CLOSE)(
+    ULONG FileId
+);
+
+typedef
+ARC_STATUS
+(*ARC_GET_FILE_INFORMATION)(
+    ULONG FileId,
+    FILEINFORMATION* Information
+);
+
+typedef
+ARC_STATUS
+(*ARC_OPEN)(
+    CHAR* Path,
+    OPENMODE OpenMode,
+    ULONG* FileId
+);
+
+typedef
+ARC_STATUS
+(*ARC_READ)(
+    ULONG FileId,
+    VOID* Buffer,
+    ULONG N, ULONG* Count
+);
+
+typedef
+ARC_STATUS
+(*ARC_SEEK)(
+    ULONG FileId,
+    LARGE_INTEGER* Position,
+    SEEKMODE SeekMode
+);
+
 #endif

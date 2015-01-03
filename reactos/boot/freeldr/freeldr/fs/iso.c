@@ -240,7 +240,7 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
     return ESUCCESS;
 }
 
-LONG IsoClose(ULONG FileId)
+ARC_STATUS IsoClose(ULONG FileId)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -249,7 +249,7 @@ LONG IsoClose(ULONG FileId)
     return ESUCCESS;
 }
 
-LONG IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -263,7 +263,7 @@ LONG IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     ISO_FILE_INFO TempFileInfo;
     PISO_FILE_INFO FileHandle;
@@ -292,7 +292,7 @@ LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     UCHAR SectorBuffer[SECTORSIZE];
@@ -461,7 +461,7 @@ LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
-LONG IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 

@@ -116,7 +116,7 @@ BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
     return TRUE;
 }
 
-static LONG PxeClose(ULONG FileId)
+static ARC_STATUS PxeClose(ULONG FileId)
 {
     t_PXENV_TFTP_CLOSE closeData;
 
@@ -136,7 +136,7 @@ static LONG PxeClose(ULONG FileId)
     return ESUCCESS;
 }
 
-static LONG PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+static ARC_STATUS PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     if (_OpenFile == NO_FILE || FileId != _OpenFile)
         return EBADF;
@@ -148,7 +148,7 @@ static LONG PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     t_PXENV_TFTP_GET_FSIZE sizeData;
     t_PXENV_TFTP_OPEN openData;
@@ -197,7 +197,7 @@ static LONG PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-static LONG PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+static ARC_STATUS PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     t_PXENV_TFTP_READ readData;
     ULONG i;
@@ -240,7 +240,7 @@ static LONG PxeRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return ESUCCESS;
 }
 
-static LONG PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+static ARC_STATUS PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     t_PXENV_TFTP_READ readData;
 
@@ -290,31 +290,31 @@ const DEVVTBL* PxeMount(ULONG DeviceId)
     return &PxeVtbl;
 }
 
-static LONG PxeDiskClose(ULONG FileId)
+static ARC_STATUS PxeDiskClose(ULONG FileId)
 {
     // Nothing to do
     return ESUCCESS;
 }
 
-static LONG PxeDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+static ARC_STATUS PxeDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     // No disk access in PXE mode
     return EINVAL;
 }
 
-static LONG PxeDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS PxeDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     // Nothing to do
     return ESUCCESS;
 }
 
-static LONG PxeDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+static ARC_STATUS PxeDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     // No disk access in PXE mode
     return EINVAL;
 }
 
-static LONG PxeDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+static ARC_STATUS PxeDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     // No disk access in PXE mode
     return EINVAL;

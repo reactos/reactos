@@ -1196,7 +1196,7 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
     return TRUE;
 }
 
-LONG Ext2Close(ULONG FileId)
+ARC_STATUS Ext2Close(ULONG FileId)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1205,7 +1205,7 @@ LONG Ext2Close(ULONG FileId)
     return ESUCCESS;
 }
 
-LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1221,7 +1221,7 @@ LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     PEXT2_FILE_INFO FileHandle;
     //ULONG DeviceId;
@@ -1251,7 +1251,7 @@ LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-LONG Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     ULONGLONG BytesReadBig;
@@ -1272,7 +1272,7 @@ LONG Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         return EIO;
 }
 
-LONG Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 

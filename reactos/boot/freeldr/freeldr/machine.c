@@ -168,4 +168,24 @@ MachDiskGetCacheableBlockCount(UCHAR DriveNumber)
   return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
 }
 
+
+/* ARC FUNCTIONS **************************************************************/
+
+TIMEINFO*
+ArcGetTime(VOID)
+{
+    return MachVtbl.GetTime();
+}
+
+ULONG
+ArcGetRelativeTime(VOID)
+{
+    TIMEINFO* TimeInfo;
+    ULONG ret;
+
+    TimeInfo = ArcGetTime();
+    ret = ((TimeInfo->Hour * 24) + TimeInfo->Minute) * 60 + TimeInfo->Second;
+    return ret;
+}
+
 /* EOF */

@@ -224,7 +224,7 @@ typedef struct tagDEVICE
 static FILEDATA FileData[MAX_FDS];
 static LIST_ENTRY DeviceListHead;
 
-LONG ArcClose(ULONG FileId)
+ARC_STATUS ArcClose(ULONG FileId)
 {
     LONG ret;
 
@@ -242,14 +242,14 @@ LONG ArcClose(ULONG FileId)
     return ret;
 }
 
-LONG ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
         return EBADF;
     return FileData[FileId].FuncTable->GetFileInformation(FileId, Information);
 }
 
-LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     ULONG Count, i, ret;
     PLIST_ENTRY pEntry;
@@ -398,14 +398,14 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ret;
 }
 
-LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
         return EBADF;
     return FileData[FileId].FuncTable->Read(FileId, Buffer, N, Count);
 }
 
-LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
         return EBADF;
