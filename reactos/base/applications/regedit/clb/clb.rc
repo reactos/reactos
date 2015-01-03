@@ -12,6 +12,10 @@
 
 #include <reactos/manifest_dll.rc>
 
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -42,8 +46,14 @@
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
 #endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
 #endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"
@@ -51,19 +61,9 @@
 #ifdef LANGUAGE_TH_TH
     #include "lang/th-TH.rc"
 #endif
-#ifdef LANGUAGE_UK_UA
-    #include "lang/uk-UA.rc"
-#endif
-#ifdef LANGUAGE_RU_RU
-    #include "lang/ru-RU.rc"
-#endif
-
-/* UTF-8 */
-#pragma code_page(65001)
-
-#ifdef LANGUAGE_PL_PL
-    #include "lang/pl-PL.rc"
-#endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
 #endif

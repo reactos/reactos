@@ -2,7 +2,7 @@
  * Korean language support
  *
  * Copyright (C) 2007 Mikolaj Zalewski
- * Copyright (C) 2008 YunSong Hwang(È²À±¼º)(hys545@dreamwiz.com)
+ * Copyright (C) 2008 YunSong Hwang(í™©ìœ¤ì„±)(hys545@dreamwiz.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,5 +25,5 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_FAILED, "¿öµåÆÐµå ½ÃÀÛ ½ÇÆÐÇÔ"
+    IDS_FAILED, "ì›Œë“œíŒ¨ë“œ ì‹œìž‘ ì‹¤íŒ¨í•¨"
 }

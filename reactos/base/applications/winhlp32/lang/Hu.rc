@@ -24,21 +24,21 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
- POPUP "&F·jl" {
-  MENUITEM "&Megnyit·s...", MNID_FILE_OPEN
+ POPUP "&F√°jl" {
+  MENUITEM "&Megnyit√°s...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
-  MENUITEM "&Nyomtat·s", MNID_FILE_PRINT
-  MENUITEM "NyomtatÛ &be·llÌt·s...", MNID_FILE_SETUP
+  MENUITEM "&Nyomtat√°s", MNID_FILE_PRINT
+  MENUITEM "Nyomtat√≥ &be√°ll√≠t√°s...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&KilÈpÈs", MNID_FILE_EXIT
+  MENUITEM "&Kil√©p√©s", MNID_FILE_EXIT
  }
- POPUP "&SzerkesztÈs" {
-   MENUITEM "&M·sol·s...", MNID_EDIT_COPYDLG
+ POPUP "&Szerkeszt√©s" {
+   MENUITEM "&M√°sol√°s...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Jegyzet...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Kˆnyvjelzı" {
-   MENUITEM "&Defini·l·s...", MNID_BKMK_DEFINE
+ POPUP "&K√∂nyvjelz≈ë" {
+   MENUITEM "&Defini√°l√°s...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
   MENUITEM "History",		MNID_OPTS_HISTORY
@@ -49,10 +49,10 @@ MAIN_MENU MENU
     MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
   END
  }
- POPUP "&S˙gÛ" {
-   MENUITEM "&Haszn·lat", MNID_HELP_HELPON
-   MENUITEM "Mindig &legfel¸l", MNID_HELP_HELPTOP
-   MENUITEM "&Inform·ciÛ...", MNID_HELP_ABOUT
+ POPUP "&S√∫g√≥" {
+   MENUITEM "&Haszn√°lat", MNID_HELP_HELPON
+   MENUITEM "Mindig &legfel√ºl", MNID_HELP_HELPTOP
+   MENUITEM "&Inform√°ci√≥...", MNID_HELP_ABOUT
  }
 }
 
@@ -74,17 +74,17 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Wine s˙gÛ"
+STID_WINE_HELP, 	"Wine s√∫g√≥"
 STID_WHERROR, 		"HIBA"
-STID_WARNING,  		"FIGYELMEZTET…S"
-STID_INFO,  		"Inform·ciÛ"
-STID_NOT_IMPLEMENTED, 	"Nincs implement·lva"
-STID_HLPFILE_ERROR_s, 	"Hiba a `%s' file olvas·sakor"
+STID_WARNING,  		"FIGYELMEZTET√âS"
+STID_INFO,  		"Inform√°ci√≥"
+STID_NOT_IMPLEMENTED, 	"Nincs implement√°lva"
+STID_HLPFILE_ERROR_s, 	"Hiba a `%s' file olvas√°sakor"
 STID_INDEX, 		"&Tartalom"
 STID_CONTENTS,		"Summary"
 STID_BACK, 		"&Vissza"
-STID_ALL_FILES, 	"Minden f·jl (*.*)"
-STID_HELP_FILES_HLP, 	"S˙gÛ f·jlok (*.hlp)"
+STID_ALL_FILES, 	"Minden f√°jl (*.*)"
+STID_HELP_FILES_HLP, 	"S√∫g√≥ f√°jlok (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 STID_PSH_INDEX,		"Help topics: "

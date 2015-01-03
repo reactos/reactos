@@ -4,7 +4,7 @@
  * Copyright 1996 Ulrich Schmid
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2004 Piotr Caban
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,28 +26,28 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 MAIN_MENU MENU
 {
  POPUP "&Plik" {
-  MENUITEM "&OtwÛrz", MNID_FILE_OPEN
+  MENUITEM "&Otw√≥rz", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Drukuj", MNID_FILE_PRINT
   MENUITEM "&Ustawienia drukarki...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Wyjúcie", MNID_FILE_EXIT
+  MENUITEM "&Wyj≈õcie", MNID_FILE_EXIT
  }
  POPUP "&Edycja" {
    MENUITEM "&Kopiuj...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Skomentuj...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Zak≥adka" {
+ POPUP "&Zak≈Çadka" {
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
   MENUITEM "Historia",		MNID_OPTS_HISTORY
   POPUP    "Czcionki"
   BEGIN
-    MENUITEM "Ma≥e",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Ma≈Çe",		MNID_OPTS_FONTS_SMALL
     MENUITEM "Normalne",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Duøe",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Du≈ºe",     	MNID_OPTS_FONTS_LARGE
   END
  }
  POPUP "Pomo&c" {
@@ -66,9 +66,9 @@ BEGIN
 		MENUITEM "Drukuj...",             MNID_CTXT_PRINT
 		POPUP    "Czcionka"
 		BEGIN
-			MENUITEM "Ma≥a",          MNID_CTXT_FONTS_SMALL
+			MENUITEM "Ma≈Ça",          MNID_CTXT_FONTS_SMALL
 			MENUITEM "Normalna",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Duøa",          MNID_CTXT_FONTS_LARGE
+			MENUITEM "Du≈ºa",          MNID_CTXT_FONTS_LARGE
 		END
 	END
 END
@@ -76,18 +76,18 @@ END
 STRINGTABLE
 {
 STID_WINE_HELP, 	"Wine - Pomoc"
-STID_WHERROR, 		"B£•D"
-STID_WARNING,  		"OSTRZEØENIE"
+STID_WHERROR, 		"B≈ÅƒÑD"
+STID_WARNING,  		"OSTRZE≈ªENIE"
 STID_INFO,  		"Informacja"
 STID_NOT_IMPLEMENTED, 	"Nie zaimplementowane"
-STID_HLPFILE_ERROR_s, 	"B≥πd w trakcie odczytu pliku pomocy `%s'"
-STID_INDEX, 		"&ZawartoúÊ"
+STID_HLPFILE_ERROR_s, 	"B≈ÇƒÖd w trakcie odczytu pliku pomocy `%s'"
+STID_INDEX, 		"&Zawarto≈õƒá"
 STID_CONTENTS,		"&Szukaj"
 STID_BACK, 		"&Wstecz"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaÊ tego pliku samodzielnie?"
-STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wyúwietlenie pomocy nie jest moøliwe"
+STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaƒá tego pliku samodzielnie?"
+STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wy≈õwietlenie pomocy nie jest mo≈ºliwe"
 STID_PSH_INDEX,		"Tematy pomocy: "
 }
 

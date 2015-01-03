@@ -22,21 +22,21 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
- POPUP "&Файл" {
-  MENUITEM "&Отвори", MNID_FILE_OPEN
+ POPUP "&Р¤Р°Р№Р»" {
+  MENUITEM "&РћС‚РІРѕСЂРё", MNID_FILE_OPEN
   MENUITEM SEPARATOR
-  MENUITEM "&Печат", MNID_FILE_PRINT
-  MENUITEM "&Настройка на принтера...", MNID_FILE_SETUP
+  MENUITEM "&РџРµС‡Р°С‚", MNID_FILE_PRINT
+  MENUITEM "&РќР°СЃС‚СЂРѕР№РєР° РЅР° РїСЂРёРЅС‚РµСЂР°...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Изход", MNID_FILE_EXIT
+  MENUITEM "&РР·С…РѕРґ", MNID_FILE_EXIT
  }
- POPUP "&Редактиране" {
-   MENUITEM "&Копирай...", MNID_EDIT_COPYDLG
+ POPUP "&Р РµРґР°РєС‚РёСЂР°РЅРµ" {
+   MENUITEM "&РљРѕРїРёСЂР°Р№...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Анотирай...", MNID_EDIT_ANNOTATE
+   MENUITEM "&РђРЅРѕС‚РёСЂР°Р№...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Отметки" {
-   MENUITEM "&Задай...", MNID_BKMK_DEFINE
+ POPUP "&РћС‚РјРµС‚РєРё" {
+   MENUITEM "&Р—Р°РґР°Р№...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
   MENUITEM "History",		MNID_OPTS_HISTORY
@@ -47,10 +47,10 @@ MAIN_MENU MENU
     MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
   END
  }
- POPUP "&Помощ" {
-   MENUITEM "Помощ &за помощта", MNID_HELP_HELPON
-   MENUITEM "Винаги от&горе", MNID_HELP_HELPTOP
-   MENUITEM "&Информация...", MNID_HELP_ABOUT
+ POPUP "&РџРѕРјРѕС‰" {
+   MENUITEM "РџРѕРјРѕС‰ &Р·Р° РїРѕРјРѕС‰С‚Р°", MNID_HELP_HELPON
+   MENUITEM "Р’РёРЅР°РіРё РѕС‚&РіРѕСЂРµ", MNID_HELP_HELPTOP
+   MENUITEM "&РРЅС„РѕСЂРјР°С†РёСЏ...", MNID_HELP_ABOUT
  }
 }
 
@@ -72,17 +72,17 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Wine Помощ"
-STID_WHERROR, 		"ГРЕШКА"
-STID_WARNING,  		"ПРЕДУПРЕЖДЕНИЕ"
-STID_INFO,  		"Информация"
-STID_NOT_IMPLEMENTED, 	"Не е реализирано"
-STID_HLPFILE_ERROR_s, 	"Грешка при четене на помощния файл `%s'"
-STID_INDEX, 		"&Съдържание"
+STID_WINE_HELP, 	"Wine РџРѕРјРѕС‰"
+STID_WHERROR, 		"Р“Р Р•РЁРљРђ"
+STID_WARNING,  		"РџР Р•Р”РЈРџР Р•Р–Р”Р•РќРР•"
+STID_INFO,  		"РРЅС„РѕСЂРјР°С†РёСЏ"
+STID_NOT_IMPLEMENTED, 	"РќРµ Рµ СЂРµР°Р»РёР·РёСЂР°РЅРѕ"
+STID_HLPFILE_ERROR_s, 	"Р“СЂРµС€РєР° РїСЂРё С‡РµС‚РµРЅРµ РЅР° РїРѕРјРѕС‰РЅРёСЏ С„Р°Р№Р» `%s'"
+STID_INDEX, 		"&РЎСЉРґСЉСЂР¶Р°РЅРёРµ"
 STID_CONTENTS,		"Summary"
-STID_BACK, 		"&Назад"
-STID_ALL_FILES, 	"Всички файлове (*.*)"
-STID_HELP_FILES_HLP, 	"Помощни файлове (*.hlp)"
+STID_BACK, 		"&РќР°Р·Р°Рґ"
+STID_ALL_FILES, 	"Р’СЃРёС‡РєРё С„Р°Р№Р»РѕРІРµ (*.*)"
+STID_HELP_FILES_HLP, 	"РџРѕРјРѕС‰РЅРё С„Р°Р№Р»РѕРІРµ (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 STID_PSH_INDEX,		"Help topics: "
