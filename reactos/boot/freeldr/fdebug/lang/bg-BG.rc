@@ -3,23 +3,23 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 /* Menu */
 IDC_FDEBUG MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Свързване", IDM_FILE_CONNECT
-        MENUITEM "&Отделяне", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&РЎРІСЉСЂР·РІР°РЅРµ", IDM_FILE_CONNECT
+        MENUITEM "&РћС‚РґРµР»СЏРЅРµ", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Из&чистване на екрана", IDM_FILE_CLEARDISPLAY
+        MENUITEM "РР·&С‡РёСЃС‚РІР°РЅРµ РЅР° РµРєСЂР°РЅР°", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Почване на прихващане", IDM_FILE_STARTCAPTURE
-        MENUITEM "&Край на прихващане", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&РџРѕС‡РІР°РЅРµ РЅР° РїСЂРёС…РІР°С‰Р°РЅРµ", IDM_FILE_STARTCAPTURE
+        MENUITEM "&РљСЂР°Р№ РЅР° РїСЂРёС…РІР°С‰Р°РЅРµ", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Местен кънтеж (echo)", IDM_FILE_LOCALECHO
+        MENUITEM "&РњРµСЃС‚РµРЅ РєСЉРЅС‚РµР¶ (echo)", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход", IDM_EXIT
+        MENUITEM "РР·&С…РѕРґ", IDM_EXIT
     END
-    POPUP "Помо&щ"
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "&За...", IDM_ABOUT
+        MENUITEM "&Р—Р°...", IDM_ABOUT
     END
 END
 
@@ -34,38 +34,38 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "За FreeLoader Debugger"
+CAPTION "Р—Р° FreeLoader Debugger"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
-    DEFPUSHBUTTON "Добре", IDOK, 183, 189, 44, 14, WS_GROUP
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на връзката"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° РІСЂСЉР·РєР°С‚Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Въведете COM извода (нпр. COM1):", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "Р’СЉРІРµРґРµС‚Рµ COM РёР·РІРѕРґР° (РЅРїСЂ. COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Въведете плътността бодове/ сек (нпр. 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "Р’СЉРІРµРґРµС‚Рµ РїР»СЉС‚РЅРѕСЃС‚С‚Р° Р±РѕРґРѕРІРµ/ СЃРµРє (РЅРїСЂ. 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Добре", IDOK, 45, 79, 50, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 100, 79, 50, 14
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 45, 79, 50, 14
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 100, 79, 50, 14
 END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Прихващане на файл"
+CAPTION "РџСЂРёС…РІР°С‰Р°РЅРµ РЅР° С„Р°Р№Р»"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Прихващане на файлово име:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "РџСЂРёС…РІР°С‰Р°РЅРµ РЅР° С„Р°Р№Р»РѕРІРѕ РёРјРµ:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Обзор", IDC_BROWSE, 194, 26, 50, 14
-    DEFPUSHBUTTON "Добре", IDOK, 139, 74, 50, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 194, 74, 50, 14
+    PUSHBUTTON "&РћР±Р·РѕСЂ", IDC_BROWSE, 194, 26, 50, 14
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 139, 74, 50, 14
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 194, 74, 50, 14
 END
 
 /* String Tables */
@@ -73,7 +73,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "fdebug"
-    IDS_HELLO "Здравей, свят!"
+    IDS_HELLO "Р—РґСЂР°РІРµР№, СЃРІСЏС‚!"
     IDC_FDEBUG "FDEBUG"
 END
 

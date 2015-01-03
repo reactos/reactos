@@ -282,7 +282,7 @@ BEGIN
     IDS_ALL_USERS "Alle Gebruikers\\"
     IDS_SEARCH "Zoeken"
     IDS_ABOUT_EXPLORER "&Over Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS "U heeft meer dan één programma geselecteerd.\nWeet u zeker dat u ze allemaal wilt starten?"
+    IDS_LAUNCH_MANY_PROGRAMS "U heeft meer dan Ã©Ã©n programma geselecteerd.\nWeet u zeker dat u ze allemaal wilt starten?"
     IDS_DESKTOPBAR_SETTINGS "Bureaublad instellingen"
     IDS_DESKTOP "Bureaublad"
     IDS_TASKBAR "Taakbalk"

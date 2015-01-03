@@ -12,42 +12,42 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDM_MDIFRAME MENU
 BEGIN
-    POPUP "&S˙bor"
+    POPUP "&S√∫bor"
     BEGIN
-        MENUITEM "&Spustiù...", ID_EXECUTE
+        MENUITEM "&Spusti≈•...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&UkonËiù", ID_FILE_EXIT
+        MENUITEM "&Ukonƒçi≈•", ID_FILE_EXIT
     END
     POPUP "&Zobrazenie"
     BEGIN
-        MENUITEM "&Panel n·strojov", ID_VIEW_TOOL_BAR
+        MENUITEM "&Panel n√°strojov", ID_VIEW_TOOL_BAR
         MENUITEM "&Extra panel", ID_VIEW_EXTRA_BAR
-        MENUITEM "&Liöta diskov", ID_VIEW_DRIVE_BAR
-        MENUITEM "&BoËn˝ panel", ID_VIEW_SIDE_BAR
-        MENUITEM "&Stavov˝ riadok", ID_VIEW_STATUSBAR
+        MENUITEM "&Li≈°ta diskov", ID_VIEW_DRIVE_BAR
+        MENUITEM "&Boƒçn√Ω panel", ID_VIEW_SIDE_BAR
+        MENUITEM "&Stavov√Ω riadok", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Obnoviù\tF5", ID_REFRESH
-        MENUITEM "&Cel· obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Obnovi≈•\tF5", ID_REFRESH
+        MENUITEM "&Cel√° obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "SDI", ID_VIEW_SDI
     END
     POPUP "&Okno"
     BEGIN
-        MENUITEM "&NovÈ okno", ID_WINDOW_NEW
-        MENUITEM "&Kask·da\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "&Nov√© okno", ID_WINDOW_NEW
+        MENUITEM "&Kask√°da\tShift+F5", ID_WINDOW_CASCADE
         MENUITEM "&Pod seba", ID_WINDOW_TILE_HORZ
-        MENUITEM "&Vedæa seba\tShift+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "Usporiadaù &automaticky", ID_WINDOW_AUTOSORT
-        MENUITEM "Usporiadaù &symboly", ID_WINDOW_ARRANGE
+        MENUITEM "&Vedƒæa seba\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Usporiada≈• &automaticky", ID_WINDOW_AUTOSORT
+        MENUITEM "Usporiada≈• &symboly", ID_WINDOW_ARRANGE
     END
-    POPUP "&N·stroje"
+    POPUP "&N√°stroje"
     BEGIN
-        MENUITEM "&Moûnosti", ID_TOOLS_OPTIONS
+        MENUITEM "&Mo≈ænosti", ID_TOOLS_OPTIONS
     END
-    POPUP "&PomocnÌk"
+    POPUP "&Pomocn√≠k"
     BEGIN
-        MENUITEM "&FAQ ku PrieskumnÌkovi...", ID_EXPLORER_FAQ
-        MENUITEM "&»o je PrieskumnÌk...", ID_ABOUT_EXPLORER
-        MENUITEM "»&o je operaËn˝ systÈm...", ID_ABOUT_WINDOWS
+        MENUITEM "&FAQ ku Prieskumn√≠kovi...", ID_EXPLORER_FAQ
+        MENUITEM "&ƒåo je Prieskumn√≠k...", ID_ABOUT_EXPLORER
+        MENUITEM "ƒå&o je operaƒçn√Ω syst√©m...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -56,9 +56,9 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Nastavenia...", ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Spr·vca ˙loh...", ID_TASKMGR
+        MENUITEM "&Spr√°vca √∫loh...", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "»&o je PrieskumnÌk...", ID_ABOUT_EXPLORER
+        MENUITEM "ƒå&o je Prieskumn√≠k...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -66,8 +66,8 @@ IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "O&tvoriù ovl·danie hlasitosti", ID_TRAY_VOLUME
-        MENUITEM "&Upraviù vlastnosti zvuku", ID_VOLUME_PROPERTIES
+        MENUITEM "O&tvori≈• ovl√°danie hlasitosti", ID_TRAY_VOLUME
+        MENUITEM "&Upravi≈• vlastnosti zvuku", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -75,42 +75,42 @@ IDM_NOTIFYAREA MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Zobraziù skrytÈ ikony", ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Zo&braziù ikonu skr˝vania", ID_SHOW_ICON_BUTTON
-        MENUITEM "&PrispÙsobiù oznamovanie...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Upr&aviù d·tum a Ëas", ID_CONFIG_TIME
+        MENUITEM "&Zobrazi≈• skryt√© ikony", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Zo&brazi≈• ikonu skr√Ωvania", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Prisp√¥sobi≈• oznamovanie...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Upr&avi≈• d√°tum a ƒças", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "»&o je PrieskumnÌk...", ID_ABOUT_EXPLORER
+        MENUITEM "ƒå&o je Prieskumn√≠k...", ID_ABOUT_EXPLORER
     END
 END
 
 IDM_SDIFRAME MENU
 BEGIN
-    POPUP "&S˙bor"
+    POPUP "&S√∫bor"
     BEGIN
-        MENUITEM "&Spustiù...", ID_EXECUTE
+        MENUITEM "&Spusti≈•...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&UkonËiù", ID_FILE_EXIT
+        MENUITEM "&Ukonƒçi≈•", ID_FILE_EXIT
     END
     POPUP "&Zobrazenie"
     BEGIN
-        MENUITEM "&Panel n·strojov", ID_VIEW_TOOL_BAR
-        MENUITEM "&BoËn˝ panel", ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Stavov˝ riadok", ID_VIEW_STATUSBAR
+        MENUITEM "&Panel n√°strojov", ID_VIEW_TOOL_BAR
+        MENUITEM "&Boƒçn√Ω panel", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Stavov√Ω riadok", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Obnoviù\tF5", ID_REFRESH
-        MENUITEM "&Cel· obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Obnovi≈•\tF5", ID_REFRESH
+        MENUITEM "&Cel√° obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI", ID_VIEW_MDI
     END
-    POPUP "&N·stroje"
+    POPUP "&N√°stroje"
     BEGIN
-        MENUITEM "&Moûnosti", ID_TOOLS_OPTIONS
+        MENUITEM "&Mo≈ænosti", ID_TOOLS_OPTIONS
     END
-    POPUP "&PomocnÌk"
+    POPUP "&Pomocn√≠k"
     BEGIN
-        MENUITEM "&FAQ ku PrieskumnÌkovi...", ID_EXPLORER_FAQ
-        MENUITEM "&»o je PrieskumnÌk...", ID_ABOUT_EXPLORER
-        MENUITEM "»&o je operaËn˝ systÈm...", ID_ABOUT_WINDOWS
+        MENUITEM "&FAQ ku Prieskumn√≠kovi...", ID_EXPLORER_FAQ
+        MENUITEM "&ƒåo je Prieskumn√≠k...", ID_ABOUT_EXPLORER
+        MENUITEM "ƒå&o je operaƒçn√Ω syst√©m...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -118,29 +118,29 @@ END
 
 IDD_EXECUTE DIALOGEX 15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Spustiù"
+CAPTION "Spusti≈•"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
-    CONTROL "&PrÌkaz:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
+    CONTROL "&Pr√≠kaz:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
     EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
     CONTROL "Ako &symbol", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
     DEFPUSHBUTTON "&OK", 1, 158, 6, 47, 14
-    PUSHBUTTON "&Zruöiù", 2, 158, 23, 47, 14
-    PUSHBUTTON "&PomocnÌk", 254, 158, 43, 47, 14
+    PUSHBUTTON "&Zru≈°i≈•", 2, 158, 23, 47, 14
+    PUSHBUTTON "&Pomocn√≠k", 254, 158, 43, 47, 14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Hæadaù program v ponuke ätart"
+CAPTION "Hƒæada≈• program v ponuke ≈†tart"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT "&Filter:", IDC_STATIC, 7, 9, 18, 8
     EDITTEXT IDC_FILTER, 34, 7, 100, 14, ES_AUTOHSCROLL
     CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
-    PUSHBUTTON "&Vyhæadaù", IDC_CHECK_ENTRIES, 143, 7, 50, 14
+    PUSHBUTTON "&Vyhƒæada≈•", IDC_CHECK_ENTRIES, 143, 7, 50, 14
 END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
@@ -148,35 +148,35 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vlastnosti plochy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Vyberte si uprednostÚovan˝ spÙsob zarovnania ikÙn:", IDC_STATIC, 7, 7, 166, 8
-    CONTROL "zæava zhora dole", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
-    CONTROL "zæava zhora vpravo", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
-    CONTROL "zprava zhora væavo", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
+    LTEXT "Vyberte si uprednost≈àovan√Ω sp√¥sob zarovnania ik√¥n:", IDC_STATIC, 7, 7, 166, 8
+    CONTROL "zƒæava zhora dole", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
+    CONTROL "zƒæava zhora vpravo", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
+    CONTROL "zprava zhora vƒæavo", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
     CONTROL "zprava zhora dole", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 25, 46, 44
-    CONTROL "zæava zdola hore", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
-    CONTROL "zæava zdola vpravo", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
-    CONTROL "zprava zdola væavo", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
+    CONTROL "zƒæava zdola hore", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
+    CONTROL "zƒæava zdola vpravo", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
+    CONTROL "zprava zdola vƒæavo", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
     CONTROL "zprava zdola hore", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 73, 46, 44
     CONTROL "po okrajoch dole", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 121, 46, 44
     CONTROL "po okrajoch H/V", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
     CONTROL "dookola", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
     CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 121, 46, 44
-//    CONTROL "Zobraziù ËÌslo &verzie", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 91, 10
+//    CONTROL "Zobrazi≈• ƒç√≠slo &verzie", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 91, 10
 END
 
 IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vlastnosti panela ˙loh"
+CAPTION "Vlastnosti panela √∫loh"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Zobraziù &hodiny", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 65, 10
-    CONTROL "&Skryù neaktÌvne ikony", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
-    PUSHBUTTON "&PrispÙsobiù...", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
+    CONTROL "Zobrazi≈• &hodiny", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 65, 10
+    CONTROL "&Skry≈• neakt√≠vne ikony", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
+    PUSHBUTTON "&Prisp√¥sobi≈•...", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vlastnosti ponuky ätart"
+CAPTION "Vlastnosti ponuky ≈†tart"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -184,51 +184,51 @@ END
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "PrispÙsobenie oznamovacÌch ikÙn"
+CAPTION "Prisp√¥sobenie oznamovac√≠ch ik√¥n"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 194, 31
     LTEXT "&Text popisu:", IDC_LABEL1, 7, 44, 44, 8
     EDITTEXT IDC_NOTIFY_TOOLTIP, 58, 42, 143, 14, ES_AUTOHSCROLL
-    LTEXT "&N·zov okna:", IDC_LABEL2, 7, 63, 44, 8
+    LTEXT "&N√°zov okna:", IDC_LABEL2, 7, 63, 44, 8
     EDITTEXT IDC_NOTIFY_TITLE, 58, 60, 143, 14, ES_AUTOHSCROLL
     LTEXT "&Cesta:", IDC_LABEL3, 7, 81, 43, 8
     EDITTEXT IDC_NOTIFY_MODULE, 58, 78, 143, 14, ES_AUTOHSCROLL
     GROUPBOX "&Zobrazenie", IDC_LABEL4, 7, 96, 157, 28
-    CONTROL "z&obraziù", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 40, 10
-    CONTROL "&skryù", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 66, 108, 29, 10
+    CONTROL "z&obrazi≈•", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 40, 10
+    CONTROL "&skry≈•", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 66, 108, 29, 10
     CONTROL "a&utomaticky", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 105, 108, 55, 10
     ICON "", IDC_PICTURE, 173, 101, 21, 20
-    LTEXT "&Posledn· zmena:", IDC_LABEL6, 7, 128, 40, 18
+    LTEXT "&Posledn√° zmena:", IDC_LABEL6, 7, 128, 40, 18
     EDITTEXT IDC_LAST_CHANGE, 59, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
-    CONTROL "zo&braziù skrytÈ", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 64, 10
+    CONTROL "zo&brazi≈• skryt√©", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 64, 10
     DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
-    PUSHBUTTON "&Zruöiù", IDCANCEL, 151, 153, 50, 14
+    PUSHBUTTON "&Zru≈°i≈•", IDCANCEL, 151, 153, 50, 14
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Vybraù spÙsob zobrazovania okien"
+CAPTION "Vybra≈• sp√¥sob zobrazovania okien"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Vyberte si uprednostÚovanÈ pouûÌvateæskÈ rozhranie:", IDC_STATIC, 7, 7, 160, 8
-    CONTROL "&MDI (Mnoho dokumentovÈ rozhranie)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 130, 10
-    CONTROL "&SDI (Jedno dokumentovÈ rozhranie)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 130, 10
+    LTEXT "Vyberte si uprednost≈àovan√© pou≈æ√≠vateƒæsk√© rozhranie:", IDC_STATIC, 7, 7, 160, 8
+    CONTROL "&MDI (Mnoho dokumentov√© rozhranie)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 130, 10
+    CONTROL "&SDI (Jedno dokumentov√© rozhranie)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 130, 10
     CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
     CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
-    CONTROL "Otv·raù prieËinky v samostatn˝ch &okn·ch", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 138, 10
-    LTEXT "Toto nastavenie sa v bud˙cnosti pouûije ako predvolenÈ pre vöetke okn· PrieskumnÌka.", IDC_STATIC, 7, 111, 174, 22
+    CONTROL "Otv√°ra≈• prieƒçinky v samostatn√Ωch &okn√°ch", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 138, 10
+    LTEXT "Toto nastavenie sa v bud√∫cnosti pou≈æije ako predvolen√© pre v≈°etke okn√° Prieskumn√≠ka.", IDC_STATIC, 7, 111, 174, 22
     DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
-    PUSHBUTTON "&Zruöiù", IDCANCEL, 106, 136, 50, 14
+    PUSHBUTTON "&Zru≈°i≈•", IDCANCEL, 106, 136, 50, 14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "»o je PrieskumnÌk systÈmu ReactOS"
+CAPTION "ƒåo je Prieskumn√≠k syst√©mu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "PrieskumnÌk systÈmu ReactOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "Prieskumn√≠k syst√©mu ReactOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
     LTEXT "Verzia 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
@@ -240,60 +240,60 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "PrieskumnÌk systÈmu ReactOS"
-    IDS_START "ätart"
-    IDS_LOGOFF "Odhl·siù..."
-    IDS_SHUTDOWN "Vypn˙ù..."
-    IDS_RESTART "Reötart..."
-    IDS_LAUNCH "Spustiù..."
-    IDS_START_HELP "PomocnÌk"
-    IDS_SEARCH_FILES "Hæadaù..."
+    IDS_TITLE "Prieskumn√≠k syst√©mu ReactOS"
+    IDS_START "≈†tart"
+    IDS_LOGOFF "Odhl√°si≈•..."
+    IDS_SHUTDOWN "Vypn√∫≈•..."
+    IDS_RESTART "Re≈°tart..."
+    IDS_LAUNCH "Spusti≈•..."
+    IDS_START_HELP "Pomocn√≠k"
+    IDS_SEARCH_FILES "Hƒæada≈•..."
     IDS_DOCUMENTS "Moje dokumenty"
-    IDS_FAVORITES "Obæ˙benÈ poloûky"
+    IDS_FAVORITES "Obƒæ√∫ben√© polo≈æky"
     IDS_PROGRAMS "Programy"
     IDS_SETTINGS "Nastavenia"
-    IDS_EXPLORE "Presk˙maù"
-    IDS_EMPTY "(Pr·zdne)"
-    IDS_RECENT "Ned·vne dokumenty"
-    IDS_ADMIN "Administr·cia"
+    IDS_EXPLORE "Presk√∫ma≈•"
+    IDS_EMPTY "(Pr√°zdne)"
+    IDS_RECENT "Ned√°vne dokumenty"
+    IDS_ADMIN "Administr√°cia"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STARTMENU "Ponuka ätart"
-    IDS_MINIMIZE_ALL "Minimalizovaù vöetke okn·"
-    IDS_DESKTOP_NUM "Pracovn· plocha %d"
-    IDS_VOLUME "Hlasitosù"
-    IDS_ITEMS_CUR "s˙ËasnÈ poloûky"
-    IDS_ITEMS_CONFIGURED "konfigur·cia"
-    IDS_ITEMS_VISIBLE "viditeænÈ"
-    IDS_ITEMS_HIDDEN "skrytÈ"
-    IDS_NOTIFY_SHOW "zobraziù"
-    IDS_NOTIFY_HIDE "skryù"
-    IDS_NOTIFY_AUTOHIDE "skryù automaticky"
-    IDS_SHOW_HIDDEN_ICONS "Zobraziù skrytÈ ikony"
-    IDS_HIDE_ICONS "Skryù ikony"
-    IDS_TERMINATE "UkonËiù PrieskumnÌka systÈmu ReactOS"
+    IDS_STARTMENU "Ponuka ≈†tart"
+    IDS_MINIMIZE_ALL "Minimalizova≈• v≈°etke okn√°"
+    IDS_DESKTOP_NUM "Pracovn√° plocha %d"
+    IDS_VOLUME "Hlasitos≈•"
+    IDS_ITEMS_CUR "s√∫ƒçasn√© polo≈æky"
+    IDS_ITEMS_CONFIGURED "konfigur√°cia"
+    IDS_ITEMS_VISIBLE "viditeƒæn√©"
+    IDS_ITEMS_HIDDEN "skryt√©"
+    IDS_NOTIFY_SHOW "zobrazi≈•"
+    IDS_NOTIFY_HIDE "skry≈•"
+    IDS_NOTIFY_AUTOHIDE "skry≈• automaticky"
+    IDS_SHOW_HIDDEN_ICONS "Zobrazi≈• skryt√© ikony"
+    IDS_HIDE_ICONS "Skry≈• ikony"
+    IDS_TERMINATE "Ukonƒçi≈• Prieskumn√≠ka syst√©mu ReactOS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORK "Sieù"
-    IDS_CONNECTIONS "SieùovÈ pripojenia"
+    IDS_NETWORK "Sie≈•"
+    IDS_CONNECTIONS "Sie≈•ov√© pripojenia"
     IDS_DRIVES "Disky"
-    IDS_SEARCH_COMPUTER "Hæadaù poËÌtaË..."
+    IDS_SEARCH_COMPUTER "Hƒæada≈• poƒç√≠taƒç..."
     IDS_SETTINGS_MENU "Nastavenie"
-    IDS_CONTROL_PANEL "Ovl·dacÌ panel"
-    IDS_PRINTERS "TlaËiarne"
-    IDS_BROWSE "Prech·dzaù s˙bory"
-    IDS_SEARCH_PRG "Hæadaù program..."
+    IDS_CONTROL_PANEL "Ovl√°dac√≠ panel"
+    IDS_PRINTERS "Tlaƒçiarne"
+    IDS_BROWSE "Prech√°dza≈• s√∫bory"
+    IDS_SEARCH_PRG "Hƒæada≈• program..."
     IDS_ALL_USERS "All Users\\"
-    IDS_SEARCH "Hæadaù"
-    IDS_ABOUT_EXPLORER "»&o je PrieskumnÌk..."
-    IDS_LAUNCH_MANY_PROGRAMS "Vybrali Ste viac programov.\nPrajete si ich vöetky spustiù?"
+    IDS_SEARCH "Hƒæada≈•"
+    IDS_ABOUT_EXPLORER "ƒå&o je Prieskumn√≠k..."
+    IDS_LAUNCH_MANY_PROGRAMS "Vybrali Ste viac programov.\nPrajete si ich v≈°etky spusti≈•?"
     IDS_DESKTOPBAR_SETTINGS "Nastavenia plochy"
-    IDS_DESKTOP "Pracovn· plocha"
-    IDS_TASKBAR "Panel ˙loh"
+    IDS_DESKTOP "Pracovn√° plocha"
+    IDS_TASKBAR "Panel √∫loh"
     IDS_NAMECOLUMN "Name"
     IDS_PATHCOLUMN "Path"
     IDS_MENUCOLUMN "Menu path"

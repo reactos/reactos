@@ -116,7 +116,7 @@ BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
     CONTROL "Co&mando:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
     EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL "Como &Símbolo", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
+    CONTROL "Como &SÃ­mbolo", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
     DEFPUSHBUTTON "&OK", 1, 158, 6, 47, 14
     PUSHBUTTON "&Cancelar", 2, 158, 23, 47, 14
     PUSHBUTTON "&Ajuda", 254, 158, 43, 47, 14
@@ -234,7 +234,7 @@ STRINGTABLE
 BEGIN
     IDS_TITLE "Explorador do ReactOS"
     IDS_START "Iniciar"
-    IDS_LOGOFF "Terminar sessão..."
+    IDS_LOGOFF "Terminar sessÃ£o..."
     IDS_SHUTDOWN "Desligar..."
     IDS_RESTART "Restart..."
     IDS_LAUNCH "Executar..."
@@ -243,7 +243,7 @@ BEGIN
     IDS_DOCUMENTS "Documentos"
     IDS_FAVORITES "Favoritos"
     IDS_PROGRAMS "Programas"
-    IDS_SETTINGS "Definições"
+    IDS_SETTINGS "DefiniÃ§Ãµes"
     IDS_EXPLORE "Explorar"
     IDS_EMPTY "(Vazio)"
     IDS_RECENT "Documentos recentes"
@@ -271,10 +271,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_NETWORK "Rede"
-    IDS_CONNECTIONS "Conecções da rede"
+    IDS_CONNECTIONS "ConecÃ§Ãµes da rede"
     IDS_DRIVES "Drives"
     IDS_SEARCH_COMPUTER "Procurar computador..."
-    IDS_SETTINGS_MENU "Menu das definições"
+    IDS_SETTINGS_MENU "Menu das definiÃ§Ãµes"
     IDS_CONTROL_PANEL "Painel de controle"
     IDS_PRINTERS "Impressora"
     IDS_BROWSE "Vasculhar Ficheiros"

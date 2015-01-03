@@ -59,7 +59,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "Apri Controllo volume", ID_TRAY_VOLUME
-        MENUITEM "Regola Propriet‡ Audio", ID_VOLUME_PROPERTIES
+        MENUITEM "Regola Propriet√† Audio", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -140,7 +140,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Impostazioni desktop"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Seleziona la modalit‡ di allineamento delle icone che preferisci:", IDC_STATIC, 7, 7, 166, 8
+    LTEXT "Seleziona la modalit√† di allineamento delle icone che preferisci:", IDC_STATIC, 7, 7, 166, 8
     CONTROL "left/top dwn", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
     CONTROL "left/top right", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
     CONTROL "right/top left", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
@@ -186,7 +186,7 @@ BEGIN
     EDITTEXT IDC_NOTIFY_TITLE, 58, 60, 143, 14, ES_AUTOHSCROLL
     LTEXT "Percorso del modulo:", IDC_LABEL3, 7, 81, 43, 8
     EDITTEXT IDC_NOTIFY_MODULE, 58, 78, 143, 14, ES_AUTOHSCROLL
-    GROUPBOX "&Modalit‡ di visualizzazione", IDC_LABEL4, 7, 96, 157, 28
+    GROUPBOX "&Modalit√† di visualizzazione", IDC_LABEL4, 7, 96, 157, 28
     CONTROL "&visualizza", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 108, 33, 10
     CONTROL "&nascondi", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 66, 108, 29, 10
     CONTROL "nascondi &automaticamente", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 112, 108, 43, 10
@@ -204,7 +204,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Seleziona aspetto di Explorer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Seleziona la modalit‡ di explorer:", IDC_STATIC, 7, 7, 160, 8
+    LTEXT "Seleziona la modalit√† di explorer:", IDC_STATIC, 7, 7, 160, 8
     CONTROL "&MDI (Interfaccia a documenti multipli)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 124, 10
     CONTROL "&SDI (Interfaccia a documento singolo)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
     CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
@@ -282,7 +282,7 @@ BEGIN
     IDS_ALL_USERS "Tutti gli utenti\\"
     IDS_SEARCH "Cerca"
     IDS_ABOUT_EXPLORER "&Informazioni su Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS "Hai selezionato pi˘ di un programma.\nSei sicuro di volerli eseguire tutti?"
+    IDS_LAUNCH_MANY_PROGRAMS "Hai selezionato pi√π di un programma.\nSei sicuro di volerli eseguire tutti?"
     IDS_DESKTOPBAR_SETTINGS "Impostazioni del Desktop"
     IDS_DESKTOP "Desktop"
     IDS_TASKBAR "Taskbar"

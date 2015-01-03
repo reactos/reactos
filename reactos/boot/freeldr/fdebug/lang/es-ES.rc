@@ -47,12 +47,12 @@ END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Opciones de Conexión"
+CAPTION "Opciones de ConexiÃ³n"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Introduzca el puerto COM (p.e. COM1):", IDC_STATIC, 7, 7, 150, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Introduzca la velocidad de transmisión (p.e. 115200):", IDC_STATIC, 7, 38, 185, 8
+    LTEXT "Introduzca la velocidad de transmisiÃ³n (p.e. 115200):", IDC_STATIC, 7, 38, 185, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Aceptar", IDOK, 45, 79, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 100, 79, 50, 14

@@ -18,7 +18,8 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
+/* UTF-8 */
+#pragma code_page(65001)
 #endif //_WIN32
 
 #define DRIVER_VERSION         1,2,0,4
@@ -52,7 +53,7 @@ BEGIN
             VALUE "FileDescription",  DRIVER_NAME "\0"
             VALUE "FileVersion",      DRIVER_VERSION_STRING "\0"
             VALUE "InternalName",     "vmscsi.sys" "\0"
-            VALUE "LegalCopyright",   "Copyright © 1998-2004 VMware, Inc." "\0"
+            VALUE "LegalCopyright",   "Copyright Â© 1998-2004 VMware, Inc." "\0"
             VALUE "OriginalFilename", "vmscsi.sys" "\0"
             VALUE "ProductName",      DRIVER_NAME "\0"
             VALUE "ProductVersion",   DRIVER_VERSION_STRING "\0"

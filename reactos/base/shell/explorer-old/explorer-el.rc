@@ -4,42 +4,42 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDM_MDIFRAME MENU
 BEGIN
-    POPUP "&Αρχείο"
+    POPUP "&Ξ‘ΟΟ‡ΞµΞ―ΞΏ"
     BEGIN
-        MENUITEM "&Εκτέλεση...", ID_EXECUTE
+        MENUITEM "&Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ·...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος", ID_FILE_EXIT
+        MENUITEM "Ξ&ΞΎΞΏΞ΄ΞΏΟ‚", ID_FILE_EXIT
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·"
     BEGIN
-        MENUITEM "Γ&ραμμή εργαλείων", ID_VIEW_TOOL_BAR
-        MENUITEM "&Επιπλέον γραμμή", ID_VIEW_EXTRA_BAR
-        MENUITEM "&Γραμμή δίσκων", ID_VIEW_DRIVE_BAR
-        MENUITEM "Α&γαπημένα", ID_VIEW_SIDE_BAR
-        MENUITEM "&Γραμμή κατάστασης", ID_VIEW_STATUSBAR
+        MENUITEM "Ξ“&ΟΞ±ΞΌΞΌΞ® ΞµΟΞ³Ξ±Ξ»ΞµΞ―Ο‰Ξ½", ID_VIEW_TOOL_BAR
+        MENUITEM "&Ξ•Ο€ΞΉΟ€Ξ»Ξ­ΞΏΞ½ Ξ³ΟΞ±ΞΌΞΌΞ®", ID_VIEW_EXTRA_BAR
+        MENUITEM "&Ξ“ΟΞ±ΞΌΞΌΞ® Ξ΄Ξ―ΟƒΞΊΟ‰Ξ½", ID_VIEW_DRIVE_BAR
+        MENUITEM "Ξ‘&Ξ³Ξ±Ο€Ξ·ΞΌΞ­Ξ½Ξ±", ID_VIEW_SIDE_BAR
+        MENUITEM "&Ξ“ΟΞ±ΞΌΞΌΞ® ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·Ο‚", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Ανανέωση\tF5", ID_REFRESH
-        MENUITEM "Π&λήρης Οθόνη\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Ξ‘Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ·\tF5", ID_REFRESH
+        MENUITEM "Ξ &Ξ»Ξ®ΟΞ·Ο‚ ΞΞΈΟΞ½Ξ·\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "SDI", ID_VIEW_SDI
     END
-    POPUP "&Παράθυρο"
+    POPUP "&Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ"
     BEGIN
-        MENUITEM "Νέο &Παράθυρο", ID_WINDOW_NEW
-        MENUITEM "Τακτοποίηση\tShift+F5", ID_WINDOW_CASCADE
-        MENUITEM "Τακτοποίηση Κα&τακόρυφα", ID_WINDOW_TILE_HORZ
-        MENUITEM "Τακτοποίηση Κά&θετα\tShift+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "Αυτόματη Τακτοποίηση", ID_WINDOW_AUTOSORT
-        MENUITEM "Τακτοποίηση &εικονιδίων", ID_WINDOW_ARRANGE
+        MENUITEM "ΞΞ­ΞΏ &Ξ Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ", ID_WINDOW_NEW
+        MENUITEM "Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞΞ±&Ο„Ξ±ΞΊΟΟΟ…Ο†Ξ±", ID_WINDOW_TILE_HORZ
+        MENUITEM "Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΞΞ¬&ΞΈΞµΟ„Ξ±\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Ξ‘Ο…Ο„ΟΞΌΞ±Ο„Ξ· Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·", ID_WINDOW_AUTOSORT
+        MENUITEM "Ξ¤Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· &ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½", ID_WINDOW_ARRANGE
     END
-    POPUP "&Εργαλεία"
+    POPUP "&Ξ•ΟΞ³Ξ±Ξ»ΞµΞ―Ξ±"
     BEGIN
-        MENUITEM "&Επιλογές", ID_TOOLS_OPTIONS
+        MENUITEM "&Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚", ID_TOOLS_OPTIONS
     END
-    POPUP "&Βοήθεια"
+    POPUP "&Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
     BEGIN
-        MENUITEM "Εξερεύνηση &FAQ...", ID_EXPLORER_FAQ
-        MENUITEM "&Σχετικά με τον εξερευνητή", ID_ABOUT_EXPLORER
-        MENUITEM "&Σχετικά με το ReactOS", ID_ABOUT_WINDOWS
+        MENUITEM "Ξ•ΞΎΞµΟΞµΟΞ½Ξ·ΟƒΞ· &FAQ...", ID_EXPLORER_FAQ
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏΞ½ ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®", ID_ABOUT_EXPLORER
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏ ReactOS", ID_ABOUT_WINDOWS
     END
 END
 
@@ -47,10 +47,10 @@ IDM_DESKTOPBAR MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Ρυθμίσεις...", ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Διαχείρηση Εργασιών", ID_TASKMGR
+        MENUITEM "&Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚...", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞ·ΟƒΞ· Ξ•ΟΞ³Ξ±ΟƒΞΉΟΞ½", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Σχετικά με τον εξερευνητή", ID_ABOUT_EXPLORER
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏΞ½ ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®", ID_ABOUT_EXPLORER
     END
 END
 
@@ -58,8 +58,8 @@ IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Άνοιγμα της ρύθμισης έντασης ήχου", ID_TRAY_VOLUME
-        MENUITEM "Διόρθωση ιδιοτήτων ήχου", ID_VOLUME_PROPERTIES
+        MENUITEM "Ξ†Ξ½ΞΏΞΉΞ³ΞΌΞ± Ο„Ξ·Ο‚ ΟΟΞΈΞΌΞΉΟƒΞ·Ο‚ Ξ­Ξ½Ο„Ξ±ΟƒΞ·Ο‚ Ξ®Ο‡ΞΏΟ…", ID_TRAY_VOLUME
+        MENUITEM "Ξ”ΞΉΟΟΞΈΟ‰ΟƒΞ· ΞΉΞ΄ΞΉΞΏΟ„Ξ®Ο„Ο‰Ξ½ Ξ®Ο‡ΞΏΟ…", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -67,42 +67,42 @@ IDM_NOTIFYAREA MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Εμφάνηση κρυμμένων εικονιδίων", ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Πλήκτρο εμφάνησης εικονιδίων", ID_SHOW_ICON_BUTTON
-        MENUITEM "Ρυθμίσεις ειδοποιήσεων", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Ρύθμιση ημερομηνίας/&ώρας", ID_CONFIG_TIME
+        MENUITEM "&Ξ•ΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ· ΞΊΟΟ…ΞΌΞΌΞ­Ξ½Ο‰Ξ½ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Ξ Ξ»Ξ®ΞΊΟ„ΟΞΏ ΞµΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ·Ο‚ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½", ID_SHOW_ICON_BUTTON
+        MENUITEM "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ ΞµΞΉΞ΄ΞΏΟ€ΞΏΞΉΞ®ΟƒΞµΟ‰Ξ½", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Ξ΅ΟΞΈΞΌΞΉΟƒΞ· Ξ·ΞΌΞµΟΞΏΞΌΞ·Ξ½Ξ―Ξ±Ο‚/&ΟΟΞ±Ο‚", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Σχετικά με το εξερευνητή", ID_ABOUT_EXPLORER
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏ ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®", ID_ABOUT_EXPLORER
     END
 END
 
 IDM_SDIFRAME MENU
 BEGIN
-    POPUP "&Αρχείο"
+    POPUP "&Ξ‘ΟΟ‡ΞµΞ―ΞΏ"
     BEGIN
-        MENUITEM "&Εκτέλεση...", ID_EXECUTE
+        MENUITEM "&Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ·...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "Έ&ξοδος", ID_FILE_EXIT
+        MENUITEM "Ξ&ΞΎΞΏΞ΄ΞΏΟ‚", ID_FILE_EXIT
     END
-    POPUP "&Εμφάνιση"
+    POPUP "&Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·"
     BEGIN
-        MENUITEM "Γ&ραμμή εργαλείων", ID_VIEW_TOOL_BAR
-        MENUITEM "Α&γαπημένα", ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Γραμμή κατάστασης", ID_VIEW_STATUSBAR
+        MENUITEM "Ξ“&ΟΞ±ΞΌΞΌΞ® ΞµΟΞ³Ξ±Ξ»ΞµΞ―Ο‰Ξ½", ID_VIEW_TOOL_BAR
+        MENUITEM "Ξ‘&Ξ³Ξ±Ο€Ξ·ΞΌΞ­Ξ½Ξ±", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Ξ“ΟΞ±ΞΌΞΌΞ® ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ·Ο‚", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Ανανέωση\tF5", ID_REFRESH
-        MENUITEM "Π&λήρης οθόνη", ID_VIEW_FULLSCREEN
+        MENUITEM "&Ξ‘Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ·\tF5", ID_REFRESH
+        MENUITEM "Ξ &Ξ»Ξ®ΟΞ·Ο‚ ΞΏΞΈΟΞ½Ξ·", ID_VIEW_FULLSCREEN
         MENUITEM "MDI", ID_VIEW_MDI
     END
-    POPUP "&Εργαλεία"
+    POPUP "&Ξ•ΟΞ³Ξ±Ξ»ΞµΞ―Ξ±"
     BEGIN
-        MENUITEM "&Επιλογές", ID_TOOLS_OPTIONS
+        MENUITEM "&Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚", ID_TOOLS_OPTIONS
     END
-    POPUP "Βοήθεια"
+    POPUP "Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
     BEGIN
-        MENUITEM "Εξερεύνηση &FAQ", ID_EXPLORER_FAQ
-        MENUITEM "&Σχετικά με τον εξερευνητή", ID_ABOUT_EXPLORER
-        MENUITEM "&Σχετικά με το ReactOS", ID_ABOUT_WINDOWS
+        MENUITEM "Ξ•ΞΎΞµΟΞµΟΞ½Ξ·ΟƒΞ· &FAQ", ID_EXPLORER_FAQ
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏΞ½ ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®", ID_ABOUT_EXPLORER
+        MENUITEM "&Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏ ReactOS", ID_ABOUT_WINDOWS
     END
 END
 
@@ -110,65 +110,65 @@ END
 
 IDD_EXECUTE DIALOGEX 15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Εκτέλεση"
+CAPTION "Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ·"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
-    CONTROL "Άνοιγμα:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 58, 10
+    CONTROL "Ξ†Ξ½ΞΏΞΉΞ³ΞΌΞ±:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 58, 10
     EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL "Ώς σύμβολο", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
+    CONTROL "ΞΟ‚ ΟƒΟΞΌΞ²ΞΏΞ»ΞΏ", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
     DEFPUSHBUTTON "&OK", 1, 158, 6, 47, 14
-    PUSHBUTTON "&Ακύρωση", 2, 158, 24, 47, 14
-    PUSHBUTTON "&Βοήθεια", 254, 158, 43, 47, 14
+    PUSHBUTTON "&Ξ‘ΞΊΟΟΟ‰ΟƒΞ·", 2, 158, 24, 47, 14
+    PUSHBUTTON "&Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±", 254, 158, 43, 47, 14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Αναζήτηση στο μενού ""έναρξη"""
+CAPTION "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ· ΟƒΟ„ΞΏ ΞΌΞµΞ½ΞΏΟ ""Ξ­Ξ½Ξ±ΟΞΎΞ·"""
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "&Φίλτρο:", IDC_STATIC, 4, 9, 27, 8
+    LTEXT "&Ξ¦Ξ―Ξ»Ο„ΟΞΏ:", IDC_STATIC, 4, 9, 27, 8
     EDITTEXT IDC_FILTER, 34, 7, 100, 14, ES_AUTOHSCROLL
     CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
-    PUSHBUTTON "&Αναζήτηση", IDC_CHECK_ENTRIES, 143, 7, 50, 14
+    PUSHBUTTON "&Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·", IDC_CHECK_ENTRIES, 143, 7, 50, 14
 END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ιδιότητες επιφάνειας εργασίας"
+CAPTION "Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚ ΞµΟ€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ±Ο‚ ΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Επιλέξτε τον τρόπο τακτοποίηση  των εικονιδίων:", IDC_STATIC, 7, 7, 198, 8
-    CONTROL "κάτω", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
-    CONTROL "δεξιά", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
-    CONTROL "αριστερά", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
-    CONTROL "κάτω", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 25, 46, 44
-    CONTROL "πάνω", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
-    CONTROL "δεξιά", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
-    CONTROL "αριστερά", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
-    CONTROL "πάνω", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 73, 46, 44
-    CONTROL "κάτων", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 121, 46, 44
-    CONTROL "πλαίσιο", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
-    CONTROL "γύρω γύρω", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
+    LTEXT "Ξ•Ο€ΞΉΞ»Ξ­ΞΎΟ„Ξµ Ο„ΞΏΞ½ Ο„ΟΟΟ€ΞΏ Ο„Ξ±ΞΊΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ·  Ο„Ο‰Ξ½ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½:", IDC_STATIC, 7, 7, 198, 8
+    CONTROL "ΞΊΞ¬Ο„Ο‰", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
+    CONTROL "Ξ΄ΞµΞΎΞΉΞ¬", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
+    CONTROL "Ξ±ΟΞΉΟƒΟ„ΞµΟΞ¬", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
+    CONTROL "ΞΊΞ¬Ο„Ο‰", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 25, 46, 44
+    CONTROL "Ο€Ξ¬Ξ½Ο‰", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 73, 46, 44
+    CONTROL "Ξ΄ΞµΞΎΞΉΞ¬", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 73, 46, 44
+    CONTROL "Ξ±ΟΞΉΟƒΟ„ΞµΟΞ¬", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 73, 46, 44
+    CONTROL "Ο€Ξ¬Ξ½Ο‰", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 73, 46, 44
+    CONTROL "ΞΊΞ¬Ο„Ο‰Ξ½", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 121, 46, 44
+    CONTROL "Ο€Ξ»Ξ±Ξ―ΟƒΞΉΞΏ", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
+    CONTROL "Ξ³ΟΟΟ‰ Ξ³ΟΟΟ‰", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
     CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 121, 46, 44
 //    CONTROL "Display &Version Number", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 91, 10
 END
 
 IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ιδιότητες γραμμής εργασιών"
+CAPTION "Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚ Ξ³ΟΞ±ΞΌΞΌΞ®Ο‚ ΞµΟΞ³Ξ±ΟƒΞΉΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Εμφάνηση του &ρολογιού", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 96, 10
-    CONTROL "&Απόκρυψη αενεργών εικονιδίων", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 122, 10
-    PUSHBUTTON "&Προσαρμογή...", ID_CONFIG_NOTIFYAREA, 147, 173, 56, 14
+    CONTROL "Ξ•ΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ· Ο„ΞΏΟ… &ΟΞΏΞ»ΞΏΞ³ΞΉΞΏΟ", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 96, 10
+    CONTROL "&Ξ‘Ο€ΟΞΊΟΟ…ΟΞ· Ξ±ΞµΞ½ΞµΟΞ³ΟΞ½ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 122, 10
+    PUSHBUTTON "&Ξ ΟΞΏΟƒΞ±ΟΞΌΞΏΞ³Ξ®...", ID_CONFIG_NOTIFYAREA, 147, 173, 56, 14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ιδιότητες του μενού ""έναρξη"""
+CAPTION "Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚ Ο„ΞΏΟ… ΞΌΞµΞ½ΞΏΟ ""Ξ­Ξ½Ξ±ΟΞΎΞ·"""
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -176,51 +176,51 @@ END
 IDD_NOTIFYAREA DIALOGEX 0, 0, 218, 174
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Ρυθμίσεις για τον χώρο ειδοποιήσεων"
+CAPTION "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ Ξ³ΞΉΞ± Ο„ΞΏΞ½ Ο‡ΟΟΞΏ ΞµΞΉΞ΄ΞΏΟ€ΞΏΞΉΞ®ΟƒΞµΟ‰Ξ½"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 202, 31
-    LTEXT "&Βοηθητικό κείμενο :", IDC_LABEL1, 7, 44, 66, 8
+    LTEXT "&Ξ’ΞΏΞ·ΞΈΞ·Ο„ΞΉΞΊΟ ΞΊΞµΞ―ΞΌΞµΞ½ΞΏ :", IDC_LABEL1, 7, 44, 66, 8
     EDITTEXT IDC_NOTIFY_TOOLTIP, 76, 42, 133, 14, ES_AUTOHSCROLL
-    LTEXT "&Όνομα παραθύρου :", IDC_LABEL2, 7, 63, 67, 8
+    LTEXT "&ΞΞ½ΞΏΞΌΞ± Ο€Ξ±ΟΞ±ΞΈΟΟΞΏΟ… :", IDC_LABEL2, 7, 63, 67, 8
     EDITTEXT IDC_NOTIFY_TITLE, 76, 60, 133, 14, ES_AUTOHSCROLL
-    LTEXT "&Διαδρομή αρχείου :", IDC_LABEL3, 7, 81, 65, 8
+    LTEXT "&Ξ”ΞΉΞ±Ξ΄ΟΞΏΞΌΞ® Ξ±ΟΟ‡ΞµΞ―ΞΏΟ… :", IDC_LABEL3, 7, 81, 65, 8
     EDITTEXT IDC_NOTIFY_MODULE, 76, 78, 133, 14, ES_AUTOHSCROLL
-    GROUPBOX "Τρόπος εμφάνησης", IDC_LABEL4, 7, 96, 169, 31
-    CONTROL "&εμφάνηση", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 14, 108, 51, 10
-    CONTROL "&απόκριψη", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 67, 108, 47, 10
-    CONTROL "α&υτόματη απόκριψη", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 118, 104, 56, 19
+    GROUPBOX "Ξ¤ΟΟΟ€ΞΏΟ‚ ΞµΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ·Ο‚", IDC_LABEL4, 7, 96, 169, 31
+    CONTROL "&ΞµΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ·", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 14, 108, 51, 10
+    CONTROL "&Ξ±Ο€ΟΞΊΟΞΉΟΞ·", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 67, 108, 47, 10
+    CONTROL "Ξ±&Ο…Ο„ΟΞΌΞ±Ο„Ξ· Ξ±Ο€ΟΞΊΟΞΉΟΞ·", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 118, 104, 56, 19
     ICON "", IDC_PICTURE, 184, 103, 20, 20
-    LTEXT "Τελευταία αλαγή :", IDC_LABEL6, 7, 134, 62, 8
+    LTEXT "Ξ¤ΞµΞ»ΞµΟ…Ο„Ξ±Ξ―Ξ± Ξ±Ξ»Ξ±Ξ³Ξ® :", IDC_LABEL6, 7, 134, 62, 8
     EDITTEXT IDC_LAST_CHANGE, 71, 132, 105, 14, ES_AUTOHSCROLL | ES_READONLY
-    CONTROL "εμφάνηση κρυφών", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 155, 79, 10
+    CONTROL "ΞµΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ· ΞΊΟΟ…Ο†ΟΞ½", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 155, 79, 10
     DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
-    PUSHBUTTON "&Άκυρο", IDCANCEL, 151, 153, 50, 14
+    PUSHBUTTON "&Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 151, 153, 50, 14
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Μορφή του εξερευνητή"
+CAPTION "ΞΞΏΟΟ†Ξ® Ο„ΞΏΟ… ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Επιλέξτε την μορφή του εξερευνητή που θέλετε :", IDC_STATIC, 7, 7, 166, 8
-    CONTROL "&MDI (Μορφή πολλαπλών παραθύρων)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 137, 10
-    CONTROL "&SDI (Μορφή μονού παραθύρου)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
+    LTEXT "Ξ•Ο€ΞΉΞ»Ξ­ΞΎΟ„Ξµ Ο„Ξ·Ξ½ ΞΌΞΏΟΟ†Ξ® Ο„ΞΏΟ… ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ® Ο€ΞΏΟ… ΞΈΞ­Ξ»ΞµΟ„Ξµ :", IDC_STATIC, 7, 7, 166, 8
+    CONTROL "&MDI (ΞΞΏΟΟ†Ξ® Ο€ΞΏΞ»Ξ»Ξ±Ο€Ξ»ΟΞ½ Ο€Ξ±ΟΞ±ΞΈΟΟΟ‰Ξ½)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 137, 10
+    CONTROL "&SDI (ΞΞΏΟΟ†Ξ® ΞΌΞΏΞ½ΞΏΟ Ο€Ξ±ΟΞ±ΞΈΟΟΞΏΟ…)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
     CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
     CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
-    CONTROL "Άνοιγμα υποφακέλων σε ξεχωριστά παράθυρα", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 172, 10
-    LTEXT "Αυτές οι ρυθμίσεις θα χρησιμοποιούνται αυτόματα για όλα τα παράθυρα του εξερευνητή στο μέλλον", IDC_STATIC, 5, 108, 174, 22
+    CONTROL "Ξ†Ξ½ΞΏΞΉΞ³ΞΌΞ± Ο…Ο€ΞΏΟ†Ξ±ΞΊΞ­Ξ»Ο‰Ξ½ ΟƒΞµ ΞΎΞµΟ‡Ο‰ΟΞΉΟƒΟ„Ξ¬ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ±", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 172, 10
+    LTEXT "Ξ‘Ο…Ο„Ξ­Ο‚ ΞΏΞΉ ΟΟ…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ ΞΈΞ± Ο‡ΟΞ·ΟƒΞΉΞΌΞΏΟ€ΞΏΞΉΞΏΟΞ½Ο„Ξ±ΞΉ Ξ±Ο…Ο„ΟΞΌΞ±Ο„Ξ± Ξ³ΞΉΞ± ΟΞ»Ξ± Ο„Ξ± Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞ± Ο„ΞΏΟ… ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ® ΟƒΟ„ΞΏ ΞΌΞ­Ξ»Ξ»ΞΏΞ½", IDC_STATIC, 5, 108, 174, 22
     DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
-    PUSHBUTTON "&Άκυρο", IDCANCEL, 106, 136, 50, 14
+    PUSHBUTTON "&Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 106, 136, 50, 14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Σχετικά με τον εξρευνητή του  ReactOS"
+CAPTION "Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏΞ½ ΞµΞΎΟΞµΟ…Ξ½Ξ·Ο„Ξ® Ο„ΞΏΟ…  ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Εξερευνητής του ReactOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "Ξ•ΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®Ο‚ Ο„ΞΏΟ… ReactOS", IDC_ROS_EXPLORER, 91, 13, 104, 11
     LTEXT "V 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
@@ -232,60 +232,60 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "Εξερευνητής του ReactOS"
-    IDS_START "έναρξη"
-    IDS_LOGOFF "Αποσύνδεση..."
-    IDS_SHUTDOWN "Τερματισμός..."
-    IDS_RESTART "Επανεκκίνηση..."
-    IDS_LAUNCH "Εκτέλεση..."
-    IDS_START_HELP "Βοήθεια"
-    IDS_SEARCH_FILES "Αναζήτηση..."
-    IDS_DOCUMENTS "Τα έγγραφά μου"
-    IDS_FAVORITES "Αγαπημένα"
-    IDS_PROGRAMS "Προγράμματα"
-    IDS_SETTINGS "Ρυθμίσεις"
-    IDS_EXPLORE "Εξερεύνηση"
-    IDS_EMPTY "(Κενό)"
-    IDS_RECENT "Πρόσφατα έγγραφα"
-    IDS_ADMIN "Διαχείρηση"
+    IDS_TITLE "Ξ•ΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®Ο‚ Ο„ΞΏΟ… ReactOS"
+    IDS_START "Ξ­Ξ½Ξ±ΟΞΎΞ·"
+    IDS_LOGOFF "Ξ‘Ο€ΞΏΟƒΟΞ½Ξ΄ΞµΟƒΞ·..."
+    IDS_SHUTDOWN "Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚..."
+    IDS_RESTART "Ξ•Ο€Ξ±Ξ½ΞµΞΊΞΊΞ―Ξ½Ξ·ΟƒΞ·..."
+    IDS_LAUNCH "Ξ•ΞΊΟ„Ξ­Ξ»ΞµΟƒΞ·..."
+    IDS_START_HELP "Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±"
+    IDS_SEARCH_FILES "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·..."
+    IDS_DOCUMENTS "Ξ¤Ξ± Ξ­Ξ³Ξ³ΟΞ±Ο†Ξ¬ ΞΌΞΏΟ…"
+    IDS_FAVORITES "Ξ‘Ξ³Ξ±Ο€Ξ·ΞΌΞ­Ξ½Ξ±"
+    IDS_PROGRAMS "Ξ ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„Ξ±"
+    IDS_SETTINGS "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚"
+    IDS_EXPLORE "Ξ•ΞΎΞµΟΞµΟΞ½Ξ·ΟƒΞ·"
+    IDS_EMPTY "(ΞΞµΞ½Ο)"
+    IDS_RECENT "Ξ ΟΟΟƒΟ†Ξ±Ο„Ξ± Ξ­Ξ³Ξ³ΟΞ±Ο†Ξ±"
+    IDS_ADMIN "Ξ”ΞΉΞ±Ο‡ΞµΞ―ΟΞ·ΟƒΞ·"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STARTMENU "Μενού έναρξη"
-    IDS_MINIMIZE_ALL "Ελαχιστοποίηση όλων των παραθύρων"
-    IDS_DESKTOP_NUM "Επιφάνεια εργασίας %d"
-    IDS_VOLUME "Ένταση ήχου"
+    IDS_STARTMENU "ΞΞµΞ½ΞΏΟ Ξ­Ξ½Ξ±ΟΞΎΞ·"
+    IDS_MINIMIZE_ALL "Ξ•Ξ»Ξ±Ο‡ΞΉΟƒΟ„ΞΏΟ€ΞΏΞ―Ξ·ΟƒΞ· ΟΞ»Ο‰Ξ½ Ο„Ο‰Ξ½ Ο€Ξ±ΟΞ±ΞΈΟΟΟ‰Ξ½"
+    IDS_DESKTOP_NUM "Ξ•Ο€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ± ΞµΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚ %d"
+    IDS_VOLUME "ΞΞ½Ο„Ξ±ΟƒΞ· Ξ®Ο‡ΞΏΟ…"
     IDS_ITEMS_CUR "current items"
     IDS_ITEMS_CONFIGURED "configuration"
-    IDS_ITEMS_VISIBLE "ορατό"
-    IDS_ITEMS_HIDDEN "κρυμμένο"
-    IDS_NOTIFY_SHOW "εμφάνηση"
-    IDS_NOTIFY_HIDE "απόκρυψη"
-    IDS_NOTIFY_AUTOHIDE "αυτόματη απόκρυψη"
-    IDS_SHOW_HIDDEN_ICONS "Εμφάνηση κρυμμένων εικονιδίων"
-    IDS_HIDE_ICONS "Απόκρυψη εικονιδίων"
-    IDS_TERMINATE "Τερματισμός της Εξερεύνησης του ROS"
+    IDS_ITEMS_VISIBLE "ΞΏΟΞ±Ο„Ο"
+    IDS_ITEMS_HIDDEN "ΞΊΟΟ…ΞΌΞΌΞ­Ξ½ΞΏ"
+    IDS_NOTIFY_SHOW "ΞµΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ·"
+    IDS_NOTIFY_HIDE "Ξ±Ο€ΟΞΊΟΟ…ΟΞ·"
+    IDS_NOTIFY_AUTOHIDE "Ξ±Ο…Ο„ΟΞΌΞ±Ο„Ξ· Ξ±Ο€ΟΞΊΟΟ…ΟΞ·"
+    IDS_SHOW_HIDDEN_ICONS "Ξ•ΞΌΟ†Ξ¬Ξ½Ξ·ΟƒΞ· ΞΊΟΟ…ΞΌΞΌΞ­Ξ½Ο‰Ξ½ ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½"
+    IDS_HIDE_ICONS "Ξ‘Ο€ΟΞΊΟΟ…ΟΞ· ΞµΞΉΞΊΞΏΞ½ΞΉΞ΄Ξ―Ο‰Ξ½"
+    IDS_TERMINATE "Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚ Ο„Ξ·Ο‚ Ξ•ΞΎΞµΟΞµΟΞ½Ξ·ΟƒΞ·Ο‚ Ο„ΞΏΟ… ROS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORK "Δίκτυο"
-    IDS_CONNECTIONS "Συνδέσεις δικτίου"
-    IDS_DRIVES "Ο υπολογιστής μου"
-    IDS_SEARCH_COMPUTER "Αναζήτηση Υπολογιστή..."
-    IDS_SETTINGS_MENU "Ρυθμίσεις"
-    IDS_CONTROL_PANEL "Πίνακας ελέγχου"
-    IDS_PRINTERS "Εκτυπωτές"
-    IDS_BROWSE "Εξερεύνηση αρχείων"
-    IDS_SEARCH_PRG "Αναζήτηση Προγράμματος..."
+    IDS_NETWORK "Ξ”Ξ―ΞΊΟ„Ο…ΞΏ"
+    IDS_CONNECTIONS "Ξ£Ο…Ξ½Ξ΄Ξ­ΟƒΞµΞΉΟ‚ Ξ΄ΞΉΞΊΟ„Ξ―ΞΏΟ…"
+    IDS_DRIVES "Ξ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®Ο‚ ΞΌΞΏΟ…"
+    IDS_SEARCH_COMPUTER "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ· Ξ¥Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ®..."
+    IDS_SETTINGS_MENU "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚"
+    IDS_CONTROL_PANEL "Ξ Ξ―Ξ½Ξ±ΞΊΞ±Ο‚ ΞµΞ»Ξ­Ξ³Ο‡ΞΏΟ…"
+    IDS_PRINTERS "Ξ•ΞΊΟ„Ο…Ο€Ο‰Ο„Ξ­Ο‚"
+    IDS_BROWSE "Ξ•ΞΎΞµΟΞµΟΞ½Ξ·ΟƒΞ· Ξ±ΟΟ‡ΞµΞ―Ο‰Ξ½"
+    IDS_SEARCH_PRG "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ· Ξ ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„ΞΏΟ‚..."
     IDS_ALL_USERS "All Users\\"
-    IDS_SEARCH "Αναζήτηση"
-    IDS_ABOUT_EXPLORER "Σχετικά με τον εξερευνητή"
-    IDS_LAUNCH_MANY_PROGRAMS "Έχετε επιλέξει παραπάνω του ενός προγράμματα.\nΕίστε σίγουροι οτι θέλετε να εκτελεστούν όλα;"
-    IDS_DESKTOPBAR_SETTINGS "Ρυθμίσεις Επιφάνειας Εργασίας"
-    IDS_DESKTOP "Επιφάνεια Εργασίας"
-    IDS_TASKBAR "Γραμμή εργασιών"
+    IDS_SEARCH "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·"
+    IDS_ABOUT_EXPLORER "Ξ£Ο‡ΞµΟ„ΞΉΞΊΞ¬ ΞΌΞµ Ο„ΞΏΞ½ ΞµΞΎΞµΟΞµΟ…Ξ½Ξ·Ο„Ξ®"
+    IDS_LAUNCH_MANY_PROGRAMS "ΞΟ‡ΞµΟ„Ξµ ΞµΟ€ΞΉΞ»Ξ­ΞΎΞµΞΉ Ο€Ξ±ΟΞ±Ο€Ξ¬Ξ½Ο‰ Ο„ΞΏΟ… ΞµΞ½ΟΟ‚ Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„Ξ±.\nΞ•Ξ―ΟƒΟ„Ξµ ΟƒΞ―Ξ³ΞΏΟ…ΟΞΏΞΉ ΞΏΟ„ΞΉ ΞΈΞ­Ξ»ΞµΟ„Ξµ Ξ½Ξ± ΞµΞΊΟ„ΞµΞ»ΞµΟƒΟ„ΞΏΟΞ½ ΟΞ»Ξ±;"
+    IDS_DESKTOPBAR_SETTINGS "Ξ΅Ο…ΞΈΞΌΞ―ΟƒΞµΞΉΟ‚ Ξ•Ο€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ±Ο‚ Ξ•ΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚"
+    IDS_DESKTOP "Ξ•Ο€ΞΉΟ†Ξ¬Ξ½ΞµΞΉΞ± Ξ•ΟΞ³Ξ±ΟƒΞ―Ξ±Ο‚"
+    IDS_TASKBAR "Ξ“ΟΞ±ΞΌΞΌΞ® ΞµΟΞ³Ξ±ΟƒΞΉΟΞ½"
     IDS_NAMECOLUMN "Name"
     IDS_PATHCOLUMN "Path"
     IDS_MENUCOLUMN "Menu path"

@@ -10,7 +10,7 @@ BEGIN
         MENUITEM "&Verbinden", IDM_FILE_CONNECT
         MENUITEM "&Trennen", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&nzeige löschen", IDM_FILE_CLEARDISPLAY
+        MENUITEM "A&nzeige lÃ¶schen", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "&Aufnahme starten", IDM_FILE_STARTCAPTURE
         MENUITEM "A&ufnahme stoppen", IDM_FILE_STOPCAPTURE, GRAYED
@@ -21,7 +21,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Über ...", IDM_ABOUT
+        MENUITEM "&Ãœber ...", IDM_ABOUT
     END
 END
 
@@ -36,7 +36,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Über FreeLoader Debugger"
+CAPTION "Ãœber FreeLoader Debugger"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
@@ -81,5 +81,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Dieses Programm ist kostenlos; Sie kÃ¶nnen es frei verteilen mit od. ohne Ã„nderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation verÃ¶ffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spÃ¤tere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

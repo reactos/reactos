@@ -6,40 +6,40 @@ IDM_MDIFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Futtat·s...", ID_EXECUTE
+        MENUITEM "&Futtat√°s...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&KilÈpÈs", ID_FILE_EXIT
+        MENUITEM "&Kil√©p√©s", ID_FILE_EXIT
     END
-    POPUP "&NÈzet"
+    POPUP "&N√©zet"
     BEGIN
-        MENUITEM "&Eszkˆzt·r", ID_VIEW_TOOL_BAR
+        MENUITEM "&Eszk√∂zt√°r", ID_VIEW_TOOL_BAR
         MENUITEM "&Extra Bar", ID_VIEW_EXTRA_BAR
         MENUITEM "&Drivebar", ID_VIEW_DRIVE_BAR
         MENUITEM "S&ide Bar", ID_VIEW_SIDE_BAR
-        MENUITEM "&¡llapot sor", ID_VIEW_STATUSBAR
+        MENUITEM "&√Ållapot sor", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&FrissÌt\tF5", ID_REFRESH
-        MENUITEM "T&eljes kÈpernyı\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Friss√≠t\tF5", ID_REFRESH
+        MENUITEM "T&eljes k√©perny≈ë\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "SDI", ID_VIEW_SDI
     END
     POPUP "&Ablak"
     BEGIN
-        MENUITEM "⁄j &Ablak", ID_WINDOW_NEW
-        MENUITEM "LÈpcsızetes\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "√öj &Ablak", ID_WINDOW_NEW
+        MENUITEM "L√©pcs≈ëzetes\tShift+F5", ID_WINDOW_CASCADE
         MENUITEM "Tile &Horizontally", ID_WINDOW_TILE_HORZ
         MENUITEM "Tile &Vertically\tShift+F4", ID_WINDOW_TILE_VERT
         MENUITEM "Arrange Automatically", ID_WINDOW_AUTOSORT
         MENUITEM "Arrange &Symbols", ID_WINDOW_ARRANGE
     END
-    POPUP "&Eszkˆzˆk"
+    POPUP "&Eszk√∂z√∂k"
     BEGIN
-        MENUITEM "&Be·llÌt·sok", ID_TOOLS_OPTIONS
+        MENUITEM "&Be√°ll√≠t√°sok", ID_TOOLS_OPTIONS
     END
-    POPUP "&S˙gÛÛ"
+    POPUP "&S√∫g√≥√≥"
     BEGIN
         MENUITEM "Explorer &GYIK...", ID_EXPLORER_FAQ
-        MENUITEM "Explorer &nÈvjegye...", ID_ABOUT_EXPLORER
-        MENUITEM "Az &OS nÈvjegye...", ID_ABOUT_WINDOWS
+        MENUITEM "Explorer &n√©vjegye...", ID_ABOUT_EXPLORER
+        MENUITEM "Az &OS n√©vjegye...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -47,10 +47,10 @@ IDM_DESKTOPBAR MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Be·llÌt·sok...", ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Feladatkezelı...", ID_TASKMGR
+        MENUITEM "&Be√°ll√≠t√°sok...", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Feladatkezel≈ë...", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Explorer nÈvjegye...", ID_ABOUT_EXPLORER
+        MENUITEM "&Explorer n√©vjegye...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -58,8 +58,8 @@ IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Hangerı be·llÌt·sok", ID_TRAY_VOLUME
-        MENUITEM "Hangrendszer tulajdons·gai", ID_VOLUME_PROPERTIES
+        MENUITEM "Hanger≈ë be√°ll√≠t√°sok", ID_TRAY_VOLUME
+        MENUITEM "Hangrendszer tulajdons√°gai", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -67,12 +67,12 @@ IDM_NOTIFYAREA MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Rejtett ikonok megjelenÌtÈse", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "&Rejtett ikonok megjelen√≠t√©se", ID_SHOW_HIDDEN_ICONS
         MENUITEM "Show Icon &Button", ID_SHOW_ICON_BUTTON
         MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "D·tum Ès idı be·llÌt·sai...", ID_CONFIG_TIME
+        MENUITEM "D√°tum √©s id≈ë be√°ll√≠t√°sai...", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Explorer nÈvjegye...", ID_ABOUT_EXPLORER
+        MENUITEM "&Explorer n√©vjegye...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -80,29 +80,29 @@ IDM_SDIFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Futtat·s...", ID_EXECUTE
+        MENUITEM "&Futtat√°s...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bez·r·s", ID_FILE_EXIT
+        MENUITEM "&Bez√°r√°s", ID_FILE_EXIT
     END
-    POPUP "&NÈzet"
+    POPUP "&N√©zet"
     BEGIN
-        MENUITEM "&Eszkˆzt·r", ID_VIEW_TOOL_BAR
+        MENUITEM "&Eszk√∂zt√°r", ID_VIEW_TOOL_BAR
         MENUITEM "S&ide Bar", ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&¡llapot sor", ID_VIEW_STATUSBAR
+        MENUITEM "&√Ållapot sor", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&FrissÌtÈs\tF5", ID_REFRESH
-        MENUITEM "T&eljes kÈpernyı\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Friss√≠t√©s\tF5", ID_REFRESH
+        MENUITEM "T&eljes k√©perny≈ë\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI", ID_VIEW_MDI
     END
-    POPUP "&Eszkˆzˆk"
+    POPUP "&Eszk√∂z√∂k"
     BEGIN
-        MENUITEM "&Be·llÌt·sok", ID_TOOLS_OPTIONS
+        MENUITEM "&Be√°ll√≠t√°sok", ID_TOOLS_OPTIONS
     END
-    POPUP "&S˙gÛÛ"
+    POPUP "&S√∫g√≥√≥"
     BEGIN
         MENUITEM "Explorer &GYIK...", ID_EXPLORER_FAQ
-        MENUITEM "&Az Explorer nÈvjegye...", ID_ABOUT_EXPLORER
-        MENUITEM "Az &OS nÈvjegye...", ID_ABOUT_WINDOWS
+        MENUITEM "&Az Explorer n√©vjegye...", ID_ABOUT_EXPLORER
+        MENUITEM "Az &OS n√©vjegye...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -110,7 +110,7 @@ END
 
 IDD_EXECUTE DIALOGEX 15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Futtat·s"
+CAPTION "Futtat√°s"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
@@ -118,8 +118,8 @@ BEGIN
     EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
     CONTROL "As &Symbol", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
     DEFPUSHBUTTON "&OK", 1, 158, 6, 47, 14
-    PUSHBUTTON "&MÈgse", 2, 158, 23, 47, 14
-    PUSHBUTTON "&S˙gÛ", 254, 158, 43, 47, 14
+    PUSHBUTTON "&M√©gse", 2, 158, 23, 47, 14
+    PUSHBUTTON "&S√∫g√≥", 254, 158, 43, 47, 14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
@@ -137,7 +137,7 @@ END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asztal be·llÌt·sai"
+CAPTION "Asztal be√°ll√≠t√°sai"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Please select your preferred icon alignment algorithm:", IDC_STATIC, 7, 7, 166, 8
@@ -195,7 +195,7 @@ BEGIN
     EDITTEXT IDC_LAST_CHANGE, 59, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
     CONTROL "sho&w hidden", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 56, 10
     DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
-    PUSHBUTTON "&MÈgse", IDCANCEL, 151, 153, 50, 14
+    PUSHBUTTON "&M√©gse", IDCANCEL, 151, 153, 50, 14
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
@@ -212,7 +212,7 @@ BEGIN
     CONTROL "Open Subfolders in s&eparate windows", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 135, 10
     LTEXT "This setting will be used as default for all Explorer windows in the future.", IDC_STATIC, 7, 111, 174, 22
     DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
-    PUSHBUTTON "&MÈgse", IDCANCEL, 106, 136, 50, 14
+    PUSHBUTTON "&M√©gse", IDCANCEL, 106, 136, 50, 14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
@@ -234,20 +234,20 @@ STRINGTABLE
 BEGIN
     IDS_TITLE "ReactOS Explorer"
     IDS_START "Start"
-    IDS_LOGOFF "KijelentkezÈs..."
-    IDS_SHUTDOWN "Kikapcsol·s..."
+    IDS_LOGOFF "Kijelentkez√©s..."
+    IDS_SHUTDOWN "Kikapcsol√°s..."
     IDS_RESTART "Restart..."
-    IDS_LAUNCH "Futtat·s..."
-    IDS_START_HELP "S˙gÛ"
-    IDS_SEARCH_FILES "KeresÈs..."
+    IDS_LAUNCH "Futtat√°s..."
+    IDS_START_HELP "S√∫g√≥"
+    IDS_SEARCH_FILES "Keres√©s..."
     IDS_DOCUMENTS "Dokumentumok"
     IDS_FAVORITES "Kedvencek"
     IDS_PROGRAMS "Programok"
-    IDS_SETTINGS "Be·llÌt·sok"
-    IDS_EXPLORE "BˆngÈszÈs"
-    IDS_EMPTY "(‹res)"
+    IDS_SETTINGS "Be√°ll√≠t√°sok"
+    IDS_EXPLORE "B√∂ng√©sz√©s"
+    IDS_EMPTY "(√úres)"
     IDS_RECENT "Recent Documents"
-    IDS_ADMIN "Fel¸gyelet"
+    IDS_ADMIN "Fel√ºgyelet"
 END
 
 STRINGTABLE
@@ -255,7 +255,7 @@ BEGIN
     IDS_STARTMENU "Start Menu"
     IDS_MINIMIZE_ALL "mimimize all windows"
     IDS_DESKTOP_NUM "%d. asztal"
-    IDS_VOLUME "Hangerı"
+    IDS_VOLUME "Hanger≈ë"
     IDS_ITEMS_CUR "Current items"
     IDS_ITEMS_CONFIGURED "Configuration"
     IDS_ITEMS_VISIBLE "Visible"
@@ -265,25 +265,25 @@ BEGIN
     IDS_NOTIFY_AUTOHIDE "Autohide"
     IDS_SHOW_HIDDEN_ICONS "Show hidden icons"
     IDS_HIDE_ICONS "Hide icons"
-    IDS_TERMINATE "KilÈpÈs a ROS Explorerbıl"
+    IDS_TERMINATE "Kil√©p√©s a ROS Explorerb≈ël"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORK "H·lÛzat"
-    IDS_CONNECTIONS "H·lÛzati kapcsolatok"
-    IDS_DRIVES "MeghajtÛk"
-    IDS_SEARCH_COMPUTER "Sz·mÌtÛgÈp keresÈse..."
+    IDS_NETWORK "H√°l√≥zat"
+    IDS_CONNECTIONS "H√°l√≥zati kapcsolatok"
+    IDS_DRIVES "Meghajt√≥k"
+    IDS_SEARCH_COMPUTER "Sz√°m√≠t√≥g√©p keres√©se..."
     IDS_SETTINGS_MENU "Settings Menu"
-    IDS_CONTROL_PANEL "VezÈrlıpult"
-    IDS_PRINTERS "NyomtatÛk"
-    IDS_BROWSE "¡llom·nyok bˆngÈszÈse"
+    IDS_CONTROL_PANEL "Vez√©rl≈ëpult"
+    IDS_PRINTERS "Nyomtat√≥k"
+    IDS_BROWSE "√Ållom√°nyok b√∂ng√©sz√©se"
     IDS_SEARCH_PRG "Search Program..."
     IDS_ALL_USERS "All Users\\"
-    IDS_SEARCH "KeresÈs"
-    IDS_ABOUT_EXPLORER "Az &Explorer nÈvjegye..."
-    IDS_LAUNCH_MANY_PROGRAMS "Tˆbb programot v·lasztott·l ki.\nBiztosan szeretnÈd mindegyiket futtatni?"
-    IDS_DESKTOPBAR_SETTINGS "Asztal be·llÌt·sai"
+    IDS_SEARCH "Keres√©s"
+    IDS_ABOUT_EXPLORER "Az &Explorer n√©vjegye..."
+    IDS_LAUNCH_MANY_PROGRAMS "T√∂bb programot v√°lasztott√°l ki.\nBiztosan szeretn√©d mindegyiket futtatni?"
+    IDS_DESKTOPBAR_SETTINGS "Asztal be√°ll√≠t√°sai"
     IDS_DESKTOP "Asztal"
     IDS_TASKBAR "Taskbar"
     IDS_NAMECOLUMN "Name"

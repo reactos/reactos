@@ -22,7 +22,8 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
+/* UTF-8 */
+#pragma code_page(65001)
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
@@ -82,7 +83,7 @@ BEGIN
             VALUE "FileDescription", "Ext2 File System Driver\0"
             VALUE "FileVersion", "0, 0, 0, 3\0"
             VALUE "InternalName", "ext2.sys\0"
-            VALUE "LegalCopyright", "Copyright © 2002 Manoj Paul Joseph\0"
+            VALUE "LegalCopyright", "Copyright Â© 2002 Manoj Paul Joseph\0"
             VALUE "LegalTrademarks", " - \0"
             VALUE "OriginalFilename", "ext2.sys\0"
             VALUE "PrivateBuild", " - \0"

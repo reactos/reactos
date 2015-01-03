@@ -10,19 +10,19 @@ IDC_FDEBUG MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "&P¯ipojit", IDM_FILE_CONNECT
+        MENUITEM "&P≈ôipojit", IDM_FILE_CONNECT
         MENUITEM "&Odpojit", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Vymazat obrazovku", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "&Spustit zachyt·v·nÌ", IDM_FILE_STARTCAPTURE
-        MENUITEM "&Zastavit zachyt·v·nÌ", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Spustit zachyt√°v√°n√≠", IDM_FILE_STARTCAPTURE
+        MENUITEM "&Zastavit zachyt√°v√°n√≠", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&MÌsnÌ echo", IDM_FILE_LOCALECHO
+        MENUITEM "&M√≠sn√≠ echo", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "&UkonËit", IDM_EXIT
+        MENUITEM "&Ukonƒçit", IDM_EXIT
     END
-    POPUP "&N·povÏda"
+    POPUP "&N√°povƒõda"
     BEGIN
         MENUITEM "&O programu...", IDM_ABOUT
     END
@@ -50,12 +50,12 @@ END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Moûnosti p¯ipojenÌ"
+CAPTION "Mo≈ænosti p≈ôipojen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Zadejte COM port (nap¯. COM1):", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "Zadejte COM port (nap≈ô. COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Zadejte rychlost v baudech (nap¯. 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "Zadejte rychlost v baudech (nap≈ô. 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 45, 79, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 100, 79, 50, 14
@@ -63,12 +63,12 @@ END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Zachyt·vacÌ soubor"
+CAPTION "Zachyt√°vac√≠ soubor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "N·zev zachyt·vacÌho souboru:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "N√°zev zachyt√°vac√≠ho souboru:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Proch·zet", IDC_BROWSE, 194, 26, 50, 14
+    PUSHBUTTON "&Proch√°zet", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 139, 74, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 194, 74, 50, 14
 END

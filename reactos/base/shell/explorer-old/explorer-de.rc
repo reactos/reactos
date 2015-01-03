@@ -6,7 +6,7 @@ IDM_MDIFRAME MENU
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Ausführen...", ID_EXECUTE
+        MENUITEM "&AusfÃ¼hren...", ID_EXECUTE
         MENUITEM SEPARATOR
         MENUITEM "&Beenden", ID_FILE_EXIT
     END
@@ -25,7 +25,7 @@ BEGIN
     POPUP "&Fenster"
     BEGIN
         MENUITEM "Neues &Fenster", ID_WINDOW_NEW
-        MENUITEM "Über&lappend\tUmschalt+F5", ID_WINDOW_CASCADE
+        MENUITEM "Ãœber&lappend\tUmschalt+F5", ID_WINDOW_CASCADE
         MENUITEM "&Untereinander", ID_WINDOW_TILE_HORZ
         MENUITEM "&Nebeneinander\tUmschalt+F4", ID_WINDOW_TILE_VERT
         MENUITEM "au&tomatisch anordnen", ID_WINDOW_AUTOSORT
@@ -38,8 +38,8 @@ BEGIN
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "Explorer-&FAQ...", ID_EXPLORER_FAQ
-        MENUITEM "&Über ReactOS Explorer...", ID_ABOUT_EXPLORER
-        MENUITEM "Über React&OS...", ID_ABOUT_WINDOWS
+        MENUITEM "&Ãœber ReactOS Explorer...", ID_ABOUT_EXPLORER
+        MENUITEM "Ãœber React&OS...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -50,7 +50,7 @@ BEGIN
         MENUITEM "&Einstellungen...", ID_DESKTOPBAR_SETTINGS
         MENUITEM "&Taskmanager...", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Über Explorer...", ID_ABOUT_EXPLORER
+        MENUITEM "&Ãœber Explorer...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -58,8 +58,8 @@ IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Öffne &Lautstärkeregler", ID_TRAY_VOLUME
-        MENUITEM "Ändern der Audio-&Einstellungen", ID_VOLUME_PROPERTIES
+        MENUITEM "Ã–ffne &LautstÃ¤rkeregler", ID_TRAY_VOLUME
+        MENUITEM "Ã„ndern der Audio-&Einstellungen", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -72,7 +72,7 @@ BEGIN
         MENUITEM "&Konfiguriere Benachrichtigungen...", ID_CONFIG_NOTIFYAREA
         MENUITEM "Einstellen von &Datum/Zeit...", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Über Explorer...", ID_ABOUT_EXPLORER
+        MENUITEM "&Ãœber Explorer...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -80,9 +80,9 @@ IDM_SDIFRAME MENU
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Ausführen...", ID_EXECUTE
+        MENUITEM "&AusfÃ¼hren...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Schließen", ID_FILE_EXIT
+        MENUITEM "&SchlieÃŸen", ID_FILE_EXIT
     END
     POPUP "&Ansicht"
     BEGIN
@@ -101,8 +101,8 @@ BEGIN
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "Explorer-&FAQ...", ID_EXPLORER_FAQ
-        MENUITEM "&Über Explorer...", ID_ABOUT_EXPLORER
-        MENUITEM "Über React&OS...", ID_ABOUT_WINDOWS
+        MENUITEM "&Ãœber Explorer...", ID_ABOUT_EXPLORER
+        MENUITEM "Ãœber React&OS...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -110,7 +110,7 @@ END
 
 IDD_EXECUTE DIALOGEX 15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ausführen"
+CAPTION "AusfÃ¼hren"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 162, 10
@@ -125,14 +125,14 @@ END
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Programmsuche im Startmenü"
+CAPTION "Programmsuche im StartmenÃ¼"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT "&Filter:", IDC_STATIC, 7, 9, 18, 8
     EDITTEXT IDC_FILTER, 34, 7, 96, 14, ES_AUTOHSCROLL
     CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
-    PUSHBUTTON "Alle über&prüfen", IDC_CHECK_ENTRIES, 138, 7, 55, 14
+    PUSHBUTTON "Alle Ã¼ber&prÃ¼fen", IDC_CHECK_ENTRIES, 138, 7, 55, 14
 END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 204
@@ -140,7 +140,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Desktop-Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bitte wählen Sie den gewünschten Platzierungs-Algorithmus für die Desktop-Symbole aus:", IDC_STATIC, 7, 7, 197, 23
+    LTEXT "Bitte wÃ¤hlen Sie den gewÃ¼nschten Platzierungs-Algorithmus fÃ¼r die Desktop-Symbole aus:", IDC_STATIC, 7, 7, 197, 23
     CONTROL "li./ob. abw.", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 35, 46, 44
     CONTROL "li./ob. re.", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 35, 46, 44
     CONTROL "re./ob. li.", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 35, 46, 44
@@ -168,7 +168,7 @@ END
 
 IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Startmenü-Einstellungen"
+CAPTION "StartmenÃ¼-Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -191,7 +191,7 @@ BEGIN
     CONTROL "&verstecken", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 55, 108, 51, 10
     CONTROL "a&utomatisch", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 110, 108, 52, 10
     ICON "", IDC_PICTURE, 173, 101, 20, 20
-    LTEXT "&Letzte Änderung:", IDC_LABEL6, 7, 132, 55, 8
+    LTEXT "&Letzte Ã„nderung:", IDC_LABEL6, 7, 132, 55, 8
     EDITTEXT IDC_LAST_CHANGE, 66, 129, 98, 14, ES_AUTOHSCROLL | ES_READONLY
     CONTROL "zei&ge versteckte", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 68, 10
     DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
@@ -204,20 +204,20 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Auswahl des Explorerfenster-Modus"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Bitte wählen Sie Ihr bevorzugtes Explorer Userinterface:", IDC_STATIC, 7, 7, 160, 8
+    LTEXT "Bitte wÃ¤hlen Sie Ihr bevorzugtes Explorer Userinterface:", IDC_STATIC, 7, 7, 160, 8
     CONTROL "&MDI (Multiple Document Interface)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 124, 10
     CONTROL "&SDI (Single Document Interface)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
     CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
     CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
-    CONTROL "Öffne Unterverzeichnisses in &neuen Fenstern", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 157, 10
-    LTEXT "Diese Auswahl wird künftig für alle Explorerfenster verwendet werden.", IDC_STATIC, 7, 111, 174, 22
+    CONTROL "Ã–ffne Unterverzeichnisses in &neuen Fenstern", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 157, 10
+    LTEXT "Diese Auswahl wird kÃ¼nftig fÃ¼r alle Explorerfenster verwendet werden.", IDC_STATIC, 7, 111, 174, 22
     DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
     PUSHBUTTON "A&bbrechen", IDCANCEL, 106, 136, 50, 14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Über ReactOS Explorer"
+CAPTION "Ãœber ReactOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
@@ -237,7 +237,7 @@ BEGIN
     IDS_LOGOFF "Abmelden..."
     IDS_SHUTDOWN "Herunterfahren..."
     IDS_RESTART "Neu starten..."
-    IDS_LAUNCH "Ausführen..."
+    IDS_LAUNCH "AusfÃ¼hren..."
     IDS_START_HELP "Hilfe"
     IDS_SEARCH_FILES "Suche Dateien..."
     IDS_DOCUMENTS "Dokumente"
@@ -252,10 +252,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STARTMENU "Startmenü"
+    IDS_STARTMENU "StartmenÃ¼"
     IDS_MINIMIZE_ALL "alle Fenster minimieren"
     IDS_DESKTOP_NUM "Desktop %d"
-    IDS_VOLUME "Lautstärke"
+    IDS_VOLUME "LautstÃ¤rke"
     IDS_ITEMS_CUR "aktuelle Symbole"
     IDS_ITEMS_CONFIGURED "Konfiguration"
     IDS_ITEMS_VISIBLE "sichtbar"
@@ -281,12 +281,12 @@ BEGIN
     IDS_SEARCH_PRG "Suche Programm..."
     IDS_ALL_USERS "Alle Benutzer\\"
     IDS_SEARCH "Suche"
-    IDS_ABOUT_EXPLORER "&Über Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS "Sie haben mehrere Programme ausgewählt.\nSind Sie sich sicher, dass Sie diese alle starten wollen?"
+    IDS_ABOUT_EXPLORER "&Ãœber Explorer..."
+    IDS_LAUNCH_MANY_PROGRAMS "Sie haben mehrere Programme ausgewÃ¤hlt.\nSind Sie sich sicher, dass Sie diese alle starten wollen?"
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
     IDS_DESKTOP "Desktop"
     IDS_TASKBAR "Taskleiste"
     IDS_NAMECOLUMN "Name"
     IDS_PATHCOLUMN "Pfad"
-    IDS_MENUCOLUMN "Menüpfad"
+    IDS_MENUCOLUMN "MenÃ¼pfad"
 END

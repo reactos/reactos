@@ -109,8 +109,14 @@ END
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 #endif
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "explorer-bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "explorer-cz.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "explorer-de.rc"
@@ -126,6 +132,9 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "explorer-fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "explorer-he.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "explorer-hu.rc"
@@ -148,27 +157,11 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 #ifdef LANGUAGE_NO_NO
     #include "explorer-no.rc"
 #endif
-#ifdef LANGUAGE_PT_PT
-    #include "explorer-pt.rc"
-#endif
-#ifdef LANGUAGE_SK_SK
-    #include "explorer-sk.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "explorer-sv.rc"
-#endif
-
-/* UTF-8 */
-#pragma code_page(65001)
-
-#ifdef LANGUAGE_CS_CZ
-    #include "explorer-cz.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "explorer-he.rc"
-#endif
 #ifdef LANGUAGE_PL_PL
     #include "explorer-pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "explorer-pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
     #include "explorer-ro.rc"
@@ -176,8 +169,14 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 #ifdef LANGUAGE_RU_RU
     #include "explorer-ru.rc"
 #endif
+#ifdef LANGUAGE_SK_SK
+    #include "explorer-sk.rc"
+#endif
 #ifdef LANGUAGE_SQ_AL
     #include "explorer-sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "explorer-sv.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "explorer-uk.rc"

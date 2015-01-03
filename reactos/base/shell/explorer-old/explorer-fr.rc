@@ -6,7 +6,7 @@ IDM_MDIFRAME MENU
 BEGIN
     POPUP "&Fichier"
     BEGIN
-        MENUITEM "E&xécuter...", ID_EXECUTE
+        MENUITEM "E&xÃ©cuter...", ID_EXECUTE
         MENUITEM SEPARATOR
         MENUITEM "&Fermer", ID_FILE_EXIT
     END
@@ -15,19 +15,19 @@ BEGIN
         MENUITEM "Barre d'&outils", ID_VIEW_TOOL_BAR
         MENUITEM "Barre d'&extras", ID_VIEW_EXTRA_BAR
         MENUITEM "&Barre des lecteurs", ID_VIEW_DRIVE_BAR
-        MENUITEM "&Volet latéral", ID_VIEW_SIDE_BAR
-        MENUITEM "Barre d'&état", ID_VIEW_STATUSBAR
+        MENUITEM "&Volet latÃ©ral", ID_VIEW_SIDE_BAR
+        MENUITEM "Barre d'&Ã©tat", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "A&ctualiser\tF5", ID_REFRESH
-        MENUITEM "&Plein écran\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Plein Ã©cran\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "SDI", ID_VIEW_SDI
     END
-    POPUP "&Fenêtre"
+    POPUP "&FenÃªtre"
     BEGIN
-        MENUITEM "Nouvelle &fenêtre", ID_WINDOW_NEW
+        MENUITEM "Nouvelle &fenÃªtre", ID_WINDOW_NEW
         MENUITEM "Cascade\tShift+F5", ID_WINDOW_CASCADE
-        MENUITEM "Mosaïque &horizontale", ID_WINDOW_TILE_HORZ
-        MENUITEM "Mosaïque &verticale\tCtrl+Shift+S", ID_WINDOW_TILE_VERT
+        MENUITEM "MosaÃ¯que &horizontale", ID_WINDOW_TILE_HORZ
+        MENUITEM "MosaÃ¯que &verticale\tCtrl+Shift+S", ID_WINDOW_TILE_VERT
         MENUITEM "Organisation automatique", ID_WINDOW_AUTOSORT
         MENUITEM "&Organisation des symboles", ID_WINDOW_ARRANGE
     END
@@ -38,8 +38,8 @@ BEGIN
     POPUP "&Aide"
     BEGIN
         MENUITEM "&FAQ de l'explorateur...", ID_EXPLORER_FAQ
-        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
-        MENUITEM "À propos de l'&OS...", ID_ABOUT_WINDOWS
+        MENUITEM "&Ã€ propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "Ã€ propos de l'&OS...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -47,10 +47,10 @@ IDM_DESKTOPBAR MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Paramètres...", ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Gestionnaire de tâches...", ID_TASKMGR
+        MENUITEM "&ParamÃ¨tres...", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Gestionnaire de tÃ¢ches...", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "&Ã€ propos de l'explorateur...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -58,8 +58,8 @@ IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Ouvrir le contrôle du volume", ID_TRAY_VOLUME
-        MENUITEM "Ajuster les propriétés audio", ID_VOLUME_PROPERTIES
+        MENUITEM "Ouvrir le contrÃ´le du volume", ID_TRAY_VOLUME
+        MENUITEM "Ajuster les propriÃ©tÃ©s audio", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -67,12 +67,12 @@ IDM_NOTIFYAREA MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Afficher les icônes cachées", ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Afficher le bouton des icônes", ID_SHOW_ICON_BUTTON
+        MENUITEM "&Afficher les icÃ´nes cachÃ©es", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Afficher le bouton des icÃ´nes", ID_SHOW_ICON_BUTTON
         MENUITEM "&Configurer les notifications...", ID_CONFIG_NOTIFYAREA
         MENUITEM "Ajuster la date/l'&heure...", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "&Ã€ propos de l'explorateur...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -80,18 +80,18 @@ IDM_SDIFRAME MENU
 BEGIN
     POPUP "&Fichier"
     BEGIN
-        MENUITEM "&Exécuter...", ID_EXECUTE
+        MENUITEM "&ExÃ©cuter...", ID_EXECUTE
         MENUITEM SEPARATOR
         MENUITEM "&Fermer", ID_FILE_EXIT
     END
     POPUP "&Affichage"
     BEGIN
         MENUITEM "&Barre d'outils", ID_VIEW_TOOL_BAR
-        MENUITEM "&Volet latéral", ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "&Barre d'état", ID_VIEW_STATUSBAR
+        MENUITEM "&Volet latÃ©ral", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Barre d'Ã©tat", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "A&ctualiser\tF5", ID_REFRESH
-        MENUITEM "&Plein écran\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&Plein Ã©cran\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI", ID_VIEW_MDI
     END
     POPUP "&Outils"
@@ -101,8 +101,8 @@ BEGIN
     POPUP "&Aide"
     BEGIN
         MENUITEM "&FAQ de l'explorateur...", ID_EXPLORER_FAQ
-        MENUITEM "&À propos de l'explorateur...", ID_ABOUT_EXPLORER
-        MENUITEM "À propos de l'&OS...", ID_ABOUT_WINDOWS
+        MENUITEM "&Ã€ propos de l'explorateur...", ID_ABOUT_EXPLORER
+        MENUITEM "Ã€ propos de l'&OS...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -110,7 +110,7 @@ END
 
 IDD_EXECUTE DIALOGEX 15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Exécuter"
+CAPTION "ExÃ©cuter"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
@@ -125,7 +125,7 @@ END
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Rechercher un programme dans le menu démarrer"
+CAPTION "Rechercher un programme dans le menu dÃ©marrer"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT "&Filtre :", IDC_STATIC, 7, 9, 18, 8
@@ -137,10 +137,10 @@ END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Propriétés du bureau"
+CAPTION "PropriÃ©tÃ©s du bureau"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Veuillez sélectionner votre algorithme d'alignement des icônes :", IDC_STATIC, 7, 7, 166, 8
+    LTEXT "Veuillez sÃ©lectionner votre algorithme d'alignement des icÃ´nes :", IDC_STATIC, 7, 7, 166, 8
     CONTROL "gauche/haut bas", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 7, 25, 46, 44
     CONTROL "gauche/haut droite", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 25, 46, 44
     CONTROL "droite/haut gauche", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 25, 46, 44
@@ -153,22 +153,22 @@ BEGIN
     CONTROL "bord H/V", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 57, 121, 46, 44
     CONTROL "faire le tour", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 110, 121, 46, 44
     CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 159, 121, 46, 44
-//    CONTROL "Afficher le numéro de la &version", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 120, 10
+//    CONTROL "Afficher le numÃ©ro de la &version", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 120, 10
 END
 
 IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Propriétés de la barre de tâches"
+CAPTION "PropriÃ©tÃ©s de la barre de tÃ¢ches"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Afficher l'&heure", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 70, 10
-    CONTROL "&Masquer les icônes inactives", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
+    CONTROL "&Masquer les icÃ´nes inactives", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 111, 10
     PUSHBUTTON "&Notifications...", ID_CONFIG_NOTIFYAREA, 153, 173, 50, 14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Propriétés du menu démarrer"
+CAPTION "PropriÃ©tÃ©s du menu dÃ©marrer"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -176,13 +176,13 @@ END
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Configurer les Icônes de Notification"
+CAPTION "Configurer les IcÃ´nes de Notification"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 194, 31
     LTEXT "&Texte conseil :", IDC_LABEL1, 7, 44, 70, 8
     EDITTEXT IDC_NOTIFY_TOOLTIP, 79, 42, 122, 14, ES_AUTOHSCROLL
-    LTEXT "Titre de la &fenêtre :", IDC_LABEL2, 7, 63, 61, 8
+    LTEXT "Titre de la &fenÃªtre :", IDC_LABEL2, 7, 63, 61, 8
     EDITTEXT IDC_NOTIFY_TITLE, 79, 60, 123, 14, ES_AUTOHSCROLL
     LTEXT "&Repertoire du module :", IDC_LABEL3, 7, 81, 71, 8
     EDITTEXT IDC_NOTIFY_MODULE, 79, 78, 123, 14, ES_AUTOHSCROLL
@@ -193,7 +193,7 @@ BEGIN
     ICON "", IDC_PICTURE, 183, 101, 21, 20
     LTEXT "&Dernier changement :", IDC_LABEL6, 7, 132, 69, 8
     EDITTEXT IDC_LAST_CHANGE, 77, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
-    CONTROL "Afficher les cac&hés", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 70, 10
+    CONTROL "Afficher les cac&hÃ©s", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 154, 70, 10
     DEFPUSHBUTTON "&OK", IDOK, 91, 153, 50, 14, WS_GROUP
     PUSHBUTTON "&Annuler", IDCANCEL, 151, 153, 50, 14
 END
@@ -201,23 +201,23 @@ END
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Veuillez choisir un mode de fenêtres pour l'explorateur"
+CAPTION "Veuillez choisir un mode de fenÃªtres pour l'explorateur"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Veuillez sélectionner l'interface que vous préférez pour l'explorateur :", IDC_STATIC, 7, 7, 160, 8
+    LTEXT "Veuillez sÃ©lectionner l'interface que vous prÃ©fÃ©rez pour l'explorateur :", IDC_STATIC, 7, 7, 160, 8
     CONTROL "&MDI (Multiple Document Interface)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 124, 10
     CONTROL "&SDI (Single Document Interface)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
     CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
     CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
-    CONTROL "Ouvrir les sous-dossiers dans des fenêtres s&éparées", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 135, 10
-    LTEXT "Ce paramètre sera utilisé par défaut.", IDC_STATIC, 7, 111, 174, 22
+    CONTROL "Ouvrir les sous-dossiers dans des fenÃªtres s&Ã©parÃ©es", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 135, 10
+    LTEXT "Ce paramÃ¨tre sera utilisÃ© par dÃ©faut.", IDC_STATIC, 7, 111, 174, 22
     DEFPUSHBUTTON "&OK", IDOK, 29, 136, 50, 14, WS_GROUP
     PUSHBUTTON "&Annuler", IDCANCEL, 106, 136, 50, 14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "À propos de ReactOS Explorer"
+CAPTION "Ã€ propos de ReactOS Explorer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "ReactOS Explorer", IDC_ROS_EXPLORER, 91, 13, 104, 11
@@ -233,59 +233,59 @@ END
 STRINGTABLE
 BEGIN
     IDS_TITLE "ReactOS Explorer"
-    IDS_START "Démarrer"
-    IDS_LOGOFF "Se déconnecter..."
-    IDS_SHUTDOWN "Arrêter..."
-    IDS_RESTART "Redémarrer..."
-    IDS_LAUNCH "Exécuter..."
+    IDS_START "DÃ©marrer"
+    IDS_LOGOFF "Se dÃ©connecter..."
+    IDS_SHUTDOWN "ArrÃªter..."
+    IDS_RESTART "RedÃ©marrer..."
+    IDS_LAUNCH "ExÃ©cuter..."
     IDS_START_HELP "Aide"
     IDS_SEARCH_FILES "Rechercher..."
     IDS_DOCUMENTS "Documents"
     IDS_FAVORITES "Favoris"
     IDS_PROGRAMS "Programmes"
-    IDS_SETTINGS "Paramètres"
+    IDS_SETTINGS "ParamÃ¨tres"
     IDS_EXPLORE "Explorer"
     IDS_EMPTY "(Vide)"
-    IDS_RECENT "Documents récents"
+    IDS_RECENT "Documents rÃ©cents"
     IDS_ADMIN "Administration"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STARTMENU "Menu démarrer"
-    IDS_MINIMIZE_ALL "Mimimiser toutes les fenêtres"
+    IDS_STARTMENU "Menu dÃ©marrer"
+    IDS_MINIMIZE_ALL "Mimimiser toutes les fenÃªtres"
     IDS_DESKTOP_NUM "Bureau %d"
     IDS_VOLUME "Volume"
     IDS_ITEMS_CUR "objets actuels"
     IDS_ITEMS_CONFIGURED "configuration"
     IDS_ITEMS_VISIBLE "visible"
-    IDS_ITEMS_HIDDEN "caché"
+    IDS_ITEMS_HIDDEN "cachÃ©"
     IDS_NOTIFY_SHOW "afficher"
     IDS_NOTIFY_HIDE "cacher"
     IDS_NOTIFY_AUTOHIDE "cacher automatiquement"
-    IDS_SHOW_HIDDEN_ICONS "Afficher les icônes cachées"
-    IDS_HIDE_ICONS "Cacher les icônes"
+    IDS_SHOW_HIDDEN_ICONS "Afficher les icÃ´nes cachÃ©es"
+    IDS_HIDE_ICONS "Cacher les icÃ´nes"
     IDS_TERMINATE "Fermer ROS Explorer"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORK "Réseaux"
-    IDS_CONNECTIONS "Connections réseau"
+    IDS_NETWORK "RÃ©seaux"
+    IDS_CONNECTIONS "Connections rÃ©seau"
     IDS_DRIVES "Lecteurs"
     IDS_SEARCH_COMPUTER "Rechercher un ordinateur..."
-    IDS_SETTINGS_MENU "Paramètres du menu"
+    IDS_SETTINGS_MENU "ParamÃ¨tres du menu"
     IDS_CONTROL_PANEL "Panneau de configuration"
     IDS_PRINTERS "Imprimantes"
     IDS_BROWSE "Parcourir"
     IDS_SEARCH_PRG "Rechercher un programme..."
     IDS_ALL_USERS "Tous les utilisateurs\\"
     IDS_SEARCH "Rechercher"
-    IDS_ABOUT_EXPLORER "&À propos de l'explorateur..."
-    IDS_LAUNCH_MANY_PROGRAMS "Vous avez sélectionné plus d'un programme.\nÊtes-vous sûr de vouloir tous les lancer ?"
-    IDS_DESKTOPBAR_SETTINGS "Paramètres du bureau"
+    IDS_ABOUT_EXPLORER "&Ã€ propos de l'explorateur..."
+    IDS_LAUNCH_MANY_PROGRAMS "Vous avez sÃ©lectionnÃ© plus d'un programme.\nÃŠtes-vous sÃ»r de vouloir tous les lancer ?"
+    IDS_DESKTOPBAR_SETTINGS "ParamÃ¨tres du bureau"
     IDS_DESKTOP "Bureau"
-    IDS_TASKBAR "Barre de tâches"
+    IDS_TASKBAR "Barre de tÃ¢ches"
     IDS_NAMECOLUMN "Nom"
     IDS_PATHCOLUMN "Chemin"
     IDS_MENUCOLUMN "Chemin dans le menu"

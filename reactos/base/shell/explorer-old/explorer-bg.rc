@@ -4,42 +4,42 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDM_MDIFRAME MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Изпълняване...", ID_EXECUTE
+        MENUITEM "&РР·РїСЉР»РЅСЏРІР°РЅРµ...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "Из&ход", ID_FILE_EXIT
+        MENUITEM "РР·&С…РѕРґ", ID_FILE_EXIT
     END
-    POPUP "Из&глед"
+    POPUP "РР·&РіР»РµРґ"
     BEGIN
-        MENUITEM "Лента средства", ID_VIEW_TOOL_BAR
-        MENUITEM "&Допълнителна лента", ID_VIEW_EXTRA_BAR
-        MENUITEM "Лента устройства", ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Странична лента", ID_VIEW_SIDE_BAR
-        MENUITEM "Лента състояние", ID_VIEW_STATUSBAR
+        MENUITEM "Р›РµРЅС‚Р° СЃСЂРµРґСЃС‚РІР°", ID_VIEW_TOOL_BAR
+        MENUITEM "&Р”РѕРїСЉР»РЅРёС‚РµР»РЅР° Р»РµРЅС‚Р°", ID_VIEW_EXTRA_BAR
+        MENUITEM "Р›РµРЅС‚Р° СѓСЃС‚СЂРѕР№СЃС‚РІР°", ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&РЎС‚СЂР°РЅРёС‡РЅР° Р»РµРЅС‚Р°", ID_VIEW_SIDE_BAR
+        MENUITEM "Р›РµРЅС‚Р° СЃСЉСЃС‚РѕСЏРЅРёРµ", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване\tF5", ID_REFRESH
-        MENUITEM "&Цял екран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
-        MENUITEM "ЕПИ", ID_VIEW_SDI
+        MENUITEM "Рћ&РїСЂРµСЃРЅСЏРІР°РЅРµ\tF5", ID_REFRESH
+        MENUITEM "&Р¦СЏР» РµРєСЂР°РЅ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "Р•РџР", ID_VIEW_SDI
     END
-    POPUP "&Прозорец"
+    POPUP "&РџСЂРѕР·РѕСЂРµС†"
     BEGIN
-        MENUITEM "Нов &прозорец", ID_WINDOW_NEW
-        MENUITEM "Надипляне\tShift+F5", ID_WINDOW_CASCADE
-        MENUITEM "Водоравно настелване", ID_WINDOW_TILE_HORZ
-        MENUITEM "&Отвесно настелване", ID_WINDOW_TILE_VERT
-        MENUITEM "Самоподреждане", ID_WINDOW_AUTOSORT
-        MENUITEM "Подреждане на знаците", ID_WINDOW_ARRANGE
+        MENUITEM "РќРѕРІ &РїСЂРѕР·РѕСЂРµС†", ID_WINDOW_NEW
+        MENUITEM "РќР°РґРёРїР»СЏРЅРµ\tShift+F5", ID_WINDOW_CASCADE
+        MENUITEM "Р’РѕРґРѕСЂР°РІРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ", ID_WINDOW_TILE_HORZ
+        MENUITEM "&РћС‚РІРµСЃРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ", ID_WINDOW_TILE_VERT
+        MENUITEM "РЎР°РјРѕРїРѕРґСЂРµР¶РґР°РЅРµ", ID_WINDOW_AUTOSORT
+        MENUITEM "РџРѕРґСЂРµР¶РґР°РЅРµ РЅР° Р·РЅР°С†РёС‚Рµ", ID_WINDOW_ARRANGE
     END
-    POPUP "&Средства"
+    POPUP "&РЎСЂРµРґСЃС‚РІР°"
     BEGIN
-        MENUITEM "На&стройки", ID_TOOLS_OPTIONS
+        MENUITEM "РќР°&СЃС‚СЂРѕР№РєРё", ID_TOOLS_OPTIONS
     END
-    POPUP "Помо&щ"
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "&ЧЗВ за изследователя...", ID_EXPLORER_FAQ
-        MENUITEM "&За изследователя...", ID_ABOUT_EXPLORER
-        MENUITEM "За &РеактОС...", ID_ABOUT_WINDOWS
+        MENUITEM "&Р§Р—Р’ Р·Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ...", ID_EXPLORER_FAQ
+        MENUITEM "&Р—Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ...", ID_ABOUT_EXPLORER
+        MENUITEM "Р—Р° &Р РµР°РєС‚РћРЎ...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -47,10 +47,10 @@ IDM_DESKTOPBAR MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "На&стройки...", ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Задачен управител...", ID_TASKMGR
+        MENUITEM "РќР°&СЃС‚СЂРѕР№РєРё...", ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Р—Р°РґР°С‡РµРЅ СѓРїСЂР°РІРёС‚РµР»...", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&За изследователя...", ID_ABOUT_EXPLORER
+        MENUITEM "&Р—Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ...", ID_ABOUT_EXPLORER
     END
 END
 
@@ -58,8 +58,8 @@ IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Отваряне на управлението на звука", ID_TRAY_VOLUME
-        MENUITEM "Настройка на свойствата на звука", ID_VOLUME_PROPERTIES
+        MENUITEM "РћС‚РІР°СЂСЏРЅРµ РЅР° СѓРїСЂР°РІР»РµРЅРёРµС‚Рѕ РЅР° Р·РІСѓРєР°", ID_TRAY_VOLUME
+        MENUITEM "РќР°СЃС‚СЂРѕР№РєР° РЅР° СЃРІРѕР№СЃС‚РІР°С‚Р° РЅР° Р·РІСѓРєР°", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -67,42 +67,42 @@ IDM_NOTIFYAREA MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Показване на скрити значета", ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Показване на &копчета за значетата", ID_SHOW_ICON_BUTTON
-        MENUITEM "На&стройка на уведомителката...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Сверяване на дата/&време...", ID_CONFIG_TIME
+        MENUITEM "&РџРѕРєР°Р·РІР°РЅРµ РЅР° СЃРєСЂРёС‚Рё Р·РЅР°С‡РµС‚Р°", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "РџРѕРєР°Р·РІР°РЅРµ РЅР° &РєРѕРїС‡РµС‚Р° Р·Р° Р·РЅР°С‡РµС‚Р°С‚Р°", ID_SHOW_ICON_BUTTON
+        MENUITEM "РќР°&СЃС‚СЂРѕР№РєР° РЅР° СѓРІРµРґРѕРјРёС‚РµР»РєР°С‚Р°...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "РЎРІРµСЂСЏРІР°РЅРµ РЅР° РґР°С‚Р°/&РІСЂРµРјРµ...", ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&За изследователя...", ID_ABOUT_EXPLORER
+        MENUITEM "&Р—Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ...", ID_ABOUT_EXPLORER
     END
 END
 
 IDM_SDIFRAME MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Изпълняване...", ID_EXECUTE
+        MENUITEM "&РР·РїСЉР»РЅСЏРІР°РЅРµ...", ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Затваряне", ID_FILE_EXIT
+        MENUITEM "&Р—Р°С‚РІР°СЂСЏРЅРµ", ID_FILE_EXIT
     END
-    POPUP "Из&глед"
+    POPUP "РР·&РіР»РµРґ"
     BEGIN
-        MENUITEM "Лента средства", ID_VIEW_TOOL_BAR
-        MENUITEM "&Странична лента", ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "Лента състояние", ID_VIEW_STATUSBAR
+        MENUITEM "Р›РµРЅС‚Р° СЃСЂРµРґСЃС‚РІР°", ID_VIEW_TOOL_BAR
+        MENUITEM "&РЎС‚СЂР°РЅРёС‡РЅР° Р»РµРЅС‚Р°", ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "Р›РµРЅС‚Р° СЃСЉСЃС‚РѕСЏРЅРёРµ", ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване\tF5", ID_REFRESH
-        MENUITEM "&Цял екран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
-        MENUITEM "&МПИ", ID_VIEW_MDI
+        MENUITEM "Рћ&РїСЂРµСЃРЅСЏРІР°РЅРµ\tF5", ID_REFRESH
+        MENUITEM "&Р¦СЏР» РµРєСЂР°РЅ\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&РњРџР", ID_VIEW_MDI
     END
-    POPUP "&Средства"
+    POPUP "&РЎСЂРµРґСЃС‚РІР°"
     BEGIN
-        MENUITEM "На&стройки", ID_TOOLS_OPTIONS
+        MENUITEM "РќР°&СЃС‚СЂРѕР№РєРё", ID_TOOLS_OPTIONS
     END
-    POPUP "Помо&щ"
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "&ЧЗВ за изследователя...", ID_EXPLORER_FAQ
-        MENUITEM "&За изследователя...", ID_ABOUT_EXPLORER
-        MENUITEM "За &РеактОС...", ID_ABOUT_WINDOWS
+        MENUITEM "&Р§Р—Р’ Р·Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ...", ID_EXPLORER_FAQ
+        MENUITEM "&Р—Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ...", ID_ABOUT_EXPLORER
+        MENUITEM "Р—Р° &Р РµР°РєС‚РћРЎ...", ID_ABOUT_WINDOWS
     END
 END
 
@@ -110,65 +110,65 @@ END
 
 IDD_EXECUTE DIALOGEX 15, 13, 210, 63
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Изпълняване"
+CAPTION "РР·РїСЉР»РЅСЏРІР°РЅРµ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", 101, "Static", SS_SIMPLE | SS_NOPREFIX, 3, 6, 150, 10
-    CONTROL "&Заповед:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
+    CONTROL "&Р—Р°РїРѕРІРµРґ:", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 3, 18, 60, 10
     EDITTEXT 201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL "Като &знак", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
-    DEFPUSHBUTTON "&Добре", 1, 158, 6, 47, 14
-    PUSHBUTTON "&Отказ", 2, 158, 23, 47, 14
-    PUSHBUTTON "Помо&щ", 254, 158, 43, 47, 14
+    CONTROL "РљР°С‚Рѕ &Р·РЅР°Рє", 214, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 3, 45, 71, 12
+    DEFPUSHBUTTON "&Р”РѕР±СЂРµ", 1, 158, 6, 47, 14
+    PUSHBUTTON "&РћС‚РєР°Р·", 2, 158, 23, 47, 14
+    PUSHBUTTON "РџРѕРјРѕ&С‰", 254, 158, 43, 47, 14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Търсене на приложение"
+CAPTION "РўСЉСЂСЃРµРЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёРµ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Пре&сяване:", IDC_STATIC, 2, 9, 41, 8
+    LTEXT "РџСЂРµ&СЃСЏРІР°РЅРµ:", IDC_STATIC, 2, 9, 41, 8
     EDITTEXT IDC_FILTER, 43, 7, 100, 14, ES_AUTOHSCROLL
     CONTROL "List1", IDC_PROGRAMS_FOUND, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 7, 25, 186, 33
-    PUSHBUTTON "&Проверка", IDC_CHECK_ENTRIES, 143, 2, 50, 20
+    PUSHBUTTON "&РџСЂРѕРІРµСЂРєР°", IDC_CHECK_ENTRIES, 143, 2, 50, 20
 END
 
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства на работната площ"
+CAPTION "РЎРІРѕР№СЃС‚РІР° РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰"
 FONT 7, "MS Shell Dlg"
 BEGIN
-    LTEXT "Изберете начин на подреждане:", IDC_STATIC, 7, 7, 166, 8
-    CONTROL "Горен ляв надолу", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 25, 60, 44
-    CONTROL "Горен ляв надясно", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 67, 25, 60, 44
-    CONTROL "Горен десен наляво", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 127, 25, 60, 44
-    CONTROL "Горен десен надолу", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 188, 25, 60, 44
-    CONTROL "Долен ляв нагоре", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 73, 60, 44
-    CONTROL "Долен ляв надясно", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 67, 73, 60, 44
-    CONTROL "Долен десен наляво", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 127, 73, 60, 44
-    CONTROL "Долен десен нагоре", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 188, 73, 60, 44
-    CONTROL "Странично надолу", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 121, 60, 44
-    CONTROL "По ръбовете", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 67, 121, 60, 44
-    CONTROL "Кръгово", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 127, 121, 60, 44
+    LTEXT "РР·Р±РµСЂРµС‚Рµ РЅР°С‡РёРЅ РЅР° РїРѕРґСЂРµР¶РґР°РЅРµ:", IDC_STATIC, 7, 7, 166, 8
+    CONTROL "Р“РѕСЂРµРЅ Р»СЏРІ РЅР°РґРѕР»Сѓ", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 25, 60, 44
+    CONTROL "Р“РѕСЂРµРЅ Р»СЏРІ РЅР°РґСЏСЃРЅРѕ", IDC_ICON_ALIGN_1, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 67, 25, 60, 44
+    CONTROL "Р“РѕСЂРµРЅ РґРµСЃРµРЅ РЅР°Р»СЏРІРѕ", IDC_ICON_ALIGN_2, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 127, 25, 60, 44
+    CONTROL "Р“РѕСЂРµРЅ РґРµСЃРµРЅ РЅР°РґРѕР»Сѓ", IDC_ICON_ALIGN_3, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 188, 25, 60, 44
+    CONTROL "Р”РѕР»РµРЅ Р»СЏРІ РЅР°РіРѕСЂРµ", IDC_ICON_ALIGN_4, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 73, 60, 44
+    CONTROL "Р”РѕР»РµРЅ Р»СЏРІ РЅР°РґСЏСЃРЅРѕ", IDC_ICON_ALIGN_5, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 67, 73, 60, 44
+    CONTROL "Р”РѕР»РµРЅ РґРµСЃРµРЅ РЅР°Р»СЏРІРѕ", IDC_ICON_ALIGN_6, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 127, 73, 60, 44
+    CONTROL "Р”РѕР»РµРЅ РґРµСЃРµРЅ РЅР°РіРѕСЂРµ", IDC_ICON_ALIGN_7, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 188, 73, 60, 44
+    CONTROL "РЎС‚СЂР°РЅРёС‡РЅРѕ РЅР°РґРѕР»Сѓ", IDC_ICON_ALIGN_8, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 121, 60, 44
+    CONTROL "РџРѕ СЂСЉР±РѕРІРµС‚Рµ", IDC_ICON_ALIGN_9, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 67, 121, 60, 44
+    CONTROL "РљСЂСЉРіРѕРІРѕ", IDC_ICON_ALIGN_10, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 127, 121, 60, 44
     CONTROL "", IDC_ICON_ALIGN_11, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 188, 121, 60, 44
-//    CONTROL "Показване на &версията", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 120, 10
+//    CONTROL "РџРѕРєР°Р·РІР°РЅРµ РЅР° &РІРµСЂСЃРёСЏС‚Р°", ID_DESKTOP_VERSION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 177, 120, 10
 END
 
 IDD_DESKBAR_TASKBAR DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства на задачната лента"
+CAPTION "РЎРІРѕР№СЃС‚РІР° РЅР° Р·Р°РґР°С‡РЅР°С‚Р° Р»РµРЅС‚Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Показване на &часовника", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 100, 10
-    CONTROL "&Показване на неползваните значета", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 143, 10
-    PUSHBUTTON "У&ведомителка...", ID_CONFIG_NOTIFYAREA, 150, 173, 62, 14
+    CONTROL "РџРѕРєР°Р·РІР°РЅРµ РЅР° &С‡Р°СЃРѕРІРЅРёРєР°", ID_SHOW_CLOCK, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 152, 100, 10
+    CONTROL "&РџРѕРєР°Р·РІР°РЅРµ РЅР° РЅРµРїРѕР»Р·РІР°РЅРёС‚Рµ Р·РЅР°С‡РµС‚Р°", ID_HIDE_INACTIVE_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 174, 143, 10
+    PUSHBUTTON "РЈ&РІРµРґРѕРјРёС‚РµР»РєР°...", ID_CONFIG_NOTIFYAREA, 150, 173, 62, 14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX 0, 0, 210, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Свойства на пусковия изборник"
+CAPTION "РЎРІРѕР№СЃС‚РІР° РЅР° РїСѓСЃРєРѕРІРёСЏ РёР·Р±РѕСЂРЅРёРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -176,117 +176,117 @@ END
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
 STYLE DS_SHELLFONT | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Настройка на уведомителните значета"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° СѓРІРµРґРѕРјРёС‚РµР»РЅРёС‚Рµ Р·РЅР°С‡РµС‚Р°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL "Tree1", IDC_NOTIFY_ICONS, "SysTreeView32", TVS_HASLINES | TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 7, 194, 31
-    LTEXT "&Подсказка:", IDC_LABEL1, 7, 44, 40, 8
+    LTEXT "&РџРѕРґСЃРєР°Р·РєР°:", IDC_LABEL1, 7, 44, 40, 8
     EDITTEXT IDC_NOTIFY_TOOLTIP, 58, 42, 143, 14, ES_AUTOHSCROLL
-    LTEXT "&Заглавие на прозореца:", IDC_LABEL2, 7, 63, 44, 8
+    LTEXT "&Р—Р°РіР»Р°РІРёРµ РЅР° РїСЂРѕР·РѕСЂРµС†Р°:", IDC_LABEL2, 7, 63, 44, 8
     EDITTEXT IDC_NOTIFY_TITLE, 58, 60, 143, 14, ES_AUTOHSCROLL
-    LTEXT "&Път:", IDC_LABEL3, 7, 81, 43, 8
+    LTEXT "&РџСЉС‚:", IDC_LABEL3, 7, 81, 43, 8
     EDITTEXT IDC_NOTIFY_MODULE, 58, 78, 143, 14, ES_AUTOHSCROLL
-    GROUPBOX "&Начин на изобразяване", IDC_LABEL4, 7, 96, 157, 28
-    CONTROL "&показване", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 8, 108, 49, 10
-    CONTROL "&скриване", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 56, 108, 45, 10
-    CONTROL "с&амоскриване", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 100, 108, 61, 10
+    GROUPBOX "&РќР°С‡РёРЅ РЅР° РёР·РѕР±СЂР°Р·СЏРІР°РЅРµ", IDC_LABEL4, 7, 96, 157, 28
+    CONTROL "&РїРѕРєР°Р·РІР°РЅРµ", IDC_NOTIFY_SHOW, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 8, 108, 49, 10
+    CONTROL "&СЃРєСЂРёРІР°РЅРµ", IDC_NOTIFY_HIDE, "Button", BS_AUTORADIOBUTTON, 56, 108, 45, 10
+    CONTROL "СЃ&Р°РјРѕСЃРєСЂРёРІР°РЅРµ", IDC_NOTIFY_AUTOHIDE, "Button", BS_AUTORADIOBUTTON, 100, 108, 61, 10
     ICON "", IDC_PICTURE, 173, 101, 21, 20
-    LTEXT "&Променено на:", IDC_LABEL6, 3, 132, 54, 8
+    LTEXT "&РџСЂРѕРјРµРЅРµРЅРѕ РЅР°:", IDC_LABEL6, 3, 132, 54, 8
     EDITTEXT IDC_LAST_CHANGE, 59, 129, 105, 14, ES_AUTOHSCROLL | ES_READONLY
-    CONTROL "&Показване на скрити", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 2, 154, 85, 10
-    DEFPUSHBUTTON "&Добре", IDOK, 91, 153, 50, 14, WS_GROUP
-    PUSHBUTTON "&Отказ", IDCANCEL, 151, 153, 50, 14
+    CONTROL "&РџРѕРєР°Р·РІР°РЅРµ РЅР° СЃРєСЂРёС‚Рё", ID_SHOW_HIDDEN_ICONS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 2, 154, 85, 10
+    DEFPUSHBUTTON "&Р”РѕР±СЂРµ", IDOK, 91, 153, 50, 14, WS_GROUP
+    PUSHBUTTON "&РћС‚РєР°Р·", IDCANCEL, 151, 153, 50, 14
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Избор на прозоречен изглед на изследователя"
+CAPTION "РР·Р±РѕСЂ РЅР° РїСЂРѕР·РѕСЂРµС‡РµРЅ РёР·РіР»РµРґ РЅР° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Изберете работен облик за изследователя:", IDC_STATIC, 7, 7, 160, 8
-    CONTROL "&МДИ (Многодокументен изглед)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 124, 10
-    CONTROL "&ЕДИ (Еднодокументен изглед)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
+    LTEXT "РР·Р±РµСЂРµС‚Рµ СЂР°Р±РѕС‚РµРЅ РѕР±Р»РёРє Р·Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ:", IDC_STATIC, 7, 7, 160, 8
+    CONTROL "&РњР”Р (РњРЅРѕРіРѕРґРѕРєСѓРјРµРЅС‚РµРЅ РёР·РіР»РµРґ)", IDC_MDI, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 7, 31, 124, 10
+    CONTROL "&Р•Р”Р (Р•РґРЅРѕРґРѕРєСѓРјРµРЅС‚РµРЅ РёР·РіР»РµРґ)", IDC_SDI, "Button", BS_AUTORADIOBUTTON, 7, 62, 118, 10
     CONTROL 170, IDC_STATIC, "Static", SS_BITMAP, 145, 23, 15, 13
     CONTROL 171, IDC_STATIC, "Static", SS_BITMAP, 145, 57, 15, 13
-    CONTROL "Отваряне на подпапките в от&делни прозорци", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 180, 10
-    LTEXT "Тази настройка вече ще бъде използвана по подразбиране за всички прозорци на изследователя.", IDC_STATIC, 7, 108, 174, 25
-    DEFPUSHBUTTON "&Добре", IDOK, 29, 136, 50, 14, WS_GROUP
-    PUSHBUTTON "&Отказ", IDCANCEL, 106, 136, 50, 14
+    CONTROL "РћС‚РІР°СЂСЏРЅРµ РЅР° РїРѕРґРїР°РїРєРёС‚Рµ РІ РѕС‚&РґРµР»РЅРё РїСЂРѕР·РѕСЂС†Рё", IDC_SEPARATE_SUBFOLDERS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 90, 180, 10
+    LTEXT "РўР°Р·Рё РЅР°СЃС‚СЂРѕР№РєР° РІРµС‡Рµ С‰Рµ Р±СЉРґРµ РёР·РїРѕР»Р·РІР°РЅР° РїРѕ РїРѕРґСЂР°Р·Р±РёСЂР°РЅРµ Р·Р° РІСЃРёС‡РєРё РїСЂРѕР·РѕСЂС†Рё РЅР° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ.", IDC_STATIC, 7, 108, 174, 25
+    DEFPUSHBUTTON "&Р”РѕР±СЂРµ", IDOK, 29, 136, 50, 14, WS_GROUP
+    PUSHBUTTON "&РћС‚РєР°Р·", IDCANCEL, 106, 136, 50, 14
 END
 
 IDD_ABOUT_EXPLORER DIALOGEX 0, 0, 199, 106
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "За изследователя на РеактОС"
+CAPTION "Р—Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Изследователят на РеактОС", IDC_ROS_EXPLORER, 91, 13, 104, 11
-    LTEXT "в 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
+    LTEXT "РР·СЃР»РµРґРѕРІР°С‚РµР»СЏС‚ РЅР° Р РµР°РєС‚РћРЎ", IDC_ROS_EXPLORER, 91, 13, 104, 11
+    LTEXT "РІ 0.9", IDC_VERSION_TXT, 91, 27, 104, 8
     LTEXT "(c) 2003-2005 Martin Fuchs", IDC_STATIC, 91, 42, 104, 8
     LTEXT "", IDC_WIN_VERSION, 91, 58, 98, 22
     LTEXT "http://www.sky.franken.de/explorer/", IDC_WWW, 17, 84, 129, 8
-    CONTROL "&Добре", IDOK, "Button", BS_OWNERDRAW | BS_FLAT | WS_GROUP, 154, 90, 38, 12
+    CONTROL "&Р”РѕР±СЂРµ", IDOK, "Button", BS_OWNERDRAW | BS_FLAT | WS_GROUP, 154, 90, 38, 12
 END
 
 /* String Tables */
 
 STRINGTABLE
 BEGIN
-    IDS_TITLE "Изследователят на РеактОС"
-    IDS_START "Пуск"
-    IDS_LOGOFF "Изход..."
-    IDS_SHUTDOWN "Изключване..."
-    IDS_RESTART "Презапускане..."
-    IDS_LAUNCH "Изпълняване..."
-    IDS_START_HELP "Помощ"
-    IDS_SEARCH_FILES "Търсене"
-    IDS_DOCUMENTS "Книжа"
-    IDS_FAVORITES "Любимки"
-    IDS_PROGRAMS "Приложения"
-    IDS_SETTINGS "Настройки"
-    IDS_EXPLORE "Изследовател"
-    IDS_EMPTY "(Празно)"
-    IDS_RECENT "Скорошни книжа"
-    IDS_ADMIN "Управление"
+    IDS_TITLE "РР·СЃР»РµРґРѕРІР°С‚РµР»СЏС‚ РЅР° Р РµР°РєС‚РћРЎ"
+    IDS_START "РџСѓСЃРє"
+    IDS_LOGOFF "РР·С…РѕРґ..."
+    IDS_SHUTDOWN "РР·РєР»СЋС‡РІР°РЅРµ..."
+    IDS_RESTART "РџСЂРµР·Р°РїСѓСЃРєР°РЅРµ..."
+    IDS_LAUNCH "РР·РїСЉР»РЅСЏРІР°РЅРµ..."
+    IDS_START_HELP "РџРѕРјРѕС‰"
+    IDS_SEARCH_FILES "РўСЉСЂСЃРµРЅРµ"
+    IDS_DOCUMENTS "РљРЅРёР¶Р°"
+    IDS_FAVORITES "Р›СЋР±РёРјРєРё"
+    IDS_PROGRAMS "РџСЂРёР»РѕР¶РµРЅРёСЏ"
+    IDS_SETTINGS "РќР°СЃС‚СЂРѕР№РєРё"
+    IDS_EXPLORE "РР·СЃР»РµРґРѕРІР°С‚РµР»"
+    IDS_EMPTY "(РџСЂР°Р·РЅРѕ)"
+    IDS_RECENT "РЎРєРѕСЂРѕС€РЅРё РєРЅРёР¶Р°"
+    IDS_ADMIN "РЈРїСЂР°РІР»РµРЅРёРµ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STARTMENU "Пусков изборник"
-    IDS_MINIMIZE_ALL "Смаляване на всички прозорци"
-    IDS_DESKTOP_NUM "Работна площ %d"
-    IDS_VOLUME "Сила на звука"
-    IDS_ITEMS_CUR "текущи предмети"
-    IDS_ITEMS_CONFIGURED "настройка"
-    IDS_ITEMS_VISIBLE "видим"
-    IDS_ITEMS_HIDDEN "скрит"
-    IDS_NOTIFY_SHOW "показване"
-    IDS_NOTIFY_HIDE "скриване"
-    IDS_NOTIFY_AUTOHIDE "самоскриване"
-    IDS_SHOW_HIDDEN_ICONS "Показване на скритите значета"
-    IDS_HIDE_ICONS "Скриване на значета"
-    IDS_TERMINATE "Прекратяване на изследователя"
+    IDS_STARTMENU "РџСѓСЃРєРѕРІ РёР·Р±РѕСЂРЅРёРє"
+    IDS_MINIMIZE_ALL "РЎРјР°Р»СЏРІР°РЅРµ РЅР° РІСЃРёС‡РєРё РїСЂРѕР·РѕСЂС†Рё"
+    IDS_DESKTOP_NUM "Р Р°Р±РѕС‚РЅР° РїР»РѕС‰ %d"
+    IDS_VOLUME "РЎРёР»Р° РЅР° Р·РІСѓРєР°"
+    IDS_ITEMS_CUR "С‚РµРєСѓС‰Рё РїСЂРµРґРјРµС‚Рё"
+    IDS_ITEMS_CONFIGURED "РЅР°СЃС‚СЂРѕР№РєР°"
+    IDS_ITEMS_VISIBLE "РІРёРґРёРј"
+    IDS_ITEMS_HIDDEN "СЃРєСЂРёС‚"
+    IDS_NOTIFY_SHOW "РїРѕРєР°Р·РІР°РЅРµ"
+    IDS_NOTIFY_HIDE "СЃРєСЂРёРІР°РЅРµ"
+    IDS_NOTIFY_AUTOHIDE "СЃР°РјРѕСЃРєСЂРёРІР°РЅРµ"
+    IDS_SHOW_HIDDEN_ICONS "РџРѕРєР°Р·РІР°РЅРµ РЅР° СЃРєСЂРёС‚РёС‚Рµ Р·РЅР°С‡РµС‚Р°"
+    IDS_HIDE_ICONS "РЎРєСЂРёРІР°РЅРµ РЅР° Р·РЅР°С‡РµС‚Р°"
+    IDS_TERMINATE "РџСЂРµРєСЂР°С‚СЏРІР°РЅРµ РЅР° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORK "Мрежа"
-    IDS_CONNECTIONS "Мрежови връзки"
-    IDS_DRIVES "Устройства"
-    IDS_SEARCH_COMPUTER "Търсене на компютър..."
-    IDS_SETTINGS_MENU "Изборник за настройки"
-    IDS_CONTROL_PANEL "Крило за управление"
-    IDS_PRINTERS "Печатачи"
-    IDS_BROWSE "Файлов обзор"
-    IDS_SEARCH_PRG "Търсене на приложение..."
-    IDS_ALL_USERS "Всички потребители\\"
-    IDS_SEARCH "Търсене"
-    IDS_ABOUT_EXPLORER "&За изследователя..."
-    IDS_LAUNCH_MANY_PROGRAMS "Избрали сте повече от едно приложение.\nСигурен ли сте, че искате да изпълните всичките?"
-    IDS_DESKTOPBAR_SETTINGS "Настройки на работната площ"
-    IDS_DESKTOP "Работна площ"
-    IDS_TASKBAR "Задачна лента"
-    IDS_NAMECOLUMN "Име"
-    IDS_PATHCOLUMN "Път"
-    IDS_MENUCOLUMN "Път на изборника"
+    IDS_NETWORK "РњСЂРµР¶Р°"
+    IDS_CONNECTIONS "РњСЂРµР¶РѕРІРё РІСЂСЉР·РєРё"
+    IDS_DRIVES "РЈСЃС‚СЂРѕР№СЃС‚РІР°"
+    IDS_SEARCH_COMPUTER "РўСЉСЂСЃРµРЅРµ РЅР° РєРѕРјРїСЋС‚СЉСЂ..."
+    IDS_SETTINGS_MENU "РР·Р±РѕСЂРЅРёРє Р·Р° РЅР°СЃС‚СЂРѕР№РєРё"
+    IDS_CONTROL_PANEL "РљСЂРёР»Рѕ Р·Р° СѓРїСЂР°РІР»РµРЅРёРµ"
+    IDS_PRINTERS "РџРµС‡Р°С‚Р°С‡Рё"
+    IDS_BROWSE "Р¤Р°Р№Р»РѕРІ РѕР±Р·РѕСЂ"
+    IDS_SEARCH_PRG "РўСЉСЂСЃРµРЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёРµ..."
+    IDS_ALL_USERS "Р’СЃРёС‡РєРё РїРѕС‚СЂРµР±РёС‚РµР»Рё\\"
+    IDS_SEARCH "РўСЉСЂСЃРµРЅРµ"
+    IDS_ABOUT_EXPLORER "&Р—Р° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ..."
+    IDS_LAUNCH_MANY_PROGRAMS "РР·Р±СЂР°Р»Рё СЃС‚Рµ РїРѕРІРµС‡Рµ РѕС‚ РµРґРЅРѕ РїСЂРёР»РѕР¶РµРЅРёРµ.\nРЎРёРіСѓСЂРµРЅ Р»Рё СЃС‚Рµ, С‡Рµ РёСЃРєР°С‚Рµ РґР° РёР·РїСЉР»РЅРёС‚Рµ РІСЃРёС‡РєРёС‚Рµ?"
+    IDS_DESKTOPBAR_SETTINGS "РќР°СЃС‚СЂРѕР№РєРё РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰"
+    IDS_DESKTOP "Р Р°Р±РѕС‚РЅР° РїР»РѕС‰"
+    IDS_TASKBAR "Р—Р°РґР°С‡РЅР° Р»РµРЅС‚Р°"
+    IDS_NAMECOLUMN "РРјРµ"
+    IDS_PATHCOLUMN "РџСЉС‚"
+    IDS_MENUCOLUMN "РџСЉС‚ РЅР° РёР·Р±РѕСЂРЅРёРєР°"
 END
