@@ -3399,11 +3399,11 @@ typedef struct tagKMDDEEXECUTEDATA
   /* BYTE Data[DataSize] */
 } KMDDEEXECUTEDATA, *PKMDDEEXECUTEDATA;
 
-typedef struct tagKMDDELPARAM
+typedef struct tagDDEPACK
 {
   UINT_PTR uiLo;
   UINT_PTR uiHi;
-} KMDDELPARAM, *PKMDDELPARAM;
+} DDEPACK, *PDDEPACK;
 
 
 

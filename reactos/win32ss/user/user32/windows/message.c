@@ -359,8 +359,8 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
     {
       case WM_DDE_ACK:
         {
-          PKMDDELPARAM DdeLparam;
-          DdeLparam = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDELPARAM));
+          PDDEPACK DdeLparam;
+          DdeLparam = HeapAlloc(GetProcessHeap(), 0, sizeof(DDEPACK));
           if (!DdeLparam ||
               !UnpackDDElParam( UMMsg->message, UMMsg->lParam, &DdeLparam->uiLo, &DdeLparam->uiHi))
              return FALSE;
@@ -490,7 +490,7 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
 
       case WM_DDE_ACK:
         {
-          PKMDDELPARAM DdeLparam = (PKMDDELPARAM) KMMsg->lParam;
+          PDDEPACK DdeLparam = (PDDEPACK) KMMsg->lParam;
           UMMsg->lParam = PackDDElParam(KMMsg->message, DdeLparam->uiLo, DdeLparam->uiHi);
         }
         break;
