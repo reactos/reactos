@@ -1,7 +1,7 @@
 /*
  * Italian resource file for MS-RLE
  *
- * Copyright 2002 Michael Günnewig
+ * Copyright 2002 Michael GÃ¼nnewig
  * Copyright 2003 Ivan Leo Puoti
  *
  * This library is free software; you can redistribute it and/or
@@ -27,5 +27,5 @@ STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
 	IDS_DESCRIPTION	"Codec video MS-RLE di Wine"
-	IDS_ABOUT       "Codec video MS-RLE di Wine\nCopyright 2002 Michael Günnewig"
+	IDS_ABOUT       "Codec video MS-RLE di Wine\nCopyright 2002 Michael GÃ¼nnewig"
 }

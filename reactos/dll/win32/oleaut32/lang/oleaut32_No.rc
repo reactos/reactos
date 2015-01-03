@@ -26,6 +26,6 @@ STRINGTABLE
   IDS_FALSE "Usann"
   IDS_YES   "Ja"
   IDS_NO    "Nei"
-  IDS_ON    "PÕ"
+  IDS_ON    "PÃ•"
   IDS_OFF   "Av"
 }

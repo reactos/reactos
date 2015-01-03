@@ -22,15 +22,17 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "Det angivna installationspaketet kunde inte öppnas.  Kontrollera filsökvägen och försök igen."
-	5 "sökvägen %s hittades inte"
+	4 "Det angivna installationspaketet kunde inte Ã¶ppnas.  Kontrollera filsÃ¶kvÃ¤gen och fÃ¶rsÃ¶k igen."
+	5 "sÃ¶kvÃ¤gen %s hittades inte"
 	9 "mata in %s"
 	10 "Windows Installer %s\n\nUsage:\nmsiexec command {required parameter} [optional parammeter]\n\nInstall a product:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nRepair an installation:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nUninstall a product:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nAdvertise a product:\n\t/j[u|m] package [/t transform] [/g languageid]\nApply a patch:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nLog and UI Modifiers for above commands:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nRegister MSI Service:\n\t/y\nUnregister MSI Service:\n\t/z\nDisplay this help:\n\t/help\n\t/?\n"
-	11 "ange vilken mapp som innehåller %s"
-	12 "installationskälla för funktion saknar"
-	13 "nätverksenhet för funktion saknar"
-	14 "funktion från:"
-	15 "välj den mapp som innehåller %s"
+	11 "ange vilken mapp som innehÃ¥ller %s"
+	12 "installationskÃ¤lla fÃ¶r funktion saknar"
+	13 "nÃ¤tverksenhet fÃ¶r funktion saknar"
+	14 "funktion frÃ¥n:"
+	15 "vÃ¤lj den mapp som innehÃ¥ller %s"
 }

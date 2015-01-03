@@ -29,22 +29,22 @@ STRINGTABLE
 
 IDD_PROXYDLG DIALOG 36, 24, 220, 146
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Въведете мрежова парола"
+CAPTION "Р’СЉРІРµРґРµС‚Рµ РјСЂРµР¶РѕРІР° РїР°СЂРѕР»Р°"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Въведете вашето потребителско име и парола:", -1, 6, 6, 210, 15
- LTEXT "Прокси", -1, 6, 26, 50, 18
- LTEXT "Област", -1, 6, 46, 50, 18
- LTEXT "Потребител", -1, 6, 66, 50, 18
- LTEXT "Парола", -1, 6, 86, 50, 18
+ LTEXT "Р’СЉРІРµРґРµС‚Рµ РІР°С€РµС‚Рѕ РїРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ РёРјРµ Рё РїР°СЂРѕР»Р°:", -1, 6, 6, 210, 15
+ LTEXT "РџСЂРѕРєСЃРё", -1, 6, 26, 50, 18
+ LTEXT "РћР±Р»Р°СЃС‚", -1, 6, 46, 50, 18
+ LTEXT "РџРѕС‚СЂРµР±РёС‚РµР»", -1, 6, 66, 50, 18
+ LTEXT "РџР°СЂРѕР»Р°", -1, 6, 86, 50, 18
  LTEXT "", IDC_PROXY, 60, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 60, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 60, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 60, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Запомни паролата (небезопасно)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Р—Р°РїРѕРјРЅРё РїР°СЂРѕР»Р°С‚Р° (РЅРµР±РµР·РѕРїР°СЃРЅРѕ)", IDC_SAVEPASSWORD,
            60, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 90, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Отмени", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РћС‚РјРµРЅРё", IDCANCEL, 154, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 IDD_AUTHDLG DIALOG 36, 24, 220, 146

@@ -1,7 +1,7 @@
 /*
  * MPR dll Spanish resources
  *
- * Copyright (C) 2004, 2005 José Manuel Ferrer Ortiz
+ * Copyright (C) 2004, 2005 JosÃ© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,19 +27,19 @@ STRINGTABLE
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Introduzca contraseña de red"
+CAPTION "Introduzca contraseÃ±a de red"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Por favor, introduzca su nombre de usuario y contraseña:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "Por favor, introduzca su nombre de usuario y contraseÃ±a:", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "Proxy", -1, 6, 26, 60, 10
 /* LTEXT "Realm", -1, 6, 46, 60, 10 */
  LTEXT "Usuario", -1, 6, 66, 60, 10
- LTEXT "Contraseña", -1, 6, 86, 60, 10
+ LTEXT "ContraseÃ±a", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 70, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Guardar esta contraseña (Inseguro)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Guardar esta contraseÃ±a (Inseguro)", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "Aceptar", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Cancelar", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP

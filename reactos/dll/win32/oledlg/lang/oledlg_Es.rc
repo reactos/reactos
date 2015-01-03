@@ -1,5 +1,5 @@
 /*
- * Copyright 2004, 2007 JosÈ Manuel Ferrer Ortiz
+ * Copyright 2004, 2007 Jos√© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,24 +21,24 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Inserta un nuevo objeto %s en su documento"
-  IDS_RESULTFILEOBJDESC	"Inserta el contenido del archivo como un objeto en su documento, con lo que podr· activarlo utilizando el programa que lo creÛ."
+  IDS_RESULTFILEOBJDESC	"Inserta el contenido del archivo como un objeto en su documento, con lo que podr√° activarlo utilizando el programa que lo cre√≥."
   IDS_BROWSE            "Explorar"
-  IDS_NOTOLEMOD         "El archivo no parece ser un mÛdulo OLE v·lido. Incapaz de registrar el control OLE."
-  IDS_NOTOLEMODCAPTION  "AÒadir control"
+  IDS_NOTOLEMOD         "El archivo no parece ser un m√≥dulo OLE v√°lido. Incapaz de registrar el control OLE."
+  IDS_NOTOLEMODCAPTION  "A√±adir control"
 }
 
 STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "Inserta el contenido del portapapeles en su documento como %s."
     IDS_PS_PASTE_OBJECT                   "Inserta el contenido del portapapeles en su documento de modo que pueda activarlo usando %s."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "Inserta el contenido del portapapeles en su documento de modo que pueda activarlo usando %s.  Ser· mostrado como un icono."
-    IDS_PS_PASTE_LINK_DATA                "Inserta el contenido del portapapeles en su documento como %s.  Los datos estar·n enlazados al archivo de origen, por lo que los cambios en el archivo se reflejar·n en su documento."
-    IDS_PS_PASTE_LINK_OBJECT              "Inserta una imagen del contenido del portapapeles en su documento.  La imagen estar· enlazada al archivo de origen, por lo que los cambios en el archivo se reflejar·n en su documento."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Inserta un acceso directo que apunte a la localizaciÛn del contenido del portapapeles.  El acceso directo estar· enlazado al archivo de origen, por lo que los cambios en el archivo se reflejar·n en su documento."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Inserta el contenido del portapapeles en su documento de modo que pueda activarlo usando %s.  Ser√° mostrado como un icono."
+    IDS_PS_PASTE_LINK_DATA                "Inserta el contenido del portapapeles en su documento como %s.  Los datos estar√°n enlazados al archivo de origen, por lo que los cambios en el archivo se reflejar√°n en su documento."
+    IDS_PS_PASTE_LINK_OBJECT              "Inserta una imagen del contenido del portapapeles en su documento.  La imagen estar√° enlazada al archivo de origen, por lo que los cambios en el archivo se reflejar√°n en su documento."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Inserta un acceso directo que apunte a la localizaci√≥n del contenido del portapapeles.  El acceso directo estar√° enlazado al archivo de origen, por lo que los cambios en el archivo se reflejar√°n en su documento."
     IDS_PS_NON_OLE                        "Inserta el contenido del portapapeles en su documento."
     IDS_PS_UNKNOWN_TYPE                   "Tipo desconocido"
     IDS_PS_UNKNOWN_SRC                    "Origen desconocido"
-    IDS_PS_UNKNOWN_APP                    "el programa que lo creÛ"
+    IDS_PS_UNKNOWN_APP                    "el programa que lo cre√≥"
 }
 
 UIINSERTOBJECT DIALOG  0, 0, 304, 151
@@ -60,7 +60,7 @@ BEGIN
     CONTROL         "Crear desde archivo",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
-    PUSHBUTTON      "&AÒadir control...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    PUSHBUTTON      "&A√±adir control...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
     CONTROL         "Mostrar como icono",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
     PUSHBUTTON      "Explorar...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE

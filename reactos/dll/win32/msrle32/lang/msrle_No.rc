@@ -1,7 +1,7 @@
 /*
- * Norwegian Bokmål resource file for MS-RLE
+ * Norwegian BokmÃ¥l resource file for MS-RLE
  *
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,5 +26,5 @@ STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
 	IDS_DESCRIPTION	"Wine MS-RLE-videokodek"
-	IDS_ABOUT       "Wine MS-RLE-videokodek\nKopirett 2002 tilhører Michael Günnewig"
+	IDS_ABOUT       "Wine MS-RLE-videokodek\nKopirett 2002 tilhÃ¸rer Michael GÃ¼nnewig"
 }

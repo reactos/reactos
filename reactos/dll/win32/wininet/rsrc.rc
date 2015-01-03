@@ -38,6 +38,10 @@
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/wininet_Bg.rc"
 #endif
@@ -46,6 +50,9 @@
 #endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/wininet_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/wininet_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/wininet_En.rc"
@@ -59,6 +66,9 @@
 #ifdef LANGUAGE_FI_FI
     #include "lang/wininet_Fi.rc"
 #endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/wininet_Fr.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/wininet_He.rc"
 #endif
@@ -68,37 +78,23 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/wininet_It.rc"
 #endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/wininet_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/wininet_Nl.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/wininet_Pl.rc"
-#endif
-#ifdef LANGUAGE_SR_SP
-    #include "lang/wininet_Sr.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/wininet_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/wininet_De.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/wininet_Fr.rc"
-#endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/wininet_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/wininet_Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/wininet_Lt.rc"
 #endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/wininet_Nl.rc"
+#endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/wininet_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/wininet_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/wininet_Pt.rc"
@@ -114,6 +110,12 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/wininet_Sq.rc"
+#endif
+#ifdef LANGUAGE_SR_SP
+    #include "lang/wininet_Sr.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/wininet_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/wininet_Tr.rc"

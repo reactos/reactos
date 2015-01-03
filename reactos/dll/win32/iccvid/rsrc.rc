@@ -20,17 +20,41 @@
 
 #include "iccvid_private.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/iccvid_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/iccvid_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/iccvid_En.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/iccvid_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/iccvid_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/iccvid_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/iccvid_Hu.rc"
 #endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/iccvid_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/iccvid_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/iccvid_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/iccvid_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/iccvid_Nl.rc"
@@ -44,32 +68,6 @@
 #ifdef LANGUAGE_PT_PT
     #include "lang/iccvid_Pt.rc"
 #endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/iccvid_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/iccvid_De.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/iccvid_Es.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/iccvid_Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/iccvid_He.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "lang/iccvid_It.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/iccvid_Ja.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/iccvid_Lt.rc"
-#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/iccvid_Ro.rc"
 #endif
@@ -81,6 +79,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/iccvid_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/iccvid_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/iccvid_Tr.rc"

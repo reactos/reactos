@@ -24,6 +24,10 @@
 
 #include "version.rc"
 
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/mpr_Bg.rc"
 #endif
@@ -33,11 +37,20 @@
 #ifdef LANGUAGE_DA_DK
     #include "lang/mpr_Da.rc"
 #endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/mpr_De.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/mpr_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/mpr_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/mpr_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/mpr_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/mpr_Hu.rc"
@@ -45,8 +58,14 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/mpr_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/mpr_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/mpr_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/mpr_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/mpr_Nl.rc"
@@ -56,26 +75,6 @@
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/mpr_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/mpr_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/mpr_De.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/mpr_Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/mpr_He.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/mpr_Ja.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/mpr_Lt.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/mpr_Pt.rc"
@@ -91,6 +90,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/mpr_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/mpr_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/mpr_Tr.rc"

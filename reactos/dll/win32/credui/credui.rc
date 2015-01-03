@@ -26,31 +26,17 @@
 /* @makedep: banner.bmp */
 IDB_BANNER BITMAP "res/banner.bmp"
 
-#ifdef LANGUAGE_EN_US
-    #include "lang/credui_En.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/credui_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/credui_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/credui_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/credui_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/credui_Sv.rc"
-#endif
-
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/credui_Da.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/credui_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/credui_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/credui_Es.rc"
@@ -67,8 +53,20 @@ IDB_BANNER BITMAP "res/banner.bmp"
 #ifdef LANGUAGE_IT_IT
     #include "lang/credui_It.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/credui_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/credui_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/credui_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/credui_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/credui_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/credui_Pt.rc"
@@ -84,6 +82,9 @@ IDB_BANNER BITMAP "res/banner.bmp"
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/credui_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/credui_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/credui_Tr.rc"

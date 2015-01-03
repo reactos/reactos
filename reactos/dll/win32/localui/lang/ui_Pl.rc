@@ -25,8 +25,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_LOCALPORT "Port lokalny"
-    IDS_INVALIDNAME "'%s' nie jest poprawn¹ nazw¹ portu"
-    IDS_PORTEXISTS "Port %s ju¿ istnieje"
+    IDS_INVALIDNAME "'%s' nie jest poprawnÄ… nazwÄ… portu"
+    IDS_PORTEXISTS "Port %s juÅ¼ istnieje"
     IDS_NOTHINGTOCONFIG "Ten port nie ma opcji do skonfigurowania"
 }
 

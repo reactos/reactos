@@ -8,14 +8,14 @@ BEGIN
     PUSHBUTTON "Avbryt", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Kilde:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Mål:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "MÃ¥l:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Din datamaskin trenger å startes på nytt for å fullføre installasjonen. Vil du starte på nytt?"
-    IDS_QUERY_REBOOT_CAPTION "Start på nytt"
+    IDS_QUERY_REBOOT_TEXT "Din datamaskin trenger Ã¥ startes pÃ¥ nytt for Ã¥ fullfÃ¸re installasjonen. Vil du starte pÃ¥ nytt?"
+    IDS_QUERY_REBOOT_CAPTION "Start pÃ¥ nytt"
     IDS_INF_FILE "Installerings informasjon"
 END

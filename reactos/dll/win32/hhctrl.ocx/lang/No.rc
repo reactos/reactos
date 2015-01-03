@@ -1,8 +1,8 @@
 /*
  * HTML Help resources
- * Norwegian Bokmål Language Support
+ * Norwegian BokmÃ¥l Language Support
  *
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@ STRINGTABLE
 BEGIN
     IDS_CONTENTS     "&Innhold"
     IDS_INDEX        "I&ndeks"
-    IDS_SEARCH       "&Søk"
+    IDS_SEARCH       "&SÃ¸k"
     IDS_FAVORITES    "Favor&itter"
 
     IDS_HIDETABS     "Hide &Tabs"

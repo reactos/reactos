@@ -29,21 +29,14 @@
 
 #include <wine/wine_common_ver.rc>
 
-#ifdef LANGUAGE_EN_US
-    #include "lang/crypt32_En.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/crypt32_Ko.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/crypt32_Pl.rc"
-#endif
-
 /* UTF-8 */
 #pragma code_page(65001)
 
 #ifdef LANGUAGE_DE_DE
     #include "lang/crypt32_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/crypt32_En.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/crypt32_Fr.rc"
@@ -57,6 +50,9 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/crypt32_It.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/crypt32_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/crypt32_Lt.rc"
 #endif
@@ -65,6 +61,9 @@
 #endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/crypt32_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/crypt32_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/crypt32_Pt.rc"

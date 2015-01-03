@@ -29,34 +29,24 @@
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_CS_CZ
     #include "lang/oledlg_Cs.rc"
 #endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/oledlg_Da.rc"
 #endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/oledlg_De.rc"
+#endif
 #ifdef LANGUAGE_EN_US
     #include "lang/oledlg_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/oledlg_Es.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/oledlg_Ko.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/oledlg_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/oledlg_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/oledlg_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/oledlg_De.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/oledlg_Fr.rc"
@@ -73,11 +63,20 @@
 #ifdef LANGUAGE_JA_JP
     #include "lang/oledlg_Ja.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/oledlg_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/oledlg_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/oledlg_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/oledlg_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/oledlg_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/oledlg_Pt.rc"
@@ -93,6 +92,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/oledlg_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/oledlg_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/oledlg_Tr.rc"

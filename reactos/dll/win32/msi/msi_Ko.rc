@@ -24,15 +24,17 @@
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 " ÁöÁ¤ÇÑ ¼³Ä¡ ÆĞÅ°Áö¸¦ ¿­ ¼ö ¾ø½À´Ï´Ù. ÆÄÀÏ °æ·Î¸¦ È®ÀÎÇÏ°í ´Ù½Ã ½ÃµµÇÏ½Ê½Ã¿À."
-	5 "%s  °æ·Î¸¦ Ã£À»¼ö ¾ø½À´Ï´Ù"
-	9 "µğ½ºÅ© %s »ğÀÔ"
-	10 "Windows Installer %s\n\n»ç¿ë¹ı:\nmsiexec ¸í·É {ÇÊ¼ö ¸Å°³º¯¼ö}  [¼±ÅÃÀû ¸Å°³º¯¼ö]\n\nÁ¦Ç° ¼³Ä¡:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\n¼³Ä¡ º¹±¸:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nÁ¦Ç° Á¦°Å:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nÁ¦Ç° ¾Ë¸®±â:\n\t/j[u|m] package [/t transform] [/g languageid]\nÆĞÄ¡ Ãß°¡:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nÀ§ÀÇ ¸í·É¾î¸¦ À§ÇÑ Log ¿Í UI ÇÑÁ¤ÀÚ :\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nMSI ¼­ºñ½º  µî·Ï:\n\t/y\nMSI ¼­ºñ½º µî·Ï ÇØÁ¦:\n\t/z\nµµ¿ò¸»  º¸±â:\n\t/help\n\t/?\n"
-	11 "%s¸¦ Æ÷ÇÔÇÏ´Â Æú´õ¸¦ ÀÔ·ÂÇÏ¼¼¿©"
-	12 "ºüÁø ºÎºĞ(feature)À» À§ÇÑ ¼³Ä¡ ¿øº»"
-	13 "ºüÁø ºÎºĞ(feature)À» À§ÇÑ ³×Æ®¿öÅ© µå¶óÀÌºê"
-	14 "ºÎºĞ(feature)¿¡¼­:"
-	15 " %s¸¦ Æ÷ÇÔÇÏ´Â Æú´õ ¼±ÅÃ"
+	4 " ì§€ì •í•œ ì„¤ì¹˜ íŒ¨í‚¤ì§€ë¥¼ ì—´ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. íŒŒì¼ ê²½ë¡œë¥¼ í™•ì¸í•˜ê³  ë‹¤ì‹œ ì‹œë„í•˜ì‹­ì‹œì˜¤."
+	5 "%s  ê²½ë¡œë¥¼ ì°¾ì„ìˆ˜ ì—†ìŠµë‹ˆë‹¤"
+	9 "ë””ìŠ¤í¬ %s ì‚½ì…"
+	10 "Windows Installer %s\n\nì‚¬ìš©ë²•:\nmsiexec ëª…ë ¹ {í•„ìˆ˜ ë§¤ê°œë³€ìˆ˜}  [ì„ íƒì  ë§¤ê°œë³€ìˆ˜]\n\nì œí’ˆ ì„¤ì¹˜:\n\t/i {package|productcode} [property]\n\t/package {package|productcode} [property]\n\t/a package [property]\nì„¤ì¹˜ ë³µêµ¬:\n\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\nì œí’ˆ ì œê±°:\n\t/uninstall {package|productcode} [property]\n\t/x {package|productcode} [property]\nì œí’ˆ ì•Œë¦¬ê¸°:\n\t/j[u|m] package [/t transform] [/g languageid]\níŒ¨ì¹˜ ì¶”ê°€:\n\t/p patchpackage [property]\n\t/p patchpackage /a package [property]\nìœ„ì˜ ëª…ë ¹ì–´ë¥¼ ìœ„í•œ Log ì™€ UI í•œì •ì :\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n\t/q{|n|b|r|f|n+|b+|b-}\nMSI ì„œë¹„ìŠ¤  ë“±ë¡:\n\t/y\nMSI ì„œë¹„ìŠ¤ ë“±ë¡ í•´ì œ:\n\t/z\në„ì›€ë§  ë³´ê¸°:\n\t/help\n\t/?\n"
+	11 "%së¥¼ í¬í•¨í•˜ëŠ” í´ë”ë¥¼ ì…ë ¥í•˜ì„¸ì—¬"
+	12 "ë¹ ì§„ ë¶€ë¶„(feature)ì„ ìœ„í•œ ì„¤ì¹˜ ì›ë³¸"
+	13 "ë¹ ì§„ ë¶€ë¶„(feature)ì„ ìœ„í•œ ë„¤íŠ¸ì›Œí¬ ë“œë¼ì´ë¸Œ"
+	14 "ë¶€ë¶„(feature)ì—ì„œ:"
+	15 " %së¥¼ í¬í•¨í•˜ëŠ” í´ë” ì„ íƒ"
 }

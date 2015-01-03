@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,20 +20,20 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_TO_PRIMITIVE        "B≥πd przy przekszta≥caniu obiektu do typu podstawowego"
-    IDS_INVALID_CALL_ARG    "Niew≥aúciwe wywo≥anie procedury lub argument"
+    IDS_TO_PRIMITIVE        "B≈ÇƒÖd przy przekszta≈Çcaniu obiektu do typu podstawowego"
+    IDS_INVALID_CALL_ARG    "Niew≈Ça≈õciwe wywo≈Çanie procedury lub argument"
     IDS_SUBSCRIPT_OUT_OF_RANGE "Subscript out of range"
     IDS_OBJECT_REQUIRED     "Object required"
-    IDS_CREATE_OBJ_ERROR    "Serwer automatyzacji nie moøe stworzyÊ obiektu"
-    IDS_NO_PROPERTY         "Obiekt nie wspiera tej w≥aúciwoúci lub metody"
+    IDS_CREATE_OBJ_ERROR    "Serwer automatyzacji nie mo≈ºe stworzyƒá obiektu"
+    IDS_NO_PROPERTY         "Obiekt nie wspiera tej w≈Ça≈õciwo≈õci lub metody"
     IDS_UNSUPPORTED_ACTION  "Object doesn't support this action"
     IDS_ARG_NOT_OPT         "Argument nieopcjonalny"
-    IDS_SYNTAX_ERROR        "B≥πd sk≥adni"
+    IDS_SYNTAX_ERROR        "B≈ÇƒÖd sk≈Çadni"
     IDS_SEMICOLON           "Oczekiwane ';'"
     IDS_LBRACKET            "Oczekiwane '('"
     IDS_RBRACKET            "Oczekiwane ')'"
     IDS_INVALID_CHAR        "Invalid character"
-    IDS_UNTERMINATED_STR    "NiezakoÒczona sta≥a znakowa"
+    IDS_UNTERMINATED_STR    "Niezako≈Ñczona sta≈Ça znakowa"
     IDS_MISPLACED_RETURN    "'return' statement outside of function"
     IDS_INVALID_BREAK       "Can't have 'break' outside of loop"
     IDS_INVALID_CONTINUE    "Can't have 'continue' outside of loop"
@@ -50,11 +50,11 @@ STRINGTABLE
     IDS_INVALID_DELETE      "Cannot delete '|'"
     IDS_NOT_VBARRAY         "VBArray object expected"
     IDS_JSCRIPT_EXPECTED    "Oczekiwany obiekt JScript"
-    IDS_REGEXP_SYNTAX_ERROR "B≥πd sk≥adni w regularnym wyraøeniu"
+    IDS_REGEXP_SYNTAX_ERROR "B≈ÇƒÖd sk≈Çadni w regularnym wyra≈ºeniu"
     IDS_URI_INVALID_CODING  "URI to be decoded is incorrect"
-    IDS_URI_INVALID_CHAR    "Kodowane URI zawiera niew≥aúciwe znaki"
+    IDS_URI_INVALID_CHAR    "Kodowane URI zawiera niew≈Ça≈õciwe znaki"
     IDS_FRACTION_DIGITS_OUT_OF_RANGE "Number of fraction digits is out of range"
     IDS_PRECISION_OUT_OF_RANGE "Precision is out of range"
-    IDS_INVALID_LENGTH      "D≥ugoúÊ tablicy musi byÊ skoÒczonπ dodatniπ liczbπ sta≥π"
+    IDS_INVALID_LENGTH      "D≈Çugo≈õƒá tablicy musi byƒá sko≈ÑczonƒÖ dodatniƒÖ liczbƒÖ sta≈ÇƒÖ"
     IDS_ARRAY_EXPECTED      "Oczekiwany obiekt tablicowy"
 }

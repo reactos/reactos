@@ -22,19 +22,19 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Цялата мрежа"
+    IDS_ENTIRENETWORK "Р¦СЏР»Р°С‚Р° РјСЂРµР¶Р°"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Въведете мрежова парола"
+CAPTION "Р’СЉРІРµРґРµС‚Рµ РјСЂРµР¶РѕРІР° РїР°СЂРѕР»Р°"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Въведете вашето потребителско име и парола:", IDC_EXPLAIN, 6, 6, 150, 18
- LTEXT "Прокси", -1, 6, 26, 60, 10
+ LTEXT "Р’СЉРІРµРґРµС‚Рµ РІР°С€РµС‚Рѕ РїРѕС‚СЂРµР±РёС‚РµР»СЃРєРѕ РёРјРµ Рё РїР°СЂРѕР»Р°:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "РџСЂРѕРєСЃРё", -1, 6, 26, 60, 10
 /* LTEXT "Realm", -1, 6, 46, 60, 10 */
- LTEXT "Потребител", -1, 6, 66, 60, 10
- LTEXT "Парола", -1, 6, 86, 60, 10
+ LTEXT "РџРѕС‚СЂРµР±РёС‚РµР»", -1, 6, 66, 60, 10
+ LTEXT "РџР°СЂРѕР»Р°", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
@@ -42,5 +42,5 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "&Save this password (insecure)", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Отмени", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РћС‚РјРµРЅРё", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP
 }

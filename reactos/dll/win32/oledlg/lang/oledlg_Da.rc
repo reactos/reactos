@@ -22,22 +22,22 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"Indsæt nyt %s objekt i dokumentet"
-  IDS_RESULTFILEOBJDESC	"Indsæt filens indhold som objekt ind i dokumentet, så du kan aktivere det med programmet som har lavet det."
+  IDS_RESULTOBJDESC	"IndsÃ¦t nyt %s objekt i dokumentet"
+  IDS_RESULTFILEOBJDESC	"IndsÃ¦t filens indhold som objekt ind i dokumentet, sÃ¥ du kan aktivere det med programmet som har lavet det."
   IDS_BROWSE            "Gennemse"
-  IDS_NOTOLEMOD         "Filen ser ikke ud til at være et gyldig OLE modul. Kunne ikke registrere OLE control'en."
-  IDS_NOTOLEMODCAPTION  "Tilføj control"
+  IDS_NOTOLEMOD         "Filen ser ikke ud til at vÃ¦re et gyldig OLE modul. Kunne ikke registrere OLE control'en."
+  IDS_NOTOLEMODCAPTION  "TilfÃ¸j control"
 }
 
 STRINGTABLE
 {
-    IDS_PS_PASTE_DATA                     "Indsætter indholdet fra klippebordet ind i dokumentet som %s."
-    IDS_PS_PASTE_OBJECT                   "Indsætter indholdet fra klippebordet ind i dokumentet, så du kan aktivere det med %s."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "Indsætter indholdet fra klippebordet ind i dokumentet, så du kan aktivere det med %s. Det vises som et ikon."
-    IDS_PS_PASTE_LINK_DATA                "Indsætter indholdet fra klippebordet ind i dokumentet som %s. Den kobles til kildefilen så ændreringer også sker i dokumentet."
-    IDS_PS_PASTE_LINK_OBJECT              "Indsætter et billede af klippebordet i dokumentet. Billedet kobles til kildefilen så ændringer også sker i dokumentet ."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Indsætter en genvej som peger på placeringen af indholdet på klippebordet. Genvejen kobles til kildefilen så ændringer også sker i dokumentet."
-    IDS_PS_NON_OLE                        "Indsætter indholdet fra klippebordet ind i dokumentet."
+    IDS_PS_PASTE_DATA                     "IndsÃ¦tter indholdet fra klippebordet ind i dokumentet som %s."
+    IDS_PS_PASTE_OBJECT                   "IndsÃ¦tter indholdet fra klippebordet ind i dokumentet, sÃ¥ du kan aktivere det med %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "IndsÃ¦tter indholdet fra klippebordet ind i dokumentet, sÃ¥ du kan aktivere det med %s. Det vises som et ikon."
+    IDS_PS_PASTE_LINK_DATA                "IndsÃ¦tter indholdet fra klippebordet ind i dokumentet som %s. Den kobles til kildefilen sÃ¥ Ã¦ndreringer ogsÃ¥ sker i dokumentet."
+    IDS_PS_PASTE_LINK_OBJECT              "IndsÃ¦tter et billede af klippebordet i dokumentet. Billedet kobles til kildefilen sÃ¥ Ã¦ndringer ogsÃ¥ sker i dokumentet ."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "IndsÃ¦tter en genvej som peger pÃ¥ placeringen af indholdet pÃ¥ klippebordet. Genvejen kobles til kildefilen sÃ¥ Ã¦ndringer ogsÃ¥ sker i dokumentet."
+    IDS_PS_NON_OLE                        "IndsÃ¦tter indholdet fra klippebordet ind i dokumentet."
     IDS_PS_UNKNOWN_TYPE                   "Ukendt type"
     IDS_PS_UNKNOWN_SRC                    "Ukendt kilde"
     IDS_PS_UNKNOWN_APP                    "programmet der lavede det"
@@ -45,7 +45,7 @@ STRINGTABLE
 
 UIINSERTOBJECT DIALOG  0, 0, 304, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Indsæt objekt"
+CAPTION "IndsÃ¦t objekt"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
@@ -62,7 +62,7 @@ BEGIN
     CONTROL         "Opret fra fil",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
-    PUSHBUTTON      "&Tilføj Control...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    PUSHBUTTON      "&TilfÃ¸j Control...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
     CONTROL         "Vis som ikon",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
     PUSHBUTTON      "Gennemse...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
@@ -72,13 +72,13 @@ END
 
 IDD_PASTESPECIAL4 DIALOG 3, 15, 304, 160
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Indsæt speciel"
+CAPTION "IndsÃ¦t speciel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT         "Kilde:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
-    CONTROL       "&Indsæt", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+    CONTROL       "&IndsÃ¦t", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 73, 10
-    CONTROL       "Indsæt &genvej", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+    CONTROL       "IndsÃ¦t &genvej", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 73, 10
     LTEXT         "&Som:", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
@@ -86,10 +86,10 @@ BEGIN
     LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
     CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
     CONTROL       "Annuller", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
-    CONTROL       "&Hjælp", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
+    CONTROL       "&HjÃ¦lp", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
     CONTROL       "&Vis som ikon", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
-    CONTROL       "Ændre &ikon...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
+    CONTROL       "Ã†ndre &ikon...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 121, 42, 34
     CONTROL       "", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 120, 159, 35
     CONTROL       "Resultat", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 110, 212, 48

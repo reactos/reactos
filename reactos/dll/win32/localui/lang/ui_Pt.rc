@@ -24,9 +24,9 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     IDS_LOCALPORT "Porta Local"
-    IDS_INVALIDNAME "'%s' n„o È um nome de porta v·lido"
-    IDS_PORTEXISTS "Porta %s j· existe"
-    IDS_NOTHINGTOCONFIG "Esta porta n„o possui opÁıes de configuraÁ„o"
+    IDS_INVALIDNAME "'%s' n√£o √© um nome de porta v√°lido"
+    IDS_PORTEXISTS "Porta %s j√° existe"
+    IDS_NOTHINGTOCONFIG "Esta porta n√£o possui op√ß√µes de configura√ß√£o"
 }
 
 ADDPORT_DIALOG DIALOG 6, 18, 245, 47
@@ -47,7 +47,7 @@ CAPTION "Configurar porta LPT"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Tempo expirado (segundos)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "&RecomeÁo da transmiss„o:", -1, 14, 22, 90, 13, WS_VISIBLE
+    LTEXT "&Recome√ßo da transmiss√£o:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Cancelar", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE

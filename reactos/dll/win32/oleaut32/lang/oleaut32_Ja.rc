@@ -4,8 +4,8 @@ STRINGTABLE
 {
   IDS_TRUE  "True"
   IDS_FALSE "False"
-  IDS_YES   "ÇÕÇ¢"
-  IDS_NO    "Ç¢Ç¢Ç¶"
-  IDS_ON    "ÉIÉì"
-  IDS_OFF   "ÉIÉt"
+  IDS_YES   "„ÅØ„ÅÑ"
+  IDS_NO    "„ÅÑ„ÅÑ„Åà"
+  IDS_ON    "„Ç™„É≥"
+  IDS_OFF   "„Ç™„Éï"
 }

@@ -24,10 +24,10 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "¸ñ·Ï(&C)"
-    IDS_INDEX        "ÀÎµ¦½º(&N)"
-    IDS_SEARCH       "Ã£±â(&S)"
-    IDS_FAVORITES    "Áñ°ÜÃ£±â(&I)"
+    IDS_CONTENTS     "ëª©ë¡(&C)"
+    IDS_INDEX        "ì¸ë±ìŠ¤(&N)"
+    IDS_SEARCH       "ì°¾ê¸°(&S)"
+    IDS_FAVORITES    "ì¦ê²¨ì°¾ê¸°(&I)"
 
     IDS_HIDETABS     "Hide &Tabs"
     IDS_SHOWTABS     "Show &Tabs"
@@ -35,16 +35,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "º¸¿©ÁÖ±â"
-    IDTB_CONTRACT    "¼û±â±â"
-    IDTB_STOP        "Á¤Áö"
-    IDTB_REFRESH     "»õ·Î °íÄ§"
-    IDTB_BACK        "µÚ·Î"
-    IDTB_HOME        "È¨"
-    IDTB_SYNC        "µ¿±âÈ­"
-    IDTB_PRINT       "ÀÎ¼â"
-    IDTB_OPTIONS     "¿É¼Ç"
-    IDTB_FORWARD     "¾ÕÀ¸·Î"
+    IDTB_EXPAND      "ë³´ì—¬ì£¼ê¸°"
+    IDTB_CONTRACT    "ìˆ¨ê¸°ê¸°"
+    IDTB_STOP        "ì •ì§€"
+    IDTB_REFRESH     "ìƒˆë¡œ ê³ ì¹¨"
+    IDTB_BACK        "ë’¤ë¡œ"
+    IDTB_HOME        "í™ˆ"
+    IDTB_SYNC        "ë™ê¸°í™”"
+    IDTB_PRINT       "ì¸ì‡„"
+    IDTB_OPTIONS     "ì˜µì…˜"
+    IDTB_FORWARD     "ì•žìœ¼ë¡œ"
 END
 
 MENU_POPUP MENU

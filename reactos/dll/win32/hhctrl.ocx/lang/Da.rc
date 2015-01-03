@@ -25,7 +25,7 @@ STRINGTABLE
 BEGIN
     IDS_CONTENTS     "&Indhold"
     IDS_INDEX        "I&ndeks"
-    IDS_SEARCH       "&Søg"
+    IDS_SEARCH       "&SÃ¸g"
     IDS_FAVORITES    "Favor&itter"
 
     IDS_HIDETABS     "Hide &Tabs"
@@ -37,7 +37,7 @@ BEGIN
     IDTB_EXPAND      "Vis"
     IDTB_CONTRACT    "Skjul"
     IDTB_STOP        "Stop"
-    IDTB_REFRESH     "Opdatér"
+    IDTB_REFRESH     "OpdatÃ©r"
     IDTB_BACK        "Tilbage"
     IDTB_HOME        "Hjem"
     IDTB_SYNC        "Synkroniser"

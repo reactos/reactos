@@ -24,17 +24,17 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 STRINGTABLE
 {
     IDS_LOCALPORT "Lokal port"
-    IDS_INVALIDNAME "'%s' är inte ett giltigt portnamn"
+    IDS_INVALIDNAME "'%s' Ã¤r inte ett giltigt portnamn"
     IDS_PORTEXISTS "Porten %s finns redan"
     IDS_NOTHINGTOCONFIG "Denna port har inga alternativ att konfigurera"
 }
 
 ADDPORT_DIALOG DIALOG 6, 18, 245, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Lägg till en lokal port"
+CAPTION "LÃ¤gg till en lokal port"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Ange portnamnet att lägga till:", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "&Ange portnamnet att lÃ¤gga till:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 188, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Avbryt", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
@@ -46,8 +46,8 @@ STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPW
 CAPTION "Konfigurera LPT-port"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Tidsgräns (sekunder)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "Öve&rföringsförsök:", -1, 14, 22, 90, 13, WS_VISIBLE
+    GROUPBOX "TidsgrÃ¤ns (sekunder)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    LTEXT "Ã–ve&rfÃ¶ringsfÃ¶rsÃ¶k:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Avbryt", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE

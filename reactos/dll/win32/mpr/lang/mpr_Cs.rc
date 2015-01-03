@@ -25,25 +25,25 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Cel· sÌù"
+    IDS_ENTIRENETWORK "Cel√° s√≠≈•"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Zad·nÌ sÌùovÈho hesla"
+CAPTION "Zad√°n√≠ s√≠≈•ov√©ho hesla"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "ProsÌm zadejte svÈ uûivatelskÈ jmÈno a heslo:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "Pros√≠m zadejte sv√© u≈æivatelsk√© jm√©no a heslo:", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "Proxy", -1, 6, 26, 60, 10
 /* LTEXT "Realm", -1, 6, 46, 60, 10 */
- LTEXT "Uûivatel", -1, 6, 66, 60, 10
+ LTEXT "U≈æivatel", -1, 6, 66, 60, 10
  LTEXT "Heslo", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 70, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Uloûit toto heslo (NenÌ bezpeËnÈ) ?", IDC_SAVEPASSWORD,
+ CHECKBOX "&Ulo≈æit toto heslo (Nen√≠ bezpeƒçn√©) ?", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Zruöit", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Zru≈°it", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP
 }

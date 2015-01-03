@@ -22,25 +22,25 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Teljes h·lÛzat"
+    IDS_ENTIRENETWORK "Teljes h√°l√≥zat"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "H·lÛzati jelszÛ megad·sa"
+CAPTION "H√°l√≥zati jelsz√≥ megad√°sa"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "KÈrem adja meg a felhaszn·lÛnevÈt Ès jelszav·t:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "K√©rem adja meg a felhaszn√°l√≥nev√©t √©s jelszav√°t:", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "Proxy", -1, 6, 26, 60, 10
 /* LTEXT "Realm", -1, 6, 46, 60, 10 */
- LTEXT "Felhaszn·lÛnÈv", -1, 6, 66, 60, 10
- LTEXT "JelszÛ", -1, 6, 86, 60, 10
+ LTEXT "Felhaszn√°l√≥n√©v", -1, 6, 66, 60, 10
+ LTEXT "Jelsz√≥", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 70, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&JelszÛ mentÈse (nem biztons·gos)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Jelsz√≥ ment√©se (nem biztons√°gos)", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "MÈgse", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "M√©gse", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP
 }

@@ -37,19 +37,17 @@
 
 #include "wine/wine_common_ver.rc"
 
-#ifdef LANGUAGE_EN_US
-    #include "lang/jscript_En.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/jscript_Pl.rc"
-#endif
-
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/jscript_Da.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/jscript_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/jscript_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/jscript_Es.rc"
@@ -80,6 +78,9 @@
 #endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/jscript_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/jscript_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/jscript_Pt.rc"

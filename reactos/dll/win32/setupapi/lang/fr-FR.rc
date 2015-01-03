@@ -15,7 +15,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Votre ordinateur doit être redémarré pour terminer l'installation. Voulez-vous redémarrer ?"
-    IDS_QUERY_REBOOT_CAPTION "Redémarrer"
+    IDS_QUERY_REBOOT_TEXT "Votre ordinateur doit Ãªtre redÃ©marrÃ© pour terminer l'installation. Voulez-vous redÃ©marrer ?"
+    IDS_QUERY_REBOOT_CAPTION "RedÃ©marrer"
     IDS_INF_FILE "Informations de configuration"
 END

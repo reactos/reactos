@@ -23,24 +23,24 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Ca³a sieæ"
+    IDS_ENTIRENETWORK "CaÅ‚a sieÄ‡"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Wpisz has³o sieci"
+CAPTION "Wpisz hasÅ‚o sieci"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Proszê wprowadziæ nazwê u¿ytkownika i has³o:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "ProszÄ™ wprowadziÄ‡ nazwÄ™ uÅ¼ytkownika i hasÅ‚o:", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "Proxy", -1, 6, 26, 60, 10
 /* LTEXT "Obszar", -1, 6, 46, 60, 10 */
- LTEXT "U¿ytkownik", -1, 6, 66, 60, 10
- LTEXT "Has³o", -1, 6, 86, 60, 10
+ LTEXT "UÅ¼ytkownik", -1, 6, 66, 60, 10
+ LTEXT "HasÅ‚o", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 70, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Zapisz to has³o (niebezpieczne)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Zapisz to hasÅ‚o (niebezpieczne)", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Anuluj", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP

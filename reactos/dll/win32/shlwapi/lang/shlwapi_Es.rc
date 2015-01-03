@@ -1,7 +1,7 @@
 /*
  * Spanish resources for shlwapi
  *
- * Copyright 2004 José Manuel Ferrer Ortiz
+ * Copyright 2004 JosÃ© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -38,6 +38,6 @@ FONT 8, "MS Shell Dlg"
  CHECKBOX "No volver a mostrar este &mensaje", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Aceptar", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Cancelar", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Sí", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&SÃ­", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&No", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }

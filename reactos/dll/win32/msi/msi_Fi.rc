@@ -22,14 +22,16 @@
 
 LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
-	4 "Annettua asennuspakettia ei voitu avata. Tarkista tiedoston polku ja yritä uudelleen."
-	5 "Polkua %s ei löydy."
+	4 "Annettua asennuspakettia ei voitu avata. Tarkista tiedoston polku ja yritÃ¤ uudelleen."
+	5 "Polkua %s ei lÃ¶ydy."
 	9 "Anna levy %s"
-	10 "Windows Installer %s\n\nKäyttö:\nmsiexec komento {pakollinen parametri} [valinnainen parametri]\n\nAsenna tuote:\n\t/i {paketti|tuotekoodi} [ominaisuus]\n\t/package {paketti|tuotekoodi} [ominaisuus]\n\t/a {paketti} [ominaisuus]\nKorjaa asennus:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paketti|tuotekoodi}\nPoista tuote:\n\t/uninstall {paketti|tuotekoodi} [ominaisuus]\n\t/x {paketti|tuotekoodi} [ominaisuus]\nMainosta (advertise) tuotetta:\n\t/j[u|m] paketti [/t muunnos] [/g kielitunnus]\nAsenna korjaus:\n\t/p korjauspaketti [ominaisuus]\n\t/p korjauspaketti /a paketti [ominaisuus]\nLoki- ja käyttöliittymäasetukset edellisille komennoille:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] lokitiedosto\n\t/q{|n|b|r|f|n+|b+|b-}\nRekisteröi MSI-palvelu:\n\t/y\nPeru MSI-palvelun rekisteröinti:\n\t/z\nNäytä tämä ohje:\n\t/help\n\t/?\n"
+	10 "Windows Installer %s\n\nKÃ¤yttÃ¶:\nmsiexec komento {pakollinen parametri} [valinnainen parametri]\n\nAsenna tuote:\n\t/i {paketti|tuotekoodi} [ominaisuus]\n\t/package {paketti|tuotekoodi} [ominaisuus]\n\t/a {paketti} [ominaisuus]\nKorjaa asennus:\n\t/f[p|o|e|d|c|a|u|m|s|v] {paketti|tuotekoodi}\nPoista tuote:\n\t/uninstall {paketti|tuotekoodi} [ominaisuus]\n\t/x {paketti|tuotekoodi} [ominaisuus]\nMainosta (advertise) tuotetta:\n\t/j[u|m] paketti [/t muunnos] [/g kielitunnus]\nAsenna korjaus:\n\t/p korjauspaketti [ominaisuus]\n\t/p korjauspaketti /a paketti [ominaisuus]\nLoki- ja kÃ¤yttÃ¶liittymÃ¤asetukset edellisille komennoille:\n\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] lokitiedosto\n\t/q{|n|b|r|f|n+|b+|b-}\nRekisterÃ¶i MSI-palvelu:\n\t/y\nPeru MSI-palvelun rekisterÃ¶inti:\n\t/z\nNÃ¤ytÃ¤ tÃ¤mÃ¤ ohje:\n\t/help\n\t/?\n"
 	11 "Anna kansio, jossa on %s"
-	12 "Ominaisuuden asennuslähde puuttuu."
+	12 "Ominaisuuden asennuslÃ¤hde puuttuu."
 	13 "Ominaisuuden verkkolevy puuttuu."
 	14 "Ominaisuus:"
 	15 "Valitse kansio, jossa on %s"

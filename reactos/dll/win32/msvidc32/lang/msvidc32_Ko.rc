@@ -21,5 +21,5 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_NAME "MS-CRAM"
-    IDS_DESCRIPTION "Wine ºñµð¿À 1 ºñµð¿À ÄÚµ¦"
+    IDS_DESCRIPTION "Wine ë¹„ë””ì˜¤ 1 ë¹„ë””ì˜¤ ì½”ë±"
 }

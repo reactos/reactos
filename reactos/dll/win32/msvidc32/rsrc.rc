@@ -20,17 +20,38 @@
 
 #include "msvidc32_private.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/msvidc32_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/msvidc32_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/msvidc32_En.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/msvidc32_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/msvidc32_Fr.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/msvidc32_Hu.rc"
 #endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/msvidc32_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/msvidc32_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/msvidc32_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/msvidc32_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/msvidc32_Nl.rc"
@@ -44,29 +65,6 @@
 #ifdef LANGUAGE_PT_PT
     #include "lang/msvidc32_Pt.rc"
 #endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/msvidc32_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/msvidc32_De.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/msvidc32_Es.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/msvidc32_Fr.rc"
-#endif
-#ifdef LANGUAGE_IT_IT
-    #include "lang/msvidc32_It.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/msvidc32_Ja.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/msvidc32_Lt.rc"
-#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/msvidc32_Ro.rc"
 #endif
@@ -78,6 +76,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
 	#include "lang/msvidc32_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/msvidc32_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/msvidc32_Tr.rc"

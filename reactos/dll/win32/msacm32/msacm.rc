@@ -22,6 +22,9 @@
 #include <winuser.h>
 #include <msacmdlg.h>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/msacm_Bg.rc"
 #endif
@@ -30,6 +33,9 @@
 #endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/msacm_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/msacm_De.rc"
 #endif
 #ifdef LANGUAGE_EL_GR
     #include "lang/msacm_El.rc"
@@ -40,14 +46,26 @@
 #ifdef LANGUAGE_ES_ES
     #include "lang/msacm_Es.rc"
 #endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/msacm_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/msacm_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/msacm_Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/msacm_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/msacm_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/msacm_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/msacm_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/msacm_Nl.rc"
@@ -57,26 +75,6 @@
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/msacm_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/msacm_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/msacm_De.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/msacm_Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/msacm_He.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/msacm_Ja.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/msacm_Lt.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/msacm_Pt.rc"
@@ -92,6 +90,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/msacm_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/msacm_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/msacm_Tr.rc"

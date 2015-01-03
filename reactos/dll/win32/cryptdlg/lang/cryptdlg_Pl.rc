@@ -1,7 +1,7 @@
 /*
  * cryptdlg dll resources
  *
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,10 +27,10 @@ STRINGTABLE
     IDS_POLICY_QUALIFIER_INFO "Informacje o kwalifikatorze zasad"
     IDS_POLICY_QUALIFIER_ID "Id kwalifikatora zasad="
     IDS_CPS "CPS" /* Certification Practice Statement */
-    IDS_USER_NOTICE "Zawiadamianie uøytkownika"
+    IDS_USER_NOTICE "Zawiadamianie u≈ºytkownika"
     IDS_QUALIFIER "Kwalifikator"
     IDS_NOTICE_REF "Odniesienie zawiadamiania"
     IDS_ORGANIZATION "Organizacja="
-    IDS_NOTICE_NUM "Numer zawiadamiajπcy="
-    IDS_NOTICE_TEXT "Tekst zawiadamiajπcy="
+    IDS_NOTICE_NUM "Numer zawiadamiajƒÖcy="
+    IDS_NOTICE_TEXT "Tekst zawiadamiajƒÖcy="
 }

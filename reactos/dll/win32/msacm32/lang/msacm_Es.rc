@@ -1,7 +1,7 @@
 /*
  * Spanish resource file for MS ACM
  *
- * Copyright 2004 José Manuel Ferrer Ortiz
+ * Copyright 2004 JosÃ© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 DLG_ACMFORMATCHOOSE_ID DIALOG  10, 20, 225, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Selección de sonido"
+CAPTION "SelecciÃ³n de sonido"
 FONT 8, "MS Shell Dlg"
 BEGIN
 

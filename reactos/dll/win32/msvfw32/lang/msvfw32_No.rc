@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ FONT 8, "MS Shell Dlg"
 
     LTEXT "Komprimeringskvalite&t:",IDC_QUALITY_TXT,9,34,135,8
 
-    CONTROL "Nø&kkelbilde for hvert",IDC_KEYFRAME_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,86,12
+    CONTROL "NÃ¸&kkelbilde for hvert",IDC_KEYFRAME_CHECKBOX,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,86,12
     EDITTEXT IDC_KEYFRAME,98,60,22,12
     LTEXT "bilde",IDC_KEYFRAME_FRAMES,123,62,26,10
 

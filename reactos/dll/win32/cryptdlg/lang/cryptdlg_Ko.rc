@@ -23,15 +23,15 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_CERT_POLICY "ΐΞΑυ Α¤Γ¥"
-    IDS_POLICY_ID "Α¤Γ¥ ½ΔΊ°ΐΪ: "
-    IDS_POLICY_QUALIFIER_INFO "Α¤Γ¥ ±ΈΊ°ΐΪ Α¤ΊΈ"
-    IDS_POLICY_QUALIFIER_ID "Α¤Γ¥ ±ΈΊ°ΐΪ ΎΖΐΜµπ="
-    IDS_CPS "CPS"/*ΐΞΑυ ½ΗΗφ Ό±Ύπ */
-    IDS_USER_NOTICE "»ηΏλΐΪ ΕλΑφ"
-    IDS_QUALIFIER "±ΈΊ°ΐΪ"
-    IDS_NOTICE_REF "ΕλΑφ ΒόΑ¶"
-    IDS_ORGANIZATION "±β°ό="
-    IDS_NOTICE_NUM "ΕλΑφ ΉψΘ£="
-    IDS_NOTICE_TEXT "ΕλΑφ ΕΨ½ΊΖ®="
+    IDS_CERT_POLICY "μΈμ¦ μ •μ±…"
+    IDS_POLICY_ID "μ •μ±… μ‹λ³„μ: "
+    IDS_POLICY_QUALIFIER_INFO "μ •μ±… κµ¬λ³„μ μ •λ³΄"
+    IDS_POLICY_QUALIFIER_ID "μ •μ±… κµ¬λ³„μ μ•„μ΄λ””="
+    IDS_CPS "CPS"/*μΈμ¦ μ‹¤ν„ μ„ μ–Έ */
+    IDS_USER_NOTICE "μ‚¬μ©μ ν†µμ§€"
+    IDS_QUALIFIER "κµ¬λ³„μ"
+    IDS_NOTICE_REF "ν†µμ§€ μ°Έμ΅°"
+    IDS_ORGANIZATION "κΈ°κ΄€="
+    IDS_NOTICE_NUM "ν†µμ§€ λ²νΈ="
+    IDS_NOTICE_TEXT "ν†µμ§€ ν…μ¤νΈ="
 }

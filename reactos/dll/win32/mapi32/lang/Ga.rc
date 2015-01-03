@@ -1,6 +1,6 @@
 /*
 * Gaelic language support
-* Tac˙ le teanga na Gaeilge
+* Tac√∫ le teanga na Gaeilge
 *
 * Copyright 2010 Ken Sharp
 *
@@ -24,6 +24,6 @@ LANGUAGE LANG_GAELIC, SUBLANG_GAELIC
 
 STRINGTABLE
 {
-   IDS_NO_MAPI_CLIENT, "R-phost a sheoladh mar a theip nÌ g· duit a cliant rÌomhphoist MAPI shuite·il."
-   IDS_SEND_MAIL, "Seol RÌomhphost"
+   IDS_NO_MAPI_CLIENT, "R-phost a sheoladh mar a theip n√≠ g√° duit a cliant r√≠omhphoist MAPI shuite√°il."
+   IDS_SEND_MAIL, "Seol R√≠omhphost"
 }
