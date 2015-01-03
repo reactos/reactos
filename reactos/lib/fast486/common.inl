@@ -1528,12 +1528,17 @@ Fast486FpuNormalize(PFAST486_STATE State,
     }
     else
     {
-        /* Make it denormalized */
-        Data->Mantissa <<= Data->Exponent - 1;
-        Data->Exponent = 1;
-
-        /* Underflow */
-        State->FpuStatus.Ue = TRUE;
+        if (State->FpuControl.Um)
+        {
+            /* Make it denormalized */
+            Data->Mantissa <<= Data->Exponent - 1;
+            Data->Exponent = 1;
+        }
+        else
+        {
+            /* Raise the underflow exception */
+            State->FpuStatus.Ue = TRUE;
+        }
     }
 }
 
@@ -1560,7 +1565,7 @@ Fast486FpuPush(PFAST486_STATE State,
         FPU_ST(0) = *Data;
         FPU_SET_TAG(0, Fast486GetValueTag(Data));
     }
-    else State->FpuStatus.Ie = TRUE;
+    else State->FpuStatus.Sf = TRUE;
 }
 
 FORCEINLINE
@@ -1573,7 +1578,7 @@ Fast486FpuPop(PFAST486_STATE State)
         FPU_SET_TAG(0, FPU_TAG_EMPTY);
         State->FpuStatus.Top++;
     }
-    else State->FpuStatus.Ie = TRUE;
+    else State->FpuStatus.Sf = TRUE;
 }
 
 #endif

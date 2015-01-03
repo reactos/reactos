@@ -59,6 +59,7 @@
 #define FPU_IS_INFINITY(x)      (FPU_IS_NAN(x) && ((x)->Mantissa == FPU_MANTISSA_HIGH_BIT))
 #define FPU_IS_POS_INF(x)       (FPU_IS_INFINITY(x) && !(x)->Sign)
 #define FPU_IS_NEG_INF(x)       (FPU_IS_INFINITY(x) && (x)->Sign)
+#define FPU_IS_INDEFINITE(x)    (FPU_IS_NAN(x) && !FPU_IS_INFINITY(x))
 
 enum
 {

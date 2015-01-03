@@ -66,6 +66,77 @@ UnsignedMult128(ULONGLONG Multiplicand,
     return LowProduct;
 }
 
+static ULONGLONG
+UnsignedDivMod128(ULONGLONG DividendLow,
+                  ULONGLONG DividendHigh,
+                  ULONGLONG Divisor,
+                  PULONGLONG QuotientLow,
+                  PULONGLONG QuotientHigh)
+{
+    ULONGLONG ValueLow = DividendLow;
+    ULONGLONG ValueHigh = DividendHigh;
+    ULONGLONG CurrentLow = 0ULL;
+    ULONGLONG CurrentHigh = Divisor;
+    ULONG Bits;
+
+    ASSERT(Divisor != 0ULL);
+
+    /* Initialize the quotient */
+    *QuotientLow = *QuotientHigh = 0ULL;
+
+    /* Normalize the current divisor */
+    Bits = CountLeadingZeros64(CurrentHigh);
+    CurrentHigh <<= Bits;
+
+    /* Loop while the value is higher than or equal to the original divisor */
+    while ((ValueHigh > 0ULL) || (ValueLow >= Divisor))
+    {
+        /* Shift the quotient left by one bit */
+        *QuotientHigh <<= 1;
+        *QuotientHigh |= *QuotientLow >> 63;
+        *QuotientLow <<= 1;
+
+        /* Check if the value is higher than or equal to the current divisor */
+        if ((ValueHigh > CurrentHigh)
+            || ((ValueHigh == CurrentHigh) && (ValueLow >= CurrentLow)))
+        {
+            BOOLEAN Carry = ValueLow < CurrentLow;
+
+            /* Subtract the current divisor from the value */
+            ValueHigh -= CurrentHigh;
+            ValueLow -= CurrentLow;
+            if (Carry) ValueHigh--;
+
+            /* Set the lowest bit of the quotient */
+            *QuotientLow |= 1;
+        }
+
+        /* Shift the current divisor right by one bit */
+        CurrentLow >>= 1;
+        CurrentLow |= (CurrentHigh & 1) << 63;
+        CurrentHigh >>= 1;
+    }
+
+    /*
+     * Calculate the number of significant bits the current
+     * divisor has more than the original divisor
+     */
+    Bits = CountLeadingZeros64(Divisor) + 64;
+    Bits -= (CurrentHigh > 0ULL) ? CountLeadingZeros64(CurrentHigh) : 64;
+    Bits -= (CurrentLow > 0ULL) ? CountLeadingZeros64(CurrentLow) : 64;
+
+    if (Bits)
+    {
+        /* Shift the quotient left by that amount */
+        *QuotientHigh <<= Bits;
+        *QuotientHigh |= *QuotientLow >> (64 - Bits);
+        *QuotientLow <<= Bits;
+    }
+
+    /* Return the remainder */
+    return ValueLow;
+}
+
 static inline VOID FASTCALL
 Fast486FpuFromInteger(PFAST486_STATE State,
                       LONGLONG Value,
@@ -557,8 +628,31 @@ Fast486FpuDivide(PFAST486_STATE State,
                  PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG TempResult;
+    ULONGLONG QuotientLow, QuotientHigh, Remainder;
+    LONG Exponent;
 
-    if (FPU_IS_ZERO(SecondOperand))
+    if (FPU_IS_INDEFINITE(FirstOperand)
+        || FPU_IS_INDEFINITE(SecondOperand)
+        || (FPU_IS_INFINITY(FirstOperand) && FPU_IS_INFINITY(SecondOperand))
+        || (FPU_IS_ZERO(FirstOperand) && FPU_IS_ZERO(SecondOperand)))
+    {
+        if (State->FpuControl.Im)
+        {
+            /* Return the indefinite NaN */ 
+            Result->Sign = TRUE;
+            Result->Exponent = FPU_MAX_EXPONENT + 1;
+            Result->Mantissa = FPU_INDEFINITE_MANTISSA;
+        }
+        else
+        {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+        }
+
+        return;
+    }
+
+    if (FPU_IS_ZERO(SecondOperand) || FPU_IS_INFINITY(FirstOperand))
     {
         if (State->FpuControl.Zm)
         {
@@ -571,16 +665,75 @@ Fast486FpuDivide(PFAST486_STATE State,
         {
             /* Raise the division by zero exception */
             State->FpuStatus.Ze = TRUE;
-            return;
         }
+
+        return;
     }
 
-    TempResult.Exponent = FirstOperand->Exponent - SecondOperand->Exponent;
+    /* Calculate the sign of the result */
     TempResult.Sign = FirstOperand->Sign ^ SecondOperand->Sign;
 
-    // TODO: NOT IMPLEMENTED
-    UNREFERENCED_PARAMETER(TempResult);
-    UNIMPLEMENTED;
+    if (FPU_IS_ZERO(FirstOperand) || FPU_IS_INFINITY(SecondOperand))
+    {
+        /* Return zero */
+        Result->Sign = TempResult.Sign;
+        Result->Mantissa = 0ULL;
+        Result->Exponent = 0;
+        return;
+    }
+
+    /* Calculate the exponent of the result */
+    Exponent = (LONG)FirstOperand->Exponent - (LONG)SecondOperand->Exponent - 64;
+
+    /* Divide the two mantissas */
+    Remainder = UnsignedDivMod128(0ULL,
+                                  /* Notice the 64 above - this is the high part */
+                                  FirstOperand->Mantissa, 
+                                  SecondOperand->Mantissa,
+                                  &QuotientLow,
+                                  &QuotientHigh);
+    UNREFERENCED_PARAMETER(Remainder); // TODO: Rounding
+
+    TempResult.Mantissa = QuotientLow;
+
+    if (QuotientHigh > 0ULL)
+    {
+        ULONG BitsToShift = 64 - CountLeadingZeros64(QuotientHigh);
+
+        if (!State->FpuControl.Pm)
+        {
+            /* Raise the precision expection */
+            State->FpuStatus.Pe = TRUE;
+            return;
+        }
+
+        TempResult.Mantissa >>= BitsToShift;
+        TempResult.Mantissa |= QuotientHigh << (64 - BitsToShift);
+        Exponent += BitsToShift;
+
+        // TODO: Rounding
+    }
+
+    if (Exponent < -FPU_REAL10_BIAS)
+    {
+        TempResult.Mantissa >>= -(Exponent + FPU_REAL10_BIAS);
+        Exponent = -FPU_REAL10_BIAS;
+
+        if ((TempResult.Mantissa == 0ULL) && !State->FpuControl.Um)
+        {
+            /* Raise the underflow exception */
+            State->FpuStatus.Ue = TRUE;
+            return;
+        }
+
+        // TODO: Rounding
+    }
+
+    TempResult.Exponent = (USHORT)(Exponent + FPU_REAL10_BIAS);
+
+    /* Normalize the result */
+    Fast486FpuNormalize(State, &TempResult);
+    *Result = TempResult;
 }
 
 static inline VOID FASTCALL
@@ -853,10 +1006,86 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
     FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-#else
-    /* Do nothing */
+
+    if (ModRegRm.Memory)
+    {
+        switch (ModRegRm.Register)
+        {
+            /* FLD */
+            case 0:
+            {
+                ULONG Value;
+                FAST486_FPU_DATA_REG MemoryData;
+
+                if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                Fast486FpuFromSingleReal(State, Value, &MemoryData);
+                Fast486FpuPush(State, &MemoryData);
+
+                break;
+            }
+
+            /* FST */
+            case 2:
+            /* FSTP */
+            case 3:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FLDENV */
+            case 4:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FLDCW */
+            case 5:
+            {
+                Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &State->FpuControl.Value);
+                break;
+            }
+
+            /* FSTENV */
+            case 6:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSTCW */
+            case 7:
+            {
+                Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, State->FpuControl.Value);
+                break;
+            }
+
+            /* Invalid */
+            default:
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return;
+            }
+        }
+    }
+    else
+    {
+        // TODO: NOT IMPLEMENTED
+        UNIMPLEMENTED;
+    }
+
 #endif
 }
 
