@@ -1735,12 +1735,6 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
        "expected nBytes %u, got %u\n", emh1->nBytes, emh2->nBytes);
     ok(emh1->nRecords == emh2->nRecords, "expected nRecords %u, got %u\n", emh1->nRecords, emh2->nRecords);
 
-    if(!winetest_interactive)
-    {
-        skip("skipping match_emf_record(), bug ROSTESTS-4\n");
-        return 0;
-    }
-
     offset1 = emh1->nSize;
     offset2 = emh2->nSize; /* Needed for Win9x/WinME/NT4 */
     while (offset1 < emh1->nBytes)
