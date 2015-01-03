@@ -4,20 +4,20 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 262, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Combinaciones de energÌa"
+CAPTION "Combinaciones de energ√≠a"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Seleccione la combinaciÛn de energÌa cuya configuraciÛn sea la m·s adecuada para su equipo. Tenga en cuenta que, si cambia la configuraciÛn siguiente, se modificar· la combinaciÛn seleccionada.", -1, 37, 6, 209, 36
-    GROUPBOX "C&ombinaciones de energÌa", -1, 6, 43, 250, 50
+    LTEXT "Seleccione la combinaci√≥n de energ√≠a cuya configuraci√≥n sea la m√°s adecuada para su equipo. Tenga en cuenta que, si cambia la configuraci√≥n siguiente, se modificar√° la combinaci√≥n seleccionada.", -1, 37, 6, 209, 36
+    GROUPBOX "C&ombinaciones de energ√≠a", -1, 6, 43, 250, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
     GROUPBOX "Desconocido ", IDC_GRPDETAIL, 6, 95, 250, 136
-    LTEXT "Cuando el equipo est·:", IDC_SAT, 12, 109, 65, 14
+    LTEXT "Cuando el equipo est√°:", IDC_SAT, 12, 109, 65, 14
     LTEXT "Enchufado", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
-    LTEXT "Con baterÌa", IDC_SDC, 195, 110, 45, 15
+    LTEXT "Con bater√≠a", IDC_SDC, 195, 110, 45, 15
     ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
     LTEXT "Apagar &monitor:", IDC_MONITOR, 13, 148, 84, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
@@ -38,29 +38,29 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarmas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Alarma de baterÌa baja ", -1, 6, 7, 249, 104
-    CONTROL "Activar la a&larma de baterÌa baja cuando la potencia alcance un nivel:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    GROUPBOX "Alarma de bater√≠a baja ", -1, 6, 7, 249, 104
+    CONTROL "Activar la a&larma de bater√≠a baja cuando la potencia alcance un nivel:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
     LTEXT "Desconocido", IDC_ALARMVALUE1, 209, 20, 33, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
     LTEXT "100%", -1, 214, 43, 25, 10
-    PUSHBUTTON "AcciÛn de la alar&ma...", -1, 17, 69, 70, 14, WS_DISABLED
-    LTEXT "NotificaciÛn:", -1, 95, 71, 57, 10
+    PUSHBUTTON "Acci√≥n de la alar&ma...", -1, 17, 69, 70, 14, WS_DISABLED
+    LTEXT "Notificaci√≥n:", -1, 95, 71, 57, 10
     LTEXT "Desconocido", IDC_ALARMMSG1, 154, 71, 84, 10
-    LTEXT "AcciÛn:", -1, 95, 83, 55, 10
+    LTEXT "Acci√≥n:", -1, 95, 83, 55, 10
     LTEXT "Desconocido", IDC_ALARMAKTION1, 154, 83, 84, 10
     LTEXT "Ejecutar programa:", -1, 95, 95, 55, 10
     LTEXT "Desconocido", IDC_ALARMPROG1, 154, 95, 84, 10
-    GROUPBOX "Alarma de baterÌa crÌtica ", -1, 6, 120, 249, 106
-    CONTROL "Activar la a&larma de baterÌa baja cuando la potencia alcance un nivel:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    GROUPBOX "Alarma de bater√≠a cr√≠tica ", -1, 6, 120, 249, 106
+    CONTROL "Activar la a&larma de bater√≠a baja cuando la potencia alcance un nivel:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
     LTEXT "Desconocido", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
     LTEXT "100%", -1, 214, 154, 25, 10
-    PUSHBUTTON "AcciÛn de la alar&ma...", -1, 17, 183, 70, 14, WS_DISABLED
-    LTEXT "NotificaciÛn:", -1, 95, 185, 50, 10
+    PUSHBUTTON "Acci√≥n de la alar&ma...", -1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT "Notificaci√≥n:", -1, 95, 185, 50, 10
     LTEXT "Desconocido", IDC_ALARMMSG2, 154, 185, 84, 10
-    LTEXT "AcciÛn:", -1, 95, 198, 45, 10
+    LTEXT "Acci√≥n:", -1, 95, 198, 45, 10
     LTEXT "Desconocido", IDC_ALARMAKTION2, 154, 198, 84, 10
     LTEXT "Ejecutar programa:", -1, 95, 211, 50, 10
     LTEXT "Desconocido", IDC_ALARMPROG2, 154, 211, 84, 10
@@ -72,30 +72,30 @@ CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "Seleccione los ajustes de ahorro energÈtico que desee usar.", -1, 37, 6, 207, 20
+    LTEXT "Seleccione los ajustes de ahorro energ√©tico que desee usar.", -1, 37, 6, 207, 20
     GROUPBOX "Opciones", -1, 6, 30, 250, 65
     CONTROL "Mo&strar siempre el icono en la barra de tareas", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 230, 10
-    CONTROL "S&olicitar una contraseÒa tras un tiempo de inactividad", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 56, 230, 14
-    CONTROL "&Atenuar monitor cuando estÈ funcionando con baterÌa", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 230, 10
+    CONTROL "S&olicitar una contrase√±a tras un tiempo de inactividad", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 56, 230, 14
+    CONTROL "&Atenuar monitor cuando est√© funcionando con bater√≠a", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 230, 10
     GROUPBOX "Botones de encendido", -1, 6, 101, 250, 127
-    LTEXT "&Cuando cierre la tapa de mi ordenador port·til:", IDC_SLIDCLOSE, 15, 115, 222, 10
+    LTEXT "&Cuando cierre la tapa de mi ordenador port√°til:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Cuando pr&esione el botÛn de encendido de mi equipo:", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    LTEXT "Cuando pr&esione el bot√≥n de encendido de mi equipo:", IDC_SPOWERBUTTON, 15, 153, 222, 10
     COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Cua&ndo presione el botÛn de suspender del equipo:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    LTEXT "Cua&ndo presione el bot√≥n de suspender del equipo:", IDC_SSLEEPBUTTON, 15, 191, 222, 10
     COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 262, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "HibernaciÛn"
+CAPTION "Hibernaci√≥n"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "Cuando su equipo hiberna, almacena lo que hay en memoria en el disco duro y luego se apaga. Cuando sale del modo de hibernaciÛn vuelve a su estado anterior. ", -1, 37, 6, 210, 35
+    LTEXT "Cuando su equipo hiberna, almacena lo que hay en memoria en el disco duro y luego se apaga. Cuando sale del modo de hibernaci√≥n vuelve a su estado anterior. ", -1, 37, 6, 210, 35
     GROUPBOX "Hibernar ", -1, 6, 41, 250, 32
-    CONTROL "Habilitar &hibernaciÛn", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
-    GROUPBOX "Espacio en disco para hibernaciÛn ", -1, 6, 80, 250, 76
+    CONTROL "Habilitar &hibernaci√≥n", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX "Espacio en disco para hibernaci√≥n ", -1, 6, 80, 250, 76
     LTEXT "Espacio libre en disco:", -1, 15, 95, 140, 10
     LTEXT "Desconocido", IDC_FREESPACE, 160, 95, 80, 10
     LTEXT "Espacio en disco requerido para hibernar:", -1, 15, 115, 140, 10
@@ -105,12 +105,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Opciones de energÌa"
-    IDS_CPLDESCRIPTION_1 "Configura los par·metros de ahorro de energÌa de su equipo."
+    IDS_CPLNAME_1 "Opciones de energ√≠a"
+    IDS_CPLDESCRIPTION_1 "Configura los par√°metros de ahorro de energ√≠a de su equipo."
     IDS_PROCENT "%i%%"
     IDS_SOUND "Sonido"
     IDS_TEXT "Texto"
-    IDS_CONFIG1 "ConfiguraciÛn para la combinaciÛn de energÌa %1"
+    IDS_CONFIG1 "Configuraci√≥n para la combinaci√≥n de energ√≠a %1"
     IDS_CONFIG2 "Opciones avanzadas para %1"
     IDS_SIZEBYTS "%i bytes"
     IDS_SIZEMB "%i MB"
@@ -122,7 +122,7 @@ BEGIN
     IDS_PowerActionShutdown "Apagar"
     IDS_PowerActionRestart "Reiniciar"
     IDS_PowerActionShutdownOff "Apagar y desc. la corriente"
-    IDS_PowerActionWarmEject "Preguntarme quÈ hacer"
+    IDS_PowerActionWarmEject "Preguntarme qu√© hacer"
     IDS_PowerActionNone2 "Nada"
     IDS_TIMEOUT1 "Tras 1 min"
     IDS_TIMEOUT2 "Tras 2 min"
@@ -140,6 +140,6 @@ BEGIN
     IDS_TIMEOUT14 "Tras 4 horas"
     IDS_TIMEOUT15 "Tras 5 horas"
     IDS_TIMEOUT16 "Nunca"
-    IDS_DEL_SCHEME "øEst· seguro de que desea eliminar la combinaciÛn de energÌa?"
-    IDS_DEL_SCHEME_TITLE "Eliminar combinaciÛn"
+    IDS_DEL_SCHEME "¬øEst√° seguro de que desea eliminar la combinaci√≥n de energ√≠a?"
+    IDS_DEL_SCHEME_TITLE "Eliminar combinaci√≥n"
 END

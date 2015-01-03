@@ -10,7 +10,7 @@ BEGIN
     LTEXT "1) Installare il software di supporto per l'hardware aggiunto al computer.", -1, 121, 56, 184, 16
     LTEXT "2) Indagare eventuali problemi relativi all'hardware.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "Se siete in possesso di un CD di installazione Ë raccomandabile l'uso della procedura disponibile sul CD fornito dal costruttore dell'hardware.", 503, 150, 106, 155, 50
+    LTEXT "Se siete in possesso di un CD di installazione √® raccomandabile l'uso della procedura disponibile sul CD fornito dal costruttore dell'hardware.", 503, 150, 106, 155, 50
     LTEXT "Per procedere cliccare Avanti.", -1, 114, 166, 193, 8
 END
 
@@ -28,9 +28,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Nuovo hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Avete gi‡ collegato il nuovo hardware al computer?", -1, 20, 11, 275, 8
-    AUTORADIOBUTTON "&Si, Ë gi‡ collegato", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "&No, non Ë gi‡ collegato", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "Avete gi√† collegato il nuovo hardware al computer?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "&Si, √® gi√† collegato", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "&No, non √® gi√† collegato", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOG 0, 0, 317, 143
@@ -38,7 +38,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Nuovo hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dalla lista seguente scegliere un dispositivo hardware, poi cliccare Avanti per controllare le propriet‡ o analizzare eventuali problemi.", -1, 21, 8, 275, 22
+    LTEXT "Dalla lista seguente scegliere un dispositivo hardware, poi cliccare Avanti per controllare le propriet√† o analizzare eventuali problemi.", -1, 21, 8, 275, 22
     LTEXT "Per aggiungere dell'hardware non presente nella lista cliccare ""Aggiungi un nuovo dispositvo"".", -1, 21, 32, 275, 24
     LTEXT "&Hardware installati:", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
@@ -49,7 +49,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Nuovo hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "L'installazione puÚ essere eseguita automaticamente oppure se sapete esattamente quale modello di hardware volete installare lo potete scegliere da una lista.", -1, 21, 8, 280, 24
+    LTEXT "L'installazione pu√≤ essere eseguita automaticamente oppure se sapete esattamente quale modello di hardware volete installare lo potete scegliere da una lista.", -1, 21, 8, 280, 24
     LTEXT "Come volete procedere?", -1, 23, 40, 275, 8
     AUTORADIOBUTTON "&Installazione automatica (Raccomandata)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "Scelta manuale da una lista (Esperto)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
@@ -80,7 +80,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Nuovo hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La ricerca dell'hardware puÚ richiedere vati minuti.", -1, 21, 8, 275, 15
+    LTEXT "La ricerca dell'hardware pu√≤ richiedere vati minuti.", -1, 21, 8, 275, 15
     LTEXT "Progresso:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -93,7 +93,7 @@ CAPTION "Nuovo hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Compleamento della procedura", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "La procedura Ë stata completata regolarmenteYou have successfully completed the Add Hardware wizard.", -1, 114, 32, 193, 19
+    LTEXT "La procedura √® stata completata regolarmenteYou have successfully completed the Add Hardware wizard.", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
     LTEXT "Per chiudere cliccare Fine.", -1, 114, 166, 132, 8
 END
@@ -128,8 +128,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Impossibile procedere", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Per continuare collegare l'hardware al computer.", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "&Spegnere il computer uando sar‡ cliccato Fine per permettere l'installazione dell'hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Spesso l'hardware verr‡ installato automaticamente dopo la connessione. Se non accadesse potete riavviare la procedura di installazione nuovo hardware per installare il software di supporto.", -1, 114, 98, 193, 32
+    AUTOCHECKBOX "&Spegnere il computer uando sar√† cliccato Fine per permettere l'installazione dell'hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "Spesso l'hardware verr√† installato automaticamente dopo la connessione. Se non accadesse potete riavviare la procedura di installazione nuovo hardware per installare il software di supporto.", -1, 114, 98, 193, 32
     LTEXT "Per chiudere cliccare Fine.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
@@ -138,9 +138,9 @@ BEGIN
     IDS_CPLNAME "Aggiungi hardware"
     IDS_CPLDESCRIPTION "Aggiungi hardware al computer."
     IDS_SEARCHTITLE "Attendere, ricerca nuovo hardware in corso..."
-    IDS_SEARCHTEXT "Ricerca di hardware che Ë stato connesso ma non ancora installato."
+    IDS_SEARCHTEXT "Ricerca di hardware che √® stato connesso ma non ancora installato."
     IDS_ISCONNECTED "E' stato connesso?"
-    IDS_PROBELISTTITLE "L'hardware seguente Ë gi‡ installato"
+    IDS_PROBELISTTITLE "L'hardware seguente √® gi√† installato"
     IDS_ADDNEWDEVICE "Aggiungi un nuovo dispositivo hardware"
     IDS_SELECTWAYTITLE "E' possibile installare altro hardware"
     IDS_HDTYPESTITLE "Scegliere dalla lista seguente il tipo di hardware da installare"

@@ -7,10 +7,10 @@ CAPTION "Spielcontroller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "Über diese Einstellungen können an den PC angeschlossene Spielcontroller konfiguriert werden.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    LTEXT "Ãœber diese Einstellungen kÃ¶nnen an den PC angeschlossene Spielcontroller konfiguriert werden.", -1, 33, 7, 214, 20, NOT WS_GROUP
     GROUPBOX "I&nstallierte Spielcontroller", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
-    PUSHBUTTON "&Hinzufügen...", IDC_ADD_BUTTON, 35, 129, 65, 14
+    PUSHBUTTON "&HinzufÃ¼gen...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Entfernen", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "&Eigenschaften", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "E&rweitert...", IDC_ADVANCED_BUTTON, 100, 157, 65, 14
@@ -21,11 +21,11 @@ END
 IDD_ADD DIALOGEX 0, 0, 265, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Spielcontroller hinzufügen"
+CAPTION "Spielcontroller hinzufÃ¼gen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Wählen Sie einen Spielcontroller aus der Liste und klicken Sie auf OK. Wenn Ihr Spielcontroller nicht in der Liste erscheint, klicken Sie auf Benutzerdefiniert.", -1, 35, 7, 210, 33
+    LTEXT "WÃ¤hlen Sie einen Spielcontroller aus der Liste und klicken Sie auf OK. Wenn Ihr Spielcontroller nicht in der Liste erscheint, klicken Sie auf Benutzerdefiniert.", -1, 35, 7, 210, 33
     LTEXT "&Spielcontroller:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
     AUTOCHECKBOX "&Ruder und Pedale aktivieren", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 105, 10, WS_GROUP
@@ -45,7 +45,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Spezielle Eigenschaften", -1, 7, 7, 245, 52
     AUTORADIOBUTTON "&Joystick", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
-    AUTORADIOBUTTON "&Flugsteuerknüppel", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
+    AUTORADIOBUTTON "&FlugsteuerknÃ¼ppel", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
     AUTORADIOBUTTON "&Gamepad", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
     AUTORADIOBUTTON "&Lenkrad", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
     GROUPBOX "&Achsen", -1, 7, 67, 116, 44, WS_GROUP
@@ -70,15 +70,15 @@ BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 34, 20, 20
     DEFPUSHBUTTON "OK", IDOK, 106, 75, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 163, 75, 50, 14
-    LTEXT "Wählen Sie das Gerät aus, welches Sie mit älteren Programmen nutzen wollen.", -1, 7, 7, 208, 20
-    LTEXT "&Bevorzugtes Gerät:", -1, 34, 34, 70, 10
+    LTEXT "WÃ¤hlen Sie das GerÃ¤t aus, welches Sie mit Ã¤lteren Programmen nutzen wollen.", -1, 7, 7, 208, 20
+    LTEXT "&Bevorzugtes GerÃ¤t:", -1, 34, 34, 70, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 48, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Spielcontroller"
-    IDS_CPLSYSTEMDESCRIPTION "Hinzufügen, Entfernen und Konfigurieren von Spielcontrollerhardware wie Joysticks und Gamepads."
+    IDS_CPLSYSTEMDESCRIPTION "HinzufÃ¼gen, Entfernen und Konfigurieren von Spielcontrollerhardware wie Joysticks und Gamepads."
     IDS_CONTROLLER "Controller"
     IDS_STATUS "Status"
 END

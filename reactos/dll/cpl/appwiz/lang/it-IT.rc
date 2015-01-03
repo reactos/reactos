@@ -46,7 +46,7 @@ BEGIN
     IDS_CPLSYSTEMNAME "Aggiunge/Rimuove programmi"
     IDS_CPLSYSTEMDESCRIPTION "Predispone i programmi e crea collegamenti."
     IDS_CREATE_SHORTCUT "Crea collegamento"
-    IDS_ERROR_NOT_FOUND "Il file %s non è stato trovato."
+    IDS_ERROR_NOT_FOUND "Il file %s non Ã¨ stato trovato."
 END
 
 STRINGTABLE

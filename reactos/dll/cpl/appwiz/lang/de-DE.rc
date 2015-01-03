@@ -2,7 +2,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Verknüpfung erstellen"
+CAPTION "VerknÃ¼pfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1", -1, 115, 15, 160, 24
@@ -11,7 +11,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Verknüpfung erstellen"
+CAPTION "VerknÃ¼pfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1",-1,10,0,225,40
@@ -21,10 +21,10 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Verknüpfung erstellen"
+CAPTION "VerknÃ¼pfung erstellen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Mit diesem Assistenten können Sie Verknüpfungen mit lokalen oder vernetzten Programmen, Dateien, Ordnern, Computern oder Internetadressen erstellen.", -1, 120, 15, 200, 30
+    LTEXT "Mit diesem Assistenten kÃ¶nnen Sie VerknÃ¼pfungen mit lokalen oder vernetzten Programmen, Dateien, Ordnern, Computern oder Internetadressen erstellen.", -1, 120, 15, 200, 30
     LTEXT "&Geben Sie den Speicherort des Elements ein:", -1, 120, 50, 150, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "&Durchsuchen...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
@@ -33,19 +33,19 @@ END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Programmbezeichnung auswählen"
+CAPTION "Programmbezeichnung auswÃ¤hlen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Geben Sie den Namen für die Verknüpfung ein:", -1, 120, 15, 150, 10
+    LTEXT "&Geben Sie den Namen fÃ¼r die VerknÃ¼pfung ein:", -1, 120, 15, 150, 10
     EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-    LTEXT "Klicken Sie auf Fertig stellen, um die Verknüpfung zu erstellen.", -1, 118, 97, 178, 17
+    LTEXT "Klicken Sie auf Fertig stellen, um die VerknÃ¼pfung zu erstellen.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Programme hinzufügen/entfernen"
-    IDS_CPLSYSTEMDESCRIPTION "Installiert Programme und erstellt Verknüpfungen."
-    IDS_CREATE_SHORTCUT "Verknüpfung erstellen"
+    IDS_CPLSYSTEMNAME "Programme hinzufÃ¼gen/entfernen"
+    IDS_CPLSYSTEMDESCRIPTION "Installiert Programme und erstellt VerknÃ¼pfungen."
+    IDS_CREATE_SHORTCUT "VerknÃ¼pfung erstellen"
     IDS_ERROR_NOT_FOUND "Die Datei %s konnte nicht gefunden werden."
 END
 
@@ -53,7 +53,7 @@ STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "Lade herunter..."
     IDS_INSTALLING "Installiere..."
-    IDS_INVALID_SHA "Die heruntergeladene Datei hat eine unerwartete Prüfsumme. Abbruch der Installation aufgrund beschädigter Datei."
+    IDS_INVALID_SHA "Die heruntergeladene Datei hat eine unerwartete PrÃ¼fsumme. Abbruch der Installation aufgrund beschÃ¤digter Datei."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
@@ -61,7 +61,7 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Wine Gecko Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS konnte kein Gecko-Paket finden, welches für die korrekte Ausführung von Anwendungen mit eingebettetem HTML benötigt wird. ReactOS kann es automatisch für Sie herunterladen und installieren.",
+    CONTROL "ReactOS konnte kein Gecko-Paket finden, welches fÃ¼r die korrekte AusfÃ¼hrung von Anwendungen mit eingebettetem HTML benÃ¶tigt wird. ReactOS kann es automatisch fÃ¼r Sie herunterladen und installieren.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Installieren", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP

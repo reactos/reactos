@@ -2,49 +2,49 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGEKEYBOARD DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Клавиатура"
+CAPTION "РљР»Р°РІРёР°С‚СѓСЂР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "ЛепкавиКлавиши", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Използвайте ЛепкавиКлавиши, ако искате да ползвате Shift, Ctrl или Alt при натискане само по един клавиш наведнъж.",
+    GROUPBOX "Р›РµРїРєР°РІРёРљР»Р°РІРёС€Рё", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
+    LTEXT "РР·РїРѕР»Р·РІР°Р№С‚Рµ Р›РµРїРєР°РІРёРљР»Р°РІРёС€Рё, Р°РєРѕ РёСЃРєР°С‚Рµ РґР° РїРѕР»Р·РІР°С‚Рµ Shift, Ctrl РёР»Рё Alt РїСЂРё РЅР°С‚РёСЃРєР°РЅРµ СЃР°РјРѕ РїРѕ РµРґРёРЅ РєР»Р°РІРёС€ РЅР°РІРµРґРЅСЉР¶.",
           -1, PROPSHEETPADDING(4) + ICONSIZE, LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, LABELLINE(3)
-    AUTOCHECKBOX "Из&ползване на ЛепкавиКлавиши", IDC_STICKY_BOX, PROPSHEETPADDING(4), LABELLINE(5) + 2, PROPSHEETPADDING(15) + 40, 14
-    PUSHBUTTON "На&стройки", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(5) + 2, PROPSHEETPADDING(15) - 40, 14
-    GROUPBOX "ПресяващиКлавиши", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Използвайте ПресяващиКлавиши, ако искате РеактОС да пренебребва кратки или повтарящши се натискания или да намали скоростта на повтаряне.",
+    AUTOCHECKBOX "РР·&РїРѕР»Р·РІР°РЅРµ РЅР° Р›РµРїРєР°РІРёРљР»Р°РІРёС€Рё", IDC_STICKY_BOX, PROPSHEETPADDING(4), LABELLINE(5) + 2, PROPSHEETPADDING(15) + 40, 14
+    PUSHBUTTON "РќР°&СЃС‚СЂРѕР№РєРё", IDC_STICKY_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(5) + 2, PROPSHEETPADDING(15) - 40, 14
+    GROUPBOX "РџСЂРµСЃСЏРІР°С‰РёРљР»Р°РІРёС€Рё", -1, PROPSHEETPADDING(1), LABELLINE(8) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
+    LTEXT "РР·РїРѕР»Р·РІР°Р№С‚Рµ РџСЂРµСЃСЏРІР°С‰РёРљР»Р°РІРёС€Рё, Р°РєРѕ РёСЃРєР°С‚Рµ Р РµР°РєС‚РћРЎ РґР° РїСЂРµРЅРµР±СЂРµР±РІР° РєСЂР°С‚РєРё РёР»Рё РїРѕРІС‚Р°СЂСЏС‰С€Рё СЃРµ РЅР°С‚РёСЃРєР°РЅРёСЏ РёР»Рё РґР° РЅР°РјР°Р»Рё СЃРєРѕСЂРѕСЃС‚С‚Р° РЅР° РїРѕРІС‚Р°СЂСЏРЅРµ.",
           -1, PROPSHEETPADDING(4) + ICONSIZE, LABELLINE(10) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, LABELLINE(3)
-    AUTOCHECKBOX "Използване на &ПресяващиКлавиши", IDC_FILTER_BOX, PROPSHEETPADDING(4), LABELLINE(13) + 2, PROPSHEETPADDING(15) + 50, 14
-    PUSHBUTTON "На&стройки", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(13) + 2, PROPSHEETPADDING(15) - 40, 14
-    GROUPBOX "ОбращащиКлавиши", -1, PROPSHEETPADDING(1), LABELLINE(16) + 3, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Използвайте ОбръщащиКлавиши, ако искате да чувате звук при натискане на Caps Lock, Num Lock и Scroll Lock.",
+    AUTOCHECKBOX "РР·РїРѕР»Р·РІР°РЅРµ РЅР° &РџСЂРµСЃСЏРІР°С‰РёРљР»Р°РІРёС€Рё", IDC_FILTER_BOX, PROPSHEETPADDING(4), LABELLINE(13) + 2, PROPSHEETPADDING(15) + 50, 14
+    PUSHBUTTON "РќР°&СЃС‚СЂРѕР№РєРё", IDC_FILTER_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(13) + 2, PROPSHEETPADDING(15) - 40, 14
+    GROUPBOX "РћР±СЂР°С‰Р°С‰РёРљР»Р°РІРёС€Рё", -1, PROPSHEETPADDING(1), LABELLINE(16) + 3, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
+    LTEXT "РР·РїРѕР»Р·РІР°Р№С‚Рµ РћР±СЂСЉС‰Р°С‰РёРљР»Р°РІРёС€Рё, Р°РєРѕ РёСЃРєР°С‚Рµ РґР° С‡СѓРІР°С‚Рµ Р·РІСѓРє РїСЂРё РЅР°С‚РёСЃРєР°РЅРµ РЅР° Caps Lock, Num Lock Рё Scroll Lock.",
           -1, PROPSHEETPADDING(4) + ICONSIZE, LABELLINE(18) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE + 4, LABELLINE(2)
-    AUTOCHECKBOX "Използване на &ОбръщащиКлавиши", IDC_TOGGLE_BOX, PROPSHEETPADDING(4), LABELLINE(20) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE + 40, 14
-    PUSHBUTTON "На&стройки", IDC_TOGGLE_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(20) + 2, PROPSHEETPADDING(15) - 40, 14
-    AUTOCHECKBOX "Показване на &допълнителна клавиатурна помощ в приложенията", IDC_KEYBOARD_EXTRA,
+    AUTOCHECKBOX "РР·РїРѕР»Р·РІР°РЅРµ РЅР° &РћР±СЂСЉС‰Р°С‰РёРљР»Р°РІРёС€Рё", IDC_TOGGLE_BOX, PROPSHEETPADDING(4), LABELLINE(20) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE + 40, 14
+    PUSHBUTTON "РќР°&СЃС‚СЂРѕР№РєРё", IDC_TOGGLE_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(20) + 2, PROPSHEETPADDING(15) - 40, 14
+    AUTOCHECKBOX "РџРѕРєР°Р·РІР°РЅРµ РЅР° &РґРѕРїСЉР»РЅРёС‚РµР»РЅР° РєР»Р°РІРёР°С‚СѓСЂРЅР° РїРѕРјРѕС‰ РІ РїСЂРёР»РѕР¶РµРЅРёСЏС‚Р°", IDC_KEYBOARD_EXTRA,
                  PROPSHEETPADDING(1), LABELLINE(23) + 3, PROPSHEETWIDTH - PROPSHEETPADDING(2), 14
 END
 
 IDD_PROPPAGESOUND DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Звук"
+CAPTION "Р—РІСѓРє"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "ЗвуковСтраж", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
-    LTEXT "Използвайте ЗвуковСтраж, ако искате РеактОС да показва видими предупреждения, когато компютърът ви издава звук.",
+    GROUPBOX "Р—РІСѓРєРѕРІРЎС‚СЂР°Р¶", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(10) + PROPSHEETPADDING(1)
+    LTEXT "РР·РїРѕР»Р·РІР°Р№С‚Рµ Р—РІСѓРєРѕРІРЎС‚СЂР°Р¶, Р°РєРѕ РёСЃРєР°С‚Рµ Р РµР°РєС‚РћРЎ РґР° РїРѕРєР°Р·РІР° РІРёРґРёРјРё РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ, РєРѕРіР°С‚Рѕ РєРѕРјРїСЋС‚СЉСЂСЉС‚ РІРё РёР·РґР°РІР° Р·РІСѓРє.",
           -1, PROPSHEETPADDING(4) + ICONSIZE, LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, LABELLINE(3)
-    AUTOCHECKBOX "Използване на &ЗвуковСтраж", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15) + 50, 14
-    LTEXT "Използване при следните предупреждения:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
+    AUTOCHECKBOX "РР·РїРѕР»Р·РІР°РЅРµ РЅР° &Р—РІСѓРєРѕРІРЎС‚СЂР°Р¶", IDC_SENTRY_BOX, PROPSHEETPADDING(2), LABELLINE(5) + 2, PROPSHEETPADDING(15) + 50, 14
+    LTEXT "РР·РїРѕР»Р·РІР°РЅРµ РїСЂРё СЃР»РµРґРЅРёС‚Рµ РїСЂРµРґСѓРїСЂРµР¶РґРµРЅРёСЏ:", IDC_SENTRY_TEXT, PROPSHEETPADDING(2), LABELLINE(8) - 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(1)
     COMBOBOX IDC_SENTRY_COMBO, PROPSHEETPADDING(2), LABELLINE(9), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(6),
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    GROUPBOX "ЗвуковоПоказване", -1, PROPSHEETPADDING(1), LABELLINE(12) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
-    LTEXT "Чрез звуковото показване карате приложенията да показват надписи, когато възпроизвеждат говор или звук.",
+    GROUPBOX "Р—РІСѓРєРѕРІРѕРџРѕРєР°Р·РІР°РЅРµ", -1, PROPSHEETPADDING(1), LABELLINE(12) + 5, PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(7) + 2
+    LTEXT "Р§СЂРµР· Р·РІСѓРєРѕРІРѕС‚Рѕ РїРѕРєР°Р·РІР°РЅРµ РєР°СЂР°С‚Рµ РїСЂРёР»РѕР¶РµРЅРёСЏС‚Р° РґР° РїРѕРєР°Р·РІР°С‚ РЅР°РґРїРёСЃРё, РєРѕРіР°С‚Рѕ РІСЉР·РїСЂРѕРёР·РІРµР¶РґР°С‚ РіРѕРІРѕСЂ РёР»Рё Р·РІСѓРє.",
           -1, PROPSHEETPADDING(4) + ICONSIZE, LABELLINE(14) - 3, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, LABELLINE(3)
-    AUTOCHECKBOX "Използване Звуково&Показване", IDC_SSHOW_BOX, PROPSHEETPADDING(4), LABELLINE(16) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, 14
+    AUTOCHECKBOX "РР·РїРѕР»Р·РІР°РЅРµ Р—РІСѓРєРѕРІРѕ&РџРѕРєР°Р·РІР°РЅРµ", IDC_SSHOW_BOX, PROPSHEETPADDING(4), LABELLINE(16) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, 14
 END
 
 IDD_PROPPAGEDISPLAY DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Екран"
+CAPTION "Р•РєСЂР°РЅ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "High Contrast", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
@@ -70,14 +70,14 @@ END
 
 IDD_PROPPAGEMOUSE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Мишка"
+CAPTION "РњРёС€РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Цъкове на мишката", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
-    LTEXT "Изберете това, ако искате да управлявате мишката с числения дял на клавиатура.",
+    GROUPBOX "Р¦СЉРєРѕРІРµ РЅР° РјРёС€РєР°С‚Р°", -1, PROPSHEETPADDING(1), LABELLINE(1), PROPSHEETWIDTH - PROPSHEETPADDING(2), LABELLINE(6) + PROPSHEETPADDING(1)
+    LTEXT "РР·Р±РµСЂРµС‚Рµ С‚РѕРІР°, Р°РєРѕ РёСЃРєР°С‚Рµ РґР° СѓРїСЂР°РІР»СЏРІР°С‚Рµ РјРёС€РєР°С‚Р° СЃ С‡РёСЃР»РµРЅРёСЏ РґСЏР» РЅР° РєР»Р°РІРёР°С‚СѓСЂР°.",
           -1, PROPSHEETPADDING(4) + ICONSIZE, LABELLINE(2), PROPSHEETWIDTH - PROPSHEETPADDING(6) - ICONSIZE, LABELLINE(3)
-    AUTOCHECKBOX "Използване на ц&ъковете на мишката", IDC_MOUSE_BOX, PROPSHEETPADDING(4), LABELLINE(5) + 2, PROPSHEETPADDING(15) + 50, 14
-    PUSHBUTTON "На&стройки", IDC_MOUSE_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(5) + 2, PROPSHEETPADDING(15) - 40, 14
+    AUTOCHECKBOX "РР·РїРѕР»Р·РІР°РЅРµ РЅР° С†&СЉРєРѕРІРµС‚Рµ РЅР° РјРёС€РєР°С‚Р°", IDC_MOUSE_BOX, PROPSHEETPADDING(4), LABELLINE(5) + 2, PROPSHEETPADDING(15) + 50, 14
+    PUSHBUTTON "РќР°&СЃС‚СЂРѕР№РєРё", IDC_MOUSE_BUTTON, PROPSHEETWIDTH - PROPSHEETPADDING(17) + 40, LABELLINE(5) + 2, PROPSHEETPADDING(15) - 40, 14
 END
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -274,18 +274,18 @@ BEGIN
     LTEXT "&Baud rate:", -1, PROPSHEETPADDING(2), LABELLINE(7), PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(2)
     COMBOBOX IDC_SERIAL_BAUD_COMBO, PROPSHEETPADDING(2), LABELLINE(8) + 2, PROPSHEETWIDTH - PROPSHEETPADDING(4), LABELLINE(8),
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-    DEFPUSHBUTTON "Добре", IDOK, PROPSHEETWIDTH - 111, PROPSHEETHEIGHT - 21, 50, 14
-    PUSHBUTTON "Отказ", IDCANCEL, PROPSHEETWIDTH - 57, PROPSHEETHEIGHT - 21, 50, 14
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, PROPSHEETWIDTH - 111, PROPSHEETHEIGHT - 21, 50, 14
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, PROPSHEETWIDTH - 57, PROPSHEETHEIGHT - 21, 50, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Достъпност"
-    IDS_CPLSYSTEMDESCRIPTION "Нагласяване на възможностите за достъпност на компютъра ви."
-    IDS_SENTRY_NONE "[Мигане]"
-    IDS_SENTRY_TITLE "Мигане на заглавната лента"
-    IDS_SENTRY_WINDOW "Мигане на текущия прозорец"
-    IDS_SENTRY_DISPLAY "Мигане на работната площ"
+    IDS_CPLSYSTEMNAME "Р”РѕСЃС‚СЉРїРЅРѕСЃС‚"
+    IDS_CPLSYSTEMDESCRIPTION "РќР°РіР»Р°СЃСЏРІР°РЅРµ РЅР° РІСЉР·РјРѕР¶РЅРѕСЃС‚РёС‚Рµ Р·Р° РґРѕСЃС‚СЉРїРЅРѕСЃС‚ РЅР° РєРѕРјРїСЋС‚СЉСЂР° РІРё."
+    IDS_SENTRY_NONE "[РњРёРіР°РЅРµ]"
+    IDS_SENTRY_TITLE "РњРёРіР°РЅРµ РЅР° Р·Р°РіР»Р°РІРЅР°С‚Р° Р»РµРЅС‚Р°"
+    IDS_SENTRY_WINDOW "РњРёРіР°РЅРµ РЅР° С‚РµРєСѓС‰РёСЏ РїСЂРѕР·РѕСЂРµС†"
+    IDS_SENTRY_DISPLAY "РњРёРіР°РЅРµ РЅР° СЂР°Р±РѕС‚РЅР°С‚Р° РїР»РѕС‰"
     IDS_SECONDS "Seconds"
     IDS_MINUTES "Minutes"
 END

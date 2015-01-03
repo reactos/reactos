@@ -15,9 +15,9 @@ BEGIN
     CHECKBOX "&Silencio", IDC_MUTE_CHECKBOX, 30, 78, 140, 10
     CHECKBOX "Colocar un icono de volumen en la &barra de tareas", IDC_ICON_IN_TASKBAR, 30, 92, 180, 10
     PUSHBUTTON "Propiedades avan&zadas...", IDC_ADVANCED_BTN, 140, 105, 88, 15
-    GROUPBOX "ConfiguraciÛn del altavoz ", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
+    GROUPBOX "Configuraci√≥n del altavoz ", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Utilice esta configuraciÛn para cambiar el volumen del altavoz y otras configuraciones.", -1, 70, 155, 150, 36
+    LTEXT "Utilice esta configuraci√≥n para cambiar el volumen del altavoz y otras configuraciones.", -1, 70, 155, 150, 36
     PUSHBUTTON "Vol&umen de altavoz...", IDC_SPEAKER_VOL_BTN, 60, 195, 75, 15
     PUSHBUTTON "Propiedades &avanzadas...", IDC_ADVANCED2_BTN, 140, 195, 88, 15
 END
@@ -27,12 +27,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sonidos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Una combinaciÛn de sonidos es un conjunto de sonidos asociados a sucesos en ReactOS y en los programas. Puede seleccionar una combinaciÛn existente o guardar una que haya modificado.", -1, 8, 7, 230, 40
-    LTEXT "&CombinaciÛn de sonidos:", -1, 8, 42, 150, 17
+    LTEXT "Una combinaci√≥n de sonidos es un conjunto de sonidos asociados a sucesos en ReactOS y en los programas. Puede seleccionar una combinaci√≥n existente o guardar una que haya modificado.", -1, 8, 7, 230, 40
+    LTEXT "&Combinaci√≥n de sonidos:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "G&uardar como...", IDC_SAVEAS_BTN, 125, 70, 59, 15
     PUSHBUTTON "&Eliminar", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Para cambiar los sonidos, haga clic en un suceso de la siguiente lista y elija un sonido que desea utilizar. Puede guardar los cambios como una combinaciÛn nueva de sonidos.", -1, 8, 90, 230, 40
+    LTEXT "Para cambiar los sonidos, haga clic en un suceso de la siguiente lista y elija un sonido que desea utilizar. Puede guardar los cambios como una combinaci√≥n nueva de sonidos.", -1, 8, 90, 230, 40
     LTEXT "&Sucesos de programa:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
     LTEXT "S&onidos:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
@@ -46,25 +46,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Audio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ReproducciÛn de sonido ", -1, 7, 7, 230, 60
+    GROUPBOX "Reproducci√≥n de sonido ", -1, 7, 7, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
     LTEXT "Dispositivo p&redeterminado:", -1, 50, 20, 100, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Volumen...", IDC_VOLUME1_BTN, 85, 47, 60, 15
     PUSHBUTTON "Opciones avan&zadas...", IDC_ADV2_BTN, 150, 47, 80, 15
-    GROUPBOX "GrabaciÛn de sonido ", -1, 7, 75, 230, 60
+    GROUPBOX "Grabaci√≥n de sonido ", -1, 7, 75, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
     LTEXT "Dispositivo pre&determinado:", -1, 50, 88, 100, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "V&olumen...", IDC_VOLUME2_BTN, 85, 115, 60, 15
     PUSHBUTTON "Opcione&s avanzadas...", IDC_ADV1_BTN, 150, 115, 80, 15
-    GROUPBOX "ReproducciÛn de m˙sica MIDI ", -1, 7, 145, 230, 60
+    GROUPBOX "Reproducci√≥n de m√∫sica MIDI ", -1, 7, 145, 230, 60
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
     LTEXT "Dispositivo prede&terminado:", -1, 50, 158, 100, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "Volu&men...", IDC_VOLUME3_BTN, 85, 185, 60, 15
     PUSHBUTTON "&Acerca de...", IDC_ADV3_BTN, 150, 185, 80, 15
-    CHECKBOX "&Usar sÛlo dispositivos predeterminados", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    CHECKBOX "&Usar s√≥lo dispositivos predeterminados", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -72,14 +72,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Voz"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Esta configuraciÛn controla el volumen y las opciones avanzadas del dispositivo de reproducciÛn de voz o del dispositivo de grabaciÛn de voz seleccionados.", -1, 8, 7, 230, 40
-    GROUPBOX "ReproducciÛn de voz ", -1, 7, 37, 230, 60
+    LTEXT "Esta configuraci√≥n controla el volumen y las opciones avanzadas del dispositivo de reproducci√≥n de voz o del dispositivo de grabaci√≥n de voz seleccionados.", -1, 8, 7, 230, 40
+    GROUPBOX "Reproducci√≥n de voz ", -1, 7, 37, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
     LTEXT "&Dispositivo predeterminado:", -1, 50, 50, 100, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Volumen...", IDC_VOLUME4_BTN, 85, 77, 60, 15
     PUSHBUTTON "Opciones &avanzadas...", IDC_ADV4_BTN, 150, 77, 80, 15
-    GROUPBOX "GrabaciÛn de voz ", -1, 7, 105, 230, 60
+    GROUPBOX "Grabaci√≥n de voz ", -1, 7, 105, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
     LTEXT "Dispositivo predet&erminado:", -1, 50, 118, 100, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
@@ -97,10 +97,10 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOG 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Guardar combinaciÛn como"
+CAPTION "Guardar combinaci√≥n como"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Guardar esta combinaciÛn de sonidos como:", -1, 7, 7, 212, 9
+    LTEXT "&Guardar esta combinaci√≥n de sonidos como:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Aceptar", IDOK, 93, 36, 60, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 157, 36, 60, 14
@@ -112,9 +112,9 @@ CAPTION "Altavoces"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "Seleccione la configuraciÛn del altavoz que m·s se asemeje a la que tiene su equipo.", -1, 36, 8, 215, 27
+    LTEXT "Seleccione la configuraci√≥n del altavoz que m√°s se asemeje a la que tiene su equipo.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "Co&nfiguraciÛn del altavoz:", 8502, 53, 169, 55, 10
+    LTEXT "Co&nfiguraci√≥n del altavoz:", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -124,19 +124,19 @@ CAPTION "Rendimiento"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Estos valores controlan la forma en que ReactOS reproduce audio y le pueden ayudar a resolver problemas relacionados.", 8492, 34, 7, 218, 23
-    GROUPBOX "ReproducciÛn de audio ", 8494, 7, 32, 243, 152
+    GROUPBOX "Reproducci√≥n de audio ", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
-    LTEXT "&AceleraciÛn de hardware:", 8495, 13, 56, 111, 14
+    LTEXT "&Aceleraci√≥n de hardware:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "Cali&dad de conversiÛn de la velocidad de muestreo:", 8496, 13, 123, 103, 14
+    LTEXT "Cali&dad de conversi√≥n de la velocidad de muestreo:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "Restaurar &valores predeterminados", 5400, 7, 191, 110, 14
     LTEXT "Ninguna", 8497, 128, 56, 21, 10
     LTEXT "Completa", 8498, 214, 56, 21, 9
     LTEXT "Bueno", 8499, 128, 123, 21, 10
-    LTEXT "”ptima", 8500, 214, 123, 23, 9
-    LTEXT "Este valor describe la configuraciÛn del hardware para el dispositivo de captura", 5399, 13, 145, 227, 21
-    LTEXT "Este valor describe la configuraciÛn del hardware para el dispositivo de render", 5398, 13, 78, 227, 22
+    LTEXT "√ìptima", 8500, 214, 123, 23, 9
+    LTEXT "Este valor describe la configuraci√≥n del hardware para el dispositivo de captura", 5399, 13, 145, 227, 21
+    LTEXT "Este valor describe la configuraci√≥n del hardware para el dispositivo de render", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
@@ -145,24 +145,24 @@ CAPTION "Rendimiento"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Estos valores controlan la forma en que ReactOS reproduce audio y le pueden ayudar a resolver problemas relacionados.", 8492, 34, 7, 217, 20
-    GROUPBOX "GrabaciÛn de audio ", 8494, 7, 29, 242, 122
+    GROUPBOX "Grabaci√≥n de audio ", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
-    LTEXT "&AceleraciÛn de hardware:", 8495, 13, 46, 103, 17
+    LTEXT "&Aceleraci√≥n de hardware:", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "Cali&dad de conversiÛn de la velocidad de muestreo:", 8496, 13, 103, 103, 17
+    LTEXT "Cali&dad de conversi√≥n de la velocidad de muestreo:", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
     PUSHBUTTON "Restaurar &valores predeterminados", 5400, 9, 158, 110, 14
     LTEXT "Ninguna", 8497, 125, 46, 24, 10
     LTEXT "Completa", 8498, 217, 46, 19, 9
     LTEXT "Buena", 8499, 125, 103, 24, 10
-    LTEXT "”ptima", 8500, 217, 103, 19, 9
-    LTEXT "Este valor describe la configuraciÛn del hardware para el dispositivo de captura", 5399, 13, 125, 222, 21
-    LTEXT "Este valor describe la configuraciÛn del hardware para el dispositivo de render", 5398, 13, 68, 218, 24
+    LTEXT "√ìptima", 8500, 217, 103, 19, 9
+    LTEXT "Este valor describe la configuraci√≥n del hardware para el dispositivo de captura", 5399, 13, 125, 222, 21
+    LTEXT "Este valor describe la configuraci√≥n del hardware para el dispositivo de render", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOG 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "InstalaciÛn"
+CAPTION "Instalaci√≥n"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
@@ -170,8 +170,8 @@ BEGIN
     LTEXT "Este equipo no puede reproducir sonidos porque el servicio ReactOS Audio service no esta habilitado.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Habilitar ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Notas", 10246, 58, 87, 150, 11
-    LTEXT "1. Debe tener privilegios administrativos para habilitar este servicio. Si no est· registrado como administrador, se le pedir· un nombre de usuario y contraseÒa de administrador.", 10247, 60, 100, 150, 40
-    LTEXT "2. Despues de habilitar ReactOS Audio necesitar· reiniciar su equipo.", 10248, 60, 140, 150, 40
+    LTEXT "1. Debe tener privilegios administrativos para habilitar este servicio. Si no est√° registrado como administrador, se le pedir√° un nombre de usuario y contrase√±a de administrador.", 10247, 60, 100, 150, 40
+    LTEXT "2. Despues de habilitar ReactOS Audio necesitar√° reiniciar su equipo.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
@@ -218,50 +218,50 @@ END
 
 IDD_SETUP2 DIALOG 0, 0, 227, 206
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "InstalaciÛn"
+CAPTION "Instalaci√≥n"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "El servicio ReactOS Audio est· ahora disponible. Sin embargo, el sonido no funcionar· correctamente hasta que reinicie. Si quiere reiniciar ahora, primero guarde su trabajo y cierre todos los programas.", 10261, 60, 25, 150, 50
+    LTEXT "El servicio ReactOS Audio est√° ahora disponible. Sin embargo, el sonido no funcionar√° correctamente hasta que reinicie. Si quiere reiniciar ahora, primero guarde su trabajo y cierre todos los programas.", 10261, 60, 25, 150, 50
     LTEXT "Para reiniciar ReactOS, presione Aceptar.", 10262, 60, 75, 150, 20
-    LTEXT "Si presiona Cancelar, necesitar· reiniciar su equipo m·s tarde para que ReactOS Audio funcione correctamente.", 10263, 60, 100, 150, 40
+    LTEXT "Si presiona Cancelar, necesitar√° reiniciar su equipo m√°s tarde para que ReactOS Audio funcione correctamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Sonido y audio"
-    IDS_CPLDESCRIPTION "Cambie la combinaciÛn de sonidos del equipo, o configure sus altavoces y dispositivos de grabaciÛn."
+    IDS_CPLDESCRIPTION "Cambie la combinaci√≥n de sonidos del equipo, o configure sus altavoces y dispositivos de grabaci√≥n."
     IDS_NO_SOUND "(Ninguno)"
     IDS_NO_DEVICES "Sin dispositivos"
     5825 "Error del programa"
     5826 "Cerrar programa"
-    5827 "Alarma de nivel crÌtico de carga de baterÌa"
+    5827 "Alarma de nivel cr√≠tico de carga de bater√≠a"
     5828 "Conectar dispositivo"
     5829 "Desconectar dispositivo"
     5830 "No se puede conectar el dispositivo"
     5831 "Vaciar Papelera de reciclaje"
-    5832 "Alarma de bajo nivel de baterÌa"
+    5832 "Alarma de bajo nivel de bater√≠a"
     5833 "Maximizar"
-    5834 "Comando de men˙"
-    5835 "Men˙ emergente"
+    5834 "Comando de men√∫"
+    5835 "Men√∫ emergente"
     5836 "Minimizar"
-    5837 "NotificaciÛn de nuevo correo"
-    5838 "Comenzar navegaciÛn"
+    5837 "Notificaci√≥n de nuevo correo"
+    5838 "Comenzar navegaci√≥n"
     5839 "Abrir programa"
-    5840 "ImpresiÛn completa"
+    5840 "Impresi√≥n completa"
     5841 "Restaurar minimizado"
     5842 "Restaurar maximizado"
     5843 "Asterisco"
     5844 "Sonido predeterminado"
-    5845 "ExclamaciÛn"
+    5845 "Exclamaci√≥n"
     5846 "Salir de ReactOS"
-    5847 "Parada crÌtica"
-    5848 "NotificaciÛn del sistema"
+    5847 "Parada cr√≠tica"
+    5848 "Notificaci√≥n del sistema"
     5849 "Pregunta"
     5850 "Iniciar ReactOS"
-    5851 "Men˙ Inicio"
-    5852 "Cierre de sesiÛn de ReactOS"
-    5853 "Inicio de sesiÛn en ReactOS"
+    5851 "Men√∫ Inicio"
+    5852 "Cierre de sesi√≥n de ReactOS"
+    5853 "Inicio de sesi√≥n en ReactOS"
     5854 "Explorador de ReactOS"
 END

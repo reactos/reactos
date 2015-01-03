@@ -12,7 +12,7 @@ BEGIN
     PUSHBUTTON "&Salva come...", IDC_SAVEAS_BTN, 101, 76, 75, 15, WS_DISABLED
     PUSHBUTTON "&Cancella", IDC_DELETE_BTN, 181, 76, 55, 15, WS_DISABLED
     GROUPBOX "sconosciuto", IDC_GRPDETAIL, 8, 100, 240, 112
-    LTEXT "Quando il computer è:", IDC_SAT, 16, 112, 72, 16
+    LTEXT "Quando il computer Ã¨:", IDC_SAT, 16, 112, 72, 16
     LTEXT "Alimentato\rda rete", IDC_SAC, 120, 112, 45, 15
     ICON IDI_AC, IDC_IAC, 96, 112, 21, 20
     LTEXT "Alimentato\ra batterie", IDC_SDC, 192, 112, 45, 15
@@ -37,7 +37,7 @@ CAPTION "Allarmi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Allarme di batteria bassa", -1, 10, 15, 235, 95
-    CONTROL "Attiva l'Allarme di batteria bassa quando il livello batteria è:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
+    CONTROL "Attiva l'Allarme di batteria bassa quando il livello batteria Ã¨:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 25, 180, 15
     LTEXT "sconosciuto", IDC_ALARMVALUE1, 200, 25, 40, 10
     LTEXT "0%", -1, 20, 40, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 40, 170, 15
@@ -50,7 +50,7 @@ BEGIN
     LTEXT "Esegui:", -1, 95, 90, 50, 10
     LTEXT "Unknown", IDC_ALARMPROG1, 150, 90, 40, 10
     GROUPBOX "Allarme critico di batteria", -1, 10, 115, 235, 95
-    CONTROL "Attiva l'Allarme di batteria bassa quando il livello batteria è:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
+    CONTROL "Attiva l'Allarme di batteria bassa quando il livello batteria Ã¨:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 125, 180, 15
     LTEXT "unknown", IDC_ALARMVALUE2, 200, 125, 40, 10
     LTEXT "0%", -1, 20, 140, 15, 15
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 30, 140, 170, 15

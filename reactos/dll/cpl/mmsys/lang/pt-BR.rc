@@ -231,7 +231,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Sons e dispositivos de audio"
-    IDS_CPLDESCRIPTION "Altera o esquema de som para o seu computador ou define as configurações para os auto-falantes e dispositivos de gravação."
+    IDS_CPLDESCRIPTION "Altera o esquema de som para o seu computador ou define as configuraÃ§Ãµes para os auto-falantes e dispositivos de gravaÃ§Ã£o."
     IDS_NO_SOUND "(None)"
     IDS_NO_DEVICES "No Devices"
     5825 "Program error"

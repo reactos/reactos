@@ -2,21 +2,21 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velkommen til veiviseren for å legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Denne veiviseren hjelper deg å:", -1, 114, 40, 182, 8
-    LTEXT "1) Installere programvare som gjør at maskinvaren støttes på din datamaskin.", -1, 121, 56, 184, 16
-    LTEXT "2) Feilsøker dine problemer som du kan ha med din maskinvare.", -1, 121, 78, 185, 16
+    LTEXT "Velkommen til veiviseren for Ã¥ legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Denne veiviseren hjelper deg Ã¥:", -1, 114, 40, 182, 8
+    LTEXT "1) Installere programvare som gjÃ¸r at maskinvaren stÃ¸ttes pÃ¥ din datamaskin.", -1, 121, 56, 184, 16
+    LTEXT "2) FeilsÃ¸ker dine problemer som du kan ha med din maskinvare.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "Hvis maskinvaren din fulgte med en installasjons CD, er det anbefalt at du avbryter denne veiviseren og bruker produsentens CD for å installere maskinvaren.", 503, 150, 106, 155, 50
-    LTEXT "Klikk Neste, for å fortsette.", -1, 114, 166, 193, 8
+    LTEXT "Hvis maskinvaren din fulgte med en installasjons CD, er det anbefalt at du avbryter denne veiviseren og bruker produsentens CD for Ã¥ installere maskinvaren.", 503, 150, 106, 155, 50
+    LTEXT "Klikk Neste, for Ã¥ fortsette.", -1, 114, 166, 193, 8
 END
 
 IDD_SEARCHPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
@@ -25,7 +25,7 @@ END
 
 IDD_ISCONNECTEDPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Har du koblet maskinvaren til din datamaskin?", -1, 20, 11, 275, 8
@@ -35,29 +35,29 @@ END
 
 IDD_PROBELISTPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fra listen under, velg en installert maskinvare komponent, også trykk på Neste for å sjekke egenskaper eller feilsøke et problem som du har.", -1, 21, 8, 275, 22
-    LTEXT "For å legge til maskinvare som ikke er vist på listen, trykk ""Legg til ny maskinvare enhet.""", -1, 21, 32, 275, 24
+    LTEXT "Fra listen under, velg en installert maskinvare komponent, ogsÃ¥ trykk pÃ¥ Neste for Ã¥ sjekke egenskaper eller feilsÃ¸ke et problem som du har.", -1, 21, 8, 275, 22
+    LTEXT "For Ã¥ legge til maskinvare som ikke er vist pÃ¥ listen, trykk ""Legg til ny maskinvare enhet.""", -1, 21, 32, 275, 24
     LTEXT "I&nstallert maskinvare:", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
 IDD_SELECTWAYPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Veiviseren kan søke etter andre maskinvare og automatisk installere det for deg. Eller, hvis du vet riktig hvilken maskinvare modell du ønsker å installere, kan du velge det fra listen.", -1, 21, 8, 280, 24
-    LTEXT "Hva ønsker du at veiviseren skal gjøre?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "&Søk etter og installere maskinvaren automatisk (Anbefalt)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    LTEXT "Veiviseren kan sÃ¸ke etter andre maskinvare og automatisk installere det for deg. Eller, hvis du vet riktig hvilken maskinvare modell du Ã¸nsker Ã¥ installere, kan du velge det fra listen.", -1, 21, 8, 280, 24
+    LTEXT "Hva Ã¸nsker du at veiviseren skal gjÃ¸re?", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "&SÃ¸k etter og installere maskinvaren automatisk (Anbefalt)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
     AUTORADIOBUTTON "Installer maskinvaren som jeg &manuelt velger fra listen (Avansert)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
@@ -67,20 +67,20 @@ END
 
 IDD_HWTYPESPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Hvis du ikke ser maskinvare kategori som du ønsker, trykk på vis alle enheter.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "Hvis du ikke ser maskinvare kategori som du Ã¸nsker, trykk pÃ¥ vis alle enheter.", IDC_STATUSTEXT, 21, 9, 275, 18
     LTEXT "Vanlige &maskinvare typer:", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
 IDD_PROGRESSPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Det vil ta noen minutter å søke etter maskinvare.", -1, 21, 8, 275, 15
+    LTEXT "Det vil ta noen minutter Ã¥ sÃ¸ke etter maskinvare.", -1, 21, 8, 275, 15
     LTEXT "Total prosess:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -89,59 +89,59 @@ END
 
 IDD_FINISHPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fullfører veiviseren for å legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Du har nå fullført veiviseren for å legge til maskinvare.", -1, 114, 32, 193, 19
+    LTEXT "FullfÃ¸rer veiviseren for Ã¥ legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Du har nÃ¥ fullfÃ¸rt veiviseren for Ã¥ legge til maskinvare.", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
-    LTEXT "For å avslutte veiviseren, trykk på Fullført.", -1, 114, 166, 132, 8
+    LTEXT "For Ã¥ avslutte veiviseren, trykk pÃ¥ FullfÃ¸rt.", -1, 114, 166, 132, 8
 END
 
 IDD_ISFOUNDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fullfører veiviseren for å legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Veiviseren fant følgende maskinvare tilkoblet til din datamaskin:", -1, 114, 32, 193, 19
-    LTEXT "For å avslutte veiviseren, trykk på Fullført.", -1, 114, 166, 132, 8
+    LTEXT "FullfÃ¸rer veiviseren for Ã¥ legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Veiviseren fant fÃ¸lgende maskinvare tilkoblet til din datamaskin:", -1, 114, 32, 193, 19
+    LTEXT "For Ã¥ avslutte veiviseren, trykk pÃ¥ FullfÃ¸rt.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
 IDD_HWSTATUSPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fullfører veiviseren for å legge til maskinvare", IDC_FINISHTITLE, 114, 8, 195, 28
-    LTEXT "Her er nåværende status av maskinvaren du valgte:", -1, 114, 40, 193, 19
+    LTEXT "FullfÃ¸rer veiviseren for Ã¥ legge til maskinvare", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Her er nÃ¥vÃ¦rende status av maskinvaren du valgte:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "For å starte feilsøking som kan hjelpe deg å løse alle problemer som du kan ha, trykk på Fullført.", -1, 114, 136, 193, 16
-    LTEXT "For å avslutte veiviseren, trykk på Avbryt.", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "For Ã¥ starte feilsÃ¸king som kan hjelpe deg Ã¥ lÃ¸se alle problemer som du kan ha, trykk pÃ¥ FullfÃ¸rt.", -1, 114, 136, 193, 16
+    LTEXT "For Ã¥ avslutte veiviseren, trykk pÃ¥ Avbryt.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Veiviser for å legge til maskinvare"
+CAPTION "Veiviser for Ã¥ legge til maskinvare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kan ikke fortsette veiviseren for å legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 28
-    LTEXT "For å fortsette, koble til maskinvaren til din datamaskin.", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "&Slå av datamaskinen når jeg trykker på Fullført når jeg trykker på Fullført slik at jeg kan slå på datamaskinen og koble til maskinvaren.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "I de fleste tilfeller ReactOS vil automatisk installere din maskinvare etter at den tilkobles. Hvis ReactOS ikke finner maskinvaren, kan du åpne denne veiviseren for å installere programvaren til maskinvaren.", -1, 114, 98, 193, 32
-    LTEXT "For å avslutte veiviseren, trykk på Fullført.", IDC_STATUSTEXT, 114, 166, 193, 8
+    LTEXT "Kan ikke fortsette veiviseren for Ã¥ legge til maskinvare", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "For Ã¥ fortsette, koble til maskinvaren til din datamaskin.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "&SlÃ¥ av datamaskinen nÃ¥r jeg trykker pÃ¥ FullfÃ¸rt nÃ¥r jeg trykker pÃ¥ FullfÃ¸rt slik at jeg kan slÃ¥ pÃ¥ datamaskinen og koble til maskinvaren.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "I de fleste tilfeller ReactOS vil automatisk installere din maskinvare etter at den tilkobles. Hvis ReactOS ikke finner maskinvaren, kan du Ã¥pne denne veiviseren for Ã¥ installere programvaren til maskinvaren.", -1, 114, 98, 193, 32
+    LTEXT "For Ã¥ avslutte veiviseren, trykk pÃ¥ FullfÃ¸rt.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Legg til maskinvare"
     IDS_CPLDESCRIPTION "Legg til maskinvare for din datamaskin."
-    IDS_SEARCHTITLE "Vennligst vent mens veiviseren søker..."
-    IDS_SEARCHTEXT "Denne veiviseren søker etter maskinvare som har blitt tilkoblet til din datamaskin men som ikke har blitt installert."
+    IDS_SEARCHTITLE "Vennligst vent mens veiviseren sÃ¸ker..."
+    IDS_SEARCHTEXT "Denne veiviseren sÃ¸ker etter maskinvare som har blitt tilkoblet til din datamaskin men som ikke har blitt installert."
     IDS_ISCONNECTED "Er maskinvaren tilkoblet?"
-    IDS_PROBELISTTITLE "Følgende maskinvare har blitt installert på din datamaskin"
+    IDS_PROBELISTTITLE "FÃ¸lgende maskinvare har blitt installert pÃ¥ din datamaskin"
     IDS_ADDNEWDEVICE "Legg til en ny maskinvare enhet"
-    IDS_SELECTWAYTITLE "Veiviseren kan hjelpe deg å installere andre maskinvare"
+    IDS_SELECTWAYTITLE "Veiviseren kan hjelpe deg Ã¥ installere andre maskinvare"
     IDS_HDTYPESTITLE "Fra listen under, velg maskinvare komponenten som du vil installere"
 END

@@ -27,7 +27,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Suoni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Uno schema dei suoni Ë un insieme di suoni legati agli eventi in ReactOS e nei programmi. Potete selezionare uno schema esistente o salvarne uno che avete modificato.", -1, 8, 7, 230, 40
+    LTEXT "Uno schema dei suoni √® un insieme di suoni legati agli eventi in ReactOS e nei programmi. Potete selezionare uno schema esistente o salvarne uno che avete modificato.", -1, 8, 7, 230, 40
     LTEXT "S&chema dei suoni:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Salva come...", IDC_SAVEAS_BTN, 134, 70, 50, 15
@@ -167,10 +167,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Questo computer non puÚ riprodurre l'audio perchË il servizio ReactOS Audio non Ë abilitato.", 10245, 60, 25, 150, 40
+    LTEXT "Questo computer non pu√≤ riprodurre l'audio perch√® il servizio ReactOS Audio non √® abilitato.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Abilitare ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Note", 10246, 58, 87, 150, 11
-    LTEXT "1. Dovete essere un amministratore per abilitare questo servizio. Se non lo siete vi sar‡ richiesto un nome utente e password di un amministratore.", 10247, 60, 100, 150, 40
+    LTEXT "1. Dovete essere un amministratore per abilitare questo servizio. Se non lo siete vi sar√† richiesto un nome utente e password di un amministratore.", 10247, 60, 100, 150, 40
     LTEXT "2. Dopo aver abilitato ReactOS Audio dovrete riavviare il computer.", 10248, 60, 140, 150, 40
 END
 
@@ -223,9 +223,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Il servizio ReactOS Audio Ë abilitato. Comunque, l'audio potrebbe non funzionare correttamente fino al riavvio di ReactOS. Se volte riavviare ora, salvate il vostro lavoro e chiudete tutti i programmi.", 10261, 60, 25, 150, 50
+    LTEXT "Il servizio ReactOS Audio √® abilitato. Comunque, l'audio potrebbe non funzionare correttamente fino al riavvio di ReactOS. Se volte riavviare ora, salvate il vostro lavoro e chiudete tutti i programmi.", 10261, 60, 25, 150, 50
     LTEXT "Per riavviare ReactOS, cliccare OK.", 10262, 60, 75, 150, 20
-    LTEXT "Se cliccherete Annulla, sar‡ necessario riavviare successivamente perchË ReactOS Audio funzioni corettamente.", 10263, 60, 100, 150, 40
+    LTEXT "Se cliccherete Annulla, sar√† necessario riavviare successivamente perch√® ReactOS Audio funzioni corettamente.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
@@ -250,7 +250,7 @@ BEGIN
     5838 "Iniziare navigazione"
     5839 "Aprire programma"
     5840 "Stampa completata"
-    5841 "Ripristinare gi˘"
+    5841 "Ripristinare gi√π"
     5842 "Ripristinare su"
     5843 "Asterisco"
     5844 "Suono predefinito"

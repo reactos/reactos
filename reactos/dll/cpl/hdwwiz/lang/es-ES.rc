@@ -2,21 +2,21 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al Asistente de instalación de dispositivos", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Este asistente le ayudará a:", -1, 114, 40, 182, 8
+    LTEXT "Bienvenido al Asistente de instalaciÃ³n de dispositivos", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Este asistente le ayudarÃ¡ a:", -1, 114, 40, 182, 8
     LTEXT "1) Instalar software para que el hardware a su equipo sea compatible.", -1, 121, 56, 184, 16
     LTEXT "2) Solucionar problemas originados por el hardware.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "Si el hardware trae consigo un CD de instalación, es recomendable que inserte el CD del fabricante para instalar este hardware y que haga clic en Cancelar para cerrar el asistente.", 503, 150, 106, 155, 50
+    LTEXT "Si el hardware trae consigo un CD de instalaciÃ³n, es recomendable que inserte el CD del fabricante para instalar este hardware y que haga clic en Cancelar para cerrar el asistente.", 503, 150, 106, 155, 50
     LTEXT "Haga clic en Siguiente para continuar.", -1, 114, 166, 193, 8
 END
 
 IDD_SEARCHPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
@@ -25,39 +25,39 @@ END
 
 IDD_ISCONNECTEDPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "¿Ya ha conectado este hardware al equipo?", -1, 20, 11, 275, 8
-    AUTORADIOBUTTON "&Sí, ya he conectado el hardware", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "&No, todavía no he agregado el hardware", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "Â¿Ya ha conectado este hardware al equipo?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "&SÃ­, ya he conectado el hardware", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "&No, todavÃ­a no he agregado el hardware", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Seleccione de la siguiente lista el dispositivo de hardware instalado, haga clic en Siguiente para comprobar las propiedades del mismo o solucionar un posible problema.", -1, 21, 8, 275, 22
-    LTEXT "Para agregar hardware que no está en la lista, haga clic en ""Agregar un nuevo dispositivo de hardware.""", -1, 21, 32, 275, 24
+    LTEXT "Para agregar hardware que no estÃ¡ en la lista, haga clic en ""Agregar un nuevo dispositivo de hardware.""", -1, 21, 32, 275, 24
     LTEXT "&Hardware instalado:", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
 IDD_SELECTWAYPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "El asistente puede buscar otro hardware e instalarlo automáticamente. Si conoce exactamente el modelo de hardware que desea instalar, puede seleccionarlo de una lista.", -1, 21, 8, 280, 24
-    LTEXT "¿Qué desea que haga el asistente?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "&Buscar el instalar el hardware automáticamente (Recomendado)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Instalar el hardware seleccionándolo manualmente de una lista (Avanzado)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    LTEXT "El asistente puede buscar otro hardware e instalarlo automÃ¡ticamente. Si conoce exactamente el modelo de hardware que desea instalar, puede seleccionarlo de una lista.", -1, 21, 8, 280, 24
+    LTEXT "Â¿QuÃ© desea que haga el asistente?", -1, 23, 40, 275, 8
+    AUTORADIOBUTTON "&Buscar el instalar el hardware automÃ¡ticamente (Recomendado)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Instalar el hardware seleccionÃ¡ndolo manualmente de una lista (Avanzado)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
@@ -67,7 +67,7 @@ END
 
 IDD_HWTYPESPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Si no encuentra el tipo de hardware que desea, haga clic en Mostrar todos los dispositivos.", IDC_STATUSTEXT, 21, 9, 275, 18
@@ -77,10 +77,10 @@ END
 
 IDD_PROGRESSPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La búsqueda de hardware puede tardar varios minutos.", -1, 21, 8, 275, 15
+    LTEXT "La bÃºsqueda de hardware puede tardar varios minutos.", -1, 21, 8, 275, 15
     LTEXT "Progreso total:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -89,21 +89,21 @@ END
 
 IDD_FINISHPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completando el Asistente de instalación de dispositivos", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Ha completado satisfactoriamente el Asistente de instalación de dispositivos.", -1, 114, 32, 193, 19
+    LTEXT "Completando el Asistente de instalaciÃ³n de dispositivos", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Ha completado satisfactoriamente el Asistente de instalaciÃ³n de dispositivos.", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
     LTEXT "Para salir de este asistente, haga clic en Finalizar.", -1, 114, 166, 193, 8
 END
 
 IDD_ISFOUNDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Completando el Asistente de instalación de dispositivos", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Completando el Asistente de instalaciÃ³n de dispositivos", IDC_FINISHTITLE, 114, 8, 203, 24
     LTEXT "El asistente ha encontrado el siguiente hardware conectado a su equipo:", -1, 114, 32, 193, 19
     LTEXT "Para salir de este asistente, haga clic en Finalizar.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
@@ -111,10 +111,10 @@ END
 
 IDD_HWSTATUSPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Finalización del Asistente de instalación de dispositivos", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "FinalizaciÃ³n del Asistente de instalaciÃ³n de dispositivos", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "Estado actual del hardware que ha seleccionado:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
     LTEXT "Para iniciar el solucionador de problemas que puede ayudarle a resolver posibles problemas, haga clic en Finalizar.", -1, 114, 136, 193, 24
@@ -123,25 +123,25 @@ END
 
 IDD_NOTCONNECTEDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Asistente de instalación de dispositivos"
+CAPTION "Asistente de instalaciÃ³n de dispositivos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "El Asistente de instalación de dispositivos no puede continuar", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "El Asistente de instalaciÃ³n de dispositivos no puede continuar", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "Para continuar, conecte este hardware al equipo.", -1, 114, 40, 193, 16
     AUTOCHECKBOX "Apagar el equipo cuando &haga clic en Finalizar para poder abrirlo y conectar el hardware.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "En muchos casos ReactOS instalará automáticamente el hardware después de conectarlo. Si ReactOS no lo encuentra, puede volver a abrir el asistente para instalar software compatible.", -1, 114, 98, 193, 32
+    LTEXT "En muchos casos ReactOS instalarÃ¡ automÃ¡ticamente el hardware despuÃ©s de conectarlo. Si ReactOS no lo encuentra, puede volver a abrir el asistente para instalar software compatible.", -1, 114, 98, 193, 32
     LTEXT "Para salir de este asistente, haga clic en Finalizar.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Instalador de dispositivos"
-    IDS_CPLDESCRIPTION "Añade nuevo dispositivo a su equipo."
-    IDS_SEARCHTITLE "Espere un momento mientras el asistente está buscando..."
-    IDS_SEARCHTEXT "El asistente está buscando hardware que haya sido conectado recientemente al equipo pero no se haya instalado todavía."
-    IDS_ISCONNECTED "¿El dispositivo está conectado?"
-    IDS_PROBELISTTITLE "El siguiente dispositivo ya está instalado en su equipo"
-    IDS_ADDNEWDEVICE "Añadir un nuevo dispositivo de hardware"
+    IDS_CPLDESCRIPTION "AÃ±ade nuevo dispositivo a su equipo."
+    IDS_SEARCHTITLE "Espere un momento mientras el asistente estÃ¡ buscando..."
+    IDS_SEARCHTEXT "El asistente estÃ¡ buscando hardware que haya sido conectado recientemente al equipo pero no se haya instalado todavÃ­a."
+    IDS_ISCONNECTED "Â¿El dispositivo estÃ¡ conectado?"
+    IDS_PROBELISTTITLE "El siguiente dispositivo ya estÃ¡ instalado en su equipo"
+    IDS_ADDNEWDEVICE "AÃ±adir un nuevo dispositivo de hardware"
     IDS_SELECTWAYTITLE "El asistente puede ayudarle a instalar otro dispositivo"
     IDS_HDTYPESTITLE "Seleccione de la siguiente lista el tipo de hardware que quiere instalar"
 END

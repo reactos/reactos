@@ -47,7 +47,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Dato/Tid"
     IDS_CPLDESCRIPTION "Skifter Dato, Tid og Tidszone informationer."
-    IDS_TIMEZONETEXT "Nuværende tidszone: %s"
+    IDS_TIMEZONETEXT "NuvÃ¦rende tidszone: %s"
     IDS_TIMEZONEINVALID "Ugyldig"
     IDS_TIMEZONEUNKNOWN "Ukendt"
     IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"

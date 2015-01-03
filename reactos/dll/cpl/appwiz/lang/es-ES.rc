@@ -30,8 +30,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Crear acceso directo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Este asistente le ayudar· a crear accesos directos a programas locales o en red, archivos, carpetas, equipos, o direcciones de Internet.", -1, 120, 15, 200, 30
-    LTEXT "Escriba la ubicaciÛn del elemento:", -1, 120, 50, 120, 10
+    LTEXT "Este asistente le ayudar√° a crear accesos directos a programas locales o en red, archivos, carpetas, equipos, o direcciones de Internet.", -1, 120, 15, 200, 30
+    LTEXT "Escriba la ubicaci√≥n del elemento:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
     PUSHBUTTON "Examinar...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Presione Siguiente para continuar.", -1, 120, 97, 162, 10
@@ -39,7 +39,7 @@ END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Seleccione un tÌtulo para el programa"
+CAPTION "Seleccione un t√≠tulo para el programa"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Escriba un nombre para este acceso directo:", -1, 120, 15, 150, 10
@@ -49,8 +49,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "AÒadir y quitar programas"
-    IDS_CPLSYSTEMDESCRIPTION "AÒade programas y crea accesos directos."
+    IDS_CPLSYSTEMNAME "A√±adir y quitar programas"
+    IDS_CPLSYSTEMDESCRIPTION "A√±ade programas y crea accesos directos."
     IDS_CREATE_SHORTCUT "Crear acceso directo"
     IDS_ERROR_NOT_FOUND "No se ha encontrado archivo %s."
 END
@@ -59,7 +59,7 @@ STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "Descargando..."
     IDS_INSTALLING "Instalando..."
-    IDS_INVALID_SHA "La suma de verificaciÛn del archivo descargado no coincide. Se ha cancelado la instalaciÛn del archivo corrupto."
+    IDS_INVALID_SHA "La suma de verificaci√≥n del archivo descargado no coincide. Se ha cancelado la instalaci√≥n del archivo corrupto."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
@@ -67,7 +67,7 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Instalador de Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS no pudo encontrar el paquete de Wine Gecko, necesario para que las aplicaciones con HTML embebido funcionen correctamente.\n\nReactOS puede ayudar a descargarlo de forma autom·tica y f·cil.",
+    CONTROL "ReactOS no pudo encontrar el paquete de Wine Gecko, necesario para que las aplicaciones con HTML embebido funcionen correctamente.\n\nReactOS puede ayudar a descargarlo de forma autom√°tica y f√°cil.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP

@@ -2,7 +2,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Δημιουργία συνδέσμου"
+CAPTION "Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± ΟƒΟ…Ξ½Ξ΄Ξ­ΟƒΞΌΞΏΟ…"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1", -1, 115, 15, 160, 24
@@ -11,7 +11,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Δημιουργία συνδέσμου"
+CAPTION "Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± ΟƒΟ…Ξ½Ξ΄Ξ­ΟƒΞΌΞΏΟ…"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1",-1,10,0,225,40
@@ -21,32 +21,32 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Δημιουργία συντόμευσης"
+CAPTION "Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± ΟƒΟ…Ξ½Ο„ΟΞΌΞµΟ…ΟƒΞ·Ο‚"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Αυτός ο οδηγός σας βοηθάει να δημιουργήσετε συντομεύσεις σε τοπικά προγράμματα ή προγράμματα δικτύου, αρχεία, φακέλους, υπολογιστές ή διευθύνσεις στο διαδίκτυο.", -1, 120, 15, 200, 30
-    LTEXT "Εισάγετε την θέση του στοιχείου:", -1, 120, 50, 120, 10
+    LTEXT "Ξ‘Ο…Ο„ΟΟ‚ ΞΏ ΞΏΞ΄Ξ·Ξ³ΟΟ‚ ΟƒΞ±Ο‚ Ξ²ΞΏΞ·ΞΈΞ¬ΞµΞΉ Ξ½Ξ± Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ®ΟƒΞµΟ„Ξµ ΟƒΟ…Ξ½Ο„ΞΏΞΌΞµΟΟƒΞµΞΉΟ‚ ΟƒΞµ Ο„ΞΏΟ€ΞΉΞΊΞ¬ Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„Ξ± Ξ® Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„Ξ± Ξ΄ΞΉΞΊΟ„ΟΞΏΟ…, Ξ±ΟΟ‡ΞµΞ―Ξ±, Ο†Ξ±ΞΊΞ­Ξ»ΞΏΟ…Ο‚, Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ­Ο‚ Ξ® Ξ΄ΞΉΞµΟ…ΞΈΟΞ½ΟƒΞµΞΉΟ‚ ΟƒΟ„ΞΏ Ξ΄ΞΉΞ±Ξ΄Ξ―ΞΊΟ„Ο…ΞΏ.", -1, 120, 15, 200, 30
+    LTEXT "Ξ•ΞΉΟƒΞ¬Ξ³ΞµΟ„Ξµ Ο„Ξ·Ξ½ ΞΈΞ­ΟƒΞ· Ο„ΞΏΟ… ΟƒΟ„ΞΏΞΉΟ‡ΞµΞ―ΞΏΟ…:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-    PUSHBUTTON "Αναζήτηση...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "Πατήστε 'Επόμενο' για να συνεχίσετε.", -1, 120, 97, 162, 10
+    PUSHBUTTON "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ 'Ξ•Ο€ΟΞΌΞµΞ½ΞΏ' Ξ³ΞΉΞ± Ξ½Ξ± ΟƒΟ…Ξ½ΞµΟ‡Ξ―ΟƒΞµΟ„Ξµ.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Επιλέξτε τίτλο για το πρόγραμμα"
+CAPTION "Ξ•Ο€ΞΉΞ»Ξ­ΞΎΟ„Ξµ Ο„Ξ―Ο„Ξ»ΞΏ Ξ³ΞΉΞ± Ο„ΞΏ Ο€ΟΟΞ³ΟΞ±ΞΌΞΌΞ±"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Πληκτρολογήστε ένα όνομα για τη συντόμευση:", -1, 120, 15, 150, 10
+    LTEXT "&Ξ Ξ»Ξ·ΞΊΟ„ΟΞΏΞ»ΞΏΞ³Ξ®ΟƒΟ„Ξµ Ξ­Ξ½Ξ± ΟΞ½ΞΏΞΌΞ± Ξ³ΞΉΞ± Ο„Ξ· ΟƒΟ…Ξ½Ο„ΟΞΌΞµΟ…ΟƒΞ·:", -1, 120, 15, 150, 10
     EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-    LTEXT "Πατήστε 'Τέλος' για να δημιουργήσετε τη συντόμευση.", -1, 118, 97, 178, 17
+    LTEXT "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ 'Ξ¤Ξ­Ξ»ΞΏΟ‚' Ξ³ΞΉΞ± Ξ½Ξ± Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ®ΟƒΞµΟ„Ξµ Ο„Ξ· ΟƒΟ…Ξ½Ο„ΟΞΌΞµΟ…ΟƒΞ·.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Προσθαφαίρεση προγραμμάτων"
-    IDS_CPLSYSTEMDESCRIPTION "Ρυθμίζει τα προγράμματα και δημιουργεί συντομεύσεις."
-    IDS_CREATE_SHORTCUT "Δημιουργία συντόμευσης"
-    IDS_ERROR_NOT_FOUND "Το αρχείο %s δε βρέθηκε."
+    IDS_CPLSYSTEMNAME "Ξ ΟΞΏΟƒΞΈΞ±Ο†Ξ±Ξ―ΟΞµΟƒΞ· Ο€ΟΞΏΞ³ΟΞ±ΞΌΞΌΞ¬Ο„Ο‰Ξ½"
+    IDS_CPLSYSTEMDESCRIPTION "Ξ΅Ο…ΞΈΞΌΞ―Ξ¶ΞµΞΉ Ο„Ξ± Ο€ΟΞΏΞ³ΟΞ¬ΞΌΞΌΞ±Ο„Ξ± ΞΊΞ±ΞΉ Ξ΄Ξ·ΞΌΞΉΞΏΟ…ΟΞ³ΞµΞ― ΟƒΟ…Ξ½Ο„ΞΏΞΌΞµΟΟƒΞµΞΉΟ‚."
+    IDS_CREATE_SHORTCUT "Ξ”Ξ·ΞΌΞΉΞΏΟ…ΟΞ³Ξ―Ξ± ΟƒΟ…Ξ½Ο„ΟΞΌΞµΟ…ΟƒΞ·Ο‚"
+    IDS_ERROR_NOT_FOUND "Ξ¤ΞΏ Ξ±ΟΟ‡ΞµΞ―ΞΏ %s Ξ΄Ξµ Ξ²ΟΞ­ΞΈΞ·ΞΊΞµ."
 END
 
 STRINGTABLE
