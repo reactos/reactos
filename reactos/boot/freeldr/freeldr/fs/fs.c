@@ -102,10 +102,7 @@ BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID 
     //
     // Check for success
     //
-    if (ret == ESUCCESS)
-        return TRUE;
-    else
-        return FALSE;
+    return (ret == ESUCCESS);
 }
 
 ULONG FsGetFileSize(PFILE FileHandle)
@@ -156,10 +153,10 @@ VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
  */
 ULONG FsGetNumPathParts(PCSTR Path)
 {
-    size_t        i;
-    ULONG        num;
+    size_t i;
+    ULONG  num;
 
-    for (i=0,num=0; i<strlen(Path); i++)
+    for (i = 0, num = 0; i < strlen(Path); i++)
     {
         if ((Path[i] == '\\') || (Path[i] == '/'))
         {
@@ -181,12 +178,12 @@ ULONG FsGetNumPathParts(PCSTR Path)
  */
 VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 {
-    size_t        i;
+    size_t i;
 
     // Copy all the characters up to the end of the
     // string or until we hit a '\' character
     // and put them in Buffer
-    for (i=0; i<strlen(Path); i++)
+    for (i = 0; i < strlen(Path); i++)
     {
         if ((Path[i] == '\\') || (Path[i] == '/'))
         {
@@ -276,8 +273,10 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     /* Count number of "()", which needs to be replaced by "(0)" */
     Count = 0;
     for (p = Path; p != FileName; p++)
+    {
         if (*p == '(' && *(p + 1) == ')')
             Count++;
+    }
 
     /* Duplicate device name, and replace "()" by "(0)" (if required) */
     Length = FileName - Path + Count;
@@ -294,14 +293,17 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         }
     }
     else
+    {
         DeviceName = Path;
+    }
 
     /* Search for the device */
-    pEntry = DeviceListHead.Flink;
     if (OpenMode == OpenReadOnly || OpenMode == OpenWriteOnly)
         DeviceOpenMode = OpenMode;
     else
         DeviceOpenMode = OpenReadWrite;
+
+    pEntry = DeviceListHead.Flink;
     while (pEntry != &DeviceListHead)
     {
         pDevice = CONTAINING_RECORD(pEntry, DEVICE, ListEntry);
@@ -312,10 +314,13 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
             {
                 /* Search some room for the device */
                 for (DeviceId = 0; DeviceId < MAX_FDS; DeviceId++)
+                {
                     if (!FileData[DeviceId].FuncTable)
                         break;
+                }
                 if (DeviceId == MAX_FDS)
                     return EMFILE;
+
                 /* Try to open the device */
                 FileData[DeviceId].FuncTable = pDevice->FuncTable;
                 ret = pDevice->FuncTable->Open(pDevice->Prefix, DeviceOpenMode, &DeviceId);
@@ -376,8 +381,10 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
     /* Search some room for the device */
     for (i = 0; i < MAX_FDS; i++)
+    {
         if (!FileData[i].FuncTable)
             break;
+    }
     if (i == MAX_FDS)
         return EMFILE;
 
@@ -468,4 +475,8 @@ VOID FsInit(VOID)
         FileData[i].DeviceId = (ULONG)-1;
 
     InitializeListHead(&DeviceListHead);
+
+    // FIXME: Retrieve the current boot device with MachDiskGetBootPath
+    // and store it somewhere in order to not call again and again this
+    // function.
 }
