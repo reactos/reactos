@@ -53,10 +53,10 @@ VOID BootMain(LPSTR CmdLine)
     }
 
 #ifdef _M_IX86
-	HalpInitializePciStubs();
-	HalpInitBusHandler();
+    HalpInitializePciStubs();
+    HalpInitBusHandler();
 #endif
-	RunLoader();
+    RunLoader();
 
 quit:
     /* If we reach this point, something went wrong before, therefore reboot */
@@ -84,4 +84,3 @@ int iswctype(wint_t wc, wctype_t wctypeFlags)
 {
     return _isctype((char)wc, wctypeFlags);
 }
-

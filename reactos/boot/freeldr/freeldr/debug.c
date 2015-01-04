@@ -33,14 +33,14 @@
 
 #define DBG_DEFAULT_LEVELS (ERR_LEVEL|FIXME_LEVEL)
 
-#define    SCREEN                1
-#define    RS232                2
-#define BOCHS                4
+#define SCREEN  1
+#define RS232   2
+#define BOCHS   4
 
-#define    COM1                1
-#define    COM2                2
-#define    COM3                3
-#define    COM4                4
+#define COM1    1
+#define COM2    2
+#define COM3    3
+#define COM4    4
 
 #define BOCHS_OUTPUT_PORT    0xe9
 

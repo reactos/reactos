@@ -26,7 +26,7 @@
 
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-//FIXME: Do a better way to retrieve Arc disk information
+//FIXME: Find a better way to retrieve ARC disk information
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 
