@@ -468,15 +468,6 @@ VOID WINAPI ShowStartGlass(DWORD unknown)
 }
 
 /*
- * @unimplemented
- */
-BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_OF_SERVICE pqosPrev)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
  * @implemented
  */
 DWORD WINAPI GetMenuIndex(HMENU hMenu, HMENU hSubMenu)
