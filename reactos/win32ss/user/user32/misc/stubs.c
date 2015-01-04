@@ -477,15 +477,6 @@ BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_
 }
 
 /*
- * @unimplemented
- */
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
  * @implemented
  */
 DWORD WINAPI GetMenuIndex(HMENU hMenu, HMENU hSubMenu)

@@ -14,6 +14,7 @@ PPROCESSINFO g_ppi = NULL;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
 PSERVERINFO gpsi = NULL;
+SHAREDINFO gSharedInfo = {0};
 ULONG_PTR g_ulSharedDelta;
 BOOLEAN gfLogonProcess  = FALSE;
 BOOLEAN gfServerProcess = FALSE;
@@ -262,6 +263,7 @@ ClientThreadSetupHelper(BOOL IsCallback)
         gpsi = SharedPtrToUser(UserCon.siClient.psi);
         gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
         gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+        gSharedInfo = UserCon.siClient;
 
         // ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
     }
@@ -414,6 +416,7 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
         gpsi = SharedPtrToUser(UserCon->siClient.psi);
         gHandleTable = SharedPtrToUser(UserCon->siClient.aheList);
         gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+        gSharedInfo = UserCon->siClient;
     }
 
     // FIXME: Yet another hack... This call should normally not be done here, but
@@ -518,13 +521,22 @@ DllMain(
             if (!Init(&ConnectInfo))
                 return FALSE;
 
+            if (!gfServerProcess)
+            {
+               InitializeImmEntryTable();
+               //
+               // Wine is stub and throws an exception so save this for real Imm32.dll testing!!!!
+               //
+               //gImmApiEntries.pImmRegisterClient(&gSharedInfo, ghImm32);
+            }
+            
             break;
         }
 
         case DLL_PROCESS_DETACH:
         {
-            if (hImmInstance)
-                FreeLibrary(hImmInstance);
+            if (ghImm32)
+                FreeLibrary(ghImm32);
 
             Cleanup();
             break;

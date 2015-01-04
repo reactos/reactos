@@ -1121,6 +1121,32 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
+typedef struct tagIMEUI
+{
+ PWND spwnd;
+ HIMC hIMC;
+ HWND hwndIMC;
+ HKL hKL;
+ HWND hwndUI;
+ INT nCntInIMEProc;
+ struct {
+ UINT fShowStatus:1;
+ UINT fActivate:1;
+ UINT fDestroy:1;
+ UINT fDefault:1;
+ UINT fChildThreadDef:1;
+ UINT fCtrlShowStatus:1;
+ UINT fFreeActiveEvent:1;
+ };
+} IMEUI, *PIMEUI;
+
+// Window Extra data container.
+typedef struct _IMEWND
+{
+  WND;
+  PIMEUI pimeui;
+} IMEWND, *PIMEWND;
+
 
 DWORD
 NTAPI
