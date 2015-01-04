@@ -106,6 +106,7 @@ list(APPEND SOURCE
     user/ntuser/class.c
     user/ntuser/clipboard.c
     user/ntuser/csr.c
+    user/ntuser/dde.c
     user/ntuser/defwnd.c
     user/ntuser/desktop.c
     user/ntuser/display.c
