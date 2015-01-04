@@ -686,7 +686,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
                              LoaderBlock,
                              BootOptions,
                              BootPath,
-                             0);
+                             FALSE);
 }
 
 VOID
