@@ -1740,7 +1740,5 @@ MUI_STRING itITStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Aggiunta delle nazionalit… di tastiera"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

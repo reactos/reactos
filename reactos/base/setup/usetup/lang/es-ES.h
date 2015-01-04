@@ -1745,7 +1745,5 @@ MUI_STRING esESStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "A¤adiendo distribuci¢n de teclado"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

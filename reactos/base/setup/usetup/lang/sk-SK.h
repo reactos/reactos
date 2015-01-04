@@ -1752,7 +1752,5 @@ MUI_STRING skSKStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Prid vam rozlo§enia kl vesnice"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

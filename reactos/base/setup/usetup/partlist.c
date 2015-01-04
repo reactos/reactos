@@ -558,7 +558,7 @@ AddPartitionToDisk(
 
     if (IsContainerPartition(PartEntry->PartitionType))
     {
-        PartEntry->FormatState = Formatted;
+        PartEntry->FormatState = Unformatted;
 
         if (LogicalPartition == FALSE && DiskEntry->ExtendedPartition == NULL)
             DiskEntry->ExtendedPartition = PartEntry;
@@ -1499,7 +1499,11 @@ PrintPartitionData(
     {
         /* Determine partition type */
         PartType = NULL;
-        if (PartEntry->IsPartitioned == TRUE)
+        if (PartEntry->New == TRUE)
+        {
+            PartType = MUIGetString(STRING_UNFORMATTED);
+        }
+        else if (PartEntry->IsPartitioned == TRUE)
         {
             if ((PartEntry->PartitionType == PARTITION_FAT_12) ||
                 (PartEntry->PartitionType == PARTITION_FAT_16) ||
@@ -2382,6 +2386,7 @@ DPRINT1("Convert existing partition entry\n");
         PartEntry->PartitionType = PARTITION_ENTRY_UNUSED;
         PartEntry->FormatState = Unformatted;
         PartEntry->AutoCreate = AutoCreate;
+        PartEntry->New = TRUE;
         PartEntry->BootIndicator = FALSE;
 
 DPRINT1("First Sector: %I64u\n", PartEntry->StartSector.QuadPart);
@@ -2415,13 +2420,12 @@ DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
 DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
 DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
 
+        NewPartEntry->New = TRUE;
         NewPartEntry->FormatState = Unformatted;
         NewPartEntry->BootIndicator = FALSE;
 
         PartEntry->StartSector.QuadPart = NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart;
         PartEntry->SectorCount.QuadPart -= (PartEntry->StartSector.QuadPart - NewPartEntry->StartSector.QuadPart);
-
-        List->CurrentPartition = NewPartEntry;
     }
 
     UpdateDiskLayout(DiskEntry);
@@ -2499,6 +2503,7 @@ DPRINT1("Convert existing partition entry\n");
         PartEntry->IsPartitioned = TRUE;
         PartEntry->FormatState = Formatted;
         PartEntry->AutoCreate = FALSE;
+        PartEntry->New = FALSE;
         PartEntry->BootIndicator = FALSE;
 
         if (PartEntry->StartSector.QuadPart < 1450560)
@@ -2540,6 +2545,7 @@ DPRINT1("Add new partition entry\n");
         NewPartEntry->SectorCount.QuadPart = Align(NewPartEntry->StartSector.QuadPart + SectorCount, DiskEntry->SectorAlignment) -
                                              NewPartEntry->StartSector.QuadPart;
 
+        NewPartEntry->New = FALSE;
         NewPartEntry->FormatState = Formatted;
         NewPartEntry->BootIndicator = FALSE;
 
@@ -2562,8 +2568,6 @@ DPRINT1("Add new partition entry\n");
 DPRINT1("First Sector: %I64u\n", NewPartEntry->StartSector.QuadPart);
 DPRINT1("Last Sector: %I64u\n", NewPartEntry->StartSector.QuadPart + NewPartEntry->SectorCount.QuadPart - 1);
 DPRINT1("Total Sectors: %I64u\n", NewPartEntry->SectorCount.QuadPart);
-
-        List->CurrentPartition = NewPartEntry;
     }
 
     AddLogicalDiskSpace(DiskEntry);
@@ -2927,16 +2931,15 @@ WritePartitons(
 }
 
 
-NTSTATUS
-WriteDirtyPartitions(
+BOOLEAN
+WritePartitionsToDisk(
     PPARTLIST List)
 {
     PLIST_ENTRY Entry;
     PDISKENTRY DiskEntry;
-    NTSTATUS Status;
 
     if (List == NULL)
-        return STATUS_SUCCESS;
+        return TRUE;
 
     Entry = List->DiskListHead.Flink;
     while (Entry != &List->DiskListHead)
@@ -2945,17 +2948,13 @@ WriteDirtyPartitions(
 
         if (DiskEntry->Dirty == TRUE)
         {
-            Status = WritePartitons(List, DiskEntry);
-            if (!NT_SUCCESS(Status))
-                return Status;
-
-            DiskEntry->Dirty = FALSE;
+            WritePartitons(List, DiskEntry);
         }
 
         Entry = Entry->Flink;
     }
 
-    return STATUS_SUCCESS;
+    return TRUE;
 }
 
 

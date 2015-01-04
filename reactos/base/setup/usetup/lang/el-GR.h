@@ -1763,7 +1763,5 @@ MUI_STRING elGRStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "‚å¤œ«˜  §¨¦©Ÿã¡ž «à¤ › ˜«á¥œà¤ §¢ž¡«¨¦¢¦šå¦¬"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

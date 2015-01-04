@@ -1746,7 +1746,5 @@ MUI_STRING plPLStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Dodawanie ukˆad¢w klawiatury"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

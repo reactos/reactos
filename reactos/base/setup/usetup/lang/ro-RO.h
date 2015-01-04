@@ -1814,7 +1814,5 @@ MUI_STRING roROStrings[] =
     "Go"},
     {STRING_ADDKBLAYOUTS,
     "Ad«ugare configuraÓii de tastatur«"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

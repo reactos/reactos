@@ -1746,7 +1746,5 @@ MUI_STRING csCZStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Pýid v m rozlo§en¡ kl ves"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

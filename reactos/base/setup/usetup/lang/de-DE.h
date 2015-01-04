@@ -1742,7 +1742,5 @@ MUI_STRING deDEStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "Tastaturlayout hinzufÅgen"},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };

@@ -2,36 +2,12 @@
 
 BOOLEAN
 NATIVE_CreateFileSystemList(
-    IN PFILE_SYSTEM_LIST List,
-    IN UCHAR PartitionType)
+    IN PFILE_SYSTEM_LIST List)
 {
-    if (PartitionType == PARTITION_ENTRY_UNUSED ||
-        PartitionType == PARTITION_FAT_12 ||
-        PartitionType == PARTITION_FAT_16 ||
-        PartitionType == PARTITION_HUGE ||
-        PartitionType == PARTITION_XINT13 ||
-        PartitionType == PARTITION_FAT32 ||
-        PartitionType == PARTITION_FAT32_XINT13)
-    {
-        FS_AddProvider(List, L"FAT", VfatFormat, VfatChkdsk);
-    }
-
+    FS_AddProvider(List, L"FAT", VfatFormat, VfatChkdsk);
 #if 0
-    if (PartitionType == PARTITION_ENTRY_UNUSED ||
-        PartitionType == PARTITION_EXT2)
-    {
-        FS_AddProvider(List, L"EXT2", Ext2Format, Ext2Chkdsk);
-    }
+    FS_AddProvider(List, L"EXT2", Ext2Format, Ext2Chkdsk);
 #endif
-
-#if 0
-    if (PartitionType == PARTITION_ENTRY_UNUSED ||
-        PartitionType == PARTITION_IFS)
-    {
-        FS_AddProvider(List, L"NTFS", NtfsFormat, NtfsChkdsk);
-    }
-#endif
-
     return TRUE;
 }
 

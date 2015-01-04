@@ -156,5 +156,3 @@ MUIGetString(
 #define STRING_MB                        54
 #define STRING_GB                        55
 #define STRING_ADDKBLAYOUTS              56
-#define STRING_FORMATPART                     62
-

@@ -1725,7 +1725,5 @@ MUI_STRING trTRStrings[] =
     "GB"},
     {STRING_ADDKBLAYOUTS,
     "DÅßme takçmç dÅzenleri ekleniyor..."},
-    {STRING_FORMATPART,
-    "Setup formats Partition"},
     {0, 0}
 };
