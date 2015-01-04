@@ -621,16 +621,30 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
         strcpy(BootPath, SectionName);
     }
 
-    /* Special case for LiveCD */
-    if (!_strnicmp(BootPath, "LiveCD", strlen("LiveCD")))
+    /*
+     * Check whether BootPath is a full path
+     * and if not, create a full boot path.
+     *
+     * See FsOpenFile for the technique used.
+     */
+    if (strrchr(BootPath, ')') == NULL)
     {
-        strcpy(FileName, BootPath + strlen("LiveCD"));
+        /* Temporarily save the boot path */
+        strcpy(FileName, BootPath);
+
+        /* This is not a full path. Use the current (i.e. boot) device. */
         MachDiskGetBootPath(BootPath, sizeof(BootPath));
+
+        /* Append a path separator if needed */
+        if (FileName[0] != '\\' && FileName[0] != '/')
+            strcat(BootPath, "\\");
+
+        /* Append the remaining path */
         strcat(BootPath, FileName);
     }
 
-    /* Append a backslash */
-    if ((strlen(BootPath)==0) || BootPath[strlen(BootPath)] != '\\')
+    /* Append a backslash if needed */
+    if ((strlen(BootPath) == 0) || BootPath[strlen(BootPath) - 1] != '\\')
         strcat(BootPath, "\\");
 
     /* Read booting options */
