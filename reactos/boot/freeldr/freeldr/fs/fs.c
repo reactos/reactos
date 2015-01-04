@@ -55,31 +55,6 @@ static LIST_ENTRY DeviceListHead;
 
 /* ARC FUNCTIONS **************************************************************/
 
-ARC_STATUS ArcClose(ULONG FileId)
-{
-    LONG ret;
-
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
-        return EBADF;
-
-    ret = FileData[FileId].FuncTable->Close(FileId);
-
-    if (ret == ESUCCESS)
-    {
-        FileData[FileId].FuncTable = NULL;
-        FileData[FileId].Specific = NULL;
-        FileData[FileId].DeviceId = -1;
-    }
-    return ret;
-}
-
-ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
-{
-    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
-        return EBADF;
-    return FileData[FileId].FuncTable->GetFileInformation(FileId, Information);
-}
-
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     ULONG Count, i, ret;
@@ -239,6 +214,24 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ret;
 }
 
+ARC_STATUS ArcClose(ULONG FileId)
+{
+    LONG ret;
+
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return EBADF;
+
+    ret = FileData[FileId].FuncTable->Close(FileId);
+
+    if (ret == ESUCCESS)
+    {
+        FileData[FileId].FuncTable = NULL;
+        FileData[FileId].Specific = NULL;
+        FileData[FileId].DeviceId = -1;
+    }
+    return ret;
+}
+
 ARC_STATUS ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
@@ -253,18 +246,24 @@ ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     return FileData[FileId].FuncTable->Seek(FileId, Position, SeekMode);
 }
 
+ARC_STATUS ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return EBADF;
+    return FileData[FileId].FuncTable->GetFileInformation(FileId, Information);
+}
+
 /* FUNCTIONS ******************************************************************/
 
 VOID FileSystemError(PCSTR ErrorString)
 {
     ERR("%s\n", ErrorString);
-
     UiMessageBox(ErrorString);
 }
 
 PFILE FsOpenFile(PCSTR FileName)
 {
-    CHAR FullPath[MAX_PATH];
+    CHAR FullPath[MAX_PATH] = "";
     ULONG FileId;
     LONG ret;
 
@@ -274,9 +273,21 @@ PFILE FsOpenFile(PCSTR FileName)
     TRACE("Opening file '%s'...\n", FileName);
 
     //
-    // Create full file name
+    // Check whether FileName is a full path
+    // and if not, create a full file name.
     //
-    MachDiskGetBootPath(FullPath, sizeof(FullPath));
+    // See ArcOpen: Search last ')', which delimits device and path.
+    //
+    if (strrchr(FileName, ')') == NULL)
+    {
+        /* This is not a full path. Use the current (i.e. boot) device. */
+        MachDiskGetBootPath(FullPath, sizeof(FullPath));
+
+        /* Append a path separator if needed */
+        if (FileName[0] != '\\' && FileName[0] != '/')
+            strcat(FullPath, "\\");
+    }
+    // Append (or just copy) the remaining file name.
     strcat(FullPath, FileName);
 
     //
@@ -298,14 +309,10 @@ VOID FsCloseFile(PFILE FileHandle)
     ULONG FileId = (ULONG)FileHandle;
 
     //
-    // Close the handle
+    // Close the handle. Do not check for error,
+    // this function is supposed to always succeed.
     //
     ArcClose(FileId);
-
-    //
-    // Do not check for error; this function is
-    // supposed to always succeed
-    //
 }
 
 /*
@@ -315,17 +322,21 @@ VOID FsCloseFile(PFILE FileHandle)
 BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
     ULONG FileId = (ULONG)FileHandle;
-    LONG ret;
 
     //
     // Read the file
     //
-    ret = ArcRead(FileId, Buffer, BytesToRead, BytesRead);
+    return (ArcRead(FileId, Buffer, BytesToRead, BytesRead) == ESUCCESS);
+}
+
+BOOLEAN FsGetFileInformation(PFILE FileHandle, FILEINFORMATION* Information)
+{
+    ULONG FileId = (ULONG)FileHandle;
 
     //
-    // Check for success
+    // Get file information
     //
-    return (ret == ESUCCESS);
+    return (ArcGetFileInformation(FileId, Information) == ESUCCESS);
 }
 
 ULONG FsGetFileSize(PFILE FileHandle)
@@ -357,16 +368,12 @@ VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
     LARGE_INTEGER Position;
 
     //
-    // Set file position
+    // Set file position. Do not check for error,
+    // this function is supposed to always succeed.
     //
     Position.HighPart = 0;
     Position.LowPart = NewFilePointer;
     ArcSeek(FileId, &Position, SeekAbsolute);
-
-    //
-    // Do not check for error; this function is
-    // supposed to always succeed
-    //
 }
 
 /*
