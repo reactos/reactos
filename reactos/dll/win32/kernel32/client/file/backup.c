@@ -20,19 +20,18 @@
  */
 BOOL
 WINAPI
-BackupRead (
-	HANDLE	hFile,
-	LPBYTE	lpBuffer,
-	DWORD	nNumberOfBytesToRead,
-	LPDWORD	lpNumberOfBytesRead,
-	BOOL	bAbort,
-	BOOL	bProcessSecurity,
-	LPVOID	* lpContext
-	)
+BackupRead(
+    HANDLE hFile,
+    LPBYTE lpBuffer,
+    DWORD nNumberOfBytesToRead,
+    LPDWORD lpNumberOfBytesRead,
+    BOOL bAbort,
+    BOOL bProcessSecurity,
+    LPVOID *lpContext)
 {
     UNIMPLEMENTED;
-	SetLastError(ERROR_NOT_SUPPORTED);
-	return FALSE;
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
 }
 
 
@@ -41,18 +40,17 @@ BackupRead (
  */
 BOOL
 WINAPI
-BackupSeek (
-	HANDLE	hFile,
-	DWORD	dwLowBytesToSeek,
-	DWORD	dwHighBytesToSeek,
-	LPDWORD	lpdwLowByteSeeked,
-	LPDWORD	lpdwHighByteSeeked,
-	LPVOID	* lpContext
-	)
+BackupSeek(
+    HANDLE hFile,
+    DWORD dwLowBytesToSeek,
+    DWORD dwHighBytesToSeek,
+    LPDWORD lpdwLowByteSeeked,
+    LPDWORD lpdwHighByteSeeked,
+    LPVOID *lpContext)
 {
     UNIMPLEMENTED;
-	SetLastError(ERROR_NOT_SUPPORTED);
-	return FALSE;
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
 }
 
 
@@ -61,19 +59,18 @@ BackupSeek (
  */
 BOOL
 WINAPI
-BackupWrite (
-	HANDLE	hFile,
-	LPBYTE	lpBuffer,
-	DWORD	nNumberOfBytesToWrite,
-	LPDWORD	lpNumberOfBytesWritten,
-	BOOL	bAbort,
-	BOOL	bProcessSecurity,
-	LPVOID	* lpContext
-	)
+BackupWrite(
+    HANDLE hFile,
+    LPBYTE lpBuffer,
+    DWORD nNumberOfBytesToWrite,
+    LPDWORD lpNumberOfBytesWritten,
+    BOOL bAbort,
+    BOOL bProcessSecurity,
+    LPVOID *lpContext)
 {
     UNIMPLEMENTED;
-	SetLastError(ERROR_NOT_SUPPORTED);
-	return FALSE;
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return FALSE;
 }
 
 /* EOF */
