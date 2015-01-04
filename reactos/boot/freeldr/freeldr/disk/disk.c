@@ -133,10 +133,8 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 
         strcpy(BootPath, Path);
 
-        strcat(BootPath, "fdisk");
-
         _itoa(FrldrBootDrive, Device, 10);
-        strcat(BootPath, "(");
+        strcat(BootPath, "fdisk(");
         strcat(BootPath, Device);
         strcat(BootPath, ")");
     }
@@ -163,10 +161,8 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 
         strcpy(BootPath, Path);
 
-        strcat(BootPath, "rdisk");
-
         _itoa(FrldrBootDrive - 0x80, Device, 10);
-        strcat(BootPath, "(");
+        strcat(BootPath, "rdisk(");
         strcat(BootPath, Device);
         strcat(BootPath, ")");
 
@@ -186,10 +182,8 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 
         strcpy(BootPath, Path);
 
-        strcat(BootPath, "cdrom");
-
         _itoa(FrldrBootDrive - 0x80, Device, 10);
-        strcat(BootPath, "(");
+        strcat(BootPath, "cdrom(");
         strcat(BootPath, Device);
         strcat(BootPath, ")");
     }

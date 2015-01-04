@@ -18,6 +18,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
 
 #define NDEBUG
@@ -25,180 +27,10 @@
 
 DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
+/* GLOBALS ********************************************************************/
+
 #define TAG_DEVICE_NAME 'NDsF'
 #define TAG_DEVICE 'vDsF'
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-VOID FileSystemError(PCSTR ErrorString)
-{
-    ERR("%s\n", ErrorString);
-
-    UiMessageBox(ErrorString);
-}
-
-PFILE FsOpenFile(PCSTR FileName)
-{
-    CHAR FullPath[MAX_PATH];
-    ULONG FileId;
-    LONG ret;
-
-    //
-    // Print status message
-    //
-    TRACE("Opening file '%s'...\n", FileName);
-
-    //
-    // Create full file name
-    //
-    MachDiskGetBootPath(FullPath, sizeof(FullPath));
-    strcat(FullPath, FileName);
-
-    //
-    // Open the file
-    //
-    ret = ArcOpen(FullPath, OpenReadOnly, &FileId);
-
-    //
-    // Check for success
-    //
-    if (ret == ESUCCESS)
-        return (PFILE)FileId;
-    else
-        return (PFILE)0;
-}
-
-VOID FsCloseFile(PFILE FileHandle)
-{
-    ULONG FileId = (ULONG)FileHandle;
-
-    //
-    // Close the handle
-    //
-    ArcClose(FileId);
-
-    //
-    // Do not check for error; this function is
-    // supposed to always succeed
-    //
-}
-
-/*
- * ReadFile()
- * returns number of bytes read or EOF
- */
-BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
-{
-    ULONG FileId = (ULONG)FileHandle;
-    LONG ret;
-
-    //
-    // Read the file
-    //
-    ret = ArcRead(FileId, Buffer, BytesToRead, BytesRead);
-
-    //
-    // Check for success
-    //
-    return (ret == ESUCCESS);
-}
-
-ULONG FsGetFileSize(PFILE FileHandle)
-{
-    ULONG FileId = (ULONG)FileHandle;
-    FILEINFORMATION Information;
-    LONG ret;
-
-    //
-    // Query file informations
-    //
-    ret = ArcGetFileInformation(FileId, &Information);
-
-    //
-    // Check for error
-    //
-    if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
-        return 0;
-
-    //
-    // Return file size
-    //
-    return Information.EndingAddress.LowPart;
-}
-
-VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
-{
-    ULONG FileId = (ULONG)FileHandle;
-    LARGE_INTEGER Position;
-
-    //
-    // Set file position
-    //
-    Position.HighPart = 0;
-    Position.LowPart = NewFilePointer;
-    ArcSeek(FileId, &Position, SeekAbsolute);
-
-    //
-    // Do not check for error; this function is
-    // supposed to always succeed
-    //
-}
-
-/*
- * FsGetNumPathParts()
- * This function parses a path in the form of dir1\dir2\file1.ext
- * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
- */
-ULONG FsGetNumPathParts(PCSTR Path)
-{
-    size_t i;
-    ULONG  num;
-
-    for (i = 0, num = 0; i < strlen(Path); i++)
-    {
-        if ((Path[i] == '\\') || (Path[i] == '/'))
-        {
-            num++;
-        }
-    }
-    num++;
-
-    TRACE("FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
-
-    return num;
-}
-
-/*
- * FsGetFirstNameFromPath()
- * This function parses a path in the form of dir1\dir2\file1.ext
- * and puts the first name of the path (e.g. "dir1") in buffer
- * compatible with the MSDOS directory structure
- */
-VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
-{
-    size_t i;
-
-    // Copy all the characters up to the end of the
-    // string or until we hit a '\' character
-    // and put them in Buffer
-    for (i = 0; i < strlen(Path); i++)
-    {
-        if ((Path[i] == '\\') || (Path[i] == '/'))
-        {
-            break;
-        }
-        else
-        {
-            Buffer[i] = Path[i];
-        }
-    }
-
-    Buffer[i] = 0;
-
-    TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
-}
 
 typedef struct tagFILEDATA
 {
@@ -220,6 +52,8 @@ typedef struct tagDEVICE
 
 static FILEDATA FileData[MAX_FDS];
 static LIST_ENTRY DeviceListHead;
+
+/* ARC FUNCTIONS **************************************************************/
 
 ARC_STATUS ArcClose(ULONG FileId)
 {
@@ -417,6 +251,176 @@ ARC_STATUS ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
         return EBADF;
     return FileData[FileId].FuncTable->Seek(FileId, Position, SeekMode);
+}
+
+/* FUNCTIONS ******************************************************************/
+
+VOID FileSystemError(PCSTR ErrorString)
+{
+    ERR("%s\n", ErrorString);
+
+    UiMessageBox(ErrorString);
+}
+
+PFILE FsOpenFile(PCSTR FileName)
+{
+    CHAR FullPath[MAX_PATH];
+    ULONG FileId;
+    LONG ret;
+
+    //
+    // Print status message
+    //
+    TRACE("Opening file '%s'...\n", FileName);
+
+    //
+    // Create full file name
+    //
+    MachDiskGetBootPath(FullPath, sizeof(FullPath));
+    strcat(FullPath, FileName);
+
+    //
+    // Open the file
+    //
+    ret = ArcOpen(FullPath, OpenReadOnly, &FileId);
+
+    //
+    // Check for success
+    //
+    if (ret == ESUCCESS)
+        return (PFILE)FileId;
+    else
+        return (PFILE)0;
+}
+
+VOID FsCloseFile(PFILE FileHandle)
+{
+    ULONG FileId = (ULONG)FileHandle;
+
+    //
+    // Close the handle
+    //
+    ArcClose(FileId);
+
+    //
+    // Do not check for error; this function is
+    // supposed to always succeed
+    //
+}
+
+/*
+ * ReadFile()
+ * returns number of bytes read or EOF
+ */
+BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+{
+    ULONG FileId = (ULONG)FileHandle;
+    LONG ret;
+
+    //
+    // Read the file
+    //
+    ret = ArcRead(FileId, Buffer, BytesToRead, BytesRead);
+
+    //
+    // Check for success
+    //
+    return (ret == ESUCCESS);
+}
+
+ULONG FsGetFileSize(PFILE FileHandle)
+{
+    ULONG FileId = (ULONG)FileHandle;
+    FILEINFORMATION Information;
+    LONG ret;
+
+    //
+    // Query file informations
+    //
+    ret = ArcGetFileInformation(FileId, &Information);
+
+    //
+    // Check for error
+    //
+    if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
+        return 0;
+
+    //
+    // Return file size
+    //
+    return Information.EndingAddress.LowPart;
+}
+
+VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
+{
+    ULONG FileId = (ULONG)FileHandle;
+    LARGE_INTEGER Position;
+
+    //
+    // Set file position
+    //
+    Position.HighPart = 0;
+    Position.LowPart = NewFilePointer;
+    ArcSeek(FileId, &Position, SeekAbsolute);
+
+    //
+    // Do not check for error; this function is
+    // supposed to always succeed
+    //
+}
+
+/*
+ * FsGetNumPathParts()
+ * This function parses a path in the form of dir1\dir2\file1.ext
+ * and returns the number of parts it has (i.e. 3 - dir1,dir2,file1.ext)
+ */
+ULONG FsGetNumPathParts(PCSTR Path)
+{
+    size_t i;
+    ULONG  num;
+
+    for (i = 0, num = 0; i < strlen(Path); i++)
+    {
+        if ((Path[i] == '\\') || (Path[i] == '/'))
+        {
+            num++;
+        }
+    }
+    num++;
+
+    TRACE("FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
+
+    return num;
+}
+
+/*
+ * FsGetFirstNameFromPath()
+ * This function parses a path in the form of dir1\dir2\file1.ext
+ * and puts the first name of the path (e.g. "dir1") in buffer
+ * compatible with the MSDOS directory structure
+ */
+VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
+{
+    size_t i;
+
+    // Copy all the characters up to the end of the
+    // string or until we hit a '\' character
+    // and put them in Buffer
+    for (i = 0; i < strlen(Path); i++)
+    {
+        if ((Path[i] == '\\') || (Path[i] == '/'))
+        {
+            break;
+        }
+        else
+        {
+            Buffer[i] = Path[i];
+        }
+    }
+
+    Buffer[i] = 0;
+
+    TRACE("FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
