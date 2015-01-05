@@ -12,6 +12,27 @@
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
+static PWSTR ControlsList[] =
+{
+  L"Button\0",
+  L"Edit\0",
+  L"Static\0",
+  L"ListBox\0",
+  L"ScrollBar\0",
+  L"ComboBox\0",
+  L"MDIClient\0",
+  L"ComboLBox\0",
+  L"DDEMLEvent\0",
+  L"DDEMLMom\0",
+  L"DMGClass\0",
+  L"DDEMLAnsiClient\0",
+  L"DDEMLUnicodeClient\0",
+  L"DDEMLAnsiServer\0",
+  L"DDEMLUnicodeServer\0",
+  L"IME\0",
+  L"\0",//L"Ghost\0", // Vista+, Ghost is registered after "Message" in XP/W2k3 Win32k.sys.
+};
+
 typedef struct _TestData
 {
     BOOL    OverrideWndProc;            /* TRUE if lpfnWndProc should be overridden */
@@ -57,6 +78,41 @@ static TestData RealClassTestData[] =
         "N/A",
     },
 };
+
+//
+// The Control Class Atoms are consecitively issued.
+//
+
+void Test_ClassAtoms()
+{
+    ATOM atom;
+    int i;
+    WNDCLASSW cls;
+
+    // Initialize starting Atom number.
+    atom = GetClassInfoW(NULL, ControlsList[0], &cls);
+    if (!atom)
+    {
+       skip( "No reference Atom\n" );
+       return;
+    }
+
+    trace("First Control Class Atom 0x%x\n",atom);
+
+    for (i = 0; i < 17; atom++ ,i++)
+    {
+        if (lstrcmpW(ControlsList[i],L"\0"))
+        {
+           ATOM test_atom = GetClassInfoW(NULL, ControlsList[i], &cls);
+           // Skip unregistered Classes.
+           if (test_atom)
+           {
+              ok(test_atom == atom, "%S class atom did not match %x:%x\n",ControlsList[i],test_atom,atom);
+              ok(!lstrcmpW(cls.lpszClassName,ControlsList[i]),"GetClassName returned incorrect name\n");
+           }
+        }
+    }
+}
 
 void Test_RealGetWindowClass()
 {
@@ -130,6 +186,7 @@ void Test_RealGetWindowClass()
 
 START_TEST(RealGetWindowClass)
 {
+    Test_ClassAtoms();
     Test_RealGetWindowClass();
 }
 
