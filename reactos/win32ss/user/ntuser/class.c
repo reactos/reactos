@@ -9,6 +9,27 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserClass);
 
+static PWSTR ControlsList[] =
+{
+  L"Button",
+  L"Edit",
+  L"Static",
+  L"ListBox",
+  L"ScrollBar",
+  L"ComboBox",
+  L"MDIClient",
+  L"ComboLBox",
+  L"DDEMLEvent",
+  L"DDEMLMom",
+  L"DMGClass",
+  L"DDEMLAnsiClient",
+  L"DDEMLUnicodeClient",
+  L"DDEMLAnsiServer",
+  L"DDEMLUnicodeServer",
+  L"IME",
+  L"Ghost",
+};
+
 static NTSTATUS IntDeregisterClassAtom(IN RTL_ATOM Atom);
 
 REGISTER_SYSCLASS DefaultServerClasses[] =
@@ -347,6 +368,26 @@ IntRegisterClassAtom(IN PUNICODE_STRING ClassName,
         return FALSE;
     }
 
+    return TRUE;
+}
+
+BOOL FASTCALL
+RegisterControlAtoms(VOID)
+{
+    RTL_ATOM Atom;
+    UNICODE_STRING ClassName;
+    INT i = 0;
+    
+    while ( i < ICLS_DESKTOP)
+    {
+       RtlInitUnicodeString(&ClassName, ControlsList[i]);
+       if (IntRegisterClassAtom(&ClassName, &Atom))
+       {
+          gpsi->atomSysClass[i] = Atom;
+          ERR("Reg Control Atoms 0x%x\n",Atom);  
+       }
+       i++;
+    }
     return TRUE;
 }
 
@@ -1026,7 +1067,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         Class->fnid = fnID;
         Class->CSF_flags = dwFlags;
 
-        if (LookupFnIdToiCls(Class->fnid, &iCls))
+        if (LookupFnIdToiCls(Class->fnid, &iCls) && gpsi->atomSysClass[iCls] == 0)
         {
             gpsi->atomSysClass[iCls] = Class->atomClassName;
         }

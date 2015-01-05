@@ -8,6 +8,8 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
+BOOL FASTCALL RegisterControlAtoms(VOID);
+
 /* GLOBALS ********************************************************************/
 
 PTHREADINFO gptiCurrent = NULL;
@@ -17,6 +19,7 @@ ATOM AtomMessage; // Window Message atom.
 ATOM AtomWndObj;  // Window Object atom.
 ATOM AtomLayer;   // Window Layer atom.
 ATOM AtomFlashWndState; // Window Flash State atom.
+ATOM AtomDDETrack; // Window DDE Tracking atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 ATOM gaGuiConsoleWndClass;
@@ -27,6 +30,8 @@ static
 NTSTATUS FASTCALL
 InitUserAtoms(VOID)
 {
+    RegisterControlAtoms();
+
     gpsi->atomSysClass[ICLS_MENU]      = 32768;
     gpsi->atomSysClass[ICLS_DESKTOP]   = 32769;
     gpsi->atomSysClass[ICLS_DIALOG]    = 32770;
@@ -46,12 +51,15 @@ InitUserAtoms(VOID)
 
     gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
 
+    AtomDDETrack = IntAddGlobalAtom(L"SysDT", TRUE);
+
     /*
      * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use
-     * the win32k atom table for this ones. What is the right thing to do ?
+     * the win32k atom table for this one. What is the right thing to do ?
      */
     // AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
     NtAddAtom(L"SysWNDO", 14, &AtomWndObj);
+
     AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
     AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
 
