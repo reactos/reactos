@@ -14,11 +14,11 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre înregistratorul audio"
+CAPTION "Despre Înregistratorul Audio"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "Înregistrator audio, versiunea 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Înregistrator Audio, versiunea 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
     LTEXT "Drept de autor (C) 2009", IDC_STATIC, 56, 25, 114, 8
     DEFPUSHBUTTON "Î&nchide", IDOK, 139, 54, 50, 14, WS_GROUP
 END
@@ -69,7 +69,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Înregistrator audio"
+    IDS_APP_TITLE "Înregistrator Audio"
     IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 
