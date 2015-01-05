@@ -237,7 +237,11 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         *strstr(FileName, " ") = ANSI_NULL;
 
         /* Load the ramdisk */
-        RamDiskLoadVirtualFile(FileName);
+        if (!RamDiskLoadVirtualFile(FileName))
+        {
+            UiMessageBox("Failed to load RAM disk file %s\n", FileName);
+            return;
+        }
     }
 
     TRACE("BootPath: '%s'\n", BootPath);
@@ -252,7 +256,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         SystemPath = SourcePaths[i];
         if (!SystemPath)
         {
-            ERR("Failed to open txtsetup.sif\n");
+            UiMessageBox("Failed to open txtsetup.sif\n");
             return;
         }
         strcpy(File, SystemPath);

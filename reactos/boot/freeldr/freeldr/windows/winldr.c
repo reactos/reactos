@@ -674,7 +674,11 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
         *strstr(FileName, " ") = ANSI_NULL;
 
         /* Load the ramdisk */
-        RamDiskLoadVirtualFile(FileName);
+        if (!RamDiskLoadVirtualFile(FileName))
+        {
+            UiMessageBox("Failed to load RAM disk file %s\n", FileName);
+            return;
+        }
     }
 
     /* Let user know we started loading */

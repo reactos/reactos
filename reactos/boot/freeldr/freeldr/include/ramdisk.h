@@ -11,7 +11,7 @@
 //
 // Ramdisk Routines
 //
-VOID
+BOOLEAN
 NTAPI
 RamDiskLoadVirtualFile(
     IN PCHAR FileName

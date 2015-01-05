@@ -116,7 +116,7 @@ RamDiskInitialize(VOID)
     FsRegisterDevice("ramdisk(0)", &RamDiskVtbl);
 }
 
-VOID
+BOOLEAN
 NTAPI
 RamDiskLoadVirtualFile(IN PCHAR FileName)
 {
@@ -138,7 +138,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     //
     RamFile = FsOpenFile(FileName);
     if (!RamFile)
-        return;
+        return FALSE;
 
     //
     // Get the file size
@@ -147,7 +147,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     if (Status != ESUCCESS)
     {
         FsCloseFile(RamFile);
-        return;
+        return FALSE;
     }
 
     //
@@ -157,7 +157,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     {
         UiMessageBox("RAM disk too big\n");
         FsCloseFile(RamFile);
-        return;
+        return FALSE;
     }
     gRamDiskSize = Information.EndingAddress.LowPart;
 
@@ -174,7 +174,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     {
         UiMessageBox("Failed to allocate memory for RAM disk\n");
         FsCloseFile(RamFile);
-        return;
+        return FALSE;
     }
 
     //
@@ -222,8 +222,8 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
             gRamDiskBase = NULL;
             gRamDiskSize = 0;
             FsCloseFile(RamFile);
-            UiMessageBox("Failed to read RamDisk\n");
-            return;
+            UiMessageBox("Failed to read RAM disk\n");
+            return FALSE;
         }
     }
 
@@ -231,4 +231,6 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
 
     // Register a new device for the ramdisk
     FsRegisterDevice("ramdisk(0)", &RamDiskVtbl);
+
+    return TRUE;
 }
