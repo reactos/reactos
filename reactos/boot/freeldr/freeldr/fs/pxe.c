@@ -350,20 +350,20 @@ static BOOLEAN GetCachedInfo(VOID)
 BOOLEAN PxeInit(VOID)
 {
     static BOOLEAN Initialized = FALSE;
-    static BOOLEAN Status = FALSE;
+    static BOOLEAN Success = FALSE;
 
     // Do initialization only once
     if (Initialized)
-        return Status;
+        return Success;
     Initialized = TRUE;
 
     // Check if PXE is available
     if (GetPxeStructure() && GetCachedInfo())
     {
         FsRegisterDevice("net(0)", &PxeDiskVtbl);
-        Status = TRUE;
+        Success = TRUE;
     }
 
-    return Status;
+    return Success;
 }
 

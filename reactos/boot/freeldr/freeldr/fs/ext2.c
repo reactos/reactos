@@ -918,7 +918,6 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
     ULONG        InodeOffsetInBlock;
     CHAR        ErrorString[80];
     EXT2_GROUP_DESC    GroupDescriptor;
-    BOOLEAN Status;
 
     TRACE("Ext2ReadInode() Inode = %d\n", Inode);
 
@@ -949,11 +948,10 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
     TRACE("InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber);
 
     // Read the block
-    Status = Ext2ReadPartialBlock(InodeBlockNumber,
-                                  (InodeOffsetInBlock * EXT2_INODE_SIZE(Ext2SuperBlock)),
-                                  sizeof(EXT2_INODE),
-                                  InodeBuffer);
-    if (!Status)
+    if (!Ext2ReadPartialBlock(InodeBlockNumber,
+                              (InodeOffsetInBlock * EXT2_INODE_SIZE(Ext2SuperBlock)),
+                              sizeof(EXT2_INODE),
+                              InodeBuffer))
     {
         return FALSE;
     }
@@ -1255,18 +1253,18 @@ ARC_STATUS Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     ULONGLONG BytesReadBig;
-    BOOLEAN ret;
+    BOOLEAN Success;
 
     //
     // Read data
     //
-    ret = Ext2ReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
+    Success = Ext2ReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
     *Count = (ULONG)BytesReadBig;
 
     //
     // Check for success
     //
-    if (ret)
+    if (Success)
         return ESUCCESS;
     else
         return EIO;
@@ -1304,18 +1302,18 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
     EXT2_SUPER_BLOCK SuperBlock;
     LARGE_INTEGER Position;
     ULONG Count;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Read the SuperBlock
     //
     Position.HighPart = 0;
     Position.LowPart = 2 * 512;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
         return NULL;
-    ret = ArcRead(DeviceId, &SuperBlock, sizeof(SuperBlock), &Count);
-    if (ret != ESUCCESS || Count != sizeof(SuperBlock))
+    Status = ArcRead(DeviceId, &SuperBlock, sizeof(SuperBlock), &Count);
+    if (Status != ESUCCESS || Count != sizeof(SuperBlock))
         return NULL;
 
     //

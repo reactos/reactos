@@ -776,7 +776,7 @@ SpiScanDevice(
     IN ULONG Lun)
 {
     ULONG FileId, i;
-    ULONG Status;
+    ARC_STATUS Status;
     NTSTATUS ret;
     struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer;
     CHAR PartitionName[64];
@@ -1574,7 +1574,7 @@ LoadBootDeviceDriver(VOID)
     CHAR NtBootDdPath[MAX_PATH];
     PVOID ImageBase = NULL;
     ULONG (NTAPI *EntryPoint)(IN PVOID DriverObject, IN PVOID RegistryPath);
-    BOOLEAN Status;
+    BOOLEAN Success;
 
     /* Initialize the loaded module list */
     InitializeListHead(&ModuleListHead);
@@ -1584,37 +1584,37 @@ LoadBootDeviceDriver(VOID)
     strcat(NtBootDdPath, "\\NTBOOTDD.SYS");
 
     /* Load file */
-    Status = WinLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
-    if (!Status)
+    Success = WinLdrLoadImage(NtBootDdPath, LoaderBootDriver, &ImageBase);
+    if (!Success)
     {
         /* That's OK. File simply doesn't exist */
         return ESUCCESS;
     }
 
     /* Allocate a DTE for ntbootdd */
-    Status = WinLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
+    Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "ntbootdd.sys",
         "NTBOOTDD.SYS", ImageBase, &BootDdDTE);
-    if (!Status)
+    if (!Success)
         return EIO;
 
     /* Add the PE part of freeldr.sys to the list of loaded executables, it
        contains Scsiport* exports, imported by ntbootdd.sys */
-    Status = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
+    Success = WinLdrAllocateDataTableEntry(&ModuleListHead, "scsiport.sys",
         "FREELDR.SYS", &__ImageBase, &FreeldrDTE);
-    if (!Status)
+    if (!Success)
     {
         RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
         return EIO;
     }
 
     /* Fix imports */
-    Status = WinLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
+    Success = WinLdrScanImportDescriptorTable(&ModuleListHead, "", BootDdDTE);
 
     /* Now unlinkt the DTEs, they won't be valid later */
     RemoveEntryList(&BootDdDTE->InLoadOrderLinks);
     RemoveEntryList(&FreeldrDTE->InLoadOrderLinks);
 
-    if (!Status)
+    if (!Success)
         return EIO;
 
     /* Change imports to PA */
@@ -1635,14 +1635,13 @@ LoadBootDeviceDriver(VOID)
     NtHeaders = RtlImageNtHeader(VaToPa(BootDdDTE->DllBase));
     if (!NtHeaders)
         return EIO;
-    Status = (BOOLEAN)LdrRelocateImageWithBias(
-        VaToPa(BootDdDTE->DllBase),
-        NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)BootDdDTE->DllBase,
-        "FreeLdr",
-        TRUE,
-        TRUE, /* in case of conflict still return success */
-        FALSE);
-    if (!Status)
+    Success = (BOOLEAN)LdrRelocateImageWithBias(VaToPa(BootDdDTE->DllBase),
+                                                NtHeaders->OptionalHeader.ImageBase - (ULONG_PTR)BootDdDTE->DllBase,
+                                                "FreeLdr",
+                                                TRUE,
+                                                TRUE, /* in case of conflict still return success */
+                                                FALSE);
+    if (!Success)
         return EIO;
 
     /* Call the entrypoint */

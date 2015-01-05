@@ -126,7 +126,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     ULONG PercentPerChunk, Percent;
     FILEINFORMATION Information;
     LARGE_INTEGER Position;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Display progress
@@ -143,8 +143,8 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     //
     // Get the file size
     //
-    ret = ArcGetFileInformation(RamFile, &Information);
-    if (ret != ESUCCESS)
+    Status = ArcGetFileInformation(RamFile, &Information);
+    if (Status != ESUCCESS)
     {
         FsCloseFile(RamFile);
         return;
@@ -204,19 +204,19 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
         //
         Position.HighPart = 0;
         Position.LowPart = TotalRead;
-        ret = ArcSeek(RamFile, &Position, SeekAbsolute);
-        if (ret == ESUCCESS)
+        Status = ArcSeek(RamFile, &Position, SeekAbsolute);
+        if (Status == ESUCCESS)
         {
-            ret = ArcRead(RamFile,
-                          (PVOID)((ULONG_PTR)gRamDiskBase + TotalRead),
-                          ChunkSize,
-                          &Count);
+            Status = ArcRead(RamFile,
+                             (PVOID)((ULONG_PTR)gRamDiskBase + TotalRead),
+                             ChunkSize,
+                             &Count);
         }
 
         //
         // Check for success
         //
-        if (ret != ESUCCESS || Count != ChunkSize)
+        if (Status != ESUCCESS || Count != ChunkSize)
         {
             MmFreeMemory(gRamDiskBase);
             gRamDiskBase = NULL;

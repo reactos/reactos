@@ -35,7 +35,7 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 {
     ULONG FileId;
     CHAR FullHiveName[256];
-    LONG Status;
+    ARC_STATUS Status;
     FILEINFORMATION FileInfo;
     ULONG HiveFileSize;
     ULONG_PTR HiveDataPhysical;
@@ -48,7 +48,6 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcat(FullHiveName, HiveName);
     //Print(L"Loading %s...\n", FullHiveName);
     Status = ArcOpen(FullHiveName, OpenReadOnly, &FileId);
-
     if (Status != ESUCCESS)
     {
         UiMessageBox("Opening hive file failed!");
@@ -57,7 +56,6 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* Get the file length */
     Status = ArcGetFileInformation(FileId, &FileInfo);
-
     if (Status != ESUCCESS)
     {
         ArcClose(FileId);
@@ -98,12 +96,13 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     FsService = FsGetServiceName(FileId);
     if (FsService)
     {
+        BOOLEAN Success;
         TRACE("  Adding filesystem service %S\n", FsService);
-        Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
-            L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-            NULL,
-            (LPWSTR)FsService);
-        if (!Status)
+        Success = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+                                        L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                        NULL,
+                                        (LPWSTR)FsService);
+        if (!Success)
             TRACE(" Failed to add filesystem service\n");
     }
     else
@@ -119,7 +118,7 @@ BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                              IN LPCSTR DirectoryPath)
 {
     CHAR SearchPath[1024];
-    BOOLEAN Status;
+    BOOLEAN Success;
 
     // There is a simple logic here: try to load usual hive (system), if it
     // fails, then give system.alt a try, and finally try a system.sav
@@ -127,18 +126,18 @@ BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     // FIXME: For now we only try system
     strcpy(SearchPath, DirectoryPath);
     strcat(SearchPath, "SYSTEM32\\CONFIG\\");
-    Status = WinLdrLoadSystemHive(LoaderBlock, SearchPath, "SYSTEM");
+    Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, "SYSTEM");
 
     // Fail if failed...
-    if (!Status)
+    if (!Success)
         return FALSE;
 
     // Initialize in-memory registry
     RegInitializeRegistry();
 
     // Import what was loaded
-    Status = RegImportBinaryHive((PCHAR)VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
-    if (!Status)
+    Success = RegImportBinaryHive((PCHAR)VaToPa(LoaderBlock->RegistryBase), LoaderBlock->RegistryLength);
+    if (!Success)
     {
         UiMessageBox("Importing binary hive failed!");
         return FALSE;
@@ -159,14 +158,14 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 {
     CHAR SearchPath[1024];
     CHAR AnsiName[256], OemName[256], LangName[256];
-    BOOLEAN Status;
+    BOOLEAN Success;
 
     // Scan registry and prepare boot drivers list
     WinLdrScanRegistry(&LoaderBlock->BootDriverListHead, DirectoryPath);
 
     // Get names of NLS files
-    Status = WinLdrGetNLSNames(AnsiName, OemName, LangName);
-    if (!Status)
+    Success = WinLdrGetNLSNames(AnsiName, OemName, LangName);
+    if (!Success)
     {
         UiMessageBox("Getting NLS names from registry failed!");
         return FALSE;
@@ -177,8 +176,8 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     // Load NLS data
     strcpy(SearchPath, DirectoryPath);
     strcat(SearchPath, "SYSTEM32\\");
-    Status = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-    TRACE("NLS data loaded with status %d\n", Status);
+    Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+    TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 
     /* TODO: Load OEM HAL font */
 
@@ -298,7 +297,8 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     PVOID NlsVirtual;
     BOOLEAN AnsiEqualsOem = FALSE;
     FILEINFORMATION FileInfo;
-    ULONG BytesRead, Status;
+    ULONG BytesRead;
+    ARC_STATUS Status;
 
     /* There may be a case, when OEM and ANSI page coincide */
     if (!strcmp(AnsiFileName, OemFileName))
@@ -309,7 +309,6 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcpy(FileName, DirectoryPath);
     strcat(FileName, AnsiFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
-
     if (Status != ESUCCESS)
         goto Failure;
 
@@ -331,7 +330,6 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         strcpy(FileName, DirectoryPath);
         strcat(FileName, OemFileName);
         Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
-
         if (Status != ESUCCESS)
             goto Failure;
 
@@ -348,7 +346,6 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcpy(FileName, DirectoryPath);
     strcat(FileName, LanguageFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
-
     if (Status != ESUCCESS)
         goto Failure;
 
@@ -390,12 +387,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcpy(FileName, DirectoryPath);
     strcat(FileName, AnsiFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
-
     if (Status != ESUCCESS)
         goto Failure;
 
     Status = ArcRead(AnsiFileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
-
     if (Status != ESUCCESS)
         goto Failure;
 
@@ -407,12 +402,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
         strcpy(FileName, DirectoryPath);
         strcat(FileName, OemFileName);
         Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
-
         if (Status != ESUCCESS)
             goto Failure;
 
         Status = ArcRead(OemFileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
-
         if (Status != ESUCCESS)
             goto Failure;
 
@@ -423,12 +416,10 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     strcpy(FileName, DirectoryPath);
     strcat(FileName, LanguageFileName);
     Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
-
     if (Status != ESUCCESS)
         goto Failure;
 
     Status = ArcRead(LanguageFileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
-
     if (Status != ESUCCESS)
         goto Failure;
 
@@ -475,7 +466,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     CHAR ImagePath[256];
     WCHAR TempImagePath[256];
 
-    BOOLEAN Status;
+    BOOLEAN Success;
 
     /* get 'service group order' key */
     rc = RegOpenKey(NULL,
@@ -570,33 +561,37 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                 /* Make sure it should be started */
                 if ((StartValue == 0) &&
                     (TagValue == OrderList[TagIndex]) &&
-                    (_wcsicmp(DriverGroup, GroupName) == 0)) {
+                    (_wcsicmp(DriverGroup, GroupName) == 0))
+                {
+                    /* Get the Driver's Location */
+                    ValueSize = sizeof(TempImagePath);
+                    rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
 
-                        /* Get the Driver's Location */
-                        ValueSize = sizeof(TempImagePath);
-                        rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
+                    /* Write the whole path if it suceeded, else prepare to fail */
+                    if (rc != ERROR_SUCCESS)
+                    {
+                        TRACE_CH(REACTOS, "ImagePath: not found\n");
+                        TempImagePath[0] = 0;
+                        sprintf(ImagePath, "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                    }
+                    else if (TempImagePath[0] != L'\\')
+                    {
+                        sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
+                    }
+                    else
+                    {
+                        sprintf(ImagePath, "%S", TempImagePath);
+                        TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
+                    }
 
-                        /* Write the whole path if it suceeded, else prepare to fail */
-                        if (rc != ERROR_SUCCESS) {
-                            TRACE_CH(REACTOS, "ImagePath: not found\n");
-                            TempImagePath[0] = 0;
-                            sprintf(ImagePath, "%s\\system32\\drivers\\%S.sys", DirectoryPath, ServiceName);
-                        } else if (TempImagePath[0] != L'\\') {
-                            sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
-                        } else {
-                            sprintf(ImagePath, "%S", TempImagePath);
-                            TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
-                        }
+                    TRACE("Adding boot driver: '%s'\n", ImagePath);
 
-                        TRACE("Adding boot driver: '%s'\n", ImagePath);
-
-                        Status = WinLdrAddDriverToList(BootDriverListHead,
-                            L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-                            TempImagePath,
-                            ServiceName);
-
-                        if (!Status)
-                            ERR("Failed to add boot driver\n");
+                    Success = WinLdrAddDriverToList(BootDriverListHead,
+                                                    L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                                    TempImagePath,
+                                                    ServiceName);
+                    if (!Success)
+                        ERR("Failed to add boot driver\n");
                 }
                 else
                 {
@@ -642,35 +637,40 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
             rc = RegQueryValue(hDriverKey, L"Group", NULL, (PUCHAR)DriverGroup, &DriverGroupSize);
             //TRACE_CH(REACTOS, "  Group: '%S'  \n", DriverGroup);
 
-            for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
+            for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++)
+            {
                 if (TagValue == OrderList[TagIndex]) break;
             }
 
             if ((StartValue == 0) &&
                 (TagIndex > OrderList[0]) &&
-                (_wcsicmp(DriverGroup, GroupName) == 0)) {
+                (_wcsicmp(DriverGroup, GroupName) == 0))
+            {
+                ValueSize = sizeof(TempImagePath);
+                rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
+                if (rc != ERROR_SUCCESS)
+                {
+                    TRACE_CH(REACTOS, "ImagePath: not found\n");
+                    TempImagePath[0] = 0;
+                    sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
+                }
+                else if (TempImagePath[0] != L'\\')
+                {
+                    sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
+                }
+                else
+                {
+                    sprintf(ImagePath, "%S", TempImagePath);
+                    TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
+                }
+                TRACE("  Adding boot driver: '%s'\n", ImagePath);
 
-                    ValueSize = sizeof(TempImagePath);
-                    rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
-                    if (rc != ERROR_SUCCESS) {
-                        TRACE_CH(REACTOS, "ImagePath: not found\n");
-                        TempImagePath[0] = 0;
-                        sprintf(ImagePath, "%ssystem32\\drivers\\%S.sys", DirectoryPath, ServiceName);
-                    } else if (TempImagePath[0] != L'\\') {
-                        sprintf(ImagePath, "%s%S", DirectoryPath, TempImagePath);
-                    } else {
-                        sprintf(ImagePath, "%S", TempImagePath);
-                        TRACE_CH(REACTOS, "ImagePath: '%s'\n", ImagePath);
-                    }
-                    TRACE("  Adding boot driver: '%s'\n", ImagePath);
-
-                    Status = WinLdrAddDriverToList(BootDriverListHead,
-                        L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-                        TempImagePath,
-                        ServiceName);
-
-                    if (!Status)
-                        ERR(" Failed to add boot driver\n");
+                Success = WinLdrAddDriverToList(BootDriverListHead,
+                                                L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                                TempImagePath,
+                                                ServiceName);
+                if (!Success)
+                    ERR(" Failed to add boot driver\n");
             }
             else
             {

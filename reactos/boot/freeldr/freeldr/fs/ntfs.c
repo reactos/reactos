@@ -147,7 +147,7 @@ static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLON
     LARGE_INTEGER Position;
     ULONG Count;
     ULONG ReadLength;
-    LONG ret;
+    ARC_STATUS Status;
 
     TRACE("NtfsDiskRead - Offset: %I64d Length: %I64d\n", Offset, Length);
 
@@ -157,11 +157,11 @@ static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLON
     if (Offset % Volume->BootSector.BytesPerSector)
     {
         Position.QuadPart = Offset & ~(Volume->BootSector.BytesPerSector - 1);
-        ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
-        if (ret != ESUCCESS)
+        Status = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+        if (Status != ESUCCESS)
             return FALSE;
-        ret = ArcRead(Volume->DeviceId, Volume->TemporarySector, Volume->BootSector.BytesPerSector, &Count);
-        if (ret != ESUCCESS || Count != Volume->BootSector.BytesPerSector)
+        Status = ArcRead(Volume->DeviceId, Volume->TemporarySector, Volume->BootSector.BytesPerSector, &Count);
+        if (Status != ESUCCESS || Count != Volume->BootSector.BytesPerSector)
             return FALSE;
         ReadLength = (USHORT)min(Length, Volume->BootSector.BytesPerSector - (Offset % Volume->BootSector.BytesPerSector));
 
@@ -186,12 +186,12 @@ static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLON
     if (Length >= Volume->BootSector.BytesPerSector)
     {
         Position.QuadPart = Offset;
-        ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
-        if (ret != ESUCCESS)
+        Status = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+        if (Status != ESUCCESS)
             return FALSE;
         ReadLength = Length & ~(Volume->BootSector.BytesPerSector - 1);
-        ret = ArcRead(Volume->DeviceId, Buffer, ReadLength, &Count);
-        if (ret != ESUCCESS || Count != ReadLength)
+        Status = ArcRead(Volume->DeviceId, Buffer, ReadLength, &Count);
+        if (Status != ESUCCESS || Count != ReadLength)
             return FALSE;
 
         //
@@ -208,11 +208,11 @@ static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLON
     if (Length)
     {
         Position.QuadPart = Offset;
-        ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
-        if (ret != ESUCCESS)
+        Status = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+        if (Status != ESUCCESS)
             return FALSE;
-        ret = ArcRead(Volume->DeviceId, Buffer, (ULONG)Length, &Count);
-        if (ret != ESUCCESS || Count != Length)
+        Status = ArcRead(Volume->DeviceId, Buffer, (ULONG)Length, &Count);
+        if (Status != ESUCCESS || Count != Length)
             return FALSE;
     }
 
@@ -880,7 +880,7 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     PNTFS_VOLUME_INFO Volume;
     LARGE_INTEGER Position;
     ULONG Count;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Allocate data for volume information
@@ -895,14 +895,14 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     //
     Position.HighPart = 0;
     Position.LowPart = 0;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
     {
         FrLdrTempFree(Volume, TAG_NTFS_VOLUME);
         return NULL;
     }
-    ret = ArcRead(DeviceId, &Volume->BootSector, sizeof(Volume->BootSector), &Count);
-    if (ret != ESUCCESS || Count != sizeof(Volume->BootSector))
+    Status = ArcRead(DeviceId, &Volume->BootSector, sizeof(Volume->BootSector), &Count);
+    if (Status != ESUCCESS || Count != sizeof(Volume->BootSector))
     {
         FrLdrTempFree(Volume, TAG_NTFS_VOLUME);
         return NULL;
@@ -947,16 +947,16 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
         return NULL;
     }
     Position.QuadPart = Volume->BootSector.MftLocation * Volume->ClusterSize;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
     {
         FileSystemError("Failed to seek to Master File Table record.");
         FrLdrTempFree(Volume->MasterFileTable, TAG_NTFS_MFT);
         FrLdrTempFree(Volume, TAG_NTFS_VOLUME);
         return NULL;
     }
-    ret = ArcRead(DeviceId, Volume->MasterFileTable, Volume->MftRecordSize, &Count);
-    if (ret != ESUCCESS || Count != Volume->MftRecordSize)
+    Status = ArcRead(DeviceId, Volume->MasterFileTable, Volume->MftRecordSize, &Count);
+    if (Status != ESUCCESS || Count != Volume->MftRecordSize)
     {
         FileSystemError("Failed to read the Master File Table record.");
         FrLdrTempFree(Volume->MasterFileTable, TAG_NTFS_MFT);

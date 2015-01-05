@@ -944,7 +944,7 @@ InfOpenFile(
     ULONG FileSize, Count;
     PINFCACHE Cache;
     BOOLEAN Success;
-    LONG ret;
+    ARC_STATUS Status;
 
     *InfHandle = NULL;
     *ErrorLine = (ULONG) - 1;
@@ -952,8 +952,8 @@ InfOpenFile(
     //
     // Open the .inf file
     //
-    ret = ArcOpen((PCHAR)FileName, OpenReadOnly, &FileId);
-    if (ret != ESUCCESS)
+    Status = ArcOpen((PCHAR)FileName, OpenReadOnly, &FileId);
+    if (Status != ESUCCESS)
     {
         return FALSE;
     }
@@ -961,8 +961,8 @@ InfOpenFile(
     //
     // Query file size
     //
-    ret = ArcGetFileInformation(FileId, &Information);
-    if ((ret != ESUCCESS) || (Information.EndingAddress.HighPart != 0))
+    Status = ArcGetFileInformation(FileId, &Information);
+    if ((Status != ESUCCESS) || (Information.EndingAddress.HighPart != 0))
     {
         ArcClose(FileId);
         return FALSE;
@@ -982,8 +982,8 @@ InfOpenFile(
     //
     // Read file into memory
     //
-    ret = ArcRead(FileId, FileBuffer, FileSize, &Count);
-    if ((ret != ESUCCESS) || (Count != FileSize))
+    Status = ArcRead(FileId, FileBuffer, FileSize, &Count);
+    if ((Status != ESUCCESS) || (Count != FileSize))
     {
         ArcClose(FileId);
         FrLdrTempFree(FileBuffer, TAG_INF_FILE);

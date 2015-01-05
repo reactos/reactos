@@ -57,7 +57,8 @@ static LIST_ENTRY DeviceListHead;
 
 ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
-    ULONG Count, i, ret;
+    ARC_STATUS Status;
+    ULONG Count, i;
     PLIST_ENTRY pEntry;
     DEVICE* pDevice;
     CHAR* DeviceName;
@@ -132,11 +133,11 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
                 /* Try to open the device */
                 FileData[DeviceId].FuncTable = pDevice->FuncTable;
-                ret = pDevice->FuncTable->Open(pDevice->Prefix, DeviceOpenMode, &DeviceId);
-                if (ret != ESUCCESS)
+                Status = pDevice->FuncTable->Open(pDevice->Prefix, DeviceOpenMode, &DeviceId);
+                if (Status != ESUCCESS)
                 {
                     FileData[DeviceId].FuncTable = NULL;
-                    return ret;
+                    return Status;
                 }
                 else if (!*FileName)
                 {
@@ -205,31 +206,31 @@ ARC_STATUS ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     FileData[i].FuncTable = FileData[DeviceId].FileFuncTable;
     FileData[i].DeviceId = DeviceId;
     *FileId = i;
-    ret = FileData[i].FuncTable->Open(FileName, OpenMode, FileId);
-    if (ret != ESUCCESS)
+    Status = FileData[i].FuncTable->Open(FileName, OpenMode, FileId);
+    if (Status != ESUCCESS)
     {
         FileData[i].FuncTable = NULL;
         *FileId = MAX_FDS;
     }
-    return ret;
+    return Status;
 }
 
 ARC_STATUS ArcClose(ULONG FileId)
 {
-    LONG ret;
+    ARC_STATUS Status;
 
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
         return EBADF;
 
-    ret = FileData[FileId].FuncTable->Close(FileId);
+    Status = FileData[FileId].FuncTable->Close(FileId);
 
-    if (ret == ESUCCESS)
+    if (Status == ESUCCESS)
     {
         FileData[FileId].FuncTable = NULL;
         FileData[FileId].Specific = NULL;
         FileData[FileId].DeviceId = -1;
     }
-    return ret;
+    return Status;
 }
 
 ARC_STATUS ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
@@ -265,7 +266,7 @@ PFILE FsOpenFile(PCSTR FileName)
 {
     CHAR FullPath[MAX_PATH] = "";
     ULONG FileId;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Print status message
@@ -293,12 +294,12 @@ PFILE FsOpenFile(PCSTR FileName)
     //
     // Open the file
     //
-    ret = ArcOpen(FullPath, OpenReadOnly, &FileId);
+    Status = ArcOpen(FullPath, OpenReadOnly, &FileId);
 
     //
     // Check for success
     //
-    if (ret == ESUCCESS)
+    if (Status == ESUCCESS)
         return (PFILE)FileId;
     else
         return (PFILE)0;
@@ -343,17 +344,17 @@ ULONG FsGetFileSize(PFILE FileHandle)
 {
     ULONG FileId = (ULONG)FileHandle;
     FILEINFORMATION Information;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Query file informations
     //
-    ret = ArcGetFileInformation(FileId, &Information);
+    Status = ArcGetFileInformation(FileId, &Information);
 
     //
     // Check for error
     //
-    if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
+    if (Status != ESUCCESS || Information.EndingAddress.HighPart != 0)
         return 0;
 
     //

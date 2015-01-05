@@ -21,10 +21,9 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(INIFILE);
 
-static LONG IniOpenIniFile(ULONG* FileId)
+static ARC_STATUS IniOpenIniFile(ULONG* FileId)
 {
     CHAR FreeldrPath[MAX_PATH];
-    LONG ret;
 
     //
     // Create full freeldr.ini path
@@ -33,9 +32,7 @@ static LONG IniOpenIniFile(ULONG* FileId)
     strcat(FreeldrPath, "\\freeldr.ini");
 
     // Try to open freeldr.ini
-    ret = ArcOpen(FreeldrPath, OpenReadOnly, FileId);
-
-    return ret;
+    return ArcOpen(FreeldrPath, OpenReadOnly, FileId);
 }
 
 BOOLEAN IniFileInitialize(VOID)
@@ -44,15 +41,15 @@ BOOLEAN IniFileInitialize(VOID)
     ULONG FileId; // File handle for freeldr.ini
     PCHAR FreeLoaderIniFileData;
     ULONG FreeLoaderIniFileSize, Count;
-    LONG ret;
+    ARC_STATUS Status;
     BOOLEAN Success;
     TRACE("IniFileInitialize()\n");
 
     //
     // Open freeldr.ini
     //
-    ret = IniOpenIniFile(&FileId);
-    if (ret != ESUCCESS)
+    Status = IniOpenIniFile(&FileId);
+    if (Status != ESUCCESS)
     {
         UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
         return FALSE;
@@ -61,8 +58,8 @@ BOOLEAN IniFileInitialize(VOID)
     //
     // Get the file size
     //
-    ret = ArcGetFileInformation(FileId, &FileInformation);
-    if (ret != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
+    Status = ArcGetFileInformation(FileId, &FileInformation);
+    if (Status != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
     {
         UiMessageBoxCritical("Error while getting informations about freeldr.ini.\nYou need to re-install FreeLoader.");
         return FALSE;
@@ -83,8 +80,8 @@ BOOLEAN IniFileInitialize(VOID)
     //
     // Read freeldr.ini off the disk
     //
-    ret = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
-    if (ret != ESUCCESS || Count != FreeLoaderIniFileSize)
+    Status = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
+    if (Status != ESUCCESS || Count != FreeLoaderIniFileSize)
     {
         UiMessageBoxCritical("Error while reading freeldr.ini.");
         ArcClose(FileId);

@@ -41,7 +41,7 @@ static VOID
 SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR SearchPath)
 {
     INFCONTEXT InfContext;
-    BOOLEAN Status;
+    BOOLEAN Success;
     LPCSTR AnsiName, OemName, LangName;
 
     /* Get ANSI codepage file */
@@ -79,15 +79,15 @@ SetupLdrLoadNlsData(PLOADER_PARAMETER_BLOCK LoaderBlock, HINF InfHandle, LPCSTR 
         return;
     }
 
-    Status = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
-    TRACE("NLS data loaded with status %d\n", Status);
+    Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
+    TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 }
 
 static VOID
 SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR SearchPath)
 {
     INFCONTEXT InfContext, dirContext;
-    BOOLEAN Status;
+    BOOLEAN Success;
     LPCSTR Media, DriverName, dirIndex, ImagePath;
     WCHAR ServiceName[256];
     WCHAR ImagePathW[256];
@@ -119,12 +119,11 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR S
                 ServiceName[wcslen(ServiceName) - 4] = 0;
 
                 /* Add it to the list */
-                Status = WinLdrAddDriverToList(BootDriverListHead,
-                    L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-                    ImagePathW,
-                    ServiceName);
-
-                if (!Status)
+                Success = WinLdrAddDriverToList(BootDriverListHead,
+                                                L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+                                                ImagePathW,
+                                                ServiceName);
+                if (!Success)
                 {
                     ERR("could not add boot driver %s, %s\n", SearchPath, DriverName);
                     return;

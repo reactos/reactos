@@ -249,7 +249,7 @@ IopReadBootRecord(
     ULONG FileId = (ULONG)DeviceObject;
     LARGE_INTEGER Position;
     ULONG BytesRead;
-    ULONG Status;
+    ARC_STATUS Status;
 
     Position.QuadPart = LogicalSectorNumber * SectorSize;
     Status = ArcSeek(FileId, &Position, SeekAbsolute);
