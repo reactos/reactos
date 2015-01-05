@@ -40,6 +40,12 @@ FORCEINLINE PMENU UserGetMenuObject(HMENU hMenu)
 
 PWND FASTCALL IntGetWindowObject(HWND hWnd);
 
+/*************** DDE.C ****************/
+
+BOOL FASTCALL IntDdeSendMessageHook(PWND,UINT,WPARAM,LPARAM);
+BOOL FASTCALL IntDdePostMessageHook(PWND,UINT,WPARAM,LPARAM);
+VOID FASTCALL IntDdeGetMessageHook(PMSG);
+
 /*************** MAIN.C ***************/
 
 NTSTATUS NTAPI InitThreadCallback(PETHREAD Thread);

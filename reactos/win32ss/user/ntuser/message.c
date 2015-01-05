@@ -1008,8 +1008,15 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      bGMSG );
         if (Present)
         {
-           /* GetMessage or PostMessage must never get messages that contain pointers */
-           ASSERT(FindMsgMemory(pMsg->message) == NULL);
+           if ( pMsg->message >= WM_DDE_FIRST && pMsg->message <= WM_DDE_LAST )
+           {
+              IntDdeGetMessageHook(pMsg);
+           }
+           else
+           {
+              /* GetMessage or PostMessage must never get messages that contain pointers */
+              ASSERT(FindMsgMemory(pMsg->message) == NULL);
+           }
 
            if (pMsg->message != WM_PAINT && pMsg->message != WM_QUIT)
            {
@@ -1113,7 +1120,7 @@ UserPostMessage( HWND Wnd,
                  LPARAM lParam )
 {
     PTHREADINFO pti;
-    MSG Message, KernelModeMsg;
+    MSG Message;
     LARGE_INTEGER LargeTickCount;
 
     Message.hwnd = Wnd;
@@ -1130,38 +1137,6 @@ UserPostMessage( HWND Wnd,
         return FALSE;
     }
 
-    if( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
-    {
-        NTSTATUS Status;
-        PMSGMEMORY MsgMemoryEntry;
-
-        MsgMemoryEntry = FindMsgMemory(Message.message);
-
-        Status = CopyMsgToKernelMem(&KernelModeMsg, &Message, MsgMemoryEntry);
-        if (! NT_SUCCESS(Status))
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-        co_IntSendMessageNoWait(KernelModeMsg.hwnd,
-                                KernelModeMsg.message,
-                                KernelModeMsg.wParam,
-                                KernelModeMsg.lParam);
-
-        if (MsgMemoryEntry && KernelModeMsg.lParam)
-            ExFreePool((PVOID) KernelModeMsg.lParam);
-
-        return TRUE;
-    }
-
-    if (!Wnd)
-    {
-        pti = PsGetCurrentThreadWin32Thread();
-        return UserPostThreadMessage( pti,
-                                      Msg,
-                                      wParam,
-                                      lParam);
-    }
     if (Wnd == HWND_BROADCAST)
     {
         HWND *List;
@@ -1192,6 +1167,14 @@ UserPostMessage( HWND Wnd,
     {
         PWND Window;
 
+        if (!Wnd)
+        {
+           return UserPostThreadMessage( gptiCurrent,
+                                         Msg,
+                                         wParam,
+                                         lParam);
+        }
+
         Window = UserGetWindowObject(Wnd);
         if ( !Window )
         {
@@ -1200,6 +1183,7 @@ UserPostMessage( HWND Wnd,
         }
 
         pti = Window->head.pti;
+
         if ( pti->TIF_flags & TIF_INCLEANUP )
         {
             ERR("Attempted to post message to window %p when the thread is in cleanup!\n", Wnd);
@@ -1211,6 +1195,15 @@ UserPostMessage( HWND Wnd,
             ERR("Attempted to post message to window %p that is being destroyed!\n", Wnd);
             /* FIXME: Last error code? */
             return FALSE;
+        }
+
+        if ( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
+        {
+           if (!IntDdePostMessageHook(Window, Msg, wParam, lParam))
+           {
+              ERR("Posting Exit DDE 0x%x\n",Msg);
+              return FALSE;
+           }
         }
 
         if (WM_QUIT == Msg)
@@ -1270,6 +1263,15 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
     ptiSendTo = IntSendTo(Window, Win32Thread, Msg);
+
+    if ( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
+    {
+       if (!IntDdeSendMessageHook(Window, Msg, wParam, lParam))
+       {
+          ERR("Sending Exit DDE 0x%x\n",Msg);
+          RETURN( FALSE);
+       }
+    }
 
     if ( !ptiSendTo )
     {
