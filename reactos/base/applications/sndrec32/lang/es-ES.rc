@@ -11,11 +11,11 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Acerca de la Grabadora de Sonidos de ReactOS"
+CAPTION "Acerca de la Grabadora de sonidos de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     ICON IDI_SNDREC32, -1, 19, 14, 21, 20
-    LTEXT "Grabadora de Sonidos de ReactOS, versión 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
+    LTEXT "Grabadora de sonidos de ReactOS, versión 1.0", IDC_STATIC, 56, 16, 114, 8, SS_NOPREFIX
     LTEXT "Copyright (C) 2009", IDC_STATIC, 56, 25, 114, 8
     DEFPUSHBUTTON "Aceptar", IDOK, 139, 54, 50, 14, WS_GROUP
 END
@@ -66,7 +66,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE "Grabadora de Sonidos"
+    IDS_APP_TITLE "Grabadora de sonidos"
     IDC_REACTOS_SNDREC32 "REACTOS_SNDREC32"
 END
 
