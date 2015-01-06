@@ -161,6 +161,7 @@ UserProcessCreate(PEPROCESS Process)
     }
 
     ppiCurrent->peProcess = Process;
+    ppiCurrent->W32Pid = HandleToUlong(PsGetProcessId(Process));
 
     /* Setup process flags */
     ppiCurrent->W32PF_flags |= W32PF_PROCESSCONNECTED;
