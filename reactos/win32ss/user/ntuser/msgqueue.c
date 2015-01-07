@@ -2026,6 +2026,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
                   IN UINT MsgFilterLow,
                   IN UINT MsgFilterHigh,
                   IN UINT QSflags,
+                  OUT LONG_PTR *ExtraInfo,
                   OUT PMSG Message)
 {
    PUSER_MESSAGE CurrentMessage;
@@ -2053,8 +2054,9 @@ MsqPeekMessage(IN PTHREADINFO pti,
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
-         *Message = CurrentMessage->Msg;
-         QS_Flags = CurrentMessage->QS_Flags;
+         *Message   = CurrentMessage->Msg;
+         *ExtraInfo = CurrentMessage->ExtraInfo;
+         QS_Flags   = CurrentMessage->QS_Flags;
 
          if (Remove)
          {

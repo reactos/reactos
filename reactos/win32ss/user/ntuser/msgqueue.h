@@ -131,6 +131,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
 	              IN UINT MsgFilterLow,
 	              IN UINT MsgFilterHigh,
 	              IN UINT QSflags,
+	              OUT LONG_PTR *ExtraInfo,
 	              OUT PMSG Message);
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(IN PTHREADINFO pti,

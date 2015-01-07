@@ -772,6 +772,7 @@ co_IntPeekMessage( PMSG Msg,
                    UINT MsgFilterMin,
                    UINT MsgFilterMax,
                    UINT RemoveMsg,
+                   LONG_PTR *ExtraInfo,
                    BOOL bGMSG )
 {
     PTHREADINFO pti;
@@ -835,6 +836,7 @@ co_IntPeekMessage( PMSG Msg,
                             MsgFilterMin,
                             MsgFilterMax,
                             ProcessMask,
+                            ExtraInfo,
                             Msg ))
         {
                return TRUE;
@@ -916,6 +918,7 @@ co_IntWaitMessage( PWND Window,
     PTHREADINFO pti;
     NTSTATUS Status = STATUS_SUCCESS;
     MSG Msg;
+    LONG_PTR ExtraInfo = 0;
 
     pti = PsGetCurrentThreadWin32Thread();
 
@@ -926,6 +929,7 @@ co_IntWaitMessage( PWND Window,
                                  MsgFilterMin,
                                  MsgFilterMax,
                                  MAKELONG( PM_NOREMOVE, GetWakeMask( MsgFilterMin, MsgFilterMax)),
+                                 &ExtraInfo,
                                  TRUE ) )   // act like GetMessage.
         {
             return TRUE;
@@ -964,6 +968,7 @@ co_IntGetPeekMessage( PMSG pMsg,
     PTHREADINFO pti;
     BOOL Present = FALSE;
     NTSTATUS Status;
+    LONG_PTR ExtraInfo = 0;
 
     if ( hWnd == HWND_TOPMOST || hWnd == HWND_BROADCAST )
         hWnd = HWND_BOTTOM;
@@ -1005,6 +1010,7 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      MsgFilterMin,
                                      MsgFilterMax,
                                      RemoveMsg,
+                                     &ExtraInfo,
                                      bGMSG );
         if (Present)
         {
@@ -1122,6 +1128,7 @@ UserPostMessage( HWND Wnd,
     PTHREADINFO pti;
     MSG Message;
     LARGE_INTEGER LargeTickCount;
+    LONG_PTR ExtraInfo = 0;
 
     Message.hwnd = Wnd;
     Message.message = Msg;
@@ -1212,7 +1219,7 @@ UserPostMessage( HWND Wnd,
         }
         else
         {
-            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, 0);
+            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, ExtraInfo);
         }
     }
     return TRUE;
