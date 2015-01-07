@@ -28,38 +28,38 @@
 
 NTSTATUS
 CmiInitializeTempHive(
-	IN OUT PCMHIVE Hive);
+    IN OUT PCMHIVE Hive);
 
 NTSTATUS
 CmiAddSubKey(
-	IN PCMHIVE RegistryHive,
-	IN HCELL_INDEX ParentKeyCellOffset,
-	IN PCUNICODE_STRING SubKeyName,
-	IN ULONG CreateOptions,
-	OUT PCM_KEY_NODE *pSubKeyCell,
-	OUT HCELL_INDEX *pBlockOffset);
+    IN PCMHIVE RegistryHive,
+    IN HCELL_INDEX ParentKeyCellOffset,
+    IN PCUNICODE_STRING SubKeyName,
+    IN ULONG CreateOptions,
+    OUT PCM_KEY_NODE *pSubKeyCell,
+    OUT HCELL_INDEX *pBlockOffset);
 
 NTSTATUS
 CmiScanForSubKey(
-	IN PCMHIVE RegistryHive,
-	IN HCELL_INDEX ParentKeyCellOffset,
-	IN PCUNICODE_STRING SubKeyName,
-	IN ULONG Attributes,
-	OUT PCM_KEY_NODE *pSubKeyCell,
-	OUT HCELL_INDEX *pBlockOffset);
+    IN PCMHIVE RegistryHive,
+    IN HCELL_INDEX ParentKeyCellOffset,
+    IN PCUNICODE_STRING SubKeyName,
+    IN ULONG Attributes,
+    OUT PCM_KEY_NODE *pSubKeyCell,
+    OUT HCELL_INDEX *pBlockOffset);
 
 NTSTATUS
 CmiAddValueKey(
-	IN PCMHIVE RegistryHive,
-	IN HCELL_INDEX KeyCellOffset,
-	IN PCUNICODE_STRING ValueName,
-	OUT PCM_KEY_VALUE *pValueCell,
-	OUT HCELL_INDEX *pValueCellOffset);
+    IN PCMHIVE RegistryHive,
+    IN HCELL_INDEX KeyCellOffset,
+    IN PCUNICODE_STRING ValueName,
+    OUT PCM_KEY_VALUE *pValueCell,
+    OUT HCELL_INDEX *pValueCellOffset);
 
 NTSTATUS
 CmiScanForValueKey(
-	IN PCMHIVE RegistryHive,
-	IN HCELL_INDEX KeyCellOffset,
-	IN PCUNICODE_STRING ValueName,
-	OUT PCM_KEY_VALUE *pValueCell,
-	OUT HCELL_INDEX *pValueCellOffset);
+    IN PCMHIVE RegistryHive,
+    IN HCELL_INDEX KeyCellOffset,
+    IN PCUNICODE_STRING ValueName,
+    OUT PCM_KEY_VALUE *pValueCell,
+    OUT HCELL_INDEX *pValueCellOffset);

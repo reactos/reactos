@@ -35,4 +35,4 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
 struct target_dir_entry *dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t);
 void dir_hash_destroy(struct target_dir_hash *dh);
 
-#endif//_REACTOS_TOOLS_CDMAKE_DIRHASH_H_
+#endif //_REACTOS_TOOLS_CDMAKE_DIRHASH_H_

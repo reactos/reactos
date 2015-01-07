@@ -9,19 +9,22 @@
 
 #include "cabinet.h"
 
-typedef struct _CABINET_NAME {
+typedef struct _CABINET_NAME
+{
     struct _CABINET_NAME *Next;
     ULONG DiskNumber;
     char Name[128];
 } CABINET_NAME, *PCABINET_NAME;
 
-typedef struct _DISK_NUMBER {
+typedef struct _DISK_NUMBER
+{
     struct _DISK_NUMBER *Next;
     ULONG DiskNumber;
     ULONG Number;
 } DISK_NUMBER, *PDISK_NUMBER;
 
-typedef enum {
+typedef enum
+{
     TokenUnknown,
     TokenInteger,
     TokenIdentifier,
@@ -35,7 +38,8 @@ typedef enum {
 } DFP_TOKEN;
 
 
-typedef enum {
+typedef enum
+{
     stCabinetName,
     stCabinetNameTemplate,
     stDiskLabel,
@@ -45,7 +49,8 @@ typedef enum {
 } SETTYPE;
 
 
-typedef enum {
+typedef enum
+{
     ntDisk,
     ntCabinet,
     ntFolder,
@@ -54,7 +59,8 @@ typedef enum {
 
 /* Classes */
 
-class CDFParser : public CCabinet {
+class CDFParser : public CCabinet
+{
 public:
     CDFParser();
     virtual ~CDFParser();

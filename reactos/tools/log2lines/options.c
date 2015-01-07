@@ -70,7 +70,7 @@ int optionInit(int argc, const char **argv)
 
     //The user introduced "log2lines.exe" or "log2lines.exe /?"
     //Let's help the user
-    if ((argc == 1) || 
+    if ((argc == 1) ||
         ((argc == 2) && (argv[1][0] == '/') && (argv[1][1] == '?')))
     {
         opt_help++;
@@ -169,8 +169,8 @@ int optionParse(int argc, const char **argv)
             free(opt_Revision);
             opt_Revision = malloc(LINESIZE);
             sscanf(optarg, "%s", opt_Revision);
-			if (strcmp(opt_Revision, "check") == 0)
-				opt_Revision_check ++;
+            if (strcmp(opt_Revision, "check") == 0)
+                opt_Revision_check ++;
             break;
         case 's':
             opt_stats++;
@@ -186,7 +186,7 @@ int optionParse(int argc, const char **argv)
                 /* need to retranslate for source info: */
                 opt_undo++;
                 opt_redo++;
-				opt_Revision_check ++;
+                opt_Revision_check ++;
             }
             break;
         case 't':

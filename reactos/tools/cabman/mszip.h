@@ -15,7 +15,8 @@
 
 /* Classes */
 
-class CMSZipCodec : public CCABCodec {
+class CMSZipCodec : public CCABCodec
+{
 public:
     /* Default constructor */
     CMSZipCodec();

@@ -92,10 +92,10 @@ typedef struct _LNK_LOCAL_VOLUME_INFO
     char VolumeLabel[0];
 } LNK_LOCAL_VOLUME_INFO;
 
-#define PT_GUID		0x1F
-#define PT_DRIVE1	0x2F
-#define PT_FOLDER	0x31
-#define PT_VALUE	0x32
+#define PT_GUID     0x1F
+#define PT_DRIVE1   0x2F
+#define PT_FOLDER   0x31
+#define PT_VALUE    0x32
 
 typedef struct _ID_LIST_FILE
 {

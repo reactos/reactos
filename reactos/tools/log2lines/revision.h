@@ -11,7 +11,7 @@
 
 typedef struct revinfo_struct
 {
-    int     rev; 
+    int     rev;
     int     buildrev;
     int     range;
     int     opt_verbose;

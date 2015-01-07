@@ -346,7 +346,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                         SetFileRelativePath(&argv[i][2]);
 
                     break;
-                    
+
                 case 'V':
                     Verbose = true;
                     break;

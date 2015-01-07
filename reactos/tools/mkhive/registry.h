@@ -17,9 +17,9 @@ typedef struct _REPARSE_POINT
 
 typedef struct _MEMKEY
 {
-  /* Information on hard disk structure */
-  HCELL_INDEX KeyCellOffset;
-  PCMHIVE RegistryHive;
+    /* Information on hard disk structure */
+    HCELL_INDEX KeyCellOffset;
+    PCMHIVE RegistryHive;
 } MEMKEY, *PMEMKEY;
 
 #define HKEY_TO_MEMKEY(hKey) ((PMEMKEY)(hKey))

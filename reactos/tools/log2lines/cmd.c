@@ -160,7 +160,7 @@ handle_address_cmd(FILE *outFile, char *arg)
             if (( plm = entry_lookup(&cache, Image) ))
             {
                 if (plm->RelBase != INVALID_BASE)
-					esclog(outFile, "Address: 0x%lx\n", plm->RelBase + Offset)
+                    esclog(outFile, "Address: 0x%lx\n", plm->RelBase + Offset)
                 else
                     esclog(outFile, "Relocated base missing for '%s' ('mod' will update)\n", Image);
             }
@@ -168,7 +168,7 @@ handle_address_cmd(FILE *outFile, char *arg)
                 esclog(outFile, "Image '%s' not found\n", Image);
         }
         else
-			esclog(outFile, "usage: `a <Image>:<offset>\n");
+            esclog(outFile, "usage: `a <Image>:<offset>\n");
     }
     else
         esclog(outFile, "':' expected\n");
@@ -259,10 +259,10 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         break;
     case 'R':
         changed = handle_switch_pstr(outFile, &opt_Revision, arg, NULL);
-		opt_Revision_check = 0;
+        opt_Revision_check = 0;
         if (opt_Revision)
         {
-			opt_Revision_check = 1;
+            opt_Revision_check = 1;
             if (strstr(opt_Revision, "check") == opt_Revision)
             {
                 esclog(outFile, "-R is \"%s\" (%s)\n", opt_Revision, changed ? "changed":"unchanged");
@@ -302,7 +302,7 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         {
             handle_switch(outFile, &opt_undo, "1", "-u Undo");
             handle_switch(outFile, &opt_redo, "1", "-U Undo and reprocess");
-			opt_Revision_check = 1;
+            opt_Revision_check = 1;
         }
         esclog(outFile, "-S Sources option is %d+%d,\"%s\"\n", opt_Source, opt_SrcPlus, opt_SourcesPath);
         esclog(outFile, "(Setting source tree not implemented)\n");

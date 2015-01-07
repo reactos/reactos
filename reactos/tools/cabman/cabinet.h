@@ -255,7 +255,8 @@ typedef struct _CAB_SEARCH
 
 /* Codecs */
 
-class CCABCodec {
+class CCABCodec
+{
 public:
     /* Default constructor */
     CCABCodec() {};
@@ -291,7 +292,8 @@ public:
 
 #ifndef CAB_READ_ONLY
 
-class CCFDATAStorage {
+class CCFDATAStorage
+{
 public:
     /* Default constructor */
     CCFDATAStorage();
@@ -312,7 +314,8 @@ private:
 
 #endif /* CAB_READ_ONLY */
 
-class CCabinet {
+class CCabinet
+{
 public:
     /* Default constructor */
     CCabinet();

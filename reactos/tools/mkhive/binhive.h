@@ -27,7 +27,7 @@
 
 BOOL
 ExportBinaryHive(
-	IN PCSTR FileName,
-	IN PCMHIVE Hive);
+    IN PCSTR FileName,
+    IN PCMHIVE Hive);
 
 /* EOF */

@@ -18,7 +18,8 @@
 
 /* Classes */
 
-class CCABManager : public CDFParser {
+class CCABManager : public CDFParser
+{
 public:
     CCABManager();
     virtual ~CCABManager();

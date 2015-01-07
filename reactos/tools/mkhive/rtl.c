@@ -24,24 +24,24 @@
  */
 VOID NTAPI
 RtlInitAnsiString(
-	IN OUT PANSI_STRING DestinationString,
-	IN PCSTR SourceString)
+    IN OUT PANSI_STRING DestinationString,
+    IN PCSTR SourceString)
 {
-	SIZE_T DestSize;
+    SIZE_T DestSize;
 
-	if(SourceString)
-	{
-		DestSize = strlen(SourceString);
-		DestinationString->Length = (USHORT)DestSize;
-		DestinationString->MaximumLength = (USHORT)DestSize + sizeof(CHAR);
-	}
-	else
-	{
-		DestinationString->Length = 0;
-		DestinationString->MaximumLength = 0;
-	}
+    if(SourceString)
+    {
+        DestSize = strlen(SourceString);
+        DestinationString->Length = (USHORT)DestSize;
+        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(CHAR);
+    }
+    else
+    {
+        DestinationString->Length = 0;
+        DestinationString->MaximumLength = 0;
+    }
 
-	DestinationString->Buffer = (PCHAR)SourceString;
+    DestinationString->Buffer = (PCHAR)SourceString;
 }
 
 /*
@@ -52,129 +52,129 @@ RtlInitAnsiString(
  */
 VOID NTAPI
 RtlInitUnicodeString(
-	IN OUT PUNICODE_STRING DestinationString,
-	IN PCWSTR SourceString)
+    IN OUT PUNICODE_STRING DestinationString,
+    IN PCWSTR SourceString)
 {
-	SIZE_T DestSize;
+    SIZE_T DestSize;
 
-	if(SourceString)
-	{
-		DestSize = strlenW(SourceString) * sizeof(WCHAR);
-		DestinationString->Length = (USHORT)DestSize;
-		DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
-	}
-	else
-	{
-		DestinationString->Length = 0;
-		DestinationString->MaximumLength = 0;
-	}
+    if(SourceString)
+    {
+        DestSize = strlenW(SourceString) * sizeof(WCHAR);
+        DestinationString->Length = (USHORT)DestSize;
+        DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
+    }
+    else
+    {
+        DestinationString->Length = 0;
+        DestinationString->MaximumLength = 0;
+    }
 
-	DestinationString->Buffer = (PWCHAR)SourceString;
+    DestinationString->Buffer = (PWCHAR)SourceString;
 }
 
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(
-	IN OUT PUNICODE_STRING UniDest,
-	IN PANSI_STRING AnsiSource,
-	IN BOOLEAN AllocateDestinationString)
+    IN OUT PUNICODE_STRING UniDest,
+    IN PANSI_STRING AnsiSource,
+    IN BOOLEAN AllocateDestinationString)
 {
-	ULONG Length;
-	PUCHAR WideString;
-	USHORT i;
+    ULONG Length;
+    PUCHAR WideString;
+    USHORT i;
 
-	Length = AnsiSource->Length * sizeof(WCHAR);
-	if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
-	UniDest->Length = (USHORT)Length;
+    Length = AnsiSource->Length * sizeof(WCHAR);
+    if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
+    UniDest->Length = (USHORT)Length;
 
-	if (AllocateDestinationString)
-	{
-		UniDest->MaximumLength = (USHORT)Length + sizeof(WCHAR);
-		UniDest->Buffer = (PWSTR) malloc(UniDest->MaximumLength);
-		if (!UniDest->Buffer)
-			return STATUS_NO_MEMORY;
-	}
-	else if (UniDest->Length >= UniDest->MaximumLength)
-	{
-		return STATUS_BUFFER_OVERFLOW;
-	}
+    if (AllocateDestinationString)
+    {
+        UniDest->MaximumLength = (USHORT)Length + sizeof(WCHAR);
+        UniDest->Buffer = (PWSTR) malloc(UniDest->MaximumLength);
+        if (!UniDest->Buffer)
+            return STATUS_NO_MEMORY;
+    }
+    else if (UniDest->Length >= UniDest->MaximumLength)
+    {
+        return STATUS_BUFFER_OVERFLOW;
+    }
 
-	WideString = (PUCHAR)UniDest->Buffer;
-	for (i = 0; i <= AnsiSource->Length; i++)
-	{
-		WideString[2 * i + 0] = AnsiSource->Buffer[i];
-		WideString[2 * i + 1] = 0;
-	}
-	return STATUS_SUCCESS;
+    WideString = (PUCHAR)UniDest->Buffer;
+    for (i = 0; i <= AnsiSource->Length; i++)
+    {
+        WideString[2 * i + 0] = AnsiSource->Buffer[i];
+        WideString[2 * i + 1] = 0;
+    }
+    return STATUS_SUCCESS;
 }
 
 LONG NTAPI
 RtlCompareUnicodeString(
-	IN PCUNICODE_STRING String1,
-	IN PCUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive)
+    IN PCUNICODE_STRING String1,
+    IN PCUNICODE_STRING String2,
+    IN BOOLEAN CaseInSensitive)
 {
-	USHORT i;
-	WCHAR c1, c2;
+    USHORT i;
+    WCHAR c1, c2;
 
-	for (i = 0; i <= String1->Length / sizeof(WCHAR) && i <= String2->Length / sizeof(WCHAR); i++)
-	{
-		if (CaseInSensitive)
-		{
-			c1 = RtlUpcaseUnicodeChar(String1->Buffer[i]);
-			c2 = RtlUpcaseUnicodeChar(String2->Buffer[i]);
-		}
-		else
-		{
-			c1 = String1->Buffer[i];
-			c2 = String2->Buffer[i];
-		}
+    for (i = 0; i <= String1->Length / sizeof(WCHAR) && i <= String2->Length / sizeof(WCHAR); i++)
+    {
+        if (CaseInSensitive)
+        {
+            c1 = RtlUpcaseUnicodeChar(String1->Buffer[i]);
+            c2 = RtlUpcaseUnicodeChar(String2->Buffer[i]);
+        }
+        else
+        {
+            c1 = String1->Buffer[i];
+            c2 = String2->Buffer[i];
+        }
 
-		if (c1 < c2)
-			return -1;
-		else if (c1 > c2)
-			return 1;
-	}
+        if (c1 < c2)
+            return -1;
+        else if (c1 > c2)
+            return 1;
+    }
 
-	return 0;
+    return 0;
 }
 
 WCHAR NTAPI
 RtlUpcaseUnicodeChar(
-	IN WCHAR Source)
+    IN WCHAR Source)
 {
-	USHORT Offset;
+    USHORT Offset;
 
-	if (Source < 'a')
-		return Source;
+    if (Source < 'a')
+        return Source;
 
-	if (Source <= 'z')
-		return (Source - ('a' - 'A'));
+    if (Source <= 'z')
+        return (Source - ('a' - 'A'));
 
-	Offset = 0;
+    Offset = 0;
 
-	return Source + (SHORT)Offset;
+    return Source + (SHORT)Offset;
 }
 
 VOID NTAPI
 KeQuerySystemTime(
-	OUT PLARGE_INTEGER CurrentTime)
+    OUT PLARGE_INTEGER CurrentTime)
 {
-	CurrentTime->QuadPart = 0;
+    CurrentTime->QuadPart = 0;
 }
 
 PVOID NTAPI
 ExAllocatePool(
-	IN POOL_TYPE PoolType,
-	IN SIZE_T NumberOfBytes)
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
 {
-	return (PVOID) malloc(NumberOfBytes);
+    return (PVOID) malloc(NumberOfBytes);
 }
 
 VOID NTAPI
 ExFreePool(
-	IN PVOID p)
+    IN PVOID p)
 {
-	free(p);
+    free(p);
 }
 
 ULONG

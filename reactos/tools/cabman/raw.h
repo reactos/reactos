@@ -12,7 +12,8 @@
 
 /* Classes */
 
-class CRawCodec : public CCABCodec {
+class CRawCodec : public CCABCodec
+{
 public:
     /* Default constructor */
     CRawCodec();

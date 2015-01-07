@@ -66,13 +66,13 @@ typedef int BOOL;
 
 // file system parameters
 
-#define MAX_LEVEL		8
-#define MAX_NAME_LENGTH		64
-#define MAX_CDNAME_LENGTH	8
-#define MAX_EXTENSION_LENGTH	10
-#define MAX_CDEXTENSION_LENGTH	3
-#define SECTOR_SIZE		2048
-#define BUFFER_SIZE		(8 * SECTOR_SIZE)
+#define MAX_LEVEL               8
+#define MAX_NAME_LENGTH         64
+#define MAX_CDNAME_LENGTH       8
+#define MAX_EXTENSION_LENGTH    10
+#define MAX_CDEXTENSION_LENGTH  3
+#define SECTOR_SIZE             2048
+#define BUFFER_SIZE             (8 * SECTOR_SIZE)
 
 const BYTE HIDDEN_FLAG    = 1;
 const BYTE DIRECTORY_FLAG = 2;
@@ -395,8 +395,8 @@ This function writes a directory record to the CD_ROM image.
 
 static void
 write_directory_record(PDIR_RECORD d,
-		       DIR_RECORD_TYPE DirType,
-		       BOOL joliet)
+                       DIR_RECORD_TYPE DirType,
+                       BOOL joliet)
 {
   unsigned identifier_size;
   unsigned record_size;
@@ -1253,7 +1253,7 @@ static void get_time_string(char *str)
     struct tm *current;
     time_t timestamp = time(NULL);
     current = gmtime(&timestamp);
-    sprintf(str, "%04d%02d%02d%02d%02d%02d00", 
+    sprintf(str, "%04d%02d%02d%02d%02d%02d00",
             current->tm_year + 1900,
             current->tm_mon,
             current->tm_mday,

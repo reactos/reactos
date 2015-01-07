@@ -37,7 +37,7 @@ stat_print(FILE *outFile, PSUMM psumm)
     }
 }
 
-void 
+void
 stat_clear(PSUMM psumm)
 {
     memset(psumm, 0, sizeof(SUMM));

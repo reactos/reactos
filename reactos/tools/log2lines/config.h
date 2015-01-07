@@ -27,8 +27,8 @@
 PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 
 /* When we can't use a normal path, because it gets cleaned,
- * fallback to name mangling: 
- */ 
+ * fallback to name mangling:
+ */
 #define ALT_PATH_STR    "#"
 
 #define LINESIZE        1024

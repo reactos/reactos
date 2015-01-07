@@ -21,7 +21,7 @@ Syntax                             Description
 Standard variable                  Description
 -------------------------------------------------------------------------------
 Cabinet=ON|OFF                     Turns cabinet mode on or off (* -- currently always on)
-CabinetFileCountThreshold=count	   Threshold count of files per cabinet (*)
+CabinetFileCountThreshold=count    Threshold count of files per cabinet (*)
 CabinetNamen=filename              Cabinet file name for cabinet number n
 CabinetNameTemplate=template       Cabinet file name template
                                    * is replaced by cabinet number

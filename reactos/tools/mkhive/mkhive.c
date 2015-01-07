@@ -49,105 +49,105 @@
 
 void usage (void)
 {
-	printf ("Usage: mkhive <dstdir> <inffiles>\n\n");
-	printf ("  dstdir   - binary hive files are created in this directory\n");
-	printf ("  inffiles - inf files with full path\n");
+    printf ("Usage: mkhive <dstdir> <inffiles>\n\n");
+    printf ("  dstdir   - binary hive files are created in this directory\n");
+    printf ("  inffiles - inf files with full path\n");
 }
 
 void convert_path(char *dst, char *src)
 {
-	int i;
+    int i;
 
-	i = 0;
-	while (src[i] != 0)
-	{
+    i = 0;
+    while (src[i] != 0)
+    {
 #ifdef _WIN32
-		if (src[i] == '/')
-		{
-			dst[i] = '\\';
-		}
+        if (src[i] == '/')
+        {
+            dst[i] = '\\';
+        }
 #else
-		if (src[i] == '\\')
-		{
-			dst[i] = '/';
-		}
+        if (src[i] == '\\')
+        {
+            dst[i] = '/';
+        }
 #endif
-		else
-		{
-			dst[i] = src[i];
-		}
+        else
+        {
+            dst[i] = src[i];
+        }
 
-		i++;
-	}
-	dst[i] = 0;
+        i++;
+    }
+    dst[i] = 0;
 }
 
 int main (int argc, char *argv[])
 {
-	char FileName[PATH_MAX];
-	int i;
+    char FileName[PATH_MAX];
+    int i;
 
-	if (argc < 3)
-	{
-		usage ();
-		return 1;
-	}
+    if (argc < 3)
+    {
+        usage ();
+        return 1;
+    }
 
-	printf ("Binary hive maker\n");
+    printf ("Binary hive maker\n");
 
-	RegInitializeRegistry ();
+    RegInitializeRegistry ();
 
-	for (i = 2; i < argc; i++)
-	{
-		convert_path (FileName, argv[i]);
-		ImportRegistryFile (FileName);
-	}
+    for (i = 2; i < argc; i++)
+    {
+        convert_path (FileName, argv[i]);
+        ImportRegistryFile (FileName);
+    }
 
-	convert_path (FileName, argv[1]);
-	strcat (FileName, DIR_SEPARATOR_STRING);
-	strcat (FileName, "default");
-	if (!ExportBinaryHive (FileName, &DefaultHive))
-	{
-		return 1;
-	}
+    convert_path (FileName, argv[1]);
+    strcat (FileName, DIR_SEPARATOR_STRING);
+    strcat (FileName, "default");
+    if (!ExportBinaryHive (FileName, &DefaultHive))
+    {
+        return 1;
+    }
 
-	convert_path (FileName, argv[1]);
-	strcat (FileName, DIR_SEPARATOR_STRING);
-	strcat (FileName, "sam");
-	if (!ExportBinaryHive (FileName, &SamHive))
-	{
-		return 1;
-	}
+    convert_path (FileName, argv[1]);
+    strcat (FileName, DIR_SEPARATOR_STRING);
+    strcat (FileName, "sam");
+    if (!ExportBinaryHive (FileName, &SamHive))
+    {
+        return 1;
+    }
 
-	convert_path (FileName, argv[1]);
-	strcat (FileName, DIR_SEPARATOR_STRING);
-	strcat (FileName, "security");
-	if (!ExportBinaryHive (FileName, &SecurityHive))
-	{
-		return 1;
-	}
+    convert_path (FileName, argv[1]);
+    strcat (FileName, DIR_SEPARATOR_STRING);
+    strcat (FileName, "security");
+    if (!ExportBinaryHive (FileName, &SecurityHive))
+    {
+        return 1;
+    }
 
-	convert_path (FileName, argv[1]);
-	strcat (FileName, DIR_SEPARATOR_STRING);
-	strcat (FileName, "software");
-	if (!ExportBinaryHive (FileName, &SoftwareHive))
-	{
-		return 1;
-	}
+    convert_path (FileName, argv[1]);
+    strcat (FileName, DIR_SEPARATOR_STRING);
+    strcat (FileName, "software");
+    if (!ExportBinaryHive (FileName, &SoftwareHive))
+    {
+        return 1;
+    }
 
-	convert_path (FileName, argv[1]);
-	strcat (FileName, DIR_SEPARATOR_STRING);
-	strcat (FileName, "system");
-	if (!ExportBinaryHive (FileName, &SystemHive))
-	{
-		return 1;
-	}
+    convert_path (FileName, argv[1]);
+    strcat (FileName, DIR_SEPARATOR_STRING);
+    strcat (FileName, "system");
+    if (!ExportBinaryHive (FileName, &SystemHive))
+    {
+        return 1;
+    }
 
-	RegShutdownRegistry ();
+    RegShutdownRegistry ();
 
-	printf ("  Done.\n");
+    printf ("  Done.\n");
 
-	return 0;
+    return 0;
 }
 
 /* EOF */
