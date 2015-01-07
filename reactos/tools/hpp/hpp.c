@@ -38,30 +38,30 @@ const char *gpszCurFile;
 char*
 convert_path(const char* origpath)
 {
-	char* newpath;
-	int i;
+    char* newpath;
+    int i;
 
-	newpath = strdup(origpath);
+    newpath = strdup(origpath);
 
-	i = 0;
-	while (newpath[i] != 0)
-	{
+    i = 0;
+    while (newpath[i] != 0)
+    {
 #ifdef UNIX_PATHS
-		if (newpath[i] == '\\')
-		{
-			newpath[i] = '/';
-		}
+        if (newpath[i] == '\\')
+        {
+            newpath[i] = '/';
+        }
 #else
 #ifdef DOS_PATHS
-		if (newpath[i] == '/')
-		{
-			newpath[i] = '\\';
-		}
+        if (newpath[i] == '/')
+        {
+            newpath[i] = '\\';
+        }
 #endif
 #endif
-		i++;
-	}
-	return newpath;
+        i++;
+    }
+    return newpath;
 }
 
 char*
@@ -73,18 +73,18 @@ GetFolder(const char* pszFullPath)
 void*
 LoadFile(const char* pszFileName, size_t* pFileSize)
 {
-	FILE* file;
-	void* pFileData = NULL;
-	int iFileSize;
+    FILE* file;
+    void* pFileData = NULL;
+    int iFileSize;
 
     trace("Loading file...");
 
-	file = fopen(pszFileName, "rb");
-	if (!file)
-	{
-	    trace("Could not open file\n");
-	    return NULL;
-	}
+    file = fopen(pszFileName, "rb");
+    if (!file)
+    {
+        trace("Could not open file\n");
+        return NULL;
+    }
 
     fseek(file, 0L, SEEK_END);
     iFileSize = ftell(file);
@@ -109,7 +109,7 @@ LoadFile(const char* pszFileName, size_t* pFileSize)
 
     fclose(file);
 
-	return pFileData;
+    return pFileData;
 }
 
 
