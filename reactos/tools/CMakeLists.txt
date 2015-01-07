@@ -15,6 +15,8 @@ add_executable(utf16le utf16le/utf16le.cpp)
 
 add_subdirectory(cabman)
 add_subdirectory(cdmake)
+add_subdirectory(hpp)
+add_subdirectory(kbdtool)
 add_subdirectory(mkhive)
 add_subdirectory(unicode)
 add_subdirectory(widl)
