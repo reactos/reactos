@@ -29,9 +29,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
-static const WCHAR szServerNameClass[] = {'D','d','e','S','e','r','v','e','r','N','a','m','e',0};
-const char WDML_szServerConvClassA[] = "DdeServerConvA";
-const WCHAR WDML_szServerConvClassW[] = {'D','d','e','S','e','r','v','e','r','C','o','n','v','W',0};
+static const WCHAR szServerNameClass[] = L"DDEMLMom";
+const char WDML_szServerConvClassA[] = "DDEMLAnsiServer";
+const WCHAR WDML_szServerConvClassW[] = L"DDEMLUnicodeServer";
 
 static LRESULT CALLBACK WDML_ServerNameProc(HWND, UINT, WPARAM, LPARAM);
 static LRESULT CALLBACK WDML_ServerConvProc(HWND, UINT, WPARAM, LPARAM);
