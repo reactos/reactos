@@ -53,10 +53,10 @@ ULONG
 isKeyWord(PCHAR p)
 {
     ULONG i;
-    
+
     /* Check if we know this keyword */
     for (i = 0; i < KEYWORD_COUNT; i++) if (strcmp(KeyWordList[i], p) == 0) break;
-    
+
     /* If we didn't find anything, i will be KEYWORD_COUNT, which is invalid */
     return i;
 }
@@ -66,7 +66,7 @@ getVKName(IN ULONG VirtualKey,
           IN BOOLEAN Prefix)
 {
     ULONG i;
-    
+
     /* Loop for standard virtual key */
     if (((VirtualKey >= 'A') && (VirtualKey <= 'Z')) ||
         ((VirtualKey >= '0') && (VirtualKey <= '9')))
@@ -78,7 +78,7 @@ getVKName(IN ULONG VirtualKey,
         gVKeyName[3] = '\0';
         return gVKeyName;
     }
-    
+
     /* Check if a prefix is required */
     if (Prefix)
     {
@@ -90,7 +90,7 @@ getVKName(IN ULONG VirtualKey,
         /* Otherwise, don't add anything */
         strcpy(gVKeyName, "");
     }
-    
+
     /* Loop all virtual keys */
     for (i = 0; i < 36; i++)
     {
@@ -102,7 +102,7 @@ getVKName(IN ULONG VirtualKey,
             return gVKeyName;
         }
     }
-    
+
     /* If we got here, then we failed, so print out an error name */
     strcpy(gVKeyName, "#ERROR#");
     return gVKeyName;
@@ -114,11 +114,11 @@ getVKNum(IN PCHAR p)
     ULONG Length;
     ULONG i;
     ULONG KeyNumber;
-    
+
     /* Compute the length of the string */
     Length = strlen(p);
     if (!Length) return -1;
-    
+
     /* Check if this is is a simple key */
     if (Length == 1)
     {
@@ -127,10 +127,10 @@ getVKNum(IN PCHAR p)
 
         /* Otherwise, convert the letter to upper case */
         *p = toupper(*p);
-        
+
         /* And make sure it's a valid letter */
         if ((*p >= 'A') && (*p <='Z')) return *p;
-        
+
         /* Otherwise, fail */
         return -1;
     }
@@ -141,7 +141,7 @@ getVKNum(IN PCHAR p)
         /* Check if we have a match */
         if (!strcmp(VKName[i].Name, p)) return VKName[i].VirtualKey;
     }
-    
+
     /*  Check if this is a hex string */
     if ((*p == '0') && ((*(p + 1) == 'x') || (*(p + 1) == 'X')))
     {
@@ -163,10 +163,10 @@ getCharacterInfo(IN PCHAR State,
     ULONG CharInfo = CHAR_NORMAL_KEY;
     UCHAR StateChar;
     ULONG CharCode;
-    
+
     /* Calculate the length of the state */
     Length = strlen(State);
-    
+
     /* Check if this is at least a simple key state */
     if (Length > 1)
     {
@@ -183,7 +183,7 @@ getCharacterInfo(IN PCHAR State,
             CharInfo = CHAR_OTHER_KEY;
         }
     }
-    
+
     /* Check if this is a numerical key state */
     if ((Length - 1) >= 2)
     {
@@ -194,7 +194,7 @@ getCharacterInfo(IN PCHAR State,
         {
             /* Handle a ligature key */
             CharInfo = CHAR_LIGATURE_KEY;
-            
+
             /* Not yet handled */
             printf("Ligatured character entries not yet supported!\n");
             exit(1);
@@ -225,29 +225,29 @@ getCharacterInfo(IN PCHAR State,
     /* Return the type of character this is */
     return CharInfo;
 }
-                 
+
 BOOLEAN
 NextLine(PCHAR LineBuffer,
          ULONG BufferSize,
          FILE *File)
 {
     PCHAR p, pp;
-    
+
     /* Scan each line */
     while (fgets(LineBuffer, BufferSize, File))
     {
         /* Remember it */
         gLineCount++;
-        
+
         /* Reset the pointer at the beginning of the line */
-        p = LineBuffer; 
+        p = LineBuffer;
 
         /* Now bypass all whitespace (and tabspace) */
         while ((*p) && ((*p == ' ') || (*p == '\t'))) p++;
-        
+
         /* If this is an old-style comment, skip the line */
         if (*p == ';')  continue;
-        
+
         /* Otherwise, check for new-style comment */
         pp = strstr(p, "//");
         if (pp)
@@ -262,11 +262,11 @@ NextLine(PCHAR LineBuffer,
             p = strchr(p, '\n');
             if (p) *p = '\0';
         }
-        
+
         /* We have a line! */
         return TRUE;
     }
-    
+
     /* No line found */
     return FALSE;
 }
@@ -276,7 +276,7 @@ SkipLines(VOID)
 {
     ULONG KeyWord;
     CHAR KeyWordChars[32];
-    
+
     /* Scan each line, skipping it if it's not a keyword */
     while (NextLine(gBuf, sizeof(gBuf), gfpInput))
     {
@@ -288,21 +288,21 @@ SkipLines(VOID)
             if (KeyWord < KEYWORD_COUNT) return KeyWord;
         }
     }
-    
+
     /* We skipped all the possible lines, not finding anything */
     return KEYWORD_COUNT;
 }
 
 ULONG
 DoKBD(VOID)
-{    
+{
     /* On Unicode files, we need to find the Unicode marker (FEEF) */
     ASSERT(UnicodeFile == FALSE);
-    
+
     /* Initial values */
     *gKBDName = '\0';
     *gDescription = '\0';
-    
+
     /* Scan for the values */
     if (sscanf(gBuf, "KBD %8s \"%40[^\"]\" %d", gKBDName, gDescription, &gID) < 2)
     {
@@ -310,7 +310,7 @@ DoKBD(VOID)
         printf("Unable to read keyboard name or description.\n");
         exit(1);
     }
-    
+
     /* Debug only */
     DPRINT1("KBD Name: [%8s] Description: [%40s] ID: [%d]\n", gKBDName, gDescription, gID);
     return SkipLines();
@@ -318,14 +318,14 @@ DoKBD(VOID)
 
 ULONG
 DoVERSION(VOID)
-{           
+{
     /* Scan for the value */
     if (sscanf(gBuf, "VERSION %d", &gKbdLayoutVersion) < 1)
     {
         /* Couldn't find them */
         printf("Unable to read keyboard version information.\n");
     }
-    
+
     /* Debug only */
     DPRINT1("VERSION [%d]\n", gKbdLayoutVersion);
     return SkipLines();
@@ -333,17 +333,17 @@ DoVERSION(VOID)
 
 ULONG
 DoCOPYRIGHT(VOID)
-{    
+{
     /* Initial values */
     *gCopyright = '\0';
-    
+
     /* Scan for the value */
     if (sscanf(gBuf, "COPYRIGHT \"%40[^\"]\"", gCopyright) < 1)
     {
         /* Couldn't find them */
         printf("Unable to read the specified COPYRIGHT string.\n");
     }
-    
+
     /* Debug only */
     DPRINT1("COPYRIGHT [%40s]\n", gCopyright);
     return SkipLines();
@@ -351,17 +351,17 @@ DoCOPYRIGHT(VOID)
 
 ULONG
 DoCOMPANY(VOID)
-{    
+{
     /* Initial values */
     *gCompany = '\0';
-    
+
     /* Scan for the value */
     if (sscanf(gBuf, "COMPANY \"%85[^\"]\"", gCompany) < 1)
     {
         /* Couldn't find them */
         printf("Unable to read the specified COMPANY name.\n");
     }
-    
+
     /* Debug only */
     DPRINT1("COMPANY [%85s]\n", gCompany);
     return SkipLines();
@@ -369,17 +369,17 @@ DoCOMPANY(VOID)
 
 ULONG
 DoLOCALENAME(VOID)
-{    
+{
     /* Initial values */
     *gLocaleName = '\0';
-    
+
     /* Scan for the value */
     if (sscanf(gBuf, "LOCALENAME \"%40[^\"]\"", gLocaleName) < 1)
     {
         /* Couldn't find them */
         printf("Unable to read the specified COPYRIGHT string.\n");
     }
-    
+
     /* Debug only */
     DPRINT1("LOCALENAME [%40s]\n", gLocaleName);
     return SkipLines();
@@ -393,23 +393,23 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
     ULONG LanguageCode;
     PCHAR p, pp;
     PKEYNAME Description;
-    
+
     /* Assume nothing */
     *DescriptionData = 0;
-    
+
     /* Start scanning */
     while (NextLine(gBuf, 256, gfpInput))
-    {        
+    {
         /* Search for token */
         if (sscanf(gBuf, "%s", Token) != 1) continue;
-        
+
         /* Make sure it's not just a comment */
         if (*Token == ';') continue;
-        
+
         /* Make sure it's not a keyword */
         KeyWord = isKeyWord(Token);
         if (KeyWord < KEYWORD_COUNT) break;
-        
+
         /* Now scan for the language code */
         if (sscanf(Token, " %4x", &LanguageCode) != 1)
         {
@@ -417,7 +417,7 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
             printf("An invalid LANGID was specified.\n");
             continue;
         }
-        
+
         /* Now get the actual description */
         if (sscanf(gBuf, " %*4x %s[^\n]", Token) != 1)
         {
@@ -425,15 +425,15 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
             printf("A language description is missing.\n");
             continue;
         }
-        
+
         /* Get the description string and find the ending */
         p = strstr(gBuf, Token);
         pp = strchr(p, '\n');
         if (!pp) pp = strchr(p, '\r');
-        
+
         /* Terminate the description string here */
         if (pp) *pp = 0;
-        
+
         /* Now allocate the description */
         Description = malloc(sizeof(KEYNAME));
         if (!Description)
@@ -442,15 +442,15 @@ DoDESCRIPTIONS(IN PKEYNAME* DescriptionData)
             printf("Unable to allocate the KEYNAME struct (out of memory?).\n");
             exit(1);
         }
-        
+
         /* Fill out the structure */
         Description->Code = LanguageCode;
         Description->Name = strdup(p);
         Description->Next = NULL;
-        
+
         /* Debug only */
         DPRINT1("LANGID: [%4x] Description: [%s]\n", Description->Code, Description->Name);
-        
+
         /* Point to it and advance the pointer */
         *DescriptionData = Description;
         DescriptionData = &Description->Next;
@@ -468,23 +468,23 @@ DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
     ULONG LanguageCode;
     PCHAR p, pp;
     PKEYNAME Language;
-    
+
     /* Assume nothing */
     *LanguageData = 0;
-    
+
     /* Start scanning */
     while (NextLine(gBuf, 256, gfpInput))
-    {        
+    {
         /* Search for token */
         if (sscanf(gBuf, "%s", Token) != 1) continue;
-        
+
         /* Make sure it's not just a comment */
         if (*Token == ';') continue;
-        
+
         /* Make sure it's not a keyword */
         KeyWord = isKeyWord(Token);
         if (KeyWord < KEYWORD_COUNT) break;
-        
+
         /* Now scan for the language code */
         if (sscanf(Token, " %4x", &LanguageCode) != 1)
         {
@@ -492,7 +492,7 @@ DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
             printf("An invalid LANGID was specified.\n");
             continue;
         }
-        
+
         /* Now get the actual language */
         if (sscanf(gBuf, " %*4x %s[^\n]", Token) != 1)
         {
@@ -500,15 +500,15 @@ DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
             printf("A language name is missing\n");
             continue;
         }
-        
+
         /* Get the language string and find the ending */
         p = strstr(gBuf, Token);
         pp = strchr(p, '\n');
         if (!pp) pp = strchr(p, '\r');
-        
+
         /* Terminate the language string here */
         if (pp) *pp = 0;
-        
+
         /* Now allocate the language */
         Language = malloc(sizeof(KEYNAME));
         if (!Language)
@@ -517,20 +517,20 @@ DoLANGUAGENAMES(IN PKEYNAME* LanguageData)
             printf("Unable to allocate the KEYNAME struct (out of memory?).\n");
             exit(1);
         }
-        
+
         /* Fill out the structure */
         Language->Code = LanguageCode;
         Language->Name = strdup(p);
         Language->Next = NULL;
-        
+
         /* Debug only */
         DPRINT1("LANGID: [%4x] Name: [%s]\n", Language->Code, Language->Name);
-        
+
         /* Point to it and advance the pointer */
         *LanguageData = Language;
         LanguageData = &Language->Next;
     }
-    
+
     /* We are done */
     return KeyWord;
 }
@@ -543,23 +543,23 @@ DoKEYNAME(IN PKEYNAME* KeyNameData)
     ULONG CharacterCode;
     PCHAR p, pp;
     PKEYNAME KeyName;
-    
+
     /* Assume nothing */
     *KeyNameData = 0;
-    
+
     /* Start scanning */
     while (NextLine(gBuf, 256, gfpInput))
-    {        
+    {
         /* Search for token */
         if (sscanf(gBuf, "%s", Token) != 1) continue;
-        
+
         /* Make sure it's not just a comment */
         if (*Token == ';') continue;
-        
+
         /* Make sure it's not a keyword */
         KeyWord = isKeyWord(Token);
         if (KeyWord < KEYWORD_COUNT) break;
-        
+
         /* Now scan for the character code */
         if (sscanf(Token, " %4x", &CharacterCode) != 1)
         {
@@ -567,7 +567,7 @@ DoKEYNAME(IN PKEYNAME* KeyNameData)
             printf("An invalid character code was specified.\n");
             continue;
         }
-        
+
         /* Now get the actual key name */
         if (sscanf(gBuf, " %*4x %s[^\n]", Token) != 1)
         {
@@ -575,15 +575,15 @@ DoKEYNAME(IN PKEYNAME* KeyNameData)
             printf("A key name is missing\n");
             continue;
         }
-        
+
         /* Get the key name string and find the ending */
         p = strstr(gBuf, Token);
         pp = strchr(p, '\n');
         if (!pp) pp = strchr(p, '\r');
-        
+
         /* Terminate the key name string here */
         if (pp) *pp = 0;
-        
+
         /* Now allocate the language */
         KeyName = malloc(sizeof(KEYNAME));
         if (!KeyName)
@@ -592,22 +592,22 @@ DoKEYNAME(IN PKEYNAME* KeyNameData)
             printf("Unable to allocate the KEYNAME struct (out of memory?).\n");
             exit(1);
         }
-        
+
         /* Fill out the structure */
         KeyName->Code = CharacterCode;
         KeyName->Name = strdup(p);
         KeyName->Next = NULL;
-        
+
         /* Debug only */
         DPRINT1("CHARCODE: [%4x] Name: [%s]\n", KeyName->Code, KeyName->Name);
-        
+
         /* Point to it and advance the pointer */
         *KeyNameData = KeyName;
         KeyNameData = &KeyName->Next;
     }
-    
+
     /* We are done */
-    return KeyWord; 
+    return KeyWord;
 }
 
 ULONG
@@ -618,23 +618,23 @@ DoSHIFTSTATE(IN PULONG StateCount,
     ULONG i;
     ULONG ShiftState;
     CHAR Token[32];
-    
+
     /* Reset the shift states */
     for (i = 0; i < 8; i++) ShiftStates[i] = -1;
-    
+
     /* Start with no states */
     *StateCount = 0;
-    
+
     /* Scan for shift states */
     while (NextLine(gBuf, 256, gfpInput))
     {
         /* Search for token */
         if (sscanf(gBuf, "%s", Token) != 1) continue;
-        
+
         /* Make sure it's not a keyword */
         KeyWord = isKeyWord(Token);
         if (KeyWord < KEYWORD_COUNT) break;
-        
+
         /* Now scan for the shift state */
         if (sscanf(gBuf, " %1s[012367]", Token) != 1)
         {
@@ -642,10 +642,10 @@ DoSHIFTSTATE(IN PULONG StateCount,
             if (Verbose) printf("An invalid shift state '%s' was found (use 0, 1, 2, 3, 6, or 7.)\n", Token);
             continue;
         }
-        
+
         /* Now read the state */
         ShiftState = atoi(Token);
-        
+
         /* Scan existing states */
         for (i = 0; i < *StateCount; i++)
         {
@@ -657,7 +657,7 @@ DoSHIFTSTATE(IN PULONG StateCount,
                 break;
             }
         }
-        
+
         /* Make sure we won't overflow */
         if (*StateCount < 8)
         {
@@ -670,12 +670,12 @@ DoSHIFTSTATE(IN PULONG StateCount,
             if (Verbose) printf("There were too many states (you defined %d).\n", *StateCount);
         }
     }
-    
+
     /* Debug only */
     DPRINT1("Found %d Shift States: [", *StateCount);
     for (i = 0; i < *StateCount; i++) DPRINT1("%d ", ShiftStates[i]);
     DPRINT1("]\n");
-    
+
     /* We are done */
     return KeyWord;
 }
@@ -727,24 +727,24 @@ DoLAYOUT(IN PLAYOUT LayoutData,
     ULONG ScanCodeCount = -1;
     PLAYOUTENTRY Entry;
     UCHAR CharacterType, LigatureChar;
-    
+
     /* Zero out the layout */
     memset(LayoutData, 0, sizeof(LAYOUT));
-    
+
     /* Read each line */
     Entry = &LayoutData->Entry[0];
     while (NextLine(gBuf, 256, gfpInput))
     {
         /* Search for token */
         if (sscanf(gBuf, "%s", Token) != 1) continue;
-        
+
         /* Make sure it's not just a comment */
         if (*Token == ';') continue;
-        
+
         /* Make sure it's not a keyword */
         KeyWord = isKeyWord(Token);
         if (KeyWord < KEYWORD_COUNT) break;
-        
+
         /* Now read the entry */
         TokenCount = sscanf(gBuf, " %x %s %s", &ScanCode, Token, Cap);
         if (TokenCount == 3)
@@ -763,7 +763,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             /* Simplified layout with no cap */
             FullEntry = FALSE;
         }
-        
+
         /* One more */
         DPRINT1("RAW ENTRY: [%x %s %s]\n", ScanCode, Token, Cap);
         Entry++;
@@ -773,11 +773,11 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             printf("ScanCode %02x - too many scancodes here to parse.\n", ScanCode);
             exit(1);
         }
-        
+
         /* Fill out this entry */
         Entry->ScanCode = ScanCode;
         Entry->LineCount = gLineCount;
-        
+
         /* Loop scancode table */
         for (i = 0; i < 110; i++)
         {
@@ -787,7 +787,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             {
                 /* New code */
                 if (Verbose) printf("A new scancode is being defined: 0x%2X, %s\n", Entry->ScanCode, Token);
-                
+
                 /* Fill out the entry */
                 Entry->VirtualKey = getVKNum(Token);
                 break;
@@ -801,7 +801,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                     printf("Scancode %X was previously defined.\n", ScanCode);
                     exit(1);
                 }
-                
+
                 /* Check if there is a valid virtual key */
                 if (ScVk[i].VirtualKey == 0xFFFF)
                 {
@@ -809,24 +809,24 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                     printf("The Scancode you tried to use (%X) is reserved.\n", ScanCode);
                     exit(1);
                 }
-                
+
                 /* Fill out the entry */
                 Entry->OriginalVirtualKey = ScVk[i].VirtualKey;
                 Entry->Name = ScVk[i].Name;
                 break;
             }
         }
-        
+
         /* The entry is now processed */
         Entry->Processed = TRUE;
         ScVk[i].Processed = TRUE;
-        
+
         /* Get the virtual key from the entry */
         VirtualKey = getVKNum(Token);
         Entry->VirtualKey = VirtualKey;
         DPRINT1("ENTRY: [%x %x %x %s] with ",
                 Entry->VirtualKey, Entry->OriginalVirtualKey, Entry->ScanCode, Entry->Name);
-        
+
         /* Make sure it's valid */
         if (VirtualKey == 0xFFFF)
         {
@@ -834,13 +834,13 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             if (Verbose) printf("An invalid Virtual Key '%s' was defined.\n", Token);
             continue;
         }
-        
+
         /* Is this a full entry */
         if (FullEntry)
         {
             /* Do we have SGCAP data? Set cap mode to 2 */
             if (!strcmp(Cap, "SGCAP")) *Cap = '2';
-            
+
             /* Read the cap mode */
             if (sscanf(Cap, "%1d[012]", &Entry->Cap) != 1)
             {
@@ -849,7 +849,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 exit(1);
             }
         }
-        
+
         /* Read the states */
         Count = sscanf(gBuf,
                        " %*s %*s %*s %s %s %s %s %s %s %s %s",
@@ -863,7 +863,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                        State[7]);
         Entry->StateCount = Count;
         DPRINT1("%d STATES: [", Count);
-        
+
         /* Check if there are less than 2 states */
         if ((Count < 2) && (FullEntry))
         {
@@ -871,7 +871,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             printf("You must have at least 2 characters.\n");
             exit(1);
         }
-        
+
         /* Loop all states */
         for (i = 0; i < Count; i++)
         {
@@ -883,7 +883,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 Entry->CharData[i] = -1;
                 continue;
             }
-            
+
             /* Otherwise, check what kind of character this is */
             CharacterType = getCharacterInfo(State[i],
                                              &Entry->CharData[i],
@@ -899,16 +899,16 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                 Entry->OtherCharData[i] = 1;
             }
         }
-        
+
         /* Check for sanity checks */
         DPRINT1("]\n");
         if (SanityCheck)
         {
             /* Not yet handled... */
             printf("Sanity checks not yet handled!\n");
-            exit(1);   
+            exit(1);
         }
-        
+
         /* Check if we had SGCAP data */
         if (Entry->Cap & 2)
         {
@@ -917,7 +917,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             exit(1);
         }
     }
-    
+
     /* Process the scan code table */
     Entry = &LayoutData->Entry[ScanCodeCount];
     for (i = 0; i < 110; i++)
@@ -925,7 +925,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
         /* Get the scan code */
         CurrentCode = ScVk[i].ScanCode;
         if (CurrentCode == 0xFFFF) break;
-        
+
         /* Check if this entry had been processed */
         if (ScVk[i].Processed)
         {
@@ -939,9 +939,9 @@ DoLAYOUT(IN PLAYOUT LayoutData,
             {
                 /* Fail */
                 printf("ScanCode %02x - too many scancodes here to parse.\n", CurrentCode);
-                exit(1);   
+                exit(1);
             }
-            
+
             /* Build an entry for it */
             Entry++;
             Entry->ScanCode = CurrentCode;
@@ -954,7 +954,7 @@ DoLAYOUT(IN PLAYOUT LayoutData,
                     Entry->VirtualKey, Entry->ScanCode, Entry->Name);
         }
     }
-    
+
     /* Skip what's left */
     return KeyWord;
 }
@@ -969,7 +969,7 @@ DoParsing(VOID)
     PKEYNAME DescriptionData = NULL, LanguageData = NULL;
     PKEYNAME KeyNameData = NULL, KeyNameExtData = NULL, KeyNameDeadData = NULL;
     PVOID AttributeData = NULL, LigatureData = NULL, DeadKeyData = NULL;
-    
+
     /* Parse keywords */
     gLineCount = 0;
     KeyWord = SkipLines();
@@ -986,7 +986,7 @@ DoParsing(VOID)
     {
         /* Save this keyword */
         KeyWords[KeyWord]++;
-        
+
         /* Check for duplicate entires, other than DEADKEY, which is okay */
         if ((KeyWord != 9) && (KeyWords[KeyWord] > 1) && (Verbose))
         {
@@ -1000,49 +1000,49 @@ DoParsing(VOID)
         {
             /* KBD */
             case 0:
-                
+
                 DPRINT1("Found KBD section\n");
                 KeyWord = DoKBD();
                 break;
-                
+
             /* VERSION */
             case 1:
-                
+
                 DPRINT1("Found VERSION section\n");
                 KeyWord = DoVERSION();
                 break;
-                
+
             /* COPYRIGHT */
             case 2:
-                
+
                 DPRINT1("Found COPYRIGHT section\n");
                 KeyWord = DoCOPYRIGHT();
                 break;
-                
+
             /* COMPANY */
             case 3:
-                
+
                 DPRINT1("Found COMPANY section\n");
                 KeyWord = DoCOMPANY();
                 break;
-                
+
             /* LOCALENAME */
             case 4:
-                
+
                 DPRINT1("Found LOCALENAME section\n");
                 KeyWord = DoLOCALENAME();
                 break;
-            
+
             /* MODIFIERS */
             case 5:
-                
+
                 DPRINT1("Found MODIFIERS section\n");
                 KeyWord = DoMODIFIERS();
                 break;
-                
+
             /* SHIFTSTATE */
             case 6:
-                
+
                 DPRINT1("Found SHIFTSTATE section\n");
                 KeyWord = DoSHIFTSTATE(&StateCount, ShiftStates);
                 if (StateCount < 2)
@@ -1053,89 +1053,89 @@ DoParsing(VOID)
                     exit(1);
                 }
                 break;
-                
+
             /* ATTRIBUTES */
             case 7:
-                
+
                 DPRINT1("Found ATTRIBUTES section\n");
                 KeyWord = DoATTRIBUTES(&AttributeData);
                 break;
-                
+
             /* LAYOUT */
             case 8:
-                
+
                 DPRINT1("Found LAYOUT section\n");
                 KeyWord = DoLAYOUT(&g_Layout,
                                    &LigatureData,
                                    ShiftStates,
                                    StateCount);
                 break;
-                
+
             /* DEADKEY */
             case 9:
-                
+
                 DPRINT1("Found DEADKEY section\n");
                 KeyWord = DoDEADKEY(&DeadKeyData);
                 break;
-                
+
             /* LIGATURE */
             case 10:
-                
+
                 DPRINT1("Found LIGATURE section\n");
                 KeyWord = DoLIGATURE(&LigatureData);
                 break;
-                
+
             /* KEYNAME */
             case 11:
-                
+
                 DPRINT1("Found KEYNAME section\n");
                 KeyWord = DoKEYNAME(&KeyNameData);
                 break;
-                
+
             /* KEYNAME_EXT */
             case 12:
-                
+
                 DPRINT1("Found KEYNAME_EXT section\n");
                 KeyWord = DoKEYNAME(&KeyNameExtData);
                 break;
-                
+
             /* KEYNAME_DEAD */
             case 13:
-                
+
                 DPRINT1("Found KEYNAME_DEAD section\n");
                 KeyWord = DoKEYNAME(&KeyNameDeadData);
                 break;
-                
+
             /* DESCRIPTIONS */
             case 14:
-                
+
                 DPRINT1("Found DESCRIPTIONS section\n");
                 KeyWord = DoDESCRIPTIONS(&DescriptionData);
                 break;
-                
+
             /* LANGUAGENAMES */
             case 15:
-                
+
                 DPRINT1("Found LANGUAGENAMES section\n");
                 KeyWord = DoLANGUAGENAMES(&LanguageData);
                 break;
-                
+
             /* ENDKBD */
             case 16:
-                
+
                 DPRINT1("Found ENDKBD section\n");
                 KeyWord = SkipLines();
                 break;
-                
-                
+
+
             default:
                 break;
         }
     }
-    
+
     /* We are done */
     fclose(gfpInput);
-    
+
     /* Now enter the output phase */
     return DoOutput(StateCount,
                     ShiftStates,

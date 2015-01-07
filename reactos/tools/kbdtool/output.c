@@ -26,7 +26,7 @@ WChName(IN ULONG Char,
         IN BOOLEAN AddZero)
 {
     PCHAR p;
-    
+
     /* Check for invalid character */
     if (Char == -1)
     {
@@ -37,19 +37,19 @@ WChName(IN ULONG Char,
     {
         /* Use our global buffer */
         p = gCharName;
-        
+
         /* Add the first quote unless this was a zero-string */
         if (!AddZero) *p++ = '\'';
-        
+
         /* Now replace any other quote or comment character with a slash */
         if ((Char == '\"') || (Char == '\'') || (Char == '\\')) *p++ = '\\';
-        
+
         /* Now plug in the character */
         *p++ = Char;
-        
+
         /* And add the terminating quote, unless this was a zero-string */
         if (!AddZero) *p++ = '\'';
-        
+
         /* Terminate the buffer */
         *p = '\0';
     }
@@ -82,7 +82,7 @@ WChName(IN ULONG Char,
             sprintf(gCharName, "\\x%04x", Char);
         }
     }
-    
+
     /* Return the name */
     return gCharName;
 }
@@ -93,26 +93,26 @@ PrintNameTable(FILE* FileHandle,
                BOOL DeadKey)
 {
     CHAR CharBuffer[255];
-    PKEYNAME NextName; 
+    PKEYNAME NextName;
     PCHAR Name, Buffer;
     ULONG i;
-    
+
     /* Loop all key names */
     while (KeyName)
     {
         /* Go to the next key name */
         NextName = KeyName->Next;
-        
+
         /* Remember the name and our buffer address */
         Name = KeyName->Name;
         Buffer = CharBuffer;
-        
+
         /* Check if it's an IDS name */
         if (strncmp(Name, "IDS_", 4))
         {
             /* No, so start parsing it. First, handle initial quote */
             if (*Name != '\"') *Buffer++ = '\"';
-            
+
             /* Next, parse the name */
             while (*Name)
             {
@@ -130,7 +130,7 @@ PrintNameTable(FILE* FileHandle,
                         /* Copy 6 characters */
                         for (i = 0; (*Name) && (i < 6); i++) *Buffer++ = *Name++;
                     }
-                    
+
                     /* Check if we still have something at the end */
                     if (*Name)
                     {
@@ -142,10 +142,10 @@ PrintNameTable(FILE* FileHandle,
                     }
                 }
             }
-            
+
             /*  Check for terminating quote */
             if (*(Buffer - 1) != '\"') *Buffer++ = '\"';
-            
+
             /* Terminate the buffer */
             *Buffer++ = '\0';
         }
@@ -168,15 +168,15 @@ PrintNameTable(FILE* FileHandle,
             /* Print the entry */
             fprintf(FileHandle, "    0x%02x,    L%s,\n", KeyName->Code, CharBuffer);
         }
-        
+
         /* Cleanup allocation */
         free(KeyName->Name);
         free(KeyName);
-        
+
         /* Move on */
         KeyName = NextName;
     }
-    
+
     /* Is this a dead key? */
     if (DeadKey)
     {
@@ -199,11 +199,11 @@ kbd_h(IN PLAYOUT Layout)
     ULONG i;
     CHAR UndefChar;
     USHORT SubCode;
-  
+
     /* Build the keyboard name */
     strcpy(OutputFile, gKBDName);
     strcat(OutputFile, ".H");
-    
+
     /* Open it */
     FileHandle = fopen(OutputFile, "wt");
     if (!FileHandle)
@@ -212,7 +212,7 @@ kbd_h(IN PLAYOUT Layout)
         printf(" %12s : can't open for write.\n", OutputFile);
         return FALSE;
     }
-    
+
     /* Print the module header */
     fprintf(FileHandle,
             "/****************************** Module Header ******************************\\\n"
@@ -228,7 +228,7 @@ kbd_h(IN PLAYOUT Layout)
             gVersion,
             gSubVersion,
             asctime(Now));
-    
+
     /* Print out the includes and defines */
     fprintf(FileHandle,
             "/*\n"
@@ -239,7 +239,7 @@ kbd_h(IN PLAYOUT Layout)
             "* Include the basis of all keyboard table values\n"
             "*/\n"
             "#include \"kbd.h\"\n");
-    
+
     /* Now print out the virtual key conversion table */
     fprintf(FileHandle,
             "/***************************************************************************\\\n"
@@ -253,7 +253,7 @@ kbd_h(IN PLAYOUT Layout)
             "*     | Scan | |    kbd   |    kbd   |    kbd   |    kbd   |    kbd   |    kbd   |\n"
             "*     | code | |   type 1 |   type 2 |   type 3 |   type 4 |   type 5 |   type 6 |\n"
             "\\****+-------+_+----------+----------+----------+----------+----------+----------+*/\n\n");
-    
+
     /* Loop all keys */
     for (i = 0; i < 110; i++)
     {
@@ -282,7 +282,7 @@ kbd_h(IN PLAYOUT Layout)
                             printf("Weird scancode value %04x: expected xx, E0xx, or E1xx\n", SubCode);
                             exit(1);
                         }
-                        
+
                         /* Extended 1 */
                         UndefChar = 'Y';
                     }
@@ -292,7 +292,7 @@ kbd_h(IN PLAYOUT Layout)
                     /* Normal key */
                     UndefChar = 'T';
                 }
-                
+
                 /* Print out the virtual key redefinition */
                 fprintf(FileHandle,
                         "#undef %c%02X\n#define %c%02X _EQ(%43s%23s\n",
@@ -302,14 +302,14 @@ kbd_h(IN PLAYOUT Layout)
                         Layout->Entry[i].ScanCode,
                         getVKName(Layout->Entry[i].VirtualKey, 0),
                         ")");
-            }   
+            }
         }
     }
-    
+
     /* Cleanup and close */
     fprintf(FileHandle,"\n");
     fclose(FileHandle);
-    
+
     /* We made it */
     return TRUE;
 }
@@ -325,13 +325,13 @@ kbd_rc(IN PKEYNAME DescriptionData,
     ULONG Length;
     PCHAR p;
     PKEYNAME NextDescription, NextLanguage;
-    
+
     /* Build the keyboard name and internal name */
     strcpy(OutputFile, gKBDName);
     strcat(OutputFile, ".RC");
     strcpy(InternalName, gKBDName);
     for (p = InternalName; *p; p++) *p = tolower(*p);
-    
+
     /* Open it */
     FileHandle = fopen(OutputFile, "wb");
     if (!FileHandle)
@@ -340,24 +340,24 @@ kbd_rc(IN PKEYNAME DescriptionData,
         printf(" %12s : can't open for write.\n", OutputFile);
         return FALSE;
     }
-    
+
     /* Check if we have copyright */
     Length = strlen(gCopyright);
     if (!Length)
     {
         /* Set time string */
         strftime(TimeBuffer, 5, "%Y", Now);
-        
+
         /* Add copyright character */
         strcpy(gCopyright, "(C)");
-        
+
         /* Add the year */
         strcat(gCopyright, TimeBuffer);
-        
+
         /* Add blank company */
         strcat(gCopyright, " ");
     }
-    
+
     /* Write the resource file header */
     fprintf(FileHandle,
             "#include \"winver.h\"\r\n"
@@ -385,7 +385,7 @@ kbd_rc(IN PKEYNAME DescriptionData,
             gDescription,
             gVersion,
             gSubVersion);
-    
+
     /* Continue writing it */
     fprintf(FileHandle,
             "            VALUE \"InternalName\",    \"%s (%d.%d)\\0\"\r\n"
@@ -410,7 +410,7 @@ kbd_rc(IN PKEYNAME DescriptionData,
             InternalName,
             gVersion,
             gSubVersion);
-    
+
     /* Now check if we have a locale name */
     Length = strlen(gLocaleName);
     if (Length)
@@ -421,7 +421,7 @@ kbd_rc(IN PKEYNAME DescriptionData,
                 9,
                 1);
         fprintf(FileHandle, "BEGIN\r\n");
-        
+
         /* Language or locale? */
         if (strchr(gLocaleName, '\"'))
         {
@@ -433,24 +433,24 @@ kbd_rc(IN PKEYNAME DescriptionData,
             /* Write the locale name */
             fprintf(FileHandle, "    %d    \"%s\"\r\n", gStringIdForLocaleName, gLocaleName);
         }
-        
+
         /* Terminate the entry */
         fprintf(FileHandle, "END\r\n\r\n");
     }
-    
+
     /* Check for description information */
     while (DescriptionData)
     {
         /* Remember the next pointer */
         NextDescription = DescriptionData->Next;
-        
+
         /* Write the header */
         fprintf(FileHandle,
                 "\r\nSTRINGTABLE DISCARDABLE\r\nLANGUAGE %d, %d\r\n",
                 DescriptionData->Code & 0x3FF,
                 DescriptionData->Code >> 10);
         fprintf(FileHandle, "BEGIN\r\n");
-        
+
         /* Quoted string or not? */
         if (strchr(DescriptionData->Name, '\"'))
         {
@@ -462,31 +462,31 @@ kbd_rc(IN PKEYNAME DescriptionData,
             /* Write the description name */
             fprintf(FileHandle, "    %d    \"%s\"\r\n", gStringIdForDescriptions, DescriptionData->Name);
         }
-        
+
         /* Terminate the entry */
         fprintf(FileHandle, "END\r\n\r\n");
-        
+
         /* Free the allocation */
         free(DescriptionData->Name);
         free(DescriptionData);
-        
+
         /* Move to the next entry */
         DescriptionData = NextDescription;
     }
-    
+
     /* Check for language information */
     while (LanguageData)
     {
         /* Remember the next pointer */
         NextLanguage = LanguageData->Next;
-        
+
         /* Write the header */
         fprintf(FileHandle,
                 "\r\nSTRINGTABLE DISCARDABLE\r\nLANGUAGE %d, %d\r\n",
                 LanguageData->Code & 0x3FF,
                 LanguageData->Code >> 10);
         fprintf(FileHandle, "BEGIN\r\n");
-        
+
         /* Quoted string or not? */
         if (strchr(LanguageData->Name, '\"'))
         {
@@ -498,18 +498,18 @@ kbd_rc(IN PKEYNAME DescriptionData,
             /* Write the language name */
             fprintf(FileHandle, "    %d    \"%s\"\r\n", gStringIdForLanguageNames, LanguageData->Name);
         }
-        
+
         /* Terminate the entry */
         fprintf(FileHandle, "END\r\n\r\n");
-        
+
         /* Free the allocation */
         free(LanguageData->Name);
         free(LanguageData);
-        
+
         /* Move to the next entry */
         LanguageData = NextLanguage;
     }
-    
+
     /* We're done! */
     fclose(FileHandle);
     return TRUE;
@@ -520,11 +520,11 @@ kbd_def(VOID)
 {
     CHAR OutputFile[13];
     FILE *FileHandle;
-    
+
     /* Build the keyboard name and internal name */
     strcpy(OutputFile, gKBDName);
     strcat(OutputFile, ".DEF");
-    
+
     /* Open it */
     FileHandle = fopen(OutputFile, "wt");
     if (!FileHandle)
@@ -533,14 +533,14 @@ kbd_def(VOID)
         printf(" %12s : can't open for write.\n", OutputFile);
         return FALSE;
     }
-    
+
     /* Write the file exports */
     fprintf(FileHandle,
             "LIBRARY %s\n\n"
             "EXPORTS\n"
             "    KbdLayerDescriptor @1\n",
             gKBDName);
-    
+
     /* Clean up */
     fclose(FileHandle);
     return TRUE;
@@ -567,11 +567,11 @@ kbd_c(IN ULONG StateCount,
     ULONG HighestState;
     PVKNAME Entry;
     PCHAR p;
-    
+
     /* Build the keyboard name and internal name */
     strcpy(OutputFile, gKBDName);
     strcat(OutputFile, ".C");
-    
+
     /* Open it */
     FileHandle = fopen(OutputFile, "wt");
     if (!FileHandle)
@@ -580,7 +580,7 @@ kbd_c(IN ULONG StateCount,
         printf(" %12s : can't open for write.\n", OutputFile);
         return FALSE;
     }
-    
+
     /* Print the header */
     fprintf(FileHandle,
             "/***************************************************************************\\\n"
@@ -595,7 +595,7 @@ kbd_c(IN ULONG StateCount,
             gVersion,
             gSubVersion,
             asctime(Now));
-    
+
     /* What kind of driver is this? */
     if (FallbackDriver)
     {
@@ -609,7 +609,7 @@ kbd_c(IN ULONG StateCount,
                 "#include <windows.h>\n"
                 "#include \"kbd.h\"\n"
                 "#include \"%s.h\"\n\n",
-                gKBDName);        
+                gKBDName);
     }
 
     /* What kind of driver is this? */
@@ -641,7 +641,7 @@ kbd_c(IN ULONG StateCount,
             "/***************************************************************************\\\n"
             "* ausVK[] - Virtual Scan Code to Virtual Key conversion table\n"
             "\\***************************************************************************/\n\n");
-    
+
     /* Table begin */
     fprintf(FileHandle,
             "static ALLOC_SECTION_LDATA USHORT ausVK[] = {\n"
@@ -652,7 +652,7 @@ kbd_c(IN ULONG StateCount,
             "    T20, T21, T22, T23, T24, T25, T26, T27,\n"
             "    T28, T29, T2A, T2B, T2C, T2D, T2E, T2F,\n"
             "    T30, T31, T32, T33, T34, T35,\n\n");
-    
+
     /* Table continue */
     fprintf(FileHandle,
             "    /*\n"
@@ -662,7 +662,7 @@ kbd_c(IN ULONG StateCount,
             "    T37 | KBDMULTIVK,               // numpad_* + Shift/Alt -> SnapShot\n\n"
             "    T38, T39, T3A, T3B, T3C, T3D, T3E,\n"
             "    T3F, T40, T41, T42, T43, T44,\n\n");
-    
+
     /* Table continue */
     fprintf(FileHandle,
             "    /*\n"
@@ -672,7 +672,7 @@ kbd_c(IN ULONG StateCount,
             "     */\n"
             "    T45 | KBDEXT | KBDMULTIVK,\n\n"
             "    T46 | KBDMULTIVK,\n\n");
-    
+
     /* Numpad table */
     fprintf(FileHandle,
             "    /*\n"
@@ -693,7 +693,7 @@ kbd_c(IN ULONG StateCount,
             "    T51 | KBDNUMPAD | KBDSPECIAL,   // Numpad 3 (PgDn),\n"
             "    T52 | KBDNUMPAD | KBDSPECIAL,   // Numpad 0 (Ins),\n"
             "    T53 | KBDNUMPAD | KBDSPECIAL,   // Numpad . (Del),\n\n");
-    
+
     /* Table finish */
     fprintf(FileHandle,
             "    T54, T55, T56, T57, T58, T59, T5A, T5B,\n"
@@ -703,10 +703,10 @@ kbd_c(IN ULONG StateCount,
             "    T74, T75, T76, T77, T78, T79, T7A, T7B,\n"
             "    T7C, T7D, T7E\n\n"
             "};\n\n");
-    
+
     /* Key name table header */
     fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_VK aE0VscToVk[] = {\n");
-    
+
     /* Loop 110-key table */
     for (i = 0; i < 110; i++)
     {
@@ -729,13 +729,13 @@ kbd_c(IN ULONG StateCount,
             }
         }
     }
-    
+
     /* Key name table finish */
     fprintf(FileHandle, "        { 0,      0                       }\n};\n\n");
-    
+
     /* Extended key name table header */
     fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_VK aE1VscToVk[] = {\n");
-    
+
     /* Loop 110-key table */
     for (i = 0; i < 110; i++)
     {
@@ -758,12 +758,12 @@ kbd_c(IN ULONG StateCount,
             }
         }
     }
-    
+
     /* Extended key name table finish */
     fprintf(FileHandle,
             "        { 0x1D, Y1D                       },  // Pause\n"
             "        { 0   ,   0                       }\n};\n\n");
-    
+
     /* Modifier table description */
     fprintf(FileHandle,
             "/***************************************************************************\\\n"
@@ -776,10 +776,10 @@ kbd_c(IN ULONG StateCount,
             "*     CTRL  (L & R) is used to generate control characters\n"
             "*     ALT   (L & R) used for generating characters by number with numpad\n"
             "\\***************************************************************************/\n");
-    
+
     /* Modifier table header */
     fprintf(FileHandle, "static ALLOC_SECTION_LDATA VK_TO_BIT aVkToBits[] = {\n");
-    
+
     /* Loop modifier table */
     i = 0;
     Entry = &Modifiers[0];
@@ -790,14 +790,14 @@ kbd_c(IN ULONG StateCount,
                 "    { %-12s,   %-12s },\n",
                 getVKName(Entry->VirtualKey, 1),
                 Entry->Name);
-        
+
         /* Move to the next one */
         Entry = &Modifiers[++i];
     }
-    
+
     /* Modifier table finish */
     fprintf(FileHandle, "    { 0,          0        }\n};\n\n");
-    
+
     /* Modifier conversion table description */
     fprintf(FileHandle,
             "/***************************************************************************\\\n"
@@ -806,10 +806,10 @@ kbd_c(IN ULONG StateCount,
             "* See kbd.h for a full description.\n"
             "*\n"
             "\\***************************************************************************/\n\n");
-    
+
     /* Zero out local state data */
     for (i = 0; i < 8; i++) States[i] = -1;
-    
+
     /* Find the highest set state */
     for (HighestState = 1, i = 0; (i < 8) && (ShiftStates[i] != -1); i++)
     {
@@ -817,7 +817,7 @@ kbd_c(IN ULONG StateCount,
         States[ShiftStates[i]] = i;
         if (ShiftStates[i] > HighestState) HighestState = ShiftStates[i];
     }
-    
+
     /* Modifier conversion table header */
     fprintf(FileHandle,
             "static ALLOC_SECTION_LDATA MODIFIERS CharModifiers = {\n"
@@ -827,7 +827,7 @@ kbd_c(IN ULONG StateCount,
             "    //  Modification# //  Keys Pressed\n"
             "    //  ============= // =============\n",
             HighestState);
-    
+
     /* Loop states */
     for (i = 0; i <= HighestState; i++)
     {
@@ -843,14 +843,14 @@ kbd_c(IN ULONG StateCount,
             if (i == HighestState)
             {
                 /* Last state header */
-                fprintf(FileHandle, "        %d             // ", States[i]);   
+                fprintf(FileHandle, "        %d             // ", States[i]);
             }
             else
             {
                 /* Normal state header */
-                fprintf(FileHandle, "        %d,            // ", States[i]);   
+                fprintf(FileHandle, "        %d,            // ", States[i]);
             }
-            
+
             /* State 1 or higher? */
             if (i >= 1)
             {
@@ -864,34 +864,34 @@ kbd_c(IN ULONG StateCount,
                         fprintf(FileHandle, "+");
                         NeedPlus = FALSE;
                     }
-                    
+
                     /* Check if it's time to add a modifier */
                     if (i & k)
                     {
                         /* Get the key state name and copy it into our buffer */
                         strcpy(KeyNameBuffer, getVKName(Modifiers[j].VirtualKey, 1));
-                        
+
                         /* Go go the 4th char (past the "KBD") and lower name */
                         for (p = &KeyNameBuffer[4]; *p; p++) *p = tolower(*p);
-                        
+
                         /* Print it */
                         fprintf(FileHandle, "%s", &KeyNameBuffer[3]);
-                        
+
                         /* We'll need a plus sign next */
                         NeedPlus = TRUE;
                     }
                 }
             }
-            
+
             /* Terminate the entry */
             fprintf(FileHandle, "\n");
         }
     }
-    
-    
+
+
     /* Modifier conversion table end */
     fprintf(FileHandle,"     }\n" "};\n\n");
-    
+
     /* Shift state translation table description */
     fprintf(FileHandle,
             "/***************************************************************************\\\n"
@@ -899,7 +899,7 @@ kbd_c(IN ULONG StateCount,
             "* aVkToWch2[]  - Virtual Key to WCHAR translation for 2 shift states\n"
             "* aVkToWch3[]  - Virtual Key to WCHAR translation for 3 shift states\n"
             "* aVkToWch4[]  - Virtual Key to WCHAR translation for 4 shift states\n");
-    
+
     /* Check if there's exta shift states */
     for (i = 5; i < HighestState; i++)
     {
@@ -909,7 +909,7 @@ kbd_c(IN ULONG StateCount,
                 i,
                 i);
     }
-    
+
     /* Shift state translation table description continue */
     fprintf(FileHandle,
             "*\n"
@@ -931,7 +931,7 @@ kbd_c(IN ULONG StateCount,
             "*     WCH_LGTR      - Ligature (generates multiple characters)\n"
             "*\n"
             "\\***************************************************************************/\n\n");
-    
+
     /* Loop all the states */
     for (i = 2; i <= StateCount; i++)
     {
@@ -945,42 +945,42 @@ kbd_c(IN ULONG StateCount,
                 if (i == Layout->Entry[j].StateCount) break;
             }
         }
-        
+
         /* Print the table header */
         fprintf(FileHandle,
                 "static ALLOC_SECTION_LDATA VK_TO_WCHARS%d aVkToWch%d[] = {\n"
                 "//                      |         |  Shift  |",
                 i,
                 i);
-        
+
         /* Print the correct state label */
         for (k = 2; k < i; k++) fprintf(FileHandle, "%-9.9s|",
                                         StateLabel[ShiftStates[k]]);
-        
+
         /* Print the next separator */
         fprintf(FileHandle, "\n//                      |=========|=========|");
-        
+
         /* Check for extra states and print their separators too */
         for (k = 2; k < i; k++) fprintf(FileHandle, "=========|");
-        
+
         /* Finalize the separator header */
         fprintf(FileHandle, "\n");
-        
+
         /* Loop all the scan codes */
         for (j = 0; j < 110; j++)
         {
             /* Check if this is the state for the entry */
             if (i != Layout->Entry[j].StateCount) continue;
-            
+
             /* Print out the entry for this key */
             fprintf(FileHandle,
                     "  {%-13s,%-7s",
                     getVKName(Layout->Entry[j].VirtualKey, 1),
                     CapState[Layout->Entry[j].Cap]);
-            
+
             /* Initialize the buffer for this line */
             *LineBuffer = '\0';
-            
+
             /* Loop states */
             for (k = 0; k < i; k++)
             {
@@ -991,7 +991,7 @@ kbd_c(IN ULONG StateCount,
                     printf("Dead key data not supported!\n");
                     exit(1);
                 }
-                
+
                 /* Check if it's a ligature key */
                 if (Layout->Entry[j].LigatureCharData[k])
                 {
@@ -999,19 +999,19 @@ kbd_c(IN ULONG StateCount,
                     printf("Ligature key data not supported!\n");
                     exit(1);
                 }
-                
+
                 /* Print out the WCH_ name */
                 fprintf(FileHandle,
                         ",%-9s",
                         WChName(Layout->Entry[j].CharData[k], 0));
-                
+
                 /* If we have something on the line buffer by now, add WCH_NONE */
                 if (*LineBuffer != '\0') strcpy(LineBuffer, "WCH_NONE ");
             }
-            
+
             /* Finish the line */
             fprintf(FileHandle, "},\n");
-            
+
             /* Do we have any data at all? */
             if (*LineBuffer != '\0')
             {
@@ -1019,15 +1019,15 @@ kbd_c(IN ULONG StateCount,
                 fprintf(FileHandle, "%s},\n", LineBuffer);
                 continue;
             }
-            
+
             /* Otherwise, we're done, unless this requires SGCAP data */
             if (Layout->Entry[j].Cap != 2) continue;
-            
+
             /* Not yet supported */
             printf("SGCAP not yet supported!\n");
             exit(1);
         }
-        
+
         /* Did we only have two states? */
         if (i == 2)
         {
@@ -1039,7 +1039,7 @@ kbd_c(IN ULONG StateCount,
                     "  {VK_MULTIPLY  ,0      ,'*'      ,'*'      },\n"
                     "  {VK_SUBTRACT  ,0      ,'-'      ,'-'      },\n");
         }
-        
+
         /* Terminate the table */
         fprintf(FileHandle, "  {0            ,0      ");
         for (k = 0; k < i; k++) fprintf(FileHandle, ",0        ");
@@ -1047,7 +1047,7 @@ kbd_c(IN ULONG StateCount,
         /* Terminate the structure */
         fprintf(FileHandle, "}\n" "};\n\n");
     }
-    
+
     /* Numpad translation table */
     fprintf(FileHandle,
             "// Put this last so that VkKeyScan interprets number characters\n"
@@ -1066,10 +1066,10 @@ kbd_c(IN ULONG StateCount,
             "    { VK_NUMPAD9   , 0      ,  '9'   },\n"
             "    { 0            , 0      ,  '\\0'  }\n"
             "};\n\n");
-    
+
     /* Translation tables header */
     fprintf(FileHandle,"static ALLOC_SECTION_LDATA VK_TO_WCHAR_TABLE aVkToWcharTable[] = {\n");
-    
+
     /* Loop states higher than 3 */
     for (i = 3; i <= StateCount; i++)
     {
@@ -1080,14 +1080,14 @@ kbd_c(IN ULONG StateCount,
                 i,
                 i);
     }
-    
+
     /* Array of translation tables */
     fprintf(FileHandle,
             "    {  (PVK_TO_WCHARS1)aVkToWch2, 2, sizeof(aVkToWch2[0]) },\n"
             "    {  (PVK_TO_WCHARS1)aVkToWch1, 1, sizeof(aVkToWch1[0]) },\n"
             "    {                       NULL, 0, 0                    },\n"
             "};\n\n");
-    
+
     /* Scan code to key name conversion table description */
     fprintf(FileHandle,
             "/***************************************************************************\\\n"
@@ -1098,33 +1098,33 @@ kbd_c(IN ULONG StateCount,
             "* Only the names of Extended, NumPad, Dead and Non-Printable keys are here.\n"
             "* (Keys producing printable characters are named by that character)\n"
             "\\***************************************************************************/\n\n");
-    
+
     /* Check for key name data */
     if (KeyNameData)
     {
         /* Table header */
         fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_LPWSTR aKeyNames[] = {\n");
-        
+
         /* Print table */
         PrintNameTable(FileHandle, KeyNameData, FALSE);
-     
+
         /* Table end */
         fprintf(FileHandle, "};\n\n");
     }
-    
+
     /* Check for extended key name data */
     if (KeyNameExtData)
     {
         /* Table header */
         fprintf(FileHandle, "static ALLOC_SECTION_LDATA VSC_LPWSTR aKeyNamesExt[] = {\n");
-        
+
         /* Print table */
         PrintNameTable(FileHandle, KeyNameExtData, FALSE);
-        
+
         /* Table end */
         fprintf(FileHandle, "};\n\n");
     }
-    
+
     /* Check for dead key name data */
     if (KeyNameDeadData)
     {
@@ -1132,7 +1132,7 @@ kbd_c(IN ULONG StateCount,
         printf("Dead key name data not supported!\n");
         exit(1);
     }
-    
+
     /* Check for dead key data */
     if (DeadKeyData)
     {
@@ -1140,7 +1140,7 @@ kbd_c(IN ULONG StateCount,
         printf("Dead key data not supported!\n");
         exit(1);
     }
-    
+
     /* Check for ligature data */
     if (LigatureData)
     {
@@ -1148,10 +1148,10 @@ kbd_c(IN ULONG StateCount,
         printf("Ligature key data not supported!\n");
         exit(1);
     }
-    
+
     /* Main keyboard table descriptor type */
     fprintf(FileHandle, "static ");
-    
+
     /* FIXME? */
 
     /* Main keyboard table descriptor header */
@@ -1169,7 +1169,7 @@ kbd_c(IN ULONG StateCount,
             "     * Diacritics\n"
             "     */\n",
             FallbackDriver ? "Fallback" : "" );
-    
+
     /* Descriptor dead key data section */
     if (DeadKeyData)
     {
@@ -1179,13 +1179,13 @@ kbd_c(IN ULONG StateCount,
     {
         fprintf(FileHandle, "    NULL,\n\n");
     }
-    
+
     /* Descriptor key name comment */
     fprintf(FileHandle,
             "    /*\n"
             "     * Names of Keys\n"
             "     */\n");
-    
+
     /* Descriptor key name section */
     if (KeyNameData)
     {
@@ -1195,7 +1195,7 @@ kbd_c(IN ULONG StateCount,
     {
         fprintf(FileHandle, "    NULL,\n");
     }
-    
+
     /* Descriptor extended key name section */
     if (KeyNameExtData)
     {
@@ -1205,7 +1205,7 @@ kbd_c(IN ULONG StateCount,
     {
         fprintf(FileHandle, "    NULL,\n");
     }
-    
+
     /* Descriptor dead key name section */
     if ((DeadKeyData) && (KeyNameDeadData))
     {
@@ -1215,7 +1215,7 @@ kbd_c(IN ULONG StateCount,
     {
         fprintf(FileHandle, "    NULL,\n\n");
     }
-    
+
     /* Descriptor conversion table section  */
     fprintf(FileHandle,
             "    /*\n"
@@ -1228,15 +1228,15 @@ kbd_c(IN ULONG StateCount,
             "    /*\n"
             "     * Locale-specific special processing\n"
             "     */\n");
-    
+
     /* FIXME: AttributeData and KLLF_ALTGR stuff */
-    
+
     /* Descriptor locale-specific section */
     fprintf(FileHandle, "    MAKELONG(%s, KBD_VERSION),\n\n", "0");  /* FIXME */
-    
+
     /* Descriptor ligature data comment */
     fprintf(FileHandle, "    /*\n     * Ligatures\n     */\n    %d,\n", 0); /* FIXME */
-    
+
     /* Descriptor ligature data section */
     if (!LigatureData)
     {
@@ -1251,7 +1251,7 @@ kbd_c(IN ULONG StateCount,
 
     /* Descriptor finish */
     fprintf(FileHandle, "};\n\n");
-    
+
     /* Keyboard layout callback function */
     if (!FallbackDriver) fprintf(FileHandle,
                                  "PKBDTABLES KbdLayerDescriptor(VOID)\n"
@@ -1287,11 +1287,11 @@ DoOutput(IN ULONG StateCount,
     {
         /* It's not, create header file */
         if (!kbd_h(&g_Layout)) FailureCode = 1;
-        
+
         /* Create the resource file */
         if (!kbd_rc(DescriptionData, LanguageData)) FailureCode = 2;
     }
-    
+
     /* Create the C file */
     if (!kbd_c(StateCount,
                ShiftStates,
@@ -1306,14 +1306,14 @@ DoOutput(IN ULONG StateCount,
         /* Failed in C file generation */
         FailureCode = 3;
     }
-    
+
     /* Check if this just a fallback driver*/
     if (!FallbackDriver)
     {
         /* Generate the definition file */
         if (!kbd_def()) FailureCode = 4;
     }
-    
+
     /* Done */
     return FailureCode;
 }
