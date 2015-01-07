@@ -391,7 +391,7 @@ Output_stublabel(FILE *fileDest, char* pszSymbolName)
     if (giArch == ARCH_ARM)
     {
         fprintf(fileDest,
-                "	EXPORT %s [FUNC]\n%s\n",
+                "\tEXPORT %s [FUNC]\n%s\n",
                 pszSymbolName,
                 pszSymbolName);
     }
