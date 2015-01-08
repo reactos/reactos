@@ -501,6 +501,45 @@ CompareFileName(PUNICODE_STRING FileName,
     }
 }
 
+NTSTATUS
+BrowseIndexEntries(PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+                   PINDEX_ENTRY_ATTRIBUTE LastEntry,
+                   PUNICODE_STRING FileName,
+                   PULONG StartEntry,
+                   PULONG CurrentEntry,
+                   BOOLEAN DirSearch,
+                   ULONGLONG *OutMFTIndex)
+{
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry;
+
+    IndexEntry = FirstEntry;
+    while (IndexEntry < LastEntry &&
+           !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
+    {
+        UNICODE_STRING EntryName;
+        EntryName.Buffer = IndexEntry->FileName.Name;
+        EntryName.Length = 
+        EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
+
+        if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
+            *CurrentEntry >= *StartEntry &&
+            CompareFileName(FileName, IndexEntry, DirSearch))
+        {
+            *StartEntry = *CurrentEntry;
+            *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
+            return STATUS_SUCCESS;
+        }
+
+        (*CurrentEntry) += 1;
+        ASSERT(IndexEntry->Length >= sizeof(INDEX_ENTRY_ATTRIBUTE));
+        IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
+    }
+
+    if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
+        DPRINT1("Sub-node available\n");
+
+    return STATUS_OBJECT_PATH_NOT_FOUND;    
+}
 
 NTSTATUS
 NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
@@ -563,30 +602,12 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
 
         DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
 
-        while (IndexEntry < IndexEntryEnd &&
-               !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
+        Status = BrowseIndexEntries(IndexEntry, IndexEntryEnd, FileName, FirstEntry, &CurrentEntry, DirSearch, OutMFTIndex);
+        if (NT_SUCCESS(Status))
         {
-            UNICODE_STRING EntryName;
-            EntryName.Buffer = IndexEntry->FileName.Name;
-            EntryName.Length = 
-            EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
-
-            if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
-                DPRINT1("Warning: sub-node browsing unimplemented! (%wZ)\n", &EntryName);
-
-            if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
-                CurrentEntry >= *FirstEntry &&
-                CompareFileName(FileName, IndexEntry, DirSearch))
-            {
-                *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
-                *FirstEntry = CurrentEntry;
-                ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-                ExFreePoolWithTag(MftRecord, TAG_NTFS);
-                return STATUS_SUCCESS;
-            }
-
-            ++CurrentEntry;
-            IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
+            ExFreePoolWithTag(IndexRecord, TAG_NTFS);
+            ExFreePoolWithTag(MftRecord, TAG_NTFS);
+            return Status;
         }
 
         if (IndexRoot->Header.Flags & INDEX_ROOT_LARGE)
@@ -662,34 +683,14 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
                 IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
                 ASSERT(IndexEntryEnd <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
 
-                while (IndexEntry < IndexEntryEnd &&
-                       !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
+                Status = BrowseIndexEntries(IndexEntry, IndexEntryEnd, FileName, FirstEntry, &CurrentEntry, DirSearch, OutMFTIndex);
+                if (NT_SUCCESS(Status))
                 {
-                    UNICODE_STRING EntryName;
-                    EntryName.Buffer = IndexEntry->FileName.Name;
-                    EntryName.Length = 
-                    EntryName.MaximumLength = IndexEntry->FileName.NameLength * sizeof(WCHAR);
-
-                    if (IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE)
-                        DPRINT1("Warning: sub-node browsing unimplemented! (%wZ)\n", &EntryName);
-
-                    if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
-                        CurrentEntry >= *FirstEntry &&
-                        CompareFileName(FileName, IndexEntry, DirSearch))
-                    {
-                        DPRINT("File found\n");
-                        *OutMFTIndex = (IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK);
-                        *FirstEntry = CurrentEntry;
-                        ExFreePoolWithTag(BitmapData, TAG_NTFS);
-                        ExFreePoolWithTag(IndexRecord, TAG_NTFS);
-                        ExFreePoolWithTag(MftRecord, TAG_NTFS);
-                        ReleaseAttributeContext(IndexAllocationCtx);
-                        return STATUS_SUCCESS;
-                    }
-
-                    ++CurrentEntry;
-                    ASSERT(IndexEntry->Length >= sizeof(INDEX_ENTRY_ATTRIBUTE));
-                    IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
+                    ExFreePoolWithTag(BitmapData, TAG_NTFS);
+                    ExFreePoolWithTag(IndexRecord, TAG_NTFS);
+                    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+                    ReleaseAttributeContext(IndexAllocationCtx);
+                    return Status;
                 }
 
                 RecordOffset += IndexBlockSize;
