@@ -1071,7 +1071,9 @@ NtGdiExtFloodFill(
     UINT  FillType)
 {
     PDC dc;
+#if 0
     PDC_ATTR   pdcattr;
+#endif
     SURFACE    *psurf = NULL;
     EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
@@ -1098,7 +1100,9 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
+#if 0
     pdcattr = dc->pdcattr;
+#endif
 
     Pt.x = XStart;
     Pt.y = YStart;
