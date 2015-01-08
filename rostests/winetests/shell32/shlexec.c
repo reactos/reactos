@@ -2693,16 +2693,8 @@ START_TEST(shlexec)
     test_find_executable();
     test_lnks();
     test_exes();
-if(winetest_interactive)
-{
     test_dde();
     test_dde_default_app();
-}
-else
-{
-    win_skip("Skipping test_dde() until we have a sane DDE implementation. CORE-6559.\n");
-    win_skip("Skipping test_dde_default_app() until we have a sane DDE implementation. CORE-6559.\n");
-}
     test_directory();
 
     cleanup_test();
