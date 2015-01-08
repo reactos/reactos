@@ -1017,7 +1017,11 @@ co_IntGetPeekMessage( PMSG pMsg,
 
            if ( pMsg->message >= WM_DDE_FIRST && pMsg->message <= WM_DDE_LAST )
            {
-              IntDdeGetMessageHook(pMsg, ExtraInfo);
+              if (!IntDdeGetMessageHook(pMsg, ExtraInfo))
+              {
+                 TRACE("DDE Get return ERROR\n");
+                 continue;
+              }
            }
 
            if (pMsg->message != WM_PAINT && pMsg->message != WM_QUIT)
@@ -1204,10 +1208,10 @@ UserPostMessage( HWND Wnd,
         {
            if (!IntDdePostMessageHook(Window, Msg, wParam, &lParam, &ExtraInfo))
            {
-              ERR("Posting Exit DDE 0x%x\n",Msg);
+              TRACE("Posting Exit DDE 0x%x\n",Msg);
               return FALSE;
            }
-           ERR("DDE Post lParam c=%08lx\n",lParam);
+           Message.lParam = lParam;
         }
 
         if (WM_QUIT == Msg)

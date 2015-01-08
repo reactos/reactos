@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS user32.dll
+ * PURPOSE:          Dynamic Data Exchange
+ * FILE:             win32ss/user/user32/misc/dde.c
+ * PROGRAMER:                                                          
+ */
 
 #include <user32.h>
 #include <wine/debug.h>
@@ -13,9 +20,9 @@ HGLOBAL FASTCALL DdeGetPair(HGLOBAL ServerMem);
 struct packed_message
 {
     //union packed_structs ps;
-    int                  count;
-    const void          *data;
-    int               size;
+    int         count;
+    const void *data;
+    int         size;
 };
 
 /* add a data field to a packed message */
@@ -79,13 +86,13 @@ BOOL post_dde_message( struct packed_message *data, UINT message, LPARAM lParam 
                 /* send back the value of h on the other side */
                 push_data( data, &hpack, sizeof(hpack) );
                 *lp = uiLo;
-                ERR( "send dde-ack %lx %08lx => %p\n", uiLo, uiHi, h );
+                TRACE( "send dde-ack %lx %08lx => %p\n", uiLo, uiHi, h );
             }
         }
         else
         {
             /* uiHi should contain either an atom or 0 */
-            ERR( "send dde-ack %lx atom=%lx\n", uiLo, uiHi );
+            TRACE( "send dde-ack %lx atom=%lx\n", uiLo, uiHi );
             *lp = MAKELONG( uiLo, uiHi );
         }
         break;
@@ -96,12 +103,17 @@ BOOL post_dde_message( struct packed_message *data, UINT message, LPARAM lParam 
         if (uiLo)
         {
             size = GlobalSize( (HGLOBAL)uiLo ) ;
+            TRACE("WM_DDE_A D P size %d\n",size);
             if ( (message == WM_DDE_ADVISE && size < sizeof(DDEADVISE)) ||
                  (message == WM_DDE_DATA   && size < FIELD_OFFSET(DDEDATA, Value)) ||
                  (message == WM_DDE_POKE   && size < FIELD_OFFSET(DDEPOKE, Value)) )
             return FALSE;
         }
-        else if (message != WM_DDE_DATA) return FALSE;
+        else if (message != WM_DDE_DATA)
+        {
+            TRACE("WM_DDE uiLo 0\n");
+            return FALSE;
+        }
 
         *lp = uiHi;
         if (uiLo)
@@ -109,14 +121,14 @@ BOOL post_dde_message( struct packed_message *data, UINT message, LPARAM lParam 
             if ((ptr = GlobalLock( (HGLOBAL)uiLo) ))
             {
                 DDEDATA *dde_data = ptr;
-                ERR("unused %d, fResponse %d, fRelease %d, fDeferUpd %d, fAckReq %d, cfFormat %d\n",
+                TRACE("unused %d, fResponse %d, fRelease %d, fDeferUpd %d, fAckReq %d, cfFormat %d\n",
                        dde_data->unused, dde_data->fResponse, dde_data->fRelease,
                        dde_data->reserved, dde_data->fAckReq, dde_data->cfFormat);
                 push_data( data, ptr, size );
                 hunlock = (HGLOBAL)uiLo;
             }
         }
-        ERR( "send ddepack %u %lx\n", size, uiHi );
+        TRACE( "send ddepack %u %lx\n", size, uiHi );
         break;
     case WM_DDE_EXECUTE:
         if (lParam)
@@ -128,7 +140,7 @@ BOOL post_dde_message( struct packed_message *data, UINT message, LPARAM lParam 
                 /* so that the other side can send it back on ACK */
                 *lp = lParam;
                 hunlock = (HGLOBAL)lParam;
-                ERR("WM_DDE_EXECUTE text size %d\n",GlobalSize( (HGLOBAL)lParam ));
+                TRACE("WM_DDE_EXECUTE text size %d\n",GlobalSize( (HGLOBAL)lParam ));
             }
         }
         break;
@@ -152,7 +164,7 @@ BOOL unpack_dde_message( HWND hwnd, UINT message, LPARAM *lparam, PVOID buffer, 
     HGLOBAL	hMem = 0;
     void*	ptr;
 
-    ERR("udm : Size %d\n",size);
+    TRACE("udm : Size %d\n",size);
 
     switch (message)
     {
@@ -167,13 +179,13 @@ BOOL unpack_dde_message( HWND hwnd, UINT message, LPARAM *lparam, PVOID buffer, 
             memcpy( &hpack, buffer, size );
             hMem = unpack_ptr( hpack );
             uiHi = (UINT_PTR)hMem;
-            ERR("recv dde-ack %lx mem=%lx[%lx]\n", uiLo, uiHi, GlobalSize( hMem ));
+            TRACE("recv dde-ack %lx mem=%lx[%lx]\n", uiLo, uiHi, GlobalSize( hMem ));
         }
         else
         {
             uiLo = LOWORD( *lparam );
             uiHi = HIWORD( *lparam );
-            ERR("recv dde-ack %lx atom=%lx\n", uiLo, uiHi);
+            TRACE("recv dde-ack %lx atom=%lx\n", uiLo, uiHi);
         }
 	*lparam = PackDDElParam( WM_DDE_ACK, uiLo, uiHi );
 	break;
@@ -210,78 +222,90 @@ BOOL unpack_dde_message( HWND hwnd, UINT message, LPARAM *lparam, PVOID buffer, 
 	    {
 		memcpy( ptr, buffer, size );
 		GlobalUnlock( hMem );
-                ERR( "exec: pairing c=%08lx s=%p\n", *lparam, hMem );
+                TRACE( "exec: pairing c=%08lx s=%p\n", *lparam, hMem );
                 if (!DdeAddPair( (HGLOBAL)*lparam, hMem ))
                 {
                     GlobalFree( hMem );
-                    ERR("udm exec: GF 1\n");
+                    TRACE("udm exec: GF 1\n");
                     return FALSE;
                 }
             }
             else
             {
                 GlobalFree( hMem );
-                ERR("udm exec: GF 2\n");
+                TRACE("udm exec: GF 2\n");
                 return FALSE;
             }
 	}
 	else
-	{
-	    ERR("udm exec: No Size\n");
+        {
+	    TRACE("udm exec: No Size\n");
 	    return FALSE;
         }
 
-        ERR( "exec: exit c=%08lx s=%p\n", *lparam, hMem );
+        TRACE( "exec: exit c=%08lx s=%p\n", *lparam, hMem );
         *lparam = (LPARAM)hMem;
         break;
     }
     return TRUE;
 }
 
+//
+//  DDE Post kernel callback.
+//
 NTSTATUS
 WINAPI
 User32CallDDEPostFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   struct packed_message data;
   BOOL Ret;
+  NTSTATUS Status = STATUS_SUCCESS;
   PDDEPOSTGET_CALLBACK_ARGUMENTS Common = Arguments;
 
   data.data = 0;
   data.size = 0;
-  ERR("DDE Post CB\n");
+  TRACE("DDE Post CB\n");
   Ret = post_dde_message( &data, Common->message, Common->lParam, &Common->lParam);
 
   if (Ret)
   {
-     if (Common->size >= data.size)
-     {
-        if (data.data) RtlCopyMemory(&Common->buffer, data.data, data.size);
-     }
+     Common->pvData = (PVOID)data.data;
      Common->size = data.size;
-     ERR("DDE Post CB size %d\n",data.size);
+     TRACE("DDE Post CB size %d\n",data.size);
   }
   else
   {
-     ERR("Return bad msg 0x%x Size %d\n",Common->message,Common->size);
+     ERR("DDE Post CB Return bad msg 0x%x Size %d\n",Common->message,Common->size);
+     Common->size = 0xdeadbeef; // HACKSSS!! Return status does not work!
+     Status = STATUS_UNSUCCESSFUL;
   }
 
-  return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+  return ZwCallbackReturn(Arguments, ArgumentLength, Status);
 }
 
+//
+//  DDE Get/Peek kernel callback.
+//
 NTSTATUS
 WINAPI
 User32CallDDEGetFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   BOOL Ret;
+  NTSTATUS Status = STATUS_SUCCESS;
   PDDEPOSTGET_CALLBACK_ARGUMENTS Common = Arguments;
 
-  ERR("DDE Get CB size %d\n",Common->size);
+  TRACE("DDE Get CB size %d\n",Common->size);
 
   Ret = unpack_dde_message( Common->hwnd, Common->message, &Common->lParam, Common->buffer, Common->size );
 
-  return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+  if (!Ret)
+  {
+     ERR("DDE Get CB Return bad msg 0x%x\n",Common->message);
+     Common->size = 0xdeadbeef; // HACKSSS!! Return status does not work!
+     Status = STATUS_UNSUCCESSFUL;
+  }
+  return ZwCallbackReturn(Arguments, ArgumentLength, Status);
 }
-
 
 
 /*

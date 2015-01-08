@@ -1,9 +1,29 @@
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS Win32k subsystem
+ * PURPOSE:          Dynamic Data Exchange
+ * FILE:             win32ss/user/ntuser/dde.c
+ * PROGRAMER:
+ */
 
 #include <win32k.h>
 
 #include <dde.h>
 
 DBG_DEFAULT_CHANNEL(UserMisc);
+
+//
+//  Default information used to support client impersonation.
+//
+SECURITY_QUALITY_OF_SERVICE gqosDefault = {sizeof(SECURITY_QUALITY_OF_SERVICE),SecurityImpersonation,SECURITY_STATIC_TRACKING,TRUE};
+
+typedef struct _DDEIMP
+{
+  SECURITY_QUALITY_OF_SERVICE qos;
+  SECURITY_CLIENT_CONTEXT ClientContext;
+  WORD cRefInit;
+  WORD cRefConv;
+} DDEIMP, *PDDEIMP;
 
 typedef struct _DDE_DATA
 {
@@ -16,10 +36,13 @@ typedef struct _DDE_PROP
 {
   PWND spwnd;
   PWND spwndPartner;
+  PDDEIMP pddei;
 } DDE_PROP, *PDDE_PROP;
 
 
-
+//
+//  DDE Posting message callback to user side.
+//
 int
 APIENTRY
 IntDDEPostCallback(
@@ -27,17 +50,15 @@ IntDDEPostCallback(
    IN UINT Msg,
    IN WPARAM wParam,
    IN OUT LPARAM *lParam,
-   IN PVOID Buffer,
-   IN int size)
+   IN OUT PVOID *Buffer)
 {
    NTSTATUS Status;
    ULONG ArgumentLength, ResultLength;
    PVOID Argument, ResultPointer;
    PDDEPOSTGET_CALLBACK_ARGUMENTS Common;
-   int origSize = size;
-
+   int size = 0;
    ResultPointer = NULL;
-   ResultLength = ArgumentLength = sizeof(DDEPOSTGET_CALLBACK_ARGUMENTS)+size;
+   ResultLength = ArgumentLength = sizeof(DDEPOSTGET_CALLBACK_ARGUMENTS);
 
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
@@ -47,12 +68,12 @@ IntDDEPostCallback(
 
    Common = (PDDEPOSTGET_CALLBACK_ARGUMENTS) Argument;
 
-   Common->size    = size;
+   Common->pvData  = 0;
+   Common->size    = 0;
    Common->hwnd    = UserHMGetHandle(pWnd);
    Common->message = Msg;
    Common->wParam  = wParam;
    Common->lParam  = *lParam;
-   RtlCopyMemory(&Common->buffer, Buffer, size);
 
    UserLeaveCo();
 
@@ -73,19 +94,26 @@ IntDDEPostCallback(
 
    RtlCopyMemory(Common, ResultPointer, ArgumentLength);
 
-   if (Common->size != 0 && size <= origSize)
+   ///// HAX!
+   if ( Common->size == 0xdeadbeef )
    {
-      RtlCopyMemory(Buffer, &Common->buffer, size); // ResultLength);
+      ERR("DDE Post callback failed! 2 status %p\n",Status);
+      IntCbFreeMemory(Argument);
+      return 0;
    }
 
    size    = Common->size;
    *lParam = Common->lParam;
+   *Buffer = Common->pvData;
 
    IntCbFreeMemory(Argument);
 
    return size ? size : -1;
 }
 
+//
+//  DDE Get/Peek message callback to user side.
+//
 BOOL
 APIENTRY
 IntDDEGetCallback(
@@ -118,7 +146,6 @@ IntDDEGetCallback(
 
    if (size && Buffer) RtlCopyMemory(&Common->buffer, Buffer, size);
 
-
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_DDEGET,
@@ -138,6 +165,14 @@ IntDDEGetCallback(
 
    RtlMoveMemory(Common, ResultPointer, ArgumentLength);
 
+   ///// HAX!
+   if ( Common->size == 0xdeadbeef )
+   {
+      ERR("DDE Get callback failed! 2 status %p\n",Status);
+      IntCbFreeMemory(Argument);
+      return FALSE;
+   }
+
    pMsg->lParam = Common->lParam;
 
    IntCbFreeMemory(Argument);
@@ -145,8 +180,9 @@ IntDDEGetCallback(
    return TRUE;
 }
 
-
-
+//
+//  DDE Post message hook, intercept DDE messages before going on to the target Processes Thread queue.
+//
 BOOL
 APIENTRY
 IntDdePostMessageHook(
@@ -158,14 +194,15 @@ IntDdePostMessageHook(
 {
    PWND pWndClient;
    PDDE_DATA pddeData;
+   int size;
    HGDIOBJ Object = NULL;
+   PVOID userBuf = NULL;
    PVOID Buffer = NULL;
-   int size = 128;
    LPARAM lp = *lParam;
 
    if (pWnd->head.pti->ppi != gptiCurrent->ppi)
    {
-      ERR("Posting long DDE 0x%x\n",Msg);
+      TRACE("Posting long DDE 0x%x\n",Msg);
       // Initiate is sent only across borders.
       if (Msg == WM_DDE_INITIATE)
       {
@@ -178,14 +215,14 @@ IntDdePostMessageHook(
          // This is terminating so post it.
          if ( Msg == WM_DDE_TERMINATE)
          {
-            ERR("DDE Posted WM_DDE_TERMINATE\n");
+            TRACE("DDE Posted WM_DDE_TERMINATE\n");
             return TRUE;
          }
-         ERR("Invalid DDE Client Window handle\n");
+         TRACE("Invalid DDE Client Window handle\n");
          return FALSE;
       }
 
-      if (Msg == WM_DDE_TERMINATE )
+      if ( Msg == WM_DDE_TERMINATE )
       {
          //// FIXME Remove Stuff if any...
 
@@ -193,26 +230,34 @@ IntDdePostMessageHook(
          return TRUE;
       }
 
-      Buffer = ExAllocatePoolWithTag(PagedPool, size, USERTAG_DDE);
+      if ( Msg == WM_DDE_EXECUTE && *lParam == 0)
+      {
+         // Do not bother to do a callback.
+         TRACE("DDE Post EXECUTE lParam 0\n");
+         return FALSE;
+      }
 
-      if ((size = IntDDEPostCallback(pWnd, Msg, wParam, &lp, Buffer, size)) == 0)
+      // Callback.
+      if ((size = IntDDEPostCallback(pWnd, Msg, wParam, &lp, &userBuf)) == 0)
       {
          ERR("DDE Post Callback return 0 0x%x\n", Msg);
+         return FALSE;
       }
 
-      if (size != -1 && size > 128)
-      {
-         ERR("FIXME: DDE Post need more bytes %d\n",size);
-      }
-
+      // No error HACK.
       if (size == -1)
       {
          size = 0;
-         ExFreePoolWithTag(Buffer, USERTAG_DDE);
-         Buffer = NULL;
+      }
+      else
+      {
+         // Set buffer with users data size.
+         Buffer = ExAllocatePoolWithTag(PagedPool, size, USERTAG_DDE);
+         // No SEH? Yes, the user memory is freed after the Acknowledgment or at Termination.
+         RtlCopyMemory(Buffer, userBuf, size);
       }
 
-      ERR("DDE Post size %d 0x%x\n",size, Msg);
+      TRACE("DDE Post size %d 0x%x\n",size, Msg);
 
       switch(Msg)
       {
@@ -245,8 +290,7 @@ IntDdePostMessageHook(
                     break;
               }
               break;
-                
-          }
+           }
           default:
               break;
       }
@@ -257,13 +301,13 @@ IntDdePostMessageHook(
          GreSetObjectOwner(Object, pWnd->head.pti->ppi->W32Pid);
       }
 
-      pddeData = ExAllocatePoolWithTag(PagedPool, sizeof(DDE_DATA), USERTAG_DDE2);
+      pddeData = ExAllocatePoolWithTag(PagedPool, sizeof(DDE_DATA), USERTAG_DDE5);
 
       pddeData->cbSize       = size;
       pddeData->pvBuffer     = Buffer;
       pddeData->lParam       = lp;
  
-      ERR("DDE Post lParam c=%08lx\n",lp);
+      TRACE("DDE Post lParam c=%08lx\n",lp);
       *lParam = lp;
  
       // Attach this data packet to the user message.
@@ -272,7 +316,10 @@ IntDdePostMessageHook(
    return TRUE;
 }
 
-VOID APIENTRY
+//
+//  DDE Get/Peek message hook, take preprocessed information and recombined it for the current Process Thread.
+//
+BOOL APIENTRY
 IntDdeGetMessageHook(PMSG pMsg, LONG_PTR ExtraInfo)
 {
    PWND pWnd, pWndClient;
@@ -284,7 +331,7 @@ IntDdeGetMessageHook(PMSG pMsg, LONG_PTR ExtraInfo)
    if (pWnd == NULL)
    {
       ERR("DDE Get Window is dead. %p\n", pMsg->hwnd);
-      return;
+      return TRUE;
    }
 
    if (pMsg->message == WM_DDE_TERMINATE)
@@ -301,37 +348,37 @@ IntDdeGetMessageHook(PMSG pMsg, LONG_PTR ExtraInfo)
          IntRemoveProp(pWnd, AtomDDETrack);
          ExFreePoolWithTag(pddeProp, USERTAG_DDE1);
       }
-      return;
+      return TRUE;
    }
 
-   ERR("DDE Get Msg 0x%x\n",pMsg->message);
+   TRACE("DDE Get Msg 0x%x\n",pMsg->message);
 
    pddeData = (PDDE_DATA)ExtraInfo;
 
    if ( pddeData )
    {
-      ERR("DDE Get 1 size %d lParam c=%08lx lp c=%08lx\n",pddeData->cbSize, pMsg->lParam, pddeData->lParam);
+      TRACE("DDE Get size %d lParam c=%08lx lp c=%08lx\n",pddeData->cbSize, pMsg->lParam, pddeData->lParam);
 
-      pMsg->lParam = pddeData->lParam; // This might be a hack... Need to backtrace lParam from post queue.
-
+      // Callback.
       Ret = IntDDEGetCallback( pWnd, pMsg, pddeData->pvBuffer, pddeData->cbSize);
       if (!Ret)
       {
          ERR("DDE Get CB failed\n");
       }
 
-      ERR("DDE Get 2 size %d lParam c=%08lx\n",pddeData->cbSize, pMsg->lParam);
-
       if (pddeData->pvBuffer) ExFreePoolWithTag(pddeData->pvBuffer, USERTAG_DDE);
 
-      ExFreePoolWithTag(pddeData, USERTAG_DDE2);
+      ExFreePoolWithTag(pddeData, USERTAG_DDE5);
 
-      return;
+      return Ret;
    }
-   ERR("DDE Get No DDE Data found!\n");
-   return;
+   TRACE("DDE Get No DDE Data found!\n");
+   return TRUE;
 }
 
+//
+//  DDE Send message hook, intercept DDE messages and associate them in a partnership with property.
+//
 BOOL FASTCALL
 IntDdeSendMessageHook(PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -340,12 +387,12 @@ IntDdeSendMessageHook(PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
    if (Msg == WM_DDE_ACK)
    {
-      ERR("Sending WM_DDE_ACK Client hwnd %p\n",pWnd->head.h);
+      TRACE("Sending WM_DDE_ACK Client hwnd %p\n",pWnd->head.h);
    }
 
    if (pWnd->head.pti->ppi != gptiCurrent->ppi)
    {
-      ERR("Sending long DDE 0x%x\n",Msg);
+      TRACE("Sending long DDE 0x%x\n",Msg);
 
       // Allow only Acknowledge and Initiate to be sent across borders.
       if (Msg != WM_DDE_ACK )
@@ -354,7 +401,7 @@ IntDdeSendMessageHook(PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
          return FALSE;
       }
 
-      ERR("Sending long WM_DDE_ACK\n");
+      TRACE("Sending long WM_DDE_ACK\n");
 
       pWndServer = UserGetWindowObject((HWND)wParam);
       if (pWndServer == NULL)
@@ -387,20 +434,6 @@ NtUserDdeGetQualityOfService(
    return 0;
 }
 
-DWORD
-APIENTRY
-NtUserDdeInitialize(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4)
-{
-   STUB
-
-   return 0;
-}
-
 BOOL
 APIENTRY
 NtUserDdeSetQualityOfService(
@@ -418,6 +451,20 @@ APIENTRY
 NtUserImpersonateDdeClientWindow(
    HWND hWndClient,
    HWND hWndServer)
+{
+   STUB
+
+   return 0;
+}
+
+DWORD
+APIENTRY
+NtUserDdeInitialize(
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3,
+   DWORD Unknown4)
 {
    STUB
 

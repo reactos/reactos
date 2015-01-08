@@ -36,11 +36,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
 static WDML_INSTANCE*	WDML_InstanceList = NULL;
 static LONG		WDML_MaxInstanceID = 0;  /* OK for present, have to worry about wrap-around later */
-const WCHAR		WDML_szEventClass[] = {'D','D','E','M','L','E','v','e','n','t',0};
+const WCHAR		WDML_szEventClass[] = L"DDEMLEvent";
 
 /* protection for instance list */
 CRITICAL_SECTION WDML_CritSect;
-CRITICAL_SECTION_DEBUG critsect_debug =
+static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &WDML_CritSect,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
@@ -797,8 +797,8 @@ static LRESULT CALLBACK WDML_EventProc(HWND hwndEvent, UINT uMsg, WPARAM wParam,
 	    /* confirm connection...
 	     * lookup for this conv handle
 	     */
-            HWND client = (HWND)wParam;
-            HWND server = (HWND)lParam;
+            HWND client = WIN_GetFullHandle( (HWND)wParam );
+            HWND server = WIN_GetFullHandle( (HWND)lParam );
 	    for (pConv = pInstance->convs[WDML_SERVER_SIDE]; pConv != NULL; pConv = pConv->next)
 	    {
 		if (pConv->hwndClient == client && pConv->hwndServer == server)
@@ -840,7 +840,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     {
 	ERR("Reserved value not zero?  What does this mean?\n");
 	/* trap this and no more until we know more */
-	return DMLERR_INVALIDPARAMETER;
+	return DMLERR_NO_ERROR;
     }
 
     /* grab enough heap for one control struct - not really necessary for re-initialise
@@ -883,12 +883,12 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 	    (pInstance->CBFflags & CBF_FAIL_ALLSVRXACTIONS) == CBF_FAIL_ALLSVRXACTIONS;
     }
 
-    ERR("instance created - checking validity\n");
+    TRACE("instance created - checking validity\n");
 
     if (*pidInst == 0)
     {
 	/*  Initialisation of new Instance Identifier */
-	ERR("new instance, callback %p flags %X\n",pfnCallback,afCmd);
+	TRACE("new instance, callback %p flags %X\n",pfnCallback,afCmd);
 
 	EnterCriticalSection(&WDML_CritSect);
 
@@ -907,7 +907,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 	     */
 
 	    pInstance->CBFflags = pInstance->CBFflags|APPCMD_FILTERINITS;
-	    ERR("First application instance detected OK\n");
+	    TRACE("First application instance detected OK\n");
 	    /*	allocate new instance ID */
 	    WDML_IncrementInstanceId(pInstance);
 	}
@@ -916,7 +916,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 	    /* really need to chain the new one in to the latest here, but after checking conditions
 	     *	such as trying to start a conversation from an application trying to monitor */
 	    reference_inst = WDML_InstanceList;
-	    ERR("Subsequent application instance - starting checks\n");
+	    TRACE("Subsequent application instance - starting checks\n");
 	    while (reference_inst->next != NULL)
 	    {
 		/*
@@ -932,7 +932,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
 		    if (pInstance->clientOnly != reference_inst->clientOnly)
 		    {
-		        ERR("WDML_Initialize Mustbe Client-only\n");
 			ret = DMLERR_DLL_USAGE;
 			goto theError;
 		    }
@@ -941,7 +940,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
 		    if (pInstance->monitor != reference_inst->monitor)
 		    {
-		        ERR("WDML_Initialize cannot use monitor w/any modes\n");
 			ret = DMLERR_INVALIDPARAMETER;
 			goto theError;
 		    }
@@ -958,7 +956,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 	    }
 	    /*  All cleared, add to chain */
 
-	    ERR("Application Instance checks finished\n");
+	    TRACE("Application Instance checks finished\n");
 	    WDML_IncrementInstanceId(pInstance);
 	    reference_inst->next = pInstance;
 	}
@@ -988,18 +986,17 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
 	SetWindowLongPtrW(pInstance->hwndEvent, GWL_WDML_INSTANCE, (ULONG_PTR)pInstance);
 
-	ERR("New application instance processing finished OK\n");
+	TRACE("New application instance processing finished OK\n");
     }
     else
     {
 	/* Reinitialisation situation   --- FIX  */
-	ERR("reinitialisation of (%p,%p,0x%x,%d): stub\n", pidInst, pfnCallback, afCmd, ulRes);
+	TRACE("reinitialisation of (%p,%p,0x%x,%d): stub\n", pidInst, pfnCallback, afCmd, ulRes);
 
 	EnterCriticalSection(&WDML_CritSect);
 
 	if (WDML_InstanceList == NULL)
 	{
-	    ERR("WDML_Initialize No instance list\n");
 	    ret = DMLERR_INVALIDPARAMETER;
 	    goto theError;
 	}
@@ -1024,7 +1021,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
 			if (!(afCmd & APPCMD_CLIENTONLY))
 			{
-			    ERR("WDML_Initialize AppCmd Client-only 2\n");
 			    ret = DMLERR_INVALIDPARAMETER;
 			    goto theError;
 			}
@@ -1034,7 +1030,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
 		if (pInstance->monitor != reference_inst->monitor)
 		{
-		    ERR("WDML_Initialize cannot change monitor modes 2\n");
 		    ret = DMLERR_INVALIDPARAMETER;
 		    goto theError;
 		}
@@ -1043,7 +1038,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
 		if ((afCmd&APPCMD_CLIENTONLY) && !reference_inst->clientOnly)
 		{
-		    ERR("WDML_Initialize trying to set Client-only via APPCMD\n");
 		    ret = DMLERR_INVALIDPARAMETER;
 		    goto theError;
 		}
@@ -1053,7 +1047,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 	}
 	if (reference_inst->next == NULL)
 	{
-	    ERR("WDML_Initialize Nothing Next\n");
 	    ret = DMLERR_INVALIDPARAMETER;
 	    goto theError;
 	}
@@ -1070,7 +1063,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 
     return DMLERR_NO_ERROR;
  theError:
-    ERR("WDML_Initialize error %x\n",ret);
     HeapFree(GetProcessHeap(), 0, pInstance);
     LeaveCriticalSection(&WDML_CritSect);
     return ret;
