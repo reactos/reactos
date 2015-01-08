@@ -1571,8 +1571,8 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "Partiîia selectatÇ este prea micÇ pentru a instala ReactOS.\n"
+        "Partiîia de instalare trebuie sÇ fie de cel puîin %lu Mocteîi.\n"
         "\n"
         "  * Tastaîi pentru a continua.",
         NULL

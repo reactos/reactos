@@ -188,7 +188,7 @@ END
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Deautentificare ""%s"""
+    IDS_SHUTDOWN_LOGOFF "Deautentificare „%s”"
     IDS_SHUTDOWN_SHUTDOWN "Închidere"
     IDS_SHUTDOWN_RESTART "Repornire"
     IDS_SHUTDOWN_SLEEP "Stare de veghe"

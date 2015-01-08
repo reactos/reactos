@@ -46,18 +46,18 @@ END
 /* menubar EDIT menu */
 MENU_003 MENU
 BEGIN
-    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM "&Anulează\tCtrl+Z", FCIDM_SHVIEW_UNDO
     MENUITEM SEPARATOR
-    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
-    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
-    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
-    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM "&Decupează\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copie\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Lipește\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Lipește sc&urtătură", FCIDM_SHVIEW_INSERTLINK
     MENUITEM SEPARATOR
-    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
-    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM "Copi&ere în dosarul…", FCIDM_SHVIEW_COPYTO
+    MENUITEM "&Mutare în dosarul…", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
-    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+    MENUITEM "Selectează t&ot\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Inversea&ză selecția", FCIDM_SHVIEW_INVERTSELECTION
 END
 
 /* shellview item menu */
@@ -354,9 +354,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Ce cont de utilizator este folosit pentru a executa?", -1, 10, 20, 220, 20
     CHECKBOX "Utilizator curent: %s", 14000, 10, 45, 150, 10
-    LTEXT "Protejare computer de activiăți neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
+    LTEXT "Protejare calculator de activiăți neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Această opțiune vă poate proteja calculatorul de activități care pot fi dăunătoare dar poate de asemenea duce la funcționarea incorectă a programului.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Utilizator curent:", 14002, 10, 100, 90, 10
+    CHECKBOX "Următorul utilizator:", 14002, 10, 100, 90, 10
     LTEXT "Nume utilizator:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "…", 14004, 180, 115, 30, 14, WS_TABSTOP
@@ -627,16 +627,16 @@ END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Caution"
+CAPTION "Atenție"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_DOCUMENT, IDI_SHELL_DOCUMENT, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "Acest fișier ar putea să fie folosit fie de către sistemul de\n\
+operare sau de o oarecare aplicație. Modificând acest fișier\n\
+riscați să cauzați daune în sistem.\n\n\
+Sigur doriți să deschideți acest fișier?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "D&a", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "N&u", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -815,5 +815,5 @@ BEGIN
     IDS_UNKNOWN_APP "Aplicație nespecificată"
     IDS_EXE_DESCRIPTION "Descriere:"
 
-    IDS_MENU_EMPTY "(Empty)"
+    IDS_MENU_EMPTY "(Gol)"
 END

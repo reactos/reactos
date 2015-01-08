@@ -321,7 +321,7 @@ BEGIN
     CONTROL "In/Ex octeți scriși", IDC_IOWRITEBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 127, 110, 10
     CONTROL "In/Ex altceva", IDC_IOOTHER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 138, 110, 10
     CONTROL "In/Ex octeți din altceva", IDC_IOOTHERBYTES, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 149, 110, 10
-    CONTROL "&Linia de comandă", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 160, 65, 10
+    CONTROL "Linie de comandă", IDC_COMMANDLINE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 160, 65, 10
 END
 
 /* String Tables */
@@ -417,7 +417,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "In/Ex octeți citiți"
     IDS_TAB_IOWRITESBYTES "In/Ex octeți scriși"
     IDS_TAB_IOOTHERBYTES "In/Ex octeți din altceva"
-    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_TAB_COMMANDLINE "Linie de comandă"
     IDS_MENU_SELECTCOLUMNS "&Selectare coloane…"
     IDS_MENU_16BITTASK "Afișează activități pe 16 &biți"
     IDS_MENU_WINDOWS "F&erestre"

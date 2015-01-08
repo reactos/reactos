@@ -47,7 +47,7 @@ BEGIN
             MENUITEM "&Securitate…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
             MENUITEM "Conexiuni în &rețea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
             MENUITEM "&Imprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Bară de activități și Meniul Pornire", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Bară de activități și Meniul „Pornire”", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "&Căut&are", IDM_SEARCH
         BEGIN
@@ -71,27 +71,27 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Aspectul barei de activități", IDC_STATIC, 6, 6, 240, 104
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13, 18, 224, 21
-    AUTOCHECKBOX "&Fixează bara de activități", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
+    AUTOCHECKBOX "Fi&xează bara de activități", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
     AUTOCHECKBOX "A&uto-ascunde bara de activități", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
-    AUTOCHECKBOX "Menține bara de ac&tivități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
+    AUTOCHECKBOX "&Menține bara de activități deasupra celorlalte ferestre", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Grupează butoanele similare din bara de activități", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
-    AUTOCHECKBOX "Arată bara &Lansărilor rapide", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
+    AUTOCHECKBOX "Afișează bara „&Lansări rapide”", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Meniu Pornire"
+CAPTION "Meniul „Pornire”"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "&Meniu Pornire", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
+    AUTORADIOBUTTON "Meniul „&Pornire”", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
     LTEXT "Acest model de meniu oferă acces facil la dosare, programele favorite, și căutare.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
     PUSHBUTTON "P&articularizare…", IDC_TASKBARPROP_STARTMENUCUST, 182, 4, 63, 14, WS_DISABLED
-    AUTORADIOBUTTON "Meniu Pornire &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
+    AUTORADIOBUTTON "Meniul „Pornire” &clasic", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
     LTEXT "Acest model de meniu vă oferă aspectul și funcționalitatea clasică", -1, 20, 57, 150, 24, WS_DISABLED
     PUSHBUTTON "Pa&rticularizare…", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 182, 44, 63, 14, WS_DISABLED
     GROUPBOX "Intimitate", IDC_STATIC, 7, 100, 238, 42
-    AUTOCHECKBOX "Păstrează și afișează o listă a &fișierelor deschise recent", IDC_TASKBARPROP_RECENTFILES, 14, 114, 224, 10, WS_DISABLED
-    AUTOCHECKBOX "Păstrează și afișează o listă a &programelor deschise recent", IDC_TASKBARPROP_RECENTFOLDERS, 14, 128, 224, 10, WS_DISABLED
+    AUTOCHECKBOX "Păstrează și afișează o listă a fiși&erelor deschise recent", IDC_TASKBARPROP_RECENTFILES, 14, 114, 224, 10, WS_DISABLED
+    AUTOCHECKBOX "Păstrează și afișează o listă a progra&melor deschise recent", IDC_TASKBARPROP_RECENTFOLDERS, 14, 128, 224, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
@@ -102,14 +102,14 @@ BEGIN
     CONTROL "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 6, 238, 21, WS_DISABLED
     GROUPBOX "Pictograme", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
     LTEXT "Puteți menține ordonată zona de notificare prin ascunderea pictogramelor neaccesate recent.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
-    AUTOCHECKBOX "&Ascunde pictogramele neaccesate", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
+    AUTOCHECKBOX "Asc&unde pictogramele neaccesate", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
     PUSHBUTTON "&Particularizare…", IDC_TASKBARPROP_ICONCUST, 168, 70, 70, 14, WS_DISABLED
     GROUPBOX "Pictograme de sistem", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
     LTEXT "Specificați care dintre pictogramele de sistem le doriți expuse.", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
     AUTOCHECKBOX "&Ceas", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
     AUTOCHECKBOX "&Volum", IDC_TASKBARPROP_VOLUME, 13, 139, 200, 10, WS_DISABLED
     AUTOCHECKBOX "&Rețea", IDC_TASKBARPROP_NETWORK, 13, 152, 200, 10, WS_DISABLED
-    AUTOCHECKBOX "A&limentare", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
+    AUTOCHECKBOX "Ali&mentare", IDC_TASKBARPROP_POWER, 13, 164, 200, 10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
@@ -127,7 +127,7 @@ CAPTION "Avansate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX "Opțiuni avansate", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "&Afișează secunde", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    AUTOCHECKBOX "Afișea&ză secunde", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
     AUTOCHECKBOX "&Prezintă miniaturi ale ferestrelor", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 
@@ -135,8 +135,8 @@ STRINGTABLE
 BEGIN
     IDS_START "Pornire"
     IDS_PROPERTIES "P&referințe"
-    IDS_OPEN_ALL_USERS "&Deschide Toți Utilizatorii"
-    IDS_EXPLORE_ALL_USERS "E&xplorează Toți Utilizatorii"
+    IDS_OPEN_ALL_USERS "&Deschide „Toți utilizatorii”"
+    IDS_EXPLORE_ALL_USERS "E&xplorează „Toți utilizatorii”"
     IDS_STARTUP_ERROR "Pornirea exploratorului a eșuat din cauza informațiilor lipsă sau corupte din registru."
 END
 
