@@ -162,11 +162,15 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 {
     ULONG Length;
     PFILENAME_ATTRIBUTE FileName;
+    PSTANDARD_INFORMATION StdInfo;
 
     DPRINT("NtfsGetDirectoryInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
+
+    StdInfo = GetStandardInformationFromRecord(FileRecord);
+    ASSERT(StdInfo != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
@@ -183,7 +187,7 @@ NtfsGetDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     Info->ChangeTime.QuadPart = FileName->ChangeTime;
 
     /* Convert file flags */
-    NtfsFileFlagsToAttributes(FileName->FileAttributes, &Info->FileAttributes);
+    NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
 
     Info->EndOfFile.QuadPart = FileName->AllocatedSize;
     Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
@@ -204,11 +208,15 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 {
     ULONG Length;
     PFILENAME_ATTRIBUTE FileName;
+    PSTANDARD_INFORMATION StdInfo;
 
     DPRINT("NtfsGetFullDirectoryInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
+
+    StdInfo = GetStandardInformationFromRecord(FileRecord);
+    ASSERT(StdInfo != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_FULL_DIRECTORY_INFORMATION) + Length) > BufferLength)
@@ -225,7 +233,7 @@ NtfsGetFullDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     Info->ChangeTime.QuadPart = FileName->ChangeTime;
 
     /* Convert file flags */
-    NtfsFileFlagsToAttributes(FileName->FileAttributes, &Info->FileAttributes);
+    NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
 
     Info->EndOfFile.QuadPart = FileName->AllocatedSize;
     Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
@@ -247,12 +255,16 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
 {
     ULONG Length;
     PFILENAME_ATTRIBUTE FileName, ShortFileName;
+    PSTANDARD_INFORMATION StdInfo;
 
     DPRINT("NtfsGetBothDirectoryInformation() called\n");
 
     FileName = GetBestFileNameFromRecord(FileRecord);
     ASSERT(FileName != NULL);
     ShortFileName = GetFileNameFromRecord(FileRecord, NTFS_FILE_NAME_DOS);
+
+    StdInfo = GetStandardInformationFromRecord(FileRecord);
+    ASSERT(StdInfo != NULL);
 
     Length = FileName->NameLength * sizeof (WCHAR);
     if ((sizeof(FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
@@ -282,7 +294,7 @@ NtfsGetBothDirectoryInformation(PDEVICE_EXTENSION DeviceExt,
     Info->ChangeTime.QuadPart = FileName->ChangeTime;
 
     /* Convert file flags */
-    NtfsFileFlagsToAttributes(FileName->FileAttributes, &Info->FileAttributes);
+    NtfsFileFlagsToAttributes(FileName->FileAttributes | StdInfo->FileAttribute, &Info->FileAttributes);
 
     Info->EndOfFile.QuadPart = FileName->AllocatedSize;
     Info->AllocationSize.QuadPart = ROUND_UP(FileName->AllocatedSize, DeviceExt->NtfsInfo.BytesPerCluster);
