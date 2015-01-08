@@ -1,4 +1,4 @@
-ATOM AtomQOS;/*
+/*
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
