@@ -122,8 +122,6 @@ MSGMEMORY, *PMSGMEMORY;
 static MSGMEMORY g_MsgMemory[] =
 {
     { WM_CREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
-    { WM_DDE_ACK, sizeof(DDEPACK), MMS_FLAG_READ },
-    { WM_DDE_EXECUTE, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_GETMINMAXINFO, sizeof(MINMAXINFO), MMS_FLAG_READWRITE },
     { WM_GETTEXT, MMS_SIZE_WPARAMWCHAR, MMS_FLAG_WRITE },
     { WM_NCCALCSIZE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
@@ -1014,14 +1012,12 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      bGMSG );
         if (Present)
         {
+           /* GetMessage or PostMessage must never get messages that contain pointers */
+           ASSERT(FindMsgMemory(pMsg->message) == NULL);
+
            if ( pMsg->message >= WM_DDE_FIRST && pMsg->message <= WM_DDE_LAST )
            {
-              IntDdeGetMessageHook(pMsg);
-           }
-           else
-           {
-              /* GetMessage or PostMessage must never get messages that contain pointers */
-              ASSERT(FindMsgMemory(pMsg->message) == NULL);
+              IntDdeGetMessageHook(pMsg, ExtraInfo);
            }
 
            if (pMsg->message != WM_PAINT && pMsg->message != WM_QUIT)
@@ -1206,11 +1202,12 @@ UserPostMessage( HWND Wnd,
 
         if ( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
         {
-           if (!IntDdePostMessageHook(Window, Msg, wParam, lParam))
+           if (!IntDdePostMessageHook(Window, Msg, wParam, &lParam, &ExtraInfo))
            {
               ERR("Posting Exit DDE 0x%x\n",Msg);
               return FALSE;
            }
+           ERR("DDE Post lParam c=%08lx\n",lParam);
         }
 
         if (WM_QUIT == Msg)

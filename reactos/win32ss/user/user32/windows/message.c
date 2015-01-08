@@ -163,7 +163,7 @@ static unsigned DdeNumAlloc = 0;
 static unsigned DdeNumUsed = 0;
 static CRITICAL_SECTION DdeCrst;
 
-static BOOL FASTCALL
+BOOL FASTCALL
 DdeAddPair(HGLOBAL ClientMem, HGLOBAL ServerMem)
 {
   unsigned i;
@@ -213,7 +213,7 @@ DdeAddPair(HGLOBAL ClientMem, HGLOBAL ServerMem)
   return TRUE;
 }
 
-static HGLOBAL FASTCALL
+HGLOBAL FASTCALL
 DdeGetPair(HGLOBAL ServerMem)
 {
   unsigned i;
@@ -357,67 +357,12 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
 
   switch (UMMsg->message)
     {
-      case WM_DDE_ACK:
-        {
-          PDDEPACK DdeLparam;
-          DdeLparam = HeapAlloc(GetProcessHeap(), 0, sizeof(DDEPACK));
-          if (!DdeLparam ||
-              !UnpackDDElParam( UMMsg->message, UMMsg->lParam, &DdeLparam->uiLo, &DdeLparam->uiHi))
-             return FALSE;
-         /*
-             If this is a reply to WM_DDE_EXECUTE then
-             uiHi will contain a hMem, hence >= 0x10000.
-             Otherwise, it will be be an atom, a 16-bit value.
-          */
-          if (!IS_ATOM(DdeLparam->uiHi))
-          {
-             HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
-             if (h)
-             {
-                GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->uiHi);
-                DdeLparam->uiHi = (UINT_PTR) h;
-             }
-          }
-          FreeDDElParam(UMMsg->message, UMMsg->lParam);
-          KMMsg->lParam = (LPARAM) DdeLparam;
-        }
-        break;
-
-      case WM_DDE_EXECUTE:
-        {
-          SIZE_T Size;
-          PKMDDEEXECUTEDATA KMDdeExecuteData;
-          PVOID Data;
-
-          Size = GlobalSize((HGLOBAL) UMMsg->lParam);
-          Data = GlobalLock((HGLOBAL) UMMsg->lParam);
-          if (!Data)
-          {
-             SetLastError(ERROR_INVALID_HANDLE);
-             return FALSE;
-          }
-          KMDdeExecuteData = HeapAlloc(GetProcessHeap(), 0, sizeof(KMDDEEXECUTEDATA) + Size);
-          if (!KMDdeExecuteData)
-          {
-             SetLastError(ERROR_OUTOFMEMORY);
-             return FALSE;
-          }
-          KMDdeExecuteData->Sender = (HWND) UMMsg->wParam;
-          KMDdeExecuteData->ClientMem = (HGLOBAL) UMMsg->lParam;
-          memcpy((PVOID) (KMDdeExecuteData + 1), Data, Size);
-          KMMsg->wParam = sizeof(KMDDEEXECUTEDATA) + Size;
-          KMMsg->lParam = (LPARAM) KMDdeExecuteData;
-          GlobalUnlock((HGLOBAL) UMMsg->lParam);
-        }
-        break;
-
       case WM_COPYDATA:
         {
           PCOPYDATASTRUCT pUMCopyData = (PCOPYDATASTRUCT)UMMsg->lParam;
           PCOPYDATASTRUCT pKMCopyData;
 
-          pKMCopyData = HeapAlloc(GetProcessHeap(), 0,
-                                  sizeof(COPYDATASTRUCT) + pUMCopyData->cbData);
+          pKMCopyData = HeapAlloc(GetProcessHeap(), 0, sizeof(COPYDATASTRUCT) + pUMCopyData->cbData);
           if (!pKMCopyData)
           {
               SetLastError(ERROR_OUTOFMEMORY);
@@ -428,8 +373,7 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
           pKMCopyData->cbData = pUMCopyData->cbData;
           pKMCopyData->lpData = pKMCopyData + 1;
 
-          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData,
-                        pUMCopyData->cbData);
+          RtlCopyMemory(pKMCopyData + 1, pUMCopyData->lpData, pUMCopyData->cbData);
 
           KMMsg->lParam = (LPARAM)pKMCopyData;
         }
@@ -448,8 +392,6 @@ MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
 {
   switch (KMMsg->message)
     {
-      case WM_DDE_ACK:
-      case WM_DDE_EXECUTE:
       case WM_COPYDATA:
         HeapFree(GetProcessHeap(), 0, (LPVOID) KMMsg->lParam);
         break;
@@ -464,6 +406,8 @@ static BOOL FASTCALL
 MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
 {
   *UMMsg = *KMMsg;
+
+  if (KMMsg->lParam == 0) return TRUE;
 
   switch (UMMsg->message)
     {
@@ -485,43 +429,6 @@ MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
               Class += sizeof(WCHAR);
               Cs->lpszClass = (LPCWSTR) Class;
             }
-        }
-        break;
-
-      case WM_DDE_ACK:
-        {
-          PDDEPACK DdeLparam = (PDDEPACK) KMMsg->lParam;
-          UMMsg->lParam = PackDDElParam(KMMsg->message, DdeLparam->uiLo, DdeLparam->uiHi);
-        }
-        break;
-
-      case WM_DDE_EXECUTE:
-        {
-          PKMDDEEXECUTEDATA KMDdeExecuteData;
-          HGLOBAL GlobalData;
-          PVOID Data;
-
-          KMDdeExecuteData = (PKMDDEEXECUTEDATA) KMMsg->lParam;
-          GlobalData = GlobalAlloc(GMEM_MOVEABLE, KMMsg->wParam - sizeof(KMDDEEXECUTEDATA));
-          if (!GlobalData)
-          {
-             return FALSE;
-          }
-          Data = GlobalLock(GlobalData);
-          if (!Data)
-          {
-             GlobalFree(GlobalData);
-             return FALSE;
-          }
-          memcpy(Data, (PVOID) (KMDdeExecuteData + 1), KMMsg->wParam - sizeof(KMDDEEXECUTEDATA));
-          GlobalUnlock(GlobalData);
-          if (!DdeAddPair(KMDdeExecuteData->ClientMem, GlobalData))
-          {
-             GlobalFree(GlobalData);
-             return FALSE;
-          }
-          UMMsg->wParam = (WPARAM) KMDdeExecuteData->Sender;
-          UMMsg->lParam = (LPARAM) GlobalData;
         }
         break;
 
@@ -2967,6 +2874,11 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       KMMsg.lParam = (LPARAM) ((char *) CallbackArgs + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS));
      switch(KMMsg.message)
      {
+        case WM_SYSTIMER:
+        {
+        ERR("WM_SYSTIMER %p\n",KMMsg.hwnd);
+        break;
+        }
         case WM_SIZING:
         {
            PRECT prect = (PRECT) KMMsg.lParam;

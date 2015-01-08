@@ -15,6 +15,8 @@ extern PPROCESSINFO gppiList;
 extern PPROCESSINFO ppiScrnSaver;
 extern PPROCESSINFO gppiInputProvider;
 extern ATOM gaGuiConsoleWndClass;
+extern ATOM AtomDDETrack;
+extern ATOM AtomQOS;
 
 INIT_FUNCTION NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);

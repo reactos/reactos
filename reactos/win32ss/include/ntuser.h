@@ -301,6 +301,12 @@ C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
+typedef struct tagDDEPACK
+{
+  UINT_PTR uiLo;
+  UINT_PTR uiHi;
+} DDEPACK, *PDDEPACK;
+
 #define HRGN_NULL    ( (HRGN) 0) // NULL empty region
 #define HRGN_WINDOW  ( (HRGN) 1) // region from window rcWindow
 #define HRGN_MONITOR ( (HRGN) 2) // region from monitor region.
@@ -3417,19 +3423,7 @@ DWORD
 NTAPI
 NtUserYieldTask(VOID);
 
-/* lParam of DDE messages */
-typedef struct tagKMDDEEXECUTEDATA
-{
-  HWND Sender;
-  HGLOBAL ClientMem;
-  /* BYTE Data[DataSize] */
-} KMDDEEXECUTEDATA, *PKMDDEEXECUTEDATA;
 
-typedef struct tagDDEPACK
-{
-  UINT_PTR uiLo;
-  UINT_PTR uiHi;
-} DDEPACK, *PDDEPACK;
 
 
 

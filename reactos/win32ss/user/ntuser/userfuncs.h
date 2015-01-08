@@ -43,8 +43,8 @@ PWND FASTCALL IntGetWindowObject(HWND hWnd);
 /*************** DDE.C ****************/
 
 BOOL FASTCALL IntDdeSendMessageHook(PWND,UINT,WPARAM,LPARAM);
-BOOL FASTCALL IntDdePostMessageHook(PWND,UINT,WPARAM,LPARAM);
-VOID FASTCALL IntDdeGetMessageHook(PMSG);
+BOOL APIENTRY IntDdePostMessageHook(IN PWND,IN UINT,IN WPARAM,IN OUT LPARAM*,IN OUT LONG_PTR*);
+VOID APIENTRY IntDdeGetMessageHook(PMSG,LONG_PTR);
 
 /*************** MAIN.C ***************/
 

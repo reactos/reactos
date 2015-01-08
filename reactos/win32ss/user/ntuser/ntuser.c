@@ -1,4 +1,4 @@
-/*
+ATOM AtomQOS;/*
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
@@ -15,11 +15,12 @@ BOOL FASTCALL RegisterControlAtoms(VOID);
 PTHREADINFO gptiCurrent = NULL;
 PPROCESSINFO gppiInputProvider = NULL;
 ERESOURCE UserLock;
-ATOM AtomMessage; // Window Message atom.
-ATOM AtomWndObj;  // Window Object atom.
-ATOM AtomLayer;   // Window Layer atom.
+ATOM AtomMessage;       // Window Message atom.
+ATOM AtomWndObj;        // Window Object atom.
+ATOM AtomLayer;         // Window Layer atom.
 ATOM AtomFlashWndState; // Window Flash State atom.
-ATOM AtomDDETrack; // Window DDE Tracking atom.
+ATOM AtomDDETrack;      // Window DDE Tracking atom.
+ATOM AtomQOS;           // Window DDE Quality of Service atom.
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
 ATOM gaGuiConsoleWndClass;
@@ -52,6 +53,7 @@ InitUserAtoms(VOID)
     gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
 
     AtomDDETrack = IntAddGlobalAtom(L"SysDT", TRUE);
+    AtomQOS      = IntAddGlobalAtom(L"SysQOS", TRUE);
 
     /*
      * FIXME: AddPropW uses the global kernel atom table, thus leading to conflicts if we use

@@ -14,7 +14,9 @@
 #define USER32_CALLBACK_COPYIMAGE             (10)
 #define USER32_CALLBACK_SETWNDICONS           (11)
 #define USER32_CALLBACK_DELIVERUSERAPC        (12)
-#define USER32_CALLBACK_MAXIMUM               (12)
+#define USER32_CALLBACK_DDEPOST               (13)
+#define USER32_CALLBACK_DDEGET                (14)
+#define USER32_CALLBACK_MAXIMUM               (14)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -115,6 +117,14 @@ typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
     HICON hIconWindows;
 } SETWNDICONS_CALLBACK_ARGUMENTS, *PSETWNDICONS_CALLBACK_ARGUMENTS;
 
+typedef struct _DDEPOSTGET_CALLBACK_ARGUMENTS
+{
+    INT Type;
+    MSG;
+    int size;
+    BYTE buffer[1];
+} DDEPOSTGET_CALLBACK_ARGUMENTS, *PDDEPOSTGET_CALLBACK_ARGUMENTS;
+
 NTSTATUS WINAPI
 User32CallCopyImageFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -141,4 +151,8 @@ NTSTATUS WINAPI
 User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32DeliverUserAPC(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallDDEPostFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallDDEGetFromKernel(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */
