@@ -12,9 +12,9 @@ URLSite = http://akelpad.sourceforge.net/
 URLDownload = http://switch.dl.sourceforge.net/project/akelpad/AkelPad%204/4.9.1/AkelPad-4.9.1-setup.exe
 CDPath = none
 
+[Section.0418]
+Description = AkelPad - editor de text simplu. Este un program cu sursă deschisă, conceput pentru a fi mic și rapid.
+Size = 1,11 Mo
+
 [Section.0419]
 Description = AkelPad - текстовый редактор с открытым исходным кодом, созданный, чтобы быть маленьким и быстрым. 
-Size = 1.11 MB
-
-
-
