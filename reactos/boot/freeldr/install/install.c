@@ -23,8 +23,13 @@
 #include <stdio.h>
 #include "install.h"
 #include "volume.h"
-#include "../bootsect/fat.h"
-#include "../bootsect/fat32.h"
+
+/*
+ * These includes are required to define
+ * the fat_data and fat32_data arrays.
+ */
+#include "fat.h"
+#include "fat32.h"
 
 BOOL    BackupBootSector(LPCTSTR lpszVolumeName);
 BOOL    InstallBootSector(LPCTSTR lpszVolumeType);
