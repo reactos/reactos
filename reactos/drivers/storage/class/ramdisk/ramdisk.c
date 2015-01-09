@@ -1473,7 +1473,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 //
                 // We don't handle anything else yet
                 //
-                UNIMPLEMENTED_DBGBREAK("IOCTL: %lx\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
+                UNIMPLEMENTED_DBGBREAK("FSCTL: 0x%lx is UNSUPPORTED!\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
             }
         }
     }
@@ -1631,7 +1631,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             case IOCTL_VOLUME_GET_GPT_ATTRIBUTES:
             case IOCTL_VOLUME_OFFLINE:
             {
-                UNIMPLEMENTED_DBGBREAK("IOCTL: %lx\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
+                UNIMPLEMENTED_DBGBREAK("IOCTL: 0x%lx is UNIMPLEMENTED!\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
                 break;
             }
 
@@ -1640,7 +1640,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 //
                 // Drive code not emulated
                 //
-                DPRINT1("IOCTL: %lx\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
+                DPRINT1("IOCTL: 0x%lx is UNSUPPORTED!\n", IoStackLocation->Parameters.DeviceIoControl.IoControlCode);
                 break;
             }
         }
@@ -2952,7 +2952,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
             // Are we being booted from setup? Not yet supported
             //
             if (KeLoaderBlock->SetupLdrBlock)
-                DPRINT1("FIXME: RamdiskAddDevice unsupported when being started from SETUPLDR!\n");
+                DPRINT1("FIXME: RamdiskAddDevice is UNSUPPORTED when being started from SETUPLDR!\n");
             // ASSERT(!KeLoaderBlock->SetupLdrBlock);
         }
 
