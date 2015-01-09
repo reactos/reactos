@@ -1,6 +1,7 @@
 /* Spanish translation created by Ismael Ferreras Morezuelas (2014-12-30) */
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
+#if 0
 IDD_POWER_METER DIALOGEX 0, 0, 252, 218
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
@@ -12,6 +13,7 @@ BEGIN
     CONTROL "Mostrar un estado detallado para cada &batería.", 1003, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
     CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
 END
+#endif
 
 STRINGTABLE
 BEGIN
@@ -35,7 +37,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Unidad(%s)"
     IDS_HOTPLUG_DRIVES " - Unidades(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Este dispositivo necesita una \"desconexión segura\""
+    IDS_HOTPLUG_REQUIERES "Este dispositivo necesita una ""desconexión segura"""
     IDS_HOTPLUG_CLICK "Antes de desconectar el dispositivo, haga clic en este icono y eliga el dispositivo a desconectar."
 
     //Volume related strings
@@ -50,4 +52,3 @@ BEGIN
     IDS_KEYS_MOUSE "MouseKeys"
     IDS_KEYS_FILTER "FilterKeys"
 END
-

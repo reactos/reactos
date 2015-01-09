@@ -1,5 +1,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
+#if 0
 IDD_POWER_METER DIALOGEX 0, 0, 252, 218 
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
@@ -11,6 +12,7 @@ BEGIN
     CONTROL "&Details für jede Batterie anzeigen", 1002, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 129, 6, 123, 10
     CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178
 END
+#endif
 
 STRINGTABLE
 BEGIN
@@ -34,7 +36,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Laufwerk (%s)"
     IDS_HOTPLUG_DRIVES " - Laufwerke (%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Diese Hardware erfordert \"Sicheres Entfernen\""
+    IDS_HOTPLUG_REQUIERES "Diese Hardware erfordert ""Sicheres Entfernen"""
     IDS_HOTPLUG_CLICK "Klicken Sie auf dieses Symbol, und wählen Sie die zu entfernende Hardware, bevor Sie diese Hardware entfernen."
 
     //Volume related strings

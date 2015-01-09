@@ -11,6 +11,9 @@
 #include <mmsystem.h>
 #include <mmddk.h>
 
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+
 WINE_DEFAULT_DEBUG_CHANNEL(stobject);
 
 HICON g_hIconVolume;
@@ -28,13 +31,13 @@ BOOL g_IsMute = FALSE;
 static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
 {
     MMRESULT result;
-    UINT mixerId    = 0;
+    UINT mixerId = 0;
     DWORD waveOutId = 0;
-    DWORD param2    = 0;
+    DWORD param2 = 0;
 
     TRACE("Volume_FindDefaultMixerID\n");
 
-    result = waveOutMessage((HWAVEOUT) WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR) &waveOutId, (DWORD_PTR) &param2);
+    result = waveOutMessage((HWAVEOUT)WAVE_MAPPER, DRVM_MAPPER_PREFERRED_GET, (DWORD_PTR)&waveOutId, (DWORD_PTR)&param2);
     if (result)
         return E_FAIL;
 
@@ -48,7 +51,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     {
         TRACE("waveOut default device is %d\n", waveOutId);
 
-        result = mixerGetID((HMIXEROBJ) waveOutId, &mixerId, MIXER_OBJECTF_WAVEOUT);
+        result = mixerGetID((HMIXEROBJ)waveOutId, &mixerId, MIXER_OBJECTF_WAVEOUT);
         if (result)
             return E_FAIL;
 
@@ -79,7 +82,7 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     {
         mixerLine.cbStruct = sizeof(mixerLine);
         mixerLine.dwDestination = idx;
-        if (!mixerGetLineInfoW((HMIXEROBJ) g_mixerId, &mixerLine, 0))
+        if (!mixerGetLineInfoW((HMIXEROBJ)g_mixerId, &mixerLine, 0))
         {
             if (mixerLine.dwComponentType >= MIXERLINE_COMPONENTTYPE_DST_SPEAKERS &&
                 mixerLine.dwComponentType <= MIXERLINE_COMPONENTTYPE_DST_HEADPHONES)
@@ -102,11 +105,11 @@ static HRESULT __stdcall Volume_FindMixerControl(CSysTray * pSysTray)
     mixerLineControls.pamxctrl = &mixerControl;
     mixerLineControls.cbmxctrl = sizeof(mixerControl);
 
-    if (mixerGetLineControlsW((HMIXEROBJ) g_mixerId, &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
+    if (mixerGetLineControlsW((HMIXEROBJ)g_mixerId, &mixerLineControls, MIXER_GETLINECONTROLSF_ONEBYTYPE))
         return E_FAIL;
 
     TRACE("Found control id %d for mute: %d\n", mixerControl.dwControlID);
-    
+
     g_muteControlID = mixerControl.dwControlID;
 
     return S_OK;
@@ -172,13 +175,18 @@ HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)
 
     Volume_IsMute();
 
+    WCHAR strTooltip[128];
     HICON icon;
-    if (g_IsMute)
+    if (g_IsMute) {
         icon = g_hIconMute;
-    else
+        LoadStringW(g_hInstance, IDS_VOL_MUTED, strTooltip, _countof(strTooltip));
+    }
+    else {
         icon = g_hIconVolume;
+        LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
+    }
 
-    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_VOLUME, icon, L"Placeholder");
+    return pSysTray->NotifyIcon(NIM_MODIFY, ID_ICON_VOLUME, icon, strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
@@ -191,6 +199,49 @@ HRESULT STDMETHODCALLTYPE Volume_Shutdown(_In_ CSysTray * pSysTray)
 HRESULT Volume_OnDeviceChange(_In_ CSysTray * pSysTray, WPARAM wParam, LPARAM lParam)
 {
     return Volume_FindMixerControl(pSysTray);
+}
+
+static void _RunVolume()
+{
+    // FIXME: ensure we are loading the right one
+    ShellExecuteW(NULL, NULL, L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL);
+}
+
+static void _RunMMCpl()
+{
+    ShellExecuteW(NULL, NULL, L"mmsys.cpl", NULL, NULL, SW_NORMAL);
+}
+
+static void _ShowContextMenu(CSysTray * pSysTray)
+{
+    WCHAR strAdjust[128];
+    WCHAR strOpen[128];
+    LoadStringW(g_hInstance, IDS_VOL_ADJUST, strAdjust, _countof(strAdjust));
+    LoadStringW(g_hInstance, IDS_VOL_OPEN, strOpen, _countof(strOpen));
+
+    HMENU hPopup = CreatePopupMenu();
+    AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
+    AppendMenuW(hPopup, MF_STRING, IDS_VOL_OPEN, strOpen);
+
+    DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
+    DWORD msgPos = GetMessagePos();
+
+    SetForegroundWindow(pSysTray->GetHWnd());
+    DWORD id = TrackPopupMenuEx(hPopup, flags,
+        GET_X_LPARAM(msgPos), GET_Y_LPARAM(msgPos),
+        pSysTray->GetHWnd(), NULL);
+
+    DestroyMenu(hPopup);
+
+    switch (id)
+    {
+    case IDS_VOL_OPEN:
+        _RunVolume();
+        break;
+    case IDS_VOL_ADJUST:
+        _RunMMCpl();
+        break;
+    }
 }
 
 HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -216,13 +267,12 @@ HRESULT STDMETHODCALLTYPE Volume_Message(_In_ CSysTray * pSysTray, UINT uMsg, WP
         TRACE("TODO: display volume slider\n");
         break;
     case WM_LBUTTONDBLCLK:
-        // FIXME: ensure we are loading the right one
-        ShellExecute(NULL, NULL, L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL);
+        _RunVolume();
         break;
     case WM_RBUTTONDOWN:
         break;
     case WM_RBUTTONUP:
-        break;
+        _ShowContextMenu(pSysTray);
     case WM_RBUTTONDBLCLK:
         break;
     case WM_MOUSEMOVE:
