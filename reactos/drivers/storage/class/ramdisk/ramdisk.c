@@ -380,7 +380,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
             /* Sanitize disk options */
             Input->Options.Fixed = TRUE;
             Input->Options.Readonly = Input->Options.ExportAsCd |
-                          Input->Options.Readonly;
+                                      Input->Options.Readonly;
             Input->Options.Hidden = FALSE;
             Input->Options.NoDosDevice = FALSE;
             Input->Options.NoDriveLetter = IsWinPEBoot ? TRUE : FALSE;
@@ -1048,8 +1048,8 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
                  IN PIRP Irp)
 {
     PRAMDISK_DRIVE_EXTENSION DeviceExtension;
-    //ULONG Length;
-    //LARGE_INTEGER ByteOffset;
+    // ULONG Length;
+    // LARGE_INTEGER ByteOffset;
     PIO_STACK_LOCATION IoStackLocation;
     NTSTATUS Status, ReturnStatus;
 
@@ -1064,8 +1064,8 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
     /* Capture parameters */
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    //Length = IoStackLocation->Parameters.Read.Length;
-    //ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    // Length = IoStackLocation->Parameters.Read.Length;
+    // ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
 
     /* FIXME: Validate offset */
 
@@ -1345,7 +1345,7 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
 
         /* Allocate a buffer big enough to contain only one DO */
         DeviceRelations = ExAllocatePoolWithTag(PagedPool,
-                                                sizeof(DeviceRelations),
+                                                sizeof(*DeviceRelations),
                                                 'dmaR');
         if (DeviceRelations != NULL)
         {
@@ -1795,7 +1795,7 @@ RamdiskQueryBusInformation(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Allocate output memory */
-    PnpBusInfo = ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), 'dmaR');
+    PnpBusInfo = ExAllocatePoolWithTag(PagedPool, sizeof(*PnpBusInfo), 'dmaR');
     if (PnpBusInfo == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -2301,8 +2301,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
     {
         /* Initialize the bus FDO extension */
         DeviceExtension = DeviceObject->DeviceExtension;
-        RtlZeroMemory(DeviceObject->DeviceExtension,
-                      sizeof(RAMDISK_BUS_EXTENSION));
+        RtlZeroMemory(DeviceExtension, sizeof(*DeviceExtension));
 
         /* Set bus FDO flags */
         DeviceObject->Flags |= DO_POWER_PAGABLE | DO_DIRECT_IO;
@@ -2349,7 +2348,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
             /* Are we being booted from setup? Not yet supported */
             if (KeLoaderBlock->SetupLdrBlock)
                 DPRINT1("FIXME: RamdiskAddDevice is UNSUPPORTED when being started from SETUPLDR!\n");
-            //ASSERT(!KeLoaderBlock->SetupLdrBlock);
+            // ASSERT(!KeLoaderBlock->SetupLdrBlock);
         }
 
         /* All done */
@@ -2378,7 +2377,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverRegistryPath = *RegistryPath;
     DriverRegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                       RegistryPath->Length +
-                                                      sizeof(WCHAR),
+                                                      sizeof(UNICODE_NULL),
                                                       'dmaR');
     if (!DriverRegistryPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlCopyUnicodeString(&DriverRegistryPath, RegistryPath);
@@ -2437,7 +2436,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Installing from Ramdisk isn't supported yet */
     if (KeLoaderBlock->SetupLdrBlock)
         DPRINT1("FIXME: Installing from RamDisk is UNSUPPORTED!\n");
-    //ASSERT(!KeLoaderBlock->SetupLdrBlock);
+    // ASSERT(!KeLoaderBlock->SetupLdrBlock);
 
     /* Are we reporting the device */
     if (ReportDetectedDevice)
