@@ -337,7 +337,7 @@ UnregisterTrayNotifyWndClass(VOID);
 HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow, IN BOOL bHideClock, CTrayNotifyWnd** ppTrayNotify);
 
-VOID
+BOOL
 TrayNotify_NotifyMsg(CTrayNotifyWnd* pTrayNotify, IN WPARAM wParam,
 IN LPARAM lParam);
 

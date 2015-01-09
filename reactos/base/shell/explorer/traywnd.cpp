@@ -2184,7 +2184,7 @@ ChangePos:
     {
         if (m_TrayNotify)
         {
-            TrayNotify_NotifyMsg(m_TrayNotifyInstance, wParam, lParam);
+            return TrayNotify_NotifyMsg(m_TrayNotifyInstance, wParam, lParam);
         }
         return TRUE;
     }
