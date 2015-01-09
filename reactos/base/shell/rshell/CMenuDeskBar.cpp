@@ -338,6 +338,8 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
         x = ppt->x + rc.left;
         y = ppt->y + rc.top;
         break;
+    case MPPF_TOP:
+        break;
     case MPPF_TOP | MPPF_ALIGN_LEFT:
         x = ppt->x - rc.right;
         y = ppt->y + rc.top;

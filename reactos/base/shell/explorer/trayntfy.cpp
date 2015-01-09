@@ -82,7 +82,7 @@ public:
         return -1;
     }
 
-    VOID AddButton(IN CONST NOTIFYICONDATA *iconData)
+    BOOL AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
         TBBUTTON tbBtn;
         NOTIFYICONDATA * notifyItem;
@@ -91,8 +91,7 @@ public:
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index >= 0)
         {
-            UpdateButton(iconData);
-            return;
+            return UpdateButton(iconData);
         }
 
         notifyItem = new NOTIFYICONDATA();
@@ -138,9 +137,11 @@ public:
 
         CToolbar::AddButton(&tbBtn);
         SetButtonSize(ICON_SIZE, ICON_SIZE);
+
+        return TRUE;
     }
 
-    VOID UpdateButton(IN CONST NOTIFYICONDATA *iconData)
+    BOOL UpdateButton(IN CONST NOTIFYICONDATA *iconData)
     {
         NOTIFYICONDATA * notifyItem;
         TBBUTTONINFO tbbi = { 0 };
@@ -148,8 +149,7 @@ public:
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
         {
-            AddButton(iconData);
-            return;
+            return AddButton(iconData);
         }
 
         tbbi.cbSize = sizeof(tbbi);
@@ -197,15 +197,17 @@ public:
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
 
         SetButtonInfo(index, &tbbi);
+
+        return TRUE;
     }
 
-    VOID RemoveButton(IN CONST NOTIFYICONDATA *iconData)
+    BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData)
     {
         NOTIFYICONDATA * notifyItem;
 
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
-            return;
+            return FALSE;
 
         DeleteButton(index);
 
@@ -215,6 +217,8 @@ public:
         }
 
         delete notifyItem;
+
+        return TRUE;
     }
 
     VOID GetTooltipText(int index, LPTSTR szTip, DWORD cchTip)
@@ -432,20 +436,11 @@ public:
             switch (data->notify_code)
             {
             case NIM_ADD:
-            {
-                Toolbar.AddButton(iconData);
-                break;
-            }
+                return Toolbar.AddButton(iconData);
             case NIM_MODIFY:
-            {
-                Toolbar.UpdateButton(iconData);
-                break;
-            }
+                return Toolbar.UpdateButton(iconData);
             case NIM_DELETE:
-            {
-                Toolbar.RemoveButton(iconData);
-                break;
-            }
+                return Toolbar.RemoveButton(iconData);
             default:
                 TRACE("NotifyMessage received with unknown code %d.\n", data->notify_code);
                 break;
