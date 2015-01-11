@@ -1077,6 +1077,7 @@ new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
     new_d->next_in_directory = d->first_record;
     d->first_record = new_d;
     new_d->next_in_memory = root.next_in_memory;
+    new_d->date_and_time = d->date_and_time;
     root.next_in_memory = new_d;
     if (directory)
     {
@@ -1703,7 +1704,7 @@ int main(int argc, char **argv)
   root.level = 1;
   root.flags = DIRECTORY_FLAG;
   root.date_and_time.year = current_time->tm_year + 1900;
-  root.date_and_time.month = current_time->tm_mon;
+  root.date_and_time.month = current_time->tm_mon + 1;
   root.date_and_time.day = current_time->tm_mday;
   root.date_and_time.hour = current_time->tm_hour;
   root.date_and_time.minute = current_time->tm_min;
