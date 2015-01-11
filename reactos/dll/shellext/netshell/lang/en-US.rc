@@ -89,7 +89,7 @@ BEGIN
     IDS_WINS_SERVERS "WINS Servers"
     IDS_PROPERTY "Property"
     IDS_VALUE "Value"
-    IDS_NETWORKCONNECTION "Network Connection"
+    IDS_NETWORKCONNECTION "Network Connections"
     IDS_SHV_COLUMN_NAME "Name"
     IDS_SHV_COLUMN_TYPE "Type"
     IDS_SHV_COLUMN_STATE "Status"
