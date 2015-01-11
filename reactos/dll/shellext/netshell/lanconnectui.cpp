@@ -124,18 +124,18 @@ CNetConnectionPropertyUi::GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent *
 
     while (pEnumCfg->Next(1, &pNCg, &Fetched) == S_OK)
     {
-       hr = pNCg->GetDisplayName(&pName);
-       if (SUCCEEDED(hr))
-       {
-           if (!_wcsicmp(pName, pProperties->pszwDeviceName))
-           {
-               *pOut = pNCg;
-               pEnumCfg->Release();
-               return TRUE;
-           }
-           CoTaskMemFree(pName);
-       }
-       pNCg->Release();
+        hr = pNCg->GetDisplayName(&pName);
+        if (SUCCEEDED(hr))
+        {
+            if (!_wcsicmp(pName, pProperties->pszwDeviceName))
+            {
+                *pOut = pNCg;
+                pEnumCfg->Release();
+                return TRUE;
+            }
+            CoTaskMemFree(pName);
+        }
+        pNCg->Release();
     }
     pEnumCfg->Release();
     return FALSE;
@@ -162,44 +162,44 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
     }
     while(pENetCfg->Next(1, &pNCfgComp, &Num) == S_OK)
     {
-          hr = pNCfgComp->GetCharacteristics(&dwCharacteristics);
-          if (SUCCEEDED(hr) && (dwCharacteristics & NCF_HIDDEN))
-          {
-              pNCfgComp->Release();
-              continue;
-          }
-          pDisplayName = NULL;
-          pHelpText = NULL;
-          hr = pNCfgComp->GetDisplayName(&pDisplayName);
-          hr = pNCfgComp->GetHelpText(&pHelpText);
-          bChecked = TRUE; //ReactOS hack
-          hr = pNCfgComp->QueryInterface(IID_INetCfgComponentBindings, (LPVOID*)&pCompBind);
-          if (SUCCEEDED(hr))
-          {
-              if (GetINetCfgComponent(pNCfg, &pAdapterCfgComp))
-              {
-                  hr = pCompBind->IsBoundTo(pAdapterCfgComp);
-                  if (hr == S_OK)
-                      bChecked = TRUE;
-                  else
-                      bChecked = FALSE;
-                  pAdapterCfgComp->Release();
-                  pCompBind->Release();
-              }
-          }
+        hr = pNCfgComp->GetCharacteristics(&dwCharacteristics);
+        if (SUCCEEDED(hr) && (dwCharacteristics & NCF_HIDDEN))
+        {
+            pNCfgComp->Release();
+            continue;
+        }
+        pDisplayName = NULL;
+        pHelpText = NULL;
+        hr = pNCfgComp->GetDisplayName(&pDisplayName);
+        hr = pNCfgComp->GetHelpText(&pHelpText);
+        bChecked = TRUE; //ReactOS hack
+        hr = pNCfgComp->QueryInterface(IID_INetCfgComponentBindings, (LPVOID*)&pCompBind);
+        if (SUCCEEDED(hr))
+        {
+            if (GetINetCfgComponent(pNCfg, &pAdapterCfgComp))
+            {
+                hr = pCompBind->IsBoundTo(pAdapterCfgComp);
+                if (hr == S_OK)
+                    bChecked = TRUE;
+                else
+                    bChecked = FALSE;
+                pAdapterCfgComp->Release();
+                pCompBind->Release();
+            }
+        }
 
-          pItem = (NET_ITEM*)CoTaskMemAlloc(sizeof(NET_ITEM));
-          if (!pItem)
-              continue;
+        pItem = (NET_ITEM*)CoTaskMemAlloc(sizeof(NET_ITEM));
+        if (!pItem)
+            continue;
 
-          pItem->dwCharacteristics = dwCharacteristics;
-          pItem->szHelp = pHelpText;
-          pItem->Type = (NET_TYPE)Type;
-          pItem->pNCfgComp = pNCfgComp;
-          pItem->NumPropDialogOpen = 0;
+        pItem->dwCharacteristics = dwCharacteristics;
+        pItem->szHelp = pHelpText;
+        pItem->Type = (NET_TYPE)Type;
+        pItem->pNCfgComp = pNCfgComp;
+        pItem->NumPropDialogOpen = 0;
 
-          AddItemToListView(hDlgCtrl, pItem, pDisplayName, bChecked);
-          CoTaskMemFree(pDisplayName);
+        AddItemToListView(hDlgCtrl, pItem, pDisplayName, bChecked);
+        CoTaskMemFree(pDisplayName);
     }
     pENetCfg->Release();
 }
@@ -298,8 +298,8 @@ CNetConnectionPropertyUi::ShowNetworkComponentProperties(HWND hwndDlg)
         lvItem.iItem = Index;
         if (SendMessageW(hDlgCtrl, LVM_GETITEMW, 0, (LPARAM)&lvItem))
         {
-           if (lvItem.state & LVIS_SELECTED)
-               break;
+            if (lvItem.state & LVIS_SELECTED)
+                break;
         }
     }
 
@@ -394,33 +394,33 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
 #endif
             if (lppl->hdr.code == LVN_ITEMCHANGING)
             {
-                    ZeroMemory(&li, sizeof(li));
-                    li.mask = LVIF_PARAM;
-                    li.iItem = lppl->iItem;
-                    if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&li))
-                        return TRUE;
+                ZeroMemory(&li, sizeof(li));
+                li.mask = LVIF_PARAM;
+                li.iItem = lppl->iItem;
+                if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&li))
+                    return TRUE;
 
-                    pItem = (PNET_ITEM)li.lParam;
-                    if (!pItem)
-                        return TRUE;
+                pItem = (PNET_ITEM)li.lParam;
+                if (!pItem)
+                    return TRUE;
 
-                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
-                    {
-                        /* new focused item */
-                        if (pItem->dwCharacteristics & NCF_NOT_USER_REMOVABLE)
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALL), FALSE);
-                        else
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALL), TRUE);
+                if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
+                {
+                    /* new focused item */
+                    if (pItem->dwCharacteristics & NCF_NOT_USER_REMOVABLE)
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALL), FALSE);
+                    else
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_UNINSTALL), TRUE);
 
-                        if (pItem->dwCharacteristics & NCF_HAS_UI)
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROPERTIES), TRUE);
-                        else
-                            EnableWindow(GetDlgItem(hwndDlg, IDC_PROPERTIES), FALSE);
+                    if (pItem->dwCharacteristics & NCF_HAS_UI)
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PROPERTIES), TRUE);
+                    else
+                        EnableWindow(GetDlgItem(hwndDlg, IDC_PROPERTIES), FALSE);
 
-                        SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_SETTEXT, 0, (LPARAM)pItem->szHelp);
-                    }
-             }
-             break;
+                    SendDlgItemMessageW(hwndDlg, IDC_DESCRIPTION, WM_SETTEXT, 0, (LPARAM)pItem->szHelp);
+                }
+            }
+            break;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_PROPERTIES)
             {
@@ -590,7 +590,7 @@ CNetConnectionPropertyUi::AddPages(
     if (FAILED(hr))
         return hr;
 
-	hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)this, pProperties->pszwName);
+    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)this, pProperties->pszwName);
     if (hProp)
     {
         ret = (*pfnAddPage)(hProp, lParam);
@@ -634,7 +634,7 @@ CNetConnectionPropertyUi::SetConnection(INetConnection* pCon)
         return E_POINTER;
 
     this->pCon = pCon;
-	
+
     pCon->AddRef();
     return S_OK;
 }
@@ -661,9 +661,9 @@ CNetConnectionPropertyUi::Disconnect(
     HWND hwndParent,
     DWORD dwFlags)
 {
-	WCHAR szBuffer[100];
+    WCHAR szBuffer[100];
     swprintf(szBuffer, L"INetConnectionConnectUi_fnDisconnect flags %x\n", dwFlags);
-	MessageBoxW(NULL, szBuffer, NULL, MB_OK);
+    MessageBoxW(NULL, szBuffer, NULL, MB_OK);
 
     return S_OK;
 }

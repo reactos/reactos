@@ -536,8 +536,7 @@ LANStatusUiAdvancedDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     WCHAR szBuffer[100] = {0};
     PROPSHEETPAGE *page;
@@ -949,7 +948,7 @@ LANStatusDlg(
     }
     return FALSE;
 }
- 
+
 HRESULT
 CLanStatus::InitializeNetTaskbarNotifications()
 {
@@ -1154,7 +1153,7 @@ CLanStatus::Release()
 #if 0 // WTF?!
     ULONG refCount = InterlockedDecrement(&ref);
 
-    if (!refCount) 
+    if (!refCount)
         delete this;
 
     return refCount;
