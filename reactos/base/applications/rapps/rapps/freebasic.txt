@@ -3,13 +3,13 @@
 
 [Section]
 Name = FreeBASIC
-Version = 1.00.0
+Version = 1.01.0
 License = GPL/LGPL
 Description = Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.
 Size = 9.0 MB
 Category = 7
 URLSite = http://www.freebasic.net/
-URLDownload = http://download.sourceforge.net/project/fbc/Binaries%20-%20Windows/FreeBASIC-1.00.0-win32.exe
+URLDownload = http://download.sourceforge.net/project/fbc/Binaries%20-%20Windows/FreeBASIC-1.01.0-win32.exe
 CDPath = none
 
 [Section.0407]

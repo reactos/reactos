@@ -3,13 +3,13 @@
 
 [Section]
 Name = SumatraPDF
-Version = 2.5.2
+Version = 3.0
 License = GPLv3
 Description = Sumatra PDF is a slim, free, open-source PDF reader. Portable out of the box.
-Size = 4.0 MB
+Size = 4.34 MB
 Category = 6
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html
-URLDownload = http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-2.5.2-install.exe
+URLDownload = http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
 CDPath = none
 
 [Section.0407]
@@ -22,7 +22,7 @@ URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-es.html
 
 [Section.040c]
 Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source.
-Size = 4,0 Mo
+Size = 4,34 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-fr.html
 
 [Section.0410]
@@ -36,13 +36,13 @@ Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
 
 [Section.0418]
 Description = Lector PDF - ușor, gratuit (cu surse deschise), și portabil.
-Size = 4,0 Mo
+Size = 4,34 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 
 [Section.041f]
 License = GPL 3. sürüm
 Description = SumatraPDF; yeğni, ücretsiz ve açık kaynak bir PDF okuyucusudur. Kutunun dışında taşınabilirdir.
-Size = 4,0 MB
+Size = 4,34 MB
 
 [Section.0813]
 Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.

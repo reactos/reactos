@@ -4,13 +4,13 @@
 
 [Section]
 Name = Bochs
-Version = 2.6.6
+Version = 2.6.7
 License = LGPL v2
 Description = Bochs is a highly portable open source IA-32 (x86) PC emulator written in C++, that runs on most popular platforms.
-Size = 4.7 MB
+Size = 4.8 MB
 Category = 15
 URLSite = http://bochs.sourceforge.net/
-URLDownload = http://download.sourceforge.net/project/bochs/bochs/2.6.6/Bochs-2.6.6.exe
+URLDownload = http://download.sourceforge.net/project/bochs/bochs/2.6.7/Bochs-2.6.7.exe
 CDPath = none
 
 [Section.0407]
@@ -24,9 +24,9 @@ Description = Bochs to przenośny (portable) emulator platformy IA-32 (x86) napi
 
 [Section.0418]
 Description = Bochs este un emulator PC (x86) cu surse deschise și portabilitate înaltă, scris în C++, compatibil cu majoritatea platformelor.
-Size = 4,7 Mo
+Size = 4,8 Mo
 
 [Section.041f]
 License = LGPL 2. sürüm
 Description = Bochs; çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
-Size = 4,7 MB
+Size = 4,8 MB
