@@ -268,6 +268,37 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
     return m_Site->QueryInterface(riid, ppvSite);
 }
 
+static void AdjustForExcludeArea(BOOL alignLeft, BOOL alignTop, BOOL preferVertical, PINT px, PINT py, INT cx, INT cy, RECTL rcExclude) {
+    RECT rcWindow = { *px, *py, *px + cx, *py + cy };
+    
+    if (rcWindow.right > rcExclude.left && rcWindow.left < rcExclude.right &&
+        rcWindow.bottom > rcExclude.top && rcWindow.top < rcExclude.bottom)
+    {
+        if (preferVertical)
+        {
+            if (alignTop && rcWindow.bottom > rcExclude.top)
+                *py = rcExclude.top - cy;
+            else if (!alignTop && rcWindow.top < rcExclude.bottom)
+                *py = rcExclude.bottom;
+            else if (alignLeft && rcWindow.right > rcExclude.left)
+                *px = rcExclude.left - cx;
+            else if (!alignLeft && rcWindow.left < rcExclude.right)
+                *px = rcExclude.right;
+        }
+        else
+        {
+            if (alignLeft && rcWindow.right > rcExclude.left)
+                *px = rcExclude.left - cx;
+            else if (!alignLeft && rcWindow.left < rcExclude.right)
+                *px = rcExclude.right;
+            else if (alignTop && rcWindow.bottom > rcExclude.top)
+                *py = rcExclude.top - cy;
+            else if (!alignTop && rcWindow.top < rcExclude.bottom)
+                *py = rcExclude.bottom;
+        }
+    }
+}
+
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
 {
     HRESULT hr;
@@ -321,58 +352,142 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
 
     RECT rcWorkArea;
     GetWindowRect(GetDesktopWindow(), &rcWorkArea);
-    int waHeight = rcWorkArea.bottom - rcWorkArea.top;
+    int cxWorkArea = rcWorkArea.right - rcWorkArea.left;
+    int cyWorkArea = rcWorkArea.bottom - rcWorkArea.top;
 
     int x = ppt->x;
     int y = ppt->y;
     int cx = rc.right - rc.left;
     int cy = rc.bottom - rc.top;
 
-    switch (dwFlags & 0xFF000000)
+    // TODO: Make alignLeft default to TRUE in LTR systems or whenever necessary.
+    BOOL alignLeft = FALSE;
+    BOOL alignTop = FALSE;
+    BOOL preferVertical = FALSE;
+    switch (dwFlags & MPPF_POS_MASK)
     {
+    case MPPF_TOP:
+        alignTop = TRUE;
+        preferVertical = TRUE;
+        break;
+    case MPPF_LEFT:
+        alignLeft = TRUE;
+        break;
     case MPPF_BOTTOM:
-        x = ppt->x;
-        y = ppt->y - rc.bottom;
+        alignTop = FALSE;
+        preferVertical = TRUE;
         break;
     case MPPF_RIGHT:
-        x = ppt->x + rc.left;
-        y = ppt->y + rc.top;
-        break;
-    case MPPF_TOP | MPPF_ALIGN_LEFT:
-        x = ppt->x - rc.right;
-        y = ppt->y + rc.top;
-        break;
-    case MPPF_TOP | MPPF_ALIGN_RIGHT:
-        x = ppt->x;
-        y = ppt->y + rc.top;
+        alignLeft = FALSE;
         break;
     }
+
+    // Try the selected alignment and verify that it doesn't escape the work area.
+    if (alignLeft)
+    {
+        x = ppt->x - cx;
+    }
+    else
+    {
+        x = ppt->x;
+    }
+
+    if (alignTop)
+    {
+        y = ppt->y - cy;
+    }
+    else
+    {
+        y = ppt->y;
+    }
+
+    if (prcExclude)
+        AdjustForExcludeArea(alignLeft, alignTop, preferVertical, &x, &y, cx, cy, *prcExclude);
+
+    // Verify that it doesn't escape the work area, and flip.
+    if (alignLeft) 
+    {
+        if (x < rcWorkArea.left && (ppt->x+cx) <= rcWorkArea.right)
+        {
+            alignLeft = FALSE;
+            if (prcExclude)
+                x = prcExclude->right - ((x + cx) - prcExclude->left);
+            else
+                x = ppt->x;
+        }
+    }
+    else
+    {
+        if ((ppt->x + cx) > rcWorkArea.right && x >= rcWorkArea.left)
+        {
+            alignLeft = TRUE;
+            if (prcExclude)
+                x = prcExclude->left - cx + (prcExclude->right - x);
+            else
+                x = ppt->x - cx;
+        }
+    }
+
+    BOOL flipV = FALSE;
+    if (alignTop)
+    {
+        if (y < rcWorkArea.top && (ppt->y + cy) <= rcWorkArea.bottom)
+        {
+            alignTop = FALSE;
+            if (prcExclude)
+                y = prcExclude->bottom - ((y + cy) - prcExclude->top);
+            else
+                y = ppt->y;
+
+            flipV = true;
+        }
+    }
+    else
+    {
+        if ((ppt->y + cy) > rcWorkArea.bottom && y >= rcWorkArea.top)
+        {
+            alignTop = TRUE;
+            if (prcExclude)
+                y = prcExclude->top - cy + (prcExclude->bottom - y);
+            else
+                y = ppt->y - cy;
+
+            flipV = true;
+        }
+    }
+
+    if (prcExclude)
+        AdjustForExcludeArea(alignLeft, alignTop, preferVertical, &x, &y, cx, cy, *prcExclude);
+
+    if (x < rcWorkArea.left)
+        x = rcWorkArea.left;
+
+    if (cx > cxWorkArea)
+        cx = cxWorkArea;
 
     if (x + cx > rcWorkArea.right)
-    {
-        // FIXME: Works, but it's oversimplified.
-        x = prcExclude->left - cx;
-        dwFlags = (dwFlags & (~MPPF_TOP)) | MPPF_LEFT;
-    }
+        x = rcWorkArea.right - cx;
 
     if (y < rcWorkArea.top)
-    {
         y = rcWorkArea.top;
-    }
 
-    if (cy > waHeight)
-    {
-        cy = waHeight;
-    }
+    if (cy > cyWorkArea)
+        cy = cyWorkArea;
 
     if (y + cy > rcWorkArea.bottom)
-    {
         y = rcWorkArea.bottom - cy;
-    }
 
     int flags = SWP_SHOWWINDOW | SWP_NOACTIVATE;
 
     this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, flags);
+
+    if (flipV)
+    {
+        if (dwFlags & MPPF_INITIALSELECT)
+            dwFlags = (dwFlags ^ MPPF_INITIALSELECT) | MPPF_FINALSELECT;
+        else if (dwFlags & MPPF_FINALSELECT)
+            dwFlags = (dwFlags ^ MPPF_FINALSELECT) | MPPF_INITIALSELECT;
+    }
 
     m_ShowFlags = dwFlags;
     m_Shown = true;

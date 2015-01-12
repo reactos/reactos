@@ -1972,18 +1972,22 @@ ChangePos:
                 case ABE_BOTTOM:
                     pt.x = rcExclude.left;
                     pt.y = rcExclude.top;
-                    dwFlags |= MPPF_BOTTOM;
+                    dwFlags |= MPPF_TOP;
                     break;
                 case ABE_TOP:
-                case ABE_LEFT:
                     pt.x = rcExclude.left;
                     pt.y = rcExclude.bottom;
-                    dwFlags |= MPPF_TOP | MPPF_ALIGN_RIGHT;
+                    dwFlags |= MPPF_BOTTOM;
+                    break;
+                case ABE_LEFT:
+                    pt.x = rcExclude.right;
+                    pt.y = rcExclude.top;
+                    dwFlags |= MPPF_RIGHT;
                     break;
                 case ABE_RIGHT:
-                    pt.x = rcExclude.right;
-                    pt.y = rcExclude.bottom;
-                    dwFlags |= MPPF_TOP | MPPF_ALIGN_LEFT;
+                    pt.x = rcExclude.left;
+                    pt.y = rcExclude.top;
+                    dwFlags |= MPPF_LEFT;
                     break;
                 }
 

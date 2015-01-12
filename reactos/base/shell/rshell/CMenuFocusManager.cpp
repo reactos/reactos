@@ -777,7 +777,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
             CComPtr<IServiceProvider> bandSite;
             CComPtr<IOleWindow> deskBar;
             hr = topMenu->mb->GetSite(IID_PPV_ARG(IServiceProvider, &bandSite));
-            hr = bandSite->QueryService(SID_SMenuBandParent, IID_PPV_ARG(IOleWindow, &deskBar));
+            hr = bandSite->QueryService(SID_SMenuPopup, IID_PPV_ARG(IOleWindow, &deskBar));
 
             CComPtr<IOleWindow> deskBarSite;
             hr = IUnknown_GetSite(deskBar, IID_PPV_ARG(IOleWindow, &deskBarSite));

@@ -684,32 +684,32 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
 {
     // Calculate the submenu position and exclude area
     RECT rc = { 0 };
-    RECT rcx = { 0 };
 
     if (!GetItemRect(index, &rc))
         return E_FAIL;
-
-    HWND topWnd;
-    GetWindow(&topWnd);
-    GetWindowRect(topWnd, &rcx);
-
+    
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
-    POINT c = { rcx.left, rcx.top };
-    POINT d = { rcx.right, rcx.bottom };
 
     ClientToScreen(m_hWnd, &a);
     ClientToScreen(m_hWnd, &b);
-    ClientToScreen(topWnd, &c);
-    ClientToScreen(topWnd, &d);
 
     POINTL pt = { a.x, b.y };
-    RECTL rcl = { c.x, c.y, d.x, d.y };
+    RECTL rcl = { a.x, a.y, b.x, b.y };
 
     if (m_initFlags & SMINIT_VERTICAL)
     {
-        pt.x = b.x - 3;
-        pt.y = a.y - 3;
+        // FIXME: Hardcoding this here feels hacky.
+        if (IsAppThemed())
+        {
+            pt.x = b.x - 1;
+            pt.y = a.y - 1;
+        }
+        else
+        {
+            pt.x = b.x - 3;
+            pt.y = a.y - 3;
+        }
     }
 
     // Display the submenu
