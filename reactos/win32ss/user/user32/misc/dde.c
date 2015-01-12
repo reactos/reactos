@@ -276,7 +276,6 @@ User32CallDDEPostFromKernel(PVOID Arguments, ULONG ArgumentLength)
   else
   {
      ERR("DDE Post CB Return bad msg 0x%x Size %d\n",Common->message,Common->size);
-     Common->size = 0xdeadbeef; // HACKSSS!! Return status does not work!
      Status = STATUS_UNSUCCESSFUL;
   }
 
@@ -301,7 +300,6 @@ User32CallDDEGetFromKernel(PVOID Arguments, ULONG ArgumentLength)
   if (!Ret)
   {
      ERR("DDE Get CB Return bad msg 0x%x\n",Common->message);
-     Common->size = 0xdeadbeef; // HACKSSS!! Return status does not work!
      Status = STATUS_UNSUCCESSFUL;
   }
   return ZwCallbackReturn(Arguments, ArgumentLength, Status);

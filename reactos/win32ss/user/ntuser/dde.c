@@ -94,14 +94,6 @@ IntDDEPostCallback(
 
    RtlCopyMemory(Common, ResultPointer, ArgumentLength);
 
-   ///// HAX!
-   if ( Common->size == 0xdeadbeef )
-   {
-      ERR("DDE Post callback failed! 2 status %p\n",Status);
-      IntCbFreeMemory(Argument);
-      return 0;
-   }
-
    size    = Common->size;
    *lParam = Common->lParam;
    *Buffer = Common->pvData;
@@ -165,14 +157,6 @@ IntDDEGetCallback(
 
    RtlMoveMemory(Common, ResultPointer, ArgumentLength);
 
-   ///// HAX!
-   if ( Common->size == 0xdeadbeef )
-   {
-      ERR("DDE Get callback failed! 2 status %p\n",Status);
-      IntCbFreeMemory(Argument);
-      return FALSE;
-   }
-
    pMsg->lParam = Common->lParam;
 
    IntCbFreeMemory(Argument);
@@ -220,6 +204,12 @@ IntDdePostMessageHook(
          }
          TRACE("Invalid DDE Client Window handle\n");
          return FALSE;
+      }
+
+      if ( Msg == WM_DDE_REQUEST || Msg == WM_DDE_UNADVISE )
+      {
+         // Do not bother to callback after validation.
+         return TRUE;
       }
 
       if ( Msg == WM_DDE_TERMINATE )
@@ -290,7 +280,7 @@ IntDdePostMessageHook(
                     break;
               }
               break;
-           }
+          }
           default:
               break;
       }
@@ -384,11 +374,6 @@ IntDdeSendMessageHook(PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    PWND pWndServer;
    PDDE_PROP pddeProp;
-
-   if (Msg == WM_DDE_ACK)
-   {
-      TRACE("Sending WM_DDE_ACK Client hwnd %p\n",pWnd->head.h);
-   }
 
    if (pWnd->head.pti->ppi != gptiCurrent->ppi)
    {
