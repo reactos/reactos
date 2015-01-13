@@ -142,7 +142,7 @@ static ARC_STATUS PxeGetFileInformation(ULONG FileId, FILEINFORMATION* Informati
     if (_OpenFile == NO_FILE || FileId != _OpenFile)
         return EBADF;
 
-    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    RtlZeroMemory(Information, sizeof(*Information));
     Information->EndingAddress.LowPart = _FileSize;
     Information->CurrentAddress.LowPart = _FilePosition;
 
@@ -153,22 +153,27 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     t_PXENV_TFTP_GET_FSIZE sizeData;
     t_PXENV_TFTP_OPEN openData;
-    ULONG i;
+    SIZE_T PathLen, i;
 
     if (_OpenFile != NO_FILE)
         return EIO;
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
-    for (i = 0; i < sizeof(_OpenFileName) - 1; i++)
+    /* Retrieve the path length without NULL terminator */
+    PathLen = (Path ? min(strlen(Path), sizeof(_OpenFileName) - 1) : 0);
+
+    /* Zero out the file name */
+    RtlZeroMemory(_OpenFileName, sizeof(_OpenFileName));
+
+    /* Lowercase the path and always use slashes as separators */
+    for (i = 0; i < PathLen; i++)
     {
         if (Path[i] == '\\')
             _OpenFileName[i] = '/';
         else
             _OpenFileName[i] = tolower(Path[i]);
     }
-    while (i < sizeof(_OpenFileName))
-        _OpenFileName[i++] = '\0';
 
     RtlZeroMemory(&sizeData, sizeof(sizeData));
     sizeData.ServerIPAddress = _ServerIP;
@@ -183,7 +188,7 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     if (_FileSize < 1024 * 1024)
     {
         _CachedFile = FrLdrTempAlloc(_FileSize, TAG_PXE_FILE);
-        // Don't check for allocation failure, we support _CachedFile = NULL
+        // Don't check for allocation failure, we support _CachedFile == NULL
     }
     _CachedLength = 0;
 
