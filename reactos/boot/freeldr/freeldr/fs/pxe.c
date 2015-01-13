@@ -29,6 +29,7 @@ DBG_DEFAULT_CHANNEL(FILESYSTEM);
 
 static IP4 _ServerIP = { 0, };
 static ULONG _OpenFile = NO_FILE;
+static CHAR _OpenFileName[128];
 static ULONG _FileSize = 0;
 static ULONG _FilePosition = 0;
 static ULONG _PacketPosition = 0;
@@ -152,15 +153,26 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     t_PXENV_TFTP_GET_FSIZE sizeData;
     t_PXENV_TFTP_OPEN openData;
+    ULONG i;
 
     if (_OpenFile != NO_FILE)
         return EIO;
     if (OpenMode != OpenReadOnly)
         return EACCES;
 
+    for (i = 0; i < sizeof(_OpenFileName) - 1; i++)
+    {
+        if (Path[i] == '\\')
+            _OpenFileName[i] = '/';
+        else
+            _OpenFileName[i] = tolower(Path[i]);
+    }
+    while (i < sizeof(_OpenFileName))
+        _OpenFileName[i++] = '\0';
+
     RtlZeroMemory(&sizeData, sizeof(sizeData));
     sizeData.ServerIPAddress = _ServerIP;
-    strncpy((CHAR*)sizeData.FileName, Path, sizeof(sizeData.FileName));
+    RtlCopyMemory(sizeData.FileName, _OpenFileName, sizeof(_OpenFileName));
     if (!CallPxe(PXENV_TFTP_GET_FSIZE, &sizeData))
     {
         ERR("Failed to get '%s' size\n", Path);
@@ -177,7 +189,7 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
     RtlZeroMemory(&openData, sizeof(openData));
     openData.ServerIPAddress = _ServerIP;
-    strncpy((CHAR*)openData.FileName, Path, sizeof(openData.FileName));
+    RtlCopyMemory(openData.FileName, _OpenFileName, sizeof(_OpenFileName));
     openData.PacketSize = sizeof(_Packet);
 
     if (!CallPxe(PXENV_TFTP_OPEN, &openData))
