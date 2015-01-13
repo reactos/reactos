@@ -263,8 +263,13 @@ static ARC_STATUS PxeSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMo
         return EINVAL;
 
     if (!_CachedFile && Position->LowPart < _FilePosition)
-        // We don't support backward seek without caching
-        return EINVAL;
+    {
+        // Close and reopen the file to go to position 0
+        if (PxeClose(FileId) != ESUCCESS)
+            return EIO;
+        if (PxeOpen(_OpenFileName, OpenReadOnly, &FileId) != ESUCCESS)
+            return EIO;
+    }
 
     RtlZeroMemory(&readData, sizeof(readData));
     readData.Buffer.segment = ((UINT32)_Packet & 0xf0000) / 16;
