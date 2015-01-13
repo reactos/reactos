@@ -301,6 +301,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
     PLIST_ENTRY NextBd;
     PBOOT_DRIVER_LIST_ENTRY BootDriver;
     BOOLEAN Success;
+    BOOLEAN ret = TRUE;
 
     // Walk through the boot drivers list
     NextBd = LoaderBlock->BootDriverListHead.Flink;
@@ -321,24 +322,28 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
                                          0,
                                          &BootDriver->LdrEntry);
 
-        // If loading failed - cry loudly
-        //FIXME: Maybe remove it from the list and try to continue?
-        if (!Success)
+        if (Success)
         {
-            ERR("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
-            UiMessageBox("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
-            return FALSE;
+            // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
+            BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
+            BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
+            BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
         }
+        else
+        {
+            // Loading failed - cry loudly
+            ERR("Can't load boot driver '%wZ'!\n", &BootDriver->FilePath);
+            UiMessageBox("Can't load boot driver '%wZ'!", &BootDriver->FilePath);
+            ret = FALSE;
 
-        // Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
-        BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
-        BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
-        BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
+            // Remove it from the list and try to continue
+            RemoveEntryList(NextBd);
+        }
 
         NextBd = BootDriver->Link.Flink;
     }
 
-    return TRUE;
+    return ret;
 }
 
 PVOID
