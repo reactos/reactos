@@ -159,6 +159,14 @@ typedef struct _DOS_EXEC_PARAM_BLOCK
     DWORD EntryPoint;
 } DOS_EXEC_PARAM_BLOCK, *PDOS_EXEC_PARAM_BLOCK;
 
+typedef struct _DOS_COUNTRY_CODE_BUFFER
+{
+    WORD TimeFormat;
+    WORD CurrencySymbol;
+    WORD ThousandSep;
+    WORD DecimalSep;
+} DOS_COUNTRY_CODE_BUFFER, *PDOS_COUNTRY_CODE_BUFFER;
+
 #pragma pack(pop)
 
 extern BOOLEAN DoEcho;

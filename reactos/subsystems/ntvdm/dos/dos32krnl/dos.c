@@ -1469,6 +1469,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
     SYSTEMTIME SystemTime;
     PCHAR String;
     PDOS_INPUT_BUFFER InputBuffer;
+    PDOS_COUNTRY_CODE_BUFFER CountryCodeBuffer;
+    INT Return;
 
     /* Check the value in the AH register */
     switch (getAH())
@@ -1987,6 +1989,65 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             {
                 /* Invalid subfunction */
                 setAL(0xFF);
+            }
+
+            break;
+        }
+
+        /* Get/Set Country-dependent Information */
+        case 0x38:
+        {
+            CountryCodeBuffer = (PDOS_COUNTRY_CODE_BUFFER)SEG_OFF_TO_PTR(getDS(), getDX());
+
+            if (getAL() == 0x00)
+            {
+                /* Get */
+                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IDATE,
+                                       &CountryCodeBuffer->TimeFormat,
+                                       sizeof(CountryCodeBuffer->TimeFormat) / sizeof(TCHAR));
+                if (Return == 0)
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(LOWORD(GetLastError()));
+                    break;
+                }
+
+                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SCURRENCY,
+                                       &CountryCodeBuffer->CurrencySymbol,
+                                       sizeof(CountryCodeBuffer->CurrencySymbol) / sizeof(TCHAR));
+                if (Return == 0)
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(LOWORD(GetLastError()));
+                    break;
+                }
+
+                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND,
+                                       &CountryCodeBuffer->ThousandSep,
+                                       sizeof(CountryCodeBuffer->ThousandSep) / sizeof(TCHAR));
+                if (Return == 0)
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(LOWORD(GetLastError()));
+                    break;
+                }
+
+                Return = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL,
+                                       &CountryCodeBuffer->DecimalSep,
+                                       sizeof(CountryCodeBuffer->DecimalSep) / sizeof(TCHAR));
+                if (Return == 0)
+                {
+                    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+                    setAX(LOWORD(GetLastError()));
+                    break;
+                }
+
+                Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            }
+            else
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
             }
 
             break;
