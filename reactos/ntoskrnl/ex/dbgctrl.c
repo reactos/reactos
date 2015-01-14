@@ -60,6 +60,47 @@ NtSystemDebugControl(SYSDBG_COMMAND ControlCode,
                      ULONG OutputBufferLength,
                      PULONG ReturnLength)
 {
-    /* FIXME: TODO */
-    return STATUS_SUCCESS;
+    switch (ControlCode)
+    {
+        case SysDbgQueryModuleInformation:
+        case SysDbgQueryTraceInformation:
+        case SysDbgSetTracepoint:
+        case SysDbgSetSpecialCall:
+        case SysDbgClearSpecialCalls:
+        case SysDbgQuerySpecialCalls:
+        case SysDbgQueryVersion:
+        case SysDbgReadVirtual:
+        case SysDbgWriteVirtual:
+        case SysDbgReadPhysical:
+        case SysDbgWritePhysical:
+        case SysDbgReadControlSpace:
+        case SysDbgWriteControlSpace:
+        case SysDbgReadIoSpace:
+        case SysDbgWriteIoSpace:
+        case SysDbgReadMsr:
+        case SysDbgWriteMsr:
+        case SysDbgReadBusData:
+        case SysDbgWriteBusData:
+        case SysDbgCheckLowMemory:
+        case SysDbgGetTriageDump:
+            return STATUS_NOT_IMPLEMENTED;
+        case SysDbgBreakPoint:
+        case SysDbgEnableKernelDebugger:
+        case SysDbgDisableKernelDebugger:
+        case SysDbgGetAutoKdEnable:
+        case SysDbgSetAutoKdEnable:
+        case SysDbgGetPrintBufferSize:
+        case SysDbgSetPrintBufferSize:
+        case SysDbgGetKdUmExceptionEnable:
+        case SysDbgSetKdUmExceptionEnable:
+        case SysDbgGetKdBlockEnable:
+        case SysDbgSetKdBlockEnable:
+            return KdSystemDebugControl(
+                ControlCode,
+                InputBuffer, InputBufferLength,
+                OutputBuffer, OutputBufferLength,
+                ReturnLength, KeGetPreviousMode());
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
 }
