@@ -1671,7 +1671,7 @@ ChangePos:
         DisplayTrayProperties(hwnd);
 
         m_TrayPropertiesOwner = NULL;
-        DestroyWindow();
+        ::DestroyWindow(hwnd);
 
         return 0;
     }
