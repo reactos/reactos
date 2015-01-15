@@ -1316,6 +1316,7 @@ ChangePos:
         {
             if (!GetClientRect(&rcClient))
             {
+                ERR("Could not get client rect lastErr=%d\n", GetLastError());
                 return;
             }
         }
@@ -1326,7 +1327,10 @@ ChangePos:
            the tray notification control */
         dwp = BeginDeferWindowPos(3);
         if (dwp == NULL)
+        {
+            ERR("BeginDeferWindowPos failed. lastErr=%d\n", GetLastError());
             return;
+        }
 
         /* Limit the Start button width to the client width, if neccessary */
         StartSize = m_StartButton.GetSize();
@@ -1345,7 +1349,10 @@ ChangePos:
                                  StartSize.cy,
                                  SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
+            {
+                ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
                 return;
+            }
         }
 
         /* Determine the size that the tray notification window needs */
@@ -1381,7 +1388,10 @@ ChangePos:
                                  TraySize.cy,
                                  SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
+            {
+                ERR("DeferWindowPos for notification area failed. lastErr=%d\n", GetLastError());
                 return;
+            }
         }
 
         /* Resize/Move the rebar control */
@@ -2188,7 +2198,8 @@ ChangePos:
     {
         if (m_TrayNotify)
         {
-            return TrayNotify_NotifyMsg(m_TrayNotifyInstance, wParam, lParam);
+            TRACE("WM_COPYDATA notify message received. Handling...\n");
+            return TrayNotify_NotifyIconCmd(m_TrayNotifyInstance, wParam, lParam);
         }
         return TRUE;
     }

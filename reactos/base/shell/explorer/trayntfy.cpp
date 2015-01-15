@@ -417,7 +417,7 @@ public:
         return TRUE;
     }
 
-    LRESULT NotifyMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT NotifyIconCmd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT) lParam;
         if (cpData->dwData == 1)
@@ -426,6 +426,7 @@ public:
             NOTIFYICONDATA *iconData;
             HWND parentHWND;
             RECT windowRect;
+            BOOL ret = FALSE;
             parentHWND = GetParent();
             parentHWND = ::GetParent(parentHWND);
             ::GetClientRect(parentHWND, &windowRect);
@@ -433,23 +434,30 @@ public:
             data = (PSYS_PAGER_COPY_DATA) cpData->lpData;
             iconData = &data->nicon_data;
 
+            TRACE("NotifyIconCmd received. Code=%d\n", data->notify_code);
             switch (data->notify_code)
             {
             case NIM_ADD:
-                return Toolbar.AddButton(iconData);
-            case NIM_MODIFY:
-                return Toolbar.UpdateButton(iconData);
-            case NIM_DELETE:
-                return Toolbar.RemoveButton(iconData);
-            default:
-                TRACE("NotifyMessage received with unknown code %d.\n", data->notify_code);
+                ret = Toolbar.AddButton(iconData);
                 break;
+            case NIM_MODIFY:
+                ret = Toolbar.UpdateButton(iconData);
+                break;
+            case NIM_DELETE:
+                ret = Toolbar.RemoveButton(iconData);
+                break;
+            default:
+                TRACE("NotifyIconCmd received with unknown code %d.\n", data->notify_code);
+                return FALSE;
             }
+
             SendMessage(parentHWND,
                 WM_SIZE,
                 0,
                 MAKELONG(windowRect.right - windowRect.left,
-                windowRect.bottom - windowRect.top));
+                         windowRect.bottom - windowRect.top));
+
+            return ret;
         }
 
         return TRUE;
@@ -1449,11 +1457,11 @@ public:
         return DrawBackground(hdc);
     }
 
-    LRESULT NotifyMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT NotifyIconCmd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         if (m_pager)
         {
-            return m_pager->NotifyMsg(uMsg, wParam, lParam, bHandled);
+            return m_pager->NotifyIconCmd(uMsg, wParam, lParam, bHandled);
         }
 
         return TRUE;
@@ -1585,10 +1593,10 @@ HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock, CTrayNotifyW
 }
 
 BOOL
-TrayNotify_NotifyMsg(CTrayNotifyWnd* pTrayNotify, WPARAM wParam, LPARAM lParam)
+TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, WPARAM wParam, LPARAM lParam)
 {
     BOOL bDummy;
-    return pTrayNotify->NotifyMsg(0, wParam, lParam, bDummy);
+    return pTrayNotify->NotifyIconCmd(0, wParam, lParam, bDummy);
 }
 
 BOOL

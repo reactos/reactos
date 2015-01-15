@@ -338,8 +338,7 @@ HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow, IN BOOL bHideClock, CTrayNotifyWnd** ppTrayNotify);
 
 BOOL
-TrayNotify_NotifyMsg(CTrayNotifyWnd* pTrayNotify, IN WPARAM wParam,
-IN LPARAM lParam);
+TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, IN WPARAM wParam, IN LPARAM lParam);
 
 BOOL
 TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock);
