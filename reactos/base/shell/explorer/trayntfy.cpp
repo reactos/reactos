@@ -417,7 +417,7 @@ public:
         return TRUE;
     }
 
-    LRESULT NotifyIconCmd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    BOOL NotifyIconCmd(WPARAM wParam, LPARAM lParam)
     {
         PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT) lParam;
         if (cpData->dwData == 1)
@@ -1457,11 +1457,11 @@ public:
         return DrawBackground(hdc);
     }
 
-    LRESULT NotifyIconCmd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    BOOL NotifyIconCmd(WPARAM wParam, LPARAM lParam)
     {
         if (m_pager)
         {
-            return m_pager->NotifyIconCmd(uMsg, wParam, lParam, bHandled);
+            return m_pager->NotifyIconCmd(wParam, lParam);
         }
 
         return TRUE;
@@ -1595,8 +1595,7 @@ HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock, CTrayNotifyW
 BOOL
 TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, WPARAM wParam, LPARAM lParam)
 {
-    BOOL bDummy;
-    return pTrayNotify->NotifyIconCmd(0, wParam, lParam, bDummy);
+    return pTrayNotify->NotifyIconCmd(wParam, lParam);
 }
 
 BOOL
