@@ -85,12 +85,12 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd/unattend.inf DESTINATION rea
 
 #LiveCD shortcuts
 macro(add_livecd_shortcut name app dest)
-	add_link(NAME ${name} CMD_LINE_ARGS ${app} ICON ${app} PATH livecd_start.cmd GUID "{450D8FBA-AD25-11D0-98A8-0800361B1103}" MINIMIZE)
-	list(APPEND LIVECD_SHORTCUTS "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
-	add_cd_file(FILE "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk"
-                    TARGET livecd_links
-	            DESTINATION ${dest}
-	            FOR livecd)
+    add_link(NAME ${name} CMD_LINE_ARGS ${app} ICON ${app} PATH livecd_start.cmd GUID "{450D8FBA-AD25-11D0-98A8-0800361B1103}" MINIMIZE)
+    list(APPEND LIVECD_SHORTCUTS "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk")
+    add_cd_file(FILE "${CMAKE_CURRENT_BINARY_DIR}/${name}.lnk"
+                TARGET livecd_links
+                DESTINATION ${dest}
+                FOR livecd)
 endmacro(add_livecd_shortcut)
 
 add_cd_file(FILE "${CMAKE_CURRENT_SOURCE_DIR}/livecd_start.cmd" DESTINATION "Profiles/Default User/My Documents" FOR livecd)
