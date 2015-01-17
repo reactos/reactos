@@ -121,8 +121,13 @@ BOOL CALLBACK EnumerateCallback(HWND window, LPARAM lParam)
          hIcon = (HICON)SendMessageW(window, WM_GETICON, ICON_SMALL2, 0);
          if (!hIcon)
          {
-            // If all fails, give up and continue with the next window
-            return TRUE;
+            // using windows logo icon as default
+            hIcon = gpsi->hIconWindows;
+            if (!hIcon)
+            {
+               //if all attempts to get icon fails go to the next window
+               return TRUE;
+            }
          }
       }
    }
