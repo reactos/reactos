@@ -24,7 +24,7 @@
 #define BIOSCALLBUFSIZE     PAGE_SIZE /* max is sizeof(VESA_SVGA_INFO) = 512 */
 #define MAX_FREELDR_PE_SIZE (DISKREADBUFFER - FREELDR_PE_BASE)
 #define MIN_DISKREADBUFFER_SIZE HEX(1000)
-#define MAX_DISKREADBUFFER_SIZE HEX(20000)
+#define MAX_DISKREADBUFFER_SIZE HEX(C000)
 
 /* These addresses specify the realmode "BSS section" layout */
 #define BSS_RealModeEntry        (BSS_START +  0)
