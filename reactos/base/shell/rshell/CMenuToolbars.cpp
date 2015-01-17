@@ -640,14 +640,15 @@ HRESULT CMenuToolbarBase::ChangePopupItem(CMenuToolbarBase * toolbar, INT item)
 LRESULT CMenuToolbarBase::IsTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TBBUTTON btn;
+    INT idx = (INT)wParam;
 
     if (m_hotBar != this)
         return S_FALSE;
 
-    if (wParam < 0)
+    if (idx < 0)
         return S_FALSE;
 
-    if (!GetButton(wParam, &btn))
+    if (!GetButton(idx, &btn))
         return E_FAIL;
 
     if (m_hotItem == btn.idCommand)
@@ -661,21 +662,21 @@ LRESULT CMenuToolbarBase::IsTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CMenuToolbarBase::ChangeTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    TBBUTTON btn;
     BOOL wasTracking = LOWORD(lParam);
     BOOL mouse = HIWORD(lParam);
+    INT idx = (INT)wParam;
 
-    TBBUTTON btn;
-
-    if (wParam < 0)
+    if (idx < 0)
     {
         m_isTrackingPopup = FALSE;
         return m_menuBand->_ChangeHotItem(NULL, -1, HICF_MOUSE);
     }
 
-    if (!GetButton(wParam, &btn))
+    if (!GetButton(idx, &btn))
         return E_FAIL;
 
-    TRACE("ChangeTrackedItem %d, %d\n", wParam, wasTracking);
+    TRACE("ChangeTrackedItem %d, %d\n", idx, wasTracking);
     m_isTrackingPopup = wasTracking;
     return m_menuBand->_ChangeHotItem(this, btn.idCommand, mouse ? HICF_MOUSE : 0);
 }
