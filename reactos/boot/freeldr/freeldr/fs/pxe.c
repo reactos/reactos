@@ -163,9 +163,6 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     /* Retrieve the path length without NULL terminator */
     PathLen = (Path ? min(strlen(Path), sizeof(_OpenFileName) - 1) : 0);
 
-    /* Zero out the file name */
-    RtlZeroMemory(_OpenFileName, sizeof(_OpenFileName));
-
     /* Lowercase the path and always use slashes as separators */
     for (i = 0; i < PathLen; i++)
     {
@@ -174,6 +171,9 @@ static ARC_STATUS PxeOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         else
             _OpenFileName[i] = tolower(Path[i]);
     }
+
+    /* Zero out rest of the file name */
+    RtlZeroMemory(_OpenFileName + PathLen, sizeof(_OpenFileName) - PathLen);
 
     RtlZeroMemory(&sizeData, sizeof(sizeData));
     sizeData.ServerIPAddress = _ServerIP;
