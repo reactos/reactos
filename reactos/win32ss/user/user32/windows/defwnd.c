@@ -153,80 +153,137 @@ UserGetInsideRectNC(PWND Wnd, RECT *rect)
     }
 }
 
+HWND FASTCALL
+IntFindChildWindowToOwner(HWND hRoot, HWND hOwner)
+{
+   HWND Ret;
+   PWND Child, OwnerWnd, Root, Owner;
+
+   Root = ValidateHwnd(hRoot);
+   Owner = ValidateHwnd(hOwner);
+
+   for( Child = Root->spwndChild ? DesktopPtrToUser(Root->spwndChild) : NULL;
+        Child;
+        Child = Child->spwndNext ? DesktopPtrToUser(Child->spwndNext) : NULL )
+   {
+      OwnerWnd = Child->spwndOwner ? DesktopPtrToUser(Child->spwndOwner) : NULL;
+      if(!OwnerWnd)
+         continue;
+
+      if (!(Child->style & WS_POPUP) || !(Child->style & WS_VISIBLE))
+         continue;
+
+      if(OwnerWnd == Owner)
+      {
+         Ret = Child->head.h;
+         return Ret;
+      }
+   }
+   ERR("IDCWTO Nothing found\n");
+   return NULL;
+}
+
 LRESULT
 DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
 {
-  /* Not for child windows. */
-  if (hWnd != (HWND)wParam)
-    {
-      return(0);
-    }
+   /* Not for child windows. */
+   if (hWnd != (HWND)wParam)
+   {
+      return 0;
+   }
 
-  switch((INT_PTR) LOWORD(lParam))
-    {
-    case HTERROR:
+   switch((short)LOWORD(lParam))
+   {
+      case HTERROR:
       {
-	WORD Msg = HIWORD(lParam);
-	if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	    Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
-	  {
-	    MessageBeep(0);
-	  }
-	break;
+         //// This is the real fix for CORE-6129!
+         HWND hwndPopUP;
+         WORD Msg = HIWORD(lParam);
+
+         if (Msg == WM_LBUTTONDOWN)
+         {
+            // Find a pop up window to bring active.
+            hwndPopUP = IntFindChildWindowToOwner(GetDesktopWindow(), hWnd);
+            if (hwndPopUP)
+            {
+               // Not a child pop up from desktop.
+               if ( hwndPopUP != GetWindow(GetDesktopWindow(), GW_CHILD) )
+               {
+                  // Get original active window.
+                  HWND hwndOrigActive = GetActiveWindow();
+
+                  SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+                  //SetActiveWindow(hwndPopUP);
+                  SetForegroundWindow(hwndPopUP); // HACK
+
+                  // If the change was made, break out.
+                  if (hwndOrigActive != GetActiveWindow())
+                     break;
+               }
+            }
+         }
+         ////
+	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+	 {
+	     ERR("Beep!\n");
+	     MessageBeep(0);
+	 }
+	 break;
       }
 
-    case HTCLIENT:
+      case HTCLIENT:
       {
-	HICON hCursor = (HICON)GetClassLongPtrW(hWnd, GCL_HCURSOR);
-	if (hCursor)
-	  {
-	    SetCursor(hCursor);
-	    return(TRUE);
-	  }
-	return(FALSE);
+         HICON hCursor = (HICON)GetClassLongPtrW(hWnd, GCL_HCURSOR);
+         if (hCursor)
+         {
+            SetCursor(hCursor);
+            return TRUE;
+	 }
+	 return FALSE;
       }
 
-    case HTLEFT:
-    case HTRIGHT:
+      case HTLEFT:
+      case HTRIGHT:
       {
-        if (Style & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZEWE)));
+         if (Style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZEWE)));
       }
 
-    case HTTOP:
-    case HTBOTTOM:
+      case HTTOP:
+      case HTBOTTOM:
       {
-        if (Style & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENS)));
-      }
+           if (Style & WS_MAXIMIZE)
+           {
+              break;
+           }
+           return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENS)));
+       }
 
-    case HTTOPLEFT:
-    case HTBOTTOMRIGHT:
-      {
-        if (Style & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENWSE)));
-      }
-
-    case HTBOTTOMLEFT:
-    case HTTOPRIGHT:
-      {
-        if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENESW)));
-      }
-    }
-  return((LRESULT)SetCursor(LoadCursorW(0, IDC_ARROW)));
+       case HTTOPLEFT:
+       case HTBOTTOMRIGHT:
+       {
+           if (Style & WS_MAXIMIZE)
+           {
+              break;
+           }
+           return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENWSE)));
+       }
+       case HTBOTTOMLEFT:
+       case HTTOPRIGHT:
+       {
+           if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
+           {
+              break;
+           }
+	   return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENESW)));
+       }
+   }
+   return((LRESULT)SetCursor(LoadCursorW(0, IDC_ARROW)));
 }
 
 /***********************************************************************
