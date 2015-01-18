@@ -107,6 +107,11 @@ void normalize_dirname(char *filename)
         }
     }
     filename[tgt] = 0;
+
+    while (tgt && (filename[--tgt] == DIR_SEPARATOR_CHAR))
+    {
+        filename[tgt] = 0;
+    }
 }
 
 struct target_dir_entry *
