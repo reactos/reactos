@@ -83,17 +83,25 @@ void normalize_dirname(char *filename)
     int i, tgt;
     int slash = 1;
 
-    for (i = 0, tgt = 0; filename[i]; i++) {
-        if (slash) {
-            if (filename[i] != '/' && filename[i] != '\\') {
+    for (i = 0, tgt = 0; filename[i]; i++)
+    {
+        if (slash)
+        {
+            if (filename[i] != '/' && filename[i] != '\\')
+            {
                 filename[tgt++] = toupper(filename[i]);
                 slash = 0;
             }
-        } else {
-            if (filename[i] == '/' || filename[i] == '\\') {
+        }
+        else
+        {
+            if (filename[i] == '/' || filename[i] == '\\')
+            {
                 slash = 1;
                 filename[tgt++] = DIR_SEPARATOR_CHAR;
-            } else {
+            }
+            else
+            {
                 filename[tgt++] = toupper(filename[i]);
             }
         }
@@ -160,7 +168,7 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     tf->target_name = strdup(filename);
 }
 
-struct target_dir_entry *
+static struct target_dir_entry *
 dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t)
 {
     if (t->i == -1)
