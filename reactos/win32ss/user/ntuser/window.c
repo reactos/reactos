@@ -2594,7 +2594,8 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
     */
    if (!co_WinPosShowWindow(Window, SW_HIDE))
    {  // Rule #1.
-      if (ti->MessageQueue->spwndActive == Window && ti->MessageQueue == IntGetFocusMessageQueue())
+      if ( ti->MessageQueue->spwndActive == Window ||
+          (ti->MessageQueue->spwndActive == NULL && ti->MessageQueue == IntGetFocusMessageQueue()) )
       {
          co_WinPosActivateOtherWindow(Window);
       }

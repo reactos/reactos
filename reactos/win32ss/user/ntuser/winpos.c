@@ -349,11 +349,16 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    {
       WndTo = Wnd->head.pti->MessageQueue->spwndActivePrev;
       if (can_activate_window( WndTo )) goto done;
+      
    }
 
-   // Find any window to bring to top. Works Okay for wine.
+   // Find any window to bring to top. Works Okay for wine since it does not see X11 windows.
    WndTo = UserGetDesktopWindow();
    WndTo = WndTo->spwndChild;
+   if ( WndTo == NULL )
+   {
+      return;
+   }
    for (;;)
    {
       if (WndTo == Wnd)
