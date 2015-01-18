@@ -431,6 +431,7 @@ SetErrorMode(IN UINT uMode)
  */
 LPTOP_LEVEL_EXCEPTION_FILTER
 WINAPI
+DECLSPEC_HOTPATCH
 SetUnhandledExceptionFilter(IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
     PVOID EncodedPointer, EncodedOldPointer;
