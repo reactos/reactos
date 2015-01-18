@@ -31,7 +31,7 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
 
 add_custom_target(hybridcd
     COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin @${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst REACTOS ${REACTOS_BINARY_DIR}/hybridcd.iso
-    DEPENDS native-cdmake livecd
+    DEPENDS native-cdmake bootcd livecd
     VERBATIM)
 
 add_subdirectory(freeldr)
