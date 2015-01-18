@@ -286,8 +286,10 @@ function(add_cd_file)
     endif()
 
     #do we add it to all CDs?
-    if(_CD_FOR STREQUAL all)
-        set(_CD_FOR "bootcd;livecd;regtest")
+    list(FIND _CD_FOR all __cd)
+    if(NOT __cd EQUAL -1)
+        list(REMOVE_AT _CD_FOR __cd)
+        list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
     endif()
 
     #do we add it to bootcd?
@@ -304,6 +306,8 @@ function(add_cd_file)
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                #add it also into the hybridcd
+                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
@@ -339,8 +343,24 @@ function(add_cd_file)
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            #add it also into the hybridcd
+            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
         endforeach()
     endif() #end livecd
+
+    #do we need also to add it to hybridcd?
+    list(FIND _CD_FOR hybridcd __cd)
+    if(NOT __cd EQUAL -1)
+        foreach(item ${_CD_FILE})
+            if(_CD_NAME_ON_CD)
+                #rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+        endforeach()
+    endif() #end hybridcd
 
     #do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
@@ -397,6 +417,11 @@ function(create_iso_lists)
         DESTINATION reactos
         NO_CAB FOR bootcd regtest)
 
+    add_cd_file(
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
+        DESTINATION root
+        FOR hybridcd)
+
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.lst "${_filelist}")
@@ -405,6 +430,11 @@ function(create_iso_lists)
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.lst "${_filelist}")
+    unset(_filelist)
+
+    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.lst "${_filelist}")
     unset(_filelist)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
