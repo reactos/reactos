@@ -25,6 +25,6 @@ Size = 97,8 Mo
 
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.7.1, 32 bitlik)
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.7.1, 32 bitlik) derleyicisini içerir.
 Size = 97,8 MB

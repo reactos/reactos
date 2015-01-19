@@ -22,7 +22,7 @@ URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.5/wi
 [Section.041f]
 Name = LibreOffice Yardım Paketi
 Version = LibreOffice 4.3.5 için
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = LibreOffice'in çevrim dışı yardım içeriği.
 Size = 6,79 MB
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.5/win/x86/LibreOffice_4.3.5_Win_x86_helppack_tr.msi

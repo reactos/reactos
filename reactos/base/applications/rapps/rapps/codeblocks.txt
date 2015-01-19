@@ -25,6 +25,6 @@ Size = 29,2 Mo
 
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. Bir derleyici içermez.
 Size = 29,2 MB

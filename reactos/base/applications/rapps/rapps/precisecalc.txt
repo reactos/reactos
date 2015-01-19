@@ -14,6 +14,6 @@ CDPath = none
 
 [Section.041f]
 Name = Precise Hesap Makinesi
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = Precise Hesap Makinesi, Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 151 KB

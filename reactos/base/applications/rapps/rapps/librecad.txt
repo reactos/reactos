@@ -16,6 +16,6 @@ CDPath = none
 Description = LibreCAD ist ein kostenloses und quelloffenes 2D-CAD Programm für Windows, Linux und OS X.
 
 [Section.041f]
-License = GPL 2. sürüm
+License = GPL sürüm 2
 Description = LibreCAD; Windows, Linux ve OS X için özgür ve açık kaynak bir 2 boyutlu CAD uygulamasıdır.
 Size = 25,5 MB

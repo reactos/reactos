@@ -36,7 +36,7 @@ Description = WinBoard este o tablă de șah grafică pentru Windows/ReactOS ce 
 Size = 5,93 Mo
 
 [Section.041f]
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = WinBoard, Umûmî Ağ satranç sunucularına ve postayla yazışmalı satranca GNU Chess, Crafty ve başka satranç motorlarını bir kullanıcı arayüzü olarak sunabilen, Windows/ReactOS için bir çizgelik satranç tahtasıdır.
 Size = 5,93 MB
 

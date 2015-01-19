@@ -23,6 +23,6 @@ Description = O versiune menținută a Dev-C++. Conține compilatorul TDM-GCC pe
 Size = 44,8 Mo
 
 [Section.041f]
-License = GPL 2. sürüm
+License = GPL sürüm 2
 Description = Dev-C++'nın sürdürülen bir sürümü. 64 bitlik TDM-GCC derleyicisi içerir.
 Size = 44,8 MB

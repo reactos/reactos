@@ -1,5 +1,6 @@
 ﻿; UTF-8
 ; Russian translation by Alexander Rechitskiy (jedi-to-be) (rechitskiy@reactos.org)
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = AkelPad
@@ -18,3 +19,8 @@ Size = 1,11 Mo
 
 [Section.0419]
 Description = AkelPad - текстовый редактор с открытым исходным кодом, созданный, чтобы быть маленьким и быстрым. 
+Size = 1.11 MB
+
+[Section.041f]
+Description = AkelPad, düz metin için bir açık kaynak düzenleyicidir. Küçük ve hızlı olacak biçimde tasarlanmıştır. 
+Size = 1,11 MB

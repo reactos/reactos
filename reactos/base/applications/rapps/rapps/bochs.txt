@@ -27,6 +27,6 @@ Description = Bochs este un emulator PC (x86) cu surse deschise și portabilitat
 Size = 4,8 Mo
 
 [Section.041f]
-License = LGPL 2. sürüm
+License = LGPL sürüm 2
 Description = Bochs; çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.
 Size = 4,8 MB
