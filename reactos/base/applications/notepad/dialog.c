@@ -206,6 +206,73 @@ BOOL HasFileExtension(LPCTSTR szFilename)
     return _tcsrchr(szFilename, _T('.')) != NULL;
 }
 
+int GetSelectionTextLength(HWND hWnd)
+{
+    DWORD dwStart = 0;
+    DWORD dwEnd = 0;
+
+    SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+
+    return dwEnd - dwStart;
+}
+
+int GetSelectionText(HWND hWnd, LPTSTR lpString, int nMaxCount)
+{
+    DWORD dwStart = 0;
+    DWORD dwEnd = 0;
+    DWORD dwSize;
+    HRESULT hResult;
+    LPTSTR lpTemp;
+
+    if (!lpString)
+    {
+        return 0;
+    }
+
+    SendMessage(hWnd, EM_GETSEL, (WPARAM)&dwStart, (LPARAM)&dwEnd);
+
+    if (dwStart == dwEnd)
+    {
+        return 0;
+    }
+
+    dwSize = GetWindowTextLength(hWnd) + 1;
+    lpTemp = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(TCHAR));
+    if (!lpTemp)
+    {
+        return 0;
+    }
+
+    dwSize = GetWindowText(hWnd, lpTemp, dwSize);
+
+    if (!dwSize)
+    {
+        HeapFree(GetProcessHeap(), 0, lpTemp);
+        return 0;
+    }
+
+    hResult = StringCchCopyN(lpString, nMaxCount, lpTemp + dwStart, dwEnd - dwStart);
+    HeapFree(GetProcessHeap(), 0, lpTemp);
+
+    switch (hResult)
+    {
+        case S_OK:
+        {
+            return dwEnd - dwStart;
+        }
+
+        case STRSAFE_E_INSUFFICIENT_BUFFER:
+        {
+            return nMaxCount - 1;
+        }
+
+        default:
+        {
+            return 0;
+        }
+    }
+}
+
 static BOOL DoSaveFile(VOID)
 {
     BOOL bRet = TRUE;
@@ -551,7 +618,14 @@ VOID DIALOG_FilePrint(VOID)
     printer.hInstance = Globals.hInstance;
 
     /* Set some default flags */
-    printer.Flags = PD_RETURNDC;
+    printer.Flags = PD_RETURNDC | PD_SELECTION;
+
+    /* Disable the selection radio button if there is no text selected */
+    if (!GetSelectionTextLength(Globals.hEdit))
+    {
+        printer.Flags = printer.Flags | PD_NOSELECTION;
+    }
+
     printer.nFromPage = 0;
     printer.nMinPage = 1;
     /* we really need to calculate number of pages to set nMaxPage and nToPage */
@@ -587,7 +661,15 @@ VOID DIALOG_FilePrint(VOID)
     cHeightPels = GetDeviceCaps(printer.hDC, VERTRES);
 
     /* Get the file text */
-    size = GetWindowTextLength(Globals.hEdit) + 1;
+    if (printer.Flags & PD_SELECTION)
+    {
+        size = GetSelectionTextLength(Globals.hEdit) + 1;
+    }
+    else
+    {
+        size = GetWindowTextLength(Globals.hEdit) + 1;
+    }
+
     pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(TCHAR));
     if (!pTemp)
     {
@@ -596,7 +678,15 @@ VOID DIALOG_FilePrint(VOID)
         ShowLastError();
         return;
     }
-    size = GetWindowText(Globals.hEdit, pTemp, size);
+
+    if (printer.Flags & PD_SELECTION)
+    {
+        size = GetSelectionText(Globals.hEdit, pTemp, size);
+    }
+    else
+    {
+        size = GetWindowText(Globals.hEdit, pTemp, size);
+    }
 
     border = 150;
     for (copycount=1; copycount <= printer.nCopies; copycount++) {
