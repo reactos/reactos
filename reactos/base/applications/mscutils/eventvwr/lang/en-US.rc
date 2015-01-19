@@ -127,15 +127,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\n\
-Event Source:   %s\n\
-Event Category: %s\n\
-Event ID:       %s\n\
-Date:           %s\n\
-Time:           %s\n\
-User:           %s\n\
-Computer:       %s\n\
-Description:\n%s"
+    IDS_COPY "Event Type:     %s\r\n\
+Event Source:   %s\r\n\
+Event Category: %s\r\n\
+Event ID:       %s\r\n\
+Date:           %s\r\n\
+Time:           %s\r\n\
+User:           %s\r\n\
+Computer:       %s\r\n\
+Description:\r\n%s"
 END
 
 STRINGTABLE

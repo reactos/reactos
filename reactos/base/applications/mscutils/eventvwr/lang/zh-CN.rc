@@ -121,14 +121,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "事件类型:     %s\n\
-事件源:   %s\n\
-事件类别: %s\n\
-事件 ID:       %s\n\
-日期:           %s\n\
-时间:           %s\n\
-用户:           %s\n\
-电脑:       %s\n\
+    IDS_COPY "事件类型:     %s\r\n\
+事件源:   %s\r\n\
+事件类别: %s\r\n\
+事件 ID:       %s\r\n\
+日期:           %s\r\n\
+时间:           %s\r\n\
+用户:           %s\r\n\
+电脑:       %s\r\n\
 描述:\n%s"
 END
 

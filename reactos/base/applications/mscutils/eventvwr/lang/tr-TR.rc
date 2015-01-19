@@ -127,15 +127,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Olay Türü:      %s\n\
-Olay Kaynağı:   %s\n\
-Olay Ulamı:     %s\n\
-Olay Kimliği:   %s\n\
-Târih:          %s\n\
-Saat:           %s\n\
-Kullanıcı:      %s\n\
-Bilgisayar:     %s\n\
-Tanım:\n%s"
+    IDS_COPY "Olay Türü:      %s\r\n\
+Olay Kaynağı:   %s\r\n\
+Olay Ulamı:     %s\r\n\
+Olay Kimliği:   %s\r\n\
+Târih:          %s\r\n\
+Saat:           %s\r\n\
+Kullanıcı:      %s\r\n\
+Bilgisayar:     %s\r\n\
+Tanım:\r\n%s"
 END
 
 STRINGTABLE

@@ -98,8 +98,8 @@ BEGIN
     IDS_EVENTLOG_ERROR_TYPE "Eroare"
     IDS_EVENTLOG_WARNING_TYPE "Avertisment"
     IDS_EVENTLOG_INFORMATION_TYPE "Informație"
-    IDS_EVENTLOG_AUDIT_SUCCESS "Succes audit"
-    IDS_EVENTLOG_AUDIT_FAILURE "Eșec audit"
+    IDS_EVENTLOG_AUDIT_SUCCESS "Audit reușit"
+    IDS_EVENTLOG_AUDIT_FAILURE "Audit nereușit"
     IDS_EVENTLOG_SUCCESS "Succes"
     IDS_EVENTLOG_UNKNOWN_TYPE "Eveniment necunoscut"
     IDS_CLEAREVENTS_MSG "Doriți păstrarea acestui jurnal de evenimente înainte de a-l închide?"
@@ -121,19 +121,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\n\
-Event Source:   %s\n\
-Event Category: %s\n\
-Event ID:       %s\n\
-Date:           %s\n\
-Time:           %s\n\
-User:           %s\n\
-Computer:       %s\n\
-Description:\n%s"
+    IDS_COPY "Tip eveniment:       %s\r\n\
+Sursă eveniment:     %s\r\n\
+Categorie eveniment: %s\r\n\
+ID eveniment:        %s\r\n\
+Dată:                %s\r\n\
+Oră:                 %s\r\n\
+Utilizator:          %s\r\n\
+Calculator:          %s\r\n\
+Descriere :\r\n%s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "nespecificat"
-    IDS_NOT_AVAILABLE "nedisponibil"
+    IDS_NONE "nespecificată"
+    IDS_NOT_AVAILABLE "nespecificat"
 END
