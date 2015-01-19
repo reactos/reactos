@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -55,7 +55,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Alan Kodu Kâideleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bir alan kodu kâidesi, şimdiki alan kodunuzdan başka alan kodlarına ve alan kodunuz içinde telefon numaralarının nasıl çevrileceğini belirtir.", 2000, 7, 7, 238, 16
+    LTEXT "Bir alan kodu kâidesi, şimdiki alan kodunuzdan başka alan kodlarına ve alan kodunuz içinde telefon numaralarının ne biçimde çevrileceğini belirtir.", 2000, 7, 7, 238, 16
     LTEXT "&Alan Kodu Kâideleri:", -1, 7, 31, 238, 8
     CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Yeni...", 1030, 87, 147, 50, 14
@@ -378,7 +378,7 @@ BEGIN
     50 "uzun aralıklı aramalar çevriliyor."
     51 "uluslararası aramalar çevriliyor."
     52 "yerli aramalar çevriliyor."
-    53 "Bu arama kartının nasıl kullanılması üzerine kâide tanımlanmamış."
+    53 "Bu arama kartının ne biçimde kullanılması üzerine bir kâide tanımlanmamış."
     54 "Bu konum için uzun aralıklı taşıyıcı kodu girmelisiniz."
     55 "Bu konum için bir ad girmelisiniz."
     56 "Bu konum için alan kodunu girmelisiniz."

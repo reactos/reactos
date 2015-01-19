@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -91,7 +91,7 @@ BEGIN
     IDS_WINS_SERVERS "WINS Sunucuları"
     IDS_PROPERTY "Husûsiyet"
     IDS_VALUE "Değer"
-    IDS_NETWORKCONNECTION "Ağ Bağlantısı"
+    IDS_NETWORKCONNECTION "Ağ Bağlantıları"
     IDS_SHV_COLUMN_NAME "Ad"
     IDS_SHV_COLUMN_TYPE "Tür"
     IDS_SHV_COLUMN_STATE "Durum"

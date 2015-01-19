@@ -3,7 +3,7 @@
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/mscutils/eventvwr/lang/tr-TR.rc
  * PURPOSE:    Turkish Language File for ReactOS Event Viewer
- * TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -140,6 +140,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "Hiçbiri"
+    IDS_NONE "Biri bile"
     IDS_NOT_AVAILABLE "Yok"
 END

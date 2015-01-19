@@ -1,4 +1,4 @@
-/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com); 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -44,8 +44,8 @@ BEGIN
         MENUITEM "&Yapıştır\tCtrl+V", CMD_PASTE
         MENUITEM "&Sil\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Ara...\tCtrl+F", CMD_SEARCH
-        MENUITEM "S&onrakini Ara\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Bul...\tCtrl+F", CMD_SEARCH
+        MENUITEM "S&onrakini Bul\tF3", CMD_SEARCH_NEXT
         MENUITEM "&Değiştir...\tCtrl+H", CMD_REPLACE
         MENUITEM "G&it...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
@@ -153,7 +153,7 @@ BEGIN
     STRING_ALL_FILES "Tüm Kütükler (*.*)"
     STRING_TEXT_FILES_TXT "Metin Belgeleri (*.txt)"
     STRING_TOOLARGE "%s kütüğü Not Defteri için çok büyük. Lütfen başka bir düzenleyici kullanınız."
-    STRING_NOTEXT "Hiç metin girmediniz. Lütfen birşeyler yazıp yeniden deneyiniz."
+    STRING_NOTEXT "Bir metin girmediniz. Lütfen birşeyler yazıp yeniden deneyiniz."
     STRING_DOESNOTEXIST "%s kütüğü yok. Yeni bir kütük oluşturmak ister misiniz?"
     STRING_NOTSAVED "%s kütüğü değiştirilmiş. Değişiklikleri saklamak ister misiniz?"
     STRING_NOTFOUND "%s bulunamadı."

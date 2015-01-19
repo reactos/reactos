@@ -1,7 +1,7 @@
 /*
  * Resources for Common Dialogs
  *
- * Copyrights: 2006 Fatih Aşıcı; 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı, 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -304,10 +304,10 @@ FONT 8, "MS Shell Dlg"
 
 FINDDLGORD DIALOG 36, 24, 276, 62
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ara"
+CAPTION "Bul"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "A&ranan:", -1, 4, 8, 52, 8
+ LTEXT "&Şunu Bul:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Ya&lnızca Tüm Dizgiyi Karşılaştır", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Büyük-Küçük Harfliği Karşılaştır", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -315,7 +315,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "Y&ukarı", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
  CONTROL "&Aşağı", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
- DEFPUSHBUTTON "Sonrakini Ara", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ DEFPUSHBUTTON "Sonrakini Bul", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "İptal", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Yardım", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
 }
@@ -326,14 +326,14 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Değiştir"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "A&ranan:", -1, 4, 8, 52, 8
+ LTEXT "&Şunu Bul:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT "&Şununla Değiştir:", -1, 4, 26, 52, 8
+ LTEXT "Ş&ununla Değiştir:", -1, 4, 26, 52, 8
  EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Ya&lnızca Tüm Dizgiyi Karşılaştır", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Y&alnızca Tüm Dizgiyi Karşılaştır", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "&Büyük-Küçük Harfliği Karşılaştır", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
- DEFPUSHBUTTON "Sonrakini Ara", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ DEFPUSHBUTTON "Sonrakini Bul", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Değiştir", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Tümünü Değiştir", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "İptal", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
