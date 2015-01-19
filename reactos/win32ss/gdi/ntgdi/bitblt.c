@@ -1111,7 +1111,6 @@ IntGdiFillRgn(
     DWORD rop2Fg;
     MIX mix;
     NT_ASSERT((pdc != NULL) && (prgn != NULL));
-    ASSERT_DC_PREPARED(pdc);
 
     if (pdc->dclevel.pSurface == NULL)
     {
