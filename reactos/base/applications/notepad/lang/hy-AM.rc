@@ -170,4 +170,5 @@ Would you like to save the changes ?"
     STRING_LF "Յունիքս (LF)"
     STRING_CR "Մակինտոշ (CR)"
     STRING_LINE_COLUMN "Line %d, column %d"
+    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
 END

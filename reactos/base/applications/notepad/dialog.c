@@ -180,6 +180,25 @@ static int AlertFileNotSaved(LPCTSTR szFileName)
     return MessageBox(Globals.hMainWnd, szMessage, szResource, MB_ICONEXCLAMATION|MB_YESNOCANCEL);
 }
 
+static void AlertPrintError(void)
+{
+    TCHAR szMessage[MAX_STRING_LEN];
+    TCHAR szResource[MAX_STRING_LEN];
+    TCHAR szUntitled[MAX_STRING_LEN];
+
+    LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, SIZEOF(szUntitled));
+
+    /* Load and format Message */
+    LoadString(Globals.hInstance, STRING_PRINTERROR, szResource, SIZEOF(szResource));
+    wsprintf(szMessage, szResource, Globals.szFileName[0] ? Globals.szFileName : szUntitled);
+
+    /* Load Caption */
+    LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
+
+    /* Display modal */
+    MessageBox(Globals.hMainWnd, szMessage, szResource, MB_ICONEXCLAMATION);
+}
+
 /**
  * Returns:
  *   TRUE  - if file exists
@@ -707,14 +726,12 @@ VOID DIALOG_FilePrint(VOID)
 
             if (dopage) {
                 if (StartPage(printer.hDC) <= 0) {
-                    static const TCHAR failed[] = _T("StartPage failed");
-                    static const TCHAR error[] = _T("Print Error");
                     SelectObject(printer.hDC, old_font);
                     EndDoc(printer.hDC);
                     DeleteDC(printer.hDC);
                     HeapFree(GetProcessHeap(), 0, pTemp);
                     DeleteObject(font);
-                    MessageBox(Globals.hMainWnd, failed, error, MB_ICONEXCLAMATION);
+                    AlertPrintError();
                     return;
                 }
                 /* Write a rectangle and header at the top of each page */

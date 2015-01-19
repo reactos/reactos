@@ -167,4 +167,5 @@ BEGIN
     STRING_LF "UNIX (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "%d. Yataç, %d. Dikeç"
+    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
 END
