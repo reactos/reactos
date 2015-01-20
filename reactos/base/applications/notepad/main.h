@@ -51,6 +51,8 @@ typedef struct
     HWND hStatusBar;
     HFONT hFont; /* Font used by the edit control */
     HMENU hMenu;
+    HGLOBAL hDevMode;
+    HGLOBAL hDevNames;
     LOGFONT lfFont;
     BOOL bWrapLongLines;
     BOOL bShowStatusBar;
@@ -59,10 +61,10 @@ typedef struct
     TCHAR szFileName[MAX_PATH];
     TCHAR szFileTitle[MAX_PATH];
     TCHAR szFilter[2 * MAX_STRING_LEN + 100];
-    TCHAR szMarginTop[MAX_PATH];
-    TCHAR szMarginBottom[MAX_PATH];
-    TCHAR szMarginLeft[MAX_PATH];
-    TCHAR szMarginRight[MAX_PATH];
+    LONG lMarginTop;
+    LONG lMarginBottom;
+    LONG lMarginLeft;
+    LONG lMarginRight;
     TCHAR szHeader[MAX_PATH];
     TCHAR szFooter[MAX_PATH];
     TCHAR szStatusBarLineCol[MAX_PATH];

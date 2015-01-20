@@ -19,6 +19,7 @@
 
 #include <windef.h>
 #include <winuser.h>
+#include <dlgs.h>
 
 #include "notepad_res.h"
 

@@ -34,14 +34,13 @@
 #define IDC_LICENSE      0x20B
 
 /* Commands */
-#define CMD_NEW           0x100
-#define CMD_OPEN          0x101
-#define CMD_SAVE          0x102
-#define CMD_SAVE_AS       0x103
-#define CMD_PRINT         0x104
-#define CMD_PAGE_SETUP    0x105
-#define CMD_PRINTER_SETUP 0x106
-#define CMD_EXIT          0x108
+#define CMD_NEW        0x100
+#define CMD_OPEN       0x101
+#define CMD_SAVE       0x102
+#define CMD_SAVE_AS    0x103
+#define CMD_PRINT      0x104
+#define CMD_PAGE_SETUP 0x105
+#define CMD_EXIT       0x108
 
 #define CMD_UNDO       0x110
 #define CMD_CUT        0x111

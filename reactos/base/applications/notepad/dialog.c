@@ -33,7 +33,7 @@ static const TCHAR empty_str[] = _T("");
 static const TCHAR szDefaultExt[] = _T("txt");
 static const TCHAR txt_files[] = _T("*.txt");
 
-static INT_PTR WINAPI DIALOG_PAGESETUP_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+static UINT_PTR CALLBACK DIALOG_PAGESETUP_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
 #ifndef UNICODE
 static LPSTR ConvertToASCII(LPSTR pszText)
@@ -654,11 +654,17 @@ VOID DIALOG_FilePrint(VOID)
     /* Let commdlg manage copy settings */
     printer.nCopies = (WORD)PD_USEDEVMODECOPIES;
 
+    printer.hDevMode = Globals.hDevMode;
+    printer.hDevNames = Globals.hDevNames;
+
     if (!PrintDlg(&printer))
     {
         DeleteObject(font);
         return;
     }
+
+    Globals.hDevMode = printer.hDevMode;
+    Globals.hDevNames = printer.hDevNames;
 
     assert(printer.hDC != 0);
 
@@ -779,20 +785,6 @@ VOID DIALOG_FilePrint(VOID)
     DeleteDC(printer.hDC);
     HeapFree(GetProcessHeap(), 0, pTemp);
     DeleteObject(font);
-}
-
-VOID DIALOG_FilePrinterSetup(VOID)
-{
-    PRINTDLG printer;
-
-    ZeroMemory(&printer, sizeof(printer));
-    printer.lStructSize = sizeof(printer);
-    printer.hwndOwner = Globals.hMainWnd;
-    printer.hInstance = Globals.hInstance;
-    printer.Flags = PD_PRINTSETUP;
-    printer.nCopies = 1;
-
-    PrintDlg(&printer);
 }
 
 VOID DIALOG_FileExit(VOID)
@@ -1257,20 +1249,38 @@ VOID DIALOG_HelpAboutWine(VOID)
  */
 VOID DIALOG_FilePageSetup(void)
 {
-    DialogBox(Globals.hInstance,
-              MAKEINTRESOURCE(DIALOG_PAGESETUP),
-              Globals.hMainWnd,
-              DIALOG_PAGESETUP_DlgProc);
+    PAGESETUPDLG page;
+
+    ZeroMemory(&page, sizeof(page));
+    page.lStructSize = sizeof(page);
+    page.hwndOwner = Globals.hMainWnd;
+    page.Flags = PSD_ENABLEPAGESETUPTEMPLATE | PSD_ENABLEPAGESETUPHOOK | PSD_MARGINS;
+    page.hInstance = Globals.hInstance;
+    page.rtMargin.left = Globals.lMarginLeft;
+    page.rtMargin.top = Globals.lMarginTop;
+    page.rtMargin.right = Globals.lMarginRight;
+    page.rtMargin.bottom = Globals.lMarginBottom;
+    page.hDevMode = Globals.hDevMode;
+    page.hDevNames = Globals.hDevNames;
+    page.lpPageSetupTemplateName = MAKEINTRESOURCE(DIALOG_PAGESETUP);
+    page.lpfnPageSetupHook = DIALOG_PAGESETUP_Hook;
+
+    PageSetupDlg(&page);
+
+    Globals.hDevMode = page.hDevMode;
+    Globals.hDevNames = page.hDevNames;
+    Globals.lMarginLeft = page.rtMargin.left;
+    Globals.lMarginTop = page.rtMargin.top;
+    Globals.lMarginRight = page.rtMargin.right;
+    Globals.lMarginBottom = page.rtMargin.bottom;
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- *           DIALOG_PAGESETUP_DlgProc
+ *           DIALOG_PAGESETUP_Hook
  */
 
-static INT_PTR
-WINAPI
-DIALOG_PAGESETUP_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR CALLBACK DIALOG_PAGESETUP_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
@@ -1283,17 +1293,11 @@ DIALOG_PAGESETUP_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 /* save user input and close dialog */
                 GetDlgItemText(hDlg, 0x141, Globals.szHeader, SIZEOF(Globals.szHeader));
                 GetDlgItemText(hDlg, 0x143, Globals.szFooter, SIZEOF(Globals.szFooter));
-                GetDlgItemText(hDlg, 0x14A, Globals.szMarginTop, SIZEOF(Globals.szMarginTop));
-                GetDlgItemText(hDlg, 0x150, Globals.szMarginBottom, SIZEOF(Globals.szMarginBottom));
-                GetDlgItemText(hDlg, 0x147, Globals.szMarginLeft, SIZEOF(Globals.szMarginLeft));
-                GetDlgItemText(hDlg, 0x14D, Globals.szMarginRight, SIZEOF(Globals.szMarginRight));
-                EndDialog(hDlg, IDOK);
-                return TRUE;
+                return FALSE;
 
             case IDCANCEL:
                 /* discard user input and close dialog */
-                EndDialog(hDlg, IDCANCEL);
-                return TRUE;
+                return FALSE;
 
             case IDHELP:
                 {
@@ -1314,10 +1318,6 @@ DIALOG_PAGESETUP_DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
         /* fetch last user input prior to display dialog */
         SetDlgItemText(hDlg, 0x141, Globals.szHeader);
         SetDlgItemText(hDlg, 0x143, Globals.szFooter);
-        SetDlgItemText(hDlg, 0x14A, Globals.szMarginTop);
-        SetDlgItemText(hDlg, 0x150, Globals.szMarginBottom);
-        SetDlgItemText(hDlg, 0x147, Globals.szMarginLeft);
-        SetDlgItemText(hDlg, 0x14D, Globals.szMarginRight);
         break;
     }
 

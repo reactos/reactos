@@ -136,6 +136,12 @@ void LoadSettings(void)
         QueryDword(hKey, _T("iPointSize"), &dwPointSize);
         QueryBool(hKey, _T("fWrap"), &Globals.bWrapLongLines);
         QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
+        QueryString(hKey, _T("szHeader"), Globals.szHeader, sizeof(Globals.szHeader) / sizeof(Globals.szHeader[0]));
+        QueryString(hKey, _T("szTrailer"), Globals.szFooter, sizeof(Globals.szFooter) / sizeof(Globals.szFooter[0]));
+        QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMarginLeft);
+        QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMarginTop);
+        QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMarginRight);
+        QueryDword(hKey, _T("iMarginBottom"), (DWORD*)&Globals.lMarginBottom);
 
         QueryDword(hKey, _T("iWindowPosX"), (DWORD*)&Globals.main_rect.left);
         QueryDword(hKey, _T("iWindowPosY"), (DWORD*)&Globals.main_rect.top);
@@ -198,6 +204,12 @@ void SaveSettings(void)
         SaveDword(hKey, _T("iPointSize"), PointSizeFromHeight(Globals.lfFont.lfHeight));
         SaveDword(hKey, _T("fWrap"), Globals.bWrapLongLines ? 1 : 0);
         SaveDword(hKey, _T("fStatusBar"), Globals.bShowStatusBar ? 1 : 0);
+        SaveString(hKey, _T("szHeader"), Globals.szHeader);
+        SaveString(hKey, _T("szTrailer"), Globals.szFooter);
+        SaveDword(hKey, _T("iMarginLeft"), Globals.lMarginLeft);
+        SaveDword(hKey, _T("iMarginTop"), Globals.lMarginTop);
+        SaveDword(hKey, _T("iMarginRight"), Globals.lMarginRight);
+        SaveDword(hKey, _T("iMarginBottom"), Globals.lMarginBottom);
         SaveDword(hKey, _T("iWindowPosX"), Globals.main_rect.left);
         SaveDword(hKey, _T("iWindowPosY"), Globals.main_rect.top);
         SaveDword(hKey, _T("iWindowPosDX"), Globals.main_rect.right - Globals.main_rect.left);

@@ -64,7 +64,6 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_SAVE_AS: DIALOG_FileSaveAs(); break;
     case CMD_PRINT: DIALOG_FilePrint(); break;
     case CMD_PAGE_SETUP: DIALOG_FilePageSetup(); break;
-    case CMD_PRINTER_SETUP: DIALOG_FilePrinterSetup(); break;
     case CMD_EXIT: DIALOG_FileExit(); break;
 
     case CMD_UNDO: DIALOG_EditUndo(); break;
@@ -359,6 +358,10 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (DoCloseFile()) {
             if (Globals.hFont)
                 DeleteObject(Globals.hFont);
+            if (Globals.hDevMode)
+                GlobalFree(Globals.hDevMode);
+            if (Globals.hDevNames)
+                GlobalFree(Globals.hDevNames);
             DestroyWindow(hWnd);
         }
         break;
