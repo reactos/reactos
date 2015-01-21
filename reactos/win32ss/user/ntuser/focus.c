@@ -150,7 +150,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
          HWND *phwndTopLevel, *phwndCurrent;
          PWND pwndCurrent, pwndDesktop;
 
-         pwndDesktop = UserGetDesktopWindow();
+         pwndDesktop = co_GetDesktopWindow(Window);//UserGetDesktopWindow();
          if (Window->spwndParent == pwndDesktop )
          {
             phwndTopLevel = IntWinListChildren(pwndDesktop);
@@ -168,8 +168,9 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
             ExFreePool(phwndTopLevel);
           }
       }
+      ////
    }
-   ////
+
    OldTID = WindowPrev ? IntGetWndThreadId(WindowPrev) : NULL;
    NewTID = Window ? IntGetWndThreadId(Window) : NULL;
    ptiOld = WindowPrev ? WindowPrev->head.pti : NULL;
@@ -245,10 +246,10 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                               (WPARAM)(Window == (gpqForeground ? gpqForeground->spwndActive : NULL)),
                                0); //(LPARAM)hWndPrev);
 
-      co_IntSendMessageNoWait( UserHMGetHandle(Window),
-                               WM_ACTIVATE,
-                               MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, Window->style & WS_MINIMIZE),
-                              (LPARAM)(WindowPrev ? UserHMGetHandle(WindowPrev) : 0));
+      co_IntSendMessage( UserHMGetHandle(Window),
+                         WM_ACTIVATE,
+                         MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, Window->style & WS_MINIMIZE),
+                        (LPARAM)(WindowPrev ? UserHMGetHandle(WindowPrev) : 0));
 
       if (Window->spwndParent == UserGetDesktopWindow() &&
           Window->spwndOwner == NULL &&
@@ -528,7 +529,7 @@ co_IntSetForegroundAndFocusWindow(
    else
    {
        //ERR("Activate Not same PQ and WQ and Wnd.\n");
-       co_IntSendMessageNoWait(hWnd, WM_ASYNC_SETACTIVEWINDOW, (WPARAM)Wnd, (LPARAM)MouseActivate );
+       co_IntSendMessage(hWnd, WM_ASYNC_SETACTIVEWINDOW, (WPARAM)Wnd, (LPARAM)MouseActivate );
        Ret = TRUE;
    }
    return Ret && fgRet;

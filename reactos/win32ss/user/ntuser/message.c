@@ -1111,7 +1111,7 @@ IntSendTo(PWND Window, PTHREADINFO ptiCur, UINT Msg)
    if ( ptiCur )
    {
       if (!Window ||
-           Window->head.pti->MessageQueue == ptiCur->MessageQueue )
+           Window->head.pti == ptiCur )
       {
          return NULL;
       }
