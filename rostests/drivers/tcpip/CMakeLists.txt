@@ -3,6 +3,7 @@ include_directories(../../apitests/include)
 
 list(APPEND SOURCE
     InterfaceInfo.c
+    tcp_info.c
     testlist.c)
 
 add_executable(tcpip_drvtest ${SOURCE})
