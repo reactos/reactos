@@ -419,7 +419,7 @@ function(create_iso_lists)
 
     add_cd_file(
         FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
-        DESTINATION root
+        DESTINATION livecd
         FOR hybridcd)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
