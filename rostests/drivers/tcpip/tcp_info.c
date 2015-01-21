@@ -449,7 +449,7 @@ test_AT_ARP_STATS(
             IndentationLevel++;
 
             indent_printf("ae_index:    %lu\n", ArpEntries[i].ae_index);
-            indent_printf("ae_physaddr: %lu\n", dbg_print_physaddr(ArpEntries[i].ae_physaddr, ArpEntries[i].ae_physaddrlen));
+            indent_printf("ae_physaddr: %s\n", dbg_print_physaddr(ArpEntries[i].ae_physaddr, ArpEntries[i].ae_physaddrlen));
             indent_printf("ae_address:  %lx (%s)\n", ArpEntries[i].ae_address, AddressString);
             indent_printf("ae_unknown:  %lu.\n", ArpEntries[i].ae_unknown);
 
