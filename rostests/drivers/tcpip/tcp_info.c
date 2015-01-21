@@ -15,6 +15,10 @@
 #include <iptypes.h>
 #include <winsock.h>
 
+/* FIXME */
+#define AT_MIB_ADDRXLAT_INFO_ID 1
+#define AT_MIB_ADDRXLAT_ENTRY_ID 0x101
+
 /* Route info */
 typedef struct IPRouteEntry {
     unsigned long ire_dest;
