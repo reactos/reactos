@@ -754,6 +754,29 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    return(Hook ? 1 : 0); // Don't call us again from user space.
 }
 
+#if 0 // Keep it for later!
+PWND FASTCALL
+co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
+{
+   PWND Ret;
+   PWND Child, OwnerWnd;
+
+   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
+   {
+      OwnerWnd = Child->spwndOwner;
+      if(!OwnerWnd)
+         continue;
+
+      if(OwnerWnd == Owner)
+      {
+         Ret = Child;
+         return Ret;
+      }
+   }
+   return NULL;
+}
+#endif
+
 VOID FASTCALL DefWndPrint( PWND pwnd, HDC hdc, ULONG uFlags)
 {
   /*

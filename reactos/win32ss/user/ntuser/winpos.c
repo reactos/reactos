@@ -349,7 +349,6 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    {
       WndTo = Wnd->head.pti->MessageQueue->spwndActivePrev;
       if (can_activate_window( WndTo )) goto done;
-      
    }
 
    // Find any window to bring to top. Works Okay for wine since it does not see X11 windows.
@@ -2410,13 +2409,12 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    return(WasVisible);
 }
 
-static
-PWND FASTCALL
+static PWND
 co_WinPosSearchChildren(
-   PWND ScopeWin,
-   POINT *Point,
-   USHORT *HitTest,
-   BOOL Ignore
+   IN PWND ScopeWin,
+   IN POINT *Point,
+   IN OUT USHORT *HitTest,
+   IN BOOL Ignore
    )
 {
     PWND pwndChild;
@@ -2429,6 +2427,7 @@ co_WinPosSearchChildren(
 
     if (!Ignore && (ScopeWin->style & WS_DISABLED))
     {
+        *HitTest = HTERROR;
         return NULL;
     }
 
@@ -2467,8 +2466,8 @@ co_WinPosSearchChildren(
 
     if (ScopeWin->head.pti == PsGetCurrentThreadWin32Thread())
     {
-       *HitTest = (USHORT)co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
-                                            MAKELONG(Point->x, Point->y));
+       *HitTest = (USHORT)co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0, MAKELONG(Point->x, Point->y));
+
        if ((*HitTest) == (USHORT)HTTRANSPARENT)
        {
            UserDereferenceObject(ScopeWin);
@@ -2476,13 +2475,15 @@ co_WinPosSearchChildren(
        }
     }
     else
-       *HitTest = HTCLIENT;
+    {
+       if (*HitTest == HTNOWHERE && pwndChild == NULL) *HitTest = HTCLIENT;
+    }
 
     return ScopeWin;
 }
 
-PWND FASTCALL
-co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest, BOOL Ignore)
+PWND APIENTRY
+co_WinPosWindowFromPoint(IN PWND ScopeWin, IN POINT *WinPoint, IN OUT USHORT* HitTest, IN BOOL Ignore)
 {
    PWND Window;
    POINT Point = *WinPoint;

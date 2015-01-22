@@ -1466,27 +1466,6 @@ IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
    }
 }
 
-PWND FASTCALL
-co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
-{
-   PWND Ret;
-   PWND Child, OwnerWnd;
-
-   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
-   {
-      OwnerWnd = Child->spwndOwner;
-      if(!OwnerWnd)
-         continue;
-
-      if(OwnerWnd == Owner)
-      {
-         Ret = Child;
-         return Ret;
-      }
-   }
-   return NULL;
-}
-
 BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT last)
 {
     MSG clk_msg;
@@ -1497,7 +1476,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     MOUSEHOOKSTRUCT hook;
     BOOL eatMsg = FALSE;
 
-    PWND pwndMsg, pwndDesktop, pwndPopUP;
+    PWND pwndMsg, pwndDesktop, pwndOrig;
     PUSER_MESSAGE_QUEUE MessageQueue;
     PTHREADINFO pti;
     PSYSTEM_CURSORINFO CurInfo;
@@ -1508,7 +1487,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     pwndDesktop = UserGetDesktopWindow();
     MessageQueue = pti->MessageQueue;
     CurInfo = IntGetSysCursorInfo();
-    pwndPopUP = pwndMsg = ValidateHwndNoErr(msg->hwnd);
+    pwndOrig = pwndMsg = ValidateHwndNoErr(msg->hwnd);
     clk_msg = MessageQueue->msgDblClk;
     pDesk = pwndDesktop->head.rpdesk;
 
@@ -1526,23 +1505,14 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         */
         pwndMsg = co_WinPosWindowFromPoint( NULL, &msg->pt, &hittest, FALSE);
         //
-        // CORE-6129, Override if a diabled window with a visible popup was selected.
+        // CORE-6129, Override if a diabled window, it might have a visible popup.
         //
-        if (pwndPopUP && pwndPopUP->style & WS_DISABLED)
+        if ( pwndOrig && pwndOrig->style & WS_DISABLED )
         {
-           TRACE("window disabled\n");
-           pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pwndPopUP);
-           if ( pwndPopUP &&
-                pwndPopUP->style & WS_POPUP &&
-                pwndPopUP->style & WS_VISIBLE &&
-                (pwndPopUP->head.pti->MessageQueue != gpqForeground ||
-                 pwndPopUP->head.pti->MessageQueue->spwndActive != pwndPopUP) &&
-              //pwndPopUP != pwndPopUP->head.rpdesk->pDeskInfo->spwndShell needs testing.
-                pwndPopUP != ValidateHwndNoErr(InputWindowStation->ShellWindow) )
+           if ( hittest == (USHORT)HTERROR )
            {
-               TRACE("Found Popup!\n");
-               UserDereferenceObject(pwndMsg);
-               pwndMsg = pwndPopUP;
+               if (pwndMsg) UserReferenceObject(pwndMsg);
+               pwndMsg = pwndOrig;
                UserReferenceObject(pwndMsg);
            }
         }
@@ -1571,6 +1541,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
     pt = msg->pt;
     message = msg->message;
+
     /* Note: windows has no concept of a non-client wheel message */
     if (message != WM_MOUSEWHEEL)
     {
@@ -1711,11 +1682,10 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         RETURN(FALSE);
     }
 
-    if ((hittest == HTERROR) || (hittest == HTNOWHERE))
+    if ((hittest == (USHORT)HTERROR) || (hittest == (USHORT)HTNOWHERE))
     {
-        co_IntSendMessage( msg->hwnd, WM_SETCURSOR, (WPARAM)msg->hwnd,
-                      MAKELONG( hittest, msg->message ));
-
+        co_IntSendMessage( msg->hwnd, WM_SETCURSOR, (WPARAM)msg->hwnd, MAKELONG( hittest, msg->message ));
+        ERR("HT errors!\n");
         /* Remove and skip message */
         *RemoveMessages = TRUE;
         RETURN(FALSE);
@@ -1745,6 +1715,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         {
             PWND pwndTop = pwndMsg;
             pwndTop = IntGetNonChildAncestor(pwndTop);
+
+            TRACE("Mouse pti %p pwndMsg pti %p pwndTop pti %p\n",MessageQueue->ptiMouse,pwndMsg->head.pti,pwndTop->head.pti);
 
             if (pwndTop && pwndTop != pwndDesktop)
             {
