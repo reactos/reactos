@@ -2381,7 +2381,7 @@ static BOOL dwarf2_parse_compilation_unit(const dwarf2_section_t* sections,
         }
         if (dwarf2_find_attribute(&ctx, di, DW_AT_stmt_list, &stmt_list))
         {
-#ifdef __REACTOS__
+#if defined(__REACTOS__) && defined(__clang__)
             unsigned long stmt_list_val = stmt_list.u.uvalue;
             if (stmt_list_val > module->module.BaseOfImage)
             {
