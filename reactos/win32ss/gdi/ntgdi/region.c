@@ -737,8 +737,8 @@ REGION_CropRegion(
         lpr = &rgnSrc->Buffer[i];
 
         /* Make sure the source rect is not retarded */
-        ASSERT(lpr->bottom > rect->top);
-        ASSERT(lpr->right > rect->left);
+        ASSERT(lpr->bottom > lpr->top);
+        ASSERT(lpr->right > lpr->left);
 
         /* We already checked above, this should hold true */
         ASSERT(lpr->bottom > rect->top);
@@ -749,15 +749,15 @@ REGION_CropRegion(
         {
             rpr = &rgnDst->Buffer[j];
 
-            /* Crop the rect with the intersect rect and add offset */
+            /* Crop the rect with the intersect rect */
             rpr->top = max(lpr->top, rect->top);
             rpr->bottom = min(lpr->bottom, rect->bottom);
             rpr->left = max(lpr->left, rect->left);
             rpr->right = min(lpr->right, rect->right);
 
             /* Make sure the resulting rect is not retarded */
-            ASSERT(lpr->bottom > rect->top);
-            ASSERT(lpr->right > rect->left);
+            ASSERT(rpr->bottom > rpr->top);
+            ASSERT(rpr->right > rpr->left);
 
             /* Track new bounds */
             if (rpr->left < left) left = rpr->left;

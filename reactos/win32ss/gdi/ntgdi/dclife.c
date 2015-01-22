@@ -459,7 +459,7 @@ void
 DC_vUpdateDC(PDC pdc)
 {
     // PREGION VisRgn ;
-    PPDEVOBJ ppdev = pdc->ppdev ;
+    PPDEVOBJ ppdev = pdc->ppdev;
 
     pdc->dhpdev = ppdev->dhpdev;
 
