@@ -653,7 +653,7 @@ new_directory_record(struct _finddata_t *f,
 {
     PDIR_RECORD d;
 
-    d = calloc(1, sizeof(DIR_RECORD));
+    d = calloc(1, sizeof(*d));
     if (d == NULL)
         error_exit("Insufficient memory");
     d->next_in_memory = root.next_in_memory;
@@ -687,7 +687,7 @@ new_directory_record(struct dirent *entry,
     char *n;
     */
 
-    d = calloc(1, sizeof(DIR_RECORD));
+    d = calloc(1, sizeof(*d));
     if (d == NULL)
         error_exit("Insufficient memory");
     d->next_in_memory = root.next_in_memory;

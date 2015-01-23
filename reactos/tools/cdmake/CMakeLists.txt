@@ -1,2 +1,2 @@
 
-add_executable(cdmake cdmake.c dirhash.c llmosrt.c)
+add_executable(cdmake cdmake.c dirhash.c llmsort.c)

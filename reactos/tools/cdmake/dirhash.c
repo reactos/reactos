@@ -39,7 +39,6 @@ chop_dirname(const char *name, char **dirname)
         last_slash = strrchr(name, '\\');
     if (!last_slash)
     {
-        free(*dirname);
         *dirname = malloc(1);
         **dirname = 0;
     }
@@ -48,7 +47,6 @@ chop_dirname(const char *name, char **dirname)
         char *newdata = malloc(last_slash - name + 1);
         memcpy(newdata, name, last_slash - name);
         newdata[last_slash - name] = 0;
-        free(*dirname);
         *dirname = newdata;
     }
 }
@@ -157,7 +155,6 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
 {
     struct target_file *tf;
     struct target_dir_entry *de;
-    const char *filename = chop_filename(target);
     char *targetdir = NULL;
     char *targetnorm;
     chop_dirname(target, &targetdir);
@@ -170,7 +167,7 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     tf->next = de->head;
     de->head = tf;
     tf->source_name = strdup(source);
-    tf->target_name = strdup(filename);
+    tf->target_name = strdup(chop_filename(target));
 }
 
 static struct target_dir_entry *
