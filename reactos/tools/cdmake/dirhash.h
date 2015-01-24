@@ -26,11 +26,13 @@ struct target_dir_hash
     struct target_dir_entry root;
 };
 
+#if 0
 struct target_dir_traversal
 {
     struct target_dir_entry *it;
     int i;
 };
+#endif
 
 void normalize_dirname(char *filename);
 void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target);

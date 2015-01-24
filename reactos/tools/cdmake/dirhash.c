@@ -138,12 +138,14 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
     hashcode = djb_hash(targetnorm);
     de = calloc(1, sizeof(*de));
     de->parent = parent_de;
+    de->head = NULL;
+    de->child = NULL;
     de->normalized_name = strdup(targetnorm);
     de->case_name = strdup(chop_filename(casename));
     de->next = parent_de->child;
     parent_de->child = de;
     ent = &dh->buckets[hashcode % NUM_DIR_HASH_BUCKETS];
-    while ((*ent))
+    while (*ent)
     {
         ent = &(*ent)->next;
     }
@@ -170,6 +172,7 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     tf->target_name = strdup(chop_filename(target));
 }
 
+#if 0
 static struct target_dir_entry *
 dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t)
 {
@@ -200,13 +203,13 @@ dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t)
             return t->it;
     }
 }
+#endif
 
 static void
 dir_hash_destroy_dir(struct target_dir_hash *dh, struct target_dir_entry *de)
 {
     struct target_file *tf;
     struct target_dir_entry *te;
-    unsigned int hashcode;
     while ((te = de->child))
     {
         de->child = te->next;
