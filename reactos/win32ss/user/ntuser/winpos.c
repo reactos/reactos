@@ -2438,10 +2438,10 @@ co_WinPosSearchChildren(
 
     UserReferenceObject(ScopeWin);
 
-    if ( RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y) )
+    if (RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y))
     {
         List = IntWinListChildren(ScopeWin);
-        if(List)
+        if (List)
         {
             for (phWnd = List; *phWnd; ++phWnd)
             {
@@ -2452,7 +2452,7 @@ co_WinPosSearchChildren(
 
                 pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest, Ignore);
 
-                if(pwndChild != NULL)
+                if (pwndChild != NULL)
                 {
                     /* We found a window. Don't send any more WM_NCHITTEST messages */
                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
@@ -2476,7 +2476,7 @@ co_WinPosSearchChildren(
     }
     else
     {
-       if (*HitTest == HTNOWHERE && pwndChild == NULL) *HitTest = HTCLIENT;
+        if (*HitTest == HTNOWHERE) *HitTest = HTCLIENT;
     }
 
     return ScopeWin;
