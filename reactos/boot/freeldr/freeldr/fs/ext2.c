@@ -569,8 +569,8 @@ BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG S
     //{
     //    return FALSE;
     //}
-    //ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER);
-    //RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * DiskGeometry.BytesPerSector);
+    //ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, DiskReadBuffer);
+    //RtlCopyMemory(Buffer, DiskReadBuffer, SectorCount * DiskGeometry.BytesPerSector);
     //return ReturnValue;
 
     return CacheReadDiskSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, Buffer);
@@ -607,11 +607,11 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
     // Now try to read the super block
     // If this fails then abort
-    if (!MachDiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, (PVOID)DISKREADBUFFER))
+    if (!MachDiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, DiskReadBuffer))
     {
         return FALSE;
     }
-    RtlCopyMemory(Ext2SuperBlock, (PVOID)((ULONG_PTR)DISKREADBUFFER + 1024), 1024);
+    RtlCopyMemory(Ext2SuperBlock, ((PUCHAR)DiskReadBuffer + 1024), 1024);
 
     TRACE("Dumping super block:\n");
     TRACE("total_inodes: %d\n", Ext2SuperBlock->total_inodes);

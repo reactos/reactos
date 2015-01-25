@@ -29,32 +29,11 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 
 #define MAX_BIOS_DESCRIPTORS 32
 
-#define STACK_BASE_PAGE    (STACKLOW / PAGE_SIZE)
-#define FREELDR_BASE_PAGE  (FREELDR_BASE / PAGE_SIZE)
-#define DISKBUF_BASE_PAGE  (DISKREADBUFFER / PAGE_SIZE)
-
-#define STACK_PAGE_COUNT   (FREELDR_BASE_PAGE - STACK_BASE_PAGE)
-#define FREELDR_PAGE_COUNT (DISKBUF_BASE_PAGE - FREELDR_BASE_PAGE)
-#define DISKBUF_PAGE_COUNT (0x10)
-#define BIOSBUF_PAGE_COUNT (1)
-
 BIOS_MEMORY_MAP PcBiosMemoryMap[MAX_BIOS_DESCRIPTORS];
 ULONG PcBiosMapCount;
-ULONG PcDiskReadBufferSize;
 
-FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1] =
-{
-    { LoaderFirmwarePermanent, 0x00,               1 }, // realmode int vectors
-    { LoaderFirmwareTemporary, 0x01,               STACK_BASE_PAGE - 1 }, // freeldr stack, cmdline, BIOS call buffer
-    { LoaderOsloaderStack,     STACK_BASE_PAGE,    FREELDR_BASE_PAGE - STACK_BASE_PAGE }, // prot mode stack.
-    { LoaderLoadedProgram,     FREELDR_BASE_PAGE,  FREELDR_PAGE_COUNT }, // freeldr image
-    { LoaderFirmwareTemporary, DISKBUF_BASE_PAGE,  DISKBUF_PAGE_COUNT }, // Disk read buffer for int 13h. DISKREADBUFFER
-    { LoaderFirmwarePermanent, 0x9F,               0x1 },  // EBDA
-    { LoaderFirmwarePermanent, 0xA0,               0x50 }, // ROM / Video
-    { LoaderSpecialMemory,     0xF0,               0x10 }, // ROM / Video
-    { LoaderSpecialMemory,     0xFFF,              1 }, // unusable memory
-    { 0, 0, 0 }, // end of map
-};
+FREELDR_MEMORY_DESCRIPTOR PcMemoryMap[MAX_BIOS_DESCRIPTORS + 1];
+ULONG PcMapCount;
 
 ULONG
 AddMemoryDescriptor(
@@ -186,38 +165,12 @@ PcMemGetConventionalMemorySize(VOID)
 }
 
 static
-ULONG
-PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
+BOOLEAN
+GetEbdaLocation(
+    PULONG BaseAddress,
+    PULONG Size)
 {
     REGS Regs;
-    ULONG MapCount = 0;
-    ULONGLONG RealBaseAddress, RealSize;
-    TYPE_OF_MEMORY MemoryType;
-    ULONG Size;
-    ASSERT(PcBiosMapCount == 0);
-
-    TRACE("GetBiosMemoryMap()\n");
-
-    /* Make sure the usable memory is large enough. To do this we check the 16
-       bit value at address 0x413 inside the BDA, which gives us the usable size
-       in KB */
-    Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
-    if (Size < DISKREADBUFFER || Size - DISKREADBUFFER < MIN_DISKREADBUFFER_SIZE)
-    {
-        FrLdrBugCheckWithMessage(
-            MEMORY_INIT_FAILURE,
-            __FILE__,
-            __LINE__,
-            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n\n"
-            "If you see this, please report to the ReactOS team!",
-            Size);
-    }
-    PcDiskReadBufferSize = (Size - DISKREADBUFFER) & ~0xfff;
-    if (PcDiskReadBufferSize > MAX_DISKREADBUFFER_SIZE)
-    {
-        PcDiskReadBufferSize = MAX_DISKREADBUFFER_SIZE;
-    }
-    TRACE("PcDiskReadBufferSize=0x%x\n", PcDiskReadBufferSize);
 
     /* Get the address of the Extended BIOS Data Area (EBDA).
      * Int 15h, AH=C1h
@@ -232,36 +185,44 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
     Int386(0x15, &Regs, &Regs);
 
     /* If the function fails, there is no EBDA */
-    if (INT386_SUCCESS(Regs))
+    if (!INT386_SUCCESS(Regs))
     {
-        /* Check if this is high enough */
-        ULONG EbdaBase = (ULONG)Regs.w.es << 4;
-        if (EbdaBase < DISKREADBUFFER || EbdaBase - DISKREADBUFFER < MIN_DISKREADBUFFER_SIZE)
-        {
-            FrLdrBugCheckWithMessage(
-                MEMORY_INIT_FAILURE,
-                __FILE__,
-                __LINE__,
-                "The location of your EBDA is 0x%lx, which is too low!\n\n"
-                "If you see this, please report to the ReactOS team!",
-                EbdaBase);
-        }
-        if (((EbdaBase - DISKREADBUFFER) & ~0xfff) < PcDiskReadBufferSize)
-        {
-            PcDiskReadBufferSize = (EbdaBase - DISKREADBUFFER) & ~0xfff;
-            TRACE("After EBDA check, PcDiskReadBufferSize=0x%x\n", PcDiskReadBufferSize);
-        }
-
-        /* Calculate the (max) size of the EBDA */
-        Size = 0xA0000 - EbdaBase;
-
-        /* Add the descriptor */
-        MapCount = AddMemoryDescriptor(PcMemoryMap,
-                                       MAX_BIOS_DESCRIPTORS,
-                                       (EbdaBase / MM_PAGE_SIZE),
-                                       (Size / MM_PAGE_SIZE),
-                                       LoaderFirmwarePermanent);
+        return FALSE;
     }
+
+    /* Get Base address and (maximum) size */
+    *BaseAddress = (ULONG)Regs.w.es << 4;
+    *Size = 0xA0000 - *BaseAddress;
+    return TRUE;
+}
+
+static
+ULONG
+PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSize)
+{
+    REGS Regs;
+    ULONGLONG RealBaseAddress, EndAddress, RealSize;
+    TYPE_OF_MEMORY MemoryType;
+    ULONG Size;
+    ASSERT(PcBiosMapCount == 0);
+
+    TRACE("GetBiosMemoryMap()\n");
+
+    /* Make sure the usable memory is large enough. To do this we check the 16
+       bit value at address 0x413 inside the BDA, which gives us the usable size
+       in KB */
+    Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
+    if (Size < MEMORY_MARGIN)
+    {
+        FrLdrBugCheckWithMessage(
+            MEMORY_INIT_FAILURE,
+            __FILE__,
+            __LINE__,
+            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n\n"
+            "If you see this, please report to the ReactOS team!",
+            Size);
+    }
+
 
     /* Int 15h AX=E820h
      * Newer BIOSes - GET SYSTEM MEMORY MAP
@@ -322,13 +283,24 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         {
             MemoryType = LoaderFree;
 
-            /* Align up base of memory area */
-            RealBaseAddress = PcBiosMemoryMap[PcBiosMapCount].BaseAddress & ~(MM_PAGE_SIZE - 1ULL);
+            /* Align up base of memory range */
+            RealBaseAddress = ALIGN_UP_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                                          PAGE_SIZE);
 
-            /* Calculate the length after aligning the base */
-            RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
-                       PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
-            RealSize = (RealSize + MM_PAGE_SIZE - 1) & ~(MM_PAGE_SIZE - 1ULL);
+            /* Calculate aligned EndAddress */
+            EndAddress = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
+                         PcBiosMemoryMap[PcBiosMapCount].Length;
+            EndAddress = ALIGN_DOWN_BY(EndAddress, PAGE_SIZE);
+
+            /* Check if there is anything left */
+            if (EndAddress <= RealBaseAddress)
+            {
+                /* This doesn't span any page, so continue with next range */
+                continue;
+            }
+
+            /* Calculate the length of the aligned range */
+            RealSize = EndAddress - RealBaseAddress;
         }
         else
         {
@@ -338,18 +310,20 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
                 MemoryType = LoaderSpecialMemory;
 
             /* Align down base of memory area */
-            RealBaseAddress = PcBiosMemoryMap[PcBiosMapCount].BaseAddress & ~(MM_PAGE_SIZE - 1ULL);
+            RealBaseAddress = ALIGN_DOWN_BY(PcBiosMemoryMap[PcBiosMapCount].BaseAddress,
+                                            PAGE_SIZE);
+
             /* Calculate the length after aligning the base */
             RealSize = PcBiosMemoryMap[PcBiosMapCount].BaseAddress +
                        PcBiosMemoryMap[PcBiosMapCount].Length - RealBaseAddress;
-            RealSize = (RealSize + MM_PAGE_SIZE - 1) & ~(MM_PAGE_SIZE - 1ULL);
+            RealSize = ALIGN_UP_BY(RealSize, PAGE_SIZE);
         }
 
         /* Check if we can add this descriptor */
-        if ((RealSize >= MM_PAGE_SIZE) && (MapCount < MaxMemoryMapSize))
+        if ((RealSize >= MM_PAGE_SIZE) && (PcMapCount < MaxMemoryMapSize))
         {
             /* Add the descriptor */
-            MapCount = AddMemoryDescriptor(PcMemoryMap,
+            PcMapCount = AddMemoryDescriptor(PcMemoryMap,
                                            MAX_BIOS_DESCRIPTORS,
                                            (PFN_NUMBER)(RealBaseAddress / MM_PAGE_SIZE),
                                            (PFN_NUMBER)(RealSize / MM_PAGE_SIZE),
@@ -366,12 +340,72 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
             TRACE("End Of System Memory Map!\n\n");
             break;
         }
-
     }
 
-    return MapCount;
+    TRACE("GetBiosMemoryMap end, PcBiosMapCount = %ld\n", PcBiosMapCount);
+    return PcBiosMapCount;
 }
 
+VOID
+ReserveMemory(
+    ULONG_PTR BaseAddress,
+    SIZE_T Size,
+    TYPE_OF_MEMORY MemoryType,
+    PCHAR Usage)
+{
+    ULONG_PTR BasePage, PageCount;
+    ULONG i;
+
+    BasePage = BaseAddress / PAGE_SIZE;
+    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(BaseAddress, Size);
+
+    for (i = 0; i < PcMapCount; i++)
+    {
+        /* Check for conflicting descriptor */
+        if ((PcMemoryMap[i].BasePage < BasePage + PageCount) &&
+            (PcMemoryMap[i].BasePage + PcMemoryMap[i].PageCount > BasePage))
+        {
+            /* Check if the memory is free */
+            if (PcMemoryMap[i].MemoryType != LoaderFree)
+            {
+                FrLdrBugCheckWithMessage(
+                    MEMORY_INIT_FAILURE,
+                    __FILE__,
+                    __LINE__,
+                    "Failed to reserve memory in the range 0x%Ix - 0x%Ix for %s",
+                    BaseAddress,
+                    Size,
+                    Usage);
+            }
+        }
+    }
+
+    /* Add the memory descriptor */
+    PcMapCount = AddMemoryDescriptor(PcMemoryMap,
+                                     MAX_BIOS_DESCRIPTORS,
+                                     BasePage,
+                                     PageCount,
+                                     MemoryType);
+}
+
+VOID
+SetMemory(
+    ULONG_PTR BaseAddress,
+    SIZE_T Size,
+    TYPE_OF_MEMORY MemoryType)
+{
+    ULONG_PTR BasePage, PageCount;
+
+    BasePage = BaseAddress / PAGE_SIZE;
+    PageCount = ADDRESS_AND_SIZE_TO_SPAN_PAGES(BaseAddress, Size);
+
+    /* Add the memory descriptor */
+    PcMapCount = AddMemoryDescriptor(PcMemoryMap,
+                                     MAX_BIOS_DESCRIPTORS,
+                                     BasePage,
+                                     PageCount,
+                                     MemoryType);
+}
 
 PFREELDR_MEMORY_DESCRIPTOR
 PcMemGetMemoryMap(ULONG *MemoryMapSize)
@@ -379,13 +413,16 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
     ULONG i, EntryCount;
     ULONG ExtendedMemorySizeAtOneMB;
     ULONG ExtendedMemorySizeAtSixteenMB;
+    ULONG EbdaBase, EbdaSize;
+    TRACE("PcMemGetMemoryMap()\n");
 
     EntryCount = PcMemGetBiosMemoryMap(PcMemoryMap, MAX_BIOS_DESCRIPTORS);
 
     /* If the BIOS didn't provide a memory map, synthesize one */
-    if (0 == EntryCount)
+    if (EntryCount == 0)
     {
-        GetExtendedMemoryConfiguration(&ExtendedMemorySizeAtOneMB, &ExtendedMemorySizeAtSixteenMB);
+        GetExtendedMemoryConfiguration(&ExtendedMemorySizeAtOneMB,
+                                       &ExtendedMemorySizeAtSixteenMB);
 
         /* Conventional memory */
         AddMemoryDescriptor(PcMemoryMap,
@@ -395,7 +432,7 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
                             LoaderFree);
 
         /* Extended memory */
-        EntryCount = AddMemoryDescriptor(PcMemoryMap,
+        PcMapCount = AddMemoryDescriptor(PcMemoryMap,
                                          MAX_BIOS_DESCRIPTORS,
                                          1024 * 1024 / PAGE_SIZE,
                                          ExtendedMemorySizeAtOneMB * 1024 / PAGE_SIZE,
@@ -404,16 +441,65 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
         if (ExtendedMemorySizeAtSixteenMB != 0)
         {
             /* Extended memory at 16MB */
-            EntryCount = AddMemoryDescriptor(PcMemoryMap,
+            PcMapCount = AddMemoryDescriptor(PcMemoryMap,
                                              MAX_BIOS_DESCRIPTORS,
                                              0x1000000 / PAGE_SIZE,
                                              ExtendedMemorySizeAtSixteenMB * 64 * 1024 / PAGE_SIZE,
                                              LoaderFree);
         }
+
+        /* Check if we have an EBDA and get it's location */
+        if (GetEbdaLocation(&EbdaBase, &EbdaSize))
+        {
+            /* Add the descriptor */
+            PcMapCount = AddMemoryDescriptor(PcMemoryMap,
+                                             MAX_BIOS_DESCRIPTORS,
+                                             (EbdaBase / PAGE_SIZE),
+                                             ADDRESS_AND_SIZE_TO_SPAN_PAGES(EbdaBase, EbdaSize),
+                                             LoaderFirmwarePermanent);
+        }
     }
 
+    /* Setup some protected ranges */
+    SetMemory(0x000000, 0x01000, LoaderFirmwarePermanent); // Realmode IVT / BDA
+    SetMemory(0x0A0000, 0x50000, LoaderFirmwarePermanent); // Video memory
+    SetMemory(0x0F0000, 0x10000, LoaderSpecialMemory); // ROM
+    SetMemory(0xFFF000, 0x01000, LoaderSpecialMemory); // unusable memory (do we really need this?)
+
+    /* Reserve some static ranges for freeldr */
+    ReserveMemory(0x1000, STACKLOW - 0x1000, LoaderFirmwareTemporary, "BIOS area");
+    ReserveMemory(STACKLOW, STACKADDR - STACKLOW, LoaderOsloaderStack, "FreeLdr stack");
+    ReserveMemory(FREELDR_BASE, FrLdrImageSize, LoaderLoadedProgram, "FreeLdr image");
+
+    /* Default to 1 page above freeldr for the disk read buffer */
+    DiskReadBuffer = (PUCHAR)ALIGN_UP_BY(FREELDR_BASE + FrLdrImageSize, PAGE_SIZE);
+    DiskReadBufferSize = PAGE_SIZE;
+
+    /* Scan for free range above freeldr image */
+    for (i = 0; i < PcMapCount; i++)
+    {
+        if ((PcMemoryMap[i].BasePage > (FREELDR_BASE / PAGE_SIZE)) &&
+            (PcMemoryMap[i].MemoryType == LoaderFree))
+        {
+            /* Use this range for the disk read buffer */
+            DiskReadBuffer = (PVOID)(PcMemoryMap[i].BasePage * PAGE_SIZE);
+            DiskReadBufferSize = min(PcMemoryMap[i].PageCount * PAGE_SIZE,
+                                     MAX_DISKREADBUFFER_SIZE);
+            break;
+        }
+    }
+
+    TRACE("DiskReadBuffer=%p, DiskReadBufferSize=%lx\n",
+          DiskReadBuffer, DiskReadBufferSize);
+
+    /* Now reserve the range for the disk read buffer */
+    ReserveMemory((ULONG_PTR)DiskReadBuffer,
+                  DiskReadBufferSize,
+                  LoaderFirmwareTemporary,
+                  "Disk read buffer");
+
     TRACE("Dumping resulting memory map:\n");
-    for (i = 0; i < EntryCount; i++)
+    for (i = 0; i < PcMapCount; i++)
     {
         TRACE("BasePage=0x%lx, PageCount=0x%lx, Type=%s\n",
               PcMemoryMap[i].BasePage,
@@ -421,9 +507,9 @@ PcMemGetMemoryMap(ULONG *MemoryMapSize)
               MmGetSystemMemoryMapTypeString(PcMemoryMap[i].MemoryType));
     }
 
-    *MemoryMapSize = EntryCount;
-
+    *MemoryMapSize = PcMapCount;
     return PcMemoryMap;
 }
+
 
 /* EOF */
