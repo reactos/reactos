@@ -2417,29 +2417,41 @@ co_WinPosSearchChildren(
    IN BOOL Ignore
    )
 {
-    PWND pwndChild;
     HWND *List, *phWnd;
+    PWND pwndChild = NULL;
 
+    /* not visible */
     if (!(ScopeWin->style & WS_VISIBLE))
     {
         return NULL;
     }
 
-    if (!Ignore && (ScopeWin->style & WS_DISABLED))
-    {
-        *HitTest = HTERROR;
-        return NULL;
-    }
-
+    /* not in window or in window region */
     if (!IntPtInWindow(ScopeWin, Point->x, Point->y))
     {
         return NULL;
     }
 
-    UserReferenceObject(ScopeWin);
-
-    if (RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y))
+    /* transparent */
+    if ((ScopeWin->ExStyle & (WS_EX_LAYERED|WS_EX_TRANSPARENT)) == (WS_EX_LAYERED|WS_EX_TRANSPARENT))
     {
+        return NULL;
+    }
+
+    if (!Ignore && (ScopeWin->style & WS_DISABLED))
+    {   /* disabled child */
+        if ((ScopeWin->style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return NULL;
+        /* process the hit error */
+        *HitTest = HTERROR;
+        return ScopeWin;
+    }
+
+    /* not minimized and check if point is inside the window */
+    if (!(ScopeWin->style & WS_MINIMIZE) && 
+         RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y) )
+    {
+        UserReferenceObject(ScopeWin);
+
         List = IntWinListChildren(ScopeWin);
         if (List)
         {
@@ -2462,6 +2474,7 @@ co_WinPosSearchChildren(
             }
             ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
         }
+        UserDereferenceObject(ScopeWin);
     }
 
     if (ScopeWin->head.pti == PsGetCurrentThreadWin32Thread())
@@ -2470,20 +2483,23 @@ co_WinPosSearchChildren(
 
        if ((*HitTest) == (USHORT)HTTRANSPARENT)
        {
-           UserDereferenceObject(ScopeWin);
            return NULL;
        }
     }
     else
     {
-        if (*HitTest == HTNOWHERE) *HitTest = HTCLIENT;
+       if (*HitTest == HTNOWHERE && pwndChild == NULL) *HitTest = HTCLIENT;
     }
 
     return ScopeWin;
 }
 
 PWND APIENTRY
-co_WinPosWindowFromPoint(IN PWND ScopeWin, IN POINT *WinPoint, IN OUT USHORT* HitTest, IN BOOL Ignore)
+co_WinPosWindowFromPoint(
+   IN PWND ScopeWin,
+   IN POINT *WinPoint,
+   IN OUT USHORT* HitTest,
+   IN BOOL Ignore)
 {
    PWND Window;
    POINT Point = *WinPoint;
@@ -3433,7 +3449,6 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    RETURN( NULL);
 
 CLEANUP:
-   if (Window) UserDereferenceObject(Window);
    if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
 
    TRACE("Leave NtUserWindowFromPoint, ret=%p\n", _ret_);

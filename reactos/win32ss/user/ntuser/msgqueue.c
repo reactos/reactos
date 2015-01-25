@@ -61,7 +61,9 @@ IntTopLevelWindowFromPoint(INT x, INT y)
             continue;
         }
 
-        if ((pWnd->style & WS_VISIBLE) && IntPtInWindow(pWnd, x, y))
+        if ((pWnd->style & WS_VISIBLE) &&
+            (pWnd->ExStyle & (WS_EX_LAYERED|WS_EX_TRANSPARENT)) == 0 &&
+            IntPtInWindow(pWnd, x, y))
             return pWnd;
     }
 
@@ -1476,18 +1478,17 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     MOUSEHOOKSTRUCT hook;
     BOOL eatMsg = FALSE;
 
-    PWND pwndMsg, pwndDesktop, pwndOrig;
+    PWND pwndMsg, pwndDesktop;
     PUSER_MESSAGE_QUEUE MessageQueue;
     PTHREADINFO pti;
     PSYSTEM_CURSORINFO CurInfo;
     PDESKTOP pDesk;
-    DECLARE_RETURN(BOOL);
 
     pti = PsGetCurrentThreadWin32Thread();
     pwndDesktop = UserGetDesktopWindow();
     MessageQueue = pti->MessageQueue;
     CurInfo = IntGetSysCursorInfo();
-    pwndOrig = pwndMsg = ValidateHwndNoErr(msg->hwnd);
+    pwndMsg = ValidateHwndNoErr(msg->hwnd);
     clk_msg = MessageQueue->msgDblClk;
     pDesk = pwndDesktop->head.rpdesk;
 
@@ -1496,7 +1497,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     {
         hittest = HTCLIENT;
         pwndMsg = MessageQueue->spwndCapture;
-        if (pwndMsg) UserReferenceObject(pwndMsg);
     }
     else
     {
@@ -1504,18 +1504,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
            Start with null window. See wine win.c:test_mouse_input:WM_COMMAND tests.
         */
         pwndMsg = co_WinPosWindowFromPoint( NULL, &msg->pt, &hittest, FALSE);
-        //
-        // CORE-6129, Override if a diabled window, it might have a visible popup.
-        //
-        if ( pwndOrig && pwndOrig->style & WS_DISABLED )
-        {
-           if ( hittest == (USHORT)HTERROR )
-           {
-               if (pwndMsg) UserReferenceObject(pwndMsg);
-               pwndMsg = pwndOrig;
-               UserReferenceObject(pwndMsg);
-           }
-        }
     }
 
     TRACE("Got mouse message for %p, hittest: 0x%x\n", msg->hwnd, hittest);
@@ -1525,7 +1513,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     {
         /* Remove and ignore the message */
         *RemoveMessages = TRUE;
-        RETURN(FALSE);
+        return FALSE;
     }
 
     if ( MessageQueue == gpqCursor ) // Cursor must use the same Queue!
@@ -1600,7 +1588,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
         {
             TRACE("Message out of range!!!\n");
-            RETURN(FALSE);
+            return FALSE;
         }
 
         /* update static double click conditions */
@@ -1611,7 +1599,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (!((first ==  0 && last == 0) || (message >= first || message <= last)))
         {
             TRACE("Message out of range!!!\n");
-            RETURN(FALSE);
+            return FALSE;
         }
 
         // Update mouse move down keys.
@@ -1621,7 +1609,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         }
     }
 
-    if(gspv.bMouseClickLock)
+    if (gspv.bMouseClickLock)
     {
         BOOL IsClkLck = FALSE;
 
@@ -1649,11 +1637,11 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
             /* Remove and ignore the message */
             *RemoveMessages = TRUE;
             TRACE("Remove and ignore the message\n");
-            RETURN(FALSE);
+            return FALSE;
         }
     }
 
-    /* message is accepted now (but may still get dropped) */
+    /* message is accepted now (but still get dropped) */
 
     event.message = msg->message;
     event.time    = msg->time;
@@ -1679,23 +1667,23 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
         /* Remove and skip message */
         *RemoveMessages = TRUE;
-        RETURN(FALSE);
+        return FALSE;
     }
 
     if ((hittest == (USHORT)HTERROR) || (hittest == (USHORT)HTNOWHERE))
     {
         co_IntSendMessage( msg->hwnd, WM_SETCURSOR, (WPARAM)msg->hwnd, MAKELONG( hittest, msg->message ));
-        ERR("HT errors!\n");
+
         /* Remove and skip message */
         *RemoveMessages = TRUE;
-        RETURN(FALSE);
+        return FALSE;
     }
 
     if ((*RemoveMessages == FALSE) || MessageQueue->spwndCapture)
     {
         /* Accept the message */
         msg->message = message;
-        RETURN(TRUE);
+        return TRUE;
     }
 
     if ((msg->message == WM_LBUTTONDOWN) ||
@@ -1753,13 +1741,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     co_IntSendMessage( msg->hwnd, WM_SETCURSOR, (WPARAM)msg->hwnd, MAKELONG( hittest, msg->message ));
 
     msg->message = message;
-    RETURN(!eatMsg);
-
-CLEANUP:
-    if(pwndMsg)
-        UserDereferenceObject(pwndMsg);
-
-    END_CLEANUP;
+    return !eatMsg;
 }
 
 BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
