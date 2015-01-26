@@ -2176,7 +2176,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
    style = Wnd->style;
 
-   ERR("co_WinPosShowWindow START hwnd %p Cmd %d usicmd %d\n",Wnd->head.h,Cmd,pti->ppi->usi.wShowWindow);
+   TRACE("co_WinPosShowWindow START hwnd %p Cmd %d usicmd %d\n",Wnd->head.h,Cmd,pti->ppi->usi.wShowWindow);
 
    if ( pti->ppi->usi.dwFlags & STARTF_USESHOWWINDOW )
    {
