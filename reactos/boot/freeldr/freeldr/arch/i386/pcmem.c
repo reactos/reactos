@@ -203,7 +203,7 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
     REGS Regs;
     ULONGLONG RealBaseAddress, EndAddress, RealSize;
     TYPE_OF_MEMORY MemoryType;
-    ULONG Size;
+    ULONG Size, RequiredSize;
     ASSERT(PcBiosMapCount == 0);
 
     TRACE("GetBiosMemoryMap()\n");
@@ -212,17 +212,18 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
        bit value at address 0x413 inside the BDA, which gives us the usable size
        in KB */
     Size = (*(PUSHORT)(ULONG_PTR)0x413) * 1024;
-    if (Size < MEMORY_MARGIN)
+    RequiredSize = FREELDR_BASE + FrLdrImageSize + PAGE_SIZE;
+    if (Size < RequiredSize)
     {
         FrLdrBugCheckWithMessage(
             MEMORY_INIT_FAILURE,
             __FILE__,
             __LINE__,
-            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n\n"
+            "The BIOS reported a usable memory range up to 0x%x, which is too small!\n"
+            "Required size is 0x%x\n\n"
             "If you see this, please report to the ReactOS team!",
-            Size);
+            Size, RequiredSize);
     }
-
 
     /* Int 15h AX=E820h
      * Newer BIOSes - GET SYSTEM MEMORY MAP
