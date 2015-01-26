@@ -461,11 +461,14 @@ InitThreadCallback(PETHREAD Thread)
     NTSTATUS Status = STATUS_SUCCESS;
     PTEB pTeb;
     LARGE_INTEGER LargeTickCount;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
     Process = Thread->ThreadsProcess;
 
     pTeb = NtCurrentTeb();
     ASSERT(pTeb);
+
+    ProcessParams = pTeb->ProcessEnvironmentBlock->ProcessParameters;
 
     /* Allocate a new Win32 thread info */
     Status = AllocW32Thread(Thread, &ptiCurrent);
@@ -557,6 +560,24 @@ InitThreadCallback(PETHREAD Thread)
         pci->CodePage = ptiCurrent->KeyboardLayout->CodePage;
     }
 
+    /* Need to pass the user Startup Information to the current process. */
+    if ( ProcessParams )
+    {
+       if ( ptiCurrent->ppi->usi.cb == 0 )      // Not initialized yet.
+       {
+          if ( ProcessParams->WindowFlags != 0 ) // Need window flags set.
+          {
+             ptiCurrent->ppi->usi.cb          = sizeof(USERSTARTUPINFO);
+             ptiCurrent->ppi->usi.dwX         = ProcessParams->StartingX;
+             ptiCurrent->ppi->usi.dwY         = ProcessParams->StartingY;
+             ptiCurrent->ppi->usi.dwXSize     = ProcessParams->CountX;
+             ptiCurrent->ppi->usi.dwYSize     = ProcessParams->CountY;
+             ptiCurrent->ppi->usi.dwFlags     = ProcessParams->WindowFlags;
+             ptiCurrent->ppi->usi.wShowWindow = (WORD)ProcessParams->ShowWindowFlags;
+          }
+       }
+    }
+
     /* Assign a default window station and desktop to the process */
     /* Do not try to open a desktop or window station before winlogon initializes */
     if (ptiCurrent->ppi->hdeskStartup == NULL && gpidLogon != 0)
@@ -565,13 +586,11 @@ InitThreadCallback(PETHREAD Thread)
         HDESK hDesk = NULL;
         UNICODE_STRING DesktopPath;
         PDESKTOP pdesk;
-        PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
         /*
          * inherit the thread desktop and process window station (if not yet inherited) from the process startup
          * info structure. See documentation of CreateProcess()
          */
-        ProcessParams = pTeb->ProcessEnvironmentBlock->ProcessParameters;
 
         Status = STATUS_UNSUCCESSFUL;
         if (ProcessParams && ProcessParams->DesktopInfo.Length > 0)

@@ -2168,12 +2168,49 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    PTHREADINFO pti;
    //HRGN VisibleRgn;
    BOOL ShowOwned = FALSE;
+   BOOL FirstTime = FALSE;
    ASSERT_REFS_CO(Wnd);
    //ERR("co_WinPosShowWindow START\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
    style = Wnd->style;
+
+   ERR("co_WinPosShowWindow START hwnd %p Cmd %d usicmd %d\n",Wnd->head.h,Cmd,pti->ppi->usi.wShowWindow);
+
+   if ( pti->ppi->usi.dwFlags & STARTF_USESHOWWINDOW )
+   {
+      if ((Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
+      {
+         if ((Wnd->style & WS_CAPTION) == WS_CAPTION)
+         {
+            if (Wnd->spwndOwner == NULL)
+            {
+               if ( Cmd == SW_SHOWNORMAL || Cmd == SW_SHOW)
+               {
+                    Cmd = SW_SHOWDEFAULT;
+               }
+               FirstTime = TRUE;
+               ERR("co_WPSW FT 1\n");
+            }
+         }
+      }
+   }
+
+   if ( Cmd == SW_SHOWDEFAULT )
+   {
+      if ( pti->ppi->usi.dwFlags & STARTF_USESHOWWINDOW )
+      {
+         Cmd = pti->ppi->usi.wShowWindow;
+         FirstTime = TRUE;
+         ERR("co_WPSW FT 2\n");
+      }
+   }
+
+   if (FirstTime)
+   {
+      pti->ppi->usi.dwFlags &= ~(STARTF_USEPOSITION|STARTF_USESIZE|STARTF_USESHOWWINDOW);
+   }
 
    switch (Cmd)
    {
@@ -2182,7 +2219,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             if (!WasVisible)
             {
                //ERR("co_WinPosShowWindow Exit Bad\n");
-               return(FALSE);
+               return FALSE;
             }
             Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
             if (Wnd != pti->MessageQueue->spwndActive)
@@ -2406,7 +2443,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       if (!(style & WS_CHILD)) co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
    }
    //ERR("co_WinPosShowWindow EXIT\n");
-   return(WasVisible);
+   return WasVisible;
 }
 
 static PWND
