@@ -2168,12 +2168,49 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    PTHREADINFO pti;
    //HRGN VisibleRgn;
    BOOL ShowOwned = FALSE;
+   BOOL FirstTime = FALSE;
    ASSERT_REFS_CO(Wnd);
    //ERR("co_WinPosShowWindow START\n");
 
    pti = PsGetCurrentThreadWin32Thread();
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
    style = Wnd->style;
+
+   TRACE("co_WinPosShowWindow START hwnd %p Cmd %d usicmd %d\n",Wnd->head.h,Cmd,pti->ppi->usi.wShowWindow);
+
+   if ( pti->ppi->usi.dwFlags & STARTF_USESHOWWINDOW )
+   {
+      if ((Wnd->style & (WS_POPUP|WS_CHILD)) != WS_CHILD)
+      {
+         if ((Wnd->style & WS_CAPTION) == WS_CAPTION)
+         {
+            if (Wnd->spwndOwner == NULL)
+            {
+               if ( Cmd == SW_SHOWNORMAL || Cmd == SW_SHOW)
+               {
+                    Cmd = SW_SHOWDEFAULT;
+               }
+               FirstTime = TRUE;
+               ERR("co_WPSW FT 1\n");
+            }
+         }
+      }
+   }
+
+   if ( Cmd == SW_SHOWDEFAULT )
+   {
+      if ( pti->ppi->usi.dwFlags & STARTF_USESHOWWINDOW )
+      {
+         Cmd = pti->ppi->usi.wShowWindow;
+         FirstTime = TRUE;
+         ERR("co_WPSW FT 2\n");
+      }
+   }
+
+   if (FirstTime)
+   {
+      pti->ppi->usi.dwFlags &= ~(STARTF_USEPOSITION|STARTF_USESIZE|STARTF_USESHOWWINDOW);
+   }
 
    switch (Cmd)
    {
@@ -2182,7 +2219,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             if (!WasVisible)
             {
                //ERR("co_WinPosShowWindow Exit Bad\n");
-               return(FALSE);
+               return FALSE;
             }
             Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
             if (Wnd != pti->MessageQueue->spwndActive)
@@ -2406,7 +2443,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       if (!(style & WS_CHILD)) co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
    }
    //ERR("co_WinPosShowWindow EXIT\n");
-   return(WasVisible);
+   return WasVisible;
 }
 
 static PWND
@@ -2417,31 +2454,43 @@ co_WinPosSearchChildren(
    IN BOOL Ignore
    )
 {
-    PWND pwndChild;
     HWND *List, *phWnd;
+    PWND pwndChild = NULL;
 
+    /* not visible */
     if (!(ScopeWin->style & WS_VISIBLE))
     {
         return NULL;
     }
 
-    if (!Ignore && (ScopeWin->style & WS_DISABLED))
-    {
-        *HitTest = HTERROR;
-        return NULL;
-    }
-
+    /* not in window or in window region */
     if (!IntPtInWindow(ScopeWin, Point->x, Point->y))
     {
         return NULL;
     }
 
-    UserReferenceObject(ScopeWin);
-
-    if ( RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y) )
+    /* transparent */
+    if ((ScopeWin->ExStyle & (WS_EX_LAYERED|WS_EX_TRANSPARENT)) == (WS_EX_LAYERED|WS_EX_TRANSPARENT))
     {
+        return NULL;
+    }
+
+    if (!Ignore && (ScopeWin->style & WS_DISABLED))
+    {   /* disabled child */
+        if ((ScopeWin->style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return NULL;
+        /* process the hit error */
+        *HitTest = HTERROR;
+        return ScopeWin;
+    }
+
+    /* not minimized and check if point is inside the window */
+    if (!(ScopeWin->style & WS_MINIMIZE) && 
+         RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y) )
+    {
+        UserReferenceObject(ScopeWin);
+
         List = IntWinListChildren(ScopeWin);
-        if(List)
+        if (List)
         {
             for (phWnd = List; *phWnd; ++phWnd)
             {
@@ -2452,7 +2501,7 @@ co_WinPosSearchChildren(
 
                 pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest, Ignore);
 
-                if(pwndChild != NULL)
+                if (pwndChild != NULL)
                 {
                     /* We found a window. Don't send any more WM_NCHITTEST messages */
                     ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
@@ -2462,6 +2511,7 @@ co_WinPosSearchChildren(
             }
             ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
         }
+        UserDereferenceObject(ScopeWin);
     }
 
     if (ScopeWin->head.pti == PsGetCurrentThreadWin32Thread())
@@ -2470,7 +2520,6 @@ co_WinPosSearchChildren(
 
        if ((*HitTest) == (USHORT)HTTRANSPARENT)
        {
-           UserDereferenceObject(ScopeWin);
            return NULL;
        }
     }
@@ -2483,7 +2532,11 @@ co_WinPosSearchChildren(
 }
 
 PWND APIENTRY
-co_WinPosWindowFromPoint(IN PWND ScopeWin, IN POINT *WinPoint, IN OUT USHORT* HitTest, IN BOOL Ignore)
+co_WinPosWindowFromPoint(
+   IN PWND ScopeWin,
+   IN POINT *WinPoint,
+   IN OUT USHORT* HitTest,
+   IN BOOL Ignore)
 {
    PWND Window;
    POINT Point = *WinPoint;
@@ -3433,7 +3486,6 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    RETURN( NULL);
 
 CLEANUP:
-   if (Window) UserDereferenceObject(Window);
    if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
 
    TRACE("Leave NtUserWindowFromPoint, ret=%p\n", _ret_);

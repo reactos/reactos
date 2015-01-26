@@ -23,6 +23,17 @@
 
 DBG_DEFAULT_CHANNEL(MEMORY);
 
+PVOID    PageLookupTableAddress = NULL;
+PFN_NUMBER TotalPagesInLookupTable = 0;
+PFN_NUMBER FreePagesInLookupTable = 0;
+PFN_NUMBER LastFreePageHint = 0;
+PFN_NUMBER MmLowestPhysicalPage = 0xFFFFFFFF;
+PFN_NUMBER MmHighestPhysicalPage = 0;
+
+PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
+ULONG BiosMemoryMapEntryCount;
+SIZE_T FrLdrImageSize;
+
 #if DBG
 typedef struct
 {
@@ -50,17 +61,42 @@ FREELDR_MEMORY_TYPE MemoryTypeArray[] =
     { LoaderReserve, "Reserve" },
 };
 ULONG MemoryTypeCount = sizeof(MemoryTypeArray) / sizeof(MemoryTypeArray[0]);
+
+PCSTR
+MmGetSystemMemoryMapTypeString(
+    TYPE_OF_MEMORY Type)
+{
+    ULONG Index;
+
+    for (Index = 1; Index < MemoryTypeCount; Index++)
+    {
+        if (MemoryTypeArray[Index].Type == Type)
+        {
+            return MemoryTypeArray[Index].TypeString;
+        }
+    }
+
+    return MemoryTypeArray[0].TypeString;
+}
+
+VOID
+DbgDumpMemoryMap(
+    PFREELDR_MEMORY_DESCRIPTOR List)
+{
+    ULONG i;
+
+    DbgPrint("Dumping Memory map:\n");
+    for (i = 0; List[i].PageCount != 0; i++)
+    {
+        DbgPrint("%02d %08x - %08x: %s\n",
+                 i,
+                 List[i].BasePage * PAGE_SIZE,
+                 (List[i].BasePage + List[i].PageCount) * PAGE_SIZE,
+                 MmGetSystemMemoryMapTypeString(List[i].MemoryType));
+    }
+    DbgPrint("\n");
+}
 #endif
-
-PVOID    PageLookupTableAddress = NULL;
-PFN_NUMBER TotalPagesInLookupTable = 0;
-PFN_NUMBER FreePagesInLookupTable = 0;
-PFN_NUMBER LastFreePageHint = 0;
-PFN_NUMBER MmLowestPhysicalPage = 0xFFFFFFFF;
-PFN_NUMBER MmHighestPhysicalPage = 0;
-
-PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
-ULONG BiosMemoryMapEntryCount;
 
 ULONG
 AddMemoryDescriptor(
@@ -70,78 +106,117 @@ AddMemoryDescriptor(
     IN PFN_NUMBER PageCount,
     IN TYPE_OF_MEMORY MemoryType)
 {
-    ULONG i, c;
-    PFN_NUMBER NextBase;
-    TRACE("AddMemoryDescriptor(0x%lx-0x%lx [0x%lx pages])\n",
-          BasePage, BasePage + PageCount, PageCount);
+    ULONG Index, DescriptCount;
+    PFN_NUMBER EndPage;
+    TRACE("AddMemoryDescriptor(0x%Ix, 0x%Ix, %u)\n",
+          BasePage, PageCount, MemoryType);
 
-    /* Scan through all existing descriptors */
-    for (i = 0, c = 0; (c < MaxCount) && (List[c].PageCount != 0); c++)
+    EndPage = BasePage + PageCount;
+
+    /* Skip over all descriptor below the new range */
+    Index = 0;
+    while ((List[Index].PageCount != 0) &&
+           ((List[Index].BasePage + List[Index].PageCount) <= BasePage))
     {
-        /* Count entries completely below the new range */
-        if (List[i].BasePage + List[i].PageCount <= BasePage) i++;
+        Index++;
     }
 
-    /* Check if the list is full */
-    if (c >= MaxCount) return c;
-
-    /* Is there an existing descriptor starting before the new range */
-    while ((i < c) && (List[i].BasePage <= BasePage))
+    /* Count the descriptors */
+    DescriptCount = Index;
+    while (List[DescriptCount].PageCount != 0)
     {
-        /* The end of the existing one is the minimum for the new range */
-        NextBase = List[i].BasePage + List[i].PageCount;
-
-        /* Bail out, if everything is trimmed away */
-        if ((BasePage + PageCount) <= NextBase) return c;
-
-        /* Trim the naew range at the lower end */
-        PageCount -= (NextBase - BasePage);
-        BasePage = NextBase;
-
-        /* Go to the next entry and repeat */
-        i++;
+        DescriptCount++;
     }
 
-    ASSERT(PageCount > 0);
-
-    /* Are there still entries above? */
-    if (i < c)
+    /* Check if the existing range conflicts with the new range */
+    while ((List[Index].PageCount != 0) &&
+           (List[Index].BasePage < EndPage))
     {
-        /* Shift the following entries one up */
-        RtlMoveMemory(&List[i+1], &List[i], (c - i) * sizeof(List[0]));
+        TRACE("AddMemoryDescriptor conflict @%lu: new=[%lx:%lx], existing=[%lx,%lx]\n",
+              Index, BasePage, PageCount, List[Index].BasePage, List[Index].PageCount);
 
-        /* Insert the new range */
-        List[i].BasePage = BasePage;
-        List[i].PageCount = min(PageCount, List[i+1].BasePage - BasePage);
-        List[i].MemoryType = MemoryType;
-        c++;
+        /*
+         * We have 4 overlapping cases:
+         *
+         * Case              (a)       (b)       (c)       (d)
+         * Existing range  |---|     |-----|    |---|      |---|
+         * New range         |---|    |---|    |-----|   |---|
+         *
+         */
 
-        TRACE("Inserting at i=%ld: (0x%lx:0x%lx)\n",
-              i, List[i].BasePage, List[i].PageCount);
-
-        /* Check if the range was trimmed */
-        if (PageCount > List[i].PageCount)
+        /* Check if the existing range starts before the new range (a)/(b) */
+        if (List[Index].BasePage < BasePage)
         {
-            /* Recursively process the trimmed part */
-            c = AddMemoryDescriptor(List,
-                                    MaxCount,
-                                    BasePage + List[i].PageCount,
-                                    PageCount - List[i].PageCount,
-                                    MemoryType);
+            /* Check if the existing range extends beyond the new range (b) */
+            if (List[Index].BasePage + List[Index].PageCount > EndPage)
+            {
+                /* Split the descriptor */
+                RtlMoveMemory(&List[Index + 1],
+                              &List[Index],
+                              (DescriptCount - Index) * sizeof(List[0]));
+                List[Index + 1].BasePage = EndPage;
+                List[Index + 1].PageCount = List[Index].BasePage +
+                                            List[Index].PageCount -
+                                            List[Index + 1].BasePage;
+                List[Index].PageCount = BasePage - List[Index].BasePage;
+                Index++;
+                DescriptCount++;
+                break;
+            }
+            else
+            {
+                /* Crop the existing range and continue with the next range */
+                List[Index].PageCount = BasePage - List[Index].BasePage;
+                Index++;
+            }
+        }
+        /* Check if the existing range is fully covered by the new range (c) */
+        else if ((List[Index].BasePage + List[Index].PageCount) <=
+                 EndPage)
+        {
+            /* Delete this descriptor */
+            RtlMoveMemory(&List[Index],
+                          &List[Index + 1],
+                          (DescriptCount - Index) * sizeof(List[0]));
+            DescriptCount--;
+        }
+        /* Otherwise the existing range ends after the new range (d) */
+        else
+        {
+            /* Crop the existing range at the start and bail out */
+            List[Index].PageCount -= EndPage - List[Index].BasePage;
+            List[Index].BasePage = EndPage;
+            break;
         }
     }
-    else
+
+    /* Make sure we can still add a new descriptor */
+    if (DescriptCount >= MaxCount)
     {
-        /* We can simply add the range here */
-        TRACE("Adding i=%ld: (0x%lx:0x%lx)\n", i, BasePage, PageCount);
-        List[i].BasePage = BasePage;
-        List[i].PageCount = PageCount;
-        List[i].MemoryType = MemoryType;
-        c++;
+        FrLdrBugCheckWithMessage(
+            MEMORY_INIT_FAILURE,
+            __FILE__,
+            __LINE__,
+            "Ran out of static memory descriptors!");
     }
 
-    /* Return the new count */
-    return c;
+    /* Insert the new descriptor */
+    if (Index < DescriptCount)
+    {
+        RtlMoveMemory(&List[Index + 1],
+                      &List[Index],
+                      (DescriptCount - Index) * sizeof(List[0]));
+    }
+
+    List[Index].BasePage = BasePage;
+    List[Index].PageCount = PageCount;
+    List[Index].MemoryType = MemoryType;
+    DescriptCount++;
+
+#ifdef DBG
+    DbgDumpMemoryMap(List);
+#endif
+    return DescriptCount;
 }
 
 const FREELDR_MEMORY_DESCRIPTOR*
@@ -230,6 +305,9 @@ MmCheckFreeldrImageFile()
             OptionalHeader->SizeOfImage, MAX_FREELDR_PE_SIZE,
             OptionalHeader->SectionAlignment, OptionalHeader->FileAlignment);
     }
+
+    /* Calculate the full image size */
+    FrLdrImageSize = (ULONG_PTR)&__ImageBase + OptionalHeader->SizeOfImage - FREELDR_BASE;
 }
 
 BOOLEAN MmInitializeMemoryManager(VOID)
@@ -287,22 +365,6 @@ BOOLEAN MmInitializeMemoryManager(VOID)
     return TRUE;
 }
 
-#if DBG
-PCSTR MmGetSystemMemoryMapTypeString(TYPE_OF_MEMORY Type)
-{
-    ULONG        Index;
-
-    for (Index=1; Index<MemoryTypeCount; Index++)
-    {
-        if (MemoryTypeArray[Index].Type == Type)
-        {
-            return MemoryTypeArray[Index].TypeString;
-        }
-    }
-
-    return MemoryTypeArray[0].TypeString;
-}
-#endif
 
 PFN_NUMBER MmGetPageNumberFromAddress(PVOID Address)
 {

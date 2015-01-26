@@ -7,6 +7,7 @@
  *                  Timo Kreuzer
  */
 
+#define DISKREADBUFFER HEX(8E000)
 
 /*
  * Layout of a FAT volume:

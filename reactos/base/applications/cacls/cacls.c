@@ -19,6 +19,11 @@
 
 #include "precomp.h"
 
+/* command line options */
+BOOL OptionT = FALSE, OptionE = FALSE, OptionC = FALSE;
+BOOL OptionG = FALSE, OptionR = FALSE, OptionP = FALSE, OptionD = FALSE;
+LPCTSTR GUser, GPerm, RUser, PUser, PPerm, DUser;
+
 static GENERIC_MAPPING FileGenericMapping =
 {
     FILE_GENERIC_READ,
@@ -512,92 +517,500 @@ PrintSpecialAccess:
     return Ret;
 }
 
+/* add a backslash at end to a path string if necessary */
+static VOID
+AddBackslash(LPTSTR FilePath)
+{
+    INT len = lstrlen(FilePath);
+    LPTSTR pch = CharPrev(FilePath, FilePath + len);
+    if (*pch != _T('\\'))
+        lstrcat(pch, _T("\\"));
+}
+
+static BOOL
+GetPathOfFile(LPTSTR FilePath, LPCTSTR pszFiles)
+{
+    TCHAR FullPath[MAX_PATH];
+    LPTSTR pch;
+    DWORD attrs;
+
+    lstrcpyn(FilePath, pszFiles, MAX_PATH);
+    pch = _tcsrchr(FilePath, _T('\\'));
+    if (pch != NULL)
+    {
+        *pch = 0;
+        if (!GetFullPathName(FilePath, MAX_PATH, FullPath, NULL))
+        {
+            PrintErrorMessage(GetLastError());
+            return FALSE;
+        }
+        lstrcpyn(FilePath, FullPath, MAX_PATH);
+
+        attrs = GetFileAttributes(FilePath);
+        if (attrs == 0xFFFFFFFF || !(attrs & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            PrintErrorMessage(ERROR_DIRECTORY);
+            return FALSE;
+        }
+    }
+    else
+        GetCurrentDirectory(MAX_PATH, FilePath);
+
+    AddBackslash(FilePath);
+    return TRUE;
+}
+
+static BOOL
+PrintDaclsOfFiles(LPCTSTR pszFiles)
+{
+    TCHAR FilePath[MAX_PATH];
+    WIN32_FIND_DATA FindData;
+    HANDLE hFind;
+    DWORD LastError;
+
+    /*
+     * get the file path
+     */
+    if (!GetPathOfFile(FilePath, pszFiles))
+        return FALSE;
+
+    /*
+     * search for the files
+     */
+    hFind = FindFirstFile(pszFiles, &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    do
+    {
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            continue;
+
+        if (!PrintFileDacl(FilePath, FindData.cFileName))
+        {
+            LastError = GetLastError();
+            if (LastError == ERROR_ACCESS_DENIED)
+            {
+                PrintErrorMessage(LastError);
+                if (!OptionC)
+                {
+                    FindClose(hFind);
+                    return FALSE;
+                }
+            }
+            else
+                break;
+        }
+        else
+            _tprintf(_T("\n"));
+    } while(FindNextFile(hFind, &FindData));
+    LastError = GetLastError();
+    FindClose(hFind);
+
+    if (LastError != ERROR_NO_MORE_FILES)
+    {
+        PrintErrorMessage(LastError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL
+GrantUserAccessRights(LPCTSTR FilePath, LPCTSTR File, LPCTSTR User, TCHAR Perm)
+{
+    /* TODO & FIXME */
+    switch(Perm)
+    {
+        case _T('R'): // Read
+            break;
+        case _T('W'): // Write
+            break;
+        case _T('C'): // Change (write)
+            break;
+        case _T('F'): // Full control
+            break;
+        default:
+            break;
+    }
+    return FALSE;
+}
+
+static BOOL
+ReplaceUserAccessRights(
+    LPCTSTR FilePath,
+    LPCTSTR File,
+    LPCTSTR User,
+    TCHAR Perm)
+{
+    /* TODO & FIXME */
+    switch(Perm)
+    {
+        case _T('N'): // None
+            break;
+        case _T('R'): // Read
+            break;
+        case _T('W'): // Write
+            break;
+        case _T('C'): // Change (write)
+            break;
+        case _T('F'): // Full control
+            break;
+        default:
+            break;
+    }
+    return FALSE;
+}
+
+static BOOL
+EditUserAccessRights(
+    LPCTSTR FilePath,
+    LPCTSTR File,
+    LPCTSTR User,
+    TCHAR Perm)
+{
+    /* TODO & FIXME */
+    switch(Perm)
+    {
+        case _T('N'): // None
+            break;
+        case _T('R'): // Read
+            break;
+        case _T('W'): // Write
+            break;
+        case _T('C'): // Change (write)
+            break;
+        case _T('F'): // Full control
+            break;
+        default:
+            break;
+    }
+    return FALSE;
+}
+
+static BOOL
+DenyUserAccess(LPCTSTR FilePath, LPCTSTR File, LPCTSTR User)
+{
+    /* TODO & FIXME */
+    return FALSE;
+}
+
+static BOOL
+RevokeUserAccessRights(LPCTSTR FilePath, LPCTSTR File, LPCTSTR User)
+{
+    /* TODO & FIXME */
+    return FALSE;
+}
+
+static BOOL
+ChangeFileACL(LPCTSTR FilePath, LPCTSTR File)
+{
+    if (OptionG)
+    {
+        /* Grant specified user access rights. */
+        GrantUserAccessRights(FilePath, File, GUser, *GPerm);
+    }
+
+    if (OptionP)
+    {
+        if (!OptionE)
+        {
+            /* Replace specified user's access rights. */
+            ReplaceUserAccessRights(FilePath, File, PUser, *PPerm);
+        }
+        else
+        {
+            /* Edit ACL instead of replacing it. */
+            EditUserAccessRights(FilePath, File, PUser, *PPerm);
+        }
+    }
+
+    if (OptionD)
+    {
+        /* Deny specified user access. */
+        DenyUserAccess(FilePath, File, DUser);
+    }
+
+    if (OptionR)
+    {
+        /* Revoke specified user's access rights. */
+        RevokeUserAccessRights(FilePath, File, RUser);
+    }
+
+    return TRUE;
+}
+
+static BOOL
+ChangeACLsOfFiles(LPCTSTR pszFiles)
+{
+    TCHAR FilePath[MAX_PATH];
+    HANDLE hFind;
+    WIN32_FIND_DATA FindData;
+    DWORD LastError;
+
+    /*
+     * get the file path
+     */
+    if (!GetPathOfFile(FilePath, pszFiles))
+        return FALSE;
+
+    /*
+     * search for files in current directory
+     */
+    hFind = FindFirstFile(pszFiles, &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    do
+    {
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            continue;
+
+        if (!ChangeFileACL(FilePath, FindData.cFileName))
+        {
+            LastError = GetLastError();
+            if (LastError == ERROR_ACCESS_DENIED)
+            {
+                PrintErrorMessage(LastError);
+                if (!OptionC)
+                {
+                    FindClose(hFind);
+                    return FALSE;
+                }
+            }
+            else
+                break;
+        }
+    } while(FindNextFile(hFind, &FindData));
+
+    LastError = GetLastError();
+    FindClose(hFind);
+
+    if (LastError != ERROR_NO_MORE_FILES)
+    {
+        PrintErrorMessage(LastError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static BOOL
+ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
+{
+    HANDLE hFind;
+    WIN32_FIND_DATA FindData;
+    TCHAR szCurDir[MAX_PATH];
+    DWORD LastError;
+
+    /*
+     * get the file path (current directory)
+     */
+    GetCurrentDirectory(MAX_PATH, szCurDir);
+    AddBackslash(szCurDir);
+
+    /*
+     * search for files in current directory
+     */
+    hFind = FindFirstFile(pszFiles, &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    do
+    {
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            continue;
+
+        if (!ChangeFileACL(szCurDir, FindData.cFileName))
+        {
+            LastError = GetLastError();
+            if (LastError == ERROR_ACCESS_DENIED)
+            {
+                PrintErrorMessage(LastError);
+                if (!OptionC)
+                {
+                    FindClose(hFind);
+                    return FALSE;
+                }
+            }
+            else
+                break;
+        }
+    } while(FindNextFile(hFind, &FindData));
+
+    LastError = GetLastError();
+    FindClose(hFind);
+
+    if (LastError != ERROR_NO_MORE_FILES)
+    {
+        PrintErrorMessage(LastError);
+        return FALSE;
+    }
+
+    /*
+     * search for subdirectory in current directory
+     */
+    hFind = FindFirstFile(_T("*"), &FindData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return FALSE;
+    do
+    {
+        if (_tcscmp(FindData.cFileName, _T(".")) == 0 ||
+            _tcscmp(FindData.cFileName, _T("..")) == 0)
+            continue;
+
+        if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+            GetCurrentDirectory(MAX_PATH, szCurDir);
+            if (SetCurrentDirectory(FindData.cFileName))
+            {
+                ChangeACLsOfFilesInCurDir(pszFiles);
+                SetCurrentDirectory(szCurDir);
+            }
+            else
+            {
+                LastError = GetLastError();
+                if (LastError == ERROR_ACCESS_DENIED)
+                {
+                    PrintErrorMessage(LastError);
+                    if (!OptionC)
+                    {
+                        FindClose(hFind);
+                        return FALSE;
+                    }
+                }
+                else
+                    break;
+            }
+        }
+    } while(FindNextFile(hFind, &FindData));
+    LastError = GetLastError();
+    FindClose(hFind);
+
+    if (LastError != ERROR_NO_MORE_FILES)
+    {
+        PrintErrorMessage(LastError);
+        return FALSE;
+    }
+    return TRUE;
+}
 
 int
 __cdecl
 _tmain(int argc, const TCHAR *argv[])
 {
-    if (argc < 2)
+    INT i;
+    LPTSTR pch;
+    BOOL InvalidParameter = FALSE;
+
+    if (argc <= 1)
     {
+        PrintHelp();
+        return 0;
+    }
+
+    /*
+     * parse command line options
+     */
+    for (i = 2; i < argc; i++)
+    {
+        if (lstrcmpi(argv[i], _T("/T")) == 0)
+        {
+            OptionT = TRUE;
+        }
+        else if (lstrcmpi(argv[i], _T("/E")) == 0)
+        {
+            OptionE = TRUE;
+        }
+        else if (lstrcmpi(argv[i], _T("/C")) == 0)
+        {
+            OptionC = TRUE;
+        }
+        else if (lstrcmpi(argv[i], _T("/G")) == 0)
+        {
+            if (i + 1 < argc)
+            {
+                pch = _tcschr(argv[++i], _T(':'));
+                if (pch != NULL)
+                {
+                    OptionG = TRUE;
+                    *pch = 0;
+                    GUser = argv[i];
+                    GPerm = pch + 1;
+                    continue;
+                }
+            }
+            InvalidParameter = TRUE;
+            break;
+        }
+        else if (lstrcmpi(argv[i], _T("/R")) == 0)
+        {
+            if (i + 1 < argc)
+            {
+                RUser = argv[++i];
+                OptionR = TRUE;
+                continue;
+            }
+            InvalidParameter = TRUE;
+            break;
+        }
+        else if (lstrcmpi(argv[i], _T("/P")) == 0)
+        {
+            if (i + 1 < argc)
+            {
+                pch = _tcschr(argv[++i], _T(':'));
+                if (pch != NULL)
+                {
+                    OptionP = TRUE;
+                    *pch = 0;
+                    PUser = argv[i];
+                    PPerm = pch + 1;
+                    continue;
+                }
+            }
+            InvalidParameter = TRUE;
+            break;
+        }
+        else if (lstrcmpi(argv[i], _T("/D")) == 0)
+        {
+            if (i + 1 < argc)
+            {
+                OptionD = TRUE;
+                DUser = argv[++i];
+                continue;
+            }
+            InvalidParameter = TRUE;
+            break;
+        }
+        else
+        {
+            InvalidParameter = TRUE;
+            break;
+        }
+    }
+
+    if (InvalidParameter)
+    {
+        PrintErrorMessage(ERROR_INVALID_PARAMETER);
         PrintHelp();
         return 1;
     }
+
+    /* /R is only valid with /E */
+    if (OptionR && !OptionE)
+    {
+        OptionR = FALSE;
+    }
+
+    PrintDaclsOfFiles(argv[1]);
+
+    if (OptionT)
+    {
+        ChangeACLsOfFilesInCurDir(argv[1]);
+    }
     else
     {
-        TCHAR FullPath[MAX_PATH + 1];
-        TCHAR *FilePart = NULL;
-        WIN32_FIND_DATA FindData;
-        HANDLE hFind;
-        DWORD LastError;
-
-        if (argc > 2)
-        {
-            /* FIXME - parse arguments */
-        }
-
-        /* get the full path of where we're searching in */
-        if (GetFullPathName(argv[1],
-                            sizeof(FullPath) / sizeof(FullPath[0]),
-                            FullPath,
-                            &FilePart) != 0)
-        {
-            if (FilePart != NULL)
-                *FilePart = _T('\0');
-        }
-        else
-            goto Error;
-
-        /* find the file(s) */
-        hFind = FindFirstFile(argv[1],
-                              &FindData);
-        if (hFind != INVALID_HANDLE_VALUE)
-        {
-            do
-            {
-                if (!(FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-                    (_tcscmp(FindData.cFileName,
-                             _T(".")) &&
-                     _tcscmp(FindData.cFileName,
-                             _T(".."))))
-                {
-                    if (argc > 2)
-                    {
-                        /* FIXME - edit or replace the descriptor */
-                    }
-                    else
-                    {
-                        if (!PrintFileDacl(FullPath,
-                                           FindData.cFileName))
-                        {
-                            LastError = GetLastError();
-
-                            if (LastError == ERROR_ACCESS_DENIED)
-                            {
-                                PrintErrorMessage(LastError);
-                            }
-                            else
-                                break;
-                        }
-                        else
-                            _tprintf(_T("\n"));
-                    }
-                }
-            } while (FindNextFile(hFind,
-                                  &FindData));
-
-            FindClose(hFind);
-
-            if (GetLastError() != ERROR_NO_MORE_FILES)
-            {
-                goto Error;
-            }
-        }
-        else
-        {
-Error:
-            PrintErrorMessage(GetLastError());
-            return 1;
-        }
+        ChangeACLsOfFiles(argv[1]);
     }
 
     return 0;
