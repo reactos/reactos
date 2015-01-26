@@ -265,7 +265,7 @@ macro(dir_to_num dir var)
 endmacro()
 
 function(add_cd_file)
-    cmake_parse_arguments(_CD "NO_CAB" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
+    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
@@ -306,8 +306,10 @@ function(add_cd_file)
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-                #add it also into the hybridcd
-                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
+                #add it also into the hybridcd if not specified otherwise
+                if(NOT _CD_NOT_IN_HYBRIDCD)
+                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
+                endif()
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
@@ -343,8 +345,10 @@ function(add_cd_file)
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-            #add it also into the hybridcd
-            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
+            #add it also into the hybridcd if not specified otherwise
+            if(NOT _CD_NOT_IN_HYBRIDCD)
+                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
+            endif()
         endforeach()
     endif() #end livecd
 
