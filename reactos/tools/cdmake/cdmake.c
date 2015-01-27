@@ -781,24 +781,24 @@ make_directory_records(PDIR_RECORD d)
     {
         do
         {
-        if ((f.attrib & (_A_HIDDEN | _A_SUBDIR)) == 0 && f.name[0] != '.')
-        {
-            if (strcmp(f.name, DIRECTORY_TIMESTAMP) == 0)
-        {
-            convert_date_and_time(&d->date_and_time, &f.time_write);
-        }
-            else
-        {
-            if (verbosity == VERBOSE)
+            if ((f.attrib & (_A_HIDDEN | _A_SUBDIR)) == 0 && f.name[0] != '.')
             {
-                old_end_source = end_source;
-                strcpy(end_source, f.name);
-                printf("%d: file %s\n", d->level, source);
-                end_source = old_end_source;
+                if (strcmp(f.name, DIRECTORY_TIMESTAMP) == 0)
+                {
+                    convert_date_and_time(&d->date_and_time, &f.time_write);
+                }
+                else
+                {
+                    if (verbosity == VERBOSE)
+                    {
+                        old_end_source = end_source;
+                        strcpy(end_source, f.name);
+                        printf("%d: file %s\n", d->level, source);
+                        end_source = old_end_source;
+                    }
+                    (void) new_directory_record(&f, d);
+                }
             }
-            (void) new_directory_record(&f, d);
-        }
-        }
         }
         while (_findnext(findhandle, &f) == 0);
 
@@ -809,40 +809,40 @@ make_directory_records(PDIR_RECORD d)
     findhandle= _findfirst(source, &f);
     if (findhandle)
     {
-      do
-    {
-      if (f.attrib & _A_SUBDIR && f.name[0] != '.')
+        do
         {
-          old_end_source = end_source;
-          append_string_to_source(f.name);
-          *end_source++ = DIR_SEPARATOR_CHAR;
-          if (verbosity == VERBOSE)
-        {
-          *end_source = 0;
-          printf("%d: directory %s\n", d->level + 1, source);
+            if (f.attrib & _A_SUBDIR && f.name[0] != '.')
+            {
+                old_end_source = end_source;
+                append_string_to_source(f.name);
+                *end_source++ = DIR_SEPARATOR_CHAR;
+                if (verbosity == VERBOSE)
+                {
+                    *end_source = 0;
+                    printf("%d: directory %s\n", d->level + 1, source);
+                }
+                if (d->level < MAX_LEVEL)
+                {
+                    new_d = new_directory_record(&f, d);
+                    new_d->next_in_path_table = root.next_in_path_table;
+                    root.next_in_path_table = new_d;
+                    new_d->level = d->level + 1;
+                    make_directory_records(new_d);
+                }
+                else
+                {
+                    error_exit("Directory is nested too deep");
+                }
+                end_source = old_end_source;
+            }
         }
-          if (d->level < MAX_LEVEL)
-        {
-          new_d = new_directory_record(&f, d);
-          new_d->next_in_path_table = root.next_in_path_table;
-          root.next_in_path_table = new_d;
-          new_d->level = d->level + 1;
-          make_directory_records(new_d);
-        }
-          else
-        {
-          error_exit("Directory is nested too deep");
-        }
-          end_source = old_end_source;
-        }
-    }
-       while (_findnext(findhandle, &f) == 0);
+        while (_findnext(findhandle, &f) == 0);
 
       _findclose(findhandle);
     }
 
-  // sort directory
-  d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
+    // sort directory
+    d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
 }
 
 #else
@@ -905,163 +905,163 @@ make_directory_records(PDIR_RECORD d)
                     }
                     (void) new_directory_record(entry, &stbuf, d);
                 }
-         }
-      }
-      closedir(dirp);
+            }
+        }
+        closedir(dirp);
     }
-  else
+    else
     {
-      error_exit("Can't open %s\n", source);
-      return;
+        error_exit("Can't open %s\n", source);
+        return;
     }
 
-  dirp = opendir(source);
-  if (dirp != NULL)
+    dirp = opendir(source);
+    if (dirp != NULL)
     {
-      while ((entry = readdir(dirp)) != NULL)
+        while ((entry = readdir(dirp)) != NULL)
         {
-          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-            continue; // skip self and parent
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue; // skip self and parent
 
-          if (entry->d_type == DT_DIR) // directory
+            if (entry->d_type == DT_DIR) // directory
             {
-              old_end_source = end_source;
-              append_string_to_source(entry->d_name);
-              *end_source++ = DIR_SEPARATOR_CHAR;
-              *end_source = 0;
-              if (verbosity == VERBOSE)
+                old_end_source = end_source;
+                append_string_to_source(entry->d_name);
+                *end_source++ = DIR_SEPARATOR_CHAR;
+                *end_source = 0;
+                if (verbosity == VERBOSE)
                 {
-                  printf("%d: directory %s\n", d->level + 1, source);
+                    printf("%d: directory %s\n", d->level + 1, source);
                 }
-              if (d->level < MAX_LEVEL)
+                if (d->level < MAX_LEVEL)
                 {
-                  // Check for an absolute path
-                  if (source[0] == DIR_SEPARATOR_CHAR)
+                    // Check for an absolute path
+                    if (source[0] == DIR_SEPARATOR_CHAR)
                     {
-                      strcpy(buf, source);
+                        strcpy(buf, source);
                     }
-                  else
+                    else
                     {
-                      if (!getcwd(buf, sizeof(buf)))
-                        error_exit("Can't get CWD: %s\n", strerror(errno));
-                      strcat(buf, DIR_SEPARATOR_STRING);
-                      strcat(buf, source);
+                        if (!getcwd(buf, sizeof(buf)))
+                            error_exit("Can't get CWD: %s\n", strerror(errno));
+                        strcat(buf, DIR_SEPARATOR_STRING);
+                        strcat(buf, source);
                     }
 
-                  if (stat(buf, &stbuf) == -1)
+                    if (stat(buf, &stbuf) == -1)
                     {
-                      error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
-                      return;
+                        error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+                        return;
                     }
-          new_d = new_directory_record(entry, &stbuf, d);
-          new_d->next_in_path_table = root.next_in_path_table;
-          root.next_in_path_table = new_d;
-          new_d->level = d->level + 1;
-          make_directory_records(new_d);
+                    new_d = new_directory_record(entry, &stbuf, d);
+                    new_d->next_in_path_table = root.next_in_path_table;
+                    root.next_in_path_table = new_d;
+                    new_d->level = d->level + 1;
+                    make_directory_records(new_d);
+                }
+                else
+                {
+                    error_exit("Directory is nested too deep");
+                }
+                end_source = old_end_source;
+                *end_source = 0;
+            }
         }
-          else
-        {
-          error_exit("Directory is nested too deep");
-        }
-          end_source = old_end_source;
-          *end_source = 0;
-        }
-        }
-      closedir(dirp);
+        closedir(dirp);
     }
-  else
+    else
     {
-      error_exit("Can't open %s\n", source);
-      return;
+        error_exit("Can't open %s\n", source);
+        return;
     }
 
 #else
 
-  dirp = opendir(source);
-  if (dirp != NULL)
+    dirp = opendir(source);
+    if (dirp != NULL)
     {
-      while ((entry = readdir(dirp)) != NULL)
+        while ((entry = readdir(dirp)) != NULL)
         {
-          if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-            continue; // skip self and parent
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue; // skip self and parent
 
-          // Check for an absolute path
-          if (source[0] == DIR_SEPARATOR_CHAR)
+            // Check for an absolute path
+            if (source[0] == DIR_SEPARATOR_CHAR)
             {
-              strcpy(buf, source);
-              strcat(buf, DIR_SEPARATOR_STRING);
-              strcat(buf, entry->d_name);
+                strcpy(buf, source);
+                strcat(buf, DIR_SEPARATOR_STRING);
+                strcat(buf, entry->d_name);
             }
-          else
+            else
             {
-              if (!getcwd(buf, sizeof(buf)))
-                error_exit("Can't get CWD: %s\n", strerror(errno));
-              strcat(buf, DIR_SEPARATOR_STRING);
-              strcat(buf, source);
-              strcat(buf, entry->d_name);
-            }
-
-          if (stat(buf, &stbuf) == -1)
-            {
-              error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
-              return;
+                if (!getcwd(buf, sizeof(buf)))
+                    error_exit("Can't get CWD: %s\n", strerror(errno));
+                strcat(buf, DIR_SEPARATOR_STRING);
+                strcat(buf, source);
+                strcat(buf, entry->d_name);
             }
 
-          if (S_ISDIR(stbuf.st_mode))
+            if (stat(buf, &stbuf) == -1)
             {
-              old_end_source = end_source;
-              append_string_to_source(entry->d_name);
-              *end_source++ = DIR_SEPARATOR_CHAR;
-              *end_source = 0;
-              if (verbosity == VERBOSE)
-        {
-          printf("%d: directory %s\n", d->level + 1, source);
-        }
-
-          if (d->level < MAX_LEVEL)
-        {
-          new_d = new_directory_record(entry, &stbuf, d);
-          new_d->next_in_path_table = root.next_in_path_table;
-          root.next_in_path_table = new_d;
-          new_d->level = d->level + 1;
-          make_directory_records(new_d);
-        }
-          else
-        {
-          error_exit("Directory is nested too deep");
-        }
-
-              end_source = old_end_source;
-              *end_source = 0;
+                error_exit("Can't access '%s' (%s)\n", buf, strerror(errno));
+                return;
             }
-          else if (S_ISREG(stbuf.st_mode))
+
+            if (S_ISDIR(stbuf.st_mode))
             {
-              if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
-        {
-          convert_date_and_time(&d->date_and_time, &stbuf.st_ctime);
-        }
-          else
-        {
-          if (verbosity == VERBOSE)
-            {
-              printf("%d: file %s\n", d->level, buf);
+                old_end_source = end_source;
+                append_string_to_source(entry->d_name);
+                *end_source++ = DIR_SEPARATOR_CHAR;
+                *end_source = 0;
+                if (verbosity == VERBOSE)
+                {
+                    printf("%d: directory %s\n", d->level + 1, source);
+                }
+
+                if (d->level < MAX_LEVEL)
+                {
+                    new_d = new_directory_record(entry, &stbuf, d);
+                    new_d->next_in_path_table = root.next_in_path_table;
+                    root.next_in_path_table = new_d;
+                    new_d->level = d->level + 1;
+                    make_directory_records(new_d);
+                }
+                else
+                {
+                    error_exit("Directory is nested too deep");
+                }
+
+                end_source = old_end_source;
+                *end_source = 0;
             }
-          (void) new_directory_record(entry, &stbuf, d);
+            else if (S_ISREG(stbuf.st_mode))
+            {
+                if (strcmp(entry->d_name, DIRECTORY_TIMESTAMP) == 0)
+                {
+                    convert_date_and_time(&d->date_and_time, &stbuf.st_ctime);
+                }
+                else
+                {
+                    if (verbosity == VERBOSE)
+                    {
+                        printf("%d: file %s\n", d->level, buf);
+                    }
+                    (void) new_directory_record(entry, &stbuf, d);
+                }
+            }
         }
-        }
-        }
-      closedir(dirp);
+        closedir(dirp);
     }
-  else
+    else
     {
-      error_exit("Can't open %s\n", source);
-      return;
+        error_exit("Can't open %s\n", source);
+        return;
     }
 
 #endif
 
-  // sort directory
-  d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
+    // sort directory
+    d->first_record = sort_linked_list(d->first_record, 0, compare_directory_order);
 }
 
 #endif
@@ -1264,110 +1264,51 @@ static void get_time_string(char *str)
 
 static void pass(void)
 {
-  PDIR_RECORD d;
-  PDIR_RECORD q;
-  unsigned int i;
-  char *t;
-  unsigned int index;
-  unsigned int name_length;
-  DWORD size;
-  DWORD number_of_sectors;
-  char *old_end_source;
-  int n;
-  FILE *file;
-  char timestring[17];
+    PDIR_RECORD d;
+    PDIR_RECORD q;
+    unsigned int i;
+    char *t;
+    unsigned int index;
+    unsigned int name_length;
+    DWORD size;
+    DWORD number_of_sectors;
+    char *old_end_source;
+    int n;
+    FILE *file;
+    char timestring[17];
 
-  get_time_string(timestring);
+    get_time_string(timestring);
 
-  // first 16 sectors are zeros
+    // first 16 sectors are zeros
 
-  write_block(16 * SECTOR_SIZE, 0);
+    write_block(16 * SECTOR_SIZE, 0);
 
-  // Primary Volume Descriptor
+    // Primary Volume Descriptor
 
-  write_string("\1CD001\1");
-  write_byte(0);
-  write_block(32, ' ');  // system identifier
-
-  t = volume_label;
-  for (i = 0; i < 32; i++)
-    write_byte( (BYTE)( (*t != 0) ? toupper(*t++) : ' ' ) );
-
-  write_block(8, 0);
-  write_both_endian_dword(total_sectors);
-  write_block(32, 0);
-  write_both_endian_word((WORD) 1); // volume set size
-  write_both_endian_word((WORD) 1); // volume sequence number
-  write_both_endian_word((WORD) 2048); // sector size
-  write_both_endian_dword(path_table_size);
-  write_little_endian_dword(little_endian_path_table_sector);
-  write_little_endian_dword((DWORD) 0);  // second little endian path table
-  write_big_endian_dword(big_endian_path_table_sector);
-  write_big_endian_dword((DWORD) 0);  // second big endian path table
-  write_directory_record(&root, DOT_RECORD, FALSE);
-  write_block(128, ' ');      // volume set identifier
-  write_block(128, ' ');      // publisher identifier
-  write_block(128, ' ');      // data preparer identifier
-  write_block(128, ' ');      // application identifier
-  write_block(37, ' ');       // copyright file identifier
-  write_block(37, ' ');       // abstract file identifier
-  write_block(37, ' ');       // bibliographic file identifier
-  write_string(timestring);  // volume creation
-  write_byte(0);
-  write_string(timestring);  // most recent modification
-  write_byte(0);
-  write_string("0000000000000000");  // volume expires
-  write_byte(0);
-  write_string("0000000000000000");  // volume is effective
-  write_byte(0);
-  write_byte(1);
-  write_byte(0);
-  fill_sector();
-
-
-  // Boot Volume Descriptor
-
-  if (eltorito)
-    {
-      write_byte(0);
-      write_string("CD001\1");
-      write_string("EL TORITO SPECIFICATION");  // identifier
-      write_block(9, 0);  // padding
-      write_block(32, 0);  // unused
-      write_little_endian_dword(boot_catalog_sector);  // pointer to boot catalog
-      fill_sector();
-    }
-
-  // Supplementary Volume Descriptor
-
-  if (joliet)
-  {
-    write_string("\2CD001\1");
+    write_string("\1CD001\1");
     write_byte(0);
-
-    write_word_block(16, L' '); // system identifier
+    write_block(32, ' ');  // system identifier
 
     t = volume_label;
-    for (i = 0; i < 16; i++)
-      write_big_endian_word( (BYTE)( (*t != 0) ? *t++ : ' ' ) );
+    for (i = 0; i < 32; i++)
+        write_byte( (BYTE)( (*t != 0) ? toupper(*t++) : ' ' ) );
 
     write_block(8, 0);
     write_both_endian_dword(total_sectors);
-    write_string("%/E");
-    write_block(29, 0);
+    write_block(32, 0);
     write_both_endian_word((WORD) 1); // volume set size
     write_both_endian_word((WORD) 1); // volume sequence number
     write_both_endian_word((WORD) 2048); // sector size
-    write_both_endian_dword(joliet_path_table_size);
-    write_little_endian_dword(joliet_little_endian_path_table_sector);
+    write_both_endian_dword(path_table_size);
+    write_little_endian_dword(little_endian_path_table_sector);
     write_little_endian_dword((DWORD) 0);  // second little endian path table
-    write_big_endian_dword(joliet_big_endian_path_table_sector);
+    write_big_endian_dword(big_endian_path_table_sector);
     write_big_endian_dword((DWORD) 0);  // second big endian path table
-    write_directory_record(&root, DOT_RECORD, TRUE);
-    write_word_block(64, ' ');      // volume set identifier
-    write_word_block(64, ' ');      // publisher identifier
-    write_word_block(64, ' ');      // data preparer identifier
-    write_word_block(64, ' ');      // application identifier
+    write_directory_record(&root, DOT_RECORD, FALSE);
+    write_block(128, ' ');      // volume set identifier
+    write_block(128, ' ');      // publisher identifier
+    write_block(128, ' ');      // data preparer identifier
+    write_block(128, ' ');      // application identifier
     write_block(37, ' ');       // copyright file identifier
     write_block(37, ' ');       // abstract file identifier
     write_block(37, ' ');       // bibliographic file identifier
@@ -1382,293 +1323,352 @@ static void pass(void)
     write_byte(1);
     write_byte(0);
     fill_sector();
-  }
 
 
-  // Volume Descriptor Set Terminator
-  write_string("\377CD001\1");
-  fill_sector();
+    // Boot Volume Descriptor
 
-  // Boot Catalog
-  if (eltorito)
+    if (eltorito)
     {
-      boot_catalog_sector = cd.sector;
-
-      // Validation entry
-      write_byte(1);
-      write_byte(0);  // x86 boot code
-      write_little_endian_word(0);  // reserved
-      write_string("ReactOS Foundation");
-      write_block(6, 0); // padding
-      write_little_endian_word(0x62E);  // checksum
-      write_little_endian_word(0xAA55);  // signature
-
-      // default entry
-      write_byte(0x88);  // bootable
-      write_byte(0);  // no emulation
-      write_big_endian_word(0);  // load segment = default (0x07c0)
-      write_byte(0);  // partition type
-      write_byte(0);  // unused
-      write_little_endian_word(boot_image_size);  // sector count
-      write_little_endian_dword(boot_image_sector);  // sector
-
-      fill_sector();
+        write_byte(0);
+        write_string("CD001\1");
+        write_string("EL TORITO SPECIFICATION");  // identifier
+        write_block(9, 0);  // padding
+        write_block(32, 0);  // unused
+        write_little_endian_dword(boot_catalog_sector);  // pointer to boot catalog
+        fill_sector();
     }
 
-  // Boot Image
-  if (eltorito)
-    {
-      boot_image_sector = cd.sector;
+    // Supplementary Volume Descriptor
 
-      file = fopen(bootimage, "rb");
-      if (file == NULL)
-        error_exit("Can't open %s\n", bootimage);
-      fseek(file, 0, SEEK_END);
-      size = ftell(file);
-      fseek(file, 0, SEEK_SET);
-      if (size == 0 || (size % 2048))
-      {
-        fclose(file);
-        error_exit("Invalid boot image size (%lu bytes)\n", size);
-      }
-      boot_image_size = size / 512;
-      while (size > 0)
-      {
-        n = BUFFER_SIZE - cd.count;
-        if ((DWORD) n > size)
-          n = size;
-        if (fread(cd.buffer + cd.count, n, 1, file) < 1)
+    if (joliet)
+    {
+        write_string("\2CD001\1");
+        write_byte(0);
+
+        write_word_block(16, L' '); // system identifier
+
+        t = volume_label;
+        for (i = 0; i < 16; i++)
+            write_big_endian_word( (BYTE)( (*t != 0) ? *t++ : ' ' ) );
+
+        write_block(8, 0);
+        write_both_endian_dword(total_sectors);
+        write_string("%/E");
+        write_block(29, 0);
+        write_both_endian_word((WORD) 1); // volume set size
+        write_both_endian_word((WORD) 1); // volume sequence number
+        write_both_endian_word((WORD) 2048); // sector size
+        write_both_endian_dword(joliet_path_table_size);
+        write_little_endian_dword(joliet_little_endian_path_table_sector);
+        write_little_endian_dword((DWORD) 0);  // second little endian path table
+        write_big_endian_dword(joliet_big_endian_path_table_sector);
+        write_big_endian_dword((DWORD) 0);  // second big endian path table
+        write_directory_record(&root, DOT_RECORD, TRUE);
+        write_word_block(64, ' ');      // volume set identifier
+        write_word_block(64, ' ');      // publisher identifier
+        write_word_block(64, ' ');      // data preparer identifier
+        write_word_block(64, ' ');      // application identifier
+        write_block(37, ' ');       // copyright file identifier
+        write_block(37, ' ');       // abstract file identifier
+        write_block(37, ' ');       // bibliographic file identifier
+        write_string(timestring);  // volume creation
+        write_byte(0);
+        write_string(timestring);  // most recent modification
+        write_byte(0);
+        write_string("0000000000000000");  // volume expires
+        write_byte(0);
+        write_string("0000000000000000");  // volume is effective
+        write_byte(0);
+        write_byte(1);
+        write_byte(0);
+        fill_sector();
+    }
+
+
+    // Volume Descriptor Set Terminator
+    write_string("\377CD001\1");
+    fill_sector();
+
+    // Boot Catalog
+    if (eltorito)
+    {
+        boot_catalog_sector = cd.sector;
+
+        // Validation entry
+        write_byte(1);
+        write_byte(0);  // x86 boot code
+        write_little_endian_word(0);  // reserved
+        write_string("ReactOS Foundation");
+        write_block(6, 0); // padding
+        write_little_endian_word(0x62E);  // checksum
+        write_little_endian_word(0xAA55);  // signature
+
+        // default entry
+        write_byte(0x88);  // bootable
+        write_byte(0);  // no emulation
+        write_big_endian_word(0);  // load segment = default (0x07c0)
+        write_byte(0);  // partition type
+        write_byte(0);  // unused
+        write_little_endian_word(boot_image_size);  // sector count
+        write_little_endian_dword(boot_image_sector);  // sector
+
+        fill_sector();
+    }
+
+    // Boot Image
+    if (eltorito)
+    {
+        boot_image_sector = cd.sector;
+
+        file = fopen(bootimage, "rb");
+        if (file == NULL)
+            error_exit("Can't open %s\n", bootimage);
+        fseek(file, 0, SEEK_END);
+        size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        if (size == 0 || (size % 2048))
         {
-          fclose(file);
-          error_exit("Read error in file %s\n", bootimage);
+            fclose(file);
+            error_exit("Invalid boot image size (%lu bytes)\n", size);
         }
-        cd.count += n;
-        if (cd.count == BUFFER_SIZE)
-          flush_buffer();
-        cd.sector += n / SECTOR_SIZE;
-        cd.offset += n % SECTOR_SIZE;
-        size -= n;
-      }
-      fclose(file);
+        boot_image_size = size / 512;
+        while (size > 0)
+        {
+            n = BUFFER_SIZE - cd.count;
+            if ((DWORD) n > size)
+                n = size;
+            if (fread(cd.buffer + cd.count, n, 1, file) < 1)
+            {
+                fclose(file);
+                error_exit("Read error in file %s\n", bootimage);
+            }
+            cd.count += n;
+            if (cd.count == BUFFER_SIZE)
+                flush_buffer();
+            cd.sector += n / SECTOR_SIZE;
+            cd.offset += n % SECTOR_SIZE;
+            size -= n;
+        }
+        fclose(file);
 //      fill_sector();
     }
 
-  // Little Endian Path Table
-  little_endian_path_table_sector = cd.sector;
-  write_byte(1);
-  write_byte(0);  // number of sectors in extended attribute record
-  write_little_endian_dword(root.sector);
-  write_little_endian_word((WORD) 1);
-  write_byte(0);
-  write_byte(0);
-
-  index = 1;
-  root.path_table_index = 1;
-  for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
-    {
-      name_length = strlen(d->name_on_cd);
-      write_byte((BYTE)name_length);
-      write_byte(0);  // number of sectors in extended attribute record
-      write_little_endian_dword(d->sector);
-      write_little_endian_word(d->parent->path_table_index);
-      write_string(d->name_on_cd);
-      if (name_length & 1)
-        write_byte(0);
-      d->path_table_index = ++index;
-    }
-
-  path_table_size = (cd.sector - little_endian_path_table_sector) *
-      SECTOR_SIZE + cd.offset;
-  fill_sector();
-
-  // Big Endian Path Table
-
-  big_endian_path_table_sector = cd.sector;
-  write_byte(1);
-  write_byte(0);  // number of sectors in extended attribute record
-  write_big_endian_dword(root.sector);
-  write_big_endian_word((WORD) 1);
-  write_byte(0);
-  write_byte(0);
-
-  for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
-    {
-      name_length = strlen(d->name_on_cd);
-      write_byte((BYTE)name_length);
-      write_byte(0);  // number of sectors in extended attribute record
-      write_big_endian_dword(d->sector);
-      write_big_endian_word(d->parent->path_table_index);
-      write_string(d->name_on_cd);
-      if (name_length & 1)
-        write_byte(0);
-    }
-  fill_sector();
-
-  if (joliet)
-  {
     // Little Endian Path Table
-
-    joliet_little_endian_path_table_sector = cd.sector;
+    little_endian_path_table_sector = cd.sector;
     write_byte(1);
     write_byte(0);  // number of sectors in extended attribute record
-    write_little_endian_dword(root.joliet_sector);
+    write_little_endian_dword(root.sector);
     write_little_endian_word((WORD) 1);
     write_byte(0);
     write_byte(0);
 
+    index = 1;
+    root.path_table_index = 1;
     for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
-      {
-        name_length = strlen(d->joliet_name) * 2;
+    {
+        name_length = strlen(d->name_on_cd);
         write_byte((BYTE)name_length);
         write_byte(0);  // number of sectors in extended attribute record
-        write_little_endian_dword(d->joliet_sector);
+        write_little_endian_dword(d->sector);
         write_little_endian_word(d->parent->path_table_index);
-        write_string_as_big_endian_unicode(d->joliet_name);
-      }
+        write_string(d->name_on_cd);
+        if (name_length & 1)
+            write_byte(0);
+        d->path_table_index = ++index;
+    }
 
-    joliet_path_table_size = (cd.sector - joliet_little_endian_path_table_sector) *
-        SECTOR_SIZE + cd.offset;
+    path_table_size = (cd.sector - little_endian_path_table_sector) *
+                       SECTOR_SIZE + cd.offset;
     fill_sector();
 
     // Big Endian Path Table
 
-    joliet_big_endian_path_table_sector = cd.sector;
+    big_endian_path_table_sector = cd.sector;
     write_byte(1);
     write_byte(0);  // number of sectors in extended attribute record
-    write_big_endian_dword(root.joliet_sector);
+    write_big_endian_dword(root.sector);
     write_big_endian_word((WORD) 1);
     write_byte(0);
     write_byte(0);
 
     for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
-      {
-        name_length = strlen(d->joliet_name) * 2;
+    {
+        name_length = strlen(d->name_on_cd);
         write_byte((BYTE)name_length);
         write_byte(0);  // number of sectors in extended attribute record
-        write_big_endian_dword(d->joliet_sector);
+        write_big_endian_dword(d->sector);
         write_big_endian_word(d->parent->path_table_index);
-        write_string_as_big_endian_unicode(d->joliet_name);
-      }
+        write_string(d->name_on_cd);
+        if (name_length & 1)
+            write_byte(0);
+    }
     fill_sector();
-  }
 
-  // directories and files
-  for (d = &root; d != NULL; d = d->next_in_path_table)
+    if (joliet)
     {
-      // write directory
-      d->sector = cd.sector;
-      write_directory_record(d, DOT_RECORD, FALSE);
-      write_directory_record(d == &root ? d : d->parent, DOT_DOT_RECORD, FALSE);
-      for (q = d->first_record; q != NULL; q = q->next_in_directory)
-        {
-          write_directory_record(q,
-                                 q->flags & DIRECTORY_FLAG ? SUBDIRECTORY_RECORD : FILE_RECORD,
-                                 FALSE);
-        }
-      fill_sector();
-      d->size = (cd.sector - d->sector) * SECTOR_SIZE;
+        // Little Endian Path Table
 
-      // write directory for joliet
-      if (joliet)
-      {
-        d->joliet_sector = cd.sector;
-        write_directory_record(d, DOT_RECORD, TRUE);
-        write_directory_record(d == &root ? d : d->parent, DOT_DOT_RECORD, TRUE);
-        for (q = d->first_record; q != NULL; q = q->next_in_directory)
-          {
-            write_directory_record(q,
-                                   q->flags & DIRECTORY_FLAG ? SUBDIRECTORY_RECORD : FILE_RECORD,
-                                   TRUE);
-          }
+        joliet_little_endian_path_table_sector = cd.sector;
+        write_byte(1);
+        write_byte(0);  // number of sectors in extended attribute record
+        write_little_endian_dword(root.joliet_sector);
+        write_little_endian_word((WORD) 1);
+        write_byte(0);
+        write_byte(0);
+
+        for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
+        {
+            name_length = strlen(d->joliet_name) * 2;
+            write_byte((BYTE)name_length);
+            write_byte(0);  // number of sectors in extended attribute record
+            write_little_endian_dword(d->joliet_sector);
+            write_little_endian_word(d->parent->path_table_index);
+            write_string_as_big_endian_unicode(d->joliet_name);
+        }
+
+        joliet_path_table_size = (cd.sector - joliet_little_endian_path_table_sector) *
+                                  SECTOR_SIZE + cd.offset;
         fill_sector();
-        d->joliet_size = (cd.sector - d->joliet_sector) * SECTOR_SIZE;
-        bytes_in_directories += d->joliet_size;
-      }
 
-      number_of_directories++;
-      bytes_in_directories += d->size;
+        // Big Endian Path Table
 
-      // write file data
-      for (q = d->first_record; q != NULL; q = q->next_in_directory)
-      {
-        if ((q->flags & DIRECTORY_FLAG) == 0)
+        joliet_big_endian_path_table_sector = cd.sector;
+        write_byte(1);
+        write_byte(0);  // number of sectors in extended attribute record
+        write_big_endian_dword(root.joliet_sector);
+        write_big_endian_word((WORD) 1);
+        write_byte(0);
+        write_byte(0);
+
+        for (d = root.next_in_path_table; d != NULL; d = d->next_in_path_table)
         {
-          q->sector = q->joliet_sector = cd.sector;
-          size = q->size;
-          if (cd.file == NULL)
-          {
-            number_of_sectors = (size + SECTOR_SIZE - 1) / SECTOR_SIZE;
-            cd.sector += number_of_sectors;
-            number_of_files++;
-            bytes_in_files += size;
-            unused_bytes_at_ends_of_files +=
-              number_of_sectors * SECTOR_SIZE - size;
-          }
-          else
-          {
-            const char *file_source;
-            old_end_source = end_source;
-            if (!q->orig_name)
-            {
-              get_file_specifications(q);
-              *end_source = 0;
-              file_source = source;
-            }
-            else
-            {
-              file_source = q->orig_name;
-            }
-            if (verbosity == VERBOSE)
-              printf("Writing contents of %s\n", file_source);
-            file = fopen(file_source, "rb");
-            if (file == NULL)
-              error_exit("Can't open %s\n", file_source);
-            fseek(file, 0, SEEK_SET);
-            while (size > 0)
-            {
-              n = BUFFER_SIZE - cd.count;
-              if ((DWORD) n > size)
-                n = size;
-              if (fread(cd.buffer + cd.count, n, 1, file) < 1)
-              {
-                fclose(file);
-                error_exit("Read error in file %s\n", file_source);
-              }
-              cd.count += n;
-              if (cd.count == BUFFER_SIZE)
-                flush_buffer();
-              cd.sector += n / SECTOR_SIZE;
-              cd.offset += n % SECTOR_SIZE;
-              size -= n;
-            }
-            fclose(file);
-            end_source = old_end_source;
-            fill_sector();
-          }
+            name_length = strlen(d->joliet_name) * 2;
+            write_byte((BYTE)name_length);
+            write_byte(0);  // number of sectors in extended attribute record
+            write_big_endian_dword(d->joliet_sector);
+            write_big_endian_word(d->parent->path_table_index);
+            write_string_as_big_endian_unicode(d->joliet_name);
         }
-      }
+        fill_sector();
     }
 
-  total_sectors = (DWORD)cd.sector;
+    // directories and files
+    for (d = &root; d != NULL; d = d->next_in_path_table)
+    {
+        // write directory
+        d->sector = cd.sector;
+        write_directory_record(d, DOT_RECORD, FALSE);
+        write_directory_record(d == &root ? d : d->parent, DOT_DOT_RECORD, FALSE);
+        for (q = d->first_record; q != NULL; q = q->next_in_directory)
+        {
+            write_directory_record(q,
+                                   q->flags & DIRECTORY_FLAG ? SUBDIRECTORY_RECORD : FILE_RECORD,
+                                   FALSE);
+        }
+        fill_sector();
+        d->size = (cd.sector - d->sector) * SECTOR_SIZE;
+
+        // write directory for joliet
+        if (joliet)
+        {
+            d->joliet_sector = cd.sector;
+            write_directory_record(d, DOT_RECORD, TRUE);
+            write_directory_record(d == &root ? d : d->parent, DOT_DOT_RECORD, TRUE);
+            for (q = d->first_record; q != NULL; q = q->next_in_directory)
+            {
+                write_directory_record(q,
+                                       q->flags & DIRECTORY_FLAG ? SUBDIRECTORY_RECORD : FILE_RECORD,
+                                       TRUE);
+            }
+            fill_sector();
+            d->joliet_size = (cd.sector - d->joliet_sector) * SECTOR_SIZE;
+            bytes_in_directories += d->joliet_size;
+        }
+
+        number_of_directories++;
+        bytes_in_directories += d->size;
+
+        // write file data
+        for (q = d->first_record; q != NULL; q = q->next_in_directory)
+        {
+            if ((q->flags & DIRECTORY_FLAG) == 0)
+            {
+                q->sector = q->joliet_sector = cd.sector;
+                size = q->size;
+                if (cd.file == NULL)
+                {
+                    number_of_sectors = (size + SECTOR_SIZE - 1) / SECTOR_SIZE;
+                    cd.sector += number_of_sectors;
+                    number_of_files++;
+                    bytes_in_files += size;
+                    unused_bytes_at_ends_of_files +=
+                    number_of_sectors * SECTOR_SIZE - size;
+                }
+                else
+                {
+                    const char *file_source;
+                    old_end_source = end_source;
+                    if (!q->orig_name)
+                    {
+                        get_file_specifications(q);
+                        *end_source = 0;
+                        file_source = source;
+                    }
+                    else
+                    {
+                        file_source = q->orig_name;
+                    }
+                    if (verbosity == VERBOSE)
+                        printf("Writing contents of %s\n", file_source);
+                    file = fopen(file_source, "rb");
+                    if (file == NULL)
+                        error_exit("Can't open %s\n", file_source);
+                    fseek(file, 0, SEEK_SET);
+                    while (size > 0)
+                    {
+                        n = BUFFER_SIZE - cd.count;
+                        if ((DWORD) n > size)
+                            n = size;
+                        if (fread(cd.buffer + cd.count, n, 1, file) < 1)
+                        {
+                            fclose(file);
+                            error_exit("Read error in file %s\n", file_source);
+                        }
+                        cd.count += n;
+                        if (cd.count == BUFFER_SIZE)
+                            flush_buffer();
+                        cd.sector += n / SECTOR_SIZE;
+                        cd.offset += n % SECTOR_SIZE;
+                        size -= n;
+                    }
+                    fclose(file);
+                    end_source = old_end_source;
+                    fill_sector();
+                }
+            }
+        }
+    }
+
+    total_sectors = (DWORD)cd.sector;
 }
 
 static char HELP[] =
-  "CDMAKE  [-q] [-v] [-p] [-s N] [-m] [-b bootimage] [-j]  source  volume  image\n"
-  "\n"
-  "  source        specifications of base directory containing all files to\n"
-  "                be written to CD-ROM image\n"
-  "  volume        volume label\n"
-  "  image         image file or device\n"
-  "  -q            quiet mode - display nothing but error messages\n"
-  "  -v            verbose mode - display file information as files are\n"
-  "                scanned and written - overrides -p option\n"
-  "  -p            show progress while writing\n"
-  "  -s N          abort operation before beginning write if image will be\n"
-  "                larger than N megabytes (i.e. 1024*1024*N bytes)\n"
-  "  -m            accept punctuation marks other than underscores in\n"
-  "                names and extensions\n"
-  "  -b bootimage  create bootable ElTorito CD-ROM using 'no emulation' mode\n"
-  "  -j            generate Joliet filename records\n";
+    "CDMAKE  [-q] [-v] [-p] [-s N] [-m] [-b bootimage] [-j]  source  volume  image\n"
+    "\n"
+    "  source        specifications of base directory containing all files to\n"
+    "                be written to CD-ROM image\n"
+    "  volume        volume label\n"
+    "  image         image file or device\n"
+    "  -q            quiet mode - display nothing but error messages\n"
+    "  -v            verbose mode - display file information as files are\n"
+    "                scanned and written - overrides -p option\n"
+    "  -p            show progress while writing\n"
+    "  -s N          abort operation before beginning write if image will be\n"
+    "                larger than N megabytes (i.e. 1024*1024*N bytes)\n"
+    "  -m            accept punctuation marks other than underscores in\n"
+    "                names and extensions\n"
+    "  -b bootimage  create bootable ElTorito CD-ROM using 'no emulation' mode\n"
+    "  -j            generate Joliet filename records\n";
 
 /*-----------------------------------------------------------------------------
 Program execution starts here.
@@ -1729,192 +1729,192 @@ int main(int argc, char **argv)
 
     for (i = 1; i < argc; i++)
     {
-      if (memcmp(argv[i], "-s", 2) == 0)
-      {
-        t = argv[i] + 2;
-        if (*t == 0)
+        if (memcmp(argv[i], "-s", 2) == 0)
         {
-          if (++i < argc)
-            t = argv[i];
-          else
-            error_exit("Missing size limit parameter");
+            t = argv[i] + 2;
+            if (*t == 0)
+            {
+                if (++i < argc)
+                    t = argv[i];
+                else
+                    error_exit("Missing size limit parameter");
+            }
+            while (isdigit(*t))
+            size_limit = size_limit * 10 + *t++ - '0';
+            if (size_limit < 1 || size_limit > 800)
+                error_exit("Invalid size limit");
+            size_limit <<= 9;  // convert megabyte to sector count
         }
-        while (isdigit(*t))
-          size_limit = size_limit * 10 + *t++ - '0';
-        if (size_limit < 1 || size_limit > 800)
-          error_exit("Invalid size limit");
-        size_limit <<= 9;  // convert megabyte to sector count
-      }
-      else if (strcmp(argv[i], "-q") == 0)
-        q_option = TRUE;
-      else if (strcmp(argv[i], "-v") == 0)
-        v_option = TRUE;
-      else if (strcmp(argv[i], "-p") == 0)
-        show_progress = TRUE;
-      else if (strcmp(argv[i], "-m") == 0)
-        accept_punctuation_marks = TRUE;
-      else if (strcmp(argv[i], "-j") == 0)
-        joliet = TRUE;
-      else if (strcmp(argv[i], "-b") == 0)
-      {
-        strcpy(bootimage, argv[++i]);
-        eltorito = TRUE;
-      }
-      else if (i + 2 < argc)
-      {
-        strcpy(source, argv[i++]);
-        strncpy(volume_label, argv[i++], sizeof(volume_label) - 1);
-        strcpy(cd.filespecs, argv[i]);
-      }
-      else
-        error_exit("Missing command line argument");
+        else if (strcmp(argv[i], "-q") == 0)
+            q_option = TRUE;
+        else if (strcmp(argv[i], "-v") == 0)
+            v_option = TRUE;
+        else if (strcmp(argv[i], "-p") == 0)
+            show_progress = TRUE;
+        else if (strcmp(argv[i], "-m") == 0)
+            accept_punctuation_marks = TRUE;
+        else if (strcmp(argv[i], "-j") == 0)
+            joliet = TRUE;
+        else if (strcmp(argv[i], "-b") == 0)
+        {
+            strcpy(bootimage, argv[++i]);
+            eltorito = TRUE;
+        }
+        else if (i + 2 < argc)
+        {
+            strcpy(source, argv[i++]);
+            strncpy(volume_label, argv[i++], sizeof(volume_label) - 1);
+            strcpy(cd.filespecs, argv[i]);
+        }
+        else
+            error_exit("Missing command line argument");
     }
-  if (v_option)
+    if (v_option)
     {
-      show_progress = FALSE;
-      verbosity = VERBOSE;
+        show_progress = FALSE;
+        verbosity = VERBOSE;
     }
-  else if (q_option)
+    else if (q_option)
     {
-      verbosity = QUIET;
-      show_progress = FALSE;
+        verbosity = QUIET;
+        show_progress = FALSE;
     }
-  if (source[0] == 0)
-    error_exit("Missing source directory");
-  if (volume_label[0] == 0)
-    error_exit("Missing volume label");
-  if (cd.filespecs[0] == 0)
-    error_exit("Missing image file specifications");
+    if (source[0] == 0)
+        error_exit("Missing source directory");
+    if (volume_label[0] == 0)
+        error_exit("Missing volume label");
+    if (cd.filespecs[0] == 0)
+        error_exit("Missing image file specifications");
 
-  if (source[0] != '@')
-  {
-    /* set source[] and end_source to source directory,
-     * with a terminating directory separator */
-    end_source = source + strlen(source);
-    if (end_source[-1] == ':')
-      *end_source++ = '.';
-    if (end_source[-1] != DIR_SEPARATOR_CHAR)
-      *end_source++ = DIR_SEPARATOR_CHAR;
+    if (source[0] != '@')
+    {
+        /* set source[] and end_source to source directory,
+         * with a terminating directory separator */
+        end_source = source + strlen(source);
+        if (end_source[-1] == ':')
+            *end_source++ = '.';
+        if (end_source[-1] != DIR_SEPARATOR_CHAR)
+            *end_source++ = DIR_SEPARATOR_CHAR;
 
-    /* scan all files and create directory structure in memory */
-    make_directory_records(&root);
-  }
-  else
-  {
-    char *trimmedline, *targetname, *srcname, *eq;
-    char lineread[1024];
-    FILE *f = fopen(source+1, "r");
-    if (!f)
-    {
-      error_exit("Can't open cd description %s\n", source+1);
+        /* scan all files and create directory structure in memory */
+        make_directory_records(&root);
     }
-    while (fgets(lineread, sizeof(lineread), f))
+    else
     {
-      /* We treat these characters as line endings */
-      trimmedline = strtok(lineread, "\t\r\n;");
-      eq = strchr(trimmedline, '=');
-      if (!eq)
-      {
-        char *normdir;
-        /* Treat this as a directory name */
-        targetname = trimmedline;
-        normdir = strdup(targetname);
-        normalize_dirname(normdir);
-        dir_hash_create_dir(&specified_files, targetname, normdir);
-        free(normdir);
-      }
-      else
-      {
-        targetname = strtok(lineread, "=");
-        srcname = strtok(NULL, "");
+        char *trimmedline, *targetname, *srcname, *eq;
+        char lineread[1024];
+        FILE *f = fopen(source+1, "r");
+        if (!f)
+        {
+            error_exit("Can't open cd description %s\n", source+1);
+        }
+        while (fgets(lineread, sizeof(lineread), f))
+        {
+            /* We treat these characters as line endings */
+            trimmedline = strtok(lineread, "\t\r\n;");
+            eq = strchr(trimmedline, '=');
+            if (!eq)
+            {
+                char *normdir;
+                /* Treat this as a directory name */
+                targetname = trimmedline;
+                normdir = strdup(targetname);
+                normalize_dirname(normdir);
+                dir_hash_create_dir(&specified_files, targetname, normdir);
+                free(normdir);
+            }
+            else
+            {
+                targetname = strtok(lineread, "=");
+                srcname = strtok(NULL, "");
 
 #if _WIN32
-        if (_access(srcname, R_OK) == 0)
-          dir_hash_add_file(&specified_files, srcname, targetname);
-        else
-          error_exit("can't access file '%s' (target %s)\n", srcname, targetname);
+                if (_access(srcname, R_OK) == 0)
+                    dir_hash_add_file(&specified_files, srcname, targetname);
+                else
+                    error_exit("can't access file '%s' (target %s)\n", srcname, targetname);
 #else
-        if (access(srcname, R_OK) == 0)
-          dir_hash_add_file(&specified_files, srcname, targetname);
-        else
-          error_exit("can't access file '%s' (target %s)\n", srcname, targetname);
+                if (access(srcname, R_OK) == 0)
+                    dir_hash_add_file(&specified_files, srcname, targetname);
+                else
+                    error_exit("can't access file '%s' (target %s)\n", srcname, targetname);
 #endif
-      }
+            }
+        }
+        fclose(f);
+
+        /* scan all files and create directory structure in memory */
+        scan_specified_files(&root, &specified_files.root);
     }
-    fclose(f);
 
-    /* scan all files and create directory structure in memory */
-    scan_specified_files(&root, &specified_files.root);
-  }
+    /* sort path table entries */
+    root.next_in_path_table = sort_linked_list(root.next_in_path_table,
+                                               1,
+                                               compare_path_table_order);
 
-  /* sort path table entries */
-  root.next_in_path_table = sort_linked_list(root.next_in_path_table,
-                                             1,
-                                             compare_path_table_order);
+    // initialize CD-ROM write buffer
 
-  // initialize CD-ROM write buffer
+    cd.file = NULL;
+    cd.sector = 0;
+    cd.offset = 0;
+    cd.count = 0;
 
-  cd.file = NULL;
-  cd.sector = 0;
-  cd.offset = 0;
-  cd.count = 0;
+    // make non-writing pass over directory structure to obtain the proper
+    // sector numbers and offsets and to determine the size of the image
 
-  // make non-writing pass over directory structure to obtain the proper
-  // sector numbers and offsets and to determine the size of the image
+    number_of_files = bytes_in_files = number_of_directories =
+    bytes_in_directories = unused_bytes_at_ends_of_files = 0;
+    pass();
 
-  number_of_files = bytes_in_files = number_of_directories =
-    bytes_in_directories = unused_bytes_at_ends_of_files =0;
-  pass();
-
-  if (verbosity >= NORMAL)
+    if (verbosity >= NORMAL)
     {
-      printf("%s bytes ", edit_with_commas(bytes_in_files, TRUE));
-      printf("in %s files\n", edit_with_commas(number_of_files, FALSE));
-      printf("%s unused bytes at ends of files\n",
-        edit_with_commas(unused_bytes_at_ends_of_files, TRUE));
-      printf("%s bytes ", edit_with_commas(bytes_in_directories, TRUE));
-      printf("in %s directories\n",
-        edit_with_commas(number_of_directories, FALSE));
-      printf("%s other bytes\n", edit_with_commas(root.sector * SECTOR_SIZE, TRUE));
-      puts("-------------");
-      printf("%s total bytes\n",
-        edit_with_commas(total_sectors * SECTOR_SIZE, TRUE));
-      puts("=============");
+        printf("%s bytes ", edit_with_commas(bytes_in_files, TRUE));
+        printf("in %s files\n", edit_with_commas(number_of_files, FALSE));
+        printf("%s unused bytes at ends of files\n",
+            edit_with_commas(unused_bytes_at_ends_of_files, TRUE));
+        printf("%s bytes ", edit_with_commas(bytes_in_directories, TRUE));
+        printf("in %s directories\n",
+            edit_with_commas(number_of_directories, FALSE));
+        printf("%s other bytes\n", edit_with_commas(root.sector * SECTOR_SIZE, TRUE));
+        puts("-------------");
+        printf("%s total bytes\n",
+            edit_with_commas(total_sectors * SECTOR_SIZE, TRUE));
+        puts("=============");
     }
 
-  if (size_limit != 0 && total_sectors > size_limit)
-    error_exit("Size limit exceeded");
+    if (size_limit != 0 && total_sectors > size_limit)
+        error_exit("Size limit exceeded");
 
-  // re-initialize CD-ROM write buffer
+    // re-initialize CD-ROM write buffer
 
-  cd.file = fopen(cd.filespecs, "w+b");
-  if (cd.file == NULL)
-    error_exit("Can't open image file %s", cd.filespecs);
-  cd.sector = 0;
-  cd.offset = 0;
-  cd.count = 0;
+    cd.file = fopen(cd.filespecs, "w+b");
+    if (cd.file == NULL)
+        error_exit("Can't open image file %s", cd.filespecs);
+    cd.sector = 0;
+    cd.offset = 0;
+    cd.count = 0;
 
 
-  // make writing pass over directory structure
+    // make writing pass over directory structure
 
-  pass();
+    pass();
 
-  if (cd.count > 0)
-    flush_buffer();
-  if (show_progress)
-    printf("\r             \n");
-  if (fclose(cd.file) != 0)
+    if (cd.count > 0)
+        flush_buffer();
+    if (show_progress)
+        printf("\r             \n");
+    if (fclose(cd.file) != 0)
     {
-      cd.file = NULL;
-      error_exit("File write error in image file %s", cd.filespecs);
+        cd.file = NULL;
+        error_exit("File write error in image file %s", cd.filespecs);
     }
 
-  if (verbosity >= NORMAL)
-    puts("CD-ROM image made successfully");
+    if (verbosity >= NORMAL)
+        puts("CD-ROM image made successfully");
 
-  dir_hash_destroy(&specified_files);
-  release_memory();
-  return 0;
+    dir_hash_destroy(&specified_files);
+    release_memory();
+    return 0;
 }
 
 /* EOF */
