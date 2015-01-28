@@ -137,8 +137,6 @@ dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char
     free(parentcase);
 
     de = calloc(1, sizeof(*de));
-    de->head = NULL;
-    de->child = NULL;
     de->parent = parent_de;
     de->normalized_name = strdup(targetnorm);
     de->case_name = strdup(chop_filename(casename));
