@@ -1111,6 +1111,11 @@ UniataFindBusMasterController(
     if(MasterDev) {
         KdPrint2((PRINT_PREFIX "MasterDev (1)\n"));
         deviceExtension->MasterDev = TRUE;
+        KdPrint2((PRINT_PREFIX "Check exclude\n"));
+        if(AtapiRegCheckDevValue(deviceExtension, channel, DEVNUM_NOT_SPECIFIED, L"Exclude", 0)) {
+            KdPrint2((PRINT_PREFIX "Device excluded\n"));
+            goto exit_notfound;
+        }
     }
 
     status = UniataChipDetect(HwDeviceExtension, &pciData, i, ConfigInfo, &simplexOnly);
