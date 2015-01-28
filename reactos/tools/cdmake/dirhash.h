@@ -12,6 +12,9 @@ struct target_file
 
 struct target_dir_entry
 {
+    unsigned int hashcode;
+    struct target_dir_entry *next_dir_hash_entry;
+
     struct target_dir_entry *next;
     struct target_dir_entry *parent;
     struct target_dir_entry *child;
@@ -25,14 +28,6 @@ struct target_dir_hash
     struct target_dir_entry *buckets[NUM_DIR_HASH_BUCKETS];
     struct target_dir_entry root;
 };
-
-#if 0
-struct target_dir_traversal
-{
-    struct target_dir_entry *it;
-    int i;
-};
-#endif
 
 void normalize_dirname(char *filename);
 void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const char *target);

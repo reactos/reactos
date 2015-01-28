@@ -59,21 +59,19 @@ get_entry_by_normname(struct target_dir_hash *dh, const char *norm)
     hashcode = djb_hash(norm);
     de = dh->buckets[hashcode % NUM_DIR_HASH_BUCKETS];
     while (de && strcmp(de->normalized_name, norm))
-        de = de->next;
+        de = de->next_dir_hash_entry;
     return de;
 }
 
 static void
-delete_entry_by_normname(struct target_dir_hash *dh, const char *norm)
+delete_entry(struct target_dir_hash *dh, struct target_dir_entry *de)
 {
-    unsigned int hashcode;
     struct target_dir_entry **ent;
-    hashcode = djb_hash(norm);
-    ent = &dh->buckets[hashcode % NUM_DIR_HASH_BUCKETS];
-    while (*ent && strcmp((*ent)->normalized_name, norm))
-        ent = &(*ent)->next;
+    ent = &dh->buckets[de->hashcode % NUM_DIR_HASH_BUCKETS];
+    while (*ent && ((*ent) != de))
+        ent = &(*ent)->next_dir_hash_entry;
     if (*ent)
-        *ent = (*ent)->next;
+        *ent = (*ent)->next_dir_hash_entry;
 }
 
 void normalize_dirname(char *filename)
@@ -115,41 +113,47 @@ void normalize_dirname(char *filename)
 struct target_dir_entry *
 dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char *targetnorm)
 {
-    unsigned int hashcode;
     struct target_dir_entry *de, *parent_de;
     char *parentname = NULL;
     char *parentcase = NULL;
     struct target_dir_entry **ent;
+
     if (!dh->root.normalized_name)
     {
         dh->root.normalized_name = strdup("");
         dh->root.case_name = strdup("");
-        hashcode = djb_hash("");
-        dh->buckets[hashcode % NUM_DIR_HASH_BUCKETS] = &dh->root;
+        dh->root.hashcode = djb_hash("");
+        dh->buckets[dh->root.hashcode % NUM_DIR_HASH_BUCKETS] = &dh->root;
     }
+
     de = get_entry_by_normname(dh, targetnorm);
     if (de)
         return de;
+
     chop_dirname(targetnorm, &parentname);
     chop_dirname(casename, &parentcase);
     parent_de = dir_hash_create_dir(dh, parentcase, parentname);
     free(parentname);
     free(parentcase);
-    hashcode = djb_hash(targetnorm);
+
     de = calloc(1, sizeof(*de));
-    de->parent = parent_de;
     de->head = NULL;
     de->child = NULL;
+    de->parent = parent_de;
     de->normalized_name = strdup(targetnorm);
     de->case_name = strdup(chop_filename(casename));
+    de->hashcode = djb_hash(targetnorm);
+
     de->next = parent_de->child;
     parent_de->child = de;
-    ent = &dh->buckets[hashcode % NUM_DIR_HASH_BUCKETS];
+
+    ent = &dh->buckets[de->hashcode % NUM_DIR_HASH_BUCKETS];
     while (*ent)
     {
-        ent = &(*ent)->next;
+        ent = &(*ent)->next_dir_hash_entry;
     }
     *ent = de;
+
     return de;
 }
 
@@ -159,12 +163,14 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     struct target_dir_entry *de;
     char *targetdir = NULL;
     char *targetnorm;
+
     chop_dirname(target, &targetdir);
     targetnorm = strdup(targetdir);
     normalize_dirname(targetnorm);
     de = dir_hash_create_dir(dh, targetdir, targetnorm);
     free(targetnorm);
     free(targetdir);
+
     tf = calloc(1, sizeof(*tf));
     tf->next = de->head;
     de->head = tf;
@@ -172,44 +178,12 @@ void dir_hash_add_file(struct target_dir_hash *dh, const char *source, const cha
     tf->target_name = strdup(chop_filename(target));
 }
 
-#if 0
-static struct target_dir_entry *
-dir_hash_next_dir(struct target_dir_hash *dh, struct target_dir_traversal *t)
-{
-    if (t->i == -1)
-        return NULL;
-    if (!t->it)
-    {
-        while (++t->i != NUM_DIR_HASH_BUCKETS)
-        {
-            if (dh->buckets[t->i])
-            {
-                t->it = dh->buckets[t->i];
-                return t->it;
-            }
-        }
-        t->i = -1;
-        return NULL;
-    }
-    else
-    {
-        t->it = t->it->next;
-        if (!t->it)
-        {
-            t->i = -1;
-            return NULL;
-        }
-        else
-            return t->it;
-    }
-}
-#endif
-
 static void
 dir_hash_destroy_dir(struct target_dir_hash *dh, struct target_dir_entry *de)
 {
     struct target_file *tf;
     struct target_dir_entry *te;
+
     while ((te = de->child))
     {
         de->child = te->next;
@@ -223,8 +197,8 @@ dir_hash_destroy_dir(struct target_dir_hash *dh, struct target_dir_entry *de)
         free(tf->target_name);
         free(tf);
     }
-    if (de->normalized_name)
-        delete_entry_by_normname(dh, de->normalized_name);
+
+    delete_entry(dh, de);
     free(de->normalized_name);
     free(de->case_name);
 }

@@ -503,8 +503,7 @@ puts them into a date_and_time structure.
 static void convert_date_and_time(PDATE_AND_TIME dt, time_t *time)
 {
     struct tm *timedef;
-
-    timedef = localtime(time);
+    timedef = gmtime(time);
 
     dt->second = timedef->tm_sec;
     dt->minute = timedef->tm_min;
@@ -1089,22 +1088,24 @@ new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
 
 #if _WIN32
 static int
-get_cd_file_time(HANDLE handle, DATE_AND_TIME *cd_time_info)
+get_cd_file_time(HANDLE handle, PDATE_AND_TIME cd_time_info)
 {
     FILETIME file_time;
     SYSTEMTIME sys_time;
+
     if (!GetFileTime(handle, NULL, NULL, &file_time))
-    {
         return -1;
-    }
+
     FileTimeToSystemTime(&file_time, &sys_time);
     memset(cd_time_info, 0, sizeof(*cd_time_info));
+
     cd_time_info->year = sys_time.wYear;
-    cd_time_info->month = sys_time.wMonth - 1;
+    cd_time_info->month = sys_time.wMonth;
     cd_time_info->day = sys_time.wDay;
     cd_time_info->hour = sys_time.wHour;
     cd_time_info->minute = sys_time.wMinute;
     cd_time_info->second = sys_time.wSecond;
+
     return 0;
 }
 #endif
@@ -1250,16 +1251,13 @@ static void get_file_specifications(PDIR_RECORD d)
 
 static void get_time_string(char *str)
 {
-    struct tm *current;
-    time_t timestamp = time(NULL);
-    current = gmtime(&timestamp);
     sprintf(str, "%04d%02d%02d%02d%02d%02d00",
-            current->tm_year + 1900,
-            current->tm_mon,
-            current->tm_mday,
-            current->tm_hour,
-            current->tm_min,
-            current->tm_sec);
+            root.date_and_time.year,
+            root.date_and_time.month,
+            root.date_and_time.day,
+            root.date_and_time.hour,
+            root.date_and_time.minute,
+            root.date_and_time.second);
 }
 
 static void pass(void)
@@ -1676,7 +1674,6 @@ Program execution starts here.
 
 int main(int argc, char **argv)
 {
-    struct tm *current_time;
     time_t timestamp = time(NULL);
     BOOL q_option = FALSE;
     BOOL v_option = FALSE;
@@ -1699,15 +1696,9 @@ int main(int argc, char **argv)
         error_exit("Insufficient memory");
 
     memset(&root, 0, sizeof(root));
-    current_time = gmtime(&timestamp);
     root.level = 1;
     root.flags = DIRECTORY_FLAG;
-    root.date_and_time.year = current_time->tm_year + 1900;
-    root.date_and_time.month = current_time->tm_mon + 1;
-    root.date_and_time.day = current_time->tm_mday;
-    root.date_and_time.hour = current_time->tm_hour;
-    root.date_and_time.minute = current_time->tm_min;
-    root.date_and_time.second = current_time->tm_sec;
+    convert_date_and_time(&root.date_and_time, &timestamp);
 
     // initialize CD-ROM write buffer
 
