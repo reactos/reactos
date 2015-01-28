@@ -213,7 +213,7 @@ AddMemoryDescriptor(
     List[Index].MemoryType = MemoryType;
     DescriptCount++;
 
-#ifdef DBG
+#if DBG
     DbgDumpMemoryMap(List);
 #endif
     return DescriptCount;
