@@ -34,7 +34,7 @@ PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
 SIZE_T FrLdrImageSize;
 
-#if DBG
+#ifdef DBG
 typedef struct
 {
     TYPE_OF_MEMORY Type;
