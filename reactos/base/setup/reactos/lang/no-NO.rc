@@ -144,4 +144,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Sjekk listen av installasjon egenskapene før du fortsetter installasjon av enhetene"
     IDS_ABORTSETUP "ReactOS er ikke fullstendig installert på datamaskinen. Hvis du avslutter nå, trenger du å kjøre installeringen på nytt for å installere ReactOS. Vil du virkelig avslutte?"
     IDS_ABORTSETUP2 "Avbryt installasjonen?"
+    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_CAPTION "ReactOS installering"
 END

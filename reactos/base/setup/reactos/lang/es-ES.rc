@@ -146,4 +146,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado"
     IDS_ABORTSETUP "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar ReactOS. ¿Realmente quiere salir?"
     IDS_ABORTSETUP2 "¿Abortar instalación?"
+    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_CAPTION "Instalación de ReactOS"
 END
