@@ -51,3 +51,6 @@ END
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
