@@ -17,8 +17,12 @@ add_custom_target(bootcdregtest
     VERBATIM)
 
 ##livecd
-#clear it out and create the empty Desktop folder
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop\n")
+#clear it out
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "")
+
+#create the empty Desktop and Start Menu folders
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs\n")
 
 add_custom_target(livecd
     COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin @${CMAKE_CURRENT_BINARY_DIR}/livecd.lst REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
@@ -26,8 +30,12 @@ add_custom_target(livecd
     VERBATIM)
 
 ##hybridcd
-#clear it out and create the empty Desktop folder
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop\n")
+#clear it out
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
+
+#create the empty Desktop and Start Menu folders
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs\n")
 
 add_custom_target(hybridcd
     COMMAND native-cdmake -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin @${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst REACTOS ${REACTOS_BINARY_DIR}/hybridcd.iso
