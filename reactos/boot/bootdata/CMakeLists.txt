@@ -101,6 +101,7 @@ add_livecd_shortcut("Event Viewer" eventvwr.exe "Profiles/All Users/Start Menu/P
 add_livecd_shortcut("Service Manager" servman.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
 add_livecd_shortcut("System Configuration" msconfig.exe "Profiles/All Users/Start Menu/Programs/Administrative Tools")
 add_livecd_shortcut("Magnify" magnify.exe "Profiles/All Users/Start Menu/Programs/Accessibility")
+add_livecd_shortcut("On-Screen Keyboard" osk.exe "Profiles/All Users/Start Menu/Programs/Accessibility")
 add_livecd_shortcut("Calculator" calc.exe "Profiles/All Users/Start Menu/Programs/Accessories")
 add_livecd_shortcut("Command Prompt" cmd.exe "Profiles/All Users/Start Menu/Programs/Accessories")
 add_livecd_shortcut("Paint" mspaint.exe "Profiles/All Users/Start Menu/Programs/Accessories")

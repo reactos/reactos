@@ -66,8 +66,11 @@ UniataChipDetectChannels(
     //ULONG RevID    =  deviceExtension->RevID;
     ULONG ChipType = deviceExtension->HwFlags & CHIPTYPE_MASK;
     ULONG ChipFlags= deviceExtension->HwFlags & CHIPFLAG_MASK;
+    ULONG i,n;
 
     KdPrint2((PRINT_PREFIX "UniataChipDetectChannels:\n" ));
+
+    deviceExtension->AHCI_PI_mask = 0;
 
     if(ChipFlags & (UNIATA_SATA | UNIATA_AHCI)) {
         if(!deviceExtension->NumberChannels) {
@@ -88,6 +91,21 @@ UniataChipDetectChannels(
         KdPrint2((PRINT_PREFIX "MasterDev -> 1 chan\n"));
         deviceExtension->NumberChannels = 1;
     }
+    for(n=0; n<deviceExtension->NumberChannels; n++) {
+        if(AtapiRegCheckDevValue(deviceExtension, n, DEVNUM_NOT_SPECIFIED, L"Exclude", 0)) {
+            KdPrint2((PRINT_PREFIX "Channel %d excluded\n", n));
+            deviceExtension->AHCI_PI_mask &= ~((ULONG)1 << n);
+        } else {
+            deviceExtension->AHCI_PI_mask |= ((ULONG)1 << n);
+        }
+    }
+    KdPrint2((PRINT_PREFIX "PortMask %#x\n", deviceExtension->AHCI_PI_mask));
+    deviceExtension->AHCI_PI_mask = 
+        AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PortMask", (ULONG)0xffffffff >> (32-deviceExtension->NumberChannels) );
+    KdPrint2((PRINT_PREFIX "Force PortMask %#x\n", deviceExtension->AHCI_PI_mask));
+
+    for(i=deviceExtension->AHCI_PI_mask, n=0; i; n++, i=i>>1);
+    KdPrint2((PRINT_PREFIX "mask -> %d chans\n", n));
 
     switch(VendorID) {
     case ATA_ACER_LABS_ID:
@@ -271,6 +289,21 @@ UniataChipDetectChannels(
         }
         break;
     } // end switch(VendorID)
+
+    i = AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"NumberChannels", n);
+    if(!i) {
+        i = n;
+    }
+    KdPrint2((PRINT_PREFIX "reg -> %d chans\n", n));
+
+    deviceExtension->NumberChannels = min(i, deviceExtension->NumberChannels);
+    if(!deviceExtension->NumberChannels) {
+        KdPrint2((PRINT_PREFIX "all channels blocked\n", n));
+        return FALSE;
+    }
+    deviceExtension->AHCI_PI_mask &= (ULONG)0xffffffff >> (32-deviceExtension->NumberChannels);
+    KdPrint2((PRINT_PREFIX "Final PortMask %#x\n", deviceExtension->AHCI_PI_mask));
+
     return TRUE;
 
 } // end UniataChipDetectChannels()
@@ -1542,7 +1575,18 @@ hpt_cable80(
     UCHAR reg, val, res;
     PCI_SLOT_NUMBER slotData;
 
+    PHW_CHANNEL chan;
+    ULONG  c; // logical channel (for Compatible Mode controllers)
+
+    c = channel - deviceExtension->Channel; // logical channel (for Compatible Mode controllers)
+    chan = &deviceExtension->chan[c];
+
     slotData.u.AsULONG = deviceExtension->slotNumber;
+
+    if(deviceExtension->HwFlags & UNIATA_NO80CHK) {
+        KdPrint2((PRINT_PREFIX "UNIATA_NO80CHK\n"));
+        return TRUE;
+    }
 
     if(ChipType == HPT374 && slotData.u.bits.FunctionNumber == 1)  {
         reg = channel ? 0x57 : 0x53;
@@ -1557,6 +1601,10 @@ hpt_cable80(
     GetPciConfig1(0x5a, res);
     res = res & (channel ? 0x01 : 0x02);
     SetPciConfig1(reg, val);
+    if(chan->Force80pin) {
+        KdPrint2((PRINT_PREFIX "Force80pin\n"));
+        res = 0;
+    }
     KdPrint2((PRINT_PREFIX "hpt_cable80(%d) = %d\n", channel, !res));
     return !res;
 } // end hpt_cable80()
@@ -1637,6 +1685,11 @@ generic_cable80(
 
     c = channel - deviceExtension->Channel; // logical channel (for Compatible Mode controllers)
     chan = &deviceExtension->chan[c];
+
+    if(chan->Force80pin) {
+        KdPrint2((PRINT_PREFIX "Force80pin\n"));
+        return TRUE;
+    }
 
     GetPciConfig1(pci_reg, tmp8);
     if(!(tmp8 & (1 << (channel << bit_offs)))) {
@@ -1793,6 +1846,13 @@ AtapiReadChipConfig(
                 KdPrint2((PRINT_PREFIX "MaxTransferMode (overriden): %#x\n", chan->MaxTransferMode));
                 chan->MaxTransferMode = tmp32;
             }
+            tmp32 = AtapiRegCheckDevValue(deviceExtension, c, DEVNUM_NOT_SPECIFIED, L"Force80pin", FALSE);
+            chan->Force80pin = tmp32 ? TRUE : FALSE;
+            if(chan->Force80pin) {
+                KdPrint2((PRINT_PREFIX "Force80pin on chip\n"));
+                deviceExtension->HwFlags |= UNIATA_NO80CHK;
+            }
+
             //UniAtaReadLunConfig(deviceExtension, c, 0);
             //UniAtaReadLunConfig(deviceExtension, c, 1);
         }
@@ -1823,6 +1883,12 @@ AtapiReadChipConfig(
         }
         tmp32 = AtapiRegCheckDevValue(deviceExtension, c, DEVNUM_NOT_SPECIFIED, L"ReorderEnable", TRUE);
         chan->UseReorder = tmp32 ? TRUE : FALSE;
+
+        tmp32 = AtapiRegCheckDevValue(deviceExtension, c, DEVNUM_NOT_SPECIFIED, L"Force80pin", FALSE);
+        chan->Force80pin = tmp32 ? TRUE : FALSE;
+        if(chan->Force80pin) {
+            KdPrint2((PRINT_PREFIX "Force80pin on channel\n"));
+        }
 
         for(i=0; i<deviceExtension->NumberLuns; i++) {
             UniAtaReadLunConfig(deviceExtension, channel, i);
@@ -2145,6 +2211,12 @@ AtapiChipInit(
             chan = &deviceExtension->chan[c];
             GetPciConfig2(0x54, reg54);
             KdPrint2((PRINT_PREFIX " intel 80-pin check (reg54=%x)\n", reg54));
+            if(deviceExtension->HwFlags & UNIATA_NO80CHK) {
+                KdPrint2((PRINT_PREFIX " No check (administrative)\n"));
+                if(chan->Force80pin) {
+                    KdPrint2((PRINT_PREFIX "Force80pin\n"));
+                }
+            } else
             if(reg54 == 0x0000 || reg54 == 0xffff) {
                 KdPrint2((PRINT_PREFIX " check failed (not supported)\n"));
             } else

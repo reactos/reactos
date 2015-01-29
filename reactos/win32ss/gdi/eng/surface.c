@@ -452,8 +452,6 @@ EngModifySurface(
     ppdev = (PDEVOBJ*)hdev;
     pso = &psurf->SurfObj;
     pso->dhsurf = dhsurf;
-    pso->lDelta = lDelta;
-    pso->pvScan0 = pvScan0;
 
     /* Associate the hdev */
     pso->hdev = hdev;
@@ -467,6 +465,54 @@ EngModifySurface(
     ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
     SURFACE_vSetPalette(psurf, ppal);
     PALETTE_ShareUnlockPalette(ppal);
+
+    /* Check if the caller passed bitmap bits */
+    if ((pvScan0 != NULL) && (lDelta != 0))
+    {
+        /* Update the fields */
+        pso->pvScan0 = pvScan0;
+        pso->lDelta = lDelta;
+
+        /* This is a bitmap now! */
+        pso->iType = STYPE_BITMAP;
+
+        /* Check memory layout */
+        if (lDelta > 0)
+        {
+            /* Topdown is the normal way */
+            pso->cjBits = lDelta * pso->sizlBitmap.cy;
+            pso->pvBits = pso->pvScan0;
+            pso->fjBitmap |= BMF_TOPDOWN;
+        }
+        else
+        {
+            /* Inversed bitmap (bottom up) */
+            pso->cjBits = (-lDelta) * pso->sizlBitmap.cy;
+            pso->pvBits = (PCHAR)pso->pvScan0 - pso->cjBits - lDelta;
+            pso->fjBitmap &= ~BMF_TOPDOWN;
+        }
+
+        /* Update surface flags */
+        if (flSurface & MS_NOTSYSTEMMEMORY)
+             pso->fjBitmap |= BMF_NOTSYSMEM;
+        else
+            pso->fjBitmap &= ~BMF_NOTSYSMEM;
+        if (flSurface & MS_SHAREDACCESS)
+             psurf->flags |= SHAREACCESS_SURFACE;
+        else
+            psurf->flags &= ~SHAREACCESS_SURFACE;
+    }
+    else
+    {
+        /* Set bits to NULL */
+        pso->pvBits = NULL;
+        pso->pvScan0 = NULL;
+        pso->lDelta = 0;
+
+        /* Set appropriate surface type */
+        if (pso->iType != STYPE_DEVICE)
+            pso->iType = STYPE_DEVBITMAP;
+    }
 
     SURFACE_ShareUnlockSurface(psurf);
 

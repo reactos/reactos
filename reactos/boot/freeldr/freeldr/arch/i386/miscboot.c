@@ -154,6 +154,7 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
     // result in a read error.
     //DiskStopFloppyMotor();
     //DisableA20();
+    FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
 }
 
@@ -211,5 +212,6 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
     // result in a read error.
     //DiskStopFloppyMotor();
     //DisableA20();
+    FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
 }

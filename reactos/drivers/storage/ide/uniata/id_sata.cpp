@@ -760,6 +760,9 @@ UniataAhciInit(
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
     deviceExtension->AHCI_PI = PI;
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));
+    KdPrint2((PRINT_PREFIX "  AHCI PI mask %#x\n", deviceExtension->AHCI_PI_mask));
+    deviceExtension->AHCI_PI = PI = PI & deviceExtension->AHCI_PI_mask;
+    KdPrint2((PRINT_PREFIX "  masked AHCI PI %#x\n", PI));
 
     CAP2 = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_CAP2);
     if(CAP2 & AHCI_CAP2_BOH) {
@@ -975,8 +978,20 @@ UniataAhciDetect(
      * both CAP.NOP and PI.
      */
     PI = UniataAhciReadHostPort4(deviceExtension, IDX_AHCI_PI);
-    deviceExtension->AHCI_PI = PI;
+    deviceExtension->AHCI_PI = deviceExtension->AHCI_PI_mask = PI;
     KdPrint2((PRINT_PREFIX "  AHCI PI %#x\n", PI));
+
+    for(i=PI, n=0; i; n++, i=i>>1) {
+        if(AtapiRegCheckDevValue(deviceExtension, n, DEVNUM_NOT_SPECIFIED, L"Exclude", 0)) {
+            KdPrint2((PRINT_PREFIX "Channel %d excluded\n", n));
+            deviceExtension->AHCI_PI &= ~((ULONG)1 << n);
+            deviceExtension->AHCI_PI_mask &= ~((ULONG)1 << n);
+        }
+    }
+    deviceExtension->AHCI_PI_mask = 
+        AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PortMask", deviceExtension->AHCI_PI_mask);
+    KdPrint2((PRINT_PREFIX "Force PortMask %#x\n", deviceExtension->AHCI_PI_mask));
+
     for(i=PI, n=0; i; n++, i=i>>1);
     NumberChannels =
         max((CAP & AHCI_CAP_NOP_MASK)+1, n);

@@ -104,8 +104,8 @@ Signature = "$ReactOS$"
 "modules/optional/gnutls/libgcc_s_sjlj-1.dll"         53 optional
 "modules/optional/gnutls/libgmp-10.dll"               53 optional
 "modules/optional/gnutls/libgnutls-28.dll"            53 optional
+"modules/optional/gnutls/libgnutls-xssl-0.dll"        53 optional
 "modules/optional/gnutls/libhogweed-2-5.dll"          53 optional
-"modules/optional/gnutls/libp11-kit-0.dll"            53 optional
 "modules/optional/gnutls/libnettle-4-7.dll"           53 optional
-"modules/optional/gnutls/libwinpthread-1.dll"         53 optional
+"modules/optional/gnutls/libp11-kit-0.dll"            53 optional
 "modules/optional/gnutls/zlib1.dll"                   53 optional

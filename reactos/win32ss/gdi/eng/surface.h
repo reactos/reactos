@@ -49,7 +49,7 @@ enum _SURFACEFLAGS
 //#define HOOK_FILLPATH             0x00000040
 //#define HOOK_STROKEANDFILLPATH    0x00000080
 //#define HOOK_LINETO               0x00000100
-//#define SHAREACCESS_SURFACE       0x00000200
+    SHAREACCESS_SURFACE       = 0x00000200,
 //#define HOOK_COPYBITS             0x00000400
 //#define REDIRECTION_SURFACE       0x00000800 // ?
 //#define HOOK_MOVEPANNING          0x00000800
@@ -82,7 +82,6 @@ enum _SURFACEFLAGS
 };
 
 #define BMF_POOLALLOC 0x100
-#define PDEV_SURFACE              0x80000000
 
 /*  Internal interface  */
 

@@ -153,4 +153,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
     IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
     IDS_ABORTSETUP2 "Abandonați instalarea?"
+    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_CAPTION "Asistentul de instalare ReactOS"
 END

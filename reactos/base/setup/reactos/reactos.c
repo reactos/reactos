@@ -989,7 +989,7 @@ RestartDlgProc(HWND hwndDlg,
     return FALSE;
 }
 
-void LoadSetupData()
+BOOL LoadSetupData(void)
 {
     WCHAR szPath[MAX_PATH];
     TCHAR tmp[10];
@@ -1007,115 +1007,126 @@ void LoadSetupData()
 
     wcscat(szPath, L"\\txtsetup.sif");
     hTxtsetupSif = SetupOpenInfFileW(szPath, NULL, INF_STYLE_OLDNT, NULL);
-    if (hTxtsetupSif != INVALID_HANDLE_VALUE)
+    if (hTxtsetupSif == INVALID_HANDLE_VALUE)
     {
-        // get language list
-        SetupData.LangCount = SetupGetLineCount(hTxtsetupSif, _T("Language"));
-        if (SetupData.LangCount > 0)
-        {
-            SetupData.pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * SetupData.LangCount);
-            if (SetupData.pLanguages != NULL)
-            {
-                Count = 0;
-                if (SetupFindFirstLine(hTxtsetupSif, _T("Language"), NULL, &InfContext))
-                {
-                    do
-                    {
-                        SetupGetStringField(&InfContext,
-                                            0,
-                                            SetupData.pLanguages[Count].LangId,
-                                            sizeof(SetupData.pLanguages[Count].LangId) / sizeof(TCHAR),
-                                            &LineLength);
+        TCHAR message[512], caption[64];
 
-                        SetupGetStringField(&InfContext,
-                                            1,
-                                            SetupData.pLanguages[Count].LangName,
-                                            sizeof(SetupData.pLanguages[Count].LangName) / sizeof(TCHAR),
-                                            &LineLength);
-                        ++Count;
-                    }
-                    while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
-                }
-            }
-        }
+        // txtsetup.sif cannot be found
+        LoadString(hInstance, IDS_NO_TXTSETUP_SIF, message, sizeof(message)/sizeof(TCHAR));
+        LoadString(hInstance, IDS_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
 
-        // get keyboard layout list
-        SetupData.KbLayoutCount = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
-        if (SetupData.KbLayoutCount > 0)
-        {
-            SetupData.pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * SetupData.KbLayoutCount);
-            if (SetupData.pKbLayouts != NULL)
-            {
-                Count = 0;
-                if (SetupFindFirstLine(hTxtsetupSif, _T("KeyboardLayout"), NULL, &InfContext))
-                {
-                    do
-                    {
-                        SetupGetStringField(&InfContext,
-                                            0,
-                                            SetupData.pKbLayouts[Count].LayoutId,
-                                            sizeof(SetupData.pKbLayouts[Count].LayoutId) / sizeof(TCHAR),
-                                            &LineLength);
-
-                        SetupGetStringField(&InfContext,
-                                            1,
-                                            SetupData.pKbLayouts[Count].LayoutName,
-                                            sizeof(SetupData.pKbLayouts[Count].LayoutName) / sizeof(TCHAR),
-                                            &LineLength);
-                        ++Count;
-                    }
-                    while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.KbLayoutCount);
-                }
-            }
-        }
-
-        // get default for keyboard and language
-        SetupData.DefaultKBLayout = -1;
-        SetupData.DefaultLang = -1;
-
-        // TODO: get defaults from underlaying running system
-        if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLayout"), &InfContext))
-        {
-            SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
-            for (Count = 0; Count < SetupData.KbLayoutCount; Count++)
-                if (_tcscmp(tmp, SetupData.pKbLayouts[Count].LayoutId) == 0)
-                {
-                    SetupData.DefaultKBLayout = Count;
-                    break;
-                }
-        }
-
-        if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLanguage"), &InfContext))
-        {
-            SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
-            for (Count = 0; Count < SetupData.LangCount; Count++)
-                if (_tcscmp(tmp, SetupData.pLanguages[Count].LangId) == 0)
-                {
-                    SetupData.DefaultLang = Count;
-                    break;
-                }
-        }
-
-        // get computers list
-        SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&SetupData.pComputers,&InfContext);
-
-        // get display list
-        SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&SetupData.pDisplays,&InfContext);
-
-        // get keyboard list
-        SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&SetupData.pKeyboards,&InfContext);
-
-        // get install directory
-        if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
-        {
-            SetupGetStringField(&InfContext,
-                                1,
-                                SetupData.InstallDir,
-                                sizeof(SetupData.InstallDir) / sizeof(TCHAR),
-                                &LineLength);
-        }
-        SetupCloseInfFile(hTxtsetupSif);
+        MessageBox(NULL, message, caption, MB_OK | MB_ICONERROR);
+        return FALSE;
     }
+
+    // get language list
+    SetupData.LangCount = SetupGetLineCount(hTxtsetupSif, _T("Language"));
+    if (SetupData.LangCount > 0)
+    {
+        SetupData.pLanguages = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LANG) * SetupData.LangCount);
+        if (SetupData.pLanguages != NULL)
+        {
+            Count = 0;
+            if (SetupFindFirstLine(hTxtsetupSif, _T("Language"), NULL, &InfContext))
+            {
+                do
+                {
+                    SetupGetStringField(&InfContext,
+                                        0,
+                                        SetupData.pLanguages[Count].LangId,
+                                        sizeof(SetupData.pLanguages[Count].LangId) / sizeof(TCHAR),
+                                        &LineLength);
+
+                    SetupGetStringField(&InfContext,
+                                        1,
+                                        SetupData.pLanguages[Count].LangName,
+                                        sizeof(SetupData.pLanguages[Count].LangName) / sizeof(TCHAR),
+                                        &LineLength);
+                    ++Count;
+                }
+                while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.LangCount);
+            }
+        }
+    }
+
+    // get keyboard layout list
+    SetupData.KbLayoutCount = SetupGetLineCount(hTxtsetupSif, _T("KeyboardLayout"));
+    if (SetupData.KbLayoutCount > 0)
+    {
+        SetupData.pKbLayouts = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KBLAYOUT) * SetupData.KbLayoutCount);
+        if (SetupData.pKbLayouts != NULL)
+        {
+            Count = 0;
+            if (SetupFindFirstLine(hTxtsetupSif, _T("KeyboardLayout"), NULL, &InfContext))
+            {
+                do
+                {
+                    SetupGetStringField(&InfContext,
+                                        0,
+                                        SetupData.pKbLayouts[Count].LayoutId,
+                                        sizeof(SetupData.pKbLayouts[Count].LayoutId) / sizeof(TCHAR),
+                                        &LineLength);
+
+                    SetupGetStringField(&InfContext,
+                                        1,
+                                        SetupData.pKbLayouts[Count].LayoutName,
+                                        sizeof(SetupData.pKbLayouts[Count].LayoutName) / sizeof(TCHAR),
+                                        &LineLength);
+                    ++Count;
+                }
+                while (SetupFindNextLine(&InfContext, &InfContext) && Count < SetupData.KbLayoutCount);
+            }
+        }
+    }
+
+    // get default for keyboard and language
+    SetupData.DefaultKBLayout = -1;
+    SetupData.DefaultLang = -1;
+
+    // TODO: get defaults from underlaying running system
+    if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLayout"), &InfContext))
+    {
+        SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
+        for (Count = 0; Count < SetupData.KbLayoutCount; Count++)
+            if (_tcscmp(tmp, SetupData.pKbLayouts[Count].LayoutId) == 0)
+            {
+                SetupData.DefaultKBLayout = Count;
+                break;
+            }
+    }
+
+    if (SetupFindFirstLine(hTxtsetupSif, _T("NLS"), _T("DefaultLanguage"), &InfContext))
+    {
+        SetupGetStringField(&InfContext, 1, tmp, sizeof(tmp) / sizeof(TCHAR), &LineLength);
+        for (Count = 0; Count < SetupData.LangCount; Count++)
+            if (_tcscmp(tmp, SetupData.pLanguages[Count].LangId) == 0)
+            {
+                SetupData.DefaultLang = Count;
+                break;
+            }
+    }
+
+    // get computers list
+    SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&SetupData.pComputers,&InfContext);
+
+    // get display list
+    SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&SetupData.pDisplays,&InfContext);
+
+    // get keyboard list
+    SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&SetupData.pKeyboards,&InfContext);
+
+    // get install directory
+    if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
+    {
+        SetupGetStringField(&InfContext,
+                            1,
+                            SetupData.InstallDir,
+                            sizeof(SetupData.InstallDir) / sizeof(TCHAR),
+                            &LineLength);
+    }
+    SetupCloseInfFile(hTxtsetupSif);
+
+    return TRUE;
 }
 
 LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
@@ -1211,8 +1222,8 @@ _tWinMain(HINSTANCE hInst,
     LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
     if (!isUnattend)
     {
-
-        LoadSetupData();
+        if (!LoadSetupData())
+            return 0;
 
         /* Create the Start page, until setup is working */
         psp.dwSize = sizeof(PROPSHEETPAGE);

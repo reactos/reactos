@@ -144,4 +144,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Seadete kontrollimine enne paigaldamise alustamist"
     IDS_ABORTSETUP "ReactOS ei ole veel täielikult paigaldatud. Kas tõesti lahkuda?"
     IDS_ABORTSETUP2 "Katkestada paigaldamine?"
+    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_CAPTION "ReactOSi paigaldamine"
 END
