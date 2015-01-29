@@ -7,7 +7,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE            "ReactOS 0.3.17+ - FOSDEM 2015"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "ReactOS is a modern open source operating system based on the design of Windows® XP/2003. This encompasses full compatibility with Windows applications and drivers as well as a familiar user interface, such that people accustomed to Windows would find using ReactOS straightforward. The source code of the entire system is available for free under several open source licenses, mostly the GNU General Public License."
+    IDS_DEFAULTTOPICDESC    "ReactOS is a modern open source operating system based on the design of WindowsÂ® XP/2003. This encompasses full compatibility with Windows applications and drivers as well as a familiar user interface, such that people accustomed to Windows would find using ReactOS straightforward. The source code of the entire system is available for free under several open source licenses, mostly the GNU General Public License."
 END
 
 /* Topic buttons */
@@ -25,13 +25,13 @@ END
 /* Topic titles */
 STRINGTABLE
 BEGIN
-    IDS_TOPICTITLE0         "Install ReactOS"                            
-    IDS_TOPICTITLE1         "Try out ReactOS in QEMU"                    
-    IDS_TOPICTITLE2         "Install ReactOS Build Environment"          
-    IDS_TOPICTITLE3         "Open the ReactOS Source Code Package"       
-    IDS_TOPICTITLE4         "Visit the ReactOS Website"                  
-    IDS_TOPICTITLE5         "Browse the CD"                              
-    IDS_TOPICTITLE6         "Exit"                                       
+    IDS_TOPICTITLE0         "Install ReactOS"
+    IDS_TOPICTITLE1         "Try out ReactOS in QEMU"
+    IDS_TOPICTITLE2         "Install ReactOS Build Environment"
+    IDS_TOPICTITLE3         "Open the ReactOS Source Code Package"
+    IDS_TOPICTITLE4         "Visit the ReactOS Website"
+    IDS_TOPICTITLE5         "Browse the CD"
+    IDS_TOPICTITLE6         "Exit"
 END
 
 /* Topic descriptions */
@@ -39,8 +39,8 @@ STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Installs ReactOS on your computer.\n\nPlease note that you have to restart your computer with the ReactOS CD in the drive to start the installation.\n\nAlternatively, you can easily try out ReactOS in a QEMU virtual machine by choosing the respective menu entry on the left side."
     IDS_TOPICDESC1          "Perhaps you don't want to try out an alpha-stage operating system on your own computer or you face problems during the installation. For these cases, we have preinstalled ReactOS on a QEMU virtual machine. This way, you can try out the operating system without needing to install it on your computer.\n\nA click on this menu entry opens the QEMU package in 7-Zip."
-    IDS_TOPICDESC2          "To make building ReactOS as easy as possible, the ReactOS Build Environment has been created. This contains the right compiler versions and all needed tools to compile the entire ReactOS Source Code.\n\nThe Windows version of the Build Environment is compatible with Windows 2000, XP or newer versions. It is installed using this menu entry.\n\nAdditionally, the source code of this ReactOS version is included on this CD."
-    IDS_TOPICDESC3          "The CD also contains the entire source code of this ReactOS version, which can be compiled using the ReactOS Build Environment.\nA click on this menu entry opens it in 7-Zip."
+    IDS_TOPICDESC2          "To make building ReactOS as easy as possible, the ReactOS Build Environment has been created. This contains the right compiler versions and all needed tools to compile the entire ReactOS Source Code.\n\nThe Windows version of the Build Environment is compatible with Windows XP or newer versions. It is installed using this menu entry.\n\nAdditionally, the source code of this ReactOS version is included on this CD."
+    IDS_TOPICDESC3          "The CD also contains the entire source code of this ReactOS version, which can be compiled using the ReactOS Build Environment.\n\nA click on this menu entry opens it in 7-Zip."
     IDS_TOPICDESC4          "The ReactOS Website offers many more information about the project. Here you find the latest ReactOS releases and news regarding the development."
     IDS_TOPICDESC5          "Browse the contents of this CD."
     IDS_TOPICDESC6          "Exits the AutoRun program."

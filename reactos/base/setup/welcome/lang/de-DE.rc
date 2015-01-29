@@ -1,4 +1,4 @@
-﻿LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 /* String Tables */
 
@@ -39,8 +39,8 @@ STRINGTABLE
 BEGIN
     IDS_TOPICDESC0          "Installiert ReactOS auf ihrem Computer.\n\nBitte beachten Sie, dass Sie Ihren Computer mit der ReactOS-CD im Laufwerk neu starten müssen, um die Installation zu starten.\n\nAlternativ können Sie ReactOS problemlos in einer virtuellen QEMU-Maschine ausprobieren, wenn Sie den entsprechenden Menüpunkt auf der linken Seite wählen."
     IDS_TOPICDESC1          "Möglicherweise möchten Sie ein Betriebssystem im Alpha-Stadium nicht auf Ihrem eigenen Computer testen oder es gibt Probleme bei der Installation. Daher haben wir ReactOS auf einer virtuellen QEMU-Maschine vorinstalliert, mit der Sie das Betriebssystem problemlos testen können, ohne dass es direkt auf Ihrem Computer installiert werden muss.\n\nEin Klick auf diesen Menüpunkt öffnet das QEMU-Paket in 7-Zip."
-    IDS_TOPICDESC2          "Damit ReactOS so einfach wie möglich kompiliert werden kann, wurde das ReactOS Build Environment geschaffen. Dieses enthält die passenden Compiler-Versionen und alle nötigen Tools, um den gesamten ReactOS-Quellcode zu kompilieren.\n\nDie Windows-Version des Build Environments ist kompatibel mit Windows 2000, XP oder neueren Versionen. Sie wird über diesen Menüpunkt installiert.\nDie CD enthält auch das Build Environment für Unix-ähnliche Betriebssysteme, wie z.B. Linux oder Mac OS X.\n\nZusätzlich befindet sich auf dieser CD der Quellcode dieser ReactOS-Version."
-    IDS_TOPICDESC3          "Die CD enthält auch den gesamten Quellcode dieser ReactOS-Version, welcher mit dem ReactOS Build Environment kompiliert werden kann.\nEin Klick auf diesen Menüpunkt öffnet ihn in 7-Zip."
+    IDS_TOPICDESC2          "Damit ReactOS so einfach wie möglich kompiliert werden kann, wurde das ReactOS Build Environment geschaffen. Dieses enthält die passenden Compiler-Versionen und alle nötigen Tools, um den gesamten ReactOS-Quellcode zu kompilieren.\n\nDie Windows-Version des Build Environments ist kompatibel mit Windows XP oder neueren Versionen. Sie wird über diesen Menüpunkt installiert.\nDie CD enthält auch das Build Environment für Unix-ähnliche Betriebssysteme, wie z.B. Linux oder Mac OS X.\n\nZusätzlich befindet sich auf dieser CD der Quellcode dieser ReactOS-Version."
+    IDS_TOPICDESC3          "Die CD enthält auch den gesamten Quellcode dieser ReactOS-Version, welcher mit dem ReactOS Build Environment kompiliert werden kann.\n\nEin Klick auf diesen Menüpunkt öffnet ihn in 7-Zip."
     IDS_TOPICDESC4          "Die ReactOS-Website liefert viele weitere Informationen über das Projekt. Hier finden Sie die neusten ReactOS-Versionen und Neuigkeiten bezüglich der Entwicklung."
     IDS_TOPICDESC5          "Durchsuchen Sie den Inhalt dieser CD."
     IDS_TOPICDESC6          "Beendet das AutoRun-Programm."
