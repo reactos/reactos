@@ -46,4 +46,16 @@ BEGIN
     IDS_TOPICDESC6          "Quitte le programme AutoRun."
 END
 
+/* Topic actions */
+STRINGTABLE
+BEGIN
+    IDS_TOPICACTION0        "<msg>Vous ne pouvez pas encore installer ReactOS directement depuis ce CD ! Veuillez redémarrer votre ordinateur depuis ce CD pour pouvoir installer ReactOS."
+    IDS_TOPICACTION1        "\\extras\\ReactOS on QEMU\\ReactOS-0317-FOSDEM2015-QEMU.7z"
+    IDS_TOPICACTION2        "\\extras\\ReactOS Build Environment\\RosBE-2.1.1.exe"
+    IDS_TOPICACTION3        "\\extras\\ReactOS Source Code\\ReactOS-0317-FOSDEM2015-Source.7z"
+    IDS_TOPICACTION4        "https://www.reactos.org/"
+    IDS_TOPICACTION5        "explorer.exe"
+    IDS_TOPICACTION6        "<exit>"
+END
+
 /* EOF */

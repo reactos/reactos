@@ -260,6 +260,12 @@ RunApplication(int nTopic)
   if (nLength == 0)
     return TRUE;
 
+  if (!_tcsnicmp(AppName, TEXT("<msg>"), 5))
+  {
+    MessageBox(hwndMain, AppName + 5, TEXT("ReactOS"), MB_OK | MB_TASKMODAL);
+    return TRUE;
+  }
+  
   if (!_tcsicmp(AppName, TEXT("<exit>")))
     return FALSE;
 

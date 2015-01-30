@@ -46,5 +46,17 @@ BEGIN
     IDS_TOPICDESC6          "Beendet das AutoRun-Programm."
 END
 
+/* Topic actions */
+STRINGTABLE
+BEGIN
+    IDS_TOPICACTION0        "<msg>Sie müssen Ihren Computer mit der ReactOS-CD im Laufwerk neu starten, um die Installation zu starten.\n\nBITTE BEACHTEN SIE: Es wird dringend davon abgeraten, ReactOS auf einem Computer zu installieren, welcher wichtige Daten enthält!"
+    IDS_TOPICACTION1        "\\extras\\ReactOS on QEMU\\ReactOS-0317-FOSDEM2015-QEMU.7z"
+    IDS_TOPICACTION2        "\\extras\\ReactOS Build Environment\\RosBE-2.1.1.exe"
+    IDS_TOPICACTION3        "\\extras\\ReactOS Source Code\\ReactOS-0317-FOSDEM2015-Source.7z"
+    IDS_TOPICACTION4        "https://www.reactos.org/"
+    IDS_TOPICACTION5        "explorer.exe"
+    IDS_TOPICACTION6        "<exit>"
+END
+
 /* EOF */
 
