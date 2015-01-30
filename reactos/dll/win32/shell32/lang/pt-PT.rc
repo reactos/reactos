@@ -628,7 +628,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Caution"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_SHELL_DOCUMENT, IDI_SHELL_DOCUMENT, 5, 5, 21, 20
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
     LTEXT "This file could either be used by the operating system or by\n\
 another application. Modifying this file might damage your\n\
 system or make it less functional.\n\n\
