@@ -629,7 +629,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Advertencia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON IDI_SHELL_DOCUMENT, IDI_SHELL_DOCUMENT, 5, 5, 21, 20
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
     LTEXT "Ester archivo podría pertenecer al sistema operativo o\n\
 alguna otra aplicación. Modificar este archivo podría dañar el\n\
 sistema o comprometer su correcto funcionamiento.\n\n\
