@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "dirsep.h"
+#include "config.h"
 #include "dirhash.h"
 
 /* This is the famous DJB hash */

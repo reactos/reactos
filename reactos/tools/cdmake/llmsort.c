@@ -1,8 +1,9 @@
-/* A Linked-List Memory Sort
-   by Philip J. Erdelsky
-   pje@acm.org
-   http://www.alumni.caltech.edu/~pje/
-*/
+/*
+ * A Linked-List Memory Sort
+ * by Philip J. Erdelsky
+ * pje@acm.org
+ * http://alumnus.caltech.edu/~pje/
+ */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
 

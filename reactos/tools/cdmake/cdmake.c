@@ -2,7 +2,19 @@
  * CD-ROM Maker
  * by Philip J. Erdelsky
  * pje@acm.org
- * http://www.alumni.caltech.edu/~pje/
+ * http://alumnus.caltech.edu/~pje/
+ */
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS CD-ROM Maker
+ * FILE:            tools/cdmake/cdmake.c
+ * PURPOSE:         CD-ROM Premastering Utility
+ * PROGRAMMERS:     Eric Kohl
+ *                  Casper S. Hornstrup
+ *                  Filip Navara
+ *                  Magnus Olsen
+ *
+ * HISTORY:
  *
  * ElTorito-Support
  * by Eric Kohl
@@ -18,10 +30,8 @@
  * - No Joliet file name validations
  * - Very bad ISO file name generation
  *
- *
- * convert long filename to iso9660 file name by Magnus Olsen
+ * Convert long filename to ISO9660 file name by Magnus Olsen
  * magnus@greatlord.com
- *
  */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
@@ -56,7 +66,7 @@
 #include <ctype.h>
 #include <setjmp.h>
 #include <time.h>
-#include "dirsep.h"
+#include "config.h"
 #include "dirhash.h"
 
 typedef unsigned char BYTE;
@@ -349,6 +359,20 @@ static void write_string(char *s)
         write_byte(*s++);
 }
 
+static void write_bytecounted_string(unsigned bytecount, char *s)
+{
+    while (*s != 0 && bytecount != 0)
+    {
+        write_byte(*s++);
+        bytecount--;
+    }
+    while (bytecount != 0)
+    {
+        write_byte(' ');
+        bytecount--;
+    }
+}
+
 /*-----------------------------------------------------------------------------
 This function writes a ansi string as a big endian unicode string to the CD-ROM
 image. The terminating \0 is not written.
@@ -358,9 +382,27 @@ static void write_string_as_big_endian_unicode(char *s)
 {
     while (*s != 0)
     {
-        write_byte(0);
-        write_byte(*s++);
+        write_big_endian_word(*s++);
     }
+}
+
+static void write_bytecounted_string_as_big_endian_unicode(unsigned bytecount, char *s)
+{
+    unsigned wordcount = bytecount / 2;
+
+    while (*s != 0 && wordcount != 0)
+    {
+        write_big_endian_word(*s++);
+        wordcount--;
+    }
+    while (wordcount != 0)
+    {
+        write_big_endian_word(' ');
+        wordcount--;
+    }
+
+    if (bytecount % 2 != 0)
+        write_byte(' ');
 }
 
 /*-----------------------------------------------------------------------------
@@ -377,7 +419,7 @@ static void write_block(unsigned count, BYTE value)
 }
 
 /*-----------------------------------------------------------------------------
-This function writes a block of identical bige endian words to the CD-ROM image.
+This function writes a block of identical big endian words to the CD-ROM image.
 -----------------------------------------------------------------------------*/
 
 static void write_word_block(unsigned count, WORD value)
@@ -1264,8 +1306,6 @@ static void pass(void)
 {
     PDIR_RECORD d;
     PDIR_RECORD q;
-    unsigned int i;
-    char *t;
     unsigned int index;
     unsigned int name_length;
     DWORD size;
@@ -1285,11 +1325,8 @@ static void pass(void)
 
     write_string("\1CD001\1");
     write_byte(0);
-    write_block(32, ' ');  // system identifier
-
-    t = volume_label;
-    for (i = 0; i < 32; i++)
-        write_byte( (BYTE)( (*t != 0) ? toupper(*t++) : ' ' ) );
+    write_bytecounted_string(32, "");           // system identifier
+    write_bytecounted_string(32, volume_label); // volume label
 
     write_block(8, 0);
     write_both_endian_dword(total_sectors);
@@ -1303,13 +1340,16 @@ static void pass(void)
     write_big_endian_dword(big_endian_path_table_sector);
     write_big_endian_dword((DWORD) 0);  // second big endian path table
     write_directory_record(&root, DOT_RECORD, FALSE);
-    write_block(128, ' ');      // volume set identifier
-    write_block(128, ' ');      // publisher identifier
-    write_block(128, ' ');      // data preparer identifier
-    write_block(128, ' ');      // application identifier
-    write_block(37, ' ');       // copyright file identifier
-    write_block(37, ' ');       // abstract file identifier
-    write_block(37, ' ');       // bibliographic file identifier
+
+    write_bytecounted_string(128, volume_label); // volume set identifier
+    write_bytecounted_string(128, PUBLISHER_ID); // publisher identifier
+    write_bytecounted_string(128, DATA_PREP_ID); // data preparer identifier
+    write_bytecounted_string(128, APP_ID);       // application identifier
+
+    write_bytecounted_string(37, ""); // copyright file identifier
+    write_bytecounted_string(37, ""); // abstract file identifier
+    write_bytecounted_string(37, ""); // bibliographic file identifier
+
     write_string(timestring);  // volume creation
     write_byte(0);
     write_string(timestring);  // most recent modification
@@ -1342,12 +1382,8 @@ static void pass(void)
     {
         write_string("\2CD001\1");
         write_byte(0);
-
-        write_word_block(16, L' '); // system identifier
-
-        t = volume_label;
-        for (i = 0; i < 16; i++)
-            write_big_endian_word( (BYTE)( (*t != 0) ? *t++ : ' ' ) );
+        write_bytecounted_string_as_big_endian_unicode(32, "");           // system identifier
+        write_bytecounted_string_as_big_endian_unicode(32, volume_label); // volume label
 
         write_block(8, 0);
         write_both_endian_dword(total_sectors);
@@ -1362,13 +1398,16 @@ static void pass(void)
         write_big_endian_dword(joliet_big_endian_path_table_sector);
         write_big_endian_dword((DWORD) 0);  // second big endian path table
         write_directory_record(&root, DOT_RECORD, TRUE);
-        write_word_block(64, ' ');      // volume set identifier
-        write_word_block(64, ' ');      // publisher identifier
-        write_word_block(64, ' ');      // data preparer identifier
-        write_word_block(64, ' ');      // application identifier
-        write_block(37, ' ');       // copyright file identifier
-        write_block(37, ' ');       // abstract file identifier
-        write_block(37, ' ');       // bibliographic file identifier
+
+        write_bytecounted_string_as_big_endian_unicode(128, volume_label); // volume set identifier
+        write_bytecounted_string_as_big_endian_unicode(128, PUBLISHER_ID); // publisher identifier
+        write_bytecounted_string_as_big_endian_unicode(128, DATA_PREP_ID); // data preparer identifier
+        write_bytecounted_string_as_big_endian_unicode(128, APP_ID);       // application identifier
+
+        write_bytecounted_string_as_big_endian_unicode(37, ""); // copyright file identifier
+        write_bytecounted_string_as_big_endian_unicode(37, ""); // abstract file identifier
+        write_bytecounted_string_as_big_endian_unicode(37, ""); // bibliographic file identifier
+
         write_string(timestring);  // volume creation
         write_byte(0);
         write_string(timestring);  // most recent modification
@@ -1651,22 +1690,27 @@ static void pass(void)
 }
 
 static char HELP[] =
-    "CDMAKE  [-q] [-v] [-p] [-s N] [-m] [-b bootimage] [-j]  source  volume  image\n"
     "\n"
-    "  source        specifications of base directory containing all files to\n"
+    "CDMAKE CD-ROM Premastering Utility\n"
+    "Copyright (C) Philip J. Erdelsky\n"
+    "Copyright (C) 2003-2015 ReactOS Team\n"
+    "\n\n"
+    "CDMAKE [-q] [-v] [-p] [-s N] [-m] [-b bootimage] [-j] source volume image\n"
+    "\n"
+    "  source        Specifications of base directory containing all files to\n"
     "                be written to CD-ROM image\n"
-    "  volume        volume label\n"
-    "  image         image file or device\n"
-    "  -q            quiet mode - display nothing but error messages\n"
-    "  -v            verbose mode - display file information as files are\n"
+    "  volume        Volume label\n"
+    "  image         Image file or device\n"
+    "  -q            Quiet mode - display nothing but error messages\n"
+    "  -v            Verbose mode - display file information as files are\n"
     "                scanned and written - overrides -p option\n"
-    "  -p            show progress while writing\n"
-    "  -s N          abort operation before beginning write if image will be\n"
+    "  -p            Show progress while writing\n"
+    "  -s N          Abort operation before beginning write if image will be\n"
     "                larger than N megabytes (i.e. 1024*1024*N bytes)\n"
-    "  -m            accept punctuation marks other than underscores in\n"
+    "  -m            Accept punctuation marks other than underscores in\n"
     "                names and extensions\n"
-    "  -b bootimage  create bootable ElTorito CD-ROM using 'no emulation' mode\n"
-    "  -j            generate Joliet filename records\n";
+    "  -b bootimage  Create bootable ElTorito CD-ROM using 'no emulation' mode\n"
+    "  -j            Generate Joliet filename records\n";
 
 /*-----------------------------------------------------------------------------
 Program execution starts here.
