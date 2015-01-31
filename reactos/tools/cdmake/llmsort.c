@@ -5,8 +5,7 @@
  * http://alumnus.caltech.edu/~pje/
  */
 
-/* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
-
+/* According to his website, this file was released into the public domain by Philip J. Erdelsky */
 
 #include <stdio.h>
 

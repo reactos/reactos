@@ -34,7 +34,7 @@
  * magnus@greatlord.com
  */
 
-/* According to his website, this file was released into the public domain by Phillip J. Erdelsky */
+/* According to his website, this file was released into the public domain by Philip J. Erdelsky */
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -1838,10 +1838,14 @@ int main(int argc, char **argv)
     {
         char *trimmedline, *targetname, *srcname, *eq;
         char lineread[1024];
-        FILE *f = fopen(source+1, "r");
+        FILE *f;
+
+        source++;
+
+        f = fopen(source, "r");
         if (!f)
         {
-            error_exit("Can't open cd description %s\n", source+1);
+            error_exit("Can't open cd description %s\n", source);
         }
         while (fgets(lineread, sizeof(lineread), f))
         {
