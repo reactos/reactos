@@ -1838,14 +1838,10 @@ int main(int argc, char **argv)
     {
         char *trimmedline, *targetname, *srcname, *eq;
         char lineread[1024];
-        FILE *f;
-
-        source++;
-
-        f = fopen(source, "r");
+        FILE *f = fopen(source+1, "r");
         if (!f)
         {
-            error_exit("Can't open cd description %s\n", source);
+            error_exit("Can't open cd description %s\n", source+1);
         }
         while (fgets(lineread, sizeof(lineread), f))
         {
