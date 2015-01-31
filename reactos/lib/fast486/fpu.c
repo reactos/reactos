@@ -920,6 +920,49 @@ Fast486FpuArithmeticOperation(PFAST486_STATE State,
 }
 
 static inline BOOLEAN FASTCALL
+Fast486FpuLoadEnvironment(PFAST486_STATE State,
+                          INT Segment,
+                          ULONG Address,
+                          BOOLEAN Size)
+{
+    UCHAR Buffer[28];
+
+    if (!Fast486ReadMemory(State, Segment, Address, FALSE, Buffer, (Size + 1) * 14))
+    {
+        /* Exception occurred */
+        return FALSE;
+    }
+
+    /* Check if this is a 32-bit save or a 16-bit save */
+    if (Size)
+    {
+        PULONG Data = (PULONG)Buffer;
+
+        State->FpuControl.Value = (USHORT)Data[0];
+        State->FpuStatus.Value = (USHORT)Data[1];
+        State->FpuTag = (USHORT)Data[2];
+        State->FpuLastInstPtr.Long = Data[3];
+        State->FpuLastCodeSel = (USHORT)Data[4];
+        State->FpuLastOpPtr.Long = Data[5];
+        State->FpuLastDataSel = (USHORT)Data[6];
+    }
+    else
+    {
+        PUSHORT Data = (PUSHORT)Buffer;
+
+        State->FpuControl.Value = Data[0];
+        State->FpuStatus.Value = Data[1];
+        State->FpuTag = Data[2];
+        State->FpuLastInstPtr.LowWord = Data[3];
+        State->FpuLastCodeSel = Data[4];
+        State->FpuLastOpPtr.LowWord = Data[5];
+        State->FpuLastDataSel = Data[6];
+    }
+
+    return TRUE;
+}
+
+static inline BOOLEAN FASTCALL
 Fast486FpuSaveEnvironment(PFAST486_STATE State,
                           INT Segment,
                           ULONG Address,
@@ -1136,9 +1179,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FLDENV */
             case 4:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
-
+                Fast486FpuLoadEnvironment(State,
+                                          (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                          ? FAST486_REG_DS : State->SegmentOverride,
+                                          ModRegRm.MemoryAddress,
+                                          OperandSize);
                 break;
             }
 
@@ -1698,8 +1743,47 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             /* FRSTOR */
             case 4:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                INT i;
+                UCHAR AllRegs[80];
+
+                /* Save the environment */
+                if (!Fast486FpuLoadEnvironment(State,
+                                               (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                               ? FAST486_REG_DS : State->SegmentOverride,
+                                               ModRegRm.MemoryAddress,
+                                               OperandSize))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                /* Load the registers */
+                if (!Fast486ReadMemory(State,
+                                       (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                       ? FAST486_REG_DS : State->SegmentOverride,
+                                       ModRegRm.MemoryAddress + (OperandSize + 1) * 14,
+                                       FALSE,
+                                       AllRegs,
+                                       sizeof(AllRegs)))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                for (i = 0; i < FAST486_NUM_FPU_REGS; i++)
+                {
+                    State->FpuRegisters[i].Mantissa = *((PULONGLONG)&AllRegs[i * 10]);
+                    State->FpuRegisters[i].Exponent = *((PUSHORT)&AllRegs[(i * 10) + sizeof(ULONGLONG)]) & 0x7FFF;
+
+                    if (*((PUSHORT)&AllRegs[(i * 10) + sizeof(ULONGLONG)]) & 0x8000)
+                    {
+                        State->FpuRegisters[i].Sign = TRUE;
+                    }
+                    else
+                    {
+                        State->FpuRegisters[i].Sign = FALSE;
+                    }
+                }
 
                 break;
             }
@@ -1709,8 +1793,6 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             {
                 INT i;
                 UCHAR AllRegs[80];
-
-                FPU_SAVE_LAST_INST();
 
                 /* Save the environment */
                 if (!Fast486FpuSaveEnvironment(State,
@@ -1748,9 +1830,6 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             /* FSTSW */
             case 7:
             {
-                FPU_SAVE_LAST_INST();
-                FPU_SAVE_LAST_OPERAND();
-
                 Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, State->FpuStatus.Value);
                 break;
             }
