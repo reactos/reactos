@@ -919,6 +919,43 @@ Fast486FpuArithmeticOperation(PFAST486_STATE State,
     }
 }
 
+static inline BOOLEAN FASTCALL
+Fast486FpuSaveEnvironment(PFAST486_STATE State,
+                          INT Segment,
+                          ULONG Address,
+                          BOOLEAN Size)
+{
+    UCHAR Buffer[28];
+
+    /* Check if this is a 32-bit save or a 16-bit save */
+    if (Size)
+    {
+        PULONG Data = (PULONG)Buffer;
+
+        Data[0] = (ULONG)State->FpuControl.Value;
+        Data[1] = (ULONG)State->FpuStatus.Value;
+        Data[2] = (ULONG)State->FpuTag;
+        Data[3] = State->FpuLastInstPtr.Long;
+        Data[4] = (ULONG)State->FpuLastCodeSel;
+        Data[5] = State->FpuLastOpPtr.Long;
+        Data[6] = (ULONG)State->FpuLastDataSel;
+    }
+    else
+    {
+        PUSHORT Data = (PUSHORT)Buffer;
+
+        Data[0] = State->FpuControl.Value;
+        Data[1] = State->FpuStatus.Value;
+        Data[2] = State->FpuTag;
+        Data[3] = State->FpuLastInstPtr.LowWord;
+        Data[4] = State->FpuLastCodeSel;
+        Data[5] = State->FpuLastOpPtr.LowWord;
+        Data[6] = State->FpuLastDataSel;
+    }
+
+    return Fast486WriteMemory(State, Segment, Address, Buffer, (Size + 1) * 14);
+}
+
 #endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -930,6 +967,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
     FAST486_FPU_DATA_REG MemoryData;
 
+    TOGGLE_ADSIZE(AddressSize);
+
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -940,6 +979,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
     FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
+
+    FPU_SAVE_LAST_INST();
 
     /* The destination operand is ST0 */
     DestOperand = &FPU_ST(0);
@@ -976,6 +1017,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 
         Fast486FpuFromSingleReal(State, Value, &MemoryData);
         SourceOperand = &MemoryData;
+
+        FPU_SAVE_LAST_OPERAND();
     }
     else
     {
@@ -1008,106 +1051,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD8)
 #endif
 }
 
-FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
-{
-    FAST486_MOD_REG_RM ModRegRm;
-    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
-    PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
-    FAST486_FPU_DATA_REG MemoryData;
-
-    /* Get the operands */
-    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
-    {
-        /* Exception occurred */
-        return;
-    }
-
-    FPU_CHECK();
-
-#ifndef FAST486_NO_FPU
-
-    if (ModRegRm.Memory)
-    {
-        ULONGLONG Value;
-
-        /* The destination operand is ST0 */
-        DestOperand = &FPU_ST(0);
-
-        if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
-        {
-            /* Raise the invalid operation exception */
-            State->FpuStatus.Ie = TRUE;
-
-            if (State->FpuControl.Im)
-            {
-                /* Return the indefinite NaN */
-                DestOperand->Sign = TRUE;
-                DestOperand->Exponent = FPU_MAX_EXPONENT + 1;
-                DestOperand->Mantissa = FPU_INDEFINITE_MANTISSA;
-
-                FPU_SET_TAG(0, FPU_TAG_SPECIAL);
-            }
-            else Fast486FpuException(State);
-
-            return;
-        }
-
-        /* Load the source operand from memory */
-        if (!Fast486ReadMemory(State,
-                               (State->PrefixFlags & FAST486_PREFIX_SEG)
-                               ? State->SegmentOverride : FAST486_REG_DS,
-                               ModRegRm.MemoryAddress,
-                               FALSE,
-                               &Value,
-                               sizeof(ULONGLONG)))
-        {
-            /* Exception occurred */
-            return;
-        }
-
-        Fast486FpuFromDoubleReal(State, Value, &MemoryData);
-        SourceOperand = &MemoryData;
-    }
-    else
-    {
-        /* The source operand is ST0 */
-        SourceOperand = &FPU_ST(0);
-
-        /* Load the destination operand from an FPU register */
-        DestOperand = &FPU_ST(ModRegRm.SecondRegister);
-
-        if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
-            || (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY))
-        {
-            /* Raise the invalid operation exception */
-            State->FpuStatus.Ie = TRUE;
-
-            if (State->FpuControl.Im)
-            {
-                /* Return the indefinite NaN */
-                DestOperand->Sign = TRUE;
-                DestOperand->Exponent = FPU_MAX_EXPONENT + 1;
-                DestOperand->Mantissa = FPU_INDEFINITE_MANTISSA;
-
-                FPU_SET_TAG(ModRegRm.SecondRegister, FPU_TAG_SPECIAL);
-            }
-            else Fast486FpuException(State);
-
-            return;
-        }
-    }
-
-    /* Perform the requested operation */
-    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);
-
-#endif
-}
-
-
 FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
 {
     FAST486_MOD_REG_RM ModRegRm;
-    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1130,6 +1081,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
                 ULONG Value;
                 FAST486_FPU_DATA_REG MemoryData;
 
+                FPU_SAVE_LAST_INST();
+                FPU_SAVE_LAST_OPERAND();
+
                 if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Value))
                 {
                     /* Exception occurred */
@@ -1148,6 +1102,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             case 3:
             {
                 ULONG Value = FPU_REAL4_INDEFINITE;
+
+                FPU_SAVE_LAST_INST();
+                FPU_SAVE_LAST_OPERAND();
 
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                 {
@@ -1195,9 +1152,11 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FSTENV */
             case 6:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
-
+                Fast486FpuSaveEnvironment(State,
+                                          (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                          ? FAST486_REG_DS : State->SegmentOverride,
+                                          ModRegRm.MemoryAddress,
+                                          OperandSize);
                 break;
             }
 
@@ -1233,6 +1192,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
     LONG Value;
     FAST486_FPU_DATA_REG MemoryData;
 
+    TOGGLE_ADSIZE(AddressSize);
+
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1243,6 +1204,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
     FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
+
+    FPU_SAVE_LAST_INST();
 
     if (!ModRegRm.Memory)
     {
@@ -1271,6 +1234,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
 
         return;
     }
+
+    FPU_SAVE_LAST_OPERAND();
 
     /* Load the source operand from memory */
     if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, (PULONG)&Value))
@@ -1315,6 +1280,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
+    TOGGLE_ADSIZE(AddressSize);
+
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1328,6 +1295,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 
     if (ModRegRm.Memory)
     {
+        FPU_SAVE_LAST_INST();
+        FPU_SAVE_LAST_OPERAND();
+
         switch (ModRegRm.Register)
         {
             /* FILD */
@@ -1531,10 +1501,115 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
 #endif
 }
 
-FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
+FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDC)
 {
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
+    FAST486_FPU_DATA_REG MemoryData;
+
+    TOGGLE_ADSIZE(AddressSize);
+
+    /* Get the operands */
+    if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
+    {
+        /* Exception occurred */
+        return;
+    }
+
+    FPU_CHECK();
+
+#ifndef FAST486_NO_FPU
+
+    FPU_SAVE_LAST_INST();
+
+    if (ModRegRm.Memory)
+    {
+        ULONGLONG Value;
+
+        /* The destination operand is ST0 */
+        DestOperand = &FPU_ST(0);
+
+        if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+        {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+
+            if (State->FpuControl.Im)
+            {
+                /* Return the indefinite NaN */
+                DestOperand->Sign = TRUE;
+                DestOperand->Exponent = FPU_MAX_EXPONENT + 1;
+                DestOperand->Mantissa = FPU_INDEFINITE_MANTISSA;
+
+                FPU_SET_TAG(0, FPU_TAG_SPECIAL);
+            }
+            else Fast486FpuException(State);
+
+            return;
+        }
+
+        /* Load the source operand from memory */
+        if (!Fast486ReadMemory(State,
+                               (State->PrefixFlags & FAST486_PREFIX_SEG)
+                               ? State->SegmentOverride : FAST486_REG_DS,
+                               ModRegRm.MemoryAddress,
+                               FALSE,
+                               &Value,
+                               sizeof(ULONGLONG)))
+        {
+            /* Exception occurred */
+            return;
+        }
+
+        Fast486FpuFromDoubleReal(State, Value, &MemoryData);
+        SourceOperand = &MemoryData;
+
+        FPU_SAVE_LAST_OPERAND();
+    }
+    else
+    {
+        /* The source operand is ST0 */
+        SourceOperand = &FPU_ST(0);
+
+        /* Load the destination operand from an FPU register */
+        DestOperand = &FPU_ST(ModRegRm.SecondRegister);
+
+        if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+            || (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY))
+        {
+            /* Raise the invalid operation exception */
+            State->FpuStatus.Ie = TRUE;
+
+            if (State->FpuControl.Im)
+            {
+                /* Return the indefinite NaN */
+                DestOperand->Sign = TRUE;
+                DestOperand->Exponent = FPU_MAX_EXPONENT + 1;
+                DestOperand->Mantissa = FPU_INDEFINITE_MANTISSA;
+
+                FPU_SET_TAG(ModRegRm.SecondRegister, FPU_TAG_SPECIAL);
+            }
+            else Fast486FpuException(State);
+
+            return;
+        }
+    }
+
+    /* Perform the requested operation */
+    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);
+
+#endif
+}
+
+FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
+{
+    FAST486_MOD_REG_RM ModRegRm;
+    BOOLEAN OperandSize, AddressSize;
+
+    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    TOGGLE_OPSIZE(OperandSize);
+    TOGGLE_ADSIZE(AddressSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -1556,6 +1631,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             {
                 ULONGLONG Value;
                 FAST486_FPU_DATA_REG MemoryData;
+
+                FPU_SAVE_LAST_INST();
+                FPU_SAVE_LAST_OPERAND();
 
                 if (!Fast486ReadMemory(State,
                                        (State->PrefixFlags & FAST486_PREFIX_SEG)
@@ -1581,6 +1659,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             case 3:
             {
                 ULONGLONG Value = FPU_REAL8_INDEFINITE;
+
+                FPU_SAVE_LAST_INST();
+                FPU_SAVE_LAST_OPERAND();
 
                 if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
                 {
@@ -1626,8 +1707,40 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             /* FSAVE */
             case 6:
             {
-                // TODO: NOT IMPLEMENTED 
-                UNIMPLEMENTED;
+                INT i;
+                UCHAR AllRegs[80];
+
+                FPU_SAVE_LAST_INST();
+
+                /* Save the environment */
+                if (!Fast486FpuSaveEnvironment(State,
+                                               (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                               ? FAST486_REG_DS : State->SegmentOverride,
+                                               ModRegRm.MemoryAddress,
+                                               OperandSize))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                /* Save the registers */
+                for (i = 0; i < FAST486_NUM_FPU_REGS; i++)
+                {
+                    *((PULONGLONG)&AllRegs[i * 10]) = State->FpuRegisters[i].Mantissa;
+                    *((PUSHORT)&AllRegs[(i * 10) + sizeof(ULONGLONG)]) = State->FpuRegisters[i].Exponent;
+
+                    if (State->FpuRegisters[i].Sign)
+                    {
+                        *((PUSHORT)&AllRegs[(i * 10) + sizeof(ULONGLONG)]) |= 0x8000;
+                    }
+                }
+
+                Fast486WriteMemory(State,
+                                   (State->PrefixFlags & FAST486_PREFIX_SEG)
+                                   ? FAST486_REG_DS : State->SegmentOverride,
+                                   ModRegRm.MemoryAddress + (OperandSize + 1) * 14,
+                                   AllRegs,
+                                   sizeof(AllRegs));
 
                 break;
             }
@@ -1635,6 +1748,9 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
             /* FSTSW */
             case 7:
             {
+                FPU_SAVE_LAST_INST();
+                FPU_SAVE_LAST_OPERAND();
+
                 Fast486WriteModrmWordOperands(State, &ModRegRm, FALSE, State->FpuStatus.Value);
                 break;
             }
@@ -1648,6 +1764,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDD)
     }
     else
     {
+        FPU_SAVE_LAST_INST();
+
         switch (ModRegRm.Register)
         {
             /* FFREE */
@@ -1731,6 +1849,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     PFAST486_FPU_DATA_REG SourceOperand, DestOperand;
 
+    TOGGLE_ADSIZE(AddressSize);
+
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1741,6 +1861,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
     FPU_CHECK();
 
 #ifndef FAST486_NO_FPU
+
+    FPU_SAVE_LAST_INST();
 
     if (ModRegRm.Memory)
     {
@@ -1778,6 +1900,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
 
         Fast486FpuFromInteger(State, (LONGLONG)Value, &MemoryData);
         SourceOperand = &MemoryData;
+
+        FPU_SAVE_LAST_OPERAND();
     }
     else
     {
@@ -1818,6 +1942,8 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
     FAST486_MOD_REG_RM ModRegRm;
     BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
+    TOGGLE_ADSIZE(AddressSize);
+
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
     {
@@ -1829,8 +1955,12 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
 
 #ifndef FAST486_NO_FPU
 
+    FPU_SAVE_LAST_INST();
+
     if (ModRegRm.Memory)
     {
+        FPU_SAVE_LAST_OPERAND();
+
         switch (ModRegRm.Register)
         {
             /* FILD */

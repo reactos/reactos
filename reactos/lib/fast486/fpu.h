@@ -42,6 +42,15 @@
                                 State->FpuTag |= ((t) & 3) << (FPU_INDEX(i) * 2); \
                             }
 #define FPU_UPDATE_TAG(i)   FPU_SET_TAG((i), Fast486FpuGetValueTag(&FPU_ST(i)))
+#define FPU_SAVE_LAST_INST()    { \
+                                    State->FpuLastInstPtr = State->SavedInstPtr; \
+                                    State->FpuLastCodeSel = State->SegmentRegs[FAST486_REG_CS].Selector; \
+                                }
+#define FPU_SAVE_LAST_OPERAND() { \
+                                    State->FpuLastOpPtr.Long = ModRegRm.MemoryAddress; \
+                                    State->FpuLastDataSel = (State->PrefixFlags & FAST486_PREFIX_SEG) \
+                                                            ? State->SegmentOverride : FAST486_REG_DS; \
+                                }
 
 #define FPU_REAL4_BIAS          0x7F
 #define FPU_REAL8_BIAS          0x3FF

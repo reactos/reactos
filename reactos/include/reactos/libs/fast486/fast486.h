@@ -508,6 +508,10 @@ struct _FAST486_STATE
     FAST486_FPU_STATUS_REG FpuStatus;
     FAST486_FPU_CONTROL_REG FpuControl;
     USHORT FpuTag;
+    FAST486_REG FpuLastInstPtr;
+    USHORT FpuLastCodeSel;
+    FAST486_REG FpuLastOpPtr;
+    USHORT FpuLastDataSel;
 #endif
 };
 
