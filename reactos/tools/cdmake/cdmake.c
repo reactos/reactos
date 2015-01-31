@@ -239,7 +239,7 @@ This function edits and displays an error message and then jumps back to the
 error exit point in main().
 -----------------------------------------------------------------------------*/
 
-void error_exit( const char* fmt, ... )
+void error_exit(const char* fmt, ...)
 {
     va_list arg;
 
@@ -459,11 +459,11 @@ write_directory_record(PDIR_RECORD d,
                 identifier_size = 1;
                 break;
             case SUBDIRECTORY_RECORD:
-                /*printf( "Subdir: %s\n", d->name_on_cd );*/
+                /*printf("Subdir: %s\n", d->name_on_cd);*/
                 identifier_size = strlen(d->name_on_cd);
                 break;
             case FILE_RECORD:
-                /*printf( "File: %s.%s -> %s.%s\n", d->name, d->extension, d->name_on_cd, d->extension_on_cd );*/
+                /*printf("File: %s.%s -> %s.%s\n", d->name, d->extension, d->name_on_cd, d->extension_on_cd);*/
                 identifier_size = strlen(d->name_on_cd) + 2;
                 if (d->extension_on_cd[0] != 0)
                     identifier_size += 1 + strlen(d->extension_on_cd);
@@ -578,21 +578,21 @@ static int check_for_punctuation(int c, const char *name)
 This function checks to see if there's a cdname conflict.
 -----------------------------------------------------------------------------*/
 
-int cdname_exists( PDIR_RECORD d )
+int cdname_exists(PDIR_RECORD d)
 {
     PDIR_RECORD p = d->parent->first_record;
-    while ( p )
+    while (p)
     {
         if ( p != d
-            && !strcasecmp( p->name_on_cd, d->name_on_cd )
-            && !strcasecmp( p->extension_on_cd, d->extension_on_cd ) )
+            && !strcasecmp(p->name_on_cd, d->name_on_cd)
+            && !strcasecmp(p->extension_on_cd, d->extension_on_cd) )
             return 1;
         p = p->next_in_directory;
     }
     return 0;
 }
 
-void parse_filename_into_dirrecord( const char* filename, PDIR_RECORD d, BOOL dir )
+void parse_filename_into_dirrecord(const char* filename, PDIR_RECORD d, BOOL dir)
 {
     const char *s = filename;
     char *t = d->name_on_cd;
@@ -608,35 +608,35 @@ void parse_filename_into_dirrecord( const char* filename, PDIR_RECORD d, BOOL di
             break;
         }
 
-        if ( (size_t)(t-d->name_on_cd) < sizeof(d->name_on_cd)-1 )
+        if ((size_t)(t-d->name_on_cd) < sizeof(d->name_on_cd)-1)
             *t++ = check_for_punctuation(*s, filename);
         else if (!joliet)
-        error_exit("'%s' is not ISO-9660, aborting...", filename );
-        if ( (size_t)(n-d->name) < sizeof(d->name)-1 )
+        error_exit("'%s' is not ISO-9660, aborting...", filename);
+        if ((size_t)(n-d->name) < sizeof(d->name)-1)
             *n++ = *s;
         else if (!joliet)
-            error_exit( "'%s' is not ISO-9660, aborting...", filename );
+            error_exit("'%s' is not ISO-9660, aborting...", filename);
         s++;
     }
     if (strlen(s) > MAX_EXTENSION_LENGTH)
     {
-        error_exit( "'%s' has too long extension for cdmake, aborting...", filename );
+        error_exit("'%s' has too long extension, aborting...", filename);
     }
     *t = 0;
     strcpy(d->extension, s);
     t = d->extension_on_cd;
-    while ( *s != 0 )
+    while (*s != 0)
     {
-        if ( (size_t)(t-d->extension_on_cd) < sizeof(d->extension_on_cd)-1 )
+        if ((size_t)(t-d->extension_on_cd) < sizeof(d->extension_on_cd)-1)
             *t++ = check_for_punctuation(*s, filename);
         else if (!joliet)
-            error_exit( "'%s' is not ISO-9660, aborting...", filename );
+            error_exit("'%s' is not ISO-9660, aborting...", filename);
         s++;
     }
     *t = 0;
     *n = 0;
 
-    if ( dir )
+    if (dir)
     {
         if (d->extension[0] != 0)
         {
@@ -650,28 +650,28 @@ void parse_filename_into_dirrecord( const char* filename, PDIR_RECORD d, BOOL di
     }
 
     filename_counter = 1;
-    while ( cdname_exists( d ) )
+    while (cdname_exists(d))
     {
         // the file name must be least 8 char long
         if (strlen(d->name_on_cd)<8)
-            error_exit( "'%s' is a duplicate file name, aborting...", filename );
+            error_exit("'%s' is a duplicate file name, aborting...", filename);
 
         if ((d->name_on_cd[8] == '.') && (strlen(d->name_on_cd) < 13))
-            error_exit( "'%s' is a duplicate file name, aborting...", filename );
+            error_exit("'%s' is a duplicate file name, aborting...", filename);
 
         // max 255 times for equal short filename
-        if (filename_counter>255) error_exit( "'%s' is a duplicate file name, aborting...", filename );
+        if (filename_counter>255) error_exit("'%s' is a duplicate file name, aborting...", filename);
         d->name_on_cd[8] = '~';
         memset(&d->name_on_cd[9],0,5);
         sprintf(&d->name_on_cd[9],"%d",filename_counter);
         filename_counter++;
     }
 
-    if ( joliet )
+    if (joliet)
     {
         joliet_length = strlen(filename);
         if (joliet_length > 64)
-            error_exit( "'%s' is not Joliet, aborting...", filename );
+            error_exit("'%s' is not Joliet, aborting...", filename);
         d->joliet_name = malloc(joliet_length + 1);
         if (d->joliet_name == NULL)
             error_exit("Insufficient memory");
@@ -703,7 +703,7 @@ new_directory_record(struct _finddata_t *f,
     /* I need the parent set before calling parse_filename_into_dirrecord(),
     because that functions checks for duplicate file names*/
     d->parent = parent;
-    parse_filename_into_dirrecord( f->name, d, f->attrib & _A_SUBDIR );
+    parse_filename_into_dirrecord(f->name, d, f->attrib & _A_SUBDIR);
 
     convert_date_and_time(&d->date_and_time, &f->time_write);
     d->flags |= f->attrib & _A_HIDDEN ? HIDDEN_FLAG : 0;
@@ -738,9 +738,9 @@ new_directory_record(struct dirent *entry,
     because that functions checks for duplicate file names*/
     d->parent = parent;
 #ifdef HAVE_D_TYPE
-    parse_filename_into_dirrecord( entry->d_name, d, entry->d_type == DT_DIR );
+    parse_filename_into_dirrecord(entry->d_name, d, entry->d_type == DT_DIR);
 #else
-    parse_filename_into_dirrecord( entry->d_name, d, S_ISDIR(stbuf->st_mode) );
+    parse_filename_into_dirrecord(entry->d_name, d, S_ISDIR(stbuf->st_mode));
 #endif
 
     convert_date_and_time(&d->date_and_time, &stbuf->st_mtime);
