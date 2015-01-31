@@ -942,23 +942,127 @@ BOOL
 FASTCALL
 IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 {
-   PPROPERTY pprop;
-   DWORD FlashState;
-   BOOL Ret = FALSE;
+   PFLASHDATA pfData;
+   BOOL Activate = FALSE, Ret = FALSE;
 
-   pprop = IntGetProp(pWnd, AtomFlashWndState);
-   if (!pprop)
+   pfData = UserGetProp(pWnd, AtomFlashWndState);
+   if (!pfData)
    {
-      FlashState = pfwi->dwFlags;
-      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
-      return TRUE;
+      pfData = ExAllocatePoolWithTag(NonPagedPool, sizeof(FLASHDATA), USERTAG_WINDOW);
+
+      pfData->FlashState = 0;
+      pfData->uCount = pfwi->uCount;
+
+      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) pfData);
    }
 
-   FlashState = (DWORD)pprop->Data;
+   if (pfData->FlashState == FLASHW_FINISHED)
+   {
+      // Cycle has finished, kill timer and set this to Stop.
+      pfData->FlashState |= FLASHW_KILLSYSTIMER;
+      pfwi->dwFlags = FLASHW_STOP;
+   }
+   else
+   {
+      if (pfData->FlashState)
+      {
+         if (pfwi->dwFlags == FLASHW_SYSTIMER)
+         {
+             // Called from system timer, restore flags.
+             pfwi->dwFlags = pfData->FlashState;
+         }
+      }
+      else
+      {  // First time in cycle, setup flash state.
+         if ( pWnd->state & WNDS_ACTIVEFRAME ||
+             (pfwi->dwFlags & FLASHW_CAPTION && pWnd->style & (WS_BORDER|WS_DLGFRAME)))
+         {
+             pfData->FlashState = FLASHW_STARTED|FLASHW_ACTIVE;
+         }
+      }
+
+      // Set previous window state.
+      Ret = !!(pfData->FlashState & FLASHW_ACTIVE);
+
+      if ( pfwi->dwFlags & FLASHW_TIMERNOFG && 
+           gpqForeground == pWnd->head.pti->MessageQueue )
+      {
+          // Flashing until foreground, set this to Stop.
+          pfwi->dwFlags = FLASHW_STOP;
+      }
+   }
+
+   // Toggle activate flag.
    if ( pfwi->dwFlags == FLASHW_STOP )
    {
+      if (gpqForeground && gpqForeground->spwndActive == pWnd)
+         Activate = TRUE;
+      else
+         Activate = FALSE;
+   }
+   else
+   {
+      Activate = (pfData->FlashState & FLASHW_ACTIVE) == 0;
+   }
+
+   if ( pfwi->dwFlags == FLASHW_STOP || pfwi->dwFlags & FLASHW_CAPTION )
+   {
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCACTIVATE, Activate, 0);
+   }
+
+   // FIXME: Check for a Stop Sign here.
+   if ( pfwi->dwFlags & FLASHW_TRAY )
+   {
+      // Need some shell work here too.
+      TRACE("FIXME: Flash window no Tray support!\n");
+   }
+
+   if ( pfwi->dwFlags == FLASHW_STOP )
+   {
+      if (pfData->FlashState & FLASHW_KILLSYSTIMER)
+      {
+         IntKillTimer(pWnd, ID_EVENT_SYSTIMER_FLASHWIN, TRUE);
+      }
+
       IntRemoveProp(pWnd, AtomFlashWndState);
-      Ret = TRUE;
+
+      ExFreePoolWithTag(pfData, USERTAG_WINDOW);
+   }
+   else
+   {  // Have a count and started, set timer.
+      if ( pfData->uCount )
+      {
+         pfData->FlashState |= FLASHW_COUNT;
+
+         if (!(Activate ^ !!(pfData->FlashState & FLASHW_STARTED)))
+             pfData->uCount--;
+
+         if (!(pfData->FlashState & FLASHW_KILLSYSTIMER))
+             pfwi->dwFlags |= FLASHW_TIMER;
+      }
+
+      if (pfwi->dwFlags & FLASHW_TIMER)
+      {
+         pfData->FlashState |= FLASHW_KILLSYSTIMER;
+
+         IntSetTimer( pWnd,
+                      ID_EVENT_SYSTIMER_FLASHWIN,
+                      pfwi->dwTimeout ? pfwi->dwTimeout : gpsi->dtCaretBlink,
+                      SystemTimerProc,
+                      TMRF_SYSTEM );
+      }
+
+      if (pfData->FlashState & FLASHW_COUNT && pfData->uCount == 0)
+      {
+         // Keep spinning? Nothing else to do.
+         pfData->FlashState = FLASHW_FINISHED;
+      }
+      else
+      {
+         // Save state and flags so this can be restored next time through.
+         pfData->FlashState ^= (pfData->FlashState ^ -!!(Activate)) & FLASHW_ACTIVE;
+         pfData->FlashState ^= (pfData->FlashState ^ pfwi->dwFlags) & (FLASHW_MASK & ~FLASHW_TIMER);
+      }
    }
    return Ret;
 }

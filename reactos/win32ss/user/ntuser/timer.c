@@ -345,6 +345,17 @@ SystemTimerProc(HWND hwnd,
        }
        return; // Not this window so just return.
 
+     case ID_EVENT_SYSTIMER_FLASHWIN:
+       {
+          FLASHWINFO fwi = 
+            {sizeof(FLASHWINFO),
+             UserHMGetHandle(pWnd),
+             FLASHW_SYSTIMER,0,0};
+
+          IntFlashWindowEx(pWnd, &fwi);
+       }
+       return;
+
      default:
        ERR("System Timer Proc invalid id %u!\n", idEvent);
        break;
