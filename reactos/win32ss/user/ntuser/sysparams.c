@@ -295,6 +295,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bMenuDropAlign = 1;
     gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
+    gspv.dwForegroundFlashCount = 3;
 
     gspv.iScrSaverTimeout = SpiLoadTimeOut();
     gspv.bScrSaverActive = FALSE;
