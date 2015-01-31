@@ -270,6 +270,117 @@ Fast486FpuFromSingleReal(PFAST486_STATE State,
     }
 }
 
+static inline BOOLEAN FASTCALL
+Fast486FpuToSingleReal(PFAST486_STATE State,
+                       PFAST486_FPU_DATA_REG Value,
+                       PULONG Result)
+{
+    ULONGLONG Remainder;
+    SHORT UnbiasedExp = (SHORT)Value->Exponent - FPU_REAL10_BIAS;
+
+    if (FPU_IS_ZERO(Value))
+    {
+        *Result = 0;
+        return TRUE;
+    }
+
+    /* Calculate the mantissa */
+    *Result = (ULONG)(Value->Mantissa >> 40) & 0x7FFFFF;
+
+    if (FPU_IS_NAN(Value))
+    {
+        *Result |= FPU_REAL4_INFINITY;
+        goto SetSign;
+    }
+
+    /* Check for underflow */
+    if (!FPU_IS_NORMALIZED(Value) || (UnbiasedExp < -127))
+    {
+        /* Raise the underflow exception */
+        State->FpuStatus.Ue = TRUE;
+
+        if (State->FpuControl.Um)
+        {
+            /* The result is zero due to underflow */
+            *Result = 0ULL;
+            return TRUE;
+        }
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
+    }
+
+    /* Check for overflow */
+    if (UnbiasedExp > 127)
+    {
+        /* Raise the overflow exception */
+        State->FpuStatus.Oe = TRUE;
+
+        if (State->FpuControl.Om)
+        {
+            /* The result is infinity due to overflow */
+            *Result = FPU_REAL4_INFINITY;
+            goto SetSign;
+        }
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
+    }
+
+    /* Calculate the remainder */
+    Remainder = Value->Mantissa & ((1ULL << 40) - 1);
+
+    switch (State->FpuControl.Rc)
+    {
+        case FPU_ROUND_NEAREST:
+        {
+            /* Check if the highest bit of the remainder is set */
+            if (Remainder & (1ULL << 39))
+            {
+                (*Result)++;
+
+                /* Check if all the other bits are clear */
+                if (!(Remainder & ((1ULL << 39) - 1)))
+                {
+                    /* Round to even */
+                    *Result &= ~1;
+                }
+            }
+
+            break;
+        }
+
+        case FPU_ROUND_DOWN:
+        {
+            if ((Remainder != 0ULL) && Value->Sign) (*Result)++;
+            break;
+        }
+
+        case FPU_ROUND_UP:
+        {
+            if ((Remainder != 0ULL) && !Value->Sign) (*Result)++;
+            break;
+        }
+
+        default:
+        {
+            /* Leave it truncated */
+        }
+    }
+
+    /* Store the biased exponent */
+    *Result |= (ULONG)(UnbiasedExp + FPU_REAL4_BIAS) << 23;
+
+SetSign:
+
+    if (Value->Sign) *Result |= 0x80000000;
+    return TRUE;
+}
+
 static inline VOID FASTCALL
 Fast486FpuFromDoubleReal(PFAST486_STATE State,
                          ULONGLONG Value,
@@ -310,7 +421,7 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
 
     if (FPU_IS_NAN(Value))
     {
-        *Result |= 0x7FFULL << 52;
+        *Result |= FPU_REAL8_INFINITY;
         goto SetSign;
     }
 
@@ -1036,9 +1147,32 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FSTP */
             case 3:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                ULONG Value = FPU_REAL4_INDEFINITE;
 
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im)
+                    {
+                        Fast486FpuException(State);
+                        return;
+                    }
+                }
+                else if (!Fast486FpuToSingleReal(State, &FPU_ST(0), &Value))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                if (!Fast486WriteModrmDwordOperands(State, &ModRegRm, FALSE, Value))
+                {
+                    /* Exception occurred */
+                    return;
+                }
+
+                if (ModRegRm.Register == 3) Fast486FpuPop(State);
                 break;
             }
 
