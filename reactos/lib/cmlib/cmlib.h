@@ -345,25 +345,25 @@ CmPrepareHive(
 BOOLEAN
 NTAPI
 CmCompareHash(
-	IN PCUNICODE_STRING KeyName,
-	IN PCHAR HashString,
-	IN BOOLEAN CaseInsensitive);
+    IN PCUNICODE_STRING KeyName,
+    IN PCHAR HashString,
+    IN BOOLEAN CaseInsensitive);
 
 BOOLEAN
 NTAPI
 CmComparePackedNames(
-	IN PCUNICODE_STRING Name,
-	IN PVOID NameBuffer,
-	IN USHORT NameBufferSize,
-	IN BOOLEAN NamePacked,
-	IN BOOLEAN CaseInsensitive);
+    IN PCUNICODE_STRING Name,
+    IN PVOID NameBuffer,
+    IN USHORT NameBufferSize,
+    IN BOOLEAN NamePacked,
+    IN BOOLEAN CaseInsensitive);
 
 BOOLEAN
 NTAPI
 CmCompareKeyName(
-	IN PCM_KEY_NODE KeyCell,
-	IN PCUNICODE_STRING KeyName,
-	IN BOOLEAN CaseInsensitive);
+    IN PCM_KEY_NODE KeyCell,
+    IN PCUNICODE_STRING KeyName,
+    IN BOOLEAN CaseInsensitive);
 
 BOOLEAN
 NTAPI
