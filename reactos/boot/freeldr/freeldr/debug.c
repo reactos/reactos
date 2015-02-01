@@ -395,7 +395,7 @@ KeBugCheckEx(
             BugCheckCode, BugCheckParameter1, BugCheckParameter2,
             BugCheckParameter3, BugCheckParameter4);
     UiMessageBoxCritical(Buffer);
-    assert(FALSE);
+    ASSERT(FALSE);
     for (;;);
 }
 

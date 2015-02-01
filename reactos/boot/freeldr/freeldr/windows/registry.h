@@ -28,54 +28,42 @@
 
 typedef struct _REG_KEY
 {
-  LIST_ENTRY KeyList;
-  LIST_ENTRY SubKeyList;
-  LIST_ENTRY ValueList;
+    LIST_ENTRY KeyList;
+    LIST_ENTRY SubKeyList;
+    LIST_ENTRY ValueList;
 
-  ULONG SubKeyCount;
-  ULONG ValueCount;
+    ULONG SubKeyCount;
+    ULONG ValueCount;
 
-  ULONG NameSize;
-  PWCHAR Name;
+    ULONG NameSize;
+    PWCHAR Name;
 
-  /* default data */
-  ULONG DataType;
-  ULONG DataSize;
-  PCHAR Data;
+    /* Default data */
+    ULONG DataType;
+    ULONG DataSize;
+    PCHAR Data;
 } KEY, *FRLDRHKEY, **PFRLDRHKEY;
 
 
 typedef struct _REG_VALUE
 {
-  LIST_ENTRY ValueList;
+    LIST_ENTRY ValueList;
 
-  /* value name */
-  ULONG NameSize;
-  PWCHAR Name;
+    /* Value name */
+    ULONG NameSize;
+    PWCHAR Name;
 
-  /* value data */
-  ULONG DataType;
-  ULONG DataSize;
-  PCHAR Data;
+    /* Value data */
+    ULONG DataType;
+    ULONG DataSize;
+    PCHAR Data;
 } VALUE, *PVALUE;
-
-#define assert(x)
 
 VOID
 RegInitializeRegistry(VOID);
 
 LONG
 RegInitCurrentControlSet(BOOLEAN LastKnownGood);
-
-
-LONG
-RegCreateKey(FRLDRHKEY ParentKey,
-         PCWSTR KeyName,
-         PFRLDRHKEY Key);
-
-LONG
-RegDeleteKey(FRLDRHKEY Key,
-         PCWSTR Name);
 
 LONG
 RegEnumKey(
@@ -87,9 +75,8 @@ RegEnumKey(
 
 LONG
 RegOpenKey(FRLDRHKEY ParentKey,
-       PCWSTR KeyName,
-       PFRLDRHKEY Key);
-
+           PCWSTR KeyName,
+           PFRLDRHKEY Key);
 
 LONG
 RegSetValue(FRLDRHKEY Key,
@@ -138,4 +125,3 @@ RegExportBinaryHive (PCWSTR KeyName,
 #endif /* __REGISTRY_H */
 
 /* EOF */
-

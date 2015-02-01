@@ -9,8 +9,9 @@
 /* INCLUDES ***************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
+#include "registry.h"
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
 // The only global var here, used to mark mem pages as NLS in WinLdrSetupMemoryLayout()
@@ -278,7 +279,6 @@ WinLdrGetNLSNames(LPSTR AnsiName,
 
     return TRUE;
 }
-
 
 BOOLEAN
 WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,

@@ -32,7 +32,7 @@ FldrpHwHeapAlloc(IN SIZE_T Size)
     return Buffer;
 }
 
-VOID
+static VOID
 NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                   IN PCHAR IdentifierString)
@@ -82,7 +82,7 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     *SystemNode = FldrArcHwTreeRoot;
 }
 
-VOID
+static VOID
 NTAPI
 FldrLinkToParent(IN PCONFIGURATION_COMPONENT_DATA Parent,
                  IN PCONFIGURATION_COMPONENT_DATA Child)
@@ -162,4 +162,3 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     /* Return the child */
     *ComponentKey = ComponentData;
 }
-

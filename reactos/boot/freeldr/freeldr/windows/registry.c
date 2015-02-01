@@ -20,8 +20,9 @@
 
 #include <freeldr.h>
 #include <cmlib.h>
-#include <debug.h>
+#include "registry.h"
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(REGISTRY);
 
 static PCMHIVE CmHive;
@@ -70,7 +71,6 @@ RegInitializeRegistry(VOID)
 {
     /* Nothing to do */
 }
-
 
 LONG
 RegInitCurrentControlSet(
@@ -529,7 +529,6 @@ RegQueryValue(
     TRACE("RegQueryValue value not found\n");
     return ERROR_INVALID_PARAMETER;
 }
-
 
 LONG
 RegEnumValue(

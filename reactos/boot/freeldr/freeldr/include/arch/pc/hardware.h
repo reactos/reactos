@@ -26,30 +26,6 @@
 #define TAG_HW_RESOURCE_LIST 'lRwH'
 #define TAG_HW_DISK_CONTEXT 'cDwH'
 
-//
-// ARC Component Configuration Routines
-//
-VOID
-NTAPI
-FldrCreateSystemKey(
-    OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
-);
-
-VOID
-NTAPI
-FldrCreateComponentKey(
-    IN PCONFIGURATION_COMPONENT_DATA SystemKey,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN IDENTIFIER_FLAG Flags,
-    IN ULONG Key,
-    IN ULONG Affinity,
-    IN PCHAR IdentifierString,
-    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size,
-    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
-);
-
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */

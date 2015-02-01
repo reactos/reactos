@@ -56,6 +56,7 @@
 
 /* Internal headers */
 // #include <arcemul.h>
+#include <arcname.h>
 #include <bytesex.h>
 #include <cache.h>
 #include <cmdline.h>
@@ -75,8 +76,6 @@
 #include <options.h>
 #include <oslist.h>
 #include <ramdisk.h>
-#include <reactos.h>
-#include <registry.h>
 #include <ui.h>
 #include <ver.h>
 #include <video.h>
@@ -96,6 +95,7 @@
 #include <ui/tui.h>
 
 /* Arch specific includes */
+#include <arch/archwsup.h>
 #if defined(_M_IX86) || defined(_M_AMD64)
 #include <arch/pc/hardware.h>
 #include <arch/pc/pcbios.h>

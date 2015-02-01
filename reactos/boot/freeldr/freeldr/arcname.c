@@ -25,20 +25,14 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
 {
     char *p;
 
-    //
-    // Detect ramdisk path
-    //
+    /* Detect ramdisk path */
     if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)
     {
-        //
-        // Magic value for ramdisks
-        //
+        /* Magic value for ramdisks */
         *BootDrive = 0x49;
         *BootPartition = 1;
 
-        //
-        // Get the path
-        //
+        /* Get the path */
         p = ArcPath + 11;
         strcpy(BootPath, p);
         return TRUE;
@@ -51,7 +45,7 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
     if (_strnicmp(p, "fdisk(", 6) == 0)
     {
         /*
-         * floppy disk path:
+         * Floppy disk path:
          *  multi(0)disk(0)fdisk(x)\path
          */
         p = p + 6;
@@ -65,7 +59,7 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
     else if (_strnicmp(p, "cdrom(", 6) == 0)
     {
         /*
-         * cdrom path:
+         * Cdrom path:
          *  multi(0)disk(0)cdrom(x)\path
          */
         p = p + 6;
@@ -79,7 +73,7 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* B
     else if (_strnicmp(p, "rdisk(", 6) == 0)
     {
         /*
-         * hard disk path:
+         * Hard disk path:
          *  multi(0)disk(0)rdisk(x)partition(y)\path
          */
         p = p + 6;
@@ -169,7 +163,7 @@ VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Parti
     if (Disk < 0x80)
     {
         /*
-         * floppy disk path:
+         * Floppy disk path:
          *  multi(0)disk(0)fdisk(x)\path
          */
         sprintf(tmp, "fdisk(%d)", (int) Disk);
@@ -178,7 +172,7 @@ VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Parti
     else
     {
         /*
-         * hard disk path:
+         * Hard disk path:
          *  multi(0)disk(0)rdisk(x)partition(y)\path
          */
         sprintf(tmp, "rdisk(%d)partition(%d)", (int) (Disk - 0x80), (int) Partition);
@@ -209,7 +203,7 @@ UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
     if (_strnicmp(p, "fdisk(", 6) == 0)
     {
         /*
-         * floppy disk path:
+         * Floppy disk path:
          *  multi(0)disk(0)fdisk(x)\path
          */
         p = p + 6;
@@ -218,7 +212,7 @@ UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
     else if (_strnicmp(p, "rdisk(", 6) == 0)
     {
         /*
-         * hard disk path:
+         * Hard disk path:
          *  multi(0)disk(0)rdisk(x)partition(y)\path
          */
         p = p + 6;

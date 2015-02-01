@@ -45,127 +45,127 @@ MACHVTBL MachVtbl;
 VOID
 MachConsPutChar(int Ch)
 {
-  MachVtbl.ConsPutChar(Ch);
+    MachVtbl.ConsPutChar(Ch);
 }
 
 BOOLEAN
 MachConsKbHit()
 {
-  return MachVtbl.ConsKbHit();
+    return MachVtbl.ConsKbHit();
 }
 
 int
 MachConsGetCh()
 {
-  return MachVtbl.ConsGetCh();
+    return MachVtbl.ConsGetCh();
 }
 
 VOID
 MachVideoClearScreen(UCHAR Attr)
 {
-  MachVtbl.VideoClearScreen(Attr);
+    MachVtbl.VideoClearScreen(Attr);
 }
 
 VIDEODISPLAYMODE
 MachVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init)
 {
-  return MachVtbl.VideoSetDisplayMode(DisplayMode, Init);
+    return MachVtbl.VideoSetDisplayMode(DisplayMode, Init);
 }
 
 VOID
 MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
-  MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
+    MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
 }
 
 ULONG
 MachVideoGetBufferSize(VOID)
 {
-  return MachVtbl.VideoGetBufferSize();
+    return MachVtbl.VideoGetBufferSize();
 }
 
 VOID
 MachVideoSetTextCursorPosition(UCHAR X, UCHAR Y)
 {
-  MachVtbl.VideoSetTextCursorPosition(X, Y);
+    MachVtbl.VideoSetTextCursorPosition(X, Y);
 }
 
 VOID
 MachVideoHideShowTextCursor(BOOLEAN Show)
 {
-  MachVtbl.VideoHideShowTextCursor(Show);
+    MachVtbl.VideoHideShowTextCursor(Show);
 }
 
 VOID
 MachVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
-  MachVtbl.VideoPutChar(Ch, Attr, X, Y);
+    MachVtbl.VideoPutChar(Ch, Attr, X, Y);
 }
 
 VOID
 MachVideoCopyOffScreenBufferToVRAM(PVOID Buffer)
 {
-  MachVtbl.VideoCopyOffScreenBufferToVRAM(Buffer);
+    MachVtbl.VideoCopyOffScreenBufferToVRAM(Buffer);
 }
 
 BOOLEAN
 MachVideoIsPaletteFixed(VOID)
 {
-  return MachVtbl.VideoIsPaletteFixed();
+    return MachVtbl.VideoIsPaletteFixed();
 }
 
 VOID
 MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
-  MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
+    MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID
 MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue)
 {
-  MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
+    MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID
 MachVideoSync(VOID)
 {
-  MachVtbl.VideoSync();
+    MachVtbl.VideoSync();
 }
 
 VOID
 MachBeep(VOID)
 {
-  MachVtbl.Beep();
+    MachVtbl.Beep();
 }
 
 VOID
 MachPrepareForReactOS(IN BOOLEAN Setup)
 {
-  MachVtbl.PrepareForReactOS(Setup);
+    MachVtbl.PrepareForReactOS(Setup);
 }
 
 BOOLEAN
 MachDiskGetBootPath(char *BootPath, unsigned Size)
 {
-  return MachVtbl.DiskGetBootPath(BootPath, Size);
+    return MachVtbl.DiskGetBootPath(BootPath, Size);
 }
 
 BOOLEAN
 MachDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-  return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
+    return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
 }
 
 BOOLEAN
 MachDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry)
 {
-  return MachVtbl.DiskGetDriveGeometry(DriveNumber, DriveGeometry);
+    return MachVtbl.DiskGetDriveGeometry(DriveNumber, DriveGeometry);
 }
 
 ULONG
 MachDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
-  return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
+    return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
 }
 
 

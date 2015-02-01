@@ -15,15 +15,6 @@
 #include "../../../../../armllb/inc/osloader.h"
 #include "../../../../../armllb/inc/machtype.h"
 
-//
-// ARC Component Configuration Routines
-//
-VOID
-NTAPI
-FldrCreateSystemKey(
-    OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
-);
-
 extern PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 extern ULONG FirstLevelDcacheSize;
 extern ULONG FirstLevelDcacheFillSize;

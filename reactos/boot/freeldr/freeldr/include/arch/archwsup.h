@@ -1,6 +1,7 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *
+ *  Copyright (C) 2003  Eric Kohl
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,17 +18,32 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <freeldr.h>
+#pragma once
 
-CHAR FreeLoaderVersionString[80];
+/* PROTOTYPES ***************************************************************/
 
-PCHAR GetFreeLoaderVersionString(VOID)
-{
-#if (FREELOADER_PATCH_VERSION == 0)
-    sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION);
-#else
-    sprintf(FreeLoaderVersionString, "FreeLoader v%d.%d.%d", FREELOADER_MAJOR_VERSION, FREELOADER_MINOR_VERSION, FREELOADER_PATCH_VERSION);
-#endif
+//
+// ARC Component Configuration Routines
+//
+VOID
+NTAPI
+FldrCreateSystemKey(
+    OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
+);
 
-    return FreeLoaderVersionString;
-}
+VOID
+NTAPI
+FldrCreateComponentKey(
+    IN PCONFIGURATION_COMPONENT_DATA SystemKey,
+    IN CONFIGURATION_CLASS Class,
+    IN CONFIGURATION_TYPE Type,
+    IN IDENTIFIER_FLAG Flags,
+    IN ULONG Key,
+    IN ULONG Affinity,
+    IN PCHAR IdentifierString,
+    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    IN ULONG Size,
+    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
+);
+
+/* EOF */

@@ -33,6 +33,7 @@ endif()
 
 list(APPEND FREELDR_COMMON_SOURCE
     include/freeldr.h
+    arcname.c
     cmdline.c
     custom.c
     debug.c
@@ -42,6 +43,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     options.c
     oslist.c
     version.c
+    arch/archwsup.c
     cache/blocklist.c
     cache/cache.c
     comm/rs232.c
@@ -60,9 +62,6 @@ list(APPEND FREELDR_COMMON_SOURCE
     mm/meminit.c
     mm/mm.c
     mm/heap.c
-    reactos/registry.c
-    reactos/arcname.c
-    reactos/archwsup.c
     ui/directui.c
     ui/gui.c
     ui/minitui.c
@@ -75,6 +74,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     video/video.c
     windows/conversion.c
     windows/peloader.c
+    windows/registry.c
     windows/winldr.c
     windows/wlmemory.c
     windows/wlregistry.c)

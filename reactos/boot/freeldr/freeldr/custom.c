@@ -58,7 +58,7 @@ VOID OptionMenuCustomBoot(VOID)
                        TRUE,
                        NULL))
     {
-        // The user pressed ESC
+        /* The user pressed ESC */
         return;
     }
 

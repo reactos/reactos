@@ -20,10 +20,11 @@
  */
 
 #include <freeldr.h>
+#include "registry.h"
 
 #include <ndk/ldrtypes.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
 //FIXME: Find a better way to retrieve ARC disk information
