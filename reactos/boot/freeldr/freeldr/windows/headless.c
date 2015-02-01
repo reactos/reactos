@@ -242,7 +242,7 @@ WinLdrInitializeHeadlessPort(VOID)
 VOID
 WinLdrSetupEms(IN PCHAR BootOptions)
 {
-    PCHAR Settings;
+    PCHAR Settings, RedirectPort;
 
     /* Start fresh */
     RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
@@ -252,7 +252,7 @@ WinLdrSetupEms(IN PCHAR BootOptions)
     Settings = strstr(BootOptions, "/redirect=");
     if (Settings)
     {
-        PCHAR RedirectPort = strstr(Settings, "com");
+        RedirectPort = strstr(Settings, "com");
         if (RedirectPort)
         {
             RedirectPort += sizeof("com") - 1;
@@ -261,10 +261,11 @@ WinLdrSetupEms(IN PCHAR BootOptions)
         }
         else
         {
-            Settings = strstr(Settings, "usebiossettings");
-            if (Settings)
+            RedirectPort = strstr(Settings, "usebiossettings");
+            if (RedirectPort)
             {
                 UiDrawStatusText("ACPI SRT Table Not Supported...");
+                return;
             }
             else
             {
