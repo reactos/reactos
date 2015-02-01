@@ -242,34 +242,33 @@ WinLdrInitializeHeadlessPort(VOID)
 VOID
 WinLdrSetupEms(IN PCHAR BootOptions)
 {
-    PCHAR RedirectPort;
+    PCHAR Settings;
 
     /* Start fresh */
     RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
     LoaderRedirectionInformation.PciDeviceId = PCI_INVALID_VENDORID;
 
     /* Use a direction port if one was given, or use ACPI to detect one instead */
-    RedirectPort = strstr(BootOptions, "/redirect=");
-
-    if (RedirectPort)
+    Settings = strstr(BootOptions, "/redirect=");
+    if (Settings)
     {
-        RedirectPort = strstr(RedirectPort, "com");
+        PCHAR RedirectPort = strstr(Settings, "com");
         if (RedirectPort)
         {
             RedirectPort += sizeof("com") - 1;
             LoaderRedirectionInformation.PortNumber = atoi(RedirectPort);
-            LoaderRedirectionInformation.TerminalType = 1; //HeadlessSerialPort
+            LoaderRedirectionInformation.TerminalType = 1; // HeadlessSerialPort
         }
         else
         {
-            RedirectPort = strstr(RedirectPort, "usebiossettings");
-            if (RedirectPort)
+            Settings = strstr(Settings, "usebiossettings");
+            if (Settings)
             {
                 UiDrawStatusText("ACPI SRT Table Not Supported...");
             }
             else
             {
-                LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(RedirectPort, 0, 16);
+                LoaderRedirectionInformation.PortAddress = (PUCHAR)strtoul(Settings, 0, 16);
                 if (LoaderRedirectionInformation.PortAddress)
                 {
                     LoaderRedirectionInformation.PortNumber = 3;
@@ -279,18 +278,18 @@ WinLdrSetupEms(IN PCHAR BootOptions)
     }
 
     /* Use a direction baudrate if one was given */
-    RedirectPort = strstr(BootOptions, "/redirectbaudrate=");
-    if (RedirectPort)
+    Settings = strstr(BootOptions, "/redirectbaudrate=");
+    if (Settings)
     {
-        if (strstr(RedirectPort, "115200"))
+        if (strstr(Settings, "115200"))
         {
             LoaderRedirectionInformation.BaudRate = 115200;
         }
-        else if (strstr(RedirectPort, "57600"))
+        else if (strstr(Settings, "57600"))
         {
             LoaderRedirectionInformation.BaudRate = 57600;
         }
-        else if (strstr(RedirectPort, "19200"))
+        else if (strstr(Settings, "19200"))
         {
             LoaderRedirectionInformation.BaudRate = 19200;
         }
