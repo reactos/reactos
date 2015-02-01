@@ -1,4 +1,4 @@
-Changes in v3.0+ (05/01/2015) (hbelusca)
+Changes in v3.0+ (01/05/2015) (hbelusca)
 
 - Remove support for special value "LiveCD" of SystemPath option
   for loading ReactOS since now we treat non-ARC SystemPath as

@@ -23,12 +23,12 @@
 
 #if DBG && !defined(_M_ARM)
 
-//#define DEBUG_ALL
-//#define DEBUG_WARN
-//#define DEBUG_ERR
-//#define DEBUG_INIFILE
-//#define DEBUG_REACTOS
-//#define DEBUG_CUSTOM
+// #define DEBUG_ALL
+// #define DEBUG_WARN
+// #define DEBUG_ERR
+// #define DEBUG_INIFILE
+// #define DEBUG_REACTOS
+// #define DEBUG_CUSTOM
 #define DEBUG_NONE
 
 #define DBG_DEFAULT_LEVELS (ERR_LEVEL|FIXME_LEVEL)
@@ -44,23 +44,22 @@
 
 #define BOCHS_OUTPUT_PORT    0xe9
 
-
 static UCHAR DbgChannels[DBG_CHANNELS_COUNT];
 
-ULONG        DebugPort = RS232;
-//ULONG        DebugPort = SCREEN;
-//ULONG        DebugPort = BOCHS;
-//ULONG        DebugPort = SCREEN|BOCHS;
+ULONG DebugPort = RS232;
+// ULONG DebugPort = SCREEN;
+// ULONG DebugPort = BOCHS;
+// ULONG DebugPort = SCREEN|BOCHS;
 #ifdef _WINKD_
 /* COM1 is the WinDbg port */
-ULONG        ComPort = COM2;
+ULONG ComPort = COM2;
 #else
-ULONG        ComPort = COM1;
+ULONG ComPort = COM1;
 #endif
-//ULONG        BaudRate = 19200;
-ULONG        BaudRate = 115200;
+// ULONG BaudRate = 19200;
+ULONG BaudRate = 115200;
 
-BOOLEAN    DebugStartOfLine = TRUE;
+BOOLEAN DebugStartOfLine = TRUE;
 
 VOID DebugInit(VOID)
 {
@@ -93,16 +92,13 @@ VOID DebugInit(VOID)
 VOID DebugPrintChar(UCHAR Character)
 {
     if (Character == '\n')
-    {
         DebugStartOfLine = TRUE;
-    }
 
     if (DebugPort & RS232)
     {
         if (Character == '\n')
-        {
             Rs232PortPutByte('\r');
-        }
+
         Rs232PortPutByte(Character);
     }
     if (DebugPort & BOCHS)
@@ -152,13 +148,13 @@ DbgPrint2(ULONG Mask, ULONG Level, const char *File, ULONG Line, char *Format, .
     char Buffer[2096];
     char *ptr = Buffer;
 
-    // Mask out unwanted debug messages
+    /* Mask out unwanted debug messages */
     if (!(DbgChannels[Mask] & Level) && !(Level & DBG_DEFAULT_LEVELS ))
     {
         return;
     }
 
-    // Print the header if we have started a new line
+    /* Print the header if we have started a new line */
     if (DebugStartOfLine)
     {
         DbgPrint("(%s:%lu) ", File, Line);
@@ -199,11 +195,9 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
     ULONG        Idx;
     ULONG        Idx2;
 
-    // Mask out unwanted debug messages
+    /* Mask out unwanted debug messages */
     if (!(DbgChannels[Mask] & TRACE_LEVEL))
-    {
         return;
-    }
 
     DebugStartOfLine = FALSE; // We don't want line headers
     DbgPrint("Dumping buffer at %p with length of %lu bytes:\n", Buffer, Length);
@@ -213,21 +207,13 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
         DebugStartOfLine = FALSE; // We don't want line headers
 
         if (Idx < 0x0010)
-        {
             DbgPrint("000%x:\t", Idx);
-        }
         else if (Idx < 0x0100)
-        {
             DbgPrint("00%x:\t", Idx);
-        }
         else if (Idx < 0x1000)
-        {
             DbgPrint("0%x:\t", Idx);
-        }
         else
-        {
             DbgPrint("%x:\t", Idx);
-        }
 
         for (Idx2=0; Idx2<16; Idx2++,Idx++)
         {
@@ -267,40 +253,40 @@ DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 }
 
 static BOOLEAN
-DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
+DbgAddDebugChannel(CHAR* channel, CHAR* level, CHAR op)
 {
     int iLevel, iChannel;
 
-    if(channel == NULL || *channel == L'\0' ||strlen(channel) == 0 )
+    if (channel == NULL || *channel == L'\0' || strlen(channel) == 0 )
         return FALSE;
 
-    if(level == NULL || *level == L'\0' ||strlen(level) == 0 )
+    if (level == NULL || *level == L'\0' || strlen(level) == 0 )
         iLevel = MAX_LEVEL;
-    else if(strcmp(level, "err") == 0)
+    else if (strcmp(level, "err") == 0)
         iLevel = ERR_LEVEL;
-    else if(strcmp(level, "fixme") == 0)
+    else if (strcmp(level, "fixme") == 0)
         iLevel = FIXME_LEVEL;
-    else if(strcmp(level, "warn") == 0)
+    else if (strcmp(level, "warn") == 0)
         iLevel = WARN_LEVEL;
     else if (strcmp(level, "trace") == 0)
         iLevel = TRACE_LEVEL;
     else
         return FALSE;
 
-    if(strcmp(channel, "memory") == 0) iChannel = DPRINT_MEMORY;
-    else if(strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
-    else if(strcmp(channel, "inifile") == 0) iChannel = DPRINT_INIFILE;
-    else if(strcmp(channel, "ui") == 0) iChannel = DPRINT_UI;
-    else if(strcmp(channel, "disk") == 0) iChannel = DPRINT_DISK;
-    else if(strcmp(channel, "cache") == 0) iChannel = DPRINT_CACHE;
-    else if(strcmp(channel, "registry") == 0) iChannel = DPRINT_REGISTRY;
-    else if(strcmp(channel, "linux") == 0) iChannel = DPRINT_LINUX;
-    else if(strcmp(channel, "hwdetect") == 0) iChannel = DPRINT_HWDETECT;
-    else if(strcmp(channel, "windows") == 0) iChannel = DPRINT_WINDOWS;
-    else if(strcmp(channel, "peloader") == 0) iChannel = DPRINT_PELOADER;
-    else if(strcmp(channel, "scsiport") == 0) iChannel = DPRINT_SCSIPORT;
-    else if(strcmp(channel, "heap") == 0) iChannel = DPRINT_HEAP;
-    else if(strcmp(channel, "all") == 0)
+         if (strcmp(channel, "memory"    ) == 0) iChannel = DPRINT_MEMORY;
+    else if (strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
+    else if (strcmp(channel, "inifile"   ) == 0) iChannel = DPRINT_INIFILE;
+    else if (strcmp(channel, "ui"        ) == 0) iChannel = DPRINT_UI;
+    else if (strcmp(channel, "disk"      ) == 0) iChannel = DPRINT_DISK;
+    else if (strcmp(channel, "cache"     ) == 0) iChannel = DPRINT_CACHE;
+    else if (strcmp(channel, "registry"  ) == 0) iChannel = DPRINT_REGISTRY;
+    else if (strcmp(channel, "linux"     ) == 0) iChannel = DPRINT_LINUX;
+    else if (strcmp(channel, "hwdetect"  ) == 0) iChannel = DPRINT_HWDETECT;
+    else if (strcmp(channel, "windows"   ) == 0) iChannel = DPRINT_WINDOWS;
+    else if (strcmp(channel, "peloader"  ) == 0) iChannel = DPRINT_PELOADER;
+    else if (strcmp(channel, "scsiport"  ) == 0) iChannel = DPRINT_SCSIPORT;
+    else if (strcmp(channel, "heap"      ) == 0) iChannel = DPRINT_HEAP;
+    else if (strcmp(channel, "all"       ) == 0)
     {
         int i;
 
@@ -316,7 +302,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
     }
     else return FALSE;
 
-    if(op==L'+')
+    if (op == L'+')
         DbgChannels[iChannel] |= iLevel;
     else
         DbgChannels[iChannel] &= ~iLevel;
@@ -333,25 +319,25 @@ DbgParseDebugChannels(PCHAR Value)
 
     do
     {
-        separator = strchr(str, L',');
-        if(separator != NULL)
-            *separator = L'\0';
+        separator = strchr(str, ',');
+        if (separator != NULL)
+            *separator = '\0';
 
-        c = strchr(str, L'+');
-        if(c == NULL)
-            c = strchr(str, L'-');
+        c = strchr(str, '+');
+        if (c == NULL)
+            c = strchr(str, '-');
 
-        if(c != NULL)
+        if (c != NULL)
         {
             op = *c;
-            *c = L'\0';
+            *c = '\0';
             c++;
 
             DbgAddDebugChannel(c, str, op);
         }
 
         str = separator + 1;
-    } while(separator != NULL);
+    } while (separator != NULL);
 }
 
 #else
@@ -394,7 +380,7 @@ MsgBoxPrint(const char *Format, ...)
     return 0;
 }
 
-//DECLSPEC_NORETURN
+// DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(
@@ -406,8 +392,8 @@ KeBugCheckEx(
 {
     char Buffer[70];
     sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
-        BugCheckCode, BugCheckParameter1, BugCheckParameter2,
-        BugCheckParameter3, BugCheckParameter4);
+            BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+            BugCheckParameter3, BugCheckParameter4);
     UiMessageBoxCritical(Buffer);
     assert(FALSE);
     for (;;);
@@ -420,23 +406,23 @@ RtlAssert(IN PVOID FailedAssertion,
           IN ULONG LineNumber,
           IN PCHAR Message OPTIONAL)
 {
-   if (Message)
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber,
-               Message);
-   }
-   else
-   {
-      DbgPrint("Assertion \'%s\' failed at %s line %u\n",
-               (PCHAR)FailedAssertion,
-               (PCHAR)FileName,
-               LineNumber);
-   }
+    if (Message)
+    {
+        DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber,
+                 Message);
+    }
+    else
+    {
+        DbgPrint("Assertion \'%s\' failed at %s line %u\n",
+                 (PCHAR)FailedAssertion,
+                 (PCHAR)FileName,
+                 LineNumber);
+    }
 
-   DbgBreakPoint();
+    DbgBreakPoint();
 }
 
 char *BugCodeStrings[] =
@@ -448,4 +434,3 @@ char *BugCodeStrings[] =
 };
 
 ULONG_PTR BugCheckInfo[5];
-

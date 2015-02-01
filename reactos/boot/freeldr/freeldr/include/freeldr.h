@@ -29,7 +29,7 @@
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
-/* public headers */
+/* Public headers */
 #ifdef __REACTOS__
 #define NTOSAPI
 #define printf TuiPrintf
@@ -54,7 +54,7 @@
 #include <ntsup.h>
 #endif
 
-/* internal headers */
+/* Internal headers */
 // #include <arcemul.h>
 #include <bytesex.h>
 #include <cache.h>
@@ -62,6 +62,7 @@
 #include <comm.h>
 #include <disk.h>
 #include <fs.h>
+#include <hal.h>
 #include <inffile.h>
 #include <inifile.h>
 #include <keycodes.h>
@@ -81,20 +82,20 @@
 #include <video.h>
 #include <winldr.h>
 
-/* file system headers */
+/* File system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>
 #include <fs/ntfs.h>
 #include <fs/iso.h>
 #include <fs/pxe.h>
 
-/* ui support */
+/* UI support */
 #include <ui/gui.h>
 #include <ui/minitui.h>
 #include <ui/noui.h>
 #include <ui/tui.h>
 
-/* arch specific includes */
+/* Arch specific includes */
 #if defined(_M_IX86) || defined(_M_AMD64)
 #include <arch/pc/hardware.h>
 #include <arch/pc/pcbios.h>

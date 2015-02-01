@@ -17,25 +17,29 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifdef _M_IX86
+
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
 
-#ifdef _M_IX86
+/* FUNCTIONS ******************************************************************/
 
 VOID
 LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
                       IN USHORT OperatingSystemVersion)
 {
-    ULONG_PTR    SectionId;
-    PCSTR    SectionName = OperatingSystem->SystemPartition;
-    CHAR    FileName[260];
-    PFILE    FilePointer;
-    ULONG    BytesRead;
-    CHAR    SettingName[80];
+    ULONG_PTR SectionId;
+    PCSTR SectionName = OperatingSystem->SystemPartition;
+    CHAR  FileName[260];
+    PFILE FilePointer;
+    ULONG BytesRead;
+    CHAR  SettingName[80];
 
-    // Find all the message box settings and run them
+    /* Find all the message box settings and run them */
     UiShowMessageBoxesInSection(SectionName);
 
-    // Try to open the operating system section in the .ini file
+    /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
         sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
@@ -57,14 +61,14 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
         return;
     }
 
-    // Read boot sector
+    /* Read boot sector */
     if (!FsReadFile(FilePointer, 512, &BytesRead, (void*)0x7c00) || (BytesRead != 512))
     {
         UiMessageBox("Unable to read boot sector.");
         return;
     }
 
-    // Check for validity
+    /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
@@ -72,15 +76,18 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
     }
 
     UiUnInitialize("Booting...");
-    // Don't stop the floppy drive motor when we
-    // are just booting a bootsector, or drive, or partition.
-    // If we were to stop the floppy motor then
-    // the BIOS wouldn't be informed and if the
-    // next read is to a floppy then the BIOS will
-    // still think the motor is on and this will
-    // result in a read error.
-    //DiskStopFloppyMotor();
-    //DisableA20();
+
+    /*
+     * Don't stop the floppy drive motor when we
+     * are just booting a bootsector, or drive, or partition.
+     * If we were to stop the floppy motor then
+     * the BIOS wouldn't be informed and if the
+     * next read is to a floppy then the BIOS will
+     * still think the motor is on and this will
+     * result in a read error.
+     */
+    // DiskStopFloppyMotor();
+    // DisableA20();
     ChainLoadBiosBootSectorCode();
 }
 
@@ -88,18 +95,18 @@ VOID
 LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
                      IN USHORT OperatingSystemVersion)
 {
-    ULONG_PTR        SectionId;
-    PCSTR            SectionName = OperatingSystem->SystemPartition;
-    CHAR            SettingName[80];
-    CHAR            SettingValue[80];
-    PARTITION_TABLE_ENTRY    PartitionTableEntry;
-    UCHAR            DriveNumber;
-    ULONG            PartitionNumber;
+    ULONG_PTR SectionId;
+    PCSTR SectionName = OperatingSystem->SystemPartition;
+    CHAR  SettingName[80];
+    CHAR  SettingValue[80];
+    PARTITION_TABLE_ENTRY PartitionTableEntry;
+    UCHAR DriveNumber;
+    ULONG PartitionNumber;
 
-    // Find all the message box settings and run them
+    /* Find all the message box settings and run them */
     UiShowMessageBoxesInSection(SectionName);
 
-    // Try to open the operating system section in the .ini file
+    /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
         sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
@@ -107,7 +114,7 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
         return;
     }
 
-    // Read the boot drive
+    /* Read the boot drive */
     if (!IniReadSettingByName(SectionId, "BootDrive", SettingValue, sizeof(SettingValue)))
     {
         UiMessageBox("Boot drive not specified for selected OS!");
@@ -116,7 +123,7 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
 
     DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
 
-    // Read the boot partition
+    /* Read the boot partition */
     if (!IniReadSettingByName(SectionId, "BootPartition", SettingValue, sizeof(SettingValue)))
     {
         UiMessageBox("Boot partition not specified for selected OS!");
@@ -125,21 +132,20 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
 
     PartitionNumber = atoi(SettingValue);
 
-    // Get the partition table entry
+    /* Get the partition table entry */
     if (!DiskGetPartitionEntry(DriveNumber, PartitionNumber, &PartitionTableEntry))
     {
         return;
     }
 
-    // Now try to read the partition boot sector
-    // If this fails then abort
+    /* Now try to read the partition boot sector. If this fails then abort. */
     if (!MachDiskReadLogicalSectors(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
     {
         UiMessageBox("Unable to read partition's boot sector.");
         return;
     }
 
-    // Check for validity
+    /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
@@ -147,15 +153,18 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
     }
 
     UiUnInitialize("Booting...");
-    // Don't stop the floppy drive motor when we
-    // are just booting a bootsector, or drive, or partition.
-    // If we were to stop the floppy motor then
-    // the BIOS wouldn't be informed and if the
-    // next read is to a floppy then the BIOS will
-    // still think the motor is on and this will
-    // result in a read error.
-    //DiskStopFloppyMotor();
-    //DisableA20();
+
+    /*
+     * Don't stop the floppy drive motor when we
+     * are just booting a bootsector, or drive, or partition.
+     * If we were to stop the floppy motor then
+     * the BIOS wouldn't be informed and if the
+     * next read is to a floppy then the BIOS will
+     * still think the motor is on and this will
+     * result in a read error.
+     */
+    // DiskStopFloppyMotor();
+    // DisableA20();
     FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
 }
@@ -164,16 +173,16 @@ VOID
 LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
                  IN USHORT OperatingSystemVersion)
 {
-    ULONG_PTR    SectionId;
-    PCSTR    SectionName = OperatingSystem->SystemPartition;
-    CHAR    SettingName[80];
-    CHAR    SettingValue[80];
-    UCHAR    DriveNumber;
+    ULONG_PTR SectionId;
+    PCSTR SectionName = OperatingSystem->SystemPartition;
+    CHAR  SettingName[80];
+    CHAR  SettingValue[80];
+    UCHAR DriveNumber;
 
-    // Find all the message box settings and run them
+    /* Find all the message box settings and run them */
     UiShowMessageBoxesInSection(SectionName);
 
-    // Try to open the operating system section in the .ini file
+    /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
         sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
@@ -189,15 +198,14 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
 
     DriveNumber = DriveMapGetBiosDriveNumber(SettingValue);
 
-    // Now try to read the boot sector (or mbr)
-    // If this fails then abort
+    /* Now try to read the boot sector (or mbr). If this fails then abort. */
     if (!MachDiskReadLogicalSectors(DriveNumber, 0, 1, (PVOID)0x7C00))
     {
         UiMessageBox("Unable to read boot sector");
         return;
     }
 
-    // Check for validity
+    /* Check for validity */
     if (*((USHORT*)(0x7c00 + 0x1fe)) != 0xaa55)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
@@ -205,15 +213,18 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
     }
 
     UiUnInitialize("Booting...");
-    // Don't stop the floppy drive motor when we
-    // are just booting a bootsector, or drive, or partition.
-    // If we were to stop the floppy motor then
-    // the BIOS wouldn't be informed and if the
-    // next read is to a floppy then the BIOS will
-    // still think the motor is on and this will
-    // result in a read error.
-    //DiskStopFloppyMotor();
-    //DisableA20();
+
+    /*
+     * Don't stop the floppy drive motor when we
+     * are just booting a bootsector, or drive, or partition.
+     * If we were to stop the floppy motor then
+     * the BIOS wouldn't be informed and if the
+     * next read is to a floppy then the BIOS will
+     * still think the motor is on and this will
+     * result in a read error.
+     */
+    // DiskStopFloppyMotor();
+    // DisableA20();
     FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
 }

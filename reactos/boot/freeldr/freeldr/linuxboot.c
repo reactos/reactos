@@ -19,55 +19,55 @@
 
 #ifndef _M_ARM
 
+#ifdef _M_IX86
+
+/* INCLUDES *******************************************************************/
+
 #include <freeldr.h>
 #include <debug.h>
 
-#ifdef _M_IX86
-
-#define    LINUX_READ_CHUNK_SIZE    0x20000     // Read 128k at a time
-
 DBG_DEFAULT_CHANNEL(LINUX);
 
-PLINUX_BOOTSECTOR    LinuxBootSector = NULL;
-PLINUX_SETUPSECTOR    LinuxSetupSector = NULL;
-ULONG            SetupSectorSize = 0;
-BOOLEAN            NewStyleLinuxKernel = FALSE;
-ULONG            LinuxKernelSize = 0;
-ULONG            LinuxInitrdSize = 0;
-CHAR            LinuxKernelName[260];
-CHAR            LinuxInitrdName[260];
-BOOLEAN            LinuxHasInitrd = FALSE;
-CHAR            LinuxCommandLine[260] = "";
-ULONG            LinuxCommandLineSize = 0;
-PVOID            LinuxKernelLoadAddress = NULL;
-PVOID            LinuxInitrdLoadAddress = NULL;
-CHAR            LinuxBootDescription[80];
-CHAR            LinuxBootPath[260] = "";
+/* GLOBALS ********************************************************************/
+
+#define LINUX_READ_CHUNK_SIZE   0x20000 // Read 128k at a time
+
+PLINUX_BOOTSECTOR  LinuxBootSector = NULL;
+PLINUX_SETUPSECTOR LinuxSetupSector = NULL;
+ULONG   SetupSectorSize = 0;
+BOOLEAN NewStyleLinuxKernel = FALSE;
+ULONG   LinuxKernelSize = 0;
+ULONG   LinuxInitrdSize = 0;
+CHAR    LinuxKernelName[260];
+CHAR    LinuxInitrdName[260];
+BOOLEAN LinuxHasInitrd = FALSE;
+CHAR    LinuxCommandLine[260] = "";
+ULONG   LinuxCommandLineSize = 0;
+PVOID   LinuxKernelLoadAddress = NULL;
+PVOID   LinuxInitrdLoadAddress = NULL;
+CHAR    LinuxBootDescription[80];
+CHAR    LinuxBootPath[260] = "";
+
+/* FUNCTIONS ******************************************************************/
 
 BOOLEAN RemoveQuotes(PCHAR QuotedString)
 {
-    CHAR    TempString[200];
+    CHAR  TempString[200];
     PCHAR p;
-    PSTR Start;
+    PSTR  Start;
 
-    //
-    // Skip spaces up to "
-    //
+    /* Skip spaces up to " */
     p = QuotedString;
     while (*p == ' ' || *p == '"')
         p++;
     Start = p;
 
-    //
-    // Go up to next "
-    //
+    /* Go up to next " */
     while (*p != '"' && *p != ANSI_NULL)
         p++;
     *p = ANSI_NULL;
 
-    //
-    // Copy result
-    //
+    /* Copy result */
     strcpy(TempString, Start);
     strcpy(QuotedString, TempString);
 
@@ -78,33 +78,27 @@ VOID
 LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
                  IN USHORT OperatingSystemVersion)
 {
-    PCSTR    SectionName = OperatingSystem->SystemPartition;
-    PCSTR    Description = OperatingSystem->LoadIdentifier;
-    PFILE    LinuxKernel = 0;
-    PFILE    LinuxInitrdFile = 0;
-    CHAR    TempString[260];
+    PCSTR SectionName = OperatingSystem->SystemPartition;
+    PCSTR Description = OperatingSystem->LoadIdentifier;
+    PFILE LinuxKernel = 0;
+    PFILE LinuxInitrdFile = 0;
+    CHAR  TempString[260];
 
     UiDrawBackdrop();
 
     if (Description)
-    {
         sprintf(LinuxBootDescription, "Loading %s...", Description);
-    }
     else
-    {
         strcpy(LinuxBootDescription, "Loading Linux...");
-    }
 
     UiDrawStatusText(LinuxBootDescription);
     UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
 
-    // Parse the .ini file section
+    /* Parse the .ini file section */
     if (!LinuxParseIniSection(SectionName))
-    {
         goto LinuxBootFailed;
-    }
 
-    // Open the kernel
+    /* Open the kernel */
     LinuxKernel = FsOpenFile(LinuxKernelName);
     if (!LinuxKernel)
     {
@@ -113,7 +107,7 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
         goto LinuxBootFailed;
     }
 
-    // Open the initrd file image (if necessary)
+    /* Open the initrd file image (if necessary) */
     if (LinuxHasInitrd)
     {
         LinuxInitrdFile = FsOpenFile(LinuxInitrdName);
@@ -125,44 +119,34 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
         }
     }
 
-    // Read the boot sector
+    /* Read the boot sector */
     if (!LinuxReadBootSector(LinuxKernel))
-    {
         goto LinuxBootFailed;
-    }
 
-    // Read the setup sector
+    /* Read the setup sector */
     if (!LinuxReadSetupSector(LinuxKernel))
-    {
         goto LinuxBootFailed;
-    }
 
-    // Calc kernel size
+    /* Calc kernel size */
     LinuxKernelSize = FsGetFileSize(LinuxKernel) - (512 + SetupSectorSize);
 
-    // Get the file size
+    /* Get the file size */
     LinuxInitrdSize = FsGetFileSize(LinuxInitrdFile);
 
-    // Read the kernel
+    /* Read the kernel */
     if (!LinuxReadKernel(LinuxKernel))
-    {
         goto LinuxBootFailed;
-    }
 
-    // Read the initrd (if necessary)
+    /* Read the initrd (if necessary) */
     if (LinuxHasInitrd)
     {
         if (!LinuxReadInitrd(LinuxInitrdFile))
-        {
             goto LinuxBootFailed;
-        }
     }
 
     // If the default root device is set to FLOPPY (0000h), change to /dev/fd0 (0200h)
     if (LinuxBootSector->RootDevice == 0x0000)
-    {
         LinuxBootSector->RootDevice = 0x0200;
-    }
 
     if (LinuxSetupSector->Version >= 0x0202)
     {
@@ -175,13 +159,9 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
     }
 
     if (NewStyleLinuxKernel)
-    {
         LinuxSetupSector->TypeOfLoader = LINUX_LOADER_TYPE_FREELOADER;
-    }
     else
-    {
         LinuxSetupSector->LoadFlags = 0;
-    }
 
     RtlCopyMemory((PVOID)0x90000, LinuxBootSector, 512);
     RtlCopyMemory((PVOID)0x90200, LinuxSetupSector, SetupSectorSize);
@@ -192,42 +172,30 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
     DiskStopFloppyMotor();
 
     if (LinuxSetupSector->LoadFlags & LINUX_FLAG_LOAD_HIGH)
-    {
         BootNewLinuxKernel();
-    }
     else
-    {
         BootOldLinuxKernel(LinuxKernelSize);
-    }
 
 
 LinuxBootFailed:
 
     if (LinuxKernel)
-    {
         FsCloseFile(LinuxKernel);
-    }
+
     if (LinuxInitrdFile)
-    {
         FsCloseFile(LinuxInitrdFile);
-    }
 
     if (LinuxBootSector != NULL)
-    {
         MmFreeMemory(LinuxBootSector);
-    }
+
     if (LinuxSetupSector != NULL)
-    {
         MmFreeMemory(LinuxSetupSector);
-    }
+
     if (LinuxKernelLoadAddress != NULL)
-    {
         MmFreeMemory(LinuxKernelLoadAddress);
-    }
+
     if (LinuxInitrdLoadAddress != NULL)
-    {
         MmFreeMemory(LinuxInitrdLoadAddress);
-    }
 
     LinuxBootSector = NULL;
     LinuxSetupSector = NULL;
@@ -243,13 +211,13 @@ LinuxBootFailed:
 
 BOOLEAN LinuxParseIniSection(PCSTR SectionName)
 {
-    ULONG_PTR    SectionId;
-    CHAR        SettingName[260];
+    ULONG_PTR SectionId;
+    CHAR SettingName[260];
 
-    // Find all the message box settings and run them
+    /* Find all the message box settings and run them */
     UiShowMessageBoxesInSection(SectionName);
 
-    // Try to open the operating system section in the .ini file
+    /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
         sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
@@ -263,20 +231,20 @@ BOOLEAN LinuxParseIniSection(PCSTR SectionName)
         return FALSE;
     }
 
-    // Get the kernel name
+    /* Get the kernel name */
     if (!IniReadSettingByName(SectionId, "Kernel", LinuxKernelName, sizeof(LinuxKernelName)))
     {
         UiMessageBox("Linux kernel filename not specified for selected OS!");
         return FALSE;
     }
 
-    // Get the initrd name
+    /* Get the initrd name */
     if (IniReadSettingByName(SectionId, "Initrd", LinuxInitrdName, sizeof(LinuxInitrdName)))
     {
         LinuxHasInitrd = TRUE;
     }
 
-    // Get the command line
+    /* Get the command line */
     if (IniReadSettingByName(SectionId, "CommandLine", LinuxCommandLine, sizeof(LinuxCommandLine)))
     {
         RemoveQuotes(LinuxCommandLine);
@@ -288,21 +256,17 @@ BOOLEAN LinuxParseIniSection(PCSTR SectionName)
 
 BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
 {
-    // Allocate memory for boot sector
+    /* Allocate memory for boot sector */
     LinuxBootSector = MmAllocateMemoryWithType(512, LoaderSystemCode);
     if (LinuxBootSector == NULL)
-    {
         return FALSE;
-    }
 
-    // Read linux boot sector
+    /* Read linux boot sector */
     FsSetFilePointer(LinuxKernelFile, 0);
     if (!FsReadFile(LinuxKernelFile, 512, NULL, LinuxBootSector))
-    {
         return FALSE;
-    }
 
-    // Check for validity
+    /* Check for validity */
     if (LinuxBootSector->BootFlag != LINUX_BOOT_SECTOR_MAGIC)
     {
         UiMessageBox("Invalid boot sector magic (0xaa55)");
@@ -325,48 +289,36 @@ BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
 
 BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
 {
-    UCHAR    TempLinuxSetupSector[512];
+    UCHAR TempLinuxSetupSector[512];
 
     LinuxSetupSector = (PLINUX_SETUPSECTOR)TempLinuxSetupSector;
 
-    // Read first linux setup sector
+    /* Read first linux setup sector */
     FsSetFilePointer(LinuxKernelFile, 512);
     if (!FsReadFile(LinuxKernelFile, 512, NULL, TempLinuxSetupSector))
-    {
         return FALSE;
-    }
 
-    // Check the kernel version
+    /* Check the kernel version */
     if (!LinuxCheckKernelVersion())
-    {
         return FALSE;
-    }
 
     if (NewStyleLinuxKernel)
-    {
         SetupSectorSize = 512 * LinuxBootSector->SetupSectors;
-    }
     else
-    {
-        SetupSectorSize = 4 * 512; // Always 4 setup sectors
-    }
+        SetupSectorSize = 512 * 4; // Always 4 setup sectors
 
-    // Allocate memory for setup sectors
+    /* Allocate memory for setup sectors */
     LinuxSetupSector = MmAllocateMemoryWithType(SetupSectorSize, LoaderSystemCode);
     if (LinuxSetupSector == NULL)
-    {
         return FALSE;
-    }
 
-    // Copy over first setup sector
+    /* Copy over first setup sector */
     RtlCopyMemory(LinuxSetupSector, TempLinuxSetupSector, 512);
 
-    // Read in the rest of the linux setup sectors
+    /* Read in the rest of the linux setup sectors */
     FsSetFilePointer(LinuxKernelFile, 1024);
     if (!FsReadFile(LinuxKernelFile, SetupSectorSize - 512, NULL, (PVOID)((ULONG_PTR)LinuxSetupSector + 512)))
-    {
         return FALSE;
-    }
 
     // DbgDumpBuffer(DPRINT_LINUX, LinuxSetupSector, SetupSectorSize);
 
@@ -391,14 +343,14 @@ BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
 
 BOOLEAN LinuxReadKernel(PFILE LinuxKernelFile)
 {
-    ULONG        BytesLoaded;
-    CHAR    StatusText[260];
-    PVOID    LoadAddress;
+    ULONG BytesLoaded;
+    CHAR  StatusText[260];
+    PVOID LoadAddress;
 
     sprintf(StatusText, "Loading %s", LinuxKernelName);
     UiDrawStatusText(StatusText);
 
-    // Allocate memory for Linux kernel
+    /* Allocate memory for Linux kernel */
     LinuxKernelLoadAddress = MmAllocateMemoryAtAddress(LinuxKernelSize, (PVOID)LINUX_KERNEL_LOAD_ADDRESS, LoaderSystemCode);
     if (LinuxKernelLoadAddress != (PVOID)LINUX_KERNEL_LOAD_ADDRESS)
     {
@@ -407,14 +359,12 @@ BOOLEAN LinuxReadKernel(PFILE LinuxKernelFile)
 
     LoadAddress = LinuxKernelLoadAddress;
 
-    // Read linux kernel to 0x100000 (1mb)
+    /* Read linux kernel to 0x100000 (1mb) */
     FsSetFilePointer(LinuxKernelFile, 512 + SetupSectorSize);
     for (BytesLoaded=0; BytesLoaded<LinuxKernelSize; )
     {
         if (!FsReadFile(LinuxKernelFile, LINUX_READ_CHUNK_SIZE, NULL, LoadAddress))
-        {
             return FALSE;
-        }
 
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
         LoadAddress = (PVOID)((ULONG_PTR)LoadAddress + LINUX_READ_CHUNK_SIZE);
@@ -427,25 +377,25 @@ BOOLEAN LinuxReadKernel(PFILE LinuxKernelFile)
 
 BOOLEAN LinuxCheckKernelVersion(VOID)
 {
-    // Just assume old kernel until we find otherwise
+    /* Just assume old kernel until we find otherwise */
     NewStyleLinuxKernel = FALSE;
 
-    // Check for new style setup header
+    /* Check for new style setup header */
     if (LinuxSetupSector->SetupHeaderSignature != LINUX_SETUP_HEADER_ID)
     {
         NewStyleLinuxKernel = FALSE;
     }
-    // Check for version below 2.0
+    /* Check for version below 2.0 */
     else if (LinuxSetupSector->Version < 0x0200)
     {
         NewStyleLinuxKernel = FALSE;
     }
-    // Check for version 2.0
+    /* Check for version 2.0 */
     else if (LinuxSetupSector->Version == 0x0200)
     {
         NewStyleLinuxKernel = TRUE;
     }
-    // Check for version 2.01+
+    /* Check for version 2.01+ */
     else if (LinuxSetupSector->Version >= 0x0201)
     {
         NewStyleLinuxKernel = TRUE;
@@ -487,7 +437,7 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
         return FALSE;
     }
 
-    // Set the information in the setup struct
+    /* Set the information in the setup struct */
     LinuxSetupSector->RamdiskAddress = (ULONG)LinuxInitrdLoadAddress;
     LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
 
@@ -499,13 +449,11 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
         TRACE("InitrdAddressMax: 0x%x\n", LinuxSetupSector->InitrdAddressMax);
     }
 
-    // Read in the ramdisk
+    /* Read in the ramdisk */
     for (BytesLoaded=0; BytesLoaded<LinuxInitrdSize; )
     {
         if (!FsReadFile(LinuxInitrdFile, LINUX_READ_CHUNK_SIZE, NULL, (PVOID)LinuxInitrdLoadAddress))
-        {
             return FALSE;
-        }
 
         BytesLoaded += LINUX_READ_CHUNK_SIZE;
         LinuxInitrdLoadAddress = (PVOID)((ULONG_PTR)LinuxInitrdLoadAddress + LINUX_READ_CHUNK_SIZE);
