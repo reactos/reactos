@@ -1184,8 +1184,27 @@ SeAssignSecurityEx(
     }
     if (!Owner)
     {
-        DPRINT("Use token owner sid!\n");
-        Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
+        if (AutoInheritFlags & 0x20 /* FIXME: SEF_DEFAULT_OWNER_FROM_PARENT */)
+        {
+            DPRINT("Use parent owner sid!\n");
+            if (!ARGUMENT_PRESENT(ParentDescriptor))
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_OWNER;
+            }
+
+            Owner = SepGetOwnerFromDescriptor(ParentDescriptor);
+            if (!Owner)
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_OWNER;
+            }
+        }
+        else
+        {
+            DPRINT("Use token owner sid!\n");
+            Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
+        }
     }
     OwnerLength = RtlLengthSid(Owner);
     NT_ASSERT(OwnerLength % sizeof(ULONG) == 0);
@@ -1197,8 +1216,27 @@ SeAssignSecurityEx(
     }
     if (!Group)
     {
-        DPRINT("Use token group sid!\n");
-        Group = Token->PrimaryGroup;
+        if (AutoInheritFlags & 0x40 /* FIXME: SEF_DEFAULT_GROUP_FROM_PARENT */)
+        {
+            DPRINT("Use parent group sid!\n");
+            if (!ARGUMENT_PRESENT(ParentDescriptor))
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_PRIMARY_GROUP;
+            }
+
+            Group = SepGetGroupFromDescriptor(ParentDescriptor);
+            if (!Group)
+            {
+                SeUnlockSubjectContext(SubjectContext);
+                return STATUS_INVALID_PRIMARY_GROUP;
+            }
+        }
+        else
+        {
+            DPRINT("Use token group sid!\n");
+            Group = Token->PrimaryGroup;
+        }
     }
     if (!Group)
     {
