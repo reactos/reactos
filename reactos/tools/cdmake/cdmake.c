@@ -64,7 +64,6 @@
 # define FALSE 0
 #endif // _WIN32
 #include <ctype.h>
-#include <setjmp.h>
 #include <time.h>
 #include "config.h"
 #include "dirhash.h"
@@ -131,7 +130,6 @@ typedef struct directory_record
     WORD path_table_index;                      /* directory record only */
 } DIR_RECORD, *PDIR_RECORD;
 
-
 typedef enum directory_record_type
 {
     DOT_RECORD,
@@ -147,7 +145,6 @@ PDIR_RECORD sort_linked_list(PDIR_RECORD,
 
 static char DIRECTORY_TIMESTAMP[] = "~Y$'KOR$.3K&";
 
-static jmp_buf error;
 static struct cd_image cd;
 
 char volume_label[32];
@@ -570,13 +567,13 @@ static int check_for_punctuation(int c, const char *name)
     return c;
 }
 
-#if defined(_WIN32) && !defined(strcasecmp)
-#define strcasecmp stricmp
-#endif//_WIN32
-
 /*-----------------------------------------------------------------------------
 This function checks to see if there's a cdname conflict.
 -----------------------------------------------------------------------------*/
+
+#if defined(_WIN32) && !defined(strcasecmp)
+#define strcasecmp stricmp
+#endif//_WIN32
 
 int cdname_exists(PDIR_RECORD d)
 {
@@ -722,11 +719,6 @@ new_directory_record(struct dirent *entry,
                      PDIR_RECORD parent)
 {
     PDIR_RECORD d;
-    /*
-    char *s;
-    char *t;
-    char *n;
-    */
 
     d = calloc(1, sizeof(*d));
     if (d == NULL)
@@ -1117,8 +1109,8 @@ new_empty_dirrecord(PDIR_RECORD d, BOOL directory)
     new_d->next_in_directory = d->first_record;
     d->first_record = new_d;
     new_d->next_in_memory = root.next_in_memory;
-    new_d->date_and_time = d->date_and_time;
     root.next_in_memory = new_d;
+    new_d->date_and_time = d->date_and_time;
     if (directory)
     {
         new_d->flags |= DIRECTORY_FLAG;
@@ -1730,9 +1722,6 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (setjmp(error))
-        return 1;
-
     // initialize root directory
 
     cd.buffer = malloc(BUFFER_SIZE);
@@ -1775,7 +1764,7 @@ int main(int argc, char **argv)
                     error_exit("Missing size limit parameter");
             }
             while (isdigit(*t))
-            size_limit = size_limit * 10 + *t++ - '0';
+                size_limit = size_limit * 10 + *t++ - '0';
             if (size_limit < 1 || size_limit > 800)
                 error_exit("Invalid size limit");
             size_limit <<= 9;  // convert megabyte to sector count
@@ -1838,6 +1827,7 @@ int main(int argc, char **argv)
     {
         char *trimmedline, *targetname, *srcname, *eq;
         char lineread[1024];
+
         FILE *f = fopen(source+1, "r");
         if (!f)
         {

@@ -1,5 +1,5 @@
-#ifndef _REACTOS_TOOLS_CDMAKE_DIRHASH_H_
-#define _REACTOS_TOOLS_CDMAKE_DIRHASH_H_
+#ifndef _DIRHASH_H_
+#define _DIRHASH_H_
 
 #define NUM_DIR_HASH_BUCKETS 1024
 
@@ -35,4 +35,4 @@ struct target_dir_entry *
 dir_hash_create_dir(struct target_dir_hash *dh, const char *casename, const char *targetnorm);
 void dir_hash_destroy(struct target_dir_hash *dh);
 
-#endif //_REACTOS_TOOLS_CDMAKE_DIRHASH_H_
+#endif // _DIRHASH_H_
