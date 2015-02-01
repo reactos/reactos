@@ -131,6 +131,15 @@ extern ULONG NTSYSAPI NtBuildNumber;
 #define PROFILE_ALL_ACCESS                  (STANDARD_RIGHTS_REQUIRED | PROFILE_CONTROL)
 
 //
+// Keyed Event Object Access Masks
+//
+#define KEYEDEVENT_WAIT                     0x0001
+#define KEYEDEVENT_WAKE                     0x0002
+#define KEYEDEVENT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED | \
+                                             KEYEDEVENT_WAIT | \
+                                             KEYEDEVENT_WAKE)
+
+//
 // NtRaiseHardError-related parameters
 //
 #define MAXIMUM_HARDERROR_PARAMETERS        4

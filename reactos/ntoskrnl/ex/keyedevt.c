@@ -43,10 +43,10 @@ POBJECT_TYPE ExKeyedEventObjectType;
 static
 GENERIC_MAPPING ExpKeyedEventMapping =
 {
-    STANDARD_RIGHTS_READ | EVENT_QUERY_STATE,
-    STANDARD_RIGHTS_WRITE | EVENT_MODIFY_STATE,
+    STANDARD_RIGHTS_READ | KEYEDEVENT_WAIT,
+    STANDARD_RIGHTS_WRITE | KEYEDEVENT_WAKE,
     STANDARD_RIGHTS_EXECUTE,
-    EVENT_ALL_ACCESS
+    KEYEDEVENT_ALL_ACCESS
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -68,7 +68,7 @@ ExpInitializeKeyedEventImplementation(VOID)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpKeyedEventMapping;
     ObjectTypeInitializer.PoolType = PagedPool;
-    ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
+    ObjectTypeInitializer.ValidAccessMask = KEYEDEVENT_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
 
     /* Create the keyed event object type */
@@ -81,14 +81,14 @@ ExpInitializeKeyedEventImplementation(VOID)
     /* Create the out of memory event for critical sections */
     InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_PERMANENT, NULL, NULL);
     Status = ZwCreateKeyedEvent(&EventHandle,
-                                EVENT_ALL_ACCESS,
+                                KEYEDEVENT_ALL_ACCESS,
                                 &ObjectAttributes,
                                 0);
     if (NT_SUCCESS(Status))
     {
         /* Take a reference so we can get rid of the handle */
         Status = ObReferenceObjectByHandle(EventHandle,
-                                           EVENT_ALL_ACCESS,
+                                           KEYEDEVENT_ALL_ACCESS,
                                            ExKeyedEventObjectType,
                                            KernelMode,
                                            (PVOID*)&ExpCritSecOutOfMemoryEvent,
@@ -258,8 +258,8 @@ NTAPI
 ExpReleaseKeyedEvent(
     _Inout_ PEX_KEYED_EVENT KeyedEvent,
     _In_ PVOID KeyedWaitValue,
-	_In_ BOOLEAN Alertable,
-	_In_ PLARGE_INTEGER Timeout)
+    _In_ BOOLEAN Alertable,
+    _In_ PLARGE_INTEGER Timeout)
 {
     /* Call the generic internal function */
     return ExpReleaseOrWaitForKeyedEvent(KeyedEvent,
@@ -433,7 +433,7 @@ NtWaitForKeyedEvent(
     {
         /* Get the keyed event object */
         Status = ObReferenceObjectByHandle(Handle,
-                                           EVENT_MODIFY_STATE,
+                                           KEYEDEVENT_WAIT,
                                            ExKeyedEventObjectType,
                                            PreviousMode,
                                            (PVOID*)&KeyedEvent,
@@ -493,7 +493,7 @@ NtReleaseKeyedEvent(
     {
         /* Get the keyed event object */
         Status = ObReferenceObjectByHandle(Handle,
-                                           EVENT_MODIFY_STATE,
+                                           KEYEDEVENT_WAKE,
                                            ExKeyedEventObjectType,
                                            PreviousMode,
                                            (PVOID*)&KeyedEvent,
