@@ -245,13 +245,13 @@ SwitchToReal16Address:
 
     /* 16-bit stack pointer */
 stack16:
-	.word STACK16ADDR
+    .word STACK16ADDR
 
     /* 32-bit stack pointer */
 stack32:
     .long STACKADDR
 
-    .align 4	/* force 4-byte alignment */
+    .align 4    /* force 4-byte alignment */
 gdt:
     /* NULL Descriptor */
    .word HEX(0000)
@@ -285,18 +285,18 @@ gdt:
 
 /* GDT table pointer */
 gdtptr:
-    .word HEX(27)		/* Limit */
-    .long gdt			/* Base Address */
+    .word HEX(27)       /* Limit */
+    .long gdt           /* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
-    .word HEX(3ff)		/* Limit */
-    .long 0			/* Base Address */
+    .word HEX(3ff)      /* Limit */
+    .long 0             /* Base Address */
 
 PUBLIC i386idtptr
 i386idtptr:
-    .word 255			/* Limit */
-    .long _i386Idt		/* Base Address */
+    .word 255           /* Limit */
+    .long _i386Idt      /* Base Address */
 
 PUBLIC _FrldrBootDrive
 _FrldrBootDrive:

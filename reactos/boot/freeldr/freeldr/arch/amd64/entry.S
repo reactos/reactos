@@ -1,5 +1,4 @@
 
-
 #include <asm.inc>
 #include <arch/pc/x86common.h>
 
@@ -45,11 +44,11 @@ FrldrStartup:
     xor rcx, rcx
     call BootMain
 
-	/* We should never get here */
+    /* We should never get here */
 stop:
-	jmp	stop
-	nop
-	nop
+    jmp stop
+    nop
+    nop
 
 
 PUBLIC Reboot
@@ -74,17 +73,17 @@ CallRealMode:
 
 SwitchToReal:
     /* Set sane segments */
-	mov ax, LMODE_DS
-	mov ds, ax
-	mov es, ax
-	mov fs, ax
-	mov gs, ax
-	//mov ss, ax
+    mov ax, LMODE_DS
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    //mov ss, ax
 
     //mov word ptr [HEX(0b8008)], HEX(0e00) + '4'
 
-	/* Save 64-bit stack pointer */
-	mov qword ptr [stack64], rsp
+    /* Save 64-bit stack pointer */
+    mov qword ptr [stack64], rsp
 
     /* Step 1 - jump to compatibility segment */
     jmp fword ptr [jumpvector]
@@ -97,15 +96,15 @@ SwitchToRealCompSegment:
     /* Note: In fact the CPU is in 32 bit mode here. But it will interprete
        the generated instructions accordingly. rax will become eax */
 
-	/* Step 2 - deactivate long mode, by disabling paging */
-	mov rax, cr0
-	and eax, HEX(7fffffff) //~0x80000000, upper bits cleared
-	mov cr0, rax
+    /* Step 2 - deactivate long mode, by disabling paging */
+    mov rax, cr0
+    and eax, HEX(7fffffff) //~0x80000000, upper bits cleared
+    mov cr0, rax
 
 //    mov word ptr [HEX(0b800a)], HEX(0e00) + '5'
 
-	/* Step 3 - jump to 16-bit segment to set the limit correctly */
-	.byte HEX(0EA) // 32bit long jmp
+    /* Step 3 - jump to 16-bit segment to set the limit correctly */
+    .byte HEX(0EA) // 32bit long jmp
 AddressOfRealModeEntryPoint:
     .long 0 // receives address of RealModeEntryPoint
     .word HEX(20)//RMODE_CS
@@ -119,7 +118,7 @@ CallRealMode_return:
 /////////////////////////////////////////
 
 
-	/* 64-bit stack pointer */
+    /* 64-bit stack pointer */
 stack64:
     .double STACKADDR
 

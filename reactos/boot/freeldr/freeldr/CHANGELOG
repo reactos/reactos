@@ -38,7 +38,7 @@ Changes in v1.8.25 (10/30/2004) (chorns)
 
 Changes in v1.8.24 (09/20/2004) (hbirr)
 
-- Implemented the driver loading by the sequence of tag entries 
+- Implemented the driver loading by the sequence of tag entries
   in the GroupOrderList key.
 
 Changes in v1.8.23 (30/08/2004) (ekohl)
@@ -56,7 +56,7 @@ Changes in v1.8.21 (21/05/2004) (navaraf)
 - Experimental NTFS reading support with no boot code yet.
 - Adjusted detection timeouts for PS/2 and RS232 to the minimum
   allowed by the specifications.
-- Enabled the 'Press any key to boot from CD' message in the ISO 
+- Enabled the 'Press any key to boot from CD' message in the ISO
   boot code and show it only when some hard disk is present.
 
 Changes in v1.8.20 (21/05/2004) (navaraf)
@@ -228,7 +228,7 @@ Changes in v1.7.6 (8/31/2002) (ekohl)
 - freeldr.c, bootmgr.c, setupldr.c, makefile: Renamed
   LoadBootManager() and ReactOSRunSetupLoader() to RunLoader().
   Either bootmgr.o or setupldr.o is used to build freeldr.sys or
-  setupldr.sys  
+  setupldr.sys
 
 Changes in v1.7.5 (8/21/2002) (brianp)
 

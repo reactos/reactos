@@ -41,25 +41,25 @@ PnpBiosSupported:
     xor rdi, rdi
 
     /* init rsi */
-	mov rsi, HEX(0F0000)
+    mov rsi, HEX(0F0000)
 
 pnp_again:
     mov eax, [rsi]
-	cmp eax, HEX(506E5024)			/* "$PnP" */
+    cmp eax, HEX(506E5024)  /* "$PnP" */
     je pnp_found
 
-	cmp rsi, HEX(0FFFF0)
+    cmp rsi, HEX(0FFFF0)
     je pnp_not_found
 
 pnp_add:
-	add rsi, 16
+    add rsi, 16
     jmp pnp_again
 
 pnp_found:
     /* first calculate the checksum */
     push rsi
 
-	push HEX(21)
+    push HEX(21)
     pop rcx
     xor edx, edx
 
@@ -76,14 +76,14 @@ pnp_loop:
 
     /* Calculate the bios entry point (far pointer) */
     xor eax, eax
-	mov ax, [rsi + HEX(0F)]
-	shl eax, 16
-	mov ax, [rsi + HEX(0D)]
-	mov dword ptr [BSS_PnpBiosEntryPoint], eax
+    mov ax, [rsi + HEX(0F)]
+    shl eax, 16
+    mov ax, [rsi + HEX(0D)]
+    mov dword ptr [BSS_PnpBiosEntryPoint], eax
 
     /* Store bios data segment */
     mov ax, [rsi + HEX(1B)]
-	mov word ptr [BSS_PnpBiosDataSegment], ax
+    mov word ptr [BSS_PnpBiosDataSegment], ax
 
 pnp_not_found:
     mov rax, rdi
@@ -109,14 +109,14 @@ PnpBiosGetDeviceNodeCount:
     call CallRealMode
 
     xor eax, eax
-	mov ax, [BSS_PnpNodeSize]
-	mov [rcx], eax
-	mov ax, [BSS_PnpNodeCount]
-	mov [rdx], eax
+    mov ax, [BSS_PnpNodeSize]
+    mov [rcx], eax
+    mov ax, [BSS_PnpNodeCount]
+    mov [rdx], eax
 
-	mov eax, dword ptr [BSS_PnpResult]
+    mov eax, dword ptr [BSS_PnpResult]
 
-	ret
+    ret
 
 
 
@@ -128,29 +128,29 @@ PnpBiosGetDeviceNodeCount:
 PUBLIC PnpBiosGetDeviceNode
 PnpBiosGetDeviceNode:
 
-	/* get current node number */
-	mov al, [rcx]
-	mov byte ptr [BSS_PnpNodeNumber], al
+    /* get current node number */
+    mov al, [rcx]
+    mov byte ptr [BSS_PnpNodeNumber], al
 
-	/* convert pointer to node buffer to segment/offset */
-	mov rax, rdx
-	shr eax, 4
-	mov word ptr [BSS_PnpBiosBufferSegment], ax
-	mov rax, rdx
-	and eax, HEX(0f)
-	mov word ptr [BSS_PnpBiosBufferOffset], ax
+    /* convert pointer to node buffer to segment/offset */
+    mov rax, rdx
+    shr eax, 4
+    mov word ptr [BSS_PnpBiosBufferSegment], ax
+    mov rax, rdx
+    and eax, HEX(0f)
+    mov word ptr [BSS_PnpBiosBufferOffset], ax
 
     /* Call the real mode function */
     mov bx, FNID_PnpBiosGetDeviceNode
     call CallRealMode
 
-	/* update node number */
-	mov al, byte ptr [BSS_PnpNodeNumber]
-	mov [rcx], al
+    /* update node number */
+    mov al, byte ptr [BSS_PnpNodeNumber]
+    mov [rcx], al
 
-	mov eax, [BSS_PnpResult]
+    mov eax, [BSS_PnpResult]
 
-	ret
+    ret
 
 END
 /* EOF */

@@ -97,7 +97,7 @@ WinLdrPortInitialize(IN ULONG BaudRate,
         }
     }
     else
-    {   
+    {
         /* Pick correct port for address */
         PortAddress = (PUCHAR)0x2F8;
         if (CpDoesPortExist(PortAddress))
@@ -182,17 +182,17 @@ WinLdrInitializeHeadlessPort(VOID)
             {
                 case 2:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x2F8;
-                    break;    
-                    
+                    break;
+
                 case 3:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x3E8;
-                    break;            
-                    
+                    break;
+
                 case 4:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x2E8;
-                    break;                
+                    break;
 
-                default:                
+                default:
                     LoaderRedirectionInformation.PortAddress = (PUCHAR)0x3F8;
                     break;
             }
@@ -218,7 +218,7 @@ WinLdrInitializeHeadlessPort(VOID)
     {
         /* Port seems usable, set it up and get the BIOS GUID */
         WinLdrEnableFifo(WinLdrTerminalDeviceId, TRUE);
-        
+
         WinLdrLoadGUID(&LoaderRedirectionInformation.SystemGUID);
 
         /* Calculate delay in us based on the baud, assume 9600 if none given */
@@ -297,7 +297,7 @@ WinLdrSetupEms(IN PCHAR BootOptions)
         else
         {
             LoaderRedirectionInformation.BaudRate = 9600;
-        }    
+        }
     }
 
     /* Enable headless support if parameters were found */

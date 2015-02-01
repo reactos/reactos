@@ -33,7 +33,8 @@ char *i386ExceptionDescriptionText[] =
     "Exception 12: MACHINE CHECK\n\n"
 };
 
-#define SCREEN_ATTR 0x1f
+#define SCREEN_ATTR 0x1F    // Bright white on blue background
+
 void
 i386PrintChar(char chr, ULONG x, ULONG y)
 {

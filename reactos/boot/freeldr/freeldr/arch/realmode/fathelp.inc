@@ -8,37 +8,37 @@
 
 //.text
 
-#define BootSectorStackTop		HEX(7bf2)
-#define DataAreaStartHigh		2
-#define DataAreaStartLow		4
-#define BiosCHSDriveSizeHigh	6
-#define BiosCHSDriveSizeLow		8
-#define BiosCHSDriveSize		8
-#define ReadSectorsOffset		10
-#define ReadClusterOffset		12
-#define PutCharsOffset			14
+#define BootSectorStackTop      HEX(7bf2)
+#define DataAreaStartHigh       2
+#define DataAreaStartLow        4
+#define BiosCHSDriveSizeHigh    6
+#define BiosCHSDriveSizeLow     8
+#define BiosCHSDriveSize        8
+#define ReadSectorsOffset       10
+#define ReadClusterOffset       12
+#define PutCharsOffset          14
 
-#define OEMName					3
-#define BytesPerSector			11
-#define SectsPerCluster			13
-#define ReservedSectors			14
-#define NumberOfFats			16
-#define MaxRootEntries			17
-#define TotalSectors			19
-#define MediaDescriptor			21
-#define SectorsPerFat			22
-#define SectorsPerTrack			24
-#define NumberOfHeads			26
-#define HiddenSectors			28
-#define TotalSectorsBig			32
-#define BootDrive				36
-#define Reserved				37
-#define ExtendSig				38
-#define SerialNumber			39
-#define VolumeLabel				43
-#define FileSystem				54
+#define OEMName                 3
+#define BytesPerSector          11
+#define SectsPerCluster         13
+#define ReservedSectors         14
+#define NumberOfFats            16
+#define MaxRootEntries          17
+#define TotalSectors            19
+#define MediaDescriptor         21
+#define SectorsPerFat           22
+#define SectorsPerTrack         24
+#define NumberOfHeads           26
+#define HiddenSectors           28
+#define TotalSectorsBig         32
+#define BootDrive               36
+#define Reserved                37
+#define ExtendSig               38
+#define SerialNumber            39
+#define VolumeLabel             43
+#define FileSystem              54
 
-#define BootPartition			HEX(7dfd)
+#define BootPartition           HEX(7dfd)
 
 
 // This code will be stored in the first 512 bytes
@@ -82,13 +82,13 @@ LoadFile:
     call IsFat12
     pop  ax
     jnc  LoadFile2
-    cmp  ax, HEX(0ff8)		    // Check to see if this is the last cluster in the chain
+    cmp  ax, HEX(0ff8)      // Check to see if this is the last cluster in the chain
     jmp  LoadFile3
 
 LoadFile2:
     cmp  ax, HEX(0fff8)
 LoadFile3:
-    jae	 LoadFile_Done		// If so continue, if not then read then next one
+    jae  LoadFile_Done      // If so continue, if not then read then next one
     push ax
     xor  bx,bx              // Load ROSLDR starting at 0000:8000h
     push es
@@ -97,27 +97,27 @@ LoadFile3:
 
     xor  bx,bx
     mov  bl, [bp+SectsPerCluster]
-    shl  bx,5							// BX = BX * 512 / 16
-    mov  ax,es							// Increment the load address by
-    add  ax,bx							// The size of a cluster
+    shl  bx,5                           // BX = BX * 512 / 16
+    mov  ax,es                          // Increment the load address by
+    add  ax,bx                          // The size of a cluster
     mov  es,ax
 
     call IsFat12
     pop  ax
     push es
     jnc  LoadFile4
-    call GetFatEntry12					// Get the next entry
+    call GetFatEntry12                  // Get the next entry
     jmp  LoadFile5
 LoadFile4:
     call GetFatEntry16
 LoadFile5:
     pop  es
 
-    jmp  LoadFile						// Load the next cluster (if any)
+    jmp  LoadFile                       // Load the next cluster (if any)
 
 LoadFile_Done:
-    mov  dl, byte ptr [bp+BootDrive]		// Load the boot drive into DL
-    mov  dh, byte ptr ds:[BootPartition]	// Load the boot partition into DH
+    mov  dl, byte ptr [bp+BootDrive]        // Load the boot drive into DL
+    mov  dh, byte ptr ds:[BootPartition]    // Load the boot partition into DH
 
     /* continue where other bootsectors start */
     jmp start
@@ -141,15 +141,15 @@ ReadFatIntoMemory:
 // On entry AX has cluster number
 // On return AX has FAT entry for that cluster
 GetFatEntry16:
-    mov cx,2						// AX = AX * 2 (since FAT16 entries are 2 bytes)
+    mov cx,2                        // AX = AX * 2 (since FAT16 entries are 2 bytes)
     mul cx
     shl dx,12
 
     mov bx, HEX(7000)
     add bx,dx
     mov es,bx
-    mov bx,ax						// Restore FAT entry offset
-    mov ax, es:[bx]	    	// Get FAT entry
+    mov bx,ax                       // Restore FAT entry offset
+    mov ax, es:[bx]                 // Get FAT entry
 
     ret
 
@@ -161,13 +161,13 @@ GetFatEntry12:
     push  ax
     mov   cx,ax
     shr   ax,1
-    add   ax,cx						// AX = AX * 1.5 (AX = AX + (AX / 2)) (since FAT12 entries are 12 bits)
+    add   ax,cx                     // AX = AX * 1.5 (AX = AX + (AX / 2)) (since FAT12 entries are 12 bits)
 
     mov   bx, HEX(7000)
     mov   es,bx
-    mov   bx,ax						// Put FAT entry offset into BX
-    mov   ax, es:[bx]	    	// Get FAT entry
-    pop   cx						// Get cluster number from stack
+    mov   bx,ax                     // Put FAT entry offset into BX
+    mov   ax, es:[bx]               // Get FAT entry
+    pop   cx                        // Get cluster number from stack
     and   cx,1
     jz    UseLow12Bits
     and   ax, HEX(0fff0)
@@ -201,8 +201,8 @@ IsFat12:
     // EAX now contains the number of sectors on the volume
 
 IsFat12_2:
-    sub   eax,ebx				// Subtract data area start sector
-    xor   edx,edx				// from total sectors of volume
+    sub   eax,ebx               // Subtract data area start sector
+    xor   edx,edx               // from total sectors of volume
 
     // EDX:EAX now contains the number of data sectors on the volume
     movzx ebx, byte ptr [bp+SectsPerCluster]
@@ -220,6 +220,6 @@ IsFat12_Done:
 msgLoading:
     .ascii "Loading FreeLoader...", CR, LF, NUL
 
-    .org 510				// Pad to 510 bytes
-    .word HEX(0aa55)		// BootSector signature
+    .org 510                // Pad to 510 bytes
+    .word HEX(0aa55)        // BootSector signature
 

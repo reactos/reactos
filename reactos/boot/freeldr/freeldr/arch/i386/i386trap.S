@@ -19,9 +19,6 @@
 
 #include <asm.inc>
 #include <arch/pc/x86common.h>
-#include <ver.h>
-
-#define SCREEN_ATTR 0x1f			/* Bright white on blue background */
 
 EXTERN _i386PrintExceptionText@12:PROC
 
@@ -59,10 +56,10 @@ MACRO(SAVE_CPU_REGS)
     /* push KSPECIAL_REGISTERS */
     /* Gdtr, Idtr, Tr, Ldtr, Reserved */
     sub esp, 44
-	sgdt [esp]
-	sidt [esp + 8]
-	str word ptr [esp + 16]
-	sldt word ptr [esp + 18]
+    sgdt [esp]
+    sidt [esp + 8]
+    str word ptr [esp + 16]
+    sldt word ptr [esp + 18]
     mov eax, dr7;
     push eax
     mov eax, dr6;
@@ -87,12 +84,12 @@ ENDM
 
 /* Set by each exception handler to the address of the description text */
 i386ExceptionIndex:
-	.long	0
+    .long   0
 
 /************************************************************************/
 i386CommonExceptionHandler:
 
-	SAVE_CPU_REGS
+    SAVE_CPU_REGS
 
     lea eax, [esp + (21 * 4)] // KTRAP_FRAME
     push esp // KSPECIAL_REGISTERS
@@ -100,26 +97,26 @@ i386CommonExceptionHandler:
     push dword ptr ds:[i386ExceptionIndex]
     call _i386PrintExceptionText@12
 
-	cli
+    cli
 i386ExceptionHandlerHang:
-	hlt
-	jmp	i386ExceptionHandlerHang
+    hlt
+    jmp i386ExceptionHandlerHang
 
-	iret
+    iret
 
 MACRO(TRAP_STUB, function, index)
     PUBLIC VAL(function)
     &function:
     push 0 // Fake error code
-	mov dword ptr ds:[i386ExceptionIndex], VAL(index)
-	jmp i386CommonExceptionHandler
+    mov dword ptr ds:[i386ExceptionIndex], VAL(index)
+    jmp i386CommonExceptionHandler
 ENDM
 
 MACRO(TRAP_STUB2, function, index)
     PUBLIC VAL(function)
     &function:
-	mov dword ptr ds:[i386ExceptionIndex], VAL(index)
-	jmp i386CommonExceptionHandler
+    mov dword ptr ds:[i386ExceptionIndex], VAL(index)
+    jmp i386CommonExceptionHandler
 ENDM
 
 /************************************************************************/
@@ -156,15 +153,15 @@ MACRO(BREAKPOINT_TEPLATE, functionname, mask1, mask2)
 #else
     \functionname:
 #endif
-	push eax
-	mov eax, [esp + 8]
-	mov dr3, eax
-	mov eax, dr7
-	and eax, VAL(mask1)
-	or  eax, VAL(mask2)
-	mov dr7, eax
-	pop eax
-	ret
+    push eax
+    mov eax, [esp + 8]
+    mov dr3, eax
+    mov eax, dr7
+    and eax, VAL(mask1)
+    or  eax, VAL(mask2)
+    mov dr7, eax
+    pop eax
+    ret
 ENDM
 
 BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT1, HEX(0fff0ffff), HEX(000000303)
@@ -179,6 +176,5 @@ BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT3, HEX(0f0ffffff), HEX(001000330)
 BREAKPOINT_TEPLATE _INSTRUCTION_BREAKPOINT4, HEX(00fffffff), HEX(0000003c0)
 BREAKPOINT_TEPLATE _MEMORY_READWRITE_BREAKPOINT4, HEX(00fffffff), HEX(0300003c0)
 BREAKPOINT_TEPLATE _MEMORY_WRITE_BREAKPOINT4, HEX(00fffffff), HEX(0100003c0)
-
 
 END

@@ -10,7 +10,7 @@ struct _vga_desc {
 #define VGA_HEIGHT 768
 struct _vga_desc vga1_desc = { (char *)0x800003c0 };
 
-void vga_setup( PCONFIGURATION_COMPONENT_DATA pcibus, 
+void vga_setup( PCONFIGURATION_COMPONENT_DATA pcibus,
                 struct _pci_desc *desc, struct _vga_desc *vga_desc,
         int bus, int dev, int fn ) {
     struct _pci_bar bar_data;

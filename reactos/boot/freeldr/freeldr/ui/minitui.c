@@ -154,7 +154,7 @@ const UIVTBL MiniTuiVtbl =
     TuiEditBox,
     TuiTextToColor,
     TuiTextToFillStyle,
-    MiniTuiDrawBackdrop, /* no FadeIn */ 
+    MiniTuiDrawBackdrop, /* no FadeIn */
     TuiFadeOut,
     TuiDisplayMenu,
     MiniTuiDrawMenu,
