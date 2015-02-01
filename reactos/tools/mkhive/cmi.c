@@ -219,7 +219,7 @@ CmiAllocateHashTableCell (
     return Status;
 }
 
-NTSTATUS
+static NTSTATUS
 CmiCreateSubKey(
     IN PCMHIVE RegistryHive,
     IN HCELL_INDEX ParentKeyCellOffset,
@@ -363,6 +363,7 @@ CmiAddSubKey(
     return STATUS_SUCCESS;
 }
 
+#if 0 // Those two functions seem to be unused, but keep them just in case we may need to use them in the future...
 static BOOLEAN
 CmiCompareHash(
     IN PCUNICODE_STRING KeyName,
@@ -378,8 +379,7 @@ CmiCompareHash(
     return (strncmp(Buffer, HashString, 4) == 0);
 }
 
-
-BOOLEAN
+static BOOLEAN
 CmiCompareHashI(
     IN PCUNICODE_STRING KeyName,
     IN PCHAR HashString)
@@ -393,6 +393,7 @@ CmiCompareHashI(
 
     return (strncasecmp(Buffer, HashString, 4) == 0);
 }
+#endif
 
 NTSTATUS
 CmiScanForSubKey(

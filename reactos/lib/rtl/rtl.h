@@ -39,6 +39,9 @@
 #include <ndk/sefuncs.h>
 #include <ndk/umfuncs.h>
 
+/* SEH support with PSEH */
+#include <pseh/pseh2.h>
+
 /* Internal RTL header */
 #include "rtlp.h"
 
