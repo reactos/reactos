@@ -23,6 +23,8 @@
 #define CONFIG_CMD(bus, dev_fn, where) \
     (0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
+#define TAG_HW_RESOURCE_LIST 'lRwH'
+#define TAG_HW_DISK_CONTEXT 'cDwH'
 
 //
 // ARC Component Configuration Routines

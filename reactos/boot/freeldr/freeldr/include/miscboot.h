@@ -19,6 +19,8 @@
 
 #pragma once
 
+#ifdef _M_IX86
+
 VOID
 LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
                       IN USHORT OperatingSystemVersion);
@@ -28,3 +30,5 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
 VOID
 LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
                  IN USHORT OperatingSystemVersion);
+
+#endif // _M_IX86

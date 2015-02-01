@@ -19,6 +19,7 @@
 
 #include <freeldr.h>
 
+#ifdef _M_IX86
 
 const CHAR    BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
 const CHAR    BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
@@ -448,3 +449,5 @@ VOID OptionMenuReboot(VOID)
     DiskStopFloppyMotor();
     Reboot();
 }
+
+#endif // _M_IX86

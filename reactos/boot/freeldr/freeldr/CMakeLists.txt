@@ -34,8 +34,10 @@ endif()
 list(APPEND FREELDR_COMMON_SOURCE
     include/freeldr.h
     cmdline.c
+    custom.c
     debug.c
     linuxboot.c
+    miscboot.c
     machine.c
     options.c
     oslist.c
@@ -87,7 +89,6 @@ if(ARCH STREQUAL "i386")
     list(APPEND FREELDR_COMMON_SOURCE
         fs/pxe.c
         arch/i386/archmach.c
-        arch/i386/custom.c
         arch/i386/drivemap.c
         arch/i386/halstub.c
         arch/i386/hardware.c
@@ -101,7 +102,6 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386rtl.c
         arch/i386/i386vid.c
         arch/i386/machpc.c
-        arch/i386/miscboot.c
         arch/i386/ntoskrnl.c
         arch/i386/pccons.c
         arch/i386/pcdisk.c
@@ -130,7 +130,6 @@ elseif(ARCH STREQUAL "amd64")
         arch/amd64/pnpbios.S)
     list(APPEND FREELDR_COMMON_SOURCE
         fs/pxe.c
-        arch/i386/custom.c
         arch/i386/drivemap.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c

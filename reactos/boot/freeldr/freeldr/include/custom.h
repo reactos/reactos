@@ -19,8 +19,7 @@
 
 #pragma once
 
-#define TAG_HW_RESOURCE_LIST 'lRwH'
-#define TAG_HW_DISK_CONTEXT 'cDwH'
+#ifdef _M_IX86
 
 #define HAS_OPTION_MENU_CUSTOM_BOOT
 #define HAS_OPTION_MENU_REBOOT
@@ -33,3 +32,5 @@ VOID    OptionMenuCustomBootPartition(VOID);
 VOID    OptionMenuCustomBootBootSectorFile(VOID);
 VOID    OptionMenuCustomBootReactOS(VOID);
 VOID    OptionMenuCustomBootLinux(VOID);
+
+#endif // _M_IX86

@@ -21,8 +21,10 @@
 
 #include <freeldr.h>
 #include <debug.h>
-#ifdef __i386__
-#define    LINUX_READ_CHUNK_SIZE    0x20000            // Read 128k at a time
+
+#ifdef _M_IX86
+
+#define    LINUX_READ_CHUNK_SIZE    0x20000     // Read 128k at a time
 
 DBG_DEFAULT_CHANNEL(LINUX);
 
@@ -307,7 +309,7 @@ BOOLEAN LinuxReadBootSector(PFILE LinuxKernelFile)
         return FALSE;
     }
 
-    DbgDumpBuffer(DPRINT_LINUX, LinuxBootSector, 512);
+    // DbgDumpBuffer(DPRINT_LINUX, LinuxBootSector, 512);
 
     TRACE("SetupSectors: %d\n", LinuxBootSector->SetupSectors);
     TRACE("RootFlags: 0x%x\n", LinuxBootSector->RootFlags);
@@ -366,7 +368,7 @@ BOOLEAN LinuxReadSetupSector(PFILE LinuxKernelFile)
         return FALSE;
     }
 
-    DbgDumpBuffer(DPRINT_LINUX, LinuxSetupSector, SetupSectorSize);
+    // DbgDumpBuffer(DPRINT_LINUX, LinuxSetupSector, SetupSectorSize);
 
     TRACE("SetupHeaderSignature: 0x%x (HdrS)\n", LinuxSetupSector->SetupHeaderSignature);
     TRACE("Version: 0x%x\n", LinuxSetupSector->Version);
@@ -513,5 +515,7 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
 
     return TRUE;
 }
-#endif /* __i386__ */
+
+#endif // _M_IX86
+
 #endif

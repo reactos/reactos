@@ -19,6 +19,8 @@
 
 #include <freeldr.h>
 
+#ifdef _M_IX86
+
 VOID
 LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
                       IN USHORT OperatingSystemVersion)
@@ -215,3 +217,5 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
     FrldrBootDrive = DriveNumber;
     ChainLoadBiosBootSectorCode();
 }
+
+#endif // _M_IX86
