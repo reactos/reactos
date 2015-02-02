@@ -1189,7 +1189,6 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
 
             SMINFO * sminfo = new SMINFO();
             sminfo->dwMask = SMIM_ICON | SMIM_FLAGS;
-            // FIXME: remove before deleting the toolbar or it will leak
 
             HRESULT hr = m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo));
             if (FAILED_UNEXPECTEDLY(hr))

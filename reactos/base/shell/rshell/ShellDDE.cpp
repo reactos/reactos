@@ -23,6 +23,9 @@
 #include <strsafe.h>
 #include <shlwapi_undoc.h>
 
+/* WARNING: Although this is a functional implementation of the DDE parsing, the handlers are not implemented here.
+The actual working implementation is in shell32 instead. */
+
 WINE_DEFAULT_DEBUG_CHANNEL(shelldde);
 
 typedef DWORD(CALLBACK * pfnCommandHandler)(PWSTR strCommand, PWSTR strPath, LPITEMIDLIST pidl, INT unkS);

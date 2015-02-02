@@ -17,6 +17,28 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+/* 
+This file implements the CMenuFocusManager class.
+
+This class manages the shell menus, by overriding the hot-tracking behaviour.
+
+For the shell menus, it uses a GetMessage hook,
+where it intercepts messages directed to the menu windows.
+
+In order to show submenus using system popups, it also has a MessageFilter hook.
+
+The menu is tracked using a stack structure. When a CMenuBand wants to open a submenu,
+it pushes the submenu band, or HMENU to track in case of system popups,
+and when the menu has closed, it pops the same pointer or handle.
+
+While a shell menu is open, it overrides the menu toolbar's hottracking behaviour,
+using its own logic to track both the active menu item, and the opened submenu's parent item.
+
+While a system popup is open, it tracks the mouse movements so that it can cancel the popup,
+and switch to another submenu when the mouse goes over another item from the parent.
+
+*/
 #include "precomp.h"
 #include <windowsx.h>
 #include <commoncontrols.h>
@@ -65,11 +87,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(CMenuFocus);
 
 DWORD CMenuFocusManager::TlsIndex = 0;
 
+// Gets the thread's assigned manager without refcounting
 CMenuFocusManager * CMenuFocusManager::GetManager()
 {
     return reinterpret_cast<CMenuFocusManager *>(TlsGetValue(TlsIndex));
 }
 
+// Obtains a manager for the thread, with refcounting
 CMenuFocusManager * CMenuFocusManager::AcquireManager()
 {
     CMenuFocusManager * obj = NULL;
@@ -93,6 +117,7 @@ CMenuFocusManager * CMenuFocusManager::AcquireManager()
     return obj;
 }
 
+// Releases a previously acquired manager, and deletes it if the refcount reaches 0
 void CMenuFocusManager::ReleaseManager(CMenuFocusManager * obj)
 {
     if (!obj->Release())
@@ -176,6 +201,7 @@ CMenuFocusManager::~CMenuFocusManager()
 {
 }
 
+// Used so that the toolbar can properly ignore mouse events, when the menu is being used with the keyboard
 void CMenuFocusManager::DisableMouseTrack(HWND parent, BOOL disableThis)
 {
     BOOL bDisable = FALSE;
@@ -328,6 +354,8 @@ LRESULT CMenuFocusManager::ProcessMouseMove(MSG* msg)
 
         if (SendMessage(child, WM_USER_ISTRACKEDITEM, iHitTestResult, 0) == S_FALSE)
         {
+            // The current tracked item has changed, notify the toolbar
+
             TRACE("Hot item tracking detected a change (capture=%p / cCapture=%p)...\n", m_captureHwnd, cCapture);
             DisableMouseTrack(NULL, FALSE);
             if (isTracking && iHitTestResult >= 0 && m_current->type == TrackedMenuEntry)
@@ -692,6 +720,7 @@ HRESULT CMenuFocusManager::RemoveHooks()
     return S_OK;
 }
 
+// Used to update the tracking info to account for a change in the top-level menu
 HRESULT CMenuFocusManager::UpdateFocus()
 {
     HRESULT hr;
@@ -699,11 +728,13 @@ HRESULT CMenuFocusManager::UpdateFocus()
 
     TRACE("UpdateFocus\n");
 
+    // Assign the new current item
     if (m_bandCount > 0)
         m_current = &(m_bandStack[m_bandCount - 1]);
     else
         m_current = NULL;
 
+    // Remove the menu capture if necesary
     if (!m_current || m_current->type != MenuPopupEntry)
     {
         SetMenuCapture(NULL);
@@ -714,6 +745,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
         }
     }
 
+    // Obtain the top-level window for the new active menu
     if (m_current && m_current->type != TrackedMenuEntry)
     {
         hr = m_current->mb->_GetTopLevelWindow(&(m_current->hwnd));
@@ -721,6 +753,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
             return hr;
     }
 
+    // Refresh the parent pointer
     if (m_bandCount >= 2)
     {
         m_parent = &(m_bandStack[m_bandCount - 2]);
@@ -731,6 +764,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
         m_parent = NULL;
     }
 
+    // Refresh the menubar pointer, if applicable
     if (m_bandCount >= 1 && m_bandStack[0].type == MenuBarEntry)
     {
         m_menuBar = &(m_bandStack[0]);
@@ -740,6 +774,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
         m_menuBar = NULL;
     }
 
+    // Remove the old hooks if the menu type changed, or we don't have a menu anymore
     if (old && (!m_current || old->type != m_current->type))
     {
         if (m_current && m_current->type != TrackedMenuEntry)
@@ -752,6 +787,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
             return hr;
     }
 
+    // And place new ones if necessary
     if (m_current && (!old || old->type != m_current->type))
     {
         hr = PlaceHooks();
@@ -759,6 +795,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
             return hr;
     }
 
+    // Give the user a chance to move the mouse to the new menu
     if (m_parent)
     {
         DisableMouseTrack(m_parent->hwnd, TRUE);
@@ -822,6 +859,7 @@ HRESULT CMenuFocusManager::UpdateFocus()
     return S_OK;
 }
 
+// Begin tracking top-level menu bar (for file browser windows)
 HRESULT CMenuFocusManager::PushMenuBar(CMenuBand * mb)
 {
     TRACE("PushMenuBar %p\n", mb);
@@ -837,6 +875,7 @@ HRESULT CMenuFocusManager::PushMenuBar(CMenuBand * mb)
     return UpdateFocus();
 }
 
+// Begin tracking a shell menu popup (start menu or submenus)
 HRESULT CMenuFocusManager::PushMenuPopup(CMenuBand * mb)
 {
     TRACE("PushTrackedPopup %p\n", mb);
@@ -862,6 +901,7 @@ HRESULT CMenuFocusManager::PushMenuPopup(CMenuBand * mb)
     return hr;
 }
 
+// Begin tracking a system popup submenu (submenu of the file browser windows)
 HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
 {
     TRACE("PushTrackedPopup %p\n", popup);
@@ -881,6 +921,7 @@ HRESULT CMenuFocusManager::PushTrackedPopup(HMENU popup)
     return UpdateFocus();
 }
 
+// Stop tracking the menubar
 HRESULT CMenuFocusManager::PopMenuBar(CMenuBand * mb)
 {
     StackEntryType type;
@@ -925,6 +966,7 @@ HRESULT CMenuFocusManager::PopMenuBar(CMenuBand * mb)
     return S_OK;
 }
 
+// Stop tracking a shell menu
 HRESULT CMenuFocusManager::PopMenuPopup(CMenuBand * mb)
 {
     StackEntryType type;
@@ -971,6 +1013,7 @@ HRESULT CMenuFocusManager::PopMenuPopup(CMenuBand * mb)
     return S_OK;
 }
 
+// Stop tracking a system popup submenu
 HRESULT CMenuFocusManager::PopTrackedPopup(HMENU popup)
 {
     StackEntryType type;

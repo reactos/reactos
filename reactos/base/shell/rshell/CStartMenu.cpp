@@ -232,8 +232,8 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
-        // HACK: Instead of running explorer.exe with the path, we should be using ShellExecute to "open" the path directly!
-        // Remove once ShellExecute can handle CLSID path components.
+        // HACK: Because our ShellExecute can't handle CLSID components in paths, we can't launch the paths using the "open" verb.
+        // FIXME: Change this back to using the path as the filename and the "open" verb, once ShellExecute can handle CLSID path components.
 
         if (psmd->uId == IDM_CONTROLPANEL)
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", NULL, SW_SHOWNORMAL);

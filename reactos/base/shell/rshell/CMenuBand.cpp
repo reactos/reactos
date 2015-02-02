@@ -128,6 +128,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     HWND hwnd,
     DWORD dwFlags)
 {
+    HRESULT hr;
+
     TRACE("CMenuBand::SetMenu called, hmenu=%p; hwnd=%p, flags=%x\n", hmenu, hwnd, dwFlags);
 
     BOOL created = FALSE;
@@ -138,17 +140,21 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
         m_hmenu = NULL;
     }
 
-    if (m_staticToolbar == NULL)
+    m_hmenu = hmenu;
+    m_menuOwner = hwnd;
+
+    if (m_hmenu && m_staticToolbar == NULL)
     {
         m_staticToolbar = new CMenuStaticToolbar(this);
         created = true;
     }
-    m_hmenu = hmenu;
-    m_menuOwner = hwnd;
 
-    HRESULT hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (m_staticToolbar)
+    {
+        hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
 
     if (m_site)
     {
@@ -287,8 +293,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
     int syStatic = maxStatic.cy;
     int syShlFld = sy - syStatic;
 
+    // TODO: Windows has a more complex system to decide ordering.
+    // Because we only support two toolbars at once, this is enough for us.
     if (m_shellBottom)
     {
+        // Static menu on top
         if (m_SFToolbar)
         {
             m_SFToolbar->SetPosSize(
@@ -306,8 +315,9 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
                 syStatic);
         }
     }
-    else // shell menu on top
+    else
     {
+        // Folder menu on top
         if (m_SFToolbar)
         {
             m_SFToolbar->SetPosSize(
@@ -547,6 +557,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Popup(POINTL *ppt, RECTL *prcExclude, MP_PO
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
 {
+    // When called from outside, this is straightforward:
+    // Things that a submenu needs to know, are spread down, and
+    // things that the parent needs to know, are spread up. No drama.
+    // The fun is in _MenuItemSelect (internal method).
     switch (dwSelectType)
     {
     case MPOS_CHILDTRACKING:
@@ -585,6 +599,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
     return S_OK;
 }
 
+// Used by the focus manager to update the child band pointer
 HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
 {
     m_childBand = child;
@@ -595,6 +610,7 @@ HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
     return S_OK;
 }
 
+// User by the focus manager to update the parent band pointer
 HRESULT CMenuBand::_SetParentBand(CMenuBand * parent)
 {
     m_parentBand = parent;
@@ -633,7 +649,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 {
-    // HACK, so I can test for a submenu in the DeskBar
     if (!ppunkClient)
         return E_POINTER;
     *ppunkClient = NULL;
@@ -754,7 +769,6 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     smData.pidlItem = pidl;
     smData.hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
     smData.hmenu = m_hmenu;
-    smData.pvUserData = NULL;
     if (m_SFToolbar)
         m_SFToolbar->GetShellFolder(NULL, &smData.pidlFolder, IID_PPV_ARG(IShellFolder, &smData.psf));
     HRESULT hr = m_psmc->CallbackSM(&smData, uMsg, wParam, lParam);
@@ -860,7 +874,6 @@ HRESULT CMenuBand::_ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags)
 
     _MenuItemSelect(MPOS_CHILDTRACKING);
 
-
     return S_OK;
 }
 
@@ -921,6 +934,7 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
 
 HRESULT CMenuBand::_MenuItemSelect(DWORD changeType)
 {
+    // Needed to prevent the this point from vanishing mid-function
     CComPtr<CMenuBand> safeThis = this;
     HRESULT hr;
 
@@ -957,6 +971,9 @@ HRESULT CMenuBand::_MenuItemSelect(DWORD changeType)
         }
     }
 
+    // In this context, the parent is the CMenuDeskBar, so when it bubbles upward,
+    // it is notifying the deskbar, and not the the higher-level menu.
+    // Same for the child: since it points to a CMenuDeskBar, it's not just recursing.
     switch (changeType)
     {
     case MPOS_EXECUTE:

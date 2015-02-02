@@ -23,6 +23,26 @@
 
 #include "CMenuDeskBar.h"
 
+/* As far as I can tell, the submenu hierarchy looks like this:
+*
+* The DeskBar's Child is the Band it contains.
+* The DeskBar's Parent is the SID_SMenuPopup of the Site.
+*
+* The Band's Child is the IMenuPopup of the child submenu.
+* The Band's Parent is the SID_SMenuPopup of the Site (the DeskBar).
+*
+* When the DeskBar receives a selection event:
+* If it requires closing the window, it will notify the Child (Band) using CancelLevel.
+* If it has to spread upwards (everything but CancelLevel), it will notify the Parent.
+*
+* When the Band receives a selection event, this is where it gets fuzzy:
+* In which cases does it call the Parent? Probably not CancelLevel.
+* In which cases does it call the Child?
+* How does it react to calls?
+*
+*/
+
+
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
 extern "C"
@@ -576,26 +596,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 {
     CComPtr<IDeskBar> safeThis = this;
-
-    /* As far as I can tell, the submenu hierarchy looks like this:
-     *
-     * The DeskBar's Child is the Band it contains.
-     * The DeskBar's Parent is the SID_SMenuPopup of the Site.
-     *
-     * The Band's Child is the IMenuPopup of the child submenu.
-     * The Band's Parent is the SID_SMenuPopup of the Site (the DeskBar).
-     *
-     * When the DeskBar receives a selection event:
-     * If it requires closing the window, it will notify the Child (Band) using CancelLevel.
-     * If it has to spread upwards (everything but CancelLevel), it will notify the Parent.
-     *
-     * When the Band receives a selection event, this is where it gets fuzzy:
-     * In which cases does it call the Parent? Probably not CancelLevel.
-     * In which cases does it call the Child?
-     * How does it react to calls?
-     *
-     */
-
     CComPtr<IMenuPopup> oldParent = m_SubMenuParent;
 
     TRACE("OnSelect dwSelectType=%d\n", this, dwSelectType);
@@ -623,9 +623,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 
 HRESULT CMenuDeskBar::_CloseBar()
 {
-    CComPtr<IDeskBar> safeThis = this;
     CComPtr<IDeskBarClient> dbc;
     HRESULT hr;
+
+    // Ensure that our data isn't destroyed while we are working
+    CComPtr<IDeskBar> safeThis = this;
 
     m_Shown = false;
 

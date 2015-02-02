@@ -40,55 +40,12 @@ CMenuSite::CMenuSite() :
 {
 }
 
-HRESULT STDMETHODCALLTYPE CMenuSite::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::RemoveBand(DWORD dwBandID)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::SetBandSiteInfo(const BANDSITEINFO *pbsinfo)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::SetModeDBC(DWORD dwMode)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::TranslateAcceleratorIO(LPMSG lpMsg)
-{
-    return S_FALSE;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::HasFocusIO()
-{
-    return S_FALSE;
-}
-
-HRESULT STDMETHODCALLTYPE CMenuSite::OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus)
-{
-    return S_OK;
-}
-
+// Child Band management (simplified due to only supporting one single child)
 HRESULT STDMETHODCALLTYPE CMenuSite::AddBand(IUnknown * punk)
 {
     HRESULT hr;
 
+    // Little helper, for readability
 #define TO_HRESULT(x) ((HRESULT)(S_OK+(x)))
 
     CComPtr<IUnknown> pUnknown;
@@ -144,11 +101,6 @@ HRESULT STDMETHODCALLTYPE CMenuSite::EnumBands(UINT uBand, DWORD* pdwBandID)
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE CMenuSite::Exec(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
-{
-    return IUnknown_Exec(m_DeskBarSite, *pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-}
-
 HRESULT STDMETHODCALLTYPE CMenuSite::GetBandObject(DWORD dwBandID, REFIID riid, VOID **ppv)
 {
     if (dwBandID != 0 || m_BandObject == NULL)
@@ -158,6 +110,27 @@ HRESULT STDMETHODCALLTYPE CMenuSite::GetBandObject(DWORD dwBandID, REFIID riid, 
     }
 
     return m_BandObject->QueryInterface(riid, ppv);
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
+{
+    if (dwBandID != 0)
+        return E_FAIL;
+
+    if (!m_BandObject)
+    {
+        *ppstb = NULL;
+        return E_NOINTERFACE;
+    }
+
+    HRESULT hr = m_BandObject->QueryInterface(IID_PPV_ARG(IDeskBand, ppstb));
+
+    *pdwState = 1;
+
+    if (cchName > 0)
+        pszName[0] = 0;
+
+    return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CMenuSite::GetSize(DWORD dwWhich, LPRECT prc)
@@ -210,27 +183,6 @@ HRESULT STDMETHODCALLTYPE CMenuSite::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
     return m_WinEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
 }
 
-HRESULT STDMETHODCALLTYPE CMenuSite::QueryBand(DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
-{
-    if (dwBandID != 0)
-        return E_FAIL;
-
-    if (!m_BandObject)
-    {
-        *ppstb = NULL;
-        return E_NOINTERFACE;
-    }
-
-    HRESULT hr = m_BandObject->QueryInterface(IID_PPV_ARG(IDeskBand, ppstb));
-
-    *pdwState = 1;
-
-    if (cchName > 0)
-        pszName[0] = 0;
-
-    return hr;
-}
-
 HRESULT STDMETHODCALLTYPE CMenuSite::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
     *ppvObject = NULL;
@@ -251,11 +203,15 @@ HRESULT STDMETHODCALLTYPE CMenuSite::QueryService(REFGUID guidService, REFIID ri
     return IUnknown_QueryService(m_DeskBarSite, guidService, riid, ppvObject);
 }
 
+HRESULT STDMETHODCALLTYPE CMenuSite::Exec(const GUID * pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+{
+    // Forward Exec calls directly to the parent deskbar
+    return IUnknown_Exec(m_DeskBarSite, *pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+}
+
 HRESULT STDMETHODCALLTYPE CMenuSite::QueryStatus(const GUID * pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
 {
-    if (!m_DeskBarSite)
-        return E_FAIL;
-
+    // Forward QueryStatus calls directly to the parent deskbar
     return IUnknown_QueryStatus(m_DeskBarSite, *pguidCmdGroup, cCmds, prgCmds, pCmdText);
 }
 
@@ -265,6 +221,7 @@ HRESULT STDMETHODCALLTYPE CMenuSite::SetDeskBarSite(IUnknown *punkSite)
 
     CComPtr<IUnknown> protectThis(this->ToIUnknown());
 
+    // Only initialize if a parent site is being assigned
     if (punkSite)
     {
         HWND hWndSite;
@@ -282,23 +239,24 @@ HRESULT STDMETHODCALLTYPE CMenuSite::SetDeskBarSite(IUnknown *punkSite)
         }
 
         m_DeskBarSite = punkSite;
-
-        return S_OK;
     }
-
-    if (m_DeskBand)
+    else
     {
-        m_DeskBand->CloseDW(0);
+        // Otherwise, deinitialize.
+        if (m_DeskBand)
+        {
+            m_DeskBand->CloseDW(0);
+        }
+
+        hr = IUnknown_SetSite(m_BandObject, NULL);
+
+        m_BandObject = NULL;
+        m_DeskBand = NULL;
+        m_WinEventHandler = NULL;
+        m_hWndBand = NULL;
+        m_hWnd = NULL;
+        m_DeskBarSite = NULL;
     }
-
-    hr = IUnknown_SetSite(m_BandObject, NULL);
-
-    m_BandObject = NULL;
-    m_DeskBand = NULL;
-    m_WinEventHandler = NULL;
-    m_hWndBand = NULL;
-    m_hWnd = NULL;
-    m_DeskBarSite = NULL;
 
     return S_OK;
 }
@@ -358,4 +316,49 @@ BOOL CMenuSite::ProcessWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     }
 
     return FALSE;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::ContextSensitiveHelp(BOOL fEnterMode)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::GetBandSiteInfo(BANDSITEINFO *pbsinfo)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::RemoveBand(DWORD dwBandID)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::SetBandSiteInfo(const BANDSITEINFO *pbsinfo)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::SetBandState(DWORD dwBandID, DWORD dwMask, DWORD dwState)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::SetModeDBC(DWORD dwMode)
+{
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::TranslateAcceleratorIO(LPMSG lpMsg)
+{
+    return S_FALSE;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::HasFocusIO()
+{
+    return S_FALSE;
+}
+
+HRESULT STDMETHODCALLTYPE CMenuSite::OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus)
+{
+    return S_OK;
 }

@@ -152,6 +152,7 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
     DSA_DeleteAllItems(m_hDsa);
     m_hDsaCount = 0;
 
+    // The sources are not ordered so load all of the items for the user folder first
     TRACE("Loading Local entries...\n");
     for (;;)
     {
@@ -186,6 +187,7 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
         m_hDsaCount++;
     }
 
+    // Then load the items for the common folder
     TRACE("Loading Common entries...\n");
     for (;;)
     {
@@ -213,6 +215,8 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
 
         ILFree(pidl);
 
+        // Try to find an existing entry with the same name, and makr it as shared.
+        // FIXME: This is sub-optimal, a hash table would be a lot more efficient.
         BOOL bShared = FALSE;
         for (int i = 0; i < (int)m_hDsaCount; i++)
         {
@@ -235,6 +239,7 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
             }
         }
 
+        // If an entry was not found, add a new one for this item
         if (!bShared)
         {
             TRACE("Inserting item %d with name %S\n", m_hDsaCount, name);
