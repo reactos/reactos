@@ -942,47 +942,49 @@ BOOL
 FASTCALL
 IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 {
-   PFLASHDATA pfData;
+   DWORD FlashState;
+   UINT uCount = pfwi->uCount;
    BOOL Activate = FALSE, Ret = FALSE;
 
-   pfData = UserGetProp(pWnd, AtomFlashWndState);
-   if (!pfData)
-   {
-      pfData = ExAllocatePoolWithTag(NonPagedPool, sizeof(FLASHDATA), USERTAG_WINDOW);
+   ASSERT(pfwi);
 
-      pfData->FlashState = 0;
-      pfData->uCount = pfwi->uCount;
+   FlashState = (DWORD)UserGetProp(pWnd, AtomFlashWndState);
 
-      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) pfData);
-   }
-
-   if (pfData->FlashState == FLASHW_FINISHED)
+   if (FlashState == FLASHW_FINISHED)
    {
       // Cycle has finished, kill timer and set this to Stop.
-      pfData->FlashState |= FLASHW_KILLSYSTIMER;
+      FlashState |= FLASHW_KILLSYSTIMER;
       pfwi->dwFlags = FLASHW_STOP;
    }
    else
    {
-      if (pfData->FlashState)
+      if (FlashState)
       {
          if (pfwi->dwFlags == FLASHW_SYSTIMER)
          {
-             // Called from system timer, restore flags.
-             pfwi->dwFlags = pfData->FlashState;
+             // Called from system timer, restore flags, counts and state.
+             pfwi->dwFlags = LOWORD(FlashState);
+             uCount = HIWORD(FlashState);
+             FlashState = MAKELONG(LOWORD(FlashState),0);
+         }
+         else
+         {
+             // Clean out the trash! Fix SeaMonkey crash after restart.
+             FlashState = 0;
          }
       }
-      else
+
+      if (FlashState == 0)
       {  // First time in cycle, setup flash state.
          if ( pWnd->state & WNDS_ACTIVEFRAME ||
              (pfwi->dwFlags & FLASHW_CAPTION && pWnd->style & (WS_BORDER|WS_DLGFRAME)))
          {
-             pfData->FlashState = FLASHW_STARTED|FLASHW_ACTIVE;
+             FlashState = FLASHW_STARTED|FLASHW_ACTIVE;
          }
       }
 
       // Set previous window state.
-      Ret = !!(pfData->FlashState & FLASHW_ACTIVE);
+      Ret = !!(FlashState & FLASHW_ACTIVE);
 
       if ( pfwi->dwFlags & FLASHW_TIMERNOFG && 
            gpqForeground == pWnd->head.pti->MessageQueue )
@@ -1002,7 +1004,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
    }
    else
    {
-      Activate = (pfData->FlashState & FLASHW_ACTIVE) == 0;
+      Activate = (FlashState & FLASHW_ACTIVE) == 0;
    }
 
    if ( pfwi->dwFlags == FLASHW_STOP || pfwi->dwFlags & FLASHW_CAPTION )
@@ -1019,31 +1021,29 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 
    if ( pfwi->dwFlags == FLASHW_STOP )
    {
-      if (pfData->FlashState & FLASHW_KILLSYSTIMER)
+      if (FlashState & FLASHW_KILLSYSTIMER)
       {
          IntKillTimer(pWnd, ID_EVENT_SYSTIMER_FLASHWIN, TRUE);
       }
 
       IntRemoveProp(pWnd, AtomFlashWndState);
-
-      ExFreePoolWithTag(pfData, USERTAG_WINDOW);
    }
    else
    {  // Have a count and started, set timer.
-      if ( pfData->uCount )
+      if ( uCount )
       {
-         pfData->FlashState |= FLASHW_COUNT;
+         FlashState |= FLASHW_COUNT;
 
-         if (!(Activate ^ !!(pfData->FlashState & FLASHW_STARTED)))
-             pfData->uCount--;
+         if (!(Activate ^ !!(FlashState & FLASHW_STARTED)))
+             uCount--;
 
-         if (!(pfData->FlashState & FLASHW_KILLSYSTIMER))
+         if (!(FlashState & FLASHW_KILLSYSTIMER))
              pfwi->dwFlags |= FLASHW_TIMER;
       }
 
       if (pfwi->dwFlags & FLASHW_TIMER)
       {
-         pfData->FlashState |= FLASHW_KILLSYSTIMER;
+         FlashState |= FLASHW_KILLSYSTIMER;
 
          IntSetTimer( pWnd,
                       ID_EVENT_SYSTIMER_FLASHWIN,
@@ -1052,17 +1052,19 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
                       TMRF_SYSTEM );
       }
 
-      if (pfData->FlashState & FLASHW_COUNT && pfData->uCount == 0)
+      if (FlashState & FLASHW_COUNT && uCount == 0)
       {
          // Keep spinning? Nothing else to do.
-         pfData->FlashState = FLASHW_FINISHED;
+         FlashState = FLASHW_FINISHED;
       }
       else
       {
          // Save state and flags so this can be restored next time through.
-         pfData->FlashState ^= (pfData->FlashState ^ -!!(Activate)) & FLASHW_ACTIVE;
-         pfData->FlashState ^= (pfData->FlashState ^ pfwi->dwFlags) & (FLASHW_MASK & ~FLASHW_TIMER);
+         FlashState ^= (FlashState ^ -!!(Activate)) & FLASHW_ACTIVE;
+         FlashState ^= (FlashState ^ pfwi->dwFlags) & (FLASHW_MASK & ~FLASHW_TIMER);
       }
+      FlashState = MAKELONG(LOWORD(FlashState),uCount);
+      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
    }
    return Ret;
 }

@@ -8,11 +8,6 @@
 #define FLASHW_KILLSYSTIMER 0x00004000
 #define FLASHW_ACTIVE       0x00008000
 
-typedef struct _FLASHDATA{
-  DWORD FlashState;
-  UINT uCount;
-} FLASHDATA, *PFLASHDATA;
-
 BOOL FASTCALL co_UserRedrawWindow(PWND Wnd, const RECTL* UpdateRect, PREGION UpdateRgn, ULONG Flags);
 VOID FASTCALL IntInvalidateWindows(PWND Window, PREGION Rgn, ULONG Flags);
 BOOL FASTCALL IntGetPaintMessage(PWND Window, UINT MsgFilterMin, UINT MsgFilterMax, PTHREADINFO Thread, MSG *Message, BOOL Remove);
