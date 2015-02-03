@@ -1222,8 +1222,307 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
     }
     else
     {
-        // TODO: NOT IMPLEMENTED
-        UNIMPLEMENTED;
+        switch ((ModRegRm.Register << 3) | ModRegRm.SecondRegister)
+        {
+            /* FLD */
+            case 0x00:
+            case 0x01:
+            case 0x02:
+            case 0x03:
+            case 0x04:
+            case 0x05:
+            case 0x06:
+            case 0x07:
+            {
+                if (FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
+                {
+                    /* Raise the invalid operation exception */
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im)
+                    {
+                        Fast486FpuException(State);
+                        return;
+                    }
+                }
+
+                Fast486FpuPush(State, &FPU_ST(ModRegRm.SecondRegister));
+                break;
+            }
+
+            /* FXCH */
+            case 0x08:
+            case 0x09:
+            case 0x0A:
+            case 0x0B:
+            case 0x0C:
+            case 0x0D:
+            case 0x0E:
+            case 0x0F:
+            {
+                FAST486_FPU_DATA_REG Temp;
+
+                if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                    || FPU_GET_TAG(ModRegRm.SecondRegister) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                /* Exchange */
+                Temp = FPU_ST(0);
+                FPU_ST(0) = FPU_ST(ModRegRm.SecondRegister);
+                FPU_ST(ModRegRm.SecondRegister) = Temp;
+
+                FPU_UPDATE_TAG(0);
+                FPU_UPDATE_TAG(ModRegRm.SecondRegister);
+
+                break;
+            }
+
+            /* FNOP */
+            case 0x10:
+            {
+                /* Do nothing */
+                break;
+            }
+
+            /* FSTP */
+            case 0x18:
+            case 0x19:
+            case 0x1A:
+            case 0x1B:
+            case 0x1C:
+            case 0x1D:
+            case 0x1E:
+            case 0x1F:
+            {
+                FPU_ST(ModRegRm.SecondRegister) = FPU_ST(0);
+                FPU_UPDATE_TAG(ModRegRm.SecondRegister);
+
+                Fast486FpuPop(State);
+                break;
+            }
+
+            /* FCHS */
+            case 0x20:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FABS */
+            case 0x21:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FTST */
+            case 0x24:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FXAM */
+            case 0x25:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FTSTP */
+            case 0x26:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FLD1 */
+            case 0x28:
+            /* FLDL2T */
+            case 0x29:
+            /* FLDL2E */
+            case 0x2A:
+            /* FLDPI */
+            case 0x2B:
+            /* FLDLG2 */
+            case 0x2C:
+            /* FLDLN2 */
+            case 0x2D:
+            /* FLDZ */
+            case 0x2E:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* F2XM1 */
+            case 0x30:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FYL2X */
+            case 0x31:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FPTAN */
+            case 0x32:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FPATAN */
+            case 0x33:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FXTRACT */
+            case 0x34:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FPREM1 */
+            case 0x35:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FDECSTP */
+            case 0x36:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FINCSTP */
+            case 0x37:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FPREM */
+            case 0x38:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FYL2XP1 */
+            case 0x39:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSQRT */
+            case 0x3A:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSINCOS */
+            case 0x3B:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FRNDINT */
+            case 0x3C:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSCALE */
+            case 0x3D:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FSIN */
+            case 0x3E:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* FCOS */
+            case 0x3F:
+            {
+                // TODO: NOT IMPLEMENTED
+                UNIMPLEMENTED;
+
+                break;
+            }
+
+            /* Invalid */
+            default:
+            {
+                Fast486Exception(State, FAST486_EXCEPTION_UD);
+                return;
+            }
+        }
     }
 
 #endif
