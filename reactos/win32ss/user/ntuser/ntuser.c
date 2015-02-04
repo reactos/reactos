@@ -113,7 +113,6 @@ UserInitialize(VOID)
     HBITMAP hPattern55AABitmap = NULL;
     NTSTATUS Status;
 
-// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
 // Create Event for Diconnect Desktop.
 
     Status = UserCreateWinstaDirectory();

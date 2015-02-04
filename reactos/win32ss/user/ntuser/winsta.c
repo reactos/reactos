@@ -105,6 +105,8 @@ IntWinStaObjectDelete(
 
    TRACE("Deleting window station (0x%p)\n", WinSta);
 
+   WinSta->Flags |= WSS_DYING;
+
    UserEmptyClipboardData(WinSta);
 
    RtlDestroyAtomTable(WinSta->AtomTable);
@@ -214,7 +216,8 @@ IntValidateWindowStationHandle(
    HWINSTA WindowStation,
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
-   PWINSTATION_OBJECT *Object)
+   PWINSTATION_OBJECT *Object,
+   POBJECT_HANDLE_INFORMATION pObjectHandleInfo)
 {
    NTSTATUS Status;
 
@@ -231,7 +234,7 @@ IntValidateWindowStationHandle(
                ExWindowStationObjectType,
                AccessMode,
                (PVOID*)Object,
-               NULL);
+               pObjectHandleInfo);
 
    if (!NT_SUCCESS(Status))
       SetLastNtError(Status);
@@ -291,6 +294,9 @@ co_IntInitializeDesktopGraphics(VOID)
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
 
+   /* Setup the icons */
+   //co_IntSetWndIcons();
+
    /* Show the desktop */
    pdesk = IntGetActiveDesktop();
    ASSERT(pdesk);
@@ -317,6 +323,29 @@ IntGetScreenDC(VOID)
 {
    return ScreenDeviceContext;
 }
+
+BOOL FASTCALL
+CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
+{
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+   if ( gpidLogon != PsGetCurrentProcessId() )
+   {
+      if (!(ppi->W32PF_flags & W32PF_IOWINSTA))
+      {
+         ERR("Requires Interactive Window Station\n");
+         EngSetLastError(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
+         return FALSE;
+      }
+      if (!RtlAreAllAccessesGranted(ppi->amwinsta, DesiredAccess))
+      {
+         ERR("Access Denied\n");
+         EngSetLastError(ERROR_ACCESS_DENIED);
+         return FALSE;
+      }
+   }
+   return TRUE;
+}
+
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -458,10 +487,16 @@ NtUserCreateWindowStation(
 
    if (InputWindowStation == NULL)
    {
-       TRACE("Initializeing input window station\n");
+      ERR("Initializeing input window station\n");
       InputWindowStation = WindowStationObject;
 
+      WindowStationObject->Flags &= ~WSS_NOIO;
+
       InitCursorImpl();
+   }
+   else
+   {
+      WindowStationObject->Flags |= WSS_NOIO;
    }
 
    TRACE("NtUserCreateWindowStation created object %p with name %wZ handle %p\n",
@@ -563,7 +598,8 @@ NtUserCloseWindowStation(
                hWinSta,
                KernelMode,
                0,
-               &Object);
+               &Object,
+               0);
 
    if (!NT_SUCCESS(Status))
    {
@@ -852,6 +888,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     PPROCESSINFO ppi;
     NTSTATUS Status;
     HWINSTA hwinstaOld;
+    OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     PWINSTATION_OBJECT NewWinSta = NULL, OldWinSta;
 
     ppi = PsGetCurrentProcessWin32Process();
@@ -862,7 +899,8 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
         Status = IntValidateWindowStationHandle( hWindowStation,
                                                  KernelMode,
                                                  0,
-                                                 &NewWinSta);
+                                                 &NewWinSta,
+                                                 &ObjectHandleInfo);
        if (!NT_SUCCESS(Status))
        {
           TRACE("Validation of window station handle (%p) failed\n",
@@ -895,7 +933,26 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
 
    ppi->prpwinsta = NewWinSta;
    ppi->hwinsta = hWindowStation;
+   ppi->amwinsta = ObjectHandleInfo.GrantedAccess;
+   ERR("WS : Granted Access %p\n",ppi->amwinsta);
 
+   if (RtlAreAllAccessesGranted(ppi->amwinsta, WINSTA_READSCREEN))
+   {
+      ppi->W32PF_flags |= W32PF_READSCREENACCESSGRANTED;
+   }
+   else
+   {
+      ppi->W32PF_flags &= ~W32PF_READSCREENACCESSGRANTED;
+   }
+
+   if (NewWinSta && !(NewWinSta->Flags & WSS_NOIO) )
+   {
+      ppi->W32PF_flags |= W32PF_IOWINSTA;
+   }
+   else // Might be closed if the handle is null.
+   {
+      ppi->W32PF_flags &= ~W32PF_IOWINSTA;
+   }
    return TRUE;
 }
 
@@ -958,7 +1015,8 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
                hWindowStation,
                KernelMode,
                0,
-               &Object);
+               &Object,
+               0);
    if (!NT_SUCCESS(Status))
    {
       TRACE("Validation of window station handle (%p) failed\n",
@@ -1003,7 +1061,8 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
                hWindowStation,
                KernelMode,
                0,
-               &Object);
+               &Object,
+               0);
    if (!NT_SUCCESS(Status))
    {
       TRACE("Validation of window station handle (%p) failed\n",
@@ -1212,7 +1271,8 @@ BuildDesktopNameList(
    Status = IntValidateWindowStationHandle(hWindowStation,
                                            KernelMode,
                                            0,
-                                           &WindowStation);
+                                           &WindowStation,
+                                           0);
    if (! NT_SUCCESS(Status))
    {
       return Status;
@@ -1375,5 +1435,76 @@ NtUserLockWorkStation(VOID)
 
    return ret;
 }
+
+BOOL APIENTRY
+NEW_NtUserSetWindowStationUser(
+   HWINSTA hWindowStation,
+   PLUID pluid,
+   PSID psid,
+   DWORD size)
+{
+   NTSTATUS Status;
+   PWINSTATION_OBJECT WindowStation = NULL;
+   BOOL Ret = FALSE;
+
+   UserEnterExclusive();
+
+   if (gpidLogon != PsGetCurrentProcessId())
+   {
+       EngSetLastError(ERROR_ACCESS_DENIED);
+       goto Leave;
+   }
+
+   Status = IntValidateWindowStationHandle(hWindowStation,
+                                           KernelMode,
+                                           0,
+                                           &WindowStation,
+                                           0);
+   if (!NT_SUCCESS(Status))
+   {
+      goto Leave;
+   }
+
+   if (WindowStation->psidUser)
+   {
+      ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
+   }
+
+   WindowStation->psidUser = ExAllocatePoolWithTag(PagedPool, size, USERTAG_SECURITY);
+   if (WindowStation->psidUser == NULL)
+   {
+      EngSetLastError(ERROR_OUTOFMEMORY);
+      goto Leave;
+   }
+
+   _SEH2_TRY
+   {
+      ProbeForRead( psid, size, 1);
+      ProbeForRead( pluid, sizeof(LUID), 1);
+
+      RtlCopyMemory(WindowStation->psidUser, psid, size);
+      WindowStation->luidUser = *pluid;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePoolWithTag(WindowStation->psidUser, 0);
+      WindowStation->psidUser = 0;
+      goto Leave;
+   }
+
+   Ret = TRUE;
+
+Leave:
+   if (WindowStation) ObDereferenceObject(WindowStation);
+   UserLeave();
+   return Ret;
+}
+
 
 /* EOF */
