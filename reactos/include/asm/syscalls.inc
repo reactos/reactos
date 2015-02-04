@@ -6,8 +6,8 @@ MACRO(STUBCODE_U, Name, SyscallId, ArgCount)
     StackBytes = 4 * ArgCount
     FPO 0, 0, 0, 0, 0, FRAME_FPO
     mov eax, SyscallId
-    mov ecx, KUSER_SHARED_SYSCALL
-    call dword ptr [ecx]
+    mov edx, KUSER_SHARED_SYSCALL
+    call dword ptr [edx]
     ret StackBytes
 ENDM
 MACRO(STUBCODE_K, Name, SyscallId, ArgCount)
