@@ -35,7 +35,6 @@
 #include <commdlg.h>
 #include <commoncontrols.h>
 #include <recyclebin.h>
-#include <mmsystem.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -1647,6 +1646,15 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 }
 
 /*************************************************************************
+ *      PathIsTemporaryA    [SHELL32.713]
+ */
+BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+{
+    FIXME("(%s)stub\n", debugstr_a(Str));
+    return FALSE;
+}
+
+/*************************************************************************
  *      PathIsTemporaryW    [SHELL32.714]
  */
 BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
@@ -2189,144 +2197,4 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 	IShellView_Release(psf);
 
 	return hRes;
-}
-
-/*************************************************************************
- *      PathIsTemporaryA    [SHELL32.713]
- */
-BOOL WINAPI PathIsTemporaryA(LPSTR Str)
-{
-    FIXME("(%s)stub\n", debugstr_a(Str));
-    return FALSE;
-}
-
-/*************************************************************************
- *              SHEmptyRecycleBinA (SHELL32.@)
- */
-HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
-{
-    LPWSTR szRootPathW = NULL;
-    int len;
-    HRESULT hr;
-
-    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_a(pszRootPath), dwFlags);
-
-    if (pszRootPath)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
-        if (len == 0)
-            return HRESULT_FROM_WIN32(GetLastError());
-        szRootPathW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!szRootPathW)
-            return E_OUTOFMEMORY;
-        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
-        {
-            HeapFree(GetProcessHeap(), 0, szRootPathW);
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-    }
-
-    hr = SHEmptyRecycleBinW(hwnd, szRootPathW, dwFlags);
-    HeapFree(GetProcessHeap(), 0, szRootPathW);
-
-    return hr;
-}
-
-HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
-{
-    WCHAR szPath[MAX_PATH] = {0};
-    DWORD dwSize, dwType;
-    LONG ret;
-
-    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
-
-    if (!(dwFlags & SHERB_NOCONFIRMATION))
-    {
-        /* FIXME
-         * enumerate available files
-         * show confirmation dialog
-         */
-        FIXME("show confirmation dialog\n");
-    }
-
-    if (dwFlags & SHERB_NOPROGRESSUI)
-    {
-        ret = EmptyRecycleBinW(pszRootPath);
-    }
-    else
-    {
-       /* FIXME
-        * show a progress dialog
-        */
-        ret = EmptyRecycleBinW(pszRootPath);
-    }
-
-    if (!ret)
-        return HRESULT_FROM_WIN32(GetLastError());
-
-    if (!(dwFlags & SHERB_NOSOUND))
-    {
-        dwSize = sizeof(szPath);
-        ret = RegGetValueW(HKEY_CURRENT_USER,
-                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
-                           NULL,
-                           RRF_RT_REG_EXPAND_SZ,
-                           &dwType,
-                           (PVOID)szPath,
-                           &dwSize);
-        if (ret != ERROR_SUCCESS)
-            return S_OK;
-
-        if (dwType != REG_EXPAND_SZ) /* type dismatch */
-            return S_OK;
-
-        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
-        PlaySoundW(szPath, NULL, SND_FILENAME);
-    }
-    return S_OK;
-}
-
-HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
-{
-    LPWSTR szRootPathW = NULL;
-    int len;
-    HRESULT hr;
-
-    TRACE("%s, %p\n", debugstr_a(pszRootPath), pSHQueryRBInfo);
-
-    if (pszRootPath)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
-        if (len == 0)
-            return HRESULT_FROM_WIN32(GetLastError());
-        szRootPathW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!szRootPathW)
-            return E_OUTOFMEMORY;
-        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
-        {
-            HeapFree(GetProcessHeap(), 0, szRootPathW);
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-    }
-
-    hr = SHQueryRecycleBinW(szRootPathW, pSHQueryRBInfo);
-    HeapFree(GetProcessHeap(), 0, szRootPathW);
-
-    return hr;
-}
-
-HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
-{
-    FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
-
-    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
-        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
-    {
-        return E_INVALIDARG;
-    }
-
-    pSHQueryRBInfo->i64Size = 0;
-    pSHQueryRBInfo->i64NumItems = 0;
-
-    return S_OK;
 }
