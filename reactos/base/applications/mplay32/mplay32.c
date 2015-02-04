@@ -44,26 +44,26 @@ static const TBBUTTON Buttons[] =
 
 void EnableMenuItems(HWND hwnd)
 {
+    MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
     MCI_DGV_RECT_PARMS mciVideoRect;
     MCI_DGV_WINDOW_PARMSW mciVideoWindow; 
-    DWORD dwError;
 
     EnableMenuItem(hMainMenu, IDM_CLOSE_FILE, MF_BYCOMMAND | MF_ENABLED);
 
-    dwError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_TEST, (DWORD_PTR)&mciGeneric);
-    if (dwError == 0)
+    mciError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_TEST, (DWORD_PTR)&mciGeneric);
+    if (mciError == 0)
     {
         EnableMenuItem(hMainMenu, IDM_DEVPROPS, MF_BYCOMMAND | MF_ENABLED);
     }
 
     mciVideoWindow.hWnd = hwnd;
 
-    dwError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow); 
-    if (!dwError)
+    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow); 
+    if (!mciError)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD_PTR)&mciVideoRect);
-        if (!dwError)
+        mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD_PTR)&mciVideoRect);
+        if (!mciError)
         {
             EnableMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_ENABLED);
         }
@@ -155,17 +155,17 @@ SetImageList(HWND hwnd)
 }
 
 static VOID
-ShowMCIError(HWND hwnd, DWORD dwError)
+ShowMCIError(HWND hwnd, MCIERROR mciError)
 {
     TCHAR szErrorMessage[MAX_MCISTR];
     TCHAR szTempMessage[MAX_MCISTR + 44];
 
-    if (mciGetErrorString(dwError, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0])) == FALSE)
+    if (mciGetErrorString(mciError, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0])) == FALSE)
     {
         LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0]));
     }
 
-    _stprintf(szTempMessage, _T("MMSYS%lu: %s"), dwError, szErrorMessage);
+    _stprintf(szTempMessage, _T("MMSYS%lu: %s"), mciError, szErrorMessage);
     MessageBox(hwnd, szTempMessage, szAppTitle, MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -391,13 +391,13 @@ GetDeviceFriendlyName(LPTSTR lpDeviceName, LPTSTR lpFriendlyName, DWORD dwFriend
 static DWORD
 CloseMciDevice(VOID)
 {
+    MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
-    DWORD dwError;
 
     if (bIsOpened)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-        if (dwError) return dwError;
+        mciError = mciSendCommand(wDeviceId, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+        if (mciError) return mciError;
         bIsOpened = FALSE;
     }
 
@@ -409,10 +409,10 @@ CloseMciDevice(VOID)
 static DWORD
 OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 {
+    MCIERROR mciError;
     MCI_STATUS_PARMS mciStatus;
     MCI_OPEN_PARMS mciOpen;
     TCHAR szNewTitle[MAX_PATH];
-    DWORD dwError;
 
     if (bIsOpened)
     {
@@ -425,18 +425,18 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     mciOpen.wDeviceID = 0;
     mciOpen.lpstrAlias = NULL;
 
-    dwError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD_PTR)&mciOpen);
-    if (dwError != 0)
+    mciError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD_PTR)&mciOpen);
+    if (mciError != 0)
     {
-        return dwError;
+        return mciError;
     }
 
     mciStatus.dwItem = MCI_STATUS_LENGTH;
 
-    dwError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD_PTR)&mciStatus);
-    if (dwError != 0)
+    mciError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD_PTR)&mciStatus);
+    if (mciError != 0)
     {
-        return dwError;
+        return mciError;
     }
 
     SendMessage(hTrackBar, TBM_SETRANGEMIN, (WPARAM) TRUE, (LPARAM) 1);
@@ -495,24 +495,24 @@ StopPlayback(HWND hwnd)
 static VOID
 SeekPlayback(HWND hwnd, DWORD dwNewPos)
 {
+    MCIERROR mciError;
     MCI_SEEK_PARMS mciSeek;
     MCI_PLAY_PARMS mciPlay;
-    DWORD dwError;
 
     if (bIsOpened)
     {
         mciSeek.dwTo = (DWORD_PTR)dwNewPos;
-        dwError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_TO, (DWORD_PTR)&mciSeek);
-        if (dwError != 0)
+        mciError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_TO, (DWORD_PTR)&mciSeek);
+        if (mciError != 0)
         {
-            ShowMCIError(hwnd, dwError);
+            ShowMCIError(hwnd, mciError);
         }
 
         mciPlay.dwCallback = (DWORD_PTR)hwnd;
-        dwError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
-        if (dwError != 0)
+        mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
+        if (mciError != 0)
         {
-            ShowMCIError(hwnd, dwError);
+            ShowMCIError(hwnd, mciError);
         }
     }
 }
@@ -566,15 +566,15 @@ SeekForwPlayback(HWND hwnd)
 static VOID
 PausePlayback(HWND hwnd)
 {
+    MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
-    DWORD dwError;
 
     if (bIsOpened)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-        if (dwError != 0)
+        mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+        if (mciError != 0)
         {
-            ShowMCIError(hwnd, dwError);
+            ShowMCIError(hwnd, mciError);
         }
         bIsPaused = TRUE;
     }
@@ -583,15 +583,15 @@ PausePlayback(HWND hwnd)
 static VOID
 ResumePlayback(HWND hwnd)
 {
+    MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
-    DWORD dwError;
 
     if (bIsPaused)
     {
-        dwError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-        if (dwError != 0)
+        mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+        if (mciError != 0)
         {
-            ShowMCIError(hwnd, dwError);
+            ShowMCIError(hwnd, mciError);
         }
         bIsPaused = FALSE;
     }
@@ -600,13 +600,13 @@ ResumePlayback(HWND hwnd)
 static VOID
 ShowDeviceProperties(HWND hwnd)
 {
+    MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
-    DWORD dwError;
 
-    dwError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-    if (dwError != 0)
+    mciError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+    if (mciError != 0)
     {
-        ShowMCIError(hwnd, dwError);
+        ShowMCIError(hwnd, mciError);
     }
 }
 
