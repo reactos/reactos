@@ -1526,8 +1526,42 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FXTRACT */
             case 0x34:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                FAST486_FPU_DATA_REG Value = FPU_ST(0);
+
+                if ((FPU_GET_TAG(0) == FPU_TAG_EMPTY) || FPU_IS_INDEFINITE(&Value))
+                {
+                    State->FpuStatus.Ie = TRUE;
+                    if (FPU_GET_TAG(0) == FPU_TAG_EMPTY) State->FpuStatus.Sf = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (FPU_IS_ZERO(&Value))
+                {
+                    /* The exponent of zero is negative infinity */
+                    FPU_ST(0).Sign = TRUE;
+                    FPU_ST(0).Exponent = FPU_MAX_EXPONENT + 1;
+                    FPU_ST(0).Mantissa = FPU_MANTISSA_HIGH_BIT;
+                }
+                else if (FPU_IS_INFINITY(&Value))
+                {
+                    /* The exponent of infinity is positive infinity */
+                    FPU_ST(0).Sign = FALSE;
+                    FPU_ST(0).Exponent = FPU_MAX_EXPONENT + 1;
+                    FPU_ST(0).Mantissa = FPU_MANTISSA_HIGH_BIT;
+                }
+                else
+                {
+                    /* Store the unbiased exponent in ST0 */
+                    Fast486FpuFromInteger(State,
+                                          (LONGLONG)Value.Exponent - (LONGLONG)FPU_REAL10_BIAS,
+                                          &FPU_ST(0));
+                }
+
+                /* Now push the mantissa as a real number, with the original sign */
+                Value.Exponent = FPU_REAL10_BIAS;
+                Fast486FpuPush(State, &Value);
 
                 break;
             }
@@ -1544,18 +1578,14 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FDECSTP */
             case 0x36:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
-
+                State->FpuStatus.Top--;
                 break;
             }
 
             /* FINCSTP */
             case 0x37:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
-
+                State->FpuStatus.Top++;
                 break;
             }
 
