@@ -1578,7 +1578,7 @@ FORCEINLINE
 BOOLEAN
 FASTCALL
 Fast486FpuPush(PFAST486_STATE State,
-               PFAST486_FPU_DATA_REG Data)
+               PCFAST486_FPU_DATA_REG Data)
 {
     State->FpuStatus.Top--;
 

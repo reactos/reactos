@@ -30,6 +30,64 @@
 #include "common.h"
 #include "fpu.h"
 
+/* CONSTANTS ******************************************************************/
+
+/* 0.00 */
+static const FAST486_FPU_DATA_REG FpuZero =
+{
+    .Sign = FALSE,
+    .Exponent = 0,
+    .Mantissa = 0ULL
+};
+
+/* 1.00 */
+static const FAST486_FPU_DATA_REG FpuOne =
+{
+    .Sign = FALSE,
+    .Exponent = FPU_REAL10_BIAS,
+    .Mantissa = 0x8000000000000000ULL
+};
+
+/* Pi */
+static const FAST486_FPU_DATA_REG FpuPi =
+{
+    .Sign = FALSE,
+    .Exponent = FPU_REAL10_BIAS + 1,
+    .Mantissa = 0xC90FDAA22168C234ULL
+};
+
+/* lb(10) */
+static const FAST486_FPU_DATA_REG FpuL2Ten =
+{
+    .Sign = FALSE,
+    .Exponent = FPU_REAL10_BIAS + 1,
+    .Mantissa = 0xD49A784BCD1D8AFEULL
+};
+
+/* lb(e) */
+static const FAST486_FPU_DATA_REG FpuL2E =
+{
+    .Sign = FALSE,
+    .Exponent = FPU_REAL10_BIAS,
+    .Mantissa = 0xB8AA3B295C17F0BBULL
+};
+
+/* lg(2) */
+static const FAST486_FPU_DATA_REG FpuLgTwo =
+{
+    .Sign = FALSE,
+    .Exponent = FPU_REAL10_BIAS - 2,
+    .Mantissa = 0x9A209A84FBCFF798ULL
+};
+
+/* ln(2) */
+static const FAST486_FPU_DATA_REG FpuLnTwo =
+{
+    .Sign = FALSE,
+    .Exponent = FPU_REAL10_BIAS - 1,
+    .Mantissa = 0xB17217F7D1CF79ABULL
+};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef FAST486_NO_FPU
@@ -167,7 +225,7 @@ Fast486FpuFromInteger(PFAST486_STATE State,
 
 static inline BOOLEAN FASTCALL
 Fast486FpuToInteger(PFAST486_STATE State,
-                    PFAST486_FPU_DATA_REG Value,
+                    PCFAST486_FPU_DATA_REG Value,
                     PLONGLONG Result)
 {
     ULONG Bits;
@@ -272,7 +330,7 @@ Fast486FpuFromSingleReal(PFAST486_STATE State,
 
 static inline BOOLEAN FASTCALL
 Fast486FpuToSingleReal(PFAST486_STATE State,
-                       PFAST486_FPU_DATA_REG Value,
+                       PCFAST486_FPU_DATA_REG Value,
                        PULONG Result)
 {
     ULONGLONG Remainder;
@@ -404,7 +462,7 @@ Fast486FpuFromDoubleReal(PFAST486_STATE State,
 
 static inline BOOLEAN FASTCALL
 Fast486FpuToDoubleReal(PFAST486_STATE State,
-                       PFAST486_FPU_DATA_REG Value,
+                       PCFAST486_FPU_DATA_REG Value,
                        PULONGLONG Result)
 {
     ULONGLONG Remainder;
@@ -536,7 +594,7 @@ Fast486FpuFromPackedBcd(PFAST486_STATE State,
 
 static inline BOOLEAN FASTCALL
 Fast486FpuToPackedBcd(PFAST486_STATE State,
-                      PFAST486_FPU_DATA_REG Value,
+                      PCFAST486_FPU_DATA_REG Value,
                       PUCHAR Result)
 {
     INT i;
@@ -562,8 +620,8 @@ Fast486FpuToPackedBcd(PFAST486_STATE State,
 
 static inline VOID FASTCALL
 Fast486FpuAdd(PFAST486_STATE State,
-              PFAST486_FPU_DATA_REG FirstOperand,
-              PFAST486_FPU_DATA_REG SecondOperand,
+              PCFAST486_FPU_DATA_REG FirstOperand,
+              PCFAST486_FPU_DATA_REG SecondOperand,
               PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG FirstAdjusted = *FirstOperand;
@@ -656,8 +714,8 @@ Fast486FpuAdd(PFAST486_STATE State,
 
 static inline VOID FASTCALL
 Fast486FpuSubtract(PFAST486_STATE State,
-                   PFAST486_FPU_DATA_REG FirstOperand,
-                   PFAST486_FPU_DATA_REG SecondOperand,
+                   PCFAST486_FPU_DATA_REG FirstOperand,
+                   PCFAST486_FPU_DATA_REG SecondOperand,
                    PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG NegativeSecondOperand = *SecondOperand;
@@ -671,8 +729,8 @@ Fast486FpuSubtract(PFAST486_STATE State,
 
 static inline VOID FASTCALL
 Fast486FpuCompare(PFAST486_STATE State,
-                  PFAST486_FPU_DATA_REG FirstOperand,
-                  PFAST486_FPU_DATA_REG SecondOperand)
+                  PCFAST486_FPU_DATA_REG FirstOperand,
+                  PCFAST486_FPU_DATA_REG SecondOperand)
 {
     if (FPU_IS_NAN(FirstOperand) || FPU_IS_NAN(SecondOperand))
     {
@@ -724,8 +782,8 @@ Fast486FpuCompare(PFAST486_STATE State,
 
 static inline VOID FASTCALL
 Fast486FpuMultiply(PFAST486_STATE State,
-                   PFAST486_FPU_DATA_REG FirstOperand,
-                   PFAST486_FPU_DATA_REG SecondOperand,
+                   PCFAST486_FPU_DATA_REG FirstOperand,
+                   PCFAST486_FPU_DATA_REG SecondOperand,
                    PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG TempResult;
@@ -756,8 +814,8 @@ Fast486FpuMultiply(PFAST486_STATE State,
 
 static inline VOID FASTCALL
 Fast486FpuDivide(PFAST486_STATE State,
-                 PFAST486_FPU_DATA_REG FirstOperand,
-                 PFAST486_FPU_DATA_REG SecondOperand,
+                 PCFAST486_FPU_DATA_REG FirstOperand,
+                 PCFAST486_FPU_DATA_REG SecondOperand,
                  PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG TempResult;
@@ -1309,8 +1367,16 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FCHS */
             case 0x20:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                /* Invert the sign */
+                FPU_ST(0).Sign = !FPU_ST(0).Sign;
 
                 break;
             }
@@ -1318,8 +1384,16 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FABS */
             case 0x21:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                /* Set the sign to positive */
+                FPU_ST(0).Sign = FALSE;
 
                 break;
             }
@@ -1327,26 +1401,58 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FTST */
             case 0x24:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
-
+                Fast486FpuCompare(State, &FPU_ST(0), &FpuZero);
                 break;
             }
 
             /* FXAM */
             case 0x25:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                /* The sign bit goes in C1, even if the register's empty */
+                State->FpuStatus.Code1 = FPU_ST(0).Sign;
 
-                break;
-            }
-
-            /* FTSTP */
-            case 0x26:
-            {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Code0 = 1;
+                    State->FpuStatus.Code2 = 0;
+                    State->FpuStatus.Code3 = 1;
+                }
+                else if (FPU_GET_TAG(0) == FPU_TAG_SPECIAL)
+                {
+                    if (FPU_IS_INFINITY(&FPU_ST(0)))
+                    {
+                        State->FpuStatus.Code0 = 1;
+                        State->FpuStatus.Code2 = 1;
+                        State->FpuStatus.Code3 = 0;
+                    }
+                    else
+                    {
+                        State->FpuStatus.Code0 = 1;
+                        State->FpuStatus.Code2 = 0;
+                        State->FpuStatus.Code3 = 0;
+                    }
+                }
+                else if (FPU_GET_TAG(0) == FPU_TAG_ZERO)
+                {
+                    State->FpuStatus.Code0 = 0;
+                    State->FpuStatus.Code2 = 0;
+                    State->FpuStatus.Code3 = 1;
+                }
+                else
+                {
+                    if (FPU_IS_NORMALIZED(&FPU_ST(0)))
+                    {
+                        State->FpuStatus.Code0 = 0;
+                        State->FpuStatus.Code2 = 1;
+                        State->FpuStatus.Code3 = 0;
+                    }
+                    else
+                    {
+                        State->FpuStatus.Code0 = 0;
+                        State->FpuStatus.Code2 = 1;
+                        State->FpuStatus.Code3 = 1;
+                    }
+                }
 
                 break;
             }
@@ -1366,9 +1472,18 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FLDZ */
             case 0x2E:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                PCFAST486_FPU_DATA_REG Constants[] =
+                {
+                    &FpuOne,
+                    &FpuL2Ten,
+                    &FpuL2E,
+                    &FpuPi,
+                    &FpuLgTwo,
+                    &FpuLnTwo,
+                    &FpuZero
+                };
 
+                Fast486FpuPush(State, Constants[ModRegRm.SecondRegister]);
                 break;
             }
 
