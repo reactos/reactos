@@ -53,6 +53,7 @@ list(APPEND SOURCE
     OffsetClipRgn.c
     PatBlt.c
     Rectangle.c
+    RealizePalette.c
     SelectObject.c
     SetBrushOrgEx.c
     SetDCPenColor.c

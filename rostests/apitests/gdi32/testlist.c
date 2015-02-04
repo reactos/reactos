@@ -54,6 +54,7 @@ extern void func_MaskBlt(void);
 extern void func_OffsetClipRgn(void);
 extern void func_PatBlt(void);
 extern void func_Rectangle(void);
+extern void func_RealizePalette(void);
 extern void func_SelectObject(void);
 extern void func_SetBrushOrgEx(void);
 extern void func_SetDCPenColor(void);
@@ -118,6 +119,7 @@ const struct test winetest_testlist[] =
     { "OffsetClipRgn", func_OffsetClipRgn },
     { "PatBlt", func_PatBlt },
     { "Rectangle", func_Rectangle },
+    { "RealizePalette", func_RealizePalette },
     { "SelectObject", func_SelectObject },
     { "SetBrushOrgEx", func_SetBrushOrgEx },
     { "SetDCPenColor", func_SetDCPenColor },
