@@ -7,6 +7,8 @@
 #define strcasecmp _stricmp
 #endif
 
+#define ARRAYSIZE(a) (sizeof(a) / sizeof((a)[0]))
+
 typedef struct _STRING
 {
     const char *buf;
@@ -38,11 +40,13 @@ enum _ARCH
 typedef int (*PFNOUTLINE)(FILE *, EXPORT *);
 int gbMSComp = 0;
 int gbImportLib = 0;
+int gbNotPrivateNoWarn = 0;
 int gbTracing = 0;
 int giArch = ARCH_X86;
 char *pszArchString = "i386";
 char *pszArchString2;
-char *pszDllName = 0;
+char *pszSourceFileName = NULL;
+char *pszDllName = NULL;
 char *gpszUnderscore = "";
 int gbDebug;
 #define DbgPrint(...) (!gbDebug || fprintf(stderr, __VA_ARGS__))
@@ -80,13 +84,32 @@ enum
     ARG_FLOAT
 };
 
-char* astrCallingConventions[] =
+const char* astrCallingConventions[] =
 {
     "STDCALL",
     "CDECL",
     "FASTCALL",
     "THISCALL",
     "EXTERN"
+};
+
+static const char* astrShouldBePrivate[] =
+{
+    "DllCanUnloadNow",
+    "DllGetClassObject",
+    "DllGetClassFactoryFromClassString",
+    "DllGetDocumentation",
+    "DllInitialize",
+    "DllInstall",
+    "DllRegisterServer",
+    "DllRegisterServerEx",
+    "DllRegisterServerExW",
+    "DllUnload",
+    "DllUnregisterServer",
+    "RasCustomDeleteEntryNotify",
+    "RasCustomDial",
+    "RasCustomDialDlg",
+    "RasCustomEntryDlg",
 };
 
 static
@@ -284,7 +307,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             fprintf(file, "\tint retval;\n");
         }
         fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s(",
-                        pszDllName, pexp->strName.len, pexp->strName.buf);
+                pszDllName, pexp->strName.len, pexp->strName.buf);
     }
 
     for (i = 0; i < pexp->nArgCount; i++)
@@ -352,12 +375,12 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         if (pexp->uFlags & FL_RET64)
         {
             fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = %%\"PRIx64\"\\n\", retval);\n",
-                pszDllName, pexp->strName.len, pexp->strName.buf);
+                    pszDllName, pexp->strName.len, pexp->strName.buf);
         }
         else
         {
             fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = 0x%%lx\\n\", retval);\n",
-                pszDllName, pexp->strName.len, pexp->strName.buf);
+                    pszDllName, pexp->strName.len, pexp->strName.buf);
         }
         fprintf(file, "\treturn retval;\n}\n\n");
     }
@@ -380,8 +403,7 @@ OutputHeader_asmstub(FILE *file, char *libname)
     }
     else if (giArch == ARCH_ARM)
     {
-        fprintf(file,
-                "    AREA |.text|,ALIGN=2,CODE,READONLY\n\n");
+        fprintf(file, "    AREA |.text|,ALIGN=2,CODE,READONLY\n\n");
     }
 }
 
@@ -689,6 +711,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
     EXPORT exp;
     int included;
     char namebuffer[16];
+    unsigned int i;
 
     //fprintf(stderr, "info: line %d, pcStart:'%.30s'\n", nLine, pcStart);
 
@@ -702,7 +725,6 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         exp.nArgCount = 0;
         exp.uFlags = 0;
         exp.nNumber++;
-
 
         //if (!strncmp(pcLine, "22 stdcall @(long) MPR_Alloc",28))
         //    gbDebug = 1;
@@ -734,7 +756,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         /* Go to next token (type) */
         if (!(pc = NextToken(pc)))
         {
-            fprintf(stderr, "error: line %d, unexpected end of line\n", nLine);
+            fprintf(stderr, "%s line %d : error: unexpected end of line\n", pszSourceFileName, nLine);
             return -10;
         }
 
@@ -768,8 +790,8 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         }
         else
         {
-            fprintf(stderr, "error: line %d, expected callconv, got '%.*s' %d\n",
-                    nLine, TokenLength(pc), pc, *pc);
+            fprintf(stderr, "%s line %d : error: expected callconv, got '%.*s' %d\n",
+                    pszSourceFileName, nLine, TokenLength(pc), pc, *pc);
             return -11;
         }
 
@@ -879,14 +901,14 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Go to next token */
             if (!(pc = NextToken(pc)))
             {
-                fprintf(stderr, "error: line %d, expected token\n", nLine);
+                fprintf(stderr, "%s line %d : error: expected token\n", pszSourceFileName, nLine);
                 return -13;
             }
 
             /* Verify syntax */
             if (*pc++ != '(')
             {
-                fprintf(stderr, "error: line %d, expected '('\n", nLine);
+                fprintf(stderr, "%s line %d : error: expected '('\n", pszSourceFileName, nLine);
                 return -14;
             }
 
@@ -937,7 +959,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.anArgs[exp.nArgCount] = ARG_FLOAT;
                 }
                 else
-                    fprintf(stderr, "error: line %d, expected type, got: %.10s\n", nLine, pc);
+                    fprintf(stderr, "%s line %d : error: expected type, got: %.10s\n", pszSourceFileName, nLine, pc);
 
                 exp.nArgCount++;
 
@@ -952,7 +974,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Check syntax */
             if (*pc++ != ')')
             {
-                fprintf(stderr, "error: line %d, expected ')'\n", nLine);
+                fprintf(stderr, "%s line %d : error: expected ')'\n", pszSourceFileName, nLine);
                 return -16;
             }
         }
@@ -978,7 +1000,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.strName.len = (int)(p - pc);
                     if (exp.strName.len < 1)
                     {
-                        fprintf(stderr, "error, @ in line %d\n", nLine);
+                        fprintf(stderr, "%s line %d : error: unexpected @ found\n", pszSourceFileName, nLine);
                         return -1;
                     }
                     exp.nStackBytes = atoi(p + 1);
@@ -1001,7 +1023,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Check syntax (end of line) */
             if (NextToken(pc))
             {
-                 fprintf(stderr, "error: line %d, additional tokens after ')'\n", nLine);
+                 fprintf(stderr, "%s line %d : error: additional tokens after ')'\n", pszSourceFileName, nLine);
                  return -17;
             }
 
@@ -1010,15 +1032,28 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         }
         else
         {
-            exp.strTarget.buf = 0;
+            exp.strTarget.buf = NULL;
             exp.strTarget.len = 0;
         }
 
         /* Check for no-name without ordinal */
         if ((exp.uFlags & FL_ORDINAL) && (exp.nOrdinal == -1))
         {
-            fprintf(stderr, "error: line %d, ordinal export without ordinal!\n", nLine);
+            fprintf(stderr, "%s line %d : error: ordinal export without ordinal!\n", pszSourceFileName, nLine);
             return -1;
+        }
+
+        if (!gbNotPrivateNoWarn && !(exp.uFlags & FL_PRIVATE))
+        {
+            for (i = 0; i < ARRAYSIZE(astrShouldBePrivate); i++)
+            {
+                if (strlen(astrShouldBePrivate[i]) == exp.strName.len &&
+                    strncmp(exp.strName.buf, astrShouldBePrivate[i], exp.strName.len) == 0)
+                {
+                    fprintf(stderr, "%s line %d : warning: export of '%.*s' should be PRIVATE\n",
+                            pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
+                }
+            }
         }
 
         OutputLine(fileDest, &exp);
@@ -1028,26 +1063,26 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
     return 0;
 }
 
-
 void usage(void)
 {
     printf("syntax: spec2def [<options> ...] <spec file>\n"
            "Possible options:\n"
-           "  -h --help       prints this screen\n"
-           "  -l=<file>       generates an asm lib stub\n"
-           "  -d=<file>       generates a def file\n"
-           "  -s=<file>       generates a stub file\n"
-           "  --ms            msvc compatibility\n"
-           "  -n=<name>       name of the dll\n"
-           "  --implib        generate a def file for an import library\n"
-           "  -a=<arch>       Set architecture to <arch>. (i386, x86_64, arm)\n"
-           "  --with-tracing generates wine-like \"+relay\" trace trampolines. (necessitates -s)\n");
+           "  -h --help               print this help screen\n"
+           "  -l=<file>               generate an asm lib stub\n"
+           "  -d=<file>               generate a def file\n"
+           "  -s=<file>               generate a stub file\n"
+           "  --ms                    MSVC compatibility\n"
+           "  -n=<name>               name of the dll\n"
+           "  --implib                generate a def file for an import library\n"
+           "  --no-private-warnings   suppress warnings about symbols that should be -private\n"
+           "  -a=<arch>               set architecture to <arch> (i386, x86_64, arm)\n"
+           "  --with-tracing          generate wine-like \"+relay\" trace trampolines (needs -s)\n");
 }
 
 int main(int argc, char *argv[])
 {
     size_t nFileSize;
-    char *pszSource, *pszDefFileName = 0, *pszStubFileName = 0, *pszLibStubName = 0;
+    char *pszSource, *pszDefFileName = NULL, *pszStubFileName = NULL, *pszLibStubName = NULL;
     char achDllName[40];
     FILE *file;
     int result = 0, i;
@@ -1083,15 +1118,19 @@ int main(int argc, char *argv[])
         {
             pszDllName = argv[i] + 3;
         }
-        else if ((strcasecmp(argv[i], "--implib") == 0))
+        else if (strcasecmp(argv[i], "--implib") == 0)
         {
             gbImportLib = 1;
         }
-        else if ((strcasecmp(argv[i], "--ms") == 0))
+        else if (strcasecmp(argv[i], "--ms") == 0)
         {
             gbMSComp = 1;
         }
-        else if ((strcasecmp(argv[i], "--with-tracing") == 0))
+        else if (strcasecmp(argv[i], "--no-private-warnings") == 0)
+        {
+            gbNotPrivateNoWarn = 1;
+        }
+        else if (strcasecmp(argv[i], "--with-tracing") == 0)
         {
             if (!pszStubFileName)
             {
@@ -1152,11 +1191,12 @@ int main(int argc, char *argv[])
         pszDllName = achDllName;
     }
 
-    /* Open input file argv[1] */
-    file = fopen(argv[i], "r");
+    /* Open input file */
+    pszSourceFileName = argv[i];
+    file = fopen(pszSourceFileName, "r");
     if (!file)
     {
-        fprintf(stderr, "error: could not open file %s ", argv[i]);
+        fprintf(stderr, "error: could not open file %s\n", pszSourceFileName);
         return -3;
     }
 
@@ -1186,7 +1226,7 @@ int main(int argc, char *argv[])
         file = fopen(pszDefFileName, "w");
         if (!file)
         {
-            fprintf(stderr, "error: could not open output file %s ", argv[i + 1]);
+            fprintf(stderr, "error: could not open output file %s\n", argv[i + 1]);
             return -5;
         }
 
@@ -1201,7 +1241,7 @@ int main(int argc, char *argv[])
         file = fopen(pszStubFileName, "w");
         if (!file)
         {
-            fprintf(stderr, "error: could not open output file %s ", argv[i + 1]);
+            fprintf(stderr, "error: could not open output file %s\n", argv[i + 1]);
             return -5;
         }
 
@@ -1216,7 +1256,7 @@ int main(int argc, char *argv[])
         file = fopen(pszLibStubName, "w");
         if (!file)
         {
-            fprintf(stderr, "error: could not open output file %s ", argv[i + 1]);
+            fprintf(stderr, "error: could not open output file %s\n", argv[i + 1]);
             return -5;
         }
 
@@ -1225,7 +1265,6 @@ int main(int argc, char *argv[])
         fprintf(file, "\n    END\n");
         fclose(file);
     }
-
 
     return result;
 }
