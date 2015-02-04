@@ -49,7 +49,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Toate admisibile (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_ALL_TYPES_FILTER "Toate admisibile"
     IDS_TOOLTIP_PLAY "Redare conținut multimedia"
     IDS_TOOLTIP_STOP "Oprirea lecturii"
     IDS_TOOLTIP_EJECT "Scoate"

@@ -50,7 +50,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Alla kompaktibla filer  (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_ALL_TYPES_FILTER "Alla kompaktibla filer"
     IDS_TOOLTIP_PLAY "Spela upp"
     IDS_TOOLTIP_STOP "Stopp"
     IDS_TOOLTIP_EJECT "Mata ut"

@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdlib.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -10,6 +11,7 @@
 #include <digitalv.h>
 #include <commctrl.h>
 #include <tchar.h>
+#include <strsafe.h>
 
 #include "resource.h"
 

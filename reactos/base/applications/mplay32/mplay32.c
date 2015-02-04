@@ -8,13 +8,18 @@
 
 #define MAIN_WINDOW_HEIGHT    125
 #define MAIN_WINDOW_MIN_WIDTH 250
+#define MAX_MCISTR            256
 
 HINSTANCE hInstance = NULL;
 HWND hTrackBar = NULL;
 HWND hToolBar = NULL;
 HMENU hMainMenu = NULL;
+
 TCHAR szAppTitle[256] = _T("");
-TCHAR szPrevFile[MAX_PATH] = _T("\0");
+TCHAR szPrevFile[MAX_PATH] = _T("");
+TCHAR szDefaultFilter[MAX_PATH] = _T("");
+TCHAR *szFilter = NULL;
+
 WORD wDeviceId;
 BOOL bIsOpened = FALSE;
 BOOL bIsPaused = FALSE;
@@ -152,12 +157,12 @@ SetImageList(HWND hwnd)
 static VOID
 ShowMCIError(HWND hwnd, DWORD dwError)
 {
-    TCHAR szErrorMessage[256];
-    TCHAR szTempMessage[300];
+    TCHAR szErrorMessage[MAX_MCISTR];
+    TCHAR szTempMessage[MAX_MCISTR + 44];
 
-    if (mciGetErrorString(dwError, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR)) == FALSE)
+    if (mciGetErrorString(dwError, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0])) == FALSE)
     {
-        LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR));
+        LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0]));
     }
 
     _stprintf(szTempMessage, _T("MMSYS%lu: %s"), dwError, szErrorMessage);
@@ -318,6 +323,69 @@ SwitchViewMode(HWND hwnd)
 
         MoveWindow(hwnd, PrevWindowPos.left, PrevWindowPos.top, PrevWindowPos.right - PrevWindowPos.left, PrevWindowPos.bottom - PrevWindowPos.top, TRUE);
     }
+}
+
+static DWORD
+GetNumDevices(VOID)
+{
+    MCI_SYSINFO_PARMS mciSysInfo;
+    DWORD dwNumDevices = 0;
+
+    mciSysInfo.dwCallback  = 0;
+    mciSysInfo.lpstrReturn = (LPTSTR)&dwNumDevices;
+    mciSysInfo.dwRetSize   = sizeof(dwNumDevices);
+    mciSysInfo.dwNumber    = 0;
+    mciSysInfo.wDeviceType = MCI_ALL_DEVICE_ID;
+
+    mciSendCommand(MCI_ALL_DEVICE_ID, MCI_SYSINFO, MCI_SYSINFO_QUANTITY, (DWORD_PTR)&mciSysInfo);
+
+    return *(DWORD*)mciSysInfo.lpstrReturn;
+}
+
+static DWORD
+GetDeviceName(DWORD dwDeviceIndex, LPTSTR lpDeviceName, DWORD dwDeviceNameSize)
+{
+    MCI_SYSINFO_PARMS mciSysInfo;
+
+    mciSysInfo.dwCallback  = 0;
+    mciSysInfo.lpstrReturn = lpDeviceName;
+    mciSysInfo.dwRetSize   = dwDeviceNameSize;
+    mciSysInfo.dwNumber    = dwDeviceIndex;
+    mciSysInfo.wDeviceType = MCI_DEVTYPE_WAVEFORM_AUDIO;
+
+    return mciSendCommand(MCI_ALL_DEVICE_ID, MCI_SYSINFO, MCI_SYSINFO_NAME, (DWORD_PTR)&mciSysInfo);
+}
+
+static DWORD
+GetDeviceFriendlyName(LPTSTR lpDeviceName, LPTSTR lpFriendlyName, DWORD dwFriendlyNameSize)
+{
+    MCIERROR mciError;
+    MCI_OPEN_PARMS mciOpen;
+    MCI_INFO_PARMS mciInfo;
+    MCI_GENERIC_PARMS mciGeneric;
+
+    mciOpen.dwCallback = 0;
+    mciOpen.wDeviceID  = 0;
+    mciOpen.lpstrDeviceType  = lpDeviceName;
+    mciOpen.lpstrElementName = NULL;
+    mciOpen.lpstrAlias = NULL;
+
+    mciError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_WAIT, (DWORD_PTR)&mciOpen);
+    if (mciError)
+    {
+        return mciError;
+    }
+
+    mciInfo.dwCallback  = 0;
+    mciInfo.lpstrReturn = lpFriendlyName;
+    mciInfo.dwRetSize   = dwFriendlyNameSize;
+
+    mciError = mciSendCommand(mciOpen.wDeviceID, MCI_INFO, MCI_INFO_PRODUCT, (DWORD_PTR)&mciInfo);
+
+    mciGeneric.dwCallback = 0;
+    mciSendCommand(mciOpen.wDeviceID, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+
+    return mciError;
 }
 
 static DWORD
@@ -607,7 +675,7 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
     {
         TCHAR szErrorMessage[256];
 
-        LoadString(hInstance, IDS_UNKNOWNFILEEXT, szErrorMessage, sizeof(szErrorMessage) / sizeof(TCHAR));
+        LoadString(hInstance, IDS_UNKNOWNFILEEXT, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0]));
         MessageBox(hwnd, szErrorMessage, szAppTitle, MB_OK | MB_ICONEXCLAMATION);
         return;
     }
@@ -640,17 +708,215 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
 }
 
 static VOID
+BuildFileFilter(VOID)
+{
+    TCHAR szDeviceName[MAX_MCISTR];
+    TCHAR szFriendlyName[MAX_MCISTR];
+    TCHAR *szDevice = NULL;
+    static TCHAR szDefaultExtension[] = _T("*.*");
+    TCHAR *szExtensionList = NULL;
+    TCHAR *szExtension = NULL;
+    TCHAR *c = NULL;
+    TCHAR *d = NULL;
+    DWORD dwNumValues;
+    DWORD dwNumDevices;
+    DWORD dwValueNameLen;
+    DWORD dwValueDataSize;
+    DWORD dwMaskLen;
+    DWORD dwFilterSize;
+    DWORD dwDeviceSize;
+    DWORD dwExtensionLen;
+    DWORD i;
+    DWORD j;
+    UINT uSizeRemain;
+    UINT uMaskRemain;
+    HKEY hKey = NULL;
+
+    /* Always load the default (all files) filter */
+    LoadString(hInstance, IDS_ALL_TYPES_FILTER, szDefaultFilter, sizeof(szDefaultFilter) / sizeof(szDefaultFilter[0]));
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\MCI Extensions"), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        goto Failure;
+    }
+
+    if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwNumValues, &dwValueNameLen, &dwValueDataSize, NULL, NULL) != ERROR_SUCCESS)
+    {
+        goto Failure;
+    }
+
+    dwMaskLen = ((dwValueNameLen + 3) * dwNumValues) + 1;
+
+    szExtensionList = malloc(dwMaskLen * sizeof(TCHAR));
+    if (!szExtensionList)
+    {
+        goto Failure;
+    }
+
+    dwNumDevices = GetNumDevices();
+
+    /* Allocate space for every pair of Device and Extension Filter */
+    dwFilterSize = (MAX_MCISTR + (dwMaskLen * 2) + 5) * dwNumDevices;
+
+    /* Add space for the "All supported" entry */
+    dwFilterSize = (dwFilterSize + (dwMaskLen * 2) + 7) * sizeof(TCHAR) + sizeof(szDefaultFilter);
+
+    szFilter = malloc(dwFilterSize);
+    if (!szFilter)
+    {
+        goto Failure;
+    }
+
+    szExtension = malloc((dwValueNameLen + 1) * sizeof(TCHAR));
+    if (!szExtension)
+    {
+        goto Failure;
+    }
+
+    szDevice = malloc(dwValueDataSize + sizeof(TCHAR));
+    if (!szDevice)
+    {
+        goto Failure;
+    }
+
+    ZeroMemory(szFilter, dwFilterSize);
+
+    uSizeRemain = dwFilterSize;
+    c = szFilter;
+
+    for (j = 1; j <= dwNumDevices; j++)
+    {
+        if (GetDeviceName(j, szDeviceName, sizeof(szDeviceName)))
+        {
+            continue;
+        }
+
+        if (GetDeviceFriendlyName(szDeviceName, szFriendlyName, sizeof(szFriendlyName)))
+        {
+            continue;
+        }
+
+        /* Copy the default extension list, that may be overwritten after... */
+        StringCbCopy(szExtensionList, dwMaskLen * sizeof(TCHAR), szDefaultExtension);
+
+        /* Try to determine the real extension list */
+        uMaskRemain = dwMaskLen * sizeof(TCHAR);
+        d = szExtensionList;
+
+        for (i = 0; i < dwNumValues; i++)
+        {
+            dwExtensionLen = dwValueNameLen + 1;
+            dwDeviceSize   = dwValueDataSize + sizeof(TCHAR);
+
+            ZeroMemory(szDevice, dwDeviceSize);
+
+            if (RegEnumValue(hKey, i, szExtension, &dwExtensionLen, NULL, NULL, (LPBYTE)szDevice, &dwDeviceSize) == ERROR_SUCCESS)
+            {
+                CharLowerBuff(szDevice, dwDeviceSize / sizeof(TCHAR));
+                CharLowerBuff(szDeviceName, sizeof(szDeviceName) / sizeof(szDeviceName[0]));
+                if (_tcscmp(szDeviceName, szDevice) == 0)
+                {
+                     CharLowerBuff(szExtension, dwExtensionLen);
+                     StringCbPrintfEx(d, uMaskRemain, &d, &uMaskRemain, 0, _T("%s%s%s"), _T("*."), szExtension, _T(";"));
+                }
+            }
+        }
+
+        /* Remove the last separator */
+        d--;
+        uSizeRemain += sizeof(*d);
+        *d = _T('\0');
+
+        /* Add the description */
+        StringCbPrintfEx(c, uSizeRemain, &c, &uSizeRemain, 0, _T("%s (%s)"), szFriendlyName, szExtensionList);
+
+        /* Skip one char to seperate the description from the filter mask */
+        c++;
+        uSizeRemain -= sizeof(*c);
+
+        /* Append the filter mask */
+        StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0); 
+
+        /* Skip another char to seperate the elements of the filter mask */
+        c++;
+        uSizeRemain -= sizeof(*c);
+    }
+
+    /* Build the full list of supported extensions */
+    uMaskRemain = dwMaskLen * sizeof(TCHAR);
+    d = szExtensionList;
+
+    for (i = 0; i < dwNumValues; i++)
+    {
+        dwExtensionLen = dwValueNameLen + 1;
+
+        if (RegEnumValue(hKey, i, szExtension, &dwExtensionLen, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
+        {
+            CharLowerBuff(szExtension, dwExtensionLen);
+            StringCbPrintfEx(d, uMaskRemain, &d, &uMaskRemain, 0, _T("%s%s%s"), _T("*."), szExtension, _T(";"));
+        }
+    }
+
+    /* Remove the last separator */
+    d--;
+    uSizeRemain += sizeof(*d);
+    *d = _T('\0');
+
+    /* Add the default (all files) description */
+    StringCbPrintfEx(c, uSizeRemain, &c, &uSizeRemain, 0, _T("%s (%s)"), szDefaultFilter, szExtensionList);
+
+    /* Skip one char to seperate the description from the filter mask */
+    c++;
+    uSizeRemain -= sizeof(*c);
+
+    /* Append the filter mask */
+    StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0); 
+
+Cleanup:
+    if (szExtensionList) free(szExtensionList);
+    if (szExtension)     free(szExtension);
+    if (szDevice)        free(szDevice);
+    RegCloseKey(hKey);
+
+    return;
+
+Failure:
+    /* We failed at retrieving the supported files, so use the default filter */
+    if (szFilter) free(szFilter);
+    szFilter = szDefaultFilter;
+
+    uSizeRemain = sizeof(szDefaultFilter);
+    c = szFilter;
+
+    /* Add the default (all files) description */
+    StringCbPrintfEx(c, uSizeRemain, &c, &uSizeRemain, 0, _T("%s (%s)"), szDefaultFilter, szDefaultExtension);
+
+    /* Skip one char to seperate the description from the filter mask */
+    c++;
+    uSizeRemain -= sizeof(*c);
+
+    /* Append the filter mask */
+    StringCbCopyEx(c, uSizeRemain, szDefaultExtension, &c, &uSizeRemain, 0); 
+
+    goto Cleanup;
+}
+
+static VOID
+CleanupFileFilter(VOID)
+{
+    if (szFilter && szFilter != szDefaultFilter) free(szFilter);
+}
+
+static VOID
 OpenFileDialog(HWND hwnd)
 {
     OPENFILENAME OpenFileName;
-    TCHAR szFile[MAX_PATH + 1] = _T("\0");
-    TCHAR szFilter[MAX_PATH], szCurrentDir[MAX_PATH];
+    TCHAR szFile[MAX_PATH + 1] = _T("");
+    TCHAR szCurrentDir[MAX_PATH];
 
     ZeroMemory(&OpenFileName, sizeof(OpenFileName));
 
-    LoadString(hInstance, IDS_ALL_TYPES_FILTER, szFilter, sizeof(szFilter) / sizeof(TCHAR));
-
-    if (!GetCurrentDirectory(sizeof(szCurrentDir) / sizeof(TCHAR), szCurrentDir))
+    if (!GetCurrentDirectory(sizeof(szCurrentDir) / sizeof(szCurrentDir[0]), szCurrentDir))
     {
         _tcscpy(szCurrentDir, _T("c:\\"));
     }
@@ -660,7 +926,7 @@ OpenFileDialog(HWND hwnd)
     OpenFileName.hInstance       = hInstance;
     OpenFileName.lpstrFilter     = szFilter;
     OpenFileName.lpstrFile       = szFile;
-    OpenFileName.nMaxFile        = sizeof(szFile) / sizeof((szFile)[0]);
+    OpenFileName.nMaxFile        = sizeof(szFile) / sizeof(szFile[0]);
     OpenFileName.lpstrInitialDir = szCurrentDir;
     OpenFileName.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
     OpenFileName.lpstrDefExt     = _T("\0");
@@ -689,7 +955,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             TCHAR droppedfile[MAX_PATH];
 
             drophandle = (HDROP)wParam;
-            DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile) / sizeof(TCHAR));
+            DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile) / sizeof(droppedfile[0]));
             DragFinish(drophandle);
             PlayFile(hwnd, droppedfile);
             break;
@@ -862,7 +1128,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_CLOSE_FILE:
                     StopPlayback(hwnd);
-                    _tcscpy(szPrevFile, _T("\0"));
+                    szPrevFile[0] = _T('\0');
                     break;
 
                 case IDM_REPEAT:
@@ -928,7 +1194,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
     hInstance = hInst;
 
-    LoadString(hInstance, IDS_APPTITLE, szAppTitle, sizeof(szAppTitle) / sizeof(TCHAR));
+    LoadString(hInstance, IDS_APPTITLE, szAppTitle, sizeof(szAppTitle) / sizeof(szAppTitle[0]));
 
     WndClass.cbSize            = sizeof(WNDCLASSEX);
     WndClass.lpszClassName     = szClassName;
@@ -965,6 +1231,8 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCELERATORS));
 
+    BuildFileFilter();
+
     DragAcceptFiles(hwnd, TRUE);
 
     DisableMenuItems();
@@ -990,6 +1258,8 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
             DispatchMessage(&msg);
         }
     }
+
+    CleanupFileFilter();
 
     DestroyAcceleratorTable(hAccel);
 

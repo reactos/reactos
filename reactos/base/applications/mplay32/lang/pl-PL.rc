@@ -51,7 +51,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Wszystkie formaty (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_ALL_TYPES_FILTER "Wszystkie formaty"
     IDS_TOOLTIP_PLAY "Odtwarzaj"
     IDS_TOOLTIP_STOP "Zatrzymaj"
     IDS_TOOLTIP_EJECT "Wysuń"

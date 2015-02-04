@@ -47,7 +47,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Всички поддържани (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_ALL_TYPES_FILTER "Всички поддържани"
     IDS_TOOLTIP_PLAY "Пускане"
     IDS_TOOLTIP_STOP "Спиране"
     IDS_TOOLTIP_EJECT "Изваждане"

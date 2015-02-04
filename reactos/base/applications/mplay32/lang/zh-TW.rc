@@ -51,7 +51,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "所有支援格式 (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_ALL_TYPES_FILTER "所有支援格式"
     IDS_TOOLTIP_PLAY "播放"
     IDS_TOOLTIP_STOP "停止"
     IDS_TOOLTIP_EJECT "卸載"
