@@ -434,18 +434,20 @@ EngModifySurface(
     _In_ FLONG flHooks,
     _In_ FLONG flSurface,
     _In_ DHSURF dhsurf,
-    _In_ VOID *pvScan0,
+    _In_ PVOID pvScan0,
     _In_ LONG lDelta,
-    _Reserved_ VOID *pvReserved)
+    _Reserved_ PVOID pvReserved)
 {
     SURFOBJ *pso;
     PSURFACE psurf;
     PDEVOBJ* ppdev;
     PPALETTE ppal;
 
+    /* Lock the surface */
     psurf = SURFACE_ShareLockSurface(hsurf);
     if (psurf == NULL)
     {
+        DPRINT1("Failed to reference surface %p\n", hsurf);
         return FALSE;
     }
 
@@ -465,6 +467,16 @@ EngModifySurface(
     ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
     SURFACE_vSetPalette(psurf, ppal);
     PALETTE_ShareUnlockPalette(ppal);
+
+    /* Update surface flags */
+    if (flSurface & MS_NOTSYSTEMMEMORY)
+         pso->fjBitmap |= BMF_NOTSYSMEM;
+    else
+        pso->fjBitmap &= ~BMF_NOTSYSMEM;
+    if (flSurface & MS_SHAREDACCESS)
+         psurf->flags |= SHAREACCESS_SURFACE;
+    else
+        psurf->flags &= ~SHAREACCESS_SURFACE;
 
     /* Check if the caller passed bitmap bits */
     if ((pvScan0 != NULL) && (lDelta != 0))
@@ -491,16 +503,6 @@ EngModifySurface(
             pso->pvBits = (PCHAR)pso->pvScan0 - pso->cjBits - lDelta;
             pso->fjBitmap &= ~BMF_TOPDOWN;
         }
-
-        /* Update surface flags */
-        if (flSurface & MS_NOTSYSTEMMEMORY)
-             pso->fjBitmap |= BMF_NOTSYSMEM;
-        else
-            pso->fjBitmap &= ~BMF_NOTSYSMEM;
-        if (flSurface & MS_SHAREDACCESS)
-             psurf->flags |= SHAREACCESS_SURFACE;
-        else
-            psurf->flags &= ~SHAREACCESS_SURFACE;
     }
     else
     {
@@ -530,7 +532,7 @@ EngDeleteSurface(
     psurf = SURFACE_ShareLockSurface(hsurf);
     if (!psurf)
     {
-        DPRINT1("Could not reference surface to delete\n");
+        DPRINT1("Could not reference surface %p to delete\n", hsurf);
         return FALSE;
     }
 
