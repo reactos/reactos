@@ -146,6 +146,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Kurulumdan aygıtına uygulanmadan önce gözden geçirmek için dizelgelenen kurulum seçenekleri."
     IDS_ABORTSETUP "ReactOS bilgisayarınıza tümüyle kurulmadı. Eğer şimdi Kur'dan çıkarsanız, ReactOS'u kurmak için Kur'u yeniden çalıştırmayı isteybilirsiniz. Gerçekten çıkılsın mı?"
     IDS_ABORTSETUP2 "Kurulum iptal edilsin mi?"
-    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_NO_TXTSETUP_SIF """txtsetup.sif"" bulunamıyor.\nKur sürdüremiyor."
     IDS_CAPTION "ReactOS Kur"
 END
