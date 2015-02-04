@@ -33,60 +33,60 @@
 /* CONSTANTS ******************************************************************/
 
 /* 0.00 */
-static const FAST486_FPU_DATA_REG FpuZero =
-{
-    .Sign = FALSE,
-    .Exponent = 0,
-    .Mantissa = 0ULL
-};
+static const FAST486_FPU_DATA_REG FpuZero = {0ULL, 0, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = 0,
+//     .Mantissa = 0ULL
+// };
 
 /* 1.00 */
-static const FAST486_FPU_DATA_REG FpuOne =
-{
-    .Sign = FALSE,
-    .Exponent = FPU_REAL10_BIAS,
-    .Mantissa = 0x8000000000000000ULL
-};
+static const FAST486_FPU_DATA_REG FpuOne = {0x8000000000000000ULL, FPU_REAL10_BIAS, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = FPU_REAL10_BIAS,
+//     .Mantissa = 0x8000000000000000ULL
+// };
 
 /* Pi */
-static const FAST486_FPU_DATA_REG FpuPi =
-{
-    .Sign = FALSE,
-    .Exponent = FPU_REAL10_BIAS + 1,
-    .Mantissa = 0xC90FDAA22168C234ULL
-};
+static const FAST486_FPU_DATA_REG FpuPi = {0xC90FDAA22168C234ULL, FPU_REAL10_BIAS + 1, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = FPU_REAL10_BIAS + 1,
+//     .Mantissa = 0xC90FDAA22168C234ULL
+// };
 
 /* lb(10) */
-static const FAST486_FPU_DATA_REG FpuL2Ten =
-{
-    .Sign = FALSE,
-    .Exponent = FPU_REAL10_BIAS + 1,
-    .Mantissa = 0xD49A784BCD1D8AFEULL
-};
+static const FAST486_FPU_DATA_REG FpuL2Ten = {0xD49A784BCD1D8AFEULL, FPU_REAL10_BIAS + 1, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = FPU_REAL10_BIAS + 1,
+//     .Mantissa = 0xD49A784BCD1D8AFEULL
+// };
 
 /* lb(e) */
-static const FAST486_FPU_DATA_REG FpuL2E =
-{
-    .Sign = FALSE,
-    .Exponent = FPU_REAL10_BIAS,
-    .Mantissa = 0xB8AA3B295C17F0BBULL
-};
+static const FAST486_FPU_DATA_REG FpuL2E = {0xB8AA3B295C17F0BBULL, FPU_REAL10_BIAS, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = FPU_REAL10_BIAS,
+//     .Mantissa = 0xB8AA3B295C17F0BBULL
+// };
 
 /* lg(2) */
-static const FAST486_FPU_DATA_REG FpuLgTwo =
-{
-    .Sign = FALSE,
-    .Exponent = FPU_REAL10_BIAS - 2,
-    .Mantissa = 0x9A209A84FBCFF798ULL
-};
+static const FAST486_FPU_DATA_REG FpuLgTwo = {0x9A209A84FBCFF798ULL, FPU_REAL10_BIAS - 2, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = FPU_REAL10_BIAS - 2,
+//     .Mantissa = 0x9A209A84FBCFF798ULL
+// };
 
 /* ln(2) */
-static const FAST486_FPU_DATA_REG FpuLnTwo =
-{
-    .Sign = FALSE,
-    .Exponent = FPU_REAL10_BIAS - 1,
-    .Mantissa = 0xB17217F7D1CF79ABULL
-};
+static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ABULL, FPU_REAL10_BIAS - 1, FALSE};
+// {
+//     .Sign = FALSE,
+//     .Exponent = FPU_REAL10_BIAS - 1,
+//     .Mantissa = 0xB17217F7D1CF79ABULL
+// };
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
