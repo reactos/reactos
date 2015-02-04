@@ -9,7 +9,7 @@ Description = Total Commander is a file manager with two panels side by side.
 Size = 3.55 MB
 Category = 12
 URLSite = http://www.ghisler.com/
-URLDownload = http://www.slo.ru/download/total_commander/tcm851ax32.exe
+URLDownload = http://totalcmd2.s3.amazonaws.com/tcmd851ax32.exe
 CDPath = none
 
 [Section.0407]
