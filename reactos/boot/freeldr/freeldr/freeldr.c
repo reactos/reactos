@@ -41,13 +41,13 @@ VOID BootMain(LPSTR CmdLine)
 
     if (!UiInitialize(FALSE))
     {
-        UiMessageBoxCritical("Unable to initialize UI.\n");
+        UiMessageBoxCritical("Unable to initialize UI.");
         goto Quit;
     }
 
     if (!MmInitializeMemoryManager())
     {
-        UiMessageBoxCritical("Unable to initialize memory manager");
+        UiMessageBoxCritical("Unable to initialize memory manager.");
         goto Quit;
     }
 

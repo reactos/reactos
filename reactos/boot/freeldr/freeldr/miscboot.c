@@ -34,7 +34,6 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
     CHAR  FileName[260];
     PFILE FilePointer;
     ULONG BytesRead;
-    CHAR  SettingName[80];
 
     /* Find all the message box settings and run them */
     UiShowMessageBoxesInSection(SectionName);
@@ -42,8 +41,7 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
     /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
-        sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
-        UiMessageBox(SettingName);
+        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
         return;
     }
 
@@ -56,8 +54,7 @@ LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
     FilePointer = FsOpenFile(FileName);
     if (!FilePointer)
     {
-        strcat(FileName, " not found.");
-        UiMessageBox(FileName);
+        UiMessageBox("%s not found.", FileName);
         return;
     }
 
@@ -97,7 +94,6 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
 {
     ULONG_PTR SectionId;
     PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR  SettingName[80];
     CHAR  SettingValue[80];
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     UCHAR DriveNumber;
@@ -109,8 +105,7 @@ LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
     /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
-        sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
-        UiMessageBox(SettingName);
+        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
         return;
     }
 
@@ -175,7 +170,6 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
 {
     ULONG_PTR SectionId;
     PCSTR SectionName = OperatingSystem->SystemPartition;
-    CHAR  SettingName[80];
     CHAR  SettingValue[80];
     UCHAR DriveNumber;
 
@@ -185,8 +179,7 @@ LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
     /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
-        sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
-        UiMessageBox(SettingName);
+        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
         return;
     }
 

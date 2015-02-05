@@ -682,7 +682,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
         /* Load the ramdisk */
         if (!RamDiskLoadVirtualFile(FileName))
         {
-            UiMessageBox("Failed to load RAM disk file %s\n", FileName);
+            UiMessageBox("Failed to load RAM disk file %s", FileName);
             return;
         }
     }

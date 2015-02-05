@@ -437,8 +437,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
     return TRUE;
 
 Failure:
-    //UiMessageBox("Error reading NLS file %s\n", Filename);
-    UiMessageBox("Error reading NLS file!");
+    UiMessageBox("Error reading NLS file %s", FileName);
     return FALSE;
 }
 

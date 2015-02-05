@@ -30,16 +30,15 @@ ULONG        DriveMapHandlerSegOff = 0;    // Segment:offset style address of ou
 #ifndef _MSC_VER
 VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 {
-    CHAR            SettingName[80];
-    CHAR            SettingValue[80];
-    CHAR            ErrorText[260];
-    CHAR            Drive1[80];
-    CHAR            Drive2[80];
-    ULONG                SectionId;
-    ULONG                SectionItemCount;
-    ULONG                Index;
-    ULONG                Index2;
-    DRIVE_MAP_LIST    DriveMapList;
+    CHAR           SettingName[80];
+    CHAR           SettingValue[80];
+    CHAR           Drive1[80];
+    CHAR           Drive2[80];
+    ULONG          SectionId;
+    ULONG          SectionItemCount;
+    ULONG          Index;
+    ULONG          Index2;
+    DRIVE_MAP_LIST DriveMapList;
 
     RtlZeroMemory(&DriveMapList, sizeof(DRIVE_MAP_LIST));
 
@@ -62,8 +61,7 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
                 // Make sure we haven't exceeded the drive map max count
                 if (DriveMapList.DriveMapCount >= 4)
                 {
-                    sprintf(ErrorText, "Max DriveMap count exceeded in section [%s]:\n\n%s=%s", SectionName, SettingName, SettingValue);
-                    UiMessageBox(ErrorText);
+                    UiMessageBox("Max DriveMap count exceeded in section [%s]:\n\n%s=%s", SectionName, SettingName, SettingValue);
                     continue;
                 }
 
@@ -88,8 +86,7 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
                 // Make sure we got good values before we add them to the map
                 if (!DriveMapIsValidDriveString(Drive1) || !DriveMapIsValidDriveString(Drive2))
                 {
-                    sprintf(ErrorText, "Error in DriveMap setting in section [%s]:\n\n%s=%s", SectionName, SettingName, SettingValue);
-                    UiMessageBox(ErrorText);
+                    UiMessageBox("Error in DriveMap setting in section [%s]:\n\n%s=%s", SectionName, SettingName, SettingValue);
                     continue;
                 }
 

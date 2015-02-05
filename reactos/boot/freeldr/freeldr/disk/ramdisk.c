@@ -155,7 +155,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     //
     if (Information.EndingAddress.HighPart != 0)
     {
-        UiMessageBox("RAM disk too big\n");
+        UiMessageBox("RAM disk too big.");
         FsCloseFile(RamFile);
         return FALSE;
     }
@@ -172,7 +172,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
     gRamDiskBase = MmAllocateMemoryWithType(gRamDiskSize, LoaderXIPRom);
     if (!gRamDiskBase)
     {
-        UiMessageBox("Failed to allocate memory for RAM disk\n");
+        UiMessageBox("Failed to allocate memory for RAM disk.");
         FsCloseFile(RamFile);
         return FALSE;
     }
@@ -222,7 +222,7 @@ RamDiskLoadVirtualFile(IN PCHAR FileName)
             gRamDiskBase = NULL;
             gRamDiskSize = 0;
             FsCloseFile(RamFile);
-            UiMessageBox("Failed to read RAM disk\n");
+            UiMessageBox("Failed to read RAM disk.");
             return FALSE;
         }
     }

@@ -82,7 +82,6 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
     PCSTR Description = OperatingSystem->LoadIdentifier;
     PFILE LinuxKernel = 0;
     PFILE LinuxInitrdFile = 0;
-    CHAR  TempString[260];
 
     UiDrawBackdrop();
 
@@ -102,8 +101,7 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
     LinuxKernel = FsOpenFile(LinuxKernelName);
     if (!LinuxKernel)
     {
-        sprintf(TempString, "Linux kernel \'%s\' not found.", LinuxKernelName);
-        UiMessageBox(TempString);
+        UiMessageBox("Linux kernel \'%s\' not found.", LinuxKernelName);
         goto LinuxBootFailed;
     }
 
@@ -113,8 +111,7 @@ LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
         LinuxInitrdFile = FsOpenFile(LinuxInitrdName);
         if (!LinuxInitrdFile)
         {
-            sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
-            UiMessageBox(TempString);
+            UiMessageBox("Linux initrd image \'%s\' not found.", LinuxInitrdName);
             goto LinuxBootFailed;
         }
     }
@@ -212,7 +209,6 @@ LinuxBootFailed:
 BOOLEAN LinuxParseIniSection(PCSTR SectionName)
 {
     ULONG_PTR SectionId;
-    CHAR SettingName[260];
 
     /* Find all the message box settings and run them */
     UiShowMessageBoxesInSection(SectionName);
@@ -220,8 +216,7 @@ BOOLEAN LinuxParseIniSection(PCSTR SectionName)
     /* Try to open the operating system section in the .ini file */
     if (!IniOpenSection(SectionName, &SectionId))
     {
-        sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
-        UiMessageBox(SettingName);
+        UiMessageBox("Section [%s] not found in freeldr.ini.", SectionName);
         return FALSE;
     }
 
