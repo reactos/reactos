@@ -1473,7 +1473,7 @@ static void IntSendParentNotify( PWND pWindow, UINT msg )
     if ( (pWindow->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
          !(pWindow->style & WS_EX_NOPARENTNOTIFY))
     {
-        if (pWindow->spwndParent && pWindow->spwndParent != UserGetDesktopWindow())
+        if (VerifyWnd(pWindow->spwndParent) && pWindow->spwndParent != UserGetDesktopWindow())
         {
             USER_REFERENCE_ENTRY Ref;
             UserRefObjectCo(pWindow->spwndParent, &Ref);
