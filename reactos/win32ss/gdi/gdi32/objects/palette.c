@@ -139,6 +139,12 @@ RealizePalette(
     _In_ HDC hdc) /* [in] Handle of device context */
 {
     HANDLE_METADC0P(UINT, RealizePalette, GDI_ERROR, hdc);
+
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE)
+    {
+        return GDI_ERROR;
+    }
+
     return UserRealizePalette(hdc);
 }
 
