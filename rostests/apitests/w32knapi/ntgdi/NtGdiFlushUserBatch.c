@@ -1,14 +1,23 @@
 
+
+NTSTATUS
+(NTAPI
+*pNtGdiFlushUserBatch)(VOID);
+
 INT
 Test_NtGdiFlushUserBatch(PTESTINFO pti)
 {
 	PVOID pRet;
 	PTEB pTeb;
 
+    pNtGdiFlushUserBatch = (PVOID)GetProcAddress(g_hModule, "NtGdiFlushUserBatch");
+    if (pNtGdiFlushUserBatch == NULL)
+        return APISTATUS_NOT_FOUND;
+
 	pTeb = NtCurrentTeb();
 	ASSERT(pTeb);
 
-	pRet = (PVOID)NtGdiFlushUserBatch();
+	pRet = (PVOID)pNtGdiFlushUserBatch();
 
 	TEST(pRet != 0);
 	TEST(pRet == &pTeb->RealClientId);
@@ -23,7 +32,7 @@ Test_NtGdiFlushUserBatch(PTESTINFO pti)
 	pTeb->GdiTebBatch.Offset = 21;
 	pTeb->GdiTebBatch.HDC = (HDC)123;
 
-	pRet = (PVOID)NtGdiFlushUserBatch();
+	pRet = (PVOID)pNtGdiFlushUserBatch();
 	TEST(pRet == &pTeb->RealClientId);
 
 	TEST(pTeb->InDbgPrint == 0);
