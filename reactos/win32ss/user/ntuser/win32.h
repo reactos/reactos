@@ -252,10 +252,14 @@ typedef struct _PROCESSINFO
     ACCESS_MASK amwinsta;
     DWORD dwHotkey;
     HMONITOR hMonitor;
+    UINT iClipSerialNumber;
     struct _CURICON_OBJECT* pCursorCache;
+    PVOID pClientBase;
+    DWORD dwLpkEntryPoints;
+    PVOID pW32Job;
+    DWORD dwImeCompatFlags;
     LUID luidSession;
     USERSTARTUPINFO usi;
-    PVOID pW32Job;
     DWORD dwLayout;
     DWORD dwRegisteredClasses;
 

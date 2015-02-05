@@ -114,6 +114,43 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL ScreenSaverRunning;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
+typedef struct {
+    DWORD type;
+    PCURICON_OBJECT handle;
+} SYSTEMCURICO;
+
+extern SYSTEMCURICO gasysico[];
+extern SYSTEMCURICO gasyscur[];
+
+#define ROIC_SAMPLE 0
+#define ROIC_HAND 1
+#define ROIC_QUES 2
+#define ROIC_BANG 3
+#define ROIC_NOTE 4
+#define ROIC_WINLOGO 5
+
+#define ROCR_ARROW 0
+#define ROCR_IBEAM 1
+#define ROCR_WAIT 2
+#define ROCR_CROSS 3
+#define ROCR_UP 4
+#define ROCR_SIZE 5
+#define ROCR_ICON 6
+#define ROCR_SIZENWSE 7
+#define ROCR_SIZENESW 8
+#define ROCR_SIZEWE 9
+#define ROCR_SIZENS 10
+#define ROCR_SIZEALL 11
+#define ROCR_NO 12
+#define ROCR_HAND 13
+#define ROCR_APPSTARTING 14
+#define ROCR_HELP 15
+
+#define SYSTEMCUR(func) (gasyscur[ROCR_ ## func].handle)
+#define SYSTEMICO(func) (gasysico[ROIC_ ## func].handle)
+
+VOID IntLoadSystenIcons(HICON,DWORD);
+
 BOOL InitCursorImpl(VOID);
 HANDLE IntCreateCurIconHandle(BOOLEAN Anim);
 

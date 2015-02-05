@@ -754,7 +754,6 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    return(Hook ? 1 : 0); // Don't call us again from user space.
 }
 
-#if 0 // Keep it for later!
 PWND FASTCALL
 co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
 {
@@ -767,6 +766,12 @@ co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
       if(!OwnerWnd)
          continue;
 
+      if (!(Child->style & WS_POPUP) ||
+          !(Child->style & WS_VISIBLE) ||
+          /* Fixes CMD pop up properties window from having foreground. */
+           Owner->head.pti->MessageQueue != Child->head.pti->MessageQueue)
+         continue;
+
       if(OwnerWnd == Owner)
       {
          Ret = Child;
@@ -775,7 +780,128 @@ co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
    }
    return NULL;
 }
-#endif
+
+LRESULT
+DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+   PWND pwndPopUP = NULL;
+   WORD Msg = HIWORD(lParam);
+
+   /* Not for child windows. */
+   if (UserHMGetHandle(pWnd) != (HWND)wParam)
+   {
+      return FALSE;
+   }
+
+   switch((short)LOWORD(lParam))
+   {
+      case HTERROR:
+      {
+         //// This is the real fix for CORE-6129! This was a "Code Whole".
+         USER_REFERENCE_ENTRY Ref;
+
+         if (Msg == WM_LBUTTONDOWN)
+         {
+            // Find a pop up window to bring active.
+            pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pWnd);
+            if (pwndPopUP)
+            {
+               // Not a child pop up from desktop.
+               if ( pwndPopUP != UserGetDesktopWindow()->spwndChild )
+               {
+                  // Get original active window.
+                  PWND pwndOrigActive = gpqForeground->spwndActive;
+
+                  co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+                  UserRefObjectCo(pwndPopUP, &Ref);
+                  //UserSetActiveWindow(pwndPopUP);
+                  co_IntSetForegroundWindow(pwndPopUP); // HACK
+                  UserDerefObjectCo(pwndPopUP);
+
+                  // If the change was made, break out.
+                  if (pwndOrigActive != gpqForeground->spwndActive)
+                     break;
+               }
+            }
+         }
+         ////
+	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+	 {
+             if (pwndPopUP)
+             {
+                 FLASHWINFO fwi = 
+                    {sizeof(FLASHWINFO),
+                     UserHMGetHandle(pwndPopUP),
+                     FLASHW_ALL,
+                     gspv.dwForegroundFlashCount,
+                     (gpsi->dtCaretBlink >> 3)};
+
+                 // Now shake that window!
+                 IntFlashWindowEx(pwndPopUP, &fwi);
+             }
+	     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
+	 }
+	 break;
+      }
+
+      case HTCLIENT:
+      {
+         if (pWnd->pcls->spcur)
+         {
+            UserSetCursor(pWnd->pcls->spcur, FALSE);
+	 }
+	 return FALSE;
+      }
+
+      case HTLEFT:
+      case HTRIGHT:
+      {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZEWE), FALSE);
+         return TRUE;
+      }
+
+      case HTTOP:
+      case HTBOTTOM:
+      {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENS), FALSE);
+         return TRUE;
+       }
+
+       case HTTOPLEFT:
+       case HTBOTTOMRIGHT:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENWSE), FALSE);
+         return TRUE;
+       }
+
+       case HTBOTTOMLEFT:
+       case HTTOPRIGHT:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENESW), FALSE);
+         return TRUE;
+       }
+   }
+   UserSetCursor(SYSTEMCUR(ARROW), FALSE);
+   return FALSE;
+}
 
 VOID FASTCALL DefWndPrint( PWND pwnd, HDC hdc, ULONG uFlags)
 {
@@ -886,6 +1012,23 @@ IntDefWindowProc(
 
       case WM_CTLCOLOR:
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
+
+      case WM_SETCURSOR:
+      {
+         if (Wnd->style & WS_CHILD)
+         {
+             /* with the exception of the border around a resizable wnd,
+              * give the parent first chance to set the cursor */
+             if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
+             {
+                 PWND parent = Wnd->spwndParent;//IntGetParent( Wnd );
+                 if (parent != UserGetDesktopWindow() &&
+                     co_IntSendMessage( UserHMGetHandle(parent), WM_SETCURSOR, wParam, lParam))
+                    return TRUE;
+             }
+         }
+         return DefWndHandleSetCursor(Wnd, wParam, lParam);
+      }
 
       case WM_ACTIVATE:
        /* The default action in Windows is to set the keyboard focus to
@@ -1094,12 +1237,11 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
 {
     PCURICON_OBJECT pIcon = NULL;
     HICON hIcon;
-   // First thing to do, init the Window Logo icons.
-   if (!gpsi->hIconSmWindows) co_IntSetWndIcons();
 
    //FIXME: Some callers use this function as if it returns a boolean saying "this window has an icon".
    //FIXME: Hence we must return a pointer with no reference count.
    //FIXME: This is bad and we should feel bad.
+   //FIXME: Stop whining over wine code.
 
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
    if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp);

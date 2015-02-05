@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            dll/win32/user32/windows/cursoricon.c
+ * FILE:            win32ss/user//user32/windows/cursoricon.c
  * PURPOSE:         cursor and icons implementation
  * PROGRAMMER:      Jérôme Gardou (jerome.gardou@reactos.org)
  */
@@ -20,6 +20,30 @@ WINE_DECLARE_DEBUG_CHANNEL(icon);
 
 /************* USER32 INTERNAL FUNCTIONS **********/
 
+VOID LoadSystemCursors(VOID)
+{
+   if (!gpsi->hIconSmWindows)
+   {
+       ERR("Loading System Cursors\n");
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_ARROW,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_NORMAL);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_IBEAM,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_IBEAM);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_WAIT,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_WAIT);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_CROSS,       IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_CROSS);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_UPARROW,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_UP);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_ICON,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_ICON);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZE,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZE);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENWSE,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENWSE);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENESW,    IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENESW);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZEWE,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZEWE);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZENS,      IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZENS);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_SIZEALL,     IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_SIZEALL);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_NO,          IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_NO);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_HAND,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_HAND);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_APPSTARTING, IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_APPSTARTING);
+       NtUserSetSystemCursor(LoadImageW( 0, IDC_HELP,        IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE ), OCR_HELP);
+   }
+}
+
 /* This callback routine is called directly after switching to gui mode */
 NTSTATUS
 WINAPI
@@ -28,6 +52,9 @@ User32SetupDefaultCursors(PVOID Arguments,
 {
     BOOL *DefaultCursor = (BOOL*)Arguments;
     HCURSOR hCursor; 
+
+    /* Load system cursors first */
+    LoadSystemCursors();
 
     if(*DefaultCursor)
     {
@@ -1397,29 +1424,25 @@ CURSORICON_LoadImageW(
     BOOL bStatus;
     UNICODE_STRING ustrRsrc;
     UNICODE_STRING ustrModule = {0, 0, NULL};
-    
+
     /* Fix width/height */
     if(fuLoad & LR_DEFAULTSIZE)
     {
         if(!cxDesired) cxDesired = GetSystemMetrics(bIcon ? SM_CXICON : SM_CXCURSOR);
         if(!cyDesired) cyDesired = GetSystemMetrics(bIcon ? SM_CYICON : SM_CYCURSOR);
     }
-    
+
     if(fuLoad & LR_LOADFROMFILE)
     {
         return CURSORICON_LoadFromFileW(lpszName, cxDesired, cyDesired, fuLoad, bIcon);
     }
-    
+
     /* Check if caller wants OEM icons */
     if(!hinst)
         hinst = User32Instance;
-    
-    if(fuLoad & LR_SHARED)
-    {
-        DWORD size = MAX_PATH;
-        FINDEXISTINGCURICONPARAM param;
 
-        TRACE("Checking for an LR_SHARED cursor/icon.\n");
+    if(lpszName)
+    {
         /* Prepare the resource name string */
         if(IS_INTRESOURCE(lpszName))
         {
@@ -1429,7 +1452,11 @@ CURSORICON_LoadImageW(
         }
         else
             RtlInitUnicodeString(&ustrRsrc, lpszName);
+    }
 
+    if(hinst)
+    {
+        DWORD size = MAX_PATH;
         /* Get the module name string */
         while (TRUE)
         {
@@ -1460,7 +1487,13 @@ CURSORICON_LoadImageW(
             ustrModule.MaximumLength = size * sizeof(WCHAR);
             break;
         }
-        
+    }
+
+    if(fuLoad & LR_SHARED)
+    {
+        FINDEXISTINGCURICONPARAM param;
+
+        TRACE("Checking for an LR_SHARED cursor/icon.\n");
         /* Ask win32k */
         param.bIcon = bIcon;
         param.cx = cxDesired;
@@ -1469,7 +1502,7 @@ CURSORICON_LoadImageW(
         if(hCurIcon)
         {
             /* Woohoo, got it! */
-            TRACE("MATCH!\n");
+            TRACE("MATCH! %p\n",hCurIcon);
             HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
             return hCurIcon;
         }
@@ -1484,18 +1517,18 @@ CURSORICON_LoadImageW(
     /* We let FindResource, LoadResource, etc. call SetLastError */
     if(!hrsrc)
         goto done;
-    
+
     handle = LoadResource(hinst, hrsrc);
     if(!handle)
         goto done;
-    
+
     dir = LockResource(handle);
     if(!dir)
         goto done;
-    
+
     wResId = LookupIconIdFromDirectoryEx((PBYTE)dir, bIcon, cxDesired, cyDesired, fuLoad);
     FreeResource(handle);
-    
+
     /* Get the relevant resource pointer */
     hrsrc = FindResourceW(
         hinst,
@@ -1503,11 +1536,11 @@ CURSORICON_LoadImageW(
         bIcon ? RT_ICON : RT_CURSOR);
     if(!hrsrc)
         goto done;
-    
+
     handle = LoadResource(hinst, hrsrc);
     if(!handle)
         goto done;
-    
+
     bits = LockResource(handle);
     if(!bits)
     {
@@ -1531,32 +1564,31 @@ CURSORICON_LoadImageW(
     cursorData.cx = cxDesired;
     cursorData.cy = cyDesired;
     cursorData.rt = (USHORT)((ULONG_PTR)(bIcon ? RT_ICON : RT_CURSOR));
-    
+
     /* Get the bitmaps */
     bStatus = CURSORICON_GetCursorDataFromBMI(
         &cursorData,
         (BITMAPINFO*)bits);
-    
+
     FreeResource( handle );
-    
+
     if(!bStatus)
         goto done;
-    
+
     /* Create the handle */
     hCurIcon = NtUserxCreateEmptyCurObject(FALSE);
     if(!hCurIcon)
     {
         goto end_error;
     }
-    
-    /* Tell win32k */
+
     if(fuLoad & LR_SHARED)
     {
         cursorData.CURSORF_flags |= CURSORF_LRSHARED;
-        bStatus = NtUserSetCursorIconData(hCurIcon, &ustrModule, &ustrRsrc, &cursorData);
     }
-    else
-        bStatus = NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData);
+
+    /* Tell win32k */
+    bStatus = NtUserSetCursorIconData(hCurIcon, hinst ? &ustrModule : NULL, lpszName ? &ustrRsrc : NULL, &cursorData);
     
     if(!bStatus)
     {
@@ -1575,7 +1607,7 @@ end_error:
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
-    
+
     return NULL;
 }
 
@@ -2580,8 +2612,15 @@ BOOL WINAPI SetSystemCursor(
   _In_  DWORD id
 )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    if (hcur == NULL)
+    {
+       hcur = LoadImageW( 0, MAKEINTRESOURCE(id), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
+       if (hcur == NULL)
+       {
+          return FALSE;
+       }
+    }
+    return NtUserSetSystemCursor(hcur,id);
 }
 
 BOOL WINAPI SetCursorPos(

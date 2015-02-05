@@ -113,8 +113,13 @@ typedef struct _GET_CHARSET_INFO
 
 typedef struct _SETWNDICONS_CALLBACK_ARGUMENTS
 {
-    HICON hIconSmWindows;
+    HICON hIconSample;
+    HICON hIconHand;
+    HICON hIconQuestion;
+    HICON hIconBang;
+    HICON hIconNote;
     HICON hIconWindows;
+    HICON hIconSmWindows;
 } SETWNDICONS_CALLBACK_ARGUMENTS, *PSETWNDICONS_CALLBACK_ARGUMENTS;
 
 typedef struct _DDEPOSTGET_CALLBACK_ARGUMENTS

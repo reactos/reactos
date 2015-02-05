@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Callback to usermode support
- * FILE:             subsystems/win32/win32k/ntuser/callback.c
+ * FILE:             win32ss/user/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * NOTES:            Please use the Callback Memory Management functions for
@@ -357,7 +357,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    if (!NT_SUCCESS(Status))
    {
-     ERR("Call to user mode failed!\n");
+     ERR("Call to user mode failed! %p\n",Status);
       if (lParamBufferSize != -1)
       {
          IntCbFreeMemory(Arguments);
@@ -1082,20 +1082,28 @@ co_IntSetWndIcons(VOID)
 
    UserEnterCo();
 
-   /* FIXME: Need to setup Registry System Cursor & Icons via Callbacks at init time! */
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Set Window Icons callback failed!\n");
+      IntCbFreeMemory(Argument);
+      return FALSE;
+   }
+
    RtlMoveMemory(Common, ResultPointer, ArgumentLength);
    gpsi->hIconSmWindows = Common->hIconSmWindows;
    gpsi->hIconWindows   = Common->hIconWindows;
 
+   IntLoadSystenIcons(Common->hIconSample,   OIC_SAMPLE);
+   IntLoadSystenIcons(Common->hIconHand,     OIC_HAND);
+   IntLoadSystenIcons(Common->hIconQuestion, OIC_QUES);
+   IntLoadSystenIcons(Common->hIconBang,     OIC_BANG);
+   IntLoadSystenIcons(Common->hIconNote,     OIC_NOTE);
+   IntLoadSystenIcons(gpsi->hIconWindows,    OIC_WINLOGO);
+   IntLoadSystenIcons(gpsi->hIconSmWindows,  OIC_WINLOGO+1);
+
    ERR("hIconSmWindows %p hIconWindows %p \n",gpsi->hIconSmWindows,gpsi->hIconWindows);
 
    IntCbFreeMemory(Argument);
-
-   if (!NT_SUCCESS(Status))
-   {
-      ERR("Set Window Icons callback failed!\n");
-      return FALSE;
-   }
 
    return TRUE;
 }

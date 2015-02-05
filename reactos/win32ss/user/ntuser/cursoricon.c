@@ -1593,4 +1593,16 @@ NtUserGetCursorFrameInfo(
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtUserSetSystemCursor(
+    HCURSOR hcur,
+    DWORD id)
+{
+    return FALSE;
+}
+
 /* EOF */

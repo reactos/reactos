@@ -2,7 +2,7 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window stations
- *  FILE:             subsystems/win32/win32k/ntuser/winsta.c
+ *  FILE:             win32ss/user/ntuser/winsta.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *  TODO:             The process window station is created on
  *                    the first USER32/GDI32 call not related
@@ -295,7 +295,7 @@ co_IntInitializeDesktopGraphics(VOID)
    co_IntLoadDefaultCursors();
 
    /* Setup the icons */
-   //co_IntSetWndIcons();
+   co_IntSetWndIcons();
 
    /* Show the desktop */
    pdesk = IntGetActiveDesktop();
@@ -1437,7 +1437,7 @@ NtUserLockWorkStation(VOID)
 }
 
 BOOL APIENTRY
-NEW_NtUserSetWindowStationUser(
+NtUserSetWindowStationUser(
    HWINSTA hWindowStation,
    PLUID pluid,
    PSID psid,

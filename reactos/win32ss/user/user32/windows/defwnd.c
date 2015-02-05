@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/defwnd.c
+ * FILE:            win32ss/user/user32/windows/defwnd.c
  * PURPOSE:         Window management
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -181,109 +181,6 @@ IntFindChildWindowToOwner(HWND hRoot, HWND hOwner)
    }
    ERR("IDCWTO Nothing found\n");
    return NULL;
-}
-
-LRESULT
-DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
-{
-   /* Not for child windows. */
-   if (hWnd != (HWND)wParam)
-   {
-      return 0;
-   }
-
-   switch((short)LOWORD(lParam))
-   {
-      case HTERROR:
-      {
-         //// This is the real fix for CORE-6129!
-         HWND hwndPopUP;
-         WORD Msg = HIWORD(lParam);
-
-         if (Msg == WM_LBUTTONDOWN)
-         {
-            // Find a pop up window to bring active.
-            hwndPopUP = IntFindChildWindowToOwner(GetDesktopWindow(), hWnd);
-            if (hwndPopUP)
-            {
-               // Not a child pop up from desktop.
-               if ( hwndPopUP != GetWindow(GetDesktopWindow(), GW_CHILD) )
-               {
-                  // Get original active window.
-                  HWND hwndOrigActive = GetActiveWindow();
-
-                  SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-
-                  //SetActiveWindow(hwndPopUP);
-                  SetForegroundWindow(hwndPopUP); // HACK
-
-                  // If the change was made, break out.
-                  if (hwndOrigActive != GetActiveWindow())
-                     break;
-               }
-            }
-         }
-         ////
-	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
-	 {
-	     ERR("Beep!\n");
-	     MessageBeep(0);
-	 }
-	 break;
-      }
-
-      case HTCLIENT:
-      {
-         HICON hCursor = (HICON)GetClassLongPtrW(hWnd, GCL_HCURSOR);
-         if (hCursor)
-         {
-            SetCursor(hCursor);
-            return TRUE;
-	 }
-	 return FALSE;
-      }
-
-      case HTLEFT:
-      case HTRIGHT:
-      {
-         if (Style & WS_MAXIMIZE)
-         {
-            break;
-         }
-         return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZEWE)));
-      }
-
-      case HTTOP:
-      case HTBOTTOM:
-      {
-           if (Style & WS_MAXIMIZE)
-           {
-              break;
-           }
-           return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENS)));
-       }
-
-       case HTTOPLEFT:
-       case HTBOTTOMRIGHT:
-       {
-           if (Style & WS_MAXIMIZE)
-           {
-              break;
-           }
-           return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENWSE)));
-       }
-       case HTBOTTOMLEFT:
-       case HTTOPRIGHT:
-       {
-           if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
-           {
-              break;
-           }
-	   return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENESW)));
-       }
-   }
-   return((LRESULT)SetCursor(LoadCursorW(0, IDC_ARROW)));
 }
 
 /***********************************************************************
@@ -893,34 +790,6 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_CTLCOLOR:
             return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
-
-        case WM_SETCURSOR:
-        {
-            LONG_PTR Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
-
-            if (Style & WS_CHILD)
-            {
-                /* with the exception of the border around a resizable wnd,
-                 * give the parent first chance to set the cursor */
-                if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
-                {
-                    HWND parent = GetParent( hWnd );
-                    if (bUnicode)
-                    {
-                       if (parent != GetDesktopWindow() &&
-                           SendMessageW( parent, WM_SETCURSOR, wParam, lParam))
-                          return TRUE;
-                    }
-                    else
-                    {
-                       if (parent != GetDesktopWindow() &&                    
-                           SendMessageA( parent, WM_SETCURSOR, wParam, lParam))
-                          return TRUE;
-                    }
-                }
-            }
-            return (DefWndHandleSetCursor(hWnd, wParam, lParam, Style));
-        }
 
         case WM_SYSCOMMAND:
             return (DefWndHandleSysCommand(hWnd, wParam, lParam));

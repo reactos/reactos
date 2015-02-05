@@ -580,13 +580,18 @@ User32CallSetWndIconsFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PSETWNDICONS_CALLBACK_ARGUMENTS Common = Arguments;
 
-  if (!hIconSmWindows)
+  if (!gpsi->hIconSmWindows)
   {
-      hIconSmWindows = LoadImageW(0, IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
-      hIconWindows   = LoadImageW(0, IDI_WINLOGO, IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+      Common->hIconSample    = LoadImageW(0, IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+      Common->hIconHand      = LoadImageW(0, IDI_HAND,        IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+      Common->hIconQuestion  = LoadImageW(0, IDI_QUESTION,    IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+      Common->hIconBang      = LoadImageW(0, IDI_EXCLAMATION, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+      Common->hIconNote      = LoadImageW(0, IDI_ASTERISK,    IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+      Common->hIconWindows   = LoadImageW(0, IDI_WINLOGO,     IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+      Common->hIconSmWindows = LoadImageW(0, IDI_WINLOGO, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
+      hIconWindows   = Common->hIconWindows;
+      hIconSmWindows = Common->hIconSmWindows;
   }
-  Common->hIconSmWindows = hIconSmWindows;
-  Common->hIconWindows = hIconWindows;
   ERR("hIconSmWindows %p hIconWindows %p \n",hIconSmWindows,hIconWindows);
   return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
 }

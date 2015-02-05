@@ -1006,6 +1006,7 @@ typedef struct _PROPERTY
   LIST_ENTRY PropListEntry;
   HANDLE Data;
   ATOM Atom;
+  WORD fs;
 } PROPERTY, *PPROPERTY;
 
 typedef struct _BROADCASTPARM
@@ -3184,13 +3185,13 @@ NtUserSetWindowsHookEx(
   HOOKPROC HookProc,
   BOOL Ansi);
 
-DWORD
+BOOL
 NTAPI
 NtUserSetWindowStationUser(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
+  HWINSTA hWindowStation,
+  PLUID pluid,
+  PSID psid,
+  DWORD size);
 
 WORD NTAPI
 NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewVal);

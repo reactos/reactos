@@ -24,6 +24,42 @@ DBG_DEFAULT_CHANNEL(UserIcon);
 
 SYSTEM_CURSORINFO gSysCursorInfo;
 
+PCURICON_OBJECT gcurFirst = NULL; // After all is done, this should be WINLOGO!
+
+//
+//   System Cursors
+//
+SYSTEMCURICO gasyscur[] = {
+    {OCR_NORMAL,     NULL},
+    {OCR_IBEAM,      NULL},
+    {OCR_WAIT,       NULL},
+    {OCR_CROSS,      NULL},
+    {OCR_UP,         NULL},
+    {OCR_ICON,       NULL},
+    {OCR_SIZE,       NULL},
+    {OCR_SIZENWSE,   NULL},
+    {OCR_SIZENESW,   NULL},
+    {OCR_SIZEWE,     NULL},
+    {OCR_SIZENS,     NULL},
+    {OCR_SIZEALL,    NULL},
+    {OCR_NO,         NULL},
+    {OCR_HAND,       NULL},
+    {OCR_APPSTARTING,NULL},
+    {OCR_HELP,       NULL},
+    };
+
+//
+//   System Icons
+//
+SYSTEMCURICO gasysico[] = {
+    {OIC_SAMPLE, NULL},
+    {OIC_HAND,   NULL},
+    {OIC_QUES,   NULL},
+    {OIC_BANG,   NULL},
+    {OIC_NOTE,   NULL},
+    {OIC_WINLOGO,NULL},
+    };
+
 BOOL
 InitCursorImpl(VOID)
 {
@@ -37,6 +73,57 @@ InitCursorImpl(VOID)
     gSysCursorInfo.ClickLockTime = 0;
 
     return TRUE;
+}
+
+VOID
+IntLoadSystenIcons(HICON hcur, DWORD id)
+{
+    PCURICON_OBJECT pcur;
+    int i;
+    PPROCESSINFO ppi;
+
+    if (hcur)
+    {
+        pcur = UserGetCurIconObject(hcur);
+        if (!pcur)
+        {
+            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+            return;
+        }
+
+        ppi = PsGetCurrentProcessWin32Process();
+
+        if (!(ppi->W32PF_flags & W32PF_CREATEDWINORDC))
+           return;
+
+        // Set Small Window Icon and do not link.
+        if ( id == OIC_WINLOGO+1 )
+        {
+            pcur->CURSORF_flags |= CURSORF_GLOBAL;
+            UserReferenceObject(pcur);
+            pcur->head.ppi = NULL;
+            return;
+        }
+
+        for(i = 0 ; i < 6; i++)
+        {
+            if (gasysico[i].type == id)
+            {
+                gasysico[i].handle = pcur;
+                pcur->CURSORF_flags |= CURSORF_GLOBAL|CURSORF_LINKED;
+                UserReferenceObject(pcur);
+                //
+                //  The active switch between LR shared and Global public.
+                //  This is hacked around to support this while at the initial system start up.
+                //
+                pcur->head.ppi = NULL;
+                //
+                pcur->pcurNext = gcurFirst;
+                gcurFirst = pcur;
+                return;
+            }
+        }
+    }
 }
 
 PSYSTEM_CURSORINFO
@@ -183,6 +270,7 @@ IntDestroyCurIconObject(
             ASSERT(CacheCurIcon != NULL);
             UserDereferenceObject(CurIcon);
         }
+        CurIcon->CURSORF_flags &= ~CURSORF_LINKED;
     }
 
     /* We just mark the handle as being destroyed.
@@ -456,7 +544,7 @@ NtUserGetIconSize(
     BOOL bRet = FALSE;
 
     TRACE("Enter NtUserGetIconSize\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
     {
@@ -515,7 +603,7 @@ NtUserGetCursorInfo(
     DECLARE_RETURN(BOOL);
 
     TRACE("Enter NtUserGetCursorInfo\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     CurInfo = IntGetSysCursorInfo();
     CurIcon = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
@@ -562,9 +650,13 @@ APIENTRY
 UserClipCursor(
     RECTL *prcl)
 {
-    /* FIXME: Check if process has WINSTA_WRITEATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     PWND DesktopWindow = NULL;
+
+    if (!CheckWinstaAttributeAccess(WINSTA_WRITEATTRIBUTES))
+    {
+        return FALSE;
+    }
 
     CurInfo = IntGetSysCursorInfo();
 
@@ -667,6 +759,14 @@ NtUserDestroyCursor(
 
     if (!bForce)
     {
+        /* Can not destroy global objects */
+        if (CurIcon->head.ppi == NULL)
+        {
+           ERR("Trying to delete global cursor!\n");
+           ret = TRUE;
+           goto leave;
+        }
+
         /* Maybe we have good reasons not to destroy this object */
         if (CurIcon->head.ppi != PsGetCurrentProcessWin32Process())
         {
@@ -750,7 +850,7 @@ NtUserFindExistingCursorIcon(
         goto done;
     }
 
-    UserEnterExclusive();
+    UserEnterShared();
     CurIcon = pProcInfo->pCursorCache;
     while(CurIcon)
     {
@@ -770,7 +870,7 @@ NtUserFindExistingCursorIcon(
                 CurIcon = CurIcon->pcurNext;
                 continue;
             }
-            
+
             if (IS_INTRESOURCE(CurIcon->strName.Buffer))
             {
                 if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
@@ -786,6 +886,47 @@ NtUserFindExistingCursorIcon(
             }
         }
         CurIcon = CurIcon->pcurNext;
+    }
+    //
+    //    Now search Global Cursors or Icons.
+    //
+    if(CurIcon == NULL)
+    {
+        CurIcon = gcurFirst;
+        while(CurIcon)
+        {
+            /* Icon/cursor */
+            if (paramSafe.bIcon != is_icon(CurIcon))
+            {
+                CurIcon = CurIcon->pcurNext;
+                continue;
+            }
+            /* See if module names match */
+            if (atomModName == CurIcon->atomModName)
+            {
+                /* They do. Now see if this is the same resource */
+                if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
+                {
+                    /* One is an INT resource and the other is not -> no match */
+                    CurIcon = CurIcon->pcurNext;
+                    continue;
+                }
+                if (IS_INTRESOURCE(CurIcon->strName.Buffer))
+                {
+                    if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
+                    {
+                        /* INT resources match */
+                        break;
+                    }
+                }
+                else if (RtlCompareUnicodeString(&ustrRsrcSafe, &CurIcon->strName, TRUE) == 0)
+                {
+                    /* Resource name strings match */
+                    break;
+                }
+            }
+            CurIcon = CurIcon->pcurNext;
+        }
     }
     if(CurIcon)
         Ret = CurIcon->head.h;
@@ -807,14 +948,18 @@ APIENTRY
 NtUserGetClipCursor(
     RECTL *lpRect)
 {
-    /* FIXME: Check if process has WINSTA_READATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
     NTSTATUS Status;
     DECLARE_RETURN(BOOL);
 
     TRACE("Enter NtUserGetClipCursor\n");
-    UserEnterExclusive();
+    UserEnterShared();
+
+    if (!CheckWinstaAttributeAccess(WINSTA_READATTRIBUTES))
+    {
+        RETURN(FALSE);
+    }
 
     if (!lpRect)
         RETURN(FALSE);
@@ -881,6 +1026,21 @@ NtUserSetCursor(
     if (pcurOld)
     {
         hOldCursor = pcurOld->head.h;
+    /*
+        Problem:
+
+        System Global Cursors start out having at least 2 lock counts. If a system
+        cursor is the default cursor and is returned to the caller twice in its   
+        life, the count will reach zero. Causing an assert to occur in objects.   
+        
+        This fixes a SeaMonkey crash while the mouse crosses a boundary.
+     */
+        if (pcurOld->CURSORF_flags & CURSORF_GLOBAL)
+        {
+           TRACE("Returning Global Cursor hcur %p\n",hOldCursor);
+           goto leave;
+        }
+
         /* See if it was destroyed in the meantime */
         if (UserObjectInDestroy(hOldCursor))
             hOldCursor = NULL;
@@ -1015,6 +1175,11 @@ NtUserSetCursorIconData(
     if(CurIcon->CURSORF_flags & CURSORF_LRSHARED)
     {
         IsShared = TRUE;
+    }
+
+    // Support global public cursors and icons too.
+    if(!IsAnim || IsShared)
+    {
         if(pustrRsrc && pustrModule)
         {
             UNICODE_STRING ustrModuleSafe;
@@ -1054,12 +1219,13 @@ NtUserSetCursorIconData(
         UserReferenceObject(CurIcon);
         CurIcon->pcurNext = ppi->pCursorCache;
         ppi->pCursorCache = CurIcon;
+        CurIcon->CURSORF_flags |= CURSORF_LINKED;
     }
     
     Ret = TRUE;
 
 done:
-    if(!Ret && IsShared)
+    if(!Ret && (!IsAnim || IsShared))
     {
         if(!IS_INTRESOURCE(CurIcon->strName.Buffer))
             ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
@@ -1555,7 +1721,7 @@ NtUserGetCursorFrameInfo(
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("Enter NtUserGetCursorFrameInfo\n");
-    UserEnterExclusive();
+    UserEnterShared();
 
     if (!(CurIcon = UserGetCurIconObject(hCursor)))
     {
@@ -1605,6 +1771,68 @@ NtUserGetCursorFrameInfo(
     TRACE("Leaving NtUserGetCursorFrameInfo, ret = 0x%08x\n", ret);
 
     return ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+NtUserSetSystemCursor(
+    HCURSOR hcur,
+    DWORD id)
+{
+    PCURICON_OBJECT pcur, pcurOrig = NULL;
+    int i;
+    PPROCESSINFO ppi;
+    BOOL Ret = FALSE;
+    UserEnterExclusive();
+
+    if (!CheckWinstaAttributeAccess(WINSTA_WRITEATTRIBUTES))
+    {
+        goto Exit;
+    }
+
+    if (hcur)
+    {
+        pcur = UserGetCurIconObject(hcur);
+        if (!pcur)
+        {
+            EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
+            goto Exit;
+        }
+
+        ppi = PsGetCurrentProcessWin32Process();
+
+        for(i = 0 ; i < 16; i++)
+        {
+           if (gasyscur[i].type == id)
+           {
+              pcurOrig = gasyscur[i].handle;
+
+              if (pcurOrig) break;
+
+              if (ppi->W32PF_flags & W32PF_CREATEDWINORDC)
+              {
+                 gasyscur[i].handle = pcur;
+                 pcur->CURSORF_flags |= CURSORF_GLOBAL|CURSORF_LINKED;
+                 UserReferenceObject(pcur);
+                 pcur->head.ppi = NULL;
+                 pcur->pcurNext = gcurFirst;
+                 gcurFirst = pcur;
+                 Ret = TRUE;
+              }
+              break;
+           }
+        }
+        if (pcurOrig)
+        {
+           FIXME("Need to copy cursor data or do something! pcurOrig %p new pcur %p\n",pcurOrig,pcur);
+        }
+    }
+Exit:
+    UserLeave();
+    return Ret;
 }
 
 /* EOF */

@@ -86,12 +86,6 @@ UserSetCursor(
     pti = PsGetCurrentThreadWin32Thread();
     MessageQueue = pti->MessageQueue;
 
-    /* Get the screen DC */
-    if(!(hdcScreen = IntGetScreenDC()))
-    {
-        return NULL;
-    }
-
     OldCursor = MessageQueue->CursorObject;
 
     /* Check if cursors are different */
@@ -105,10 +99,22 @@ UserSetCursor(
     if (MessageQueue->iCursorLevel < 0)
         return OldCursor;
 
+    // Fixes the error message "Not the same cursor!". 
+    if (gpqCursor == NULL)
+    {
+       gpqCursor = MessageQueue;
+    }
+
     /* Update cursor if this message queue controls it */
     pWnd = IntTopLevelWindowFromPoint(gpsi->ptCursor.x, gpsi->ptCursor.y);
     if (pWnd && pWnd->head.pti->MessageQueue == MessageQueue)
     {
+       /* Get the screen DC */
+        if (!(hdcScreen = IntGetScreenDC()))
+        {
+            return NULL;
+        }
+
         if (NewCursor)
         {
             /* Call GDI to set the new screen cursor */
@@ -681,7 +687,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                } else
                    GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
            }
-           /* Check if w have to hide cursor */
+           /* Check if we have to hide cursor */
            else if (CurInfo->ShowingCursor >= 0)
                GreMovePointer(hdcScreen, -1, -1);
 
@@ -1053,20 +1059,21 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    ASSERT(ptirec->pcti); // Send must have a client side to receive it!!!!
 
    /* Don't send from or to a dying thread */
-    if (pti->TIF_flags & TIF_INCLEANUP || ptirec->TIF_flags & TIF_INCLEANUP)
-    {
-        // Unless we are dying and need to tell our parents.
-        if (pti->TIF_flags & TIF_INCLEANUP && !(ptirec->TIF_flags & TIF_INCLEANUP))
-        {
+   if (pti->TIF_flags & TIF_INCLEANUP || ptirec->TIF_flags & TIF_INCLEANUP)
+   {
+       // Unless we are dying and need to tell our parents.
+       if (pti->TIF_flags & TIF_INCLEANUP && !(ptirec->TIF_flags & TIF_INCLEANUP))
+       {
            // Parent notify is the big one. Fire and forget!
            TRACE("Send message from dying thread %d\n",Msg);
            co_MsqSendMessageAsync(ptirec, Wnd, Msg, wParam, lParam, NULL, 0, FALSE, HookMessage);
-        }
-        if (uResult) *uResult = -1;
-        TRACE("MsqSM: Msg %d Current pti %lu or Rec pti %lu\n", Msg, pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
-        return STATUS_UNSUCCESSFUL;
-    }
+       }
+       if (uResult) *uResult = -1;
+       TRACE("MsqSM: Msg %d Current pti %lu or Rec pti %lu\n", Msg, pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
+       return STATUS_UNSUCCESSFUL;
+   }
 
+   // Should we do the same for No Wait?
    if ( HookMessage == MSQ_NORMAL )
    {
       pWnd = ValidateHwndNoErr(Wnd);
@@ -1511,6 +1518,8 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     // Null window or not the same "Hardware" message queue.
     if (pwndMsg == NULL || pwndMsg->head.pti->MessageQueue != pti->MessageQueue)
     {
+        // Crossing a boundary, so set cursor. See default message queue cursor.
+        UserSetCursor(SYSTEMCUR(ARROW), FALSE);
         /* Remove and ignore the message */
         *RemoveMessages = TRUE;
         return FALSE;
@@ -2074,7 +2083,12 @@ MsqInitializeMessageQueue(PTHREADINFO pti, PUSER_MESSAGE_QUEUE MessageQueue)
    InitializeListHead(&MessageQueue->HardwareMessagesListHead); // Keep here!
    MessageQueue->spwndFocus = NULL;
    MessageQueue->iCursorLevel = 0;
-   MessageQueue->CursorObject = NULL;
+   MessageQueue->CursorObject = SYSTEMCUR(WAIT); // See test_initial_cursor.
+   if (MessageQueue->CursorObject)
+   {
+      TRACE("Default cursor hcur %p\n",UserHMGetHandle(MessageQueue->CursorObject));
+      UserReferenceObject(MessageQueue->CursorObject);
+   }
    RtlCopyMemory(MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
    MessageQueue->ptiMouse = pti;
    MessageQueue->ptiKeyboard = pti;

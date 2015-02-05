@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/misc/winsta.c
+ * FILE:            win32ss/user/user32/misc/winsta.c
  * PURPOSE:         Window stations
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -388,16 +388,16 @@ OpenWindowStationW(LPCWSTR lpszWinSta,
 /*
  * @unimplemented
  */
-DWORD
+BOOL
 WINAPI
 SetWindowStationUser(
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4
+  HWINSTA hWindowStation,
+  PLUID pluid,
+  PSID psid,
+  DWORD size
   )
 {
-  return NtUserSetWindowStationUser(Unknown1, Unknown2, Unknown3, Unknown4);
+  return NtUserSetWindowStationUser(hWindowStation, pluid, psid, size);
 }
 
 /* EOF */

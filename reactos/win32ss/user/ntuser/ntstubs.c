@@ -1111,25 +1111,6 @@ NtUserAlterWindowStyle(DWORD Unknown0,
    return(0);
 }
 
-/*
- * NtUserSetWindowStationUser
- *
- * Status
- *    @unimplemented
- */
-
-DWORD APIENTRY
-NtUserSetWindowStationUser(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   STUB
-
-   return 0;
-}
-
 BOOL APIENTRY NtUserAddClipboardFormatListener(
     HWND hwnd
 )
@@ -1153,18 +1134,6 @@ BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
 )
 {
     STUB;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtUserSetSystemCursor(
-    HCURSOR hcur,
-    DWORD id)
-{
     return FALSE;
 }
 

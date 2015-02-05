@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Window classes
- * FILE:             subsystems/win32/win32k/ntuser/class.c
+ * FILE:             win32ss/user/ntuser/class.c
  * PROGRAMER:        Thomas Weidenmueller <w3seek@reactos.com>
  */
 
@@ -38,7 +38,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL, // Use User32 procs
     sizeof(ULONG)*2,
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     (HBRUSH)(COLOR_BACKGROUND),
     FNID_DESKTOP,
     ICLS_DESKTOP
@@ -47,7 +47,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs
     sizeof(LONG),
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     NULL,
     FNID_SWITCH,
     ICLS_SWITCH
@@ -56,7 +56,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_DBLCLKS|CS_SAVEBITS,
     NULL, // Use User32 procs
     sizeof(LONG),
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     (HBRUSH)(COLOR_MENU + 1),
     FNID_MENU,
     ICLS_MENU
@@ -65,7 +65,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_DBLCLKS|CS_VREDRAW|CS_HREDRAW|CS_PARENTDC,
     NULL, // Use User32 procs
     sizeof(SBWND)-sizeof(WND),
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     NULL,
     FNID_SCROLLBAR,
     ICLS_SCROLLBAR
@@ -75,7 +75,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_PARENTDC|CS_DBLCLKS,
     NULL, // Use User32 procs
     0,
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     0,
     FNID_TOOLTIPS,
     ICLS_TOOLTIPS
@@ -85,7 +85,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     0,
     NULL, // Use User32 procs
     0,
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     0,
     FNID_ICONTITLE,
     ICLS_ICONTITLE
@@ -94,7 +94,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_GLOBALCLASS,
     NULL, // Use User32 procs
     0,
-    (HICON)IDC_ARROW,
+    (HICON)OCR_NORMAL,
     NULL,
     FNID_MESSAGEWND,
     ICLS_HWNDMESSAGE
@@ -2424,7 +2424,8 @@ UserRegisterSystemClasses(VOID)
         wc.cbClsExtra = 0;
         wc.cbWndExtra = DefaultServerClasses[i].ExtraBytes;
         wc.hIcon = NULL;
-        wc.hCursor = DefaultServerClasses[i].hCursor;
+        //// System Cursors should be initilized!!!
+        wc.hCursor = DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL ? UserHMGetHandle(SYSTEMCUR(ARROW)) : NULL;
         hBrush = DefaultServerClasses[i].hBrush;
         if (hBrush <= (HBRUSH)COLOR_MENUBAR)
         {
