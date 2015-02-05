@@ -3107,7 +3107,7 @@ RealMsgWaitForMultipleObjectsEx(
       if ( (pcti->fsChangeBits & LOWORD(dwWakeMask)) ||
            ( (dwFlags & MWMO_INPUTAVAILABLE) && (pcti->fsWakeBits & LOWORD(dwWakeMask)) ) )
       {
-         //FIXME("Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
+         //FIXME("Return Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
          return nCount;
       }
    }
@@ -3130,12 +3130,22 @@ RealMsgWaitForMultipleObjectsEx(
    RtlCopyMemory(RealHandles, pHandles, nCount * sizeof(HANDLE));
    RealHandles[nCount] = MessageQueueHandle;
 
-   Result = WaitForMultipleObjectsEx(nCount + 1, RealHandles,
-                                     dwFlags & MWMO_WAITALL,
-                                     dwMilliseconds, dwFlags & MWMO_ALERTABLE);
+   //FIXME("1 Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
+
+   Result = WaitForMultipleObjectsEx( nCount + 1,
+                                      RealHandles,
+                                      dwFlags & MWMO_WAITALL,
+                                      dwMilliseconds,
+                                      dwFlags & MWMO_ALERTABLE );
+
+   //FIXME("2 Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
 
    HeapFree(GetProcessHeap(), 0, RealHandles);
    NtUserxMsqClearWakeMask();
+
+   // wine hack! MSDN: If dwMilliseconds is zero,,specified objects are not signaled; it always returns immediately.
+   if (!Result && !nCount && !dwMilliseconds) Result = WAIT_TIMEOUT;
+
    //FIXME("Result 0X%x\n",Result);
    return Result;
 }
