@@ -183,8 +183,16 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
     if (!HasSection ||
         !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
     {
+        /*
+         * IMPROVE: I don't want to call MachDiskGetBootPath here as a
+         * default choice because I can call it after (see few lines below).
+         * Also doing the strcpy call as it is done in winldr.c is not
+         * really what we want. Instead I reset BootPath here so that
+         * we can build the full path using the general code from below.
+         */
         // MachDiskGetBootPath(BootPath, sizeof(BootPath));
         // strcpy(BootPath, SectionName);
+        BootPath[0] = '\0';
     }
 
     /*
@@ -239,7 +247,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         /* Load the ramdisk */
         if (!RamDiskLoadVirtualFile(FileName))
         {
-            UiMessageBox("Failed to load RAM disk file %s\n", FileName);
+            UiMessageBox("Failed to load RAM disk file %s", FileName);
             return;
         }
     }
@@ -256,7 +264,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         SystemPath = SourcePaths[i];
         if (!SystemPath)
         {
-            UiMessageBox("Failed to open txtsetup.sif\n");
+            UiMessageBox("Failed to open txtsetup.sif");
             return;
         }
         strcpy(File, SystemPath);
