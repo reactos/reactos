@@ -1213,6 +1213,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_WINDOWPOSCHANGING:
         case WM_WINDOWPOSCHANGED:
         case WM_APPCOMMAND:
+        case WM_SETCURSOR:
         {
             LRESULT lResult;
             NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
