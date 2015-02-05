@@ -133,7 +133,7 @@
 @ stdcall CreateStreamOnHGlobal(ptr long ptr)
 # DcomChannelSetHResult
 @ stdcall DllDebugObjectRPCHook(long ptr)
-@ stdcall DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stub DllGetClassObjectWOW
 @ stdcall -private DllRegisterServer()
 @ stdcall DoDragDrop(ptr ptr long ptr)

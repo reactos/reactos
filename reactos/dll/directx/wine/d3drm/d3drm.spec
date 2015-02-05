@@ -19,5 +19,5 @@
 @ stdcall D3DRMVectorScale(ptr ptr float)
 @ stdcall D3DRMVectorSubtract(ptr ptr ptr)
 @ stdcall Direct3DRMCreate(ptr)
-@ stub DllCanUnloadNow
-@ stub DllGetClassObject
+@ stub -private DllCanUnloadNow
+@ stub -private DllGetClassObject
