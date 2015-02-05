@@ -34,59 +34,24 @@
 
 /* 0.00 */
 static const FAST486_FPU_DATA_REG FpuZero = {0ULL, 0, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = 0,
-//     .Mantissa = 0ULL
-// };
 
 /* 1.00 */
 static const FAST486_FPU_DATA_REG FpuOne = {0x8000000000000000ULL, FPU_REAL10_BIAS, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = FPU_REAL10_BIAS,
-//     .Mantissa = 0x8000000000000000ULL
-// };
 
 /* Pi */
 static const FAST486_FPU_DATA_REG FpuPi = {0xC90FDAA22168C234ULL, FPU_REAL10_BIAS + 1, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = FPU_REAL10_BIAS + 1,
-//     .Mantissa = 0xC90FDAA22168C234ULL
-// };
 
 /* lb(10) */
 static const FAST486_FPU_DATA_REG FpuL2Ten = {0xD49A784BCD1D8AFEULL, FPU_REAL10_BIAS + 1, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = FPU_REAL10_BIAS + 1,
-//     .Mantissa = 0xD49A784BCD1D8AFEULL
-// };
 
 /* lb(e) */
 static const FAST486_FPU_DATA_REG FpuL2E = {0xB8AA3B295C17F0BBULL, FPU_REAL10_BIAS, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = FPU_REAL10_BIAS,
-//     .Mantissa = 0xB8AA3B295C17F0BBULL
-// };
 
 /* lg(2) */
 static const FAST486_FPU_DATA_REG FpuLgTwo = {0x9A209A84FBCFF798ULL, FPU_REAL10_BIAS - 2, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = FPU_REAL10_BIAS - 2,
-//     .Mantissa = 0x9A209A84FBCFF798ULL
-// };
 
 /* ln(2) */
 static const FAST486_FPU_DATA_REG FpuLnTwo = {0xB17217F7D1CF79ABULL, FPU_REAL10_BIAS - 1, FALSE};
-// {
-//     .Sign = FALSE,
-//     .Exponent = FPU_REAL10_BIAS - 1,
-//     .Mantissa = 0xB17217F7D1CF79ABULL
-// };
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -201,6 +166,52 @@ UnsignedDivMod128(ULONGLONG DividendLow,
 }
 
 static inline VOID FASTCALL
+Fast486FpuRound(PFAST486_STATE State,
+                PULONGLONG Result,
+                BOOLEAN Sign,
+                ULONGLONG Remainder,
+                INT RemainderHighBit)
+{
+    switch (State->FpuControl.Rc)
+    {
+        case FPU_ROUND_NEAREST:
+        {
+            /* Check if the highest bit of the remainder is set */
+            if (Remainder & (1ULL << RemainderHighBit))
+            {
+                (*Result)++;
+
+                /* Check if all the other bits are clear */
+                if (!(Remainder & ((1ULL << RemainderHighBit) - 1)))
+                {
+                    /* Round to even */
+                    *Result &= ~1;
+                }
+            }
+
+            break;
+        }
+
+        case FPU_ROUND_DOWN:
+        {
+            if ((Remainder != 0ULL) && Sign) (*Result)++;
+            break;
+        }
+
+        case FPU_ROUND_UP:
+        {
+            if ((Remainder != 0ULL) && !Sign) (*Result)++;
+            break;
+        }
+
+        default:
+        {
+            /* Leave it truncated */
+        }
+    }
+}
+
+static inline VOID FASTCALL
 Fast486FpuFromInteger(PFAST486_STATE State,
                       LONGLONG Value,
                       PFAST486_FPU_DATA_REG Result)
@@ -265,43 +276,8 @@ Fast486FpuToInteger(PFAST486_STATE State,
     /* The result must be positive here */
     ASSERT(*Result >= 0LL);
 
-    switch (State->FpuControl.Rc)
-    {
-        case FPU_ROUND_NEAREST:
-        {
-            /* Check if the highest bit of the remainder is set */
-            if (Remainder & (1 << (Bits - 1)))
-            {
-                (*Result)++;
-
-                /* Check if all the other bits are clear */
-                if (!(Remainder & ((1 << (Bits - 1)) - 1)))
-                {
-                    /* Round to even */
-                    *Result &= ~1;
-                }
-            }
-
-            break;
-        }
-
-        case FPU_ROUND_DOWN:
-        {
-            if ((Remainder != 0ULL) && Value->Sign) (*Result)++;
-            break;
-        }
-
-        case FPU_ROUND_UP:
-        {
-            if ((Remainder != 0ULL) && !Value->Sign) (*Result)++;
-            break;
-        }
-
-        default:
-        {
-            /* Leave it truncated */
-        }
-    }
+    /* Perform rounding */
+    Fast486FpuRound(State, (PULONGLONG)Result, Value->Sign, Remainder, Bits - 1);
 
     if (Value->Sign) *Result = -*Result;
     return TRUE;
@@ -335,6 +311,7 @@ Fast486FpuToSingleReal(PFAST486_STATE State,
 {
     ULONGLONG Remainder;
     SHORT UnbiasedExp = (SHORT)Value->Exponent - FPU_REAL10_BIAS;
+    ULONGLONG Result64;
 
     if (FPU_IS_ZERO(Value))
     {
@@ -392,43 +369,10 @@ Fast486FpuToSingleReal(PFAST486_STATE State,
     /* Calculate the remainder */
     Remainder = Value->Mantissa & ((1ULL << 40) - 1);
 
-    switch (State->FpuControl.Rc)
-    {
-        case FPU_ROUND_NEAREST:
-        {
-            /* Check if the highest bit of the remainder is set */
-            if (Remainder & (1ULL << 39))
-            {
-                (*Result)++;
-
-                /* Check if all the other bits are clear */
-                if (!(Remainder & ((1ULL << 39) - 1)))
-                {
-                    /* Round to even */
-                    *Result &= ~1;
-                }
-            }
-
-            break;
-        }
-
-        case FPU_ROUND_DOWN:
-        {
-            if ((Remainder != 0ULL) && Value->Sign) (*Result)++;
-            break;
-        }
-
-        case FPU_ROUND_UP:
-        {
-            if ((Remainder != 0ULL) && !Value->Sign) (*Result)++;
-            break;
-        }
-
-        default:
-        {
-            /* Leave it truncated */
-        }
-    }
+    /* Perform rounding */
+    Result64 = (ULONGLONG)*Result;
+    Fast486FpuRound(State, &Result64, Value->Sign, Remainder, 39);
+    *Result = (ULONG)Result64;
 
     /* Store the biased exponent */
     *Result |= (ULONG)(UnbiasedExp + FPU_REAL4_BIAS) << 23;
@@ -524,43 +468,8 @@ Fast486FpuToDoubleReal(PFAST486_STATE State,
     /* Calculate the remainder */
     Remainder = Value->Mantissa & ((1 << 11) - 1);
 
-    switch (State->FpuControl.Rc)
-    {
-        case FPU_ROUND_NEAREST:
-        {
-            /* Check if the highest bit of the remainder is set */
-            if (Remainder & (1 << 10))
-            {
-                (*Result)++;
-
-                /* Check if all the other bits are clear */
-                if (!(Remainder & ((1 << 10) - 1)))
-                {
-                    /* Round to even */
-                    *Result &= ~1;
-                }
-            }
-
-            break;
-        }
-
-        case FPU_ROUND_DOWN:
-        {
-            if ((Remainder != 0ULL) && Value->Sign) (*Result)++;
-            break;
-        }
-
-        case FPU_ROUND_UP:
-        {
-            if ((Remainder != 0ULL) && !Value->Sign) (*Result)++;
-            break;
-        }
-
-        default:
-        {
-            /* Leave it truncated */
-        }
-    }
+    /* Perform rounding */
+    Fast486FpuRound(State, Result, Value->Sign, Remainder, 10);
 
     /* Store the biased exponent */
     *Result |= (ULONGLONG)(UnbiasedExp + FPU_REAL8_BIAS) << 52;
@@ -1628,8 +1537,44 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeD9)
             /* FRNDINT */
             case 0x3C:
             {
-                // TODO: NOT IMPLEMENTED
-                UNIMPLEMENTED;
+                INT Bits;
+                ULONGLONG Result = 0ULL;
+                ULONGLONG Remainder;
+
+                if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
+                {
+                    State->FpuStatus.Ie = TRUE;
+
+                    if (!State->FpuControl.Im) Fast486FpuException(State);
+                    break;
+                }
+
+                if (!FPU_IS_NORMALIZED(&FPU_ST(0)))
+                {
+                    State->FpuStatus.De = TRUE;
+
+                    if (!State->FpuControl.Dm)
+                    {
+                        Fast486FpuException(State);
+                        break;
+                    }
+                }
+
+                Bits = min(max(0, (INT)FPU_ST(0).Exponent - FPU_REAL10_BIAS + 1), 64);
+                if (Bits == 64) break;
+
+                if (Bits)
+                {
+                    Result = FPU_ST(0).Mantissa >> (64 - Bits);
+                    Remainder = FPU_ST(0).Mantissa & ((1 << (64 - Bits)) - 1);
+                }
+                else Remainder = FPU_ST(0).Mantissa;
+
+                /* Perform the rounding */
+                Fast486FpuRound(State, &Result, FPU_ST(0).Sign, Remainder, 63 - Bits);
+
+                State->FpuStatus.Pe = TRUE;
+                if (!State->FpuControl.Pm) Fast486FpuException(State);
 
                 break;
             }
