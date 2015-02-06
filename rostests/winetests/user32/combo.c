@@ -537,6 +537,61 @@ static void test_editselection(void)
     DestroyWindow(hCombo);
 }
 
+static void test_listbox_styles(DWORD cb_style)
+{
+    BOOL (WINAPI *pGetComboBoxInfo)(HWND, PCOMBOBOXINFO);
+    HWND combo;
+    COMBOBOXINFO info;
+    DWORD style, exstyle, expect_style, expect_exstyle;
+    BOOL ret;
+
+    pGetComboBoxInfo = (void*)GetProcAddress(GetModuleHandleA("user32.dll"), "GetComboBoxInfo");
+    if (!pGetComboBoxInfo){
+        win_skip("GetComboBoxInfo is not available\n");
+        return;
+    }
+
+    expect_style = WS_CHILD|WS_CLIPSIBLINGS|LBS_COMBOBOX|LBS_HASSTRINGS|LBS_NOTIFY;
+    if (cb_style == CBS_SIMPLE)
+    {
+        expect_style |= WS_VISIBLE;
+        expect_exstyle = WS_EX_CLIENTEDGE;
+    }
+    else
+    {
+        expect_style |= WS_BORDER;
+        expect_exstyle = WS_EX_TOOLWINDOW;
+    }
+
+    combo = build_combo(cb_style);
+    info.cbSize = sizeof(COMBOBOXINFO);
+    SetLastError(0xdeadbeef);
+    ret = pGetComboBoxInfo(combo, &info);
+    ok(ret, "Failed to get combobox info structure.\n");
+
+    style = GetWindowLongW( info.hwndList, GWL_STYLE );
+    exstyle = GetWindowLongW( info.hwndList, GWL_EXSTYLE );
+    ok(style == expect_style, "%08x: got %08x\n", cb_style, style);
+    ok(exstyle == expect_exstyle, "%08x: got %08x\n", cb_style, exstyle);
+
+    if (cb_style != CBS_SIMPLE)
+        expect_exstyle |= WS_EX_TOPMOST;
+
+    SendMessageW(combo, CB_SHOWDROPDOWN, TRUE, 0 );
+    style = GetWindowLongW( info.hwndList, GWL_STYLE );
+    exstyle = GetWindowLongW( info.hwndList, GWL_EXSTYLE );
+    ok(style == (expect_style | WS_VISIBLE), "%08x: got %08x\n", cb_style, style);
+    ok(exstyle == expect_exstyle, "%08x: got %08x\n", cb_style, exstyle);
+
+    SendMessageW(combo, CB_SHOWDROPDOWN, FALSE, 0 );
+    style = GetWindowLongW( info.hwndList, GWL_STYLE );
+    exstyle = GetWindowLongW( info.hwndList, GWL_EXSTYLE );
+    ok(style == expect_style, "%08x: got %08x\n", cb_style, style);
+    ok(exstyle == expect_exstyle, "%08x: got %08x\n", cb_style, exstyle);
+
+    DestroyWindow(combo);
+}
+
 START_TEST(combo)
 {
     hMainWnd = CreateWindowA("static", "Test", WS_OVERLAPPEDWINDOW, 10, 10, 300, 300, NULL, NULL, NULL, 0);
@@ -551,6 +606,9 @@ START_TEST(combo)
     test_changesize(CBS_DROPDOWN);
     test_changesize(CBS_DROPDOWNLIST);
     test_editselection();
+    test_listbox_styles(CBS_SIMPLE);
+    test_listbox_styles(CBS_DROPDOWN);
+    test_listbox_styles(CBS_DROPDOWNLIST);
 
     DestroyWindow(hMainWnd);
 }
