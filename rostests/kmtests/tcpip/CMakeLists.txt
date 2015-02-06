@@ -3,6 +3,7 @@ include_directories(../include)
 
 list(APPEND TCPIP_TEST_DRV_SOURCE
     ../kmtest_drv/kmtest_standalone.c
+    connect.c
     tdi.c
     TcpIp_drv.c)
 

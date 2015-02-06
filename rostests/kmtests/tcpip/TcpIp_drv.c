@@ -9,6 +9,7 @@
 #include "tcpip.h"
 
 extern KMT_MESSAGE_HANDLER TestTdi;
+extern KMT_MESSAGE_HANDLER TestConnect;
 
 static struct
 {
@@ -16,7 +17,8 @@ static struct
     PKMT_MESSAGE_HANDLER Handler;
 } MessageHandlers[] =
 {
-    { IOCTL_TEST_TDI, TestTdi },
+    { IOCTL_TEST_TDI,       TestTdi },
+    { IOCTL_TEST_CONNECT,   TestConnect },
 };
 
 NTSTATUS

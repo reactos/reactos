@@ -19,6 +19,7 @@ KMT_TESTFUNC Test_RtlSplayTree;
 KMT_TESTFUNC Test_RtlUnicodeString;
 KMT_TESTFUNC Test_TcpIpIoctl;
 KMT_TESTFUNC Test_TcpIpTdi;
+KMT_TESTFUNC Test_TcpIpConnect;
 
 /* tests with a leading '-' will not be listed */
 const KMT_TEST TestList[] =
@@ -34,5 +35,6 @@ const KMT_TEST TestList[] =
     { "RtlSplayTree",       Test_RtlSplayTree },
     { "RtlUnicodeString",   Test_RtlUnicodeString },
     { "TcpIpTdi",           Test_TcpIpTdi },
+    { "TcpIpConnect",       Test_TcpIpConnect },
     { NULL,                 NULL },
 };
