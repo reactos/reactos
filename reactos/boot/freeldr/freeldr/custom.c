@@ -17,13 +17,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifdef _M_IX86
-
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
 
 /* GLOBALS ********************************************************************/
+
+#ifdef _M_IX86
 
 const CHAR BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first floppy drive\nhd0 - first hard drive\nhd1 - second hard drive\ncd0 - first CD-ROM drive.\n\nBIOS drive numbers may also be used:\n0 - first floppy drive\n0x80 - first hard drive\n0x81 - second hard drive";
 const CHAR BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
@@ -31,6 +31,9 @@ const CHAR BootSectorFilePrompt[] = "Enter the boot sector file path.\n\nExample
 const CHAR LinuxKernelPrompt[] = "Enter the Linux kernel image path.\n\nExamples:\n/vmlinuz\n/boot/vmlinuz-2.4.18";
 const CHAR LinuxInitrdPrompt[] = "Enter the initrd image path.\n\nExamples:\n/initrd.gz\n/boot/root.img.gz\n\nLeave blank for no initial ram disk.";
 const CHAR LinuxCommandLinePrompt[] = "Enter the Linux kernel command line.\n\nExamples:\nroot=/dev/hda1\nroot=/dev/fd0 read-only\nroot=/dev/sdb1 init=/sbin/init";
+
+#endif // _M_IX86
+
 const CHAR ReactOSSystemPathPrompt[] = "Enter the path to your ReactOS system directory.\n\nExamples:\n\\REACTOS\n\\ROS";
 const CHAR ReactOSOptionsPrompt[] = "Enter the options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
 const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
@@ -40,11 +43,13 @@ const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
 VOID OptionMenuCustomBoot(VOID)
 {
     PCSTR CustomBootMenuList[] = {
+#ifdef _M_IX86
         "Disk",
         "Partition",
         "Boot Sector File",
-        "ReactOS",
-        "Linux"
+        "Linux",
+#endif
+        "ReactOS"
         };
     ULONG CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
     ULONG SelectedMenuItem;
@@ -64,6 +69,7 @@ VOID OptionMenuCustomBoot(VOID)
 
     switch (SelectedMenuItem)
     {
+#ifdef _M_IX86
         case 0: // Disk
             OptionMenuCustomBootDisk();
             break;
@@ -73,14 +79,19 @@ VOID OptionMenuCustomBoot(VOID)
         case 2: // Boot Sector File
             OptionMenuCustomBootBootSectorFile();
             break;
-        case 3: // ReactOS
-            OptionMenuCustomBootReactOS();
-            break;
-        case 4: // Linux
+        case 3: // Linux
             OptionMenuCustomBootLinux();
+            break;
+        case 4: // ReactOS
+#else
+        case 0:
+#endif
+            OptionMenuCustomBootReactOS();
             break;
     }
 }
+
+#ifdef _M_IX86
 
 VOID OptionMenuCustomBootDisk(VOID)
 {
@@ -229,69 +240,6 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
     LoadOperatingSystem(&OperatingSystem);
 }
 
-VOID OptionMenuCustomBootReactOS(VOID)
-{
-    ULONG_PTR SectionId;
-    CHAR SectionName[100];
-    CHAR BootDriveString[20];
-    CHAR BootPartitionString[20];
-    CHAR ReactOSSystemPath[200];
-    CHAR ReactOSARCPath[200];
-    CHAR ReactOSOptions[200];
-    TIMEINFO* TimeInfo;
-    OperatingSystemItem OperatingSystem;
-
-    RtlZeroMemory(SectionName, sizeof(SectionName));
-    RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
-    RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
-    RtlZeroMemory(ReactOSSystemPath, sizeof(ReactOSSystemPath));
-    RtlZeroMemory(ReactOSOptions, sizeof(ReactOSOptions));
-
-    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
-        return;
-
-    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, 20))
-        return;
-
-    if (!UiEditBox(ReactOSSystemPathPrompt, ReactOSSystemPath, 200))
-        return;
-
-    if (!UiEditBox(ReactOSOptionsPrompt, ReactOSOptions, 200))
-        return;
-
-    /* Generate a unique section name */
-    TimeInfo = ArcGetTime();
-    sprintf(SectionName, "CustomReactOS%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
-
-    /* Add the section */
-    if (!IniAddSection(SectionName, &SectionId))
-        return;
-
-    /* Add the BootType */
-    if (!IniAddSettingValueToSection(SectionId, "BootType", "Windows2003"))
-        return;
-
-    /* Construct the ReactOS ARC system path */
-    ConstructArcPath(ReactOSARCPath, ReactOSSystemPath, DriveMapGetBiosDriveNumber(BootDriveString), atoi(BootPartitionString));
-
-    /* Add the system path */
-    if (!IniAddSettingValueToSection(SectionId, "SystemPath", ReactOSARCPath))
-        return;
-
-    /* Add the CommandLine */
-    if (!IniAddSettingValueToSection(SectionId, "Options", ReactOSOptions))
-        return;
-
-    UiMessageBox(CustomBootPrompt);
-
-    OperatingSystem.SystemPartition = SectionName;
-    OperatingSystem.LoadIdentifier  = NULL;
-    OperatingSystem.OsLoadOptions   = NULL; // ReactOSOptions
-
-    // LoadAndBootWindows(&OperatingSystem, _WIN32_WINNT_WS03);
-    LoadOperatingSystem(&OperatingSystem);
-}
-
 VOID OptionMenuCustomBootLinux(VOID)
 {
     ULONG_PTR SectionId;
@@ -371,6 +319,71 @@ VOID OptionMenuCustomBootLinux(VOID)
     LoadOperatingSystem(&OperatingSystem);
 }
 
+#endif // _M_IX86
+
+VOID OptionMenuCustomBootReactOS(VOID)
+{
+    ULONG_PTR SectionId;
+    CHAR SectionName[100];
+    CHAR BootDriveString[20];
+    CHAR BootPartitionString[20];
+    CHAR ReactOSSystemPath[200];
+    CHAR ReactOSARCPath[200];
+    CHAR ReactOSOptions[200];
+    TIMEINFO* TimeInfo;
+    OperatingSystemItem OperatingSystem;
+
+    RtlZeroMemory(SectionName, sizeof(SectionName));
+    RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
+    RtlZeroMemory(BootPartitionString, sizeof(BootPartitionString));
+    RtlZeroMemory(ReactOSSystemPath, sizeof(ReactOSSystemPath));
+    RtlZeroMemory(ReactOSOptions, sizeof(ReactOSOptions));
+
+    if (!UiEditBox(BootDrivePrompt, BootDriveString, 20))
+        return;
+
+    if (!UiEditBox(BootPartitionPrompt, BootPartitionString, 20))
+        return;
+
+    if (!UiEditBox(ReactOSSystemPathPrompt, ReactOSSystemPath, 200))
+        return;
+
+    if (!UiEditBox(ReactOSOptionsPrompt, ReactOSOptions, 200))
+        return;
+
+    /* Generate a unique section name */
+    TimeInfo = ArcGetTime();
+    sprintf(SectionName, "CustomReactOS%u%u%u%u%u%u", TimeInfo->Year, TimeInfo->Day, TimeInfo->Month, TimeInfo->Hour, TimeInfo->Minute, TimeInfo->Second);
+
+    /* Add the section */
+    if (!IniAddSection(SectionName, &SectionId))
+        return;
+
+    /* Add the BootType */
+    if (!IniAddSettingValueToSection(SectionId, "BootType", "Windows2003"))
+        return;
+
+    /* Construct the ReactOS ARC system path */
+    ConstructArcPath(ReactOSARCPath, ReactOSSystemPath, DriveMapGetBiosDriveNumber(BootDriveString), atoi(BootPartitionString));
+
+    /* Add the system path */
+    if (!IniAddSettingValueToSection(SectionId, "SystemPath", ReactOSARCPath))
+        return;
+
+    /* Add the CommandLine */
+    if (!IniAddSettingValueToSection(SectionId, "Options", ReactOSOptions))
+        return;
+
+    UiMessageBox(CustomBootPrompt);
+
+    OperatingSystem.SystemPartition = SectionName;
+    OperatingSystem.LoadIdentifier  = NULL;
+    OperatingSystem.OsLoadOptions   = NULL; // ReactOSOptions
+
+    // LoadAndBootWindows(&OperatingSystem, _WIN32_WINNT_WS03);
+    LoadOperatingSystem(&OperatingSystem);
+}
+
 VOID OptionMenuReboot(VOID)
 {
     UiMessageBox("The system will now reboot.");
@@ -378,5 +391,3 @@ VOID OptionMenuReboot(VOID)
     DiskStopFloppyMotor();
     Reboot();
 }
-
-#endif // _M_IX86

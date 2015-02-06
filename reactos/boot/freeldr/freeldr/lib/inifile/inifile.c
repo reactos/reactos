@@ -199,6 +199,7 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
 
     // Get the section name
     strcpy(Section->SectionName, SectionName);
+    InitializeListHead(&Section->SectionItemList);
 
     // Add it to the section list head
     IniFileSectionCount++;
