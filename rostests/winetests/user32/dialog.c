@@ -1227,7 +1227,12 @@ static void test_DisabledDialogTest(void)
 static INT_PTR CALLBACK messageBoxFontDlgWinProc (HWND hDlg, UINT uiMsg, WPARAM wParam,
         LPARAM lParam)
 {
-    return (uiMsg == WM_INITDIALOG);
+    if (uiMsg == WM_INITDIALOG) {
+        SetFocus(hDlg);
+        return 1;
+    }
+
+    return 0;
 }
 
 static void test_MessageBoxFontTest(void)
@@ -1337,6 +1342,12 @@ static void test_SaveRestoreFocus(void)
     foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
     ok (foundId == 1000, "First edit box should have gained focus on dialog creation. Expected: %d, Found: %ld\n", 1000, foundId);
 
+    SetFocus(GetNextDlgTabItem(hDlg, GetFocus(), FALSE));
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
+    ok (foundId == 1001, "First edit box should have regained focus after dialog reactivation. Expected: %d, Found: %ld\n", 1001, foundId);
+    SetFocus(GetNextDlgTabItem(hDlg, NULL, FALSE));
+
     /* de- then reactivate the dialog */
     SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
     SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
@@ -1356,6 +1367,24 @@ static void test_SaveRestoreFocus(void)
 
     foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
     ok (foundId == 1001, "Second edit box should have gained focus after dialog reactivation. Expected: %d, Found: %ld\n", 1001, foundId);
+
+    /* set focus to the dialog */
+    SetFocus(hDlg);
+
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
+    ok (foundId == 1000, "First edit box should have gained focus on dialog focus. Expected: %d, Found: %ld\n", 1000, foundId);
+
+    /* select second tabbable item */
+    SetFocus(GetNextDlgTabItem(hDlg, GetNextDlgTabItem(hDlg, NULL, FALSE), FALSE));
+
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
+    ok (foundId == 1001, "Second edit box should have gained focus. Expected: %d, Found: %ld\n", 1001, foundId);
+
+    /* send WM_ACTIVATE message to already active dialog */
+    SendMessageA(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+
+    foundId = GetWindowLongPtrA(GetFocus(), GWLP_ID);
+    ok (foundId == 1001, "Second edit box should have gained focus. Expected: %d, Found: %ld\n", 1001, foundId);
 
     /* disable the 2nd box */
     EnableWindow(GetFocus(), FALSE);
