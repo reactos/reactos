@@ -450,12 +450,12 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
             if (m_bGroupPolicyActive)
             {
                 if (RegGetValueW(HKEY_LOCAL_MACHINE,
-                                L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
-                                pwszClsid,
-                                RRF_RT_REG_SZ,
-                                NULL,
-                                NULL,
-                                NULL) == ERROR_SUCCESS)
+                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                                 pwszClsid,
+                                 RRF_RT_REG_SZ,
+                                 NULL,
+                                 NULL,
+                                 NULL) == ERROR_SUCCESS)
                 {
                     LoadDynamicContextMenuHandler(hKey, &clsid);
                 }

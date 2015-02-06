@@ -366,12 +366,12 @@ CDrvDefExt::GeneralPageProc(
                 DWORD cbBuf = sizeof(wszBuf);
 
                 if (RegGetValueW(HKEY_LOCAL_MACHINE,
-                                     L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\CleanupPath",
-                                     NULL,
-                                     RRF_RT_REG_SZ,
-                                     NULL,
-                                     (PVOID)wszBuf,
-                                     &cbBuf) == ERROR_SUCCESS)
+                                 L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\CleanupPath",
+                                 NULL,
+                                 RRF_RT_REG_SZ,
+                                 NULL,
+                                 (PVOID)wszBuf,
+                                 &cbBuf) == ERROR_SUCCESS)
                 {
                     WCHAR wszCmd[MAX_PATH];
 
@@ -460,7 +460,7 @@ CDrvDefExt::ExtraPageProc(
                     if (RegGetValueW(HKEY_LOCAL_MACHINE,
                                      L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\BackupPath",
                                      NULL,
-                                     RRF_RT_REG_EXPAND_SZ,
+                                     RRF_RT_REG_SZ,
                                      NULL,
                                      (PVOID)wszBuf,
                                      &cbBuf) == ERROR_SUCCESS)
