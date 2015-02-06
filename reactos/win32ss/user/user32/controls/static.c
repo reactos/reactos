@@ -823,19 +823,14 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
         GetClientRect(hwnd, &rcClient);
         if (style & SS_CENTERIMAGE)
         {
-            INT x, y;
-            x = (rcClient.right - rcClient.left)/2 - bm.bmWidth/2;
-            y = (rcClient.bottom - rcClient.top)/2 - bm.bmHeight/2;
-            FillRect( hdc, &rcClient, hbrush );
-            BitBlt(hdc, x, y, bm.bmWidth, bm.bmHeight, hMemDC, 0, 0,
-                   SRCCOPY);
+            rcClient.left = (rcClient.right - rcClient.left)/2 - bm.bmWidth/2;
+            rcClient.top = (rcClient.bottom - rcClient.top)/2 - bm.bmHeight/2;
+            rcClient.right = rcClient.left + bm.bmWidth;
+            rcClient.bottom = rcClient.top + bm.bmHeight;
         }
-        else
-        {
-            StretchBlt(hdc, 0, 0, rcClient.right - rcClient.left,
-                       rcClient.bottom - rcClient.top, hMemDC,
-                       0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
-        }
+        StretchBlt(hdc, rcClient.left, rcClient.top, rcClient.right - rcClient.left,
+                   rcClient.bottom - rcClient.top, hMemDC,
+                   0, 0, bm.bmWidth, bm.bmHeight, SRCCOPY);
         SelectObject(hMemDC, oldbitmap);
         DeleteDC(hMemDC);
     }
