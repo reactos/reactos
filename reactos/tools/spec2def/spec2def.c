@@ -756,7 +756,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         /* Go to next token (type) */
         if (!(pc = NextToken(pc)))
         {
-            fprintf(stderr, "%s line %d : error: unexpected end of line\n", pszSourceFileName, nLine);
+            fprintf(stderr, "%s line %d: error: unexpected end of line\n", pszSourceFileName, nLine);
             return -10;
         }
 
@@ -790,7 +790,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         }
         else
         {
-            fprintf(stderr, "%s line %d : error: expected callconv, got '%.*s' %d\n",
+            fprintf(stderr, "%s line %d: error: expected callconv, got '%.*s' %d\n",
                     pszSourceFileName, nLine, TokenLength(pc), pc, *pc);
             return -11;
         }
@@ -901,14 +901,14 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Go to next token */
             if (!(pc = NextToken(pc)))
             {
-                fprintf(stderr, "%s line %d : error: expected token\n", pszSourceFileName, nLine);
+                fprintf(stderr, "%s line %d: error: expected token\n", pszSourceFileName, nLine);
                 return -13;
             }
 
             /* Verify syntax */
             if (*pc++ != '(')
             {
-                fprintf(stderr, "%s line %d : error: expected '('\n", pszSourceFileName, nLine);
+                fprintf(stderr, "%s line %d: error: expected '('\n", pszSourceFileName, nLine);
                 return -14;
             }
 
@@ -959,7 +959,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.anArgs[exp.nArgCount] = ARG_FLOAT;
                 }
                 else
-                    fprintf(stderr, "%s line %d : error: expected type, got: %.10s\n", pszSourceFileName, nLine, pc);
+                    fprintf(stderr, "%s line %d: error: expected type, got: %.10s\n", pszSourceFileName, nLine, pc);
 
                 exp.nArgCount++;
 
@@ -974,7 +974,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Check syntax */
             if (*pc++ != ')')
             {
-                fprintf(stderr, "%s line %d : error: expected ')'\n", pszSourceFileName, nLine);
+                fprintf(stderr, "%s line %d: error: expected ')'\n", pszSourceFileName, nLine);
                 return -16;
             }
         }
@@ -1000,7 +1000,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                     exp.strName.len = (int)(p - pc);
                     if (exp.strName.len < 1)
                     {
-                        fprintf(stderr, "%s line %d : error: unexpected @ found\n", pszSourceFileName, nLine);
+                        fprintf(stderr, "%s line %d: error: unexpected @ found\n", pszSourceFileName, nLine);
                         return -1;
                     }
                     exp.nStackBytes = atoi(p + 1);
@@ -1023,7 +1023,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             /* Check syntax (end of line) */
             if (NextToken(pc))
             {
-                 fprintf(stderr, "%s line %d : error: additional tokens after ')'\n", pszSourceFileName, nLine);
+                 fprintf(stderr, "%s line %d: error: additional tokens after ')'\n", pszSourceFileName, nLine);
                  return -17;
             }
 
@@ -1039,7 +1039,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
         /* Check for no-name without ordinal */
         if ((exp.uFlags & FL_ORDINAL) && (exp.nOrdinal == -1))
         {
-            fprintf(stderr, "%s line %d : error: ordinal export without ordinal!\n", pszSourceFileName, nLine);
+            fprintf(stderr, "%s line %d: error: ordinal export without ordinal!\n", pszSourceFileName, nLine);
             return -1;
         }
 
@@ -1050,7 +1050,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
                 if (strlen(astrShouldBePrivate[i]) == exp.strName.len &&
                     strncmp(exp.strName.buf, astrShouldBePrivate[i], exp.strName.len) == 0)
                 {
-                    fprintf(stderr, "%s line %d : warning: export of '%.*s' should be PRIVATE\n",
+                    fprintf(stderr, "%s line %d: warning: export of '%.*s' should be PRIVATE\n",
                             pszSourceFileName, nLine, exp.strName.len, exp.strName.buf);
                 }
             }
