@@ -27,6 +27,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <objbase.h>
+#include <ntintsafe.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>
