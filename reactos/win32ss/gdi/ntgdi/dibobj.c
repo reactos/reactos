@@ -1161,7 +1161,7 @@ NtGdiStretchDIBitsInternal(
     DC_UnlockDc(pdc);
 
     /* Check if we can use NtGdiSetDIBitsToDeviceInternal */
-    if (sizel.cx == cxSrc && sizel.cy == cySrc && dwRop == SRCCOPY)
+    if ((sizel.cx == cxSrc) && (sizel.cy == cySrc) && (dwRop == SRCCOPY))
     {
         /* Yes, we can! */
         return NtGdiSetDIBitsToDeviceInternal(hdc,
@@ -1270,6 +1270,10 @@ NtGdiStretchDIBitsInternal(
                           RGB(0xff, 0xff, 0xff),
                           pdc->pdcattr->crBackgroundClr,
                           pdc->pdcattr->crForegroundClr);
+
+    /* Mask away everything except foreground rop index */
+    dwRop = dwRop & 0x00FF0000;
+    dwRop |= dwRop << 8;
 
     /* Perform the stretch operation */
     bResult = IntEngStretchBlt(&psurfDst->SurfObj,
