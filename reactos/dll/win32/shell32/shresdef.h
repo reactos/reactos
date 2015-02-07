@@ -291,7 +291,6 @@
 #define IDD_NOOPEN       27
 
 /* Not used dialogs */
-#define IDD_FILE_COPY            28
 #define IDD_SHUTDOWN             29
 #define IDD_LOG_OFF              30
 #define IDD_DISCONNECT           31
