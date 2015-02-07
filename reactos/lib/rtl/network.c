@@ -131,31 +131,70 @@ RtlIpv4AddressToStringExW(IN struct in_addr *Address,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressA(IN PCSTR String,
-                        IN BOOLEAN Strict,
-                        OUT PCSTR *Terminator,
-                        OUT struct in_addr *Addr)
+RtlIpv4StringToAddressA(
+    _In_ PCSTR String,
+    _In_ BOOLEAN Strict,
+    _Out_ PCSTR *Terminator,
+    _Out_ struct in_addr *Addr)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ANSI_STRING AddressA;
+    UNICODE_STRING AddressW;
+    PCWSTR TerminatorW = NULL;
+
+    Status = RtlInitAnsiStringEx(&AddressA, String);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlAnsiStringToUnicodeString(&AddressW, &AddressA, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlIpv4StringToAddressW(AddressW.Buffer,
+                                     Strict,
+                                     &TerminatorW,
+                                     Addr);
+
+    ASSERT(TerminatorW >= AddressW.Buffer);
+    *Terminator = String + (TerminatorW - AddressW.Buffer);
+
+    RtlFreeUnicodeString(&AddressW);
+
+    return Status;
 }
 
 /*
-* @unimplemented
-*/
+ * @implemented
+ */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressExA(IN PCSTR AddressString,
-                          IN BOOLEAN Strict,
-                          OUT struct in_addr *Address,
-                          OUT PUSHORT Port)
+RtlIpv4StringToAddressExA(
+    _In_ PCSTR AddressString,
+    _In_ BOOLEAN Strict,
+    _Out_ struct in_addr *Address,
+    _Out_ PUSHORT Port)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ANSI_STRING AddressA;
+    UNICODE_STRING AddressW;
+
+    Status = RtlInitAnsiStringEx(&AddressA, AddressString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlAnsiStringToUnicodeString(&AddressW, &AddressA, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlIpv4StringToAddressExW(AddressW.Buffer, Strict, Address, Port);
+
+    RtlFreeUnicodeString(&AddressW);
+
+    return Status;
 }
 
 /*
