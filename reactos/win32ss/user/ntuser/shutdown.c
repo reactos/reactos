@@ -228,11 +228,13 @@ UserInitiateShutdown(IN PETHREAD Thread,
     if (PsGetThreadProcessId(Thread) != gpidLogon)
     {
         // FIXME: HACK!! Do more checks!!
+        ERR("UserInitiateShutdown -- Notify Winlogon for shutdown\n");
         UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_LOGOFF, (LPARAM)Flags);
         return STATUS_PENDING;
     }
 
     // If we reach this point, that means it's Winlogon that triggered the shutdown.
+    ERR("UserInitiateShutdown -- Winlogon shuts down\n");
 
     /*
      * FIXME:

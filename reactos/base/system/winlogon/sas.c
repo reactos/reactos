@@ -38,6 +38,8 @@ typedef struct tagLOGOFF_SHUTDOWN_DATA
     PWLSESSION Session;
 } LOGOFF_SHUTDOWN_DATA, *PLOGOFF_SHUTDOWN_DATA;
 
+static BOOL ExitReactOSInProgress = FALSE;
+
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
@@ -499,25 +501,33 @@ LogoffShutdownThread(
     LPVOID Parameter)
 {
     PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+    UINT uFlags;
 
-    if (LSData->Session->UserToken != NULL && !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    if (LSData->Session->UserToken != NULL &&
+        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
     {
         ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
         return 0;
     }
 
+    uFlags = EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
+             ((LSData->Flags & EWX_ACTION_MASK) == EWX_LOGOFF ? EWX_INTERNAL_FLAG_LOGOFF : 0);
+
+    ERR("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
+        uFlags, ExitReactOSInProgress ? "true" : "false");
+
+    ExitReactOSInProgress = TRUE;
+
     /* Close processes of the interactive user */
-    if (!ExitWindowsEx(
-        EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
-        (EWX_LOGOFF == (LSData->Flags & EWX_ACTION_MASK) ? EWX_INTERNAL_FLAG_LOGOFF : 0),
-        0))
+    if (!ExitWindowsEx(uFlags, 0))
     {
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
         RevertToSelf();
         return 0;
     }
 
-    /* FIXME: Call ExitWindowsEx() to terminate COM processes */
+    /* FIXME: Call ExitWindowsEx() to terminate COM processes only at logoff! */
+    ERR("Should terminate COM processes only at logoff!\n");
 
     if (LSData->Session->UserToken)
         RevertToSelf();
@@ -687,7 +697,7 @@ HandleLogoff(
     /* Run logoff thread */
     hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
 
-    /* we're done with the SECURITY_DESCRIPTOR */
+    /* We're done with the SECURITY_DESCRIPTOR */
     DestroyLogoffSecurityAttributes(psa);
     psa = NULL;
 
@@ -1317,8 +1327,36 @@ SASWindowProc(
                         }
                     }
 
+                    ERR("In LN_LOGOFF, exit_in_progress == %s\n",
+                        ExitReactOSInProgress ? "true" : "false");
+
+                    /*
+                     * In case a parallel shutdown request is done (while we are
+                     * being to shut down) and it was not done by Winlogon itself,
+                     * then just stop here.
+                     */
+#if 0
+// This code is commented at the moment (even if it's correct) because
+// our log-offs do not really work: the shell is restarted, no app is killed
+// etc... and as a result you just get explorer opening "My Documents". And
+// if you try now a shut down, it won't work because winlogon thinks it is
+// still in the middle of a shutdown.
+// Maybe we also need to reset ExitReactOSInProgress somewhere else??
+                    if (ExitReactOSInProgress && (lParam & EWX_INTERNAL_FLAG) == 0)
+                    {
+                        break;
+                    }
+#endif
                     /* Now do the shutdown action proper */
                     DoGenericAction(Session, wlxAction);
+                    return 1;
+                }
+                case LN_LOGOFF_CANCELED:
+                {
+                    ERR("Logoff canceled!!, before: exit_in_progress == %s, after will be false\n",
+                        ExitReactOSInProgress ? "true" : "false");
+
+                    ExitReactOSInProgress = FALSE;
                     return 1;
                 }
                 default:
