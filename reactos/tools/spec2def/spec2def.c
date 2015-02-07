@@ -1043,7 +1043,7 @@ ParseFile(char* pcStart, FILE *fileDest, PFNOUTLINE OutputLine)
             return -1;
         }
 
-        if (!gbNotPrivateNoWarn && !(exp.uFlags & FL_PRIVATE))
+        if (!gbNotPrivateNoWarn && gbImportLib && !(exp.uFlags & FL_PRIVATE))
         {
             for (i = 0; i < ARRAYSIZE(astrShouldBePrivate); i++)
             {
