@@ -1148,6 +1148,7 @@ UnregisterHotKeys(
     return TRUE;
 }
 
+#if 0
 static
 NTSTATUS
 CheckForShutdownPrivilege(
@@ -1206,6 +1207,7 @@ CheckForShutdownPrivilege(
     }
     return STATUS_SUCCESS;
 }
+#endif
 
 BOOL
 WINAPI
@@ -1329,6 +1331,38 @@ SASWindowProc(
                     DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
                     break;
                 }
+                case LN_LOGOFF:
+                {
+                    UINT Flags = (UINT)lParam;
+                    UINT Action = Flags & EWX_ACTION_MASK;
+                    DWORD wlxAction;
+
+                    /* Check parameters */
+                    switch (Action)
+                    {
+                        case EWX_LOGOFF: wlxAction = WLX_SAS_ACTION_LOGOFF; break;
+                        case EWX_SHUTDOWN: wlxAction = WLX_SAS_ACTION_SHUTDOWN; break;
+                        case EWX_REBOOT: wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT; break;
+                        case EWX_POWEROFF: wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF; break;
+                        default:
+                        {
+                            ERR("Invalid ExitWindows action 0x%x\n", Action);
+                            return STATUS_INVALID_PARAMETER;
+                        }
+                    }
+
+#if 0
+                    // FIXME: This check must be done by Win32k, not by us!
+                    if (WLX_SHUTTINGDOWN(wlxAction))
+                    {
+                        NTSTATUS Status = CheckForShutdownPrivilege(wParam);
+                        if (!NT_SUCCESS(Status))
+                            return Status;
+                    }
+#endif
+                    DoGenericAction(Session, wlxAction);
+                    return 1;
+                }
                 default:
                 {
                     ERR("WM_LOGONNOTIFY case %d is unimplemented\n", wParam);
@@ -1349,35 +1383,6 @@ SASWindowProc(
         {
             DispatchSAS(Session, (DWORD)wParam);
             return TRUE;
-        }
-        case PM_WINLOGON_EXITWINDOWS:
-        {
-            UINT Flags = (UINT)lParam;
-            UINT Action = Flags & EWX_ACTION_MASK;
-            DWORD wlxAction;
-
-            /* Check parameters */
-            switch (Action)
-            {
-                case EWX_LOGOFF: wlxAction = WLX_SAS_ACTION_LOGOFF; break;
-                case EWX_SHUTDOWN: wlxAction = WLX_SAS_ACTION_SHUTDOWN; break;
-                case EWX_REBOOT: wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT; break;
-                case EWX_POWEROFF: wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF; break;
-                default:
-                {
-                    ERR("Invalid ExitWindows action 0x%x\n", Action);
-                    return STATUS_INVALID_PARAMETER;
-                }
-            }
-
-            if (WLX_SHUTTINGDOWN(wlxAction))
-            {
-                NTSTATUS Status = CheckForShutdownPrivilege((DWORD)wParam);
-                if (!NT_SUCCESS(Status))
-                    return Status;
-            }
-            DoGenericAction(Session, wlxAction);
-            return 1;
         }
     }
 

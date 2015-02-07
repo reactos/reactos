@@ -449,13 +449,18 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
+
       case TWOPARAM_ROUTINE_EXITREACTOS:
+      {
+          UNREFERENCED_PARAMETER(Param1 /* ProcessId */);
+
           if(hwndSAS == NULL)
           {
               ASSERT(hwndSAS);
               RETURN(STATUS_NOT_FOUND);
           }
-         RETURN( co_IntSendMessage (hwndSAS, PM_WINLOGON_EXITWINDOWS, (WPARAM) Param1, (LPARAM)Param2));
+         RETURN(co_IntSendMessage(hwndSAS, WM_LOGONNOTIFY, LN_LOGOFF, Param2 /* Flags */));
+      }
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
