@@ -34,7 +34,7 @@ PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
 SIZE_T FrLdrImageSize;
 
-#ifdef DBG
+#if DBG
 typedef struct
 {
     TYPE_OF_MEMORY Type;
@@ -213,7 +213,7 @@ AddMemoryDescriptor(
     List[Index].MemoryType = MemoryType;
     DescriptCount++;
 
-#if DBG
+#if 0 // only enable on demand!
     DbgDumpMemoryMap(List);
 #endif
     return DescriptCount;
