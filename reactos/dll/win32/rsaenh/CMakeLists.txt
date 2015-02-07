@@ -1,7 +1,7 @@
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-spec2def(rsaenh.dll rsaenh.spec ADD_IMPORTLIB)
+spec2def(rsaenh.dll rsaenh.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 
 list(APPEND SOURCE
     aes.c

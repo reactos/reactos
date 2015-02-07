@@ -11,7 +11,7 @@ add_definitions(
     -DWINE_REGISTER_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-spec2def(ole32.dll ole32.spec ADD_IMPORTLIB)
+spec2def(ole32.dll ole32.spec ADD_IMPORTLIB NO_PRIVATE_WARNINGS)
 generate_idl_iids(dcom.idl)
 add_idl_headers(ole32idl dcom.idl irot.idl)
 add_rpc_files(client irot.idl)

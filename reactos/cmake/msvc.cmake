@@ -315,14 +315,8 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 function(spec2def _dllname _spec_file)
-    # Do we also want to add importlib targets?
-    if(${ARGC} GREATER 2)
-        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
-            set(__add_importlib TRUE)
-        else()
-            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
-        endif()
-    endif()
+
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS" "" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -338,7 +332,10 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-    if(__add_importlib)
+    if(__spec2def_ADD_IMPORTLIB)
+        # TODO: NO_PRIVATE_WARNINGS should add /IGNORE:4104 to the link command
+        #       line. However that should be on all command lines outside of
+        #       generate_import_lib in the first place.
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
     endif()
 endfunction()
