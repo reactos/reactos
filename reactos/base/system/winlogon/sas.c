@@ -1148,67 +1148,6 @@ UnregisterHotKeys(
     return TRUE;
 }
 
-#if 0
-static
-NTSTATUS
-CheckForShutdownPrivilege(
-    IN DWORD RequestingProcessId)
-{
-    HANDLE Process;
-    HANDLE Token;
-    BOOL CheckResult;
-    PPRIVILEGE_SET PrivSet;
-
-    TRACE("CheckForShutdownPrivilege()\n");
-
-    Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, RequestingProcessId);
-    if (!Process)
-    {
-        WARN("OpenProcess() failed with error %lu\n", GetLastError());
-        return STATUS_INVALID_HANDLE;
-    }
-    if (!OpenProcessToken(Process, TOKEN_QUERY, &Token))
-    {
-        WARN("OpenProcessToken() failed with error %lu\n", GetLastError());
-        CloseHandle(Process);
-        return STATUS_INVALID_HANDLE;
-    }
-    CloseHandle(Process);
-    PrivSet = HeapAlloc(GetProcessHeap(), 0, sizeof(PRIVILEGE_SET) + sizeof(LUID_AND_ATTRIBUTES));
-    if (!PrivSet)
-    {
-        ERR("Failed to allocate mem for privilege set\n");
-        CloseHandle(Token);
-        return STATUS_NO_MEMORY;
-    }
-    PrivSet->PrivilegeCount = 1;
-    PrivSet->Control = PRIVILEGE_SET_ALL_NECESSARY;
-    if (!LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &PrivSet->Privilege[0].Luid))
-    {
-        WARN("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, PrivSet);
-        CloseHandle(Token);
-        return STATUS_UNSUCCESSFUL;
-    }
-    if (!PrivilegeCheck(Token, PrivSet, &CheckResult))
-    {
-        WARN("PrivilegeCheck() failed with error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, PrivSet);
-        CloseHandle(Token);
-        return STATUS_ACCESS_DENIED;
-    }
-    HeapFree(GetProcessHeap(), 0, PrivSet);
-    CloseHandle(Token);
-
-    if (!CheckResult)
-    {
-        WARN("SE_SHUTDOWN privilege not enabled\n");
-        return STATUS_ACCESS_DENIED;
-    }
-    return STATUS_SUCCESS;
-}
-#endif
-
 BOOL
 WINAPI
 HandleMessageBeep(UINT uType)
@@ -1337,13 +1276,40 @@ SASWindowProc(
                     UINT Action = Flags & EWX_ACTION_MASK;
                     DWORD wlxAction;
 
+                    TRACE("\tFlags : 0x%lx\n", lParam);
+
+                    /*
+                     * Our caller (USERSRV) should have added the shutdown flag
+                     * when setting also poweroff or reboot.
+                     */
+                    if (Action & (EWX_POWEROFF | EWX_REBOOT))
+                    {
+                        if ((Action & EWX_SHUTDOWN) == 0)
+                        {
+                            ERR("Missing EWX_SHUTDOWN flag for poweroff or reboot; action 0x%x\n", Action);
+                            return STATUS_INVALID_PARAMETER;
+                        }
+
+                        /* Now we can locally remove it for performing checks */
+                        Action &= ~EWX_SHUTDOWN;
+                    }
+
                     /* Check parameters */
                     switch (Action)
                     {
-                        case EWX_LOGOFF: wlxAction = WLX_SAS_ACTION_LOGOFF; break;
-                        case EWX_SHUTDOWN: wlxAction = WLX_SAS_ACTION_SHUTDOWN; break;
-                        case EWX_REBOOT: wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT; break;
-                        case EWX_POWEROFF: wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF; break;
+                        case EWX_LOGOFF:
+                            wlxAction = WLX_SAS_ACTION_LOGOFF;
+                            break;
+                        case EWX_SHUTDOWN:
+                            wlxAction = WLX_SAS_ACTION_SHUTDOWN;
+                            break;
+                        case EWX_REBOOT:
+                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
+                            break;
+                        case EWX_POWEROFF:
+                            wlxAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
+                            break;
+
                         default:
                         {
                             ERR("Invalid ExitWindows action 0x%x\n", Action);
@@ -1351,15 +1317,7 @@ SASWindowProc(
                         }
                     }
 
-#if 0
-                    // FIXME: This check must be done by Win32k, not by us!
-                    if (WLX_SHUTTINGDOWN(wlxAction))
-                    {
-                        NTSTATUS Status = CheckForShutdownPrivilege(wParam);
-                        if (!NT_SUCCESS(Status))
-                            return Status;
-                    }
-#endif
+                    /* Now do the shutdown action proper */
                     DoGenericAction(Session, wlxAction);
                     return 1;
                 }

@@ -778,6 +778,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
         return STATUS_ACCESS_DENIED;
     }
 
+    // FIXME: HAAAAACK!!
     DPRINT1("FIXME: Need to close all user processes!\n");
     return STATUS_SUCCESS;
 
@@ -896,12 +897,34 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
 }
 
 static NTSTATUS FASTCALL
-UserExitReactos(DWORD UserProcessId, UINT Flags)
+UserExitReactos(PCSR_THREAD CsrThread, UINT Flags)
 {
     NTSTATUS Status;
+    LUID CallerLuid;
 
-    /* FIXME Inside 2000 says we should impersonate the caller here */
-    Status = NtUserCallTwoParam(UserProcessId, Flags, TWOPARAM_ROUTINE_EXITREACTOS);
+    // FIXME: HACK!!
+
+    /*
+     * Retrieve the caller's LUID so that we can only shutdown
+     * processes in the caller's LUID.
+     */
+    if (!CsrImpersonateClient(NULL))
+        return STATUS_BAD_IMPERSONATION_LEVEL;
+
+    Status = CsrGetProcessLuid(NULL, &CallerLuid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to get caller LUID, Status = 0x%08x\n", Status);
+        goto Quit;
+    }
+
+    DPRINT1("Caller LUID is: %lx.%lx\n", CallerLuid.HighPart, CallerLuid.LowPart);
+
+    /* Notify Win32k and potentially Winlogon of the shutdown */
+    Status = NtUserSetInformationThread(CsrThread->ThreadHandle,
+                                        UserThreadInitiateShutdown,
+                                        &Flags, sizeof(Flags));
+    DPRINT1("Win32k says: %lx\n", Status);
 
     /* If the message isn't handled, the return value is 0, so 0 doesn't indicate
        success. Success is indicated by a 1 return value, if anything besides 0
@@ -915,6 +938,10 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
         Status = STATUS_NOT_IMPLEMENTED;
     }
 
+    DPRINT1("SrvExitWindowsEx returned 0x%08x\n", Status);
+
+Quit:
+    CsrRevertToSelf();
     return Status;
 }
 
@@ -938,19 +965,42 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
 
 CSR_API(SrvExitWindowsEx)
 {
+    NTSTATUS Status;
     PUSER_EXIT_REACTOS ExitReactosRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactosRequest;
+    PCSR_THREAD CsrThread = CsrGetClientThread();
+    ULONG Flags = ExitReactosRequest->Flags;
 
-    if (0 == (ExitReactosRequest->Flags & EWX_INTERNAL_FLAG))
+    /*
+     * Check for flags validity
+     */
+
+    DWORD ProcessId = HandleToUlong(CsrThread->ClientId.UniqueProcess);
+    DWORD ThreadId  = HandleToUlong(CsrThread->ClientId.UniqueThread);
+
+    DPRINT1("SrvExitWindowsEx(ClientId: %lx.%lx, Flags: 0x%x)\n",
+            ProcessId, ThreadId, Flags);
+
+    /* Implicitely add the shutdown flag when we poweroff or reboot */
+    if (Flags & (EWX_POWEROFF | EWX_REBOOT))
+        Flags |= EWX_SHUTDOWN;
+
+
+    // FIXME: Everything else starting after this line is a HAAACK!!
+
+
+    if (0 == (Flags & EWX_INTERNAL_FLAG))
     {
-        return UserExitReactos((DWORD_PTR) ApiMessage->Header.ClientId.UniqueProcess,
-                               ExitReactosRequest->Flags);
+        Status = UserExitReactos(CsrThread, Flags);
     }
     else
     {
-        return InternalExitReactos((DWORD_PTR) ApiMessage->Header.ClientId.UniqueProcess,
-                                   (DWORD_PTR) ApiMessage->Header.ClientId.UniqueThread,
-                                   ExitReactosRequest->Flags);
+        // EWX_INTERNAL_FLAG --> For Winlogon only!!
+        // FIXME: This is just a big HAAAACK!!
+        Status = InternalExitReactos(ProcessId, ThreadId, Flags);
     }
+
+    ExitReactosRequest->Success = NT_SUCCESS(Status);
+    return Status;
 }
 
 CSR_API(SrvEndTask)

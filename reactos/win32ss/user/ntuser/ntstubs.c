@@ -412,7 +412,7 @@ NtUserConsoleControl(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Allow only Console Server to perform this operation (via CSRSS) */
+    /* Allow only the Console Server to perform this operation (via CSRSS) */
     if (PsGetCurrentProcess() != gpepCSRSS)
         return STATUS_ACCESS_DENIED;
 
@@ -770,7 +770,6 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PETHREAD Thread;
-    HANDLE CsrPortHandle;
 
     /* Allow only CSRSS to perform this operation */
     if (PsGetCurrentProcess() != gpepCSRSS)
@@ -792,24 +791,24 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
         case UserThreadInitiateShutdown:
         {
             ERR("Shutdown initiated\n");
-            STUB;
-            Status = STATUS_NOT_IMPLEMENTED;
+
+            if (ThreadInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            Status = UserInitiateShutdown(Thread, (PULONG)ThreadInformation);
             break;
         }
 
         case UserThreadEndShutdown:
         {
+            NTSTATUS ShutdownStatus;
+
             ERR("Shutdown ended\n");
-            STUB;
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-        }
 
-        case UserThreadCsrApiPort:
-        {
-            ERR("Set CSR API Port for Win32k\n");
-
-            if (ThreadInformationLength != sizeof(HANDLE))
+            if (ThreadInformationLength != sizeof(ShutdownStatus))
             {
                 Status = STATUS_INFO_LENGTH_MISMATCH;
                 break;
@@ -818,7 +817,37 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
-                ProbeForRead(ThreadInformation, sizeof(HANDLE), sizeof(PVOID));
+                ProbeForRead(ThreadInformation, sizeof(ShutdownStatus), sizeof(PVOID));
+                ShutdownStatus = *(NTSTATUS*)ThreadInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            if (NT_SUCCESS(Status))
+                Status = UserEndShutdown(Thread, ShutdownStatus);
+
+            break;
+        }
+
+        case UserThreadCsrApiPort:
+        {
+            HANDLE CsrPortHandle;
+
+            ERR("Set CSR API Port for Win32k\n");
+
+            if (ThreadInformationLength != sizeof(CsrPortHandle))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            Status = STATUS_SUCCESS;
+            _SEH2_TRY
+            {
+                ProbeForRead(ThreadInformation, sizeof(CsrPortHandle), sizeof(PVOID));
                 CsrPortHandle = *(PHANDLE)ThreadInformation;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -828,9 +857,8 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             _SEH2_END;
 
             if (NT_SUCCESS(Status))
-            {
                 Status = InitCsrApiPort(CsrPortHandle);
-            }
+
             break;
         }
 

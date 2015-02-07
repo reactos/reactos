@@ -10,6 +10,8 @@
 
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
 /*
  * Sequence of events:
  *
@@ -61,6 +63,130 @@
  *   the kernel and executive shutdown by calling NtShutdownSystem.
  */
 
+typedef struct
+{
+    UINT  uFlags;
+    DWORD dwReserved;
+} EXIT_REACTOS_DATA, *PEXIT_REACTOS_DATA;
+
+static BOOL
+ExitWindowsWorker(UINT uFlags,
+                  DWORD dwReserved,
+                  BOOL bCalledFromThread);
+
+static DWORD
+WINAPI
+ExitWindowsThread(LPVOID Param)
+{
+    DWORD dwExitCode;
+    PEXIT_REACTOS_DATA ExitData = (PEXIT_REACTOS_DATA)Param;
+
+    /* Do the exit asynchronously */
+    if (ExitWindowsWorker(ExitData->uFlags, ExitData->dwReserved, TRUE))
+        dwExitCode = ERROR_SUCCESS;
+    else
+        dwExitCode = GetLastError();
+
+    ExitThread(dwExitCode);
+    return ERROR_SUCCESS;
+}
+
+static BOOL
+ExitWindowsWorker(UINT uFlags,
+                  DWORD dwReserved,
+                  BOOL bCalledFromThread)
+{
+    EXIT_REACTOS_DATA ExitData;
+    HANDLE hExitThread;
+    DWORD ExitCode;
+    MSG msg;
+
+    USER_API_MESSAGE ApiMessage;
+    PUSER_EXIT_REACTOS ExitReactosRequest = &ApiMessage.Data.ExitReactosRequest;
+
+    /*
+     * 1- FIXME: Call NtUserCallOneParam(uFlags, ONEPARAM_ROUTINE_PREPAREFORLOGOFF);
+     *    If success we can continue, otherwise we must fail.
+     */
+
+    /*
+     * 2- Send the Exit request to CSRSS (and to Win32k indirectly).
+     *    We can shutdown synchronously or asynchronously.
+     */
+
+    // ExitReactosRequest->LastError = ERROR_SUCCESS;
+    ExitReactosRequest->Flags = uFlags;
+
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
+                        sizeof(*ExitReactosRequest));
+
+    /* Set the last error accordingly */
+    if (NT_SUCCESS(ApiMessage.Status) || ApiMessage.Status == STATUS_CANT_WAIT)
+    {
+        if (ExitReactosRequest->LastError != ERROR_SUCCESS)
+            UserSetLastError(ExitReactosRequest->LastError);
+    }
+    else
+    {
+        UserSetLastNTError(ApiMessage.Status);
+        ExitReactosRequest->Success = FALSE;
+    }
+
+    /*
+     * In case CSR call succeeded and we did a synchronous exit
+     * (STATUS_CANT_WAIT is considered as a non-success status),
+     * return the real state of the operation now.
+     */
+    if (NT_SUCCESS(ApiMessage.Status))
+        return ExitReactosRequest->Success;
+
+    /*
+     * In case something failed: we have a non-success status and:
+     * - either we were doing a synchronous exit (Status != STATUS_CANT_WAIT), or
+     * - we were doing an asynchronous exit because we were called recursively via
+     *   another thread but we failed to exit,
+     * then bail out immediately, otherwise we would enter an infinite loop of exit requests.
+     *
+     * On the contrary if we need to do an asynchronous exit (Status == STATUS_CANT_WAIT
+     * and not called recursively via another thread), then continue and do the exit.
+     */
+    if (ApiMessage.Status != STATUS_CANT_WAIT || bCalledFromThread)
+    {
+        UserSetLastNTError(ApiMessage.Status);
+        return FALSE;
+    }
+
+    /*
+     * 3- Win32k wants us to perform an asynchronous exit. Run the request in a thread.
+     * (ApiMessage.Status == STATUS_CANT_WAIT and not already called from a thread)
+     */
+    ExitData.uFlags     = uFlags;
+    ExitData.dwReserved = dwReserved;
+    hExitThread = CreateThread(NULL, 0, ExitWindowsThread, &ExitData, 0, NULL);
+    if (hExitThread == NULL)
+        return FALSE;
+
+    /* Pump and discard any input events sent to the app(s) */
+    while (MsgWaitForMultipleObjectsEx(1, &hExitThread, INFINITE, QS_ALLINPUT, 0))
+    {
+        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+            DispatchMessageW(&msg);
+    }
+
+    /* Finally, return to caller */
+    if (!GetExitCodeThread(hExitThread, &ExitCode))
+        ExitCode = GetLastError();
+
+    CloseHandle(hExitThread);
+
+    if (ExitCode != ERROR_SUCCESS)
+        UserSetLastError(ExitCode);
+
+    return (ExitCode == ERROR_SUCCESS);
+}
+
 /*
  * @implemented
  */
@@ -68,23 +194,17 @@ BOOL WINAPI
 ExitWindowsEx(UINT uFlags,
               DWORD dwReserved)
 {
-    NTSTATUS Status;
-    USER_API_MESSAGE ApiMessage;
+    /*
+     * FIXME:
+     * 1- Calling the Exit worker must be done under certain conditions.
+     *    We may also need to warn the user if there are other people logged
+     *    on this computer (see http://pve.proxmox.com/wiki/Windows_2003_guest_best_practices )
+     * 2- Call SrvRecordShutdownReason.
+     */
 
-    ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
-    // ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
+    return ExitWindowsWorker(uFlags, dwReserved, FALSE);
 
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
-                                 sizeof(USER_EXIT_REACTOS));
-    if (!NT_SUCCESS(Status))
-    {
-        UserSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
+    /* FIXME: Call SrvRecordShutdownReason if we failed */
 }
 
 /*
