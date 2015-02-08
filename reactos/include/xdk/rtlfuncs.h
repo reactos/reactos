@@ -31,6 +31,10 @@ RtlFailFast(
   __fastfail(Code);
 }
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && (defined(_M_CEE_PURE) || defined(_M_CEE_SAFE))
+#define NO_KERNEL_LIST_ENTRY_CHECKS
+#endif
+
 #if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
 
 #define RTL_STATIC_LIST_HEAD(x) LIST_ENTRY x = { &x, &x }
@@ -54,6 +58,46 @@ IsListEmpty(
 
 FORCEINLINE
 BOOLEAN
+RemoveEntryListUnsafe(
+  _In_ PLIST_ENTRY Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (BOOLEAN)(OldFlink == OldBlink);
+}
+
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+FORCEINLINE
+VOID
+FatalListEntryError(
+  _In_ PVOID P1,
+  _In_ PVOID P2,
+  _In_ PVOID P3)
+{
+  UNREFERENCED_PARAMETER(P1);
+  UNREFERENCED_PARAMETER(P2);
+  UNREFERENCED_PARAMETER(P3);
+
+  RtlFailFast(FAST_FAIL_CORRUPT_LIST_ENTRY);
+}
+
+FORCEINLINE
+VOID
+RtlpCheckListEntry(
+  _In_ PLIST_ENTRY Entry)
+{
+  if (Entry->Flink->Blink != Entry || Entry->Blink->Flink != Entry)
+    FatalListEntryError(Entry->Blink, Entry, Entry->Flink);
+}
+#endif
+
+FORCEINLINE
+BOOLEAN
 RemoveEntryList(
   _In_ PLIST_ENTRY Entry)
 {
@@ -62,6 +106,10 @@ RemoveEntryList(
 
   OldFlink = Entry->Flink;
   OldBlink = Entry->Blink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (OldFlink->Blink != Entry || OldBlink->Flink != Entry)
+    FatalListEntryError(OldBlink, Entry, OldFlink);
+#endif
   OldFlink->Blink = OldBlink;
   OldBlink->Flink = OldFlink;
   return (BOOLEAN)(OldFlink == OldBlink);
@@ -75,8 +123,15 @@ RemoveHeadList(
   PLIST_ENTRY Flink;
   PLIST_ENTRY Entry;
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#endif
   Entry = ListHead->Flink;
   Flink = Entry->Flink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (Entry->Blink != ListHead || Flink->Blink != Entry)
+    FatalListEntryError(ListHead, Entry, Flink);
+#endif
   ListHead->Flink = Flink;
   Flink->Blink = ListHead;
   return Entry;
@@ -90,8 +145,15 @@ RemoveTailList(
   PLIST_ENTRY Blink;
   PLIST_ENTRY Entry;
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#endif
   Entry = ListHead->Blink;
   Blink = Entry->Blink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (Blink->Flink != Entry || Entry->Flink != ListHead)
+    FatalListEntryError(Blink, Entry, ListHead);
+#endif
   ListHead->Blink = Blink;
   Blink->Flink = ListHead;
   return Entry;
@@ -104,9 +166,16 @@ InsertTailList(
   _Inout_ __drv_aliasesMem PLIST_ENTRY Entry)
 {
   PLIST_ENTRY OldBlink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#endif
   OldBlink = ListHead->Blink;
   Entry->Flink = ListHead;
   Entry->Blink = OldBlink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (OldBlink->Flink != ListHead)
+    FatalListEntryError(OldBlink->Blink, OldBlink, ListHead);
+#endif
   OldBlink->Flink = Entry;
   ListHead->Blink = Entry;
 }
@@ -118,9 +187,16 @@ InsertHeadList(
   _Inout_ __drv_aliasesMem PLIST_ENTRY Entry)
 {
   PLIST_ENTRY OldFlink;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
+  RtlpCheckListEntry(ListHead);
+#endif
   OldFlink = ListHead->Flink;
   Entry->Flink = OldFlink;
   Entry->Blink = ListHead;
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  if (OldFlink->Blink != ListHead)
+    FatalListEntryError(ListHead, OldFlink, OldFlink->Flink);
+#endif
   OldFlink->Blink = Entry;
   ListHead->Flink = Entry;
 }
@@ -133,6 +209,10 @@ AppendTailList(
 {
   PLIST_ENTRY ListEnd = ListHead->Blink;
 
+#if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+  RtlpCheckListEntry(ListHead);
+  RtlpCheckListEntry(ListToAppend);
+#endif
   ListHead->Blink->Flink = ListToAppend;
   ListHead->Blink = ListToAppend->Blink;
   ListToAppend->Blink->Flink = ListHead;
