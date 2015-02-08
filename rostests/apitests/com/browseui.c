@@ -225,6 +225,16 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x4,   &IID_IObjectWithSite },
         }
     },
+    {
+        ID_NAME(CLSID_ProgressDialog),
+        {
+            {    0x0,   &IID_IProgressDialog },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IOleWindow },
+            {   0x10,   &IID_IObjectWithSite },
+        },
+        L"Both"
+    }
 };
 static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 
