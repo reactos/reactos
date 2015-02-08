@@ -2444,3 +2444,79 @@ Cleanup:
 
     return Status;
 }
+
+NTSTATUS
+NTAPI
+CmSaveMergedKeys(IN PCM_KEY_CONTROL_BLOCK HighKcb,
+                 IN PCM_KEY_CONTROL_BLOCK LowKcb,
+                 IN HANDLE FileHandle)
+{
+    PCMHIVE KeyHive = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PAGED_CODE();
+
+    DPRINT("CmSaveKey(%p, %p, %p)\n", HighKcb, LowKcb, FileHandle);
+
+    /* Lock the registry and the KCBs */
+    CmpLockRegistry();
+    CmpAcquireKcbLockShared(HighKcb);
+    CmpAcquireKcbLockShared(LowKcb);
+
+    if (LowKcb->Delete || HighKcb->Delete)
+    {
+        /* The source key has been deleted, do nothing */
+        Status = STATUS_KEY_DELETED;
+        goto done;
+    }
+
+    /* Create a new hive that will hold the key */
+    Status = CmpInitializeHive(&KeyHive,
+                               HINIT_CREATE,
+                               HIVE_VOLATILE,
+                               HFILE_TYPE_PRIMARY,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               0);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Copy the low precedence key recursively into the new hive */
+    Status = CmpDeepCopyKey(LowKcb->KeyHive,
+                            LowKcb->KeyCell,
+                            &KeyHive->Hive,
+                            Stable,
+                            &KeyHive->Hive.BaseBlock->RootCell);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Copy the high precedence key recursively into the new hive */
+    Status = CmpDeepCopyKey(HighKcb->KeyHive,
+                            HighKcb->KeyCell,
+                            &KeyHive->Hive,
+                            Stable,
+                            &KeyHive->Hive.BaseBlock->RootCell);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set the primary handle of the hive */
+    KeyHive->FileHandles[HFILE_TYPE_PRIMARY] = FileHandle;
+
+    /* Dump the hive into the file */
+    HvWriteHive(&KeyHive->Hive);
+
+done:
+    /* Free the hive */
+    if (KeyHive)
+        CmpDestroyHive(KeyHive);
+
+    /* Release the locks */
+    CmpReleaseKcbLock(LowKcb);
+    CmpReleaseKcbLock(HighKcb);
+    CmpUnlockRegistry();
+
+    return Status;
+}
