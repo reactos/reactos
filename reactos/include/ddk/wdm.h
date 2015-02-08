@@ -9621,6 +9621,10 @@ RtlFailFast(
 #define NO_KERNEL_LIST_ENTRY_CHECKS
 #endif
 
+#if !defined(EXTRA_KERNEL_LIST_ENTRY_CHECKS) && defined(__REACTOS__)
+#define EXTRA_KERNEL_LIST_ENTRY_CHECKS
+#endif
+
 #if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
 
 #define RTL_STATIC_LIST_HEAD(x) LIST_ENTRY x = { &x, &x }
@@ -9693,6 +9697,10 @@ RemoveEntryList(
   OldFlink = Entry->Flink;
   OldBlink = Entry->Blink;
 #if !defined(NO_KERNEL_LIST_ENTRY_CHECKS)
+#ifdef EXTRA_KERNEL_LIST_ENTRY_CHECKS
+  if (OldFlink == Entry || OldBlink == Entry)
+    FatalListEntryError(OldBlink, Entry, OldFlink);
+#endif
   if (OldFlink->Blink != Entry || OldBlink->Flink != Entry)
     FatalListEntryError(OldBlink, Entry, OldFlink);
 #endif
@@ -9711,6 +9719,10 @@ RemoveHeadList(
 
 #if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
   RtlpCheckListEntry(ListHead);
+#ifdef EXTRA_KERNEL_LIST_ENTRY_CHECKS
+  if (ListHead->Flink == ListHead || ListHead->Blink == ListHead)
+    FatalListEntryError(ListHead->Blink, ListHead, ListHead->Flink);
+#endif
 #endif
   Entry = ListHead->Flink;
   Flink = Entry->Flink;
@@ -9733,6 +9745,10 @@ RemoveTailList(
 
 #if !defined(NO_KERNEL_LIST_ENTRY_CHECKS) && DBG
   RtlpCheckListEntry(ListHead);
+#ifdef EXTRA_KERNEL_LIST_ENTRY_CHECKS
+  if (ListHead->Flink == ListHead || ListHead->Blink == ListHead)
+    FatalListEntryError(ListHead->Blink, ListHead, ListHead->Flink);
+#endif
 #endif
   Entry = ListHead->Blink;
   Blink = Entry->Blink;
