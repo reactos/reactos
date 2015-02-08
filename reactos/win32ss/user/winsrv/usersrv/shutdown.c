@@ -32,6 +32,8 @@ typedef struct tagSHUTDOWN_SETTINGS
     DWORD WaitToKillAppTimeout;
 } SHUTDOWN_SETTINGS, *PSHUTDOWN_SETTINGS;
 
+SHUTDOWN_SETTINGS ShutdownSettings = {0};
+
 #define DEFAULT_AUTO_END_TASKS           FALSE
 #define DEFAULT_HUNG_APP_TIMEOUT         5000
 #define DEFAULT_WAIT_TO_KILL_APP_TIMEOUT 20000
@@ -84,16 +86,7 @@ typedef struct tagPROCESS_ENUM_CONTEXT
 
 /* FUNCTIONS ******************************************************************/
 
-/*
-NTSTATUS FASTCALL
-Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
-                      PVOID Context)
-{
-    return CsrEnumProcesses(EnumProc, Context);
-}
-*/
-
-static void FASTCALL
+static VOID FASTCALL
 UpdateProgressBar(HWND ProgressBar, PNOTIFY_CONTEXT NotifyContext)
 {
     DWORD Passed;
@@ -185,20 +178,21 @@ EndNowDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     return Result;
 }
 
-static void
-CallInitCommonControls()
+HMODULE hComCtl32Lib = NULL;
+
+static VOID
+CallInitCommonControls(VOID)
 {
     static BOOL Initialized = FALSE;
-    HMODULE Lib;
     INITCOMMONCONTROLS_PROC InitProc;
 
     if (Initialized) return;
 
-    Lib = LoadLibraryW(L"COMCTL32.DLL");
-    if (NULL == Lib) return;
+    hComCtl32Lib = LoadLibraryW(L"COMCTL32.DLL");
+    if (hComCtl32Lib == NULL) return;
 
-    InitProc = (INITCOMMONCONTROLS_PROC) GetProcAddress(Lib, "InitCommonControls");
-    if (NULL == InitProc) return;
+    InitProc = (INITCOMMONCONTROLS_PROC)GetProcAddress(hComCtl32Lib, "InitCommonControls");
+    if (InitProc == NULL) return;
 
     (*InitProc)();
 
@@ -292,88 +286,74 @@ NotifyTopLevelEnum(HWND Wnd, LPARAM lParam)
         return FALSE;
     }
 
-    if (ProcessId == NotifyContext->ProcessId)
+    if (ProcessId != NotifyContext->ProcessId)
+        goto Quit;
+
+    Now = GetTickCount();
+    if (0 == NotifyContext->StartTime)
     {
-        Now = GetTickCount();
-        if (0 == NotifyContext->StartTime)
+        NotifyContext->StartTime = Now;
+    }
+    /*
+     * Note: Passed is computed correctly even when GetTickCount()
+     * wraps due to unsigned arithmetic.
+     */
+    Passed = Now - NotifyContext->StartTime;
+    MessageContext.Wnd = Wnd;
+    MessageContext.Msg = NotifyContext->Msg;
+    MessageContext.wParam = NotifyContext->wParam;
+    MessageContext.lParam = NotifyContext->lParam;
+    MessageContext.Timeout = NotifyContext->ShutdownSettings->HungAppTimeout;
+    if (! NotifyContext->ShutdownSettings->AutoEndTasks)
+    {
+        MessageContext.Timeout += NotifyContext->ShutdownSettings->WaitToKillAppTimeout;
+    }
+    if (Passed < MessageContext.Timeout)
+    {
+        MessageContext.Timeout -= Passed;
+        MessageThread = CreateThread(NULL, 0, NotifyContext->SendMessageProc,
+                                     (LPVOID) &MessageContext, 0, NULL);
+        if (NULL == MessageThread)
         {
-            NotifyContext->StartTime = Now;
+            NotifyContext->QueryResult = QUERY_RESULT_ERROR;
+            return FALSE;
         }
-        /* Note: Passed is computed correctly even when GetTickCount() wraps due
-           to unsigned arithmetic */
-        Passed = Now - NotifyContext->StartTime;
-        MessageContext.Wnd = Wnd;
-        MessageContext.Msg = NotifyContext->Msg;
-        MessageContext.wParam = NotifyContext->wParam;
-        MessageContext.lParam = NotifyContext->lParam;
-        MessageContext.Timeout = NotifyContext->ShutdownSettings->HungAppTimeout;
-        if (! NotifyContext->ShutdownSettings->AutoEndTasks)
+        Timeout = NotifyContext->ShutdownSettings->HungAppTimeout;
+        if (Passed < Timeout)
         {
-            MessageContext.Timeout += NotifyContext->ShutdownSettings->WaitToKillAppTimeout;
+            Timeout -= Passed;
+            WaitStatus = WaitForSingleObjectEx(MessageThread, Timeout, FALSE);
         }
-        if (Passed < MessageContext.Timeout)
+        else
         {
-            MessageContext.Timeout -= Passed;
-            MessageThread = CreateThread(NULL, 0, NotifyContext->SendMessageProc,
-                                         (LPVOID) &MessageContext, 0, NULL);
-            if (NULL == MessageThread)
+            WaitStatus = WAIT_TIMEOUT;
+        }
+        if (WAIT_TIMEOUT == WaitStatus)
+        {
+            NotifyContext->WndClient = Wnd;
+            if (NULL == NotifyContext->UIThread && NotifyContext->ShowUI)
             {
-                NotifyContext->QueryResult = QUERY_RESULT_ERROR;
-                return FALSE;
+                NotifyContext->UIThread = CreateThread(NULL, 0,
+                                                       EndNowThreadProc,
+                                                       (LPVOID) NotifyContext,
+                                                       0, NULL);
             }
-            Timeout = NotifyContext->ShutdownSettings->HungAppTimeout;
-            if (Passed < Timeout)
+            Threads[0] = MessageThread;
+            Threads[1] = NotifyContext->UIThread;
+            WaitStatus = WaitForMultipleObjectsEx(NULL == NotifyContext->UIThread ?
+                                                  1 : 2,
+                                                  Threads, FALSE, INFINITE,
+                                                  FALSE);
+            if (WAIT_OBJECT_0 == WaitStatus)
             {
-                Timeout -= Passed;
-                WaitStatus = WaitForSingleObjectEx(MessageThread, Timeout, FALSE);
-            }
-            else
-            {
-                WaitStatus = WAIT_TIMEOUT;
-            }
-            if (WAIT_TIMEOUT == WaitStatus)
-            {
-                NotifyContext->WndClient = Wnd;
-                if (NULL == NotifyContext->UIThread && NotifyContext->ShowUI)
-                {
-                    NotifyContext->UIThread = CreateThread(NULL, 0,
-                                                           EndNowThreadProc,
-                                                           (LPVOID) NotifyContext,
-                                                           0, NULL);
-                }
-                Threads[0] = MessageThread;
-                Threads[1] = NotifyContext->UIThread;
-                WaitStatus = WaitForMultipleObjectsEx(NULL == NotifyContext->UIThread ?
-                                                      1 : 2,
-                                                      Threads, FALSE, INFINITE,
-                                                      FALSE);
-                if (WAIT_OBJECT_0 == WaitStatus)
-                {
-                    if (! GetExitCodeThread(MessageThread, &NotifyContext->QueryResult))
-                    {
-                        NotifyContext->QueryResult = QUERY_RESULT_ERROR;
-                    }
-                }
-                else if (WAIT_OBJECT_0 + 1 == WaitStatus)
-                {
-                    if (! GetExitCodeThread(NotifyContext->UIThread,
-                                            &NotifyContext->QueryResult))
-                    {
-                        NotifyContext->QueryResult = QUERY_RESULT_ERROR;
-                    }
-                }
-                else
+                if (! GetExitCodeThread(MessageThread, &NotifyContext->QueryResult))
                 {
                     NotifyContext->QueryResult = QUERY_RESULT_ERROR;
                 }
-                if (WAIT_OBJECT_0 != WaitStatus)
-                {
-                    TerminateThread(MessageThread, QUERY_RESULT_TIMEOUT);
-                }
             }
-            else if (WAIT_OBJECT_0 == WaitStatus)
+            else if (WAIT_OBJECT_0 + 1 == WaitStatus)
             {
-                if (! GetExitCodeThread(MessageThread,
+                if (! GetExitCodeThread(NotifyContext->UIThread,
                                         &NotifyContext->QueryResult))
                 {
                     NotifyContext->QueryResult = QUERY_RESULT_ERROR;
@@ -383,15 +363,33 @@ NotifyTopLevelEnum(HWND Wnd, LPARAM lParam)
             {
                 NotifyContext->QueryResult = QUERY_RESULT_ERROR;
             }
-            CloseHandle(MessageThread);
+            if (WAIT_OBJECT_0 != WaitStatus)
+            {
+                TerminateThread(MessageThread, QUERY_RESULT_TIMEOUT);
+            }
+        }
+        else if (WAIT_OBJECT_0 == WaitStatus)
+        {
+            if (! GetExitCodeThread(MessageThread,
+                                    &NotifyContext->QueryResult))
+            {
+                NotifyContext->QueryResult = QUERY_RESULT_ERROR;
+            }
         }
         else
         {
-            NotifyContext->QueryResult = QUERY_RESULT_TIMEOUT;
+            NotifyContext->QueryResult = QUERY_RESULT_ERROR;
         }
+        CloseHandle(MessageThread);
+    }
+    else
+    {
+        NotifyContext->QueryResult = QUERY_RESULT_TIMEOUT;
     }
 
-    return QUERY_RESULT_CONTINUE == NotifyContext->QueryResult;
+Quit:
+    DPRINT1("NotifyContext->QueryResult == %d\n", NotifyContext->QueryResult);
+    return (NotifyContext->QueryResult == QUERY_RESULT_CONTINUE);
 }
 
 static BOOL CALLBACK
@@ -470,7 +468,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeou
 #endif
 /************************************************/
 
-static BOOL FASTCALL
+BOOL FASTCALL
 NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
                           PSHUTDOWN_SETTINGS ShutdownSettings,
                           UINT Flags)
@@ -629,32 +627,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
 }
 #endif
 
-static int
-ProcessDataCompare(const void *Elem1, const void *Elem2)
-{
-    const PCSR_PROCESS *ProcessData1 = (PCSR_PROCESS *) Elem1;
-    const PCSR_PROCESS *ProcessData2 = (PCSR_PROCESS *) Elem2;
-
-    if ((*ProcessData1)->ShutdownLevel < (*ProcessData2)->ShutdownLevel)
-    {
-        return +1;
-    }
-    else if ((*ProcessData2)->ShutdownLevel < (*ProcessData1)->ShutdownLevel)
-    {
-        return -1;
-    }
-    else if ((*ProcessData1)->ClientId.UniqueProcess < (*ProcessData2)->ClientId.UniqueProcess)
-    {
-        return +1;
-    }
-    else if ((*ProcessData2)->ClientId.UniqueProcess < (*ProcessData1)->ClientId.UniqueProcess)
-    {
-        return -1;
-    }
-
-    return 0;
-}
-
+#if 0
 static DWORD FASTCALL
 GetShutdownSettings(HKEY DesktopKey, LPCWSTR ValueName, DWORD DefaultValue)
 {
@@ -695,7 +668,7 @@ GetShutdownSettings(HKEY DesktopKey, LPCWSTR ValueName, DWORD DefaultValue)
     return DefaultValue;
 }
 
-static void FASTCALL
+static VOID FASTCALL
 LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
 {
     static WCHAR Subkey[] = L"\\Control Panel\\Desktop";
@@ -761,140 +734,30 @@ LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
 NTSTATUS FASTCALL
 InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
 {
-    HANDLE CallerThread;
-    HANDLE CallerToken;
-    NTSTATUS Status;
-    PROCESS_ENUM_CONTEXT Context;
-    DWORD ReturnLength;
+    // PROCESS_ENUM_CONTEXT Context;
     HWND ShellWnd;
-    UINT ProcessIndex;
     char FixedUserInfo[64];
     TOKEN_USER *UserInfo;
     SHUTDOWN_SETTINGS ShutdownSettings;
 
-    if (ProcessId != LogonProcessId)
-    {
-        DPRINT1("Internal ExitWindowsEx call not from winlogon\n");
-        return STATUS_ACCESS_DENIED;
-    }
-
-    // FIXME: HAAAAACK!!
-    DPRINT1("FIXME: Need to close all user processes!\n");
-    return STATUS_SUCCESS;
-
-    CallerThread = OpenThread(THREAD_QUERY_INFORMATION, FALSE, ThreadId);
-    if (NULL == CallerThread)
-    {
-        DPRINT1("OpenThread failed with error %d\n", GetLastError());
-        return STATUS_UNSUCCESSFUL;
-    }
-    if (! OpenThreadToken(CallerThread, TOKEN_QUERY, FALSE, &CallerToken))
-    {
-        DPRINT1("OpenThreadToken failed with error %d\n", GetLastError());
-        CloseHandle(CallerThread);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(CallerThread);
-
-    Context.ProcessCount = 0;
-    Context.ProcessData = NULL;
-    if (! GetTokenInformation(CallerToken, TokenOrigin, &Context.TokenOrigin,
-                              sizeof(TOKEN_ORIGIN), &ReturnLength))
-    {
-        DPRINT1("GetTokenInformation failed with error %d\n", GetLastError());
-        CloseHandle(CallerToken);
-        return STATUS_UNSUCCESSFUL;
-    }
-    if (! GetTokenInformation(CallerToken, TokenUser, FixedUserInfo,
-                              sizeof(FixedUserInfo), &ReturnLength))
-    {
-        if (sizeof(FixedUserInfo) < ReturnLength)
-        {
-            UserInfo = HeapAlloc(UserServerHeap, 0, ReturnLength);
-            if (NULL == UserInfo)
-            {
-                DPRINT1("Unable to allocate %u bytes for user info\n",
-                        (unsigned) ReturnLength);
-                CloseHandle(CallerToken);
-                return STATUS_NO_MEMORY;
-            }
-            if (! GetTokenInformation(CallerToken, TokenUser, UserInfo,
-                                      ReturnLength, &ReturnLength))
-            {
-                DPRINT1("GetTokenInformation failed with error %d\n",
-                        GetLastError());
-                HeapFree(UserServerHeap, 0, UserInfo);
-                CloseHandle(CallerToken);
-                return STATUS_UNSUCCESSFUL;
-            }
-        }
-        else
-        {
-            DPRINT1("GetTokenInformation failed with error %d\n", GetLastError());
-            CloseHandle(CallerToken);
-            return STATUS_UNSUCCESSFUL;
-        }
-    }
-    else
-    {
-        UserInfo = (TOKEN_USER *) FixedUserInfo;
-    }
-    CloseHandle(CallerToken);
     LoadShutdownSettings(UserInfo->User.Sid, &ShutdownSettings);
-    if (UserInfo != (TOKEN_USER *) FixedUserInfo)
-    {
-        HeapFree(UserServerHeap, 0, UserInfo);
-    }
-    Context.CsrssProcess = GetCurrentProcessId();
-    ShellWnd = GetShellWindow();
-    if (NULL == ShellWnd)
-    {
-        DPRINT("No shell present\n");
-        Context.ShellProcess = 0;
-    }
-    else if (0 == GetWindowThreadProcessId(ShellWnd, &Context.ShellProcess))
-    {
-        DPRINT1("Can't get process id of shell window\n");
-        Context.ShellProcess = 0;
-    }
 
-    // Status = Win32CsrEnumProcesses(ExitReactosProcessEnum, &Context);
-    if (! NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to enumerate registered processes, status 0x%x\n",
-                Status);
-        if (NULL != Context.ProcessData)
-        {
-            HeapFree(UserServerHeap, 0, Context.ProcessData);
-        }
-        return Status;
-    }
+    // Context.CsrssProcess = GetCurrentProcessId();
+    // ShellWnd = GetShellWindow();
+    // if (NULL == ShellWnd)
+    // {
+        // DPRINT("No shell present\n");
+        // Context.ShellProcess = 0;
+    // }
+    // else if (0 == GetWindowThreadProcessId(ShellWnd, &Context.ShellProcess))
+    // {
+        // DPRINT1("Can't get process id of shell window\n");
+        // Context.ShellProcess = 0;
+    // }
 
-    qsort(Context.ProcessData, Context.ProcessCount, sizeof(PCSR_PROCESS),
-          ProcessDataCompare);
-
-    /* Terminate processes, stop if we find one kicking and screaming it doesn't
-       want to die */
-    Status = STATUS_SUCCESS;
-    for (ProcessIndex = 0;
-            ProcessIndex < Context.ProcessCount && NT_SUCCESS(Status);
-            ProcessIndex++)
-    {
-        if (! NotifyAndTerminateProcess(Context.ProcessData[ProcessIndex],
-                                        &ShutdownSettings, Flags))
-        {
-            Status = STATUS_REQUEST_ABORTED;
-        }
-    }
-
-    /* Cleanup */
-    if (NULL != Context.ProcessData)
-    {
-        HeapFree(UserServerHeap, 0, Context.ProcessData);
-    }
-
-    return Status;
+    return STATUS_SUCCESS;
 }
+#endif
 
 static NTSTATUS FASTCALL
 UserExitReactos(PCSR_THREAD CsrThread, UINT Flags)
@@ -902,9 +765,25 @@ UserExitReactos(PCSR_THREAD CsrThread, UINT Flags)
     NTSTATUS Status;
     LUID CallerLuid;
 
+    DWORD ProcessId = HandleToUlong(CsrThread->ClientId.UniqueProcess);
+    DWORD ThreadId  = HandleToUlong(CsrThread->ClientId.UniqueThread);
+
+    DPRINT1("SrvExitWindowsEx(ClientId: %lx.%lx, Flags: 0x%x)\n",
+            ProcessId, ThreadId, Flags);
+
     /*
      * Check for flags validity
      */
+
+    if (Flags & EWX_INTERNAL_FLAG)
+    {
+        /* Only Winlogon can call this */
+        if (ProcessId != LogonProcessId)
+        {
+            DPRINT1("SrvExitWindowsEx call not from Winlogon\n");
+            return STATUS_ACCESS_DENIED;
+        }
+    }
 
     /* Implicitely add the shutdown flag when we poweroff or reboot */
     if (Flags & (EWX_POWEROFF | EWX_REBOOT))
@@ -984,14 +863,6 @@ UserExitReactos(PCSR_THREAD CsrThread, UINT Flags)
     {
         DPRINT1("Failed to shutdown processes, Status = 0x%08x\n", Status);
     }
-    /*
-     * FIXME:
-     * At the moment the callbacks just do nothing so no process will be killed.
-     * It's not dramatic since:
-     * 1- We didn't do that before,
-     * 2- Related to point 1, the hackish InternalExitReactos call will end back
-     *    into Winlogon that will directly call NtShutdownSystem.
-     */
 
     // FIXME: If Status == STATUS_CANCELLED, call RecordShutdownReason
 
@@ -1018,7 +889,29 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
     DPRINT1("UserClientShutdown(0x%p, 0x%x, %s)\n",
             CsrProcess, Flags, FirstPhase ? "FirstPhase" : "LastPhase");
 
-    UNIMPLEMENTED;
+    /*
+     * Check for process validity
+     */
+
+    /* Do not kill WinLogon or CSRSS */
+    if (CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ||
+        CsrProcess->ClientId.UniqueProcess == UlongToHandle(LogonProcessId))
+    {
+        DPRINT1("Not killing %s; CsrProcess->ShutdownFlags = %lu\n",
+                CsrProcess->ClientId.UniqueProcess == NtCurrentProcess() ? "CSRSS" : "Winlogon",
+                CsrProcess->ShutdownFlags);
+
+        return CsrShutdownNonCsrProcess;
+    }
+
+    DPRINT1("Killing process with ShutdownFlags = %lu\n", CsrProcess->ShutdownFlags);
+
+#if 0
+    if (!NotifyAndTerminateProcess(CsrProcess, &ShutdownSettings, Flags))
+    {
+        return CsrShutdownCancelled;
+    }
+#endif
 
     return CsrShutdownNonCsrProcess;
 }
@@ -1030,41 +923,11 @@ CSR_API(SrvExitWindowsEx)
 {
     NTSTATUS Status;
     PUSER_EXIT_REACTOS ExitReactosRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactosRequest;
-    PCSR_THREAD CsrThread = CsrGetClientThread();
-    ULONG Flags = ExitReactosRequest->Flags;
 
-    DWORD ProcessId = HandleToUlong(CsrThread->ClientId.UniqueProcess);
-    DWORD ThreadId  = HandleToUlong(CsrThread->ClientId.UniqueThread);
+    Status = UserExitReactos(CsrGetClientThread(), ExitReactosRequest->Flags);
+    ExitReactosRequest->Success   = NT_SUCCESS(Status);
+    ExitReactosRequest->LastError = GetLastError();
 
-    DPRINT1("SrvExitWindowsEx(ClientId: %lx.%lx, Flags: 0x%x)\n",
-            ProcessId, ThreadId, Flags);
-
-
-    // FIXME: Everything else starting after this line is a HAAACK!!
-
-
-    if (Flags & EWX_INTERNAL_FLAG)
-    {
-        /* Only Winlogon can call this */
-        if (ProcessId != LogonProcessId)
-        {
-            DPRINT1("SrvExitWindowsEx call not from Winlogon\n");
-            return STATUS_ACCESS_DENIED;
-        }
-
-        // This function is a HACK!!
-        // EWX_INTERNAL_FLAG --> For Winlogon only!!
-        // Status = InternalExitReactos(ProcessId, ThreadId, Flags);
-
-        // This is this function that we need to call instead!
-        Status = UserExitReactos(CsrThread, Flags);
-    }
-    else
-    {
-        Status = UserExitReactos(CsrThread, Flags);
-    }
-
-    ExitReactosRequest->Success = NT_SUCCESS(Status);
     return Status;
 }
 
@@ -1082,7 +945,7 @@ CSR_API(SrvEndTask)
     {
         if (EndTaskRequest->Force)
         {
-            EndTaskRequest->Success = DestroyWindow(EndTaskRequest->WndHandle);
+            EndTaskRequest->Success   = DestroyWindow(EndTaskRequest->WndHandle);
             EndTaskRequest->LastError = GetLastError();
         }
         else
@@ -1092,8 +955,8 @@ CSR_API(SrvEndTask)
     }
     else
     {
+        EndTaskRequest->Success   = TRUE;
         EndTaskRequest->LastError = ERROR_SUCCESS;
-        EndTaskRequest->Success = TRUE;
     }
 
     return STATUS_SUCCESS;
