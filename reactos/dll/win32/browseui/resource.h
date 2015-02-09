@@ -83,6 +83,7 @@
 #define IDR_GLOBALFOLDERSETTINGS 137
 #define IDR_REGTREEOPTIONS       138
 #define IDR_EXPLORERBAND         139
+#define IDR_PROGRESSDIALOG       140
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
@@ -99,6 +100,13 @@
 #define IDS_UP                   58434
 #define IDS_BACK                 58689
 #define IDS_FORWARD              58690
+
+#define IDS_CANCELLING           16
+#define IDS_REMAINING            17
+#define IDC_ANIMATION            100
+#define IDC_PROGRESS_BAR         102
+#define IDC_TEXT_LINE            103
+#define IDD_PROGRESS_DLG         100
 
 #define IDR_ACCELERATORS 256
 

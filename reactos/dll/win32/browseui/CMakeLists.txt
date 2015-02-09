@@ -28,6 +28,7 @@ list(APPEND SOURCE
     toolsband.cpp
     travellog.cpp
     utility.cpp
+    CProgressDialog.cpp
     precomp.h)
 
 add_library(browseui SHARED

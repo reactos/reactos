@@ -22,6 +22,7 @@
 #include <atlwin.h>
 #include <perhist.h>
 #include <exdispid.h>
+#include <Strsafe.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <undocshell.h>
@@ -43,6 +44,7 @@
 #include "globalfoldersettings.h"
 #include "regtreeoptions.h"
 #include "explorerband.h"
+#include "CProgressDialog.h"
 #include <stdio.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);

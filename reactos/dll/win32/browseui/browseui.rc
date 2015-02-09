@@ -42,6 +42,7 @@ IDR_GLOBALFOLDERSETTINGS REGISTRY "res/globalfoldersettings.rgs"
 IDR_INTERNETTOOLBAR REGISTRY "res/internettoolbar.rgs"
 IDR_REGTREEOPTIONS REGISTRY "res/regtreeoptions.rgs"
 IDR_EXPLORERBAND REGISTRY "res/explorerband.rgs"
+IDR_PROGRESSDIALOG REGISTRY "res/progressdialog.rgs"
 
 /*
  * Everything specific to any language goes
