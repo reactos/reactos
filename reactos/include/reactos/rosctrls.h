@@ -175,7 +175,7 @@ public:
 
     int HitTest(LV_HITTESTINFO * phtInfo)
     {
-        return (int)SendMessage(LVM_HITTEST, 0, reinterpret_cast<LPARAM>(&phtInfo));
+        return (int)SendMessage(LVM_HITTEST, 0, reinterpret_cast<LPARAM>(phtInfo));
     }
 
     DWORD_PTR GetItemData(int i)
