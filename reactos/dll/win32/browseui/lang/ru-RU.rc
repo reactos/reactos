@@ -1,9 +1,9 @@
 /* Russian language resource file by Petr Akhlamov (petr-akhlamov@yandex.ru) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
- 
+
 /* Menus */
- 
+
 IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
   POPUP "", 264,MFT_STRING,MFS_ENABLED
@@ -18,7 +18,7 @@ BEGIN
       MENUITEM "&Кнопка Переход", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
   END
 END
- 
+
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
   POPUP "&Файл", FCIDM_MENU_FILE
@@ -91,7 +91,20 @@ BEGIN
 END
 
 /* Dialogs */
- 
+
+IDD_PROGRESS_DLG DIALOGEX 0, 0, 260, 85
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    CONTROL "", IDC_ANIMATION, ANIMATE_CLASSA, 0, 12, 10, 236, 25 /* TODO: style */
+    LTEXT "", IDC_TEXT_LINE,     7, 45, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
+    LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
+    CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
+    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+}
+
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
@@ -101,9 +114,9 @@ BEGIN
   LTEXT "Ico&n options:", -1, 4, 20, 48, 15
   COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
- 
+
 /* Accelerators */
- 
+
 IDR_ACCELERATORS ACCELERATORS
 BEGIN
   VK_F5, IDM_VIEW_REFRESH, VIRTKEY, NOINVERT
@@ -120,52 +133,58 @@ BEGIN
   "I", IDM_EXPLORERBAR_FAVORITES, VIRTKEY, CONTROL, NOINVERT
   "H", IDM_EXPLORERBAR_HISTORY, VIRTKEY, CONTROL, NOINVERT
 END
- 
+
 /* Strings */
- 
+
+STRINGTABLE
+BEGIN
+    IDS_CANCELLING "Canceling..."
+    IDS_REMAINING  "Remaining"
+END
+
 STRINGTABLE
 BEGIN
   800 "Команды работы с выделенными объектами."
 END
- 
+
 STRINGTABLE
 BEGIN
   864 "Команды для редактирования."
 END
- 
+
 STRINGTABLE
 BEGIN
   928 "Команды для управления отображением."
 END
- 
+
 STRINGTABLE
 BEGIN
   992 "Служебные команды."
 END
- 
+
 STRINGTABLE
 BEGIN
   1056 "Команды для просмотра справки."
 END
- 
+
 STRINGTABLE
 BEGIN
   9025 "Закрыть окно."
   9026 "Вверх."
 END
- 
+
 STRINGTABLE
 BEGIN
   9121 "Подключить сетевой диск."
   9122 "Отключить сетевой диск."
 END
- 
+
 STRINGTABLE
 BEGIN
   9250 "Отображение сведений о программе, номере версии и авторских правах."
   9252 "Отображение сведений для отладки."
 END
- 
+
 STRINGTABLE
 BEGIN
   9281 "Перейти на предыдущую страницу."
@@ -173,13 +192,13 @@ BEGIN
   9283 "Применить измененные настройки."
   9285 "Перейти на домашнюю страницу."
 END
- 
+
 STRINGTABLE
 BEGIN
   9362 "Открыть папку Избранное."
   9363 "Добавить в избранное."
 END
- 
+
 STRINGTABLE
 BEGIN
   9505 "Показать или спрятать панели."
@@ -189,12 +208,12 @@ BEGIN
   9510 "Отобразить панель ссылок."
   9516 "Закрепить панель инструментов."
 END
- 
+
 STRINGTABLE
 BEGIN
   9533 "Настройка панели инструментов."
 END
- 
+
 STRINGTABLE
 BEGIN
   9552 "Отобразить или скрыть панели обозревателя"
@@ -204,53 +223,52 @@ BEGIN
   9557 "Отобразить панель папок"
   9559 "Отобразить панель медиа"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_SMALLICONS "Мелкие значки"
   IDS_LARGEICONS "Крупные значки"
   IDS_SHOWTEXTLABELS "Текст кнопки"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_NOTEXTLABELS "Без подписей к кнопкам"
   IDS_SELECTIVETEXTONRIGHT "Выборочно текст справа"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_GOBUTTONLABEL "|Переход||"
   IDS_GOBUTTONTIPTEMPLATE "Перейти в ""%s"""
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_SEARCHLABEL "Поиск"
   IDS_ADDRESSBANDLABEL "А&дрес"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_FOLDERSLABEL "Папки"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_HISTORYTEXT "&История\tCtrl+H"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_UP "Вверх"
 END
- 
+
 STRINGTABLE
 BEGIN
   IDS_BACK "Назад"
   IDS_FORWARD "Вперед"
 END
-
 
 STRINGTABLE
 BEGIN
