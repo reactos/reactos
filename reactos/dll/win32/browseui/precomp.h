@@ -22,7 +22,7 @@
 #include <atlwin.h>
 #include <perhist.h>
 #include <exdispid.h>
-#include <Strsafe.h>
+#include <strsafe.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
 #include <undocshell.h>
