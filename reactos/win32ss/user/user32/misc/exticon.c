@@ -52,7 +52,7 @@ DWORD get_best_icon_file_offset(const LPBYTE dir,
                                 BOOL bIcon,
                                 DWORD fuLoad,
                                 POINT *ptHotSpot);
-#endif 
+#endif
 
 /**********************************************************************
  *  find_entry_by_id
@@ -380,7 +380,7 @@ static UINT ICO_ExtractIconExW(
             INT cx[2] = {cx1, cx2}, cy[2] = {cy1, cy2};
             INT index;
 
-            for(index = 0; index < 2; index++)
+            for(index = 0; index < (cx2 || cy2 ? 2 : 1); index++)
             {
                 DWORD dataOffset;
                 LPBYTE imageData;
