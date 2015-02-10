@@ -9,6 +9,7 @@
 
 #include <wingdi.h>
 #include <winuser.h>
+#include "init.h"
 
 void Test_MaskBlt_1bpp()
 {
@@ -42,7 +43,7 @@ void Test_MaskBlt_1bpp()
     pjBitsMsk[0] = 0xF0;
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
-    ok (pjBitsDst[0] == 0xCA, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
+    ok(pjBitsDst[0] == 0xCA, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
     pjBitsDst[0] = 0x00;
     pjBitsSrc[0] = 0xFF;
@@ -52,9 +53,10 @@ void Test_MaskBlt_1bpp()
     ok (pjBitsDst[0] == 0xF0, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
     /* Do the masking (NOTSRCERASE / SRCINVERT) */
-    pjBitsDst[0] = 0xF0;
-    pjBitsSrc[0] = 0xCC;
-    pjBitsMsk[0] = 0xAA;
+    pjBitsDst[0] = 0xF0; // 11110000
+    pjBitsSrc[0] = 0xCC; // 11001100
+    pjBitsMsk[0] = 0xAA; // 10101010
+
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(NOTSRCERASE, SRCINVERT)); // 22
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pjBitsDst[0] == 0x16, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
@@ -66,6 +68,28 @@ void Test_MaskBlt_1bpp()
     ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(MERGEPAINT, 0x990000));
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pjBitsDst[0] == 0xE3, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
+
+    /* Try a ROP that needs a mask with a NULL mask bitmap handle */
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, NULL, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok(ret == 1, "MaskBlt failed (%d)\n", ret);
+    ok(pjBitsDst[0] == 0xCC, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
+
+    /* Try a ROP that needs a mask with an invalid mask bitmap handle */
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, (HBITMAP)0x123456, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
+
+    /* Try a ROP that needs a mask with an invalid mask bitmap */
+    ok(ghbmp24 != NULL, "ghbmp24 is NULL!\n");
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, ghbmp24, 0, 0, MAKEROP4(SRCCOPY, 0xAA0000));
+    ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
+
+    /* Try a ROP that needs no mask with an invalid mask bitmap */
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, (HBITMAP)0x123456, 0, 0, MAKEROP4(SRCCOPY, SRCCOPY));
+    ok(ret == 1, "MaskBlt failed (%d)\n", ret);
+
+    /* Try (PATCOPY / NOOP) with a NULL source mask and bitmap */
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, NULL, 0, 0, NULL, 0, 0, MAKEROP4(PATCOPY, 0xAA0000));
+    ok(ret == 0, "MaskBlt should fail, but succeeded (%d)\n", ret);
 
 }
 
@@ -159,6 +183,7 @@ void Test_MaskBlt_32bpp()
 
 START_TEST(MaskBlt)
 {
+    InitStuff();
     Test_MaskBlt_1bpp();
     switch (GetDeviceCaps(GetDC(NULL), BITSPIXEL))
     {
