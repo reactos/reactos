@@ -696,6 +696,37 @@ Fast486FpuMultiply(PFAST486_STATE State,
                    PFAST486_FPU_DATA_REG Result)
 {
     FAST486_FPU_DATA_REG TempResult;
+    LONG Exponent;
+
+    if (FPU_IS_INDEFINITE(FirstOperand)
+        || FPU_IS_INDEFINITE(SecondOperand)
+        || (FPU_IS_ZERO(FirstOperand) && FPU_IS_INFINITY(SecondOperand))
+        || (FPU_IS_INFINITY(FirstOperand) && FPU_IS_ZERO(SecondOperand)))
+    {
+        /* The result will be indefinite */
+        Result->Sign = TRUE;
+        Result->Exponent = FPU_MAX_EXPONENT + 1;
+        Result->Mantissa = FPU_INDEFINITE_MANTISSA;
+        return;
+    }
+
+    if (FPU_IS_ZERO(FirstOperand) || FPU_IS_ZERO(SecondOperand))
+    {
+        /* The result will be zero */
+        Result->Sign = FirstOperand->Sign ^ SecondOperand->Sign;
+        Result->Exponent = 0;
+        Result->Mantissa = 0ULL;
+        return;
+    }
+
+    if (FPU_IS_INFINITY(FirstOperand) || FPU_IS_INFINITY(SecondOperand))
+    {   
+        /* The result will be infinity */
+        Result->Sign = FirstOperand->Sign ^ SecondOperand->Sign;
+        Result->Exponent = FPU_MAX_EXPONENT + 1;
+        Result->Mantissa = FPU_MANTISSA_HIGH_BIT;
+        return;
+    }
 
     if ((!FPU_IS_NORMALIZED(FirstOperand) || !FPU_IS_NORMALIZED(SecondOperand)))
     {
@@ -709,12 +740,51 @@ Fast486FpuMultiply(PFAST486_STATE State,
         }
     }
 
+    /* Calculate the sign */
+    TempResult.Sign = FirstOperand->Sign ^ SecondOperand->Sign;
+
+    /* Calculate the exponent */
+    Exponent = (LONG)FirstOperand->Exponent + (LONG)SecondOperand->Exponent - FPU_REAL10_BIAS;
+
+    /* Calculate the mantissa */
     UnsignedMult128(FirstOperand->Mantissa,
                     SecondOperand->Mantissa,
                     &TempResult.Mantissa);
 
-    TempResult.Exponent = FirstOperand->Exponent + SecondOperand->Exponent;
-    TempResult.Sign = FirstOperand->Sign ^ SecondOperand->Sign;
+    if (Exponent < 0)
+    {
+        /* Raise the underflow exception */
+        State->FpuStatus.Ue = TRUE;
+        
+        if (!State->FpuControl.Um)
+        {
+            Fast486FpuException(State);
+            return;
+        }
+
+        /* The exponent will be zero */
+        TempResult.Exponent = 0;
+
+        /* If possible, denormalize the result, otherwise make it zero */
+        if (Exponent > -64) TempResult.Mantissa >>= (-Exponent);
+        else TempResult.Mantissa = 0ULL;
+    }
+    else if (Exponent > FPU_MAX_EXPONENT)
+    {
+        /* Raise the overflow exception */
+        State->FpuStatus.Oe = TRUE;
+
+        if (!State->FpuControl.Om)
+        {
+            Fast486FpuException(State);
+            return;
+        }
+
+        /* Make the result infinity */
+        TempResult.Exponent = FPU_MAX_EXPONENT + 1;
+        TempResult.Mantissa = FPU_MANTISSA_HIGH_BIT;
+    }
+    else TempResult.Exponent = (USHORT)Exponent;
 
     /* Normalize the result */
     Fast486FpuNormalize(State, &TempResult);
