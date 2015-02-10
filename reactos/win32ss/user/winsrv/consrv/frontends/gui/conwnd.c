@@ -715,7 +715,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
     WORD ActivationState = LOWORD(wParam);
 
-    DPRINT("WM_ACTIVATE - ActivationState = %d\n");
+    DPRINT("WM_ACTIVATE - ActivationState = %d\n", ActivationState);
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )
