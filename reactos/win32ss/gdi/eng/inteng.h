@@ -41,10 +41,10 @@ enum _R3_ROPCODES
 
 #define ROP4_FROM_INDEX(index) ((index) | ((index) << 8))
 
-#define ROP4_USES_SOURCE(Rop4)  (((((Rop4) & 0xCC00) >> 2) != ((Rop4) & 0x3300)) || ((((Rop4) & 0xCC) >> 2) != ((Rop4) & 0x33)))
-#define ROP4_USES_MASK(Rop4)    (((Rop4) & 0xFF00) != (((Rop4) & 0xff) << 8))
-#define ROP4_USES_DEST(Rop4)    (((((Rop4) & 0xAA) >> 1) != ((Rop4) & 0x55)) || ((((Rop4) & 0xAA00) >> 1) != ((Rop4) & 0x5500)))
-#define ROP4_USES_PATTERN(Rop4) (((((Rop4) & 0xF0) >> 4) != ((Rop4) & 0x0F)) || ((((Rop4) & 0xF000) >> 4) != ((Rop4) & 0x0F00)))
+#define ROP4_USES_DEST(Rop4)    ((((Rop4) & 0xAAAA) >> 1) != ((Rop4) & 0x5555))
+#define ROP4_USES_SOURCE(Rop4)  ((((Rop4) & 0xCCCC) >> 2) != ((Rop4) & 0x3333))
+#define ROP4_USES_PATTERN(Rop4) ((((Rop4) & 0xF0F0) >> 4) != ((Rop4) & 0x0F0F))
+#define ROP4_USES_MASK(Rop4)    ((((Rop4) & 0xFF00) >> 8) != ((Rop4) & 0x00ff))
 
 #define IS_VALID_ROP4(rop) (((rop) & 0xFFFF0000) == 0)
 
