@@ -1415,7 +1415,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
                                DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
-    
+
     /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
 
     FORMATETC fmt;
@@ -1430,7 +1430,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
     }
     else
     {
-        /* 
+        /*
          * TODO call SetData on the data object with format CFSTR_TARGETCLSID
          * set to the Recycle Bin's class identifier CLSID_RecycleBin.
          */
@@ -1438,7 +1438,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
     return S_OK;
 }
 
-DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter) 
+DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
 {
     CoInitialize(NULL);
     CComPtr<IDataObject> pDataObject;
@@ -1451,7 +1451,7 @@ DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
     return 0;
 }
 
-HRESULT WINAPI DoDeleteDataObject(IDataObject *pda) 
+HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
 {
     TRACE("performing delete");
     HRESULT hr;
@@ -1499,7 +1499,7 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
     {
         psfFrom = psfDesktop;
     }
-    else 
+    else
     {
         hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
         if (FAILED(hr))
@@ -1603,19 +1603,80 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-    WCHAR szPath[MAX_PATH] = {0};
-    DWORD dwSize, dwType;
+    WCHAR szPath[MAX_PATH] = {0}, szBuffer[MAX_PATH];
+    DWORD dwSize, dwType, count;
     LONG ret;
+    IShellFolder *pDesktop, *pRecycleBin;
+    PIDLIST_ABSOLUTE pidlRecycleBin;
+    PITEMID_CHILD pidl;
+    HRESULT hr = S_OK;
+    LPENUMIDLIST penumFiles;
+    STRRET StrRet;
 
     TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
 
     if (!(dwFlags & SHERB_NOCONFIRMATION))
     {
-        /* FIXME
-         * enumerate available files
-         * show confirmation dialog
-         */
-        FIXME("show confirmation dialog\n");
+        hr = SHGetDesktopFolder(&pDesktop);
+        if (FAILED(hr))
+            return hr;
+        hr = SHGetFolderLocation(NULL, CSIDL_BITBUCKET, NULL, 0, &pidlRecycleBin);
+        if (FAILED(hr))
+        {
+            pDesktop->Release();
+            return hr;
+        }
+        hr = pDesktop->BindToObject(pidlRecycleBin, NULL, IID_PPV_ARG(IShellFolder, &pRecycleBin));
+        CoTaskMemFree(pidlRecycleBin);
+        pDesktop->Release();
+        if (FAILED(hr))
+            return hr;
+        hr = pRecycleBin->EnumObjects(hwnd, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penumFiles);
+        if (FAILED(hr))
+        {
+            pRecycleBin->Release();
+            return hr;
+        }
+
+        count = 0;
+        if (hr != S_FALSE)
+        {
+            while (penumFiles->Next(1, &pidl, NULL) == S_OK)
+            {
+                count++;
+                pRecycleBin->GetDisplayNameOf(pidl, SHGDN_NORMAL, &StrRet);
+                StrRetToBuf(&StrRet, pidl, szBuffer, _countof(szBuffer));
+                CoTaskMemFree(pidl);
+            }
+            penumFiles->Release();
+        }
+        pRecycleBin->Release();
+
+        switch (count)
+        {
+            case 0:
+                /* no files, don't need confirmation */
+                break;
+
+            case 1:
+                /* we have only one item inside the bin, so show a message box with its name */
+                if (ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_DELETEITEM_TEXT), MAKEINTRESOURCEW(IDS_EMPTY_BITBUCKET),
+                                   MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2, szBuffer) == IDNO)
+                {
+                    return S_OK;
+                }
+                break;
+
+            default:
+                /* we have more than one item, so show a message box with the count of the items */
+                StringCbPrintfW(szBuffer, sizeof(szBuffer), L"%u", count);
+                if (ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_DELETEMULTIPLE_TEXT), MAKEINTRESOURCEW(IDS_EMPTY_BITBUCKET),
+                                   MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2, szBuffer) == IDNO)
+                {
+                    return S_OK;
+                }
+                break;
+        }
     }
 
     if (dwFlags & SHERB_NOPROGRESSUI)
