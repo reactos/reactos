@@ -312,8 +312,8 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     if (pbr->flAttrs & BR_IS_HATCH)
     {
         /* Get the hatch brush pattern from the PDEV */
-        hbmPattern = (HBITMAP)ppdev->ahsurf[pbr->ulStyle];
-        iHatch = pbr->ulStyle;
+        hbmPattern = (HBITMAP)ppdev->ahsurf[pbr->iHatch];
+        iHatch = pbr->iHatch;
     }
     else
     {

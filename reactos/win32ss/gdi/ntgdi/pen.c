@@ -120,11 +120,11 @@ IntGdiExtCreatePen(
     if ((bOldStylePen) && (!dwWidth) && ((dwPenStyle & PS_STYLE_MASK) != PS_SOLID))
         dwWidth = 1;
 
-    pbrushPen->ptPenWidth.x = dwWidth;
-    pbrushPen->ptPenWidth.y = 0;
+    pbrushPen->lWidth = dwWidth;
+    pbrushPen->eWidth = (FLOAT)pbrushPen->lWidth;
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
-    pbrushPen->ulStyle = ulBrushStyle;
+    pbrushPen->iBrushStyle = ulBrushStyle;
     // FIXME: Copy the bitmap first ?
     pbrushPen->hbmClient = (HANDLE)ulClientHatch;
     pbrushPen->dwStyleCount = dwStyleCount;
@@ -256,7 +256,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
                 pExtLogPen = (PEXTLOGPEN)pBuffer;
                 pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
                 pExtLogPen->elpWidth = 0;
-                pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
+                pExtLogPen->elpBrushStyle = pbrushPen->iBrushStyle;
                 pExtLogPen->elpColor = pbrushPen->BrushAttr.lbColor;
                 pExtLogPen->elpHatch = 0;
                 pExtLogPen->elpNumEntries = 0;
@@ -265,7 +265,8 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
             else
             {
                 pLogPen = (PLOGPEN)pBuffer;
-                pLogPen->lopnWidth = pbrushPen->ptPenWidth;
+                pLogPen->lopnWidth.x = pbrushPen->lWidth;
+                pLogPen->lopnWidth.y = 0;
                 pLogPen->lopnStyle = pbrushPen->ulPenStyle;
                 pLogPen->lopnColor = pbrushPen->BrushAttr.lbColor;
             }
@@ -282,8 +283,8 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
             if (cbCount < cbRetCount) return 0;
             pExtLogPen = (PEXTLOGPEN)pBuffer;
             pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
-            pExtLogPen->elpWidth = pbrushPen->ptPenWidth.x;
-            pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
+            pExtLogPen->elpWidth = pbrushPen->lWidth;
+            pExtLogPen->elpBrushStyle = pbrushPen->iBrushStyle;
             pExtLogPen->elpColor = pbrushPen->BrushAttr.lbColor;
             pExtLogPen->elpHatch = (ULONG_PTR)pbrushPen->hbmClient;
             pExtLogPen->elpNumEntries = pbrushPen->dwStyleCount;

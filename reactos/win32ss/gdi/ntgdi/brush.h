@@ -13,31 +13,40 @@
  */
 typedef struct _BRUSH
 {
-  /* Header for all gdi objects in the handle table.
-     Do not (re)move this. */
-   BASEOBJECT    BaseObject;
+    /* Header for all gdi objects in the handle table.
+       Do not (re)move this. */
+    BASEOBJECT BaseObject;
 
-   ULONG ulStyle;
-   HBITMAP hbmPattern;
-   HBITMAP hbmClient;
-   ULONG flAttrs;
+    ULONG iHatch;           // This is not the brush style, but the hatch style!
+    HBITMAP hbmPattern;
+    HBITMAP hbmClient;
+    ULONG flAttrs;
 
-   ULONG ulBrushUnique;
-   BRUSH_ATTR *pBrushAttr; // Just like DC_ATTR, pointer to user data
-   BRUSH_ATTR BrushAttr;   // "    "    DCOBJ, internal if pBrushAttr == Zero
-   POINT ptOrigin;
-   ULONG bCacheGrabbed;
-   COLORREF crBack;
-   COLORREF crFore;
-   ULONG ulPalTime;
-   ULONG ulSurfTime;
-   PVOID ulRealization;
-   //ULONG Unknown4C[3];
-   POINT ptPenWidth;
-   ULONG ulPenStyle;
-   DWORD *pStyle;
-   ULONG dwStyleCount;
-   //ULONG Unknown6C;
+    ULONG ulBrushUnique;
+    BRUSH_ATTR *pBrushAttr; // Pointer to the currently active brush attribute
+    BRUSH_ATTR BrushAttr;   // Internal brush attribute for global brushes
+    POINT ptOrigin;
+    ULONG bCacheGrabbed;
+    COLORREF crBack;
+    COLORREF crFore;
+    ULONG ulPalTime;
+    ULONG ulSurfTime;
+    PVOID pvRBrush;
+    HDEV hdev;
+    //DWORD unk054;
+    LONG lWidth;
+    FLOAT eWidth;
+    ULONG ulPenStyle;
+    DWORD *pStyle;
+    ULONG dwStyleCount;
+    BYTE jJoin;             // 0x06c Join styles for geometric wide lines
+    BYTE jEndCap;           //       end cap style for a geometric wide line
+    //WORD unk06e;          // 0x06e
+    INT iBrushStyle;        // 0x070
+    //PREGION prgn;           // 0x074
+    //DWORD unk078;         // 0x078
+    DWORD unk07c;           // 0x07c
+    LIST_ENTRY ListHead;    // 0x080
 } BRUSH, *PBRUSH;
 
 typedef struct _EBRUSHOBJ
@@ -91,8 +100,17 @@ typedef struct _EBRUSHOBJ
 #define  BRUSH_ShareLockBrush(hBrush) ((PBRUSH)GDIOBJ_ShareLockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_vDereferenceObject((POBJ)pBrush)
 
-INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
-VOID NTAPI BRUSH_vCleanup(PVOID ObjectBody);
+INT
+FASTCALL
+BRUSH_GetObject(
+    PBRUSH GdiObject,
+    INT Count,
+    LPLOGBRUSH Buffer);
+
+VOID
+NTAPI
+BRUSH_vCleanup(
+    PVOID ObjectBody);
 
 extern HSURF gahsurfHatch[HS_DDI_MAX];
 

@@ -252,7 +252,7 @@ NtGdiEllipse(
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrush->ptPenWidth.x;
+    PenOrigWidth = PenWidth = pbrush->lWidth;
     if (pbrush->ulPenStyle == PS_NULL) PenWidth = 0;
 
     if (pbrush->ulPenStyle == PS_INSIDEFRAME)
@@ -266,7 +266,7 @@ NtGdiEllipse(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrush->ptPenWidth.x = PenWidth;
+    pbrush->lWidth = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -330,7 +330,7 @@ NtGdiEllipse(
         DC_vFinishBlit(dc, NULL);
     }
 
-    pbrush->ptPenWidth.x = PenOrigWidth;
+    pbrush->lWidth = PenOrigWidth;
     PEN_ShareUnlockPen(pbrush);
     DC_UnlockDc(dc);
     DPRINT("Ellipse Exit.\n");
@@ -760,7 +760,7 @@ IntRoundRect(
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrLine->ptPenWidth.x;
+    PenOrigWidth = PenWidth = pbrLine->lWidth;
     if (pbrLine->ulPenStyle == PS_NULL) PenWidth = 0;
 
     if (pbrLine->ulPenStyle == PS_INSIDEFRAME)
@@ -774,7 +774,7 @@ IntRoundRect(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrLine->ptPenWidth.x = PenWidth;
+    pbrLine->lWidth = PenWidth;
 
     RectBounds.left = Left;
     RectBounds.top = Top;
@@ -829,7 +829,7 @@ IntRoundRect(
     }
 
 
-    pbrLine->ptPenWidth.x = PenOrigWidth;
+    pbrLine->lWidth = PenOrigWidth;
     PEN_ShareUnlockPen(pbrLine);
     return ret;
 }

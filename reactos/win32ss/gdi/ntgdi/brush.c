@@ -181,7 +181,7 @@ BRUSH_GetObject(PBRUSH pbrush, INT cjSize, LPLOGBRUSH plogbrush)
     else if (pbrush->flAttrs & BR_IS_HATCH)
     {
         plogbrush->lbStyle = BS_HATCHED;
-        plogbrush->lbHatch = pbrush->ulStyle;
+        plogbrush->lbHatch = pbrush->iHatch;
     }
     else if (pbrush->flAttrs & BR_IS_DIB)
     {
@@ -293,7 +293,7 @@ IntGdiCreateHatchBrush(
 
     pbrush->flAttrs |= BR_IS_HATCH;
     pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
-    pbrush->ulStyle = Style;
+    pbrush->iHatch = Style;
 
     GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 

@@ -114,11 +114,12 @@ IntCreateStockPen(DWORD dwPenStyle,
 
     if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
 
-    pbrushPen->ptPenWidth.x = abs(dwWidth);
-    pbrushPen->ptPenWidth.y = 0;
+    pbrushPen->iHatch = 0;
+    pbrushPen->lWidth = abs(dwWidth);
+    pbrushPen->eWidth = (FLOAT)pbrushPen->lWidth;
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
-    pbrushPen->ulStyle = ulBrushStyle;
+    pbrushPen->iBrushStyle = ulBrushStyle;
     pbrushPen->hbmClient = (HANDLE)NULL;
     pbrushPen->dwStyleCount = 0;
     pbrushPen->pStyle = 0;

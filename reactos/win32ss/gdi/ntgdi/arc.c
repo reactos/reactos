@@ -79,7 +79,7 @@ IntArc( DC *dc,
         return FALSE;
     }
 
-    PenOrigWidth = PenWidth = pbrPen->ptPenWidth.x;
+    PenOrigWidth = PenWidth = pbrPen->lWidth;
     if (pbrPen->ulPenStyle == PS_NULL) PenWidth = 0;
 
     if (pbrPen->ulPenStyle == PS_INSIDEFRAME)
@@ -93,7 +93,7 @@ IntArc( DC *dc,
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrPen->ptPenWidth.x = PenWidth;
+    pbrPen->lWidth = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -181,7 +181,7 @@ IntArc( DC *dc,
     if (arctype == GdiTypeChord)
         PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
 
-    pbrPen->ptPenWidth.x = PenOrigWidth;
+    pbrPen->lWidth = PenOrigWidth;
     PEN_ShareUnlockPen(pbrPen);
     DPRINT("IntArc Exit.\n");
     return ret;
