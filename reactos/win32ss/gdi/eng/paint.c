@@ -63,9 +63,8 @@ EngPaint(
     /* Convert the MIX, consisting of 2 ROP2 codes into a ROP4 */
     rop4 = MIX_TO_ROP4(mix);
 
-    /* Sanity checks */
+    /* Sanity check */
     NT_ASSERT(!ROP4_USES_SOURCE(rop4));
-    NT_ASSERT(!ROP4_USES_MASK(rop4));
 
     /* Forward the call to Eng/DrvBitBlt */
     return IntEngBitBlt(pso,

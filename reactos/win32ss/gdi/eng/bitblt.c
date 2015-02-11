@@ -460,6 +460,19 @@ EngBitBlt(
         clippingType = pco->iDComplexity;
     }
 
+    /* Check if we need a mask but have no mask surface */
+    if (UsesMask && (psoMask == NULL))
+    {
+        /* Check if the BRUSHOBJ can provide the mask */
+        psoMask = BRUSHOBJ_psoMask(pbo);
+        if (psoMask == NULL)
+        {
+            /* We have no mask, assume the mask is all foreground */
+            rop4 &= (rop4 & 0xFF) || ((rop4 & 0xFF) << 8);
+            UsesMask = FALSE;
+        }
+    }
+
     if (UsesMask)
     {
         BltRectFunc = BltMask;
