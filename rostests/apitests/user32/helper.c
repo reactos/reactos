@@ -23,6 +23,12 @@ static char* get_msg_name(UINT msg)
 {
     switch(msg)
     {
+        case WM_CREATE: return "WM_CREATE";
+        case WM_NCCREATE: return "WM_NCCREATE";
+        case WM_PARENTNOTIFY: return "WM_PARENTNOTIFY";
+        case WM_DESTROY: return "WM_DESTROY";
+        case WM_NCDESTROY: return "WM_NCDESTROY";
+        case WM_CHILDACTIVATE: return "WM_CHILDACTIVATE";
         case WM_NCACTIVATE: return "WM_NCACTIVATE";
         case WM_ACTIVATE: return "WM_ACTIVATE";
         case WM_ACTIVATEAPP: return "WM_ACTIVATEAPP";

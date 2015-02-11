@@ -5,6 +5,7 @@
 
 extern void func_AttachThreadInput(void);
 extern void func_CreateIconFromResourceEx(void);
+extern void func_CreateWindowEx(void);
 extern void func_DeferWindowPos(void);
 extern void func_DestroyCursorIcon(void);
 extern void func_DrawIconEx(void);
@@ -33,6 +34,7 @@ const struct test winetest_testlist[] =
 {
     { "AttachThreadInput", func_AttachThreadInput },
     { "CreateIconFromResourceEx", func_CreateIconFromResourceEx },
+    { "CreateWindowEx", func_CreateWindowEx },
     { "DeferWindowPos", func_DeferWindowPos },
     { "DestroyCursorIcon", func_DestroyCursorIcon },
     { "DrawIconEx", func_DrawIconEx },

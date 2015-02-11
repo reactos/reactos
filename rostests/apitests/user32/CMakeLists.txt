@@ -3,6 +3,7 @@ list(APPEND SOURCE
     AttachThreadInput.c
     helper.c
     CreateIconFromResourceEx.c
+    CreateWindowEx.c
     DeferWindowPos.c
     DestroyCursorIcon.c
     DrawIconEx.c
