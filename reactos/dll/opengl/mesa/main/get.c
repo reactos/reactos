@@ -1132,10 +1132,20 @@ find_value(const char *func, GLenum pname, void **p, union value *v)
    mask = Elements(table) - 1;
    hash = (pname * prime_factor);
    while (1) {
-      d = &values[table[hash & mask]];
+      int idx = table[hash & mask];
 
+      /* If the enum isn't valid, the hash walk ends with index 0,
+       * pointing to the first entry of values[] which doesn't hold
+       * any valid enum. */
+      if (unlikely(idx == 0)) {
+         _mesa_error(ctx, GL_INVALID_ENUM, "%s(pname=%s)", func,
+               _mesa_lookup_enum_by_nr(pname));
+         return &error_value;
+      }
+
+      d = &values[idx];
       if (likely(d->pname == pname))
-	 break;
+         break;
 
       hash += prime_step;
    }
