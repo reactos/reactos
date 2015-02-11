@@ -73,6 +73,8 @@ typedef struct _EBRUSHOBJ
     DWORD       ulUnique;
 //    DWORD       dwUnknown54;
 //    DWORD       dwUnknown58;
+
+    SURFOBJ *psoMask;
 } EBRUSHOBJ, *PEBRUSHOBJ;
 
 /* GDI Brush Attributes */
@@ -157,6 +159,13 @@ EBRUSHOBJ_psoPattern(EBRUSHOBJ *pebo);
 
 #define BRUSHOBJ_psoPattern(pbo) \
     EBRUSHOBJ_psoPattern(CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject))
+
+SURFOBJ*
+NTAPI
+EBRUSHOBJ_psoMask(EBRUSHOBJ *pebo);
+
+#define BRUSHOBJ_psoMask(pbo) \
+    EBRUSHOBJ_psoMask(CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject))
 
 FORCEINLINE
 ULONG
