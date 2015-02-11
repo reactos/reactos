@@ -11,19 +11,80 @@
 #define NDEBUG
 #include <debug.h>
 
-#define GDIOBJATTRFREE 170
-
-typedef struct _GDI_OBJ_ATTR_FREELIST
+static
+VOID
+BRUSH_vInit(
+    PBRUSH pbr)
 {
-  LIST_ENTRY Entry;
-  DWORD nEntries;
-  PVOID AttrList[GDIOBJATTRFREE];
-} GDI_OBJ_ATTR_FREELIST, *PGDI_OBJ_ATTR_FREELIST;
+    /* Start with kmode brush attribute */
+    pbr->pBrushAttr = &pbr->BrushAttr;
+}
 
-typedef struct _GDI_OBJ_ATTR_ENTRY
+static
+PBRUSH
+BRUSH_AllocBrushWithHandle(
+    VOID)
 {
-  RGN_ATTR Attr[GDIOBJATTRFREE];
-} GDI_OBJ_ATTR_ENTRY, *PGDI_OBJ_ATTR_ENTRY;
+    PBRUSH pbr;
+
+    pbr = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_BRUSH_TYPE, sizeof(BRUSH));
+    if (pbr == NULL)
+    {
+        return NULL;
+    }
+
+    BRUSH_vInit(pbr);
+    return pbr;
+}
+
+static
+BOOL
+BRUSH_bAllocBrushAttr(PBRUSH pbr)
+{
+    PPROCESSINFO ppi;
+    BRUSH_ATTR *pBrushAttr;
+    NT_ASSERT(pbr->pBrushAttr == &pbr->BrushAttr);
+
+    ppi = PsGetCurrentProcessWin32Process();
+    NT_ASSERT(ppi);
+
+    pBrushAttr = GdiPoolAllocate(ppi->pPoolBrushAttr);
+    if (!pBrushAttr)
+    {
+        DPRINT1("Could not allocate brush attr\n");
+        return FALSE;
+    }
+
+    /* Copy the content from the kernel mode dc attr */
+    pbr->pBrushAttr = pBrushAttr;
+    *pbr->pBrushAttr = pbr->BrushAttr;
+
+    /* Set the object attribute in the handle table */
+    GDIOBJ_vSetObjectAttr(&pbr->BaseObject, pBrushAttr);
+
+    DPRINT("BRUSH_bAllocBrushAttr: pbr=%p, pbr->pdcattr=%p\n", pbr, pbr->pBrushAttr);
+    return TRUE;
+}
+
+static
+VOID
+BRUSH_vFreeBrushAttr(PBRUSH pbr)
+{
+    PPROCESSINFO ppi;
+
+    if (pbr->pBrushAttr == &pbr->BrushAttr) return;
+
+    /* Reset the object attribute in the handle table */
+    GDIOBJ_vSetObjectAttr(&pbr->BaseObject, NULL);
+
+    /* Free memory from the process gdi pool */
+    ppi = PsGetCurrentProcessWin32Process();
+    ASSERT(ppi);
+    GdiPoolFree(ppi->pPoolBrushAttr, pbr->pBrushAttr);
+
+    /* Reset to kmode brush attribute */
+    pbr->pBrushAttr = &pbr->BrushAttr;
+}
 
 BOOL
 FASTCALL
@@ -34,16 +95,20 @@ IntGdiSetBrushOwner(PBRUSH pbr, ULONG ulOwner)
 
     if ((ulOwner == GDI_OBJ_HMGR_PUBLIC) || ulOwner == GDI_OBJ_HMGR_NONE)
     {
+        /* Free user mode attribute, if any */
+        BRUSH_vFreeBrushAttr(pbr);
+
         // Deny user access to User Data.
         GDIOBJ_vSetObjectAttr(&pbr->BaseObject, NULL);
-        // FIXME: deallocate brush attr
     }
 
     if (ulOwner == GDI_OBJ_HMGR_POWNED)
     {
+        /* Allocate a user mode attribute */
+        BRUSH_bAllocBrushAttr(pbr);
+
         // Allow user access to User Data.
         GDIOBJ_vSetObjectAttr(&pbr->BaseObject, pbr->pBrushAttr);
-        // FIXME: Allocate brush attr
     }
 
     GDIOBJ_vSetObjectOwner(&pbr->BaseObject, ulOwner);
@@ -62,56 +127,6 @@ GreSetBrushOwner(HBRUSH hBrush, ULONG ulOwner)
     Ret = IntGdiSetBrushOwner(pbrush, ulOwner);
     BRUSH_ShareUnlockBrush(pbrush);
     return Ret;
-}
-
-BOOL
-NTAPI
-BRUSH_bAllocBrushAttr(PBRUSH pbr)
-{
-    PPROCESSINFO ppi;
-    BRUSH_ATTR *pBrushAttr;
-
-    ppi = PsGetCurrentProcessWin32Process();
-    ASSERT(ppi);
-
-    pBrushAttr = GdiPoolAllocate(ppi->pPoolDcAttr);
-    if (!pBrushAttr)
-    {
-        DPRINT1("Could not allocate brush attr\n");
-        return FALSE;
-    }
-
-    /* Copy the content from the kernel mode dc attr */
-    pbr->pBrushAttr = pBrushAttr;
-    *pbr->pBrushAttr = pbr->BrushAttr;
-
-    /* Set the object attribute in the handle table */
-    GDIOBJ_vSetObjectAttr(&pbr->BaseObject, pBrushAttr);
-
-    DPRINT("BRUSH_bAllocBrushAttr: pbr=%p, pbr->pdcattr=%p\n", pbr, pbr->pBrushAttr);
-    return TRUE;
-}
-
-
-VOID
-NTAPI
-BRUSH_vFreeBrushAttr(PBRUSH pbr)
-{
-#if 0
-    PPROCESSINFO ppi;
-
-    if (pbrush->pBrushAttr == &pbrush->BrushAttr) return;
-
-    /* Reset the object attribute in the handle table */
-    GDIOBJ_vSetObjectAttr(&pbr->BaseObject, NULL);
-
-    /* Free memory from the process gdi pool */
-    ppi = PsGetCurrentProcessWin32Process();
-    ASSERT(ppi);
-    GdiPoolFree(ppi->pPoolBrushAttr, pbr->pBrushAttr);
-#endif
-    /* Reset to kmode brush attribute */
-    pbr->pBrushAttr = &pbr->BrushAttr;
 }
 
 VOID

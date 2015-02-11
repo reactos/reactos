@@ -32,12 +32,12 @@ typedef struct _BRUSH
    ULONG ulPalTime;
    ULONG ulSurfTime;
    PVOID ulRealization;
-   ULONG Unknown4C[3];
+   //ULONG Unknown4C[3];
    POINT ptPenWidth;
    ULONG ulPenStyle;
    DWORD *pStyle;
    ULONG dwStyleCount;
-   ULONG Unknown6C;
+   //ULONG Unknown6C;
 } BRUSH, *PBRUSH;
 
 typedef struct _EBRUSHOBJ
@@ -86,8 +86,6 @@ typedef struct _EBRUSHOBJ
 #define BR_CACHED_ENGINE    0x00040000
 #define BR_CACHED_IS_SOLID  0x80000000
 
-#define  BRUSH_AllocBrush() ((PBRUSH) GDIOBJ_AllocObj(GDIObjType_BRUSH_TYPE))
-#define  BRUSH_AllocBrushWithHandle() ((PBRUSH) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BRUSH, sizeof(BRUSH)))
 #define  BRUSH_FreeBrush(pBrush) GDIOBJ_FreeObj((POBJ)pBrush, GDIObjType_BRUSH_TYPE)
 #define  BRUSH_FreeBrushByHandle(hBrush) GDIOBJ_FreeObjByHandle((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 #define  BRUSH_ShareLockBrush(hBrush) ((PBRUSH)GDIOBJ_ShareLockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))

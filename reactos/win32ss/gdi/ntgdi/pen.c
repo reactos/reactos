@@ -13,9 +13,52 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static
+VOID
+PEN_vInit(
+    PPEN ppen)
+{
+    /* Start with kmode brush attribute */
+    ppen->pBrushAttr = &ppen->BrushAttr;
+}
+
+PBRUSH
+NTAPI
+PEN_AllocPenWithHandle(
+    VOID)
+{
+    PPEN ppen;
+
+    ppen = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_PEN_TYPE, sizeof(PEN));
+    if (ppen == NULL)
+    {
+        return NULL;
+    }
+
+    PEN_vInit(ppen);
+    return ppen;
+}
+
+PBRUSH
+NTAPI
+PEN_AllocExtPenWithHandle(
+    VOID)
+{
+    PPEN ppen;
+
+    ppen = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_EXTPEN_TYPE, sizeof(PEN));
+    if (ppen == NULL)
+    {
+        return NULL;
+    }
+
+    PEN_vInit(ppen);
+    return ppen;
+}
+
 PBRUSH
 FASTCALL
-PEN_ShareLockPen(HGDIOBJ hobj)
+PEN_ShareLockPen(HPEN hobj)
 {
     if ((GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_PEN_TYPE) &&
         (GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_EXTPEN_TYPE))
