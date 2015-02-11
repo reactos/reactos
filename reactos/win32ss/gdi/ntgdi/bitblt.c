@@ -324,51 +324,44 @@ NtGdiMaskBlt(
     BOOL Status = FALSE;
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
-    BOOL UsesSource = ROP_USES_SOURCE(dwRop);
-    BOOL UsesMask;
+    BOOL UsesSource;
 
-    FIXUP_ROP(dwRop);
-
-    UsesMask = ROP_USES_MASK(dwRop);
+    FIXUP_ROP(dwRop); // FIXME: why do we need this???
 
     //DPRINT1("dwRop : 0x%08x\n", dwRop);
+    UsesSource = ROP_USES_SOURCE(dwRop);
     if (!hdcDest || (UsesSource && !hdcSrc))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    /* Take care of mask bitmap */
-    if(hbmMask)
+    /* Check if we need a mask and have a mask bitmap */
+    if (ROP_USES_MASK(dwRop) && (hbmMask != NULL))
     {
+        /* Reference the mask bitmap */
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
-        if(!psurfMask)
+        if (psurfMask == NULL)
         {
             EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
-    }
 
-    if(UsesMask)
-    {
-        if(!psurfMask)
-        {
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            return FALSE;
-        }
-        if(gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
+        /* Make sure the mask bitmap is 1 BPP */
+        if (gajBitsPerFormat[psurfMask->SurfObj.iBitmapFormat] != 1)
         {
             EngSetLastError(ERROR_INVALID_PARAMETER);
             SURFACE_ShareUnlockSurface(psurfMask);
             return FALSE;
         }
     }
-    else if(psurfMask)
+    else
     {
-        WARN("Getting Mask bitmap without needing it?\n");
-        SURFACE_ShareUnlockSurface(psurfMask);
+        /* We use NULL, if we need a mask, the Eng function will take care of
+           that and use the brushobject to get a mask */
         psurfMask = NULL;
     }
+
     MaskPoint.x = xMask;
     MaskPoint.y = yMask;
 
