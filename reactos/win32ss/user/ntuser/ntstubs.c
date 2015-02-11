@@ -790,6 +790,8 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
     {
         case UserThreadInitiateShutdown:
         {
+            ULONG CapturedFlags = 0;
+
             ERR("Shutdown initiated\n");
 
             if (ThreadInformationLength != sizeof(ULONG))
@@ -798,7 +800,33 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                 break;
             }
 
-            Status = UserInitiateShutdown(Thread, (PULONG)ThreadInformation);
+            /* Capture the caller value */
+            Status = STATUS_SUCCESS;
+            _SEH2_TRY
+            {
+                ProbeForWrite(ThreadInformation, sizeof(CapturedFlags), sizeof(PVOID));
+                CapturedFlags = *(PULONG)ThreadInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            if (NT_SUCCESS(Status))
+                Status = UserInitiateShutdown(Thread, &CapturedFlags);
+
+            /* Return the modified value to the caller */
+            _SEH2_TRY
+            {
+                *(PULONG)ThreadInformation = CapturedFlags;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
             break;
         }
 
@@ -814,6 +842,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                 break;
             }
 
+            /* Capture the caller value */
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
@@ -844,6 +873,7 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
                 break;
             }
 
+            /* Capture the caller value */
             Status = STATUS_SUCCESS;
             _SEH2_TRY
             {
