@@ -1150,7 +1150,7 @@ IntGdiFillRgn(
                            &prgnClip->rdh.rcBound );
 
     /* Get the FG rop and create a MIX based on the BK mode */
-    rop2Fg = pdc->pdcattr->jROP2;
+    rop2Fg = FIXUP_ROP2(pdc->pdcattr->jROP2);
     mix = rop2Fg | (pdc->pdcattr->jBkMode == OPAQUE ? rop2Fg : R2_NOP) << 8;
 
     /* Prepare DC for blit */

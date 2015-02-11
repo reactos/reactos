@@ -5,6 +5,9 @@
 #define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
 #define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
+/* The range of valid ROP2 values is 1 .. 16 */
+#define FIXUP_ROP2(rop2) ((((rop2) - 1) & 0xF) + 1)
+
 /* Brush functions */
 
 extern HDC hSystemBM;
