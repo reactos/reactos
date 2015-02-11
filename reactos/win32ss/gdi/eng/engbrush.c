@@ -424,7 +424,37 @@ SURFOBJ*
 NTAPI
 EBRUSHOBJ_psoMask(EBRUSHOBJ *pebo)
 {
-    return NULL;
+    HBITMAP hbmMask;
+    PSURFACE psurfMask;
+    PPDEVOBJ ppdev;
+
+    /* Check if we don't have a mask yet */
+    if (pebo->psoMask == NULL)
+    {
+        /* Check if this is a hatch brush */
+        if (pebo->flattrs & BR_IS_HATCH)
+        {
+            /* Get the PDEV */
+            ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
+            if (!ppdev)
+                ppdev = gppdevPrimary;
+
+            /* Use the hatch bitmap as the mask */
+            hbmMask = (HBITMAP)ppdev->ahsurf[pebo->pbrush->iHatch];
+            psurfMask = SURFACE_ShareLockSurface(hbmMask);
+            if (psurfMask == NULL)
+            {
+                ERR("Failed to lock hatch brush for PDEV %p, iHatch %lu\n",
+                    ppdev, pebo->pbrush->iHatch);
+                return NULL;
+            }
+
+            NT_ASSERT(psurfMask->SurfObj.iBitmapFormat == BMF_1BPP);
+            pebo->psoMask = &psurfMask->SurfObj;
+        }
+    }
+
+    return pebo->psoMask;
 }
 
 /** Exported DDI functions ****************************************************/
