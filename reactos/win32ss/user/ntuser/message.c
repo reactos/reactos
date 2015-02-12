@@ -848,8 +848,8 @@ co_IntPeekMessage( PMSG Msg,
                return TRUE;
         }
 
-        /* Now look for a quit message. */
-        if (pti->QuitPosted)
+        /* Only check for quit messages if not posted messages pending. */
+        if (ProcessMask & QS_POSTMESSAGE && pti->QuitPosted)
         {
             /* According to the PSDK, WM_QUIT messages are always returned, regardless
                of the filter specified */
@@ -1222,14 +1222,7 @@ UserPostMessage( HWND Wnd,
            Message.lParam = lParam;
         }
 
-        if (WM_QUIT == Msg)
-        {
-            MsqPostQuitMessage(pti, wParam);
-        }
-        else
-        {
-            MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, ExtraInfo);
-        }
+        MsqPostMessage(pti, &Message, FALSE, QS_POSTMESSAGE, 0, ExtraInfo);
     }
     return TRUE;
 }

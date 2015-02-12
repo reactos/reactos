@@ -932,6 +932,11 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
                                         ListEntry);
       if (PostedMessage->Msg.hwnd == Window->head.h)
       {
+         if (PostedMessage->Msg.message == WM_QUIT && pti->QuitPosted == 0)
+         {
+            pti->QuitPosted = 1;
+            pti->exitCode = PostedMessage->Msg.wParam;
+         }
          RemoveEntryList(&PostedMessage->ListEntry);
          ClearMsgBitsMask(pti, PostedMessage->QS_Flags);
          MsqDestroyMessage(PostedMessage);
