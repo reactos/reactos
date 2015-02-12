@@ -7,7 +7,12 @@
  */
 
 #include <win32k.h>
+#include <winlogon.h>
+
 DBG_DEFAULT_CHANNEL(UserShutdown);
+
+/* Our local copy of shutdown flags */
+static ULONG gdwShutdownFlags = 0;
 
 /*
  * Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
@@ -150,6 +155,51 @@ HasPrivilege(IN PPRIVILEGE_SET Privilege)
     return Result;
 }
 
+BOOL
+NotifyLogon(IN HWND hWndSta,
+            IN PLUID CallerLuid,
+            IN ULONG Flags,
+            IN NTSTATUS ShutdownStatus)
+{
+    // LUID SystemLuid = SYSTEM_LUID;
+    ULONG Notif, Param;
+
+    ERR("NotifyLogon(0x%lx, 0x%lx)\n", Flags, ShutdownStatus);
+
+    /* If no Winlogon notifications are needed, just return */
+    if (Flags & EWX_NONOTIFY)
+        return FALSE;
+
+    /* In case we cancelled the shutdown...*/
+    if (Flags & EWX_SHUTDOWN_CANCELED)
+    {
+        /* ... send a LN_LOGOFF_CANCELED to Winlogon with the real cancel status... */
+        Notif = LN_LOGOFF_CANCELED;
+        Param = ShutdownStatus;
+    }
+    else
+    {
+        /* ... otherwise it's a real logoff. Send the shutdown flags in that case. */
+        Notif = LN_LOGOFF;
+        Param = Flags;
+    }
+
+    // FIXME: At the moment, always send the notifications... In real world some checks are done.
+    // if (hwndSAS && ( (Flags & EWX_SHUTDOWN) || RtlEqualLuid(CallerLuid, &SystemLuid)) )
+    if (hwndSAS)
+    {
+        ERR("\tSending %s message to Winlogon\n", Notif == LN_LOGOFF ? "LN_LOGOFF" : "LN_LOGOFF_CANCELED");
+        UserPostMessage(hwndSAS, WM_LOGONNOTIFY, Notif, (LPARAM)Param);
+        return TRUE;
+    }
+    else
+    {
+        ERR("hwndSAS == NULL\n");
+    }
+
+    return FALSE;
+}
+
 NTSTATUS
 UserInitiateShutdown(IN PETHREAD Thread,
                      IN OUT PULONG pFlags)
@@ -157,7 +207,7 @@ UserInitiateShutdown(IN PETHREAD Thread,
     NTSTATUS Status;
     ULONG Flags = *pFlags;
     LUID CallerLuid;
-    // LUID SystemLuid = SYSTEM_LUID;
+    LUID SystemLuid = SYSTEM_LUID;
     static PRIVILEGE_SET ShutdownPrivilege =
     {
         1, PRIVILEGE_SET_ALL_NECESSARY,
@@ -168,9 +218,6 @@ UserInitiateShutdown(IN PETHREAD Thread,
 
     ERR("UserInitiateShutdown\n");
 
-    if(hwndSAS == NULL)
-        return STATUS_NOT_FOUND;
-
     /* Get the caller's LUID */
     Status = GetProcessLuid(Thread, &CallerLuid);
     if (!NT_SUCCESS(Status))
@@ -179,8 +226,16 @@ UserInitiateShutdown(IN PETHREAD Thread,
         return Status;
     }
 
-    // FIXME: Check if this is the System LUID, and adjust flags if needed.
-    // if (RtlEqualLuid(&CallerLuid, &SystemLuid)) { Flags = ...; }
+    /*
+     * Check if this is the System LUID, and adjust flags if needed.
+     * In particular, be sure there is no EWX_CALLER_SYSTEM flag
+     * spuriously set (could be the sign of malicous app!).
+     */
+    if (RtlEqualLuid(&CallerLuid, &SystemLuid))
+        Flags |= EWX_CALLER_SYSTEM;
+    else
+        Flags &= ~EWX_CALLER_SYSTEM;
+
     *pFlags = Flags;
 
     /* Retrieve the Win32 process info */
@@ -191,7 +246,12 @@ UserInitiateShutdown(IN PETHREAD Thread,
     /* If the caller is not Winlogon, do some security checks */
     if (PsGetThreadProcessId(Thread) != gpidLogon)
     {
-        // FIXME: Play again with flags...
+        /*
+         * Here also, be sure there is no EWX_CALLER_WINLOGON flag
+         * spuriously set (could be the sign of malicous app!).
+         */
+        Flags &= ~EWX_CALLER_WINLOGON;
+
         *pFlags = Flags;
 
         /* Check whether the current process is attached to a window station */
@@ -224,24 +284,27 @@ UserInitiateShutdown(IN PETHREAD Thread,
         }
     }
 
-    /* If the caller is not Winlogon, notify it to perform the real shutdown */
+    /* If the caller is not Winlogon, possibly notify it to perform the real shutdown */
     if (PsGetThreadProcessId(Thread) != gpidLogon)
     {
         // FIXME: HACK!! Do more checks!!
         ERR("UserInitiateShutdown -- Notify Winlogon for shutdown\n");
-        UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_LOGOFF, (LPARAM)Flags);
+        NotifyLogon(hwndSAS, &CallerLuid, Flags, STATUS_SUCCESS);
         return STATUS_PENDING;
     }
 
     // If we reach this point, that means it's Winlogon that triggered the shutdown.
-    ERR("UserInitiateShutdown -- Winlogon shuts down\n");
+    ERR("UserInitiateShutdown -- Winlogon is doing a shutdown\n");
 
     /*
-     * FIXME:
-     * Update and save the shutdown flags globally for renotifying Winlogon
-     * if needed, when calling EndShutdown.
+     * Update and save the shutdown flags globally for renotifying
+     * Winlogon if needed, when calling EndShutdown.
      */
+    Flags |= EWX_CALLER_WINLOGON; // Winlogon is doing a shutdown, be sure the internal flag is set.
     *pFlags = Flags;
+
+    /* Save the shutdown flags now */
+    gdwShutdownFlags = Flags;
 
     return STATUS_SUCCESS;
 }
@@ -250,9 +313,45 @@ NTSTATUS
 UserEndShutdown(IN PETHREAD Thread,
                 IN NTSTATUS ShutdownStatus)
 {
+    NTSTATUS Status;
+    ULONG Flags;
+    LUID CallerLuid;
+
     ERR("UserEndShutdown\n");
+
+    /*
+     * FIXME: Some cleanup should be done when shutdown succeeds,
+     * and some reset should be done when shutdown is cancelled.
+     */
     STUB;
-    return STATUS_NOT_IMPLEMENTED;
+
+    Status = GetProcessLuid(Thread, &CallerLuid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetProcessLuid failed\n");
+        return Status;
+    }
+
+    /* Copy the global flags because we're going to modify them for our purposes */
+    Flags = gdwShutdownFlags;
+
+    if (NT_SUCCESS(ShutdownStatus))
+    {
+        /* Just report success, and keep the shutdown flags as they are */
+        ShutdownStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Report the status to Winlogon and say that we cancel the shutdown */
+        Flags |= EWX_SHUTDOWN_CANCELED;
+        // FIXME: Should we reset gdwShutdownFlags to 0 ??
+    }
+
+    ERR("UserEndShutdown -- Notify Winlogon for end of shutdown\n");
+    NotifyLogon(hwndSAS, &CallerLuid, Flags, ShutdownStatus);
+
+    /* Always return success */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

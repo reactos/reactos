@@ -29,8 +29,12 @@
 #define HK_CTRL_ALT_DEL   0
 #define HK_CTRL_SHIFT_ESC 1
 
-#define EWX_ACTION_MASK 0xffffffeb
-#define EWX_FLAGS_MASK  0x00000014
+// #define EWX_FLAGS_MASK  0x00000014
+// #define EWX_ACTION_MASK ~EWX_FLAGS_MASK
+
+// FIXME: At the moment we use this value (select the lowbyte flags and some highbytes ones).
+// It should be set such that it makes winlogon accepting only valid flags.
+#define EWX_ACTION_MASK 0x5C0F
 
 typedef struct tagLOGOFF_SHUTDOWN_DATA
 {
@@ -510,8 +514,12 @@ LogoffShutdownThread(
         return 0;
     }
 
-    uFlags = EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
-             ((LSData->Flags & EWX_ACTION_MASK) == EWX_LOGOFF ? EWX_INTERNAL_FLAG_LOGOFF : 0);
+    // FIXME: To be really fixed: need to check what needs to be kept and what needs to be removed there.
+    //
+    // uFlags = EWX_INTERNAL_KILL_USER_APPS | (LSData->Flags & EWX_FLAGS_MASK) |
+             // ((LSData->Flags & EWX_ACTION_MASK) == EWX_LOGOFF ? EWX_CALLER_WINLOGON_LOGOFF : 0);
+
+    uFlags = EWX_CALLER_WINLOGON | (LSData->Flags & 0x0F);
 
     ERR("In LogoffShutdownThread with uFlags == 0x%x; exit_in_progress == %s\n",
         uFlags, ExitReactOSInProgress ? "true" : "false");
@@ -526,15 +534,42 @@ LogoffShutdownThread(
         return 0;
     }
 
-    /* FIXME: Call ExitWindowsEx() to terminate COM processes only at logoff! */
-    ERR("Should terminate COM processes only at logoff!\n");
-
     if (LSData->Session->UserToken)
         RevertToSelf();
 
     return 1;
 }
 
+static
+DWORD
+WINAPI
+KillComProcesses(
+    LPVOID Parameter)
+{
+    PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
+
+    ERR("In KillComProcesses\n");
+
+    if (LSData->Session->UserToken != NULL &&
+        !ImpersonateLoggedOnUser(LSData->Session->UserToken))
+    {
+        ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return 0;
+    }
+
+    /* Attempt to kill remaining processes. No notifications needed. */
+    if (!ExitWindowsEx(EWX_CALLER_WINLOGON | EWX_NONOTIFY | EWX_FORCE | EWX_LOGOFF, 0))
+    {
+        ERR("Unable to kill COM apps, error %lu\n", GetLastError());
+        RevertToSelf();
+        return 0;
+    }
+
+    if (LSData->Session->UserToken)
+        RevertToSelf();
+
+    return 1;
+}
 
 static
 NTSTATUS
@@ -694,8 +729,38 @@ HandleLogoff(
         return Status;
     }
 
+
     /* Run logoff thread */
     hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
+
+    if (!hThread)
+    {
+        ERR("Unable to create logoff thread, error %lu\n", GetLastError());
+        DestroyLogoffSecurityAttributes(psa);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    WaitForSingleObject(hThread, INFINITE);
+    if (!GetExitCodeThread(hThread, &exitCode))
+    {
+        ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
+        CloseHandle(hThread);
+        DestroyLogoffSecurityAttributes(psa);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+    CloseHandle(hThread);
+    if (exitCode == 0)
+    {
+        ERR("Logoff thread returned failure\n");
+        DestroyLogoffSecurityAttributes(psa);
+        HeapFree(GetProcessHeap(), 0, LSData);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+
+    /* Kill remaining COM apps. Only at logoff! */
+    hThread = CreateThread(psa, 0, KillComProcesses, (LPVOID)LSData, 0, NULL);
 
     /* We're done with the SECURITY_DESCRIPTOR */
     DestroyLogoffSecurityAttributes(psa);
@@ -703,7 +768,7 @@ HandleLogoff(
 
     if (!hThread)
     {
-        ERR("Unable to create logoff thread, error %lu\n", GetLastError());
+        ERR("Unable to create kill COM apps thread, error %lu\n", GetLastError());
         HeapFree(GetProcessHeap(), 0, LSData);
         return STATUS_UNSUCCESSFUL;
     }
@@ -711,16 +776,17 @@ HandleLogoff(
     HeapFree(GetProcessHeap(), 0, LSData);
     if (!GetExitCodeThread(hThread, &exitCode))
     {
-        ERR("Unable to get exit code of logoff thread (error %lu)\n", GetLastError());
+        ERR("Unable to get exit code of kill COM apps thread (error %lu)\n", GetLastError());
         CloseHandle(hThread);
         return STATUS_UNSUCCESSFUL;
     }
     CloseHandle(hThread);
     if (exitCode == 0)
     {
-        ERR("Logoff thread returned failure\n");
+        ERR("Kill COM apps thread returned failure\n");
         return STATUS_UNSUCCESSFUL;
     }
+
 
     UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
     CloseHandle(Session->UserToken);
@@ -804,6 +870,11 @@ HandleShutdown(
     else
         LSData->Flags = EWX_SHUTDOWN;
     LSData->Session = Session;
+
+    // FIXME: We may need to specify this flag to really force application kill
+    // (we are shutting down ReactOS, not just logging off so no hangs, etc...
+    // should be allowed).
+    // LSData->Flags |= EWX_FORCE;
 
     /* Run shutdown thread */
     hThread = CreateThread(NULL, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
@@ -1305,6 +1376,12 @@ SASWindowProc(
                     }
 
                     /* Check parameters */
+                    if (Action & EWX_FORCE)
+                    {
+                        // FIXME!
+                        ERR("FIXME: EWX_FORCE present for Winlogon, what to do?\n");
+                        Action &= ~EWX_FORCE;
+                    }
                     switch (Action)
                     {
                         case EWX_LOGOFF:
@@ -1342,7 +1419,7 @@ SASWindowProc(
 // if you try now a shut down, it won't work because winlogon thinks it is
 // still in the middle of a shutdown.
 // Maybe we also need to reset ExitReactOSInProgress somewhere else??
-                    if (ExitReactOSInProgress && (lParam & EWX_INTERNAL_FLAG) == 0)
+                    if (ExitReactOSInProgress && (lParam & EWX_CALLER_WINLOGON) == 0)
                     {
                         break;
                     }

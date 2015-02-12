@@ -493,7 +493,7 @@ NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
         {
             Context.ProcessId = (DWORD_PTR) ProcessData->ClientId.UniqueProcess;
             Context.wParam = 0;
-            Context.lParam = (0 != (Flags & EWX_INTERNAL_FLAG_LOGOFF) ?
+            Context.lParam = (0 != (Flags & EWX_CALLER_WINLOGON_LOGOFF) ?
                               ENDSESSION_LOGOFF : 0);
             Context.StartTime = 0;
             Context.UIThread = NULL;
@@ -505,7 +505,7 @@ NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
             NotifyTopLevelWindows(&Context);
 
             Context.wParam = (QUERY_RESULT_ABORT != Context.QueryResult);
-            Context.lParam = (0 != (Flags & EWX_INTERNAL_FLAG_LOGOFF) ?
+            Context.lParam = (0 != (Flags & EWX_CALLER_WINLOGON_LOGOFF) ?
                               ENDSESSION_LOGOFF : 0);
             Context.SendMessageProc = SendEndSession;
             Context.ShowUI = DtbgIsDesktopVisible() &&
@@ -775,7 +775,7 @@ UserExitReactos(PCSR_THREAD CsrThread, UINT Flags)
      * Check for flags validity
      */
 
-    if (Flags & EWX_INTERNAL_FLAG)
+    if (Flags & EWX_CALLER_WINLOGON)
     {
         /* Only Winlogon can call this */
         if (ProcessId != LogonProcessId)
@@ -904,7 +904,10 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
         return CsrShutdownNonCsrProcess;
     }
 
-    DPRINT1("Killing process with ShutdownFlags = %lu\n", CsrProcess->ShutdownFlags);
+    if (Flags & EWX_CALLER_SYSTEM)
+        DPRINT1("Killed by a SYSTEM process -- ShutdownFlags = %lu\n", CsrProcess->ShutdownFlags);
+    else
+        DPRINT1("Killing process with ShutdownFlags = %lu\n", CsrProcess->ShutdownFlags);
 
 #if 0
     if (!NotifyAndTerminateProcess(CsrProcess, &ShutdownSettings, Flags))
