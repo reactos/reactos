@@ -379,17 +379,29 @@ static void IntSendDestroyMsg(HWND hWnd)
        * be destroying.
        */
       // Rule #1
-      if ( ti->MessageQueue->spwndActive == Window ||
+      if ( ti->MessageQueue->spwndActive == Window || // Fixes CORE-106 RegSrv32 exit and return focus to CMD.
           (ti->MessageQueue->spwndActive == NULL && ti->MessageQueue == IntGetFocusMessageQueue()) )
       {
          co_WinPosActivateOtherWindow(Window);
+      }
+
+      /* Fixes dialog test test_focus breakage due to r66237 and CMD properties closing and returning focus to CMD */
+      if (ti->MessageQueue->spwndFocus == Window)
+      {
+         if ((Window->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+         {
+            co_UserSetFocus(Window->spwndParent);
+         }
+         else
+         {
+            co_UserSetFocus(NULL);
+         }
       }
 
       if (ti->MessageQueue->CaretInfo->hWnd == UserHMGetHandle(Window))
       {
          co_IntDestroyCaret(ti);
       }
-
    }
 
    /*
@@ -2566,10 +2578,12 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (WPARAM) hWnd, 0);
    }
 
+   /* Hide the window */
    if (Window->style & WS_VISIBLE)
    {
       if (Window->style & WS_CHILD)
       {
+         /* Only child windows receive WM_SHOWWINDOW in DestroyWindow() */
          co_WinPosShowWindow(Window, SW_HIDE);
       }
       else
@@ -3846,7 +3860,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
 /*
  * @implemented
  */
@@ -3884,7 +3897,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
 
 /*
  * @implemented
