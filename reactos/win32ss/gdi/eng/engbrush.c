@@ -64,6 +64,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo,
     pebo->pbrush = pbrush;
     pebo->pengbrush = NULL;
     pebo->flattrs = pbrush->flAttrs;
+    pebo->psoMask = NULL;
 
     /* Initialize 1 bpp fore and back colors */
     pebo->crCurrentBack = crBackgroundClr;
