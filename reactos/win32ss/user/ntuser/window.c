@@ -408,32 +408,24 @@ static void IntSendDestroyMsg(HWND hWnd)
     * This WM_DESTROY message can trigger re-entrant calls to DestroyWindow
     * make sure that the window still exists when we come back.
     */
-#if 0 /* FIXME */
 
-   if (IsWindow(Wnd))
+   if (IntIsWindow(hWnd))
    {
       HWND* pWndArray;
       int i;
 
-      if (!(pWndArray = WIN_ListChildren( hwnd )))
-         return;
+      if (!(pWndArray = IntWinListChildren( Window ))) return;
 
-      /* start from the end (FIXME: is this needed?) */
       for (i = 0; pWndArray[i]; i++)
-         ;
-
-      while (--i >= 0)
       {
-         if (IsWindow( pWndArray[i] ))
-            WIN_SendDestroyMsg( pWndArray[i] );
+         if (IntIsWindow( pWndArray[i] )) IntSendDestroyMsg( pWndArray[i] );
       }
-      HeapFree(GetProcessHeap(), 0, pWndArray);
+      ExFreePoolWithTag(pWndArray, USERTAG_WINDOWLIST);
    }
    else
    {
       TRACE("destroyed itself while in WM_DESTROY!\n");
    }
-#endif
 }
 
 static VOID
@@ -471,10 +463,10 @@ UserFreeWindowInfo(PTHREADINFO ti, PWND Wnd)
  * done in CreateWindow is undone here and not in DestroyWindow:-P
 
  */
-static LRESULT co_UserFreeWindow(PWND Window,
-                                   PPROCESSINFO ProcessData,
-                                   PTHREADINFO ThreadData,
-                                   BOOLEAN SendMessages)
+LRESULT co_UserFreeWindow(PWND Window,
+                          PPROCESSINFO ProcessData,
+                          PTHREADINFO ThreadData,
+                          BOOLEAN SendMessages)
 {
    HWND *Children;
    HWND *ChildHandle;
@@ -504,12 +496,6 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    IntDeRegisterShellHookWindow(Window->head.h);
 
-   if(SendMessages)
-   {
-      /* Send destroy messages */
-      IntSendDestroyMsg(Window->head.h);
-   }
-
    /* free child windows */
    Children = IntWinListChildren(Window);
    if (Children)
@@ -521,7 +507,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
             if(!IntWndBelongsToThread(Child, ThreadData))
             {
                /* send WM_DESTROY messages to windows not belonging to the same thread */
-               IntSendDestroyMsg(Child->head.h);
+               co_IntSendMessage( UserHMGetHandle(Child), WM_ASYNC_DESTROYWINDOW, 0, 0 );
             }
             else
                co_UserFreeWindow(Child, ProcessData, ThreadData, SendMessages);
@@ -1415,8 +1401,8 @@ NtUserBuildHwndList(
    {
       PETHREAD Thread;
       PTHREADINFO W32Thread;
-      PLIST_ENTRY Current;
       PWND Window;
+      HWND *List = NULL;
 
       Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
       if (!NT_SUCCESS(Status))
@@ -1431,35 +1417,42 @@ NtUserBuildHwndList(
          return ERROR_INVALID_PARAMETER;
       }
 
-      Current = W32Thread->WindowListHead.Flink;
-      while (Current != &(W32Thread->WindowListHead))
+     // Do not use Thread link list due to co_UserFreeWindow!!!
+     // Current = W32Thread->WindowListHead.Flink;
+     // Fixes Api:CreateWindowEx tests!!!
+      List = IntWinListChildren(UserGetDesktopWindow());
+      if (List)
       {
-         Window = CONTAINING_RECORD(Current, WND, ThreadListEntry);
-         ASSERT(Window);
-
-         if (dwCount < *pBufSize && pWnd)
+         int i;
+         for (i = 0; List[i]; i++)
          {
-            _SEH2_TRY
+            Window = ValidateHwndNoErr(List[i]);
+            if (Window && Window->head.pti == W32Thread)
             {
-               ProbeForWrite(pWnd, sizeof(HWND), 1);
-               *pWnd = Window->head.h;
-               pWnd++;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-               Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END
-            if (!NT_SUCCESS(Status))
-            {
-               ERR("Failure to build window list!\n");
-               SetLastNtError(Status);
-               break;
+               if (dwCount < *pBufSize && pWnd)
+               {
+                  _SEH2_TRY
+                  {
+                     ProbeForWrite(pWnd, sizeof(HWND), 1);
+                     *pWnd = Window->head.h;
+                     pWnd++;
+                  }
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                  {
+                     Status = _SEH2_GetExceptionCode();
+                  }
+                  _SEH2_END
+                  if (!NT_SUCCESS(Status))
+                  {
+                     ERR("Failure to build window list!\n");
+                     SetLastNtError(Status);
+                     break;
+                  }
+               }
+               dwCount++;
             }
          }
-         dwCount++;
-         Current = Window->ThreadListEntry.Flink;
-      }
+      }      
 
       ObDereferenceObject(Thread);
    }
@@ -2711,6 +2704,10 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
     msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
     msg.pt = gpsi->ptCursor;
     co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
+
+   /* Send destroy messages */
+
+   IntSendDestroyMsg(Window->head.h);
 
    if (!IntIsWindow(Window->head.h))
    {

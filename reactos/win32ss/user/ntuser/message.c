@@ -640,6 +640,14 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
           if (wparam) UserDerefObjectCo(Window);
           return lRes;
        }
+       case WM_ASYNC_DESTROYWINDOW:
+       {
+          ERR("WM_ASYNC_DESTROYWINDOW\n");
+          if (pWnd->style & WS_CHILD)
+             return co_UserFreeWindow(pWnd, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
+          else
+             co_UserDestroyWindow(pWnd);
+       }
     }
     return 0;
 }
