@@ -2181,6 +2181,13 @@ MmArmInitSystem(IN ULONG Phase,
                 //
                 MmNumberOfSystemPtes <<= 1;
             }
+            if (MmSpecialPoolTag != 0 && MmSpecialPoolTag != -1)
+            {
+                //
+                // Add some extra PTEs for special pool
+                //
+                MmNumberOfSystemPtes += 0x6000;
+            }
         }
 
         DPRINT("System PTE count has been tuned to %lu (%lu bytes)\n",
