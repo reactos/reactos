@@ -367,36 +367,30 @@ IntGetWindow(HWND hWnd,
  */
 static void IntSendDestroyMsg(HWND hWnd)
 {
-
+   PTHREADINFO ti;
    PWND Window;
-#if 0 /* FIXME */
 
-   GUITHREADINFO info;
-
-   if (GetGUIThreadInfo(GetCurrentThreadId(), &info))
-   {
-      if (hWnd == info.hwndCaret)
-      {
-         DestroyCaret();
-      }
-   }
-#endif
-
+   ti = PsGetCurrentThreadWin32Thread();
    Window = UserGetWindowObject(hWnd);
+
    if (Window)
    {
-//      USER_REFERENCE_ENTRY Ref;
-//      UserRefObjectCo(Window, &Ref);
-
-      if (!Window->spwndOwner && !IntGetParent(Window))
+      /* Look whether the focus is within the tree of windows we will
+       * be destroying.
+       */
+      // Rule #1
+      if ( ti->MessageQueue->spwndActive == Window ||
+          (ti->MessageQueue->spwndActive == NULL && ti->MessageQueue == IntGetFocusMessageQueue()) )
       {
-         co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (WPARAM) hWnd, 0);
+         co_WinPosActivateOtherWindow(Window);
       }
 
-//      UserDerefObjectCo(Window);
-   }
+      if (ti->MessageQueue->CaretInfo->hWnd == UserHMGetHandle(Window))
+      {
+         co_IntDestroyCaret(ti);
+      }
 
-   /* The window could already be destroyed here */
+   }
 
    /*
     * Send the WM_DESTROY to the window.
@@ -485,7 +479,6 @@ LRESULT co_UserFreeWindow(PWND Window,
    Window->style &= ~WS_VISIBLE;
    Window->head.pti->cVisWindows--;
 
-   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window, OBJID_WINDOW, CHILDID_SELF, 0);
 
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
@@ -494,7 +487,7 @@ LRESULT co_UserFreeWindow(PWND Window,
 
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
 
-   IntDeRegisterShellHookWindow(Window->head.h);
+   IntDeRegisterShellHookWindow(UserHMGetHandle(Window));
 
    /* free child windows */
    Children = IntWinListChildren(Window);
@@ -528,13 +521,13 @@ LRESULT co_UserFreeWindow(PWND Window,
                           RDW_VALIDATE | RDW_NOFRAME | RDW_NOERASE |
                           RDW_NOINTERNALPAINT | RDW_NOCHILDREN);
       if(BelongsToThreadData)
-         co_IntSendMessage(Window->head.h, WM_NCDESTROY, 0, 0);
+         co_IntSendMessage(UserHMGetHandle(Window), WM_NCDESTROY, 0, 0);
    }
 
    DestroyTimersForWindow(ThreadData, Window);
 
    /* Unregister hot keys */
-   UnregisterWindowHotKeys (Window);
+   UnregisterWindowHotKeys(Window);
 
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
@@ -555,19 +548,10 @@ LRESULT co_UserFreeWindow(PWND Window,
          ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
 
-   /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
-
-#if 0 /* FIXME */
-
-   WinPosCheckInternalPos(Window->head.h);
-   if (Window->head.h == GetCapture())
+   if (ThreadData->MessageQueue->spwndCapture == Window)
    {
-      ReleaseCapture();
+      IntReleaseCapture();
    }
-
-   /* free resources associated with the window */
-   TIMER_RemoveWindowTimers(Window->head.h);
-#endif
 
    if ( ((Window->style & (WS_CHILD|WS_POPUP)) != WS_CHILD) &&
         Window->IDMenu &&
@@ -585,11 +569,6 @@ LRESULT co_UserFreeWindow(PWND Window,
    }
 
    DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
-#if 0 /* FIXME */
-
-   WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
-   CLASS_RemoveWindow(Window->Class);
-#endif
 
    IntUnlinkWindow(Window);
 
@@ -601,7 +580,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    }
 
    UserReferenceObject(Window);
-   UserDeleteObject(Window->head.h, TYPE_WINDOW);
+   UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
 
    IntDestroyScrollBars(Window);
 
@@ -2582,15 +2561,20 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       IntSendParentNotify(Window, WM_DESTROY);
    }
 
-   /* Look whether the focus is within the tree of windows we will
-    * be destroying.
-    */
-   if (!co_WinPosShowWindow(Window, SW_HIDE))
-   {  // Rule #1.
-      if ( ti->MessageQueue->spwndActive == Window ||
-          (ti->MessageQueue->spwndActive == NULL && ti->MessageQueue == IntGetFocusMessageQueue()) )
+   if (!Window->spwndOwner && !IntGetParent(Window))
+   {
+      co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (WPARAM) hWnd, 0);
+   }
+
+   if (Window->style & WS_VISIBLE)
+   {
+      if (Window->style & WS_CHILD)
       {
-         co_WinPosActivateOtherWindow(Window);
+         co_WinPosShowWindow(Window, SW_HIDE);
+      }
+      else
+      {
+         co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE|SWP_HIDEWINDOW );
       }
    }
 
@@ -2604,7 +2588,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
          pwndTemp->spwndLastActive = Window->spwndOwner;
    }
 
-   if (Window->spwndParent && IntIsWindow(Window->head.h))
+   if (Window->spwndParent && IntIsWindow(UserHMGetHandle(Window)))
    {
       if ((Window->style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
@@ -2640,7 +2624,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
 
    IntEngWindowChanged(Window, WOC_DELETE);
 
-   if (!IntIsWindow(Window->head.h))
+   if (!IntIsWindow(UserHMGetHandle(Window)))
    {
       return TRUE;
    }
@@ -2705,11 +2689,13 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
     msg.pt = gpsi->ptCursor;
     co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
 
+   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window, OBJID_WINDOW, CHILDID_SELF, 0);
+
    /* Send destroy messages */
 
-   IntSendDestroyMsg(Window->head.h);
+   IntSendDestroyMsg(UserHMGetHandle(Window));
 
-   if (!IntIsWindow(Window->head.h))
+   if (!IntIsWindow(UserHMGetHandle(Window)))
    {
       return TRUE;
    }
