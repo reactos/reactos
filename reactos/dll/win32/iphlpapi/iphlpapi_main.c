@@ -781,11 +781,24 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
  *
  * NOTES
  */
+
 DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
 {
 	DWORD ret = NO_ERROR;
-	UNIMPLEMENTED;
-	return ret;	
+
+  if (TableClass == TCP_TABLE_OWNER_PID_ALL) {
+    if (*pdwSize == 0) {
+      *pdwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
+      return ERROR_INSUFFICIENT_BUFFER; 
+    } else {
+      ZeroMemory(pTcpTable, sizeof(MIB_TCPTABLE_OWNER_PID));
+      return NO_ERROR;
+    }
+  }
+
+
+    UNIMPLEMENTED;
+    return ret;	
 }
 
 
