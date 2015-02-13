@@ -550,9 +550,14 @@ function(set_module_type MODULE TYPE)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
 
+    # Add the module to the module group list, if it is defined
+    if(DEFINED CURRENT_MODULE_GROUP)
+        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
+    endif()
+
     # Set subsystem. Also take this as an occasion
     # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) 
+    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll)
             OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
         set(__subsystem native)
     elseif(${TYPE} STREQUAL win32cui)
@@ -662,6 +667,21 @@ function(set_module_type MODULE TYPE)
 
     # do compiler specific stuff
     set_module_type_toolchain(${MODULE} ${TYPE})
+endfunction()
+
+function(start_module_group __name)
+    if(DEFINED CURRENT_MODULE_GROUP)
+        message(FATAL_ERROR "CURRENT_MODULE_GROUP is already set ('${CURRENT_MODULE_GROUP}')")
+    endif()
+    set(CURRENT_MODULE_GROUP rostests PARENT_SCOPE)
+endfunction()
+
+function(end_module_group)
+    get_property(__modulelist GLOBAL PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST)
+    add_custom_target(${CURRENT_MODULE_GROUP})
+    foreach(__module ${__modulelist})
+        add_dependencies(${CURRENT_MODULE_GROUP} ${__module})
+    endforeach()
 endfunction()
 
 function(preprocess_file __in __out)
