@@ -379,13 +379,13 @@ static void IntSendDestroyMsg(HWND hWnd)
        * be destroying.
        */
       // Rule #1
-      if ( ti->MessageQueue->spwndActive == Window || // Fixes CORE-106 RegSrv32 exit and return focus to CMD.
+      if ( ti->MessageQueue->spwndActive == Window || // Fixes CORE-106 RegSvr32 exit and return focus to CMD.
           (ti->MessageQueue->spwndActive == NULL && ti->MessageQueue == IntGetFocusMessageQueue()) )
       {
          co_WinPosActivateOtherWindow(Window);
       }
 
-      /* Fixes dialog test test_focus breakage due to r66237 and CMD properties closing and returning focus to CMD */
+      /* Fixes CMD properties closing and returning focus to CMD */
       if (ti->MessageQueue->spwndFocus == Window)
       {
          if ((Window->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
@@ -559,6 +559,13 @@ LRESULT co_UserFreeWindow(PWND Window,
       if (Window->head.h == ThreadData->rpdesk->rpwinstaParent->ShellListView)
          ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
+
+   /* Fixes dialog test_focus breakage due to r66237. */
+   if (ThreadData->MessageQueue->spwndFocus == Window)
+      ThreadData->MessageQueue->spwndFocus = NULL;
+   
+   if (ThreadData->MessageQueue->spwndActive == Window)
+      ThreadData->MessageQueue->spwndActive = NULL;
 
    if (ThreadData->MessageQueue->spwndCapture == Window)
    {
