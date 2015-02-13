@@ -586,9 +586,10 @@ BOOL
 FASTCALL
 UserDereferenceObject(PVOID Object)
 {
-    PHEAD ObjHead = (PHEAD)Object;
+    PHEAD ObjHead = Object;
 
     ASSERT(ObjHead->cLockObj >= 1);
+    ASSERT(ObjHead->cLockObj < 0x10000);
 
     if (--ObjHead->cLockObj == 0)
     {
@@ -663,6 +664,7 @@ UserDeleteObject(HANDLE h, HANDLE_TYPE type )
    if (!body) return FALSE;
 
    ASSERT( ((PHEAD)body)->cLockObj >= 1);
+   ASSERT( ((PHEAD)body)->cLockObj < 0x10000);
 
    return UserFreeHandle(gHandleTable, h);
 }
@@ -671,9 +673,11 @@ VOID
 FASTCALL
 UserReferenceObject(PVOID obj)
 {
-   ASSERT(((PHEAD)obj)->cLockObj >= 0);
+   PHEAD ObjHead = obj;
+   ASSERT(ObjHead->cLockObj >= 0);
+   ASSERT(ObjHead->cLockObj < 0x10000);
 
-   ((PHEAD)obj)->cLockObj++;
+   ObjHead->cLockObj++;
 }
 
 PVOID
