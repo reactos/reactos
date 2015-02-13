@@ -316,4 +316,19 @@ typedef enum {
     TCP_TABLE_OWNER_MODULE_ALL
 } TCP_TABLE_CLASS, *PTCP_TABLE_CLASS;
 
+typedef struct _MIB_TCPROW_OWNER_PID {
+  DWORD dwState;
+  DWORD dwLocalAddr;
+  DWORD dwLocalPort;
+  DWORD dwRemoteAddr;
+  DWORD dwRemotePort;
+  DWORD dwOwningPid;
+} MIB_TCPROW_OWNER_PID, *PMIB_TCPROW_OWNER_PID;
+
+typedef struct {
+  DWORD                dwNumEntries;
+  MIB_TCPROW_OWNER_PID table[0];
+} MIB_TCPTABLE_OWNER_PID, *PMIB_TCPTABLE_OWNER_PID;
+
+
 #endif /* WINE_IPRTRMIB_H__ */
