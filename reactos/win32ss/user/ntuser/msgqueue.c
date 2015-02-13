@@ -1172,7 +1172,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
       UserEnterCo();
 
-      if (WaitStatus == STATUS_TIMEOUT || WaitStatus == STATUS_USER_APC)
+      if (WaitStatus == STATUS_TIMEOUT)
       {
          /* Look up if the message has not yet dispatched, if so
             make sure it can't pass a result and it must not set the completion event anymore */
@@ -1186,6 +1186,9 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                   and the message is still hasn't been dispatched */
                Message->CompletionEvent = NULL;
                Message->Result = NULL;
+               RemoveEntryList(&Message->ListEntry);
+               ClearMsgBitsMask(ptirec, Message->QS_Flags);
+               ExFreePoolWithTag(Message, TAG_USRMSG);
                break;
             }
             Entry = Entry->Flink;
@@ -1254,7 +1257,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
          UserEnterCo();
 
-         if (WaitStatus == STATUS_TIMEOUT || WaitStatus == STATUS_USER_APC)
+         if (WaitStatus == STATUS_TIMEOUT)
          {
             /* Look up if the message has not yet been dispatched, if so
                make sure it can't pass a result and it must not set the completion event anymore */
@@ -1268,6 +1271,9 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                      and the message is still hasn't been dispatched */
                   Message->CompletionEvent = NULL;
                   Message->Result = NULL;
+                  RemoveEntryList(&Message->ListEntry);
+                  ClearMsgBitsMask(ptirec, Message->QS_Flags);
+                  ExFreePoolWithTag(Message, TAG_USRMSG);
                   break;
                }
                Entry = Entry->Flink;
@@ -1317,6 +1323,9 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                Entry = Entry->Flink;
             }
          }
+
+         if (WaitStatus == STATUS_USER_APC) break;
+
          while (co_MsqDispatchOneSentMessage(pti))
             ;
       }
