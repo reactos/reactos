@@ -41,7 +41,7 @@ InitPerBitDepth(
 {
     struct
     {
-        BITMAPCOREHEADER bmiHeader;
+        BITMAPINFOHEADER bmiHeader;
         RGBQUAD bmiColors[256];
     } bmiBuffer;
     LPBITMAPINFO pbmi = (LPBITMAPINFO)&bmiBuffer;
