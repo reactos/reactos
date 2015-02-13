@@ -16,6 +16,111 @@ DBG_DEFAULT_CHANNEL(UserCaret);
 
 /* FUNCTIONS *****************************************************************/
 
+VOID FASTCALL
+co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
+{
+    HDC hdc, hdcMem;
+    HBITMAP hbmOld;
+    BOOL bDone = FALSE;
+
+    hdc = UserGetDCEx(pWnd, 0, DCX_USESTYLE | DCX_WINDOW);
+    if (!hdc)
+    {
+        ERR("GetDC failed\n");
+        return;
+    }
+
+    if (pWnd->hrgnUpdate)
+    {
+       NtGdiSaveDC(hdc);
+    }
+
+    if(CaretInfo->Bitmap && NtGdiGetBitmapDimension(CaretInfo->Bitmap, &CaretInfo->Size))
+    {
+        hdcMem = NtGdiCreateCompatibleDC(hdc);
+        if (hdcMem)
+        {
+            hbmOld = NtGdiSelectBitmap(hdcMem, CaretInfo->Bitmap);
+            bDone = NtGdiBitBlt(hdc,
+                                CaretInfo->Pos.x,
+                                CaretInfo->Pos.y,
+                                CaretInfo->Size.cx,
+                                CaretInfo->Size.cy,
+                                hdcMem,
+                                0,
+                                0,
+                                SRCINVERT,
+                                0,
+                                0);
+            NtGdiSelectBitmap(hdcMem, hbmOld);
+            GreDeleteObject(hdcMem);
+        }
+    }
+
+    if (!bDone)
+    {
+        NtGdiPatBlt(hdc,
+                    CaretInfo->Pos.x,
+                    CaretInfo->Pos.y,
+                    CaretInfo->Size.cx,
+                    CaretInfo->Size.cy,
+                    DSTINVERT);
+    }
+
+    if (pWnd->hrgnUpdate)
+    {
+       NtGdiRestoreDC(hdc, -1);
+    }
+
+    UserReleaseDC(pWnd, hdc, FALSE);
+}
+
+VOID
+CALLBACK
+CaretSystemTimerProc(HWND hwnd,
+                     UINT uMsg,
+                     UINT_PTR idEvent,
+                     DWORD dwTime)
+{
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+   PWND pWnd;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+   
+   if (ThreadQueue->CaretInfo->hWnd != hwnd)
+   {
+      ERR("Not the same caret window!\n");
+      return;
+   }
+   
+   if (hwnd)
+   {
+      pWnd = UserGetWindowObject(hwnd);
+      if (!pWnd)
+      {
+         ERR("Caret System Timer Proc has invalid window handle! %p Id: %u\n", hwnd, idEvent);
+         return;
+      }
+   }
+   else
+   {
+      TRACE( "Windowless Caret Timer Running!\n" );
+      return;
+   }
+
+   switch (idEvent)
+   {
+      case IDCARETTIMER:
+      {
+         ThreadQueue->CaretInfo->Showing = (ThreadQueue->CaretInfo->Showing ? 0 : 1);
+         co_IntDrawCaret(pWnd, ThreadQueue->CaretInfo);
+      }
+   }
+   return;  
+}
+
 static
 BOOL FASTCALL
 co_IntHideCaret(PTHRDCARETINFO CaretInfo)
@@ -24,8 +129,8 @@ co_IntHideCaret(PTHRDCARETINFO CaretInfo)
    if(CaretInfo->hWnd && CaretInfo->Visible && CaretInfo->Showing)
    {
       pWnd = UserGetWindowObject(CaretInfo->hWnd);
-      co_IntSendMessage(CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       CaretInfo->Showing = 0;
+
       IntNotifyWinEvent(EVENT_OBJECT_HIDE, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       return TRUE;
    }
@@ -92,8 +197,8 @@ co_IntSetCaretPos(int X, int Y)
          ThreadQueue->CaretInfo->Showing = 0;
          ThreadQueue->CaretInfo->Pos.x = X;
          ThreadQueue->CaretInfo->Pos.y = Y;
-         co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
-         IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, NULL, TMRF_SYSTEM);
+
+         IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       }
       return TRUE;
@@ -101,47 +206,6 @@ co_IntSetCaretPos(int X, int Y)
 
    return FALSE;
 }
-
-BOOL FASTCALL
-IntSwitchCaretShowing(PVOID Info)
-{
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-
-   if(ThreadQueue->CaretInfo->hWnd)
-   {
-      ThreadQueue->CaretInfo->Showing = (ThreadQueue->CaretInfo->Showing ? 0 : 1);
-      MmCopyToCaller(Info, ThreadQueue->CaretInfo, sizeof(THRDCARETINFO));
-      return TRUE;
-   }
-
-   return FALSE;
-}
-
-#if 0 // Unused
-static
-VOID FASTCALL
-co_IntDrawCaret(HWND hWnd)
-{
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-
-   if(ThreadQueue->CaretInfo->hWnd && ThreadQueue->CaretInfo->Visible &&
-         ThreadQueue->CaretInfo->Showing)
-   {
-      co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
-      ThreadQueue->CaretInfo->Showing = 1;
-   }
-}
-#endif
-
-
 
 BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 {
@@ -178,7 +242,6 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
    return TRUE;
 }
 
-
 BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
 {
    PTHREADINFO pti;
@@ -208,14 +271,32 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
       pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
       if (!ThreadQueue->CaretInfo->Showing && pWnd)
       {
-         co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
          IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, OBJID_CARET, 0);
       }
-      IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, NULL, TMRF_SYSTEM);
+      IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
    }
    return TRUE;
 }
 
+/* This can go away now! */
+BOOL FASTCALL
+IntSwitchCaretShowing(PVOID Info)
+{
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE ThreadQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   ThreadQueue = pti->MessageQueue;
+
+   if(ThreadQueue->CaretInfo->hWnd)
+   {
+      ThreadQueue->CaretInfo->Showing = (ThreadQueue->CaretInfo->Showing ? 0 : 1);
+      MmCopyToCaller(Info, ThreadQueue->CaretInfo, sizeof(THRDCARETINFO));
+      return TRUE;
+   }
+
+   return FALSE;
+}
 
 /* SYSCALLS *****************************************************************/
 
@@ -277,7 +358,11 @@ NtUserCreateCaret(
    }
    ThreadQueue->CaretInfo->Visible = 0;
    ThreadQueue->CaretInfo->Showing = 0;
+
+   IntSetTimer( Window, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM );
+
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_CARET, CHILDID_SELF, 0);
+
    RETURN(TRUE);
 
 CLEANUP:
