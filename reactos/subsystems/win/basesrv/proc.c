@@ -288,7 +288,8 @@ CSR_API(BaseSrvGetProcessShutdownParam)
     ASSERT(CsrThread);
 
     ShutdownParametersRequest->ShutdownLevel = CsrThread->Process->ShutdownLevel;
-    ShutdownParametersRequest->ShutdownFlags = CsrThread->Process->ShutdownFlags;
+    /* Only SHUTDOWN_NORETRY flag is valid for this API. The other private flags are for CSRSRV/WINSRV only. */
+    ShutdownParametersRequest->ShutdownFlags = CsrThread->Process->ShutdownFlags & SHUTDOWN_NORETRY;
 
     return STATUS_SUCCESS;
 }
@@ -299,7 +300,15 @@ CSR_API(BaseSrvSetProcessShutdownParam)
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
+    /* Only SHUTDOWN_NORETRY flag is valid for this API. The other private flags are for CSRSRV/WINSRV only. */
+    if (ShutdownParametersRequest->ShutdownFlags & ~SHUTDOWN_NORETRY)
+    {
+        /* If there were other flags specified, fail the call */
+        return STATUS_INVALID_PARAMETER;
+    }
+
     CsrThread->Process->ShutdownLevel = ShutdownParametersRequest->ShutdownLevel;
+    /* Notice that all the possible other private flags are reinitialized here */
     CsrThread->Process->ShutdownFlags = ShutdownParametersRequest->ShutdownFlags;
 
     return STATUS_SUCCESS;
