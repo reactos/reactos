@@ -20,6 +20,7 @@
  */
 
 #pragma once
+#ifndef _WINNT_
 #define _WINNT_
 
 /* We require WDK / VS 2008 or newer */
@@ -6130,3 +6131,5 @@ typedef struct _TP_CALLBACK_ENVIRON_V1 {
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#endif /* _WINNT_ */
