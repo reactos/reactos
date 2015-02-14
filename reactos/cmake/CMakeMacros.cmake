@@ -682,7 +682,7 @@ function(end_module_group)
     foreach(__module ${__modulelist})
         add_dependencies(${CURRENT_MODULE_GROUP} ${__module})
     endforeach()
-    unset(CURRENT_MODULE_GROUP PARENT_SCOPE)
+    set(CURRENT_MODULE_GROUP PARENT_SCOPE)
 endfunction()
 
 function(preprocess_file __in __out)
