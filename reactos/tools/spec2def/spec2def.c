@@ -567,8 +567,8 @@ OutputLine_def_MS(FILE *fileDest, EXPORT *pexp)
     {
         if (pexp->strName.buf[0] == '?')
         {
-            fprintf(stderr, "warning: ignoring C++ redirection %.*s -> %.*s\n",
-                    pexp->strName.len, pexp->strName.buf, pexp->strTarget.len, pexp->strTarget.buf);
+            //fprintf(stderr, "warning: ignoring C++ redirection %.*s -> %.*s\n",
+            //        pexp->strName.len, pexp->strName.buf, pexp->strTarget.len, pexp->strTarget.buf);
         }
         else
         {
