@@ -337,17 +337,52 @@ Done:
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressExW(IN PCWSTR AddressString,
-                          IN BOOLEAN Strict,
-                          OUT struct in_addr *Address,
-                          OUT PUSHORT Port)
+RtlIpv4StringToAddressExW(
+    _In_ PCWSTR AddressString,
+    _In_ BOOLEAN Strict,
+    _Out_ struct in_addr *Address,
+    _Out_ PUSHORT Port)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCWSTR CurrentChar;
+    ULONG ConvertedPort;
+    NTSTATUS Status;
+
+    if (!AddressString || !Address || !Port)
+        return STATUS_INVALID_PARAMETER;
+
+    Status = RtlIpv4StringToAddressW(AddressString,
+                                     Strict,
+                                     &CurrentChar,
+                                     Address);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (!*CurrentChar)
+    {
+        *Port = 0;
+        return STATUS_SUCCESS;
+    }
+
+    if (*CurrentChar != L':')
+        return STATUS_INVALID_PARAMETER;
+    ++CurrentChar;
+
+    Status = RtlpStringToUlong(CurrentChar,
+                               FALSE,
+                               &CurrentChar,
+                               &ConvertedPort);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (*CurrentChar || !ConvertedPort || ConvertedPort > 0xffff)
+        return STATUS_INVALID_PARAMETER;
+
+    *Port = WN2H(ConvertedPort);
+    return STATUS_SUCCESS;
 }
 
 /*
