@@ -229,9 +229,10 @@ function(set_module_type_toolchain MODULE TYPE)
     if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
-        add_target_link_flags(${MODULE} "/DRIVER")
+        # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
+        add_target_link_flags(${MODULE} "/DRIVER /IGNORE:4078")
     elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM")
+        add_target_link_flags(${MODULE} "/DRIVER:WDM /IGNORE:4078")
     endif()
 
     if(RUNTIME_CHECKS)
