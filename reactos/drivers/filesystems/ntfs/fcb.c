@@ -220,8 +220,7 @@ NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
         Fcb = CONTAINING_RECORD(current_entry, NTFS_FCB, FcbListEntry);
 
         DPRINT("Comparing '%S' and '%S'\n", FileName, Fcb->PathName);
-        if ((Fcb->Flags & FCB_IS_OPEN_BY_ID) != FCB_IS_OPEN_BY_ID &&
-            _wcsicmp(FileName, Fcb->PathName) == 0)
+        if (_wcsicmp(FileName, Fcb->PathName) == 0)
         {
             Fcb->RefCount++;
             KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
@@ -229,38 +228,6 @@ NtfsGrabFCBFromTable(PNTFS_VCB Vcb,
         }
 
         //FIXME: need to compare against short name in FCB here
-
-        current_entry = current_entry->Flink;
-    }
-
-    KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
-
-    return NULL;
-}
-
-
-PNTFS_FCB
-NtfsGrabFCBFromTableById(PNTFS_VCB Vcb,
-                         ULONGLONG Id)
-{
-    KIRQL oldIrql;
-    PNTFS_FCB Fcb;
-    PLIST_ENTRY current_entry;
-
-    KeAcquireSpinLock(&Vcb->FcbListLock, &oldIrql);
-
-    current_entry = Vcb->FcbListHead.Flink;
-    while (current_entry != &Vcb->FcbListHead)
-    {
-        Fcb = CONTAINING_RECORD(current_entry, NTFS_FCB, FcbListEntry);
-
-        if ((Fcb->Flags & FCB_IS_OPEN_BY_ID) == FCB_IS_OPEN_BY_ID &&
-            Fcb->MFTIndex == Id)
-        {
-            Fcb->RefCount++;
-            KeReleaseSpinLock(&Vcb->FcbListLock, oldIrql);
-            return Fcb;
-        }
 
         current_entry = current_entry->Flink;
     }
@@ -696,42 +663,6 @@ NtfsGetFCBForFile(PNTFS_VCB Vcb,
     return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-NtfsGetFCBForFileById(PNTFS_VCB Vcb,
-                      PNTFS_FCB *pFCB,
-                      ULONGLONG Id)
-{
-    NTSTATUS Status;
-    PFILE_RECORD_HEADER FileRecord;
-
-    FileRecord = ExAllocatePoolWithTag(NonPagedPool,
-                                       Vcb->NtfsInfo.BytesPerFileRecord,
-                                       TAG_NTFS);
-    if (FileRecord == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Status = ReadFileRecord(Vcb, Id, FileRecord);
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        return Status;
-    }
-
-    if ((FileRecord->Flags & FRH_IN_USE) != FRH_IN_USE)
-    {
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Status = NtfsMakeFCBFromDirEntry(Vcb, NULL, NULL, FileRecord, Id, pFCB);
-
-    ExFreePoolWithTag(FileRecord, TAG_NTFS);
-
-    return Status;
-}
 
 NTSTATUS
 NtfsReadFCBAttribute(PNTFS_VCB Vcb,

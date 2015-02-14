@@ -46,6 +46,18 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
     Fcb = pFileObject->FsContext;
     ASSERT(Fcb);
 
+    if (Fcb->Flags & FCB_IS_VOLUME)
+    {
+        /* This is likely to be an opening by ID, return ourselves */
+        if (pRelativeFileName[0] == L'\\')
+        {
+            *pAbsoluteFilename = NULL;
+            return STATUS_SUCCESS;
+        }
+
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* verify related object is a directory and target name
        don't start with \. */
     if (NtfsFCBIsDirectory(Fcb) == FALSE ||
@@ -72,6 +84,66 @@ NtfsMakeAbsoluteFilename(PFILE_OBJECT pFileObject,
 }
 
 
+static
+NTSTATUS
+NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
+               ULONGLONG Id,
+               PUNICODE_STRING OutPath)
+{
+    NTSTATUS Status;
+    PFILE_RECORD_HEADER MftRecord;
+    PFILENAME_ATTRIBUTE FileName;
+    WCHAR FullPath[MAX_PATH];
+    ULONG WritePosition = MAX_PATH - 1;
+
+    DPRINT1("NtfsMoonWalkID(%p, %I64x, %p)\n", DeviceExt, Id, OutPath);
+
+    Id = Id & NTFS_MFT_MASK;
+
+    RtlZeroMemory(FullPath, sizeof(FullPath));
+    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                      DeviceExt->NtfsInfo.BytesPerFileRecord,
+                                      TAG_NTFS);
+    if (MftRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    while (TRUE)
+    {
+        Status = ReadFileRecord(DeviceExt, Id, MftRecord);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
+
+        FileName = GetBestFileNameFromRecord(MftRecord);
+        WritePosition -= FileName->NameLength;
+        ASSERT(WritePosition < MAX_PATH);
+        RtlCopyMemory(FullPath + WritePosition, FileName->Name, FileName->NameLength * sizeof(WCHAR));
+        WritePosition -= 1;
+        ASSERT(WritePosition < MAX_PATH);
+        FullPath[WritePosition] = L'\\';
+
+        Id = FileName->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
+        if (Id == NTFS_FILE_ROOT)
+            break;
+    }
+
+    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+
+    OutPath->Length = (MAX_PATH - WritePosition - 1) * sizeof(WCHAR);
+    OutPath->MaximumLength = (MAX_PATH - WritePosition) * sizeof(WCHAR);
+    OutPath->Buffer = ExAllocatePoolWithTag(NonPagedPool, OutPath->MaximumLength, TAG_NTFS);
+    if (OutPath->Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlCopyMemory(OutPath->Buffer, FullPath + WritePosition, OutPath->MaximumLength);
+
+    return Status;
+}
+
 /*
  * FUNCTION: Opens a file
  */
@@ -80,7 +152,6 @@ NTSTATUS
 NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
              PFILE_OBJECT FileObject,
              PWSTR FileName,
-             BOOLEAN OpenById,
              PNTFS_FCB * FoundFCB)
 {
     PNTFS_FCB ParentFcb;
@@ -88,81 +159,53 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PWSTR AbsFileName = NULL;
 
-    DPRINT1("NtfsOpenFile(%p, %p, %S, %u, %p)\n", DeviceExt, FileObject, (!OpenById ? FileName : NULL), OpenById, FoundFCB);
+    DPRINT1("NtfsOpenFile(%p, %p, %S, %p)\n", DeviceExt, FileObject, FileName, FoundFCB);
 
     *FoundFCB = NULL;
 
-    if (OpenById)
+    if (FileObject->RelatedFileObject)
     {
-        ULONGLONG Id = (*(PULONGLONG)FileName) & NTFS_MFT_MASK;
+        DPRINT("Converting relative filename to absolute filename\n");
 
-        DPRINT1("Will attempt to open by id: %I64x\n", Id);
-
-        Fcb = NtfsGrabFCBFromTableById(DeviceExt,
-                                       Id);
-        if (Fcb == NULL)
+        Status = NtfsMakeAbsoluteFilename(FileObject->RelatedFileObject,
+                                          FileName,
+                                          &AbsFileName);
+        if (AbsFileName) FileName = AbsFileName;
+        if (!NT_SUCCESS(Status))
         {
-            Status = NtfsGetFCBForFileById(DeviceExt,
-                                           &Fcb,
-                                           Id);
-            if (!NT_SUCCESS (Status))
-            {
-                DPRINT("Could not make a new FCB, status: %x\n", Status);
-
-                return Status;
-            }
-
-            Fcb->Flags |= FCB_IS_OPEN_BY_ID;
+            return Status;
         }
     }
-    else
+
+    //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
+
+    DPRINT("PathName to open: %S\n", FileName);
+
+    /*  try first to find an existing FCB in memory  */
+    DPRINT("Checking for existing FCB in memory\n");
+    Fcb = NtfsGrabFCBFromTable(DeviceExt,
+                               FileName);
+    if (Fcb == NULL)
     {
-        if (FileObject->RelatedFileObject)
+        DPRINT("No existing FCB found, making a new one if file exists.\n");
+        Status = NtfsGetFCBForFile(DeviceExt,
+                                   &ParentFcb,
+                                   &Fcb,
+                                   FileName);
+        if (ParentFcb != NULL)
         {
-            DPRINT("Converting relative filename to absolute filename\n");
-
-            Status = NtfsMakeAbsoluteFilename(FileObject->RelatedFileObject,
-                                              FileName,
-                                              &AbsFileName);
-            FileName = AbsFileName;
-            if (!NT_SUCCESS(Status))
-            {
-                return Status;
-            }
-
-            return STATUS_UNSUCCESSFUL;
+            NtfsReleaseFCB(DeviceExt,
+                           ParentFcb);
         }
 
-        //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
-
-        DPRINT("PathName to open: %S\n", FileName);
-
-        /*  try first to find an existing FCB in memory  */
-        DPRINT("Checking for existing FCB in memory\n");
-        Fcb = NtfsGrabFCBFromTable(DeviceExt,
-                                   FileName);
-        if (Fcb == NULL)
+        if (!NT_SUCCESS (Status))
         {
-            DPRINT("No existing FCB found, making a new one if file exists.\n");
-            Status = NtfsGetFCBForFile(DeviceExt,
-                                       &ParentFcb,
-                                       &Fcb,
-                                       FileName);
-            if (ParentFcb != NULL)
-            {
-                NtfsReleaseFCB(DeviceExt,
-                               ParentFcb);
-            }
+            DPRINT("Could not make a new FCB, status: %x\n", Status);
 
-            if (!NT_SUCCESS (Status))
-            {
-                DPRINT("Could not make a new FCB, status: %x\n", Status);
+            if (AbsFileName)
+                ExFreePool(AbsFileName);
 
-                if (AbsFileName)
-                    ExFreePool(AbsFileName);
-
-                return Status;
-            }
+            return Status;
         }
     }
 
@@ -196,6 +239,7 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     PNTFS_FCB Fcb;
 //    PWSTR FileName;
     NTSTATUS Status;
+    UNICODE_STRING FullPath;
 
     DPRINT1("NtfsCreateFile(%p, %p) called\n", DeviceObject, Irp);
 
@@ -213,12 +257,6 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
-    {
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
-    }
-
     FileObject = Stack->FileObject;
 
     if (RequestedDisposition == FILE_CREATE ||
@@ -228,10 +266,18 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
         return STATUS_ACCESS_DENIED;
     }
 
-    if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID &&
-        FileObject->FileName.Length != sizeof(ULONGLONG))
+    if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID)
     {
-        return STATUS_INVALID_PARAMETER;
+        if (FileObject->FileName.Length != sizeof(ULONGLONG))
+            return STATUS_INVALID_PARAMETER;
+
+        Status = NtfsMoonWalkID(DeviceExt, (*(PULONGLONG)FileObject->FileName.Buffer), &FullPath);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        DPRINT1("Open by ID: %I64x -> %wZ\n", (*(PULONGLONG)FileObject->FileName.Buffer) & NTFS_MFT_MASK, &FullPath);
     }
 
     /* This a open operation for the volume itself */
@@ -258,9 +304,13 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
 
     Status = NtfsOpenFile(DeviceExt,
                           FileObject,
-                          FileObject->FileName.Buffer,
-                          ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID),
+                          ((RequestedOptions & FILE_OPEN_BY_FILE_ID) ? FullPath.Buffer : FileObject->FileName.Buffer),
                           &Fcb);
+
+    if (RequestedOptions & FILE_OPEN_BY_FILE_ID)
+    {
+        ExFreePoolWithTag(FullPath.Buffer, TAG_NTFS);
+    }
 
     if (NT_SUCCESS(Status))
     {
