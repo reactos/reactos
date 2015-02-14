@@ -476,7 +476,7 @@ Test_SetDIBitsToDevice()
     aulBits[3] = 0x000000FF;
 
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             0, // YDest,
@@ -491,16 +491,16 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 2);
-    ok_hex(pulDIB32Bits[0], 0x11000000);
-    ok_hex(pulDIB32Bits[1], 0x00000011);
-    ok_hex(pulDIB32Bits[2], 0x00000000);
-    ok_hex(pulDIB32Bits[3], 0x00000000);
-    ok_hex(pulDIB32Bits[4], 0xFF000000);
-    ok_hex(pulDIB32Bits[5], 0x000000FF);
-    ok_hex(pulDIB32Bits[6], 0x00000000);
-    ok_hex(pulDIB32Bits[7], 0x00000000);
+    ok_hex((*gpDIB32)[0][0], 0x11000000);
+    ok_hex((*gpDIB32)[0][1], 0x00000011);
+    ok_hex((*gpDIB32)[0][2], 0x00000000);
+    ok_hex((*gpDIB32)[0][3], 0x00000000);
+    ok_hex((*gpDIB32)[1][0], 0xFF000000);
+    ok_hex((*gpDIB32)[1][1], 0x000000FF);
+    ok_hex((*gpDIB32)[1][2], 0x00000000);
+    ok_hex((*gpDIB32)[1][3], 0x00000000);
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             1, // YDest,
@@ -515,20 +515,20 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 2);
-    ok_hex(pulDIB32Bits[0], 0x00000000);
-    ok_hex(pulDIB32Bits[1], 0x00000000);
-    ok_hex(pulDIB32Bits[2], 0x00000000);
-    ok_hex(pulDIB32Bits[3], 0x00000000);
-    ok_hex(pulDIB32Bits[4], 0x11000000);
-    ok_hex(pulDIB32Bits[5], 0x00000011);
-    ok_hex(pulDIB32Bits[6], 0x00000000);
-    ok_hex(pulDIB32Bits[7], 0x00000000);
-    ok_hex(pulDIB32Bits[8], 0xFF000000);
-    ok_hex(pulDIB32Bits[9], 0x000000FF);
-    ok_hex(pulDIB32Bits[10], 0x00000000);
-    ok_hex(pulDIB32Bits[11], 0x00000000);
+    ok_hex((*gpDIB32)[0][0], 0x00000000);
+    ok_hex((*gpDIB32)[0][1], 0x00000000);
+    ok_hex((*gpDIB32)[0][2], 0x00000000);
+    ok_hex((*gpDIB32)[0][3], 0x00000000);
+    ok_hex((*gpDIB32)[1][0], 0x11000000);
+    ok_hex((*gpDIB32)[1][1], 0x00000011);
+    ok_hex((*gpDIB32)[1][2], 0x00000000);
+    ok_hex((*gpDIB32)[1][3], 0x00000000);
+    ok_hex((*gpDIB32)[2][0], 0xFF000000);
+    ok_hex((*gpDIB32)[2][1], 0x000000FF);
+    ok_hex((*gpDIB32)[2][2], 0x00000000);
+    ok_hex((*gpDIB32)[2][3], 0x00000000);
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             0, // YDest,
@@ -543,17 +543,17 @@ Test_SetDIBitsToDevice()
                             DIB_RGB_COLORS);
 
     ok_dec(ret, 1);
-    todo_ros ok_hex(pulDIB32Bits[0], 0x00000000);
-    todo_ros ok_hex(pulDIB32Bits[1], 0x00000000);
-    ok_hex(pulDIB32Bits[2], 0x00000000);
-    ok_hex(pulDIB32Bits[3], 0x00000000);
-    todo_ros ok_hex(pulDIB32Bits[4], 0x11000000);
-    todo_ros ok_hex(pulDIB32Bits[5], 0x00000011);
-    ok_hex(pulDIB32Bits[6], 0x00000000);
-    ok_hex(pulDIB32Bits[7], 0x00000000);
+    todo_ros ok_hex((*gpDIB32)[0][0], 0x00000000);
+    todo_ros ok_hex((*gpDIB32)[0][1], 0x00000000);
+    ok_hex((*gpDIB32)[0][2], 0x00000000);
+    ok_hex((*gpDIB32)[0][3], 0x00000000);
+    todo_ros ok_hex((*gpDIB32)[1][0], 0x11000000);
+    todo_ros ok_hex((*gpDIB32)[1][1], 0x00000011);
+    ok_hex((*gpDIB32)[1][2], 0x00000000);
+    ok_hex((*gpDIB32)[1][3], 0x00000000);
+#if 0
 
-
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             0, // YDest,
@@ -582,7 +582,7 @@ Test_SetDIBitsToDevice()
     /* Use bottom-up bitmap */
     pbmi->bmiHeader.biHeight = 2;
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             0, // YDest,
@@ -606,7 +606,7 @@ Test_SetDIBitsToDevice()
     ok_hex(pulDIB32Bits[6], 0x00000000);
     ok_hex(pulDIB32Bits[7], 0x00000000);
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             1, // YDest,
@@ -634,7 +634,7 @@ Test_SetDIBitsToDevice()
     ok_hex(pulDIB32Bits[10], 0x00000000);
     ok_hex(pulDIB32Bits[11], 0x00000000);
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             0, // YDest,
@@ -659,7 +659,7 @@ Test_SetDIBitsToDevice()
     ok_hex(pulDIB32Bits[7], 0x00000000);
 
 
-    memset(pulDIB32Bits, 0, 4 * 4 * sizeof(ULONG));
+    memset(gpDIB32, 0, sizeof(*gpDIB32));
     ret = SetDIBitsToDevice(ghdcDIB32,
                             0, // XDest,
                             0, // YDest,
@@ -682,7 +682,7 @@ Test_SetDIBitsToDevice()
     todo_ros ok_hex(pulDIB32Bits[5], 0x00000000);
     ok_hex(pulDIB32Bits[6], 0x00000000);
     ok_hex(pulDIB32Bits[7], 0x00000000);
-
+#endif
 }
 
 

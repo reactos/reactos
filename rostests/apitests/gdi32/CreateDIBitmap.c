@@ -462,12 +462,12 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
     ok(hbmpOld != NULL, "Couldn't select the bitmap.\n");
 
     /* Copy it on a dib section */
-    memset(pulDIB32Bits, 0x77, 64);
+    memset(gpDIB32, 0x77, sizeof(*gpDIB32));
     ok_long(BitBlt(ghdcDIB32, 0, 0, 4, 4, hdc, 0, 0, SRCCOPY), 1);
-    ok_long(pulDIB32Bits[0], 0x20100);
-    ok_long(pulDIB32Bits[1], 0x20100);
-    ok_long(pulDIB32Bits[2], 0x20100);
-    ok_long(pulDIB32Bits[3], 0x20100);
+    ok_long((*gpDIB32)[0][0], 0x20100);
+    ok_long((*gpDIB32)[0][1], 0x20100);
+    ok_long((*gpDIB32)[0][2], 0x20100);
+    ok_long((*gpDIB32)[0][3], 0x20100);
 
     SelectObject(hdc, hbmpOld);
     DeleteObject(hbmp);
@@ -501,12 +501,12 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
     ok(hbmpOld != NULL, "Couldn't select the bitmap.\n");
 
     /* Copy it on a dib section */
-    memset(pulDIB32Bits, 0x77, 64);
+    memset(gpDIB32, 0x77, sizeof(*gpDIB32));
     ok_long(BitBlt(ghdcDIB32, 0, 0, 4, 4, hdc, 0, 0, SRCCOPY), 1);
-    ok_long(pulDIB32Bits[0], 0);
-    ok_long(pulDIB32Bits[1], 0);
-    ok_long(pulDIB32Bits[2], 0);
-    ok_long(pulDIB32Bits[3], 0);
+    ok_long((*gpDIB32)[0][0], 0);
+    ok_long((*gpDIB32)[0][1], 0);
+    ok_long((*gpDIB32)[0][2], 0);
+    ok_long((*gpDIB32)[0][3], 0);
 
     SelectObject(hdc, hbmpOld);
     DeleteObject(hbmp);

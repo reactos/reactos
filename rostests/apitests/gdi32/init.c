@@ -5,11 +5,10 @@
 #include "init.h"
 
 HBITMAP ghbmp1, ghbmp4, ghbmp8, ghbmp16, ghbmp24, ghbmp32;
-HDC ghdcBmp1, ghdcBmp4, ghdcBmp8, ghdcBmp16, ghdcBmp24, ghdcBmp32;
 HBITMAP ghbmpDIB1, ghbmpDIB4, ghbmpDIB8, ghbmpDIB16, ghbmpDIB24, ghbmpDIB32;
 HDC ghdcDIB1, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
 PVOID gpvDIB1, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
-PULONG pulDIB32Bits;
+ULONG (*gpDIB32)[8][8];
 PULONG pulDIB4Bits;
 HPALETTE ghpal;
 
@@ -33,7 +32,6 @@ InitPerBitDepth(
     _In_ ULONG cBitsPerPixel,
     _In_ ULONG cx,
     _In_ ULONG cy,
-    _Out_ HDC *phdcBmp,
     _Out_ HBITMAP *phbmp,
     _Out_ HDC *phdcDIB,
     _Out_ HBITMAP *phbmpDIB,
@@ -46,14 +44,6 @@ InitPerBitDepth(
     } bmiBuffer;
     LPBITMAPINFO pbmi = (LPBITMAPINFO)&bmiBuffer;
 
-    /* Create a compatible DC for the bitmap */
-    *phdcBmp = CreateCompatibleDC(0);
-    if (*phdcBmp == NULL)
-    {
-        printf("CreateCompatibleDC failed for %lu bpp\n", cBitsPerPixel);
-        return FALSE;
-    }
-
     /* Create a bitmap */
     *phbmp = CreateBitmap(cx, cy, 1, cBitsPerPixel, NULL);
     if (*phbmp == NULL)
@@ -62,16 +52,19 @@ InitPerBitDepth(
         return FALSE;
     }
 
-    SelectObject(*phdcBmp, *phbmp);
-
-    /* Get info about the bitmap */
+    /* Setup bitmap info */
     memset(&bmiBuffer, 0, sizeof(bmiBuffer));
     pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    if (!GetDIBits(*phdcBmp, *phbmp, 0, 1, NULL, pbmi, DIB_RGB_COLORS))
-    {
-        printf("GetDIBits failed %lu\n", cBitsPerPixel);
-        return FALSE;
-    }
+    pbmi->bmiHeader.biWidth = cx;
+    pbmi->bmiHeader.biHeight = -(LONG)cy;
+    pbmi->bmiHeader.biPlanes = 1;
+    pbmi->bmiHeader.biBitCount = cBitsPerPixel;
+    pbmi->bmiHeader.biCompression = BI_RGB;
+    pbmi->bmiHeader.biSizeImage = 0;
+    pbmi->bmiHeader.biXPelsPerMeter = 0;
+    pbmi->bmiHeader.biYPelsPerMeter = 0;
+    pbmi->bmiHeader.biClrUsed = 0;
+    pbmi->bmiHeader.biClrImportant = 0;
 
     /* Create a compatible DC for the DIB */
     *phdcDIB = CreateCompatibleDC(0);
@@ -80,9 +73,6 @@ InitPerBitDepth(
         printf("CreateCompatibleDC failed %lu\n", cBitsPerPixel);
         return FALSE;
     }
-
-    pbmi->bmiHeader.biCompression = BI_RGB;
-    pbmi->bmiHeader.biHeight = -pbmi->bmiHeader.biHeight;
 
     /* Create the DIB section with the same values */
     *phbmpDIB = CreateDIBSection(*phdcDIB, pbmi, DIB_RGB_COLORS, ppvBits, 0, 0 );
@@ -108,18 +98,18 @@ BOOL InitStuff(void)
         return FALSE;
     }
 
-    if (!InitPerBitDepth(1, 9, 9, &ghdcBmp1, &ghbmp1, &ghdcDIB1, &ghbmpDIB1, &gpvDIB1) ||
-        !InitPerBitDepth(4, 5, 5, &ghdcBmp4, &ghbmp4, &ghdcDIB4, &ghbmpDIB4, &gpvDIB4) ||
-        !InitPerBitDepth(8, 5, 5, &ghdcBmp8, &ghbmp8, &ghdcDIB8, &ghbmpDIB8, &gpvDIB8) ||
-        !InitPerBitDepth(16, 5, 5, &ghdcBmp16, &ghbmp16, &ghdcDIB16, &ghbmpDIB16, &gpvDIB16) ||
-        !InitPerBitDepth(24, 5, 5, &ghdcBmp24, &ghbmp24, &ghdcDIB24, &ghbmpDIB24, &gpvDIB24) ||
-        !InitPerBitDepth(32, 4, 4, &ghdcBmp32, &ghbmp32, &ghdcDIB32, &ghbmpDIB32, &gpvDIB32))
+    if (!InitPerBitDepth(1, 9, 9, &ghbmp1, &ghdcDIB1, &ghbmpDIB1, &gpvDIB1) ||
+        !InitPerBitDepth(4, 5, 5, &ghbmp4, &ghdcDIB4, &ghbmpDIB4, &gpvDIB4) ||
+        !InitPerBitDepth(8, 5, 5, &ghbmp8, &ghdcDIB8, &ghbmpDIB8, &gpvDIB8) ||
+        !InitPerBitDepth(16, 8, 8, &ghbmp16, &ghdcDIB16, &ghbmpDIB16, &gpvDIB16) ||
+        !InitPerBitDepth(24, 8, 8, &ghbmp24, &ghdcDIB24, &ghbmpDIB24, &gpvDIB24) ||
+        !InitPerBitDepth(32, 8, 8, &ghbmp32, &ghdcDIB32, &ghbmpDIB32, &gpvDIB32))
     {
         printf("failed to create objects \n");
         return FALSE;
     }
 
-    pulDIB32Bits = gpvDIB32;
+    gpDIB32 = gpvDIB32;
     pulDIB4Bits = gpvDIB4;
 
     return TRUE;
