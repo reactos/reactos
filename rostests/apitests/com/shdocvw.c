@@ -62,6 +62,12 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     },
 #endif
     {
+        ID_NAME(CLSID_MruLongList),
+        {
+            {    0x0,   &IID_IUnknown },
+        }
+    },
+    {
         ID_NAME(CLSID_TaskbarList),
         {
             {    0x0,   &IID_ITaskbarList2 },

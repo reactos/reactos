@@ -13,6 +13,17 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_ControlPanel),
+        {
+            {    0x0,   &IID_IUnknown },
+            {   0x10,   &IID_IPersistFolder2 },
+            {   0x10,       &IID_IPersistFolder },
+            {   0x10,           &IID_IPersist },
+            {   0xbc,   &IID_IShellFolder2 },
+            {   0xbc,       &IID_IShellFolder },
+        }
+    },
+    {
         ID_NAME(CLSID_CopyToMenu),
         {
             {    0x0,   &IID_IContextMenu3 },
@@ -237,6 +248,46 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_MyComputer),
+        {
+            {    0x0,   &IID_IUnknown },
+            {   0x10,   &IID_IPersistFolder2 },
+            {   0x10,       &IID_IPersistFolder },
+            {   0x10,           &IID_IPersist },
+            {   0x64,   &IID_IShellFolder2 },
+            {   0x64,       &IID_IShellFolder },
+        }
+    },
+    {
+        ID_NAME(CLSID_MyDocuments),
+        {
+            {   -0x4,   &IID_IPersistFolder },
+            {   -0x4,       &IID_IPersist },
+            {    0x0,   &IID_IShellFolder2 },
+            {    0x0,       &IID_IShellFolder },
+            {    0x0,           &IID_IUnknown },
+            {   0x70,   &IID_IShellIcon },
+            {   0x78,   &IID_IPersistFolder3 },
+            {   0x78,       &IID_IPersistFolder2 },
+            {   0x7c,   &IID_IStorage },
+            {   0x8c,   &IID_IContextMenuCB },
+            {   0x94,   &IID_IOleCommandTarget },
+            
+        }
+    },
+    {
+        ID_NAME(CLSID_NetworkPlaces),
+        {
+            {    0x0,   &IID_IUnknown },
+            {   0x10,   &IID_IPersistFolder3 },
+            {   0x10,       &IID_IPersistFolder2 },
+            {   0x10,           &IID_IPersistFolder },
+            {   0x10,               &IID_IPersist },
+            {   0xcc,   &IID_IShellFolder2 },
+            {   0xcc,       &IID_IShellFolder },
+        }
+    },
+    {
         ID_NAME(CLSID_NewMenu),
         {
             {   -0xc,   &IID_IObjectWithSite },
@@ -270,6 +321,25 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_Printers),
+        {
+            {    0x0,   &IID_IShellFolder2 },
+            {    0x0,       &IID_IShellFolder },
+            {    0x0,           &IID_IUnknown },
+            {    0x4,   &IID_IPersistFolder2 },
+            {    0x4,       &IID_IPersistFolder },
+            {    0x4,           &IID_IPersist },
+            {    0x8,   &IID_IContextMenuCB },
+        }
+    },
+    {
+        ID_NAME(CLSID_QueryAssociations),
+        {
+            {    0x0,   &IID_IUnknown },
+            {    0x8,   &IID_IQueryAssociations },
+        }
+    },
+    {
         ID_NAME(CLSID_QuickLinks),
         {
             {  -0xac,   &IID_IDeskBand },
@@ -288,6 +358,20 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IShellFolderBand },
             {    0x0,       &IID_IUnknown },
             {   0x94,   &IID_IFolderBandPriv },
+        }
+    },
+    {
+        ID_NAME(CLSID_RecycleBin),
+        {
+            {    0x0,   &IID_IPersistFolder2 },
+            {    0x0,       &IID_IPersistFolder },
+            //{    0x0,           &IID_IPersist },
+            {    0x0,           &IID_IUnknown },
+            {    0x4,   &IID_IShellFolder2 },
+            {    0x4,       &IID_IShellFolder },
+            {    0x8,   &IID_IContextMenu },
+            {    0xc,   &IID_IShellPropSheetExt },
+            {   0x10,   &IID_IShellExtInit },
         }
     },
     {

@@ -22,6 +22,17 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_ACListISF),
+        {
+            {    0x0,   &IID_IEnumString },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IACList2 },
+            {    0x4,       &IID_IACList },
+            {    0xc,   &IID_IShellService },
+            {   0x10,   &IID_IPersistFolder },
+        }
+    },
+    {
         ID_NAME(CLSID_AddressEditBox),
         {
             {    0x0,   &IID_IWinEventHandler },
@@ -54,6 +65,17 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x4,   &IID_IShellFolder2 },
             {    0x8,   &IID_IShellService },
             {   0x10,   &IID_IDropTarget },
+        }
+    },
+    {
+        ID_NAME(CLSID_AutoComplete),
+        {
+            {    0x0,   &IID_IAutoComplete2 },
+            {    0x0,       &IID_IAutoComplete },
+            {    0x0,           &IID_IUnknown },
+            {    0x8,   &IID_IEnumString },
+            {    0xc,   &IID_IAccessible },
+            {    0xc,       &IID_IDispatch },
         }
     },
     {
