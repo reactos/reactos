@@ -529,6 +529,8 @@ GetAdaptersAddresses(
                     {
                         if (CurrentAA->IfIndex == AddrEntries[j].iae_index)
                             break;
+
+                        CurrentAA = CurrentAA->Next;
                     }
 
                     if (!CurrentAA)
