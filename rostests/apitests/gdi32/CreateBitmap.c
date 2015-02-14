@@ -76,12 +76,13 @@ void Test_CreateBitmap_Params()
     ok_err(0);
 
     /* Check for overflow in width * height */
-    hbmp = CreateBitmap(0x20000, 0x1FFFF, 1, 1, NULL);
-    //ok(hbmp != 0, "\n"); // fails on windows 2003
+    hbmp = CreateBitmap(0x2000, 0x4000, 1, 1, NULL); //128 MB.Should work.
+    ok(hbmp != 0, "\n");
     DeleteObject(hbmp);
 
+    /* XP doesn't allow to create bitmaps larger than 128 Mb */
     SetLastError(0);
-    hbmp = CreateBitmap(0x20000, 0x20000, 1, 1, NULL);
+    hbmp = CreateBitmap(0x2000, 0x4001, 1, 1, NULL);//More than 128MB.Should fail.
     ok(hbmp == 0, "\n");
     ok_err(0);
 
@@ -98,6 +99,7 @@ void Test_CreateBitmap()
     HBITMAP hbmp;
     BITMAP bitmap;
     ULONG cjWidthBytes, cBitsPixel, cExpectedBitsPixel;
+    int result, TestBitsPixel, ExpectedBitsPixel;
 
     hbmp = CreateBitmap(0, 0, 0, 0, NULL);
     ok(hbmp != 0, "should get a 1x1 bitmap\n");
@@ -111,6 +113,36 @@ void Test_CreateBitmap()
     ok_int(bitmap.bmBitsPixel, 1);
     ok_ptr(bitmap.bmBits, 0);
     DeleteObject(hbmp);
+
+    /* Above 32 bpp should fail */
+    hbmp = CreateBitmap(1, 2, 1, 33, NULL);
+    ok(hbmp == 0, "should fail\n");
+
+    for (TestBitsPixel = 0; TestBitsPixel <= 32; TestBitsPixel++)
+    {
+        /* CreateBitmap API accepts any number as BitsPixels param.
+           but it can only create 1, 4, 8, 16, 24, 32 bpp bitmaps */
+        if (TestBitsPixel <= 1)      ExpectedBitsPixel = 1;
+        else if(TestBitsPixel <= 4)  ExpectedBitsPixel = 4;
+        else if(TestBitsPixel <= 8)  ExpectedBitsPixel = 8;
+        else if(TestBitsPixel <= 16) ExpectedBitsPixel = 16;
+        else if(TestBitsPixel <= 24) ExpectedBitsPixel = 24;
+        else if(TestBitsPixel <= 32) ExpectedBitsPixel = 32;
+
+        /* Calculate proper bmWidthBytes */
+
+        hbmp = CreateBitmap(1, 2, 1, TestBitsPixel, NULL);
+        ok(hbmp != 0, "should get a 1x2 bitmap\n");
+        result = GetObject(hbmp, sizeof(bitmap), &bitmap);
+        ok(result > 0, "result = %d\n", result);
+        ok(bitmap.bmType == 0, "bmType = %ld\n", bitmap.bmType);
+        ok(bitmap.bmWidth == 1, "bmWidth = %ld\n", bitmap.bmWidth);
+        ok(bitmap.bmHeight == 2, "bmHeight = %ld\n", bitmap.bmHeight);
+        ok(bitmap.bmPlanes == 1, "bmPlanes = %d\n", bitmap.bmPlanes);
+        ok(bitmap.bmBitsPixel == ExpectedBitsPixel, "bmBitsPixel = %d ExpectedBitsPixel= %d \n", bitmap.bmBitsPixel, ExpectedBitsPixel);
+        ok(bitmap.bmBits == 0, "bmBits = %p\n", bitmap.bmBits);
+        DeleteObject(hbmp);
+    }
 
     hbmp = CreateBitmap(1, 2, 1, 1, NULL);
     ok(hbmp != 0, "should get a 1x2 bitmap\n");
@@ -162,7 +194,7 @@ void Test_CreateBitmap()
 
 START_TEST(CreateBitmap)
 {
-    //Test_CreateBitmap_Params();
+    Test_CreateBitmap_Params();
     Test_CreateBitmap();
 
 }
