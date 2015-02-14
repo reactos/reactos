@@ -90,7 +90,7 @@ CheckBitmapBitsWithLine(
         {
             i = y * cx + x;
             ok(GetPixel(hdc, x, y) == pcrColors[pjBits[i]],
-               "Wrong pixel at (%u,%u): expected 0x%08x, got 0x%08x\n",
+               "Wrong pixel at (%u,%u): expected 0x%08lx, got 0x%08lx\n",
                x, y, pcrColors[pjBits[i]], GetPixel(hdc, x, y));
         }
     }
