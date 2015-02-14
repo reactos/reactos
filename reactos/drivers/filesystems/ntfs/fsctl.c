@@ -168,6 +168,28 @@ ByeBye:
 
 
 static
+ULONG
+NtfsQueryMftZoneReservation(VOID)
+{
+    ULONG ZoneReservation = 1;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = L"NtfsMftZoneReservation";
+    QueryTable[0].EntryContext = &ZoneReservation;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                           L"FileSystem",
+                           QueryTable,
+                           NULL,
+                           NULL);
+
+    return ZoneReservation;
+}
+
+
+static
 NTSTATUS
 NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                   PDEVICE_EXTENSION DeviceExt)
@@ -361,6 +383,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     }
 
     ExFreePool(VolumeRecord);
+
+    NtfsInfo->MftZoneReservation = NtfsQueryMftZoneReservation();
 
     return Status;
 }

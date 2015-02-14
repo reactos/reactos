@@ -75,6 +75,7 @@ typedef struct _NTFS_INFO
     UCHAR MinorVersion;
     USHORT Flags;
 
+    ULONG MftZoneReservation;
 } NTFS_INFO, *PNTFS_INFO;
 
 #define NTFS_TYPE_CCB         '20SF'
