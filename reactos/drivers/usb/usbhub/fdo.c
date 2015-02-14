@@ -210,7 +210,7 @@ DeviceStatusChangeThread(
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PWORK_ITEM_DATA WorkItemData;
     PORT_STATUS_CHANGE PortStatus;
-    LONG PortId;
+    ULONG PortId;
     BOOLEAN SignalResetComplete = FALSE;
 
     DPRINT("Entered DeviceStatusChangeThread, Context %x\n", Context);

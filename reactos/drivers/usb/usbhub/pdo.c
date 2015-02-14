@@ -307,7 +307,7 @@ USBHUB_PdoHandleInternalDeviceControl(
         case IOCTL_INTERNAL_USB_GET_PORT_STATUS:
         {
             PORT_STATUS_CHANGE PortStatus;
-            LONG PortId;
+            ULONG PortId;
             PUCHAR PortStatusBits;
 
             PortStatusBits = (PUCHAR)Stack->Parameters.Others.Argument1;

@@ -28,7 +28,7 @@
  * 1. via "Device Specific (D-State) Control"
  * 2. via "Power Resource Control".
  * This module is used to manage devices relying on Power Resource Control.
- * 
+ *
  * An ACPI "power resource object" describes a software controllable power
  * plane, clock plane, or other resource used by a power managed device.
  * A device may rely on multiple power resources, and a power resource
@@ -37,7 +37,7 @@
 
 /*
  * Modified for ReactOS and latest ACPICA
- * Copyright (C)2009  Samuel Serapion 
+ * Copyright (C)2009  Samuel Serapion
  */
 
 #include <precomp.h>
@@ -346,13 +346,14 @@ int acpi_device_sleep_wake(struct acpi_device *dev,
 
 /*
  * Prepare a wakeup device, two steps (Ref ACPI 2.0:P229):
- * 1. Power on the power resources required for the wakeup device 
+ * 1. Power on the power resources required for the wakeup device
  * 2. Execute _DSW (Device Sleep Wake) or (deprecated in ACPI 3.0) _PSW (Power
  *    State Wake) for the device, if present
  */
 int acpi_enable_wakeup_device_power(struct acpi_device *dev, int sleep_state)
 {
-	int i, err = 0;
+	unsigned int i;
+	int err = 0;
 
 	if (!dev || !dev->wakeup.flags.valid)
 		return -1;
@@ -396,7 +397,8 @@ int acpi_enable_wakeup_device_power(struct acpi_device *dev, int sleep_state)
  */
 int acpi_disable_wakeup_device_power(struct acpi_device *dev)
 {
-	int i, err = 0;
+	unsigned int i;
+	int err = 0;
 
 	if (!dev || !dev->wakeup.flags.valid)
 		return -1;
@@ -486,7 +488,7 @@ acpi_power_transition (
 	int			result = 0;
 	struct acpi_handle_list	*cl = NULL;	/* Current Resources */
 	struct acpi_handle_list	*tl = NULL;	/* Target Resources */
-	int			i = 0;
+	unsigned int	i = 0;
 
 	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3))
 		return_VALUE(-1);
@@ -589,14 +591,14 @@ acpi_power_add (
 		break;
 	}
 
-	
+
 	DPRINT("%s [%s] (%s)\n", acpi_device_name(device),
 		acpi_device_bid(device), state?"on":"off");
 
 end:
 	if (result)
 		ExFreePool(resource);
-	
+
 	return result;
 }
 
@@ -654,7 +656,7 @@ static int acpi_power_resume(struct acpi_device *device, int state)
 	return 0;
 }
 
-int 
+int
 acpi_power_init (void)
 {
 	int			result = 0;

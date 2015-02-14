@@ -40,7 +40,7 @@ USBSTOR_FdoHandleDeviceRelations(
     IN OUT PIRP Irp)
 {
     ULONG DeviceCount = 0;
-    ULONG Index;
+    LONG Index;
     PDEVICE_RELATIONS DeviceRelations;
     PIO_STACK_LOCATION IoStack;
 
@@ -63,7 +63,7 @@ USBSTOR_FdoHandleDeviceRelations(
     //
     // go through array and count device objects
     //
-    for(Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
+    for (Index = 0; Index < max(DeviceExtension->MaxLUN, 1); Index++)
     {
         if (DeviceExtension->ChildPDO[Index])
         {
@@ -391,7 +391,7 @@ USBSTOR_FdoHandlePnp(
        case IRP_MN_QUERY_CAPABILITIES:
        {
            //
-           // FIXME: set custom capabilities 
+           // FIXME: set custom capabilities
            //
            IoSkipCurrentIrpStackLocation(Irp);
            return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
