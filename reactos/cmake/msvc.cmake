@@ -35,11 +35,11 @@ endif ()
 
 # Disable overly sensitive warnings as well as those that generally aren't
 # useful to us.
-# - TODO: C4018: signed/unsigned mismatch
 # - C4244: implicit integer truncation
 # - C4290: C++ exception specification ignored
-#add_compile_flags("/wd4018 /wd4244 /wd4290")
-add_compile_flags("/wd4290 /wd4244")
+# - C4800: forcing value to bool 'true' or 'false' (performance warning)
+#add_compile_flags("/wd4244 /wd4290 /wd4800 ")
+add_compile_flags("/wd4244 /wd4290 /wd4800")
 
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
