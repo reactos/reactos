@@ -483,10 +483,9 @@ cleanup:
         HeapFree(GetProcessHeap(), 0, Session->Profile);
     }
     Session->Profile = NULL;
-    if (!ret
-     && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
+    if (!ret && ProfileInfo.hProfile != INVALID_HANDLE_VALUE)
     {
-        UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
+        UnloadUserProfile(Session->UserToken, ProfileInfo.hProfile);
     }
     RemoveStatusMessage(Session);
     if (!ret)
@@ -494,6 +493,13 @@ cleanup:
         CloseHandle(Session->UserToken);
         Session->UserToken = NULL;
     }
+
+    if (ret)
+    {
+        SwitchDesktop(Session->ApplicationDesktop);
+        Session->LogonState = STATE_LOGGED_ON;
+    }
+
     return ret;
 }
 
@@ -504,6 +510,7 @@ WINAPI
 LogoffShutdownThread(
     LPVOID Parameter)
 {
+    DWORD ret = 1;
     PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
     UINT uFlags;
 
@@ -530,14 +537,13 @@ LogoffShutdownThread(
     if (!ExitWindowsEx(uFlags, 0))
     {
         ERR("Unable to kill user apps, error %lu\n", GetLastError());
-        RevertToSelf();
-        return 0;
+        ret = 0;
     }
 
     if (LSData->Session->UserToken)
         RevertToSelf();
 
-    return 1;
+    return ret;
 }
 
 static
@@ -546,6 +552,7 @@ WINAPI
 KillComProcesses(
     LPVOID Parameter)
 {
+    DWORD ret = 1;
     PLOGOFF_SHUTDOWN_DATA LSData = (PLOGOFF_SHUTDOWN_DATA)Parameter;
 
     ERR("In KillComProcesses\n");
@@ -561,14 +568,13 @@ KillComProcesses(
     if (!ExitWindowsEx(EWX_CALLER_WINLOGON | EWX_NONOTIFY | EWX_FORCE | EWX_LOGOFF, 0))
     {
         ERR("Unable to kill COM apps, error %lu\n", GetLastError());
-        RevertToSelf();
-        return 0;
+        ret = 0;
     }
 
     if (LSData->Session->UserToken)
         RevertToSelf();
 
-    return 1;
+    return ret;
 }
 
 static
@@ -709,8 +715,6 @@ HandleLogoff(
     DWORD exitCode;
     NTSTATUS Status;
 
-    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
-
     /* Prepare data for logoff thread */
     LSData = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGOFF_SHUTDOWN_DATA));
     if (!LSData)
@@ -729,10 +733,8 @@ HandleLogoff(
         return Status;
     }
 
-
     /* Run logoff thread */
     hThread = CreateThread(psa, 0, LogoffShutdownThread, (LPVOID)LSData, 0, NULL);
-
     if (!hThread)
     {
         ERR("Unable to create logoff thread, error %lu\n", GetLastError());
@@ -758,35 +760,28 @@ HandleLogoff(
         return STATUS_UNSUCCESSFUL;
     }
 
+    SwitchDesktop(Session->WinlogonDesktop);
+
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_LOGGINGOFF);
+
+    // FIXME: Closing network connections!
+    // DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_CLOSINGNETWORKCONNECTIONS);
 
     /* Kill remaining COM apps. Only at logoff! */
     hThread = CreateThread(psa, 0, KillComProcesses, (LPVOID)LSData, 0, NULL);
+    if (hThread)
+    {
+        WaitForSingleObject(hThread, INFINITE);
+        CloseHandle(hThread);
+    }
 
     /* We're done with the SECURITY_DESCRIPTOR */
     DestroyLogoffSecurityAttributes(psa);
     psa = NULL;
 
-    if (!hThread)
-    {
-        ERR("Unable to create kill COM apps thread, error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, LSData);
-        return STATUS_UNSUCCESSFUL;
-    }
-    WaitForSingleObject(hThread, INFINITE);
     HeapFree(GetProcessHeap(), 0, LSData);
-    if (!GetExitCodeThread(hThread, &exitCode))
-    {
-        ERR("Unable to get exit code of kill COM apps thread (error %lu)\n", GetLastError());
-        CloseHandle(hThread);
-        return STATUS_UNSUCCESSFUL;
-    }
-    CloseHandle(hThread);
-    if (exitCode == 0)
-    {
-        ERR("Kill COM apps thread returned failure\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
+    DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_SAVEYOURSETTINGS);
 
     UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
     CloseHandle(Session->UserToken);
@@ -854,6 +849,7 @@ HandleShutdown(
     DWORD exitCode;
     BOOLEAN Old;
 
+    // SwitchDesktop(Session->WinlogonDesktop);
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_REACTOSISSHUTTINGDOWN);
 
     /* Prepare data for shutdown thread */
@@ -905,13 +901,16 @@ HandleShutdown(
     FIXME("FIXME: Call SMSS API #1\n");
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
+    {
         NtShutdownSystem(ShutdownReboot);
+    }
     else
     {
         if (FALSE)
         {
             /* FIXME - only show this dialog if it's a shutdown and the computer doesn't support APM */
-            DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER), GetDesktopWindow(), ShutdownComputerWindowProc);
+            DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_SHUTDOWNCOMPUTER),
+                      GetDesktopWindow(), ShutdownComputerWindowProc);
         }
         NtShutdownSystem(ShutdownNoReboot);
     }
@@ -930,12 +929,7 @@ DoGenericAction(
         case WLX_SAS_ACTION_LOGON: /* 0x01 */
             if (Session->LogonState == STATE_LOGGED_OFF_SAS)
             {
-                if (HandleLogon(Session))
-                {
-                    SwitchDesktop(Session->ApplicationDesktop);
-                    Session->LogonState = STATE_LOGGED_ON;
-                }
-                else
+                if (!HandleLogon(Session))
                 {
                     Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
                 }
@@ -960,7 +954,7 @@ DoGenericAction(
         case WLX_SAS_ACTION_LOCK_WKSTA: /* 0x03 */
             if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
             {
-                SwitchDesktop(WLSession->WinlogonDesktop);
+                SwitchDesktop(Session->WinlogonDesktop);
                 Session->LogonState = STATE_LOCKED;
                 Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
             }
@@ -973,16 +967,17 @@ DoGenericAction(
             {
                 if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
                     break;
-                SwitchDesktop(WLSession->WinlogonDesktop);
-                Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
                 if (!NT_SUCCESS(HandleLogoff(Session, EWX_LOGOFF)))
                 {
                     RemoveStatusMessage(Session);
                     break;
                 }
+                Session->Gina.Functions.WlxLogoff(Session->Gina.Context);
             }
             if (WLX_SHUTTINGDOWN(wlxAction))
             {
+                // FIXME: WlxShutdown should be done from inside HandleShutdown,
+                // after having displayed "ReactOS is shutting down" message.
                 Session->Gina.Functions.WlxShutdown(Session->Gina.Context, wlxAction);
                 if (!NT_SUCCESS(HandleShutdown(Session, wlxAction)))
                 {
@@ -997,12 +992,12 @@ DoGenericAction(
             }
             break;
         case WLX_SAS_ACTION_TASKLIST: /* 0x07 */
-            SwitchDesktop(WLSession->ApplicationDesktop);
+            SwitchDesktop(Session->ApplicationDesktop);
             Session->LogonState = STATE_LOGGED_ON;
             StartTaskManager(Session);
             break;
         case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
-            SwitchDesktop(WLSession->ApplicationDesktop);
+            SwitchDesktop(Session->ApplicationDesktop);
             Session->LogonState = STATE_LOGGED_ON;
             break;
         default:

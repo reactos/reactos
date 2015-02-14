@@ -90,7 +90,7 @@ extern "C" {
 // Definitions used by WM_CLIENTSHUTDOWN
 //
 // Client Shutdown messages
-#define MCS_SHUTDOWNTIMERS  1
+#define MCS_ENDSESSION      1
 #define MCS_QUERYENDSESSION 2
 // Client Shutdown returns
 #define MCSR_GOODFORSHUTDOWN  1
