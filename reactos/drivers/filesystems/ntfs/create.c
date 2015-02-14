@@ -116,6 +116,11 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
             break;
 
         ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
+        if (!(MftRecord->Flags & FRH_IN_USE))
+        {
+            Status = STATUS_OBJECT_PATH_NOT_FOUND;
+            break;
+        }
 
         FileName = GetBestFileNameFromRecord(MftRecord);
         WritePosition -= FileName->NameLength;
@@ -131,6 +136,9 @@ NtfsMoonWalkID(PDEVICE_EXTENSION DeviceExt,
     }
 
     ExFreePoolWithTag(MftRecord, TAG_NTFS);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     OutPath->Length = (MAX_PATH - WritePosition - 1) * sizeof(WCHAR);
     OutPath->MaximumLength = (MAX_PATH - WritePosition) * sizeof(WCHAR);
