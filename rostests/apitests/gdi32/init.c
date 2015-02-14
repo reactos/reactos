@@ -9,7 +9,6 @@ HBITMAP ghbmpDIB1, ghbmpDIB4, ghbmpDIB8, ghbmpDIB16, ghbmpDIB24, ghbmpDIB32;
 HDC ghdcDIB1, ghdcDIB4, ghdcDIB8, ghdcDIB16, ghdcDIB24, ghdcDIB32;
 PVOID gpvDIB1, gpvDIB4, gpvDIB8, gpvDIB16, gpvDIB24, gpvDIB32;
 ULONG (*gpDIB32)[8][8];
-PULONG pulDIB4Bits;
 HPALETTE ghpal;
 
 MYPAL gpal =
@@ -40,7 +39,7 @@ InitPerBitDepth(
     struct
     {
         BITMAPINFOHEADER bmiHeader;
-        RGBQUAD bmiColors[256];
+        ULONG bmiColors[256];
     } bmiBuffer;
     LPBITMAPINFO pbmi = (LPBITMAPINFO)&bmiBuffer;
 
@@ -65,6 +64,13 @@ InitPerBitDepth(
     pbmi->bmiHeader.biYPelsPerMeter = 0;
     pbmi->bmiHeader.biClrUsed = 0;
     pbmi->bmiHeader.biClrImportant = 0;
+
+    if (cBitsPerPixel == 1)
+    {
+        bmiBuffer.bmiColors[0] = 0;
+        bmiBuffer.bmiColors[1] = 0xFFFFFF;
+        pbmi->bmiHeader.biClrUsed = 2;
+    }
 
     /* Create a compatible DC for the DIB */
     *phdcDIB = CreateCompatibleDC(0);
@@ -110,7 +116,6 @@ BOOL InitStuff(void)
     }
 
     gpDIB32 = gpvDIB32;
-    pulDIB4Bits = gpvDIB4;
 
     return TRUE;
 }

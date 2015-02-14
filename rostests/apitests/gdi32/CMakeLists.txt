@@ -26,6 +26,7 @@ list(APPEND SOURCE
     ExcludeClipRect.c
     ExtCreatePen.c
     ExtCreateRegion.c
+    FrameRgn.c
     GdiConvertBitmap.c
     GdiConvertBrush.c
     GdiConvertDC.c
@@ -51,6 +52,8 @@ list(APPEND SOURCE
     GetTextFace.c
     MaskBlt.c
     OffsetClipRgn.c
+    OffsetRgn.c
+    PaintRgn.c
     PatBlt.c
     Rectangle.c
     RealizePalette.c

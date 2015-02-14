@@ -27,6 +27,7 @@ extern void func_EnumFontFamilies(void);
 extern void func_ExcludeClipRect(void);
 extern void func_ExtCreatePen(void);
 extern void func_ExtCreateRegion(void);
+extern void func_FrameRgn(void);
 extern void func_GdiConvertBitmap(void);
 extern void func_GdiConvertBrush(void);
 extern void func_GdiConvertDC(void);
@@ -52,6 +53,8 @@ extern void func_GetTextExtentExPoint(void);
 extern void func_GetTextFace(void);
 extern void func_MaskBlt(void);
 extern void func_OffsetClipRgn(void);
+extern void func_OffsetRgn(void);
+extern void func_PaintRgn(void);
 extern void func_PatBlt(void);
 extern void func_Rectangle(void);
 extern void func_RealizePalette(void);
@@ -92,6 +95,7 @@ const struct test winetest_testlist[] =
     { "ExcludeClipRect", func_ExcludeClipRect },
     { "ExtCreatePen", func_ExtCreatePen },
     { "ExtCreateRegion", func_ExtCreateRegion },
+    { "FrameRgn", func_FrameRgn },
     { "GdiConvertBitmap", func_GdiConvertBitmap },
     { "GdiConvertBrush", func_GdiConvertBrush },
     { "GdiConvertDC", func_GdiConvertDC },
@@ -117,6 +121,8 @@ const struct test winetest_testlist[] =
     { "GetTextFace", func_GetTextFace },
     { "MaskBlt", func_MaskBlt },
     { "OffsetClipRgn", func_OffsetClipRgn },
+    { "OffsetRgn", func_OffsetRgn },
+    { "PaintRgn", func_PaintRgn },
     { "PatBlt", func_PatBlt },
     { "Rectangle", func_Rectangle },
     { "RealizePalette", func_RealizePalette },
