@@ -674,7 +674,7 @@ GreGetDIBitsInternal(
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
 
-    DPRINT("Entered NtGdiGetDIBitsInternal()\n");
+    DPRINT("Entered GreGetDIBitsInternal()\n");
 
     if ((Usage && Usage != DIB_PAL_COLORS) || !Info || !hBitmap)
         return 0;
@@ -1090,7 +1090,7 @@ NtGdiGetDIBitsInternal(
         _SEH2_TRY
         {
             /* Copy the data back */
-            cjMaxInfo = DIB_BitmapInfoSize(pbmi, (WORD)iUsage);
+            cjMaxInfo = min(cjMaxInfo, DIB_BitmapInfoSize(pbmi, (WORD)iUsage));
             ProbeForWrite(pbmiUser, cjMaxInfo, 1);
             RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
         }
