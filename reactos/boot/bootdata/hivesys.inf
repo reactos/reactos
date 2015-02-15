@@ -1933,15 +1933,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ObjectName",0x00000000,"LocalSy
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Type",0x00010001,0x00000020
 
-; ReactOS Installer Service
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Description",0x00000000,"ReactOS Installer Service"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","DisplayName",0x00000000,"ReactOS Installer Service"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Group",0x00000000,"Installation Infrastructure"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","ImagePath",0x00020000,"%SystemRoot%\system32\msiexec.exe /V"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIServer","Type",0x00010001,0x00000020
+; Windows Installer Service
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","DisplayName",0x00000000,"ReactOS Installer"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Controls installation, maintenance, and removal of software packaged as an msi (Windows Installer)"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ImagePath",0x00020000,"system32\msiexec.exe /V"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Type",0x00010001,0x00000020
 
 ; Sound Blaster (NT4)
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
@@ -2013,16 +2013,6 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.BitsPerPel",0x00010001,8
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.XResolution",0x00010001,640
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
-
-; Windows Installer Service
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","DisplayName",0x00000000,"ReactOS Installer"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Controls installation, maintenance, and removal of software packaged as an msi (Windows Installer)"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ImagePath",0x00020000,"system32\msiexec.exe /V"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Type",0x00010001,0x00000020
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001
