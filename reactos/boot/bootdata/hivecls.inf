@@ -263,7 +263,7 @@ HKCR,"SHCmdFile\shellex\IconHandler","",0x00000000,"{57651662-CE3E-11D0-8D77-00C
 HKCR,".sys","",0x00000000,"sysfile"
 HKCR,"sysfile","",0x00000000,"System File"
 HKCR,"sysfile","NoOpen",0x00000000,""
-HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-171"
+HKCR,"sysfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-171"
 HKCR,"sysfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; URL shortcuts (e.g. used in favorites folder of IExplorer)
