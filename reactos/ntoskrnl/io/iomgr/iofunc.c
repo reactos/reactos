@@ -1863,6 +1863,9 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     PVOID NormalContext;
     KIRQL OldIrql;
     IO_STATUS_BLOCK KernelIosb;
+    BOOLEAN CallDriver = TRUE;
+    PFILE_ACCESS_INFORMATION AccessBuffer;
+    PFILE_ALIGNMENT_INFORMATION AlignmentBuffer;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -2043,8 +2046,34 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
 
+    /* Fill in file information before calling the driver.
+       See 'File System Internals' page 485.*/
+    if (FileInformationClass == FileAccessInformation)
+    {
+        AccessBuffer = Irp->AssociatedIrp.SystemBuffer;
+        AccessBuffer->AccessFlags = HandleInformation.GrantedAccess;
+        Irp->IoStatus.Information = sizeof(FILE_ACCESS_INFORMATION);
+        CallDriver = FALSE;
+    }
+    else if (FileInformationClass == FileAlignmentInformation)
+    {
+        AlignmentBuffer = Irp->AssociatedIrp.SystemBuffer;
+        AlignmentBuffer->AlignmentRequirement = DeviceObject->AlignmentRequirement;
+        Irp->IoStatus.Information = sizeof(FILE_ALIGNMENT_INFORMATION);
+        CallDriver = FALSE;
+    }
+
     /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
+    if (CallDriver)
+    {
+        Status = IoCallDriver(DeviceObject, Irp);
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+    }
+
     if (Status == STATUS_PENDING)
     {
         /* Check if this was async I/O */
