@@ -868,7 +868,8 @@ HRESULT CDefView::FillList()
     TRACE("%p\n", this);
 
     /* get the itemlist from the shfolder*/
-    hRes = m_pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS, &pEnumIDList);
+    /* FIXME: make showing hidden files a setting. */
+    hRes = m_pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, &pEnumIDList);
     if (hRes != S_OK)
     {
         if (hRes == S_FALSE)
