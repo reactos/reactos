@@ -587,7 +587,7 @@ NtUserLoadKeyboardLayoutEx(
 
     if (Flags & ~(KLF_ACTIVATE|KLF_NOTELLSHELL|KLF_REORDER|KLF_REPLACELANG|
                   KLF_SUBSTITUTE_OK|KLF_SETFORPROCESS|KLF_UNLOADPREVIOUS|
-                  KLF_RESET|KLF_SETFORPROCESS|KLF_SHIFTLOCK))
+                  KLF_RESET|KLF_SHIFTLOCK))
     {
         ERR("Invalid flags: %x\n", Flags);
         EngSetLastError(ERROR_INVALID_FLAGS);
