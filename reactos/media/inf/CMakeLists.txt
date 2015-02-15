@@ -39,6 +39,7 @@ list(APPEND INF_FILES
     usb.inf
     usbport.inf
     usbstor.inf
+    wdmaudio.inf
     xboxdisp.inf)
 
 foreach(item ${INF_FILES})
