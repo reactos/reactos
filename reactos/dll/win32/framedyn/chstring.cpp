@@ -180,7 +180,7 @@ CHString::CHString(LPCSTR lpsz) throw (CHeap_Exception)
     if (lpsz != 0)
     {
         // Get its length
-        int Len = strlen(lpsz);
+        int Len = (int)strlen(lpsz);
         if (Len)
         {
             // Allocate and convert the string
@@ -968,7 +968,7 @@ void CHString::ReleaseBuffer(int nNewLength) throw (CHeap_Exception)
     // If no len provided, get one
     if (nNewLength == -1)
     {
-        nNewLength = wcslen(m_pchData);
+        nNewLength = (int)wcslen(m_pchData);
     }
 
     // Set appropriate size and null-terminate
@@ -1052,7 +1052,7 @@ CHString CHString::SpanExcluding(LPCWSTR lpszCharSet) const throw (CHeap_Excepti
     int Count;
 
     // Get position and then, extract
-    Count = wcscspn(m_pchData, lpszCharSet);
+    Count = (int)wcscspn(m_pchData, lpszCharSet);
     return Left(Count);
 }
 
@@ -1064,7 +1064,7 @@ CHString CHString::SpanIncluding(LPCWSTR lpszCharSet) const throw (CHeap_Excepti
     int Count;
 
     // Get position and then, extract
-    Count = wcsspn(m_pchData, lpszCharSet);
+    Count = (int)wcsspn(m_pchData, lpszCharSet);
     return Left(Count);
 }
 
@@ -1199,7 +1199,7 @@ const CHString& CHString::operator=(LPCSTR lpsz) throw (CHeap_Exception)
     // If we have string, get its len
     if (lpsz != 0)
     {
-        Len = strlen(lpsz);
+        Len = (int)strlen(lpsz);
     }
     else
     {
