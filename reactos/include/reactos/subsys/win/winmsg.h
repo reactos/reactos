@@ -60,6 +60,11 @@ typedef struct _USER_END_TASK
     BOOL  Success;
 } USER_END_TASK, *PUSER_END_TASK;
 
+typedef struct _USER_LOGON
+{
+    BOOL IsLogon;
+} USER_LOGON, *PUSER_LOGON;
+
 typedef struct _USER_GET_THREAD_CONSOLE_DESKTOP
 {
     ULONG_PTR ThreadId;
@@ -90,6 +95,7 @@ typedef struct _USER_API_MESSAGE
     {
         USER_EXIT_REACTOS ExitReactosRequest;
         USER_END_TASK EndTaskRequest;
+        USER_LOGON LogonRequest;
         USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;

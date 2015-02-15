@@ -74,6 +74,22 @@ RegisterLogonProcess(DWORD dwProcessId,
 }
 
 /*
+ * Helper function used by SetWindowStationUser (see winsta.c)
+ */
+VOID FASTCALL
+Logon(BOOL IsLogon)
+{
+    USER_API_MESSAGE ApiMessage;
+    PUSER_LOGON LogonRequest = &ApiMessage.Data.LogonRequest;
+
+    LogonRequest->IsLogon = IsLogon;
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                         NULL,
+                         CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpLogon),
+                         sizeof(*LogonRequest));
+}
+
+/*
  * @implemented
  */
 BOOL

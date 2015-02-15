@@ -113,6 +113,9 @@ UINT MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw);
 VOID MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar);
 
+/* definitions for logon.c */
+VOID FASTCALL Logon(BOOL IsLogon);
+
 /* misc definitions */
 void mirror_rect( const RECT *window_rect, RECT *rect );
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);

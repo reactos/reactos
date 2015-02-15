@@ -371,7 +371,7 @@ OpenWindowStationW(LPCWSTR lpszWinSta,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -380,7 +380,21 @@ SetWindowStationUser(HWINSTA hWindowStation,
                      PSID psid,
                      DWORD size)
 {
-    return NtUserSetWindowStationUser(hWindowStation, pluid, psid, size);
+    BOOL Success;
+
+    Success = NtUserSetWindowStationUser(hWindowStation, pluid, psid, size);
+    if (Success)
+    {
+        /* Signal log-on/off to WINSRV */
+
+        /* User is logging on if pluid != LuidNone, otherwise it is a log-off */
+        LUID LuidNone = {0, 0};
+        BOOL IsLogon = (pluid && !RtlEqualLuid(pluid, &LuidNone));
+
+        Logon(IsLogon);
+    }
+
+    return Success;
 }
 
 /* EOF */
