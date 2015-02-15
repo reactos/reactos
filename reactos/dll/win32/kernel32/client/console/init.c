@@ -111,7 +111,7 @@ static INT
 ParseShellInfo(LPCWSTR lpszShellInfo,
                LPCWSTR lpszKeyword)
 {
-    DPRINT1("ParseShellInfo is UNIMPLEMENTED\n");
+    DPRINT("ParseShellInfo is UNIMPLEMENTED\n");
     return 0;
 }
 

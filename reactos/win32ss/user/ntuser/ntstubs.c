@@ -585,7 +585,8 @@ NtUserNotifyProcessCreate(
     ULONG  dwUnknown,
     ULONG  CreateFlags)
 {
-    STUB;
+    // STUB;
+    TRACE("NtUserNotifyProcessCreate is UNIMPLEMENTED\n");
     return FALSE;
 }
 

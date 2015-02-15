@@ -400,7 +400,7 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
             /* Minimal setup of the connect info structure */
             UserCon->ulVersion = USER_VERSION;
 
-            ERR("HACK: Hackish NtUserProcessConnect call!!\n");
+            TRACE("HACK: Hackish NtUserProcessConnect call!!\n");
             /* Connect to win32k */
             Status = NtUserProcessConnect(NtCurrentProcess(),
                                           UserCon,
@@ -423,10 +423,10 @@ Init(PUSERCONNECT UserCon /*PUSERSRV_API_CONNECTINFO*/)
 
     // FIXME: Yet another hack... This call should normally not be done here, but
     // instead in ClientThreadSetup, and in User32CallClientThreadSetupFromKernel as well.
-    ERR("HACK: Using Init-ClientThreadSetupHelper hack!!\n");
+    TRACE("HACK: Using Init-ClientThreadSetupHelper hack!!\n");
     if (!ClientThreadSetupHelper(FALSE))
     {
-        ERR("Init-ClientThreadSetupHelper hack failed!\n");
+        TRACE("Init-ClientThreadSetupHelper hack failed!\n");
         return FALSE;
     }
 
