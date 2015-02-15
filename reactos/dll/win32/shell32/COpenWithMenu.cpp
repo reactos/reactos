@@ -783,7 +783,7 @@ class COpenWithDialog
         VOID AddApp(COpenWithList::SApp *pApp, BOOL bSelected);
         VOID Browse();
         VOID Accept();
-        static BOOL CALLBACK NoOpenDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+        static INT_PTR CALLBACK NoOpenDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
         COpenWithList::SApp *GetCurrentApp();
 
         const OPENASINFO *m_pInfo;
@@ -816,7 +816,7 @@ COpenWithDialog::~COpenWithDialog()
         ImageList_Destroy(m_hImgList);
 }
 
-BOOL CALLBACK COpenWithDialog::NoOpenDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK COpenWithDialog::NoOpenDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     switch(Message)
     {
@@ -850,7 +850,7 @@ BOOL COpenWithDialog::IsNoOpen(HWND hwnd)
     if (m_bNoOpen)
     {
         int dReturnValue = DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_NOOPEN), hwnd, NoOpenDlgProc);
-        
+
         if (dReturnValue == IDNO)
             return TRUE;
         else if (dReturnValue == -1)
