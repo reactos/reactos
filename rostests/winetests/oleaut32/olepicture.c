@@ -564,11 +564,6 @@ static void test_apm(void)
     BOOL keep;
     short type;
 
-    if(!winetest_interactive) {
-        skip("ROSTESTS-2: oleaut_winetest:olepicture crashes with Page Fault.\n");
-        return;
-    }
-
     hglob = GlobalAlloc (0, sizeof(apmdata));
     data = GlobalLock(hglob);
     memcpy(data, apmdata, sizeof(apmdata));
@@ -624,11 +619,6 @@ static void test_enhmetafile(void)
     LONG cxy;
     BOOL keep;
     short type;
-
-    if(!winetest_interactive) {
-        skip("ROSTESTS-2: oleaut_winetest:olepicture crashes with Page Fault.\n");
-        return;
-    }
 
     hglob = GlobalAlloc (0, sizeof(enhmetafile));
     data = GlobalLock(hglob);
