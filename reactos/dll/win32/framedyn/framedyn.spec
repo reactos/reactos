@@ -149,7 +149,7 @@
 @ stdcall -arch=win32 ??H@YG?AVCHString@@PBGABV0@@Z(wstr ptr) _ZplPKwRK8CHString # class CHString __stdcall operator+(unsigned short const *,class CHString const &)
 @ stdcall -arch=win64 ??H@YA?AVCHString@@PEBGAEBV0@@Z(wstr ptr) _ZplPKwRK8CHString # class CHString __stdcall operator+(unsigned short const *,class CHString const &)
 @ stdcall -arch=win32 ??H@YG?AVCHString@@ABV0@0@Z(ptr ptr) _ZplRK8CHStringS1_ # class CHString __stdcall operator+(class CHString const &,class CHString const &)
-@ stdcall -arch=win64 ??H@YA?AVCHString@@AEBV0@G@Z(ptr ptr) _ZplRK8CHStringS1_ # class CHString __stdcall operator+(class CHString const &,class CHString const &)
+@ stdcall -arch=win64 ??H@YA?AVCHString@@AEBV0@0@Z(ptr ptr) _ZplRK8CHStringS1_ # class CHString __stdcall operator+(class CHString const &,class CHString const &)
 @ thiscall -arch=win32 ?Flush@Provider@@MAEXXZ() _ZN8Provider5FlushEv # protected: virtual void __thiscall Provider::Flush(void)
 @ thiscall -arch=win64 ?Flush@Provider@@MEAAXXZ() _ZN8Provider5FlushEv # protected: virtual void __thiscall Provider::Flush(void)
 @ thiscall -arch=win32 ?ValidateDeletionFlags@Provider@@MAEJJ@Z(long) _ZN8Provider21ValidateDeletionFlagsEl # protected: virtual long __thiscall Provider::ValidateDeletionFlags(long)
