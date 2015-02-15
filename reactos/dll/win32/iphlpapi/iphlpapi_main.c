@@ -2145,7 +2145,7 @@ DWORD WINAPI SetIpNetEntry(PMIB_IPNETROW pArpEntry)
   if (!pArpEntry)
       return ERROR_INVALID_PARAMETER;
 
-  if (!NT_SUCCESS(openTcpFile( &tcpFile )))
+  if (!NT_SUCCESS(openTcpFile( &tcpFile, FILE_READ_DATA | FILE_WRITE_DATA )))
       return ERROR_NOT_SUPPORTED;
 
   if (!NT_SUCCESS(getNthIpEntity( tcpFile, pArpEntry->dwIndex, &id )))
@@ -2312,7 +2312,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
     if (!indexTable)
         return ERROR_NOT_ENOUGH_MEMORY;
 
-    ret = openTcpFile(&tcpFile);
+    ret = openTcpFile(&tcpFile, FILE_READ_DATA);
     if (!NT_SUCCESS(ret))
         return ERROR_NO_DATA;
 

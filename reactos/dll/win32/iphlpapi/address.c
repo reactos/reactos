@@ -306,7 +306,7 @@ GetAdaptersAddresses(
         ZeroMemory(Ptr, RemainingSize);
 
     /* open the tcpip driver */
-    Status = openTcpFile(&TcpFile);
+    Status = openTcpFile(&TcpFile, FILE_READ_DATA);
     if (!NT_SUCCESS(Status))
     {
         ERR("Could not open handle to tcpip.sys. Status %08x\n", Status);
