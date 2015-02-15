@@ -19,9 +19,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(winsta);
  */
 HWINSTA WINAPI
 CreateWindowStationA(LPCSTR lpwinsta,
-		     DWORD dwReserved,
-		     ACCESS_MASK dwDesiredAccess,
-		     LPSECURITY_ATTRIBUTES lpsa)
+                     DWORD dwReserved,
+                     ACCESS_MASK dwDesiredAccess,
+                     LPSECURITY_ATTRIBUTES lpsa)
 {
     UNICODE_STRING WindowStationNameU;
     HWINSTA hWinSta;
@@ -53,55 +53,55 @@ CreateWindowStationA(LPCSTR lpwinsta,
  */
 HWINSTA WINAPI
 CreateWindowStationW(LPCWSTR lpwinsta,
-		     DWORD dwReserved,
-		     ACCESS_MASK dwDesiredAccess,
-		     LPSECURITY_ATTRIBUTES lpsa)
+                     DWORD dwReserved,
+                     ACCESS_MASK dwDesiredAccess,
+                     LPSECURITY_ATTRIBUTES lpsa)
 {
-  UNICODE_STRING WindowStationName;
-  UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE hWindowStationsDir;
-  NTSTATUS Status;
-  HWINSTA hwinsta;
+    UNICODE_STRING WindowStationName;
+    UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hWindowStationsDir;
+    NTSTATUS Status;
+    HWINSTA hwinsta;
 
-  /* Open WindowStations directory */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &WindowStationsDir,
-                             OBJ_CASE_INSENSITIVE,
-                             0,
-                             0);
+    /* Open WindowStations directory */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &WindowStationsDir,
+                               OBJ_CASE_INSENSITIVE,
+                               0,
+                               0);
 
-  Status = NtOpenDirectoryObject(&hWindowStationsDir, 
-                                 DIRECTORY_CREATE_OBJECT, 
-                                 &ObjectAttributes);
-  if(!NT_SUCCESS(Status))
-  {
-      ERR("Failed to open WindowStations directory\n");
-      return NULL;
-  }
+    Status = NtOpenDirectoryObject(&hWindowStationsDir, 
+                                   DIRECTORY_CREATE_OBJECT, 
+                                   &ObjectAttributes);
+    if(!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open WindowStations directory\n");
+        return NULL;
+    }
 
-  RtlInitUnicodeString(&WindowStationName, lpwinsta);
+    RtlInitUnicodeString(&WindowStationName, lpwinsta);
 
-  /* Create the window station object */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &WindowStationName,
-                             OBJ_CASE_INSENSITIVE,
-                             hWindowStationsDir,
-                             0);
+    /* Create the window station object */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &WindowStationName,
+                               OBJ_CASE_INSENSITIVE,
+                               hWindowStationsDir,
+                               0);
 
-  /* Check if the handle should be inheritable */
-  if (lpsa && lpsa->bInheritHandle)
-  { 
-      ObjectAttributes.Attributes |= OBJ_INHERIT;
-  }
+    /* Check if the handle should be inheritable */
+    if (lpsa && lpsa->bInheritHandle)
+    { 
+        ObjectAttributes.Attributes |= OBJ_INHERIT;
+    }
 
-  hwinsta = NtUserCreateWindowStation(&ObjectAttributes,
-                                      dwDesiredAccess,
-                                      0, 0, 0, 0, 0);
+    hwinsta = NtUserCreateWindowStation(&ObjectAttributes,
+                                        dwDesiredAccess,
+                                        0, 0, 0, 0, 0);
 
-  NtClose(hWindowStationsDir);
+    NtClose(hWindowStationsDir);
 
-  return hwinsta;
+    return hwinsta;
 }
 
 /*
@@ -110,87 +110,78 @@ CreateWindowStationW(LPCWSTR lpwinsta,
 BOOL FASTCALL
 EnumNamesW(HWINSTA WindowStation,
            NAMEENUMPROCW EnumFunc,
-	   LPARAM Context,
+           LPARAM Context,
            BOOL Desktops)
 {
-   char Buffer[256];
-   PVOID NameList;
-   PWCHAR Name;
-   NTSTATUS Status;
-   ULONG RequiredSize;
-   ULONG CurrentEntry, EntryCount;
-   BOOL Ret;
+    CHAR Buffer[256];
+    PVOID NameList;
+    PWCHAR Name;
+    NTSTATUS Status;
+    ULONG RequiredSize;
+    ULONG CurrentEntry, EntryCount;
+    BOOL Ret;
 
-   /*
-    * Check parameters
-    */
-   if (NULL == WindowStation && Desktops)
-   {
-      WindowStation = GetProcessWindowStation();
-   }
+    /* Check parameters */
+    if (WindowStation == NULL && Desktops)
+    {
+        WindowStation = GetProcessWindowStation();
+    }
 
-   /*
-    * Try with fixed-size buffer
-    */
-   Status = NtUserBuildNameList(WindowStation, sizeof(Buffer), Buffer, &RequiredSize);
-   if (NT_SUCCESS(Status))
-   {
-      /* Fixed-size buffer is large enough */
-      NameList = (PWCHAR) Buffer;
-   }
-   else if (Status == STATUS_BUFFER_TOO_SMALL)
-   {
-      /* Allocate a larger buffer */
-      NameList = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
-      if (NULL == NameList)
-      {
-         return FALSE;
-      }
-      /* Try again */
-      Status = NtUserBuildNameList(WindowStation, RequiredSize, NameList, NULL);
-      if (! NT_SUCCESS(Status))
-      {
-         HeapFree(GetProcessHeap(), 0, NameList);
-         SetLastError(RtlNtStatusToDosError(Status));
-         return FALSE;
-      }
-   }
-   else
-   {
-      /* Some unrecognized error occured */
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-   }
+    /* Try with fixed-size buffer */
+    Status = NtUserBuildNameList(WindowStation, sizeof(Buffer), Buffer, &RequiredSize);
+    if (NT_SUCCESS(Status))
+    {
+        /* Fixed-size buffer is large enough */
+        NameList = (PWCHAR) Buffer;
+    }
+    else if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        /* Allocate a larger buffer */
+        NameList = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
+        if (NameList == NULL)
+            return FALSE;
 
-   /*
-    * Enum the names one by one
-    */
-   EntryCount = *((DWORD *) NameList);
-   Name = (PWCHAR) ((PCHAR) NameList + sizeof(DWORD));
-   Ret = TRUE;
-   for (CurrentEntry = 0; CurrentEntry < EntryCount && Ret; ++CurrentEntry)
-   {
-      Ret = (*EnumFunc)(Name, Context);
-      Name += wcslen(Name) + 1;
-   }
+        /* Try again */
+        Status = NtUserBuildNameList(WindowStation, RequiredSize, NameList, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            HeapFree(GetProcessHeap(), 0, NameList);
+            SetLastError(RtlNtStatusToDosError(Status));
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Some unrecognized error occured */
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-   /*
-    * Cleanup
-    */
-   if (NameList != Buffer)
-   {
-      HeapFree(GetProcessHeap(), 0, NameList);
-   }
+    /* Enum the names one by one */
+    EntryCount = *((DWORD *) NameList);
+    Name = (PWCHAR) ((PCHAR) NameList + sizeof(DWORD));
+    Ret = TRUE;
+    for (CurrentEntry = 0; CurrentEntry < EntryCount && Ret; ++CurrentEntry)
+    {
+        Ret = (*EnumFunc)(Name, Context);
+        Name += wcslen(Name) + 1;
+    }
 
-   return Ret;
+    /* Cleanup */
+    if (NameList != Buffer)
+    {
+        HeapFree(GetProcessHeap(), 0, NameList);
+    }
+
+    return Ret;
 }
 
 
 /* For W->A conversion */
 typedef struct tagENUMNAMESASCIICONTEXT
 {
-   NAMEENUMPROCA UserEnumFunc;
-   LPARAM UserContext;
+    NAMEENUMPROCA UserEnumFunc;
+    LPARAM UserContext;
 } ENUMNAMESASCIICONTEXT, *PENUMNAMESASCIICONTEXT;
 
 /*
@@ -200,65 +191,59 @@ typedef struct tagENUMNAMESASCIICONTEXT
 BOOL CALLBACK
 EnumNamesCallback(LPWSTR Name, LPARAM Param)
 {
-   PENUMNAMESASCIICONTEXT Context = (PENUMNAMESASCIICONTEXT) Param;
-   char FixedNameA[32];
-   LPSTR NameA;
-   int Len;
-   BOOL Ret;
+    PENUMNAMESASCIICONTEXT Context = (PENUMNAMESASCIICONTEXT) Param;
+    CHAR FixedNameA[32];
+    LPSTR NameA;
+    INT Len;
+    BOOL Ret;
 
-   /*
-    * Determine required size of Ascii string and see if we can use
-    * fixed buffer
-    */
-   Len = WideCharToMultiByte(CP_ACP, 0, Name, -1, NULL, 0, NULL, NULL);
-   if (Len <= 0)
-   {
-      /* Some strange error occured */
-      return FALSE;
-   }
-   else if (Len <= sizeof(FixedNameA))
-   {
-      /* Fixed-size buffer is large enough */
-      NameA = FixedNameA;
-   }
-   else
-   {
-      /* Allocate a larger buffer */
-      NameA = HeapAlloc(GetProcessHeap(), 0, Len);
-      if (NULL == NameA)
-      {
-         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-         return FALSE;
-      }
-   }
+    /*
+     * Determine required size of Ascii string and see
+     * if we can use fixed buffer.
+     */
+    Len = WideCharToMultiByte(CP_ACP, 0, Name, -1, NULL, 0, NULL, NULL);
+    if (Len <= 0)
+    {
+        /* Some strange error occured */
+        return FALSE;
+    }
+    else if (Len <= sizeof(FixedNameA))
+    {
+        /* Fixed-size buffer is large enough */
+        NameA = FixedNameA;
+    }
+    else
+    {
+        /* Allocate a larger buffer */
+        NameA = HeapAlloc(GetProcessHeap(), 0, Len);
+        if (NULL == NameA)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+    }
 
-   /*
-    * Do the Unicode ->Ascii conversion
-    */
-   if (0 == WideCharToMultiByte(CP_ACP, 0, Name, -1, NameA, Len, NULL, NULL))
-   {
-      /* Something went wrong, clean up */
-      if (NameA != FixedNameA)
-      {
-         HeapFree(GetProcessHeap(), 0, NameA);
-      }
-      return FALSE;
-   }
+    /* Do the Unicode ->Ascii conversion */
+    if (0 == WideCharToMultiByte(CP_ACP, 0, Name, -1, NameA, Len, NULL, NULL))
+    {
+        /* Something went wrong, clean up */
+        if (NameA != FixedNameA)
+        {
+            HeapFree(GetProcessHeap(), 0, NameA);
+        }
+        return FALSE;
+    }
 
-   /*
-    * Call user callback
-    */
-   Ret = Context->UserEnumFunc(NameA, Context->UserContext);
+    /* Call user callback */
+    Ret = Context->UserEnumFunc(NameA, Context->UserContext);
 
-   /*
-    * Clean up
-    */
-   if (NameA != FixedNameA)
-   {
-      HeapFree(GetProcessHeap(), 0, NameA);
-   }
+    /* Cleanup */
+    if (NameA != FixedNameA)
+    {
+        HeapFree(GetProcessHeap(), 0, NameA);
+    }
 
-   return Ret;
+    return Ret;
 }
 
 /*
@@ -267,15 +252,15 @@ EnumNamesCallback(LPWSTR Name, LPARAM Param)
 BOOL FASTCALL
 EnumNamesA(HWINSTA WindowStation,
            NAMEENUMPROCA EnumFunc,
-	   LPARAM Context,
+           LPARAM Context,
            BOOL Desktops)
 {
-   ENUMNAMESASCIICONTEXT PrivateContext;
+    ENUMNAMESASCIICONTEXT PrivateContext;
 
-   PrivateContext.UserEnumFunc = EnumFunc;
-   PrivateContext.UserContext = Context;
+    PrivateContext.UserEnumFunc = EnumFunc;
+    PrivateContext.UserContext = Context;
 
-   return EnumNamesW(WindowStation, EnumNamesCallback, (LPARAM) &PrivateContext, Desktops);
+    return EnumNamesW(WindowStation, EnumNamesCallback, (LPARAM) &PrivateContext, Desktops);
 }
 
 /*
@@ -283,9 +268,9 @@ EnumNamesA(HWINSTA WindowStation,
  */
 BOOL WINAPI
 EnumWindowStationsA(WINSTAENUMPROCA EnumFunc,
-		    LPARAM Context)
+                    LPARAM Context)
 {
-   return EnumNamesA(NULL, EnumFunc, Context, FALSE);
+    return EnumNamesA(NULL, EnumFunc, Context, FALSE);
 }
 
 
@@ -294,9 +279,9 @@ EnumWindowStationsA(WINSTAENUMPROCA EnumFunc,
  */
 BOOL WINAPI
 EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
-		    LPARAM Context)
+                    LPARAM Context)
 {
-   return EnumNamesW(NULL, EnumFunc, Context, FALSE);
+    return EnumNamesW(NULL, EnumFunc, Context, FALSE);
 }
 
 
@@ -305,8 +290,8 @@ EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
  */
 HWINSTA WINAPI
 OpenWindowStationA(LPCSTR lpszWinSta,
-		   BOOL fInherit,
-		   ACCESS_MASK dwDesiredAccess)
+                   BOOL fInherit,
+                   ACCESS_MASK dwDesiredAccess)
 {
     UNICODE_STRING WindowStationNameU;
     HWINSTA hWinSta;
@@ -340,48 +325,48 @@ OpenWindowStationW(LPCWSTR lpszWinSta,
                    BOOL fInherit,
                    ACCESS_MASK dwDesiredAccess)
 {
-  UNICODE_STRING WindowStationName;
-  UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE hWindowStationsDir;
-  NTSTATUS Status;
-  HWINSTA hwinsta;
+    UNICODE_STRING WindowStationName;
+    UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hWindowStationsDir;
+    NTSTATUS Status;
+    HWINSTA hwinsta;
 
-  /* Open WindowStations directory */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &WindowStationsDir,
-                             OBJ_CASE_INSENSITIVE,
-                             0,
-                             0);
+    /* Open WindowStations directory */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &WindowStationsDir,
+                               OBJ_CASE_INSENSITIVE,
+                               0,
+                               0);
 
-  Status = NtOpenDirectoryObject(&hWindowStationsDir, 
-                                 DIRECTORY_TRAVERSE, 
-                                 &ObjectAttributes);
-  if(!NT_SUCCESS(Status))
-  {
-      ERR("Failed to open WindowStations directory\n");
-      return NULL;
-  }
+    Status = NtOpenDirectoryObject(&hWindowStationsDir, 
+                                   DIRECTORY_TRAVERSE, 
+                                   &ObjectAttributes);
+    if(!NT_SUCCESS(Status))
+    {
+        ERR("Failed to open WindowStations directory\n");
+        return NULL;
+    }
 
-  /* Open the window station object */
-  RtlInitUnicodeString(&WindowStationName, lpszWinSta);
+    /* Open the window station object */
+    RtlInitUnicodeString(&WindowStationName, lpszWinSta);
 
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &WindowStationName,
-                             OBJ_CASE_INSENSITIVE,
-                             hWindowStationsDir,
-                             0);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &WindowStationName,
+                               OBJ_CASE_INSENSITIVE,
+                               hWindowStationsDir,
+                               0);
 
-  if( fInherit )
-  {
-      ObjectAttributes.Attributes |= OBJ_INHERIT;
-  }
+    if(fInherit)
+    {
+        ObjectAttributes.Attributes |= OBJ_INHERIT;
+    }
 
-  hwinsta = NtUserOpenWindowStation(&ObjectAttributes, dwDesiredAccess);
+    hwinsta = NtUserOpenWindowStation(&ObjectAttributes, dwDesiredAccess);
 
-  NtClose(hWindowStationsDir);
+    NtClose(hWindowStationsDir);
 
-  return hwinsta;
+    return hwinsta;
 }
 
 
@@ -390,15 +375,12 @@ OpenWindowStationW(LPCWSTR lpszWinSta,
  */
 BOOL
 WINAPI
-SetWindowStationUser(
-  HWINSTA hWindowStation,
-  PLUID pluid,
-  PSID psid,
-  DWORD size
-  )
+SetWindowStationUser(HWINSTA hWindowStation,
+                     PLUID pluid,
+                     PSID psid,
+                     DWORD size)
 {
-  return NtUserSetWindowStationUser(hWindowStation, pluid, psid, size);
+    return NtUserSetWindowStationUser(hWindowStation, pluid, psid, size);
 }
 
 /* EOF */
-

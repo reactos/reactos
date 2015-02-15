@@ -898,7 +898,8 @@ HandleShutdown(
     /* Destroy SAS window */
     UninitializeSAS(Session);
 
-    FIXME("FIXME: Call SMSS API #1\n");
+    /* Now we can shut down NT */
+    ERR("Shutting down NT...\n");
     RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
     if (wlxAction == WLX_SAS_ACTION_SHUTDOWN_REBOOT)
     {

@@ -17,10 +17,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  *
  * - App (usually explorer) calls ExitWindowsEx()
  * - ExitWindowsEx() sends a message to CSRSS
- * - CSRSS impersonates the caller and sends a message to a hidden WinLogon window
- * - WinLogon checks if the caller has the required privileges
- * - WinLogon enters pending log-out state
- * - WinLogon impersonates the interactive user and calls ExitWindowsEx() again,
+ * - CSRSS impersonates the caller and sends a message to a hidden Winlogon window
+ * - Winlogon checks if the caller has the required privileges
+ * - Winlogon enters pending log-out state
+ * - Winlogon impersonates the interactive user and calls ExitWindowsEx() again,
  *   passing some special internal flags
  * - CSRSS loops over all processes of the interactive user (sorted by their
  *   SetProcessShutdownParameters() level), sending WM_QUERYENDSESSION and
@@ -39,28 +39,24 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  *   If the handler doesn't respond in time the same activities as for GUI
  *   apps (i.e. display dialog box etc) take place. This also happens if
  *   the handler returns TRUE.
- * - This ends the processing for the first ExitWindowsEx() call from WinLogon.
- *   Execution continues in WinLogon, which calls ExitWindowsEx() again to
+ * - This ends the processing for the first ExitWindowsEx() call from Winlogon.
+ *   Execution continues in Winlogon, which calls ExitWindowsEx() again to
  *   terminate COM processes in the interactive user's session.
- * - WinLogon stops impersonating the interactive user (whose processes are
+ * - Winlogon stops impersonating the interactive user (whose processes are
  *   all dead by now). and enters log-out state
- * - If the ExitWindowsEx() request was for a logoff, WinLogon sends a SAS
- *   event (to display the "press ctrl+alt+del") to the GINA. WinLogon then
+ * - If the ExitWindowsEx() request was for a logoff, Winlogon sends a SAS
+ *   event (to display the "press ctrl+alt+del") to the GINA. Winlogon then
  *   waits for the GINA to send a SAS event to login.
- * - If the ExitWindowsEx() request was for shutdown/restart, WinLogon calls
+ * - If the ExitWindowsEx() request was for shutdown/restart, Winlogon calls
  *   ExitWindowsEx() again in the system process context.
  * - CSRSS goes through the motions of sending WM_QUERYENDSESSION/WM_ENDSESSION
  *   to GUI processes running in the system process context but won't display
  *   dialog boxes or kill threads/processes. Same for console processes,
  *   using the CTRL_SHUTDOWN_EVENT. The Service Control Manager is one of
  *   these console processes and has a special timeout value WaitToKillServiceTimeout.
- * - WinLogon issues a "InitiateSystemShutdown" request to the SM (SMSS API # 1)
- * - the SM propagates the shutdown request to every environment subsystem it
- *   started since bootstrap time (still active ones, of course)
- * - each environment subsystem, on shutdown request, releases every resource
- *   it aquired during its life (processes, memory etc), then dies
- * - when every environment subsystem has gone to bed, the SM actually initiates
- *   the kernel and executive shutdown by calling NtShutdownSystem.
+ * - After CSRSS has finished its pass notifying processes that system is shutting down,
+ *   Winlogon finishes the shutdown process by calling the executive subsystem
+ *   function NtShutdownSystem.
  */
 
 typedef struct
