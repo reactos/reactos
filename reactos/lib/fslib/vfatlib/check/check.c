@@ -838,7 +838,7 @@ static int subdirs(DOS_FS *fs,DOS_FILE *parent,FDSC **cp)
 int scan_root(DOS_FS *fs)
 {
     DOS_FILE **chain;
-    int i;
+    ULONG i;
 
     root = NULL;
     chain = &root;

@@ -178,8 +178,8 @@ extern void *FsCheckMemQueue;
 #define FAT_MAX_BAD(fs)	(0xff7 | FAT_EXTD(fs))
 #define FAT_IS_BAD(fs,v) ((v) >= FAT_MIN_BAD(fs) && (v) <= FAT_MAX_BAD(fs))
 
-/* return -16 as a number with fs->fat_bits bits */
-#define FAT_EXTD(fs)	(((1 << fs->eff_fat_bits)-1) & ~0xf)
+/* return -16 as an unsigned number with fs->fat_bits bits */
+#define FAT_EXTD(fs)	(((1UL << fs->eff_fat_bits)-1) & ~0xf)
 
 #endif
 
