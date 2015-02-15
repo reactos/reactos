@@ -30,7 +30,8 @@ VOID    OptionMenuCustomBoot(VOID);
 VOID    OptionMenuCustomBootDisk(VOID);
 VOID    OptionMenuCustomBootPartition(VOID);
 VOID    OptionMenuCustomBootBootSectorFile(VOID);
-VOID    OptionMenuCustomBootReactOS(VOID);
 VOID    OptionMenuCustomBootLinux(VOID);
 
 #endif // _M_IX86
+
+VOID    OptionMenuCustomBootReactOS(VOID);
