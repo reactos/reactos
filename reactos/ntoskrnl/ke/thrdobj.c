@@ -838,8 +838,9 @@ KeInitThread(IN OUT PKTHREAD Thread,
     TimerWaitBlock->WaitListEntry.Flink = &Timer->Header.WaitListHead;
     TimerWaitBlock->WaitListEntry.Blink = &Timer->Header.WaitListHead;
 
-    /* Set the TEB */
+    /* Set the TEB and process */
     Thread->Teb = Teb;
+    Thread->Process = Process;
 
     /* Check if we have a kernel stack */
     if (!KernelStack)

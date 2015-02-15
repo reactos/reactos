@@ -1080,8 +1080,5 @@ START_TEST(om)
     test_query_object();
     test_type_mismatch();
     test_event();
-    if (winetest_interactive)
-        test_keyed_events();
-    else
-        skip("Skipping test_keyed_events(). ROSTESTS-118.\n");
+    test_keyed_events();
 }

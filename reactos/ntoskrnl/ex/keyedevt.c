@@ -132,6 +132,7 @@ ExpReleaseOrWaitForKeyedEvent(
     PLIST_ENTRY ListEntry, WaitListHead1, WaitListHead2;
     NTSTATUS Status;
     ULONG_PTR HashIndex;
+    PVOID PreviousKeyedWaitValue;
 
     /* Get the current process */
     CurrentProcess = KeGetCurrentProcess();
@@ -167,6 +168,7 @@ ExpReleaseOrWaitForKeyedEvent(
            be signaled by this thread or, when the wait is aborted due to thread
            termination, then it first needs to acquire the list lock. */
         Thread = CONTAINING_RECORD(ListEntry, ETHREAD, KeyedWaitChain);
+        ListEntry = ListEntry->Flink;
 
         /* Check if this thread is a correct waiter */
         if ((Thread->Tcb.Process == CurrentProcess) &&
@@ -179,7 +181,10 @@ ExpReleaseOrWaitForKeyedEvent(
             InitializeListHead(&Thread->KeyedWaitChain);
 
             /* Wake the thread */
-            KeReleaseSemaphore(&Thread->KeyedWaitSemaphore, 0, 1, FALSE);
+            KeReleaseSemaphore(&Thread->KeyedWaitSemaphore,
+                               IO_NO_INCREMENT,
+                               1,
+                               FALSE);
             Thread = NULL;
 
             /* Unlock the list. After this it is not safe to access Thread */
@@ -193,7 +198,8 @@ ExpReleaseOrWaitForKeyedEvent(
     /* Get the current thread */
     CurrentThread = PsGetCurrentThread();
 
-    /* Set the wait key */
+    /* Set the wait key and remember the old value */
+    PreviousKeyedWaitValue = CurrentThread->KeyedWaitValue;
     CurrentThread->KeyedWaitValue = KeyedWaitValue;
 
     /* Initialize the wait semaphore */
@@ -221,16 +227,20 @@ ExpReleaseOrWaitForKeyedEvent(
         ExAcquirePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
 
         /* Check if the wait list entry is still in the list */
-        if (CurrentThread->KeyedWaitChain.Flink != &CurrentThread->KeyedWaitChain)
+        if (!IsListEmpty(&CurrentThread->KeyedWaitChain))
         {
             /* Remove the thread from the list */
             RemoveEntryList(&CurrentThread->KeyedWaitChain);
+            InitializeListHead(&CurrentThread->KeyedWaitChain);
         }
 
         /* Unlock the list */
         ExReleasePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
         KeLeaveCriticalRegion();
     }
+
+    /* Restore the previous KeyedWaitValue, since this is a union member */
+    CurrentThread->KeyedWaitValue = PreviousKeyedWaitValue;
 
     return Status;
 }
@@ -412,6 +422,12 @@ NtWaitForKeyedEvent(
     NTSTATUS Status;
     LARGE_INTEGER TimeoutCopy;
 
+    /* Key must always be two-byte aligned */
+    if ((ULONG_PTR)Key & 1)
+    {
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
     /* Check if the caller passed a timeout value and this is from user mode */
     if ((Timeout != NULL) && (PreviousMode != KernelMode))
     {
@@ -471,6 +487,12 @@ NtReleaseKeyedEvent(
     PEX_KEYED_EVENT KeyedEvent;
     NTSTATUS Status;
     LARGE_INTEGER TimeoutCopy;
+
+    /* Key must always be two-byte aligned */
+    if ((ULONG_PTR)Key & 1)
+    {
+        return STATUS_INVALID_PARAMETER_1;
+    }
 
     /* Check if the caller passed a timeout value and this is from user mode */
     if ((Timeout != NULL) && (PreviousMode != KernelMode))
