@@ -250,7 +250,7 @@ SepAccessCheckEx(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* Fail if some rights have not been granted */
     if (RemainingAccess != 0)
     {
-        DPRINT1("HACK: RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", RemainingAccess, DesiredAccess);
+        DPRINT("HACK: RemainingAccess = 0x%08lx  DesiredAccess = 0x%08lx\n", RemainingAccess, DesiredAccess);
 #if 0
         /* HACK HACK HACK */
         Status = STATUS_ACCESS_DENIED;
