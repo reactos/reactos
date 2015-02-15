@@ -96,9 +96,6 @@ DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
   }
   Ret = NtUserDefSetText(hWnd, (String ? &lsString : NULL));
 
-  if (Ret)
-     IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
-
   return Ret;
 }
 
@@ -1402,7 +1399,10 @@ RealDefWindowProcA(HWND hWnd,
             DefSetText(hWnd, (PCWSTR)lParam, TRUE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+            {
                 UserPaintCaption(hWnd);
+                IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
+            }
             Result = 1;
             break;
         }
