@@ -199,7 +199,7 @@
 #define IDS_DEFAULT_CLUSTER_SIZE 326
 #define IDS_FORMATDRIVE          328
 #define IDS_RENAME               329
-#define IDS_INSERT               330
+#define IDS_PASTE                330
 #define IDS_DESCRIPTION          331
 #define IDS_COPY_OF              332
 

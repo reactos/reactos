@@ -678,7 +678,7 @@ BEGIN
     IDS_RESTORE "&Restabilește"
     IDS_FORMATDRIVE "F&ormatare…"
     IDS_RENAME "Rede&numește"
-    IDS_INSERT "Inserea&ză"
+    IDS_PASTE "Inserea&ză"
 
     IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Eroare de permisiune."
     IDS_CREATEFOLDER_CAPTION "Eroare la crearea unui nou dosar"

@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "&Obnoviť"
     IDS_FORMATDRIVE "Formátovať..."
     IDS_RENAME "Premenovať"
-    IDS_INSERT "Vložiť"
+    IDS_PASTE "Vložiť"
 
     IDS_CREATEFOLDER_DENIED "Nie je možné vytvoriť nový priečinok: Prístup zamietnutý."
     IDS_CREATEFOLDER_CAPTION "Chyba počas vytvárania nového priečinka"

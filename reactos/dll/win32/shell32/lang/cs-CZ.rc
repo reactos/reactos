@@ -682,7 +682,7 @@ BEGIN
     IDS_RESTORE "Obnovit"
     IDS_FORMATDRIVE "Formátovat..."
     IDS_RENAME "Přejmenovat"
-    IDS_INSERT "Vložit"
+    IDS_PASTE "Vložit"
 
     IDS_CREATEFOLDER_DENIED "Nelze vytvořit novou složku, protože přístup byl odepřen."
     IDS_CREATEFOLDER_CAPTION "Chyba při pokusu vytvořit novou složku"

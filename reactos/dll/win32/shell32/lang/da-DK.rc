@@ -682,7 +682,7 @@ BEGIN
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Rename"
-    IDS_INSERT "Insert"
+    IDS_PASTE "Paste"
 
     IDS_CREATEFOLDER_DENIED "Kan ikke oprette ny mappe: Tilladelse Afvist."
     IDS_CREATEFOLDER_CAPTION "Fejl ved oprettelse ad ny mappe"

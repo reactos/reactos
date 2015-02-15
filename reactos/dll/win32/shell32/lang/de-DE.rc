@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Wiederherstellen"
     IDS_FORMATDRIVE "Formatieren..."
     IDS_RENAME "Umbenennen"
-    IDS_INSERT "Einfügen"
+    IDS_PASTE "Einfügen"
 
     IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
     IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf."

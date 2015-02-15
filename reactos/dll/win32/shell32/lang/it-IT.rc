@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Ripristina"
     IDS_FORMATDRIVE "Formatta..."
     IDS_RENAME "Rinomina"
-    IDS_INSERT "Inserisci"
+    IDS_PASTE "Inserisci"
 
     IDS_CREATEFOLDER_DENIED "Impossibile creare la cartella: Accesso negato."
     IDS_CREATEFOLDER_CAPTION "Errore durante la creazione della cartella"

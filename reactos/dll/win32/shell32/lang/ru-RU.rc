@@ -678,7 +678,7 @@ BEGIN
     IDS_RESTORE "Восстановить"
     IDS_FORMATDRIVE "Форматировать..."
     IDS_RENAME "Переименовать"
-    IDS_INSERT "Вставить"
+    IDS_PASTE "Вставить"
 
     IDS_CREATEFOLDER_DENIED "Недостаточно прав для создания папки"
     IDS_CREATEFOLDER_CAPTION "Ошибка во время создания папки"

@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Przywróć"
     IDS_FORMATDRIVE "Formatuj..."
     IDS_RENAME "Zmień nazwę"
-    IDS_INSERT "Włóż"
+    IDS_PASTE "Włóż"
 
     IDS_CREATEFOLDER_DENIED "Nie mogę utworzyć nowego katalogu: Brak dostępu."
     IDS_CREATEFOLDER_CAPTION "Błąd przy tworzeniu nowego katalogu."

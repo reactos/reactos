@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Rename"
-    IDS_INSERT "Insert"
+    IDS_PASTE "Paste"
 
     IDS_CREATEFOLDER_DENIED "Δεν ήταν δυνατή η δημιουργία του φακέλου: Δεν επιτρέπεται η πρόσβαση."
     IDS_CREATEFOLDER_CAPTION "Σφάλμα κατά την δημιουργία νέου φακέλου"

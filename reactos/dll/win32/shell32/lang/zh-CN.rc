@@ -685,7 +685,7 @@ BEGIN
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Rename"
-    IDS_INSERT "Insert"
+    IDS_PASTE "Paste"
 
     IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
     IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"

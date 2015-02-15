@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "元に戻す"
     IDS_FORMATDRIVE "フォーマット..."
     IDS_RENAME "名前の変更"
-    IDS_INSERT "挿入"
+    IDS_PASTE "挿入"
 
     IDS_CREATEFOLDER_DENIED "新しいフォルダを作成できませんでした: アクセス権がありません。"
     IDS_CREATEFOLDER_CAPTION "新しいフォルダの作成中にエラーが発生しました"

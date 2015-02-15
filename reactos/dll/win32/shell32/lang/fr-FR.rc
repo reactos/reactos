@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Res&taurer"
     IDS_FORMATDRIVE "Formater..."
     IDS_RENAME "Renommer"
-    IDS_INSERT "Insérer"
+    IDS_PASTE "Insérer"
 
     IDS_CREATEFOLDER_DENIED "Impossible de créer le nouveau dossier : permission refusée."
     IDS_CREATEFOLDER_CAPTION "Erreur lors de la création du nouveau dossier"

@@ -677,7 +677,7 @@ BEGIN
     IDS_RESTORE "Restaurar"
     IDS_FORMATDRIVE "Formatear..."
     IDS_RENAME "Renombrar"
-    IDS_INSERT "Insertar"
+    IDS_PASTE "Insertar"
 
     IDS_CREATEFOLDER_DENIED "No se puede crear una nueva carpeta: Permiso denegado."
     IDS_CREATEFOLDER_CAPTION "Error durante la creación de una nueva carpeta"

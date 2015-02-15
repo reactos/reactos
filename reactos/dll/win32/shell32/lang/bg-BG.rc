@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Възвръщане"
     IDS_FORMATDRIVE "Оразмеряване..."
     IDS_RENAME "Преименуване"
-    IDS_INSERT "Вмъкване"
+    IDS_PASTE "Вмъкване"
 
     IDS_CREATEFOLDER_DENIED "Създаването на нова папка е невъзможно: недостатъчни права."
     IDS_CREATEFOLDER_CAPTION "Грешка при създаване на нова папка"

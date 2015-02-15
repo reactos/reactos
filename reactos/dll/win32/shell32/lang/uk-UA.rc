@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Відновити"
     IDS_FORMATDRIVE "Форматувати..."
     IDS_RENAME "Перейменувати"
-    IDS_INSERT "Вставити"
+    IDS_PASTE "Вставити"
 
     IDS_CREATEFOLDER_DENIED "Не вдалося створити нову папку: Відмова у доступі."
     IDS_CREATEFOLDER_CAPTION "Помилка при створенні нової папки"

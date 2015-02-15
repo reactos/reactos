@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Formatar..."
     IDS_RENAME "Renomear"
-    IDS_INSERT "Inserir"
+    IDS_PASTE "Inserir"
 
     IDS_CREATEFOLDER_DENIED "Não pode criar nova pasta: Permissão negada."
     IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"

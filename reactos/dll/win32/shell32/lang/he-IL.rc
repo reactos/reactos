@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "שחזר"
     IDS_FORMATDRIVE "אתחול..."
     IDS_RENAME "שנה שם"
-    IDS_INSERT "הכנס"
+    IDS_PASTE "הכנס"
 
     IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
     IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"

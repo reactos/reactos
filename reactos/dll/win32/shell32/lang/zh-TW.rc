@@ -684,7 +684,7 @@ BEGIN
     IDS_RESTORE "復原"
     IDS_FORMATDRIVE "格式化..."
     IDS_RENAME "重新命名"
-    IDS_INSERT "插入"
+    IDS_PASTE "插入"
 
     IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
     IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"

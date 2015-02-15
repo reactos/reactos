@@ -676,7 +676,7 @@ BEGIN
     IDS_RESTORE "Gjenopprett"
     IDS_FORMATDRIVE "Formatering..."
     IDS_RENAME "Endre navn"
-    IDS_INSERT "Sett inn"
+    IDS_PASTE "Sett inn"
 
     IDS_CREATEFOLDER_DENIED "Kunne ikke opprette ny mappe: tilgang nektet."
     IDS_CREATEFOLDER_CAPTION "Klarte ikke opprette ny mappe"

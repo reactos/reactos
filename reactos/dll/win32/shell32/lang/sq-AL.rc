@@ -680,7 +680,7 @@ BEGIN
     IDS_RESTORE "Rikthe"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Riemërto"
-    IDS_INSERT "Fut"
+    IDS_PASTE "Fut"
 
     IDS_CREATEFOLDER_DENIED "Në pamundësi për të krijuar dosje të re: Ndalohet hyrja."
     IDS_CREATEFOLDER_CAPTION "Gabim gjatë krijimit të një dosje të re"
