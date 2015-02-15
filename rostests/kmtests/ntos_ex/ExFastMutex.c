@@ -10,9 +10,23 @@
 //#define NDEBUG
 #include <debug.h>
 
-NTKERNELAPI VOID    FASTCALL ExiAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
-NTKERNELAPI VOID    FASTCALL ExiReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex);
-NTKERNELAPI BOOLEAN FASTCALL ExiTryToAcquireFastMutex(IN OUT PFAST_MUTEX FastMutex);
+static
+VOID
+(FASTCALL
+*pExEnterCriticalRegionAndAcquireFastMutexUnsafe)(
+    _Inout_ PFAST_MUTEX FastMutex
+);
+
+static
+VOID
+(FASTCALL
+*pExReleaseFastMutexUnsafeAndLeaveCriticalRegion)(
+    _Inout_ PFAST_MUTEX FastMutex
+);
+
+static VOID    (FASTCALL *pExiAcquireFastMutex)(IN OUT PFAST_MUTEX FastMutex);
+static VOID    (FASTCALL *pExiReleaseFastMutex)(IN OUT PFAST_MUTEX FastMutex);
+static BOOLEAN (FASTCALL *pExiTryToAcquireFastMutex)(IN OUT PFAST_MUTEX FastMutex);
 
 #define CheckMutex(Mutex, ExpectedCount, ExpectedOwner,                 \
                    ExpectedContention, ExpectedOldIrql,                 \
@@ -44,15 +58,18 @@ TestFastMutex(
     ExReleaseFastMutex(Mutex);
     CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
 
-#ifdef _M_IX86
     /* ntoskrnl's fastcall version */
-    ExiAcquireFastMutex(Mutex);
-    CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
-    ok_bool_false(ExiTryToAcquireFastMutex(Mutex), "ExiTryToAcquireFastMutex returned");
-    CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
-    ExiReleaseFastMutex(Mutex);
-    CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
-#endif
+    if (!skip(pExiAcquireFastMutex &&
+              pExiReleaseFastMutex &&
+              pExiTryToAcquireFastMutex, "No fastcall fast mutex functions\n"))
+    {
+        pExiAcquireFastMutex(Mutex);
+        CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
+        ok_bool_false(pExiTryToAcquireFastMutex(Mutex), "ExiTryToAcquireFastMutex returned");
+        CheckMutex(Mutex, 0L, Thread, 0LU, OriginalIrql, APC_LEVEL);
+        pExiReleaseFastMutex(Mutex);
+        CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
+    }
 
     /* try to acquire */
     ok_bool_true(ExTryToAcquireFastMutex(Mutex), "ExTryToAcquireFastMutex returned");
@@ -61,9 +78,14 @@ TestFastMutex(
     CheckMutex(Mutex, 1L, NULL, 0LU, OriginalIrql, OriginalIrql);
 
     /* shortcut functions with critical region */
-    ExEnterCriticalRegionAndAcquireFastMutexUnsafe(Mutex);
-    ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(Mutex);
+    if (!skip(pExEnterCriticalRegionAndAcquireFastMutexUnsafe &&
+              pExReleaseFastMutexUnsafeAndLeaveCriticalRegion,
+              "Shortcut functions not available"))
+    {
+        pExEnterCriticalRegionAndAcquireFastMutexUnsafe(Mutex);
+        ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
+        pExReleaseFastMutexUnsafeAndLeaveCriticalRegion(Mutex);
+    }
 
     /* acquire/release unsafe */
     if (!KmtIsCheckedBuild || OriginalIrql == APC_LEVEL)
@@ -290,6 +312,13 @@ START_TEST(ExFastMutex)
 {
     FAST_MUTEX Mutex;
     KIRQL Irql;
+
+    pExEnterCriticalRegionAndAcquireFastMutexUnsafe = KmtGetSystemRoutineAddress(L"ExEnterCriticalRegionAndAcquireFastMutexUnsafe");
+    pExReleaseFastMutexUnsafeAndLeaveCriticalRegion = KmtGetSystemRoutineAddress(L"ExReleaseFastMutexUnsafeAndLeaveCriticalRegion");
+
+    pExiAcquireFastMutex = KmtGetSystemRoutineAddress(L"ExiAcquireFastMutex");
+    pExiReleaseFastMutex = KmtGetSystemRoutineAddress(L"ExiReleaseFastMutex");
+    pExiTryToAcquireFastMutex = KmtGetSystemRoutineAddress(L"ExiTryToAcquireFastMutex");
 
     memset(&Mutex, 0x55, sizeof Mutex);
     ExInitializeFastMutex(&Mutex);

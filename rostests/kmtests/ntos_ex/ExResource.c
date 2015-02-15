@@ -10,6 +10,49 @@
 //#define NDEBUG
 #include <debug.h>
 
+static
+_IRQL_requires_max_(APC_LEVEL)
+_Acquires_lock_(_Global_critical_region_)
+PVOID
+(NTAPI
+*pExEnterCriticalRegionAndAcquireResourceShared)(
+    _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_shared_lock_(*_Curr_)
+        PERESOURCE Resource);
+
+static
+_IRQL_requires_max_(APC_LEVEL)
+_Acquires_lock_(_Global_critical_region_)
+PVOID
+(NTAPI
+*pExEnterCriticalRegionAndAcquireResourceExclusive)(
+    _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_exclusive_lock_(*_Curr_)
+        PERESOURCE Resource);
+
+static
+_IRQL_requires_max_(APC_LEVEL)
+_Acquires_lock_(_Global_critical_region_)
+PVOID
+(NTAPI
+*pExEnterCriticalRegionAndAcquireSharedWaitForExclusive)(
+    _Inout_ _Requires_lock_not_held_(*_Curr_) _Acquires_lock_(*_Curr_)
+        PERESOURCE Resource);
+
+static
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Releases_lock_(_Global_critical_region_)
+VOID
+(FASTCALL
+*pExReleaseResourceAndLeaveCriticalRegion)(
+    _Inout_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+        PERESOURCE Resource);
+
+static
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+BOOLEAN
+(NTAPI
+*pKeAreAllApcsDisabled)(VOID);
+
 /* TODO: This is getting pretty long, make it somehow easier to read if possible */
 
 /* TODO: this is the Windows Server 2003 version! ROS should use this!
@@ -137,65 +180,83 @@ TestResourceUndocumentedShortcuts(
     LONG Count = 0;
 
     ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_uint(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_uint(pKeAreAllApcsDisabled(), AreApcsDisabled);
 
+    if (skip(pExEnterCriticalRegionAndAcquireResourceShared &&
+             pExEnterCriticalRegionAndAcquireSharedWaitForExclusive &&
+             pExEnterCriticalRegionAndAcquireResourceExclusive &&
+             pExReleaseResourceAndLeaveCriticalRegion, "No shortcuts\n"))
+    {
+        return;
+    }
     /* ExEnterCriticalRegionAndAcquireResourceShared, ExEnterCriticalRegionAndAcquireSharedWaitForExclusive */
     Count = 0;
-    Ret = ExEnterCriticalRegionAndAcquireResourceShared(Res); ++Count;
+    Ret = pExEnterCriticalRegionAndAcquireResourceShared(Res); ++Count;
     ok_eq_pointer(Ret, KeGetCurrentThread()->Win32Thread);
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 
-    Ret = ExEnterCriticalRegionAndAcquireResourceShared(Res); ++Count;
+    Ret = pExEnterCriticalRegionAndAcquireResourceShared(Res); ++Count;
     ok_eq_pointer(Ret, KeGetCurrentThread()->Win32Thread);
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 
-    ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(Res); ++Count;
+    pExEnterCriticalRegionAndAcquireSharedWaitForExclusive(Res); ++Count;
     ok_eq_pointer(Ret, KeGetCurrentThread()->Win32Thread);
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 
     while (Count-- > 1)
     {
-        ExReleaseResourceAndLeaveCriticalRegion(Res);
+        pExReleaseResourceAndLeaveCriticalRegion(Res);
         ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-        ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+        if (pKeAreAllApcsDisabled)
+            ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
         CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
     }
 
-    ExReleaseResourceAndLeaveCriticalRegion(Res);
+    pExReleaseResourceAndLeaveCriticalRegion(Res);
     ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 
     /* ExEnterCriticalRegionAndAcquireResourceExclusive */
     Count = 0;
     ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
-    Ret = ExEnterCriticalRegionAndAcquireResourceExclusive(Res); ++Count;
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
+    Ret = pExEnterCriticalRegionAndAcquireResourceExclusive(Res); ++Count;
     ok_eq_pointer(Ret, KeGetCurrentThread()->Win32Thread);
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, TRUE, Count, 0LU, 0LU);
 
-    Ret = ExEnterCriticalRegionAndAcquireResourceExclusive(Res); ++Count;
+    Ret = pExEnterCriticalRegionAndAcquireResourceExclusive(Res); ++Count;
     ok_eq_pointer(Ret, KeGetCurrentThread()->Win32Thread);
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, TRUE, Count, 0LU, 0LU);
 
-    ExReleaseResourceAndLeaveCriticalRegion(Res); --Count;
+    pExReleaseResourceAndLeaveCriticalRegion(Res); --Count;
     ok_bool_true(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_bool(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_bool(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, TRUE, Count, 0LU, 0LU);
 
-    ExReleaseResourceAndLeaveCriticalRegion(Res); --Count;
+    pExReleaseResourceAndLeaveCriticalRegion(Res); --Count;
     ok_bool_false(KeAreApcsDisabled(), "KeAreApcsDisabled returned");
-    ok_eq_uint(KeAreAllApcsDisabled(), AreApcsDisabled);
+    if (pKeAreAllApcsDisabled)
+        ok_eq_uint(pKeAreAllApcsDisabled(), AreApcsDisabled);
     CheckResourceStatus(Res, FALSE, Count, 0LU, 0LU);
 }
 
@@ -399,6 +460,17 @@ START_TEST(ExResource)
     NTSTATUS Status;
     ERESOURCE Res;
     KIRQL Irql;
+
+    pExEnterCriticalRegionAndAcquireResourceShared = KmtGetSystemRoutineAddress(L"ExEnterCriticalRegionAndAcquireResourceShared");
+    pExEnterCriticalRegionAndAcquireSharedWaitForExclusive = KmtGetSystemRoutineAddress(L"ExEnterCriticalRegionAndAcquireSharedWaitForExclusive");
+    pExEnterCriticalRegionAndAcquireResourceExclusive = KmtGetSystemRoutineAddress(L"ExEnterCriticalRegionAndAcquireResourceExclusive");
+    pExReleaseResourceAndLeaveCriticalRegion = KmtGetSystemRoutineAddress(L"ExReleaseResourceAndLeaveCriticalRegion");
+    pKeAreAllApcsDisabled = KmtGetSystemRoutineAddress(L"KeAreAllApcsDisabled");
+
+    if (skip(pKeAreAllApcsDisabled != NULL, "KeAreAllApcsDisabled unavailable\n"))
+    {
+        /* We can live without this function here */
+    }
 
     /* this must be true even with the different structure versions */
     ASSERT(sizeof(ERESOURCE) == sizeof(ERESOURCE_2K3));

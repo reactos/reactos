@@ -126,6 +126,13 @@ USHORT KmtGetPoolType(PVOID Memory)
     return Header->PoolType;
 }
 
+PVOID KmtGetSystemRoutineAddress(IN PCWSTR RoutineName)
+{
+    UNICODE_STRING RoutineNameString;
+    RtlInitUnicodeString(&RoutineNameString, (PWSTR)RoutineName);
+    return MmGetSystemRoutineAddress(&RoutineNameString);
+}
+
 PKTHREAD KmtStartThread(IN PKSTART_ROUTINE StartRoutine, IN PVOID StartContext OPTIONAL)
 {
     NTSTATUS Status;

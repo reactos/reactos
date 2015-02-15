@@ -20,19 +20,36 @@ __declspec(dllimport) void __stdcall KeReleaseSpinLockFromDpcLevel(unsigned long
 //#define NDEBUG
 #include <debug.h>
 
-/* TODO: these are documented for Vista+ */
-NTKERNELAPI
+static
+_Must_inspect_result_
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Post_satisfies_(return == 1 || return == 0)
+BOOLEAN
+(FASTCALL
+*pKeTryToAcquireSpinLockAtDpcLevel)(
+    _Inout_ _Requires_lock_not_held_(*_Curr_)
+    _When_(return!=0, _Acquires_lock_(*_Curr_))
+        PKSPIN_LOCK SpinLock);
+
+static
 VOID
-FASTCALL
-KeAcquireInStackQueuedSpinLockForDpc(
+(FASTCALL
+*pKeAcquireInStackQueuedSpinLockForDpc)(
   IN OUT PKSPIN_LOCK SpinLock,
   OUT PKLOCK_QUEUE_HANDLE LockHandle);
 
-NTKERNELAPI
+static
 VOID
-FASTCALL
-KeReleaseInStackQueuedSpinLockForDpc(
+(FASTCALL
+*pKeReleaseInStackQueuedSpinLockForDpc)(
   IN PKLOCK_QUEUE_HANDLE LockHandle);
+
+static
+_Must_inspect_result_
+BOOLEAN
+(FASTCALL
+*pKeTestSpinLock)(
+  _In_ PKSPIN_LOCK SpinLock);
 
 /* TODO: multiprocessor testing */
 
@@ -119,8 +136,8 @@ DEFINE_ACQUIRE(AcquireForDpc,         TRUE,  CheckData->Irql = KeAcquireSpinLock
 DEFINE_RELEASE(ReleaseForDpc,         TRUE,  KeReleaseSpinLockForDpc(SpinLock, CheckData->Irql))
 #endif
 
-DEFINE_ACQUIRE(AcquireInStackForDpc,  FALSE, KeAcquireInStackQueuedSpinLockForDpc(SpinLock, &CheckData->QueueHandle))
-DEFINE_RELEASE(ReleaseInStackForDpc,  FALSE, KeReleaseInStackQueuedSpinLockForDpc(&CheckData->QueueHandle))
+DEFINE_ACQUIRE(AcquireInStackForDpc,  FALSE, pKeAcquireInStackQueuedSpinLockForDpc(SpinLock, &CheckData->QueueHandle))
+DEFINE_RELEASE(ReleaseInStackForDpc,  FALSE, pKeReleaseInStackQueuedSpinLockForDpc(&CheckData->QueueHandle))
 
 #ifdef _X86_
 DEFINE_ACQUIRE(AcquireInt,            FALSE, KiAcquireSpinLock(SpinLock))
@@ -142,7 +159,7 @@ BOOLEAN TryQueuedSynch(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
     return Ret;
 }
 BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
-    BOOLEAN Ret = KeTryToAcquireSpinLockAtDpcLevel(SpinLock);
+    BOOLEAN Ret = pKeTryToAcquireSpinLockAtDpcLevel(SpinLock);
     return Ret;
 }
 
@@ -197,7 +214,7 @@ BOOLEAN TryNoRaise(PKSPIN_LOCK SpinLock, PCHECK_DATA CheckData) {
 
 #define CheckSpinLock(SpinLock, CheckData, Value) do                                \
 {                                                                                   \
-    BOOLEAN Ret = SpinLock ? KeTestSpinLock(SpinLock) : TRUE;                       \
+    BOOLEAN Ret = SpinLock && pKeTestSpinLock ? pKeTestSpinLock(SpinLock) : TRUE;   \
     KIRQL ExpectedIrql = (CheckData)->OriginalIrql;                                 \
                                                                                     \
     switch ((CheckData)->Check)                                                     \
@@ -257,7 +274,10 @@ TestSpinLock(
     }
 
     if (CheckData->AcquireNoRaise &&
-            (CheckData->OriginalIrql >= DISPATCH_LEVEL || !KmtIsCheckedBuild))
+        (CheckData->OriginalIrql >= DISPATCH_LEVEL || !KmtIsCheckedBuild) &&
+        (CheckData->AcquireNoRaise != AcquireInStackForDpc ||
+         !skip(pKeAcquireInStackQueuedSpinLockForDpc &&
+               pKeReleaseInStackQueuedSpinLockForDpc, "No DPC spinlock functions\n")))
     {
         /* acquire/release without irql change */
         CheckData->AcquireNoRaise(SpinLock, CheckData);
@@ -279,7 +299,8 @@ TestSpinLock(
         CheckData->IsAcquired = FALSE;
         KmtSetIrql(CheckData->OriginalIrql);
 
-        if (CheckData->TryAcquireNoRaise)
+        if (CheckData->TryAcquireNoRaise &&
+            !skip(pKeTryToAcquireSpinLockAtDpcLevel != NULL, "KeTryToAcquireSpinLockAtDpcLevel unavailable\n"))
         {
             CheckSpinLock(SpinLock, CheckData, 0);
             ok_bool_true(CheckData->TryAcquireNoRaise(SpinLock, CheckData), "TryAcquireNoRaise returned");
@@ -320,7 +341,14 @@ START_TEST(KeSpinLock)
         { CheckQueue,       SynchIrql,      AcquireQueuedSynch,   ReleaseQueued,        TryQueuedSynch, NULL,                  NULL,                  NULL,       LockQueuePfnLock },
     };
     int i, iIrql;
-    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKPRCB Prcb;
+
+    pKeTryToAcquireSpinLockAtDpcLevel = KmtGetSystemRoutineAddress(L"KeTryToAcquireSpinLockAtDpcLevel");
+    pKeAcquireInStackQueuedSpinLockForDpc = KmtGetSystemRoutineAddress(L"KeAcquireInStackQueuedSpinLockForDpc");
+    pKeReleaseInStackQueuedSpinLockForDpc = KmtGetSystemRoutineAddress(L"KeReleaseInStackQueuedSpinLockForDpc");
+    pKeTestSpinLock = KmtGetSystemRoutineAddress(L"KeTestSpinLock");
+
+    Prcb = KeGetCurrentPrcb();
 
     /* KeInitializeSpinLock */
     memset(&SpinLock, 0x55, sizeof SpinLock);
@@ -328,17 +356,20 @@ START_TEST(KeSpinLock)
     ok_eq_ulongptr(SpinLock, 0);
 
     /* KeTestSpinLock */
-    ok_bool_true(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
-    SpinLock = 1;
-    ok_bool_false(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
-    SpinLock = 2;
-    ok_bool_false(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
-    SpinLock = (ULONG_PTR)-1;
-    ok_bool_false(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
-    SpinLock = (ULONG_PTR)1 << (sizeof(ULONG_PTR) * CHAR_BIT - 1);
-    ok_bool_false(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
-    SpinLock = 0;
-    ok_bool_true(KeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+    if (!skip(pKeTestSpinLock != NULL, "KeTestSpinLock unavailable\n"))
+    {
+        ok_bool_true(pKeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+        SpinLock = 1;
+        ok_bool_false(pKeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+        SpinLock = 2;
+        ok_bool_false(pKeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+        SpinLock = (ULONG_PTR)-1;
+        ok_bool_false(pKeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+        SpinLock = (ULONG_PTR)1 << (sizeof(ULONG_PTR) * CHAR_BIT - 1);
+        ok_bool_false(pKeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+        SpinLock = 0;
+        ok_bool_true(pKeTestSpinLock(&SpinLock), "KeTestSpinLock returned");
+    }
 
     /* on UP none of the following functions actually looks at the spinlock! */
     if (!KmtIsMultiProcessorBuild && !KmtIsCheckedBuild)

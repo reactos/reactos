@@ -132,6 +132,7 @@ VOID KmtSetIrql(IN KIRQL NewIrql);
 BOOLEAN KmtAreInterruptsEnabled(VOID);
 ULONG KmtGetPoolTag(PVOID Memory);
 USHORT KmtGetPoolType(PVOID Memory);
+PVOID KmtGetSystemRoutineAddress(IN PCWSTR RoutineName);
 PKTHREAD KmtStartThread(IN PKSTART_ROUTINE StartRoutine, IN PVOID StartContext OPTIONAL);
 VOID KmtFinishThread(IN PKTHREAD Thread OPTIONAL, IN PKEVENT Event OPTIONAL);
 #elif defined KMT_USER_MODE

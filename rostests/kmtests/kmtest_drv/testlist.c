@@ -94,7 +94,7 @@ const KMT_TEST TestList[] =
     { "KeIrql",                             Test_KeIrql },
     { "KeMutex",                            Test_KeMutex },
     { "-KeProcessor",                       Test_KeProcessor },
-    { "KeSpinLock",                        Test_KeSpinLock },
+    { "KeSpinLock",                         Test_KeSpinLock },
     { "KeTimer",                            Test_KeTimer },
     { "-KernelType",                        Test_KernelType },
     { "MmSection",                          Test_MmSection },

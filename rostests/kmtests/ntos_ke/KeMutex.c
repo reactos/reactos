@@ -7,6 +7,13 @@
 
 #include <kmt_test.h>
 
+static
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+BOOLEAN
+(NTAPI
+*pKeAreAllApcsDisabled)(VOID);
+
 #define ULONGS_PER_POINTER (sizeof(PVOID) / sizeof(ULONG))
 #define MUTANT_SIZE (2 + 6 * ULONGS_PER_POINTER)
 
@@ -55,7 +62,8 @@ C_ASSERT(sizeof(KMUTANT) == MUTANT_SIZE * sizeof(ULONG));
 {                                                                                       \
     ok_eq_bool(KeAreApcsDisabled(), KernelApcsDisabled || SpecialApcsDisabled);         \
     ok_eq_int(Thread->KernelApcDisable, KernelApcsDisabled);                            \
-    ok_eq_bool(KeAreAllApcsDisabled(), AllApcsDisabled);                                \
+    if (pKeAreAllApcsDisabled)                                                          \
+        ok_eq_bool(pKeAreAllApcsDisabled(), AllApcsDisabled);                           \
     ok_eq_int(Thread->SpecialApcDisable, SpecialApcsDisabled);                          \
     ok_irql(Irql);                                                                      \
 } while (0)
@@ -137,6 +145,12 @@ TestMutex(VOID)
 
 START_TEST(KeMutex)
 {
+    pKeAreAllApcsDisabled = KmtGetSystemRoutineAddress(L"KeAreAllApcsDisabled");
+    if (skip(pKeAreAllApcsDisabled != NULL, "KeAreAllApcsDisabled unavailable\n"))
+    {
+        /* We can live without this function here */
+    }
+
     TestMutant();
     TestMutex();
 }
