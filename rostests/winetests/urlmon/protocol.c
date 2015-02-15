@@ -3748,12 +3748,6 @@ START_TEST(protocol)
 {
     HMODULE hurlmon;
 
-    if(!winetest_interactive)
-    {
-        skip("protocol test skipped, ROSTESTS-38\n");
-        return;
-    }
-
     hurlmon = GetModuleHandleA("urlmon.dll");
     pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
     pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");
