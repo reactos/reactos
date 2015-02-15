@@ -1602,7 +1602,7 @@ typedef struct _LDT_ENTRY {
 #endif /* _LDT_ENTRY_DEFINED */
 
 /* FIXME: add more machines */
-#if defined(_X86_) && !defined(__PowerPC__)
+#if defined(_X86_)
 #define SIZE_OF_80387_REGISTERS    80
 #define CONTEXT_i386    0x10000
 #define CONTEXT_i486    0x10000
@@ -1658,7 +1658,7 @@ typedef struct _CONTEXT {
   DWORD SegSs;
   BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
-#elif defined(__x86_64__)
+#elif defined(_AMD64_)
 
 #define CONTEXT_AMD64 0x100000
 
@@ -2107,7 +2107,7 @@ typedef struct _CONTEXT {
     DWORD ContextFlags;
     DWORD Fill[4];
 } CONTEXT;
-#elif defined(SHx)
+#elif defined(_SH_)
 
 /* These are the debug or break registers on the SH3 */
 typedef struct _DEBUG_REGISTERS {
