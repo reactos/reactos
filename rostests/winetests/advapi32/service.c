@@ -2266,6 +2266,12 @@ static void test_start_stop(void)
         goto cleanup;
     }
 
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-151: Skipping service start timeout tests because they take too long. This is not a bug!\n");
+        goto cleanup;
+    }
+
     /* Again with a process that exits right away */
     displayname = "Winetest Exit Service";
     ret = ChangeServiceConfigA(svc_handle, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE, cmd, NULL, NULL, NULL, NULL, NULL, displayname);
