@@ -1591,7 +1591,7 @@ HKLM,"SOFTWARE\Microsoft\Ole","EnableRemoteConnect",0x00000000,"N"
 ; SvcHost services
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","DcomLaunch",0x00010000,"PlugPlay"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000,"DHCP","BITS"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000,"DHCP","BITS",winmgmt"
 
 ; Win32 config
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows",,0x00000012

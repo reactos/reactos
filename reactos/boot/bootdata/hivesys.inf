@@ -1943,6 +1943,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ObjectName",0x00000000,"Loca
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Type",0x00010001,0x00000020
 
+; WMI service
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","DisplayName",0x00000000,"ReactOS Management Infrastructure"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Description",0x00000000,"Provides interface to system management information"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Group",0x00000000,"WMI"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\winmgmt\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wbem\wmisvc.dll"
+
 ; Sound Blaster (NT4)
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ErrorControl",0x00010001,0x00000001
