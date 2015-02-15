@@ -20,6 +20,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winreg.h>
 #include <winuser.h>
 #include <imm.h>
 
@@ -41,5 +42,19 @@
 
 /* CSRSS Header */
 #include <csr/csrsrv.h>
+
+typedef struct tagSHUTDOWN_SETTINGS
+{
+    BOOL  AutoEndTasks;
+    ULONG HungAppTimeout;
+    ULONG WaitToKillAppTimeout;
+    ULONG WaitToKillServiceTimeout;
+    ULONG ProcessTerminateTimeout;
+} SHUTDOWN_SETTINGS, *PSHUTDOWN_SETTINGS;
+
+extern SHUTDOWN_SETTINGS ShutdownSettings;
+
+VOID FASTCALL
+GetTimeouts(IN PSHUTDOWN_SETTINGS ShutdownSettings);
 
 #endif /* __WINSRV_H__ */
