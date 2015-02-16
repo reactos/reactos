@@ -367,6 +367,7 @@ CheckAdjacentVADs()
     NTSTATUS Status;
     PVOID BaseAddress;
     SIZE_T Size;
+    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
 
     /* Reserve a full 64k region */
     BaseAddress = UlongToPtr(0x50000000);
@@ -486,6 +487,42 @@ CheckAdjacentVADs()
     }
     _SEH2_END;
     ok_ntstatus(Status, STATUS_ACCESS_VIOLATION);
+
+    /* Commit a page at the end of the first region */
+    BaseAddress = UlongToPtr(0x5000F000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    ok_ptr(BaseAddress, UlongToPtr(0x5000F000));
+
+    /* See where is the base of this newly committed area
+     * (choose a base address in the middle of it) */
+    Status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                  UlongToPtr(0x5000F700),
+                                  MemoryBasicInformation,
+                                  &MemoryBasicInfo,
+                                  sizeof(MemoryBasicInfo),
+                                  NULL);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    /* The base address is the beginning of the committed area */
+    ok_ptr(MemoryBasicInfo.BaseAddress, UlongToPtr(0x5000F000));
+    /* The allocation base address is the beginning of the whole region */
+    ok_ptr(MemoryBasicInfo.AllocationBase, UlongToPtr(0x50000000));
+    /* This is the protection of the memory when it was reserved. */
+    ok_long(MemoryBasicInfo.AllocationProtect, PAGE_NOACCESS);
+    /* This is the size of the committed region. (ie, smallest chunk size) */
+    ok_long(MemoryBasicInfo.RegionSize, 0x1000);
+    /* This is the state of the queried address */
+    ok_long(MemoryBasicInfo.State, MEM_COMMIT);
+    /* This is the protection of the queried address */
+    ok_long(MemoryBasicInfo.Protect, PAGE_READWRITE);
+    /* NtAllocateVirtualMemory makes it MEM_PRIVATE */
+    ok_long(MemoryBasicInfo.Type, MEM_PRIVATE);
 
     /* Try to free the whole region at once */
     BaseAddress = UlongToPtr(0x50000000);
