@@ -84,9 +84,6 @@ static int CALLBACK eto_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     LOGFONTA device_lf;
     INT ret;
 
-    trace("hdc %p, emr->iType %d, emr->nSize %d, param %p\n",
-           hdc, emr->iType, emr->nSize, (void *)param);
-
     if(!hdc) return 1;
 
     PlayEnhMetaFileRecord(hdc, handle_table, emr, n_objs);
@@ -299,10 +296,6 @@ static int CALLBACK eto_scale_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     if (emr->iType == EMR_EXTTEXTOUTW)
     {
         const EMREXTTEXTOUTW *pExtTextOutW = (const EMREXTTEXTOUTW *)emr;
-        trace("gm %d, mm %d, scale %f, %f, expected %f, %f\n",
-              test->graphics_mode, test->map_mode,
-              pExtTextOutW->exScale, pExtTextOutW->eyScale,
-              test->ex_scale, test->ey_scale);
         ok(fabs(test->ex_scale - pExtTextOutW->exScale) < 0.001,
            "Got exScale %f, expected %f\n", pExtTextOutW->exScale, test->ex_scale);
         ok(fabs(test->ey_scale - pExtTextOutW->eyScale) < 0.001,
@@ -488,7 +481,6 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     trace("hdc %p, emr->iType %d, emr->nSize %d, param %p\n",
            hdc, emr->iType, emr->nSize, (void *)param);
 
-    trace("BEFORE:\n");
     SetLastError(0xdeadbeef);
     ret = GetWorldTransform(hdc, &xform);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
@@ -610,7 +602,6 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         break;
     }
 
-    trace("AFTER:\n");
     SetLastError(0xdeadbeef);
     ret = GetWorldTransform(hdc, &xform);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
@@ -3222,11 +3213,8 @@ static void test_GetWinMetaFileBits(void)
     for(mode = MM_MIN; mode <= MM_MAX; mode++)
     {
         RECT *rc;
-        trace("mode %d\n", mode);
-
         for(rc = frames; rc->right - rc->left > 0; rc++)
         {
-            trace("frame %d,%d - %d,%d\n", rc->left, rc->top, rc->right, rc->bottom);
             getwinmetafilebits(mode, 1, rc);
             getwinmetafilebits(mode, 2, rc);
         }

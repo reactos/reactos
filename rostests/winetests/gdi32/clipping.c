@@ -184,11 +184,12 @@ static void test_ExtCreateRegion(void)
 {
     static const RECT empty_rect;
     static const RECT rc = { 111, 222, 333, 444 };
+    static const RECT arc[2] = { {0, 0, 10, 10}, {10, 10, 20, 20}};
     static const RECT rc_xformed = { 76, 151, 187, 262 };
     union
     {
         RGNDATA data;
-        char buf[sizeof(RGNDATAHEADER) + sizeof(RECT)];
+        char buf[sizeof(RGNDATAHEADER) + 2 * sizeof(RECT)];
     } rgn;
     HRGN hrgn;
     XFORM xform;
@@ -224,6 +225,20 @@ static void test_ExtCreateRegion(void)
     rgn.data.rdh.iType = RDH_RECTANGLES;
     rgn.data.rdh.dwSize = sizeof(rgn.data.rdh);
 
+    /* sizeof(RGNDATAHEADER) is large enough */
+    SetLastError(0xdeadbeef);
+    hrgn = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER), &rgn.data);
+    ok(hrgn != 0, "ExtCreateRegion error %u\n", GetLastError());
+    verify_region(hrgn, &empty_rect);
+    DeleteObject(hrgn);
+
+    /* Cannot be smaller than sizeof(RGNDATAHEADER) */
+    SetLastError(0xdeadbeef);
+    hrgn = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER) - 1, &rgn.data);
+    todo_wine
+    ok(!hrgn, "ExtCreateRegion should fail\n");
+    ok(GetLastError() == 0xdeadbeef, "0xdeadbeef, got %u\n", GetLastError());
+
     SetLastError(0xdeadbeef);
     hrgn = ExtCreateRegion(NULL, sizeof(rgn), &rgn.data);
     ok(hrgn != 0, "ExtCreateRegion error %u\n", GetLastError());
@@ -233,6 +248,13 @@ static void test_ExtCreateRegion(void)
     rgn.data.rdh.nCount = 1;
     SetRectEmpty(&rgn.data.rdh.rcBound);
     memcpy(rgn.data.Buffer, &rc, sizeof(rc));
+
+    /* With a single rect this seems to work... */
+    SetLastError(0xdeadbeef);
+    hrgn = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER) + sizeof(RECT) - 1, &rgn.data);
+    ok(hrgn != 0, "ExtCreateRegion error %u\n", GetLastError());
+    verify_region(hrgn, &rc);
+    DeleteObject(hrgn);
 
     SetLastError(0xdeadbeef);
     hrgn = ExtCreateRegion(NULL, sizeof(rgn), &rgn.data);
@@ -267,6 +289,18 @@ static void test_ExtCreateRegion(void)
     ok(hrgn != 0, "ExtCreateRegion error %u/%x\n", GetLastError(), GetLastError());
     verify_region(hrgn, &rc_xformed);
     DeleteObject(hrgn);
+
+    rgn.data.rdh.nCount = 2;
+    SetRectEmpty(&rgn.data.rdh.rcBound);
+    memcpy(rgn.data.Buffer, arc, sizeof(arc));
+
+    /* Buffer cannot be smaller than sizeof(RGNDATAHEADER) + 2 * sizeof(RECT) */
+    SetLastError(0xdeadbeef);
+    hrgn = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER) + 2 * sizeof(RECT) - 1, &rgn.data);
+    todo_wine
+    ok(!hrgn, "ExtCreateRegion should fail\n");
+    ok(GetLastError() == 0xdeadbeef, "0xdeadbeef, got %u\n", GetLastError());
+
 }
 
 static void test_GetClipRgn(void)

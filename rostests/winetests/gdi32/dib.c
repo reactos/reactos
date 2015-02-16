@@ -1214,17 +1214,17 @@ static const char **current_sha1;
 static const RECT *current_bounds;
 static const char *dst_format;
 
-static inline DWORD get_stride(BITMAPINFO *bmi)
+static inline DWORD get_stride(const BITMAPINFO *bmi)
 {
     return ((bmi->bmiHeader.biBitCount * bmi->bmiHeader.biWidth + 31) >> 3) & ~3;
 }
 
-static inline DWORD get_dib_size(BITMAPINFO *bmi)
+static inline DWORD get_dib_size(const BITMAPINFO *bmi)
 {
     return get_stride(bmi) * abs(bmi->bmiHeader.biHeight);
 }
 
-static char *hash_dib(BITMAPINFO *bmi, void *bits)
+static char *hash_dib(const BITMAPINFO *bmi, const void *bits)
 {
     DWORD dib_size = get_dib_size(bmi);
     HCRYPTHASH hash;
@@ -1292,7 +1292,7 @@ static void skip_compare( int count )
     current_bounds++;
 }
 
-static void compare_hash_broken_todo(HDC hdc, BITMAPINFO *bmi, BYTE *bits, const char *info, int num_broken, BOOL todo)
+static void compare_hash_broken_todo(HDC hdc, const BITMAPINFO *bmi, BYTE *bits, const char *info, int num_broken, BOOL todo)
 {
     char *hash = hash_dib(bmi, bits);
     BOOL ok_cond;
@@ -1336,7 +1336,7 @@ static void compare_hash_broken_todo(HDC hdc, BITMAPINFO *bmi, BYTE *bits, const
     compare_bounds( hdc, info );
 }
 
-static void compare_hash(HDC hdc, BITMAPINFO *bmi, BYTE *bits, const char *info)
+static void compare_hash(HDC hdc, const BITMAPINFO *bmi, BYTE *bits, const char *info)
 {
     compare_hash_broken_todo(hdc, bmi, bits, info, 0, FALSE);
 }
@@ -1619,7 +1619,7 @@ static inline void solid_patblt( HDC hdc, int x, int y, int width, int height, C
     DeleteObject( SelectObject( hdc, brush ) );
 }
 
-static void draw_graphics(HDC hdc, BITMAPINFO *bmi, BYTE *bits)
+static void draw_graphics(HDC hdc, const BITMAPINFO *bmi, BYTE *bits)
 {
     char pal_buffer[sizeof(LOGPALETTE) + 255 * sizeof(PALETTEENTRY)];
     LOGPALETTE *pal = (LOGPALETTE *)pal_buffer;
@@ -2844,7 +2844,7 @@ static inline COLORREF aa_colorref( COLORREF dst, COLORREF text, BYTE glyph )
 
 static const BYTE masks[8] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
-static void draw_text_2( HDC hdc, BITMAPINFO *bmi, BYTE *bits, BOOL aa )
+static void draw_text_2( HDC hdc, const BITMAPINFO *bmi, BYTE *bits, BOOL aa )
 {
     DWORD dib_size = get_dib_size(bmi), ret;
     LOGFONTA lf;
@@ -2960,7 +2960,7 @@ static void draw_text_2( HDC hdc, BITMAPINFO *bmi, BYTE *bits, BOOL aa )
     DeleteObject( font );
 }
 
-static void draw_text( HDC hdc, BITMAPINFO *bmi, BYTE *bits )
+static void draw_text( HDC hdc, const BITMAPINFO *bmi, BYTE *bits )
 {
     draw_text_2( hdc, bmi, bits, FALSE );
 

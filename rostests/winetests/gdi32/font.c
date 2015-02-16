@@ -399,12 +399,6 @@ static void test_bitmap_font(void)
     SIZE size_orig;
     INT ret, i, width_orig, height_orig, scale, lfWidth;
 
-    if(!winetest_interactive)
-    {
-	    skip("reactos bug ROSTESTS-8: Skipping bitmap font tests!\n");
-	    return;
-    }
-
     hdc = CreateCompatibleDC(0);
 
     /* "System" has only 1 pixel size defined, otherwise the test breaks */
@@ -497,12 +491,6 @@ static void test_outline_font(void)
     MAT2 mat2 = { {0x8000,0}, {0,0}, {0,0}, {0x8000,0} };
     POINT pt;
     INT ret;
-
-    if(!winetest_interactive)
-    {
-        skip("reactos bug 5401: Skipping outline font tests!\n");
-        return;
-    }
 
     if (!is_truetype_font_installed("Arial"))
     {
@@ -972,7 +960,6 @@ static void test_bitmap_font_metrics(void)
             if(!TranslateCharsetInfo( fs, &csi, TCI_SRCFONTSIG )) continue;
 
             lf.lfCharSet = csi.ciCharset;
-            trace("looking for %s height %d charset %d\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet);
             ret = EnumFontFamiliesExA(hdc, &lf, find_font_proc, (LPARAM)&lf, 0);
             if (fd[i].height & FH_SCALE)
                 ok(ret, "scaled font height %d should not be enumerated\n", height);
@@ -1000,7 +987,6 @@ static void test_bitmap_font_metrics(void)
             {
                 ok(ret != ANSI_CHARSET, "font charset should not be ANSI_CHARSET\n");
                 ok(ret != expected_cs, "font charset %d should not be %d\n", ret, expected_cs);
-                trace("Skipping replacement %s height %d charset %d\n", face_name, tm.tmHeight, tm.tmCharSet);
                 SelectObject(hdc, old_hfont);
                 DeleteObject(hfont);
                 continue;
@@ -1855,7 +1841,6 @@ static void test_height( HDC hdc, const struct font_data *fd )
         ok(ret, "GetTextMetrics error %d\n", GetLastError());
         if(fd[i].dpi == tm.tmDigitizedAspectX)
         {
-            trace("found font %s, height %d charset %x dpi %d\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
             ok(tm.tmWeight == fd[i].weight, "%s(%d): tm.tmWeight %d != %d\n", fd[i].face_name, fd[i].requested_height, tm.tmWeight, fd[i].weight);
             ok(match_off_by_1(tm.tmHeight, fd[i].height, fd[i].exact), "%s(%d): tm.tmHeight %d != %d\n", fd[i].face_name, fd[i].requested_height, tm.tmHeight, fd[i].height);
             ok(match_off_by_1(tm.tmAscent, fd[i].ascent, fd[i].exact), "%s(%d): tm.tmAscent %d != %d\n", fd[i].face_name, fd[i].requested_height, tm.tmAscent, fd[i].ascent);
@@ -2227,8 +2212,6 @@ static void testJustification(HDC hdc, PCSTR str, RECT *clientArea)
             }
         }
 
-        trace( "%u %.*s\n", size.cx, (int)(pLastChar - pFirstChar), pFirstChar);
-
         y += size.cy;
         str = pLastChar;
     } while (*str && y < clientArea->bottom);
@@ -2582,6 +2565,22 @@ static void test_GdiGetCodePage(void)
 
         hfont = SelectObject(hdc, hfont);
         DeleteObject(hfont);
+
+        /* CLIP_DFA_DISABLE turns off the font association */
+        lf.lfClipPrecision = CLIP_DFA_DISABLE;
+        hfont = CreateFontIndirectA(&lf);
+        ok(hfont != 0, "CreateFontIndirectA error %u\n", GetLastError());
+
+        hfont = SelectObject(hdc, hfont);
+        charset = GetTextCharset(hdc);
+        codepage = pGdiGetCodePage(hdc);
+        trace("acp=%d, lfFaceName=%s, lfCharSet=%d, GetTextCharset=%d, GdiGetCodePage=%d\n",
+              acp, lf.lfFaceName, lf.lfCharSet, charset, codepage);
+        ok(codepage == 1252, "GdiGetCodePage returned %d\n", codepage);
+
+        hfont = SelectObject(hdc, hfont);
+        DeleteObject(hfont);
+
         ReleaseDC(NULL, hdc);
     }
 }
@@ -3267,42 +3266,20 @@ static BOOL get_first_last_from_cmap4(void *ptr, DWORD *first, DWORD *last, DWOR
     int i;
     cmap_format_4 *cmap = (cmap_format_4*)ptr;
     USHORT seg_count = GET_BE_WORD(cmap->seg_countx2) / 2;
-    USHORT const *glyph_ids = cmap->end_count + 4 * seg_count + 1;
 
     *first = 0x10000;
 
     for(i = 0; i < seg_count; i++)
     {
-        DWORD code, index;
         cmap_format_4_seg seg;
 
         get_seg4(cmap, i, &seg);
-        for(code = seg.start_count; code <= seg.end_count; code++)
-        {
-            if(seg.id_range_offset == 0)
-                index = (seg.id_delta + code) & 0xffff;
-            else
-            {
-                index = seg.id_range_offset / 2
-                    + code - seg.start_count
-                    + i - seg_count;
 
-                /* some fonts have broken last segment */
-                if ((char *)(glyph_ids + index + 1) < (char *)ptr + limit)
-                    index = GET_BE_WORD(glyph_ids[index]);
-                else
-                {
-                    trace("segment %04x/%04x index %04x points to nowhere\n",
-                          seg.start_count, seg.end_count, index);
-                    index = 0;
-                }
-                if(index) index += seg.id_delta;
-            }
-            if(*first == 0x10000)
-                *last = *first = code;
-            else if(index)
-                *last = code;
-        }
+        if(seg.start_count > 0xfffe) break;
+
+        if(*first == 0x10000) *first = seg.start_count;
+
+        *last = min(seg.end_count, 0xfffe);
     }
 
     if(*first == 0x10000) return FALSE;
@@ -3380,7 +3357,12 @@ end:
     return r;
 }
 
+#define TT_PLATFORM_APPLE_UNICODE 0
+#define TT_PLATFORM_MACINTOSH 1
 #define TT_PLATFORM_MICROSOFT 3
+#define TT_APPLE_ID_DEFAULT 0
+#define TT_APPLE_ID_ISO_10646 2
+#define TT_APPLE_ID_UNICODE_2_0 3
 #define TT_MS_ID_SYMBOL_CS 0
 #define TT_MS_ID_UNICODE_CS 1
 #define TT_MS_LANGID_ENGLISH_UNITED_STATES 0x0409
@@ -3388,6 +3370,194 @@ end:
 #define TT_NAME_ID_FONT_SUBFAMILY 2
 #define TT_NAME_ID_UNIQUE_ID 3
 #define TT_NAME_ID_FULL_NAME 4
+#define TT_MAC_ID_SIMPLIFIED_CHINESE    25
+
+typedef struct sfnt_name
+{
+    USHORT platform_id;
+    USHORT encoding_id;
+    USHORT language_id;
+    USHORT name_id;
+    USHORT length;
+    USHORT offset;
+} sfnt_name;
+
+static const LANGID mac_langid_table[] =
+{
+    MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_ENGLISH */
+    MAKELANGID(LANG_FRENCH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_FRENCH */
+    MAKELANGID(LANG_GERMAN,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_GERMAN */
+    MAKELANGID(LANG_ITALIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_ITALIAN */
+    MAKELANGID(LANG_DUTCH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_DUTCH */
+    MAKELANGID(LANG_SWEDISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SWEDISH */
+    MAKELANGID(LANG_SPANISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SPANISH */
+    MAKELANGID(LANG_DANISH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_DANISH */
+    MAKELANGID(LANG_PORTUGUESE,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_PORTUGUESE */
+    MAKELANGID(LANG_NORWEGIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_NORWEGIAN */
+    MAKELANGID(LANG_HEBREW,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_HEBREW */
+    MAKELANGID(LANG_JAPANESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_JAPANESE */
+    MAKELANGID(LANG_ARABIC,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_ARABIC */
+    MAKELANGID(LANG_FINNISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_FINNISH */
+    MAKELANGID(LANG_GREEK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_GREEK */
+    MAKELANGID(LANG_ICELANDIC,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ICELANDIC */
+    MAKELANGID(LANG_MALTESE,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_MALTESE */
+    MAKELANGID(LANG_TURKISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TURKISH */
+    MAKELANGID(LANG_CROATIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_CROATIAN */
+    MAKELANGID(LANG_CHINESE_TRADITIONAL,SUBLANG_DEFAULT),    /* TT_MAC_LANGID_CHINESE_TRADITIONAL */
+    MAKELANGID(LANG_URDU,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_URDU */
+    MAKELANGID(LANG_HINDI,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_HINDI */
+    MAKELANGID(LANG_THAI,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_THAI */
+    MAKELANGID(LANG_KOREAN,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_KOREAN */
+    MAKELANGID(LANG_LITHUANIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_LITHUANIAN */
+    MAKELANGID(LANG_POLISH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_POLISH */
+    MAKELANGID(LANG_HUNGARIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_HUNGARIAN */
+    MAKELANGID(LANG_ESTONIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ESTONIAN */
+    MAKELANGID(LANG_LATVIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_LETTISH */
+    MAKELANGID(LANG_SAMI,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_SAAMISK */
+    MAKELANGID(LANG_FAEROESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_FAEROESE */
+    MAKELANGID(LANG_FARSI,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_FARSI */
+    MAKELANGID(LANG_RUSSIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_RUSSIAN */
+    MAKELANGID(LANG_CHINESE_SIMPLIFIED,SUBLANG_DEFAULT),     /* TT_MAC_LANGID_CHINESE_SIMPLIFIED */
+    MAKELANGID(LANG_DUTCH,SUBLANG_DUTCH_BELGIAN),            /* TT_MAC_LANGID_FLEMISH */
+    MAKELANGID(LANG_IRISH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_IRISH */
+    MAKELANGID(LANG_ALBANIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ALBANIAN */
+    MAKELANGID(LANG_ROMANIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ROMANIAN */
+    MAKELANGID(LANG_CZECH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_CZECH */
+    MAKELANGID(LANG_SLOVAK,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_SLOVAK */
+    MAKELANGID(LANG_SLOVENIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_SLOVENIAN */
+    0,                                                       /* TT_MAC_LANGID_YIDDISH */
+    MAKELANGID(LANG_SERBIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SERBIAN */
+    MAKELANGID(LANG_MACEDONIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_MACEDONIAN */
+    MAKELANGID(LANG_BULGARIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_BULGARIAN */
+    MAKELANGID(LANG_UKRAINIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_UKRAINIAN */
+    MAKELANGID(LANG_BELARUSIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_BYELORUSSIAN */
+    MAKELANGID(LANG_UZBEK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_UZBEK */
+    MAKELANGID(LANG_KAZAK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_KAZAKH */
+    MAKELANGID(LANG_AZERI,SUBLANG_AZERI_CYRILLIC),           /* TT_MAC_LANGID_AZERBAIJANI */
+    0,                                                       /* TT_MAC_LANGID_AZERBAIJANI_ARABIC_SCRIPT */
+    MAKELANGID(LANG_ARMENIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ARMENIAN */
+    MAKELANGID(LANG_GEORGIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GEORGIAN */
+    0,                                                       /* TT_MAC_LANGID_MOLDAVIAN */
+    MAKELANGID(LANG_KYRGYZ,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_KIRGHIZ */
+    MAKELANGID(LANG_TAJIK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TAJIKI */
+    MAKELANGID(LANG_TURKMEN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TURKMEN */
+    MAKELANGID(LANG_MONGOLIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_MONGOLIAN */
+    MAKELANGID(LANG_MONGOLIAN,SUBLANG_MONGOLIAN_CYRILLIC_MONGOLIA), /* TT_MAC_LANGID_MONGOLIAN_CYRILLIC_SCRIPT */
+    MAKELANGID(LANG_PASHTO,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_PASHTO */
+    0,                                                       /* TT_MAC_LANGID_KURDISH */
+    MAKELANGID(LANG_KASHMIRI,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_KASHMIRI */
+    MAKELANGID(LANG_SINDHI,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_SINDHI */
+    MAKELANGID(LANG_TIBETAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TIBETAN */
+    MAKELANGID(LANG_NEPALI,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_NEPALI */
+    MAKELANGID(LANG_SANSKRIT,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_SANSKRIT */
+    MAKELANGID(LANG_MARATHI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_MARATHI */
+    MAKELANGID(LANG_BENGALI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_BENGALI */
+    MAKELANGID(LANG_ASSAMESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ASSAMESE */
+    MAKELANGID(LANG_GUJARATI,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GUJARATI */
+    MAKELANGID(LANG_PUNJABI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_PUNJABI */
+    MAKELANGID(LANG_ORIYA,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_ORIYA */
+    MAKELANGID(LANG_MALAYALAM,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_MALAYALAM */
+    MAKELANGID(LANG_KANNADA,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_KANNADA */
+    MAKELANGID(LANG_TAMIL,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TAMIL */
+    MAKELANGID(LANG_TELUGU,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_TELUGU */
+    MAKELANGID(LANG_SINHALESE,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_SINHALESE */
+    0,                                                       /* TT_MAC_LANGID_BURMESE */
+    MAKELANGID(LANG_KHMER,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_KHMER */
+    MAKELANGID(LANG_LAO,SUBLANG_DEFAULT),                    /* TT_MAC_LANGID_LAO */
+    MAKELANGID(LANG_VIETNAMESE,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_VIETNAMESE */
+    MAKELANGID(LANG_INDONESIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_INDONESIAN */
+    0,                                                       /* TT_MAC_LANGID_TAGALOG */
+    MAKELANGID(LANG_MALAY,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_MALAY_ROMAN_SCRIPT */
+    0,                                                       /* TT_MAC_LANGID_MALAY_ARABIC_SCRIPT */
+    MAKELANGID(LANG_AMHARIC,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_AMHARIC */
+    MAKELANGID(LANG_TIGRIGNA,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_TIGRINYA */
+    0,                                                       /* TT_MAC_LANGID_GALLA */
+    0,                                                       /* TT_MAC_LANGID_SOMALI */
+    MAKELANGID(LANG_SWAHILI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SWAHILI */
+    0,                                                       /* TT_MAC_LANGID_RUANDA */
+    0,                                                       /* TT_MAC_LANGID_RUNDI */
+    0,                                                       /* TT_MAC_LANGID_CHEWA */
+    MAKELANGID(LANG_MALAGASY,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_MALAGASY */
+    MAKELANGID(LANG_ESPERANTO,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ESPERANTO */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,       /* 95-111 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          /* 112-127 */
+    MAKELANGID(LANG_WELSH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_WELSH */
+    MAKELANGID(LANG_BASQUE,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BASQUE */
+    MAKELANGID(LANG_CATALAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_CATALAN */
+    0,                                                       /* TT_MAC_LANGID_LATIN */
+    MAKELANGID(LANG_QUECHUA,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_QUECHUA */
+    0,                                                       /* TT_MAC_LANGID_GUARANI */
+    0,                                                       /* TT_MAC_LANGID_AYMARA */
+    MAKELANGID(LANG_TATAR,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TATAR */
+    MAKELANGID(LANG_UIGHUR,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_UIGHUR */
+    0,                                                       /* TT_MAC_LANGID_DZONGKHA */
+    0,                                                       /* TT_MAC_LANGID_JAVANESE */
+    0,                                                       /* TT_MAC_LANGID_SUNDANESE */
+    MAKELANGID(LANG_GALICIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GALICIAN */
+    MAKELANGID(LANG_AFRIKAANS,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_AFRIKAANS */
+    MAKELANGID(LANG_BRETON,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BRETON */
+    MAKELANGID(LANG_INUKTITUT,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_INUKTITUT */
+    MAKELANGID(LANG_SCOTTISH_GAELIC,SUBLANG_DEFAULT),        /* TT_MAC_LANGID_SCOTTISH_GAELIC */
+    MAKELANGID(LANG_MANX_GAELIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_MANX_GAELIC */
+    MAKELANGID(LANG_IRISH,SUBLANG_IRISH_IRELAND),            /* TT_MAC_LANGID_IRISH_GAELIC */
+    0,                                                       /* TT_MAC_LANGID_TONGAN */
+    0,                                                       /* TT_MAC_LANGID_GREEK_POLYTONIC */
+    MAKELANGID(LANG_GREENLANDIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_GREELANDIC */
+    MAKELANGID(LANG_AZERI,SUBLANG_AZERI_LATIN),              /* TT_MAC_LANGID_AZERBAIJANI_ROMAN_SCRIPT */
+};
+
+static inline WORD get_mac_code_page( const sfnt_name *name )
+{
+    if (GET_BE_WORD(name->encoding_id) == TT_MAC_ID_SIMPLIFIED_CHINESE) return 10008;  /* special case */
+    return 10000 + GET_BE_WORD(name->encoding_id);
+}
+
+static int match_name_table_language( const sfnt_name *name, LANGID lang )
+{
+    LANGID name_lang;
+    int res = 0;
+
+    switch (GET_BE_WORD(name->platform_id))
+    {
+    case TT_PLATFORM_MICROSOFT:
+        res += 5;  /* prefer the Microsoft name */
+        switch (GET_BE_WORD(name->encoding_id))
+        {
+        case TT_MS_ID_UNICODE_CS:
+        case TT_MS_ID_SYMBOL_CS:
+            name_lang = GET_BE_WORD(name->language_id);
+            break;
+        default:
+            return 0;
+        }
+        break;
+    case TT_PLATFORM_MACINTOSH:
+        if (!IsValidCodePage( get_mac_code_page( name ))) return 0;
+        if (GET_BE_WORD(name->language_id) >= sizeof(mac_langid_table)/sizeof(mac_langid_table[0])) return 0;
+        name_lang = mac_langid_table[GET_BE_WORD(name->language_id)];
+        break;
+    case TT_PLATFORM_APPLE_UNICODE:
+        res += 2;  /* prefer Unicode encodings */
+        switch (GET_BE_WORD(name->encoding_id))
+        {
+        case TT_APPLE_ID_DEFAULT:
+        case TT_APPLE_ID_ISO_10646:
+        case TT_APPLE_ID_UNICODE_2_0:
+            if (GET_BE_WORD(name->language_id) >= sizeof(mac_langid_table)/sizeof(mac_langid_table[0])) return 0;
+            name_lang = mac_langid_table[GET_BE_WORD(name->language_id)];
+            break;
+        default:
+            return 0;
+        }
+        break;
+    default:
+        return 0;
+    }
+    if (name_lang == lang) res += 30;
+    else if (PRIMARYLANGID( name_lang ) == PRIMARYLANGID( lang )) res += 20;
+    else if (name_lang == MAKELANGID( LANG_ENGLISH, SUBLANG_DEFAULT )) res += 10;
+    return res;
+}
 
 static BOOL get_ttf_nametable_entry(HDC hdc, WORD name_id, WCHAR *out_buf, SIZE_T out_size, LCID language_id)
 {
@@ -3397,21 +3567,14 @@ static BOOL get_ttf_nametable_entry(HDC hdc, WORD name_id, WCHAR *out_buf, SIZE_
         USHORT number_of_record;
         USHORT storage_offset;
     } *header;
-    struct sfnt_name
-    {
-        USHORT platform_id;
-        USHORT encoding_id;
-        USHORT language_id;
-        USHORT name_id;
-        USHORT length;
-        USHORT offset;
-    } *entry;
+    sfnt_name *entry;
     BOOL r = FALSE;
     LONG size, offset, length;
     LONG c, ret;
     WCHAR *name;
     BYTE *data;
     USHORT i;
+    int res, best_lang = 0, best_index = -1;
 
     size = GetFontData(hdc, MS_NAME_TAG, 0, NULL, 0);
     ok(size != GDI_ERROR, "no name table found\n");
@@ -3444,35 +3607,34 @@ static BOOL get_ttf_nametable_entry(HDC hdc, WORD name_id, WCHAR *out_buf, SIZE_
     entry = (void *)&header[1];
     for (i = 0; i < header->number_of_record; i++)
     {
-        if (GET_BE_WORD(entry[i].platform_id) != TT_PLATFORM_MICROSOFT ||
-            (GET_BE_WORD(entry[i].encoding_id) != TT_MS_ID_UNICODE_CS && GET_BE_WORD(entry[i].encoding_id) != TT_MS_ID_SYMBOL_CS) ||
-            GET_BE_WORD(entry[i].language_id) != language_id ||
-            GET_BE_WORD(entry[i].name_id) != name_id)
+        if (GET_BE_WORD(entry[i].name_id) != name_id) continue;
+        res = match_name_table_language( &entry[i], language_id);
+        if (res > best_lang)
         {
-            continue;
+            best_lang = res;
+            best_index = i;
         }
-
-        offset = header->storage_offset + GET_BE_WORD(entry[i].offset);
-        length = GET_BE_WORD(entry[i].length);
-        if (offset + length > size)
-        {
-            trace("entry %d is out of range\n", i);
-            break;
-        }
-        if (length >= out_size)
-        {
-            trace("buffer too small for entry %d\n", i);
-            break;
-        }
-
-        name = (WCHAR *)(data + offset);
-        for (c = 0; c < length / 2; c++)
-            out_buf[c] = GET_BE_WORD(name[c]);
-        out_buf[c] = 0;
-
-        r = TRUE;
-        break;
     }
+
+    offset = header->storage_offset + GET_BE_WORD(entry[best_index].offset);
+    length = GET_BE_WORD(entry[best_index].length);
+    if (offset + length > size)
+    {
+        trace("entry %d is out of range\n", best_index);
+        goto out;
+    }
+    if (length >= out_size)
+    {
+        trace("buffer too small for entry %d\n", best_index);
+        goto out;
+    }
+
+    name = (WCHAR *)(data + offset);
+    for (c = 0; c < length / 2; c++)
+        out_buf[c] = GET_BE_WORD(name[c]);
+    out_buf[c] = 0;
+
+    r = TRUE;
 
 out:
     HeapFree(GetProcessHeap(), 0, data);
@@ -3555,6 +3717,9 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
             expect_first_W    = 0;
             switch(GetACP())
             {
+            case 1255:  /* Hebrew */
+                expect_last_W = 0xf896;
+                break;
             case 1257:  /* Baltic */
                 expect_last_W = 0xf8fd;
                 break;
@@ -3569,7 +3734,7 @@ static void test_text_metrics(const LOGFONTA *lf, const NEWTEXTMETRICA *ntm)
         else
         {
             expect_first_W    = cmap_first;
-            expect_last_W     = min(cmap_last, os2_last_char);
+            expect_last_W     = cmap_last;
             if(os2_first_char <= 1)
                 expect_break_W = os2_first_char + 2;
             else if(os2_first_char > 0xff)
@@ -4200,7 +4365,11 @@ static void test_GetGlyphOutline(void)
     SetLastError(0xdeadbeef);
     ret = GetGlyphOutlineW(hdc, ' ', GGO_NATIVE, &gm, 0, NULL, &mat);
     if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+    {
         ok(ret == 0, "GetGlyphOutlineW should return 0 buffer size for space char\n");
+        ok(gm.gmBlackBoxX == 1, "Expected 1, got %u\n", gm.gmBlackBoxX);
+        ok(gm.gmBlackBoxY == 1, "Expected 1, got %u\n", gm.gmBlackBoxY);
+    }
 
     /* requesting buffer size for space char + error */
     memset(&gm, 0, sizeof(gm));
@@ -4210,7 +4379,15 @@ static void test_GetGlyphOutline(void)
     {
        ok(ret == GDI_ERROR, "GetGlyphOutlineW should return GDI_ERROR\n");
        ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %u\n", GetLastError());
+       ok(gm.gmBlackBoxX == 0, "Expected 0, got %u\n", gm.gmBlackBoxX);
+       ok(gm.gmBlackBoxY == 0, "Expected 0, got %u\n", gm.gmBlackBoxY);
     }
+
+    /* test GetGlyphOutline with a buffer too small */
+    SetLastError(0xdeadbeef);
+    ret = GetGlyphOutlineA(hdc, 'A', GGO_NATIVE, &gm, sizeof(i), &i, &mat);
+    if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+        ok(ret == GDI_ERROR, "GetGlyphOutlineW should return an error when the buffer size is too small.\n");
 
     for (i = 0; i < sizeof(fmt) / sizeof(fmt[0]); ++i)
     {
@@ -4690,6 +4867,7 @@ static void test_EnumFonts(void)
     int ret;
     LOGFONTA lf;
     HDC hdc;
+    struct enum_fullname_data efnd;
 
     if (!is_truetype_font_installed("Arial"))
     {
@@ -4749,6 +4927,28 @@ static void test_EnumFonts(void)
     strcpy(lf.lfFaceName, "Arial Italic Bold");
     ret = EnumFontFamiliesA(hdc, NULL, enum_all_fonts_proc, (LPARAM)&lf);
     ok(ret, "font Arial Italic Bold should not be enumerated\n");
+
+    /* MS Shell Dlg and MS Shell Dlg 2 must exist */
+    memset(&lf, 0, sizeof(lf));
+    lf.lfCharSet = DEFAULT_CHARSET;
+
+    memset(&efnd, 0, sizeof(efnd));
+    strcpy(lf.lfFaceName, "MS Shell Dlg");
+    ret = EnumFontFamiliesExA(hdc, &lf, enum_fullname_data_proc, (LPARAM)&efnd, 0);
+    ok(ret, "font MS Shell Dlg is not enumerated\n");
+    ret = strcmp((char*)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg");
+    todo_wine ok(!ret, "expected MS Shell Dlg got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
+    ret = strcmp((char*)efnd.elf[0].elfFullName, "MS Shell Dlg");
+    ok(ret, "did not expect MS Shell Dlg\n");
+
+    memset(&efnd, 0, sizeof(efnd));
+    strcpy(lf.lfFaceName, "MS Shell Dlg 2");
+    ret = EnumFontFamiliesExA(hdc, &lf, enum_fullname_data_proc, (LPARAM)&efnd, 0);
+    ok(ret, "font MS Shell Dlg 2 is not enumerated\n");
+    ret = strcmp((char*)efnd.elf[0].elfLogFont.lfFaceName, "MS Shell Dlg 2");
+    todo_wine ok(!ret, "expected MS Shell Dlg 2 got %s\n", efnd.elf[0].elfLogFont.lfFaceName);
+    ret = strcmp((char*)efnd.elf[0].elfFullName, "MS Shell Dlg 2");
+    ok(ret, "did not expect MS Shell Dlg 2\n");
 
     DeleteDC(hdc);
 }
@@ -4871,8 +5071,6 @@ static void test_fullname2_helper(const char *Family)
         FaceName = (char *)efnd.elf[i].elfFullName;
         StyleName = (char *)efnd.elf[i].elfStyle;
 
-        trace("Checking font %s:\nFamilyName: %s; FaceName: %s; StyleName: %s\n", Family, FamilyName, FaceName, StyleName);
-
         get_vertical = ( FamilyName[0] == '@' );
         ok(get_vertical == want_vertical, "Vertical flags don't match: %s %s\n", Family, FamilyName);
 
@@ -4898,12 +5096,8 @@ static void test_fullname2_helper(const char *Family)
         bufW[0] = 0;
         bufA[0] = 0;
         ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FONT_FAMILY, bufW, buf_size, GetSystemDefaultLangID());
-        if (!ret)
-        {
-            trace("no localized FONT_FAMILY found.\n");
-            ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FONT_FAMILY, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
-        }
-        ok(ret, "FAMILY (family name) could not be read\n");
+        if (!ret) ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FONT_FAMILY, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
+        ok(ret, "%s: FAMILY (family name) could not be read\n", FamilyName);
         if (want_vertical) bufW = prepend_at(bufW);
         WideCharToMultiByte(CP_ACP, 0, bufW, -1, bufA, buf_size, NULL, FALSE);
         ok(!lstrcmpA(FamilyName, bufA), "font family names don't match: returned %s, expect %s\n", FamilyName, bufA);
@@ -4913,44 +5107,32 @@ static void test_fullname2_helper(const char *Family)
         bufW[0] = 0;
         bufA[0] = 0;
         ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FULL_NAME, bufW, buf_size, GetSystemDefaultLangID());
-        if (!ret)
-        {
-            trace("no localized FULL_NAME found.\n");
-            ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FULL_NAME, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
-        }
+        if (!ret) ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FULL_NAME, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
         ok(ret, "FULL_NAME (face name) could not be read\n");
         if (want_vertical) bufW = prepend_at(bufW);
         WideCharToMultiByte(CP_ACP, 0, bufW, -1, bufA, buf_size, NULL, FALSE);
-        ok(!lstrcmpA(FaceName, bufA), "font face names don't match: returned %s, expect %s\n", FaceName, bufA);
+        ok(!lstrcmpA(FaceName, bufA), "%s: font face names don't match: returned %s, expect %s\n", FamilyName, FaceName, bufA);
         otmStr = (LPSTR)otm + (UINT_PTR)otm->otmpFaceName;
-        ok(!lstrcmpA(FaceName, otmStr), "FaceName %s doesn't match otmpFaceName %s\n", FaceName, otmStr);
+        ok(!lstrcmpA(FaceName, otmStr), "%s: FaceName %s doesn't match otmpFaceName %s\n", FamilyName, FaceName, otmStr);
 
         bufW[0] = 0;
         bufA[0] = 0;
         ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FONT_SUBFAMILY, bufW, buf_size, GetSystemDefaultLangID());
-        if (!ret)
-        {
-            trace("no localized FONT_SUBFAMILY found.\n");
-            ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FONT_SUBFAMILY, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
-        }
-        ok(ret, "SUBFAMILY (style name) could not be read\n");
+        if (!ret) ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_FONT_SUBFAMILY, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
+        ok(ret, "%s: SUBFAMILY (style name) could not be read\n", FamilyName);
         WideCharToMultiByte(CP_ACP, 0, bufW, -1, bufA, buf_size, NULL, FALSE);
-        ok(!lstrcmpA(StyleName, bufA), "style names don't match: returned %s, expect %s\n", StyleName, bufA);
+        ok(!lstrcmpA(StyleName, bufA), "%s: style names don't match: returned %s, expect %s\n", FamilyName, StyleName, bufA);
         otmStr = (LPSTR)otm + (UINT_PTR)otm->otmpStyleName;
-        ok(!lstrcmpA(StyleName, otmStr), "StyleName %s doesn't match otmpStyleName %s\n", StyleName, otmStr);
+        ok(!lstrcmpA(StyleName, otmStr), "%s: StyleName %s doesn't match otmpStyleName %s\n", FamilyName, StyleName, otmStr);
 
         bufW[0] = 0;
         bufA[0] = 0;
         ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_UNIQUE_ID, bufW, buf_size, GetSystemDefaultLangID());
-        if (!ret)
-        {
-            trace("no localized UNIQUE_ID found.\n");
-            ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_UNIQUE_ID, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
-        }
-        ok(ret, "UNIQUE_ID (full name) could not be read\n");
+        if (!ret) ret = get_ttf_nametable_entry(hdc, TT_NAME_ID_UNIQUE_ID, bufW, buf_size, TT_MS_LANGID_ENGLISH_UNITED_STATES);
+        ok(ret, "%s: UNIQUE_ID (full name) could not be read\n", FamilyName);
         WideCharToMultiByte(CP_ACP, 0, bufW, -1, bufA, buf_size, NULL, FALSE);
         otmStr = (LPSTR)otm + (UINT_PTR)otm->otmpFullName;
-        ok(!lstrcmpA(otmStr, bufA), "UNIQUE ID (full name) doesn't match: returned %s, expect %s\n", otmStr, bufA);
+        ok(!lstrcmpA(otmStr, bufA), "%s: UNIQUE ID (full name) doesn't match: returned %s, expect %s\n", FamilyName, otmStr, bufA);
 
         SelectObject(hdc, of);
         DeleteObject(hfont);
@@ -5050,6 +5232,7 @@ static void test_GetGlyphOutline_metric_clipping(void)
     HFONT hfont, hfont_prev;
     GLYPHMETRICS gm;
     TEXTMETRICA tm;
+    TEXTMETRICW tmW;
     DWORD ret;
 
     memset(&lf, 0, sizeof(lf));
@@ -5077,6 +5260,11 @@ static void test_GetGlyphOutline_metric_clipping(void)
     ok(gm.gmptGlyphOrigin.y - gm.gmBlackBoxY >= -tm.tmDescent,
         "Glyph bottom(%d) exceeds descent(%d)\n",
         gm.gmptGlyphOrigin.y - gm.gmBlackBoxY, -tm.tmDescent);
+
+    /* Test tmLastChar - wine_test has code points fffb-fffe mapped to glyph 0 */
+    GetTextMetricsW(hdc, &tmW);
+todo_wine
+    ok( tmW.tmLastChar == 0xfffe, "got %04x\n", tmW.tmLastChar);
 
     SelectObject(hdc, hfont_prev);
     DeleteObject(hfont);

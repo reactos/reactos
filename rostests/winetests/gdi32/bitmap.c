@@ -838,7 +838,7 @@ static void test_dibsections(void)
     }
     pbmi->bmiHeader.biClrUsed = 173;
     memset( pbmi->bmiColors, 0xcc, 256 * sizeof(RGBQUAD) );
-    GetDIBits( hdc, hdib, 0, 1, bits, pbmi, DIB_RGB_COLORS );
+    GetDIBits( hdc, hdib, 0, 1, NULL, pbmi, DIB_RGB_COLORS );
     ok( pbmi->bmiHeader.biClrUsed == 0, "wrong colors %u\n", pbmi->bmiHeader.biClrUsed );
     for (i = 0; i < 256; i++)
     {
@@ -853,6 +853,21 @@ static void test_dibsections(void)
                "GetDIBits returns table %d: r %02x g %02x b %02x res%02x\n",
                i, colors[i].rgbRed, colors[i].rgbGreen, colors[i].rgbBlue, colors[i].rgbReserved);
     }
+
+    rgb[0].rgbRed = 1;
+    rgb[0].rgbGreen = 2;
+    rgb[0].rgbBlue = 3;
+    rgb[0].rgbReserved = 123;
+    ret = SetDIBColorTable( hdcmem, 0, 1, rgb );
+    ok( ret == 1, "SetDIBColorTable returned unexpected result %u\n", ret );
+    ok( rgb[0].rgbReserved == 123, "Expected rgbReserved = 123, got %u\n", rgb[0].rgbReserved );
+
+    ret = GetDIBColorTable( hdcmem, 0, 1, rgb );
+    ok( ret == 1, "GetDIBColorTable returned unexpected result %u\n", ret );
+    ok( rgb[0].rgbRed == 1, "Expected rgbRed = 1, got %u\n", rgb[0].rgbRed );
+    ok( rgb[0].rgbGreen == 2, "Expected rgbGreen = 2, got %u\n", rgb[0].rgbGreen );
+    ok( rgb[0].rgbBlue == 3, "Expected rgbBlue = 3, got %u\n", rgb[0].rgbBlue );
+    todo_wine ok( rgb[0].rgbReserved == 0, "Expected rgbReserved = 0, got %u\n", rgb[0].rgbReserved );
 
     SelectObject(hdcmem, oldbm);
     DeleteObject(hdib);
@@ -881,11 +896,11 @@ static void test_dib_formats(void)
     BITMAPINFO *bi;
     char data[256];
     void *bits;
-    //int planes, bpp, compr, format;
+    int planes, bpp, compr, format;
     HBITMAP hdib, hbmp;
     HDC hdc, memdc;
     UINT ret;
-    //BOOL expect_ok, todo;
+    BOOL format_ok, expect_ok;
 
     bi = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] ) );
     hdc = GetDC( 0 );
@@ -894,7 +909,9 @@ static void test_dib_formats(void)
 
     memset( data, 0xaa, sizeof(data) );
 
-#if 0 // FIXME: CORE-5922
+    if (!winetest_interactive)
+        skip("ROSTESTS-152: Skipping loop in test_dib_formats because it's too big and causes too many failures\n");
+    else
     for (bpp = 0; bpp <= 64; bpp++)
     {
         for (planes = 0; planes <= 64; planes++)
@@ -1031,7 +1048,6 @@ static void test_dib_formats(void)
             }
         }
     }
-#endif
 
     memset( bi, 0, sizeof(bi->bmiHeader) );
     bi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -1707,7 +1723,7 @@ static void test_mono_bitmap(void)
 
     if (!winetest_interactive)
     {
-        skip("test_mono_bitmap skipped, CORE-5922\n");
+        skip("ROSTESTS-153: Skipping test_mono_bitmap because it causes too many failures and takes too long\n");
         return;
     }
 
@@ -4533,7 +4549,6 @@ static void test_GetDIBits_scanlines(void)
     ok( ret == 2, "got %d\n", ret );
     ok( !memcmp( data, inverted_bits + 32, 16 * 4 ), "bits differ\n");
     for (i = 16; i < 128; i++) ok( data[i] == 0xaaaaaaaa, "%d: got %08x\n", i, data[i] );
-    memset( data, 0xaa, sizeof(data) );
 
     DeleteObject( dib );
 
