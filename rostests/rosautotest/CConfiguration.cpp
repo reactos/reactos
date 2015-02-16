@@ -16,13 +16,12 @@ typedef void (WINAPI *GETSYSINFO)(LPSYSTEM_INFO);
  * Constructs an empty CConfiguration object
  */
 CConfiguration::CConfiguration()
+    : m_CrashRecovery(false),
+      m_PrintToConsole(true),
+      m_Shutdown(false),
+      m_Submit(false)
 {
     WCHAR WindowsDirectory[MAX_PATH];
-
-    /* Zero-initialize variables */
-    m_CrashRecovery = false;
-    m_Shutdown = false;
-    m_Submit = false;
 
     /* Check if we are running under ReactOS from the SystemRoot directory */
     if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
@@ -53,6 +52,10 @@ CConfiguration::ParseParameters(int argc, wchar_t* argv[])
                 case 'c':
                     ++i;
                     m_Comment = UnicodeToAscii(argv[i]);
+                    break;
+
+                case 'n':
+                    m_PrintToConsole = false;
                     break;
 
                 case 'r':

@@ -10,6 +10,7 @@ class CConfiguration
 private:
     bool m_CrashRecovery;
     bool m_IsReactOS;
+    bool m_PrintToConsole;
     bool m_Shutdown;
     bool m_Submit;
     string m_Comment;
@@ -26,6 +27,7 @@ public:
     void GetConfigurationFromFile();
 
     bool DoCrashRecovery() const { return m_CrashRecovery; }
+    bool DoPrint() const { return m_PrintToConsole; }
     bool DoShutdown() const { return m_Shutdown; }
     bool DoSubmit() const { return m_Submit; }
     bool IsReactOS() const { return m_IsReactOS; }

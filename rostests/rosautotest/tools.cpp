@@ -149,7 +149,8 @@ StringOut(const string& String, bool forcePrint)
     if(forcePrint == true || NewString[curr_pos - 1] == '\n')
     {
         /* Output the whole string */
-        cout << NewString;
+        if(Configuration.DoPrint())
+            cout << NewString;
 
         memcpy(DbgString, NewString.c_str() + start, size);
         DbgString[size] = 0;
@@ -160,7 +161,8 @@ StringOut(const string& String, bool forcePrint)
     }
 
     /* Output full lines only */
-    cout << NewString.substr(0, start);
+    if(Configuration.DoPrint())
+        cout << NewString.substr(0, start);
 
     /* Return the remaining chunk */
     return NewString.substr(start, size);

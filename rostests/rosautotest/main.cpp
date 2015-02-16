@@ -23,6 +23,7 @@ IntPrintUsage()
          << "    /c <comment> - Specifies the comment to be submitted to the Web Service." << endl
          << "                   Skips the comment set in the configuration file (if any)." << endl
          << "                   Only has an effect when /w is also used." << endl
+         << "    /n           - Do not print test output to console" << endl
          << "    /r           - Maintain information to resume from ReactOS crashes" << endl
          << "                   Can only be run under ReactOS and relies on sysreg2," << endl
          << "                   so incompatible with /w" << endl
