@@ -42,7 +42,9 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                           LONG idChild,
                    DWORD dwEventThread,
                    DWORD dwmsEventTime,
-                     WINEVENTPROC Proc);
+                     WINEVENTPROC Proc,
+                               INT Mod,
+                     ULONG_PTR offPfn);
 
 VOID FASTCALL
 IntCleanupThreadCallbacks(PTHREADINFO W32Thread);

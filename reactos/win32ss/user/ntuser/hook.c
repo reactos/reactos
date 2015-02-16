@@ -1251,6 +1251,23 @@ co_HOOK_CallHooks( INT HookId,
                 TRACE("\nGlobal Hook posting to another Thread! %d\n",HookId );
                 Result = co_IntCallLowLevelHook(Hook, Code, wParam, lParam);
              }
+             else if (ptiHook->ppi == pti->ppi)
+             {
+                TRACE("\nGlobal Hook calling to another Thread! %d\n",HookId );
+                ObReferenceObject(ptiHook->pEThread);
+                IntReferenceThreadInfo(ptiHook);
+                Result = co_IntCallHookProc( HookId,
+                                             Code,
+                                             wParam,
+                                             lParam,
+                                             Hook->Proc,
+                                             Hook->ihmod, 
+                                             Hook->offPfn,
+                                             Hook->Ansi,
+                                            &Hook->ModuleName);
+                IntDereferenceThreadInfo(ptiHook);
+                ObDereferenceObject(ptiHook->pEThread);
+             }
           }
           else
           { /* Make the direct call. */

@@ -805,7 +805,9 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                           LONG idChild,
                    DWORD dwEventThread,
                    DWORD dwmsEventTime,
-                     WINEVENTPROC Proc)
+                     WINEVENTPROC Proc,
+                               INT Mod,
+                     ULONG_PTR offPfn)
 {
    LRESULT Result = 0;
    NTSTATUS Status;
@@ -830,6 +832,8 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    Common->dwEventThread = dwEventThread;
    Common->dwmsEventTime = dwmsEventTime;
    Common->Proc = Proc;
+   Common->Mod = Mod;
+   Common->offPfn = offPfn;
 
    ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);

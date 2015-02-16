@@ -14,6 +14,7 @@ typedef struct _EVENTPACK
   PEVENTHOOK pEH; 
   LONG idObject;
   LONG idChild;
+  LONG idThread;
 } EVENTPACK, *PEVENTPACK;
 
 static PEVENTTABLE GlobalEvents = NULL;
@@ -98,11 +99,11 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
                          DWORD event,
                            HWND hwnd, 
                        LONG idObject,
-                        LONG idChild)
+                        LONG idChild,
+                       LONG idThread)
 {
-   NTSTATUS Status;
    PEVENTPACK pEP;
-   ULONG_PTR uResult = 0;
+   MSG Msg;
 
    pEP = ExAllocatePoolWithTag(NonPagedPool, sizeof(EVENTPACK), TAG_HOOK);
    if (!pEP) return 0;
@@ -110,23 +111,16 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
    pEP->pEH = pEH;
    pEP->idObject = idObject;
    pEP->idChild = idChild;
+   pEP->idThread = idThread;
 
-   /* FIXME: Should get timeout from
-    * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = co_MsqSendMessage( pEH->head.pti,
-                               hwnd,
-                               event,
-                               0,
-                              (LPARAM)pEP,
-                               300,
-                               TRUE,
-                               MSQ_ISEVENT,
-                              &uResult);
-   if (!NT_SUCCESS(Status))
-   { 
-      ExFreePoolWithTag(pEP, TAG_HOOK);
-   }
-   return NT_SUCCESS(Status) ? uResult : 0;
+   Msg.message = event;
+   Msg.hwnd = hwnd;
+   Msg.wParam = 0;
+   Msg.lParam = POSTEVENT_NWE;
+   Msg.time = 0;
+
+   MsqPostMessage(pEH->head.pti, &Msg, FALSE, QS_EVENT, POSTEVENT_NWE, (LONG_PTR)pEP);
+   return 0;
 }
 
 BOOLEAN
@@ -155,7 +149,7 @@ IntRemoveEvent(PVOID Object)
 LRESULT
 APIENTRY
 co_EVENT_CallEvents( DWORD event,
-                     HWND hwnd, 
+                     HWND hwnd,
                      UINT_PTR idObject,
                      LONG_PTR idChild)
 {
@@ -164,15 +158,17 @@ co_EVENT_CallEvents( DWORD event,
    PEVENTPACK pEP = (PEVENTPACK)idChild;
 
    pEH = pEP->pEH;
-   
+   TRACE("Dispatch Event 0x%x, idObject %d hwnd %p\n", event, idObject, hwnd);   
    Result = co_IntCallEventProc( UserHMGetHandle(pEH),
                                  event,
                                  hwnd,
                                  pEP->idObject,
                                  pEP->idChild,
-                                 PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
+                                 pEP->idThread,
                                 (DWORD)EngGetTickCount(),
-                                 pEH->Proc);
+                                 pEH->Proc,
+                                 pEH->ihmod,
+                                 pEH->offPfn);
 
    ExFreePoolWithTag(pEP, TAG_HOOK);
    return Result;
@@ -211,29 +207,19 @@ IntNotifyWinEvent(
      if (!pEH) break;
      UserReferenceObject(pEH);
      // Must be inside the event window.
-     if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
+     if ( Event >= pEH->eventMin && Event <= pEH->eventMax )
      {
      // if all process || all thread || other thread same process
      // if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
-        if ( (!pEH->idProcess || pEH->idProcess == PtrToUint(pti->pEThread->Cid.UniqueProcess)) &&
-             (!(pEH->Flags & WINEVENT_SKIPOWNPROCESS) || pEH->head.pti->ppi != pti->ppi) &&
-             (!pEH->idThread  || pEH->idThread == PtrToUint(pti->pEThread->Cid.UniqueThread)) &&
-             (!(pEH->Flags & WINEVENT_SKIPOWNTHREAD)  || pEH->head.pti != pti) &&
-               pEH->head.pti->rpdesk == ptiCurrent->rpdesk ) // Same as hooks.
+        if (!( (pEH->idProcess && pEH->idProcess != PtrToUint(pti->pEThread->Cid.UniqueProcess)) ||
+               (pEH->Flags & WINEVENT_SKIPOWNPROCESS && pEH->head.pti->ppi == pti->ppi) ||
+               (pEH->idThread && pEH->idThread != PtrToUint(pti->pEThread->Cid.UniqueThread)) ||
+               (pEH->Flags & WINEVENT_SKIPOWNTHREAD && pEH->head.pti == pti) ||
+                pEH->head.pti->rpdesk != ptiCurrent->rpdesk ) ) // Same as hooks.
         {
-           // Send message to the thread if pEH is not current.
-           if (pEH->head.pti != ptiCurrent)
+           if (pEH->Flags & WINEVENT_INCONTEXT)
            {
-              ERR("Global Event 0x%x, idObject %d\n", Event, idObject);
-              IntCallLowLevelEvent( pEH,
-                                    Event,
-                                    pWnd ? UserHMGetHandle(pWnd) : NULL,
-                                    idObject,
-                                    idChild);
-           }
-           else
-           {
-              ERR("Local Event 0x%x, idObject %d\n", Event, idObject);
+              TRACE("In       Event 0x%x, idObject %d hwnd %p\n", Event, idObject, pWnd ? UserHMGetHandle(pWnd) : NULL);
               co_IntCallEventProc( UserHMGetHandle(pEH),
                                    Event,
                                    pWnd ? UserHMGetHandle(pWnd) : NULL,
@@ -241,7 +227,19 @@ IntNotifyWinEvent(
                                    idChild,
                                    PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
                                   (DWORD)EngGetTickCount(),
-                                   pEH->Proc);
+                                   pEH->Proc,
+                                   pEH->ihmod,
+                                   pEH->offPfn);
+           }
+           else
+           {
+              TRACE("Out      Event 0x%x, idObject %d hwnd %p\n", Event, idObject, pWnd ? UserHMGetHandle(pWnd) : NULL);
+              IntCallLowLevelEvent( pEH,
+                                    Event,
+                                    pWnd ? UserHMGetHandle(pWnd) : NULL,
+                                    idObject,
+                                    idChild,
+                                    PtrToUint(NtCurrentTeb()->ClientId.UniqueThread));
            }
         }        
      }
@@ -329,10 +327,25 @@ NtUserSetWinEventHook(
       goto SetEventExit;
    }
 
-   if ((dwflags & WINEVENT_INCONTEXT) && !hmodWinEventProc)
+   if (dwflags & WINEVENT_INCONTEXT)
    {
-      EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
-      goto SetEventExit;
+      if (!hmodWinEventProc)
+      {
+         ERR("Hook needs a module\n");
+         EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
+         goto SetEventExit;
+      }
+      if (puString == NULL)
+      {
+         ERR("Dll not found\n");
+         EngSetLastError(ERROR_DLL_NOT_FOUND);
+         goto SetEventExit;
+      }
+   }
+   else
+   {
+      TRACE("Out of Context\n");
+      hmodWinEventProc = 0;
    }
 
    if (idThread)
@@ -371,14 +384,18 @@ NtUserSetWinEventHook(
        If WINEVENT_OUTOFCONTEXT just use proc..
        Do this instead....
      */
-      if (NULL != hmodWinEventProc)
+      if (hmodWinEventProc != NULL)
       {
          pEH->offPfn = (ULONG_PTR)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
          pEH->ihmod = (INT)hmodWinEventProc;
          pEH->Proc = lpfnWinEventProc;
       }
       else
+      {
          pEH->Proc = lpfnWinEventProc;
+         pEH->offPfn = 0;
+         pEH->ihmod = (INT)hmodWinEventProc;
+      }
 
       UserDereferenceObject(pEH);
 

@@ -800,13 +800,6 @@ co_MsqDispatchOneSentMessage(PTHREADINFO pti)
                             Message->Msg.wParam,
                             Message->Msg.lParam);
    }
-   else if (Message->HookMessage == MSQ_ISEVENT)
-   {  // Direct Event Call processor
-      Result = co_EVENT_CallEvents( Message->Msg.message,
-                                    Message->Msg.hwnd,
-                                    Message->Msg.wParam,
-                                    Message->Msg.lParam);
-   }
    else if(Message->HookMessage == MSQ_INJECTMODULE)
    {
        Result = IntLoadHookModule(Message->Msg.message,
@@ -2076,6 +2069,13 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    {
       CurrentEntry = RemoveHeadList(&pti->PostedMessagesListHead);
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
+      if (CurrentMessage->dwQEvent)
+      {
+         if (CurrentMessage->dwQEvent == POSTEVENT_NWE)
+         {
+            ExFreePoolWithTag( (PVOID)CurrentMessage->ExtraInfo, TAG_HOOK);
+         }
+      }
       MsqDestroyMessage(CurrentMessage);
    }
 

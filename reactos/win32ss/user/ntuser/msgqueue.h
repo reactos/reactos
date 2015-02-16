@@ -3,8 +3,7 @@
 #define MSQ_HUNG        5000
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
-#define MSQ_ISEVENT     2
-#define MSQ_INJECTMODULE 3
+#define MSQ_INJECTMODULE 2
 
 typedef struct _USER_MESSAGE
 {
@@ -115,6 +114,8 @@ enum internal_event_message
     WM_ASYNC_SETACTIVEWINDOW,
     WM_ASYNC_DESTROYWINDOW
 };
+
+#define POSTEVENT_NWE 14
 
 BOOL FASTCALL MsqIsHung(PTHREADINFO pti);
 VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);

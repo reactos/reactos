@@ -652,6 +652,20 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
     return 0;
 }
 
+static LRESULT handle_internal_events( PTHREADINFO pti, PWND pWnd, LONG_PTR ExtraInfo, PMSG pMsg)
+{
+    LRESULT Result = 0;
+
+    switch(pMsg->lParam)
+    {
+       case POSTEVENT_NWE:
+       {
+          co_EVENT_CallEvents( pMsg->message, pMsg->hwnd, pMsg->wParam, ExtraInfo);
+       }
+    }
+    return Result;
+}
+
 LRESULT FASTCALL
 IntDispatchMessage(PMSG pMsg)
 {
@@ -845,7 +859,7 @@ co_IntPeekMessage( PMSG Msg,
                             ExtraInfo,
                             Msg ))
         {
-               return TRUE;
+            return TRUE;
         }
 
         /* Only check for quit messages if not posted messages pending. */
@@ -878,6 +892,24 @@ co_IntPeekMessage( PMSG Msg,
                                        Msg))
         {
             return TRUE;
+        }
+
+        /* Now check for System Event messages. */
+        {
+           LONG_PTR eExtraInfo;
+           MSG eMsg;
+           if (MsqPeekMessage( pti,
+                               TRUE,
+                               Window,
+                               0,
+                               0,
+                               QS_EVENT,
+                              &eExtraInfo,
+                              &eMsg ))
+           {
+              handle_internal_events( pti, Window, eExtraInfo, &eMsg);
+              continue;
+           }
         }
 
         /* Check for sent messages again. */

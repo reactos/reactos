@@ -357,6 +357,9 @@ SetWinEventHook(
 {
   WCHAR ModuleName[MAX_PATH];
   UNICODE_STRING USModuleName;
+  PUNICODE_STRING pusmodName;
+
+  RtlInitUnicodeString(&USModuleName, NULL);
 
   if ((hmodWinEventProc != NULL) && (dwFlags & WINEVENT_INCONTEXT))
   {
@@ -365,16 +368,17 @@ SetWinEventHook(
           return NULL;
       }
       RtlInitUnicodeString(&USModuleName, ModuleName);
+      pusmodName = &USModuleName;
   }
   else
   {
-      RtlInitUnicodeString(&USModuleName, NULL);
+      pusmodName = NULL;
   }
 
   return NtUserSetWinEventHook(eventMin,
                                eventMax,
                        hmodWinEventProc,
-                          &USModuleName,
+                             pusmodName,
                         pfnWinEventProc,
                               idProcess,
                                idThread,
@@ -779,16 +783,53 @@ NTSTATUS WINAPI
 User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PEVENTPROC_CALLBACK_ARGUMENTS Common;
+  WINEVENTPROC Proc;
+  WCHAR module[MAX_PATH];
+  DWORD len;
+  HMODULE mod = NULL;
+  BOOL Loaded = FALSE;
 
   Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Arguments;
 
-  Common->Proc(Common->hook,
-               Common->event,
-               Common->hwnd,
-               Common->idObject,
-               Common->idChild,
-               Common->dwEventThread,
-               Common->dwmsEventTime);
+  Proc = Common->Proc;
+
+  if (Common->offPfn && Common->Mod)
+  {  // Validate the module again.
+     if (!(len = GetModuleFileNameW((HINSTANCE)Common->Mod, module, MAX_PATH)) || len >= MAX_PATH)
+     {
+        ERR("Error check for module!\n");
+        Common->Mod = 0;
+     }
+
+     if (Common->Mod && !(mod = GetModuleHandleW(module)))
+     {
+        TRACE("Reloading Event Module.\n");
+        if (!(mod = LoadLibraryExW(module, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)))
+        {
+           ERR("Failed to load Event Module.\n");
+        }
+        else
+        {
+           Loaded = TRUE; // Free it only when loaded.
+        }
+     }
+
+     if (mod)
+     {
+        TRACE("Loading Event Module. %S\n",module);
+        Proc = (WINEVENTPROC)((char *)mod + Common->offPfn);
+     }
+  }
+
+  Proc(Common->hook,
+       Common->event,
+       Common->hwnd,
+       Common->idObject,
+       Common->idChild,
+       Common->dwEventThread,
+       Common->dwmsEventTime);
+
+  if (Loaded) FreeLibrary(mod);
 
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
 }
