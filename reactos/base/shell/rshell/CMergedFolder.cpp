@@ -225,17 +225,15 @@ HRESULT CEnumMergedFolder::Begin(HWND hwndOwner, SHCONTF flags)
             int order = CompareStringW(GetThreadLocale(), NORM_IGNORECASE,
                                    pInfo->parseName, lstrlenW(pInfo->parseName),
                                    info.parseName, lstrlenW(info.parseName));
-            switch (order)
+
+            if (order == CSTR_EQUAL)
             {
-            case CSTR_EQUAL:
                 TRACE("Item name already exists! Marking '%S' as shared ...\n", name);
                 bShared = TRUE;
                 pInfo->shared = TRUE;
                 pInfo->pidl2 = info.pidl;
                 CoTaskMemFree(name);
                 break;
-            default:
-                continue;
             }
         }
 
