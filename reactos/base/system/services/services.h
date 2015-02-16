@@ -199,7 +199,6 @@ VOID ScmLogEvent(DWORD dwEventId,
                  WORD wType,
                  WORD wStrings,
                  LPCWSTR *lpStrings);
-LPWSTR ScmGetResourceString(UINT uID);
 VOID ScmWaitForLsa(VOID);
 
 #endif /* _SERVICES_H */
