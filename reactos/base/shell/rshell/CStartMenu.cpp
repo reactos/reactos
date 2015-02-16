@@ -496,7 +496,6 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
             return hr;
 
         StrRetToBuf(&str, pcidlPrograms, szDisplayName, _countof(szDisplayName));
-        ILFree((LPITEMIDLIST)pcidlPrograms);
         ILFree(pidlProgramsAbsolute);
 
         hr = psf->ParseDisplayName(NULL, NULL, szDisplayName, NULL, &pidlPrograms, NULL);
