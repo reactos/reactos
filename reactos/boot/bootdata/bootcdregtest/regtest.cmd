@@ -9,4 +9,4 @@ if exist "C:\ReactOS\bin\AHKAppTests.cmd" (
 )
 
 dbgprint --process "ipconfig"
-start rosautotest /r /s
+start rosautotest /r /s /n
