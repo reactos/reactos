@@ -789,8 +789,7 @@ co_MsqDispatchOneSentMessage(PTHREADINFO pti)
 
    /* insert it to the list of messages that are currently dispatched by this
       message queue */
-   InsertTailList(&pti->LocalDispatchingMessagesHead,
-                  &Message->ListEntry);
+   InsertTailList(&pti->LocalDispatchingMessagesHead, &Message->ListEntry);
 
    ClearMsgBitsMask(pti, Message->QS_Flags);
 
@@ -866,7 +865,7 @@ co_MsqDispatchOneSentMessage(PTHREADINFO pti)
    }
 
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
-   if (Message->ptiSender)
+   if (Message->ptiSender && !(Message->ptiSender->TIF_flags & TIF_INCLEANUP))
    {
       if (Message->DispatchingListEntry.Flink != NULL)
       {
@@ -953,8 +952,8 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
    ListHead = &pti->SentMessagesListHead;
    while (CurrentEntry != ListHead)
    {
-      SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
-                                      ListEntry);
+      SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
+
       if(SentMessage->Msg.hwnd == Window->head.h)
       {
          TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
@@ -1187,6 +1186,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                Message->CompletionEvent = NULL;
                Message->Result = NULL;
                RemoveEntryList(&Message->ListEntry);
+               RemoveEntryList(&Message->DispatchingListEntry);
                ClearMsgBitsMask(ptirec, Message->QS_Flags);
                ExFreePoolWithTag(Message, TAG_USRMSG);
                break;
@@ -1194,30 +1194,8 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             Entry = Entry->Flink;
          }
 
-         /* Remove from the local dispatching list so the other thread knows,
-            it can't pass a result and it must not set the completion event anymore */
-         Entry = pti->DispatchingMessagesHead.Flink;
-         while (Entry != &pti->DispatchingMessagesHead)
-         {
-            if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
-                  == Message)
-            {
-               /* We can access Message here, it's secure because the sender's message is locked
-                  and the message has definitely not yet been destroyed, otherwise it would
-                  have been removed from this list by the dispatching routine right after
-                  dispatching the message */
-               Message->CompletionEvent = NULL;
-               Message->Result = NULL;
-               RemoveEntryList(&Message->DispatchingListEntry);
-               Message->DispatchingListEntry.Flink = NULL;
-               break;
-            }
-            Entry = Entry->Flink;
-         }
-
          TRACE("MsqSendMessage (blocked) timed out 1 Status %p\n",WaitStatus);
-
-       }
+      }
       // Receiving thread passed on and left us hanging with issues still pending.
       if ( WaitStatus == STATUS_WAIT_1 )
       {
@@ -1272,29 +1250,9 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                   Message->CompletionEvent = NULL;
                   Message->Result = NULL;
                   RemoveEntryList(&Message->ListEntry);
+                  RemoveEntryList(&Message->DispatchingListEntry);
                   ClearMsgBitsMask(ptirec, Message->QS_Flags);
                   ExFreePoolWithTag(Message, TAG_USRMSG);
-                  break;
-               }
-               Entry = Entry->Flink;
-            }
-
-            /* Remove from the local dispatching list so the other thread knows,
-               it can't pass a result and it must not set the completion event anymore */
-            Entry = pti->DispatchingMessagesHead.Flink;
-            while (Entry != &pti->DispatchingMessagesHead)
-            {
-               if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
-                     == Message)
-               {
-                  /* We can access Message here, it's secure because the sender's message is locked
-                     and the message has definitely not yet been destroyed, otherwise it would
-                     have been removed from this list by the dispatching routine right after
-                     dispatching the message */
-                  Message->CompletionEvent = NULL;
-                  Message->Result = NULL;
-                  RemoveEntryList(&Message->DispatchingListEntry);
-                  Message->DispatchingListEntry.Flink = NULL;
                   break;
                }
                Entry = Entry->Flink;
@@ -1375,12 +1333,7 @@ MsqPostMessage(PTHREADINFO pti,
 
    MessageQueue = pti->MessageQueue;
 
-   if (dwQEvent)
-   {
-       ERR("Post Msg; System Qeued Event Message!\n");
-       InsertHeadList(&pti->PostedMessagesListHead, &Message->ListEntry);
-   }
-   else if (!HardwareMessage)
+   if (!HardwareMessage)
    {
        InsertTailList(&pti->PostedMessagesListHead, &Message->ListEntry);
    }
@@ -2122,8 +2075,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    while (!IsListEmpty(&pti->PostedMessagesListHead))
    {
       CurrentEntry = RemoveHeadList(&pti->PostedMessagesListHead);
-      CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
-                                         ListEntry);
+      CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE, ListEntry);
       MsqDestroyMessage(CurrentMessage);
    }
 
@@ -2131,8 +2083,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    while (!IsListEmpty(&pti->SentMessagesListHead))
    {
       CurrentEntry = RemoveHeadList(&pti->SentMessagesListHead);
-      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
-                                             ListEntry);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
 
       TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
       /* Only if the message has a sender was the message in the DispatchingList */
@@ -2163,8 +2114,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    while (!IsListEmpty(&pti->LocalDispatchingMessagesHead))
    {
       CurrentEntry = RemoveHeadList(&pti->LocalDispatchingMessagesHead);
-      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
-                                             ListEntry);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
 
       /* remove the message from the dispatching list */
       if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
@@ -2194,8 +2144,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    while (! IsListEmpty(&pti->DispatchingMessagesHead))
    {
       CurrentEntry = RemoveHeadList(&pti->DispatchingMessagesHead);
-      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
-                                             DispatchingListEntry);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, DispatchingListEntry);
       CurrentSentMessage->CompletionEvent = NULL;
       CurrentSentMessage->Result = NULL;
 
