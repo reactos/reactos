@@ -865,6 +865,35 @@ IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
     return STATUS_SUCCESS;
 }
 
+static
+ULONG
+IopGetFileMode(IN PFILE_OBJECT FileObject)
+{
+    ULONG Mode = 0;
+
+    if (FileObject->Flags & FO_WRITE_THROUGH)
+        Mode |= FILE_WRITE_THROUGH;
+
+    if (FileObject->Flags & FO_SEQUENTIAL_ONLY)
+        Mode |= FILE_SEQUENTIAL_ONLY;
+
+    if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
+        Mode |= FILE_NO_INTERMEDIATE_BUFFERING;
+
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        if (FileObject->Flags & FO_ALERTABLE_IO)
+            Mode |= FILE_SYNCHRONOUS_IO_ALERT;
+        else
+            Mode |= FILE_SYNCHRONOUS_IO_NONALERT;
+    }
+
+    if (FileObject->Flags & FO_DELETE_ON_CLOSE)
+        Mode |= FILE_DELETE_ON_CLOSE;
+
+    return Mode;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1865,6 +1894,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     IO_STATUS_BLOCK KernelIosb;
     BOOLEAN CallDriver = TRUE;
     PFILE_ACCESS_INFORMATION AccessBuffer;
+    PFILE_MODE_INFORMATION ModeBuffer;
     PFILE_ALIGNMENT_INFORMATION AlignmentBuffer;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
@@ -2053,6 +2083,13 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         AccessBuffer = Irp->AssociatedIrp.SystemBuffer;
         AccessBuffer->AccessFlags = HandleInformation.GrantedAccess;
         Irp->IoStatus.Information = sizeof(FILE_ACCESS_INFORMATION);
+        CallDriver = FALSE;
+    }
+    else if (FileInformationClass == FileModeInformation)
+    {
+        ModeBuffer = Irp->AssociatedIrp.SystemBuffer;
+        ModeBuffer->Mode = IopGetFileMode(FileObject);
+        Irp->IoStatus.Information = sizeof(FILE_MODE_INFORMATION);
         CallDriver = FALSE;
     }
     else if (FileInformationClass == FileAlignmentInformation)
