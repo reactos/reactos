@@ -351,8 +351,8 @@ BaseFormatObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 NTSTATUS
 WINAPI
 BaseCreateStack(HANDLE hProcess,
-                 SIZE_T StackReserve,
                  SIZE_T StackCommit,
+                 SIZE_T StackReserve,
                  PINITIAL_TEB InitialTeb)
 {
     NTSTATUS Status;
