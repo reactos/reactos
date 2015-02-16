@@ -7798,10 +7798,7 @@ START_TEST(win)
     test_layered_window();
 
     test_SetForegroundWindow(hwndMain);
-    if(!winetest_interactive)
-       skip("bug ROSTESTS-23: skipping test_shell_window, it crashes ros/win7 explorer\n");
-    else
-       test_shell_window();
+    test_shell_window();
     test_handles( hwndMain );
     test_winregion();
     test_map_points();
