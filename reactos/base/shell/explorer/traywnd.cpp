@@ -72,8 +72,12 @@ class CStartButton
 
 public:
     CStartButton(CMessageMap *pObject, DWORD dwMsgMapID)
-        : CContainedWindow(pObject, dwMsgMapID)
+        : CContainedWindow(pObject, dwMsgMapID),
+          m_ImageList(NULL),
+          m_Font(NULL)
     {
+        m_Size.cx = 0;
+        m_Size.cy = 0;
     }
 
     virtual ~CStartButton()
