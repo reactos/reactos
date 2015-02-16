@@ -18,10 +18,7 @@ CWineTest::CWineTest()
 
     /* Zero-initialize variables */
     m_hFind = NULL;
-    m_hReadPipe = NULL;
-    m_hWritePipe = NULL;
     m_ListBuffer = NULL;
-    memset(&m_StartupInfo, 0, sizeof(m_StartupInfo));
 
     /* Set up m_TestPath */
     if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
@@ -38,12 +35,6 @@ CWineTest::~CWineTest()
 {
     if(m_hFind)
         FindClose(m_hFind);
-
-    if(m_hReadPipe)
-        CloseHandle(m_hReadPipe);
-
-    if(m_hWritePipe)
-        CloseHandle(m_hWritePipe);
 
     if(m_ListBuffer)
         delete m_ListBuffer;
@@ -111,6 +102,7 @@ CWineTest::DoListCommand()
     DWORD BytesAvailable;
     DWORD Temp;
     wstring CommandLine;
+    CPipe Pipe;
 
     /* Build the command line */
     CommandLine = m_TestPath;
@@ -119,7 +111,7 @@ CWineTest::DoListCommand()
 
     {
         /* Start the process for getting all available tests */
-        CProcess Process(CommandLine, &m_StartupInfo);
+        CPipedProcess Process(CommandLine, Pipe);
 
         /* Wait till this process ended */
         if(WaitForSingleObject(Process.GetProcessHandle(), ListTimeout) == WAIT_FAILED)
@@ -127,8 +119,8 @@ CWineTest::DoListCommand()
     }
 
     /* Read the output data into a buffer */
-    if(!PeekNamedPipe(m_hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
-        FATAL("PeekNamedPipe failed for the test list\n");
+    if(!Pipe.Peek(NULL, 0, NULL, &BytesAvailable))
+        FATAL("CPipe::Peek failed for the test list\n");
 
     /* Check if we got any */
     if(!BytesAvailable)
@@ -142,8 +134,8 @@ CWineTest::DoListCommand()
     /* Read the data */
     m_ListBuffer = new char[BytesAvailable];
 
-    if(!ReadFile(m_hReadPipe, m_ListBuffer, BytesAvailable, &Temp, NULL))
-        FATAL("ReadPipe failed\n");
+    if(!Pipe.Read(m_ListBuffer, BytesAvailable, &Temp))
+        FATAL("CPipe::Read failed\n");
 
     return BytesAvailable;
 }
@@ -260,13 +252,13 @@ CWineTest::GetNextTestInfo()
 void
 CWineTest::RunTest(CTestInfo* TestInfo)
 {
-    bool BreakLoop = false;
     DWORD BytesAvailable;
-    DWORD Temp;
     stringstream ss, ssFinish;
     DWORD StartTime = GetTickCount();
     float TotalTime;
     string tailString;
+    CPipe Pipe;
+    char Buffer[1024];
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
@@ -275,40 +267,20 @@ CWineTest::RunTest(CTestInfo* TestInfo)
 
     {
         /* Execute the test */
-        CProcess Process(TestInfo->CommandLine, &m_StartupInfo);
+        CPipedProcess Process(TestInfo->CommandLine, Pipe);
 
         /* Receive all the data from the pipe */
-        do
+        while(Pipe.Read(Buffer, sizeof(Buffer) - 1, &BytesAvailable) && BytesAvailable)
         {
-            /* When the application finished, make sure that we peek the pipe one more time, so that we get all data.
-               If the following condition would be the while() condition, we might hit a race condition:
-                  - We check for data with PeekNamedPipe -> no data available
-                  - The application outputs its data and finishes
-                  - WaitForSingleObject reports that the application has finished and we break the loop without receiving any data
-            */
-            if(WaitForSingleObject(Process.GetProcessHandle(), 0) != WAIT_TIMEOUT)
-                BreakLoop = true;
+            /* Output text through StringOut, even while the test is still running */
+            Buffer[BytesAvailable] = 0;
+            tailString = StringOut(tailString.append(string(Buffer)), false);
 
-            if(!PeekNamedPipe(m_hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
-                FATAL("PeekNamedPipe failed for the test run\n");
-
-            if(BytesAvailable)
-            {
-                /* There is data, so get it and output it */
-                auto_array_ptr<char> Buffer(new char[BytesAvailable + 1]);
-
-                if(!ReadFile(m_hReadPipe, Buffer, BytesAvailable, &Temp, NULL))
-                    FATAL("ReadFile failed for the test run\n");
-
-                /* Output text through StringOut, even while the test is still running */
-                Buffer[BytesAvailable] = 0;
-                tailString = StringOut(tailString.append(string(Buffer)), false);
-
-                if(Configuration.DoSubmit())
-                    TestInfo->Log += Buffer;
-            }
+            if(Configuration.DoSubmit())
+                TestInfo->Log += Buffer;
         }
-        while(!BreakLoop);
+        if(GetLastError() != ERROR_BROKEN_PIPE)
+            FATAL("CPipe::Read failed for the test run\n");
     }
 
     /* Print what's left */
@@ -330,21 +302,6 @@ CWineTest::Run()
     auto_ptr<CTestList> TestList;
     auto_ptr<CWebService> WebService;
     CTestInfo* TestInfo;
-    SECURITY_ATTRIBUTES SecurityAttributes;
-
-    /* Create a pipe for getting the output of the tests */
-    SecurityAttributes.nLength = sizeof(SecurityAttributes);
-    SecurityAttributes.bInheritHandle = TRUE;
-    SecurityAttributes.lpSecurityDescriptor = NULL;
-
-    if(!CreatePipe(&m_hReadPipe, &m_hWritePipe, &SecurityAttributes, 0))
-        FATAL("CreatePipe failed\n");
-
-    m_StartupInfo.cb = sizeof(m_StartupInfo);
-    m_StartupInfo.dwFlags = STARTF_USESTDHANDLES;
-    m_StartupInfo.hStdInput  = GetStdHandle(STD_INPUT_HANDLE);
-    m_StartupInfo.hStdOutput = m_hWritePipe;
-    m_StartupInfo.hStdError  = m_hWritePipe;
 
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.

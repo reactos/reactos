@@ -9,10 +9,7 @@ class CWineTest : public CTest
 {
 private:
     HANDLE m_hFind;
-    HANDLE m_hReadPipe;
-    HANDLE m_hWritePipe;
     PCHAR m_ListBuffer;
-    STARTUPINFOW m_StartupInfo;
     string m_CurrentTest;
     wstring m_CurrentFile;
     wstring m_CurrentListCommand;

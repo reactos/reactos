@@ -6,6 +6,8 @@ list(APPEND SOURCE
     CFatalException.cpp
     CInvalidParameterException.cpp
     CJournaledTestList.cpp
+    CPipe.cpp
+    CPipedProcess.cpp
     CProcess.cpp
     CSimpleException.cpp
     CTest.cpp
