@@ -1340,7 +1340,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
     OVERLAPPED Overlapped = {0};
 #endif
 #if 0
-    LPCWSTR lpErrorStrings[3];
+    LPCWSTR lpLogStrings[3];
     WCHAR szBuffer1[20];
     WCHAR szBuffer2[20];
 #endif
@@ -1377,13 +1377,13 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
 #if 0
                 _ultow(PipeTimeout, szBuffer1, 10);
-                lpErrorStrings[0] = Service->lpDisplayName;
-                lpErrorStrings[1] = szBuffer1;
+                lpLogStrings[0] = Service->lpDisplayName;
+                lpLogStrings[1] = szBuffer1;
 
                 ScmLogEvent(EVENT_CONNECTION_TIMEOUT,
                             EVENTLOG_ERROR_TYPE,
                             2,
-                            lpErrorStrings);
+                            lpLogStrings);
 #endif
                 DPRINT1("Log EVENT_CONNECTION_TIMEOUT by %S\n", Service->lpDisplayName);
 
@@ -1444,12 +1444,12 @@ ScmWaitForServiceConnect(PSERVICE Service)
 
 #if 0
                 _ultow(PipeTimeout, szBuffer1, 10);
-                lpErrorStrings[0] = szBuffer1;
+                lpLogStrings[0] = szBuffer1;
 
                 ScmLogEvent(EVENT_READFILE_TIMEOUT,
                             EVENTLOG_ERROR_TYPE,
                             1,
-                            lpErrorStrings);
+                            lpLogStrings);
 #endif
                 DPRINT1("Log EVENT_READFILE_TIMEOUT by %S\n", Service->lpDisplayName);
 
@@ -1491,14 +1491,14 @@ ScmWaitForServiceConnect(PSERVICE Service)
         _ultow(Service->lpImage->dwProcessId, szBuffer1, 10);
         _ultow(dwProcessId, szBuffer2, 10);
 
-        lpErrorStrings[0] = Service->lpDisplayName;
-        lpErrorStrings[1] = szBuffer1;
-        lpErrorStrings[2] = szBuffer2;
+        lpLogStrings[0] = Service->lpDisplayName;
+        lpLogStrings[1] = szBuffer1;
+        lpLogStrings[2] = szBuffer2;
 
         ScmLogEvent(EVENT_SERVICE_DIFFERENT_PID_CONNECTED,
                     EVENTLOG_WARNING_TYPE,
                     3,
-                    lpErrorStrings);
+                    lpLogStrings);
 #endif
 
         DPRINT1("Log EVENT_SERVICE_DIFFERENT_PID_CONNECTED by %S\n", Service->lpDisplayName);
@@ -1625,8 +1625,8 @@ ScmLoadService(PSERVICE Service,
 {
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
-    LPCWSTR lpErrorStrings[2];
-    WCHAR szErrorBuffer[32];
+    LPCWSTR lpLogStrings[2];
+    WCHAR szLogBuffer[80];
 
     DPRINT("ScmLoadService() called\n");
     DPRINT("Start Service %p (%S)\n", Service, Service->lpServiceName);
@@ -1682,25 +1682,27 @@ ScmLoadService(PSERVICE Service,
         }
 
         /* Log a successful service start */
-        lpErrorStrings[0] = Service->lpDisplayName;
-        lpErrorStrings[1] = L"start";
+        LoadStringW(GetModuleHandle(NULL), IDS_SERVICE_START, szLogBuffer, 80);
+        lpLogStrings[0] = Service->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
+
         ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
                     EVENTLOG_INFORMATION_TYPE,
                     2,
-                    lpErrorStrings);
+                    lpLogStrings);
     }
     else
     {
         if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
             /* Log a failed service start */
-            swprintf(szErrorBuffer, L"%lu", dwError);
-            lpErrorStrings[0] = Service->lpServiceName;
-            lpErrorStrings[1] = szErrorBuffer;
+            swprintf(szLogBuffer, L"%lu", dwError);
+            lpLogStrings[0] = Service->lpServiceName;
+            lpLogStrings[1] = szLogBuffer;
             ScmLogEvent(EVENT_SERVICE_START_FAILED,
                         EVENTLOG_ERROR_TYPE,
                         2,
-                        lpErrorStrings);
+                        lpLogStrings);
         }
 
 #if 0
