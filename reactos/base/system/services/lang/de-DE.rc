@@ -1,0 +1,12 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_SERVICE_START   "starten"
+    IDS_SERVICE_STOP    "beenden"
+    IDS_SERVICE_PAUSE   "anhalten"
+    IDS_SERVICE_RESUME  "fortsetzen"
+    IDS_SERVICE_RUNNING "Ausgeführt"
+    IDS_SERVICE_STOPPED "Beendet"
+    IDS_SERVICE_PAUSED  "Angehalten"
+END

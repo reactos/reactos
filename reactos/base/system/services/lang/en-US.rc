@@ -6,7 +6,7 @@ BEGIN
     IDS_SERVICE_STOP    "stop"
     IDS_SERVICE_PAUSE   "pause"
     IDS_SERVICE_RESUME  "resume"
-    IDS_SERVICE_RUNNING "running"
-    IDS_SERVICE_STOPPED "stopped"
-    IDS_SERVICE_PAUSED  "paused"
+    IDS_SERVICE_RUNNING "Running"
+    IDS_SERVICE_STOPPED "Stopped"
+    IDS_SERVICE_PAUSED  "Paused"
 END
