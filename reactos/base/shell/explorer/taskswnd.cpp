@@ -419,6 +419,8 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
+        if (!icon)
+            icon = static_cast<HICON>(LoadImage(NULL, MAKEINTRESOURCE(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskItem->IconIndex, icon);
         tbbi.iImage = TaskItem->IconIndex;
 
@@ -562,6 +564,8 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
+        if (!icon)
+            icon = static_cast<HICON>(LoadImage(NULL, MAKEINTRESOURCE(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
 
         tbBtn.iBitmap = TaskItem->IconIndex;
