@@ -1994,14 +1994,13 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
         if (OnBoundary)
         {
             /* Is this PDE demand zero? */
-            PointerPde = MiAddressToPte(PointerPte);
+            PointerPde = MiPteToPde(PointerPte);
             if (PointerPde->u.Long != 0)
             {
                 /* It isn't -- is it valid? */
                 if (PointerPde->u.Hard.Valid == 0)
                 {
                     /* Nope, fault it in */
-                    PointerPte = MiPteToAddress(PointerPde);
                     MiMakeSystemAddressValid(PointerPte, Process);
                 }
             }
@@ -2009,13 +2008,13 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
             {
                 /* The PTE was already valid, so move to the next one */
                 PointerPde++;
-                PointerPte = MiPteToAddress(PointerPde);
+                PointerPte = MiPdeToPte(PointerPde);
 
                 /* Is the entire VAD committed? If not, fail */
                 if (!Vad->u.VadFlags.MemCommit) return FALSE;
 
-                /* Everything is committed so far past the range, return true */
-                if (PointerPte > LastPte) return TRUE;
+                /* New loop iteration with our new, on-boundary PTE. */
+                continue;
             }
         }
 
