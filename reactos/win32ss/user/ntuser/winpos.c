@@ -17,9 +17,9 @@ DBG_DEFAULT_CHANNEL(UserWinpos);
 #define SWP_EX_PAINTSELF 0x0002
 
 #define  SWP_AGG_NOGEOMETRYCHANGE \
-    (SWP_NOSIZE | SWP_NOMOVE | SWP_NOCLIENTSIZE | SWP_NOCLIENTMOVE)
+    (SWP_NOSIZE | SWP_NOCLIENTSIZE | SWP_NOZORDER)
 #define  SWP_AGG_NOPOSCHANGE \
-    (SWP_AGG_NOGEOMETRYCHANGE | SWP_NOZORDER)
+    (SWP_NOSIZE | SWP_NOMOVE | SWP_NOCLIENTSIZE | SWP_NOCLIENTMOVE | SWP_NOZORDER)
 #define  SWP_AGG_STATUSFLAGS \
     (SWP_AGG_NOPOSCHANGE | SWP_FRAMECHANGED | SWP_HIDEWINDOW | SWP_SHOWWINDOW)
 
@@ -1287,7 +1287,7 @@ co_WinPosDoWinPosChanging(PWND Window,
    if (!(WinPos->flags & SWP_NOSENDCHANGING))
    {
       TRACE("Sending WM_WINDOWPOSCHANGING to hwnd %p.\n", Window->head.h);
-      co_IntSendMessageNoWait(Window->head.h, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
+      co_IntSendMessage(Window->head.h, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
    }
 
    /* Calculate new position and size */
@@ -1604,7 +1604,9 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWND Wnd)
             WinPos->hwndInsertAfter = HWND_TOPMOST;
 
          if (IntGetWindow(WinPos->hwnd, GW_HWNDFIRST) == WinPos->hwnd)
+         {
             WinPos->flags |= SWP_NOZORDER;
+         }
       }
       else if (WinPos->hwndInsertAfter == HWND_BOTTOM)
       {
@@ -2069,6 +2071,16 @@ co_WinPosSetWindowPos(
       }
    }
 
+   // Fix wine msg test_SetFocus, prevents sending WM_WINDOWPOSCHANGED.
+   if ( VisBefore == NULL &&
+        VisBeforeJustClient == NULL &&
+       !(Window->ExStyle & WS_EX_TOPMOST) &&
+        (WinPos.flags & SWP_AGG_STATUSFLAGS) == (SWP_AGG_NOPOSCHANGE & ~SWP_NOZORDER))
+   {
+      TRACE("No drawing, set no Z order and no redraw!\n");
+      WinPos.flags |= SWP_NOZORDER|SWP_NOREDRAW;
+   }
+
    /* And last, send the WM_WINDOWPOSCHANGED message */
 
    TRACE("\tstatus flags = %04x\n", WinPos.flags & SWP_AGG_STATUSFLAGS);
@@ -2082,6 +2094,7 @@ co_WinPosSetWindowPos(
       WinPos.y = NewWindowRect.top;
       WinPos.cx = NewWindowRect.right - NewWindowRect.left;
       WinPos.cy = NewWindowRect.bottom - NewWindowRect.top;
+      TRACE("WM_WINDOWPOSCHANGED hwnd %p Flags %04x\n",WinPos.hwnd,(WinPos.flags&SWP_AGG_STATUSFLAGS));
       co_IntSendMessageNoWait(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
    }
 
