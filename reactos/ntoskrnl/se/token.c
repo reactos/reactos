@@ -3015,6 +3015,8 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
 
+    ObDereferenceObject(Thread);
+
     if (NT_SUCCESS(Status))
     {
         _SEH2_TRY
