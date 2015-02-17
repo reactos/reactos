@@ -99,7 +99,7 @@ UserSetCursor(
     if (MessageQueue->iCursorLevel < 0)
         return OldCursor;
 
-    // Fixes the error message "Not the same cursor!". 
+    // Fixes the error message "Not the same cursor!".
     if (gpqCursor == NULL)
     {
        gpqCursor = MessageQueue;
@@ -446,7 +446,7 @@ ClearMsgBitsMask(PTHREADINFO pti, UINT MessageBits)
    }
    if (MessageBits & QS_MOUSEMOVE)
    {  // Account for tracking mouse moves..
-      if (pti->nCntsQBits[QSRosMouseMove]) 
+      if (pti->nCntsQBits[QSRosMouseMove])
       {
          pti->nCntsQBits[QSRosMouseMove] = 0; // Throttle down count. Up to > 3:1 entries are ignored.
          ClrMask |= QS_MOUSEMOVE;
@@ -1062,11 +1062,11 @@ co_MsqSendMessage(PTHREADINFO ptirec,
        if (pti->TIF_flags & TIF_INCLEANUP && !(ptirec->TIF_flags & TIF_INCLEANUP))
        {
            // Parent notify is the big one. Fire and forget!
-           TRACE("Send message from dying thread %d\n",Msg);
+           TRACE("Send message from dying thread %u\n", Msg);
            co_MsqSendMessageAsync(ptirec, Wnd, Msg, wParam, lParam, NULL, 0, FALSE, HookMessage);
        }
        if (uResult) *uResult = -1;
-       TRACE("MsqSM: Msg %d Current pti %lu or Rec pti %lu\n", Msg, pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
+       TRACE("MsqSM: Msg %u Current pti %lu or Rec pti %lu\n", Msg, pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
        return STATUS_UNSUCCESSFUL;
    }
 
@@ -1112,7 +1112,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
    if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
    {
-      ERR("MsqSendMessage(): Not enough memory to allocate a message");
+      ERR("MsqSendMessage(): Not enough memory to allocate a message\n");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -1171,8 +1171,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
          Entry = ptirec->SentMessagesListHead.Flink;
          while (Entry != &ptirec->SentMessagesListHead)
          {
-            if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
-                  == Message)
+            if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry) == Message)
             {
                /* We can access Message here, it's secure because the message queue is locked
                   and the message is still hasn't been dispatched */
@@ -1187,17 +1186,16 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             Entry = Entry->Flink;
          }
 
-         TRACE("MsqSendMessage (blocked) timed out 1 Status %p\n",WaitStatus);
+         TRACE("MsqSendMessage (blocked) timed out 1 Status %lx\n", WaitStatus);
       }
       // Receiving thread passed on and left us hanging with issues still pending.
-      if ( WaitStatus == STATUS_WAIT_1 )
+      else if (WaitStatus == STATUS_WAIT_1)
       {
          ERR("Bk Receiving Thread woken up dead!\n");
          Entry = pti->DispatchingMessagesHead.Flink;
          while (Entry != &pti->DispatchingMessagesHead)
          {
-            if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
-                  == Message)
+            if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry) == Message)
             {
                Message->CompletionEvent = NULL;
                Message->Result = NULL;
@@ -1235,8 +1233,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
             Entry = ptirec->SentMessagesListHead.Flink;
             while (Entry != &ptirec->SentMessagesListHead)
             {
-               if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry)
-                     == Message)
+               if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry) == Message)
                {
                   /* We can access Message here, it's secure because the message queue is locked
                      and the message is still hasn't been dispatched */
@@ -1251,19 +1248,18 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                Entry = Entry->Flink;
             }
 
-            TRACE("MsqSendMessage timed out 2 Status %p\n",WaitStatus);
- 
+            TRACE("MsqSendMessage timed out 2 Status %lx\n", WaitStatus);
+
             break;
          }
          // Receiving thread passed on and left us hanging with issues still pending.
-         if ( WaitStatus == STATUS_WAIT_2 )
+         else if (WaitStatus == STATUS_WAIT_2)
          {
             ERR("NB Receiving Thread woken up dead!\n");
             Entry = pti->DispatchingMessagesHead.Flink;
             while (Entry != &pti->DispatchingMessagesHead)
             {
-               if ((PUSER_SENT_MESSAGE) CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry)
-                     == Message)
+               if (CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, DispatchingListEntry) == Message)
                {
                   Message->CompletionEvent = NULL;
                   Message->Result = NULL;
@@ -1279,11 +1275,10 @@ co_MsqSendMessage(PTHREADINFO ptirec,
 
          while (co_MsqDispatchOneSentMessage(pti))
             ;
-      }
-      while (NT_SUCCESS(WaitStatus) && WaitStatus == STATUS_WAIT_1);
+      } while (WaitStatus == STATUS_WAIT_1);
    }
 
-   if ( WaitStatus == STATUS_USER_APC )
+   if (WaitStatus == STATUS_USER_APC)
    {
      // The current thread is dying!
      TRACE("User APC\n");
@@ -1291,7 +1286,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
      ERR("User APC Returned\n"); // Should not see this message.
    }
 
-   if ( WaitStatus != STATUS_TIMEOUT )
+   if (WaitStatus != STATUS_TIMEOUT)
    {
       if (uResult)
       {
