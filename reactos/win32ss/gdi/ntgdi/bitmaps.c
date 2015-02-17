@@ -11,7 +11,8 @@
 #define NDEBUG
 #include <debug.h>
 
-void
+static
+int
 NTAPI
 UnsafeSetBitmapBits(
     PSURFACE psurf,
@@ -32,6 +33,9 @@ UnsafeSetBitmapBits(
     lDeltaDst = psurf->SurfObj.lDelta;
     lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
 
+    if (cjBits && (cjBits < (lDeltaSrc * nHeight)))
+        return 0;
+
     while (nHeight--)
     {
         /* Copy one line */
@@ -40,6 +44,7 @@ UnsafeSetBitmapBits(
         pjDst += lDeltaDst;
     }
 
+    return 1;
 }
 
 HBITMAP
@@ -538,9 +543,8 @@ NtGdiSetBitmapBits(
 
     _SEH2_TRY
     {
-        ProbeForRead(pUnsafeBits, Bytes, 1);
-        UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
-        ret = 1;
+        ProbeForRead(pUnsafeBits, Bytes, sizeof(WORD));
+        ret = UnsafeSetBitmapBits(psurf, Bytes, pUnsafeBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
