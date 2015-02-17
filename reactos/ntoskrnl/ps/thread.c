@@ -481,7 +481,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             ObDereferenceObject(Thread);
 
             /* Close its handle, killing it */
-            ObCloseHandle(ThreadHandle, PreviousMode);
+            ObCloseHandle(hThread, PreviousMode);
 
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -523,7 +523,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             ObDereferenceObject(Thread);
 
             /* Close its handle, killing it */
-            ObCloseHandle(ThreadHandle, PreviousMode);
+            ObCloseHandle(hThread, PreviousMode);
             return Status;
         }
 
