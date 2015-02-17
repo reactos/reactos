@@ -622,14 +622,18 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         case HCBT_CLICKSKIPPED:
             pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
             lParam = (LPARAM) pMHook;
+            wParam = Common->wParam;
             break;
         case HCBT_MOVESIZE:
             prl = (PRECTL)((PCHAR) Common + Common->lParam);
             lParam = (LPARAM) prl;
+            wParam = Common->wParam;
             break;
         case HCBT_ACTIVATE:
+            //ERR("HCBT_ACTIVATE: hwnd %p\n",Common->wParam);
             pcbtas = (LPCBTACTIVATESTRUCT)((PCHAR) Common + Common->lParam);
             lParam = (LPARAM) pcbtas;
+            wParam = Common->wParam;
             break;
         case HCBT_KEYSKIPPED: /* The rest SEH support */
         case HCBT_MINMAX:
