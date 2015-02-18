@@ -4667,14 +4667,7 @@ static void test_secure_connection(void)
     ok(ret, "InternetQueryOption failed: %d\n", GetLastError());
     ok(flags & SECURITY_FLAG_SECURE, "expected secure flag to be set\n");
 
-    if (!winetest_interactive)
-    {
-        skip("test_cert_struct(req, &test_winehq_org_cert), ROSTESTS-121\n");
-    }
-    else
-    {
-        test_cert_struct(req, &test_winehq_org_cert);
-    }
+    test_cert_struct(req, &test_winehq_org_cert);
 
     /* Querying the same option through InternetQueryOptionW still results in
      * ASCII strings being returned.
