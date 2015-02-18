@@ -2931,7 +2931,6 @@ static void test_GdipGetNearestColor(void)
     ReleaseDC(hwnd, hdc);
 }
 
-#if CORE_6659_IS_FIXED
 static void test_string_functions(void)
 {
     GpStatus status;
@@ -3300,7 +3299,6 @@ static void test_string_functions(void)
 
     ReleaseDC(hwnd, hdc);
 }
-#endif /* CORE_6659_IS_FIXED */
 
 static void test_get_set_interpolation(void)
 {
@@ -5620,9 +5618,7 @@ START_TEST(graphics)
     test_clear();
     test_textcontrast();
     test_fromMemoryBitmap();
-#if CORE_6659_IS_FIXED
     test_string_functions();
-#endif
     test_get_set_interpolation();
     test_get_set_textrenderinghint();
     test_getdc_scaled();
