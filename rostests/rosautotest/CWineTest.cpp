@@ -254,7 +254,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
 {
     DWORD BytesAvailable;
     stringstream ss, ssFinish;
-    DWORD StartTime = GetTickCount();
+    DWORD StartTime;
     float TotalTime;
     string tailString;
     CPipe Pipe;
