@@ -304,7 +304,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                                    NULL);
         /* Attempt to open source file */
         Status = NtOpenFile(&SourceHandle,
-                            FILE_READ_ATTRIBUTES | DELETE | SYNCHRONIZE, 
+                            FILE_READ_ATTRIBUTES | DELETE | SYNCHRONIZE,
                             &ObjectAttributes,
                             &IoStatusBlock,
                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -474,7 +474,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         if (Status != STATUS_NOT_SAME_DEVICE || !(dwFlags & MOVEFILE_COPY_ALLOWED))
         {
             /* ReactOS hack! To be removed once all FSD have proper renaming support
-             * Just leave status to error and leave 
+             * Just leave status to error and leave
              */
             if (Status == STATUS_NOT_IMPLEMENTED)
             {
