@@ -93,12 +93,6 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
 
     /* Reserve enough to read previous string + to append our with required null chars */
     BufferLength = NewPath->Length + ExistingPath->Length + STRING_LENGTH + 3 * sizeof(UNICODE_NULL);
-    /* Check we didn't overflow */
-    if (BufferLength < STRING_LENGTH)
-    {
-        NtClose(KeyHandle);
-        return STATUS_BUFFER_TOO_SMALL;
-    }
 
     while (TRUE)
     {
@@ -123,6 +117,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
         StringLength = DataSize;
         RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
         BufferLength = ExistingPath->Length + StringLength + NewPath->Length + 3 * sizeof(UNICODE_NULL);
+        /* Check we didn't overflow */
         if (BufferLength < StringLength)
         {
             NtClose(KeyHandle);
