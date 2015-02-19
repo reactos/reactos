@@ -535,6 +535,7 @@ NotifyProcessForShutdown(PCSR_PROCESS CsrProcess,
 
         NOTIFY_CONTEXT Context;
         Context.ShutdownSettings = ShutdownSettings;
+        Context.QueryResult = QUERY_RESULT_CONTINUE; // We continue shutdown by default.
 
         /* Lock the process */
         CsrLockProcessByClientId(CsrProcess->ClientId.UniqueProcess, &Process);
