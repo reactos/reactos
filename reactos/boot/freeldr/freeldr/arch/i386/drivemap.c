@@ -114,11 +114,12 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 
 BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 {
-    ULONG        Index;
+    ULONG Index;
 
     // Now verify that the user has given us appropriate strings
     if ((strlen(DriveString) < 3) ||
-        ((DriveString[0] != 'f') && (DriveString[0] != 'F') && (DriveString[0] != 'h') && (DriveString[0] != 'H')) ||
+        ((DriveString[0] != 'f') && (DriveString[0] != 'F') &&
+         (DriveString[0] != 'h') && (DriveString[0] != 'H')) ||
         ((DriveString[1] != 'd') && (DriveString[1] != 'D')))
     {
         return FALSE;
@@ -126,13 +127,14 @@ BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 
     // Now verify that the user has given us appropriate numbers
     // Make sure that only numeric characters were given
-    for (Index=2; Index<strlen(DriveString); Index++)
+    for (Index = 2; Index < strlen(DriveString); Index++)
     {
         if (DriveString[Index] < '0' || DriveString[Index] > '9')
         {
             return FALSE;
         }
     }
+
     // Now make sure that they are not outrageous values (i.e. hd90874)
     if ((atoi(&DriveString[2]) < 0) || (atoi(&DriveString[2]) > 0xff))
     {
@@ -145,13 +147,15 @@ BOOLEAN DriveMapIsValidDriveString(PCSTR DriveString)
 
 UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 {
-    UCHAR        BiosDriveNumber = 0;
+    UCHAR BiosDriveNumber = 0;
+
+    TRACE("DriveMapGetBiosDriveNumber(%s)\n", DeviceName);
 
     // If they passed in a number string then just
     // convert it to decimal and return it
     if (DeviceName[0] >= '0' && DeviceName[0] <= '9')
     {
-        return atoi(DeviceName);
+        return (UCHAR)strtoul(DeviceName, NULL, 0);
     }
 
     // Convert the drive number string into a number
@@ -171,8 +175,8 @@ UCHAR DriveMapGetBiosDriveNumber(PCSTR DeviceName)
 #ifndef _MSC_VER
 VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 {
-    ULONG*    RealModeIVT = (ULONG*)0x00000000;
-    USHORT*    BiosLowMemorySize = (USHORT*)0x00000413;
+    ULONG*  RealModeIVT = (ULONG*)0x00000000;
+    USHORT* BiosLowMemorySize = (USHORT*)0x00000413;
 
     if (!DriveMapInstalled)
     {
@@ -207,8 +211,8 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 
 VOID DriveMapRemoveInt13Handler(VOID)
 {
-    ULONG*    RealModeIVT = (ULONG*)0x00000000;
-    USHORT*    BiosLowMemorySize = (USHORT*)0x00000413;
+    ULONG*  RealModeIVT = (ULONG*)0x00000000;
+    USHORT* BiosLowMemorySize = (USHORT*)0x00000413;
 
     if (DriveMapInstalled)
     {
