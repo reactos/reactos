@@ -370,7 +370,7 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
-        DPRINT1("Exception text: %x\n", ExceptionRecord.ExceptionInformation[2]);
+        DPRINT1("Exception text: %lx\n", ExceptionRecord.ExceptionInformation[2]);
     }
 
     /* Trace the wine special error and show the modulename and functionname */
