@@ -55,6 +55,7 @@ typedef ULONG LOGICAL, *PLOGICAL;
 #define ExFreePoolWithTag(p, tag)               HeapFree(GetProcessHeap(), 0, p)
 #define RtlCopyMemoryNonTemporal                RtlCopyMemory
 #define RtlPrefetchMemoryNonTemporal(s, l)
+#define ExRaiseStatus                           RtlRaiseStatus
 #endif /* defined KMT_EMULATE_KERNEL */
 
 #endif /* defined KMT_USER_MODE */

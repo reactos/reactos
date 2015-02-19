@@ -5,6 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thomas.faber@reactos.org>
  */
 
+#define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
 
 START_TEST(RtlException)
@@ -39,13 +40,29 @@ START_TEST(RtlException)
     KmtEndSeh(STATUS_ACCESS_VIOLATION);
 #endif
 
+    KmtStartSeh()
+        ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+
+    KmtStartSeh()
+        ExRaiseStatus(STATUS_TIMEOUT);
+    KmtEndSeh(STATUS_TIMEOUT);
+
+    KmtStartSeh()
+        ExRaiseStatus(STATUS_STACK_OVERFLOW);
+    KmtEndSeh(STATUS_STACK_OVERFLOW);
+
+    KmtStartSeh()
+        ExRaiseStatus(STATUS_GUARD_PAGE_VIOLATION);
+    KmtEndSeh(STATUS_GUARD_PAGE_VIOLATION);
+
     /* We cannot test this in kernel mode easily - the stack is just "somewhere"
      * in system space, and there's no guard page below it */
 #if CORE_6640_IS_FIXED
 #ifdef KMT_USER_MODE
     /* Overflow the stack - must cause a special exception */
     KmtStartSeh()
-        PCHAR Pointer;
+        volatile CHAR *Pointer;
 
         while (1)
         {
