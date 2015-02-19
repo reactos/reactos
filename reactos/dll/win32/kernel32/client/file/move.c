@@ -92,7 +92,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     }
 
     /* Reserve enough to read previous string + to append our with required null chars */
-    BufferLength = NewPath->Length + ExistingPath->Length + STRING_LENGTH + 3 * sizeof(WCHAR);
+    BufferLength = NewPath->Length + ExistingPath->Length + STRING_LENGTH + 3 * sizeof(UNICODE_NULL);
     /* Check we didn't overflow */
     if (BufferLength < STRING_LENGTH)
     {
@@ -122,7 +122,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
         /* If buffer was too small, then, reallocate one which is big enough */
         StringLength = DataSize;
         RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        BufferLength = ExistingPath->Length + StringLength + NewPath->Length + 3 * sizeof(WCHAR);
+        BufferLength = ExistingPath->Length + StringLength + NewPath->Length + 3 * sizeof(UNICODE_NULL);
         if (BufferLength < StringLength)
         {
             NtClose(KeyHandle);
@@ -148,9 +148,11 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     {
         PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)Buffer;
 
-        /* Get data, our buffer begin and then where we should append data (+ null char) */
+        /* Get data, our buffer begin and then where we should append data
+         * (- null char, this is REG_MULTI_SZ, it already includes double termination, we keep only one)
+         */
         BufferBegin = PartialInfo->Data;
-        BufferWrite = (PWSTR)((ULONG_PTR)PartialInfo->Data + PartialInfo->DataLength + sizeof(WCHAR));
+        BufferWrite = (PWSTR)((ULONG_PTR)PartialInfo->Data + PartialInfo->DataLength - sizeof(UNICODE_NULL));
     }
 
     /* First copy existing */
