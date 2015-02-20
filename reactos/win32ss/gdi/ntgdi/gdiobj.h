@@ -5,6 +5,8 @@
 
 #pragma once
 
+#define GDI_OBJECT_STACK_LEVELS 10
+
 /* The first 10 entries are never used in windows, they are empty */
 static const unsigned RESERVE_ENTRIES_COUNT = 10;
 
@@ -42,6 +44,9 @@ typedef struct _BASEOBJECT
     USHORT cExclusiveLock;
     USHORT BaseFlags;
     EX_PUSH_LOCK pushlock;
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+    PVOID apvBackTrace[GDI_OBJECT_STACK_LEVELS];
+#endif
 #if DBG_ENABLE_EVENT_LOGGING
     SLIST_HEADER slhLog;
 #endif

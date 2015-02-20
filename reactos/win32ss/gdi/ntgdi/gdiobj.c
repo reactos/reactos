@@ -339,6 +339,10 @@ ENTRY_pentPopFreeEntry(VOID)
             if (iFirst >= GDI_HANDLE_COUNT)
             {
                 DPRINT1("No more GDI handles left!\n");
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+                DbgDumpGdiHandleTableWithBT();
+#endif
+                InterlockedDecrement((LONG*)&gulFirstUnused);
                 return 0;
             }
 
@@ -350,7 +354,7 @@ ENTRY_pentPopFreeEntry(VOID)
         pentFree = &gpentHmgr[iFirst & GDI_HANDLE_INDEX_MASK];
 
         /* Create a new value with an increased sequence number */
-        iNext = (USHORT)(ULONG_PTR)pentFree->einfo.pobj;
+        iNext = GDI_HANDLE_GET_INDEX(pentFree->einfo.hFree);
         iNext |= (iFirst & ~GDI_HANDLE_INDEX_MASK) + 0x10000;
 
         /* Try to exchange the FirstFree value */
@@ -516,6 +520,9 @@ GDIOBJ_AllocateObject(UCHAR objt, ULONG cjSize, FLONG fl)
     pobj->BaseFlags = fl & 0xffff;
     DBG_INITLOG(&pobj->slhLog);
     DBG_LOGEVENT(&pobj->slhLog, EVENT_ALLOCATE, 0);
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+    DbgCaptureStackBackTace(pobj->apvBackTrace, 1, GDI_OBJECT_STACK_LEVELS);
+#endif /* GDI_DEBUG */
 
     return pobj;
 }
@@ -1497,9 +1504,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     }
 
 #if DBG
-//#ifdef GDI_DEBUG
-	DbgGdiHTIntegrityCheck();
-//#endif
+    DbgGdiHTIntegrityCheck();
 #endif
 
     ppi = PsGetCurrentProcessWin32Process();

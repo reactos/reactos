@@ -23,6 +23,7 @@
 
 /* Enable debugging features */
 #define GDI_DEBUG 0
+#define DBG_ENABLE_GDIOBJ_BACKTRACES 0
 #define DBG_ENABLE_EVENT_LOGGING 0
 #define DBG_ENABLE_SERVICE_HOOKS 0
 
