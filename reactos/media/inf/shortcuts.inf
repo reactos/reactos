@@ -40,7 +40,7 @@ GamesShortcuts=2, %GAMES%
 [SystemToolsShortcuts]
 %SystemRoot%\system32\charmap.exe, %CHARMAP_TITLE%, %CHARMAP_DESC%, 0
 %SystemRoot%\system32\kbswitch.exe, %KBSWITCH_TITLE%, %KBSWITCH_DESC%, 0
-%SystemRoot%\system32\regedt32.exe, %REGEDIT_TITLE%, %REGEDIT_DESC%, 0
+%SystemRoot%\regedit.exe, %REGEDIT_TITLE%, %REGEDIT_DESC%, 0
 %SystemRoot%\system32\dxdiag.exe, %DXDIAG_TITLE%, %DXDIAG_DESC%, 0
 
 [AccessibilityShortcuts]
