@@ -49,6 +49,7 @@ CPlApplet*    Control_UnloadApplet(CPlApplet* applet)
     
     FreeLibrary(applet->hModule);
     next = applet->next;
+    HeapFree(GetProcessHeap(), 0, applet->cmd);
     HeapFree(GetProcessHeap(), 0, applet);
     return next;
 }
@@ -56,6 +57,7 @@ CPlApplet*    Control_UnloadApplet(CPlApplet* applet)
 CPlApplet*    Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 {
     CPlApplet*    applet;
+    DWORD len;
     unsigned     i;
     CPLINFO    info;
     NEWCPLINFOW newinfo;
@@ -63,16 +65,32 @@ CPlApplet*    Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
     if (!(applet = (CPlApplet *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*applet))))
        return applet;
 
+    len = ExpandEnvironmentStringsW(cmd, NULL, 0);
+    if (len > 0)
+    {
+        if (!(applet->cmd = HeapAlloc(GetProcessHeap(), 0, (len+1) * sizeof(WCHAR))))
+        {
+            WARN("Cannot allocate memory for applet path\n");
+            goto theError;
+        }
+        ExpandEnvironmentStringsW(cmd, applet->cmd, len+1);
+    }
+    else
+    {
+        WARN("Cannot expand applet path\n");
+        goto theError;
+    }
+
     applet->hWnd = hWnd;
 
-    if (!(applet->hModule = LoadLibraryW(cmd)))
+    if (!(applet->hModule = LoadLibraryW(applet->cmd)))
     {
-        WARN("Cannot load control panel applet %s\n", debugstr_w(cmd));
+        WARN("Cannot load control panel applet %s\n", debugstr_w(applet->cmd));
         goto theError;
     }
     if (!(applet->proc = (APPLET_PROC)GetProcAddress(applet->hModule, "CPlApplet")))
     {
-        WARN("Not a valid control panel applet %s\n", debugstr_w(cmd));
+        WARN("Not a valid control panel applet %s\n", debugstr_w(applet->cmd));
         goto theError;
     }
     if (!applet->proc(hWnd, CPL_INIT, 0L, 0L))
@@ -155,9 +173,9 @@ static void Control_WndProc_Create(HWND hWnd, const CREATESTRUCTW* cs)
    panel->hWnd = hWnd;
 }
 
-#define    XICON    32
+#define XICON    32
 #define XSTEP    128
-#define    YICON    32
+#define YICON    32
 #define YSTEP    64
 
 static BOOL    Control_Localize(const CPanel* panel, int cx, int cy,
