@@ -136,7 +136,7 @@ CloseProcessAndVerify_(
     Error = GetLastError();
     ok_(File, Line)(hProcess == NULL, "OpenProcess succeeded unexpectedly for pid 0x%lx\n", ProcessId);
     ok_(File, Line)(Error == ERROR_INVALID_PARAMETER, "Error = %lu\n", Error);
-    ok_(File, Line)(ExitCode == ExpectedExitCode, "Exit code is %lu but expected %lu\n", ExitCode, ExpectedExitCode);
+    ok_(File, Line)(ExitCode == ExpectedExitCode, "Exit code is %lu but expected %u\n", ExitCode, ExpectedExitCode);
 }
 
 static
