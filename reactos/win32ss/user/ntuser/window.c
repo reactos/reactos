@@ -1411,7 +1411,7 @@ NtUserBuildHwndList(
       if (!(W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread))
       {
          ObDereferenceObject(Thread);
-         ERR("Thread is not initialized!\n");
+         TRACE("Tried to enumerate windows of a non gui thread\n");
          return ERROR_INVALID_PARAMETER;
       }
 

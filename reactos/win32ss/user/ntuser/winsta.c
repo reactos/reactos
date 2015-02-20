@@ -934,7 +934,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
    ppi->prpwinsta = NewWinSta;
    ppi->hwinsta = hWindowStation;
    ppi->amwinsta = hWindowStation != NULL ? ObjectHandleInfo.GrantedAccess : 0;
-   ERR("WS : Granted Access %p\n",ppi->amwinsta);
+   TRACE("WS : Granted Access %p\n",ppi->amwinsta);
 
    if (RtlAreAllAccessesGranted(ppi->amwinsta, WINSTA_READSCREEN))
    {

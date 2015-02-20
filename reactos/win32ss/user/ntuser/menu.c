@@ -254,7 +254,7 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
          }
          if (UserObjectInDestroy(Menu->head.h))
          {
-            ERR("Menu already dead!\n");
+            WARN("Menu already dead!\n");
             return FALSE;
          }
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);

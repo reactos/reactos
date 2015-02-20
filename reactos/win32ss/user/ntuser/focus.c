@@ -337,7 +337,7 @@ FindRemoveAsyncMsg(PWND Wnd, WPARAM wParam)
           Message->Msg.hwnd == UserHMGetHandle(Wnd) &&
           Message->Msg.wParam == wParam)
       {
-         ERR("ASYNC SAW: Found one in the Sent Msg Queue! %p Activate/Deactivate %d\n", Message->Msg.hwnd, !!wParam);
+         WARN("ASYNC SAW: Found one in the Sent Msg Queue! %p Activate/Deactivate %d\n", Message->Msg.hwnd, !!wParam);
          RemoveEntryList(&Message->ListEntry); // Purge the entry.
          ClearMsgBitsMask(pti, Message->QS_Flags);
          ExFreePoolWithTag(Message, TAG_USRMSG);
