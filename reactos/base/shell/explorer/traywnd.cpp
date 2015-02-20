@@ -2622,8 +2622,8 @@ HandleTrayContextMenu:
     LRESULT OnDoExitWindows(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* 
-         * TWM_DOEXITWINDOWS is send by the CDesktopBrowserr to us to 
-         * show the shutdown dialog
+         * TWM_DOEXITWINDOWS is send by the CDesktopBrowser to us
+         * to show the shutdown dialog.
          */
         return DoExitWindows();
     }
@@ -2717,7 +2717,6 @@ HandleTrayContextMenu:
         {
             switch (LOWORD(wParam))
             {
-                /* FIXME: Handle these commands as well */
             case IDM_TASKBARANDSTARTMENU:
                 DisplayProperties();
                 break;
@@ -2734,11 +2733,14 @@ HandleTrayContextMenu:
                 DisplayRunFileDlg();
                 break;
 
-                /* FIXME: Handle these commands as well */
+            /* FIXME: Handle these commands as well */
             case IDM_SYNCHRONIZE:
-            case IDM_LOGOFF:
             case IDM_DISCONNECT:
             case IDM_UNDOCKCOMPUTER:
+                break;
+
+            case IDM_LOGOFF:
+                LogoffWindowsDialog(m_hWnd); // FIXME: Maybe handle it in a similar way as DoExitWindows?
                 break;
 
             case IDM_SHUTDOWN:

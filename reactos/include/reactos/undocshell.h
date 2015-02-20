@@ -123,6 +123,7 @@ void WINAPI RunFileDlg(
 	LPCWSTR lpstrDescription,
 	UINT uFlags);
 
+int WINAPI LogoffWindowsDialog(HWND hwndOwner);
 void WINAPI ExitWindowsDialog(HWND hwndOwner);
 
 BOOL WINAPI SHFindComputer(
