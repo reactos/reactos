@@ -791,11 +791,6 @@ EXTINLINE LPARAM NtUserxGetMessageExtraInfo(VOID)
     return (LPARAM)NtUserGetThreadState(THREADSTATE_GETMESSAGEEXTRAINFO);
 }
 
-EXTINLINE BOOL NtUserxSwitchCaretShowing(THRDCARETINFO* CaretInfo)
-{
-    return (BOOL)NtUserCallOneParam((DWORD_PTR)CaretInfo, ONEPARAM_ROUTINE_SWITCHCARETSHOWING);
-}
-
 EXTINLINE VOID NtUserxEnableProcessWindowGhosting(BOOL bEnable)
 {
     NtUserCallOneParam((DWORD_PTR)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING);

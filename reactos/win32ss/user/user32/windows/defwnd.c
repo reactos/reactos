@@ -967,22 +967,6 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
-        case WM_SYSTIMER:
-        {
-          THRDCARETINFO CaretInfo;
-          switch(wParam)
-          {
-            case 0xffff: /* Caret timer */
-              /* switch showing byte in win32k and get information about the caret */
-              if(NtUserxSwitchCaretShowing(&CaretInfo) && (CaretInfo.hWnd == hWnd))
-              {
-                DrawCaret(hWnd, &CaretInfo);
-              }
-              break;
-          }
-          break;
-        }
-
         case WM_QUERYOPEN:
         case WM_QUERYENDSESSION:
         {

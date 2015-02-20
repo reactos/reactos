@@ -218,9 +218,6 @@ NtUserCallOneParam(
             RETURN(Result);
          }
 
-      case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
-         RETURN( (DWORD_PTR)IntSwitchCaretShowing((PVOID)Param));
-
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD_PTR)IntSetCaretBlinkTime((UINT)Param));
 

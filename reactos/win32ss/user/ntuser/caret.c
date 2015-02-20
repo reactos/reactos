@@ -278,26 +278,6 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
    return TRUE;
 }
 
-/* This can go away now! */
-BOOL FASTCALL
-IntSwitchCaretShowing(PVOID Info)
-{
-   PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE ThreadQueue;
-
-   pti = PsGetCurrentThreadWin32Thread();
-   ThreadQueue = pti->MessageQueue;
-
-   if(ThreadQueue->CaretInfo->hWnd)
-   {
-      ThreadQueue->CaretInfo->Showing = (ThreadQueue->CaretInfo->Showing ? 0 : 1);
-      MmCopyToCaller(Info, ThreadQueue->CaretInfo, sizeof(THRDCARETINFO));
-      return TRUE;
-   }
-
-   return FALSE;
-}
-
 /* SYSCALLS *****************************************************************/
 
 BOOL

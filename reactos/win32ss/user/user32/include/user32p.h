@@ -129,7 +129,6 @@ void UserGetInsideRectNC(PWND Wnd, RECT *rect);
 VOID FASTCALL GetConnected(VOID);
 extern BOOL FASTCALL EnumNamesA(HWINSTA WindowStation, NAMEENUMPROCA EnumFunc, LPARAM Context, BOOL Desktops);
 extern BOOL FASTCALL EnumNamesW(HWINSTA WindowStation, NAMEENUMPROCW EnumFunc, LPARAM Context, BOOL Desktops);
-void DrawCaret(HWND hWnd, PTHRDCARETINFO CaretInfo);
 BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 HWND* WIN_ListChildren (HWND hWndparent);
 VOID DeleteFrameBrushes(VOID);
