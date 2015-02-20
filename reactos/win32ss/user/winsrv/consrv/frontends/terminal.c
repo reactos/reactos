@@ -277,7 +277,7 @@ ConSrvTermInitTerminal(IN OUT PTERMINAL This,
         DPRINT1("InitFrontEnd failed, Status = 0x%08lx\n", Status);
 
     /** HACK HACK!! Be sure FrontEndIFace is correctly updated in the console!! **/
-    DPRINT1("Using FrontEndIFace HACK(2), should be removed after proper implementation!\n");
+    DPRINT("Using FrontEndIFace HACK(2), should be removed after proper implementation!\n");
     Console->FrontEndIFace = *FrontEnd;
 
     return Status;

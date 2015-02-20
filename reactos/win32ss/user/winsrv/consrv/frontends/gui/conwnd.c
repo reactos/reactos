@@ -762,9 +762,9 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     LeaveCriticalSection(&Console->Lock);
 
     if (SetFocus)
-        DPRINT1("TODO: Create console caret\n");
+        DPRINT("TODO: Create console caret\n");
     else
-        DPRINT1("TODO: Destroy console caret\n");
+        DPRINT("TODO: Destroy console caret\n");
 }
 
 static VOID

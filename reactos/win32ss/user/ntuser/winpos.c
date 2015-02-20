@@ -327,7 +327,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    /* If this is popup window, try to activate the owner first. */
    if ((Wnd->style & WS_POPUP) && (WndTo = Wnd->spwndOwner))
    {
-      ERR("WPAOW Popup with Owner\n");
+      TRACE("WPAOW Popup with Owner\n");
       WndTo = UserGetAncestor( WndTo, GA_ROOT );
       if (can_activate_window(WndTo)) goto done;
    }
@@ -2088,10 +2088,10 @@ co_WinPosSetWindowPos(
                 pti->MessageQueue != gpqForeground ) // This fixes the breakage at boot time caused by the above line!
       {
          // Inside SAW? Fixes Api AttachThreadInput tests.
-         ERR("SetWindowPos Set FG Window! hWnd %p\n",WinPos.hwnd);
+         TRACE("SetWindowPos Set FG Window! hWnd %p\n",WinPos.hwnd);
          if (!(Window->state & WNDS_BEINGACTIVATED))
          {
-            ERR("SetWindowPos Set FG Window!\n");
+            TRACE("SetWindowPos Set FG Window!\n");
             // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
             co_IntSetForegroundWindow(Window);
          }
