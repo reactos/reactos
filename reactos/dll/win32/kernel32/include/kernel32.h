@@ -353,7 +353,7 @@ VOID
 WINAPI
 InitCommandLines(VOID);
 
-VOID
+DWORD
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status);
 

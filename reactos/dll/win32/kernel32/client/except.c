@@ -682,12 +682,16 @@ SetLastError(IN DWORD dwErrCode)
 /*
  * @implemented
  */
-VOID
+DWORD
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status)
 {
+    DWORD dwErrCode;
+
     /* Convert from NT to Win32, then set */
-    SetLastError(RtlNtStatusToDosError(Status));
+    dwErrCode = RtlNtStatusToDosError(Status);
+    SetLastError(dwErrCode);
+    return dwErrCode;
 }
 
 /*
