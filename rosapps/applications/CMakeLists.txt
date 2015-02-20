@@ -1,5 +1,6 @@
 add_subdirectory(cmdutils)
 add_subdirectory(devutils)
+add_subdirectory(explorer-old)
 #add_subdirectory(fraginator)
 add_subdirectory(imagesoft)
 #add_subdirectory(net)
