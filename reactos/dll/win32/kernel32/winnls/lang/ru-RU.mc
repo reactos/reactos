@@ -11,8 +11,8 @@ SeverityNames=(Success=0x0:STATUS_SEVERITY_SUCCESS
               )
 
 FacilityNames=(System=0x0:FACILITY_SYSTEM
-			   ITF=0x4:FACILITY_ITF
-			   WIN32=0x7:FACILITY_GENERAL
+               ITF=0x4:FACILITY_ITF
+               WIN32=0x7:FACILITY_GENERAL
               )
 
 LanguageNames=(Russian=0x419:MSG00419)
