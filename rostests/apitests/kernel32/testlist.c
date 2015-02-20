@@ -13,6 +13,7 @@ extern void func_lstrcpynW(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_SetCurrentDirectory(void);
 extern void func_SetUnhandledExceptionFilter(void);
+extern void func_TerminateProcess(void);
 
 const struct test winetest_testlist[] =
 {
@@ -25,7 +26,8 @@ const struct test winetest_testlist[] =
     { "lstrcpynW",                   func_lstrcpynW },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
-    { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter},
+    { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter },
+    { "TerminateProcess",            func_TerminateProcess },
     { 0, 0 }
 };
 

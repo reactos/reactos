@@ -10,6 +10,7 @@ list(APPEND SOURCE
     MultiByteToWideChar.c
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
+    TerminateProcess.c
     testlist.c)
 
 add_executable(kernel32_apitest ${SOURCE})
