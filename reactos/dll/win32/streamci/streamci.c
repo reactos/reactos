@@ -50,7 +50,7 @@ InstallSoftwareDeviceInterface(IN LPGUID DeviceId,
 {
     HDEVINFO hDevInfo;
     SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
-    GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
+   // GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData;
     HANDLE hDevice;
     PSWENUM_INSTALL_INTERFACE InstallInterface;
@@ -64,7 +64,7 @@ InstallSoftwareDeviceInterface(IN LPGUID DeviceId,
     }
 
     DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-    if (!SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &SWBusGuid, 0, &DeviceInterfaceData))
+    if (!SetupDiEnumDeviceInterfaces(hDevInfo, NULL, NULL, 0, &DeviceInterfaceData))
     {
         // failed
         SetupDiDestroyDeviceInfoList(hDevInfo);
