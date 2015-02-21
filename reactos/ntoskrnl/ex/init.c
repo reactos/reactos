@@ -1226,7 +1226,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
         Status = RtlStringCbPrintfA(RcEnd,
                                     Remaining,
                                     "r%u",
-                                    (CmNtCSDVersion & 0xFFFF0000) >> 16);
+                                    /*(CmNtCSDVersion & 0xFFFF0000) >> 16*/
+                                    KERNEL_VERSION_BUILD_HEX);
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
