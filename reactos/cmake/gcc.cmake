@@ -366,7 +366,7 @@ endmacro()
 set(PSEH_LIB "pseh")
 
 # Macros
-if(PCH)
+if(PCH AND (NOT ENABLE_CCACHE))
     add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
     macro(add_pch _target _pch _sources)
         # When including x.h GCC looks for x.h.gch first
@@ -387,10 +387,6 @@ if(PCH)
             LANGUAGE ${_pch_language}
             EXTERNAL_SOURCE TRUE
             OBJECT_LOCATION ${_gch})
-
-        if(ENABLE_CCACHE)
-            set(_ccache_flag "-fpch-preprocess")
-        endif()
 
         # Include the gch in the specified source files, skipping the pch file itself
         list(REMOVE_ITEM ${_sources} ${_pch})
