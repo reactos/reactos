@@ -203,6 +203,14 @@
 #define IDS_DESCRIPTION          331
 #define IDS_COPY_OF              332
 
+/* Strings for file operations*/
+#define IDS_FILEOOP_COPYING      333
+#define IDS_FILEOOP_MOVING       334
+#define IDS_FILEOOP_DELETING     335
+#define IDS_FILEOOP_FROM_TO      336
+#define IDS_FILEOOP_FROM         337
+#define IDS_FILEOOP_PREFLIGHT    338
+
 #define IDS_MENU_EMPTY           34561
 
 /* Note: those strings are referenced from the registry */
