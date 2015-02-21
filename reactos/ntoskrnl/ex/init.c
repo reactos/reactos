@@ -526,7 +526,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                               (USHORT)Size);
 
     /* Append the DLL path to it */
-    RtlAppendUnicodeToString(&Environment, L"Path=" );
+    RtlAppendUnicodeToString(&Environment, L"Path=");
     RtlAppendUnicodeStringToString(&Environment, &ProcessParams->DllPath);
     RtlAppendUnicodeStringToString(&Environment, &NullString);
 
@@ -1956,6 +1956,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Update progress bar */
     InbvUpdateProgressBar(100);
 
+    /* Clear the screen */
+    if (InbvBootDriverInstalled) FinalizeBootLogo();
+
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
 
@@ -1993,9 +1996,6 @@ Phase1InitializationDiscard(IN PVOID Context)
                         (PVOID*)&ProcessParameters,
                         &Size,
                         MEM_RELEASE);
-
-    /* Clean the screen */
-    if (InbvBootDriverInstalled) FinalizeBootLogo();
 
     /* Increase init phase */
     ExpInitializationPhase++;
