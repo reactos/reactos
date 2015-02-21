@@ -1,0 +1,23 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_NTOBJECTFOLDER  ICON "resources/1.ico"
+IDI_NTOBJECTDIR     ICON "resources/2.ico"
+IDI_NTOBJECTDIROPEN ICON "resources/3.ico"
+IDI_NTOBJECTITEM    ICON "resources/4.ico"
+IDI_NTOBJECTDEVICE  ICON "resources/5.ico"
+IDI_NTOBJECTPORT    ICON "resources/6.ico"
+
+IDR_NTOBJECTFOLDER REGISTRY "resources/rgs/ntobjectfolder.rgs"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif

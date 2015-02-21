@@ -24,6 +24,9 @@ list(APPEND SOURCE
     lanstatusui.cpp
     precomp.h)
 
+list(APPEND atl_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/rgs/ntobjectfolder.rgs)
+
 add_library(netshell SHARED
     ${SOURCE}
     netshell.rc
