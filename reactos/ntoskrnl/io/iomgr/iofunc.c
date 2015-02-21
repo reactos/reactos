@@ -1896,6 +1896,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     PFILE_ACCESS_INFORMATION AccessBuffer;
     PFILE_MODE_INFORMATION ModeBuffer;
     PFILE_ALIGNMENT_INFORMATION AlignmentBuffer;
+    PFILE_ALL_INFORMATION AllBuffer;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -2098,6 +2099,16 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         AlignmentBuffer->AlignmentRequirement = DeviceObject->AlignmentRequirement;
         Irp->IoStatus.Information = sizeof(FILE_ALIGNMENT_INFORMATION);
         CallDriver = FALSE;
+    }
+    else if (FileInformationClass == FileAllInformation)
+    {
+        AllBuffer = Irp->AssociatedIrp.SystemBuffer;
+        AllBuffer->AccessInformation.AccessFlags = HandleInformation.GrantedAccess;
+        AllBuffer->ModeInformation.Mode = IopGetFileMode(FileObject);
+        AllBuffer->AlignmentInformation.AlignmentRequirement = DeviceObject->AlignmentRequirement;
+        Irp->IoStatus.Information = sizeof(FILE_ACCESS_INFORMATION) +
+                                    sizeof(FILE_MODE_INFORMATION) +
+                                    sizeof(FILE_ALIGNMENT_INFORMATION);
     }
 
     /* Call the Driver */
