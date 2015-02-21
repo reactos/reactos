@@ -693,6 +693,13 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Bekreft overskriving av fil"
     IDS_OVERWRITEFOLDER_TEXT "Denne mappen inneholder allerede en mappe som heter '%1'.\n\nHvis filene i destinasjon mappen har samme navn filer i \nvalgte mapper her vil bli overskrevet. Ønsker du fortsatt å flytte eller kopiere \ndenne mappen?"
 
+    IDS_FILEOOP_COPYING "Copying"
+    IDS_FILEOOP_MOVING "Moving"
+    IDS_FILEOOP_DELETING "Deleting"
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
+
     /* message box strings */
     IDS_RESTART_TITLE "Starte på nytt"
     IDS_RESTART_PROMPT "Vil du starte datamaskinen på nytt?"

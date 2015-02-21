@@ -693,6 +693,13 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Potvrdenie prepísania súboru"
     IDS_OVERWRITEFOLDER_TEXT "Tento priečinok už obsahuje priečinok s názvom '%1'.\n\nAk budú mať súbory v cieľovom priečinku rovnaké názvy ako súbory\nvo vybranom priečinku, tak budú nahradené. Stále chcete presunúť\nalebo skopírovať priečinok?"
 
+    IDS_FILEOOP_COPYING "Copying"
+    IDS_FILEOOP_MOVING "Moving"
+    IDS_FILEOOP_DELETING "Deleting"
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
+
     /* message box strings */
     IDS_RESTART_TITLE "Reštartovať"
     IDS_RESTART_PROMPT "Naozaj chcete reštartovať systém?"

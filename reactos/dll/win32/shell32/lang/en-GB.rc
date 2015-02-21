@@ -693,6 +693,13 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirm file overwrite"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
 
+    IDS_FILEOOP_COPYING "Copying"
+    IDS_FILEOOP_MOVING "Moving"
+    IDS_FILEOOP_DELETING "Deleting"
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
+
     /* message box strings */
     IDS_RESTART_TITLE "Restart"
     IDS_RESTART_PROMPT "Do you want to restart the system?"

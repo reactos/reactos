@@ -693,6 +693,13 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmer l'écrasement du fichier"
     IDS_OVERWRITEFOLDER_TEXT "Ce dossier contient déjà un dossier nommé '%1'.\n\nSi les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\ndossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\nle dossier?"
 
+    IDS_FILEOOP_COPYING "Copying"
+    IDS_FILEOOP_MOVING "Moving"
+    IDS_FILEOOP_DELETING "Deleting"
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
+
     /* message box strings */
     IDS_RESTART_TITLE "Redémarrer"
     IDS_RESTART_PROMPT "Voulez-vous redémarrer votre ordinateur ?"

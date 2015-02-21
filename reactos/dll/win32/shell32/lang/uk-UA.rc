@@ -693,6 +693,13 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Підтвердження Перезапису Файлу"
     IDS_OVERWRITEFOLDER_TEXT "Ця папка вже містить папку з ім'ям '%1'.\n\nЯкщо файли в папці призначення мають ті ж імена, що файли у вибраній папці,\nвони будуть замінені. Ви все ще бажаєте перемістити або\nскопіювати папку?"
 
+    IDS_FILEOOP_COPYING "Copying"
+    IDS_FILEOOP_MOVING "Moving"
+    IDS_FILEOOP_DELETING "Deleting"
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
+
     /* message box strings */
     IDS_RESTART_TITLE "Перезавантажити"
     IDS_RESTART_PROMPT "Ви хочете перезавантажити систему?"
