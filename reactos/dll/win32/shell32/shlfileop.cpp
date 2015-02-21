@@ -1714,6 +1714,10 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     if (!lpFileOp)
         return ERROR_INVALID_PARAMETER;
 
+    ret = CoInitialize(NULL);
+    if (FAILED(ret))
+        return ret;
+
     check_flags(lpFileOp->fFlags);
 
     ZeroMemory(&flFrom, sizeof(FILE_LIST));
@@ -1732,7 +1736,13 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
     op.bManyItems = (flFrom.dwNumFiles > 1);
 
     if (lpFileOp->wFunc != FO_RENAME && !(lpFileOp->fFlags & FOF_SILENT)) {
-        CoCreateInstance(CLSID_ProgressDialog, NULL, CLSCTX_INPROC_SERVER, IID_IProgressDialog, (void**) &op.progress);
+        ret = CoCreateInstance(CLSID_ProgressDialog, 
+                               NULL, 
+                               CLSCTX_INPROC_SERVER, 
+                               IID_PPV_ARG(IProgressDialog, &op.progress));
+        if (FAILED(ret))
+            goto cleanup;
+
         op.progress->StartProgressDialog(op.req->hwnd, NULL, PROGDLG_NORMAL & PROGDLG_AUTOTIME, NULL);
         _SetOperationTitle(&op);
         _FileOpCountManager(&op, &flFrom);
@@ -1762,6 +1772,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
         op.progress->Release();
     }
 
+cleanup:
     destroy_file_list(&flFrom);
 
     if (lpFileOp->wFunc != FO_DELETE)
@@ -1769,6 +1780,8 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 
     if (ret == ERROR_CANCELLED)
         lpFileOp->fAnyOperationsAborted = TRUE;
+
+    CoUninitialize();
 
     return ret;
 }
