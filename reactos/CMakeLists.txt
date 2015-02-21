@@ -102,11 +102,6 @@ else()
     #useful stuff!
     include(CMakeParseArguments)
 
-    if(ENABLE_CCACHE)
-        set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
-        set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
-    endif()
-
     # Default to Debug for the build type
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
 "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)

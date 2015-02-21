@@ -2,6 +2,8 @@
 # Show a note about ccache build
 if(ENABLE_CCACHE)
     message("-- Enabling ccache build - done")
+    set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
+    set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
 endif()
 
 # PDB style debug info
