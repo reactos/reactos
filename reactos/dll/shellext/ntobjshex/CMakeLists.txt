@@ -21,6 +21,9 @@ add_library(ntobjshex SHARED
     ntobjshex.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)
 
+list(APPEND atl_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/rgs/ntobjectfolder.rgs)
+
 set_module_type(ntobjshex win32dll UNICODE)
 target_link_libraries(ntobjshex uuid wine atlnew)
 
