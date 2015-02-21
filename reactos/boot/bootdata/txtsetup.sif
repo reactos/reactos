@@ -90,6 +90,7 @@ GenDisk = disk
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt
+ROOT\SWENUM = swenum
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
