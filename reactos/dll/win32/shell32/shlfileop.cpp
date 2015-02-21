@@ -35,18 +35,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static const WCHAR wWildcardFile[] = {'*',0};
 static const WCHAR wWildcardChars[] = {'*','?',0};
 
-static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec);
-static DWORD SHNotifyRemoveDirectoryW(LPCWSTR path);
-static DWORD SHNotifyDeleteFileW(FILE_OPERATION *op, LPCWSTR path);
-static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BOOL isdir);
-static DWORD SHNotifyCopyFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists);
-static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly);
-static HRESULT copy_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flFrom, FILE_LIST *flTo);
-static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flFrom, const FILE_LIST *flTo);
-
-DWORD WINAPI _FileOpCountManager(FILE_OPERATION *op, const FILE_LIST *flFrom);
-static BOOL _FileOpCount(FILE_OPERATION *op, LPWSTR pwszBuf, BOOL bFolder, DWORD *ticks);
-
 typedef struct
 {
     SHFILEOPSTRUCTW *req;
@@ -81,6 +69,18 @@ typedef struct
     BOOL bAnyDirectories;
     BOOL bAnyDontExist;
 } FILE_LIST;
+
+static DWORD SHNotifyCreateDirectoryW(LPCWSTR path, LPSECURITY_ATTRIBUTES sec);
+static DWORD SHNotifyRemoveDirectoryW(LPCWSTR path);
+static DWORD SHNotifyDeleteFileW(FILE_OPERATION *op, LPCWSTR path);
+static DWORD SHNotifyMoveFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BOOL isdir);
+static DWORD SHNotifyCopyFileW(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists);
+static DWORD SHFindAttrW(LPCWSTR pName, BOOL fileOnly);
+static HRESULT copy_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flFrom, FILE_LIST *flTo);
+static DWORD move_files(FILE_OPERATION *op, BOOL multiDest, const FILE_LIST *flFrom, const FILE_LIST *flTo);
+
+DWORD WINAPI _FileOpCountManager(FILE_OPERATION *op, const FILE_LIST *flFrom);
+static BOOL _FileOpCount(FILE_OPERATION *op, LPWSTR pwszBuf, BOOL bFolder, DWORD *ticks);
 
 /* Confirm dialogs with an optional "Yes To All" as used in file operations confirmations
  */
