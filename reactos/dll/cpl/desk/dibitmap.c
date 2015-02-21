@@ -12,71 +12,75 @@
 PDIBITMAP
 DibLoadImage(LPTSTR lpFilename)
 {
-    BOOL     bSuccess;
-    DWORD    dwFileSize, dwHighSize, dwBytesRead;
-    HANDLE   hFile;
     PDIBITMAP lpBitmap;
+    GpBitmap  *bitmap;
+    BitmapData lock;
 
-    hFile = CreateFile(lpFilename,
-                       GENERIC_READ,
-                       FILE_SHARE_READ,
-                       NULL,
-                       OPEN_EXISTING,
-                       FILE_FLAG_SEQUENTIAL_SCAN,
-                       NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-        return NULL;
-
-    dwFileSize = GetFileSize(hFile, &dwHighSize);
-
-    if (dwHighSize)
+    if (GdipCreateBitmapFromFile(lpFilename, &bitmap) != Ok)
     {
-        CloseHandle(hFile);
         return NULL;
     }
 
     lpBitmap = HeapAlloc(GetProcessHeap(), 0, sizeof(DIBITMAP));
     if (lpBitmap == NULL)
     {
-        CloseHandle(hFile);
+        GdipDisposeImage((GpImage*)bitmap);
         return NULL;
     }
 
-    lpBitmap->header = HeapAlloc(GetProcessHeap(), 0, dwFileSize);
-    if (lpBitmap->header == NULL)
+    lpBitmap->info = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFO));
+    if (lpBitmap->info == NULL)
     {
         HeapFree(GetProcessHeap(), 0, lpBitmap);
-        CloseHandle(hFile);
+        GdipDisposeImage((GpImage*)bitmap);
         return NULL;
     }
 
-    bSuccess = ReadFile(hFile, lpBitmap->header, dwFileSize, &dwBytesRead, NULL);
-    CloseHandle(hFile);
-
-    if (!bSuccess ||
-        (dwBytesRead != dwFileSize) ||
-        (lpBitmap->header->bfType != * (WORD *) "BM") ||
-        (lpBitmap->header->bfSize != dwFileSize))
+    if (GdipGetImageWidth((GpImage*)bitmap, &lpBitmap->width) != Ok ||
+        GdipGetImageHeight((GpImage*)bitmap, &lpBitmap->height) != Ok)
     {
-        HeapFree(GetProcessHeap(), 0, lpBitmap->header);
+        HeapFree(GetProcessHeap(), 0, lpBitmap->info);
         HeapFree(GetProcessHeap(), 0, lpBitmap);
+        GdipDisposeImage((GpImage*)bitmap);
         return NULL;
     }
 
-    lpBitmap->info = (BITMAPINFO *)(lpBitmap->header + 1);
-    lpBitmap->bits = (BYTE *)lpBitmap->header + lpBitmap->header->bfOffBits;
+    lpBitmap->bits = HeapAlloc(GetProcessHeap(), 0, lpBitmap->width * lpBitmap->height * 4);
+    if (!lpBitmap->bits)
+    {
+        HeapFree(GetProcessHeap(), 0, lpBitmap->info);
+        HeapFree(GetProcessHeap(), 0, lpBitmap);
+        GdipDisposeImage((GpImage*)bitmap);
+        return NULL;
+    }
 
-    /* Get the DIB width and height */
-    if (lpBitmap->info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    ZeroMemory(lpBitmap->info, sizeof(BITMAPINFO));
+    lpBitmap->info->bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    lpBitmap->info->bmiHeader.biWidth       = lpBitmap->width;
+    lpBitmap->info->bmiHeader.biHeight      = -lpBitmap->height;
+    lpBitmap->info->bmiHeader.biPlanes      = 1;
+    lpBitmap->info->bmiHeader.biBitCount    = 32;
+    lpBitmap->info->bmiHeader.biCompression = BI_RGB;
+    lpBitmap->info->bmiHeader.biSizeImage   = lpBitmap->width * lpBitmap->height * 4;
+
+    lock.Width = lpBitmap->width;
+    lock.Height = lpBitmap->height;
+    lock.Stride = lpBitmap->width * 4;
+    lock.PixelFormat = PixelFormat32bppPARGB;
+    lock.Scan0  = lpBitmap->bits;
+    lock.Reserved = 0;
+
+    if (GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead | ImageLockModeUserInputBuf, PixelFormat32bppPARGB, &lock) != Ok)
     {
-        lpBitmap->width  = ((BITMAPCOREHEADER *)lpBitmap->info)->bcWidth;
-        lpBitmap->height = ((BITMAPCOREHEADER *)lpBitmap->info)->bcHeight;
+        HeapFree(GetProcessHeap(), 0, lpBitmap->bits);
+        HeapFree(GetProcessHeap(), 0, lpBitmap->info);
+        HeapFree(GetProcessHeap(), 0, lpBitmap);
+        GdipDisposeImage((GpImage*)bitmap);
+        return NULL;
     }
-    else
-    {
-        lpBitmap->width   =     lpBitmap->info->bmiHeader.biWidth;
-        lpBitmap->height  = abs(lpBitmap->info->bmiHeader.biHeight);
-    }
+
+    GdipBitmapUnlockBits(bitmap, &lock);
+    GdipDisposeImage((GpImage*)bitmap);
 
     return lpBitmap;
 }
@@ -88,9 +92,13 @@ DibFreeImage(PDIBITMAP lpBitmap)
     if (lpBitmap == NULL)
         return;
 
-    /* Free the header */
-    if (lpBitmap->header != NULL)
-        HeapFree(GetProcessHeap(), 0, lpBitmap->header);
+    /* Free the image data */
+    if (lpBitmap->bits != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBitmap->bits);
+
+    /* Free the bitmap info */
+    if (lpBitmap->info != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBitmap->info);
 
     /* Free the bitmap structure */
     if (lpBitmap != NULL)

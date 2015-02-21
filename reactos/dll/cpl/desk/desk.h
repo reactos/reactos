@@ -23,6 +23,7 @@
 #include <regstr.h>
 #include <dll/desk/deskcplx.h>
 #include <strsafe.h>
+#include <gdiplus.h>
 
 #include "appearance.h"
 #include "preview.h"
@@ -41,11 +42,10 @@ typedef struct _APPLET
 
 typedef struct _DIBITMAP
 {
-    BITMAPFILEHEADER *header;
     BITMAPINFO       *info;
     BYTE             *bits;
-    int               width;
-    int               height;
+    UINT              width;
+    UINT              height;
 } DIBITMAP, *PDIBITMAP;
 
 extern HINSTANCE hApplet;

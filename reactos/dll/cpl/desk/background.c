@@ -58,9 +58,109 @@ typedef struct _DATA
     HBITMAP hBitmap;
     int cxSource;
     int cySource;
+
+    ULONG_PTR gdipToken;
 } DATA, *PDATA;
 
 GLOBAL_DATA g_GlobalData;
+
+
+HRESULT
+GdipGetEncoderClsid(PCWSTR MimeType, CLSID *pClsid)
+{
+    UINT num;
+    UINT size;
+    UINT i;
+    ImageCodecInfo *codecInfo;
+
+    if (GdipGetImageEncodersSize(&num, &size) != Ok ||
+        size == 0)
+    {
+        return E_FAIL;
+    }
+
+    codecInfo = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!codecInfo)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    if (GdipGetImageEncoders(num, size, codecInfo) != Ok)
+    {
+        HeapFree(GetProcessHeap(), 0, codecInfo);
+        return E_FAIL;
+    }
+
+    for (i = 0; i < num; i++)
+    {
+        if (!_wcsicmp(codecInfo[i].MimeType, MimeType))
+        {
+            *pClsid = codecInfo[i].Clsid;
+            HeapFree(GetProcessHeap(), 0, codecInfo);
+            return S_OK;
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, codecInfo);
+    return E_FAIL;
+}
+
+
+LPWSTR
+GdipGetSupportedFileExtensions(VOID)
+{
+    ImageCodecInfo *codecInfo;
+    UINT num;
+    UINT size;
+    UINT i;
+    LPWSTR lpBuffer = NULL;
+
+    if (GdipGetImageDecodersSize(&num, &size) != Ok ||
+        size == 0)
+    {
+        return NULL;
+    }
+
+    codecInfo = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!codecInfo)
+    {
+        return NULL;
+    }
+
+    if (GdipGetImageDecoders(num, size, codecInfo) != Ok)
+    {
+        HeapFree(GetProcessHeap(), 0, codecInfo);
+        return NULL;
+    }
+
+    size = 0;
+    for (i = 0; i < num; ++i)
+    {
+        size = size + wcslen(codecInfo[i].FilenameExtension) + 1;
+    }
+
+    size = (size + 1) * sizeof(WCHAR);
+
+    lpBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    if (!lpBuffer)
+    {
+        HeapFree(GetProcessHeap(), 0, codecInfo);
+        return NULL;
+    }
+
+    for (i = 0; i < num; ++i)
+    {
+        StringCbCatW(lpBuffer, size, codecInfo[i].FilenameExtension);
+        if (i < (num - 1))
+        {
+            StringCbCatW(lpBuffer, size, L";");
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, codecInfo);
+
+    return lpBuffer;
+}
 
 
 /* Add the images in the C:\ReactOS directory and the current wallpaper if any */
@@ -70,7 +170,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     WIN32_FIND_DATA fd;
     HANDLE hFind;
     TCHAR szSearchPath[MAX_PATH];
-    TCHAR szFileTypes[MAX_PATH];
+    LPTSTR szFileTypes = NULL;
     LV_ITEM listItem;
     LV_COLUMN dummy;
     RECT clientRect;
@@ -119,7 +219,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     listItem.lParam     = pData->listViewItemCount;
 
     (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-    ListView_SetItemState(hwndBackgroundList, 
+    ListView_SetItemState(hwndBackgroundList,
                           pData->listViewItemCount,
                           LVIS_SELECTED,
                           LVIS_SELECTED);
@@ -224,19 +324,30 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
 
     /* Add all the images in the C:\ReactOS directory. */
 
-    LoadString(hApplet, IDS_SUPPORTED_EXT, szFileTypes, sizeof(szFileTypes) / sizeof(TCHAR));
+    szFileTypes = GdipGetSupportedFileExtensions();
+    if (!szFileTypes)
+    {
+        return;
+    }
 
     token = _tcstok(szFileTypes, separators);
     while (token != NULL)
     {
         GetWindowsDirectory(szSearchPath, MAX_PATH);
-        
+
         hr = StringCbCat(szSearchPath, sizeof(szSearchPath), TEXT("\\"));
         if (FAILED(hr))
+        {
+            HeapFree(GetProcessHeap(), 0, szFileTypes);
             return;
+        }
+
         hr = StringCbCat(szSearchPath, sizeof(szSearchPath), token);
         if (FAILED(hr))
+        {
+            HeapFree(GetProcessHeap(), 0, szFileTypes);
             return;
+        }
 
         hFind = FindFirstFile(szSearchPath, &fd);
         while (hFind != INVALID_HANDLE_VALUE)
@@ -249,12 +360,14 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
             if (FAILED(hr))
             {
                 FindClose(hFind);
+                HeapFree(GetProcessHeap(), 0, szFileTypes);
                 return;
             }
             hr = StringCbCat(filename, sizeof(filename), fd.cFileName);
             if (FAILED(hr))
             {
                 FindClose(hFind);
+                HeapFree(GetProcessHeap(), 0, szFileTypes);
                 return;
             }
 
@@ -284,6 +397,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
                 if (FAILED(hr))
                 {
                     FindClose(hFind);
+                    HeapFree(GetProcessHeap(), 0, szFileTypes);
                     return;
                 }
                 p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
@@ -293,6 +407,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
                 if (FAILED(hr))
                 {
                     FindClose(hFind);
+                    HeapFree(GetProcessHeap(), 0, szFileTypes);
                     return;
                 }
 
@@ -316,6 +431,8 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
         token = _tcstok(NULL, separators);
         FindClose(hFind);
     }
+
+    HeapFree(GetProcessHeap(), 0, szFileTypes);
 }
 
 
@@ -488,13 +605,19 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
     TCHAR fileTitle[256];
-    TCHAR filter[MAX_PATH];
+    LPTSTR filter;
+    LPTSTR extensions;
     BackgroundItem *backgroundItem = NULL;
     SHFILEINFO sfi;
     LV_ITEM listItem;
     HWND hwndBackgroundList;
     TCHAR *p;
     HRESULT hr;
+    TCHAR filterdesc[MAX_PATH];
+    TCHAR *c;
+    UINT sizeRemain;
+    DWORD buffersize;
+    BOOL success;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
 
@@ -504,7 +627,44 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     ofn.hwndOwner = hwndDlg;
     ofn.lpstrFile = filename;
 
-    LoadString(hApplet, IDS_BACKGROUND_COMDLG_FILTER, filter, sizeof(filter) / sizeof(TCHAR));
+    LoadString(hApplet, IDS_BACKGROUND_COMDLG_FILTER, filterdesc, sizeof(filterdesc) / sizeof(TCHAR));
+
+    extensions = GdipGetSupportedFileExtensions();
+    if (!extensions)
+    {
+        return;
+    }
+
+    buffersize = (_tcslen(extensions) * 2 + 6) * sizeof(TCHAR) + sizeof(filterdesc);
+
+    filter = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffersize);
+    if (!filter)
+    {
+        HeapFree(GetProcessHeap(), 0, extensions);
+        return;
+    }
+
+    sizeRemain = buffersize;
+    c = filter;
+
+    if (FAILED(StringCbPrintfEx(c, sizeRemain, &c, &sizeRemain, 0, L"%ls (%ls)", filterdesc, extensions)))
+    {
+        HeapFree(GetProcessHeap(), 0, extensions);
+        HeapFree(GetProcessHeap(), 0, filter);
+        return;
+    }
+
+    c++;
+    sizeRemain -= sizeof(*c);
+
+    if (FAILED(StringCbPrintfEx(c, sizeRemain, &c, &sizeRemain, 0, L"%ls", extensions)))
+    {
+        HeapFree(GetProcessHeap(), 0, extensions);
+        HeapFree(GetProcessHeap(), 0, filter);
+        return;
+    }
+
+    HeapFree(GetProcessHeap(), 0, extensions);
 
     /* Set lpstrFile[0] to '\0' so that GetOpenFileName does not
      * use the contents of szFile to initialize itself */
@@ -517,7 +677,10 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (GetOpenFileName(&ofn) == TRUE)
+    success = GetOpenFileName(&ofn);
+    HeapFree(GetProcessHeap(), 0, filter);
+
+    if (success)
     {
         /* Check if there is already a entry that holds this filename */
         if (CheckListViewFilenameExists(hwndBackgroundList, ofn.lpstrFileTitle) == TRUE)
@@ -747,6 +910,22 @@ static VOID
 SetWallpaper(PDATA pData)
 {
     HKEY regKey;
+    TCHAR szWallpaper[MAX_PATH];
+    GpImage *image;
+    CLSID  encoderClsid;
+    size_t length = 0;
+    GpStatus status;
+
+
+    if (FAILED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, szWallpaper)))
+    {
+        return;
+    }
+
+    if (FAILED(StringCbCat(szWallpaper, MAX_PATH, TEXT("\\Wallpaper1.bmp"))))
+    {
+        return;
+    }
 
     RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
 
@@ -768,19 +947,50 @@ SetWallpaper(PDATA pData)
         RegSetValueEx(regKey, TEXT("WallpaperStyle"), 0, REG_SZ, (BYTE *)TEXT("2"), sizeof(TCHAR) * 2);
     }
 
-    RegCloseKey(regKey);
-
     if (pData->backgroundItems[pData->backgroundSelection].bWallpaper == TRUE)
     {
-        SystemParametersInfo(SPI_SETDESKWALLPAPER,
-                             0,
-                             pData->backgroundItems[pData->backgroundSelection].szFilename,
-                             SPIF_UPDATEINIFILE);
+        GdipLoadImageFromFile(pData->backgroundItems[pData->backgroundSelection].szFilename, &image);
+        if (!image)
+        {
+            RegCloseKey(regKey);
+            return;
+        }
+
+        if (FAILED(GdipGetEncoderClsid(L"image/bmp", &encoderClsid)))
+        {
+            GdipDisposeImage(image);
+            RegCloseKey(regKey);
+            return;
+        }
+
+        status = GdipSaveImageToFile(image, szWallpaper, &encoderClsid, NULL);
+
+        GdipDisposeImage(image);
+
+        if (status != Ok)
+        {
+            RegCloseKey(regKey);
+            return;
+        }
+
+        if (SUCCEEDED(StringCchLength(pData->backgroundItems[pData->backgroundSelection].szFilename, MAX_PATH, &length)))
+        {
+            RegSetValueEx(regKey, TEXT("ConvertedWallpaper"), 0, REG_SZ, (BYTE*)pData->backgroundItems[pData->backgroundSelection].szFilename, (length + 1) * sizeof(TCHAR));
+        }
+
+        if (SUCCEEDED(StringCchLength(szWallpaper, MAX_PATH, &length)))
+        {
+            RegSetValueEx(regKey, TEXT("OriginalWallpaper"), 0, REG_SZ, (BYTE *)szWallpaper, (length + 1) * sizeof(TCHAR));
+        }
+
+        SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_UPDATEINIFILE);
     }
     else
     {
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (void*) TEXT(""), SPIF_UPDATEINIFILE);
     }
+
+    RegCloseKey(regKey);
 }
 
 
@@ -821,6 +1031,7 @@ BackgroundPageProc(HWND hwndDlg,
                    LPARAM lParam)
 {
     PDATA pData;
+    struct GdiplusStartupInput gdipStartup;
 
     pData = (PDATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -829,6 +1040,11 @@ BackgroundPageProc(HWND hwndDlg,
         case WM_INITDIALOG:
             pData = (DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DATA));
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pData);
+            gdipStartup.GdiplusVersion = 1;
+            gdipStartup.DebugEventCallback = NULL;
+            gdipStartup.SuppressBackgroundThread = FALSE;
+            gdipStartup.SuppressExternalCodecs = FALSE;
+            GdiplusStartup(&pData->gdipToken, &gdipStartup, NULL);
             InitBackgroundDialog(hwndDlg, pData);
             break;
 
@@ -908,6 +1124,7 @@ BackgroundPageProc(HWND hwndDlg,
                 DibFreeImage(pData->pWallpaperBitmap);
 
             DeleteObject(pData->hBitmap);
+            GdiplusShutdown(pData->gdipToken);
             HeapFree(GetProcessHeap(), 0, pData);
             break;
     }
