@@ -1836,6 +1836,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     oldrow = -1;
     for(i=0; i<infoPtr->uNumBands; i++) {
         RECT rcBand;
+        RECT rcBandReal;
         HRGN hrgnBand;
 
         lpBand = REBAR_GetBand(infoPtr, i);
@@ -1843,9 +1844,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	if (HIDDENBAND(lpBand)) continue;
         translate_rect(infoPtr, &rcBand, &lpBand->rcBand);
 
-        hrgnBand = CreateRectRgn(rcBand.left, rcBand.top, rcBand.right, rcBand.bottom);
-        CombineRgn(hrgn, hrgn, hrgnBand, RGN_DIFF);
-        DeleteObject(hrgnBand);
+        rcBandReal = rcBand;
 
 	/* draw band separator between rows */
 	if (lpBand->iRow != oldrow) {
@@ -1871,6 +1870,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 		}
                 TRACE ("drawing band separator bottom (%s)\n",
                        wine_dbgstr_rect(&rcRowSep));
+        rcBandReal = rcRowSep;
 	    }
 	}
 
@@ -1881,6 +1881,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	    if (infoPtr->dwStyle & CCS_VERT) {
                 rcSep.bottom = rcSep.top;
 		rcSep.top -= SEP_WIDTH_SIZE;
+        rcBandReal.top -= SEP_WIDTH_SIZE;
                 if (theme)
                     DrawThemeEdge (theme, hdc, RP_BAND, 0, &rcSep, EDGE_ETCHED, BF_BOTTOM, NULL);
                 else
@@ -1889,6 +1890,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	    else {
                 rcSep.right = rcSep.left;
 		rcSep.left -= SEP_WIDTH_SIZE;
+        rcBandReal.left -= SEP_WIDTH_SIZE;
                 if (theme)
                     DrawThemeEdge (theme, hdc, RP_BAND, 0, &rcSep, EDGE_ETCHED, BF_RIGHT, NULL);
                 else
@@ -1936,6 +1938,10 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
             if (lpBand->clrBack != CLR_NONE)
                 SetBkColor (hdc, old);
         }
+
+        hrgnBand = CreateRectRgn(rcBandReal.left, rcBandReal.top, rcBandReal.right, rcBandReal.bottom);
+        CombineRgn(hrgn, hrgn, hrgnBand, RGN_DIFF);
+        DeleteObject(hrgnBand);
     }
 
 #if 1
