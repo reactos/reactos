@@ -117,3 +117,4 @@
 @ stdcall freeaddrinfo(ptr)
 @ stdcall getaddrinfo(str str ptr ptr)
 @ stdcall getnameinfo(ptr long ptr long ptr long long)
+@ stdcall GetNameInfoW(ptr long wstr long wstr long long)
