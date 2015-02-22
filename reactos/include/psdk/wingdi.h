@@ -2902,8 +2902,10 @@ typedef DWORD (CALLBACK *LPFNDEVCAPS)(LPSTR,LPSTR,UINT,LPSTR,LPDEVMODEA);
 #define GetRValue(rgb) ((BYTE)(rgb))
 #define GetGValue(rgb) ((BYTE)(((WORD)(rgb)) >> 8))
 #define GetBValue(rgb) ((BYTE)((rgb)>>16))
+#define GetAValue(rgb) ((BYTE)((rgb)>>24))
 
 #define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
+#define RGBA(r,g,b,a)       ((COLORREF)((((DWORD)(BYTE)(a))<<24) | RGB(r,g,b)))
 #define PALETTERGB(r,g,b)   (0x02000000 | RGB(r,g,b))
 #define PALETTEINDEX(i)     ((COLORREF)(0x01000000 | (DWORD)(WORD)(i)))
 

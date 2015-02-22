@@ -696,10 +696,12 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
                   const NMTBCUSTOMDRAW *tbcd, DWORD dwItemCDFlag)
 {
     HIMAGELIST himl = NULL;
-    BOOL draw_masked = FALSE;
+    BOOL draw_masked = FALSE, draw_desaturated = FALSE;
     INT index;
     INT offset = 0;
     UINT draw_flags = ILD_TRANSPARENT;
+    IMAGEINFO info = {0};
+    BITMAP bm = {0};
 
     if (tbcd->nmcd.uItemState & (CDIS_DISABLED | CDIS_INDETERMINATE))
     {
@@ -707,7 +709,18 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
         if (!himl)
         {
             himl = TOOLBAR_GetImageListForDrawing(infoPtr, btnPtr, IMAGE_LIST_DEFAULT, &index);
-            draw_masked = TRUE;
+
+            ImageList_GetImageInfo(himl, index, &info);
+            GetObjectW(info.hbmImage, sizeof(bm), &bm);
+
+            if (bm.bmBitsPixel == 32)
+            {
+                draw_desaturated = TRUE;
+            }
+            else
+            {
+                draw_masked = TRUE;
+            }
         }
     }
     else if (tbcd->nmcd.uItemState & CDIS_CHECKED ||
@@ -738,9 +751,34 @@ TOOLBAR_DrawImage(const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, INT left, I
       index, himl, left, top, offset);
 
     if (draw_masked)
+    {
+        /* code path for drawing flat disabled icons without alpha channel */
         TOOLBAR_DrawMasked (himl, index, tbcd->nmcd.hdc, left + offset, top + offset, draw_flags);
+    }
+    else if (draw_desaturated)
+    {
+        /* code path for drawing disabled, alpha-blended (32bpp) icons */
+        IMAGELISTDRAWPARAMS imldp = {0};
+
+        imldp.cbSize = sizeof(imldp);
+        imldp.himl   = himl;
+        imldp.i      = index;
+        imldp.hdcDst = tbcd->nmcd.hdc,
+        imldp.x      = offset + left;
+        imldp.y      = offset + top;
+        imldp.rgbBk  = CLR_NONE;
+        imldp.rgbFg  = CLR_DEFAULT;
+        imldp.fStyle = ILD_TRANSPARENT;
+        imldp.fState = ILS_ALPHA | ILS_SATURATE;
+        imldp.Frame  = 192;
+
+        ImageList_DrawIndirect (&imldp);
+    }
     else
+    {
+        /* code path for drawing standard icons as-is */
         ImageList_Draw (himl, index, tbcd->nmcd.hdc, left + offset, top + offset, draw_flags);
+    }
 }
 
 /* draws a blank frame for a toolbar button */
