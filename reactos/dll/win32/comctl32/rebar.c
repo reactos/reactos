@@ -1828,15 +1828,24 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     RECT cr;
     COLORREF old = CLR_NONE, new;
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+    HRGN hrgn;
 
     GetClientRect (infoPtr->hwndSelf, &cr);
+    hrgn = CreateRectRgn(cr.left, cr.top, cr.right, cr.bottom);
 
     oldrow = -1;
     for(i=0; i<infoPtr->uNumBands; i++) {
         RECT rcBand;
+        HRGN hrgnBand;
+
         lpBand = REBAR_GetBand(infoPtr, i);
+
 	if (HIDDENBAND(lpBand)) continue;
         translate_rect(infoPtr, &rcBand, &lpBand->rcBand);
+
+        hrgnBand = CreateRectRgn(rcBand.left, rcBand.top, rcBand.right, rcBand.bottom);
+        CombineRgn(hrgn, hrgn, hrgnBand, RGN_DIFF);
+        DeleteObject(hrgnBand);
 
 	/* draw band separator between rows */
 	if (lpBand->iRow != oldrow) {
@@ -1928,6 +1937,16 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
                 SetBkColor (hdc, old);
         }
     }
+
+#if 1
+    {
+        //FIXME: Apparently painting the remaining area is a v6 feature
+        HBRUSH hbrush = CreateSolidBrush(new);
+        FillRgn(hdc, hrgn, hbrush);
+        DeleteObject(hbrush);
+        DeleteObject(hrgn);
+    }
+#endif
     return TRUE;
 }
 
