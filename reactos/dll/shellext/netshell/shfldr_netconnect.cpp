@@ -46,8 +46,8 @@ class CNetworkConnections final :
         virtual HRESULT WINAPI BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
         virtual HRESULT WINAPI CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
         virtual HRESULT WINAPI CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI GetAttributesOf (UINT cidl, LPCITEMIDLIST *apidl, DWORD *rgfInOut);
-        virtual HRESULT WINAPI GetUIObjectOf(HWND hwndOwner, UINT cidl, LPCITEMIDLIST *apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
+        virtual HRESULT WINAPI GetAttributesOf (UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
+        virtual HRESULT WINAPI GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
         virtual HRESULT WINAPI GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
         virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl, LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut);
 
@@ -356,7 +356,7 @@ HRESULT WINAPI CNetworkConnections::CreateViewObject(
 *  ISF_NetConnect_fnGetAttributesOf
 */
 HRESULT WINAPI CNetworkConnections::GetAttributesOf(
-               UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
+               UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     //IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
@@ -412,7 +412,7 @@ HRESULT IContextMenuImpl_Constructor(REFIID riid, LPCITEMIDLIST apidl, LPVOID * 
 }
 
 HRESULT WINAPI CNetworkConnections::GetUIObjectOf(
-               HWND hwndOwner, UINT cidl, LPCITEMIDLIST * apidl, REFIID riid,
+               HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
                UINT * prgfInOut, LPVOID * ppvOut)
 {
     IUnknown *pObj = NULL;

@@ -54,7 +54,7 @@ static HRESULT MakeVariantString(VARIANT * pv, PCWSTR string)
     return S_OK;
 }
 
-static HRESULT GetFullName(LPCITEMIDLIST pidl, DWORD uFlags, PWSTR strName, DWORD cchName)
+static HRESULT GetFullName(PCIDLIST_ABSOLUTE pidl, DWORD uFlags, PWSTR strName, DWORD cchName)
 {
     CComPtr<IShellFolder> psfDesktop;
     STRRET str;
@@ -75,42 +75,42 @@ class CNtObjectFolderContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu
 {
-    LPCITEMIDLIST pcidlFolder;
-    LPCITEMIDLIST pcidlChild;
-    UINT idFirst;
+    PCIDLIST_ABSOLUTE m_pcidlFolder;
+    PCITEMID_CHILD    m_pcidlChild;
+    UINT              m_idFirst;
 
 public:
     CNtObjectFolderContextMenu() :
-        pcidlFolder(NULL),
-        pcidlChild(NULL),
-        idFirst(0)
+        m_pcidlFolder(NULL),
+        m_pcidlChild(NULL),
+        m_idFirst(0)
     {
 
     }
 
     virtual ~CNtObjectFolderContextMenu()
     {
-        if (pcidlFolder)
-            ILFree((LPITEMIDLIST) pcidlFolder);
-        if (pcidlChild)
-            ILFree((LPITEMIDLIST) pcidlChild);
+        if (m_pcidlFolder)
+            ILFree((LPITEMIDLIST) m_pcidlFolder);
+        if (m_pcidlChild)
+            ILFree((LPITEMIDLIST) m_pcidlChild);
     }
 
-    HRESULT Initialize(LPITEMIDLIST parent, UINT cidl, LPCITEMIDLIST *apidl)
+    HRESULT Initialize(PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
     {
-        pcidlFolder = ILClone(parent);
+        m_pcidlFolder = ILClone(parent);
         if (cidl != 1)
-            return E_FAIL;
-        pcidlChild = ILClone(apidl[0]);
+            return E_INVALIDARG;
+        m_pcidlChild = ILClone(apidl[0]);
         return S_OK;
     }
 
     // IContextMenu
     virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
-        idFirst = idCmdFirst;
+        m_idFirst = idCmdFirst;
 
-        const NtPidlEntry * entry = (NtPidlEntry *) pcidlChild;
+        const NtPidlEntry * entry = (NtPidlEntry *) m_pcidlChild;
 
         if ((entry->objectType == DIRECTORY_OBJECT) ||
             (entry->objectType == SYMBOLICLINK_OBJECT))
@@ -146,14 +146,14 @@ public:
             }
         }
 
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst - idFirst);
+        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst - m_idFirst);
     }
 
     virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
-        if (LOWORD(lpici->lpVerb) == idFirst || !lpici->lpVerb)
+        if (LOWORD(lpici->lpVerb) == m_idFirst || !lpici->lpVerb)
         {
-            LPITEMIDLIST fullPidl = ILCombine(pcidlFolder, pcidlChild);
+            LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
 
             SHELLEXECUTEINFO sei = { 0 };
             sei.cbSize = sizeof(sei);
@@ -169,9 +169,9 @@ public:
 
             return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
-        else if (LOWORD(lpici->lpVerb) == (idFirst + 1))
+        else if (LOWORD(lpici->lpVerb) == (m_idFirst + 1))
         {
-            LPITEMIDLIST fullPidl = ILCombine(pcidlFolder, pcidlChild);
+            LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
 
             SHELLEXECUTEINFO sei = { 0 };
             sei.cbSize = sizeof(sei);
@@ -192,7 +192,7 @@ public:
 
     virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax)
     {
-        if (idCmd == idFirst)
+        if (idCmd == m_idFirst)
         {
             if (uType == GCS_VERBW)
             {
@@ -200,7 +200,7 @@ public:
                 return S_OK;
             }
         }
-        else if (idCmd == (idFirst + 1))
+        else if (idCmd == (m_idFirst + 1))
         {
             if (uType == GCS_VERBW)
             {
@@ -224,31 +224,31 @@ class CNtObjectFolderExtractIcon :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IExtractIconW
 {
-    LPCITEMIDLIST pcidlFolder;
-    LPCITEMIDLIST pcidlChild;
+    PCIDLIST_ABSOLUTE m_pcidlFolder;
+    PCITEMID_CHILD    m_pcidlChild;
 
 public:
     CNtObjectFolderExtractIcon() :
-        pcidlFolder(NULL),
-        pcidlChild(NULL)
+        m_pcidlFolder(NULL),
+        m_pcidlChild(NULL)
     {
 
     }
 
     virtual ~CNtObjectFolderExtractIcon()
     {
-        if (pcidlFolder)
-            ILFree((LPITEMIDLIST) pcidlFolder);
-        if (pcidlChild)
-            ILFree((LPITEMIDLIST) pcidlChild);
+        if (m_pcidlFolder)
+            ILFree((LPITEMIDLIST) m_pcidlFolder);
+        if (m_pcidlChild)
+            ILFree((LPITEMIDLIST) m_pcidlChild);
     }
 
-    HRESULT Initialize(LPITEMIDLIST parent, UINT cidl, LPCITEMIDLIST *apidl)
+    HRESULT Initialize(PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
     {
-        pcidlFolder = ILClone(parent);
+        m_pcidlFolder = ILClone(parent);
         if (cidl != 1)
             return E_FAIL;
-        pcidlChild = ILClone(apidl[0]);
+        m_pcidlChild = ILClone(apidl[0]);
         return S_OK;
     }
 
@@ -259,9 +259,16 @@ public:
         INT *piIndex,
         UINT *pwFlags)
     {
-        const NtPidlEntry * entry = (NtPidlEntry *) pcidlChild;
+        const NtPidlEntry * entry = (NtPidlEntry *) m_pcidlChild;
         if (entry->magic != NT_OBJECT_PIDL_MAGIC)
             return E_FAIL;
+
+        UINT flags = 0;
+
+#define GIL_CHECKSHIELD 0x0200
+#define GIL_SHIELD 0x0200
+        if (uFlags & GIL_CHECKSHIELD && !(entry->objectInformation.GrantedAccess & STANDARD_RIGHTS_READ))
+            flags |= GIL_SHIELD;
 
         switch (entry->objectType)
         {
@@ -269,22 +276,22 @@ public:
         case SYMBOLICLINK_OBJECT:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -((uFlags & GIL_OPENICON) ? IDI_NTOBJECTDIROPEN : IDI_NTOBJECTDIR);
-            *pwFlags = 0;
+            *pwFlags = flags;
             return S_OK;
         case DEVICE_OBJECT:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_NTOBJECTDEVICE;
-            *pwFlags = 0;
+            *pwFlags = flags;
             return S_OK;
         case PORT_OBJECT:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_NTOBJECTPORT;
-            *pwFlags = 0;
+            *pwFlags = flags;
             return S_OK;
         default:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_NTOBJECTITEM;
-            *pwFlags = 0;
+            *pwFlags = flags;
             return S_OK;
         }
     }
@@ -358,7 +365,7 @@ public:
         return S_OK;
     }
 
-    HRESULT FindPidlInList(LPCITEMIDLIST pcidl, NtPidlEntry ** pinfo)
+    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, NtPidlEntry ** pinfo)
     {
         HRESULT hr;
 
@@ -522,15 +529,15 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    ULONG ConvertAttributes(OBJECT_TYPE Type, ULONG Attributes, PULONG inMask)
+    ULONG ConvertAttributes(NtPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
-        ULONG flags = 0;
+        ULONG flags = SFGAO_HASPROPSHEET | SFGAO_CANLINK;
 
-        if (Type == DIRECTORY_OBJECT)
+        if (entry->objectType == DIRECTORY_OBJECT)
             flags |= SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE;
 
-        if (Type == SYMBOLICLINK_OBJECT)
+        if (entry->objectType == SYMBOLICLINK_OBJECT)
             flags |= SFGAO_LINK | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE;
 
         return flags & mask;
@@ -707,7 +714,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
         *pchEaten = lstrlenW(info->entryName);
 
     if (pdwAttributes)
-        *pdwAttributes = m_PidlManager->ConvertAttributes(info->objectType, info->objectInformation.Attributes, pdwAttributes);
+        *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
 
     return S_OK;
 }
@@ -808,7 +815,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::CreateViewObject(
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     SFGAOF *rgfInOut)
 {
     NtPidlEntry * info;
@@ -824,35 +831,23 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
 
     for (int i = 0; i < (int) cidl; i++)
     {
-        LPCITEMIDLIST pidl = apidl[i];
+        PCUITEMID_CHILD pidl = apidl[i];
 
         hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
         // Update attributes.
-        *rgfInOut = m_PidlManager->ConvertAttributes(info->objectType, info->objectInformation.Attributes, rgfInOut);
+        *rgfInOut = m_PidlManager->ConvertAttributes(info, rgfInOut);
     }
 
     return S_OK;
 }
 
-HRESULT CALLBACK ContextMenuCallback(
-    _In_opt_  IShellFolder *psf,
-    _In_opt_  HWND hwnd,
-    _In_opt_  IDataObject *pdtobj,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam
-    )
-{
-    return E_NOTIMPL;
-}
-
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
     HWND hwndOwner,
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid,
     UINT *prgfInOut,
     void **ppvOut)

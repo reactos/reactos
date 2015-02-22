@@ -595,7 +595,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::CreateViewObject(
 
 HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     SFGAOF *rgfInOut)
 {
     LocalPidlInfo info;
@@ -627,7 +627,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::GetAttributesOf(
 HRESULT STDMETHODCALLTYPE CMergedFolder::GetUIObjectOf(
     HWND hwndOwner,
     UINT cidl,
-    LPCITEMIDLIST *apidl,
+    PCUITEMID_CHILD_ARRAY apidl,
     REFIID riid,
     UINT *prgfInOut,
     void **ppvOut)

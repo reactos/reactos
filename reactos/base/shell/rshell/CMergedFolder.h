@@ -132,13 +132,13 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE GetAttributesOf(
         UINT cidl,
-        LPCITEMIDLIST *apidl,
+        PCUITEMID_CHILD_ARRAY apidl,
         SFGAOF *rgfInOut);
 
     virtual HRESULT STDMETHODCALLTYPE GetUIObjectOf(
         HWND hwndOwner,
         UINT cidl,
-        LPCITEMIDLIST *apidl,
+        PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid,
         UINT *prgfInOut,
         void **ppvOut);
