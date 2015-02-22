@@ -76,6 +76,7 @@ AddReg=Classes
 11,,msxml6.dll,1
 11,,netcfgx.dll,1
 11,,netshell.dll,1
+11,,ntobjshex.dll,1
 11,,objsel.dll,1
 11,,ole32.dll,1
 11,,oleacc.dll,1
