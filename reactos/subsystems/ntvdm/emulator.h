@@ -36,9 +36,40 @@
 
 
 /* BCD-Binary conversion */
-#define BINARY_TO_BCD(x) ((((x) / 1000) << 12) + (((x) / 100) << 8) + (((x) / 10) << 4) + ((x) % 10))
-#define BCD_TO_BINARY(x) (((x) >> 12) * 1000 + ((x) >> 8) * 100 + ((x) >> 4) * 10 + ((x) & 0x0F))
 
+FORCEINLINE
+USHORT
+BINARY_TO_BCD(USHORT Value)
+{
+    USHORT Result;
+
+    Result = (Value / 1000) << 12;
+    Value %= 1000;
+    Result |= (Value / 100) << 8;
+    Value %= 100;
+    Result |= (Value / 10) << 4;
+    Value %= 10;
+    Result |= Value;
+
+    return Result;
+}
+
+FORCEINLINE
+USHORT
+BCD_TO_BINARY(USHORT Value)
+{
+    USHORT Result;
+
+    Result = Value & 0xF;
+    Value >>= 4;
+    Result += (Value & 0xF) * 10;
+    Value >>= 4;
+    Result += (Value & 0xF) * 100;
+    Value >>= 4;
+    Result += Value * 1000;
+
+    return Result;
+}
 
 /* System I/O ports */
 #define CONTROL_SYSTEM_PORT61H  0x61

@@ -2014,6 +2014,8 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
 
         case SCROLL_DOWN:
         {
+            INT Bottom;
+
             /* Move text lines down */
             for (i = Rectangle.Bottom - Amount; i >= Rectangle.Top; i--)
             {
@@ -2024,7 +2026,8 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
             }
 
             /* Fill the top of the rectangle */
-            for (i = Rectangle.Top; i <= Rectangle.Top + Amount - 1; i++)
+            Bottom = Rectangle.Top + Amount - 1;
+            for (i = Rectangle.Top; i <= Bottom; i++)
             {
                 for (j = Rectangle.Left; j <= Rectangle.Right; j++)
                 {
@@ -2078,7 +2081,8 @@ static BOOLEAN VidBiosScrollWindow(SCROLL_DIRECTION Direction,
             /* Fill the left of the rectangle */
             for (i = Rectangle.Top; i <= Rectangle.Bottom; i++)
             {
-                for (j = Rectangle.Left; j <= Rectangle.Left + Amount - 1; j++)
+                INT Right = Rectangle.Left + Amount - 1;
+                for (j = Rectangle.Left; j <= Right; j++)
                 {
                     EmulatorWriteMemory(&EmulatorContext,
                                         VideoAddress + (i * Bda->ScreenColumns + j) * sizeof(WORD),
