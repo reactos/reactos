@@ -1,0 +1,603 @@
+/*
+ * Workstation Service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [handle] wchar_t *WKSSVC_IDENTIFY_HANDLE;
+typedef [handle] wchar_t *WKSSVC_IMPERSONATE_HANDLE;
+
+typedef enum _NETSETUP_JOIN_STATUS
+{
+    NetSetupUnknownStatus = 0,
+    NetSetupUnjoined,
+    NetSetupWorkgroupName,
+    NetSetupDomainName
+} NETSETUP_JOIN_STATUS, *PNETSETUP_JOIN_STATUS;
+
+typedef enum _NETSETUP_NAME_TYPE
+{
+    NetSetupUnknown = 0,
+    NetSetupMachine,
+    NetSetupWorkgroup,
+    NetSetupDomain,
+    NetSetupNonExistentDomain,
+    NetSetupDnsMachine
+} NETSETUP_NAME_TYPE, *PNETSETUP_NAME_TYPE;
+
+typedef enum _NET_COMPUTER_NAME_TYPE
+{
+    NetPrimaryComputerName = 0,
+    NetAlternateComputerNames,
+    NetAllComputerNames,
+    NetComputerNameTypeMax
+} NET_COMPUTER_NAME_TYPE, *PNET_COMPUTER_NAME_TYPE;
+
+typedef struct _STAT_WORKSTATION_0
+{
+    LARGE_INTEGER StatisticsStartTime;
+    LARGE_INTEGER BytesReceived;
+    LARGE_INTEGER SmbsReceived;
+    LARGE_INTEGER PagingReadBytesRequested;
+    LARGE_INTEGER NonPagingReadBytesRequested;
+    LARGE_INTEGER CacheReadBytesRequested;
+    LARGE_INTEGER NetworkReadBytesRequested;
+    LARGE_INTEGER BytesTransmitted;
+    LARGE_INTEGER SmbsTransmitted;
+    LARGE_INTEGER PagingWriteBytesRequested;
+    LARGE_INTEGER NonPagingWriteBytesRequested;
+    LARGE_INTEGER CacheWriteBytesRequested;
+    LARGE_INTEGER NetworkWriteBytesRequested;
+    unsigned long InitiallyFailedOperations;
+    unsigned long FailedCompletionOperations;
+    unsigned long ReadOperations;
+    unsigned long RandomReadOperations;
+    unsigned long ReadSmbs;
+    unsigned long LargeReadSmbs;
+    unsigned long SmallReadSmbs;
+    unsigned long WriteOperations;
+    unsigned long RandomWriteOperations;
+    unsigned long WriteSmbs;
+    unsigned long LargeWriteSmbs;
+    unsigned long SmallWriteSmbs;
+    unsigned long RawReadsDenied;
+    unsigned long RawWritesDenied;
+    unsigned long NetworkErrors;
+    unsigned long Sessions;
+    unsigned long FailedSessions;
+    unsigned long Reconnects;
+    unsigned long CoreConnects;
+    unsigned long Lanman20Connects;
+    unsigned long Lanman21Connects;
+    unsigned long LanmanNtConnects;
+    unsigned long ServerDisconnects;
+    unsigned long HungSessions;
+    unsigned long UseCount;
+    unsigned long FailedUseCount;
+    unsigned long CurrentCommands;
+} STAT_WORKSTATION_0, *PSTAT_WORKSTATION_0, *LPSTAT_WORKSTATION_0;
+
+typedef struct _WKSTA_INFO_100
+{
+    unsigned long wki100_platform_id;
+    [string] wchar_t *wki100_computername;
+    [string] wchar_t *wki100_langroup;
+    unsigned long wki100_ver_major;
+    unsigned long wki100_ver_minor;
+} WKSTA_INFO_100, *PWKSTA_INFO_100, *LPWKSTA_INFO_100;
+
+typedef struct _WKSTA_INFO_101
+{
+    unsigned long wki101_platform_id;
+    [string] wchar_t *wki101_computername;
+    [string] wchar_t *wki101_langroup;
+    unsigned long wki101_ver_major;
+    unsigned long wki101_ver_minor;
+    [string] wchar_t* wki101_lanroot;
+} WKSTA_INFO_101, *PWKSTA_INFO_101, *LPWKSTA_INFO_101;
+
+typedef struct _WKSTA_INFO_102
+{
+    unsigned long wki102_platform_id;
+    [string] wchar_t *wki102_computername;
+    [string] wchar_t *wki102_langroup;
+    unsigned long wki102_ver_major;
+    unsigned long wki102_ver_minor;
+    [string] wchar_t *wki102_lanroot;
+    unsigned long wki102_logged_on_users;
+} WKSTA_INFO_102, *PWKSTA_INFO_102, *LPWKSTA_INFO_102;
+
+typedef struct _WKSTA_INFO_502
+{
+    unsigned long wki502_char_wait;
+    unsigned long wki502_collection_time;
+    unsigned long wki502_maximum_collection_count;
+    unsigned long wki502_keep_conn;
+    unsigned long wki502_max_cmds;
+    unsigned long wki502_sess_timeout;
+    unsigned long wki502_siz_char_buf;
+    unsigned long wki502_max_threads;
+    unsigned long wki502_lock_quota;
+    unsigned long wki502_lock_increment;
+    unsigned long wki502_lock_maximum;
+    unsigned long wki502_pipe_increment;
+    unsigned long wki502_pipe_maximum;
+    unsigned long wki502_cache_file_timeout;
+    unsigned long wki502_dormant_file_limit;
+    unsigned long wki502_read_ahead_throughput;
+    unsigned long wki502_num_mailslot_buffers;
+    unsigned long wki502_num_srv_announce_buffers;
+    unsigned long wki502_max_illegal_datagram_events;
+    unsigned long wki502_illegal_datagram_event_reset_frequency;
+    int wki502_log_election_packets;
+    int wki502_use_opportunistic_locking;
+    int wki502_use_unlock_behind;
+    int wki502_use_close_behind;
+    int wki502_buf_named_pipes;
+    int wki502_use_lock_read_unlock;
+    int wki502_utilize_nt_caching;
+    int wki502_use_raw_read;
+    int wki502_use_raw_write;
+    int wki502_use_write_raw_data;
+    int wki502_use_encryption;
+    int wki502_buf_files_deny_write;
+    int wki502_buf_read_only_files;
+    int wki502_force_core_create_mode;
+    int wki502_use_512_byte_max_transfer;
+} WKSTA_INFO_502, *PWKSTA_INFO_502, *LPWKSTA_INFO_502;
+
+typedef struct _WKSTA_INFO_1013
+{
+    unsigned long wki1013_keep_conn;
+} WKSTA_INFO_1013, *PWKSTA_INFO_1013, *LPWKSTA_INFO_1013;
+
+typedef struct _WKSTA_INFO_1018
+{
+    unsigned long wki1018_sess_timeout;
+} WKSTA_INFO_1018, *PWKSTA_INFO_1018, *LPWKSTA_INFO_1018;
+
+typedef struct _WKSTA_INFO_1046
+{
+    unsigned long wki1046_dormant_file_limit;
+} WKSTA_INFO_1046, *PWKSTA_INFO_1046, *LPWKSTA_INFO_1046;
+
+typedef struct _WKSTA_USER_INFO_0
+{
+    [string] wchar_t *wkui0_username;
+} WKSTA_USER_INFO_0, *PWKSTA_USER_INFO_0, *LPWKSTA_USER_INFO_0;
+
+typedef struct _WKSTA_USER_INFO_1
+{
+    [string] wchar_t *wkui1_username;
+    [string] wchar_t *wkui1_logon_domain;
+    [string] wchar_t *wkui1_oth_domains;
+    [string] wchar_t *wkui1_logon_server;
+} WKSTA_USER_INFO_1, *PWKSTA_USER_INFO_1, *LPWKSTA_USER_INFO_1;
+
+typedef struct _WKSTA_TRANSPORT_INFO_0
+{
+    unsigned long wkti0_quality_of_service;
+    unsigned long wkti0_number_of_vcs;
+    [string] wchar_t *wkti0_transport_name;
+    [string] wchar_t *wkti0_transport_address;
+    unsigned long wkti0_wan_ish;
+} WKSTA_TRANSPORT_INFO_0, *PWKSTA_TRANSPORT_INFO_0, *LPWKSTA_TRANSPORT_INFO_0;
+
+typedef [switch_type(unsigned long)] union _WKSTA_INFO
+{
+    [case(100)] LPWKSTA_INFO_100 WkstaInfo100;
+    [case(101)] LPWKSTA_INFO_101 WkstaInfo101;
+    [case(102)] LPWKSTA_INFO_102 WkstaInfo102;
+    [case(502)] LPWKSTA_INFO_502 WkstaInfo502;
+    [case(1013)] LPWKSTA_INFO_1013 WkstaInfo1013;
+    [case(1018)] LPWKSTA_INFO_1018 WkstaInfo1018;
+    [case(1046)] LPWKSTA_INFO_1046 WkstaInfo1046;
+    [default] ;
+} WKSTA_INFO, *PWKSTA_INFO, *LPWKSTA_INFO;
+
+typedef struct _USE_INFO_0
+{
+    [string] wchar_t *ui0_local;
+    [string] wchar_t *ui0_remote;
+} USE_INFO_0, *PUSE_INFO_0, *LPUSE_INFO_0;
+
+typedef struct _USE_INFO_1
+{
+    [string] wchar_t *ui1_local;
+    [string] wchar_t *ui1_remote;
+    [string] wchar_t *ui1_password;
+    unsigned long ui1_status;
+    unsigned long ui1_asg_type;
+    unsigned long ui1_refcount;
+    unsigned long ui1_usecount;
+} USE_INFO_1, *PUSE_INFO_1, *LPUSE_INFO_1;
+
+typedef struct _USE_INFO_2
+{
+    USE_INFO_1 ui2_useinfo;
+    [string] wchar_t *ui2_username;
+    [string] wchar_t *ui2_domainname;
+} USE_INFO_2, *PUSE_INFO_2, *LPUSE_INFO_2;
+
+typedef struct _USE_INFO_3
+{
+    USE_INFO_2 ui3_ui2;
+    ULONG ui3_flags;
+} USE_INFO_3, *PUSE_INFO_3, *LPUSE_INFO_3;
+
+typedef [switch_type(unsigned long)] union _USE_INFO
+{
+    [case(0)] LPUSE_INFO_0 UseInfo0;
+    [case(1)] LPUSE_INFO_1 UseInfo1;
+    [case(2)] LPUSE_INFO_2 UseInfo2;
+    [case(3)] LPUSE_INFO_3 UseInfo3;
+    [default] ;
+} USE_INFO, *PUSE_INFO, *LPUSE_INFO;
+
+typedef struct _USE_INFO_0_CONTAINER
+{
+    unsigned long EntriesRead;
+    LPUSE_INFO_0 Buffer;
+} USE_INFO_0_CONTAINER, *PUSE_INFO_0_CONTAINER, *LPUSE_INFO_0_CONTAINER;
+
+typedef struct _USE_INFO_1_CONTAINER
+{
+    unsigned long EntriesRead;
+    LPUSE_INFO_1 Buffer;
+} USE_INFO_1_CONTAINER, *PUSE_INFO_1_CONTAINER, *LPUSE_INFO_1_CONTAINER;
+
+typedef struct _USE_INFO_2_CONTAINER
+{
+    unsigned long EntriesRead;
+    LPUSE_INFO_2 Buffer;
+} USE_INFO_2_CONTAINER, *PUSE_INFO_2_CONTAINER, *LPUSE_INFO_2_CONTAINER;
+
+typedef struct _USE_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] union _USE_ENUM_UNION
+    {
+        [case(0)] LPUSE_INFO_0_CONTAINER Level0;
+        [case(1)] LPUSE_INFO_1_CONTAINER Level1;
+        [case(2)] LPUSE_INFO_2_CONTAINER Level2;
+        [default] ;
+    } UseInfo;
+} USE_ENUM_STRUCT, *PUSE_ENUM_STRUCT, *LPUSE_ENUM_STRUCT;
+
+typedef struct _WKSTA_USER_INFO_0_CONTAINER
+{
+    unsigned long EntriesRead;
+    [size_is(EntriesRead)] LPWKSTA_USER_INFO_0 Buffer;
+} WKSTA_USER_INFO_0_CONTAINER, *PWKSTA_USER_INFO_0_CONTAINER, *LPWKSTA_USER_INFO_0_CONTAINER;
+
+typedef struct _WKSTA_USER_INFO_1_CONTAINER
+{
+    unsigned long EntriesRead;
+    [size_is(EntriesRead)] LPWKSTA_USER_INFO_1 Buffer;
+} WKSTA_USER_INFO_1_CONTAINER, *PWKSTA_USER_INFO_1_CONTAINER, *LPWKSTA_USER_INFO_1_CONTAINER;
+
+typedef struct _WKSTA_USER_ENUM_STRUCT
+{
+    unsigned long Level;
+    [switch_is(Level)] union _WKSTA_USER_ENUM_UNION
+    {
+        [case(0)] LPWKSTA_USER_INFO_0_CONTAINER Level0;
+        [case(1)] LPWKSTA_USER_INFO_1_CONTAINER Level1;
+        [default] ;
+    } WkstaUserInfo;
+} WKSTA_USER_ENUM_STRUCT, *PWKSTA_USER_ENUM_STRUCT, *LPWKSTA_USER_ENUM_STRUCT;
+
+typedef struct _WKSTA_TRANSPORT_INFO_0_CONTAINER
+{
+    unsigned long EntriesRead;
+    [size_is(EntriesRead)] LPWKSTA_TRANSPORT_INFO_0 Buffer;
+} WKSTA_TRANSPORT_INFO_0_CONTAINER, *PWKSTA_TRANSPORT_INFO_0_CONTAINER, *LPWKSTA_TRANSPORT_INFO_0_CONTAINER;
+
+typedef struct _WKSTA_TRANSPORT_ENUM_STRUCT
+{
+    unsigned long Level;
+    [switch_is(Level)] union _WKSTA_TRANSPORT_ENUM_UNION
+    {
+        [case(0)] LPWKSTA_TRANSPORT_INFO_0_CONTAINER Level0;
+        [default] ;
+    } WkstaTransportInfo;
+} WKSTA_TRANSPORT_ENUM_STRUCT, *PWKSTA_TRANSPORT_ENUM_STRUCT, *LPWKSTA_TRANSPORT_ENUM_STRUCT;
+
+#define JOIN_OBFUSCATOR_LENGTH 8
+#define JOIN_MAX_PASSWORD_LENGTH 256
+typedef struct _JOINPR_USER_PASSWORD
+{
+    unsigned char Obfuscator[JOIN_OBFUSCATOR_LENGTH];
+    wchar_t Buffer[JOIN_MAX_PASSWORD_LENGTH];
+    unsigned long Length;
+} JOINPR_USER_PASSWORD, *PJOINPR_USER_PASSWORD;
+
+typedef struct _JOINPR_ENCRYPTED_USER_PASSWORD
+{
+    unsigned char Buffer[JOIN_OBFUSCATOR_LENGTH + (JOIN_MAX_PASSWORD_LENGTH * sizeof(wchar_t)) + sizeof(unsigned long)];
+} JOINPR_ENCRYPTED_USER_PASSWORD, *PJOINPR_ENCRYPTED_USER_PASSWORD;
+
+cpp_quote("#if !defined(_NTSECAPI_H)")
+typedef struct _UNICODE_STRING
+{
+    unsigned short Length;
+    unsigned short MaximumLength;
+    [size_is(MaximumLength / 2), length_is((Length) / 2)] unsigned short *Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+cpp_quote("#endif")
+
+typedef struct _NET_COMPUTER_NAME_ARRAY
+{
+    unsigned long EntryCount;
+    [size_is(EntryCount)] PUNICODE_STRING ComputerNames;
+} NET_COMPUTER_NAME_ARRAY, *PNET_COMPUTER_NAME_ARRAY;
+
+
+[
+    uuid(6BFFD098-A112-3610-9833-46C3F87E345A),version(1.0),
+    version(1.0),
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\wkssvc]")
+#ifndef __midl
+    ,implicit_handle(handle_t hBinding)
+#endif
+
+]
+interface wkssvc
+{
+    /* Function 0 */
+    unsigned long
+    __stdcall
+    NetrWkstaGetInfo (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in] unsigned long Level,
+        [out, switch_is(Level)] LPWKSTA_INFO WkstaInfo);
+
+    /* Function 1 */
+    unsigned long
+    __stdcall
+    NetrWkstaSetInfo (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in] unsigned long Level,
+        [in, switch_is(Level)] LPWKSTA_INFO WkstaInfo,
+        [in, out, unique] unsigned long *ErrorParameter);
+
+    /* Function 2 */
+    unsigned long
+    __stdcall
+    NetrWkstaUserEnum (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in, out] LPWKSTA_USER_ENUM_STRUCT UserInfo,
+        [in] unsigned long PreferredMaximumLength,
+        [out] unsigned long *TotalEntries,
+        [in, out, unique] unsigned long *ResumeHandle);
+
+    /* Function 3 */
+    void
+    __stdcall
+    Opnum3NotUsedOnWire(void);
+
+    /* Function 4 */
+    void
+    __stdcall
+    Opnum4NotUsedOnWire(void);
+
+    /* Function 5 */
+    unsigned long
+    __stdcall
+    NetrWkstaTransportEnum (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in, out] LPWKSTA_TRANSPORT_ENUM_STRUCT TransportInfo,
+        [in] unsigned long PreferredMaximumLength,
+        [out] unsigned long* TotalEntries,
+        [in, out, unique] unsigned long *ResumeHandle);
+
+    /* Function 6 */
+    unsigned long
+    __stdcall
+    NetrWkstaTransportAdd (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in] unsigned long Level,
+        [in] LPWKSTA_TRANSPORT_INFO_0 TransportInfo,
+        [in, out, unique] unsigned long *ErrorParameter);
+
+    /* Function 7 */
+    unsigned long
+    __stdcall
+    NetrWkstaTransportDel (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in, string, unique] wchar_t *TransportName,
+        [in] unsigned long ForceLevel);
+
+    /* Function 8 */
+    unsigned long
+    __stdcall
+    NetrUseAdd (
+        [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
+        [in] unsigned long Level,
+        [in, switch_is(Level)] LPUSE_INFO InfoStruct,
+        [in, out, unique] unsigned long *ErrorParameter);
+
+    /* Function 9 */
+    unsigned long
+    __stdcall
+    NetrUseGetInfo (
+        [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
+        [in, string] wchar_t *UseName,
+        [in] unsigned long Level,
+        [out, switch_is(Level)] LPUSE_INFO InfoStruct);
+
+    /* Function 10 */
+    unsigned long
+    __stdcall
+    NetrUseDel (
+        [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
+        [in, string] wchar_t *UseName,
+        [in] unsigned long ForceLevel);
+
+    /* Function 11 */
+    unsigned long
+    __stdcall
+    NetrUseEnum (
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in, out] LPUSE_ENUM_STRUCT InfoStruct,
+        [in] unsigned long PreferredMaximumLength,
+        [out] unsigned long *TotalEntries,
+        [in, out, unique] unsigned long *ResumeHandle);
+
+    /* Function 12 */
+    void
+    __stdcall
+    Opnum12NotUsedOnWire(void);
+
+    /* Function 13 */
+    unsigned long
+    __stdcall
+    NetrWorkstationStatisticsGet(
+        [in, string, unique] WKSSVC_IDENTIFY_HANDLE ServerName,
+        [in, string, unique] wchar_t *ServiceName,
+        [in] unsigned long Level,
+        [in] unsigned long Options,
+        [out] LPSTAT_WORKSTATION_0 *Buffer);
+
+    /* Function 14 */
+    void
+    __stdcall
+    Opnum14NotUsedOnWire(void);
+
+    /* Function 15 */
+    void
+    __stdcall
+    Opnum15NotUsedOnWire(void);
+
+    /* Function 16 */
+    void
+    __stdcall
+    Opnum16NotUsedOnWire(void);
+
+    /* Function 17 */
+    void
+    __stdcall
+    Opnum17NotUsedOnWire(void);
+
+    /* Function 18 */
+    void
+    __stdcall
+    Opnum18NotUsedOnWire(void);
+
+    /* Function 19 */
+    void
+    __stdcall
+    Opnum19NotUsedOnWire(void);
+
+    /* Function 20 */
+    unsigned long
+    __stdcall
+    NetrGetJoinInformation(
+        [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
+        [in, out, string] wchar_t **NameBuffer,
+        [out] PNETSETUP_JOIN_STATUS BufferType);
+
+    /* Function 21 */
+    void
+    __stdcall
+    Opnum21NotUsedOnWire(void);
+
+    /* Function 22 */
+    unsigned long
+    __stdcall
+    NetrJoinDomain2(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string] wchar_t *DomainNameParam,
+        [in, string, unique] wchar_t *MachineAccountOU,
+        [in, string, unique] wchar_t *AccountName,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD Password,
+        [in] unsigned long Options);
+
+    /* Function 23 */
+    unsigned long
+    __stdcall
+    NetrUnjoinDomain2(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string, unique] wchar_t *AccountName,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD Password,
+        [in] unsigned long Options);
+
+    /* Function 24 */
+    unsigned long
+    __stdcall
+    NetrRenameMachineInDomain2(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string, unique] wchar_t *MachineName,
+        [in, string, unique] wchar_t *AccountName,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD Password,
+        [in] unsigned long Options);
+
+    /* Function 25 */
+    unsigned long
+    __stdcall
+    NetrValidateName2(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string] wchar_t *NameToValidate,
+        [in, string, unique] wchar_t *AccountName,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD Password,
+        [in] NETSETUP_NAME_TYPE NameType);
+
+    /* Function 26 */
+    unsigned long
+    __stdcall
+    NetrGetJoinableOUs2(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string] wchar_t *DomainNameParam,
+        [in, string, unique] wchar_t *AccountName,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD Password,
+        [in, out] unsigned long* OUCount,
+        [out, string, size_is(,*OUCount)] wchar_t ***OUs);
+
+    /* Function 27 */
+    unsigned long
+    __stdcall
+    NetrAddAlternateComputerName(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string, unique] wchar_t *AlternateName,
+        [in, string, unique] wchar_t *DomainAccount,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword,
+        [in] unsigned long Reserved);
+
+    /* Function 28 */
+    unsigned long
+    __stdcall
+    NetrRemoveAlternateComputerName(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string, unique] wchar_t *AlternateName,
+        [in, string, unique] wchar_t *DomainAccount,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword,
+        [in] unsigned long Reserved);
+
+    /* Function 29 */
+    unsigned long
+    __stdcall
+    NetrSetPrimaryComputerName(
+        [in] handle_t RpcBindingHandle,
+        [in, string, unique] wchar_t *ServerName,
+        [in, string, unique] wchar_t *PrimaryName,
+        [in, string, unique] wchar_t *DomainAccount,
+        [in, unique] PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword,
+        [in] unsigned long Reserved);
+
+    /* Function 30 */
+    unsigned long
+    __stdcall
+    NetrEnumerateComputerNames(
+        [in, string, unique] WKSSVC_IMPERSONATE_HANDLE ServerName,
+        [in] NET_COMPUTER_NAME_TYPE NameType,
+        [in] unsigned long Reserved,
+        [out] PNET_COMPUTER_NAME_ARRAY *ComputerNames);
+}
