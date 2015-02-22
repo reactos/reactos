@@ -41,7 +41,7 @@ extern const LPCWSTR ObjectTypeNames [];
 #include <pshpack1.h>
 struct NtPidlEntry
 {
-    SHORT cb;
+    USHORT cb;
     USHORT magic; // 0x9A03 ~~~ "NTOB"
 
     // If this is -1, there will be a NtPidlTypeData following this, and before any other extensions

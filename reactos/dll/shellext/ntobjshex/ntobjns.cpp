@@ -26,10 +26,10 @@ static const GUID GUID_NtObjectColumns = { 0xf4c430c3, 0x3a8d, 0x4b56, { 0xa0, 0
 
 enum NtObjectColumns
 {
-    PID_NTOBJECT_NAME = 1,
-    PID_NTOBJECT_TYPE = 2,
-    PID_NTOBJECT_CREATEDATE = 3,
-    PID_NTOBJECT_LINKTARGET = 4,
+    NTOBJECT_COLUMN_NAME = 0,
+    NTOBJECT_COLUMN_TYPE = 1,
+    NTOBJECT_COLUMN_CREATEDATE = 2,
+    NTOBJECT_COLUMN_LINKTARGET = 3,
 };
 
 static HRESULT MakeStrRetFromString(LPCWSTR string, DWORD cbLength, STRRET * str)
@@ -43,7 +43,7 @@ static HRESULT MakeStrRetFromString(LPCWSTR string, DWORD cbLength, STRRET * str
 
 static HRESULT MakeStrRetFromString(LPCWSTR string, STRRET * str)
 {
-    DWORD stringLength = lstrlenW(string) * sizeof(WCHAR);
+    DWORD stringLength = wcslen(string) * sizeof(WCHAR);
     return MakeStrRetFromString(string, stringLength, str);
 }
 
@@ -196,16 +196,14 @@ public:
         {
             if (uType == GCS_VERBW)
             {
-                StringCchCopyW((LPWSTR) pszName, cchMax, L"open");
-                return S_OK;
+                return StringCchCopyW((LPWSTR) pszName, cchMax, L"open");
             }
         }
         else if (idCmd == (m_idFirst + 1))
         {
             if (uType == GCS_VERBW)
             {
-                StringCchCopyW((LPWSTR) pszName, cchMax, L"opennewwindow");
-                return S_OK;
+                return StringCchCopyW((LPWSTR) pszName, cchMax, L"opennewwindow");
             }
         }
         return E_NOTIMPL;
@@ -247,7 +245,7 @@ public:
     {
         m_pcidlFolder = ILClone(parent);
         if (cidl != 1)
-            return E_FAIL;
+            return E_INVALIDARG;
         m_pcidlChild = ILClone(apidl[0]);
         return S_OK;
     }
@@ -260,8 +258,9 @@ public:
         UINT *pwFlags)
     {
         const NtPidlEntry * entry = (NtPidlEntry *) m_pcidlChild;
-        if (entry->magic != NT_OBJECT_PIDL_MAGIC)
-            return E_FAIL;
+
+        if ((entry->cb < sizeof(NtPidlEntry)) || (entry->magic != NT_OBJECT_PIDL_MAGIC))
+            return E_INVALIDARG;
 
         UINT flags = 0;
 
@@ -356,7 +355,7 @@ public:
         m_hDpa = DPA_Create(10);
 
         if (!m_hDpa)
-            return E_FAIL;
+            return E_OUTOFMEMORY;
 
         HRESULT hr = EnumerateNtDirectory(m_hDpa, m_ntPath, &m_hDpaCount);
         if (FAILED_UNEXPECTEDLY(hr))
@@ -376,11 +375,10 @@ public:
 
         TRACE("Searching for pidl { cb=%d } in a list of %d items\n", pcidl->mkid.cb, m_hDpaCount);
 
-        for (int i = 0; i < (int) m_hDpaCount; i++)
+        for (UINT i = 0; i < m_hDpaCount; i++)
         {
             NtPidlEntry * pInfo = (NtPidlEntry *) DPA_GetPtr(m_hDpa, i);
-            if (!pInfo)
-                return E_FAIL;
+            ASSERT(pInfo);
 
             hr = CompareIDs(0, pInfo, pcidl);
             if (FAILED_UNEXPECTEDLY(hr))
@@ -413,12 +411,11 @@ public:
         for (int i = 0; i < (int) m_hDpaCount; i++)
         {
             NtPidlEntry * pInfo = (NtPidlEntry *) DPA_GetPtr(m_hDpa, i);
-            if (!pInfo)
-                return E_FAIL;
+            ASSERT(pInfo);
 
             int order = CompareStringW(GetThreadLocale(), NORM_IGNORECASE,
-                pInfo->entryName, lstrlenW(pInfo->entryName),
-                strParsingName, lstrlenW(strParsingName));
+                pInfo->entryName, wcslen(pInfo->entryName),
+                strParsingName, wcslen(strParsingName));
 
             if (order == CSTR_EQUAL)
             {
@@ -465,7 +462,7 @@ public:
     HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
     {
         if (LOWORD(lParam) != 0)
-            return E_FAIL;
+            return E_INVALIDARG;
 
         if (second->cb > first->cb)
             return MAKE_HRESULT(0, 0, (USHORT) 1);
@@ -511,20 +508,20 @@ public:
 
     HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
     {
-        LPCITEMIDLIST p = (pcidl);
+        LPCITEMIDLIST p = pcidl;
         NtPidlEntry * second = (NtPidlEntry*) &(p->mkid);
-        if (second->magic != NT_OBJECT_PIDL_MAGIC)
-            return E_FAIL;
+        if ((second->cb < sizeof(NtPidlEntry)) || (second->magic != NT_OBJECT_PIDL_MAGIC))
+            return E_INVALIDARG;
 
         return CompareIDs(lParam, first, second);
     }
 
     HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
     {
-        LPCITEMIDLIST p = (pcidl1);
+        LPCITEMIDLIST p = pcidl1;
         NtPidlEntry * first = (NtPidlEntry*) &(p->mkid);
-        if (first->magic != NT_OBJECT_PIDL_MAGIC)
-            return E_FAIL;
+        if ((first->cb < sizeof(NtPidlEntry)) || (first->magic != NT_OBJECT_PIDL_MAGIC))
+            return E_INVALIDARG;
 
         return CompareIDs(lParam, first, pcidl2);
     }
@@ -692,7 +689,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
     NtPidlEntry * info;
 
     if (!ppidl)
-        return E_FAIL;
+        return E_POINTER;
 
     if (pchEaten)
         *pchEaten = 0;
@@ -711,7 +708,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
     *ppidl = m_PidlManager->CreatePidlFromItem(info);
 
     if (pchEaten)
-        *pchEaten = lstrlenW(info->entryName);
+        *pchEaten = wcslen(info->entryName);
 
     if (pdwAttributes)
         *pdwAttributes = m_PidlManager->ConvertAttributes(info, pdwAttributes);
@@ -745,8 +742,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
         if (!(info->objectInformation.GrantedAccess & (STANDARD_RIGHTS_READ | FILE_LIST_DIRECTORY)))
             return E_ACCESSDENIED;
 
-        LPITEMIDLIST fullPidl = ILCombine(m_shellPidl, pidl);
-
         WCHAR path[MAX_PATH];
 
         if (info->objectType == SYMBOLICLINK_OBJECT)
@@ -759,7 +754,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
             }
             else
             {
-                return E_FAIL;
+                return E_UNEXPECTED;
             }
         }
         else
@@ -771,7 +766,13 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
             DbgPrint("BindToObject for Directory %S\n", path);
         }
 
-        return ShellObjectCreatorInit<CNtObjectFolder>(fullPidl, path, riid, ppvOut);
+        LPITEMIDLIST fullPidl = ILCombine(m_shellPidl, pidl);
+
+        hr = ShellObjectCreatorInit<CNtObjectFolder>(fullPidl, path, riid, ppvOut);
+
+        ILFree(fullPidl);
+
+        return hr;
     }
 
     return E_NOTIMPL;
@@ -952,12 +953,11 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetClassID(CLSID *lpClassId)
 // IPersistFolder
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    static WCHAR slash [] = L"\\";
-    return Initialize(pidl, slash);
+    return Initialize(pidl, L"\\");
 }
 
 // Internal
-HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl, PWSTR ntPath)
+HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath)
 {
     m_shellPidl = ILClone(pidl);
     StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
@@ -1011,21 +1011,21 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDefaultColumnState(
 {
     switch (iColumn)
     {
-    case 0:
+    case NTOBJECT_COLUMN_NAME:
         *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
         return S_OK;
-    case 1:
+    case NTOBJECT_COLUMN_TYPE:
         *pcsFlags = SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT;
         return S_OK;
-    case 2:
+    case NTOBJECT_COLUMN_CREATEDATE:
         *pcsFlags = SHCOLSTATE_TYPE_DATE | SHCOLSTATE_ONBYDEFAULT;
         return S_OK;
-    case 3:
+    case NTOBJECT_COLUMN_LINKTARGET:
         *pcsFlags = SHCOLSTATE_TYPE_STR;
         return S_OK;
     }
 
-    return E_FAIL;
+    return E_INVALIDARG;
 }
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
@@ -1085,7 +1085,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
         }
         else if (IsEqualGUID(pscid->fmtid, GUID_NtObjectColumns))
         {
-            if (pscid->pid == PID_NTOBJECT_LINKTARGET)
+            if (pscid->pid == NTOBJECT_COLUMN_LINKTARGET)
             {
                 if (info->objectType == SYMBOLICLINK_OBJECT)
                 {
@@ -1097,12 +1097,13 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
                     }
                 }
 
-                return MakeVariantString(pv, L"");
+                V_VT(pv) = VT_EMPTY;
+                return S_OK;
             }
         }
     }
 
-    return E_FAIL;
+    return E_INVALIDARG;
 }
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
@@ -1123,12 +1124,12 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
         switch (iColumn)
         {
-        case 0:
+        case NTOBJECT_COLUMN_NAME:
             psd->fmt = LVCFMT_LEFT;
 
             MakeStrRetFromString(info->entryName, info->entryNameLength, &(psd->str));
             return S_OK;
-        case 1:
+        case NTOBJECT_COLUMN_TYPE:
             psd->fmt = LVCFMT_LEFT;
 
             if (info->objectType < 0)
@@ -1143,7 +1144,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
             else
                 MakeStrRetFromString(ObjectTypeNames[info->objectType], &(psd->str));
             return S_OK;
-        case 2:
+        case NTOBJECT_COLUMN_CREATEDATE:
             psd->fmt = LVCFMT_LEFT;
 
             if (info->objectInformation.CreateTime.QuadPart != 0)
@@ -1153,7 +1154,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
                 SYSTEMTIME stime;
                 FileTimeToSystemTime((LPFILETIME) &(info->objectInformation.CreateTime), &stime);
                 GetDateFormat(LOCALE_USER_DEFAULT, 0, &stime, NULL, dbuff, _countof(dbuff));
-                tbuff = dbuff + lstrlenW(dbuff);
+                tbuff = dbuff + wcslen(dbuff);
                 *tbuff++ = L' ';
                 GetTimeFormat(LOCALE_USER_DEFAULT, 0, &stime, NULL, tbuff, _countof(dbuff) - (tbuff - dbuff));
 
@@ -1164,7 +1165,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
             MakeStrRetFromString(L"", &(psd->str));
             return S_OK;
 
-        case 3:
+        case NTOBJECT_COLUMN_LINKTARGET:
             psd->fmt = LVCFMT_LEFT;
 
             if (info->objectType == SYMBOLICLINK_OBJECT)
@@ -1186,28 +1187,28 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
     {
         switch (iColumn)
         {
-        case 0:
+        case NTOBJECT_COLUMN_NAME:
             psd->fmt = LVCFMT_LEFT;
             psd->cxChar = 30;
 
             // TODO: Make localizable
             MakeStrRetFromString(L"Object Name", &(psd->str));
             return S_OK;
-        case 1:
+        case NTOBJECT_COLUMN_TYPE:
             psd->fmt = LVCFMT_LEFT;
             psd->cxChar = 20;
 
             // TODO: Make localizable
             MakeStrRetFromString(L"Object Type", &(psd->str));
             return S_OK;
-        case 2:
+        case NTOBJECT_COLUMN_CREATEDATE:
             psd->fmt = LVCFMT_LEFT;
             psd->cxChar = 20;
 
             // TODO: Make localizable
             MakeStrRetFromString(L"Creation Time", &(psd->str));
             return S_OK;
-        case 3:
+        case NTOBJECT_COLUMN_LINKTARGET:
             psd->fmt = LVCFMT_LEFT;
             psd->cxChar = 30;
 
@@ -1217,7 +1218,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
         }
     }
 
-    return E_FAIL;
+    return E_INVALIDARG;
 }
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::MapColumnToSCID(
@@ -1227,22 +1228,22 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MapColumnToSCID(
     static const GUID storage = PSGUID_STORAGE;
     switch (iColumn)
     {
-    case 0:
+    case NTOBJECT_COLUMN_NAME:
         pscid->fmtid = storage;
         pscid->pid = PID_STG_NAME;
         return S_OK;
-    case 1:
+    case NTOBJECT_COLUMN_TYPE:
         pscid->fmtid = storage;
         pscid->pid = PID_STG_STORAGETYPE;
         return S_OK;
-    case 2:
+    case NTOBJECT_COLUMN_CREATEDATE:
         pscid->fmtid = storage;
         pscid->pid = PID_STG_WRITETIME;
         return S_OK;
-    case 3:
+    case NTOBJECT_COLUMN_LINKTARGET:
         pscid->fmtid = GUID_NtObjectColumns;
-        pscid->pid = PID_NTOBJECT_LINKTARGET;
+        pscid->pid = NTOBJECT_COLUMN_LINKTARGET;
         return S_OK;
     }
-    return E_FAIL;
+    return E_INVALIDARG;
 }
