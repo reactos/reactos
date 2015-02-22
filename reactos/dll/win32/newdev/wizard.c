@@ -1251,6 +1251,9 @@ DisplayWizard(
     HPROPSHEETPAGE ahpsp[IDD_MAXIMUMPAGE + 1];
     PROPSHEETPAGE psp;
 
+    /* zero based index */
+    startPage -= IDD_FIRSTPAGE;
+
     /* Create the Welcome page */
     ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
     psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -1260,52 +1263,52 @@ DisplayWizard(
     psp.pszTitle = MAKEINTRESOURCE(DevInstData->bUpdate ? IDS_UPDATEWIZARDTITLE : IDS_INSTALLWIZARDTITLE);
     psp.pfnDlgProc = WelcomeDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_WELCOMEPAGE);
-    ahpsp[IDD_WELCOMEPAGE] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_WELCOMEPAGE-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Select Source page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USETITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_CHSOURCE_TITLE);
     psp.pfnDlgProc = CHSourceDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_CHSOURCE);
-    ahpsp[IDD_CHSOURCE] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_CHSOURCE-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Search driver page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USETITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_SEARCHDRV_TITLE);
     psp.pfnDlgProc = SearchDrvDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_SEARCHDRV);
-    ahpsp[IDD_SEARCHDRV] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_SEARCHDRV-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Install driver page */
     psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USETITLE;
     psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_INSTALLDRV_TITLE);
     psp.pfnDlgProc = InstallDrvDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLDRV);
-    ahpsp[IDD_INSTALLDRV] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_INSTALLDRV-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the No driver page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER | PSP_USETITLE;
     psp.pfnDlgProc = NoDriverDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NODRIVER);
-    ahpsp[IDD_NODRIVER] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_NODRIVER-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Install failed page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER | PSP_USETITLE;
     psp.pfnDlgProc = InstallFailedDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_INSTALLFAILED);
-    ahpsp[IDD_INSTALLFAILED] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_INSTALLFAILED-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Need reboot page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER | PSP_USETITLE;
     psp.pfnDlgProc = NeedRebootDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NEEDREBOOT);
-    ahpsp[IDD_NEEDREBOOT] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_NEEDREBOOT-200] = CreatePropertySheetPage(&psp);
 
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER | PSP_USETITLE;
     psp.pfnDlgProc = FinishDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-    ahpsp[IDD_FINISHPAGE] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_FINISHPAGE-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
