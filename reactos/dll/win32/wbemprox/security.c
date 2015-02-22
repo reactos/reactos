@@ -109,8 +109,11 @@ static HRESULT get_sd( SECURITY_DESCRIPTOR **sd, DWORD *size )
 
     if (SUCCEEDED(hr))
     {
-        if (!MakeSelfRelativeSD(&absolute_sd, *sd, size))
+        if (!MakeSelfRelativeSD(&absolute_sd, *sd, size)) {
+            HeapFree( GetProcessHeap(), 0, *sd );
+	    *sd = NULL;
             hr = E_FAIL;
+        }
     }
 
     return hr;
