@@ -350,6 +350,13 @@ KspPinPropertyHandler(
             return STATUS_INVALID_PARAMETER;
         }
     }
+    else
+    {
+        (*(PULONG)Buffer) = DescriptorsCount;
+        Irp->IoStatus.Information = sizeof(ULONG);
+        return STATUS_SUCCESS;
+    }
+
 
     if (DescriptorSize == sizeof(KSPIN_DESCRIPTOR))
     {
@@ -364,11 +371,6 @@ KspPinPropertyHandler(
 
     switch(Property->Id)
     {
-        case KSPROPERTY_PIN_CTYPES:
-            (*(PULONG)Buffer) = DescriptorsCount;
-            Irp->IoStatus.Information = sizeof(ULONG);
-            Status = STATUS_SUCCESS;
-            break;
         case KSPROPERTY_PIN_DATAFLOW:
 
             Size = sizeof(KSPIN_DATAFLOW);
