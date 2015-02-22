@@ -1302,7 +1302,7 @@ DisplayWizard(
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER | PSP_USETITLE;
     psp.pfnDlgProc = NeedRebootDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_NEEDREBOOT);
-    ahpsp[IDD_NEEDREBOOT-200] = CreatePropertySheetPage(&psp);
+    ahpsp[IDD_NEEDREBOOT-IDD_FIRSTPAGE] = CreatePropertySheetPage(&psp);
 
     /* Create the Finish page */
     psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER | PSP_USETITLE;
