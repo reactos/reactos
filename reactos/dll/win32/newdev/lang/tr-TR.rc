@@ -7,13 +7,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Hoş Geldiniz", IDC_WELCOMETITLE, 120, 8, 195, 24
+    LTEXT "Hoş Geldiniz", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Bu yardımcı, şunun için yeni bir aygıt sürücüsü kurar:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 134, 36, 164, 11
+    LTEXT "Sürdürmek için İleri'ye tıklayınız.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "UYARI! HUSÛSİ BİR AYGIT KURMA BİLGİSAYARINIZI, DONDURABİLİR VEYÂ AÇILAMAZ YAPABİLİR!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Sürücüyü Kendiliğinden Kur", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Sürücüyü Belirli Konumdan Kur", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    CONTROL "Sürücüyü Kendiliğinden Kur", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Sürücüyü Belirli Konumdan Kur", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -21,10 +21,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kurulum Başarısız Oldu", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Sürücü bulunamadığından dolayı aygıt kurulamadı.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Eğer sizde bir sürücü diski varsa ya da sürücü için yolu biliyorsanız Geri'ye tıklayınız.", IDC_STATIC, 120, 98, 181, 24
-    CONTROL "Bu İletişim Kutusunu Bir Daha Gösterme", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
+    LTEXT "Kurulum Başarısız Oldu", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Sürücü bulunamadığından dolayı aygıt kurulamadı.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Eğer sizde bir sürücü diski varsa ya da sürücü için yolu biliyorsanız Geri'ye tıklayınız.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Bu İletişim Kutusunu Bir Daha Gösterme", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -32,9 +32,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kurulum Başarısız Oldu", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Beklenmeyen bir yanlışlık olduğundan dolayı aygıt kurulamadı.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "Kurulum Başarısız Oldu", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Beklenmeyen bir yanlışlık olduğundan dolayı aygıt kurulamadı.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -42,11 +42,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Şu Konumlarda Ara:", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
+    CONTROL "Şu Konumlarda Ara:", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "Sürücüyü Elle Seç", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "Çıkarılabilir Ortamı Ara", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
-    CONTROL "Şu Yolu Kapsa:", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Göz At", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "Çıkarılabilir Ortamı Ara", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "Şu Yolu Kapsa:", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Göz At", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -71,9 +71,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kurulum Bitti", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Şunun kurulumunu bitirmek için yeniden başlatmaya gereksiniminiz var:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Bu yardımcıyı kapatmak için Bitir'e tıklayınız.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Kurulum Bitti", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Şunun kurulumunu bitirmek için yeniden başlatmaya gereksiniminiz var:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Bu yardımcıyı kapatmak için Bitir'e tıklayınız.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 53, 147, 12
 END
 
@@ -82,9 +82,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Aygıt Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Kurulum Bitti", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Bu yardımcı, şunun için sürücüyü kurmayı bitirdi:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Bu yardımcıyı kapatmak için Bitir'e tıklayınız.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Kurulum Bitti", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Bu yardımcı, şunun için sürücüyü kurmayı bitirdi:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Bu yardımcıyı kapatmak için Bitir'e tıklayınız.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "BİLİNMEYEN AYGIT", IDC_DEVICE, 148, 53, 147, 12
 END
 

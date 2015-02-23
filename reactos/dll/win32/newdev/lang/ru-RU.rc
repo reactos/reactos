@@ -5,13 +5,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Установка нового оборудования", IDC_WELCOMETITLE, 120, 8, 210, 24
+    LTEXT "Установка нового оборудования", IDC_WELCOMETITLE, 120, 8, 210, 16
     LTEXT "Этот мастер устанавливает драйвер для:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Для продолжения нажмите кнопку ""Далее"".", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "Неизвестное устройство", IDC_DEVICE, 134, 36, 164, 11
-    LTEXT "ВНИМАНИЕ! Установка нового оборудования может закончиться зависанием компьютера или невозможностью загрузить его!", IDC_STATIC, 120, 59, 195, 25
-    CONTROL "Установить драйвер автоматически", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Установить драйвер из указанного места", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    LTEXT "Для продолжения нажмите кнопку ""Далее"".", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "Неизвестное устройство", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "ВНИМАНИЕ! Установка нового оборудования может закончиться зависанием компьютера или невозможностью загрузить его!", IDC_STATIC, 120, 59, 195, 16
+    CONTROL "Установить драйвер автоматически", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Установить драйвер из указанного места", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -19,10 +19,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Это оборудование установить не удалось", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Оборудование не установлено, поскольку мастер не смог найти нужного программного обеспечения.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Если имеются установочные диски или известно расположение нужного программного обеспечения, нажмите кнопку ""Назад"".", IDC_STATIC, 120, 125, 181, 24
-    CONTROL "Больше не напоминать об установке этого драйвера.", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 190, 11
+    LTEXT "Это оборудование установить не удалось", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Оборудование не установлено, поскольку мастер не смог найти нужного программного обеспечения.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Если имеются установочные диски или известно расположение нужного программного обеспечения, нажмите кнопку ""Назад"".", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Больше не напоминать об установке этого драйвера.", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -30,9 +30,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Это оборудование установить не удалось", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Неизвестная ошибка. Не удалось установить устройство.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Неизвестное устройство", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "Это оборудование установить не удалось", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Неизвестная ошибка. Не удалось установить устройство.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Неизвестное устройство", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -40,11 +40,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Искать по этим путям", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
+    CONTROL "Искать по этим путям", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "Выбор драйвера вручную", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "Поиск на сменных носителях", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
-    CONTROL "Включить это место поиска", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Обзор", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "Поиск на сменных носителях", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "Включить это место поиска", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Обзор", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -69,9 +69,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Установка оборудования завершена", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Вы должны выполнить перезагрузку, чтобы закончить установку:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Нажмите ""Готово"" для завершения мастера.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Установка оборудования завершена", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Вы должны выполнить перезагрузку, чтобы закончить установку:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Нажмите ""Готово"" для завершения мастера.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "Неизвестное устройство", IDC_DEVICE, 148, 53, 147, 12
 END
 
@@ -80,9 +80,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Мастер нового оборудования"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Установка завершена", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Мастер закончил установку драйвера для:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Нажмите ""Готово"" для завершения мастера.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Установка завершена", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Мастер закончил установку драйвера для:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Нажмите ""Готово"" для завершения мастера.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "Неизвестное устройство", IDC_DEVICE, 148, 53, 147, 12
 END
 

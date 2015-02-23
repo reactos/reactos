@@ -9,13 +9,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalimi Pajisjes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Mirëseerdhët", IDC_WELCOMETITLE, 120, 8, 195, 24
+    LTEXT "Mirëseerdhët", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Ky magjistar instalon një komandues të ri të pajisjes për:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Klikoni Vazhdo për të vazhduar.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 134, 36, 164, 11
+    LTEXT "Klikoni Vazhdo për të vazhduar.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "KUJDES! INSTALIMI I NJË PAJISJE TË PERSONALIZUAR MUND TË NGRIJË KOMPJUTERIN TUAJ OSE TA BËJNË TË MOS NISET!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Instalo komanduesit automatikisht", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Instalo komanduesit nga një vend specifik", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    CONTROL "Instalo komanduesit automatikisht", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Instalo komanduesit nga një vend specifik", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -23,10 +23,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalimi Pajisjes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalimi dështoj", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Pajisja nuk mund të instalohet për shkak se komanduesi nuk mund të gjendet.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Kliko Kthehu në qoftë se ju keni komanduesin n[ disk ose e di rrugën për të komanduesi.", IDC_STATIC, 120, 98, 181, 24
-    CONTROL "Mos e tregoni këtë dialog më", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
+    LTEXT "Instalimi dështoj", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Pajisja nuk mund të instalohet për shkak se komanduesi nuk mund të gjendet.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Kliko Kthehu në qoftë se ju keni komanduesin n[ disk ose e di rrugën për të komanduesi.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Mos e tregoni këtë dialog më", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -34,9 +34,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalimi Pajisjes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalimi dështoj", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Pajisja nuk mund të instalohet për shkak se një gabim i papritur ka ndodhur.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "Instalimi dështoj", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Pajisja nuk mund të instalohet për shkak se një gabim i papritur ka ndodhur.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -44,11 +44,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalimi Pajisjes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Kërko në këto vende", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
+    CONTROL "Kërko në këto vende", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "Zgjidhni komanduesin manualisht", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "Kërko media e lëvizshme", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
-    CONTROL "Përfshij këtë rrugë", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Shfleto", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "Kërko media e lëvizshme", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "Përfshij këtë rrugë", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Shfleto", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -73,9 +73,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalimi Pajisjes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalimi i plotë", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Ju duhet të rinisni për të përfunduar të instaluari të:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Kliko Mbaro për të mbyllur magjistar.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Instalimi i plotë", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Ju duhet të rinisni për të përfunduar të instaluari të:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Kliko Mbaro për të mbyllur magjistar.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 12
 END
 
@@ -84,9 +84,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalimi Pajisjes"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalimi i plotë", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Magjistar ka përfunduar instalimin e komanduesit për:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Kliko Mbaro për të mbyllur magjistar.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Instalimi i plotë", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Magjistar ka përfunduar instalimin e komanduesit për:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Kliko Mbaro për të mbyllur magjistar.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "PAJISJE PANJOHUR", IDC_DEVICE, 148, 53, 147, 12
 END
 

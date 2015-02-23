@@ -13,13 +13,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Witamy", IDC_WELCOMETITLE, 120, 8, 195, 24
+    LTEXT "Witamy", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Ten kreator zainstaluje nowe sterowniki dla urządzenia:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Naciśnij Dalej, aby kontynuować.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 134, 36, 164, 11
+    LTEXT "Naciśnij Dalej, aby kontynuować.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "UWAGA! NIEODPOWIEDNI STEROWNIK MOŻE ZDESTABILIZOWAĆ LUB NAWET ZAWIESIĆ SYSTEM!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Zainstaluj sterownik automatycznie", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Zainstaluj sterownik z określonej lokalizacji", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    CONTROL "Zainstaluj sterownik automatycznie", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Zainstaluj sterownik z określonej lokalizacji", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -27,10 +27,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalacja nieudana", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Instalacja zakończona niepowodzeniem, sterownik dla tego urządzenia nie został znaleziony.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Naciśnij Wstecz, jeżeli chcesz podać ścieżkę do sterownika.", IDC_STATIC, 120, 98, 181, 24
-    CONTROL "Nie pokazuj więcej tej wiadomości", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
+    LTEXT "Instalacja nieudana", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Instalacja zakończona niepowodzeniem, sterownik dla tego urządzenia nie został znaleziony.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Naciśnij Wstecz, jeżeli chcesz podać ścieżkę do sterownika.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Nie pokazuj więcej tej wiadomości", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -38,9 +38,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalacja nieudana", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Instalacja zakończona niepowodzeniem, z powodu wystąpienia nieoczekiwanego błędu.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "Instalacja nieudana", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Instalacja zakończona niepowodzeniem, z powodu wystąpienia nieoczekiwanego błędu.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -48,11 +48,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Szukanie w wybranej lokalizacji", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
+    CONTROL "Szukanie w wybranej lokalizacji", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "Wybierz sterownik ręcznie", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "Szukaj w nośnikach wymiennych", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
-    CONTROL "Uwzględnij podaną ścieżkę", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Przeglądaj", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "Szukaj w nośnikach wymiennych", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "Uwzględnij podaną ścieżkę", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Przeglądaj", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -77,9 +77,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalacja zakończona", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Należy zrestartować komputer, zakańczanie instalacji:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Instalacja zakończona", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Należy zrestartować komputer, zakańczanie instalacji:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
 END
 
@@ -88,9 +88,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalacja urządzenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Instalacja zakończona", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Kreator zakończył instalację sterownika dla:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Instalacja zakończona", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Kreator zakończył instalację sterownika dla:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
 END
 

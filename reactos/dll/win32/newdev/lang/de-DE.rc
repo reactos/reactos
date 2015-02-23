@@ -5,13 +5,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Willkommen", IDC_WELCOMETITLE, 120, 8, 195, 24
-    LTEXT "Dieser Assistent installiert einen neuen Gerätetreiber für:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 134, 36, 164, 11
-    LTEXT "WARNUNG! DAS INSTALLIEREN VON TREIBERN KANN IHREN PC ZUM ABSTURZ BRINGEN ODER AM BOOTEN HINDERN!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Treiber automatisch installieren", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Treiber von einer bestimmten Position installieren", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 178, 13
+    LTEXT "Willkommen", IDC_WELCOMETITLE, 120, 8, 195, 12
+    LTEXT "Dieser Assistent installiert einen neuen Gerätetreiber für:", IDC_STATIC, 120, 21, 195, 12
+    LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 120, 169, 195, 12
+    LTEXT "UNBEKANNTES GERÄT", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "WARNUNG! DAS INSTALLIEREN VON TREIBERN KANN IHREN PC ZUM ABSTURZ BRINGEN ODER AM STARTEN HINDERN!", IDC_STATIC, 120, 59, 195, 16
+    CONTROL "Treiber automatisch installieren", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Treiber von einer bestimmten Position installieren", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -19,10 +19,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation fehlgeschlagen", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Das Gerät konnte nicht installiert werden, da kein passender Treiber gefunden wurde.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Klicken Sie auf Zurück, wenn Sie eine Treiber-CD oder -Diskette besitzen oder den Pfad des Treibers kennen.", IDC_STATIC, 120, 98, 181, 24
-    CONTROL "Diesen Dialog nicht mehr anzeigen", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
+    LTEXT "Installation fehlgeschlagen", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Das Gerät konnte nicht installiert werden, da kein passender Treiber gefunden wurde.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Klicken Sie auf Zurück, wenn Sie eine Treiber-CD oder -Diskette besitzen oder den Pfad des Treibers kennen.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Diesen Dialog nicht mehr anzeigen", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -30,9 +30,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation fehlgeschlagen", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Das Gerät konnte aufgrund eines unerwarteten Fehlers nicht installiert werden.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "Installation fehlgeschlagen", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Das Gerät konnte aufgrund eines unerwarteten Fehlers nicht installiert werden.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "UNBEKANNTES GERÄT", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -40,11 +40,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Diese Pfade durchsuchen", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
-    CONTROL "Treiber manuell auswählen", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 13
-    CONTROL "Wechseldatenträger durchsuchen", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 162, 10
-    CONTROL "Diesen Pfad ebenfalls durchsuchen", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Durchsuchen", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "Diese Pfade durchsuchen", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
+    CONTROL "Treiber manuell auswählen", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
+    CONTROL "Wechseldatenträger durchsuchen", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 162, 12
+    CONTROL "Diesen Pfad ebenfalls durchsuchen", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Durchsuchen", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -53,7 +53,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "UNBEKANNTES GERÄT", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_INSTALLDRV DIALOGEX 0, 0, 317, 143
@@ -61,7 +61,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 51, 20, 169, 16
+    LTEXT "UNBEKANNTES GERÄT", IDC_DEVICE, 51, 20, 169, 16
 END
 
 IDD_NEEDREBOOT DIALOGEX 0, 0, 317, 193
@@ -69,10 +69,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Geräteinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation vollständig", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Sie müssen den Computer neustarten, um folgende Installation abzuschließen:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Wählen Sie Beenden, um den Wizard zu schließen.", IDC_STATIC, 120, 174, 179, 11
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "Installation vollständig", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Sie müssen den Computer neustarten, um folgende Installation abzuschließen:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Klicken Sie auf Beenden, um den Assistenten zu schließen.", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "UNBEKANNTES GERÄT", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -80,17 +80,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Hardwareinstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installation abgeschlossen", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "Der Assistent hat die Installation erfolgreich abgeschlossen.", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Klicken Sie zum Beenden der Installation auf Fertigstellen.", IDC_STATIC, 120, 174, 190, 11
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "Installation abgeschlossen", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "Der Assistent hat die Installation erfolgreich abgeschlossen.", IDC_STATIC, 120, 32, 195, 12
+    LTEXT "Klicken Sie zum Beenden der Installation auf Fertigstellen.", IDC_STATIC, 120, 174, 195, 12
+    LTEXT "UNBEKANNTES GERÄT", IDC_DEVICE, 148, 53, 147, 12
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New hardware wizard"
-    IDS_UPDATEWIZARDTITLE "Update driver wizard"
-    IDS_CHSOURCE_TITLE "Choose search and install options"
-    IDS_SEARCHDRV_TITLE "Searching..."
-    IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_INSTALLWIZARDTITLE "Assistent zur Installation neuer Hardware"
+    IDS_UPDATEWIZARDTITLE "Assistent zur Treiberaktualisierung"
+    IDS_CHSOURCE_TITLE "Wählen Sie Such- und Installationsoptionen"
+    IDS_SEARCHDRV_TITLE "Suche..."
+    IDS_INSTALLDRV_TITLE "Installiere..."
 END
