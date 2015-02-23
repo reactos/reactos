@@ -1,10 +1,9 @@
 /*
- * PROJECT:     ReactOS system libraries
+ * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\win32\stobject\stobject.cpp
- * PURPOSE:     COM registration services for STobject.dll
- * PROGRAMMERS: Robert Naumann
- David Quintana <gigaherz@gmail.com>
+ * FILE:        dll\shellext\ntobjshex\ntobjshex.cpp
+ * PURPOSE:     NT Object Namespace shell extension
+ * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
  */
 
 #include "precomp.h"

@@ -22,7 +22,7 @@ extern "C" {
 #include <ndk/rtlfuncs.h>
 }
 
-// All the possible values are defined here because I want the type field to be 
+// All the possible values are defined here because I want the type field to be
 // "persistable" and not change if more types are added in the future.
 enum OBJECT_TYPE {
     DIRECTORY_OBJECT, SYMBOLICLINK_OBJECT,
@@ -34,7 +34,7 @@ enum OBJECT_TYPE {
 
     UNKNOWN_OBJECT_TYPE = -1
 };
-extern const LPCWSTR ObjectTypeNames [];
+extern const LPCWSTR ObjectTypeNames[];
 
 #define NT_OBJECT_PIDL_MAGIC (USHORT)0x9A03
 
@@ -45,25 +45,25 @@ struct NtPidlEntry
     USHORT magic; // 0x9A03 ~~~ "NTOB"
 
     // If this is -1, there will be a NtPidlTypeData following this, and before any other extensions
-    OBJECT_TYPE	objectType;
+    OBJECT_TYPE objectType;
 
     OBJECT_BASIC_INFORMATION objectInformation;
 
     USHORT entryNameLength;
-    WCHAR entryName[0];
+    WCHAR entryName[ANYSIZE_ARRAY];
 
 };
 
 struct NtPidlTypeData
 {
     USHORT typeNameLength;
-    WCHAR typeName[0];
+    WCHAR typeName[ANYSIZE_ARRAY];
 };
 
 struct NtPidlSymlinkData
 {
     USHORT targetNameLength;
-    WCHAR targetName[0];
+    WCHAR targetName[ANYSIZE_ARRAY];
 };
 #include <poppack.h>
 

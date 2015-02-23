@@ -327,7 +327,7 @@ typedef struct _MIB_TCPROW_OWNER_PID {
 
 typedef struct {
   DWORD                dwNumEntries;
-  MIB_TCPROW_OWNER_PID table[0];
+  MIB_TCPROW_OWNER_PID table[1];
 } MIB_TCPTABLE_OWNER_PID, *PMIB_TCPTABLE_OWNER_PID;
 
 
