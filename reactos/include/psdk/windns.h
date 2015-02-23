@@ -152,21 +152,25 @@ typedef struct _IP4_ARRAY {
 typedef struct {
 	DWORD IP6Dword[4];
 } IP6_ADDRESS, *PIP6_ADDRESS, DNS_IP6_ADDRESS, *PDNS_IP6_ADDRESS;
+
 typedef struct _DNS_HEADER {
-	WORD Xid;
-	BYTE RecursionDesired;
-	BYTE Truncation;
-	BYTE Authoritative;
-	BYTE Opcode;
-	BYTE IsResponse;
-	BYTE ResponseCode;
-	BYTE Reserved;
-	BYTE RecursionAvailable;
-	WORD QuestionCount;
-	WORD AnswerCount;
-	WORD NameServerCount;
-	WORD AdditionalCount;
+    WORD Xid;
+    BYTE RecursionDesired:1;
+    BYTE Truncation:1;
+    BYTE Authoritative:1;
+    BYTE Opcode:4;
+    BYTE IsResponse:1;
+    BYTE ResponseCode:4;
+    BYTE CheckingDisabled:1;
+    BYTE AuthenticatedData:1;
+    BYTE Reserved:1;
+    BYTE RecursionAvailable:1;
+    WORD QuestionCount;
+    WORD AnswerCount;
+    WORD NameServerCount;
+    WORD AdditionalCount;
 } DNS_HEADER, *PDNS_HEADER;
+
 typedef struct _DNS_MESSAGE_BUFFER {
 	DNS_HEADER MessageHead;
 	CHAR MessageBody[1];
