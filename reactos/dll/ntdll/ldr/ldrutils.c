@@ -223,6 +223,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                      OUT PUNICODE_STRING UpdateString)
 {
     PIMAGE_BOUND_FORWARDER_REF NewImportForwarder;
+    PIMAGE_BOUND_IMPORT_DESCRIPTOR FirstEntry;
     PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundEntry;
     PIMAGE_IMPORT_DESCRIPTOR ImportEntry;
     PIMAGE_THUNK_DATA FirstThunk;
@@ -256,12 +257,12 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     ImportNameUnic = &NtCurrentTeb()->StaticUnicodeString;
 
     /* Try to get the new import entry */
-    BoundEntry = (PIMAGE_BOUND_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(LdrEntry->DllBase,
-                                                                              TRUE,
-                                                                              IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT,
-                                                                              &ImportSize);
+    FirstEntry = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                              TRUE,
+                                              IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT,
+                                              &ImportSize);
 
-    if (BoundEntry)
+    if (FirstEntry)
     {
         /* Set entry flags if refing/derefing */
         if (Flags == LDRP_UPDATE_REFCOUNT)
@@ -269,10 +270,11 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
         else if (Flags == LDRP_UPDATE_DEREFCOUNT)
             LdrEntry->Flags |= LDRP_UNLOAD_IN_PROGRESS;
 
+        BoundEntry = FirstEntry;
         while (BoundEntry->OffsetModuleName)
         {
             /* Get pointer to the current import name */
-            ImportName = (PCHAR)BoundEntry + BoundEntry->OffsetModuleName;
+            ImportName = (LPSTR)FirstEntry + BoundEntry->OffsetModuleName;
 
             RtlInitAnsiString(&ImportNameAnsi, ImportName);
             Status = RtlAnsiStringToUnicodeString(ImportNameUnic, &ImportNameAnsi, FALSE);
@@ -315,9 +317,9 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
             /* Go through forwarders */
             NewImportForwarder = (PIMAGE_BOUND_FORWARDER_REF)(BoundEntry + 1);
-            for (i=0; i<BoundEntry->NumberOfModuleForwarderRefs; i++)
+            for (i = 0; i < BoundEntry->NumberOfModuleForwarderRefs; i++)
             {
-                ImportName = (PCHAR)BoundEntry + NewImportForwarder->OffsetModuleName;
+                ImportName = (LPSTR)FirstEntry + NewImportForwarder->OffsetModuleName;
 
                 RtlInitAnsiString(&ImportNameAnsi, ImportName);
                 Status = RtlAnsiStringToUnicodeString(ImportNameUnic, &ImportNameAnsi, FALSE);
