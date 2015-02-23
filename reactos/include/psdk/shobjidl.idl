@@ -4191,3 +4191,26 @@ interface IFileOperation : IUnknown
      HRESULT GetAnyOperationsAborted(
          [out] BOOL *pfAnyOperationsAborted);
 };
+
+[
+    uuid(6CCB7BE0-6807-11d0-B810-00C04FD706EC),
+    object,
+    pointer_default(unique)
+]
+interface IShellTaskScheduler : IUnknown
+{
+    HRESULT AddTask(
+        [in] IRunnableTask *pTask, 
+        [in] REFGUID rtoid, 
+        [in] DWORD_PTR lParam, 
+        [in] DWORD dwPriority);
+    HRESULT RemoveTasks(
+        [in] REFGUID rtoid, 
+        [in] DWORD_PTR lParam, 
+        [in] BOOL fWaitIfRunning);
+    UINT CountTasks(
+        [in] REFGUID rtoid);
+    HRESULT Status(
+        [in] DWORD dwReleaseStatus, 
+        [in] DWORD dwThreadTimeout);
+}
