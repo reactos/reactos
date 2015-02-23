@@ -334,7 +334,7 @@ typedef struct _NET_COMPUTER_NAME_ARRAY
 
 
 [
-    uuid(6BFFD098-A112-3610-9833-46C3F87E345A),version(1.0),
+    uuid(6BFFD098-A112-3610-9833-46C3F87E345A),
     version(1.0),
     pointer_default(unique),
     endpoint("ncacn_np:[\\pipe\\wkssvc]")
