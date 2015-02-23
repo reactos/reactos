@@ -1229,17 +1229,16 @@ static HRESULT load_data(IDirect3DRM3 *iface, IDirectXFileData *data_object, IID
         /* Cannot be requested */
         if (parent_frame)
         {
-            D3DRMMATRIX4D matrix;
+            D3DRMMATRIX4D *matrix;
             DWORD size;
 
             TRACE("Load Frame Transform Matrix data\n");
 
-            size = sizeof(matrix);
-            hr = IDirectXFileData_GetData(data_object, NULL, &size, (void**)matrix);
+            hr = IDirectXFileData_GetData(data_object, NULL, &size, (void**)&matrix);
             if ((hr != DXFILE_OK) || (size != sizeof(matrix)))
                 goto end;
 
-            hr = IDirect3DRMFrame3_AddTransform(parent_frame, D3DRMCOMBINE_REPLACE, matrix);
+            hr = IDirect3DRMFrame3_AddTransform(parent_frame, D3DRMCOMBINE_REPLACE, *matrix);
             if (FAILED(hr))
                 goto end;
         }
