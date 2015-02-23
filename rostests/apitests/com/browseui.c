@@ -256,6 +256,20 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x10,   &IID_IObjectWithSite },
         },
         L"Both"
+    },
+    {
+        ID_NAME(CLSID_SharedTaskScheduler),
+        {
+            {    0x0,   &IID_IShellTaskScheduler },
+            {    0x0,       &IID_IUnknown },
+        }
+    },
+    {
+        ID_NAME(CLSID_BackgroundTaskScheduler),
+        {
+            {    0x0,   &IID_IShellTaskScheduler },
+            {    0x0,       &IID_IUnknown },
+        }
     }
 };
 static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);

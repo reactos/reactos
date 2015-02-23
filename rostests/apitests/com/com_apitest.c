@@ -235,6 +235,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_FolderItems3)                      },
     { ID_NAME(IID_FolderItemVerb)                    },
     { ID_NAME(IID_FolderItemVerbs)                   },
+    { ID_NAME(IID_IShellTaskScheduler)               },
 
     { ID_NAME(CLSID_ShellDesktop),              TRUE }
 };
