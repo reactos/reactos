@@ -149,7 +149,7 @@ HRESULT EnumerateNtDirectory(HDPA hdpa, PCWSTR path, UINT * hdpaCount)
 
             if (otype < 0)
             {
-                entryBufferLength += sizeof(NtPidlTypeData) + sizeof(WCHAR);
+                entryBufferLength += FIELD_OFFSET(NtPidlTypeData,typeName) + sizeof(WCHAR);
 
                 if (info->TypeName.Buffer)
                 {
@@ -159,7 +159,7 @@ HRESULT EnumerateNtDirectory(HDPA hdpa, PCWSTR path, UINT * hdpaCount)
 
             if (otype == SYMBOLICLINK_OBJECT)
             {
-                entryBufferLength += sizeof(NtPidlSymlinkData) + sizeof(WCHAR);
+                entryBufferLength += FIELD_OFFSET(NtPidlSymlinkData,targetName) + sizeof(WCHAR);
             }
 
             DWORD access = STANDARD_RIGHTS_READ;

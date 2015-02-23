@@ -41,7 +41,7 @@ extern const LPCWSTR ObjectTypeNames[];
 
 #include <pshpack1.h>
 
-// NT OBJECT browsere
+// NT OBJECT browser
 struct NtPidlEntry
 {
     USHORT cb;
@@ -69,7 +69,7 @@ struct NtPidlSymlinkData
     WCHAR targetName[ANYSIZE_ARRAY];
 };
 
-// REGISTRY browsere
+// REGISTRY browser
 enum REG_ENTRY_TYPE
 {
     REG_ENTRY_KEY,
