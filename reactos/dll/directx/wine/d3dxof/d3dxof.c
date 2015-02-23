@@ -28,7 +28,6 @@ static const struct IDirectXFileBinaryVtbl IDirectXFileBinary_Vtbl;
 static const struct IDirectXFileDataVtbl IDirectXFileData_Vtbl;
 static const struct IDirectXFileDataReferenceVtbl IDirectXFileDataReference_Vtbl;
 static const struct IDirectXFileEnumObjectVtbl IDirectXFileEnumObject_Vtbl;
-static const struct IDirectXFileObjectVtbl IDirectXFileObject_Vtbl;
 static const struct IDirectXFileSaveObjectVtbl IDirectXFileSaveObject_Vtbl;
 
 static HRESULT IDirectXFileDataReferenceImpl_Create(IDirectXFileDataReferenceImpl** ppObj);
