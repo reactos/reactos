@@ -464,6 +464,7 @@ NET_API_STATUS WINAPI I_NetNameValidate(LPVOID p1, LPWSTR wkgrp, LPVOID p3,
     return ERROR_INVALID_PARAMETER;
 }
 
+#if 0
 NET_API_STATUS WINAPI NetWkstaGetInfo( LMSTR servername, DWORD level,
                                        LPBYTE* bufptr)
 {
@@ -566,4 +567,4 @@ NET_API_STATUS NET_API_FUNCTION NetGetJoinInformation(
 
     return NERR_Success;
 }
-
+#endif
