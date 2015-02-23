@@ -291,6 +291,8 @@ static const WCHAR prop_typeW[] =
     {'T','y','p','e',0};
 static const WCHAR prop_uniqueidW[] =
     {'U','n','i','q','u','e','I','d',0};
+static const WCHAR prop_usernameW[] =
+    {'U','s','e','r','N','a','m','e',0};
 static const WCHAR prop_uuidW[] =
     {'U','U','I','D',0};
 static const WCHAR prop_varianttypeW[] =
@@ -343,7 +345,8 @@ static const struct column col_compsys[] =
     { prop_nameW,                 CIM_STRING|COL_FLAG_DYNAMIC },
     { prop_numlogicalprocessorsW, CIM_UINT32, VT_I4 },
     { prop_numprocessorsW,        CIM_UINT32, VT_I4 },
-    { prop_totalphysicalmemoryW,  CIM_UINT64 }
+    { prop_totalphysicalmemoryW,  CIM_UINT64 },
+    { prop_usernameW,             CIM_STRING }
 };
 static const struct column col_compsysproduct[] =
 {
@@ -690,6 +693,7 @@ struct record_computersystem
     UINT32       num_logical_processors;
     UINT32       num_processors;
     UINT64       total_physical_memory;
+    const WCHAR *username;
 };
 struct record_computersystemproduct
 {
@@ -1106,10 +1110,28 @@ static UINT64 get_total_physical_memory(void)
 static WCHAR *get_computername(void)
 {
     WCHAR *ret;
-    DWORD size = MAX_COMPUTERNAME_LENGTH;
+    DWORD size = MAX_COMPUTERNAME_LENGTH + 1;
 
     if (!(ret = heap_alloc( size * sizeof(WCHAR) ))) return NULL;
     GetComputerNameW( ret, &size );
+    return ret;
+}
+
+static WCHAR *get_username(void)
+{
+    WCHAR *ret;
+    DWORD compsize, usersize;
+    DWORD size;
+
+    compsize = 0;
+    GetComputerNameW( NULL, &compsize );
+    usersize = 0;
+    GetUserNameW( NULL, &usersize );
+    size = compsize + usersize; /* two null terminators account for the \ */
+    if (!(ret = heap_alloc( size * sizeof(WCHAR) ))) return NULL;
+    GetComputerNameW( ret, &compsize );
+    ret[compsize] = '\\';
+    GetUserNameW( ret + compsize + 1, &usersize );
     return ret;
 }
 
@@ -1131,6 +1153,7 @@ static enum fill_status fill_compsys( struct table *table, const struct expr *co
     rec->num_logical_processors = get_logical_processor_count( NULL );
     rec->num_processors         = get_processor_count();
     rec->total_physical_memory  = get_total_physical_memory();
+    rec->username               = get_username();
     if (!match_row( table, row, cond, &status )) free_row_values( table, row );
     else row++;
 
