@@ -777,8 +777,8 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             TempRotBarSelection = RB_SQUARE_CELLS;
 
             /*
-             * Save the main image palette and replace it with black palette, so
-             * we can do fade in effect later.
+             * Save the main image palette and replace it with black palette,
+             * so that we can do fade in effect later.
              */
             BitmapInfoHeader = (PBITMAPINFOHEADER)Screen;
             Palette = (LPRGBQUAD)((PUCHAR)Screen + BitmapInfoHeader->biSize);
@@ -789,7 +789,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             InbvBitBlt(Screen, 0, 0);
 
             /* Set progress bar coordinates and display it */
-            InbvSetProgressBarCoordinates(257, 352);
+            InbvSetProgressBarCoordinates(259, 352);
 
             /* Display the boot logo and fade it in */
             BootImageFadeIn();
