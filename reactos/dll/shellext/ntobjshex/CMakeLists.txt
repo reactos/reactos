@@ -19,6 +19,7 @@ add_library(ntobjshex SHARED
     ntobjshex.cpp
     ntobjutil.cpp
     ntobjshex.rc
+    regfolder.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)
 
 list(APPEND atl_rc_deps

@@ -37,8 +37,11 @@ enum OBJECT_TYPE {
 extern const LPCWSTR ObjectTypeNames[];
 
 #define NT_OBJECT_PIDL_MAGIC (USHORT)0x9A03
+#define REGISTRY_PIDL_MAGIC (USHORT)0x5364
 
 #include <pshpack1.h>
+
+// NT OBJECT browsere
 struct NtPidlEntry
 {
     USHORT cb;
@@ -65,6 +68,37 @@ struct NtPidlSymlinkData
     USHORT targetNameLength;
     WCHAR targetName[ANYSIZE_ARRAY];
 };
+
+// REGISTRY browsere
+enum REG_ENTRY_TYPE
+{
+    REG_ENTRY_KEY,
+    REG_ENTRY_VALUE,
+    REG_ENTRY_VALUE_WITH_CONTENT
+    // any more?
+};
+extern const LPCWSTR RegistryTypeNames [];
+
+struct RegPidlEntry
+{
+    USHORT cb;
+    USHORT magic; // 0x5364 ~~~ "REGK"
+
+    REG_ENTRY_TYPE entryType;
+    
+    USHORT entryNameLength;
+
+    // For Value entries, this contains the value contents, if it's resonably small.
+    // For Key entries, this contains the custom class name
+    DWORD contentType;
+    USHORT contentsLength;
+
+    WCHAR entryName[0];
+
+};
+
+
 #include <poppack.h>
 
 HRESULT EnumerateNtDirectory(HDPA hdpa, PCWSTR path, UINT * hdpaCount);
+HRESULT EnumerateRegistryKey(HDPA hdpa, PCWSTR path, HKEY root, UINT * hdpaCount);
