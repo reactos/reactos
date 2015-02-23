@@ -153,23 +153,39 @@ typedef struct {
 	DWORD IP6Dword[4];
 } IP6_ADDRESS, *PIP6_ADDRESS, DNS_IP6_ADDRESS, *PDNS_IP6_ADDRESS;
 
+#pragma pack(push, 1)
+
 typedef struct _DNS_HEADER {
-    WORD Xid;
-    BYTE RecursionDesired:1;
-    BYTE Truncation:1;
-    BYTE Authoritative:1;
-    BYTE Opcode:4;
-    BYTE IsResponse:1;
-    BYTE ResponseCode:4;
-    BYTE CheckingDisabled:1;
-    BYTE AuthenticatedData:1;
-    BYTE Reserved:1;
-    BYTE RecursionAvailable:1;
-    WORD QuestionCount;
-    WORD AnswerCount;
-    WORD NameServerCount;
-    WORD AdditionalCount;
+  WORD Xid;
+  BYTE RecursionDesired:1;
+  BYTE Truncation:1;
+  BYTE Authoritative:1;
+  BYTE Opcode:4;
+  BYTE IsResponse:1;
+  BYTE ResponseCode:4;
+  BYTE CheckingDisabled:1;
+  BYTE AuthenticatedData:1;
+  BYTE Reserved:1;
+  BYTE RecursionAvailable:1;
+  WORD QuestionCount;
+  WORD AnswerCount;
+  WORD NameServerCount;
+  WORD AdditionalCount;
 } DNS_HEADER, *PDNS_HEADER;
+
+typedef struct _DNS_WIRE_QUESTION {
+  WORD QuestionType;
+  WORD QuestionClass;
+} DNS_WIRE_QUESTION, *PDNS_WIRE_QUESTION;
+
+typedef struct _DNS_WIRE_RECORD {
+  WORD RecordType;
+  WORD RecordClass;
+  DWORD TimeToLive;
+  WORD DataLength;
+} DNS_WIRE_RECORD, *PDNS_WIRE_RECORD;
+
+#pragma pack(pop)
 
 typedef struct _DNS_MESSAGE_BUFFER {
 	DNS_HEADER MessageHead;
@@ -389,16 +405,7 @@ typedef struct {
 	DWORD dwCacheTimeout;
 	LPWSTR pNameResultDomain;
 } DNS_WINSR_DATAW, *PDNS_WINSR_DATAW;
-typedef struct _DNS_WIRE_QUESTION {
-	WORD QuestionType;
-	WORD QuestionClass;
-} DNS_WIRE_QUESTION, *PDNS_WIRE_QUESTION;
-typedef struct _DNS_WIRE_RECORD {
-	WORD RecordType;
-	WORD RecordClass;
-	DWORD TimeToLive;
-	WORD DataLength;
-} DNS_WIRE_RECORD, *PDNS_WIRE_RECORD;
+
 typedef struct {
 	IP4_ADDRESS IpAddress;
 	UCHAR chProtocol;
