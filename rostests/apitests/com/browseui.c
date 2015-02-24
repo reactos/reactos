@@ -53,6 +53,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,           &IID_IShellFolder },
             {    0x0,               &IID_IUnknown },
             {    0x4,   &IID_IShellService },
+            {    0x8,   &IID_ITranslateShellChangeNotify },
         }
     },
     {
@@ -64,6 +65,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,               &IID_IUnknown },
             {    0x4,   &IID_IShellFolder2 },
             {    0x8,   &IID_IShellService },
+            {    0xc,   &IID_ITranslateShellChangeNotify },
             {   0x10,   &IID_IDropTarget },
         }
     },
@@ -76,6 +78,13 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x8,   &IID_IEnumString },
             {    0xc,   &IID_IAccessible },
             {    0xc,       &IID_IDispatch },
+        }
+    },
+    {
+        ID_NAME(CLSID_BackgroundTaskScheduler),
+        {
+            {    0x0,   &IID_IShellTaskScheduler },
+            {    0x0,       &IID_IUnknown },
         }
     },
     {
@@ -204,6 +213,16 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
+        ID_NAME(CLSID_ProgressDialog),
+        {
+            {    0x0,   &IID_IProgressDialog },
+            {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IOleWindow },
+            {   0x10,   &IID_IObjectWithSite },
+        },
+        L"Both"
+    },
+    {
         ID_NAME(CLSID_RebarBandSite),
         {
             {    0x0,   &IID_IUnknown },
@@ -240,24 +259,6 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
-        ID_NAME(CLSID_ShellSearchExt),
-        {
-            {    0x0,   &IID_IContextMenu },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_IObjectWithSite },
-        }
-    },
-    {
-        ID_NAME(CLSID_ProgressDialog),
-        {
-            {    0x0,   &IID_IProgressDialog },
-            {    0x0,       &IID_IUnknown },
-            {    0x4,   &IID_IOleWindow },
-            {   0x10,   &IID_IObjectWithSite },
-        },
-        L"Both"
-    },
-    {
         ID_NAME(CLSID_SharedTaskScheduler),
         {
             {    0x0,   &IID_IShellTaskScheduler },
@@ -265,12 +266,13 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
         }
     },
     {
-        ID_NAME(CLSID_BackgroundTaskScheduler),
+        ID_NAME(CLSID_ShellSearchExt),
         {
-            {    0x0,   &IID_IShellTaskScheduler },
+            {    0x0,   &IID_IContextMenu },
             {    0x0,       &IID_IUnknown },
+            {    0x4,   &IID_IObjectWithSite },
         }
-    }
+    },
 };
 static const INT ExpectedInterfaceCount = RTL_NUMBER_OF(ExpectedInterfaces);
 

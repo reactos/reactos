@@ -105,6 +105,8 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IExtractImage2)                    },
     { ID_NAME(IID_IFileDialog)                       },
     { ID_NAME(IID_IFileDialog2),                TRUE },
+    { ID_NAME(IID_IFileOpenDialog)                   },
+    { ID_NAME(IID_IFileSaveDialog)                   },
     { ID_NAME(IID_IFileSearchBand)                   },
     { ID_NAME(IID_IFolderBandPriv)                   },
     { ID_NAME(IID_IFolderFilter)                     },
@@ -199,6 +201,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_IShellMenuCallback),          TRUE },
     { ID_NAME(IID_IShellNameSpace)                   },
     { ID_NAME(IID_IShellService),               TRUE },
+    { ID_NAME(IID_IShellTaskScheduler),         TRUE },
     { ID_NAME(IID_IShellView)                        },
     { ID_NAME(IID_IShellView2)                       },
     { ID_NAME(IID_IShellView3)                       },
@@ -213,6 +216,7 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_ITaskbarList)                      },
     { ID_NAME(IID_ITaskbarList2)                     },
     { ID_NAME(IID_ITrackShellMenu),             TRUE },
+    { ID_NAME(IID_ITranslateShellChangeNotify), TRUE },
     { ID_NAME(IID_ITrayPriv),                   TRUE },
     { ID_NAME(IID_ITrayPriv2),                  TRUE },
     { ID_NAME(IID_IUnknown)                          },
@@ -235,7 +239,6 @@ static KNOWN_INTERFACE KnownInterfaces[] =
     { ID_NAME(IID_FolderItems3)                      },
     { ID_NAME(IID_FolderItemVerb)                    },
     { ID_NAME(IID_FolderItemVerbs)                   },
-    { ID_NAME(IID_IShellTaskScheduler)               },
 
     { ID_NAME(CLSID_ShellDesktop),              TRUE }
 };

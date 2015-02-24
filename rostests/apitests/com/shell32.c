@@ -19,8 +19,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x10,   &IID_IPersistFolder2 },
             {   0x10,       &IID_IPersistFolder },
             {   0x10,           &IID_IPersist },
-            {   0xbc,   &IID_IShellFolder2 },
-            {   0xbc,       &IID_IShellFolder },
+            { FARAWY,   &IID_IShellFolder2 },
+            { FARAWY,       &IID_IShellFolder },
         }
     },
     {
@@ -229,6 +229,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,           &IID_IShellFolder },
             {    0x0,               &IID_IUnknown },
             {    0x4,   &IID_IShellService },
+            {    0x8,   &IID_ITranslateShellChangeNotify },
             {    0xc,   &IID_IPersistFolder2 },
             {    0xc,       &IID_IPersistFolder },
             {    0xc,           &IID_IPersist },
@@ -254,8 +255,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x10,   &IID_IPersistFolder2 },
             {   0x10,       &IID_IPersistFolder },
             {   0x10,           &IID_IPersist },
-            {   0x64,   &IID_IShellFolder2 },
-            {   0x64,       &IID_IShellFolder },
+            { FARAWY,   &IID_IShellFolder2 },
+            { FARAWY,       &IID_IShellFolder },
         }
     },
     {
@@ -266,13 +267,12 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IShellFolder2 },
             {    0x0,       &IID_IShellFolder },
             {    0x0,           &IID_IUnknown },
-            {   0x70,   &IID_IShellIcon },
-            {   0x78,   &IID_IPersistFolder3 },
-            {   0x78,       &IID_IPersistFolder2 },
-            {   0x7c,   &IID_IStorage },
-            {   0x8c,   &IID_IContextMenuCB },
-            {   0x94,   &IID_IOleCommandTarget },
-            
+            { FARAWY,   &IID_IShellIcon },
+            { FARAWY,   &IID_IPersistFolder3 },
+            { FARAWY,       &IID_IPersistFolder2 },
+            { FARAWY,   &IID_IStorage },
+            { FARAWY,   &IID_IContextMenuCB },
+            { FARAWY,   &IID_IOleCommandTarget },
         }
     },
     {
@@ -283,8 +283,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {   0x10,       &IID_IPersistFolder2 },
             {   0x10,           &IID_IPersistFolder },
             {   0x10,               &IID_IPersist },
-            {   0xcc,   &IID_IShellFolder2 },
-            {   0xcc,       &IID_IShellFolder },
+            { FARAWY,   &IID_IShellFolder2 },
+            { FARAWY,       &IID_IShellFolder },
         }
     },
     {
@@ -410,6 +410,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x8,           &IID_IPersist },
             {    0xc,   &IID_IShellIcon },
             {   0x14,   &IID_IContextMenuCB },
+            {   0x18,   &IID_ITranslateShellChangeNotify },
             {   0x20,   &IID_IOleCommandTarget },
             { FARAWY,   &IID_IShellFolder2 },
             { FARAWY,       &IID_IShellFolder },
