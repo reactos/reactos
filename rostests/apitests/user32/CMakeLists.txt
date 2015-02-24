@@ -9,6 +9,7 @@ list(APPEND SOURCE
     DrawIconEx.c
     desktop.c
     EnumDisplaySettings.c
+    GetDCEx.c
     GetIconInfo.c
     GetKeyState.c
     GetPeekMessage.c
