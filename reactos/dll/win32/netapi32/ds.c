@@ -136,6 +136,40 @@ DWORD WINAPI DsRoleGetPrimaryDomainInformation(
             LsaFreeMemory(DomainInfo);
         }
         break;
+
+        case DsRoleUpgradeStatus:
+        {
+            PDSROLE_UPGRADE_STATUS_INFO buffer;
+
+            buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DSROLE_UPGRADE_STATUS_INFO));
+            if (buffer)
+            {
+                buffer->OperationState = 0;
+                buffer->PreviousServerState = 0;
+                ret = ERROR_SUCCESS;
+            }
+            else
+                ret = ERROR_OUTOFMEMORY;
+            *Buffer = (PBYTE)buffer;
+        }
+        break;
+
+        case DsRoleOperationState:
+        {
+            PDSROLE_OPERATION_STATE_INFO buffer;
+
+            buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DSROLE_OPERATION_STATE_INFO));
+            if (buffer)
+            {
+                buffer->OperationState = DsRoleOperationIdle;
+                ret = ERROR_SUCCESS;
+            }
+            else
+                ret = ERROR_OUTOFMEMORY;
+            *Buffer = (PBYTE)buffer;
+        }
+        break;
+
     default:
         ret = ERROR_CALL_NOT_IMPLEMENTED;
     }
