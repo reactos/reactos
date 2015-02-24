@@ -1880,7 +1880,9 @@ done:
 /************************************************************
  *                NetLocalGroupSetMember (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupSetMembers(
+NET_API_STATUS
+WINAPI
+NetLocalGroupSetMembers(
     LPCWSTR servername,
     LPCWSTR groupname,
     DWORD level,
