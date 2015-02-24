@@ -417,6 +417,7 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
 /************************************************************
  *                NetWkstaUserEnum  (NETAPI32.@)
  */
+#if 0
 NET_API_STATUS WINAPI
 NetWkstaUserEnum(LMSTR servername, DWORD level, LPBYTE* bufptr,
                  DWORD prefmaxlen, LPDWORD entriesread,
@@ -426,6 +427,7 @@ NetWkstaUserEnum(LMSTR servername, DWORD level, LPBYTE* bufptr,
           level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
     return ERROR_INVALID_PARAMETER;
 }
+#endif
 
 /************************************************************
  *                NetpGetComputerName  (NETAPI32.@)

@@ -171,7 +171,7 @@ NetGetJoinInformation(
 NET_API_STATUS
 WINAPI
 NetWkstaGetInfo(
-    LMSTR servername,
+    LPWSTR servername,
     DWORD level,
     LPBYTE *bufptr)
 {
@@ -184,6 +184,104 @@ NetWkstaGetInfo(
         status = NetrWkstaGetInfo(servername,
                                   level,
                                   (LPWKSTA_INFO)bufptr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetWkstaSetInfo(
+    LPWSTR servername,
+    DWORD level,
+    LPBYTE buffer,
+    LPDWORD parm_err)
+{
+    NET_API_STATUS status;
+
+    RpcTryExcept
+    {
+        status = NetrWkstaSetInfo(servername,
+                                  level,
+                                  (LPWKSTA_INFO)buffer,
+                                  parm_err);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetWkstaUserEnum(
+    LMSTR servername,
+    DWORD level,
+    LPBYTE *bufptr,
+    DWORD prefmaxlen,
+    LPDWORD entriesread,
+    LPDWORD totalentries,
+    LPDWORD resumehandle)
+{
+    WKSTA_USER_ENUM_STRUCT UserEnumInfo;
+    WKSTA_USER_INFO_0_CONTAINER Level0;
+    WKSTA_USER_INFO_1_CONTAINER Level1;
+    NET_API_STATUS status;
+
+    TRACE("(%s, %d, %p, %d, %p, %p, %p): stub!\n", debugstr_w(servername),
+          level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
+
+    UserEnumInfo.Level = level;
+    switch (level)
+    {
+        case 0:
+            UserEnumInfo.WkstaUserInfo.Level0 = &Level0;
+            UserEnumInfo.WkstaUserInfo.Level0->EntriesRead = 0;
+            UserEnumInfo.WkstaUserInfo.Level0->Buffer = NULL;
+            break;
+
+        case 1:
+            UserEnumInfo.WkstaUserInfo.Level1 = &Level1;
+            UserEnumInfo.WkstaUserInfo.Level1->EntriesRead = 0;
+            UserEnumInfo.WkstaUserInfo.Level1->Buffer = NULL;
+            break;
+
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrWkstaUserEnum(servername,
+                                   &UserEnumInfo,
+                                   prefmaxlen,
+                                   totalentries,
+                                   resumehandle);
+        if (status == NERR_Success || status == ERROR_MORE_DATA)
+        {
+            switch (level)
+            {
+                case 0:
+                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level0->Buffer;
+                    *entriesread = UserEnumInfo.WkstaUserInfo.Level0->EntriesRead;
+                    break;
+
+                case 1:
+                    *bufptr = (LPBYTE)UserEnumInfo.WkstaUserInfo.Level1->Buffer;
+                    *entriesread = UserEnumInfo.WkstaUserInfo.Level1->EntriesRead;
+                    break;
+            }
+        }
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
