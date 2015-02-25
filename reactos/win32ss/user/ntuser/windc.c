@@ -366,7 +366,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Flags |= DCX_CACHE;
    }
 
-   if (Flags & (DCX_WINDOW | DCX_PARENTCLIP)) Flags |= DCX_CACHE;
+   if (Flags & DCX_PARENTCLIP) Flags |= DCX_CACHE;
 
    // When GetDC is called with hWnd nz, DCX_CACHE & _WINDOW are clear w _USESTYLE set.
    if (Flags & DCX_USESTYLE)
@@ -488,6 +488,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
                break;
             }
          }
+         Dce = NULL; // Loop issue?
       }
       KeLeaveCriticalRegion();
 
@@ -497,7 +498,7 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       {
          Dce = DceAllocDCE(NULL, DCE_CACHE_DC);
       }
-      if (!Dce) return NULL;
+      if (Dce == NULL) return NULL;
 
       Dce->hwndCurrent = (Wnd ? Wnd->head.h : NULL);
       Dce->pwndOrg = Dce->pwndClip = Wnd;
@@ -510,20 +511,31 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       {
           Dce = CONTAINING_RECORD(ListEntry, DCE, List);
           ListEntry = ListEntry->Flink;
-          // Check for Window handle than HDC match for CLASS.
-          if (Dce->hwndCurrent == Wnd->head.h)
+
+          // Skip Cache DCE entries.
+          if (!(Dce->DCXFlags & DCX_CACHE))
           {
-             bUpdateVisRgn = FALSE;
-             break;
+             // Check for Window handle than HDC match for CLASS.
+             if (Dce->hwndCurrent == Wnd->head.h)
+             {
+                bUpdateVisRgn = FALSE;
+                break;
+             }
+             else if (Dce->hDC == hDC) break;
           }
-          if (Dce->hDC == hDC) break;
+          Dce = NULL; // Loop issue?
       }
       KeLeaveCriticalRegion();
+
+      if (Dce == NULL)
+      {
+         return(NULL);
+      }
 
       if ( (Flags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) &&
            (Dce->DCXFlags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) )
       {
-          DceDeleteClipRgn(Dce);
+         DceDeleteClipRgn(Dce);
       }
    }
 // First time use hax, need to use DceAllocDCE during window display init.
