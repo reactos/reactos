@@ -25,6 +25,7 @@ list(APPEND SOURCE
 
 add_library(desk SHARED
     ${SOURCE}
+    guid.c
     desk.rc
     ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
 

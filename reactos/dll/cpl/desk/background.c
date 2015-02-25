@@ -913,6 +913,7 @@ SetWallpaper(PDATA pData)
     TCHAR szWallpaper[MAX_PATH];
     GpImage *image;
     CLSID  encoderClsid;
+    GUID guidFormat;
     size_t length = 0;
     GpStatus status;
 
@@ -953,6 +954,15 @@ SetWallpaper(PDATA pData)
         if (!image)
         {
             RegCloseKey(regKey);
+            return;
+        }
+
+        GdipGetImageRawFormat(image, &guidFormat);
+        if (IsEqualGUID(&guidFormat, &ImageFormatBMP))
+        {
+            GdipDisposeImage(image);
+            RegCloseKey(regKey);
+            SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, pData->backgroundItems[pData->backgroundSelection].szFilename, SPIF_UPDATEINIFILE);
             return;
         }
 
