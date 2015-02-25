@@ -19,7 +19,7 @@ HKLM,"SOFTWARE\Classes\gopher\URL Protocol","",0x00000000,""
 HKLM,"SOFTWARE\Classes\gopher\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
 HKLM,"SOFTWARE\Classes\http","",0x00000000,"URL:HyperText Transfer Protocol"
-HKLM,"SOFTWARE\Classes\http\DefaultIcon","",0x00000000,"%systemroot%\system32\url.dll,0"
+HKLM,"SOFTWARE\Classes\http\DefaultIcon","",0x00000000,"%SystemRoot%\system32\url.dll,0"
 HKLM,"SOFTWARE\Classes\http\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\http\URL Protocol","",0x00000000,""
 HKLM,"SOFTWARE\Classes\http\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
@@ -30,7 +30,7 @@ HKLM,"SOFTWARE\Classes\http\shell\open\command","",0x00000000,"""%programfiles%\
 ;HKLM,"SOFTWARE\Classes\http\shell\open\ddeexec\Topic","",0x00000000,"WWW_OpenURL"
 
 HKLM,"SOFTWARE\Classes\https","",0x00000000,"URL:HyperText Transfer Protocol with Privacy"
-HKLM,"SOFTWARE\Classes\https\DefaultIcon","",0x00000000,"%systemroot%\system32\url.dll,0"
+HKLM,"SOFTWARE\Classes\https\DefaultIcon","",0x00000000,"%SystemRoot%\system32\url.dll,0"
 HKLM,"SOFTWARE\Classes\https\Source Filter","",0x00000000,"{E436EBB6-524F-11CE-9F53-0020AF0BA770}"
 HKLM,"SOFTWARE\Classes\https\URL Protocol","",0x00000000,""
 ;see http
@@ -86,7 +86,11 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","MediaPathUnexpanded",0x0002000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion","WallPaperDir",0x00020002,"%SystemRoot%\Web\Wallpaper"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Applets",,0x00000012
+
+; Extra Control Panel Applets
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls","Console",0x00020000,"%SystemRoot%\system32\console.dll"
+
 ; Cursors Schemes
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,""",,,,,,,,,,,,,"""
 
@@ -94,7 +98,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\DefragPath",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\DefragPath","",0x00020000,"%systemroot%\system32\dfrg.msc %c:"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\DefragPath","",0x00020000,"%SystemRoot%\system32\dfrg.msc %c:"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\BackupPath",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\BackupPath","",0x00020000,"%SystemRoot%\system32\ntbackup.exe"
 
