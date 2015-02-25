@@ -1918,8 +1918,6 @@ HKCU,"SOFTWARE\ReactOS\Debug","SpyInclude",0x00020000,"INCLUDEALL"
 HKCU,"SOFTWARE\Wine\MSHTML","GeckoUrl",,"http://source.winehq.org/winegecko.php"
 HKCU,"SOFTWARE\Wine\MSHTML","GeckoCabDir",0x00020000,"%SystemRoot%\"
 
-HKCU,"SOFTWARE\Microsoft\Internet Explorer\Main","Start Page",0x00000000,"http://www.reactos.org"
-
 ; Sound Schemes
 HKCU,"AppEvents",,0x00000012
 HKCU,"AppEvents\Schemes","",0x00000000,".Default"

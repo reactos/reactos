@@ -22,12 +22,13 @@ HKCR,"CLSID\%CLSID_Internet%\Shell\OpenHomePage",,,"Open &Home Page"
 HKCR,"CLSID\%CLSID_Internet%\Shell\OpenHomePage\Command",,,"""%16422%\Internet Explorer\iexplore.exe"""
 HKCR,"CLSID\%CLSID_Internet%\ShellFolder",,2,"0x24"
 
-
 [Settings.Reg]
-HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.winehq.org"
+#HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.winehq.org"
+HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.reactos.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"http://www.google.com"
 HKCU,"Software\Microsoft\Internet Explorer\Settings","Text Color",2,"0,0,0"
-HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"http://www.winehq.org"
+#HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"http://www.winehq.org"
+HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"http://www.reactos.org"
 HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe",,,"%16422%\Internet Explorer\iexplore.exe"
 HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe","Path",,"%16422%\Internet Explorer;"
 

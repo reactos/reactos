@@ -3,11 +3,6 @@ Signature="$ReactOS$"
 
 [AddReg]
 
-; Internet Explorer
-HKLM,"SOFTWARE\Microsoft\Internet Explorer","Build",,"62800"
-HKLM,"SOFTWARE\Microsoft\Internet Explorer","Version",,"6.0.2800.3959"
-HKLM,"SOFTWARE\Microsoft\Internet Explorer","W2kVersion",,"6.0.2800.3959"
-
 HKLM,"SOFTWARE\Classes\Applications\iexplore.exe","",0x00000000,""
 HKLM,"SOFTWARE\Classes\Applications\iexplore.exe\shell\open\command","",0x00000000,"""%programfiles%\Internet Explorer\iexplore.exe"" %1"
 
