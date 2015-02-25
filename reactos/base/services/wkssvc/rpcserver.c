@@ -121,22 +121,31 @@ NetrWkstaUserEnum(
 
 
 /* Function 3 */
-void
+unsigned long
 __stdcall
-Opnum3NotUsedOnWire(void)
+NetrWkstaUserGetInfo(
+    WKSSVC_IDENTIFY_HANDLE Unused,
+    unsigned long Level,
+    LPWKSTA_USER_INFO UserInfo)
 {
+    FIXME("(%s, %d, %p)\n", debugstr_w(Unused), Level, UserInfo);
+
     UNIMPLEMENTED;
-//    return 0;
+    return 0;
 }
 
 
 /* Function 4 */
-void
+unsigned long
 __stdcall
-Opnum4NotUsedOnWire(void)
+NetrWkstaUserSetInfo (
+    WKSSVC_IDENTIFY_HANDLE Unused,
+    unsigned long Level,
+    LPWKSTA_USER_INFO UserInfo,
+    unsigned long *ErrorParameter)
 {
     UNIMPLEMENTED;
-//    return 0;
+    return 0;
 }
 
 

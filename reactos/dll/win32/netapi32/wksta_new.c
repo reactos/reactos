@@ -147,7 +147,8 @@ NetGetJoinInformation(
 {
     NET_API_STATUS status;
 
-    FIXME("Stub %s %p %p\n", wine_dbgstr_w(Server), Name, type);
+    TRACE("NetGetJoinInformation(%s %p %p)\n", wine_dbgstr_w(Server),
+          Name, type);
 
     if (Name == NULL || type == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -177,6 +178,9 @@ NetWkstaGetInfo(
 {
     NET_API_STATUS status;
 
+    TRACE("NetWkstaGetInfo(%s, %d, %p)\n", debugstr_w(servername),
+          level, bufptr);
+
     *bufptr = NULL;
 
     RpcTryExcept
@@ -204,6 +208,9 @@ NetWkstaSetInfo(
     LPDWORD parm_err)
 {
     NET_API_STATUS status;
+
+    TRACE("NetWkstaSetInfo(%s, %d, %p, %p)\n", debugstr_w(servername),
+          level, buffer, parm_err);
 
     RpcTryExcept
     {
@@ -238,7 +245,7 @@ NetWkstaUserEnum(
     WKSTA_USER_INFO_1_CONTAINER Level1;
     NET_API_STATUS status;
 
-    TRACE("(%s, %d, %p, %d, %p, %p, %p): stub!\n", debugstr_w(servername),
+    TRACE("NetWkstaUserEnum(%s, %d, %p, %d, %p, %p, %p)\n", debugstr_w(servername),
           level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
 
     UserEnumInfo.Level = level;
@@ -282,6 +289,72 @@ NetWkstaUserEnum(
                     break;
             }
         }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetWkstaUserGetInfo(
+    LPWSTR reserved,
+    DWORD level,
+    PBYTE *bufptr)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetWkstaUserGetInfo(%s, %d, %p)\n", debugstr_w(reserved),
+          level, bufptr);
+
+    if (reserved != NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    *bufptr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrWkstaUserGetInfo(NULL,
+                                      level,
+                                      (LPWKSTA_USER_INFO)bufptr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetWkstaUserSetInfo(
+    LPWSTR reserved,
+    DWORD level,
+    LPBYTE buf,
+    LPDWORD parm_err)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetWkstaSetInfo(%s, %d, %p, %p)\n", debugstr_w(reserved),
+          level, buf, parm_err);
+
+    if (reserved != NULL)
+        return ERROR_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+       status = NetrWkstaUserSetInfo(NULL,
+                                     level,
+                                     (LPWKSTA_USER_INFO)&buf,
+                                     parm_err);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

@@ -276,6 +276,7 @@ NetWkstaTransportEnum(LMSTR ServerName, DWORD level, PBYTE* pbuf,
 /************************************************************
  *                NetWkstaUserGetInfo  (NETAPI32.@)
  */
+#if 0
 NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
                                           PBYTE* bufptr)
 {
@@ -413,6 +414,7 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
     }
     return NERR_Success;
 }
+#endif
 
 /************************************************************
  *                NetWkstaUserEnum  (NETAPI32.@)

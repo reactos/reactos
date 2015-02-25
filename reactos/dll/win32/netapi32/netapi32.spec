@@ -260,7 +260,7 @@
 @ stdcall NetWkstaTransportEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserGetInfo(wstr long ptr)
-@ stub NetWkstaUserSetInfo
+@ stdcall NetWkstaUserSetInfo(wstr long ptr ptr)
 @ stdcall NetapipBufferAllocate(long ptr) NetApiBufferAllocate
 @ stdcall Netbios(ptr)
 @ stub NetpAccessCheck
