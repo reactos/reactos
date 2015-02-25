@@ -578,12 +578,12 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
     case WM_NCCREATE:
     case WM_CREATE:
       {
-        MDICREATESTRUCTW mdi_cs;
         struct s
         {
-           CREATESTRUCTW cs;    /* new structure */
-           LPCWSTR lpszName;    /* allocated Name */
-           LPCWSTR lpszClass;   /* allocated Class */
+           CREATESTRUCTW cs;          /* new structure */
+           MDICREATESTRUCTW mdi_cs;   /* MDI info */
+           LPCWSTR lpszName;          /* allocated Name */
+           LPCWSTR lpszClass;         /* allocated Class */
         };
 
         struct s *xs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct s));
@@ -605,10 +605,10 @@ MsgiAnsiToUnicodeMessage(HWND hwnd, LPMSG UnicodeMsg, LPMSG AnsiMsg)
 
         if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
         {
-           mdi_cs = *(MDICREATESTRUCTW *)xs->cs.lpCreateParams;
-           mdi_cs.szTitle = xs->cs.lpszName;
-           mdi_cs.szClass = xs->cs.lpszClass;
-           xs->cs.lpCreateParams = &mdi_cs;
+           xs->mdi_cs = *(MDICREATESTRUCTW *)xs->cs.lpCreateParams;
+           xs->mdi_cs.szTitle = xs->cs.lpszName;
+           xs->mdi_cs.szClass = xs->cs.lpszClass;
+           xs->cs.lpCreateParams = &xs->mdi_cs;
         }
 
         UnicodeMsg->lParam = (LPARAM)xs;
@@ -737,9 +737,10 @@ MsgiAnsiToUnicodeCleanup(LPMSG UnicodeMsg, LPMSG AnsiMsg)
       {
         struct s
         {
-           CREATESTRUCTW cs;	/* new structure */
-           LPWSTR lpszName;	/* allocated Name */
-           LPWSTR lpszClass;	/* allocated Class */
+           CREATESTRUCTW cs;          /* new structure */
+           MDICREATESTRUCTW mdi_cs;   /* MDI info */
+           LPWSTR lpszName;           /* allocated Name */
+           LPWSTR lpszClass;          /* allocated Class */
         };
 
         struct s *xs = (struct s *)UnicodeMsg->lParam;
@@ -847,10 +848,28 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
           MDICREATESTRUCTA *pmdi_cs;
           CREATESTRUCTA* CsA;
           CREATESTRUCTW* CsW;
+          ULONG NameSize, ClassSize;
           NTSTATUS Status;
 
           CsW = (CREATESTRUCTW*)(UnicodeMsg->lParam);
-          CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA) + sizeof(MDICREATESTRUCTA));
+          RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
+          NameSize = RtlUnicodeStringToAnsiSize(&UnicodeString);
+          if (NameSize == 0)
+            {
+              return FALSE;
+            }
+          ClassSize = 0;
+          if (!IS_ATOM(CsW->lpszClass))
+            {
+              RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
+              ClassSize = RtlUnicodeStringToAnsiSize(&UnicodeString);
+              if (ClassSize == 0)
+                {
+                  return FALSE;
+                }
+            }
+
+          CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA) + sizeof(MDICREATESTRUCTA) + NameSize + ClassSize);
           if (NULL == CsA)
             {
               return FALSE;
@@ -861,21 +880,21 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
           pmdi_cs = (MDICREATESTRUCTA*)(CsA + 1);
 
           RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
-          Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
+          RtlInitEmptyAnsiString(&AnsiString, (PCHAR)(pmdi_cs + 1), NameSize);
+          Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
           if (! NT_SUCCESS(Status))
             {
               RtlFreeHeap(GetProcessHeap(), 0, CsA);
               return FALSE;
             }
           CsA->lpszName = AnsiString.Buffer;
-          if (HIWORD((ULONG_PTR)CsW->lpszClass) != 0)
+          if (!IS_ATOM(CsW->lpszClass))
             {
               RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
-              Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
+              RtlInitEmptyAnsiString(&AnsiString, (PCHAR)(pmdi_cs + 1) + NameSize, ClassSize);
+              Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
               if (! NT_SUCCESS(Status))
                 {
-                  RtlInitAnsiString(&AnsiString, CsA->lpszName);
-                  RtlFreeAnsiString(&AnsiString);
                   RtlFreeHeap(GetProcessHeap(), 0, CsA);
                   return FALSE;
                 }
@@ -1118,13 +1137,6 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           CREATESTRUCTA* Cs;
 
           Cs = (CREATESTRUCTA*) AnsiMsg->lParam;
-          RtlInitAnsiString(&AnsiString, Cs->lpszName);
-          RtlFreeAnsiString(&AnsiString);
-          if (HIWORD((ULONG_PTR)Cs->lpszClass) != 0)
-            {
-              RtlInitAnsiString(&AnsiString, Cs->lpszClass);
-              RtlFreeAnsiString(&AnsiString);
-            }
           RtlFreeHeap(GetProcessHeap(), 0, Cs);
           break;
         }
