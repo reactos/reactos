@@ -298,11 +298,10 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         /* XP turns a BS_USERBUTTON into BS_PUSHBUTTON */
         if (btn_type == BS_USERBUTTON )
         {
+            style = (style & ~BS_TYPEMASK) | BS_PUSHBUTTON;
 #ifdef __REACTOS__
-            style = (style & ~BS_TYPEMASK) | BS_PUSHBUTTON;
-            SetWindowLongPtrW( hWnd, GWL_STYLE, style );
+            NtUserAlterWindowStyle(hWnd, GWL_STYLE, style );
 #else
-            style = (style & ~BS_TYPEMASK) | BS_PUSHBUTTON;
             WIN_SetStyle( hWnd, style, BS_TYPEMASK & ~style );
 #endif
         }
@@ -508,8 +507,11 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if ((wParam & BS_TYPEMASK) >= MAX_BTN_TYPE) break;
         btn_type = wParam & BS_TYPEMASK;
         style = (style & ~BS_TYPEMASK) | btn_type;
-        SetWindowLongPtrW( hWnd, GWL_STYLE, style );
-        //WIN_SetStyle( hWnd, style, BS_TYPEMASK & ~style );
+#ifdef __REACTOS__
+            NtUserAlterWindowStyle(hWnd, GWL_STYLE, style );
+#else
+            WIN_SetStyle( hWnd, style, BS_TYPEMASK & ~style );
+#endif
 
         /* Only redraw if lParam flag is set.*/
         if (lParam)
@@ -565,7 +567,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 #ifdef __REACTOS__
             if (wParam) style |= WS_TABSTOP;
             else style &= ~WS_TABSTOP;
-            SetWindowLongPtrW( hWnd, GWL_STYLE, style );
+            NtUserAlterWindowStyle(hWnd, GWL_STYLE, style );
 #else
             if (wParam) WIN_SetStyle( hWnd, WS_TABSTOP, 0 );
             else WIN_SetStyle( hWnd, 0, WS_TABSTOP );

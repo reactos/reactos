@@ -1157,19 +1157,6 @@ NtUserQuerySendMessage(DWORD Unknown0)
     return 0;
 }
 
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserAlterWindowStyle(DWORD Unknown0,
-                       DWORD Unknown1,
-                       DWORD Unknown2)
-{
-   STUB
-
-   return(0);
-}
-
 BOOL APIENTRY NtUserAddClipboardFormatListener(
     HWND hwnd
 )

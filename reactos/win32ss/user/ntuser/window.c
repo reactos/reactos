@@ -3537,8 +3537,8 @@ IntCheckFrameEdge(ULONG Style, ULONG ExStyle)
       return FALSE;
 }
 
-LONG FASTCALL
-co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
+static LONG
+co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlter)
 {
    PWND Window, Parent;
    PWINSTATION_OBJECT WindowStation;
@@ -3597,6 +3597,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
                Style.styleNew &= ~WS_EX_WINDOWEDGE;
 
             Window->ExStyle = (DWORD)Style.styleNew;
+
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_EXSTYLE, (LPARAM) &Style);
             break;
 
@@ -3604,7 +3605,9 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             OldValue = (LONG) Window->style;
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
-            co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
+
+            if (!bAlter)
+                co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
 
            /* WS_CLIPSIBLINGS can't be reset on top-level windows */
             if (Window->spwndParent == UserGetDesktopWindow()) Style.styleNew |= WS_CLIPSIBLINGS;
@@ -3621,7 +3624,9 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
                DceResetActiveDCEs( Window );
             }
             Window->style = (DWORD)Style.styleNew;
-            co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
+
+            if (!bAlter)
+                co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
             break;
 
          case GWL_WNDPROC:
@@ -3672,6 +3677,13 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    return( OldValue);
 }
 
+
+LONG FASTCALL
+co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
+{
+    return co_IntSetWindowLong(hWnd, Index, NewValue, Ansi, FALSE);
+}
+
 /*
  * NtUserSetWindowLong
  *
@@ -3686,24 +3698,45 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 LONG APIENTRY
 NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
-   DECLARE_RETURN(LONG);
+   LONG ret;
 
-   TRACE("Enter NtUserSetWindowLong\n");
    UserEnterExclusive();
 
    if (hWnd == IntGetDesktopWindow())
    {
       EngSetLastError(STATUS_ACCESS_DENIED);
-      RETURN( 0);
+      UserLeave();
+      return 0;
    }
 
-   RETURN( co_UserSetWindowLong(hWnd, Index, NewValue, Ansi));
+   ret = co_IntSetWindowLong(hWnd, Index, NewValue, Ansi, FALSE);
 
-CLEANUP:
-   TRACE("Leave NtUserSetWindowLong, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;
+   
+   return ret;
 }
+
+DWORD APIENTRY
+NtUserAlterWindowStyle(HWND hWnd, DWORD Index, LONG NewValue)
+{
+   LONG ret;
+
+   UserEnterExclusive();
+
+   if (hWnd == IntGetDesktopWindow())
+   {
+      EngSetLastError(STATUS_ACCESS_DENIED);
+      UserLeave();
+      return 0;
+   }
+
+   ret = co_IntSetWindowLong(hWnd, Index, NewValue, FALSE, TRUE);
+
+   UserLeave();
+   
+   return ret;
+}
+
 
 /*
  * NtUserSetWindowWord
