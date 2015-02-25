@@ -44,6 +44,7 @@ FORCEINLINE BOOL IntPtInWindow(PWND pwnd, INT x, INT y)
                            y - pwnd->rcWindow.top);
 }
 
+BOOL FASTCALL ActivateOtherWindowMin(PWND);
 UINT FASTCALL co_WinPosArrangeIconicWindows(PWND parent);
 BOOL FASTCALL IntGetClientOrigin(PWND Window, LPPOINT Point);
 LRESULT FASTCALL co_WinPosGetNonClientSize(PWND Window, RECTL* WindowRect, RECTL* ClientRect);

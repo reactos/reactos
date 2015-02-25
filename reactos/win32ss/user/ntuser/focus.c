@@ -717,6 +717,8 @@ co_IntMouseActivateWindow(PWND Wnd)
 BOOL FASTCALL
 UserSetActiveWindow(PWND Wnd)
 {
+  PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
   if (Wnd) // Must have a window!
   {
      if ((Wnd->style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
@@ -734,7 +736,34 @@ UserSetActiveWindow(PWND Wnd)
      SetActiveWindow(0);
      check_wnd_state(0, 0, 0, 0); <-- This should pass if ShowWindow does it's job!!! As of 10/28/2012 it does!
 
+     Now Handle wines Msg.c test_SetActiveWindow( 0 )...
   */
+  TRACE("USAW: Previous active window\n");
+  if (  gpqForegroundPrev &&
+        gpqForegroundPrev->spwndActivePrev &&
+       (gpqForegroundPrev->spwndActivePrev->style & (WS_VISIBLE|WS_DISABLED)) == WS_VISIBLE  &&
+      !(gpqForegroundPrev->spwndActivePrev->state2 & WNDS2_BOTTOMMOST) &&
+       (Wnd = VerifyWnd(gpqForegroundPrev->spwndActivePrev)) != NULL )
+  {
+     TRACE("USAW:PAW hwnd %p\n",Wnd?Wnd->head.h:NULL);
+     return co_IntSetActiveWindow(Wnd, FALSE, TRUE, FALSE);
+  }
+
+  // Activate anyone but the active window.
+  if ( pti->MessageQueue->spwndActive &&
+      (Wnd = VerifyWnd(pti->MessageQueue->spwndActive)) != NULL )
+  {
+      ERR("USAW:AOWM hwnd %p\n",Wnd?Wnd->head.h:NULL);
+      if (!ActivateOtherWindowMin(Wnd))
+      {
+         // Okay, now go find someone else to play with!
+         ERR("USAW: Going to WPAOW\n");
+         co_WinPosActivateOtherWindow(Wnd);
+      }
+      return TRUE;
+  }
+
+  TRACE("USAW: Nothing\n");
   return FALSE;
 }
 
