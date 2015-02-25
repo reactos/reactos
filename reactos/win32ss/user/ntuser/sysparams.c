@@ -374,7 +374,7 @@ SpiStoreSz(PCWSTR pwszKey, PCWSTR pwszValue, PCWSTR pwsz)
                         pwszValue,
                         REG_SZ,
                         (PWSTR)pwsz,
-                        wcslen(pwsz) * sizeof(WCHAR));
+                        (wcslen(pwsz) + 1) * sizeof(WCHAR));
 }
 
 static
