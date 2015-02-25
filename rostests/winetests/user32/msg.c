@@ -14717,9 +14717,12 @@ START_TEST(msg_messages)
 START_TEST(msg_focus)
 {
     init_tests();
-    test_SetFocus();
     test_SetActiveWindow();
+    test_SetFocus();
 
+    /* HACK: For some reason test_SetForegroundWindow fails on Windows unless
+     * we do this */
+    keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
      */
