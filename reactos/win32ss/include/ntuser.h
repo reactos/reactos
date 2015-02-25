@@ -1366,9 +1366,9 @@ NtUserActivateKeyboardLayout(
 DWORD
 NTAPI
 NtUserAlterWindowStyle(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2);
+    HWND hWnd,
+    DWORD Index,
+    LONG NewValue);
 
 BOOL
 NTAPI
