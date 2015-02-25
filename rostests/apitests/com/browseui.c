@@ -75,6 +75,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IAutoComplete2 },
             {    0x0,       &IID_IAutoComplete },
             {    0x0,           &IID_IUnknown },
+            {    0x4,   &IID_IAutoCompleteDropDown },
             {    0x8,   &IID_IEnumString },
             {    0xc,   &IID_IAccessible },
             {    0xc,       &IID_IDispatch },
@@ -218,6 +219,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,   &IID_IProgressDialog },
             {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IOleWindow },
+            {    0x8,   &IID_IActionProgressDialog },
+            {    0xc,   &IID_IActionProgress },
             {   0x10,   &IID_IObjectWithSite },
         },
         L"Both"

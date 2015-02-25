@@ -13,6 +13,22 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_CDBurn),
+        {
+            {    0x0,   &IID_IObjectWithSite },
+            {    0x0,       &IID_IUnknown },
+            {    0x8,   &IID_IShellExtInit },
+            {    0xc,   &IID_IContextMenu },
+            {   0x10,   &IID_IShellPropSheetExt },
+            {   0x18,   &IID_IDropTarget },
+            {   0x1c,   &IID_IPersistFile },
+            {   0x20,   &IID_IOleCommandTarget },
+            {   0x24,   &IID_ICDBurn },
+            {   0x2c,   &IID_IPersistPropertyBag },
+            {   0x3c,   &IID_IServiceProvider },
+        }
+    },
+    {
         ID_NAME(CLSID_ControlPanel),
         {
             {    0x0,   &IID_IUnknown },
@@ -131,7 +147,8 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_FolderViewHost),
         {
-            {    0x0,   &IID_IUnknown },
+            {    0x0,   &IID_IFolderViewHost },
+            {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_IServiceProvider },
             {    0x8,   &IID_IOleWindow },
             {    0xc,   &IID_IFolderView },
