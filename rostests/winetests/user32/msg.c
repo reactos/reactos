@@ -13324,7 +13324,11 @@ static void test_WaitForInputIdle( char *argv0 )
     {
         ResetEvent( start_event );
         ResetEvent( end_event );
+#if 0
         sprintf( path, "%s msg %u", argv0, i );
+#else
+        sprintf( path, "%s msg_queue %u", argv0, i );
+#endif
         ret = CreateProcessA( NULL, path, NULL, NULL, TRUE, 0, NULL, NULL, &startup, &pi );
         ok( ret, "CreateProcess '%s' failed err %u.\n", path, GetLastError() );
         if (ret)
@@ -14483,6 +14487,7 @@ static void init_funcs(void)
 #undef X
 }
 
+#if 0
 START_TEST(msg)
 {
     char **test_argv;
@@ -14622,4 +14627,240 @@ START_TEST(msg)
            "unexpected error %d\n", GetLastError());
     }
     DeleteCriticalSection( &sequence_cs );
+}
+#endif
+
+static void init_tests()
+{
+    HMODULE hModuleImm32;
+    BOOL (WINAPI *pImmDisableIME)(DWORD);
+
+    init_funcs();
+
+    InitializeCriticalSection( &sequence_cs );
+    init_procs();
+
+    hModuleImm32 = LoadLibraryA("imm32.dll");
+    if (hModuleImm32) {
+        pImmDisableIME = (void *)GetProcAddress(hModuleImm32, "ImmDisableIME");
+        if (pImmDisableIME)
+            pImmDisableIME(0);
+    }
+    pImmDisableIME = NULL;
+    FreeLibrary(hModuleImm32);
+
+    if (!RegisterWindowClasses()) assert(0);
+
+    cbt_hook_thread_id = GetCurrentThreadId();
+    hCBT_hook = SetWindowsHookExA(WH_CBT, cbt_hook_proc, 0, GetCurrentThreadId());
+    if (!hCBT_hook) win_skip( "cannot set global hook, will skip hook tests\n" );
+}
+
+static void cleanup_tests()
+{
+    BOOL ret;
+    UnhookWindowsHookEx(hCBT_hook);
+    if (pUnhookWinEvent && hEvent_hook)
+    {
+	ret = pUnhookWinEvent(hEvent_hook);
+	ok( ret, "UnhookWinEvent error %d\n", GetLastError());
+	SetLastError(0xdeadbeef);
+	ok(!pUnhookWinEvent(hEvent_hook), "UnhookWinEvent succeeded\n");
+	ok(GetLastError() == ERROR_INVALID_HANDLE || /* Win2k */
+	   GetLastError() == 0xdeadbeef, /* Win9x */
+           "unexpected error %d\n", GetLastError());
+    }
+    DeleteCriticalSection( &sequence_cs );
+
+}
+
+START_TEST(msg_queue)
+{
+    int argc;
+    char **test_argv;
+    argc = winetest_get_mainargs( &test_argv );
+    if (argc >= 3)
+    {
+        unsigned int arg;
+        /* Child process. */
+        sscanf (test_argv[2], "%d", (unsigned int *) &arg);
+        do_wait_idle_child( arg );
+        return;
+    }
+
+    init_tests();
+    test_PostMessage();
+    test_PeekMessage();
+    test_PeekMessage2();
+    test_interthread_messages();
+    test_DispatchMessage();
+    test_SendMessageTimeout();
+    test_quit_message();
+    test_WaitForInputIdle( test_argv[0] );
+    test_DestroyWindow();
+    cleanup_tests();
+}
+
+START_TEST(msg_messages)
+{
+    init_tests();
+    test_message_conversion();
+    test_messages();
+    test_wmime_keydown_message();
+    test_nullCallback();
+    test_dbcs_wm_char();
+    test_unicode_wm_char();
+    test_defwinproc();
+    cleanup_tests();
+}
+
+START_TEST(msg_focus)
+{
+    init_tests();
+    test_SetFocus();
+    test_SetActiveWindow();
+
+    /* keep it the last test, under Windows it tends to break the tests
+     * which rely on active/foreground windows being correct.
+     */
+    test_SetForegroundWindow();
+    cleanup_tests();
+}
+
+START_TEST(msg_winpos)
+{
+    init_tests();
+    test_SetParent();
+    test_ShowWindow();
+    test_setwindowpos();
+    test_showwindow();
+    test_SetWindowRgn();
+    invisible_parent_tests();
+    cleanup_tests();
+}
+
+START_TEST(msg_paint)
+{
+    init_tests();
+    test_scrollwindowex();
+    test_paint_messages();
+    test_paintingloop();
+    cleanup_tests();
+}
+
+START_TEST(msg_input)
+{
+    init_tests();
+    test_accelerators();
+    if (!pTrackMouseEvent)
+        win_skip("TrackMouseEvent is not available\n");
+    else
+        test_TrackMouseEvent();
+
+    test_keyflags();
+    test_hotkey();
+    cleanup_tests();
+}
+
+START_TEST(msg_timer)
+{
+    init_tests();
+    test_timers();
+    test_timers_no_wnd();
+    cleanup_tests();
+}
+
+typedef BOOL (WINAPI *IS_WINEVENT_HOOK_INSTALLED)(DWORD);
+
+START_TEST(msg_hook)
+{
+//    HMODULE user32 = GetModuleHandleA("user32.dll");
+//    IS_WINEVENT_HOOK_INSTALLED pIsWinEventHookInstalled = (IS_WINEVENT_HOOK_INSTALLED)GetProcAddress(user32, "IsWinEventHookInstalled");
+    BOOL (WINAPI *pIsWinEventHookInstalled)(DWORD)= 0;/*GetProcAddress(user32, "IsWinEventHookInstalled");*/
+
+    init_tests();
+
+    if (pSetWinEventHook)
+    {
+        hEvent_hook = pSetWinEventHook(EVENT_MIN, EVENT_MAX,
+                                       GetModuleHandleA(0), win_event_proc,
+                                       0, GetCurrentThreadId(),
+                                       WINEVENT_INCONTEXT);
+        if (pIsWinEventHookInstalled && hEvent_hook)
+	{
+	    UINT event;
+	    for (event = EVENT_MIN; event <= EVENT_MAX; event++)
+		ok(pIsWinEventHookInstalled(event), "IsWinEventHookInstalled(%u) failed\n", event);
+	}
+    }
+    if (!hEvent_hook) win_skip( "no win event hook support\n" );
+
+    test_winevents();
+
+    /* Fix message sequences before removing 4 lines below */
+    if (pUnhookWinEvent && hEvent_hook)
+    {
+        BOOL ret;
+        ret = pUnhookWinEvent(hEvent_hook);
+        ok( ret, "UnhookWinEvent error %d\n", GetLastError());
+        pUnhookWinEvent = 0;
+    }
+    hEvent_hook = 0;
+    if (hCBT_hook) test_set_hook();
+    cleanup_tests();
+}
+
+START_TEST(msg_menu)
+{
+    init_tests();
+    test_sys_menu();
+    test_menu_messages();
+    if(!winetest_interactive)
+       skip("CORE-8299 : Skip Tracking popup menu tests.\n");
+    else
+    {
+    test_TrackPopupMenu();
+    test_TrackPopupMenuEmpty();
+    }
+    cleanup_tests();
+}
+
+START_TEST(msg_mdi)
+{
+    init_tests();
+    test_mdi_messages();
+    cleanup_tests();
+}
+
+START_TEST(msg_controls)
+{
+    init_tests();
+    test_button_messages();
+    test_static_messages();
+    test_listbox_messages();
+    test_combobox_messages();
+    test_edit_messages();
+    cleanup_tests();
+}
+
+START_TEST(msg_layered_window)
+{
+    init_tests();
+    test_layered_window();
+    cleanup_tests();
+}
+
+START_TEST(msg_dialog)
+{
+    init_tests();
+    test_dialog_messages();
+    test_EndDialog();
+    cleanup_tests();
+}
+
+START_TEST(msg_clipboard)
+{
+    init_tests();
+    test_clipboard_viewers();
+    cleanup_tests();
 }
