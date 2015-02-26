@@ -47,6 +47,7 @@ int  nOldWidth;                  /* Holds the previous client area width */
 int  nOldHeight;                 /* Holds the previous client area height */
 
 BOOL bInMenuLoop = FALSE;        /* Tells us if we are in the menu loop */
+BOOL bWasKeyboardInput = FALSE;  /* TabChange by Keyboard or Mouse ? */
 
 TASKMANAGER_SETTINGS TaskManagerSettings;
 
@@ -411,12 +412,21 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         pnmh = (LPNMHDR)lParam;
         if ((pnmh->hwndFrom == hTabWnd) &&
-            (pnmh->idFrom == IDC_TAB) &&
-            (pnmh->code == TCN_SELCHANGE))
+            (pnmh->idFrom == IDC_TAB))
         {
-            TaskManager_OnTabWndSelChange();
+            switch (pnmh->code)
+            {
+                case TCN_SELCHANGE:
+                    TaskManager_OnTabWndSelChange();
+                    break;
+                case TCN_KEYDOWN:
+                    bWasKeyboardInput = TRUE;
+                    break;
+                case NM_CLICK:
+                    bWasKeyboardInput = FALSE;
+                break;
+            }
         }
-        break;
 #if 0
     case WM_NCPAINT:
         hdc = GetDC(hDlg);
@@ -1045,7 +1055,8 @@ void TaskManager_OnTabWndSelChange(void)
         /*
          * Give the application list control focus
          */
-        SetFocus(hApplicationPageListCtrl);
+        if (!bWasKeyboardInput)
+            SetFocus(hApplicationPageListCtrl);
         break;
 
     case 1:
@@ -1070,7 +1081,8 @@ void TaskManager_OnTabWndSelChange(void)
         /*
          * Give the process list control focus
          */
-        SetFocus(hProcessPageListCtrl);
+        if (!bWasKeyboardInput)
+            SetFocus(hProcessPageListCtrl);
         break;
 
     case 2:
@@ -1116,7 +1128,8 @@ void TaskManager_OnTabWndSelChange(void)
         /*
          * Give the tab control focus
          */
-        SetFocus(hTabWnd);
+        if (!bWasKeyboardInput)
+            SetFocus(hTabWnd);
         break;
     }
 }
