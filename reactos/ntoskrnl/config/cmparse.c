@@ -24,6 +24,8 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 {
     BOOLEAN NameValid = TRUE;
 
+    NT_ASSERT(RemainingName->Length % sizeof(WCHAR) == 0);
+
     /* Check if there's nothing left in the name */
     if (!(RemainingName->Buffer) ||
         (!RemainingName->Length) ||
@@ -37,7 +39,8 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
     }
 
     /* Check if we have a path separator */
-    while (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR)
+    while ((RemainingName->Length) &&
+           (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
         /* Skip it */
         RemainingName->Buffer++;
@@ -47,15 +50,9 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
 
     /* Start loop at where the current buffer is */
     NextName->Buffer = RemainingName->Buffer;
-    while (TRUE)
+    while ((RemainingName->Length) &&
+           (*RemainingName->Buffer != OBJ_NAME_PATH_SEPARATOR))
     {
-        /* Break out if we ran out or hit a path separator */
-        if (!(RemainingName->Length) ||
-            (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR))
-        {
-            break;
-        }
-
         /* Move to the next character */
         RemainingName->Buffer++;
         RemainingName->Length -= sizeof(WCHAR);
