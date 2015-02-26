@@ -37,7 +37,7 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
     }
 
     /* Check if we have a path separator */
-    if (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR)
+    while (*RemainingName->Buffer == OBJ_NAME_PATH_SEPARATOR)
     {
         /* Skip it */
         RemainingName->Buffer++;
