@@ -20,6 +20,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <undocuser.h>
 #include <perhist.h>
 #include <exdispid.h>
 #include <strsafe.h>
@@ -35,6 +36,7 @@
 #include "aclmulti.h"
 #include "addressband.h"
 #include "addresseditbox.h"
+#include "CAutoComplete.h"
 #include "bandproxy.h"
 #include "bandsite.h"
 #include "bandsitemenu.h"

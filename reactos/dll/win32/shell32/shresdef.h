@@ -540,7 +540,6 @@
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
-#define IDR_AUTOCOMPLETE        129
 #define IDR_CONTROLPANEL        130
 #define IDR_DRAGDROPHELPER      131
 #define IDR_FOLDEROPTIONS       132

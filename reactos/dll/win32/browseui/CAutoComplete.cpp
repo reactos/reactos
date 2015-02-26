@@ -37,8 +37,6 @@
 
 #include "precomp.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
 static const WCHAR autocomplete_propertyW[] = {'W','i','n','e',' ','A','u','t','o',
                                                'c','o','m','p','l','e','t','e',' ',
                                                'c','o','n','t','r','o','l',0};
@@ -169,7 +167,7 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
         if (key)
         {
             wcscpy(key, pwzsRegKeyPath);
-            value = const_cast<WCHAR *>(strrchrW(key, '\\'));
+            value = const_cast<WCHAR *>(wcsrchr(key, '\\'));
 
             if (value)
             {
@@ -435,7 +433,7 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                 if (hr != S_OK)
                     break;
 
-                if ((LPWSTR)strstrW(strs, hwndText) == strs)
+                if ((LPWSTR)wcsstr(strs, hwndText) == strs)
                 {
 
                     if (pThis->options & ACO_AUTOAPPEND)

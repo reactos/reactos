@@ -1,7 +1,6 @@
 /* REGISTRY */
 
 IDR_ADMINFOLDERSHORTCUT REGISTRY "res/rgs/adminfoldershortcut.rgs"
-IDR_AUTOCOMPLETE REGISTRY "res/rgs/autocomplete.rgs"
 IDR_CONTROLPANEL REGISTRY "res/rgs/controlpanel.rgs"
 IDR_DRAGDROPHELPER REGISTRY "res/rgs/dragdrophelper.rgs"
 IDR_FOLDEROPTIONS REGISTRY "res/rgs/folderoptions.rgs"

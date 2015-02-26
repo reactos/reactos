@@ -17,6 +17,7 @@ list(APPEND SOURCE
     brandband.cpp
     browseui.cpp
     browseuiord.cpp
+    CAutoComplete.cpp
     commonbrowser.cpp
     desktopipc.cpp
     explorerband.cpp
