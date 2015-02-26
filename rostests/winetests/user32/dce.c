@@ -33,7 +33,7 @@
 #define DCX_USESTYLE         0x00010000
 #endif
 
-static HWND hwnd_cache, hwnd_owndc, hwnd_classdc, hwnd_classdc2;
+static HWND hwnd_cache, hwnd_owndc, hwnd_classdc, hwnd_classdc2, hwnd_parent, hwnd_parentdc;
 
 /* test behavior of DC attributes with various GetDC/ReleaseDC combinations */
 static void test_dc_attributes(void)
@@ -190,7 +190,7 @@ static void test_dc_visrgn(void)
 {
     HDC old_hdc, hdc;
     HRGN hrgn, hrgn2;
-    RECT rect;
+    RECT rect, parent_rect;
 
     /* cache DC */
 
@@ -325,6 +325,20 @@ static void test_dc_visrgn(void)
     ok( !(rect.left >= 20 && rect.top >= 20 && rect.right <= 30 && rect.bottom <= 30),
         "clip box must have been reset %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
     ReleaseDC( hwnd_classdc2, hdc );
+
+    /* parent DC */
+    hdc = GetDC( hwnd_parentdc );
+    GetClipBox( hdc, &rect );
+    ReleaseDC( hwnd_parentdc, hdc );
+
+    hdc = GetDC( hwnd_parent );
+    GetClipBox( hdc, &parent_rect );
+    ReleaseDC( hwnd_parent, hdc );
+
+    ok( rect.left == parent_rect.left, "rect.left = %d, expected %d\n", rect.left, parent_rect.left );
+    ok( rect.top == parent_rect.top, "rect.top = %d, expected %d\n", rect.top, parent_rect.top );
+    ok( rect.right == parent_rect.right, "rect.right = %d, expected %d\n", rect.right, parent_rect.right );
+    ok( rect.bottom == parent_rect.bottom, "rect.bottom = %d, expected %d\n", rect.bottom, parent_rect.bottom );
 }
 
 
@@ -332,8 +346,9 @@ static void test_dc_visrgn(void)
 static void test_begin_paint(void)
 {
     HDC old_hdc, hdc;
-    RECT rect;
+    RECT rect, parent_rect;
     PAINTSTRUCT ps;
+    COLORREF cr;
 
     /* cache DC */
 
@@ -405,6 +420,27 @@ static void test_begin_paint(void)
     GetClipBox( hdc, &rect );
     ok( !(rect.left >= 10 && rect.top >= 10 && rect.right <= 20 && rect.bottom <= 20),
         "clip box should have been reset %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ReleaseDC( hwnd_classdc2, hdc );
+    EndPaint( hwnd_classdc, &ps );
+
+    /* parent DC */
+    RedrawWindow( hwnd_parent, NULL, 0, RDW_VALIDATE|RDW_NOFRAME|RDW_NOERASE );
+    RedrawWindow( hwnd_parentdc, NULL, 0, RDW_INVALIDATE );
+    hdc = BeginPaint( hwnd_parentdc, &ps );
+    GetClipBox( hdc, &rect );
+    cr = SetPixel( hdc, 10, 10, RGB(255, 0, 0) );
+    ok( cr != -1, "error drawing outside of window client area\n" );
+    EndPaint( hwnd_parentdc, &ps );
+    GetClientRect( hwnd_parent, &parent_rect );
+
+    ok( rect.left == parent_rect.left, "rect.left = %d, expected %d\n", rect.left, parent_rect.left );
+    ok( rect.top == parent_rect.top, "rect.top = %d, expected %d\n", rect.top, parent_rect.top );
+    todo_wine ok( rect.right == parent_rect.right, "rect.right = %d, expected %d\n", rect.right, parent_rect.right );
+    todo_wine ok( rect.bottom == parent_rect.bottom, "rect.bottom = %d, expected %d\n", rect.bottom, parent_rect.bottom );
+
+    hdc = GetDC( hwnd_parent );
+    todo_wine ok( GetPixel( hdc, 10, 10 ) == cr, "error drawing outside of window client area\n" );
+    ReleaseDC( hwnd_parent, hdc );
 }
 
 /* test ScrollWindow with window DCs */
@@ -593,6 +629,9 @@ START_TEST(dce)
     cls.style = CS_DBLCLKS | CS_CLASSDC;
     cls.lpszClassName = "classdc_class";
     RegisterClassA(&cls);
+    cls.style = CS_PARENTDC;
+    cls.lpszClassName = "parentdc_class";
+    RegisterClassA(&cls);
 
     hwnd_cache = CreateWindowA("cache_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                0, 0, 100, 100,
@@ -606,6 +645,11 @@ START_TEST(dce)
     hwnd_classdc2 = CreateWindowA("classdc_class", NULL, WS_OVERLAPPED | WS_VISIBLE,
                                   200, 200, 100, 100,
                                   0, 0, GetModuleHandleA(0), NULL );
+    hwnd_parent = CreateWindowA("static", NULL, WS_OVERLAPPED | WS_VISIBLE,
+                                400, 0, 100, 100, 0, 0, 0, NULL );
+    hwnd_parentdc = CreateWindowA("parentdc_class", NULL, WS_CHILD | WS_VISIBLE,
+                                  0, 0, 1, 1, hwnd_parent, 0, 0, NULL );
+
     test_dc_attributes();
     test_parameters();
     test_dc_visrgn();
@@ -614,6 +658,7 @@ START_TEST(dce)
     test_invisible_create();
     test_dc_layout();
 
+    DestroyWindow(hwnd_parent);
     DestroyWindow(hwnd_classdc2);
     DestroyWindow(hwnd_classdc);
     DestroyWindow(hwnd_owndc);

@@ -2976,6 +2976,7 @@ static void test_menu_setmenuinfo(void)
     MENUITEMINFOA mii = { sizeof(MENUITEMINFOA) };
     BOOL ret;
     DWORD gle;
+    HBRUSH brush;
 
     if (!pGetMenuInfo || !pSetMenuInfo)
     {
@@ -3091,6 +3092,31 @@ static void test_menu_setmenuinfo(void)
     ok( ret, "GetMenuInfo() should have succeeded\n");
     ok( gle == 0xdeadbeef, "GetMenuInfo() error got %u\n", gle);
     ok( !(mi.dwStyle & MNS_NOCHECK), "menustyle was not expected to have the MNS_NOCHECK flag\n");
+
+    /* test background brush */
+    mi.cbSize = sizeof(mi);
+    mi.fMask = MIM_BACKGROUND;
+    ret = pGetMenuInfo( hmenu, &mi );
+    ok( ret, "GetMenuInfo() should have succeeded\n" );
+    ok( mi.hbrBack == NULL, "got %p\n", mi.hbrBack );
+
+    brush = CreateSolidBrush( RGB(0xff, 0, 0) );
+    mi.hbrBack = brush;
+    ret = pSetMenuInfo( hmenu, &mi );
+    ok( ret, "SetMenuInfo() should have succeeded\n" );
+    mi.hbrBack = NULL;
+    ret = pGetMenuInfo( hmenu, &mi );
+    ok( ret, "GetMenuInfo() should have succeeded\n" );
+    ok( mi.hbrBack == brush, "got %p original %p\n", mi.hbrBack, brush );
+
+    mi.hbrBack = NULL;
+    ret = pSetMenuInfo( hmenu, &mi );
+    ok( ret, "SetMenuInfo() should have succeeded\n" );
+    ret = pGetMenuInfo( hmenu, &mi );
+    ok( ret, "GetMenuInfo() should have succeeded\n" );
+    ok( mi.hbrBack == NULL, "got %p\n", mi.hbrBack );
+    DeleteObject( brush );
+
     /* clean up */
     DestroyMenu( hsubmenu);
     DestroyMenu( hmenu);

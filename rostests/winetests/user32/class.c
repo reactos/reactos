@@ -1101,6 +1101,52 @@ static void test_comctl32_classes(void)
     }
 }
 
+static void test_IME(void)
+{
+    static const WCHAR ime_classW[] = {'I','M','E',0};
+
+    char module_name[MAX_PATH], *ptr;
+    MEMORY_BASIC_INFORMATION mbi;
+    WNDCLASSW wnd_classw;
+    WNDCLASSA wnd_class;
+    SIZE_T size;
+    BOOL ret;
+
+    if (!GetProcAddress(GetModuleHandleA("user32.dll"), "BroadcastSystemMessageExA"))
+    {
+        win_skip("BroadcastSystemMessageExA not available, skipping IME class test\n");
+        return;
+    }
+
+    ok(GetModuleHandleA("imm32") != 0, "imm32.dll is not loaded\n");
+
+    ret = GetClassInfoA(NULL, "IME", &wnd_class);
+    ok(ret, "GetClassInfo failed: %d\n", GetLastError());
+
+    size = VirtualQuery(wnd_class.lpfnWndProc, &mbi, sizeof(mbi));
+    ok(size == sizeof(mbi), "VirtualQuery returned %ld\n", size);
+    if (size == sizeof(mbi)) {
+        size = GetModuleFileNameA(mbi.AllocationBase, module_name, sizeof(module_name));
+        ok(size, "GetModuleFileName failed\n");
+        for (ptr = module_name+size-1; ptr > module_name; ptr--)
+            if (*ptr == '\\' || *ptr == '/') break;
+        if (*ptr == '\\' || *ptr=='/') ptr++;
+        ok(!lstrcmpiA(ptr, "user32.dll") || !lstrcmpiA(ptr, "ntdll.dll"), "IME window proc implemented in %s\n", ptr);
+    }
+
+    ret = GetClassInfoW(NULL, ime_classW, &wnd_classw);
+    ok(ret, "GetClassInfo failed: %d\n", GetLastError());
+
+    size = VirtualQuery(wnd_classw.lpfnWndProc, &mbi, sizeof(mbi));
+    ok(size == sizeof(mbi), "VirtualQuery returned %ld\n", size);
+    size = GetModuleFileNameA(mbi.AllocationBase, module_name, sizeof(module_name));
+    ok(size, "GetModuleFileName failed\n");
+    for (ptr = module_name+size-1; ptr > module_name; ptr--)
+        if (*ptr == '\\' || *ptr == '/') break;
+    if (*ptr == '\\' || *ptr=='/') ptr++;
+    ok(!lstrcmpiA(ptr, "user32.dll") || !lstrcmpiA(ptr, "ntdll.dll"), "IME window proc implemented in %s\n", ptr);
+}
+
 START_TEST(class)
 {
     char **argv;
@@ -1113,6 +1159,7 @@ START_TEST(class)
         return;
     }
 
+    test_IME();
     test_GetClassInfo();
     test_extra_values();
 

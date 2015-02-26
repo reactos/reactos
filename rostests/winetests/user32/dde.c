@@ -776,7 +776,6 @@ static HDDEDATA CALLBACK server_ddeml_callback(UINT uType, UINT uFmt, HCONV hcon
         else if (msg_index == 10)
         {
             DWORD rsize = 0;
-            size = 0;
 
             size = DdeGetData(hdata, NULL, 0, 0);
             ok(size == 17, "DdeGetData should have returned 17 not %d\n", size);
@@ -1591,7 +1590,7 @@ static void test_dde_aw_transaction( BOOL client_unicode, BOOL server_unicode )
     info.cb = sizeof(info);
     ret = DdeQueryConvInfo(hconv, QID_SYNC, &info);
     ok(ret, "wrong info size %d, DdeQueryConvInfo error %x\n", ret, DdeGetLastError(dde_inst));
-    ok(info.ConvCtxt.iCodePage == client_unicode ? CP_WINUNICODE : CP_WINANSI,
+    ok(info.ConvCtxt.iCodePage == (client_unicode ? CP_WINUNICODE : CP_WINANSI),
        "wrong iCodePage %d\n", info.ConvCtxt.iCodePage);
     ok(!info.hConvPartner, "unexpected info.hConvPartner: %p\n", info.hConvPartner);
 todo_wine {
