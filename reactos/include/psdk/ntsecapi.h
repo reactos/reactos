@@ -290,6 +290,13 @@ typedef enum _SECURITY_LOGON_TYPE {
   Proxy,
   Unlock
 } SECURITY_LOGON_TYPE, *PSECURITY_LOGON_TYPE;
+#if (_WIN32_WINNT >= 0x0600)
+typedef struct _LSA_LAST_INTER_LOGON_INFO {
+  LARGE_INTEGER LastSuccessfulLogon;
+  LARGE_INTEGER LastFailedLogon;
+  ULONG FailedAttemptCountSinceLastSuccessfulLogon;
+} LSA_LAST_INTER_LOGON_INFO, *PLSA_LAST_INTER_LOGON_INFO;
+#endif
 typedef struct _SECURITY_LOGON_SESSION_DATA {
   ULONG Size;
   LUID LogonId;
@@ -303,6 +310,19 @@ typedef struct _SECURITY_LOGON_SESSION_DATA {
   LSA_UNICODE_STRING LogonServer;
   LSA_UNICODE_STRING DnsDomainName;
   LSA_UNICODE_STRING Upn;
+#if (_WIN32_WINNT >= 0x0600)
+  ULONG UserFlags;
+  LSA_LAST_INTER_LOGON_INFO LastLogonInfo;
+  LSA_UNICODE_STRING LogonScript;
+  LSA_UNICODE_STRING ProfilePath;
+  LSA_UNICODE_STRING HomeDirectory;
+  LSA_UNICODE_STRING HomeDirectoryDrive;
+  LARGE_INTEGER LogoffTime;
+  LARGE_INTEGER KickOffTime;
+  LARGE_INTEGER PasswordLastSet;
+  LARGE_INTEGER PasswordCanChange;
+  LARGE_INTEGER PasswordMustChange;
+#endif
 } SECURITY_LOGON_SESSION_DATA, *PSECURITY_LOGON_SESSION_DATA;
 typedef enum _TRUSTED_INFORMATION_CLASS {
   TrustedDomainNameInformation = 1,
