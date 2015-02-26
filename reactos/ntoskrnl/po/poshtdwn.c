@@ -164,8 +164,8 @@ PopShutdownHandler(VOID)
         InbvSetScrollRegion(0, 0, 639, 479);
 
         /* Display shutdown logo and message */
-        Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_LOGO);
-        Logo2 = InbvGetResourceAddress(IDB_LOGO);
+        Logo1 = InbvGetResourceAddress(IDB_SHUTDOWN_MSG);
+        Logo2 = InbvGetResourceAddress(IDB_DEFAULT_LOGO);
         if ((Logo1) && (Logo2))
         {
             InbvBitBlt(Logo1, 220, 352);
