@@ -2,8 +2,11 @@
 #define _SETUPAPI_H_
 
 #include <commctrl.h>
+#if defined(_WIN64)
+#include <pshpack8.h>
+#else
 #include <pshpack1.h>
-
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
