@@ -153,16 +153,11 @@ HdlspEnableTerminal(IN BOOLEAN Enable)
         !((HeadlessGlobals->IsMMIODevice) && (HeadlessGlobals->InBugCheck)))
     {
         /* Initialize the COM port with cportlib */
-        HeadlessGlobals->TerminalEnabled = InbvPortInitialize(HeadlessGlobals->
-                                                              TerminalBaudRate,
-                                                              HeadlessGlobals->
-                                                              TerminalPortNumber,
-                                                              HeadlessGlobals->
-                                                              TerminalPortAddress,
-                                                              &HeadlessGlobals->
-                                                              TerminalPort,
-                                                              HeadlessGlobals->
-                                                              IsMMIODevice);
+        HeadlessGlobals->TerminalEnabled = InbvPortInitialize(HeadlessGlobals->TerminalBaudRate,
+                                                              HeadlessGlobals->TerminalPortNumber,
+                                                              HeadlessGlobals->TerminalPortAddress,
+                                                              &HeadlessGlobals->TerminalPort,
+                                                              HeadlessGlobals->IsMMIODevice);
         if (!HeadlessGlobals->TerminalEnabled)
         {
             DPRINT1("Failed to initialize port through cportlib\n");
@@ -259,11 +254,15 @@ HdlspDispatch(IN HEADLESS_CMD Command,
               OUT PSIZE_T OutputBufferSize)
 {
     KIRQL OldIrql;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     PHEADLESS_RSP_QUERY_INFO HeadlessInfo;
     PHEADLESS_CMD_PUT_STRING PutString;
     PHEADLESS_CMD_ENABLE_TERMINAL EnableTerminal;
+    PHEADLESS_CMD_SET_COLOR SetColor;
+    PHEADLESS_CMD_CURSOR_POS CursorPos;
     PHEADLESS_RSP_GET_BYTE GetByte;
-    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+    UCHAR DataBuffer[80];
+
     ASSERT(HeadlessGlobals != NULL);
     // ASSERT(HeadlessGlobals->PageLockHandle != NULL);
 
@@ -332,30 +331,80 @@ HdlspDispatch(IN HEADLESS_CMD Command,
         }
 
         case HeadlessCmdClearDisplay:
+        case HeadlessCmdClearToEndOfDisplay:
+        case HeadlessCmdClearToEndOfLine:
+        case HeadlessCmdDisplayAttributesOff:
+        case HeadlessCmdDisplayInverseVideo:
+        case HeadlessCmdSetColor:
+        case HeadlessCmdPositionCursor:
         {
-            /* Send the VT100 clear screen command if the terminal is enabled */
+            /* By default return success */
+            Status = STATUS_SUCCESS;
+
+            /* Send the VT100 commands only if the terminal is enabled */
             if (HeadlessGlobals->TerminalEnabled)
             {
-                HdlspSendStringAtBaud((PUCHAR)"\033[2J");
+                PUCHAR CommandStr = NULL;
+
+                if (Command == HeadlessCmdClearDisplay)
+                    CommandStr = (PUCHAR)"\x1B[2J";
+                else if (Command == HeadlessCmdClearToEndOfDisplay)
+                    CommandStr = (PUCHAR)"\x1B[0J";
+                else if (Command == HeadlessCmdClearToEndOfLine)
+                    CommandStr = (PUCHAR)"\x1B[0K";
+                else if (Command == HeadlessCmdDisplayAttributesOff)
+                    CommandStr = (PUCHAR)"\x1B[0m";
+                else if (Command == HeadlessCmdDisplayInverseVideo)
+                    CommandStr = (PUCHAR)"\x1B[7m";
+                else if (Command == HeadlessCmdSetColor)
+                {
+                    /* Make sure the caller passed valid data */
+                    if (!InputBuffer ||
+                        (InputBufferSize != sizeof(*SetColor)))
+                    {
+                        DPRINT1("Invalid buffer\n");
+                        Status = STATUS_INVALID_PARAMETER;
+                        break;
+                    }
+
+                    SetColor = InputBuffer;
+                    Status = RtlStringCbPrintfA((PCHAR)DataBuffer, sizeof(DataBuffer),
+                                                "\x1B[%d;%dm",
+                                                SetColor->BkgdColor,
+                                                SetColor->TextColor);
+                    if (!NT_SUCCESS(Status)) break;
+
+                    CommandStr = DataBuffer;
+                }
+                else // if (Command == HeadlessCmdPositionCursor)
+                {
+                    /* Make sure the caller passed valid data */
+                    if (!InputBuffer ||
+                        (InputBufferSize != sizeof(*CursorPos)))
+                    {
+                        DPRINT1("Invalid buffer\n");
+                        Status = STATUS_INVALID_PARAMETER;
+                        break;
+                    }
+
+                    CursorPos = InputBuffer;
+                    /* Cursor position is 1-based */
+                    Status = RtlStringCbPrintfA((PCHAR)DataBuffer, sizeof(DataBuffer),
+                                                "\x1B[%d;%dH",
+                                                CursorPos->CursorRow + 1,
+                                                CursorPos->CursorCol + 1);
+                    if (!NT_SUCCESS(Status)) break;
+
+                    CommandStr = DataBuffer;
+                }
+
+                /* Send the command */
+                HdlspSendStringAtBaud(CommandStr);
             }
 
-            /* Return success either way */
-            Status = STATUS_SUCCESS;
             break;
         }
 
-        case HeadlessCmdClearToEndOfDisplay:
-            break;
-        case HeadlessCmdClearToEndOfLine:
-            break;
-        case HeadlessCmdDisplayAttributesOff:
-            break;
-        case HeadlessCmdDisplayInverseVideo:
-            break;
-        case HeadlessCmdSetColor:
-            break;
-        case HeadlessCmdPositionCursor:
-            break;
         case HeadlessCmdTerminalPoll:
             break;
 
