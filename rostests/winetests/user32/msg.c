@@ -14728,12 +14728,21 @@ START_TEST(msg_messages)
 START_TEST(msg_focus)
 {
     init_tests();
+
     test_SetFocus();
+
+    /* HACK: For some reason the tests fail on Windows if run consecutively.
+     * Putting these in between helps, and is essentially what happens in the
+     * "normal" msg test. */
+    keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+    flush_events();
+
     test_SetActiveWindow();
 
-    /* HACK: For some reason test_SetForegroundWindow fails on Windows unless
-     * we do this */
+    /* HACK */
     keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+    flush_events();
+
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
      */
