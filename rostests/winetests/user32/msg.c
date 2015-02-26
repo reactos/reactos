@@ -14717,8 +14717,8 @@ START_TEST(msg_messages)
 START_TEST(msg_focus)
 {
     init_tests();
-    test_SetActiveWindow();
     test_SetFocus();
+    test_SetActiveWindow();
 
     /* HACK: For some reason test_SetForegroundWindow fails on Windows unless
      * we do this */
