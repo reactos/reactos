@@ -91,20 +91,37 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
                 Fcb->RFCB.ValidDataLength.HighPart,
                 Fcb->RFCB.ValidDataLength.LowPart);
 
-            CcInitializeCacheMap(FileObject,
-                &FileSizes,
-                FALSE,
-                &(CdfsGlobalData->CacheMgrCallbacks),
-                Fcb);
+            _SEH2_TRY
+            {
+                CcInitializeCacheMap(FileObject,
+                    &FileSizes,
+                    FALSE,
+                    &(CdfsGlobalData->CacheMgrCallbacks),
+                    Fcb);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                return _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
         }
 
         FileOffset.QuadPart = (LONGLONG)ReadOffset;
-        CcCopyRead(FileObject,
-            &FileOffset,
-            ToRead,
-            TRUE,
-            Buffer,
-            &IoStatus);
+        _SEH2_TRY
+        {
+            CcCopyRead(FileObject,
+                &FileOffset,
+                ToRead,
+                TRUE,
+                Buffer,
+                &IoStatus);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            IoStatus.Information = 0;
+            IoStatus.Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
         *LengthRead = IoStatus.Information;
 
         Status = IoStatus.Status;

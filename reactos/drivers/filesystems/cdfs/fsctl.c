@@ -414,11 +414,20 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
     Fcb->Entry.ExtentLocationL = 0;
     Fcb->Entry.DataLengthL = (DeviceExt->CdInfo.VolumeSpaceSize + DeviceExt->CdInfo.VolumeOffset) * BLOCKSIZE;
 
-    CcInitializeCacheMap(DeviceExt->StreamFileObject,
-        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-        TRUE,
-        &(CdfsGlobalData->CacheMgrCallbacks),
-        Fcb);
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(DeviceExt->StreamFileObject,
+            (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+            TRUE,
+            &(CdfsGlobalData->CacheMgrCallbacks),
+            Fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        goto ByeBye;
+    }
+    _SEH2_END;
 
     ExInitializeResourceLite(&DeviceExt->VcbResource);
 

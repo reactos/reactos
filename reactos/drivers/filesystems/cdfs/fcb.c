@@ -255,11 +255,23 @@ CdfsFCBInitializeCache(PVCB Vcb,
     Fcb->FileObject = FileObject;
     Fcb->DevExt = Vcb;
 
-    CcInitializeCacheMap(FileObject,
-        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-        FALSE,
-        &(CdfsGlobalData->CacheMgrCallbacks),
-        Fcb);
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(FileObject,
+            (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+            FALSE,
+            &(CdfsGlobalData->CacheMgrCallbacks),
+            Fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        FileObject->FsContext2 = NULL;
+        ExFreePoolWithTag(newCCB, TAG_CCB);
+        ObDereferenceObject(FileObject);
+        Fcb->FileObject = NULL;
+        return _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     ObDereferenceObject(FileObject);
     Fcb->Flags |= FCB_CACHE_INITIALIZED;
@@ -444,11 +456,21 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 
     if (CdfsFCBIsDirectory(Fcb))
     {
-        CcInitializeCacheMap(FileObject,
-            (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
-            FALSE,
-            &(CdfsGlobalData->CacheMgrCallbacks),
-            Fcb);
+        _SEH2_TRY
+        {
+            CcInitializeCacheMap(FileObject,
+                (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
+                FALSE,
+                &(CdfsGlobalData->CacheMgrCallbacks),
+                Fcb);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            FileObject->FsContext2 = NULL;
+            ExFreePoolWithTag(newCCB, TAG_CCB);
+            return _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
         Fcb->Flags |= FCB_CACHE_INITIALIZED;
     }
 
