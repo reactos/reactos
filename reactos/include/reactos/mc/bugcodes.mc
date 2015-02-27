@@ -1578,6 +1578,15 @@ Language=English
 The PCI driver has detected an error in a PCI device or BIOS being verified.
 .
 
+MessageId=0xF7
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_OVERRAN_STACK_BUFFER
+Language=English
+A driver has overrun a stack-based buffer.  This overrun could potentially
+allow a malicious user to gain control of this machine.
+.
+
 MessageId=0xF8
 Severity=Success
 Facility=System
