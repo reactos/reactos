@@ -427,6 +427,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             }
         }
+        break;
 #if 0
     case WM_NCPAINT:
         hdc = GetDC(hDlg);
