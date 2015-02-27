@@ -1377,13 +1377,13 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
 
     /* Get the command line and upcase it */
-    CommandLine = _strupr(LoaderBlock->LoadOptions);
+    CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);
 
     /* Check if GUI Boot is enabled */
-    NoGuiBoot = (strstr(CommandLine, "NOGUIBOOT")) ? TRUE: FALSE;
+    NoGuiBoot = (CommandLine && strstr(CommandLine, "NOGUIBOOT") != NULL);
 
     /* Get the SOS setting */
-    SosEnabled = strstr(CommandLine, "SOS") ? TRUE: FALSE;
+    SosEnabled = (CommandLine && strstr(CommandLine, "SOS") != NULL);
 
     /* Setup the boot driver */
     InbvEnableBootDriver(!NoGuiBoot);
@@ -1406,11 +1406,11 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Check if this is LiveCD (WinPE) mode */
-    if (strstr(CommandLine, "MININT"))
+    if (CommandLine && strstr(CommandLine, "MININT") != NULL)
     {
         /* Setup WinPE Settings */
         InitIsWinPEMode = TRUE;
-        InitWinPEModeType |= (strstr(CommandLine, "INRAM")) ? 0x80000000 : 1;
+        InitWinPEModeType |= (strstr(CommandLine, "INRAM") != NULL) ? 0x80000000 : 0x00000001;
     }
 
     /* Get the kernel's load entry */

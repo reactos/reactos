@@ -40,8 +40,8 @@ static BOOLEAN ShowProgressBar = FALSE;
 static INBV_PROGRESS_STATE InbvProgressState;
 static BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 static INBV_RESET_DISPLAY_PARAMETERS InbvResetDisplayParameters;
-static ULONG ResourceCount;
-static PUCHAR ResourceList[IDB_CLUSTER_SERVER + 1]; // The first entry in the table is the NULL pointer
+static ULONG ResourceCount = 0;
+static PUCHAR ResourceList[1 + IDB_CLUSTER_SERVER]; // First entry == NULL, followed by 'ResourceCount' entries.
 
 #ifdef INBV_ROTBAR_IMPLEMENTED
 static BOOLEAN RotBarThreadActive = FALSE;
@@ -174,14 +174,14 @@ BootLogoFadeIn(VOID)
 
             VidBitBlt(PaletteBitmapBuffer, 0, 0);
 
-            /* Wait for a bit. */
+            /* Wait for a bit */
             KeStallExecutionProcessor(PALETTE_FADE_TIME);
         }
 
         /* Release the lock */
         InbvReleaseLock();
 
-        /* Wait for a bit. */
+        /* Wait for a bit */
         KeStallExecutionProcessor(PALETTE_FADE_TIME);
     }
 }
@@ -271,8 +271,8 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (InbvDisplayState == INBV_DISPLAY_STATE_OWNED)
     {
         /* Check if we have a custom boot logo */
-        CommandLine = _strupr(LoaderBlock->LoadOptions);
-        CustomLogo = strstr(CommandLine, "BOOTLOGO") ? TRUE: FALSE;
+        CommandLine = (LoaderBlock->LoadOptions ? _strupr(LoaderBlock->LoadOptions) : NULL);
+        CustomLogo  = (CommandLine && strstr(CommandLine, "BOOTLOGO") != NULL);
     }
 
     /* Initialize the video */
@@ -283,7 +283,7 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         VidResetDisplay(CustomLogo);
 
         /* Find bitmap resources in the kernel */
-        ResourceCount = min(Count, RTL_NUMBER_OF(ResourceList));
+        ResourceCount = min(Count, RTL_NUMBER_OF(ResourceList) - 1);
         for (i = 1; i <= ResourceCount; i++)
         {
             /* Do the lookup */
