@@ -56,6 +56,7 @@ typedef ULONG LOGICAL, *PLOGICAL;
 #define RtlCopyMemoryNonTemporal                RtlCopyMemory
 #define RtlPrefetchMemoryNonTemporal(s, l)
 #define ExRaiseStatus                           RtlRaiseStatus
+#define KmtIsCheckedBuild                       FALSE
 #endif /* defined KMT_EMULATE_KERNEL */
 
 #endif /* defined KMT_USER_MODE */

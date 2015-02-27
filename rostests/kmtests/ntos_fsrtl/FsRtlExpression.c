@@ -184,10 +184,6 @@ static VOID FsRtlIsNameInExpressionTest()
         UNICODE_STRING Expression;
         UNICODE_STRING Name;
 
-        /* Don't run Tests which are known to assert in checked builds */
-        if (KmtIsCheckedBuild && Tests[i].AssertsInChecked)
-            continue;
-
         RtlInitUnicodeString(&Expression, Tests[i].Expression);
         RtlInitUnicodeString(&Name, Tests[i].Name);
 

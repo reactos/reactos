@@ -87,7 +87,7 @@ TestFindCharInUnicodeString(VOID)
     Status = RtlFindCharInUnicodeString(7, &String, &Chars4, &Position);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_uint(Position, 22);
-    
+
     /* Show that Position is USHORT */
     LongPosition = 0x55555555;
     Status = RtlFindCharInUnicodeString(8, &String, &String, (PUSHORT)&LongPosition);
@@ -116,7 +116,7 @@ TestFindCharInUnicodeString(VOID)
         Status = RtlFindCharInUnicodeString(0, NULL, &String, &Position);
     KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_uint(Position, 0);
-    
+
     /* NULL for SearchString and invalid flags */
     Position = 123;
     KmtStartSeh()
@@ -150,7 +150,7 @@ TestFindCharInUnicodeString(VOID)
     KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_uint(Position, 0);
 #endif
-    
+
     /* NULL for MatchString and invalid flags */
     Position = 123;
     KmtStartSeh()
@@ -173,7 +173,87 @@ TestFindCharInUnicodeString(VOID)
 #endif
 }
 
+static
+VOID
+TestUpcaseUnicodeString(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Lower;
+    UNICODE_STRING Upper;
+    PWCHAR Buffer;
+
+    Buffer = KmtAllocateGuarded(sizeof(WCHAR));
+
+    if (!KmtIsCheckedBuild)
+    {
+    RtlInitEmptyUnicodeString(&Lower, NULL, 0);
+    RtlFillMemory(&Upper, sizeof(Upper), 0x55);
+    Status = RtlUpcaseUnicodeString(&Upper, &Lower, TRUE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_uint(Upper.Length, 0);
+    ok_eq_uint(Upper.MaximumLength, 0);
+    ok(Upper.Buffer != NULL, "Buffer = %p\n", Upper.Buffer);
+    RtlFreeUnicodeString(&Upper);
+
+    RtlInitEmptyUnicodeString(&Lower, Buffer, 0);
+    RtlFillMemory(&Upper, sizeof(Upper), 0x55);
+    Status = RtlUpcaseUnicodeString(&Upper, &Lower, TRUE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_uint(Upper.Length, 0);
+    ok_eq_uint(Upper.MaximumLength, 0);
+    ok(Upper.Buffer != NULL, "Buffer = %p\n", Upper.Buffer);
+    RtlFreeUnicodeString(&Upper);
+
+    RtlInitEmptyUnicodeString(&Lower, Buffer, sizeof(WCHAR));
+    Buffer[0] = UNICODE_NULL;
+    RtlFillMemory(&Upper, sizeof(Upper), 0x55);
+    Status = RtlUpcaseUnicodeString(&Upper, &Lower, TRUE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_uint(Upper.Length, 0);
+    ok_eq_uint(Upper.MaximumLength, 0);
+    ok(Upper.Buffer != NULL, "Buffer = %p\n", Upper.Buffer);
+    RtlFreeUnicodeString(&Upper);
+    }
+
+    RtlInitEmptyUnicodeString(&Lower, Buffer, sizeof(WCHAR));
+    Lower.Length = sizeof(WCHAR);
+    Buffer[0] = UNICODE_NULL;
+    RtlFillMemory(&Upper, sizeof(Upper), 0x55);
+    Status = RtlUpcaseUnicodeString(&Upper, &Lower, TRUE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_uint(Upper.Length, sizeof(WCHAR));
+    ok_eq_uint(Upper.MaximumLength, sizeof(WCHAR));
+    ok(Upper.Buffer != NULL, "Buffer = %p\n", Upper.Buffer);
+    ok_eq_hex(Upper.Buffer[0], UNICODE_NULL);
+    RtlFreeUnicodeString(&Upper);
+
+    RtlInitEmptyUnicodeString(&Lower, Buffer, sizeof(WCHAR));
+    Lower.Length = sizeof(WCHAR);
+    Buffer[0] = 'a';
+    RtlFillMemory(&Upper, sizeof(Upper), 0x55);
+    Status = RtlUpcaseUnicodeString(&Upper, &Lower, TRUE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_uint(Upper.Length, sizeof(WCHAR));
+    ok_eq_uint(Upper.MaximumLength, sizeof(WCHAR));
+    ok(Upper.Buffer != NULL, "Buffer = %p\n", Upper.Buffer);
+    ok_eq_hex(Upper.Buffer[0], 'A');
+    RtlFreeUnicodeString(&Upper);
+
+    RtlInitUnicodeString(&Lower, L"a");
+    RtlFillMemory(&Upper, sizeof(Upper), 0x55);
+    Status = RtlUpcaseUnicodeString(&Upper, &Lower, TRUE);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_uint(Upper.Length, sizeof(WCHAR));
+    ok_eq_uint(Upper.MaximumLength, sizeof(WCHAR));
+    ok(Upper.Buffer != NULL, "Buffer = %p\n", Upper.Buffer);
+    ok_eq_hex(Upper.Buffer[0], 'A');
+    RtlFreeUnicodeString(&Upper);
+
+    KmtFreeGuarded(Buffer);
+}
+
 START_TEST(RtlUnicodeString)
 {
     TestFindCharInUnicodeString();
+    TestUpcaseUnicodeString();
 }
