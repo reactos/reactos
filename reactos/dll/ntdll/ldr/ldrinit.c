@@ -1846,24 +1846,24 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     PebLdr.Initialized = TRUE;
 
     /* Allocate a data entry for the Image */
-    LdrpImageEntry = NtLdrEntry = LdrpAllocateDataTableEntry(Peb->ImageBaseAddress);
+    LdrpImageEntry = LdrpAllocateDataTableEntry(Peb->ImageBaseAddress);
 
     /* Set it up */
-    NtLdrEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(NtLdrEntry->DllBase);
-    NtLdrEntry->LoadCount = -1;
-    NtLdrEntry->EntryPointActivationContext = 0;
-    NtLdrEntry->FullDllName = ImageFileName;
+    LdrpImageEntry->EntryPoint = LdrpFetchAddressOfEntryPoint(LdrpImageEntry->DllBase);
+    LdrpImageEntry->LoadCount = -1;
+    LdrpImageEntry->EntryPointActivationContext = 0;
+    LdrpImageEntry->FullDllName = ImageFileName;
 
     if (IsDotNetImage)
-        NtLdrEntry->Flags = LDRP_COR_IMAGE;
+        LdrpImageEntry->Flags = LDRP_COR_IMAGE;
     else
-        NtLdrEntry->Flags = 0;
+        LdrpImageEntry->Flags = 0;
 
     /* Check if the name is empty */
     if (!ImageFileName.Buffer[0])
     {
         /* Use the same Base name */
-        NtLdrEntry->BaseDllName = NtLdrEntry->FullDllName;
+        LdrpImageEntry->BaseDllName = LdrpImageEntry->FullDllName;
     }
     else
     {
@@ -1882,21 +1882,21 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         if (!NtDllName)
         {
             /* Use the same Base name */
-            NtLdrEntry->BaseDllName = NtLdrEntry->FullDllName;
+            LdrpImageEntry->BaseDllName = LdrpImageEntry->FullDllName;
         }
         else
         {
             /* Setup the name */
-            NtLdrEntry->BaseDllName.Length = (USHORT)((ULONG_PTR)ImageFileName.Buffer + ImageFileName.Length - (ULONG_PTR)NtDllName);
-            NtLdrEntry->BaseDllName.MaximumLength = NtLdrEntry->BaseDllName.Length + sizeof(WCHAR);
-            NtLdrEntry->BaseDllName.Buffer = (PWSTR)((ULONG_PTR)ImageFileName.Buffer +
-                                                     (ImageFileName.Length - NtLdrEntry->BaseDllName.Length));
+            LdrpImageEntry->BaseDllName.Length = (USHORT)((ULONG_PTR)ImageFileName.Buffer + ImageFileName.Length - (ULONG_PTR)NtDllName);
+            LdrpImageEntry->BaseDllName.MaximumLength = LdrpImageEntry->BaseDllName.Length + sizeof(WCHAR);
+            LdrpImageEntry->BaseDllName.Buffer = (PWSTR)((ULONG_PTR)ImageFileName.Buffer +
+                                                     (ImageFileName.Length - LdrpImageEntry->BaseDllName.Length));
         }
     }
 
     /* Processing done, insert it */
-    LdrpInsertMemoryTableEntry(NtLdrEntry);
-    NtLdrEntry->Flags |= LDRP_ENTRY_PROCESSED;
+    LdrpInsertMemoryTableEntry(LdrpImageEntry);
+    LdrpImageEntry->Flags |= LDRP_ENTRY_PROCESSED;
 
     /* Now add an entry for NTDLL */
     NtLdrEntry = LdrpAllocateDataTableEntry(SystemArgument1);
