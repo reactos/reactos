@@ -46,6 +46,31 @@ HKLM,"SOFTWARE\Clients\StartMenuInternet\IEXPLORE.EXE\shell\open\command","",0x0
 ; DirectX
 HKLM,"SOFTWARE\Microsoft\DirectX","InstalledVersion",0x00000001, 0x00,0x00,0x00,0x09,0x00,0x00,0x00,0x00
 HKLM,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","DescriptionA",,"Internet TCP/IP Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","DescriptionW",,"Internet TCP/IP Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","dwReserved1",0x10001,0x000001f4
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","dwReserved2",0x10001,0x00000000
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","Guid",,"{36E95EE0-8577-11cf-960C-0080C7534E82}"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","NATHelp",,"dpnhupnp.dll"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Internet TCP/IP Connection For DirectPlay","Path",,"dpwsockx.dll"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\IPX Connection For DirectPlay","DescriptionA",,"IPX Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\IPX Connection For DirectPlay","DescriptionW",,"IPX Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\IPX Connection For DirectPlay","dwReserved1",0x10001,0x00000032
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\IPX Connection For DirectPlay","dwReserved2",0x10001,0x00000000
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\IPX Connection For DirectPlay","Guid",,"{685BC400-9D2C-11cf-A9CD-00AA006886E3}"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\IPX Connection For DirectPlay","Path",,"dpwsockx.dll"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Modem Connection For DirectPlay","DescriptionA",,"Modem Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Modem Connection For DirectPlay","DescriptionW",,"Modem Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Modem Connection For DirectPlay","dwReserved1",0x10001,0x00000000
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Modem Connection For DirectPlay","dwReserved2",0x10001,0x00000000
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Modem Connection For DirectPlay","Guid",,"{44EAA760-CB68-11cf-9C4E-00A0C905425E}"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Modem Connection For DirectPlay","Path",,"dpmodemx.dll"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","DescriptionA",,"Serial Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","DescriptionW",,"Serial Connection For DirectPlay"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","dwReserved1",0x10001,0x00000000
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","dwReserved2",0x10001,0x00000000
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","Guid",,"{0F1D6860-88D9-11cf-9C4E-00A0C905425E}"
+HKLM,"SOFTWARE\Microsoft\DirectPlay\Service Providers\Serial Connection For DirectPlay","Path",,"dpmodemx.dll"
 
 ; RPC
 HKLM,"SOFTWARE\Microsoft\Rpc",,0x00000012
