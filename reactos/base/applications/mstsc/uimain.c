@@ -29,42 +29,62 @@ char g_password[256] = "";
 char g_shell[256] = "";
 char g_directory[256] = "";
 char g_domain[256] = "";
-BOOL g_desktop_save = False; /* desktop save order */
-BOOL g_polygon_ellipse_orders = False; /* polygon / ellipse orders */
-BOOL g_bitmap_compression = True;
+RD_BOOL g_desktop_save = False; /* desktop save order */
+RD_BOOL g_polygon_ellipse_orders = False; /* polygon / ellipse orders */
+RD_BOOL g_bitmap_compression = True;
 uint32 g_rdp5_performanceflags =
-  RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG | RDP5_NO_MENUANIMATIONS;
-BOOL g_bitmap_cache_persist_enable = False;
-BOOL g_bitmap_cache_precache = True;
-BOOL g_bitmap_cache = True;
-BOOL g_encryption = True;
+  RDP5_NO_WALLPAPER | RDP5_NO_FULLWINDOWDRAG | RDP5_NO_MENUANIMATIONS | RDP5_NO_CURSOR_SHADOW;
+RD_BOOL g_bitmap_cache_persist_enable = False;
+RD_BOOL g_bitmap_cache_precache = True;
+RD_BOOL g_bitmap_cache = True;
+RD_BOOL g_encryption = True;
 int g_server_depth = 8;
-BOOL g_use_rdp5 = False;
+RD_BOOL g_use_rdp5 = False;
 int g_width = 800;
 int g_height = 600;
 uint32 g_keylayout = 0x409; /* Defaults to US keyboard layout */
 int g_keyboard_type = 0x4; /* Defaults to US keyboard layout */
 int g_keyboard_subtype = 0x0; /* Defaults to US keyboard layout */
 int g_keyboard_functionkeys = 0xc; /* Defaults to US keyboard layout */
-BOOL g_console_session = False;
+RD_BOOL g_console_session = False;
 
 /* can't be static, hardware file or bsops need these */
 int g_tcp_sck = 0;
 int pal_entries[256];
 
 /* Session Directory redirection */
-BOOL g_redirect = False;
-char g_redirect_server[64];
-char g_redirect_domain[16];
-char g_redirect_password[64];
-char g_redirect_username[64];
-char g_redirect_cookie[128];
+RD_BOOL g_redirect = False;
+char g_redirect_server[256];
+uint32 g_redirect_server_len;
+char g_redirect_domain[256];
+uint32 g_redirect_domain_len;
+char g_redirect_username[256];
+uint32 g_redirect_username_len;
+uint8 g_redirect_lb_info[256];
+uint32 g_redirect_lb_info_len;
+uint8 g_redirect_cookie[256];
+uint32 g_redirect_cookie_len;
 uint32 g_redirect_flags = 0;
+uint32 g_redirect_session_id = 0;
 
 extern int g_tcp_port_rdp;
 
 static int g_deactivated = 0;
 static uint32 g_ext_disc_reason = 0;
+
+RDP_VERSION g_rdp_version = RDP_V5;	/* Default to version 5 */
+RD_BOOL g_encryption_initial = True;
+RD_BOOL g_user_quit = False;
+RD_BOOL g_network_error = False;
+uint8 g_client_random[SEC_RANDOM_SIZE];
+RD_BOOL g_pending_resize = False;
+RD_BOOL g_numlock_sync = False;
+
+uint32 g_reconnect_logonid = 0;
+char g_reconnect_random[16];
+time_t g_reconnect_random_ts;
+RD_BOOL g_has_reconnect_random = False;
+RD_BOOL g_reconnect_loop = False;
 
 struct bitmap
 {
@@ -153,9 +173,9 @@ ui_select(int in)
 
 /*****************************************************************************/
 void *
-ui_create_cursor(uint32 x, uint32 y,
+ui_create_cursor(unsigned int x, unsigned int y,
                  int width, int height,
-                 uint8 * andmask, uint8 * xormask)
+                 uint8 * andmask, uint8 * xormask, int xor_bpp)
 {
   int i;
   int j;
@@ -164,7 +184,11 @@ ui_create_cursor(uint32 x, uint32 y,
 
   if (width != 32 || height != 32)
   {
-    return 0;
+    return NULL;
+  }
+  if (xor_bpp==1)
+  {
+    return (void *) mi_create_cursor(x, y, width, height, (unsigned char *)andmask, (unsigned char *)xormask);
   }
   memset(am, 0, 32 * 4);
   memset(xm, 0, 32 * 4);
@@ -645,7 +669,7 @@ ui_end_update(void)
 
 /*****************************************************************************/
 void
-ui_polygon(uint8 opcode, uint8 fillmode, POINT * point, int npoints,
+ui_polygon(uint8 opcode, uint8 fillmode, RD_POINT * point, int npoints,
            BRUSH * brush, int bgcolour, int fgcolour)
 {
   /* not used */
@@ -653,7 +677,7 @@ ui_polygon(uint8 opcode, uint8 fillmode, POINT * point, int npoints,
 
 /*****************************************************************************/
 void
-ui_polyline(uint8 opcode, POINT * points, int npoints, PEN * pen)
+ui_polyline(uint8 opcode, RD_POINT * points, int npoints, PEN * pen)
 {
   int i, x, y, dx, dy;
   if (npoints > 0)
@@ -691,7 +715,7 @@ generate_random(uint8 * random)
   rand();
   for (i = 0; i < 32; i++)
   {
-    random[i] = rand() >> 16; /* higher bits are more random */
+    random[i] = rand(); /* higher bits are more random */
   }
 }
 
@@ -710,7 +734,7 @@ load_licence(uint8 ** data)
 
 /*****************************************************************************/
 void *
-xrealloc(void * in, int size)
+xrealloc(void * in, size_t size)
 {
   if (size < 1)
   {
@@ -933,10 +957,10 @@ ui_main(void)
   flags = RDP_LOGON_NORMAL;
   if (g_password[0] != 0)
   {
-    flags |= RDP_LOGON_AUTO;
+    flags |= RDP_INFO_AUTOLOGON;
   }
   if (!rdp_connect(g_servername, flags, g_domain, g_password,
-                   g_shell, g_directory))
+                   g_shell, g_directory, FALSE))
   {
     return 0;
   }

@@ -1,12 +1,12 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Protocol services - RDP5 short form PDU processing
-   Copyright (C) Matthew Chapman 1999-2005
-   Copyright (C) Erik Forsberg 2003
+   Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 1999-2008
+   Copyright 2003-2008 Erik Forsberg <forsberg@cendio.se> for Cendio AB
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "precomp.h"
@@ -110,6 +109,9 @@ rdp5_process(STREAM s)
 				break;
 			case 10:	/* cached pointer */
 				process_cached_pointer_pdu(ts);
+				break;
+			case 11:
+				process_new_pointer_pdu(ts);
 				break;
 			default:
 				unimpl("RDP5 opcode %d\n", type);

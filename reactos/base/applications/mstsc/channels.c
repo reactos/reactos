@@ -1,12 +1,12 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Protocol services - Virtual channels
-   Copyright (C) Erik Forsberg <forsberg@cendio.se> 2003
-   Copyright (C) Matthew Chapman 2003-2005
+   Copyright 2003 Erik Forsberg <forsberg@cendio.se> for Cendio AB
+   Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 2003-2008
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -14,9 +14,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "precomp.h"
@@ -27,8 +26,8 @@
 #define CHANNEL_FLAG_LAST		0x02
 #define CHANNEL_FLAG_SHOW_PROTOCOL	0x10
 
-extern BOOL g_use_rdp5;
-extern BOOL g_encryption;
+extern RDP_VERSION g_rdp_version;
+extern RD_BOOL g_encryption;
 
 VCHANNEL g_channels[MAX_CHANNELS];
 unsigned int g_num_channels;
@@ -48,7 +47,7 @@ channel_register(char *name, uint32 flags, void (*callback) (STREAM))
 {
 	VCHANNEL *channel;
 
-	if (!g_use_rdp5)
+	if (g_rdp_version < RDP_V5)
 		return NULL;
 
 	if (g_num_channels >= MAX_CHANNELS)
@@ -82,6 +81,10 @@ channel_send(STREAM s, VCHANNEL * channel)
 	uint32 length, flags;
 	uint32 thislength, remaining;
 	uint8 *data;
+
+#ifdef WITH_SCARD
+	scard_lock(SCARD_LOCK_CHANNEL);
+#endif
 
 	/* first fragment sent in-place */
 	s_pop_layer(s, channel_hdr);
@@ -125,6 +128,10 @@ channel_send(STREAM s, VCHANNEL * channel)
 
 		data += thislength;
 	}
+
+#ifdef WITH_SCARD
+	scard_unlock(SCARD_LOCK_CHANNEL);
+#endif
 }
 
 void

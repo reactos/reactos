@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    asn.c
     bitmap.c
     bsops.c
     cache.c
@@ -19,6 +20,14 @@ list(APPEND SOURCE
     tcp.c
     uimain.c
     win32.c
+    bsops.h
+    constants.h
+    orders.h
+    proto.h
+    rdesktop.h
+    resource.h
+    types.h
+    uimain.h
     precomp.h)
 
 add_executable(mstsc ${SOURCE} rdc.rc)

@@ -713,6 +713,43 @@ ssl_md5_complete(void* md5_info, char* data)
   PUT_UINT32(ctx->state[3], data, 12);
 }
 
+void APP_CC ssl_hmac_md5(char* key, int keylen, char* data, int len, char* output)
+{
+    int i;
+    char ipad[64];
+    char opad[64];
+    char sum[16];
+    void* ctx;
+
+    if( keylen > 64 )
+    {
+        ctx = ssl_md5_info_create();
+        ssl_md5_transform(ctx, key, keylen);
+        ssl_md5_complete(ctx, sum);
+        ssl_md5_info_delete(ctx);
+        keylen = 16;
+        key = sum;
+    }
+
+    memset( ipad, 0x36, sizeof(ipad) );
+    memset( opad, 0x5C, sizeof(opad) );
+
+    for( i = 0; i < keylen; i++ )
+    {
+        ipad[i] = ipad[i] ^ key[i];
+        opad[i] = opad[i] ^ key[i];
+    }
+    ctx = ssl_md5_info_create();
+    ssl_md5_transform(ctx, ipad, sizeof(ipad));
+    ssl_md5_transform(ctx, data, len);
+    ssl_md5_complete(ctx, sum);
+    ssl_md5_info_delete(ctx);
+    ctx = ssl_md5_info_create();
+    ssl_md5_transform(ctx, opad, sizeof(opad));
+    ssl_md5_complete(ctx, output);
+    ssl_md5_info_delete(ctx);
+}
+
 /*****************************************************************************/
 /*****************************************************************************/
 /* big number stuff */

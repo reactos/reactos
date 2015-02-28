@@ -1114,6 +1114,7 @@ wWinMain(HINSTANCE hInstance,
                     uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"username"));
                     SetDomainAndUsername(szValue);
                     strcpy(g_password, "");
+                    strcpy(g_hostname, tcp_get_address());
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
                     if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
                     g_screen_width = GetSystemMetrics(SM_CXSCREEN);

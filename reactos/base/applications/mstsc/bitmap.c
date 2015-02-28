@@ -1,11 +1,11 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Bitmap decompression routines
-   Copyright (C) Matthew Chapman 1999-2005
+   Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 1999-2008
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -13,22 +13,18 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* three seperate function for speed when decompressing the bitmaps */
-/* when modifing one function make the change in the others */
-/* comment out #define BITMAP_SPEED_OVER_SIZE below for one slower function */
-/* j@american-data.com */
+/* three seperate function for speed when decompressing the bitmaps
+   when modifing one function make the change in the others
+   jay.sorg@gmail.com */
 
 /* indent is confused by this file */
 /* *INDENT-OFF* */
 
 #include "precomp.h"
-
-#define BITMAP_SPEED_OVER_SIZE
 
 #define CVAL(p)   (*(p++))
 #ifdef NEED_ALIGN
@@ -66,10 +62,8 @@
 	} \
 }
 
-#ifdef BITMAP_SPEED_OVER_SIZE
-
 /* 1 byte bitmap decompress */
-static BOOL
+static RD_BOOL
 bitmap_decompress1(uint8 * output, int width, int height, uint8 * input, int size)
 {
 	uint8 *end = input + size;
@@ -267,7 +261,7 @@ bitmap_decompress1(uint8 * output, int width, int height, uint8 * input, int siz
 }
 
 /* 2 byte bitmap decompress */
-static BOOL
+static RD_BOOL
 bitmap_decompress2(uint8 * output, int width, int height, uint8 * input, int size)
 {
 	uint8 *end = input + size;
@@ -466,7 +460,7 @@ bitmap_decompress2(uint8 * output, int width, int height, uint8 * input, int siz
 }
 
 /* 3 byte bitmap decompress */
-static BOOL
+static RD_BOOL
 bitmap_decompress3(uint8 * output, int width, int height, uint8 * input, int size)
 {
 	uint8 *end = input + size;
@@ -751,254 +745,146 @@ bitmap_decompress3(uint8 * output, int width, int height, uint8 * input, int siz
 	return True;
 }
 
-#else
-
-static uint32
-cvalx(uint8 **input, int Bpp)
+/* decompress a colour plane */
+static int
+process_plane(uint8 * in, int width, int height, uint8 * out, int size)
 {
-	uint32 rv = 0;
-	memcpy(&rv, *input, Bpp);
-	*input += Bpp;
-	return rv;
-}
+	int indexw;
+	int indexh;
+	int code;
+	int collen;
+	int replen;
+	int color;
+	int x;
+	int revcode;
+	uint8 * last_line;
+	uint8 * this_line;
+	uint8 * org_in;
+	uint8 * org_out;
 
-static void
-setli(uint8 *input, int offset, uint32 value, int Bpp)
-{
-	input += offset * Bpp;
-	memcpy(input, &value, Bpp);
-}
-
-static uint32
-getli(uint8 *input, int offset, int Bpp)
-{
-	uint32 rv = 0;
-	input += offset * Bpp;
-	memcpy(&rv, input, Bpp);
-	return rv;
-}
-
-static BOOL
-bitmap_decompressx(uint8 *output, int width, int height, uint8 *input, int size, int Bpp)
-{
-	uint8 *end = input + size;
-	uint8 *prevline = NULL, *line = NULL;
-	int opcode, count, offset, isfillormix, x = width;
-	int lastopcode = -1, insertmix = False, bicolour = False;
-	uint8 code;
-	uint32 colour1 = 0, colour2 = 0;
-	uint8 mixmask, mask = 0;
-	uint32 mix = 0xffffffff;
-	int fom_mask = 0;
-
-	while (input < end)
+	org_in = in;
+	org_out = out;
+	last_line = 0;
+	indexh = 0;
+	while (indexh < height)
 	{
-		fom_mask = 0;
-		code = CVAL(input);
-		opcode = code >> 4;
-
-		/* Handle different opcode forms */
-		switch (opcode)
+		out = (org_out + width * height * 4) - ((indexh + 1) * width * 4);
+		color = 0;
+		this_line = out;
+		indexw = 0;
+		if (last_line == 0)
 		{
-			case 0xc:
-			case 0xd:
-			case 0xe:
-				opcode -= 6;
-				count = code & 0xf;
-				offset = 16;
-				break;
-
-			case 0xf:
-				opcode = code & 0xf;
-				if (opcode < 9)
+			while (indexw < width)
+			{
+				code = CVAL(in);
+				replen = code & 0xf;
+				collen = (code >> 4) & 0xf;
+				revcode = (replen << 4) | collen;
+				if ((revcode <= 47) && (revcode >= 16))
 				{
-					count = CVAL(input);
-					count |= CVAL(input) << 8;
+					replen = revcode;
+					collen = 0;
 				}
-				else
+				while (collen > 0)
 				{
-					count = (opcode < 0xb) ? 8 : 1;
+					color = CVAL(in);
+					*out = color;
+					out += 4;
+					indexw++;
+					collen--;
 				}
-				offset = 0;
-				break;
-
-			default:
-				opcode >>= 1;
-				count = code & 0x1f;
-				offset = 32;
-				break;
-		}
-
-		/* Handle strange cases for counts */
-		if (offset != 0)
-		{
-			isfillormix = ((opcode == 2) || (opcode == 7));
-
-			if (count == 0)
-			{
-				if (isfillormix)
-					count = CVAL(input) + 1;
-				else
-					count = CVAL(input) + offset;
-			}
-			else if (isfillormix)
-			{
-				count <<= 3;
+				while (replen > 0)
+				{
+					*out = color;
+					out += 4;
+					indexw++;
+					replen--;
+				}
 			}
 		}
-
-		/* Read preliminary data */
-		switch (opcode)
+		else
 		{
-			case 0:	/* Fill */
-				if ((lastopcode == opcode) && !((x == width) && (prevline == NULL)))
-					insertmix = True;
-				break;
-			case 8:	/* Bicolour */
-				colour1 = cvalx(&input, Bpp);
-			case 3:	/* Colour */
-				colour2 = cvalx(&input, Bpp);
-				break;
-			case 6:	/* SetMix/Mix */
-			case 7:	/* SetMix/FillOrMix */
-				mix = cvalx(&input, Bpp);
-				opcode -= 5;
-				break;
-			case 9:	/* FillOrMix_1 */
-				mask = 0x03;
-				opcode = 0x02;
-				fom_mask = 3;
-				break;
-			case 0x0a:	/* FillOrMix_2 */
-				mask = 0x05;
-				opcode = 0x02;
-				fom_mask = 5;
-				break;
-
-		}
-
-		lastopcode = opcode;
-		mixmask = 0;
-
-		/* Output body */
-		while (count > 0)
-		{
-			if (x >= width)
+			while (indexw < width)
 			{
-				if (height <= 0)
-					return False;
-
-				x = 0;
-				height--;
-
-				prevline = line;
-				line = output + height * width * Bpp;
-			}
-
-			switch (opcode)
-			{
-				case 0:	/* Fill */
-					if (insertmix)
+				code = CVAL(in);
+				replen = code & 0xf;
+				collen = (code >> 4) & 0xf;
+				revcode = (replen << 4) | collen;
+				if ((revcode <= 47) && (revcode >= 16))
+				{
+					replen = revcode;
+					collen = 0;
+				}
+				while (collen > 0)
+				{
+					x = CVAL(in);
+					if (x & 1)
 					{
-						if (prevline == NULL)
-							setli(line, x, mix, Bpp);
-						else
-							setli(line, x,
-							      getli(prevline, x, Bpp) ^ mix, Bpp);
-
-						insertmix = False;
-						count--;
-						x++;
-					}
-
-					if (prevline == NULL)
-					{
-					REPEAT(setli(line, x, 0, Bpp))}
-					else
-					{
-						REPEAT(setli
-						       (line, x, getli(prevline, x, Bpp), Bpp));
-					}
-					break;
-
-				case 1:	/* Mix */
-					if (prevline == NULL)
-					{
-						REPEAT(setli(line, x, mix, Bpp));
+						x = x >> 1;
+						x = x + 1;
+						color = -x;
 					}
 					else
 					{
-						REPEAT(setli
-						       (line, x, getli(prevline, x, Bpp) ^ mix,
-							Bpp));
+						x = x >> 1;
+						color = x;
 					}
-					break;
-
-				case 2:	/* Fill or Mix */
-					if (prevline == NULL)
-					{
-						REPEAT(MASK_UPDATE();
-						       if (mask & mixmask) setli(line, x, mix, Bpp);
-						       else
-						       setli(line, x, 0, Bpp););
-					}
-					else
-					{
-						REPEAT(MASK_UPDATE();
-						       if (mask & mixmask)
-						       setli(line, x, getli(prevline, x, Bpp) ^ mix,
-							     Bpp);
-						       else
-						       setli(line, x, getli(prevline, x, Bpp),
-							     Bpp););
-					}
-					break;
-
-				case 3:	/* Colour */
-					REPEAT(setli(line, x, colour2, Bpp));
-					break;
-
-				case 4:	/* Copy */
-					REPEAT(setli(line, x, cvalx(&input, Bpp), Bpp));
-					break;
-
-				case 8:	/* Bicolour */
-					REPEAT(if (bicolour)
-					       {
-					       setli(line, x, colour2, Bpp); bicolour = False;}
-					       else
-					       {
-					       setli(line, x, colour1, Bpp); bicolour = True;
-					       count++;}
-					);
-					break;
-
-				case 0xd:	/* White */
-					REPEAT(setli(line, x, 0xffffffff, Bpp));
-					break;
-
-				case 0xe:	/* Black */
-					REPEAT(setli(line, x, 0, Bpp));
-					break;
-
-				default:
-					unimpl("bitmap opcode 0x%x\n", opcode);
-					return False;
+					x = last_line[indexw * 4] + color;
+					*out = x;
+					out += 4;
+					indexw++;
+					collen--;
+				}
+				while (replen > 0)
+				{
+					x = last_line[indexw * 4] + color;
+					*out = x;
+					out += 4;
+					indexw++;
+					replen--;
+				}
 			}
 		}
+		indexh++;
+		last_line = this_line;
 	}
-
-	return True;
+	return (int) (in - org_in);
 }
 
-#endif
+/* 4 byte bitmap decompress */
+static RD_BOOL
+bitmap_decompress4(uint8 * output, int width, int height, uint8 * input, int size)
+{
+	int code;
+	int bytes_pro;
+	int total_pro;
+
+	code = CVAL(input);
+	if (code != 0x10)
+	{
+		return False;
+	}
+	total_pro = 1;
+	bytes_pro = process_plane(input, width, height, output + 3, size - total_pro);
+	total_pro += bytes_pro;
+	input += bytes_pro;
+	bytes_pro = process_plane(input, width, height, output + 2, size - total_pro);
+	total_pro += bytes_pro;
+	input += bytes_pro;
+	bytes_pro = process_plane(input, width, height, output + 1, size - total_pro);
+	total_pro += bytes_pro;
+	input += bytes_pro;
+	bytes_pro = process_plane(input, width, height, output + 0, size - total_pro);
+	total_pro += bytes_pro;
+	return size == total_pro;
+}
 
 /* main decompress function */
-BOOL
+RD_BOOL
 bitmap_decompress(uint8 * output, int width, int height, uint8 * input, int size, int Bpp)
 {
-#ifdef BITMAP_SPEED_OVER_SIZE
-	BOOL rv = False;
+	RD_BOOL rv = False;
+
 	switch (Bpp)
 	{
 		case 1:
@@ -1010,11 +896,13 @@ bitmap_decompress(uint8 * output, int width, int height, uint8 * input, int size
 		case 3:
 			rv = bitmap_decompress3(output, width, height, input, size);
 			break;
+		case 4:
+			rv = bitmap_decompress4(output, width, height, input, size);
+			break;
+		default:
+			unimpl("Bpp %d\n", Bpp);
+			break;
 	}
-#else
-	BOOL rv;
-  rv = bitmap_decompressx(output, width, height, input, size, Bpp);
-#endif
 	return rv;
 }
 

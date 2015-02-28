@@ -223,11 +223,23 @@ bs_is_pixel_on(char * data, int x, int y, int width, int bpp)
   {
     return data[y * width + x] != 0;
   }
+  else if (bpp == 15 || bpp == 16)
+  {
+    return data[(y * 2) * width + (x * 2)] != 0 ||
+           data[(y * 2) * width + (x * 2) + 1] != 0;
+  }
   else if (bpp == 24)
   {
-    return data[(y * 3) * width + (x * 3)] != 0 &&
-           data[(y * 3) * width + (x * 3) + 1] != 0 &&
+    return data[(y * 3) * width + (x * 3)] != 0 ||
+           data[(y * 3) * width + (x * 3) + 1] != 0 ||
            data[(y * 3) * width + (x * 3) + 2] != 0;
+  }
+  else if (bpp == 32)
+  {
+    return data[(y * 4) * width + (x * 4)] != 0 ||
+           data[(y * 4) * width + (x * 4) + 1] != 0 ||
+           data[(y * 4) * width + (x * 4) + 2] != 0 ||
+           data[(y * 4) * width + (x * 4) + 3] != 0;
   }
   else
   {

@@ -1,11 +1,12 @@
 /*
    rdesktop: A Remote Desktop Protocol client.
    Common data types
-   Copyright (C) Matthew Chapman 1999-2005
+   Copyright (C) Matthew Chapman 1999-2008
+   Copyright 2014 Henrik Andersson <hean01@cendio.se> for Cendio AB
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -13,10 +14,11 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+typedef int RD_BOOL;
 
 #ifndef True
 #define True  (1)
@@ -34,6 +36,15 @@ typedef void *RD_HBITMAP;
 typedef void *RD_HGLYPH;
 typedef void *RD_HCOLOURMAP;
 typedef void *RD_HCURSOR;
+
+
+typedef enum _RDP_VERSION
+{
+	RDP_V4 = 4,
+	RDP_V5 = 5,
+	RDP_V6 = 6
+} RDP_VERSION;
+
 
 typedef struct _RD_POINT
 {
@@ -77,13 +88,22 @@ typedef struct _PEN
 }
 PEN;
 
+/* this is whats in the brush cache */
+typedef struct _BRUSHDATA
+{
+	uint32 colour_code;
+	uint32 data_size;
+	uint8 *data;
+}
+BRUSHDATA;
+
 typedef struct _BRUSH
 {
 	uint8 xorigin;
 	uint8 yorigin;
 	uint8 style;
 	uint8 pattern[8];
-
+	BRUSHDATA *bd;
 }
 BRUSH;
 
@@ -117,6 +137,16 @@ typedef struct _key_translation
 }
 key_translation;
 
+typedef struct _key_translation_entry
+{
+	key_translation *tr;
+	/* The full KeySym for this entry, not KEYMAP_MASKed */
+	uint32 keysym;
+	/* This will be non-NULL if there has been a hash collision */
+	struct _key_translation_entry *next;
+}
+key_translation_entry;
+
 typedef struct _VCHANNEL
 {
 	uint16 mcs_id;
@@ -143,7 +173,7 @@ CELLHEADER;
 #define MAX_CBSIZE 256
 
 /* RDPSND */
-typedef struct
+typedef struct _RD_WAVEFORMATEX
 {
 	uint16 wFormatTag;
 	uint16 nChannels;
@@ -170,13 +200,13 @@ typedef uint32 RD_NTHANDLE;
 typedef struct _DEVICE_FNS
 {
 	RD_NTSTATUS(*create) (uint32 device, uint32 desired_access, uint32 share_mode,
-			   uint32 create_disposition, uint32 flags_and_attributes, char *filename,
-			   RD_NTHANDLE * handle);
+			      uint32 create_disposition, uint32 flags_and_attributes,
+			      char *filename, RD_NTHANDLE * handle);
 	RD_NTSTATUS(*close) (RD_NTHANDLE handle);
 	RD_NTSTATUS(*read) (RD_NTHANDLE handle, uint8 * data, uint32 length, uint32 offset,
-			 uint32 * result);
+			    uint32 * result);
 	RD_NTSTATUS(*write) (RD_NTHANDLE handle, uint8 * data, uint32 length, uint32 offset,
-			  uint32 * result);
+			     uint32 * result);
 	RD_NTSTATUS(*device_control) (RD_NTHANDLE handle, uint32 request, STREAM in, STREAM out);
 }
 DEVICE_FNS;
@@ -233,7 +263,7 @@ typedef struct rdpdr_printer_info
 	char *driver, *printer;
 	uint32 bloblen;
 	uint8 *blob;
-	BOOL default_printer;
+	RD_BOOL default_printer;
 }
 PRINTER;
 
@@ -250,7 +280,6 @@ NOTIFY;
 #define PATH_MAX 256
 #endif
 
-#ifndef _WIN32
 typedef struct fileinfo
 {
 	uint32 device_id, flags_and_attributes, accessmask;
@@ -258,11 +287,10 @@ typedef struct fileinfo
 	DIR *pdir;
 	struct dirent *pdirent;
 	char pattern[PATH_MAX];
-	BOOL delete_on_close;
+	RD_BOOL delete_on_close;
 	NOTIFY notify;
 	uint32 info_class;
 }
 FILEINFO;
-#endif
 
-typedef BOOL(*str_handle_lines_t) (const char *line, void *data);
+typedef RD_BOOL(*str_handle_lines_t) (const char *line, void *data);
