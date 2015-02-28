@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Class implementing functions for handling Wine tests
- * COPYRIGHT:   Copyright 2009 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2009-2015 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -13,19 +13,25 @@ static const DWORD ListTimeout = 10000;
  * Constructs a CWineTest object.
  */
 CWineTest::CWineTest()
+    : m_hFind(NULL), m_ListBuffer(NULL)
 {
-    WCHAR WindowsDirectory[MAX_PATH];
-
-    /* Zero-initialize variables */
-    m_hFind = NULL;
-    m_ListBuffer = NULL;
+    WCHAR wszDirectory[MAX_PATH];
 
     /* Set up m_TestPath */
-    if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
-        FATAL("GetWindowsDirectoryW failed");
+    if (GetEnvironmentVariableW(L"ROSAUTOTEST_DIR", wszDirectory, MAX_PATH))
+    {
+        m_TestPath = wszDirectory;
+        if (*m_TestPath.rbegin() != L'\\')
+            m_TestPath += L'\\';
+    }
+    else
+    {
+        if (!GetWindowsDirectoryW(wszDirectory, MAX_PATH))
+            FATAL("GetWindowsDirectoryW failed");
 
-    m_TestPath = WindowsDirectory;
-    m_TestPath += L"\\bin\\";
+        m_TestPath = wszDirectory;
+        m_TestPath += L"\\bin\\";
+    }
 }
 
 /**

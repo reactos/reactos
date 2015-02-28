@@ -2,13 +2,13 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Class implementing the interface to the "testman" Web Service
- * COPYRIGHT:   Copyright 2009-2011 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2009-2015 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
 
 static const WCHAR szHostname[] = L"reactos.org";
-static const WCHAR szServerFile[] = L"testman/webservice/";
+static const WCHAR szServerFile[] = L"sites/all/modules/reactos/testman/webservice/";
 
 /**
  * Constructs a CWebService object and immediately establishes a connection to the "testman" Web Service.
