@@ -471,6 +471,13 @@ ULONG CDECL wined3d_device_incref(struct wined3d_device *device)
     return refcount;
 }
 
+static void device_leftover_sampler(struct wine_rb_entry *entry, void *context)
+{
+    struct wined3d_sampler *sampler = WINE_RB_ENTRY_VALUE(entry, struct wined3d_sampler, entry);
+
+    ERR("Leftover sampler %p.\n", sampler);
+}
+
 ULONG CDECL wined3d_device_decref(struct wined3d_device *device)
 {
     ULONG refcount = InterlockedDecrement(&device->ref);
@@ -513,6 +520,8 @@ ULONG CDECL wined3d_device_decref(struct wined3d_device *device)
         if (device->hardwareCursor)
             DestroyCursor(device->hardwareCursor);
         device->hardwareCursor = 0;
+
+        wine_rb_destroy(&device->samplers, device_leftover_sampler, NULL);
 
         wined3d_decref(device->wined3d);
         device->wined3d = NULL;
@@ -583,7 +592,7 @@ static void device_load_logo(struct wined3d_device *device, const char *filename
     desc.depth = 1;
     desc.size = 0;
     if (FAILED(hr = wined3d_texture_create(device, &desc, 1, WINED3D_SURFACE_MAPPABLE,
-            NULL, &wined3d_null_parent_ops, &device->logo_texture)))
+            NULL, NULL, &wined3d_null_parent_ops, &device->logo_texture)))
     {
         ERR("Wine logo requested, but failed to create texture, hr %#x.\n", hr);
         goto out;
@@ -599,7 +608,7 @@ static void device_load_logo(struct wined3d_device *device, const char *filename
 
         color_key.color_space_low_value = 0;
         color_key.color_space_high_value = 0;
-        wined3d_texture_set_color_key(device->logo_texture, WINEDDCKEY_SRCBLT, &color_key);
+        wined3d_texture_set_color_key(device->logo_texture, WINED3D_CKEY_SRC_BLT, &color_key);
     }
     else
     {
@@ -667,7 +676,7 @@ static void create_dummy_textures(struct wined3d_device *device, struct wined3d_
             gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_3D, device->dummy_texture_3d[i]);
             checkGLcall("glBindTexture");
 
-            GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_RGBA8, 1, 1, 1, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, &color));
+            GL_EXTCALL(glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 1, 1, 1, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, &color));
             checkGLcall("glTexImage3D");
         }
 
@@ -1012,6 +1021,13 @@ err_out:
     return hr;
 }
 
+static void device_free_sampler(struct wine_rb_entry *entry, void *context)
+{
+    struct wined3d_sampler *sampler = WINE_RB_ENTRY_VALUE(entry, struct wined3d_sampler, entry);
+
+    wined3d_sampler_decref(sampler);
+}
+
 HRESULT CDECL wined3d_device_uninit_3d(struct wined3d_device *device)
 {
     struct wined3d_resource *resource, *cursor;
@@ -1045,6 +1061,8 @@ HRESULT CDECL wined3d_device_uninit_3d(struct wined3d_device *device)
 
         resource->resource_ops->resource_unload(resource);
     }
+
+    wine_rb_clear(&device->samplers, device_free_sampler, NULL);
 
     /* Destroy the depth blt resources, they will be invalid after the reset. Also free shader
      * private data, it might contain opengl pointers
@@ -3011,7 +3029,7 @@ HRESULT CDECL wined3d_device_process_vertices(struct wined3d_device *device,
         e->data.addr += (ULONG_PTR)buffer_get_sysmem(buffer, context);
         if (buffer->buffer_object)
         {
-            GL_EXTCALL(glDeleteBuffersARB(1, &buffer->buffer_object));
+            GL_EXTCALL(glDeleteBuffers(1, &buffer->buffer_object));
             buffer->buffer_object = 0;
         }
         if (e->data.addr)
@@ -3447,9 +3465,9 @@ void CDECL wined3d_device_draw_indexed_primitive_instanced(struct wined3d_device
 static HRESULT device_update_volume(struct wined3d_device *device,
         struct wined3d_volume *src_volume, struct wined3d_volume *dst_volume)
 {
+    struct wined3d_const_bo_address data;
     struct wined3d_map_desc src;
     HRESULT hr;
-    struct wined3d_bo_address data;
     struct wined3d_context *context;
 
     TRACE("device %p, src_volume %p, dst_volume %p.\n",
@@ -3473,7 +3491,9 @@ static HRESULT device_update_volume(struct wined3d_device *device,
 
     context = context_acquire(device, NULL);
 
-    wined3d_volume_load(dst_volume, context, FALSE);
+    /* Only a prepare, since we're uploading the entire volume. */
+    wined3d_texture_prepare_texture(dst_volume->container, context, FALSE);
+    wined3d_texture_bind(dst_volume->container, context, FALSE);
 
     data.buffer_object = 0;
     data.addr = src.data;
@@ -3978,13 +3998,11 @@ void CDECL wined3d_device_set_depth_stencil_view(struct wined3d_device *device, 
 static struct wined3d_texture *wined3d_device_create_cursor_texture(struct wined3d_device *device,
         struct wined3d_surface *cursor_image)
 {
+    struct wined3d_sub_resource_data data;
     struct wined3d_resource_desc desc;
     struct wined3d_map_desc map_desc;
     struct wined3d_texture *texture;
-    struct wined3d_surface *surface;
-    BYTE *src_data, *dst_data;
-    unsigned int src_pitch;
-    unsigned int i;
+    HRESULT hr;
 
     if (FAILED(wined3d_surface_map(cursor_image, &map_desc, NULL, WINED3D_MAP_READONLY)))
     {
@@ -3992,8 +4010,9 @@ static struct wined3d_texture *wined3d_device_create_cursor_texture(struct wined
         return NULL;
     }
 
-    src_pitch = map_desc.row_pitch;
-    src_data = map_desc.data;
+    data.data = map_desc.data;
+    data.row_pitch = map_desc.row_pitch;
+    data.slice_pitch = map_desc.slice_pitch;
 
     desc.resource_type = WINED3D_RTYPE_TEXTURE;
     desc.format = WINED3DFMT_B8G8R8A8_UNORM;
@@ -4006,30 +4025,14 @@ static struct wined3d_texture *wined3d_device_create_cursor_texture(struct wined
     desc.depth = 1;
     desc.size = 0;
 
-    if (FAILED(wined3d_texture_create(device, &desc, 1, WINED3D_SURFACE_MAPPABLE,
-            NULL, &wined3d_null_parent_ops, &texture)))
+    hr = wined3d_texture_create(device, &desc, 1, WINED3D_SURFACE_MAPPABLE,
+            &data, NULL, &wined3d_null_parent_ops, &texture);
+    wined3d_surface_unmap(cursor_image);
+    if (FAILED(hr))
     {
         ERR("Failed to create cursor texture.\n");
-        wined3d_surface_unmap(cursor_image);
         return NULL;
     }
-
-    surface = surface_from_resource(wined3d_texture_get_sub_resource(texture, 0));
-    if (FAILED(wined3d_surface_map(surface, &map_desc, NULL, WINED3D_MAP_DISCARD)))
-    {
-        ERR("Failed to map destination surface.\n");
-        wined3d_texture_decref(texture);
-        wined3d_surface_unmap(cursor_image);
-        return NULL;
-    }
-
-    dst_data = map_desc.data;
-
-    for (i = 0; i < desc.height; ++i)
-        memcpy(&dst_data[map_desc.row_pitch * i], &src_data[src_pitch * i], desc.width * 4);
-
-    wined3d_surface_unmap(surface);
-    wined3d_surface_unmap(cursor_image);
 
     return texture;
 }
@@ -4313,7 +4316,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     struct wined3d_resource *resource, *cursor;
     struct wined3d_swapchain *swapchain;
     struct wined3d_display_mode m;
-    BOOL DisplayModeChanged = FALSE;
+    BOOL DisplayModeChanged;
     BOOL update_desc = FALSE;
     UINT backbuffer_width = swapchain_desc->backbuffer_width;
     UINT backbuffer_height = swapchain_desc->backbuffer_height;
@@ -4327,6 +4330,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         ERR("Failed to get the first implicit swapchain.\n");
         return WINED3DERR_INVALIDCALL;
     }
+    DisplayModeChanged = swapchain->reapply_mode;
 
     if (reset_state)
     {
@@ -4489,16 +4493,14 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
     {
         UINT i;
 
-        if (FAILED(hr = wined3d_surface_update_desc(surface_from_resource(
-                wined3d_texture_get_sub_resource(swapchain->front_buffer, 0)), swapchain->desc.backbuffer_width,
+        if (FAILED(hr = wined3d_texture_update_desc(swapchain->front_buffer, swapchain->desc.backbuffer_width,
                 swapchain->desc.backbuffer_height, swapchain->desc.backbuffer_format,
                 swapchain->desc.multisample_type, swapchain->desc.multisample_quality, NULL, 0)))
             return hr;
 
         for (i = 0; i < swapchain->desc.backbuffer_count; ++i)
         {
-            if (FAILED(hr = wined3d_surface_update_desc(surface_from_resource(
-                    wined3d_texture_get_sub_resource(swapchain->back_buffers[i], 0)), swapchain->desc.backbuffer_width,
+            if (FAILED(hr = wined3d_texture_update_desc(swapchain->back_buffers[i], swapchain->desc.backbuffer_width,
                     swapchain->desc.backbuffer_height, swapchain->desc.backbuffer_format,
                     swapchain->desc.multisample_type, swapchain->desc.multisample_quality, NULL, 0)))
                 return hr;
@@ -4595,6 +4597,7 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
                         swapchain_desc->backbuffer_height,
                         TRUE);
             }
+            swapchain->d3d_mode = m;
         }
         else if (!swapchain->desc.windowed)
         {
@@ -4620,6 +4623,8 @@ HRESULT CDECL wined3d_device_reset(struct wined3d_device *device,
         device->style = style;
         device->exStyle = exStyle;
     }
+
+    wine_rb_clear(&device->samplers, device_free_sampler, NULL);
 
     if (reset_state)
     {
@@ -4858,6 +4863,21 @@ struct wined3d_surface * CDECL wined3d_device_get_surface_from_dc(const struct w
     return NULL;
 }
 
+static int wined3d_sampler_compare(const void *key, const struct wine_rb_entry *entry)
+{
+    const struct wined3d_sampler *sampler = WINE_RB_ENTRY_VALUE(entry, struct wined3d_sampler, entry);
+
+    return memcmp(&sampler->desc, key, sizeof(sampler->desc));
+}
+
+static const struct wine_rb_functions wined3d_sampler_rb_functions =
+{
+    wined3d_rb_alloc,
+    wined3d_rb_realloc,
+    wined3d_rb_free,
+    wined3d_sampler_compare,
+};
+
 HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
         UINT adapter_idx, enum wined3d_device_type device_type, HWND focus_window, DWORD flags,
         BYTE surface_alignment, struct wined3d_device_parent *device_parent)
@@ -4889,12 +4909,19 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
 
     fragment_pipeline = adapter->fragment_pipe;
 
+    if (wine_rb_init(&device->samplers, &wined3d_sampler_rb_functions) == -1)
+    {
+        ERR("Failed to initialize sampler rbtree.\n");
+        return E_OUTOFMEMORY;
+    }
+
     if (vertex_pipeline->vp_states && fragment_pipeline->states
             && FAILED(hr = compile_state_table(device->StateTable, device->multistate_funcs,
             &adapter->gl_info, &adapter->d3d_info, vertex_pipeline,
             fragment_pipeline, misc_state_template)))
     {
         ERR("Failed to compile state table, hr %#x.\n", hr);
+        wine_rb_destroy(&device->samplers, NULL, NULL);
         wined3d_decref(device->wined3d);
         return hr;
     }
@@ -4924,6 +4951,7 @@ err:
     {
         HeapFree(GetProcessHeap(), 0, device->multistate_funcs[i]);
     }
+    wine_rb_destroy(&device->samplers, NULL, NULL);
     wined3d_decref(device->wined3d);
     return hr;
 }
@@ -4952,7 +4980,7 @@ void device_invalidate_state(const struct wined3d_device *device, DWORD state)
 LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL unicode,
         UINT message, WPARAM wparam, LPARAM lparam, WNDPROC proc)
 {
-    if (device->filter_messages)
+    if (device->filter_messages && message != WM_DISPLAYCHANGE)
     {
         TRACE("Filtering message: window %p, message %#x, wparam %#lx, lparam %#lx.\n",
                 window, message, wparam, lparam);
@@ -4976,7 +5004,22 @@ LRESULT device_process_message(struct wined3d_device *device, HWND window, BOOL 
     }
     else if (message == WM_ACTIVATEAPP)
     {
+        UINT i;
+
+        for (i = 0; i < device->swapchain_count; i++)
+            wined3d_swapchain_activate(device->swapchains[i], wparam);
+
         device->device_parent->ops->activate(device->device_parent, wparam);
+    }
+    else if (message == WM_SYSCOMMAND)
+    {
+        if (wparam == SC_RESTORE && device->wined3d->flags & WINED3D_HANDLE_RESTORE)
+        {
+            if (unicode)
+                DefWindowProcW(window, message, wparam, lparam);
+            else
+                DefWindowProcA(window, message, wparam, lparam);
+        }
     }
 
     if (unicode)

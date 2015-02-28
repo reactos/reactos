@@ -348,16 +348,16 @@ static HRESULT wined3d_occlusion_query_ops_get_data(struct wined3d_query *query,
 
     context = context_acquire(query->device, oq->context->current_rt);
 
-    GL_EXTCALL(glGetQueryObjectuivARB(oq->id, GL_QUERY_RESULT_AVAILABLE_ARB, &available));
-    checkGLcall("glGetQueryObjectuivARB(GL_QUERY_RESULT_AVAILABLE)");
+    GL_EXTCALL(glGetQueryObjectuiv(oq->id, GL_QUERY_RESULT_AVAILABLE, &available));
+    checkGLcall("glGetQueryObjectuiv(GL_QUERY_RESULT_AVAILABLE)");
     TRACE("available %#x.\n", available);
 
     if (available)
     {
         if (size)
         {
-            GL_EXTCALL(glGetQueryObjectuivARB(oq->id, GL_QUERY_RESULT_ARB, &samples));
-            checkGLcall("glGetQueryObjectuivARB(GL_QUERY_RESULT)");
+            GL_EXTCALL(glGetQueryObjectuiv(oq->id, GL_QUERY_RESULT, &samples));
+            checkGLcall("glGetQueryObjectuiv(GL_QUERY_RESULT)");
             TRACE("Returning %d samples.\n", samples);
             fill_query_data(data, size, &samples, sizeof(samples));
         }
@@ -490,7 +490,7 @@ static HRESULT wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DW
                 {
                     context = context_acquire(query->device, oq->context->current_rt);
 
-                    GL_EXTCALL(glEndQueryARB(GL_SAMPLES_PASSED_ARB));
+                    GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
                     checkGLcall("glEndQuery()");
                 }
             }
@@ -501,7 +501,7 @@ static HRESULT wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DW
                 context_alloc_occlusion_query(context, oq);
             }
 
-            GL_EXTCALL(glBeginQueryARB(GL_SAMPLES_PASSED_ARB, oq->id));
+            GL_EXTCALL(glBeginQuery(GL_SAMPLES_PASSED, oq->id));
             checkGLcall("glBeginQuery()");
 
             context_release(context);
@@ -522,7 +522,7 @@ static HRESULT wined3d_occlusion_query_ops_issue(struct wined3d_query *query, DW
                 {
                     context = context_acquire(query->device, oq->context->current_rt);
 
-                    GL_EXTCALL(glEndQueryARB(GL_SAMPLES_PASSED_ARB));
+                    GL_EXTCALL(glEndQuery(GL_SAMPLES_PASSED));
                     checkGLcall("glEndQuery()");
 
                     context_release(context);
@@ -578,16 +578,16 @@ static HRESULT wined3d_timestamp_query_ops_get_data(struct wined3d_query *query,
 
     context = context_acquire(query->device, tq->context->current_rt);
 
-    GL_EXTCALL(glGetQueryObjectuivARB(tq->id, GL_QUERY_RESULT_AVAILABLE_ARB, &available));
-    checkGLcall("glGetQueryObjectuivARB(GL_QUERY_RESULT_AVAILABLE)");
+    GL_EXTCALL(glGetQueryObjectuiv(tq->id, GL_QUERY_RESULT_AVAILABLE, &available));
+    checkGLcall("glGetQueryObjectuiv(GL_QUERY_RESULT_AVAILABLE)");
     TRACE("available %#x.\n", available);
 
     if (available)
     {
         if (size)
         {
-            GL_EXTCALL(glGetQueryObjectui64v(tq->id, GL_QUERY_RESULT_ARB, &timestamp));
-            checkGLcall("glGetQueryObjectuivARB(GL_QUERY_RESULT)");
+            GL_EXTCALL(glGetQueryObjectui64v(tq->id, GL_QUERY_RESULT, &timestamp));
+            checkGLcall("glGetQueryObjectui64v(GL_QUERY_RESULT)");
             TRACE("Returning timestamp %s.\n", wine_dbgstr_longlong(timestamp));
             fill_query_data(data, size, &timestamp, sizeof(timestamp));
         }

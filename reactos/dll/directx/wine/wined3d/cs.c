@@ -634,10 +634,15 @@ static void wined3d_cs_exec_set_texture(struct wined3d_cs *cs, const void *data)
 
     if (op->texture)
     {
+        const struct wined3d_format *new_format = op->texture->resource.format;
+        const struct wined3d_format *old_format = prev ? prev->resource.format : NULL;
+
         if (InterlockedIncrement(&op->texture->resource.bind_count) == 1)
             op->texture->sampler = op->stage;
 
-        if (!prev || op->texture->target != prev->target)
+        if (!prev || op->texture->target != prev->target
+                || !is_same_fixup(new_format->color_fixup, old_format->color_fixup)
+                || (new_format->flags & WINED3DFMT_FLAG_SHADOW) != (old_format->flags & WINED3DFMT_FLAG_SHADOW))
             device_invalidate_state(cs->device, STATE_SHADER(WINED3D_SHADER_TYPE_PIXEL));
 
         if (!prev && op->stage < d3d_info->limits.ffp_blend_stages)
@@ -697,6 +702,7 @@ static void wined3d_cs_exec_set_shader_resource_view(struct wined3d_cs *cs, cons
     const struct wined3d_cs_set_shader_resource_view *op = data;
 
     cs->state.shader_resource_view[op->type][op->view_idx] = op->view;
+    device_invalidate_state(cs->device, STATE_SHADER_RESOURCE_BINDING);
 }
 
 void wined3d_cs_emit_set_shader_resource_view(struct wined3d_cs *cs, enum wined3d_shader_type type,
@@ -718,6 +724,7 @@ static void wined3d_cs_exec_set_sampler(struct wined3d_cs *cs, const void *data)
     const struct wined3d_cs_set_sampler *op = data;
 
     cs->state.sampler[op->type][op->sampler_idx] = op->sampler;
+    device_invalidate_state(cs->device, STATE_SHADER_RESOURCE_BINDING);
 }
 
 void wined3d_cs_emit_set_sampler(struct wined3d_cs *cs, enum wined3d_shader_type type,
@@ -740,6 +747,7 @@ static void wined3d_cs_exec_set_shader(struct wined3d_cs *cs, const void *data)
 
     cs->state.shader[op->type] = op->shader;
     device_invalidate_state(cs->device, STATE_SHADER(op->type));
+    device_invalidate_state(cs->device, STATE_SHADER_RESOURCE_BINDING);
 }
 
 void wined3d_cs_emit_set_shader(struct wined3d_cs *cs, enum wined3d_shader_type type, struct wined3d_shader *shader)

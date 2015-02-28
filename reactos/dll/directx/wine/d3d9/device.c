@@ -500,10 +500,35 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_CreateAdditionalSwapChain(ID
     struct d3d9_device *device = impl_from_IDirect3DDevice9Ex(iface);
     struct wined3d_swapchain_desc desc;
     struct d3d9_swapchain *object;
+    UINT i, count;
     HRESULT hr;
 
     TRACE("iface %p, present_parameters %p, swapchain %p.\n",
             iface, present_parameters, swapchain);
+
+    if (!present_parameters->Windowed)
+    {
+        WARN("Trying to create an additional fullscreen swapchain, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    wined3d_mutex_lock();
+    count = wined3d_device_get_swapchain_count(device->wined3d_device);
+    for (i = 0; i < count; ++i)
+    {
+        struct wined3d_swapchain *wined3d_swapchain;
+
+        wined3d_swapchain = wined3d_device_get_swapchain(device->wined3d_device, i);
+        wined3d_swapchain_get_desc(wined3d_swapchain, &desc);
+
+        if (!desc.windowed)
+        {
+            wined3d_mutex_unlock();
+            WARN("Trying to create an additional swapchain in fullscreen mode, returning D3DERR_INVALIDCALL.\n");
+            return D3DERR_INVALIDCALL;
+        }
+    }
+    wined3d_mutex_unlock();
 
     wined3d_swapchain_desc_from_present_parameters(&desc, present_parameters);
     if (SUCCEEDED(hr = d3d9_swapchain_create(device, &desc, &object)))
@@ -606,6 +631,12 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_device_Reset(IDirect3DDevice9Ex *if
     HRESULT hr;
 
     TRACE("iface %p, present_parameters %p.\n", iface, present_parameters);
+
+    if (!device->d3d_parent->extended && device->device_state == D3D9_DEVICE_STATE_LOST)
+    {
+        WARN("App not active, returning D3DERR_DEVICELOST.\n");
+        return D3DERR_DEVICELOST;
+    }
 
     wined3d_mutex_lock();
 
@@ -784,16 +815,9 @@ static HRESULT WINAPI d3d9_device_CreateTexture(IDirect3DDevice9Ex *iface,
     }
 
     if (set_mem)
-    {
-        struct wined3d_resource *resource;
-        struct d3d9_surface *surface;
-
-        resource = wined3d_texture_get_sub_resource(object->wined3d_texture, 0);
-        surface = wined3d_resource_get_parent(resource);
-        wined3d_surface_update_desc(surface->wined3d_surface, width, height,
+        wined3d_texture_update_desc(object->wined3d_texture, width, height,
                 wined3dformat_from_d3dformat(format), WINED3D_MULTISAMPLE_NONE, 0,
                 *shared_handle, 0);
-    }
 
     TRACE("Created texture %p.\n", object);
     *texture = (IDirect3DTexture9 *)&object->IDirect3DBaseTexture9_iface;
@@ -1014,7 +1038,7 @@ static HRESULT d3d9_device_create_surface(struct d3d9_device *device, UINT width
     wined3d_mutex_lock();
 
     if (FAILED(hr = wined3d_texture_create(device->wined3d_device, &desc,
-            1, flags, NULL, &d3d9_null_wined3d_parent_ops, &texture)))
+            1, flags, NULL, NULL, &d3d9_null_wined3d_parent_ops, &texture)))
     {
         wined3d_mutex_unlock();
         WARN("Failed to create texture, hr %#x.\n", hr);
@@ -1026,11 +1050,12 @@ static HRESULT d3d9_device_create_surface(struct d3d9_device *device, UINT width
     surface_impl->parent_device = &device->IDirect3DDevice9Ex_iface;
     *surface = &surface_impl->IDirect3DSurface9_iface;
     IDirect3DSurface9_AddRef(*surface);
-    wined3d_texture_decref(texture);
 
     if (user_mem)
-        wined3d_surface_update_desc(surface_impl->wined3d_surface, width, height,
+        wined3d_texture_update_desc(texture, width, height,
                 desc.format, multisample_type, multisample_quality, user_mem, 0);
+
+    wined3d_texture_decref(texture);
 
     wined3d_mutex_unlock();
 
@@ -3519,7 +3544,7 @@ static HRESULT CDECL device_parent_create_swapchain_surface(struct wined3d_devic
     texture_desc = *desc;
     texture_desc.resource_type = WINED3D_RTYPE_TEXTURE;
     if (FAILED(hr = wined3d_texture_create(device->wined3d_device, &texture_desc, 1,
-            WINED3D_SURFACE_MAPPABLE, container_parent, &d3d9_null_wined3d_parent_ops, &texture)))
+            WINED3D_SURFACE_MAPPABLE, NULL, container_parent, &d3d9_null_wined3d_parent_ops, &texture)))
     {
         WARN("Failed to create texture, hr %#x.\n", hr);
         return hr;

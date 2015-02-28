@@ -33,8 +33,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 #define WINED3DSP_DCL_USAGEINDEX_MASK           (0xf << WINED3DSP_DCL_USAGEINDEX_SHIFT)
 
 /* DCL sampler type */
-#define WINED3DSP_TEXTURETYPE_SHIFT             27
-#define WINED3DSP_TEXTURETYPE_MASK              (0xf << WINED3DSP_TEXTURETYPE_SHIFT)
+#define WINED3D_SM1_RESOURCE_TYPE_SHIFT         27
+#define WINED3D_SM1_RESOURCE_TYPE_MASK          (0xf << WINED3D_SM1_RESOURCE_TYPE_SHIFT)
 
 /* Opcode-related masks */
 #define WINED3DSI_OPCODE_MASK                   0x0000ffff
@@ -94,6 +94,15 @@ enum WINED3DSHADER_ADDRESSMODE_TYPE
 {
     WINED3DSHADER_ADDRMODE_ABSOLUTE = 0 << WINED3DSHADER_ADDRESSMODE_SHIFT,
     WINED3DSHADER_ADDRMODE_RELATIVE = 1 << WINED3DSHADER_ADDRESSMODE_SHIFT,
+};
+
+enum wined3d_sm1_resource_type
+{
+    WINED3D_SM1_RESOURCE_UNKNOWN        = 0x0,
+    WINED3D_SM1_RESOURCE_TEXTURE_1D     = 0x1,
+    WINED3D_SM1_RESOURCE_TEXTURE_2D     = 0x2,
+    WINED3D_SM1_RESOURCE_TEXTURE_CUBE   = 0x3,
+    WINED3D_SM1_RESOURCE_TEXTURE_3D     = 0x4,
 };
 
 enum wined3d_sm1_opcode
@@ -374,6 +383,15 @@ static const struct wined3d_sm1_opcode_info ps_opcode_table[] =
     {0,                       0, 0, WINED3DSIH_TABLE_SIZE,   0,                           0                          },
 };
 
+static const enum wined3d_shader_resource_type resource_type_table[] =
+{
+    /* WINED3D_SM1_RESOURCE_UNKNOWN */      WINED3D_SHADER_RESOURCE_NONE,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_1D */   WINED3D_SHADER_RESOURCE_TEXTURE_1D,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_2D */   WINED3D_SHADER_RESOURCE_TEXTURE_2D,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_CUBE */ WINED3D_SHADER_RESOURCE_TEXTURE_CUBE,
+    /* WINED3D_SM1_RESOURCE_TEXTURE_3D */   WINED3D_SHADER_RESOURCE_TEXTURE_3D,
+};
+
 /* Read a parameter opcode from the input stream,
  * and possibly a relative addressing token.
  * Return the number of tokens read */
@@ -609,12 +627,23 @@ static void shader_sm1_read_dst_param(struct wined3d_sm1_data *priv, const DWORD
 
 static void shader_sm1_read_semantic(const DWORD **ptr, struct wined3d_shader_semantic *semantic)
 {
+    enum wined3d_sm1_resource_type resource_type;
     DWORD usage_token = *(*ptr)++;
     DWORD dst_token = *(*ptr)++;
 
     semantic->usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
     semantic->usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
-    semantic->sampler_type = (usage_token & WINED3DSP_TEXTURETYPE_MASK) >> WINED3DSP_TEXTURETYPE_SHIFT;
+    resource_type = (usage_token & WINED3D_SM1_RESOURCE_TYPE_MASK) >> WINED3D_SM1_RESOURCE_TYPE_SHIFT;
+    if (resource_type >= ARRAY_SIZE(resource_type_table))
+    {
+        FIXME("Unhandled resource type %#x.\n", resource_type);
+        semantic->resource_type = WINED3D_SHADER_RESOURCE_NONE;
+    }
+    else
+    {
+        semantic->resource_type = resource_type_table[resource_type];
+    }
+    semantic->resource_data_type = WINED3D_DATA_FLOAT;
     shader_parse_dst_param(dst_token, NULL, &semantic->reg);
 }
 

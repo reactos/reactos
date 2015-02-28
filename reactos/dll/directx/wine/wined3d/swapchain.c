@@ -134,12 +134,17 @@ HRESULT CDECL wined3d_swapchain_present(struct wined3d_swapchain *swapchain,
         const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
         const RGNDATA *dirty_region, DWORD flags)
 {
+    static DWORD notified_flags = 0;
+
     TRACE("swapchain %p, src_rect %s, dst_rect %s, dst_window_override %p, dirty_region %p, flags %#x.\n",
             swapchain, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect),
             dst_window_override, dirty_region, flags);
 
-    if (flags)
-        FIXME("Ignoring flags %#x.\n", flags);
+    if (flags & ~notified_flags)
+    {
+        FIXME("Ignoring flags %#x.\n", flags & ~notified_flags);
+        notified_flags |= flags;
+    }
 
     if (!swapchain->back_buffers)
     {
@@ -347,7 +352,7 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
         context2 = context_acquire(device, backbuffer);
         context_apply_blit_state(context2, device);
 
-        if (backbuffer->flags & SFLAG_NORMCOORD)
+        if (backbuffer->container->flags & WINED3D_TEXTURE_NORMALIZED_COORDS)
         {
             tex_left /= src_w;
             tex_right /= src_w;
@@ -873,16 +878,14 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
 
     if (!desc->windowed)
     {
-        struct wined3d_display_mode mode;
-
         /* Change the display settings */
-        mode.width = desc->backbuffer_width;
-        mode.height = desc->backbuffer_height;
-        mode.format_id = desc->backbuffer_format;
-        mode.refresh_rate = desc->refresh_rate;
-        mode.scanline_ordering = WINED3D_SCANLINE_ORDERING_UNKNOWN;
+        swapchain->d3d_mode.width = desc->backbuffer_width;
+        swapchain->d3d_mode.height = desc->backbuffer_height;
+        swapchain->d3d_mode.format_id = desc->backbuffer_format;
+        swapchain->d3d_mode.refresh_rate = desc->refresh_rate;
+        swapchain->d3d_mode.scanline_ordering = WINED3D_SCANLINE_ORDERING_UNKNOWN;
 
-        if (FAILED(hr = wined3d_set_adapter_display_mode(device->wined3d, adapter->ordinal, &mode)))
+        if (FAILED(hr = wined3d_set_adapter_display_mode(device->wined3d, adapter->ordinal, &swapchain->d3d_mode)))
         {
             WARN("Failed to set display mode, hr %#x.\n", hr);
             goto err;
@@ -1172,4 +1175,55 @@ void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain)
     {
         wined3d_resource_update_draw_binding(&swapchain->back_buffers[i]->resource);
     }
+}
+
+void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate)
+{
+    struct wined3d_device *device = swapchain->device;
+    BOOL filter_messages = device->filter_messages;
+
+    /* This code is not protected by the wined3d mutex, so it may run while
+     * wined3d_device_reset is active. Testing on Windows shows that changing
+     * focus during resets and resetting during focus change events causes
+     * the application to crash with an invalid memory access. */
+
+    device->filter_messages = !(device->wined3d->flags & WINED3D_FOCUS_MESSAGES);
+
+    if (activate)
+    {
+        if (!(device->create_parms.flags & WINED3DCREATE_NOWINDOWCHANGES))
+        {
+            /* The d3d versions do not agree on the exact messages here. D3d8 restores
+             * the window but leaves the size untouched, d3d9 sets the size on an
+             * invisible window, generates messages but doesn't change the window
+             * properties. The implementation follows d3d9.
+             *
+             * Guild Wars 1 wants a WINDOWPOSCHANGED message on the device window to
+             * resume drawing after a focus loss. */
+            SetWindowPos(swapchain->device_window, NULL, 0, 0,
+                    swapchain->desc.backbuffer_width, swapchain->desc.backbuffer_height,
+                    SWP_NOACTIVATE | SWP_NOZORDER);
+        }
+
+        if (device->wined3d->flags & WINED3D_RESTORE_MODE_ON_ACTIVATE)
+        {
+            if (FAILED(wined3d_set_adapter_display_mode(device->wined3d,
+                    device->adapter->ordinal, &swapchain->d3d_mode)))
+                ERR("Failed to set display mode.\n");
+        }
+    }
+    else
+    {
+        if (FAILED(wined3d_set_adapter_display_mode(device->wined3d,
+                device->adapter->ordinal, NULL)))
+            ERR("Failed to set display mode.\n");
+
+        swapchain->reapply_mode = TRUE;
+
+        if (!(device->create_parms.flags & WINED3DCREATE_NOWINDOWCHANGES)
+                && IsWindowVisible(swapchain->device_window))
+            ShowWindow(swapchain->device_window, SW_MINIMIZE);
+    }
+
+    device->filter_messages = filter_messages;
 }

@@ -633,10 +633,13 @@ static const struct IDirect3D9ExVtbl d3d9_vtbl =
 
 BOOL d3d9_init(struct d3d9 *d3d9, BOOL extended)
 {
-    DWORD flags = WINED3D_PRESENT_CONVERSION;
+    DWORD flags = WINED3D_PRESENT_CONVERSION | WINED3D_HANDLE_RESTORE;
 
     if (!extended)
         flags |= WINED3D_VIDMEM_ACCOUNTING;
+    else
+        flags |= WINED3D_RESTORE_MODE_ON_ACTIVATE;
+
     d3d9->IDirect3D9Ex_iface.lpVtbl = &d3d9_vtbl;
     d3d9->refcount = 1;
 
