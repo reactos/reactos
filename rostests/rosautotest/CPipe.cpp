@@ -42,6 +42,7 @@ CPipe::CloseReadPipe()
     if (!m_hReadPipe)
         FATAL("Trying to close already closed read pipe");
     CloseHandle(m_hReadPipe);
+    m_hReadPipe = NULL;
 }
 
 /**
@@ -53,6 +54,7 @@ CPipe::CloseWritePipe()
     if (!m_hWritePipe)
         FATAL("Trying to close already closed write pipe");
     CloseHandle(m_hWritePipe);
+    m_hWritePipe = NULL;
 }
 
 /**
