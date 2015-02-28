@@ -23,7 +23,7 @@
 #define __WINE_WINE_RBTREE_H
 
 #define WINE_RB_ENTRY_VALUE(element, type, field) \
-    ((type *)((char *)(element) - offsetof(type, field)))
+    ((type *)((char *)(element) - FIELD_OFFSET(type, field)))
 
 struct wine_rb_entry
 {
