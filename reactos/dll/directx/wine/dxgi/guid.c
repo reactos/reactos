@@ -1,5 +1,6 @@
 /* DO NOT USE THE PRECOMPILED HEADER FOR THIS FILE! */
 
+#include <wine/config.h>
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
