@@ -34,6 +34,7 @@ using namespace std;
 #include "CProcess.h"
 #include "CPipedProcess.h"
 #include "CSimpleException.h"
+#include "CTestException.h"
 #include "CTestInfo.h"
 #include "CTest.h"
 #include "CTestList.h"
@@ -45,9 +46,10 @@ using namespace std;
 #include <rosautotestmsg.h>
 
 /* Useful macros */
-#define EXCEPTION(Message)   throw CSimpleException(Message)
-#define FATAL(Message)       throw CFatalException(__FILE__, __LINE__, Message)
-#define SSEXCEPTION          throw CSimpleException(ss.str().c_str())
+#define EXCEPTION(Message)     throw CSimpleException(Message)
+#define FATAL(Message)         throw CFatalException(__FILE__, __LINE__, Message)
+#define SSEXCEPTION            throw CSimpleException(ss.str())
+#define TESTEXCEPTION(Message) throw CTestException(Message)
 
 /* main.c */
 extern CConfiguration Configuration;

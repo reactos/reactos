@@ -121,12 +121,12 @@ CWineTest::DoListCommand()
 
         /* Wait till this process ended */
         if(WaitForSingleObject(Process.GetProcessHandle(), ListTimeout) == WAIT_FAILED)
-            FATAL("WaitForSingleObject failed for the test list\n");
+            TESTEXCEPTION("WaitForSingleObject failed for the test list\n");
     }
 
     /* Read the output data into a buffer */
     if(!Pipe.Peek(NULL, 0, NULL, &BytesAvailable))
-        FATAL("CPipe::Peek failed for the test list\n");
+        TESTEXCEPTION("CPipe::Peek failed for the test list\n");
 
     /* Check if we got any */
     if(!BytesAvailable)
@@ -134,14 +134,14 @@ CWineTest::DoListCommand()
         stringstream ss;
 
         ss << "The --list command did not return any data for " << UnicodeToAscii(m_CurrentFile) << endl;
-        SSEXCEPTION;
+        TESTEXCEPTION(ss.str());
     }
 
     /* Read the data */
     m_ListBuffer = new char[BytesAvailable];
 
     if(!Pipe.Read(m_ListBuffer, BytesAvailable, &Temp))
-        FATAL("CPipe::Read failed\n");
+        TESTEXCEPTION("CPipe::Read failed\n");
 
     return BytesAvailable;
 }
@@ -208,40 +208,49 @@ CWineTest::GetNextTestInfo()
 {
     while(!m_CurrentFile.empty() || GetNextFile())
     {
-        while(GetNextTest())
+        try
         {
-            /* If the user specified a test through the command line, check this here */
-            if(!Configuration.GetTest().empty() && Configuration.GetTest() != m_CurrentTest)
-                continue;
-
+            while(GetNextTest())
             {
-                auto_ptr<CTestInfo> TestInfo(new CTestInfo());
-                size_t UnderscorePosition;
+                /* If the user specified a test through the command line, check this here */
+                if(!Configuration.GetTest().empty() && Configuration.GetTest() != m_CurrentTest)
+                    continue;
 
-                /* Build the command line */
-                TestInfo->CommandLine = m_TestPath;
-                TestInfo->CommandLine += m_CurrentFile;
-                TestInfo->CommandLine += ' ';
-                TestInfo->CommandLine += AsciiToUnicode(m_CurrentTest);
-
-                /* Store the Module name */
-                UnderscorePosition = m_CurrentFile.find_last_of('_');
-
-                if(UnderscorePosition == m_CurrentFile.npos)
                 {
-                    stringstream ss;
+                    auto_ptr<CTestInfo> TestInfo(new CTestInfo());
+                    size_t UnderscorePosition;
 
-                    ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
-                    SSEXCEPTION;
+                    /* Build the command line */
+                    TestInfo->CommandLine = m_TestPath;
+                    TestInfo->CommandLine += m_CurrentFile;
+                    TestInfo->CommandLine += ' ';
+                    TestInfo->CommandLine += AsciiToUnicode(m_CurrentTest);
+
+                    /* Store the Module name */
+                    UnderscorePosition = m_CurrentFile.find_last_of('_');
+
+                    if(UnderscorePosition == m_CurrentFile.npos)
+                    {
+                        stringstream ss;
+
+                        ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
+                        SSEXCEPTION;
+                    }
+
+                    TestInfo->Module = UnicodeToAscii(m_CurrentFile.substr(0, UnderscorePosition));
+
+                    /* Store the test */
+                    TestInfo->Test = m_CurrentTest;
+
+                    return TestInfo.release();
                 }
-
-                TestInfo->Module = UnicodeToAscii(m_CurrentFile.substr(0, UnderscorePosition));
-
-                /* Store the test */
-                TestInfo->Test = m_CurrentTest;
-
-                return TestInfo.release();
             }
+        }
+        catch(CTestException& e)
+        {
+            delete[] m_ListBuffer;
+            StringOut(e.GetMessage());
+            m_CurrentFile.clear();
         }
     }
 
@@ -271,6 +280,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
 
     StartTime = GetTickCount();
 
+    try
     {
         /* Execute the test */
         CPipedProcess Process(TestInfo->CommandLine, Pipe);
@@ -286,7 +296,15 @@ CWineTest::RunTest(CTestInfo* TestInfo)
                 TestInfo->Log += Buffer;
         }
         if(GetLastError() != ERROR_BROKEN_PIPE)
-            FATAL("CPipe::Read failed for the test run\n");
+            TESTEXCEPTION("CPipe::Read failed for the test run\n");
+    }
+    catch(CTestException& e)
+    {
+        if(!tailString.empty())
+            StringOut(tailString);
+        tailString.clear();
+        StringOut(e.GetMessage());
+        TestInfo->Log += e.GetMessage();
     }
 
     /* Print what's left */
@@ -297,6 +315,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     ssFinish << "Test " << TestInfo->Test << " completed in ";
     ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
     StringOut(ssFinish.str());
+    TestInfo->Log += ssFinish.str();
 }
 
 /**
