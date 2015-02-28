@@ -1,0 +1,60 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        ForceRemove {7007ACC7-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections'
+        {
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Both'
+            }
+            DefaultIcon = s '%MODULE%'
+            ShellFolder
+            {
+                val Attributes = d '0x00000020'
+            }
+            val LocalizedString = s '@%MODULE%,-10000'
+        }
+        ForceRemove {7007ACC5-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections'
+        {
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Both'
+            }
+        }
+        ForceRemove {7007ACCF-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections'
+        {
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Both'
+            }
+        }
+    }
+}
+HKLM
+{
+  NoRemove Software
+  {
+    NoRemove Microsoft
+    {
+      NoRemove Windows
+      {
+        NoRemove CurrentVersion
+        {
+          NoRemove Explorer
+          {
+            NoRemove MyComputer
+            {
+              NoRemove NameSpace
+              {
+                ForceRemove {7007ACC7-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections'
+                {
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

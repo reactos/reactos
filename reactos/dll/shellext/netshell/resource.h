@@ -94,3 +94,5 @@
 #define IDS_WINS_SERVERS     10308
 #define IDS_PROPERTY         10309
 #define IDS_VALUE            10310
+
+#define IDR_NETSHELL 20000
