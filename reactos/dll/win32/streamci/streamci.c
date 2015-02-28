@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Configuration of network devices
+ * FILE:            dll/win32/streamci/streamci.c
+ * PURPOSE:         Streaming device class installer
+ *
+ * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
+ */
+
 #include "precomp.h"
 
 DWORD
@@ -56,7 +65,7 @@ InstallSoftwareDeviceInterface(IN LPGUID DeviceId,
     PSWENUM_INSTALL_INTERFACE InstallInterface;
     DWORD dwResult;
 
-    hDevInfo = SetupDiGetClassDevsW(&GUID_DEVCLASS_SYSTEM, NULL, NULL,  DIGCF_DEVICEINTERFACE| DIGCF_PRESENT);
+    hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL,  DIGCF_DEVICEINTERFACE| DIGCF_PRESENT);
     if (!hDevInfo)
     {
         // failed
@@ -79,6 +88,7 @@ InstallSoftwareDeviceInterface(IN LPGUID DeviceId,
         return GetLastError();
     }
 
+    DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
     if (!SetupDiGetDeviceInterfaceDetailW(hDevInfo,  &DeviceInterfaceData, DeviceInterfaceDetailData,MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W), NULL, NULL))
     {
         // failed
@@ -86,7 +96,6 @@ InstallSoftwareDeviceInterface(IN LPGUID DeviceId,
         SetupDiDestroyDeviceInfoList(hDevInfo);
         return GetLastError();
     }
-
 
     hDevice = CreateFileW(DeviceInterfaceDetailData->DevicePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED|FILE_ATTRIBUTE_NORMAL, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
