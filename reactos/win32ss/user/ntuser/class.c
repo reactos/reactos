@@ -2424,8 +2424,19 @@ UserRegisterSystemClasses(VOID)
         wc.cbClsExtra = 0;
         wc.cbWndExtra = DefaultServerClasses[i].ExtraBytes;
         wc.hIcon = NULL;
+
         //// System Cursors should be initilized!!!
-        wc.hCursor = DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL ? UserHMGetHandle(SYSTEMCUR(ARROW)) : NULL;
+        if (DefaultServerClasses[i].hCursor == (HICON)OCR_NORMAL &&
+            SYSTEMCUR(ARROW) != NULL)
+        {
+            wc.hCursor = UserHMGetHandle(SYSTEMCUR(ARROW));
+        }
+        else
+        {
+            ERR("SYSTEMCUR(ARROW) == NULL, should not happen!!\n");
+            wc.hCursor = NULL;
+        }
+
         hBrush = DefaultServerClasses[i].hBrush;
         if (hBrush <= (HBRUSH)COLOR_MENUBAR)
         {
