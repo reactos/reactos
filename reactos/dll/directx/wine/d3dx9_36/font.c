@@ -29,7 +29,28 @@ struct d3dx_font
 
     HDC hdc;
     HFONT hfont;
+
+    UINT tex_width;
+    UINT tex_height;
+    IDirect3DTexture9 *texture;
+    HBITMAP bitmap;
+    BYTE *bits;
 };
+
+/* Returns the smallest power of 2 which is greater than or equal to num */
+static UINT make_pow2(UINT num)
+{
+    UINT result = 1;
+
+    /* In the unlikely event somebody passes a large value, make sure we don't enter an infinite loop */
+    if (num >= 0x80000000)
+        return 0x80000000;
+
+    while (result < num)
+        result <<= 1;
+
+    return result;
+}
 
 static inline struct d3dx_font *impl_from_ID3DXFont(ID3DXFont *iface)
 {
@@ -57,19 +78,27 @@ static HRESULT WINAPI ID3DXFontImpl_QueryInterface(ID3DXFont *iface, REFIID riid
 static ULONG WINAPI ID3DXFontImpl_AddRef(ID3DXFont *iface)
 {
     struct d3dx_font *This = impl_from_ID3DXFont(iface);
-    ULONG ref=InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
     TRACE("%p increasing refcount to %u\n", iface, ref);
+
     return ref;
 }
 
 static ULONG WINAPI ID3DXFontImpl_Release(ID3DXFont *iface)
 {
     struct d3dx_font *This = impl_from_ID3DXFont(iface);
-    ULONG ref=InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("%p decreasing refcount to %u\n", iface, ref);
 
-    if(ref==0) {
+    if (!ref)
+    {
+        if (This->texture)
+        {
+            IDirect3DTexture9_Release(This->texture);
+            DeleteObject(This->bitmap);
+        }
         DeleteObject(This->hfont);
         DeleteDC(This->hdc);
         IDirect3DDevice9_Release(This->device);
@@ -148,7 +177,7 @@ static HRESULT WINAPI ID3DXFontImpl_GetGlyphData(ID3DXFont *iface, UINT glyph,
 static HRESULT WINAPI ID3DXFontImpl_PreloadCharacters(ID3DXFont *iface, UINT first, UINT last)
 {
     FIXME("iface %p, first %u, last %u stub!\n", iface, first, last);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI ID3DXFontImpl_PreloadGlyphs(ID3DXFont *iface, UINT first, UINT last)
@@ -172,17 +201,177 @@ static HRESULT WINAPI ID3DXFontImpl_PreloadTextW(ID3DXFont *iface, const WCHAR *
 static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
         const char *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
-    FIXME("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x stub!\n",
+    LPWSTR stringW;
+    INT countW, ret = 0;
+
+    TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
             iface,  sprite, debugstr_a(string), count, wine_dbgstr_rect(rect), format, color);
-    return 1;
+
+    if (!string || !count)
+        return 0;
+
+    countW = MultiByteToWideChar(CP_ACP, 0, string, count, NULL, 0);
+    stringW = HeapAlloc(GetProcessHeap(), 0, countW * sizeof(WCHAR));
+    if (stringW)
+    {
+        MultiByteToWideChar(CP_ACP, 0, string, count, stringW, countW);
+        ret = ID3DXFont_DrawTextW(iface, sprite, stringW, countW, rect, format, color);
+        HeapFree(GetProcessHeap(), 0, stringW);
+    }
+
+    return ret;
 }
 
 static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
-    FIXME("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x stub!\n",
+    struct d3dx_font *This = impl_from_ID3DXFont(iface);
+    RECT calc_rect = *rect;
+    INT height;
+
+    TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x\n",
             iface,  sprite, debugstr_w(string), count, wine_dbgstr_rect(rect), format, color);
-    return 1;
+
+    if (!string || !count)
+        return 0;
+
+    /* Strip terminating NULL characters */
+    while (count > 0 && !string[count-1])
+        count--;
+
+    height = DrawTextW(This->hdc, string, count, &calc_rect, format | DT_CALCRECT);
+
+    if (format & DT_CALCRECT)
+    {
+        *rect = calc_rect;
+        return height;
+    }
+
+    if (format & DT_CENTER)
+    {
+        UINT new_width = calc_rect.right - calc_rect.left;
+        calc_rect.left = (rect->right + rect->left - new_width) / 2;
+        calc_rect.right = calc_rect.left + new_width;
+    }
+
+    if (height && (calc_rect.left < calc_rect.right))
+    {
+        D3DLOCKED_RECT locked_rect;
+        D3DXVECTOR3 position;
+        UINT text_width, text_height;
+        RECT text_rect;
+        ID3DXSprite *target = sprite;
+        HRESULT hr;
+        int i, j;
+
+        /* Get rect position and dimensions */
+        position.x = calc_rect.left;
+        position.y = calc_rect.top;
+        position.z = 0;
+        text_width = calc_rect.right - calc_rect.left;
+        text_height = calc_rect.bottom - calc_rect.top;
+        text_rect.left = 0;
+        text_rect.top = 0;
+        text_rect.right = text_width;
+        text_rect.bottom = text_height;
+
+        /* We need to flush as it seems all draws in the begin/end sequence use only the latest updated texture */
+        if (sprite)
+            ID3DXSprite_Flush(sprite);
+
+        /* Extend texture and DIB section to contain text */
+        if ((text_width > This->tex_width) || (text_height > This->tex_height))
+        {
+            BITMAPINFOHEADER header;
+
+            if (text_width > This->tex_width)
+                This->tex_width = make_pow2(text_width);
+            if (text_height > This->tex_height)
+                This->tex_height = make_pow2(text_height);
+
+            if (This->texture)
+            {
+                IDirect3DTexture9_Release(This->texture);
+                DeleteObject(This->bitmap);
+            }
+
+            hr = D3DXCreateTexture(This->device, This->tex_width, This->tex_height, 1, 0,
+                                   D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &This->texture);
+            if (FAILED(hr))
+            {
+                This->texture = NULL;
+                return 0;
+            }
+
+            header.biSize = sizeof(header);
+            header.biWidth = This->tex_width;
+            header.biHeight = -This->tex_height;
+            header.biPlanes = 1;
+            header.biBitCount = 32;
+            header.biCompression = BI_RGB;
+            header.biSizeImage = sizeof(DWORD) * This->tex_width * This->tex_height;
+            header.biXPelsPerMeter = 0;
+            header.biYPelsPerMeter = 0;
+            header.biClrUsed = 0;
+            header.biClrImportant = 0;
+
+            This->bitmap = CreateDIBSection(This->hdc, (const BITMAPINFO*)&header,
+                                            DIB_RGB_COLORS, (void**)&This->bits, NULL, 0);
+            if (!This->bitmap)
+            {
+                IDirect3DTexture9_Release(This->texture);
+                This->texture = NULL;
+                return 0;
+            }
+
+            SelectObject(This->hdc, This->bitmap);
+        }
+
+        if (FAILED(IDirect3DTexture9_LockRect(This->texture, 0, &locked_rect, &text_rect, D3DLOCK_DISCARD)))
+            return 0;
+
+        /* Clear rect */
+        for (i = 0; i < text_height; i++)
+            memset(This->bits + i * This->tex_width * sizeof(DWORD), 0,
+                   text_width * sizeof(DWORD));
+
+        DrawTextW(This->hdc, string, count, &text_rect, format);
+
+        /* All RGB components are equal so take one as alpha and set RGB
+         * color to white, so it can be modulated with color parameter */
+        for (i = 0; i < text_height; i++)
+        {
+            DWORD *src = (DWORD *)This->bits + i * This->tex_width;
+            DWORD *dst = (DWORD *)((BYTE *)locked_rect.pBits + i * locked_rect.Pitch);
+            for (j = 0; j < text_width; j++)
+            {
+                *dst++ = (*src++ << 24) | 0xFFFFFF;
+            }
+        }
+
+        IDirect3DTexture9_UnlockRect(This->texture, 0);
+
+        if (!sprite)
+        {
+            hr = D3DXCreateSprite(This->device, &target);
+            if (FAILED(hr))
+                 return 0;
+            ID3DXSprite_Begin(target, 0);
+        }
+
+        hr = target->lpVtbl->Draw(target, This->texture, &text_rect, NULL, &position, color);
+
+        if (!sprite)
+        {
+            ID3DXSprite_End(target);
+            ID3DXSprite_Release(target);
+        }
+
+        if (FAILED(hr))
+            return 0;
+    }
+
+    return height;
 }
 
 static HRESULT WINAPI ID3DXFontImpl_OnLostDevice(ID3DXFont *iface)
@@ -296,46 +485,55 @@ HRESULT WINAPI D3DXCreateFontIndirectW(IDirect3DDevice9 *device, const D3DXFONT_
 
     TRACE("(%p, %p, %p)\n", device, desc, font);
 
-    if( !device || !desc || !font ) return D3DERR_INVALIDCALL;
+    if (!device || !desc || !font) return D3DERR_INVALIDCALL;
 
-    /* the device MUST support D3DFMT_A8R8G8B8 */
+    TRACE("desc: %d %d %d %d %d %d %d %d %d %s\n", desc->Height, desc->Width, desc->Weight, desc->MipLevels, desc->Italic,
+            desc->CharSet, desc->OutputPrecision, desc->Quality, desc->PitchAndFamily, debugstr_w(desc->FaceName));
+
+    /* The device MUST support D3DFMT_A8R8G8B8 */
     IDirect3DDevice9_GetDirect3D(device, &d3d);
     IDirect3DDevice9_GetCreationParameters(device, &cpars);
     IDirect3DDevice9_GetDisplayMode(device, 0, &mode);
     hr = IDirect3D9_CheckDeviceFormat(d3d, cpars.AdapterOrdinal, cpars.DeviceType, mode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8R8G8B8);
-    if(FAILED(hr)) {
+    if (FAILED(hr))
+    {
         IDirect3D9_Release(d3d);
         return D3DXERR_INVALIDDATA;
     }
     IDirect3D9_Release(d3d);
 
-    object = HeapAlloc(GetProcessHeap(), 0, sizeof(struct d3dx_font));
-    if(object==NULL) {
-        *font=NULL;
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct d3dx_font));
+    if (!object)
+    {
+        *font = NULL;
         return E_OUTOFMEMORY;
     }
     object->ID3DXFont_iface.lpVtbl = &D3DXFont_Vtbl;
-    object->ref=1;
-    object->device=device;
-    object->desc=*desc;
+    object->ref = 1;
+    object->device = device;
+    object->desc = *desc;
 
     object->hdc = CreateCompatibleDC(NULL);
-    if( !object->hdc ) {
+    if (!object->hdc)
+    {
         HeapFree(GetProcessHeap(), 0, object);
         return D3DXERR_INVALIDDATA;
     }
 
     object->hfont = CreateFontW(desc->Height, desc->Width, 0, 0, desc->Weight, desc->Italic, FALSE, FALSE, desc->CharSet,
                                 desc->OutputPrecision, CLIP_DEFAULT_PRECIS, desc->Quality, desc->PitchAndFamily, desc->FaceName);
-    if( !object->hfont ) {
+    if (!object->hfont)
+    {
         DeleteDC(object->hdc);
         HeapFree(GetProcessHeap(), 0, object);
         return D3DXERR_INVALIDDATA;
     }
     SelectObject(object->hdc, object->hfont);
+    SetTextColor(object->hdc, 0x00ffffff);
+    SetBkColor(object->hdc, 0x00000000);
 
     IDirect3DDevice9_AddRef(device);
-    *font=&object->ID3DXFont_iface;
+    *font = &object->ID3DXFont_iface;
 
     return D3D_OK;
 }

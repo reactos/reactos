@@ -1,6 +1,7 @@
 /*
  * Copyright 2008 Luis Busquets
  * Copyright 2009 Matteo Bruni
+ * Copyright 2010, 2013 Christian Costa
  * Copyright 2011 Travis Athougies
  *
  * This library is free software; you can redistribute it and/or
@@ -435,6 +436,41 @@ HRESULT WINAPI D3DXCompileShader(const char *data, UINT length, const D3DXMACRO 
         {
             ID3DXBuffer_Release(*shader);
             *shader = NULL;
+        }
+    }
+
+    /* Filter out D3DCompile warning messages that are not present with D3DCompileShader */
+    if (SUCCEEDED(hr) && error_msgs && *error_msgs)
+    {
+        char *messages = ID3DXBuffer_GetBufferPointer(*error_msgs);
+        DWORD size     = ID3DXBuffer_GetBufferSize(*error_msgs);
+
+        /* Ensure messages are null terminated for safe processing */
+        if (size) messages[size - 1] = 0;
+
+        while (size > 1)
+        {
+            char *prev, *next;
+
+            /* Warning has the form "warning X3206: ... implicit truncation of vector type"
+               but we only search for "X3206:" in case d3dcompiler_43 has localization */
+            prev = next = strstr(messages, "X3206:");
+            if (!prev) break;
+
+            /* get pointer to beginning and end of current line */
+            while (prev > messages && *(prev - 1) != '\n') prev--;
+            while (next < messages + size - 1 && *next != '\n') next++;
+            if (next < messages + size - 1 && *next == '\n') next++;
+
+            memmove(prev, next, messages + size - next);
+            size -= (next - prev);
+        }
+
+        /* Only return a buffer if the resulting string is not empty as some apps depend on that */
+        if (size <= 1)
+        {
+            ID3DXBuffer_Release(*error_msgs);
+            *error_msgs = NULL;
         }
     }
 
@@ -2111,6 +2147,121 @@ HRESULT WINAPI D3DXGetShaderSamplers(const DWORD *byte_code, const char **sample
     TRACE("Found %u samplers\n", sampler_count);
 
     if (count) *count = sampler_count;
+
+    return D3D_OK;
+}
+
+HRESULT WINAPI D3DXDisassembleShader(const DWORD *shader, BOOL colorcode, const char *comments, ID3DXBuffer **disassembly)
+{
+   FIXME("%p %d %s %p: stub\n", shader, colorcode, debugstr_a(comments), disassembly);
+   return E_OUTOFMEMORY;
+}
+
+const DWORD* skip_instruction(const DWORD *byte_code, UINT shader_model)
+{
+    TRACE("Shader model %u\n", shader_model);
+
+    /* Handle all special instructions whose arguments may contain D3DSIO_DCL */
+    if ((*byte_code & D3DSI_OPCODE_MASK) == D3DSIO_COMMENT)
+    {
+        byte_code += 1 + ((*byte_code & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT);
+    }
+    else if (shader_model >= 2)
+    {
+        byte_code += 1 + ((*byte_code & D3DSI_INSTLENGTH_MASK) >> D3DSI_INSTLENGTH_SHIFT);
+    }
+    else if ((*byte_code & D3DSI_OPCODE_MASK) == D3DSIO_DEF)
+    {
+        byte_code += 1 + 5;
+    }
+    else
+    {
+        /* Handle remaining safe instructions */
+        while (*++byte_code & (1 << 31));
+    }
+
+    return byte_code;
+}
+
+static UINT get_shader_semantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, BOOL input)
+{
+    const DWORD *ptr = byte_code;
+    UINT shader_model = (*ptr >> 8) & 0xff;
+    UINT i = 0;
+
+    TRACE("Shader version: %#x\n", *ptr);
+    ptr++;
+
+    while (*ptr != D3DSIO_END)
+    {
+        if (*ptr & (1 << 31))
+        {
+            FIXME("Opcode expected but got %#x\n", *ptr);
+            return 0;
+        }
+        else if ((*ptr & D3DSI_OPCODE_MASK) == D3DSIO_DCL)
+        {
+            DWORD param1 = *++ptr;
+            DWORD param2 = *++ptr;
+            DWORD usage = param1 & 0x1f;
+            DWORD usage_index = (param1 >> 16) & 0xf;
+            DWORD reg_type = (((param2 >> 11) & 0x3) << 3) | ((param2 >> 28) & 0x7);
+
+            TRACE("D3DSIO_DCL param1: %#x, param2: %#x, usage: %u, usage_index: %u, reg_type: %u\n",
+                   param1, param2, usage, usage_index, reg_type);
+
+            if ((input && (reg_type == D3DSPR_INPUT)) || (!input && (reg_type == D3DSPR_OUTPUT)))
+            {
+                if (semantics)
+                {
+                    semantics[i].Usage = usage;
+                    semantics[i].UsageIndex = usage_index;
+                }
+                i++;
+            }
+
+            ptr++;
+        }
+        else
+        {
+            ptr = skip_instruction(ptr, shader_model);
+        }
+    }
+
+    return i;
+}
+
+HRESULT WINAPI D3DXGetShaderInputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count)
+{
+    UINT nb_semantics;
+
+    TRACE("byte_code %p, semantics %p, count %p\n", byte_code, semantics, count);
+
+    if (!byte_code)
+        return D3DERR_INVALIDCALL;
+
+    nb_semantics = get_shader_semantics(byte_code, semantics, TRUE);
+
+    if (count)
+        *count = nb_semantics;
+
+    return D3D_OK;
+}
+
+
+HRESULT WINAPI D3DXGetShaderOutputSemantics(const DWORD *byte_code, D3DXSEMANTIC *semantics, UINT *count)
+{
+    UINT nb_semantics;
+
+    TRACE("byte_code %p, semantics %p, count %p\n", byte_code, semantics, count);
+
+    if (!byte_code)
+        return D3DERR_INVALIDCALL;
+
+    nb_semantics = get_shader_semantics(byte_code, semantics, FALSE);
+
+    if (count)
+        *count = nb_semantics;
 
     return D3D_OK;
 }

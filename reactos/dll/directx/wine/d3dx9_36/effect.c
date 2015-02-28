@@ -3113,13 +3113,41 @@ static HRESULT WINAPI ID3DXEffectImpl_ValidateTechnique(ID3DXEffect* iface, D3DX
     return D3D_OK;
 }
 
-static HRESULT WINAPI ID3DXEffectImpl_FindNextValidTechnique(ID3DXEffect* iface, D3DXHANDLE technique, D3DXHANDLE* next_technique)
+static HRESULT WINAPI ID3DXEffectImpl_FindNextValidTechnique(ID3DXEffect *iface,
+        D3DXHANDLE technique, D3DXHANDLE *next_technique)
 {
     struct ID3DXEffectImpl *This = impl_from_ID3DXEffect(iface);
+    struct d3dx9_base_effect *base_effect = &This->base_effect;
+    UINT i = 0;
 
-    FIXME("(%p)->(%p, %p): stub\n", This, technique, next_technique);
+    TRACE("iface %p, technique %p, next_technique %p\n", iface, technique, next_technique);
 
-    return E_NOTIMPL;
+    if (!next_technique)
+        return D3DERR_INVALIDCALL;
+
+    if (technique)
+    {
+        for (; i < base_effect->technique_count; i++)
+        {
+            if (technique == get_technique_handle(&base_effect->techniques[i]))
+            {
+                i++; /* Go to next technique */
+                break;
+            }
+        }
+    }
+
+    for (; i < base_effect->technique_count; i++)
+    {
+        if (SUCCEEDED(iface->lpVtbl->ValidateTechnique(iface, get_technique_handle(&base_effect->techniques[i]))))
+        {
+            *next_technique = get_technique_handle(&base_effect->techniques[i]);
+            return D3D_OK;
+        }
+    }
+
+    *next_technique = NULL;
+    return S_FALSE;
 }
 
 static BOOL WINAPI ID3DXEffectImpl_IsParameterUsed(ID3DXEffect* iface, D3DXHANDLE parameter, D3DXHANDLE technique)

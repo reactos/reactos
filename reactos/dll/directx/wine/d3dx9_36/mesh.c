@@ -1690,11 +1690,7 @@ static HRESULT WINAPI d3dx9_mesh_OptimizeInplace(ID3DXMesh *iface, DWORD flags, 
         if (FAILED(hr)) goto cleanup;
     } else if (flags & D3DXMESHOPT_ATTRSORT) {
         if (!(flags & D3DXMESHOPT_IGNOREVERTS))
-        {
             FIXME("D3DXMESHOPT_ATTRSORT vertex reordering not implemented.\n");
-            hr = E_NOTIMPL;
-            goto cleanup;
-        }
 
         hr = iface->lpVtbl->LockAttributeBuffer(iface, 0, &attrib_buffer);
         if (FAILED(hr)) goto cleanup;
@@ -2397,9 +2393,9 @@ BOOL WINAPI D3DXIntersectTri(const D3DXVECTOR3 *p0, const D3DXVECTOR3 *p1, const
         D3DXVec4Transform(&vec, &vec, &m);
         if ( (vec.x >= 0.0f) && (vec.y >= 0.0f) && (vec.x + vec.y <= 1.0f) && (vec.z >= 0.0f) )
         {
-            *pu = vec.x;
-            *pv = vec.y;
-            *pdist = fabsf( vec.z );
+            if (pu) *pu = vec.x;
+            if (pv) *pv = vec.y;
+            if (pdist) *pdist = fabsf( vec.z );
             return TRUE;
         }
     }
@@ -4544,6 +4540,94 @@ struct vertex
     D3DXVECTOR3 position;
     D3DXVECTOR3 normal;
 };
+
+HRESULT WINAPI D3DXCreatePolygon(struct IDirect3DDevice9 *device, float length, UINT sides,
+        struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency)
+{
+    HRESULT hr;
+    ID3DXMesh *polygon;
+    struct vertex *vertices;
+    WORD (*faces)[3];
+    DWORD (*adjacency_buf)[3];
+    float scale;
+    unsigned int i;
+
+    TRACE("device %p, length %f, sides %u, mesh %p, adjacency %p.\n",
+            device, length, sides, mesh, adjacency);
+
+    if (!device || length < 0.0f || sides < 3 || !mesh)
+        return D3DERR_INVALIDCALL;
+
+    if (FAILED(hr = D3DXCreateMeshFVF(sides, sides + 1, D3DXMESH_MANAGED,
+            D3DFVF_XYZ | D3DFVF_NORMAL, device, &polygon)))
+    {
+        return hr;
+    }
+
+    if (FAILED(hr = polygon->lpVtbl->LockVertexBuffer(polygon, 0, (void **)&vertices)))
+    {
+        polygon->lpVtbl->Release(polygon);
+        return hr;
+    }
+
+    if (FAILED(hr = polygon->lpVtbl->LockIndexBuffer(polygon, 0, (void **)&faces)))
+    {
+        polygon->lpVtbl->UnlockVertexBuffer(polygon);
+        polygon->lpVtbl->Release(polygon);
+        return hr;
+    }
+
+    scale = 0.5f * length / sinf(D3DX_PI / sides);
+
+    vertices[0].position.x = 0.0f;
+    vertices[0].position.y = 0.0f;
+    vertices[0].position.z = 0.0f;
+    vertices[0].normal.x = 0.0f;
+    vertices[0].normal.y = 0.0f;
+    vertices[0].normal.z = 1.0f;
+
+    for (i = 0; i < sides; ++i)
+    {
+        vertices[i + 1].position.x = cosf(2.0f * D3DX_PI * i / sides) * scale;
+        vertices[i + 1].position.y = sinf(2.0f * D3DX_PI * i / sides) * scale;
+        vertices[i + 1].position.z = 0.0f;
+        vertices[i + 1].normal.x = 0.0f;
+        vertices[i + 1].normal.y = 0.0f;
+        vertices[i + 1].normal.z = 1.0f;
+
+        faces[i][0] = 0;
+        faces[i][1] = i + 1;
+        faces[i][2] = i + 2;
+    }
+
+    faces[sides - 1][2] = 1;
+
+    polygon->lpVtbl->UnlockVertexBuffer(polygon);
+    polygon->lpVtbl->UnlockIndexBuffer(polygon);
+
+    if (adjacency)
+    {
+        if (FAILED(hr = D3DXCreateBuffer(sides * sizeof(DWORD) * 3, adjacency)))
+        {
+            polygon->lpVtbl->Release(polygon);
+            return hr;
+        }
+
+        adjacency_buf = ID3DXBuffer_GetBufferPointer(*adjacency);
+        for (i = 0; i < sides; ++i)
+        {
+            adjacency_buf[i][0] = i - 1;
+            adjacency_buf[i][1] = ~0U;
+            adjacency_buf[i][2] = i + 1;
+        }
+        adjacency_buf[0][0] = sides - 1;
+        adjacency_buf[sides - 1][2] = 0;
+    }
+
+    *mesh = polygon;
+
+    return D3D_OK;
+}
 
 HRESULT WINAPI D3DXCreateBox(struct IDirect3DDevice9 *device, float width, float height,
         float depth, struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency)
@@ -7135,4 +7219,60 @@ HRESULT WINAPI D3DXOptimizeFaces(const void *indices, UINT num_faces,
 
 error:
     return hr;
+}
+
+/*************************************************************************
+ * D3DXComputeTangentFrameEx    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeTangentFrameEx(ID3DXMesh *Mesh, DWORD TextureInSemantic, DWORD TextureInIndex,
+               DWORD UPartialOutSemantic, DWORD UPartialOutIndex, DWORD VPartialOutSemantic, DWORD VPartialOutIndex,
+               DWORD NormalOutSemantic, DWORD NormalOutIndex, DWORD options, const DWORD *adjacency,
+               FLOAT PartialEdgeThreshold, FLOAT SingularPointThreshold, FLOAT NormalEdgeThreshold,
+               ID3DXMesh **MeshOut, ID3DXBuffer **VertexMapping)
+{
+    FIXME("Mesh %p, TextureInSemantic %u, TextureInIndex %u, UPartialOutSemantic %u, UPartialOutIndex %u, "
+            "VPartialOutSemantic %u, VPartialOutIndex %u, NormalOutSemantic %u, NormalOutIndex %u, "
+            "options %x, adjacency %p, PartialEdgeThreshold %f, SingularPointThreshold %f, NormalEdgeThreshold %f, "
+            "MeshOut %p, VertexMapping %p stub.\n",
+            Mesh, TextureInSemantic, TextureInIndex, UPartialOutSemantic, UPartialOutIndex, VPartialOutSemantic,
+            VPartialOutIndex, NormalOutSemantic, NormalOutIndex, options, adjacency, PartialEdgeThreshold,
+            SingularPointThreshold, NormalEdgeThreshold, MeshOut, VertexMapping);
+
+    return E_NOTIMPL;
+}
+
+/*************************************************************************
+ * D3DXComputeNormals    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeNormals(ID3DXBaseMesh *mesh, const DWORD *adjacency)
+{
+    TRACE("mesh %p, adjacency %p.\n", mesh, adjacency);
+
+    return D3DXComputeTangentFrameEx((ID3DXMesh *)mesh, D3DX_DEFAULT, 0, D3DX_DEFAULT, 0, D3DX_DEFAULT, 0,
+                                     D3DDECLUSAGE_NORMAL, 0, D3DXTANGENT_GENERATE_IN_PLACE | D3DXTANGENT_CALCULATE_NORMALS,
+                                     adjacency, -1.01f, -0.01f, -1.01f, NULL, NULL);
+}
+
+/*************************************************************************
+ * D3DXComputeNormalMap    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXComputeNormalMap(IDirect3DTexture9 *texture, IDirect3DTexture9 *src_texture,
+        const PALETTEENTRY *src_palette, DWORD flags, DWORD channel, FLOAT amplitude)
+{
+    FIXME("texture %p, src_texture %p, src_palette %p, flags %#x, channel %u, amplitude %f stub.\n",
+            texture, src_texture, src_palette, flags, channel, amplitude);
+
+    return D3D_OK;
+}
+
+/*************************************************************************
+ * D3DXIntersect    (D3DX9_36.@)
+ */
+HRESULT WINAPI D3DXIntersect(ID3DXBaseMesh *Mesh, const D3DXVECTOR3 *RayPos, const D3DXVECTOR3 *RayDir, BOOL *Hit,
+        DWORD *FaceIndex, FLOAT *U, FLOAT *V, FLOAT *Dist, ID3DXBuffer **AllHits, DWORD *CountOfHits)
+{
+    FIXME("Mesh %p, RayPos %p, RayDir %p, Hit %p, FaceIndex %p, U %p, V %p, Dist %p, AllHits %p, CountOfHits %p stub.\n",
+            Mesh, RayPos, RayDir, Hit, FaceIndex, U, V, Dist, AllHits, CountOfHits);
+
+    return E_NOTIMPL;
 }
