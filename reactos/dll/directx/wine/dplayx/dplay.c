@@ -5761,6 +5761,11 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
     DWORD max_sizeOfDescriptionA = 0;
     WCHAR *descriptionW = NULL;
     DWORD max_sizeOfDescriptionW = 0;
+    DWORD sizeOfSubKeyName;
+    WCHAR subKeyName[255]; /* 255 is the maximum key size according to MSDN */
+    LONG  ret_value;
+    static GUID *guid_cache;
+    static int cache_count;
     
     if (!lpEnumCallbackA && !lpEnumCallbackW)
     {
@@ -5775,19 +5780,37 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	ERR(": no service provider key in the registry - check your Wine installation !!!\n");
 	return DPERR_GENERIC;
     }
-    
+
+    dwIndex = 0;
+    do
+    {
+	sizeOfSubKeyName = sizeof(subKeyName) / sizeof(WCHAR);
+	ret_value = RegEnumKeyW(hkResult, dwIndex, subKeyName, sizeOfSubKeyName);
+	dwIndex++;
+    }
+    while (ret_value == ERROR_SUCCESS);
+    /* The game Swing from bug 37185 expects GUID values to persist after
+     * the end of the enumeration. */
+    if (cache_count < dwIndex)
+    {
+	HeapFree(GetProcessHeap(), 0, guid_cache);
+	guid_cache = HeapAlloc(GetProcessHeap(), 0, sizeof(GUID) * dwIndex);
+	if (!guid_cache)
+	{
+	    ERR(": failed to alloc required memory.\n");
+	    return DPERR_EXCEPTION;
+	}
+	cache_count = dwIndex;
+    }
     /* Traverse all the service providers we have available */
     dwIndex = 0;
     while (1)
     {
-	WCHAR subKeyName[255]; /* 255 is the maximum key size according to MSDN */
-	DWORD sizeOfSubKeyName = sizeof(subKeyName) / sizeof(WCHAR);
 	HKEY  hkServiceProvider;
-	GUID  serviceProviderGUID;
 	WCHAR guidKeyContent[(2 * 16) + 1 + 6 /* This corresponds to '{....-..-..-..-......}' */ ];
 	DWORD sizeOfGuidKeyContent = sizeof(guidKeyContent);
-	LONG  ret_value;
 	
+	sizeOfSubKeyName = sizeof(subKeyName) / sizeof(WCHAR);
 	ret_value = RegEnumKeyExW(hkResult, dwIndex, subKeyName, &sizeOfSubKeyName,
 				  NULL, NULL, NULL, &filetime);
 	if (ret_value == ERROR_NO_MORE_ITEMS)
@@ -5818,7 +5841,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    ERR(": invalid format for the GUID registry data member for service provider %s (%s).\n", debugstr_w(subKeyName), debugstr_w(guidKeyContent));
 	    continue;
 	}
-	CLSIDFromString(guidKeyContent, &serviceProviderGUID );
+	CLSIDFromString(guidKeyContent, &guid_cache[dwIndex]);
 	
 	/* The enumeration will return FALSE if we are not to continue.
 	 *
@@ -5846,7 +5869,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    RegQueryValueExA(hkServiceProvider, "DescriptionA",
 			     NULL, NULL, (LPBYTE) descriptionA, &sizeOfDescription);
 	    
-	    if (!lpEnumCallbackA(&serviceProviderGUID, descriptionA, 6, 0, lpContext))
+	    if (!lpEnumCallbackA(&guid_cache[dwIndex], descriptionA, 6, 0, lpContext))
 		goto end;
 	}
 	else
@@ -5868,7 +5891,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    RegQueryValueExW(hkServiceProvider, descW,
 			     NULL, NULL, (LPBYTE) descriptionW, &sizeOfDescription);
 
-	    if (!lpEnumCallbackW(&serviceProviderGUID, descriptionW, 6, 0, lpContext))
+	    if (!lpEnumCallbackW(&guid_cache[dwIndex], descriptionW, 6, 0, lpContext))
 		goto end;
 	}
       
