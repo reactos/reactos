@@ -17,17 +17,22 @@ typedef void (WINAPI *GETSYSINFO)(LPSYSTEM_INFO);
  */
 CConfiguration::CConfiguration()
     : m_CrashRecovery(false),
+      m_IsInteractive(false),
       m_PrintToConsole(true),
       m_Shutdown(false),
       m_Submit(false)
 {
     WCHAR WindowsDirectory[MAX_PATH];
+    WCHAR Interactive[32];
 
     /* Check if we are running under ReactOS from the SystemRoot directory */
     if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
         FATAL("GetWindowsDirectoryW failed");
 
     m_IsReactOS = !_wcsnicmp(&WindowsDirectory[3], L"reactos", 7);
+
+    if(GetEnvironmentVariableW(L"WINETEST_INTERACTIVE", Interactive, _countof(Interactive)))
+        m_IsInteractive = _wtoi(Interactive);
 }
 
 /**

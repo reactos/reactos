@@ -248,9 +248,14 @@ CWineTest::GetNextTestInfo()
         }
         catch(CTestException& e)
         {
-            delete[] m_ListBuffer;
+            stringstream ss;
+
+            ss << "An exception occurred trying to list tests for: " << UnicodeToAscii(m_CurrentFile) << endl;
+            StringOut(ss.str());
             StringOut(e.GetMessage());
+            StringOut("\n");
             m_CurrentFile.clear();
+            delete[] m_ListBuffer;
         }
     }
 
@@ -327,6 +332,7 @@ CWineTest::Run()
     auto_ptr<CTestList> TestList;
     auto_ptr<CWebService> WebService;
     CTestInfo* TestInfo;
+    DWORD ErrorMode;
 
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.
@@ -349,6 +355,10 @@ CWineTest::Run()
     if(Configuration.DoSubmit())
         WebService.reset(new CWebService());
 
+    /* Disable error dialogs if we're running in non-interactive mode */
+    if(!Configuration.IsInteractive())
+        ErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
+
     /* Get information for each test to run */
     while((TestInfo = TestList->GetNextTestInfo()) != 0)
     {
@@ -361,4 +371,8 @@ CWineTest::Run()
 
         StringOut("\n\n");
     }
+
+    /* Restore the original error mode */
+    if(!Configuration.IsInteractive())
+        SetErrorMode(ErrorMode);
 }
