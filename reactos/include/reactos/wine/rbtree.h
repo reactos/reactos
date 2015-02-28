@@ -23,7 +23,7 @@
 #define __WINE_WINE_RBTREE_H
 
 #define WINE_RB_ENTRY_VALUE(element, type, field) \
-    ((type *)((char *)(element) - FIELD_OFFSET(type, field)))
+    ((type *)((char *)(element) - offsetof(type, field)))
 
 struct wine_rb_entry
 {
@@ -220,12 +220,16 @@ static inline void wine_rb_for_each_entry(struct wine_rb_tree *tree, wine_rb_tra
     wine_rb_postorder(tree, callback, context);
 }
 
-static inline void wine_rb_destroy(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
+static inline void wine_rb_clear(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
 {
     /* Note that we use postorder here because the callback will likely free the entry. */
     if (callback) wine_rb_postorder(tree, callback, context);
-
     tree->root = NULL;
+}
+
+static inline void wine_rb_destroy(struct wine_rb_tree *tree, wine_rb_traverse_func_t *callback, void *context)
+{
+    wine_rb_clear(tree, callback, context);
     tree->functions->free(tree->stack.entries);
 }
 
