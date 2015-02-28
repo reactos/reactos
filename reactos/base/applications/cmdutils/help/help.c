@@ -21,50 +21,21 @@
 #include "help.h"
 #include "resource.h"
 
-BOOL IsConsoleHandle(HANDLE hHandle)
-{
-    DWORD dwMode;
-
-    /* Check whether the handle may be that of a console... */
-    if ((GetFileType(hHandle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR)
-        return FALSE;
-
-    /*
-     * It may be. Perform another test... The idea comes from the
-     * MSDN description of the WriteConsole API:
-     *
-     * "WriteConsole fails if it is used with a standard handle
-     *  that is redirected to a file. If an application processes
-     *  multilingual output that can be redirected, determine whether
-     *  the output handle is a console handle (one method is to call
-     *  the GetConsoleMode function and check whether it succeeds).
-     *  If the handle is a console handle, call WriteConsole. If the
-     *  handle is not a console handle, the output is redirected and
-     *  you should call WriteFile to perform the I/O."
-     */
-    return GetConsoleMode(hHandle, &dwMode);
-}
-
 VOID PrintResourceString(INT resID, ...)
 {
-    HANDLE OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-    WCHAR tmpBuffer[RC_STRING_MAX_SIZE];
-    va_list arg_ptr;
+    WCHAR bufSrc[RC_STRING_MAX_SIZE];
+    WCHAR bufFormatted[RC_STRING_MAX_SIZE];
+    CHAR bufFormattedOem[RC_STRING_MAX_SIZE];
 
-    va_start(arg_ptr, resID);
-    LoadStringW(GetModuleHandleW(NULL), resID, tmpBuffer, RC_STRING_MAX_SIZE);
+    va_list args;
+    va_start(args, resID);
 
-    // FIXME: Optimize by using Win32 console functions.
-    if (IsConsoleHandle(OutputHandle))
-    {
-        vfwprintf(stdout, tmpBuffer, arg_ptr);
-    }
-    else
-    {
-        vwprintf(tmpBuffer, arg_ptr);
-    }
+    LoadStringW(GetModuleHandleW(NULL), resID, bufSrc, RC_STRING_MAX_SIZE);
+    vswprintf(bufFormatted, bufSrc, args);
+    CharToOemW(bufFormatted, bufFormattedOem);
+    fputs(bufFormattedOem, stdout);
 
-    va_end(arg_ptr);
+    va_end(args);
 }
 
 BOOL IsInternalCommand(LPCWSTR Cmd)
@@ -75,7 +46,7 @@ BOOL IsInternalCommand(LPCWSTR Cmd)
     /* Invalid command */
     if (!Cmd) return FALSE;
 
-    for (i = 0; i < sizeof(InternalCommands)/sizeof(InternalCommands[0]); ++i)
+    for (i = 0; i < ARRAYSIZE(InternalCommands); ++i)
     {
         res = _wcsicmp(InternalCommands[i], Cmd);
         if (res == 0)
