@@ -72,6 +72,13 @@ typedef struct tagCallbackData
     UINT dpidSize;
 } CallbackData, *lpCallbackData;
 
+struct provider_data
+{
+    int call_count;
+    GUID *guid_ptr[10];
+    GUID guid_data[10];
+    BOOL ret_value;
+};
 
 static LPSTR get_temp_buffer(void)
 {
@@ -685,7 +692,7 @@ static void init_TCPIP_provider( IDirectPlay4 *pDP, LPCSTR strIPAddressString, W
     }
 
     hr = IDirectPlayX_InitializeConnection( pDP, pAddress, 0 );
-    todo_wine checkHR( DP_OK, hr );
+    checkHR( DP_OK, hr );
 
     HeapFree( GetProcessHeap(), 0, pAddress );
 
@@ -743,10 +750,117 @@ static void test_DirectPlayCreate(void)
     if ( hr == DP_OK )
         IDirectPlayX_Release( pDP );
     hr = DirectPlayCreate( (LPGUID) &DPSPGUID_TCPIP, &pDP, NULL );
-    todo_wine checkHR( DP_OK, hr );
+    checkHR( DP_OK, hr );
     if ( hr == DP_OK )
         IDirectPlayX_Release( pDP );
 
+}
+
+static BOOL CALLBACK callback_providersA(GUID* guid, char *name, DWORD major, DWORD minor, void *arg)
+{
+    struct provider_data *prov = arg;
+
+    if (!prov) return TRUE;
+
+    if (prov->call_count < sizeof(prov->guid_data) / sizeof(prov->guid_data[0]))
+    {
+        prov->guid_ptr[prov->call_count] = guid;
+        prov->guid_data[prov->call_count] = *guid;
+
+        prov->call_count++;
+    }
+
+    if (prov->ret_value) /* Only trace when looping all providers */
+        trace("Provider #%d '%s' (%d.%d)\n", prov->call_count, name, major, minor);
+    return prov->ret_value;
+}
+
+static BOOL CALLBACK callback_providersW(GUID* guid, WCHAR *name, DWORD major, DWORD minor, void *arg)
+{
+    struct provider_data *prov = arg;
+
+    if (!prov) return TRUE;
+
+    if (prov->call_count < sizeof(prov->guid_data) / sizeof(prov->guid_data[0]))
+    {
+        prov->guid_ptr[prov->call_count] = guid;
+        prov->guid_data[prov->call_count] = *guid;
+
+        prov->call_count++;
+    }
+
+    return prov->ret_value;
+}
+
+static void test_EnumerateProviders(void)
+{
+    HRESULT hr;
+    int i;
+    struct provider_data arg;
+
+    memset(&arg, 0, sizeof(arg));
+    arg.ret_value = TRUE;
+
+    hr = DirectPlayEnumerateA(callback_providersA, NULL);
+    ok(SUCCEEDED(hr), "DirectPlayEnumerateA failed\n");
+
+    SetLastError(0xdeadbeef);
+    hr = DirectPlayEnumerateA(NULL, &arg);
+    ok(FAILED(hr), "DirectPlayEnumerateA expected to fail\n");
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hr = DirectPlayEnumerateA(NULL, NULL);
+    ok(FAILED(hr), "DirectPlayEnumerateA expected to fail\n");
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
+
+    hr = DirectPlayEnumerateA(callback_providersA, &arg);
+    ok(SUCCEEDED(hr), "DirectPlayEnumerateA failed\n");
+    ok(arg.call_count > 0, "Expected at least one valid provider\n");
+    trace("Found %d providers\n", arg.call_count);
+
+    /* The returned GUID values must have persisted after enumeration (bug 37185) */
+    for(i = 0; i < arg.call_count; i++)
+    {
+        ok(IsEqualGUID(arg.guid_ptr[i], &arg.guid_data[i]), "#%d Expected equal GUID values\n", i);
+    }
+
+    memset(&arg, 0, sizeof(arg));
+    arg.ret_value = FALSE;
+    hr = DirectPlayEnumerateA(callback_providersA, &arg);
+    ok(SUCCEEDED(hr), "DirectPlayEnumerateA failed\n");
+    ok(arg.call_count == 1, "Expected 1, got %d\n", arg.call_count);
+
+    hr = DirectPlayEnumerateW(callback_providersW, NULL);
+    ok(SUCCEEDED(hr), "DirectPlayEnumerateW failed\n");
+
+    SetLastError(0xdeadbeef);
+    hr = DirectPlayEnumerateW(NULL, &arg);
+    ok(FAILED(hr), "DirectPlayEnumerateW expected to fail\n");
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hr = DirectPlayEnumerateW(NULL, NULL);
+    ok(FAILED(hr), "DirectPlayEnumerateW expected to fail\n");
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got 0x%x\n", GetLastError());
+
+    memset(&arg, 0, sizeof(arg));
+    arg.ret_value = TRUE;
+    hr = DirectPlayEnumerateW(callback_providersW, &arg);
+    ok(SUCCEEDED(hr), "DirectPlayEnumerateW failed\n");
+    ok(arg.call_count > 0, "Expected at least one valid provider\n");
+
+    /* The returned GUID values must have persisted after enumeration (bug 37185) */
+    for(i = 0; i < arg.call_count; i++)
+    {
+        ok(IsEqualGUID(arg.guid_ptr[i], &arg.guid_data[i]), "#%d Expected equal GUID values\n", i);
+    }
+
+    memset(&arg, 0, sizeof(arg));
+    arg.ret_value = FALSE;
+    hr = DirectPlayEnumerateW(callback_providersW, &arg);
+    ok(SUCCEEDED(hr), "DirectPlayEnumerateW failed\n");
+    ok(arg.call_count == 1, "Expected 1, got %d\n", arg.call_count);
 }
 
 /* EnumConnections */
@@ -915,9 +1029,9 @@ static BOOL CALLBACK EnumConnections_cb2( LPCGUID lpguidSP,
     if( IsEqualGUID(lpguidSP, &DPSPGUID_TCPIP) )
     {
         hr = IDirectPlayX_InitializeConnection( pDP, lpConnection, 0 );
-        todo_wine checkHR( DP_OK, hr );
+        checkHR( DP_OK, hr );
         hr = IDirectPlayX_InitializeConnection( pDP, lpConnection, 0 );
-        todo_wine checkHR( DPERR_ALREADYINITIALIZED, hr );
+        checkHR( DPERR_ALREADYINITIALIZED, hr );
     }
 
     return TRUE;
@@ -976,7 +1090,7 @@ static void test_GetCaps(void)
     {
 
         hr = IDirectPlayX_GetCaps( pDP, &dpcaps, dwFlags );
-        todo_wine checkHR( DP_OK, hr );
+        checkHR( DP_OK, hr );
 
 
         if ( hr == DP_OK )
@@ -1085,7 +1199,7 @@ static void test_Open(void)
 
     /* Uninitialized  dpsd */
     hr = IDirectPlayX_Open( pDP_server, &dpsd_server, DPOPEN_CREATE );
-    todo_wine checkHR( DPERR_INVALIDPARAMS, hr );
+    checkHR( DPERR_INVALIDPARAMS, hr );
 
 
     dpsd_server.dwSize = sizeof(DPSESSIONDESC2);
@@ -1095,7 +1209,7 @@ static void test_Open(void)
 
     /* Regular operation */
     hr = IDirectPlayX_Open( pDP_server, &dpsd_server, DPOPEN_CREATE );
-    todo_wine checkHR( DP_OK, hr );
+    checkHR( DP_OK, hr );
 
     /* Opening twice */
     hr = IDirectPlayX_Open( pDP_server, &dpsd_server, DPOPEN_CREATE );
@@ -1698,12 +1812,16 @@ static void test_SessionDesc(void)
     checkHR( DPERR_INVALIDPARAMS, hr );
     hr = IDirectPlayX_GetSessionDesc( pDP[0], NULL, NULL );
     checkHR( DPERR_INVALIDPARAM, hr );
+if(0)
+{
+    /* Crashes under Win7 */
     hr = IDirectPlayX_GetSessionDesc( pDP[0], lpData[0], NULL );
     checkHR( DPERR_INVALIDPARAM, hr );
     dwDataSize=-1;
     hr = IDirectPlayX_GetSessionDesc( pDP[0], lpData[0], &dwDataSize );
     checkHR( DPERR_INVALIDPARAMS, hr );
     check( -1, dwDataSize );
+}
 
     /* Get: Insufficient buffer size */
     dwDataSize=0;
@@ -2498,10 +2616,14 @@ static void test_PlayerName(void)
     checkHR( DPERR_INVALIDPLAYER, hr );
     check( 1024, dwDataSize );
 
+if(0)
+{
+    /* Crashes under Win7 */
     dwDataSize = -1;
     hr = IDirectPlayX_GetPlayerName( pDP[0], dpid[0], lpData, &dwDataSize );
     checkHR( DPERR_INVALIDPARAMS, hr );
     check( -1, dwDataSize );
+}
 
     hr = IDirectPlayX_GetPlayerName( pDP[0], dpid[0], lpData, NULL );
     checkHR( DPERR_INVALIDPARAMS, hr );
@@ -5789,6 +5911,9 @@ static void test_GetMessageQueue(void)
     check( -1, dwNumBytes );
 
     /* - Remote players */
+if(0)
+{
+    /* Crash under Win7 */
     dwNumMsgs = dwNumBytes = -1;
     hr = IDirectPlayX_GetMessageQueue( pDP[0], 0, dpid[3],
                                        DPMESSAGEQUEUE_RECEIVE,
@@ -5796,6 +5921,7 @@ static void test_GetMessageQueue(void)
     checkHR( DPERR_INVALIDPLAYER, hr ); /* Player 3 is remote */
     check( -1, dwNumMsgs );
     check( -1, dwNumBytes );
+}
 
     dwNumMsgs = dwNumBytes = -1;
     hr = IDirectPlayX_GetMessageQueue( pDP[0], dpid[3], 0,
@@ -6532,6 +6658,7 @@ START_TEST(dplayx)
 
     test_COM();
     test_COM_dplobby();
+    test_EnumerateProviders();
 
     if (!winetest_interactive)
     {
