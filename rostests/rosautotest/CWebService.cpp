@@ -95,6 +95,38 @@ CWebService::DoRequest(const string& InputData)
 }
 
 /**
+* Interface to other classes for finishing this test run
+*
+* @param TestType
+* Constant pointer to a char array containing the test type to be run (i.e. "wine")
+*/
+void
+CWebService::Finish(const char* TestType)
+{
+    auto_array_ptr<char> Response;
+    string Data;
+    stringstream ss;
+
+    if (!m_TestID)
+        EXCEPTION("CWebService::Finish was called, but not a single result had been submitted!");
+
+    Data = "action=finish";
+    Data += Configuration.GetAuthenticationRequestString();
+    Data += "&testtype=";
+    Data += TestType;
+    Data += "&testid=";
+    Data += m_TestID;
+
+    Response.reset(DoRequest(Data));
+
+    if (strcmp(Response, "OK"))
+    {
+        ss << "When finishing the test run, the server responded:" << endl << Response << endl;
+        SSEXCEPTION;
+    }
+}
+
+/**
  * Requests a Test ID from the Web Service for our test run.
  *
  * @param TestType
@@ -206,9 +238,9 @@ CWebService::Submit(const char* TestType, CTestInfo* TestInfo)
 
     Response.reset(DoRequest(Data));
 
-    ss << "The server responded:" << endl << Response << endl;
-    StringOut(ss.str());
-
-    if(strcmp(Response, "OK"))
-        EXCEPTION("Aborted!\n");
+    if (strcmp(Response, "OK"))
+    {
+        ss << "When submitting the result, the server responded:" << endl << Response << endl;
+        SSEXCEPTION;
+    }
 }

@@ -372,6 +372,10 @@ CWineTest::Run()
         StringOut("\n\n");
     }
 
+    /* We're done with all tests. Finish this run */
+    if(Configuration.DoSubmit())
+        WebService->Finish("wine");
+
     /* Restore the original error mode */
     if(!Configuration.IsInteractive())
         SetErrorMode(ErrorMode);
