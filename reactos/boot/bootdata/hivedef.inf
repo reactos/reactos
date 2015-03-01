@@ -1852,6 +1852,10 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
+; Keyboard layout switcher
+;HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch.exe",0x00020000,"%SystemRoot%\system32\kbswitch.exe"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch.exe",2,"kbswitch.exe"
+
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Devices",,0x00000012

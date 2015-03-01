@@ -1609,9 +1609,6 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\P
 HKLM,"SOFTWARE\Microsoft\Ole","EnableDCOM",0x00000000,"Y"
 HKLM,"SOFTWARE\Microsoft\Ole","EnableRemoteConnect",0x00000000,"N"
 
-; Keyboard layout switcher
-;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch",0x00000000,"kbswitch.exe"
-
 ; SvcHost services
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","DcomLaunch",0x00010000,"PlugPlay"
