@@ -983,6 +983,11 @@ VOID DoCreateEditWindow(VOID)
 
     if (Globals.hEdit == NULL)
     {
+        if (pTemp)
+        {
+            HeapFree(GetProcessHeap(), 0, pTemp);
+        }
+
         ShowLastError();
         return;
     }

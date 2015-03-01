@@ -24,6 +24,8 @@
 
 #include "notepad.h"
 
+#include <strsafe.h>
+
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;
 
@@ -43,7 +45,7 @@ VOID NOTEPAD_EnableSearchMenu()
  */
 VOID SetFileName(LPCTSTR szFileName)
 {
-    _tcscpy(Globals.szFileName, szFileName);
+    StringCchCopy(Globals.szFileName, SIZEOF(Globals.szFileName), szFileName);
     Globals.szFileTitle[0] = 0;
     GetFileTitle(szFileName, Globals.szFileTitle, SIZEOF(Globals.szFileTitle));
 }
