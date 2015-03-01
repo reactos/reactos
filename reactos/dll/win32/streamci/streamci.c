@@ -130,6 +130,53 @@ InstallSoftwareDeviceInterface(IN LPGUID DeviceId,
     return dwResult;
 }
 
+DWORD
+InstallSoftwareDeviceInterfaceInf(IN LPWSTR InfName,
+                                  IN LPWSTR SectionName)
+{
+    HDEVINFO hDevInfo;
+    HINF hInf;
+    HKEY hKey;
+    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
+    GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
+
+    hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL, 0);
+    if (!hDevInfo)
+    {
+        // failed
+        return GetLastError();
+    }
+
+    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+    if (!SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &SWBusGuid, 0, &DeviceInterfaceData))
+    {
+        // failed
+        return GetLastError();
+    }
+
+    hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+    {
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return GetLastError();
+    }
+
+    //
+    // FIXME check if interface is already installed
+    //
+
+    hKey = SetupDiCreateDeviceInterfaceRegKeyW(hDevInfo, &DeviceInterfaceData, 0, KEY_ALL_ACCESS, hInf, SectionName);
+
+    SetupCloseInfFile(hInf);
+    SetupDiDestroyDeviceInfoList(hDevInfo);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        RegCloseKey(hKey);
+    }
+    return ERROR_SUCCESS;
+}
+
+
 VOID
 WINAPI
 StreamingDeviceSetupW(IN HWND hwnd, 
@@ -137,11 +184,11 @@ StreamingDeviceSetupW(IN HWND hwnd,
                      IN LPWSTR lpszCmdLine, 
                      IN int nCmdShow)
 {
-    DWORD Length;
+    DWORD Length, dwResult;
     LPWSTR pCmdLine;
     LPWSTR pStr; 
     GUID Guids[2];
-    //WCHAR DevicePath[MAX_PATH];
+    WCHAR DevicePath[MAX_PATH];
     HRESULT hResult;
     DWORD Index;
 
@@ -187,10 +234,19 @@ StreamingDeviceSetupW(IN HWND hwnd,
 
     }while(Index < 2);
 
-    
-    hResult = InstallSoftwareDeviceInterface(&Guids[0], &Guids[1], pStr);
 
-    // FIXME
-    // install inf section
-
+    dwResult = InstallSoftwareDeviceInterface(&Guids[0], &Guids[1], pStr);
+    if (dwResult == ERROR_SUCCESS)
+    {
+        pStr = wcstok(NULL, L",\t\"");
+        if (pStr != NULL)
+        {
+            wcscpy(DevicePath, pStr);
+            pStr = wcstok(NULL, L",\t\"");
+            if (pStr != NULL)
+            {
+                dwResult = InstallSoftwareDeviceInterfaceInf(DevicePath, pStr);
+            }
+        }
+    }
 }
