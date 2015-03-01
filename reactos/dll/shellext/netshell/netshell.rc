@@ -22,7 +22,7 @@ IDI_NET_REC ICON "res/netrec.ico"
 IDI_NET_TRANS ICON "res/nettrans.ico"
 IDI_NET_TRANSREC ICON "res/nettrrec.ico"
 
-IDR_NETSHELL REGISTRY "res/netshell.rgs"
+IDR_NETSHELL WINE_REGISTRY "res/netshell.rgs"
 
 /* UTF-8 */
 #pragma code_page(65001)
