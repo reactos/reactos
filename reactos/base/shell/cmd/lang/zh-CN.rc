@@ -490,6 +490,7 @@ RESTORE       恢复窗口\n\
     STRING_REPLACE_ERROR5 "禁止访问 - %s\n"
     STRING_REPLACE_ERROR6 "没有文件被发现 - %s\n"
     STRING_REPLACE_ERROR7 "扩展错误 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "ReactOS 操作系统 [版本 %s-%s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上运行"

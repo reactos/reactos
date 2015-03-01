@@ -530,6 +530,7 @@ RESTORE       восстанавливает окно\n\
     STRING_REPLACE_ERROR5 "Доступ запрещен - %s\n"
     STRING_REPLACE_ERROR6 "Не найдено файлов - %s\n"
     STRING_REPLACE_ERROR7 "Расширенная ошибка 32\n"
+    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
     STRING_REACTOS_VERSION "Операционная система ReactOS [Версия %s-%s]\n"
     STRING_CMD_SHELLINFO "\nИнтерпретатор командной строки ReactOS\nВерсия %s %s"
     STRING_VERSION_RUNNING_ON "Запущен на: "

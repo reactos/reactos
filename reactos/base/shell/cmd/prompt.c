@@ -48,12 +48,8 @@
  */
 #include "precomp.h"
 
-// FIXME: Localize the information line.
-static TCHAR InfoLine[] = _T("  ReactOS Command Prompt                                      Type HELP = Help  ");
-
 /* The default prompt */
 static TCHAR DefaultPrompt[] = _T("$P$G");
-
 
 /*
  * Initialize prompt support
@@ -66,7 +62,7 @@ VOID InitPrompt(VOID)
      * Set the PROMPT environment variable if it doesn't exist already.
      * You can change the PROMPT environment variable before cmd starts.
      */
-    if (GetEnvironmentVariable(_T("PROMPT"), Buffer, sizeof(Buffer) / sizeof(Buffer[0])) == 0)
+    if (GetEnvironmentVariable(_T("PROMPT"), Buffer, ARRAYSIZE(Buffer)) == 0)
         SetEnvironmentVariable(_T("PROMPT"), DefaultPrompt);
 }
 
@@ -82,12 +78,16 @@ VOID PrintInfoLine(VOID)
     COORD coPos;
     DWORD dwWritten;
 
-    if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
-    {
-        /* No console */
-        return;
-    }
+    TCHAR szInfoLine[80 + 1]; // The info line is 80 characters long (without NULL character)
+    INT iInfoLineLen;
 
+    /* Return directly if the output handle is not a console handle */
+    if (!GetConsoleScreenBufferInfo(hOutput, &csbi))
+        return;
+
+    iInfoLineLen = LoadString(CMD_ModuleHandle, STRING_CMD_INFOLINE, szInfoLine, ARRAYSIZE(szInfoLine));
+
+    /* Display the localized information line */
     coPos.X = 0;
     coPos.Y = 0;
     FillConsoleOutputAttribute(hOutput, BACKGROUND_BLUE | FOREGROUND_WHITE,
@@ -97,8 +97,7 @@ VOID PrintInfoLine(VOID)
                                csbi.dwSize.X,
                                coPos, &dwWritten);
 
-    WriteConsoleOutputCharacter(hOutput, InfoLine,
-                                sizeof(InfoLine)/sizeof(TCHAR) - 1,
+    WriteConsoleOutputCharacter(hOutput, szInfoLine, iInfoLineLen,
                                 coPos, &dwWritten);
 }
 
