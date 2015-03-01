@@ -44,7 +44,7 @@ reactos/dll/directx/wine/dplayx         # Synced to WineStaging-1.7.37
 reactos/dll/directx/wine/dsound         # Synced to Wine-1.3.29
 reactos/dll/directx/wine/dxdiagn        # Synced to Wine-1.7.27
 reactos/dll/directx/wine/dxgi           # Synced to WineStaging-1.7.37
-reactos/dll/directx/wine/msdmo          # Synced to Wine-1.7.27
+reactos/dll/directx/wine/msdmo          # Synced to WineStaging-1.7.37
 reactos/dll/directx/wine/qedit          # Synced to Wine-1.7.27
 reactos/dll/directx/wine/quartz         # Synced to Wine-1.7.27
 reactos/dll/directx/wine/wined3d        # Synced to WineStaging-1.7.37
