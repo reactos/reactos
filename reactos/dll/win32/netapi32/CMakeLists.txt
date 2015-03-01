@@ -5,13 +5,16 @@ include_directories(
 
 add_definitions(-D__WINESRC__)
 spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
-add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/wkssvc.idl)
+add_rpc_files(client
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/wkssvc.idl)
 
 list(APPEND SOURCE
     access.c
     apibuf.c
     browsr.c
     ds.c
+    dssetup.c
     group.c
     local_group.c
     misc.c
@@ -25,6 +28,7 @@ list(APPEND SOURCE
     wksta.c
     wksta_new.c
     netapi32.h
+    ${CMAKE_CURRENT_BINARY_DIR}/dssetup_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/wkssvc_c.c)
 
 add_library(netapi32 SHARED
