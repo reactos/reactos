@@ -105,7 +105,7 @@ IntLoadSystenIcons(HICON hcur, DWORD id)
             return;
         }
 
-        for(i = 0 ; i < 6; i++)
+        for (i = 0 ; i < 6; i++)
         {
             if (gasysico[i].type == id)
             {
@@ -177,7 +177,7 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
     RECTL rcClip;
     POINT pt;
 
-    if(!(DesktopWindow = UserGetDesktopWindow()))
+    if (!(DesktopWindow = UserGetDesktopWindow()))
     {
         return FALSE;
     }
@@ -190,10 +190,10 @@ BOOL UserSetCursorPos( INT x, INT y, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Ho
     else
         rcClip = CurInfo->rcClip;
 
-    if(x >= rcClip.right)  x = rcClip.right - 1;
-    if(x < rcClip.left)    x = rcClip.left;
-    if(y >= rcClip.bottom) y = rcClip.bottom - 1;
-    if(y < rcClip.top)     y = rcClip.top;
+    if (x >= rcClip.right)  x = rcClip.right - 1;
+    if (x < rcClip.left)    x = rcClip.left;
+    if (y >= rcClip.bottom) y = rcClip.bottom - 1;
+    if (y < rcClip.top)     y = rcClip.top;
 
     pt.x = x;
     pt.y = y;
@@ -284,8 +284,8 @@ FreeCurIconObject(
     _In_ PVOID Object)
 {
     PCURICON_OBJECT CurIcon = Object;
-    
-    if(!(CurIcon->CURSORF_flags & CURSORF_ACON))
+
+    if (!(CurIcon->CURSORF_flags & CURSORF_ACON))
     {
         HBITMAP bmpMask = CurIcon->hbmMask;
         HBITMAP bmpColor = CurIcon->hbmColor;
@@ -316,7 +316,7 @@ FreeCurIconObject(
         PACON AniCurIcon = (PACON)CurIcon;
         UINT i;
 
-        for(i = 0; i < AniCurIcon->cpcur; i++)
+        for (i = 0; i < AniCurIcon->cpcur; i++)
         {
             UserDereferenceObject(AniCurIcon->aspcur[i]);
             IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
@@ -380,7 +380,7 @@ NtUserGetIconInfo(
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    
+
     UserEnterExclusive();
 
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
@@ -389,17 +389,17 @@ NtUserGetIconInfo(
         UserLeave();
         return FALSE;
     }
-    
+
     /* Give back the icon information */
-    if(IconInfo)
+    if (IconInfo)
     {
         PCURICON_OBJECT FrameCurIcon = CurIcon;
-        if(CurIcon->CURSORF_flags & CURSORF_ACON)
+        if (CurIcon->CURSORF_flags & CURSORF_ACON)
         {
             /* Get information from first frame. */
             FrameCurIcon = ((PACON)CurIcon)->aspcur[0];
         }
-            
+
         /* Fill data */
         ii.fIcon = is_icon(FrameCurIcon);
         ii.xHotspot = FrameCurIcon->xHotspot;
@@ -439,7 +439,7 @@ NtUserGetIconInfo(
     }
 
     /* Give back the module name */
-    if(lpModule)
+    if (lpModule)
     {
         ULONG BufLen = 0;
         if (!CurIcon->atomModName)
@@ -475,7 +475,7 @@ NtUserGetIconInfo(
             goto leave;
         }
     }
-    
+
     if (lpResName)
     {
         if (!CurIcon->strName.Buffer)
@@ -515,7 +515,7 @@ NtUserGetIconInfo(
         SetLastNtError(Status);
         goto leave;
     }
-    
+
     Ret = TRUE;
 
 leave:
@@ -551,7 +551,7 @@ NtUserGetIconSize(
         goto cleanup;
     }
 
-    if(CurIcon->CURSORF_flags & CURSORF_ACON)
+    if (CurIcon->CURSORF_flags & CURSORF_ACON)
     {
         /* Use first frame for animated cursors */
         PACON AniCurIcon = (PACON)CurIcon;
@@ -822,8 +822,7 @@ NtUserFindExistingCursorIcon(
     RTL_ATOM atomModName;
 
     TRACE("Enter NtUserFindExistingCursorIcon\n");
-    
-    
+
     _SEH2_TRY
     {
         ProbeForRead(param, sizeof(*param), 1);
@@ -837,14 +836,14 @@ NtUserFindExistingCursorIcon(
 
     /* Capture resource name (it can be an INTRESOURCE == ATOM) */
     Status = ProbeAndCaptureUnicodeStringOrAtom(&ustrRsrcSafe, pustrRsrc);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
         return NULL;
     Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
         goto done;
     Status = RtlLookupAtomInAtomTable(gAtomTable, ustrModuleSafe.Buffer, &atomModName);
     ReleaseCapturedUnicodeString(&ustrModuleSafe, UserMode);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         /* The module is not in the atom table. No chance to find the cursor */
         goto done;
@@ -852,7 +851,7 @@ NtUserFindExistingCursorIcon(
 
     UserEnterShared();
     CurIcon = pProcInfo->pCursorCache;
-    while(CurIcon)
+    while (CurIcon)
     {
         /* Icon/cursor */
         if (paramSafe.bIcon != is_icon(CurIcon))
@@ -890,10 +889,10 @@ NtUserFindExistingCursorIcon(
     //
     //    Now search Global Cursors or Icons.
     //
-    if(CurIcon == NULL)
+    if (CurIcon == NULL)
     {
         CurIcon = gcurFirst;
-        while(CurIcon)
+        while (CurIcon)
         {
             /* Icon/cursor */
             if (paramSafe.bIcon != is_icon(CurIcon))
@@ -928,14 +927,14 @@ NtUserFindExistingCursorIcon(
             CurIcon = CurIcon->pcurNext;
         }
     }
-    if(CurIcon)
+    if (CurIcon)
         Ret = CurIcon->head.h;
     UserLeave();
 
 done:
-    if(!IS_INTRESOURCE(ustrRsrcSafe.Buffer))
+    if (!IS_INTRESOURCE(ustrRsrcSafe.Buffer))
         ExFreePoolWithTag(ustrRsrcSafe.Buffer, TAG_STRING);
-    
+
     return Ret;
 }
 
@@ -1030,9 +1029,9 @@ NtUserSetCursor(
         Problem:
 
         System Global Cursors start out having at least 2 lock counts. If a system
-        cursor is the default cursor and is returned to the caller twice in its   
-        life, the count will reach zero. Causing an assert to occur in objects.   
-        
+        cursor is the default cursor and is returned to the caller twice in its
+        life, the count will reach zero. Causing an assert to occur in objects.
+
         This fixes a SeaMonkey crash while the mouse crosses a boundary.
      */
         if (pcurOld->CURSORF_flags & CURSORF_GLOBAL)
@@ -1085,9 +1084,9 @@ NtUserSetCursorIconData(
     BOOLEAN IsShared = FALSE, IsAnim = FALSE;
     DWORD numFrames;
     UINT i = 0;
-    
+
     TRACE("Enter NtUserSetCursorIconData\n");
-    
+
     UserEnterExclusive();
 
     if (!(CurIcon = UserGetCurIconObject(Handle)))
@@ -1100,7 +1099,7 @@ NtUserSetCursorIconData(
     _SEH2_TRY
     {
         ProbeForRead(pCursorData, sizeof(*pCursorData), 1);
-        if(pCursorData->CURSORF_flags & CURSORF_ACON)
+        if (pCursorData->CURSORF_flags & CURSORF_ACON)
         {
             /* This is an animated cursor */
             PACON AniCurIcon = (PACON)CurIcon;
@@ -1124,7 +1123,7 @@ NtUserSetCursorIconData(
             RtlCopyMemory(AniCurIcon->aicur, pCursorData->aicur, numSteps * sizeof(DWORD));
             ProbeForRead(pCursorData->ajifRate, numSteps * sizeof(INT), 1);
             RtlCopyMemory(AniCurIcon->ajifRate, pCursorData->ajifRate, numSteps * sizeof(INT));
-            
+
             AniCurIcon->CURSORF_flags = pCursorData->CURSORF_flags;
             pCursorData = pCursorData->aspcur;
 
@@ -1149,55 +1148,55 @@ NtUserSetCursorIconData(
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END
-    
+
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
         goto done;
     }
 
-    if(IsAnim)
+    if (IsAnim)
     {
         PACON AniCurIcon = (PACON)CurIcon;
         /* This is an animated cursor. Create a cursor object for each frame and set up the data */
-        for(i = 0; i < numFrames; i++)
+        for (i = 0; i < numFrames; i++)
         {
             HANDLE hCurFrame = IntCreateCurIconHandle(FALSE);
-            if(!NtUserSetCursorIconData(hCurFrame, NULL, NULL, pCursorData))
+            if (!NtUserSetCursorIconData(hCurFrame, NULL, NULL, pCursorData))
                 goto done;
             AniCurIcon->aspcur[i] = UserGetCurIconObject(hCurFrame);
-            if(!AniCurIcon->aspcur[i])
+            if (!AniCurIcon->aspcur[i])
                 goto done;
             pCursorData++;
         }
     }
-    
-    if(CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+
+    if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
     {
         IsShared = TRUE;
     }
 
     // Support global public cursors and icons too.
-    if(!IsAnim || IsShared)
+    if (!IsAnim || IsShared)
     {
-        if(pustrRsrc && pustrModule)
+        if (pustrRsrc && pustrModule)
         {
             UNICODE_STRING ustrModuleSafe;
             /* We use this convenient function, because INTRESOURCEs and ATOMs are the same */
             Status = ProbeAndCaptureUnicodeStringOrAtom(&CurIcon->strName, pustrRsrc);
-            if(!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
                 goto done;
             Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
-            if(!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
                 goto done;
             Status = RtlAddAtomToAtomTable(gAtomTable, ustrModuleSafe.Buffer, &CurIcon->atomModName);
             ReleaseCapturedUnicodeString(&ustrModuleSafe, UserMode);
-            if(!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
                 goto done;
         }
     }
 
-    if(!CurIcon->hbmMask)
+    if (!CurIcon->hbmMask)
     {
         ERR("NtUserSetCursorIconData was got no hbmMask.\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -1206,13 +1205,13 @@ NtUserSetCursorIconData(
 
     GreSetObjectOwner(CurIcon->hbmMask, GDI_OBJ_HMGR_PUBLIC);
 
-    if(CurIcon->hbmColor)
+    if (CurIcon->hbmColor)
         GreSetObjectOwner(CurIcon->hbmColor, GDI_OBJ_HMGR_PUBLIC);
-    
-    if(CurIcon->hbmAlpha)
+
+    if (CurIcon->hbmAlpha)
         GreSetObjectOwner(CurIcon->hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
 
-    if(IsShared)
+    if (IsShared)
     {
         /* Update process cache in case of shared cursor */
         PPROCESSINFO ppi = CurIcon->head.ppi;
@@ -1221,22 +1220,22 @@ NtUserSetCursorIconData(
         ppi->pCursorCache = CurIcon;
         CurIcon->CURSORF_flags |= CURSORF_LINKED;
     }
-    
+
     Ret = TRUE;
 
 done:
-    if(!Ret && (!IsAnim || IsShared))
+    if (!Ret && (!IsAnim || IsShared))
     {
-        if(!IS_INTRESOURCE(CurIcon->strName.Buffer))
+        if (!IS_INTRESOURCE(CurIcon->strName.Buffer))
             ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
     }
 
-    if(!Ret && IsAnim)
+    if (!Ret && IsAnim)
     {
         PACON AniCurIcon = (PACON)CurIcon;
-        for(i = 0; i < numFrames; i++)
+        for (i = 0; i < numFrames; i++)
         {
-            if(AniCurIcon->aspcur[i])
+            if (AniCurIcon->aspcur[i])
             {
                 UserDereferenceObject(AniCurIcon->aspcur[i]);
                 IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
@@ -1285,9 +1284,9 @@ UserDrawIconEx(
     RECTL rcDest, rcSrc;
     CLIPOBJ* pdcClipObj = NULL;
     EXLATEOBJ exlo;
-    
+
     /* Stupid case */
-    if((diFlags & DI_NORMAL) == 0)
+    if ((diFlags & DI_NORMAL) == 0)
     {
         ERR("DrawIconEx called without mask or color bitmap to draw.\n");
         return FALSE;
@@ -1296,7 +1295,7 @@ UserDrawIconEx(
     if (pIcon->CURSORF_flags & CURSORF_ACON)
     {
         ACON* pAcon = (ACON*)pIcon;
-        if(istepIfAniCur >= pAcon->cicur)
+        if (istepIfAniCur >= pAcon->cicur)
         {
             ERR("NtUserDrawIconEx: istepIfAniCur too big!\n");
             return FALSE;
@@ -1307,20 +1306,20 @@ UserDrawIconEx(
     hbmMask = pIcon->hbmMask;
     hbmColor = pIcon->hbmColor;
     hbmAlpha = pIcon->hbmAlpha;
-    
+
     /*
-     * Get our objects. 
+     * Get our objects.
      * Shared locks are enough, we are only reading those bitmaps
      */
     psurfMask = SURFACE_ShareLockSurface(hbmMask);
-    if(psurfMask == NULL)
+    if (psurfMask == NULL)
     {
         ERR("Unable to lock the mask surface.\n");
         return FALSE;
     }
-    
+
     /* Color bitmap is not mandatory */
-    if(hbmColor == NULL)
+    if (hbmColor == NULL)
     {
         /* But then the mask bitmap must have the information in it's bottom half */
         ASSERT(psurfMask->SurfObj.sizlBitmap.cy == 2*pIcon->cy);
@@ -1332,21 +1331,21 @@ UserDrawIconEx(
         SURFACE_ShareUnlockSurface(psurfMask);
         return FALSE;
     }
-    
+
     pdc = DC_LockDc(hDc);
-    if(!pdc)
+    if (!pdc)
     {
         ERR("Could not lock the destination DC.\n");
         SURFACE_ShareUnlockSurface(psurfMask);
-        if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+        if (psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
         return FALSE;
     }
 
     /* Fix width parameter, if needed */
     if (!cxWidth)
     {
-        if(diFlags & DI_DEFAULTSIZE)
-            cxWidth = is_icon(pIcon) ? 
+        if (diFlags & DI_DEFAULTSIZE)
+            cxWidth = is_icon(pIcon) ?
                 UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
         else
             cxWidth = pIcon->cx;
@@ -1355,8 +1354,8 @@ UserDrawIconEx(
     /* Fix height parameter, if needed */
     if (!cyHeight)
     {
-        if(diFlags & DI_DEFAULTSIZE)
-            cyHeight = is_icon(pIcon) ? 
+        if (diFlags & DI_DEFAULTSIZE)
+            cyHeight = is_icon(pIcon) ?
                 UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
         else
             cyHeight = pIcon->cy;
@@ -1366,28 +1365,28 @@ UserDrawIconEx(
     RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
     IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
     RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-    
+
     /* Prepare the underlying surface */
     DC_vPrepareDCsForBlit(pdc, &rcDest, NULL, NULL);
 
     /* We now have our destination surface and rectangle */
     psurfDest = pdc->dclevel.pSurface;
-    
-    if(psurfDest == NULL)
+
+    if (psurfDest == NULL)
     {
         /* Empty DC */
         DC_vFinishBlit(pdc, NULL);
         DC_UnlockDc(pdc);
         SURFACE_ShareUnlockSurface(psurfMask);
-        if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+        if (psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
         return FALSE;
     }
-    
+
     /* Set source rect */
     RECTL_vSetRect(&rcSrc, 0, 0, pIcon->cx, pIcon->cy);
 
     /* Should we render off-screen? */
-    bOffScreen = hbrFlickerFreeDraw && 
+    bOffScreen = hbrFlickerFreeDraw &&
         (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH);
 
     if (bOffScreen)
@@ -1395,10 +1394,10 @@ UserDrawIconEx(
         /* Yes: Allocate and paint the offscreen surface */
         EBRUSHOBJ eboFill;
         PBRUSH pbrush = BRUSH_ShareLockBrush(hbrFlickerFreeDraw);
-        
+
         TRACE("Performing off-screen rendering.\n");
-        
-        if(!pbrush)
+
+        if (!pbrush)
         {
             ERR("Failed to get brush object.\n");
             goto Cleanup;
@@ -1408,17 +1407,17 @@ UserDrawIconEx(
         psurfOffScreen = SURFACE_AllocSurface(STYPE_BITMAP,
             cxWidth, cyHeight, psurfDest->SurfObj.iBitmapFormat,
             0, 0, NULL);
-        if(!psurfOffScreen)
+        if (!psurfOffScreen)
         {
             ERR("Failed to allocate the off-screen surface.\n");
             BRUSH_ShareUnlockBrush(pbrush);
             goto Cleanup;
         }
-        
+
         /* Paint the brush */
         EBRUSHOBJ_vInit(&eboFill, pbrush, psurfOffScreen, 0x00FFFFFF, 0, NULL);
         RECTL_vSetRect(&rcDest, 0, 0, cxWidth, cyHeight);
-        
+
         Ret = IntEngBitBlt(&psurfOffScreen->SurfObj,
             NULL,
             NULL,
@@ -1434,20 +1433,20 @@ UserDrawIconEx(
         /* Clean up everything */
         EBRUSHOBJ_vCleanup(&eboFill);
         BRUSH_ShareUnlockBrush(pbrush);
-            
-        if(!Ret)
+
+        if (!Ret)
         {
             ERR("Failed to paint the off-screen surface.\n");
             goto Cleanup;
         }
-        
+
         /* We now have our destination surface */
         psurfDest = psurfOffScreen;
 #else
         pdcClipObj = &pdc->co.ClipObj;
         /* Paint the brush */
         EBRUSHOBJ_vInit(&eboFill, pbrush, psurfDest, 0x00FFFFFF, 0, NULL);
-        
+
         Ret = IntEngBitBlt(&psurfDest->SurfObj,
             NULL,
             NULL,
@@ -1463,8 +1462,8 @@ UserDrawIconEx(
         /* Clean up everything */
         EBRUSHOBJ_vCleanup(&eboFill);
         BRUSH_ShareUnlockBrush(pbrush);
-            
-        if(!Ret)
+
+        if (!Ret)
         {
             ERR("Failed to paint the off-screen surface.\n");
             goto Cleanup;
@@ -1480,21 +1479,21 @@ UserDrawIconEx(
     }
 
     /* Now do the rendering */
-    if(hbmAlpha && ((diFlags & DI_NORMAL) == DI_NORMAL))
+    if (hbmAlpha && ((diFlags & DI_NORMAL) == DI_NORMAL))
     {
         BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
         PSURFACE psurf = NULL;
 
         psurf = SURFACE_ShareLockSurface(hbmAlpha);
-        if(!psurf)
+        if (!psurf)
         {
             ERR("SURFACE_LockSurface failed!\n");
             goto NoAlpha;
         }
-        
+
         /* Initialize color translation object */
         EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xFFFFFFFF, 0xFFFFFFFF, 0);
-        
+
         /* Now do it */
         Ret = IntEngAlphaBlend(&psurfDest->SurfObj,
                                &psurf->SurfObj,
@@ -1503,19 +1502,19 @@ UserDrawIconEx(
                                &rcDest,
                                &rcSrc,
                                &blendobj);
-        
+
         EXLATEOBJ_vCleanup(&exlo);
         SURFACE_ShareUnlockSurface(psurf);
-        if(Ret) goto done;
+        if (Ret) goto done;
         ERR("NtGdiAlphaBlend failed!\n");
     }
 NoAlpha:
     if (diFlags & DI_MASK)
     {
         DWORD rop4 = (diFlags & DI_IMAGE) ? ROP4_SRCAND : ROP4_SRCCOPY;
-        
+
         EXLATEOBJ_vInitSrcMonoXlate(&exlo, psurfDest->ppal, 0x00FFFFFF, 0);
-        
+
         Ret = IntEngStretchBlt(&psurfDest->SurfObj,
                                &psurfMask->SurfObj,
                                NULL,
@@ -1528,24 +1527,24 @@ NoAlpha:
                                NULL,
                                NULL,
                                rop4);
-        
+
         EXLATEOBJ_vCleanup(&exlo);
 
-        if(!Ret)
+        if (!Ret)
         {
             ERR("Failed to mask the bitmap data.\n");
             goto Cleanup;
         }
     }
 
-    if(diFlags & DI_IMAGE)
+    if (diFlags & DI_IMAGE)
     {
         if (psurfColor)
         {
             DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY ;
-            
+
             EXLATEOBJ_vInitialize(&exlo, psurfColor->ppal, psurfDest->ppal, 0x00FFFFFF, 0x00FFFFFF, 0);
-            
+
             Ret = IntEngStretchBlt(&psurfDest->SurfObj,
                                    &psurfColor->SurfObj,
                                    NULL,
@@ -1558,10 +1557,10 @@ NoAlpha:
                                    NULL,
                                    NULL,
                                    rop4);
-        
+
             EXLATEOBJ_vCleanup(&exlo);
 
-            if(!Ret)
+            if (!Ret)
             {
                 ERR("Failed to render the icon bitmap.\n");
                 goto Cleanup;
@@ -1572,9 +1571,9 @@ NoAlpha:
             /* Mask bitmap holds the information in its bottom half */
             DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY;
             RECTL_vOffsetRect(&rcSrc, 0, pIcon->cy);
-            
+
             EXLATEOBJ_vInitSrcMonoXlate(&exlo, psurfDest->ppal, 0x00FFFFFF, 0);
-        
+
             Ret = IntEngStretchBlt(&psurfDest->SurfObj,
                                    &psurfMask->SurfObj,
                                    NULL,
@@ -1587,10 +1586,10 @@ NoAlpha:
                                    NULL,
                                    NULL,
                                    rop4);
-            
+
             EXLATEOBJ_vCleanup(&exlo);
 
-            if(!Ret)
+            if (!Ret)
             {
                 ERR("Failed to render the icon bitmap.\n");
                 goto Cleanup;
@@ -1601,7 +1600,7 @@ NoAlpha:
 done:
 #if 0
     /* We're done. Was it a double buffered draw ? */
-    if(bOffScreen)
+    if (bOffScreen)
     {
         /* Yes. Draw it back to our DC */
         POINTL ptSrc = {0, 0};
@@ -1610,16 +1609,16 @@ done:
         RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
         IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
         RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-        
+
         /* Get the clip object */
         pdcClipObj = pdc->rosdc.CombinedClip;
-        
+
         /* We now have our destination surface and rectangle */
         psurfDest = pdc->dclevel.pSurface;
-        
+
         /* Color translation */
         EXLATEOBJ_vInitialize(&exlo, psurfOffScreen->ppal, psurfDest->ppal, 0x00FFFFFF, 0x00FFFFFF, 0);
-        
+
         /* Blt it! */
         Ret = IntEngBitBlt(&psurfDest->SurfObj,
                            &psurfOffScreen->SurfObj,
@@ -1632,12 +1631,12 @@ done:
                            NULL,
                            NULL,
                            ROP4_SRCCOPY);
-                           
+
         EXLATEOBJ_vCleanup(&exlo);
     }
 #endif
 Cleanup:
-    if(pdc)
+    if (pdc)
     {
         DC_vFinishBlit(pdc, NULL);
         DC_UnlockDc(pdc);
@@ -1645,13 +1644,13 @@ Cleanup:
 
 #if 0
     /* Delete off screen rendering surface */
-    if(psurfOffScreen)
+    if (psurfOffScreen)
         GDIOBJ_vDeleteObject(&psurfOffScreen->BaseObject);
 #endif
 
     /* Unlock other surfaces */
     SURFACE_ShareUnlockSurface(psurfMask);
-    if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+    if (psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
 
     return Ret;
 }
@@ -1731,10 +1730,10 @@ NtUserGetCursorFrameInfo(
 
     ret = CurIcon->head.h;
 
-    if(CurIcon->CURSORF_flags & CURSORF_ACON)
+    if (CurIcon->CURSORF_flags & CURSORF_ACON)
     {
         PACON AniCurIcon = (PACON)CurIcon;
-        if(istep >= AniCurIcon->cicur)
+        if (istep >= AniCurIcon->cicur)
         {
             UserDereferenceObject(CurIcon);
             UserLeave();
@@ -1804,7 +1803,7 @@ NtUserSetSystemCursor(
 
         ppi = PsGetCurrentProcessWin32Process();
 
-        for(i = 0 ; i < 16; i++)
+        for (i = 0 ; i < 16; i++)
         {
            if (gasyscur[i].type == id)
            {
