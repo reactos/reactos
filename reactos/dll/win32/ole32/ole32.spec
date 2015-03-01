@@ -14,7 +14,7 @@
 @ stdcall CoAddRefServerProcess()
 @ stdcall CoAllowSetForegroundWindow(ptr ptr)
 @ stdcall CoBuildVersion()
-# CoCancelCall
+@ stdcall -stub CoCancelCall(long long)
 @ stdcall CoCopyProxy(ptr ptr)
 @ stdcall CoCreateFreeThreadedMarshaler(ptr ptr)
 @ stdcall CoCreateGuid(ptr)
@@ -22,10 +22,10 @@
 @ stdcall CoCreateInstanceEx(ptr ptr long ptr long ptr)
 # CoCreateObjectInContext
 # CoDeactivateObject
-# CoDisableCallCancellation
+@ stdcall -stub CoDisableCallCancellation(ptr)
 @ stdcall CoDisconnectObject(ptr long)
 @ stdcall CoDosDateTimeToFileTime(long long ptr) kernel32.DosDateTimeToFileTime
-# CoEnableCallCancellation
+@ stdcall -stub CoEnableCallCancellation(ptr)
 @ stdcall CoFileTimeNow(ptr)
 @ stdcall CoFileTimeToDosDateTime(ptr ptr ptr) kernel32.FileTimeToDosDateTime
 @ stdcall CoFreeAllLibraries()
