@@ -648,7 +648,6 @@ HRESULT MediaDet_create(IUnknown * pUnkOuter, LPVOID * ppv) {
     obj->cur_pin = NULL;
     obj->num_streams = -1;
     obj->cur_stream = 0;
-    *ppv = obj;
 
     if (pUnkOuter)
         obj->outer_unk = pUnkOuter;
