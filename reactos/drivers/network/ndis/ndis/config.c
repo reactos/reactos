@@ -645,6 +645,13 @@ NdisReadConfiguration(
         (*ParameterValue)->ParameterData.StringData.Buffer = Buffer;
         (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
     }
+    else if (KeyInformation->Type == REG_DWORD)
+    {
+        ASSERT(KeyInformation->DataLength == sizeof(ULONG));
+        NDIS_DbgPrint(MAX_TRACE, ("NdisParameterInteger\n"));
+        (*ParameterValue)->ParameterType = NdisParameterInteger;
+        (*ParameterValue)->ParameterData.IntegerData = * (ULONG *) &KeyInformation->Data[0];
+    }
     else if (KeyInformation->Type == REG_SZ)
     {
          UNICODE_STRING str;
