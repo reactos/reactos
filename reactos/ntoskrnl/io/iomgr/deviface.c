@@ -1397,6 +1397,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlGUIDFromString() failed with status 0x%08lx\n", Status);
+        ObDereferenceObject(FileObject);
         return Status;
     }
 
