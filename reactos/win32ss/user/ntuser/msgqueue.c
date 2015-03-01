@@ -118,7 +118,6 @@ UserSetCursor(
         if (NewCursor)
         {
             /* Call GDI to set the new screen cursor */
-#ifdef NEW_CURSORICON
             PCURICON_OBJECT CursorFrame = NewCursor;
             if(NewCursor->CURSORF_flags & CURSORF_ACON)
             {
@@ -133,16 +132,6 @@ UserSetCursor(
                                gpsi->ptCursor.x,
                                gpsi->ptCursor.y,
                                CursorFrame->hbmAlpha ? SPS_ALPHA : 0);
-#else
-            GreSetPointerShape(hdcScreen,
-                               NewCursor->IconInfo.hbmMask,
-                               NewCursor->IconInfo.hbmColor,
-                               NewCursor->IconInfo.xHotspot,
-                               NewCursor->IconInfo.yHotspot,
-                               gpsi->ptCursor.x,
-                               gpsi->ptCursor.y,
-                               0);
-#endif
         }
         else /* Note: OldCursor != NewCursor so we have to hide cursor */
         {
@@ -663,7 +652,6 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                if(CurInfo->CurrentCursorObject != MessageQueue->CursorObject)
                {
                    /* Call GDI to set the new screen cursor */
-#ifdef NEW_CURSORICON
                     GreSetPointerShape(hdcScreen,
                                        MessageQueue->CursorObject->hbmAlpha ?
                                            NULL : MessageQueue->CursorObject->hbmMask,
@@ -674,16 +662,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                                        gpsi->ptCursor.x,
                                        gpsi->ptCursor.y,
                                        MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0);
-#else
-                    GreSetPointerShape(hdcScreen,
-                                      MessageQueue->CursorObject->IconInfo.hbmMask,
-                                      MessageQueue->CursorObject->IconInfo.hbmColor,
-                                      MessageQueue->CursorObject->IconInfo.xHotspot,
-                                      MessageQueue->CursorObject->IconInfo.yHotspot,
-                                      gpsi->ptCursor.x,
-                                      gpsi->ptCursor.y,
-                                      0);
-#endif
+
                } else
                    GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
            }

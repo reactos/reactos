@@ -125,7 +125,7 @@ IntSetStyle( PWND pwnd, ULONG set_bits, ULONG clear_bits )
     pwnd->style = styleNew;
     if ((styleOld ^ styleNew) & WS_VISIBLE) // State Change.
     {
-       if (styleOld & WS_VISIBLE) pwnd->head.pti->cVisWindows--; 
+       if (styleOld & WS_VISIBLE) pwnd->head.pti->cVisWindows--;
        if (styleNew & WS_VISIBLE) pwnd->head.pti->cVisWindows++;
        DceResetActiveDCEs( pwnd );
     }
@@ -340,7 +340,7 @@ IntGetWindow(HWND hWnd,
                 if (Wnd->spwndPrev != NULL)
                     FoundWnd = Wnd->spwndPrev;
                 break;
-   
+
             case GW_CHILD:
                 if (Wnd->spwndChild != NULL)
                     FoundWnd = Wnd->spwndChild;
@@ -563,7 +563,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    /* Fixes dialog test_focus breakage due to r66237. */
    if (ThreadData->MessageQueue->spwndFocus == Window)
       ThreadData->MessageQueue->spwndFocus = NULL;
-   
+
    if (ThreadData->MessageQueue->spwndActive == Window)
       ThreadData->MessageQueue->spwndActive = NULL;
 
@@ -1450,7 +1450,7 @@ NtUserBuildHwndList(
                dwCount++;
             }
          }
-      }      
+      }
 
       ObDereferenceObject(Thread);
    }
@@ -1671,7 +1671,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    }
 
    pWnd->head.pti->cWindows++;
-#ifdef NEW_CURSORICON
+
    if (Class->spicn && !Class->spicnSm)
    {
        HICON IconSmHandle = NULL;
@@ -1702,16 +1702,6 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
            Class->CSF_flags |= CSF_CACHEDSMICON;
        }
    }
-#else
-   if (Class->hIcon && !Class->hIconSm)
-   {
-      Class->hIconSmIntern = co_IntCopyImage( Class->hIcon, IMAGE_ICON,
-                                              UserGetSystemMetrics( SM_CXSMICON ),
-                                              UserGetSystemMetrics( SM_CYSMICON ), 0 );
-      TRACE("IntCreateWindow hIconSmIntern %p\n",Class->hIconSmIntern);
-      Class->CSF_flags |= CSF_CACHEDSMICON;
-   }
-#endif
 
    if (pWnd->pcls->CSF_flags & CSF_SERVERSIDEPROC)
       pWnd->state |= WNDS_SERVERSIDEWINDOWPROC;
@@ -2135,7 +2125,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       if (ParentWindow != co_GetDesktopWindow(Window))
       {
          Cs->x += ParentWindow->rcClient.left;
-         Cs->y += ParentWindow->rcClient.top; 
+         Cs->y += ParentWindow->rcClient.top;
       }
    }
 
@@ -2168,7 +2158,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    /* correct child window coordinates if mirroring on parent is enabled */
    if (ParentWindow != NULL)
    {
-      if ( ((Cs->style & WS_CHILD) == WS_CHILD) && 
+      if ( ((Cs->style & WS_CHILD) == WS_CHILD) &&
           ((ParentWindow->ExStyle & WS_EX_LAYOUTRTL) ==  WS_EX_LAYOUTRTL))
       {
           Window->rcWindow.right = ParentWindow->rcClient.right - (Window->rcWindow.left - ParentWindow->rcClient.left);
@@ -2433,7 +2423,7 @@ NtUserCreateWindowEx(
 
     ASSERT(plstrWindowName);
 
-    if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD) 
+    if ( (dwStyle & (WS_POPUP|WS_CHILD)) != WS_CHILD)
     {
         /* check hMenu is valid handle */
         if (hMenu && !UserGetMenuObject(hMenu))
@@ -2442,7 +2432,7 @@ NtUserCreateWindowEx(
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
             return NULL;
         }
-    } 
+    }
 
     /* Copy the window name to kernel mode */
     Status = ProbeAndCaptureLargeString(&lstrWindowName, plstrWindowName);
@@ -3244,7 +3234,7 @@ NtUserGetComboBoxInfo(
       SetLastNtError(_SEH2_GetExceptionCode());
    }
    _SEH2_END;
-   
+
    RETURN( Ret);
 
 CLEANUP:
@@ -3332,7 +3322,7 @@ NtUserGetListBoxInfo(
       SetLastNtError(_SEH2_GetExceptionCode());
    }
    _SEH2_END;
-   
+
    RETURN( Ret);
 
 CLEANUP:
@@ -3712,7 +3702,7 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    ret = co_IntSetWindowLong(hWnd, Index, NewValue, Ansi, FALSE);
 
    UserLeave();
-   
+
    return ret;
 }
 
@@ -3733,7 +3723,7 @@ NtUserAlterWindowStyle(HWND hWnd, DWORD Index, LONG NewValue)
    ret = co_IntSetWindowLong(hWnd, Index, NewValue, FALSE, TRUE);
 
    UserLeave();
-   
+
    return ret;
 }
 

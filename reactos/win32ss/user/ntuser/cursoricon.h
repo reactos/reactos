@@ -2,7 +2,6 @@
 
 #define MAXCURICONHANDLES 4096
 
-#ifdef NEW_CURSORICON
 typedef struct _CURICON_OBJECT
 {
     PROCMARKHEAD head;
@@ -48,32 +47,6 @@ VOID FASTCALL
 IntCleanupCurIconCache(PPROCESSINFO Win32Process);
 
 void FreeCurIconObject(PVOID Object);
-
-#else
-
-typedef struct tagCURICON_PROCESS
-{
-  LIST_ENTRY ListEntry;
-  PPROCESSINFO Process;
-} CURICON_PROCESS, *PCURICON_PROCESS;
-
-typedef struct _CURICON_OBJECT
-{
-  PROCMARKHEAD head;
-  LIST_ENTRY ListEntry;
-  HANDLE Self;
-  LIST_ENTRY ProcessList;
-  HMODULE hModule;
-  HRSRC hRsrc;
-  HRSRC hGroupRsrc;
-  SIZE Size;
-  BYTE Shadow;
-  ICONINFO IconInfo;
-} CURICON_OBJECT, *PCURICON_OBJECT;
-BOOLEAN FASTCALL IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi);
-BOOL FASTCALL IntDestroyCursor(HANDLE hCurIcon, BOOL bForce);
-HCURSOR FASTCALL IntSetCursor(HCURSOR hCursor);
-#endif
 
 typedef struct _CURSORACCELERATION_INFO
 {

@@ -220,10 +220,8 @@ UserProcessDestroy(PEPROCESS Process)
         ppiCurrent->hdeskStartup = NULL;
     }
 
-#ifdef NEW_CURSORICON
     /* Clean up the process icon cache */
     IntCleanupCurIconCache(ppiCurrent);
-#endif
 
     return STATUS_SUCCESS;
 }

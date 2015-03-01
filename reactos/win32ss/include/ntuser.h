@@ -435,7 +435,7 @@ typedef struct tagPOPUPMENU
     struct _WND *spwndPrevPopup;
     PMENU spmenu;
     PMENU spmenuAlternate;
-    struct _WND *spwndActivePopup; 
+    struct _WND *spwndActivePopup;
     struct tagPOPUPMENU *ppopupmenuRoot;
     struct tagPOPUPMENU *ppmDelayedFree;
     UINT posSelectedItem;
@@ -545,24 +545,12 @@ typedef struct _CLS
     INT cbclsExtra;
     INT cbwndExtra;
     HINSTANCE hModule;
-#ifdef NEW_CURSORICON
     struct _CURICON_OBJECT *spicn;
     struct _CURICON_OBJECT *spcur;
-#else
-    HANDLE hIcon; /* FIXME - Use pointer! */
-    HANDLE hCursor; /* FIXME - Use pointer! */
-#endif
     HBRUSH hbrBackground;
     PWSTR lpszMenuName; /* kernel use */
     PSTR lpszAnsiClassName; /* " */
-#ifdef NEW_CURSORICON
     struct _CURICON_OBJECT *spicnSm;
-#else
-    HANDLE hIconSm; /* FIXME - Use pointer! */
-
-    //// ReactOS doesn't support cache icons. */
-    HICON hIconSmIntern; /* Internal small icon, derived from hIcon */
-#endif
     ////
     UINT Unicode:1; // !CSF_ANSIPROC
     UINT Global:1; // CS_GLOBALCLASS or CSF_SERVERSIDEPROC
@@ -2990,8 +2978,6 @@ NtUserSetCursorContents(
     HANDLE Handle,
     PICONINFO IconInfo);
 
-#ifdef NEW_CURSORICON
-
 BOOL
 NTAPI
 NtUserSetCursorIconData(
@@ -3013,28 +2999,6 @@ NtUserFindExistingCursorIcon(
     _In_ PUNICODE_STRING pustrModule,
     _In_ PUNICODE_STRING pustrRsrc,
     _In_ FINDEXISTINGCURICONPARAM *param);
-
-#else /* NEW_CURSORICON */
-
-BOOL
-NTAPI
-NtUserSetCursorIconData(
-    HANDLE Handle,
-    PBOOL fIcon,
-    POINT *Hotspot,
-    HMODULE hModule,
-    HRSRC hRsrc,
-    HRSRC hGroupRsrc);
-
-HICON
-NTAPI
-NtUserFindExistingCursorIcon(
-    HMODULE hModule,
-    HRSRC hRsrc,
-    LONG cx,
-    LONG cy);
-
-#endif /* NEW_CURSORICON */
 
 DWORD
 NTAPI

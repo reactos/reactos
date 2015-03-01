@@ -379,11 +379,7 @@ SVC_(UserEnumDisplaySettings, 4)
 SVC_(UserEvent, 1)
 SVC_(UserExcludeUpdateRgn, 2)
 SVC_(UserFillWindow, 4)
-#ifdef NEW_CURSORICON
 SVC_(UserFindExistingCursorIcon, 3)
-#else
-SVC_(UserFindExistingCursorIcon, 4)
-#endif
 SVC_(UserFindWindowEx, 5)
 SVC_(UserFlashWindowEx, 1)
 SVC_(UserGetAltTabInfo, 6)
@@ -519,11 +515,7 @@ SVC_(UserSetClipboardViewer, 1)
 SVC_(UserSetConsoleReserveKeys, 2)
 SVC_(UserSetCursor, 1)
 SVC_(UserSetCursorContents, 2)
-#ifdef NEW_CURSORICON
 SVC_(UserSetCursorIconData, 4)
-#else
-SVC_(UserSetCursorIconData, 6)
-#endif
 SVC_(UserSetDbgTag, 2)
 SVC_(UserSetFocus, 1)
 SVC_(UserSetImeHotKey, 5)

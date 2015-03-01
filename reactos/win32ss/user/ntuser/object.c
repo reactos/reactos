@@ -218,11 +218,7 @@ static const struct
     { NULL,                     NULL,                       NULL },                 /* TYPE_FREE */
     { AllocDeskThreadObject,    co_UserDestroyWindow,       FreeDeskThreadObject }, /* TYPE_WINDOW */
     { AllocDeskProcObject,      UserDestroyMenuObject,      FreeDeskProcObject },   /* TYPE_MENU */
-#ifndef NEW_CURSORICON
-    { AllocProcMarkObject,      /*UserCursorCleanup*/NULL,  FreeProcMarkObject },   /* TYPE_CURSOR */
-#else
     { AllocProcMarkObject,      IntDestroyCurIconObject,    FreeCurIconObject },    /* TYPE_CURSOR */
-#endif
     { AllocSysObject,           /*UserSetWindowPosCleanup*/NULL, FreeSysObject },   /* TYPE_SETWINDOWPOS */
     { AllocDeskThreadObject,    IntRemoveHook,              FreeDeskThreadObject }, /* TYPE_HOOK */
     { AllocSysObject,           /*UserClipDataCleanup*/NULL,FreeSysObject },        /* TYPE_CLIPDATA */
@@ -694,43 +690,6 @@ UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type)
     return object;
 }
 
-#ifndef NEW_CURSORICON
-VOID
-FASTCALL
-UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
-{
-    PUSER_HANDLE_ENTRY entry = handle_to_entry(gHandleTable, ((PHEAD)obj)->h );
-    PPROCESSINFO ppi, oldppi;
-
-    /* This must be called with a valid object */
-    ASSERT(entry);
-
-    /* For now, only supported for CursorIcon object */
-    switch(type)
-    {
-        case TYPE_CURSOR:
-            ppi = (PPROCESSINFO)owner;
-            entry->pi = ppi;
-            oldppi = ((PPROCMARKHEAD)obj)->ppi;
-            ((PPROCMARKHEAD)obj)->ppi = ppi;
-            break;
-        default:
-            ASSERT(FALSE);
-            return;
-    }
-
-#if DBG
-    oldppi->DbgHandleCount[type]--;
-    ppi->DbgHandleCount[type]++;
-#endif
-
-    oldppi->UserHandleCount--;
-    IntDereferenceProcessInfo(oldppi);
-    ppi->UserHandleCount++;
-    IntReferenceProcessInfo(ppi);
-}
-#endif
-
 BOOLEAN
 UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 {
@@ -750,19 +709,6 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
         if (Entry->flags & HANDLEENTRY_INDESTROY)
             continue;
 
-#ifndef NEW_CURSORICON
-        /* Spcial case for cursors until cursoricon_new is there */
-        if (Entry->type == TYPE_CURSOR)
-        {
-            UserReferenceObject(Entry->ptr);
-            if (!IntDestroyCurIconObject(Entry->ptr, Owner))
-            {
-                Ret = FALSE;
-            }
-            continue;
-        }
-#endif
-
         /* Call destructor */
         if (!ObjectCallbacks[Entry->type].ObjectDestroy(Entry->ptr))
         {
@@ -774,7 +720,7 @@ UserDestroyObjectsForOwner(PUSER_HANDLE_TABLE Table, PVOID Owner)
 
     return Ret;
 }
-      
+
 /*
  * NtUserValidateHandleSecure W2k3 has one argument.
  *

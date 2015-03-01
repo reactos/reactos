@@ -666,15 +666,12 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
           {
               return TRUE;
           }
-#ifdef NEW_CURSORICON
+
           pcurNew->CURSORF_flags |= CURSORF_CURRENT;
-#endif
           pcurOld = UserSetCursor(pcurNew, FALSE);
           if (pcurOld)
           {
-#ifdef NEW_CURSORICON
                pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-#endif
                UserDereferenceObject(pcurOld);
           }
           return TRUE;
