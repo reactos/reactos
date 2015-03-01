@@ -2,6 +2,10 @@
 
 #define MAXCURICONHANDLES 4096
 
+/* Flags that are allowed to be set through NtUserSetCursorIconData() */
+#define CURSORF_USER_MASK \
+    (CURSORF_FROMRESOURCE | CURSORF_LRSHARED | CURSORF_ACON)
+
 typedef struct _CURICON_OBJECT
 {
     PROCMARKHEAD head;
@@ -35,18 +39,21 @@ typedef struct tagACON
     PCURICON_OBJECT * aspcur;
     DWORD * aicur;
     INT * ajifRate;
-    INT iicur;
+    UINT iicur;
 } ACON, *PACON;
 
 C_ASSERT(FIELD_OFFSET(ACON, cpcur) == FIELD_OFFSET(CURICON_OBJECT, xHotspot));
 
 BOOLEAN
-IntDestroyCurIconObject(PVOID Object);
+IntDestroyCurIconObject(
+    _In_ PVOID Object);
 
 VOID FASTCALL
 IntCleanupCurIconCache(PPROCESSINFO Win32Process);
 
-void FreeCurIconObject(PVOID Object);
+VOID
+FreeCurIconObject(
+    _In_ PVOID Object);
 
 typedef struct _CURSORACCELERATION_INFO
 {

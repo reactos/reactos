@@ -75,6 +75,66 @@ InitCursorImpl(VOID)
     return TRUE;
 }
 
+static
+VOID
+IntInsertCursorIntoList(
+    _Inout_ PCURICON_OBJECT pcur)
+{
+    PPROCESSINFO ppi = pcur->head.ppi;
+    PCURICON_OBJECT *ppcurHead;
+    NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
+    NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) == 0);
+
+    /* Get the right list head */
+    ppcurHead = (pcur->CURSORF_flags & CURSORF_GLOBAL) ?
+        &gcurFirst : &ppi->pCursorCache;
+
+    UserReferenceObject(pcur);
+    pcur->pcurNext = *ppcurHead;
+    *ppcurHead = pcur;
+    pcur->CURSORF_flags |= CURSORF_LINKED;
+}
+
+// FIXME: should think about using a LIST_ENTRY!
+static
+VOID
+IntRemoveCursorFromList(
+    _Inout_ PCURICON_OBJECT pcur)
+{
+    PPROCESSINFO ppi = pcur->head.ppi;
+    PCURICON_OBJECT *ppcurHead;
+    PCURICON_OBJECT *ppcur;
+    NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
+    NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) != 0);
+
+    NT_ASSERT((pcur->CURSORF_flags & CURSORF_GLOBAL) == 0);
+
+    /* Get the right list head */
+    ppcurHead = (pcur->CURSORF_flags & CURSORF_GLOBAL) ?
+        &gcurFirst : &ppi->pCursorCache;
+
+    /* Loop all cursors in the cache */
+    for (ppcur = ppcurHead;
+         (*ppcur) != NULL;
+         ppcur = &(*ppcur)->pcurNext)
+    {
+        /* Check if this is the one we are looking for */
+        if ((*ppcur) == pcur)
+        {
+            /* Remove it from the list */
+            (*ppcur) = pcur->pcurNext;
+
+            /* Dereference it */
+            UserDereferenceObject(pcur);
+            pcur->CURSORF_flags &= ~CURSORF_LINKED;
+            return;
+        }
+    }
+
+    /* We did not find it, this must not happen */
+    NT_ASSERT(FALSE);
+}
+
 VOID
 IntLoadSystenIcons(HICON hcur, DWORD id)
 {
@@ -110,16 +170,15 @@ IntLoadSystenIcons(HICON hcur, DWORD id)
             if (gasysico[i].type == id)
             {
                 gasysico[i].handle = pcur;
-                pcur->CURSORF_flags |= CURSORF_GLOBAL|CURSORF_LINKED;
-                UserReferenceObject(pcur);
+                pcur->CURSORF_flags |= CURSORF_GLOBAL;
+
                 //
                 //  The active switch between LR shared and Global public.
                 //  This is hacked around to support this while at the initial system start up.
                 //
                 pcur->head.ppi = NULL;
-                //
-                pcur->pcurNext = gcurFirst;
-                gcurFirst = pcur;
+
+                IntInsertCursorIntoList(pcur);
                 return;
             }
         }
@@ -231,6 +290,13 @@ IntCreateCurIconHandle(BOOLEAN Animated)
         return FALSE;
     }
 
+    if (Animated)
+    {
+        /* We MUST set this flag, to track whether this is an ACON! */
+        CurIcon->CURSORF_flags |= CURSORF_ACON;
+    }
+
+    NT_ASSERT(CurIcon->pcurNext == NULL);
     UserDereferenceObject(CurIcon);
 
     return hCurIcon;
@@ -242,35 +308,11 @@ IntDestroyCurIconObject(
 {
     PCURICON_OBJECT CurIcon = Object;
 
-    /* Try finding it in its process cache */
-    if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+    /* Check if the cursor is in a list */
+    if (CurIcon->CURSORF_flags & CURSORF_LINKED)
     {
-        PPROCESSINFO ppi;
-
-        ppi = CurIcon->head.ppi;
-        if (ppi->pCursorCache == CurIcon)
-        {
-            ppi->pCursorCache = CurIcon->pcurNext;
-            UserDereferenceObject(CurIcon);
-        }
-        else
-        {
-            PCURICON_OBJECT CacheCurIcon = ppi->pCursorCache;
-            while (CacheCurIcon)
-            {
-                if (CacheCurIcon->pcurNext == CurIcon)
-                {
-                    CacheCurIcon->pcurNext = CurIcon->pcurNext;
-                    break;
-                }
-                CacheCurIcon = CacheCurIcon->pcurNext;
-            }
-
-            /* We must have found it! */
-            ASSERT(CacheCurIcon != NULL);
-            UserDereferenceObject(CurIcon);
-        }
-        CurIcon->CURSORF_flags &= ~CURSORF_LINKED;
+        /* Remove the cursor from it's list */
+        IntRemoveCursorFromList(CurIcon);
     }
 
     /* We just mark the handle as being destroyed.
@@ -279,7 +321,7 @@ IntDestroyCurIconObject(
     return TRUE;
 }
 
-void
+VOID
 FreeCurIconObject(
     _In_ PVOID Object)
 {
@@ -295,19 +337,19 @@ FreeCurIconObject(
         if (bmpMask)
         {
             GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
-            GreDeleteObject(bmpMask);
+            NT_VERIFY(GreDeleteObject(bmpMask) == TRUE);
             CurIcon->hbmMask = NULL;
         }
         if (bmpColor)
         {
             GreSetObjectOwner(bmpColor, GDI_OBJ_HMGR_POWNED);
-            GreDeleteObject(bmpColor);
+            NT_VERIFY(GreDeleteObject(bmpColor) == TRUE);
             CurIcon->hbmColor = NULL;
         }
         if (bmpAlpha)
         {
             GreSetObjectOwner(bmpAlpha, GDI_OBJ_HMGR_POWNED);
-            GreDeleteObject(bmpAlpha);
+            NT_VERIFY(GreDeleteObject(bmpAlpha) == TRUE);
             CurIcon->hbmAlpha = NULL;
         }
     }
@@ -318,8 +360,8 @@ FreeCurIconObject(
 
         for (i = 0; i < AniCurIcon->cpcur; i++)
         {
-            UserDereferenceObject(AniCurIcon->aspcur[i]);
-            IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
+            NT_VERIFY(UserDereferenceObject(AniCurIcon->aspcur[i]) == TRUE);
+            NT_VERIFY(IntDestroyCurIconObject(AniCurIcon->aspcur[i]) == TRUE);
         }
         ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
     }
@@ -385,7 +427,7 @@ NtUserGetIconInfo(
 
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
     {
-        WARN("UserGetIconObject(0x%08x) Failed.\n", hCurIcon);
+        WARN("UserGetIconObject(0x%p) Failed.\n", hCurIcon);
         UserLeave();
         return FALSE;
     }
@@ -747,7 +789,7 @@ NtUserDestroyCursor(
     BOOL ret;
     PCURICON_OBJECT CurIcon = NULL;
 
-    TRACE("Enter NtUserDestroyCursorIcon (%p, %u)\n", hCurIcon, bForce);
+    TRACE("Enter NtUserDestroyCursorIcon (%p, %i)\n", hCurIcon, bForce);
     UserEnterExclusive();
 
     CurIcon = UserGetCurIconObject(hCurIcon);
@@ -862,16 +904,11 @@ NtUserFindExistingCursorIcon(
         /* See if module names match */
         if (atomModName == CurIcon->atomModName)
         {
-            /* They do. Now see if this is the same resource */
-            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
-            {
-                /* One is an INT resource and the other is not -> no match */
-                CurIcon = CurIcon->pcurNext;
-                continue;
-            }
-
+            /* Check if this is an INTRESOURCE */
             if (IS_INTRESOURCE(CurIcon->strName.Buffer))
             {
+                /* Compare if it matches the one we are looking for. This also
+                   handles the case, where ustrRsrcSafe is not an INTRESOURCE */
                 if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
                 {
                     /* INT resources match */
@@ -886,9 +923,8 @@ NtUserFindExistingCursorIcon(
         }
         CurIcon = CurIcon->pcurNext;
     }
-    //
-    //    Now search Global Cursors or Icons.
-    //
+
+    /* Now search Global Cursors or Icons. */
     if (CurIcon == NULL)
     {
         CurIcon = gcurFirst;
@@ -1067,193 +1103,521 @@ NtUserSetCursorContents(
 }
 
 
-/*
- * @implemented
- */
+static
 BOOL
-APIENTRY
-NtUserSetCursorIconData(
-  _In_     HCURSOR Handle,
-  _In_opt_ PUNICODE_STRING pustrModule,
-  _In_opt_ PUNICODE_STRING pustrRsrc,
-  _In_     const CURSORDATA* pCursorData)
+IntSetCursorData(
+    _Inout_ PCURICON_OBJECT pcur,
+    _In_opt_ PUNICODE_STRING pustrName,
+    _In_ ATOM atomModName,
+    _In_ const CURSORDATA* pcursordata)
 {
-    PCURICON_OBJECT CurIcon;
-    NTSTATUS Status = STATUS_SUCCESS;
-    BOOLEAN Ret = FALSE;
-    BOOLEAN IsShared = FALSE, IsAnim = FALSE;
-    DWORD numFrames;
-    UINT i = 0;
+    NT_ASSERT((pcur->CURSORF_flags & CURSORF_ACON) == 0);
 
-    TRACE("Enter NtUserSetCursorIconData\n");
-
-    UserEnterExclusive();
-
-    if (!(CurIcon = UserGetCurIconObject(Handle)))
+    /* Check if the CURSORF_ACON is also set in the cursor data */
+    if (pcursordata->CURSORF_flags & CURSORF_ACON)
     {
-        UserLeave();
-        EngSetLastError(ERROR_INVALID_HANDLE);
+        ERR("Mismatch in CURSORF_flags! cursor: 0x%08lx, data:  0x%08lx\n",
+            pcur->CURSORF_flags, pcursordata->CURSORF_flags);
         return FALSE;
     }
 
+    /* Check if this cursor was already set */
+    if (pcur->hbmMask != NULL)
+    {
+        ERR("Cursor data already set!\n");
+        return FALSE;
+    }
+
+    /* We need a mask */
+    if (pcursordata->hbmMask == NULL)
+    {
+        ERR("NtUserSetCursorIconData was got no hbmMask.\n");
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto Cleanup;
+    }
+
+    /* Take ownership of the mask bitmap */
+    if (!GreSetObjectOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_PUBLIC))
+    {
+        goto Cleanup;
+    }
+
+    /* Check if we have a color bitmap */
+    if (pcursordata->hbmColor)
+    {
+        /* Take ownership of the color bitmap */
+        if (!GreSetObjectOwner(pcursordata->hbmColor, GDI_OBJ_HMGR_PUBLIC))
+        {
+            goto Cleanup;
+        }
+    }
+
+    /* Check if we have an alpha bitmap */
+    if (pcursordata->hbmAlpha)
+    {
+        /* Take ownership of the alpha bitmap */
+        if (!GreSetObjectOwner(pcursordata->hbmAlpha, GDI_OBJ_HMGR_PUBLIC))
+        {
+            goto Cleanup;
+        }
+    }
+
+    /* Free the old name */
+    if (pcur->strName.Buffer != NULL)
+    {
+        ExFreePoolWithTag(pcur->strName.Buffer, TAG_STRING);
+        pcur->strName.Buffer = NULL;
+        pcur->strName.Length = 0;
+        pcur->strName.MaximumLength = 0;
+    }
+
+    /* Free the module atom */
+    if (pcur->atomModName != 0)
+    {
+        NT_VERIFY(NT_SUCCESS(RtlDeleteAtomFromAtomTable(gAtomTable, pcur->atomModName)));
+    }
+
+    /* Now set the new cursor data */
+    pcur->atomModName = atomModName;
+    pcur->rt = pcursordata->rt;
+    pcur->CURSORF_flags = pcursordata->CURSORF_flags & CURSORF_USER_MASK;
+    pcur->xHotspot = pcursordata->xHotspot;
+    pcur->yHotspot = pcursordata->yHotspot;
+    pcur->hbmMask = pcursordata->hbmMask;
+    pcur->hbmColor = pcursordata->hbmColor;
+    pcur->hbmAlpha = pcursordata->hbmAlpha;
+    pcur->rcBounds.left = 0;
+    pcur->rcBounds.top = 0;
+    pcur->rcBounds.right = pcursordata->cx;
+    pcur->rcBounds.bottom = pcursordata->cy;
+    pcur->hbmUserAlpha = pcursordata->hbmUserAlpha;
+    pcur->bpp = pcursordata->bpp;
+    pcur->cx = pcursordata->cx;
+    pcur->cy = pcursordata->cy;
+    if (pustrName != NULL)
+    {
+        pcur->strName = *pustrName;
+    }
+
+    return TRUE;
+
+Cleanup:
+
+    if (pcursordata->hbmMask != NULL)
+    {
+        GreSetObjectOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(pcursordata->hbmMask);
+    }
+
+    if (pcursordata->hbmColor != NULL)
+    {
+        GreSetObjectOwner(pcursordata->hbmColor, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(pcursordata->hbmColor);
+    }
+
+    if (pcursordata->hbmAlpha != NULL)
+    {
+        GreSetObjectOwner(pcursordata->hbmAlpha, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(pcursordata->hbmAlpha);
+    }
+
+    return FALSE;
+}
+
+static
+BOOL
+IntSetAconData(
+    _Inout_ PACON pacon,
+    _In_opt_ PUNICODE_STRING pustrName,
+    _In_ ATOM atomModName,
+    _In_ PCURSORDATA pcursordata)
+{
+    PCURICON_OBJECT *aspcur;
+    DWORD *aicur;
+    INT *ajifRate;
+    PCURSORDATA pcdFrame;
+    HCURSOR hcurFrame;
+    UINT cjSize, i;
+
+    NT_ASSERT((pacon->CURSORF_flags & CURSORF_ACON) != 0);
+    NT_ASSERT((ULONG_PTR)pcursordata->aspcur > MmUserProbeAddress);
+    NT_ASSERT((ULONG_PTR)pcursordata->aicur > MmUserProbeAddress);
+    NT_ASSERT((ULONG_PTR)pcursordata->ajifRate > MmUserProbeAddress);
+    NT_ASSERT(pcursordata->cpcur > 0);
+    NT_ASSERT(pcursordata->cicur > 0);
+
+    /* Check if the CURSORF_ACON is also set in the cursor data */
+    if (!(pcursordata->CURSORF_flags & CURSORF_ACON))
+    {
+        ERR("Mismatch in CURSORF_flags! acon: 0x%08lx, data:  0x%08lx\n",
+            pacon->CURSORF_flags, pcursordata->CURSORF_flags);
+        return FALSE;
+    }
+
+    /* Check if this acon was already set */
+    if (pacon->aspcur != NULL)
+    {
+        ERR("Acon data already set!\n");
+        return FALSE;
+    }
+
+    /* Calculate size: one cursor object for each frame, and a frame
+       index and jiffies for each "step" */
+    cjSize = (pcursordata->cpcur * sizeof(CURICON_OBJECT*)) +
+             (pcursordata->cicur * sizeof(DWORD)) +
+             (pcursordata->cicur * sizeof(INT));
+
+    /* Allocate a buffer */
+    aspcur = ExAllocatePoolWithTag(PagedPool, cjSize, USERTAG_CURSOR);
+    if (aspcur == NULL)
+    {
+        ERR("Failed to allocate memory (cpcur = %u, cicur = %u)\n",
+            pcursordata->cpcur, pcursordata->cicur);
+        return FALSE;
+    }
+
+    /* Set the pointers */
+    aicur = (DWORD*)&aspcur[pcursordata->cpcur];
+    ajifRate = (INT*)&aicur[pcursordata->cicur];
+
+    /* Get a pointer to the cursor data for each frame */
+    pcdFrame = pcursordata->aspcur;
+
+    /* Create the cursors */
+    for (i = 0; i < pcursordata->cpcur; i++)
+    {
+        /* Create a cursor for this frame */
+        hcurFrame = IntCreateCurIconHandle(FALSE);
+        if (hcurFrame == NULL)
+        {
+            ERR("Failed to create a cursor for frame %u\n", i);
+            aspcur[i] = NULL;
+            goto Cleanup;
+        }
+
+        /* Get a pointer to the frame cursor */
+        aspcur[i] = UserGetCurIconObject(hcurFrame);
+        NT_ASSERT(aspcur[i] != NULL);
+
+        /* Mark this cursor as an acon frame */
+        pcdFrame->CURSORF_flags |= CURSORF_ACONFRAME;
+
+        /* Set the cursor data for this frame */
+        if (!IntSetCursorData(aspcur[i], NULL, 0, &pcdFrame[i]))
+        {
+            ERR("Failed to set cursor data for frame %u\n", i);
+            goto Cleanup;
+        }
+    }
+
+    /* Free the old name */
+    if (pacon->strName.Buffer != NULL)
+    {
+        ExFreePoolWithTag(pacon->strName.Buffer, TAG_STRING);
+        pacon->strName.Buffer = NULL;
+        pacon->strName.Length = 0;
+        pacon->strName.MaximumLength = 0;
+    }
+
+    /* Free the module atom */
+    if (pacon->atomModName != 0)
+    {
+        NT_VERIFY(NT_SUCCESS(RtlDeleteAtomFromAtomTable(gAtomTable, pacon->atomModName)));
+    }
+
+    /* Free the previous frames */
+    if (pacon->aspcur != NULL)
+    {
+        for (i = 0; i < pacon->cpcur; i++)
+        {
+            NT_VERIFY(UserDereferenceObject(pacon->aspcur[i]) == TRUE);
+            NT_VERIFY(IntDestroyCurIconObject(pacon->aspcur[i]) == TRUE);
+        }
+        ExFreePoolWithTag(pacon->aspcur, USERTAG_CURSOR);
+    }
+
+    /* Finally set the data in the acon */
+    pacon->atomModName = atomModName;
+    pacon->rt = pcursordata->rt;
+    pacon->CURSORF_flags = pcursordata->CURSORF_flags & CURSORF_USER_MASK;
+    pacon->cpcur = pcursordata->cpcur;
+    pacon->cicur = pcursordata->cicur;
+    pacon->aspcur = aspcur;
+    pacon->aicur = aicur;
+    pacon->ajifRate = ajifRate;
+    pacon->iicur = 0;
+    if (pustrName != NULL)
+    {
+        pacon->strName = *pustrName;
+    }
+
+    return TRUE;
+
+Cleanup:
+
+    /* Clean up the cursors we created */
+    for (i = 0; i < pcursordata->cpcur; i++)
+    {
+        if (aspcur[i] == NULL)
+            break;
+
+        /* Destroy this cursor */
+        NT_VERIFY(UserDereferenceObject(aspcur[i]) == TRUE);
+        NT_VERIFY(IntDestroyCurIconObject(aspcur[i]) == TRUE);
+    }
+
+    /* Delete the allocated structure */
+    ExFreePoolWithTag(aspcur, USERTAG_CURSOR);
+
+    return FALSE;
+}
+
+BOOL
+APIENTRY
+UserSetCursorIconData(
+    _In_ HCURSOR hcursor,
+    _In_opt_ PUNICODE_STRING pustrModule,
+    _In_opt_ PUNICODE_STRING pustrRsrc,
+    _In_ PCURSORDATA pcursordata)
+{
+    PCURICON_OBJECT pcur;
+    ATOM atomModName;
+    NTSTATUS status;
+    BOOL bResult;
+
+    /* Do we have a module name? */
+    if (pustrModule != NULL)
+    {
+        /* Create an atom for the module name */
+        status = RtlAddAtomToAtomTable(gAtomTable,
+                                       pustrModule->Buffer,
+                                       &atomModName);
+        if (!NT_SUCCESS(status))
+        {
+            ERR("Failed to create atom from module name '%wZ': %0x8lx\n",
+                pustrModule, status);
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* No module name atom */
+        atomModName = 0;
+    }
+
+    /* Reference the cursor */
+    pcur = UserGetCurIconObject(hcursor);
+    if (pcur == NULL)
+    {
+        ERR("Failed to reference cursor %p\n", hcursor);
+        bResult = FALSE;
+        goto Exit;
+    }
+
+    /* Check if this is an acon */
+    if (pcur->CURSORF_flags & CURSORF_ACON)
+    {
+        bResult = IntSetAconData((PACON)pcur,
+                                 pustrRsrc,
+                                 atomModName,
+                                 pcursordata);
+    }
+    else
+    {
+        bResult = IntSetCursorData(pcur,
+                                   pustrRsrc,
+                                   atomModName,
+                                   pcursordata);
+    }
+
+Exit:
+
+    /* Check if we had success */
+    if (bResult != FALSE)
+    {
+        /* Check if this is an LRSHARED cursor now */
+        if (pcur->CURSORF_flags & CURSORF_LRSHARED)
+        {
+            /* Insert the cursor into the list. */
+            IntInsertCursorIntoList(pcur);
+        }
+    }
+    else
+    {
+        /* Cleanup on failure */
+        if (atomModName != 0)
+        {
+            NT_VERIFY(NT_SUCCESS(RtlDeleteAtomFromAtomTable(gAtomTable, atomModName)));
+        }
+    }
+
+    /* Dereference the cursor and return the result */
+    UserDereferenceObject(pcur);
+    return bResult;
+}
+
+
+/*
+ * @implemented
+ */
+__kernel_entry
+BOOL
+APIENTRY
+NtUserSetCursorIconData(
+    _In_ HCURSOR hcursor,
+    _In_opt_ PUNICODE_STRING pustrModule,
+    _In_opt_ PUNICODE_STRING pustrRsrc,
+    _In_ const CURSORDATA* pCursorData)
+{
+    CURSORDATA cursordata;
+    UNICODE_STRING ustrModule, ustrRsrc;
+    _SEH2_VOLATILE PVOID pvBuffer;
+    UINT cjSize;
+    NTSTATUS status;
+    BOOL bResult;
+
+    TRACE("Enter NtUserSetCursorIconData\n");
+
+    /* Initialize buffer, so we can handle cleanup */
+    ustrRsrc.Buffer = NULL;
+    ustrModule.Buffer = NULL;
+    pvBuffer = NULL;
+
     _SEH2_TRY
     {
+        /* Probe and capture the cursor data structure */
         ProbeForRead(pCursorData, sizeof(*pCursorData), 1);
-        if (pCursorData->CURSORF_flags & CURSORF_ACON)
+        cursordata = *pCursorData;
+
+        /* Check if this is an animated cursor */
+        if (cursordata.CURSORF_flags & CURSORF_ACON)
         {
-            /* This is an animated cursor */
-            PACON AniCurIcon = (PACON)CurIcon;
-            DWORD numSteps;
+            /* Check of the range is ok */
+            if ((cursordata.cpcur == 0) || (cursordata.cicur == 0) ||
+                (cursordata.cpcur > 1000) || (cursordata.cicur > 1000))
+            {
+                ERR("Range error (cpcur = %u, cicur = %u)\n",
+                    cursordata.cpcur, cursordata.cicur);
+                bResult = FALSE;
+                goto Exit;
+            }
 
-            numFrames = AniCurIcon->cpcur = pCursorData->cpcur;
-            numSteps = AniCurIcon->cicur = pCursorData->cicur;
-            AniCurIcon->iicur = pCursorData->iicur;
-            AniCurIcon->rt = pCursorData->rt;
+            /* Calculate size: one cursor data structure for each frame,
+               and a frame index and jiffies for each "step" */
+            cjSize = (cursordata.cpcur * sizeof(CURSORDATA)) +
+                     (cursordata.cicur * sizeof(DWORD)) +
+                     (cursordata.cicur * sizeof(INT));
 
-            /* Calculate size: one cursor object for each frame, and a frame index and jiffies for each "step" */
-            AniCurIcon->aspcur = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE, /* Let SEH catch allocation failures */
-                numFrames * sizeof(CURICON_OBJECT*) + numSteps * (sizeof(DWORD) + sizeof(INT)),
-                USERTAG_CURSOR);
-            AniCurIcon->aicur = (DWORD*)(AniCurIcon->aspcur + numFrames);
-            AniCurIcon->ajifRate = (INT*)(AniCurIcon->aicur + numSteps);
+            /* Allocate a buffer */
+            pvBuffer = ExAllocatePoolWithTag(PagedPool, cjSize, USERTAG_CURSOR);
+            if (pvBuffer == NULL)
+            {
+                ERR("Failed to allocate memory (cpcur = %u, cicur = %u)\n",
+                    cursordata.cpcur, cursordata.cicur);
+                bResult = FALSE;
+                goto Exit;
+            }
 
-            RtlZeroMemory(AniCurIcon->aspcur, numFrames * sizeof(CURICON_OBJECT*));
+            /* Set the pointers */
+            cursordata.aspcur = (CURSORDATA*)pvBuffer;
+            cursordata.aicur = (DWORD*)&cursordata.aspcur[cursordata.cpcur];
+            cursordata.ajifRate = (INT*)&cursordata.aicur[cursordata.cicur];
 
-            ProbeForRead(pCursorData->aicur, numSteps * sizeof(DWORD), 1);
-            RtlCopyMemory(AniCurIcon->aicur, pCursorData->aicur, numSteps * sizeof(DWORD));
-            ProbeForRead(pCursorData->ajifRate, numSteps * sizeof(INT), 1);
-            RtlCopyMemory(AniCurIcon->ajifRate, pCursorData->ajifRate, numSteps * sizeof(INT));
+            /* Probe and copy aspcur */
+            ProbeForRead(pCursorData->aspcur, cursordata.cpcur * sizeof(CURSORDATA), 1);
+            RtlCopyMemory(cursordata.aspcur,
+                          pCursorData->aspcur,
+                          cursordata.cpcur * sizeof(CURSORDATA));
 
-            AniCurIcon->CURSORF_flags = pCursorData->CURSORF_flags;
-            pCursorData = pCursorData->aspcur;
+            /* Probe and copy aicur */
+            ProbeForRead(pCursorData->aicur, cursordata.cicur * sizeof(DWORD), 1);
+            RtlCopyMemory(cursordata.aicur,
+                          pCursorData->aicur,
+                          cursordata.cicur * sizeof(DWORD));
 
-            IsAnim = TRUE;
+            /* Probe and copy ajifRate */
+            ProbeForRead(pCursorData->ajifRate, cursordata.cicur * sizeof(INT), 1);
+            RtlCopyMemory(cursordata.ajifRate,
+                          pCursorData->ajifRate,
+                          cursordata.cicur * sizeof(INT));
         }
         else
         {
-            CurIcon->xHotspot = pCursorData->xHotspot;
-            CurIcon->yHotspot = pCursorData->yHotspot;
-            CurIcon->cx = pCursorData->cx;
-            CurIcon->cy = pCursorData->cy;
-            CurIcon->rt = pCursorData->rt;
-            CurIcon->bpp = pCursorData->bpp;
-            CurIcon->hbmMask = pCursorData->hbmMask;
-            CurIcon->hbmColor = pCursorData->hbmColor;
-            CurIcon->hbmAlpha = pCursorData->hbmAlpha;
-            CurIcon->CURSORF_flags = pCursorData->CURSORF_flags;
+            /* This is a standard cursor, we don't use the pointers */
+            cursordata.aspcur = NULL;
+            cursordata.aicur = NULL;
+            cursordata.ajifRate = NULL;
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        SetLastNtError(_SEH2_GetExceptionCode());
+        bResult = FALSE;
+        goto Exit;
     }
     _SEH2_END
 
-    if (!NT_SUCCESS(Status))
+    /* Check if we got a module name */
+    if (pustrModule != NULL)
     {
-        SetLastNtError(Status);
-        goto done;
-    }
-
-    if (IsAnim)
-    {
-        PACON AniCurIcon = (PACON)CurIcon;
-        /* This is an animated cursor. Create a cursor object for each frame and set up the data */
-        for (i = 0; i < numFrames; i++)
+        /* Capture the name */
+        status = ProbeAndCaptureUnicodeString(&ustrModule, UserMode, pustrModule);
+        if (!NT_SUCCESS(status))
         {
-            HANDLE hCurFrame = IntCreateCurIconHandle(FALSE);
-            if (!NtUserSetCursorIconData(hCurFrame, NULL, NULL, pCursorData))
-                goto done;
-            AniCurIcon->aspcur[i] = UserGetCurIconObject(hCurFrame);
-            if (!AniCurIcon->aspcur[i])
-                goto done;
-            pCursorData++;
+            ERR("Failed to copy pustrModule: status 0x%08lx\n", status);
+            goto Exit;
         }
     }
 
-    if (CurIcon->CURSORF_flags & CURSORF_LRSHARED)
+    /* Check if we got a resource name */
+    if (pustrRsrc != NULL)
     {
-        IsShared = TRUE;
-    }
-
-    // Support global public cursors and icons too.
-    if (!IsAnim || IsShared)
-    {
-        if (pustrRsrc && pustrModule)
+        /* We use this function, because INTRESOURCEs and ATOMs are the same */
+        status = ProbeAndCaptureUnicodeStringOrAtom(&ustrRsrc, pustrRsrc);
+        if (!NT_SUCCESS(status))
         {
-            UNICODE_STRING ustrModuleSafe;
-            /* We use this convenient function, because INTRESOURCEs and ATOMs are the same */
-            Status = ProbeAndCaptureUnicodeStringOrAtom(&CurIcon->strName, pustrRsrc);
-            if (!NT_SUCCESS(Status))
-                goto done;
-            Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
-            if (!NT_SUCCESS(Status))
-                goto done;
-            Status = RtlAddAtomToAtomTable(gAtomTable, ustrModuleSafe.Buffer, &CurIcon->atomModName);
-            ReleaseCapturedUnicodeString(&ustrModuleSafe, UserMode);
-            if (!NT_SUCCESS(Status))
-                goto done;
+            ERR("Failed to copy pustrRsrc: status 0x%08lx\n", status);
+            goto Exit;
         }
     }
 
-    if (!CurIcon->hbmMask)
-    {
-        ERR("NtUserSetCursorIconData was got no hbmMask.\n");
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        goto done;
-    }
+    /* Acquire the global user lock */
+    UserEnterExclusive();
 
-    GreSetObjectOwner(CurIcon->hbmMask, GDI_OBJ_HMGR_PUBLIC);
+    /* Call the internal function */
+    bResult = UserSetCursorIconData(hcursor,
+                                    pustrModule ? &ustrModule : NULL,
+                                    pustrRsrc ? &ustrRsrc : NULL,
+                                    &cursordata);
 
-    if (CurIcon->hbmColor)
-        GreSetObjectOwner(CurIcon->hbmColor, GDI_OBJ_HMGR_PUBLIC);
-
-    if (CurIcon->hbmAlpha)
-        GreSetObjectOwner(CurIcon->hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
-
-    if (IsShared)
-    {
-        /* Update process cache in case of shared cursor */
-        PPROCESSINFO ppi = CurIcon->head.ppi;
-        UserReferenceObject(CurIcon);
-        CurIcon->pcurNext = ppi->pCursorCache;
-        ppi->pCursorCache = CurIcon;
-        CurIcon->CURSORF_flags |= CURSORF_LINKED;
-    }
-
-    Ret = TRUE;
-
-done:
-    if (!Ret && (!IsAnim || IsShared))
-    {
-        if (!IS_INTRESOURCE(CurIcon->strName.Buffer))
-            ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
-    }
-
-    if (!Ret && IsAnim)
-    {
-        PACON AniCurIcon = (PACON)CurIcon;
-        for (i = 0; i < numFrames; i++)
-        {
-            if (AniCurIcon->aspcur[i])
-            {
-                UserDereferenceObject(AniCurIcon->aspcur[i]);
-                IntDestroyCurIconObject(AniCurIcon->aspcur[i]);
-            }
-        }
-        AniCurIcon->cicur = 0;
-        AniCurIcon->cpcur = 0;
-        ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
-        AniCurIcon->aspcur = NULL;
-        AniCurIcon->aicur = NULL;
-        AniCurIcon->ajifRate = NULL;
-    }
-
-    UserDereferenceObject(CurIcon);
-    TRACE("Leave NtUserSetCursorIconData, ret=%i\n",Ret);
+    /* Release the global user lock */
     UserLeave();
 
-    return Ret;
+Exit:
+
+    /* Free the captured module name */
+    if ((ustrModule.Buffer != NULL) && !IS_INTRESOURCE(ustrModule.Buffer))
+    {
+        ReleaseCapturedUnicodeString(&ustrModule, UserMode);
+    }
+
+    if (pvBuffer != NULL)
+    {
+        ExFreePoolWithTag(pvBuffer, USERTAG_CURSOR);
+    }
+
+    /* Additional cleanup on failure */
+    if (bResult == FALSE)
+    {
+        if (ustrRsrc.Buffer != NULL)
+        {
+            ExFreePoolWithTag(ustrRsrc.Buffer, TAG_STRING);
+        }
+    }
+
+    TRACE("Leave NtUserSetCursorIconData, bResult = %i\n", bResult);
+
+    return bResult;
 }
 
 /* Mostly inspired from wine code.
@@ -1681,7 +2045,7 @@ NtUserDrawIconEx(
 
     if (!(pIcon = UserGetCurIconObject(hIcon)))
     {
-        ERR("UserGetCurIconObject(0x%08x) failed!\n", hIcon);
+        ERR("UserGetCurIconObject(0x%p) failed!\n", hIcon);
         UserLeave();
         return FALSE;
     }
@@ -1767,7 +2131,7 @@ NtUserGetCursorFrameInfo(
     UserDereferenceObject(CurIcon);
     UserLeave();
 
-    TRACE("Leaving NtUserGetCursorFrameInfo, ret = 0x%08x\n", ret);
+    TRACE("Leaving NtUserGetCursorFrameInfo, ret = 0x%p\n", ret);
 
     return ret;
 }
@@ -1814,11 +2178,9 @@ NtUserSetSystemCursor(
               if (ppi->W32PF_flags & W32PF_CREATEDWINORDC)
               {
                  gasyscur[i].handle = pcur;
-                 pcur->CURSORF_flags |= CURSORF_GLOBAL|CURSORF_LINKED;
-                 UserReferenceObject(pcur);
+                 pcur->CURSORF_flags |= CURSORF_GLOBAL;
                  pcur->head.ppi = NULL;
-                 pcur->pcurNext = gcurFirst;
-                 gcurFirst = pcur;
+                 IntInsertCursorIntoList(pcur);
                  Ret = TRUE;
               }
               break;

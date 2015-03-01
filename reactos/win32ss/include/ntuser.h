@@ -1103,12 +1103,12 @@ typedef struct tagCURSORDATA
     ULONG bpp;
     ULONG cx;
     ULONG cy;
-    INT cpcur;
-    INT cicur;
+    UINT cpcur;
+    UINT cicur;
     struct tagCURSORDATA *aspcur;
     DWORD *aicur;
     INT *ajifRate;
-    INT iicur;
+    UINT iicur;
 } CURSORDATA, *PCURSORDATA; /* !dso CURSORDATA */
 
 /* CURSORF_flags: */
