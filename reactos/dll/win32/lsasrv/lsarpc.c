@@ -44,6 +44,8 @@ LsarStartRpcServer(VOID)
         return;
     }
 
+    DsSetupInit();
+
     Status = RpcServerListen(1, 20, TRUE);
     if (Status != RPC_S_OK)
     {

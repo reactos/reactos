@@ -4,13 +4,16 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/idl
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
 
-add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
+add_rpc_files(server
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
 spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     authpackage.c
     authport.c
     database.c
+    dssetup.c
     lookup.c
     lsarpc.c
     lsasrv.c
@@ -21,6 +24,7 @@ list(APPEND SOURCE
     session.c
     utils.c
     lsasrv.h
+    ${CMAKE_CURRENT_BINARY_DIR}/dssetup_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsa_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c)
 

@@ -166,6 +166,10 @@ NTSTATUS
 LsapDeleteObjectAttribute(PLSA_DB_OBJECT DbObject,
                           LPWSTR AttributeName);
 
+/* dssetup.c */
+VOID
+DsSetupInit(VOID);
+
 /* lookup.c */
 NTSTATUS
 LsapInitSids(VOID);
