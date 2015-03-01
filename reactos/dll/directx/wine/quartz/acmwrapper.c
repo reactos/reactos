@@ -39,11 +39,6 @@ static inline ACMWrapperImpl *impl_from_TransformFilter( TransformFilter *iface 
     return CONTAINING_RECORD(iface, ACMWrapperImpl, tf.filter);
 }
 
-static inline ACMWrapperImpl *impl_from_IBaseFilter( IBaseFilter *iface )
-{
-    return CONTAINING_RECORD(iface, ACMWrapperImpl, tf.filter.IBaseFilter_iface);
-}
-
 static HRESULT WINAPI ACMWrapper_Receive(TransformFilter *tf, IMediaSample *pSample)
 {
     ACMWrapperImpl* This = impl_from_TransformFilter(tf);

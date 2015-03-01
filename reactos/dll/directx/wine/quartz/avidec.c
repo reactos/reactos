@@ -32,11 +32,6 @@ typedef struct AVIDecImpl
 
 static const IBaseFilterVtbl AVIDec_Vtbl;
 
-static inline AVIDecImpl *impl_from_IBaseFilter( IBaseFilter *iface )
-{
-    return CONTAINING_RECORD(iface, AVIDecImpl, tf.filter.IBaseFilter_iface);
-}
-
 static inline AVIDecImpl *impl_from_TransformFilter( TransformFilter *iface )
 {
     return CONTAINING_RECORD(iface, AVIDecImpl, tf.filter);

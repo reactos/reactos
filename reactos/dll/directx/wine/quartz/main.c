@@ -268,11 +268,10 @@ HRESULT __RPC_STUB ICaptureGraphBuilder2_FindInterface_Stub( ICaptureGraphBuilde
 const char * qzdebugstr_guid( const GUID * id )
 {
     int i;
-    char * name = NULL;
 
-    for (i=0;InterfaceDesc[i].name && !name;i++) {
+    for (i=0; InterfaceDesc[i].name; i++)
         if (IsEqualGUID(&InterfaceDesc[i].riid, id)) return InterfaceDesc[i].name;
-    }
+
     return debugstr_guid(id);
 }
 

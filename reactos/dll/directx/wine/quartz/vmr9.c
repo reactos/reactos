@@ -457,14 +457,12 @@ static HRESULT WINAPI VMR9_ShouldDrawSampleNow(BaseRenderer *This, IMediaSample 
 static HRESULT WINAPI VMR9_CompleteConnect(BaseRenderer *This, IPin *pReceivePin)
 {
     struct quartz_vmr *pVMR9 = (struct quartz_vmr*)This;
-    HRESULT hr = S_OK;
+    HRESULT hr;
 
     TRACE("(%p)\n", This);
 
-    if (!pVMR9->mode && SUCCEEDED(hr))
-        hr = IVMRFilterConfig9_SetRenderingMode(&pVMR9->IVMRFilterConfig9_iface, VMR9Mode_Windowed);
-
-    if (SUCCEEDED(hr))
+    if (pVMR9->mode ||
+            SUCCEEDED(hr = IVMRFilterConfig9_SetRenderingMode(&pVMR9->IVMRFilterConfig9_iface, VMR9Mode_Windowed)))
         hr = VMR9_maybe_init(pVMR9, FALSE);
 
     return hr;
