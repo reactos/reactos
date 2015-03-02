@@ -21,22 +21,7 @@
 
 #include "precomp.h"
 
-/* Get a function pointer from a DLL handle */
-#define GET_FUNC(func, module, name, fail) \
-  do { \
-    if (!func) { \
-      if (!SHLWAPI_h##module && !(SHLWAPI_h##module = LoadLibraryA(#module ".dll"))) return fail; \
-      func = (fn##func)GetProcAddress(SHLWAPI_h##module, name); \
-      if (!func) return fail; \
-    } \
-  } while (0)
-
-/* DLL handles for late bound calls */
-static HMODULE SHLWAPI_hshell32;
-
-/* Function pointers for GET_FUNC macro; these need to be global because of gcc bug */
-typedef BOOL (WINAPI *fnpIsNetDrive)(int);
-static  fnpIsNetDrive pIsNetDrive;
+int WINAPI IsNetDrive(int drive);
 
 HRESULT WINAPI SHGetWebFolderFilePathW(LPCWSTR,LPWSTR,DWORD);
 
@@ -3699,8 +3684,7 @@ BOOL WINAPI PathIsNetworkPathA(LPCSTR lpszPath)
   dwDriveNum = PathGetDriveNumberA(lpszPath);
   if (dwDriveNum == -1)
     return FALSE;
-  GET_FUNC(pIsNetDrive, shell32, (LPCSTR)66, FALSE); /* ord 66 = shell32.IsNetDrive */
-  return pIsNetDrive(dwDriveNum);
+  return IsNetDrive(dwDriveNum);
 }
 
 /*************************************************************************
@@ -3721,8 +3705,7 @@ BOOL WINAPI PathIsNetworkPathW(LPCWSTR lpszPath)
   dwDriveNum = PathGetDriveNumberW(lpszPath);
   if (dwDriveNum == -1)
     return FALSE;
-  GET_FUNC(pIsNetDrive, shell32, (LPCSTR)66, FALSE); /* ord 66 = shell32.IsNetDrive */
-  return pIsNetDrive(dwDriveNum);
+  return IsNetDrive(dwDriveNum);
 }
 
 /*************************************************************************
