@@ -8,7 +8,7 @@
 @ stdcall WlanFreeMemory (ptr)
 @ stub WlanGetAvailableNetworkList
 @ stub WlanGetFilterList
-@ stub WlanGetInterfaceCapability
+@ stdcall WlanGetInterfaceCapability (ptr ptr ptr ptr)
 @ stub WlanGetNetworkBssList
 @ stdcall WlanGetProfile (ptr ptr ptr ptr ptr long ptr)
 @ stdcall WlanGetProfileCustomUserData (ptr ptr ptr ptr ptr ptr)
@@ -17,7 +17,7 @@
 @ stub WlanIhvControl
 @ stdcall WlanOpenHandle (long ptr ptr ptr)
 @ stub WlanQueryAutoConfigParameter
-@ stub WlanQueryInterface
+@ stdcall WlanQueryInterface (ptr ptr ptr ptr ptr ptr ptr)
 @ stub WlanReasonCodeToString
 @ stub WlanRegisterNotification
 @ stdcall WlanRenameProfile (ptr ptr ptr ptr ptr)

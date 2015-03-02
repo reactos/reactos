@@ -250,6 +250,37 @@ WlanScan(IN HANDLE hClientHandle,
     return dwError;
 }
 
+DWORD
+WINAPI
+WlanQueryInterface(IN HANDLE hClientHandle,
+                   IN const GUID *pInterfaceGuid,
+                   IN WLAN_INTF_OPCODE OpCode,
+                   PVOID pReserved,
+                   OUT PDWORD pdwDataSize,
+                   OUT PVOID *ppData,
+                   WLAN_OPCODE_VALUE_TYPE *pWlanOpcodeValueType)
+{
+    if ((pReserved != NULL) || (pInterfaceGuid == NULL) || (hClientHandle == NULL) || (pdwDataSize == NULL) || (ppData == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;    
+}
+
+DWORD
+WINAPI
+WlanGetInterfaceCapability(IN HANDLE hClientHandle,
+                           IN const GUID *pInterfaceGuid,
+                           PVOID pReserved,
+                           OUT PWLAN_INTERFACE_CAPABILITY *ppCapability)
+{
+    if ((pReserved != NULL) || (pInterfaceGuid == NULL) || (hClientHandle == NULL) || (ppCapability == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;        
+}  
+
 void __RPC_FAR * __RPC_USER
 midl_user_allocate(SIZE_T len)
 {
