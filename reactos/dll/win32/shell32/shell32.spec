@@ -1,7 +1,7 @@
 2 stdcall SHChangeNotifyRegister(long long long long long ptr)
 3 stdcall SHDefExtractIconA(str long long ptr ptr long)
 4 stdcall SHChangeNotifyDeregister(long)
-5 stdcall -noname SHChangeNotifyUpdateEntryList(long long long long) # FIXME: Inspect
+5 stdcall -noname SHChangeNotifyUpdateEntryList(long long long long)
 6 stdcall SHDefExtractIconW(wstr long long ptr ptr long)
 7 stdcall -noname SHLookupIconIndexA(str long long)
 8 stdcall -noname SHLookupIconIndexW(wstr long long)
@@ -26,22 +26,22 @@
 27 stdcall ILSaveToStream(ptr ptr)
 28 stdcall SHILCreateFromPath(ptr ptr ptr) SHILCreateFromPathAW
 29 stdcall -noname PathIsRoot(ptr) PathIsRootAW
-30 stdcall -noname PathBuildRoot(ptr long) PathBuildRootAW # FIXME: should be PathBuildRootW
+30 stdcall -noname PathBuildRoot(ptr long) PathBuildRootW
 31 stdcall -noname PathFindExtension(wstr) PathFindExtensionW
 32 stdcall -noname PathAddBackslash(wstr) PathAddBackslashW
 33 stdcall -noname PathRemoveBlanks(wstr) PathRemoveBlanksW
 34 stdcall -noname PathFindFileName(wstr) PathFindFileNameW
-35 stdcall -noname PathRemoveFileSpec(ptr) PathRemoveFileSpecAW # Fixme
-36 stdcall -noname PathAppend(ptr ptr) PathAppendAW # Fixme
-37 stdcall -noname PathCombine(wstr wstr wstr) PathCombineW # FIXME: Inspect
+35 stdcall -noname PathRemoveFileSpec(ptr) PathRemoveFileSpecAW
+36 stdcall -noname PathAppend(ptr ptr) PathAppendAW
+37 stdcall -noname PathCombine(wstr wstr wstr) PathCombineW
 38 stdcall -noname PathStripPath(wstr) PathStripPathW
-39 stdcall -noname PathIsUNC(wstr) PathIsUNCW # FIXME: Inspect
-40 stdcall -noname PathIsRelative(wstr) PathIsRelativeW # FIXME: Inspect
+39 stdcall -noname PathIsUNC(wstr) PathIsUNCW
+40 stdcall -noname PathIsRelative(wstr) PathIsRelativeW
 41 stdcall IsLFNDriveA(str)
 42 stdcall IsLFNDriveW(wstr)
 43 stdcall PathIsExe(ptr) PathIsExeAW
 44 stub -noname Control_RunDLLNoFallback
-45 stdcall -noname PathFileExists(ptr) PathFileExistsAW # Fixme
+45 stdcall -noname PathFileExists(ptr) PathFileExistsAW # FIXME
 46 stdcall -noname PathMatchSpec(wstr wstr) PathMatchSpecW
 47 stdcall PathMakeUniqueName(ptr long ptr ptr ptr) PathMakeUniqueNameAW
 48 stdcall -noname PathSetDlgItemPath(long long wstr) PathSetDlgItemPathW
@@ -49,19 +49,19 @@
 50 stdcall -noname PathStripToRoot(wstr) PathStripToRootW
 51 stdcall PathResolve(str long long) PathResolveAW
 52 stdcall -noname PathGetArgs(wstr) PathGetArgsW
-53 stdcall -noname IsSuspendAllowed() # FIXME: Wine says DoEnvironmentSubst
+53 stdcall -noname IsSuspendAllowed()
 54 stdcall -noname LogoffWindowsDialog(ptr)
 55 stdcall -noname PathQuoteSpaces(wstr) PathQuoteSpacesW
 56 stdcall -noname PathUnquoteSpaces(wstr) PathUnquoteSpacesW
-57 stdcall -noname PathGetDriveNumber(wstr) PathGetDriveNumberW  # FIXME: Inspect
-58 stdcall -noname ParseField(str long ptr long) ParseFieldAW # Fixme
+57 stdcall -noname PathGetDriveNumber(wstr) PathGetDriveNumberW
+58 stdcall -noname ParseField(str long ptr long) ParseFieldAW # FIXME
 59 stdcall RestartDialog(long wstr long)
-60 stdcall -noname ExitWindowsDialog(long) # Fixme
-61 stdcall -noname RunFileDlg(long long long wstr wstr long) RunFileDlg # Fixme?
+60 stdcall -noname ExitWindowsDialog(long)
+61 stdcall -noname RunFileDlg(long long long wstr wstr long)
 62 stdcall PickIconDlg(long long long long)
 63 stdcall GetFileNameFromBrowse(long long long long wstr wstr wstr)
 64 stdcall DriveType(long)
-65 stdcall -noname InvalidateDriveType(long)  # FIXME: Inspect
+65 stdcall -noname InvalidateDriveType(long)
 66 stdcall IsNetDrive(long)
 67 stdcall Shell_MergeMenus(long long long long long long)
 68 stdcall SHGetSetSettings(ptr long long)
@@ -74,13 +74,13 @@
 75 stdcall PathYetAnotherMakeUniqueName(ptr wstr wstr wstr)
 76 stdcall -noname DragQueryInfo(ptr ptr)
 77 stdcall SHMapPIDLToSystemImageListIndex(ptr ptr ptr)
-78 stdcall -noname OleStrToStrN(str long wstr long) OleStrToStrNAW # Fixme
-79 stdcall -noname StrToOleStrN(wstr long str long) StrToOleStrNAW # Fixme
+78 stdcall -noname OleStrToStrN(str long wstr long) OleStrToStrNAW # FIXME
+79 stdcall -noname StrToOleStrN(wstr long str long) StrToOleStrNAW # FIXME
 80 stdcall SHOpenPropSheetW(wstr ptr long ptr ptr ptr wstr)
 81 stdcall OpenAs_RunDLL(long long str long) OpenAs_RunDLLA
 82 stdcall -noname DDECreatePostNotify(ptr)
 83 stdcall -noname CIDLData_CreateFromIDArray(ptr long ptr ptr)
-84 stdcall -noname SHIsBadInterfacePtr(ptr long) # Fixme
+84 stdcall -noname SHIsBadInterfacePtr(ptr long)
 85 stdcall OpenRegStream(long str str long) shlwapi.SHOpenRegStreamA
 86 stdcall -noname SHRegisterDragDrop(long ptr)
 87 stdcall -noname SHRevokeDragDrop(long)
@@ -92,10 +92,10 @@
 93 stdcall -noname Win32CreateDirectory(wstr ptr) Win32CreateDirectoryW
 94 stdcall -noname Win32RemoveDirectory(wstr) Win32RemoveDirectoryW
 95 stdcall -noname SHLogILFromFSIL(ptr)
-96 stdcall -noname StrRetToStrN(ptr long ptr ptr) StrRetToStrNAW # Fixme
+96 stdcall -noname StrRetToStrN(ptr long ptr ptr) StrRetToStrNAW # FIXME
 97 stdcall -noname SHWaitForFileToOpen(long long long)
 98 stdcall SHGetRealIDL(ptr ptr ptr)
-99 stdcall -noname SetAppStartingCursor(long long) # Fixme
+99 stdcall -noname SetAppStartingCursor(long long)
 100 stdcall SHRestricted(long)
 101 stdcall OpenAs_RunDLLA(long long str long)
 102 stdcall SHCoCreateInstance(wstr ptr long ptr ptr)
@@ -118,11 +118,11 @@
 119 stdcall IsLFNDrive(ptr) IsLFNDriveAW
 @ stdcall -private DllGetVersion(ptr)
 121 stdcall SHFlushClipboard()
-122 stdcall -noname RunDLL_CallEntry16(long long long str long) # Fixme #name wrong?
+122 stdcall -noname RunDll_CallEntry16(long long long str long)
 123 stdcall -noname SHFreeUnusedLibraries()
 @ stdcall -private DllInstall(long wstr)
 @ stdcall -private DllRegisterServer()
-126 stdcall -noname SHOutOfMemoryMessageBox(long long long) # Fixme
+126 stdcall -noname SHOutOfMemoryMessageBox(long long long)
 127 stdcall -noname SHWinHelp(long long long long)
 128 stdcall -noname SHDllGetClassObject(ptr ptr ptr) DllGetClassObject
 129 stdcall DAD_AutoScroll(long ptr ptr)
@@ -156,10 +156,10 @@
 157 stdcall ILCreateFromPath(ptr) ILCreateFromPathAW
 158 stdcall -noname PathGetExtension(wstr long long) SHPathGetExtensionW
 159 stdcall -noname PathIsDirectory(wstr) PathIsDirectoryW
-160 stdcall -noname SHNetConnectionDialog(ptr wstr long) # Fixme
+160 stdcall -noname SHNetConnectionDialog(ptr wstr long)
 161 stdcall SHRunControlPanel(long long)
-162 stdcall SHSimpleIDListFromPath(ptr) SHSimpleIDListFromPathAW # Fixme
-163 stdcall -noname StrToOleStr(wstr str) StrToOleStrAW # Fixme
+162 stdcall SHSimpleIDListFromPath(ptr) SHSimpleIDListFromPathAW # FIXME
+163 stdcall -noname StrToOleStr(wstr str) StrToOleStrAW # FIXME
 164 stdcall Win32DeleteFile(wstr) Win32DeleteFileW
 165 stdcall SHCreateDirectory(long ptr)
 166 stdcall CallCPLEntry16(long long long long long long)
@@ -181,7 +181,7 @@
 182 varargs ShellMessageBoxW(long long wstr wstr long)
 183 varargs ShellMessageBoxA(long long str str long)
 184 stdcall -noname ArrangeWindows(long long long long long)
-185 stdcall -noname SHHandleDiskFull(ptr long) # Fixme
+185 stdcall -noname SHHandleDiskFull(ptr long)
 186 stdcall -noname ILGetDisplayNameEx(ptr ptr ptr long)
 187 stdcall -noname ILGetPseudoNameW(ptr ptr wstr long)
 188 stdcall -noname ShellDDEInit(long)
@@ -193,7 +193,7 @@
 194 stdcall -noname SHCreatePropSheetExtArrayEx(long wstr long ptr)
 195 stdcall SHFree(ptr)
 196 stdcall SHAlloc(long)
-197 stdcall -noname SHGlobalDefect(long) # FIXME: Inspect
+197 stdcall -noname SHGlobalDefect(long)
 198 stdcall -noname SHAbortInvokeCommand()
 199 stdcall DuplicateIcon(long long)
 200 stdcall -noname SHCreateDesktop(ptr)
@@ -205,9 +205,9 @@
 206 stdcall ExtractAssociatedIconA(long str ptr)
 207 stdcall ExtractAssociatedIconExA(long str long long)
 208 stdcall ExtractAssociatedIconExW(long wstr long long)
-209 stdcall -noname Int64ToString(double wstr long long ptr long) # Fixme
-210 stdcall -noname LargeIntegerToString(ptr wstr long long ptr long) # Fixme
-211 stdcall -noname Printers_GetPidl(ptr str) # Fixme
+209 stdcall -noname Int64ToString(__int64 wstr long long ptr long)
+210 stdcall -noname LargeIntegerToString(ptr wstr long long ptr long)
+211 stdcall -noname Printers_GetPidl(ptr str long long)
 212 stdcall -noname Printers_AddPrinterPropPages(ptr ptr)
 213 stdcall -noname Printers_RegisterWindowW(wstr long ptr ptr)
 214 stdcall -noname Printers_UnregisterWindow(long long)
@@ -238,13 +238,13 @@
 239 stdcall PathIsSlowW(wstr long)
 240 stdcall PathIsSlowA(str long)
 241 stdcall -noname SHGetUserDisplayName(wstr ptr)
-242 stdcall -noname SHGetProcessDword(long long) # FIXME: Inspect
+242 stdcall -noname SHGetProcessDword(long long)
 243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx # FIXME: Inspect
-244 stdcall -noname SHInitRestricted(ptr ptr) # FIXME: Inspect
+244 stdcall -noname SHSettingsChanged(ptr ptr)
 245 stdcall SHTestTokenMembership(ptr ptr)
 246 stub -noname SHInvokePrivilegedFunctionW
 247 stub -noname SHGetActiveConsoleSessionId
-248 stdcall -noname SHGetUserSessionId(ptr) # Fixme
+248 stdcall -noname SHGetUserSessionId(ptr)
 249 stdcall -noname PathParseIconLocation(wstr) PathParseIconLocationW
 250 stdcall -noname PathRemoveExtension(wstr) PathRemoveExtensionW
 251 stdcall -noname PathRemoveArgs(wstr) PathRemoveArgsW
@@ -253,9 +253,9 @@
 254 stub -noname DisconnectWindowsDialog
 255 stdcall Options_RunDLL(ptr ptr str long)
 256 stdcall SHCreateShellFolderView(ptr ptr)
-257 stdcall -noname SHGetShellFolderViewCB(ptr) # FIXME: Inspect
+257 stdcall -noname SHGetShellFolderViewCB(ptr)
 258 stdcall -noname LinkWindow_RegisterClass()
-259 stdcall -noname LinkWindow_UnregisterClass() # FIXME: Inspect
+259 stdcall -noname LinkWindow_UnregisterClass(long)
 260 stdcall Options_RunDLLA(ptr ptr str long)
 261 stdcall Options_RunDLLW(ptr ptr wstr long)
 262 stdcall PrintersGetCommand_RunDLL(ptr ptr wstr long)
@@ -394,10 +394,10 @@
 395 stdcall StrStrIW(wstr wstr) shlwapi.StrStrIW
 396 stdcall StrStrW(wstr wstr) shlwapi.StrStrW
 397 stdcall WOWShellExecute(ptr str str str str long ptr)
-520 stdcall SHAllocShared(ptr long long) # FIXME: Inspect
-521 stdcall SHLockShared(long long) # FIXME: Inspect
-522 stdcall SHUnlockShared(ptr) # FIXME: Inspect
-523 stdcall SHFreeShared(long long) # FIXME: Inspect
+520 stdcall SHAllocShared(ptr long long) shlwapi.SHAllocShared
+521 stdcall SHLockShared(long long) shlwapi.SHLockShared
+522 stdcall SHUnlockShared(ptr) shlwapi.SHUnlockShared
+523 stdcall SHFreeShared(long long) shlwapi.SHFreeShared
 524 stdcall RealDriveType(long long)
 525 stdcall -noname RealDriveTypeFlags(long long)
 526 stdcall SHFlushSFCache()
@@ -406,9 +406,9 @@
 643 stdcall -noname SHChangeNotifyReceive(long long ptr ptr)
 644 stdcall SHChangeNotification_Lock(long long ptr ptr)
 645 stdcall SHChangeNotification_Unlock(long)
-646 stdcall -noname SHChangeRegistrationReceive(ptr long) # FIXME: Inspect
+646 stdcall -noname SHChangeRegistrationReceive(ptr long)
 648 stdcall -noname SHWaitOp_Operate(ptr long)
-650 stdcall -noname PathIsSameRoot(ptr ptr) PathIsSameRootAW # Fixme
+650 stdcall -noname PathIsSameRoot(wstr wstr) PathIsSameRootW
 651 stdcall -noname OldReadCabinetState(long long) ReadCabinetState
 652 stdcall WriteCabinetState(long)
 653 stdcall PathProcessCommand(long long long long) PathProcessCommandAW
@@ -432,7 +432,7 @@
 708 stdcall -noname SHGetSetFolderCustomSettingsA(ptr str long)
 709 stdcall SHGetSetFolderCustomSettingsW(ptr wstr long)
 711 stdcall -noname CheckWinIniForAssocs()
-712 stdcall -noname SHCopyMonikerToTemp(ptr wstr wstr long) # FIXME: Inspect
+712 stdcall -noname SHCopyMonikerToTemp(ptr wstr wstr long)
 713 stdcall -noname PathIsTemporaryA(str)
 714 stdcall -noname PathIsTemporaryW(wstr)
 715 stdcall -noname SHCreatePropertyBag(ptr ptr)

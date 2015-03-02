@@ -481,7 +481,7 @@ static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
  * Control_RunDLLW            [SHELL32.@]
  *
  */
-EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
+void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
 {
     CPanel Panel;
 
@@ -538,10 +538,10 @@ HRESULT WINAPI Control_FillCache_RunDLLA(HWND hWnd, HANDLE hModule, DWORD w, DWO
 
 
 /*************************************************************************
- * RunDLL_CallEntry16                [SHELL32.122]
- * the name is probably wrong
+ * RunDll_CallEntry16                [SHELL32.122]
+ * the name is OK (when written with Dll, and not DLL as in Wine!)
  */
-EXTERN_C void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
+void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
                                 LPCSTR cmdline, INT cmdshow )
 {
 #if !defined(__CYGWIN__) && !defined (__MINGW32__) && !defined(_MSC_VER)

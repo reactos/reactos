@@ -146,7 +146,7 @@ HRESULT WINAPI SHRegCloseKey (HKEY hkey)
 /*************************************************************************
  * SHCreateSessionKey            [SHELL32.723]
  */
-EXTERN_C HRESULT
+HRESULT
 WINAPI
 SHCreateSessionKey(REGSAM samDesired, PHKEY phKey)
 {

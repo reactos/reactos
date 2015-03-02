@@ -821,7 +821,7 @@ void WINAPI FileMenu_AbortInitMenu (void)
  *  LPXXXXX			 pointer to struct containing a func addr at offset 8
  *					 or NULL at failure.
  */
-EXTERN_C IContextMenu * WINAPI SHFind_InitMenuPopup (HMENU hMenu, HWND hWndParent, UINT w, UINT x)
+IContextMenu * WINAPI SHFind_InitMenuPopup (HMENU hMenu, HWND hWndParent, UINT w, UINT x)
 {
 	FIXME("hmenu=%p hwnd=%p 0x%08x 0x%08x stub\n",
 		hMenu,hWndParent,w,x);

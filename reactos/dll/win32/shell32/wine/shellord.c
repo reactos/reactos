@@ -69,20 +69,6 @@ extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPI
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
 
 
-/* Get a function pointer from a DLL handle */
-#define GET_FUNC(func, funcType, module, name, fail) \
-  do { \
-    if (!func) { \
-      if (!SHELL32_h##module && !(SHELL32_h##module = LoadLibraryA(#module ".dll"))) return fail; \
-      func = (funcType)GetProcAddress(SHELL32_h##module, name); \
-      if (!func) return fail; \
-    } \
-  } while (0)
-
-/* Function pointers for GET_FUNC macro */
-static HMODULE SHELL32_hshlwapi=NULL;
-
-
 /*************************************************************************
  * ParseFieldA					[internal]
  *
@@ -1371,62 +1357,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 }
 
 /*************************************************************************
- * SHAllocShared				[SHELL32.520]
- *
- * See shlwapi.SHAllocShared
- */
-HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
-{
-    typedef HANDLE (WINAPI *SHAllocSharedProc)(LPCVOID, DWORD, DWORD);
-    static SHAllocSharedProc        pSHAllocShared;
-
-    GET_FUNC(pSHAllocShared, SHAllocSharedProc, shlwapi, (char*)7, NULL);
-    return pSHAllocShared(lpvData, dwSize, dwProcId);
-}
-
-/*************************************************************************
- * SHLockShared					[SHELL32.521]
- *
- * See shlwapi.SHLockShared
- */
-LPVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
-{
-    typedef HANDLE (WINAPI *SHLockSharedProc)(HANDLE, DWORD);
-    static SHLockSharedProc            pSHLockShared;
-
-    GET_FUNC(pSHLockShared, SHLockSharedProc, shlwapi, (char*)8, NULL);
-    return pSHLockShared(hShared, dwProcId);
-}
-
-/*************************************************************************
- * SHUnlockShared				[SHELL32.522]
- *
- * See shlwapi.SHUnlockShared
- */
-BOOL WINAPI SHUnlockShared(LPVOID lpView)
-{
-    typedef HANDLE (WINAPI *SHUnlockSharedProc)(LPCVOID);
-    static SHUnlockSharedProc        pSHUnlockShared;
-
-    GET_FUNC(pSHUnlockShared, SHUnlockSharedProc, shlwapi, (char*)9, FALSE);
-    return pSHUnlockShared(lpView) != NULL;
-}
-
-/*************************************************************************
- * SHFreeShared					[SHELL32.523]
- *
- * See shlwapi.SHFreeShared
- */
-BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
-{
-    typedef HANDLE (WINAPI *SHFreeSharedProc)(HANDLE, DWORD);
-    static SHFreeSharedProc            pSHFreeShared;
-
-    GET_FUNC(pSHFreeShared, SHFreeSharedProc, shlwapi, (char*)10, FALSE);
-    return pSHFreeShared(hShared, dwProcId) != NULL;
-}
-
-/*************************************************************************
  * SetAppStartingCursor				[SHELL32.99]
  */
 HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
@@ -2101,7 +2031,7 @@ BOOL WINAPI LinkWindow_RegisterClass(void)
 /*************************************************************************
  *              LinkWindow_UnregisterClass (SHELL32.259)
  */
-BOOL WINAPI LinkWindow_UnregisterClass(void)
+BOOL WINAPI LinkWindow_UnregisterClass(DWORD dwUnused)
 {
     FIXME("()\n");
     return TRUE;
