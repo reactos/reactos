@@ -39,6 +39,9 @@ WlanDeleteProfile(IN HANDLE hClientHandle,
                   IN LPCWSTR strProfileName,
                   PVOID pReserved)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileName == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return ERROR_SUCCESS;    
 }
@@ -51,6 +54,9 @@ WlanRenameProfile(IN HANDLE hClientHandle,
                   IN LPCWSTR strNewProfileName,
                   PVOID pReserved)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strOldProfileName == NULL) || (strNewProfileName == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return ERROR_SUCCESS;    
 }
@@ -65,6 +71,9 @@ WlanGetProfile(IN HANDLE hClientHandle,
                DWORD *pdwFlags,
                PDWORD pdwGrantedAccess)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (pstrProfileXml  == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return ERROR_SUCCESS;    
 }
@@ -80,6 +89,9 @@ WlanSetProfile(IN HANDLE hClientHandle,
                PVOID pReserved,
                OUT DWORD *pdwReasonCode)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileXml == NULL) || (pdwReasonCode == NULL))
+        return ERROR_INVALID_PARAMETER;
+    
     UNIMPLEMENTED;
     return ERROR_SUCCESS;    
 }
@@ -93,6 +105,9 @@ WlanGetProfileCustomUserData(IN HANDLE hClientHandle,
                              OUT DWORD *pdwDataSize,
                              OUT PBYTE *ppData)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileName == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return ERROR_SUCCESS;    
 }
@@ -106,6 +121,12 @@ WlanSetProfileCustomUserData(IN HANDLE hClientHandle,
                              IN const PBYTE pData,
                              PVOID pReserved)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileName == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if ((dwDataSize != 0) && (pData == NULL))
+        return ERROR_INVALID_PARAMETER;        
+    
     UNIMPLEMENTED;
     return ERROR_SUCCESS;    
 }
@@ -117,6 +138,9 @@ WlanGetProfileList(IN HANDLE hClientHandle,
                    PVOID pReserved,
                    OUT PWLAN_PROFILE_INFO_LIST *ppProfileList)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (ppProfileList  == NULL))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return ERROR_SUCCESS;
 }
@@ -129,6 +153,9 @@ WlanSetProfileList(IN HANDLE hClientHandle,
                    IN LPCWSTR *strProfileNames,
                    PVOID pReserved)
 {
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileNames  == NULL) || (dwItems == 0))
+        return ERROR_INVALID_PARAMETER;
+
     UNIMPLEMENTED;
     return ERROR_SUCCESS;
 }

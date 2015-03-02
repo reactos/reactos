@@ -108,7 +108,7 @@ WlanConnect(IN HANDLE hClientHandle,
 {
     DWORD dwError = ERROR_SUCCESS;
 
-    if ((pReserved != NULL) || (hClientHandle == NULL))
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (pConnectionParameters == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
@@ -132,7 +132,7 @@ WlanDisconnect(IN HANDLE hClientHandle,
 {
     DWORD dwError = ERROR_SUCCESS;
 
-    if ((pReserved != NULL) || (hClientHandle == NULL))
+    if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
