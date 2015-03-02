@@ -2029,6 +2029,8 @@ typedef enum {
 #define PF_RDTSC_INSTRUCTION_AVAILABLE 8
 #define PF_PAE_ENABLED 9
 #define PF_XMMI64_INSTRUCTIONS_AVAILABLE 10
+#define PF_NX_ENABLED 12
+
 /* also in ddk/ntifs.h */
 #define FILE_ACTION_ADDED                   0x00000001
 #define FILE_ACTION_REMOVED                 0x00000002
