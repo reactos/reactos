@@ -205,6 +205,25 @@ static void WlanEnumInterfaces_test(void)
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
 }
 
+static void WlanGetInterfaceCapability_test(void)
+{
+    DWORD ret;
+    PWLAN_INTERFACE_CAPABILITY pInterfaceCapability;
+
+    /* invalid pReserved */
+    ret = WlanGetInterfaceCapability((HANDLE) -1, &InterfaceGuid, (PVOID) 1, &pInterfaceCapability);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid InterfaceGuid */
+    ret = WlanGetInterfaceCapability((HANDLE) -1, NULL, NULL, &pInterfaceCapability);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    /* invalid pInterfaceCapability */
+    ret = WlanGetInterfaceCapability((HANDLE) -1, &InterfaceGuid, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+}
+
+
 START_TEST(wlanapi)
 {
     WlanOpenHandle_test();
@@ -216,4 +235,5 @@ START_TEST(wlanapi)
     WlanDeleteProfile_test();
     WlanGetProfile_test();
     WlanEnumInterfaces_test();
+    WlanGetInterfaceCapability_test();
 }
