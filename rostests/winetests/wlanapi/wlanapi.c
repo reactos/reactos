@@ -75,8 +75,106 @@ static void WlanCloseHandle_test(void)
     ok(ret == ERROR_INVALID_HANDLE, "expected failure\n");
 }
 
+static void WlanConnect_test(void)
+{
+    DWORD ret;
+    DWORD dwNegotiatedVersion;
+    HANDLE hClientHandle;
+    WLAN_CONNECTION_PARAMETERS pConnectParams;
+    const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
+    
+    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
+    if (ret != ERROR_SUCCESS)
+    {
+        skip("WlanOpenHandle failed. Skipping wlanapi_WlanConnect tests\n");
+        return;
+    }
+    
+    /* invalid pReserved */
+    ret = WlanConnect(hClientHandle, &InterfaceGuid, &pConnectParams, (PVOID) 1);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    /* invalid InterfaceGuid */
+    ret = WlanConnect(hClientHandle, NULL, &pConnectParams, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    /* invalid hClientHandle */
+    ret = WlanConnect(NULL, &InterfaceGuid, &pConnectParams, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid connection parameters */
+    ret = WlanConnect(hClientHandle, &InterfaceGuid, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    WlanCloseHandle(hClientHandle, NULL);    
+}
+
+static void WlanDisconnect_test(void)
+{
+    DWORD ret;
+    DWORD dwNegotiatedVersion;
+    HANDLE hClientHandle;
+    const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
+    
+    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
+    if (ret != ERROR_SUCCESS)
+    {
+        skip("WlanOpenHandle failed. Skipping wlanapi_WlanDisconnect tests\n");
+        return;
+    }
+    
+    /* invalid pReserved */
+    ret = WlanDisconnect(hClientHandle, &InterfaceGuid, (PVOID) 1);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    /* invalid InterfaceGuid */
+    ret = WlanDisconnect(hClientHandle, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid hClientHandle */
+    ret = WlanDisconnect(NULL, &InterfaceGuid, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    WlanCloseHandle(hClientHandle, NULL);    
+}
+
+static void WlanScan_test(void)
+{
+    DWORD ret;
+    DWORD dwNegotiatedVersion;
+    HANDLE hClientHandle;
+    DOT11_SSID Ssid;
+    WLAN_RAW_DATA RawData;
+    const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
+    
+    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
+    if (ret != ERROR_SUCCESS)
+    {
+        skip("WlanOpenHandle failed. Skipping wlanapi_WlanDisconnect tests\n");
+        return;
+    }
+    
+    /* invalid pReserved */
+    ret = WlanScan(hClientHandle, &InterfaceGuid, &Ssid, &RawData, (PVOID) 1);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    /* invalid InterfaceGuid */
+    ret = WlanScan(hClientHandle, NULL, &Ssid, &RawData, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid hClientHandle */
+    ret = WlanScan(NULL, &InterfaceGuid, &Ssid, &RawData, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+    
+    WlanCloseHandle(hClientHandle, NULL);    
+}
+
+
 START_TEST(wlanapi)
 {
     WlanOpenHandle_test();
     WlanCloseHandle_test();
+    WlanConnect_test();
+    WlanDisconnect_test();
+    WlanScan_test();
 }
