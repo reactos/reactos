@@ -205,7 +205,7 @@
 206 stdcall ExtractAssociatedIconA(long str ptr)
 207 stdcall ExtractAssociatedIconExA(long str long long)
 208 stdcall ExtractAssociatedIconExW(long wstr long long)
-209 stdcall -noname Int64ToString(__int64 wstr long long ptr long)
+209 stdcall -noname Int64ToString(int64 wstr long long ptr long)
 210 stdcall -noname LargeIntegerToString(ptr wstr long long ptr long)
 211 stdcall -noname Printers_GetPidl(ptr str long long)
 212 stdcall -noname Printers_AddPrinterPropPages(ptr ptr)
