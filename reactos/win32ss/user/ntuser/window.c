@@ -850,25 +850,25 @@ IntSetMenu(
 
 /* INTERNAL ******************************************************************/
 
-
+////
+//   This fixes a check for children messages that need paint while searching the parents messages!
+//   Fixes wine msg:test_paint_messages:WmParentErasePaint ..
+////
 BOOL FASTCALL
 IntIsChildWindow(PWND Parent, PWND BaseWindow)
 {
-   PWND Window;
-
-   Window = BaseWindow;
-   while (Window && ((Window->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
+   PWND Window = BaseWindow;
+   do
    {
-      if (Window == Parent)
-      {
-         return(TRUE);
-      }
+     if ( Window == NULL || (Window->style & (WS_POPUP|WS_CHILD)) != WS_CHILD )
+        return FALSE;
 
-      Window = Window->spwndParent;
+     Window = Window->spwndParent;
    }
-
-   return(FALSE);
+   while(Parent != Window);
+   return TRUE;
 }
+////
 
 /*
    Link the window into siblings list
