@@ -18,6 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+PDEVICE_OBJECT
+IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
+
 static PWCHAR BaseKeyString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses\\";
 
 static
@@ -1308,17 +1311,17 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
                           IN BOOLEAN Enable)
 {
     PDEVICE_OBJECT PhysicalDeviceObject;
-    PFILE_OBJECT FileObject;
     UNICODE_STRING GuidString;
     PWCHAR StartPosition;
     PWCHAR EndPosition;
     NTSTATUS Status;
     LPCGUID EventGuid;
     HANDLE InstanceHandle, ControlHandle;
-    UNICODE_STRING KeyName;
+    UNICODE_STRING KeyName, DeviceInstance;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG LinkedValue;
+    ULONG LinkedValue, Index;
     GUID DeviceGuid;
+
 
     if (SymbolicLinkName == NULL)
         return STATUS_INVALID_PARAMETER_1;
@@ -1381,23 +1384,38 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         return Status;
     }
 
-    /* Get pointer to the PDO */
-    Status = IoGetDeviceObjectPointer(
-        SymbolicLinkName,
-        0, /* DesiredAccess */
-        &FileObject,
-        &PhysicalDeviceObject);
-    if (!NT_SUCCESS(Status))
+    DeviceInstance.Buffer = ExAllocatePool(PagedPool, (ULONG_PTR)StartPosition - (ULONG_PTR)SymbolicLinkName->Buffer);
+    if (DeviceInstance.Buffer == NULL)
     {
-        DPRINT1("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
-        return Status;
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    DeviceInstance.MaximumLength = DeviceInstance.Length = ((ULONG_PTR)StartPosition - (ULONG_PTR)SymbolicLinkName->Buffer) - 5 * sizeof(WCHAR);
+    RtlCopyMemory(DeviceInstance.Buffer, &SymbolicLinkName->Buffer[4], DeviceInstance.Length);
+    for(Index = 0; Index < DeviceInstance.Length / sizeof(WCHAR); Index++)
+    {
+        if (DeviceInstance.Buffer[Index] == L'#')
+        {
+            DeviceInstance.Buffer[Index] = L'\\';
+        }
+    }
+
+    PhysicalDeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
+    
+    if (!PhysicalDeviceObject)
+    {
+        DPRINT1("IopGetDeviceObjectFromDeviceInstance failed to find status %wZ\n", &DeviceInstance);
+        ExFreePool(DeviceInstance.Buffer);
+        return STATUS_NOT_FOUND;
+    }
+
+    ExFreePool(DeviceInstance.Buffer);
     Status = RtlGUIDFromString(&GuidString, &DeviceGuid);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlGUIDFromString() failed with status 0x%08lx\n", Status);
-        ObDereferenceObject(FileObject);
+        ObDereferenceObject(PhysicalDeviceObject);
         return Status;
     }
 
@@ -1409,7 +1427,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         &DeviceGuid,
         (PVOID)SymbolicLinkName);
 
-    ObDereferenceObject(FileObject);
+    ObDereferenceObject(PhysicalDeviceObject);
     DPRINT("Status %x\n", Status);
     return STATUS_SUCCESS;
 }
