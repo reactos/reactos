@@ -28,6 +28,8 @@
 
 #include "wine/test.h"
 
+static const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
+
 static void WlanOpenHandle_test(void)
 {
     DWORD ret;
@@ -78,24 +80,14 @@ static void WlanCloseHandle_test(void)
 static void WlanConnect_test(void)
 {
     DWORD ret;
-    DWORD dwNegotiatedVersion;
-    HANDLE hClientHandle;
     WLAN_CONNECTION_PARAMETERS pConnectParams;
-    const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
-    
-    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
-    if (ret != ERROR_SUCCESS)
-    {
-        skip("WlanOpenHandle failed. Skipping wlanapi_WlanConnect tests\n");
-        return;
-    }
     
     /* invalid pReserved */
-    ret = WlanConnect(hClientHandle, &InterfaceGuid, &pConnectParams, (PVOID) 1);
+    ret = WlanConnect((HANDLE) -1, &InterfaceGuid, &pConnectParams, (PVOID) 1);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
     
     /* invalid InterfaceGuid */
-    ret = WlanConnect(hClientHandle, NULL, &pConnectParams, NULL);
+    ret = WlanConnect((HANDLE) -1, NULL, &pConnectParams, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
     
     /* invalid hClientHandle */
@@ -103,72 +95,115 @@ static void WlanConnect_test(void)
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
 
     /* invalid connection parameters */
-    ret = WlanConnect(hClientHandle, &InterfaceGuid, NULL, NULL);
+    ret = WlanConnect((HANDLE) -1, &InterfaceGuid, NULL, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
-    WlanCloseHandle(hClientHandle, NULL);    
 }
 
 static void WlanDisconnect_test(void)
 {
     DWORD ret;
-    DWORD dwNegotiatedVersion;
-    HANDLE hClientHandle;
-    const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
-    
-    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
-    if (ret != ERROR_SUCCESS)
-    {
-        skip("WlanOpenHandle failed. Skipping wlanapi_WlanDisconnect tests\n");
-        return;
-    }
     
     /* invalid pReserved */
-    ret = WlanDisconnect(hClientHandle, &InterfaceGuid, (PVOID) 1);
+    ret = WlanDisconnect((HANDLE) -1, &InterfaceGuid, (PVOID) 1);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
     
     /* invalid InterfaceGuid */
-    ret = WlanDisconnect(hClientHandle, NULL, NULL);
+    ret = WlanDisconnect((HANDLE) -1, NULL, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
 
     /* invalid hClientHandle */
     ret = WlanDisconnect(NULL, &InterfaceGuid, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
-    WlanCloseHandle(hClientHandle, NULL);    
 }
 
 static void WlanScan_test(void)
 {
     DWORD ret;
-    DWORD dwNegotiatedVersion;
-    HANDLE hClientHandle;
     DOT11_SSID Ssid;
     WLAN_RAW_DATA RawData;
-    const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
-    
-    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
-    if (ret != ERROR_SUCCESS)
-    {
-        skip("WlanOpenHandle failed. Skipping wlanapi_WlanDisconnect tests\n");
-        return;
-    }
     
     /* invalid pReserved */
-    ret = WlanScan(hClientHandle, &InterfaceGuid, &Ssid, &RawData, (PVOID) 1);
+    ret = WlanScan((HANDLE) -1, &InterfaceGuid, &Ssid, &RawData, (PVOID) 1);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
     
     /* invalid InterfaceGuid */
-    ret = WlanScan(hClientHandle, NULL, &Ssid, &RawData, NULL);
+    ret = WlanScan((HANDLE) -1, NULL, &Ssid, &RawData, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
 
     /* invalid hClientHandle */
     ret = WlanScan(NULL, &InterfaceGuid, &Ssid, &RawData, NULL);
     ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
-    
-    WlanCloseHandle(hClientHandle, NULL);    
 }
 
+static void WlanRenameProfile_test(void)
+{
+    DWORD ret;
+
+    /* invalid pReserved */
+    ret = WlanRenameProfile((HANDLE) -1, &InterfaceGuid, L"test", L"test1", (PVOID) 1);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid InterfaceGuid */
+    ret = WlanRenameProfile((HANDLE) -1, NULL, L"test", L"test1", NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid strOldProfileName */
+    ret = WlanRenameProfile((HANDLE) -1, &InterfaceGuid, NULL, L"test1", NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid strNewProfileName */
+    ret = WlanRenameProfile((HANDLE) -1, &InterfaceGuid, L"test", NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+}
+
+static void WlanDeleteProfile_test(void)
+{
+    DWORD ret;
+
+    /* invalid pReserved */
+    ret = WlanDeleteProfile((HANDLE) -1, &InterfaceGuid, L"test", (PVOID) 1);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid InterfaceGuid */
+    ret = WlanDeleteProfile((HANDLE) -1, NULL, L"test", NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid strProfileName */
+    ret = WlanDeleteProfile((HANDLE) -1, &InterfaceGuid, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+}
+
+static void WlanGetProfile_test(void)
+{
+    DWORD ret;
+    WCHAR *strProfileXml;
+
+    /* invalid pReserved */
+    ret = WlanGetProfile((HANDLE) -1, &InterfaceGuid, L"", (PVOID) 1, &strProfileXml, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid InterfaceGuid */
+    ret = WlanGetProfile((HANDLE) -1, NULL, L"test", NULL, &strProfileXml, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid pstrProfileXml */
+    ret = WlanGetProfile((HANDLE) -1, &InterfaceGuid, L"test", NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+}
+
+static void WlanEnumInterfaces_test(void)
+{
+    DWORD ret;
+    PWLAN_INTERFACE_INFO_LIST pInterfaceList;
+
+    /* invalid pReserved */
+    ret = WlanEnumInterfaces((HANDLE) -1, (PVOID) 1, &pInterfaceList);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    /* invalid pInterfaceList */
+    ret = WlanEnumInterfaces((HANDLE) -1, NULL, NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+}
 
 START_TEST(wlanapi)
 {
@@ -177,4 +212,8 @@ START_TEST(wlanapi)
     WlanConnect_test();
     WlanDisconnect_test();
     WlanScan_test();
+    WlanRenameProfile_test();
+    WlanDeleteProfile_test();
+    WlanGetProfile_test();
+    WlanEnumInterfaces_test();
 }
