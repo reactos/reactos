@@ -190,8 +190,19 @@ PVOID WINAPI WlanAllocateMemory(DWORD dwSize);
 VOID WINAPI WlanFreeMemory(PVOID pMemory);
 DWORD WINAPI WlanOpenHandle(IN DWORD dwClientVersion, PVOID pReserved, OUT DWORD *pdwNegotiatedVersion, OUT HANDLE *phClientHandle);
 DWORD WINAPI WlanCloseHandle(IN HANDLE hClientHandle, PVOID pReserved);
+DWORD WINAPI WlanConnect(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN const PWLAN_CONNECTION_PARAMETERS pConnectionParameters, PVOID pReserved);
+DWORD WINAPI WlanDisconnect(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, PVOID pReserved);
 DWORD WINAPI WlanEnumInterfaces(IN HANDLE hClientHandle, PVOID pReserved, OUT PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
-DWORD WINAPI WlanScan(IN HANDLE hClientHandle, IN GUID *pInterfaceGuid, IN PDOT11_SSID pDot11Ssid, IN PWLAN_RAW_DATA pIeData, PVOID pReserved);
+DWORD WINAPI WlanScan(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN PDOT11_SSID pDot11Ssid, IN PWLAN_RAW_DATA pIeData, PVOID pReserved);
+DWORD WINAPI WlanDeleteProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, PVOID pReserved);
+DWORD WINAPI WlanGetProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, PVOID pReserved, OUT LPWSTR *pstrProfileXml, DWORD *pdwFlags, PDWORD pdwGrantedAccess);
+DWORD WINAPI WlanGetProfileCustomUserData(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, PVOID pReserved, OUT DWORD *pdwDataSize, OUT PBYTE *ppData);
+DWORD WINAPI WlanGetProfileList(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, PVOID pReserved, OUT PWLAN_PROFILE_INFO_LIST *ppProfileList);
+DWORD WINAPI WlanSetProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN DWORD dwFlags, IN LPCWSTR strProfileXml, LPCWSTR strAllUserProfileSecurity, IN BOOL bOverwrite, PVOID pReserved, OUT DWORD *pdwReasonCode);
+DWORD WINAPI WlanSetProfileCustomUserData(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, IN DWORD dwDataSize, IN const PBYTE pData, PVOID pReserved);
+DWORD WINAPI WlanSetProfileEapUserData(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strProfileName, IN EAP_METHOD_TYPE eapType, IN DWORD dwFlags, IN DWORD dwEapUserDataSize, IN const LPBYTE pbEapUserData, PVOID pReserved);
+DWORD WINAPI WlanSetProfileList(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, DWORD dwItems, IN LPCWSTR *strProfileNames, PVOID pReserved);
+DWORD WINAPI WlanRenameProfile(IN HANDLE hClientHandle, IN const GUID *pInterfaceGuid, IN LPCWSTR strOldProfileName, IN LPCWSTR strNewProfileName, PVOID pReserved);
 #endif
 
 #ifdef __cplusplus

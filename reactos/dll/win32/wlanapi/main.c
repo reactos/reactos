@@ -101,6 +101,55 @@ WlanFreeMemory(IN PVOID pMem)
 
 DWORD
 WINAPI
+WlanConnect(IN HANDLE hClientHandle,
+            IN const GUID *pInterfaceGuid,
+            IN const PWLAN_CONNECTION_PARAMETERS pConnectionParameters,
+            PVOID pReserved)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    if ((pReserved != NULL) || (hClientHandle == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        _RpcConnect(hClientHandle, pInterfaceGuid, &pConnectionParameters);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwError;
+}
+
+DWORD
+WINAPI
+WlanDisconnect(IN HANDLE hClientHandle,
+               IN const GUID *pInterfaceGuid,
+               PVOID pReserved)
+{
+    DWORD dwError = ERROR_SUCCESS;
+
+    if ((pReserved != NULL) || (hClientHandle == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    RpcTryExcept
+    {
+        _RpcDisconnect(hClientHandle, pInterfaceGuid);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwError;
+}
+
+DWORD
+WINAPI
 WlanOpenHandle(IN DWORD dwClientVersion,
                PVOID pReserved,
                OUT DWORD *pdwNegotiatedVersion,
@@ -178,7 +227,7 @@ WlanEnumInterfaces(IN HANDLE hClientHandle,
 DWORD
 WINAPI
 WlanScan(IN HANDLE hClientHandle,
-         IN GUID *pInterfaceGuid,
+         IN const GUID *pInterfaceGuid,
          IN PDOT11_SSID pDot11Ssid,
          IN PWLAN_RAW_DATA pIeData,
          PVOID pReserved)

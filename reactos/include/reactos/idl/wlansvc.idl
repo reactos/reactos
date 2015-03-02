@@ -79,13 +79,13 @@ interface wlansvc_interface
     /* Function: 0x05 */
     DWORD _RpcGetInterfaceCapability(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [out, ref] PWLAN_INTERFACE_CAPABILITY *ppCapability);
 
     /* Function: 0x06 */
      DWORD _RpcSetInterface(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] /* enum32 */ DWORD OpCode,
         [in] DWORD dwDataSize,
         [in, size_is(dwDataSize)] LPBYTE pData);
@@ -93,7 +93,7 @@ interface wlansvc_interface
      /* Function: 0x07 */
      DWORD _RpcQueryInterface(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] /* enum32 */ long OpCode,
         [in, out] LPDWORD pdwDataSize,
         [out][ref][size_is(*pdwDataSize)] LPBYTE* ppData,
@@ -102,7 +102,7 @@ interface wlansvc_interface
     /* Function: 0x08 */
     DWORD _RpcIhvControl(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] /* enum32 */ DWORD Type,
         [in] DWORD dwInBufferSize,
         [in][size_is(dwInBufferSize)] LPBYTE pInBuffer,
@@ -113,21 +113,21 @@ interface wlansvc_interface
     /* Function: 0x09 */
     DWORD _RpcScan(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][unique] PDOT11_SSID pDot11Ssid,
         [in][unique] PWLAN_RAW_DATA pIeData);
 
     /* Function: 0x0A */
     DWORD _RpcGetAvailableNetworkList(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] DWORD dwFlags,
         [out][ref] WLAN_AVAILABLE_NETWORK_LIST **ppAvailableNetworkList);
 
     /* Function: 0x0B */
     DWORD _RpcGetNetworkBssList(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][unique] PDOT11_SSID pDot11Ssid,
         [in] /* enum16 */ short dot11BssType,
         [in] DWORD bSecurityEnabled,
@@ -137,13 +137,13 @@ interface wlansvc_interface
     /* Function: 0x0C */
     DWORD _RpcConnect(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
-        [in] PWLAN_CONNECTION_PARAMETERS* pConnectionParameters);
+        [in] const GUID* pInterfaceGuid,
+        [in] const PWLAN_CONNECTION_PARAMETERS* pConnectionParameters);
 
     /* Function: 0x0D */
     DWORD _RpcDisconnect(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGUID);
+        [in] const GUID* pInterfaceGUID);
 
     /* Function: 0x0E */
     DWORD _RpcRegisterNotification(
@@ -159,7 +159,7 @@ interface wlansvc_interface
     /* Function: 0x10 */
     DWORD _RpcSetProfileEapUserData(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
         [in] EAP_METHOD_TYPE MethodType,
         [in] DWORD dwFlags,
@@ -169,7 +169,7 @@ interface wlansvc_interface
     /* Function: 0x11 */
     DWORD _RpcSetProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] DWORD dwFlags,
         [in][string] wchar_t * strProfileXml,
         [in][unique][string] wchar_t * strAllUserProfileSecurity,
@@ -179,7 +179,7 @@ interface wlansvc_interface
     /* Function: 0x12 */
     DWORD _RpcGetProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
         [out][ref][string] wchar_t ** pstrProfileXml,
         [out] LPDWORD pdwFlags,
@@ -188,40 +188,40 @@ interface wlansvc_interface
     /* Function: 0x13 */
     DWORD _RpcDeleteProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName);
 
     /* Function: 0x14 */
     DWORD _RpcRenameProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strOldProfileName,
         [in][string] wchar_t * strNewProfileName);
 
     /* Function: 0x15 */
     DWORD _RpcSetProfileList(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] DWORD dwItems,
         [in] /* [string] */ [size_is(dwItems)] /* wchar_t */ BYTE ** strProfileNames); /* FIXME */
 
     /* Function: 0x16 */
     DWORD _RpcGetProfileList(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [out][ref] PWLAN_PROFILE_INFO_LIST *ppProfileList);
 
     /* Function: 0x17 */
     DWORD _RpcSetProfilePosition(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
         [in] DWORD dwPosition);
 
     /* Function: 0x18 */
     DWORD _RpcSetProfileCustomUserData(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
         [in] DWORD dwDataSize,
         [in][unique][size_is(dwDataSize)] LPBYTE pData);
@@ -229,7 +229,7 @@ interface wlansvc_interface
     /* Function: 0x19 */
     DWORD _RpcGetProfileCustomUserData(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
         [in, out] LPDWORD dwDataSize,
         [out][ref][size_is(*dwDataSize)] LPBYTE *pData);
@@ -256,7 +256,7 @@ interface wlansvc_interface
     /* Function: 0x1D */
     DWORD _RpcSaveTemporaryProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * strProfileName,
         [in][unique][string] wchar_t * strAllUserProfileSecurity,
         [in] DWORD dwFlags,
@@ -265,7 +265,7 @@ interface wlansvc_interface
     /* Function: 0x1E, address: 0x2C992E36 */
     DWORD _RpcIsUIRequestPending(
         [in] wchar_t * arg_1,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in] struct_C * arg_3,
         [out] LPDWORD arg_4);
 
@@ -280,13 +280,13 @@ interface wlansvc_interface
     DWORD _RpcIsNetworkSuppressed(
         [in] wchar_t * arg_1,
         [in] DWORD arg_2,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [out] LPDWORD arg_4);
 
     /* Function: 0x21 */
     DWORD _RpcRemoveUIForwardingNetworkList(
         [in] wchar_t * arg_1,
-        [in] GUID* pInterfaceGuid);
+        [in] const GUID* pInterfaceGuid);
 
     /* Function: 0x22 */
     DWORD _RpcQueryExtUIRequest(
@@ -307,7 +307,7 @@ interface wlansvc_interface
     DWORD _RpcGetProfileKeyInfo(
         [in] wchar_t * arg_1,
         [in] DWORD arg_2,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * arg_4,
         [in] DWORD arg_5,
         [out] LPDWORD arg_6,
@@ -317,7 +317,7 @@ interface wlansvc_interface
     /* Function: 0x25 */
     DWORD _RpcAsyncDoPlap(
         [in] wchar_t * arg_1,
-        [in] GUID* pInterfaceGuid,
+        [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * arg_3,
         [in] DWORD dwSize,
         [in][size_is(dwSize)] struct_E arg_5[]);
@@ -337,7 +337,7 @@ interface wlansvc_interface
     /* Function: 0x27 */
     DWORD _RpcCancelPlap(
         [in] wchar_t * arg_1,
-        [in] GUID* pInterfaceGuid);
+        [in] const GUID* pInterfaceGuid);
 
     /* Function: 0x28 */
     DWORD _RpcSetSecuritySettings(
