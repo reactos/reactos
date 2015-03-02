@@ -730,8 +730,6 @@ _save_Materialfv(GLenum face, GLenum pname, const GLfloat *params)
       _mesa_compile_error(ctx, GL_INVALID_ENUM, "glMaterial(face)");
       return;
    }
-   
-   __debugbreak();
 
    switch (pname) {
    case GL_EMISSION:
