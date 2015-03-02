@@ -705,6 +705,7 @@ typedef enum _PROCESSINFOCLASS {
 
 #define MEM_EXECUTE_OPTION_DISABLE   0x01
 #define MEM_EXECUTE_OPTION_ENABLE    0x02
+#define MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION 0x04
 #define MEM_EXECUTE_OPTION_PERMANENT 0x08
 
 typedef enum _SECTION_INHERIT {
@@ -1685,23 +1686,28 @@ typedef enum _SECTION_INFORMATION_CLASS
 } SECTION_INFORMATION_CLASS;
 
 typedef struct _SECTION_BASIC_INFORMATION {
-  ULONG BaseAddress;
+  PVOID BaseAddress;
   ULONG Attributes;
   LARGE_INTEGER Size;
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
 typedef struct _SECTION_IMAGE_INFORMATION {
-  PVOID EntryPoint;
-  ULONG StackZeroBits;
-  ULONG StackReserved;
-  ULONG StackCommit;
-  ULONG ImageSubsystem;
+  PVOID TransferAddress;
+  ULONG ZeroBits;
+  SIZE_T MaximumStackSize;
+  SIZE_T CommittedStackSize;
+  ULONG SubSystemType;
   WORD SubsystemVersionLow;
   WORD SubsystemVersionHigh;
-  ULONG Unknown1;
+  ULONG GpValue;
   ULONG ImageCharacteristics;
-  ULONG ImageMachineType;
-  ULONG Unknown2[3];
+  USHORT DllCharacteristics;
+  USHORT Machine;
+  BOOLEAN ImageContainsCode;
+  UCHAR ImageFlags;
+  ULONG LoaderFlags;
+  ULONG ImageFileSize;
+  ULONG CheckSum;
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 typedef struct _LPC_SECTION_WRITE {
