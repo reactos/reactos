@@ -165,7 +165,7 @@ ShowMCIError(HWND hwnd, MCIERROR mciError)
         LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0]));
     }
 
-    _stprintf(szTempMessage, _T("MMSYS%lu: %s"), mciError, szErrorMessage);
+    StringCbPrintf(szTempMessage, sizeof(szTempMessage), _T("MMSYS%lu: %s"), mciError, szErrorMessage);
     MessageBox(hwnd, szTempMessage, szAppTitle, MB_OK | MB_ICONEXCLAMATION);
 }
 
@@ -412,7 +412,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     MCIERROR mciError;
     MCI_STATUS_PARMS mciStatus;
     MCI_OPEN_PARMS mciOpen;
-    TCHAR szNewTitle[MAX_PATH];
+    TCHAR szNewTitle[MAX_PATH + 128];
 
     if (bIsOpened)
     {
@@ -462,13 +462,13 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
         SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM) 100000, (LPARAM) 0);
     }
 
-    _stprintf(szNewTitle, _T("%s - %s"), szAppTitle, lpFileName);
+    StringCbPrintf(szNewTitle, sizeof(szNewTitle), _T("%s - %s"), szAppTitle, lpFileName);
     SetWindowText(hwnd, szNewTitle);
 
     MaxFilePos = mciStatus.dwReturn;
     wDeviceId = mciOpen.wDeviceID;
     bIsOpened = TRUE;
-    _tcscpy(szPrevFile, lpFileName);
+    StringCbCopy(szPrevFile, sizeof(szPrevFile), lpFileName);
 
     EnableMenuItems(hwnd);
 
@@ -656,11 +656,11 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
         if (szPrevFile[0] == _T('\0'))
             return;
 
-        _tcscpy(szLocalFileName, szPrevFile);
+        StringCbCopy(szLocalFileName, sizeof(szLocalFileName), szPrevFile);
     }
     else
     {
-        _tcscpy(szLocalFileName, lpFileName);
+        StringCbCopy(szLocalFileName, sizeof(szLocalFileName), lpFileName);
     }
 
     if (GetFileAttributes(szLocalFileName) == INVALID_FILE_ATTRIBUTES)
@@ -918,7 +918,7 @@ OpenFileDialog(HWND hwnd)
 
     if (!GetCurrentDirectory(sizeof(szCurrentDir) / sizeof(szCurrentDir[0]), szCurrentDir))
     {
-        _tcscpy(szCurrentDir, _T("c:\\"));
+        StringCbCopy(szCurrentDir, sizeof(szCurrentDir), _T("c:\\"));
     }
 
     OpenFileName.lStructSize     = sizeof(OpenFileName);
