@@ -258,7 +258,7 @@ KspCreateDeviceAssociation(
     IN LPWSTR ReferenceString,
     IN LPWSTR InterfaceString)
 {
-    GUID DeviceGuid;
+    GUID InterfaceGUID;
     NTSTATUS Status;
     PLIST_ENTRY Entry;
     PBUS_INSTANCE_ENTRY CurEntry;
@@ -268,7 +268,7 @@ KspCreateDeviceAssociation(
     RtlInitUnicodeString(&DeviceName, InterfaceString);
 
     /* first convert device name to guid */
-    RtlGUIDFromString(&DeviceName, &DeviceGuid);
+    RtlGUIDFromString(&DeviceName, &InterfaceGUID);
 
     /* check if the device is already present */
     Entry = DeviceEntry->DeviceInterfaceList.Flink;
@@ -278,7 +278,7 @@ KspCreateDeviceAssociation(
          /* get offset */
          CurEntry = (PBUS_INSTANCE_ENTRY)CONTAINING_RECORD(Entry, BUS_INSTANCE_ENTRY, Entry);
 
-         if (IsEqualGUIDAligned(&CurEntry->InterfaceGuid, &DeviceGuid))
+         if (IsEqualGUIDAligned(&CurEntry->InterfaceGuid, &InterfaceGUID))
          {
              /* entry already exists */
              return STATUS_SUCCESS;
@@ -298,7 +298,7 @@ KspCreateDeviceAssociation(
     }
 
     /* store guid */
-    RtlMoveMemory(&CurEntry->InterfaceGuid, &DeviceGuid, sizeof(GUID));
+    RtlMoveMemory(&CurEntry->InterfaceGuid, &InterfaceGUID, sizeof(GUID));
 
     /* now register the association */
     Status = KspRegisterDeviceAssociation(BusDeviceExtension, DeviceEntry, CurEntry);
@@ -391,7 +391,7 @@ KspCreateDeviceReference(
         InitializeListHead(&DeviceEntry->IrpPendingList);
 
         /* copy device guid */
-        RtlInitUnicodeString(&String, ReferenceString);
+        RtlInitUnicodeString(&String, DeviceCategory);
         RtlGUIDFromString(&String, &DeviceEntry->DeviceGuid);
 
         /* copy device names */
@@ -1110,10 +1110,14 @@ KspInstallBusEnumInterface(
         return;
     }
 
+    /* now scan the bus */
+    KspScanBus(Context->BusDeviceExtension);
+
     /* acquire device entry lock */
     KeAcquireSpinLock(&Context->BusDeviceExtension->Lock, &OldLevel);
 
     /* now iterate all device entries */
+    ASSERT(!IsListEmpty(&Context->BusDeviceExtension->Common.Entry));
     Entry = Context->BusDeviceExtension->Common.Entry.Flink;
     while(Entry != &Context->BusDeviceExtension->Common.Entry)
     {
@@ -1514,8 +1518,6 @@ KsCreateBusEnumObject(
     /* get device extension */
     DeviceExtension = (PDEV_EXTENSION)BusDeviceObject->DeviceExtension;
 
-    DPRINT1("DeviceExtension %p BusDeviceExtension %p\n", DeviceExtension, DeviceExtension->Ext);
-
     /* store bus device extension */
     DeviceExtension->Ext = (PCOMMON_DEVICE_EXTENSION)BusDeviceExtension;
 
@@ -1567,7 +1569,7 @@ KsCreateBusEnumObject(
         /* check for success */
         if (!NT_SUCCESS(Status))
         {
-
+            DPRINT1("IoRegisterDeviceInterface failed Status %lx\n", Status);
             FreeItem(BusDeviceExtension->ServicePath.Buffer);
             FreeItem(BusDeviceExtension);
             return Status;
@@ -1578,6 +1580,7 @@ KsCreateBusEnumObject(
 
         if (!NT_SUCCESS(Status))
         {
+            DPRINT1("IoSetDeviceInterfaceState failed Status %lx\n", Status);
             FreeItem(BusDeviceExtension->ServicePath.Buffer);
             FreeItem(BusDeviceExtension);
             return Status;
@@ -1618,6 +1621,7 @@ KsCreateBusEnumObject(
         if (!BusDeviceExtension->PnpDeviceObject)
         {
             /* failed to attach device */
+            DPRINT1("IoAttachDeviceToDeviceStack failed with %x\n", Status);
             if (BusDeviceExtension->DeviceInterfaceLink.Buffer)
             {
                 IoSetDeviceInterfaceState(&BusDeviceExtension->DeviceInterfaceLink, FALSE);
@@ -1753,8 +1757,8 @@ KsInstallBusEnumInterface(
     /* perform access check */
     if (!SeSinglePrivilegeCheck(luid, Mode))
     {
-        /* insufficient privileges */
-        return STATUS_PRIVILEGE_NOT_HELD;
+        /* FIXME insufficient privileges */
+        //return STATUS_PRIVILEGE_NOT_HELD;
     }
 
     /* get device extension */
@@ -1848,6 +1852,13 @@ KsServiceBusEnumCreateRequest(
 
     /* sanity checks */
     ASSERT(IoStack->FileObject);
+    if (IoStack->FileObject->FileName.Buffer == NULL)
+    {
+         DPRINT1("KsServiceBusEnumCreateRequest PNP Hack\n");
+         Irp->IoStatus.Status = STATUS_SUCCESS;
+         return STATUS_SUCCESS;
+    }
+
     ASSERT(IoStack->FileObject->FileName.Buffer);
 
     DPRINT1("KsServiceBusEnumCreateRequest IRP %p Name %wZ\n", Irp, &IoStack->FileObject->FileName);

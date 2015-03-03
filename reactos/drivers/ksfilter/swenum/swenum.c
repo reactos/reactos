@@ -11,7 +11,6 @@
 
 const GUID KSMEDIUMSETID_Standard = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-
 NTSTATUS
 NTAPI
 SwDispatchPower(
@@ -312,7 +311,7 @@ SwDispatchCreate(
     /* check if the device object is a child device */
     Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
 
-    DPRINT("SwDispatchCreate %x\n", Status);
+    DPRINT1("SwDispatchCreate %x\n", Status);
 
     /* check for success */
     if (NT_SUCCESS(Status))
@@ -326,7 +325,7 @@ SwDispatchCreate(
         }
         /* perform the create request */
         Status = KsServiceBusEnumCreateRequest(DeviceObject, Irp);
-        DPRINT("SwDispatchCreate %x\n", Status);
+        DPRINT1("SwDispatchCreate %x\n", Status);
     }
 
     /* check the irp is pending */
@@ -426,7 +425,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = SwDispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = SwDispatchSystemControl;
 
-    DPRINT("SWENUM loaded\n");
+    DPRINT1("SWENUM loaded\n");
     return STATUS_SUCCESS;
 }
 
