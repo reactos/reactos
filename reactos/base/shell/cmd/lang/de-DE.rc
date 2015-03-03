@@ -25,9 +25,9 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
   /D  Verarbeitet auch die Ordner.\n\n\
 ATTRIB ohne Parameter zeigt die derzeit gesetzten Attribute aller Dateien an."
     STRING_ALIAS_HELP "Setzt, löscht oder zeigt ein Alias.\n\n\
-ALIAS [alias=[command]]\n\n\
-  alias    Name des Alias.\n\
-  command  Text welcher für den Alias zugeordnet wird.\n\n\
+ALIAS [Alias=[Befehl]]\n\n\
+  Alias    Name des Alias.\n\
+  Befehl  Text welcher dem Alias zugeordnet wird.\n\n\
 Listet alle Aliase auf:\n\
   ALIAS\n\n\
 Setzt ein neues oder überschreibt ein bestehendes Alias:\n\
@@ -45,31 +45,31 @@ CHDIR[..|.]\n\
 CD [Laufwerk:][Pfad]\n\
 CD[..|.]\n\n\
   ..   übergeordnetes Verzeichnis\n\
-  .    vorhergehende Verzeichnis\n\n\
-Geben Sie CD-Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
+  .    vorhergehendes Verzeichnis\n\n\
+Geben Sie CD Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
 Laufwerk anzuzeigen.\n\
 Mit CD ohne Parameter wird das aktuelle Laufwerk und Verzeichnis angezeigt."
-    STRING_CHCP_HELP "Zeigt die aktuelle Codepage oder wechselt sie.\n\n\
+    STRING_CHCP_HELP "Zeigt die aktuelle Codepage an oder wechselt diese.\n\n\
 CHCP [nnn]\n\n\
   nnn   Codepage angeben.\n\n\
 Der Befehl CHCP ohne Parameter zeigt die Nummer der aktuellen Codepage an."
-    STRING_CHOICE_HELP "Wartet auf den Benutzer, welcher aus einer Auswahl eine Option wählen muss.\n\n\
-CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
-  /C[:]choices  Die erlaubten Tasten festlegen. Standard-Tasten sind Y und N.\n\
-  /N            Zeigt choices und ? am ende des Prompt-Strings NICHT an.\n\
+    STRING_CHOICE_HELP "Wartet auf Auswahl einer Option durch den Benutzer.\n\n\
+CHOICE  [/C[:]optionen][/N][/S][/T[:]c,nn][text]\n\n\
+  /C[:]optionen  Die erlaubten Tasten festlegen. Standard-Tasten sind Y und N.\n\
+  /N            Zeigt die Optionen und ? am Ende des Prompt-Strings NICHT an.\n\
   /S            Groß- und Kleinschreibung wird beachtet.\n\
-  /T[:]c,nn     Standard-Auswahl wird auf c gesetzt nach nn Sekunden.\n\
+  /T[:]c,nn     Standard-Auswahl wird nach nn Sekunden auf c gesetzt.\n\
   text          Zeigt eine Beschreibung an.\n\n\
-ERRORLEVEL wird auf den Offset der Taste welche der Benutzer gedrückt hat gesetzt."
+ERRORLEVEL wird auf den Offset der Taste, welche der Benutzer gedrückt hat, gesetzt."
     STRING_CLS_HELP "Löscht den Bildschirminhalt.\n\nCLS"
     STRING_CMD_HELP1 "\nInterne Befehle verfügbar:\n"
     STRING_CMD_HELP2 "\nVerfügbare Funktionen:"
-    STRING_CMD_HELP3 "  [aliases]"
-    STRING_CMD_HELP4 "  [history]"
-    STRING_CMD_HELP5 "  [unix filename completion]"
-    STRING_CMD_HELP6 "  [directory stack]"
-    STRING_CMD_HELP7 "  [redirections and piping]"
-    STRING_CMD_HELP8 "Startet eine neue Instanz des ReactOS-Befehlsinterpreters.\n\n\
+    STRING_CMD_HELP3 "  [Aliase]"
+    STRING_CMD_HELP4 "  [Verlauf]"
+    STRING_CMD_HELP5 "  [Unix Dateinamen-Vervollständigung]"
+    STRING_CMD_HELP6 "  [Verzeichnis-Stack]"
+    STRING_CMD_HELP7 "  [Weiterleitung und Piping]"
+    STRING_CMD_HELP8 "Startet eine neue Instanz der ReactOS-Eingabeaufforderung.\n\n\
 CMD [/[C|K] Befehl][/P][/Q][/T:bf]\n\n\
   /C Befehl     Führt den Befehl in der Zeichenfolge aus. Anschließend\n\
                 wird diese Instanz beendet.\n\
@@ -101,12 +101,12 @@ Beispiel: ""COLOR fc"" legt Rot als Text- und Weiß als Hintergrund-\n\
 farbe fest"
     STRING_COPY_HELP1 " %s überschreiben (Ja/Nein/Alle)? "
     STRING_COPY_HELP2 "Kopiert eine oder mehrere Dateien an eine andere Position.\n\n\
-COPY [/V][/Y|/-Y][/A|/B] Quelle [/A|/B]\n\
-     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
-  source       Bezeichnet die zu kopierende(n) Datei(en).\n\
+COPY [/V][/Y|/-Y][/A|/B] \n\
+     [+ Quelle [/A|/B] [+ ...]] [Ziel [/A|/B]]\n\n\
+  Quelle       Bezeichnet die zu kopierende(n) Datei(en).\n\
   /A           Weist auf eine ASCII-Textdatei hin.\n\
   /B           Weist auf eine Binärdatei hin.\n\
-  destination  Bezeichnet das Verzeichnis und/oder Dateinamen der neuen Datei(en).\n\
+  Ziel         Bezeichnet das Verzeichnis und/oder Dateinamen der neuen Datei(en).\n\
   /V           Überprüft, ob die Dateien richtig geschrieben wurden.\n\
   /Y           Unterdrückt die Bestätigungsaufforderung beim Überschreiben\n\
                vorhandener Zieldateien.\n\
@@ -118,35 +118,35 @@ Die Option /Y ist möglicherweise in der Umgebungsvariablen COPYCMD definiert.\n
     STRING_DATE_HELP2 "\nGeben Sie das neue Datum ein (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nGeben Sie das neue Datum ein (yyyy%cmm%cdd): "
     STRING_DATE_HELP4 "Ändert das eingestellte Datum oder zeigt es an.\n\n\
-DATE [/T][date]\n\n\
-  /T    nur Datum anzeigen\n\n\
+DATE [/T][Datum]\n\n\
+  /T           nur Datum anzeigen\n\n\
 Der Befehl DATE ohne Parameter zeigt das aktuelle Datum an und fragt nach\n\
 einem neuen. Drücken Sie die EINGABETASTE, um das bisherige Datum zu behalten."
     STRING_DEL_HELP1 "Löscht eine oder mehrere Dateien.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 ERASE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\n\
-  file  Geben Sie die Dateinamen an, welche Sie löschen möchten\n\n\
-  /N    Nichts.\n\
-  /P    Fordert Sie vor dem Löschen jeder Datei zur Bestätigung auf.\n\
-  /T    Zeigt die Anzahl der gelöschten Dateien und deren vorherigen Speicherplatzbedarf an.\n\
-  /Q    Beenden.\n\
-  /W    Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben, bevor sie gelöscht werden.\n\
-  /Y    Löscht alles (*.*) ohne Vorwarnung.\n\
-  /Z    Löscht versteckte Dateien mit Nur-Leserechten und Systemdateien.\n"
-    STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (Y/N)?"
+  Dateinamen  Geben Sie die Dateinamen an, welche Sie löschen möchten\n\n\
+  /N          Nichts.\n\
+  /P          Fordert Sie vor dem Löschen jeder Datei zur Bestätigung auf.\n\
+  /T          Zeigt die Anzahl der gelöschten Dateien und deren vorherigen Speicherplatzbedarf an.\n\
+  /Q          Beenden.\n\
+  /W          Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben, bevor sie gelöscht werden.\n\
+  /Y          Löscht alles (*.*) ohne Vorwarnung.\n\
+  /Z          Löscht versteckte, schreibgeschützte und Systemdateien.\n"
+    STRING_DEL_HELP2 "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (J/N)?"
     STRING_DEL_HELP3 "    %lu Datei(en) gelöscht\n"
     STRING_DEL_HELP4 "    %lu Datei(en) gelöscht\n"
     STRING_DELAY_HELP "Pause für n Sekunden oder Millisekunden\n\
 DELAY [/m]n\n\n\
   /m          Millisekunden, ansonsten Sekunden\n"
     STRING_DIR_HELP1 "Listet die Dateien und Unterverzeichnisse eines Verzeichnisses auf.\n\n\
-DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
+DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]Attribute]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]Reihenfolge]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
   [Laufwerk:][path][Dateiname]\n\
               Bezeichnet Laufwerk, Verzeichnis und/oder Dateien.\n\n\
   /A          Listet Dateien mit angegebenen Attributen auf.\n\
-  attributes   D  Verzeichnisse         R  Schreibgeschützte Dateien\n\
+  Attribute    D  Verzeichnisse         R  Schreibgeschützte Dateien\n\
                H  Versteckte Dateien    A  Zu archivierende Dateien\n\
                S  Systemdateien         -  vorangestellt kehrt die Bedeutung um\n\
   /B          Einfaches Format (keine Kopfdaten, keine Zusammenfassung).\n\
@@ -157,7 +157,7 @@ DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
   /L          Verwendet Kleinschreibung.\n\
   /N          Neues, langes Listenformat (Dateinamen auf der rechten Seite).\n\
   /O          Gibt die Liste sortiert aus.\n\
-  sortorder    N  Name (alphabetisch)         S  Größe (kleinere zuerst)\n\
+  Reihenfolge  N  Name (alphabetisch)         S  Größe (kleinere zuerst)\n\
                E  Erweiterung (alphabetisch)  D Datum/Zeit (ältere zuerst)\n\
                G  Verzeichnisse zuerst        - vorangestellt kehrt die\n\
   /P          Pausiert nach jeder vollen Bildschirmseite.\n\
@@ -224,19 +224,19 @@ GOTO Marke\n\n\
 Marken stehen am Zeilenanfang mit einem vorangestellten Doppelpunkt."
     STRING_IF_HELP1 "Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\n\
   IF [NOT] ERRORLEVEL Nummer Befehl\n\
-  IF [NOT] variable1==variable2 Befehl\n\
+  IF [NOT] Variable1==Variable2 Befehl\n\
   IF [NOT] EXIST Dateiname Befehl\n\
-  IF [NOT] DEFINED variable Befehl\n\n\
+  IF [NOT] DEFINED Variable Befehl\n\n\
 NOT               Befehl wird nur dann ausgeführt, wenn die Bedingung nicht\n\
                   erfüllt wird\n\
-ERRORLEVEL number Bedingung ist erfüllt, wenn das zuletzt ausgeführte\n\
+ERRORLEVEL Nummer Bedingung ist erfüllt, wenn das zuletzt ausgeführte\n\
                   Programm einen Code größer oder gleich der Nummer zurückgibt.\n\
 command           Gibt den Befehl an, der bei erfüllter Bedingung ausgeführt\n\
                   werden soll.\n\
-variable1==variable2\n\
+Variable1==Variable2\n\
                   Bedingung ist erfüllt, falls die Zeichenfolgen gleich sind.\n\
 EXIST Dateiname   Bedingung ist erfüllt, wenn die angegebene Datei existiert.\n\
-DEFINED variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
+DEFINED Variable  Bedingung ist erfüllt, wenn die angegebene Datei definiert\n\
                   wurde."
     STRING_LABEL_HELP1 "Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\nLABEL [Laufwerk:][label]"
     STRING_LABEL_HELP2 "Datenträger im Laufwerk %c: ist %s\n"
@@ -254,12 +254,12 @@ MKLINK [/D | /H | /J] Linkname Ziel\n\n\
 Wenn weder /H noch /J angegeben werden, wird eine symbolische Verknüpfung angelegt."
     STRING_MEMMORY_HELP1 "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
     STRING_MEMMORY_HELP2 "\n  %12s%% Speicher geladen.\n\n\
-  %13s bytes RAM (insgesamt)\n\
-  %13s bytes verfügbarer RAM\n\n\
-  %13s bytes Auslagerungsdatei (insgesamt)\n\
-  %13s bytes verfügbare Auslagerungsdatei\n\n\
-  %13s bytes Virtueller Speicher (insgesamt)\n\
-  %13s bytes verfügbarer virtueller Speicher\n"
+  %13s Bytes RAM (insgesamt)\n\
+  %13s Bytes verfügbarer RAM\n\n\
+  %13s Bytes Auslagerungsdatei (insgesamt)\n\
+  %13s Bytes verfügbare Auslagerungsdatei\n\n\
+  %13s Bytes Virtueller Speicher (insgesamt)\n\
+  %13s Bytes verfügbarer virtueller Speicher\n"
     STRING_MISC_HELP1 "Drücken Sie eine beliebige Taste . . .\n"
     STRING_MOVE_HELP1 "Überschreiben %s (Ja/Nein/Alle)? "
     STRING_MOVE_HELP2 "Verschiebt Dateien und benennt Dateien sowie Verzeichnisse um.\n\n\
@@ -273,12 +273,12 @@ MOVE [/N][Laufwerk:][Pfad]Verzeichnis1 Verzeichnis2\n\n\
 Derzeitige Einschränkung:\n\
 Es ist noch nicht möglich, Objekte über die Laufwerksgrenzen hinaus zu verschieben.\n"
     STRING_MSGBOX_HELP "Zeigt ein Fenster und wartet auf eine Eingabe vom Benutzer.\n\n\
-MSGBOX type ['title'] prompt\n\n\
+MSGBOX type ['Titel'] Anzeigetext\n\n\
 type          Button anzeigen\n\
               mögliche Werte sind: OK, OKCANCEL,\n\
               YESNO, YESNOCANCEL\n\
-title         Titel des Fensters\n\
-prompt        Text der in dem Fenster angezeigt wird\n\n\n\
+Titel         Titel des Fensters\n\
+Anzeigetext   Text der in dem Fenster angezeigt wird\n\n\n\
 ERRORLEVEL wird je nach dem gedrückten Button gesetzt:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
@@ -334,7 +334,7 @@ Nutzen Sie den 'move' Befehl falls Sie Objekte verschieben wollen.\n"
     STRING_REPLACE_HELP1 "Ersetzt Dateien.\n\n\
 REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/A] [/P] [/R] [/W]\n\
 REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [Laufwerk1:][Pfad1]dateiname Bezeichnet die Quelldatei(en).\n\
+  [Laufwerk1:][Pfad1]Dateiname Bezeichnet die Quelldatei(en).\n\
   [Laufwerk2:][Pfad2]          Bezeichnet den Pfad in dem die Dateien ersetzt\n\
                                werden sollen.\n\
   /A                           Fügt neue Dateien dem Zielpfad hinzu. Kann nicht\n\
@@ -357,8 +357,8 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
     STRING_REPLACE_HELP6 "Ersetze %s\n"
     STRING_REPLACE_HELP7 "Keine Dateien hinzugefügt\n"
     STRING_REPLACE_HELP8 "%lu Datei(en) hinzugefügt\n"
-    STRING_REPLACE_HELP9 "Füge %s hinzu (Y/N) "
-    STRING_REPLACE_HELP10 "Ersetze %s (Y/N) "
+    STRING_REPLACE_HELP9 "Füge %s hinzu (J/N) "
+    STRING_REPLACE_HELP10 "Ersetze %s (J/N) "
     STRING_REPLACE_HELP11 "Füge %s hinzu\n"
     STRING_SHIFT_HELP "Verändert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
@@ -367,7 +367,7 @@ SCREEN Reihe Spalte [Text]\n\n\
   Reihe         Reihe, in die der Curser bewegt werden soll\n\
   Spalte        Spalte, in die der Curser bewegt werden soll"
     STRING_SET_HELP "Setzt oder löscht Umgebungsvariablen für CMD.EXE oder zeigt diese an.\n\n\
-SET [variable[=][Zeichenfolge]]\n\n\
+SET [Variable[=][Zeichenfolge]]\n\n\
   Variable     Bezeichnet den Namen der Umgebungsvariablen.\n\
   Zeichenfolge Eine Zeichenfolge, die der Variable zugewiesen werden soll.\n\n\
 Der Befehl SET ohne Parameter zeigt die aktuellen Umgebungsvariablen an.\n"
@@ -376,7 +376,7 @@ START Befehl\n\n\
   Befehl     Befehl welcher ausgeführt werden soll\n\n\
 Achtung: Derzeit werden alle Befehle asynchron ausgeführt.\n"
     STRING_TITLE_HELP "Legt den Fenstertitel für das Eingabeaufforderungsfenster fest.\n\n\
-TITLE [string]\n\n\
+TITLE [Zeichenfolge]\n\n\
   Zeichenfolge      Bezeichnet den Titel des Eingabeaufforderungsfensters."
     STRING_TIME_HELP1 "Stellt die Systemzeit oder zeigt sie an.\n\n\
 TIME [/T][Zeit]\n\n\
@@ -420,15 +420,15 @@ VER [/C][/R][/W]\n\n\
  und Sie können die Software unter bestimmten Bedingungen weiter\n\
  vertreiben; tippen Sie `ver /R' für nähere Informationen darüber.\n\
  Tippen Sie `ver /C' um die Mitwirkenden (Credits) aufzulisten."
-    STRING_VERSION_HELP3 "\n This program is distributed in the hope that it will be useful,\n\
- but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
- GNU General Public License for more details."
-    STRING_VERSION_HELP4 "\n This program is free software; you can redistribute it and/or modify\n\
- it under the terms of the GNU General Public License as published by\n\
- the Free Software Foundation; either version 2 of the License, or\n\
- (at your option) any later version."
-    STRING_VERSION_HELP5 "\nSenden Sie Bug-Reports an <ros-dev@reactos.org>.\n\
+    STRING_VERSION_HELP3 "\n Dieses Programm wir in der Hoffnung, dass es nützlich ist,\n\
+ jedoch OHNE JEGLICHE GARANTIE, auch die der implizierten Garantie der \n\
+ MARKTFÄHIGKEIT und der EIGNUNG FÜR EINEN BESTIMMTEN ZWECK, verteilt. \n\
+ Siehe GNU General Public License für weitere Details.\n"
+    STRING_VERSION_HELP4 "\n Dieses Programm ist freie Software; Sie können es verteilen\n\
+ und/oder unter den Bedingungnen der GNU General Public License, von der\n\
+ Free Software Foundation entweder in Version 2 oder\n\
+ (nach eigenem Belieben) jeder höheren Version veröffentlicht, verändern."
+    STRING_VERSION_HELP5 "\nSenden Sie Fehlerberichte an <ros-dev@reactos.org>.\n\
 Updates sind auf der offiziellen ReactOS-Webseite verfügbar:\n\
 http://www.reactos.org"
     STRING_VERSION_HELP6 "\nFreeDOS-Version programmiert von:\n"
@@ -438,21 +438,21 @@ http://www.reactos.org"
     STRING_VOL_HELP3 " Datenträger-Seriennummer: %04X-%04X\n"
     STRING_VOL_HELP4 "Zeigt die Laufwerksbezeichnung und die Seriennummer an, falls diese existieren.\n\nVOL [drive:]"
     STRING_WINDOW_HELP1 "Verändert die Größe des Konsolenfensters\n\n\
-WINDOW [/POS[=]left,top,width,heigth]\n\
-              [MIN|MAX|RESTORE] ['title']\n\n\
+WINDOW [/POS[=]links, oben, Breite, Höhe]\n\
+              [MIN|MAX|RESTORE] ['Titel']\n\n\
 /POS          Gibt Position und Größe des Fensters an\n\
 MIN           minimiert das Fenster\n\
 MAX           maximiert das Fenster\n\
 RESTORE       stellt das Fenster wieder her"
     STRING_WINDOW_HELP2 "Verändert die Größe des Konsolenfensters\n\n\
-ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
-              [MIN|MAX|RESTORE] ['title']\n\n\
+ACTIVATE 'window' [/POS[=]links, oben, Breite, Höhe]\n\
+              [MIN|MAX|RESTORE] ['Titel']\n\n\
 window        Titel des Fensters, das bearbeitet wird\n\
 /POS          einstellen der Fensterplatzierung und der Dimensionen\n\
 MIN           minimiert das Fenster\n\
 MAX           maximiert das Fenster\n\
 RESTORE       stellt das Fenster wieder her\n\
-title         neuer Titel"
+Titel         neuer Titel"
     STRING_CHOICE_OPTION "JN"
     STRING_COPY_OPTION "JNA"
     STRING_ALIAS_ERROR "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
@@ -460,7 +460,7 @@ title         neuer Titel"
     STRING_BATCH_ERROR "Es trat ein Fehler auf, während die Batchdatei geöffnet wurde.\n"
     STRING_CHCP_ERROR1 "Aktive Codepage: %u\n"
     STRING_CHCP_ERROR4 "Ungültige Codepage\n"
-    STRING_CHOICE_ERROR "Ungültige Option. Erwartetes Format: /C[:]options"
+    STRING_CHOICE_ERROR "Ungültige Option. Erwartetes Format: /C[:]Optionen"
     STRING_CHOICE_ERROR_TXT "Ungültige Option. Erwartetes Format: /T[:]c,nn"
     STRING_CHOICE_ERROR_OPTION "Ungültige Option: %s"
     STRING_CMD_ERROR1 "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
@@ -509,10 +509,10 @@ title         neuer Titel"
     STRING_ERROR_INVALID_PARAM_FORMAT "Ungültiges Parameterformat - %s\n"
     STRING_ERROR_BADCOMMAND "Ungültiger Befehl oder Dateiname - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Fehler: Zu wenig Speicher verfügbar.\n"
-    STRING_ERROR_CANNOTPIPE "Fehler: Cannot pipe! Temporäre Datei kann nicht geöffnet werden!\n"
+    STRING_ERROR_CANNOTPIPE "Fehler: Pipen nicht möglich! Temporäre Datei kann nicht geöffnet werden!\n"
     STRING_ERROR_D_PAUSEMSG "Drücken Sie eine beliebige Taste . . ."
     STRING_ERROR_DRIVER_NOT_READY "Laufwerk ist nicht bereit"
-    STRING_PATH_ERROR "CMD: Nicht in environment '%s'\n"
+    STRING_PATH_ERROR "CMD: Nicht in Umgebung '%s'\n"
     STRING_REPLACE_ERROR1 "Ungültiger Parameter - %s\n"
     STRING_REPLACE_ERROR2 "Pfad wurde nicht gefunden - %s\n"
     STRING_REPLACE_ERROR3 "Der Dateiname, Ordnername oder die Syntax der Volumenbezeichung sind inkorrekt.\n"
@@ -520,9 +520,9 @@ title         neuer Titel"
     STRING_REPLACE_ERROR5 "Zugriff verweigert - %s\n"
     STRING_REPLACE_ERROR6 "Keine Dateien gefunden - %s\n"
     STRING_REPLACE_ERROR7 "Erweiterter Fehler 32\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_INFOLINE "  ReactOS Eingabeaufforderung                            HELP eingeben = Hilfe  "
     STRING_REACTOS_VERSION "ReactOS Betriebssystem [Version %s-%s]\n"
-    STRING_CMD_SHELLINFO "\nReactOS-Befehlszeileninterpreter\nVersion %s %s"
+    STRING_CMD_SHELLINFO "\nReactOS Eingabeaufforderung\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Läuft in: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
     STRING_COPY_FILE "        %d Datei(en) kopiert\n"
