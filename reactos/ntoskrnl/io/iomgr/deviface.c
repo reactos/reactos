@@ -1330,8 +1330,8 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
 
     /* Symbolic link name is \??\ACPI#PNP0501#1#{GUID}\ReferenceString */
     /* Get GUID from SymbolicLinkName */
-    StartPosition = wcsrchr(SymbolicLinkName->Buffer, L'{');
-    EndPosition = wcsrchr(SymbolicLinkName->Buffer, L'}');
+    StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
+    EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
     if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
     {
         DPRINT1("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
