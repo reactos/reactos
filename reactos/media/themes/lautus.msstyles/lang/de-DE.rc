@@ -1,0 +1,37 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Ater"
+}
+
+STRINGTABLE
+{
+2000, "Lautus Ater"
+}
+
+STRINGTABLE
+{
+3000, "Standardgröße"
+3001, "Groß"
+3002, "Extragroß"
+}
+
+STRINGTABLE
+{
+4000, "Standardgröße"
+4001, "Groß"
+4002, "Extragroß"
+}
+
+STRINGTABLE
+{
+5000, "Lautus"
+5001, "Visueller Stil"
+5002, "ReactOS Foundation"
+5003, "Pisarz, basierend auf Luna Inspirat"
+5004, "Veröffentlicht unter GNU/GPL 2.0, 2011"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Visueller Stil für ReactOS"
+}
