@@ -106,22 +106,22 @@ WlanConnect(IN HANDLE hClientHandle,
             IN const PWLAN_CONNECTION_PARAMETERS pConnectionParameters,
             PVOID pReserved)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
 
     if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (pConnectionParameters == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        _RpcConnect(hClientHandle, pInterfaceGuid, &pConnectionParameters);
+        dwResult = _RpcConnect(hClientHandle, pInterfaceGuid, &pConnectionParameters);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        dwResult = RpcExceptionCode();
     }
     RpcEndExcept;
 
-    return dwError;
+    return dwResult;
 }
 
 DWORD
@@ -130,22 +130,22 @@ WlanDisconnect(IN HANDLE hClientHandle,
                IN const GUID *pInterfaceGuid,
                PVOID pReserved)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
 
     if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        _RpcDisconnect(hClientHandle, pInterfaceGuid);
+        dwResult = _RpcDisconnect(hClientHandle, pInterfaceGuid);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        dwResult = RpcExceptionCode();
     }
     RpcEndExcept;
 
-    return dwError;
+    return dwResult;
 }
 
 DWORD
@@ -155,7 +155,7 @@ WlanOpenHandle(IN DWORD dwClientVersion,
                OUT DWORD *pdwNegotiatedVersion,
                OUT HANDLE *phClientHandle)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
     WCHAR szDummy[] = L"localhost";
 
     if ((pReserved != NULL) || (pdwNegotiatedVersion == NULL) || (phClientHandle == NULL))
@@ -163,18 +163,18 @@ WlanOpenHandle(IN DWORD dwClientVersion,
 
     RpcTryExcept
     {
-        dwError = _RpcOpenHandle(szDummy,
+        dwResult = _RpcOpenHandle(szDummy,
                                 dwClientVersion,
                                 pdwNegotiatedVersion,
                                 (WLANSVC_RPC_HANDLE) phClientHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        dwResult = RpcExceptionCode();
     }
     RpcEndExcept;
 
-    return dwError;
+    return dwResult;
 }
 
 DWORD
@@ -182,22 +182,22 @@ WINAPI
 WlanCloseHandle(IN HANDLE hClientHandle,
                 PVOID pReserved)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
 
     if ((pReserved != NULL) || (hClientHandle == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        _RpcCloseHandle(hClientHandle);
+        dwResult = _RpcCloseHandle(&hClientHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        dwResult = RpcExceptionCode();
     }
     RpcEndExcept;
 
-    return dwError;
+    return dwResult;
 }
 
 DWORD
@@ -206,22 +206,22 @@ WlanEnumInterfaces(IN HANDLE hClientHandle,
                    PVOID pReserved,
                    OUT PWLAN_INTERFACE_INFO_LIST *ppInterfaceList)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
 
     if ((pReserved != NULL) || (ppInterfaceList == NULL) || (hClientHandle == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        _RpcEnumInterfaces(hClientHandle, ppInterfaceList);
+        dwResult = _RpcEnumInterfaces(hClientHandle, ppInterfaceList);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        dwResult = RpcExceptionCode();
     }
     RpcEndExcept;
 
-    return dwError;
+    return dwResult;
 }
 
 DWORD
@@ -232,22 +232,22 @@ WlanScan(IN HANDLE hClientHandle,
          IN PWLAN_RAW_DATA pIeData,
          PVOID pReserved)
 {
-    DWORD dwError = ERROR_SUCCESS;
+    DWORD dwResult = ERROR_SUCCESS;
 
     if ((pReserved != NULL) || (pInterfaceGuid == NULL) || (hClientHandle == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        _RpcScan(hClientHandle, pInterfaceGuid, pDot11Ssid, pIeData);
+        dwResult = _RpcScan(hClientHandle, pInterfaceGuid, pDot11Ssid, pIeData);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        dwError = RpcExceptionCode();
+        dwResult = RpcExceptionCode();
     }
     RpcEndExcept;
 
-    return dwError;
+    return dwResult;
 }
 
 DWORD
@@ -319,11 +319,22 @@ WlanSetSecuritySettings(IN HANDLE hClientHandle,
                         IN WLAN_SECURABLE_OBJECT SecurableObject,
                         IN LPCWSTR strModifiedSDDL)
 {
+    DWORD dwResult = ERROR_SUCCESS;
+
     if ((hClientHandle == NULL) || (strModifiedSDDL == NULL) || (SecurableObject >= WLAN_SECURABLE_OBJECT_COUNT))
         return ERROR_INVALID_PARAMETER;
 
-    UNIMPLEMENTED;
-    return ERROR_SUCCESS;        
+    RpcTryExcept
+    {
+        dwResult = _RpcSetSecuritySettings(hClientHandle, SecurableObject, strModifiedSDDL);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwResult = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwResult;     
 }
 
 DWORD

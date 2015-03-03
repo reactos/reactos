@@ -39,11 +39,22 @@ WlanDeleteProfile(IN HANDLE hClientHandle,
                   IN LPCWSTR strProfileName,
                   PVOID pReserved)
 {
+    DWORD dwResult = ERROR_SUCCESS;
+
     if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strProfileName == NULL))
         return ERROR_INVALID_PARAMETER;
 
-    UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    RpcTryExcept
+    {
+        dwResult = _RpcDeleteProfile(hClientHandle, pInterfaceGuid, strProfileName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwResult = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwResult;
 }
 
 DWORD
@@ -54,11 +65,22 @@ WlanRenameProfile(IN HANDLE hClientHandle,
                   IN LPCWSTR strNewProfileName,
                   PVOID pReserved)
 {
+    DWORD dwResult = ERROR_SUCCESS;
+
     if ((pReserved != NULL) || (hClientHandle == NULL) || (pInterfaceGuid == NULL) || (strOldProfileName == NULL) || (strNewProfileName == NULL))
         return ERROR_INVALID_PARAMETER;
 
-    UNIMPLEMENTED;
-    return ERROR_SUCCESS;    
+    RpcTryExcept
+    {
+        dwResult = _RpcRenameProfile(hClientHandle, pInterfaceGuid, strOldProfileName, strNewProfileName);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwResult = RpcExceptionCode();
+    }
+    RpcEndExcept;
+
+    return dwResult;
 }
 
 DWORD

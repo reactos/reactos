@@ -6,7 +6,7 @@
 #include <wlanapi.h>
 
 typedef [context_handle] PVOID WLANSVC_RPC_HANDLE;
-typedef WLANSVC_RPC_HANDLE* LPWLANSVC_RPC_HANDLE;
+typedef WLANSVC_RPC_HANDLE *LPWLANSVC_RPC_HANDLE;
 typedef [handle, string] LPWSTR WLANSVC_HANDLE;
 
 /* FIXME */
@@ -39,8 +39,12 @@ typedef struct struct_E {
 } struct_E ;
 
 [
-   uuid(266f33b4-c7c1-4bd1-8f52-ddb8f2214ea9),
-   version(1.0)
+    uuid(266f33b4-c7c1-4bd1-8f52-ddb8f2214ea9),
+    version(1.0),
+    pointer_default(unique)
+#ifndef __midl
+    ,explicit_handle
+#endif    
 ]
  
 interface wlansvc_interface
@@ -50,11 +54,11 @@ interface wlansvc_interface
         [in] WLANSVC_HANDLE szMachineName,
         [in] DWORD dwClientVersion,
         [out] DWORD* pdwNegotiatedVersion,
-        [out] LPWLANSVC_RPC_HANDLE phClientHandle);
+        [out] WLANSVC_RPC_HANDLE *phClientHandle);
 
     /* Function: 0x01 */
     DWORD _RpcCloseHandle(
-        [in, out] LPWLANSVC_RPC_HANDLE phClientHandle);
+        [in, out] WLANSVC_RPC_HANDLE *phClientHandle);
 
     /* Function: 0x02 */
     DWORD _RpcEnumInterfaces(
@@ -189,14 +193,14 @@ interface wlansvc_interface
     DWORD _RpcDeleteProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] const GUID* pInterfaceGuid,
-        [in][string] wchar_t * strProfileName);
+        [in][string] const wchar_t * strProfileName);
 
     /* Function: 0x14 */
     DWORD _RpcRenameProfile(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] const GUID* pInterfaceGuid,
-        [in][string] wchar_t * strOldProfileName,
-        [in][string] wchar_t * strNewProfileName);
+        [in][string] const wchar_t * strOldProfileName,
+        [in][string] const wchar_t * strNewProfileName);
 
     /* Function: 0x15 */
     DWORD _RpcSetProfileList(
@@ -262,35 +266,35 @@ interface wlansvc_interface
         [in] DWORD dwFlags,
         [in] BOOL bOverWrite);
 
-    /* Function: 0x1E, address: 0x2C992E36 */
+    /* Function: 0x1E */
     DWORD _RpcIsUIRequestPending(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] const GUID* pInterfaceGuid,
         [in] struct_C * arg_3,
         [out] LPDWORD arg_4);
 
-    /* Function: 0x1F, address: 0x2C992EB3 */
+    /* Function: 0x1F */
     DWORD _RpcSetUIForwardingNetworkList(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in][size_is(dwSize)] GUID* arg_2,
         [in] DWORD dwSize,
         [out] GUID* arg_4);
 
     /* Function: 0x20 */
     DWORD _RpcIsNetworkSuppressed(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] DWORD arg_2,
         [in] const GUID* pInterfaceGuid,
         [out] LPDWORD arg_4);
 
     /* Function: 0x21 */
     DWORD _RpcRemoveUIForwardingNetworkList(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] const GUID* pInterfaceGuid);
 
     /* Function: 0x22 */
     DWORD _RpcQueryExtUIRequest(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] GUID* arg_2,
         [in] GUID* arg_3,
         [in] /* enum16 */ short arg_4,
@@ -299,13 +303,13 @@ interface wlansvc_interface
 
     /* Function: 0x23 */
     DWORD _RpcUIResponse(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] struct_C * arg_2,
         [in] struct_D * arg_3);
 
     /* Function: 0x24 */
     DWORD _RpcGetProfileKeyInfo(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] DWORD arg_2,
         [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * arg_4,
@@ -316,7 +320,7 @@ interface wlansvc_interface
 
     /* Function: 0x25 */
     DWORD _RpcAsyncDoPlap(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] const GUID* pInterfaceGuid,
         [in][string] wchar_t * arg_3,
         [in] DWORD dwSize,
@@ -324,7 +328,7 @@ interface wlansvc_interface
 
     /* Function: 0x26 */
     DWORD _RpcQueryPlapCredentials(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in, out] LPDWORD dwSize,
         [out][ref][size_is(*dwSize)] struct_E ** arg_3,
         [out][ref][string] wchar_t ** arg_4,
@@ -336,14 +340,14 @@ interface wlansvc_interface
 
     /* Function: 0x27 */
     DWORD _RpcCancelPlap(
-        [in] wchar_t * arg_1,
+        [in] WLANSVC_HANDLE arg_1,
         [in] const GUID* pInterfaceGuid);
 
     /* Function: 0x28 */
     DWORD _RpcSetSecuritySettings(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
         [in] WLAN_SECURABLE_OBJECT SecurableObject,
-        [in][string] wchar_t * strModifiedSDDL);
+        [in][string] const wchar_t * strModifiedSDDL);
 
     /* Function: 0x29 */
     DWORD _RpcGetSecuritySettings(

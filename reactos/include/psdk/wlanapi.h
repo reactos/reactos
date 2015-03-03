@@ -10,6 +10,9 @@ extern "C" {
 #endif
 
 /* Defines */
+#define WLAN_API_VERSION_1_0 0x00000001
+#define WLAN_API_VERSION_2_0 0x00000002
+
 #define WLAN_MAX_PHY_INDEX 64
 #define WLAN_MAX_NAME_LENGTH 256
 

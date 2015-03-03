@@ -12,21 +12,103 @@
 #include <debug.h>
 //#define GET_IF_ENTRY2_IMPLEMENTED 1
 
+LIST_ENTRY WlanSvcHandleListHead;
+
+DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
+{
+    RPC_STATUS Status;
+
+    InitializeListHead(&WlanSvcHandleListHead);
+    
+    Status = RpcServerUseProtseqEpW(L"ncalrpc", 20, L"wlansvc", NULL);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    Status = RpcServerRegisterIf(wlansvc_interface_v1_0_s_ifspec, NULL, NULL);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        return 0;
+    }
+
+    Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0);
+    if (Status != RPC_S_OK)
+    {
+        DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
+    }
+
+    DPRINT("RpcServerListen finished\n");
+    return 0;
+}
+
+PWLANSVCHANDLE WlanSvcGetHandleEntry(LPWLANSVC_RPC_HANDLE ClientHandle)
+{
+    PLIST_ENTRY CurrentEntry;
+    PWLANSVCHANDLE lpWlanSvcHandle;
+
+    CurrentEntry = WlanSvcHandleListHead.Flink;
+    while (CurrentEntry != &WlanSvcHandleListHead)
+    {
+        lpWlanSvcHandle = CONTAINING_RECORD(CurrentEntry,
+                                        WLANSVCHANDLE,
+                                        WlanSvcHandleListEntry);
+        CurrentEntry = CurrentEntry->Flink;
+
+        if (lpWlanSvcHandle == (PWLANSVCHANDLE) ClientHandle)
+            return lpWlanSvcHandle;
+    }
+
+    return NULL;
+}
+
 DWORD _RpcOpenHandle(
     wchar_t *arg_1,
     DWORD dwClientVersion,
     DWORD *pdwNegotiatedVersion,
     LPWLANSVC_RPC_HANDLE phClientHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PWLANSVCHANDLE lpWlanSvcHandle;
+
+    lpWlanSvcHandle = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLANSVCHANDLE));
+    if (lpWlanSvcHandle == NULL)
+    {
+        DPRINT1("Failed to allocate Heap!\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    if (dwClientVersion > 2)
+        dwClientVersion = 2;
+    
+    if (dwClientVersion < 1)
+        dwClientVersion = 1;
+    
+    lpWlanSvcHandle->dwClientVersion = dwClientVersion;
+    *pdwNegotiatedVersion = dwClientVersion;
+    
+    InsertTailList(&WlanSvcHandleListHead, &lpWlanSvcHandle->WlanSvcHandleListEntry);
+    *phClientHandle = lpWlanSvcHandle;
+
+    return ERROR_SUCCESS;
 }
 
 DWORD _RpcCloseHandle(
     LPWLANSVC_RPC_HANDLE phClientHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PWLANSVCHANDLE lpWlanSvcHandle;
+
+    lpWlanSvcHandle = WlanSvcGetHandleEntry(phClientHandle);
+    if (!lpWlanSvcHandle)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+
+    RemoveEntryList(&lpWlanSvcHandle->WlanSvcHandleListEntry);
+    HeapFree(GetProcessHeap(), 0, lpWlanSvcHandle);
+
+    return ERROR_SUCCESS;
 }
 
 DWORD _RpcEnumInterfaces(
@@ -120,6 +202,14 @@ DWORD _RpcGetInterfaceCapability(
     const GUID *pInterfaceGuid,
     PWLAN_INTERFACE_CAPABILITY *ppCapability)
 {
+    PWLANSVCHANDLE lpWlanSvcHandle;
+
+    lpWlanSvcHandle = WlanSvcGetHandleEntry(hClientHandle);
+    if (!lpWlanSvcHandle)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -167,6 +257,14 @@ DWORD _RpcScan(
     PDOT11_SSID pDot11Ssid,
     PWLAN_RAW_DATA pIeData)
 {
+    PWLANSVCHANDLE lpWlanSvcHandle;
+
+    lpWlanSvcHandle = WlanSvcGetHandleEntry(hClientHandle);
+    if (!lpWlanSvcHandle)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+    
     /*
     DWORD dwBytesReturned;
     HANDLE hDevice;
@@ -284,7 +382,7 @@ DWORD _RpcGetProfile(
 DWORD _RpcDeleteProfile(
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
-    wchar_t *strProfileName)
+    const wchar_t *strProfileName)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -293,8 +391,8 @@ DWORD _RpcDeleteProfile(
 DWORD _RpcRenameProfile(
     WLANSVC_RPC_HANDLE hClientHandle,
     const GUID *pInterfaceGuid,
-    wchar_t *strOldProfileName,
-    wchar_t *strNewProfileName)
+    const wchar_t *strOldProfileName,
+    const wchar_t *strNewProfileName)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -501,7 +599,7 @@ DWORD _RpcCancelPlap(
 DWORD _RpcSetSecuritySettings(
     WLANSVC_RPC_HANDLE hClientHandle,
     WLAN_SECURABLE_OBJECT SecurableObject,
-    wchar_t *strModifiedSDDL)
+    const wchar_t *strModifiedSDDL)
 {
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
