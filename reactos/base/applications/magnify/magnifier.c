@@ -31,7 +31,7 @@ TCHAR szTitle[MAX_LOADSTRING];
 
 HWND hDesktopWindow = NULL;
 
-/* Current magnified area /*
+/* Current magnified area */
 POINT cp;
 
 /* Last positions */
