@@ -64,7 +64,7 @@ BEGIN
         MENUITEM "Deconectea&ză",              ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "&Elimină calculator",         ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", ID_HELP_TOPICS
         MENUITEM SEPARATOR

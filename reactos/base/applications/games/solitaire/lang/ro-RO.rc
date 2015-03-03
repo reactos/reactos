@@ -78,7 +78,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_GAME_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…\tF1", IDM_HELP_CONTENTS
         MENUITEM "&Despre…", IDM_HELP_ABOUT

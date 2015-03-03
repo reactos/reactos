@@ -99,3 +99,9 @@ WDM_DRMKAUD.DeviceDesc    = "ReactOS Trusted Audio Drivers"
 WDM_DRMKAUD.FriendlyName  = "ReactOS Trusted Audio Drivers"
 drmkaud.SvcDesc           = "ReactOS Trusted Audio Drivers"
 WDMAUDIO_CopyFilesOnlyId.DeviceDesc = "ReactOS WDM Audio Drivers"
+
+[Strings.0418]
+WDM_DRMKAUD.DeviceDesc    = "Module-pilot audio de încredere ale ReactOS"
+WDM_DRMKAUD.FriendlyName  = "Module-pilot audio de încredere ale ReactOS"
+drmkaud.SvcDesc           = "Module-pilot audio de încredere ale ReactOS"
+WDMAUDIO_CopyFilesOnlyId.DeviceDesc = "Module-pilot audio WDM ale ReactOS"

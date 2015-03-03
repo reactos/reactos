@@ -1,10 +1,13 @@
-/* Romanian translation by Petru Dimitriu and Ștefan Fulea */
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDM_EVENTVWR MENU
 BEGIN
-    POPUP "J&urnal"
+    POPUP "&Jurnal"
     BEGIN
         MENUITEM "Păstrare p&rotocol…", IDM_SAVE_PROTOCOL, GRAYED
         MENUITEM SEPARATOR
@@ -17,7 +20,7 @@ BEGIN
         MENUITEM "Împ&rospătare", IDM_REFRESH
     END
     MENUITEM "&Opțiuni", IDM_OPTIONS
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP
         MENUITEM SEPARATOR

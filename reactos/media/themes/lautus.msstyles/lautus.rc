@@ -189,3 +189,6 @@ NORMAL_NORMALGROUPEXPAND_BMP BITMAP "bitmaps/dummy.bmp"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif

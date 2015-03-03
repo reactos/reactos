@@ -80,7 +80,7 @@ BEGIN
         MENUITEM "Paletă &modernă", IDM_COLORSMODERNPALETTE
         MENUITEM "Paletă &veche", IDM_COLORSOLDPALETTE
     END
-    POPUP "&Ajutor"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR

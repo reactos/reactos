@@ -668,7 +668,7 @@ BEGIN
     IDS_VIEW_SMALL "&Pictograme"
     IDS_VIEW_LIST "&Listă"
     IDS_VIEW_DETAILS "&Detalii"
-    IDS_SELECT "Selectează"
+    IDS_SELECT "Selectea&ză"
     IDS_OPEN "&Deschide"
     IDS_CREATELINK "Creează sc&urtătură"
     IDS_COPY "&Copiază"
@@ -678,7 +678,7 @@ BEGIN
     IDS_RESTORE "&Restabilește"
     IDS_FORMATDRIVE "F&ormatare…"
     IDS_RENAME "Rede&numește"
-    IDS_PASTE "Inserea&ză"
+    IDS_PASTE "&Lipește"
 
     IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Eroare de permisiune."
     IDS_CREATEFOLDER_CAPTION "Eroare la crearea unui nou dosar"
@@ -695,12 +695,12 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Confirmarea înlocuirii fișierului"
     IDS_OVERWRITEFOLDER_TEXT "Acest dosar deja conține un sub-dosar cu numele „%1”.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur doriți să copiați sau\nsă mutați dosarul?"
 
-    IDS_FILEOOP_COPYING "Copying"
-    IDS_FILEOOP_MOVING "Moving"
-    IDS_FILEOOP_DELETING "Deleting"
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "Se copie"
+    IDS_FILEOOP_MOVING "Se mută"
+    IDS_FILEOOP_DELETING "Se șterge"
+    IDS_FILEOOP_FROM_TO "Din %1 în %2"
+    IDS_FILEOOP_FROM "Din %1"
+    IDS_FILEOOP_PREFLIGHT "Se verifică"
 
     /* message box strings */
     IDS_RESTART_TITLE "Repornire"

@@ -26,7 +26,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Actualizează baza de date", ID_RESETDB
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", ID_HELP, GRAYED
         MENUITEM "&Despre…", ID_ABOUT

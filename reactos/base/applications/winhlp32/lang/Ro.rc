@@ -52,7 +52,7 @@ MAIN_MENU MENU
     MENUITEM "M&are",     	MNID_OPTS_FONTS_LARGE
   END
  }
- POPUP "&?" {
+ POPUP "Aj&utor" {
    MENUITEM "&Despre…", MNID_HELP_HELPON
    MENUITEM "Î&ntotdeauna deasupra", MNID_HELP_HELPTOP
    MENUITEM "In&formații…", MNID_HELP_ABOUT

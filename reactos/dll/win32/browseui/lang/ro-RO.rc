@@ -72,7 +72,7 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Opțiuni de dosar…", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&?", FCIDM_MENU_HELP
+    POPUP "Aj&utor", FCIDM_MENU_HELP
     BEGIN
         MENUITEM "&Este această copie a ReactOS legală?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Despre…", IDM_HELP_ABOUT
@@ -102,7 +102,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
     LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
-    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "A&nulează", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
 }
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
@@ -138,8 +138,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
-    IDS_REMAINING  "Remaining"
+    IDS_CANCELLING "Anulare…"
+    IDS_REMAINING  "Rămas"
 END
 
 STRINGTABLE
@@ -272,5 +272,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Înapoi|Înainte|Sus|Caută|Dosare|Mută în|Copie în|Șterge|Anulează|Afișări|Oprește|Împrospătează|Acasă|Conectează unitate|Deconectează|Favorite|Istoric|Pe tot ecranul|Proprietăți|Decupează|Copie|Lipește|Opțiuni dosar||"
 END

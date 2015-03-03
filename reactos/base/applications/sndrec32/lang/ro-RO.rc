@@ -61,7 +61,7 @@ BEGIN
         MENUITEM "&Adaugă ecou", ID_EFFECTS_ECHO
         MENUITEM "In&versează", ID_EFFECTS_REVERSE
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", ID_ABOUT
     END

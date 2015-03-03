@@ -20,7 +20,7 @@ BEGIN
     BEGIN
         MENUITEM "I&eșire", ID_REGISTRY_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", ID_HELP_ABOUT
     END
@@ -81,7 +81,7 @@ BEGIN
         MENUITEM "&Adaugă la favorite", ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
         MENUITEM "&Elimină favorite", ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR

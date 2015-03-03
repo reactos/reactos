@@ -1,4 +1,7 @@
-/* 2011.10.19 - Fulea Ștefan: minor changes */
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -10,11 +13,11 @@ BEGIN
     END
     POPUP "A&cțiune"
     BEGIN
-        MENUITEM "Im&primare", IDC_PRINT, GRAYED
+        MENUITEM "I&mprimare", IDC_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "P&roprietăți", IDC_PROP, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&?", IDC_PROGHELP, GRAYED
+        MENUITEM "Aj&utor", IDC_PROGHELP, GRAYED
     END
     POPUP "&Afișare"
     BEGIN
@@ -25,7 +28,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Afișea&ză dispozitive ascunse", IDC_SHOWHIDDEN
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDC_PROGHELP
         MENUITEM "Despre…", IDC_ABOUT

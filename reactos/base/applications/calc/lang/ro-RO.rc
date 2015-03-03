@@ -1,4 +1,8 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/*
+Translators: Petru Dumitriu (petrimetri at gmail dot com)
+             Ștefan Fulea (stefan dot fulea at mail dot md)
+*/
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 /* Dialogs */
@@ -346,7 +350,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifrele", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -379,7 +383,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifrele", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -402,7 +406,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Grupează &cifre", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", IDM_HELP_HELP
         MENUITEM SEPARATOR

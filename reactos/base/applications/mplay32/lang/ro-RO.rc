@@ -32,7 +32,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Control &volum…", IDM_VOLUMECTL
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", IDM_ABOUT
     END
