@@ -281,6 +281,66 @@ WlanGetInterfaceCapability(IN HANDLE hClientHandle,
     return ERROR_SUCCESS;        
 }  
 
+DWORD
+WINAPI
+WlanReasonCodeToString(IN DWORD dwReasonCode,
+                       IN DWORD dwBufferSize,
+                       IN PWCHAR pStringBuffer,
+                       PVOID pReserved)
+{
+    if ((pReserved != NULL) || (pStringBuffer == NULL) || (dwBufferSize == 0))
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;        
+}
+
+DWORD
+WINAPI
+WlanIhvControl(IN HANDLE hClientHandle,
+               IN const GUID *pInterfaceGuid,
+               IN WLAN_IHV_CONTROL_TYPE Type,
+               IN DWORD dwInBufferSize,
+               IN PVOID pInBuffer,
+               IN DWORD dwOutBufferSize,
+               PVOID pOutBuffer,
+               OUT PDWORD pdwBytesReturned)
+{
+    if ((hClientHandle == NULL) || (pInterfaceGuid == NULL) || (pdwBytesReturned == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;        
+}
+
+DWORD
+WINAPI
+WlanSetSecuritySettings(IN HANDLE hClientHandle,
+                        IN WLAN_SECURABLE_OBJECT SecurableObject,
+                        IN LPCWSTR strModifiedSDDL)
+{
+    if ((hClientHandle == NULL) || (strModifiedSDDL == NULL) || (SecurableObject >= WLAN_SECURABLE_OBJECT_COUNT))
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;        
+}
+
+DWORD
+WINAPI
+WlanGetAvailableNetworkList(IN HANDLE hClientHandle,
+                            IN const GUID *pInterfaceGuid,
+                            IN DWORD dwFlags,
+                            PVOID pReserved,
+                            OUT PWLAN_AVAILABLE_NETWORK_LIST *ppAvailableNetworkList)
+{
+    if ((pReserved != NULL) || (pInterfaceGuid == NULL) || (hClientHandle == NULL) || (ppAvailableNetworkList == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;        
+}
+
 void __RPC_FAR * __RPC_USER
 midl_user_allocate(SIZE_T len)
 {

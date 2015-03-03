@@ -40,9 +40,6 @@ DWORD _RpcEnumInterfaces(
     MIB_IF_ROW2 IfRow;
     PWLAN_INTERFACE_INFO_LIST InterfaceList;
 
-    if (!hClientHandle || !ppInterfaceList)
-        return ERROR_INVALID_PARAMETER;
-
     dwResult = GetNumberOfInterfaces(&dwNumInterfaces);
     dwSize = sizeof(WLAN_INTERFACE_INFO_LIST);
     if (dwResult != NO_ERROR)
