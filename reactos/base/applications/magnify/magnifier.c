@@ -21,35 +21,33 @@ const TCHAR szWindowClass[] = TEXT("MAGNIFIER");
 
 #define MAX_LOADSTRING 100
 
-// Global Variables:
-HINSTANCE hInst;								// current instance
+/* Global Variables */
+HINSTANCE hInst;
 HWND hMainWnd;
 
-TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
+TCHAR szTitle[MAX_LOADSTRING];
 
-#define REPAINT_SPEED	100
+#define REPAINT_SPEED   100
 
 HWND hDesktopWindow = NULL;
 
-//Current magnified area
+/* Current magnified area /*
 POINT cp;
 
-//Last positions
+/* Last positions */
 POINT pMouse;
 POINT pCaret;
 POINT pFocus;
 
-// Forward declarations of functions included in this code module:
-ATOM				MyRegisterClass(HINSTANCE hInstance);
-BOOL				InitInstance(HINSTANCE, int);
-LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	AboutProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	OptionsProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK	WarningProc(HWND, UINT, WPARAM, LPARAM);
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+BOOL                InitInstance(HINSTANCE, int);
+LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    AboutProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    OptionsProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    WarningProc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    // TODO: Place code here.
     MSG msg;
     HACCEL hAccelTable;
 
@@ -57,28 +55,26 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     switch (GetUserDefaultUILanguage())
-  {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-      SetProcessDefaultLayout(LAYOUT_RTL);
-      break;
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+          SetProcessDefaultLayout(LAYOUT_RTL);
+          break;
 
-    default:
-      break;
-  }
+        default:
+          break;
+    }
 
-    // Initialize global strings
+    /* Initialize global strings */
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
-    {
+    /* Perform application initialization */
+    if (!InitInstance(hInstance, nCmdShow))
         return FALSE;
-    }
 
     hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MAGNIFIER));
 
-    // Main message loop:
+    /* Main message loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -91,21 +87,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     return (int) msg.wParam;
 }
 
-
-
-/*
- *  FUNCTION: MyRegisterClass()
- *
- *  PURPOSE: Registers the window class.
- *
- *  COMMENTS:
- *
- *    This function and its usage are only necessary if you want this code
- *    to be compatible with Win32 systems prior to the 'RegisterClassEx'
- *    function that was added to Windows 95. It is important to call this function
- *    so that the application will get 'well formed' small icons associated
- *    with it.
- */
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASS wc;
@@ -124,25 +105,15 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClass(&wc);
 }
 
-/*
- *  FUNCTION: InitInstance(HINSTANCE, int)
- *
- *  PURPOSE: Saves instance handle and creates main window
- *
- *   COMMENTS:
- *
- *        In this function, we save the instance handle in a global variable and
- *        create and display the main program window.
- */
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   RECT rcWorkArea;
-   hInst = hInstance; // Store instance handle in our global variable
+    RECT rcWorkArea;
+    hInst = hInstance; // Store instance handle in our global variable
 
-   SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
 
-   /* Create the Window */
-   hMainWnd = CreateWindowEx(
+    /* Create the Window */
+    hMainWnd = CreateWindowEx(
         WS_EX_TOPMOST | WS_EX_PALETTEWINDOW,
         szWindowClass,
         szTitle,
@@ -156,27 +127,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         hInstance,
         NULL);
 
-   if (!hMainWnd)
-   {
-      return FALSE;
-   }
+    if (!hMainWnd)
+        return FALSE;
 
-   ShowWindow(hMainWnd, (bStartMinimized) ? SW_MINIMIZE : nCmdShow);
-   UpdateWindow(hMainWnd);
+    ShowWindow(hMainWnd, bStartMinimized ? SW_MINIMIZE : nCmdShow);
+    UpdateWindow(hMainWnd);
 
-   if (bShowWarning)
-   {
-      DialogBox (hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, WarningProc);
-   }
+    if (bShowWarning)
+        DialogBox(hInstance, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hMainWnd, WarningProc);
 
-   return TRUE;
+    return TRUE;
 }
 
-void Refresh ()
+void Refresh()
 {
     if (!IsIconic(hMainWnd))
     {
-        // Invalidate the client area forcing a WM_PAINT message
+        /* Invalidate the client area forcing a WM_PAINT message */
         InvalidateRgn(hMainWnd, NULL, TRUE);
     }
 }
@@ -197,28 +164,28 @@ void Draw(HDC aDc)
     int Width, Height, AppWidth, AppHeight;
     LONG blitAreaWidth, blitAreaHeight, blitAreaX, blitAreaY;
 
-    desktopHdc = GetWindowDC (hDesktopWindow);
+    desktopHdc = GetWindowDC(hDesktopWindow);
 
     GetClientRect(hMainWnd, &appRect);
     GetWindowRect(hDesktopWindow, &R);
 
-    ZeroMemory(&cinfo, sizeof(CURSORINFO));
-    ZeroMemory(&iinfo, sizeof(ICONINFO));
+    ZeroMemory(&cinfo, sizeof(cinfo));
+    ZeroMemory(&iinfo, sizeof(iinfo));
     cinfo.cbSize = sizeof(cinfo);
     GetCursorInfo(&cinfo);
     GetIconInfo(cinfo.hCursor, &iinfo);
 
-     /* Create a memory DC compatible with client area DC.*/
+     /* Create a memory DC compatible with client area DC */
     HdcStrech = CreateCompatibleDC(desktopHdc);
 
-    /* Create a bitmap compatible with the client area DC.*/
+    /* Create a bitmap compatible with the client area DC */
     HbmpStrech = CreateCompatibleBitmap(
         desktopHdc,
         R.right,
         R.bottom);
 
-    /* Select our bitmap in memory DC and save the old one.*/
-    hOld = SelectObject (HdcStrech , HbmpStrech);
+    /* Select our bitmap in memory DC and save the old one */
+    hOld = SelectObject(HdcStrech , HbmpStrech);
     
     /* Paint the screen bitmap to our in memory DC */
     BitBlt(
@@ -239,44 +206,34 @@ void Draw(HDC aDc)
         pMouse.y - iinfo.yHotspot, // - 10,
         cinfo.hCursor);
 
-    Width = (R.right - R.left);
+    Width  = (R.right - R.left);
     Height = (R.bottom - R.top);
 
-    AppWidth = (appRect.right - appRect.left);
+    AppWidth  = (appRect.right - appRect.left);
     AppHeight = (appRect.bottom - appRect.top);
 
-    blitAreaWidth = AppWidth / iZoom;
+    blitAreaWidth  = AppWidth / iZoom;
     blitAreaHeight = AppHeight / iZoom;
 
     blitAreaX = (cp.x) - (blitAreaWidth /2);
     blitAreaY = (cp.y) - (blitAreaHeight /2);
 
     if (blitAreaX < 0)
-    {
        blitAreaX = 0;
-    }
 
     if (blitAreaY < 0)
-    {
        blitAreaY = 0;
-    }
 
     if (blitAreaX > (Width - blitAreaWidth))
-    {
         blitAreaX = (Width - blitAreaWidth);
-    }
 
     if (blitAreaY > (Height - blitAreaHeight))
-    {
         blitAreaY = (Height - blitAreaHeight);
-    }
 
     if (bInvertColors)
-    {
         rop = NOTSRCCOPY;
-    }
 
-    /* Blast the stretched image from memory DC to window DC.*/
+    /* Blast the stretched image from memory DC to window DC */
     StretchBlt(
         aDc,
         0,
@@ -291,27 +248,17 @@ void Draw(HDC aDc)
         rop | NOMIRRORBITMAP);
         
         
-    /* Cleanup.*/
+    /* Cleanup */
     if (iinfo.hbmMask)
         DeleteObject(iinfo.hbmMask);
     if (iinfo.hbmColor)
         DeleteObject(iinfo.hbmColor);
-    SelectObject (HdcStrech, hOld);
+    SelectObject(HdcStrech, hOld);
     DeleteObject (HbmpStrech);
-    DeleteDC (HdcStrech);
+    DeleteDC(HdcStrech);
     ReleaseDC(hDesktopWindow, desktopHdc);
 }
 
-/*
- *  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
- *
- *  PURPOSE:  Processes messages for the main window.
- *
- *  WM_COMMAND	- process the application menu
- *  WM_PAINT	- Paint the main window
- *  WM_DESTROY	- post a quit message and return
- *
- */
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId;
@@ -369,79 +316,87 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             Refresh();
         }
         break;
-    case WM_COMMAND:
-        wmId    = LOWORD(wParam);
-        // Parse the menu selections:
-        switch (wmId)
+
+        case WM_COMMAND:
         {
-            case IDM_OPTIONS:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hWnd, OptionsProc);
-                break;
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutProc);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
+            wmId = LOWORD(wParam);
+            /* Parse the menu selections */
+            switch (wmId)
+            {
+                case IDM_OPTIONS:
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOGOPTIONS), hWnd, OptionsProc);
+                    break;
+                case IDM_ABOUT:
+                    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, AboutProc);
+                    break;
+                case IDM_EXIT:
+                    DestroyWindow(hWnd);
+                    break;
+                default:
+                    return DefWindowProc(hWnd, message, wParam, lParam);
+            }
+            break;
         }
-        break;
-   case WM_PAINT:
+
+        case WM_PAINT:
         {
             PAINTSTRUCT PaintStruct;
             HDC dc;
             dc = BeginPaint(hWnd, &PaintStruct);
             Draw(dc);
             EndPaint(hWnd, &PaintStruct);
+            break;
         }
-      break;
-   case WM_ERASEBKGND:
-        //handle WM_ERASEBKGND by simply returning non-zero because we did all the drawing in WM_PAINT.
-       break;
-    case WM_DESTROY:
-        //Save settings to registry
-        SaveSettings ();
-        KillTimer (hWnd , 1);
-        PostQuitMessage(0);
-        break;
-    case WM_CREATE:
-            //Load settings from registry
-            LoadSettings ();
 
-            //Get the desktop window
+        case WM_ERASEBKGND:
+            // handle WM_ERASEBKGND by simply returning non-zero because we did all the drawing in WM_PAINT.
+            break;
+
+        case WM_DESTROY:
+            /* Save settings to registry */
+            SaveSettings();
+            KillTimer(hWnd , 1);
+            PostQuitMessage(0);
+            break;
+
+        case WM_CREATE:
+            /* Load settings from registry */
+            LoadSettings();
+
+            /* Get the desktop window */
             hDesktopWindow = GetDesktopWindow();
 
-            //Set the timer
+            /* Set the timer */
             SetTimer (hWnd , 1, REPAINT_SPEED , NULL);
             break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
     }
+
     return 0;
 }
 
-// Message handler for about box.
 INT_PTR CALLBACK AboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
-
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
+        case WM_INITDIALOG:
             return (INT_PTR)TRUE;
-        }
-        break;
+
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+            {
+                EndDialog(hDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+            break;
     }
+
     return (INT_PTR)FALSE;
 }
 
-// Message handler for options box.
 INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -449,7 +404,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     {
         case WM_INITDIALOG:
         {
-            //Add the zoom items....
+            // Add the zoom items...
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("1"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("2"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("3"));
@@ -459,7 +414,6 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("7"));
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_ADDSTRING, 0, (LPARAM)("8"));
 
-            //
             SendDlgItemMessage(hDlg, IDC_ZOOM, CB_SETCURSEL, iZoom - 1, 0);
 
             if (bFollowMouse)
@@ -482,8 +436,9 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 
             return (INT_PTR)TRUE;
         }
+
     case WM_COMMAND:
-        switch(LOWORD(wParam))
+        switch (LOWORD(wParam))
         {
             case IDOK:
             case IDCANCEL:
@@ -491,51 +446,50 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                 return (INT_PTR)TRUE;
 
             case IDC_BUTTON_HELP:
-                /* unimplemented */
+                /* Unimplemented */
                 MessageBox(hDlg , TEXT("Magnifier help not available yet!") , TEXT("Help") , MB_OK);
                 break;
             case IDC_ZOOM:
-                if(HIWORD(wParam) == CBN_SELCHANGE)
+                if (HIWORD(wParam) == CBN_SELCHANGE)
                 {
                     HWND hCombo = GetDlgItem(hDlg,IDC_ZOOM);
 
-                    /* Get index of current selection and the text of that selection. */
+                    /* Get index of current selection and the text of that selection */
                     iZoom = SendMessage( hCombo, CB_GETCURSEL, (WPARAM) wParam, (LPARAM) lParam ) + 1;
 
-                    //Update the magnigier UI
-                    Refresh ();
+                    /* Update the magnifier UI */
+                    Refresh();
                 }
                 break;
             case IDC_INVERTCOLORSCHECK:
-                bInvertColors = IsDlgButtonChecked (hDlg, IDC_INVERTCOLORSCHECK);
-                Refresh ();
+                bInvertColors = IsDlgButtonChecked(hDlg, IDC_INVERTCOLORSCHECK);
+                Refresh();
                 break;
             case IDC_FOLLOWMOUSECHECK:
-                bFollowMouse = IsDlgButtonChecked (hDlg, IDC_FOLLOWMOUSECHECK);
+                bFollowMouse = IsDlgButtonChecked(hDlg, IDC_FOLLOWMOUSECHECK);
                 break;
             case IDC_FOLLOWKEYBOARDCHECK:
-                bFollowFocus = IsDlgButtonChecked (hDlg, IDC_FOLLOWKEYBOARDCHECK);
+                bFollowFocus = IsDlgButtonChecked(hDlg, IDC_FOLLOWKEYBOARDCHECK);
                 break;
             case IDC_FOLLOWTEXTEDITINGCHECK:
-                bFollowCaret = IsDlgButtonChecked (hDlg, IDC_FOLLOWTEXTEDITINGCHECK);
+                bFollowCaret = IsDlgButtonChecked(hDlg, IDC_FOLLOWTEXTEDITINGCHECK);
                 break;
             case IDC_STARTMINIMIZEDCHECK:
-                bStartMinimized = IsDlgButtonChecked (hDlg, IDC_STARTMINIMIZEDCHECK);
+                bStartMinimized = IsDlgButtonChecked(hDlg, IDC_STARTMINIMIZEDCHECK);
                 break;
             case IDC_SHOWMAGNIFIER:
-                bShowMagnifier = IsDlgButtonChecked (hDlg, IDC_SHOWMAGNIFIERCHECK);
-                if (bShowMagnifier){
+                bShowMagnifier = IsDlgButtonChecked(hDlg, IDC_SHOWMAGNIFIERCHECK);
+                if (bShowMagnifier)
                     ShowWindow (hMainWnd , SW_SHOW);
-                }else{
+                else
                     ShowWindow (hMainWnd , SW_HIDE);
-                }
                 break;
         }
     }
+
     return (INT_PTR)FALSE;
 }
 
-// Message handler for warning box.
 INT_PTR CALLBACK WarningProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
@@ -544,11 +498,12 @@ INT_PTR CALLBACK WarningProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
     {
         case WM_INITDIALOG:
             return (INT_PTR)TRUE;
+
         case WM_COMMAND:
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_SHOWWARNINGCHECK:
-                    bShowWarning = !IsDlgButtonChecked (hDlg, IDC_SHOWWARNINGCHECK);
+                    bShowWarning = !IsDlgButtonChecked(hDlg, IDC_SHOWWARNINGCHECK);
                     break;
             }
             if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
@@ -558,5 +513,6 @@ INT_PTR CALLBACK WarningProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
             }
             break;
     }
+
     return (INT_PTR)FALSE;
 }
