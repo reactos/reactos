@@ -62,11 +62,17 @@ LoadEventSources(HKEY hKey,
     DWORD dwEventSourceNameLength;
     DWORD dwIndex;
     WCHAR *Buf = NULL;
+    LONG Result;
 
     DPRINT("LoadEventSources\n");
 
-    RegQueryInfoKeyW(hKey, NULL, NULL, NULL, NULL, &dwMaxSubKeyLength, NULL,
-                     NULL, NULL, NULL, NULL, NULL);
+    Result = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, NULL, &dwMaxSubKeyLength, NULL,
+                              NULL, NULL, NULL, NULL, NULL);
+    if (Result != ERROR_SUCCESS)
+    {
+        DPRINT1("RegQueryInfoKey failed: %lu\n", Result);
+        return FALSE;
+    }
 
     DPRINT("dwMaxSubKeyLength: %lu\n", dwMaxSubKeyLength);
 
