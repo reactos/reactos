@@ -95,6 +95,28 @@ MainWndProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* FUNCTIONS ****************************************************************/
 
+static VOID
+ShowLastWin32Error(HWND hwnd)
+{
+    LPTSTR lpMessageBuffer = NULL;
+    DWORD dwError = GetLastError();
+
+    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                      NULL,
+                      dwError,
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR)&lpMessageBuffer,
+                      0, NULL))
+    {
+        MessageBox(hwnd, lpMessageBuffer, szAppTitle, MB_OK | MB_ICONERROR);
+    }
+
+    if (lpMessageBuffer)
+    {
+        LocalFree(lpMessageBuffer);
+    }
+}
+
 int WINAPI
 _tWinMain(HINSTANCE hInst,
 	HINSTANCE hPrevInstance,
@@ -277,10 +299,12 @@ RunApplication(int nTopic)
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWNORMAL;
 
-  CreateProcess(NULL, AppName, NULL, NULL, FALSE, CREATE_NEW_CONSOLE,NULL,
-		CurrentDir,
-		&StartupInfo,
-		&ProcessInfo);
+  if (!CreateProcess(NULL, AppName, NULL, NULL, FALSE, CREATE_NEW_CONSOLE,
+                     NULL, CurrentDir, &StartupInfo, &ProcessInfo))
+  {
+      ShowLastWin32Error(hwndMain);
+      return TRUE;
+  }
 
   CloseHandle(ProcessInfo.hProcess);
   CloseHandle(ProcessInfo.hThread);
