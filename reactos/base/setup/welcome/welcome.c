@@ -27,6 +27,8 @@
  *   This utility can be customized by modifying the resources.
  *   Please do NOT change the source code in order to customize this
  *   utility but change the resources!
+ *
+ * TODO: Use instead a XML file!
  */
 
 #include <stdarg.h>
@@ -34,6 +36,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <shellapi.h>
 #include <reactos/version.h>
 #include <tchar.h>
 #include <winnls.h>
@@ -47,7 +50,13 @@
 #define TITLE_HEIGHT  93
 
 #define MAX_NUMBER_TOPICS   10
+#define TOPIC_DESC_LENGTH   1024
 
+/*
+ * Disable this define if you want to revert back to the old behaviour, i.e.
+ * opening files with CreateProcess. This defines uses ShellExecute instead.
+ */
+#define USE_SHELL_EXECUTE
 
 /* GLOBALS ******************************************************************/
 
@@ -97,6 +106,7 @@ MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* FUNCTIONS ****************************************************************/
 
+#ifndef USE_SHELL_EXECUTE
 static VOID
 ShowLastWin32Error(HWND hWnd)
 {
@@ -118,6 +128,7 @@ ShowLastWin32Error(HWND hWnd)
         LocalFree(lpMessageBuffer);
     }
 }
+#endif
 
 int WINAPI
 _tWinMain(HINSTANCE hInst,
@@ -269,15 +280,21 @@ ButtonSubclassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static BOOL
 RunApplication(int nTopic)
 {
+#ifndef USE_SHELL_EXECUTE
     PROCESS_INFORMATION ProcessInfo;
     STARTUPINFO StartupInfo;
-    TCHAR AppName[256];
     TCHAR CurrentDir[256];
+#else
+    TCHAR Parameters[2];
+#endif
+    TCHAR AppName[512];
     int nLength;
 
     InvalidateRect(hWndMain, NULL, TRUE);
 
+#ifndef USE_SHELL_EXECUTE
     GetCurrentDirectory(ARRAYSIZE(CurrentDir), CurrentDir);
+#endif
 
     nLength = LoadString(hInstance, IDS_TOPICACTION0 + nTopic, AppName, ARRAYSIZE(AppName));
     if (nLength == 0)
@@ -286,12 +303,29 @@ RunApplication(int nTopic)
     if (!_tcsicmp(AppName, TEXT("<exit>")))
         return FALSE;
 
-    if (_tcsicmp(AppName, TEXT("explorer.exe")) == 0)
+    if (!_tcsnicmp(AppName, TEXT("<msg>"), 5))
     {
-        _tcscat(AppName, TEXT(" "));
-        _tcscat(AppName, CurrentDir);
+        MessageBox(hWndMain, AppName + 5, TEXT("ReactOS"), MB_OK | MB_TASKMODAL);
+        return TRUE;
     }
 
+    if (_tcsicmp(AppName, TEXT("explorer.exe")) == 0)
+    {
+#ifndef USE_SHELL_EXECUTE
+        _tcscat(AppName, TEXT(" "));
+        _tcscat(AppName, CurrentDir);
+#else
+        _tcscpy(Parameters, TEXT("\\"));
+#endif
+    }
+#ifdef USE_SHELL_EXECUTE
+    else
+    {
+        *Parameters = 0;
+    }
+#endif
+
+#ifndef USE_SHELL_EXECUTE
     ZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.lpTitle = TEXT("Test");
@@ -307,6 +341,9 @@ RunApplication(int nTopic)
 
     CloseHandle(ProcessInfo.hProcess);
     CloseHandle(ProcessInfo.hThread);
+#else
+    ShellExecute(NULL, NULL, AppName, Parameters, NULL, SW_SHOWDEFAULT);
+#endif
 
     return TRUE;
 }
@@ -557,7 +594,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     HFONT hOldFont;
     RECT rcTitle, rcDescription;
     TCHAR szTopicTitle[80];
-    TCHAR szTopicDesc[256];
+    TCHAR szTopicDesc[TOPIC_DESC_LENGTH];
     int nLength;
     BITMAP bmpInfo;
     TCHAR version[50];
