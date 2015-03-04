@@ -653,7 +653,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     SetBkMode(hdc, TRANSPARENT);
 
     /* Draw version information */
-    _tsprintf(version, TEXT("ReactOS %d.%d.%d"),
+    _stprintf(version, TEXT("ReactOS %d.%d.%d"),
               KERNEL_VERSION_MAJOR,
               KERNEL_VERSION_MINOR,
               KERNEL_VERSION_PATCH_LEVEL);
@@ -712,7 +712,7 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(hWnd);
     UNREFERENCED_PARAMETER(wParam);
 
-    if (lpDis->hWndItem == hWndCloseButton)
+    if (lpDis->hwndItem == hWndCloseButton)
     {
         DrawFrameControl(lpDis->hDC,
                          &lpDis->rcItem,
@@ -743,7 +743,7 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
         InflateRect(&lpDis->rcItem, -10, -4);
         OffsetRect(&lpDis->rcItem, 0, 1);
-        GetWindowText(lpDis->hWndItem, szText, ARRAYSIZE(szText));
+        GetWindowText(lpDis->hwndItem, szText, ARRAYSIZE(szText));
         SetTextColor(lpDis->hDC, 0x00000000);
         iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
         DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
