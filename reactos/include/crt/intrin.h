@@ -40,7 +40,6 @@ short _InterlockedDecrement16(_Interlocked_operand_ short volatile * _Addend);
 long __cdecl _InterlockedExchange(_Interlocked_operand_ long volatile * _Target, long _Value);
 short _InterlockedExchange16(_Interlocked_operand_ short volatile * _Target, short _Value);
 char _InterlockedExchange8(_Interlocked_operand_ char volatile * _Target, char _Value);
-char _InterlockedExchange8(_Interlocked_operand_ char volatile * _Target, char _Value);
 long __cdecl _InterlockedExchangeAdd(_Interlocked_operand_ long volatile * _Addend, long _Value);
 short _InterlockedExchangeAdd16(_Interlocked_operand_ short volatile * _Addend, short _Value);
 char _InterlockedExchangeAdd8(_Interlocked_operand_ char volatile * _Addend, char _Value);
@@ -145,6 +144,11 @@ unsigned long __cdecl _inpd(unsigned short);
 unsigned short __cdecl _inpw(unsigned short);
 void _m_prefetch(void *);
 void _m_prefetchw(volatile const void *);
+
+void _mm_mfence(void);
+void _mm_lfence(void);
+void _mm_sfence(void);
+void _mm_pause(void);
 
 #if 0
 __m128i _mm_abs_epi16(__m128i);
@@ -338,7 +342,6 @@ __m128 _mm_insert_ps(__m128, __m128, int);
 __m128i _mm_insert_si64(__m128i, __m128i);
 __m128i _mm_inserti_si64(__m128i, __m128i, int, int);
 __m128i _mm_lddqu_si128(__m128i const *);
-void _mm_lfence(void);
 __m128d _mm_load1_pd(double const *);
 __m128d _mm_load_pd(double const *);
 __m128 _mm_load_ps(float const *);
@@ -371,7 +374,6 @@ __m128d _mm_max_pd(__m128d, __m128d);
 __m128 _mm_max_ps(__m128, __m128);
 __m128d _mm_max_sd(__m128d, __m128d);
 __m128 _mm_max_ss(__m128, __m128);
-void _mm_mfence(void);
 __m128i _mm_min_epi16(__m128i, __m128i);
 __m128i _mm_min_epi32(__m128i, __m128i);
 __m128i _mm_min_epi8(__m128i, __m128i);
@@ -418,7 +420,6 @@ __m128i _mm_packs_epi16(__m128i, __m128i);
 __m128i _mm_packs_epi32(__m128i, __m128i);
 __m128i _mm_packus_epi16(__m128i, __m128i);
 __m128i _mm_packus_epi32(__m128i, __m128i);
-void _mm_pause(void);
 int _mm_popcnt_u32(unsigned int);
 void _mm_prefetch(_In_ char const *, _In_ int);
 __m128 _mm_rcp_ps(__m128);
@@ -452,7 +453,6 @@ __m128 _mm_setr_ps(float, float, float, float);
 __m128d _mm_setzero_pd(void);
 __m128 _mm_setzero_ps(void);
 __m128i _mm_setzero_si128(void);
-void _mm_sfence(void);
 __m128i _mm_shuffle_epi32(__m128i, int);
 __m128i _mm_shuffle_epi8(__m128i, __m128i);
 __m128d _mm_shuffle_pd(__m128d, __m128d, int);
@@ -581,22 +581,18 @@ unsigned long __readcr0(void);
 unsigned long __readcr2(void);
 unsigned long __readcr3(void);
 unsigned long __readcr4(void);
-unsigned long __readcr8(void);
 unsigned int __readdr(unsigned int);
 unsigned int __readeflags(void);
 unsigned char __readfsbyte(unsigned long);
 unsigned long __readfsdword(unsigned long);
-unsigned __int64 __readfsqword(unsigned long);
 unsigned short __readfsword(unsigned long);
 void __writecr0(unsigned int);
 void __writecr3(unsigned int);
 void __writecr4(unsigned int);
-void __writecr8(unsigned int);
 void __writedr(unsigned int, unsigned int);
 void __writeeflags(unsigned int);
 void __writefsbyte(unsigned long, unsigned char);
 void __writefsdword(unsigned long, unsigned long);
-void __writefsqword(unsigned long, unsigned __int64);
 void __writefsword(unsigned long, unsigned short);
 void _m_empty(void);
 void _m_femms(void);
@@ -825,13 +821,13 @@ unsigned __int64 _umul128(unsigned __int64 _Multiplier, unsigned __int64 _Multip
 
 #if defined(_M_ARM) || defined(_M_X64)
 
-__MACHINEARM_X64(__int64 _InterlockedAnd64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
-__MACHINEARM_X64(__int64 _InterlockedDecrement64(_Interlocked_operand_ __int64 volatile * _Addend);
-__MACHINEARM_X64(__int64 _InterlockedExchange64(_Interlocked_operand_ __int64 volatile * _Target, __int64 _Value);
-__MACHINEARM_X64(__int64 _InterlockedExchangeAdd64(_Interlocked_operand_ __int64 volatile * _Addend, __int64 _Value);
-__MACHINEARM_X64(__int64 _InterlockedIncrement64(_Interlocked_operand_ __int64 volatile * _Addend);
-__MACHINEARM_X64(__int64 _InterlockedOr64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
-__MACHINEARM_X64(__int64 _InterlockedXor64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
+__int64 _InterlockedAnd64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
+__int64 _InterlockedDecrement64(_Interlocked_operand_ __int64 volatile * _Addend);
+__int64 _InterlockedExchange64(_Interlocked_operand_ __int64 volatile * _Target, __int64 _Value);
+__int64 _InterlockedExchangeAdd64(_Interlocked_operand_ __int64 volatile * _Addend, __int64 _Value);
+__int64 _InterlockedIncrement64(_Interlocked_operand_ __int64 volatile * _Addend);
+__int64 _InterlockedOr64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
+__int64 _InterlockedXor64(_Interlocked_operand_ __int64 volatile * _Value, __int64 _Mask);
 
 #endif /* _M_ARM || _M_X64 */
 
