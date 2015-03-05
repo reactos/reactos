@@ -3,6 +3,30 @@
 
 typedef ULONG ARC_STATUS;
 
+/* Avoid conflicts with errno.h */
+#undef E2BIG
+#undef EACCES
+#undef EAGAIN
+#undef EBADF
+#undef EBUSY
+#undef EFAULT
+#undef EINVAL
+#undef EIO
+#undef EISDIR
+#undef EMFILE
+#undef EMLINK
+#undef ENAMETOOLONG
+#undef ENODEV
+#undef ENOENT
+#undef ENOEXEC
+#undef ENOMEM
+#undef ENOSPC
+#undef ENOTDIR
+#undef ENOTTY
+#undef ENXIO
+#undef EROFS
+#undef EMAXIMUM
+
 typedef enum _ARC_CODES
 {
     ESUCCESS,
