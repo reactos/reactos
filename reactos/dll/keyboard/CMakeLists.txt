@@ -99,7 +99,7 @@ foreach(_keyboard_layout ${_keyboard_layouts})
         add_target_link_flags(${_keyboard_layout} "/ignore:4254 /SECTION:.data,ER /MERGE:.text=.data /MERGE:.rdata=.data /MERGE:.bss=.data /MERGE:.edata=.data")
     else()
         # Use a custom linker script
-        add_target_link_flags(${_keyboard_layout} "-Wl,-T,${CMAKE_SOURCE_DIR}/kbdlayout.lds")
+        add_target_link_flags(${_keyboard_layout} "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/kbdlayout.lds")
     endif()
 
     if (STACK_PROTECTOR)
