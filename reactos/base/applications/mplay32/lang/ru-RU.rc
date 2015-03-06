@@ -51,8 +51,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Перемотка назад"
     IDS_TOOLTIP_SEEKFORW "Перемотка вперед"
     IDS_TOOLTIP_FORWARD "Вперед"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "Проигрыватель ReactOS"
     IDS_PLAY "Воспроизвести"
     IDS_DEFAULTMCIERRMSG "Неизвестная ошибка."
-    IDS_UNKNOWNFILEEXT "Невозможно определить тип устройства мультимедиа для заданного расширения файла."
 END

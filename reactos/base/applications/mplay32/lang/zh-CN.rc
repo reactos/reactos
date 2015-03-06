@@ -53,8 +53,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "快退"
     IDS_TOOLTIP_SEEKFORW "快进"
     IDS_TOOLTIP_FORWARD "向前跳过"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS 多媒体播放器"
     IDS_PLAY "播放"
     IDS_DEFAULTMCIERRMSG "该错误没有可用的描述."
-    IDS_UNKNOWNFILEEXT "该设备类型从给定的文件扩展名无法断定."
 END

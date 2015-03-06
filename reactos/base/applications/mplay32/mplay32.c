@@ -6,6 +6,8 @@
 
 #include "mplay32.h"
 
+#define IDT_PLAYTIMER 1000
+
 #define MAIN_WINDOW_HEIGHT    125
 #define MAIN_WINDOW_MIN_WIDTH 250
 #define MAX_MCISTR            256
@@ -20,9 +22,7 @@ TCHAR szPrevFile[MAX_PATH] = _T("");
 TCHAR szDefaultFilter[MAX_PATH] = _T("");
 TCHAR *szFilter = NULL;
 
-WORD wDeviceId;
-BOOL bIsOpened = FALSE;
-BOOL bIsPaused = FALSE;
+WORD wDeviceId = 0;
 BOOL bRepeat = FALSE;
 BOOL bIsSingleWindow = FALSE;
 UINT MaxFilePos = 0;
@@ -39,7 +39,8 @@ static const TBBUTTON Buttons[] =
     {TBICON_BACKWARD,  IDC_BACKWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
     {TBICON_SEEKBACK,  IDC_SEEKBACK, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
     {TBICON_SEEKFORW,  IDC_SEEKFORW, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {TBICON_FORWARD,   IDC_FORWARD,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0}
+    {TBICON_FORWARD,   IDC_FORWARD,  TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
+//  {TBICON_PAUSE,     IDC_PAUSE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0}
 };
 
 void EnableMenuItems(HWND hwnd)
@@ -47,7 +48,7 @@ void EnableMenuItems(HWND hwnd)
     MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
     MCI_DGV_RECT_PARMS mciVideoRect;
-    MCI_DGV_WINDOW_PARMSW mciVideoWindow; 
+    MCI_DGV_WINDOW_PARMSW mciVideoWindow;
 
     EnableMenuItem(hMainMenu, IDM_CLOSE_FILE, MF_BYCOMMAND | MF_ENABLED);
 
@@ -59,7 +60,7 @@ void EnableMenuItems(HWND hwnd)
 
     mciVideoWindow.hWnd = hwnd;
 
-    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow); 
+    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow);
     if (!mciError)
     {
         mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD_PTR)&mciVideoRect);
@@ -148,6 +149,10 @@ SetImageList(HWND hwnd)
                         LoadImage(hInstance, MAKEINTRESOURCE(IDB_FORWARDICON), IMAGE_BITMAP, 16, 16, LR_DEFAULTCOLOR),
                         RGB(255, 255, 255));
 
+    ImageList_AddMasked(hImageList,
+                        LoadImage(hInstance, MAKEINTRESOURCE(IDB_PAUSEICON), IMAGE_BITMAP, 16, 16, LR_DEFAULTCOLOR),
+                        RGB(255, 255, 255));
+
     ImageList_Destroy((HIMAGELIST)SendMessage(hToolBar,
                                               TB_SETIMAGELIST,
                                               0,
@@ -160,9 +165,9 @@ ShowMCIError(HWND hwnd, MCIERROR mciError)
     TCHAR szErrorMessage[MAX_MCISTR];
     TCHAR szTempMessage[MAX_MCISTR + 44];
 
-    if (mciGetErrorString(mciError, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0])) == FALSE)
+    if (mciGetErrorString(mciError, szErrorMessage, ARRAYSIZE(szErrorMessage)) == FALSE)
     {
-        LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0]));
+        LoadString(hInstance, IDS_DEFAULTMCIERRMSG, szErrorMessage, ARRAYSIZE(szErrorMessage));
     }
 
     StringCbPrintf(szTempMessage, sizeof(szTempMessage), _T("MMSYS%lu: %s"), mciError, szErrorMessage);
@@ -172,7 +177,7 @@ ShowMCIError(HWND hwnd, MCIERROR mciError)
 static VOID
 InitControls(HWND hwnd)
 {
-    INT NumButtons = sizeof(Buttons) / sizeof(Buttons[0]);
+    INT NumButtons = ARRAYSIZE(Buttons);
 
     InitCommonControls();
 
@@ -219,63 +224,24 @@ InitControls(HWND hwnd)
     SendMessage(hToolBar, TB_ADDBUTTONS, NumButtons, (LPARAM)Buttons);
 }
 
-static BOOL
-IsSupportedFileExtension(LPTSTR lpFileName, LPTSTR lpDeviceName, LPDWORD dwSize)
-{
-    HKEY hKey;
-    DWORD dwType;
-    TCHAR *pathend;
-
-    pathend = _tcsrchr(lpFileName, '.');
-
-    if (pathend == NULL)
-    {
-        return FALSE;
-    }
-
-    pathend++;
-
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\MCI Extensions"), 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-    {
-        if (RegQueryValueEx(hKey, pathend, NULL, &dwType, (LPBYTE)lpDeviceName, dwSize) == ERROR_SUCCESS)
-        {
-            RegCloseKey(hKey);
-            if (dwType != REG_SZ)
-            {
-                return FALSE;
-            }
-
-            return TRUE;
-        }
-
-        RegCloseKey(hKey);
-    }
-
-    return FALSE;
-}
-
 static VOID
 SwitchViewMode(HWND hwnd)
 {
     MCIERROR mciError;
     MCI_DGV_RECT_PARMS mciVideoRect;
-    MCI_DGV_WINDOW_PARMSW mciVideoWindow; 
+    MCI_DGV_WINDOW_PARMSW mciVideoWindow;
     RECT rcToolbarRect;
     RECT rcTempRect;
 
     mciVideoWindow.hWnd = hwnd;
 
-    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow); 
-    if (mciError)
-    {
+    mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND | MCI_TEST, (DWORD_PTR)&mciVideoWindow);
+    if (mciError != 0)
         return;
-    }
 
     mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE | MCI_TEST, (DWORD_PTR)&mciVideoRect);
-    if (mciError)
-    {
+    if (mciError != 0)
         return;
-    }
 
     if (!bIsSingleWindow)
     {
@@ -284,17 +250,17 @@ SwitchViewMode(HWND hwnd)
         SetParent(hTrackBar, hToolBar);
 
         mciError = mciSendCommand(wDeviceId, MCI_WHERE, MCI_DGV_WHERE_SOURCE, (DWORD_PTR)&mciVideoRect);
-        if (mciError)
+        if (mciError != 0)
         {
             ShowMCIError(hwnd, mciError);
             return;
         }
 
-        GetWindowRect(hToolBar, &rcToolbarRect);         
+        GetWindowRect(hToolBar, &rcToolbarRect);
         ResizeClientArea(hwnd, mciVideoRect.rc.right, mciVideoRect.rc.bottom + (rcToolbarRect.bottom - rcToolbarRect.top));
 
-        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD_PTR)&mciVideoWindow); 
-        if (mciError)
+        mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD_PTR)&mciVideoWindow);
+        if (mciError != 0)
         {
             ShowMCIError(hwnd, mciError);
             return;
@@ -313,7 +279,7 @@ SwitchViewMode(HWND hwnd)
 
         mciVideoWindow.hWnd = MCI_DGV_WINDOW_DEFAULT;
         mciError = mciSendCommand(wDeviceId, MCI_WINDOW, MCI_DGV_WINDOW_HWND, (DWORD_PTR)&mciVideoWindow);
-        if (mciError)
+        if (mciError != 0)
         {
             ShowMCIError(hwnd, mciError);
             return;
@@ -371,10 +337,8 @@ GetDeviceFriendlyName(LPTSTR lpDeviceName, LPTSTR lpFriendlyName, DWORD dwFriend
     mciOpen.lpstrAlias = NULL;
 
     mciError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_WAIT, (DWORD_PTR)&mciOpen);
-    if (mciError)
-    {
+    if (mciError != 0)
         return mciError;
-    }
 
     mciInfo.dwCallback  = 0;
     mciInfo.lpstrReturn = lpFriendlyName;
@@ -388,17 +352,17 @@ GetDeviceFriendlyName(LPTSTR lpDeviceName, LPTSTR lpFriendlyName, DWORD dwFriend
     return mciError;
 }
 
-static DWORD
+static MCIERROR
 CloseMciDevice(VOID)
 {
     MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
 
-    if (bIsOpened)
+    if (wDeviceId)
     {
         mciError = mciSendCommand(wDeviceId, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-        if (mciError) return mciError;
-        bIsOpened = FALSE;
+        if (mciError != 0) return mciError;
+        wDeviceId = 0;
     }
 
     DisableMenuItems();
@@ -406,18 +370,17 @@ CloseMciDevice(VOID)
     return 0;
 }
 
-static DWORD
+static MCIERROR
 OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 {
     MCIERROR mciError;
     MCI_STATUS_PARMS mciStatus;
     MCI_OPEN_PARMS mciOpen;
-    TCHAR szNewTitle[MAX_PATH + 128];
+    DWORD dwFlags = MCI_OPEN_ELEMENT | MCI_WAIT;
+    TCHAR szNewTitle[MAX_PATH + 3 + 256];
 
-    if (bIsOpened)
-    {
+    if (wDeviceId)
         CloseMciDevice();
-    }
 
     mciOpen.lpstrDeviceType = lpType;
     mciOpen.lpstrElementName = lpFileName;
@@ -425,41 +388,40 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     mciOpen.wDeviceID = 0;
     mciOpen.lpstrAlias = NULL;
 
-    mciError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_WAIT, (DWORD_PTR)&mciOpen);
+    if (lpType)
+        dwFlags |= MCI_OPEN_TYPE;
+
+    mciError = mciSendCommand(0, MCI_OPEN, dwFlags, (DWORD_PTR)&mciOpen);
     if (mciError != 0)
-    {
         return mciError;
-    }
 
     mciStatus.dwItem = MCI_STATUS_LENGTH;
 
     mciError = mciSendCommand(mciOpen.wDeviceID, MCI_STATUS, MCI_STATUS_ITEM | MCI_WAIT, (DWORD_PTR)&mciStatus);
     if (mciError != 0)
-    {
         return mciError;
-    }
 
-    SendMessage(hTrackBar, TBM_SETRANGEMIN, (WPARAM) TRUE, (LPARAM) 1);
-    SendMessage(hTrackBar, TBM_SETRANGEMAX, (WPARAM) TRUE, (LPARAM) mciStatus.dwReturn);
+    SendMessage(hTrackBar, TBM_SETRANGEMIN, (WPARAM)TRUE, (LPARAM)1);
+    SendMessage(hTrackBar, TBM_SETRANGEMAX, (WPARAM)TRUE, (LPARAM)mciStatus.dwReturn);
     SendMessage(hTrackBar, TBM_SETPAGESIZE, 0, 10);
     SendMessage(hTrackBar, TBM_SETLINESIZE, 0, 1);
-    SendMessage(hTrackBar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 1);
+    SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)1);
 
     if (mciStatus.dwReturn < 10000)
     {
-        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM) 100, (LPARAM) 0);
+        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM)100, (LPARAM)0);
     }
     else if (mciStatus.dwReturn < 100000)
     {
-        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM) 1000, (LPARAM) 0);
+        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM)1000, (LPARAM)0);
     }
     else if (mciStatus.dwReturn < 1000000)
     {
-        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM) 10000, (LPARAM) 0);
+        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM)10000, (LPARAM)0);
     }
     else
     {
-        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM) 100000, (LPARAM) 0);
+        SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM)100000, (LPARAM)0);
     }
 
     StringCbPrintf(szNewTitle, sizeof(szNewTitle), _T("%s - %s"), szAppTitle, lpFileName);
@@ -467,7 +429,6 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 
     MaxFilePos = mciStatus.dwReturn;
     wDeviceId = mciOpen.wDeviceID;
-    bIsOpened = TRUE;
     StringCbCopy(szPrevFile, sizeof(szPrevFile), lpFileName);
 
     EnableMenuItems(hwnd);
@@ -475,21 +436,52 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     return 0;
 }
 
+static DWORD
+GetDeviceMode(HWND hwnd)
+{
+    MCIERROR mciError;
+    MCI_STATUS_PARMS mciStatus;
+
+    mciStatus.dwItem = MCI_STATUS_MODE;
+    mciError = mciSendCommand(wDeviceId, MCI_STATUS, MCI_WAIT | MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+        return MCI_MODE_NOT_READY;
+    }
+
+    return mciStatus.dwReturn;
+}
+
 static VOID
 StopPlayback(HWND hwnd)
 {
-    if (bIsOpened)
+    MCIERROR mciError;
+    MCI_GENERIC_PARMS mciGeneric;
+
+    if (wDeviceId == 0) return;
+
+    SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)1);
+    KillTimer(hwnd, IDT_PLAYTIMER);
+
+    mciGeneric.dwCallback = (DWORD_PTR)hwnd;
+    mciError = mciSendCommand(wDeviceId, MCI_STOP, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
+    if (mciError != 0)
     {
-        SendMessage(hTrackBar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) 1);
-        KillTimer(hwnd, IDT_PLAYTIMER);
-
-        if (bIsSingleWindow)
-        {
-            SwitchViewMode(hwnd);
-        }
-
-        CloseMciDevice();
+        ShowMCIError(hwnd, mciError);
+        return;
     }
+
+    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+
+    SendMessage(hToolBar,
+                TB_SETCMDID,
+                0,
+                IDC_PLAY);
+    SendMessage(hToolBar,
+                TB_CHANGEBITMAP,
+                IDC_PLAY,
+                IDB_PLAYICON - IDB_PLAYICON);
 }
 
 static VOID
@@ -499,21 +491,20 @@ SeekPlayback(HWND hwnd, DWORD dwNewPos)
     MCI_SEEK_PARMS mciSeek;
     MCI_PLAY_PARMS mciPlay;
 
-    if (bIsOpened)
-    {
-        mciSeek.dwTo = (DWORD_PTR)dwNewPos;
-        mciError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_TO, (DWORD_PTR)&mciSeek);
-        if (mciError != 0)
-        {
-            ShowMCIError(hwnd, mciError);
-        }
+    if (wDeviceId == 0) return;
 
-        mciPlay.dwCallback = (DWORD_PTR)hwnd;
-        mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
-        if (mciError != 0)
-        {
-            ShowMCIError(hwnd, mciError);
-        }
+    mciSeek.dwTo = (DWORD_PTR)dwNewPos;
+    mciError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_TO, (DWORD_PTR)&mciSeek);
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+    }
+
+    mciPlay.dwCallback = (DWORD_PTR)hwnd;
+    mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY, (DWORD_PTR)&mciPlay);
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
     }
 }
 
@@ -523,14 +514,14 @@ SeekBackPlayback(HWND hwnd)
     MCI_STATUS_PARMS mciStatus;
     DWORD dwNewPos;
 
-    if (!bIsOpened) return;
+    if (wDeviceId == 0) return;
 
     mciStatus.dwItem = MCI_STATUS_POSITION;
     mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
 
     dwNewPos = mciStatus.dwReturn - 1;
 
-    if((UINT)dwNewPos <= 1)
+    if ((UINT)dwNewPos <= 1)
     {
         StopPlayback(hwnd);
     }
@@ -546,14 +537,14 @@ SeekForwPlayback(HWND hwnd)
     MCI_STATUS_PARMS mciStatus;
     DWORD dwNewPos;
 
-    if (!bIsOpened) return;
+    if (wDeviceId == 0) return;
 
     mciStatus.dwItem = MCI_STATUS_POSITION;
     mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
 
     dwNewPos = mciStatus.dwReturn + 1;
 
-    if((UINT)dwNewPos >= MaxFilePos)
+    if ((UINT)dwNewPos >= MaxFilePos)
     {
         StopPlayback(hwnd);
     }
@@ -564,37 +555,46 @@ SeekForwPlayback(HWND hwnd)
 }
 
 static VOID
-PausePlayback(HWND hwnd)
+TogglePlaybackState(HWND hwnd)
 {
     MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
+    DWORD dwMode;
+    ULONG idBmp = IDB_PLAYICON;
+    ULONG idCmd = IDC_PLAY;
 
-    if (bIsOpened)
+    if (wDeviceId == 0) return;
+
+    dwMode = GetDeviceMode(hwnd);
+    if (dwMode == MCI_MODE_PLAY)
     {
-        mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-        if (mciError != 0)
-        {
-            ShowMCIError(hwnd, mciError);
-        }
-        bIsPaused = TRUE;
+        mciGeneric.dwCallback = (DWORD_PTR)hwnd;
+        mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
+        idBmp = IDB_PLAYICON;
+        idCmd = IDC_PLAY;
     }
-}
-
-static VOID
-ResumePlayback(HWND hwnd)
-{
-    MCIERROR mciError;
-    MCI_GENERIC_PARMS mciGeneric;
-
-    if (bIsPaused)
+    else if (dwMode == MCI_MODE_PAUSE)
     {
-        mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-        if (mciError != 0)
-        {
-            ShowMCIError(hwnd, mciError);
-        }
-        bIsPaused = FALSE;
+        mciGeneric.dwCallback = (DWORD_PTR)hwnd;
+        mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
+        idBmp = IDB_PAUSEICON;
+        idCmd = IDC_PAUSE;
     }
+
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+        return;
+    }
+
+    SendMessage(hToolBar,
+                TB_SETCMDID,
+                0,
+                idCmd);
+    SendMessage(hToolBar,
+                TB_CHANGEBITMAP,
+                idCmd,
+                idBmp - IDB_PLAYICON);
 }
 
 static VOID
@@ -617,13 +617,13 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     MCI_PLAY_PARMS mciPlay;
     DWORD dwPos;
 
-    if (!bIsOpened) KillTimer(hwnd, IDT_PLAYTIMER);
+    if (wDeviceId == 0) KillTimer(hwnd, IDT_PLAYTIMER);
 
     mciStatus.dwItem = MCI_STATUS_POSITION;
     mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
     dwPos = mciStatus.dwReturn;
 
-    if((UINT)dwPos >= MaxFilePos)
+    if ((UINT)dwPos >= MaxFilePos)
     {
         if (!bRepeat)
         {
@@ -638,18 +638,58 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     }
     else
     {
-        SendMessage(hTrackBar, TBM_SETPOS, (WPARAM) TRUE, (LPARAM) dwPos);
+        SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)dwPos);
     }
 }
 
 static VOID
-PlayFile(HWND hwnd, LPTSTR lpFileName)
+StartPlayback(HWND hwnd)
 {
-    MCI_PLAY_PARMS mciPlay;
-    TCHAR szLocalFileName[MAX_PATH];
-    TCHAR szDeviceName[MAX_PATH];
-    DWORD dwSize;
     MCIERROR mciError;
+    MCI_PLAY_PARMS mciPlay;
+
+    SetTimer(hwnd, IDT_PLAYTIMER, 100, (TIMERPROC)PlayTimerProc);
+
+    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+
+    mciPlay.dwCallback = (DWORD_PTR)hwnd;
+    mciPlay.dwFrom = 0;
+    mciPlay.dwTo = MaxFilePos;
+
+    mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM /*| MCI_TO*/, (DWORD_PTR)&mciPlay);
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+        return;
+    }
+
+    SendMessage(hToolBar,
+                TB_SETCMDID,
+                0,
+                IDC_PAUSE);
+    SendMessage(hToolBar,
+                TB_CHANGEBITMAP,
+                IDC_PAUSE,
+                IDB_PAUSEICON - IDB_PLAYICON);
+}
+
+static VOID
+CloseMediaFile(HWND hwnd)
+{
+    StopPlayback(hwnd);
+
+    if (bIsSingleWindow)
+        SwitchViewMode(hwnd);
+
+    CloseMciDevice();
+    SetWindowText(hwnd, szAppTitle);
+}
+
+static VOID
+OpenMediaFile(HWND hwnd, LPTSTR lpFileName)
+{
+    MCIERROR mciError;
+    TCHAR szLocalFileName[MAX_PATH];
 
     if (lpFileName == NULL)
     {
@@ -664,47 +704,19 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
     }
 
     if (GetFileAttributes(szLocalFileName) == INVALID_FILE_ATTRIBUTES)
-    {
         return;
-    }
 
-    dwSize = sizeof(szDeviceName) - 2;
-    _tcsnset(szDeviceName, _T('\0'), dwSize / sizeof(TCHAR));
+    if (wDeviceId)
+        CloseMediaFile(hwnd);
 
-    if (!IsSupportedFileExtension(szLocalFileName, szDeviceName, &dwSize))
-    {
-        TCHAR szErrorMessage[256];
-
-        LoadString(hInstance, IDS_UNKNOWNFILEEXT, szErrorMessage, sizeof(szErrorMessage) / sizeof(szErrorMessage[0]));
-        MessageBox(hwnd, szErrorMessage, szAppTitle, MB_OK | MB_ICONEXCLAMATION);
-        return;
-    }
-
-    if (bIsOpened)
-    {
-        StopPlayback(hwnd);
-    }
-
-    mciError = OpenMciDevice(hwnd, szDeviceName, szLocalFileName);
+    mciError = OpenMciDevice(hwnd, NULL, szLocalFileName);
     if (mciError != 0)
     {
         ShowMCIError(hwnd, mciError);
         return;
     }
 
-    SetTimer(hwnd, IDT_PLAYTIMER, 100, (TIMERPROC) PlayTimerProc);
-
-    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
-
-    mciPlay.dwCallback = (DWORD_PTR)hwnd;
-    mciPlay.dwFrom = 0;
-    mciPlay.dwTo = MaxFilePos;
-
-    mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM /*| MCI_TO*/, (DWORD_PTR)&mciPlay);
-    if (mciError != 0)
-    {
-        ShowMCIError(hwnd, mciError);
-    }
+    StartPlayback(hwnd);
 }
 
 static VOID
@@ -733,7 +745,7 @@ BuildFileFilter(VOID)
     HKEY hKey = NULL;
 
     /* Always load the default (all files) filter */
-    LoadString(hInstance, IDS_ALL_TYPES_FILTER, szDefaultFilter, sizeof(szDefaultFilter) / sizeof(szDefaultFilter[0]));
+    LoadString(hInstance, IDS_ALL_TYPES_FILTER, szDefaultFilter, ARRAYSIZE(szDefaultFilter));
 
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\MCI Extensions"), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
@@ -749,9 +761,7 @@ BuildFileFilter(VOID)
 
     szExtensionList = malloc(dwMaskLen * sizeof(TCHAR));
     if (!szExtensionList)
-    {
         goto Failure;
-    }
 
     dwNumDevices = GetNumDevices();
 
@@ -763,21 +773,15 @@ BuildFileFilter(VOID)
 
     szFilter = malloc(dwFilterSize);
     if (!szFilter)
-    {
         goto Failure;
-    }
 
     szExtension = malloc((dwValueNameLen + 1) * sizeof(TCHAR));
     if (!szExtension)
-    {
         goto Failure;
-    }
 
     szDevice = malloc(dwValueDataSize + sizeof(TCHAR));
     if (!szDevice)
-    {
         goto Failure;
-    }
 
     ZeroMemory(szFilter, dwFilterSize);
 
@@ -813,7 +817,7 @@ BuildFileFilter(VOID)
             if (RegEnumValue(hKey, i, szExtension, &dwExtensionLen, NULL, NULL, (LPBYTE)szDevice, &dwDeviceSize) == ERROR_SUCCESS)
             {
                 CharLowerBuff(szDevice, dwDeviceSize / sizeof(TCHAR));
-                CharLowerBuff(szDeviceName, sizeof(szDeviceName) / sizeof(szDeviceName[0]));
+                CharLowerBuff(szDeviceName, ARRAYSIZE(szDeviceName));
                 if (_tcscmp(szDeviceName, szDevice) == 0)
                 {
                      CharLowerBuff(szExtension, dwExtensionLen);
@@ -835,7 +839,7 @@ BuildFileFilter(VOID)
         uSizeRemain -= sizeof(*c);
 
         /* Append the filter mask */
-        StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0); 
+        StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0);
 
         /* Skip another char to seperate the elements of the filter mask */
         c++;
@@ -870,7 +874,7 @@ BuildFileFilter(VOID)
     uSizeRemain -= sizeof(*c);
 
     /* Append the filter mask */
-    StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0); 
+    StringCbCopyEx(c, uSizeRemain, szExtensionList, &c, &uSizeRemain, 0);
 
 Cleanup:
     if (szExtensionList) free(szExtensionList);
@@ -896,7 +900,7 @@ Failure:
     uSizeRemain -= sizeof(*c);
 
     /* Append the filter mask */
-    StringCbCopyEx(c, uSizeRemain, szDefaultExtension, &c, &uSizeRemain, 0); 
+    StringCbCopyEx(c, uSizeRemain, szDefaultExtension, &c, &uSizeRemain, 0);
 
     goto Cleanup;
 }
@@ -916,7 +920,7 @@ OpenFileDialog(HWND hwnd)
 
     ZeroMemory(&OpenFileName, sizeof(OpenFileName));
 
-    if (!GetCurrentDirectory(sizeof(szCurrentDir) / sizeof(szCurrentDir[0]), szCurrentDir))
+    if (!GetCurrentDirectory(ARRAYSIZE(szCurrentDir), szCurrentDir))
     {
         StringCbCopy(szCurrentDir, sizeof(szCurrentDir), _T("c:\\"));
     }
@@ -926,15 +930,15 @@ OpenFileDialog(HWND hwnd)
     OpenFileName.hInstance       = hInstance;
     OpenFileName.lpstrFilter     = szFilter;
     OpenFileName.lpstrFile       = szFile;
-    OpenFileName.nMaxFile        = sizeof(szFile) / sizeof(szFile[0]);
+    OpenFileName.nMaxFile        = ARRAYSIZE(szFile);
     OpenFileName.lpstrInitialDir = szCurrentDir;
     OpenFileName.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
     OpenFileName.lpstrDefExt     = _T("\0");
 
-    if (GetOpenFileName(&OpenFileName))
-    {
-        PlayFile(hwnd, OpenFileName.lpstrFile);
-    }
+    if (!GetOpenFileName(&OpenFileName))
+        return;
+
+    OpenMediaFile(hwnd, OpenFileName.lpstrFile);
 }
 
 LRESULT CALLBACK
@@ -955,9 +959,9 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             TCHAR droppedfile[MAX_PATH];
 
             drophandle = (HDROP)wParam;
-            DragQueryFile(drophandle, 0, droppedfile, sizeof(droppedfile) / sizeof(droppedfile[0]));
+            DragQueryFile(drophandle, 0, droppedfile, ARRAYSIZE(droppedfile));
             DragFinish(drophandle);
-            PlayFile(hwnd, droppedfile);
+            OpenMediaFile(hwnd, droppedfile);
             break;
         }
 
@@ -994,6 +998,9 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                             break;
                         case IDC_FORWARD:
                             lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_FORWARD);
+                            break;
+                        case IDC_PAUSE:
+                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_PAUSE);
                             break;
                     }
                     break;
@@ -1054,11 +1061,11 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_HSCROLL:
         {
-            if (hTrackBar == (HWND) lParam)
+            if (hTrackBar == (HWND)lParam)
             {
-                if (bIsOpened)
+                if (wDeviceId)
                 {
-                    DWORD dwNewPos = (DWORD) SendMessage(hTrackBar, TBM_GETPOS, 0, 0);
+                    DWORD dwNewPos = (DWORD)SendMessage(hTrackBar, TBM_GETPOS, 0, 0);
                     SeekPlayback(hwnd, dwNewPos);
                 }
                 else
@@ -1083,20 +1090,23 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             switch (LOWORD(wParam))
             {
                 case IDC_PLAY:
+                case IDC_PAUSE:
                 {
-                    if (bIsOpened)
+                    if (wDeviceId)
                     {
-                        if (bIsPaused)
-                            ResumePlayback(hwnd);
-                        else
-                            PausePlayback(hwnd);
+                        DWORD dwMode = GetDeviceMode(hwnd);
+
+                        if ((dwMode == MCI_MODE_STOP) || (dwMode == MCI_MODE_OPEN))
+                            StartPlayback(hwnd);
+                        else if ((dwMode == MCI_MODE_PAUSE) || (dwMode = MCI_MODE_PLAY))
+                            TogglePlaybackState(hwnd);
                     }
                     else
                     {
                         if (szPrevFile[0] == _T('\0'))
                             OpenFileDialog(hwnd);
                         else
-                            PlayFile(hwnd, NULL);
+                            OpenMediaFile(hwnd, NULL);
                     }
                     break;
                 }
@@ -1127,8 +1137,8 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     return 0;
 
                 case IDM_CLOSE_FILE:
-                    StopPlayback(hwnd);
                     szPrevFile[0] = _T('\0');
+                    CloseMediaFile(hwnd);
                     break;
 
                 case IDM_REPEAT:
@@ -1174,7 +1184,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_DESTROY:
-            StopPlayback(hwnd);
+            CloseMediaFile(hwnd);
             PostQuitMessage(0);
             return 0;
     }
@@ -1194,9 +1204,9 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
     hInstance = hInst;
 
-    LoadString(hInstance, IDS_APPTITLE, szAppTitle, sizeof(szAppTitle) / sizeof(szAppTitle[0]));
+    LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle));
 
-    WndClass.cbSize            = sizeof(WNDCLASSEX);
+    WndClass.cbSize            = sizeof(WndClass);
     WndClass.lpszClassName     = szClassName;
     WndClass.lpfnWndProc       = MainWndProc;
     WndClass.hInstance         = hInstance;
@@ -1247,7 +1257,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    PlayFile(hwnd, lpCmdLine);
+    OpenMediaFile(hwnd, lpCmdLine);
 
     /* Message Loop */
     while (GetMessage(&msg, NULL, 0, 0))

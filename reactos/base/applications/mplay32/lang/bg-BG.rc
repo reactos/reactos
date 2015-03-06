@@ -55,8 +55,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Търсене назад"
     IDS_TOOLTIP_SEEKFORW "Търсене напред"
     IDS_TOOLTIP_FORWARD "Търсене напред"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "Мултимедийният възпроизводител на РеактОС"
     IDS_PLAY "Възпроизвеждане"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

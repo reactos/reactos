@@ -53,8 +53,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Procurar Anterior"
     IDS_TOOLTIP_SEEKFORW "Procurar Próximo"
     IDS_TOOLTIP_FORWARD "Pular Próxima"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Executar"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

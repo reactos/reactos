@@ -51,8 +51,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Schneller Rücklauf"
     IDS_TOOLTIP_SEEKFORW "Schneller Vorlauf"
     IDS_TOOLTIP_FORWARD "Weiter"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Multimedia Player"
     IDS_PLAY "Abspielen"
     IDS_DEFAULTMCIERRMSG "Für diesen Fehler steht keine Beschreibung zur Verfügung."
-    IDS_UNKNOWNFILEEXT "Kann keinen Gerätetyp aus der angegebenen Dateinamenerweiterung ermitteln."
 END

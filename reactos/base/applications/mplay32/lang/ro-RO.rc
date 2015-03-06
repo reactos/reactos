@@ -57,8 +57,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Derulează înapoi"
     IDS_TOOLTIP_SEEKFORW "Derulează înainte"
     IDS_TOOLTIP_FORWARD "Salt la următor"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "Lector multimedia"
     IDS_PLAY "Lecturare"
     IDS_DEFAULTMCIERRMSG "Nu există descriere pentru această eroare."
-    IDS_UNKNOWNFILEEXT "Nu se poate determina tipul dispozitivului din extensia fișierului."
 END

@@ -59,8 +59,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "後退"
     IDS_TOOLTIP_SEEKFORW "前進"
     IDS_TOOLTIP_FORWARD "快轉"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS 多媒體播放器"
     IDS_PLAY "播放"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

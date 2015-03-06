@@ -56,8 +56,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Vyhľadať dozadu"
     IDS_TOOLTIP_SEEKFORW "Vyhľadať dopredu"
     IDS_TOOLTIP_FORWARD "Preskočiť dopredu"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "Multimediálny prehrávač systému ReactOS"
     IDS_PLAY "Prehrať"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

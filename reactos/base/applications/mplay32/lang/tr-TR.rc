@@ -53,8 +53,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Geri Sar"
     IDS_TOOLTIP_SEEKFORW "İleri Sar"
     IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "Çoklu Ortam Oynatıcısı"
     IDS_PLAY "Çal"
     IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."
-    IDS_UNKNOWNFILEEXT "Verilen kütük türünden aygıt türü belirlenemiyor."
 END

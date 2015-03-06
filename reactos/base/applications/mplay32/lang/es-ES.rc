@@ -51,8 +51,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Rebobinar"
     IDS_TOOLTIP_SEEKFORW "Avance rápido"
     IDS_TOOLTIP_FORWARD  "Siguiente marca"
+    IDS_TOOLTIP_PAUSE    "Pause"
     IDS_APPTITLE         "Reproductor multimedia de ReactOS"
     IDS_PLAY             "Reproducir"
     IDS_DEFAULTMCIERRMSG "No hay una descripción disponible para este error."
-    IDS_UNKNOWNFILEEXT   "No se puede determinar el tipo de dispositivo a partir de la extensión del archivo."
 END

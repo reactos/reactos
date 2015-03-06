@@ -56,8 +56,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Posunout zpět"
     IDS_TOOLTIP_SEEKFORW "Posunout vpřed"
     IDS_TOOLTIP_FORWARD "Přeskočit vpřed"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Přehrávač multimédií"
     IDS_PLAY "Přehrát"
     IDS_DEFAULTMCIERRMSG "Pro tuto chybu není dostupný žádný popis."
-    IDS_UNKNOWNFILEEXT "Nelze určit typ zařízení z dané přípony souboru."
 END
