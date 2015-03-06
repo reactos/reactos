@@ -306,7 +306,7 @@ KiGetFeatureBits(VOID)
 
             /* Check if the CPU is too old to support SYSENTER */
             if ((Prcb->CpuType < 6) ||
-                ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0300)))
+                ((Prcb->CpuType == 6) && (Prcb->CpuStep < 0x0303)))
             {
                 /* Disable it */
                 Reg[3] &= ~0x800;
