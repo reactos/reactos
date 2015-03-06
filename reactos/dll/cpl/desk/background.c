@@ -11,6 +11,7 @@
 #include "desk.h"
 
 #include <shellapi.h>
+#include <shlwapi.h>
 
 #define MAX_BACKGROUNDS     100
 
@@ -163,14 +164,121 @@ GdipGetSupportedFileExtensions(VOID)
 }
 
 
-/* Add the images in the C:\ReactOS directory and the current wallpaper if any */
-static VOID
-AddListViewItems(HWND hwndDlg, PDATA pData)
+static UINT
+AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundItem *backgroundItem, PDATA pData, LPCTSTR wallpaperFilename, LPCTSTR wallpaperDirectory)
 {
     WIN32_FIND_DATA fd;
     HANDLE hFind;
     TCHAR szSearchPath[MAX_PATH];
     LPTSTR szFileTypes = NULL;
+    TCHAR separators[] = TEXT(";");
+    TCHAR *token;
+    HRESULT hr;
+    SHFILEINFO sfi;
+    UINT i = uCounter;
+    LV_ITEM listItem;
+    HIMAGELIST himl;
+
+
+    szFileTypes = GdipGetSupportedFileExtensions();
+    if (!szFileTypes)
+    {
+        return i;
+    }
+
+    token = _tcstok(szFileTypes, separators);
+    while (token != NULL)
+    {
+        if (!PathCombine(szSearchPath, wallpaperDirectory, token))
+        {
+            HeapFree(GetProcessHeap(), 0, szFileTypes);
+            return i;
+        }
+
+        hFind = FindFirstFile(szSearchPath, &fd);
+        while (hFind != INVALID_HANDLE_VALUE)
+        {
+            TCHAR filename[MAX_PATH];
+
+            if (!PathCombine(filename, wallpaperDirectory, fd.cFileName))
+            {
+                FindClose(hFind);
+                HeapFree(GetProcessHeap(), 0, szFileTypes);
+                return i;
+            }
+
+            /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
+            if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcsicmp(wallpaperFilename, filename) != 0))
+            {
+                himl = (HIMAGELIST)SHGetFileInfo(filename,
+                                                0,
+                                                &sfi,
+                                                sizeof(sfi),
+                                                SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
+                                                SHGFI_DISPLAYNAME);
+
+                if (himl == NULL)
+                    break;
+
+                if (i++ == 0)
+                {
+                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
+                }
+
+                backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
+
+                backgroundItem->bWallpaper = TRUE;
+
+                hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
+                if (FAILED(hr))
+                {
+                    FindClose(hFind);
+                    HeapFree(GetProcessHeap(), 0, szFileTypes);
+                    return i;
+                }
+
+                PathRemoveExtension(backgroundItem->szDisplayName);
+                
+                hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), filename);
+                if (FAILED(hr))
+                {
+                    FindClose(hFind);
+                    HeapFree(GetProcessHeap(), 0, szFileTypes);
+                    return i;
+                }
+
+                ZeroMemory(&listItem, sizeof(LV_ITEM));
+                listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+                listItem.pszText    = backgroundItem->szDisplayName;
+                listItem.state      = 0;
+                listItem.iImage     = sfi.iIcon;
+                listItem.iItem      = pData->listViewItemCount;
+                listItem.lParam     = pData->listViewItemCount;
+
+                (void)ListView_InsertItem(hwndBackgroundList, &listItem);
+
+                pData->listViewItemCount++;
+            }
+
+            if(!FindNextFile(hFind, &fd))
+                break;
+        }
+
+        token = _tcstok(NULL, separators);
+        FindClose(hFind);
+    }
+
+    HeapFree(GetProcessHeap(), 0, szFileTypes);
+
+    return i;
+}
+
+
+/* Add the images in the C:\ReactOS, the wallpaper directory and the current wallpaper if any */
+static VOID
+AddListViewItems(HWND hwndDlg, PDATA pData)
+{
+    TCHAR szSearchPath[MAX_PATH];
     LV_ITEM listItem;
     LV_COLUMN dummy;
     RECT clientRect;
@@ -185,10 +293,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     LONG result;
     UINT i = 0;
     BackgroundItem *backgroundItem = NULL;
-    TCHAR separators[] = TEXT(";");
-    TCHAR *token;
     HWND hwndBackgroundList;
-    TCHAR *p;
     HRESULT hr;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
@@ -290,9 +395,7 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
                     return;
                 }
 
-                p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
-                if (p)
-                    *p = (TCHAR)0;
+                PathRemoveExtension(backgroundItem->szDisplayName);
 
                 hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), wallpaperFilename);
                 if (FAILED(hr))
@@ -323,116 +426,16 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
     }
 
     /* Add all the images in the C:\ReactOS directory. */
-
-    szFileTypes = GdipGetSupportedFileExtensions();
-    if (!szFileTypes)
+    if (GetWindowsDirectory(szSearchPath, MAX_PATH))
     {
-        return;
+        i = AddWallpapersFromDirectory(i, hwndBackgroundList, backgroundItem, pData, wallpaperFilename, szSearchPath);
     }
 
-    token = _tcstok(szFileTypes, separators);
-    while (token != NULL)
+    /* Add all the images in the wallpaper directory. */
+    if (SHRegGetPath(HKEY_LOCAL_MACHINE, TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion"), TEXT("WallpaperDir"), szSearchPath, 0) == ERROR_SUCCESS)
     {
-        GetWindowsDirectory(szSearchPath, MAX_PATH);
-
-        hr = StringCbCat(szSearchPath, sizeof(szSearchPath), TEXT("\\"));
-        if (FAILED(hr))
-        {
-            HeapFree(GetProcessHeap(), 0, szFileTypes);
-            return;
-        }
-
-        hr = StringCbCat(szSearchPath, sizeof(szSearchPath), token);
-        if (FAILED(hr))
-        {
-            HeapFree(GetProcessHeap(), 0, szFileTypes);
-            return;
-        }
-
-        hFind = FindFirstFile(szSearchPath, &fd);
-        while (hFind != INVALID_HANDLE_VALUE)
-        {
-            TCHAR filename[MAX_PATH];
-
-            GetWindowsDirectory(filename, MAX_PATH);
-
-            hr = StringCbCat(filename, sizeof(filename), TEXT("\\"));
-            if (FAILED(hr))
-            {
-                FindClose(hFind);
-                HeapFree(GetProcessHeap(), 0, szFileTypes);
-                return;
-            }
-            hr = StringCbCat(filename, sizeof(filename), fd.cFileName);
-            if (FAILED(hr))
-            {
-                FindClose(hFind);
-                HeapFree(GetProcessHeap(), 0, szFileTypes);
-                return;
-            }
-
-            /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
-            if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcsicmp(wallpaperFilename, filename) != 0))
-            {
-                himl = (HIMAGELIST)SHGetFileInfo(filename,
-                                                0,
-                                                &sfi,
-                                                sizeof(sfi),
-                                                SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
-                                                SHGFI_DISPLAYNAME);
-
-                if (himl == NULL)
-                    break;
-
-                if (i++ == 0)
-                {
-                    (void)ListView_SetImageList(hwndBackgroundList, himl, LVSIL_SMALL);
-                }
-
-                backgroundItem = &pData->backgroundItems[pData->listViewItemCount];
-
-                backgroundItem->bWallpaper = TRUE;
-
-                hr = StringCbCopy(backgroundItem->szDisplayName, sizeof(backgroundItem->szDisplayName), sfi.szDisplayName);
-                if (FAILED(hr))
-                {
-                    FindClose(hFind);
-                    HeapFree(GetProcessHeap(), 0, szFileTypes);
-                    return;
-                }
-                p = _tcsrchr(backgroundItem->szDisplayName, _T('.'));
-                if (p)
-                    *p = (TCHAR)0;
-                hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), filename);
-                if (FAILED(hr))
-                {
-                    FindClose(hFind);
-                    HeapFree(GetProcessHeap(), 0, szFileTypes);
-                    return;
-                }
-
-                ZeroMemory(&listItem, sizeof(LV_ITEM));
-                listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-                listItem.pszText    = backgroundItem->szDisplayName;
-                listItem.state      = 0;
-                listItem.iImage     = sfi.iIcon;
-                listItem.iItem      = pData->listViewItemCount;
-                listItem.lParam     = pData->listViewItemCount;
-
-                (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-
-                pData->listViewItemCount++;
-            }
-
-            if(!FindNextFile(hFind, &fd))
-                break;
-        }
-
-        token = _tcstok(NULL, separators);
-        FindClose(hFind);
+        i = AddWallpapersFromDirectory(i, hwndBackgroundList, backgroundItem, pData, wallpaperFilename, szSearchPath);
     }
-
-    HeapFree(GetProcessHeap(), 0, szFileTypes);
 }
 
 
