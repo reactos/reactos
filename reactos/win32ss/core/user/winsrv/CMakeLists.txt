@@ -1,7 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/win32ss/include)
+    ${REACTOS_SOURCE_DIR}/win32ss/core/include)
 
 spec2def(winsrv.dll winsrv.spec)
 

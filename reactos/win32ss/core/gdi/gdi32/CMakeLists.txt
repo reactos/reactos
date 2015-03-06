@@ -5,7 +5,7 @@ add_definitions(-DLANGPACK)
 
 include_directories(
     include
-    ${REACTOS_SOURCE_DIR}/win32ss/include)
+    ${REACTOS_SOURCE_DIR}/win32ss/core/include)
 
 add_definitions(-DLANGPACK)
 spec2def(gdi32.dll gdi32.spec ADD_IMPORTLIB)
