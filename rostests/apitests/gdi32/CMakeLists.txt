@@ -1,5 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/win32ss)
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/core)
 
 list(APPEND SOURCE
     AddFontResource.c
