@@ -1,5 +1,4 @@
 /*
- *
  * PROJECT:         ReactOS Picture and Fax Viewer
  * FILE:            dll/win32/shimgvw/shimgvw.c
  * PURPOSE:         shimgvw.dll
@@ -175,9 +174,9 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
         {
             c++;
         }
-        
-        LoadStringW(hInstance, IDS_APPTITLE, szResStr, 512);
-        StringCbPrintfExW(szTitleBuf, 800, NULL, NULL, 0, L"%ls%ls%ls", szResStr, L" - ", c);
+
+        LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
+        StringCbPrintfW(szTitleBuf, sizeof(szTitleBuf), L"%ls%ls%ls", szResStr, L" - ", c);
         SetWindowTextW(hwnd, szTitleBuf);
 
         if (image)
@@ -200,16 +199,15 @@ pBuildFileList(LPWSTR szFirstFile)
     WCHAR szSearchMask[MAX_PATH];
     WCHAR szFileTypes[MAX_PATH];
     WIN32_FIND_DATAW findData;
-    SHIMGVW_FILENODE *currentNode;
-    SHIMGVW_FILENODE *root;
-    SHIMGVW_FILENODE *conductor;
+    SHIMGVW_FILENODE *currentNode = NULL;
+    SHIMGVW_FILENODE *root = NULL;
+    SHIMGVW_FILENODE *conductor = NULL;
     ImageCodecInfo *codecInfo;
     UINT num;
     UINT size;
     UINT j;
 
-
-    wcscpy(szSearchPath, szFirstFile);
+    StringCbCopyW(szSearchPath, sizeof(szSearchPath), szFirstFile);
     PathRemoveFileSpecW(szSearchPath);
 
     GdipGetImageDecodersSize(&num, &size);
@@ -234,19 +232,19 @@ pBuildFileList(LPWSTR szFirstFile)
 
     for (j = 0; j < num; ++j)
     {
-        StringCbPrintfExW(szFileTypes, MAX_PATH, NULL, NULL, 0, L"%ls", codecInfo[j].FilenameExtension);
-        
+        StringCbCopyW(szFileTypes, sizeof(szFileTypes), codecInfo[j].FilenameExtension);
+
         extension = wcstok(szFileTypes, L";");
         while (extension != NULL)
         {
-            StringCbPrintfExW(szSearchMask, MAX_PATH, NULL, NULL, 0, L"%ls%ls%ls", szSearchPath, L"\\", extension);
+            PathCombineW(szSearchMask, szSearchPath, extension);
 
             hFindHandle = FindFirstFileW(szSearchMask, &findData);
             if (hFindHandle != INVALID_HANDLE_VALUE)
             {
                 do
                 {
-                    StringCbPrintfExW(conductor->FileName, MAX_PATH, NULL, NULL, 0, L"%ls%ls%ls", szSearchPath, L"\\", findData.cFileName);
+                    PathCombineW(conductor->FileName, szSearchPath, findData.cFileName);
 
                     // compare the name of the requested file with the one currently found.
                     // if the name matches, the current node is returned by the function.
@@ -261,7 +259,7 @@ pBuildFileList(LPWSTR szFirstFile)
                     if (!conductor->Next)
                     {
                         DPRINT1("malloc() failed in pLoadFileList()\n");
-                        
+
                         conductor->Next = root;
                         root->Prev = conductor;
 
@@ -286,7 +284,7 @@ pBuildFileList(LPWSTR szFirstFile)
     // we use this node to store the name of it, otherwise we free it.
     if (currentNode == NULL)
     {
-        StringCbPrintfExW(conductor->FileName, MAX_PATH, NULL, NULL, 0, L"%ls", szFirstFile);
+        StringCchCopyW(conductor->FileName, MAX_PATH, szFirstFile);
         currentNode = conductor;
     }
     else
@@ -503,7 +501,7 @@ ImageView_DispWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             ImageView_DrawImage(hwnd);
             return 0L;
         }
-	}
+    }
     return CallWindowProc(PrevProc, hwnd, Message, wParam, lParam);
 }
 
@@ -793,4 +791,3 @@ DllMain(IN HINSTANCE hinstDLL,
 
     return TRUE;
 }
-
