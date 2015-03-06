@@ -1,6 +1,6 @@
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${REACTOS_SOURCE_DIR}/win32ss/include)
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/core/include)
 
 list(APPEND SOURCE
     osver.c
