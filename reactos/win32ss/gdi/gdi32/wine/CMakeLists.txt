@@ -1,7 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/win32ss/core/include
+    ${REACTOS_SOURCE_DIR}/win32ss/include
     ../include
     .)
 

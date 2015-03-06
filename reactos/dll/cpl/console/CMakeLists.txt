@@ -1,7 +1,7 @@
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/win32ss/core/user/winsrv/consrv
-    ${REACTOS_SOURCE_DIR}/win32ss/core/user/winsrv/consrv/frontends/gui)
+    ${REACTOS_SOURCE_DIR}/win32ss/user/winsrv/consrv
+    ${REACTOS_SOURCE_DIR}/win32ss/user/winsrv/consrv/frontends/gui)
 
 spec2def(console.dll console.spec)
 

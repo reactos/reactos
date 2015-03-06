@@ -4,7 +4,7 @@ spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
     include
-    ${REACTOS_SOURCE_DIR}/win32ss/core/include)
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     controls/appswitch.c

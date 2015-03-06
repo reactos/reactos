@@ -1,11 +1,5 @@
 
-add_subdirectory(browseui)
 add_subdirectory(cmd)
 add_subdirectory(explorer)
 add_subdirectory(filebrowser)
-add_subdirectory(ie)
 add_subdirectory(rshell)
-add_subdirectory(shell32)
-add_subdirectory(shfolder)
-add_subdirectory(shlwapi)
-add_subdirectory(shellext)
