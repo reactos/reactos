@@ -67,7 +67,7 @@ This setting is disabled by default.")
 set(BUILD_MP TRUE CACHE BOOL
 "Whether to build the multiprocessor versions of NTOSKRNL and HAL.")
 
-set(GENERATE_DEPENDENCY_GRAPH TRUE CACHE BOOL
+set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a GraphML dependency graph of DLLs.")
 
 if(MSVC)
