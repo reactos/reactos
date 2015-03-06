@@ -55,6 +55,7 @@ BEGIN
     IDS_HIGHCOLOR15 "Висока цветност (15 разряда)"
     IDS_HIGHCOLOR16 "Висока цветност (16 разряда)"
     IDS_HIGHCOLOR24 "Истинска цветност (24 разряда)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu точки"
     IDS_FULLSCREEN "Цял екран"
     IDS_BROWSESERVER "<Обзор за още...>"

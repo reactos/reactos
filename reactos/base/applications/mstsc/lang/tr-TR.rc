@@ -57,6 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 (15 Bitlik) Renk"
     IDS_HIGHCOLOR16 "65,536 (16 Bitlik) Renk"
     IDS_HIGHCOLOR24 "16,777,216 (24 Bitlik) Renk"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lu*%lu Nokta"
     IDS_FULLSCREEN "Tüm Görüntülük"
     IDS_BROWSESERVER "(Daha Çoğu İçin Göz At...)"

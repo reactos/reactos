@@ -63,6 +63,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 кольорів (15 біт)"
     IDS_HIGHCOLOR16 "65,536 кольорів (16 біт)"
     IDS_HIGHCOLOR24 "16,777,216 кольорів (24 біти)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lu на %lu крапок"
     IDS_FULLSCREEN "На весь екран"
     IDS_BROWSESERVER "<Пошук інших...>"

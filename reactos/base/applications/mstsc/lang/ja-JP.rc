@@ -55,6 +55,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 色 (15 ビット)"
     IDS_HIGHCOLOR16 "65,536 色 (16 ビット)"
     IDS_HIGHCOLOR24 "16,777,216 色 (24 ビット)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lu x %lu ピクセル"
     IDS_FULLSCREEN "全画面表示"
     IDS_BROWSESERVER "<参照...>"

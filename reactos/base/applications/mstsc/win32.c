@@ -942,6 +942,10 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
       }
     }
   }
+  else if (g_server_depth == 24 || g_server_depth == 32)
+  {
+    memcpy(bits, data, cx*cy*4);
+  }
   dc = CreateCompatibleDC(maindc);
   if (dc == 0)
   {
@@ -1116,7 +1120,6 @@ wWinMain(HINSTANCE hInstance,
                     strcpy(g_password, "");
                     strcpy(g_hostname, tcp_get_address());
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
-                    if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
                     g_screen_width = GetSystemMetrics(SM_CXSCREEN);
                     g_screen_height = GetSystemMetrics(SM_CYSCREEN);
                     g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
@@ -1192,11 +1195,11 @@ mi_fill_rect(int x, int y, int cx, int cy, int colour)
   {
     SPLIT_COLOUR16(colour, red, green, blue);
   }
-  else
+  else if (g_server_depth == 24 || g_server_depth == 32)
   {
-    red = 0;
-    green = 0;
-    blue = 0;
+    red = (colour>>16)&0xff;
+    green = (colour>>8)&0xff;
+    blue =  colour&0xff;
   }
   maindc = GetWindowDC(g_Wnd);
   rgn = mi_clip(maindc);
@@ -1237,11 +1240,11 @@ mi_line(int x1, int y1, int x2, int y2, int colour)
   {
     SPLIT_COLOUR16(colour, red, green, blue);
   }
-  else
+  else if (g_server_depth == 24 || g_server_depth == 32)
   {
-    red = 0;
-    green = 0;
-    blue = 0;
+    red = (colour>>16)&0xff;
+    green = (colour>>8)&0xff;
+    blue =  colour&0xff;
   }
   maindc = GetWindowDC(g_Wnd);
   rgn = mi_clip(maindc);

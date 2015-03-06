@@ -57,6 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 색 (15 비트)"
     IDS_HIGHCOLOR16 "65,536 색 (16 비트)"
     IDS_HIGHCOLOR24 "16,777,216 색 (24 비트)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu 픽셀"
     IDS_FULLSCREEN "최대 화면"
     IDS_BROWSESERVER "<더 많이...>"

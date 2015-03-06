@@ -57,6 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 spalvos (15 bitų)"
     IDS_HIGHCOLOR16 "65,536 spalvos (16 bitų)"
     IDS_HIGHCOLOR24 "16,777,216 spalvų (24 bitai)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu taškų"
     IDS_FULLSCREEN "Visas ekranas"
     IDS_BROWSESERVER "<Daugiau...>"

@@ -55,6 +55,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 Farger (15 bit)"
     IDS_HIGHCOLOR16 "65,536 Farger (16 bit)"
     IDS_HIGHCOLOR24 "16,777,216 Farger (24 bit)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu Piksler"
     IDS_FULLSCREEN "Full skjerm"
     IDS_BROWSESERVER "<Bla gjennom etter flere...>"
