@@ -11,9 +11,6 @@
 
 #include <ntdll.h>
 
-#include <wingdi.h>
-#include <callback.h>
-
 #define NDEBUG
 #include <debug.h>
 
