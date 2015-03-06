@@ -102,8 +102,8 @@ typedef struct
     BOOL Maximized;
     INT Left;
     INT Top;
-    INT Right;
-    INT Bottom;
+    INT Width;
+    INT Height;
 
 } SETTINGS_INFO, *PSETTINGS_INFO;
 
