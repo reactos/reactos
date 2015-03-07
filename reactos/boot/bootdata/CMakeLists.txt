@@ -72,9 +72,6 @@ add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/icon.ico DESTINATION root NO_CAB NO
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/readme.txt DESTINATION root NO_CAB NOT_IN_HYBRIDCD FOR all hybridcd)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/readme.txt DESTINATION reactos FOR all)
 
-#system.ini
-add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/system.ini DESTINATION reactos FOR all)
-
 #freeldr.ini
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcd.ini DESTINATION root NO_CAB NOT_IN_HYBRIDCD NAME_ON_CD freeldr.ini FOR bootcd regtest)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/livecd.ini DESTINATION root NOT_IN_HYBRIDCD NAME_ON_CD freeldr.ini FOR livecd)

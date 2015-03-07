@@ -1,4 +1,5 @@
 
+add_subdirectory(config)
 #add_subdirectory(dos)
 add_subdirectory(ntvdm)
 add_subdirectory(vdmdbg)

@@ -1,0 +1,65 @@
+REM Virtual DOS Machine (VDM) Default Startup File
+
+REM NOTE: NTVDM does not use CONFIG.BAT as the default
+REM environment settings file when running a DOS application. To
+REM change the default settings for the VDM, change this file
+REM instead. However, if a DOS Shortcut (PIF) is used, then
+REM the settings found in the PIF file will be used instead.
+
+REM Echo Output Option
+REM ==================
+REM     When starting up a DOS application, by default, no output
+REM     text is shown to the user as the application starts
+REM     up. To display information from both CONFIG.NT and
+REM     AUTOEXEC.NT, use the option, 'echoconfig'.
+REM echoconfig
+
+REM Command Prompt Option
+REM =====================
+REM     If the user returns to the Command Prompt either from a TSR,
+REM     or while running a DOS application, by default, VDM runs
+REM     COMMAND.COM. To run cmd.exe instead, use the option, 'ntcmdprompt'.
+REM     However, if COMMAND.COM cannot be found, VDM will use this option
+REM     regardless if it's disabled or not.
+ntcmdprompt
+
+REM DOS-Only Mode
+REM =============
+REM     By default, any DOS application can run another application,
+REM     regardless if it's DOS-based or not. To prevent DOS applications
+REM     from running non-DOS applications, and therefore possibly preventing
+REM     disruption of the TSR, use the option 'dosonly'.
+REM dosonly
+
+REM Expanded Memory Manager (EMM)
+REM =============================
+REM     Syntax = EMM [A=AltRegSets] [B=BaseSegment] [RAM]
+REM
+REM     A = Alternative Mapping Register (AltRegSets)
+REM         * Determines the Alternative Mapping Register Sets supported by the system.
+REM           The supported values goes from 1 to 255.
+REM         * The default value is 8.
+REM     B = Base Segment
+REM         * The default value is 0x4000.
+REM     Random Access Memory (RAM)
+REM         * If used, then only allocate 64kb address space from the Upper Memory
+REM           Block (UMB) for EMM page frames, while allowing the rest (if any) to be
+REM           used by NTVDM for loadhigh and devicehigh commands.
+REM         * By default, all available and possible UMB will be used for page frames.
+REM
+REM     The size of a program's EMM is determined by it's given PIF file. But
+REM     if no PIF file is provided, the default settings will be used (_default.pif).
+REM     But if the size of the given PIF file is zero, then the EMM will be disabled
+REM     and the options below will be ignored.
+REM EMM A=8 B=0x4000 64
+
+REM Disable PC Speaker Audio
+REM ========================
+REM     Disables the playback of PC Speaker Audio.
+REM disablepcspeaker
+
+REM Misc. Configuration Options
+REM ===========================
+REM dos=high, umb
+REM device=%SystemRoot%\System32\himem.sys
+REM files=40
