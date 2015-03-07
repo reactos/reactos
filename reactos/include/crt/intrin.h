@@ -794,6 +794,7 @@ unsigned char _bittestandset64(__int64 *, __int64);
 unsigned char _interlockedbittestandreset64(__int64 volatile *, __int64);
 unsigned char _interlockedbittestandset64(__int64 volatile *, __int64);
 unsigned __int64 _mm_crc32_u64(unsigned __int64, unsigned __int64);
+#if 0
 __int64 _mm_cvtsd_si64(__m128d);
 __int64 _mm_cvtsd_si64x(__m128d);
 __int64 _mm_cvtsi128_si64(__m128i);
@@ -818,7 +819,7 @@ __m128i _mm_set_epi64x(__int64, __int64);
 void _mm_stream_si64x(__int64 *, __int64);
 __int64 _mul128(__int64 _Multiplier, __int64 _Multiplicand, __int64 * _HighProduct);
 unsigned __int64 _umul128(unsigned __int64 _Multiplier, unsigned __int64 _Multiplicand, unsigned __int64 * _HighProduct);
-
+#endif
 #endif /* _M_X64 */
 
 #if defined(_M_ARM) || defined(_M_X64)
