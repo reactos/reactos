@@ -98,7 +98,7 @@ KspRegisterDeviceAssociation(
     RtlInitUnicodeString(&ReferenceString, DeviceEntry->DeviceName);
 
     /* register device interface */
-    Status = IoRegisterDeviceInterface(BusDeviceExtension->PhysicalDeviceObject, &BusInstanceEntry->InterfaceGuid, &ReferenceString, &BusInstanceEntry->SymbolicLink);
+    Status = IoRegisterDeviceInterface(BusDeviceExtension->PhysicalDeviceObject, &DeviceEntry->DeviceGuid, NULL, &BusInstanceEntry->SymbolicLink);
 
     /* check for success */
     if (!NT_SUCCESS(Status))
@@ -231,7 +231,7 @@ KspEnumerateBusRegistryKeys(
         if (NT_SUCCESS(Status))
         {
             /* perform callback */
-            Status = Callback(hNewKey, BusDeviceExtension, DeviceEntry, ReferenceString, KeyInfo->Name);
+            Status = Callback(hNewKey, BusDeviceExtension, DeviceEntry, KeyInfo->Name, ReferenceString);
 
             /* should enumeration stop */
             if (!NT_SUCCESS(Status))
@@ -272,6 +272,8 @@ KspCreateDeviceAssociation(
 
     /* check if the device is already present */
     Entry = DeviceEntry->DeviceInterfaceList.Flink;
+	DPRINT1("KspCreateDeviceAssociation ReferenceString %S\n", ReferenceString);
+	DPRINT1("KspCreateDeviceAssociation InterfaceString %S\n", InterfaceString);
 
     while(Entry != &DeviceEntry->DeviceInterfaceList)
     {
@@ -325,8 +327,8 @@ KspCreateDeviceReference(
     IN PHANDLE hKey,
     IN PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension,
     IN PBUS_DEVICE_ENTRY DummyEntry,
-    IN LPWSTR DeviceCategory,
-    IN LPWSTR ReferenceString)
+    IN LPWSTR InterfaceId,
+    IN LPWSTR DeviceId)
 {
     LPWSTR DeviceName;
     SIZE_T Length;
@@ -338,7 +340,7 @@ KspCreateDeviceReference(
     KIRQL OldLevel;
 
     /* first construct device name & reference guid */
-    Length = wcslen(DeviceCategory) + wcslen(ReferenceString);
+    Length = wcslen(DeviceId) + wcslen(InterfaceId);
 
     /* append '&' and null byte */
     Length += 2;
@@ -353,7 +355,9 @@ KspCreateDeviceReference(
     }
 
     /* construct device name */
-    swprintf(DeviceName, L"%s&%s", DeviceCategory, ReferenceString);
+    wcscpy(DeviceName, DeviceId);
+    wcscat(DeviceName, L"&");
+    wcscat(DeviceName, InterfaceId);
 
     /* scan list and check if it is already present */
     Entry = BusDeviceExtension->Common.Entry.Flink;
@@ -391,15 +395,15 @@ KspCreateDeviceReference(
         InitializeListHead(&DeviceEntry->IrpPendingList);
 
         /* copy device guid */
-        RtlInitUnicodeString(&String, DeviceCategory);
+        RtlInitUnicodeString(&String, DeviceId);
         RtlGUIDFromString(&String, &DeviceEntry->DeviceGuid);
 
         /* copy device names */
         DeviceEntry->DeviceName = DeviceName;
-        DeviceEntry->Instance = (DeviceName + wcslen(DeviceCategory) + 1);
+        DeviceEntry->Instance = (DeviceName + wcslen(DeviceId) + 1);
 
         /* copy name */
-        DeviceEntry->BusId = AllocateItem(NonPagedPool, (wcslen(DeviceCategory) + 1) * sizeof(WCHAR));
+        DeviceEntry->BusId = AllocateItem(NonPagedPool, (wcslen(DeviceId) + 1) * sizeof(WCHAR));
         if (!DeviceEntry->BusId)
         {
             /* no memory */
@@ -407,11 +411,11 @@ KspCreateDeviceReference(
             FreeItem(DeviceEntry);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-        wcscpy(DeviceEntry->BusId, DeviceCategory);
+        wcscpy(DeviceEntry->BusId, DeviceId);
     }
 
-    /* now enumerate the devices */
-    Status = KspEnumerateBusRegistryKeys(hKey, ReferenceString, KspCreateDeviceAssociation, BusDeviceExtension, DeviceEntry);
+    /* now enumerate the interfaces */
+    Status = KspEnumerateBusRegistryKeys(hKey, InterfaceId, KspCreateDeviceAssociation, BusDeviceExtension, DeviceEntry);
 
     /* check if list is empty */
     if (IsListEmpty(&DeviceEntry->DeviceInterfaceList))
@@ -466,7 +470,7 @@ KspCreateDeviceReferenceTrampoline(
     IN LPWSTR DeviceCategory,
     IN LPWSTR ReferenceString)
 {
-    return KspEnumerateBusRegistryKeys(hKey, ReferenceString, KspCreateDeviceReference, BusDeviceExtension, DummyEntry);
+    return KspEnumerateBusRegistryKeys(hKey, DeviceCategory, KspCreateDeviceReference, BusDeviceExtension, DummyEntry);
 }
 
 
@@ -1015,35 +1019,36 @@ KspInstallInterface(
             Status = ZwCreateKey(&hDeviceKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
             if (NT_SUCCESS(Status))
             {
-                /* initialize reference string */
-                RtlInitUnicodeString(&ReferenceString, InstallInterface->ReferenceString);
-
-                /* initialize object attributes */
-                InitializeObjectAttributes(&ObjectAttributes, &ReferenceString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hDeviceKey, NULL);
-
-                /* construct device key */
-                Status = ZwCreateKey(&hReferenceKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
+                /* convert interface guid to string */
+                Status = RtlStringFromGUID(&InstallInterface->InterfaceId, &InterfaceString);
                 if (NT_SUCCESS(Status))
                 {
-                    /* convert interface guid to string */
-                    Status = RtlStringFromGUID(&InstallInterface->InterfaceId, &InterfaceString);
+                    /* initialize object attributes */
+                    InitializeObjectAttributes(&ObjectAttributes, &InterfaceString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hDeviceKey, NULL);
+
+                    /* construct device key */
+                    Status = ZwCreateKey(&hInterfaceKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
                     if (NT_SUCCESS(Status))
                     {
+                        /* initialize reference string */
+                        RtlInitUnicodeString(&ReferenceString, InstallInterface->ReferenceString);
+
                         /* initialize object attributes */
-                        InitializeObjectAttributes(&ObjectAttributes, &InterfaceString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hReferenceKey, NULL);
+                        InitializeObjectAttributes(&ObjectAttributes, &ReferenceString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hInterfaceKey, NULL);
 
                         /* construct device key */
-                        Status = ZwCreateKey(&hInterfaceKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
+                        Status = ZwCreateKey(&hReferenceKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
                         if (NT_SUCCESS(Status))
                         {
                             /* close key */
-                            ZwClose(hInterfaceKey);
+                            ZwClose(hReferenceKey);
                         }
-                        /* free interface string */
-                        RtlFreeUnicodeString(&InterfaceString);
                     }
+                    /* free interface string */
+                    RtlFreeUnicodeString(&InterfaceString);
+
                     /* close reference key */
-                    ZwClose(hReferenceKey);
+                    ZwClose(hInterfaceKey);
                 }
                 /* close device key */
                 ZwClose(hDeviceKey);
@@ -1123,14 +1128,18 @@ KspInstallBusEnumInterface(
     {
         /* get device entry */
         DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
-
-        if (IsEqualGUIDAligned(&DeviceEntry->DeviceGuid, &InstallInterface->DeviceId) &&
-            !wcsicmp(DeviceEntry->Instance, InstallInterface->ReferenceString))
+        if (IsEqualGUIDAligned(&DeviceEntry->DeviceGuid, &InstallInterface->DeviceId))
         {
             if (!DeviceEntry->PDO)
             {
+                /* release device entry lock */
+                KeReleaseSpinLock(&Context->BusDeviceExtension->Lock, OldLevel);
+
                 /* create pdo */
                 Status = KspCreatePDO(Context->BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
+
+                /* acquire device entry lock */
+                KeAcquireSpinLock(&Context->BusDeviceExtension->Lock, &OldLevel);
 
                 /* done */
                 break;

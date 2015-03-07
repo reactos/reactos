@@ -25,6 +25,7 @@ ExcludeFromSelect = SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 ExcludeFromSelect = WDMAUDIO_CopyFilesOnlyId
 
 [GenericMfg]
+%WDM_WDMAUD.DeviceDesc%   = WDM_WDMAUD,   SW\{CD171DE3-69E5-11D2-B56D-0000F8754380}
 %WDM_DRMKAUD.DeviceDesc%  = WDM_DRMKAUD,  SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 %WDMAUDIO_CopyFilesOnlyId.DeviceDesc% = WDMAUDIO.CopyFilesOnly, WDMAUDIO_CopyFilesOnlyId
 
@@ -42,10 +43,38 @@ AddReg = DeviceRegistration
 CopyFiles = WDM.CopyFiles
 
 [DeviceRegistration]
-;; DRMKAUD swenum install
+; WDMAud install
+HKLM,%RunOnce%,"WDM_WDMAUD",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_WDMAUD.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_WDMAUD%,%17%\WDMAUDIO.inf,WDM_WDMAUD.Interface.Install"
+; DRMKAUD install
 HKLM,%RunOnce%,"WDM_DRMKAUD",,"rundll32.exe streamci,StreamingDeviceSetup %WDM_DRMKAUD.DeviceId%,%KSNAME_DRMKAUD%,%KSCATEGORY_DRM_DESCRAMBLE%,%17%\WDMAUDIO.inf,WDM_DRMKAUD.Interface.Install"
 
-;; DRMKAUD Install
+;--------------------------------------------------------------------------------
+; WDMAUD Install
+[WDM_WDMAUD.Interface.Install]
+AddReg=WDM_WDMAUD.Interface.AddReg
+
+[WDM_WDMAUD.Interface.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%WDM_WDMAUD.FriendlyName%
+
+[WDM_WDMAUD]
+CopyFiles = WDM_WDMAUD.CopyFiles
+
+[WDM_WDMAUD.CopyFiles]
+wdmaud.sys
+
+[WDM_WDMAUD.Services]
+AddService = wdmaud,0x00000002, wdmaud_Service_Inst
+
+[wdmaud_Service_Inst]
+DisplayName    = %wdmaud.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\system32\drivers\wdmaud.sys
+
+;--------------------------------------------------------------------------------
+; DRMKAUD Install
 [WDM_DRMKAUD.Interface.Install]
 AddReg=WDM_DRMKAUD.Interface.AddReg
 
@@ -80,6 +109,7 @@ portcls.sys,,,0x0100
 WDM.CopyFiles  = 10,system32\drivers ; %SystemRoot%\system32\drivers
 WDM_DRMKAUD.CopyFiles  = 10,system32\drivers
 
+;---------------------------------------------------------------------------------
 [Strings]
 ;Non-localizable
 ReactOS="ReactOS"
@@ -87,18 +117,26 @@ MfgName="ReactOS"
 
 RunOnce = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
 Proxy.CLSID               = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSNAME_Filter             = "{9B365890-165F-11D0-A195-0020AFD156E4}"
 KSNAME_DRMKAUD            = "{ABD61E00-9350-47e2-A632-4438B90C6641}"
 WDM_DRMKAUD.DeviceId      = "{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}"
 KSCATEGORY_DRM_DESCRAMBLE = "{FFBB6E3F-CCFE-4D84-90D9-421418B03A8E}"
 KSCATEGORY_DATATRANSFORM  =  "{2EB07EA0-7E70-11D0-A5D6-28DB04C10000}"
 KSCATEGORY_AUDIO          =  "{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
 PKEY_AudioEngine_OEMFormat = "{E4870E26-3CC5-4CD2-BA46-CA0A9A70ED04},3"
+WDM_WDMAUD.DeviceId       = "{CD171DE3-69E5-11D2-B56D-0000F8754380}"
+KSCATEGORY_WDMAUD         = "{3E227E76-690D-11D2-8161-0000F8775BF1}"
+
 
 ;Localizable
 WDM_DRMKAUD.DeviceDesc    = "ReactOS Trusted Audio Drivers"
 WDM_DRMKAUD.FriendlyName  = "ReactOS Trusted Audio Drivers"
 drmkaud.SvcDesc           = "ReactOS Trusted Audio Drivers"
 WDMAUDIO_CopyFilesOnlyId.DeviceDesc = "ReactOS WDM Audio Drivers"
+WDM_WDMAUD.DeviceDesc     = "Driver for ReactOS WINMM-WDM-Audio"
+WDM_WDMAUD.FriendlyName   = "Driver for ReactOS WINMM-WDM-Audio"
+wdmaud.SvcDesc            = "Driver for ReactOS WINMM-WDM-Audio"
+
 
 [Strings.0418]
 WDM_DRMKAUD.DeviceDesc    = "Module-pilot audio de încredere ale ReactOS"
