@@ -33,6 +33,7 @@ list(APPEND SOURCE
     dos/mouse32.c
     dos/dem.c
     clock.c
+    ems.c
     emulator.c
     int32.c
     io.c
