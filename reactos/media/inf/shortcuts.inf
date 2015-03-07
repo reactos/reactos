@@ -15,6 +15,7 @@ GamesShortcuts=2, %GAMES%
 
 [DesktopShortcuts]
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0
+%SystemRoot%\system32\rapps.exe, %RAPPS_TITLE%, %RAPPS_DESC%, 0
 
 [ProgramShortcuts]
 %SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 0
