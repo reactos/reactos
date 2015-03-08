@@ -476,11 +476,27 @@ Finish:
         if (IconPath && *IconPath)
         {
             HICON hIcon = NULL, hIconSm = NULL;
+            /*
+             * FIXME!! Because of a strange bug we have in PrivateExtractIconExW
+             * (see r65683 for more details), we cannot use this API to extract
+             * at the same time the large and small icons from the app.
+             * Instead we just use PrivateExtractIconsW.
+             *
             PrivateExtractIconExW(IconPath,
                                   ConsoleInitInfo->ConsoleStartInfo->IconIndex,
                                   &hIcon,
                                   &hIconSm,
                                   1);
+             */
+            PrivateExtractIconsW(IconPath,
+                                 ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                 32, 32,
+                                 &hIcon, NULL, 1, LR_COPYFROMRESOURCE);
+            PrivateExtractIconsW(IconPath,
+                                 ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                 16, 16,
+                                 &hIconSm, NULL, 1, LR_COPYFROMRESOURCE);
+
             DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
             if (hIcon   != NULL) ConsoleInitInfo->ConsoleStartInfo->hIcon   = hIcon;
             if (hIconSm != NULL) ConsoleInitInfo->ConsoleStartInfo->hIconSm = hIconSm;
