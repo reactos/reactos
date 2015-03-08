@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "emulator.h"
 #include "bios/bios32/bios32p.h"
 #include <ndk/rtltypes.h>
 #include <ndk/rtlfuncs.h>
@@ -104,12 +105,24 @@ static UCHAR EmsAlloc(USHORT NumPages, PUSHORT Handle)
     return EMS_STATUS_OK;
 }
 
+static PEMS_PAGE GetLogicalPage(PEMS_HANDLE Handle, USHORT LogicalPage)
+{
+    PLIST_ENTRY Entry = Handle->PageList.Flink;
+
+    while (LogicalPage)
+    {
+        if (Entry == &Handle->PageList) return NULL;
+        LogicalPage--;
+        Entry = Entry->Flink;
+    }
+
+    return (PEMS_PAGE)CONTAINING_RECORD(Entry, EMS_PAGE, Entry);
+}
+
 static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 {
-    PLIST_ENTRY Entry;
     PEMS_PAGE PageEntry;
     PEMS_HANDLE HandleEntry = &HandleTable[Handle];
-    ULONG PageNumber;
 
     if (PhysicalPage >= EMS_PHYSICAL_PAGES) return EMS_STATUS_INV_PHYSICAL_PAGE;
     if (LogicalPage == 0xFFFF)
@@ -121,21 +134,10 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 
     if (Handle >= EMS_MAX_HANDLES || !HandleEntry->Allocated) return EMS_STATUS_INVALID_HANDLE;
 
-    Entry = HandleEntry->PageList.Flink;
-    while (LogicalPage)
-    {
-        if (Entry == &HandleEntry->PageList) break;
+    PageEntry = GetLogicalPage(HandleEntry, LogicalPage);
+    if (!PageEntry) return EMS_STATUS_INV_LOGICAL_PAGE; 
 
-        LogicalPage--;
-        Entry = Entry->Flink;
-    }
-
-    if (Entry == &HandleEntry->PageList) return EMS_STATUS_INV_LOGICAL_PAGE; 
-
-    PageEntry = (PEMS_PAGE)CONTAINING_RECORD(Entry, EMS_PAGE, Entry);
-    PageNumber = (ULONG)(((ULONG_PTR)PageEntry - (ULONG_PTR)PageTable) / sizeof(EMS_PAGE));
-    Mapping[PhysicalPage] = (PVOID)(EMS_ADDRESS + PageNumber * EMS_PAGE_SIZE);
-
+    Mapping[PhysicalPage] = (PVOID)(EMS_ADDRESS + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE);
     return EMS_STATUS_OK;
 }
 
@@ -189,6 +191,97 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         case 0x45:
         {
             setAH(EmsFree(getDX()));
+            break;
+        }
+
+        /* Move/Exchange Memory */
+        case 0x57:
+        {
+            PUCHAR SourcePtr, DestPtr;
+            PEMS_HANDLE HandleEntry;
+            PEMS_PAGE PageEntry;
+            BOOLEAN Exchange = getAL();
+            PEMS_COPY_DATA Data = (PEMS_COPY_DATA)SEG_OFF_TO_PTR(getDS(), getSI());
+
+            if (Data->SourceType)
+            {
+                /* Expanded memory */
+                HandleEntry = &HandleTable[Data->SourceHandle];
+
+                if (Data->SourceHandle >= EMS_MAX_HANDLES || !HandleEntry->Allocated)
+                {
+                    setAL(EMS_STATUS_INVALID_HANDLE);
+                    break;
+                }
+
+                PageEntry = GetLogicalPage(HandleEntry, Data->SourceSegment);
+
+                if (!PageEntry)
+                {
+                    setAL(EMS_STATUS_INV_LOGICAL_PAGE);
+                    break;
+                }
+
+                SourcePtr = (PUCHAR)(EMS_ADDRESS
+                                     + ARRAY_INDEX(PageEntry, PageTable)
+                                     * EMS_PAGE_SIZE
+                                     + Data->SourceOffset);
+            }
+            else
+            {
+                /* Conventional memory */
+                SourcePtr = (PUCHAR)SEG_OFF_TO_PTR(Data->SourceSegment, Data->SourceOffset);
+            }
+
+            if (Data->DestType)
+            {
+                /* Expanded memory */
+                HandleEntry = &HandleTable[Data->DestHandle];
+
+                if (Data->SourceHandle >= EMS_MAX_HANDLES || !HandleEntry->Allocated)
+                {
+                    setAL(EMS_STATUS_INVALID_HANDLE);
+                    break;
+                }
+
+                PageEntry = GetLogicalPage(HandleEntry, Data->DestSegment);
+
+                if (!PageEntry)
+                {
+                    setAL(EMS_STATUS_INV_LOGICAL_PAGE);
+                    break;
+                }
+
+                DestPtr = (PUCHAR)(EMS_ADDRESS
+                                   + ARRAY_INDEX(PageEntry, PageTable)
+                                   * EMS_PAGE_SIZE
+                                   + Data->DestOffset);
+            }
+            else
+            {
+                /* Conventional memory */
+                DestPtr = (PUCHAR)SEG_OFF_TO_PTR(Data->DestSegment, Data->DestOffset);
+            }
+
+            if (Exchange)
+            {
+                ULONG i;
+
+                /* Exchange */
+                for (i = 0; i < Data->RegionLength; i++)
+                {
+                    UCHAR Temp = DestPtr[i];
+                    DestPtr[i] = SourcePtr[i];
+                    SourcePtr[i] = Temp;
+                }
+            }
+            else
+            {
+                /* Move */
+                RtlMoveMemory(DestPtr, SourcePtr, Data->RegionLength);
+            }
+
+            setAL(EMS_STATUS_OK);
             break;
         }
 

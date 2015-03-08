@@ -32,6 +32,8 @@
 #define EMS_STATUS_INV_PHYSICAL_PAGE    0x8B
 #define EMS_STATUS_UNKNOWN_FUNCTION     0x8F
 
+#define ARRAY_INDEX(ptr, array) ((ULONG)(((ULONG_PTR)(ptr) - (ULONG_PTR)(array)) / sizeof(*array)))
+
 typedef struct _EMS_HANDLE
 {
     BOOLEAN Allocated;
@@ -44,6 +46,23 @@ typedef struct _EMS_PAGE
     LIST_ENTRY Entry;
     USHORT Handle;
 } EMS_PAGE, *PEMS_PAGE;
+
+#pragma pack(push, 1)
+
+typedef struct _EMS_COPY_DATA
+{
+    ULONG RegionLength;
+    UCHAR SourceType;
+    USHORT SourceHandle;
+    USHORT SourceOffset;
+    USHORT SourceSegment;
+    UCHAR DestType;
+    USHORT DestHandle;
+    USHORT DestOffset;
+    USHORT DestSegment;
+} EMS_COPY_DATA, *PEMS_COPY_DATA;
+
+#pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 
