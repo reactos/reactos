@@ -461,7 +461,7 @@ NtGdiSetDIBitsToDeviceInternal(
 {
     INT ret = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-    PDC pDC;
+    PDC pDC = NULL;
     HBITMAP hSourceBitmap = NULL, hMaskBitmap = NULL;
     SURFOBJ *pDestSurf, *pSourceSurf = NULL, *pMaskSurf = NULL;
     SURFACE *pSurf;
@@ -493,21 +493,25 @@ NtGdiSetDIBitsToDeviceInternal(
 
     if (!NT_SUCCESS(Status))
     {
-        goto Exit2;
+        goto Exit;
     }
 
     ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+    if (ScanLines == 0)
+    {
+        DPRINT1("ScanLines == 0\n");
+        goto Exit;
+    }
 
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
-        goto Exit2;
+        goto Exit;
     }
 
     if (pDC->dctype == DC_TYPE_INFO)
     {
-        DC_UnlockDc(pDC);
         goto Exit;
     }
 
@@ -637,14 +641,13 @@ Exit:
     }
 
     if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
-
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
     if (pMaskSurf) EngUnlockSurface(pMaskSurf);
     if (hMaskBitmap) EngDeleteSurface((HSURF)hMaskBitmap);
-    DC_UnlockDc(pDC);
-Exit2:
+    if (pDC) DC_UnlockDc(pDC);
     ExFreePoolWithTag(pbmiSafe, 'pmTG');
+
     return ret;
 }
 
