@@ -5,7 +5,7 @@
 
 #pragma once
 
-#define GDI_OBJECT_STACK_LEVELS 10
+#define GDI_OBJECT_STACK_LEVELS 20
 
 /* The first 10 entries are never used in windows, they are empty */
 static const unsigned RESERVE_ENTRIES_COUNT = 10;

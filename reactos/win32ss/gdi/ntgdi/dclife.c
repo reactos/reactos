@@ -86,15 +86,16 @@ DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType)
     /* Set the actual DC type */
     pdc->BaseObject.hHmgr = UlongToHandle(eDcObjType);
 
+    pdc->pdcattr = &pdc->dcattr;
+
     /* Insert the object */
     if (!GDIOBJ_hInsertObject(&pdc->BaseObject, GDI_OBJ_HMGR_POWNED))
     {
+        /// FIXME: this is broken, since the DC is not initialized yet...
         DPRINT1("Could not insert DC into handle table.\n");
         GDIOBJ_vFreeObject(&pdc->BaseObject);
         return NULL;
     }
-
-    pdc->pdcattr = &pdc->dcattr;
 
     return pdc;
 }
@@ -177,8 +178,6 @@ DC_vInitDc(
         pdc->erclBoundsApp.bottom = 0x00000333; // FIXME
         pdc->erclClip = pdc->erclBounds;
         pdc->co = gxcoTrivial;
-
-        pdc->fs |= DC_SYNCHRONIZEACCESS | DC_ACCUM_APP | DC_PERMANANT | DC_DISPLAY;
     }
     else
     {
@@ -891,11 +890,13 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
         if (!GreDeleteObject(hDC))
         {
             DPRINT1("DC_FreeDC failed\n");
+            return FALSE;
         }
     }
     else
     {
         DPRINT1("Attempted to Delete 0x%p currently being destroyed!!!\n", hDC);
+        return FALSE;
     }
 
     return TRUE;
