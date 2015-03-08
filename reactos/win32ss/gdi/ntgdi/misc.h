@@ -156,8 +156,3 @@ HBITMAP NTAPI UserLoadImage(PCWSTR);
 
 BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 
-#define ROUND_DOWN(n, align) \
-    (((ULONG)n) & ~((align) - 1l))
-
-#define ROUND_UP(n, align) \
-    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))

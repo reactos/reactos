@@ -347,7 +347,7 @@ SystemTimerProc(HWND hwnd,
 
      case ID_EVENT_SYSTIMER_FLASHWIN:
        {
-          FLASHWINFO fwi = 
+          FLASHWINFO fwi =
             {sizeof(FLASHWINFO),
              UserHMGetHandle(pWnd),
              FLASHW_SYSTIMER,0,0};
@@ -602,7 +602,7 @@ InitTimerImpl(VOID)
 
    ExInitializeFastMutex(Mutex);
 
-   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
+   BitmapBytes = ALIGN_UP_BY(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
    WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapBytes, TAG_TIMERBMP);
    if (WindowLessTimersBitMapBuffer == NULL)
    {
