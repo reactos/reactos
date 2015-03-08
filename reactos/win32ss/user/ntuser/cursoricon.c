@@ -107,8 +107,6 @@ IntRemoveCursorFromList(
     NT_ASSERT((pcur->CURSORF_flags & (CURSORF_GLOBAL|CURSORF_LRSHARED)) != 0);
     NT_ASSERT((pcur->CURSORF_flags & CURSORF_LINKED) != 0);
 
-    NT_ASSERT((pcur->CURSORF_flags & CURSORF_GLOBAL) == 0);
-
     /* Get the right list head */
     ppcurHead = (pcur->CURSORF_flags & CURSORF_GLOBAL) ?
         &gcurFirst : &ppi->pCursorCache;
@@ -360,7 +358,7 @@ FreeCurIconObject(
 
         for (i = 0; i < AniCurIcon->cpcur; i++)
         {
-            NT_VERIFY(UserDereferenceObject(AniCurIcon->aspcur[i]) == TRUE);
+            UserDereferenceObject(AniCurIcon->aspcur[i]);
             NT_VERIFY(IntDestroyCurIconObject(AniCurIcon->aspcur[i]) == TRUE);
         }
         ExFreePoolWithTag(AniCurIcon->aspcur, USERTAG_CURSOR);
@@ -904,11 +902,16 @@ NtUserFindExistingCursorIcon(
         /* See if module names match */
         if (atomModName == CurIcon->atomModName)
         {
-            /* Check if this is an INTRESOURCE */
+            /* They do. Now see if this is the same resource */
+            if (IS_INTRESOURCE(CurIcon->strName.Buffer) != IS_INTRESOURCE(ustrRsrcSafe.Buffer))
+            {
+                /* One is an INT resource and the other is not -> no match */
+                CurIcon = CurIcon->pcurNext;
+                continue;
+            }
+
             if (IS_INTRESOURCE(CurIcon->strName.Buffer))
             {
-                /* Compare if it matches the one we are looking for. This also
-                   handles the case, where ustrRsrcSafe is not an INTRESOURCE */
                 if (CurIcon->strName.Buffer == ustrRsrcSafe.Buffer)
                 {
                     /* INT resources match */
@@ -1111,8 +1114,6 @@ IntSetCursorData(
     _In_ ATOM atomModName,
     _In_ const CURSORDATA* pcursordata)
 {
-    NT_ASSERT((pcur->CURSORF_flags & CURSORF_ACON) == 0);
-
     /* Check if the CURSORF_ACON is also set in the cursor data */
     if (pcursordata->CURSORF_flags & CURSORF_ACON)
     {
@@ -1133,22 +1134,25 @@ IntSetCursorData(
     {
         ERR("NtUserSetCursorIconData was got no hbmMask.\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
-        goto Cleanup;
+        return FALSE;
     }
 
     /* Take ownership of the mask bitmap */
-    if (!GreSetObjectOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_PUBLIC))
+    if (!GreSetBitmapOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_PUBLIC))
     {
-        goto Cleanup;
+        ERR("Failed to set ownership of hbmMask %p.\n", pcursordata->hbmMask);
+        return FALSE;
     }
 
     /* Check if we have a color bitmap */
     if (pcursordata->hbmColor)
     {
         /* Take ownership of the color bitmap */
-        if (!GreSetObjectOwner(pcursordata->hbmColor, GDI_OBJ_HMGR_PUBLIC))
+        if (!GreSetBitmapOwner(pcursordata->hbmColor, GDI_OBJ_HMGR_PUBLIC))
         {
-            goto Cleanup;
+            ERR("Failed to set ownership of hbmColor %p.\n", pcursordata->hbmColor);
+            GreSetBitmapOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_POWNED);
+            return FALSE;
         }
     }
 
@@ -1156,19 +1160,27 @@ IntSetCursorData(
     if (pcursordata->hbmAlpha)
     {
         /* Take ownership of the alpha bitmap */
-        if (!GreSetObjectOwner(pcursordata->hbmAlpha, GDI_OBJ_HMGR_PUBLIC))
+        if (!GreSetBitmapOwner(pcursordata->hbmAlpha, GDI_OBJ_HMGR_PUBLIC))
         {
-            goto Cleanup;
+            ERR("Failed to set ownership of hbmAlpha %p.\n", pcursordata->hbmAlpha);
+            GreSetBitmapOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_POWNED);
+            if (pcursordata->hbmColor)
+            {
+                GreSetBitmapOwner(pcursordata->hbmColor, GDI_OBJ_HMGR_POWNED);
+            }
+            return FALSE;
         }
     }
 
-    /* Free the old name */
+    /* Free the old name (Must be NULL atm, but later we might allow this) */
+    NT_ASSERT(pcur->strName.Buffer == NULL);
     if (pcur->strName.Buffer != NULL)
     {
-        ExFreePoolWithTag(pcur->strName.Buffer, TAG_STRING);
-        pcur->strName.Buffer = NULL;
-        pcur->strName.Length = 0;
-        pcur->strName.MaximumLength = 0;
+        if (!IS_INTRESOURCE(pcur->strName.Buffer))
+        {
+            ExFreePoolWithTag(pcur->strName.Buffer, TAG_STRING);
+        }
+        RtlInitEmptyUnicodeString(&pcur->strName, NULL, 0);
     }
 
     /* Free the module atom */
@@ -1200,28 +1212,6 @@ IntSetCursorData(
     }
 
     return TRUE;
-
-Cleanup:
-
-    if (pcursordata->hbmMask != NULL)
-    {
-        GreSetObjectOwner(pcursordata->hbmMask, GDI_OBJ_HMGR_POWNED);
-        GreDeleteObject(pcursordata->hbmMask);
-    }
-
-    if (pcursordata->hbmColor != NULL)
-    {
-        GreSetObjectOwner(pcursordata->hbmColor, GDI_OBJ_HMGR_POWNED);
-        GreDeleteObject(pcursordata->hbmColor);
-    }
-
-    if (pcursordata->hbmAlpha != NULL)
-    {
-        GreSetObjectOwner(pcursordata->hbmAlpha, GDI_OBJ_HMGR_POWNED);
-        GreDeleteObject(pcursordata->hbmAlpha);
-    }
-
-    return FALSE;
 }
 
 static
@@ -1230,7 +1220,7 @@ IntSetAconData(
     _Inout_ PACON pacon,
     _In_opt_ PUNICODE_STRING pustrName,
     _In_ ATOM atomModName,
-    _In_ PCURSORDATA pcursordata)
+    _In_ const CURSORDATA *pcursordata)
 {
     PCURICON_OBJECT *aspcur;
     DWORD *aicur;
@@ -1240,9 +1230,11 @@ IntSetAconData(
     UINT cjSize, i;
 
     NT_ASSERT((pacon->CURSORF_flags & CURSORF_ACON) != 0);
+    NT_ASSERT((pacon->CURSORF_flags & CURSORF_ACONFRAME) == 0);
     NT_ASSERT((ULONG_PTR)pcursordata->aspcur > MmUserProbeAddress);
     NT_ASSERT((ULONG_PTR)pcursordata->aicur > MmUserProbeAddress);
     NT_ASSERT((ULONG_PTR)pcursordata->ajifRate > MmUserProbeAddress);
+    NT_ASSERT((pcursordata->CURSORF_flags & ~CURSORF_USER_MASK) == 0);
     NT_ASSERT(pcursordata->cpcur > 0);
     NT_ASSERT(pcursordata->cicur > 0);
 
@@ -1259,6 +1251,20 @@ IntSetAconData(
     {
         ERR("Acon data already set!\n");
         return FALSE;
+    }
+
+    /* Loop all frames indexes */
+    for (i = 0; i < pcursordata->cicur; i++)
+    {
+        /* Check if the index is within the range of the frames */
+        if (pcursordata->aicur[i] >= pcursordata->cpcur)
+        {
+            ERR("aicur[%lu] is out or range. Got %lu, cpcur = %u\n",
+                i, pcursordata->aicur[i], pcursordata->cpcur);
+            return FALSE;
+        }
+
+        /* FIXME: check the JIF rates? */
     }
 
     /* Calculate size: one cursor object for each frame, and a frame
@@ -1280,6 +1286,13 @@ IntSetAconData(
     aicur = (DWORD*)&aspcur[pcursordata->cpcur];
     ajifRate = (INT*)&aicur[pcursordata->cicur];
 
+    /* Copy the values */
+    RtlCopyMemory(aicur, pcursordata->aicur, pcursordata->cicur * sizeof(DWORD));
+    RtlCopyMemory(ajifRate, pcursordata->ajifRate, pcursordata->cicur * sizeof(INT));
+
+    /* Zero out the array, so we can handle cleanup */
+    RtlZeroMemory(aspcur, pcursordata->cpcur * sizeof(PCURICON_OBJECT));
+
     /* Get a pointer to the cursor data for each frame */
     pcdFrame = pcursordata->aspcur;
 
@@ -1291,7 +1304,6 @@ IntSetAconData(
         if (hcurFrame == NULL)
         {
             ERR("Failed to create a cursor for frame %u\n", i);
-            aspcur[i] = NULL;
             goto Cleanup;
         }
 
@@ -1299,8 +1311,13 @@ IntSetAconData(
         aspcur[i] = UserGetCurIconObject(hcurFrame);
         NT_ASSERT(aspcur[i] != NULL);
 
-        /* Mark this cursor as an acon frame */
-        pcdFrame->CURSORF_flags |= CURSORF_ACONFRAME;
+        /* Check if the flags are valid */
+        if (pcdFrame->CURSORF_flags & ~(CURSORF_USER_MASK|CURSORF_ACONFRAME))
+        {
+            ERR("Invalid flags for acon frame %u: 0x%lx\n",
+                i, pcdFrame->CURSORF_flags);
+            goto Cleanup;
+        }
 
         /* Set the cursor data for this frame */
         if (!IntSetCursorData(aspcur[i], NULL, 0, &pcdFrame[i]))
@@ -1308,15 +1325,20 @@ IntSetAconData(
             ERR("Failed to set cursor data for frame %u\n", i);
             goto Cleanup;
         }
+
+        /* Mark this cursor as an acon frame */
+        aspcur[i]->CURSORF_flags |= CURSORF_ACONFRAME;
     }
 
-    /* Free the old name */
+    /* Free the old name (Must be NULL atm.) */
+    NT_ASSERT(pacon->strName.Buffer == NULL);
     if (pacon->strName.Buffer != NULL)
     {
-        ExFreePoolWithTag(pacon->strName.Buffer, TAG_STRING);
-        pacon->strName.Buffer = NULL;
-        pacon->strName.Length = 0;
-        pacon->strName.MaximumLength = 0;
+        if (!IS_INTRESOURCE(pacon->strName.Buffer))
+        {
+            ExFreePoolWithTag(pacon->strName.Buffer, TAG_STRING);
+        }
+        RtlInitEmptyUnicodeString(&pacon->strName, NULL, 0);
     }
 
     /* Free the module atom */
@@ -1330,7 +1352,7 @@ IntSetAconData(
     {
         for (i = 0; i < pacon->cpcur; i++)
         {
-            NT_VERIFY(UserDereferenceObject(pacon->aspcur[i]) == TRUE);
+            UserDereferenceObject(pacon->aspcur[i]);
             NT_VERIFY(IntDestroyCurIconObject(pacon->aspcur[i]) == TRUE);
         }
         ExFreePoolWithTag(pacon->aspcur, USERTAG_CURSOR);
@@ -1362,7 +1384,7 @@ Cleanup:
             break;
 
         /* Destroy this cursor */
-        NT_VERIFY(UserDereferenceObject(aspcur[i]) == TRUE);
+        UserDereferenceObject(aspcur[i]);
         NT_VERIFY(IntDestroyCurIconObject(aspcur[i]) == TRUE);
     }
 
@@ -1472,6 +1494,9 @@ NtUserSetCursorIconData(
     CURSORDATA cursordata;
     UNICODE_STRING ustrModule, ustrRsrc;
     _SEH2_VOLATILE PVOID pvBuffer;
+    CURSORDATA* aspcur;
+    DWORD* aicur;
+    PINT ajifRate;
     UINT cjSize;
     NTSTATUS status;
     BOOL bResult;
@@ -1518,28 +1543,33 @@ NtUserSetCursorIconData(
                 goto Exit;
             }
 
-            /* Set the pointers */
-            cursordata.aspcur = (CURSORDATA*)pvBuffer;
-            cursordata.aicur = (DWORD*)&cursordata.aspcur[cursordata.cpcur];
-            cursordata.ajifRate = (INT*)&cursordata.aicur[cursordata.cicur];
+            /* Calculate the kernel mode pointers */
+            aspcur = (CURSORDATA*)pvBuffer;
+            aicur = (DWORD*)&aspcur[cursordata.cpcur];
+            ajifRate = (INT*)&aicur[cursordata.cicur];
 
             /* Probe and copy aspcur */
-            ProbeForRead(pCursorData->aspcur, cursordata.cpcur * sizeof(CURSORDATA), 1);
-            RtlCopyMemory(cursordata.aspcur,
-                          pCursorData->aspcur,
+            ProbeForRead(cursordata.aspcur, cursordata.cpcur * sizeof(CURSORDATA), 1);
+            RtlCopyMemory(aspcur,
+                          cursordata.aspcur,
                           cursordata.cpcur * sizeof(CURSORDATA));
 
             /* Probe and copy aicur */
-            ProbeForRead(pCursorData->aicur, cursordata.cicur * sizeof(DWORD), 1);
-            RtlCopyMemory(cursordata.aicur,
-                          pCursorData->aicur,
+            ProbeForRead(cursordata.aicur, cursordata.cicur * sizeof(DWORD), 1);
+            RtlCopyMemory(aicur,
+                          cursordata.aicur,
                           cursordata.cicur * sizeof(DWORD));
 
             /* Probe and copy ajifRate */
-            ProbeForRead(pCursorData->ajifRate, cursordata.cicur * sizeof(INT), 1);
-            RtlCopyMemory(cursordata.ajifRate,
-                          pCursorData->ajifRate,
+            ProbeForRead(cursordata.ajifRate, cursordata.cicur * sizeof(INT), 1);
+            RtlCopyMemory(ajifRate,
+                          cursordata.ajifRate,
                           cursordata.cicur * sizeof(INT));
+
+            /* Set the new pointers */
+            cursordata.aspcur = aspcur;
+            cursordata.aicur = aicur;
+            cursordata.ajifRate = ajifRate;
         }
         else
         {
@@ -1579,6 +1609,13 @@ NtUserSetCursorIconData(
             ERR("Failed to copy pustrRsrc: status 0x%08lx\n", status);
             goto Exit;
         }
+    }
+
+    /* Make sure the caller doesn't give us invalid flags */
+    if (cursordata.CURSORF_flags & ~CURSORF_USER_MASK)
+    {
+        ERR("Invalid cursor flags: 0x%08lx\n", cursordata.CURSORF_flags);
+        goto Exit;
     }
 
     /* Acquire the global user lock */

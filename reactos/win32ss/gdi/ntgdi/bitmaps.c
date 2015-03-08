@@ -11,6 +11,37 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOL
+NTAPI
+GreSetBitmapOwner(
+    _In_ HBITMAP hbmp,
+    _In_ ULONG ulOwner)
+{
+    /* Check if we have the correct object type */
+    if (GDI_HANDLE_GET_TYPE(hbmp) != GDILoObjType_LO_BITMAP_TYPE)
+    {
+        DPRINT1("Incorrect type for hbmp: %p\n", hbmp);
+        return FALSE;
+    }
+
+    /// FIXME: this is a hack and doesn't handle a race condition properly.
+    /// It needs to be done in GDIOBJ_vSetObjectOwner atomically.
+
+    /* Check if we set public or none */
+    if ((ulOwner == GDI_OBJ_HMGR_PUBLIC) ||
+        (ulOwner == GDI_OBJ_HMGR_NONE))
+    {
+        /* Only allow this for owned objects */
+        if (GreGetObjectOwner(hbmp) != GDI_OBJ_HMGR_POWNED)
+        {
+            DPRINT1("Cannot change owner for non-powned hbmp\n");
+            return FALSE;
+        }
+    }
+
+    return GreSetObjectOwner(hbmp, ulOwner);
+}
+
 static
 int
 NTAPI
