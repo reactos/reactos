@@ -40,6 +40,12 @@ class CRegistryFolderContextMenu :
     PCITEMID_CHILD    m_pcidlChild;
     UINT              m_idFirst;
 
+    enum ItemOffsets
+    {
+        ITEM_Open = 0,
+        ITEM_OpenNewWindow
+    };
+
 public:
     CRegistryFolderContextMenu() :
         m_pcidlFolder(NULL),
@@ -69,22 +75,22 @@ public:
     // IContextMenu
     virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
+        MENUITEMINFOW mii;
+
         m_idFirst = idCmdFirst;
 
         const RegPidlEntry * entry = (RegPidlEntry *) m_pcidlChild;
 
+        static WCHAR open [] = L"Open";
+        static WCHAR opennewwindow [] = L"Open in new window";
+
         if (entry->entryType == REG_ENTRY_KEY)
         {
-            MENUITEMINFOW mii;
-
-            WCHAR open [] = L"Open";
-            WCHAR opennewwindow [] = L"Open in new window";
-
             ZeroMemory(&mii, sizeof(mii));
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
             mii.fType = MFT_STRING;
-            mii.wID = idCmdFirst++;
+            mii.wID = (idCmdFirst = m_idFirst + ITEM_Open);
             mii.dwTypeData = open;
             mii.cch = _countof(open);
             mii.fState = MFS_ENABLED | MFS_DEFAULT;
@@ -97,7 +103,7 @@ public:
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
                 mii.fType = MFT_STRING;
-                mii.wID = idCmdFirst++;
+                mii.wID = (idCmdFirst = m_idFirst + ITEM_OpenNewWindow);
                 mii.dwTypeData = opennewwindow;
                 mii.cch = _countof(opennewwindow);
                 mii.fState = MFS_ENABLED;
@@ -111,10 +117,10 @@ public:
 
     virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
-        if (LOWORD(lpici->lpVerb) == m_idFirst || !lpici->lpVerb)
-        {
-            LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
+        LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
 
+        if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_Open) || !lpici->lpVerb)
+        {
             SHELLEXECUTEINFO sei = { 0 };
             sei.cbSize = sizeof(sei);
             sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
@@ -129,10 +135,8 @@ public:
 
             return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
-        else if (LOWORD(lpici->lpVerb) == (m_idFirst + 1))
+        else if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_OpenNewWindow))
         {
-            LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
-
             SHELLEXECUTEINFO sei = { 0 };
             sei.cbSize = sizeof(sei);
             sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
@@ -223,7 +227,7 @@ public:
             return E_INVALIDARG;
 
         UINT flags = 0;
-        
+
         switch (entry->entryType)
         {
         case REG_ENTRY_KEY:
@@ -453,7 +457,7 @@ public:
             if (ord < 0)
                 return MAKE_HRESULT(0, 0, (USHORT) -1);
 
-            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength/sizeof(WCHAR));
+            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength / sizeof(WCHAR));
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
@@ -495,7 +499,7 @@ public:
 
     HRESULT FormatContentsForDisplay(RegPidlEntry * info, PCWSTR * strContents)
     {
-        PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry,entryName) + info->entryNameLength + sizeof(WCHAR));
+        PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
         if (info->contentsLength > 0)
         {
@@ -553,7 +557,7 @@ public:
         else
         {
             PCWSTR strEmpty = L"(Empty)";
-            DWORD bufferLength = (wcslen(strEmpty)+1) * sizeof(WCHAR);
+            DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
             PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
             StringCbCopyW(strValue, bufferLength, strEmpty);
             *strContents = strValue;
@@ -755,11 +759,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-#if 0
-        if (!(info->objectInformation.GrantedAccess & (STANDARD_RIGHTS_READ | FILE_LIST_DIRECTORY)))
-            return E_ACCESSDENIED;
-#endif
-
         WCHAR path[MAX_PATH];
 
         StringCbCopyW(path, _countof(path), m_NtPath);
@@ -819,7 +818,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::CreateViewObject(
     sfv.cbSize = sizeof(sfv);
     sfv.pshf = this;
     sfv.psvOuter = NULL;
-    sfv.psfvcb = NULL;
+    sfv.psfvcb = this;
 
     return SHCreateShellFolderView(&sfv, (IShellView**) ppvOut);
 }
@@ -967,26 +966,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
 
     PCWSTR ntPath = L"\\REGISTRY";
 
-#if 0
-    WCHAR debugTemp[MAX_PATH];
-    GetFullName(m_shellPidl, SHGDN_FORPARSING, debugTemp, _countof(debugTemp));
-    DbgPrint("INITIALIZE CRegistryFolder PIDL PATH: %S (ntPath: %S)\n", debugTemp, ntPath);
-
-    if (ntPath[wcslen(ntPath) - 1] == L'\\' && debugTemp[wcslen(debugTemp) - 1] != L'\\')
-        wcscat(debugTemp, L"\\");
-
-    PCWSTR guidTemp = L"::{845B0FB2-66E0-416B-8F91-314E23F7C12D}";
-
-    PCWSTR findTemp = StrStrW(debugTemp, guidTemp);
-    PCWSTR nextTemp = findTemp + wcslen(guidTemp);
-
-    if (wcscmp(nextTemp, ntPath))
-    {
-        DbgPrint("WHAT THE F, the NT PATH DOES NOT MATCH\n");
-        return E_FAIL;
-    }
-#endif
-
     if (!m_PidlManager)
     {
         m_PidlManager = new CRegistryPidlManager();
@@ -1001,26 +980,6 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
 HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath)
 {
     m_shellPidl = ILClone(pidl);
-
-#if 0
-    WCHAR debugTemp[MAX_PATH];
-    GetFullName(m_shellPidl, SHGDN_FORPARSING, debugTemp, _countof(debugTemp));
-    DbgPrint("INITIALIZE CRegistryFolder PIDL PATH: %S (ntPath: %S)\n", debugTemp, ntPath);
-
-    if (ntPath[wcslen(ntPath) - 1] == L'\\' && debugTemp[wcslen(debugTemp) - 1] != L'\\')
-        wcscat(debugTemp, L"\\");
-
-    PCWSTR guidTemp = L"::{845B0FB2-66E0-416B-8F91-314E23F7C12D}";
-
-    PCWSTR findTemp = StrStrW(debugTemp, guidTemp);
-    PCWSTR nextTemp = findTemp + wcslen(guidTemp);
-
-    if (wcscmp(nextTemp, ntPath))
-    {
-        DbgPrint("WHAT THE F, the NT PATH DOES NOT MATCH\n");
-        return E_FAIL;
-    }
-#endif
 
     if (!m_PidlManager)
         m_PidlManager = new CRegistryPidlManager();
@@ -1129,7 +1088,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
 
                 hr = MakeVariantString(pv, strValueContents);
 
-                CoTaskMemFree((PVOID)strValueContents);
+                CoTaskMemFree((PVOID) strValueContents);
 
                 return hr;
 
@@ -1245,4 +1204,18 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MapColumnToSCID(
         return S_OK;
     }
     return E_INVALIDARG;
+}
+
+HRESULT STDMETHODCALLTYPE CRegistryFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case SFVM_DEFVIEWMODE:
+    {
+        FOLDERVIEWMODE* pViewMode = (FOLDERVIEWMODE*) lParam;
+        *pViewMode = FVM_DETAILS;
+        return S_OK;
+    }
+    }
+    return E_NOTIMPL;
 }

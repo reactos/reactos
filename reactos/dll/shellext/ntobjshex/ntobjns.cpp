@@ -41,6 +41,12 @@ class CNtObjectFolderContextMenu :
     PCITEMID_CHILD    m_pcidlChild;
     UINT              m_idFirst;
 
+    enum ItemOffsets
+    {
+        ITEM_Open = 0,
+        ITEM_OpenNewWindow
+    };
+
 public:
     CNtObjectFolderContextMenu() :
         m_pcidlFolder(NULL),
@@ -70,24 +76,24 @@ public:
     // IContextMenu
     virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
     {
+        MENUITEMINFOW mii;
+
         m_idFirst = idCmdFirst;
 
         const NtPidlEntry * entry = (NtPidlEntry *) m_pcidlChild;
+
+        static WCHAR open [] = L"Open";
+        static WCHAR opennewwindow [] = L"Open in new window";
 
         if ((entry->objectType == DIRECTORY_OBJECT) ||
             (entry->objectType == SYMBOLICLINK_OBJECT) ||
             (entry->objectType == KEY_OBJECT))
         {
-            MENUITEMINFOW mii;
-
-            WCHAR open [] = L"Open";
-            WCHAR opennewwindow [] = L"Open in new window";
-
             ZeroMemory(&mii, sizeof(mii));
             mii.cbSize = sizeof(mii);
             mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
             mii.fType = MFT_STRING;
-            mii.wID = idCmdFirst++;
+            mii.wID = (idCmdFirst = m_idFirst + ITEM_Open);
             mii.dwTypeData = open;
             mii.cch = _countof(open);
             mii.fState = MFS_ENABLED | MFS_DEFAULT;
@@ -100,7 +106,7 @@ public:
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
                 mii.fType = MFT_STRING;
-                mii.wID = idCmdFirst++;
+                mii.wID = (idCmdFirst = m_idFirst + ITEM_OpenNewWindow);
                 mii.dwTypeData = opennewwindow;
                 mii.cch = _countof(opennewwindow);
                 mii.fState = MFS_ENABLED;
@@ -114,10 +120,10 @@ public:
 
     virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
-        if (LOWORD(lpici->lpVerb) == m_idFirst || !lpici->lpVerb)
-        {
-            LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
+        LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
 
+        if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_Open) || !lpici->lpVerb)
+        {
             SHELLEXECUTEINFO sei = { 0 };
             sei.cbSize = sizeof(sei);
             sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
@@ -132,10 +138,8 @@ public:
 
             return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
         }
-        else if (LOWORD(lpici->lpVerb) == (m_idFirst + 1))
+        else if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_OpenNewWindow))
         {
-            LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
-
             SHELLEXECUTEINFO sei = { 0 };
             sei.cbSize = sizeof(sei);
             sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
@@ -467,7 +471,7 @@ public:
             if (ord < 0)
                 return MAKE_HRESULT(0, 0, (USHORT) -1);
 
-            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength/sizeof(WCHAR));
+            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength / sizeof(WCHAR));
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
@@ -722,7 +726,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
         if (info->objectType == SYMBOLICLINK_OBJECT)
         {
-            NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry,entryName) + info->entryNameLength + sizeof(WCHAR));
+            NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
             if (symlink->targetNameLength > 0)
             {
@@ -806,7 +810,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::CreateViewObject(
     sfv.cbSize = sizeof(sfv);
     sfv.pshf = this;
     sfv.psvOuter = NULL;
-    sfv.psfvcb = NULL;
+    sfv.psfvcb = this;
 
     return SHCreateShellFolderView(&sfv, (IShellView**) ppvOut);
 }
@@ -954,26 +958,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl)
 
     PCWSTR ntPath = L"\\";
 
-#if 0
-    WCHAR debugTemp[MAX_PATH];
-    GetFullName(m_shellPidl, SHGDN_FORPARSING, debugTemp, _countof(debugTemp));
-    DbgPrint("INITIALIZE CRegistryFolder PIDL PATH: %S (ntPath: %S)\n", debugTemp, ntPath);
-
-    if (ntPath[wcslen(ntPath)-1] == L'\\' && debugTemp[wcslen(debugTemp) - 1] != L'\\')
-        wcscat(debugTemp, L"\\");
-
-    PCWSTR guidTemp = L"::{845B0FB2-66E0-416B-8F91-314E23F7C12D}";
-
-    PCWSTR findTemp = StrStrW(debugTemp, guidTemp);
-    PCWSTR nextTemp = findTemp + wcslen(guidTemp);
-
-    if (wcscmp(nextTemp, ntPath))
-    {
-        DbgPrint("WHAT THE F, the NT PATH DOES NOT MATCH\n");
-        return E_FAIL;
-    }
-#endif
-
     if (!m_PidlManager)
     {
         m_PidlManager = new CNtObjectPidlManager();
@@ -989,27 +973,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR
 {
     TRACE("INITIALIZE %p CNtObjectFolder with ntPath %S\n", this, ntPath);
 
-#if 0
-    m_shellPidl = ILClone(pidl);
-    WCHAR debugTemp[MAX_PATH];
-    GetFullName(m_shellPidl, SHGDN_FORPARSING, debugTemp, _countof(debugTemp));
-    DbgPrint("INITIALIZE CNtObjectFolder PIDL PATH: %S (ntPath: %S)\n", debugTemp, ntPath);
-
-    if (ntPath[wcslen(ntPath) - 1] == L'\\' && debugTemp[wcslen(debugTemp) - 1] != L'\\')
-        wcscat(debugTemp, L"\\");
-
-    PCWSTR guidTemp = L"::{845B0FB2-66E0-416B-8F91-314E23F7C12D}";
-
-    PCWSTR findTemp = StrStrW(debugTemp, guidTemp);
-    PCWSTR nextTemp = findTemp + wcslen(guidTemp);
-
-    if (wcscmp(nextTemp, ntPath))
-    {
-        DbgPrint("WHAT THE F, the NT PATH DOES NOT MATCH\n");
-        return E_FAIL;
-    }
-#endif
-    
     if (!m_PidlManager)
         m_PidlManager = new CNtObjectPidlManager();
 
@@ -1104,7 +1067,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
             {
                 if (info->objectType < 0)
                 {
-                    NtPidlTypeData * td = (NtPidlTypeData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry,entryName) + info->entryNameLength + sizeof(WCHAR));
+                    NtPidlTypeData * td = (NtPidlTypeData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
                     if (td->typeNameLength > 0)
                     {
@@ -1138,7 +1101,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
             {
                 if (info->objectType == SYMBOLICLINK_OBJECT)
                 {
-                    NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry,entryName) + info->entryNameLength + sizeof(WCHAR));
+                    NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
                     if (symlink->targetNameLength > 0)
                     {
@@ -1183,7 +1146,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
             if (info->objectType < 0)
             {
-                NtPidlTypeData * td = (NtPidlTypeData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry,entryName) + info->entryNameLength + sizeof(WCHAR));
+                NtPidlTypeData * td = (NtPidlTypeData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
                 if (td->typeNameLength > 0)
                     MakeStrRetFromString(td->typeName, td->typeNameLength, &(psd->str));
@@ -1219,7 +1182,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
             if (info->objectType == SYMBOLICLINK_OBJECT)
             {
-                NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry,entryName) + info->entryNameLength + sizeof(WCHAR));
+                NtPidlSymlinkData * symlink = (NtPidlSymlinkData*) (((PBYTE) info) + FIELD_OFFSET(NtPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
                 if (symlink->targetNameLength > 0)
                 {
@@ -1295,4 +1258,18 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MapColumnToSCID(
         return S_OK;
     }
     return E_INVALIDARG;
+}
+
+HRESULT STDMETHODCALLTYPE CNtObjectFolder::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case SFVM_DEFVIEWMODE:
+    {
+        FOLDERVIEWMODE* pViewMode = (FOLDERVIEWMODE*) lParam;
+        *pViewMode = FVM_DETAILS;
+        return S_OK;
+    }
+    }
+    return E_NOTIMPL;
 }

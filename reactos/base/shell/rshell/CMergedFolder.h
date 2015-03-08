@@ -50,13 +50,13 @@ class CMergedFolder :
     public IShellFolder2,
     public IPersistFolder2,
     public IAugmentedShellFolder3     // -- undocumented
-    //public IShellService,              // -- undocumented
+    //public IShellService,              // DEPRECATED IE4 interface: https://msdn.microsoft.com/en-us/library/windows/desktop/bb774870%28v=vs.85%29.aspx
     //public ITranslateShellChangeNotify,// -- undocumented
     //public IStorage,
     //public IPersistPropertyBag,
     //public IShellIconOverlay,          // -- undocumented
     //public ICompositeFolder,           // -- undocumented
-    //public IItemNameLimits,            // -- undocumented
+    //public IItemNameLimits,            // https://msdn.microsoft.com/en-us/library/windows/desktop/bb761776%28v=vs.85%29.aspx
 {
 private:
     CComPtr<IShellFolder> m_UserLocal;

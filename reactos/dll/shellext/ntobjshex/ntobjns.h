@@ -15,7 +15,8 @@ class CNtObjectFolder :
     public CComCoClass<CNtObjectFolder, &CLSID_NtObjectFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IShellFolderViewCB
 {
     CNtObjectPidlManager * m_PidlManager;
 
@@ -130,6 +131,9 @@ public:
     // IPersistFolder2
     virtual HRESULT STDMETHODCALLTYPE GetCurFolder(LPITEMIDLIST * pidl);
 
+    // IShellFolderViewCB
+    virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
     // Internal
     HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath);
 
@@ -143,6 +147,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
+        COM_INTERFACE_ENTRY_IID(IID_IShellFolderViewCB, IShellFolderViewCB)
     END_COM_MAP()
 
 };
