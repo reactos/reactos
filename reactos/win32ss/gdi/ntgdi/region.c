@@ -2187,13 +2187,6 @@ REGION_AllocRgnWithHandle(
         return NULL;
     }
 
-    if (!GDIOBJ_hInsertObject(&pReg->BaseObject, GDI_OBJ_HMGR_POWNED))
-    {
-        DPRINT1("Could not insert palette into handle table.\n");
-        GDIOBJ_vFreeObject(&pReg->BaseObject);
-        return NULL;
-    }
-
     //hReg = pReg->BaseObject.hHmgr;
 
     if ((nReg == 0) || (nReg == 1))
@@ -2221,6 +2214,19 @@ REGION_AllocRgnWithHandle(
     pReg->rdh.nRgnSize = nReg * sizeof(RECT);
     pReg->prgnattr = &pReg->rgnattr;
 
+    /* Initialize the region attribute */
+    pReg->rgnattr.AttrFlags = 0;
+    pReg->rgnattr.iComplexity = SIMPLEREGION;
+    pReg->rgnattr.Rect = pReg->rdh.rcBound;
+
+    /* Finally insert the region into the handle table */
+    if (!GDIOBJ_hInsertObject(&pReg->BaseObject, GDI_OBJ_HMGR_POWNED))
+    {
+        DPRINT1("Could not insert palette into handle table.\n");
+        GDIOBJ_vFreeObject(&pReg->BaseObject);
+        return NULL;
+    }
+
     return pReg;
 }
 
@@ -2232,6 +2238,8 @@ REGION_bAllocRgnAttr(
     PPROCESSINFO ppi;
     PRGN_ATTR prgnattr;
 
+    NT_ASSERT(prgn->prgnattr == &prgn->rgnattr);
+
     ppi = PsGetCurrentProcessWin32Process();
     ASSERT(ppi);
 
@@ -2241,6 +2249,9 @@ REGION_bAllocRgnAttr(
         DPRINT1("Could not allocate RGN attr\n");
         return FALSE;
     }
+
+    /* Copy the current region attribute */
+    *prgnattr = prgn->rgnattr;
 
     /* Set the object attribute in the handle table */
     prgn->prgnattr = prgnattr;
@@ -3928,105 +3939,112 @@ NtGdiGetRgnBox(
 INT
 APIENTRY
 NtGdiOffsetRgn(
-    HRGN hRgn,
-    INT XOffset,
-    INT YOffset)
+    _In_ HRGN hrgn,
+    _In_ INT cx,
+    _In_ INT cy)
 {
-    PREGION rgn;
-    INT ret;
+    PREGION prgn;
+    INT iResult;
 
-    DPRINT("NtGdiOffsetRgn: hRgn %p Xoffs %d Yoffs %d rgn %p\n", hRgn, XOffset, YOffset, rgn );
+    DPRINT("NtGdiOffsetRgn: hrgn %p cx %d cy %d\n", hrgn, cx, cy);
 
-    rgn = REGION_LockRgn(hRgn);
-    if (rgn == NULL)
+    /* Lock the region */
+    prgn = REGION_LockRgn(hrgn);
+    if (prgn == NULL)
     {
-        DPRINT("NtGdiOffsetRgn: hRgn error\n");
+        DPRINT1("NtGdiOffsetRgn: failed to lock region %p\n", hrgn);
         return ERROR;
     }
 
-    if (!REGION_bOffsetRgn(rgn, XOffset, YOffset))
+    /* Call the internal function */
+    if (!REGION_bOffsetRgn(prgn, cx, cy))
     {
-        ret = ERROR;
+        iResult = ERROR;
     }
     else
     {
-        ret = REGION_Complexity(rgn);
+        iResult = REGION_Complexity(prgn);
     }
 
-    REGION_UnlockRgn(rgn);
-    return ret;
+    /* Unlock and return the result */
+    REGION_UnlockRgn(prgn);
+    return iResult;
 }
 
 BOOL
 APIENTRY
 NtGdiPtInRegion(
-    HRGN hRgn,
-    INT X,
-    INT Y)
+    _In_ HRGN hrgn,
+    _In_ INT x,
+    _In_ INT y)
 {
     PREGION prgn;
-    BOOL ret;
+    BOOL bResult;
 
-    prgn = REGION_LockRgn(hRgn);
+    /* Lock the region */
+    prgn = REGION_LockRgn(hrgn);
     if (prgn == NULL)
+    {
+        DPRINT1("NtGdiPtInRegion: hrgn error\n");
         return FALSE;
+    }
 
-    ret = REGION_PtInRegion(prgn, X, Y);
+    /* Call the internal function */
+    bResult = REGION_PtInRegion(prgn, x, y);
 
+    /* Unlock and return the result */
     REGION_UnlockRgn(prgn);
-    return ret;
+    return bResult;
 }
 
 BOOL
 APIENTRY
 NtGdiRectInRegion(
-    HRGN  hRgn,
-    LPRECTL unsaferc)
+    _In_ HRGN hrgn,
+    _In_ LPRECT prclUnsafe)
 {
-    RECTL rc = { 0 };
-    NTSTATUS Status = STATUS_SUCCESS;
+    RECTL rcTemp;
 
+    /* Probe and copy the rect */
     _SEH2_TRY
     {
-        ProbeForRead(unsaferc, sizeof(RECT), 1);
-        rc = *unsaferc;
+        ProbeForRead(prclUnsafe, sizeof(RECT), 1);
+        rcTemp = *prclUnsafe;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        DPRINT1("NtGdiRectInRegion: Exception accessing the rect\n");
+        return FALSE;
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        DPRINT1("NtGdiRectInRegion: Bogus rc\n");
-        return ERROR;
-    }
-
-    return IntRectInRegion(hRgn, &rc);
+    /* Call the internal function */
+    return IntRectInRegion(hrgn, &rcTemp);
 }
 
 BOOL
 APIENTRY
 NtGdiSetRectRgn(
-    HRGN hRgn,
-    INT LeftRect,
-    INT TopRect,
-    INT RightRect,
-    INT BottomRect)
+    _In_ HRGN hrgn,
+    _In_ INT xLeft,
+    _In_ INT yTop,
+    _In_ INT xRight,
+    _In_ INT yBottom)
 {
-    PREGION rgn;
+    PREGION prgn;
 
-    rgn = REGION_LockRgn(hRgn);
-    if (rgn == NULL)
+    /* Lock the region */
+    prgn = REGION_LockRgn(hrgn);
+    if (prgn == NULL)
     {
-        return 0; // Per documentation
+        return FALSE;
     }
 
-    REGION_SetRectRgn(rgn, LeftRect, TopRect, RightRect, BottomRect);
+    /* Call the internal API */
+    REGION_SetRectRgn(prgn, xLeft, yTop, xRight, yBottom);
 
-    REGION_UnlockRgn(rgn);
+    /* Unlock the region and return success */
+    REGION_UnlockRgn(prgn);
     return TRUE;
 }
 
