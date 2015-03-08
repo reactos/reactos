@@ -116,6 +116,11 @@ NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int iTextLength, 
     BOOL bMatches;
     size_t iTargetLength;
 
+    if ((!pFindReplace) || (!pszText))
+    {
+        return FALSE;
+    }
+
     iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
 
     /* Make proper comparison */
