@@ -345,7 +345,6 @@ IsSoftwareBusPnpEnumeratorInstalled()
     SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
     GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
     PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData;
-    HANDLE hDevice;
 
     hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL,  DIGCF_DEVICEINTERFACE| DIGCF_PRESENT);
     if (!hDevInfo)
