@@ -53,6 +53,8 @@ UnsafeSetBitmapBits(
     PUCHAR pjDst, pjSrc;
     LONG lDeltaDst, lDeltaSrc;
     ULONG nWidth, nHeight, cBitsPixel;
+    NT_ASSERT(psurf->flags & API_BITMAP);
+    NT_ASSERT(psurf->SurfObj.iBitmapFormat <= BMF_32BPP);
 
     nWidth = psurf->SurfObj.sizlBitmap.cx;
     nHeight = psurf->SurfObj.sizlBitmap.cy;
@@ -63,8 +65,10 @@ UnsafeSetBitmapBits(
     pjSrc = pvBits;
     lDeltaDst = psurf->SurfObj.lDelta;
     lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
+    NT_ASSERT(lDeltaSrc <= abs(lDeltaDst));
 
-    if (cjBits && (cjBits < (lDeltaSrc * nHeight)))
+    /* Make sure the buffer is large enough*/
+    if (cjBits < (lDeltaSrc * nHeight))
         return 0;
 
     while (nHeight--)
@@ -227,7 +231,7 @@ NtGdiCreateBitmap(
         _SEH2_TRY
         {
             ProbeForRead(pUnsafeBits, (SIZE_T)cjSize, 1);
-            UnsafeSetBitmapBits(psurf, 0, pUnsafeBits);
+            UnsafeSetBitmapBits(psurf, cjSize, pUnsafeBits);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -568,10 +572,26 @@ NtGdiSetBitmapBits(
         return 0;
     }
 
+    if (GDI_HANDLE_IS_STOCKOBJ(hBitmap))
+    {
+        return 0;
+    }
+
     psurf = SURFACE_ShareLockSurface(hBitmap);
     if (psurf == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    if (((psurf->flags & API_BITMAP) == 0) ||
+        (psurf->SurfObj.iBitmapFormat > BMF_32BPP))
+    {
+        DPRINT1("Invalid bitmap: iBitmapFormat = %lu, flags = 0x%lx\n",
+                psurf->SurfObj.iBitmapFormat,
+                psurf->flags);
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        SURFACE_ShareUnlockSurface(psurf);
         return 0;
     }
 
