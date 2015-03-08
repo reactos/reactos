@@ -1,9 +1,10 @@
 #pragma once
 
-#define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
-#define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
-#define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
-#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
+/* Convert WIN32 ROP into an ENG ROP */
+#define WIN32_ROP3_TO_ENG_ROP4(dwRop4) ((((dwRop4) & 0x00FF0000) >> 16) | (((dwRop4) & 0x00FF0000) >> 8))
+#define WIN32_ROP4_TO_ENG_ROP4(dwRop4) ((dwRop4) >> 16)
+
+#define WIN32_ROP4_USES_SOURCE(Rop)  ((((Rop) & 0xCCCC0000) >> 2) != ((Rop) & 0x33330000))
 
 /* The range of valid ROP2 values is 1 .. 16 */
 #define FIXUP_ROP2(rop2) ((((rop2) - 1) & 0xF) + 1)

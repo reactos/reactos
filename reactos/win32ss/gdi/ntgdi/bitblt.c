@@ -151,13 +151,13 @@ NtGdiBitBlt(
     HDC hDCSrc,
     INT XSrc,
     INT YSrc,
-    DWORD ROP,
+    DWORD dwRop,
     IN DWORD crBackColor,
     IN FLONG fl)
 {
-    DWORD dwTRop;
 
-    if (ROP & CAPTUREBLT)
+    if (dwRop & CAPTUREBLT)
+    {
        return NtGdiStretchBlt(hDCDest,
                               XDest,
                               YDest,
@@ -168,10 +168,11 @@ NtGdiBitBlt(
                               YSrc,
                               Width,
                               Height,
-                              ROP,
+                              dwRop,
                               crBackColor);
+    }
 
-    dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
+    dwRop = dwRop & ~(NOMIRRORBITMAP|CAPTUREBLT);
 
     /* Forward to NtGdiMaskBlt */
     // TODO: What's fl for? LOL not to send this to MaskBit!
@@ -186,7 +187,7 @@ NtGdiBitBlt(
                         NULL,
                         0,
                         0,
-                        dwTRop,
+                        MAKEROP4(dwRop, dwRop),
                         crBackColor);
 }
 
@@ -310,7 +311,7 @@ NtGdiMaskBlt(
     HBITMAP hbmMask,
     INT xMask,
     INT yMask,
-    DWORD dwRop,
+    DWORD dwRop4,
     IN DWORD crBackColor)
 {
     PDC DCDest;
@@ -325,11 +326,11 @@ NtGdiMaskBlt(
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     BOOL UsesSource;
+    ROP4 rop4;
 
-    FIXUP_ROP(dwRop); // FIXME: why do we need this???
+    rop4 = WIN32_ROP4_TO_ENG_ROP4(dwRop4);
 
-    //DPRINT1("dwRop : 0x%08x\n", dwRop);
-    UsesSource = ROP_USES_SOURCE(dwRop);
+    UsesSource = ROP4_USES_SOURCE(rop4);
     if (!hdcDest || (UsesSource && !hdcSrc))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -337,7 +338,7 @@ NtGdiMaskBlt(
     }
 
     /* Check if we need a mask and have a mask bitmap */
-    if (ROP_USES_MASK(dwRop) && (hbmMask != NULL))
+    if (ROP4_USES_MASK(rop4) && (hbmMask != NULL))
     {
         /* Reference the mask bitmap */
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
@@ -481,7 +482,7 @@ NtGdiMaskBlt(
                           &MaskPoint,
                           &DCDest->eboFill.BrushObject,
                           &DCDest->dclevel.pbrFill->ptOrigin,
-                          ROP_TO_ROP4(dwRop));
+                          rop4);
 
     if (UsesSource)
         EXLATEOBJ_vCleanup(&exlo);
@@ -516,7 +517,8 @@ NtGdiPlgBlt(
     return FALSE;
 }
 
-BOOL APIENTRY
+BOOL
+NTAPI
 GreStretchBltMask(
     HDC hDCDest,
     INT XOriginDest,
@@ -528,7 +530,7 @@ GreStretchBltMask(
     INT YOriginSrc,
     INT WidthSrc,
     INT HeightSrc,
-    DWORD ROP,
+    DWORD dwRop4,
     IN DWORD dwBackColor,
     HDC hDCMask,
     INT XOriginMask,
@@ -551,10 +553,12 @@ GreStretchBltMask(
     POINTL BrushOrigin;
     BOOL UsesSource;
     BOOL UsesMask;
+    ROP4 rop4;
 
-    FIXUP_ROP(ROP);
-    UsesSource = ROP_USES_SOURCE(ROP);
-    UsesMask = ROP_USES_MASK(ROP);
+    rop4 = WIN32_ROP4_TO_ENG_ROP4(dwRop4);
+
+    UsesSource = ROP4_USES_SOURCE(rop4);
+    UsesMask = ROP4_USES_MASK(rop4);
 
     if (0 == WidthDest || 0 == HeightDest || 0 == WidthSrc || 0 == HeightSrc)
     {
@@ -692,7 +696,7 @@ GreStretchBltMask(
                               BitmapMask ? &MaskPoint : NULL,
                               &DCDest->eboFill.BrushObject,
                               &BrushOrigin,
-                              ROP_TO_ROP4(ROP));
+                              rop4);
     if (UsesSource)
     {
         EXLATEOBJ_vCleanup(&exlo);
@@ -726,10 +730,10 @@ NtGdiStretchBlt(
     INT YOriginSrc,
     INT WidthSrc,
     INT HeightSrc,
-    DWORD ROP,
+    DWORD dwRop3,
     IN DWORD dwBackColor)
 {
-    DWORD dwTRop = ROP & ~(NOMIRRORBITMAP|CAPTUREBLT);
+    dwRop3 = dwRop3 & ~(NOMIRRORBITMAP|CAPTUREBLT);
 
     return GreStretchBltMask(
                 hDCDest,
@@ -742,7 +746,7 @@ NtGdiStretchBlt(
                 YOriginSrc,
                 WidthSrc,
                 HeightSrc,
-                dwTRop,
+                MAKEROP4(dwRop3 & 0xFF0000, dwRop3),
                 dwBackColor,
                 NULL,
                 0,
@@ -757,7 +761,7 @@ IntPatBlt(
     INT YLeft,
     INT Width,
     INT Height,
-    DWORD dwRop,
+    DWORD dwRop3,
     PEBRUSHOBJ pebo)
 {
     RECTL DestRect;
@@ -769,8 +773,6 @@ IntPatBlt(
     ASSERT(pebo);
     pbrush = pebo->pbrush;
     ASSERT(pbrush);
-
-    FIXUP_ROP(dwRop);
 
     if (pbrush->flAttrs & BR_IS_NULL)
     {
@@ -817,18 +819,17 @@ IntPatBlt(
 
     psurf = pdc->dclevel.pSurface;
 
-    ret = IntEngBitBlt(
-        &psurf->SurfObj,
-        NULL,
-        NULL,
-        &pdc->co.ClipObj,
-        NULL,
-        &DestRect,
-        NULL,
-        NULL,
-        &pebo->BrushObject,
-        &BrushOrigin,
-        ROP_TO_ROP4(dwRop));
+    ret = IntEngBitBlt(&psurf->SurfObj,
+                       NULL,
+                       NULL,
+                       &pdc->co.ClipObj,
+                       NULL,
+                       &DestRect,
+                       NULL,
+                       NULL,
+                       &pebo->BrushObject,
+                       &BrushOrigin,
+                       WIN32_ROP3_TO_ENG_ROP4(dwRop3));
 
     DC_vFinishBlit(pdc, NULL);
 
@@ -906,15 +907,14 @@ NtGdiPatBlt(
     BOOL bResult;
     PDC pdc;
 
-    /* Mask away everything except foreground rop index */
-    dwRop = dwRop & 0x00FF0000;
-    dwRop |= dwRop << 8;
+    /* Convert the ROP3 to a ROP4 */
+    dwRop = MAKEROP4(dwRop & 0xFF0000, dwRop);
 
     /* Check if the rop uses a source */
-    if (ROP_USES_SOURCE(dwRop))
+    if (WIN32_ROP4_USES_SOURCE(dwRop))
     {
         /* This is not possible */
-        return 0;
+        return FALSE;
     }
 
     /* Lock the DC */

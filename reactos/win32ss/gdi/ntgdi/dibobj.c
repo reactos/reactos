@@ -1274,10 +1274,6 @@ NtGdiStretchDIBitsInternal(
                           pdc->pdcattr->crBackgroundClr,
                           pdc->pdcattr->crForegroundClr);
 
-    /* Mask away everything except foreground rop index */
-    dwRop = dwRop & 0x00FF0000;
-    dwRop |= dwRop << 8;
-
     /* Perform the stretch operation */
     bResult = IntEngStretchBlt(&psurfDst->SurfObj,
                                &psurfTmp->SurfObj,
@@ -1290,7 +1286,7 @@ NtGdiStretchDIBitsInternal(
                                NULL,
                                &pdc->eboFill.BrushObject,
                                NULL,
-                               ROP_TO_ROP4(dwRop));
+                               WIN32_ROP3_TO_ENG_ROP4(dwRop));
 
     /* Cleanup */
     DC_vFinishBlit(pdc, NULL);
