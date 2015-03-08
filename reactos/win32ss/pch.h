@@ -26,6 +26,7 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
+#include <ntintsafe.h>
 #include <ntddkbd.h>
 
 /* Win32 headers */

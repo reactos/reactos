@@ -1078,6 +1078,7 @@ IntEngMaskBlt(
                                          psoDest->iBitmapFormat,
                                          0,
                                          0,
+                                         0,
                                          NULL);
         if (psurfTemp == NULL)
         {

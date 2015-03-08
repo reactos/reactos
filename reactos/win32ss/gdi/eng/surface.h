@@ -123,6 +123,7 @@ SURFACE_AllocSurface(
     _In_ ULONG iFormat,
     _In_ ULONG fjBitmap,
     _In_opt_ ULONG cjWidth,
+    _In_opt_ ULONG cjBits,
     _In_opt_ PVOID pvBits);
 
 FORCEINLINE

@@ -120,6 +120,7 @@ SURFACE_AllocSurface(
     _In_ ULONG iFormat,
     _In_ ULONG fjBitmap,
     _In_opt_ ULONG cjWidth,
+    _In_opt_ ULONG cjBufSize,
     _In_opt_ PVOID pvBits)
 {
     ULONG cBitsPixel, cjBits, cjObject;
@@ -127,7 +128,9 @@ SURFACE_AllocSurface(
     SURFOBJ *pso;
     PVOID pvSection;
 
-    ASSERT(!pvBits || (iType == STYPE_BITMAP));
+    NT_ASSERT(!pvBits || (iType == STYPE_BITMAP));
+    NT_ASSERT((iFormat <= BMF_32BPP) || (cjBufSize != 0));
+    NT_ASSERT((LONG)cy > 0);
 
     /* Verify format */
     if ((iFormat < BMF_1BPP) || (iFormat > BMF_PNG))
@@ -151,8 +154,35 @@ SURFACE_AllocSurface(
         cjWidth = WIDTH_BYTES_ALIGN32(cx, cBitsPixel);
     }
 
-    /* Calculate the bitmap size in bytes */
-    cjBits = cjWidth * cy;
+    /* Is this an uncompressed format? */
+    if (iFormat <= BMF_32BPP)
+    {
+        /* Calculate the correct bitmap size in bytes */
+        if (!NT_SUCCESS(RtlULongMult(cjWidth, cy, &cjBits)))
+        {
+            DPRINT1("Overflow calculating size: cjWidth %lu, cy %lu\n",
+                    cjWidth, cy);
+            return NULL;
+        }
+
+        /* Did we get a buffer and size? */
+        if ((pvBits != NULL) && (cjBufSize != 0))
+        {
+            /* Make sure the buffer is large enough */
+            if (cjBufSize < cjBits)
+            {
+                DPRINT1("Buffer is too small, required: %lu, got %lu\n",
+                        cjBits, cjBufSize);
+                return NULL;
+            }
+        }
+    }
+    else
+    {
+        /* Compressed format, use the provided size */
+        NT_ASSERT(cjBufSize != 0);
+        cjBits = cjBufSize;
+    }
 
     /* Check if we need an extra large object */
     if ((iType == STYPE_BITMAP) && (pvBits == NULL) &&
@@ -168,9 +198,10 @@ SURFACE_AllocSurface(
     }
 
     /* Check for arithmetic overflow */
-    if ((cjBits < cjWidth) || (cjObject < sizeof(SURFACE)))
+    if (cjObject < sizeof(SURFACE))
     {
         /* Fail! */
+        DPRINT1("Overflow calculating cjObject: cjBits %lu\n", cjBits);
         return NULL;
     }
 
@@ -289,6 +320,7 @@ EngCreateBitmap(
                                  iFormat,
                                  fl,
                                  lWidth,
+                                 0,
                                  pvBits);
     if (!psurf)
     {
@@ -327,6 +359,7 @@ EngCreateDeviceBitmap(
                                  iFormat,
                                  0,
                                  0,
+                                 0,
                                  NULL);
     if (!psurf)
     {
@@ -363,6 +396,7 @@ EngCreateDeviceSurface(
                                  sizl.cx,
                                  sizl.cy,
                                  iFormat,
+                                 0,
                                  0,
                                  0,
                                  NULL);

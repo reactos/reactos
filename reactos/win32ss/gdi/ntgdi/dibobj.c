@@ -1090,7 +1090,7 @@ NtGdiGetDIBitsInternal(
         _SEH2_TRY
         {
             /* Copy the data back */
-            cjMaxInfo = min(cjMaxInfo, DIB_BitmapInfoSize(pbmi, (WORD)iUsage));
+            cjMaxInfo = min(cjMaxInfo, (UINT)DIB_BitmapInfoSize(pbmi, (WORD)iUsage));
             ProbeForWrite(pbmiUser, cjMaxInfo, 1);
             RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
         }
@@ -1228,7 +1228,7 @@ NtGdiStretchDIBitsInternal(
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
 
     hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
-                               pbmi->bmiHeader.biHeight,
+                               abs(pbmi->bmiHeader.biHeight),
                                0,
                                BitmapFormat(pbmi->bmiHeader.biBitCount,
                                             pbmi->bmiHeader.biCompression),
@@ -1652,7 +1652,7 @@ DIB_CreateDIBSection(
 
     // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
     // we're dealing with a compressed bitmap.  Otherwise, use width * height.
-    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB && bi->biCompression != BI_BITFIELDS
+    totalSize = (bi->biSizeImage && (bi->biCompression != BI_RGB) && (bi->biCompression != BI_BITFIELDS))
                 ? bi->biSizeImage : (ULONG)(bm.bmWidthBytes * effHeight);
 
     if (section)
@@ -1674,7 +1674,7 @@ DIB_CreateDIBSection(
         }
 
         mapOffset = offset - (offset % Sbi.AllocationGranularity);
-        mapSize = bi->biSizeImage + (offset - mapOffset);
+        mapSize = totalSize + (offset - mapOffset);
 
         SectionOffset.LowPart  = mapOffset;
         SectionOffset.HighPart = 0;
@@ -1724,7 +1724,7 @@ DIB_CreateDIBSection(
                             BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
                             BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
                             ((bi->biHeight < 0) ? BMF_TOPDOWN : 0),
-                            bi->biSizeImage,
+                            totalSize,
                             bm.bmBits,
                             0);
     if (!res)

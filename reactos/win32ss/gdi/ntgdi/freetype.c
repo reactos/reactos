@@ -3662,7 +3662,6 @@ GreExtTextOutW(
                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
             MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
-
         }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
@@ -3675,71 +3674,75 @@ GreExtTextOutW(
         MaskRect.right = realglyph->bitmap.width;
         MaskRect.bottom = realglyph->bitmap.rows;
 
-        /*
-         * We should create the bitmap out of the loop at the biggest possible
-         * glyph size. Then use memset with 0 to clear it and sourcerect to
-         * limit the work of the transbitblt.
-         */
+        /* Check if the bitmap has any pixels */
+        if ((bitSize.cx != 0) && (bitSize.cy != 0))
+        {
+            /*
+             * We should create the bitmap out of the loop at the biggest possible
+             * glyph size. Then use memset with 0 to clear it and sourcerect to
+             * limit the work of the transbitblt.
+             */
 
-        HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
-                                       BMF_8BPP, BMF_TOPDOWN,
-                                       realglyph->bitmap.buffer);
-        if ( !HSourceGlyph )
-        {
-            DPRINT1("WARNING: EngLockSurface() failed!\n");
-            // FT_Done_Glyph(realglyph);
-            IntUnLockFreeType;
-            DC_vFinishBlit(dc, NULL);
-            goto fail2;
-        }
-        SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-        if ( !SourceGlyphSurf )
-        {
+            HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
+                                           BMF_8BPP, BMF_TOPDOWN,
+                                           realglyph->bitmap.buffer);
+            if ( !HSourceGlyph )
+            {
+                DPRINT1("WARNING: EngCreateBitmap() failed!\n");
+                // FT_Done_Glyph(realglyph);
+                IntUnLockFreeType;
+                DC_vFinishBlit(dc, NULL);
+                goto fail2;
+            }
+            SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
+            if ( !SourceGlyphSurf )
+            {
+                EngDeleteSurface((HSURF)HSourceGlyph);
+                DPRINT1("WARNING: EngLockSurface() failed!\n");
+                IntUnLockFreeType;
+                DC_vFinishBlit(dc, NULL);
+                goto fail2;
+            }
+
+            /*
+             * Use the font data as a mask to paint onto the DCs surface using a
+             * brush.
+             */
+
+            if (lprc && (fuOptions & ETO_CLIPPED) &&
+                    DestRect.right >= lprc->right + dc->ptlDCOrig.x)
+            {
+                // We do the check '>=' instead of '>' to possibly save an iteration
+                // through this loop, since it's breaking after the drawing is done,
+                // and x is always incremented.
+                DestRect.right = lprc->right + dc->ptlDCOrig.x;
+                DoBreak = TRUE;
+            }
+            if (lprc && (fuOptions & ETO_CLIPPED) &&
+                    DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+            {
+                DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+            }
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+            if (!IntEngMaskBlt(
+                SurfObj,
+                SourceGlyphSurf,
+                &dc->co.ClipObj,
+                &exloRGB2Dst.xlo,
+                &exloDst2RGB.xlo,
+                &DestRect,
+                (PPOINTL)&MaskRect,
+                &dc->eboText.BrushObject,
+                &BrushOrigin))
+            {
+                DPRINT1("Failed to MaskBlt a glyph!\n");
+            }
+
+            MouseSafetyOnDrawEnd(dc->ppdev) ;
+
+            EngUnlockSurface(SourceGlyphSurf);
             EngDeleteSurface((HSURF)HSourceGlyph);
-            DPRINT1("WARNING: EngLockSurface() failed!\n");
-            IntUnLockFreeType;
-            DC_vFinishBlit(dc, NULL);
-            goto fail2;
         }
-
-        /*
-         * Use the font data as a mask to paint onto the DCs surface using a
-         * brush.
-         */
-
-        if (lprc && (fuOptions & ETO_CLIPPED) &&
-                DestRect.right >= lprc->right + dc->ptlDCOrig.x)
-        {
-            // We do the check '>=' instead of '>' to possibly save an iteration
-            // through this loop, since it's breaking after the drawing is done,
-            // and x is always incremented.
-            DestRect.right = lprc->right + dc->ptlDCOrig.x;
-            DoBreak = TRUE;
-        }
-        if (lprc && (fuOptions & ETO_CLIPPED) &&
-                DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
-        {
-            DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
-        }
-        MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-        if (!IntEngMaskBlt(
-            SurfObj,
-            SourceGlyphSurf,
-            &dc->co.ClipObj,
-            &exloRGB2Dst.xlo,
-            &exloDst2RGB.xlo,
-            &DestRect,
-            (PPOINTL)&MaskRect,
-            &dc->eboText.BrushObject,
-            &BrushOrigin))
-        {
-            DPRINT1("Failed to MaskBlt a glyph!\n");
-        }
-
-        MouseSafetyOnDrawEnd(dc->ppdev) ;
-
-        EngUnlockSurface(SourceGlyphSurf);
-        EngDeleteSurface((HSURF)HSourceGlyph);
 
         if (DoBreak)
         {

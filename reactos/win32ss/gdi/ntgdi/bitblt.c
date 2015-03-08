@@ -1453,6 +1453,7 @@ NtGdiGetPixel(
                                      BMF_32BPP,
                                      0,
                                      0,
+                                     0,
                                      &ulRGBColor);
     if (psurfDest)
     {

@@ -103,6 +103,7 @@ GreCreateBitmapEx(
         pvCompressedBits = pvBits;
         pvBits = NULL;
         iFormat = (iFormat == BMF_4RLE) ? BMF_4BPP : BMF_8BPP;
+        cjSizeImage = 0;
     }
 
     /* Allocate a surface */
@@ -112,6 +113,7 @@ GreCreateBitmapEx(
                                  iFormat,
                                  fjBitmap,
                                  cjWidthBytes,
+                                 cjSizeImage,
                                  pvBits);
     if (!psurf)
     {
@@ -205,6 +207,7 @@ NtGdiCreateBitmap(
                                  nWidth,
                                  nHeight,
                                  iFormat,
+                                 0,
                                  0,
                                  0,
                                  NULL);
