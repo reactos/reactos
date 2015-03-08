@@ -15,6 +15,7 @@
 #include <shlwapi.h>
 #include <debug.h>
 
+#include <swenum.h>
 #include <newdev.h>
 #include <initguid.h>
 #include <devguid.h>
@@ -337,6 +338,51 @@ InstallSystemSoundScheme()
     RegCloseKey(hKey);
 }
 
+BOOL
+IsSoftwareBusPnpEnumeratorInstalled()
+{
+    HDEVINFO hDevInfo;
+    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
+    GUID SWBusGuid = {STATIC_BUSID_SoftwareDeviceEnumerator};
+    PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData;
+    HANDLE hDevice;
+
+    hDevInfo = SetupDiGetClassDevsW(&SWBusGuid, NULL, NULL,  DIGCF_DEVICEINTERFACE| DIGCF_PRESENT);
+    if (!hDevInfo)
+    {
+        // failed
+        return FALSE;
+    }
+
+    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+    if (!SetupDiEnumDeviceInterfaces(hDevInfo, NULL, &SWBusGuid, 0, &DeviceInterfaceData))
+    {
+        // failed
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return FALSE;
+    }
+
+    DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W));
+    if (!DeviceInterfaceDetailData)
+    {
+        // failed
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return FALSE;
+    }
+
+    DeviceInterfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W);
+    if (!SetupDiGetDeviceInterfaceDetailW(hDevInfo,  &DeviceInterfaceData, DeviceInterfaceDetailData,MAX_PATH * sizeof(WCHAR) + sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W), NULL, NULL))
+    {
+        // failed
+        HeapFree(GetProcessHeap(), 0, DeviceInterfaceDetailData);
+        SetupDiDestroyDeviceInfoList(hDevInfo);
+        return FALSE;
+    }
+    HeapFree(GetProcessHeap(), 0, DeviceInterfaceDetailData);
+    SetupDiDestroyDeviceInfoList(hDevInfo);
+    return TRUE;
+}
+
 DWORD
 InstallSoftwareBusPnpEnumerator(LPWSTR InfPath, LPCWSTR HardwareIdList)
 {
@@ -484,20 +530,23 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
     SetupTermDefaultQueueCallback(Context);
     SetupCloseInfFile(hInf);
 
-    Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
-    if (!Length || Length >= MAX_PATH - 14)
+    if (!IsSoftwareBusPnpEnumeratorInstalled())
     {
-        return ERROR_GEN_FAILURE;
-    }
+        Length = GetWindowsDirectoryW(szBuffer, MAX_PATH);
+        if (!Length || Length >= MAX_PATH - 14)
+        {
+            return ERROR_GEN_FAILURE;
+        }
 
-    pBuffer = PathAddBackslashW(szBuffer);
-    if (!pBuffer)
-    {
-        return ERROR_GEN_FAILURE;
-    }
+        pBuffer = PathAddBackslashW(szBuffer);
+        if (!pBuffer)
+        {
+            return ERROR_GEN_FAILURE;
+        }
 
-    wcscpy(pBuffer, L"inf\\machine.inf");
-    InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM");
+        wcscpy(pBuffer, L"inf\\machine.inf");
+        InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM");
+    }
 
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!hSCManager)
