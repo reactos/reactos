@@ -468,7 +468,7 @@ EngBitBlt(
         if (psoMask == NULL)
         {
             /* We have no mask, assume the mask is all foreground */
-            rop4 &= (rop4 & 0xFF) || ((rop4 & 0xFF) << 8);
+            rop4 = (rop4 & 0xFF) || ((rop4 & 0xFF) << 8);
             UsesMask = FALSE;
         }
     }
