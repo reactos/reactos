@@ -1,6 +1,9 @@
 [Version]
 Signature = "$ReactOS$"
 
+; Directories relative to the installation directory.
+; For specifying absolute directories, use the SystemPartitionFiles section,
+; or use names starting with \.
 [Directories]
 ; <directory_id> = <path>
 1 = "\"
@@ -22,6 +25,7 @@ sacdrv.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
+vgafonts.cab=,,,,,,,,,,,,1
 bootvid.dll=,,,,,,,,,,,,2
 c_437.nls=,,,,,,,,,,,,2
 c_1252.nls=,,,,,,,,,,,,2
@@ -63,6 +67,8 @@ ntdll.dll=,,,,,,,,,,,,2
 wmilib.sys=,,,,,,,,,,,,4
 ksecdd.sys=,,,,,,,,,,,,4
 mountmgr.sys=,,,,,,x,,,,,,4
+
+[SystemPartitionFiles]
 
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp

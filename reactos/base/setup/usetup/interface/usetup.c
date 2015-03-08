@@ -3121,7 +3121,8 @@ AddSectionToCopyQueue(HINF InfFile,
     PWCHAR FileKeyValue;
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
-    WCHAR CompleteOrigFileName[512];
+    ULONG Length;
+    WCHAR CompleteOrigDirName[512];
 
     if (SourceCabinet)
         return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
@@ -3180,14 +3181,35 @@ AddSectionToCopyQueue(HINF InfFile,
             break;
         }
 
-        wcscpy(CompleteOrigFileName, SourceRootDir.Buffer);
-        wcscat(CompleteOrigFileName, L"\\");
-        wcscat(CompleteOrigFileName, DirKeyValue);
+        if ((DirKeyValue[0] == 0) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == 0))
+        {
+            /* Installation path */
+            wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
+        }
+        else if (DirKeyValue[0] == L'\\')
+        {
+            /* Absolute path */
+            wcscpy(CompleteOrigDirName, DirKeyValue);
+        }
+        else // if (DirKeyValue[0] != L'\\')
+        {
+            /* Path relative to the installation path */
+            wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
+            wcscat(CompleteOrigDirName, L"\\");
+            wcscat(CompleteOrigDirName, DirKeyValue);
+        }
+
+        /* Remove trailing backslash */
+        Length = wcslen(CompleteOrigDirName);
+        if ((Length > 0) && (CompleteOrigDirName[Length - 1] == L'\\'))
+        {
+            CompleteOrigDirName[Length - 1] = 0;
+        }
 
         if (!SetupQueueCopy(SetupFileQueue,
                             SourceCabinet,
                             SourceRootPath.Buffer,
-                            CompleteOrigFileName,
+                            CompleteOrigDirName,
                             FileKeyName,
                             DirKeyValue,
                             TargetFileName))
@@ -3209,7 +3231,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     WCHAR PathBuffer[MAX_PATH];
     INFCONTEXT DirContext;
     PWCHAR AdditionalSectionName = NULL;
-    PWCHAR KeyValue;
+    PWCHAR DirKeyValue;
     ULONG Length;
     NTSTATUS Status;
 
@@ -3233,16 +3255,20 @@ PrepareCopyPageInfFile(HINF InfFile,
     /* Create directories */
 
     /*
-    * FIXME:
-    * Install directories like '\reactos\test' are not handled yet.
-    */
+     * FIXME:
+     * - Install directories like '\reactos\test' are not handled yet.
+     * - Copying files to DestinationRootPath should be done from within
+     *   the SystemPartitionFiles section.
+     *   At the moment we check whether we specify paths like '\foo' or '\\' for that.
+     *   For installing to DestinationPath specify just '\' .
+     */
 
     /* Get destination path */
     wcscpy(PathBuffer, DestinationPath.Buffer);
 
     /* Remove trailing backslash */
     Length = wcslen(PathBuffer);
-    if ((Length > 0) && (PathBuffer[Length - 1] == '\\'))
+    if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
     {
         PathBuffer[Length - 1] = 0;
     }
@@ -3274,27 +3300,35 @@ PrepareCopyPageInfFile(HINF InfFile,
     /* Enumerate the directory values and create the subdirectories */
     do
     {
-        if (!INF_GetData(&DirContext, NULL, &KeyValue))
+        if (!INF_GetData(&DirContext, NULL, &DirKeyValue))
         {
             DPRINT1("break\n");
             break;
         }
 
-        if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
+        if ((DirKeyValue[0] == 0) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == 0))
         {
-            DPRINT("Absolute Path: '%S'\n", KeyValue);
+            /* Installation path */
+            DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
-            wcscpy(PathBuffer, DestinationRootPath.Buffer);
-            wcscat(PathBuffer, KeyValue);
+            wcscpy(PathBuffer, DestinationPath.Buffer);
 
             DPRINT("FullPath: '%S'\n", PathBuffer);
         }
-        else if (KeyValue[0] != L'\\')
+        else if (DirKeyValue[0] == L'\\')
         {
-            DPRINT("RelativePath: '%S'\n", KeyValue);
-            wcscpy(PathBuffer, DestinationPath.Buffer);
-            wcscat(PathBuffer, L"\\");
-            wcscat(PathBuffer, KeyValue);
+            /* Absolute path */
+            DPRINT("Absolute Path: '%S'\n", DirKeyValue);
+
+            wcscpy(PathBuffer, DestinationRootPath.Buffer);
+            wcscat(PathBuffer, DirKeyValue);
+
+            /* Remove trailing backslash */
+            Length = wcslen(PathBuffer);
+            if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
+            {
+                PathBuffer[Length - 1] = 0;
+            }
 
             DPRINT("FullPath: '%S'\n", PathBuffer);
 
@@ -3306,7 +3340,33 @@ PrepareCopyPageInfFile(HINF InfFile,
                 return FALSE;
             }
         }
-    } while (SetupFindNextLine (&DirContext, &DirContext));
+        else // if (DirKeyValue[0] != L'\\')
+        {
+            /* Path relative to the installation path */
+            DPRINT("RelativePath: '%S'\n", DirKeyValue);
+
+            wcscpy(PathBuffer, DestinationPath.Buffer);
+            wcscat(PathBuffer, L"\\");
+            wcscat(PathBuffer, DirKeyValue);
+
+            /* Remove trailing backslash */
+            Length = wcslen(PathBuffer);
+            if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
+            {
+                PathBuffer[Length - 1] = 0;
+            }
+
+            DPRINT("FullPath: '%S'\n", PathBuffer);
+
+            Status = SetupCreateDirectory(PathBuffer);
+            if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
+            {
+                DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+                MUIDisplayError(ERROR_CREATE_DIR, Ir, POPUP_WAIT_ENTER);
+                return FALSE;
+            }
+        }
+    } while (SetupFindNextLine(&DirContext, &DirContext));
 
     return TRUE;
 }

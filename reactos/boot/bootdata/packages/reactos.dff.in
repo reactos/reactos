@@ -13,11 +13,14 @@
 [Version]
 Signature = "$ReactOS$"
 
+; Directories relative to the installation directory.
+; For specifying absolute directories, use the SystemPartitionFiles section,
+; or use names starting with \.
 [Directories]
 1 = system32
 2 = system32\drivers
 3 = Fonts
-4 =
+4 = "\"
 5 = system32\drivers\etc
 6 = inf
 7 = bin
