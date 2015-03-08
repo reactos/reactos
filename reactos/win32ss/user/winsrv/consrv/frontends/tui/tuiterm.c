@@ -11,11 +11,15 @@
 
 #ifdef TUITERM_COMPILE
 
-#include "consrv.h"
+#include <consrv.h>
+
 // #include "include/conio.h"
 #include "include/console.h"
 #include "include/settings.h"
 #include "tuiterm.h"
+
+#include <ndk/iofuncs.h>
+#include <ndk/setypes.h>
 #include <drivers/blue/ntddblue.h>
 
 #define NDEBUG
@@ -23,6 +27,10 @@
 
 
 /* GLOBALS ********************************************************************/
+
+#define ConsoleOutputUnicodeToAnsiChar(Console, dChar, sWChar) \
+    ASSERT((ULONG_PTR)dChar != (ULONG_PTR)sWChar); \
+    WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
 /* TUI Console Window Class name */
 #define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"
@@ -32,10 +40,12 @@ typedef struct _TUI_CONSOLE_DATA
     CRITICAL_SECTION Lock;
     LIST_ENTRY Entry;           /* Entry in the list of virtual consoles */
     // HANDLE hTuiInitEvent;
+    // HANDLE hTuiTermEvent;
 
-    HWND hWindow;               /* Handle to the console's window (used for the window's procedure */
+    HWND hWindow;               /* Handle to the console's window (used for the window's procedure) */
 
     PCONSRV_CONSOLE Console;           /* Pointer to the owned console */
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to the active screen buffer (then maybe the previous Console member is redundant?? Or not...) */
     // TUI_CONSOLE_INFO TuiInfo;   /* TUI terminal settings */
 } TUI_CONSOLE_DATA, *PTUI_CONSOLE_DATA;
 
@@ -164,6 +174,7 @@ done:
 /**\
 \******************************************************************************/
 
+#if 0
 static BOOL
 TuiSwapConsole(INT Next)
 {
@@ -230,6 +241,7 @@ TuiSwapConsole(INT Next)
         return FALSE;
     }
 }
+#endif
 
 static VOID
 TuiCopyRect(PCHAR Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
@@ -244,7 +256,7 @@ TuiCopyRect(PCHAR Dest, PTEXTMODE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
     DestDelta = ConioRectWidth(Region) * 2 /* 2 == sizeof(CHAR) + sizeof(BYTE) */;
     for (i = Region->Top; i <= Region->Bottom; i++)
     {
-        ConsoleUnicodeCharToAnsiChar(Buff->Header.Console, (PCHAR)Dest, &Src->Char.UnicodeChar);
+        ConsoleOutputUnicodeToAnsiChar(Buff->Header.Console, (PCHAR)Dest, &Src->Char.UnicodeChar);
         *(PBYTE)(Dest + 1) = (BYTE)Src->Attributes;
 
         Src += SrcDelta;
@@ -386,7 +398,7 @@ TuiInit(DWORD OemCP)
                                       0, NULL,
                                       OPEN_EXISTING,
                                       0, NULL);
-    if (INVALID_HANDLE_VALUE == ConsoleDeviceHandle)
+    if (ConsoleDeviceHandle == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to open BlueScreen.\n");
         return FALSE;
@@ -470,11 +482,8 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
     if (This == NULL || Console == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    // if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER)
-        // return STATUS_INVALID_PARAMETER;
-
-    // /* Initialize the console */
-    // Console->FrontEndIFace.Vtbl = &TuiVtbl;
+    if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER)
+        return STATUS_INVALID_PARAMETER;
 
     TuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(TUI_CONSOLE_DATA));
     if (!TuiData)
@@ -483,7 +492,8 @@ TuiInitFrontEnd(IN OUT PFRONTEND This,
         return STATUS_UNSUCCESSFUL;
     }
     // Console->FrontEndIFace.Context = (PVOID)TuiData;
-    TuiData->Console = Console;
+    TuiData->Console      = Console;
+    TuiData->ActiveBuffer = Console->ActiveBuffer;
     TuiData->hWindow = NULL;
 
     InitializeCriticalSection(&TuiData->Lock);
@@ -540,7 +550,7 @@ static VOID NTAPI
 TuiDeinitFrontEnd(IN OUT PFRONTEND This)
 {
     // PCONSRV_CONSOLE Console = This->Console;
-    PTUI_CONSOLE_DATA TuiData = This->Context; // Console->FrontEndIFace.Context;
+    PTUI_CONSOLE_DATA TuiData = This->Context;
 
     /* Close the notification window */
     DestroyWindow(TuiData->hWindow);
@@ -571,7 +581,6 @@ TuiDeinitFrontEnd(IN OUT PFRONTEND This)
     /* Switch to the next console */
     if (NULL != ActiveConsole) ConioDrawConsole(ActiveConsole->Console);
 
-    // Console->FrontEndIFace.Context = NULL;
     This->Context = NULL;
     DeleteCriticalSection(&TuiData->Lock);
     ConsoleFreeHeap(TuiData);
@@ -581,12 +590,14 @@ static VOID NTAPI
 TuiDrawRegion(IN OUT PFRONTEND This,
               SMALL_RECT* Region)
 {
-    DWORD BytesReturned;
-    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+    PTUI_CONSOLE_DATA TuiData = This->Context;
+    PCONSOLE_SCREEN_BUFFER Buff = TuiData->Console->ActiveBuffer;
     PCONSOLE_DRAW ConsoleDraw;
+    DWORD BytesReturned;
     UINT ConsoleDrawSize;
 
-    if (ActiveConsole->Console != Console || GetType(Buff) != TEXTMODE_BUFFER) return;
+    if (TuiData != ActiveConsole) return;
+    if (GetType(Buff) != TEXTMODE_BUFFER) return;
 
     ConsoleDrawSize = sizeof(CONSOLE_DRAW) +
                       (ConioRectWidth(Region) * ConioRectHeight(Region)) * 2;
@@ -625,20 +636,22 @@ TuiWriteStream(IN OUT PFRONTEND This,
                PWCHAR Buffer,
                UINT Length)
 {
-    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+    PTUI_CONSOLE_DATA TuiData = This->Context;
+    PCONSOLE_SCREEN_BUFFER Buff = TuiData->Console->ActiveBuffer;
     PCHAR NewBuffer;
     ULONG NewLength;
     DWORD BytesWritten;
 
-    if (ActiveConsole->Console->ActiveBuffer != Buff) return;
+    if (TuiData != ActiveConsole) return;
+    if (GetType(Buff) != TEXTMODE_BUFFER) return;
 
-    NewLength = WideCharToMultiByte(Console->OutputCodePage, 0,
+    NewLength = WideCharToMultiByte(TuiData->Console->OutputCodePage, 0,
                                     Buffer, Length,
                                     NULL, 0, NULL, NULL);
     NewBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, NewLength * sizeof(CHAR));
     if (!NewBuffer) return;
 
-    WideCharToMultiByte(Console->OutputCodePage, 0,
+    WideCharToMultiByte(TuiData->Console->OutputCodePage, 0,
                         Buffer, Length,
                         NewBuffer, NewLength, NULL, NULL);
 
@@ -650,16 +663,25 @@ TuiWriteStream(IN OUT PFRONTEND This,
     RtlFreeHeap(RtlGetProcessHeap(), 0, NewBuffer);
 }
 
+static VOID NTAPI
+TuiRingBell(IN OUT PFRONTEND This)
+{
+    Beep(800, 200);
+}
+
 static BOOL NTAPI
 TuiSetCursorInfo(IN OUT PFRONTEND This,
                  PCONSOLE_SCREEN_BUFFER Buff)
 {
+    PTUI_CONSOLE_DATA TuiData = This->Context;
     CONSOLE_CURSOR_INFO Info;
     DWORD BytesReturned;
 
-    if (ActiveConsole->Console->ActiveBuffer != Buff) return TRUE;
+    if (TuiData != ActiveConsole) return TRUE;
+    if (TuiData->Console->ActiveBuffer != Buff) return TRUE;
+    if (GetType(Buff) != TEXTMODE_BUFFER) return FALSE;
 
-    Info.dwSize = ConioEffectiveCursorSize(Console, 100);
+    Info.dwSize = ConioEffectiveCursorSize(TuiData->Console, 100);
     Info.bVisible = Buff->CursorInfo.bVisible;
 
     if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_CURSOR_INFO,
@@ -678,10 +700,12 @@ TuiSetScreenInfo(IN OUT PFRONTEND This,
                  SHORT OldCursorX,
                  SHORT OldCursorY)
 {
+    PTUI_CONSOLE_DATA TuiData = This->Context;
     CONSOLE_SCREEN_BUFFER_INFO Info;
     DWORD BytesReturned;
 
-    if (ActiveConsole->Console->ActiveBuffer != Buff) return TRUE;
+    if (TuiData != ActiveConsole) return TRUE;
+    if (TuiData->Console->ActiveBuffer != Buff) return TRUE;
     if (GetType(Buff) != TEXTMODE_BUFFER) return FALSE;
 
     Info.dwCursorPosition = Buff->CursorPosition;
@@ -701,6 +725,93 @@ TuiSetScreenInfo(IN OUT PFRONTEND This,
 static VOID NTAPI
 TuiResizeTerminal(IN OUT PFRONTEND This)
 {
+}
+
+static VOID NTAPI
+TuiSetActiveScreenBuffer(IN OUT PFRONTEND This)
+{
+    // PGUI_CONSOLE_DATA GuiData = This->Context;
+    // PCONSOLE_SCREEN_BUFFER ActiveBuffer;
+    // HPALETTE hPalette;
+
+    // EnterCriticalSection(&GuiData->Lock);
+    // GuiData->WindowSizeLock = TRUE;
+
+    // InterlockedExchangePointer(&GuiData->ActiveBuffer,
+                               // ConDrvGetActiveScreenBuffer(GuiData->Console));
+
+    // GuiData->WindowSizeLock = FALSE;
+    // LeaveCriticalSection(&GuiData->Lock);
+
+    // ActiveBuffer = GuiData->ActiveBuffer;
+
+    // /* Change the current palette */
+    // if (ActiveBuffer->PaletteHandle == NULL)
+    // {
+        // hPalette = GuiData->hSysPalette;
+    // }
+    // else
+    // {
+        // hPalette = ActiveBuffer->PaletteHandle;
+    // }
+
+    // DPRINT("GuiSetActiveScreenBuffer using palette 0x%p\n", hPalette);
+
+    // /* Set the new palette for the framebuffer */
+    // SelectPalette(GuiData->hMemDC, hPalette, FALSE);
+
+    // /* Specify the use of the system palette for the framebuffer */
+    // SetSystemPaletteUse(GuiData->hMemDC, ActiveBuffer->PaletteUsage);
+
+    // /* Realize the (logical) palette */
+    // RealizePalette(GuiData->hMemDC);
+
+    // GuiResizeTerminal(This);
+    // // ConioDrawConsole(Console);
+}
+
+static VOID NTAPI
+TuiReleaseScreenBuffer(IN OUT PFRONTEND This,
+                       IN PCONSOLE_SCREEN_BUFFER ScreenBuffer)
+{
+    // PGUI_CONSOLE_DATA GuiData = This->Context;
+
+    // /*
+     // * If we were notified to release a screen buffer that is not actually
+     // * ours, then just ignore the notification...
+     // */
+    // if (ScreenBuffer != GuiData->ActiveBuffer) return;
+
+    // /*
+     // * ... else, we must release our active buffer. Two cases are present:
+     // * - If ScreenBuffer (== GuiData->ActiveBuffer) IS NOT the console
+     // *   active screen buffer, then we can safely switch to it.
+     // * - If ScreenBuffer IS the console active screen buffer, we must release
+     // *   it ONLY.
+     // */
+
+    // /* Release the old active palette and set the default one */
+    // if (GetCurrentObject(GuiData->hMemDC, OBJ_PAL) == ScreenBuffer->PaletteHandle)
+    // {
+        // /* Set the new palette */
+        // SelectPalette(GuiData->hMemDC, GuiData->hSysPalette, FALSE);
+    // }
+
+    // /* Set the adequate active screen buffer */
+    // if (ScreenBuffer != GuiData->Console->ActiveBuffer)
+    // {
+        // GuiSetActiveScreenBuffer(This);
+    // }
+    // else
+    // {
+        // EnterCriticalSection(&GuiData->Lock);
+        // GuiData->WindowSizeLock = TRUE;
+
+        // InterlockedExchangePointer(&GuiData->ActiveBuffer, NULL);
+
+        // GuiData->WindowSizeLock = FALSE;
+        // LeaveCriticalSection(&GuiData->Lock);
+    // }
 }
 
 static VOID NTAPI
@@ -800,9 +911,12 @@ static FRONTEND_VTBL TuiVtbl =
     TuiDeinitFrontEnd,
     TuiDrawRegion,
     TuiWriteStream,
+    TuiRingBell,
     TuiSetCursorInfo,
     TuiSetScreenInfo,
     TuiResizeTerminal,
+    TuiSetActiveScreenBuffer,
+    TuiReleaseScreenBuffer,
     TuiRefreshInternalInfo,
     TuiChangeTitle,
     TuiChangeIcon,
