@@ -260,6 +260,8 @@ check Wine current souces first as it may already be fixed.
 
 reactos/lib/3rdparty/strmbase               # Synced to Wine-1.7.27
 
+reactos/lib/rtl/actctx.c                    # Partly synced with WineStaging-1.7.37
+
 advapi32 -
   reactos/dll/win32/advapi32/wine/cred.c         # Synced to Wine-1.7.27
   reactos/dll/win32/advapi32/wine/crypt.c        # Synced to Wine-1.7.27

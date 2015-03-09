@@ -12,7 +12,7 @@
  *                  Samuel Serapión
  */
 
-/* Based on Wine 1.7.17 */
+/* Based on Wine Staging 1.7.37 */
 
 #include <rtl.h>
 
@@ -78,6 +78,7 @@ struct assembly_identity
     WCHAR                *type;
     struct assembly_version version;
     BOOL                  optional;
+    BOOL                  delayed;
 };
 
 struct strsection_header
@@ -582,13 +583,13 @@ static const WCHAR dependencyW[] = {'d','e','p','e','n','d','e','n','c','y',0};
 static const WCHAR dependentAssemblyW[] = {'d','e','p','e','n','d','e','n','t','A','s','s','e','m','b','l','y',0};
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR fileW[] = {'f','i','l','e',0};
+static const WCHAR hashW[] = {'h','a','s','h',0};
 static const WCHAR noInheritW[] = {'n','o','I','n','h','e','r','i','t',0};
 static const WCHAR noInheritableW[] = {'n','o','I','n','h','e','r','i','t','a','b','l','e',0};
 static const WCHAR typelibW[] = {'t','y','p','e','l','i','b',0};
 static const WCHAR windowClassW[] = {'w','i','n','d','o','w','C','l','a','s','s',0};
 
 static const WCHAR clsidW[] = {'c','l','s','i','d',0};
-static const WCHAR hashW[] = {'h','a','s','h',0};
 static const WCHAR hashalgW[] = {'h','a','s','h','a','l','g',0};
 static const WCHAR helpdirW[] = {'h','e','l','p','d','i','r',0};
 static const WCHAR iidW[] = {'i','i','d',0};
@@ -684,6 +685,7 @@ static const struct olemisc_entry olemisc_values[] =
 
 static const WCHAR g_xmlW[] = {'?','x','m','l',0};
 static const WCHAR manifestv1W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','1',0};
+static const WCHAR manifestv2W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','2',0};
 static const WCHAR manifestv3W[] = {'u','r','n',':','s','c','h','e','m','a','s','-','m','i','c','r','o','s','o','f','t','-','c','o','m',':','a','s','m','.','v','3',0};
 
 static const WCHAR dotManifestW[] = {'.','m','a','n','i','f','e','s','t',0};
@@ -879,6 +881,7 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.base);
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.ps32);
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.name);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.ifaceps.tlib);
             break;
         case ACTIVATION_CONTEXT_SECTION_COM_TYPE_LIBRARY_REDIRECTION:
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.typelib.tlbid);
@@ -1060,6 +1063,7 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
     append_string( ret, versionW2, version );
     return ret;
 }
+
 static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
 {
     ACTIVATION_CONTEXT *ret = NULL, *actctx = h;
@@ -1114,6 +1118,14 @@ static void actctx_release( ACTIVATION_CONTEXT *actctx )
         RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->config.info );
         RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->appdir.info );
         RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->assemblies );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->dllredirect_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->wndclass_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->tlib_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->comserver_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->ifaceps_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->clrsurrogate_section );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, actctx->progid_section );
+
         pActual = CONTAINING_RECORD(actctx, ACTIVATION_CONTEXT_WRAPPED, ActivationContext);
         pActual->MagicMarker = 0;
         RtlFreeHeap(RtlGetProcessHeap(), 0, pActual);
@@ -1891,16 +1903,26 @@ static BOOL parse_binding_redirect_elem(xmlbuf_t* xmlbuf)
 
 static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
 {
-    xmlstr_t    elem, content;
-    UNICODE_STRING elemU;
-    BOOL        end = FALSE, ret = TRUE;
+    xmlstr_t    elem, content, attr_name, attr_value;
+    BOOL        end = FALSE, ret = TRUE, error = FALSE;
 
-    if (!parse_expect_no_attr(xmlbuf, &end) || end ||
-        !parse_text_content(xmlbuf, &content))
+    UNICODE_STRING elem1U, elem2U;
+
+    while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
+    {
+        elem1U = xmlstr2unicode(&attr_name);
+        elem2U = xmlstr2unicode(&attr_value);
+        DPRINT1("unknown attr %s=%s\n", &elem1U, &elem2U);
+    }
+
+    if (error) return FALSE;
+    if (end) return TRUE;
+
+    if (!parse_text_content(xmlbuf, &content))
         return FALSE;
 
-    elemU = xmlstr2unicode(&content);
-    DPRINT("Got description %wZ\n", &elemU);
+    elem1U = xmlstr2unicode(&content);
+    DPRINT("Got description %wZ\n", &elem1U);
 
     while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
     {
@@ -1911,8 +1933,8 @@ static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
         }
         else
         {
-            elemU = xmlstr2unicode(&elem);
-            DPRINT1("unknown elem %wZ\n", &elemU);
+            elem1U = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elem1U);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -2092,13 +2114,31 @@ static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
 static BOOL parse_dependent_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl, BOOL optional)
 {
     struct assembly_identity    ai;
-    xmlstr_t                    elem;
-    BOOL                        end = FALSE, ret = TRUE;
+    xmlstr_t                    elem, attr_name, attr_value;
+    BOOL                        end = FALSE, error = FALSE, ret = TRUE, delayed = FALSE;
 
-    if (!parse_expect_no_attr(xmlbuf, &end) || end) return end;
+    UNICODE_STRING elem1U, elem2U;
+
+    while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
+    {
+        static const WCHAR allowDelayedBindingW[] = {'a','l','l','o','w','D','e','l','a','y','e','d','B','i','n','d','i','n','g',0};
+        static const WCHAR trueW[] = {'t','r','u','e',0};
+
+        if (xmlstr_cmp(&attr_name, allowDelayedBindingW))
+            delayed = xmlstr_cmp(&attr_value, trueW);
+        else
+        {
+            elem1U = xmlstr2unicode(&attr_name);
+            elem2U = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %s=%s\n", &elem1U, &elem2U);
+        }
+    }
+
+    if (error || end) return end;
 
     memset(&ai, 0, sizeof(ai));
     ai.optional = optional;
+    ai.delayed = delayed;
 
     if (!parse_expect_elem(xmlbuf, assemblyIdentityW, asmv1W) ||
         !parse_assembly_identity_elem(xmlbuf, acl->actctx, &ai))
@@ -2297,7 +2337,9 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         }
         else if (xmlstr_cmp(&attr_name, xmlnsW))
         {
-            if (!xmlstr_cmp(&attr_value, manifestv1W) && !xmlstr_cmp(&attr_value, manifestv3W))
+            if (!xmlstr_cmp(&attr_value, manifestv1W) &&
+                !xmlstr_cmp(&attr_value, manifestv2W) &&
+                !xmlstr_cmp(&attr_value, manifestv3W))
             {
                 DPRINT1("wrong namespace %wZ\n", &attr_valueU);
                 return FALSE;
@@ -2537,7 +2579,7 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
 static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT extra_len )
 {
     NTSTATUS status;
-    ULONG magic;
+    ULONG_PTR magic;
     LDR_DATA_TABLE_ENTRY *pldr;
 
     LdrLockLoaderLock(0, NULL, &magic);
@@ -2763,8 +2805,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
 {
     static const WCHAR lookup_fmtW[] =
         {'%','s','_','%','s','_','%','s','_','%','u','.','%','u','.','*','.','*','_',
-         '*', /* FIXME */
-         '.','m','a','n','i','f','e','s','t',0};
+         '%','s','_','*','.','m','a','n','i','f','e','s','t',0};
+    static const WCHAR wine_trailerW[] = {'d','e','a','d','b','e','e','f','.','m','a','n','i','f','e','s','t'};
 
     WCHAR *lookup, *ret = NULL;
     UNICODE_STRING lookup_us;
@@ -2788,6 +2830,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
                           FileBothDirectoryInformation, FALSE, &lookup_us, TRUE );
     if (io.Status == STATUS_SUCCESS)
     {
+        ULONG min_build = ai->version.build, min_revision = ai->version.revision;
         FILE_BOTH_DIR_INFORMATION *dir_info;
         WCHAR *tmp;
         ULONG build, revision;
@@ -2811,20 +2854,32 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
 
             tmp = (WCHAR *)dir_info->FileName + (strchrW(lookup, '*') - lookup);
             build = atoiW(tmp);
-            if (build < ai->version.build) continue;
+            if (build < min_build) continue;
             tmp = strchrW(tmp, '.') + 1;
             revision = atoiW(tmp);
-            if (build == ai->version.build && revision < ai->version.revision)
-                continue;
-            ai->version.build = (USHORT)build;
-            ai->version.revision = (USHORT)revision;
-
-            if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength * sizeof(WCHAR) )))
+            if (build == min_build && revision < min_revision) continue;
+            tmp = strchrW(tmp, '_') + 1;
+            tmp = strchrW(tmp, '_') + 1;
+            if (dir_info->FileNameLength - (tmp - dir_info->FileName) * sizeof(WCHAR) == sizeof(wine_trailerW) &&
+                !memicmpW( tmp, wine_trailerW, sizeof(wine_trailerW) / sizeof(WCHAR) ))
+            {
+                /* prefer a non-Wine manifest if we already have one */
+                /* we'll still load the builtin dll if specified through DllOverrides */
+                if (ret) continue;
+            }
+            else
+            {
+                min_build = build;
+                min_revision = revision;
+            }
+            ai->version.build = build;
+            ai->version.revision = revision;
+            RtlFreeHeap( RtlGetProcessHeap(), 0, ret );
+            if ((ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, dir_info->FileNameLength + sizeof(WCHAR) )))
             {
                 memcpy( ret, dir_info->FileName, dir_info->FileNameLength );
                 ret[dir_info->FileNameLength/sizeof(WCHAR)] = 0;
             }
-            break;
         }
     }
     else DPRINT1("no matching file for %S\n", lookup);
@@ -2920,7 +2975,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     HANDLE file;
     DWORD len;
 
-    DPRINT( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
+    DPRINT1( "looking for name=%S version=%u.%u.%u.%u arch=%S\n",
            ai->name, ai->version.major, ai->version.minor, ai->version.build, ai->version.revision, ai->arch );
 
     if ((status = lookup_winsxs(acl, ai)) != STATUS_NO_SUCH_FILE) return status;
@@ -3006,7 +3061,7 @@ static NTSTATUS parse_depend_manifests(struct actctx_loader* acl)
     {
         if (lookup_assembly(acl, &acl->dependencies[i]) != STATUS_SUCCESS)
         {
-            if (!acl->dependencies[i].optional)
+            if (!acl->dependencies[i].optional && !acl->dependencies[i].delayed)
             {
                 const struct assembly_version *ver = &acl->dependencies[i].version;
                 DPRINT1( "Could not find dependent assembly %S (%u.%u.%u.%u)\n",
@@ -3035,7 +3090,7 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
     }
     else if (flags & (RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_ADDRESS | RTL_QUERY_ACTIVATION_CONTEXT_FLAG_IS_HMODULE))
     {
-        ULONG magic;
+        ULONG_PTR magic;
         LDR_DATA_TABLE_ENTRY *pldr;
 
         if (!*handle) return STATUS_INVALID_PARAMETER;
@@ -4584,6 +4639,11 @@ void actctx_init(void)
 
 /* FUNCTIONS ***************************************************************/
 
+/***********************************************************************
+ * RtlCreateActivationContext (NTDLL.@)
+ *
+ * Create an activation context.
+ */
 NTSTATUS
 NTAPI
 RtlCreateActivationContext(IN ULONG Flags,
@@ -4633,7 +4693,7 @@ RtlCreateActivationContext(IN ULONG Flags,
         if (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID) module = pActCtx->hModule;
         else module = NtCurrentTeb()->ProcessEnvironmentBlock->ImageBaseAddress;
 
-        status = get_module_filename(module, &dir, 0);
+        status = get_module_filename( module, &dir, 0 );
         if (!NT_SUCCESS(status)) goto error;
         if ((p = strrchrW( dir.Buffer, '\\' ))) p[1] = 0;
         actctx->appdir.info = dir.Buffer;
@@ -4782,24 +4842,43 @@ RtlReleaseActivationContext( HANDLE handle )
     }
 }
 #else
-VOID
-NTAPI
-RtlAddRefActivationContext( HANDLE handle )
+
+/***********************************************************************
+ *		RtlAddRefActivationContext (NTDLL.@)
+ */
+VOID NTAPI RtlAddRefActivationContext( HANDLE handle )
 {
     ACTIVATION_CONTEXT *actctx;
 
-    if ((actctx = check_actctx(handle))) actctx_addref(actctx);
+    if ((actctx = check_actctx( handle ))) actctx_addref( actctx );
 }
 
-VOID
-NTAPI
-RtlReleaseActivationContext( HANDLE handle )
+
+/******************************************************************
+ *		RtlReleaseActivationContext (NTDLL.@)
+ */
+VOID NTAPI RtlReleaseActivationContext( HANDLE handle )
 {
     ACTIVATION_CONTEXT *actctx;
 
-    if ((actctx = check_actctx(handle))) actctx_release(actctx);
+    if ((actctx = check_actctx( handle ))) actctx_release( actctx );
 }
+
 #endif
+
+/******************************************************************
+ *              RtlZombifyActivationContext (NTDLL.@)
+ *
+ */
+NTSTATUS NTAPI RtlZombifyActivationContext(PVOID Context)
+{
+    UNIMPLEMENTED;
+
+    if (Context == ACTCTX_FAKE_HANDLE)
+        return STATUS_SUCCESS;
+
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 NTSTATUS
 NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handle, PULONG_PTR cookie )
@@ -4821,16 +4900,18 @@ NTAPI RtlActivateActivationContextEx( ULONG flags, PTEB tebAddress, HANDLE handl
     return STATUS_SUCCESS;
 }
 
-
-NTSTATUS
-NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
+/******************************************************************
+ *		RtlActivateActivationContext (NTDLL.@)
+ */
+NTSTATUS NTAPI RtlActivateActivationContext( ULONG flags, HANDLE handle, PULONG_PTR cookie )
 {
     return RtlActivateActivationContextEx(flags, NtCurrentTeb(), handle, cookie);
 }
 
-NTSTATUS
-NTAPI
-RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
+/***********************************************************************
+ *		RtlDeactivateActivationContext (NTDLL.@)
+ */
+NTSTATUS NTAPI RtlDeactivateActivationContext( ULONG flags, ULONG_PTR cookie )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame, *top;
 
@@ -4892,16 +4973,20 @@ RtlFreeActivationContextStack(IN PACTIVATION_CONTEXT_STACK Stack)
     RtlFreeHeap(RtlGetProcessHeap(), 0, Stack);
 }
 
-VOID
-NTAPI RtlFreeThreadActivationContextStack(VOID)
+/******************************************************************
+ *		RtlFreeThreadActivationContextStack (NTDLL.@)
+ */
+VOID NTAPI RtlFreeThreadActivationContextStack(VOID)
 {
     RtlFreeActivationContextStack(NtCurrentTeb()->ActivationContextStackPointer);
     NtCurrentTeb()->ActivationContextStackPointer = NULL;
 }
 
 
-NTSTATUS
-NTAPI RtlGetActiveActivationContext( HANDLE *handle )
+/******************************************************************
+ *		RtlGetActiveActivationContext (NTDLL.@)
+ */
+NTSTATUS NTAPI RtlGetActiveActivationContext( HANDLE *handle )
 {
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
@@ -4915,8 +5000,10 @@ NTAPI RtlGetActiveActivationContext( HANDLE *handle )
 }
 
 
-BOOLEAN
-NTAPI RtlIsActivationContextActive( HANDLE handle )
+/******************************************************************
+ *		RtlIsActivationContextActive (NTDLL.@)
+ */
+BOOLEAN NTAPI RtlIsActivationContextActive( HANDLE handle )
 {
     RTL_ACTIVATION_CONTEXT_STACK_FRAME *frame;
 
@@ -4925,11 +5012,16 @@ NTAPI RtlIsActivationContextActive( HANDLE handle )
     return FALSE;
 }
 
-NTSTATUS
-NTAPI
-RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
-                                      ULONG class, PVOID buffer,
-                                      SIZE_T bufsize, SIZE_T *retlen )
+
+/***********************************************************************
+ *		RtlQueryInformationActivationContext (NTDLL.@)
+ *
+ * Get information about an activation context.
+ * FIXME: function signature/prototype may be wrong
+ */
+NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
+                                                     ULONG class, PVOID buffer,
+                                                     SIZE_T bufsize, SIZE_T *retlen )
 {
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
@@ -5172,10 +5264,14 @@ RtlpFindActivationContextSection_CheckParameters( ULONG flags, const GUID *guid,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
-RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
-                                       const UNICODE_STRING *section_name, PVOID ptr )
+/***********************************************************************
+ *		RtlFindActivationContextSectionString (NTDLL.@)
+ *
+ * Find information about a string in an activation context.
+ * FIXME: function signature/prototype may be wrong
+ */
+NTSTATUS NTAPI RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG section_kind,
+                                                      const UNICODE_STRING *section_name, PVOID ptr )
 {
     PACTCTX_SECTION_KEYED_DATA data = ptr;
     NTSTATUS status;
@@ -5204,13 +5300,19 @@ RtlFindActivationContextSectionString( ULONG flags, const GUID *guid, ULONG sect
     return status;
 }
 
+/***********************************************************************
+ *		RtlFindActivationContextSectionGuid (NTDLL.@)
+ *
+ * Find information about a GUID in an activation context.
+ * FIXME: function signature/prototype may be wrong
+ */
 NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *extguid, ULONG section_kind,
                                                      const GUID *guid, void *ptr )
 {
-   ACTCTX_SECTION_KEYED_DATA *data = ptr;
-   NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
+    ACTCTX_SECTION_KEYED_DATA *data = ptr;
+    NTSTATUS status = STATUS_SXS_KEY_NOT_FOUND;
 
-   if (extguid)
+    if (extguid)
     {
         DPRINT1("expected extguid == NULL\n");
         return STATUS_INVALID_PARAMETER;
@@ -5224,7 +5326,7 @@ NTSTATUS WINAPI RtlFindActivationContextSectionGuid( ULONG flags, const GUID *ex
 
     if (!data || data->cbSize < FIELD_OFFSET(ACTCTX_SECTION_KEYED_DATA, ulAssemblyRosterIndex) || !guid)
         return STATUS_INVALID_PARAMETER;
-    
+
     if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
     {
         ACTIVATION_CONTEXT *actctx = check_actctx(NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext);
@@ -5346,17 +5448,3 @@ RtlDeactivateActivationContextUnsafeFast(IN PRTL_CALLER_ALLOCATED_ACTIVATION_CON
 
     return frame;
 }
-
-
-NTSTATUS
-NTAPI
-RtlZombifyActivationContext(PVOID Context)
-{
-    UNIMPLEMENTED;
-
-    if (Context == ACTCTX_FAKE_HANDLE)
-        return STATUS_SUCCESS;
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
