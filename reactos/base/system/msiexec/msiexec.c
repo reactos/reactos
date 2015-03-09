@@ -866,7 +866,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				ExitProcess(1);
 			}
 		}
-		else if(msi_option_equal(argvW[i], "p"))
+		else if(msi_option_equal(argvW[i], "p") || msi_option_equal(argvW[i], "update"))
 		{
 			FunctionPatch = TRUE;
 			i++;
