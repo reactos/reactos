@@ -48,6 +48,10 @@ static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathA)
     (LPCSTR, LPCSTR, LPSTR, DWORD*);
+static INSTALLSTATE (WINAPI *pMsiProvideComponentA)
+    (LPCSTR, LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
+static INSTALLSTATE (WINAPI *pMsiProvideComponentW)
+    (LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPWSTR, LPDWORD);
 static UINT (WINAPI *pMsiGetFileHashA)
     (LPCSTR, DWORD, PMSIFILEHASHINFO);
 static UINT (WINAPI *pMsiGetProductInfoExA)
@@ -86,6 +90,8 @@ static void init_functionpointers(void)
       trace("GetProcAddress(%s) failed\n", #func);
 
     GET_PROC(hmsi, MsiGetComponentPathA)
+    GET_PROC(hmsi, MsiProvideComponentA)
+    GET_PROC(hmsi, MsiProvideComponentW)
     GET_PROC(hmsi, MsiGetFileHashA)
     GET_PROC(hmsi, MsiGetProductInfoExA)
     GET_PROC(hmsi, MsiOpenPackageExA)
@@ -3400,6 +3406,100 @@ static void test_MsiGetComponentPath(void)
     RegCloseKey(compkey);
     DeleteFileA("C:\\imapath");
     LocalFree(usersid);
+}
+
+static void test_MsiProvideComponent(void)
+{
+    static const WCHAR sourcedirW[] =
+        {'s','o','u','r','c','e','d','i','r',0};
+    static const WCHAR productW[] =
+        {'{','3','8','8','4','7','3','3','8','-','1','B','B','C','-','4','1','0','4','-',
+         '8','1','A','C','-','2','F','A','A','C','7','E','C','D','D','C','D','}',0};
+    static const WCHAR componentW[] =
+        {'{','D','D','4','2','2','F','9','2','-','3','E','D','8','-','4','9','B','5','-',
+         'A','0','B','7','-','F','2','6','6','F','9','8','3','5','7','D','F','}',0};
+    INSTALLSTATE state;
+    char buf[0x100];
+    WCHAR bufW[0x100];
+    DWORD len, len2;
+    UINT r;
+
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
+
+    create_test_files();
+    create_file("msitest\\sourcedir.txt", "msitest\\sourcedir.txt", 1000);
+    create_database(msifile, sd_tables, sizeof(sd_tables) / sizeof(msi_table));
+
+    MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
+
+    buf[0] = 0;
+    len = sizeof(buf);
+    r = pMsiProvideComponentA("{90120000-0070-0000-0000-4000000FF1CE}",
+                              "{17961602-C4E2-482E-800A-DF6E627549CF}",
+                              "ProductFiles", INSTALLMODE_NODETECTION, buf, &len);
+    ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    r = MsiInstallProductA(msifile, NULL);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    state = MsiQueryFeatureStateA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", "sourcedir");
+    ok(state == INSTALLSTATE_LOCAL, "got %d\n", state);
+
+    buf[0] = 0;
+    len = sizeof(buf);
+    r = pMsiProvideComponentA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", "sourcedir",
+                              "{DD422F92-3ED8-49B5-A0B7-F266F98357DF}",
+                              INSTALLMODE_NODETECTION, buf, &len);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+    ok(buf[0], "empty path\n");
+    ok(len == lstrlenA(buf), "got %u\n", len);
+
+    len2 = 0;
+    r = pMsiProvideComponentA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", "sourcedir",
+                              "{DD422F92-3ED8-49B5-A0B7-F266F98357DF}",
+                              INSTALLMODE_NODETECTION, NULL, &len2);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+    ok(len2 == len, "got %u\n", len2);
+
+    len2 = 0;
+    r = pMsiProvideComponentA("{38847338-1BBC-4104-81AC-2FAAC7ECDDCD}", "sourcedir",
+                              "{DD422F92-3ED8-49B5-A0B7-F266F98357DF}",
+                              INSTALLMODE_NODETECTION, buf, &len2);
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(len2 == len, "got %u\n", len2);
+
+    /* wide version */
+
+    bufW[0] = 0;
+    len = sizeof(buf);
+    r = pMsiProvideComponentW(productW, sourcedirW, componentW,
+                              INSTALLMODE_NODETECTION, bufW, &len);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+    ok(bufW[0], "empty path\n");
+    ok(len == lstrlenW(bufW), "got %u\n", len);
+
+    len2 = 0;
+    r = pMsiProvideComponentW(productW, sourcedirW, componentW,
+                              INSTALLMODE_NODETECTION, NULL, &len2);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+    ok(len2 == len, "got %u\n", len2);
+
+    len2 = 0;
+    r = pMsiProvideComponentW(productW, sourcedirW, componentW,
+                              INSTALLMODE_NODETECTION, bufW, &len2);
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(len2 == len, "got %u\n", len2);
+
+    r = MsiInstallProductA(msifile, "REMOVE=ALL");
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    DeleteFileA("msitest\\sourcedir.txt");
+    delete_test_files();
+    DeleteFileA(msifile);
 }
 
 static void test_MsiGetProductCode(void)
@@ -14298,6 +14398,7 @@ START_TEST(msi)
         test_MsiQueryFeatureState();
         test_MsiQueryComponentState();
         test_MsiGetComponentPath();
+        test_MsiProvideComponent();
         test_MsiGetProductCode();
         test_MsiEnumClients();
         test_MsiGetProductInfo();

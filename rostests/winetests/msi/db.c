@@ -1670,6 +1670,28 @@ static void test_streamtable(void)
     MsiViewClose( view );
     MsiCloseHandle( view );
 
+    /* try again */
+    create_file( "test1.txt" );
+
+    rec = MsiCreateRecord( 2 );
+    MsiRecordSetStringA( rec, 1, "data1" );
+
+    r = MsiRecordSetStreamA( rec, 2, "test1.txt" );
+    ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r );
+
+    DeleteFileA( "test1.txt" );
+
+    r = MsiDatabaseOpenViewA( hdb,
+            "INSERT INTO `_Streams` ( `Name`, `Data` ) VALUES ( ?, ? )", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r );
+
+    r = MsiViewExecute( view, rec );
+    ok( r == ERROR_FUNCTION_FAILED, "got %u\n", r );
+
+    MsiCloseHandle( rec );
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
     r = MsiDatabaseOpenViewA( hdb,
             "SELECT `Name`, `Data` FROM `_Streams` WHERE `Name` = 'data'", &view );
     ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
@@ -1759,7 +1781,7 @@ static void test_streamtable(void)
     memset(buf, 0, MAX_PATH);
     r = MsiRecordReadStream( rec, 2, buf, &size );
     ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
-    todo_wine ok( !lstrcmpA(buf, "test2.txt\n"), "Expected 'test2.txt\\n', got %s\n", buf);
+    ok( !lstrcmpA(buf, "test2.txt\n"), "Expected 'test2.txt\\n', got %s\n", buf);
 
     MsiCloseHandle( rec );
     MsiViewClose( view );
@@ -1791,9 +1813,40 @@ static void test_binary(void)
     ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r);
     DeleteFileA( "test.txt" );
 
+    /* try a name that exceeds maximum OLE stream name length */
+    query = "INSERT INTO `Binary` ( `Name`, `ID`, `Data` ) VALUES ( 'encryption.dll.CB4E6205_F99A_4C51_ADD4_184506EFAB87', 10000, ? )";
+    r = run_query( hdb, rec, query );
+    ok( r == ERROR_SUCCESS, "Insert into Binary table failed: %d\n", r );
+
+    r = MsiCloseHandle( rec );
+    ok( r == ERROR_SUCCESS , "Failed to close record handle\n" );
+
+    r = MsiDatabaseCommit( hdb );
+    ok( r == ERROR_FUNCTION_FAILED , "got %u\n", r );
+
+    r = MsiCloseHandle( hdb );
+    ok( r == ERROR_SUCCESS , "Failed to close database\n" );
+
+    r = MsiOpenDatabaseW(msifileW, MSIDBOPEN_CREATE, &hdb );
+    ok( r == ERROR_SUCCESS , "Failed to open database\n" );
+
+    query = "CREATE TABLE `Binary` ( `Name` CHAR(72) NOT NULL, `ID` INT NOT NULL, `Data` OBJECT  PRIMARY KEY `Name`, `ID`)";
+    r = run_query( hdb, 0, query );
+    ok( r == ERROR_SUCCESS, "Cannot create Binary table: %d\n", r );
+
+    create_file( "test.txt" );
+    rec = MsiCreateRecord( 1 );
+    r = MsiRecordSetStreamA( rec, 1, "test.txt" );
+    ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r );
+    DeleteFileA( "test.txt" );
+
     query = "INSERT INTO `Binary` ( `Name`, `ID`, `Data` ) VALUES ( 'filename1', 1, ? )";
     r = run_query( hdb, rec, query );
     ok( r == ERROR_SUCCESS, "Insert into Binary table failed: %d\n", r );
+
+    query = "INSERT INTO `Binary` ( `Name`, `ID`, `Data` ) VALUES ( 'filename1', 1, ? )";
+    r = run_query( hdb, rec, query );
+    ok( r == ERROR_FUNCTION_FAILED, "got %u\n", r );
 
     r = MsiCloseHandle( rec );
     ok( r == ERROR_SUCCESS , "Failed to close record handle\n" );
@@ -4535,7 +4588,7 @@ static void test_update(void)
     size = MAX_PATH;
     r = MsiRecordGetStringA(rec, 1, result, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrlenA(result), "Expected an empty string, got %s\n", result);
+    ok(!result[0], "Expected an empty string, got %s\n", result);
 
     MsiCloseHandle(rec);
 
@@ -4581,7 +4634,7 @@ static void test_update(void)
     size = MAX_PATH;
     r = MsiRecordGetStringA(rec, 1, result, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!lstrlenA(result), "Expected an empty string, got %s\n", result);
+    ok(!result[0], "Expected an empty string, got %s\n", result);
 
     MsiCloseHandle(rec);
 

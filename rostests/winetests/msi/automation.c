@@ -1934,7 +1934,7 @@ static void test_Session(IDispatch *pSession)
 
     hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, TRUE);
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
-    if (hr == DISP_E_EXCEPTION) ok_exception(hr, szModeFlag);
+    ok_exception(hr, szModeFlag);
 
     hr = Session_ModeGet(pSession, MSIRUNMODE_REBOOTNOW, &bool);
     ok(hr == S_OK, "Session_ModeGet failed, hresult 0x%08x\n", hr);
@@ -1942,7 +1942,7 @@ static void test_Session(IDispatch *pSession)
 
     hr = Session_ModePut(pSession, MSIRUNMODE_REBOOTNOW, FALSE);  /* set it again so we don't reboot */
     ok(hr == S_OK, "Session_ModePut failed, hresult 0x%08x\n", hr);
-    if (hr == DISP_E_EXCEPTION) ok_exception(hr, szModeFlag);
+    ok_exception(hr, szModeFlag);
 
     hr = Session_ModePut(pSession, MSIRUNMODE_MAINTENANCE, TRUE);
     ok(hr == DISP_E_EXCEPTION, "Session_ModePut failed, hresult 0x%08x\n", hr);

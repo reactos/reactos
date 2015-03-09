@@ -175,7 +175,7 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
     }
 
     if (!expected)
-        ok_(__FILE__, line)(lstrlenA(val) == 0, "Expected empty string, got %s\n", val);
+        ok_(__FILE__, line)(!val[0], "Expected empty string, got %s\n", val);
     else
     {
         if (bcase)

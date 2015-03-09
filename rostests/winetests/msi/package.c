@@ -2194,7 +2194,7 @@ static void test_props(void)
     sz = 6;
     r = MsiGetPropertyA(hpkg, "property", buffer, &sz);
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok( !strlen(buffer), "Expected empty string, got %s\n", buffer);
+    ok(!buffer[0], "Expected empty string, got %s\n", buffer);
 
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
@@ -2347,7 +2347,7 @@ static void test_property_table(void)
     lstrcpyA(buffer, "aaa");
     r = MsiGetPropertyA(hpkg, "dantes", buffer, &sz);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(lstrlenA(buffer) == 0, "Expected empty string, got %s\n", buffer);
+    ok(!buffer[0], "Expected empty string, got %s\n", buffer);
 
     r = MsiSetPropertyA(hpkg, "dantes", "mercedes");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
