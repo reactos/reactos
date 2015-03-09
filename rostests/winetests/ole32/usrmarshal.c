@@ -281,7 +281,6 @@ static void test_marshal_HENHMETAFILE(void)
     ok(*(DWORD *)wirehemf == (size - 0x10), "wirestgm + 0xc should be size - 0x10 instead of 0x%08x\n", *(DWORD *)wirehemf);
     wirehemf += sizeof(DWORD);
     ok(*(DWORD *)wirehemf == EMR_HEADER, "wirestgm + 0x10 should be EMR_HEADER instead of %d\n", *(DWORD *)wirehemf);
-    wirehemf += sizeof(DWORD);
     /* ... rest of data not tested - refer to tests for GetEnhMetaFileBits
      * at this point */
 
@@ -306,7 +305,6 @@ static void test_marshal_HENHMETAFILE(void)
     ok(*(DWORD *)wirehemf == WDT_REMOTE_CALL, "wirestgm + 0x0 should be WDT_REMOTE_CALL instead of 0x%08x\n", *(DWORD *)wirehemf);
     wirehemf += sizeof(DWORD);
     ok(*(DWORD *)wirehemf == (DWORD)(DWORD_PTR)hemf, "wirestgm + 0x4 should be hemf instead of 0x%08x\n", *(DWORD *)wirehemf);
-    wirehemf += sizeof(DWORD);
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     HENHMETAFILE_UserUnmarshal(&umcb.Flags, buffer, &hemf2);
@@ -442,7 +440,6 @@ static void test_marshal_HMETAFILEPICT(void)
     ok(*(DWORD *)wirehmfp == (buffer_end - buffer - 0x28), "wirestgm + 0x24 should be size - 0x34 instead of 0x%08x\n", *(DWORD *)wirehmfp);
     wirehmfp += sizeof(DWORD);
     ok(*(WORD *)wirehmfp == 1, "wirehmfp + 0x28 should be 1 instead of 0x%08x\n", *(DWORD *)wirehmfp);
-    wirehmfp += sizeof(DWORD);
     /* ... rest of data not tested - refer to tests for GetMetaFileBits
      * at this point */
 
@@ -585,6 +582,7 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     ok(size == 0, "size should be 0 bytes, not %d\n", size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, ctx, buffer, unk, &IID_IUnknown);
+    ok(buffer_end == buffer, "buffer_end %p buffer %p\n", buffer_end, buffer);
     HeapFree(GetProcessHeap(), 0, buffer);
 
     /* Now for a non-NULL pointer. The marshalled data are two size DWORDS and then

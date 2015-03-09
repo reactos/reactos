@@ -1052,7 +1052,7 @@ static void test_streamenum(void)
     r = IStorage_CreateStream(stg, stmname, STGM_SHARE_EXCLUSIVE | STGM_READWRITE, 0, 0, &stm );
     ok(r==S_OK, "IStorage->CreateStream failed\n");
 
-    r = IStream_Release(stm);
+    IStream_Release(stm);
 
     /* first enum ... should be 1 stream */
     r = IStorage_EnumElements(stg, 0, NULL, 0, &ee);
