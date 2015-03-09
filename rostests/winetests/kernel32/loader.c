@@ -78,7 +78,7 @@ static PVOID RVAToAddr(DWORD_PTR rva, HMODULE module)
 
 static IMAGE_DOS_HEADER dos_header;
 
-static IMAGE_NT_HEADERS nt_header =
+static const IMAGE_NT_HEADERS nt_header_template =
 {
     IMAGE_NT_SIGNATURE, /* Signature */
     {
@@ -123,8 +123,8 @@ static IMAGE_NT_HEADERS nt_header =
       4, /* MajorSubsystemVersion */
       0, /* MinorSubsystemVersion */
       0, /* Win32VersionValue */
-      sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x1000, /* SizeOfImage */
-      sizeof(dos_header) + sizeof(nt_header), /* SizeOfHeaders */
+      sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x1000, /* SizeOfImage */
+      sizeof(dos_header) + sizeof(nt_header_template), /* SizeOfHeaders */
       0, /* CheckSum */
       IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
       0, /* DllCharacteristics */
@@ -266,14 +266,14 @@ static void test_Loader(void)
         },
         { sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x1000, 0x1000,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0xe00,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER),
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0xe00,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER),
           { ERROR_BAD_EXE_FORMAT } /* XP doesn't like too small image size */
         },
         { sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x1000, 0x1000,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER),
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER),
           { ERROR_SUCCESS }
         },
         { sizeof(dos_header),
@@ -284,25 +284,25 @@ static void test_Loader(void)
         },
         { sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x200, 0x200,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x200,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER),
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x200,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER),
           { ERROR_SUCCESS, ERROR_INVALID_ADDRESS } /* vista is more strict */
         },
         { sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x200, 0x1000,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER),
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER),
           { ERROR_BAD_EXE_FORMAT } /* XP doesn't like alignments */
         },
         { sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x1000, 0x200,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER),
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER),
           { ERROR_SUCCESS }
         },
         { sizeof(dos_header),
           1, sizeof(IMAGE_OPTIONAL_HEADER), 0x1000, 0x200,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
           0x200,
           { ERROR_SUCCESS }
         },
@@ -363,7 +363,7 @@ static void test_Loader(void)
         /* the following data mimics the PE image which upack creates */
         { 0x10,
           1, 0x148, 0x1000, 0x200,
-          sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
+          sizeof(dos_header) + sizeof(nt_header_template) + sizeof(IMAGE_SECTION_HEADER) + 0x1000,
           0x200,
           { ERROR_SUCCESS }
         },
@@ -384,7 +384,8 @@ static void test_Loader(void)
     SIZE_T size;
     BOOL ret;
     NTSTATUS status;
-    WORD orig_machine = nt_header.FileHeader.Machine;
+    WORD orig_machine = nt_header_template.FileHeader.Machine;
+    IMAGE_NT_HEADERS nt_header;
 
     /* prevent displaying of the "Unable to load this DLL" message box */
     SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -395,6 +396,7 @@ static void test_Loader(void)
     {
         GetTempFileNameA(temp_path, "ldr", 0, dll_name);
 
+        nt_header = nt_header_template;
         nt_header.FileHeader.NumberOfSections = td[i].number_of_sections;
         nt_header.FileHeader.SizeOfOptionalHeader = td[i].size_of_optional_header;
 
@@ -589,13 +591,14 @@ todo_wine
         ok(ret, "DeleteFile error %d\n", GetLastError());
     }
 
+    nt_header = nt_header_template;
     nt_header.FileHeader.NumberOfSections = 1;
     nt_header.FileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER);
 
     nt_header.OptionalHeader.SectionAlignment = page_size;
     nt_header.OptionalHeader.FileAlignment = page_size;
     nt_header.OptionalHeader.SizeOfHeaders = sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER);
-    nt_header.OptionalHeader.SizeOfImage = nt_header.OptionalHeader.SizeOfImage + page_size;
+    nt_header.OptionalHeader.SizeOfImage = sizeof(dos_header) + sizeof(nt_header) + sizeof(IMAGE_SECTION_HEADER) + page_size;
 
     status = map_image_section( &nt_header );
     ok( status == STATUS_SUCCESS, "NtCreateSection error %08x\n", status );
@@ -1032,8 +1035,6 @@ static void test_section_access(void)
         { IMAGE_SCN_CNT_UNINITIALIZED_DATA | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE, PAGE_EXECUTE_WRITECOPY, PAGE_EXECUTE_READWRITE },
         { IMAGE_SCN_CNT_UNINITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE, PAGE_EXECUTE_WRITECOPY, PAGE_EXECUTE_READWRITE }
     };
-    static const char filler[0x1000];
-    static const char section_data[0x10] = "section data";
     char buf[256];
     int i;
     DWORD dummy, file_align;
@@ -1054,6 +1055,8 @@ static void test_section_access(void)
 
     for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
     {
+        IMAGE_NT_HEADERS nt_header;
+
         GetTempFileNameA(temp_path, "ldr", 0, dll_name);
 
         /*trace("creating %s\n", dll_name);*/
@@ -1068,6 +1071,7 @@ static void test_section_access(void)
         ret = WriteFile(hfile, &dos_header, sizeof(dos_header), &dummy, NULL);
         ok(ret, "WriteFile error %d\n", GetLastError());
 
+        nt_header = nt_header_template;
         nt_header.FileHeader.NumberOfSections = 1;
         nt_header.FileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER);
         nt_header.FileHeader.Characteristics = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_DLL | IMAGE_FILE_RELOCS_STRIPPED;
@@ -1235,11 +1239,13 @@ static void test_import_resolution(void)
     for (test = 0; test < 3; test++)
     {
 #define DATA_RVA(ptr) (page_size + ((char *)(ptr) - (char *)&data))
-        nt = nt_header;
+        nt = nt_header_template;
         nt.FileHeader.NumberOfSections = 1;
         nt.FileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER);
         nt.FileHeader.Characteristics = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_32BIT_MACHINE | IMAGE_FILE_RELOCS_STRIPPED;
         if (test != 2) nt.FileHeader.Characteristics |= IMAGE_FILE_DLL;
+        nt.OptionalHeader.SectionAlignment = page_size;
+        nt.OptionalHeader.FileAlignment = 0x200;
         nt.OptionalHeader.ImageBase = 0x12340000;
         nt.OptionalHeader.SizeOfImage = 2 * page_size;
         nt.OptionalHeader.SizeOfHeaders = nt.OptionalHeader.FileAlignment;
@@ -2015,6 +2021,7 @@ static void test_ExitProcess(void)
     void *addr;
     LARGE_INTEGER offset;
     SIZE_T size;
+    IMAGE_NT_HEADERS nt_header;
 
 #if !defined(__i386__) && !defined(__x86_64__)
     skip("x86 specific ExitProcess test\n");
@@ -2055,6 +2062,7 @@ static void test_ExitProcess(void)
     ret = WriteFile(file, &dos_header, sizeof(dos_header), &dummy, NULL);
     ok(ret, "WriteFile error %d\n", GetLastError());
 
+    nt_header = nt_header_template;
     nt_header.FileHeader.NumberOfSections = 1;
     nt_header.FileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER);
     nt_header.FileHeader.Characteristics = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_DLL | IMAGE_FILE_RELOCS_STRIPPED;
@@ -2510,6 +2518,8 @@ static void test_ResolveDelayLoadedAPI(void)
     DWORD dummy, file_size, i;
     WORD hint = 0;
     BOOL ret;
+    IMAGE_NT_HEADERS nt_header;
+
     static const struct test_data
     {
         BOOL func;
@@ -2536,7 +2546,7 @@ static void test_ResolveDelayLoadedAPI(void)
 
     if (!pResolveDelayLoadedAPI)
     {
-        todo_wine win_skip("ResolveDelayLoadedAPI is not available\n");
+        win_skip("ResolveDelayLoadedAPI is not available\n");
         return;
     }
 
@@ -2569,6 +2579,7 @@ static void test_ResolveDelayLoadedAPI(void)
     ret = WriteFile(hfile, &dos_header, sizeof(dos_header), &dummy, NULL);
     ok(ret, "WriteFile error %d\n", GetLastError());
 
+    nt_header = nt_header_template;
     nt_header.FileHeader.NumberOfSections = 2;
     nt_header.FileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER);
 

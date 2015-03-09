@@ -39,15 +39,8 @@ static const IMAGE_SECTION_HEADER sh_rodata_1 =
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
 };
 
-/* rodata @ [0x1000-0x4000) */
-static const IMAGE_SECTION_HEADER sh_rodata_2 =
-{
-    ".rodata", {3*page_size}, page_size, 3*page_size, page_size, 0, 0, 0, 0,
-    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
-};
-
 /* rodata @ [0x1000-0x2000) */
-static const IMAGE_SECTION_HEADER sh_rodata_3 =
+static const IMAGE_SECTION_HEADER sh_rodata_2 =
 {
     ".rodata", {page_size}, page_size, page_size, page_size, 0, 0, 0, 0,
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
@@ -60,50 +53,36 @@ static const IMAGE_SECTION_HEADER sh_rsrc_1 =
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
 };
 
-/* rsrc @ [0x4000-0x5000) */
-static const IMAGE_SECTION_HEADER sh_rsrc_2 =
-{
-    ".rsrc\0\0", {page_size}, 4*page_size, page_size, 4*page_size, 0, 0, 0, 0,
-    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
-};
-
 /* rsrc @ [0x2000-0x4000) */
-static const IMAGE_SECTION_HEADER sh_rsrc_3 =
+static const IMAGE_SECTION_HEADER sh_rsrc_2 =
 {
     ".rsrc\0\0", {2*page_size}, rva_rsrc_start-page_size, 2*page_size, rva_rsrc_start-page_size, 0, 0, 0, 0,
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
 };
 
 /* rsrc @ [0x2000-0x3000) */
-static const IMAGE_SECTION_HEADER sh_rsrc_4 =
+static const IMAGE_SECTION_HEADER sh_rsrc_3 =
 {
     ".rsrc\0\0", {page_size}, rva_rsrc_start-page_size, page_size, rva_rsrc_start-page_size, 0, 0, 0, 0,
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
 };
 
 /* rsrc @ [0x3000-0x6000) */
-static const IMAGE_SECTION_HEADER sh_rsrc_5 =
+static const IMAGE_SECTION_HEADER sh_rsrc_4 =
 {
     ".rsrc\0\0", {3*page_size}, rva_rsrc_start, 3*page_size, rva_rsrc_start, 0, 0, 0, 0,
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
 };
 
-/* rsrc @ [0x4000-0x7000) */
-static const IMAGE_SECTION_HEADER sh_rsrc_6 =
-{
-    ".rsrc\0\0", {3*page_size}, 4*page_size, 3*page_size, 4*page_size, 0, 0, 0, 0,
-    IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
-};
-
 /* rsrc @ [0x2000-0x5000) */
-static const IMAGE_SECTION_HEADER sh_rsrc_7 =
+static const IMAGE_SECTION_HEADER sh_rsrc_5 =
 {
     ".rsrc\0\0", {3*page_size}, 2*page_size, 3*page_size, 2*page_size, 0, 0, 0, 0,
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
 };
 
 /* rsrc @ [0x3000-0x4000), small SizeOfRawData */
-static const IMAGE_SECTION_HEADER sh_rsrc_8 =
+static const IMAGE_SECTION_HEADER sh_rsrc_6 =
 {
     ".rsrc\0\0", {page_size}, rva_rsrc_start, 8, rva_rsrc_start, 0, 0, 0, 0,
     IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ
@@ -148,29 +127,17 @@ static const struct _sec_variants
         {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
         {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
         {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 1},
-        {{&sh_rodata_1, &sh_rsrc_5, NULL}, 6*page_size, 1, 0, 1}
+        {{&sh_rodata_1, &sh_rsrc_4, NULL}, 6*page_size, 1, 0, 1}
     },
-    /* single .rodata section with compatible characteristics, data directory entry points to section end */
-    /* Vista+ - existing section isn't used, new section is created at the end of file */
-    /* NT4/2000/2003 - image is broken */
-#if 0
-    {
-        {{&sh_rodata_2, NULL, NULL}},
-        {{&sh_rodata_2, &sh_rsrc_2, NULL}, 5*page_size, 1, 0, 0},
-        {{&sh_rodata_2, &sh_rsrc_2, NULL}, 5*page_size, 1, 0, 0},
-        {{&sh_rodata_2, &sh_rsrc_2, NULL}, 5*page_size, 1, 0, 1},
-        {{&sh_rodata_2, &sh_rsrc_6, NULL}, 7*page_size, 1, 0, 1}
-    },
-#endif
     /* .rsrc is the last section, data directory entry points to section end */
     /* Vista+ - resources are moved to section start (trashing data that could be there), and section is trimmed */
     /* NT4/2000/2003 - resources are moved to section start (trashing data that could be there); section isn't trimmed */
     {
-        {{&sh_rodata_3, &sh_rsrc_3, NULL}},
-        {{&sh_rodata_3, &sh_rsrc_4, NULL}, 3*page_size, 1, 0, 0},
-        {{&sh_rodata_3, &sh_rsrc_4, NULL}, 3*page_size, 1, 0, 0},
-        {{&sh_rodata_3, &sh_rsrc_4, NULL}, 3*page_size, 1, 0, 1},
-        {{&sh_rodata_3, &sh_rsrc_7, NULL}, 5*page_size, 1, 0, 1}
+        {{&sh_rodata_2, &sh_rsrc_2, NULL}},
+        {{&sh_rodata_2, &sh_rsrc_3, NULL}, 3*page_size, 1, 0, 0},
+        {{&sh_rodata_2, &sh_rsrc_3, NULL}, 3*page_size, 1, 0, 0},
+        {{&sh_rodata_2, &sh_rsrc_3, NULL}, 3*page_size, 1, 0, 1},
+        {{&sh_rodata_2, &sh_rsrc_5, NULL}, 5*page_size, 1, 0, 1}
     },
     /* .rsrc is not the last section */
     /* section is reused; sections after .rsrc are shifted to give space to rsrc (in-image offset and RVA!) */
@@ -179,15 +146,15 @@ static const struct _sec_variants
         {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}, 5*page_size, 1, 0, 0},
         {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}, 5*page_size, 1, 0, 0},
         {{&sh_rodata_1, &sh_rsrc_1, &sh_junk}, 5*page_size, 1, 0, 1},
-        {{&sh_rodata_1, &sh_rsrc_5, &sh_junk_2}, 7*page_size, 1, 0, 1}
+        {{&sh_rodata_1, &sh_rsrc_4, &sh_junk_2}, 7*page_size, 1, 0, 1}
     },
     /* .rsrc is the last section, data directory entry points to whole section, file size is not aligned on FileAlign */
     {
-        {{&sh_rodata_1, &sh_rsrc_8, NULL}},
+        {{&sh_rodata_1, &sh_rsrc_6, NULL}},
         {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
         {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 0},
         {{&sh_rodata_1, &sh_rsrc_1, NULL}, 4*page_size, 1, 0, 1},
-        {{&sh_rodata_1, &sh_rsrc_5, NULL}, 6*page_size, 1, 0, 1}
+        {{&sh_rodata_1, &sh_rsrc_4, NULL}, 6*page_size, 1, 0, 1}
     }
 };
 

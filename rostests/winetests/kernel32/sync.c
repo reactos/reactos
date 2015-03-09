@@ -64,6 +64,7 @@ static void test_signalandwait(void)
     HMODULE kernel32;
     DWORD r;
     HANDLE event[2], semaphore[2], file;
+    int i;
 
     kernel32 = GetModuleHandleA("kernel32.dll");
     pSignalObjectAndWait = (void*) GetProcAddress(kernel32, "SignalObjectAndWait");
@@ -96,9 +97,13 @@ static void test_signalandwait(void)
     r = pSignalObjectAndWait(event[0], event[1], 0, FALSE);
     ok( r == WAIT_OBJECT_0, "should succeed\n");
 
-    /* event[0] is now signalled */
-    r = pSignalObjectAndWait(event[0], event[0], 0, FALSE);
-    ok( r == WAIT_OBJECT_0, "should succeed\n");
+    /* event[0] is now signalled - we repeat this test multiple times
+     * to ensure that the wineserver handles this situation properly. */
+    for (i = 0; i < 10000; i++)
+    {
+        r = pSignalObjectAndWait(event[0], event[0], 0, FALSE);
+        ok( r == WAIT_OBJECT_0, "should succeed\n");
+    }
 
     /* event[0] is not signalled */
     r = WaitForSingleObject(event[0], 0);

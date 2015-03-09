@@ -1002,8 +1002,10 @@ static void test_GetTempPath(void)
 {
     char save_TMP[MAX_PATH];
     char windir[MAX_PATH];
+    char origdir[MAX_PATH];
     char buf[MAX_PATH];
 
+    GetCurrentDirectoryA(sizeof(origdir), origdir);
     if (!GetEnvironmentVariableA("TMP", save_TMP, sizeof(save_TMP))) save_TMP[0] = 0;
 
     /* test default configuration */
@@ -1048,6 +1050,7 @@ static void test_GetTempPath(void)
     test_GetTempPathW(windir);
 
     SetEnvironmentVariableA("TMP", save_TMP);
+    SetCurrentDirectoryA(origdir);
 }
 
 static void test_GetLongPathNameA(void)
@@ -1644,10 +1647,11 @@ static void test_SearchPathA(void)
     static const CHAR testdeprelA[] = "./testdep.dll";
     static const CHAR kernel32A[] = "kernel32.dll";
     static const CHAR fileA[] = "";
-    CHAR pathA[MAX_PATH], buffA[MAX_PATH], path2A[MAX_PATH];
-    CHAR *ptrA = NULL;
+    CHAR pathA[MAX_PATH], buffA[MAX_PATH], path2A[MAX_PATH], path3A[MAX_PATH], curdirA[MAX_PATH];
+    CHAR tmpdirA[MAX_PATH], *ptrA = NULL;
     ULONG_PTR cookie;
     HANDLE handle;
+    BOOL bret;
     DWORD ret;
 
     if (!pSearchPathA)
@@ -1721,6 +1725,28 @@ static void test_SearchPathA(void)
     ret = pDeactivateActCtx(0, cookie);
     ok(ret, "failed to deactivate context, %u\n", GetLastError());
     pReleaseActCtx(handle);
+
+    /* test the search path priority of the working directory */
+    GetTempPathA(sizeof(tmpdirA), tmpdirA);
+    ret = GetCurrentDirectoryA(MAX_PATH, curdirA);
+    ok(ret, "failed to obtain working directory.\n");
+    sprintf(pathA, "%s\\%s", tmpdirA, kernel32A);
+    ret = pSearchPathA(NULL, kernel32A, NULL, sizeof(path2A)/sizeof(CHAR), path2A, NULL);
+    ok(ret && ret == strlen(path2A), "got %d\n", ret);
+    bret = CopyFileA(path2A, pathA, FALSE);
+    ok(bret != 0, "failed to copy test executable to temp directory, %u\n", GetLastError());
+    sprintf(path3A, "%s%s%s", curdirA, curdirA[strlen(curdirA)-1] != '\\' ? "\\" : "", kernel32A);
+    bret = CopyFileA(path2A, path3A, FALSE);
+    ok(bret != 0, "failed to copy test executable to launch directory, %u\n", GetLastError());
+    bret = SetCurrentDirectoryA(tmpdirA);
+    ok(bret, "failed to change working directory\n");
+    ret = pSearchPathA(NULL, kernel32A, ".exe", sizeof(buffA), buffA, NULL);
+    ok(ret && ret == strlen(buffA), "got %d\n", ret);
+    ok(strcmp(buffA, path3A) == 0, "expected %s, got %s\n", path3A, buffA);
+    bret = SetCurrentDirectoryA(curdirA);
+    ok(bret, "failed to reset working directory\n");
+    DeleteFileA(path3A);
+    DeleteFileA(pathA);
 }
 
 static void test_SearchPathW(void)
@@ -1828,6 +1854,7 @@ static void test_GetFullPathNameA(void)
     char output[MAX_PATH], *filepart;
     DWORD ret;
     int i;
+    UINT acp;
 
     const struct
     {
@@ -1863,6 +1890,27 @@ static void test_GetFullPathNameA(void)
            GetLastError() == ERROR_INVALID_NAME, /* Win7 */
            "[%d] Expected GetLastError() to return 0xdeadbeef, got %u\n",
            i, GetLastError());
+    }
+
+    acp = GetACP();
+    if (acp != 932)
+        skip("Skipping DBCS(Japanese) GetFullPathNameA test in this codepage (%d)\n", acp);
+    else {
+        const struct dbcs_case {
+            const char *input;
+            const char *expected;
+        } testset[] = {
+            { "c:\\a\\\x95\x5c\x97\xa0.txt", "\x95\x5c\x97\xa0.txt" },
+            { "c:\\\x83\x8f\x83\x43\x83\x93\\wine.c", "wine.c" },
+            { "c:\\demo\\\x97\xa0\x95\x5c", "\x97\xa0\x95\x5c" }
+        };
+        for (i = 0; i < sizeof(testset)/sizeof(testset[0]); i++) {
+            ret = GetFullPathNameA(testset[i].input, sizeof(output),
+                                   output, &filepart);
+            ok(ret, "[%d] GetFullPathName error %u\n", i, GetLastError());
+            ok(!lstrcmpA(filepart, testset[i].expected),
+               "[%d] expected %s got %s\n", i, testset[i].expected, filepart);
+        }
     }
 }
 

@@ -46,10 +46,10 @@ static HANDLE (WINAPI *pOpenFileById)(HANDLE, LPFILE_ID_DESCRIPTOR, DWORD, DWORD
 static BOOL (WINAPI *pSetFileValidData)(HANDLE, LONGLONG);
 static HRESULT (WINAPI *pCopyFile2)(PCWSTR,PCWSTR,COPYFILE2_EXTENDED_PARAMETERS*);
 static HANDLE (WINAPI *pCreateFile2)(LPCWSTR, DWORD, DWORD, DWORD, CREATEFILE2_EXTENDED_PARAMETERS*);
+static DWORD (WINAPI* pGetFinalPathNameByHandleA)(HANDLE, LPSTR, DWORD, DWORD);
+static DWORD (WINAPI* pGetFinalPathNameByHandleW)(HANDLE, LPWSTR, DWORD, DWORD);
 
-/* keep filename and filenameW the same */
 static const char filename[] = "testfile.xxx";
-static const WCHAR filenameW[] = { 't','e','s','t','f','i','l','e','.','x','x','x',0 };
 static const char sillytext[] =
 "en larvig liten text dx \033 gx hej 84 hej 4484 ! \001\033 bla bl\na.. bla bla."
 "1234 43 4kljf lf &%%%&&&&&& 34 4 34   3############# 33 3 3 3 # 3## 3"
@@ -85,6 +85,8 @@ static void InitFunctionPointers(void)
     pSetFileValidData = (void *) GetProcAddress(hkernel32, "SetFileValidData");
     pCopyFile2 = (void *) GetProcAddress(hkernel32, "CopyFile2");
     pCreateFile2 = (void *) GetProcAddress(hkernel32, "CreateFile2");
+    pGetFinalPathNameByHandleA = (void *) GetProcAddress(hkernel32, "GetFinalPathNameByHandleA");
+    pGetFinalPathNameByHandleW = (void *) GetProcAddress(hkernel32, "GetFinalPathNameByHandleW");
 }
 
 static void test__hread( void )
@@ -2562,7 +2564,7 @@ static void test_FindNextFileA(void)
     ok ( err == ERROR_NO_MORE_FILES, "GetLastError should return ERROR_NO_MORE_FILES\n");
 }
 
-static void test_FindFirstFileExA(FINDEX_SEARCH_OPS search_ops)
+static void test_FindFirstFileExA(FINDEX_INFO_LEVELS level, FINDEX_SEARCH_OPS search_ops, DWORD flags)
 {
     WIN32_FIND_DATAA search_results;
     HANDLE handle;
@@ -2574,27 +2576,45 @@ static void test_FindFirstFileExA(FINDEX_SEARCH_OPS search_ops)
         return;
     }
 
+    trace("Running FindFirstFileExA tests with level=%d, search_ops=%d, flags=%u\n",
+          level, search_ops, flags);
+
     CreateDirectoryA("test-dir", NULL);
     _lclose(_lcreat("test-dir\\file1", 0));
     _lclose(_lcreat("test-dir\\file2", 0));
     CreateDirectoryA("test-dir\\dir1", NULL);
     SetLastError(0xdeadbeef);
-    handle = pFindFirstFileExA("test-dir\\*", FindExInfoStandard, &search_results, search_ops, NULL, 0);
+    handle = pFindFirstFileExA("test-dir\\*", level, &search_results, search_ops, NULL, flags);
     if (handle == INVALID_HANDLE_VALUE && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("FindFirstFileExA is not implemented\n");
         goto cleanup;
     }
-    ok(handle != INVALID_HANDLE_VALUE, "FindFirstFile failed (err=%u)\n", GetLastError());
-    ok(strcmp(search_results.cFileName, ".") == 0, "First entry should be '.', is %s\n", search_results.cFileName);
+    if ((flags & FIND_FIRST_EX_LARGE_FETCH) && handle == INVALID_HANDLE_VALUE && GetLastError() == ERROR_INVALID_PARAMETER)
+    {
+        win_skip("FindFirstFileExA flag FIND_FIRST_EX_LARGE_FETCH not supported, skipping test\n");
+        goto cleanup;
+    }
+    if ((level == FindExInfoBasic) && handle == INVALID_HANDLE_VALUE && GetLastError() == ERROR_INVALID_PARAMETER)
+    {
+        win_skip("FindFirstFileExA level FindExInfoBasic not supported, skipping test\n");
+        goto cleanup;
+    }
 
 #define CHECK_NAME(fn) (strcmp((fn), "file1") == 0 || strcmp((fn), "file2") == 0 || strcmp((fn), "dir1") == 0)
+#define CHECK_LEVEL(fn) (level != FindExInfoBasic || !(fn)[0])
+
+    ok(handle != INVALID_HANDLE_VALUE, "FindFirstFile failed (err=%u)\n", GetLastError());
+    ok(strcmp(search_results.cFileName, ".") == 0, "First entry should be '.', is %s\n", search_results.cFileName);
+    ok(CHECK_LEVEL(search_results.cAlternateFileName), "FindFirstFile unexpectedly returned an alternate filename\n");
 
     ok(FindNextFileA(handle, &search_results), "Fetching second file failed\n");
     ok(strcmp(search_results.cFileName, "..") == 0, "Second entry should be '..' is %s\n", search_results.cFileName);
+    ok(CHECK_LEVEL(search_results.cAlternateFileName), "FindFirstFile unexpectedly returned an alternate filename\n");
 
     ok(FindNextFileA(handle, &search_results), "Fetching third file failed\n");
     ok(CHECK_NAME(search_results.cFileName), "Invalid third entry - %s\n", search_results.cFileName);
+    ok(CHECK_LEVEL(search_results.cAlternateFileName), "FindFirstFile unexpectedly returned an alternate filename\n");
 
     SetLastError(0xdeadbeef);
     ret = FindNextFileA(handle, &search_results);
@@ -2603,21 +2623,42 @@ static void test_FindFirstFileExA(FINDEX_SEARCH_OPS search_ops)
         skip("File system supports directory filtering\n");
         /* Results from the previous call are not cleared */
         ok(strcmp(search_results.cFileName, "dir1") == 0, "Third entry should be 'dir1' is %s\n", search_results.cFileName);
-        FindClose( handle );
-        goto cleanup;
+        ok(CHECK_LEVEL(search_results.cAlternateFileName), "FindFirstFile unexpectedly returned an alternate filename\n");
+
+    }
+    else
+    {
+        ok(ret, "Fetching fourth file failed\n");
+        ok(CHECK_NAME(search_results.cFileName), "Invalid fourth entry - %s\n", search_results.cFileName);
+        ok(CHECK_LEVEL(search_results.cAlternateFileName), "FindFirstFile unexpectedly returned an alternate filename\n");
+
+        ok(FindNextFileA(handle, &search_results), "Fetching fifth file failed\n");
+        ok(CHECK_NAME(search_results.cFileName), "Invalid fifth entry - %s\n", search_results.cFileName);
+        ok(CHECK_LEVEL(search_results.cAlternateFileName), "FindFirstFile unexpectedly returned an alternate filename\n");
+
+        ok(FindNextFileA(handle, &search_results) == FALSE, "Fetching sixth file should fail\n");
     }
 
-    ok(ret, "Fetching fourth file failed\n");
-    ok(CHECK_NAME(search_results.cFileName), "Invalid fourth entry - %s\n", search_results.cFileName);
-
-    ok(FindNextFileA(handle, &search_results), "Fetching fifth file failed\n");
-    ok(CHECK_NAME(search_results.cFileName), "Invalid fifth entry - %s\n", search_results.cFileName);
-
 #undef CHECK_NAME
-
-    ok(FindNextFileA(handle, &search_results) == FALSE, "Fetching sixth file should fail\n");
+#undef CHECK_LEVEL
 
     FindClose( handle );
+
+    /* Most Windows systems seem to ignore the FIND_FIRST_EX_CASE_SENSITIVE flag. Unofficial documentation
+     * suggests that there are registry keys and that it might depend on the used filesystem. */
+    SetLastError(0xdeadbeef);
+    handle = pFindFirstFileExA("TEST-DIR\\*", level, &search_results, search_ops, NULL, flags);
+    if (flags & FIND_FIRST_EX_CASE_SENSITIVE)
+    {
+        ok(handle != INVALID_HANDLE_VALUE || GetLastError() == ERROR_PATH_NOT_FOUND,
+           "Unexpected error %x, expected valid handle or ERROR_PATH_NOT_FOUND\n", GetLastError());
+        trace("FindFirstFileExA flag FIND_FIRST_EX_CASE_SENSITIVE is %signored\n",
+              (handle == INVALID_HANDLE_VALUE) ? "not " : "");
+    }
+    else
+        ok(handle != INVALID_HANDLE_VALUE, "Unexpected error %x, expected valid handle\n", GetLastError());
+    if (handle != INVALID_HANDLE_VALUE)
+        FindClose( handle );
 
 cleanup:
     DeleteFileA("test-dir\\file1");
@@ -4145,6 +4186,203 @@ todo_wine
     }
 }
 
+
+static void test_GetFinalPathNameByHandleA(void)
+{
+    static char prefix[] = "GetFinalPathNameByHandleA";
+    static char dos_prefix[] = "\\\\?\\";
+    char temp_path[MAX_PATH], test_path[MAX_PATH];
+    char long_path[MAX_PATH], result_path[MAX_PATH];
+    char dos_path[sizeof(dos_prefix) + MAX_PATH];
+    HANDLE hFile;
+    DWORD count;
+    UINT ret;
+
+    if (!pGetFinalPathNameByHandleA)
+    {
+        win_skip("GetFinalPathNameByHandleA is missing\n");
+        return;
+    }
+
+    /* Test calling with INVALID_HANDLE_VALUE */
+    SetLastError(0xdeadbeaf);
+    count = pGetFinalPathNameByHandleA(INVALID_HANDLE_VALUE, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == 0, "Expected length 0, got %d\n", count);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %x\n", GetLastError());
+
+    count = GetTempPathA(MAX_PATH, temp_path);
+    ok(count, "Failed to get temp path, error %x\n", GetLastError());
+    if (!count) return;
+
+    ret = GetTempFileNameA(temp_path, prefix, 0, test_path);
+    ok(ret != 0, "GetTempFileNameA error %x\n", GetLastError());
+    if (!ret) return;
+
+    ret = GetLongPathNameA(test_path, long_path, MAX_PATH);
+    ok(ret != 0, "GetLongPathNameA error %x\n", GetLastError());
+    if (!ret) return;
+
+    hFile = CreateFileA(test_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                        CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, 0);
+    ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA error %x\n", GetLastError());
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    dos_path[0] = 0;
+    strcat(dos_path, dos_prefix);
+    strcat(dos_path, long_path);
+
+    /* Test VOLUME_NAME_DOS with sufficient buffer size */
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleA(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
+    if (count && count <= MAX_PATH)
+        ok(lstrcmpiA(dos_path, result_path) == 0, "Expected %s, got %s\n", dos_path, result_path);
+
+    /* Test VOLUME_NAME_DOS with insufficient buffer size */
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path)-2, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
+    ok(result_path[0] == 0x11, "Result path was modified\n");
+
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path)-1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
+    ok(result_path[0] == 0x11, "Result path was modified\n");
+
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
+    ok(result_path[0] == 0x11, "Result path was modified\n");
+
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleA(hFile, result_path, strlen(dos_path)+1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == strlen(dos_path), "Expected length %u, got %u\n", (DWORD)strlen(dos_path), count);
+    ok(result_path[0] != 0x11, "Result path was not modified\n");
+    ok(result_path[strlen(dos_path)+1] == 0x11, "Buffer overflow\n");
+
+    CloseHandle(hFile);
+}
+
+static void test_GetFinalPathNameByHandleW(void)
+{
+    static WCHAR prefix[] = {'G','e','t','F','i','n','a','l','P','a','t','h','N','a','m','e','B','y','H','a','n','d','l','e','W','\0'};
+    static WCHAR dos_prefix[] = {'\\','\\','?','\\','\0'};
+    WCHAR temp_path[MAX_PATH], test_path[MAX_PATH];
+    WCHAR long_path[MAX_PATH], result_path[MAX_PATH];
+    WCHAR dos_path[MAX_PATH + sizeof(dos_prefix)];
+    WCHAR drive_part[MAX_PATH];
+    WCHAR *file_part;
+    WCHAR volume_path[MAX_PATH+50];
+    WCHAR nt_path[2*MAX_PATH];
+    HANDLE hFile;
+    DWORD count;
+    UINT ret;
+
+    if (!pGetFinalPathNameByHandleW)
+    {
+        win_skip("GetFinalPathNameByHandleW is missing\n");
+        return;
+    }
+
+    /* Test calling with INVALID_HANDLE_VALUE */
+    SetLastError(0xdeadbeaf);
+    count = pGetFinalPathNameByHandleW(INVALID_HANDLE_VALUE, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == 0, "Expected length 0, got %d\n", count);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+
+    count = GetTempPathW(MAX_PATH, temp_path);
+    ok(count, "Failed to get temp path, error %d\n", GetLastError());
+    if (!count) return;
+
+    ret = GetTempFileNameW(temp_path, prefix, 0, test_path);
+    ok(ret != 0, "GetTempFileNameW error %d\n", GetLastError());
+    if (!ret) return;
+
+    ret = GetLongPathNameW(test_path, long_path, MAX_PATH);
+    ok(ret != 0, "GetLongPathNameW error %d\n", GetLastError());
+    if (!ret) return;
+
+    hFile = CreateFileW(test_path, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                        CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, 0);
+    ok(hFile != INVALID_HANDLE_VALUE, "CreateFileW error %d\n", GetLastError());
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    dos_path[0] = 0;
+    lstrcatW(dos_path, dos_prefix);
+    lstrcatW(dos_path, long_path);
+
+    /* Test VOLUME_NAME_DOS with sufficient buffer size */
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path), "Expected length %d, got %d\n", lstrlenW(dos_path), count);
+    if (count && count <= MAX_PATH)
+        ok(lstrcmpiW(dos_path, result_path) == 0, "Expected %s, got %s\n", wine_dbgstr_w(dos_path), wine_dbgstr_w(result_path));
+
+    /* Test VOLUME_NAME_DOS with insufficient buffer size */
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(hFile, result_path, lstrlenW(dos_path)-1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path) + 1, "Expected length %d, got %d\n", lstrlenW(dos_path) + 1, count);
+    ok(result_path[0] == 0x1111, "Result path was modified\n");
+
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(hFile, result_path, lstrlenW(dos_path), FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path) + 1, "Expected length %d, got %d\n", lstrlenW(dos_path) + 1, count);
+    ok(result_path[0] == 0x1111, "Result path was modified\n");
+
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(hFile, result_path, lstrlenW(dos_path)+1, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+    ok(count == lstrlenW(dos_path), "Expected length %d, got %d\n", lstrlenW(dos_path), count);
+    ok(result_path[0] != 0x1111, "Result path was not modified\n");
+    ok(result_path[lstrlenW(dos_path)+1] == 0x1111, "Buffer overflow\n");
+
+    if (!GetVolumePathNameW(long_path, drive_part, MAX_PATH))
+    {
+        ok(0, "Failed to get drive part, error: %d\n", GetLastError());
+        CloseHandle(hFile);
+        return;
+    }
+
+    if (!GetVolumeNameForVolumeMountPointW(drive_part, volume_path, sizeof(volume_path) / sizeof(WCHAR)))
+        ok(0, "GetVolumeNameForVolumeMountPointW failed, error: %d\n", GetLastError());
+    else
+    {
+        /* Test for VOLUME_NAME_GUID */
+        lstrcatW(volume_path, long_path + lstrlenW(drive_part));
+        memset(result_path, 0x11, sizeof(result_path));
+        count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_GUID);
+        ok(count == lstrlenW(volume_path), "Expected length %d, got %d\n", lstrlenW(volume_path), count);
+        if (count && count <= MAX_PATH)
+            ok(lstrcmpiW(volume_path, result_path) == 0, "Expected %s, got %s\n",
+               wine_dbgstr_w(volume_path), wine_dbgstr_w(result_path));
+    }
+
+    /* Test for VOLUME_NAME_NONE */
+    file_part = long_path + lstrlenW(drive_part) - 1;
+    memset(result_path, 0x11, sizeof(result_path));
+    count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NONE);
+    ok(count == lstrlenW(file_part), "Expected length %d, got %d\n", lstrlenW(file_part), count);
+    if (count && count <= MAX_PATH)
+        ok(lstrcmpiW(file_part, result_path) == 0, "Expected %s, got %s\n",
+           wine_dbgstr_w(file_part), wine_dbgstr_w(result_path));
+
+    drive_part[lstrlenW(drive_part)-1] = 0;
+    if (!QueryDosDeviceW(drive_part, nt_path, sizeof(nt_path) / sizeof(WCHAR)))
+        ok(0, "QueryDosDeviceW failed, error: %d\n", GetLastError());
+    else
+    {
+        /* Test for VOLUME_NAME_NT */
+        lstrcatW(nt_path, file_part);
+        memset(result_path, 0x11, sizeof(result_path));
+        count = pGetFinalPathNameByHandleW(hFile, result_path, MAX_PATH, FILE_NAME_NORMALIZED | VOLUME_NAME_NT);
+        ok(count == lstrlenW(nt_path), "Expected length %d, got %d\n", lstrlenW(nt_path), count);
+        if (count && count <= MAX_PATH)
+            ok(lstrcmpiW(nt_path, result_path) == 0, "Expected %s, got %s\n",
+               wine_dbgstr_w(nt_path), wine_dbgstr_w(result_path));
+    }
+
+    CloseHandle(hFile);
+}
+
 START_TEST(file)
 {
     InitFunctionPointers();
@@ -4171,9 +4409,15 @@ START_TEST(file)
     test_MoveFileW();
     test_FindFirstFileA();
     test_FindNextFileA();
-    test_FindFirstFileExA(0);
+    test_FindFirstFileExA(FindExInfoStandard, 0, 0);
+    test_FindFirstFileExA(FindExInfoStandard, 0, FIND_FIRST_EX_CASE_SENSITIVE);
+    test_FindFirstFileExA(FindExInfoStandard, 0, FIND_FIRST_EX_LARGE_FETCH);
+    test_FindFirstFileExA(FindExInfoBasic, 0, 0);
     /* FindExLimitToDirectories is ignored if the file system doesn't support directory filtering */
-    test_FindFirstFileExA(FindExSearchLimitToDirectories);
+    test_FindFirstFileExA(FindExInfoStandard, FindExSearchLimitToDirectories, 0);
+    test_FindFirstFileExA(FindExInfoStandard, FindExSearchLimitToDirectories, FIND_FIRST_EX_CASE_SENSITIVE);
+    test_FindFirstFileExA(FindExInfoStandard, FindExSearchLimitToDirectories, FIND_FIRST_EX_LARGE_FETCH);
+    test_FindFirstFileExA(FindExInfoBasic, FindExSearchLimitToDirectories, 0);
     test_LockFile();
     test_file_sharing();
     test_offset_in_overlapped_structure();
@@ -4191,4 +4435,6 @@ START_TEST(file)
     test_SetFileValidData();
     test_WriteFileGather();
     test_file_access();
+    test_GetFinalPathNameByHandleA();
+    test_GetFinalPathNameByHandleW();
 }

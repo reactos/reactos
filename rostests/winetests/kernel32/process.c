@@ -57,7 +57,7 @@
           wine_dbgstr_w(expected), wine_dbgstr_w(value)); \
     } while (0)
 
-static HINSTANCE hkernel32;
+static HINSTANCE hkernel32, hntdll;
 static void   (WINAPI *pGetNativeSystemInfo)(LPSYSTEM_INFO);
 static BOOL   (WINAPI *pGetSystemRegistryQuota)(PDWORD, PDWORD);
 static BOOL   (WINAPI *pIsWow64Process)(HANDLE,PBOOL);
@@ -66,6 +66,7 @@ static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
 static BOOL   (WINAPI *pQueryFullProcessImageNameA)(HANDLE hProcess, DWORD dwFlags, LPSTR lpExeName, PDWORD lpdwSize);
 static BOOL   (WINAPI *pQueryFullProcessImageNameW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 static DWORD  (WINAPI *pK32GetProcessImageFileNameA)(HANDLE,LPSTR,DWORD);
+static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 
 /* ############################### */
 static char     base[MAX_PATH];
@@ -201,6 +202,8 @@ static BOOL init(void)
     if ((p = strrchr(exename, '/')) != NULL) exename = p + 1;
 
     hkernel32 = GetModuleHandleA("kernel32");
+    hntdll    = GetModuleHandleA("ntdll.dll");
+
     pGetNativeSystemInfo = (void *) GetProcAddress(hkernel32, "GetNativeSystemInfo");
     pGetSystemRegistryQuota = (void *) GetProcAddress(hkernel32, "GetSystemRegistryQuota");
     pIsWow64Process = (void *) GetProcAddress(hkernel32, "IsWow64Process");
@@ -209,6 +212,7 @@ static BOOL init(void)
     pQueryFullProcessImageNameA = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameA");
     pQueryFullProcessImageNameW = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameW");
     pK32GetProcessImageFileNameA = (void *) GetProcAddress(hkernel32, "K32GetProcessImageFileNameA");
+    pNtCurrentTeb = (void *)GetProcAddress( hntdll, "NtCurrentTeb" );
     return TRUE;
 }
 
@@ -276,6 +280,16 @@ static void     doChild(const char* file, const char* option)
                 siA.dwXCountChars, siA.dwYCountChars, siA.dwFillAttribute,
                 siA.dwFlags, siA.wShowWindow,
                 (DWORD_PTR)siA.hStdInput, (DWORD_PTR)siA.hStdOutput, (DWORD_PTR)siA.hStdError);
+
+    if (pNtCurrentTeb)
+    {
+        RTL_USER_PROCESS_PARAMETERS *params = pNtCurrentTeb()->Peb->ProcessParameters;
+
+        /* check the console handles in the TEB */
+        childPrintf(hFile, "[TEB]\nhStdInput=%lu\nhStdOutput=%lu\nhStdError=%lu\n\n",
+                    (DWORD_PTR)params->hStdInput, (DWORD_PTR)params->hStdOutput,
+                    (DWORD_PTR)params->hStdError);
+    }
 
     /* since GetStartupInfoW is only implemented in win2k,
      * zero out before calling so we can notice the difference
@@ -1863,6 +1877,62 @@ static void test_Handles(void)
     SetStdHandle( STD_ERROR_HANDLE, handle );
 }
 
+static void test_IsWow64Process(void)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA si;
+    DWORD ret;
+    BOOL is_wow64;
+    static char cmdline[] = "C:\\Program Files\\Internet Explorer\\iexplore.exe";
+    static char cmdline_wow64[] = "C:\\Program Files (x86)\\Internet Explorer\\iexplore.exe";
+
+    if (!pIsWow64Process)
+    {
+        skip("IsWow64Process is not available\n");
+        return;
+    }
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    ret = CreateProcessA(NULL, cmdline_wow64, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    if (ret)
+    {
+        trace("Created process %s\n", cmdline_wow64);
+        is_wow64 = FALSE;
+        ret = pIsWow64Process(pi.hProcess, &is_wow64);
+        ok(ret, "IsWow64Process failed.\n");
+        ok(is_wow64, "is_wow64 returned FALSE.\n");
+
+        ret = TerminateProcess(pi.hProcess, 0);
+        ok(ret, "TerminateProcess error\n");
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    ret = CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+    if (ret)
+    {
+        trace("Created process %s\n", cmdline);
+        is_wow64 = TRUE;
+        ret = pIsWow64Process(pi.hProcess, &is_wow64);
+        ok(ret, "IsWow64Process failed.\n");
+        ok(!is_wow64, "is_wow64 returned TRUE.\n");
+
+        ret = TerminateProcess(pi.hProcess, 0);
+        ok(ret, "TerminateProcess error\n");
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+}
+
 static void test_SystemInfo(void)
 {
     SYSTEM_INFO si, nsi;
@@ -2063,6 +2133,41 @@ static void test_DuplicateHandle(void)
     CloseHandle(out);
 }
 
+void test_StartupNoConsole(void)
+{
+    char                buffer[MAX_PATH];
+    PROCESS_INFORMATION	info;
+    STARTUPINFOA	    startup;
+    DWORD               code;
+
+    if (!pNtCurrentTeb)
+    {
+        win_skip( "NtCurrentTeb not supported\n" );
+        return;
+    }
+
+    memset(&startup, 0, sizeof(startup));
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESHOWWINDOW;
+    startup.wShowWindow = SW_SHOWNORMAL;
+    get_file_name(resfile);
+    sprintf(buffer, "\"%s\" tests/process.c \"%s\"", selfname, resfile);
+    ok(CreateProcessA(NULL, buffer, NULL, NULL, TRUE, DETACHED_PROCESS, NULL, NULL, &startup,
+                      &info), "CreateProcess\n");
+    ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
+    ok(GetExitCodeProcess(info.hProcess, &code), "Getting exit code\n");
+    WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
+    okChildInt("StartupInfoA", "hStdInput", (DWORD_PTR)INVALID_HANDLE_VALUE);
+    okChildInt("StartupInfoA", "hStdOutput", (DWORD_PTR)INVALID_HANDLE_VALUE);
+    okChildInt("StartupInfoA", "hStdError", (DWORD_PTR)INVALID_HANDLE_VALUE);
+    okChildInt("TEB", "hStdInput", (DWORD_PTR)0);
+    okChildInt("TEB", "hStdOutput", (DWORD_PTR)0);
+    okChildInt("TEB", "hStdError", (DWORD_PTR)0);
+    release_memory();
+    assert(DeleteFileA(resfile) != 0);
+
+}
+
 START_TEST(process)
 {
     BOOL b = init();
@@ -2089,9 +2194,11 @@ START_TEST(process)
     test_QueryFullProcessImageNameA();
     test_QueryFullProcessImageNameW();
     test_Handles();
+    test_IsWow64Process();
     test_SystemInfo();
     test_RegistryQuota();
     test_DuplicateHandle();
+    test_StartupNoConsole();
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched
      *  handles:        check the handle inheritance stuff (+sec options)

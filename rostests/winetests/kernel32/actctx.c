@@ -97,6 +97,7 @@ static const char manifest3[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
 "<assemblyIdentity version=\"1.2.3.4\"  name=\"Wine.Test\" type=\"win32\""
 " publicKeyToken=\"6595b6414666f1df\" />"
+"<description />"
 "<file name=\"testlib.dll\">"
 "<windowClass>wndClass</windowClass>"
 "    <comClass description=\"Test com class\""
@@ -221,6 +222,17 @@ static const char manifest4[] =
 "</dependency>"
 "</assembly>";
 
+static const char manifest5[] =
+"<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
+"<assemblyIdentity version=\"1.2.3.4\" name=\"Wine.Test\" type=\"win32\">"
+"</assemblyIdentity>"
+"<dependency>"
+"    <dependentAssembly dependencyType=\"preRequisite\" allowDelayedBinding=\"true\">"
+"        <assemblyIdentity name=\"Missing.Assembly\" version=\"1.0.0.0\" />"
+"    </dependentAssembly>"
+"</dependency>"
+"</assembly>";
+
 static const char testdep_manifest1[] =
 "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">"
 "<assemblyIdentity type=\"win32\" name=\"testdep\" version=\"6.5.4.3\" processorArchitecture=\"" ARCH "\"/>"
@@ -304,8 +316,6 @@ static const WCHAR wndClass2W[] =
     {'w','n','d','C','l','a','s','s','2',0};
 static const WCHAR wndClass3W[] =
     {'w','n','d','C','l','a','s','s','3',0};
-static const WCHAR acr_manifest[] =
-    {'a','c','r','.','m','a','n','i','f','e','s','t',0};
 
 static WCHAR app_dir[MAX_PATH], exe_path[MAX_PATH], work_dir[MAX_PATH], work_dir_subdir[MAX_PATH];
 static WCHAR app_manifest_path[MAX_PATH], manifest_path[MAX_PATH], depmanifest_path[MAX_PATH];
@@ -1729,6 +1739,29 @@ static void test_typelib_section(void)
     pReleaseActCtx(handle);
 }
 
+static void test_allowDelayedBinding(void)
+{
+    HANDLE handle;
+
+    if (!create_manifest_file("test5.manifest", manifest5, -1, NULL, NULL)) {
+        skip("Could not create manifest file\n");
+        return;
+    }
+
+    handle = test_create("test5.manifest");
+    if (handle == INVALID_HANDLE_VALUE) {
+        win_skip("allowDelayedBinding attribute is not supported.\n");
+        return;
+    }
+
+    DeleteFileA("test5.manifest");
+    DeleteFileA("testdep.manifest");
+    if (handle != INVALID_HANDLE_VALUE) {
+        test_basic_info(handle, __LINE__);
+        pReleaseActCtx(handle);
+    }
+}
+
 static void test_actctx(void)
 {
     ULONG_PTR cookie;
@@ -1994,6 +2027,7 @@ static void test_actctx(void)
     test_wndclass_section();
     test_dllredirect_section();
     test_typelib_section();
+    test_allowDelayedBinding();
 }
 
 static void test_app_manifest(void)
@@ -2055,7 +2089,6 @@ static void run_child_process(void)
 static void init_paths(void)
 {
     LPWSTR ptr;
-    WCHAR last;
 
     static const WCHAR dot_manifest[] = {'.','M','a','n','i','f','e','s','t',0};
     static const WCHAR backslash[] = {'\\',0};
@@ -2067,8 +2100,8 @@ static void init_paths(void)
     ptr[1] = 0;
 
     GetCurrentDirectoryW(MAX_PATH, work_dir);
-    last = work_dir[lstrlenW(work_dir) - 1];
-    if (last != '\\' && last != '/')
+    ptr = work_dir + lstrlenW( work_dir ) - 1;
+    if (*ptr != '\\' && *ptr != '/')
         lstrcatW(work_dir, backslash);
     lstrcpyW(work_dir_subdir, work_dir);
     lstrcatW(work_dir_subdir, subdir);

@@ -20,12 +20,15 @@
 
 #include "wine/test.h"
 #include <windows.h>
+#include <psapi.h>
 
 static DWORD (WINAPI *pGetDllDirectoryA)(DWORD,LPSTR);
 static DWORD (WINAPI *pGetDllDirectoryW)(DWORD,LPWSTR);
 static BOOL (WINAPI *pSetDllDirectoryA)(LPCSTR);
 static BOOL (WINAPI *pGetModuleHandleExA)(DWORD,LPCSTR,HMODULE*);
 static BOOL (WINAPI *pGetModuleHandleExW)(DWORD,LPCWSTR,HMODULE*);
+static BOOL (WINAPI *pK32GetModuleInformation)(HANDLE process, HMODULE module,
+                                               MODULEINFO *modinfo, DWORD cb);
 
 static BOOL is_unicode_enabled = TRUE;
 
@@ -514,7 +517,20 @@ static void init_pointers(void)
     MAKEFUNC(SetDllDirectoryA);
     MAKEFUNC(GetModuleHandleExA);
     MAKEFUNC(GetModuleHandleExW);
+    MAKEFUNC(K32GetModuleInformation);
 #undef MAKEFUNC
+
+    /* not all Windows versions export this in kernel32 */
+    if (!pK32GetModuleInformation)
+    {
+        HMODULE hPsapi = LoadLibraryA("psapi.dll");
+        if (hPsapi)
+        {
+            pK32GetModuleInformation = (void *)GetProcAddress(hPsapi, "GetModuleInformation");
+            if (!pK32GetModuleInformation) FreeLibrary(hPsapi);
+        }
+    }
+
 }
 
 static void testGetModuleHandleEx(void)
@@ -696,6 +712,33 @@ static void testGetModuleHandleEx(void)
     FreeLibrary( mod_kernel32 );
 }
 
+static void testK32GetModuleInformation(void)
+{
+    MODULEINFO info;
+    HMODULE mod;
+    BOOL ret;
+
+    if (!pK32GetModuleInformation)
+    {
+        win_skip("K32GetModuleInformation not available\n");
+        return;
+    }
+
+    mod = GetModuleHandleA(NULL);
+    memset(&info, 0xAA, sizeof(info));
+    ret = pK32GetModuleInformation(GetCurrentProcess(), mod, &info, sizeof(info));
+    ok(ret, "K32GetModuleInformation failed for main module\n");
+    ok(info.lpBaseOfDll == mod, "Wrong info.lpBaseOfDll = %p, expected %p\n", info.lpBaseOfDll, mod);
+    ok(info.EntryPoint != NULL, "Expected nonzero entrypoint\n");
+
+    mod = GetModuleHandleA("kernel32.dll");
+    memset(&info, 0xAA, sizeof(info));
+    ret = pK32GetModuleInformation(GetCurrentProcess(), mod, &info, sizeof(info));
+    ok(ret, "K32GetModuleInformation failed for kernel32 module\n");
+    ok(info.lpBaseOfDll == mod, "Wrong info.lpBaseOfDll = %p, expected %p\n", info.lpBaseOfDll, mod);
+    ok(info.EntryPoint != NULL, "Expected nonzero entrypoint\n");
+}
+
 START_TEST(module)
 {
     WCHAR filenameW[MAX_PATH];
@@ -724,4 +767,5 @@ START_TEST(module)
     testGetProcAddress_Wrong();
     testLoadLibraryEx();
     testGetModuleHandleEx();
+    testK32GetModuleInformation();
 }

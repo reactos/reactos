@@ -12,6 +12,7 @@ extern void func_change(void);
 extern void func_codepage(void);
 extern void func_comm(void);
 extern void func_console(void);
+extern void func_cpu(void);
 extern void func_debugger(void);
 extern void func_directory(void);
 extern void func_drive(void);

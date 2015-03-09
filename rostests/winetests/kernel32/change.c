@@ -472,7 +472,7 @@ static void test_readdirectorychanges(void)
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );
 
-    ok( ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 0x12, "ov.InternalHigh wrong\n");
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
@@ -502,7 +502,7 @@ static void test_readdirectorychanges(void)
     r = pReadDirectoryChangesW(hdir,buffer,sizeof buffer,FALSE,filter,NULL,&ov,NULL);
     ok(r==TRUE, "should return true\n");
 
-    ok( ov.Internal == STATUS_PENDING, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_PENDING, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 1, "ov.InternalHigh wrong\n");
 
     r = WaitForSingleObject( ov.hEvent, 0 );
@@ -514,10 +514,10 @@ static void test_readdirectorychanges(void)
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok( ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 0x12, "ov.InternalHigh wrong\n");
 
-    if (ov.Internal == STATUS_SUCCESS)
+    if ((NTSTATUS)ov.Internal == STATUS_SUCCESS)
     {
         r = GetOverlappedResult( hdir, &ov, &dwCount, TRUE );
         ok( r == TRUE, "getoverlappedresult failed\n");
@@ -540,7 +540,7 @@ static void test_readdirectorychanges(void)
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok( ov.Internal == STATUS_NOTIFY_ENUM_DIR, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_NOTIFY_ENUM_DIR, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 0, "ov.InternalHigh wrong\n");
 
     /* test the recursive watch */
@@ -553,10 +553,19 @@ static void test_readdirectorychanges(void)
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok( ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
-    ok( ov.InternalHigh == 0x18, "ov.InternalHigh wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
+    ok( ov.InternalHigh == 0x18 || ov.InternalHigh == 0x12 + 0x18,
+        "ov.InternalHigh wrong %lx\n", ov.InternalHigh);
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
+    if (pfni->NextEntryOffset)  /* we may get a modified event on the parent dir */
+    {
+        ok( pfni->NextEntryOffset == 0x12, "offset wrong %x\n", pfni->NextEntryOffset );
+        ok( pfni->Action == FILE_ACTION_MODIFIED, "action wrong %d\n", pfni->Action );
+        ok( pfni->FileNameLength == 3*sizeof(WCHAR), "len wrong\n" );
+        ok( !memcmp(pfni->FileName,&szGa[1],3*sizeof(WCHAR)), "name wrong\n");
+        pfni = (PFILE_NOTIFY_INFORMATION)((char *)pfni + pfni->NextEntryOffset);
+    }
     ok( pfni->NextEntryOffset == 0, "offset wrong\n" );
     ok( pfni->Action == FILE_ACTION_ADDED, "action wrong\n" );
     ok( pfni->FileNameLength == 6*sizeof(WCHAR), "len wrong\n" );
@@ -589,7 +598,7 @@ static void test_readdirectorychanges(void)
     ok( pfni->FileNameLength == 6*sizeof(WCHAR), "len wrong %u\n", pfni->FileNameLength );
     ok( !memcmp(pfni->FileName,&szGa[1],6*sizeof(WCHAR)), "name wrong\n" );
 
-    ok( ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
     dwCount = (char *)&pfni->FileName[pfni->FileNameLength/sizeof(WCHAR)] - buffer;
     ok( ov.InternalHigh == dwCount, "ov.InternalHigh wrong %lu/%u\n",ov.InternalHigh, dwCount );
 
@@ -666,7 +675,7 @@ static void test_readdirectorychanges_null(void)
     r = WaitForSingleObject( ov.hEvent, 0 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );
 
-    ok( ov.Internal == STATUS_NOTIFY_ENUM_DIR, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_NOTIFY_ENUM_DIR, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 0, "ov.InternalHigh wrong\n");
 
     ov.Internal = 0;
@@ -687,7 +696,7 @@ static void test_readdirectorychanges_null(void)
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "should be ready\n" );
 
-    ok( ov.Internal == STATUS_NOTIFY_ENUM_DIR, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_NOTIFY_ENUM_DIR, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 0, "ov.InternalHigh wrong\n");
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;
@@ -763,7 +772,7 @@ static void test_readdirectorychanges_filedir(void)
     r = WaitForSingleObject( ov.hEvent, 1000 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );
 
-    ok( ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
+    ok( (NTSTATUS)ov.Internal == STATUS_SUCCESS, "ov.Internal wrong\n");
     ok( ov.InternalHigh == 0x12, "ov.InternalHigh wrong\n");
 
     pfni = (PFILE_NOTIFY_INFORMATION) buffer;

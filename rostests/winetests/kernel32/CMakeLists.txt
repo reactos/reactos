@@ -8,6 +8,7 @@ list(APPEND SOURCE
     codepage.c
     comm.c
     console.c
+    cpu.c
     debugger.c
     directory.c
     drive.c
@@ -37,6 +38,11 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(kernel32_winetest ${SOURCE} resource.rc)
+
+if(NOT MSVC)
+    add_target_compile_flags(kernel32_winetest "-Wno-format")
+endif()
+
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET kernel32_winetest DESTINATION reactos/bin FOR all)
