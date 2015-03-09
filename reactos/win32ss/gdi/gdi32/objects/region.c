@@ -837,7 +837,7 @@ GetClipRgn(
     {
         /* Last error code differs from what NtGdiGetRandomRgn returns */
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        return -1;
     }
 
     Ret = NtGdiGetRandomRgn(hdc, hrgn, CLIPRGN);
