@@ -193,7 +193,6 @@ static void delnode_test(void)
     CloseHandle(hn);
     hr = pDelNode(lstrcatA(currDir, "\\DelNodeTestDir"), 0);
     ok (hr == S_OK, "DelNode failed deleting a directory containing multiple files\n");
-    currDir[currDirLen] = '\0';
 }
 
 static void append_str(char **str, const char *data, ...)
