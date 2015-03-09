@@ -80,7 +80,7 @@ add_library(ole32 SHARED
 
 set_module_type(ole32 win32dll)
 target_link_libraries(ole32 wine uuid ${PSEH_LIB})
-add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
+add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 kernel32_vista ntdll)
 add_delay_importlibs(ole32 oleaut32)
 add_dependencies(ole32 ole32idl)
 add_pch(ole32 precomp.h SOURCE)

@@ -2950,7 +2950,7 @@ static HRESULT StorageImpl_GrabLocks(StorageImpl *This, DWORD openFlags)
     hr = S_OK;
 
     /* First check for any conflicting locks. */
-    if (SUCCEEDED(hr) && (openFlags & STGM_PRIORITY) == STGM_PRIORITY)
+    if ((openFlags & STGM_PRIORITY) == STGM_PRIORITY)
         hr = StorageImpl_CheckLockRange(This, RANGELOCK_COMMIT, RANGELOCK_COMMIT, STG_E_LOCKVIOLATION);
 
     if (SUCCEEDED(hr) && (STGM_ACCESS_MODE(openFlags) != STGM_WRITE))
@@ -6976,10 +6976,8 @@ static ULONG BlockChainStream_GetHeadOfChain(BlockChainStream* This)
                       This->ownerDirEntry,
                       &chainEntry);
 
-    if (SUCCEEDED(hr))
-    {
+    if (SUCCEEDED(hr) && chainEntry.startingBlock < BLOCK_FIRST_SPECIAL)
       return chainEntry.startingBlock;
-    }
   }
 
   return BLOCK_END_OF_CHAIN;
@@ -7501,11 +7499,8 @@ static ULONG SmallBlockChainStream_GetHeadOfChain(
                       This->ownerDirEntry,
                       &chainEntry);
 
-    if (SUCCEEDED(hr))
-    {
+    if (SUCCEEDED(hr) && chainEntry.startingBlock < BLOCK_FIRST_SPECIAL)
       return chainEntry.startingBlock;
-    }
-
   }
 
   return BLOCK_END_OF_CHAIN;

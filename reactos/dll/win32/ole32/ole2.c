@@ -205,7 +205,7 @@ HRESULT WINAPI OleInitialize(LPVOID reserved)
 /******************************************************************************
  *		OleUninitialize	[OLE32.@]
  */
-void WINAPI OleUninitialize(void)
+void WINAPI DECLSPEC_HOTPATCH OleUninitialize(void)
 {
   TRACE("()\n");
 
@@ -2381,11 +2381,12 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
 	 */
         case DRAGDROP_S_DROP:
           if (*trackerInfo->pdwEffect != DROPEFFECT_NONE)
-            trackerInfo->returnValue =  IDropTarget_Drop(trackerInfo->curDragTarget,
-                                                         trackerInfo->dataObject,
-                                                         trackerInfo->dwKeyState,
-                                                         trackerInfo->curMousePos,
-                                                         trackerInfo->pdwEffect);
+          {
+            hr = IDropTarget_Drop(trackerInfo->curDragTarget, trackerInfo->dataObject,
+                    trackerInfo->dwKeyState, trackerInfo->curMousePos, trackerInfo->pdwEffect);
+            if (FAILED(hr))
+              trackerInfo->returnValue = hr;
+          }
           else
             IDropTarget_DragLeave(trackerInfo->curDragTarget);
           break;

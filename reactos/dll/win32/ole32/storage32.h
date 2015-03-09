@@ -69,6 +69,7 @@ static const WORD  MAX_BIG_BLOCK_SIZE_BITS   = 0x000c;
 static const WORD  DEF_SMALL_BLOCK_SIZE_BITS = 0x0006;
 static const WORD  DEF_BIG_BLOCK_SIZE        = 0x0200;
 static const WORD  DEF_SMALL_BLOCK_SIZE      = 0x0040;
+static const ULONG BLOCK_FIRST_SPECIAL       = 0xFFFFFFFB;
 static const ULONG BLOCK_EXTBBDEPOT          = 0xFFFFFFFC;
 static const ULONG BLOCK_SPECIAL             = 0xFFFFFFFD;
 static const ULONG BLOCK_END_OF_CHAIN        = 0xFFFFFFFE;

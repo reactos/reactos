@@ -1622,7 +1622,7 @@ unsigned char * WINAPI WdtpInterfacePointer_UserMarshal(ULONG *pFlags, ULONG Rea
     if(CoMarshalInterface(stm, riid, punk, LOWORD(RealFlags), NULL, MSHLFLAGS_NORMAL) != S_OK)
     {
         IStream_Release(stm);
-        return NULL;
+        return pBuffer;
     }
 
     ALIGN_POINTER(pBuffer, 3);

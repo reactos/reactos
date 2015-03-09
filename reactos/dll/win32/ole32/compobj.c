@@ -1628,7 +1628,6 @@ static HRESULT apartment_hostobject_in_hostapt(
     return hr;
 }
 
-#ifndef __REACTOS__
 static BOOL WINAPI register_class( INIT_ONCE *once, void *param, void **context )
 {
     WNDCLASSW wclass;
@@ -1649,33 +1648,24 @@ static BOOL WINAPI register_class( INIT_ONCE *once, void *param, void **context 
     RegisterClassW(&wclass);
     return TRUE;
 }
-#endif
 
 /* create a window for the apartment or return the current one if one has
  * already been created */
 HRESULT apartment_createwindowifneeded(struct apartment *apt)
 {
-#ifndef __REACTOS__
     static INIT_ONCE class_init_once = INIT_ONCE_STATIC_INIT;
-#endif
 
     if (apt->multi_threaded)
         return S_OK;
 
     if (!apt->win)
     {
-#ifndef __REACTOS__
         HWND hwnd;
 
         InitOnceExecuteOnce( &class_init_once, register_class, NULL, NULL );
 
         hwnd = CreateWindowW(wszAptWinClass, NULL, 0, 0, 0, 0, 0,
                              HWND_MESSAGE, 0, hProxyDll, NULL);
-#else
-        HWND hwnd = CreateWindowW(wszAptWinClass, NULL, 0,
-                                  0, 0, 0, 0,
-                                  HWND_MESSAGE, 0, hProxyDll, NULL);
-#endif
         if (!hwnd)
         {
             ERR("CreateWindow failed with error %d\n", GetLastError());
@@ -1701,35 +1691,6 @@ void apartment_joinmta(void)
     apartment_addref(MTA);
     COM_CurrentInfo()->apt = MTA;
 }
-
-#ifdef __REACTOS__
-
-static void COMPOBJ_InitProcess( void )
-{
-    WNDCLASSW wclass;
-
-    /* Dispatching to the correct thread in an apartment is done through
-     * window messages rather than RPC transports. When an interface is
-     * marshalled into another apartment in the same process, a window of the
-     * following class is created. The *caller* of CoMarshalInterface (i.e., the
-     * application) is responsible for pumping the message loop in that thread.
-     * The WM_USER messages which point to the RPCs are then dispatched to
-     * apartment_wndproc by the user's code from the apartment in which the
-     * interface was unmarshalled.
-     */
-    memset(&wclass, 0, sizeof(wclass));
-    wclass.lpfnWndProc = apartment_wndproc;
-    wclass.hInstance = hProxyDll;
-    wclass.lpszClassName = wszAptWinClass;
-    RegisterClassW(&wclass);
-}
-
-static void COMPOBJ_UninitProcess( void )
-{
-    UnregisterClassW(wszAptWinClass, hProxyDll);
-}
-
-#endif
 
 static void COM_TlsDestroy(void)
 {
@@ -1964,7 +1925,7 @@ HRESULT WINAPI CoInitializeEx(LPVOID lpReserved, DWORD dwCoInit)
  * SEE ALSO
  *   CoInitializeEx
  */
-void WINAPI CoUninitialize(void)
+void WINAPI DECLSPEC_HOTPATCH CoUninitialize(void)
 {
   struct oletls * info = COM_CurrentInfo();
   LONG lCOMRefCnt;
@@ -4443,9 +4404,21 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
     DWORD start_time = GetTickCount();
     APARTMENT *apt = COM_CurrentApt();
     BOOL message_loop = apt && !apt->multi_threaded;
+    BOOL check_apc = (dwFlags & COWAIT_ALERTABLE) != 0;
 
     TRACE("(0x%08x, 0x%08x, %d, %p, %p)\n", dwFlags, dwTimeout, cHandles,
         pHandles, lpdwindex);
+
+    if (!lpdwindex)
+        return E_INVALIDARG;
+
+    *lpdwindex = 0;
+
+    if (!pHandles)
+        return E_INVALIDARG;
+
+    if (!cHandles)
+        return RPC_E_NO_SYNC;
 
     while (TRUE)
     {
@@ -4465,9 +4438,19 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
 
             TRACE("waiting for rpc completion or window message\n");
 
-            res = MsgWaitForMultipleObjectsEx(cHandles, pHandles,
-                (dwTimeout == INFINITE) ? INFINITE : start_time + dwTimeout - now,
-                QS_SENDMESSAGE | QS_ALLPOSTMESSAGE | QS_PAINT, wait_flags);
+            res = WAIT_TIMEOUT;
+
+            if (check_apc)
+            {
+                res = WaitForMultipleObjectsEx(cHandles, pHandles,
+                    (dwFlags & COWAIT_WAITALL) != 0, 0, TRUE);
+                check_apc = FALSE;
+            }
+
+            if (res == WAIT_TIMEOUT)
+                res = MsgWaitForMultipleObjectsEx(cHandles, pHandles,
+                    (dwTimeout == INFINITE) ? INFINITE : start_time + dwTimeout - now,
+                    QS_SENDMESSAGE | QS_ALLPOSTMESSAGE | QS_PAINT, wait_flags);
 
             if (res == WAIT_OBJECT_0 + cHandles)  /* messages available */
             {
@@ -5047,19 +5030,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID reserved)
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
         hProxyDll = hinstDLL;
-#ifdef __REACTOS__
-        COMPOBJ_InitProcess();
-#endif
 	break;
 
     case DLL_PROCESS_DETACH:
         if (reserved) break;
         release_std_git();
-#ifdef __REACTOS__
-        COMPOBJ_UninitProcess();
-#else
         UnregisterClassW( wszAptWinClass, hProxyDll );
-#endif
         RPC_UnregisterAllChannelHooks();
         COMPOBJ_DllList_Free();
         DeleteCriticalSection(&csRegisteredClassList);
