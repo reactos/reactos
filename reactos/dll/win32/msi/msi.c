@@ -1738,10 +1738,6 @@ UINT WINAPI MsiGetPatchInfoExW(LPCWSTR szPatchCode, LPCWSTR szProductCode,
             datakey = patch;
             szProperty = szInstalled;
         }
-        else if (!strcmpW( szProperty, INSTALLPROPERTY_LOCALPACKAGEW ))
-        {
-            datakey = udpatch;
-        }
         else if (!strcmpW( szProperty, INSTALLPROPERTY_UNINSTALLABLEW ) ||
                  !strcmpW( szProperty, INSTALLPROPERTY_PATCHSTATEW ) ||
                  !strcmpW( szProperty, INSTALLPROPERTY_DISPLAYNAMEW ) ||
@@ -4178,6 +4174,92 @@ UINT WINAPI MsiInstallMissingComponentW(LPCWSTR szProduct, LPCWSTR szComponent, 
     return ERROR_SUCCESS;
 }
 
+UINT WINAPI MsiProvideComponentA( LPCSTR product, LPCSTR feature, LPCSTR component, DWORD mode, LPSTR buf, LPDWORD buflen )
+{
+    WCHAR *productW = NULL, *componentW = NULL, *featureW = NULL, *bufW = NULL;
+    UINT r = ERROR_OUTOFMEMORY;
+    DWORD lenW;
+    int len;
+
+    TRACE("%s, %s, %s, %x, %p, %p\n", debugstr_a(product), debugstr_a(component), debugstr_a(feature), mode, buf, buflen);
+
+    if (product && !(productW = strdupAtoW( product ))) goto done;
+    if (feature && !(featureW = strdupAtoW( feature ))) goto done;
+    if (component && !(componentW = strdupAtoW( component ))) goto done;
+
+    r = MsiProvideComponentW( productW, featureW, componentW, mode, NULL, &lenW );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    if (!(bufW = msi_alloc( ++lenW * sizeof(WCHAR) )))
+    {
+        r = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    r = MsiProvideComponentW( productW, featureW, componentW, mode, bufW, &lenW );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    len = WideCharToMultiByte( CP_ACP, 0, bufW, -1, NULL, 0, NULL, NULL );
+    if (buf)
+    {
+        if (len > *buflen)
+            r = ERROR_MORE_DATA;
+        else
+            WideCharToMultiByte( CP_ACP, 0, bufW, -1, buf, *buflen, NULL, NULL );
+    }
+
+    *buflen = len - 1;
+
+done:
+    msi_free( productW );
+    msi_free( featureW );
+    msi_free( componentW );
+    msi_free( bufW );
+    return r;
+}
+
+UINT WINAPI MsiProvideComponentW( LPCWSTR product, LPCWSTR feature, LPCWSTR component, DWORD mode, LPWSTR buf, LPDWORD buflen )
+{
+    INSTALLSTATE state;
+
+    TRACE("%s, %s, %s, %x, %p, %p\n", debugstr_w(product), debugstr_w(component), debugstr_w(feature), mode, buf, buflen);
+
+    state = MsiQueryFeatureStateW( product, feature );
+    TRACE("feature state: %d\n", state);
+    switch (mode)
+    {
+    case INSTALLMODE_NODETECTION:
+        break;
+
+    default:
+        FIXME("mode %x not implemented\n", mode);
+        return ERROR_INSTALL_FAILURE;
+    }
+
+    state = MsiGetComponentPathW( product, component, buf, buflen );
+    TRACE("component state: %d\n", state);
+    switch (state)
+    {
+    case INSTALLSTATE_INVALIDARG:
+        return ERROR_INVALID_PARAMETER;
+
+    case INSTALLSTATE_MOREDATA:
+        return ERROR_MORE_DATA;
+
+    case INSTALLSTATE_ADVERTISED:
+    case INSTALLSTATE_LOCAL:
+    case INSTALLSTATE_SOURCE:
+        MsiUseFeatureW( product, feature );
+        return ERROR_SUCCESS;
+
+    default:
+        TRACE("MsiGetComponentPathW returned %d\n", state);
+        return ERROR_INSTALL_FAILURE;
+    }
+}
+
 /***********************************************************************
  * MsiBeginTransactionA     [MSI.@]
  */
@@ -4222,5 +4304,23 @@ UINT WINAPI MsiEndTransaction( DWORD state )
 UINT WINAPI Migrate10CachedPackagesW(void* a, void* b, void* c, DWORD d)
 {
     FIXME("%p,%p,%p,%08x\n", a, b, c, d);
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ * MsiRemovePatchesA     [MSI.@]
+ */
+UINT WINAPI MsiRemovePatchesA(LPCSTR patchlist, LPCSTR product, INSTALLTYPE type, LPCSTR propertylist)
+{
+    FIXME("(%s %s %d %s\n", debugstr_a(patchlist), debugstr_a(product), type, debugstr_a(propertylist));
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ * MsiRemovePatchesW    [MSI.@]
+ */
+UINT WINAPI MsiRemovePatchesW(LPCWSTR patchlist, LPCWSTR product, INSTALLTYPE type, LPCWSTR propertylist)
+{
+    FIXME("(%s %s %d %s\n", debugstr_w(patchlist), debugstr_w(product), type, debugstr_w(propertylist));
     return ERROR_SUCCESS;
 }

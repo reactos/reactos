@@ -36,179 +36,25 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
 
-typedef struct tagMSITRANSFORM {
-    struct list entry;
-    IStorage *stg;
-} MSITRANSFORM;
-
-typedef struct tagMSISTREAM {
-    struct list entry;
-    IStorage *stg;
-    IStream *stm;
-} MSISTREAM;
-
-static UINT find_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStream **stm )
-{
-    MSISTREAM *stream;
-
-    LIST_FOR_EACH_ENTRY( stream, &db->streams, MSISTREAM, entry )
-    {
-        HRESULT r;
-        STATSTG stat;
-
-        if (stream->stg != stg) continue;
-
-        r = IStream_Stat( stream->stm, &stat, 0 );
-        if( FAILED( r ) )
-        {
-            WARN("failed to stat stream r = %08x!\n", r);
-            continue;
-        }
-
-        if( !strcmpW( name, stat.pwcsName ) )
-        {
-            TRACE("found %s\n", debugstr_w(name));
-            *stm = stream->stm;
-            CoTaskMemFree( stat.pwcsName );
-            return ERROR_SUCCESS;
-        }
-
-        CoTaskMemFree( stat.pwcsName );
-    }
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-UINT msi_clone_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStream **stm )
-{
-    IStream *stream;
-
-    if (find_open_stream( db, stg, name, &stream ) == ERROR_SUCCESS)
-    {
-        HRESULT r;
-        LARGE_INTEGER pos;
-
-        r = IStream_Clone( stream, stm );
-        if( FAILED( r ) )
-        {
-            WARN("failed to clone stream r = %08x!\n", r);
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        pos.QuadPart = 0;
-        r = IStream_Seek( *stm, pos, STREAM_SEEK_SET, NULL );
-        if( FAILED( r ) )
-        {
-            IStream_Release( *stm );
-            return ERROR_FUNCTION_FAILED;
-        }
-
-        return ERROR_SUCCESS;
-    }
-
-    return ERROR_FUNCTION_FAILED;
-}
-
-UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
-{
-    HRESULT r;
-    IStorage *stg;
-    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
-
-    decode_streamname( stname, decoded );
-    TRACE("%s -> %s\n", debugstr_w(stname), debugstr_w(decoded));
-
-    if (msi_clone_open_stream( db, db->storage, stname, stm ) == ERROR_SUCCESS)
-        return ERROR_SUCCESS;
-
-    r = IStorage_OpenStream( db->storage, stname, NULL,
-                             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
-    if( FAILED( r ) )
-    {
-        MSITRANSFORM *transform;
-
-        LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
-        {
-            r = IStorage_OpenStream( transform->stg, stname, NULL,
-                                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
-            if (SUCCEEDED(r))
-            {
-                stg = transform->stg;
-                break;
-            }
-        }
-    }
-    else stg = db->storage;
-
-    if( SUCCEEDED(r) )
-    {
-        MSISTREAM *stream;
-
-        if (!(stream = msi_alloc( sizeof(MSISTREAM) ))) return ERROR_NOT_ENOUGH_MEMORY;
-        stream->stg = stg;
-        IStorage_AddRef( stg );
-        stream->stm = *stm;
-        IStream_AddRef( *stm );
-        list_add_tail( &db->streams, &stream->entry );
-    }
-
-    return SUCCEEDED(r) ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
-}
-
 static void free_transforms( MSIDATABASE *db )
 {
     while( !list_empty( &db->transforms ) )
     {
-        MSITRANSFORM *t = LIST_ENTRY( list_head( &db->transforms ),
-                                      MSITRANSFORM, entry );
+        MSITRANSFORM *t = LIST_ENTRY( list_head( &db->transforms ), MSITRANSFORM, entry );
         list_remove( &t->entry );
         IStorage_Release( t->stg );
         msi_free( t );
     }
 }
 
-void msi_destroy_stream( MSIDATABASE *db, const WCHAR *stname )
-{
-    MSISTREAM *stream, *stream2;
-
-    LIST_FOR_EACH_ENTRY_SAFE( stream, stream2, &db->streams, MSISTREAM, entry )
-    {
-        HRESULT r;
-        STATSTG stat;
-
-        r = IStream_Stat( stream->stm, &stat, 0 );
-        if (FAILED(r))
-        {
-            WARN("failed to stat stream r = %08x\n", r);
-            continue;
-        }
-
-        if (!strcmpW( stname, stat.pwcsName ))
-        {
-            TRACE("destroying %s\n", debugstr_w(stname));
-
-            list_remove( &stream->entry );
-            IStream_Release( stream->stm );
-            IStorage_Release( stream->stg );
-            IStorage_DestroyElement( stream->stg, stname );
-            msi_free( stream );
-            CoTaskMemFree( stat.pwcsName );
-            break;
-        }
-        CoTaskMemFree( stat.pwcsName );
-    }
-}
-
 static void free_streams( MSIDATABASE *db )
 {
-    while( !list_empty( &db->streams ) )
+    UINT i;
+    for (i = 0; i < db->num_streams; i++)
     {
-        MSISTREAM *s = LIST_ENTRY(list_head( &db->streams ), MSISTREAM, entry);
-        list_remove( &s->entry );
-        IStream_Release( s->stm );
-        IStorage_Release( s->stg );
-        msi_free( s );
+        if (db->streams[i].stream) IStream_Release( db->streams[i].stream );
     }
+    msi_free( db->streams );
 }
 
 void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
@@ -219,9 +65,6 @@ void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
     t->stg = stg;
     IStorage_AddRef( stg );
     list_add_head( &db->transforms, &t->entry );
-
-    /* the transform may add or replace streams */
-    free_streams( db );
 }
 
 static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
@@ -229,8 +72,8 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
     MSIDATABASE *db = (MSIDATABASE *) arg;
 
     msi_free(db->path);
-    free_cached_tables( db );
     free_streams( db );
+    free_cached_tables( db );
     free_transforms( db );
     if (db->strings) msi_destroy_stringtable( db->strings );
     IStorage_Release( db->storage );
@@ -413,7 +256,6 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         db->deletefile = strdupW( szDBPath );
     list_init( &db->tables );
     list_init( &db->transforms );
-    list_init( &db->streams );
 
     db->strings = msi_load_string_table( stg, &db->bytes_per_strref );
     if( !db->strings )

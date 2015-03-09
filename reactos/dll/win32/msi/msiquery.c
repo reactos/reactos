@@ -821,8 +821,13 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
 
     /* FIXME: lock the database */
 
-    r = MSI_CommitTables( db );
-    if (r != ERROR_SUCCESS) ERR("Failed to commit tables!\n");
+    r = msi_commit_streams( db );
+    if (r != ERROR_SUCCESS) ERR("Failed to commit streams!\n");
+    else
+    {
+        r = MSI_CommitTables( db );
+        if (r != ERROR_SUCCESS) ERR("Failed to commit tables!\n");
+    }
 
     /* FIXME: unlock the database */
 

@@ -2,6 +2,7 @@
  * Implementation of the Microsoft Installer (msi.dll)
  *
  * Copyright 2007 James Hawkins
+ * Copyright 2015 Hans Leidekker for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,54 +25,30 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 #define NUM_STREAMS_COLS    2
 
-typedef struct tabSTREAM
-{
-    UINT str_index;
-    IStream *stream;
-} STREAM;
-
 typedef struct tagMSISTREAMSVIEW
 {
     MSIVIEW view;
     MSIDATABASE *db;
-    STREAM **streams;
-    UINT max_streams;
-    UINT num_rows;
-    UINT row_size;
+    UINT num_cols;
 } MSISTREAMSVIEW;
 
-static BOOL streams_set_table_size(MSISTREAMSVIEW *sv, UINT size)
+static BOOL streams_resize_table( MSIDATABASE *db, UINT size )
 {
-    if (size >= sv->max_streams)
+    if (!db->num_streams_allocated)
     {
-        sv->max_streams *= 2;
-        sv->streams = msi_realloc_zero(sv->streams, sv->max_streams * sizeof(STREAM *));
-        if (!sv->streams)
-            return FALSE;
+        if (!(db->streams = msi_alloc_zero( size * sizeof(MSISTREAM) ))) return FALSE;
+        db->num_streams_allocated = size;
+        return TRUE;
     }
-
+    while (size >= db->num_streams_allocated)
+    {
+        MSISTREAM *tmp;
+        UINT new_size = db->num_streams_allocated * 2;
+        if (!(tmp = msi_realloc_zero( db->streams, new_size * sizeof(MSISTREAM) ))) return FALSE;
+        db->streams = tmp;
+        db->num_streams_allocated = new_size;
+    }
     return TRUE;
-}
-
-static STREAM *create_stream(MSISTREAMSVIEW *sv, LPCWSTR name, BOOL encoded, IStream *stm)
-{
-    STREAM *stream;
-    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
-
-    stream = msi_alloc(sizeof(STREAM));
-    if (!stream)
-        return NULL;
-
-    if (encoded)
-    {
-        decode_streamname(name, decoded);
-        TRACE("stream -> %s %s\n", debugstr_w(name), debugstr_w(decoded));
-        name = decoded;
-    }
-
-    stream->str_index = msi_addstringW(sv->db->strings, name, -1, 1, StringNonPersistent);
-    stream->stream = stm;
-    return stream;
 }
 
 static UINT STREAMS_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT *val)
@@ -83,10 +60,10 @@ static UINT STREAMS_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT 
     if (col != 1)
         return ERROR_INVALID_PARAMETER;
 
-    if (row >= sv->num_rows)
+    if (row >= sv->db->num_streams)
         return ERROR_NO_MORE_ITEMS;
 
-    *val = sv->streams[row]->str_index;
+    *val = sv->db->streams[row].str_index;
 
     return ERROR_SUCCESS;
 }
@@ -94,14 +71,21 @@ static UINT STREAMS_fetch_int(struct tagMSIVIEW *view, UINT row, UINT col, UINT 
 static UINT STREAMS_fetch_stream(struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
+    LARGE_INTEGER pos;
+    HRESULT hr;
 
     TRACE("(%p, %d, %d, %p)\n", view, row, col, stm);
 
-    if (row >= sv->num_rows)
+    if (row >= sv->db->num_streams)
         return ERROR_FUNCTION_FAILED;
 
-    IStream_AddRef(sv->streams[row]->stream);
-    *stm = sv->streams[row]->stream;
+    pos.QuadPart = 0;
+    hr = IStream_Seek( sv->db->streams[row].stream, pos, STREAM_SEEK_SET, NULL );
+    if (FAILED( hr ))
+        return ERROR_FUNCTION_FAILED;
+
+    *stm = sv->db->streams[row].stream;
+    IStream_AddRef( *stm );
 
     return ERROR_SUCCESS;
 }
@@ -118,110 +102,94 @@ static UINT STREAMS_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec 
 static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    STREAM *stream;
-    IStream *stm;
-    STATSTG stat;
-    LPWSTR encname = NULL, name = NULL;
-    USHORT *data = NULL;
-    HRESULT hr;
-    ULONG count;
-    UINT r = ERROR_FUNCTION_FAILED;
 
     TRACE("(%p, %d, %p, %08x)\n", view, row, rec, mask);
 
-    if (row > sv->num_rows)
-        return ERROR_FUNCTION_FAILED;
+    if (row > sv->db->num_streams || mask >= (1 << sv->num_cols))
+        return ERROR_INVALID_PARAMETER;
 
-    r = MSI_RecordGetIStream(rec, 2, &stm);
+    if (mask & 1)
+    {
+        const WCHAR *name = MSI_RecordGetString( rec, 1 );
+
+        if (!name) return ERROR_INVALID_PARAMETER;
+        sv->db->streams[row].str_index = msi_add_string( sv->db->strings, name, -1, StringNonPersistent );
+    }
+    if (mask & 2)
+    {
+        IStream *old, *new;
+        HRESULT hr;
+        UINT r;
+
+        r = MSI_RecordGetIStream( rec, 2, &new );
+        if (r != ERROR_SUCCESS)
+            return r;
+
+        old = sv->db->streams[row].stream;
+        hr = IStream_QueryInterface( new, &IID_IStream, (void **)&sv->db->streams[row].stream );
+        if (FAILED( hr ))
+        {
+            IStream_Release( new );
+            return ERROR_FUNCTION_FAILED;
+        }
+        if (old) IStream_Release( old );
+    }
+
+    return ERROR_SUCCESS;
+}
+
+static UINT streams_find_row( MSISTREAMSVIEW *sv, MSIRECORD *rec, UINT *row )
+{
+    const WCHAR *str;
+    UINT r, i, id, val;
+
+    str = MSI_RecordGetString( rec, 1 );
+    r = msi_string2id( sv->db->strings, str, -1, &id );
     if (r != ERROR_SUCCESS)
         return r;
 
-    hr = IStream_Stat(stm, &stat, STATFLAG_NONAME);
-    if (FAILED(hr))
+    for (i = 0; i < sv->db->num_streams; i++)
     {
-        WARN("failed to stat stream: %08x\n", hr);
-        goto done;
+        STREAMS_fetch_int( &sv->view, i, 1, &val );
+
+        if (val == id)
+        {
+            if (row) *row = i;
+            return ERROR_SUCCESS;
+        }
     }
 
-    if (stat.cbSize.QuadPart >> 32)
-    {
-        WARN("stream too large\n");
-        goto done;
-    }
-
-    data = msi_alloc(stat.cbSize.QuadPart);
-    if (!data)
-        goto done;
-
-    hr = IStream_Read(stm, data, stat.cbSize.QuadPart, &count);
-    if (FAILED(hr) || count != stat.cbSize.QuadPart)
-    {
-        WARN("failed to read stream: %08x\n", hr);
-        goto done;
-    }
-
-    name = strdupW(MSI_RecordGetString(rec, 1));
-    if (!name)
-    {
-        WARN("failed to retrieve stream name\n");
-        goto done;
-    }
-
-    encname = encode_streamname(FALSE, name);
-    msi_destroy_stream(sv->db, encname);
-
-    r = write_stream_data(sv->db->storage, name, data, count, FALSE);
-    if (r != ERROR_SUCCESS)
-    {
-        WARN("failed to write stream data: %d\n", r);
-        goto done;
-    }
-
-    stream = create_stream(sv, name, FALSE, NULL);
-    if (!stream)
-        goto done;
-
-    hr = IStorage_OpenStream(sv->db->storage, encname, 0,
-                             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream->stream);
-    if (FAILED(hr))
-    {
-        WARN("failed to open stream: %08x\n", hr);
-        msi_free(stream);
-        goto done;
-    }
-
-    sv->streams[row] = stream;
-
-done:
-    msi_free(name);
-    msi_free(data);
-    msi_free(encname);
-
-    IStream_Release(stm);
-
-    return r;
+    return ERROR_FUNCTION_FAILED;
 }
 
 static UINT STREAMS_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    UINT i;
+    UINT i, r, num_rows = sv->db->num_streams + 1;
 
     TRACE("(%p, %p, %d, %d)\n", view, rec, row, temporary);
 
-    if (!streams_set_table_size(sv, ++sv->num_rows))
+    r = streams_find_row( sv, rec, NULL );
+    if (r == ERROR_SUCCESS)
+        return ERROR_FUNCTION_FAILED;
+
+    if (!streams_resize_table( sv->db, num_rows ))
         return ERROR_FUNCTION_FAILED;
 
     if (row == -1)
-        row = sv->num_rows - 1;
+        row = num_rows - 1;
 
     /* shift the rows to make room for the new row */
-    for (i = sv->num_rows - 1; i > row; i--)
+    for (i = num_rows - 1; i > row; i--)
     {
-        sv->streams[i] = sv->streams[i - 1];
+        sv->db->streams[i] = sv->db->streams[i - 1];
     }
 
-    return STREAMS_set_row(view, row, rec, 0);
+    r = STREAMS_set_row( view, row, rec, (1 << sv->num_cols) - 1 );
+    if (r == ERROR_SUCCESS)
+        sv->db->num_streams = num_rows;
+
+    return r;
 }
 
 static UINT STREAMS_delete_row(struct tagMSIVIEW *view, UINT row)
@@ -248,8 +216,8 @@ static UINT STREAMS_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *co
 
     TRACE("(%p, %p, %p)\n", view, rows, cols);
 
-    if (cols) *cols = NUM_STREAMS_COLS;
-    if (rows) *rows = sv->num_rows;
+    if (cols) *cols = sv->num_cols;
+    if (rows) *rows = sv->db->num_streams;
 
     return ERROR_SUCCESS;
 }
@@ -257,10 +225,11 @@ static UINT STREAMS_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *co
 static UINT STREAMS_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
                                      UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
-    TRACE("(%p, %d, %p, %p, %p, %p)\n", view, n, name, type, temporary,
-          table_name);
+    MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
 
-    if (n == 0 || n > NUM_STREAMS_COLS)
+    TRACE("(%p, %d, %p, %p, %p, %p)\n", view, n, name, type, temporary, table_name);
+
+    if (!n || n > sv->num_cols)
         return ERROR_INVALID_PARAMETER;
 
     switch (n)
@@ -280,30 +249,6 @@ static UINT STREAMS_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *n
     return ERROR_SUCCESS;
 }
 
-static UINT streams_find_row(MSISTREAMSVIEW *sv, MSIRECORD *rec, UINT *row)
-{
-    LPCWSTR str;
-    UINT r, i, id, data;
-
-    str = MSI_RecordGetString(rec, 1);
-    r = msi_string2id(sv->db->strings, str, -1, &id);
-    if (r != ERROR_SUCCESS)
-        return r;
-
-    for (i = 0; i < sv->num_rows; i++)
-    {
-        STREAMS_fetch_int(&sv->view, i, 1, &data);
-
-        if (data == id)
-        {
-            *row = i;
-            return ERROR_SUCCESS;
-        }
-    }
-
-    return ERROR_FUNCTION_FAILED;
-}
-
 static UINT streams_modify_update(struct tagMSIVIEW *view, MSIRECORD *rec)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
@@ -313,15 +258,15 @@ static UINT streams_modify_update(struct tagMSIVIEW *view, MSIRECORD *rec)
     if (r != ERROR_SUCCESS)
         return ERROR_FUNCTION_FAILED;
 
-    return STREAMS_set_row(view, row, rec, 0);
+    return STREAMS_set_row( view, row, rec, (1 << sv->num_cols) - 1 );
 }
 
 static UINT streams_modify_assign(struct tagMSIVIEW *view, MSIRECORD *rec)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    UINT r, row;
+    UINT r;
 
-    r = streams_find_row(sv, rec, &row);
+    r = streams_find_row( sv, rec, NULL );
     if (r == ERROR_SUCCESS)
         return streams_modify_update(view, rec);
 
@@ -371,23 +316,10 @@ static UINT STREAMS_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRE
 static UINT STREAMS_delete(struct tagMSIVIEW *view)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    UINT i;
 
     TRACE("(%p)\n", view);
 
-    for (i = 0; i < sv->num_rows; i++)
-    {
-        if (sv->streams[i])
-        {
-            if (sv->streams[i]->stream)
-                IStream_Release(sv->streams[i]->stream);
-            msi_free(sv->streams[i]);
-        }
-    }
-
-    msi_free(sv->streams);
     msi_free(sv);
-
     return ERROR_SUCCESS;
 }
 
@@ -399,23 +331,22 @@ static UINT STREAMS_find_matching_rows(struct tagMSIVIEW *view, UINT col,
 
     TRACE("(%p, %d, %d, %p, %p)\n", view, col, val, row, handle);
 
-    if (col == 0 || col > NUM_STREAMS_COLS)
+    if (!col || col > sv->num_cols)
         return ERROR_INVALID_PARAMETER;
 
-    while (index < sv->num_rows)
+    while (index < sv->db->num_streams)
     {
-        if (sv->streams[index]->str_index == val)
+        if (sv->db->streams[index].str_index == val)
         {
             *row = index;
             break;
         }
-
         index++;
     }
 
     *handle = UlongToPtr(++index);
 
-    if (index > sv->num_rows)
+    if (index > sv->db->num_streams)
         return ERROR_NO_MORE_ITEMS;
 
     return ERROR_SUCCESS;
@@ -444,107 +375,256 @@ static const MSIVIEWOPS streams_ops =
     NULL,
 };
 
-static INT add_streams_to_table(MSISTREAMSVIEW *sv)
+static HRESULT open_stream( MSIDATABASE *db, const WCHAR *name, IStream **stream )
 {
-    IEnumSTATSTG *stgenum = NULL;
-    STATSTG stat;
-    STREAM *stream = NULL;
     HRESULT hr;
-    UINT r, count = 0, size;
-    LPWSTR encname;
 
-    hr = IStorage_EnumElements(sv->db->storage, 0, NULL, 0, &stgenum);
-    if (FAILED(hr))
-        return -1;
-
-    sv->max_streams = 1;
-    sv->streams = msi_alloc_zero(sizeof(STREAM *));
-    if (!sv->streams)
-        return -1;
-
-    while (TRUE)
+    hr = IStorage_OpenStream( db->storage, name, NULL, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, stream );
+    if (FAILED( hr ))
     {
-        size = 0;
-        hr = IEnumSTATSTG_Next(stgenum, 1, &stat, &size);
-        if (FAILED(hr) || !size)
-            break;
+        MSITRANSFORM *transform;
 
-        if (stat.type != STGTY_STREAM)
+        LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
         {
-            CoTaskMemFree(stat.pwcsName);
-            continue;
+            hr = IStorage_OpenStream( transform->stg, name, NULL, STGM_READ|STGM_SHARE_EXCLUSIVE, 0, stream );
+            if (SUCCEEDED( hr ))
+                break;
         }
+    }
+    return hr;
+}
+
+static MSISTREAM *find_stream( MSIDATABASE *db, const WCHAR *name )
+{
+    UINT r, id, i;
+
+    r = msi_string2id( db->strings, name, -1, &id );
+    if (r != ERROR_SUCCESS)
+        return NULL;
+
+    for (i = 0; i < db->num_streams; i++)
+    {
+        if (db->streams[i].str_index == id) return &db->streams[i];
+    }
+    return NULL;
+}
+
+static UINT append_stream( MSIDATABASE *db, const WCHAR *name, IStream *stream )
+{
+    WCHAR decoded[MAX_STREAM_NAME_LEN + 1];
+    UINT i = db->num_streams;
+
+    if (!streams_resize_table( db, db->num_streams + 1 ))
+        return ERROR_OUTOFMEMORY;
+
+    decode_streamname( name, decoded );
+    db->streams[i].str_index = msi_add_string( db->strings, decoded, -1, StringNonPersistent );
+    db->streams[i].stream = stream;
+    db->num_streams++;
+
+    TRACE("added %s\n", debugstr_w( decoded ));
+    return ERROR_SUCCESS;
+}
+
+static UINT load_streams( MSIDATABASE *db )
+{
+    IEnumSTATSTG *stgenum;
+    STATSTG stat;
+    HRESULT hr;
+    UINT count, r = ERROR_SUCCESS;
+    IStream *stream;
+
+    hr = IStorage_EnumElements( db->storage, 0, NULL, 0, &stgenum );
+    if (FAILED( hr ))
+        return ERROR_FUNCTION_FAILED;
+
+    for (;;)
+    {
+        count = 0;
+        hr = IEnumSTATSTG_Next( stgenum, 1, &stat, &count );
+        if (FAILED( hr ) || !count)
+            break;
 
         /* table streams are not in the _Streams table */
-        if (*stat.pwcsName == 0x4840)
+        if (stat.type != STGTY_STREAM || *stat.pwcsName == 0x4840 ||
+            find_stream( db, stat.pwcsName ))
         {
-            CoTaskMemFree(stat.pwcsName);
+            CoTaskMemFree( stat.pwcsName );
             continue;
         }
+        TRACE("found new stream %s\n", debugstr_w( stat.pwcsName ));
 
-        stream = create_stream(sv, stat.pwcsName, TRUE, NULL);
-        if (!stream)
+        hr = open_stream( db, stat.pwcsName, &stream );
+        if (FAILED( hr ))
         {
-            count = -1;
-            CoTaskMemFree(stat.pwcsName);
+            ERR("unable to open stream %08x\n", hr);
+            CoTaskMemFree( stat.pwcsName );
+            r = ERROR_FUNCTION_FAILED;
             break;
         }
 
-        /* these streams appear to be unencoded */
-        if (*stat.pwcsName == 0x0005)
-        {
-            r = msi_get_raw_stream(sv->db, stat.pwcsName, &stream->stream);
-        }
-        else
-        {
-            encname = encode_streamname(FALSE, stat.pwcsName);
-            r = msi_get_raw_stream(sv->db, encname, &stream->stream);
-            msi_free(encname);
-        }
-        CoTaskMemFree(stat.pwcsName);
-
+        r = append_stream( db, stat.pwcsName, stream );
+        CoTaskMemFree( stat.pwcsName );
         if (r != ERROR_SUCCESS)
-        {
-            WARN("unable to get stream %u\n", r);
-            count = -1;
             break;
-        }
-
-        if (!streams_set_table_size(sv, ++count))
-        {
-            count = -1;
-            break;
-        }
-
-        sv->streams[count - 1] = stream;
     }
 
-    IEnumSTATSTG_Release(stgenum);
-    return count;
+    TRACE("loaded %u streams\n", db->num_streams);
+    IEnumSTATSTG_Release( stgenum );
+    return r;
+}
+
+UINT msi_get_stream( MSIDATABASE *db, const WCHAR *name, IStream **ret )
+{
+    MSISTREAM *stream;
+    WCHAR *encname;
+    HRESULT hr;
+    UINT r;
+
+    if ((stream = find_stream( db, name )))
+    {
+        LARGE_INTEGER pos;
+
+        pos.QuadPart = 0;
+        hr = IStream_Seek( stream->stream, pos, STREAM_SEEK_SET, NULL );
+        if (FAILED( hr ))
+            return ERROR_FUNCTION_FAILED;
+
+        *ret = stream->stream;
+        IStream_AddRef( *ret );
+        return ERROR_SUCCESS;
+    }
+
+    if (!(encname = encode_streamname( FALSE, name )))
+        return ERROR_OUTOFMEMORY;
+
+    hr = open_stream( db, encname, ret );
+    msi_free( encname );
+    if (FAILED( hr ))
+        return ERROR_FUNCTION_FAILED;
+
+    r = append_stream( db, name, *ret );
+    if (r != ERROR_SUCCESS)
+    {
+        IStream_Release( *ret );
+        return r;
+    }
+
+    IStream_AddRef( *ret );
+    return ERROR_SUCCESS;
 }
 
 UINT STREAMS_CreateView(MSIDATABASE *db, MSIVIEW **view)
 {
     MSISTREAMSVIEW *sv;
-    INT rows;
+    UINT r;
 
     TRACE("(%p, %p)\n", db, view);
 
-    sv = msi_alloc_zero( sizeof(MSISTREAMSVIEW) );
-    if (!sv)
-        return ERROR_FUNCTION_FAILED;
+    r = load_streams( db );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    if (!(sv = msi_alloc_zero( sizeof(MSISTREAMSVIEW) )))
+        return ERROR_OUTOFMEMORY;
 
     sv->view.ops = &streams_ops;
+    sv->num_cols = NUM_STREAMS_COLS;
     sv->db = db;
-    rows = add_streams_to_table(sv);
-    if (rows < 0)
-    {
-        msi_free( sv );
-        return ERROR_FUNCTION_FAILED;
-    }
-    sv->num_rows = rows;
 
     *view = (MSIVIEW *)sv;
+
+    return ERROR_SUCCESS;
+}
+
+static HRESULT write_stream( IStream *dst, IStream *src )
+{
+    HRESULT hr;
+    char buf[4096];
+    STATSTG stat;
+    LARGE_INTEGER pos;
+    UINT count, size;
+
+    hr = IStream_Stat( src, &stat, STATFLAG_NONAME );
+    if (FAILED( hr )) return hr;
+
+    hr = IStream_SetSize( dst, stat.cbSize );
+    if (FAILED( hr )) return hr;
+
+    pos.QuadPart = 0;
+    hr = IStream_Seek( dst, pos, STREAM_SEEK_SET, NULL );
+    if (FAILED( hr )) return hr;
+
+    for (;;)
+    {
+        size = min( sizeof(buf), stat.cbSize.QuadPart );
+        hr = IStream_Read( src, buf, size, &count );
+        if (FAILED( hr ) || count != size)
+        {
+            WARN("failed to read stream: %08x\n", hr);
+            return E_INVALIDARG;
+        }
+        stat.cbSize.QuadPart -= count;
+        if (count)
+        {
+            size = count;
+            hr = IStream_Write( dst, buf, size, &count );
+            if (FAILED( hr ) || count != size)
+            {
+                WARN("failed to write stream: %08x\n", hr);
+                return E_INVALIDARG;
+            }
+        }
+        if (!stat.cbSize.QuadPart) break;
+    }
+
+    return S_OK;
+}
+
+UINT msi_commit_streams( MSIDATABASE *db )
+{
+    UINT i;
+    const WCHAR *name;
+    WCHAR *encname;
+    IStream *stream;
+    HRESULT hr;
+
+    TRACE("got %u streams\n", db->num_streams);
+
+    for (i = 0; i < db->num_streams; i++)
+    {
+        name = msi_string_lookup( db->strings, db->streams[i].str_index, NULL );
+        if (!(encname = encode_streamname( FALSE, name ))) return ERROR_OUTOFMEMORY;
+
+        hr = open_stream( db, encname, &stream );
+        if (FAILED( hr )) /* new stream */
+        {
+            hr = IStorage_CreateStream( db->storage, encname, STGM_WRITE|STGM_SHARE_EXCLUSIVE, 0, 0, &stream );
+            if (FAILED( hr ))
+            {
+                ERR("failed to create stream %s (hr = %08x)\n", debugstr_w(encname), hr);
+                msi_free( encname );
+                return ERROR_FUNCTION_FAILED;
+            }
+            hr = write_stream( stream, db->streams[i].stream );
+            if (FAILED( hr ))
+            {
+                ERR("failed to write stream %s (hr = %08x)\n", debugstr_w(encname), hr);
+                msi_free( encname );
+                IStream_Release( stream );
+                return ERROR_FUNCTION_FAILED;
+            }
+        }
+        hr = IStream_Commit( stream, 0 );
+        IStream_Release( stream );
+        if (FAILED( hr ))
+        {
+            WARN("failed to commit stream %s (hr = %08x)\n", debugstr_w(encname), hr);
+            msi_free( encname );
+            return ERROR_FUNCTION_FAILED;
+        }
+        msi_free( encname );
+    }
 
     return ERROR_SUCCESS;
 }

@@ -242,7 +242,7 @@ static BOOL is_assembly_installed( IAssemblyCache *cache, const WCHAR *display_n
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
     hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, display_name, &info );
-    if (hr == S_OK /* sxs version */ || hr == HRESULT_FROM_WIN32( ERROR_INSUFFICIENT_BUFFER ))
+    if (hr == S_OK /* sxs version */ || hr == E_NOT_SUFFICIENT_BUFFER)
     {
         return (info.dwAssemblyFlags == ASSEMBLYINFO_FLAG_INSTALLED);
     }
@@ -348,7 +348,7 @@ static enum clr_version get_clr_version( const WCHAR *filename )
     if (!pGetFileVersion) return CLR_VERSION_V10;
 
     hr = pGetFileVersion( filename, NULL, 0, &len );
-    if (hr != HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER)) return CLR_VERSION_V11;
+    if (hr != E_NOT_SUFFICIENT_BUFFER) return CLR_VERSION_V11;
     if ((strW = msi_alloc( len * sizeof(WCHAR) )))
     {
         hr = pGetFileVersion( filename, strW, len, &len );
