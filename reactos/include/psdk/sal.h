@@ -423,6 +423,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 
 #define _Analysis_noreturn_                                         _SAL2_NAME(_Analysis_noreturn_) [SAL_annotes(Name="SAL_terminates")]
 #define _Analysis_assume_(expr)                                     __assume(expr)
+#define __analysis_assume(expr)                                     __assume(expr)
 
 #define _Check_return_                                              _SAL2_NAME(_Check_return_) [SA_Post(MustCheck=SA_Yes)]
 #define _COM_Outptr_                                                _SAL2_NAME(_COM_Outptr_) _Group_(_Outptr_ _On_failure_(_Deref_post_null_))
@@ -1098,7 +1099,8 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 #define __inner_typefix(ctype)
 #define _Always_(annos)
 #define _Analysis_noreturn_
-#define _Analysis_assume_(expr)
+#define _Analysis_assume_(expr) ((void)0)
+#define __analysis_assume(expr) ((void)0)
 #define _At_(target, annos)
 #define _At_buffer_(target, iter, bound, annos)
 #define _Check_return_

@@ -69,9 +69,6 @@
 #define __refparam __deref __notreadonly
 #define __valid __declspec("SAL_valid")
 #define __writableTo(size) __declspec("SAL_writableTo("SPECSTRINGIZE(size)")")
-#ifndef __analysis_assume
-#define __analysis_assume(expr) __assume(expr)
-#endif
 
 #else
 
@@ -108,9 +105,6 @@
 #define __refparam
 #define __valid
 #define __writableTo(size)
-#ifndef __analysis_assume
-#define __analysis_assume(expr)
-#endif
 
 #endif /* defined(_PREFAST_) && !defined(__midl) */
 
