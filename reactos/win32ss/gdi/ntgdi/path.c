@@ -1736,6 +1736,13 @@ PATH_WidenPath(DC *dc)
     }
 
     elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
+    if (elp == NULL)
+    {
+        PATH_UnlockPath(pPath);
+        EngSetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
     GreGetObject(pdcattr->hpen, size, elp);
 
     obj_type = GDI_HANDLE_GET_TYPE(pdcattr->hpen);

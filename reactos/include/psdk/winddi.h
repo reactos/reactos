@@ -1372,6 +1372,7 @@ EngAcquireSemaphore(
 _Must_inspect_result_
 _When_(fl & FL_ZERO_MEMORY, _Ret_opt_bytecount_(cjMemSize))
 _When_(!(fl & FL_ZERO_MEMORY), _Ret_opt_bytecap_(cjMemSize))
+__drv_allocatesMem(Mem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1382,6 +1383,7 @@ EngAllocMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(PrivateUserMem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1392,6 +1394,7 @@ EngAllocPrivateUserMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(UserMem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1814,20 +1817,20 @@ ENGAPI
 VOID
 APIENTRY
 EngFreeMem(
-    _In_ _Post_ptr_invalid_ PVOID pv);
+    _Pre_notnull_ __drv_freesMem(Mem) PVOID pv);
 
 ENGAPI
 VOID
 APIENTRY
 EngFreePrivateUserMem(
     _In_ PDD_SURFACE_LOCAL psl,
-    _In_ _Post_ptr_invalid_ PVOID  pv);
+    _Pre_notnull_ __drv_freesMem(PrivateUserMem) PVOID pv);
 
 ENGAPI
 VOID
 APIENTRY
 EngFreeUserMem(
-    _In_ _Post_ptr_invalid_ PVOID pv);
+    _Pre_notnull_ __drv_freesMem(UserMem) PVOID pv);
 
 #endif /* !USERMODE_DRIVER */
 

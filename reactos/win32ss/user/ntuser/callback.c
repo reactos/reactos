@@ -338,6 +338,11 @@ co_IntCallWindowProc(WNDPROC Proc,
                                ArgumentLength,
                                &ResultPointer,
                                &ResultLength);
+   if (!NT_SUCCESS(Status))
+   {
+      UserEnterCo();
+      return -1;
+   }
 
    _SEH2_TRY
    {
@@ -346,7 +351,7 @@ co_IntCallWindowProc(WNDPROC Proc,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      ERR("Failed to copy result from user mode, Message %d lParam size %d!\n", Message, lParamBufferSize);
+      ERR("Failed to copy result from user mode, Message %u lParam size %d!\n", Message, lParamBufferSize);
       Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
@@ -357,7 +362,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 
    if (!NT_SUCCESS(Status))
    {
-     ERR("Call to user mode failed! %p\n",Status);
+     ERR("Call to user mode failed! 0x%08lx\n",Status);
       if (lParamBufferSize != -1)
       {
          IntCbFreeMemory(Arguments);
@@ -372,11 +377,11 @@ co_IntCallWindowProc(WNDPROC Proc,
       // Is this message being processed from inside kernel space?
       BOOL InSendMessage = (pti->pcti->CTI_flags & CTI_INSENDMESSAGE);
 
-      TRACE("Copy lParam Message %d lParam %d!\n", Message, lParam);
+      TRACE("Copy lParam Message %u lParam %d!\n", Message, lParam);
       switch (Message)
       {
           default:
-            TRACE("Don't copy lParam, Message %d Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
+            TRACE("Don't copy lParam, Message %u Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
             break;
           // Write back to user/kernel space. Also see g_MsgMemory.
           case WM_CREATE:
@@ -388,7 +393,7 @@ co_IntCallWindowProc(WNDPROC Proc,
           case WM_WINDOWPOSCHANGING:
           case WM_SIZING:
           case WM_MOVING:
-            TRACE("Copy lParam, Message %d Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
+            TRACE("Copy lParam, Message %u Size %d lParam %d!\n", Message, lParamBufferSize, lParam);
             if (InSendMessage)
                // Copy into kernel space.
                RtlMoveMemory((PVOID) lParam,
@@ -404,7 +409,7 @@ co_IntCallWindowProc(WNDPROC Proc,
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
-                ERR("Failed to copy lParam to user space, Message %d!\n", Message);
+                ERR("Failed to copy lParam to user space, Message %u!\n", Message);
              }
              _SEH2_END;
             }
@@ -483,13 +488,14 @@ co_IntLoadDefaultCursors(VOID)
 
    UserEnterCo();
 
-   /* HACK: The desktop class doen't have a proper cursor yet, so set it here */
-    gDesktopCursor = *((HCURSOR*)ResultPointer);
-
    if (!NT_SUCCESS(Status))
    {
       return FALSE;
    }
+
+   /* HACK: The desktop class doen't have a proper cursor yet, so set it here */
+    gDesktopCursor = *((HCURSOR*)ResultPointer);
+
    return TRUE;
 }
 
@@ -721,6 +727,12 @@ co_IntCallHookProc(INT HookId,
 
    UserEnterCo();
 
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Failure to make Callback! Status 0x%x",Status);
+      goto Fault_Exit;
+   }
+
    if (ResultPointer)
    {
       _SEH2_TRY
@@ -741,11 +753,6 @@ co_IntCallHookProc(INT HookId,
       ERR("ERROR: Hook %d Code %d ResultPointer 0x%p ResultLength %u\n",HookId,Code,ResultPointer,ResultLength);
    }
 
-   if (!NT_SUCCESS(Status))
-   {
-      ERR("Failure to make Callback! Status 0x%x",Status);
-      goto Fault_Exit;
-   }
    /* Support write backs... SEH is in UserCallNextHookEx. */
    switch (HookId)
    {
@@ -906,14 +913,16 @@ co_IntCallLoadMenu( HINSTANCE hModule,
 
    UserEnterCo();
 
-   Result = *(LRESULT*)ResultPointer;
+   if (NT_SUCCESS(Status))
+   {
+      Result = *(LRESULT*)ResultPointer;
+   }
+   else
+   {
+      Result = 0;
+   }
 
    IntCbFreeMemory(Argument);
-
-   if (!NT_SUCCESS(Status))
-   {
-      return 0;
-   }
 
    return (HMENU)Result;
 }
@@ -984,15 +993,17 @@ co_IntCopyImage(HANDLE hnd, UINT type, INT desiredx, INT desiredy, UINT flags)
 
    UserEnterCo();
 
-   Handle = *(HANDLE*)ResultPointer;
-
-   IntCbFreeMemory(Argument);
-
-   if (!NT_SUCCESS(Status))
+   if (NT_SUCCESS(Status))
+   {
+      Handle = *(HANDLE*)ResultPointer;
+   }
+   else
    {
       ERR("CopyImage callback failed!\n");
-      return 0;
+      Handle = NULL;
    }
+
+   IntCbFreeMemory(Argument);
 
    return Handle;
 }
@@ -1029,17 +1040,20 @@ co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs)
                                &ResultPointer,
                                &ResultLength);
 
-   _SEH2_TRY
+   if (NT_SUCCESS(Status))
    {
-      /* Need to copy into our local buffer */
-      RtlMoveMemory(Argument, ResultPointer, ArgumentLength);
+      _SEH2_TRY
+      {
+         /* Need to copy into our local buffer */
+         RtlMoveMemory(Argument, ResultPointer, ArgumentLength);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+         ERR("Failed to copy result from user mode!\n");
+         Status = _SEH2_GetExceptionCode();
+      }
+      _SEH2_END;
    }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      ERR("Failed to copy result from user mode!\n");
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END;
 
    UserEnterCo();
 
@@ -1115,14 +1129,16 @@ co_IntSetWndIcons(VOID)
 VOID FASTCALL
 co_IntDeliverUserAPC(VOID)
 {
+   ULONG ResultLength;
+   PVOID ResultPointer;
    NTSTATUS Status;
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_DELIVERUSERAPC,
                                0,
                                0,
-                               NULL,
-                               NULL);
+                               &ResultPointer,
+                               &ResultLength);
 
 
    UserEnterCo();
@@ -1130,6 +1146,6 @@ co_IntDeliverUserAPC(VOID)
    if (!NT_SUCCESS(Status))
    {
       ERR("Delivering User APC callback failed!\n");
-   }   
+   }
 }
 /* EOF */

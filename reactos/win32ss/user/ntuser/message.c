@@ -319,6 +319,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         }
         else
         {
+            NT_ASSERT(ClassName->Buffer != NULL);
             *((WCHAR *) CsData) = L'S';
             CsData += sizeof(WCHAR);
             RtlCopyMemory(CsData, ClassName->Buffer, ClassName->Length);
@@ -444,7 +445,7 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEnt
         /* Copy data if required */
         if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
         {
-            TRACE("Copy Message %d from usermode buffer\n", KernelModeMsg->message);
+            TRACE("Copy Message %u from usermode buffer\n", KernelModeMsg->message);
             Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
             if (! NT_SUCCESS(Status))
             {
@@ -612,7 +613,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
          pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
-    TRACE("Internal Event Msg %p hWnd 0x%x\n",msg,pWnd->head.h);
+    TRACE("Internal Event Msg 0x%x hWnd 0x%p\n", msg, pWnd->head.h);
 
     switch(msg)
     {
@@ -1225,7 +1226,7 @@ UserPostMessage( HWND Wnd,
         Window = UserGetWindowObject(Wnd);
         if ( !Window )
         {
-            ERR("UserPostMessage: Invalid handle 0x%p Msg %d!\n",Wnd,Msg);
+            ERR("UserPostMessage: Invalid handle 0x%p Msg 0x%x!\n", Wnd, Msg);
             return FALSE;
         }
 

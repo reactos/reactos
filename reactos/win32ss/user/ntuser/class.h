@@ -46,6 +46,7 @@ VOID
 UserAddCallProcToClass(IN OUT PCLS Class,
                        IN PCALLPROCDATA CallProc);
 
+_Success_(return)
 BOOL
 NTAPI
 IntGetAtomFromStringOrAtom(

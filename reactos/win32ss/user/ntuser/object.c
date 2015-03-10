@@ -13,6 +13,7 @@ DBG_DEFAULT_CHANNEL(UserObj);
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 
 /* Forward declarations */
+_Success_(return!=NULL)
 static PVOID AllocThreadObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -53,6 +54,7 @@ static void FreeThreadObject(
     IntDereferenceThreadInfo(pti);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocDeskThreadObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -97,6 +99,7 @@ static void FreeDeskThreadObject(
     IntDereferenceThreadInfo(pti);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocDeskProcObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -141,6 +144,7 @@ static void FreeDeskProcObject(
     DesktopHeapFree(pDesk, Object);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocProcMarkObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,
@@ -179,6 +183,7 @@ void FreeProcMarkObject(
     IntDereferenceProcessInfo(ppi);
 }
 
+_Success_(return!=NULL)
 static PVOID AllocSysObject(
     _In_ PDESKTOP pDesk,
     _In_ PTHREADINFO pti,

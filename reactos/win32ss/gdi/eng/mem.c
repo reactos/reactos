@@ -17,6 +17,7 @@
 _Must_inspect_result_
 _When_(fl & FL_ZERO_MEMORY, _Ret_opt_bytecount_(cjMemSize))
 _When_(!(fl & FL_ZERO_MEMORY), _Ret_opt_bytecap_(cjMemSize))
+__drv_allocatesMem(Mem)
 ENGAPI
 PVOID
 APIENTRY
@@ -61,6 +62,7 @@ EngFreeMem(PVOID pvBaseAddress)
  */
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(UserMem)
 ENGAPI
 PVOID
 APIENTRY

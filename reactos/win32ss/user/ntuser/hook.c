@@ -720,7 +720,8 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                             if (!IS_ATOM(pcbtcww->lpcs->lpszClass))
                             {
-                               ProbeForRead( pcbtcww->lpcs->lpszClass,
+                                _Analysis_assume_(pcbtcww->lpcs->lpszClass != NULL);
+                                ProbeForRead(pcbtcww->lpcs->lpszClass,
                                              sizeof(CHAR),
                                              1);
                             }
@@ -739,7 +740,8 @@ co_UserCallNextHookEx(PHOOK Hook,
 
                             if (!IS_ATOM(pcbtcww->lpcs->lpszClass))
                             {
-                               ProbeForRead( pcbtcww->lpcs->lpszClass,
+                                _Analysis_assume_(pcbtcww->lpcs->lpszClass != NULL);
+                                ProbeForRead(pcbtcww->lpcs->lpszClass,
                                              sizeof(WCHAR),
                                              1);
                             }
@@ -968,15 +970,16 @@ IntGetGlobalHookHandles(PDESKTOP pdo, int HookId)
       ++cHooks;
 
     pList = ExAllocatePoolWithTag(PagedPool, (cHooks + 1) * sizeof(HHOOK), TAG_HOOK);
-    if(!pList)
+    if (!pList)
     {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
-}
+    }
 
     for (pElem = pLastHead->Flink; pElem != pLastHead; pElem = pElem->Flink)
-{
+    {
         pHook = CONTAINING_RECORD(pElem, HOOK, Chain);
+        NT_ASSERT(i < cHooks);
         pList[i++] = pHook->head.h;
     }
     pList[i] = NULL;
@@ -1180,7 +1183,7 @@ co_HOOK_CallHooks( INT HookId,
                                     wParam,
                                     lParam,
                                     Hook->Proc,
-                                    Hook->ihmod, 
+                                    Hook->ihmod,
                                     Hook->offPfn,
                                     Hook->Ansi,
                                    &Hook->ModuleName);
@@ -1261,7 +1264,7 @@ co_HOOK_CallHooks( INT HookId,
                                              wParam,
                                              lParam,
                                              Hook->Proc,
-                                             Hook->ihmod, 
+                                             Hook->ihmod,
                                              Hook->offPfn,
                                              Hook->Ansi,
                                             &Hook->ModuleName);
@@ -1279,7 +1282,7 @@ co_HOOK_CallHooks( INT HookId,
                                           wParam,
                                           lParam,
                                           Hook->Proc,
-                                          Hook->ihmod, 
+                                          Hook->ihmod,
                                           Hook->offPfn,
                                           Hook->Ansi,
                                          &Hook->ModuleName);

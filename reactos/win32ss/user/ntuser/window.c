@@ -594,7 +594,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    if (Window->PropListItems)
    {
       IntRemoveWindowProp(Window);
-      TRACE("Window->PropListItems %d\n",Window->PropListItems);
+      TRACE("Window->PropListItems %lu\n",Window->PropListItems);
       ASSERT(Window->PropListItems==0);
    }
 
@@ -610,6 +610,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    }
 
    /* dereference the class */
+   NT_ASSERT(Window->head.pti != NULL);
    IntDereferenceClass(Window->pcls,
                        Window->head.pti->pDeskInfo,
                        Window->head.pti->ppi);
@@ -1170,7 +1171,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    {
       if ( Wnd->spwndParent != co_GetDesktopWindow(Wnd))
       {
-         if (Wnd->head.pti != WndOldParent->head.pti)
+         if (WndOldParent && (Wnd->head.pti != WndOldParent->head.pti))
          {
             //ERR("SetParent Old out.\n");
             UserAttachThreadInput(Wnd->head.pti, WndOldParent->head.pti, FALSE);
@@ -2483,10 +2484,7 @@ NtUserCreateWindowEx(
     Cs.x = x;
     Cs.y = y;
     Cs.lpszName = (LPCWSTR) plstrWindowName->Buffer;
-    if (IS_ATOM(plstrClassName))
-       Cs.lpszClass = (LPCWSTR) plstrClassName;
-    else
-       Cs.lpszClass = (LPCWSTR) plstrClassName->Buffer;
+    Cs.lpszClass = ustrClassName.Buffer;
     Cs.dwExStyle = dwExStyle;
 
     UserEnterExclusive();
@@ -3181,12 +3179,7 @@ NtUserGetComboBoxInfo(
    }
    _SEH2_TRY
    {
-       if(pcbi)
-       {
-          ProbeForWrite(pcbi,
-                        sizeof(COMBOBOXINFO),
-                        1);
-       }
+        ProbeForWrite(pcbi, sizeof(COMBOBOXINFO), 1);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {

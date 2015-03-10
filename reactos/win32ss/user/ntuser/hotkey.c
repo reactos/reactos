@@ -217,7 +217,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                 pWnd = ValidateHwndNoErr(InputWindowStation->ShellWindow);
                 if (pWnd)
                 {
-                   TRACE("System Hot key Id %d Key %d\n",pHotKey->id, wVk );
+                   TRACE("System Hot key Id %d Key %u\n", pHotKey->id, wVk );
                    UserPostMessage(UserHMGetHandle(pWnd), WM_SYSCOMMAND, SC_TASKLIST, 0);
                    co_IntShellHookNotify(HSHELL_TASKMAN, 0, 0);
                    bWinHotkeyActive = FALSE;
@@ -238,7 +238,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
         {
             if (!pHotKey->pWnd)
             {
-                TRACE("UPTM Hot key Id %d Key %d\n",pHotKey->id, wVk );
+                TRACE("UPTM Hot key Id %d Key %u\n", pHotKey->id, wVk );
                 UserPostThreadMessage(pHotKey->pti, WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
                 //ptiLastInput = pHotKey->pti;
                 return TRUE; /* Don't send any message */
@@ -267,7 +267,7 @@ co_UserProcessHotKeys(WORD wVk, BOOL bIsDown)
                    }
                    else
                    {
-                      TRACE("UPM Hot key Id %d Key %d\n",pHotKey->id, wVk );
+                      TRACE("UPM Hot key Id %d Key %u\n", pHotKey->id, wVk );
                       UserPostMessage(UserHMGetHandle(pWnd), WM_HOTKEY, pHotKey->id, MAKELONG(fModifiers, wVk));
                    }
                    //ptiLastInput = pWnd->head.pti;

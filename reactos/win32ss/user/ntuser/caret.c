@@ -35,8 +35,14 @@ co_IntDrawCaret(PWND pWnd, PTHRDCARETINFO CaretInfo)
        NtGdiSaveDC(hdc);
     }
 
-    if(CaretInfo->Bitmap && NtGdiGetBitmapDimension(CaretInfo->Bitmap, &CaretInfo->Size))
+    if (CaretInfo->Bitmap)
     {
+        if (!NtGdiGetBitmapDimension(CaretInfo->Bitmap, &CaretInfo->Size))
+        {
+            ERR("Failed to get bitmap dimensions\n");
+            return;
+        }
+
         hdcMem = NtGdiCreateCompatibleDC(hdc);
         if (hdcMem)
         {
@@ -88,13 +94,13 @@ CaretSystemTimerProc(HWND hwnd,
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   
+
    if (ThreadQueue->CaretInfo->hWnd != hwnd)
    {
       ERR("Not the same caret window!\n");
       return;
    }
-   
+
    if (hwnd)
    {
       pWnd = UserGetWindowObject(hwnd);
@@ -118,7 +124,7 @@ CaretSystemTimerProc(HWND hwnd,
          co_IntDrawCaret(pWnd, ThreadQueue->CaretInfo);
       }
    }
-   return;  
+   return;
 }
 
 static

@@ -175,7 +175,7 @@ do { \
 #define IntReferenceProcessInfo(ppi) \
     InterlockedIncrement((volatile LONG*)(&(ppi)->RefCount))
 
-VOID UserDeleteW32Process(PPROCESSINFO);
+VOID UserDeleteW32Process(_Pre_notnull_ __drv_freesMem(Mem) PPROCESSINFO);
 
 #define IntDereferenceProcessInfo(ppi) \
 do { \

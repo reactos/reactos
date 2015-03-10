@@ -135,7 +135,7 @@ UserGetCPD(
    {
       if (!pCls->rpdeskParent)
       {
-         TRACE("Null DESKTOP Atom %d\n",pCls->atomClassName);
+         TRACE("Null DESKTOP Atom %u\n",pCls->atomClassName);
          pDesk = pti->rpdesk;
       }
       else
@@ -157,7 +157,7 @@ UserGetCPD(
 
 /* SYSCALLS *****************************************************************/
 
-/* 
+/*
    Retrieve the WinProcA/W or CallProcData handle for Class, Dialog or Window.
    This Function called from user space uses Window handle for class, window
    and dialog procs only.
@@ -183,12 +183,12 @@ NtUserGetCPD(
 
    UserEnterExclusive();
    if (!(Wnd = UserGetWindowObject(hWnd)))
-   {   
+   {
       goto Cleanup;
    }
 
    // Processing Window only from User space.
-   if ((Flags & ~(UserGetCPDU2A|UserGetCPDA2U)) != UserGetCPDClass)        
+   if ((Flags & ~(UserGetCPDU2A|UserGetCPDA2U)) != UserGetCPDClass)
       Result = UserGetCPD(Wnd, Flags, ProcIn);
 
 Cleanup:

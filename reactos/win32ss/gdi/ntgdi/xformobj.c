@@ -332,7 +332,8 @@ XFORMOBJ_bXformFixPoints(
 
     if ((flAccel & (XFORM_SCALE|XFORM_UNITY)) == (XFORM_SCALE|XFORM_UNITY))
     {
-        /* Identity transformation, nothing to do */
+        /* Identity transformation */
+        RtlCopyMemory(pptOut, pptIn, cPoints * sizeof(POINTL));
     }
     else if (flAccel & XFORM_INTEGER)
     {

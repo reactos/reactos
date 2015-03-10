@@ -419,7 +419,7 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 VOID FASTCALL
 IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
 {
-   INT RgnType;
+   INT RgnType = NULLREGION;
    BOOL HadPaintMessage;
 
    TRACE("IntInvalidateWindows start\n");
@@ -986,7 +986,7 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
       // Set previous window state.
       Ret = !!(FlashState & FLASHW_ACTIVE);
 
-      if ( pfwi->dwFlags & FLASHW_TIMERNOFG && 
+      if ( pfwi->dwFlags & FLASHW_TIMERNOFG &&
            gpqForeground == pWnd->head.pti->MessageQueue )
       {
           // Flashing until foreground, set this to Stop.
@@ -1390,8 +1390,11 @@ CLEANUP:
            EngSetLastError(ERROR_INVALID_HANDLE);
            _ret_ = ERROR;
        }
-       IntGdiCombineRgn(TheRgn, Rgn, NULL, RGN_COPY);
-       REGION_UnlockRgn(TheRgn);
+       else
+       {
+          IntGdiCombineRgn(TheRgn, Rgn, NULL, RGN_COPY);
+          REGION_UnlockRgn(TheRgn);
+       }
    }
 
    if (Rgn)
@@ -1604,7 +1607,12 @@ UserScrollDC(
    RECTL rcScroll, rcClip, rcSrc, rcDst;
    INT Result;
 
-   GdiGetClipBox(hDC, &rcClip);
+   if (GdiGetClipBox(hDC, &rcClip) == ERROR)
+   {
+       ERR("GdiGetClipBox failed for HDC %p\n", hDC);
+       return ERROR;
+   }
+
    rcScroll = rcClip;
    if (prcClip)
    {

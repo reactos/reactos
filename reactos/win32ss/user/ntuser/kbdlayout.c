@@ -204,7 +204,7 @@ cleanup:
  * Loads keyboard layout and creates KL object
  */
 static PKL
-UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
+UserLoadKbdLayout(PUNICODE_STRING pustrKLID, HKL hKL)
 {
     LCID lCid;
     CHARSETINFO cs;
@@ -219,7 +219,7 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     }
 
     pKl->hkl = hKL;
-    pKl->spkf = UserLoadKbdFile(pwszKLID);
+    pKl->spkf = UserLoadKbdFile(pustrKLID);
 
     /* Dereference keyboard layout */
     UserDereferenceObject(pKl);
@@ -227,20 +227,27 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     /* If we failed, remove KL object */
     if (!pKl->spkf)
     {
-        ERR("UserLoadKbdFile(%wZ) failed!\n", pwszKLID);
+        ERR("UserLoadKbdFile(%wZ) failed!\n", pustrKLID);
         UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
         return NULL;
     }
 
     // Up to Language Identifiers..
-    RtlUnicodeStringToInteger(pwszKLID, (ULONG)16, (PULONG)&lCid);
-    TRACE("Language Identifiers %wZ LCID 0x%x\n", pwszKLID, lCid);
+    if (!NT_SUCCESS(RtlUnicodeStringToInteger(pustrKLID, 16, (PULONG)&lCid)))
+    {
+        ERR("RtlUnicodeStringToInteger failed for '%wZ'\n", pustrKLID);
+        UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
+        return NULL;
+    }
+
+    TRACE("Language Identifiers %wZ LCID 0x%x\n", pustrKLID, lCid);
     if (co_IntGetCharsetInfo(lCid, &cs))
     {
        pKl->iBaseCharset = cs.ciCharset;
        pKl->dwFontSigs = cs.fs.fsCsb[0];
        pKl->CodePage = (USHORT)cs.ciACP;
-       TRACE("Charset %u Font Sig %lu CodePage %u\n", pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
+       TRACE("Charset %u Font Sig %lu CodePage %u\n",
+             pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
     }
     else
     {

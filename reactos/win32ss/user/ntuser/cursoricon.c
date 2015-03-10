@@ -1310,6 +1310,7 @@ IntSetAconData(
 
         /* Get a pointer to the frame cursor */
         aspcur[i] = UserGetCurIconObject(hcurFrame);
+        _PRAGMA_WARNING_SUPPRESS(__WARNING_READ_OVERRUN);
         NT_ASSERT(aspcur[i] != NULL);
 
         /* Check if the flags are valid */

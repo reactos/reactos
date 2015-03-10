@@ -84,6 +84,7 @@ POLYGONFILL_DestroyEdgeList(FILL_EDGE_LIST* list)
         {
             for (i = 0; i < list->Count; i++)
             {
+                _PRAGMA_WARNING_SUPPRESS(__WARNING_USING_UNINIT_VAR)
                 if (list->Edges[i])
                     EngFreeMem(list->Edges[i]);
             }

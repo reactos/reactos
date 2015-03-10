@@ -15,6 +15,10 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#ifdef _PREFAST_
+#pragma warning(disable:__WARNING_WRONG_KIND)
+#endif
+
 _Check_return_
 _Success_(return)
 _Kernel_float_restored_

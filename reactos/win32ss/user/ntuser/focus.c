@@ -416,7 +416,7 @@ CanForceFG(PPROCESSINFO ppi)
 static
 BOOL FASTCALL
 co_IntSetForegroundAndFocusWindow(
-    _In_ PWND Wnd,
+    _In_opt_ PWND Wnd,
     _In_ BOOL MouseActivate)
 {
    HWND hWnd = Wnd ? UserHMGetHandle(Wnd) : NULL;
@@ -805,6 +805,7 @@ co_UserSetFocus(PWND Window)
       {
          if (pwndTop->style & (WS_MINIMIZED|WS_DISABLED)) return 0;
          if ((pwndTop->style & (WS_POPUP|WS_CHILD)) != WS_CHILD) break;
+         if (pwndTop->spwndParent == NULL) break;
       }
       ////
       if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->head.h, (LPARAM)hWndPrev))

@@ -4346,13 +4346,14 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
+#if 0
 DWORD
 FASTCALL
 GreGetGlyphIndicesW(
     _In_ HDC hdc,
-    _In_opt_ LPWSTR pwc,
+    _In_reads_(cwc) LPWSTR pwc,
     _In_ INT cwc,
-    _Out_opt_ LPWORD pgi,
+    _Out_writes_opt_(cwc) LPWORD pgi,
     _In_ DWORD iMode,
     _In_ DWORD dwUnknown)
 {
@@ -4431,25 +4432,30 @@ GreGetGlyphIndicesW(
 
     IntUnLockFreeType;
 
-    RtlCopyMemory( pgi, Buffer, cwc*sizeof(WORD));
+    if (pgi != NULL)
+    {
+        RtlCopyMemory(pgi, Buffer, cwc * sizeof(WORD));
+    }
 
 ErrorRet:
     if (Buffer) ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     return cwc;
 }
-
+#endif // 0
 
 /*
 * @implemented
 */
+__kernel_entry
+W32KAPI
 DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
-    IN HDC hdc,
-    IN OPTIONAL LPWSTR UnSafepwc,
-    IN INT cwc,
-    OUT OPTIONAL LPWORD UnSafepgi,
-    IN DWORD iMode)
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) LPWSTR pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) LPWORD pgi,
+    _In_ DWORD iMode)
 {
     PDC dc;
     PDC_ATTR pdcattr;
@@ -4464,8 +4470,16 @@ NtGdiGetGlyphIndicesW(
     PWSTR Buffer = NULL;
     ULONG Size, pwcSize;
     PWSTR Safepwc = NULL;
+    LPWSTR UnSafepwc = pwc;
+    LPWORD UnSafepgi = pgi;
 
     if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
+
+    if ((UnSafepwc == NULL) || (UnSafepgi == NULL))
+    {
+        DPRINT1("UnSafepwc == %p, UnSafepgi = %p\n", UnSafepwc, UnSafepgi);
+        return -1;
+    }
 
     dc = DC_LockDc(hdc);
     if (!dc)
@@ -4563,7 +4577,10 @@ NtGdiGetGlyphIndicesW(
 
 ErrorRet:
     ExFreePoolWithTag(Buffer, GDITAG_TEXT);
-    ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
+    if (Safepwc != NULL)
+    {
+        ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
+    }
     if (NT_SUCCESS(Status)) return cwc;
     EngSetLastError(Status);
     return GDI_ERROR;

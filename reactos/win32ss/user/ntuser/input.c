@@ -153,6 +153,9 @@ RawInputThreadMain()
     StartTheTimers();
     UserLeave();
 
+    NT_ASSERT(ghMouseDevice == NULL);
+    NT_ASSERT(ghKeyboardDevice == NULL);
+
     for (;;)
     {
         if (!ghMouseDevice)
@@ -247,10 +250,16 @@ RawInputThreadMain()
                 pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
 
                 /* Check if it is mouse or keyboard and update status */
-                if (pSignaledObject == &pMouDevice->Event)
+                if ((MouStatus == STATUS_PENDING) &&
+                    (pSignaledObject == &pMouDevice->Event))
+                {
                     MouStatus = MouIosb.Status;
-                else if (pSignaledObject == &pKbdDevice->Event)
+                }
+                else if ((KbdStatus == STATUS_PENDING) &&
+                         (pSignaledObject == &pKbdDevice->Event))
+                {
                     KbdStatus = KbdIosb.Status;
+                }
                 else if (pSignaledObject == MasterTimer)
                 {
                     ProcessTimers();
@@ -414,7 +423,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
     do
     {
        if (!gpai) return TRUE;
- 
+
        pai = gpai; // Bottom of the list.
 
        do
@@ -432,7 +441,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
              break;
           }
           pai = pai->paiNext;
-        
+
        } while (pai);
 
        if (!pai && !ptiFrom && !ptiTo) break;
@@ -529,7 +538,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
            }
 
            ptiFrom->MessageQueue->cThreads++;
-           ERR("ptiTo S Share count %d\n", ptiFrom->MessageQueue->cThreads);
+           ERR("ptiTo S Share count %u\n", ptiFrom->MessageQueue->cThreads);
 
            IntReferenceMessageQueue(ptiTo->MessageQueue);
         }
@@ -563,9 +572,9 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         }
 
         if (!Hit) return STATUS_INVALID_PARAMETER;
- 
+
         ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
- 
+
         if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
         {
            if (gptiForeground == ptiFrom)
@@ -575,7 +584,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
               gptiForeground = ptiTo;
            }
            ptiTo->MessageQueue->cThreads--;
-           ERR("ptiTo E Share count %d\n", ptiTo->MessageQueue->cThreads);
+           ERR("ptiTo E Share count %u\n", ptiTo->MessageQueue->cThreads);
            ASSERT(ptiTo->MessageQueue->cThreads >= 1);
 
            IntDereferenceMessageQueue(ptiTo->MessageQueue);

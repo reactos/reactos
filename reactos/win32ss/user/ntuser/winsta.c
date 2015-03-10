@@ -669,7 +669,7 @@ NtUserGetObjectInformation(
    DWORD nLength,
    PDWORD nLengthNeeded)
 {
-   PWINSTATION_OBJECT WinStaObject = NULL;
+   PWINSTATION_OBJECT WinStaObject;
    PDESKTOP DesktopObject = NULL;
    NTSTATUS Status;
    PVOID pvData = NULL;
@@ -702,6 +702,7 @@ NtUserGetObjectInformation(
    {
       /* try desktop */
       TRACE("Trying to open desktop %p\n", hObject);
+      WinStaObject = NULL;
       Status = IntValidateDesktopHandle(
                   hObject,
                   UserMode,
@@ -934,7 +935,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
    ppi->prpwinsta = NewWinSta;
    ppi->hwinsta = hWindowStation;
    ppi->amwinsta = hWindowStation != NULL ? ObjectHandleInfo.GrantedAccess : 0;
-   TRACE("WS : Granted Access %p\n",ppi->amwinsta);
+   TRACE("WS : Granted Access 0x%08lx\n",ppi->amwinsta);
 
    if (RtlAreAllAccessesGranted(ppi->amwinsta, WINSTA_READSCREEN))
    {
@@ -1133,10 +1134,11 @@ BuildWindowStationNameList(
       /* Need a larger buffer, check how large exactly */
       Status = ZwQueryDirectoryObject(DirectoryHandle, NULL, 0, FALSE, TRUE, &Context,
                                       &ReturnLength);
-      if (STATUS_BUFFER_TOO_SMALL == Status)
+      if (!NT_SUCCESS(Status))
       {
+         ERR("ZwQueryDirectoryObject failed\n");
          ObDereferenceObject(DirectoryHandle);
-         return STATUS_NO_MEMORY;
+         return Status;
       }
 
       BufferSize = ReturnLength;

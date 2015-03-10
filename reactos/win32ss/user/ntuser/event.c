@@ -11,7 +11,7 @@ DBG_DEFAULT_CHANNEL(UserEvent);
 
 typedef struct _EVENTPACK
 {
-  PEVENTHOOK pEH; 
+  PEVENTHOOK pEH;
   LONG idObject;
   LONG idChild;
   LONG idThread;
@@ -97,7 +97,7 @@ LRESULT
 FASTCALL
 IntCallLowLevelEvent( PEVENTHOOK pEH,
                          DWORD event,
-                           HWND hwnd, 
+                           HWND hwnd,
                        LONG idObject,
                         LONG idChild,
                        LONG idThread)
@@ -158,7 +158,7 @@ co_EVENT_CallEvents( DWORD event,
    PEVENTPACK pEP = (PEVENTPACK)idChild;
 
    pEH = pEP->pEH;
-   TRACE("Dispatch Event 0x%x, idObject %d hwnd %p\n", event, idObject, hwnd);   
+   TRACE("Dispatch Event 0x%lx, idObject %uI hwnd %p\n", event, idObject, hwnd);
    Result = co_IntCallEventProc( UserHMGetHandle(pEH),
                                  event,
                                  hwnd,
@@ -241,13 +241,13 @@ IntNotifyWinEvent(
                                     idChild,
                                     PtrToUint(NtCurrentTeb()->ClientId.UniqueThread));
            }
-        }        
+        }
      }
      UserDereferenceObject(pEH);
      pLE = pEH->Chain.Flink;
      pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
    } while (pLE != &GlobalEvents->Events);
-}            
+}
 
 VOID
 APIENTRY
@@ -311,7 +311,7 @@ NtUserSetWinEventHook(
          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
          goto SetEventExit;
       }
-      GlobalEvents->Counts = 0;      
+      GlobalEvents->Counts = 0;
       InitializeListHead(&GlobalEvents->Events);
    }
 
@@ -353,7 +353,7 @@ NtUserSetWinEventHook(
       PETHREAD Thread;
       Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if (!NT_SUCCESS(Status))
-      {   
+      {
          EngSetLastError(ERROR_INVALID_THREAD_ID);
          goto SetEventExit;
       }
@@ -419,7 +419,7 @@ NtUserUnhookWinEvent(
    UserEnterExclusive();
 
    pEH = (PEVENTHOOK)UserGetObject(gHandleTable, hWinEventHook, TYPE_WINEVENTHOOK);
-   if (pEH) 
+   if (pEH)
    {
       Ret = IntRemoveEvent(pEH);
    }

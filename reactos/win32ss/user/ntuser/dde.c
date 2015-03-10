@@ -243,6 +243,11 @@ IntDdePostMessageHook(
       {
          // Set buffer with users data size.
          Buffer = ExAllocatePoolWithTag(PagedPool, size, USERTAG_DDE);
+         if (Buffer == NULL)
+         {
+             ERR("Failed to allocate %i bytes.\n", size);
+             return FALSE;
+         }
          // No SEH? Yes, the user memory is freed after the Acknowledgment or at Termination.
          RtlCopyMemory(Buffer, userBuf, size);
       }
@@ -254,6 +259,7 @@ IntDdePostMessageHook(
           case WM_DDE_POKE:
           {
               DDEPOKE *pddePoke = Buffer;
+              NT_ASSERT(pddePoke != NULL);
               switch(pddePoke->cfFormat)
               {
                  case CF_BITMAP:
@@ -268,13 +274,14 @@ IntDdePostMessageHook(
           }
           case WM_DDE_DATA:
           {
-              DDEDATA *pddeData = Buffer;
-              switch(pddeData->cfFormat)
+              DDEDATA *pddeData2 = Buffer;
+              NT_ASSERT(pddeData2 != NULL);
+              switch(pddeData2->cfFormat)
               {
                  case CF_BITMAP:
                  case CF_DIB:
                  case CF_PALETTE:
-                    RtlCopyMemory(&Object, pddeData->Value, sizeof(HGDIOBJ));
+                    RtlCopyMemory(&Object, pddeData2->Value, sizeof(HGDIOBJ));
                     break;
                  default:
                     break;
@@ -292,14 +299,20 @@ IntDdePostMessageHook(
       }
 
       pddeData = ExAllocatePoolWithTag(PagedPool, sizeof(DDE_DATA), USERTAG_DDE5);
+      if (pddeData == NULL)
+      {
+         ERR("Failed to allocate DDE_DATA\n");
+         ExFreePoolWithTag(Buffer, USERTAG_DDE);
+         return FALSE;
+      }
 
       pddeData->cbSize       = size;
       pddeData->pvBuffer     = Buffer;
       pddeData->lParam       = lp;
- 
+
       TRACE("DDE Post lParam c=%08lx\n",lp);
       *lParam = lp;
- 
+
       // Attach this data packet to the user message.
       *ExtraInfo = (LONG_PTR)pddeData;
    }
@@ -397,6 +410,11 @@ IntDdeSendMessageHook(PWND pWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
       // Setup property so this conversation can be tracked.
       pddeProp = ExAllocatePoolWithTag(PagedPool, sizeof(DDE_PROP), USERTAG_DDE1);
+      if (pddeProp == NULL)
+      {
+         ERR("failed to allocate DDE_PROP\n");
+         return FALSE;
+      }
 
       pddeProp->spwnd        = pWndServer;
       pddeProp->spwndPartner = pWnd;

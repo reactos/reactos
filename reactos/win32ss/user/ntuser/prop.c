@@ -26,7 +26,7 @@ IntGetProp(PWND Window, ATOM Atom)
 
       if (ListEntry == NULL)
       {
-          ERR("Corrupted (or uninitialized?) property list for window %p. Prop count %d. Atom %d.\n",
+          ERR("Corrupted (or uninitialized?) property list for window %p. Prop count %u. Atom %u.\n",
               Window, Window->PropListItems, Atom);
           return NULL;
       }

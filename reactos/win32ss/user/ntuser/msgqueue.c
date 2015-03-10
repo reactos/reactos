@@ -738,7 +738,8 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
 }
 
 BOOLEAN FASTCALL
-co_MsqDispatchOneSentMessage(PTHREADINFO pti)
+co_MsqDispatchOneSentMessage(
+    _In_ PTHREADINFO pti)
 {
    PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
@@ -2107,7 +2108,10 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
       if (CurrentSentMessage->HasPackedLParam)
       {
          if (CurrentSentMessage->Msg.lParam)
+         {
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_USING_UNINIT_VAR);
             ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+         }
       }
 
       /* free the message */
@@ -2219,11 +2223,12 @@ MsqCreateMessageQueue(PTHREADINFO pti)
 }
 
 VOID FASTCALL
-MsqDestroyMessageQueue(PTHREADINFO pti)
+MsqDestroyMessageQueue(_In_ PTHREADINFO pti)
 {
    PDESKTOP desk;
    PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
+   NT_ASSERT(MessageQueue != NULL);
    MessageQueue->QF_flags |= QF_INDESTROY;
 
    /* remove the message queue from any desktops */
@@ -2237,6 +2242,7 @@ MsqDestroyMessageQueue(PTHREADINFO pti)
    MsqCleanupMessageQueue(pti);
 
    /* decrease the reference counter, if it hits zero, the queue will be freed */
+   _PRAGMA_WARNING_SUPPRESS(__WARNING_USING_UNINIT_VAR);
    IntDereferenceMessageQueue(MessageQueue);
 }
 

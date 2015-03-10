@@ -286,7 +286,7 @@ int FASTCALL MENU_depth( PMENU pmenu, int depth)
     if( depth > MAXMENUDEPTH) return depth;
     item = pmenu->rgItems;
     subdepth = depth;
-    for( i = 0; item, i < pmenu->cItems && subdepth <= MAXMENUDEPTH; i++, item++)
+    for( i = 0; i < pmenu->cItems && subdepth <= MAXMENUDEPTH; i++, item++)
     {
         if( item->spSubMenu)//VerifyMenu(item->spSubMenu))
         {
@@ -323,7 +323,7 @@ PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags )
     else
     {
         PITEM item = menu->rgItems;
-	for (i = 0; item, i < menu->cItems; i++, item++)
+	for (i = 0; i < menu->cItems; i++, item++)
 	{
 	    if (item->spSubMenu)
 	    {
@@ -478,7 +478,7 @@ IntInsertMenuItem(
    SubMenu->cyMenu = 0;
    MenuItem->hbmpChecked = MenuItem->hbmpUnchecked = 0;
 
-   TRACE("IntInsertMenuItemToList = %i %d\n", uItem, (BOOL)((INT)uItem >= 0));
+   TRACE("IntInsertMenuItemToList = %u %i\n", uItem, (BOOL)((INT)uItem >= 0));
 
    return TRUE;
 }
@@ -1033,7 +1033,7 @@ UserSetMenuDefaultItem(PMENU MenuObject, UINT uItem, UINT fByPos)
    if (!MenuItem) return FALSE;
 
    /* reset all default-item flags */
-   for (i = 0; MenuItem, i < MenuObject->cItems; i++, MenuItem++)
+   for (i = 0; i < MenuObject->cItems; i++, MenuItem++)
    {
        MenuItem->fState &= ~MFS_DEFAULT;
    }
@@ -1052,7 +1052,7 @@ UserSetMenuDefaultItem(PMENU MenuObject, UINT uItem, UINT fByPos)
    }
    else
    {
-      for (i = 0; MenuItem, i < MenuObject->cItems; i++, MenuItem++)
+      for (i = 0; i < MenuObject->cItems; i++, MenuItem++)
       {
           if (MenuItem->wID == uItem)
           {
@@ -1623,7 +1623,7 @@ IntGetMenuItemRect(
    }
    else
    {
-      ERR("Failed Item Lookup! %d\n", uItem);
+      ERR("Failed Item Lookup! %u\n", uItem);
       return FALSE;
    }
 
@@ -2162,7 +2162,7 @@ NtUserGetMenuBarInfo(
             RETURN(FALSE);
         if (pWnd->pcls->fnid != FNID_MENU)
         {
-            WARN("called on invalid window: %d\n", pWnd->pcls->fnid);
+            WARN("called on invalid window: %u\n", pWnd->pcls->fnid);
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
             RETURN(FALSE);
         }

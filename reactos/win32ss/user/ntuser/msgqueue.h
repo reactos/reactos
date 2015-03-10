@@ -146,9 +146,9 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 BOOLEAN FASTCALL MsqInitializeMessageQueue(PTHREADINFO, PUSER_MESSAGE_QUEUE);
 PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(PTHREADINFO);
 VOID FASTCALL MsqCleanupThreadMsgs(PTHREADINFO);
-VOID FASTCALL MsqDestroyMessageQueue(PTHREADINFO);
+VOID FASTCALL MsqDestroyMessageQueue(_In_ PTHREADINFO pti);
 INIT_FUNCTION NTSTATUS NTAPI MsqInitializeImpl(VOID);
-BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PTHREADINFO pti);
+BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(_In_ PTHREADINFO pti);
 NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);

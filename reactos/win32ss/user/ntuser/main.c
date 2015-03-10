@@ -100,7 +100,8 @@ do { \
  * Called from IntDereferenceProcessInfo
  */
 VOID
-UserDeleteW32Process(PPROCESSINFO ppiCurrent)
+UserDeleteW32Process(
+    _Pre_notnull_ __drv_freesMem(Mem) PPROCESSINFO ppiCurrent)
 {
     if (ppiCurrent->InputIdleEvent)
     {
@@ -863,7 +864,7 @@ Win32kThreadCallback(PETHREAD Thread,
     return Status;
 }
 
-
+_Function_class_(DRIVER_UNLOAD)
 VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {

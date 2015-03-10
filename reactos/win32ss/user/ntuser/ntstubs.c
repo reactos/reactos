@@ -479,7 +479,7 @@ NtUserConsoleControl(
         }
 
         default:
-            ERR("Calling invalid control %lu in NtUserConsoleControl\n", ConsoleCtrl);
+            ERR("Calling invalid control %d in NtUserConsoleControl\n", ConsoleCtrl);
             Status = STATUS_INVALID_INFO_CLASS;
             break;
     }

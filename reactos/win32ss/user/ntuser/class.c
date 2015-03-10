@@ -1042,7 +1042,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         /* FIXME: The class was created before being connected
                   to a desktop. It is possible for the desktop window,
                   but should it be allowed for any other case? */
-        TRACE("This CLASS has no Desktop to heap from! Atom %d\n",Atom);
+        TRACE("This CLASS has no Desktop to heap from! Atom %u\n",Atom);
         Class = UserHeapAlloc(ClassSize);
     }
 
@@ -1232,6 +1232,7 @@ IntFindClass(IN RTL_ATOM Atom,
     return Class;
 }
 
+_Success_(return)
 BOOL
 NTAPI
 IntGetAtomFromStringOrAtom(
@@ -1314,8 +1315,7 @@ IntGetClassAtom(
 
     ASSERT(BaseClass != NULL);
 
-    if (IntGetAtomFromStringOrAtom(ClassName,
-                                   &Atom) &&
+    if (IntGetAtomFromStringOrAtom(ClassName, &Atom) &&
         Atom != (RTL_ATOM)0)
     {
         PCLS Class;
@@ -1368,6 +1368,10 @@ IntGetClassAtom(
 
 FoundClass:
         *BaseClass = Class;
+    }
+    else
+    {
+        Atom = 0;
     }
 
     return Atom;

@@ -64,10 +64,9 @@ IntClientShutdown(IN PWND pWindow,
             }
         }
         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+        if (lResult == MCSR_DONOTSHUTDOWN)
+            return lResult;
     }
-
-    if (List && (lResult == MCSR_DONOTSHUTDOWN))
-        return lResult;
 
     /* Send to the caller */
     if (wParam & MCS_QUERYENDSESSION)

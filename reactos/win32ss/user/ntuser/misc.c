@@ -58,7 +58,7 @@ UserGetLanguageID(VOID)
   HANDLE KeyHandle;
   OBJECT_ATTRIBUTES ObAttr;
 //  http://support.microsoft.com/kb/324097
-  ULONG Ret = 0x409; // English
+  ULONG Ret = MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT);
   PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
   ULONG Size = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH*sizeof(WCHAR);
   UNICODE_STRING Language;
@@ -87,7 +87,10 @@ UserGetLanguageID(VOID)
                                              &Size)) )
       {
         RtlInitUnicodeString(&Language, (PWSTR)pKeyInfo->Data);
-        RtlUnicodeStringToInteger(&Language, 16, &Ret);
+        if (!NT_SUCCESS(RtlUnicodeStringToInteger(&Language, 16, &Ret)))
+        {
+            Ret = MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT);
+        }
       }
       ExFreePoolWithTag(pKeyInfo, TAG_STRING);
     }

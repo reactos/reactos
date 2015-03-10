@@ -372,7 +372,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
 done:
    if (WndTo) UserRefObjectCo(WndTo, &Ref);
 
-   if ((gpqForeground && !gpqForeground->spwndActive) || Wnd == gpqForeground->spwndActive)
+   if (gpqForeground && (!gpqForeground->spwndActive || Wnd == gpqForeground->spwndActive))
    {
       /* ReactOS can pass WndTo = NULL to co_IntSetForegroundWindow and returns FALSE. */
       //ERR("WinPosActivateOtherWindow Set FG 0x%p hWnd %p\n",WndTo, WndTo ? WndTo->head.h : 0);
@@ -2218,7 +2218,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    WasVisible = (Wnd->style & WS_VISIBLE) != 0;
    style = Wnd->style;
 
-   TRACE("co_WinPosShowWindow START hwnd %p Cmd %d usicmd %d\n",Wnd->head.h,Cmd,pti->ppi->usi.wShowWindow);
+   TRACE("co_WinPosShowWindow START hwnd %p Cmd %d usicmd %u\n",
+         Wnd->head.h, Cmd, pti->ppi->usi.wShowWindow);
 
    if ( pti->ppi->usi.dwFlags & STARTF_USESHOWWINDOW )
    {
@@ -2378,7 +2379,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
    if ((ShowFlag != WasVisible || Cmd == SW_SHOWNA) && Cmd != SW_SHOWMAXIMIZED && !(Swp & SWP_STATECHANGED))
    {
-      co_IntSendMessageNoWait(Wnd->head.h, WM_SHOWWINDOW, ShowFlag, 0);      
+      co_IntSendMessageNoWait(Wnd->head.h, WM_SHOWWINDOW, ShowFlag, 0);
 #if 0 // Fix wine msg test_SetParent:WmSetParentSeq_1:2
       if (!(Wnd->state2 & WNDS2_WIN31COMPAT)) // <------------- XP sets this bit!
          co_IntSendMessageNoWait(Wnd->head.h, WM_SETVISIBLE, ShowFlag, 0);
@@ -2517,7 +2518,7 @@ co_WinPosSearchChildren(
     }
 
     /* not minimized and check if point is inside the window */
-    if (!(ScopeWin->style & WS_MINIMIZE) && 
+    if (!(ScopeWin->style & WS_MINIMIZE) &&
          RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y) )
     {
         UserReferenceObject(ScopeWin);

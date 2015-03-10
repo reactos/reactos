@@ -515,8 +515,8 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    if(Old != NULL)
    {
       (void)InterlockedExchangePointer((PVOID*)&Old->Desktop, 0);
-      IntDereferenceMessageQueue(Old);
       gpqForegroundPrev = Old;
+      IntDereferenceMessageQueue(Old);
    }
    // Only one Q can have active foreground even when there are more than one desktop.
    if (NewQueue)
@@ -999,7 +999,10 @@ IntPaintDesktop(HDC hDC)
    UINT align_old;
    int mode_old;
 
-   GdiGetClipBox(hDC, &Rect);
+   if (GdiGetClipBox(hDC, &Rect) == ERROR)
+   {
+       return FALSE;
+   }
 
    hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
 
@@ -1292,7 +1295,7 @@ NtUserCreateDesktop(
    PDESKTOP pdesk = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    HDESK hdesk;
-   BOOLEAN Context;
+   BOOLEAN Context = FALSE;
    UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
    BOOL NoHooks = FALSE;

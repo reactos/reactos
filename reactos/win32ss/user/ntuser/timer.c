@@ -571,7 +571,7 @@ BOOL FASTCALL
 IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTIMER pTmr = NULL;
-   TRACE("IntKillTimer Window %p id %p systemtimer %s\n",
+   TRACE("IntKillTimer Window %p id %uI systemtimer %s\n",
          Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
    TimerEnterExclusive();

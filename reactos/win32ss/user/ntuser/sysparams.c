@@ -570,14 +570,18 @@ SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
     if (fl & SPIF_UPDATEINIFILE)
     {
         /* Read current value */
-        RegReadUserSetting(KEY_DESKTOP,
-                           VAL_USERPREFMASK,
-                           REG_BINARY,
-                           &dwRegMask,
-                           sizeof(DWORD));
+        if (!RegReadUserSetting(KEY_DESKTOP,
+                                VAL_USERPREFMASK,
+                                REG_BINARY,
+                                &dwRegMask,
+                                sizeof(DWORD)))
+        {
+            WARN("Failed to read UserPreferencesMask setting\n");
+            dwRegMask = 0;
+        }
 
         /* Set or clear bit according to bValue */
-        dwRegMask = bValue ? dwRegMask | dwMask : dwRegMask & ~dwMask;
+        dwRegMask = bValue ? (dwRegMask | dwMask) : (dwRegMask & ~dwMask);
 
         /* write back value */
         RegWriteUserSetting(KEY_DESKTOP,
