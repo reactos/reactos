@@ -1051,7 +1051,7 @@ NtGdiGetDIBitsInternal(
     {
         /* Probe and copy the BITMAPINFO */
         ProbeForRead(pbmi, cjMaxInfo, 1);
-        RtlCopyMemory(pbmi, pbmi, cjMaxInfo);
+        RtlCopyMemory(pbmiSafe, pbmi, cjMaxInfo);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
