@@ -89,7 +89,10 @@ static int (__cdecl *p_tolower)(int);
 static size_t (__cdecl *p_mbrlen)(const char*, size_t, mbstate_t*);
 static size_t (__cdecl *p_mbrtowc)(wchar_t*, const char*, size_t, mbstate_t*);
 static int (__cdecl *p__atodbl_l)(_CRT_DOUBLE*,char*,_locale_t);
+static double (__cdecl *p__atof_l)(const char*,_locale_t);
+static double (__cdecl *p__strtod_l)(const char *,char**,_locale_t);
 static int (__cdecl *p__strnset_s)(char*,size_t,int,size_t);
+static int (__cdecl *p__wcsset_s)(wchar_t*,size_t,wchar_t);
 
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
 #define SET(x,y) SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y)
@@ -1579,6 +1582,28 @@ static void test__strtod(void)
     ok(almost_equal(d, 0), "d = %lf\n", d);
     ok(end == white_chars, "incorrect end (%d)\n", (int)(end-white_chars));
 
+    if (!p__strtod_l)
+        win_skip("_strtod_l not found\n");
+    else
+    {
+        errno = EBADF;
+        d = strtod(NULL, NULL);
+        ok(almost_equal(d, 0.0), "d =  %lf\n", d);
+        ok(errno == EINVAL, "errno = %x\n", errno);
+
+        errno = EBADF;
+        end = (char *)0xdeadbeef;
+        d = strtod(NULL, &end);
+        ok(almost_equal(d, 0.0), "d = %lf\n", d);
+        ok(errno == EINVAL, "errno = %x\n", errno);
+        ok(!end, "incorrect end ptr %p\n", end);
+
+        errno = EBADF;
+        d = p__strtod_l(NULL, NULL, NULL);
+        ok(almost_equal(d, 0.0), "d = %lf\n", d);
+        ok(errno == EINVAL, "errno = %x\n", errno);
+    }
+
     /* Set locale with non '.' decimal point (',') */
     if(!setlocale(LC_ALL, "Polish")) {
         win_skip("system with limited locales\n");
@@ -2622,6 +2647,36 @@ static void test_atoi(void)
     ok(r == 0, "atoi(4294967296) = %d\n", r);
 }
 
+static void test_atof(void)
+{
+    double d;
+
+    d = atof("0.0");
+    ok(almost_equal(d, 0.0), "d = %lf\n", d);
+
+    d = atof("1.0");
+    ok(almost_equal(d, 1.0), "d = %lf\n", d);
+
+    d = atof("-1.0");
+    ok(almost_equal(d, -1.0), "d = %lf\n", d);
+
+    if (!p__atof_l)
+    {
+        win_skip("_atof_l not found\n");
+        return;
+    }
+
+    errno = EBADF;
+    d = atof(NULL);
+    ok(almost_equal(d, 0.0), "d = %lf\n", d);
+    ok(errno == EINVAL, "errno = %x\n", errno);
+
+    errno = EBADF;
+    d = p__atof_l(NULL, NULL);
+    ok(almost_equal(d, 0.0), "d = %lf\n", d);
+    ok(errno == EINVAL, "errno = %x\n", errno);
+}
+
 static void test_strncpy(void)
 {
 #define TEST_STRNCPY_LEN 10
@@ -2749,6 +2804,40 @@ static void test__strnset_s(void)
     ok(!buf[0] && buf[1]=='c' && buf[2]=='b', "buf = %s\n", buf);
 }
 
+static void test__wcsset_s(void)
+{
+    wchar_t str[10];
+    int r;
+
+    if(!p__wcsset_s) {
+        win_skip("_wcsset_s not available\n");
+        return;
+    }
+
+    r = p__wcsset_s(NULL, 0, 'a');
+    ok(r == EINVAL, "r = %d\n", r);
+
+    str[0] = 'a';
+    r = p__wcsset_s(str, 0, 'a');
+    ok(r == EINVAL, "r = %d\n", r);
+    ok(str[0] == 'a', "str[0] = %d\n", str[0]);
+
+    str[0] = 'a';
+    str[1] = 'b';
+    r = p__wcsset_s(str, 2, 'c');
+    ok(r == EINVAL, "r = %d\n", r);
+    ok(!str[0], "str[0] = %d\n", str[0]);
+    ok(str[1] == 'b', "str[1] = %d\n", str[1]);
+
+    str[0] = 'a';
+    str[1] = 0;
+    str[2] = 'b';
+    r = p__wcsset_s(str, 3, 'c');
+    ok(str[0] == 'c', "str[0] = %d\n", str[0]);
+    ok(str[1] == 0, "str[1] = %d\n", str[1]);
+    ok(str[2] == 'b', "str[2] = %d\n", str[2]);
+}
+
 START_TEST(string)
 {
     char mem[100];
@@ -2796,7 +2885,10 @@ START_TEST(string)
     p_mbrtowc = (void*)GetProcAddress(hMsvcrt, "mbrtowc");
     p_mbsrtowcs = (void*)GetProcAddress(hMsvcrt, "mbsrtowcs");
     p__atodbl_l = (void*)GetProcAddress(hMsvcrt, "_atodbl_l");
+    p__atof_l = (void*)GetProcAddress(hMsvcrt, "_atof_l");
+    p__strtod_l = (void*)GetProcAddress(hMsvcrt, "_strtod_l");
     p__strnset_s = (void*)GetProcAddress(hMsvcrt, "_strnset_s");
+    p__wcsset_s = (void*)GetProcAddress(hMsvcrt, "_wcsset_s");
 
     /* MSVCRT memcpy behaves like memmove for overlapping moves,
        MFC42 CString::Insert seems to rely on that behaviour */
@@ -2848,7 +2940,9 @@ START_TEST(string)
     test__stricmp();
     test__wcstoi64();
     test_atoi();
+    test_atof();
     test_strncpy();
     test_strxfrm();
     test__strnset_s();
+    test__wcsset_s();
 }

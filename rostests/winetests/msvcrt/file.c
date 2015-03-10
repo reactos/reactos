@@ -2244,6 +2244,7 @@ static void test_write_flush_size(FILE *file, int bufsize)
     char *inbuffer;
     char *outbuffer;
     int size, fd;
+    fpos_t pos, pos2;
 
     fd = fileno(file);
     inbuffer = calloc(bufsize + 1, 1);
@@ -2275,6 +2276,19 @@ static void test_write_flush_size(FILE *file, int bufsize)
     fseek(file, 0, SEEK_SET);
     ok(fread(inbuffer, 1, bufsize, file) == bufsize, "read failed\n");
     ok(memcmp(outbuffer, inbuffer, bufsize) != 0, "unexpected flush by %d/2 byte double write\n", bufsize);
+
+    ok(!fseek(file, -1, SEEK_END), "fseek failed\n");
+    ok(!fgetpos(file, &pos), "fgetpos failed\n");
+    ok(fread(inbuffer, 1, 1, file) == 1, "fread failed\n");
+    ok(file->_flag & _IOREAD, "file->_flag = %x\n", file->_flag);
+    ok(!file->_cnt, "file->_cnt = %d\n", file->_cnt);
+    ok(file->_ptr != file->_base, "file->_ptr == file->_base\n");
+    ok(fwrite(outbuffer, 1, bufsize, file), "fwrite failed\n");
+    ok(file->_flag & _IOREAD, "file->_flag = %x\n", file->_flag);
+    ok(!file->_cnt, "file->_cnt = %d\n", file->_cnt);
+    ok(file->_ptr == file->_base, "file->_ptr == file->_base\n");
+    ok(!fgetpos(file, &pos2), "fgetpos failed\n");
+    ok(pos+bufsize+1 == pos2, "pos = %d (%d)\n", (int)pos, (int)pos2);
     free(inbuffer);
     free(outbuffer);
 }

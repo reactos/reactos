@@ -1127,6 +1127,12 @@ static void test_vsnwprintf(void)
     ok( ret == 11, "got %d expected 11\n", ret );
     WideCharToMultiByte( CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL );
     ok( !strcmp(buf, "onetwothree"), "got %s expected 'onetwothree'\n", buf );
+
+    ret = _vsnwprintf_wrapper( str, 0, format, one, two, three );
+    ok( ret == -1, "got %d, expected -1\n", ret );
+
+    ret = _vsnwprintf_wrapper( NULL, 0, format, one, two, three );
+    ok( ret == 11 || broken(ret == -1 /* Win2k */), "got %d, expected 11\n", ret );
 }
 
 static int __cdecl vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)

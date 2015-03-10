@@ -66,11 +66,10 @@
 #define TYPEOF(type) int
 #endif
 #define MSVCRT(x)    MSVCRT_##x
-#define OFFSET(T,F) ((unsigned int)((char *)&((struct T *)0L)->F - (char *)0L))
 #define CHECK_SIZE(e) ok(sizeof(e) == sizeof(MSVCRT(e)), "Element has different sizes\n")
 #define CHECK_TYPE(t) { TYPEOF(t) a = 0; TYPEOF(MSVCRT(t)) b = a; a = b; CHECK_SIZE(t); }
 #define CHECK_STRUCT(s) ok(sizeof(struct s) == sizeof(struct MSVCRT(s)), "Struct has different sizes\n")
-#define CHECK_FIELD(s,e) ok(OFFSET(s,e) == OFFSET(MSVCRT(s),e), "Bad offset\n")
+#define CHECK_FIELD(s,e) ok(offsetof(struct s,e) == offsetof(struct MSVCRT(s),e), "Bad offset\n")
 #define CHECK_DEF(d) ok(d == MSVCRT_##d, "Defines (MSVCRT_)" #d " are different: %d vs. %d\n", d, MSVCRT_##d)
 
 /************* Checking types ***************/
