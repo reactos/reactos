@@ -45,7 +45,6 @@
 #define __exceptthat __declspec("SAL_except")
 #define __execeptthat __exceptthat
 #define __inner_blocksOn(resource) __declspec("SAL_blocksOn("SPECSTRINGIZE(resource)")")
-#define __inner_callback __declspec("__callback")
 #define __inner_checkReturn __declspec("SAL_checkReturn")
 #define __inner_control_entrypoint(category) __declspec("SAL_entrypoint(controlEntry, "SPECSTRINGIZE(category)")")
 #define __inner_data_entrypoint(category) __declspec("SAL_entrypoint(dataEntry, "SPECSTRINGIZE(category)")")
@@ -80,7 +79,6 @@
 #define __exceptthat
 #define __execeptthat
 #define __inner_blocksOn(resource)
-#define __inner_callback
 #define __inner_checkReturn
 #define __inner_control_entrypoint(category)
 #define __inner_data_entrypoint(category)
