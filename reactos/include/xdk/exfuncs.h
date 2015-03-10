@@ -606,14 +606,14 @@ NTKERNELAPI
 VOID
 NTAPI
 ExFreePool(
-  _In_ __drv_freesMem(Mem) PVOID P);
+  _Pre_not __drv_freesMem(Mem) PVOID P);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFreePoolWithTag(
-  _In_ __drv_freesMem(Mem) PVOID P,
+  _Pre_not __drv_freesMem(Mem) PVOID P,
   _In_ ULONG Tag);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)

@@ -11593,7 +11593,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmBuildMdlForNonPagedPool(
-  _Inout_ PMDLX MemoryDescriptorList);
+  _Inout_ PMDL MemoryDescriptorList);
 
 //DECLSPEC_DEPRECATED_DDK
 NTKERNELAPI
@@ -11626,7 +11626,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmFreePagesFromMdl(
-  _Inout_ PMDLX MemoryDescriptorList);
+  _Inout_ PMDL MemoryDescriptorList);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
@@ -11681,7 +11681,7 @@ NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPagesSpecifyCache(
-  _Inout_ PMDLX MemoryDescriptorList,
+  _Inout_ PMDL MemoryDescriptorList,
   _In_ __drv_strictType(KPROCESSOR_MODE/enum _MODE,__drv_typeConst)
     KPROCESSOR_MODE AccessMode,
   _In_ __drv_strictTypeMatch(__drv_typeCond) MEMORY_CACHING_TYPE CacheType,
@@ -11703,7 +11703,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmProbeAndLockPages(
-  _Inout_ PMDLX MemoryDescriptorList,
+  _Inout_ PMDL MemoryDescriptorList,
   _In_ KPROCESSOR_MODE AccessMode,
   _In_ LOCK_OPERATION Operation);
 
@@ -11738,7 +11738,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmUnlockPages(
-  _Inout_ PMDLX MemoryDescriptorList);
+  _Inout_ PMDL MemoryDescriptorList);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
@@ -11789,7 +11789,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 MmAdvanceMdl(
-  _Inout_ PMDLX Mdl,
+  _Inout_ PMDL Mdl,
   _In_ ULONG NumberOfBytes);
 
 _Must_inspect_result_
@@ -11829,7 +11829,7 @@ NTAPI
 MmMapLockedPagesWithReservedMapping(
   _In_ PVOID MappingAddress,
   _In_ ULONG PoolTag,
-  _Inout_ PMDLX MemoryDescriptorList,
+  _Inout_ PMDL MemoryDescriptorList,
   _In_ __drv_strictTypeMatch(__drv_typeCond)
     MEMORY_CACHING_TYPE CacheType);
 
@@ -11839,7 +11839,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 MmProtectMdlSystemAddress(
-  _In_ PMDLX MemoryDescriptorList,
+  _In_ PMDL MemoryDescriptorList,
   _In_ ULONG NewProtect);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -11849,7 +11849,7 @@ NTAPI
 MmUnmapReservedMapping(
   _In_ PVOID BaseAddress,
   _In_ ULONG PoolTag,
-  _Inout_ PMDLX MemoryDescriptorList);
+  _Inout_ PMDL MemoryDescriptorList);
 
 _IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
@@ -14799,14 +14799,14 @@ NTKERNELAPI
 VOID
 NTAPI
 ExFreePool(
-  _In_ __drv_freesMem(Mem) PVOID P);
+  _Pre_notnull_ __drv_freesMem(Mem) PVOID P);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ExFreePoolWithTag(
-  _In_ __drv_freesMem(Mem) PVOID P,
+  _Pre_notnull_ __drv_freesMem(Mem) PVOID P,
   _In_ ULONG Tag);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)

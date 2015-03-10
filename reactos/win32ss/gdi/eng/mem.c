@@ -14,16 +14,20 @@
 /*
  * @implemented
  */
+_Must_inspect_result_
+_When_(fl & FL_ZERO_MEMORY, _Ret_opt_bytecount_(cjMemSize))
+_When_(!(fl & FL_ZERO_MEMORY), _Ret_opt_bytecap_(cjMemSize))
+ENGAPI
 PVOID
 APIENTRY
 EngAllocMem(
-    ULONG Flags,
-    ULONG cjMemSize,
-    ULONG ulTag)
+    _In_ ULONG fl,
+    _In_ ULONG cjMemSize,
+    _In_ ULONG ulTag)
 {
     PVOID pvBaseAddress;
 
-    pvBaseAddress = ExAllocatePoolWithTag((Flags & FL_NONPAGED_MEMORY) ?
+    pvBaseAddress = ExAllocatePoolWithTag((fl & FL_NONPAGED_MEMORY) ?
                                                     NonPagedPool : PagedPool,
                                           cjMemSize,
                                           ulTag);
@@ -31,7 +35,7 @@ EngAllocMem(
     if (pvBaseAddress == NULL)
         return NULL;
 
-    if (Flags & FL_ZERO_MEMORY)
+    if (fl & FL_ZERO_MEMORY)
         RtlZeroMemory(pvBaseAddress, cjMemSize);
 
     return pvBaseAddress;
@@ -55,9 +59,14 @@ EngFreeMem(PVOID pvBaseAddress)
 /*
  * @implemented
  */
+_Must_inspect_result_
+_Ret_opt_bytecount_(cjMemSize)
+ENGAPI
 PVOID
 APIENTRY
-EngAllocUserMem(SIZE_T cjSize, ULONG ulTag)
+EngAllocUserMem(
+    _In_ SIZE_T cjMemSize,
+    _In_ ULONG ulTag)
 {
     PVOID pvBaseAddress = NULL;
     NTSTATUS Status;
@@ -65,7 +74,7 @@ EngAllocUserMem(SIZE_T cjSize, ULONG ulTag)
     Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
                                      &pvBaseAddress,
                                      0,
-                                     &cjSize,
+                                     &cjMemSize,
                                      MEM_COMMIT | MEM_RESERVE,
                                      PAGE_READWRITE);
 
@@ -77,7 +86,7 @@ EngAllocUserMem(SIZE_T cjSize, ULONG ulTag)
     /* TODO: Add allocation info to AVL tree (stored inside W32PROCESS structure) */
     //hSecure = EngSecureMem(pvBaseAddress, cj);
 
-  return pvBaseAddress;
+    return pvBaseAddress;
 }
 
 /*
@@ -96,7 +105,6 @@ EngFreeUserMem(PVOID pvBaseAddress)
 
   /* TODO: Remove allocation info from AVL tree */
 }
-
 
 PVOID
 APIENTRY
