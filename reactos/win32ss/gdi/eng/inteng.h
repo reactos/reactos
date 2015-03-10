@@ -147,19 +147,6 @@ IntEngPaint(
     _In_ POINTL *pptlBrushOrg,
     _In_ __in_data_source(USER_MODE) MIX mix);
 
-ULONG APIENTRY
-IntEngSetPointerShape(
-   IN SURFOBJ *pso,
-   IN SURFOBJ *psoMask,
-   IN SURFOBJ *psoColor,
-   IN XLATEOBJ *pxlo,
-   IN LONG xHot,
-   IN LONG yHot,
-   IN LONG x,
-   IN LONG y,
-   IN RECTL *prcl,
-   IN FLONG fl);
-
 BOOL
 APIENTRY
 IntEngAlphaBlend(
