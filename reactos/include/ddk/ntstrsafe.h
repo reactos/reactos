@@ -117,7 +117,14 @@ RtlStringCchCopyA(
   _In_ size_t cchDest,
   _In_ NTSTRSAFE_PCSTR pszSrc)
 {
-    return (cchDest > NTSTRSAFE_MAX_CCH ? STATUS_INVALID_PARAMETER : RtlStringCopyWorkerA(pszDest,cchDest,pszSrc));
+    if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    return RtlStringCopyWorkerA(pszDest, cchDest, pszSrc);
 }
 
 NTSTRSAFEAPI
@@ -127,7 +134,12 @@ RtlStringCchCopyW(
   _In_ NTSTRSAFE_PCWSTR pszSrc)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
+
     return RtlStringCopyWorkerW(pszDest,cchDest,pszSrc);
 }
 
@@ -149,8 +161,13 @@ RtlStringCbCopyA(
   _In_ size_t cbDest,
   _In_ NTSTRSAFE_PCSTR pszSrc)
 {
-    if (cbDest > NTSTRSAFE_MAX_CCH)
+    size_t cchDest = cbDest / sizeof(char);
+    if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     return RtlStringCopyWorkerA(pszDest,cbDest,pszSrc);
 }
 
@@ -162,7 +179,11 @@ RtlStringCbCopyW(
 {
     size_t cchDest = cbDest / sizeof(wchar_t);
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     return RtlStringCopyWorkerW(pszDest,cchDest,pszSrc);
 }
 
@@ -194,7 +215,11 @@ RtlStringCchCopyExA(
   _In_ STRSAFE_DWORD dwFlags)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     return RtlStringCopyExWorkerA(pszDest,cchDest,cchDest,pszSrc,ppszDestEnd,pcchRemaining,dwFlags);
 }
 
@@ -207,10 +232,15 @@ RtlStringCchCopyExW(
   _Out_opt_ size_t *pcchRemaining,
   _In_ STRSAFE_DWORD dwFlags)
 {
-    size_t cbDest;
+    size_t cbDest = cchDest * sizeof(wchar_t);
+
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
-    cbDest = cchDest * sizeof(wchar_t);
+    }
+
     return RtlStringCopyExWorkerW(pszDest,cchDest,cbDest,pszSrc,ppszDestEnd,pcchRemaining,dwFlags);
 }
 
@@ -242,9 +272,16 @@ RtlStringCbCopyExA(
   _In_ STRSAFE_DWORD dwFlags)
 {
     NTSTATUS Status;
+    size_t cchDest = cbDest / sizeof(char);
     size_t cchRemaining = 0;
-    if (cbDest > NTSTRSAFE_MAX_CCH)
+
+    if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
+
     Status = RtlStringCopyExWorkerA(pszDest,cbDest,cbDest,pszSrc,ppszDestEnd,&cchRemaining,dwFlags);
     if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW)
     {
@@ -268,7 +305,12 @@ RtlStringCbCopyExW(
     size_t cchRemaining = 0;
 
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
+
     Status = RtlStringCopyExWorkerW(pszDest,cchDest,cbDest,pszSrc,ppszDestEnd,&cchRemaining,dwFlags);
     if (NT_SUCCESS(Status) || (Status==STATUS_BUFFER_OVERFLOW))
     {
@@ -301,7 +343,12 @@ RtlStringCchCopyNA(
   _In_ size_t cchToCopy)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH || cchToCopy > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
+
     return RtlStringCopyNWorkerA(pszDest,cchDest,pszSrc,cchToCopy);
 }
 
@@ -313,7 +360,12 @@ RtlStringCchCopyNW(
   _In_ size_t cchToCopy)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH || cchToCopy > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
+
     return RtlStringCopyNWorkerW(pszDest,cchDest,pszSrc,cchToCopy);
 }
 
@@ -338,9 +390,17 @@ RtlStringCbCopyNA(
   _In_reads_bytes_(cbToCopy) STRSAFE_LPCSTR pszSrc,
   _In_ size_t cbToCopy)
 {
-    if (cbDest > NTSTRSAFE_MAX_CCH || cbToCopy > NTSTRSAFE_MAX_CCH)
+    size_t cchDest  = cbDest / sizeof(char);
+    size_t cchToCopy = cbToCopy / sizeof(char);
+
+    if (cchDest > NTSTRSAFE_MAX_CCH || cchToCopy > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
-    return RtlStringCopyNWorkerA(pszDest,cbDest,pszSrc,cbToCopy);
+    }
+
+    return RtlStringCopyNWorkerA(pszDest, cchDest, pszSrc, cchToCopy);
 }
 
 NTSTRSAFEAPI
@@ -352,9 +412,15 @@ RtlStringCbCopyNW(
 {
     size_t cchDest  = cbDest / sizeof(wchar_t);
     size_t cchToCopy = cbToCopy / sizeof(wchar_t);
+
     if (cchDest > NTSTRSAFE_MAX_CCH || cchToCopy > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
-    return RtlStringCopyNWorkerW(pszDest,cchDest,pszSrc,cchToCopy);
+    }
+
+    return RtlStringCopyNWorkerW(pszDest, cchDest, pszSrc, cchToCopy);
 }
 
 NTSTRSAFEAPI
@@ -388,8 +454,13 @@ RtlStringCchCopyNExA(
   _In_ STRSAFE_DWORD dwFlags)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
-    return RtlStringCopyNExWorkerA(pszDest,cchDest,cchDest,pszSrc,cchToCopy,ppszDestEnd,pcchRemaining,dwFlags);
+    }
+
+    return RtlStringCopyNExWorkerA(pszDest, cchDest, cchDest, pszSrc, cchToCopy, ppszDestEnd, pcchRemaining, dwFlags);
 }
 
 NTSTRSAFEAPI
@@ -403,8 +474,13 @@ RtlStringCchCopyNExW(
   _In_ STRSAFE_DWORD dwFlags)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
-    return RtlStringCopyNExWorkerW(pszDest,cchDest,cchDest * sizeof(wchar_t),pszSrc,cchToCopy,ppszDestEnd,pcchRemaining,dwFlags);
+    }
+
+    return RtlStringCopyNExWorkerW(pszDest,cchDest,cchDest * sizeof(wchar_t), pszSrc, cchToCopy, ppszDestEnd, pcchRemaining, dwFlags);
 }
 
 NTSTRSAFEAPI
@@ -439,10 +515,15 @@ RtlStringCbCopyNExA(
 {
     NTSTATUS Status;
     size_t cchRemaining = 0;
+
     if (cbDest > NTSTRSAFE_MAX_CCH)
-        Status = STATUS_INVALID_PARAMETER;
-    else
-        Status = RtlStringCopyNExWorkerA(pszDest,cbDest,cbDest,pszSrc,cbToCopy,ppszDestEnd,&cchRemaining,dwFlags);
+    {
+        if ((pszDest != NULL) && (cbDest > 0))
+            *pszDest = L'\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = RtlStringCopyNExWorkerA(pszDest,cbDest,cbDest,pszSrc,cbToCopy,ppszDestEnd,&cchRemaining,dwFlags);
     if ((NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW) && pcbRemaining)
         *pcbRemaining = cchRemaining;
     return Status;
@@ -465,9 +546,13 @@ RtlStringCbCopyNExW(
     cchDest = cbDest / sizeof(wchar_t);
     cchToCopy = cbToCopy / sizeof(wchar_t);
     if (cchDest > NTSTRSAFE_MAX_CCH)
-        Status = STATUS_INVALID_PARAMETER;
-    else
-        Status = RtlStringCopyNExWorkerW(pszDest,cchDest,cbDest,pszSrc,cchToCopy,ppszDestEnd,&cchRemaining,dwFlags);
+    {
+        if ((pszDest != NULL) && (cbDest > 0))
+            *pszDest = L'\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = RtlStringCopyNExWorkerW(pszDest,cchDest,cbDest,pszSrc,cchToCopy,ppszDestEnd,&cchRemaining,dwFlags);
     if ((NT_SUCCESS(Status) || Status == STATUS_BUFFER_OVERFLOW) && pcbRemaining)
         *pcbRemaining = (cchRemaining*sizeof(wchar_t)) + (cbDest % sizeof(wchar_t));
     return Status;
@@ -864,7 +949,12 @@ RtlStringCchVPrintfA(
   _In_ va_list argList)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
+
     return RtlStringVPrintfWorkerA(pszDest,cchDest,pszFormat,argList);
 }
 
@@ -876,7 +966,11 @@ RtlStringCchVPrintfW(
   _In_ va_list argList)
 {
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
     return RtlStringVPrintfWorkerW(pszDest,cchDest,pszFormat,argList);
 }
 
@@ -902,7 +996,11 @@ RtlStringCbVPrintfA(
   _In_ va_list argList)
 {
     if (cbDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cbDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     return RtlStringVPrintfWorkerA(pszDest,cbDest,pszFormat,argList);
 }
 
@@ -915,7 +1013,11 @@ RtlStringCbVPrintfW(
 {
     size_t cchDest = cbDest / sizeof(wchar_t);
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
     return RtlStringVPrintfWorkerW(pszDest,cchDest,pszFormat,argList);
 }
 
@@ -943,7 +1045,11 @@ RtlStringCchPrintfA(
     NTSTATUS Status;
     va_list argList;
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     va_start(argList,pszFormat);
     Status = RtlStringVPrintfWorkerA(pszDest,cchDest,pszFormat,argList);
     va_end(argList);
@@ -960,7 +1066,11 @@ RtlStringCchPrintfW(
     NTSTATUS Status;
     va_list argList;
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
     va_start(argList,pszFormat);
     Status = RtlStringVPrintfWorkerW(pszDest,cchDest,pszFormat,argList);
     va_end(argList);
@@ -991,7 +1101,11 @@ RtlStringCbPrintfA(
     NTSTATUS Status;
     va_list argList;
     if (cbDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cbDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     va_start(argList,pszFormat);
     Status = RtlStringVPrintfWorkerA(pszDest,cbDest,pszFormat,argList);
     va_end(argList);
@@ -1009,7 +1123,11 @@ RtlStringCbPrintfW(
     va_list argList;
     size_t cchDest = cbDest / sizeof(wchar_t);
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
     va_start(argList,pszFormat);
     Status = RtlStringVPrintfWorkerW(pszDest,cchDest,pszFormat,argList);
     va_end(argList);
@@ -1049,7 +1167,11 @@ RtlStringCchPrintfExA(
     NTSTATUS Status;
     va_list argList;
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
         return STATUS_INVALID_PARAMETER;
+    }
     va_start(argList,pszFormat);
     Status = RtlStringVPrintfExWorkerA(pszDest,cchDest,cchDest,ppszDestEnd,pcchRemaining,dwFlags,pszFormat,argList);
     va_end(argList);
@@ -1070,7 +1192,11 @@ RtlStringCchPrintfExW(
     size_t cbDest = cchDest * sizeof(wchar_t);
     va_list argList;
     if (cchDest > NTSTRSAFE_MAX_CCH)
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
         return STATUS_INVALID_PARAMETER;
+    }
     va_start(argList,pszFormat);
     Status = RtlStringVPrintfExWorkerW(pszDest,cchDest,cbDest,ppszDestEnd,pcchRemaining,dwFlags,pszFormat,argList);
     va_end(argList);
@@ -1110,10 +1236,15 @@ RtlStringCbPrintfExA(
     NTSTATUS Status;
     size_t cchDest;
     size_t cchRemaining = 0;
+
     cchDest = cbDest / sizeof(char);
     if (cchDest > NTSTRSAFE_MAX_CCH)
-        Status = STATUS_INVALID_PARAMETER;
-    else
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
     {
         va_list argList;
         va_start(argList,pszFormat);
@@ -1145,8 +1276,12 @@ RtlStringCbPrintfExW(
     size_t cchRemaining = 0;
     cchDest = cbDest / sizeof(wchar_t);
     if (cchDest > NTSTRSAFE_MAX_CCH)
-        Status = STATUS_INVALID_PARAMETER;
-    else
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
     {
         va_list argList;
         va_start(argList,pszFormat);
@@ -1195,8 +1330,12 @@ RtlStringCchVPrintfExA(
 {
     NTSTATUS Status;
     if (cchDest > NTSTRSAFE_MAX_CCH)
-        Status = STATUS_INVALID_PARAMETER;
-    else
+    {
+        if (cchDest > 0)
+            *pszDest = '\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
     {
         size_t cbDest;
         cbDest = cchDest*sizeof(char);
@@ -1217,8 +1356,12 @@ RtlStringCchVPrintfExW(
 {
     NTSTATUS Status;
     if (cchDest > NTSTRSAFE_MAX_CCH)
-        Status = STATUS_INVALID_PARAMETER;
-    else
+    {
+        if (cchDest > 0)
+            *pszDest = L'\0';
+        return STATUS_INVALID_PARAMETER;
+    }
+
     {
         size_t cbDest;
         cbDest = cchDest*sizeof(wchar_t);
