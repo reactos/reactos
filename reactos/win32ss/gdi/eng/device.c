@@ -212,7 +212,7 @@ EngpRegisterGraphicsDevice(
                   pdm->dmBitsPerPel,
                   pdm->dmDisplayFrequency);
             /* Compare with the default entry */
-            if (!bModeMatch && 
+            if (!bModeMatch &&
                 pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
                 pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
                 pdm->dmPelsHeight == pdmDefault->dmPelsHeight)
@@ -438,13 +438,15 @@ EngFileIoControl(
 /*
  * @implemented
  */
-DWORD APIENTRY
+_Success_(return==0)
+DWORD
+APIENTRY
 EngDeviceIoControl(
     _In_ HANDLE hDevice,
     _In_ DWORD dwIoControlCode,
-    _In_opt_bytecount_(cjInBufferSize) LPVOID lpInBuffer,
+    _In_reads_bytes_opt_(cjInBufferSize) LPVOID lpInBuffer,
     _In_ DWORD cjInBufferSize,
-    _Out_opt_bytecap_(cjOutBufferSize) LPVOID lpOutBuffer,
+    _Out_writes_bytes_opt_(cjOutBufferSize) LPVOID lpOutBuffer,
     _In_ DWORD cjOutBufferSize,
     _Out_ LPDWORD lpBytesReturned)
 {

@@ -11,14 +11,6 @@
 #define KeRosDumpStackFrames(Frames, Count)
 #endif
 
-NTSYSAPI
-ULONG
-APIENTRY
-RtlWalkFrameChain(
-    _Out_ PVOID *Callers,
-    _In_ ULONG Count,
-    _In_ ULONG Flags);
-
 ULONG
 NTAPI
 DbgCaptureStackBackTace(

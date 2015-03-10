@@ -91,8 +91,8 @@ IntAddGlobalAtom(LPWSTR lpBuffer, BOOL PinAtom)
  * \note The function does not aquire any global lock, since synchronisation is
  *       handled by the RtlAtom function.
  */
-_Success_(return!=0)
-_At_(pustrName->Buffer, _Out_z_bytecap_post_bytecount_(pustrName->MaximumLength, return*2+2))
+_Success_(return != 0)
+_At_(pustrName->Buffer, _Out_z_bytecap_post_bytecount_(pustrName->MaximumLength, return * 2 + 2))
 ULONG
 APIENTRY
 NtUserGetAtomName(

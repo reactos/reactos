@@ -395,15 +395,16 @@ IntCleanupCurIconCache(PPROCESSINFO Win32Process)
 /*
  * @implemented
  */
+_Success_(return != FALSE)
 BOOL
-APIENTRY
+NTAPI
 NtUserGetIconInfo(
-  _In_       HANDLE hCurIcon,
-  _Out_opt_  PICONINFO IconInfo,
-  _Out_opt_  PUNICODE_STRING lpModule,   // Optional
-  _Out_opt_  PUNICODE_STRING lpResName,  // Optional
-  _Out_opt_  LPDWORD pbpp,               // Optional
-  _In_       BOOL bInternal)
+    _In_ HANDLE hCurIcon,
+    _Out_opt_ PICONINFO IconInfo,
+    _Inout_opt_ PUNICODE_STRING lpModule,
+    _Inout_opt_ PUNICODE_STRING lpResName,
+    _Out_opt_ LPDWORD pbpp,
+    _In_ BOOL bInternal)
 {
     ICONINFO ii;
     PCURICON_OBJECT CurIcon;
