@@ -129,11 +129,14 @@ static NTSTATUS (WINAPI * pNtDeleteKey)(HANDLE);
 static NTSTATUS (WINAPI * pNtCreateKey)( PHANDLE retkey, ACCESS_MASK access, const OBJECT_ATTRIBUTES *attr,
                              ULONG TitleIndex, const UNICODE_STRING *class, ULONG options,
                              PULONG dispos );
+static NTSTATUS (WINAPI * pNtQueryKey)(HANDLE,KEY_INFORMATION_CLASS,PVOID,ULONG,PULONG);
+static NTSTATUS (WINAPI * pNtQueryLicenseValue)(const UNICODE_STRING *,ULONG *,PVOID,ULONG,ULONG *);
 static NTSTATUS (WINAPI * pNtQueryValueKey)(HANDLE,const UNICODE_STRING *,KEY_VALUE_INFORMATION_CLASS,void *,DWORD,DWORD *);
 static NTSTATUS (WINAPI * pNtSetValueKey)(HANDLE, const PUNICODE_STRING, ULONG,
                                ULONG, const void*, ULONG  );
 static NTSTATUS (WINAPI * pNtQueryInformationProcess)(HANDLE,PROCESSINFOCLASS,PVOID,ULONG,PULONG);
 static NTSTATUS (WINAPI * pRtlFormatCurrentUserKeyPath)(PUNICODE_STRING);
+static LONG     (WINAPI * pRtlCompareUnicodeString)(const PUNICODE_STRING,const PUNICODE_STRING,BOOLEAN);
 static BOOLEAN  (WINAPI * pRtlCreateUnicodeString)(PUNICODE_STRING, LPCWSTR);
 static LPVOID   (WINAPI * pRtlReAllocateHeap)(IN PVOID, IN ULONG, IN PVOID, IN ULONG);
 static NTSTATUS (WINAPI * pRtlAppendUnicodeToString)(PUNICODE_STRING, PCWSTR);
@@ -166,7 +169,6 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(RtlCreateUnicodeStringFromAsciiz)
     NTDLL_GET_PROC(RtlCreateUnicodeString)
     NTDLL_GET_PROC(RtlFreeUnicodeString)
-    NTDLL_GET_PROC(NtDeleteValueKey)
     NTDLL_GET_PROC(RtlQueryRegistryValues)
     NTDLL_GET_PROC(RtlCheckRegistryKey)
     NTDLL_GET_PROC(RtlOpenCurrentUser)
@@ -175,11 +177,13 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(NtCreateKey)
     NTDLL_GET_PROC(NtFlushKey)
     NTDLL_GET_PROC(NtDeleteKey)
+    NTDLL_GET_PROC(NtQueryKey)
     NTDLL_GET_PROC(NtQueryValueKey)
     NTDLL_GET_PROC(NtQueryInformationProcess)
     NTDLL_GET_PROC(NtSetValueKey)
     NTDLL_GET_PROC(NtOpenKey)
     NTDLL_GET_PROC(RtlFormatCurrentUserKeyPath)
+    NTDLL_GET_PROC(RtlCompareUnicodeString)
     NTDLL_GET_PROC(RtlReAllocateHeap)
     NTDLL_GET_PROC(RtlAppendUnicodeToString)
     NTDLL_GET_PROC(RtlUnicodeStringToAnsiString)
@@ -188,6 +192,10 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(RtlZeroMemory)
     NTDLL_GET_PROC(RtlpNtQueryValueKey)
     NTDLL_GET_PROC(RtlOpenCurrentUser)
+
+    /* optional functions */
+    pNtQueryLicenseValue = (void *)GetProcAddress(hntdll, "NtQueryLicenseValue");
+
     return TRUE;
 }
 #undef NTDLL_GET_PROC
@@ -640,6 +648,180 @@ static void test_NtDeleteKey(void)
 
     status = pNtDeleteKey(hkey);
     ok(status == STATUS_SUCCESS, "NtDeleteKey Failed: 0x%08x\n", status);
+}
+
+static void test_NtQueryLicenseKey(void)
+{
+    static const WCHAR emptyW[] = {'E','M','P','T','Y',0};
+    UNICODE_STRING name;
+    WORD buffer[32];
+    NTSTATUS status;
+    ULONG type, len;
+    DWORD value;
+
+    if (!pNtQueryLicenseValue)
+    {
+        win_skip("NtQueryLicenseValue not found, skipping tests\n");
+        return;
+    }
+
+    type = 0xdead;
+    len = 0xbeef;
+    memset(&name, 0, sizeof(name));
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    /* test with empty key */
+    pRtlCreateUnicodeStringFromAsciiz(&name, "");
+
+    type = 0xdead;
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(NULL, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    type = 0xdead;
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), NULL);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(&name, NULL, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    type = 0xdead;
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    pRtlFreeUnicodeString(&name);
+
+    /* test with nonexistent licence key */
+    pRtlCreateUnicodeStringFromAsciiz(&name, "Nonexistent-License-Value");
+
+    type = 0xdead;
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(NULL, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    type = 0xdead;
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), NULL);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(&name, NULL, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryLicenseValue returned %08x, expected STATUS_OBJECT_NAME_NOT_FOUND\n", status);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    type = 0xdead;
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryLicenseValue unexpected suceeded\n");
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    pRtlFreeUnicodeString(&name);
+
+    /* test with REG_SZ license key */
+    pRtlCreateUnicodeStringFromAsciiz(&name, "Kernel-MUI-Language-Allowed");
+
+    type = 0xdead;
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(NULL, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    type = 0xdead;
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), NULL);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+
+    type = 0xdead;
+    len = 0;
+    status = pNtQueryLicenseValue(&name, &type, buffer, 0, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryLicenseValue returned %08x, expected STATUS_BUFFER_TOO_SMALL\n", status);
+    ok(type == REG_SZ, "expected type = REG_SZ, got %u\n", type);
+    ok(len == sizeof(emptyW), "expected len = %u, got %u\n", (DWORD)sizeof(emptyW), len);
+
+    len = 0;
+    status = pNtQueryLicenseValue(&name, NULL, buffer, 0, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryLicenseValue returned %08x, expected STATUS_BUFFER_TOO_SMALL\n", status);
+    ok(len == sizeof(emptyW), "expected len = %u, got %u\n", (DWORD)sizeof(emptyW), len);
+
+    type = 0xdead;
+    len = 0;
+    memset(buffer, 0x11, sizeof(buffer));
+    status = pNtQueryLicenseValue(&name, &type, buffer, sizeof(buffer), &len);
+    ok(status == STATUS_SUCCESS, "NtQueryLicenseValue returned %08x, expected STATUS_SUCCESS\n", status);
+    ok(type == REG_SZ, "expected type = REG_SZ, got %u\n", type);
+    ok(len == sizeof(emptyW), "expected len = %u, got %u\n", (DWORD)sizeof(emptyW), len);
+    ok(!memcmp(buffer, emptyW, sizeof(emptyW)), "unexpected buffer content\n");
+
+    type = 0xdead;
+    len = 0;
+    memset(buffer, 0x11, sizeof(buffer));
+    status = pNtQueryLicenseValue(&name, &type, buffer, 2, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryLicenseValue returned %08x, expected STATUS_BUFFER_TOO_SMALL\n", status);
+    ok(type == REG_SZ, "expected type REG_SZ, got %u\n", type);
+    ok(len == sizeof(emptyW), "expected len = %u, got %u\n", (DWORD)sizeof(emptyW), len);
+    ok(buffer[0] == 0x1111, "expected buffer[0] = 0x1111, got %u\n", buffer[0]);
+
+    pRtlFreeUnicodeString(&name);
+
+    /* test with REG_DWORD license key */
+    pRtlCreateUnicodeStringFromAsciiz(&name, "Kernel-MUI-Number-Allowed");
+
+    type = 0xdead;
+    len = 0xbeef;
+    status = pNtQueryLicenseValue(NULL, &type, &value, sizeof(value), &len);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+    ok(len == 0xbeef, "expected unmodified value for len, got %u\n", len);
+
+    type = 0xdead;
+    status = pNtQueryLicenseValue(&name, &type, &value, sizeof(value), NULL);
+    ok(status == STATUS_INVALID_PARAMETER, "NtQueryLicenseValue returned %08x, expected STATUS_INVALID_PARAMETER\n", status);
+    ok(type == 0xdead, "expected unmodified value for type, got %u\n", type);
+
+    type = 0xdead;
+    len = 0;
+    status = pNtQueryLicenseValue(&name, &type, &value, 0, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryLicenseValue returned %08x, expected STATUS_BUFFER_TOO_SMALL\n", status);
+    ok(type == REG_DWORD, "expected type = REG_DWORD, got %u\n", type);
+    ok(len == sizeof(value), "expected len = %u, got %u\n", (DWORD)sizeof(value), len);
+
+    len = 0;
+    status = pNtQueryLicenseValue(&name, NULL, &value, 0, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryLicenseValue returned %08x, expected STATUS_BUFFER_TOO_SMALL\n", status);
+    ok(len == sizeof(value), "expected len = %u, got %u\n", (DWORD)sizeof(value), len);
+
+    type = 0xdead;
+    len = 0;
+    value = 0xdeadbeef;
+    status = pNtQueryLicenseValue(&name, &type, &value, sizeof(value), &len);
+    ok(status == STATUS_SUCCESS, "NtQueryLicenseValue returned %08x, expected STATUS_SUCCESS\n", status);
+    ok(type == REG_DWORD, "expected type = REG_DWORD, got %u\n", type);
+    ok(len == sizeof(value), "expected len = %u, got %u\n", (DWORD)sizeof(value), len);
+    ok(value != 0xdeadbeef, "expected value != 0xdeadbeef\n");
+
+    type = 0xdead;
+    len = 0;
+    status = pNtQueryLicenseValue(&name, &type, &value, 2, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryLicenseValue returned %08x, expected STATUS_BUFFER_TOO_SMALL\n", status);
+    ok(type == REG_DWORD, "expected type REG_DWORD, got %u\n", type);
+    ok(len == sizeof(value), "expected len = %u, got %u\n", (DWORD)sizeof(value), len);
+
+    pRtlFreeUnicodeString(&name);
 }
 
 static void test_RtlpNtQueryValueKey(void)
@@ -1277,6 +1459,51 @@ static void test_long_value_name(void)
     pNtClose(key);
 }
 
+static void test_NtQueryKey(void)
+{
+    HANDLE key;
+    NTSTATUS status;
+    OBJECT_ATTRIBUTES attr;
+    ULONG length, len;
+    KEY_NAME_INFORMATION *info = NULL;
+    UNICODE_STRING str;
+
+    InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
+    status = pNtOpenKey(&key, KEY_READ, &attr);
+    ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08x\n", status);
+
+    status = pNtQueryKey(key, KeyNameInformation, NULL, 0, &length);
+    if (status == STATUS_INVALID_PARAMETER) {
+        win_skip("KeyNameInformation is not supported\n");
+        pNtClose(key);
+        return;
+    }
+    todo_wine ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryKey Failed: 0x%08x\n", status);
+    info = HeapAlloc(GetProcessHeap(), 0, length);
+
+    /* non-zero buffer size, but insufficient */
+    status = pNtQueryKey(key, KeyNameInformation, info, sizeof(*info), &len);
+    ok(status == STATUS_BUFFER_OVERFLOW, "NtQueryKey Failed: 0x%08x\n", status);
+    ok(length == len, "got %d, expected %d\n", len, length);
+    ok(info->NameLength == winetestpath.Length, "got %d, expected %d\n",
+       info->NameLength, winetestpath.Length);
+
+    /* correct buffer size */
+    status = pNtQueryKey(key, KeyNameInformation, info, length, &len);
+    ok(status == STATUS_SUCCESS, "NtQueryKey Failed: 0x%08x\n", status);
+    ok(length == len, "got %d, expected %d\n", len, length);
+
+    str.Buffer = info->Name;
+    str.Length = info->NameLength;
+    ok(pRtlCompareUnicodeString(&winetestpath, &str, TRUE) == 0,
+       "got %s, expected %s\n",
+       wine_dbgstr_wn(str.Buffer, str.Length/sizeof(WCHAR)),
+       wine_dbgstr_wn(winetestpath.Buffer, winetestpath.Length/sizeof(WCHAR)));
+
+    HeapFree(GetProcessHeap(), 0, info);
+    pNtClose(key);
+}
+
 START_TEST(reg)
 {
     static const WCHAR winetest[] = {'\\','W','i','n','e','T','e','s','t',0};
@@ -1297,7 +1524,9 @@ START_TEST(reg)
     test_RtlQueryRegistryValues();
     test_RtlpNtQueryValueKey();
     test_NtFlushKey();
+    test_NtQueryKey();
     test_NtQueryValueKey();
+    test_NtQueryLicenseKey();
     test_long_value_name();
     test_NtDeleteKey();
     test_symlinks();

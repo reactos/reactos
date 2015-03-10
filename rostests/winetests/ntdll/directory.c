@@ -51,7 +51,6 @@ static NTSTATUS (WINAPI *pRtlWow64EnableFsRedirectionEx)( ULONG disable, ULONG *
 
 /* The attribute sets to test */
 static struct testfile_s {
-    BOOL todo;                /* set if it doesn't work on wine yet */
     BOOL attr_done;           /* set if attributes were tested for this file already */
     const DWORD attr;         /* desired attribute */
     const char *name;         /* filename to use */
@@ -60,13 +59,13 @@ static struct testfile_s {
     int nfound;               /* How many were found (expect 1) */
     WCHAR nameW[20];          /* unicode version of name (filled in later) */
 } testfiles[] = {
-    { 0, 0, FILE_ATTRIBUTE_NORMAL,    "n.tmp", NULL, "normal" },
-    { 1, 0, FILE_ATTRIBUTE_HIDDEN,    "h.tmp", NULL, "hidden" },
-    { 1, 0, FILE_ATTRIBUTE_SYSTEM,    "s.tmp", NULL, "system" },
-    { 0, 0, FILE_ATTRIBUTE_DIRECTORY, "d.tmp", NULL, "directory" },
-    { 0, 0, FILE_ATTRIBUTE_DIRECTORY, ".",     NULL, ". directory" },
-    { 0, 0, FILE_ATTRIBUTE_DIRECTORY, "..",    NULL, ".. directory" },
-    { 0, 0, 0, NULL }
+    { 0, FILE_ATTRIBUTE_NORMAL,    "n.tmp", NULL, "normal" },
+    { 0, FILE_ATTRIBUTE_HIDDEN,    "h.tmp", NULL, "hidden" },
+    { 0, FILE_ATTRIBUTE_SYSTEM,    "s.tmp", NULL, "system" },
+    { 0, FILE_ATTRIBUTE_DIRECTORY, "d.tmp", NULL, "directory" },
+    { 0, FILE_ATTRIBUTE_DIRECTORY, ".",     NULL, ". directory" },
+    { 0, FILE_ATTRIBUTE_DIRECTORY, "..",    NULL, ".. directory" },
+    { 0, 0, NULL }
 };
 static const int max_test_dir_size = 20;  /* size of above plus some for .. etc */
 
@@ -147,12 +146,7 @@ static void tally_test_file(FILE_BOTH_DIRECTORY_INFORMATION *dir_info)
         if (namelen != len || memcmp(nameW, testfiles[i].nameW, len*sizeof(WCHAR)))
             continue;
         if (!testfiles[i].attr_done) {
-            if (testfiles[i].todo) {
-                todo_wine
-                ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
-            } else {
-                ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
-            }
+            ok (attrib == (testfiles[i].attr & attribmask), "file %s: expected %s (%x), got %x (is your linux new enough?)\n", testfiles[i].name, testfiles[i].description, testfiles[i].attr, attrib);
             testfiles[i].attr_done = TRUE;
         }
         testfiles[i].nfound++;

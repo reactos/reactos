@@ -835,14 +835,14 @@ static void test_event(void)
     status = pNtOpenEvent(&Event2, GENERIC_ALL, &attr);
     ok( status == STATUS_SUCCESS, "NtOpenEvent failed %08x\n", status );
 
-    status = pNtClose(Event);
+    pNtClose(Event);
 
     status = pNtQueryEvent(Event2, EventBasicInformation, &info, sizeof(info), NULL);
     ok( status == STATUS_SUCCESS, "NtQueryEvent failed %08x\n", status );
     ok( info.EventType == 1 && info.EventState == 0,
         "NtQueryEvent failed, expected 1 0, got %d %d\n", info.EventType, info.EventState );
 
-    status = pNtClose(Event2);
+    pNtClose(Event2);
 }
 
 static const WCHAR keyed_nameW[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s',

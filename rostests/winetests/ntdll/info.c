@@ -737,6 +737,84 @@ static void test_query_processor_power_info(void)
     HeapFree(GetProcessHeap(), 0, ppi);
 }
 
+static void test_query_process_wow64(void)
+{
+    NTSTATUS status;
+    ULONG ReturnLength;
+    ULONG_PTR pbi[2], dummy;
+
+    memset(&dummy, 0xcc, sizeof(dummy));
+
+    /* Do not give a handle and buffer */
+    status = pNtQueryInformationProcess(NULL, ProcessWow64Information, NULL, 0, NULL);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+
+    /* Use a correct info class and buffer size, but still no handle and buffer */
+    status = pNtQueryInformationProcess(NULL, ProcessWow64Information, NULL, sizeof(ULONG_PTR), NULL);
+    ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
+        "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_HANDLE, got %08x\n", status);
+
+    /* Use a correct info class, buffer size and handle, but no buffer */
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information, NULL, sizeof(ULONG_PTR), NULL);
+    ok( status == STATUS_ACCESS_VIOLATION , "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
+
+    /* Use a correct info class, buffer and buffer size, but no handle */
+    pbi[0] = pbi[1] = dummy;
+    status = pNtQueryInformationProcess(NULL, ProcessWow64Information, pbi, sizeof(ULONG_PTR), NULL);
+    ok( status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got %08x\n", status);
+    ok( pbi[0] == dummy, "pbi[0] changed to %lx\n", pbi[0]);
+    ok( pbi[1] == dummy, "pbi[1] changed to %lx\n", pbi[1]);
+
+    /* Use a greater buffer size */
+    pbi[0] = pbi[1] = dummy;
+    status = pNtQueryInformationProcess(NULL, ProcessWow64Information, pbi, sizeof(ULONG_PTR) + 1, NULL);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( pbi[0] == dummy, "pbi[0] changed to %lx\n", pbi[0]);
+    ok( pbi[1] == dummy, "pbi[1] changed to %lx\n", pbi[1]);
+
+    /* Use no ReturnLength */
+    pbi[0] = pbi[1] = dummy;
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information, pbi, sizeof(ULONG_PTR), NULL);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    trace( "Platform is_wow64 %d, ProcessInformation of ProcessWow64Information %lx\n", is_wow64, pbi[0]);
+    ok( is_wow64 == (pbi[0] != 0), "is_wow64 %x, pbi[0] %lx\n", is_wow64, pbi[0]);
+    ok( pbi[0] != dummy, "pbi[0] %lx\n", pbi[0]);
+    ok( pbi[1] == dummy, "pbi[1] changed to %lx\n", pbi[1]);
+    /* Test written size on 64 bit by checking high 32 bit buffer */
+    if (sizeof(ULONG_PTR) > sizeof(DWORD))
+    {
+        DWORD *ptr = (DWORD *)pbi;
+        ok( ptr[1] != (DWORD)dummy, "ptr[1] unchanged!\n");
+    }
+
+    /* Finally some correct calls */
+    pbi[0] = pbi[1] = dummy;
+    ReturnLength = 0xdeadbeef;
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information, pbi, sizeof(ULONG_PTR), &ReturnLength);
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok( is_wow64 == (pbi[0] != 0), "is_wow64 %x, pbi[0] %lx\n", is_wow64, pbi[0]);
+    ok( pbi[1] == dummy, "pbi[1] changed to %lx\n", pbi[1]);
+    ok( ReturnLength == sizeof(ULONG_PTR), "Inconsistent length %d\n", ReturnLength);
+
+    /* Everything is correct except a too small buffer size */
+    pbi[0] = pbi[1] = dummy;
+    ReturnLength = 0xdeadbeef;
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information, pbi, sizeof(ULONG_PTR) - 1, &ReturnLength);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( pbi[0] == dummy, "pbi[0] changed to %lx\n", pbi[0]);
+    ok( pbi[1] == dummy, "pbi[1] changed to %lx\n", pbi[1]);
+    todo_wine ok( ReturnLength == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", ReturnLength);
+
+    /* Everything is correct except a too large buffer size */
+    pbi[0] = pbi[1] = dummy;
+    ReturnLength = 0xdeadbeef;
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessWow64Information, pbi, sizeof(ULONG_PTR) + 1, &ReturnLength);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    ok( pbi[0] == dummy, "pbi[0] changed to %lx\n", pbi[0]);
+    ok( pbi[1] == dummy, "pbi[1] changed to %lx\n", pbi[1]);
+    todo_wine ok( ReturnLength == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", ReturnLength);
+}
+
 static void test_query_process_basic(void)
 {
     NTSTATUS status;
@@ -1713,6 +1791,10 @@ START_TEST(info)
     /* 0x14 ProcessHandleCount */
     trace("Starting test_query_process_handlecount()\n");
     test_query_process_handlecount();
+
+    /* 0x1A ProcessWow64Information */
+    trace("Starting test_query_process_wow64()\n");
+    test_query_process_wow64();
 
     /* 0x1B ProcessImageFileName */
     trace("Starting test_query_process_image_file_name()\n");

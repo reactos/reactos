@@ -62,6 +62,8 @@ static inline USHORT __my_ushort_swap(USHORT s)
 
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;
+static PVOID     (WINAPI *pWinSqmStartSession)(PVOID unknown1, DWORD unknown2, DWORD unknown3);
+static NTSTATUS  (WINAPI *pWinSqmEndSession)(PVOID unknown1);
 static SIZE_T    (WINAPI  *pRtlCompareMemory)(LPCVOID,LPCVOID,SIZE_T);
 static SIZE_T    (WINAPI  *pRtlCompareMemoryUlong)(PULONG, SIZE_T, ULONG);
 static NTSTATUS  (WINAPI  *pRtlDeleteTimer)(HANDLE, HANDLE, HANDLE);
@@ -89,9 +91,14 @@ static IMAGE_BASE_RELOCATION *(WINAPI *pLdrProcessRelocationBlock)(void*,UINT,US
 static CHAR *    (WINAPI *pRtlIpv4AddressToStringA)(const IN_ADDR *, LPSTR);
 static NTSTATUS  (WINAPI *pRtlIpv4AddressToStringExA)(const IN_ADDR *, USHORT, LPSTR, PULONG);
 static NTSTATUS  (WINAPI *pRtlIpv4StringToAddressA)(PCSTR, BOOLEAN, PCSTR *, IN_ADDR *);
+static NTSTATUS  (WINAPI *pRtlIpv4StringToAddressExA)(PCSTR, BOOLEAN, IN_ADDR *, PUSHORT);
 static NTSTATUS  (WINAPI *pLdrAddRefDll)(ULONG, HMODULE);
 static NTSTATUS  (WINAPI *pLdrLockLoaderLock)(ULONG, ULONG*, ULONG_PTR*);
 static NTSTATUS  (WINAPI *pLdrUnlockLoaderLock)(ULONG, ULONG_PTR);
+static NTSTATUS  (WINAPI *pRtlGetCompressionWorkSpaceSize)(USHORT, PULONG, PULONG);
+static NTSTATUS  (WINAPI *pRtlDecompressBuffer)(USHORT, PUCHAR, ULONG, const UCHAR*, ULONG, PULONG);
+static NTSTATUS  (WINAPI *pRtlDecompressFragment)(USHORT, PUCHAR, ULONG, const UCHAR*, ULONG, ULONG, PULONG, PVOID);
+static NTSTATUS  (WINAPI *pRtlCompressBuffer)(USHORT, const UCHAR*, ULONG, PUCHAR, ULONG, ULONG, PULONG, PVOID);
 
 static HMODULE hkernel32 = 0;
 static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
@@ -109,6 +116,8 @@ static void InitFunctionPtrs(void)
     hntdll = LoadLibraryA("ntdll.dll");
     ok(hntdll != 0, "LoadLibrary failed\n");
     if (hntdll) {
+        pWinSqmStartSession = (void *)GetProcAddress(hntdll, "WinSqmStartSession");
+        pWinSqmEndSession = (void *)GetProcAddress(hntdll, "WinSqmEndSession");
 	pRtlCompareMemory = (void *)GetProcAddress(hntdll, "RtlCompareMemory");
 	pRtlCompareMemoryUlong = (void *)GetProcAddress(hntdll, "RtlCompareMemoryUlong");
         pRtlDeleteTimer = (void *)GetProcAddress(hntdll, "RtlDeleteTimer");
@@ -136,9 +145,14 @@ static void InitFunctionPtrs(void)
         pRtlIpv4AddressToStringA = (void *)GetProcAddress(hntdll, "RtlIpv4AddressToStringA");
         pRtlIpv4AddressToStringExA = (void *)GetProcAddress(hntdll, "RtlIpv4AddressToStringExA");
         pRtlIpv4StringToAddressA = (void *)GetProcAddress(hntdll, "RtlIpv4StringToAddressA");
+        pRtlIpv4StringToAddressExA = (void *)GetProcAddress(hntdll, "RtlIpv4StringToAddressExA");
         pLdrAddRefDll = (void *)GetProcAddress(hntdll, "LdrAddRefDll");
         pLdrLockLoaderLock = (void *)GetProcAddress(hntdll, "LdrLockLoaderLock");
         pLdrUnlockLoaderLock = (void *)GetProcAddress(hntdll, "LdrUnlockLoaderLock");
+        pRtlGetCompressionWorkSpaceSize = (void *)GetProcAddress(hntdll, "RtlGetCompressionWorkSpaceSize");
+        pRtlDecompressBuffer = (void *)GetProcAddress(hntdll, "RtlDecompressBuffer");
+        pRtlDecompressFragment = (void *)GetProcAddress(hntdll, "RtlDecompressFragment");
+        pRtlCompressBuffer = (void *)GetProcAddress(hntdll, "RtlCompressBuffer");
     }
     hkernel32 = LoadLibraryA("kernel32.dll");
     ok(hkernel32 != 0, "LoadLibrary failed\n");
@@ -148,6 +162,46 @@ static void InitFunctionPtrs(void)
     strcpy((char*)src_aligned_block, src_src);
     ok(strlen(src) == 15, "Source must be 16 bytes long!\n");
 }
+
+#ifdef __i386__
+const char stdcall3_thunk[] =
+    "\x56"              /* push %esi */
+    "\x89\xE6"          /* mov %esp, %esi */
+    "\xFF\x74\x24\x14"  /* pushl 20(%esp) */
+    "\xFF\x74\x24\x14"  /* pushl 20(%esp) */
+    "\xFF\x74\x24\x14"  /* pushl 20(%esp) */
+    "\xFF\x54\x24\x14"  /* calll 20(%esp) */
+    "\x89\xF0"          /* mov %esi, %eax */
+    "\x29\xE0"          /* sub %esp, %eax */
+    "\x89\xF4"          /* mov %esi, %esp */
+    "\x5E"              /* pop %esi */
+    "\xC2\x10\x00"      /* ret $16 */
+;
+
+static INT (WINAPI *call_stdcall_func3)(PVOID func, PVOID arg0, DWORD arg1, DWORD arg2) = NULL;
+
+static void test_WinSqm(void)
+{
+    INT args;
+
+    if (!pWinSqmStartSession)
+    {
+        win_skip("WinSqmStartSession() is not available\n");
+        return;
+    }
+
+    call_stdcall_func3 = (void*) VirtualAlloc( NULL, sizeof(stdcall3_thunk) - 1, MEM_COMMIT,
+                                               PAGE_EXECUTE_READWRITE );
+    memcpy( call_stdcall_func3, stdcall3_thunk, sizeof(stdcall3_thunk) - 1 );
+
+    args = 3 - call_stdcall_func3( pWinSqmStartSession, NULL, 0, 0 ) / 4;
+    ok(args == 3, "WinSqmStartSession expected to take %d arguments instead of 3\n", args);
+    args = 3 - call_stdcall_func3( pWinSqmEndSession, NULL, 0, 0 ) / 4;
+    ok(args == 1, "WinSqmEndSession expected to take %d arguments instead of 1\n", args);
+
+    VirtualFree( call_stdcall_func3, 0, MEM_RELEASE );
+}
+#endif
 
 #define COMP(str1,str2,cmplen,len) size = pRtlCompareMemory(str1, str2, cmplen); \
   ok(size == len, "Expected %ld, got %ld\n", size, (SIZE_T)len)
@@ -1492,6 +1546,94 @@ static void test_RtlIpv4StringToAddress(void)
     }
 }
 
+static void test_RtlIpv4StringToAddressEx(void)
+{
+    NTSTATUS res;
+    IN_ADDR ip, expected_ip;
+    USHORT port;
+    struct
+    {
+        PCSTR address;
+        NTSTATUS res;
+        int ip[4];
+        USHORT port;
+    } tests[] =
+    {
+        { "",               STATUS_INVALID_PARAMETER,   { -1 },         0xdead },
+        { " ",              STATUS_INVALID_PARAMETER,   { -1 },         0xdead },
+        { "1.1.1.1:",       STATUS_INVALID_PARAMETER,   { 1, 1, 1, 1 }, 0xdead },
+        { "1.1.1.1+",       STATUS_INVALID_PARAMETER,   { 1, 1, 1, 1 }, 0xdead },
+        { "1.1.1.1:1",      STATUS_SUCCESS,             { 1, 1, 1, 1 }, 0x100 },
+        { "0.0.0.0:0",      STATUS_INVALID_PARAMETER,   { 0, 0, 0, 0 }, 0xdead },
+        { "0.0.0.0:1",      STATUS_SUCCESS,             { 0, 0, 0, 0 }, 0x100 },
+        { "1.2.3.4:65535",  STATUS_SUCCESS,             { 1, 2, 3, 4 }, 65535 },
+        { "1.2.3.4:65536",  STATUS_INVALID_PARAMETER,   { 1, 2, 3, 4 }, 0xdead },
+        { "1.2.3.4:0xffff", STATUS_SUCCESS,             { 1, 2, 3, 4 }, 65535 },
+        { "1.2.3.4:0XfFfF", STATUS_SUCCESS,             { 1, 2, 3, 4 }, 65535 },
+        { "1.2.3.4:011064", STATUS_SUCCESS,             { 1, 2, 3, 4 }, 0x3412 },
+        { "1.2.3.4:1234a",  STATUS_INVALID_PARAMETER,   { 1, 2, 3, 4 }, 0xdead },
+        { "1.2.3.4:1234+",  STATUS_INVALID_PARAMETER,   { 1, 2, 3, 4 }, 0xdead },
+        { "1.2.3.4: 1234",  STATUS_INVALID_PARAMETER,   { 1, 2, 3, 4 }, 0xdead },
+        { "1.2.3.4:\t1234", STATUS_INVALID_PARAMETER,   { 1, 2, 3, 4 }, 0xdead },
+    };
+    const int testcount = sizeof(tests) / sizeof(tests[0]);
+    int i, Strict;
+
+    if (!pRtlIpv4StringToAddressExA)
+    {
+        skip("RtlIpv4StringToAddressEx not available\n");
+        return;
+    }
+
+    /* do not crash, and do not touch the ip / port. */
+    ip.S_un.S_addr = 0xabababab;
+    port = 0xdead;
+    res = pRtlIpv4StringToAddressExA(NULL, FALSE, &ip, &port);
+    ok(res == STATUS_INVALID_PARAMETER, "[null address] res = 0x%08x, expected 0x%08x\n", res, STATUS_INVALID_PARAMETER);
+    ok(ip.S_un.S_addr == 0xabababab, "RtlIpv4StringToAddressExA should not touch the ip!, ip == %x\n", ip.S_un.S_addr);
+    ok(port == 0xdead, "RtlIpv4StringToAddressExA should not touch the port!, port == %x\n", port);
+
+    port = 0xdead;
+    res = pRtlIpv4StringToAddressExA("1.1.1.1", FALSE, NULL, &port);
+    ok(res == STATUS_INVALID_PARAMETER, "[null ip] res = 0x%08x, expected 0x%08x\n", res, STATUS_INVALID_PARAMETER);
+    ok(port == 0xdead, "RtlIpv4StringToAddressExA should not touch the port!, port == %x\n", port);
+
+    ip.S_un.S_addr = 0xabababab;
+    port = 0xdead;
+    res = pRtlIpv4StringToAddressExA("1.1.1.1", FALSE, &ip, NULL);
+    ok(res == STATUS_INVALID_PARAMETER, "[null port] res = 0x%08x, expected 0x%08x\n", res, STATUS_INVALID_PARAMETER);
+    ok(ip.S_un.S_addr == 0xabababab, "RtlIpv4StringToAddressExA should not touch the ip!, ip == %x\n", ip.S_un.S_addr);
+    ok(port == 0xdead, "RtlIpv4StringToAddressExA should not touch the port!, port == %x\n", port);
+
+    for (i = 0; i < testcount; i++)
+    {
+        /* Strict is only relevant for the ip address, so make sure that it does not influence the port */
+        for (Strict = 0; Strict < 2; Strict++)
+        {
+            ip.S_un.S_addr = 0xabababab;
+            port = 0xdead;
+            res = pRtlIpv4StringToAddressExA(tests[i].address, Strict, &ip, &port);
+            if (tests[i].ip[0] == -1)
+            {
+                expected_ip.S_un.S_addr = 0xabababab;
+            }
+            else
+            {
+                expected_ip.S_un.S_un_b.s_b1 = tests[i].ip[0];
+                expected_ip.S_un.S_un_b.s_b2 = tests[i].ip[1];
+                expected_ip.S_un.S_un_b.s_b3 = tests[i].ip[2];
+                expected_ip.S_un.S_un_b.s_b4 = tests[i].ip[3];
+            }
+            ok(res == tests[i].res, "[%s] res = 0x%08x, expected 0x%08x\n",
+               tests[i].address, res, tests[i].res);
+            ok(ip.S_un.S_addr == expected_ip.S_un.S_addr, "[%s] ip = %08x, expected %08x\n",
+               tests[i].address, ip.S_un.S_addr, expected_ip.S_un.S_addr);
+            ok(port == tests[i].port, "[%s] port = %u, expected %u\n",
+               tests[i].address, port, tests[i].port);
+        }
+    }
+}
+
 static void test_LdrAddRefDll(void)
 {
     HMODULE mod, mod2;
@@ -1599,9 +1741,744 @@ static void test_LdrLockLoaderLock(void)
     pLdrUnlockLoaderLock(0, magic);
 }
 
+static void test_RtlGetCompressionWorkSpaceSize(void)
+{
+    ULONG compress_workspace, decompress_workspace;
+    NTSTATUS status;
+
+    if (!pRtlGetCompressionWorkSpaceSize)
+    {
+        win_skip("RtlGetCompressionWorkSpaceSize is not available\n");
+        return;
+    }
+
+    status = pRtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_NONE, &compress_workspace,
+                                             &decompress_workspace);
+    ok(status == STATUS_INVALID_PARAMETER, "got wrong status 0x%08x\n", status);
+
+    status = pRtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_DEFAULT, &compress_workspace,
+                                             &decompress_workspace);
+    ok(status == STATUS_INVALID_PARAMETER, "got wrong status 0x%08x\n", status);
+
+    status = pRtlGetCompressionWorkSpaceSize(0xFF, &compress_workspace, &decompress_workspace);
+    ok(status == STATUS_UNSUPPORTED_COMPRESSION, "got wrong status 0x%08x\n", status);
+
+    compress_workspace = decompress_workspace = 0xdeadbeef;
+    status = pRtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_LZNT1, &compress_workspace,
+                                             &decompress_workspace);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(compress_workspace != 0, "got wrong compress_workspace %d\n", compress_workspace);
+    ok(decompress_workspace == 0x1000, "got wrong decompress_workspace %d\n", decompress_workspace);
+
+    compress_workspace = decompress_workspace = 0xdeadbeef;
+    status = pRtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_LZNT1 | COMPRESSION_ENGINE_MAXIMUM,
+                                             &compress_workspace, &decompress_workspace);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(compress_workspace != 0, "got wrong compress_workspace %d\n", compress_workspace);
+    ok(decompress_workspace == 0x1000, "got wrong decompress_workspace %d\n", decompress_workspace);
+}
+
+/* helper for test_RtlDecompressBuffer, checks if a chunk is incomplete */
+static BOOL is_incomplete_chunk(const UCHAR *compressed, ULONG compressed_size, BOOL check_all)
+{
+    ULONG chunk_size;
+    if (compressed_size <= sizeof(WORD))
+        return TRUE;
+    while (compressed_size >= sizeof(WORD))
+    {
+        chunk_size = (*(WORD *)compressed & 0xFFF) + 1;
+        if (compressed_size < sizeof(WORD) + chunk_size)
+            return TRUE;
+        if (!check_all)
+            break;
+        compressed      += sizeof(WORD) + chunk_size;
+        compressed_size -= sizeof(WORD) + chunk_size;
+    }
+    return FALSE;
+}
+
+#define DECOMPRESS_BROKEN_TRUNCATED    1
+#define DECOMPRESS_BROKEN_FRAGMENT0    2
+#define DECOMPRESS_BROKEN_FRAGMENT1    4
+#define DECOMPRESS_BROKEN_FRAGMENT4095 8
+
+static void test_RtlDecompressBuffer(void)
+{
+    static const UCHAR test_multiple_chunks[] = {0x03, 0x30, 'W', 'i', 'n', 'e',
+                                                 0x03, 0x30, 'W', 'i', 'n', 'e'};
+    static const struct
+    {
+        UCHAR compressed[32];
+        ULONG compressed_size;
+        NTSTATUS status;
+        UCHAR uncompressed[32];
+        ULONG uncompressed_size;
+        DWORD broken_flags;
+    }
+    test_lznt[] =
+    {
+        /* 4 byte uncompressed chunk */
+        {
+            {0x03, 0x30, 'W', 'i', 'n', 'e'},
+            6,
+            STATUS_SUCCESS,
+            "Wine",
+            4,
+            DECOMPRESS_BROKEN_FRAGMENT4095 |
+            DECOMPRESS_BROKEN_FRAGMENT1 |
+            DECOMPRESS_BROKEN_FRAGMENT0
+        },
+        /* 8 byte uncompressed chunk */
+        {
+            {0x07, 0x30, 'W', 'i', 'n', 'e', 'W', 'i', 'n', 'e'},
+            10,
+            STATUS_SUCCESS,
+            "WineWine",
+            8,
+            DECOMPRESS_BROKEN_FRAGMENT4095 |
+            DECOMPRESS_BROKEN_FRAGMENT1 |
+            DECOMPRESS_BROKEN_FRAGMENT0
+        },
+        /* 4 byte compressed chunk */
+        {
+            {0x04, 0xB0, 0x00, 'W', 'i', 'n', 'e'},
+            7,
+            STATUS_SUCCESS,
+            "Wine",
+            4
+        },
+        /* 8 byte compressed chunk */
+        {
+            {0x08, 0xB0, 0x00, 'W', 'i', 'n', 'e', 'W', 'i', 'n', 'e'},
+            11,
+            STATUS_SUCCESS,
+            "WineWine",
+            8
+        },
+        /* compressed chunk using backwards reference */
+        {
+            {0x06, 0xB0, 0x10, 'W', 'i', 'n', 'e', 0x01, 0x30},
+            9,
+            STATUS_SUCCESS,
+            "WineWine",
+            8,
+            DECOMPRESS_BROKEN_TRUNCATED
+        },
+        /* compressed chunk using backwards reference with length > bytes_read */
+        {
+            {0x06, 0xB0, 0x10, 'W', 'i', 'n', 'e', 0x05, 0x30},
+            9,
+            STATUS_SUCCESS,
+            "WineWineWine",
+            12,
+            DECOMPRESS_BROKEN_TRUNCATED
+        },
+        /* same as above, but unused bits != 0 */
+        {
+            {0x06, 0xB0, 0x30, 'W', 'i', 'n', 'e', 0x01, 0x30},
+            9,
+            STATUS_SUCCESS,
+            "WineWine",
+            8,
+            DECOMPRESS_BROKEN_TRUNCATED
+        },
+        /* compressed chunk without backwards reference and unused bits != 0 */
+        {
+            {0x01, 0xB0, 0x02, 'W'},
+            4,
+            STATUS_SUCCESS,
+            "W",
+            1
+        },
+        /* termination sequence after first chunk */
+        {
+            {0x03, 0x30, 'W', 'i', 'n', 'e', 0x00, 0x00, 0x03, 0x30, 'W', 'i', 'n', 'e'},
+            14,
+            STATUS_SUCCESS,
+            "Wine",
+            4,
+            DECOMPRESS_BROKEN_FRAGMENT4095 |
+            DECOMPRESS_BROKEN_FRAGMENT1 |
+            DECOMPRESS_BROKEN_FRAGMENT0
+        },
+        /* compressed chunk using backwards reference with 4 bit offset, 12 bit length */
+        {
+            {0x14, 0xB0, 0x00, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+                         0x00, 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                         0x01, 0x01, 0xF0},
+            23,
+            STATUS_SUCCESS,
+            "ABCDEFGHIJKLMNOPABCD",
+            20,
+            DECOMPRESS_BROKEN_TRUNCATED
+        },
+        /* compressed chunk using backwards reference with 5 bit offset, 11 bit length */
+        {
+            {0x15, 0xB0, 0x00, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+                         0x00, 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                         0x02, 'A', 0x00, 0x78},
+            24,
+            STATUS_SUCCESS,
+            "ABCDEFGHIJKLMNOPABCD",
+            20,
+            DECOMPRESS_BROKEN_TRUNCATED
+        },
+        /* uncompressed chunk with invalid magic */
+        {
+            {0x03, 0x20, 'W', 'i', 'n', 'e'},
+            6,
+            STATUS_SUCCESS,
+            "Wine",
+            4,
+            DECOMPRESS_BROKEN_FRAGMENT4095 |
+            DECOMPRESS_BROKEN_FRAGMENT1 |
+            DECOMPRESS_BROKEN_FRAGMENT0
+        },
+        /* compressed chunk with invalid magic */
+        {
+            {0x04, 0xA0, 0x00, 'W', 'i', 'n', 'e'},
+            7,
+            STATUS_SUCCESS,
+            "Wine",
+            4
+        },
+        /* garbage byte after end of buffer */
+        {
+            {0x00, 0xB0, 0x02, 0x01},
+            4,
+            STATUS_SUCCESS,
+            "",
+            0
+        },
+        /* empty compressed chunk */
+        {
+            {0x00, 0xB0, 0x00},
+            3,
+            STATUS_SUCCESS,
+            "",
+            0
+        },
+        /* empty compressed chunk with unused bits != 0 */
+        {
+            {0x00, 0xB0, 0x01},
+            3,
+            STATUS_SUCCESS,
+            "",
+            0
+        },
+        /* empty input buffer */
+        {
+            {0},
+            0,
+            STATUS_BAD_COMPRESSION_BUFFER,
+        },
+        /* incomplete chunk header */
+        {
+            {0x01},
+            1,
+            STATUS_BAD_COMPRESSION_BUFFER
+        },
+        /* incomplete chunk header */
+        {
+            {0x00, 0x30},
+            2,
+            STATUS_BAD_COMPRESSION_BUFFER
+        },
+        /* compressed chunk with invalid backwards reference */
+        {
+            {0x06, 0xB0, 0x10, 'W', 'i', 'n', 'e', 0x05, 0x40},
+            9,
+            STATUS_BAD_COMPRESSION_BUFFER
+        },
+        /* compressed chunk with incomplete backwards reference */
+        {
+            {0x05, 0xB0, 0x10, 'W', 'i', 'n', 'e', 0x05},
+            8,
+            STATUS_BAD_COMPRESSION_BUFFER
+        },
+        /* incomplete uncompressed chunk */
+        {
+            {0x07, 0x30, 'W', 'i', 'n', 'e'},
+            6,
+            STATUS_BAD_COMPRESSION_BUFFER
+        },
+        /* incomplete compressed chunk */
+        {
+            {0x08, 0xB0, 0x00, 'W', 'i', 'n', 'e'},
+            7,
+            STATUS_BAD_COMPRESSION_BUFFER
+        },
+        /* two compressed chunks, the second one incomplete */
+        {
+            {0x00, 0xB0, 0x02, 0x00, 0xB0},
+            5,
+            STATUS_BAD_COMPRESSION_BUFFER,
+        }
+    };
+
+    static UCHAR buf[0x2000], workspace[0x1000];
+    NTSTATUS status, expected_status;
+    ULONG final_size;
+    int i;
+
+    if (!pRtlDecompressBuffer || !pRtlDecompressFragment)
+    {
+        win_skip("RtlDecompressBuffer or RtlDecompressFragment is not available\n");
+        return;
+    }
+
+    /* test compression format / engine */
+    final_size = 0xdeadbeef;
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_NONE, buf, sizeof(buf) - 1, test_lznt[0].compressed,
+                                  test_lznt[0].compressed_size, &final_size);
+    ok(status == STATUS_INVALID_PARAMETER, "got wrong status 0x%08x\n", status);
+    ok(final_size == 0xdeadbeef, "got wrong final_size %d\n", final_size);
+
+    final_size = 0xdeadbeef;
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_DEFAULT, buf, sizeof(buf) - 1, test_lznt[0].compressed,
+                                  test_lznt[0].compressed_size, &final_size);
+    ok(status == STATUS_INVALID_PARAMETER, "got wrong status 0x%08x\n", status);
+    ok(final_size == 0xdeadbeef, "got wrong final_size %d\n", final_size);
+
+    final_size = 0xdeadbeef;
+    status = pRtlDecompressBuffer(0xFF, buf, sizeof(buf) - 1, test_lznt[0].compressed,
+                                  test_lznt[0].compressed_size, &final_size);
+    ok(status == STATUS_UNSUPPORTED_COMPRESSION, "got wrong status 0x%08x\n", status);
+    ok(final_size == 0xdeadbeef, "got wrong final_size %d\n", final_size);
+
+    /* regular tests for RtlDecompressBuffer */
+    for (i = 0; i < sizeof(test_lznt) / sizeof(test_lznt[0]); i++)
+    {
+        trace("Running test %d (compressed_size=%d, compressed_size=%d, status=%d)\n",
+              i, test_lznt[i].compressed_size, test_lznt[i].compressed_size, test_lznt[i].status);
+
+        /* test with very big buffer */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
+                                      test_lznt[i].compressed_size, &final_size);
+        ok(status == test_lznt[i].status, "%d: got wrong status 0x%08x\n", i, status);
+        if (!status)
+        {
+            ok(final_size == test_lznt[i].uncompressed_size,
+               "%d: got wrong final_size %d\n", i, final_size);
+            ok(!memcmp(buf, test_lznt[i].uncompressed, test_lznt[i].uncompressed_size),
+               "%d: got wrong decoded data\n", i);
+            ok(buf[test_lznt[i].uncompressed_size] == 0x11,
+               "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size);
+        }
+
+        /* test that modifier for compression engine is ignored */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1 | COMPRESSION_ENGINE_MAXIMUM, buf, sizeof(buf),
+                                      test_lznt[i].compressed, test_lznt[i].compressed_size, &final_size);
+        ok(status == test_lznt[i].status, "%d: got wrong status 0x%08x\n", i, status);
+        if (!status)
+        {
+            ok(final_size == test_lznt[i].uncompressed_size,
+               "%d: got wrong final_size %d\n", i, final_size);
+            ok(!memcmp(buf, test_lznt[i].uncompressed, test_lznt[i].uncompressed_size),
+               "%d: got wrong decoded data\n", i);
+            ok(buf[test_lznt[i].uncompressed_size] == 0x11,
+               "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size);
+        }
+
+        /* test with expected output size */
+        if (test_lznt[i].uncompressed_size > 0)
+        {
+            final_size = 0xdeadbeef;
+            memset(buf, 0x11, sizeof(buf));
+            status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, test_lznt[i].uncompressed_size,
+                                          test_lznt[i].compressed, test_lznt[i].compressed_size, &final_size);
+            ok(status == test_lznt[i].status, "%d: got wrong status 0x%08x\n", i, status);
+            if (!status)
+            {
+                ok(final_size == test_lznt[i].uncompressed_size,
+                   "%d: got wrong final_size %d\n", i, final_size);
+                ok(!memcmp(buf, test_lznt[i].uncompressed, test_lznt[i].uncompressed_size),
+                   "%d: got wrong decoded data\n", i);
+                ok(buf[test_lznt[i].uncompressed_size] == 0x11,
+                   "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size);
+            }
+        }
+
+        /* test with smaller output size */
+        if (test_lznt[i].uncompressed_size > 1)
+        {
+            final_size = 0xdeadbeef;
+            memset(buf, 0x11, sizeof(buf));
+            status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, test_lznt[i].uncompressed_size - 1,
+                                          test_lznt[i].compressed, test_lznt[i].compressed_size, &final_size);
+            ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
+               (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_TRUNCATED)), "%d: got wrong status 0x%08x\n", i, status);
+            if (!status)
+            {
+                ok(final_size == test_lznt[i].uncompressed_size - 1,
+                   "%d: got wrong final_size %d\n", i, final_size);
+                ok(!memcmp(buf, test_lznt[i].uncompressed, test_lznt[i].uncompressed_size - 1),
+                   "%d: got wrong decoded data\n", i);
+                ok(buf[test_lznt[i].uncompressed_size - 1] == 0x11,
+                   "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size - 1);
+            }
+        }
+
+        /* test with zero output size */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 0, test_lznt[i].compressed,
+                                      test_lznt[i].compressed_size, &final_size);
+        if (is_incomplete_chunk(test_lznt[i].compressed, test_lznt[i].compressed_size, FALSE))
+        {
+            ok(status == STATUS_BAD_COMPRESSION_BUFFER, "%d: got wrong status 0x%08x\n", i, status);
+        }
+        else
+        {
+            ok(status == STATUS_SUCCESS, "%d: got wrong status 0x%08x\n", i, status);
+            ok(final_size == 0, "%d: got wrong final_size %d\n", i, final_size);
+            ok(buf[0] == 0x11, "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size);
+        }
+
+        /* test RtlDecompressBuffer with offset = 0 */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
+                                        test_lznt[i].compressed_size, 0, &final_size, workspace);
+        ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT0)), "%d: got wrong status 0x%08x\n", i, status);
+        if (!status)
+        {
+            ok(final_size == test_lznt[i].uncompressed_size,
+               "%d: got wrong final_size %d\n", i, final_size);
+            ok(!memcmp(buf, test_lznt[i].uncompressed, test_lznt[i].uncompressed_size),
+               "%d: got wrong decoded data\n", i);
+            ok(buf[test_lznt[i].uncompressed_size] == 0x11,
+               "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size);
+        }
+
+        /* test RtlDecompressBuffer with offset = 1 */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
+                                        test_lznt[i].compressed_size, 1, &final_size, workspace);
+        ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT1)), "%d: got wrong status 0x%08x\n", i, status);
+        if (!status)
+        {
+            if (test_lznt[i].uncompressed_size == 0)
+            {
+                todo_wine
+                ok(final_size == 4095,
+                   "%d: got wrong final size %d\n", i, final_size);
+                /* Buffer doesn't contain any useful value on Windows */
+                ok(buf[4095] == 0x11,
+                   "%d: buf[4095] overwritten\n", i);
+            }
+            else
+            {
+                ok(final_size == test_lznt[i].uncompressed_size - 1,
+                   "%d: got wrong final_size %d\n", i, final_size);
+                ok(!memcmp(buf, test_lznt[i].uncompressed + 1, test_lznt[i].uncompressed_size - 1),
+                   "%d: got wrong decoded data\n", i);
+                ok(buf[test_lznt[i].uncompressed_size - 1] == 0x11,
+                   "%d: buf[%d] overwritten\n", i, test_lznt[i].uncompressed_size - 1);
+            }
+        }
+
+        /* test RtlDecompressBuffer with offset = 4095 */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
+                                        test_lznt[i].compressed_size, 4095, &final_size, workspace);
+        ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT4095)), "%d: got wrong status 0x%08x\n", i, status);
+        if (!status)
+        {
+            todo_wine
+            ok(final_size == 1,
+               "%d: got wrong final size %d\n", i, final_size);
+            todo_wine
+            ok(buf[0] == 0,
+               "%d: padding is not zero\n", i);
+            ok(buf[1] == 0x11,
+               "%d: buf[1] overwritten\n", i);
+        }
+
+        /* test RtlDecompressBuffer with offset = 4096 */
+        final_size = 0xdeadbeef;
+        memset(buf, 0x11, sizeof(buf));
+        status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
+                                        test_lznt[i].compressed_size, 4096, &final_size, workspace);
+        expected_status = is_incomplete_chunk(test_lznt[i].compressed, test_lznt[i].compressed_size, TRUE) ?
+                          test_lznt[i].status : STATUS_SUCCESS;
+        ok(status == expected_status, "%d: got wrong status 0x%08x, expected 0x%08x\n", i, status, expected_status);
+        if (!status)
+        {
+            ok(final_size == 0,
+               "%d: got wrong final size %d\n", i, final_size);
+            ok(buf[0] == 0x11,
+               "%d: buf[4096] overwritten\n", i);
+        }
+    }
+
+    /* test decoding of multiple chunks with pRtlDecompressBuffer */
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_multiple_chunks,
+                                  sizeof(test_multiple_chunks), &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4100, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "Wine", 4), "got wrong decoded data at offset 0\n");
+        ok(buf[4] == 0 && buf[4095] == 0, "padding is not zero\n");
+        ok(!memcmp(buf + 4096, "Wine", 4), "got wrong decoded data at offset 4096\n");
+        ok(buf[4100] == 0x11, "buf[4100] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 4097, test_multiple_chunks,
+                                  sizeof(test_multiple_chunks), &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4097, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "Wine", 4), "got wrong decoded data at offset 0\n");
+        ok(buf[4] == 0 && buf[4095] == 0, "padding is not zero\n");
+        ok(buf[4096], "got wrong decoded data at offset 4096\n");
+        ok(buf[4097] == 0x11, "buf[4097] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 4096, test_multiple_chunks,
+                                  sizeof(test_multiple_chunks), &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "Wine", 4), "got wrong decoded data at offset 0\n");
+        ok(buf[4] == 0x11, "buf[4] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 4, test_multiple_chunks,
+                                  sizeof(test_multiple_chunks), &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "Wine", 4), "got wrong decoded data at offset 0\n");
+        ok(buf[4] == 0x11, "buf[4] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 3, test_multiple_chunks,
+                                  sizeof(test_multiple_chunks), &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 3, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "Wine", 3), "got wrong decoded data at offset 0\n");
+        ok(buf[3] == 0x11, "buf[3] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 0, test_multiple_chunks,
+                                  sizeof(test_multiple_chunks), &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 0, "got wrong final_size %d\n", final_size);
+        ok(buf[0] == 0x11, "buf[0] overwritten\n");
+    }
+
+    /* test multiple chunks in combination with RtlDecompressBuffer and offset=1 */
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 1, &final_size, workspace);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4099, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "ine", 3), "got wrong decoded data at offset 0\n");
+        ok(buf[3] == 0 && buf[4094] == 0, "padding is not zero\n");
+        ok(!memcmp(buf + 4095, "Wine", 4), "got wrong decoded data at offset 4095\n");
+        ok(buf[4099] == 0x11, "buf[4099] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, 4096, test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 1, &final_size, workspace);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4096, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "ine", 3), "got wrong decoded data at offset 0\n");
+        ok(buf[3] == 0 && buf[4094] == 0, "padding is not zero\n");
+        ok(buf[4095] == 'W', "got wrong decoded data at offset 4095\n");
+        ok(buf[4096] == 0x11, "buf[4096] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, 4095, test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 1, &final_size, workspace);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 3, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "ine", 3), "got wrong decoded data at offset 0\n");
+        ok(buf[4] == 0x11, "buf[4] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, 3, test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 1, &final_size, workspace);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 3, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "ine", 3), "got wrong decoded data at offset 0\n");
+        ok(buf[3] == 0x11, "buf[3] overwritten\n");
+    }
+
+    /* test multiple chunks in combination with RtlDecompressBuffer and offset=4 */
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 4, &final_size, workspace);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4096, "got wrong final_size %d\n", final_size);
+        ok(buf[0] == 0 && buf[4091] == 0, "padding is not zero\n");
+        ok(!memcmp(buf + 4092, "Wine", 4), "got wrong decoded data at offset 4092\n");
+        ok(buf[4096] == 0x11, "buf[4096] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 4095, &final_size, workspace);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 5, "got wrong final_size %d\n", final_size);
+        ok(buf[0] == 0, "padding is not zero\n");
+        ok(!memcmp(buf + 1, "Wine", 4), "got wrong decoded data at offset 1\n");
+        ok(buf[5] == 0x11, "buf[5] overwritten\n");
+    }
+
+    final_size = 0xdeadbeef;
+    memset(buf, 0x11, sizeof(buf));
+    status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_multiple_chunks,
+                                    sizeof(test_multiple_chunks), 4096, &final_size, workspace);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
+    if (!status)
+    {
+        ok(final_size == 4, "got wrong final_size %d\n", final_size);
+        ok(!memcmp(buf, "Wine", 4), "got wrong decoded data at offset 0\n");
+        ok(buf[4] == 0x11, "buf[4] overwritten\n");
+    }
+
+}
+
+static void test_RtlCompressBuffer(void)
+{
+    ULONG compress_workspace, decompress_workspace;
+    static const UCHAR test_buffer[] = "WineWineWine";
+    static UCHAR buf1[0x1000], buf2[0x1000], *workspace;
+    ULONG final_size, buf_size;
+    NTSTATUS status;
+
+    if (!pRtlCompressBuffer || !pRtlGetCompressionWorkSpaceSize)
+    {
+        win_skip("RtlCompressBuffer or RtlGetCompressionWorkSpaceSize is not available\n");
+        return;
+    }
+
+    compress_workspace = decompress_workspace = 0xdeadbeef;
+    status = pRtlGetCompressionWorkSpaceSize(COMPRESSION_FORMAT_LZNT1, &compress_workspace,
+                                             &decompress_workspace);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(compress_workspace != 0, "got wrong compress_workspace %d\n", compress_workspace);
+
+    workspace = HeapAlloc( GetProcessHeap(), 0, compress_workspace );
+    ok(workspace != NULL, "HeapAlloc failed %x\n", GetLastError());
+
+    /* test compression format / engine */
+    final_size = 0xdeadbeef;
+    status = pRtlCompressBuffer(COMPRESSION_FORMAT_NONE, test_buffer, sizeof(test_buffer),
+                                buf1, sizeof(buf1) - 1, 4096, &final_size, workspace);
+    ok(status == STATUS_INVALID_PARAMETER, "got wrong status 0x%08x\n", status);
+    ok(final_size == 0xdeadbeef, "got wrong final_size %d\n", final_size);
+
+    final_size = 0xdeadbeef;
+    status = pRtlCompressBuffer(COMPRESSION_FORMAT_DEFAULT, test_buffer, sizeof(test_buffer),
+                                buf1, sizeof(buf1) - 1, 4096, &final_size, workspace);
+    ok(status == STATUS_INVALID_PARAMETER, "got wrong status 0x%08x\n", status);
+    ok(final_size == 0xdeadbeef, "got wrong final_size %d\n", final_size);
+
+    final_size = 0xdeadbeef;
+    status = pRtlCompressBuffer(0xFF, test_buffer, sizeof(test_buffer),
+                                buf1, sizeof(buf1) - 1, 4096, &final_size, workspace);
+    ok(status == STATUS_UNSUPPORTED_COMPRESSION, "got wrong status 0x%08x\n", status);
+    ok(final_size == 0xdeadbeef, "got wrong final_size %d\n", final_size);
+
+    /* test compression */
+    final_size = 0xdeadbeef;
+    memset(buf1, 0x11, sizeof(buf1));
+    status = pRtlCompressBuffer(COMPRESSION_FORMAT_LZNT1, test_buffer, sizeof(test_buffer),
+                                buf1, sizeof(buf1), 4096, &final_size, workspace);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok((*(WORD *)buf1 & 0x7000) == 0x3000, "no chunk signature found %04x\n", *(WORD *)buf1);
+    buf_size = final_size;
+    todo_wine
+    ok(final_size < sizeof(test_buffer), "got wrong final_size %d\n", final_size);
+
+    /* test decompression */
+    final_size = 0xdeadbeef;
+    memset(buf2, 0x11, sizeof(buf2));
+    status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf2, sizeof(buf2),
+                                  buf1, buf_size, &final_size);
+    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(final_size == sizeof(test_buffer), "got wrong final_size %d\n", final_size);
+    ok(!memcmp(buf2, test_buffer, sizeof(test_buffer)), "got wrong decoded data\n");
+    ok(buf2[sizeof(test_buffer)] == 0x11, "buf[%u] overwritten\n", (DWORD)sizeof(test_buffer));
+
+    /* buffer too small */
+    final_size = 0xdeadbeef;
+    memset(buf1, 0x11, sizeof(buf1));
+    status = pRtlCompressBuffer(COMPRESSION_FORMAT_LZNT1, test_buffer, sizeof(test_buffer),
+                                buf1, 4, 4096, &final_size, workspace);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "got wrong status 0x%08x\n", status);
+
+    HeapFree(GetProcessHeap(), 0, workspace);
+}
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
+
+#ifdef __i386__
+    test_WinSqm();
+#else
+    skip("stdcall-style parameter checks are not supported on this platform.\n");
+#endif
 
     test_RtlCompareMemory();
     test_RtlCompareMemoryUlong();
@@ -1623,6 +2500,10 @@ START_TEST(rtl)
     test_RtlIpv4AddressToString();
     test_RtlIpv4AddressToStringEx();
     test_RtlIpv4StringToAddress();
+    test_RtlIpv4StringToAddressEx();
     test_LdrAddRefDll();
     test_LdrLockLoaderLock();
+    test_RtlGetCompressionWorkSpaceSize();
+    test_RtlDecompressBuffer();
+    test_RtlCompressBuffer();
 }

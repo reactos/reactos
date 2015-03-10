@@ -1083,8 +1083,8 @@ static void test_atoi64(void)
 	result = p_atoi64(str2longlong[test_num].str);
         if (str2longlong[test_num].overflow)
             ok(result == str2longlong[test_num].value ||
-               (result == (str2longlong[test_num].overflow == -1) ?
-                ULL(0x80000000,0x00000000) : ULL(0x7fffffff,0xffffffff)),
+               (result == ((str2longlong[test_num].overflow == -1) ?
+                ULL(0x80000000,0x00000000) : ULL(0x7fffffff,0xffffffff))),
                "(test %d): call failed: _atoi64(\"%s\") has result 0x%x%08x, expected: 0x%x%08x\n",
                test_num, str2longlong[test_num].str, (DWORD)(result >> 32), (DWORD)result,
                (DWORD)(str2longlong[test_num].value >> 32), (DWORD)str2longlong[test_num].value);
@@ -1108,8 +1108,8 @@ static void test_wtoi64(void)
 	result = p_wtoi64(uni.Buffer);
         if (str2longlong[test_num].overflow)
             ok(result == str2longlong[test_num].value ||
-               (result == (str2longlong[test_num].overflow == -1) ?
-                ULL(0x80000000,0x00000000) : ULL(0x7fffffff,0xffffffff)),
+               (result == ((str2longlong[test_num].overflow == -1) ?
+                ULL(0x80000000,0x00000000) : ULL(0x7fffffff,0xffffffff))),
                "(test %d): call failed: _atoi64(\"%s\") has result 0x%x%08x, expected: 0x%x%08x\n",
                test_num, str2longlong[test_num].str, (DWORD)(result >> 32), (DWORD)result,
                (DWORD)(str2longlong[test_num].value >> 32), (DWORD)str2longlong[test_num].value);
