@@ -206,12 +206,13 @@ NtGdiEngCreatePalette(
     return NULL;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiEngDeleteClip(
     CLIPOBJ *pco)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 BOOL
@@ -223,12 +224,13 @@ NtGdiEngDeletePalette(
     return FALSE;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiEngDeletePath(
     IN PATHOBJ *ppo)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 BOOL
@@ -431,7 +433,7 @@ NtGdiEngTransparentBlt(
     return FALSE;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiFONTOBJ_vGetInfo(
     IN FONTOBJ *pfo,
@@ -439,6 +441,7 @@ NtGdiFONTOBJ_vGetInfo(
     OUT FONTINFO *pfi)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 XFORMOBJ*
@@ -537,13 +540,14 @@ NtGdiHT_Get8BPPFormatPalette(
     return FALSE;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vGetBounds(
     IN PATHOBJ *ppo,
     OUT PRECTFX prectfx)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 BOOL
@@ -556,15 +560,16 @@ NtGdiPATHOBJ_bEnum(
     return FALSE;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vEnumStart(
     IN PATHOBJ *ppo)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vEnumStartClipLines(
     IN PATHOBJ *ppo,
@@ -573,6 +578,7 @@ NtGdiPATHOBJ_vEnumStartClipLines(
     IN LINEATTRS *pla)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 BOOL
@@ -620,12 +626,13 @@ NtGdiSTROBJ_bGetAdvanceWidths(
     return FALSE;
 }
 
-VOID
+NTSTATUS
 APIENTRY
 NtGdiSTROBJ_vEnumStart(
     IN STROBJ *pstro)
 {
     UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 DWORD
@@ -643,8 +650,8 @@ NtGdiXFORMOBJ_bApplyXform(
     IN XFORMOBJ *pxo,
     IN ULONG iMode,
     IN ULONG cPoints,
-    IN  PVOID pvIn,
-    OUT PVOID pvOut)
+    _In_reads_(cPoints) PPOINTL pptIn,
+    _Out_writes_(cPoints) PPOINTL pptOut)
 {
     UNIMPLEMENTED;
     return FALSE;

@@ -105,14 +105,13 @@ IntGdiCleanDC(HDC hDC)
     return TRUE;
 }
 
-
 BOOL
 APIENTRY
 NtGdiResetDC(
     IN HDC hdc,
     IN LPDEVMODEW pdm,
     OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2,
+    IN OPTIONAL DRIVER_INFO_2W *pDriverInfo2,
     OUT VOID *ppUMdhpdev)
 {
     UNIMPLEMENTED;

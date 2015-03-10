@@ -679,7 +679,7 @@ NtGdiOpenDCW(
     ULONG iType,
     BOOL bDisplay,
     HANDLE hspool,
-    VOID *pDriverInfo2,
+    DRIVER_INFO_2W *pDriverInfo2,
     VOID *pUMdhpdev)
 {
     UNICODE_STRING ustrDevice;

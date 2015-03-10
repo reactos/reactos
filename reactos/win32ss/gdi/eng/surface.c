@@ -606,12 +606,15 @@ EngLockSurface(
     return psurf ? &psurf->SurfObj : NULL;
 }
 
-VOID
+__kernel_entry
+NTSTATUS
 APIENTRY
-NtGdiEngUnlockSurface(IN SURFOBJ *pso)
+NtGdiEngUnlockSurface(
+    _In_ SURFOBJ *pso)
 {
     UNIMPLEMENTED;
     ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 VOID
