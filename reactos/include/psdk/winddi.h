@@ -1581,10 +1581,13 @@ PATHOBJ*
 APIENTRY
 EngCreatePath(VOID);
 
+__drv_allocatesMem(Mem)
+_Post_writable_byte_size_(sizeof(ERESOURCE))
 ENGAPI
 HSEMAPHORE
 APIENTRY
-EngCreateSemaphore(VOID);
+EngCreateSemaphore(
+    VOID);
 
 /* EngCreateWnd.fl constants */
 #define WO_RGN_CLIENT_DELTA               0x00000001
@@ -1667,13 +1670,14 @@ ENGAPI
 VOID
 APIENTRY
 EngDeleteSafeSemaphore(
-    _Inout_ ENGSAFESEMAPHORE *pssem);
+    _Inout_ _Post_invalid_ ENGSAFESEMAPHORE *pssem);
 
+_Requires_lock_not_held_(*hsem)
 ENGAPI
 VOID
 APIENTRY
 EngDeleteSemaphore(
-    _In_ _Post_ptr_invalid_ HSEMAPHORE hsem);
+    _Inout_ __drv_freesMem(Mem) HSEMAPHORE hsem);
 
 ENGAPI
 BOOL
@@ -2302,11 +2306,14 @@ APIENTRY
 EngReadStateEvent(
     _In_ PEVENT pEvent);
 
+_Requires_lock_held_(*hsem)
+_Releases_lock_(*hsem)
+_Releases_lock_(_Global_critical_region_)
 ENGAPI
 VOID
 APIENTRY
 EngReleaseSemaphore(
-    _In_ HSEMAPHORE hsem);
+    _Inout_ HSEMAPHORE hsem);
 
 #if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -3303,11 +3310,14 @@ EngRenderHint(
     _In_ SIZE_T Length,
     _In_reads_bytes_opt_(Length) PVOID Data);
 
+_Requires_lock_not_held_(*hsem)
+_Acquires_exclusive_lock_(*hsem)
+_Acquires_lock_(_Global_critical_region_)
 ENGAPI
 VOID
 APIENTRY
-EngAcquireSemaphoreShared(
-    _In_ HSEMAPHORE hsem);
+EngAcquireSemaphore(
+    _Inout_ HSEMAPHORE hsem);
 
 ENGAPI
 BOOL
@@ -3315,11 +3325,14 @@ APIENTRY
 EngAcquireSemaphoreNoWait(
     _In_ HSEMAPHORE hsem);
 
+_Acquires_lock_(_Global_critical_region_)
+_Requires_lock_not_held_(*hsem)
+_Acquires_shared_lock_(*hsem)
 ENGAPI
-BOOL
-APIENTRY
-EngAcquireSemaphoreSharedNoWait(
-    _In_ HSEMAPHORE hsem);
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    _Inout_ HSEMAPHORE hsem);
 
 ENGAPI
 BOOL

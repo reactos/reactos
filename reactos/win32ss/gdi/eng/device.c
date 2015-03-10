@@ -21,7 +21,7 @@ static ULONG giDevNum = 1;
 INIT_FUNCTION
 NTSTATUS
 NTAPI
-InitDeviceImpl()
+InitDeviceImpl(VOID)
 {
     ghsemGraphicsDeviceList = EngCreateSemaphore();
     if (!ghsemGraphicsDeviceList)
@@ -34,10 +34,10 @@ InitDeviceImpl()
 PGRAPHICS_DEVICE
 NTAPI
 EngpRegisterGraphicsDevice(
-    PUNICODE_STRING pustrDeviceName,
-    PUNICODE_STRING pustrDiplayDrivers,
-    PUNICODE_STRING pustrDescription,
-    PDEVMODEW pdmDefault)
+    _In_ PUNICODE_STRING pustrDeviceName,
+    _In_ PUNICODE_STRING pustrDiplayDrivers,
+    _In_ PUNICODE_STRING pustrDescription,
+    _In_ PDEVMODEW pdmDefault)
 {
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVICE_OBJECT pDeviceObject;
@@ -259,9 +259,9 @@ EngpRegisterGraphicsDevice(
 PGRAPHICS_DEVICE
 NTAPI
 EngpFindGraphicsDevice(
-    PUNICODE_STRING pustrDevice,
-    ULONG iDevNum,
-    DWORD dwFlags)
+    _In_opt_ PUNICODE_STRING pustrDevice,
+    _In_ ULONG iDevNum,
+    _In_ DWORD dwFlags)
 {
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
@@ -305,12 +305,12 @@ EngpFindGraphicsDevice(
 static
 NTSTATUS
 EngpFileIoRequest(
-    PFILE_OBJECT pFileObject,
-    ULONG ulMajorFunction,
-    LPVOID lpBuffer,
-    SIZE_T nBufferSize,
-    ULONGLONG ullStartOffset,
-    OUT PULONG_PTR lpInformation)
+    _In_ PFILE_OBJECT pFileObject,
+    _In_ ULONG ulMajorFunction,
+    _In_reads_(nBufferSize) PVOID lpBuffer,
+    _In_ SIZE_T nBufferSize,
+    _In_ ULONGLONG ullStartOffset,
+    _Out_ PULONG_PTR lpInformation)
 {
     PDEVICE_OBJECT pDeviceObject;
     KEVENT Event;
@@ -363,29 +363,36 @@ EngpFileIoRequest(
 VOID
 APIENTRY
 EngFileWrite(
-    IN PFILE_OBJECT pFileObject,
-    IN PVOID lpBuffer,
-    IN SIZE_T nLength,
-    IN PSIZE_T lpBytesWritten)
+    _In_ PFILE_OBJECT pFileObject,
+    _In_reads_(nLength) PVOID lpBuffer,
+    _In_ SIZE_T nLength,
+    _Out_ PSIZE_T lpBytesWritten)
 {
-    EngpFileIoRequest(pFileObject,
-                      IRP_MJ_WRITE,
-                      lpBuffer,
-                      nLength,
-                      0,
-                      lpBytesWritten);
+    NTSTATUS status;
+
+    status = EngpFileIoRequest(pFileObject,
+                               IRP_MJ_WRITE,
+                               lpBuffer,
+                               nLength,
+                               0,
+                               lpBytesWritten);
+    if (!NT_SUCCESS(status))
+    {
+        *lpBytesWritten = 0;
+    }
 }
 
+_Success_(return>=0)
 NTSTATUS
 APIENTRY
 EngFileIoControl(
-    IN PFILE_OBJECT pFileObject,
-    IN DWORD dwIoControlCode,
-    IN PVOID lpInBuffer,
-    IN SIZE_T nInBufferSize,
-    OUT PVOID lpOutBuffer,
-    IN SIZE_T nOutBufferSize,
-    OUT PULONG_PTR lpInformation)
+    _In_ PFILE_OBJECT pFileObject,
+    _In_ DWORD dwIoControlCode,
+    _In_reads_(nInBufferSize) PVOID lpInBuffer,
+    _In_ SIZE_T nInBufferSize,
+    _Out_writes_(nOutBufferSize) PVOID lpOutBuffer,
+    _In_ SIZE_T nOutBufferSize,
+    _Out_ PULONG_PTR lpInformation)
 {
     PDEVICE_OBJECT pDeviceObject;
     KEVENT Event;
