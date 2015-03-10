@@ -538,7 +538,7 @@ typedef struct _DRVFN {
 #define DDI_DRIVER_VERSION_NT5_01         0x00030100
 #define DDI_DRIVER_VERSION_NT5_01_SP1     0x00030101
 
-typedef struct _DRVENABLEDATA {
+typedef struct tagDRVENABLEDATA {
   ULONG  iDriverVersion;
   ULONG  c;
   DRVFN  *pdrvfn;
@@ -2351,8 +2351,7 @@ ENGAPI
 BOOL
 APIENTRY
 EngRestoreFloatingPointState(
-    _In_reads_(_Inexpressible_(statesize))
-    PVOID pBuffer);
+    _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer);
 
 _Check_return_
 _Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
