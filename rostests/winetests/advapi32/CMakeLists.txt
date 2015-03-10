@@ -14,6 +14,11 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(advapi32_winetest ${SOURCE})
+
+if(NOT MSVC)
+    add_target_compile_flags(advapi32_winetest "-Wno-format")
+endif()
+
 set_module_type(advapi32_winetest win32cui)
 add_importlibs(advapi32_winetest advapi32 ole32 msvcrt kernel32)
 add_cd_file(TARGET advapi32_winetest DESTINATION reactos/bin FOR all)

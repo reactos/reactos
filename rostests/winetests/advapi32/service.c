@@ -1401,8 +1401,8 @@ static void test_enum_svc(void)
         SERVICE_STATUS status = services[i].ServiceStatus;
 
         /* lpServiceName and lpDisplayName should always be filled */
-        ok(lstrlenA(services[i].lpServiceName) > 0, "Expected a service name\n");
-        ok(lstrlenA(services[i].lpDisplayName) > 0, "Expected a display name\n");
+        ok(services[i].lpServiceName[0], "Expected a service name\n");
+        ok(services[i].lpDisplayName[0], "Expected a display name\n");
 
         /* Decrement the counters to see if the functions calls return the same
          * numbers as the contents of these structures.
@@ -1704,8 +1704,8 @@ static void test_enum_svc(void)
         SERVICE_STATUS_PROCESS status = exservices[i].ServiceStatusProcess;
 
         /* lpServiceName and lpDisplayName should always be filled */
-        ok(lstrlenA(exservices[i].lpServiceName) > 0, "Expected a service name\n");
-        ok(lstrlenA(exservices[i].lpDisplayName) > 0, "Expected a display name\n");
+        ok(exservices[i].lpServiceName[0], "Expected a service name\n");
+        ok(exservices[i].lpDisplayName[0], "Expected a display name\n");
 
         /* Decrement the counters to see if the functions calls return the
          * same numbers as the contents of these structures.
