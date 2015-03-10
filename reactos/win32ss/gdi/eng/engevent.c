@@ -119,6 +119,7 @@ EngMapEvent(
     _Reserved_ PVOID Reserved3)
 {
     PENG_EVENT EngEvent;
+    PVOID pvEvent;
     NTSTATUS Status;
 
     /* Allocate memory for the event structure */
@@ -132,16 +133,17 @@ EngMapEvent(
     EngEvent->pKEvent = NULL;
 
     /* Create a handle, and have Ob fill out the pKEvent field */
-    Status = ObReferenceObjectByHandle(EngEvent,
+    Status = ObReferenceObjectByHandle(hUserObject,
                                        EVENT_ALL_ACCESS,
                                        *ExEventObjectType,
                                        UserMode,
-                                       &EngEvent->pKEvent,
+                                       &pvEvent,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
         /* Pulse the event and set that it's mapped by user */
-        KePulseEvent(EngEvent->pKEvent, EVENT_INCREMENT, FALSE);
+        KePulseEvent(pvEvent, EVENT_INCREMENT, FALSE);
+        EngEvent->pKEvent = pvEvent;
         EngEvent->fFlags |= ENG_EVENT_USERMAPPED;
     }
     else
