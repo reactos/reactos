@@ -985,6 +985,11 @@ typedef struct _KEY_FULL_INFORMATION
     WCHAR         Class[1];
 } KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
 
+typedef struct _KEY_NAME_INFORMATION {
+    ULONG         NameLength;
+    WCHAR         Name[1];
+} KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
+
 typedef struct _KEY_VALUE_ENTRY
 {
     PUNICODE_STRING ValueName;
