@@ -1842,7 +1842,7 @@ ENGAPI
 VOID
 APIENTRY
 EngFreeModule(
-    _In_ HANDLE h);
+    _In_ _Post_invalid_ HANDLE h);
 
 
 ENGAPI
@@ -2089,6 +2089,8 @@ EngMapFile(
     _Out_ ULONG_PTR *piFile);
 
 __drv_preferredFunction("EngMapFontFileFD", "Obsolete")
+_Check_return_
+_Success_(return!=FALSE)
 ENGAPI
 BOOL
 APIENTRY
@@ -2097,6 +2099,8 @@ EngMapFontFile(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
+_Check_return_
+_Success_(return!=FALSE)
 ENGAPI
 BOOL
 APIENTRY
@@ -2105,12 +2109,15 @@ EngMapFontFileFD(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
+_Check_return_
+_Success_(return!=NULL)
+_Post_writable_byte_size_(*pulSize)
 ENGAPI
 PVOID
 APIENTRY
 EngMapModule(
-    _In_ HANDLE h,
-    _Out_ PULONG pSize);
+    _In_  HANDLE h,
+    _Out_ PULONG pulSize);
 
 ENGAPI
 BOOL
