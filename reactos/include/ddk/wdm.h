@@ -11189,6 +11189,12 @@ RtlCheckBit(
     DbgPrint("Assertion failed at %s(%d): %S\n", __FILE__, __LINE__, msg)
 #endif
 
+#ifdef _PREFAST_
+#define __analysis_unreachable() __assume(0)
+#else
+#define __analysis_unreachable() ((void)0)
+#endif
+
 #define NT_VERIFY(exp) \
    ((!(exp)) ? \
       (__assert_annotationA(#exp), \
@@ -11208,17 +11214,17 @@ RtlCheckBit(
 #define NT_ASSERT(exp) \
    ((VOID)((!(exp)) ? \
       (__assert_annotationA(#exp), \
-       DbgRaiseAssertionFailure(), FALSE) : TRUE))
+       DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
 
 #define NT_ASSERTMSG(msg, exp) \
    ((VOID)((!(exp)) ? \
       (__assert_annotationA(msg), \
-      DbgRaiseAssertionFailure(), FALSE) : TRUE))
+      DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
 
 #define NT_ASSERTMSGW(msg, exp) \
     ((VOID)((!(exp)) ? \
         (__assert_annotationW(msg), \
-         DbgRaiseAssertionFailure(), FALSE) : TRUE))
+         DbgRaiseAssertionFailure(), __analysis_unreachable(), FALSE) : TRUE))
 
 #else /* !DBG */
 
