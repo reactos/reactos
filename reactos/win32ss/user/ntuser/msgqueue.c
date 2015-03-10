@@ -840,15 +840,16 @@ co_MsqDispatchOneSentMessage(
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
    if (Message->ptiSender && !(Message->ptiSender->TIF_flags & TIF_INCLEANUP))
    {
-      if (Message->DispatchingListEntry.Flink != NULL)
+      if (!IsListEmpty(&Message->DispatchingListEntry))
       {
          /* only remove it from the dispatching list if not already removed by a timeout */
          RemoveEntryList(&Message->DispatchingListEntry);
+         InitializeListHead(&Message->DispatchingListEntry);
       }
    }
+
    /* still keep the sender's message queue locked, so the sender can't exit the
       MsqSendMessage() function (if timed out) */
-
    if (Message->QS_Flags & QS_SMRESULT)
    {
       Result = Message->lResult;
@@ -935,10 +936,11 @@ MsqRemoveWindowMessagesFromQueue(PWND Window)
          ClearMsgBitsMask(pti, SentMessage->QS_Flags);
 
          /* Only if the message has a sender was the queue referenced */
-         if ((SentMessage->ptiSender)
-            && (SentMessage->DispatchingListEntry.Flink != NULL))
+         if ((SentMessage->ptiSender) &&
+             (!IsListEmpty(&SentMessage->DispatchingListEntry)))
          {
             RemoveEntryList(&SentMessage->DispatchingListEntry);
+            InitializeListHead(&SentMessage->DispatchingListEntry);
          }
 
          /* wake the sender's thread */
@@ -998,7 +1000,7 @@ co_MsqSendMessageAsync(PTHREADINFO ptiReceiver,
     Message->ptiReceiver = ptiReceiver;
     Message->ptiSender = NULL;
     Message->ptiCallBackSender = ptiSender;
-    Message->DispatchingListEntry.Flink = NULL;
+    InitializeListHead(&Message->DispatchingListEntry);
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
     Message->HookMessage = HookMessage;
@@ -1180,7 +1182,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                Message->CompletionEvent = NULL;
                Message->Result = NULL;
                RemoveEntryList(&Message->DispatchingListEntry);
-               Message->DispatchingListEntry.Flink = NULL;
+               InitializeListHead(&Message->DispatchingListEntry);
                break;
             }
             Entry = Entry->Flink;
@@ -1221,6 +1223,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                   Message->Result = NULL;
                   RemoveEntryList(&Message->ListEntry);
                   RemoveEntryList(&Message->DispatchingListEntry);
+                  InitializeListHead(&Message->DispatchingListEntry);
                   ClearMsgBitsMask(ptirec, Message->QS_Flags);
                   ExFreePoolWithTag(Message, TAG_USRMSG);
                   break;
@@ -1244,7 +1247,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
                   Message->CompletionEvent = NULL;
                   Message->Result = NULL;
                   RemoveEntryList(&Message->DispatchingListEntry);
-                  Message->DispatchingListEntry.Flink = NULL;
+                  InitializeListHead(&Message->DispatchingListEntry);
                   break;
                }
                Entry = Entry->Flink;
@@ -2062,10 +2065,11 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
 
       TRACE("Notify the sender and remove a message from the queue that had not been dispatched\n");
       /* Only if the message has a sender was the message in the DispatchingList */
-      if ((CurrentSentMessage->ptiSender)
-         && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
+      if ((CurrentSentMessage->ptiSender) &&
+          (!IsListEmpty(&CurrentSentMessage->DispatchingListEntry)))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
+         InitializeListHead(&CurrentSentMessage->DispatchingListEntry);
       }
 
       /* wake the sender's thread */
@@ -2092,9 +2096,10 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, ListEntry);
 
       /* remove the message from the dispatching list */
-      if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
+      if (!IsListEmpty(&CurrentSentMessage->DispatchingListEntry))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
+         InitializeListHead(&CurrentSentMessage->DispatchingListEntry);
       }
 
       TRACE("Notify the sender, the thread has been terminated while dispatching a message!\n");

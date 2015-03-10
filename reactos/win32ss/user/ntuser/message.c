@@ -1698,7 +1698,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->ptiReceiver = ptiSendTo;
     Message->ptiSender = NULL; // mjmartin, you are right! This is null.
     Message->ptiCallBackSender = Win32Thread;
-    Message->DispatchingListEntry.Flink = NULL;
+    InitializeListHead(&Message->DispatchingListEntry);
+    //Message->DispatchingListEntry.Flink = NULL;
     Message->CompletionCallback = CompletionCallback;
     Message->CompletionCallbackContext = CompletionCallbackContext;
     Message->HookMessage = MSQ_NORMAL;
