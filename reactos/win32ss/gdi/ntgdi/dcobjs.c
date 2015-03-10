@@ -159,7 +159,8 @@ DC_vSetBrushOrigin(PDC pdc, LONG x, LONG y)
  *
  * @implemented
  */
-_Success_(return != FALSE)
+_Success_(return!=FALSE)
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiSetBrushOrg(

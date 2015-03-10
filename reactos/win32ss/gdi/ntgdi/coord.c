@@ -517,7 +517,13 @@ NtGdiModifyWorldTransform(
     /* The xform is permitted to be NULL for MWT_IDENTITY.
      * However, if it is not NULL, then it must be valid even
      * though it is not used. */
-    if ((pxformUnsafe != NULL) || (dwMode != MWT_IDENTITY))
+    if ((dwMode != MWT_IDENTITY) && (pxformUnsafe == NULL))
+    {
+        DC_UnlockDc(pdc);
+        return FALSE;
+    }
+
+    if (pxformUnsafe != NULL)
     {
         _SEH2_TRY
         {

@@ -1,5 +1,6 @@
 #pragma once
 
+_Success_(return!=ERROR)
 INT
 FASTCALL
 GdiGetClipBox(

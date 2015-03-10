@@ -9,7 +9,7 @@ typedef struct _REGION
   /* Header for all gdi objects in the handle table.
      Do not (re)move this. */
   BASEOBJECT BaseObject;
-  PRGN_ATTR prgnattr;
+  _Notnull_ PRGN_ATTR prgnattr;
   RGN_ATTR rgnattr;
 
   RGNDATAHEADER rdh;
@@ -101,4 +101,8 @@ FASTCALL
 IntSysCreateRectpRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect);
 
 // FIXME: move this
-BOOL FASTCALL IntGdiPaintRgn(PDC, PREGION );
+BOOL
+FASTCALL
+IntGdiPaintRgn(
+    _In_ PDC pdc,
+    _In_ PREGION prgn);

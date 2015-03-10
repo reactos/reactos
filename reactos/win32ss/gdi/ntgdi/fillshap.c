@@ -1074,7 +1074,7 @@ NtGdiExtFloodFill(
 #if 0
     PDC_ATTR   pdcattr;
 #endif
-    SURFACE    *psurf = NULL;
+    SURFACE    *psurf;
     EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
@@ -1111,6 +1111,7 @@ NtGdiExtFloodFill(
     DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
     /// FIXME: what about prgnVIS? And what about REAL clipping?
+    psurf = dc->dclevel.pSurface;
     if (dc->prgnRao)
     {
         Ret = REGION_PtInRegion(dc->prgnRao, Pt.x, Pt.y);
@@ -1126,8 +1127,6 @@ NtGdiExtFloodFill(
     {
         RECTL_vSetRect(&DestRect, 0, 0, psurf->SurfObj.sizlBitmap.cx, psurf->SurfObj.sizlBitmap.cy);
     }
-
-    psurf = dc->dclevel.pSurface;
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);
 

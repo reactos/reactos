@@ -15,14 +15,20 @@
 
 /* FUNCTIONS *****************************************************************/
 
+_Check_return_
+_Success_(return)
+_Kernel_float_restored_
+_At_(*pBuffer, _Kernel_requires_resource_held_(EngFloatState)
+               _Kernel_releases_resource_(EngFloatState))
+ENGAPI
 BOOL
 APIENTRY
 EngRestoreFloatingPointState(
-    PVOID Buffer)
+    _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer)
 {
     NTSTATUS Status;
 
-    Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)Buffer);
+    Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)pBuffer);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -31,16 +37,24 @@ EngRestoreFloatingPointState(
     return TRUE;
 }
 
+_Check_return_
+_Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
+          ((pBuffer == NULL || cjBufferSize == 0) && return > 0))
+_When_(pBuffer != NULL && cjBufferSize != 0 && return == 1, _Kernel_float_saved_
+    _At_(*pBuffer, _Post_valid_ _Kernel_acquires_resource_(EngFloatState)))
+_On_failure_(_Post_satisfies_(return == 0))
+ENGAPI
 ULONG
 APIENTRY
 EngSaveFloatingPointState(
-    PVOID Buffer,
-    ULONG BufferSize)
+    _At_(*pBuffer, _Kernel_requires_resource_not_held_(EngFloatState))
+    _Out_writes_bytes_opt_(cjBufferSize) PVOID pBuffer,
+    _Inout_ ULONG cjBufferSize)
 {
     KFLOATING_SAVE TempBuffer;
     NTSTATUS Status;
 
-    if ((Buffer == NULL) || (BufferSize == 0))
+    if ((pBuffer == NULL) || (cjBufferSize == 0))
     {
         /* Check for floating point support. */
         Status = KeSaveFloatingPointState(&TempBuffer);
@@ -53,12 +67,12 @@ EngSaveFloatingPointState(
         return(sizeof(KFLOATING_SAVE));
     }
 
-    if (BufferSize < sizeof(KFLOATING_SAVE))
+    if (cjBufferSize < sizeof(KFLOATING_SAVE))
     {
         return(0);
     }
 
-    Status = KeSaveFloatingPointState((PKFLOATING_SAVE)Buffer);
+    Status = KeSaveFloatingPointState((PKFLOATING_SAVE)pBuffer);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;

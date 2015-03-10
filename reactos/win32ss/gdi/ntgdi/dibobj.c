@@ -1002,6 +1002,8 @@ done:
     return ScanLines;
 }
 
+_Success_(return!=0)
+__kernel_entry
 INT
 APIENTRY
 NtGdiGetDIBitsInternal(
@@ -1009,13 +1011,13 @@ NtGdiGetDIBitsInternal(
     _In_ HBITMAP hbm,
     _In_ UINT iStartScan,
     _In_ UINT cScans,
-    _Out_opt_ LPBYTE pjBits,
-    _Inout_ LPBITMAPINFO pbmiUser,
+    _Out_writes_bytes_opt_(cjMaxBits) LPBYTE pjBits,
+    _Inout_ LPBITMAPINFO pbmi,
     _In_ UINT iUsage,
     _In_ UINT cjMaxBits,
     _In_ UINT cjMaxInfo)
 {
-    PBITMAPINFO pbmi;
+    PBITMAPINFO pbmiSafe;
     HANDLE hSecure = NULL;
     INT iResult = 0;
     UINT cjAlloc;
@@ -1037,8 +1039,8 @@ NtGdiGetDIBitsInternal(
     cjAlloc = sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD);
 
     /* Allocate a buffer the bitmapinfo */
-    pbmi = ExAllocatePoolWithTag(PagedPool, cjAlloc, 'imBG');
-    if (!pbmi)
+    pbmiSafe = ExAllocatePoolWithTag(PagedPool, cjAlloc, 'imBG');
+    if (!pbmiSafe)
     {
         /* Fail */
         return 0;
@@ -1048,8 +1050,8 @@ NtGdiGetDIBitsInternal(
     _SEH2_TRY
     {
         /* Probe and copy the BITMAPINFO */
-        ProbeForRead(pbmiUser, cjMaxInfo, 1);
-        RtlCopyMemory(pbmi, pbmiUser, cjMaxInfo);
+        ProbeForRead(pbmi, cjMaxInfo, 1);
+        RtlCopyMemory(pbmi, pbmi, cjMaxInfo);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1058,8 +1060,8 @@ NtGdiGetDIBitsInternal(
     _SEH2_END;
 
     /* Check if the header size is large enough */
-    if ((pbmi->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
-        (pbmi->bmiHeader.biSize > cjMaxInfo))
+    if ((pbmiSafe->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
+        (pbmiSafe->bmiHeader.biSize > cjMaxInfo))
     {
         goto cleanup;
     }
@@ -1081,7 +1083,7 @@ NtGdiGetDIBitsInternal(
                                    iStartScan,
                                    cScans,
                                    pjBits,
-                                   pbmi,
+                                   pbmiSafe,
                                    iUsage,
                                    cjMaxBits,
                                    cjMaxInfo);
@@ -1093,20 +1095,21 @@ NtGdiGetDIBitsInternal(
         _SEH2_TRY
         {
             /* Copy the data back */
-            cjMaxInfo = min(cjMaxInfo, (UINT)DIB_BitmapInfoSize(pbmi, (WORD)iUsage));
-            ProbeForWrite(pbmiUser, cjMaxInfo, 1);
-            RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
+            cjMaxInfo = min(cjMaxInfo, (UINT)DIB_BitmapInfoSize(pbmiSafe, (WORD)iUsage));
+            ProbeForWrite(pbmi, cjMaxInfo, 1);
+            RtlCopyMemory(pbmi, pbmiSafe, cjMaxInfo);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Ignore */
+            (VOID)0;
         }
         _SEH2_END;
     }
 
 cleanup:
     if (hSecure) EngUnsecureMem(hSecure);
-    ExFreePoolWithTag(pbmi, 'imBG');
+    ExFreePoolWithTag(pbmiSafe, 'imBG');
 
     return iResult;
 }

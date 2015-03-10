@@ -138,12 +138,14 @@ IntEngTransparentBlt(SURFOBJ *Dest,
                      ULONG iTransColor,
                      ULONG Reserved);
 
-BOOL APIENTRY
-IntEngPaint(IN SURFOBJ *Surface,
-            IN CLIPOBJ *ClipRegion,
-            IN BRUSHOBJ *Brush,
-            IN POINTL *BrushOrigin,
-            IN MIX Mix);
+BOOL
+APIENTRY
+IntEngPaint(
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ __in_data_source(USER_MODE) MIX mix);
 
 ULONG APIENTRY
 IntEngSetPointerShape(

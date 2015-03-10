@@ -37,6 +37,13 @@
 #define NDEBUG
 #include <debug.h>
 
+FORCEINLINE
+ULONG
+InterlockedReadUlong(
+    _In_ _Interlocked_operand_ ULONG volatile *Source)
+{
+    return *Source;
+}
 
 FORCEINLINE
 void
@@ -126,8 +133,8 @@ enum
 static PVOID gpvGdiHdlTblSection = NULL;
 PENTRY gpentHmgr;
 PULONG gpaulRefCount;
-ULONG gulFirstFree;
-ULONG gulFirstUnused;
+volatile ULONG gulFirstFree;
+volatile ULONG gulFirstUnused;
 static PPAGED_LOOKASIDE_LIST gpaLookasideList;
 
 static VOID NTAPI GDIOBJ_vCleanup(PVOID ObjectBody);
@@ -293,6 +300,7 @@ IncrementGdiHandleCount(ULONG ulProcessId)
 
     Status = PsLookupProcessByProcessId(ULongToHandle(ulProcessId), &pep);
     NT_ASSERT(NT_SUCCESS(Status));
+    __analysis_assume(NT_SUCCESS(Status));
 
     ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedIncrement((LONG*)&ppi->GDIHandleCount);
@@ -309,6 +317,7 @@ DecrementGdiHandleCount(ULONG ulProcessId)
 
     Status = PsLookupProcessByProcessId(ULongToHandle(ulProcessId), &pep);
     NT_ASSERT(NT_SUCCESS(Status));
+    __analysis_assume(NT_SUCCESS(Status));
 
     ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedDecrement((LONG*)&ppi->GDIHandleCount);
@@ -327,7 +336,7 @@ ENTRY_pentPopFreeEntry(VOID)
     do
     {
         /* Get the index and sequence number of the first free entry */
-        iFirst = gulFirstFree;
+        iFirst = InterlockedReadUlong(&gulFirstFree);
 
         /* Check if we have a free entry */
         if (!(iFirst & GDI_HANDLE_INDEX_MASK))
@@ -395,7 +404,7 @@ ENTRY_vPushFreeEntry(PENTRY pentFree)
     do
     {
         /* Get the current first free index and sequence number */
-        iFirst = gulFirstFree;
+        iFirst = InterlockedReadUlong(&gulFirstFree);
 
         /* Set the einfo.pobj member to the index of the first free entry */
         pentFree->einfo.pobj = UlongToPtr(iFirst & GDI_HANDLE_INDEX_MASK);

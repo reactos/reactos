@@ -47,6 +47,7 @@ BRUSH_bAllocBrushAttr(PBRUSH pbr)
 
     ppi = PsGetCurrentProcessWin32Process();
     NT_ASSERT(ppi);
+    __analysis_assume(ppi);
 
     pBrushAttr = GdiPoolAllocate(ppi->pPoolBrushAttr);
     if (!pBrushAttr)

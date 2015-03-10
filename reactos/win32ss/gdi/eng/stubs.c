@@ -423,11 +423,13 @@ FONTOBJ_pifi(IN FONTOBJ *FontObj)
 /*
  * @unimplemented
  */
+_Ret_opt_bytecount_(*pcjFile)
+ENGAPI
 PVOID
 APIENTRY
 FONTOBJ_pvTrueTypeFontFile(
-    IN FONTOBJ  *FontObj,
-    IN ULONG    *FileSize)
+    _In_ FONTOBJ *pfo,
+    _Out_ ULONG *pcjFile)
 {
     UNIMPLEMENTED;
     return NULL;
@@ -729,12 +731,14 @@ FONTOBJ_pfdg(
 /*
  * @unimplemented
  */
+_Ret_opt_bytecount_(*pcjTable)
+ENGAPI
 PBYTE
 APIENTRY
 FONTOBJ_pjOpenTypeTablePointer(
-    IN FONTOBJ *FontObj,
-    IN ULONG Tag,
-    OUT ULONG *Table)
+    _In_ FONTOBJ *pfo,
+    _In_ ULONG ulTag,
+    _Out_ ULONG *pcjTable)
 {
     UNIMPLEMENTED;
     return NULL;
@@ -1628,11 +1632,14 @@ EngControlSprites(
     return FALSE;
 }
 
+_Must_inspect_result_
+_Ret_opt_bytecap_(cjSize)
+ENGAPI
 PVOID
 APIENTRY
 EngFntCacheAlloc(
-    IN ULONG FastCheckSum,
-    IN ULONG ulSize)
+    _In_ ULONG ulFastCheckSum,
+    _In_ ULONG cjSize)
 {
     UNIMPLEMENTED;
     return NULL;

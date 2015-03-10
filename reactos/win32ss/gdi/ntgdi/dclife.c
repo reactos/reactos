@@ -670,17 +670,18 @@ GreOpenDCW(
     return hdc;
 }
 
+__kernel_entry
 HDC
 APIENTRY
 NtGdiOpenDCW(
-    PUNICODE_STRING pustrDevice,
-    DEVMODEW *pdmInit,
-    PUNICODE_STRING pustrLogAddr,
-    ULONG iType,
-    BOOL bDisplay,
-    HANDLE hspool,
-    DRIVER_INFO_2W *pDriverInfo2,
-    VOID *pUMdhpdev)
+    _In_opt_ PUNICODE_STRING pustrDevice,
+    _In_ DEVMODEW *pdmInit,
+    _In_ PUNICODE_STRING pustrLogAddr,
+    _In_ ULONG iType,
+    _In_ BOOL bDisplay,
+    _In_opt_ HANDLE hspool,
+    _In_opt_ DRIVER_INFO_2W *pDriverInfo2,
+    _At_((PUMDHPDEV*)pUMdhpdev, _Out_) PVOID pUMdhpdev)
 {
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
@@ -706,6 +707,8 @@ NtGdiOpenDCW(
             if (pdmInit)
             {
                 /* FIXME: could be larger */
+                /* According to a comment in Windows SDK the size of the buffer for
+                   pdm is (pdm->dmSize + pdm->dmDriverExtra) */
                 ProbeForRead(pdmInit, sizeof(DEVMODEW), 1);
                 RtlCopyMemory(&dmInit, pdmInit, sizeof(DEVMODEW));
             }

@@ -11,16 +11,18 @@ NTAPI
 EngAcquireSemaphoreShared(
     IN HSEMAPHORE hsem);
 
-BOOL APIENTRY
-IntEngMaskBlt(SURFOBJ *psoDest,
-              SURFOBJ *psoMask,
-              CLIPOBJ *ClipRegion,
-              XLATEOBJ *DestColorTranslation,
-              XLATEOBJ *SourceColorTranslation,
-              RECTL *DestRect,
-              POINTL *pptlMask,
-              BRUSHOBJ *pbo,
-              POINTL *BrushOrigin);
+BOOL
+APIENTRY
+IntEngMaskBlt(
+    _Inout_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoMask,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxloDest,
+    _In_ XLATEOBJ *pxloSource,
+    _In_ RECTL *prclDest,
+    _In_ POINTL *pptlMask,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg);
 
 VOID FASTCALL
 IntEngWindowChanged(

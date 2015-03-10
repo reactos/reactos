@@ -241,10 +241,10 @@ APIENTRY
 EngDeleteClip(
     _In_ _Post_ptr_invalid_ CLIPOBJ *pco)
 {
-    XCLIPOBJ* Clip = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
-    TRACE("Deleting %p.\n");
-    IntEngFreeClipResources(Clip);
-    EngFreeMem(Clip);
+    XCLIPOBJ* pxco = CONTAINING_RECORD(pco, XCLIPOBJ, ClipObj);
+    TRACE("Deleting %p.\n", pco);
+    IntEngFreeClipResources(pxco);
+    EngFreeMem(pxco);
 }
 
 /*

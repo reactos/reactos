@@ -17,7 +17,7 @@ EngCreateSemaphore(VOID)
 
     if (!NT_SUCCESS(ExInitializeResourceLite(psem)))
     {
-        ExFreePoolWithTag ( psem, GDITAG_SEMAPHORE );
+        ExFreePoolWithTag(psem, GDITAG_SEMAPHORE );
         return NULL;
     }
 

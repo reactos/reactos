@@ -153,8 +153,17 @@ InitFontSupport(VOID)
     FontCacheNumEntries = 0;
     /* Fast Mutexes must be allocated from non paged pool */
     FontListLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    if (FontListLock == NULL)
+    {
+        return FALSE;
+    }
+
     ExInitializeFastMutex(FontListLock);
     FreeTypeLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    if (FreeTypeLock == NULL)
+    {
+        return FALSE;
+    }
     ExInitializeFastMutex(FreeTypeLock);
 
     ulError = FT_Init_FreeType(&library);
@@ -417,7 +426,15 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     Entry->Font = FontGDI;
     Entry->NotEnum = (Characteristics & FR_NOT_ENUM);
     RtlInitAnsiString(&AnsiFaceName, (LPSTR)Face->family_name);
-    RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
+        EngFreeMem(FontGDI);
+        FT_Done_Face(Face);
+        ExFreePoolWithTag(Entry, TAG_FONT);
+        return 0;
+    }
 
     if (Characteristics & FR_PRIVATE)
     {
@@ -786,14 +803,24 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     FT_WinFNT_HeaderRec Win;
     FT_Error Error;
     char *Cp;
+    NTSTATUS status;
 
     Needed = sizeof(OUTLINETEXTMETRICW);
 
     RtlInitAnsiString(&FamilyNameA, FontGDI->face->family_name);
-    RtlAnsiStringToUnicodeString(&FamilyNameW, &FamilyNameA, TRUE);
+    status = RtlAnsiStringToUnicodeString(&FamilyNameW, &FamilyNameA, TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        return 0;
+    }
 
     RtlInitAnsiString(&StyleNameA, FontGDI->face->style_name);
-    RtlAnsiStringToUnicodeString(&StyleNameW, &StyleNameA, TRUE);
+    status = RtlAnsiStringToUnicodeString(&StyleNameW, &StyleNameA, TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        RtlFreeUnicodeString(&FamilyNameW);
+        return 0;
+    }
 
     /* These names should be read from the TT name table */
 
@@ -939,6 +966,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     ANSI_STRING EntryFaceNameA;
     UNICODE_STRING EntryFaceNameW;
     FONTGDI *FontGDI;
+    NTSTATUS status;
 
     Entry = Head->Flink;
     while (Entry != Head)
@@ -949,7 +977,12 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         ASSERT(FontGDI);
 
         RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
-        RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+
         if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
         {
             EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
@@ -1007,6 +1040,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     TEXTMETRICW *TM;
     NEWTEXTMETRICW *Ntm;
     DWORD fs0;
+    NTSTATUS status;
 
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
@@ -1078,7 +1112,11 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     RtlInitAnsiString(&StyleA, FontGDI->face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
     StyleW.MaximumLength = sizeof(Info->EnumLogFontEx.elfStyle);
-    RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
+    status = RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
 
     Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
     Info->EnumLogFontEx.elfScript[0] = L'\0';
@@ -1192,6 +1230,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
     ANSI_STRING EntryFaceNameA;
     UNICODE_STRING EntryFaceNameW;
     FONTGDI *FontGDI;
+    NTSTATUS status;
 
     Entry = Head->Flink;
     while (Entry != Head)
@@ -1202,7 +1241,12 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         ASSERT(FontGDI);
 
         RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
-        RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        if (!NT_SUCCESS(status))
+        {
+            return FALSE;
+        }
+
         if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
         {
             EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
@@ -1232,6 +1276,7 @@ typedef struct FontFamilyInfoCallbackContext
     DWORD Size;
 } FONT_FAMILY_INFO_CALLBACK_CONTEXT, *PFONT_FAMILY_INFO_CALLBACK_CONTEXT;
 
+_Function_class_(RTL_QUERY_REGISTRY_ROUTINE)
 static NTSTATUS APIENTRY
 FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
                                     IN PVOID ValueData, IN ULONG ValueLength,
@@ -1779,7 +1824,7 @@ ftGdiGetGlyphOutline(
         for (n = 0; n < ft_face->num_charmaps; n++)
         {
             charmap = ft_face->charmaps[n];
-            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -2230,7 +2275,7 @@ TextIntGetTextExtentPoint(PDC dc,
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -2505,7 +2550,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
         }
     }
     else
-        DPRINT1("Encoding %u not supported\n", face->charmap->encoding);
+        DPRINT1("Encoding %i not supported\n", face->charmap->encoding);
 
     size = sizeof(GLYPHSET) + sizeof(WCRANGE) * (num_ranges - 1);
     if (glyphset)
@@ -3356,7 +3401,7 @@ GreExtTextOutW(
     Start.y = YStart;
     IntLPtoDP(dc, &Start, 1);
 
-    RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
+    RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
     SourcePoint.x = 0;
@@ -3433,7 +3478,7 @@ GreExtTextOutW(
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -3498,7 +3543,7 @@ GreExtTextOutW(
     {
         ULONGLONG TextWidth = 0;
         LPCWSTR TempText = String;
-        int Start;
+        int iStart;
 
         /*
          * Calculate width of the text.
@@ -3506,16 +3551,16 @@ GreExtTextOutW(
 
         if (NULL != Dx)
         {
-            Start = Count < 2 ? 0 : Count - 2;
+            iStart = Count < 2 ? 0 : Count - 2;
             TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
         }
         else
         {
-            Start = 0;
+            iStart = 0;
         }
-        TempText = String + Start;
+        TempText = String + iStart;
 
-        for (i = Start; i < Count; i++)
+        for (i = iStart; i < Count; i++)
         {
             if (fuOptions & ETO_GLYPH_INDEX)
                 glyph_index = *TempText;
@@ -4304,12 +4349,12 @@ NtGdiGetCharWidthW(
 DWORD
 FASTCALL
 GreGetGlyphIndicesW(
-    HDC hdc,
-    LPWSTR pwc,
-    INT cwc,
-    LPWORD pgi,
-    DWORD iMode,
-    DWORD Unknown)
+    _In_ HDC hdc,
+    _In_opt_ LPWSTR pwc,
+    _In_ INT cwc,
+    _Out_opt_ LPWORD pgi,
+    _In_ DWORD iMode,
+    _In_ DWORD dwUnknown)
 {
     PDC dc;
     PDC_ATTR pdcattr;

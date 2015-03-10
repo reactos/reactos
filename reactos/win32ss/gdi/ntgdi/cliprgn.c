@@ -143,6 +143,7 @@ NtGdiExtSelectClipRgn(
     return retval;
 }
 
+_Success_(return!=ERROR)
 INT
 FASTCALL
 GdiGetClipBox(
@@ -186,6 +187,7 @@ GdiGetClipBox(
     return iComplexity;
 }
 
+_Success_(return!=ERROR)
 INT
 APIENTRY
 NtGdiGetAppClipBox(

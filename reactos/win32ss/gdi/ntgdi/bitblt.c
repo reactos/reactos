@@ -1090,11 +1090,12 @@ IntGdiBitBltRgn(
     return bResult;
 }
 
+static
 BOOL
 IntGdiFillRgn(
     _In_ PDC pdc,
     _In_ PREGION prgn,
-    _In_ PBRUSH pbrFill)
+    _In_opt_ PBRUSH pbrFill)
 {
     PREGION prgnClip;
     XCLIPOBJ xcoClip;

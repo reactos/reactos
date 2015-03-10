@@ -3,653 +3,709 @@
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiUMPDEngFreeUserMem(
-    IN KERNEL_PVOID *ppv)
+    _In_ KERNEL_PVOID *ppv)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiSetPUMPDOBJ(
-    IN HUMPD humpd,
-    IN BOOL bStoreID,
-    OUT HUMPD *phumpd,
-    OUT BOOL *pbWOW64)
+    _In_opt_ HUMPD humpd,
+    _In_ BOOL bStoreID,
+    _Inout_opt_ HUMPD *phumpd,
+    _Out_opt_ BOOL *pbWOW64)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 HANDLE
 APIENTRY
 NtGdiBRUSHOBJ_hGetColorTransform(
-   IN BRUSHOBJ *pbo)
+    _In_ BRUSHOBJ *pbo)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 PVOID
 APIENTRY
 NtGdiBRUSHOBJ_pvAllocRbrush(
-    IN BRUSHOBJ *pbo,
-    IN ULONG cj)
+    _In_ BRUSHOBJ *pbo,
+    _In_ ULONG cj)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 PVOID
 APIENTRY
 NtGdiBRUSHOBJ_pvGetRbrush(
-    IN BRUSHOBJ *pbo)
+    _In_ BRUSHOBJ *pbo)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiBRUSHOBJ_ulGetBrushColor(
-    BRUSHOBJ *pbo)
+    _In_ BRUSHOBJ *pbo)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiBRUSHOBJ_DeleteRbrush(
-    IN BRUSHOBJ *pbo,
-    IN BRUSHOBJ *pboB)
+    _In_opt_ BRUSHOBJ *pbo,
+    _In_opt_ BRUSHOBJ *pboB)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiCLIPOBJ_bEnum(
-    IN CLIPOBJ *pco,
-    IN ULONG cj,
-    OUT ULONG *pv)
+    _In_ CLIPOBJ *pco,
+    _In_ ULONG cj,
+    _Out_writes_bytes_(cj) ULONG *pul)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiCLIPOBJ_cEnumStart(
-    IN CLIPOBJ *pco,
-    IN BOOL bAll,
-    IN ULONG iType,
-    IN ULONG iDirection,
-    IN ULONG cLimit)
+    _In_ CLIPOBJ *pco,
+    _In_ BOOL bAll,
+    _In_ ULONG iType,
+    _In_ ULONG iDirection,
+    _In_ ULONG cLimit)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 PATHOBJ*
 APIENTRY
 NtGdiCLIPOBJ_ppoGetPath(
-    CLIPOBJ *pco)
+    _In_ CLIPOBJ *pco)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngAssociateSurface(
-    IN HSURF hsurf,
-    IN HDEV hdev,
-    IN ULONG flHooks)
+    _In_ HSURF hsurf,
+    _In_ HDEV hdev,
+    _In_ FLONG flHooks)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngCheckAbort(
-    IN SURFOBJ *pso)
+    _In_ SURFOBJ *pso)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 FD_GLYPHSET*
 APIENTRY
 NtGdiEngComputeGlyphSet(
-    INT nCodePage,
-    INT nFirstChar,
-    INT cChars)
+    _In_ INT nCodePage,
+    _In_ INT nFirstChar,
+    _In_ INT cChars)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngCopyBits(
-    SURFOBJ *psoDest,
-    SURFOBJ *psoSrc,
-    CLIPOBJ *pco,
-    XLATEOBJ *pxlo,
-    RECTL *prclDest,
-    POINTL *pptlSrc)
+    _In_ SURFOBJ *psoDst,
+    _In_ SURFOBJ *psoSrc,
+    _In_opt_ CLIPOBJ *pco,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclDst,
+    _In_ POINTL *pptlSrc)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 HBITMAP
 APIENTRY
 NtGdiEngCreateBitmap(
-    IN SIZEL sizl,
-    IN LONG lWidth,
-    IN ULONG iFormat,
-    IN ULONG fl,
-    IN PVOID pvBits)
+    _In_ SIZEL sizl,
+    _In_ LONG lWidth,
+    _In_ ULONG iFormat,
+    _In_ FLONG fl,
+    _In_opt_ PVOID pvBits)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 CLIPOBJ*
 APIENTRY
-NtGdiEngCreateClip(VOID)
+NtGdiEngCreateClip(
+    VOID)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 HBITMAP
 APIENTRY
 NtGdiEngCreateDeviceBitmap(
-    IN DHSURF dhsurf,
-    IN SIZEL sizl,
-    IN ULONG iFormatCompat)
+    _In_ DHSURF dhsurf,
+    _In_ SIZEL sizl,
+    _In_ ULONG iFormatCompat)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 HSURF
 APIENTRY
 NtGdiEngCreateDeviceSurface(
-    IN DHSURF dhsurf,
-    IN SIZEL sizl,
-    IN ULONG iFormatCompat)
+    _In_ DHSURF dhsurf,
+    _In_ SIZEL sizl,
+    _In_ ULONG iFormatCompat)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 HPALETTE
 APIENTRY
 NtGdiEngCreatePalette(
-    IN ULONG iMode,
-    IN ULONG cColors,
-    IN ULONG *pulColors,
-    IN ULONG flRed,
-    IN ULONG flGreen,
-    IN ULONG flBlue)
+    _In_ ULONG iMode,
+    _In_ ULONG cColors,
+    _In_ ULONG *pulColors,
+    _In_ FLONG flRed,
+    _In_ FLONG flGreen,
+    _In_ FLONG flBlue)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiEngDeleteClip(
-    CLIPOBJ *pco)
+    _In_ CLIPOBJ*pco)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngDeletePalette(
-    IN HPALETTE hpal)
+    _In_ HPALETTE hPal)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiEngDeletePath(
-    IN PATHOBJ *ppo)
+    _In_ PATHOBJ *ppo)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngDeleteSurface(
-    IN HSURF hsurf)
+    _In_ HSURF hsurf)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngEraseSurface(
-    SURFOBJ *pso,
-    RECTL *prcl,
-    ULONG iColor)
+    _In_ SURFOBJ *pso,
+    _In_ RECTL *prcl,
+    _In_ ULONG iColor)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngFillPath(
-    SURFOBJ *pso,
-    PATHOBJ *ppo,
-    CLIPOBJ *pco,
-    BRUSHOBJ *pbo,
-    POINTL *pptlBrushOrg,
-    MIX mix,
-    FLONG flOptions)
+    _In_ SURFOBJ *pso,
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ MIX mix,
+    _In_ FLONG flOptions)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngGradientFill(
-    SURFOBJ *psoDest,
-    CLIPOBJ *pco,
-    XLATEOBJ *pxlo,
-    TRIVERTEX *pVertex,
-    ULONG nVertex,
-    PVOID pMesh,
-    ULONG nMesh,
-    RECTL *prclExtents,
-    POINTL *pptlDitherOrg,
-    ULONG ulMode)
+    _In_ SURFOBJ *psoDest,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_reads_(nVertex) TRIVERTEX *pVertex,
+    _In_ ULONG nVertex,
+    _In_ /* _In_reads_(nMesh) */ PVOID pMesh,
+    _In_ ULONG nMesh,
+    _In_ RECTL *prclExtents,
+    _In_ POINTL *pptlDitherOrg,
+    _In_ ULONG ulMode)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngLineTo(
-    IN SURFOBJ *pso,
-    IN CLIPOBJ *pco,
-    IN BRUSHOBJ *pbo,
-    IN LONG x1,
-    IN LONG y1,
-    IN LONG x2,
-    IN LONG y2,
-    IN RECTL *prclBounds,
-    IN MIX mix)
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ LONG x1,
+    _In_ LONG y1,
+    _In_ LONG x2,
+    _In_ LONG y2,
+    _In_ RECTL *prclBounds,
+    _In_ MIX mix)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngMarkBandingSurface(
-    HSURF hsurf)
+    _In_ HSURF hsurf)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngPaint(
-    IN SURFOBJ *pso,
-    IN CLIPOBJ *pco,
-    IN BRUSHOBJ *pbo,
-    IN POINTL *pptlBrushOrg,
-    IN MIX  mix)
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ MIX mix)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngPlgBlt(
-    SURFOBJ *psoTrg,
-    SURFOBJ *psoSrc,
-    SURFOBJ *psoMsk,
-    CLIPOBJ *pco,
-    XLATEOBJ *pxlo,
-    COLORADJUSTMENT *pca,
-    POINTL *pptlBrushOrg,
-    POINTFIX *pptfx,
-    RECTL *prcl,
-    POINTL *pptl,
-    ULONG iMode)
+    _In_ SURFOBJ *psoTrg,
+    _In_ SURFOBJ *psoSrc,
+    _In_opt_ SURFOBJ *psoMsk,
+    _In_ CLIPOBJ *pco,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ COLORADJUSTMENT *pca,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ POINTFIX *pptfx,
+    _In_ RECTL *prcl,
+    _In_opt_ POINTL *pptl,
+    _In_ ULONG iMode)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngStretchBltROP(
-    SURFOBJ *psoDest,
-    SURFOBJ *psoSrc,
-    SURFOBJ *psoMask,
-    CLIPOBJ *pco,
-    XLATEOBJ *pxlo,
-    COLORADJUSTMENT *pca,
-    POINTL *pptlHTOrg,
-    RECTL *prclDest,
-    RECTL *prclSrc,
-    POINTL *pptlMask,
-    ULONG iMode,
-    BRUSHOBJ *pbo,
-    DWORD rop4)
+    _In_ SURFOBJ *psoTrg,
+    _In_ SURFOBJ *psoSrc,
+    _In_ SURFOBJ *psoMask,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_ COLORADJUSTMENT *pca,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ RECTL *prclTrg,
+    _In_ RECTL *prclSrc,
+    _In_ POINTL *pptlMask,
+    _In_ ULONG iMode,
+    _In_ BRUSHOBJ *pbo,
+    _In_ ROP4 rop4)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngStrokePath(
-    SURFOBJ *pso,
-    PATHOBJ *ppo,
-    CLIPOBJ *pco,
-    XFORMOBJ *pxo,
-    BRUSHOBJ *pbo,
-    POINTL *pptlBrushOrg,
-    LINEATTRS *plineattrs,
-    MIX mix)
+    _In_ SURFOBJ *pso,
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,
+    _In_ XFORMOBJ *pxo,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ LINEATTRS *plineattrs,
+    _In_ MIX mix)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngStrokeAndFillPath(
-    SURFOBJ *pso,
-    PATHOBJ *ppo,
-    CLIPOBJ *pco,
-    XFORMOBJ *pxo,
-    BRUSHOBJ *pboStroke,
-    LINEATTRS *plineattrs,
-    BRUSHOBJ *pboFill,
-    POINTL *pptlBrushOrg,
-    MIX mixFill,
-    FLONG flOptions)
+    _In_ SURFOBJ *pso,
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,IN XFORMOBJ *pxo,
+    _In_ BRUSHOBJ *pboStroke,
+    _In_ LINEATTRS *plineattrs,
+    _In_ BRUSHOBJ *pboFill,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ MIX mix,
+    _In_ FLONG flOptions)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngTextOut(
-    SURFOBJ *pso,
-    STROBJ *pstro,
-    FONTOBJ *pfo,
-    CLIPOBJ *pco,
-    RECTL *prclExtra,
-    RECTL *prclOpaque,
-    BRUSHOBJ *pboFore,
-    BRUSHOBJ *pboOpaque,
-    POINTL *pptlOrg,
-    MIX mix)
+    _In_ SURFOBJ *pso,
+    _In_ STROBJ *pstro,
+    _In_ FONTOBJ *pfo,
+    _In_ CLIPOBJ *pco,
+    _In_ RECTL *prclExtra,
+    _In_ RECTL *prclOpaque,
+    _In_ BRUSHOBJ *pboFore,
+    _In_ BRUSHOBJ *pboOpaque,
+    _In_ POINTL *pptlOrg,
+    _In_ MIX mix)
 {
      UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiEngTransparentBlt(
-    IN SURFOBJ *psoDst,
-    IN SURFOBJ *psoSrc,
-    IN CLIPOBJ *pco,
-    IN XLATEOBJ *pxlo,
-    IN PRECTL prclDst,
-    IN PRECTL prclSrc,
-    IN ULONG iTransColor,
-    IN ULONG ulReserved)
+    _In_ SURFOBJ *psoDst,
+    _In_ SURFOBJ *psoSrc,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclDst,
+    _In_ RECTL *prclSrc,
+    _In_ ULONG iTransColor,
+    _In_ ULONG ulReserved)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiFONTOBJ_vGetInfo(
-    IN FONTOBJ *pfo,
-    IN ULONG cjSize,
-    OUT FONTINFO *pfi)
+    _In_ FONTOBJ *pfo,
+    _In_ ULONG cjSize,
+    _Out_writes_bytes_(cjSize) FONTINFO *pfi)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 XFORMOBJ*
 APIENTRY
 NtGdiFONTOBJ_pxoGetXform(
-    IN FONTOBJ *pfo)
+    _In_ FONTOBJ *pfo)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiFONTOBJ_cGetGlyphs(
-    IN FONTOBJ *pfo,
-    IN ULONG    iMode,
-    IN ULONG    cGlyph,
-    IN HGLYPH  *phg,
-    IN PVOID   *ppvGlyph)
+    _In_ FONTOBJ *pfo,
+    _In_ ULONG iMode,
+    _In_ ULONG cGlyph,
+    _In_ HGLYPH *phg,
+    _At_((GLYPHDATA**)ppvGlyph, _Outptr_) PVOID *ppvGlyph)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 IFIMETRICS*
 APIENTRY
 NtGdiFONTOBJ_pifi(
-    IN FONTOBJ *pfo)
+    _In_ FONTOBJ *pfo)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 FD_GLYPHSET*
 APIENTRY
 NtGdiFONTOBJ_pfdg(
-    IN FONTOBJ *pfo)
+    _In_ FONTOBJ *pfo)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 PFD_GLYPHATTR
 APIENTRY
 NtGdiFONTOBJ_pQueryGlyphAttrs(
-    IN FONTOBJ *pfo,
-    IN ULONG iMode)
+    _In_ FONTOBJ *pfo,
+    _In_ ULONG iMode)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 PVOID
 APIENTRY
 NtGdiFONTOBJ_pvTrueTypeFontFile(
-    IN FONTOBJ *pfo,
-    OUT ULONG *pcjFile)
+    _In_ FONTOBJ *pfo,
+    _Out_ ULONG *pcjFile)
 {
     UNIMPLEMENTED;
     return NULL;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiFONTOBJ_cGetAllGlyphHandles(
-    IN FONTOBJ *pfo,
-    IN HGLYPH  *phg)
+    _In_ FONTOBJ *pfo,
+    _Out_opt_ _Post_count_(return) HGLYPH *phg)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 LONG
 APIENTRY
 NtGdiHT_Get8BPPMaskPalette(
-    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
-    IN BOOL Use8BPPMaskPal,
-    IN BYTE CMYMask,
-    IN USHORT RedGamma,
-    IN USHORT GreenGamma,
-    IN USHORT BlueGamma)
+    _Out_opt_ _Post_count_(return) LPPALETTEENTRY pPaletteEntry,
+    _In_ BOOL Use8BPPMaskPal,
+    _In_ BYTE CMYMask,
+    _In_ USHORT RedGamma,
+    _In_ USHORT GreenGamma,
+    _In_ USHORT BlueGamma)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 LONG
 APIENTRY
 NtGdiHT_Get8BPPFormatPalette(
-    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
-    IN USHORT RedGamma,
-    IN USHORT GreenGamma,
-    IN USHORT BlueGamma)
+    _Out_opt_ _Post_count_(return) LPPALETTEENTRY pPaletteEntry,
+    _In_ USHORT RedGamma,
+    _In_ USHORT GreenGamma,
+    _In_ USHORT BlueGamma)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vGetBounds(
-    IN PATHOBJ *ppo,
-    OUT PRECTFX prectfx)
+    _In_ PATHOBJ *ppo,
+    _Out_ PRECTFX prectfx)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiPATHOBJ_bEnum(
-    IN PATHOBJ *ppo,
-    OUT PATHDATA *ppd)
+    _In_ PATHOBJ *ppo,
+    _Out_ PATHDATA *ppd)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vEnumStart(
-    IN PATHOBJ *ppo)
+    _In_ PATHOBJ *ppo)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vEnumStartClipLines(
-    IN PATHOBJ *ppo,
-    IN CLIPOBJ *pco,
-    IN SURFOBJ *pso,
-    IN LINEATTRS *pla)
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,
+    _In_ SURFOBJ *pso,
+    _In_ LINEATTRS *pla)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiPATHOBJ_bEnumClipLines(
-    IN PATHOBJ *ppo,
-    IN ULONG cb,
-    OUT CLIPLINE *pcl)
+    _In_ PATHOBJ *ppo,
+    _In_ ULONG cb,
+    _Out_writes_bytes_(cb) CLIPLINE *pcl)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiSTROBJ_bEnum(
-    IN STROBJ *pstro,
-    OUT ULONG *pc,
-    OUT PGLYPHPOS *ppgpos)
+    _In_ STROBJ *pstro,
+    _Out_ ULONG *pc,
+    _Outptr_result_buffer_(*pc) PGLYPHPOS *ppgpos)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiSTROBJ_bEnumPositionsOnly(
-    IN STROBJ *pstro,
-    OUT ULONG *pc,
-    OUT PGLYPHPOS *ppgpos)
+    _In_ STROBJ *pstro,
+    _Out_ ULONG *pc,
+    _Outptr_result_buffer_(*pc) PGLYPHPOS *ppgpos)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiSTROBJ_bGetAdvanceWidths(
-    IN STROBJ *pstro,
-    IN ULONG iFirst,
-    IN ULONG c,
-    OUT POINTQF *pptqD)
+    _In_ STROBJ*pstro,
+    _In_ ULONG iFirst,
+    _In_ ULONG c,
+    _Out_writes_(c) POINTQF*pptqD)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
 
+__kernel_entry
 NTSTATUS
 APIENTRY
 NtGdiSTROBJ_vEnumStart(
-    IN STROBJ *pstro)
+    _Inout_ STROBJ *pstro)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
+__kernel_entry
 DWORD
 APIENTRY
 NtGdiSTROBJ_dwGetCodePage(
-    IN STROBJ *pstro)
+    _In_ STROBJ *pstro)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiXFORMOBJ_bApplyXform(
-    IN XFORMOBJ *pxo,
-    IN ULONG iMode,
-    IN ULONG cPoints,
+    _In_ XFORMOBJ *pxo,
+    _In_ ULONG iMode,
+    _In_ ULONG cPoints,
     _In_reads_(cPoints) PPOINTL pptIn,
     _Out_writes_(cPoints) PPOINTL pptOut)
 {
@@ -657,42 +713,46 @@ NtGdiXFORMOBJ_bApplyXform(
     return FALSE;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiXFORMOBJ_iGetXform(
-    IN XFORMOBJ *pxo,
-    OUT OPTIONAL XFORML *pxform)
+    _In_ XFORMOBJ *pxo,
+    _Out_opt_ XFORML *pxform)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiXLATEOBJ_cGetPalette(
-    IN XLATEOBJ *pxlo,
-    IN ULONG iPal,
-    IN ULONG cPal,
-    OUT ULONG *pPal)
+    _In_ XLATEOBJ *pxlo,
+    _In_ ULONG iPal,
+    _In_ ULONG cPal,
+    _Out_writes_(cPal) ULONG *pPal)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiXLATEOBJ_iXlate(
-    IN XLATEOBJ *pxlo,
-    IN ULONG iColor)
+    _In_ XLATEOBJ *pxlo,
+    _In_ ULONG iColor)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
+__kernel_entry
 HANDLE
 APIENTRY
 NtGdiXLATEOBJ_hGetColorTransform(
-    IN XLATEOBJ *pxlo)
+    _In_ XLATEOBJ *pxlo)
 {
     UNIMPLEMENTED;
     return 0;

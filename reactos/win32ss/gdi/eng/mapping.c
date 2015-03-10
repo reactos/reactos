@@ -381,6 +381,12 @@ EngLoadModuleEx(
                           FILE_NON_DIRECTORY_FILE,
                           NULL,
                           0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open file, hFile=%p, Status=0x%x\n", hFile, Status);
+        EngFreeMem(pFileView);
+        return NULL;
+    }
 
     Status = ZwQueryInformationFile(hFile,
                                     &IoStatusBlock,

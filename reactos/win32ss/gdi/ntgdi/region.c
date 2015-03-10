@@ -2288,7 +2288,7 @@ REGION_AllocUserRgnWithHandle(
 static
 VOID
 REGION_vSyncRegion(
-    PREGION prgn)
+    _In_ PREGION prgn)
 {
     PRGN_ATTR prgnattr;
 
@@ -3997,11 +3997,12 @@ NtGdiPtInRegion(
     return bResult;
 }
 
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiRectInRegion(
     _In_ HRGN hrgn,
-    _In_ LPRECT prclUnsafe)
+    _Inout_ LPRECT prclUnsafe)
 {
     RECTL rcTemp;
 
@@ -4059,12 +4060,13 @@ NtGdiSetRectRgn(
  * If the function fails, the return value is zero."
  */
 _Success_(return!=0)
+__kernel_entry
 ULONG
 APIENTRY
 NtGdiGetRegionData(
     _In_ HRGN hrgn,
     _In_ ULONG cjBuffer,
-    _Out_opt_bytecap_(cjBuffer) LPRGNDATA lpRgnData)
+    _Out_writes_bytes_to_opt_(cjBuffer, return) LPRGNDATA lpRgnData)
 {
     ULONG cjRects, cjSize;
     PREGION prgn;
