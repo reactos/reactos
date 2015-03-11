@@ -22,10 +22,10 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-  IDS_TRUE  "��ԧ"
-  IDS_FALSE "����ԧ"
-  IDS_YES   "��"
-  IDS_NO    "�����"
-  IDS_ON    "�Դ"
-  IDS_OFF   "�Դ"
+  IDS_TRUE  "จริง"
+  IDS_FALSE "ไม่จริง"
+  IDS_YES   "ใช่"
+  IDS_NO    "ไม่ใช่"
+  IDS_ON    "เปิด"
+  IDS_OFF   "ปิด"
 }

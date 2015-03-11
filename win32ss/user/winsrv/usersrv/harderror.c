@@ -490,7 +490,7 @@ UserpMessageBox(
            Text, Caption, Severity, Type);
 
     /* Display a message box */
-    MessageBoxResponse = MessageBoxW(0, Text, Caption, Type);
+    MessageBoxResponse = MessageBoxW(NULL, Text, Caption, Type);
 
     /* Return response value */
     switch (MessageBoxResponse)

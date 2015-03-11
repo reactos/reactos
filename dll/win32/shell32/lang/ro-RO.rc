@@ -43,6 +43,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Anulează\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "&Decupează\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copie\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Lipește\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Lipește sc&urtătură", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copi&ere în dosarul…", FCIDM_SHVIEW_COPYTO
+    MENUITEM "&Mutare în dosarul…", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Selectează t&ot\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Inversea&ză selecția", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -337,9 +354,9 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Ce cont de utilizator este folosit pentru a executa?", -1, 10, 20, 220, 20
     CHECKBOX "Utilizator curent: %s", 14000, 10, 45, 150, 10
-    LTEXT "Protejare computer de activiăți neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
+    LTEXT "Protejare calculator de activiăți neautorizate", -1, 25, 57, 200, 10, WS_DISABLED
     CHECKBOX "Această opțiune vă poate proteja calculatorul de activități care pot fi dăunătoare dar poate de asemenea duce la funcționarea incorectă a programului.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-    CHECKBOX "Utilizator curent:", 14002, 10, 100, 90, 10
+    CHECKBOX "Următorul utilizator:", 14002, 10, 100, 90, 10
     LTEXT "Nume utilizator:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "…", 14004, 180, 115, 30, 14, WS_TABSTOP
@@ -378,16 +395,6 @@ BEGIN
     PUSHBUTTON "Spe&cificare…", 14004, 198, 207, 50, 14
     DEFPUSHBUTTON "Con&firmă", IDOK, 150, 236, 50, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 206, 236, 50, 14
-END
-
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copiere…"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "A&nulează", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "Fișier", 14001, 8, 6, 169, 10
 END
 
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
@@ -608,6 +615,20 @@ BEGIN
     PUSHBUTTON "A&nulează", IDCANCEL, 167, 181, 50, 14
 END
 
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Atenție"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "Acest fișier ar putea să fie folosit fie de către sistemul de\n\
+operare sau de o oarecare aplicație. Modificând acest fișier\n\
+riscați să cauzați daune în sistem.\n\n\
+Sigur doriți să deschideți acest fișier?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "D&a", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "N&u", IDNO, 180, 55, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -647,7 +668,7 @@ BEGIN
     IDS_VIEW_SMALL "&Pictograme"
     IDS_VIEW_LIST "&Listă"
     IDS_VIEW_DETAILS "&Detalii"
-    IDS_SELECT "Selectează"
+    IDS_SELECT "Selectea&ză"
     IDS_OPEN "&Deschide"
     IDS_CREATELINK "Creează sc&urtătură"
     IDS_COPY "&Copiază"
@@ -657,7 +678,7 @@ BEGIN
     IDS_RESTORE "&Restabilește"
     IDS_FORMATDRIVE "F&ormatare…"
     IDS_RENAME "Rede&numește"
-    IDS_INSERT "Inserea&ză"
+    IDS_PASTE "&Lipește"
 
     IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Eroare de permisiune."
     IDS_CREATEFOLDER_CAPTION "Eroare la crearea unui nou dosar"
@@ -673,6 +694,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Acest dosar deja conține un fișier numit „%1”.\n\nDoriți să îl înlocuiți"
     IDS_OVERWRITEFILE_CAPTION "Confirmarea înlocuirii fișierului"
     IDS_OVERWRITEFOLDER_TEXT "Acest dosar deja conține un sub-dosar cu numele „%1”.\n\nDacă fișierele din dosarul de destinație au același nume ca cele din\ndosarul selectat, ele vor fi înlocuite. Sigur doriți să copiați sau\nsă mutați dosarul?"
+
+    IDS_FILEOOP_COPYING "Se copie"
+    IDS_FILEOOP_MOVING "Se mută"
+    IDS_FILEOOP_DELETING "Se șterge"
+    IDS_FILEOOP_FROM_TO "Din %1 în %2"
+    IDS_FILEOOP_FROM "Din %1"
+    IDS_FILEOOP_PREFLIGHT "Se verifică"
 
     /* message box strings */
     IDS_RESTART_TITLE "Repornire"
@@ -783,4 +811,6 @@ BEGIN
     IDS_BYTES_FORMAT "octeți"
     IDS_UNKNOWN_APP "Aplicație nespecificată"
     IDS_EXE_DESCRIPTION "Descriere:"
+
+    IDS_MENU_EMPTY "(Gol)"
 END

@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/defwnd.c
+ * FILE:            win32ss/user/user32/windows/defwnd.c
  * PURPOSE:         Window management
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -96,9 +96,6 @@ DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
   }
   Ret = NtUserDefSetText(hWnd, (String ? &lsString : NULL));
 
-  if (Ret)
-     IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
-
   return Ret;
 }
 
@@ -153,80 +150,34 @@ UserGetInsideRectNC(PWND Wnd, RECT *rect)
     }
 }
 
-LRESULT
-DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
+HWND FASTCALL
+IntFindChildWindowToOwner(HWND hRoot, HWND hOwner)
 {
-  /* Not for child windows. */
-  if (hWnd != (HWND)wParam)
-    {
-      return(0);
-    }
+   HWND Ret;
+   PWND Child, OwnerWnd, Root, Owner;
 
-  switch((INT_PTR) LOWORD(lParam))
-    {
-    case HTERROR:
-      {
-	WORD Msg = HIWORD(lParam);
-	if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	    Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
-	  {
-	    MessageBeep(0);
-	  }
-	break;
-      }
+   Root = ValidateHwnd(hRoot);
+   Owner = ValidateHwnd(hOwner);
 
-    case HTCLIENT:
-      {
-	HICON hCursor = (HICON)GetClassLongPtrW(hWnd, GCL_HCURSOR);
-	if (hCursor)
-	  {
-	    SetCursor(hCursor);
-	    return(TRUE);
-	  }
-	return(FALSE);
-      }
+   for( Child = Root->spwndChild ? DesktopPtrToUser(Root->spwndChild) : NULL;
+        Child;
+        Child = Child->spwndNext ? DesktopPtrToUser(Child->spwndNext) : NULL )
+   {
+      OwnerWnd = Child->spwndOwner ? DesktopPtrToUser(Child->spwndOwner) : NULL;
+      if(!OwnerWnd)
+         continue;
 
-    case HTLEFT:
-    case HTRIGHT:
-      {
-        if (Style & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZEWE)));
-      }
+      if (!(Child->style & WS_POPUP) || !(Child->style & WS_VISIBLE))
+         continue;
 
-    case HTTOP:
-    case HTBOTTOM:
+      if(OwnerWnd == Owner)
       {
-        if (Style & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENS)));
+         Ret = Child->head.h;
+         return Ret;
       }
-
-    case HTTOPLEFT:
-    case HTBOTTOMRIGHT:
-      {
-        if (Style & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENWSE)));
-      }
-
-    case HTBOTTOMLEFT:
-    case HTTOPRIGHT:
-      {
-        if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MAXIMIZE)
-        {
-          break;
-        }
-	return((LRESULT)SetCursor(LoadCursorW(0, IDC_SIZENESW)));
-      }
-    }
-  return((LRESULT)SetCursor(LoadCursorW(0, IDC_ARROW)));
+   }
+   ERR("IDCWTO Nothing found\n");
+   return NULL;
 }
 
 /***********************************************************************
@@ -837,34 +788,6 @@ User32DefWindowProc(HWND hWnd,
         case WM_CTLCOLOR:
             return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
-        case WM_SETCURSOR:
-        {
-            LONG_PTR Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
-
-            if (Style & WS_CHILD)
-            {
-                /* with the exception of the border around a resizable wnd,
-                 * give the parent first chance to set the cursor */
-                if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
-                {
-                    HWND parent = GetParent( hWnd );
-                    if (bUnicode)
-                    {
-                       if (parent != GetDesktopWindow() &&
-                           SendMessageW( parent, WM_SETCURSOR, wParam, lParam))
-                          return TRUE;
-                    }
-                    else
-                    {
-                       if (parent != GetDesktopWindow() &&                    
-                           SendMessageA( parent, WM_SETCURSOR, wParam, lParam))
-                          return TRUE;
-                    }
-                }
-            }
-            return (DefWndHandleSetCursor(hWnd, wParam, lParam, Style));
-        }
-
         case WM_SYSCOMMAND:
             return (DefWndHandleSysCommand(hWnd, wParam, lParam));
 
@@ -1042,22 +965,6 @@ User32DefWindowProc(HWND hWnd,
                 SendMessageA(GetParent(hWnd), Msg, wParam, lParam);
             }
             break;
-        }
-
-        case WM_SYSTIMER:
-        {
-          THRDCARETINFO CaretInfo;
-          switch(wParam)
-          {
-            case 0xffff: /* Caret timer */
-              /* switch showing byte in win32k and get information about the caret */
-              if(NtUserxSwitchCaretShowing(&CaretInfo) && (CaretInfo.hWnd == hWnd))
-              {
-                DrawCaret(hWnd, &CaretInfo);
-              }
-              break;
-          }
-          break;
         }
 
         case WM_QUERYOPEN:
@@ -1287,6 +1194,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_WINDOWPOSCHANGING:
         case WM_WINDOWPOSCHANGED:
         case WM_APPCOMMAND:
+        case WM_SETCURSOR:
         {
             LRESULT lResult;
             NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, !bUnicode);
@@ -1475,7 +1383,10 @@ RealDefWindowProcA(HWND hWnd,
             DefSetText(hWnd, (PCWSTR)lParam, TRUE);
 
             if ((GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_CAPTION) == WS_CAPTION)
+            {
                 UserPaintCaption(hWnd);
+                IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
+            }
             Result = 1;
             break;
         }
@@ -1505,6 +1416,7 @@ RealDefWindowProcA(HWND hWnd,
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
+        case WM_IME_CONTROL:
         {
             HWND hwndIME;
 
@@ -1666,6 +1578,7 @@ RealDefWindowProcW(HWND hWnd,
         case WM_IME_ENDCOMPOSITION:
         case WM_IME_SELECT:
         case WM_IME_NOTIFY:
+        case WM_IME_CONTROL:
         {
             HWND hwndIME;
 

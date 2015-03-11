@@ -72,7 +72,7 @@
 @ stub SetupSetRegisteredOsComponentsOrder
 @ stub SetupSetSetupInfo
 @ stub SetupShellSettings
-@ stub SetupStartService
+@ stdcall SetupStartService(wstr long)
 @ stub SetupUnregisterOsComponent
 @ stub StorageCoInstaller
 @ stub SystemUpdateUserProfileDirectory

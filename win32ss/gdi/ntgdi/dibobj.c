@@ -461,7 +461,7 @@ NtGdiSetDIBitsToDeviceInternal(
 {
     INT ret = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-    PDC pDC;
+    PDC pDC = NULL;
     HBITMAP hSourceBitmap = NULL, hMaskBitmap = NULL;
     SURFOBJ *pDestSurf, *pSourceSurf = NULL, *pMaskSurf = NULL;
     SURFACE *pSurf;
@@ -493,21 +493,25 @@ NtGdiSetDIBitsToDeviceInternal(
 
     if (!NT_SUCCESS(Status))
     {
-        goto Exit2;
+        goto Exit;
     }
 
     ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+    if (ScanLines == 0)
+    {
+        DPRINT1("ScanLines == 0\n");
+        goto Exit;
+    }
 
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
-        goto Exit2;
+        goto Exit;
     }
 
     if (pDC->dctype == DC_TYPE_INFO)
     {
-        DC_UnlockDc(pDC);
         goto Exit;
     }
 
@@ -637,14 +641,13 @@ Exit:
     }
 
     if (ppalDIB) PALETTE_ShareUnlockPalette(ppalDIB);
-
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
     if (pMaskSurf) EngUnlockSurface(pMaskSurf);
     if (hMaskBitmap) EngDeleteSurface((HSURF)hMaskBitmap);
-    DC_UnlockDc(pDC);
-Exit2:
+    if (pDC) DC_UnlockDc(pDC);
     ExFreePoolWithTag(pbmiSafe, 'pmTG');
+
     return ret;
 }
 
@@ -674,7 +677,7 @@ GreGetDIBitsInternal(
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
 
-    DPRINT("Entered NtGdiGetDIBitsInternal()\n");
+    DPRINT("Entered GreGetDIBitsInternal()\n");
 
     if ((Usage && Usage != DIB_PAL_COLORS) || !Info || !hBitmap)
         return 0;
@@ -737,20 +740,9 @@ GreGetDIBitsInternal(
         Info->bmiHeader.biSizeImage = DIB_GetDIBImageBytes( Info->bmiHeader.biWidth,
                                       Info->bmiHeader.biHeight,
                                       Info->bmiHeader.biBitCount);
-        if(psurf->hSecure)
-        {
-            switch(Info->bmiHeader.biBitCount)
-            {
-            case 16:
-            case 32:
-                Info->bmiHeader.biCompression = BI_BITFIELDS;
-                break;
-            default:
-                Info->bmiHeader.biCompression = BI_RGB;
-                break;
-            }
-        }
-        else if(Info->bmiHeader.biBitCount > 8)
+
+        if ((Info->bmiHeader.biBitCount == 16) ||
+            (Info->bmiHeader.biBitCount == 32))
         {
             Info->bmiHeader.biCompression = BI_BITFIELDS;
         }
@@ -1010,6 +1002,8 @@ done:
     return ScanLines;
 }
 
+_Success_(return!=0)
+__kernel_entry
 INT
 APIENTRY
 NtGdiGetDIBitsInternal(
@@ -1017,13 +1011,13 @@ NtGdiGetDIBitsInternal(
     _In_ HBITMAP hbm,
     _In_ UINT iStartScan,
     _In_ UINT cScans,
-    _Out_opt_ LPBYTE pjBits,
-    _Inout_ LPBITMAPINFO pbmiUser,
+    _Out_writes_bytes_opt_(cjMaxBits) LPBYTE pjBits,
+    _Inout_ LPBITMAPINFO pbmi,
     _In_ UINT iUsage,
     _In_ UINT cjMaxBits,
     _In_ UINT cjMaxInfo)
 {
-    PBITMAPINFO pbmi;
+    PBITMAPINFO pbmiSafe;
     HANDLE hSecure = NULL;
     INT iResult = 0;
     UINT cjAlloc;
@@ -1045,8 +1039,8 @@ NtGdiGetDIBitsInternal(
     cjAlloc = sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD);
 
     /* Allocate a buffer the bitmapinfo */
-    pbmi = ExAllocatePoolWithTag(PagedPool, cjAlloc, 'imBG');
-    if (!pbmi)
+    pbmiSafe = ExAllocatePoolWithTag(PagedPool, cjAlloc, 'imBG');
+    if (!pbmiSafe)
     {
         /* Fail */
         return 0;
@@ -1056,8 +1050,8 @@ NtGdiGetDIBitsInternal(
     _SEH2_TRY
     {
         /* Probe and copy the BITMAPINFO */
-        ProbeForRead(pbmiUser, cjMaxInfo, 1);
-        RtlCopyMemory(pbmi, pbmiUser, cjMaxInfo);
+        ProbeForRead(pbmi, cjMaxInfo, 1);
+        RtlCopyMemory(pbmiSafe, pbmi, cjMaxInfo);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1066,8 +1060,8 @@ NtGdiGetDIBitsInternal(
     _SEH2_END;
 
     /* Check if the header size is large enough */
-    if ((pbmi->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
-        (pbmi->bmiHeader.biSize > cjMaxInfo))
+    if ((pbmiSafe->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
+        (pbmiSafe->bmiHeader.biSize > cjMaxInfo))
     {
         goto cleanup;
     }
@@ -1089,7 +1083,7 @@ NtGdiGetDIBitsInternal(
                                    iStartScan,
                                    cScans,
                                    pjBits,
-                                   pbmi,
+                                   pbmiSafe,
                                    iUsage,
                                    cjMaxBits,
                                    cjMaxInfo);
@@ -1101,26 +1095,25 @@ NtGdiGetDIBitsInternal(
         _SEH2_TRY
         {
             /* Copy the data back */
-            cjMaxInfo = DIB_BitmapInfoSize(pbmi, (WORD)iUsage);
-            ProbeForWrite(pbmiUser, cjMaxInfo, 1);
-            RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
+            cjMaxInfo = min(cjMaxInfo, (UINT)DIB_BitmapInfoSize(pbmiSafe, (WORD)iUsage));
+            ProbeForWrite(pbmi, cjMaxInfo, 1);
+            RtlCopyMemory(pbmi, pbmiSafe, cjMaxInfo);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Ignore */
+            (VOID)0;
         }
         _SEH2_END;
     }
 
 cleanup:
     if (hSecure) EngUnsecureMem(hSecure);
-    ExFreePoolWithTag(pbmi, 'imBG');
+    ExFreePoolWithTag(pbmiSafe, 'imBG');
 
     return iResult;
 }
 
-
-#define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
 W32KAPI
 INT
@@ -1174,7 +1167,7 @@ NtGdiStretchDIBitsInternal(
     DC_UnlockDc(pdc);
 
     /* Check if we can use NtGdiSetDIBitsToDeviceInternal */
-    if (sizel.cx == cxSrc && sizel.cy == cySrc && dwRop == SRCCOPY)
+    if ((sizel.cx == cxSrc) && (sizel.cy == cySrc) && (dwRop == SRCCOPY))
     {
         /* Yes, we can! */
         return NtGdiSetDIBitsToDeviceInternal(hdc,
@@ -1241,7 +1234,7 @@ NtGdiStretchDIBitsInternal(
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
 
     hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
-                               pbmi->bmiHeader.biHeight,
+                               abs(pbmi->bmiHeader.biHeight),
                                0,
                                BitmapFormat(pbmi->bmiHeader.biBitCount,
                                             pbmi->bmiHeader.biCompression),
@@ -1296,7 +1289,7 @@ NtGdiStretchDIBitsInternal(
                                NULL,
                                &pdc->eboFill.BrushObject,
                                NULL,
-                               ROP_TO_ROP4(dwRop));
+                               WIN32_ROP3_TO_ENG_ROP4(dwRop));
 
     /* Cleanup */
     DC_vFinishBlit(pdc, NULL);
@@ -1661,7 +1654,7 @@ DIB_CreateDIBSection(
 
     // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
     // we're dealing with a compressed bitmap.  Otherwise, use width * height.
-    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB && bi->biCompression != BI_BITFIELDS
+    totalSize = (bi->biSizeImage && (bi->biCompression != BI_RGB) && (bi->biCompression != BI_BITFIELDS))
                 ? bi->biSizeImage : (ULONG)(bm.bmWidthBytes * effHeight);
 
     if (section)
@@ -1683,7 +1676,7 @@ DIB_CreateDIBSection(
         }
 
         mapOffset = offset - (offset % Sbi.AllocationGranularity);
-        mapSize = bi->biSizeImage + (offset - mapOffset);
+        mapSize = totalSize + (offset - mapOffset);
 
         SectionOffset.LowPart  = mapOffset;
         SectionOffset.HighPart = 0;
@@ -1733,7 +1726,7 @@ DIB_CreateDIBSection(
                             BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
                             BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
                             ((bi->biHeight < 0) ? BMF_TOPDOWN : 0),
-                            bi->biSizeImage,
+                            totalSize,
                             bm.bmBits,
                             0);
     if (!res)

@@ -103,6 +103,11 @@ Author:
 #define LDR_IS_RESOURCE(handle)     (LDR_IS_IMAGEMAPPING(handle) || LDR_IS_DATAFILE(handle))
 
 //
+// Activation Context
+//
+typedef PVOID PACTIVATION_CONTEXT;
+
+//
 // Loader Data stored in the PEB
 //
 typedef struct _PEB_LDR_DATA
@@ -150,7 +155,7 @@ typedef struct _LDR_DATA_TABLE_ENTRY
         ULONG TimeDateStamp;
         PVOID LoadedImports;
     };
-    PVOID EntryPointActivationContext;
+    PACTIVATION_CONTEXT EntryPointActivationContext;
     PVOID PatchInformation;
 } LDR_DATA_TABLE_ENTRY, *PLDR_DATA_TABLE_ENTRY;
 
@@ -228,8 +233,14 @@ typedef struct _ALT_RESOURCE_MODULE
 //
 // Callback function for LdrEnumerateLoadedModules
 //
-typedef VOID (NTAPI LDR_ENUM_CALLBACK)(IN PLDR_DATA_TABLE_ENTRY ModuleInformation, _In_ PVOID Parameter, _Out_ BOOLEAN *Stop);
+typedef VOID (NTAPI LDR_ENUM_CALLBACK)(_In_ PLDR_DATA_TABLE_ENTRY ModuleInformation, _In_ PVOID Parameter, _Out_ BOOLEAN *Stop);
 typedef LDR_ENUM_CALLBACK *PLDR_ENUM_CALLBACK;
+
+//
+// Manifest prober routine set via LdrSetDllManifestProber
+//
+typedef NTSTATUS (NTAPI LDR_MANIFEST_PROBER_ROUTINE)(_In_ PVOID DllHandle, _In_ PCWSTR FullDllName, _Out_ PVOID *ActCtx);
+typedef LDR_MANIFEST_PROBER_ROUTINE *PLDR_MANIFEST_PROBER_ROUTINE;
 
 //
 // DLL Main Routine

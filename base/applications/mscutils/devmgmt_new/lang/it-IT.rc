@@ -10,7 +10,7 @@ BEGIN
   BEGIN
     MENUITEM "Stampa",                      IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Propriet‡",                   IDC_PROP, GRAYED
+    MENUITEM "Propriet√†",                   IDC_PROP, GRAYED
   END
   POPUP "Visualizza"
   BEGIN
@@ -29,7 +29,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Propriet‡",              IDC_PROP, GRAYED
+    MENUITEM "Propriet√†",              IDC_PROP, GRAYED
   END
 END
 
@@ -46,12 +46,12 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Questo programma Ë software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma Ë distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILIT¿ o UTILIZZABILIT¿ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non Ë cosi' scrivete a 'Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.."
+  IDS_LICENSE "Questo programma √® software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma √® distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILIT√Ä o UTILIZZABILIT√Ä PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non √® cosi' scrivete a 'Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Propriet‡"
+  IDS_TOOLTIP_PROP      "Propriet√†"
   IDS_TOOLTIP_REFRESH   "Aggiorna"
   IDS_TOOLTIP_HELP      "Aiuto"
   IDS_TOOLTIP_EXIT      "Esci"
@@ -64,7 +64,7 @@ BEGIN
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Esci dal programma."
   IDS_HINT_REFRESH      " Aggiorna la lista dei servizi."
-  IDS_HINT_PROP         " Apri le propriet‡ per la selezione attuale."
+  IDS_HINT_PROP         " Apri le propriet√† per la selezione attuale."
   IDS_HINT_HELP         " Visualizza la finestra di aiuto."
   IDS_HINT_ABOUT        " Informazioni su Gestione dispositivi di ReactOS."
 

@@ -88,6 +88,12 @@ static ULONG WINAPI d3d9_surface_Release(IDirect3DSurface9 *iface)
         return IDirect3DBaseTexture9_Release(&surface->texture->IDirect3DBaseTexture9_iface);
     }
 
+    if (!surface->resource.refcount)
+    {
+        ERR("Surface doesn't have any references.\n");
+        return 0;
+    }
+
     refcount = InterlockedDecrement(&surface->resource.refcount);
     TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 

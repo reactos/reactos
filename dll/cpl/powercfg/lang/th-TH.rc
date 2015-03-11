@@ -9,15 +9,15 @@ BEGIN
     LTEXT "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.", -1, 45, 13, 194, 36
     GROUPBOX "P&ower schemes", -1, 7, 57, 240, 46
     COMBOBOX IDC_ENERGYLIST, 14, 70, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "&�ѹ�֡��...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
-    PUSHBUTTON "&ź", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
-    GROUPBOX "����Һ���", IDC_GRPDETAIL, 7, 108, 240, 105
-    LTEXT "����ͤ�����������:", IDC_SAT, 15, 120, 60, 10
+    PUSHBUTTON "&บันทึกเป็น...", IDC_SAVEAS_BTN, 100, 85, 75, 15, WS_DISABLED
+    PUSHBUTTON "&ลบ", IDC_DELETE_BTN, 180, 85, 55, 15, WS_DISABLED
+    GROUPBOX "ไม่ทราบค่า", IDC_GRPDETAIL, 7, 108, 240, 105
+    LTEXT "เมื่อคอมพิวเตอร์เป็น:", IDC_SAT, 15, 120, 60, 10
     LTEXT "Plugged in", IDC_SAC, 100, 120, 45, 15
     ICON IDI_AC, IDC_IAC, 75, 115, 25, 15
-    LTEXT "���ѧ��ҹ�ػ�ó����俿��", IDC_SDC, 197, 120, 45, 15
+    LTEXT "กำลังใช้งานอุปกรณ์จ่ายไฟฟ้า", IDC_SDC, 197, 120, 45, 15
     ICON IDI_DC, IDC_IDC, 165, 115, 25, 15
-    LTEXT "�Դ&���Ҿ:", IDC_MONITOR, 15, 145, 80, 10
+    LTEXT "ปิด&จอภาพ:", IDC_MONITOR, 15, 145, 80, 10
     COMBOBOX IDC_MONITORACLIST, 100, 140, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 175, 140, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "Turn off hard d&isks:", IDC_DISK, 15, 160, 80, 10
@@ -103,41 +103,41 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "������͡��Ҿ�ѧ�ҹ"
-    IDS_CPLDESCRIPTION_1 "��Ѻ��Ҿ�ѧ�ҹ-���ѧ�ѹ�֡��õ�駤�����Ѻ����������ͧ�س"
+    IDS_CPLNAME_1 "ตัวเลือกค่าพลังงาน"
+    IDS_CPLDESCRIPTION_1 "ปรับค่าพลังงาน-กำลังบันทึกการตั้งค่าให้กับคอมพิวเตอร์ของคุณ"
     IDS_PROCENT "%i%%"
-    IDS_SOUND "���§"
-    IDS_TEXT "��ͤ���"
-    IDS_CONFIG1 "��駤�����Ѻ %1 ��Ҿ�ѧ�ҹ"
-    IDS_CONFIG2 "��õ�駤��Ẻ����٧�� %1"
+    IDS_SOUND "เสียง"
+    IDS_TEXT "ข้อความ"
+    IDS_CONFIG1 "ตั้งค่าให้กับ %1 ค่าพลังงาน"
+    IDS_CONFIG2 "การตั้งค่าแบบขั้นสูงเป็น %1"
     IDS_SIZEBYTS "%i bytes"
     IDS_SIZEMB "%i MB"
-    IDS_NOACTION "�������¹���"
-    IDS_PowerActionNone1 "�������¹���"
-    IDS_PowerActionUnknown "����Һ"
-    IDS_PowerActionSleep "����о�����ӧҹ"
-    IDS_PowerActionHibernate "�������ش�ѡ"
-    IDS_PowerActionShutdown "�Դ����ͧ"
-    IDS_PowerActionRestart "������Դ����"
-    IDS_PowerActionShutdownOff "�Դ����ͧ��лԴ�к���ѧ�ҹ"
-    IDS_PowerActionWarmEject "�ô����ѹ��͹��Ҩз�����"
-    IDS_PowerActionNone2 "����駤��"
-    IDS_TIMEOUT1 "��ѧ�ҡ 1 �ҷ�"
-    IDS_TIMEOUT2 "��ѧ�ҡ 2 �ҷ�"
-    IDS_TIMEOUT3 "��ѧ�ҡ 3 �ҷ�"
-    IDS_TIMEOUT4 "��ѧ�ҡ 5 �ҷ�"
-    IDS_TIMEOUT5 "��ѧ�ҡ 10 �ҷ�"
-    IDS_TIMEOUT6 "��ѧ�ҡ 15 �ҷ�"
-    IDS_TIMEOUT7 "��ѧ�ҡ 20 �ҷ�"
-    IDS_TIMEOUT8 "��ѧ�ҡ 25 �ҷ�"
-    IDS_TIMEOUT9 "��ѧ�ҡ 30 �ҷ�"
-    IDS_TIMEOUT10 "��ѧ�ҡ 45 �ҷ�"
-    IDS_TIMEOUT11 "��ѧ�ҡ 1 �������"
-    IDS_TIMEOUT12 "��ѧ�ҡ 2 �������"
-    IDS_TIMEOUT13 "��ѧ�ҡ 3 �������"
-    IDS_TIMEOUT14 "��ѧ�ҡ 4 �������"
-    IDS_TIMEOUT15 "��ѧ�ҡ 5 �������"
-    IDS_TIMEOUT16 "����駤��"
+    IDS_NOACTION "ไม่เปลี่ยนค่า"
+    IDS_PowerActionNone1 "ไม่เปลี่ยนค่า"
+    IDS_PowerActionUnknown "ไม่ทราบ"
+    IDS_PowerActionSleep "สภาวะพร้อมทำงาน"
+    IDS_PowerActionHibernate "สภาวะหยุดพัก"
+    IDS_PowerActionShutdown "ปิดเครื่อง"
+    IDS_PowerActionRestart "เริ่มเปิดใหม่"
+    IDS_PowerActionShutdownOff "ปิดเครื่องและปิดระบบพลังงาน"
+    IDS_PowerActionWarmEject "โปรดถามฉันก่อนว่าจะทำอะไร"
+    IDS_PowerActionNone2 "ไม่ตั้งค่า"
+    IDS_TIMEOUT1 "หลังจาก 1 นาที"
+    IDS_TIMEOUT2 "หลังจาก 2 นาที"
+    IDS_TIMEOUT3 "หลังจาก 3 นาที"
+    IDS_TIMEOUT4 "หลังจาก 5 นาที"
+    IDS_TIMEOUT5 "หลังจาก 10 นาที"
+    IDS_TIMEOUT6 "หลังจาก 15 นาที"
+    IDS_TIMEOUT7 "หลังจาก 20 นาที"
+    IDS_TIMEOUT8 "หลังจาก 25 นาที"
+    IDS_TIMEOUT9 "หลังจาก 30 นาที"
+    IDS_TIMEOUT10 "หลังจาก 45 นาที"
+    IDS_TIMEOUT11 "หลังจาก 1 ชั่วโมง"
+    IDS_TIMEOUT12 "หลังจาก 2 ชั่วโมง"
+    IDS_TIMEOUT13 "หลังจาก 3 ชั่วโมง"
+    IDS_TIMEOUT14 "หลังจาก 4 ชั่วโมง"
+    IDS_TIMEOUT15 "หลังจาก 5 ชั่วโมง"
+    IDS_TIMEOUT16 "ไม่ตั้งค่า"
     IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
     IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END

@@ -542,6 +542,8 @@ AddPartitionToDisk(
         return;
     }
 
+    PartEntry->DiskEntry = DiskEntry;
+
     PartEntry->StartSector.QuadPart = (ULONGLONG)PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector;
     PartEntry->SectorCount.QuadPart = (ULONGLONG)PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector;
 

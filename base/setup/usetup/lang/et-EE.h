@@ -1491,8 +1491,10 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = Taask„ivita arvuti"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Valitud partitsioonil pole piisavalt ruumi.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Vajuta suvalist klahvi, et j„tkata.",
         NULL
     },

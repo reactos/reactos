@@ -1,0 +1,12 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Afișează o structura de fișiere a unui director sau unități de stocare.\n\n\
+TREE [unitate:][cale] [/F] [/A]\n\n\
+\t/F   Afișează numele fișierelor din fiecare director.\n\
+\t/A   Folosește ASCII în loc de caractere extinse.\n"
+    IDS_NO_SUBDIRECTORIES "Nu există subdirectoare"
+    IDS_FOLDER_PATH "Enumerarea directorului CALE\n"
+    IDS_VOL_SERIAL "Numărul de serie al volumului este %x:%x\n"
+END

@@ -22,6 +22,7 @@ typedef struct _STARTINFO
     INT iFreeLdrIni;
 } STARTINFO, *PSTARTINFO;
 
+BOOL SaveRecoveryOptions;
 
 static VOID
 SetTimeout(HWND hwndDlg, INT Timeout)
@@ -544,13 +545,21 @@ WriteStartupRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
     HKEY hKey;
     DWORD lResult;
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                     L"System\\CurrentControlSet\\Control\\CrashControl",
-                     0,
-                     KEY_WRITE,
-                     &hKey) != ERROR_SUCCESS)
+    lResult = (DWORD)RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                                    L"System\\CurrentControlSet\\Control\\CrashControl",
+                                    0,
+                                    NULL,
+                                    REG_OPTION_NON_VOLATILE,
+                                    KEY_WRITE,
+                                    NULL,
+                                    &hKey,
+                                    NULL);
+    if (lResult != ERROR_SUCCESS)
     {
-        /* Failed to open key */
+         /* Failed to open key */
+        SetLastError(lResult);
+        ShowLastWin32Error(hwndDlg);
+
         return;
     }
 
@@ -587,15 +596,31 @@ LoadRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
 {
     HKEY hKey;
     WCHAR szName[MAX_PATH];
-    DWORD dwValue, dwValueLength, dwType;
+    DWORD dwValue, dwValueLength, dwType, dwResult;
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                     L"System\\CurrentControlSet\\Control\\CrashControl",
-                     0,
-                     KEY_READ,
-                     &hKey) != ERROR_SUCCESS)
+    dwResult = (DWORD)RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                                      L"System\\CurrentControlSet\\Control\\CrashControl",
+                                      0,
+                                      NULL,
+                                      REG_OPTION_NON_VOLATILE,
+                                      KEY_READ,
+                                      NULL,
+                                      &hKey,
+                                      NULL);
+    if (dwResult != ERROR_SUCCESS)
     {
         /* Failed to open key */
+        SetLastError(dwResult);
+        ShowLastWin32Error(hwndDlg);
+
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECWRITEEVENT), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECSENDALERT), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECRESTART), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECDEBUGCOMBO), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECDUMPFILE), FALSE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_STRRECOVERWRITE), FALSE);
+
+        SaveRecoveryOptions = FALSE;
         return;
     }
 
@@ -633,7 +658,7 @@ LoadRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
         SendDlgItemMessageW(hwndDlg, IDC_STRRECDEBUGCOMBO, CB_ADDSTRING, (WPARAM)0, (LPARAM) szName);
     }
 
-    if (LoadString(hApplet, IDS_FULL_DUMP, szName, sizeof(szName) / sizeof(WCHAR)))
+    if (LoadStringW(hApplet, IDS_FULL_DUMP, szName, sizeof(szName) / sizeof(WCHAR)))
     {
         szName[(sizeof(szName)/sizeof(WCHAR))-1] = L'\0';
         SendDlgItemMessageW(hwndDlg, IDC_STRRECDEBUGCOMBO, CB_ADDSTRING, (WPARAM)0, (LPARAM) szName);
@@ -653,6 +678,8 @@ LoadRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
 
     SetCrashDlgItems(hwndDlg, pStartInfo);
     RegCloseKey(hKey);
+
+    SaveRecoveryOptions = TRUE;
 }
 
 
@@ -748,7 +775,11 @@ StartRecDlgProc(HWND hwndDlg,
                         }
                     }
 
-                    WriteStartupRecoveryOptions(hwndDlg, pStartInfo);
+                    if (SaveRecoveryOptions)
+                    {
+                        WriteStartupRecoveryOptions(hwndDlg, pStartInfo);
+                    }
+
                     EndDialog(hwndDlg,
                               LOWORD(wParam));
                     return TRUE;

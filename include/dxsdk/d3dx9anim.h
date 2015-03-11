@@ -327,7 +327,7 @@ DECLARE_INTERFACE_(ID3DXAnimationController, IUnknown)
     STDMETHOD_(UINT, GetNumAnimationSets)(THIS) PURE;
     STDMETHOD(GetAnimationSet)(THIS_ UINT index, ID3DXAnimationSet **anim_set) PURE;
     STDMETHOD(GetAnimationSetByName)(THIS_ const char *name, ID3DXAnimationSet **anim_set) PURE;
-    STDMETHOD(AdvanceTime)(THIS_ double time_delta, ID3DXAnimationCallbackHandler **callback_handler) PURE;
+    STDMETHOD(AdvanceTime)(THIS_ DOUBLE time_delta, ID3DXAnimationCallbackHandler **callback_handler) PURE;
     STDMETHOD(ResetTime)(THIS) PURE;
     STDMETHOD_(DOUBLE, GetTime)(THIS) PURE;
     STDMETHOD(SetTrackAnimationSet)(THIS_ UINT track, ID3DXAnimationSet *anim_set) PURE;
@@ -337,8 +337,8 @@ DECLARE_INTERFACE_(ID3DXAnimationController, IUnknown)
     STDMETHOD(SetTrackWeight)(THIS_ UINT track, FLOAT weight) PURE;
     STDMETHOD(SetTrackPosition)(THIS_ UINT track, DOUBLE position) PURE;
     STDMETHOD(SetTrackEnable)(THIS_ UINT track, BOOL enable) PURE;
-    STDMETHOD(SetTrackDesc)(THIS_ UINT track, LPD3DXTRACK_DESC desc) PURE;
-    STDMETHOD(GetTrackDesc)(THIS_ UINT track, LPD3DXTRACK_DESC desc) PURE;
+    STDMETHOD(SetTrackDesc)(THIS_ UINT track, D3DXTRACK_DESC *desc) PURE;
+    STDMETHOD(GetTrackDesc)(THIS_ UINT track, D3DXTRACK_DESC *desc) PURE;
     STDMETHOD(SetPriorityBlend)(THIS_ FLOAT blend_weight) PURE;
     STDMETHOD_(FLOAT, GetPriorityBlend)(THIS) PURE;
     STDMETHOD_(D3DXEVENTHANDLE, KeyTrackSpeed)(THIS_ UINT track, FLOAT new_speed,
@@ -357,7 +357,7 @@ DECLARE_INTERFACE_(ID3DXAnimationController, IUnknown)
     STDMETHOD_(D3DXEVENTHANDLE, GetUpcomingTrackEvent)(THIS_ UINT track, D3DXEVENTHANDLE event) PURE;
     STDMETHOD_(D3DXEVENTHANDLE, GetUpcomingPriorityBlend)(THIS_ D3DXEVENTHANDLE handle) PURE;
     STDMETHOD(ValidateEvent)(THIS_ D3DXEVENTHANDLE event) PURE;
-    STDMETHOD(GetEventDesc)(THIS_ D3DXEVENTHANDLE event, LPD3DXEVENT_DESC desc) PURE;
+    STDMETHOD(GetEventDesc)(THIS_ D3DXEVENTHANDLE event, D3DXEVENT_DESC *desc) PURE;
     STDMETHOD(CloneAnimationController)(THIS_ UINT max_num_anim_outputs, UINT max_num_anim_sets,
             UINT max_num_tracks, UINT max_num_events, ID3DXAnimationController **anim_controller) PURE;
 };

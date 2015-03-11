@@ -12,7 +12,7 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
-IDI_MAIN ICON "res/reactos.ico"
+IDI_MAIN ICON "res/setup.ico"
 
 /* Bitmaps */
 IDB_WATERMARK BITMAP "res/watermark.bmp"

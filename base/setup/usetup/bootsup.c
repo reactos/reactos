@@ -477,7 +477,13 @@ CreateFreeLoaderIniForReactos(
                           L"ReactOS_Debug", L"\"ReactOS (Debug)\"",
                           L"Windows2003", ArcPath,
                           L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
-
+#ifdef _WINKD_
+    /* ReactOS_VBoxDebug */
+    CreateFreeLoaderEntry(IniCache, IniSection,
+                          L"ReactOS_VBoxDebug", L"\"ReactOS (VBoxDebug)\"",
+                          L"Windows2003", ArcPath,
+                          L"/DEBUG /DEBUGPORT=VBOX /SOS");
+#endif
 #if DBG
 #ifndef _WINKD_
     /* ReactOS_KdSerial */
@@ -503,7 +509,7 @@ CreateFreeLoaderIniForReactos(
     CreateFreeLoaderEntry(IniCache, IniSection,
                           L"ReactOS_Ram", L"\"ReactOS (RAM Disk)\"",
                           L"Windows2003", L"ramdisk(0)\\ReactOS",
-                          L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
+                          L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDPATH=reactos.img /RDIMAGEOFFSET=32256");
 
     /* ReactOS_EMS */
     CreateFreeLoaderEntry(IniCache, IniSection,

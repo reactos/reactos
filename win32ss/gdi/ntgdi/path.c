@@ -1280,11 +1280,11 @@ PATH_PathToRegion(
     }
 
     /* Fill the region with the strokes */
-    Ret = IntSetPolyPolygonRgn(pPath->pPoints,
-                               pNumPointsInStroke,
-                               numStrokes,
-                               nPolyFillMode,
-                               Rgn);
+    Ret = REGION_SetPolyPolygonRgn(Rgn,
+                                   pPath->pPoints,
+                                   pNumPointsInStroke,
+                                   numStrokes,
+                                   nPolyFillMode);
 
     /* Free memory for number-of-points-in-stroke array */
     ExFreePoolWithTag(pNumPointsInStroke, TAG_PATH);
@@ -1736,6 +1736,13 @@ PATH_WidenPath(DC *dc)
     }
 
     elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
+    if (elp == NULL)
+    {
+        PATH_UnlockPath(pPath);
+        EngSetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+
     GreGetObject(pdcattr->hpen, size, elp);
 
     obj_type = GDI_HANDLE_GET_TYPE(pdcattr->hpen);
@@ -2723,7 +2730,7 @@ NtGdiPathToRegion(HDC  hDC)
         if (PATH_PathToRegion(pPath, pdcattr->jFillMode, Rgn))
         {
             PATH_EmptyPath(pPath);
-            RGNOBJAPI_Unlock(Rgn);
+            REGION_UnlockRgn(Rgn);
         }
         else
         {

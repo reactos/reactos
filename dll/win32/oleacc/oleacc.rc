@@ -37,22 +37,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <wine/wine_common_ver.rc>
 
-#ifdef LANGUAGE_EN_US
-    #include "lang/oleacc_En.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/oleacc_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/oleacc_Nl.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/oleacc_Pl.rc"
-#endif
-
 /* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/oleacc_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/oleacc_En.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/oleacc_Fr.rc"
@@ -66,11 +58,20 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_IT_IT
     #include "lang/oleacc_It.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/oleacc_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/oleacc_Lt.rc"
 #endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/oleacc_Nl.rc"
+#endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/oleacc_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/oleacc_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/oleacc_Pt.rc"

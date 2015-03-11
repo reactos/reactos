@@ -314,15 +314,15 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    {
       if (Wnd->hrgnUpdate)
       {
-          PREGION RgnUpdate = RGNOBJAPI_Lock(Wnd->hrgnUpdate, NULL);
+          PREGION RgnUpdate = REGION_LockRgn(Wnd->hrgnUpdate);
           if (RgnUpdate)
           {
               if (!IntValidateParent(Wnd, RgnUpdate, Recurse))
               {
-                  RGNOBJAPI_Unlock(RgnUpdate);
+                  REGION_UnlockRgn(RgnUpdate);
                   return;
               }
-              RGNOBJAPI_Unlock(RgnUpdate);
+              REGION_UnlockRgn(RgnUpdate);
           }
       }
 
@@ -419,7 +419,7 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 VOID FASTCALL
 IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
 {
-   INT RgnType;
+   INT RgnType = NULLREGION;
    BOOL HadPaintMessage;
 
    TRACE("IntInvalidateWindows start\n");
@@ -457,17 +457,17 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
    }
    else
    {
-       PREGION RgnClip = RGNOBJAPI_Lock(Wnd->hrgnClip, NULL);
+       PREGION RgnClip = REGION_LockRgn(Wnd->hrgnClip);
        if (RgnClip)
        {
-           IntGdiOffsetRgn( Rgn,
-                            -Wnd->rcWindow.left,
-                            -Wnd->rcWindow.top);
+           REGION_bOffsetRgn(Rgn,
+                             -Wnd->rcWindow.left,
+                             -Wnd->rcWindow.top);
            RgnType = IntGdiCombineRgn(Rgn, Rgn, RgnClip, RGN_AND);
-           IntGdiOffsetRgn( Rgn,
-                            Wnd->rcWindow.left,
-                            Wnd->rcWindow.top);
-           RGNOBJAPI_Unlock(RgnClip);
+           REGION_bOffsetRgn(Rgn,
+                             Wnd->rcWindow.left,
+                             Wnd->rcWindow.top);
+           REGION_UnlockRgn(RgnClip);
        }
    }
 
@@ -514,11 +514,11 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
             IntGdiSetRegionOwner(Wnd->hrgnUpdate, GDI_OBJ_HMGR_PUBLIC);
          }
 
-         RgnUpdate = RGNOBJAPI_Lock(Wnd->hrgnUpdate, NULL);
+         RgnUpdate = REGION_LockRgn(Wnd->hrgnUpdate);
          if (RgnUpdate)
          {
              RgnType = IntGdiCombineRgn(RgnUpdate, RgnUpdate, Rgn, RGN_OR);
-             RGNOBJAPI_Unlock(RgnUpdate);
+             REGION_UnlockRgn(RgnUpdate);
              if (RgnType == NULLREGION)
              {
                 IntGdiSetRegionOwner(Wnd->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
@@ -547,12 +547,12 @@ IntInvalidateWindows(PWND Wnd, PREGION Rgn, ULONG Flags)
 
          if (Wnd->hrgnUpdate != NULL)
          {
-             PREGION RgnUpdate = RGNOBJAPI_Lock(Wnd->hrgnUpdate, NULL);
+             PREGION RgnUpdate = REGION_LockRgn(Wnd->hrgnUpdate);
 
              if (RgnUpdate)
              {
                  RgnType = IntGdiCombineRgn(RgnUpdate, RgnUpdate, Rgn, RGN_DIFF);
-                 RGNOBJAPI_Unlock(RgnUpdate);
+                 REGION_UnlockRgn(RgnUpdate);
 
                  if(RgnType == NULLREGION)
                  {
@@ -682,7 +682,7 @@ co_UserRedrawWindow(
           }
           else
           {
-              IntGdiOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
+              REGION_bOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
           }
       }
       else if (UpdateRect != NULL)
@@ -690,7 +690,7 @@ co_UserRedrawWindow(
          if (!RECTL_bIsEmptyRect(UpdateRect))
          {
             TmpRgn = IntSysCreateRectpRgnIndirect(UpdateRect);
-            IntGdiOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
+            REGION_bOffsetRgn(TmpRgn, Window->rcClient.left, Window->rcClient.top);
          }
       }
       else if ((Flags & (RDW_INVALIDATE | RDW_FRAME)) == (RDW_INVALIDATE | RDW_FRAME) ||
@@ -942,23 +942,129 @@ BOOL
 FASTCALL
 IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
 {
-   PPROPERTY pprop;
    DWORD FlashState;
-   BOOL Ret = FALSE;
+   UINT uCount = pfwi->uCount;
+   BOOL Activate = FALSE, Ret = FALSE;
 
-   pprop = IntGetProp(pWnd, AtomFlashWndState);
-   if (!pprop)
+   ASSERT(pfwi);
+
+   FlashState = (DWORD)UserGetProp(pWnd, AtomFlashWndState);
+
+   if (FlashState == FLASHW_FINISHED)
    {
-      FlashState = pfwi->dwFlags;
-      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
-      return TRUE;
+      // Cycle has finished, kill timer and set this to Stop.
+      FlashState |= FLASHW_KILLSYSTIMER;
+      pfwi->dwFlags = FLASHW_STOP;
+   }
+   else
+   {
+      if (FlashState)
+      {
+         if (pfwi->dwFlags == FLASHW_SYSTIMER)
+         {
+             // Called from system timer, restore flags, counts and state.
+             pfwi->dwFlags = LOWORD(FlashState);
+             uCount = HIWORD(FlashState);
+             FlashState = MAKELONG(LOWORD(FlashState),0);
+         }
+         else
+         {
+             // Clean out the trash! Fix SeaMonkey crash after restart.
+             FlashState = 0;
+         }
+      }
+
+      if (FlashState == 0)
+      {  // First time in cycle, setup flash state.
+         if ( pWnd->state & WNDS_ACTIVEFRAME ||
+             (pfwi->dwFlags & FLASHW_CAPTION && pWnd->style & (WS_BORDER|WS_DLGFRAME)))
+         {
+             FlashState = FLASHW_STARTED|FLASHW_ACTIVE;
+         }
+      }
+
+      // Set previous window state.
+      Ret = !!(FlashState & FLASHW_ACTIVE);
+
+      if ( pfwi->dwFlags & FLASHW_TIMERNOFG &&
+           gpqForeground == pWnd->head.pti->MessageQueue )
+      {
+          // Flashing until foreground, set this to Stop.
+          pfwi->dwFlags = FLASHW_STOP;
+      }
    }
 
-   FlashState = (DWORD)pprop->Data;
+   // Toggle activate flag.
    if ( pfwi->dwFlags == FLASHW_STOP )
    {
+      if (gpqForeground && gpqForeground->spwndActive == pWnd)
+         Activate = TRUE;
+      else
+         Activate = FALSE;
+   }
+   else
+   {
+      Activate = (FlashState & FLASHW_ACTIVE) == 0;
+   }
+
+   if ( pfwi->dwFlags == FLASHW_STOP || pfwi->dwFlags & FLASHW_CAPTION )
+   {
+      co_IntSendMessage(UserHMGetHandle(pWnd), WM_NCACTIVATE, Activate, 0);
+   }
+
+   // FIXME: Check for a Stop Sign here.
+   if ( pfwi->dwFlags & FLASHW_TRAY )
+   {
+      // Need some shell work here too.
+      TRACE("FIXME: Flash window no Tray support!\n");
+   }
+
+   if ( pfwi->dwFlags == FLASHW_STOP )
+   {
+      if (FlashState & FLASHW_KILLSYSTIMER)
+      {
+         IntKillTimer(pWnd, ID_EVENT_SYSTIMER_FLASHWIN, TRUE);
+      }
+
       IntRemoveProp(pWnd, AtomFlashWndState);
-      Ret = TRUE;
+   }
+   else
+   {  // Have a count and started, set timer.
+      if ( uCount )
+      {
+         FlashState |= FLASHW_COUNT;
+
+         if (!(Activate ^ !!(FlashState & FLASHW_STARTED)))
+             uCount--;
+
+         if (!(FlashState & FLASHW_KILLSYSTIMER))
+             pfwi->dwFlags |= FLASHW_TIMER;
+      }
+
+      if (pfwi->dwFlags & FLASHW_TIMER)
+      {
+         FlashState |= FLASHW_KILLSYSTIMER;
+
+         IntSetTimer( pWnd,
+                      ID_EVENT_SYSTIMER_FLASHWIN,
+                      pfwi->dwTimeout ? pfwi->dwTimeout : gpsi->dtCaretBlink,
+                      SystemTimerProc,
+                      TMRF_SYSTEM );
+      }
+
+      if (FlashState & FLASHW_COUNT && uCount == 0)
+      {
+         // Keep spinning? Nothing else to do.
+         FlashState = FLASHW_FINISHED;
+      }
+      else
+      {
+         // Save state and flags so this can be restored next time through.
+         FlashState ^= (FlashState ^ -!!(Activate)) & FLASHW_ACTIVE;
+         FlashState ^= (FlashState ^ pfwi->dwFlags) & (FLASHW_MASK & ~FLASHW_TIMER);
+      }
+      FlashState = MAKELONG(LOWORD(FlashState),uCount);
+      IntSetProp(pWnd, AtomFlashWndState, (HANDLE) FlashState);
    }
    return Ret;
 }
@@ -1221,7 +1327,7 @@ co_UserGetUpdateRgn(PWND Window, PREGION Rgn, BOOL bErase)
         return NULLREGION;
     }
 
-    UpdateRgn = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
+    UpdateRgn = REGION_LockRgn(Window->hrgnUpdate);
     if (!UpdateRgn)
        return ERROR;
 
@@ -1229,8 +1335,8 @@ co_UserGetUpdateRgn(PWND Window, PREGION Rgn, BOOL bErase)
     IntIntersectWithParents(Window, &Rect);
     REGION_SetRectRgn(Rgn, Rect.left, Rect.top, Rect.right, Rect.bottom);
     RegionType = IntGdiCombineRgn(Rgn, Rgn, UpdateRgn, RGN_AND);
-    IntGdiOffsetRgn(Rgn, -Window->rcClient.left, -Window->rcClient.top);
-    RGNOBJAPI_Unlock(UpdateRgn);
+    REGION_bOffsetRgn(Rgn, -Window->rcClient.left, -Window->rcClient.top);
+    REGION_UnlockRgn(UpdateRgn);
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
    {
@@ -1278,14 +1384,17 @@ NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 CLEANUP:
    if (Rgn && (_ret_ != ERROR))
    {
-       PREGION TheRgn = RGNOBJAPI_Lock(hRgn, NULL);
+       PREGION TheRgn = REGION_LockRgn(hRgn);
        if (!TheRgn)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            _ret_ = ERROR;
        }
-       IntGdiCombineRgn(TheRgn, Rgn, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(TheRgn);
+       else
+       {
+          IntGdiCombineRgn(TheRgn, Rgn, NULL, RGN_COPY);
+          REGION_UnlockRgn(TheRgn);
+       }
    }
 
    if (Rgn)
@@ -1309,7 +1418,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    PWND Window;
    RECTL Rect;
    INT RegionType;
-   PROSRGNDATA RgnData;
+   PREGION RgnData;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
@@ -1336,10 +1445,10 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       }
       else
       {
-         RgnData = RGNOBJAPI_Lock(Window->hrgnUpdate, NULL);
+         RgnData = REGION_LockRgn(Window->hrgnUpdate);
          ASSERT(RgnData != NULL);
          RegionType = REGION_GetRgnBox(RgnData, &Rect);
-         RGNOBJAPI_Unlock(RgnData);
+         REGION_UnlockRgn(RgnData);
 
          if (RegionType != ERROR && RegionType != NULLREGION)
             RECTL_bIntersectRect(&Rect, &Rect, &Window->rcClient);
@@ -1453,14 +1562,14 @@ NtUserRedrawWindow(
            RETURN(FALSE);
        }
 
-       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       RgnTemp = REGION_LockRgn(hrgnUpdate);
        if (!RgnTemp)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            RETURN(FALSE);
        }
        IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(RgnTemp);
+       REGION_UnlockRgn(RgnTemp);
    }
 
    UserRefObjectCo(Wnd, &Ref);
@@ -1490,6 +1599,7 @@ UserScrollDC(
    INT dy,
    const RECTL *prcScroll,
    const RECTL *prcClip,
+   HRGN hrgnUpdate,
    PREGION RgnUpdate,
    RECTL *prcUpdate)
 {
@@ -1497,7 +1607,12 @@ UserScrollDC(
    RECTL rcScroll, rcClip, rcSrc, rcDst;
    INT Result;
 
-   GdiGetClipBox(hDC, &rcClip);
+   if (GdiGetClipBox(hDC, &rcClip) == ERROR)
+   {
+       ERR("GdiGetClipBox failed for HDC %p\n", hDC);
+       return ERROR;
+   }
+
    rcScroll = rcClip;
    if (prcClip)
    {
@@ -1535,15 +1650,26 @@ UserScrollDC(
 
    /* Calculate the region that was invalidated by moving or
       could not be copied, because it was not visible */
-   if (RgnUpdate || prcUpdate)
+   if (RgnUpdate || hrgnUpdate || prcUpdate)
    {
       PREGION RgnOwn, RgnTmp;
 
       pDC = DC_LockDc(hDC);
       if (!pDC)
       {
-         return FALSE;
+         return ERROR;
       }
+
+       if (hrgnUpdate)
+       {
+           NT_ASSERT(RgnUpdate == NULL);
+           RgnUpdate = REGION_LockRgn(hrgnUpdate);
+           if (!RgnUpdate)
+           {
+               DC_UnlockDc(pDC);
+               return ERROR;
+           }
+       }
 
       /* Begin with the shifted and then clipped scroll rect */
       rcDst = rcScroll;
@@ -1565,7 +1691,7 @@ UserScrollDC(
 
       /* Substract the part of the dest that was visible in source */
       IntGdiCombineRgn(RgnTmp, RgnTmp, pDC->prgnVis, RGN_AND);
-      IntGdiOffsetRgn(RgnTmp, dx, dy);
+      REGION_bOffsetRgn(RgnTmp, dx, dy);
       Result = IntGdiCombineRgn(RgnOwn, RgnOwn, RgnTmp, RGN_DIFF);
 
       /* DO NOT Unlock DC while messing with prgnVis! */
@@ -1578,7 +1704,11 @@ UserScrollDC(
          REGION_GetRgnBox(RgnOwn, prcUpdate);
       }
 
-      if (!RgnUpdate)
+      if (hrgnUpdate)
+      {
+         REGION_UnlockRgn(RgnUpdate);
+      }
+      else if (!RgnUpdate)
       {
          REGION_Delete(RgnOwn);
       }
@@ -1609,7 +1739,6 @@ NtUserScrollDC(
    RECTL rcScroll, rcClip, rcUpdate;
    NTSTATUS Status = STATUS_SUCCESS;
    DWORD Result;
-   PREGION RgnUpdate = NULL;
 
    TRACE("Enter NtUserScrollDC\n");
    UserEnterExclusive();
@@ -1642,19 +1771,13 @@ NtUserScrollDC(
       RETURN(FALSE);
    }
 
-   if (hrgnUpdate)
-   {
-       RgnUpdate = RGNOBJAPI_Lock(hrgnUpdate, NULL);
-       if (!RgnUpdate)
-           RETURN(FALSE);
-   }
-
    Result = UserScrollDC( hDC,
                           dx,
                           dy,
                           prcUnsafeScroll? &rcScroll : 0,
                           prcUnsafeClip? &rcClip : 0,
-                          RgnUpdate,
+                          hrgnUpdate,
+                          NULL,
                           prcUnsafeUpdate? &rcUpdate : NULL);
    if(Result == ERROR)
    {
@@ -1684,8 +1807,6 @@ NtUserScrollDC(
    RETURN(TRUE);
 
 CLEANUP:
-   if (RgnUpdate)
-       RGNOBJAPI_Unlock(RgnUpdate);
    TRACE("Leave NtUserScrollDC, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1779,14 +1900,14 @@ NtUserScrollWindowEx(
 
    if (hrgnUpdate)
    {
-       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       RgnTemp = REGION_LockRgn(hrgnUpdate);
        if (!RgnTemp)
        {
            EngSetLastError(ERROR_INVALID_HANDLE);
            RETURN(ERROR);
        }
        IntGdiCombineRgn(RgnUpdate, RgnTemp, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(RgnTemp);
+       REGION_UnlockRgn(RgnTemp);
    }
 
    /* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
@@ -1824,6 +1945,7 @@ NtUserScrollWindowEx(
                           dy,
                           &rcScroll,
                           &rcClip,
+                          NULL,
                           RgnUpdate,
                           prcUnsafeUpdate? &rcUpdate : NULL);
 
@@ -1851,7 +1973,7 @@ NtUserScrollWindowEx(
              RgnWinupd = IntSysCreateRectpRgn( 0, 0, 0, 0);
              IntGdiCombineRgn( RgnWinupd, RgnTemp, 0, RGN_COPY);
           }
-          IntGdiOffsetRgn(RgnTemp, dx, dy);
+          REGION_bOffsetRgn(RgnTemp, dx, dy);
           IntGdiCombineRgn(RgnTemp, RgnTemp, RgnClip, RGN_AND);
           if (hrgnUpdate)
               IntGdiCombineRgn( RgnWinupd, RgnWinupd, RgnTemp, RGN_OR );
@@ -1933,14 +2055,14 @@ CLEANUP:
    if (hrgnUpdate && (_ret_ != ERROR))
    {
        /* Give everything back to the caller */
-       RgnTemp = RGNOBJAPI_Lock(hrgnUpdate, NULL);
+       RgnTemp = REGION_LockRgn(hrgnUpdate);
        /* The handle should still be valid */
        ASSERT(RgnTemp);
        if (RgnWinupd)
            IntGdiCombineRgn(RgnTemp, RgnUpdate, RgnWinupd, RGN_OR);
        else
            IntGdiCombineRgn(RgnTemp, RgnUpdate, NULL, RGN_COPY);
-       RGNOBJAPI_Unlock(RgnTemp);
+       REGION_UnlockRgn(RgnTemp);
    }
 
    if (RgnWinupd)

@@ -29,14 +29,7 @@ toolbar, and address band for an explorer window
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
-#define USE_CUSTOM_MENUBAND 1
-HMODULE g_hRShell = NULL;
-
 #if 1
-// TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
-
-IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
-CLSID CLSID_MergedFolder = { 0x26FDC864, 0xBE88, 0x46E7, { 0x92, 0x35, 0x03, 0x2D, 0x8E, 0xA5, 0x16, 0x2E } };
 
 interface IAugmentedShellFolder : public IShellFolder
 {
@@ -89,35 +82,6 @@ extern HRESULT CreateToolsBar(REFIID riid, void **ppv);
 extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
 extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
 extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
-
-typedef HRESULT(WINAPI * PMENUBAND_CONSTRUCTOR)(REFIID riid, void **ppv);
-typedef HRESULT(WINAPI * PMERGEDFOLDER_CONSTRUCTOR)(REFIID riid, void **ppv);
-
-HMODULE hRShell = NULL;
-PMERGEDFOLDER_CONSTRUCTOR pCMergedFolder_Constructor = NULL;
-PMENUBAND_CONSTRUCTOR     pCMenuBand_Constructor = NULL;
-
-HRESULT IUnknown_HasFocusIO(IUnknown * punk)
-{
-    CComPtr<IInputObject> pio;
-    HRESULT hr;
-    hr = punk->QueryInterface(IID_PPV_ARG(IInputObject, &pio));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-    return pio->HasFocusIO();
-}
-
-HRESULT IUnknown_TranslateAcceleratorIO(IUnknown * punk, MSG * pmsg)
-{
-    CComPtr<IInputObject> pio;
-    HRESULT hr;
-    if (!punk)
-        return E_FAIL;
-    hr = punk->QueryInterface(IID_PPV_ARG(IInputObject, &pio));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-    return pio->TranslateAcceleratorIO(pmsg);
-}
 
 HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
@@ -478,28 +442,7 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if 1
-    if (!hRShell)
-    {
-        hRShell = GetModuleHandle(L"rshell.dll");
-        if (!hRShell)
-            hRShell = LoadLibrary(L"rshell.dll");
-    }
-
-    if (!pCMergedFolder_Constructor)
-        pCMergedFolder_Constructor = (PMERGEDFOLDER_CONSTRUCTOR) GetProcAddress(hRShell, "CMergedFolder_Constructor");
-
-    if (pCMergedFolder_Constructor)
-    {
-        hr = pCMergedFolder_Constructor(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
-    }
-    else
-    {
-        hr = E_FAIL;
-    }
-#else
-    hr = CoCreateInstance(CLSID_MergedFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IAugmentedShellFolder, &pasf));
-#endif
+    hr = CreateMergedFolder(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
     if (FAILED_UNEXPECTEDLY(hr))
     {
         *ppsfFavorites = psfUserFavorites.Detach();
@@ -560,30 +503,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
 
     if (fFavoritesMenu.p == NULL)
     {
-#if USE_CUSTOM_MENUBAND
-        if (!hRShell)
-        {
-            hRShell = GetModuleHandle(L"rshell.dll");
-            if (!hRShell)
-                hRShell = LoadLibrary(L"rshell.dll");
-        }
-
-        if (!pCMenuBand_Constructor)
-            pCMenuBand_Constructor = (PMENUBAND_CONSTRUCTOR) GetProcAddress(hRShell, "CMenuBand_Constructor");
-
-        if (pCMenuBand_Constructor)
-        {
-            hResult = pCMenuBand_Constructor(IID_PPV_ARG(IShellMenu, &newMenu));
-        }
-        else
-        {
-            hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-                IID_PPV_ARG(IShellMenu, &newMenu));
-        }
-#else
-        hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IShellMenu, &newMenu));
-#endif
+        hResult = CreateMenuBand(IID_PPV_ARG(IShellMenu, &newMenu));
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = newMenu->Initialize(this, FCIDM_MENU_FAVORITES, -1, SMINIT_VERTICAL | SMINIT_CACHED);
@@ -751,29 +671,9 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
     *pMenuBar = NULL;
 
-    hResult = E_FAIL;
-#if USE_CUSTOM_MENUBAND
-    if (!g_hRShell) g_hRShell = GetModuleHandleW(L"rshell.dll");
-    
-    if (!g_hRShell) g_hRShell = LoadLibraryW(L"rshell.dll");
-
-    if (g_hRShell)
-    {
-        PMENUBAND_CONSTRUCTOR func = (PMENUBAND_CONSTRUCTOR) GetProcAddress(g_hRShell, "CMenuBand_Constructor");
-        if (func)
-        {
-            hResult = func(IID_PPV_ARG(IShellMenu, &menubar));
-        }
-    }
-#endif
-
+    hResult = CreateMenuBand(IID_PPV_ARG(IShellMenu, &menubar));
     if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        hResult = CoCreateInstance(CLSID_MenuBand, NULL, CLSCTX_INPROC_SERVER,
-            IID_PPV_ARG(IShellMenu, &menubar));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
+        return hResult;
     
     hResult = fMenuCallback->QueryInterface(IID_PPV_ARG(IShellMenuCallback, &callback));
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -1403,8 +1303,6 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::OnChange(LONG lEvent, LPCITEMIDLIST 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
 {
     CComPtr<IBrowserService>                browserService;
-    CComPtr<IServiceProvider>               serviceProvider;
-    CComPtr<IOleWindow>                     oleWindow;
     HWND                                    ownerWindow;
     HWND                                    dockContainer;
     HRESULT                                 hResult;
@@ -1419,10 +1317,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
     else
     {
         // get window handle of owner
-        hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-        hResult = oleWindow->GetWindow(&ownerWindow);
+        hResult = IUnknown_GetWindow(pUnkSite, &ownerWindow);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         if (ownerWindow == NULL)
@@ -1447,9 +1342,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::SetSite(IUnknown *pUnkSite)
             return E_FAIL;
 
         // take advice to watch events
-        hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-        hResult = serviceProvider->QueryService(
-            SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
+        hResult = IUnknown_QueryService(pUnkSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
         hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
     }
     return S_OK;
@@ -1467,7 +1360,6 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetSite(REFIID riid, void **ppvSite)
 
 HRESULT STDMETHODCALLTYPE CInternetToolbar::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
     HRESULT                                 hResult;
 
     if (IsEqualIID(guidService, IID_IBandSite))
@@ -1577,15 +1469,10 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::GetBandSiteInfo(BANDSITEINFO *pbsinf
 
 LRESULT CInternetToolbar::OnTravelBack(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
     CComPtr<IWebBrowser>                    webBrowser;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return 0;
-    hResult = serviceProvider->QueryService(SID_SShellBrowser,
-        IID_PPV_ARG(IWebBrowser, &webBrowser));
+    hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IWebBrowser, &webBrowser));
     if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = webBrowser->GoBack();
@@ -1594,15 +1481,10 @@ LRESULT CInternetToolbar::OnTravelBack(WORD wNotifyCode, WORD wID, HWND hWndCtl,
 
 LRESULT CInternetToolbar::OnTravelForward(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
     CComPtr<IWebBrowser>                    webBrowser;
     HRESULT                                 hResult;
 
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return 0;
-    hResult = serviceProvider->QueryService(
-        SID_SShellBrowser, IID_PPV_ARG(IWebBrowser, &webBrowser));
+    hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IWebBrowser, &webBrowser));
     if (FAILED_UNEXPECTEDLY(hResult))
         return 0;
     hResult = webBrowser->GoForward();
@@ -1611,13 +1493,7 @@ LRESULT CInternetToolbar::OnTravelForward(WORD wNotifyCode, WORD wID, HWND hWndC
 
 LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    CComPtr<IOleCommandTarget>              oleCommandTarget;
-    HRESULT                                 hResult;
-
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = oleCommandTarget->Exec(&CGID_ShellBrowser, IDM_GOTO_UPONELEVEL, 0, NULL, NULL);
+    IUnknown_Exec(fSite, CGID_ShellBrowser, IDM_GOTO_UPONELEVEL, 0, NULL, NULL);
     return 1;
 }
 
@@ -1654,13 +1530,7 @@ LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 
 LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    CComPtr<IOleCommandTarget>              oleCommandTarget;
-    HRESULT                                 hResult;
-
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &oleCommandTarget));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = oleCommandTarget->Exec(&CGID_Explorer, 0x23, 0, NULL, NULL);
+    IUnknown_Exec(fSite, CGID_Explorer, 0x23, 0, NULL, NULL);
     return 1;
 }
 
@@ -1677,7 +1547,6 @@ LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, H
 
 LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
     CComPtr<IBrowserService>                browserService;
     CComPtr<IOleCommandTarget>              commandTarget;
     CComPtr<ITravelLog>                     travelLog;
@@ -1703,14 +1572,11 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
     {
         case IDM_GOTO_BACK:
             newMenu = CreatePopupMenu();
-            hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-            hResult = serviceProvider->QueryService(
-                SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
+            hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->InsertMenuEntries(browserService, newMenu, 0, 1, 9, TLMENUF_BACK);
-            hResult = browserService->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &commandTarget));
             commandInfo.cmdID = 0x1d;
-            hResult = commandTarget->QueryStatus(&CGID_Explorer, 1, &commandInfo, NULL);
+            hResult = IUnknown_QueryStatus(browserService, CGID_Explorer, 1, &commandInfo, NULL);
             if ((commandInfo.cmdf & (OLECMDF_ENABLED | OLECMDF_LATCHED)) == OLECMDF_ENABLED &&
                 travelLog->CountEntries(browserService) > 1)
             {
@@ -1733,13 +1599,11 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
             break;
         case IDM_GOTO_FORWARD:
             newMenu = CreatePopupMenu();
-            hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
-            hResult = serviceProvider->QueryService(SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
+            hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
             hResult = browserService->GetTravelLog(&travelLog);
             hResult = travelLog->InsertMenuEntries(browserService, newMenu, 0, 1, 9, TLMENUF_FORE);
-            hResult = browserService->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &commandTarget));
             commandInfo.cmdID = 0x1d;
-            hResult = commandTarget->QueryStatus(&CGID_Explorer, 1, &commandInfo, NULL);
+            hResult = IUnknown_QueryStatus(browserService, CGID_Explorer, 1, &commandInfo, NULL);
             if ((commandInfo.cmdf & (OLECMDF_ENABLED | OLECMDF_LATCHED)) == OLECMDF_ENABLED &&
                 travelLog->CountEntries(browserService) > 1)
             {

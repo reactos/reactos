@@ -73,7 +73,7 @@ IopFindMemoryResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   LONGLONG Start;
+   ULONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
@@ -82,16 +82,16 @@ IopFindMemoryResource(
    /* HACK */
    if (IoDesc->u.Memory.Alignment == 0) IoDesc->u.Memory.Alignment = 1;
 
-   for (Start = IoDesc->u.Memory.MinimumAddress.QuadPart;
-        Start <= IoDesc->u.Memory.MaximumAddress.QuadPart - IoDesc->u.Memory.Length + 1;
+   for (Start = (ULONGLONG)IoDesc->u.Memory.MinimumAddress.QuadPart;
+        Start <= (ULONGLONG)IoDesc->u.Memory.MaximumAddress.QuadPart - IoDesc->u.Memory.Length + 1;
         Start += IoDesc->u.Memory.Alignment)
    {
         CmDesc->u.Memory.Length = IoDesc->u.Memory.Length;
-        CmDesc->u.Memory.Start.QuadPart = Start;
+        CmDesc->u.Memory.Start.QuadPart = (LONGLONG)Start;
 
         if (IopCheckDescriptorForConflict(CmDesc, &ConflictingDesc))
         {
-            Start += ConflictingDesc.u.Memory.Start.QuadPart +
+            Start += (ULONGLONG)ConflictingDesc.u.Memory.Start.QuadPart +
                      ConflictingDesc.u.Memory.Length;
         }
         else
@@ -110,7 +110,7 @@ IopFindPortResource(
    IN PIO_RESOURCE_DESCRIPTOR IoDesc,
    OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc)
 {
-   LONGLONG Start;
+   ULONGLONG Start;
    CM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDesc;
 
    ASSERT(IoDesc->Type == CmDesc->Type);
@@ -119,16 +119,16 @@ IopFindPortResource(
    /* HACK */
    if (IoDesc->u.Port.Alignment == 0) IoDesc->u.Port.Alignment = 1;
 
-   for (Start = IoDesc->u.Port.MinimumAddress.QuadPart;
-        Start <= IoDesc->u.Port.MaximumAddress.QuadPart - IoDesc->u.Port.Length + 1;
+   for (Start = (ULONGLONG)IoDesc->u.Port.MinimumAddress.QuadPart;
+       Start <= (ULONGLONG)IoDesc->u.Port.MaximumAddress.QuadPart - IoDesc->u.Port.Length + 1;
         Start += IoDesc->u.Port.Alignment)
    {
         CmDesc->u.Port.Length = IoDesc->u.Port.Length;
-        CmDesc->u.Port.Start.QuadPart = Start;
+        CmDesc->u.Port.Start.QuadPart = (LONGLONG)Start;
 
         if (IopCheckDescriptorForConflict(CmDesc, &ConflictingDesc))
         {
-            Start += ConflictingDesc.u.Port.Start.QuadPart + ConflictingDesc.u.Port.Length;
+            Start += (ULONGLONG)ConflictingDesc.u.Port.Start.QuadPart + ConflictingDesc.u.Port.Length;
         }
         else
         {
@@ -300,8 +300,8 @@ IopFixupResourceListWithRequirements(
                     case CmResourceTypePort:
                         /* Make sure the length matches and it satisfies our address range */
                         if (CmDesc->u.Memory.Length == IoDesc->u.Memory.Length &&
-                            CmDesc->u.Memory.Start.QuadPart >= IoDesc->u.Memory.MinimumAddress.QuadPart &&
-                            CmDesc->u.Memory.Start.QuadPart + CmDesc->u.Memory.Length - 1 <= IoDesc->u.Memory.MaximumAddress.QuadPart)
+                            (ULONGLONG)CmDesc->u.Memory.Start.QuadPart >= (ULONGLONG)IoDesc->u.Memory.MinimumAddress.QuadPart &&
+                            (ULONGLONG)CmDesc->u.Memory.Start.QuadPart + CmDesc->u.Memory.Length - 1 <= (ULONGLONG)IoDesc->u.Memory.MaximumAddress.QuadPart)
                         {
                             /* Found it */
                             Matched = TRUE;
@@ -564,11 +564,11 @@ IopCheckResourceDescriptor(
          switch (ResDesc->Type)
          {
              case CmResourceTypeMemory:
-                 if ((ResDesc->u.Memory.Start.QuadPart < ResDesc2->u.Memory.Start.QuadPart &&
-                      ResDesc->u.Memory.Start.QuadPart + ResDesc->u.Memory.Length >
-                      ResDesc2->u.Memory.Start.QuadPart) || (ResDesc2->u.Memory.Start.QuadPart <
-                      ResDesc->u.Memory.Start.QuadPart && ResDesc2->u.Memory.Start.QuadPart +
-                      ResDesc2->u.Memory.Length > ResDesc->u.Memory.Start.QuadPart))
+                 if (((ULONGLONG)ResDesc->u.Memory.Start.QuadPart < (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart &&
+                      (ULONGLONG)ResDesc->u.Memory.Start.QuadPart + ResDesc->u.Memory.Length >
+                      (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart) || ((ULONGLONG)ResDesc2->u.Memory.Start.QuadPart <
+                      (ULONGLONG)ResDesc->u.Memory.Start.QuadPart && (ULONGLONG)ResDesc2->u.Memory.Start.QuadPart +
+                      ResDesc2->u.Memory.Length > (ULONGLONG)ResDesc->u.Memory.Start.QuadPart))
                  {
                       if (!Silent)
                       {
@@ -585,11 +585,11 @@ IopCheckResourceDescriptor(
                  break;
 
              case CmResourceTypePort:
-                 if ((ResDesc->u.Port.Start.QuadPart < ResDesc2->u.Port.Start.QuadPart &&
-                      ResDesc->u.Port.Start.QuadPart + ResDesc->u.Port.Length >
-                      ResDesc2->u.Port.Start.QuadPart) || (ResDesc2->u.Port.Start.QuadPart <
-                      ResDesc->u.Port.Start.QuadPart && ResDesc2->u.Port.Start.QuadPart +
-                      ResDesc2->u.Port.Length > ResDesc->u.Port.Start.QuadPart))
+                 if (((ULONGLONG)ResDesc->u.Port.Start.QuadPart < (ULONGLONG)ResDesc2->u.Port.Start.QuadPart &&
+                      (ULONGLONG)ResDesc->u.Port.Start.QuadPart + ResDesc->u.Port.Length >
+                      (ULONGLONG)ResDesc2->u.Port.Start.QuadPart) || ((ULONGLONG)ResDesc2->u.Port.Start.QuadPart <
+                      (ULONGLONG)ResDesc->u.Port.Start.QuadPart && (ULONGLONG)ResDesc2->u.Port.Start.QuadPart +
+                      ResDesc2->u.Port.Length > (ULONGLONG)ResDesc->u.Port.Start.QuadPart))
                  {
                       if (!Silent)
                       {

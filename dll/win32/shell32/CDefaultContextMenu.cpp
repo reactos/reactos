@@ -450,12 +450,12 @@ CDefaultContextMenu::EnumerateDynamicContextHandlerForKey(HKEY hRootKey)
             if (m_bGroupPolicyActive)
             {
                 if (RegGetValueW(HKEY_LOCAL_MACHINE,
-                                L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
-                                pwszClsid,
-                                RRF_RT_REG_SZ,
-                                NULL,
-                                NULL,
-                                NULL) == ERROR_SUCCESS)
+                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                                 pwszClsid,
+                                 RRF_RT_REG_SZ,
+                                 NULL,
+                                 NULL,
+                                 NULL) == ERROR_SUCCESS)
                 {
                     LoadDynamicContextMenuHandler(hKey, &clsid);
                 }
@@ -866,7 +866,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         if (rfg & SFGAO_CANCOPY)
             _InsertMenuItemW(hMenu, IndexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, MAKEINTRESOURCEW(IDS_COPY), MFS_ENABLED);
         if (bClipboardData)
-            _InsertMenuItemW(hMenu, IndexMenu++, TRUE, FCIDM_SHVIEW_INSERT, MFT_STRING, MAKEINTRESOURCEW(IDS_INSERT), MFS_ENABLED);
+            _InsertMenuItemW(hMenu, IndexMenu++, TRUE, FCIDM_SHVIEW_INSERT, MFT_STRING, MAKEINTRESOURCEW(IDS_PASTE), MFS_ENABLED);
 
         bAddSep = TRUE;
     }

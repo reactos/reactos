@@ -544,9 +544,10 @@ DECLARE_INTERFACE_(ID3DXSkinInfo, IUnknown)
     STDMETHOD(ConvertToBlendedMesh)(THIS_ ID3DXMesh *mesh_in, DWORD options, const DWORD *adjacency_in,
             DWORD *adjacency_out, DWORD *face_remap, ID3DXBuffer **vertex_remap, DWORD *max_face_infl,
             DWORD *num_bone_combinations, ID3DXBuffer **bone_combination_table, ID3DXMesh **mesh_out) PURE;
-    STDMETHOD(ConvertToIndexedBlendedMesh)(THIS_ ID3DXMesh *mesh_in, DWORD options, const DWORD *adjacency_in,
-            DWORD *adjacency_out, DWORD *face_remap, ID3DXBuffer **vertex_remap, DWORD *max_face_infl,
-            DWORD *num_bone_combinations, ID3DXBuffer **bone_combination_table, ID3DXMesh **mesh_out) PURE;
+    STDMETHOD(ConvertToIndexedBlendedMesh)(THIS_ ID3DXMesh *mesh_in, DWORD options, DWORD palette_size,
+            const DWORD *adjacency_in, DWORD *adjacency_out, DWORD *face_remap, ID3DXBuffer **vertex_remap,
+            DWORD *max_face_infl, DWORD *num_bone_combinations, ID3DXBuffer **bone_combination_table,
+            ID3DXMesh **mesh_out) PURE;
 };
 #undef INTERFACE
 

@@ -2,21 +2,21 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_STARTPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenue dans l'Assistant Ajout de matÈriel", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Cet assistant vous aide ‡ :", -1, 114, 40, 182, 8
-    LTEXT "1) Installer le logiciel qui prend en charge le matÈriel que vous ajoutez ‡ votre ordinateur.", -1, 121, 56, 184, 16
-    LTEXT "2) DÈpanner les problËmes que vous pouvez rencontrer avec votre matÈriel.", -1, 121, 78, 185, 16
+    LTEXT "Bienvenue dans l'Assistant Ajout de mat√©riel", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Cet assistant vous aide √† :", -1, 114, 40, 182, 8
+    LTEXT "1) Installer le logiciel qui prend en charge le mat√©riel que vous ajoutez √† votre ordinateur.", -1, 121, 56, 184, 16
+    LTEXT "2) D√©panner les probl√®mes que vous pouvez rencontrer avec votre mat√©riel.", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-    LTEXT "Si votre matÈriel a ÈtÈ fourni avec un CD d'installation, il est recommandÈ de fermer l'assistant en cliquant sur Annuler, et d'utiliser ce CD pour installer votre matÈriel.", 503, 150, 106, 155, 50
+    LTEXT "Si votre mat√©riel a √©t√© fourni avec un CD d'installation, il est recommand√© de fermer l'assistant en cliquant sur Annuler, et d'utiliser ce CD pour installer votre mat√©riel.", 503, 150, 106, 155, 50
     LTEXT "Pour continuer, cliquez sur Suivant.", -1, 114, 166, 193, 8
 END
 
 IDD_SEARCHPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
@@ -25,62 +25,62 @@ END
 
 IDD_ISCONNECTEDPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Avez-vous dÈj‡ connectÈ ce matÈriel ‡ votre ordinateur ?", -1, 20, 11, 275, 8
-    AUTORADIOBUTTON "Oui, je l'ai dÈj‡ connectÈ", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "Non, je ne l'ai pas encore ajoutÈ", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "Avez-vous d√©j√† connect√© ce mat√©riel √† votre ordinateur ?", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "Oui, je l'ai d√©j√† connect√©", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "Non, je ne l'ai pas encore ajout√©", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dans la liste ci-dessous, sÈlectionnez un pÈriphÈrique matÈriel installÈ, puis cliquez sur Suivant pour vÈrifier les propriÈtÈs ou rÈsoudre les problËmes que vous pourriez avoir.", -1, 21, 8, 275, 22
-    LTEXT "Pour ajouter un matÈriel qui ne figure pas dans la liste, cliquez sur ""Ajouter un nouveau pÈriphÈrique matÈriel.""", -1, 21, 32, 275, 24
-    LTEXT "MatÈriel installÈ :", -1, 21, 62, 140, 8
+    LTEXT "Dans la liste ci-dessous, s√©lectionnez un p√©riph√©rique mat√©riel install√©, puis cliquez sur Suivant pour v√©rifier les propri√©t√©s ou r√©soudre les probl√®mes que vous pourriez avoir.", -1, 21, 8, 275, 22
+    LTEXT "Pour ajouter un mat√©riel qui ne figure pas dans la liste, cliquez sur ""Ajouter un nouveau p√©riph√©rique mat√©riel.""", -1, 21, 32, 275, 24
+    LTEXT "Mat√©riel install√© :", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
 IDD_SELECTWAYPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "L'Assistant peut rechercher un autre matÈriel et l'installer automatiquement pour vous. Ou, si vous savez exactement le type du matÈriel que vous voulez installer, vous pouvez le sÈlectionner dans une liste.", -1, 21, 8, 280, 24
+    LTEXT "L'Assistant peut rechercher un autre mat√©riel et l'installer automatiquement pour vous. Ou, si vous savez exactement le type du mat√©riel que vous voulez installer, vous pouvez le s√©lectionner dans une liste.", -1, 21, 8, 280, 24
     LTEXT "Que voulez-vous que l'assistant fasse ?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "Rechercher et installer le nouveau matÈriel automatiquement (RecommandÈ)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Installer le matÈriel que je sÈlectionne manuellement dans la liste (AvancÈ)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Rechercher et installer le nouveau mat√©riel automatiquement (Recommand√©)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Installer le mat√©riel que je s√©lectionne manuellement dans la liste (Avanc√©)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
-    LTEXT "MatÈriel dÈtectÈ :", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
+    LTEXT "Mat√©riel d√©tect√© :", IDC_DETECTEDHWTEXT, 21, 53, 176, 8
     CONTROL "", IDC_DETECTEDHWLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 65, 275, 70
 END
 
 IDD_HWTYPESPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Si vous ne voyez pas la catÈgorie du matÈriel que vous souhaitez installer, cliquez sur Afficher tous les pÈriphÈriques.", IDC_STATUSTEXT, 21, 9, 275, 18
-    LTEXT "Types communs de matÈriels :", IDC_HWTYPESTEXT, 21, 31, 180, 8
+    LTEXT "Si vous ne voyez pas la cat√©gorie du mat√©riel que vous souhaitez installer, cliquez sur Afficher tous les p√©riph√©riques.", IDC_STATUSTEXT, 21, 9, 275, 18
+    LTEXT "Types communs de mat√©riels :", IDC_HWTYPESTEXT, 21, 31, 180, 8
     CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
 IDD_PROGRESSPAGE DIALOG 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "La recherche de matÈriel peut prendre plusieurs minutes.", -1, 21, 8, 275, 15
+    LTEXT "La recherche de mat√©riel peut prendre plusieurs minutes.", -1, 21, 8, 275, 15
     LTEXT "Progression totale :", IDC_TPROGRESSTEXT, 21, 25, 275, 8
     CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
     LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -89,59 +89,59 @@ END
 
 IDD_FINISHPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fin de l'Assistant Ajout de matÈriel", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "Vous avez fini l'Assistant Ajout de matÈriel avec succËs.", -1, 114, 32, 193, 19
+    LTEXT "Fin de l'Assistant Ajout de mat√©riel", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "Vous avez fini l'Assistant Ajout de mat√©riel avec succ√®s.", -1, 114, 32, 193, 19
     LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
     LTEXT "Pour fermer cet assistant, cliquez sur Terminer.", -1, 114, 166, 132, 8
 END
 
 IDD_ISFOUNDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fin de l'Assistant Ajout de matÈriel", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "L'assistant a trouvÈ le matÈriel suivant :", -1, 114, 32, 193, 19
+    LTEXT "Fin de l'Assistant Ajout de mat√©riel", IDC_FINISHTITLE, 114, 8, 203, 24
+    LTEXT "L'assistant a trouv√© le mat√©riel suivant :", -1, 114, 32, 193, 19
     LTEXT "Pour fermer cet assistant, cliquez sur Terminer.", -1, 114, 166, 132, 8
     CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
 IDD_HWSTATUSPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Fin de l'Assistant Ajout de matÈriel", IDC_FINISHTITLE, 114, 8, 195, 28
-    LTEXT "Voici l'Ètat actuel du matÈriel que vous avez sÈlectionnÈ :", -1, 114, 40, 193, 19
+    LTEXT "Fin de l'Assistant Ajout de mat√©riel", IDC_FINISHTITLE, 114, 8, 195, 28
+    LTEXT "Voici l'√©tat actuel du mat√©riel que vous avez s√©lectionn√© :", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "Pour dÈmarrer un outil de dÈpannage qui peut vous aider ‡ rÈsoudre les problËmes que vous pourriez avoir, cliquez sur Terminer.", -1, 114, 136, 193, 16
+    LTEXT "Pour d√©marrer un outil de d√©pannage qui peut vous aider √† r√©soudre les probl√®mes que vous pourriez avoir, cliquez sur Terminer.", -1, 114, 136, 193, 16
     LTEXT "Pour quitter cet assistant, cliquez sur Annuler.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOG 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Assistant Ajout de matÈriel"
+CAPTION "Assistant Ajout de mat√©riel"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "L'Assistant Ajout de matÈriel ne peut pas continuer", IDC_FINISHTITLE, 114, 8, 203, 28
-    LTEXT "Pour continuer, veuillez connecter ce matÈriel ‡ votre ordinateur.", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "…teignez l'ordinateur quand je clique sur Terminer pour que je puisse ouvrir l'ordinateur et connecter le matÈriel.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-    LTEXT "Dans la plupart des cas, ReactOS installera automatiquement votre matÈriel quand vous le connecterez. Si ReactOS ne le trouve pas, vous pouvez rouvrir cet assistant pour installer le pilote.", -1, 114, 98, 193, 32
+    LTEXT "L'Assistant Ajout de mat√©riel ne peut pas continuer", IDC_FINISHTITLE, 114, 8, 203, 28
+    LTEXT "Pour continuer, veuillez connecter ce mat√©riel √† votre ordinateur.", -1, 114, 40, 193, 16
+    AUTOCHECKBOX "√âteignez l'ordinateur quand je clique sur Terminer pour que je puisse ouvrir l'ordinateur et connecter le mat√©riel.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    LTEXT "Dans la plupart des cas, ReactOS installera automatiquement votre mat√©riel quand vous le connecterez. Si ReactOS ne le trouve pas, vous pouvez rouvrir cet assistant pour installer le pilote.", -1, 114, 98, 193, 32
     LTEXT "Pour fermer cet assistant, cliquez sur Terminer.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Ajout de matÈriel"
-    IDS_CPLDESCRIPTION "Ajoute un nouveau matÈriel ‡ votre ordinateur."
+    IDS_CPLNAME "Ajout de mat√©riel"
+    IDS_CPLDESCRIPTION "Ajoute un nouveau mat√©riel √† votre ordinateur."
     IDS_SEARCHTITLE "Veuillez patienter pendant que l'assistant recherche..."
-    IDS_SEARCHTEXT "Cet assistant est ‡ la recherche de matÈriel qui a ÈtÈ connectÈ ‡ votre ordinateur rÈcemment, mais qui n'a pas encore ÈtÈ installÈ."
-    IDS_ISCONNECTED "Est-ce que ce matÈriel est dÈj‡ connectÈ ?"
-    IDS_PROBELISTTITLE "Le matÈriel suivant est dÈj‡ installÈ sur votre ordinateur"
-    IDS_ADDNEWDEVICE "Ajouter un nouveau pÈriphÈrique matÈriel"
-    IDS_SELECTWAYTITLE "L'assistant peut vous aider ‡ installer d'autres matÈriels"
-    IDS_HDTYPESTITLE "Dans la liste ci-dessous, sÈlectionnez le type de matÈriel que vous voulez installer"
+    IDS_SEARCHTEXT "Cet assistant est √† la recherche de mat√©riel qui a √©t√© connect√© √† votre ordinateur r√©cemment, mais qui n'a pas encore √©t√© install√©."
+    IDS_ISCONNECTED "Est-ce que ce mat√©riel est d√©j√† connect√© ?"
+    IDS_PROBELISTTITLE "Le mat√©riel suivant est d√©j√† install√© sur votre ordinateur"
+    IDS_ADDNEWDEVICE "Ajouter un nouveau p√©riph√©rique mat√©riel"
+    IDS_SELECTWAYTITLE "L'assistant peut vous aider √† installer d'autres mat√©riels"
+    IDS_HDTYPESTITLE "Dans la liste ci-dessous, s√©lectionnez le type de mat√©riel que vous voulez installer"
 END

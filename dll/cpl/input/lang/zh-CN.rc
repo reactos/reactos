@@ -19,12 +19,12 @@ END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "高级设置"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+    GROUPBOX "系统配置", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "关闭高级的文字服务(&T)", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "选择此复选框以关闭所有程序中的高级的文字服务。\n这不是推荐东亚用户因为这个命令将关闭语言栏。", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

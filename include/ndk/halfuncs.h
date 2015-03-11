@@ -52,16 +52,6 @@ Author:
 #define KdUnmapVirtualAddress           HALPRIVATEDISPATCH->KdUnmapVirtualAddress
 
 //
-// The DDK steals these away from you.
-//
-#ifdef _MSC_VER
-void __cdecl _enable(void);
-void __cdecl _disable(void);
-#pragma intrinsic(_enable)
-#pragma intrinsic(_disable)
-#endif
-
-//
 // Display Functions
 //
 NTHALAPI

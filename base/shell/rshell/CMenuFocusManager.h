@@ -81,10 +81,13 @@ private:
     BOOL m_movedSinceDown;
     HWND m_windowAtDown;
 
+    HWND m_PreviousForeground;
+
     // TODO: make dynamic
 #define MAX_RECURSE 20
     StackEntry m_bandStack[MAX_RECURSE];
     int m_bandCount;
+    int m_menuDepth;
 
     HRESULT PushToArray(StackEntryType type, CMenuBand * mb, HMENU hmenu);
     HRESULT PopFromArray(StackEntryType * pType, CMenuBand ** pMb, HMENU * pHmenu);
@@ -110,10 +113,10 @@ private:
     HRESULT IsTrackedWindowOrParent(HWND hWnd);
 
     void DisableMouseTrack(HWND parent, BOOL disableThis);
-    void SetCapture(HWND child);
+    void SetMenuCapture(HWND child);
 
     LRESULT ProcessMouseMove(MSG* msg);
-    LRESULT ProcessMouseDown(MSG* msg);
+    LRESULT ProcessMouseDown(MSG* msg, BOOL isLButton);
     LRESULT ProcessMouseUp(MSG* msg);
 public:
     HRESULT PushMenuBar(CMenuBand * mb);

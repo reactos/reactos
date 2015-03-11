@@ -3,6 +3,7 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#pragma once
 #include <crtdefs.h>
 
 #ifndef _INC_LIMITS
@@ -23,8 +24,13 @@
 #define SCHAR_MAX 127
 #define UCHAR_MAX 0xff
 
-#define CHAR_MIN SCHAR_MIN
-#define CHAR_MAX SCHAR_MAX
+#ifdef _CHAR_UNSIGNED
+ #define CHAR_MIN 0
+ #define CHAR_MAX UCHAR_MAX
+#else
+ #define CHAR_MIN SCHAR_MIN
+ #define CHAR_MAX SCHAR_MAX
+#endif /* _CHAR_UNSIGNED */
 
 #define MB_LEN_MAX 5
 #define SHRT_MIN (-32768)
@@ -36,41 +42,30 @@
 #define LONG_MIN (-2147483647L - 1)
 #define LONG_MAX 2147483647L
 #define ULONG_MAX 0xffffffffUL
-#define LLONG_MAX 9223372036854775807ll
-#define LLONG_MIN (-9223372036854775807ll - 1)
-#define ULLONG_MAX 0xffffffffffffffffull
+#define LLONG_MAX 9223372036854775807LL
+#define LLONG_MIN (-9223372036854775807LL - 1)
+#define ULLONG_MAX 0xffffffffffffffffULL
 
-#if _INTEGRAL_MAX_BITS >= 8
-#define _I8_MIN (-127 - 1)
-#define _I8_MAX 127i8
-#define _UI8_MAX 0xffu
-#endif
+#define _I8_MIN ((signed char)(-127 - 1))
+#define _I8_MAX ((signed char)127)
+#define _UI8_MAX ((unsigned char)0xff)
 
-#if _INTEGRAL_MAX_BITS >= 16
-#define _I16_MIN (-32767 - 1)
-#define _I16_MAX 32767i16
-#define _UI16_MAX 0xffffu
-#endif
+#define _I16_MIN ((short)(-32767 - 1))
+#define _I16_MAX ((short)32767)
+#define _UI16_MAX ((unsigned short)0xffffU)
 
-#if _INTEGRAL_MAX_BITS >= 32
 #define _I32_MIN (-2147483647 - 1)
 #define _I32_MAX 2147483647
 #define _UI32_MAX 0xffffffffu
-#endif
 
-#if defined(__GNUC__)
-#undef LONG_LONG_MAX
-#define LONG_LONG_MAX 9223372036854775807ll
-#undef LONG_LONG_MIN
-#define LONG_LONG_MIN (-LONG_LONG_MAX-1)
-#undef ULONG_LONG_MAX
-#define ULONG_LONG_MAX (2ull * LONG_LONG_MAX + 1ull)
-#endif
+#define _I64_MIN (-9223372036854775807LL - 1)
+#define _I64_MAX 9223372036854775807LL
+#define _UI64_MAX 0xffffffffffffffffULL
 
-#if _INTEGRAL_MAX_BITS >= 64
-#define _I64_MIN (-9223372036854775807ll - 1)
-#define _I64_MAX 9223372036854775807ll
-#define _UI64_MAX 0xffffffffffffffffull
+#if defined(_MSC_VER) && (_INTEGRAL_MAX_BITS >= 128)
+#define _I128_MIN (-170141183460469231731687303715884105727i128 - 1)
+#define _I128_MAX 170141183460469231731687303715884105727i128
+#define _UI128_MAX 0xffffffffffffffffffffffffffffffffui128
 #endif
 
 #ifndef SIZE_MAX
@@ -79,33 +74,12 @@
 #else
 #define SIZE_MAX UINT_MAX
 #endif
-#endif
+#endif /* SIZE_MAX */
 
-#ifdef _POSIX_
-#define _POSIX_ARG_MAX 4096
-#define _POSIX_CHILD_MAX 6
-#define _POSIX_LINK_MAX 8
-#define _POSIX_MAX_CANON 255
-#define _POSIX_MAX_INPUT 255
-#define _POSIX_NAME_MAX 14
-#define _POSIX_NGROUPS_MAX 0
-#define _POSIX_OPEN_MAX 16
-#define _POSIX_PATH_MAX 255
-#define _POSIX_PIPE_BUF 512
-#define _POSIX_SSIZE_MAX 32767
-#define _POSIX_STREAM_MAX 8
-#define _POSIX_TZNAME_MAX 3
-#define ARG_MAX 14500
-#define LINK_MAX 1024
-#define MAX_CANON _POSIX_MAX_CANON
-#define MAX_INPUT _POSIX_MAX_INPUT
-#define NAME_MAX 255
-#define NGROUPS_MAX 16
-#define OPEN_MAX 32
-#define PATH_MAX 512
-#define PIPE_BUF _POSIX_PIPE_BUF
-#define SSIZE_MAX _POSIX_SSIZE_MAX
-#define STREAM_MAX 20
-#define TZNAME_MAX 10
-#endif
-#endif
+#if __STDC_WANT_SECURE_LIB__
+#ifndef RSIZE_MAX
+#define RSIZE_MAX SIZE_MAX
+#endif /* RSIZE_MAX */
+#endif /* __STDC_WANT_SECURE_LIB__ */
+
+#endif /* _INC_LIMITS */

@@ -16,8 +16,14 @@ IDI_CPLACCESS ICON "resources/applet.ico"
 
 #include <reactos/manifest_dll.rc>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
@@ -34,6 +40,9 @@ IDI_CPLACCESS ICON "resources/applet.ico"
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"
 #endif
@@ -43,30 +52,14 @@ IDI_CPLACCESS ICON "resources/applet.ico"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
-#endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/sk-SK.rc"
-#endif
-#ifdef LANGUAGE_ZH_CN
-    #include "lang/zh-CN.rc"
-#endif
-
-/* UTF-8 */
-#pragma code_page(65001)
-
-#ifdef LANGUAGE_CS_CZ
-    #include "lang/cs-CZ.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/he-IL.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/ja-JP.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
@@ -77,12 +70,18 @@ IDI_CPLACCESS ICON "resources/applet.ico"
 #ifdef LANGUAGE_RU_RU
     #include "lang/ru-RU.rc"
 #endif
-#ifdef LANGUAGE_TR_TR
-    #include "lang/tr-TR.rc"
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/sq-AL.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/zh-CN.rc"
 #endif

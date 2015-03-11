@@ -21,6 +21,16 @@
 
 /* SDK/DDK/NDK Headers. */
 #include <windef.h>
+
+/* Avoid type casting, by defining RECT to RECTL */
+#define RECT RECTL
+#define PRECT PRECTL
+#define LPRECT LPRECTL
+#define LPCRECT LPCRECTL
+#define POINT POINTL
+#define LPPOINT PPOINTL
+#define PPOINT PPOINTL
+
 #include <winbase.h>
 #include <winnls.h>
 #include <objbase.h>

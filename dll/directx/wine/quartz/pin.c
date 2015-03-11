@@ -66,7 +66,6 @@ static HRESULT SendFurther( IPin *from, SendPinFunc fnMiddle, LPVOID arg, SendPi
     hr = IPin_QueryInternalConnections( from, NULL, &amount );
     if (hr != E_NOTIMPL && amount)
         FIXME("Use QueryInternalConnections!\n");
-     hr = S_OK;
 
     pin_info.pFilter = NULL;
     hr = IPin_QueryPinInfo( from, &pin_info );
@@ -260,7 +259,7 @@ HRESULT WINAPI PullPin_ReceiveConnection(IPin * iface, IPin * pReceivePin, const
         props.cbAlign = 1;
         props.cbPrefix = 0;
 
-        if (SUCCEEDED(hr) && (This->fnQueryAccept(This->pUserData, pmt) != S_OK))
+        if (This->fnQueryAccept(This->pUserData, pmt) != S_OK)
             hr = VFW_E_TYPE_NOT_ACCEPTED; /* FIXME: shouldn't we just map common errors onto 
                                            * VFW_E_TYPE_NOT_ACCEPTED and pass the value on otherwise? */
 

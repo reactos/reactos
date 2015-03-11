@@ -298,6 +298,12 @@ void PerfDataRefresh(void)
         /*  CurrentCpuUsage% = 100 - (CurrentCpuIdle * 100) / NumberOfProcessors */
         dbIdleTime = 100.0 - dbIdleTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
         dbKernelTime = 100.0 - dbKernelTime * 100.0 / (double)SystemBasicInfo.NumberOfProcessors; /* + 0.5; */
+
+        if (dbIdleTime < 0.0) dbIdleTime = 0.0;
+        if (dbIdleTime > 100.0) dbIdleTime = 100.0;
+        if (dbKernelTime < 0.0) dbKernelTime = 0.0;
+        if (dbKernelTime > 100.0) dbKernelTime = 100.0;
+
     }
 
     /* Store new CPU's idle and system time */

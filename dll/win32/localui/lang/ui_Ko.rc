@@ -2,7 +2,7 @@
  * Korean resources for localui
  *
  * Copyright 2007 Detlef Riekenberg
- * Copyright 2007 YunSong Hwang(Ȳ����)(hys545@dreamwiz.com)
+ * Copyright 2007 YunSong Hwang(황윤성)(hys545@dreamwiz.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,32 +24,32 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_LOCALPORT "���� ��Ʈ"
-    IDS_INVALIDNAME "'%s'�� �ùٸ� ��Ʈ �̸��� �ƴմϴ�"
-    IDS_PORTEXISTS "��Ʈ %s�� �̹� �����մϴ�"
-    IDS_NOTHINGTOCONFIG "�� ��Ʈ�� ������ �ɼ��� �����ϴ�"
+    IDS_LOCALPORT "지역 포트"
+    IDS_INVALIDNAME "'%s'는 올바른 포트 이름이 아닙니다"
+    IDS_PORTEXISTS "포트 %s는 이미 존재합니다"
+    IDS_NOTHINGTOCONFIG "이 포트는 설정할 옵션이 없습니다"
 }
 
 ADDPORT_DIALOG DIALOG 6, 18, 245, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "���� ��Ʈ ���ϱ�"
+CAPTION "지역 포트 더하기"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    LTEXT "���� ��Ʈ �̸� �Է�(&E):", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "더할 포트 이름 입력(&E):", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
-    DEFPUSHBUTTON "Ȯ��", IDOK, 188, 10, 50, 14, WS_VISIBLE
-    PUSHBUTTON "���", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
+    DEFPUSHBUTTON "확인", IDOK, 188, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "취소", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
 END
 
 
 LPTCONFIG_DIALOG DIALOG 6, 18, 220, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "LPT ��Ʈ ����"
+CAPTION "LPT 포트 설정"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "�ð��ʰ�(��)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "�� ���� Ƚ��(&T):", -1, 14, 22, 90, 13, WS_VISIBLE
+    GROUPBOX "시간초과(초)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    LTEXT "재 전송 횟수(&T):", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
-    DEFPUSHBUTTON "Ȯ��", IDOK, 164, 10, 50, 14, WS_VISIBLE
-    PUSHBUTTON "���", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
+    DEFPUSHBUTTON "확인", IDOK, 164, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "취소", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
 END

@@ -2,21 +2,21 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_MONITOR DIALOGEX 0, 0, 252, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Монитор"
+CAPTION "РњРѕРЅРёС‚РѕСЂ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Вид монитор", -1, 7, 3, 237, 52
+    GROUPBOX "Р’РёРґ РјРѕРЅРёС‚РѕСЂ", -1, 7, 3, 237, 52
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
-    PUSHBUTTON "&Свойства", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Настройки на монитора", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "Опресняване на &екрана:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    PUSHBUTTON "&РЎРІРѕР№СЃС‚РІР°", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+    GROUPBOX "РќР°СЃС‚СЂРѕР№РєРё РЅР° РјРѕРЅРёС‚РѕСЂР°", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "РћРїСЂРµСЃРЅСЏРІР°РЅРµ РЅР° &РµРєСЂР°РЅР°:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Скриване на режимите, които мониторът не може да използва", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&РЎРєСЂРёРІР°РЅРµ РЅР° СЂРµР¶РёРјРёС‚Рµ, РєРѕРёС‚Рѕ РјРѕРЅРёС‚РѕСЂСЉС‚ РЅРµ РјРѕР¶Рµ РґР° РёР·РїРѕР»Р·РІР°", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Използване на подразбираните настройки"
-    IDS_FREQFMT "%u херца"
+    IDS_USEDEFFRQUENCY "РР·РїРѕР»Р·РІР°РЅРµ РЅР° РїРѕРґСЂР°Р·Р±РёСЂР°РЅРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё"
+    IDS_FREQFMT "%u С…РµСЂС†Р°"
 END

@@ -97,10 +97,10 @@
 101 stub MsiProcessAdvertiseScriptA
 102 stub MsiProcessAdvertiseScriptW
 103 stdcall MsiProcessMessage(long long long)
-104 stub MsiProvideComponentA
+104 stdcall MsiProvideComponentA(str str str long ptr ptr)
 105 stdcall MsiProvideComponentFromDescriptorA(str ptr ptr ptr)
 106 stdcall MsiProvideComponentFromDescriptorW(wstr ptr ptr ptr)
-107 stub MsiProvideComponentW
+107 stdcall MsiProvideComponentW(wstr wstr wstr long ptr ptr)
 108 stdcall MsiProvideQualifiedComponentA(str str long ptr ptr)
 109 stdcall MsiProvideQualifiedComponentW(wstr wstr long ptr ptr)
 110 stdcall MsiQueryFeatureStateA(str str)
@@ -230,8 +230,8 @@
 234 stub MsiDeleteUserDataW
 235 stub Migrate10CachedPackagesA
 236 stdcall Migrate10CachedPackagesW(ptr ptr ptr long)
-237 stub MsiRemovePatchesA
-238 stub MsiRemovePatchesW
+237 stdcall MsiRemovePatchesA(str str long str)
+238 stdcall MsiRemovePatchesW(wstr wstr long wstr)
 239 stdcall MsiApplyMultiplePatchesA(str str str)
 240 stdcall MsiApplyMultiplePatchesW(wstr wstr wstr)
 241 stub MsiExtractPatchXMLDataA
@@ -281,9 +281,16 @@
 285 stdcall MsiBeginTransactionW(wstr long ptr ptr)
 286 stdcall MsiEndTransaction(long)
 287 stub MsiJoinTransaction
-288 stub QueryInstanceCount
+288 stub MsiSetOfflineContextW
+289 stdcall MsiEnumComponentsExA(str long long ptr ptr ptr ptr)
+290 stdcall MsiEnumComponentsExW(wstr long long ptr ptr ptr ptr)
+291 stdcall MsiEnumClientsExA(str str long long ptr ptr ptr ptr)
+292 stdcall MsiEnumClientsExW(wstr wstr long long ptr ptr ptr ptr)
+293 stub MsiGetComponentPathExA
+294 stub MsiGetComponentPathExW
+295 stub QueryInstanceCount
+
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-

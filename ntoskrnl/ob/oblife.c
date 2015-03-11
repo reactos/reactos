@@ -370,7 +370,7 @@ ObpCaptureObjectName(IN OUT PUNICODE_STRING CapturedName,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG StringLength;
-    PWCHAR StringBuffer = NULL;
+    PWCHAR _SEH2_VOLATILE StringBuffer = NULL;
     UNICODE_STRING LocalName;
     PAGED_CODE();
 
@@ -491,7 +491,8 @@ ObpCaptureObjectCreateInformation(IN POBJECT_ATTRIBUTES ObjectAttributes,
             /* Check if we have a security descriptor */
             if (SecurityDescriptor)
             {
-                /* Capture it */
+                /* Capture it. Note: This has an implicit memory barrier due
+                   to the function call, so cleanup is safe here.) */
                 Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
                                                      AccessMode,
                                                      NonPagedPool,

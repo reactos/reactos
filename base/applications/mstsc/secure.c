@@ -1,11 +1,12 @@
 /* -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Protocol services - RDP encryption and licensing
-   Copyright (C) Matthew Chapman 1999-2005
+   Copyright (C) Matthew Chapman <matthewc.unsw.edu.au> 1999-2008
+   Copyright 2005-2011 Peter Astrand <astrand@cendio.se> for Cendio AB
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -14,8 +15,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "precomp.h"
@@ -55,6 +55,9 @@ ssl_rc4_crypt(void * rc4_info, char * in_data, char * out_data, int len);
 int
 ssl_mod_exp(char* out, int out_len, char* in, int in_len,
             char* mod, int mod_len, char* exp, int exp_len);
+//int
+//ssl_sig_ok(char * exp, int exp_size, char * mod, int mod_len,
+//            char * sig, int sig_len);
 
 extern char g_hostname[16];
 extern int g_width;
@@ -63,34 +66,94 @@ extern unsigned int g_keylayout;
 extern int g_keyboard_type;
 extern int g_keyboard_subtype;
 extern int g_keyboard_functionkeys;
-extern BOOL g_encryption;
-extern BOOL g_licence_issued;
-extern BOOL g_use_rdp5;
-extern BOOL g_console_session;
+extern RD_BOOL g_encryption;
+extern RD_BOOL g_licence_issued;
+extern RD_BOOL g_licence_error_result;
+extern RDP_VERSION g_rdp_version;
+extern RD_BOOL g_console_session;
+extern uint32 g_redirect_session_id;
 extern int g_server_depth;
-extern uint16 mcs_userid;
 extern VCHANNEL g_channels[];
 extern unsigned int g_num_channels;
+extern uint8 g_client_random[SEC_RANDOM_SIZE];
 
-static int rc4_key_len;
-static void * rc4_decrypt_key = 0;
-static void * rc4_encrypt_key = 0;
-//static RSA *server_public_key;
-static void * server_public_key;
-static uint32 server_public_key_len;
+static int g_rc4_key_len;
+static void * g_rc4_decrypt_key;
+static void * g_rc4_encrypt_key;
+static uint32 g_server_public_key_len;
 
-static uint8 sec_sign_key[16];
-static uint8 sec_decrypt_key[16];
-static uint8 sec_encrypt_key[16];
-static uint8 sec_decrypt_update_key[16];
-static uint8 sec_encrypt_update_key[16];
-static uint8 sec_crypted_random[SEC_MAX_MODULUS_SIZE];
+static uint8 g_sec_sign_key[16];
+static uint8 g_sec_decrypt_key[16];
+static uint8 g_sec_encrypt_key[16];
+static uint8 g_sec_decrypt_update_key[16];
+static uint8 g_sec_encrypt_update_key[16];
+static uint8 g_sec_crypted_random[SEC_MAX_MODULUS_SIZE];
 
 uint16 g_server_rdp_version = 0;
 
 /* These values must be available to reset state - Session Directory */
-static int sec_encrypt_use_count = 0;
-static int sec_decrypt_use_count = 0;
+static int g_sec_encrypt_use_count = 0;
+static int g_sec_decrypt_use_count = 0;
+
+#define SEC_MODULUS_SIZE 64
+
+static uint8 g_ppk_n[72] =
+{
+    0x3D, 0x3A, 0x5E, 0xBD, 0x72, 0x43, 0x3E, 0xC9,
+    0x4D, 0xBB, 0xC1, 0x1E, 0x4A, 0xBA, 0x5F, 0xCB,
+    0x3E, 0x88, 0x20, 0x87, 0xEF, 0xF5, 0xC1, 0xE2,
+    0xD7, 0xB7, 0x6B, 0x9A, 0xF2, 0x52, 0x45, 0x95,
+    0xCE, 0x63, 0x65, 0x6B, 0x58, 0x3A, 0xFE, 0xEF,
+    0x7C, 0xE7, 0xBF, 0xFE, 0x3D, 0xF6, 0x5C, 0x7D,
+    0x6C, 0x5E, 0x06, 0x09, 0x1A, 0xF5, 0x61, 0xBB,
+    0x20, 0x93, 0x09, 0x5F, 0x05, 0x6D, 0xEA, 0x87,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static uint8 g_ppk_d[108] =
+{
+    0x87, 0xA7, 0x19, 0x32, 0xDA, 0x11, 0x87, 0x55,
+    0x58, 0x00, 0x16, 0x16, 0x25, 0x65, 0x68, 0xF8,
+    0x24, 0x3E, 0xE6, 0xFA, 0xE9, 0x67, 0x49, 0x94,
+    0xCF, 0x92, 0xCC, 0x33, 0x99, 0xE8, 0x08, 0x60,
+    0x17, 0x9A, 0x12, 0x9F, 0x24, 0xDD, 0xB1, 0x24,
+    0x99, 0xC7, 0x3A, 0xB8, 0x0A, 0x7B, 0x0D, 0xDD,
+    0x35, 0x07, 0x79, 0x17, 0x0B, 0x51, 0x9B, 0xB3,
+    0xC7, 0x10, 0x01, 0x13, 0xE7, 0x3F, 0xF3, 0x5F,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+static uint8 g_testkey[176] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x06, 0x00, 0x5c, 0x00,
+    0x52, 0x53, 0x41, 0x31, 0x48, 0x00, 0x00, 0x00,
+    0x00, 0x02, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x01, 0x00, 0x79, 0x6f, 0xb4, 0xdf,
+    0xa6, 0x95, 0xb9, 0xa9, 0x61, 0xe3, 0xc4, 0x5e,
+    0xff, 0x6b, 0xd8, 0x81, 0x8a, 0x12, 0x4a, 0x93,
+    0x42, 0x97, 0x18, 0x93, 0xac, 0xd1, 0x3a, 0x38,
+    0x3c, 0x68, 0x50, 0x19, 0x31, 0xb6, 0x84, 0x51,
+    0x79, 0xfb, 0x1c, 0xe7, 0xe3, 0x99, 0x20, 0xc7,
+    0x84, 0xdf, 0xd1, 0xaa, 0xb5, 0x15, 0xef, 0x47,
+    0x7e, 0xfc, 0x88, 0xeb, 0x29, 0xc3, 0x27, 0x5a,
+    0x35, 0xf8, 0xfd, 0xaa, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+                            0x08, 0x00, 0x48, 0x00,
+    0x32, 0x3b, 0xde, 0x6f, 0x18, 0x97, 0x1e, 0xc3,
+    0x6b, 0x2b, 0x2d, 0xe4, 0xfc, 0x2d, 0xa2, 0x8e,
+    0x32, 0x3c, 0xf3, 0x1b, 0x24, 0x90, 0x57, 0x4d,
+    0x8e, 0xe4, 0x69, 0xfc, 0x16, 0x8d, 0x41, 0x92,
+    0x78, 0xc7, 0x9c, 0xb4, 0x26, 0xff, 0xe8, 0x3e,
+    0xa1, 0x8a, 0xf5, 0x57, 0xc0, 0x7f, 0x3e, 0x21,
+    0x17, 0x32, 0x30, 0x6f, 0x79, 0xe1, 0x36, 0xcd,
+    0xb6, 0x8e, 0xbe, 0x57, 0x57, 0xd2, 0xa9, 0x36
+};
 
 /*
  * I believe this is based on SSLv3 with the following differences:
@@ -152,6 +215,33 @@ sec_hash_16(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2)
 	ssl_md5_info_delete(md5);
 }
 
+/*
+ * 16-byte sha1 hash
+ */
+void
+sec_hash_sha1_16(uint8 * out, uint8 * in, uint8 * salt1)
+{
+	void * sha;
+	sha = ssl_sha1_info_create();
+	ssl_sha1_clear(sha);
+	ssl_sha1_transform(&sha, (char *)in, 16);
+	ssl_sha1_transform(&sha, (char *)salt1, 16);
+	ssl_sha1_complete(&sha, (char *)out);
+	ssl_sha1_info_delete(sha);
+}
+
+/* create string from hash */
+void
+sec_hash_to_string(char *out, int out_size, uint8 * in, int in_size)
+{
+	int k;
+	memset(out, 0, out_size);
+	for (k = 0; k < in_size; k++, out += 2)
+	{
+		sprintf(out, "%.2x", in[k]);
+	}
+}
+
 /* Reduce key entropy from 64 to 40 bits */
 static void
 sec_make_40bit(uint8 * key)
@@ -178,39 +268,39 @@ sec_generate_keys(uint8 * client_random, uint8 * server_random, int rc4_key_size
 	sec_hash_48(key_block, master_secret, client_random, server_random, 'X');
 
 	/* First 16 bytes of key material is MAC secret */
-	memcpy(sec_sign_key, key_block, 16);
+	memcpy(g_sec_sign_key, key_block, 16);
 
 	/* Generate export keys from next two blocks of 16 bytes */
-	sec_hash_16(sec_decrypt_key, &key_block[16], client_random, server_random);
-	sec_hash_16(sec_encrypt_key, &key_block[32], client_random, server_random);
+	sec_hash_16(g_sec_decrypt_key, &key_block[16], client_random, server_random);
+	sec_hash_16(g_sec_encrypt_key, &key_block[32], client_random, server_random);
 
 	if (rc4_key_size == 1)
 	{
 		DEBUG(("40-bit encryption enabled\n"));
-		sec_make_40bit(sec_sign_key);
-		sec_make_40bit(sec_decrypt_key);
-		sec_make_40bit(sec_encrypt_key);
-		rc4_key_len = 8;
+		sec_make_40bit(g_sec_sign_key);
+		sec_make_40bit(g_sec_decrypt_key);
+		sec_make_40bit(g_sec_encrypt_key);
+		g_rc4_key_len = 8;
 	}
 	else
 	{
 		DEBUG(("rc_4_key_size == %d, 128-bit encryption enabled\n", rc4_key_size));
-		rc4_key_len = 16;
+		g_rc4_key_len = 16;
 	}
 
 	/* Save initial RC4 keys as update keys */
-	memcpy(sec_decrypt_update_key, sec_decrypt_key, 16);
-	memcpy(sec_encrypt_update_key, sec_encrypt_key, 16);
+	memcpy(g_sec_decrypt_update_key, g_sec_decrypt_key, 16);
+	memcpy(g_sec_encrypt_update_key, g_sec_encrypt_key, 16);
 
 	/* Initialise RC4 state arrays */
 
-    ssl_rc4_info_delete(rc4_decrypt_key);
-	rc4_decrypt_key = ssl_rc4_info_create(); 
-	ssl_rc4_set_key(rc4_decrypt_key, (char *)sec_decrypt_key, rc4_key_len); 
+    ssl_rc4_info_delete(g_rc4_decrypt_key);
+	g_rc4_decrypt_key = ssl_rc4_info_create(); 
+	ssl_rc4_set_key(g_rc4_decrypt_key, (char *)g_sec_decrypt_key, g_rc4_key_len); 
 
-    ssl_rc4_info_delete(rc4_encrypt_key);
-	rc4_encrypt_key = ssl_rc4_info_create(); 
-	ssl_rc4_set_key(rc4_encrypt_key, (char *)sec_encrypt_key, rc4_key_len); 
+    ssl_rc4_info_delete(g_rc4_encrypt_key);
+	g_rc4_encrypt_key = ssl_rc4_info_create(); 
+	ssl_rc4_set_key(g_rc4_encrypt_key, (char *)g_sec_encrypt_key, g_rc4_key_len); 
 }
 
 static uint8 pad_54[40] = {
@@ -280,15 +370,15 @@ sec_update(uint8 * key, uint8 * update_key)
 
 	sha = ssl_sha1_info_create();
 	ssl_sha1_clear(sha);
-	ssl_sha1_transform(sha, (char *)update_key, rc4_key_len);
+	ssl_sha1_transform(sha, (char *)update_key, g_rc4_key_len);
 	ssl_sha1_transform(sha, (char *)pad_54, 40);
-	ssl_sha1_transform(sha, (char *)key, rc4_key_len);
+	ssl_sha1_transform(sha, (char *)key, g_rc4_key_len);
 	ssl_sha1_complete(sha, (char *)shasig);
 	ssl_sha1_info_delete(sha);
 
 	md5 = ssl_md5_info_create();
 	ssl_md5_clear(md5);
-    ssl_md5_transform(md5, (char *)update_key, rc4_key_len);
+    ssl_md5_transform(md5, (char *)update_key, g_rc4_key_len);
 	ssl_md5_transform(md5, (char *)pad_92, 48);
 	ssl_md5_transform(md5, (char *)shasig, 20);
 	ssl_md5_complete(md5, (char *)key);
@@ -296,11 +386,11 @@ sec_update(uint8 * key, uint8 * update_key)
 
 
 	update = ssl_rc4_info_create();
-	ssl_rc4_set_key(update, (char *)key, rc4_key_len);
-	ssl_rc4_crypt(update, (char *)key, (char *)key, rc4_key_len);
+	ssl_rc4_set_key(update, (char *)key, g_rc4_key_len);
+	ssl_rc4_crypt(update, (char *)key, (char *)key, g_rc4_key_len);
 	ssl_rc4_info_delete(update);
-	
-	if (rc4_key_len == 8)
+
+	if (g_rc4_key_len == 8)
 		sec_make_40bit(key);
 }
 
@@ -308,96 +398,79 @@ sec_update(uint8 * key, uint8 * update_key)
 static void
 sec_encrypt(uint8 * data, int length)
 {
-	if (sec_encrypt_use_count == 4096)
+	if (g_sec_encrypt_use_count == 4096)
 	{
-		sec_update(sec_encrypt_key, sec_encrypt_update_key);
-		ssl_rc4_set_key(rc4_encrypt_key, (char *)sec_encrypt_key, rc4_key_len);
-		sec_encrypt_use_count = 0;
+		sec_update(g_sec_encrypt_key, g_sec_encrypt_update_key);
+		ssl_rc4_set_key(g_rc4_encrypt_key, (char *)g_sec_encrypt_key, g_rc4_key_len);
+		g_sec_encrypt_use_count = 0;
 	}
-	ssl_rc4_crypt(rc4_encrypt_key, (char *)data, (char *)data, length);
-	sec_encrypt_use_count++;
+
+	ssl_rc4_crypt(g_rc4_encrypt_key, (char *)data, (char *)data, length);
+	g_sec_encrypt_use_count++;
 }
 
 /* Decrypt data using RC4 */
 void
 sec_decrypt(uint8 * data, int length)
 {
-	if (sec_decrypt_use_count == 4096)
+	if (g_sec_decrypt_use_count == 4096)
 	{
-		sec_update(sec_decrypt_key, sec_decrypt_update_key);
-		ssl_rc4_set_key(rc4_decrypt_key, (char *)sec_decrypt_key, rc4_key_len);
-		sec_decrypt_use_count = 0;
+		sec_update(g_sec_decrypt_key, g_sec_decrypt_update_key);
+		ssl_rc4_set_key(g_rc4_decrypt_key, (char *)g_sec_decrypt_key, g_rc4_key_len);
+		g_sec_decrypt_use_count = 0;
 	}
-	ssl_rc4_crypt(rc4_decrypt_key, (char *)data, (char *)data, length);
-	sec_decrypt_use_count++;
+
+	ssl_rc4_crypt(g_rc4_decrypt_key,(char *)data, (char *)data, length);
+	g_sec_decrypt_use_count++;
 }
-
-/*static void
-reverse(uint8 * p, int len)
-{
-	int i, j;
-	uint8 temp;
-
-	for (i = 0, j = len - 1; i < j; i++, j--)
-	{
-		temp = p[i];
-		p[i] = p[j];
-		p[j] = temp;
-	}
-}*/
 
 /* Perform an RSA public key encryption operation */
 static void
-//sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint8 * modulus, uint8 * exponent)
-sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint32 modulus_size, uint8 * modulus, uint8 * exponent)
+sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint32 modulus_size, uint8 * modulus,
+		uint8 * exponent)
 {
 	ssl_mod_exp((char *)out, 64, (char *)in, 32, (char *)modulus, 64, (char *)exponent, 4);
-/*
-ssl_mod_exp(out, 64, in, 32, modulus, 64, exponent, 4);
+}
 
-ssl_mod_exp(char* out, int out_len, char* in, int in_len,
-            char* mod, int mod_len, char* exp, int exp_len)
+static int
+sec_sign_ok(char* e_data, int e_len, char* n_data, int n_len,
+         char* sign_data, int sign_len, char* sign_data2, int sign_len2, char* testkey)
+{
+    char* key;
+    char* md5_final;
+    void* md5;
 
-e = (DIGIT_T*)l_exp;
-x = (DIGIT_T*)l_in;
-y = (DIGIT_T*)l_out;
-m = (DIGIT_T*)l_mod;
-
-*/
-
-	//BN_CTX *ctx;
-
-/*
-	BN_CTX *ctx;
-	BIGNUM mod, exp, x, y;
-	uint8 inr[SEC_MAX_MODULUS_SIZE];
-	int outlen;
-
-	reverse(modulus, modulus_size);
-	reverse(exponent, SEC_EXPONENT_SIZE);
-	memcpy(inr, in, len);
-	reverse(inr, len);
-
-	ctx = BN_CTX_new();
-	BN_init(&mod);
-	BN_init(&exp);
-	BN_init(&x);
-	BN_init(&y);
-
-	BN_bin2bn(modulus, modulus_size, &mod);
-	BN_bin2bn(exponent, SEC_EXPONENT_SIZE, &exp);
-	BN_bin2bn(inr, len, &x);
-	BN_mod_exp(&y, &x, &exp, &mod, ctx);
-	outlen = BN_bn2bin(&y, out);
-	reverse(out, outlen);
-	if (outlen < modulus_size)
-		memset(out + outlen, 0, modulus_size - outlen);
-
-	BN_free(&y);
-	BN_clear_free(&x);
-	BN_free(&exp);
-	BN_free(&mod);
-	BN_CTX_free(ctx);*/
+    if ((e_len != 4) || (n_len != 64) || (sign_len != 64) || (sign_len2 != 64))
+    {
+        return 1;
+    }
+    key = (char*)xmalloc(176);
+    md5_final = (char*)xmalloc(64);
+    md5 = ssl_md5_info_create();
+    // copy the test key
+    memcpy(key, testkey, 176);
+    // replace e and n
+    memcpy(key + 32, e_data, 4);
+    memcpy(key + 36, n_data, 64);
+    ssl_md5_clear(md5);
+    // the first 108 bytes
+    ssl_md5_transform(md5, key, 108);
+    // set the whole thing with 0xff
+    memset(md5_final, 0xff, 64);
+    // digest 16 bytes
+    ssl_md5_complete(md5, md5_final);
+    // set non 0xff array items
+    md5_final[16] = 0;
+    md5_final[62] = 1;
+    md5_final[63] = 0;
+    // encrypt
+    ssl_mod_exp(sign_data, 64, md5_final, 64, (char*)g_ppk_n, 64,
+                (char*)g_ppk_d, 64);
+    // cleanup
+    ssl_md5_info_delete(md5);
+    xfree(key);
+    xfree(md5_final);
+    return memcmp(sign_data, sign_data2, sign_len2);
 }
 
 /* Initialise secure transport packet */
@@ -407,7 +480,7 @@ sec_init(uint32 flags, int maxlen)
 	int hdrlen;
 	STREAM s;
 
-	if (!g_licence_issued)
+	if (!g_licence_issued && !g_licence_error_result)
 		hdrlen = (flags & SEC_ENCRYPT) ? 12 : 4;
 	else
 		hdrlen = (flags & SEC_ENCRYPT) ? 12 : 0;
@@ -423,8 +496,12 @@ sec_send_to_channel(STREAM s, uint32 flags, uint16 channel)
 {
 	int datalen;
 
+#ifdef WITH_SCARD
+	scard_lock(SCARD_LOCK_SEC);
+#endif
+
 	s_pop_layer(s, sec_hdr);
-	if (!g_licence_issued || (flags & SEC_ENCRYPT))
+	if ((!g_licence_issued && !g_licence_error_result) || (flags & SEC_ENCRYPT))
 		out_uint32_le(s, flags);
 
 	if (flags & SEC_ENCRYPT)
@@ -437,11 +514,15 @@ sec_send_to_channel(STREAM s, uint32 flags, uint16 channel)
 		hexdump(s->p + 8, datalen);
 #endif
 
-		sec_sign(s->p, 8, sec_sign_key, rc4_key_len, s->p + 8, datalen);
+		sec_sign(s->p, 8, g_sec_sign_key, g_rc4_key_len, s->p + 8, datalen);
 		sec_encrypt(s->p + 8, datalen);
 	}
 
 	mcs_send_to_channel(s, channel);
+
+#ifdef WITH_SCARD
+	scard_unlock(SCARD_LOCK_SEC);
+#endif
 }
 
 /* Transmit secure transport packet */
@@ -457,14 +538,14 @@ sec_send(STREAM s, uint32 flags)
 static void
 sec_establish_key(void)
 {
-	uint32 length = server_public_key_len + SEC_PADDING_SIZE;
+	uint32 length = g_server_public_key_len + SEC_PADDING_SIZE;
 	uint32 flags = SEC_CLIENT_RANDOM;
 	STREAM s;
 
-	s = sec_init(flags, length+4);
+	s = sec_init(flags, length + 4);
 
 	out_uint32_le(s, length);
-	out_uint8p(s, sec_crypted_random, server_public_key_len);
+	out_uint8p(s, g_sec_crypted_random, g_server_public_key_len);
 	out_uint8s(s, SEC_PADDING_SIZE);
 
 	s_mark_end(s);
@@ -473,11 +554,12 @@ sec_establish_key(void)
 
 /* Output connect initial data blob */
 static void
-sec_out_mcs_data(STREAM s)
+sec_out_mcs_data(STREAM s, uint32 selected_protocol)
 {
 	int hostlen = 2 * strlen(g_hostname);
-	int length = 158 + 76 + 12 + 4;
+	int length = 162 + 76 + 12 + 4;
 	unsigned int i;
+	uint32 cluster_flags = 0;
 
 	if (g_num_channels > 0)
 		length += g_num_channels * 12 + 8;
@@ -504,8 +586,8 @@ sec_out_mcs_data(STREAM s)
 
 	/* Client information */
 	out_uint16_le(s, SEC_TAG_CLI_INFO);
-	out_uint16_le(s, 212);	/* length */
-	out_uint16_le(s, g_use_rdp5 ? 4 : 1);	/* RDP version. 1 == RDP4, 4 == RDP5. */
+	out_uint16_le(s, 216);	/* length */
+	out_uint16_le(s, (g_rdp_version >= RDP_V5) ? 4 : 1);	/* RDP version. 1 == RDP4, 4 >= RDP5 to RDP8 */
 	out_uint16_le(s, 8);
 	out_uint16_le(s, g_width);
 	out_uint16_le(s, g_height);
@@ -532,12 +614,21 @@ sec_out_mcs_data(STREAM s)
 	out_uint16_le(s, 0x0700);
 	out_uint8(s, 0);
 	out_uint32_le(s, 1);
-	out_uint8s(s, 64);	/* End of client info */
+	out_uint8s(s, 64);
+	out_uint32_le(s, selected_protocol);	/* End of client info */
 
-	out_uint16_le(s, SEC_TAG_CLI_4);
-	out_uint16_le(s, 12);
-	out_uint32_le(s, g_console_session ? 0xb : 9);
-	out_uint32(s, 0);
+	/* Write a Client Cluster Data (TS_UD_CS_CLUSTER) */
+	out_uint16_le(s, SEC_TAG_CLI_CLUSTER);	/* header.type */
+	out_uint16_le(s, 12);	/* length */
+
+	cluster_flags |= SEC_CC_REDIRECTION_SUPPORTED;
+	cluster_flags |= (SEC_CC_REDIRECT_VERSION_3 << 2);
+
+	if (g_console_session || g_redirect_session_id != 0)
+		cluster_flags |= SEC_CC_REDIRECT_SESSIONID_FIELD_VALID;
+
+	out_uint32_le(s, cluster_flags);
+	out_uint32(s, g_redirect_session_id);
 
 	/* Client encryption settings */
 	out_uint16_le(s, SEC_TAG_CLI_CRYPT);
@@ -563,8 +654,8 @@ sec_out_mcs_data(STREAM s)
 }
 
 /* Parse a public key structure */
-static BOOL
-sec_parse_public_key(STREAM s, uint8 ** modulus, uint8 ** exponent)
+static RD_BOOL
+sec_parse_public_key(STREAM s, uint8 * modulus, uint8 * exponent)
 {
 	uint32 magic, modulus_len;
 
@@ -577,36 +668,64 @@ sec_parse_public_key(STREAM s, uint8 ** modulus, uint8 ** exponent)
 
 	in_uint32_le(s, modulus_len);
 	modulus_len -= SEC_PADDING_SIZE;
-	if ((modulus_len < 64) || (modulus_len > SEC_MAX_MODULUS_SIZE))
+	if ((modulus_len < SEC_MODULUS_SIZE) || (modulus_len > SEC_MAX_MODULUS_SIZE))
 	{
-		error("Bad server public key size (%u bits)\n", modulus_len*8);
+		error("Bad server public key size (%u bits)\n", modulus_len * 8);
 		return False;
 	}
 
 	in_uint8s(s, 8);	/* modulus_bits, unknown */
-	in_uint8p(s, *exponent, SEC_EXPONENT_SIZE);
-	in_uint8p(s, *modulus, modulus_len);
+	in_uint8a(s, exponent, SEC_EXPONENT_SIZE);
+	in_uint8a(s, modulus, modulus_len);
 	in_uint8s(s, SEC_PADDING_SIZE);
-	server_public_key_len = modulus_len;
+	g_server_public_key_len = modulus_len;
 
 	return s_check(s);
 }
 
+/* Parse a public signature structure */
+static RD_BOOL
+sec_parse_public_sig(STREAM s, uint32 len, uint8 * modulus, uint8 * exponent)
+{
+	uint8 signature[SEC_MAX_MODULUS_SIZE];
+	uint8 signature_[SEC_MAX_MODULUS_SIZE];
+	uint32 sig_len;
+
+	if (len != 72)
+	{
+		return True;
+	}
+	memset(signature, 0, sizeof(signature));
+	sig_len = len - 8;
+	in_uint8a(s, signature, sig_len);
+    if(sec_sign_ok((char *)exponent, SEC_EXPONENT_SIZE, (char *)modulus, g_server_public_key_len,
+                (char *)signature_, SEC_MODULUS_SIZE, (char *)signature, sig_len, (char *)g_testkey))
+    {
+        DEBUG_RDP5(("key signature doesn't match test key\n"));
+    }
+	return s_check(s);
+}
+
 /* Parse a crypto information structure */
-static BOOL
+static RD_BOOL
 sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
-		     uint8 ** server_random, uint8 ** modulus, uint8 ** exponent)
+		     uint8 ** server_random, uint8 * modulus, uint8 * exponent)
 {
 	uint32 crypt_level, random_len, rsa_info_len;
 	uint32 /*cacert_len, cert_len,*/ flags;
-	//X509 *cacert, *server_cert;
+	//RDSSL_CERT *cacert, *server_cert;
+	//RDSSL_RKEY *server_public_key;
 	uint16 tag, length;
 	uint8 *next_tag, *end;
 
 	in_uint32_le(s, *rc4_key_size);	/* 1 = 40-bit, 2 = 128-bit */
 	in_uint32_le(s, crypt_level);	/* 1 = low, 2 = medium, 3 = high */
-	if (crypt_level == 0)	/* no encryption */
+	if (crypt_level == 0)
+	{
+		/* no encryption */
 		return False;
+	}
+
 	in_uint32_le(s, random_len);
 	in_uint32_le(s, rsa_info_len);
 
@@ -646,10 +765,8 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 					break;
 
 				case SEC_TAG_KEYSIG:
-					/* Is this a Microsoft key that we just got? */
-					/* Care factor: zero! */
-					/* Actually, it would probably be a good idea to check if the public key is signed with this key, and then store this 
-					   key as a known key of the hostname. This would prevent some MITM-attacks. */
+					if (!sec_parse_public_sig(s, length, modulus, exponent))
+						return False;
 					break;
 
 				default:
@@ -660,30 +777,27 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 		}
 	}
 	else
-	{ 
+	{
 #if 0
 		uint32 certcount;
 
 		DEBUG_RDP5(("We're going for the RDP5-style encryption\n"));
 		in_uint32_le(s, certcount);	/* Number of certificates */
-
 		if (certcount < 2)
 		{
 			error("Server didn't send enough X509 certificates\n");
 			return False;
 		}
-
 		for (; certcount > 2; certcount--)
 		{		/* ignore all the certificates between the root and the signing CA */
 			uint32 ignorelen;
-			X509 *ignorecert;
+			RDSSL_CERT *ignorecert;
 
 			DEBUG_RDP5(("Ignored certs left: %d\n", certcount));
-
 			in_uint32_le(s, ignorelen);
 			DEBUG_RDP5(("Ignored Certificate length is %d\n", ignorelen));
-			ignorecert = d2i_X509(NULL, &(s->p), ignorelen);
-
+			ignorecert = rdssl_cert_read(s->p, ignorelen);
+			in_uint8s(s, ignorelen);
 			if (ignorecert == NULL)
 			{	/* XXX: error out? */
 				DEBUG_RDP5(("got a bad cert: this will probably screw up the rest of the communication\n"));
@@ -691,11 +805,10 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 
 #ifdef WITH_DEBUG_RDP5
 			DEBUG_RDP5(("cert #%d (ignored):\n", certcount));
-			X509_print_fp(stdout, ignorecert);
+			rdssl_cert_print_fp(stdout, ignorecert);
 #endif
 		}
-
-		/* Do da funky X.509 stuffy 
+		/* Do da funky X.509 stuffy
 
 		   "How did I find out about this?  I looked up and saw a
 		   bright light and when I came to I had a scar on my forehead
@@ -703,52 +816,58 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 		   - Peter Gutman in a early version of 
 		   http://www.cs.auckland.ac.nz/~pgut001/pubs/x509guide.txt
 		 */
-
 		in_uint32_le(s, cacert_len);
 		DEBUG_RDP5(("CA Certificate length is %d\n", cacert_len));
-		cacert = d2i_X509(NULL, &(s->p), cacert_len);
-		/* Note: We don't need to move s->p here - d2i_X509 is
-		   "kind" enough to do it for us */
+		cacert = rdssl_cert_read(s->p, cacert_len);
+		in_uint8s(s, cacert_len);
 		if (NULL == cacert)
 		{
 			error("Couldn't load CA Certificate from server\n");
 			return False;
 		}
-
-		/* Currently, we don't use the CA Certificate. 
-		   FIXME: 
-		   *) Verify the server certificate (server_cert) with the 
-		   CA certificate.
-		   *) Store the CA Certificate with the hostname of the 
-		   server we are connecting to as key, and compare it
-		   when we connect the next time, in order to prevent
-		   MITM-attacks.
-		 */
-
-		X509_free(cacert);
-
 		in_uint32_le(s, cert_len);
 		DEBUG_RDP5(("Certificate length is %d\n", cert_len));
-		server_cert = d2i_X509(NULL, &(s->p), cert_len);
+		server_cert = rdssl_cert_read(s->p, cert_len);
+		in_uint8s(s, cert_len);
 		if (NULL == server_cert)
 		{
+			rdssl_cert_free(cacert);
 			error("Couldn't load Certificate from server\n");
 			return False;
 		}
-
-		in_uint8s(s, 16);	/* Padding */
-
-		/* Note: Verifying the server certificate must be done here, 
-		   before sec_parse_public_key since we'll have to apply
-		   serious violence to the key after this */
-
-		if (!sec_parse_x509_key(server_cert))
+		if (!rdssl_certs_ok(server_cert, cacert))
 		{
-			DEBUG_RDP5(("Didn't parse X509 correctly\n"));
-			X509_free(server_cert);
+			rdssl_cert_free(server_cert);
+			rdssl_cert_free(cacert);
+			error("Security error CA Certificate invalid\n");
 			return False;
 		}
-		X509_free(server_cert);
+		rdssl_cert_free(cacert);
+		in_uint8s(s, 16);	/* Padding */
+		server_public_key = rdssl_cert_to_rkey(server_cert, &g_server_public_key_len);
+		if (NULL == server_public_key)
+		{
+			DEBUG_RDP5(("Didn't parse X509 correctly\n"));
+			rdssl_cert_free(server_cert);
+			return False;
+		}
+		rdssl_cert_free(server_cert);
+		if ((g_server_public_key_len < SEC_MODULUS_SIZE) ||
+		    (g_server_public_key_len > SEC_MAX_MODULUS_SIZE))
+		{
+			error("Bad server public key size (%u bits)\n",
+			      g_server_public_key_len * 8);
+			rdssl_rkey_free(server_public_key);
+			return False;
+		}
+		if (rdssl_rkey_get_exp_mod(server_public_key, exponent, SEC_EXPONENT_SIZE,
+					   modulus, SEC_MAX_MODULUS_SIZE) != 0)
+		{
+			error("Problem extracting RSA exponent, modulus");
+			rdssl_rkey_free(server_public_key);
+			return False;
+		}
+		rdssl_rkey_free(server_public_key);
 		return True;	/* There's some garbage here we don't care about */
 #endif
 	}
@@ -759,51 +878,23 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 static void
 sec_process_crypt_info(STREAM s)
 {
-	uint8 *server_random, *modulus, *exponent;
-	uint8 client_random[SEC_RANDOM_SIZE];
+	uint8 *server_random = NULL;
+	uint8 modulus[SEC_MAX_MODULUS_SIZE];
+	uint8 exponent[SEC_EXPONENT_SIZE];
 	uint32 rc4_key_size;
-	//uint8 inr[SEC_MODULUS_SIZE];
 
-	if (!sec_parse_crypt_info(s, &rc4_key_size, &server_random, &modulus, &exponent))
+	memset(modulus, 0, sizeof(modulus));
+	memset(exponent, 0, sizeof(exponent));
+	if (!sec_parse_crypt_info(s, &rc4_key_size, &server_random, modulus, exponent))
 	{
 		DEBUG(("Failed to parse crypt info\n"));
 		return;
 	}
-
 	DEBUG(("Generating client random\n"));
-	/* Generate a client random, and hence determine encryption keys */
-	/* This is what the MS client do: */
-	//memset(inr, 0, SEC_RANDOM_SIZE);
-	/*  *ARIGL!* Plaintext attack, anyone?
-	I tried doing:
-	 generate_random(inr);
-	..but that generates connection errors now and then (yes, 
-	"now and then". Something like 0 to 3 attempts needed before a 
-	successful connection. Nice. Not! 
-	*/
-	generate_random(client_random);
-	if (NULL != server_public_key)
-	{			/* Which means we should use 
-				   RDP5-style encryption */
-#if 0
-		memcpy(inr + SEC_RANDOM_SIZE, client_random, SEC_RANDOM_SIZE);
-		reverse(inr + SEC_RANDOM_SIZE, SEC_RANDOM_SIZE);
-
-		RSA_public_encrypt(SEC_MODULUS_SIZE,
-				   inr, sec_crypted_random, server_public_key, RSA_NO_PADDING);
-
-		reverse(sec_crypted_random, SEC_MODULUS_SIZE);
-
-		RSA_free(server_public_key);
-		server_public_key = NULL;
-#endif
-	}
-	else
-	{			/* RDP4-style encryption */
-		sec_rsa_encrypt(sec_crypted_random,
-				client_random, SEC_RANDOM_SIZE, server_public_key_len, modulus, exponent);
-	}
-	sec_generate_keys(client_random, server_random, rc4_key_size);
+	generate_random(g_client_random);
+	sec_rsa_encrypt(g_sec_crypted_random, g_client_random, SEC_RANDOM_SIZE,
+			g_server_public_key_len, modulus, exponent);
+	sec_generate_keys(g_client_random, server_random, rc4_key_size);
 }
 
 
@@ -815,7 +906,7 @@ sec_process_srv_info(STREAM s)
 	DEBUG_RDP5(("Server RDP version is %d\n", g_server_rdp_version));
 	if (1 == g_server_rdp_version)
 	{
-		g_use_rdp5 = 0;
+		g_rdp_version = RDP_V4;
 		g_server_depth = 8;
 	}
 }
@@ -890,62 +981,74 @@ sec_recv(uint8 * rdpver)
 				return s;
 			}
 		}
-		if (g_encryption || !g_licence_issued)
+		if (g_encryption || (!g_licence_issued && !g_licence_error_result))
 		{
 			in_uint32_le(s, sec_flags);
 
-			if (sec_flags & SEC_ENCRYPT)
+			if (g_encryption)
 			{
-				in_uint8s(s, 8);	/* signature */
-				sec_decrypt(s->p, s->end - s->p);
-			}
-
-			if (sec_flags & SEC_LICENCE_NEG)
-			{
-				licence_process(s);
-				continue;
-			}
-
-			if (sec_flags & 0x0400)	/* SEC_REDIRECT_ENCRYPT */
-			{
-				uint8 swapbyte;
-
-				in_uint8s(s, 8);	/* signature */
-				sec_decrypt(s->p, s->end - s->p);
-
-				/* Check for a redirect packet, starts with 00 04 */
-				if (s->p[0] == 0 && s->p[1] == 4)
+				if (sec_flags & SEC_ENCRYPT)
 				{
-					/* for some reason the PDU and the length seem to be swapped.
-					   This isn't good, but we're going to do a byte for byte
-					   swap.  So the first foure value appear as: 00 04 XX YY,
-					   where XX YY is the little endian length. We're going to
-					   use 04 00 as the PDU type, so after our swap this will look
-					   like: XX YY 04 00 */
-					swapbyte = s->p[0];
-					s->p[0] = s->p[2];
-					s->p[2] = swapbyte;
-
-					swapbyte = s->p[1];
-					s->p[1] = s->p[3];
-					s->p[3] = swapbyte;
-
-					swapbyte = s->p[2];
-					s->p[2] = s->p[3];
-					s->p[3] = swapbyte;
+					in_uint8s(s, 8);	/* signature */
+					sec_decrypt(s->p, s->end - s->p);
 				}
-#ifdef WITH_DEBUG
-				/* warning!  this debug statement will show passwords in the clear! */
-				hexdump(s->p, s->end - s->p);
-#endif
-			}
 
+				if (sec_flags & SEC_LICENCE_NEG)
+				{
+					licence_process(s);
+					continue;
+				}
+
+				if (sec_flags & 0x0400)	/* SEC_REDIRECT_ENCRYPT */
+				{
+					uint8 swapbyte;
+
+					in_uint8s(s, 8);	/* signature */
+					sec_decrypt(s->p, s->end - s->p);
+
+					/* Check for a redirect packet, starts with 00 04 */
+					if (s->p[0] == 0 && s->p[1] == 4)
+					{
+						/* for some reason the PDU and the length seem to be swapped.
+						   This isn't good, but we're going to do a byte for byte
+						   swap.  So the first foure value appear as: 00 04 XX YY,
+						   where XX YY is the little endian length. We're going to
+						   use 04 00 as the PDU type, so after our swap this will look
+						   like: XX YY 04 00 */
+						swapbyte = s->p[0];
+						s->p[0] = s->p[2];
+						s->p[2] = swapbyte;
+
+						swapbyte = s->p[1];
+						s->p[1] = s->p[3];
+						s->p[3] = swapbyte;
+
+						swapbyte = s->p[2];
+						s->p[2] = s->p[3];
+						s->p[3] = swapbyte;
+					}
+#ifdef WITH_DEBUG
+					/* warning!  this debug statement will show passwords in the clear! */
+					hexdump(s->p, s->end - s->p);
+#endif
+				}
+			}
+			else
+			{
+				if ((sec_flags & 0xffff) == SEC_LICENCE_NEG)
+				{
+					licence_process(s);
+					continue;
+				}
+				s->p -= 4;
+			}
 		}
 
 		if (channel != MCS_GLOBAL_CHANNEL)
 		{
 			channel_process(s, channel);
-			*rdpver = 0xff;
+			if (rdpver != NULL)
+				*rdpver = 0xff;
 			return s;
 		}
 
@@ -956,41 +1059,26 @@ sec_recv(uint8 * rdpver)
 }
 
 /* Establish a secure connection */
-BOOL
-sec_connect(char *server, char *username)
+RD_BOOL
+sec_connect(char *server, char *username, char *domain, char *password, RD_BOOL reconnect)
 {
+	uint32 selected_proto;
 	struct stream mcs_data;
+
+	/* Start a MCS connect sequence */
+	if (!mcs_connect_start(server, username, domain, password, reconnect, &selected_proto))
+		return False;
 
 	/* We exchange some RDP data during the MCS-Connect */
 	mcs_data.size = 512;
 	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
-	sec_out_mcs_data(&mcs_data);
+	sec_out_mcs_data(&mcs_data, selected_proto);
 
-	if (!mcs_connect(server, &mcs_data, username))
+	/* finialize the MCS connect sequence */
+	if (!mcs_connect_finalize(&mcs_data))
 		return False;
 
-	/*      sec_process_mcs_data(&mcs_data); */
-	if (g_encryption)
-		sec_establish_key();
-	xfree(mcs_data.data);
-	return True;
-}
-
-/* Establish a secure connection */
-BOOL
-sec_reconnect(char *server)
-{
-	struct stream mcs_data;
-
-	/* We exchange some RDP data during the MCS-Connect */
-	mcs_data.size = 512;
-	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
-	sec_out_mcs_data(&mcs_data);
-
-	if (!mcs_reconnect(server, &mcs_data))
-		return False;
-
-	/*      sec_process_mcs_data(&mcs_data); */
+	/* sec_process_mcs_data(&mcs_data); */
 	if (g_encryption)
 		sec_establish_key();
 	xfree(mcs_data.data);
@@ -1009,7 +1097,9 @@ void
 sec_reset_state(void)
 {
 	g_server_rdp_version = 0;
-	sec_encrypt_use_count = 0;
-	sec_decrypt_use_count = 0;
+	g_sec_encrypt_use_count = 0;
+	g_sec_decrypt_use_count = 0;
+	g_licence_issued = 0;
+	g_licence_error_result = 0;
 	mcs_reset_state();
 }

@@ -22,6 +22,6 @@ Size = 1,36 Mo
 
 [Section.041f]
 Name = D+ Tarayıcı
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = DPlus; güvenlik, başarım ve taşınabilirlik üzerine bir vurguyla, çizgelik bir Umûmî Ağ tarayıcısıdır. Dillo tabanlıdır ve Dillo-Win32 tasarısından çatallanmıştır.
 Size = 1,36 MB

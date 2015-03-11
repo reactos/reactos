@@ -13,6 +13,7 @@ URLDownload = http://download.sourceforge.net/preccalc/preccalc-32bit.zip
 CDPath = none
 
 [Section.041f]
-License = GPL 3. sürüm
+Name = Precise Hesap Makinesi
+License = GPL sürüm 3
 Description = Precise Hesap Makinesi, Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 151 KB

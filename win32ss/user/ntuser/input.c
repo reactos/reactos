@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          General input functions
- * FILE:             subsystems/win32/win32k/ntuser/input.c
+ * FILE:             win32ss/user/ntuser/input.c
  * PROGRAMERS:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Rafal Harabien (rafalh@reactos.org)
  */
@@ -153,7 +153,10 @@ RawInputThreadMain()
     StartTheTimers();
     UserLeave();
 
-    for(;;)
+    NT_ASSERT(ghMouseDevice == NULL);
+    NT_ASSERT(ghKeyboardDevice == NULL);
+
+    for (;;)
     {
         if (!ghMouseDevice)
         {
@@ -247,10 +250,16 @@ RawInputThreadMain()
                 pSignaledObject = WaitObjects[Status - STATUS_WAIT_0];
 
                 /* Check if it is mouse or keyboard and update status */
-                if (pSignaledObject == &pMouDevice->Event)
+                if ((MouStatus == STATUS_PENDING) &&
+                    (pSignaledObject == &pMouDevice->Event))
+                {
                     MouStatus = MouIosb.Status;
-                else if (pSignaledObject == &pKbdDevice->Event)
+                }
+                else if ((KbdStatus == STATUS_PENDING) &&
+                         (pSignaledObject == &pKbdDevice->Event))
+                {
                     KbdStatus = KbdIosb.Status;
+                }
                 else if (pSignaledObject == MasterTimer)
                 {
                     ProcessTimers();
@@ -300,7 +309,7 @@ RawInputThreadMain()
  * CreateSystemThreads
  *
  * Called form dedicated thread in CSRSS. RIT is started in context of this
- * thread because it needs valid Win32 process with TEB initialized
+ * thread because it needs valid Win32 process with TEB initialized.
  */
 DWORD NTAPI
 CreateSystemThreads(UINT Type)
@@ -414,7 +423,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
     do
     {
        if (!gpai) return TRUE;
- 
+
        pai = gpai; // Bottom of the list.
 
        do
@@ -432,7 +441,7 @@ IsRemoveAttachThread(PTHREADINFO pti)
              break;
           }
           pai = pai->paiNext;
-        
+
        } while (pai);
 
        if (!pai && !ptiFrom && !ptiTo) break;
@@ -450,6 +459,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {
     MSG msg;
     PATTACHINFO pai;
+    PCURICON_OBJECT CurIcon;
 
     /* Can not be the same thread. */
     if (ptiFrom == ptiTo) return STATUS_INVALID_PARAMETER;
@@ -497,7 +507,6 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
               ERR("ptiFrom is Foreground\n");
               ptiTo->MessageQueue->spwndActive  = ptiFrom->MessageQueue->spwndActive;
               ptiTo->MessageQueue->spwndFocus   = ptiFrom->MessageQueue->spwndFocus;
-              ptiTo->MessageQueue->CursorObject = ptiFrom->MessageQueue->CursorObject;
               ptiTo->MessageQueue->spwndCapture = ptiFrom->MessageQueue->spwndCapture;
               ptiTo->MessageQueue->QF_flags    ^= ((ptiTo->MessageQueue->QF_flags ^ ptiFrom->MessageQueue->QF_flags) & QF_CAPTURELOCKED);
               ptiTo->MessageQueue->CaretInfo    = ptiFrom->MessageQueue->CaretInfo;
@@ -510,12 +519,26 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
               ERR("ptiFrom NOT Foreground\n");
            }
 
+           CurIcon = ptiFrom->MessageQueue->CursorObject;
+
            MsqDestroyMessageQueue(ptiFrom);
+
+           if (CurIcon && UserObjectInDestroy(UserHMGetHandle(CurIcon)))
+           {
+              CurIcon = NULL;
+           }
 
            ptiFrom->MessageQueue = ptiTo->MessageQueue;
 
+           // Pass cursor From if To is null. Pass test_SetCursor parent_id == current pti ID.
+           if (CurIcon && ptiTo->MessageQueue->CursorObject == NULL)
+           {
+              ptiTo->MessageQueue->CursorObject = CurIcon;
+              UserReferenceObject(CurIcon);
+           }
+
            ptiFrom->MessageQueue->cThreads++;
-           ERR("ptiTo S Share count %d\n", ptiFrom->MessageQueue->cThreads);
+           ERR("ptiTo S Share count %u\n", ptiFrom->MessageQueue->cThreads);
 
            IntReferenceMessageQueue(ptiTo->MessageQueue);
         }
@@ -549,9 +572,9 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         }
 
         if (!Hit) return STATUS_INVALID_PARAMETER;
- 
+
         ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p paiCount %d\n",ptiFrom,ptiTo,paiCount);
- 
+
         if (ptiTo->MessageQueue == ptiFrom->MessageQueue)
         {
            if (gptiForeground == ptiFrom)
@@ -561,7 +584,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
               gptiForeground = ptiTo;
            }
            ptiTo->MessageQueue->cThreads--;
-           ERR("ptiTo E Share count %d\n", ptiTo->MessageQueue->cThreads);
+           ERR("ptiTo E Share count %u\n", ptiTo->MessageQueue->cThreads);
            ASSERT(ptiTo->MessageQueue->cThreads >= 1);
 
            IntDereferenceMessageQueue(ptiTo->MessageQueue);
@@ -603,14 +626,14 @@ NtUserAttachThreadInput(
   BOOL Ret = FALSE;
 
   UserEnterExclusive();
-  ERR("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
+  TRACE("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
 
   pti = IntTID2PTI((HANDLE)idAttach);
   ptiTo = IntTID2PTI((HANDLE)idAttachTo);
 
   if ( !pti || !ptiTo )
   {
-     ERR("AttachThreadInput pti or ptiTo NULL.\n");
+     TRACE("AttachThreadInput pti or ptiTo NULL.\n");
      EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }
@@ -618,13 +641,13 @@ NtUserAttachThreadInput(
   Status = UserAttachThreadInput( pti, ptiTo, fAttach);
   if (!NT_SUCCESS(Status))
   {
-     ERR("AttachThreadInput Error Status 0x%x. \n",Status);
+     TRACE("AttachThreadInput Error Status 0x%x. \n",Status);
      EngSetLastError(RtlNtStatusToDosError(Status));
   }
   else Ret = TRUE;
 
 Exit:
-  ERR("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
+  TRACE("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
   UserLeave();
   return Ret;
 }

@@ -10,10 +10,95 @@
 #include <powrprof.h>
 #include <strsafe.h>
 #include <wingdi.h>
+#include <winreg.h>
 #include <stdlib.h>
 
 int g_shutdownCode = 0;
 BOOL g_logoffHideState = FALSE;
+
+int LoadShutdownSelState(void)
+{
+    HKEY hKey;
+    DWORD dwValue, dwTemp, dwSize;
+
+
+    /* default to shutdown */
+    dwValue = 1;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+    {
+        return dwValue;
+    }
+
+    dwSize = sizeof(dwTemp);
+    if (RegQueryValueExW(hKey, L"Shutdown Setting", NULL, NULL, (LPBYTE)&dwTemp, &dwSize) == ERROR_SUCCESS)
+    {
+        switch(dwTemp)
+        {
+            case 0x01: /* Log off */
+                dwValue = 0;
+                break;
+
+            case 0x02: /* Shut down */
+                dwValue = 1;
+                break;
+
+            case 0x04: /* Reboot */
+                dwValue = 2;
+                break;
+
+            case 0x10: /* Sleep */
+                dwValue = 3;
+                break;
+
+            case 0x40: /* Hibernate */
+                dwValue = 4;
+                break;
+        }
+    }
+
+    RegCloseKey(hKey);
+
+    return dwValue;
+}
+
+VOID SaveShutdownSelState(int ShutdownCode)
+{
+    HKEY hKey;
+    DWORD dwValue = 0;
+
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    switch(ShutdownCode)
+    {
+        case 0: /* Log off */
+            dwValue = 0x01;
+            break;
+
+        case 1: /* Shut down */
+            dwValue = 0x02;
+            break;
+
+        case 2: /* Reboot */
+            dwValue = 0x04;
+            break;
+
+        case 3: /* Sleep */
+            dwValue = 0x10;
+            break;
+
+        case 4: /* Hibernate */
+            dwValue = 0x40;
+            break;
+    }
+
+    RegSetValueExW(hKey, L"Shutdown Setting", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(dwValue));
+    RegCloseKey(hKey);
+}
 
 VOID UpdateShutdownShellDesc(HWND hwnd)
 {
@@ -109,6 +194,7 @@ BOOL CALLBACK ExitWindowsDialogShellProc(HWND hwnd, UINT Message, WPARAM wParam,
         case WM_INITDIALOG:
         {
             int defSelect = 0;
+            int tmpSelect, lastState;
             WCHAR userBuffer[256];
             DWORD userBufferSize = _countof(userBuffer);
             WCHAR tmpBuffer[256];
@@ -125,35 +211,57 @@ BOOL CALLBACK ExitWindowsDialogShellProc(HWND hwnd, UINT Message, WPARAM wParam,
             /* Clears the content before it's used */
             SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_RESETCONTENT, 0, 0);
 
+            lastState = LoadShutdownSelState();
+
             if(!g_logoffHideState)
             {
                 /* Log off */
                 LoadStringW(hDllInstance, IDS_SHUTDOWN_LOGOFF, tmpBuffer, sizeof(tmpBuffer)/sizeof(WCHAR));
                 GetUserNameW(userBuffer, &userBufferSize);
                 StringCchPrintfW(tmpBuffer2, 512, tmpBuffer, userBuffer);
-                SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer2);
+                tmpSelect = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer2);
+                if (lastState == 0)
+                {
+                    defSelect = tmpSelect;
+                }
             }
 
             /* Shut down - DEFAULT */
             LoadStringW(hDllInstance, IDS_SHUTDOWN_SHUTDOWN, tmpBuffer, sizeof(tmpBuffer)/sizeof(WCHAR));
-            defSelect = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+            tmpSelect = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+            if (lastState == 1)
+            {
+                defSelect = tmpSelect;
+            }
 
             /* Restart */
             LoadStringW(hDllInstance, IDS_SHUTDOWN_RESTART, tmpBuffer, sizeof(tmpBuffer)/sizeof(WCHAR));
-            SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+            tmpSelect = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+            if (lastState == 2)
+            {
+                defSelect = tmpSelect;
+            }
 
             /* Sleep */
             if (IsPwrSuspendAllowed())
             {
                 LoadStringW(hDllInstance, IDS_SHUTDOWN_SLEEP, tmpBuffer, sizeof(tmpBuffer)/sizeof(WCHAR));
-                SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+                tmpSelect = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+                if (lastState == 3)
+                {
+                    defSelect = tmpSelect;
+                }
             }
 
             /* Hibernate */
             if (IsPwrHibernateAllowed())
             {
                 LoadStringW(hDllInstance, IDS_SHUTDOWN_HIBERNATE, tmpBuffer, sizeof(tmpBuffer)/sizeof(WCHAR));
-                SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+                tmpSelect = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_ADDSTRING, 0, (LPARAM)tmpBuffer);
+                if (lastState == 4)
+                {
+                    defSelect = tmpSelect;
+                }
             }
 
             /* Sets the default shut down selection */
@@ -192,6 +300,7 @@ BOOL CALLBACK ExitWindowsDialogShellProc(HWND hwnd, UINT Message, WPARAM wParam,
             {
                 case IDOK:
                     g_shutdownCode = SendDlgItemMessageW(hwnd, IDC_SHUTDOWN_LIST, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+                    SaveShutdownSelState(g_shutdownCode);
                     EndDialog(hwnd, IDOK);
                     break;
                 case IDCANCEL:

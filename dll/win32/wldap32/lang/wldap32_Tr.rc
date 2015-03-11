@@ -1,7 +1,7 @@
 /*
  * Turkish resources for WLDAP32
  *
- * Copyrights: 2006 Fatih Aşıcı, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı; 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -103,7 +103,7 @@ STRINGTABLE
     78 ""
     79 ""
     80 "Başka"
-    81 "Sunucu Devre Dışı"
+    81 "Sunucu Edilgin"
     82 "Yerli Yanlışlık"
     83 "Kodlama Yanlışlığı"
     84 "Çözme Yanlışlığı"

@@ -378,11 +378,11 @@ public:
         SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (PDWORD_PTR) &hIcon);
         if (hIcon)
             return hIcon;
-        
+
         hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICONSM);
         if (hIcon)
             return hIcon;
-        
+
         hIcon = (HICON) GetClassLongPtr(hwnd, GCL_HICON);
 
         return hIcon;
@@ -419,6 +419,8 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
+        if (!icon)
+            icon = static_cast<HICON>(LoadImage(NULL, MAKEINTRESOURCE(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskItem->IconIndex, icon);
         tbbi.iImage = TaskItem->IconIndex;
 
@@ -562,6 +564,8 @@ public:
         }
 
         icon = GetWndIcon(TaskItem->hWnd);
+        if (!icon)
+            icon = static_cast<HICON>(LoadImage(NULL, MAKEINTRESOURCE(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
 
         tbBtn.iBitmap = TaskItem->IconIndex;
@@ -1131,7 +1135,6 @@ public:
 
                 if (Horizontal)
                 {
-                    DbgPrint("HORIZONTAL!\n");
                     TBMETRICS tbm = { 0 };
                     tbm.cbSize = sizeof(tbm);
                     tbm.dwMask = TBMF_BUTTONSPACING;
@@ -1145,7 +1148,6 @@ public:
                 }
                 else
                 {
-                    DbgPrint("VERTICAL!\n");
                     uiBtnsPerLine = 1;
                     uiRows = m_ButtonCount;
                 }
@@ -1277,7 +1279,7 @@ public:
     }
 
     LRESULT OnThemeChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {        
+    {
         return OnThemeChanged();
     }
 
@@ -1351,7 +1353,7 @@ public:
 
         return Ret;
     }
-    
+
     LRESULT HandleShellHookMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         BOOL Ret = FALSE;
@@ -1524,7 +1526,7 @@ public:
 
         HMENU hmenu = GetSystemMenu(TaskItem->hWnd, FALSE);
 
-        if (hmenu) 
+        if (hmenu)
         {
             POINT pt;
             int cmd;
@@ -1754,11 +1756,12 @@ public:
 
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        LRESULT Ret;
+        LRESULT Ret = 0;
+        INT_PTR iBtn = -1;
+
         if (m_TaskBar.m_hWnd != NULL)
         {
             POINT pt;
-            INT_PTR iBtn;
 
             pt.x = GET_X_LPARAM(lParam);
             pt.y = GET_Y_LPARAM(lParam);
@@ -1770,13 +1773,10 @@ public:
             {
                 HandleButtonRightClick(iBtn);
             }
-            else
-                goto ForwardContextMenuMsg;
         }
-        else
+        if (iBtn < 0)
         {
-        ForwardContextMenuMsg:
-            /* Forward message */
+            /* Not on a taskbar button, so forward message to tray */
             Ret = SendMessage(m_Tray->GetHWND(), uMsg, wParam, lParam);
         }
         return Ret;

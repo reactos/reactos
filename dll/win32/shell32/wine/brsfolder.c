@@ -385,9 +385,6 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 	tvi.lParam = (LPARAM)lptvid;
 
 	IShellFolder_AddRef(lpsf);
-#ifdef __REACTOS__
-        IEnumIDList_AddRef(pEnumIL);
-#endif
 	lptvid->lpsfParent = lpsf;
 	lptvid->lpi	= ILClone(pidl);
 	lptvid->lpifq	= pidlParent ? ILCombine(pidlParent, pidl) : ILClone(pidl);

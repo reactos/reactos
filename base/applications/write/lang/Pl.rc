@@ -24,5 +24,5 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_FAILED, "Nie uda³o siê uruchomiæ programu Wordpad"
+    IDS_FAILED, "Nie udaÅ‚o siÄ™ uruchomiÄ‡ programu Wordpad"
 }

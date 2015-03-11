@@ -23,12 +23,12 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_TITLEFORMAT     "Po≥πcz z %s"
-    IDS_MESSAGEFORMAT   "£πczenie z %s"
-    IDS_INCORRECTPASSWORDTITLE  "Logowanie nie powiod≥o siÍ"
-    IDS_INCORRECTPASSWORD       "Upewnij siÍ, øe nazwa uøytkownika\ni has≥o sπ poprawne."
-    IDS_CAPSLOCKONTITLE "Caps Lock jest w≥πczony"
-    IDS_CAPSLOCKON      "W≥πczony tryb Caps Lock moøe spowodowaÊ, øe wpiszesz has≥o niepoprawnie.\n\nNaciúnik klawisz Caps Lock key na klawiaturze, aby go wy≥πczyÊ\nprzed wprowadzeniem has≥a."
+    IDS_TITLEFORMAT     "Po≈ÇƒÖcz z %s"
+    IDS_MESSAGEFORMAT   "≈ÅƒÖczenie z %s"
+    IDS_INCORRECTPASSWORDTITLE  "Logowanie nie powiod≈Ço siƒô"
+    IDS_INCORRECTPASSWORD       "Upewnij siƒô, ≈ºe nazwa u≈ºytkownika\ni has≈Ço sƒÖ poprawne."
+    IDS_CAPSLOCKONTITLE "Caps Lock jest w≈ÇƒÖczony"
+    IDS_CAPSLOCKON      "W≈ÇƒÖczony tryb Caps Lock mo≈ºe spowodowaƒá, ≈ºe wpiszesz has≈Ço niepoprawnie.\n\nNaci≈õnik klawisz Caps Lock key na klawiaturze, aby go wy≈ÇƒÖczyƒá\nprzed wprowadzeniem has≈Ça."
 }
 
 IDD_CREDDIALOG DIALOG  0, 0, 213, 149
@@ -38,12 +38,12 @@ BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "&Uøytkownik:",-1,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "&U≈ºytkownik:",-1,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "&Has≥o:",-1,8,80,72,12,SS_CENTERIMAGE
+    LTEXT           "&Has≈Ço:",-1,8,80,72,12,SS_CENTERIMAGE
     EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "&ZapamiÍtaj has≥o",IDC_SAVE,"Button",
+    CONTROL         "&Zapamiƒôtaj has≈Ço",IDC_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
     DEFPUSHBUTTON   "&OK",IDOK,97,128,50,14
     PUSHBUTTON      "&Anuluj",IDCANCEL,156,128,50,14

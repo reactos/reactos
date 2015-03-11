@@ -1,8 +1,8 @@
-Index: libs/libjpeg/jmorecfg.h
+Index: include/reactos/libs/libjpeg/jmorecfg.h
 ===================================================================
---- libs/libjpeg/jmorecfg.h	(revision 48026)
-+++ libs/libjpeg/jmorecfg.h	(working copy)
-@@ -191,14 +191,63 @@
+--- include/reactos/libs/libjpeg/jmorecfg.h	(revision 66390)
++++ include/reactos/libs/libjpeg/jmorecfg.h	(working copy)
+@@ -238,14 +238,62 @@
   * or code profilers that require it.
   */
  
@@ -61,10 +61,9 @@ Index: libs/libjpeg/jmorecfg.h
  /* a reference to a GLOBAL function: */
 -#define EXTERN(type)		extern type
 +#ifndef EXTERN
-+# define EXTERN(type)          extern JPEG_IMPEXP type JPEG_API
++# define EXTERN(type)		extern JPEG_IMPEXP type JPEG_API
 +/* a reference to a "GLOBAL" function exported by sourcefiles of utility progs */
 +#endif /* EXTERN */
-+#define EXTERN_1(type)   extern type JPEG_API
  
  
  /* This macro is used to declare a "method", that is, a function pointer.

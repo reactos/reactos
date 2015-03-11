@@ -50,6 +50,23 @@ BEGIN
     END
 END
 
+/* menubar EDIT menu */
+MENU_003 MENU
+BEGIN
+    MENUITEM "&Undo\tCtrl+Z", FCIDM_SHVIEW_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t\tCtrl+X", FCIDM_SHVIEW_CUT
+    MENUITEM "&Copy\tCtrl+C", FCIDM_SHVIEW_COPY
+    MENUITEM "&Paste\tCtrl+V", FCIDM_SHVIEW_INSERT
+    MENUITEM "Paste &shortcut", FCIDM_SHVIEW_INSERTLINK
+    MENUITEM SEPARATOR
+    MENUITEM "Copy to &folder...", FCIDM_SHVIEW_COPYTO
+    MENUITEM "Mo&ve to folder...", FCIDM_SHVIEW_MOVETO
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all\tCtrl+A", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "&Invert Selection", FCIDM_SHVIEW_INVERTSELECTION
+END
+
 /* shellview item menu */
 MENU_SHV_FILE MENU
 BEGIN
@@ -387,16 +404,6 @@ BEGIN
     PUSHBUTTON "取消", IDCANCEL, 206, 236, 50, 14
 END
 
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Copying..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Cancel", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
-END
-
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
@@ -615,6 +622,20 @@ BEGIN
     PUSHBUTTON "取消", IDCANCEL, 167, 181, 50, 14
 END
 
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Caution"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "This file could either be used by the operating system or by\n\
+another application. Modifying this file might damage your\n\
+system or make it less functional.\n\n\
+Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -664,7 +685,7 @@ BEGIN
     IDS_RESTORE "Restore"
     IDS_FORMATDRIVE "Format..."
     IDS_RENAME "Rename"
-    IDS_INSERT "Insert"
+    IDS_PASTE "Paste"
 
     IDS_CREATEFOLDER_DENIED "Unable to create new Folder: Permission denied."
     IDS_CREATEFOLDER_CAPTION "Error during creation of a new folder"
@@ -680,6 +701,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
     IDS_OVERWRITEFILE_CAPTION "Confirm file overwrite"
     IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\nIf the files in the destination folder have the same names as files in the\nselected folder they will be replaced. Do you still want to move or copy\nthe folder?"
+
+    IDS_FILEOOP_COPYING "Copying"
+    IDS_FILEOOP_MOVING "Moving"
+    IDS_FILEOOP_DELETING "Deleting"
+    IDS_FILEOOP_FROM_TO "From %1 to %2"
+    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "重新启动"
@@ -790,4 +818,6 @@ BEGIN
     IDS_BYTES_FORMAT "bytes"
     IDS_UNKNOWN_APP "Unknown application"
     IDS_EXE_DESCRIPTION "Description:"
+
+    IDS_MENU_EMPTY "(Empty)"
 END

@@ -538,7 +538,7 @@ typedef struct _DRVFN {
 #define DDI_DRIVER_VERSION_NT5_01         0x00030100
 #define DDI_DRIVER_VERSION_NT5_01_SP1     0x00030101
 
-typedef struct _DRVENABLEDATA {
+typedef struct tagDRVENABLEDATA {
   ULONG  iDriverVersion;
   ULONG  c;
   DRVFN  *pdrvfn;
@@ -1372,6 +1372,7 @@ EngAcquireSemaphore(
 _Must_inspect_result_
 _When_(fl & FL_ZERO_MEMORY, _Ret_opt_bytecount_(cjMemSize))
 _When_(!(fl & FL_ZERO_MEMORY), _Ret_opt_bytecap_(cjMemSize))
+__drv_allocatesMem(Mem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1382,6 +1383,7 @@ EngAllocMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(PrivateUserMem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1392,6 +1394,7 @@ EngAllocPrivateUserMem(
 
 _Must_inspect_result_
 _Ret_opt_bytecount_(cjMemSize)
+__drv_allocatesMem(UserMem)
 ENGAPI
 PVOID
 APIENTRY
@@ -1578,10 +1581,13 @@ PATHOBJ*
 APIENTRY
 EngCreatePath(VOID);
 
+__drv_allocatesMem(Mem)
+_Post_writable_byte_size_(sizeof(ERESOURCE))
 ENGAPI
 HSEMAPHORE
 APIENTRY
-EngCreateSemaphore(VOID);
+EngCreateSemaphore(
+    VOID);
 
 /* EngCreateWnd.fl constants */
 #define WO_RGN_CLIENT_DELTA               0x00000001
@@ -1664,13 +1670,14 @@ ENGAPI
 VOID
 APIENTRY
 EngDeleteSafeSemaphore(
-    _Inout_ ENGSAFESEMAPHORE *pssem);
+    _Inout_ _Post_invalid_ ENGSAFESEMAPHORE *pssem);
 
+_Requires_lock_not_held_(*hsem)
 ENGAPI
 VOID
 APIENTRY
 EngDeleteSemaphore(
-    _In_ _Post_ptr_invalid_ HSEMAPHORE hsem);
+    _Inout_ __drv_freesMem(Mem) HSEMAPHORE hsem);
 
 ENGAPI
 BOOL
@@ -1814,20 +1821,20 @@ ENGAPI
 VOID
 APIENTRY
 EngFreeMem(
-    _In_ _Post_ptr_invalid_ PVOID pv);
+    _Pre_notnull_ __drv_freesMem(Mem) PVOID pv);
 
 ENGAPI
 VOID
 APIENTRY
 EngFreePrivateUserMem(
     _In_ PDD_SURFACE_LOCAL psl,
-    _In_ _Post_ptr_invalid_ PVOID  pv);
+    _Pre_notnull_ __drv_freesMem(PrivateUserMem) PVOID pv);
 
 ENGAPI
 VOID
 APIENTRY
 EngFreeUserMem(
-    _In_ _Post_ptr_invalid_ PVOID pv);
+    _Pre_notnull_ __drv_freesMem(UserMem) PVOID pv);
 
 #endif /* !USERMODE_DRIVER */
 
@@ -1835,7 +1842,7 @@ ENGAPI
 VOID
 APIENTRY
 EngFreeModule(
-    _In_ HANDLE h);
+    _In_ _Post_invalid_ HANDLE h);
 
 
 ENGAPI
@@ -2082,6 +2089,8 @@ EngMapFile(
     _Out_ ULONG_PTR *piFile);
 
 __drv_preferredFunction("EngMapFontFileFD", "Obsolete")
+_Check_return_
+_Success_(return!=FALSE)
 ENGAPI
 BOOL
 APIENTRY
@@ -2090,6 +2099,8 @@ EngMapFontFile(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
+_Check_return_
+_Success_(return!=FALSE)
 ENGAPI
 BOOL
 APIENTRY
@@ -2098,12 +2109,15 @@ EngMapFontFileFD(
     _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
     _Out_ ULONG *pcjBuf);
 
+_Check_return_
+_Success_(return!=NULL)
+_Post_writable_byte_size_(*pulSize)
 ENGAPI
 PVOID
 APIENTRY
 EngMapModule(
-    _In_ HANDLE h,
-    _Out_ PULONG pSize);
+    _In_  HANDLE h,
+    _Out_ PULONG pulSize);
 
 ENGAPI
 BOOL
@@ -2299,11 +2313,14 @@ APIENTRY
 EngReadStateEvent(
     _In_ PEVENT pEvent);
 
+_Requires_lock_held_(*hsem)
+_Releases_lock_(*hsem)
+_Releases_lock_(_Global_critical_region_)
 ENGAPI
 VOID
 APIENTRY
 EngReleaseSemaphore(
-    _In_ HSEMAPHORE hsem);
+    _Inout_ HSEMAPHORE hsem);
 
 #if defined(_M_AMD64) && (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -2351,8 +2368,7 @@ ENGAPI
 BOOL
 APIENTRY
 EngRestoreFloatingPointState(
-    _In_reads_(_Inexpressible_(statesize))
-    PVOID pBuffer);
+    _In_reads_(_Inexpressible_(statesize)) PVOID pBuffer);
 
 _Check_return_
 _Success_(((pBuffer != NULL && cjBufferSize != 0) && return == 1) ||
@@ -3301,11 +3317,14 @@ EngRenderHint(
     _In_ SIZE_T Length,
     _In_reads_bytes_opt_(Length) PVOID Data);
 
+_Requires_lock_not_held_(*hsem)
+_Acquires_exclusive_lock_(*hsem)
+_Acquires_lock_(_Global_critical_region_)
 ENGAPI
 VOID
 APIENTRY
-EngAcquireSemaphoreShared(
-    _In_ HSEMAPHORE hsem);
+EngAcquireSemaphore(
+    _Inout_ HSEMAPHORE hsem);
 
 ENGAPI
 BOOL
@@ -3313,11 +3332,14 @@ APIENTRY
 EngAcquireSemaphoreNoWait(
     _In_ HSEMAPHORE hsem);
 
+_Acquires_lock_(_Global_critical_region_)
+_Requires_lock_not_held_(*hsem)
+_Acquires_shared_lock_(*hsem)
 ENGAPI
-BOOL
-APIENTRY
-EngAcquireSemaphoreSharedNoWait(
-    _In_ HSEMAPHORE hsem);
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    _Inout_ HSEMAPHORE hsem);
 
 ENGAPI
 BOOL

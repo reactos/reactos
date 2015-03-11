@@ -2,6 +2,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE 
 BEGIN
-    IDS_CPLSYSTEMNAME "Opciones de teléfono y modem"
-    IDS_CPLSYSTEMDESCRIPTION "Establece las reglas de marcado de su teléfono y la configuración del modem."
+    IDS_CPLSYSTEMNAME "Teléfono y módem"
+    IDS_CPLSYSTEMDESCRIPTION "Establece las reglas de marcado de su teléfono y la configuración del módem."
 END

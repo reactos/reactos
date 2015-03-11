@@ -30,6 +30,7 @@
 
 #include "bootsup.h"
 #include "chkdsk.h"
+#include "cmdcons.h"
 #include "format.h"
 #include "drivesup.h"
 #include "settings.h"
@@ -989,7 +990,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
         }
         else if (toupper(Ir->Event.KeyEvent.uChar.AsciiChar) == 'R')  /* R */
         {
-            return INTRO_PAGE;
+            return RECOVERY_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
@@ -1424,28 +1425,18 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 }
 
 
-#if 0
 static BOOL
 IsDiskSizeValid(PPARTENTRY PartEntry)
 {
-    ULONGLONG m1, m2;
+    ULONGLONG size;
 
-    /*  check for unpartitioned space  */
-    m1 = PartEntry->UnpartitionedLength;
-    m1 = (m1 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    size = PartEntry->SectorCount.QuadPart * PartEntry->DiskEntry->BytesPerSector;
+    size = (size + 524288) / 1048576;  /* in MBytes */
 
-    if( m1 > RequiredPartitionDiskSpace)
-    {
-        return TRUE;
-    }
-
-    /* check for partitioned space */
-    m2 = PartEntry->PartInfo[0].PartitionLength.QuadPart;
-    m2 = (m2 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if (m2 < RequiredPartitionDiskSpace)
+    if (size < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
-        DPRINT1("Partition is too small(unpartitioned: %I64u MB, partitioned: %I64u MB), required disk space is %lu MB\n", m1, m2, RequiredPartitionDiskSpace);
+        DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, RequiredPartitionDiskSpace);
         return FALSE;
     }
     else
@@ -1453,7 +1444,6 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
         return TRUE;
     }
 }
-#endif
 
 
 static PAGE_NUMBER
@@ -1512,16 +1502,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (AutoPartition)
             {
-#if 0
-                if (!IsDiskSizeValid(PartitionList->CurrentPartition))
-                {
-                    MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
-                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
-                }
-#endif
                 CreatePrimaryPartition(PartitionList,
                                        PartitionList->CurrentPartition->SectorCount.QuadPart,
                                        TRUE);
+
+                if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+                {
+                    MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                    RequiredPartitionDiskSpace);
+                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
+                }
 
                 DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
@@ -1530,13 +1520,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
-#if 0
             if (!IsDiskSizeValid(PartitionList->CurrentPartition))
             {
-                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                RequiredPartitionDiskSpace);
                 return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
-#endif
+
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
 
             return SELECT_FILE_SYSTEM_PAGE;
@@ -1608,13 +1598,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
-#if 0
-            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
-            {
-                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
-                return SELECT_PARTITION_PAGE; /* let the user select another partition */
-            }
-#endif
             if (IsContainerPartition(PartitionList->CurrentPartition->PartitionType))
                 continue; //return SELECT_PARTITION_PAGE;
 
@@ -1624,6 +1607,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
                 CreatePrimaryPartition(PartitionList,
                                        0ULL,
                                        TRUE);
+            }
+
+            if (!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_PARTITION_SIZE, Ir, POPUP_WAIT_ANY_KEY,
+                                RequiredPartitionDiskSpace);
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
             }
 
             DestinationDriveLetter = (WCHAR)PartitionList->CurrentPartition->DriveLetter;
@@ -3131,7 +3121,8 @@ AddSectionToCopyQueue(HINF InfFile,
     PWCHAR FileKeyValue;
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
-    WCHAR CompleteOrigFileName[512];
+    ULONG Length;
+    WCHAR CompleteOrigDirName[512];
 
     if (SourceCabinet)
         return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
@@ -3190,14 +3181,35 @@ AddSectionToCopyQueue(HINF InfFile,
             break;
         }
 
-        wcscpy(CompleteOrigFileName, SourceRootDir.Buffer);
-        wcscat(CompleteOrigFileName, L"\\");
-        wcscat(CompleteOrigFileName, DirKeyValue);
+        if ((DirKeyValue[0] == 0) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == 0))
+        {
+            /* Installation path */
+            wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
+        }
+        else if (DirKeyValue[0] == L'\\')
+        {
+            /* Absolute path */
+            wcscpy(CompleteOrigDirName, DirKeyValue);
+        }
+        else // if (DirKeyValue[0] != L'\\')
+        {
+            /* Path relative to the installation path */
+            wcscpy(CompleteOrigDirName, SourceRootDir.Buffer);
+            wcscat(CompleteOrigDirName, L"\\");
+            wcscat(CompleteOrigDirName, DirKeyValue);
+        }
+
+        /* Remove trailing backslash */
+        Length = wcslen(CompleteOrigDirName);
+        if ((Length > 0) && (CompleteOrigDirName[Length - 1] == L'\\'))
+        {
+            CompleteOrigDirName[Length - 1] = 0;
+        }
 
         if (!SetupQueueCopy(SetupFileQueue,
                             SourceCabinet,
                             SourceRootPath.Buffer,
-                            CompleteOrigFileName,
+                            CompleteOrigDirName,
                             FileKeyName,
                             DirKeyValue,
                             TargetFileName))
@@ -3219,7 +3231,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     WCHAR PathBuffer[MAX_PATH];
     INFCONTEXT DirContext;
     PWCHAR AdditionalSectionName = NULL;
-    PWCHAR KeyValue;
+    PWCHAR DirKeyValue;
     ULONG Length;
     NTSTATUS Status;
 
@@ -3243,16 +3255,20 @@ PrepareCopyPageInfFile(HINF InfFile,
     /* Create directories */
 
     /*
-    * FIXME:
-    * Install directories like '\reactos\test' are not handled yet.
-    */
+     * FIXME:
+     * - Install directories like '\reactos\test' are not handled yet.
+     * - Copying files to DestinationRootPath should be done from within
+     *   the SystemPartitionFiles section.
+     *   At the moment we check whether we specify paths like '\foo' or '\\' for that.
+     *   For installing to DestinationPath specify just '\' .
+     */
 
     /* Get destination path */
     wcscpy(PathBuffer, DestinationPath.Buffer);
 
     /* Remove trailing backslash */
     Length = wcslen(PathBuffer);
-    if ((Length > 0) && (PathBuffer[Length - 1] == '\\'))
+    if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
     {
         PathBuffer[Length - 1] = 0;
     }
@@ -3284,27 +3300,35 @@ PrepareCopyPageInfFile(HINF InfFile,
     /* Enumerate the directory values and create the subdirectories */
     do
     {
-        if (!INF_GetData(&DirContext, NULL, &KeyValue))
+        if (!INF_GetData(&DirContext, NULL, &DirKeyValue))
         {
             DPRINT1("break\n");
             break;
         }
 
-        if (KeyValue[0] == L'\\' && KeyValue[1] != 0)
+        if ((DirKeyValue[0] == 0) || (DirKeyValue[0] == L'\\' && DirKeyValue[1] == 0))
         {
-            DPRINT("Absolute Path: '%S'\n", KeyValue);
+            /* Installation path */
+            DPRINT("InstallationPath: '%S'\n", DirKeyValue);
 
-            wcscpy(PathBuffer, DestinationRootPath.Buffer);
-            wcscat(PathBuffer, KeyValue);
+            wcscpy(PathBuffer, DestinationPath.Buffer);
 
             DPRINT("FullPath: '%S'\n", PathBuffer);
         }
-        else if (KeyValue[0] != L'\\')
+        else if (DirKeyValue[0] == L'\\')
         {
-            DPRINT("RelativePath: '%S'\n", KeyValue);
-            wcscpy(PathBuffer, DestinationPath.Buffer);
-            wcscat(PathBuffer, L"\\");
-            wcscat(PathBuffer, KeyValue);
+            /* Absolute path */
+            DPRINT("Absolute Path: '%S'\n", DirKeyValue);
+
+            wcscpy(PathBuffer, DestinationRootPath.Buffer);
+            wcscat(PathBuffer, DirKeyValue);
+
+            /* Remove trailing backslash */
+            Length = wcslen(PathBuffer);
+            if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
+            {
+                PathBuffer[Length - 1] = 0;
+            }
 
             DPRINT("FullPath: '%S'\n", PathBuffer);
 
@@ -3316,7 +3340,33 @@ PrepareCopyPageInfFile(HINF InfFile,
                 return FALSE;
             }
         }
-    } while (SetupFindNextLine (&DirContext, &DirContext));
+        else // if (DirKeyValue[0] != L'\\')
+        {
+            /* Path relative to the installation path */
+            DPRINT("RelativePath: '%S'\n", DirKeyValue);
+
+            wcscpy(PathBuffer, DestinationPath.Buffer);
+            wcscat(PathBuffer, L"\\");
+            wcscat(PathBuffer, DirKeyValue);
+
+            /* Remove trailing backslash */
+            Length = wcslen(PathBuffer);
+            if ((Length > 0) && (PathBuffer[Length - 1] == L'\\'))
+            {
+                PathBuffer[Length - 1] = 0;
+            }
+
+            DPRINT("FullPath: '%S'\n", PathBuffer);
+
+            Status = SetupCreateDirectory(PathBuffer);
+            if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
+            {
+                DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+                MUIDisplayError(ERROR_CREATE_DIR, Ir, POPUP_WAIT_ENTER);
+                return FALSE;
+            }
+        }
+    } while (SetupFindNextLine(&DirContext, &DirContext));
 
     return TRUE;
 }
@@ -4133,7 +4183,7 @@ RunUSetup(VOID)
     CONSOLE_SetCursorType(TRUE, FALSE);
 
     Page = START_PAGE;
-    while (Page != REBOOT_PAGE)
+    while (Page != REBOOT_PAGE && Page != RECOVERY_PAGE)
     {
         CONSOLE_ClearScreen();
         CONSOLE_Flush();
@@ -4281,10 +4331,14 @@ RunUSetup(VOID)
                 Page = QuitPage(&Ir);
                 break;
 
+            case RECOVERY_PAGE:
             case REBOOT_PAGE:
                 break;
         }
     }
+
+    if (Page == RECOVERY_PAGE)
+        RecoveryConsole();
 
     FreeConsole();
 

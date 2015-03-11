@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 #if 1
-#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (DbgPrint("Unexpected failure %08x.\n", hr), TRUE))
+#define FAILED_UNEXPECTEDLY(hr) (FAILED(hr) && (Win32DbgPrint(__FILE__, __LINE__, "Unexpected failure %08x.\n", hr), TRUE))
 #else
 #define FAILED_UNEXPECTEDLY(hr) FAILED(hr)
 #endif
@@ -257,6 +257,52 @@ HRESULT inline ShellObjectCreatorInit(T1 initArg1, REFIID riid, void ** ppv)
         return hResult;
 
     hResult = obj->Initialize(initArg1);
+    if (FAILED(hResult))
+        return hResult;
+
+    return S_OK;
+}
+
+template<class T, class T1, class T2>
+HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, REFIID riid, void ** ppv)
+{
+    CComPtr<T>  obj;
+    HRESULT     hResult;
+
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY(obj = new _CComObject<T>);
+    if (obj.p == NULL)
+        return E_OUTOFMEMORY;
+    hResult = obj->QueryInterface(riid, ppv);
+    if (FAILED(hResult))
+        return hResult;
+
+    hResult = obj->Initialize(initArg1, initArg2);
+    if (FAILED(hResult))
+        return hResult;
+
+    return S_OK;
+}
+
+template<class T, class T1, class T2, class T3>
+HRESULT inline ShellObjectCreatorInit(T1 initArg1, T2 initArg2, T3 initArg3, REFIID riid, void ** ppv)
+{
+    CComPtr<T>  obj;
+    HRESULT     hResult;
+
+    if (ppv == NULL)
+        return E_POINTER;
+    *ppv = NULL;
+    ATLTRY(obj = new _CComObject<T>);
+    if (obj.p == NULL)
+        return E_OUTOFMEMORY;
+    hResult = obj->QueryInterface(riid, ppv);
+    if (FAILED(hResult))
+        return hResult;
+
+    hResult = obj->Initialize(initArg1, initArg2, initArg3);
     if (FAILED(hResult))
         return hResult;
 

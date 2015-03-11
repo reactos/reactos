@@ -35,6 +35,15 @@ typedef enum _USERSRV_API_NUMBER
     UserpMaxApiNumber
 } USERSRV_API_NUMBER, *PUSERSRV_API_NUMBER;
 
+/* The USERCONNECT structure is defined in win32ss/include/ntuser.h */
+#define _USERSRV_API_CONNECTINFO    _USERCONNECT
+#define  USERSRV_API_CONNECTINFO     USERCONNECT
+#define PUSERSRV_API_CONNECTINFO    PUSERCONNECT
+
+#if defined(_M_IX86)
+C_ASSERT(sizeof(USERSRV_API_CONNECTINFO) == 0x124);
+#endif
+
 
 typedef struct _USER_EXIT_REACTOS
 {
@@ -50,6 +59,11 @@ typedef struct _USER_END_TASK
     BOOL  Force;
     BOOL  Success;
 } USER_END_TASK, *PUSER_END_TASK;
+
+typedef struct _USER_LOGON
+{
+    BOOL IsLogon;
+} USER_LOGON, *PUSER_LOGON;
 
 typedef struct _USER_GET_THREAD_CONSOLE_DESKTOP
 {
@@ -81,6 +95,7 @@ typedef struct _USER_API_MESSAGE
     {
         USER_EXIT_REACTOS ExitReactosRequest;
         USER_END_TASK EndTaskRequest;
+        USER_LOGON LogonRequest;
         USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;
         USER_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         USER_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;

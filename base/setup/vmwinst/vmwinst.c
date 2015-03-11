@@ -31,6 +31,7 @@
 #include <winreg.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <strsafe.h>
 #include <newdev.h>
 #include <pseh/pseh2.h>
 #include <debug.h>
@@ -124,8 +125,8 @@ DoesFileExist(WCHAR *Path, WCHAR *File)
     HANDLE FileHandle;
 
     FileName[0] = L'\0';
-    wcscat(FileName, Path);
-    wcscat(FileName, File);
+    StringCbCat(FileName, sizeof(FileName), Path);
+    StringCbCat(FileName, sizeof(FileName), File);
 
     FileHandle = CreateFile(FileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -495,8 +496,8 @@ InstInstallationThread(LPVOID lpParameter)
     if(AbortInstall != 0) goto done;
     PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_COPYINGFILES, 0);
 
-    wcscpy(InfFileName, SrcPath);
-    wcscat(InfFileName, L"vmx_svga.inf");
+    StringCbCopy(InfFileName, sizeof(InfFileName), SrcPath);
+    StringCbCat(InfFileName, sizeof(InfFileName), L"vmx_svga.inf");
     DPRINT1("Calling UpdateDriverForPlugAndPlayDevices()\n");
     if (!UpdateDriverForPlugAndPlayDevices(
         hInstallationNotifyWnd,
@@ -1071,11 +1072,11 @@ wWinMain(HINSTANCE hInstance,
     lc += GetSystemDirectory(DestinationPath, MAX_PATH) - 1;
     if(lc >= DestinationPath && *lc != L'\\')
     {
-        wcscat(DestinationPath, L"\\");
+        StringCbCat(DestinationPath, sizeof(DestinationPath), L"\\");
     }
     DestinationDriversPath[0] = L'\0';
-    wcscat(DestinationDriversPath, DestinationPath);
-    wcscat(DestinationDriversPath, L"drivers\\");
+    StringCbCat(DestinationDriversPath, sizeof(DestinationDriversPath), DestinationPath);
+    StringCbCat(DestinationDriversPath, sizeof(DestinationDriversPath), L"drivers\\");
 
     SetCurrentDirectory(DestinationPath);
 

@@ -118,7 +118,7 @@ startPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE, FALSE);
             if (pointSP == 0)
             {
                 newReversible();
@@ -142,7 +142,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             ptStack[ptSP].x = max(0, min(x, imgXRes));
             ptStack[ptSP].y = max(0, min(y, imgYRes));
             resetToU1();
-            Poly(hdc, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE);
+            Poly(hdc, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE, TRUE); /* draw the freehand selection inverted/xored */
             break;
         case TOOL_RECTSEL:
         case TOOL_TEXT:
@@ -208,7 +208,7 @@ whilePaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
                                    &pointStack[pointSP].x, &pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
             resetToU1();
@@ -267,13 +267,13 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                     ptStackCopy[i].x = ptStack[i].x - rectSel_src.left;
                     ptStackCopy[i].y = ptStack[i].y - rectSel_src.top;
                 }
-                Poly(hSelDC, ptStackCopy, ptSP + 1, 0x00ffffff, 0x00ffffff, 1, 2, TRUE);
+                Poly(hSelDC, ptStackCopy, ptSP + 1, 0x00ffffff, 0x00ffffff, 1, 2, TRUE, FALSE);
                 HeapFree(GetProcessHeap(), 0, ptStackCopy);
                 SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src)));
                 resetToU1();
                 MaskBlt(hSelDC, 0, 0, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hDrawingDC, rectSel_src.left,
                         rectSel_src.top, hSelMask, 0, 0, MAKEROP4(SRCCOPY, WHITENESS));
-                Poly(hdc, ptStack, ptSP + 1, bg, bg, 1, 2, TRUE);
+                Poly(hdc, ptStack, ptSP + 1, bg, bg, 1, 2, TRUE, FALSE);
                 newReversible();
 
                 MaskBlt(hDrawingDC, rectSel_src.left, rectSel_src.top, RECT_WIDTH(rectSel_src), RECT_HEIGHT(rectSel_src), hSelDC, 0,
@@ -362,12 +362,12 @@ endPaintingL(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 if ((pointStack[0].x - x) * (pointStack[0].x - x) +
                     (pointStack[0].y - y) * (pointStack[0].y - y) <= lineWidth * lineWidth + 1)
                 {
-                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, TRUE);
+                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, TRUE, FALSE);
                     pointSP = 0;
                 }
                 else
                 {
-                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, FALSE);
+                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, FALSE, FALSE);
                 }
             }
             if (pointSP == 255)
@@ -438,7 +438,7 @@ startPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE, FALSE);
             if (pointSP == 0)
             {
                 newReversible();
@@ -503,7 +503,7 @@ whilePaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
                                    &pointStack[pointSP].x, &pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
-                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
+                Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE, FALSE);
             break;
         case TOOL_ELLIPSE:
             resetToU1();
@@ -565,12 +565,12 @@ endPaintingR(HDC hdc, LONG x, LONG y, COLORREF fg, COLORREF bg)
                 if ((pointStack[0].x - x) * (pointStack[0].x - x) +
                     (pointStack[0].y - y) * (pointStack[0].y - y) <= lineWidth * lineWidth + 1)
                 {
-                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, TRUE);
+                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, TRUE, FALSE);
                     pointSP = 0;
                 }
                 else
                 {
-                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, FALSE);
+                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, FALSE, FALSE);
                 }
             }
             if (pointSP == 255)

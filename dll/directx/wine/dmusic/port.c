@@ -48,9 +48,7 @@ static HRESULT WINAPI IDirectMusicDownloadedInstrumentImpl_QueryInterface(IDirec
 {
     TRACE("(%p, %s, %p)\n", iface, debugstr_dmguid(riid), ret_iface);
 
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IDirectMusicDownloadedInstrument) ||
-        IsEqualIID(riid, &IID_IDirectMusicDownloadedInstrument8))
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDirectMusicDownloadedInstrument))
     {
         IDirectMusicDownloadedInstrument_AddRef(iface);
         *ret_iface = iface;
@@ -131,19 +129,15 @@ static HRESULT WINAPI SynthPortImpl_IDirectMusicPort_QueryInterface(LPDIRECTMUSI
 
     TRACE("(%p/%p)->(%s, %p)\n", iface, This, debugstr_dmguid(riid), ret_iface);
 
-    if (IsEqualIID (riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_IDirectMusicPort) ||
-        IsEqualGUID(riid, &IID_IDirectMusicPort8)) {
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDirectMusicPort)) {
         *ret_iface = &This->IDirectMusicPort_iface;
         IDirectMusicPort_AddRef((LPDIRECTMUSICPORT)*ret_iface);
         return S_OK;
-    } else if (IsEqualGUID(riid, &IID_IDirectMusicPortDownload) ||
-               IsEqualGUID(riid, &IID_IDirectMusicPortDownload8)) {
+    } else if (IsEqualGUID(riid, &IID_IDirectMusicPortDownload)) {
         *ret_iface = &This->IDirectMusicPortDownload_iface;
         IDirectMusicPortDownload_AddRef((LPDIRECTMUSICPORTDOWNLOAD)*ret_iface);
         return S_OK;
-    } else if (IsEqualGUID(riid, &IID_IDirectMusicThru) ||
-               IsEqualGUID(riid, &IID_IDirectMusicThru8)) {
+    } else if (IsEqualGUID(riid, &IID_IDirectMusicThru)) {
         *ret_iface = &This->IDirectMusicThru_iface;
         IDirectMusicThru_AddRef((LPDIRECTMUSICTHRU)*ret_iface);
         return S_OK;

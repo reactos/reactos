@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 180, 93, 10
+    CONTROL "Επισκευτείτε την <A HREF=""http://www.reactos.org/"">Ιστοσελίδα του ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "&Προβολή άδειας...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -55,8 +55,8 @@ BEGIN
     GROUPBOX "Εκκίνηση και αποκατάσταση", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Η Εκκίνηση και αποκατάσταση ρυθμίζει το πώς θα ξεκινά ο υπολογιστής αλλά και τον τρόπο αντιμετόπησης σφαλμάτων που θα τον κάνουν να σταματήσει.", IDC_STATIC, 16, 144, 210, 24
     PUSHBUTTON "Ρ&υθμίσεις", IDC_STAREC, 194, 162, 50, 15
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "&Μεταβλητές περιβάλλοντος", IDC_ENVVAR, 70, 192, 96, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Μεταβλητές περιβάλλοντος", IDC_ENVVAR, 88, 192, 80, 15
     PUSHBUTTON "Αναφο&ρά σφαλμάτων", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
@@ -150,7 +150,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Εκκίνηση συστήματος", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Προεπιλεγμένο λειτουργικό &σύστημα:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX "Διάρκεια προβο&λής λίστας :", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -170,7 +170,7 @@ BEGIN
     GROUPBOX "Εγγραφή πληροφοριών εντοπισμού σφαλμάτων", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "Αρχείο έν&δειξης σφαλμάτων:", IDC_STATIC, 17, 202, 150, 8
-    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Α&ντικατάσταση κάθε αρχείου", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON "Άκυρο", IDCANCEL, 195, 259, 50, 14

@@ -395,16 +395,6 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 206, 236, 50, 14
 END
 
-IDD_FILE_COPY DIALOGEX 0, 0, 264, 45
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Kopiere..."
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    PUSHBUTTON "Abbrechen", 14002, 195, 14, 60, 16 
-    CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
-    LTEXT "File", 14001, 8, 6, 169, 10
-END
-
 IDD_FOLDER_OPTIONS_GENERAL DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Allgemein"
@@ -623,6 +613,20 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 167, 181, 50, 14
 END
 
+IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Warnung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
+    LTEXT "Diese Datei wird entweder durch das Betriebssystem oder durch\n\
+eine andere Anwendung verwendet. Diese Datei zu verändern kann Ihr System beschädigen\n\
+oder die Funktion beeinträchtigen.\n\n\
+Sind Sie sicher, dass Sie diese Datei öffnen möchten?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "&Ja", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "&Nein", IDNO, 180, 55, 50, 14
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -672,7 +676,7 @@ BEGIN
     IDS_RESTORE "Wiederherstellen"
     IDS_FORMATDRIVE "Formatieren..."
     IDS_RENAME "Umbenennen"
-    IDS_INSERT "Einfügen"
+    IDS_PASTE "Einfügen"
 
     IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
     IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf."
@@ -688,6 +692,13 @@ BEGIN
     IDS_OVERWRITEFILE_TEXT "Dieser Ordner enthält bereits eine Datei namens '%1'.\n\nWollen Sie diese überschreiben?"
     IDS_OVERWRITEFILE_CAPTION "Bestätigung: Datei überschreiben"
     IDS_OVERWRITEFOLDER_TEXT "Dieser Ordner enthält bereits einen Ordner namens '%1'.\n\nWenn Dateien im Zielordner die gleichen Namen haben, wie Dateien\nim gewählten Ordner, werden diese ersetzt. Soll der Vorgang fortgesetzt werden?"
+
+    IDS_FILEOOP_COPYING "Kopieren"
+    IDS_FILEOOP_MOVING "Verschieben"
+    IDS_FILEOOP_DELETING "Löschen"
+    IDS_FILEOOP_FROM_TO "von %1 nach %2"
+    IDS_FILEOOP_FROM "von %1"
+    IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
     IDS_RESTART_TITLE "Neu starten"
@@ -798,6 +809,6 @@ BEGIN
     IDS_BYTES_FORMAT "Bytes"
     IDS_UNKNOWN_APP "Unbekannte Anwendung"
     IDS_EXE_DESCRIPTION "Beschreibung:"
-    
+
     IDS_MENU_EMPTY "(Leer)"
 END

@@ -20,44 +20,44 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU
 BEGIN
-    POPUP "&F·jl"
+    POPUP "&F√°jl"
     BEGIN
-        MENUITEM "&⁄j...\tCtrl+N",        ID_FILE_NEW
-        MENUITEM "&Megnyit·s...\tCtrl+O", ID_FILE_OPEN
-        MENUITEM "M&entÈs\tCtrl+S",       ID_FILE_SAVE
-        MENUITEM "MentÈs m·&skÈnt...",    ID_FILE_SAVEAS
+        MENUITEM "&√öj...\tCtrl+N",        ID_FILE_NEW
+        MENUITEM "&Megnyit√°s...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "M&ent√©s\tCtrl+S",       ID_FILE_SAVE
+        MENUITEM "Ment√©s m√°&sk√©nt...",    ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Print...\tCtrl+P",     ID_PRINT
         MENUITEM "Print previe&w...",     ID_PREVIEW
         MENUITEM "Page setup...",         ID_PRINTSETUP
         MENUITEM SEPARATOR
-        MENUITEM "&KilÈpÈs",              ID_FILE_EXIT
+        MENUITEM "&Kil√©p√©s",              ID_FILE_EXIT
     END
-    POPUP "Sz&erkesztÈs"
+    POPUP "Sz&erkeszt√©s"
     BEGIN
-        MENUITEM "&Visszavon·s\tCtrl+Z",        ID_EDIT_UNDO
-        MENUITEM "&Elıre\tCtrl+Y",              ID_EDIT_REDO
+        MENUITEM "&Visszavon√°s\tCtrl+Z",        ID_EDIT_UNDO
+        MENUITEM "&El≈ëre\tCtrl+Y",              ID_EDIT_REDO
         MENUITEM SEPARATOR
-        MENUITEM "Kiv&·g·s\tCtrl+X",            ID_EDIT_CUT
-        MENUITEM "M·&sol·s\tCtrl+C",            ID_EDIT_COPY
-        MENUITEM "&BeillesztÈs\tCtrl+V",        ID_EDIT_PASTE
-        MENUITEM "Tˆr&lÈs\tDel",                ID_EDIT_CLEAR
-        MENUITEM "M&indet kijelˆli\tCtrl+A",    ID_EDIT_SELECTALL
+        MENUITEM "Kiv&√°g√°s\tCtrl+X",            ID_EDIT_CUT
+        MENUITEM "M√°&sol√°s\tCtrl+C",            ID_EDIT_COPY
+        MENUITEM "&Beilleszt√©s\tCtrl+V",        ID_EDIT_PASTE
+        MENUITEM "T√∂r&l√©s\tDel",                ID_EDIT_CLEAR
+        MENUITEM "M&indet kijel√∂li\tCtrl+A",    ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F",            ID_FIND
         MENUITEM "Find &next\tF3",              ID_FIND_NEXT
         MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Csak &olvashatÛ",             ID_EDIT_READONLY
-        MENUITEM "MÛ&dosÌtva",                  ID_EDIT_MODIFIED
+        MENUITEM "Csak &olvashat√≥",             ID_EDIT_READONLY
+        MENUITEM "M√≥&dos√≠tva",                  ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
-        POPUP "&Extr·k"
+        POPUP "&Extr√°k"
         BEGIN
-            MENUITEM "KijelˆlÈs &inform·ciÛ",             ID_EDIT_SELECTIONINFO
-            MENUITEM "Karakter&form·tum",                 ID_EDIT_CHARFORMAT
-            MENUITEM "A&laprtelmezett karakter form·tum", ID_EDIT_DEFCHARFORMAT
-            MENUITEM "&BekezdÈs form·tum",                ID_EDIT_PARAFORMAT
-            MENUITEM "Sz&ˆvegszerzÈs",                    ID_EDIT_GETTEXT
+            MENUITEM "Kijel√∂l√©s &inform√°ci√≥",             ID_EDIT_SELECTIONINFO
+            MENUITEM "Karakter&form√°tum",                 ID_EDIT_CHARFORMAT
+            MENUITEM "A&laprtelmezett karakter form√°tum", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Bekezd√©s form√°tum",                ID_EDIT_PARAFORMAT
+            MENUITEM "Sz&√∂vegszerz√©s",                    ID_EDIT_GETTEXT
         END
     END
     POPUP "&View"
@@ -73,16 +73,16 @@ BEGIN
     BEGIN
         MENUITEM "&Date and time...",  ID_DATETIME
     END
-    POPUP "F&orm·tum"
+    POPUP "F&orm√°tum"
     BEGIN
         MENUITEM "&Font...",                     ID_FONTSETTINGS
         MENUITEM "&Bullet points",               ID_BULLET
         MENUITEM "&Paragraph...",                ID_PARAFORMAT
         MENUITEM "&Tabs...",                     ID_TABSTOPS
-        POPUP "&H·ttÈr"
+        POPUP "&H√°tt√©r"
         BEGIN
             MENUITEM "&Rendszer\tCtrl+1",       ID_BACK_1
-            MENUITEM "&S·rg·ban kÈrem\tCtrl+2",        ID_BACK_2
+            MENUITEM "&S√°rg√°ban k√©rem\tCtrl+2",        ID_BACK_2
         END
     END
     POPUP "&Help"
@@ -95,9 +95,9 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Kiv&·g·s\tCtrl+X",     ID_EDIT_CUT
-        MENUITEM "M·&sol·s\tCtrl+C",     ID_EDIT_COPY
-        MENUITEM "&BeillesztÈs\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "Kiv&√°g√°s\tCtrl+X",     ID_EDIT_CUT
+        MENUITEM "M√°&sol√°s\tCtrl+C",     ID_EDIT_COPY
+        MENUITEM "&Beilleszt√©s\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Bullet points",       ID_BULLET
         MENUITEM "&Paragraph...",        ID_PARAFORMAT

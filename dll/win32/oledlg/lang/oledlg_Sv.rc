@@ -22,7 +22,7 @@ STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Infoga ett nytt %s-objekt i ditt dokument"
   IDS_RESULTFILEOBJDESC	"Insert the contents of the file as an object into your document so that you may activate it using the program which created it."
-  IDS_BROWSE            "Bl‰ddra"
+  IDS_BROWSE            "Bl√§ddra"
   IDS_NOTOLEMOD         "File does not appear to be a valid OLE module. Unable to register OLE control."
   IDS_NOTOLEMODCAPTION  "Add Control"
 }
@@ -57,13 +57,13 @@ BEGIN
                     WS_GROUP,7,20,84,10
     CONTROL         "Create Control",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
-    CONTROL         "Skapa frÂn fil",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "Skapa fr√•n fil",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
     PUSHBUTTON      "&Add Control...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
     CONTROL         "Visa som ikon",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
-    PUSHBUTTON      "Bl‰ddra...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Bl√§ddra...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
     LTEXT           "Fil:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
     EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
@@ -73,10 +73,10 @@ STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Paste Special"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT         "K‰lla:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
+    LTEXT         "K√§lla:", -1, 6, 9, 150, 8, WS_VISIBLE | WS_GROUP
     CONTROL       "Klistra &in", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
                   6, 38, 73, 10
-    CONTROL       "Klistra in &l‰nk", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+    CONTROL       "Klistra in &l√§nk", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 73, 10
     LTEXT         "&Som:", -1, 75, 25, 150, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
@@ -84,7 +84,7 @@ BEGIN
     LISTBOX       IDC_PS_DISPLAYLIST,   80, 36, 148, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
     CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 234, 6, 66, 14
     CONTROL       "Avbryt", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 23, 66, 14
-    CONTROL       "&Hj‰lp", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
+    CONTROL       "&Hj√§lp", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 42, 66, 14
     CONTROL       "&Visa som ikon", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 80, 94, 150, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 234, 75, 66, 44
     CONTROL       "Byt &ikon...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 234, 143, 66, 14

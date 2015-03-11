@@ -3,6 +3,12 @@
 INT     APIENTRY  BITMAP_GetObject(SURFACE * bmp, INT count, LPVOID buffer);
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 
+BOOL
+NTAPI
+GreSetBitmapOwner(
+    _In_ HBITMAP hbmp,
+    _In_ ULONG ulOwner);
+
 HBITMAP
 NTAPI
 GreCreateBitmap(

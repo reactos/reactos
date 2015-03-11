@@ -37,20 +37,15 @@ CBandProxy::~CBandProxy()
 
 HRESULT CBandProxy::FindBrowserWindow(IUnknown **browser)
 {
-    CComPtr<IServiceProvider>               serviceProvider;
-    CComPtr<IWebBrowser2>                   webBrowser;
-    HRESULT                                 hResult;
+    IWebBrowser2* webBrowser;
+    HRESULT hResult;
 
     if (browser == NULL)
         return E_POINTER;
-    hResult = fSite->QueryInterface(IID_PPV_ARG(IServiceProvider, &serviceProvider));
+    hResult = IUnknown_QueryService(fSite, SID_IWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &webBrowser));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-    hResult = serviceProvider->QueryService(
-        SID_IWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &webBrowser));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    *browser = webBrowser.Detach();
+    *browser = webBrowser;
     return S_OK;
 }
 

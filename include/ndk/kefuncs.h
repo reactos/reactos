@@ -312,9 +312,9 @@ NTSTATUS
 NTAPI
 KeUserModeCallback(
     _In_ ULONG FunctionID,
-    _In_ PVOID InputBuffer,
+    _In_reads_opt_(InputLength) PVOID InputBuffer,
     _In_ ULONG InputLength,
-    _Out_ PVOID *OutputBuffer,
+    _Outptr_result_buffer_(*OutputLength) PVOID *OutputBuffer,
     _Out_ PULONG OutputLength
 );
 

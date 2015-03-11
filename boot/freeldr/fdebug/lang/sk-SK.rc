@@ -1,27 +1,27 @@
-/* Slovak resources by M·rio KaËm·r aka Kario (kario@szm.sk) 29-02-2008 */
+/* Slovak resources by M√°rio Kaƒçm√°r aka Kario (kario@szm.sk) 29-02-2008 */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 /* Menu */
 IDC_FDEBUG MENU
 BEGIN
-    POPUP "&S˙bor"
+    POPUP "&S√∫bor"
     BEGIN
-        MENUITEM "&Spojiù", IDM_FILE_CONNECT
-        MENUITEM "&Rozpojiù", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Spoji≈•", IDM_FILE_CONNECT
+        MENUITEM "&Rozpoji≈•", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Zmazaù obrazovku", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&Zmaza≈• obrazovku", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "S&pustiù zachyt·vanie", IDM_FILE_STARTCAPTURE
-        MENUITEM "Zas&taviù zachyt·vanie", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "S&pusti≈• zachyt√°vanie", IDM_FILE_STARTCAPTURE
+        MENUITEM "Zas&tavi≈• zachyt√°vanie", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Lok·lne Echo", IDM_FILE_LOCALECHO
+        MENUITEM "&Lok√°lne Echo", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
-        MENUITEM "S&konËiù", IDM_EXIT
+        MENUITEM "S&konƒçi≈•", IDM_EXIT
     END
-    POPUP "&PomocnÌk"
+    POPUP "&Pomocn√≠k"
     BEGIN
-        MENUITEM "»&o je ...", IDM_ABOUT
+        MENUITEM "ƒå&o je ...", IDM_ABOUT
     END
 END
 
@@ -36,7 +36,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "»o je Ladenie voænÈho zav·dzaËa"
+CAPTION "ƒåo je Ladenie voƒæn√©ho zav√°dzaƒça"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nod Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
@@ -47,27 +47,27 @@ END
 
 IDD_CONNECTION DIALOGEX 0, 0, 196, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Moûnosti spojenia"
+CAPTION "Mo≈ænosti spojenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Zadajte COM port (napr. COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Zadajte baudov˙ r˝chlosù (napr. 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "Zadajte baudov√∫ r√Ωchlos≈• (napr. 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 45, 79, 50, 14
-    PUSHBUTTON "Zruöiù", IDCANCEL, 100, 79, 50, 14
+    PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 100, 79, 50, 14
 END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "S˙bor zachyt·vania"
+CAPTION "S√∫bor zachyt√°vania"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "N·zov s˙boru zachyt·vania:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "N√°zov s√∫boru zachyt√°vania:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "&Prehæad·vaù", IDC_BROWSE, 194, 26, 50, 14
+    PUSHBUTTON "&Prehƒæad√°va≈•", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 139, 74, 50, 14
-    PUSHBUTTON "Zruöiù", IDCANCEL, 194, 74, 50, 14
+    PUSHBUTTON "Zru≈°i≈•", IDCANCEL, 194, 74, 50, 14
 END
 
 /* String Tables */
@@ -81,5 +81,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Tento program je voæn˝ softvÈr; mÙûete ho öÌriù a/alebo modifikovaù podæa podmienok GNU Vöeobecnej verejnej licencie (GNU General Public License) ako bola zverejnen· nad·ciou Free Software Foundation; buÔ verzie 2 tejto licencie, alebo (podæa V·öho uv·ûenia) niektorej neskoröej verzie.\r\n\r\nTento program je distribuovan˝ v n·deji, ûe bude uûitoËn˝, avöak BEZ AKEJKOºVEK Z¡RUKY; rovnako bez z·ruky PREDAJNOSTI alebo VHODNOSTI PRE UR»IT› ⁄»EL. Pre viac detailov si pozrite GNU Vöeobecn˙ verejn˙ licenciu (GNU General Public License).\r\n\r\nKÛpiu Vöeobecnej verejnej licencie GNU ste mali dostaù spolu s t˝mto programom; ak nie, napÌöte si o Úu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Tento program je voƒæn√Ω softv√©r; m√¥≈æete ho ≈°√≠ri≈• a/alebo modifikova≈• podƒæa podmienok GNU V≈°eobecnej verejnej licencie (GNU General Public License) ako bola zverejnen√° nad√°ciou Free Software Foundation; buƒè verzie 2 tejto licencie, alebo (podƒæa V√°≈°ho uv√°≈æenia) niektorej neskor≈°ej verzie.\r\n\r\nTento program je distribuovan√Ω v n√°deji, ≈æe bude u≈æitoƒçn√Ω, av≈°ak BEZ AKEJKOƒΩVEK Z√ÅRUKY; rovnako bez z√°ruky PREDAJNOSTI alebo VHODNOSTI PRE URƒåIT√ù √öƒåEL. Pre viac detailov si pozrite GNU V≈°eobecn√∫ verejn√∫ licenciu (GNU General Public License).\r\n\r\nK√≥piu V≈°eobecnej verejnej licencie GNU ste mali dosta≈• spolu s t√Ωmto programom; ak nie, nap√≠≈°te si o ≈àu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

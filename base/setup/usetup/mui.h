@@ -69,7 +69,8 @@ VOID
 MUIDisplayError(
     ULONG ErrorNum,
     PINPUT_RECORD Ir,
-    ULONG WaitEvent);
+    ULONG WaitEvent,
+    ...);
 
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID);

@@ -515,8 +515,8 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    if(Old != NULL)
    {
       (void)InterlockedExchangePointer((PVOID*)&Old->Desktop, 0);
-      IntDereferenceMessageQueue(Old);
       gpqForegroundPrev = Old;
+      IntDereferenceMessageQueue(Old);
    }
    // Only one Q can have active foreground even when there are more than one desktop.
    if (NewQueue)
@@ -666,15 +666,12 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
           {
               return TRUE;
           }
-#ifdef NEW_CURSORICON
+
           pcurNew->CURSORF_flags |= CURSORF_CURRENT;
-#endif
           pcurOld = UserSetCursor(pcurNew, FALSE);
           if (pcurOld)
           {
-#ifdef NEW_CURSORICON
                pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-#endif
                UserDereferenceObject(pcurOld);
           }
           return TRUE;
@@ -726,7 +723,7 @@ VOID NTAPI DesktopThreadMain()
        classes will be allocated from the shared heap */
     UserRegisterSystemClasses();
 
-    while(TRUE)
+    while (TRUE)
     {
         Ret = co_IntGetPeekMessage(&Msg, 0, 0, 0, PM_REMOVE, TRUE);
         if (Ret)
@@ -1002,7 +999,10 @@ IntPaintDesktop(HDC hDC)
    UINT align_old;
    int mode_old;
 
-   GdiGetClipBox(hDC, &Rect);
+   if (GdiGetClipBox(hDC, &Rect) == ERROR)
+   {
+       return FALSE;
+   }
 
    hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
 
@@ -1295,7 +1295,7 @@ NtUserCreateDesktop(
    PDESKTOP pdesk = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
    HDESK hdesk;
-   BOOLEAN Context;
+   BOOLEAN Context = FALSE;
    UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
    BOOL NoHooks = FALSE;
@@ -1651,6 +1651,103 @@ NtUserPaintDesktop(HDC hDC)
 }
 
 /*
+ * NtUserResolveDesktop
+ *
+ * The NtUserResolveDesktop function retrieves handles to the desktop and
+ * the window station specified by the desktop path string.
+ *
+ * Parameters
+ *    ProcessHandle
+ *       Handle to a user process.
+ *
+ *    DesktopPath
+ *       The desktop path string.
+ *
+ * Return Value
+ *    Handle to the desktop (direct return value) and
+ *    handle to the associated window station (by pointer).
+ *    NULL in case of failure.
+ *
+ * Remarks
+ *    Callable by CSRSS only.
+ *
+ * Status
+ *    @implemented
+ */
+
+HDESK
+APIENTRY
+NtUserResolveDesktop(
+    IN HANDLE ProcessHandle,
+    IN PUNICODE_STRING DesktopPath,
+    DWORD dwUnknown,
+    OUT HWINSTA* phWinSta)
+{
+    NTSTATUS Status;
+    PEPROCESS Process = NULL;
+    HWINSTA hWinSta = NULL;
+    HDESK hDesktop  = NULL;
+
+    /* Allow only the Console Server to perform this operation (via CSRSS) */
+    if (PsGetCurrentProcess() != gpepCSRSS)
+        return NULL;
+
+    /* Get the process object the user handle was referencing */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       *PsProcessType,
+                                       UserMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return NULL;
+
+    // UserEnterShared();
+
+    _SEH2_TRY
+    {
+        UNICODE_STRING CapturedDesktopPath;
+
+        /* Capture the user desktop path string */
+        Status = IntSafeCopyUnicodeStringTerminateNULL(&CapturedDesktopPath,
+                                                       DesktopPath);
+        if (!NT_SUCCESS(Status)) _SEH2_YIELD(goto Quit);
+
+        /* Call the internal function */
+        Status = IntParseDesktopPath(Process,
+                                     &CapturedDesktopPath,
+                                     &hWinSta,
+                                     &hDesktop);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("IntParseDesktopPath failed, Status = 0x%08lx\n", Status);
+            hWinSta  = NULL;
+            hDesktop = NULL;
+        }
+
+        /* Return the window station handle */
+        *phWinSta = hWinSta;
+
+        /* Free the captured string */
+        if (CapturedDesktopPath.Buffer)
+            ExFreePoolWithTag(CapturedDesktopPath.Buffer, TAG_STRING);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+Quit:
+    // UserLeave();
+
+    /* Dereference the process object */
+    ObDereferenceObject(Process);
+
+    /* Return the desktop handle */
+    return hDesktop;
+}
+
+/*
  * NtUserSwitchDesktop
  *
  * Sets the current input (interactive) desktop.
@@ -1849,9 +1946,13 @@ IntUnmapDesktopView(IN PDESKTOP pdesk)
     TRACE("IntUnmapDesktopView called for desktop object %p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
-    PrevLink = &ppi->HeapMappings.Next;
 
-    /* Unmap if we're the last thread using the desktop */
+    /*
+     * Unmap if we're the last thread using the desktop.
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
+    PrevLink = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1892,9 +1993,13 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     TRACE("IntMapDesktopView called for desktop object 0x%p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
-    PrevLink = &ppi->HeapMappings.Next;
 
-    /* Find out if another thread already mapped the desktop heap */
+    /*
+     * Find out if another thread already mapped the desktop heap.
+     * Start the search at the next mapping: skip the first entry
+     * as it must be the global user heap mapping.
+     */
+    PrevLink = &ppi->HeapMappings.Next;
     HeapMapping = *PrevLink;
     while (HeapMapping != NULL)
     {
@@ -1929,7 +2034,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     TRACE("ppi 0x%p mapped heap of desktop 0x%p\n", ppi, pdesk);
 
     /* Add the mapping */
-    HeapMapping = UserHeapAlloc(sizeof(W32HEAP_USER_MAPPING));
+    HeapMapping = UserHeapAlloc(sizeof(*HeapMapping));
     if (HeapMapping == NULL)
     {
         MmUnmapViewOfSection(PsGetCurrentProcess(), UserBase);

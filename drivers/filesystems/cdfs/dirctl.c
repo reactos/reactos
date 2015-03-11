@@ -813,11 +813,10 @@ CdfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
         break;
     }
 
-    Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
-
     if (Status != STATUS_PENDING)
     {
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     FsRtlExitFileSystem();

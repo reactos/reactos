@@ -817,7 +817,7 @@ static void shader_generate_arb_declarations(const struct wined3d_shader *shader
             max_constantsF -= count_bits(reg_maps->integer_constants);
             max_constantsF -= gl_info->reserved_arb_constants;
 
-            for (i = 0; i < shader->limits.constant_float; ++i)
+            for (i = 0; i < shader->limits->constant_float; ++i)
             {
                 DWORD idx = i >> 5;
                 DWORD shift = i & 0x1f;
@@ -893,7 +893,7 @@ static void shader_generate_arb_declarations(const struct wined3d_shader *shader
     }
 
     /* Avoid declaring more constants than needed */
-    max_constantsF = min(max_constantsF, shader->limits.constant_float);
+    max_constantsF = min(max_constantsF, shader->limits->constant_float);
 
     /* we use the array-based constants array if the local constants are marked for loading,
      * because then we use indirect addressing, or when the local constant list is empty,
@@ -1384,8 +1384,8 @@ static const char *shader_arb_get_modifier(const struct wined3d_shader_instructi
 static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD sampler_idx,
         const char *dst_str, const char *coord_reg, WORD flags, const char *dsx, const char *dsy)
 {
+    enum wined3d_shader_resource_type resource_type = ins->ctx->reg_maps->resource_info[sampler_idx].type;
     struct wined3d_shader_buffer *buffer = ins->ctx->buffer;
-    DWORD sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     const char *tex_type;
     BOOL np2_fixup = FALSE;
     struct shader_arb_ctx_priv *priv = ins->ctx->backend_data;
@@ -1398,12 +1398,13 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
     /* D3D vertex shader sampler IDs are vertex samplers(0-3), not global d3d samplers */
     if(!pshader) sampler_idx += MAX_FRAGMENT_SAMPLERS;
 
-    switch(sampler_type) {
-        case WINED3DSTT_1D:
+    switch (resource_type)
+    {
+        case WINED3D_SHADER_RESOURCE_TEXTURE_1D:
             tex_type = "1D";
             break;
 
-        case WINED3DSTT_2D:
+        case WINED3D_SHADER_RESOURCE_TEXTURE_2D:
             shader = ins->ctx->shader;
             device = shader->device;
             gl_info = &device->adapter->gl_info;
@@ -1423,16 +1424,16 @@ static void shader_hw_sample(const struct wined3d_shader_instruction *ins, DWORD
             }
             break;
 
-        case WINED3DSTT_VOLUME:
+        case WINED3D_SHADER_RESOURCE_TEXTURE_3D:
             tex_type = "3D";
             break;
 
-        case WINED3DSTT_CUBE:
+        case WINED3D_SHADER_RESOURCE_TEXTURE_CUBE:
             tex_type = "CUBE";
             break;
 
         default:
-            ERR("Unexpected texture type %d\n", sampler_type);
+            ERR("Unexpected resource type %#x.\n", resource_type);
             tex_type = "";
     }
 
@@ -4251,7 +4252,7 @@ static GLuint shader_arb_generate_vshader(const struct wined3d_shader *shader,
         {
             int i;
             const char *one = arb_get_helper_value(WINED3D_SHADER_TYPE_VERTEX, ARB_ONE);
-            for(i = 0; i < min(8, MAX_REG_TEXCRD); i++)
+            for(i = 0; i < MAX_REG_TEXCRD; i++)
             {
                 if (reg_maps->texcoord_mask[i] && reg_maps->texcoord_mask[i] != WINED3DSP_WRITEMASK_ALL)
                     shader_addline(buffer, "MOV result.texcoord[%u].w, %s\n", i, one);
@@ -4370,7 +4371,7 @@ static struct arb_ps_compiled_shader *find_arb_pshader(struct wined3d_shader *sh
 
     shader_data->gl_shaders[shader_data->num_gl_shaders].args = *args;
 
-    pixelshader_update_samplers(shader, args->super.tex_types);
+    pixelshader_update_resource_types(shader, args->super.tex_types);
 
     if (!shader_buffer_init(&buffer))
     {
@@ -5231,8 +5232,10 @@ static const SHADER_HANDLER shader_arb_instruction_handler_table[WINED3DSIH_TABL
     /* WINED3DSIH_MOVA                  */ shader_hw_mov,
     /* WINED3DSIH_MOVC                  */ NULL,
     /* WINED3DSIH_MUL                   */ shader_hw_map2gl,
+    /* WINED3DSIH_NE                    */ NULL,
     /* WINED3DSIH_NOP                   */ shader_hw_nop,
     /* WINED3DSIH_NRM                   */ shader_hw_nrm,
+    /* WINED3DSIH_OR                    */ NULL,
     /* WINED3DSIH_PHASE                 */ shader_hw_nop,
     /* WINED3DSIH_POW                   */ shader_hw_pow,
     /* WINED3DSIH_RCP                   */ shader_hw_scalar_op,
@@ -5273,6 +5276,7 @@ static const SHADER_HANDLER shader_arb_instruction_handler_table[WINED3DSIH_TABL
     /* WINED3DSIH_TEXREG2GB             */ pshader_hw_texreg2gb,
     /* WINED3DSIH_TEXREG2RGB            */ pshader_hw_texreg2rgb,
     /* WINED3DSIH_UDIV                  */ NULL,
+    /* WINED3DSIH_UGE                   */ NULL,
     /* WINED3DSIH_USHR                  */ NULL,
     /* WINED3DSIH_UTOF                  */ NULL,
     /* WINED3DSIH_XOR                   */ NULL,
@@ -6529,7 +6533,11 @@ static void fragment_prog_arbfp(struct wined3d_context *context, const struct wi
             state_arb_specularenable(context, state, STATE_RENDER(WINED3D_RS_SPECULARENABLE));
         }
         context->last_was_pshader = FALSE;
-    } else {
+    }
+    else if (!context->last_was_pshader)
+    {
+        if (device->shader_backend == &arb_program_shader_backend)
+            context->constant_update_mask |= WINED3D_SHADER_CONST_PS_F;
         context->last_was_pshader = TRUE;
     }
 
@@ -7243,7 +7251,7 @@ static GLuint gen_p8_shader(struct arbfp_blit_priv *priv,
 
     /* The alpha-component contains the palette index */
     if(textype == GL_TEXTURE_RECTANGLE_ARB)
-        shader_addline(&buffer, "TXP index, fragment.texcoord[0], texture[0], RECT;\n");
+        shader_addline(&buffer, "TEX index, fragment.texcoord[0], texture[0], RECT;\n");
     else
         shader_addline(&buffer, "TEX index, fragment.texcoord[0], texture[0], 2D;\n");
 
@@ -7282,7 +7290,7 @@ static void upload_palette(const struct wined3d_texture *texture, struct wined3d
     if (!priv->palette_texture)
         gl_info->gl_ops.gl.p_glGenTextures(1, &priv->palette_texture);
 
-    GL_EXTCALL(glActiveTextureARB(GL_TEXTURE1));
+    GL_EXTCALL(glActiveTexture(GL_TEXTURE1));
     gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_1D, priv->palette_texture);
 
     gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -7463,7 +7471,7 @@ static HRESULT arbfp_blit_set(void *blit_priv, struct wined3d_context *context, 
     struct arbfp_blit_type type;
     struct arbfp_blit_desc *desc;
 
-    if (surface->flags & SFLAG_CONVERTED)
+    if (surface->container->flags & WINED3D_TEXTURE_CONVERTED)
     {
         gl_info->gl_ops.gl.p_glEnable(textype);
         checkGLcall("glEnable(textype)");

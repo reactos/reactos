@@ -80,7 +80,7 @@ BEGIN
         MENUITEM "Modern palette", IDM_COLORSMODERNPALETTE
         MENUITEM "Old palette", IDM_COLORSOLDPALETTE
     END
-    POPUP "&?"
+    POPUP "&Aiuto"
     BEGIN
         MENUITEM "Guida in linea", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR

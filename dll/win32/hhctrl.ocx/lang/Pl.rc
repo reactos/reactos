@@ -24,7 +24,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Spis treúci"
+    IDS_CONTENTS     "&Spis tre≈õci"
     IDS_INDEX        "&Indeks"
     IDS_SEARCH       "&Wyszukaj"
     IDS_FAVORITES    "&Ulubione"
@@ -35,10 +35,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Pokaø"
+    IDTB_EXPAND      "Poka≈º"
     IDTB_CONTRACT    "Ukryj"
     IDTB_STOP        "Zatrzymaj"
-    IDTB_REFRESH     "Odúwieø"
+    IDTB_REFRESH     "Od≈õwie≈º"
     IDTB_BACK        "Wstecz"
     IDTB_HOME        "Start"
     IDTB_SYNC        "Synchronizuj"

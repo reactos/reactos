@@ -2,26 +2,26 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGE1 DIALOGEX 20, 40, 315, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_OVERLAPPED | WS_CAPTION | WS_VISIBLE | WS_SYSMENU
-CAPTION "Избор на вида на даване на разрешителни"
+CAPTION "РР·Р±РѕСЂ РЅР° РІРёРґР° РЅР° РґР°РІР°РЅРµ РЅР° СЂР°Р·СЂРµС€РёС‚РµР»РЅРё"
 FONT 8, "Helv"
 BEGIN
-    CONTROL "Вид на клиентко разрешаване", 100, "BUTTON", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 4, 4, 239, 94
-    CONTROL "На устройство или на потребител", 102, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 79, 107, 12
-    CONTROL "На сървър. Брой едновременни свързвания:", 103, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 38, 163, 9
-    CONTROL "Произведенеие:", 105, "STATIC", SS_LEFT | WS_CHILD | WS_VISIBLE, 13, 20, 31, 8
+    CONTROL "Р’РёРґ РЅР° РєР»РёРµРЅС‚РєРѕ СЂР°Р·СЂРµС€Р°РІР°РЅРµ", 100, "BUTTON", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 4, 4, 239, 94
+    CONTROL "РќР° СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РёР»Рё РЅР° РїРѕС‚СЂРµР±РёС‚РµР»", 102, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 79, 107, 12
+    CONTROL "РќР° СЃСЉСЂРІСЉСЂ. Р‘СЂРѕР№ РµРґРЅРѕРІСЂРµРјРµРЅРЅРё СЃРІСЉСЂР·РІР°РЅРёСЏ:", 103, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 38, 163, 9
+    CONTROL "РџСЂРѕРёР·РІРµРґРµРЅРµРёРµ:", 105, "STATIC", SS_LEFT | WS_CHILD | WS_VISIBLE, 13, 20, 31, 8
     CONTROL "", 106, "COMBOBOX", CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP, 49, 20, 171, 12
-    CONTROL "Добре", 107, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 7, 46, 14
-    CONTROL "Отказ", 108, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 27, 46, 14
-    CONTROL "Помощ", 109, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 48, 46, 14
-    CONTROL "Размножаване...", 110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
-    CONTROL "Прмахване на разрешителни", 111, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 30, 56, 65, 15
-    CONTROL "Добавяне на разрешителни", 112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
+    CONTROL "Р”РѕР±СЂРµ", 107, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 7, 46, 14
+    CONTROL "РћС‚РєР°Р·", 108, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 27, 46, 14
+    CONTROL "РџРѕРјРѕС‰", 109, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 48, 46, 14
+    CONTROL "Р Р°Р·РјРЅРѕР¶Р°РІР°РЅРµ...", 110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
+    CONTROL "РџСЂРјР°С…РІР°РЅРµ РЅР° СЂР°Р·СЂРµС€РёС‚РµР»РЅРё", 111, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 30, 56, 65, 15
+    CONTROL "Р”РѕР±Р°РІСЏРЅРµ РЅР° СЂР°Р·СЂРµС€РёС‚РµР»РЅРё", 112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
     CONTROL "", 114, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 187, 39, 32, 12
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Управление на разрешителните"
-    IDS_CPLDESCRIPTION_1 "Управление на разрешителните"
+    IDS_CPLNAME_1 "РЈРїСЂР°РІР»РµРЅРёРµ РЅР° СЂР°Р·СЂРµС€РёС‚РµР»РЅРёС‚Рµ"
+    IDS_CPLDESCRIPTION_1 "РЈРїСЂР°РІР»РµРЅРёРµ РЅР° СЂР°Р·СЂРµС€РёС‚РµР»РЅРёС‚Рµ"
     IDS_REACTOS "ReactOS - FreeSoftware"
 END

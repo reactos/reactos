@@ -32,67 +32,67 @@ EXTERN i386CallRealMode:PROC
 PUBLIC _PnpBiosSupported
 _PnpBiosSupported:
 
-	push edi
-	push esi
-	push ecx
-	push edx
+    push edi
+    push esi
+    push ecx
+    push edx
 
-	xor edi, edi
+    xor edi, edi
 
-	/* init esi */
-	mov esi, HEX(0F0000)
+    /* init esi */
+    mov esi, HEX(0F0000)
 
 pnp_again:
-	mov eax, [esi]
-	cmp eax, HEX(506E5024)			/* "$PnP" */
-	je pnp_found
+    mov eax, [esi]
+    cmp eax, HEX(506E5024)  /* "$PnP" */
+    je pnp_found
 
-	cmp esi, HEX(0FFFF0)
-	je pnp_not_found
+    cmp esi, HEX(0FFFF0)
+    je pnp_not_found
 
 pnp_add:
-	add esi, 16
-	jmp pnp_again
+    add esi, 16
+    jmp pnp_again
 
 pnp_found:
-	/* first calculate the checksum */
-	push esi
+    /* first calculate the checksum */
+    push esi
 
-	push HEX(21)
-	pop ecx
-	xor edx, edx
+    push HEX(21)
+    pop ecx
+    xor edx, edx
 
 pnp_loop:
-	lodsb
-	add dl, al
-	loop pnp_loop
+    lodsb
+    add dl, al
+    loop pnp_loop
 
-	test dl, dl
-	pop esi
-	jnz pnp_add
+    test dl, dl
+    pop esi
+    jnz pnp_add
 
-	mov edi, esi
+    mov edi, esi
 
-	/* Calculate the bios entry point (far pointer) */
-	xor eax, eax
-	mov ax, [esi + HEX(0F)]
-	shl eax, 16
-	mov ax, [esi + HEX(0D)]
-	mov dword ptr ds:[BSS_PnpBiosEntryPoint], eax
+    /* Calculate the bios entry point (far pointer) */
+    xor eax, eax
+    mov ax, [esi + HEX(0F)]
+    shl eax, 16
+    mov ax, [esi + HEX(0D)]
+    mov dword ptr ds:[BSS_PnpBiosEntryPoint], eax
 
-	/* Store bios data segment */
-	mov ax, [esi + HEX(1B)]
-	mov word ptr ds:[BSS_PnpBiosDataSegment], ax
+    /* Store bios data segment */
+    mov ax, [esi + HEX(1B)]
+    mov word ptr ds:[BSS_PnpBiosDataSegment], ax
 
 pnp_not_found:
-	mov eax, edi
+    mov eax, edi
 
-	pop edx
-	pop ecx
-	pop esi
-	pop edi
+    pop edx
+    pop ecx
+    pop esi
+    pop edi
 
-	ret
+    ret
 
 
 /*
@@ -103,34 +103,34 @@ pnp_not_found:
 PUBLIC _PnpBiosGetDeviceNodeCount
 _PnpBiosGetDeviceNodeCount:
 
-	push ebp
-	mov ebp, esp
+    push ebp
+    mov ebp, esp
 
-	pusha
-	push es
+    pusha
+    push es
 
     mov bx, FNID_PnpBiosGetDeviceNodeCount
     call i386CallRealMode
 
-	mov esi, [ebp + 8]
-	mov ax, [BSS_PnpNodeSize]
-	movzx ecx, ax
-	mov [esi], ecx
+    mov esi, [ebp + 8]
+    mov ax, [BSS_PnpNodeSize]
+    movzx ecx, ax
+    mov [esi], ecx
 
-	mov esi, [ebp + 12]
-	mov ax, [BSS_PnpNodeCount]
-	movzx ecx, ax
-	mov [esi], ecx
+    mov esi, [ebp + 12]
+    mov ax, [BSS_PnpNodeCount]
+    movzx ecx, ax
+    mov [esi], ecx
 
-	pop es
-	popa
+    pop es
+    popa
 
-	mov esp, ebp
-	pop ebp
+    mov esp, ebp
+    pop ebp
 
-	mov eax, dword ptr [BSS_PnpResult]
+    mov eax, dword ptr [BSS_PnpResult]
 
-	ret
+    ret
 
 
 /*
@@ -141,43 +141,44 @@ _PnpBiosGetDeviceNodeCount:
 PUBLIC _PnpBiosGetDeviceNode
 _PnpBiosGetDeviceNode:
 
-	push ebp
-	mov ebp, esp
+    push ebp
+    mov ebp, esp
 
-	pusha
-	push es
+    pusha
+    push es
 
-	/* get current node number */
-	mov esi, [ebp + 8]
-	mov al, [esi]
-	mov byte ptr ds:[BSS_PnpNodeNumber], al
+    /* get current node number */
+    mov esi, [ebp + 8]
+    mov al, [esi]
+    mov byte ptr ds:[BSS_PnpNodeNumber], al
 
-	/* convert pointer to node buffer to segment/offset */
-	mov eax, [ebp + 12]
-	shr eax, 4
-	and eax, HEX(0f000)
-	mov word ptr ds:[BSS_PnpBiosBufferSegment], ax
-	mov eax, [ebp + 12]
-	and eax, HEX(0ffff)
-	mov word ptr ds:[BSS_PnpBiosBufferOffset], ax
+    /* convert pointer to node buffer to segment/offset */
+    mov eax, [ebp + 12]
+    shr eax, 4
+    and eax, HEX(0f000)
+    mov word ptr ds:[BSS_PnpBiosBufferSegment], ax
+    mov eax, [ebp + 12]
+    and eax, HEX(0ffff)
+    mov word ptr ds:[BSS_PnpBiosBufferOffset], ax
 
     mov bx, FNID_PnpBiosGetDeviceNode
     call i386CallRealMode
 
-	/* update node number */
-	mov esi, [ebp + 8]
-	mov al, byte ptr ds:[BSS_PnpNodeNumber]
-	mov [esi], al
+    /* update node number */
+    mov esi, [ebp + 8]
+    mov al, byte ptr ds:[BSS_PnpNodeNumber]
+    mov [esi], al
 
-	pop es
-	popa
+    pop es
+    popa
 
-	mov esp, ebp
-	pop ebp
+    mov esp, ebp
+    pop ebp
 
-	mov eax, [BSS_PnpResult]
+    mov eax, [BSS_PnpResult]
 
-	ret
+    ret
 
 END
+
 /* EOF */

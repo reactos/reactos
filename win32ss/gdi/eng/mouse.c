@@ -15,14 +15,15 @@
 
 /* FUNCTIONS *****************************************************************/
 
+__drv_preferredFunction("(see documentation)", "Obsolete, always returns false. ")
 BOOL
 APIENTRY
 EngSetPointerTag(
-	IN HDEV hdev,
-	IN SURFOBJ *psoMask,
-	IN SURFOBJ *psoColor,
-	IN XLATEOBJ *pxlo,
-	IN FLONG fl)
+    _In_ HDEV hdev,
+    _In_opt_ SURFOBJ *psoMask,
+    _In_opt_ SURFOBJ *psoColor,
+    _Reserved_ XLATEOBJ *pxlo,
+    _In_ FLONG fl)
 {
     // This function is obsolete for Windows 2000 and later.
     // This function is still supported, but always returns FALSE.
@@ -34,13 +35,15 @@ EngSetPointerTag(
  * FUNCTION: Notify the mouse driver that drawing is about to begin in
  * a rectangle on a particular surface.
  */
-INT NTAPI
+_Requires_lock_held_(*ppdev->hsemDevLock)
+BOOL
+NTAPI
 MouseSafetyOnDrawStart(
-    PPDEVOBJ ppdev,
-    LONG HazardX1,
-    LONG HazardY1,
-    LONG HazardX2,
-    LONG HazardY2)
+    _Inout_ PPDEVOBJ ppdev,
+    _In_ LONG HazardX1,
+    _In_ LONG HazardY1,
+    _In_ LONG HazardX2,
+    _In_ LONG HazardY2)
 {
     LONG tmp;
     GDIPOINTER *pgp;
@@ -84,15 +87,17 @@ MouseSafetyOnDrawStart(
         ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, -1, -1, NULL);
     }
 
-    return(TRUE);
+    return TRUE;
 }
 
 /*
  * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
  */
-INT NTAPI
+_Requires_lock_held_(*ppdev->hsemDevLock)
+BOOL
+NTAPI
 MouseSafetyOnDrawEnd(
-    PPDEVOBJ ppdev)
+    _Inout_ PPDEVOBJ ppdev)
 {
     GDIPOINTER *pgp;
 
@@ -118,7 +123,7 @@ MouseSafetyOnDrawEnd(
 
     ppdev->SafetyRemoveLevel = 0;
 
-    return(TRUE);
+    return TRUE;
 }
 
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
@@ -126,8 +131,8 @@ MouseSafetyOnDrawEnd(
 VOID
 NTAPI
 IntHideMousePointer(
-    PDEVOBJ *ppdev,
-    SURFOBJ *psoDest)
+    _Inout_ PDEVOBJ *ppdev,
+    _Inout_ SURFOBJ *psoDest)
 {
     GDIPOINTER *pgp;
     POINTL pt;
@@ -179,7 +184,9 @@ IntHideMousePointer(
 
 VOID
 NTAPI
-IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
+IntShowMousePointer(
+    _Inout_ PDEVOBJ *ppdev,
+    _Inout_ SURFOBJ *psoDest)
 {
     GDIPOINTER *pgp;
     POINTL pt;
@@ -309,18 +316,19 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 /*
  * @implemented
  */
-ULONG APIENTRY
+ULONG
+APIENTRY
 EngSetPointerShape(
-    IN SURFOBJ *pso,
-    IN SURFOBJ *psoMask,
-    IN SURFOBJ *psoColor,
-    IN XLATEOBJ *pxlo,
-    IN LONG xHot,
-    IN LONG yHot,
-    IN LONG x,
-    IN LONG y,
-    IN RECTL *prcl,
-    IN FLONG fl)
+    _In_ SURFOBJ *pso,
+    _In_opt_ SURFOBJ *psoMask,
+    _In_opt_ SURFOBJ *psoColor,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ LONG xHot,
+    _In_ LONG yHot,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ RECTL *prcl,
+    _In_ FLONG fl)
 {
     PDEVOBJ *ppdev;
     GDIPOINTER *pgp;
@@ -334,6 +342,10 @@ EngSetPointerShape(
 
     ppdev = GDIDEV(pso);
     pgp = &ppdev->Pointer;
+
+    /* Handle the case where we have no XLATEOBJ */
+    if (pxlo == NULL)
+        pxlo = &gexloTrivial.xlo;
 
     /* Do we have any bitmap at all? */
     if (psoColor || psoMask)
@@ -549,13 +561,13 @@ failure:
 /*
  * @implemented
  */
-
-VOID APIENTRY
+VOID
+APIENTRY
 EngMovePointer(
-    IN SURFOBJ *pso,
-    IN LONG x,
-    IN LONG y,
-    IN RECTL *prcl)
+    _In_ SURFOBJ *pso,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ RECTL *prcl)
 {
     PDEVOBJ *ppdev;
     GDIPOINTER *pgp;
@@ -589,18 +601,19 @@ EngMovePointer(
     }
 }
 
-ULONG APIENTRY
+ULONG
+NTAPI
 IntEngSetPointerShape(
-   IN SURFOBJ *pso,
-   IN SURFOBJ *psoMask,
-   IN SURFOBJ *psoColor,
-   IN XLATEOBJ *pxlo,
-   IN LONG xHot,
-   IN LONG yHot,
-   IN LONG x,
-   IN LONG y,
-   IN RECTL *prcl,
-   IN FLONG fl)
+    _In_ SURFOBJ *pso,
+    _In_opt_ SURFOBJ *psoMask,
+    _In_opt_ SURFOBJ *psoColor,
+    _In_opt_ XLATEOBJ *pxlo,
+    _In_ LONG xHot,
+    _In_ LONG yHot,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ RECTL *prcl,
+    _In_ FLONG fl)
 {
     ULONG ulResult = SPS_DECLINE;
     PFN_DrvSetPointerShape pfnSetPointerShape;
@@ -610,6 +623,11 @@ IntEngSetPointerShape(
 
     if (pfnSetPointerShape)
     {
+        /* Drivers expect to get an XLATEOBJ */
+        if (pxlo == NULL)
+            pxlo = &gexloTrivial.xlo;
+
+        /* Call the driver */
         ulResult = pfnSetPointerShape(pso,
                                       psoMask,
                                       psoColor,
@@ -651,14 +669,14 @@ IntEngSetPointerShape(
 ULONG
 NTAPI
 GreSetPointerShape(
-    HDC hdc,
-    HBITMAP hbmMask,
-    HBITMAP hbmColor,
-    LONG xHot,
-    LONG yHot,
-    LONG x,
-    LONG y,
-    FLONG fl)
+    _In_ HDC hdc,
+    _In_opt_ HBITMAP hbmMask,
+    _In_opt_ HBITMAP hbmColor,
+    _In_ LONG xHot,
+    _In_ LONG yHot,
+    _In_ LONG x,
+    _In_ LONG y,
+    _In_ FLONG fl)
 {
     PDC pdc;
     PSURFACE psurf, psurfMask, psurfColor;
@@ -686,7 +704,9 @@ GreSetPointerShape(
 
     /* Lock the mask bitmap */
     if (hbmMask)
+    {
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
+    }
     else
     {
         //ASSERT(fl & SPS_ALPHA);
@@ -707,9 +727,9 @@ GreSetPointerShape(
     }
     else
         psurfColor = NULL;
-    
+
     /* We must have a valid surface in case of alpha bitmap */
-    ASSERT(((fl & SPS_ALPHA) && psurfColor) || !(fl & SPS_ALPHA)); 
+    ASSERT(((fl & SPS_ALPHA) && psurfColor) || !(fl & SPS_ALPHA));
 
     /* Call the driver or eng function */
     ulResult = IntEngSetPointerShape(&psurf->SurfObj,
@@ -745,9 +765,9 @@ GreSetPointerShape(
 VOID
 NTAPI
 GreMovePointer(
-    HDC hdc,
-    LONG x,
-    LONG y)
+    _In_ HDC hdc,
+    _In_ LONG x,
+    _In_ LONG y)
 {
     PDC pdc;
     PRECTL prcl;

@@ -25,7 +25,8 @@
 
 #include "resource.h"
 
-#define APPLICATION_DATEBASE_URL L"http://svn.reactos.org/packages/rappmgr.cab"
+/* FIXME: this should be downloaded by HTTPS once is supported */
+#define APPLICATION_DATABASE_URL L"http://svn.reactos.org/packages/rappmgr.cab"
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
@@ -101,8 +102,8 @@ typedef struct
     BOOL Maximized;
     INT Left;
     INT Top;
-    INT Right;
-    INT Bottom;
+    INT Width;
+    INT Height;
 
 } SETTINGS_INFO, *PSETTINGS_INFO;
 

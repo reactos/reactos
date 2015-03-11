@@ -365,7 +365,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (Pcr == 0)
     {
-        UiMessageBox("Can't allocate PCR\n");
+        UiMessageBox("Can't allocate PCR.");
         return;
     }
 
@@ -384,7 +384,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (GdtIdt == NULL)
     {
-        UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+        UiMessageBox("Can't allocate pages for GDT+IDT!");
         return;
     }
 

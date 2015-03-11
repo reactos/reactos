@@ -261,7 +261,6 @@ TBBUTTON tbButtonsAdd[numShownButtons + numHiddenButtons] =
 
 HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     HWND                    parentWindow;
-    IOleWindow              *oleWindow;
     HWND                    toolbar;
     HRESULT                 hResult;
 
@@ -273,13 +272,8 @@ HRESULT STDMETHODCALLTYPE CToolsBand::SetSite(IUnknown* pUnkSite){
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     parentWindow = NULL;
-    hResult = pUnkSite->QueryInterface(IID_PPV_ARG(IOleWindow, &oleWindow));
-    if (SUCCEEDED(hResult))
-    {
-        oleWindow->GetWindow(&parentWindow);
-        oleWindow->Release();
-    }
-    if (!::IsWindow(parentWindow))
+    hResult = IUnknown_GetWindow(pUnkSite, &parentWindow);
+    if (FAILED(hResult) || !::IsWindow(parentWindow))
         return E_FAIL;
 
     toolbar = CreateWindowEx(

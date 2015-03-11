@@ -1,5 +1,14 @@
 #pragma once
 
+/* Convert WIN32 ROP into an ENG ROP */
+#define WIN32_ROP3_TO_ENG_ROP4(dwRop4) ((((dwRop4) & 0x00FF0000) >> 16) | (((dwRop4) & 0x00FF0000) >> 8))
+#define WIN32_ROP4_TO_ENG_ROP4(dwRop4) ((dwRop4) >> 16)
+
+#define WIN32_ROP4_USES_SOURCE(Rop)  ((((Rop) & 0xCCCC0000) >> 2) != ((Rop) & 0x33330000))
+
+/* The range of valid ROP2 values is 1 .. 16 */
+#define FIXUP_ROP2(rop2) ((((rop2) - 1) & 0xF) + 1)
+
 /* Brush functions */
 
 extern HDC hSystemBM;

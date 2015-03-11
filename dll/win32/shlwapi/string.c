@@ -438,6 +438,47 @@ LPWSTR WINAPI StrCatW(LPWSTR lpszStr, LPCWSTR lpszSrc)
 }
 
 /*************************************************************************
+ * StrCatChainW	[SHLWAPI.@]
+ *
+ * Concatenates two unicode strings.
+ *
+ * PARAMS
+ *  lpszStr [O] Initial string
+ *  cchMax  [I] Length of destination buffer
+ *  ichAt   [I] Offset from the destination buffer to begin concatenation
+ *  lpszCat [I] String to concatenate
+ *
+ * RETURNS
+ *  The offset from the beginning of pszDst to the terminating NULL.
+ */
+DWORD WINAPI StrCatChainW(LPWSTR lpszStr, DWORD cchMax, DWORD ichAt, LPCWSTR lpszCat)
+{
+  TRACE("(%s,%u,%d,%s)\n", debugstr_w(lpszStr), cchMax, ichAt, debugstr_w(lpszCat));
+
+  if (ichAt == -1)
+    ichAt = strlenW(lpszStr);
+
+  if (!cchMax)
+    return ichAt;
+
+  if (ichAt == cchMax)
+    ichAt--;
+
+  if (lpszCat && ichAt < cchMax)
+  {
+    lpszStr += ichAt;
+    while (ichAt < cchMax - 1 && *lpszCat)
+    {
+      *lpszStr++ = *lpszCat++;
+      ichAt++;
+    }
+    *lpszStr = 0;
+  }
+
+  return ichAt;
+}
+
+/*************************************************************************
  * StrCpyW	[SHLWAPI.@]
  *
  * Copy a string to another string.

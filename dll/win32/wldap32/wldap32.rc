@@ -20,34 +20,20 @@
 
 #include <windef.h>
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/wldap32_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/wldap32_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/wldap32_En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/wldap32_Es.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/wldap32_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/wldap32_Nl.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/wldap32_No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/wldap32_Pl.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/wldap32_Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DE_DE
-    #include "lang/wldap32_De.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/wldap32_Fr.rc"
@@ -61,8 +47,20 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/wldap32_It.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/wldap32_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/wldap32_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/wldap32_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/wldap32_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/wldap32_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/wldap32_Pt.rc"
@@ -75,6 +73,9 @@
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/wldap32_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/wldap32_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/wldap32_Tr.rc"

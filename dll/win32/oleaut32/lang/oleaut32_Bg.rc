@@ -22,10 +22,10 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-  IDS_TRUE  "Истина"
-  IDS_FALSE "Лъжа"
-  IDS_YES   "Да"
-  IDS_NO    "Не"
-  IDS_ON    "Включено"
-  IDS_OFF   "Изключено"
+  IDS_TRUE  "РСЃС‚РёРЅР°"
+  IDS_FALSE "Р›СЉР¶Р°"
+  IDS_YES   "Р”Р°"
+  IDS_NO    "РќРµ"
+  IDS_ON    "Р’РєР»СЋС‡РµРЅРѕ"
+  IDS_OFF   "РР·РєР»СЋС‡РµРЅРѕ"
 }

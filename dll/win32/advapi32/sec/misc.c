@@ -891,6 +891,75 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
     return TRUE;
 }
 
+/**********************************************************************
+ * LookupPrivilegeDisplayNameW			EXPORTED
+ *
+ * @unimplemented
+ */
+BOOL
+WINAPI
+LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
+                            LPCWSTR lpName,
+                            LPWSTR lpDisplayName,
+                            LPDWORD cchDisplayName,
+                            LPDWORD lpLanguageId)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName, Name;
+    PUNICODE_STRING DisplayName;
+    LSA_HANDLE PolicyHandle = NULL;
+    USHORT LanguageId;
+    NTSTATUS Status;
+
+    TRACE("%S,%S,%p,%p,%p\n", lpSystemName, lpName, lpDisplayName, cchDisplayName, lpLanguageId);
+
+    RtlInitUnicodeString(&SystemName, lpSystemName);
+    RtlInitUnicodeString(&Name, lpName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
+        return FALSE;
+    }
+
+    Status = LsaLookupPrivilegeDisplayName(PolicyHandle, &Name, &DisplayName, &LanguageId);
+    if (NT_SUCCESS(Status))
+    {
+        *lpLanguageId = LanguageId;
+        if (DisplayName->Length + sizeof(WCHAR) > *cchDisplayName * sizeof(WCHAR))
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+
+            *cchDisplayName = (DisplayName->Length + sizeof(WCHAR)) / sizeof(WCHAR);
+        }
+        else
+        {
+            RtlMoveMemory(lpDisplayName,
+                          DisplayName->Buffer,
+                          DisplayName->Length);
+            lpDisplayName[DisplayName->Length / sizeof(WCHAR)] = 0;
+
+            *cchDisplayName = DisplayName->Length / sizeof(WCHAR);
+        }
+
+        LsaFreeMemory(DisplayName->Buffer);
+        LsaFreeMemory(DisplayName);
+    }
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static DWORD
 pGetSecurityInfoCheck(SECURITY_INFORMATION SecurityInfo,

@@ -37,6 +37,13 @@
 #define NDEBUG
 #include <debug.h>
 
+FORCEINLINE
+ULONG
+InterlockedReadUlong(
+    _In_ _Interlocked_operand_ ULONG volatile *Source)
+{
+    return *Source;
+}
 
 FORCEINLINE
 void
@@ -71,6 +78,22 @@ DECREASE_THREAD_LOCK_COUNT(
 }
 
 #if DBG
+VOID
+ASSERT_LOCK_ORDER(
+    _In_ UCHAR objt)
+{
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+    ULONG i;
+
+    if (pti)
+    {
+        /* Ensure correct locking order! */
+        for (i = objt + 1; i < GDIObjTypeTotal; i++)
+        {
+            NT_ASSERT(pti->acExclusiveLockCount[i] == 0);
+        }
+    }
+}
 #define ASSERT_SHARED_OBJECT_TYPE(objt) \
     ASSERT((objt) == GDIObjType_SURF_TYPE || \
            (objt) == GDIObjType_PAL_TYPE || \
@@ -83,6 +106,7 @@ DECREASE_THREAD_LOCK_COUNT(
 #define ASSERT_TRYLOCK_OBJECT_TYPE(objt) \
     ASSERT((objt) == GDIObjType_DRVOBJ_TYPE)
 #else
+#define ASSERT_LOCK_ORDER(hobj)
 #define ASSERT_SHARED_OBJECT_TYPE(objt)
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt)
 #define ASSERT_TRYLOCK_OBJECT_TYPE(objt)
@@ -109,8 +133,8 @@ enum
 static PVOID gpvGdiHdlTblSection = NULL;
 PENTRY gpentHmgr;
 PULONG gpaulRefCount;
-ULONG gulFirstFree;
-ULONG gulFirstUnused;
+volatile ULONG gulFirstFree;
+volatile ULONG gulFirstUnused;
 static PPAGED_LOOKASIDE_LIST gpaLookasideList;
 
 static VOID NTAPI GDIOBJ_vCleanup(PVOID ObjectBody);
@@ -276,6 +300,7 @@ IncrementGdiHandleCount(ULONG ulProcessId)
 
     Status = PsLookupProcessByProcessId(ULongToHandle(ulProcessId), &pep);
     NT_ASSERT(NT_SUCCESS(Status));
+    __analysis_assume(NT_SUCCESS(Status));
 
     ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedIncrement((LONG*)&ppi->GDIHandleCount);
@@ -292,6 +317,7 @@ DecrementGdiHandleCount(ULONG ulProcessId)
 
     Status = PsLookupProcessByProcessId(ULongToHandle(ulProcessId), &pep);
     NT_ASSERT(NT_SUCCESS(Status));
+    __analysis_assume(NT_SUCCESS(Status));
 
     ppi = PsGetProcessWin32Process(pep);
     if (ppi) InterlockedDecrement((LONG*)&ppi->GDIHandleCount);
@@ -310,7 +336,7 @@ ENTRY_pentPopFreeEntry(VOID)
     do
     {
         /* Get the index and sequence number of the first free entry */
-        iFirst = gulFirstFree;
+        iFirst = InterlockedReadUlong(&gulFirstFree);
 
         /* Check if we have a free entry */
         if (!(iFirst & GDI_HANDLE_INDEX_MASK))
@@ -322,6 +348,10 @@ ENTRY_pentPopFreeEntry(VOID)
             if (iFirst >= GDI_HANDLE_COUNT)
             {
                 DPRINT1("No more GDI handles left!\n");
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+                DbgDumpGdiHandleTableWithBT();
+#endif
+                InterlockedDecrement((LONG*)&gulFirstUnused);
                 return 0;
             }
 
@@ -333,7 +363,7 @@ ENTRY_pentPopFreeEntry(VOID)
         pentFree = &gpentHmgr[iFirst & GDI_HANDLE_INDEX_MASK];
 
         /* Create a new value with an increased sequence number */
-        iNext = (USHORT)(ULONG_PTR)pentFree->einfo.pobj;
+        iNext = GDI_HANDLE_GET_INDEX(pentFree->einfo.hFree);
         iNext |= (iFirst & ~GDI_HANDLE_INDEX_MASK) + 0x10000;
 
         /* Try to exchange the FirstFree value */
@@ -374,7 +404,7 @@ ENTRY_vPushFreeEntry(PENTRY pentFree)
     do
     {
         /* Get the current first free index and sequence number */
-        iFirst = gulFirstFree;
+        iFirst = InterlockedReadUlong(&gulFirstFree);
 
         /* Set the einfo.pobj member to the index of the first free entry */
         pentFree->einfo.pobj = UlongToPtr(iFirst & GDI_HANDLE_INDEX_MASK);
@@ -499,6 +529,9 @@ GDIOBJ_AllocateObject(UCHAR objt, ULONG cjSize, FLONG fl)
     pobj->BaseFlags = fl & 0xffff;
     DBG_INITLOG(&pobj->slhLog);
     DBG_LOGEVENT(&pobj->slhLog, EVENT_ALLOCATE, 0);
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+    DbgCaptureStackBackTace(pobj->apvBackTrace, 1, GDI_OBJECT_STACK_LEVELS);
+#endif /* GDI_DEBUG */
 
     return pobj;
 }
@@ -542,6 +575,10 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
     if (ulIndex)
     {
         /* Decrement reference count */
+        if ((gpaulRefCount[ulIndex] & REF_MASK_COUNT) == 0)
+        {
+            DBG_DUMP_EVENT_LIST(&pobj->slhLog);
+        }
         ASSERT((gpaulRefCount[ulIndex] & REF_MASK_COUNT) > 0);
         cRefs = InterlockedDecrement((LONG*)&gpaulRefCount[ulIndex]);
         DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
@@ -669,6 +706,9 @@ GDIOBJ_TryLockObject(
         return NULL;
     }
 
+    /* Make sure lock order is correct */
+    ASSERT_LOCK_ORDER(objt);
+
     /* Reference the handle entry */
     pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
     if (!pentry)
@@ -734,6 +774,9 @@ GDIOBJ_LockObject(
         DPRINT("Wrong object type: hobj=0x%p, objt=0x%x\n", hobj, objt);
         return NULL;
     }
+
+    /* Make sure lock order is correct */
+    ASSERT_LOCK_ORDER(objt);
 
     /* Reference the handle entry */
     pentry = ENTRY_ReferenceEntryByHandle(hobj, 0);
@@ -1470,9 +1513,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     }
 
 #if DBG
-//#ifdef GDI_DEBUG
-	DbgGdiHTIntegrityCheck();
-//#endif
+    DbgGdiHTIntegrityCheck();
 #endif
 
     ppi = PsGetCurrentProcessWin32Process();

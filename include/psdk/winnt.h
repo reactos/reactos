@@ -20,6 +20,7 @@
  */
 
 #pragma once
+#ifndef _WINNT_
 #define _WINNT_
 
 /* We require WDK / VS 2008 or newer */
@@ -2028,6 +2029,8 @@ typedef enum {
 #define PF_RDTSC_INSTRUCTION_AVAILABLE 8
 #define PF_PAE_ENABLED 9
 #define PF_XMMI64_INSTRUCTIONS_AVAILABLE 10
+#define PF_NX_ENABLED 12
+
 /* also in ddk/ntifs.h */
 #define FILE_ACTION_ADDED                   0x00000001
 #define FILE_ACTION_REMOVED                 0x00000002
@@ -2958,7 +2961,7 @@ typedef struct _LDT_ENTRY {
 #endif /* _LDT_ENTRY_DEFINED */
 
 /* FIXME: add more machines */
-#if defined(_X86_) && !defined(__PowerPC__)
+#if defined(_X86_)
 #define SIZE_OF_80387_REGISTERS    80
 #define CONTEXT_i386    0x10000
 #define CONTEXT_i486    0x10000
@@ -3014,7 +3017,7 @@ typedef struct _CONTEXT {
   DWORD SegSs;
   BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
-#elif defined(__x86_64__)
+#elif defined(_AMD64_)
 
 #define CONTEXT_AMD64 0x100000
 
@@ -3463,7 +3466,7 @@ typedef struct _CONTEXT {
     DWORD ContextFlags;
     DWORD Fill[4];
 } CONTEXT;
-#elif defined(SHx)
+#elif defined(_SH_)
 
 /* These are the debug or break registers on the SH3 */
 typedef struct _DEBUG_REGISTERS {
@@ -4320,18 +4323,26 @@ NTAPI
 RtlQueryDepthSList(
   _In_ PSLIST_HEADER ListHead);
 
-#ifndef _RTL_RUN_ONCE_DEF
-#define _RTL_RUN_ONCE_DEF
-
 #define RTL_RUN_ONCE_CHECK_ONLY 0x00000001UL
 #define RTL_RUN_ONCE_ASYNC 0x00000002UL
 #define RTL_RUN_ONCE_INIT_FAILED 0x00000004UL
+
+#define RTL_RUN_ONCE_INIT {0}
 
 typedef union _RTL_RUN_ONCE {
   PVOID Ptr;
 } RTL_RUN_ONCE, *PRTL_RUN_ONCE;
 
-#endif
+typedef DWORD WINAPI RTL_RUN_ONCE_INIT_FN(PRTL_RUN_ONCE, PVOID, PVOID*);
+typedef RTL_RUN_ONCE_INIT_FN *PRTL_RUN_ONCE_INIT_FN;
+
+NTSYSAPI
+DWORD
+WINAPI
+RtlRunOnceComplete(
+    PRTL_RUN_ONCE,
+    DWORD,
+    PVOID);
 
 #define RTL_CONDITION_VARIABLE_INIT {0}
 #define RTL_CONDITION_VARIABLE_LOCKMODE_SHARED 0x1
@@ -6130,3 +6141,5 @@ typedef struct _TP_CALLBACK_ENVIRON_V1 {
 #ifdef __cplusplus
 } // extern "C"
 #endif
+
+#endif /* _WINNT_ */

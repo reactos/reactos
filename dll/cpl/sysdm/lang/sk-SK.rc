@@ -25,7 +25,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Navštívte <A HREF=""http://www.reactos.org/"">domovskú stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 165, 10
+    CONTROL "Navštívte <A HREF=""http://www.reactos.org/"">domovskú stránku systému ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "Zobraziť &licenciu...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -56,16 +56,16 @@ BEGIN
     LTEXT "Na vykonanie väčšiny z týchto zmien sú potrebné privilégia správcu.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Výkon", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Nastavením možností výkonu môžete kontrolovať, ako majú aplikácie využívať pamäť. Tieto nastavenia ovplyvňujú rýchlosť práce počítača.", IDC_STATIC, 16, 29, 210, 24
-    PUSHBUTTON "&Nastavenie", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "&Nastavenie", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Používateľské profily", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Nastavenie pracovnej plochy súvisiace s prihlásením", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Spúšťanie a obnovovanie", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Možnosti spustenia a obnovenia systému upravujú, ako má byť počítač spustený a čo má urobiť, ak nejaká chyba zapríčiní zlyhanie systému.", IDC_STATIC, 16, 144, 210, 27
-    PUSHBUTTON "Na&stavenie", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "&Premenné prostredia", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "&Hlásenie chýb", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "Na&stavenie", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "System Settings", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "&Premenné prostredia", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "&Hlásenie chýb", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
@@ -158,7 +158,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Spustenie systému", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Predvolený operačný &systém:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX "&Zobraziť zoznam operačných systémov na:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 183, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -178,7 +178,7 @@ BEGIN
     GROUPBOX "Zápis informácií pre ladenie", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "Súbor &výpisu z pamäte:", IDC_STATIC, 17, 202, 150, 8
-    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Pr&episovať existujúci súbor", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON "Zrušiť", IDCANCEL, 195, 259, 50, 14

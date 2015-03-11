@@ -90,7 +90,7 @@ extern "C" {
 // Definitions used by WM_CLIENTSHUTDOWN
 //
 // Client Shutdown messages
-#define MCS_SHUTDOWNTIMERS  1
+#define MCS_ENDSESSION      1
 #define MCS_QUERYENDSESSION 2
 // Client Shutdown returns
 #define MCSR_GOODFORSHUTDOWN  1
@@ -100,12 +100,21 @@ extern "C" {
 //
 // Definitions used by WM_LOGONNOTIFY
 //
+#define LN_LOGOFF             0x0
 #define LN_SHELL_EXITED       0x2
 #define LN_START_TASK_MANAGER 0x4
 #define LN_LOCK_WORKSTATION   0x5
 #define LN_UNLOCK_WORKSTATION 0x6
 #define LN_MESSAGE_BEEP       0x9
 #define LN_START_SCREENSAVE   0xA
+#define LN_LOGOFF_CANCELED    0xB
+
+// From WinCE 6.0 Imm.h SDK
+// Returns for ImmProcessHotKey
+#define IPHK_HOTKEY                     0x0001
+#define IPHK_PROCESSBYIME               0x0002
+#define IPHK_CHECKCTRL                  0x0004
+#define IPHK_SKIPTHISKEY                0x0010
 
 //
 // Undocumented flags for DrawCaptionTemp
@@ -113,6 +122,8 @@ extern "C" {
 #define DC_NOSENDMSG 0x2000
 
 #define STARTF_SCRNSAVER 0x80000000
+
+#define MOD_WINLOGON_SAS 0x8000
 
 #define CW_USEDEFAULT16 ((short)0x8000)
 
@@ -124,7 +135,7 @@ extern "C" {
 #define SBRG_BOTTOMLEFTBTN 5 /* the bottom or left button */
 
 BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable);
-BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
+BOOL WINAPI SetLogonNotifyWindow(HWND Wnd);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 DWORD_PTR WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD_PTR);
@@ -165,8 +176,8 @@ typedef int (WINAPI *SETWINDOWRGN)(HWND hWnd, HRGN hRgn, BOOL bRedraw);
 
 typedef struct _UAHOWP
 {
-  BYTE*  MsgBitArray;
-  DWORD  Size;
+    BYTE*  MsgBitArray;
+    DWORD  Size;
 } UAHOWP, *PUAHOWP;
 
 #define UAH_HOOK_MESSAGE(uahowp, msg) uahowp.MsgBitArray[msg/8] |= (1 << (msg % 8));
@@ -175,47 +186,47 @@ typedef struct _UAHOWP
 
 typedef struct tagUSERAPIHOOK
 {
-  DWORD       size;
-  WNDPROC     DefWindowProcA;
-  WNDPROC     DefWindowProcW;
-  UAHOWP      DefWndProcArray;
-  FARPROC     GetScrollInfo;
-  FARPROC     SetScrollInfo;
-  FARPROC     EnableScrollBar;
-  FARPROC     AdjustWindowRectEx;
-  SETWINDOWRGN SetWindowRgn;
-  WNDPROC_OWP PreWndProc;
-  WNDPROC_OWP PostWndProc;
-  UAHOWP      WndProcArray;
-  WNDPROC_OWP PreDefDlgProc;
-  WNDPROC_OWP PostDefDlgProc;
-  UAHOWP      DlgProcArray;
-  FARPROC     GetSystemMetrics;
-  FARPROC     SystemParametersInfoA;
-  FARPROC     SystemParametersInfoW;
-  FARPROC     ForceResetUserApiHook;
-  FARPROC     DrawFrameControl;
-  FARPROC     DrawCaption;
-  FARPROC     MDIRedrawFrame;
-  FARPROC     GetRealWindowOwner;
+    DWORD       size;
+    WNDPROC     DefWindowProcA;
+    WNDPROC     DefWindowProcW;
+    UAHOWP      DefWndProcArray;
+    FARPROC     GetScrollInfo;
+    FARPROC     SetScrollInfo;
+    FARPROC     EnableScrollBar;
+    FARPROC     AdjustWindowRectEx;
+    SETWINDOWRGN SetWindowRgn;
+    WNDPROC_OWP PreWndProc;
+    WNDPROC_OWP PostWndProc;
+    UAHOWP      WndProcArray;
+    WNDPROC_OWP PreDefDlgProc;
+    WNDPROC_OWP PostDefDlgProc;
+    UAHOWP      DlgProcArray;
+    FARPROC     GetSystemMetrics;
+    FARPROC     SystemParametersInfoA;
+    FARPROC     SystemParametersInfoW;
+    FARPROC     ForceResetUserApiHook;
+    FARPROC     DrawFrameControl;
+    FARPROC     DrawCaption;
+    FARPROC     MDIRedrawFrame;
+    FARPROC     GetRealWindowOwner;
 } USERAPIHOOK, *PUSERAPIHOOK;
 
 typedef enum _UAPIHK
 {
-  uahLoadInit,
-  uahStop,
-  uahShutdown
+    uahLoadInit,
+    uahStop,
+    uahShutdown
 } UAPIHK, *PUAPIHK;
 
 typedef BOOL(CALLBACK *USERAPIHOOKPROC)(UAPIHK State, PUSERAPIHOOK puah);
 
 typedef struct _USERAPIHOOKINFO
 {
-  DWORD m_size;
-  LPCWSTR m_dllname1;
-  LPCWSTR m_funname1;
-  LPCWSTR m_dllname2;
-  LPCWSTR m_funname2;
+    DWORD m_size;
+    LPCWSTR m_dllname1;
+    LPCWSTR m_funname1;
+    LPCWSTR m_dllname2;
+    LPCWSTR m_funname2;
 } USERAPIHOOKINFO,*PUSERAPIHOOKINFO;
 
 #if (WINVER == _WIN32_WINNT_WINXP)

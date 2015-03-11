@@ -25,7 +25,7 @@ STRINGTABLE
 BEGIN
     IDS_CONTENTS     "&Tartalom"
     IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&KeresÈs"
+    IDS_SEARCH       "&Keres√©s"
     IDS_FAVORITES    "Kedven&cek"
 
     IDS_HIDETABS     "Hide &Tabs"
@@ -34,16 +34,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "MegjelenÌtÈs"
-    IDTB_CONTRACT    "ElrejtÈs"
-    IDTB_STOP        "Meg·llÌt·s"
-    IDTB_REFRESH     "FrissÌtÈs"
+    IDTB_EXPAND      "Megjelen√≠t√©s"
+    IDTB_CONTRACT    "Elrejt√©s"
+    IDTB_STOP        "Meg√°ll√≠t√°s"
+    IDTB_REFRESH     "Friss√≠t√©s"
     IDTB_BACK        "Vissza"
-    IDTB_HOME        "Kezdılap"
+    IDTB_HOME        "Kezd≈ëlap"
     IDTB_SYNC        "Szink."
-    IDTB_PRINT       "Nyomtat·s"
-    IDTB_OPTIONS     "OpciÛk"
-    IDTB_FORWARD     "Elıre"
+    IDTB_PRINT       "Nyomtat√°s"
+    IDTB_OPTIONS     "Opci√≥k"
+    IDTB_FORWARD     "El≈ëre"
 END
 
 MENU_POPUP MENU

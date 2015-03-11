@@ -538,6 +538,26 @@ VOID
     PVOID StartContext
 );
 
+#ifndef _NTSYSTEM_
+typedef VOID
+(NTAPI *PKNORMAL_ROUTINE)(
+  IN PVOID NormalContext OPTIONAL,
+  IN PVOID SystemArgument1 OPTIONAL,
+  IN PVOID SystemArgument2 OPTIONAL);
+
+typedef VOID
+(NTAPI *PKRUNDOWN_ROUTINE)(
+  IN struct _KAPC *Apc);
+
+typedef VOID
+(NTAPI *PKKERNEL_ROUTINE)(
+  IN struct _KAPC *Apc,
+  IN OUT PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+  IN OUT PVOID *NormalContext OPTIONAL,
+  IN OUT PVOID *SystemArgument1 OPTIONAL,
+  IN OUT PVOID *SystemArgument2 OPTIONAL);
+#endif
+
 //
 // APC Environment Types
 //

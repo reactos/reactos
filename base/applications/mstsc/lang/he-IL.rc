@@ -55,6 +55,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 צבעים (15 סיביות)"
     IDS_HIGHCOLOR16 "65,536 צבעים (16 סיביות)"
     IDS_HIGHCOLOR24 "16,777,216 צבעים (24 סיביות)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu פיקסלים"
     IDS_FULLSCREEN "מסך מלא"
     IDS_BROWSESERVER "<Browse for more...>"

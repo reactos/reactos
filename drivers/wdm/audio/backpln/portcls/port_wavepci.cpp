@@ -228,7 +228,7 @@ CPortWavePci::Init(
     IN PRESOURCELIST  ResourceList)
 {
     IMiniportWavePci * Miniport;
-    PSERVICEGROUP ServiceGroup;
+    PSERVICEGROUP ServiceGroup = 0;
     NTSTATUS Status;
     PPINCOUNT PinCount;
     PPOWERNOTIFY PowerNotify;

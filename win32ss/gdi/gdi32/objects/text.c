@@ -48,14 +48,7 @@ TextOutW(
     _In_reads_(cchString) LPCWSTR lpString,
     _In_ INT cchString)
 {
-    return NtGdiExtTextOutW(hdc,
-                            nXStart,
-                            nYStart,
-                            0, NULL,
-                            (LPWSTR)lpString,
-                            cchString,
-                            NULL,
-                            0);
+    return ExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL);
 }
 
 
@@ -473,6 +466,18 @@ ExtTextOutW(
     _In_ UINT cwc,
     _In_reads_opt_(cwc) const INT *lpDx)
 {
+    HANDLE_METADC(BOOL,
+                  ExtTextOut,
+                  FALSE,
+                  hdc,
+                  x,
+                  y,
+                  fuOptions,
+                  lprc,
+                  lpString,
+                  cwc,
+                  lpDx);
+
     return NtGdiExtTextOutW(hdc,
                             x,
                             y,
@@ -633,12 +638,10 @@ SetTextCharacterExtra(
         return 0x80000000;
     }
 
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
     {
-        return MFDRV_SetTextCharacterExtra( hdc, nCharExtra ); // Wine port.
+        HANDLE_METADC(INT, SetTextCharacterExtra, 0x80000000, hdc, nCharExtra);
     }
-#endif
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -718,7 +721,9 @@ SetTextAlign(
     _In_ UINT fMode)
 {
     PDC_ATTR pdcattr;
-    INT fOldMode;
+    UINT fOldMode;
+
+    HANDLE_METADC(BOOL, SetTextAlign, GDI_ERROR, hdc, fMode);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -728,26 +733,6 @@ SetTextAlign(
         return GDI_ERROR;
     }
 
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetTextAlign( hdc, fMode )
-                   else
-            {
-                PLDC pLDC = pdcattr->pvLDC;
-                if ( !pLDC )
-                {
-                    SetLastError(ERROR_INVALID_HANDLE);
-                    return FALSE;
-                }
-                if (pLDC->iType == LDC_EMFLDC)
-                {
-                    if return EMFDRV_SetTextAlign( hdc, fMode )
-                              }
-                      }
-              }
-#endif
 
     fOldMode = pdcattr->lTextAlign;
     pdcattr->lTextAlign = fMode; // Raw
@@ -771,36 +756,16 @@ SetTextColor(
     _In_ COLORREF crColor)
 {
     PDC_ATTR pdcattr;
-    COLORREF crOldColor = CLR_INVALID;
+    COLORREF crOldColor;
 
-    /* Get the DC attribute */
+    HANDLE_METADC(COLORREF, SetTextColor, CLR_INVALID, hdc, crColor);
+
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return GDI_ERROR;
+        return CLR_INVALID;
     }
-
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetTextColor( hDC, crColor );
-        else
-        {
-            PLDC pLDC = pdcattr->pvLDC;
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                if return EMFDRV_SetTextColor( hDC, crColor );
-            }
-        }
-    }
-#endif
 
     crOldColor = (COLORREF) pdcattr->ulForegroundClr;
     pdcattr->ulForegroundClr = (ULONG)crColor;
@@ -826,6 +791,11 @@ SetTextJustification(
 {
     PDC_ATTR pdcattr;
 
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+    {
+        HANDLE_METADC(BOOL, SetTextJustification, FALSE, hdc, nBreakExtra, nBreakCount);
+    }
+
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
@@ -834,17 +804,6 @@ SetTextJustification(
         return GDI_ERROR;
     }
 
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetTextJustification( hdc, nBreakExtra, nBreakCount )
-                   else
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-#endif
 
     if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
     {

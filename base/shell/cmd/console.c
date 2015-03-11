@@ -249,14 +249,14 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 VOID ConOutResPaging(BOOL NewPage, UINT resID)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
-    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
     ConOutPrintfPaging(NewPage, szMsg);
 }
 
 VOID ConOutResPuts(UINT resID)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
-    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
     ConPuts(szMsg, STD_OUTPUT_HANDLE);
 }
 
@@ -373,7 +373,7 @@ VOID ConErrFormatMessage(DWORD MessageId, ...)
     }
     else
     {
-        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
         ConErrPrintf(szMsg);
     }
 }
@@ -402,7 +402,7 @@ VOID ConOutFormatMessage(DWORD MessageId, ...)
     }
     else
     {
-        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
+        LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, ARRAYSIZE(szMsg));
         ConErrPrintf(szMsg);
     }
 }
@@ -413,7 +413,7 @@ VOID ConOutResPrintf(UINT resID, ...)
     va_list arg_ptr;
 
     va_start(arg_ptr, resID);
-    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
     ConPrintf(szMsg, arg_ptr, STD_OUTPUT_HANDLE);
     va_end(arg_ptr);
 }
@@ -447,7 +447,7 @@ VOID ConErrChar(TCHAR c)
 VOID ConErrResPuts(UINT resID)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
-    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
     ConPuts(szMsg, STD_ERROR_HANDLE);
 }
 
@@ -463,7 +463,7 @@ VOID ConErrResPrintf(UINT resID, ...)
     va_list arg_ptr;
 
     va_start(arg_ptr, resID);
-    LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, resID, szMsg, ARRAYSIZE(szMsg));
     ConPrintf(szMsg, arg_ptr, STD_ERROR_HANDLE);
     va_end(arg_ptr);
 }

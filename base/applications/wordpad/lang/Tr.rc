@@ -1,7 +1,7 @@
 /*
  * Turkish Resources for ReactOS Wordpad
  *
- * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org); 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyrights: 2006 Fatih Aşıcı (fasici@linux-sevenler.org), 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,12 +42,12 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kes\tCtrl+X",                ID_EDIT_CUT
         MENUITEM "&Çoğalt\tCtrl+C",             ID_EDIT_COPY
-        MENUITEM "Ya&pıştır\tCtrl+V",           ID_EDIT_PASTE
+        MENUITEM "Y&apıştır\tCtrl+V",           ID_EDIT_PASTE
         MENUITEM "&Sil\tDel",                   ID_EDIT_CLEAR
         MENUITEM "&Tümünü Seç\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Ara...\tCtrl+F",             ID_FIND
-        MENUITEM "S&onrakini Ara\tF3",          ID_FIND_NEXT
+        MENUITEM "&Bul...\tCtrl+F",             ID_FIND
+        MENUITEM "S&onrakini Bul\tF3",          ID_FIND_NEXT
         MENUITEM "&Değiştir...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Ya&lnızca Okunur",            ID_EDIT_READONLY

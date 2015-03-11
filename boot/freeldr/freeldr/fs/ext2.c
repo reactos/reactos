@@ -569,8 +569,8 @@ BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG S
     //{
     //    return FALSE;
     //}
-    //ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER);
-    //RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * DiskGeometry.BytesPerSector);
+    //ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, DiskReadBuffer);
+    //RtlCopyMemory(Buffer, DiskReadBuffer, SectorCount * DiskGeometry.BytesPerSector);
     //return ReturnValue;
 
     return CacheReadDiskSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, Buffer);
@@ -607,11 +607,11 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 
     // Now try to read the super block
     // If this fails then abort
-    if (!MachDiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, (PVOID)DISKREADBUFFER))
+    if (!MachDiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, DiskReadBuffer))
     {
         return FALSE;
     }
-    RtlCopyMemory(Ext2SuperBlock, (PVOID)((ULONG_PTR)DISKREADBUFFER + 1024), 1024);
+    RtlCopyMemory(Ext2SuperBlock, ((PUCHAR)DiskReadBuffer + 1024), 1024);
 
     TRACE("Dumping super block:\n");
     TRACE("total_inodes: %d\n", Ext2SuperBlock->total_inodes);
@@ -918,7 +918,6 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
     ULONG        InodeOffsetInBlock;
     CHAR        ErrorString[80];
     EXT2_GROUP_DESC    GroupDescriptor;
-    BOOLEAN Status;
 
     TRACE("Ext2ReadInode() Inode = %d\n", Inode);
 
@@ -949,11 +948,10 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
     TRACE("InodeBlockNumber (after group desc correction) = %d\n", InodeBlockNumber);
 
     // Read the block
-    Status = Ext2ReadPartialBlock(InodeBlockNumber,
-                                  (InodeOffsetInBlock * EXT2_INODE_SIZE(Ext2SuperBlock)),
-                                  sizeof(EXT2_INODE),
-                                  InodeBuffer);
-    if (!Status)
+    if (!Ext2ReadPartialBlock(InodeBlockNumber,
+                              (InodeOffsetInBlock * EXT2_INODE_SIZE(Ext2SuperBlock)),
+                              sizeof(EXT2_INODE),
+                              InodeBuffer))
     {
         return FALSE;
     }
@@ -1196,7 +1194,7 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
     return TRUE;
 }
 
-LONG Ext2Close(ULONG FileId)
+ARC_STATUS Ext2Close(ULONG FileId)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1205,7 +1203,7 @@ LONG Ext2Close(ULONG FileId)
     return ESUCCESS;
 }
 
-LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+ARC_STATUS Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1221,7 +1219,7 @@ LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
     return ESUCCESS;
 }
 
-LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+ARC_STATUS Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     PEXT2_FILE_INFO FileHandle;
     //ULONG DeviceId;
@@ -1251,28 +1249,28 @@ LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-LONG Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+ARC_STATUS Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
     ULONGLONG BytesReadBig;
-    BOOLEAN ret;
+    BOOLEAN Success;
 
     //
     // Read data
     //
-    ret = Ext2ReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
+    Success = Ext2ReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
     *Count = (ULONG)BytesReadBig;
 
     //
     // Check for success
     //
-    if (ret)
+    if (Success)
         return ESUCCESS;
     else
         return EIO;
 }
 
-LONG Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+ARC_STATUS Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
@@ -1304,18 +1302,18 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
     EXT2_SUPER_BLOCK SuperBlock;
     LARGE_INTEGER Position;
     ULONG Count;
-    LONG ret;
+    ARC_STATUS Status;
 
     //
     // Read the SuperBlock
     //
     Position.HighPart = 0;
     Position.LowPart = 2 * 512;
-    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
-    if (ret != ESUCCESS)
+    Status = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (Status != ESUCCESS)
         return NULL;
-    ret = ArcRead(DeviceId, &SuperBlock, sizeof(SuperBlock), &Count);
-    if (ret != ESUCCESS || Count != sizeof(SuperBlock))
+    Status = ArcRead(DeviceId, &SuperBlock, sizeof(SuperBlock), &Count);
+    if (Status != ESUCCESS || Count != sizeof(SuperBlock))
         return NULL;
 
     //

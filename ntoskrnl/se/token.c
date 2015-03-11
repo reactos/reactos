@@ -400,18 +400,12 @@ SepDuplicateToken(PTOKEN Token,
         return Status;
     }
 
-    Status = ZwAllocateLocallyUniqueId(&AccessToken->ModifiedId);
-    if (!NT_SUCCESS(Status))
-    {
-        ObDereferenceObject(AccessToken);
-        return Status;
-    }
-
     AccessToken->TokenLock = &SepTokenLock;
 
     AccessToken->TokenType  = TokenType;
     AccessToken->ImpersonationLevel = Level;
     RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
+    RtlCopyLuid(&AccessToken->ModifiedId, &Token->ModifiedId);
 
     AccessToken->TokenSource.SourceIdentifier.LowPart = Token->TokenSource.SourceIdentifier.LowPart;
     AccessToken->TokenSource.SourceIdentifier.HighPart = Token->TokenSource.SourceIdentifier.HighPart;
@@ -3020,6 +3014,8 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     if (NewToken) ObDereferenceObject(NewToken);
 
     if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
+
+    ObDereferenceObject(Thread);
 
     if (NT_SUCCESS(Status))
     {

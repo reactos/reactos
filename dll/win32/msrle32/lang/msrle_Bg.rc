@@ -25,6 +25,6 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Wine MS-RLE видео кодек"
-	IDS_ABOUT       "Wine MS-RLE видео кодек\nCopyright 2002 by Michael Gunnewig"
+	IDS_DESCRIPTION	"Wine MS-RLE РІРёРґРµРѕ РєРѕРґРµРє"
+	IDS_ABOUT       "Wine MS-RLE РІРёРґРµРѕ РєРѕРґРµРє\nCopyright 2002 by Michael Gunnewig"
 }

@@ -1,7 +1,7 @@
 /*
- * MPR dll resources for Norwegian Bokmål
+ * MPR dll resources for Norwegian BokmÃ¥l
  *
- * Copyright (C) 2005 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright (C) 2005 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Skriv inn brukernavnet og passordet ditt:", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "Mellomtjener", -1, 6, 26, 60, 10
-/* LTEXT "Område", -1, 6, 46, 60, 10 */
+/* LTEXT "OmrÃ¥de", -1, 6, 46, 60, 10 */
  LTEXT "Bruker", -1, 6, 66, 60, 10
  LTEXT "Passord", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0

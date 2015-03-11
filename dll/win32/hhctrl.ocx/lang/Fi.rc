@@ -23,7 +23,7 @@ LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Sis‰llys"
+    IDS_CONTENTS     "&Sis√§llys"
     IDS_INDEX        "&Hakemisto"
     IDS_SEARCH       "&Etsi"
     IDS_FAVORITES    "S&uosikit"
@@ -34,10 +34,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "N‰yt‰"
+    IDTB_EXPAND      "N√§yt√§"
     IDTB_CONTRACT    "Piilota"
-    IDTB_STOP        "Pys‰yt‰"
-    IDTB_REFRESH     "P‰ivit‰"
+    IDTB_STOP        "Pys√§yt√§"
+    IDTB_REFRESH     "P√§ivit√§"
     IDTB_BACK        "Takaisin"
     IDTB_HOME        "Alkuun"
     IDTB_SYNC        "Synkronoi"

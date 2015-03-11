@@ -37,10 +37,10 @@ BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "A&nvändarnamn:",-1,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "A&nvÃ¤ndarnamn:",-1,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "&Lösenord:",-1,8,80,72,12,SS_CENTERIMAGE
+    LTEXT           "&LÃ¶senord:",-1,8,80,72,12,SS_CENTERIMAGE
     EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
     CONTROL         "&Remember my password",IDC_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12

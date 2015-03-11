@@ -36,29 +36,29 @@
 
 typedef struct _BASESRV_KERNEL_IMPORTS
 {
-    PCHAR FunctionName;
+    PCHAR  FunctionName;
     PVOID* FunctionPointer;
 } BASESRV_KERNEL_IMPORTS, *PBASESRV_KERNEL_IMPORTS;
 
 /* FIXME: BASENLS.H */
-typedef NTSTATUS(WINAPI *POPEN_DATA_FILE)(HANDLE hFile,
-                                          PWCHAR FileName);
+typedef NTSTATUS (WINAPI *POPEN_DATA_FILE)(HANDLE hFile,
+                                           PWCHAR FileName);
 
-typedef BOOL(WINAPI *PGET_CP_FILE_NAME_FROM_REGISTRY)(UINT   CodePage,
-                                                      LPWSTR FileName,
-                                                      ULONG  FileNameSize);
+typedef BOOL (WINAPI *PGET_CP_FILE_NAME_FROM_REGISTRY)(UINT   CodePage,
+                                                       LPWSTR FileName,
+                                                       ULONG  FileNameSize);
 
-typedef BOOL(WINAPI *PGET_NLS_SECTION_NAME)(UINT   CodePage,
-                                            UINT   Base,
-                                            ULONG  Unknown,
-                                            LPWSTR BaseName,
-                                            LPWSTR Result,
-                                            ULONG  ResultSize);
+typedef BOOL (WINAPI *PGET_NLS_SECTION_NAME)(UINT   CodePage,
+                                             UINT   Base,
+                                             ULONG  Unknown,
+                                             LPWSTR BaseName,
+                                             LPWSTR Result,
+                                             ULONG  ResultSize);
 
-typedef BOOL(WINAPI *PVALIDATE_LOCALE)(IN ULONG LocaleId);
-typedef NTSTATUS(WINAPI *PCREATE_NLS_SECURTY_DESCRIPTOR)(IN PVOID Buffer,
-                                                         IN ULONG BufferSize,
-                                                         IN ULONG AceType);
+typedef BOOL (WINAPI *PVALIDATE_LOCALE)(IN ULONG LocaleId);
+typedef NTSTATUS (WINAPI *PCREATE_NLS_SECURTY_DESCRIPTOR)(IN PVOID Buffer,
+                                                          IN ULONG BufferSize,
+                                                          IN ULONG AceType);
 
 /* Globals */
 extern HANDLE BaseSrvHeap;

@@ -1,6 +1,5 @@
 
 set(USE_DIBLIB FALSE)
-set(USE_NEW_CURSORICON TRUE)
 
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
@@ -9,10 +8,6 @@ add_subdirectory(drivers)
 
 if(USE_DIBLIB)
     add_subdirectory(gdi/diblib)
-endif()
-
-if(USE_NEW_CURSORICON)
-    add_definitions(-DNEW_CURSORICON)
 endif()
 
 add_subdirectory(gdi/gdi32)
@@ -105,6 +100,10 @@ list(APPEND SOURCE
     user/ntuser/caret.c
     user/ntuser/class.c
     user/ntuser/clipboard.c
+    user/ntuser/console.c
+    user/ntuser/csr.c
+    user/ntuser/cursoricon.c
+    user/ntuser/dde.c
     user/ntuser/defwnd.c
     user/ntuser/desktop.c
     user/ntuser/display.c
@@ -115,6 +114,7 @@ list(APPEND SOURCE
     user/ntuser/hook.c
     user/ntuser/hotkey.c
     user/ntuser/input.c
+    user/ntuser/ime.c
     user/ntuser/keyboard.c
     user/ntuser/kbdlayout.c
     user/ntuser/menu.c
@@ -165,6 +165,7 @@ list(APPEND SOURCE
     gdi/ntgdi/gdiobj.c
     gdi/ntgdi/gdipool.c
     gdi/ntgdi/icm.c
+    gdi/ntgdi/init.c
     gdi/ntgdi/line.c
     gdi/ntgdi/metafile.c
     gdi/ntgdi/palette.c
@@ -192,12 +193,6 @@ else()
         gdi/dib/dib.c
         gdi/eng/copybits.c
         ${GENDIB_FILES})
-endif()
-
-if(USE_NEW_CURSORICON)
-    list(APPEND SOURCE user/ntuser/cursoricon_new.c)
-else()
-    list(APPEND SOURCE user/ntuser/cursoricon.c)
 endif()
 
 if(ARCH STREQUAL "i386")

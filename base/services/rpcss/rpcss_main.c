@@ -98,6 +98,10 @@ BOOL RPCSS_Initialize(void)
   exit_event = __wine_make_process_system();
 #else
   exit_event = CreateEventW(NULL, FALSE, FALSE, NULL); // never fires
+  {
+    HANDLE hStartEvent = CreateEventW(NULL, TRUE, FALSE, L"ScmCreatedEvent");
+    SetEvent(hStartEvent);
+  }
 #endif
 
   return TRUE;

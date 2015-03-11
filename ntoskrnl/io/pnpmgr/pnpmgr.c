@@ -3977,8 +3977,10 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             PIP_UNIMPLEMENTED();
         case DevicePropertyRemovalPolicy:
             PIP_UNIMPLEMENTED();
+            break;
         case DevicePropertyInstallState:
-            PIP_UNIMPLEMENTED();
+            PIP_REGISTRY_DATA(REGSTR_VAL_CONFIGFLAGS, REG_DWORD);
+            break;
         case DevicePropertyResourceRequirements:
             PIP_UNIMPLEMENTED();
         case DevicePropertyAllocatedResources:

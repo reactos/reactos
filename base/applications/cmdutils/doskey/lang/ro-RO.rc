@@ -6,7 +6,7 @@
  *             2011-10-17  diacritics change, other minor changes
  */
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN

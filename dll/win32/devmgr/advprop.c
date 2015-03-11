@@ -757,6 +757,9 @@ DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
         return;
     }
 
+    if (dwType == REG_SZ)
+        dwSize += sizeof(WCHAR);
+
     lpBuffer = HeapAlloc(GetProcessHeap(),
                          HEAP_ZERO_MEMORY,
                          dwSize);

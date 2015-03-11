@@ -18,6 +18,7 @@ list(APPEND SOURCE
     bootsup.c
     cabinet.c
     chkdsk.c
+    cmdcons.c
     drivesup.c
     filesup.c
     filequeue.c

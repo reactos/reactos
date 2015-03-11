@@ -98,7 +98,7 @@ BEGIN
     IDS_NONE "(nespecificat)"
     IDS_UNKNOWN "(necunoscut)"
     IDS_RESTART "Doriți să reporniți calculatorul acum?"
-    IDS_WHATS_THIS "Ce-i asta?"
+    IDS_WHATS_THIS "Aceasta ce este?"
     IDS_LANGUAGE "Limbă"
     IDS_LAYOUT "Aranjament de tastatură"
     IDS_REM_QUESTION "Doriți eliminarea aranjamentului de tastatură slectat?"

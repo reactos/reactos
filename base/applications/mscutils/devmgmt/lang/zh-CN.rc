@@ -1,4 +1,4 @@
-﻿/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+/* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -23,7 +23,7 @@ BEGIN
         MENUITEM "资源，按类型", IDC_RESBYTYPE, GRAYED
         MENUITEM "资源，按连接", IDC_RESBYCONN, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Show hidden devices", IDC_SHOWHIDDEN
+        MENUITEM "显示隐藏的设备", IDC_SHOWHIDDEN
     END
     POPUP "帮助"
     BEGIN

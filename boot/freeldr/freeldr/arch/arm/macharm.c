@@ -29,8 +29,9 @@ ULONG SecondLevelDcacheFillSize;
 ULONG SecondLevelIcacheSize;
 ULONG SecondLevelIcacheFillSize;
 
-ARC_DISK_SIGNATURE reactos_arc_disk_info;
-ULONG reactos_disk_count;
+extern ULONG reactos_disk_count;
+extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
+extern CHAR reactos_arc_strings[32][256];
 
 ULONG SizeBits[] =
 {
@@ -146,10 +147,13 @@ ArmHwDetect(VOID)
     RamDiskInitialize();
 
     /* Fill out the ARC disk block */
-    reactos_arc_disk_info.Signature = 0xBADAB00F;
-    reactos_arc_disk_info.CheckSum = 0xDEADBABE;
-    reactos_arc_disk_info.ArcName = "ramdisk(0)";
-    reactos_disk_count = 1;
+    reactos_arc_disk_info[reactos_disk_count].Signature = 0xBADAB00F;
+    reactos_arc_disk_info[reactos_disk_count].CheckSum = 0xDEADBABE;
+    strcpy(reactos_arc_strings[reactos_disk_count], "ramdisk(0)");
+    reactos_arc_disk_info[reactos_disk_count].ArcName =
+        reactos_arc_strings[reactos_disk_count];
+    reactos_disk_count++;
+    ASSERT(reactos_disk_count == 1);
 
     /* Return the root node */
     return RootNode;

@@ -26,6 +26,6 @@ STRINGTABLE
   IDS_FALSE "Falskt"
   IDS_YES   "Ja"
   IDS_NO    "Nej"
-  IDS_ON    "På"
+  IDS_ON    "PÃ¥"
   IDS_OFF   "Av"
 }

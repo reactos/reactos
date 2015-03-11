@@ -80,7 +80,7 @@ BEGIN
         MENUITEM "Paleta moderne", IDM_COLORSMODERNPALETTE
         MENUITEM "Paleta te vjetra", IDM_COLORSOLDPALETTE
     END
-    POPUP "&?"
+    POPUP "&Ndihmë"
     BEGIN
         MENUITEM "Ndihmë me temë", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR

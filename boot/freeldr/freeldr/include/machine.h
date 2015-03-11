@@ -127,4 +127,9 @@ VOID MachHwIdle(VOID);
 #define MachHwDetect()                MachVtbl.HwDetect()
 #define MachHwIdle()                MachVtbl.HwIdle()
 
+/* ARC FUNCTIONS **************************************************************/
+
+TIMEINFO* ArcGetTime(VOID);
+ULONG ArcGetRelativeTime(VOID);
+
 /* EOF */

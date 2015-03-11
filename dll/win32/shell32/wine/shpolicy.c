@@ -815,7 +815,7 @@ static POLICYDATA sh32_policy_table[] =
  * NOTES
  *     Exported by ordinal.
  *     This function caches the retrieved values to prevent unnecessary registry access,
- *     if SHInitRestricted() was previously called.
+ *     if SHSettingsChanged() was previously called.
  *
  * REFERENCES
  *     a: MS System Policy Editor.
@@ -872,7 +872,7 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
 }
 
 /*************************************************************************
- * SHInitRestricted          [SHELL32.244]
+ * SHSettingsChanged          [SHELL32.244]
  *
  * Initialise the policy cache to speed up calls to SHRestricted().
  *
@@ -888,7 +888,7 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
  * NOTES
  *  Exported by ordinal. Introduced in Win98.
  */
-BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey)
+BOOL WINAPI SHSettingsChanged(LPCVOID unused, LPCVOID inpRegKey)
 {
 	TRACE("(%p, %p)\n", unused, inpRegKey);
 

@@ -398,16 +398,38 @@ HRESULT WINAPI JoystickAGenericImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface, REF
     return JoystickWGenericImpl_SetProperty(IDirectInputDevice8W_from_impl(This), rguid, ph);
 }
 
+#define DEBUG_TYPE(x) case (x): str = #x; break
 void _dump_DIDEVCAPS(const DIDEVCAPS *lpDIDevCaps)
 {
+    int type = GET_DIDEVICE_TYPE(lpDIDevCaps->dwDevType);
+    const char *str;
     TRACE("dwSize: %d\n", lpDIDevCaps->dwSize);
     TRACE("dwFlags: %08x\n", lpDIDevCaps->dwFlags);
-    TRACE("dwDevType: %08x %s\n", lpDIDevCaps->dwDevType,
-          lpDIDevCaps->dwDevType == DIDEVTYPE_DEVICE ? "DIDEVTYPE_DEVICE" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_MOUSE ? "DIDEVTYPE_MOUSE" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_KEYBOARD ? "DIDEVTYPE_KEYBOARD" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_JOYSTICK ? "DIDEVTYPE_JOYSTICK" :
-          lpDIDevCaps->dwDevType == DIDEVTYPE_HID ? "DIDEVTYPE_HID" : "UNKNOWN");
+    switch(type)
+    {
+        /* Directx <= 7 definitions */
+        DEBUG_TYPE(DIDEVTYPE_DEVICE);
+        DEBUG_TYPE(DIDEVTYPE_MOUSE);
+        DEBUG_TYPE(DIDEVTYPE_KEYBOARD);
+        DEBUG_TYPE(DIDEVTYPE_JOYSTICK);
+        DEBUG_TYPE(DIDEVTYPE_HID);
+        /* Directx >= 8 definitions */
+        DEBUG_TYPE(DI8DEVTYPE_DEVICE);
+        DEBUG_TYPE(DI8DEVTYPE_MOUSE);
+        DEBUG_TYPE(DI8DEVTYPE_KEYBOARD);
+        DEBUG_TYPE(DI8DEVTYPE_JOYSTICK);
+        DEBUG_TYPE(DI8DEVTYPE_GAMEPAD);
+        DEBUG_TYPE(DI8DEVTYPE_DRIVING);
+        DEBUG_TYPE(DI8DEVTYPE_FLIGHT);
+        DEBUG_TYPE(DI8DEVTYPE_1STPERSON);
+        DEBUG_TYPE(DI8DEVTYPE_DEVICECTRL);
+        DEBUG_TYPE(DI8DEVTYPE_SCREENPOINTER);
+        DEBUG_TYPE(DI8DEVTYPE_REMOTE);
+        DEBUG_TYPE(DI8DEVTYPE_SUPPLEMENTAL);
+        default: str = "UNKNOWN";
+    }
+
+    TRACE("dwDevType: %08x %s\n", lpDIDevCaps->dwDevType, str);
     TRACE("dwAxes: %d\n", lpDIDevCaps->dwAxes);
     TRACE("dwButtons: %d\n", lpDIDevCaps->dwButtons);
     TRACE("dwPOVs: %d\n", lpDIDevCaps->dwPOVs);
@@ -419,6 +441,7 @@ void _dump_DIDEVCAPS(const DIDEVCAPS *lpDIDevCaps)
         TRACE("dwFFDriverVersion: %d\n", lpDIDevCaps->dwFFDriverVersion);
     }
 }
+#undef DEBUG_TYPE
 
 HRESULT WINAPI JoystickWGenericImpl_GetCapabilities(LPDIRECTINPUTDEVICE8W iface, LPDIDEVCAPS lpDIDevCaps)
 {

@@ -55,6 +55,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 colori (15 bit)"
     IDS_HIGHCOLOR16 "65.536 colori (16 bit)"
     IDS_HIGHCOLOR24 "16,777,216 colori (24 bit)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu Pixel"
     IDS_FULLSCREEN "Schermo Intero"
     IDS_BROWSESERVER "<Cerca...>"

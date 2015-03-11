@@ -868,7 +868,8 @@ HRESULT CDefView::FillList()
     TRACE("%p\n", this);
 
     /* get the itemlist from the shfolder*/
-    hRes = m_pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS, &pEnumIDList);
+    /* FIXME: make showing hidden files a setting. */
+    hRes = m_pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, &pEnumIDList);
     if (hRes != S_OK)
     {
         if (hRes == S_FALSE)
@@ -1898,14 +1899,14 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     MENUITEMINFOW mii = { 0 };
     HMENU hSubmenu = (HMENU) wParam;
 
-    DbgPrint("OnInitMenuPopup lParam=%d\n", lParam);
+    TRACE("OnInitMenuPopup lParam=%d\n", lParam);
     
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_SUBMENU;
 
     if (!GetMenuItemInfoW(this->m_hMenu, lParam, TRUE, &mii))
     {
-        DbgPrint("OnInitMenuPopup GetMenuItemInfoW failed!\n");
+        TRACE("OnInitMenuPopup GetMenuItemInfoW failed!\n");
         return FALSE;
     }
 
@@ -1913,11 +1914,11 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 
     if (mii.hSubMenu != hSubmenu)
     {
-        DbgPrint("OnInitMenuPopup submenu does not match!!!!\n");
+        TRACE("OnInitMenuPopup submenu does not match!!!!\n");
         return FALSE;
     }
 
-    DbgPrint("OnInitMenuPopup id=%d\n", menuItemId);
+    TRACE("OnInitMenuPopup id=%d\n", menuItemId);
 
     switch (menuItemId)
     {

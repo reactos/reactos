@@ -16,12 +16,15 @@
 #include <winbase.h>
 #include <winsvc.h>
 #include <winreg.h>
+#include <winuser.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <services/services.h>
 #include <svcctl_s.h>
+
+#include "resource.h"
 
 typedef struct _SERVICE_GROUP
 {

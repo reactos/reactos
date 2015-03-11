@@ -43,17 +43,6 @@ inline void FillSolidRect(HDC dc, const RECT *bounds, COLORREF clr)
     ::ExtTextOut(dc, 0, 0, ETO_OPAQUE, bounds, NULL, 0, NULL);
 }
 
-long GetScreenDepth()
-{
-    HDC                                     tempDC;
-    long                                    depth;
-
-    tempDC = GetDC(NULL);
-    depth = GetDeviceCaps(tempDC, BITSPIXEL) * GetDeviceCaps(tempDC, PLANES);
-    ReleaseDC(NULL, tempDC);
-    return depth;
-}
-
 static const int                            gSmallImageSize = 22;
 static const int                            gMediumImageSize = 26;
 static const int                            gLargeImageSize = 38;
@@ -100,7 +89,7 @@ void CBrandBand::SelectImage()
     BITMAP                                  bitmapInfo;
     int                                     resourceID;
 
-    screenDepth = GetScreenDepth();
+    screenDepth = SHGetCurColorRes();
     GetClientRect(&clientRect);
     clientWidth = clientRect.right - clientRect.left;
     clientHeight = clientRect.bottom - clientRect.top;

@@ -100,7 +100,7 @@ UpdateAppsDB(VOID)
     if (!DeleteCurrentAppsDB())
         return FALSE;
 
-    DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
+    DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
     if (!GetStorageDirectory(szPath, sizeof(szPath) / sizeof(szPath[0])))
         return FALSE;
@@ -168,7 +168,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     if (hFind == INVALID_HANDLE_VALUE)
     {
         if (GetFileAttributesW(szCabPath) == INVALID_FILE_ATTRIBUTES)
-            DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
+            DownloadApplicationsDB(APPLICATION_DATABASE_URL);
 
         ExtractFilesFromCab(szCabPath, szAppsPath);
         hFind = FindFirstFileW(szPath, &FindFileData);

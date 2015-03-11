@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2007 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2005-2007 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,16 +58,16 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Image */
     {
-        MENUITEM "Åpne k&obling",                  IDM_FOLLOWLINKC
-        MENUITEM "Åpne kobling i &nytt vindu",     IDM_FOLLOWLINKN
-        MENUITEM "L&agre mål som...",              IDM_SAVETARGET
-        MENUITEM "Skriv &ut mål",                  IDM_PRINTTARGET
+        MENUITEM "Ã…pne k&obling",                  IDM_FOLLOWLINKC
+        MENUITEM "Ã…pne kobling i &nytt vindu",     IDM_FOLLOWLINKN
+        MENUITEM "L&agre mÃ¥l som...",              IDM_SAVETARGET
+        MENUITEM "Skriv &ut mÃ¥l",                  IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Vis bilde",                     IDM_SHOWPICTURE
         MENUITEM "Lagre bilde &som...",            IDM_SAVEPICTURE
         MENUITEM "Send bilde via &e-post...",      IDM_MP_EMAILPICTURE
         MENUITEM "Skr&iv ut bilde...",             IDM_MP_PRINTPICTURE
-        MENUITEM "&Gå til mine bilder",            IDM_MP_MYPICS
+        MENUITEM "&GÃ¥ til mine bilder",            IDM_MP_MYPICS
         MENUITEM "Bruk som bak&grunn",             IDM_SETWALLPAPER
         MENUITEM "Bruk som skrivebor&dsobjekt...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -119,10 +119,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Anchor */
     {
-        MENUITEM "&Åpne",                     IDM_FOLLOWLINKC
-        MENUITEM "Åpne i &nytt vindu",        IDM_FOLLOWLINKN
-        MENUITEM "L&agre mål som...",         IDM_SAVETARGET
-        MENUITEM "&Skriv ut mål",             IDM_PRINTTARGET
+        MENUITEM "&Ã…pne",                     IDM_FOLLOWLINKC
+        MENUITEM "Ã…pne i &nytt vindu",        IDM_FOLLOWLINKN
+        MENUITEM "L&agre mÃ¥l som...",         IDM_SAVETARGET
+        MENUITEM "&Skriv ut mÃ¥l",             IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "Klipp ut",                  IDM_CUT
         MENUITEM "&Kopier",                   IDM_COPY
@@ -141,10 +141,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* DYNSRC Image */
     {
-        MENUITEM "Åpne k&obling",                   IDM_FOLLOWLINKC
-        MENUITEM "Åpne kobling i &nytt vindu",      IDM_FOLLOWLINKN
-        MENUITEM "L&agre mål som...",               IDM_SAVETARGET
-        MENUITEM "Skriv &ut mål",                   IDM_PRINTTARGET
+        MENUITEM "Ã…pne k&obling",                   IDM_FOLLOWLINKC
+        MENUITEM "Ã…pne kobling i &nytt vindu",      IDM_FOLLOWLINKN
+        MENUITEM "L&agre mÃ¥l som...",               IDM_SAVETARGET
+        MENUITEM "Skriv &ut mÃ¥l",                   IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Vis bilde",                      IDM_SHOWPICTURE
         MENUITEM "Lagre video &som...",             IDM_SAVEPICTURE
@@ -165,10 +165,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* ART Image */
     {
-        MENUITEM "&Åpne kobling",                 IDM_FOLLOWLINKC
-        MENUITEM "Åpne kobling i &nytt vindu",    IDM_FOLLOWLINKN
-        MENUITEM "L&agre mål som...",             IDM_SAVETARGET
-        MENUITEM "Skriv &ut mål",                 IDM_PRINTTARGET
+        MENUITEM "&Ã…pne kobling",                 IDM_FOLLOWLINKC
+        MENUITEM "Ã…pne kobling i &nytt vindu",    IDM_FOLLOWLINKN
+        MENUITEM "L&agre mÃ¥l som...",             IDM_SAVETARGET
+        MENUITEM "Skriv &ut mÃ¥l",                 IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Vis bilde",                    IDM_SHOWPICTURE
         MENUITEM "Lagre bilde &som...",           IDM_SAVEPICTURE
@@ -194,15 +194,15 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Sporingsmerkelapper",      IDM_TRACETAGS
         MENUITEM "Ressursfeil",              IDM_RESOURCEFAILURES
         MENUITEM "Dump sporingsinformasjon", IDM_DUMPTRACKINGINFO
-        MENUITEM "Feilsøkingspause",         IDM_DEBUGBREAK
-        MENUITEM "Feilsøkingsvisning",       IDM_DEBUGVIEW
-        MENUITEM "Dump «Tree»",              IDM_DUMPTREE
-        MENUITEM "Dump «Lines»",             IDM_DUMPLINES
-        MENUITEM "Dump «DisplayTree»",       IDM_DUMPDISPLAYTREE
-        MENUITEM "Dump «FormatCaches»",      IDM_DUMPFORMATCACHES
-        MENUITEM "Dump «LayoutRects»",       IDM_DUMPLAYOUTRECTS
-        MENUITEM "Minneovervåker",           IDM_MEMORYMONITOR
-        MENUITEM "Ytelsesmålere",            IDM_PERFORMANCEMETERS
+        MENUITEM "FeilsÃ¸kingspause",         IDM_DEBUGBREAK
+        MENUITEM "FeilsÃ¸kingsvisning",       IDM_DEBUGVIEW
+        MENUITEM "Dump Â«TreeÂ»",              IDM_DUMPTREE
+        MENUITEM "Dump Â«LinesÂ»",             IDM_DUMPLINES
+        MENUITEM "Dump Â«DisplayTreeÂ»",       IDM_DUMPDISPLAYTREE
+        MENUITEM "Dump Â«FormatCachesÂ»",      IDM_DUMPFORMATCACHES
+        MENUITEM "Dump Â«LayoutRectsÂ»",       IDM_DUMPLAYOUTRECTS
+        MENUITEM "MinneovervÃ¥ker",           IDM_MEMORYMONITOR
+        MENUITEM "YtelsesmÃ¥lere",            IDM_PERFORMANCEMETERS
         MENUITEM "Lagre HTML",               IDM_SAVEHTML
         MENUITEM SEPARATOR
         MENUITEM "&Bla-visning",             IDM_BROWSEMODE
@@ -228,12 +228,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Rull her",         IDM_SCROLL_HERE
         MENUITEM SEPARATOR
         MENUITEM "Venstre kant",     IDM_SCROLL_LEFTEDGE
-        MENUITEM "Høyre kant",       IDM_SCROLL_RIGHTEDGE
+        MENUITEM "HÃ¸yre kant",       IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
         MENUITEM "Side venstre",     IDM_SCROLL_PAGELEFT
-        MENUITEM "Side høyre",       IDM_SCROLL_PAGERIGHT
+        MENUITEM "Side hÃ¸yre",       IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
         MENUITEM "Rull til venstre", IDM_SCROLL_LEFT
-        MENUITEM "Rull til høyre",   IDM_SCROLL_RIGHT
+        MENUITEM "Rull til hÃ¸yre",   IDM_SCROLL_RIGHT
     }
 }

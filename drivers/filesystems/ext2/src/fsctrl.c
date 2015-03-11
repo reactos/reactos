@@ -788,7 +788,7 @@ BOOLEAN Ext2PerformVerifyDiskRead(
 
     if (Status == STATUS_NO_MEDIA_IN_DEVICE) 
 	{
-        DbgPrint("Ext2PerformVerifyDiskRead NO MEDIA in DEVICE!!! BS!!\n");
+        DebugTrace(DEBUG_TRACE_MOUNT, "NO MEDIA in DEVICE!", 0);
         return FALSE;
     }
 

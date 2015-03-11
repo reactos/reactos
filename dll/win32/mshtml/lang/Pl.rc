@@ -1,7 +1,7 @@
 /*
  * Copyright 2005-2006 Jacek Caban
  * Copyright 2008 Mikolaj Zalewski
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,10 +33,10 @@ STRINGTABLE
 
 IDD_HYPERLINK DIALOG 0, 0, 255, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hiper≥πcze"
+CAPTION "Hiper≈ÇƒÖcze"
 FONT 8, "MS Shell Dlg"
 {
-    GROUPBOX "W≥asnoúci hiper≥πcza", -1, 5, 5, 190, 55
+    GROUPBOX "W≈Çasno≈õci hiper≈ÇƒÖcza", -1, 5, 5, 190, 55
     LTEXT "&Typ:", -1, 10, 22, 24, 10
     COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
     LTEXT "&URL:", -1, 10, 42, 24, 10

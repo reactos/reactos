@@ -82,7 +82,7 @@ public:
         return -1;
     }
 
-    VOID AddButton(IN CONST NOTIFYICONDATA *iconData)
+    BOOL AddButton(IN CONST NOTIFYICONDATA *iconData)
     {
         TBBUTTON tbBtn;
         NOTIFYICONDATA * notifyItem;
@@ -91,8 +91,7 @@ public:
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index >= 0)
         {
-            UpdateButton(iconData);
-            return;
+            return UpdateButton(iconData);
         }
 
         notifyItem = new NOTIFYICONDATA();
@@ -132,16 +131,17 @@ public:
                 tbBtn.fsState |= TBSTATE_HIDDEN;
                 m_VisibleButtonCount--;
             }
-
         }
 
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
 
         CToolbar::AddButton(&tbBtn);
         SetButtonSize(ICON_SIZE, ICON_SIZE);
+
+        return TRUE;
     }
 
-    VOID UpdateButton(IN CONST NOTIFYICONDATA *iconData)
+    BOOL UpdateButton(IN CONST NOTIFYICONDATA *iconData)
     {
         NOTIFYICONDATA * notifyItem;
         TBBUTTONINFO tbbi = { 0 };
@@ -149,8 +149,7 @@ public:
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
         {
-            AddButton(iconData);
-            return;
+            return AddButton(iconData);
         }
 
         tbbi.cbSize = sizeof(tbbi);
@@ -198,18 +197,28 @@ public:
         /* TODO: support NIF_INFO, NIF_GUID, NIF_REALTIME, NIF_SHOWTIP */
 
         SetButtonInfo(index, &tbbi);
+
+        return TRUE;
     }
 
-    VOID RemoveButton(IN CONST NOTIFYICONDATA *iconData)
+    BOOL RemoveButton(IN CONST NOTIFYICONDATA *iconData)
     {
         NOTIFYICONDATA * notifyItem;
 
         int index = FindItemByIconData(iconData, &notifyItem);
         if (index < 0)
-            return;
+            return FALSE;
 
         DeleteButton(index);
+
+        if (!(notifyItem->dwState & NIS_HIDDEN))
+        {
+            m_VisibleButtonCount--;
+        }
+
         delete notifyItem;
+
+        return TRUE;
     }
 
     VOID GetTooltipText(int index, LPTSTR szTip, DWORD cchTip)
@@ -408,7 +417,7 @@ public:
         return TRUE;
     }
 
-    LRESULT NotifyMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    BOOL NotifyIconCmd(WPARAM wParam, LPARAM lParam)
     {
         PCOPYDATASTRUCT cpData = (PCOPYDATASTRUCT) lParam;
         if (cpData->dwData == 1)
@@ -417,6 +426,7 @@ public:
             NOTIFYICONDATA *iconData;
             HWND parentHWND;
             RECT windowRect;
+            BOOL ret = FALSE;
             parentHWND = GetParent();
             parentHWND = ::GetParent(parentHWND);
             ::GetClientRect(parentHWND, &windowRect);
@@ -424,32 +434,30 @@ public:
             data = (PSYS_PAGER_COPY_DATA) cpData->lpData;
             iconData = &data->nicon_data;
 
+            TRACE("NotifyIconCmd received. Code=%d\n", data->notify_code);
             switch (data->notify_code)
             {
             case NIM_ADD:
-            {
-                Toolbar.AddButton(iconData);
+                ret = Toolbar.AddButton(iconData);
                 break;
-            }
             case NIM_MODIFY:
-            {
-                Toolbar.UpdateButton(iconData);
+                ret = Toolbar.UpdateButton(iconData);
                 break;
-            }
             case NIM_DELETE:
-            {
-                Toolbar.RemoveButton(iconData);
+                ret = Toolbar.RemoveButton(iconData);
                 break;
-            }
             default:
-                TRACE("NotifyMessage received with unknown code %d.\n", data->notify_code);
-                break;
+                TRACE("NotifyIconCmd received with unknown code %d.\n", data->notify_code);
+                return FALSE;
             }
+
             SendMessage(parentHWND,
                 WM_SIZE,
                 0,
                 MAKELONG(windowRect.right - windowRect.left,
-                windowRect.bottom - windowRect.top));
+                         windowRect.bottom - windowRect.top));
+
+            return ret;
         }
 
         return TRUE;
@@ -533,12 +541,19 @@ public:
         return Ret;
     }
 
+    LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        bHandled = TRUE;
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szSysPagerWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu)
         NOTIFY_CODE_HANDLER(TBN_GETINFOTIPW, OnGetInfoTip)
         NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()
@@ -1442,11 +1457,11 @@ public:
         return DrawBackground(hdc);
     }
 
-    LRESULT NotifyMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    BOOL NotifyIconCmd(WPARAM wParam, LPARAM lParam)
     {
         if (m_pager)
         {
-            m_pager->NotifyMsg(uMsg, wParam, lParam, bHandled);
+            return m_pager->NotifyIconCmd(wParam, lParam);
         }
 
         return TRUE;
@@ -1529,6 +1544,12 @@ public:
         return FALSE;
     }
 
+    LRESULT OnCtxMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        bHandled = TRUE;
+        return 0;
+    }
+
     DECLARE_WND_CLASS_EX(szTrayNotifyWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
@@ -1539,6 +1560,7 @@ public:
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnCtxMenu) // FIXME: This handler is not necessary in Windows
         MESSAGE_HANDLER(TNWM_GETMINIMUMSIZE, OnGetMinimumSize)
         MESSAGE_HANDLER(TNWM_UPDATETIME, OnUpdateTime)
         MESSAGE_HANDLER(TNWM_SHOWCLOCK, OnShowClock)
@@ -1561,25 +1583,23 @@ public:
     }
 };
 
-static CTrayNotifyWnd * g_Instance;
-
-HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock)
+HWND CreateTrayNotifyWnd(IN OUT ITrayWindow *Tray, BOOL bHideClock, CTrayNotifyWnd** ppinstance)
 {
+    CTrayNotifyWnd * pTrayNotify = new CTrayNotifyWnd();
     // TODO: Destroy after the window is destroyed
-    g_Instance = new CTrayNotifyWnd();
+    *ppinstance = pTrayNotify;
 
-    return g_Instance->_Init(Tray, bHideClock);
-}
-
-VOID
-TrayNotify_NotifyMsg(WPARAM wParam, LPARAM lParam)
-{
-    BOOL bDummy;
-    g_Instance->NotifyMsg(0, wParam, lParam, bDummy);
+    return pTrayNotify->_Init(Tray, bHideClock);
 }
 
 BOOL
-TrayNotify_GetClockRect(OUT PRECT rcClock)
+TrayNotify_NotifyIconCmd(CTrayNotifyWnd* pTrayNotify, WPARAM wParam, LPARAM lParam)
 {
-    return g_Instance->GetClockRect(rcClock);
+    return pTrayNotify->NotifyIconCmd(wParam, lParam);
+}
+
+BOOL
+TrayNotify_GetClockRect(CTrayNotifyWnd* pTrayNotify, OUT PRECT rcClock)
+{
+    return pTrayNotify->GetClockRect(rcClock);
 }

@@ -104,8 +104,8 @@ SmpSaveRegistryValue(IN PLIST_ENTRY ListAddress,
         /* A new entry -- allocate it */
         RegEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                    SmBaseTag,
-                                   NameString.MaximumLength +
-                                   sizeof(SMP_REGISTRY_VALUE));
+                                   sizeof(SMP_REGISTRY_VALUE) +
+                                   NameString.MaximumLength);
         if (!RegEntry) return STATUS_NO_MEMORY;
 
         /* Initialize the list and set all values to NULL */
@@ -355,15 +355,15 @@ SmpConfigureFileRenames(IN PWSTR ValueName,
                         IN PVOID EntryContext)
 {
     NTSTATUS Status;
-    static PWCHAR Canary;
+    static PWCHAR Canary = NULL;
 
     /* Check if this is the second call */
     if (Canary)
     {
         /* Save the data into the list */
-        DPRINT1("Renamed file: %S-%S\n", Canary, ValueData);
+        DPRINT1("Renamed file: '%S' - '%S'\n", Canary, ValueData);
         Status = SmpSaveRegistryValue(EntryContext, Canary, ValueData, FALSE);
-        Canary = 0;
+        Canary = NULL;
     }
     else
     {
@@ -1994,7 +1994,7 @@ SmpProcessFileRenames(VOID)
         /* Get this entry */
         NextEntry = RemoveHeadList(Head);
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        DPRINT1("Processing PFRO: %wZ/%wZ\n", &RegEntry->Value, &RegEntry->Name);
+        DPRINT1("Processing PFRO: '%wZ' / '%wZ'\n", &RegEntry->Value, &RegEntry->Name);
 
         /* Skip past the '@' marker */
         if (!(RegEntry->Value.Length) && (*RegEntry->Name.Buffer == L'@'))
@@ -2077,7 +2077,7 @@ SmpProcessFileRenames(VOID)
                 (Buffer->ReplaceIfExists)))
             {
                 /* Open the file for write attribute access this time... */
-                DPRINT1("\nSMSS: %wZ => %wZ failed - Status == %x, Possible readonly target\n",
+                DPRINT1("\nSMSS: '%wZ' => '%wZ' failed - Status == %x, Possible readonly target\n",
                         &RegEntry->Name,
                         &RegEntry->Value,
                         STATUS_OBJECT_NAME_COLLISION);
@@ -2150,18 +2150,18 @@ Quickie:
         if (!NT_SUCCESS(Status))
         {
             /* We totally failed */
-            DPRINT1("SMSS: %wZ => %wZ failed - Status == %x\n",
+            DPRINT1("SMSS: '%wZ' => '%wZ' failed - Status == %x\n",
                     &RegEntry->Name, &RegEntry->Value, Status);
         }
         else if (RegEntry->Value.Length)
         {
             /* We succeed with a rename */
-            DPRINT1("SMSS: %wZ (renamed to) %wZ\n", &RegEntry->Name, &RegEntry->Value);
+            DPRINT1("SMSS: '%wZ' (renamed to) '%wZ'\n", &RegEntry->Name, &RegEntry->Value);
         }
         else
         {
             /* We suceeded with a delete */
-            DPRINT1("SMSS: %wZ (deleted)\n", &RegEntry->Name);
+            DPRINT1("SMSS: '%wZ' (deleted)\n", &RegEntry->Name);
         }
 
         /* Now free this entry and keep going */

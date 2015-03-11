@@ -468,24 +468,6 @@ VOID WINAPI ShowStartGlass(DWORD unknown)
 }
 
 /*
- * @unimplemented
- */
-BOOL WINAPI DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_OF_SERVICE pqosPrev)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
  * @implemented
  */
 DWORD WINAPI GetMenuIndex(HMENU hMenu, HMENU hSubMenu)
@@ -512,9 +494,10 @@ BuildReasonArray(PVOID Pointer)
 
 VOID
 WINAPI
-CreateSystemThreads(DWORD dwUnknown)
+CreateSystemThreads(DWORD Unused)
 {
-    NtUserxCreateSystemThreads(dwUnknown);
+    /* Thread call for remote processes (non-CSRSS) only */
+    NtUserxCreateSystemThreads(TRUE);
     ExitThread(0);
 }
 

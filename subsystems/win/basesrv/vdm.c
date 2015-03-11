@@ -228,11 +228,14 @@ VOID NTAPI BaseSrvFreeVDMInfo(PVDM_COMMAND_INFO CommandInfo)
     RtlFreeHeap(BaseSrvHeap, 0, CommandInfo);
 }
 
-VOID NTAPI BaseSrvCleanupVdmRecords(ULONG ProcessId)
+VOID
+NTAPI
+BaseSrvCleanupVDMResources(IN PCSR_PROCESS CsrProcess)
 {
-    PLIST_ENTRY i;
+    ULONG ProcessId = HandleToUlong(CsrProcess->ClientId.UniqueProcess);
     PVDM_CONSOLE_RECORD ConsoleRecord = NULL;
     PVDM_DOS_RECORD DosRecord;
+    PLIST_ENTRY i;
 
     /* Enter the critical section */
     RtlEnterCriticalSection(&DosCriticalSection);
@@ -364,7 +367,7 @@ BOOLEAN NTAPI BaseSrvCopyCommand(PBASE_CHECK_VDM CheckVdmRequest, PVDM_DOS_RECOR
     RtlMoveMemory(&CommandInfo->StartupInfo,
                   CheckVdmRequest->StartupInfo,
                   sizeof(STARTUPINFOA));
- 
+
     /* Allocate memory for the desktop */
     if (CheckVdmRequest->DesktopLen != 0)
     {
@@ -1000,7 +1003,7 @@ CSR_API(BaseSrvGetNextVDMCommand)
             DosRecord->ExitCode = GetNextVdmCommandRequest->ExitCode;
 
             /* Update the VDM state */
-            DosRecord->State = VDM_READY; 
+            DosRecord->State = VDM_READY;
 
             /* Notify all waiting threads that the task is finished */
             NtSetEvent(DosRecord->ServerEvent, NULL);

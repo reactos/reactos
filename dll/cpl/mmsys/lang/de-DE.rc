@@ -2,40 +2,40 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Lautst‰rke"
+CAPTION "Lautst√§rke"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 32, 32
     LTEXT "", IDC_DEVICE_NAME, 40, 10, 194, 36
-    GROUPBOX "Ger‰telautst‰rke", -1, 7, 30, 230, 100
+    GROUPBOX "Ger√§telautst√§rke", -1, 7, 30, 230, 100
     CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
     CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
     LTEXT "Niedrig", -1, 62, 66, 30, 17
     LTEXT "Hoch", -1, 195, 66, 30, 17
     CHECKBOX "Stu&mm schalten", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    CHECKBOX "Lautst‰rkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
+    CHECKBOX "Lautst√§rkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "Er&weitert", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "Lautsprechereinstellungen", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Verwenden Sie die unteren Einstellungen um die Lautst‰rke einzelner Ger‰te und andere Einstellungen zu ver‰ndern.", -1, 70, 155, 150, 36
-    PUSHBUTTON "&Lautst‰rke...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
+    LTEXT "Verwenden Sie die unteren Einstellungen um die Lautst√§rke einzelner Ger√§te und andere Einstellungen zu ver√§ndern.", -1, 70, 155, 150, 36
+    PUSHBUTTON "&Lautst√§rke...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "E&rweitert...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Kl‰nge"
+CAPTION "Kl√§nge"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ein Klangschema ist eine Sammlung von Kl‰ngen, die bestimmten Programmereignissen in ReactOS zugeordnet sind. Sie kˆnnen ein existierendes Schema ausw‰hlen oder ein modifiziertes speichern.", -1, 8, 7, 230, 40
+    LTEXT "Ein Klangschema ist eine Sammlung von Kl√§ngen, die bestimmten Programmereignissen in ReactOS zugeordnet sind. Sie k√∂nnen ein existierendes Schema ausw√§hlen oder ein modifiziertes speichern.", -1, 8, 7, 230, 40
     LTEXT "Klang&schema:", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sp&eichern unter...", IDC_SAVEAS_BTN, 120, 70, 65, 15
-    PUSHBUTTON "&Lˆschen", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Um Kl‰nge zu ‰ndern, klicken Sie auf ein Programmereignis in der folgenden Liste und w‰hlen Sie einen Klang aus. Sie kˆnnen ƒnderungen als neue Klangschemata speichern.", -1, 8, 90, 230, 40
+    PUSHBUTTON "&L√∂schen", IDC_DELETE_BTN, 188, 70, 50, 15
+    LTEXT "Um Kl√§nge zu √§ndern, klicken Sie auf ein Programmereignis in der folgenden Liste und w√§hlen Sie einen Klang aus. Sie k√∂nnen √Ñnderungen als neue Klangschemata speichern.", -1, 8, 90, 230, 40
     LTEXT "&Programmereignisse:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Kl‰nge:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
+    LTEXT "&Kl√§nge:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 135, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 148, 205, 15, 15, WS_DISABLED | BS_ICON
     PUSHBUTTON "&Durchsuchen...", IDC_BROWSE_SOUND, 168, 205, 70, 15, WS_DISABLED
@@ -48,23 +48,23 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Soundwiedergabe", -1, 7, 7, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 20, 32, 32
-    LTEXT "&Standardger‰t:", -1, 50, 20, 80, 17
+    LTEXT "&Standardger√§t:", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Lautst‰rke...", IDC_VOLUME1_BTN, 85, 47, 70, 15
+    PUSHBUTTON "&Lautst√§rke...", IDC_VOLUME1_BTN, 85, 47, 70, 15
     PUSHBUTTON "&Erweitert...", IDC_ADV2_BTN, 160, 47, 70, 15
     GROUPBOX "Tonaufnahme", -1, 7, 75, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
-    LTEXT "S&tandardger‰t:", -1, 50, 88, 80, 17
+    LTEXT "S&tandardger√§t:", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "L&autst‰rke...", IDC_VOLUME2_BTN, 85, 115, 70, 15
+    PUSHBUTTON "L&autst√§rke...", IDC_VOLUME2_BTN, 85, 115, 70, 15
     PUSHBUTTON "E&rweitert...", IDC_ADV1_BTN, 160, 115, 70, 15
     GROUPBOX "MIDI-Wiedergabe", -1, 7, 145, 230, 60
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
-    LTEXT "St&andardger‰t:", -1, 50, 158, 80, 17
+    LTEXT "St&andardger√§t:", -1, 50, 158, 80, 17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "La&utst‰rke...", IDC_VOLUME3_BTN, 85, 185, 70, 15
-    PUSHBUTTON "‹&ber...", IDC_ADV3_BTN, 160, 185, 70, 15
-    CHECKBOX "&Nur Standardger‰te verwenden", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    PUSHBUTTON "La&utst√§rke...", IDC_VOLUME3_BTN, 85, 185, 70, 15
+    PUSHBUTTON "√ú&ber...", IDC_ADV3_BTN, 160, 185, 70, 15
+    CHECKBOX "&Nur Standardger√§te verwenden", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
@@ -72,18 +72,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Stimme"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Diese Einstellungen legen die Lautst‰rke und die erweiterten Einstellungen f¸r Stimmenwiedergabe und -aufnahme des gew‰hlten Ger‰tes fest.", -1, 8, 7, 230, 40
+    LTEXT "Diese Einstellungen legen die Lautst√§rke und die erweiterten Einstellungen f√ºr Stimmenwiedergabe und -aufnahme des gew√§hlten Ger√§tes fest.", -1, 8, 7, 230, 40
     GROUPBOX "Stimmenwiedergabe", -1, 7, 37, 230, 60
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
-    LTEXT "&Standardger‰t:", -1, 50, 50, 80, 17
+    LTEXT "&Standardger√§t:", -1, 50, 50, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Lautst‰rke..", IDC_VOLUME4_BTN, 85, 77, 70, 15
+    PUSHBUTTON "&Lautst√§rke..", IDC_VOLUME4_BTN, 85, 77, 70, 15
     PUSHBUTTON "&Erweitert...", IDC_ADV4_BTN, 160, 77, 70, 15
     GROUPBOX "Stimmenaufnahme", -1, 7, 105, 230, 60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
-    LTEXT "S&tandardger‰t:", -1, 50, 118, 80, 17
+    LTEXT "S&tandardger√§t:", -1, 50, 118, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "L&autst‰rke..", IDC_VOLUME5_BTN, 85, 145, 70, 15
+    PUSHBUTTON "L&autst√§rke..", IDC_VOLUME5_BTN, 85, 145, 70, 15
     PUSHBUTTON "E&rweitert...", IDC_ADV5_BTN, 160, 145, 70, 15
     PUSHBUTTON "&Hardware testen...", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
@@ -112,7 +112,7 @@ CAPTION "Lautsprecher"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "W‰hlen Sie die Lautsprecherkonfiguration, die der an Ihrem Computer am ehesten entspricht.", -1, 36, 8, 215, 27
+    LTEXT "W√§hlen Sie die Lautsprecherkonfiguration, die der an Ihrem Computer am ehesten entspricht.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
     LTEXT "Lauts&precherkonfiguration:", 8502, 53, 169, 90, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -123,20 +123,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Leistung"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Diese Einstellungen bestimmen, wie ReactOS Audiodaten wiedergibt. Sie kˆnnen auch bei Problemen in der Audiowiedergabe helfen.", 8492, 34, 7, 218, 23
+    LTEXT "Diese Einstellungen bestimmen, wie ReactOS Audiodaten wiedergibt. Sie k√∂nnen auch bei Problemen in der Audiowiedergabe helfen.", 8492, 34, 7, 218, 23
     GROUPBOX "Audiowiedergabe", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Hardwarebeschleunigung:", 8495, 13, 56, 111, 14
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 54, 62, 18
-    LTEXT "&Konvertierungsqualtit‰t:", 8496, 13, 123, 103, 14
+    LTEXT "&Konvertierungsqualtit√§t:", 8496, 13, 123, 103, 14
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 121, 62, 18
     PUSHBUTTON "Standard &wiederherstellen", 5400, 7, 191, 110, 14
     LTEXT "Keine", 8497, 128, 56, 21, 10
     LTEXT "Voll", 8498, 214, 56, 21, 9
     LTEXT "Gut", 8499, 128, 123, 21, 10
     LTEXT "Beste", 8500, 214, 123, 23, 9
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f¸r das Capture-Ger‰t", 5399, 13, 145, 227, 21
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f¸r das Render-Ger‰t", 5398, 13, 78, 227, 22
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f√ºr das Capture-Ger√§t", 5399, 13, 145, 227, 21
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f√ºr das Render-Ger√§t", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
@@ -144,20 +144,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Leistung"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Diese Einstellungen bestimmen, wie ReactOS Audiodaten aufnimmt. Sie kˆnnen auch bei Problemen in der Audiowiedergabe helfen.", 8492, 34, 7, 217, 20
+    LTEXT "Diese Einstellungen bestimmen, wie ReactOS Audiodaten aufnimmt. Sie k√∂nnen auch bei Problemen in der Audiowiedergabe helfen.", 8492, 34, 7, 217, 20
     GROUPBOX "Aufnahme", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Hardwarebeschleunigung:", 8495, 13, 46, 103, 17
     CONTROL "Slider1", 5395, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000401, 150, 43, 62, 18
-    LTEXT "&Konvertierungsqualtit‰t:", 8496, 13, 103, 103, 17
+    LTEXT "&Konvertierungsqualtit√§t:", 8496, 13, 103, 103, 17
     CONTROL "Slider1", 5396, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 150, 101, 62, 18
     PUSHBUTTON "Standard &wiederherstellen", 5400, 9, 158, 110, 14
     LTEXT "Keine", 8497, 125, 46, 24, 10
     LTEXT "Voll", 8498, 217, 46, 19, 9
     LTEXT "Gut", 8499, 125, 103, 24, 10
     LTEXT "Beste", 8500, 217, 103, 19, 9
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f¸r das Capture-Ger‰t", 5399, 13, 125, 222, 21
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f¸r das Render-Ger‰t", 5398, 13, 68, 218, 24
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f√ºr das Capture-Ger√§t", 5399, 13, 125, 222, 21
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung f√ºr das Render-Ger√§t", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOG 0, 0, 227, 206
@@ -170,8 +170,8 @@ BEGIN
     LTEXT "Dieser Computer kann keine Audiodaten abspielen, da der ReactOS-Audiodienst nicht aktiviert ist.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&ReactOS Audio aktivieren", 10253, 60, 68, 150, 9
     LTEXT "Informationen", 10246, 58, 87, 150, 11
-    LTEXT "1. Sie m¸ssen Administrator sein, um diesen Dienst aktivieren zu kˆnnen. Wenn Sie nicht als Administrator angemeldet sind, werden Sie nach dem Administaratornamen und Passwort gefragt.", 10247, 60, 100, 150, 40
-    LTEXT "2. Nach Aktivierung des ReactOS-Audiodienstes m¸ssen Sie den Computer neu starten.", 10248, 60, 140, 150, 40
+    LTEXT "1. Sie m√ºssen Administrator sein, um diesen Dienst aktivieren zu k√∂nnen. Wenn Sie nicht als Administrator angemeldet sind, werden Sie nach dem Administaratornamen und Passwort gefragt.", 10247, 60, 100, 150, 40
+    LTEXT "2. Nach Aktivierung des ReactOS-Audiodienstes m√ºssen Sie den Computer neu starten.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
@@ -212,7 +212,7 @@ BEGIN
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
     LTEXT "Hoch", 9502, 202, 164, 17, 8
-    AUTOCHECKBOX "&Alle Regler auf einmal bet‰tigen", 9504, 5, 185, 216, 9
+    AUTOCHECKBOX "&Alle Regler auf einmal bet√§tigen", 9504, 5, 185, 216, 9
     PUSHBUTTON "Standard &wiederherstellen", 9505, 110, 199, 110, 14
 END
 
@@ -225,33 +225,33 @@ BEGIN
     ICON 4394, 10257, 25, 25, 20, 20
     LTEXT "Der ReactOS-Audiodienst ist nun aktiviert. Dennoch kann es sein, dass die Audiowiedergabe nicht richtig funktioniert, bis Sie ReactOS neu gestartet haben. Wenn Sie jetzt neu starten wollen, speichern Sie Ihre Arbeit und beenden Sie alle Programme.", 10261, 60, 25, 150, 50
     LTEXT "Um ReactOS neu zu starten, klicken Sie auf OK.", 10262, 60, 75, 150, 20
-    LTEXT "Wenn Sie abbrechen, m¸ssen Sie sp‰ter neu starten, um sichergehen zu kˆnnen, dass die Audiowiedergabe richtig funktioniert.", 10263, 60, 100, 150, 40
+    LTEXT "Wenn Sie abbrechen, m√ºssen Sie sp√§ter neu starten, um sichergehen zu k√∂nnen, dass die Audiowiedergabe richtig funktioniert.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Kl‰nge und Audioger‰te"
-    IDS_CPLDESCRIPTION "ƒndert das Klangschema Ihres Computers oder konfiguriert die Einstellungen f¸r Ihre Lautsprecher und Aufnahmeger‰te."
+    IDS_CPLNAME "Kl√§nge und Audioger√§te"
+    IDS_CPLDESCRIPTION "√Ñndert das Klangschema Ihres Computers oder konfiguriert die Einstellungen f√ºr Ihre Lautsprecher und Aufnahmeger√§te."
     IDS_NO_SOUND "(Kein)"
-    IDS_NO_DEVICES "Keine Ger‰te"
+    IDS_NO_DEVICES "Keine Ger√§te"
     5825 "Programmfehler"
-    5826 "Programm schlieﬂen"
+    5826 "Programm schlie√üen"
     5827 "Alarm bei kritischem Batteriestand"
-    5828 "Ger‰teanschluss"
-    5829 "Ger‰tetrennung"
-    5830 "Fehler bei Ger‰teverbindung"
+    5828 "Ger√§teanschluss"
+    5829 "Ger√§tetrennung"
+    5830 "Fehler bei Ger√§teverbindung"
     5831 "Papierkorb leeren"
     5832 "Alarm bei niedrigem Batteriestand"
     5833 "Maximieren"
-    5834 "Men¸befehl"
-    5835 "Men¸-Popup"
+    5834 "Men√ºbefehl"
+    5835 "Men√º-Popup"
     5836 "Minimieren"
     5837 "Posteingangsbenachrichtigung"
     5838 "Navigation starten"
-    5839 "Programm ˆffnen"
+    5839 "Programm √∂ffnen"
     5840 "Druckvorgang abgeschlossen"
     5841 "Verkleinern"
-    5842 "Vergrˆﬂern"
+    5842 "Vergr√∂√üern"
     5843 "Sternchen"
     5844 "Standardsound"
     5845 "Hinweis"
@@ -260,7 +260,7 @@ BEGIN
     5848 "Systembenachrichtigung"
     5849 "Frage"
     5850 "ReactOS starten"
-    5851 "Startmen¸"
+    5851 "Startmen√º"
     5852 "ReactOS-Abmeldung"
     5853 "ReactOS-Anmeldung"
     5854 "ReactOS Explorer"

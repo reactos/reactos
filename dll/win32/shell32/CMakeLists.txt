@@ -16,7 +16,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR})
 
 list(APPEND SOURCE
-    CAutoComplete.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
     CIDLDataObj.cpp

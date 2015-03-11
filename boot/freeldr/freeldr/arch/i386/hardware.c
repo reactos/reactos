@@ -307,10 +307,10 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         NodeNumber = (UCHAR)i;
 
-        x = PnpBiosGetDeviceNode(&NodeNumber, (PVOID)DISKREADBUFFER);
+        x = PnpBiosGetDeviceNode(&NodeNumber, DiskReadBuffer);
         if (x == 0)
         {
-            DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DISKREADBUFFER;
+            DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DiskReadBuffer;
 
             TRACE("Node: %u  Size %u (0x%x)\n",
                   DeviceNode->Node,

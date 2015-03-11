@@ -803,8 +803,8 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->ServiceTable = KeServiceDescriptorTable;
 
     /* Setup APC Fields */
-    InitializeListHead(&Thread->ApcState.ApcListHead[0]);
-    InitializeListHead(&Thread->ApcState.ApcListHead[1]);
+    InitializeListHead(&Thread->ApcState.ApcListHead[KernelMode]);
+    InitializeListHead(&Thread->ApcState.ApcListHead[UserMode]);
     Thread->ApcState.Process = Process;
     Thread->ApcStatePointer[OriginalApcEnvironment] = &Thread->ApcState;
     Thread->ApcStatePointer[AttachedApcEnvironment] = &Thread->SavedApcState;
@@ -838,8 +838,9 @@ KeInitThread(IN OUT PKTHREAD Thread,
     TimerWaitBlock->WaitListEntry.Flink = &Timer->Header.WaitListHead;
     TimerWaitBlock->WaitListEntry.Blink = &Timer->Header.WaitListHead;
 
-    /* Set the TEB */
+    /* Set the TEB and process */
     Thread->Teb = Teb;
+    Thread->Process = Process;
 
     /* Check if we have a kernel stack */
     if (!KernelStack)

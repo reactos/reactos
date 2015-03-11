@@ -35,7 +35,6 @@
 #include <commdlg.h>
 #include <commoncontrols.h>
 #include <recyclebin.h>
-#include <mmsystem.h>
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -68,20 +67,6 @@ extern VOID WINAPI FreeMRUList(HANDLE hMRUList);
 extern INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
 extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum);
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
-
-
-/* Get a function pointer from a DLL handle */
-#define GET_FUNC(func, funcType, module, name, fail) \
-  do { \
-    if (!func) { \
-      if (!SHELL32_h##module && !(SHELL32_h##module = LoadLibraryA(#module ".dll"))) return fail; \
-      func = (funcType)GetProcAddress(SHELL32_h##module, name); \
-      if (!func) return fail; \
-    } \
-  } while (0)
-
-/* Function pointers for GET_FUNC macro */
-static HMODULE SHELL32_hshlwapi=NULL;
 
 
 /*************************************************************************
@@ -1372,62 +1357,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 }
 
 /*************************************************************************
- * SHAllocShared				[SHELL32.520]
- *
- * See shlwapi.SHAllocShared
- */
-HANDLE WINAPI SHAllocShared(LPCVOID lpvData, DWORD dwSize, DWORD dwProcId)
-{
-    typedef HANDLE (WINAPI *SHAllocSharedProc)(LPCVOID, DWORD, DWORD);
-    static SHAllocSharedProc        pSHAllocShared;
-
-    GET_FUNC(pSHAllocShared, SHAllocSharedProc, shlwapi, (char*)7, NULL);
-    return pSHAllocShared(lpvData, dwSize, dwProcId);
-}
-
-/*************************************************************************
- * SHLockShared					[SHELL32.521]
- *
- * See shlwapi.SHLockShared
- */
-LPVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
-{
-    typedef HANDLE (WINAPI *SHLockSharedProc)(HANDLE, DWORD);
-    static SHLockSharedProc            pSHLockShared;
-
-    GET_FUNC(pSHLockShared, SHLockSharedProc, shlwapi, (char*)8, NULL);
-    return pSHLockShared(hShared, dwProcId);
-}
-
-/*************************************************************************
- * SHUnlockShared				[SHELL32.522]
- *
- * See shlwapi.SHUnlockShared
- */
-BOOL WINAPI SHUnlockShared(LPVOID lpView)
-{
-    typedef HANDLE (WINAPI *SHUnlockSharedProc)(LPCVOID);
-    static SHUnlockSharedProc        pSHUnlockShared;
-
-    GET_FUNC(pSHUnlockShared, SHUnlockSharedProc, shlwapi, (char*)9, FALSE);
-    return pSHUnlockShared(lpView) != NULL;
-}
-
-/*************************************************************************
- * SHFreeShared					[SHELL32.523]
- *
- * See shlwapi.SHFreeShared
- */
-BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
-{
-    typedef HANDLE (WINAPI *SHFreeSharedProc)(HANDLE, DWORD);
-    static SHFreeSharedProc            pSHFreeShared;
-
-    GET_FUNC(pSHFreeShared, SHFreeSharedProc, shlwapi, (char*)10, FALSE);
-    return pSHFreeShared(hShared, dwProcId) != NULL;
-}
-
-/*************************************************************************
  * SetAppStartingCursor				[SHELL32.99]
  */
 HRESULT WINAPI SetAppStartingCursor(HWND u, DWORD v)
@@ -1644,6 +1573,15 @@ BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 
     RtlInitUnicodeString(&guid_str, str);
     return !RtlGUIDFromString(&guid_str, guid);
+}
+
+/*************************************************************************
+ *      PathIsTemporaryA    [SHELL32.713]
+ */
+BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+{
+    FIXME("(%s)stub\n", debugstr_a(Str));
+    return FALSE;
 }
 
 /*************************************************************************
@@ -2093,7 +2031,7 @@ BOOL WINAPI LinkWindow_RegisterClass(void)
 /*************************************************************************
  *              LinkWindow_UnregisterClass (SHELL32.259)
  */
-BOOL WINAPI LinkWindow_UnregisterClass(void)
+BOOL WINAPI LinkWindow_UnregisterClass(DWORD dwUnused)
 {
     FIXME("()\n");
     return TRUE;
@@ -2189,144 +2127,4 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 	IShellView_Release(psf);
 
 	return hRes;
-}
-
-/*************************************************************************
- *      PathIsTemporaryA    [SHELL32.713]
- */
-BOOL WINAPI PathIsTemporaryA(LPSTR Str)
-{
-    FIXME("(%s)stub\n", debugstr_a(Str));
-    return FALSE;
-}
-
-/*************************************************************************
- *              SHEmptyRecycleBinA (SHELL32.@)
- */
-HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
-{
-    LPWSTR szRootPathW = NULL;
-    int len;
-    HRESULT hr;
-
-    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_a(pszRootPath), dwFlags);
-
-    if (pszRootPath)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
-        if (len == 0)
-            return HRESULT_FROM_WIN32(GetLastError());
-        szRootPathW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!szRootPathW)
-            return E_OUTOFMEMORY;
-        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
-        {
-            HeapFree(GetProcessHeap(), 0, szRootPathW);
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-    }
-
-    hr = SHEmptyRecycleBinW(hwnd, szRootPathW, dwFlags);
-    HeapFree(GetProcessHeap(), 0, szRootPathW);
-
-    return hr;
-}
-
-HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
-{
-    WCHAR szPath[MAX_PATH] = {0};
-    DWORD dwSize, dwType;
-    LONG ret;
-
-    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
-
-    if (!(dwFlags & SHERB_NOCONFIRMATION))
-    {
-        /* FIXME
-         * enumerate available files
-         * show confirmation dialog
-         */
-        FIXME("show confirmation dialog\n");
-    }
-
-    if (dwFlags & SHERB_NOPROGRESSUI)
-    {
-        ret = EmptyRecycleBinW(pszRootPath);
-    }
-    else
-    {
-       /* FIXME
-        * show a progress dialog
-        */
-        ret = EmptyRecycleBinW(pszRootPath);
-    }
-
-    if (!ret)
-        return HRESULT_FROM_WIN32(GetLastError());
-
-    if (!(dwFlags & SHERB_NOSOUND))
-    {
-        dwSize = sizeof(szPath);
-        ret = RegGetValueW(HKEY_CURRENT_USER,
-                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
-                           NULL,
-                           RRF_RT_REG_EXPAND_SZ,
-                           &dwType,
-                           (PVOID)szPath,
-                           &dwSize);
-        if (ret != ERROR_SUCCESS)
-            return S_OK;
-
-        if (dwType != REG_EXPAND_SZ) /* type dismatch */
-            return S_OK;
-
-        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
-        PlaySoundW(szPath, NULL, SND_FILENAME);
-    }
-    return S_OK;
-}
-
-HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
-{
-    LPWSTR szRootPathW = NULL;
-    int len;
-    HRESULT hr;
-
-    TRACE("%s, %p\n", debugstr_a(pszRootPath), pSHQueryRBInfo);
-
-    if (pszRootPath)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
-        if (len == 0)
-            return HRESULT_FROM_WIN32(GetLastError());
-        szRootPathW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!szRootPathW)
-            return E_OUTOFMEMORY;
-        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
-        {
-            HeapFree(GetProcessHeap(), 0, szRootPathW);
-            return HRESULT_FROM_WIN32(GetLastError());
-        }
-    }
-
-    hr = SHQueryRecycleBinW(szRootPathW, pSHQueryRBInfo);
-    HeapFree(GetProcessHeap(), 0, szRootPathW);
-
-    return hr;
-}
-
-HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
-{
-    FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
-
-    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
-        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
-    {
-        return E_INVALIDARG;
-    }
-
-    pSHQueryRBInfo->i64Size = 0;
-    pSHQueryRBInfo->i64NumItems = 0;
-
-    return S_OK;
 }

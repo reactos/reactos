@@ -391,7 +391,7 @@ SendRequest(
     HANDLE TcpCC;
     DWORD BytesReturned;
 
-    if (openTcpFile(&TcpCC) != STATUS_SUCCESS)
+    if (openTcpFile(&TcpCC, FILE_READ_DATA | FILE_WRITE_DATA) != STATUS_SUCCESS)
         return WSAEINVAL;
 
     Status = DeviceIoControl(TcpCC,
@@ -449,7 +449,7 @@ WSHNotify(
 
         case WSH_NOTIFY_BIND:
             DPRINT("WSHNotify: WSH_NOTIFY_BIND\n");
-            Status = openTcpFile(&TcpCC);
+            Status = openTcpFile(&TcpCC, FILE_READ_DATA);
             if (Status != STATUS_SUCCESS)
                 return WSAEINVAL;
 

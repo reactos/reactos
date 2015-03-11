@@ -48,7 +48,7 @@ static DWORD resource_access_from_pool(enum wined3d_pool pool)
 
 static void resource_check_usage(DWORD usage)
 {
-    static const DWORD handled = WINED3DUSAGE_RENDERTARGET
+    static DWORD handled = WINED3DUSAGE_RENDERTARGET
             | WINED3DUSAGE_DEPTHSTENCIL
             | WINED3DUSAGE_WRITEONLY
             | WINED3DUSAGE_DYNAMIC
@@ -64,7 +64,10 @@ static void resource_check_usage(DWORD usage)
      * driver. */
 
     if (usage & ~handled)
+    {
         FIXME("Unhandled usage flags %#x.\n", usage & ~handled);
+        handled |= usage;
+    }
     if ((usage & (WINED3DUSAGE_DYNAMIC | WINED3DUSAGE_WRITEONLY)) == WINED3DUSAGE_DYNAMIC)
         WARN_(d3d_perf)("WINED3DUSAGE_DYNAMIC used without WINED3DUSAGE_WRITEONLY.\n");
 }
@@ -79,14 +82,23 @@ HRESULT resource_init(struct wined3d_resource *resource, struct wined3d_device *
     const struct wined3d *d3d = device->wined3d;
 
     resource_check_usage(usage);
-    if (pool != WINED3D_POOL_SCRATCH)
+    if (pool != WINED3D_POOL_SCRATCH && type != WINED3D_RTYPE_BUFFER)
     {
         if ((usage & WINED3DUSAGE_RENDERTARGET) && !(format->flags & WINED3DFMT_FLAG_RENDERTARGET))
+        {
+            WARN("Format %s cannot be used for render targets.\n", debug_d3dformat(format->id));
             return WINED3DERR_INVALIDCALL;
+        }
         if ((usage & WINED3DUSAGE_DEPTHSTENCIL) && !(format->flags & (WINED3DFMT_FLAG_DEPTH | WINED3DFMT_FLAG_STENCIL)))
+        {
+            WARN("Format %s cannot be used for depth/stencil buffers.\n", debug_d3dformat(format->id));
             return WINED3DERR_INVALIDCALL;
+        }
         if ((usage & WINED3DUSAGE_TEXTURE) && !(format->flags & WINED3DFMT_FLAG_TEXTURE))
+        {
+            WARN("Format %s cannot be used for texturing.\n", debug_d3dformat(format->id));
             return WINED3DERR_INVALIDCALL;
+        }
     }
 
     resource->ref = 1;
@@ -149,7 +161,7 @@ void resource_cleanup(struct wined3d_resource *resource)
     if (resource->pool == WINED3D_POOL_DEFAULT && d3d->flags & WINED3D_VIDMEM_ACCOUNTING)
     {
         TRACE("Decrementing device memory pool by %u.\n", resource->size);
-        adapter_adjust_memory(resource->device->adapter, 0 - resource->size);
+        adapter_adjust_memory(resource->device->adapter, (INT64)0 - resource->size);
     }
 
     wined3d_resource_free_sysmem(resource);

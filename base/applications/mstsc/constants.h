@@ -1,11 +1,11 @@
 /*
    rdesktop: A Remote Desktop Protocol client.
    Miscellaneous protocol constants
-   Copyright (C) Matthew Chapman 1999-2005
-   
-   This program is free software; you can redistribute it and/or modify
+   Copyright (C) Matthew Chapman 1999-2008
+
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /* TCP port for Remote Desktop Protocol */
@@ -32,6 +31,31 @@ enum ISO_PDU_CODE
 	ISO_PDU_DR = 0x80,	/* Disconnect Request */
 	ISO_PDU_DT = 0xF0,	/* Data */
 	ISO_PDU_ER = 0x70	/* Error */
+};
+
+/* RDP protocol negotiating constants */
+enum RDP_NEG_TYPE_CODE
+{
+	RDP_NEG_REQ = 1,
+	RDP_NEG_RSP = 2,
+	RDP_NEG_FAILURE = 3
+};
+
+enum RDP_NEG_REQ_CODE
+{
+	PROTOCOL_RDP = 0,
+	PROTOCOL_SSL = 1,
+	PROTOCOL_HYBRID = 2
+};
+
+enum RDP_NEG_FAILURE_CODE
+{
+	SSL_REQUIRED_BY_SERVER = 1,
+	SSL_NOT_ALLOWED_BY_SERVER = 2,
+	SSL_CERT_NOT_ON_SERVER = 3,
+	INCONSISTENT_FLAGS = 4,
+	HYBRID_REQUIRED_BY_SERVER = 5,
+	SSL_WITH_USER_AUTH_REQUIRED_BY_SERVER = 6
 };
 
 /* MCS PDU codes */
@@ -54,17 +78,21 @@ enum MCS_PDU_TYPE
 #define BER_TAG_INTEGER		2
 #define BER_TAG_OCTET_STRING	4
 #define BER_TAG_RESULT		10
+#define BER_TAG_SEQUENCE	16
+#define BER_TAG_CONSTRUCTED	0x20
+#define BER_TAG_CTXT_SPECIFIC	0x80
+
 #define MCS_TAG_DOMAIN_PARAMS	0x30
 
 #define MCS_GLOBAL_CHANNEL	1003
 #define MCS_USERCHANNEL_BASE    1001
 
 /* RDP secure transport constants */
-#define SEC_RANDOM_SIZE			32
-#define SEC_MODULUS_SIZE		64
+#define SEC_RANDOM_SIZE		32
+#define SEC_MODULUS_SIZE	64
 #define SEC_MAX_MODULUS_SIZE	256
-#define SEC_PADDING_SIZE		8
-#define SEC_EXPONENT_SIZE		4
+#define SEC_PADDING_SIZE	8
+#define SEC_EXPONENT_SIZE	4
 
 #define SEC_CLIENT_RANDOM	0x0001
 #define SEC_ENCRYPT		0x0008
@@ -79,38 +107,50 @@ enum MCS_PDU_TYPE
 #define SEC_TAG_CLI_INFO	0xc001
 #define SEC_TAG_CLI_CRYPT	0xc002
 #define SEC_TAG_CLI_CHANNELS    0xc003
-#define SEC_TAG_CLI_4           0xc004
+#define SEC_TAG_CLI_CLUSTER     0xc004
 
 #define SEC_TAG_PUBKEY		0x0006
 #define SEC_TAG_KEYSIG		0x0008
 
 #define SEC_RSA_MAGIC		0x31415352	/* RSA1 */
 
+/* Client cluster constants */
+#define SEC_CC_REDIRECTION_SUPPORTED          0x00000001
+#define SEC_CC_REDIRECT_SESSIONID_FIELD_VALID 0x00000002
+#define SEC_CC_REDIRECTED_SMARTCARD           0x00000040
+#define SEC_CC_REDIRECT_VERSION_MASK          0x0000003c
+
+#define SEC_CC_REDIRECT_VERSION_3             0x02
+#define SEC_CC_REDIRECT_VERSION_4             0x03
+#define SEC_CC_REDIRECT_VERSION_5             0x04
+#define SEC_CC_REDIRECT_VERSION_6             0x05
+
 /* RDP licensing constants */
 #define LICENCE_TOKEN_SIZE	10
 #define LICENCE_HWID_SIZE	20
 #define LICENCE_SIGNATURE_SIZE	16
 
-#define LICENCE_TAG_DEMAND	0x01
-#define LICENCE_TAG_AUTHREQ	0x02
-#define LICENCE_TAG_ISSUE	0x03
-#define LICENCE_TAG_REISSUE	0x04
-#define LICENCE_TAG_PRESENT	0x12
-#define LICENCE_TAG_REQUEST	0x13
-#define LICENCE_TAG_AUTHRESP	0x15
-#define LICENCE_TAG_RESULT	0xff
+#define LICENCE_TAG_REQUEST                     0x01
+#define LICENCE_TAG_PLATFORM_CHALLANGE          0x02
+#define LICENCE_TAG_NEW_LICENCE                 0x03
+#define LICENCE_TAG_UPGRADE_LICENCE             0x04
+#define LICENCE_TAG_LICENCE_INFO                0x12
+#define LICENCE_TAG_NEW_LICENCE_REQUEST         0x13
+#define LICENCE_TAG_PLATFORM_CHALLANGE_RESPONSE 0x15
+#define LICENCE_TAG_ERROR_ALERT                 0xff
 
-#define LICENCE_TAG_USER	0x000f
-#define LICENCE_TAG_HOST	0x0010
+#define BB_CLIENT_USER_NAME_BLOB	0x000f
+#define BB_CLIENT_MACHINE_NAME_BLOB	0x0010
 
 /* RDP PDU codes */
 enum RDP_PDU_TYPE
 {
 	RDP_PDU_DEMAND_ACTIVE = 1,
 	RDP_PDU_CONFIRM_ACTIVE = 3,
-	RDP_PDU_REDIRECT = 4,	/* MS Server 2003 Session Redirect */
+	RDP_PDU_REDIRECT = 4,	/* Standard Server Redirect */
 	RDP_PDU_DEACTIVATE = 6,
-	RDP_PDU_DATA = 7
+	RDP_PDU_DATA = 7,
+	RDP_PDU_ENHANCED_REDIRECT = 10	/* Enhanced Server Redirect */
 };
 
 enum RDP_DATA_PDU_TYPE
@@ -122,10 +162,25 @@ enum RDP_DATA_PDU_TYPE
 	RDP_DATA_PDU_SYNCHRONISE = 31,
 	RDP_DATA_PDU_BELL = 34,
 	RDP_DATA_PDU_CLIENT_WINDOW_STATUS = 35,
-	RDP_DATA_PDU_LOGON = 38,
+	RDP_DATA_PDU_LOGON = 38,	/* PDUTYPE2_SAVE_SESSION_INFO */
 	RDP_DATA_PDU_FONT2 = 39,
 	RDP_DATA_PDU_KEYBOARD_INDICATORS = 41,
-	RDP_DATA_PDU_DISCONNECT = 47
+	RDP_DATA_PDU_DISCONNECT = 47,
+	RDP_DATA_PDU_AUTORECONNECT_STATUS = 50
+};
+
+enum RDP_SAVE_SESSION_PDU_TYPE
+{
+	INFOTYPE_LOGON = 0,
+	INFOTYPE_LOGON_LONG = 1,
+	INFOTYPE_LOGON_PLAINNOTIFY = 2,
+	INFOTYPE_LOGON_EXTENDED_INF = 3
+};
+
+enum RDP_LOGON_INFO_EXTENDED_TYPE
+{
+	LOGON_EX_AUTORECONNECTCOOKIE = 1,
+	LOGON_EX_LOGONERRORS = 2
 };
 
 enum RDP_CONTROL_PDU_TYPE
@@ -149,7 +204,8 @@ enum RDP_POINTER_PDU_TYPE
 	RDP_POINTER_SYSTEM = 1,
 	RDP_POINTER_MOVE = 3,
 	RDP_POINTER_COLOR = 6,
-	RDP_POINTER_CACHED = 7
+	RDP_POINTER_CACHED = 7,
+	RDP_POINTER_NEW = 8
 };
 
 enum RDP_SYSTEM_POINTER_TYPE
@@ -192,9 +248,8 @@ enum RDP_INPUT_DEVICE
 #define MOUSE_FLAG_DOWN         0x8000
 
 /* Raster operation masks */
-#define ROP2_S(rop3) ((uint8) (rop3 & 0xf))
-#define ROP2_P(rop3) ((uint8) ((rop3 & 0x3) | ((rop3 & 0x30) >> 2)))
-#define ROP_MINUS_1(rop) ((uint8) (rop - 1))
+#define ROP2_S(rop3) (rop3 & 0xf)
+#define ROP2_P(rop3) ((rop3 & 0x3) | ((rop3 & 0x30) >> 2))
 
 #define ROP2_COPY	0xc
 #define ROP2_XOR	0x6
@@ -245,12 +300,16 @@ enum RDP_INPUT_DEVICE
 
 #define RDP_CAPSET_POINTER	8
 #define RDP_CAPLEN_POINTER	0x08
+#define RDP_CAPLEN_NEWPOINTER	0x0a
 
 #define RDP_CAPSET_SHARE	9
 #define RDP_CAPLEN_SHARE	0x08
 
 #define RDP_CAPSET_COLCACHE	10
 #define RDP_CAPLEN_COLCACHE	0x08
+
+#define RDP_CAPSET_BRUSHCACHE	15
+#define RDP_CAPLEN_BRUSHCACHE	0x08
 
 #define RDP_CAPSET_BMPCACHE2	19
 #define RDP_CAPLEN_BMPCACHE2	0x28
@@ -259,12 +318,16 @@ enum RDP_INPUT_DEVICE
 #define RDP_SOURCE		"MSTSC"
 
 /* Logon flags */
-#define RDP_LOGON_AUTO		0x0008
-#define RDP_LOGON_NORMAL	0x0033
-#define RDP_LOGON_COMPRESSION	0x0080	/* mppc compression with 8kB histroy buffer */
-#define RDP_LOGON_BLOB		0x0100
-#define RDP_LOGON_COMPRESSION2	0x0200	/* rdp5 mppc compression with 64kB history buffer */
-#define RDP_LOGON_LEAVE_AUDIO	0x2000
+#define RDP_INFO_MOUSE                0x00000001
+#define RDP_INFO_DISABLECTRLALTDEL    0x00000002
+#define RDP_INFO_AUTOLOGON 	      0x00000008
+#define RDP_INFO_UNICODE              0x00000010
+#define RDP_INFO_MAXIMIZESHELL        0x00000020
+#define RDP_INFO_COMPRESSION	      0x00000080	/* mppc compression with 8kB histroy buffer */
+#define RDP_INFO_ENABLEWINDOWSKEY     0x00000100
+#define RDP_INFO_COMPRESSION2	      0x00000200	/* rdp5 mppc compression with 64kB history buffer */
+#define RDP_INFO_REMOTE_CONSOLE_AUDIO 0x00002000
+#define RDP_INFO_PASSWORD_IS_SC_PIN   0x00040000
 
 #define RDP5_DISABLE_NOTHING	0x00
 #define RDP5_NO_WALLPAPER	0x01
@@ -313,7 +376,8 @@ enum RDP_INPUT_DEVICE
 #define MASK_CHANGE_BIT(var, mask, active) (var = ((var & ~mask) | (active ? mask : 0)))
 
 /* Clipboard constants, "borrowed" from GCC system headers in 
-   the w32 cross compiler */
+   the w32 cross compiler
+   this is the CF_ set when WINVER is 0x0400 */
 
 #ifndef CF_TEXT
 #define CF_TEXT         1
@@ -357,37 +421,53 @@ enum RDP_INPUT_DEVICE
 #define CHANNEL_OPTION_SHOW_PROTOCOL	0x00200000
 
 /* NT status codes for RDPDR */
-#undef STATUS_SUCCESS
-#define STATUS_SUCCESS			0x00000000
-#undef STATUS_NOT_IMPLEMENTED
-#define STATUS_NOT_IMPLEMENTED          0x00000001
-#undef STATUS_PENDING
-#define STATUS_PENDING                  0x00000103
+#define RD_STATUS_SUCCESS                  0x00000000
+#define RD_STATUS_NOT_IMPLEMENTED          0x00000001
+#define RD_STATUS_PENDING                  0x00000103
 
-#ifndef STATUS_NO_MORE_FILES
-#define STATUS_NO_MORE_FILES            0x80000006
-#define STATUS_DEVICE_PAPER_EMPTY       0x8000000e
-#define STATUS_DEVICE_POWERED_OFF       0x8000000f
-#define STATUS_DEVICE_OFF_LINE          0x80000010
-#define STATUS_DEVICE_BUSY              0x80000011
-#endif
+#define RD_STATUS_NO_MORE_FILES            0x80000006
+#define RD_STATUS_DEVICE_PAPER_EMPTY       0x8000000e
+#define RD_STATUS_DEVICE_POWERED_OFF       0x8000000f
+#define RD_STATUS_DEVICE_OFF_LINE          0x80000010
+#define RD_STATUS_DEVICE_BUSY              0x80000011
 
-#ifndef STATUS_INVALID_HANDLE
-#define STATUS_INVALID_HANDLE           0xc0000008
-#define STATUS_INVALID_PARAMETER	0xc000000d
-#define STATUS_NO_SUCH_FILE             0xc000000f
-#define STATUS_INVALID_DEVICE_REQUEST	0xc0000010
-#define STATUS_ACCESS_DENIED		0xc0000022
-#define STATUS_OBJECT_NAME_COLLISION    0xc0000035
-#define STATUS_DISK_FULL                0xc000007f
-#define STATUS_FILE_IS_A_DIRECTORY      0xc00000ba
-#define STATUS_NOT_SUPPORTED            0xc00000bb
-#define STATUS_TIMEOUT                  0xc0000102
-#define STATUS_NOTIFY_ENUM_DIR          0xc000010c
-#define STATUS_CANCELLED                0xc0000120
-#endif
+#define RD_STATUS_INVALID_HANDLE           0xc0000008
+#define RD_STATUS_INVALID_PARAMETER        0xc000000d
+#define RD_STATUS_NO_SUCH_FILE             0xc000000f
+#define RD_STATUS_INVALID_DEVICE_REQUEST   0xc0000010
+#define RD_STATUS_ACCESS_DENIED            0xc0000022
+#define RD_STATUS_OBJECT_NAME_COLLISION    0xc0000035
+#define RD_STATUS_DISK_FULL                0xc000007f
+#define RD_STATUS_FILE_IS_A_DIRECTORY      0xc00000ba
+#define RD_STATUS_NOT_SUPPORTED            0xc00000bb
+#define RD_STATUS_TIMEOUT                  0xc0000102
+#define RD_STATUS_NOTIFY_ENUM_DIR          0xc000010c
+#define RD_STATUS_CANCELLED                0xc0000120
+#define RD_STATUS_DIRECTORY_NOT_EMPTY      0xc0000101
+
+/* RDPSND constants */
+#define TSSNDCAPS_ALIVE                    0x00000001
+#define TSSNDCAPS_VOLUME                   0x00000002
 
 /* RDPDR constants */
+
+#define RDPDR_CTYP_CORE                 0x4472
+#define RDPDR_CTYP_PRN                  0x5052
+
+#define PAKID_CORE_SERVER_ANNOUNCE      0x496e
+#define PAKID_CORE_CLIENTID_CONFIRM     0x4343
+#define PAKID_CORE_CLIENT_NAME          0x434e
+#define PAKID_CORE_DEVICE_LIST_ANNOUNCE 0x4441
+#define PAKID_CORE_DEVICE_REPLY         0x6472
+#define PAKID_CORE_DEVICE_IOREQUEST     0x4952
+#define PAKID_CORE_DEVICE_IOCOMPLETION  0x4943
+#define PAKID_CORE_SERVER_CAPABILITY    0x5350
+#define PAKID_CORE_CLIENT_CAPABILITY    0x4350
+#define PAKID_CORE_DEVICELIST_REMOVE    0x444d
+#define PAKID_PRN_CACHE_DATA            0x5043
+#define PAKID_CORE_USER_LOGGEDON        0x554c
+#define PAKID_PRN_USING_XPS             0x5543
+
 #define RDPDR_MAX_DEVICES               0x10
 #define DEVICE_TYPE_SERIAL              0x01
 #define DEVICE_TYPE_PARALLEL            0x02
@@ -411,6 +491,10 @@ enum RDP_INPUT_DEVICE
 #define exDiscReasonOutOfMemory				0x0006
 #define exDiscReasonServerDeniedConnection		0x0007
 #define exDiscReasonServerDeniedConnectionFips		0x0008
+#define exDiscReasonServerInsufficientPrivileges        0x0009
+#define exDiscReasonServerFreshCredentialsRequired      0x000a
+#define exDiscReasonRPCInitiatedDisconnectByUser        0x000b
+#define exDiscReasonByUser                              0x000c
 #define exDiscReasonLicenseInternal			0x0100
 #define exDiscReasonLicenseNoLicenseServer		0x0101
 #define exDiscReasonLicenseNoLicense			0x0102
@@ -431,6 +515,31 @@ enum RDP_INPUT_DEVICE
 #define SEAMLESSRDP_POSITION_TIMER 200000
 
 #define SEAMLESSRDP_CREATE_MODAL	0x0001
+#define SEAMLESSRDP_CREATE_TOPMOST	0x0002
 
 #define SEAMLESSRDP_HELLO_RECONNECT	0x0001
 #define SEAMLESSRDP_HELLO_HIDDEN	0x0002
+
+/* Smartcard constants */
+#define SCARD_LOCK_TCP		0
+#define SCARD_LOCK_SEC		1
+#define SCARD_LOCK_CHANNEL	2
+#define SCARD_LOCK_RDPDR	3
+#define SCARD_LOCK_LAST		4
+
+
+/* redirect flags, from [MS-RDPBCGR] 2.2.13.1 */
+enum RDP_PDU_REDIRECT_FLAGS
+{
+	PDU_REDIRECT_HAS_IP = 0x1,
+	PDU_REDIRECT_HAS_LOAD_BALANCE_INFO = 0x2,
+	PDU_REDIRECT_HAS_USERNAME = 0x4,
+	PDU_REDIRECT_HAS_DOMAIN = 0x8,
+	PDU_REDIRECT_HAS_PASSWORD = 0x10,
+	PDU_REDIRECT_DONT_STORE_USERNAME = 0x20,
+	PDU_REDIRECT_USE_SMARTCARD = 0x40,
+	PDU_REDIRECT_INFORMATIONAL = 0x80,
+	PDU_REDIRECT_HAS_TARGET_FQDN = 0x100,
+	PDU_REDIRECT_HAS_TARGET_NETBIOS = 0x200,
+	PDU_REDIRECT_HAS_TARGET_IP_ARRAY = 0x800
+};

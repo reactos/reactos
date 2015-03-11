@@ -1,7 +1,7 @@
 /*
- * Norwegian Bokmål resources for localui
+ * Norwegian BokmÃ¥l resources for localui
  *
- * Copyright 2007 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2007 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 STRINGTABLE
 {
     IDS_LOCALPORT "Lokal port"
-    IDS_INVALIDNAME "«%s» er ikke et gyldig portnavn"
+    IDS_INVALIDNAME "Â«%sÂ» er ikke et gyldig portnavn"
     IDS_PORTEXISTS "Porten %s finnes allerede"
     IDS_NOTHINGTOCONFIG "Denne porten har ingen innstillinger"
 }
@@ -34,7 +34,7 @@ STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPW
 CAPTION "Legg til en lokal port"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Skriv inn navn&et på den nye porten:", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "Skriv inn navn&et pÃ¥ den nye porten:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 188, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Avbryt", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
@@ -47,7 +47,7 @@ CAPTION "Oppsett av LPT-port"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Tidsavbrudd (sekunder)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "Prøv å sende på nyt&t:", -1, 14, 22, 90, 13, WS_VISIBLE
+    LTEXT "PrÃ¸v Ã¥ sende pÃ¥ nyt&t:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Avbryt", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE

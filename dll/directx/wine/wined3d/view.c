@@ -173,7 +173,10 @@ ULONG CDECL wined3d_shader_resource_view_decref(struct wined3d_shader_resource_v
 
     if (!refcount)
     {
+        /* Call wined3d_object_destroyed() before releasing the resource,
+         * since releasing the resource may end up destroying the parent. */
         view->parent_ops->wined3d_object_destroyed(view->parent);
+        wined3d_resource_decref(view->resource);
         HeapFree(GetProcessHeap(), 0, view);
     }
 
@@ -187,8 +190,8 @@ void * CDECL wined3d_shader_resource_view_get_parent(const struct wined3d_shader
     return view->parent;
 }
 
-HRESULT CDECL wined3d_shader_resource_view_create(void *parent, const struct wined3d_parent_ops *parent_ops,
-        struct wined3d_shader_resource_view **view)
+HRESULT CDECL wined3d_shader_resource_view_create(struct wined3d_resource *resource, void *parent,
+        const struct wined3d_parent_ops *parent_ops, struct wined3d_shader_resource_view **view)
 {
     struct wined3d_shader_resource_view *object;
 
@@ -198,6 +201,8 @@ HRESULT CDECL wined3d_shader_resource_view_create(void *parent, const struct win
         return E_OUTOFMEMORY;
 
     object->refcount = 1;
+    object->resource = resource;
+    wined3d_resource_incref(resource);
     object->parent = parent;
     object->parent_ops = parent_ops;
 

@@ -1503,8 +1503,10 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Brak wystarczaj¥cej wolnej przestrzeni w wybranej partycji.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Naci˜nij dowolny klawisz, aby kontynuowa†.",
         NULL
     },

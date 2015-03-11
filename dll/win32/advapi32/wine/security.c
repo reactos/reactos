@@ -1102,31 +1102,54 @@ WINAPI
 LookupPrivilegeDisplayNameA(LPCSTR lpSystemName,
                             LPCSTR lpName,
                             LPSTR lpDisplayName,
-                            LPDWORD cbDisplayName,
+                            LPDWORD cchDisplayName,
                             LPDWORD lpLanguageId)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
+    UNICODE_STRING lpSystemNameW;
+    UNICODE_STRING lpNameW;
+    BOOL ret;
+    DWORD wLen = 0;
 
+    TRACE("%s %s %p %p %p\n", debugstr_a(lpSystemName), debugstr_a(lpName), lpName, cchDisplayName, lpLanguageId);
 
-/**********************************************************************
- * LookupPrivilegeDisplayNameW			EXPORTED
- *
- * @unimplemented
- */
-BOOL
-WINAPI
-LookupPrivilegeDisplayNameW(LPCWSTR lpSystemName,
-                            LPCWSTR lpName,
-                            LPWSTR lpDisplayName,
-                            LPDWORD cbDisplayName,
-                            LPDWORD lpLanguageId)
-{
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    SetLastError (ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    RtlCreateUnicodeStringFromAsciiz(&lpSystemNameW, lpSystemName);
+    RtlCreateUnicodeStringFromAsciiz(&lpNameW, lpName);
+    ret = LookupPrivilegeDisplayNameW(lpSystemNameW.Buffer, lpNameW.Buffer, NULL, &wLen, lpLanguageId);
+    if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        LPWSTR lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, wLen * sizeof(WCHAR));
+
+        ret = LookupPrivilegeDisplayNameW(lpSystemNameW.Buffer, lpNameW.Buffer, lpDisplayNameW,
+                                          &wLen, lpLanguageId);
+        if (ret)
+        {
+            unsigned int len = WideCharToMultiByte(CP_ACP, 0, lpDisplayNameW, -1, lpDisplayName,
+                                                   *cchDisplayName, NULL, NULL);
+
+            if (len == 0)
+            {
+                /* WideCharToMultiByte failed */
+                ret = FALSE;
+            }
+            else if (len > *cchDisplayName)
+            {
+                *cchDisplayName = len;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                ret = FALSE;
+            }
+            else
+            {
+                /* WideCharToMultiByte succeeded, output length needs to be
+                 * length not including NULL terminator
+                 */
+                *cchDisplayName = len - 1;
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+    }
+    RtlFreeUnicodeString(&lpSystemNameW);
+    RtlFreeUnicodeString(&lpNameW);
+    return ret;
 }
 
 /**********************************************************************

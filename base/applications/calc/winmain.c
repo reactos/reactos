@@ -286,7 +286,7 @@ static void save_config(void)
     HKEY hKey;
     DWORD sepValue;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, KEY_ALL_ACCESS, &hKey) != ERROR_SUCCESS )
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
     {
         return;
     }

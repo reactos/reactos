@@ -138,6 +138,12 @@ static void APIENTRY GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwO
   if(*nPtsOut == *dwOut) {
     *dwOut *= 2;
     *PtsOut = ExAllocatePoolWithTag(PagedPool, *dwOut * sizeof(POINT), TAG_BEZIER);
+    if (*PtsOut == NULL)
+    {
+        /// \todo FIXME!
+        NT_ASSERT(FALSE);
+        return;
+    }
   }
 
   if(!level || BezierCheck(level, Points)) {

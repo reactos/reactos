@@ -22,6 +22,8 @@
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
+#pragma code_page(65001)
+
 STRINGTABLE
 {
 	4 "Belirtilen kurulum paketi açılamadı. Lütfen, kütüğün yolunu denetleyiniz ve yeiden deneyiniz."

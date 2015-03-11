@@ -715,7 +715,7 @@ OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
     WORD ActivationState = LOWORD(wParam);
 
-    DPRINT("WM_ACTIVATE - ActivationState = %d\n");
+    DPRINT("WM_ACTIVATE - ActivationState = %d\n", ActivationState);
 
     if ( ActivationState == WA_ACTIVE ||
          ActivationState == WA_CLICKACTIVE )
@@ -762,9 +762,9 @@ OnFocus(PGUI_CONSOLE_DATA GuiData, BOOL SetFocus)
     LeaveCriticalSection(&Console->Lock);
 
     if (SetFocus)
-        DPRINT1("TODO: Create console caret\n");
+        DPRINT("TODO: Create console caret\n");
     else
-        DPRINT1("TODO: Destroy console caret\n");
+        DPRINT("TODO: Destroy console caret\n");
 }
 
 static VOID
@@ -1007,7 +1007,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
                 wcscat(WindowTitle, L" - ");
                 wcscat(WindowTitle, Console->Title.Buffer);
 
-                SetWindowText(GuiData->hWindow, WindowTitle);
+                SetWindowTextW(GuiData->hWindow, WindowTitle);
                 ConsoleFreeHeap(WindowTitle);
             }
 
@@ -1027,7 +1027,7 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
         ConioUnpause(Console, PAUSED_FROM_SELECTION);
 
         /* Restore the console title */
-        SetWindowText(GuiData->hWindow, Console->Title.Buffer);
+        SetWindowTextW(GuiData->hWindow, Console->Title.Buffer);
     }
 
     DeleteObject(oldRgn);
@@ -2468,7 +2468,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         // case PM_CONSOLE_SET_TITLE:
-            // SetWindowText(GuiData->hWindow, GuiData->Console->Title.Buffer);
+            // SetWindowTextW(GuiData->hWindow, GuiData->Console->Title.Buffer);
             // break;
 
         default: Default:

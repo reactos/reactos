@@ -345,6 +345,17 @@ SystemTimerProc(HWND hwnd,
        }
        return; // Not this window so just return.
 
+     case ID_EVENT_SYSTIMER_FLASHWIN:
+       {
+          FLASHWINFO fwi =
+            {sizeof(FLASHWINFO),
+             UserHMGetHandle(pWnd),
+             FLASHW_SYSTIMER,0,0};
+
+          IntFlashWindowEx(pWnd, &fwi);
+       }
+       return;
+
      default:
        ERR("System Timer Proc invalid id %u!\n", idEvent);
        break;
@@ -560,7 +571,7 @@ BOOL FASTCALL
 IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTIMER pTmr = NULL;
-   TRACE("IntKillTimer Window %p id %p systemtimer %s\n",
+   TRACE("IntKillTimer Window %p id %uI systemtimer %s\n",
          Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
    TimerEnterExclusive();
@@ -591,7 +602,7 @@ InitTimerImpl(VOID)
 
    ExInitializeFastMutex(Mutex);
 
-   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
+   BitmapBytes = ALIGN_UP_BY(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
    WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapBytes, TAG_TIMERBMP);
    if (WindowLessTimersBitMapBuffer == NULL)
    {

@@ -4,12 +4,12 @@ LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Strømstyringsplan"
+CAPTION "StrÃ¸mstyringsplan"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "Velg Strømstyringsplan med den mest passende innstilling for denne datamaskinen. Vær oppmerksom på å endre innstillingene under vil forandre valgte plan.", -1, 37, 6, 209, 36
-    GROUPBOX "S&trømstyringsplan", -1, 6, 43, 240, 50
+    LTEXT "Velg StrÃ¸mstyringsplan med den mest passende innstilling for denne datamaskinen. VÃ¦r oppmerksom pÃ¥ Ã¥ endre innstillingene under vil forandre valgte plan.", -1, 37, 6, 209, 36
+    GROUPBOX "S&trÃ¸mstyringsplan", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
     PUSHBUTTON "&Lagre som...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
     PUSHBUTTON "&Slett", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
@@ -17,12 +17,12 @@ BEGIN
     LTEXT "Mens datamaskinen er:", IDC_SAT, 12, 109, 60, 12
     LTEXT "Koblet til", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
-    LTEXT "Kjører på batterier", IDC_SDC, 195, 110, 45, 15
+    LTEXT "KjÃ¸rer pÃ¥ batterier", IDC_SDC, 195, 110, 45, 15
     ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
-    LTEXT "Slå av &skjermen:", IDC_MONITOR, 13, 148, 84, 10
+    LTEXT "SlÃ¥ av &skjermen:", IDC_MONITOR, 13, 148, 84, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Slå av hardd&isker:", IDC_DISK, 13, 171, 84, 10
+    LTEXT "SlÃ¥ av hardd&isker:", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "System h&vilemodus:", IDC_STANDBY, 13, 191, 84, 10
@@ -39,7 +39,7 @@ CAPTION "Alarmer"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Svakt battery alarm", -1, 6, 7, 239, 104
-    CONTROL "Aktivere &svakt batteri alarm mens strømnivået passerer:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    CONTROL "Aktivere &svakt batteri alarm mens strÃ¸mnivÃ¥et passerer:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
     LTEXT "ukjent", IDC_ALARMVALUE1, 209, 20, 33, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -49,10 +49,10 @@ BEGIN
     LTEXT "Ukjent", IDC_ALARMMSG1, 154, 71, 84, 10
     LTEXT "Handling:", -1, 95, 83, 55, 10
     LTEXT "Ukjent", IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT "Kjør Program:", -1, 95, 95, 55, 10
+    LTEXT "KjÃ¸r Program:", -1, 95, 95, 55, 10
     LTEXT "Ukjent", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Kritisk batteri alarm", -1, 6, 120, 239, 106
-    CONTROL "Aktivere svakt batteri alarm mens strømnivået passerer:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    CONTROL "Aktivere svakt batteri alarm mens strÃ¸mnivÃ¥et passerer:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
     LTEXT "Ukjent", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -62,7 +62,7 @@ BEGIN
     LTEXT "Ukjent", IDC_ALARMMSG2, 154, 185, 84, 10
     LTEXT "Handling:", -1, 95, 198, 45, 10
     LTEXT "Ukjent", IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT "Kjør program:", -1, 95, 211, 50, 10
+    LTEXT "KjÃ¸r program:", -1, 95, 211, 50, 10
     LTEXT "Ukjent", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
@@ -72,12 +72,12 @@ CAPTION "Avansert"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "Velg strøm-sparing innstillinger som du vil bruke.", -1, 37, 6, 207, 20
+    LTEXT "Velg strÃ¸m-sparing innstillinger som du vil bruke.", -1, 37, 6, 207, 20
     GROUPBOX "Valg", -1, 6, 30, 240, 65
-    CONTROL "Allti&d vis ikon på oppgavelinjen", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "&Spør etter passord ved gjenopptakelse etter dvalemodus", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "&Dim vis når pcen kjører på batteri strøm", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
-    GROUPBOX "Strømknapper", -1, 6, 101, 240, 127
+    CONTROL "Allti&d vis ikon pÃ¥ oppgavelinjen", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
+    CONTROL "&SpÃ¸r etter passord ved gjenopptakelse etter dvalemodus", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
+    CONTROL "&Dim vis nÃ¥r pcen kjÃ¸rer pÃ¥ batteri strÃ¸m", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX "StrÃ¸mknapper", -1, 6, 101, 240, 127
     LTEXT "&When I close the lid of my portable computer:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     LTEXT "Wh&en I press the power button on my computer:", IDC_SPOWERBUTTON, 15, 153, 222, 10
@@ -92,7 +92,7 @@ CAPTION "Dvalemodus"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "Når din datamaskin går i dvalemodus, lagres all data i minnet til din harddisk også blir pcen slått av. Når din datamaskin våkner fra dvalemodus, gjennoppretter den økten til forrige stand. ", -1, 37, 6, 210, 35
+    LTEXT "NÃ¥r din datamaskin gÃ¥r i dvalemodus, lagres all data i minnet til din harddisk ogsÃ¥ blir pcen slÃ¥tt av. NÃ¥r din datamaskin vÃ¥kner fra dvalemodus, gjennoppretter den Ã¸kten til forrige stand. ", -1, 37, 6, 210, 35
     GROUPBOX "Dvalemodus", -1, 6, 41, 240, 32
     CONTROL "Aktiver &dvalemodus", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
     GROUPBOX "Ledig plass for dvalemodus", -1, 6, 80, 240, 76
@@ -100,29 +100,29 @@ BEGIN
     LTEXT "Ukjent", IDC_FREESPACE, 160, 95, 80, 10
     LTEXT "Ledig plass som trengs for dvalemodus:", -1, 15, 115, 140, 10
     LTEXT "Ukjent", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT "Du trenger ledig plass før din datamaskin kan gå i dvalemodus. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "Du trenger ledig plass fÃ¸r din datamaskin kan gÃ¥ i dvalemodus. ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Strømvalg"
+    IDS_CPLNAME_1 "StrÃ¸mvalg"
     IDS_CPLDESCRIPTION_1 "Konfigurere energi-sparing innstillinger for din datamaskin."
     IDS_PROCENT "%i%%"
     IDS_SOUND "Lyd"
     IDS_TEXT "Tekst"
-    IDS_CONFIG1 "Innstillinger for %1 strømplan"
+    IDS_CONFIG1 "Innstillinger for %1 strÃ¸mplan"
     IDS_CONFIG2 "Avanserte innstillinger for %1"
     IDS_SIZEBYTS "%i byte"
     IDS_SIZEMB "%i MB"
-    IDS_NOACTION "Ikke gjør noe"
+    IDS_NOACTION "Ikke gjÃ¸r noe"
     IDS_PowerActionNone1 "Ingen handling"
     IDS_PowerActionUnknown "Ukjent"
     IDS_PowerActionSleep "Ventemodus"
     IDS_PowerActionHibernate "Dvalemodus"
-    IDS_PowerActionShutdown "Slå av"
-    IDS_PowerActionRestart "Start på nytt"
-    IDS_PowerActionShutdownOff "Slå av og slå av strømmen"
-    IDS_PowerActionWarmEject "Spør meg hva som skal gjøres"
+    IDS_PowerActionShutdown "SlÃ¥ av"
+    IDS_PowerActionRestart "Start pÃ¥ nytt"
+    IDS_PowerActionShutdownOff "SlÃ¥ av og slÃ¥ av strÃ¸mmen"
+    IDS_PowerActionWarmEject "SpÃ¸r meg hva som skal gjÃ¸res"
     IDS_PowerActionNone2 "Ingen"
     IDS_TIMEOUT1 "Etter 1 min"
     IDS_TIMEOUT2 "Etter 2 min"
@@ -140,6 +140,6 @@ BEGIN
     IDS_TIMEOUT14 "Etter 4 timer"
     IDS_TIMEOUT15 "Etter 5 timer"
     IDS_TIMEOUT16 "Aldri"
-    IDS_DEL_SCHEME "Er du sikker på at du vil slette strømplanen?"
+    IDS_DEL_SCHEME "Er du sikker pÃ¥ at du vil slette strÃ¸mplanen?"
     IDS_DEL_SCHEME_TITLE "Slett planen"
 END

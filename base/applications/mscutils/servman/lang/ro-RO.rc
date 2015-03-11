@@ -13,21 +13,21 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", ID_EXIT
     END
-    POPUP "Acți&uni"
+    POPUP "A&cțiuni"
     BEGIN
         MENUITEM "Co&nectare la…", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "P&ornește", ID_START, GRAYED
         MENUITEM "&Oprește", ID_STOP, GRAYED
-        MENUITEM "S&uspendă", ID_PAUSE, GRAYED
-        MENUITEM "&Continuă", ID_RESUME, GRAYED
+        MENUITEM "Într&erupe", ID_PAUSE, GRAYED
+        MENUITEM "R&eia", ID_RESUME, GRAYED
         MENUITEM "&Repornește", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Împrospătea&ză", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Mo&dificare…", ID_EDIT, GRAYED
-        MENUITEM "Cre&are…", ID_CREATE, GRAYED
-        MENUITEM "&Eliminare…", ID_DELETE, GRAYED
+        MENUITEM "&Creare…", ID_CREATE, GRAYED
+        MENUITEM "Elimin&are…", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Proprietăți…", ID_PROP, GRAYED
     END
@@ -40,7 +40,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Pa&rticularizare…", ID_VIEW_CUST, GRAYED
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Manual…", ID_HELP
         MENUITEM "&Despre…", ID_ABOUT
@@ -53,14 +53,14 @@ BEGIN
     BEGIN
         MENUITEM "P&ornește", ID_START, GRAYED
         MENUITEM "&Oprește", ID_STOP, GRAYED
-        MENUITEM "S&uspendă", ID_PAUSE, GRAYED
-        MENUITEM "&Continuă", ID_RESUME, GRAYED
+        MENUITEM "Într&erupe", ID_PAUSE, GRAYED
+        MENUITEM "R&eia", ID_RESUME, GRAYED
         MENUITEM "&Repornește", ID_RESTART, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Împrospătea&ză", ID_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Mo&dificare…", ID_EDIT, GRAYED
-        MENUITEM "&Eliminare…", ID_DELETE, GRAYED
+        MENUITEM "Elimin&are…", ID_DELETE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Proprietăți…", ID_PROP, GRAYED
         MENUITEM SEPARATOR
@@ -91,8 +91,8 @@ BEGIN
     COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
     PUSHBUTTON "P&ornește", IDC_START, 6, 155, 54, 15, WS_DISABLED
     PUSHBUTTON "&Oprește", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "S&uspendă", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
-    PUSHBUTTON "&Continuă", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "Într&erupe", IDC_PAUSE, 130, 155, 54, 15, WS_DISABLED
+    PUSHBUTTON "R&eia", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
     LTEXT "Nume serviciu:", IDC_STATIC, 4, 11, 53, 11
     LTEXT "Nume afișat:", IDC_STATIC, 4, 29, 53, 11
     LTEXT "Descriere:", IDC_STATIC, 4, 51, 53, 11
@@ -226,7 +226,7 @@ BEGIN
     IDS_TOOLTIP_DELETE "Elimină un serviciu existent"
     IDS_TOOLTIP_START "Pornește serviciul"
     IDS_TOOLTIP_STOP "Oprește serviciul"
-    IDS_TOOLTIP_PAUSE "Suspendă serviciul"
+    IDS_TOOLTIP_PAUSE "Întrerupe serviciul"
     IDS_TOOLTIP_RESTART "Repornește serviciul"
 END
 
@@ -234,8 +234,8 @@ STRINGTABLE
 BEGIN
     IDS_PROGRESS_INFO_START "Se încearcă pornirea următorului serviciu"
     IDS_PROGRESS_INFO_STOP "Se încearcă oprirea următorului serviciu"
-    IDS_PROGRESS_INFO_PAUSE "Se încearcă suspendarea următorului serviciu"
-    IDS_PROGRESS_INFO_RESUME "Se încearcă a se continua următorul serviciu"
+    IDS_PROGRESS_INFO_PAUSE "Se încearcă întreruperea următorului serviciu"
+    IDS_PROGRESS_INFO_RESUME "Se încearcă reluarea următorului serviciu"
     IDS_CREATE_SUCCESS "Serviciu creat cu succes"
     IDS_DELETE_SUCCESS "Serviciu eliminat cu succes"
     IDS_CREATE_REQ "Câmpurile cu\nasterisc sunt obligatorii"
@@ -256,8 +256,8 @@ BEGIN
     IDS_HINT_CONNECT " Gestionează un alt calculator."
     IDS_HINT_START " Pornește serviciul selectat."
     IDS_HINT_STOP " Oprește serviciul selectat."
-    IDS_HINT_PAUSE " Suspendă serviciul selectat."
-    IDS_HINT_RESUME " Continuă serviciul selectat."
+    IDS_HINT_PAUSE " Întrerupe serviciul selectat."
+    IDS_HINT_RESUME " Reia serviciul selectat."
     IDS_HINT_RESTART " Oprește apoi repornește serviciul selectat."
     IDS_HINT_REFRESH " Împrospătează lista de servicii."
     IDS_HINT_EDIT " Editează proprietățile serviciului selectat."

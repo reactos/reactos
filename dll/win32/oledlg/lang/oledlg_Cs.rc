@@ -25,11 +25,11 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-  IDS_RESULTOBJDESC	"Vložen nový %s objekt do Vašeho dokumentu"
-  IDS_RESULTFILEOBJDESC	"Vložen obsah souboru jako objekt do Vašeho dokumentu, takže ho mùžete upravit programem, kterým byl vytvoøen."
-  IDS_BROWSE            "Procházet"
-  IDS_NOTOLEMOD         "Soubor není platným OLE modulem. Nelze registrovat OLE propojení."
-  IDS_NOTOLEMODCAPTION  "Pøidat propojení"
+  IDS_RESULTOBJDESC	"VloÅ¾en novÃ½ %s objekt do VaÅ¡eho dokumentu"
+  IDS_RESULTFILEOBJDESC	"VloÅ¾en obsah souboru jako objekt do VaÅ¡eho dokumentu, takÅ¾e ho mÅ¯Å¾ete upravit programem, kterÃ½m byl vytvoÅ™en."
+  IDS_BROWSE            "ProchÃ¡zet"
+  IDS_NOTOLEMOD         "Soubor nenÃ­ platnÃ½m OLE modulem. Nelze registrovat OLE propojenÃ­."
+  IDS_NOTOLEMODCAPTION  "PÅ™idat propojenÃ­"
 }
 
 STRINGTABLE
@@ -48,7 +48,7 @@ STRINGTABLE
 
 UIINSERTOBJECT DIALOG  0, 0, 304, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vložit objekt"
+CAPTION "VloÅ¾it objekt"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,92,19,131,66,LBS_SORT |
@@ -57,18 +57,18 @@ BEGIN
     LTEXT           "Typ objektu:",IDC_OBJTYPELBL,92,7,53,8,WS_VISIBLE
     DEFPUSHBUTTON   "OK",IDOK,231,7,66,14
     PUSHBUTTON      "Storno",IDCANCEL,231,24,66,14
-    GROUPBOX        "Výsledek",IDC_RESULT,7,103,218,41
-    CONTROL         "Vytvoøit nový",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+    GROUPBOX        "VÃ½sledek",IDC_RESULT,7,103,218,41
+    CONTROL         "VytvoÅ™it novÃ½",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,84,10
-    CONTROL         "Vytvoøit propojení",IDC_CREATECONTROL,"Button",
+    CONTROL         "VytvoÅ™it propojenÃ­",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,84,10
-    CONTROL         "Vytvoøit ze souboru",IDC_CREATEFROMFILE,"Button",
+    CONTROL         "VytvoÅ™it ze souboru",IDC_CREATEFROMFILE,"Button",
                     BS_AUTORADIOBUTTON,7,37,84,10
     LTEXT           "",IDC_RESULTDESC,49,112,169,26
-    PUSHBUTTON      "Pøid&at propojení...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
+    PUSHBUTTON      "PÅ™id&at propojenÃ­...",IDC_ADDCONTROL,92,88,80,14,NOT WS_VISIBLE
     CONTROL         "Zobrazit jako ikonu",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,92,88,120,10
-    PUSHBUTTON      "Procházet...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "ProchÃ¡zet...",IDC_BROWSE,92,53,50,14,NOT WS_VISIBLE
     LTEXT           "Soubor:",IDC_FILELBL,92,27,20,8, NOT WS_VISIBLE
     EDITTEXT        IDC_FILE,92,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END

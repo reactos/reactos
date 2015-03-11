@@ -170,12 +170,16 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
                                    &Block,
                                    IOCTL_KEYBOARD_QUERY_INDICATORS,
                                    NULL, 0,
-                                   &gIndicators, sizeof(gIndicators));
+                                   &gIndicators,
+                                   sizeof(gIndicators));
 
     if (!NT_SUCCESS(Status))
     {
         WARN("NtDeviceIoControlFile() failed, ignored\n");
+        gIndicators.LedFlags = 0;
+        gIndicators.UnitId = 0;
     }
+
     SET_KEY_LOCKED(gafAsyncKeyState, VK_CAPITAL,
                    gIndicators.LedFlags & KEYBOARD_CAPS_LOCK_ON);
     SET_KEY_LOCKED(gafAsyncKeyState, VK_NUMLOCK,
@@ -197,7 +201,7 @@ UserInitKeyboard(HANDLE hKeyboardDevice)
     {
         ERR("NtDeviceIoControlFile() failed, ignored\n");
     }
-    TRACE("Keyboard type %d, subtype %d and number of func keys %d\n",
+    TRACE("Keyboard type %u, subtype %u and number of func keys %u\n",
              gKeyboardInfo.KeyboardIdentifier.Type,
              gKeyboardInfo.KeyboardIdentifier.Subtype,
              gKeyboardInfo.NumberOfFunctionKeys);
@@ -1067,7 +1071,7 @@ UserProcessKeyboardInput(
              but it wouldn't interpret E1 key(s) properly */
     wVk = IntVscToVk(wScanCode, pKbdTbl);
     TRACE("UserProcessKeyboardInput: %x (break: %u) -> %x\n",
-          wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1 : 0, wVk);
+          wScanCode, (pKbdInputData->Flags & KEY_BREAK) ? 1u : 0, wVk);
 
     if (wVk)
     {
@@ -1194,7 +1198,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         bResult = TRUE;
     }
 
-    TRACE("Leave IntTranslateKbdMessage ret %u, cch %d, msg %x, wch %x\n",
+    TRACE("Leave IntTranslateKbdMessage ret %d, cch %d, msg %x, wch %x\n",
         bResult, cch, NewMsg.message, NewMsg.wParam);
     return bResult;
 }

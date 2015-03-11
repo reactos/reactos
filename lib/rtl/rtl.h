@@ -27,6 +27,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <objbase.h>
+#include <ntintsafe.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>
@@ -38,6 +39,9 @@
 #include <ndk/setypes.h>
 #include <ndk/sefuncs.h>
 #include <ndk/umfuncs.h>
+
+/* SEH support with PSEH */
+#include <pseh/pseh2.h>
 
 /* Internal RTL header */
 #include "rtlp.h"

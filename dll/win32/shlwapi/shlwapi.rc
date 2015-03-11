@@ -24,8 +24,14 @@
 
 #include "version.rc"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/shlwapi_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/shlwapi_De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/shlwapi_En.rc"
@@ -36,11 +42,26 @@
 #ifdef LANGUAGE_FI_FI
     #include "lang/shlwapi_Fi.rc"
 #endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/shlwapi_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/shlwapi_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/shlwapi_Hu.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/shlwapi_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/shlwapi_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/shlwapi_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/shlwapi_Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/shlwapi_Nl.rc"
@@ -51,36 +72,6 @@
 #ifdef LANGUAGE_PL_PL
     #include "lang/shlwapi_Pl.rc"
 #endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/shlwapi_Sk.rc"
-#endif
-#ifdef LANGUAGE_SQ_AL
-    #include "lang/shlwapi_Sq.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/shlwapi_Sv.rc"
-#endif
-
-/* UTF-8 */
-
-#ifdef LANGUAGE_DE_DE
-    #include "lang/shlwapi_De.rc"
-#endif
-#ifdef LANGUAGE_FR_FR
-    #include "lang/shlwapi_Fr.rc"
-#endif
-#ifdef LANGUAGE_HE_IL
-    #include "lang/shlwapi_He.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "lang/shlwapi_Hu.rc"
-#endif
-#ifdef LANGUAGE_JA_JP
-    #include "lang/shlwapi_Ja.rc"
-#endif
-#ifdef LANGUAGE_LT_LT
-    #include "lang/shlwapi_Lt.rc"
-#endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/shlwapi_Pt.rc"
 #endif
@@ -90,8 +81,17 @@
 #ifdef LANGUAGE_RU_RU
     #include "lang/shlwapi_Ru.rc"
 #endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/shlwapi_Sk.rc"
+#endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/shlwapi_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/shlwapi_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/shlwapi_Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/shlwapi_Tr.rc"

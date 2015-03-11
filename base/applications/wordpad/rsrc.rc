@@ -66,25 +66,15 @@ IDC_ZOOM CURSOR "res/zoom.cur"
 
 #include <reactos/manifest_exe.rc>
 
-#ifdef LANGUAGE_EN_US
-    #include "lang/En.rc"
-#endif
-#ifdef LANGUAGE_HU_HU
-    #include "lang/Hu.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/Ko.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/Pl.rc"
-#endif
-
 /* UTF-8 */
 #ifdef LANGUAGE_DA_DK
     #include "lang/Da.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/Es.rc"
@@ -95,11 +85,17 @@ IDC_ZOOM CURSOR "res/zoom.cur"
 #ifdef LANGUAGE_HE_IL
     #include "lang/He.rc"
 #endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/Hu.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/Lt.rc"
@@ -109,6 +105,9 @@ IDC_ZOOM CURSOR "res/zoom.cur"
 #endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/Pt.rc"

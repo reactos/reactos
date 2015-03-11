@@ -19,15 +19,9 @@
 
 #pragma once
 
-typedef struct tagCMDLINEINFO
-{
-  const char *DefaultOperatingSystem;
-  LONG TimeOut;
-} CMDLINEINFO, *PCMDLINEINFO;
+VOID CmdLineParse(IN PCHAR CmdLine);
 
-void CmdLineParse(char *CmdLine);
-
-const char *CmdLineGetDefaultOS(void);
-LONG CmdLineGetTimeOut(void);
+PCCH CmdLineGetDefaultOS(VOID);
+LONG CmdLineGetTimeOut(VOID);
 
 /* EOF */

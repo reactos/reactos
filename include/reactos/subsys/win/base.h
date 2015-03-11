@@ -13,13 +13,15 @@
 
 typedef
 BOOL
-(CALLBACK * BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(
+(NTAPI *BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(
     HANDLE NewProcessId,
-    HANDLE SourceThreadId,
-    DWORD dwUnknown,
-    ULONG CreateFlags);
+    HANDLE ParentThreadId,
+    ULONG  dwUnknown,
+    ULONG  CreateFlags);
 
-NTSTATUS WINAPI BaseSetProcessCreateNotify(BASE_PROCESS_CREATE_NOTIFY_ROUTINE);
+VOID
+NTAPI
+BaseSetProcessCreateNotify(IN BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc);
 
 typedef struct _NLS_USER_INFO
 {
@@ -131,11 +133,10 @@ typedef struct _BASE_STATIC_SERVER_DATA
     BOOLEAN LUIDDeviceMapsEnabled;
     ULONG TermsrvClientTimeZoneChangeNum;
 } BASE_STATIC_SERVER_DATA, *PBASE_STATIC_SERVER_DATA;
-#ifndef _WIN64
+
+#if defined(_M_IX86)
 C_ASSERT(sizeof(BASE_STATIC_SERVER_DATA) == 0x1AC8);
 #endif
-
-VOID WINAPI BaseSrvNLSInit(IN PBASE_STATIC_SERVER_DATA StaticData);
 
 #endif // _BASE_H
 

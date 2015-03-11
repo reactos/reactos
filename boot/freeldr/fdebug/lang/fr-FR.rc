@@ -6,12 +6,12 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Connecter", IDM_FILE_CONNECT
-        MENUITEM "&Déconnecter", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&DÃ©connecter", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Clear display", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
-        MENUITEM "Démarrer la &Capture", IDM_FILE_STARTCAPTURE
-        MENUITEM "A&rréter la Capture", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "DÃ©marrer la &Capture", IDM_FILE_STARTCAPTURE
+        MENUITEM "A&rrÃ©ter la Capture", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Echo &Local", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
@@ -34,7 +34,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "A propos du débogueur de FreeLoader"
+CAPTION "A propos du dÃ©bogueur de FreeLoader"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "FreeLoader Debugger v1.0\nCopyright (C) 2003\nby Brian Palmer (brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
@@ -48,9 +48,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Options de Connection"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Entrée le port COM (p.e. COM1):", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "EntrÃ©e le port COM (p.e. COM1):", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
-    LTEXT "Entrée le taux du débit (p.e. 115200):", IDC_STATIC, 7, 38, 114, 8
+    LTEXT "EntrÃ©e le taux du dÃ©bit (p.e. 115200):", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 45, 79, 50, 14
     PUSHBUTTON "Annuler", IDCANCEL, 100, 79, 50, 14
@@ -79,5 +79,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ A UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiÃ©e par la Free Software Foundation; dans sa version 2  (ou selon votre prÃ©fÃ©rence) toute version ultÃ©rieure.\r\n\r\nCe programme est distribuÃ© dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans mÃªme une garantie implicite de COMMERCIABILITÃ‰ ou DE CONFORMITÃ‰ A UNE UTILISATION PARTICULIÃˆRE. \r\n\r\nVoir la Licence Publique GÃ©nÃ©rale GNU pour plus de dÃ©tails. Vous devriez avoir reÃ§u un exemplaire de la Licence Publique GÃ©nÃ©rale GNU avec ce programme ; si ce n'est pas le cas, Ã©crivez Ã  la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

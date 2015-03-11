@@ -43,7 +43,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ALL_TYPES_FILTER "Alle kompaktible filer  (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+    IDS_ALL_TYPES_FILTER "Alle kompaktible filer"
     IDS_TOOLTIP_PLAY "Spill av"
     IDS_TOOLTIP_STOP "Stopp"
     IDS_TOOLTIP_EJECT "Løs ut"
@@ -51,8 +51,8 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Søke tilbake"
     IDS_TOOLTIP_SEEKFORW "Søke fremover"
     IDS_TOOLTIP_FORWARD "Spole fremover"
+    IDS_TOOLTIP_PAUSE "Pause"
     IDS_APPTITLE "ReactOS Multimedia avspiller"
     IDS_PLAY "Spill"
     IDS_DEFAULTMCIERRMSG "No description is available for this error."
-    IDS_UNKNOWNFILEEXT "Cannot determine the device type from the given filename extension."
 END

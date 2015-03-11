@@ -1,4 +1,4 @@
-/* Romanian translation by Fulea Ștefan */
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -19,7 +19,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", IDM_ABOUT
     END

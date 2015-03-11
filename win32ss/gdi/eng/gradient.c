@@ -354,9 +354,9 @@ IntEngGradientFillTriangle(
         }
     }
 
-    DPRINT1("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
+    DPRINT("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
     /* FIXME: commented out because of an endless loop - fix triangles first */
-    DPRINT1("FIXME: IntEngGradientFillTriangle is broken\n");
+    DPRINT("FIXME: IntEngGradientFillTriangle is broken\n");
 
     if (!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &psoOutput))
     {

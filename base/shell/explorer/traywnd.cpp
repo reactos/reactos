@@ -72,8 +72,12 @@ class CStartButton
 
 public:
     CStartButton(CMessageMap *pObject, DWORD dwMsgMapID)
-        : CContainedWindow(pObject, dwMsgMapID)
+        : CContainedWindow(pObject, dwMsgMapID),
+          m_ImageList(NULL),
+          m_Font(NULL)
     {
+        m_Size.cx = 0;
+        m_Size.cy = 0;
     }
 
     virtual ~CStartButton()
@@ -102,8 +106,8 @@ public:
         if (m_ImageList == NULL ||
             !SendMessageW(BCM_GETIDEALSIZE, 0, (LPARAM) &Size))
         {
-            Size.cx = GetSystemMetrics(SM_CXEDGE);
-            Size.cy = GetSystemMetrics(SM_CYEDGE);
+            Size.cx = 2 * GetSystemMetrics(SM_CXEDGE);
+            Size.cy = 2 * GetSystemMetrics(SM_CYEDGE);
 
             if (hbmStart == NULL)
             {
@@ -370,6 +374,8 @@ class CTrayWindow :
     HWND m_Rebar;
     HWND m_TaskSwitch;
     HWND m_TrayNotify;
+
+    CTrayNotifyWnd* m_TrayNotifyInstance;
 
     DWORD    m_Position;
     HMONITOR m_Monitor;
@@ -1314,6 +1320,7 @@ ChangePos:
         {
             if (!GetClientRect(&rcClient))
             {
+                ERR("Could not get client rect lastErr=%d\n", GetLastError());
                 return;
             }
         }
@@ -1324,7 +1331,10 @@ ChangePos:
            the tray notification control */
         dwp = BeginDeferWindowPos(3);
         if (dwp == NULL)
+        {
+            ERR("BeginDeferWindowPos failed. lastErr=%d\n", GetLastError());
             return;
+        }
 
         /* Limit the Start button width to the client width, if neccessary */
         StartSize = m_StartButton.GetSize();
@@ -1343,7 +1353,10 @@ ChangePos:
                                  StartSize.cy,
                                  SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
+            {
+                ERR("DeferWindowPos for start button failed. lastErr=%d\n", GetLastError());
                 return;
+            }
         }
 
         /* Determine the size that the tray notification window needs */
@@ -1379,7 +1392,10 @@ ChangePos:
                                  TraySize.cy,
                                  SWP_NOZORDER | SWP_NOACTIVATE);
             if (dwp == NULL)
+            {
+                ERR("DeferWindowPos for notification area failed. lastErr=%d\n", GetLastError());
                 return;
+            }
         }
 
         /* Resize/Move the rebar control */
@@ -1433,7 +1449,7 @@ ChangePos:
         else
             m_Theme = NULL;
 
-        if (m_Theme)
+        if (Locked && m_Theme)
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
         }
@@ -1441,6 +1457,7 @@ ChangePos:
         {
             SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
         }
+        SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
 
         return TRUE;
     }
@@ -1524,7 +1541,7 @@ ChangePos:
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
         /* Create the tray notification window */
-        m_TrayNotify = CreateTrayNotifyWnd(this, HideClock);
+        m_TrayNotify = CreateTrayNotifyWnd(this, HideClock, &m_TrayNotifyInstance);
 
         if (UpdateNonClientMetrics())
         {
@@ -1658,7 +1675,7 @@ ChangePos:
         DisplayTrayProperties(hwnd);
 
         m_TrayPropertiesOwner = NULL;
-        DestroyWindow();
+        ::DestroyWindow(hwnd);
 
         return 0;
     }
@@ -1785,9 +1802,8 @@ ChangePos:
 
     BOOL STDMETHODCALLTYPE Lock(IN BOOL bLock)
     {
-        BOOL bPrevLock;
+        BOOL bPrevLock = Locked;
 
-        bPrevLock = Locked;
         if (Locked != bLock)
         {
             Locked = bLock;
@@ -1798,8 +1814,20 @@ ChangePos:
                 {
                     /* Reset?? */
                     Locked = bPrevLock;
+                    return bPrevLock;
                 }
             }
+
+            if (Locked && m_Theme)
+            {
+                SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, 0);
+            }
+            else
+            {
+                SetWindowStyle(m_hWnd, WS_THICKFRAME | WS_BORDER, WS_THICKFRAME | WS_BORDER);
+            }
+            SetWindowPos(NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+
         }
 
         return bPrevLock;
@@ -1958,18 +1986,22 @@ ChangePos:
                 case ABE_BOTTOM:
                     pt.x = rcExclude.left;
                     pt.y = rcExclude.top;
-                    dwFlags |= MPPF_BOTTOM;
+                    dwFlags |= MPPF_TOP;
                     break;
                 case ABE_TOP:
-                case ABE_LEFT:
                     pt.x = rcExclude.left;
                     pt.y = rcExclude.bottom;
-                    dwFlags |= MPPF_TOP | MPPF_ALIGN_RIGHT;
+                    dwFlags |= MPPF_BOTTOM;
+                    break;
+                case ABE_LEFT:
+                    pt.x = rcExclude.right;
+                    pt.y = rcExclude.top;
+                    dwFlags |= MPPF_RIGHT;
                     break;
                 case ABE_RIGHT:
-                    pt.x = rcExclude.right;
-                    pt.y = rcExclude.bottom;
-                    dwFlags |= MPPF_TOP | MPPF_ALIGN_LEFT;
+                    pt.x = rcExclude.left;
+                    pt.y = rcExclude.top;
+                    dwFlags |= MPPF_LEFT;
                     break;
                 }
 
@@ -2170,7 +2202,8 @@ ChangePos:
     {
         if (m_TrayNotify)
         {
-            TrayNotify_NotifyMsg(wParam, lParam);
+            TRACE("WM_COPYDATA notify message received. Handling...\n");
+            return TrayNotify_NotifyIconCmd(m_TrayNotifyInstance, wParam, lParam);
         }
         return TRUE;
     }
@@ -2541,7 +2574,7 @@ HandleTrayContextMenu:
         /* We should forward mouse messages to child windows here.
         Right now, this is only clock double-click */
         RECT rcClock;
-        if (TrayNotify_GetClockRect(&rcClock))
+        if (TrayNotify_GetClockRect(m_TrayNotifyInstance, &rcClock))
         {
             POINT ptClick;
             ptClick.x = MAKEPOINTS(lParam).x;
@@ -2589,8 +2622,8 @@ HandleTrayContextMenu:
     LRESULT OnDoExitWindows(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* 
-         * TWM_DOEXITWINDOWS is send by the CDesktopBrowserr to us to 
-         * show the shutdown dialog
+         * TWM_DOEXITWINDOWS is send by the CDesktopBrowser to us
+         * to show the shutdown dialog.
          */
         return DoExitWindows();
     }
@@ -2684,7 +2717,6 @@ HandleTrayContextMenu:
         {
             switch (LOWORD(wParam))
             {
-                /* FIXME: Handle these commands as well */
             case IDM_TASKBARANDSTARTMENU:
                 DisplayProperties();
                 break;
@@ -2701,11 +2733,14 @@ HandleTrayContextMenu:
                 DisplayRunFileDlg();
                 break;
 
-                /* FIXME: Handle these commands as well */
+            /* FIXME: Handle these commands as well */
             case IDM_SYNCHRONIZE:
-            case IDM_LOGOFF:
             case IDM_DISCONNECT:
             case IDM_UNDOCKCOMPUTER:
+                break;
+
+            case IDM_LOGOFF:
+                LogoffWindowsDialog(m_hWnd); // FIXME: Maybe handle it in a similar way as DoExitWindows?
                 break;
 
             case IDM_SHUTDOWN:
@@ -3091,15 +3126,6 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
     return S_OK;
 }
 
-CTrayWindow * g_TrayWindow;
-
-HRESULT
-Tray_OnStartMenuDismissed()
-{
-    return g_TrayWindow->RaiseStartButton();
-}
-
-
 HRESULT CreateTrayWindow(ITrayWindow ** ppTray)
 {
     CComPtr<CTrayWindow> Tray = new CComObject<CTrayWindow>();
@@ -3108,19 +3134,27 @@ HRESULT CreateTrayWindow(ITrayWindow ** ppTray)
 
     Tray->_Init();
     Tray->Open();
-    g_TrayWindow = Tray;
 
     *ppTray = (ITrayWindow *) Tray;
 
     return S_OK;
 }
 
-VOID TrayProcessMessages(ITrayWindow *)
+HRESULT
+Tray_OnStartMenuDismissed(ITrayWindow* Tray)
 {
-    g_TrayWindow->TrayProcessMessages();
+    CTrayWindow * TrayWindow = static_cast<CTrayWindow *>(Tray);
+    return TrayWindow->RaiseStartButton();
 }
 
-VOID TrayMessageLoop(ITrayWindow *)
+VOID TrayProcessMessages(ITrayWindow *Tray)
 {
-    g_TrayWindow->TrayMessageLoop();
+    CTrayWindow * TrayWindow = static_cast<CTrayWindow *>(Tray);
+    TrayWindow->TrayProcessMessages();
+}
+
+VOID TrayMessageLoop(ITrayWindow *Tray)
+{
+    CTrayWindow * TrayWindow = static_cast<CTrayWindow *>(Tray);
+    TrayWindow->TrayMessageLoop();
 }

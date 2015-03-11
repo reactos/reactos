@@ -887,9 +887,11 @@ DllMain(HANDLE hInstDll,
 
         case DLL_PROCESS_DETACH:
         {
-            DestroyCatalog();
-
-            FreeProviderHandleTable();
+            if (!lpReserved)
+            {
+                FreeProviderHandleTable();
+                DestroyCatalog();
+            }
         }
         break;
 

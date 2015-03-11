@@ -2,46 +2,46 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_DISPLAYADAPTER DIALOGEX 0, 0, 252, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Προσαρμογέας"
+CAPTION "Ξ ΟΞΏΟƒΞ±ΟΞΌΞΏΞ³Ξ­Ξ±Ο‚"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Τύπος προσαρμογέα", -1, 7, 3, 237, 50
+    GROUPBOX "Ξ¤ΟΟ€ΞΏΟ‚ Ο€ΟΞΏΟƒΞ±ΟΞΌΞΏΞ³Ξ­Ξ±", -1, 7, 3, 237, 50
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
-    PUSHBUTTON "&Ιδιότητες", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
-    GROUPBOX "Πληφορορίες για τον προσαρμογέα", -1, 7, 56, 237, 75
-    LTEXT "Τύπος chip:", -1, 13, 68, 58, 8
+    PUSHBUTTON "&Ξ™Ξ΄ΞΉΟΟ„Ξ·Ο„ΞµΟ‚", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+    GROUPBOX "Ξ Ξ»Ξ·Ο†ΞΏΟΞΏΟΞ―ΞµΟ‚ Ξ³ΞΉΞ± Ο„ΞΏΞ½ Ο€ΟΞΏΟƒΞ±ΟΞΌΞΏΞ³Ξ­Ξ±", -1, 7, 56, 237, 75
+    LTEXT "Ξ¤ΟΟ€ΞΏΟ‚ chip:", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
-    LTEXT "Τύπος DAC:", -1, 13, 80, 58, 8
+    LTEXT "Ξ¤ΟΟ€ΞΏΟ‚ DAC:", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Μέγεθος μνήμης:", -1, 13, 92, 58, 8
+    LTEXT "ΞΞ­Ξ³ΞµΞΈΞΏΟ‚ ΞΌΞ½Ξ®ΞΌΞ·Ο‚:", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
-    LTEXT "Συμβολοσειρά προσαρμογέα:", -1, 13, 104, 58, 8
+    LTEXT "Ξ£Ο…ΞΌΞ²ΞΏΞ»ΞΏΟƒΞµΞΉΟΞ¬ Ο€ΟΞΏΟƒΞ±ΟΞΌΞΏΞ³Ξ­Ξ±:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-    LTEXT "Στοιχεία BIOS:", -1, 13, 116, 58, 8
+    LTEXT "Ξ£Ο„ΞΏΞΉΟ‡ΞµΞ―Ξ± BIOS:", -1, 13, 116, 58, 8
     LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
-    PUSHBUTTON "&Λίστα καταστάσεων λειτουργίας...", IDC_LISTALLMODES, 7, 139, 75, 14
+    PUSHBUTTON "&Ξ›Ξ―ΟƒΟ„Ξ± ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ¬ΟƒΞµΟ‰Ξ½ Ξ»ΞµΞΉΟ„ΞΏΟ…ΟΞ³Ξ―Ξ±Ο‚...", IDC_LISTALLMODES, 7, 139, 75, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Λίστα καταστάσεων λειτουργίας"
+CAPTION "Ξ›Ξ―ΟƒΟ„Ξ± ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ¬ΟƒΞµΟ‰Ξ½ Ξ»ΞµΞΉΟ„ΞΏΟ…ΟΞ³Ξ―Ξ±Ο‚"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 112, 115, 50, 15
-    PUSHBUTTON "Άκυρο", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Λίστα έγκυρων καταστάσεων", -1, 6, 7, 212, 98
+    PUSHBUTTON "Ξ†ΞΊΟ…ΟΞΏ", IDCANCEL, 167, 115, 50, 15
+    GROUPBOX "Ξ›Ξ―ΟƒΟ„Ξ± Ξ­Ξ³ΞΊΟ…ΟΟ‰Ξ½ ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ¬ΟƒΞµΟ‰Ξ½", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
     IDS_MODEFMT "%d by %d, %s, %s"
-    IDS_DEFREFRESHRATE "Προεπιλεγμένη ανανέωση"
+    IDS_DEFREFRESHRATE "Ξ ΟΞΏΞµΟ€ΞΉΞ»ΞµΞ³ΞΌΞ­Ξ½Ξ· Ξ±Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ·"
     IDES_REFRESHRATEFMT "%d Hertz"
-    IDS_4BPP "16 χρώματα"
-    IDS_8BPP "256 χρώματα"
-    IDS_15BPP "Πολλά χρώματα (15 bit)"
-    IDS_16BPP "Πολλά χρώματα (16 bit)"
-    IDS_24BPP "Φυσικά χρώματα (24 bit)"
-    IDS_32BPP "Φυσικά χρώματα (32 bit)"
+    IDS_4BPP "16 Ο‡ΟΟΞΌΞ±Ο„Ξ±"
+    IDS_8BPP "256 Ο‡ΟΟΞΌΞ±Ο„Ξ±"
+    IDS_15BPP "Ξ ΞΏΞ»Ξ»Ξ¬ Ο‡ΟΟΞΌΞ±Ο„Ξ± (15 bit)"
+    IDS_16BPP "Ξ ΞΏΞ»Ξ»Ξ¬ Ο‡ΟΟΞΌΞ±Ο„Ξ± (16 bit)"
+    IDS_24BPP "Ξ¦Ο…ΟƒΞΉΞΊΞ¬ Ο‡ΟΟΞΌΞ±Ο„Ξ± (24 bit)"
+    IDS_32BPP "Ξ¦Ο…ΟƒΞΉΞΊΞ¬ Ο‡ΟΟΞΌΞ±Ο„Ξ± (32 bit)"
 END

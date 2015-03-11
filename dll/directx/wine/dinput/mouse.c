@@ -66,10 +66,7 @@ static inline SysMouseImpl *impl_from_IDirectInputDevice8W(IDirectInputDevice8W 
 {
     return CONTAINING_RECORD(CONTAINING_RECORD(iface, IDirectInputDeviceImpl, IDirectInputDevice8W_iface), SysMouseImpl, base);
 }
-static inline IDirectInputDevice8A *IDirectInputDevice8A_from_impl(SysMouseImpl *This)
-{
-    return &This->base.IDirectInputDevice8A_iface;
-}
+
 static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(SysMouseImpl *This)
 {
     return &This->base.IDirectInputDevice8W_iface;
@@ -535,6 +532,10 @@ static HRESULT WINAPI SysMouseWImpl_GetDeviceState(LPDIRECTINPUTDEVICE8W iface, 
     SysMouseImpl *This = impl_from_IDirectInputDevice8W(iface);
 
     if(This->base.acquired == 0) return DIERR_NOTACQUIRED;
+
+#ifndef __REACTOS__
+    __wine_check_for_events( QS_ALLINPUT );
+#endif
 
     TRACE("(this=%p,0x%08x,%p):\n", This, len, ptr);
     _dump_mouse_state(&This->m_state);

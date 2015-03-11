@@ -396,8 +396,8 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         /* Check if we have a Security Descriptor */
         if (DeviceObject->SecurityDescriptor)
         {
-            /* Free it */
-            ExFreePoolWithTag(DeviceObject->SecurityDescriptor, TAG_SD);
+            /* Dereference it */
+            ObDereferenceSecurityDescriptor(DeviceObject->SecurityDescriptor, 1);
         }
 
         /* Remove the device from the list */

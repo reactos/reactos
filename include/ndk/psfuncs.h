@@ -69,8 +69,8 @@ PVOID
 NTAPI
 PsSetThreadWin32Thread(
     _Inout_ PETHREAD Thread,
-    _In_ PVOID Win32Thread,
-    _In_ PVOID OldWin32Thread
+    _In_opt_ PVOID Win32Thread,
+    _In_opt_ PVOID OldWin32Thread
 );
 
 NTKERNELAPI
@@ -92,7 +92,7 @@ VOID
 NTAPI
 PsSetProcessWindowStation(
     _Inout_ PEPROCESS Process,
-    _In_ PVOID WindowStation
+    _In_opt_ PVOID WindowStation
 );
 
 NTKERNELAPI

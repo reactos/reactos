@@ -284,6 +284,7 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFOEX {
     SMALL_RECT srWindow;
     COORD dwMaximumWindowSize;
     WORD wPopupAttributes;
+    BOOL bFullscreenSupported;
     COLORREF ColorTable[16];
 } CONSOLE_SCREEN_BUFFER_INFOEX, *PCONSOLE_SCREEN_BUFFER_INFOEX;
 

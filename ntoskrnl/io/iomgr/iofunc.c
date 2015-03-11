@@ -865,6 +865,35 @@ IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
     return STATUS_SUCCESS;
 }
 
+static
+ULONG
+IopGetFileMode(IN PFILE_OBJECT FileObject)
+{
+    ULONG Mode = 0;
+
+    if (FileObject->Flags & FO_WRITE_THROUGH)
+        Mode |= FILE_WRITE_THROUGH;
+
+    if (FileObject->Flags & FO_SEQUENTIAL_ONLY)
+        Mode |= FILE_SEQUENTIAL_ONLY;
+
+    if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
+        Mode |= FILE_NO_INTERMEDIATE_BUFFERING;
+
+    if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+    {
+        if (FileObject->Flags & FO_ALERTABLE_IO)
+            Mode |= FILE_SYNCHRONOUS_IO_ALERT;
+        else
+            Mode |= FILE_SYNCHRONOUS_IO_NONALERT;
+    }
+
+    if (FileObject->Flags & FO_DELETE_ON_CLOSE)
+        Mode |= FILE_DELETE_ON_CLOSE;
+
+    return Mode;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1863,6 +1892,11 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     PVOID NormalContext;
     KIRQL OldIrql;
     IO_STATUS_BLOCK KernelIosb;
+    BOOLEAN CallDriver = TRUE;
+    PFILE_ACCESS_INFORMATION AccessBuffer;
+    PFILE_MODE_INFORMATION ModeBuffer;
+    PFILE_ALIGNMENT_INFORMATION AlignmentBuffer;
+    PFILE_ALL_INFORMATION AllBuffer;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -2043,8 +2077,51 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     /* Update operation counts */
     IopUpdateOperationCount(IopOtherTransfer);
 
+    /* Fill in file information before calling the driver.
+       See 'File System Internals' page 485.*/
+    if (FileInformationClass == FileAccessInformation)
+    {
+        AccessBuffer = Irp->AssociatedIrp.SystemBuffer;
+        AccessBuffer->AccessFlags = HandleInformation.GrantedAccess;
+        Irp->IoStatus.Information = sizeof(FILE_ACCESS_INFORMATION);
+        CallDriver = FALSE;
+    }
+    else if (FileInformationClass == FileModeInformation)
+    {
+        ModeBuffer = Irp->AssociatedIrp.SystemBuffer;
+        ModeBuffer->Mode = IopGetFileMode(FileObject);
+        Irp->IoStatus.Information = sizeof(FILE_MODE_INFORMATION);
+        CallDriver = FALSE;
+    }
+    else if (FileInformationClass == FileAlignmentInformation)
+    {
+        AlignmentBuffer = Irp->AssociatedIrp.SystemBuffer;
+        AlignmentBuffer->AlignmentRequirement = DeviceObject->AlignmentRequirement;
+        Irp->IoStatus.Information = sizeof(FILE_ALIGNMENT_INFORMATION);
+        CallDriver = FALSE;
+    }
+    else if (FileInformationClass == FileAllInformation)
+    {
+        AllBuffer = Irp->AssociatedIrp.SystemBuffer;
+        AllBuffer->AccessInformation.AccessFlags = HandleInformation.GrantedAccess;
+        AllBuffer->ModeInformation.Mode = IopGetFileMode(FileObject);
+        AllBuffer->AlignmentInformation.AlignmentRequirement = DeviceObject->AlignmentRequirement;
+        Irp->IoStatus.Information = sizeof(FILE_ACCESS_INFORMATION) +
+                                    sizeof(FILE_MODE_INFORMATION) +
+                                    sizeof(FILE_ALIGNMENT_INFORMATION);
+    }
+
     /* Call the Driver */
-    Status = IoCallDriver(DeviceObject, Irp);
+    if (CallDriver)
+    {
+        Status = IoCallDriver(DeviceObject, Irp);
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+    }
+
     if (Status == STATUS_PENDING)
     {
         /* Check if this was async I/O */

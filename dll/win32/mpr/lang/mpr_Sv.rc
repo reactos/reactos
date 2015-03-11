@@ -22,24 +22,24 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Hela nätverket"
+    IDS_ENTIRENETWORK "Hela nÃ¤tverket"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ange nätverkslösenord"
+CAPTION "Ange nÃ¤tverkslÃ¶senord"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Ange ditt användarnamn och lösenord:", IDC_EXPLAIN, 6, 6, 150, 18
+ LTEXT "Ange ditt anvÃ¤ndarnamn och lÃ¶senord:", IDC_EXPLAIN, 6, 6, 150, 18
  LTEXT "Proxy", -1, 6, 26, 60, 10
 /* LTEXT "Realm", -1, 6, 46, 60, 10 */
- LTEXT "Användare", -1, 6, 66, 60, 10
- LTEXT "Lösenord", -1, 6, 86, 60, 10
+ LTEXT "AnvÃ¤ndare", -1, 6, 66, 60, 10
+ LTEXT "LÃ¶senord", -1, 6, 86, 60, 10
  LTEXT "", IDC_PROXY, 70, 26, 150, 14, 0
  LTEXT "", IDC_REALM, 70, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 70, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 70, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Spara detta lösenord (osäkert)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Spara detta lÃ¶senord (osÃ¤kert)", IDC_SAVEPASSWORD,
            70, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 114, 126, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Avbryt", IDCANCEL, 170, 126, 50, 14, WS_GROUP | WS_TABSTOP

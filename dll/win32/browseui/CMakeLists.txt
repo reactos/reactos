@@ -2,9 +2,6 @@ PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
 
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
-
 include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 spec2def(browseui.dll browseui.spec ADD_IMPORTLIB)
 
@@ -20,6 +17,7 @@ list(APPEND SOURCE
     brandband.cpp
     browseui.cpp
     browseuiord.cpp
+    CAutoComplete.cpp
     commonbrowser.cpp
     desktopipc.cpp
     explorerband.cpp
@@ -31,6 +29,7 @@ list(APPEND SOURCE
     toolsband.cpp
     travellog.cpp
     utility.cpp
+    CProgressDialog.cpp
     precomp.h)
 
 add_library(browseui SHARED

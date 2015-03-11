@@ -14,12 +14,17 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+/* User notification procedure to be called when a process is created */
+static BASE_PROCESS_CREATE_NOTIFY_ROUTINE UserNotifyProcessCreate = NULL;
+
 /* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(BaseSrvDebugProcess)
 {
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Deprecated */
+    return STATUS_UNSUCCESSFUL;
 }
 
 CSR_API(BaseSrvRegisterThread)
@@ -27,6 +32,7 @@ CSR_API(BaseSrvRegisterThread)
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
 }
+
 CSR_API(BaseSrvSxsCreateActivationContext)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
@@ -40,12 +46,6 @@ CSR_API(BaseSrvSetTermsrvAppInstallMode)
 }
 
 CSR_API(BaseSrvSetTermsrvClientTimeZone)
-{
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-CSR_API(BaseSrvUnknown)
 {
     DPRINT1("%s not yet implemented\n", __FUNCTION__);
     return STATUS_NOT_IMPLEMENTED;
@@ -172,7 +172,14 @@ CSR_API(BaseSrvCreateProcess)
         return Status;
     }
 
-    /* FIXME: Should notify user32 */
+    /* Call the user notification procedure */
+    if (UserNotifyProcessCreate)
+    {
+        UserNotifyProcessCreate(CreateProcessRequest->ClientId.UniqueProcess,
+                                Process->ClientId.UniqueThread,
+                                0,
+                                Flags);
+    }
 
     /* Check if this is a VDM process */
     if (CreateProcessRequest->VdmBinaryType)
@@ -281,7 +288,8 @@ CSR_API(BaseSrvGetProcessShutdownParam)
     ASSERT(CsrThread);
 
     ShutdownParametersRequest->ShutdownLevel = CsrThread->Process->ShutdownLevel;
-    ShutdownParametersRequest->ShutdownFlags = CsrThread->Process->ShutdownFlags;
+    /* Only SHUTDOWN_NORETRY flag is valid for this API. The other private flags are for CSRSRV/WINSRV only. */
+    ShutdownParametersRequest->ShutdownFlags = CsrThread->Process->ShutdownFlags & SHUTDOWN_NORETRY;
 
     return STATUS_SUCCESS;
 }
@@ -292,7 +300,15 @@ CSR_API(BaseSrvSetProcessShutdownParam)
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
+    /* Only SHUTDOWN_NORETRY flag is valid for this API. The other private flags are for CSRSRV/WINSRV only. */
+    if (ShutdownParametersRequest->ShutdownFlags & ~SHUTDOWN_NORETRY)
+    {
+        /* If there were other flags specified, fail the call */
+        return STATUS_INVALID_PARAMETER;
+    }
+
     CsrThread->Process->ShutdownLevel = ShutdownParametersRequest->ShutdownLevel;
+    /* Notice that all the possible other private flags are reinitialized here */
     CsrThread->Process->ShutdownFlags = ShutdownParametersRequest->ShutdownFlags;
 
     return STATUS_SUCCESS;
@@ -300,12 +316,12 @@ CSR_API(BaseSrvSetProcessShutdownParam)
 
 /* PUBLIC API *****************************************************************/
 
-NTSTATUS
+VOID
 NTAPI
 BaseSetProcessCreateNotify(IN BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc)
 {
-    DPRINT("BASESRV: %s(%08lx) called\n", __FUNCTION__, ProcessCreateNotifyProc);
-    return STATUS_NOT_IMPLEMENTED;
+    /* Set the user notification procedure to be called when a process is created */
+    UserNotifyProcessCreate = ProcessCreateNotifyProc;
 }
 
 /* EOF */

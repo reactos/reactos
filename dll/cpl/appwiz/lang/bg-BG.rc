@@ -2,7 +2,7 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Създаване на връзка"
+CAPTION "РЎСЉР·РґР°РІР°РЅРµ РЅР° РІСЂСЉР·РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1", -1, 115, 15, 160, 24
@@ -11,7 +11,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Създаване на връзка"
+CAPTION "РЎСЉР·РґР°РІР°РЅРµ РЅР° РІСЂСЉР·РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1",-1,10,0,225,40
@@ -21,32 +21,32 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Създаване на препратка"
+CAPTION "РЎСЉР·РґР°РІР°РЅРµ РЅР° РїСЂРµРїСЂР°С‚РєР°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Вълшебникът ви помага за създаването на препратки към местни или мрежови приложения, файлове, папки, компютри или адреси в интернет.", -1, 120, 15, 200, 32
-    LTEXT "Напишете местоположението на предмета:", -1, 120, 50, 160, 10
+    LTEXT "Р’СЉР»С€РµР±РЅРёРєСЉС‚ РІРё РїРѕРјР°РіР° Р·Р° СЃСЉР·РґР°РІР°РЅРµС‚Рѕ РЅР° РїСЂРµРїСЂР°С‚РєРё РєСЉРј РјРµСЃС‚РЅРё РёР»Рё РјСЂРµР¶РѕРІРё РїСЂРёР»РѕР¶РµРЅРёСЏ, С„Р°Р№Р»РѕРІРµ, РїР°РїРєРё, РєРѕРјРїСЋС‚СЂРё РёР»Рё Р°РґСЂРµСЃРё РІ РёРЅС‚РµСЂРЅРµС‚.", -1, 120, 15, 200, 32
+    LTEXT "РќР°РїРёС€РµС‚Рµ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµС‚Рѕ РЅР° РїСЂРµРґРјРµС‚Р°:", -1, 120, 50, 160, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-    PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 275, 65, 55, 15, ES_LEFT
-    LTEXT "Натиснете ""Напред"" за продължаване.", -1, 120, 100, 160, 10
+    PUSHBUTTON "РћР±Р·РѕСЂ...", IDC_SHORTCUT_BROWSE, 275, 65, 55, 15, ES_LEFT
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ ""РќР°РїСЂРµРґ"" Р·Р° РїСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ.", -1, 120, 100, 160, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Изберете заглавие за приложението"
+CAPTION "РР·Р±РµСЂРµС‚Рµ Р·Р°РіР»Р°РІРёРµ Р·Р° РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Напишете име за препратката:", -1, 120, 15, 150, 10
+    LTEXT "&РќР°РїРёС€РµС‚Рµ РёРјРµ Р·Р° РїСЂРµРїСЂР°С‚РєР°С‚Р°:", -1, 120, 15, 150, 10
     EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-    LTEXT "Натиснете ""Край"" за създаване на препратка.", -1, 120, 50, 170, 10
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ ""РљСЂР°Р№"" Р·Р° СЃСЉР·РґР°РІР°РЅРµ РЅР° РїСЂРµРїСЂР°С‚РєР°.", -1, 120, 50, 170, 10
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_CPLSYSTEMNAME "Добавяне/премахване на приложения"
-    IDS_CPLSYSTEMDESCRIPTION "Слага приложения и създава препратки."
-    IDS_CREATE_SHORTCUT "Създаване на препратка"
-    IDS_ERROR_NOT_FOUND "Не бе открит файл %s."
+    IDS_CPLSYSTEMNAME "Р”РѕР±Р°РІСЏРЅРµ/РїСЂРµРјР°С…РІР°РЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёСЏ"
+    IDS_CPLSYSTEMDESCRIPTION "РЎР»Р°РіР° РїСЂРёР»РѕР¶РµРЅРёСЏ Рё СЃСЉР·РґР°РІР° РїСЂРµРїСЂР°С‚РєРё."
+    IDS_CREATE_SHORTCUT "РЎСЉР·РґР°РІР°РЅРµ РЅР° РїСЂРµРїСЂР°С‚РєР°"
+    IDS_ERROR_NOT_FOUND "РќРµ Р±Рµ РѕС‚РєСЂРёС‚ С„Р°Р№Р» %s."
 END
 
 STRINGTABLE

@@ -214,6 +214,19 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
             return E_FAIL;
         }
 
+        if (e->offset == WINED3D_APPEND_ALIGNED_ELEMENT)
+        {
+            if (!i)
+            {
+                e->offset = 0;
+            }
+            else
+            {
+                struct wined3d_vertex_declaration_element *prev = &declaration->elements[i - 1];
+                e->offset = (prev->offset + prev->format->byte_count + 3) & ~3;
+            }
+        }
+
         if (e->offset & 0x3)
         {
             WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);

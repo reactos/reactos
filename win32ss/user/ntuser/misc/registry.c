@@ -82,19 +82,34 @@ RegQueryValue(
                              cbInfoSize,
                              &cbInfoSize);
 
-    cbDataSize = pInfo->DataLength;
-
     /* Note: STATUS_BUFFER_OVERFLOW is not a success */
     if (NT_SUCCESS(Status))
     {
+        cbDataSize = pInfo->DataLength;
+
         /* Did we get the right type */
-        if (pInfo->Type == ulType)
+        if (pInfo->Type != ulType)
+        {
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
+        }
+        else if (cbDataSize > *pcbValue)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
         {
             /* Copy the contents to the caller */
             RtlCopyMemory(pvData, pInfo->Data, cbDataSize);
         }
-        else
-            Status = STATUS_OBJECT_TYPE_MISMATCH;
+    }
+    else if ((Status == STATUS_BUFFER_OVERFLOW) || (Status == STATUS_BUFFER_TOO_SMALL))
+    {
+        _PRAGMA_WARNING_SUPPRESS(6102); /* cbInfoSize is initialized here! */
+        cbDataSize = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    }
+    else
+    {
+        cbDataSize = 0;
     }
 
     /* Return the data size to the caller */
@@ -140,14 +155,15 @@ RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
     return NT_SUCCESS(Status);
 }
 
+_Success_(return!=FALSE)
 BOOL
 NTAPI
 RegReadUserSetting(
-    IN PCWSTR pwszKeyName,
-    IN PCWSTR pwszValueName,
-    IN ULONG ulType,
-    OUT PVOID pvData,
-    IN ULONG cbDataSize)
+    _In_z_ PCWSTR pwszKeyName,
+    _In_z_ PCWSTR pwszValueName,
+    _In_ ULONG ulType,
+    _Out_writes_(cbDataSize) _When_(ulType == REG_SZ, _Post_z_) PVOID pvData,
+    _In_ ULONG cbDataSize)
 {
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;

@@ -85,7 +85,7 @@ FsRtlCancelNotify(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PNOTIFY_CHANGE NotifyChange;
     PREAL_NOTIFY_SYNC RealNotifySync;
-    PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
+    PSECURITY_SUBJECT_CONTEXT _SEH2_VOLATILE SubjectContext = NULL;
 
     /* Get the NOTIFY_CHANGE struct and reset it */
     NotifyChange = (PNOTIFY_CHANGE)Irp->IoStatus.Information;
@@ -559,7 +559,7 @@ FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
  * @implemented
  *
  * Lets FSD know if changes occures in the specified directory.
- * Directory will be reenumerated. 
+ * Directory will be reenumerated.
  *
  * @param NotifySync
  *        Synchronization object pointer
@@ -568,7 +568,7 @@ FsRtlNotifyUpdateBuffer(OUT PFILE_NOTIFY_INFORMATION OutputBuffer,
  *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        String (A or W) containing the full directory name 
+ *        String (A or W) containing the full directory name
  *
  * @param NotifyList
  *        Notify list pointer (to head)
@@ -620,7 +620,7 @@ FsRtlNotifyChangeDirectory(IN PNOTIFY_SYNC NotifySync,
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FsContext
  *        Used to identify the notify structure
@@ -638,7 +638,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
 {
     PNOTIFY_CHANGE NotifyChange;
     PREAL_NOTIFY_SYNC RealNotifySync;
-    PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
+    PSECURITY_SUBJECT_CONTEXT _SEH2_VOLATILE SubjectContext = NULL;
 
     /* Get real structure hidden behind the opaque pointer */
     RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
@@ -1337,7 +1337,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                             {
                                 if (PoolQuotaCharged)
                                 {
-                                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NumberOfBytes); 
+                                    PsReturnProcessPagedPoolQuota(NotifyChange->OwningProcess, NumberOfBytes);
                                 }
                                 NotifyChange->Flags |= NOTIFY_IMMEDIATELY;
                             }
@@ -1413,19 +1413,19 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
  * @name FsRtlNotifyFullChangeDirectory
  * @implemented
  *
- * Lets FSD know if changes occures in the specified directory. 
+ * Lets FSD know if changes occures in the specified directory.
  *
  * @param NotifySync
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FsContext
  *        Used to identify the notify structure
  *
  * @param FullDirectoryName
- *        String (A or W) containing the full directory name 
+ *        String (A or W) containing the full directory name
  *
  * @param WatchTree
  *        True to notify changes in subdirectories too
@@ -1489,13 +1489,13 @@ FsRtlNotifyFullChangeDirectory(IN PNOTIFY_SYNC NotifySync,
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FullTargetName
  *        String (A or W) containing the full directory name that changed
  *
  * @param TargetNameOffset
- *        Offset, in FullTargetName, of the final component that is in the changed directory 
+ *        Offset, in FullTargetName, of the final component that is in the changed directory
  *
  * @param StreamName
  *        String (A or W) containing a stream name
@@ -1563,7 +1563,7 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
     PREAL_NOTIFY_SYNC RealNotifySync;
 
     *NotifySync = NULL;
-    
+
     RealNotifySync = ExAllocatePoolWithTag(NonPagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                            sizeof(REAL_NOTIFY_SYNC), 'FSNS');
     ExInitializeFastMutex(&(RealNotifySync->FastMutex));
@@ -1583,7 +1583,7 @@ FsRtlNotifyInitializeSync(IN PNOTIFY_SYNC *NotifySync)
  *        Synchronization object pointer
  *
  * @param NotifyList
- *        Notify list pointer (to head) 
+ *        Notify list pointer (to head)
  *
  * @param FullTargetName
  *        String (A or W) containing the full directory name that changed
@@ -1616,7 +1616,7 @@ FsRtlNotifyReportChange(IN PNOTIFY_SYNC NotifySync,
                                     FilterMatch,
                                     0,
                                     NULL,
-                                    NULL); 
+                                    NULL);
 }
 
 /*++

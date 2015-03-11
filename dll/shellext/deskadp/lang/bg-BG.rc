@@ -2,46 +2,46 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_DISPLAYADAPTER DIALOGEX 0, 0, 252, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Карта"
+CAPTION "РљР°СЂС‚Р°"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Вид карта", -1, 7, 3, 237, 50
+    GROUPBOX "Р’РёРґ РєР°СЂС‚Р°", -1, 7, 3, 237, 50
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
-    PUSHBUTTON "&Свойства", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
-    GROUPBOX "Сведения за картата:", -1, 7, 56, 237, 75
-    LTEXT "Вид чип:", -1, 13, 68, 58, 8
+    PUSHBUTTON "&РЎРІРѕР№СЃС‚РІР°", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+    GROUPBOX "РЎРІРµРґРµРЅРёСЏ Р·Р° РєР°СЂС‚Р°С‚Р°:", -1, 7, 56, 237, 75
+    LTEXT "Р’РёРґ С‡РёРї:", -1, 13, 68, 58, 8
     LTEXT "", IDC_CHIPTYPE, 85, 68, 155, 8, SS_NOPREFIX
-    LTEXT "Вид ЦАП:", -1, 13, 80, 58, 8
+    LTEXT "Р’РёРґ Р¦РђРџ:", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 85, 80, 155, 8, SS_NOPREFIX
-    LTEXT "Размер на паметта:", -1, 13, 92, 75, 8
+    LTEXT "Р Р°Р·РјРµСЂ РЅР° РїР°РјРµС‚С‚Р°:", -1, 13, 92, 75, 8
     LTEXT "", IDC_MEMORYSIZE, 85, 92, 155, 8, SS_NOPREFIX
-    LTEXT "Низ на картата:", -1, 13, 104, 58, 8
+    LTEXT "РќРёР· РЅР° РєР°СЂС‚Р°С‚Р°:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 85, 104, 155, 8, SS_NOPREFIX
-    LTEXT "Сведения на БИОСа:", -1, 13, 115, 75, 8
+    LTEXT "РЎРІРµРґРµРЅРёСЏ РЅР° Р‘РРћРЎР°:", -1, 13, 115, 75, 8
     LTEXT "", IDC_BIOSINFORMATION, 85, 115, 155, 8, SS_NOPREFIX
-    PUSHBUTTON "&Списък на всички режими...", IDC_LISTALLMODES, 7, 139, 110, 14
+    PUSHBUTTON "&РЎРїРёСЃСЉРє РЅР° РІСЃРёС‡РєРё СЂРµР¶РёРјРё...", IDC_LISTALLMODES, 7, 139, 110, 14
 END
 
 IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
-CAPTION "Списък на всички режими"
+CAPTION "РЎРїРёСЃСЉРє РЅР° РІСЃРёС‡РєРё СЂРµР¶РёРјРё"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON "Добре", IDOK, 112, 115, 50, 15
-    PUSHBUTTON "Отказ", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Списък на допустимите режими", -1, 6, 7, 212, 98
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 112, 115, 50, 15
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 167, 115, 50, 15
+    GROUPBOX "РЎРїРёСЃСЉРє РЅР° РґРѕРїСѓСЃС‚РёРјРёС‚Рµ СЂРµР¶РёРјРё", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MODEFMT "%d на %d, %s, %s"
-    IDS_DEFREFRESHRATE "Подразбрано опресняване"
-    IDES_REFRESHRATEFMT "%d херца"
-    IDS_4BPP "16 цвята"
-    IDS_8BPP "256 цвята"
-    IDS_15BPP "Висока цветност (15 разряда)"
-    IDS_16BPP "Висока цветност (16 разряда)"
-    IDS_24BPP "Истинска цветност (24 разряда)"
-    IDS_32BPP "Истинска цветност (32 разряда)"
+    IDS_MODEFMT "%d РЅР° %d, %s, %s"
+    IDS_DEFREFRESHRATE "РџРѕРґСЂР°Р·Р±СЂР°РЅРѕ РѕРїСЂРµСЃРЅСЏРІР°РЅРµ"
+    IDES_REFRESHRATEFMT "%d С…РµСЂС†Р°"
+    IDS_4BPP "16 С†РІСЏС‚Р°"
+    IDS_8BPP "256 С†РІСЏС‚Р°"
+    IDS_15BPP "Р’РёСЃРѕРєР° С†РІРµС‚РЅРѕСЃС‚ (15 СЂР°Р·СЂСЏРґР°)"
+    IDS_16BPP "Р’РёСЃРѕРєР° С†РІРµС‚РЅРѕСЃС‚ (16 СЂР°Р·СЂСЏРґР°)"
+    IDS_24BPP "РСЃС‚РёРЅСЃРєР° С†РІРµС‚РЅРѕСЃС‚ (24 СЂР°Р·СЂСЏРґР°)"
+    IDS_32BPP "РСЃС‚РёРЅСЃРєР° С†РІРµС‚РЅРѕСЃС‚ (32 СЂР°Р·СЂСЏРґР°)"
 END

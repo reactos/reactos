@@ -159,7 +159,11 @@ typedef struct _NCB {
 	void (CALLBACK *ncb_post)(struct _NCB*);
 	UCHAR ncb_lana_num;
 	UCHAR ncb_cmd_cplt;
+#ifdef _WIN64
+	UCHAR ncb_reserve[18];
+#else
 	UCHAR ncb_reserve[10];
+#endif
 	HANDLE ncb_event;
 } NCB,*PNCB;
 typedef struct _SESSION_BUFFER {

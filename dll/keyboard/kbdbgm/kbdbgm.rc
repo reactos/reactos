@@ -1,5 +1,6 @@
 #define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "Марица - Българска клавиатурна подредба по БДС 5237-78 за РеактОС\0"
+#pragma code_page(65001)
+#define REACTOS_STR_FILE_DESCRIPTION  "РњР°СЂРёС†Р° - Р‘СЉР»РіР°СЂСЃРєР° РєР»Р°РІРёР°С‚СѓСЂРЅР° РїРѕРґСЂРµРґР±Р° РїРѕ Р‘Р”РЎ 5237-78 Р·Р° Р РµР°РєС‚РћРЎ\0"
 #define REACTOS_STR_INTERNAL_NAME     "kbdbgm"
 #define REACTOS_STR_ORIGINAL_FILENAME "kbdbgm.dll"
 #include <reactos/version.rc>

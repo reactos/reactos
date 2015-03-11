@@ -98,7 +98,7 @@ VOID error_sfile_not_found (LPTSTR f)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, ARRAYSIZE(szMsg));
     ConErrPrintf(_T("%s - %s\n"), szMsg, f);
     nErrorLevel = 1;
 }
@@ -150,7 +150,7 @@ VOID error_syntax (LPTSTR s)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
 
-    LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR2, szMsg, ARRAYSIZE(szMsg));
 
     if (s)
         ConErrPrintf(_T("%s - %s\n"), szMsg, s);

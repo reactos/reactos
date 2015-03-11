@@ -1501,8 +1501,10 @@ MUI_ERROR svSEErrorEntries[] =
         "ENTER = Starta om datorn"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Inte tillr„ckligt mycket fritt utrymme p† den valda partitionen.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Tryck valfri tangent f”r att forts„tta.",
         NULL
     },

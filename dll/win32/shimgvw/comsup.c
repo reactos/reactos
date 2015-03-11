@@ -34,12 +34,12 @@ DllUnregisterServer(VOID)
 STDAPI
 DllCanUnloadNow(VOID)
 {
-	if ((ObjectCount != 0) || (LockCount != 0))
+    if ((ObjectCount != 0) || (LockCount != 0))
     {
         return S_FALSE;
     }
     else
-    {    
+    {
         return S_OK;
     }
 }
@@ -53,6 +53,6 @@ DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     /* There are no classes to export, so always return CLASS_E_CLASSNOTAVAILABLE*/
     *ppv = NULL;
     hr = CLASS_E_CLASSNOTAVAILABLE;
-    
+
     return hr;
 }

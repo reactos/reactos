@@ -10,7 +10,7 @@ BEGIN
     IDS_FAVORITES "Favoritos"
     IDS_STARTMENU "Menú Inicio"
     IDS_PROGRAMS "Menú Inicio\\Programas"
-    IDS_ADMINTOOLS "Menú Inicio\\Programas\\Herramientas Administrativas"
+    IDS_ADMINTOOLS "Menú Inicio\\Programas\\Herramientas administrativas"
     IDS_STARTUP "Menú Inicio\\Programas\\Inicio"
     IDS_MYDOCUMENTS "Mis documentos"
     IDS_MYPICTURES "Mis documentos\\Mis imágenes"

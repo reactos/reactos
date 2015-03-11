@@ -38,7 +38,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Achtergrond ops&laan als...",     IDM_SAVEBACKGROUND
         MENUITEM "Als achtergrond instellen",       IDM_SETWALLPAPER
-        MENUITEM "Achtergrond &kopiëren",           IDM_COPYBACKGROUND
+        MENUITEM "Achtergrond &kopiÃ«ren",           IDM_COPYBACKGROUND
         MENUITEM "Als desktopelement instellen...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "&Alles selecteren",               IDM_SELECTALL
@@ -72,8 +72,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Als desktopelement instellen...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "K&nippen",                        IDM_CUT
-        MENUITEM "&Kopiëren",                       IDM_COPY
-        MENUITEM "&Snelkoppeling kopiëren",         IDM_COPYSHORTCUT
+        MENUITEM "&KopiÃ«ren",                       IDM_COPY
+        MENUITEM "&Snelkoppeling kopiÃ«ren",         IDM_COPYSHORTCUT
         MENUITEM "&Plakken",                        IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Aan &favorieten toevoegen...",    IDM_ADDFAVORITES
@@ -86,7 +86,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Ongedaan maken",   IDM_UNDO
         MENUITEM SEPARATOR
         MENUITEM "K&nippen",          IDM_CUT
-        MENUITEM "&Kopiëren",         IDM_COPY
+        MENUITEM "&KopiÃ«ren",         IDM_COPY
         MENUITEM "&Plakken",          IDM_PASTE
         MENUITEM "&Verwijderen",      IDM_DELETE
         MENUITEM SEPARATOR
@@ -110,7 +110,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "" /* 1DSite Select */
     {
         MENUITEM "K&nippen",          IDM_CUT
-        MENUITEM "&Kopiëren",         IDM_COPY
+        MENUITEM "&KopiÃ«ren",         IDM_COPY
         MENUITEM "&Plakken",          IDM_PASTE
         MENUITEM "Alles &selecteren", IDM_SELECTALL
         MENUITEM "Af&drukken",        IDM_PRINT
@@ -125,8 +125,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Doel af&drukken",              IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "K&nippen",                     IDM_CUT
-        MENUITEM "&Kopiëren",                    IDM_COPY
-        MENUITEM "&Snelkoppeling kopiëren",      IDM_COPYSHORTCUT
+        MENUITEM "&KopiÃ«ren",                    IDM_COPY
+        MENUITEM "&Snelkoppeling kopiÃ«ren",      IDM_COPYSHORTCUT
         MENUITEM "&Plakken",                     IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Aan &favorieten toevoegen...", IDM_ADDFAVORITES
@@ -152,8 +152,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Als desktopelement instellen...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "K&nippen",                        IDM_CUT
-        MENUITEM "&Kopiëren",                       IDM_COPY
-        MENUITEM "&Snelkoppeling kopiëren",         IDM_COPYSHORTCUT
+        MENUITEM "&KopiÃ«ren",                       IDM_COPY
+        MENUITEM "&Snelkoppeling kopiÃ«ren",         IDM_COPYSHORTCUT
         MENUITEM "&Plakken",                        IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Aan &favorieten toevoegen...",    IDM_ADDFAVORITES
@@ -176,8 +176,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Als desktopelement instellen...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
         MENUITEM "K&nippen",                        IDM_CUT
-        MENUITEM "&Kopiëren",                       IDM_COPY
-        MENUITEM "&Snelkoppeling kopiëren",         IDM_COPYSHORTCUT
+        MENUITEM "&KopiÃ«ren",                       IDM_COPY
+        MENUITEM "&Snelkoppeling kopiÃ«ren",         IDM_COPYSHORTCUT
         MENUITEM "&Plakken",                        IDM_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Aan &favorieten toevoegen...",    IDM_ADDFAVORITES

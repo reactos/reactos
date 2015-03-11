@@ -53,36 +53,42 @@ EngUnmapSectionView(
 PVOID
 NTAPI
 EngCreateSection(
-    IN ULONG fl,
-    IN SIZE_T cjSize,
-    IN ULONG ulTag);
+    _In_ ULONG fl,
+    _In_ SIZE_T cjSize,
+    _In_ ULONG ulTag);
 
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 EngMapSection(
-    IN PVOID pvSection,
-    IN BOOL bMap,
-    IN HANDLE hProcess,
-    OUT PVOID* pvBaseAddress);
+    _In_ PVOID pvSection,
+    _In_ BOOL bMap,
+    _In_ HANDLE hProcess,
+    _When_(bMap, _Outptr_) PVOID* pvBaseAddress);
 
+_Check_return_
+_Success_(return!=NULL)
+__drv_allocatesMem(Mem)
+_Post_writable_byte_size_(cjSize)
 PVOID
 APIENTRY
 EngAllocSectionMem(
-    OUT PVOID *ppvSection,
-    IN ULONG fl,
-    IN SIZE_T cjSize,
-    IN ULONG ulTag);
+    _Outptr_ PVOID *ppvSection,
+    _In_ ULONG fl,
+    _In_ SIZE_T cjSize,
+    _In_ ULONG ulTag);
 
 BOOL
 APIENTRY
 EngFreeSectionMem(
-    IN PVOID pvSection OPTIONAL,
-    IN PVOID pvMappedBase OPTIONAL);
+    _In_opt_ PVOID pvSection,
+    _In_opt_ PVOID pvMappedBase);
 
+_Check_return_
 PFILEVIEW
 NTAPI
 EngLoadModuleEx(
-    LPWSTR pwsz,
-    ULONG cjSizeOfModule,
-    FLONG fl);
+    _In_z_ LPWSTR pwsz,
+    _In_ ULONG cjSizeOfModule,
+    _In_ FLONG fl);
 

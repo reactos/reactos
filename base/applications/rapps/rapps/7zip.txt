@@ -3,13 +3,13 @@
 
 [Section]
 Name = 7-Zip
-Version = 9.34a
+Version = 9.38b
 License = LGPL
 Description = A file archiving utility with support for 7zip, zip, tar, rar and many other archive formats.
 Size = 1.14 MB
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://dl.7-zip.org/7z934.msi
+URLDownload = http://download.sourceforge.net/project/sevenzip/7-Zip/9.38/7z938.msi
 CDPath = none
 
 [Section.0407]

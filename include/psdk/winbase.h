@@ -585,6 +585,13 @@ extern "C" {
 #define CONDITION_VARIABLE_LOCKMODE_SHARED  RTL_CONDITION_VARIABLE_LOCKMODE_SHARED
 #endif
 
+#define INIT_ONCE_STATIC_INIT RTL_RUN_ONCE_INIT
+
+#if (_WIN32_WINNT >= 0x0600)
+#define PROCESS_DEP_ENABLE 0x00000001
+#define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x00000002
+#endif
+
 #ifndef RC_INVOKED
 
 #ifndef _FILETIME_
@@ -3771,6 +3778,15 @@ CopyFile2(
   _In_opt_ COPYFILE2_EXTENDED_PARAMETERS *pExtendedParameters);
 
 #endif /* _WIN32_WINNT >= 0x0601 */
+
+WINBASEAPI
+BOOL
+WINAPI
+InitOnceExecuteOnce(
+  _Inout_ PINIT_ONCE InitOnce,
+  _In_ __callback PINIT_ONCE_FN InitFn,
+  _Inout_opt_ PVOID Parameter,
+  _Outptr_opt_result_maybenull_ LPVOID *Context);
 
 #ifdef _MSC_VER
 #pragma warning(pop)

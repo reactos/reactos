@@ -22,30 +22,30 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 DLG_ACMFORMATCHOOSE_ID DIALOG  10, 20, 225, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Избор на звук"
+CAPTION "РР·Р±РѕСЂ РЅР° Р·РІСѓРє"
 FONT 8, "MS Shell Dlg"
 BEGIN
 
-    LTEXT           "&Име:", -1, 5, 5, 115, 8, NOT WS_GROUP
+    LTEXT           "&РРјРµ:", -1, 5, 5, 115, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_CUSTOM, 5, 15, 135, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "&Съхраняване като...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
-    PUSHBUTTON      "Пре&махване", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
+    PUSHBUTTON      "&РЎСЉС…СЂР°РЅСЏРІР°РЅРµ РєР°С‚Рѕ...", IDD_ACMFORMATCHOOSE_BTN_SETNAME, 150, 14, 70, 14
+    PUSHBUTTON      "РџСЂРµ&РјР°С…РІР°РЅРµ", IDD_ACMFORMATCHOOSE_BTN_DELNAME, 150, 32, 70, 14
 
-    LTEXT           "&Формат:", -1, 5, 56, 44, 8, NOT WS_GROUP
+    LTEXT           "&Р¤РѕСЂРјР°С‚:", -1, 5, 56, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMATTAG, 50, 54, 170, 60,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 
-    LTEXT           "&Принадлежности", -1, 5, 76, 44, 8, NOT WS_GROUP
+    LTEXT           "&РџСЂРёРЅР°РґР»РµР¶РЅРѕСЃС‚Рё", -1, 5, 76, 44, 8, NOT WS_GROUP
 
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 74, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    PUSHBUTTON      "Помо&щ", IDD_ACMFORMATCHOOSE_BTN_HELP, 5, 100, 50, 14
-    DEFPUSHBUTTON   "Добре", IDOK, 115, 100, 50, 14
-    PUSHBUTTON      "Отказ", IDCANCEL, 170, 100, 50, 14
+    PUSHBUTTON      "РџРѕРјРѕ&С‰", IDD_ACMFORMATCHOOSE_BTN_HELP, 5, 100, 50, 14
+    DEFPUSHBUTTON   "Р”РѕР±СЂРµ", IDOK, 115, 100, 50, 14
+    PUSHBUTTON      "РћС‚РєР°Р·", IDCANCEL, 170, 100, 50, 14
 
 END

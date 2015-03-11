@@ -1495,8 +1495,10 @@ MUI_ERROR jaJPErrorEntries[] =
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Press any key to continue.",
         NULL
     },

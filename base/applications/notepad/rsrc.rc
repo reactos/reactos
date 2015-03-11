@@ -19,6 +19,7 @@
 
 #include <windef.h>
 #include <winuser.h>
+#include <dlgs.h>
 
 #include "notepad_res.h"
 
@@ -108,6 +109,9 @@ IDI_NPICON ICON "res/notepad.ico"
 #endif
 #ifdef LANGUAGE_UK_UA
     #include "lang/uk-UA.rc"
+#endif
+#ifdef LANGUAGE_UZ_UZ
+    #include "lang/uz-UZ.rc"
 #endif
 #ifdef LANGUAGE_SK_SK
     #include "lang/sk-SK.rc"

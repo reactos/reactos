@@ -90,5 +90,9 @@ DEFINE_ALIAS(__ZplRK8CHStringw, ??H@YG?AVCHString@@ABV0@G@Z)
 DEFINE_ALIAS(__ZplRK8CHStringPKw, ??H@YG?AVCHString@@ABV0@PBG@Z)
 DEFINE_ALIAS(__ZplPKwRK8CHString, ??H@YG?AVCHString@@PBGABV0@@Z)
 DEFINE_ALIAS(__ZplRK8CHStringS1_, ??H@YG?AVCHString@@ABV0@0@Z)
+DEFINE_ALIAS(__ZN8Provider5FlushEv, ?Flush@Provider@@MAEXXZ)
+DEFINE_ALIAS(__ZN8Provider21ValidateDeletionFlagsEl, ?ValidateDeletionFlags@Provider@@MAEJJ@Z)
+DEFINE_ALIAS(__ZN8Provider19ValidateMethodFlagsEl, ?ValidateMethodFlags@Provider@@MAEJJ@Z)
+DEFINE_ALIAS(__ZN8Provider18ValidateQueryFlagsEl, ?ValidateQueryFlags@Provider@@MAEJJ@Z)
 
 END

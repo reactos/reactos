@@ -24,8 +24,8 @@ LANGUAGE LANG_SPANISH, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_FILENOTFOUND        "Archivo no encontrado"
-    IDS_VERIFYFILE          "Compruebe que haya dado el nombre de archivo correcto"
-    IDS_CREATEFILE          "El archivo no existe\n\
+    IDS_VERIFYFILE          "Compruebe que haya proporcionado el nombre de archivo correcto"
+    IDS_CREATEFILE          "El archivo no existe.\n\
 ¿Desea crearlo?"
     IDS_OVERWRITEFILE       "El archivo ya existe.\n\
 ¿Desea reemplazarlo?"
@@ -34,7 +34,7 @@ STRINGTABLE
                           / : < > |"
     IDS_PATHNOTEXISTING     "La ruta no existe"
     IDS_FILENOTEXISTING     "El archivo no existe"
-    IDS_INVALID_FOLDERNAME  "The selection contains a non-folder object"
+    IDS_INVALID_FOLDERNAME  "La selección contiene algún elemento que no es una carpeta"
 }
 
 STRINGTABLE
@@ -52,19 +52,19 @@ STRINGTABLE
 
     PD32_VALUE_UREADABLE                  "Entrada ilegible"
     PD32_INVALID_PAGE_RANGE "Este valor no concuerda con el rango de la página.\n\
- Por favor, introduzca un valor entre %d y %d."
+Introduzca un valor entre %d y %d."
     PD32_FROM_NOT_ABOVE_TO                "La entrada 'desde' no puede exceder a la entrada 'hasta'."
     PD32_MARGINS_OVERLAP                  "Los márgenes se superponen o quedan fuera de los límites del papel.\n\
-Por favor, reintroduzca los márgenes."
+Vuelva a introducir el tamaño de los márgenes."
     PD32_NR_OF_COPIES_EMPTY               "El número del valor 'Número de copias' no puede estar vacío."
-    PD32_TOO_LARGE_COPIES                 "Este número tan grande de copias no es soportado por su impresora.\n\
-Por favor, introduzca un valor entre 1 y %d."
+    PD32_TOO_LARGE_COPIES                 "Su impresora no soporta un número tan grande de copias.\n\
+Introduzca un valor entre 1 y %d."
     PD32_PRINT_ERROR                      "Ocurrió un error en la impresora."
-    PD32_NO_DEFAULT_PRINTER               "Ninguna impresora definida por defecto."
+    PD32_NO_DEFAULT_PRINTER               "No hay ninguna impresora predeterminada."
     PD32_CANT_FIND_PRINTER                "No se encuentra la impresora."
-    PD32_OUT_OF_MEMORY                    "Sin memoria."
+    PD32_OUT_OF_MEMORY                    "No hay memoria suficiente."
     PD32_GENERIC_ERROR                    "Ocurrió un error."
-    PD32_DRIVER_UNKNOWN                   "Manejador de la impresora desconocido."
+    PD32_DRIVER_UNKNOWN                   "Controlador de impresora desconocido."
     PD32_NO_DEVICES                       "Antes de que pueda realizar tareas de impresión como configurar la página o imprimir un documento, necesita instalar una impresora. Por favor, instale una y vuelva a intentarlo."
 
     PD32_DEFAULT_PRINTER                  "Impresora por defecto; "
@@ -137,7 +137,7 @@ STRINGTABLE
     IDS_SAVE        "Guardar"
     IDS_SAVE_AS     "&Guardar como"
     IDS_OPEN_FILE   "Abrir archivo"
-    IDS_SELECT_FOLDER "Select Folder"
+    IDS_SELECT_FOLDER "Elegir carpeta"
 }
 
 /*
@@ -310,14 +310,14 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Buscar:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Sólo palabra &entera", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Mayúsculas/minúsculas", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Sólo &palabras completas", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Coincidir &mayúsculas/minúsculas", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
  GROUPBOX "Dirección", grp1, 147, 21, 58, 38
  CONTROL "&Arriba", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
  CONTROL "A&bajo", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
  DEFPUSHBUTTON "Buscar &siguiente", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Cancelar", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Cancelar", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&yuda", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -331,13 +331,13 @@ FONT 8, "MS Shell Dlg"
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "Reem&plazar por:", -1, 4, 26, 52, 8
  EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
- CHECKBOX "Sólo palabra &entera", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Mayúsculas/minúsculas", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Sólo &palabras completas", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Coincidir &mayúsculas/minúsculas", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
  DEFPUSHBUTTON "Buscar &siguiente", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Reemplazar", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Reemplazar &todo", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancelar", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Cancelar", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "A&yuda", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -369,7 +369,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Copias",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Número de &copias:",stc5,168,105,68,8
     ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "C&ollate",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "&Intercalar",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Rango de impresión",    grp1,   8,92,  144,64, WS_GROUP
@@ -451,7 +451,7 @@ STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_S
 CAPTION "Abrir"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT	"Mirar &en:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    LTEXT	"&Carpeta:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
     COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
@@ -464,7 +464,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"Archivos de &tipo:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"Abrir como &sólo-lectura",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+    CONTROL	"Abrir como &sólo lectura",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
 
     DEFPUSHBUTTON	"&Abrir",		 IDOK,222,110,54,14
     PUSHBUTTON		"Cancelar",		 IDCANCEL,222,128,54,14

@@ -27,6 +27,7 @@ public:
 
 
 BEGIN_OBJECT_MAP(ObjectMap)
+OBJECT_ENTRY(CLSID_AutoComplete, CAutoComplete)
 OBJECT_ENTRY(CLSID_ACLMulti, CACLMulti)
 OBJECT_ENTRY(CLSID_SH_AddressBand, CAddressBand)
 OBJECT_ENTRY(CLSID_AddressEditBox, CAddressEditBox)
@@ -39,6 +40,7 @@ OBJECT_ENTRY(CLSID_GlobalFolderSettings, CGlobalFolderSettings)
 OBJECT_ENTRY(CLSID_InternetToolbar, CInternetToolbar)
 OBJECT_ENTRY(CLSID_CRegTreeOptions, CRegTreeOptions)
 OBJECT_ENTRY(CLSID_ExplorerBand, CExplorerBand)
+OBJECT_ENTRY(CLSID_ProgressDialog, CProgressDialog)
 END_OBJECT_MAP()
 
 CBrowseUIModule                             gModule;

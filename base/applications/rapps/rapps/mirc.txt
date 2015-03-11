@@ -3,13 +3,13 @@
 
 [Section]
 Name = mIRC 7
-Version = 7.36
+Version = 7.38
 License = Shareware
 Description = The most popular client for the Internet Relay Chat (IRC).
-Size = 2.17 MB
+Size = 2.36 MB
 Category = 5
 URLSite = http://www.mirc.com/
-URLDownload = http://download.mirc.com/10/mirc736.exe
+URLDownload = http://download.mirc.com/11/mirc738.exe
 CDPath = none
 
 [Section.0407]
@@ -20,7 +20,7 @@ Description = El más popular cliente para Internet Relay Chat (IRC).
 
 [Section.040c]
 Description = Le client le plus populaire pour l'Internet Relay Chat (IRC).
-Size = 2,17 Mo
+Size = 2,36 Mo
 
 [Section.0410]
 Description = Il famoso client per Internet Relay Chat (IRC).
@@ -34,12 +34,12 @@ Description = Najpopularniejszy klient IRC (Internet Relay Chat).
 [Section.0418]
 License = Versiune de evaluare
 Description = Cel mai popular client de IRC (Internet Relay Chat).
-Size = 2,17 Mo
+Size = 2,36 Mo
 
 [Section.041f]
 License = Paylaşımlı
 Description = Umûmî Ağ Eş Zamanlı Söyleşi (IRC) için en çok tutulan istemci.
-Size = 2,17 MB
+Size = 2,36 MB
 
 [Section.0422]
 Description = Найпопулярніший клієнт IRC (Internet Relay Chat).

@@ -23,9 +23,7 @@
 
 #include "ddraw_private.h"
 
-static struct wined3d_display_mode original_mode;
 static const struct ddraw *exclusive_ddraw;
-static BOOL restore_mode;
 
 /* Device identifier. Don't relay it to WineD3D */
 static const DDDEVICEIDENTIFIER2 deviceidentifier =
@@ -679,11 +677,8 @@ static HRESULT WINAPI ddraw7_RestoreDisplayMode(IDirectDraw7 *iface)
         return DDERR_NOEXCLUSIVEMODE;
     }
 
-    if (SUCCEEDED(hr = wined3d_set_adapter_display_mode(ddraw->wined3d, WINED3DADAPTER_DEFAULT, &original_mode)))
-    {
+    if (SUCCEEDED(hr = wined3d_set_adapter_display_mode(ddraw->wined3d, WINED3DADAPTER_DEFAULT, NULL)))
         ddraw->flags &= ~DDRAW_RESTORE_MODE;
-        restore_mode = FALSE;
-    }
 
     wined3d_mutex_unlock();
 
@@ -1092,10 +1087,6 @@ static HRESULT WINAPI ddraw7_SetDisplayMode(IDirectDraw7 *iface, DWORD width, DW
         return DD_OK;
     }
 
-    if (!restore_mode && FAILED(hr = wined3d_get_adapter_display_mode(ddraw->wined3d,
-            WINED3DADAPTER_DEFAULT, &original_mode, NULL)))
-        ERR("Failed to get current display mode, hr %#x.\n", hr);
-
     switch (bpp)
     {
         case 8:  format = WINED3DFMT_P8_UINT;        break;
@@ -1116,10 +1107,7 @@ static HRESULT WINAPI ddraw7_SetDisplayMode(IDirectDraw7 *iface, DWORD width, DW
      * can't be changed if a surface is locked or some drawing is in progress. */
     /* TODO: Lose the primary surface. */
     if (SUCCEEDED(hr = wined3d_set_adapter_display_mode(ddraw->wined3d, WINED3DADAPTER_DEFAULT, &mode)))
-    {
         ddraw->flags |= DDRAW_RESTORE_MODE;
-        restore_mode = TRUE;
-    }
 
     wined3d_mutex_unlock();
 
@@ -4721,7 +4709,6 @@ static HRESULT CDECL device_parent_surface_created(struct wined3d_device_parent 
 {
     struct ddraw *ddraw = ddraw_from_device_parent(device_parent);
     struct ddraw_surface *ddraw_surface;
-    HRESULT hr;
 
     TRACE("device_parent %p, container_parent %p, surface %p, parent %p, parent_ops %p.\n",
             device_parent, container_parent, surface, parent, parent_ops);
@@ -4741,13 +4728,7 @@ static HRESULT CDECL device_parent_surface_created(struct wined3d_device_parent 
         return DDERR_OUTOFVIDEOMEMORY;
     }
 
-    if (FAILED(hr = ddraw_surface_init(ddraw_surface, ddraw, container_parent, surface, parent_ops)))
-    {
-        WARN("Failed to initialize surface, hr %#x.\n", hr);
-        HeapFree(GetProcessHeap(), 0, ddraw_surface);
-        return hr;
-    }
-
+    ddraw_surface_init(ddraw_surface, ddraw, container_parent, surface, parent_ops);
     *parent = ddraw_surface;
     list_add_head(&ddraw->surface_list, &ddraw_surface->surface_list_entry);
 
@@ -4800,7 +4781,7 @@ static HRESULT CDECL device_parent_create_swapchain_surface(struct wined3d_devic
     texture_desc = *desc;
     texture_desc.resource_type = WINED3D_RTYPE_TEXTURE;
     if (FAILED(hr = wined3d_texture_create(ddraw->wined3d_device, &texture_desc, 1,
-            WINED3D_SURFACE_MAPPABLE, ddraw, &ddraw_frontbuffer_parent_ops, &texture)))
+            WINED3D_SURFACE_MAPPABLE, NULL, ddraw, &ddraw_frontbuffer_parent_ops, &texture)))
     {
         WARN("Failed to create texture, hr %#x.\n", hr);
         return hr;
@@ -4864,7 +4845,8 @@ HRESULT ddraw_init(struct ddraw *ddraw, enum wined3d_device_type device_type)
     ddraw->numIfaces = 1;
     ddraw->ref7 = 1;
 
-    flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING;
+    flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING
+            | WINED3D_RESTORE_MODE_ON_ACTIVATE | WINED3D_FOCUS_MESSAGES;
     if (!(ddraw->wined3d = wined3d_create(flags)))
     {
         if (!(ddraw->wined3d = wined3d_create(flags | WINED3D_NO3D)))

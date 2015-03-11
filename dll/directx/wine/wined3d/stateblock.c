@@ -456,6 +456,7 @@ ULONG CDECL wined3d_stateblock_incref(struct wined3d_stateblock *stateblock)
 
 void state_unbind_resources(struct wined3d_state *state)
 {
+    struct wined3d_shader_resource_view *srv;
     struct wined3d_vertex_declaration *decl;
     struct wined3d_sampler *sampler;
     struct wined3d_texture *texture;
@@ -525,6 +526,15 @@ void state_unbind_resources(struct wined3d_state *state)
             {
                 state->sampler[i][j] = NULL;
                 wined3d_sampler_decref(sampler);
+            }
+        }
+
+        for (j = 0; j < MAX_SHADER_RESOURCE_VIEWS; ++j)
+        {
+            if ((srv = state->shader_resource_view[i][j]))
+            {
+                state->shader_resource_view[i][j] = NULL;
+                wined3d_shader_resource_view_decref(srv);
             }
         }
     }

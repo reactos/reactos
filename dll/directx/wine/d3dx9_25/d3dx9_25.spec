@@ -22,7 +22,7 @@
 @ stdcall D3DXComputeNormals(ptr ptr) d3dx9_36.D3DXComputeNormals
 @ stdcall D3DXComputeTangent(ptr long long long long ptr) d3dx9_36.D3DXComputeTangent
 @ stdcall D3DXComputeTangentFrame(ptr long) d3dx9_36.D3DXComputeTangentFrame
-@ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr long long long ptr ptr) d3dx9_36.D3DXComputeTangentFrameEx
+@ stdcall D3DXComputeTangentFrameEx(ptr long long long long long long long long long ptr float float float ptr ptr) d3dx9_36.D3DXComputeTangentFrameEx
 @ stdcall D3DXConcatenateMeshes(ptr long long ptr ptr ptr ptr ptr) d3dx9_36.D3DXConcatenateMeshes
 @ stdcall D3DXConvertMeshSubsetToSingleStrip(ptr long long ptr ptr) d3dx9_36.D3DXConvertMeshSubsetToSingleStrip
 @ stdcall D3DXConvertMeshSubsetToStrips(ptr long long ptr ptr ptr ptr) d3dx9_36.D3DXConvertMeshSubsetToStrips
@@ -72,7 +72,7 @@
 @ stdcall D3DXCreateNPatchMesh(ptr ptr) d3dx9_36.D3DXCreateNPatchMesh
 @ stdcall D3DXCreatePMeshFromStream(ptr long ptr ptr ptr ptr ptr) d3dx9_36.D3DXCreatePMeshFromStream
 @ stdcall D3DXCreatePatchMesh(ptr long long long ptr ptr ptr) d3dx9_36.D3DXCreatePatchMesh
-@ stdcall D3DXCreatePolygon(ptr long long ptr ptr) d3dx9_36.D3DXCreatePolygon
+@ stdcall D3DXCreatePolygon(ptr float long ptr ptr) d3dx9_36.D3DXCreatePolygon
 @ stdcall D3DXCreatePRTBuffer(long long long ptr) d3dx9_36.D3DXCreatePRTBuffer
 @ stdcall D3DXCreatePRTBufferTex(long long long long ptr) d3dx9_36.D3DXCreatePRTBufferTex
 @ stdcall D3DXCreatePRTCompBuffer(long long long ptr ptr ptr ptr) d3dx9_36.D3DXCreatePRTCompBuffer
@@ -116,7 +116,7 @@
 @ stdcall D3DXDebugMute(long) d3dx9_36.D3DXDebugMute
 @ stdcall D3DXDeclaratorFromFVF(long ptr) d3dx9_36.D3DXDeclaratorFromFVF
 @ stdcall D3DXDisassembleEffect(ptr long ptr) d3dx9_36.D3DXDisassembleEffect
-@ stdcall D3DXDisassembleShader(ptr long ptr ptr) d3dx9_36.D3DXDisassembleShader
+@ stdcall D3DXDisassembleShader(ptr long str ptr) d3dx9_36.D3DXDisassembleShader
 @ stdcall D3DXFileCreate(ptr) d3dx9_36.D3DXFileCreate
 @ stdcall D3DXFillCubeTexture(ptr ptr ptr) d3dx9_36.D3DXFillCubeTexture
 @ stdcall D3DXFillCubeTextureTX(ptr ptr) d3dx9_36.D3DXFillCubeTextureTX

@@ -7,6 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    CBandSite.cpp
     CDesktopBrowser.cpp
     CMenuBand.cpp
     CMenuDeskBar.cpp
@@ -31,6 +32,7 @@ target_link_libraries(rshell
 add_importlibs(rshell
     uxtheme
     shlwapi
+    advapi32
     shell32
     comctl32
     gdi32

@@ -54,14 +54,15 @@ BOOL
 NTAPI
 RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData);
 
+_Success_(return!=FALSE)
 BOOL
 NTAPI
 RegReadUserSetting(
-    IN PCWSTR pwszKeyName,
-    IN PCWSTR pwszValueName,
-    IN ULONG ulType,
-    OUT PVOID pvData,
-    IN ULONG cbDataSize);
+    _In_z_ PCWSTR pwszKeyName,
+    _In_z_ PCWSTR pwszValueName,
+    _In_ ULONG ulType,
+    _Out_writes_(cbDataSize) _When_(ulType == REG_SZ, _Post_z_) PVOID pvData,
+    _In_ ULONG cbDataSize);
 
 BOOL
 NTAPI
@@ -156,8 +157,3 @@ HBITMAP NTAPI UserLoadImage(PCWSTR);
 
 BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 
-#define ROUND_DOWN(n, align) \
-    (((ULONG)n) & ~((align) - 1l))
-
-#define ROUND_UP(n, align) \
-    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))

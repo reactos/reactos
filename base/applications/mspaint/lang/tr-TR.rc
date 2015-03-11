@@ -211,7 +211,7 @@ BEGIN
     IDS_FILESIZE "%d çoklu"
     IDS_PRINTRES "Tüm metrekarelerde %d*%d nokta"
     IDS_INTNUMBERS "Lütfen yalnızca tam sayı giriniz."
-    IDS_PERCENTAGE "Yüzde 1 ilâ 500 olmalıdır."
-    IDS_ANGLE "Açı -89 ilâ 89 olmalıdır."
+    IDS_PERCENTAGE "Yüzde 1'den 500'e dek olmalıdır."
+    IDS_ANGLE "Açı -89'dan 89'a dek olmalıdır."
     IDS_LOADERRORTEXT "%s kütüğü yüklenemedi."
 END

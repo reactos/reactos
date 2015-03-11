@@ -76,6 +76,7 @@ AddReg=Classes
 11,,msxml6.dll,1
 11,,netcfgx.dll,1
 11,,netshell.dll,1
+11,,ntobjshex.dll,1
 11,,objsel.dll,1
 11,,ole32.dll,1
 11,,oleacc.dll,1
@@ -102,6 +103,7 @@ AddReg=Classes
 11,,winhttp.dll,1
 11,,wininet.dll,2
 11,,wintrust.dll,1
+11,wbem,wmiutils.dll,1
 11,,wshom.ocx,1
 11,,wuapi.dll,1
 11,wbem,wbemdisp.dll,1

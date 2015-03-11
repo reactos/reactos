@@ -1258,7 +1258,7 @@ NtSaveKeyEx(IN HANDLE KeyHandle,
 
     PAGED_CODE();
 
-    DPRINT("NtSaveKeyEx(0x%08X, 0x%08X, %lu)\n", KeyHandle, FileHandle, Flags);
+    DPRINT("NtSaveKeyEx(0x%p, 0x%p, %lu)\n", KeyHandle, FileHandle, Flags);
 
     /* Verify the flags */
     if ((Flags != REG_STANDARD_FORMAT)
@@ -1297,8 +1297,56 @@ NtSaveMergedKeys(IN HANDLE HighPrecedenceKeyHandle,
                  IN HANDLE LowPrecedenceKeyHandle,
                  IN HANDLE FileHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode;
+    PCM_KEY_BODY HighPrecedenceKeyObject = NULL;
+    PCM_KEY_BODY LowPrecedenceKeyObject = NULL;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    DPRINT("NtSaveMergedKeys(0x%p, 0x%p, 0x%p)\n",
+           HighPrecedenceKeyHandle, LowPrecedenceKeyHandle, FileHandle);
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* Check for the SeBackupPrivilege */
+    if (!SeSinglePrivilegeCheck(SeBackupPrivilege, PreviousMode))
+    {
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Verify that the handles are valid and are registry keys */
+    Status = ObReferenceObjectByHandle(HighPrecedenceKeyHandle,
+                                       KEY_READ,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&HighPrecedenceKeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = ObReferenceObjectByHandle(LowPrecedenceKeyHandle,
+                                       KEY_READ,
+                                       CmpKeyObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&LowPrecedenceKeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Call the internal API */
+    Status = CmSaveMergedKeys(HighPrecedenceKeyObject->KeyControlBlock,
+                              LowPrecedenceKeyObject->KeyControlBlock,
+                              FileHandle);
+
+done:
+    if (LowPrecedenceKeyObject)
+        ObDereferenceObject(LowPrecedenceKeyObject);
+
+    if (HighPrecedenceKeyObject)
+        ObDereferenceObject(HighPrecedenceKeyObject);
+
+    return Status;
 }
 
 NTSTATUS

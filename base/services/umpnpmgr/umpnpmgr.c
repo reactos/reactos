@@ -264,7 +264,7 @@ PNP_ReportLogOn(
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
 
-    if(!hProcess)
+    if (!hProcess)
     {
         DPRINT1("OpenProcess failed with error %u\n", GetLastError());
         goto cleanup;
@@ -276,7 +276,7 @@ PNP_ReportLogOn(
         hUserToken = NULL;
     }
 
-    if(!OpenProcessToken(hProcess, TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY, &hUserToken))
+    if (!OpenProcessToken(hProcess, TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY, &hUserToken))
     {
         DPRINT1("OpenProcessToken failed with error %u\n", GetLastError());
         goto cleanup;
@@ -289,7 +289,7 @@ PNP_ReportLogOn(
     ReturnValue = CR_SUCCESS;
 
 cleanup:
-    if(hProcess)
+    if (hProcess)
         CloseHandle(hProcess);
 
     return ReturnValue;
@@ -1131,9 +1131,10 @@ PNP_GetClassName(
     DPRINT("PNP_GetClassName() called\n");
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class\\");
-    if(lstrlenW(pszClassGuid) + 1 < sizeof(szKeyName)/sizeof(WCHAR)-(lstrlenW(szKeyName) * sizeof(WCHAR)))
+    if (lstrlenW(pszClassGuid) + 1 < sizeof(szKeyName)/sizeof(WCHAR)-(lstrlenW(szKeyName) * sizeof(WCHAR)))
         lstrcatW(szKeyName, pszClassGuid);
-    else return CR_INVALID_DATA;
+    else
+        return CR_INVALID_DATA;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       szKeyName,
@@ -3068,7 +3069,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     wcscat(PipeName, UuidString);
     hPipe = CreateNamedPipeW(PipeName, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_BYTE, 1, 512, 512, 0, NULL);
 
-    if(hPipe == INVALID_HANDLE_VALUE)
+    if (hPipe == INVALID_HANDLE_VALUE)
     {
         DPRINT1("CreateNamedPipeW failed with error %u\n", GetLastError());
         goto cleanup;
@@ -3081,16 +3082,16 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     ZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
 
-    if(hUserToken)
+    if (hUserToken)
     {
         /* newdev has to run under the environment of the current user */
-        if(!CreateEnvironmentBlock(&Environment, hUserToken, FALSE))
+        if (!CreateEnvironmentBlock(&Environment, hUserToken, FALSE))
         {
             DPRINT1("CreateEnvironmentBlock failed with error %d\n", GetLastError());
             goto cleanup;
         }
 
-        if(!CreateProcessAsUserW(hUserToken, NULL, CommandLine, NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, Environment, NULL, &StartupInfo, &ProcessInfo))
+        if (!CreateProcessAsUserW(hUserToken, NULL, CommandLine, NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, Environment, NULL, &StartupInfo, &ProcessInfo))
         {
             DPRINT1("CreateProcessAsUserW failed with error %u\n", GetLastError());
             goto cleanup;
@@ -3104,7 +3105,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
            (ShowWizard is only set to FALSE for these two modes) */
         ASSERT(!ShowWizard);
 
-        if(!CreateProcessW(NULL, CommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo))
+        if (!CreateProcessW(NULL, CommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo))
         {
             DPRINT1("CreateProcessW failed with error %u\n", GetLastError());
             goto cleanup;
@@ -3112,7 +3113,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     }
 
     /* Wait for the function to connect to our pipe */
-    if(!ConnectNamedPipe(hPipe, NULL))
+    if (!ConnectNamedPipe(hPipe, NULL))
     {
         if (GetLastError() != ERROR_PIPE_CONNECTED)
         {
@@ -3141,7 +3142,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
 
     /* The following check for success is probably not compatible to Windows, but should do its job */
-    if(!GetExitCodeProcess(ProcessInfo.hProcess, &Value))
+    if (!GetExitCodeProcess(ProcessInfo.hProcess, &Value))
     {
         DPRINT1("GetExitCodeProcess failed with error %u\n", GetLastError());
         goto cleanup;
@@ -3150,16 +3151,16 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     DeviceInstalled = Value;
 
 cleanup:
-    if(hPipe != INVALID_HANDLE_VALUE)
+    if (hPipe != INVALID_HANDLE_VALUE)
         CloseHandle(hPipe);
 
-    if(Environment)
+    if (Environment)
         DestroyEnvironmentBlock(Environment);
 
-    if(ProcessInfo.hProcess)
+    if (ProcessInfo.hProcess)
         CloseHandle(ProcessInfo.hProcess);
 
-    if(ProcessInfo.hThread)
+    if (ProcessInfo.hThread)
         CloseHandle(ProcessInfo.hThread);
 
     if (!DeviceInstalled)

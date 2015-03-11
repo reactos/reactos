@@ -90,16 +90,6 @@ BOOL WINAPI PathAppendAW(
 }
 
 /*************************************************************************
- * PathBuildRoot		[SHELL32.30]
- */
-LPVOID WINAPI PathBuildRootAW(LPVOID lpszPath, int drive)
-{
-	if(SHELL_OsIsUnicode())
-	  return PathBuildRootW(lpszPath, drive);
-	return PathBuildRootA(lpszPath, drive);
-}
-
-/*************************************************************************
  * PathGetExtensionA		[internal]
  *
  * NOTES
@@ -128,7 +118,7 @@ static LPWSTR PathGetExtensionW(LPCWSTR lpszPath)
 /*************************************************************************
  * SHPathGetExtension        [SHELL32.158]
  */
-EXTERN_C LPVOID WINAPI SHPathGetExtensionW(LPCWSTR lpszPath, DWORD void1, DWORD void2)
+LPVOID WINAPI SHPathGetExtensionW(LPCWSTR lpszPath, DWORD void1, DWORD void2)
 {
     return PathGetExtensionW(lpszPath);
 }
@@ -257,16 +247,6 @@ BOOL WINAPI PathFileExistsAW (LPCVOID lpszPath)
 	if (SHELL_OsIsUnicode())
 	  return PathFileExistsW (lpszPath);
 	return PathFileExistsA (lpszPath);
-}
-
-/*************************************************************************
- * PathIsSameRoot	[SHELL32.650]
- */
-BOOL WINAPI PathIsSameRootAW(LPCVOID lpszPath1, LPCVOID lpszPath2)
-{
-	if (SHELL_OsIsUnicode())
-	  return PathIsSameRootW(lpszPath1, lpszPath2);
-	return PathIsSameRootA(lpszPath1, lpszPath2);
 }
 
 /*************************************************************************

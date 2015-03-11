@@ -128,6 +128,8 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
     HWND hwnd,
     DWORD dwFlags)
 {
+    HRESULT hr;
+
     TRACE("CMenuBand::SetMenu called, hmenu=%p; hwnd=%p, flags=%x\n", hmenu, hwnd, dwFlags);
 
     BOOL created = FALSE;
@@ -138,17 +140,21 @@ HRESULT STDMETHODCALLTYPE  CMenuBand::SetMenu(
         m_hmenu = NULL;
     }
 
-    if (m_staticToolbar == NULL)
+    m_hmenu = hmenu;
+    m_menuOwner = hwnd;
+
+    if (m_hmenu && m_staticToolbar == NULL)
     {
         m_staticToolbar = new CMenuStaticToolbar(this);
         created = true;
     }
-    m_hmenu = hmenu;
-    m_menuOwner = hwnd;
 
-    HRESULT hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (m_staticToolbar)
+    {
+        hr = m_staticToolbar->SetMenu(hmenu, hwnd, dwFlags);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
 
     if (m_site)
     {
@@ -287,8 +293,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
     int syStatic = maxStatic.cy;
     int syShlFld = sy - syStatic;
 
+    // TODO: Windows has a more complex system to decide ordering.
+    // Because we only support two toolbars at once, this is enough for us.
     if (m_shellBottom)
     {
+        // Static menu on top
         if (m_SFToolbar)
         {
             m_SFToolbar->SetPosSize(
@@ -306,8 +315,9 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnPosRectChangeDB(RECT *prc)
                 syStatic);
         }
     }
-    else // shell menu on top
+    else
     {
+        // Folder menu on top
         if (m_SFToolbar)
         {
             m_SFToolbar->SetPosSize(
@@ -439,7 +449,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::CloseDW(DWORD dwReserved)
 
     if (m_subMenuChild)
     {
-        DbgPrint("Child object should have removed itself.\n");
+        TRACE("Child object should have removed itself.\n");
     }
 
     ShowDW(FALSE);
@@ -547,6 +557,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::Popup(POINTL *ppt, RECTL *prcExclude, MP_PO
 
 HRESULT STDMETHODCALLTYPE CMenuBand::OnSelect(DWORD dwSelectType)
 {
+    // When called from outside, this is straightforward:
+    // Things that a submenu needs to know, are spread down, and
+    // things that the parent needs to know, are spread up. No drama.
+    // The fun is in _MenuItemSelect (internal method).
     switch (dwSelectType)
     {
     case MPOS_CHILDTRACKING:
@@ -585,6 +599,7 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
     return S_OK;
 }
 
+// Used by the focus manager to update the child band pointer
 HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
 {
     m_childBand = child;
@@ -595,6 +610,7 @@ HRESULT CMenuBand::_SetChildBand(CMenuBand * child)
     return S_OK;
 }
 
+// User by the focus manager to update the parent band pointer
 HRESULT CMenuBand::_SetParentBand(CMenuBand * parent)
 {
     m_parentBand = parent;
@@ -633,7 +649,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::SetClient(IUnknown *punkClient)
 
 HRESULT STDMETHODCALLTYPE CMenuBand::GetClient(IUnknown **ppunkClient)
 {
-    // HACK, so I can test for a submenu in the DeskBar
     if (!ppunkClient)
         return E_POINTER;
     *ppunkClient = NULL;
@@ -699,6 +714,14 @@ HRESULT STDMETHODCALLTYPE CMenuBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wPa
 {
     *theResult = 0;
 
+    if (uMsg == WM_WININICHANGE && wParam == SPI_SETFLATMENU)
+    {
+        BOOL bFlatMenus;
+        SystemParametersInfo(SPI_GETFLATMENU, 0, &bFlatMenus, 0);
+        AdjustForTheme(bFlatMenus);
+        return S_OK;
+    }
+
     if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hWnd) == S_OK)
     {
         return m_staticToolbar->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
@@ -746,7 +769,6 @@ HRESULT CMenuBand::_CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam, UINT id, LPI
     smData.pidlItem = pidl;
     smData.hwnd = m_menuOwner ? m_menuOwner : m_topLevelWindow;
     smData.hmenu = m_hmenu;
-    smData.pvUserData = NULL;
     if (m_SFToolbar)
         m_SFToolbar->GetShellFolder(NULL, &smData.pidlFolder, IID_PPV_ARG(IShellFolder, &smData.psf));
     HRESULT hr = m_psmc->CallbackSM(&smData, uMsg, wParam, lParam);
@@ -781,6 +803,10 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
 {
     HRESULT hr;
     UINT uCommand;
+    
+    // Ensure that the menu doesn't disappear on us
+    CComPtr<IContextMenu> ctxMenu = contextMenu;
+
     HMENU popup = CreatePopupMenu();
 
     if (popup == NULL)
@@ -806,12 +832,15 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
 
     if (uCommand != 0)
     {
+        _MenuItemSelect(MPOS_FULLCANCEL);
+
         TRACE("Before InvokeCommand\n");
         CMINVOKECOMMANDINFO cmi = { 0 };
         cmi.cbSize = sizeof(cmi);
         cmi.lpVerb = MAKEINTRESOURCEA(uCommand);
         cmi.hwnd = hwnd;
         hr = contextMenu->InvokeCommand(&cmi);
+        TRACE("InvokeCommand returned hr=%08x\n", hr);
     }
     else
     {
@@ -843,8 +872,7 @@ HRESULT CMenuBand::_ChangeHotItem(CMenuToolbarBase * tb, INT id, DWORD dwFlags)
     if (m_staticToolbar) m_staticToolbar->ChangeHotItem(tb, id, dwFlags);
     if (m_SFToolbar) m_SFToolbar->ChangeHotItem(tb, id, dwFlags);
 
-    _MenuItemHotTrack(MPOS_CHILDTRACKING);
-
+    _MenuItemSelect(MPOS_CHILDTRACKING);
 
     return S_OK;
 }
@@ -904,8 +932,9 @@ HRESULT  CMenuBand::_KeyboardItemChange(DWORD change)
     return tb->KeyboardItemChange(change == VK_DOWN ? VK_HOME : VK_END);
 }
 
-HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
+HRESULT CMenuBand::_MenuItemSelect(DWORD changeType)
 {
+    // Needed to prevent the this point from vanishing mid-function
     CComPtr<CMenuBand> safeThis = this;
     HRESULT hr;
 
@@ -942,6 +971,9 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
         }
     }
 
+    // In this context, the parent is the CMenuDeskBar, so when it bubbles upward,
+    // it is notifying the deskbar, and not the the higher-level menu.
+    // Same for the child: since it points to a CMenuDeskBar, it's not just recursing.
     switch (changeType)
     {
     case MPOS_EXECUTE:
@@ -959,7 +991,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
     }
     case MPOS_SELECTLEFT:
         if (m_parentBand && m_parentBand->_IsPopup()==S_FALSE)
-            return m_parentBand->_MenuItemHotTrack(VK_LEFT);
+            return m_parentBand->_MenuItemSelect(VK_LEFT);
         if (m_subMenuChild)
             return m_subMenuChild->OnSelect(MPOS_CANCELLEVEL);
         if (!m_subMenuParent)
@@ -970,7 +1002,7 @@ HRESULT CMenuBand::_MenuItemHotTrack(DWORD changeType)
         if (m_hotBar && m_hotItem >= 0 && m_hotBar->PopupItem(m_hotItem, TRUE) == S_OK)
             return S_FALSE;
         if (m_parentBand)
-            return m_parentBand->_MenuItemHotTrack(VK_RIGHT);
+            return m_parentBand->_MenuItemSelect(VK_RIGHT);
         if (!m_subMenuParent)
             return S_OK;
         return m_subMenuParent->OnSelect(MPOS_SELECTRIGHT);
@@ -1093,12 +1125,12 @@ HRESULT CMenuBand::_KillPopupTimers()
     return hr;
 }
 
-HRESULT CMenuBand::_MenuBarMouseDown(HWND hwnd, INT item)
+HRESULT CMenuBand::_MenuBarMouseDown(HWND hwnd, INT item, BOOL isLButton)
 {
     if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hwnd) == S_OK)
-        m_staticToolbar->MenuBarMouseDown(item);
+        m_staticToolbar->MenuBarMouseDown(item, isLButton);
     if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hwnd) == S_OK)
-        m_SFToolbar->MenuBarMouseDown(item);
+        m_SFToolbar->MenuBarMouseDown(item, isLButton);
     return S_OK;
 }
 
@@ -1114,6 +1146,11 @@ HRESULT CMenuBand::_MenuBarMouseUp(HWND hwnd, INT item)
 HRESULT CMenuBand::_HasSubMenu()
 {
     return m_popupBar ? S_OK : S_FALSE;
+}
+
+HRESULT CMenuBand::AdjustForTheme(BOOL bFlatStyle)
+{
+    return IUnknown_QueryServiceExec(m_site, SID_SMenuPopup, &CGID_MenuDeskBar, 4, bFlatStyle, NULL, NULL);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuBand::InvalidateItem(LPSMDATA psmd, DWORD dwFlags)

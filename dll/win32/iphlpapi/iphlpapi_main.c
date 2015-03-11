@@ -781,11 +781,24 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
  *
  * NOTES
  */
+
 DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
 {
 	DWORD ret = NO_ERROR;
-	UNIMPLEMENTED;
-	return ret;	
+
+  if (TableClass == TCP_TABLE_OWNER_PID_ALL) {
+    if (*pdwSize == 0) {
+      *pdwSize = sizeof(MIB_TCPTABLE_OWNER_PID);
+      return ERROR_INSUFFICIENT_BUFFER; 
+    } else {
+      ZeroMemory(pTcpTable, sizeof(MIB_TCPTABLE_OWNER_PID));
+      return NO_ERROR;
+    }
+  }
+
+
+    UNIMPLEMENTED;
+    return ret;	
 }
 
 
@@ -2132,7 +2145,7 @@ DWORD WINAPI SetIpNetEntry(PMIB_IPNETROW pArpEntry)
   if (!pArpEntry)
       return ERROR_INVALID_PARAMETER;
 
-  if (!NT_SUCCESS(openTcpFile( &tcpFile )))
+  if (!NT_SUCCESS(openTcpFile( &tcpFile, FILE_READ_DATA | FILE_WRITE_DATA )))
       return ERROR_NOT_SUPPORTED;
 
   if (!NT_SUCCESS(getNthIpEntity( tcpFile, pArpEntry->dwIndex, &id )))
@@ -2299,7 +2312,7 @@ DWORD WINAPI DECLSPEC_HOTPATCH GetAdaptersAddresses(ULONG Family,ULONG Flags,PVO
     if (!indexTable)
         return ERROR_NOT_ENOUGH_MEMORY;
 
-    ret = openTcpFile(&tcpFile);
+    ret = openTcpFile(&tcpFile, FILE_READ_DATA);
     if (!NT_SUCCESS(ret))
         return ERROR_NO_DATA;
 

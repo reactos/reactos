@@ -342,7 +342,7 @@ NTSTATUS NTAPI
 ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
                    IN OUT PCONSOLE_INFO ConsoleInfo,
                    IN OUT PVOID ExtraConsoleInfo,
-                   IN ULONG ProcessId);
+                   IN PCSR_PROCESS ConsoleLeaderProcess);
 NTSTATUS NTAPI
 ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal);
 
@@ -476,11 +476,27 @@ Finish:
         if (IconPath && *IconPath)
         {
             HICON hIcon = NULL, hIconSm = NULL;
+            /*
+             * FIXME!! Because of a strange bug we have in PrivateExtractIconExW
+             * (see r65683 for more details), we cannot use this API to extract
+             * at the same time the large and small icons from the app.
+             * Instead we just use PrivateExtractIconsW.
+             *
             PrivateExtractIconExW(IconPath,
                                   ConsoleInitInfo->ConsoleStartInfo->IconIndex,
                                   &hIcon,
                                   &hIconSm,
                                   1);
+             */
+            PrivateExtractIconsW(IconPath,
+                                 ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                 32, 32,
+                                 &hIcon, NULL, 1, LR_COPYFROMRESOURCE);
+            PrivateExtractIconsW(IconPath,
+                                 ConsoleInitInfo->ConsoleStartInfo->IconIndex,
+                                 16, 16,
+                                 &hIconSm, NULL, 1, LR_COPYFROMRESOURCE);
+
             DPRINT("hIcon = 0x%p ; hIconSm = 0x%p\n", hIcon, hIconSm);
             if (hIcon   != NULL) ConsoleInitInfo->ConsoleStartInfo->hIcon   = hIcon;
             if (hIconSm != NULL) ConsoleInitInfo->ConsoleStartInfo->hIconSm = hIconSm;
@@ -497,12 +513,13 @@ NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSRV_CONSOLE* NewConsole,
                   IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
-                  IN ULONG ConsoleLeaderProcessId)
+                  IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status;
     HANDLE ConsoleHandle;
     PCONSRV_CONSOLE Console;
     CONSOLE_INFO ConsoleInfo;
+    ULONG ConsoleLeaderProcessId = HandleToUlong(ConsoleLeaderProcess->ClientId.UniqueProcess);
     SIZE_T Length = 0;
 
     TERMINAL Terminal; /* The ConSrv terminal for this console */
@@ -529,7 +546,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Status = ConSrvInitTerminal(&Terminal,
                                 &ConsoleInfo,
                                 ConsoleInitInfo,
-                                ConsoleLeaderProcessId);
+                                ConsoleLeaderProcess);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CONSRV: Failed to initialize a terminal, Status = 0x%08lx\n", Status);

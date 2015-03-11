@@ -186,7 +186,7 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "自定义区域选项"
     IDS_SPAIN "西班牙语 (西班牙)"
-    IDS_METRIC "Metric"
+    IDS_METRIC "公制"
     IDS_IMPERIAL "Imperial"
 END
 
@@ -198,16 +198,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Error"
-    IDS_ERROR_SYMBOL_SEPARATE "The short date components separator contains incorrect symbol(s)"
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "The short date format contains incorrect symbol(s)"
-    IDS_ERROR_SYMBOL_FORMAT_LONG "The long date format contains incorrect symbol(s)"
-    IDS_ERROR_OEM_CODE_PAGE "There was a problem reading the OEM code page"
-    IDS_ERROR_ANSI_CODE_PAGE "There was a problem reading the ANSI code page"
-    IDS_ERROR_INT_KEY_REG "Problem opening key: HKCU\\Control Panel\\International"
-    IDS_ERROR_DEF_INT_KEY_REG "Problem opening key: HKU\\.DEFAULT\\Control Panel\\International"
-    IDS_ERROR_NLS_KEY_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
-    IDS_ERROR_NLS_CODE_REG "Problem opening key: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
-    IDS_ERROR_INPUT_DLL "Unable to start input.dll"
+    IDS_ERROR "错误"
+    IDS_ERROR_SYMBOL_SEPARATE "短日期组件分隔符包含不正确的符号"
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "短日期格式包含不正确的符号"
+    IDS_ERROR_SYMBOL_FORMAT_LONG "长日期格式包含不正确的符号"
+    IDS_ERROR_OEM_CODE_PAGE "阅读 OEM 代码页时有个问题。"
+    IDS_ERROR_ANSI_CODE_PAGE "阅读 ANSI 代码页时有个问题。"
+    IDS_ERROR_INT_KEY_REG "问题打开项: HKCU\\Control Panel\\International"
+    IDS_ERROR_DEF_INT_KEY_REG "问题打开项: HKU\\.DEFAULT\\Control Panel\\International"
+    IDS_ERROR_NLS_KEY_REG "问题打开项: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
+    IDS_ERROR_NLS_CODE_REG "问题打开项: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
+    IDS_ERROR_INPUT_DLL "无法启动 input.dll"
 END
 

@@ -1,7 +1,7 @@
 /*
 * MAPI32 Polish resources
 *
-* Copyright 2010 £ukasz Wojni≥owicz
+* Copyright 2010 ≈Åukasz Wojni≈Çowicz
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,6 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-   IDS_NO_MAPI_CLIENT, "Wysy≥anie maila zakoÒczy≥o siÍ niepowodzeniem, poniewaø nie masz zainstalowanego klienta mailowego MAPI."
-   IDS_SEND_MAIL, "Wysy≥anie maila"
+   IDS_NO_MAPI_CLIENT, "Wysy≈Çanie maila zako≈Ñczy≈Ço siƒô niepowodzeniem, poniewa≈º nie masz zainstalowanego klienta mailowego MAPI."
+   IDS_SEND_MAIL, "Wysy≈Çanie maila"
 }

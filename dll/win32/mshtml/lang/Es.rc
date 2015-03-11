@@ -1,7 +1,7 @@
 /*
  * Spanish resources for mshtml
  *
- * Copyright 2006 José Manuel Ferrer Ortiz
+ * Copyright 2006 JosÃ© Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,8 +36,8 @@ STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Enlace"
 FONT 8, "MS Shell Dlg"
 {
-    GROUPBOX "Información sobre el enlace", -1, 5, 5, 190, 55
-    LTEXT "&Tipo :", -1, 10, 22, 24, 10
+    GROUPBOX "InformaciÃ³n sobre el enlace", -1, 5, 5, 190, 55
+    LTEXT "&TipoÂ :", -1, 10, 22, 24, 10
     COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
     LTEXT "&URL:", -1, 10, 42, 24, 10
     EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP

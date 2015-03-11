@@ -23,6 +23,13 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+#define DBIMF_NOGRIPPER         0x0800
+#define DBIMF_ALWAYSGRIPPER     0x1000
+#define DBIMF_NOMARGINS         0x2000
+#endif  // NTDDI_LONGHORN
+
 /****************************************************************************
  * Taskbar WM_COMMAND identifiers
  */
@@ -116,6 +123,7 @@ void WINAPI RunFileDlg(
 	LPCWSTR lpstrDescription,
 	UINT uFlags);
 
+int WINAPI LogoffWindowsDialog(HWND hwndOwner);
 void WINAPI ExitWindowsDialog(HWND hwndOwner);
 
 BOOL WINAPI SHFindComputer(
@@ -539,6 +547,8 @@ BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 
 #define SMC_EXEC 4
 INT WINAPI Shell_GetCachedImageIndex(LPCWSTR szPath, INT nIndex, UINT bSimulateDoc);
+
+HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv);
 
 static inline ULONG
 Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)

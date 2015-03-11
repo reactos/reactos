@@ -1,4 +1,4 @@
-//2011.10.19 - Fulea Ștefan: minor changes
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
@@ -20,7 +20,7 @@ BEGIN
     MENUITEM "Resurse după t&ip",             IDC_STATIC, GRAYED
     MENUITEM "Resurse după c&onexiune",       IDC_STATIC, GRAYED
   END
-  POPUP "&?"
+  POPUP "Aj&utor"
   BEGIN
     MENUITEM "Despre…",                       IDC_ABOUT
   END

@@ -59,7 +59,7 @@ NtfsGetStandardInformation(PNTFS_FCB Fcb,
 
     StandardInfo->AllocationSize = Fcb->RFCB.AllocationSize;
     StandardInfo->EndOfFile = Fcb->RFCB.FileSize;
-    StandardInfo->NumberOfLinks = 0; /* FIXME */
+    StandardInfo->NumberOfLinks = Fcb->LinkCount;
     StandardInfo->DeletePending = FALSE;
     StandardInfo->Directory = NtfsFCBIsDirectory(Fcb);
 
@@ -183,8 +183,7 @@ NtfsGetInternalInformation(PNTFS_FCB Fcb,
     if (*BufferLength < sizeof(FILE_INTERNAL_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
-    /* FIXME: get a real index, that can be used in a create operation */
-    InternalInfo->IndexNumber.QuadPart = 0;
+    InternalInfo->IndexNumber.QuadPart = Fcb->MFTIndex;
 
     *BufferLength -= sizeof(FILE_INTERNAL_INFORMATION);
 

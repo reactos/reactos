@@ -33,7 +33,7 @@
  *
  *  TODO:
  *    - Add support for ILD_PRESERVEALPHA, ILD_SCALE, ILD_DPISCALE
- *    - Add support for ILS_GLOW, ILS_SHADOW, ILS_SATURATE
+ *    - Add support for ILS_GLOW, ILS_SHADOW
  *    - Thread-safe locking
  */
 
@@ -1227,7 +1227,7 @@ ImageList_DrawEx (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y,
 }
 
 
-static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
+static BOOL alpha_blend_image( HIMAGELIST himl, HDC srce_dc, HDC dest_dc, int dest_x, int dest_y,
                                int src_x, int src_y, int cx, int cy, BLENDFUNCTION func,
                                UINT style, COLORREF blend_col )
 {
@@ -1252,9 +1252,9 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
     info->bmiHeader.biYPelsPerMeter = 0;
     info->bmiHeader.biClrUsed = 0;
     info->bmiHeader.biClrImportant = 0;
-    if (!(bmp = CreateDIBSection( himl->hdcImage, info, DIB_RGB_COLORS, &bits, 0, 0 ))) goto done;
+    if (!(bmp = CreateDIBSection( srce_dc, info, DIB_RGB_COLORS, &bits, 0, 0 ))) goto done;
     SelectObject( hdc, bmp );
-    BitBlt( hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY );
+    BitBlt( hdc, 0, 0, cx, cy, srce_dc, src_x, src_y, SRCCOPY );
 
     if (blend_col != CLR_NONE)
     {
@@ -1325,6 +1325,66 @@ done:
     if (mask) DeleteObject( mask );
     HeapFree( GetProcessHeap(), 0, info );
     return ret;
+}
+
+HDC saturate_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
+                    int src_x, int src_y, int cx, int cy, COLORREF rgbFg)
+{
+    HDC hdc = NULL;
+    HBITMAP bmp = 0;
+    BITMAPINFO *info;
+
+    unsigned int *ptr;
+    void *bits;
+    int i;
+
+    /* create a dc and its device independent bitmap for doing the work,
+       shamelessly copied from the alpha-blending function above */
+    if (!(hdc = CreateCompatibleDC( 0 ))) return FALSE;
+    if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) goto done;
+    info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info->bmiHeader.biWidth = cx;
+    info->bmiHeader.biHeight = cy;
+    info->bmiHeader.biPlanes = 1;
+    info->bmiHeader.biBitCount = 32;
+    info->bmiHeader.biCompression = BI_RGB;
+    info->bmiHeader.biSizeImage = cx * cy * 4;
+    info->bmiHeader.biXPelsPerMeter = 0;
+    info->bmiHeader.biYPelsPerMeter = 0;
+    info->bmiHeader.biClrUsed = 0;
+    info->bmiHeader.biClrImportant = 0;
+    if (!(bmp = CreateDIBSection(himl->hdcImage, info, DIB_RGB_COLORS, &bits, 0, 0 ))) goto done;
+
+    /* bind both surfaces */
+    SelectObject(hdc, bmp);
+
+    /* copy into our dc the section that covers just the icon we we're asked for */
+    BitBlt(hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY);
+
+    /* loop every pixel of the bitmap */
+    for (i = 0, ptr = bits; i < cx * cy; i++, ptr++)
+    {
+        COLORREF orig_color = *ptr;
+
+        /* calculate the effective luminance using the constants from here, adapted to the human eye:
+           <http://bobpowell.net/grayscale.aspx> */
+        float mixed_color = (GetRValue(orig_color) * .30 +
+                             GetGValue(orig_color) * .59 +
+                             GetBValue(orig_color) * .11);
+
+        *ptr = RGBA(mixed_color, mixed_color, mixed_color, GetAValue(orig_color));
+    }
+
+done:
+
+    if (bmp)
+        DeleteObject(bmp);
+
+    if (info)
+        HeapFree(GetProcessHeap(), 0, info);
+
+    /* return the handle to our desaturated dc, that will substitute its original counterpart in the next calls */
+    return hdc;
 }
 
 /*************************************************************************
@@ -1403,6 +1463,21 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     oldImageFg = SetTextColor( hImageDC, RGB( 0, 0, 0 ) );
     oldImageBk = SetBkColor( hImageDC, RGB( 0xff, 0xff, 0xff ) );
 
+    /*
+     * If the ILS_SATURATE bit is enabled we should multiply the
+     * RGB colors of the original image by the contents of rgbFg.
+     */
+    if (fState & ILS_SATURATE)
+    {
+        hImageListDC = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
+                                      pt.x, pt.y, cx, cy, pimldp->rgbFg);
+
+        /* shitty way of getting subroutines to blit at the right place (top left corner),
+           as our modified imagelist only contains a single image for performance reasons */
+        pt.x = 0;
+        pt.y = 0;
+    }
+
     has_alpha = (himl->has_alpha && himl->has_alpha[pimldp->i]);
     if (!bMask && (has_alpha || (fState & ILS_ALPHA)))
     {
@@ -1423,7 +1498,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 
         if (bIsTransparent)
         {
-            bResult = alpha_blend_image( himl, pimldp->hdcDst, pimldp->x, pimldp->y,
+            bResult = alpha_blend_image( himl, hImageListDC, pimldp->hdcDst, pimldp->x, pimldp->y,
                                          pt.x, pt.y, cx, cy, func, fStyle, blend_col );
             goto end;
         }
@@ -1433,7 +1508,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 
         hOldBrush = SelectObject (hImageDC, CreateSolidBrush (colour));
         PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
-        alpha_blend_image( himl, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func, fStyle, blend_col );
+        alpha_blend_image( himl, hImageListDC, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func, fStyle, blend_col );
         DeleteObject (SelectObject (hImageDC, hOldBrush));
         bResult = BitBlt( pimldp->hdcDst, pimldp->x,  pimldp->y, cx, cy, hImageDC, 0, 0, SRCCOPY );
         goto end;
@@ -1527,7 +1602,6 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 	}
     }
 
-    if (fState & ILS_SATURATE) FIXME("ILS_SATURATE: unimplemented!\n");
     if (fState & ILS_GLOW) FIXME("ILS_GLOW: unimplemented!\n");
     if (fState & ILS_SHADOW) FIXME("ILS_SHADOW: unimplemented!\n");
 

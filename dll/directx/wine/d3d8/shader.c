@@ -108,11 +108,19 @@ HRESULT d3d8_vertex_shader_init(struct d3d8_vertex_shader *shader, struct d3d8_d
 
     if (byte_code)
     {
-        if (usage) FIXME("Usage %#x not implemented.\n", usage);
+        struct wined3d_shader_desc desc;
+
+        if (usage)
+            FIXME("Usage %#x not implemented.\n", usage);
+
+        desc.byte_code = byte_code;
+        desc.input_signature = NULL;
+        desc.output_signature = NULL;
+        desc.max_version = 1;
 
         wined3d_mutex_lock();
-        hr = wined3d_shader_create_vs(device->wined3d_device, byte_code, NULL /* output signature */,
-                shader, &d3d8_vertexshader_wined3d_parent_ops, &shader->wined3d_shader, 1);
+        hr = wined3d_shader_create_vs(device->wined3d_device, &desc, shader,
+                &d3d8_vertexshader_wined3d_parent_ops, &shader->wined3d_shader);
         wined3d_mutex_unlock();
         if (FAILED(hr))
         {
@@ -149,13 +157,19 @@ static const struct wined3d_parent_ops d3d8_pixelshader_wined3d_parent_ops =
 HRESULT d3d8_pixel_shader_init(struct d3d8_pixel_shader *shader, struct d3d8_device *device,
         const DWORD *byte_code, DWORD shader_handle)
 {
+    struct wined3d_shader_desc desc;
     HRESULT hr;
 
     shader->handle = shader_handle;
 
+    desc.byte_code = byte_code;
+    desc.input_signature = NULL;
+    desc.output_signature = NULL;
+    desc.max_version = 1;
+
     wined3d_mutex_lock();
-    hr = wined3d_shader_create_ps(device->wined3d_device, byte_code, NULL, shader,
-            &d3d8_pixelshader_wined3d_parent_ops, &shader->wined3d_shader, 1);
+    hr = wined3d_shader_create_ps(device->wined3d_device, &desc, shader,
+            &d3d8_pixelshader_wined3d_parent_ops, &shader->wined3d_shader);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {

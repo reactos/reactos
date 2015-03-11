@@ -2,7 +2,7 @@
  * Help Viewer
  *
  * Copyright 1996 Ulrich Schmid
- * Swedish language by Karl Backstrˆm <karl_b@geocities.com>
+ * Swedish language by Karl Backstr√∂m <karl_b@geocities.com>
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2007, 2008 Daniel Nylander <po@danielnylander.se>
  * Copyright 2009 Anders Jonsson
@@ -27,7 +27,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 MAIN_MENU MENU
 {
  POPUP "&Arkiv" {
-  MENUITEM "&÷ppna", MNID_FILE_OPEN
+  MENUITEM "&√ñppna", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Skriv ut", MNID_FILE_PRINT
   MENUITEM "Skrivar&konfiguration...", MNID_FILE_SETUP
@@ -39,7 +39,7 @@ MAIN_MENU MENU
    MENUITEM SEPARATOR
    MENUITEM "&Kommentera...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Bokm‰rke" {
+ POPUP "&Bokm√§rke" {
    MENUITEM "&Definiera...", MNID_BKMK_DEFINE
  }
  POPUP "A&lternativ" {
@@ -51,9 +51,9 @@ MAIN_MENU MENU
     MENUITEM "Stort",     	MNID_OPTS_FONTS_LARGE
   END
  }
- POPUP "&Hj‰lp" {
-   MENUITEM "Hj‰lp &fˆr hj‰lp", MNID_HELP_HELPON
-   MENUITEM "Alltid &ˆverst", MNID_HELP_HELPTOP
+ POPUP "&Hj√§lp" {
+   MENUITEM "Hj√§lp &f√∂r hj√§lp", MNID_HELP_HELPON
+   MENUITEM "Alltid &√∂verst", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }
@@ -76,20 +76,20 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"Wine Hj‰lp"
+STID_WINE_HELP, 	"Wine Hj√§lp"
 STID_WHERROR, 		"FEL"
 STID_WARNING,  		"VARNING"
 STID_INFO,  		"Information"
 STID_NOT_IMPLEMENTED, 	"Inte implementerat"
-STID_HLPFILE_ERROR_s, 	"Fel vid l‰sning av hj‰lpfilen `%s'"
-STID_INDEX, 		"&InnehÂll"
+STID_HLPFILE_ERROR_s, 	"Fel vid l√§sning av hj√§lpfilen `%s'"
+STID_INDEX, 		"&Inneh√•ll"
 STID_CONTENTS,		"Sammandrag"
-STID_BACK, 		"&BakÂt"
+STID_BACK, 		"&Bak√•t"
 STID_ALL_FILES, 	"Alla filer (*.*)"
-STID_HELP_FILES_HLP, 	"Hj‰lpfiler (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du sˆka efter denna fil?"
+STID_HELP_FILES_HLP, 	"Hj√§lpfiler (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du s√∂ka efter denna fil?"
 STID_NO_RICHEDIT	"Kan inte hitta en implementation av richedit... Avslutar"
-STID_PSH_INDEX,		"Hj‰lprubriker: "
+STID_PSH_INDEX,		"Hj√§lprubriker: "
 }
 
 IDD_INDEX DIALOG 0, 0, 200, 190
@@ -103,7 +103,7 @@ CAPTION "Index"
 IDD_SEARCH DIALOG 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Sˆk"
+CAPTION "S√∂k"
 {
-    LTEXT  "Inte implementerat ‰nnu", -1, 10, 10, 180, 150
+    LTEXT  "Inte implementerat √§nnu", -1, 10, 10, 180, 150
 }

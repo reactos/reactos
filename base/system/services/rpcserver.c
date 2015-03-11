@@ -1085,7 +1085,9 @@ DWORD RControlService(
     DWORD dwControlsAccepted;
     DWORD dwCurrentState;
     HKEY hServicesKey = NULL;
-    LPCWSTR lpErrorStrings[2];
+    LPCWSTR lpLogStrings[2];
+    WCHAR szLogBuffer[80];
+    UINT uID;
 
     DPRINT("RControlService() called\n");
 
@@ -1245,34 +1247,35 @@ DWORD RControlService(
 
     if (dwError == ERROR_SUCCESS)
     {
-            if (dwControl != SERVICE_CONTROL_INTERROGATE)
+            if (dwControl == SERVICE_CONTROL_STOP ||
+                dwControl == SERVICE_CONTROL_PAUSE ||
+                dwControl == SERVICE_CONTROL_CONTINUE)
             {
                 /* Log a sucessful send control */
-                lpErrorStrings[0] = lpService->lpDisplayName;
 
-                switch(dwControl)
+                switch (dwControl)
                 {
                     case SERVICE_CONTROL_STOP:
-                        lpErrorStrings[1] = L"stop";
+                        uID = IDS_SERVICE_STOP;
                         break;
 
                     case SERVICE_CONTROL_PAUSE:
-                        lpErrorStrings[1] = L"pause";
+                        uID = IDS_SERVICE_PAUSE;
                         break;
 
                     case SERVICE_CONTROL_CONTINUE:
-                        lpErrorStrings[1] = L"continue";
-                        break;
-
-                    default:
-                        lpErrorStrings[1] = L"other";
+                        uID = IDS_SERVICE_RESUME;
                         break;
                 }
+                LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
+
+                lpLogStrings[0] = lpService->lpDisplayName;
+                lpLogStrings[1] = szLogBuffer;
 
                 ScmLogEvent(EVENT_SERVICE_CONTROL_SUCCESS,
                             EVENTLOG_INFORMATION_TYPE,
                             2,
-                            lpErrorStrings);
+                            lpLogStrings);
             }
     }
 
@@ -1652,8 +1655,9 @@ DWORD RSetServiceStatus(
     PSERVICE lpService;
     DWORD dwPreviousState;
     DWORD dwPreviousType;
-    LPCWSTR lpErrorStrings[2];
-    WCHAR szErrorBuffer[32];
+    LPCWSTR lpLogStrings[2];
+    WCHAR szLogBuffer[80];
+    UINT uID;
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %lu\n", hServiceStatus);
@@ -1730,14 +1734,14 @@ DWORD RSetServiceStatus(
         (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS))
     {
         /* Log a failed service stop */
-        swprintf(szErrorBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
-        lpErrorStrings[0] = lpService->lpDisplayName;
-        lpErrorStrings[1] = szErrorBuffer;
+        swprintf(szLogBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
 
         ScmLogEvent(EVENT_SERVICE_EXIT_FAILED,
                     EVENTLOG_ERROR_TYPE,
                     2,
-                    lpErrorStrings);
+                    lpLogStrings);
     }
     else if (lpServiceStatus->dwCurrentState != dwPreviousState &&
              (lpServiceStatus->dwCurrentState == SERVICE_STOPPED ||
@@ -1745,27 +1749,29 @@ DWORD RSetServiceStatus(
               lpServiceStatus->dwCurrentState == SERVICE_PAUSED))
     {
         /* Log a successful service status change */
-        lpErrorStrings[0] = lpService->lpDisplayName;
-
         switch(lpServiceStatus->dwCurrentState)
         {
             case SERVICE_STOPPED:
-                lpErrorStrings[1] = L"stopped";
+                uID = IDS_SERVICE_STOPPED;
                 break;
 
             case SERVICE_RUNNING:
-                lpErrorStrings[1] = L"running";
+                uID = IDS_SERVICE_RUNNING;
                 break;
 
             case SERVICE_PAUSED:
-                lpErrorStrings[1] = L"paused";
+                uID = IDS_SERVICE_PAUSED;
                 break;
         }
+
+        LoadStringW(GetModuleHandle(NULL), uID, szLogBuffer, 80);
+        lpLogStrings[0] = lpService->lpDisplayName;
+        lpLogStrings[1] = szLogBuffer;
 
         ScmLogEvent(EVENT_SERVICE_STATUS_SUCCESS,
                     EVENTLOG_INFORMATION_TYPE,
                     2,
-                    lpErrorStrings);
+                    lpLogStrings);
     }
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);

@@ -306,7 +306,7 @@ BEGIN
     CONTROL "S&itzungskennung", IDC_SESSIONID, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 149, 70, 10 // 50
     CONTROL "Benut&zername", IDC_USERNAME, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 7, 160, 70, 10 // 51
     CONTROL "Veränderung der Seiten&fehler", IDC_PAGEFAULTSDELTA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 28, 120, 10 // 107,60
-    CONTROL "Größe des &virtuelle Speichers", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 39, 120, 10 // 107, 60
+    CONTROL "Größe des &virtuellen Speichers", IDC_VIRTUALMEMORYSIZE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 39, 120, 10 // 107, 60
     CONTROL "&Ausgelagerter Pool", IDC_PAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 50, 80, 10 // 107, 53
     CONTROL "Nicht ausgelagerter P&ool", IDC_NONPAGEDPOOL, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 61, 115, 10 // 107
     CONTROL "&Basispriorität", IDC_BASEPRIORITY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 127, 72, 80, 10 // 107

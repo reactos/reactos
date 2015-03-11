@@ -8,20 +8,20 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "KopÌruji soubory..."
+CAPTION "Kop√≠ruji soubory..."
 FONT 8, "MS Shell Dlg"
 BEGIN
     PUSHBUTTON "Storno", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Zdroj:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "CÌl:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "C√≠l:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_QUERY_REBOOT_TEXT "Aby mohla b˝t instalace dokonËena, musÌ b˝t poËÌtaË restartov·n. PokraËovat?"
+    IDS_QUERY_REBOOT_TEXT "Aby mohla b√Ωt instalace dokonƒçena, mus√≠ b√Ωt poƒç√≠taƒç restartov√°n. Pokraƒçovat?"
     IDS_QUERY_REBOOT_CAPTION "Restartovat"
-    IDS_INF_FILE "InstalaËnÌ informace"
+    IDS_INF_FILE "Instalaƒçn√≠ informace"
 END

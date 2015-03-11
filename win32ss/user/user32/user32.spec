@@ -609,7 +609,7 @@
 @ stdcall SetKeyboardState(ptr) NtUserSetKeyboardState
 @ stdcall SetLastErrorEx(long long)
 @ stdcall SetLayeredWindowAttributes(ptr long long long) NtUserSetLayeredWindowAttributes
-@ stdcall SetLogonNotifyWindow(long long) ; Direct call NtUserSetLogonNotifyWindow
+@ stdcall SetLogonNotifyWindow(long) ; Direct call NtUserSetLogonNotifyWindow
 @ stdcall SetMenu(long long)
 @ stdcall SetMenuContextHelpId(long long) NtUserSetMenuContextHelpId
 @ stdcall SetMenuDefaultItem(long long long) NtUserSetMenuDefaultItem

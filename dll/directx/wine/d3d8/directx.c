@@ -389,7 +389,7 @@ static const struct IDirect3D8Vtbl d3d8_vtbl =
 
 BOOL d3d8_init(struct d3d8 *d3d8)
 {
-    DWORD flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING;
+    DWORD flags = WINED3D_LEGACY_DEPTH_BIAS | WINED3D_VIDMEM_ACCOUNTING | WINED3D_HANDLE_RESTORE;
 
     d3d8->IDirect3D8_iface.lpVtbl = &d3d8_vtbl;
     d3d8->refcount = 1;

@@ -35,11 +35,11 @@ endif ()
 
 # Disable overly sensitive warnings as well as those that generally aren't
 # useful to us.
-# - TODO: C4018: signed/unsigned mismatch
 # - C4244: implicit integer truncation
 # - C4290: C++ exception specification ignored
-#add_compile_flags("/wd4018 /wd4244 /wd4290")
-add_compile_flags("/wd4290 /wd4244")
+# - C4800: forcing value to bool 'true' or 'false' (performance warning)
+#add_compile_flags("/wd4244 /wd4290 /wd4800 ")
+add_compile_flags("/wd4244 /wd4290 /wd4800")
 
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
@@ -57,7 +57,8 @@ add_compile_flags("/wd4290 /wd4244")
 # - C4229: modifiers on data are ignored
 # - C4700: uninitialized variable usage
 # - C4603: macro is not defined or definition is different after precompiled header use
-add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603")
+# - C4716: function must return a value
+add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603 /we4716")
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
@@ -229,9 +230,10 @@ function(set_module_type_toolchain MODULE TYPE)
     if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
-        add_target_link_flags(${MODULE} "/DRIVER")
+        # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
+        add_target_link_flags(${MODULE} "/DRIVER /IGNORE:4078")
     elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM")
+        add_target_link_flags(${MODULE} "/DRIVER:WDM /IGNORE:4078")
     endif()
 
     if(RUNTIME_CHECKS)
@@ -315,14 +317,8 @@ else()
     set(SPEC2DEF_ARCH i386)
 endif()
 function(spec2def _dllname _spec_file)
-    # Do we also want to add importlib targets?
-    if(${ARGC} GREATER 2)
-        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
-            set(__add_importlib TRUE)
-        else()
-            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
-        endif()
-    endif()
+
+    cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS" "" "" ${ARGN})
 
     # Get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
@@ -338,7 +334,10 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-    if(__add_importlib)
+    if(__spec2def_ADD_IMPORTLIB)
+        # TODO: NO_PRIVATE_WARNINGS should add /IGNORE:4104 to the link command
+        #       line. However that should be on all command lines outside of
+        #       generate_import_lib in the first place.
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
     endif()
 endfunction()

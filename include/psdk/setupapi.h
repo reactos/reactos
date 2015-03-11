@@ -2,8 +2,11 @@
 #define _SETUPAPI_H_
 
 #include <commctrl.h>
+#if defined(_WIN64)
+#include <pshpack8.h>
+#else
 #include <pshpack1.h>
-
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -155,7 +158,9 @@ extern "C" {
 #define DIF_POWERMESSAGEWAKE               39
 #define DIF_ADDREMOTEPROPERTYPAGE_ADVANCED 40
 #define DIF_UPDATEDRIVER_UI                41
-#define DIF_RESERVED2                      42
+#define DIF_FINISHINSTALL_ACTION           42
+#define DIF_RESERVED2                      48
+
 #define DIGCDP_FLAG_BASIC	0x00000001
 #define DIGCDP_FLAG_ADVANCED	0x00000002
 #if (_SETUPAPI_VER >= 0x0501)

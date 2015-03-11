@@ -66,6 +66,7 @@ static ULONG STDMETHODCALLTYPE dxgi_adapter_Release(IDXGIAdapter1 *iface)
     if (!refcount)
     {
         IDXGIOutput_Release(adapter->output);
+        wined3d_private_store_cleanup(&adapter->private_store);
         HeapFree(GetProcessHeap(), 0, adapter);
     }
 
@@ -75,25 +76,31 @@ static ULONG STDMETHODCALLTYPE dxgi_adapter_Release(IDXGIAdapter1 *iface)
 static HRESULT STDMETHODCALLTYPE dxgi_adapter_SetPrivateData(IDXGIAdapter1 *iface,
         REFGUID guid, UINT data_size, const void *data)
 {
-    FIXME("iface %p, guid %s, data_size %u, data %p stub!\n", iface, debugstr_guid(guid), data_size, data);
+    struct dxgi_adapter *adapter = impl_from_IDXGIAdapter1(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, guid %s, data_size %u, data %p.\n", iface, debugstr_guid(guid), data_size, data);
+
+    return dxgi_set_private_data(&adapter->private_store, guid, data_size, data);
 }
 
 static HRESULT STDMETHODCALLTYPE dxgi_adapter_SetPrivateDataInterface(IDXGIAdapter1 *iface,
         REFGUID guid, const IUnknown *object)
 {
-    FIXME("iface %p, guid %s, object %p stub!\n", iface, debugstr_guid(guid), object);
+    struct dxgi_adapter *adapter = impl_from_IDXGIAdapter1(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, guid %s, object %p.\n", iface, debugstr_guid(guid), object);
+
+    return dxgi_set_private_data_interface(&adapter->private_store, guid, object);
 }
 
 static HRESULT STDMETHODCALLTYPE dxgi_adapter_GetPrivateData(IDXGIAdapter1 *iface,
         REFGUID guid, UINT *data_size, void *data)
 {
-    FIXME("iface %p, guid %s, data_size %p, data %p stub!\n", iface, debugstr_guid(guid), data_size, data);
+    struct dxgi_adapter *adapter = impl_from_IDXGIAdapter1(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, guid %s, data_size %p, data %p.\n", iface, debugstr_guid(guid), data_size, data);
+
+    return dxgi_get_private_data(&adapter->private_store, guid, data_size, data);
 }
 
 static HRESULT STDMETHODCALLTYPE dxgi_adapter_GetParent(IDXGIAdapter1 *iface, REFIID iid, void **parent)
@@ -225,11 +232,12 @@ HRESULT dxgi_adapter_init(struct dxgi_adapter *adapter, struct dxgi_factory *par
     adapter->IDXGIAdapter1_iface.lpVtbl = &dxgi_adapter_vtbl;
     adapter->parent = parent;
     adapter->refcount = 1;
+    wined3d_private_store_init(&adapter->private_store);
     adapter->ordinal = ordinal;
 
-    output = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*output));
-    if (!output)
+    if (!(output = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*output))))
     {
+        wined3d_private_store_cleanup(&adapter->private_store);
         return E_OUTOFMEMORY;
     }
     dxgi_output_init(output, adapter);

@@ -37,11 +37,18 @@ IDI_WINHELP ICON "res/winhelp.ico"
 
 #include <reactos/manifest_exe.rc>
 
+/* UTF-8 */
 #ifdef LANGUAGE_BG_BG
     #include "lang/Bg.rc"
 #endif
 #ifdef LANGUAGE_CS_CZ
     #include "lang/Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
     #include "lang/En.rc"
@@ -52,34 +59,14 @@ IDI_WINHELP ICON "res/winhelp.ico"
 #ifdef LANGUAGE_FI_FI
     #include "lang/Fi.rc"
 #endif
-#ifdef LANGUAGE_HU_HU
-    #include "lang/Hu.rc"
-#endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/Pl.rc"
-#endif
-#ifdef LANGUAGE_SK_SK
-    #include "lang/Sk.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/Sv.rc"
-#endif
-
-/* UTF-8 */
-#ifdef LANGUAGE_DA_DK
-    #include "lang/Da.rc"
-#endif
-#ifdef LANGUAGE_DE_DE
-    #include "lang/De.rc"
-#endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/It.rc"
@@ -96,6 +83,12 @@ IDI_WINHELP ICON "res/winhelp.ico"
 #ifdef LANGUAGE_NL_NL
     #include "lang/Nl.rc"
 #endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/Pl.rc"
+#endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/Pt.rc"
 #endif
@@ -108,6 +101,9 @@ IDI_WINHELP ICON "res/winhelp.ico"
 #ifdef LANGUAGE_RU_RU
     #include "lang/Ru.rc"
 #endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/Sk.rc"
+#endif
 #ifdef LANGUAGE_SL_SI
     #include "lang/Si.rc"
 #endif
@@ -116,6 +112,9 @@ IDI_WINHELP ICON "res/winhelp.ico"
 #endif
 #ifdef LANGUAGE_SR_SP
     #include "lang/Sr.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/Sv.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/Tr.rc"

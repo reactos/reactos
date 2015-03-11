@@ -87,10 +87,7 @@ static inline JoystickImpl *impl_from_IDirectInputDevice8W(IDirectInputDevice8W 
     return CONTAINING_RECORD(CONTAINING_RECORD(CONTAINING_RECORD(iface, IDirectInputDeviceImpl, IDirectInputDevice8W_iface),
            JoystickGenericImpl, base), JoystickImpl, generic);
 }
-static inline IDirectInputDevice8A *IDirectInputDevice8A_from_impl(JoystickImpl *This)
-{
-    return &This->generic.base.IDirectInputDevice8A_iface;
-}
+
 static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(JoystickImpl *This)
 {
     return &This->generic.base.IDirectInputDevice8W_iface;
@@ -149,6 +146,9 @@ static INT find_joystick_devices(void)
             WARN("ioctl(%s,JSIOCGAXES) failed: %s, defauting to 2\n", joydev.device, strerror(errno));
             joydev.axis_count = 2;
         }
+#else
+        WARN("reading number of joystick axes unsupported in this platform, defaulting to 2\n");
+        joydev.axis_count = 2;
 #endif
 #ifdef JSIOCGBUTTONS
         if (ioctl(fd, JSIOCGBUTTONS, &joydev.button_count) < 0)
@@ -156,6 +156,9 @@ static INT find_joystick_devices(void)
             WARN("ioctl(%s,JSIOCGBUTTONS) failed: %s, defauting to 2\n", joydev.device, strerror(errno));
             joydev.button_count = 2;
         }
+#else
+        WARN("reading number of joystick buttons unsupported in this platform, defaulting to 2\n");
+        joydev.button_count = 2;
 #endif
 
         if (ioctl(fd, JSIOCGAXMAP, axes_map) < 0)

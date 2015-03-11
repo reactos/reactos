@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -137,7 +137,7 @@ BEGIN
     IDS_PROPERTIES "&Husûsiyetler"
     IDS_OPEN_ALL_USERS "&Tüm Kullanıcılar'da Aç"
     IDS_EXPLORE_ALL_USERS "T&üm Kullanıcılar'da Araştır"
-    IDS_STARTUP_ERROR "Dizge, değer defterinin, bozuk ya da olmadığından gezgini başlatamadı."
+    IDS_STARTUP_ERROR "Dizge, değer defterinin, bozuk ya da olmadığından dolayı gezgini başlatamadı."
 END
 
 STRINGTABLE

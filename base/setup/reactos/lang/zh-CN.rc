@@ -144,4 +144,6 @@ BEGIN
     IDS_SUMMARYSUBTITLE "正是安装前列出安装属性以供检查"
     IDS_ABORTSETUP "ReactOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要在一次运行安装程序来安装 ReactOS。 确定退出？"
     IDS_ABORTSETUP2 "终止安装？"
+    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_CAPTION "ReactOS 安装"
 END

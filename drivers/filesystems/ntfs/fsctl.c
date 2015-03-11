@@ -168,6 +168,28 @@ ByeBye:
 
 
 static
+ULONG
+NtfsQueryMftZoneReservation(VOID)
+{
+    ULONG ZoneReservation = 1;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = L"NtfsMftZoneReservation";
+    QueryTable[0].EntryContext = &ZoneReservation;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                           L"FileSystem",
+                           QueryTable,
+                           NULL,
+                           NULL);
+
+    return ZoneReservation;
+}
+
+
+static
 NTSTATUS
 NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                   PDEVICE_EXTENSION DeviceExt)
@@ -361,6 +383,8 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     }
 
     ExFreePool(VolumeRecord);
+
+    NtfsInfo->MftZoneReservation = NtfsQueryMftZoneReservation();
 
     return Status;
 }
@@ -798,6 +822,27 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
     DeviceExt = DeviceObject->DeviceExtension;
     switch (Stack->Parameters.FileSystemControl.FsControlCode)
     {
+        case FSCTL_CREATE_USN_JOURNAL:
+        case FSCTL_DELETE_USN_JOURNAL:
+        case FSCTL_ENUM_USN_DATA:
+        case FSCTL_EXTEND_VOLUME:
+        //case FSCTL_GET_RETRIEVAL_POINTER_BASE:
+        case FSCTL_GET_RETRIEVAL_POINTERS:
+        case FSCTL_LOCK_VOLUME:
+        //case FSCTL_LOOKUP_STREAM_FROM_CLUSTER:
+        case FSCTL_MARK_HANDLE:
+        case FSCTL_MOVE_FILE:
+        case FSCTL_QUERY_USN_JOURNAL:
+        case FSCTL_READ_FILE_USN_DATA:
+        case FSCTL_READ_USN_JOURNAL:
+        //case FSCTL_SHRINK_VOLUME:
+        case FSCTL_UNLOCK_VOLUME:
+        case FSCTL_WRITE_USN_CLOSE_RECORD:
+            UNIMPLEMENTED;
+            DPRINT1("Unimplemented user request: %x\n", Stack->Parameters.FileSystemControl.FsControlCode);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         case FSCTL_GET_NTFS_VOLUME_DATA:
             Status = GetNfsVolumeData(DeviceExt, Irp);
             break;
@@ -811,7 +856,7 @@ NtfsUserFsRequest(PDEVICE_OBJECT DeviceObject,
             break;
 
         default:
-            DPRINT1("Invalid user request: %x\n", Stack->Parameters.FileSystemControl.FsControlCode);
+            DPRINT("Invalid user request: %x\n", Stack->Parameters.FileSystemControl.FsControlCode);
             Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
     }

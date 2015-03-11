@@ -25,26 +25,26 @@ BEGIN
         MENUITEM "Ouvrir...", ID_FILE_OPEN
         MENUITEM "Enregistrer", ID_FILE_SAVE, GRAYED
         MENUITEM "Enregistrer sous...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "Restorer...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Propriétés", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Sortir", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&Edition"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
+        MENUITEM "&Copie", ID_EDIT_COPY
         MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
         MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
+        MENUITEM "&Insérer un fichier...", ID_EDIT_INSERTFILE
         MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
         MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
         MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "Propriétés A&udio", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "Effet&s"
     BEGIN
         MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
         MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL

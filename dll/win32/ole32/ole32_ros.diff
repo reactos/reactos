@@ -1,7 +1,7 @@
-diff -prudN e:\Wine\dlls\ole32/compobj.c e:\reactos\dll\win32\ole32/compobj.c
---- e:\Wine\dlls\ole32/compobj.c	2014-04-04 14:12:42.091208400 +0100
-+++ e:\reactos\dll\win32\ole32/compobj.c	2014-04-24 12:30:07.466625200 +0100
-@@ -331,8 +303,12 @@ static NTSTATUS create_key( HKEY *retkey
+diff -prudN e:\wine\dlls\ole32/compobj.c dll\win32\ole32/compobj.c
+--- e:\wine\dlls\ole32/compobj.c	2015-02-21 17:13:09.561542200 +0100
++++ dll\win32\ole32/compobj.c	2015-02-28 13:26:29.259662000 +0100
+@@ -331,8 +304,12 @@ static NTSTATUS create_key( HKEY *retkey
      return status;
  }
  
@@ -14,135 +14,9 @@ diff -prudN e:\Wine\dlls\ole32/compobj.c e:\reactos\dll\win32\ole32/compobj.c
  
  static HKEY classes_root_hkey;
  
-@@ -1635,6 +1611,7 @@ static HRESULT apartment_hostobject_in_h
-     return hr;
- }
- 
-+#ifndef __REACTOS__
- static BOOL WINAPI register_class( INIT_ONCE *once, void *param, void **context )
- {
-     WNDCLASSW wclass;
-@@ -1655,24 +1632,20 @@ static BOOL WINAPI register_class( INIT_
-     RegisterClassW(&wclass);
-     return TRUE;
- }
-+#endif
- 
- /* create a window for the apartment or return the current one if one has
-  * already been created */
- HRESULT apartment_createwindowifneeded(struct apartment *apt)
- {
--    static INIT_ONCE class_init_once = INIT_ONCE_STATIC_INIT;
--
-     if (apt->multi_threaded)
-         return S_OK;
- 
-     if (!apt->win)
-     {
--        HWND hwnd;
--
--        InitOnceExecuteOnce( &class_init_once, register_class, NULL, NULL );
--
--        hwnd = CreateWindowW(wszAptWinClass, NULL, 0, 0, 0, 0, 0,
--                             HWND_MESSAGE, 0, hProxyDll, NULL);
-+        HWND hwnd = CreateWindowW(wszAptWinClass, NULL, 0,
-+                                  0, 0, 0, 0,
-+                                  HWND_MESSAGE, 0, hProxyDll, NULL);
-         if (!hwnd)
-         {
-             ERR("CreateWindow failed with error %d\n", GetLastError());
-@@ -1699,6 +1672,35 @@ void apartment_joinmta(void)
-     COM_CurrentInfo()->apt = MTA;
- }
- 
-+#ifdef __REACTOS__
-+
-+static void COMPOBJ_InitProcess( void )
-+{
-+    WNDCLASSW wclass;
-+
-+    /* Dispatching to the correct thread in an apartment is done through
-+     * window messages rather than RPC transports. When an interface is
-+     * marshalled into another apartment in the same process, a window of the
-+     * following class is created. The *caller* of CoMarshalInterface (i.e., the
-+     * application) is responsible for pumping the message loop in that thread.
-+     * The WM_USER messages which point to the RPCs are then dispatched to
-+     * apartment_wndproc by the user's code from the apartment in which the
-+     * interface was unmarshalled.
-+     */
-+    memset(&wclass, 0, sizeof(wclass));
-+    wclass.lpfnWndProc = apartment_wndproc;
-+    wclass.hInstance = hProxyDll;
-+    wclass.lpszClassName = wszAptWinClass;
-+    RegisterClassW(&wclass);
-+}
-+
-+static void COMPOBJ_UninitProcess( void )
-+{
-+    UnregisterClassW(wszAptWinClass, hProxyDll);
-+}
-+
-+#endif
-+
- static void COM_TlsDestroy(void)
- {
-     struct oletls *info = NtCurrentTeb()->ReservedForOle;
-@@ -4984,12 +4986,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, 
-     switch(fdwReason) {
-     case DLL_PROCESS_ATTACH:
-         hProxyDll = hinstDLL;
-+        COMPOBJ_InitProcess();
- 	break;
- 
-     case DLL_PROCESS_DETACH:
-         if (reserved) break;
-         release_std_git();
--        UnregisterClassW( wszAptWinClass, hProxyDll );
-+        COMPOBJ_UninitProcess();
-         RPC_UnregisterAllChannelHooks();
-         COMPOBJ_DllList_Free();
-         DeleteCriticalSection(&csRegisteredClassList);
-diff -prudN e:\Wine\dlls\ole32/stg_prop.c e:\reactos\dll\win32\ole32/stg_prop.c
---- e:\Wine\dlls\ole32/stg_prop.c	2014-04-04 14:12:42.103216400 +0100
-+++ e:\reactos\dll\win32\ole32/stg_prop.c	2014-04-08 19:21:32.097336500 +0100
-@@ -36,32 +36,15 @@
-  *   PropertyStorage_ReadFromStream
-  */
- 
--#include "config.h"
--#include "wine/port.h"
--
--#include <assert.h>
--#include <stdarg.h>
--#include <stdio.h>
--#include <stdlib.h>
--#include <string.h>
--
--#define COBJMACROS
--#define NONAMELESSUNION
--#define NONAMELESSSTRUCT
--
--#include "windef.h"
--#include "winbase.h"
--#include "winnls.h"
--#include "winuser.h"
--#include "wine/unicode.h"
--#include "wine/debug.h"
--#include "dictionary.h"
-+#include "precomp.h"
- #include "storage32.h"
--#include "enumx.h"
--#include "oleauto.h"
- 
- WINE_DEFAULT_DEBUG_CHANNEL(storage);
- 
-+#ifdef _MSC_VER
-+#define __ASM_STDCALL_FUNC(name,args,code)
-+#endif
-+
- static inline StorageImpl *impl_from_IPropertySetStorage( IPropertySetStorage *iface )
- {
-     return CONTAINING_RECORD(iface, StorageImpl, base.IPropertySetStorage_iface);
+diff -prudN e:\wine\dlls\ole32/stg_prop.c dll\win32\ole32/stg_prop.c
+--- e:\wine\dlls\ole32/stg_prop.c	2015-02-21 17:13:09.569542200 +0100
++++ dll\win32\ole32/stg_prop.c	2014-04-08 19:21:32.097336500 +0100
 @@ -1035,12 +1018,12 @@ static HRESULT PropertyStorage_ReadDicti
  }
  
@@ -184,4 +58,3 @@ diff -prudN e:\Wine\dlls\ole32/stg_prop.c e:\reactos\dll\win32\ole32/stg_prop.c
 +    void* (__cdecl *fn)(void*,ULONG) = **(void***)this;
      return fn(this, cbSize);
  }
- 

@@ -1,4 +1,4 @@
-﻿/* Hungarian translation by Peter Lukacs */
+/* Hungarian translation by Peter Lukacs */
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
@@ -212,8 +212,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Képek (*.bmp;*.dib)\0*.bmp;*.dib\0"
-    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+    IDS_BACKGROUND_COMDLG_FILTER "Képek"
 END
 
 STRINGTABLE

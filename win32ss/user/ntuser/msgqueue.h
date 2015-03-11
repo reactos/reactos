@@ -3,8 +3,7 @@
 #define MSQ_HUNG        5000
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
-#define MSQ_ISEVENT     2
-#define MSQ_INJECTMODULE 3
+#define MSQ_INJECTMODULE 2
 
 typedef struct _USER_MESSAGE
 {
@@ -46,6 +45,8 @@ typedef struct _USER_MESSAGE_QUEUE
   struct _DESKTOP *Desktop;
 
   PTHREADINFO ptiSysLock;
+  ULONG_PTR   idSysLock;
+  ULONG_PTR   idSysPeek;
   PTHREADINFO ptiMouse;
   PTHREADINFO ptiKeyboard;
 
@@ -110,8 +111,11 @@ enum internal_event_message
 {
     WM_ASYNC_SHOWWINDOW = 0x80000000,
     WM_ASYNC_SETWINDOWPOS,
-    WM_ASYNC_SETACTIVEWINDOW
+    WM_ASYNC_SETACTIVEWINDOW,
+    WM_ASYNC_DESTROYWINDOW
 };
+
+#define POSTEVENT_NWE 14
 
 BOOL FASTCALL MsqIsHung(PTHREADINFO pti);
 VOID CALLBACK HungAppSysTimerProc(HWND,UINT,UINT_PTR,DWORD);
@@ -129,6 +133,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
 	              IN UINT MsgFilterLow,
 	              IN UINT MsgFilterHigh,
 	              IN UINT QSflags,
+	              OUT LONG_PTR *ExtraInfo,
 	              OUT PMSG Message);
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
@@ -141,9 +146,9 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
 BOOLEAN FASTCALL MsqInitializeMessageQueue(PTHREADINFO, PUSER_MESSAGE_QUEUE);
 PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(PTHREADINFO);
 VOID FASTCALL MsqCleanupThreadMsgs(PTHREADINFO);
-VOID FASTCALL MsqDestroyMessageQueue(PTHREADINFO);
+VOID FASTCALL MsqDestroyMessageQueue(_In_ PTHREADINFO pti);
 INIT_FUNCTION NTSTATUS NTAPI MsqInitializeImpl(VOID);
-BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PTHREADINFO pti);
+BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(_In_ PTHREADINFO pti);
 NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PTHREADINFO pti, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
@@ -257,7 +262,7 @@ DWORD APIENTRY IntGetQueueStatus(DWORD);
 
 UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam);
 
-BOOL FASTCALL
+BOOL APIENTRY
 co_IntGetPeekMessage( PMSG pMsg,
                       HWND hWnd,
                       UINT MsgFilterMin,

@@ -210,8 +210,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACKGROUND_COMDLG_FILTER "Изображения (*.bmp;*.dib)\0*.bmp;*.dib\0"
-    IDS_SUPPORTED_EXT "*.bmp;*.dib"
+    IDS_BACKGROUND_COMDLG_FILTER "Изображения"
 END
 
 STRINGTABLE

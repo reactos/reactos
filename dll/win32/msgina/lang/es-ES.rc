@@ -1,10 +1,9 @@
-/* Spanish translation by Javier Remacha */
-
+/* Spanish translation by Ismael Ferreras Morezuelas (2015-01-02) */
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0, 0, 275, 80
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Por favor espere..."
+CAPTION "Espere un momento..."
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
@@ -18,21 +17,21 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, IDC_STATIC, 7, 55, 32, 32
-    LTEXT "Presione la combinación Ctrl-Alt-Supr",IDC_STATIC, 38, 60, 144, 14
+    LTEXT "Para empezar, presione Ctrl-Alt-Supr.",IDC_STATIC, 38, 60, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0, 0, 275, 147
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Acceder"
+CAPTION "Iniciar sesión"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "Usuario:", IDC_STATIC, 6, 60, 52, 8
-    EDITTEXT IDC_USERNAME, 60, 57, 155, 14, ES_AUTOHSCROLL
-    LTEXT "Contraseña:", IDC_STATIC, 6, 78, 52, 8
-    EDITTEXT IDC_PASSWORD, 60, 76, 155, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Log on to:", IDC_STATIC, 6, 96, 52, 8
-    COMBOBOX IDC_LOGON_TO, 60, 95, 155, 14, CBS_DROPDOWNLIST | WS_VSCROLL
+    LTEXT "Usuario:", IDC_STATIC, 6, 60, 61, 8, SS_RIGHT
+    EDITTEXT IDC_USERNAME, 71, 57, 144, 14, ES_AUTOHSCROLL
+    LTEXT "Contraseña:", IDC_STATIC, 6, 78, 61, 8, SS_RIGHT
+    EDITTEXT IDC_PASSWORD, 71, 76, 144, 14, ES_AUTOHSCROLL | ES_PASSWORD
+    LTEXT "Iniciar sesión en:", IDC_STATIC, 6, 96, 61, 8, SS_RIGHT
+    COMBOBOX IDC_LOGON_TO, 71, 95, 144, 14, CBS_DROPDOWNLIST | WS_VSCROLL
     PUSHBUTTON "Aceptar", IDOK, 106, 122, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Cancelar", IDCANCEL, 160, 122, 50, 14
     PUSHBUTTON "Cerrar", IDC_SHUTDOWN, 214, 122, 50, 14
@@ -44,75 +43,75 @@ CAPTION "Seguridad"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    GROUPBOX "Logon Information", IDC_STATIC, 7, 61, 261, 52
-    LTEXT "<Message>", IDC_LOGONMSG, 15, 73, 245, 18
-    LTEXT "<Logon date>", IDC_LOGONDATE, 15, 94, 245, 8
-    CTEXT "¿Qué quieres hacer?", IDC_STATIC, 10, 119, 255, 8
-    PUSHBUTTON "Bloquear computadora", IDC_LOCK, 4, 135, 83, 14
-    PUSHBUTTON "Salir", IDC_LOGOFF, 92, 135, 88, 14
-    PUSHBUTTON "Cerrar", IDC_SHUTDOWN, 186, 135, 70, 14
-    PUSHBUTTON "Change Password", IDC_CHANGEPWD, 10, 154, 76, 14
+    GROUPBOX "Información de inicio de sesión", IDC_STATIC, 7, 50, 261, 64
+    LTEXT "<Mensaje>", IDC_LOGONMSG, 15, 64, 245, 28
+    LTEXT "<Fecha de inicio de sesión>", IDC_LOGONDATE, 15, 97, 245, 8
+    CTEXT "¿Qué es lo que quiere hacer?", IDC_STATIC, 10, 119, 255, 8
+    PUSHBUTTON "Bloquear el equipo", IDC_LOCK, 10, 135, 76, 14
+    PUSHBUTTON "Cerrar sesión...", IDC_LOGOFF, 92, 135, 88, 14
+    PUSHBUTTON "Apagar", IDC_SHUTDOWN, 186, 135, 70, 14
+    PUSHBUTTON "Cambiar contraseña", IDC_CHANGEPWD, 10, 154, 76, 14
     PUSHBUTTON "Administrador de tareas", IDC_TASKMGR, 92, 154, 88, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 186, 154, 70, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0, 0, 275, 121
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Computer Locked"
+CAPTION "Equipo bloqueado"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "This computer is in use and has been locked.", IDC_STATIC, 37, 61, 231, 8
-    LTEXT "Message", IDC_LOCKMSG, 37, 75, 231, 26
-    LTEXT "Press Ctrl-Alt-Del to unlock this computer.", IDC_STATIC, 37, 106, 231, 8
+    LTEXT "Este equipo está en uso y ha sido bloqueado.", IDC_STATIC, 37, 61, 231, 8
+    LTEXT "Mensaje", IDC_LOCKMSG, 37, 75, 231, 26
+    LTEXT "Presione Ctrl-Alt-Supr para desbloquear el equipo.", IDC_STATIC, 37, 106, 231, 8
 END
 
 IDD_UNLOCK_DLG DIALOGEX 0, 0, 275, 179
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Unlock Computer"
+CAPTION "Desbloquear equipo"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "This computer is in use and has been locked.", IDC_STATIC, 36, 61, 232, 8
-    LTEXT "Message", IDC_LOCKMSG, 36, 75, 232, 26
-    LTEXT "User name:", IDC_STATIC, 36, 107, 40, 8
+    LTEXT "Este equipo está en uso y ha sido bloqueado.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "Mensaje", IDC_LOCKMSG, 36, 75, 232, 26
+    LTEXT "Usuario:", IDC_STATIC, 36, 107, 40, 8, SS_RIGHT
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
-    LTEXT "Password:", IDC_STATIC, 36, 125, 42, 8
+    LTEXT "Contraseña:", IDC_STATIC, 36, 125, 42, 8, SS_RIGHT
     EDITTEXT IDC_PASSWORD, 84, 123, 119, 14, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "OK", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 144, 154, 50, 14
+    PUSHBUTTON "Aceptar", IDOK, 80, 154, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Cancelar", IDCANCEL, 144, 154, 50, 14
 END
 
 IDD_CHANGE_PASSWORD DIALOGEX 0, 0, 275, 166
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Change Password"
+CAPTION "Cambiar contraseña"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
-    LTEXT "User name:", IDC_STATIC, 7, 61, 78, 8
+    LTEXT "Usuario:", IDC_STATIC, 7, 61, 78, 8, SS_RIGHT
     EDITTEXT IDC_CHANGEPWD_USERNAME, 90, 59, 127, 12, ES_AUTOHSCROLL
-    LTEXT "Log on to:", IDC_STATIC, 7, 78, 78, 8
+    LTEXT "Iniciar sesión en:", IDC_STATIC, 7, 78, 78, 8, SS_RIGHT
     COMBOBOX IDC_CHANGEPWD_DOMAIN, 90, 75, 127, 144, CBS_DROPDOWNLIST | CBS_SORT
-    LTEXT "Old Password:", IDC_STATIC, 7, 95, 78, 8
+    LTEXT "Contraseña anterior:", IDC_STATIC, 7, 95, 78, 8, SS_RIGHT
     EDITTEXT IDC_CHANGEPWD_OLDPWD, 90, 92, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "New Password:", IDC_STATIC, 7, 111, 78, 8
+    LTEXT "Contraseña nueva:", IDC_STATIC, 7, 111, 78, 8, SS_RIGHT
     EDITTEXT IDC_CHANGEPWD_NEWPWD1, 90, 109, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    LTEXT "Confirm new Password:", IDC_STATIC, 7, 127, 78, 8
+    LTEXT "Repita la contraseña:", IDC_STATIC, 7, 127, 78, 8, SS_RIGHT
     EDITTEXT IDC_CHANGEPWD_NEWPWD2, 90, 125, 127, 12, ES_AUTOHSCROLL | ES_PASSWORD
-    PUSHBUTTON "OK", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 218, 145, 50, 14
+    PUSHBUTTON "Aceptar", IDOK, 164, 145, 50, 14, BS_DEFPUSHBUTTON
+    PUSHBUTTON "Cancelar", IDCANCEL, 218, 145, 50, 14
 END
 
 IDD_LOGOFF_DLG DIALOGEX 0, 0, 188, 60
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | WS_POPUP
-CAPTION "Log Off ReactOS"
+CAPTION "Cerrar sesión de ReactOS"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOCKICON, -1, 7, 7, 20, 20
-    LTEXT "Are you sure you want to log off?", IDC_STATIC, 35, 16, 146, 8
-    PUSHBUTTON "Yes", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
+    LTEXT "¿Seguro que desea cerrar sesión?", IDC_STATIC, 35, 16, 146, 8
+    PUSHBUTTON "Sí", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "No", IDNO, 95, 39, 50, 14
 END
 
@@ -123,7 +122,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
-    LTEXT "¿&Que quieres que haga el equipo?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "¿&Qué desea hacer con el equipo?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "Aceptar", IDOK, 143, 122, 55, 14, WS_GROUP
@@ -136,7 +135,7 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT IDC_LEGALNOTICE_TEXT, 7, 7, 266, 165, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 115, 179, 50, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 115, 179, 50, 14
 END
 
 IDD_SHUTDOWN_SHELL DIALOGEX 0, 0, 275, 146
@@ -146,7 +145,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_SHELL_SHUTDOWN, IDI_SHELL_SHUTDOWN, 9, 57, 21, 20, WS_GROUP
-    LTEXT "¿&Que quieres que haga el equipo?", IDC_STATIC, 39, 57, 167, 10
+    LTEXT "¿&Qué desea hacer con el equipo?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_LIST, 39, 70, 165, 210, CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 187, 27
     DEFPUSHBUTTON "Aceptar", IDOK, 80, 122, 55, 14, WS_GROUP
@@ -157,39 +156,39 @@ END
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "¡Bienvenido!"
-    IDS_LOCKEDSAS "La computadora está actualmente bloqueada."
+    IDS_LOCKEDSAS "El equipo está actualmente bloqueado."
     IDS_PRESSCTRLALTDELETE "Presione Ctrl-Alt-Supr para acceder."
     IDS_ASKFORUSER "Usuario: "
     IDS_ASKFORPASSWORD "Contraseña: "
-    IDS_FORCELOGOFF "Esto cerrará al usuario actual y perderá todos los datos no guardados.  ¿Desea Continuar?"
-    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
-    IDS_LOGONMSG "You are logged on as %s."
-    IDS_LOGONDATE "Logon date: %s %s"
-    IDS_COMPUTERLOCKED "Computer locked"
-    IDS_LOCKEDWRONGPASSWORD "The password is wrong. Please enter your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOCKEDWRONGUSER "This computer is locked. Only %s\\%s or an Administrator can unlock this computer."
-    IDS_CHANGEPWDTITLE "Change Password"
-    IDS_NONMATCHINGPASSWORDS "The passwords you typed do not match. Type the same password in both text boxes."
-    IDS_PASSWORDCHANGED "Your password has been changed."
-    IDS_LOGONTITLE "Logon Message"
-    IDS_LOGONWRONGUSERORPWD "The system could not log you on. Make sure your User name and domain are correct, then type your password again. Letters in passwords must be typed using the correct case."
-    IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
-    IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
-    IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
+    IDS_FORCELOGOFF "Esto hará que se cierre la sesión actual, perdiendo todos los datos no guardados. ¿Desea continuar?"
+    IDS_LOCKMSG "Sólo %s o un Administrador pueden desbloquear este equipo."
+    IDS_LOGONMSG "Ha iniciado sesión como %s."
+    IDS_LOGONDATE "Fecha de inicio de sesión: %s %s"
+    IDS_COMPUTERLOCKED "Equipo bloqueado"
+    IDS_LOCKEDWRONGPASSWORD "La contraseña no es correcta, reintroduzca la contraseña. Recuerde que el campo de texto distingue entre mayúsculas y minúsculas."
+    IDS_LOCKEDWRONGUSER "El equipo ha sido bloqueado. Sólo %s\\%s o un Administrador pueden desbloquear este equipo."
+    IDS_CHANGEPWDTITLE "Cambiar contraseña"
+    IDS_NONMATCHINGPASSWORDS "Las contraseñas introducidas no coinciden. Escriba la misma contraseña en ambos campos de texto."
+    IDS_PASSWORDCHANGED "La contraseña se ha cambiado correctamente."
+    IDS_LOGONTITLE "Mensaje de inicio de sesión"
+    IDS_LOGONWRONGUSERORPWD "El sistema no pudo iniciar sesión. Asegúrese de que su usuario y dominio son correctos y pruebe de nuevo. Las contraseñas distinguen entre mayúsculas y minúsculas."
+    IDS_LOGONUSERDISABLED "La cuenta ha sido desactivada. Contacte con su administrador del sistema."
+    IDS_PASSWORDMUSTCHANGE "Es necesario cambiar la contraseña en el primer inicio de sesión."
+    IDS_PASSWORDEXPIRED "La contraseña ha expirado y debe cambiarse."
 END
 
 /* Shutdown Dialog Strings */
 STRINGTABLE
 BEGIN
-    IDS_SHUTDOWN_LOGOFF "Log off ""%s"""
-    IDS_SHUTDOWN_SHUTDOWN "Shut down"
-    IDS_SHUTDOWN_RESTART "Restart"
-    IDS_SHUTDOWN_SLEEP "Sleep"
-    IDS_SHUTDOWN_HIBERNATE "Hibernate"
+    IDS_SHUTDOWN_LOGOFF "Cerrar sesión de ""%s"""
+    IDS_SHUTDOWN_SHUTDOWN "Apagar"
+    IDS_SHUTDOWN_RESTART "Reiniciar"
+    IDS_SHUTDOWN_SLEEP "Suspender"
+    IDS_SHUTDOWN_HIBERNATE "Hibernar"
     /* Shut down descriptions */
-    IDS_SHUTDOWN_LOGOFF_DESC "Ends your current session and allows other users to log on to the system."
-    IDS_SHUTDOWN_SHUTDOWN_DESC "Ends your current session and shuts down the system so you can safely shut down the power."
-    IDS_SHUTDOWN_RESTART_DESC "Ends your current session and reboots the system."
-    IDS_SHUTDOWN_SLEEP_DESC "Puts the system in sleep mode."
-    IDS_SHUTDOWN_HIBERNATE_DESC "Saves the current session and shuts down the computer."
+    IDS_SHUTDOWN_LOGOFF_DESC "Termina la sesión actual permitiendo que otros usuarios inicien sesión en el sistema."
+    IDS_SHUTDOWN_SHUTDOWN_DESC "Termina la sesión actual y apaga el sistema para que el equipo se pueda desenchufar con seguridad."
+    IDS_SHUTDOWN_RESTART_DESC "Termina la sesión actual y reinicia el sistema."
+    IDS_SHUTDOWN_SLEEP_DESC "Pone el sistema en modo de bajo consumo."
+    IDS_SHUTDOWN_HIBERNATE_DESC "Guarda la sesión actual y apaga el equipo."
 END

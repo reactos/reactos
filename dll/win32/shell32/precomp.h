@@ -48,7 +48,6 @@
 #include "CShellItem.h"
 #include "CShellLink.h"
 #include "CDropTargetHelper.h"
-#include "CAutoComplete.h"
 #include "folders/CFSFolder.h"
 #include "folders/CDrivesFolder.h"
 #include "folders/CDesktopFolder.h"

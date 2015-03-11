@@ -1245,7 +1245,7 @@ IofCompleteRequest(IN PIRP Irp,
     PIRP MasterIrp;
     ULONG Flags;
     NTSTATUS ErrorCode = STATUS_SUCCESS;
-    PREPARSE_DATA_BUFFER DataBuffer;
+    PREPARSE_DATA_BUFFER DataBuffer = NULL;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Completing IRP %p\n",
             __FUNCTION__,

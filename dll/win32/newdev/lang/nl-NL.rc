@@ -12,13 +12,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installatie apparaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Welkom", IDC_WELCOMETITLE, 120, 8, 195, 24
+    LTEXT "Welkom", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Deze wizard installeert een nieuwe driver voor:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "Klik op Volgende om verder te gaan.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 134, 36, 164, 11
+    LTEXT "Klik op Volgende om verder te gaan.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "WAARSCHUWING! EEN ONBEKEND APPARAAT INSTALLEREN KAN UW COMPUTER LATEN VASTLOPEN OF ONOPSTARTBAAR MAKEN!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Installeer de driver automatisch", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "Installeer de driver van een bepaalde locatie", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    CONTROL "Installeer de driver automatisch", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Installeer de driver van een bepaalde locatie", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -26,10 +26,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installatie apparaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installatie mislukt.", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Het apparaat kon niet geïnstalleerd worden omdat de driver niet gevonden kon worden.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Klik op Vorige indien u het pad weet naar de driver.", IDC_STATIC, 120, 98, 181, 24
-    CONTROL "Toon dit dialoogvenster niet meer", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
+    LTEXT "Installatie mislukt.", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Het apparaat kon niet geïnstalleerd worden omdat de driver niet gevonden kon worden.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Klik op Vorige indien u het pad weet naar de driver.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Toon dit dialoogvenster niet meer", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -37,9 +37,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installatie apparaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installatie mislukt.", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "Het apparaat kon niet geïnstalleerd worden omdat er een onverwachte fout optrad.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "Installatie mislukt.", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "Het apparaat kon niet geïnstalleerd worden omdat er een onverwachte fout optrad.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -47,11 +47,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installatie apparaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Zoek in deze locaties", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
+    CONTROL "Zoek in deze locaties", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "Kies de driver handmatig", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "Zoek in verwijderbare media", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
-    CONTROL "Sluit dit pad in", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "Bladeren", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "Zoek in verwijderbare media", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "Sluit dit pad in", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "Bladeren", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -76,9 +76,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installatie apparaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installatie voltooid", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "U moet uw computer herstarten om de installatie te voltooien van:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Klik op Voltooien om de wizard te sluiten.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Installatie voltooid", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "U moet uw computer herstarten om de installatie te voltooien van:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Klik op Voltooien om de wizard te sluiten.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 12
 END
 
@@ -87,9 +87,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installatie apparaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Installatie voltooid", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "De wizard is voltooid met het installeren van de driver voor:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "Klik op Voltooien om de wizard te sluiten.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "Installatie voltooid", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "De wizard is voltooid met het installeren van de driver voor:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Klik op Voltooien om de wizard te sluiten.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "ONBEKEND APPARAAT", IDC_DEVICE, 148, 53, 147, 12
 END
 

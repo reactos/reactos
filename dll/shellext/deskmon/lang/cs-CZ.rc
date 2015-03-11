@@ -14,14 +14,14 @@ BEGIN
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
     PUSHBUTTON "&Vlastnosti", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Nastavení monitoru", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "&Obnovovací frekvence obrazovky:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    GROUPBOX "NastavenÃ­ monitoru", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "&ObnovovacÃ­ frekvence obrazovky:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    AUTOCHECKBOX "&Skrýt režimy, které tento monitor nedokáže zobrazit", IDC_PRUNINGCHECK, 13, 106, 225, 10
+    AUTOCHECKBOX "&SkrÃ½t reÅ¾imy, kterÃ© tento monitor nedokÃ¡Å¾e zobrazit", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Použít výchozí nastavení hardwaru"
+    IDS_USEDEFFRQUENCY "PouÅ¾Ã­t vÃ½chozÃ­ nastavenÃ­ hardwaru"
     IDS_FREQFMT "%u Hz"
 END

@@ -327,7 +327,7 @@ SetupCopyFile(
                           0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtCreateFile failed: %x\n", Status);
+        DPRINT1("NtCreateFile failed: %x, %wZ\n", Status, &FileName);
         goto unmapsrcsec;
     }
 

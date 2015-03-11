@@ -119,13 +119,13 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, ULONG BlockNu
     }
 
     // Now try to read in the block
-    if (!MachDiskReadLogicalSectors(CacheDrive->DriveNumber, (BlockNumber * CacheDrive->BlockSize), CacheDrive->BlockSize, (PVOID)DISKREADBUFFER))
+    if (!MachDiskReadLogicalSectors(CacheDrive->DriveNumber, (BlockNumber * CacheDrive->BlockSize), CacheDrive->BlockSize, DiskReadBuffer))
     {
         FrLdrTempFree(CacheBlock->BlockData, TAG_CACHE_DATA);
         FrLdrTempFree(CacheBlock, TAG_CACHE_BLOCK);
         return NULL;
     }
-    RtlCopyMemory(CacheBlock->BlockData, (PVOID)DISKREADBUFFER, CacheDrive->BlockSize * CacheDrive->BytesPerSector);
+    RtlCopyMemory(CacheBlock->BlockData, DiskReadBuffer, CacheDrive->BlockSize * CacheDrive->BytesPerSector);
 
     // Add it to our list of blocks managed by the cache
     InsertTailList(&CacheDrive->CacheBlockHead, &CacheBlock->ListEntry);

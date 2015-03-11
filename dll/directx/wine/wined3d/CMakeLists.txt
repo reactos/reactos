@@ -19,6 +19,7 @@ list(APPEND SOURCE
     device.c
     directx.c
     drawprim.c
+    dxtn.c
     gl_compat.c
     glsl_shader.c
     nvidia_texture_shader.c

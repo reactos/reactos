@@ -26,6 +26,10 @@
 #include <mmddk.h>
 
 /* Add your language specific defines here */
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_PT_BR
     #include "lang/winmm_Br.rc"
 #endif
@@ -44,13 +48,18 @@
 #ifdef LANGUAGE_FR_FR
     #include "lang/winmm_Fr.rc"
 #endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/winmm_Hu.rc"
+#endif
 #ifdef LANGUAGE_ID_ID
     #include "lang/winmm_Id.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/winmm_It.rc"
 #endif
-/* #include "winmm_Ja.rc" */ /* Gives error during ReactOS build */
+#ifdef LANGUAGE_JA_JP
+    #include "lang/winmm_Ja.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/winmm_Nl.rc"
 #endif
@@ -81,7 +90,6 @@
 #ifdef LANGUAGE_TR_TR
     #include "lang/winmm_Tr.rc"
 #endif
-//#include "winmm_Hu.rc"
 #ifdef LANGUAGE_UK_UA
     #include "lang/winmm_Uk.rc"
 #endif

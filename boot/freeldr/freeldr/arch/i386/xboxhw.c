@@ -109,7 +109,7 @@ typedef struct tagDISKCONTEXT
 } DISKCONTEXT;
 
 static
-LONG
+ARC_STATUS
 DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -119,7 +119,7 @@ DiskClose(ULONG FileId)
 }
 
 static
-LONG
+ARC_STATUS
 DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -132,7 +132,7 @@ DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 }
 
 static
-LONG
+ARC_STATUS
 DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
@@ -185,7 +185,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 }
 
 static
-LONG
+ARC_STATUS
 DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -198,17 +198,17 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     while (N > 0)
     {
         Length = N;
-        if (Length > DISKREADBUFFER_SIZE)
-            Length = DISKREADBUFFER_SIZE;
+        if (Length > DiskReadBufferSize)
+            Length = DiskReadBufferSize;
         Sectors = (Length + Context->SectorSize - 1) / Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
                   Context->DriveNumber,
                   Context->SectorNumber + Context->SectorOffset + i,
                   Sectors,
-                  (PVOID)DISKREADBUFFER);
+                  DiskReadBuffer);
         if (!ret)
             return EIO;
-        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Length);
+        RtlCopyMemory(Ptr, DiskReadBuffer, Length);
         Ptr += Length;
         *Count += Length;
         N -= Length;
@@ -219,7 +219,7 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 }
 
 static
-LONG
+ARC_STATUS
 DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -257,14 +257,14 @@ GetHarddiskIdentifier(PCHAR Identifier,
     PARTITION_TABLE_ENTRY PartitionTableEntry;
 
     /* Read the MBR */
-    if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
+    if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
     {
         ERR("Reading MBR failed\n");
         return;
     }
 
-    Buffer = (ULONG*)DISKREADBUFFER;
-    Mbr = (PMASTER_BOOT_RECORD)DISKREADBUFFER;
+    Buffer = (ULONG*)DiskReadBuffer;
+    Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
 
     Signature =  Mbr->Signature;
     TRACE("Signature: %x\n", Signature);
@@ -351,13 +351,13 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         * harddisks. So, we set the buffer to known contents first, then try to
         * read. If the BIOS reports success but the buffer contents haven't
         * changed then we fail anyway */
-    memset((PVOID) DISKREADBUFFER, 0xcd, DISKREADBUFFER_SIZE);
-    while (MachDiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
+    memset(DiskReadBuffer, 0xcd, DiskReadBufferSize);
+    while (MachDiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, DiskReadBuffer))
     {
         Changed = FALSE;
-        for (i = 0; ! Changed && i < DISKREADBUFFER_SIZE; i++)
+        for (i = 0; ! Changed && i < DiskReadBufferSize; i++)
         {
-            Changed = ((PUCHAR)DISKREADBUFFER)[i] != 0xcd;
+            Changed = ((PUCHAR)DiskReadBuffer)[i] != 0xcd;
         }
         if (! Changed)
         {
@@ -366,7 +366,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
             break;
         }
         DiskCount++;
-        memset((PVOID) DISKREADBUFFER, 0xcd, DISKREADBUFFER_SIZE);
+        memset(DiskReadBuffer, 0xcd, DiskReadBufferSize);
     }
     DiskReportError(TRUE);
     TRACE("BIOS reports %d harddisk%s\n",

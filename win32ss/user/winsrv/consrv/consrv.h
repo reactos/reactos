@@ -18,11 +18,9 @@
 #define COM_NO_WINDOWS_H
 
 #include <winnls.h>
-#include <winreg.h>
 #include <wincon.h>
 
 #define NTOS_MODE_USER
-#include <ndk/exfuncs.h>
 #include <ndk/mmfuncs.h>
 
 /* CONSOLE Headers */

@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -44,7 +44,7 @@ BEGIN
     IDS_DEV_DEVLOADER_FAILED2 "Bu aygıt için %1 aygıt yükleyicisi/yükleyicileri aygıt sürücüsünü yükleyemedi."
     IDS_DEV_OUT_OF_MEMORY "Bu aygıt için sürücü kötü olabilir veyâ dizgeniz, bellekte veyâ başka kaynaklarda yavaş çalışıyor olabilir."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Sürücülerinin kötü olabilmesinden veyâ değer defterinizin bozuk olabilmesinden dolayı bu aygıt düzgün çalışmıyor."
-    IDS_DEV_LACKED_ARBITRATOR "Bu aygıt için sürücü, ReactOS'un nasıl yöneteceğini bilmediği bir kaynağı istedi."
+    IDS_DEV_LACKED_ARBITRATOR "Bu aygıt için sürücü, ReactOS'un ne biçimde yöneteceğini bilmediği bir kaynağı istedi."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Başka bir aygıt, bu aygıtın gereksinim duyduğu kaynakları kullanıyor."
     IDS_DEV_FAILED_FILTER "Bu aygıtın sürücüleri yeniden kurulmaya gereksinim duyuyor."
     IDS_DEV_DEVLOADER_NOT_FOUND "ReactOS, bu aygıt için sürücüleri yükleyen %1 kütüğünü yükleyememesinden dolayı bu aygıt düzgün çalışmıyor."

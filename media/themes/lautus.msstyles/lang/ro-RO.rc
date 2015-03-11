@@ -1,0 +1,38 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Ater"
+}
+
+STRINGTABLE
+{
+2000, "Lautus Ater"
+}
+
+STRINGTABLE
+{
+3000, "Normală"
+3001, "Mare"
+3002, "Foarte mare"
+}
+
+STRINGTABLE
+{
+4000, "Normală"
+4001, "Mare"
+4002, "Foarte mare"
+}
+
+STRINGTABLE
+{
+5000, "Lautus"
+5001, "Visual Style"
+5002, "ReactOS Foundation"
+5003, "Pisarz, based on Luna Inspirat"
+5004, "Released under GNU/GPL 2.0, 2011"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Visual Style for ReactOS"
+}

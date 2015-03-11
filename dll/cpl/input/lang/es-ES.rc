@@ -9,22 +9,22 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Seleccione los servicios que desea para cada idioma mostrado en la lista. Use los botones de Agregar y Quitar para modificar esta lista.", -1, 9, 6, 238, 17
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 28, 237, 109
-    PUSHBUTTON "Por &Defecto", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "Pr&edeterminado", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "Ag&regar...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Quitar...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Propiedades...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferencias ", -1, 7, 185, 240, 36
+    GROUPBOX "Pre&ferencias ", -1, 7, 185, 240, 36
     PUSHBUTTON "C&onfiguración de teclas...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Ajustes avanzados"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+    GROUPBOX "Configuración del sistema", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Desactivar servicios de texto avanzados", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Active esta casilla para desactivar los servicios de texto avanzados en todos los programas.No se recomienda para los usuarios de Asia oriental ya que cierra la Barra de idioma.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -67,12 +67,12 @@ BEGIN
     LTEXT "Mayús", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
-    AUTORADIOBUTTON "&ALT Izq", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
+    AUTORADIOBUTTON "&Alt Izq", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
     AUTOCHECKBOX "Camb&iar la distribución del teclado", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Mayús", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
-    AUTORADIOBUTTON "ALT I&zq", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
+    AUTORADIOBUTTON "Alt I&zq", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
     DEFPUSHBUTTON "Aceptar", IDOK, 172, 9, 50, 14
     PUSHBUTTON "Cancelar", IDCANCEL, 172, 27, 50, 14
 END
@@ -106,20 +106,20 @@ BEGIN
     IDS_LAYOUT_EXISTS "Esta distribución y existe."
     IDS_LAYOUT_EXISTS2 "Esta distribución y existe y no puede ser añadida."
     IDS_CTRL_SHIFT "Ctrl+Mayús"
-    IDS_LEFT_ALT_SHIFT "lt Izq+Mayús"
+    IDS_LEFT_ALT_SHIFT "Alt Izq+Mayús"
     IDS_SWITCH_BET_INLANG "Cambiar entre los idiomas de entrada"
 END
 
 STRINGTABLE
 BEGIN
     IDS_ALBANIAN_LAYOUT "Albanés"
-    IDS_ARABIC_101_LAYOUT "Arabic (101)"
+    IDS_ARABIC_101_LAYOUT "Árabe (101)"
     IDS_ARABIC_102_LAYOUT "Arabic (102)"
     IDS_ARABIC_102_AZERTY_LAYOUT "Arabic (102) AZERTY"
     IDS_ARMENIAN_EASTERN_LAYOUT "Armenio Eastern"
     IDS_ARMENIAN_WESTERN_LAYOUT "Armenio Western"
     IDS_ASSAMESE_LAYOUT "Assamese"
-    IDS_AZERI_CYRILLIC_LAYOUT "Azerí Cirílico"
+    IDS_AZERI_CYRILLIC_LAYOUT "Azerí cirílico"
     IDS_AZERI_LATIN_LAYOUT "Azerí Latín"
     IDS_BELARUSIAN_LAYOUT "Bielorruso"
     IDS_BELGIAN_COMMA_LAYOUT "Belga (Coma)"
@@ -155,12 +155,12 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "Chino (Tradicional) - US Keyboard"
     IDS_CROATIAN_LAYOUT "Croata"
     IDS_CZECH_LAYOUT "Checo"
-    IDS_CZECH_PROGRAMMERS_LAYOUT "Checo Programadores"
+    IDS_CZECH_PROGRAMMERS_LAYOUT "Checo (Programadores)"
     IDS_CZECH_QWERTY_LAYOUT "Checo (QWERTY)"
     IDS_DANISH_LAYOUT "Danés"
     IDS_DEVANAGARI_INSCRIPT_LAYOUT "Devanagari - INSCRIPT"
-    IDS_DIVEHI_PHONETIC_LAYOUT "Divehi Fonético"
-    IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi Typewriter"
+    IDS_DIVEHI_PHONETIC_LAYOUT "Divehi (Fonético)"
+    IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi (Máq. de escribir)"
     IDS_DUTCH_LAYOUT "Holandés"
     IDS_ESTONIAN_LAYOUT "Estonio"
     IDS_FAEROESE_LAYOUT "Faroés"
@@ -241,10 +241,10 @@ BEGIN
     IDS_UKRAINIAN_LAYOUT "Ucraniano"
     IDS_UKRAINIAN_STUDENT_LAYOUT "Ucraniano (Student)"
     IDS_UNITED_KINGDOM_LAYOUT "Inglés (Reino Unido)"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT "United States-Dvorak"
-    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Estados Unidos-Dvorak para la mano izquierda"
-    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Estados Unidos-Dvorak para la mano derecha"
-    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Estados Unidos-Internacional"
+    IDS_UNITED_STATES_DVIRAK_LAYOUT "Estados Unidos, Dvorak"
+    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Estados Unidos, Dvorak para la mano izquierda"
+    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Estados Unidos, Dvorak para la mano derecha"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Estados Unidos, Internacional"
     IDS_URDU_LAYOUT "Urdu"
     IDS_US_LAYOUT "Estados Unidos"
     IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT "US English Table for IBM Arabic 238_L"

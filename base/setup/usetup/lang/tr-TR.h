@@ -97,7 +97,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  ReactOS Ruhsatlama Istçlahlarç ve Koüullarç'nç gîrÅntÅlemek iáin L'ye basçnçz.",
+        "\x07  ReactOS Ruhsatlama Istçlahlarç ve ûartlarç'nç gîrÅntÅlemek iáin L'ye basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -255,7 +255,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         10,
-        "kçsçmlarçn koüullarç altçnda ruhsatlanmçütçr.",
+        "kçsçmlarçn üartlarç altçnda ruhsatlanmçütçr.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -315,7 +315,7 @@ static MUI_ENTRY trTRLicensePageEntries[] =
     {
         8,
         23,
-        "Bu îzgÅr yazçlçmdçr, áoßaltma koüullarç iáin kaynaßa bakçnçz.",
+        "Bu îzgÅr yazçlçmdçr, áoßaltma üartlarç iáin kaynaßa bakçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1481,8 +1481,10 @@ MUI_ERROR trTRErrorEntries[] =
         "Giriü = Bilgisayarç Yeniden Baülat"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Seáili bîlÅmde yeterli boü alan yok.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },

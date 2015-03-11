@@ -1,5 +1,6 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
+#if 0
 IDD_POWER_METER DIALOGEX 0, 0, 252, 218
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
@@ -11,6 +12,7 @@ BEGIN
     CONTROL "Show details for each &battery.", 1003, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
     CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
 END
+#endif
 
 STRINGTABLE
 BEGIN
@@ -34,7 +36,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Drive(%s)"
     IDS_HOTPLUG_DRIVES " - Drives(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "This hardware requires \"Safe Removal\""
+    IDS_HOTPLUG_REQUIERES "This hardware requires ""Safe Removal"""
     IDS_HOTPLUG_CLICK "Before removing this hardware, click on this icon and select the hardware you want to remove."
 
     //Volume related strings
@@ -49,4 +51,3 @@ BEGIN
     IDS_KEYS_MOUSE "MouseKeys"
     IDS_KEYS_FILTER "FilterKeys"
 END
-

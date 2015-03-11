@@ -9,10 +9,8 @@
 
 #define IDD_END_NOW        10
 #define IDD_NOT_RESPONDING 11
-#define IDD_SWITCH_APP     12
 
 #define IDC_STATIC -1
 
 #define IDC_PROGRESS       101
 #define IDC_END_NOW        102
-#define IDC_STATIC_CUR_APP 103

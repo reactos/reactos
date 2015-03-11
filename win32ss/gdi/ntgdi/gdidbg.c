@@ -15,6 +15,7 @@
 
 extern ULONG gulFirstFree;
 extern ULONG gulFirstUnused;
+extern PENTRY gpentHmgr;;
 
 ULONG gulLogUnique = 0;
 
@@ -94,21 +95,64 @@ DBG_CHANNEL DbgChannels[DbgChCount]={
     {L"UserWnd", DbgChUserWnd}
 };
 
-#ifdef GDI_DEBUG
-#if 0
+ULONG
+NTAPI
+DbgCaptureStackBackTace(
+    _Out_writes_(cFramesToCapture) PVOID* ppvFrames,
+    _In_ ULONG cFramesToSkip,
+    _In_ ULONG cFramesToCapture)
+{
+    ULONG cFrameCount;
+    PVOID apvTemp[30];
+    NT_ASSERT(cFramesToCapture <= _countof(apvTemp));
+
+    /* Zero it out */
+    RtlZeroMemory(ppvFrames, cFramesToCapture * sizeof(PVOID));
+
+    /* Capture kernel stack */
+    cFrameCount = RtlWalkFrameChain(apvTemp, _countof(apvTemp), 0);
+
+    /* If we should skip more than we have, we are done */
+    if (cFramesToSkip > cFrameCount)
+        return 0;
+
+    /* Copy, but skip frames */
+    cFrameCount -= cFramesToSkip;
+    cFrameCount = min(cFrameCount, cFramesToCapture);
+    RtlCopyMemory(ppvFrames, &apvTemp[cFramesToSkip], cFrameCount * sizeof(PVOID));
+
+    /* Check if there is still space left */
+    if (cFrameCount < cFramesToCapture)
+    {
+        /* Capture user stack */
+        cFrameCount += RtlWalkFrameChain(&ppvFrames[cFrameCount],
+                                         cFramesToCapture - cFrameCount,
+                                         1);
+    }
+
+    return cFrameCount;
+}
+
+#if DBG_ENABLE_GDIOBJ_BACKTRACES
+
 static
 BOOL
-CompareBacktraces(ULONG idx1, ULONG idx2)
+CompareBacktraces(
+    USHORT idx1,
+    USHORT idx2)
 {
+    POBJ pobj1, pobj2;
     ULONG iLevel;
 
+    /* Get the objects */
+    pobj1 = gpentHmgr[idx1].einfo.pobj;
+    pobj2 = gpentHmgr[idx2].einfo.pobj;
+
     /* Loop all stack levels */
-    for (iLevel = 0; iLevel < GDI_STACK_LEVELS; iLevel++)
+    for (iLevel = 0; iLevel < GDI_OBJECT_STACK_LEVELS; iLevel++)
     {
-        if (GDIHandleAllocator[idx1][iLevel]
-                != GDIHandleAllocator[idx2][iLevel])
-//        if (GDIHandleShareLocker[idx1][iLevel]
-//                != GDIHandleShareLocker[idx2][iLevel])
+        /* If one level doesn't match we are done */
+        if (pobj1->apvBackTrace[iLevel] != pobj2->apvBackTrace[iLevel])
         {
             return FALSE;
         }
@@ -117,22 +161,37 @@ CompareBacktraces(ULONG idx1, ULONG idx2)
     return TRUE;
 }
 
+typedef struct
+{
+    USHORT idx;
+    USHORT iCount;
+} GDI_DBG_HANDLE_BT;
+
 VOID
 NTAPI
 DbgDumpGdiHandleTableWithBT(void)
 {
-    static int leak_reported = 0;
-    int i, j, idx, nTraces = 0;
+    static BOOL bLeakReported = FALSE;
+    ULONG idx, j;
+    BOOL bAlreadyPresent;
+    GDI_DBG_HANDLE_BT aBacktraceTable[GDI_DBG_MAX_BTS];
+    USHORT iCount;
     KIRQL OldIrql;
+    POBJ pobj;
+    ULONG iLevel, ulObj;
 
-    if (leak_reported)
+    /* Only report once */
+    if (bLeakReported)
     {
         DPRINT1("GDI handle abusers already reported!\n");
         return;
     }
 
-    leak_reported = 1;
+    bLeakReported = TRUE;
     DPRINT1("Reporting GDI handle abusers:\n");
+
+    /* Zero out the table */
+    RtlZeroMemory(aBacktraceTable, sizeof(aBacktraceTable));
 
     /* We've got serious business to do */
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
@@ -141,94 +200,84 @@ DbgDumpGdiHandleTableWithBT(void)
     for (idx = RESERVE_ENTRIES_COUNT; idx < GDI_HANDLE_COUNT; idx++)
     {
         /* If the handle is free, continue */
-        if (!IS_HANDLE_VALID(idx)) continue;
+        if (gpentHmgr[idx].einfo.pobj == 0) continue;
 
-        /* Step through all previous backtraces */
-        for (j = 0; j < nTraces; j++)
+        /* Check if this backtrace is already covered */
+        bAlreadyPresent = FALSE;
+        for (j = RESERVE_ENTRIES_COUNT; j < idx; j++)
         {
-            /* Check if the backtrace matches */
-            if (CompareBacktraces(idx, AllocatorTable[j].idx))
+            if (CompareBacktraces(idx, j))
             {
-                /* It matches, increment count and break out */
-                AllocatorTable[j].count++;
+                bAlreadyPresent = TRUE;
                 break;
             }
         }
 
-        /* Did we find a new backtrace? */
-        if (j == nTraces)
-        {
-            /* Break out, if we reached the maximum */
-            if (nTraces == MAX_BACKTRACES) break;
+        if (bAlreadyPresent) continue;
 
-            /* Initialize this entry */
-            AllocatorTable[j].idx = idx;
-            AllocatorTable[j].count = 1;
-            nTraces++;
+        /* We don't have this BT yet, count how often it is present */
+        iCount = 1;
+        for (j = idx + 1; j < GDI_HANDLE_COUNT; j++)
+        {
+            if (CompareBacktraces(idx, j))
+            {
+                iCount++;
+            }
         }
-    }
 
-    /* bubble sort time! weeeeee!! */
-    for (i = 0; i < nTraces-1; i++)
-    {
-        if (AllocatorTable[i].count < AllocatorTable[i+1].count)
+        /* Now add this backtrace */
+        for (j = 0; j < GDI_DBG_MAX_BTS; j++)
         {
-            struct DbgOpenGDIHandle temp;
+            /* Insert it below the next smaller count */
+            if (aBacktraceTable[j].iCount < iCount)
+            {
+                /* Check if there are entries above */
+                if (j < GDI_DBG_MAX_BTS - 1)
+                {
+                    /* Move the following entries up by 1 */
+                    RtlMoveMemory(&aBacktraceTable[j],
+                                  &aBacktraceTable[j + 1],
+                                  GDI_DBG_MAX_BTS - j - 1);
+                }
 
-            temp = AllocatorTable[i+1];
-            AllocatorTable[i+1] = AllocatorTable[i];
-            j = i;
-            while (j > 0 && AllocatorTable[j-1].count < temp.count)
-                j--;
-            AllocatorTable[j] = temp;
+                /* Set this entry */
+                aBacktraceTable[j].idx = idx;
+                aBacktraceTable[j].iCount = iCount;
+
+                /* We are done here */
+                break;
+            }
         }
     }
 
     /* Print the worst offenders... */
-    DbgPrint("Worst GDI Handle leak offenders (out of %i unique locations):\n", nTraces);
-    for (i = 0; i < nTraces && AllocatorTable[i].count > 1; i++)
+    DbgPrint("Count Handle   Backtrace\n");
+    DbgPrint("------------------------------------------------\n");
+    for (j = 0; j < GDI_DBG_MAX_BTS; j++)
     {
-        /* Print out the allocation count */
-        DbgPrint(" %i allocs, type = 0x%lx:\n",
-                 AllocatorTable[i].count,
-                 GdiHandleTable->Entries[AllocatorTable[i].idx].Type);
+        idx = aBacktraceTable[j].idx;
+        if (idx == 0)
+            break;
 
-        /* Dump the frames */
-        KeRosDumpStackFrames(GDIHandleAllocator[AllocatorTable[i].idx], GDI_STACK_LEVELS);
-        //KeRosDumpStackFrames(GDIHandleShareLocker[AllocatorTable[i].idx], GDI_STACK_LEVELS);
+        ulObj = ((ULONG)gpentHmgr[idx].FullUnique << 16) | idx;
+        pobj = gpentHmgr[idx].einfo.pobj;
 
-        /* Print new line for better readability */
+        DbgPrint("%5d %08lx ", aBacktraceTable[j].iCount, ulObj);
+        for (iLevel = 0; iLevel < GDI_OBJECT_STACK_LEVELS; iLevel++)
+        {
+            DbgPrint("%p,", pobj->apvBackTrace[iLevel]);
+        }
         DbgPrint("\n");
     }
 
-    if (i < nTraces)
-        DbgPrint("(List terminated - the remaining entries have 1 allocation only)\n");
+    __debugbreak();
 
     KeLowerIrql(OldIrql);
-
-    ASSERT(FALSE);
 }
-#endif
 
-ULONG
-NTAPI
-DbgCaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
-{
-    ULONG nFrameCount;
+#endif /* DBG_ENABLE_GDIOBJ_BACKTRACES */
 
-    memset(pFrames, 0x00, (nFramesToCapture + 1) * sizeof(PVOID));
-
-    nFrameCount = RtlWalkFrameChain(pFrames, nFramesToCapture, 0);
-
-    if (nFrameCount < nFramesToCapture)
-    {
-        nFrameCount += RtlWalkFrameChain(pFrames + nFrameCount,
-                                         nFramesToCapture - nFrameCount,
-                                         1);
-    }
-
-    return nFrameCount;
-}
+#if DBG
 
 BOOL
 NTAPI
@@ -352,32 +401,10 @@ DbgGdiHTIntegrityCheck()
 	return r;
 }
 
-#endif /* GDI_DEBUG */
+#endif /* DBG */
 
-VOID
-NTAPI
-DbgDumpLockedGdiHandles()
-{
-#if 0
-    ULONG i;
 
-    for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
-    {
-        PENTRY pentry = &gpentHmgr[i];
-
-        if (pentry->Objt)
-        {
-            POBJ pobj = pentry->einfo.pobj;
-            if (pobj->cExclusiveLock > 0)
-            {
-                DPRINT1("Locked object: %lx, type = %lx. allocated from:\n",
-                        i, pentry->Objt);
-                DBG_DUMP_EVENT_LIST(&pobj->slhLog);
-            }
-        }
-    }
-#endif
-}
+#if DBG_ENABLE_EVENT_LOGGING
 
 VOID
 NTAPI
@@ -400,7 +427,7 @@ DbgLogEvent(PSLIST_HEADER pslh, LOG_EVENT_TYPE nEventType, LPARAM lParam)
     pLogEntry->lParam = lParam;
 
     /* Capture a backtrace */
-    DbgCaptureStackBackTace(pLogEntry->apvBackTrace, 20);
+    DbgCaptureStackBackTace(pLogEntry->apvBackTrace, 1, 20);
 
     switch (nEventType)
     {
@@ -483,6 +510,33 @@ DbgCleanupEventList(PSLIST_HEADER pslh)
     }
 }
 
+#endif /* DBG_ENABLE_EVENT_LOGGING */
+
+#if 1 || DBG_ENABLE_SERVICE_HOOKS
+
+VOID
+NTAPI
+DbgDumpLockedGdiHandles()
+{
+    ULONG i;
+
+    for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
+    {
+        PENTRY pentry = &gpentHmgr[i];
+
+        if (pentry->Objt)
+        {
+            POBJ pobj = pentry->einfo.pobj;
+            if (pobj->cExclusiveLock > 0)
+            {
+                DPRINT1("Locked object: %lx, type = %lx. allocated from:\n",
+                        i, pentry->Objt);
+                DBG_DUMP_EVENT_LIST(&pobj->slhLog);
+            }
+        }
+    }
+}
+
 void
 NTAPI
 GdiDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
@@ -512,6 +566,9 @@ GdiDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
     }
     return ulResult;
 }
+
+#endif /* DBG_ENABLE_SERVICE_HOOKS */
+
 
 NTSTATUS NTAPI
 QueryEnvironmentVariable(PUNICODE_STRING Name,

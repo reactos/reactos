@@ -38,7 +38,7 @@ typedef struct _QUEUEENTRY
     struct _QUEUEENTRY *Prev;
     struct _QUEUEENTRY *Next;
 
-    PWSTR SourceCabinet;          /* May be NULL if file is not in a cabinet */
+    PWSTR SourceCabinet;    /* May be NULL if the file is not in a cabinet */
     PWSTR SourceRootPath;
     PWSTR SourcePath;
     PWSTR SourceFilename;
@@ -215,6 +215,8 @@ SetupQueueCopy(
     if (SourcePath != NULL)
     {
         Length = wcslen(SourcePath);
+        if ((Length > 0) && (SourcePath[Length - 1] == L'\\'))
+            Length--;
         Entry->SourcePath = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                                     0,
                                                     (Length + 1) * sizeof(WCHAR));
@@ -257,7 +259,7 @@ SetupQueueCopy(
 
     /* Copy target directory */
     Length = wcslen(TargetDirectory);
-    if (TargetDirectory[Length] == '\\')
+    if ((Length > 0) && (TargetDirectory[Length - 1] == L'\\'))
         Length--;
     Entry->TargetDirectory = (WCHAR*)RtlAllocateHeap(ProcessHeap,
                                                      0,
@@ -366,6 +368,7 @@ SetupCommitFileQueueW(
     Entry = QueueHeader->CopyHead;
     while (Entry != NULL)
     {
+        /* Build the full source path */
         wcscpy(FileSrcPath, Entry->SourceRootPath);
         if (Entry->SourcePath != NULL)
             wcscat(FileSrcPath, Entry->SourcePath);
@@ -374,12 +377,29 @@ SetupCommitFileQueueW(
 
         /* Build the full target path */
         wcscpy(FileDstPath, TargetRootPath);
-        if (Entry->TargetDirectory[0] == L'\\')
+        if (Entry->TargetDirectory[0] == 0)
         {
-            wcscat(FileDstPath, Entry->TargetDirectory);
+            /* Installation path */
+
+            /* Add the installation path */
+            if (TargetPath != NULL)
+            {
+                if (TargetPath[0] != L'\\')
+                    wcscat(FileDstPath, L"\\");
+                wcscat(FileDstPath, TargetPath);
+            }
         }
-        else
+        else if (Entry->TargetDirectory[0] == L'\\')
         {
+            /* Absolute path */
+            if (Entry->TargetDirectory[1] != 0)
+                wcscat(FileDstPath, Entry->TargetDirectory);
+        }
+        else // if (Entry->TargetDirectory[0] != L'\\')
+        {
+            /* Path relative to the installation path */
+
+            /* Add the installation path */
             if (TargetPath != NULL)
             {
                 if (TargetPath[0] != L'\\')
@@ -391,7 +411,10 @@ SetupCommitFileQueueW(
             wcscat(FileDstPath, Entry->TargetDirectory);
         }
 
-        /* Use only the destination path if the file is in a cabinet */
+        /*
+         * If the file is in a cabinet, use only the destination path.
+         * Otherwise possibly use a different target name.
+         */
         if (Entry->SourceCabinet == NULL)
         {
             wcscat(FileDstPath, L"\\");
@@ -402,7 +425,7 @@ SetupCommitFileQueueW(
         }
 
         /* FIXME: Do it! */
-        DPRINT("'%S' ==> '%S'\n", FileSrcPath, FileDstPath);
+        DPRINT("Copy: '%S' ==> '%S'\n", FileSrcPath, FileDstPath);
 
         MsgHandler(Context,
                    SPFILENOTIFY_STARTCOPY,

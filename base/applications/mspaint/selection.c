@@ -37,6 +37,7 @@ int action = ACTION_MOVE;
 POINTS pos;
 POINTS frac;
 POINT delta;
+DWORD system_selection_color;
 
 void
 RegisterWclSelection()
@@ -95,8 +96,8 @@ ForceRefreshSelectionContents()
     if (IsWindowVisible(hSelection))
     {
         SendMessage(hSelection, WM_LBUTTONDOWN, 0, MAKELPARAM(0, 0));
-        SendMessage(hSelection, WM_MOUSEMOVE, 0, MAKELPARAM(0, 0));
-        SendMessage(hSelection, WM_LBUTTONUP, 0, MAKELPARAM(0, 0));
+        SendMessage(hSelection, WM_MOUSEMOVE,   0, MAKELPARAM(0, 0));
+        SendMessage(hSelection, WM_LBUTTONUP,   0, MAKELPARAM(0, 0));
     }
 }
 
@@ -143,12 +144,22 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 HDC hDC = GetDC(hwnd);
                 DefWindowProc(hwnd, message, wParam, lParam);
                 SelectionFrame(hDC, 1, 1, RECT_WIDTH(rectSel_dest) * zoom / 1000 + 5,
-                               RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 5);
+                               RECT_HEIGHT(rectSel_dest) * zoom / 1000 + 5,
+                               system_selection_color);
                 ReleaseDC(hwnd, hDC);
             }
             break;
         }
+        case WM_CREATE:
+        case WM_SYSCOLORCHANGE:
+        {
+            /* update the system selection color */
+            system_selection_color = GetSysColor(COLOR_HIGHLIGHT);
+            SendMessage(hwnd, WM_PAINT, 0, MAKELPARAM(0, 0));
+            break;
+        }
         case WM_LBUTTONDOWN:
+        {
             pos.x = GET_X_LPARAM(lParam);
             pos.y = GET_Y_LPARAM(lParam);
             delta.x = 0;
@@ -159,6 +170,7 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             moving = TRUE;
             InvalidateRect(hScrlClient, NULL, TRUE);
             break;
+        }
         case WM_MOUSEMOVE:
             if (moving)
             {

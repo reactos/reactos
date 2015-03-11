@@ -5,13 +5,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ברוכים הבאים", IDC_WELCOMETITLE, 120, 8, 195, 24
+    LTEXT "ברוכים הבאים", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "This wizard installs a new device driver for:", IDC_STATIC, 120, 21, 195, 16
-    LTEXT "לחץ הבא כדי להמשיך.", IDC_STATIC, 120, 169, 195, 17
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 134, 36, 164, 11
+    LTEXT "לחץ הבא כדי להמשיך.", IDC_STATIC, 120, 169, 195, 16
+    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "WARNING! INSTALLING A CUSTOM DEVICE MAY FREEZE YOUR COMPUTER OR RENDER IT UNBOOTABLE!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "התקן תוכנת מנהל התקן באופן אוטומטי", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 178, 13
-    CONTROL "התקן תוכנת מהל התקן ממיקום מסוים", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 164, 14
+    CONTROL "התקן תוכנת מנהל התקן באופן אוטומטי", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "התקן תוכנת מהל התקן ממיקום מסוים", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -19,10 +19,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ההגדרה נכשלה", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "The device could not be installed because the driver could not be found.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "Click on Back if you have a driver disk or know the path to the driver.", IDC_STATIC, 120, 98, 181, 24
-    CONTROL "Do not show this dialog anymore", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 180, 11
+    LTEXT "ההגדרה נכשלה", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "The device could not be installed because the driver could not be found.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Click on Back if you have a driver disk or know the path to the driver.", IDC_STATIC, 120, 98, 195, 16
+    CONTROL "Do not show this dialog anymore", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -30,9 +30,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ההגדרה נכשלה", IDC_FINISHTITLE, 120, 8, 195, 24
-    LTEXT "The device could not be installed because an unexpected error happened.", IDC_STATIC, 120, 40, 195, 19
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 134, 55, 164, 11
+    LTEXT "ההגדרה נכשלה", IDC_FINISHTITLE, 120, 8, 195, 16
+    LTEXT "The device could not be installed because an unexpected error happened.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -40,11 +40,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "חפש במיקומים הבאים", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 13
+    CONTROL "חפש במיקומים הבאים", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
     CONTROL "בחר באופן ידני", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
-    CONTROL "חפש במדיה נשלפת", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 9
-    CONTROL "כלול את הנתיב הבא", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 10
-    PUSHBUTTON "בחר", IDC_BROWSE, 248, 69, 50, 14
+    CONTROL "חפש במדיה נשלפת", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
+    CONTROL "כלול את הנתיב הבא", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
+    PUSHBUTTON "בחר", IDC_BROWSE, 248, 70, 50, 14
     COMBOBOX IDC_COMBO_PATH, 61, 71, 176, 12, CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
 END
 
@@ -69,9 +69,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ההגדרה הושלמה", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "You need to reboot to finish the install of:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "לחץ סיום כדי לסגור את האשף.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "ההגדרה הושלמה", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "You need to reboot to finish the install of:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "לחץ סיום כדי לסגור את האשף.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
 END
 
@@ -80,9 +80,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "הגדרת התקן"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ההגדרה הושלמה", IDC_FINISHTITLE, 120, 8, 195, 11
-    LTEXT "The wizard has finished installing the driver for:", IDC_STATIC, 120, 32, 195, 19
-    LTEXT "לחץ סיום כדי לסגור את האשף.", IDC_STATIC, 120, 174, 179, 11
+    LTEXT "ההגדרה הושלמה", IDC_FINISHTITLE, 120, 8, 195, 12
+    LTEXT "The wizard has finished installing the driver for:", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "לחץ סיום כדי לסגור את האשף.", IDC_STATIC, 120, 174, 195, 12
     LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
 END
 

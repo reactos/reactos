@@ -23,10 +23,10 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Περιεχόμενα"
+    IDS_CONTENTS     "&Ξ ΞµΟΞΉΞµΟ‡ΟΞΌΞµΞ½Ξ±"
     IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Αναζήτηση"
-    IDS_FAVORITES    "Α&γαπημένα"
+    IDS_SEARCH       "&Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·"
+    IDS_FAVORITES    "Ξ‘&Ξ³Ξ±Ο€Ξ·ΞΌΞ­Ξ½Ξ±"
 
     IDS_HIDETABS     "Hide &Tabs"
     IDS_SHOWTABS     "Show &Tabs"
@@ -34,15 +34,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Εμφάνιση"
-    IDTB_CONTRACT    "Απόκρυψη"
-    IDTB_STOP        "Τερματισμός"
-    IDTB_REFRESH     "Ανανέωση"
-    IDTB_BACK        "Πίσω"
+    IDTB_EXPAND      "Ξ•ΞΌΟ†Ξ¬Ξ½ΞΉΟƒΞ·"
+    IDTB_CONTRACT    "Ξ‘Ο€ΟΞΊΟΟ…ΟΞ·"
+    IDTB_STOP        "Ξ¤ΞµΟΞΌΞ±Ο„ΞΉΟƒΞΌΟΟ‚"
+    IDTB_REFRESH     "Ξ‘Ξ½Ξ±Ξ½Ξ­Ο‰ΟƒΞ·"
+    IDTB_BACK        "Ξ Ξ―ΟƒΟ‰"
     IDTB_HOME        "Home"
     IDTB_SYNC        "Sync"
-    IDTB_PRINT       "Εκτύπωση"
-    IDTB_OPTIONS     "Επιλογές"
+    IDTB_PRINT       "Ξ•ΞΊΟ„ΟΟ€Ο‰ΟƒΞ·"
+    IDTB_OPTIONS     "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ­Ο‚"
     IDTB_FORWARD     "Forward"
 END
 

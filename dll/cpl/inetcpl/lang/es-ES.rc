@@ -1,0 +1,92 @@
+/* Spanish translation by Ismael Ferreras Morezuelas (2014-12-30) */
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_CPL_NAME        "Ajustes de Internet"
+    IDS_CPL_INFO        "Configure el navegador de Internet de Wine y sus ajustes asociados"
+    IDS_SEC_SETTINGS    "Ajustes de seguridad por zona: "
+    IDS_SEC_LEVEL0      "Personalizado"
+    IDS_SEC_LEVEL1      "Muy baja"
+    IDS_SEC_LEVEL2      "Baja"
+    IDS_SEC_LEVEL3      "Intermedia"
+    IDS_SEC_LEVEL4      "Mejorada"
+    IDS_SEC_LEVEL5      "Más alta"
+END
+
+/* "General" propsheet */
+IDD_GENERAL DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "General"
+BEGIN
+
+    GROUPBOX    "Página de inicio", IDC_STATIC, 4, 4, 312, 56
+    LTEXT       "Puede elegir la dirección que se mostrará al abrir el navegador.",
+                IDC_STATIC, 10, 14, 300, 10
+    EDITTEXT    IDC_HOME_EDIT, 10, 26, 300, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    PUSHBUTTON  "Página &actual", IDC_HOME_CURRENT, 58, 42, 80, 14
+    PUSHBUTTON  "&Predeterminada", IDC_HOME_DEFAULT, 144, 42, 80, 14
+    PUSHBUTTON  "&En blanco", IDC_HOME_BLANK, 230, 42, 80, 14
+    GROUPBOX    "Historial de navegación", IDC_STATIC, 4, 66, 312, 42
+    LTEXT       "Puede borrar páginas en caché, cookies y otros elementos.",
+                IDC_STATIC, 10, 76, 300, 10
+    PUSHBUTTON  "&Borrar archivos...", IDC_HISTORY_DELETE, 144, 90, 80, 14
+    PUSHBUTTON  "&Ajustes...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
+
+END
+
+/* "Delete browsing history" dialog */
+IDD_DELETE_HISTORY DIALOG  0, 0, 250, 250
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Borrar historial de navegación"
+BEGIN
+
+    AUTOCHECKBOX   "Archivos temporales\nCopias en caché de páginas web, imágenes y certificados.",
+                    IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Cookies\nArchivos guardados en su equipo por los sitios Web, utilizados para almacenar preferencias e información de inicio de sesión.",
+                    IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Historial\nLista de sitios que se han visitado.",
+                    IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Formularios\nNombres de usuario y otro tipo de información introducida en formularios.",
+                    IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX   "Contraseñas\nContraseñas guardadas introducidas en formularios.",
+                    IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
+    DEFPUSHBUTTON  "Cancelar", IDCANCEL, 185, 230, 60, 15, WS_GROUP
+    PUSHBUTTON     "Borrar", IDOK, 120, 230, 60, 15, WS_GROUP
+
+END
+
+/* "Security" propsheet */
+IDD_SECURITY DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Securidad"
+BEGIN
+
+    CONTROL     "", IDC_SEC_LISTVIEW, "SysListView32",
+                LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_VSCROLL,
+                4, 4, 312, 58
+    LTEXT       "", IDC_SEC_ZONE_INFO, 4, 68, 312, 20
+    GROUPBOX    "", IDC_SEC_GROUP, 4, 88, 312, 126
+    CONTROL     "", IDC_SEC_TRACKBAR, "msctls_trackbar32",
+                TBS_VERT | TBS_AUTOTICKS | TBS_BOTH | TBS_REVERSED, 8, 98, 32, 100
+    LTEXT       "", IDC_SEC_LEVEL, 48, 102, 180, 12
+    LTEXT       "", IDC_SEC_LEVEL_INFO, 48, 114, 260, 80
+END
+
+/* "Content" propsheet */
+IDD_CONTENT DIALOG  0, 0, 320, 220
+STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+CAPTION "Contenido"
+BEGIN
+
+    GROUPBOX    "Certificados", IDC_STATIC, 4, 4, 312, 50
+    LTEXT       "Los certificados se utilizan para su identificación personal y para identificar tanto autoridades de certificación como certificadores.",
+                IDC_STATIC, 58, 14, 252, 18
+    PUSHBUTTON  "Certificados...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON	"Autoridades...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+
+END

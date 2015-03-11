@@ -8,15 +8,15 @@ BEGIN
     GROUPBOX "Type de moniteur", -1, 7, 3, 237, 52
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
-    PUSHBUTTON "&Propriétés", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Paramètres du moniteur", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "Taux de rafraîchi&ssement de l'écran:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    PUSHBUTTON "&PropriÃ©tÃ©s", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
+    GROUPBOX "ParamÃ¨tres du moniteur", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "Taux de rafraÃ®chi&ssement de l'Ã©cran:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
     AUTOCHECKBOX "Cac&her les modes que ce moniteur ne peut pas afficher", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Utiliser les paramètres matériel par défaut"
+    IDS_USEDEFFRQUENCY "Utiliser les paramÃ¨tres matÃ©riel par dÃ©faut"
     IDS_FREQFMT "%u Hertz"
 END

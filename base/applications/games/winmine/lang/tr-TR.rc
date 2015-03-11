@@ -1,11 +1,11 @@
-/* TRANSLATORS: 2006 Fatih Aşıcı; 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATORS: 2006 Fatih Aşıcı, 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_APPNAME "Mayın Tarlası"
-    IDS_NOBODY "Hiç Kimse"
+    IDS_NOBODY "Bir kişi bile"
     IDS_ABOUT "Telif Hakkı: 2000 - Joshua Thielen"
 END
 

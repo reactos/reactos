@@ -105,18 +105,20 @@ IntGdiCleanDC(HDC hDC)
     return TRUE;
 }
 
-
+__kernel_entry
 BOOL
 APIENTRY
 NtGdiResetDC(
-    IN HDC hdc,
-    IN LPDEVMODEW pdm,
-    OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2,
-    OUT VOID *ppUMdhpdev)
+    _In_ HDC hdc,
+    _In_ LPDEVMODEW pdm,
+    _Out_ PBOOL pbBanding,
+    _In_opt_ DRIVER_INFO_2W *pDriverInfo2,
+    _At_((PUMDHPDEV*)ppUMdhpdev, _Out_) PVOID ppUMdhpdev)
 {
+    /* According to a comment in Windows SDK the size of the buffer for
+       pdm is (pdm->dmSize + pdm->dmDriverExtra) */
     UNIMPLEMENTED;
-    return 0;
+    return FALSE;
 }
 
 
@@ -262,7 +264,7 @@ NtGdiSaveDC(
     }
 
     /* Allocate a new dc */
-    pdcSave = DC_AllocDcWithHandle();
+    pdcSave = DC_AllocDcWithHandle(GDILoObjType_LO_DC_TYPE);
     if (pdcSave == NULL)
     {
         DPRINT("Could not allocate a new DC\n");

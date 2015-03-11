@@ -2,26 +2,26 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_PROPPAGE1 DIALOGEX 20, 40, 315, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_OVERLAPPED | WS_CAPTION | WS_VISIBLE | WS_SYSMENU
-CAPTION "Επιλέξτε Τύπο Αδειοδότησης"
+CAPTION "Ξ•Ο€ΞΉΞ»Ξ­ΞΎΟ„Ξµ Ξ¤ΟΟ€ΞΏ Ξ‘Ξ΄ΞµΞΉΞΏΞ΄ΟΟ„Ξ·ΟƒΞ·Ο‚"
 FONT 8, "Helv"
 BEGIN
-    CONTROL "Τύπος Αδειοδότησης Πελάτη", 100, "BUTTON", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 4, 4, 239, 94
-    CONTROL "Ανά Συσκευή ή Ανά Χρήστη", 102, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 79, 107, 12
-    CONTROL "Ανά ΔΙακομιστή. Αριθμός ταυτόχρονων συνδέσεων:", 103, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 38, 163, 9
-    CONTROL "Προϊόν:", 105, "STATIC", SS_LEFT | WS_CHILD | WS_VISIBLE, 13, 20, 31, 8
+    CONTROL "Ξ¤ΟΟ€ΞΏΟ‚ Ξ‘Ξ΄ΞµΞΉΞΏΞ΄ΟΟ„Ξ·ΟƒΞ·Ο‚ Ξ ΞµΞ»Ξ¬Ο„Ξ·", 100, "BUTTON", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 4, 4, 239, 94
+    CONTROL "Ξ‘Ξ½Ξ¬ Ξ£Ο…ΟƒΞΊΞµΟ…Ξ® Ξ® Ξ‘Ξ½Ξ¬ Ξ§ΟΞ®ΟƒΟ„Ξ·", 102, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 79, 107, 12
+    CONTROL "Ξ‘Ξ½Ξ¬ Ξ”Ξ™Ξ±ΞΊΞΏΞΌΞΉΟƒΟ„Ξ®. Ξ‘ΟΞΉΞΈΞΌΟΟ‚ Ο„Ξ±Ο…Ο„ΟΟ‡ΟΞΏΞ½Ο‰Ξ½ ΟƒΟ…Ξ½Ξ΄Ξ­ΟƒΞµΟ‰Ξ½:", 103, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE, 13, 38, 163, 9
+    CONTROL "Ξ ΟΞΏΟΟΞ½:", 105, "STATIC", SS_LEFT | WS_CHILD | WS_VISIBLE, 13, 20, 31, 8
     CONTROL "", 106, "COMBOBOX", CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP, 49, 20, 171, 12
     CONTROL "OK", 107, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 7, 46, 14
-    CONTROL "Άκυρο", 108, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 27, 46, 14
-    CONTROL "Βοήθεια", 109, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 48, 46, 14
-    CONTROL "Απάντηση...", 110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
-    CONTROL "Προσθήκη Αδειών", 111, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 30, 56, 65, 15
-    CONTROL "Αφαίρεση Αδειών", 112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
+    CONTROL "Ξ†ΞΊΟ…ΟΞΏ", 108, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 27, 46, 14
+    CONTROL "Ξ’ΞΏΞ®ΞΈΞµΞΉΞ±", 109, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 48, 46, 14
+    CONTROL "Ξ‘Ο€Ξ¬Ξ½Ο„Ξ·ΟƒΞ·...", 110, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 263, 68, 46, 14
+    CONTROL "Ξ ΟΞΏΟƒΞΈΞ®ΞΊΞ· Ξ‘Ξ΄ΞµΞΉΟΞ½", 111, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 30, 56, 65, 15
+    CONTROL "Ξ‘Ο†Ξ±Ξ―ΟΞµΟƒΞ· Ξ‘Ξ΄ΞµΞΉΟΞ½", 112, "BUTTON", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 112, 56, 61, 16
     CONTROL "", 114, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 187, 39, 32, 12
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "Διαχειριστής Αδειών"
-    IDS_CPLDESCRIPTION_1 "Διαχειριστής Αδειών"
+    IDS_CPLNAME_1 "Ξ”ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ®Ο‚ Ξ‘Ξ΄ΞµΞΉΟΞ½"
+    IDS_CPLDESCRIPTION_1 "Ξ”ΞΉΞ±Ο‡ΞµΞΉΟΞΉΟƒΟ„Ξ®Ο‚ Ξ‘Ξ΄ΞµΞΉΟΞ½"
     IDS_REACTOS "ReactOS - FreeSoftware"
 END

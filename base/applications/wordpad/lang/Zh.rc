@@ -358,23 +358,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Black",      ID_COLOR_BLACK
-        MENUITEM "Maroon",     ID_COLOR_MAROON
-        MENUITEM "Green",      ID_COLOR_GREEN
-        MENUITEM "Olive",      ID_COLOR_OLIVE
-        MENUITEM "Navy",       ID_COLOR_NAVY
-        MENUITEM "Purple",     ID_COLOR_PURPLE
-        MENUITEM "Teal",       ID_COLOR_TEAL
-        MENUITEM "Gray",       ID_COLOR_GRAY
-        MENUITEM "Silver",     ID_COLOR_SILVER
-        MENUITEM "Red",        ID_COLOR_RED
-        MENUITEM "Lime",       ID_COLOR_LIME
-        MENUITEM "Yellow",     ID_COLOR_YELLOW
-        MENUITEM "Blue",       ID_COLOR_BLUE
-        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
-        MENUITEM "Aqua",       ID_COLOR_AQUA
-        MENUITEM "White",      ID_COLOR_WHITE
-        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
+        MENUITEM "黑色",      ID_COLOR_BLACK
+        MENUITEM "褐色",     ID_COLOR_MAROON
+        MENUITEM "綠色",      ID_COLOR_GREEN
+        MENUITEM "橄欖色",      ID_COLOR_OLIVE
+        MENUITEM "藏青色",       ID_COLOR_NAVY
+        MENUITEM "紫色",     ID_COLOR_PURPLE
+        MENUITEM "深青色",       ID_COLOR_TEAL
+        MENUITEM "灰色",       ID_COLOR_GRAY
+        MENUITEM "銀色",     ID_COLOR_SILVER
+        MENUITEM "紅色",        ID_COLOR_RED
+        MENUITEM "青檸綠",       ID_COLOR_LIME
+        MENUITEM "黃色",     ID_COLOR_YELLOW
+        MENUITEM "藍色",       ID_COLOR_BLUE
+        MENUITEM "紫紅色",    ID_COLOR_FUCHSIA
+        MENUITEM "水藍",       ID_COLOR_AQUA
+        MENUITEM "白色",      ID_COLOR_WHITE
+        MENUITEM "自動",  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -411,11 +411,11 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "上一頁"
     STRING_PREVIEW_TWOPAGES,         "雙頁"
     STRING_PREVIEW_ONEPAGE,          "單頁"
-    STRING_PREVIEW_ZOOMIN,           "Zoom in"
-    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
+    STRING_PREVIEW_ZOOMIN,           "放大"
+    STRING_PREVIEW_ZOOMOUT,          "縮小"
     STRING_PREVIEW_CLOSE,            "關閉"
-    STRING_PREVIEW_PAGE,             "Page"
-    STRING_PREVIEW_PAGES,            "Pages"
+    STRING_PREVIEW_PAGE,             "頁"
+    STRING_PREVIEW_PAGES,            "頁"
     STRING_UNITS_CM,                 "cm"
     STRING_UNITS_IN,                 "in"
     STRING_UNITS_INCH,               "inch"
@@ -424,7 +424,7 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_DEFAULT_FILENAME,     "Document"
+    STRING_DEFAULT_FILENAME,     "文檔"
     STRING_PROMPT_SAVE_CHANGES,  "儲存改動到 '%s'?"
     STRING_SEARCH_FINISHED,      "檔案查找結束."
     STRING_LOAD_RICHED_FAILED,   "RichEdit 裝載失敗."
@@ -435,8 +435,8 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "你沒有儲存檔案的權力."
     STRING_OPEN_FAILED,               "不能開啟檔案."
     STRING_OPEN_ACCESS_DENIED,        "你沒有開啟檔案的權力."
-    STRING_PRINTING_NOT_IMPLEMENTED,  "Printing not implemented."
-    STRING_MAX_TAB_STOPS,             "Cannot add more than 32 tab stops."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "列印未實現。"
+    STRING_MAX_TAB_STOPS,             "不能添加超過 32 的定位停駐點。"
 END
 
 IDD_DATETIME DIALOG 30, 20, 130, 80
@@ -499,7 +499,7 @@ CAPTION ""
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "自動換行", -1, 5, 10, 145, 85
-    RADIOBUTTON "&No line wrapping", IDC_PAGEFMT_WN, 10, 25, 138, 15
+    RADIOBUTTON "不換行(&N)", IDC_PAGEFMT_WN, 10, 25, 138, 15
     RADIOBUTTON "按視窗寬度(&W)", IDC_PAGEFMT_WW, 10, 45, 138, 15
     RADIOBUTTON "按紙張寬度(&M)", IDC_PAGEFMT_WM, 10, 65, 138, 15
     GROUPBOX "工具欄", -1, 150, 10, 115, 85

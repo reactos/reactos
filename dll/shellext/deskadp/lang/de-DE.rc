@@ -13,7 +13,7 @@ BEGIN
     LTEXT "", IDC_CHIPTYPE, 81, 68, 160, 8, SS_NOPREFIX
     LTEXT "DAC Typ:", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 81, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Speichergröße:", -1, 13, 92, 58, 8
+    LTEXT "SpeichergrÃ¶ÃŸe:", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 81, 92, 160, 8, SS_NOPREFIX
     LTEXT "Zeichenfolge:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 81, 104, 160, 8, SS_NOPREFIX
@@ -29,7 +29,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 112, 115, 50, 15
     PUSHBUTTON "Abbrechen", IDCANCEL, 167, 115, 50, 15
-    GROUPBOX "Alle gültigen Modi auflisten", -1, 6, 7, 212, 98
+    GROUPBOX "Alle gÃ¼ltigen Modi auflisten", -1, 6, 7, 212, 98
     LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
 END
 

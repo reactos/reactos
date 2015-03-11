@@ -15,7 +15,7 @@
 
 /* GLOBALS *******************************************************************/
 
-PVOID LdrpManifestProberRoutine;
+PLDR_MANIFEST_PROBER_ROUTINE LdrpManifestProberRoutine;
 ULONG LdrpNormalSnap;
 
 /* FUNCTIONS *****************************************************************/

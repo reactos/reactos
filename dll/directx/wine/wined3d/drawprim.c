@@ -54,9 +54,9 @@ static void drawStridedFast(const struct wined3d_gl_info *gl_info, GLenum primit
                 }
                 else
                 {
-                    GL_EXTCALL(glDrawElementsInstancedARB(primitive_type, count, idxtype,
+                    GL_EXTCALL(glDrawElementsInstanced(primitive_type, count, idxtype,
                             (const char *)idx_data + (idx_size * start_idx), instance_count));
-                    checkGLcall("glDrawElementsInstancedARB");
+                    checkGLcall("glDrawElementsInstanced");
                 }
             }
         }
@@ -340,20 +340,20 @@ static inline void send_attribute(const struct wined3d_gl_info *gl_info,
     switch(format)
     {
         case WINED3DFMT_R32_FLOAT:
-            GL_EXTCALL(glVertexAttrib1fvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib1fv(index, ptr));
             break;
         case WINED3DFMT_R32G32_FLOAT:
-            GL_EXTCALL(glVertexAttrib2fvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib2fv(index, ptr));
             break;
         case WINED3DFMT_R32G32B32_FLOAT:
-            GL_EXTCALL(glVertexAttrib3fvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib3fv(index, ptr));
             break;
         case WINED3DFMT_R32G32B32A32_FLOAT:
-            GL_EXTCALL(glVertexAttrib4fvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib4fv(index, ptr));
             break;
 
         case WINED3DFMT_R8G8B8A8_UINT:
-            GL_EXTCALL(glVertexAttrib4ubvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib4ubv(index, ptr));
             break;
         case WINED3DFMT_B8G8R8A8_UNORM:
             if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
@@ -362,38 +362,38 @@ static inline void send_attribute(const struct wined3d_gl_info *gl_info,
                 DWORD c = *src & 0xff00ff00;
                 c |= (*src & 0xff0000) >> 16;
                 c |= (*src & 0xff) << 16;
-                GL_EXTCALL(glVertexAttrib4NubvARB(index, (GLubyte *)&c));
+                GL_EXTCALL(glVertexAttrib4Nubv(index, (GLubyte *)&c));
                 break;
             }
             /* else fallthrough */
         case WINED3DFMT_R8G8B8A8_UNORM:
-            GL_EXTCALL(glVertexAttrib4NubvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib4Nubv(index, ptr));
             break;
 
         case WINED3DFMT_R16G16_SINT:
-            GL_EXTCALL(glVertexAttrib4svARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib2sv(index, ptr));
             break;
         case WINED3DFMT_R16G16B16A16_SINT:
-            GL_EXTCALL(glVertexAttrib4svARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib4sv(index, ptr));
             break;
 
         case WINED3DFMT_R16G16_SNORM:
         {
             GLshort s[4] = {((const GLshort *)ptr)[0], ((const GLshort *)ptr)[1], 0, 1};
-            GL_EXTCALL(glVertexAttrib4NsvARB(index, s));
+            GL_EXTCALL(glVertexAttrib4Nsv(index, s));
             break;
         }
         case WINED3DFMT_R16G16_UNORM:
         {
             GLushort s[4] = {((const GLushort *)ptr)[0], ((const GLushort *)ptr)[1], 0, 1};
-            GL_EXTCALL(glVertexAttrib4NusvARB(index, s));
+            GL_EXTCALL(glVertexAttrib4Nusv(index, s));
             break;
         }
         case WINED3DFMT_R16G16B16A16_SNORM:
-            GL_EXTCALL(glVertexAttrib4NsvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib4Nsv(index, ptr));
             break;
         case WINED3DFMT_R16G16B16A16_UNORM:
-            GL_EXTCALL(glVertexAttrib4NusvARB(index, ptr));
+            GL_EXTCALL(glVertexAttrib4Nusv(index, ptr));
             break;
 
         case WINED3DFMT_R10G10B10A2_UINT:
@@ -418,7 +418,7 @@ static inline void send_attribute(const struct wined3d_gl_info *gl_info,
             {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);
                 float y = float_16_to_32(((const unsigned short *)ptr) + 1);
-                GL_EXTCALL(glVertexAttrib2fARB(index, x, y));
+                GL_EXTCALL(glVertexAttrib2f(index, x, y));
             }
             break;
         case WINED3DFMT_R16G16B16A16_FLOAT:
@@ -433,7 +433,7 @@ static inline void send_attribute(const struct wined3d_gl_info *gl_info,
                 float y = float_16_to_32(((const unsigned short *)ptr) + 1);
                 float z = float_16_to_32(((const unsigned short *)ptr) + 2);
                 float w = float_16_to_32(((const unsigned short *)ptr) + 3);
-                GL_EXTCALL(glVertexAttrib4fARB(index, x, y, z, w));
+                GL_EXTCALL(glVertexAttrib4f(index, x, y, z, w));
             }
             break;
 

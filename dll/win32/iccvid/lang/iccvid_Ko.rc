@@ -21,6 +21,6 @@ LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_NAME "½Ã³×ÆÑ ºñµð¿À ÄÚµ¦"
-    IDS_DESCRIPTION "½Ã³×ÆÑ ºñµð¿À ÄÚµ¦"
+    IDS_NAME "ì‹œë„¤íŒ© ë¹„ë””ì˜¤ ì½”ë±"
+    IDS_DESCRIPTION "ì‹œë„¤íŒ© ë¹„ë””ì˜¤ ì½”ë±"
 }

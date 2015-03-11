@@ -58,7 +58,7 @@ NpSetPipeInfo(IN PNP_FCB Fcb,
 
     if (Buffer->CompletionMode != FILE_PIPE_COMPLETE_OPERATION ||
         Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION ||
-        (ReadQueue->QueueState == ReadEntries &&
+        (ReadQueue->QueueState != ReadEntries &&
         WriteQueue->QueueState != WriteEntries))
     {
         Ccb->ReadMode[NamedPipeEnd] = Buffer->ReadMode & 0xFF;

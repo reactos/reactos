@@ -33,105 +33,105 @@ IDR_BROWSE_CONTEXT_MENU MENU
 {
     POPUP "" /* Default */
     {
-        MENUITEM "На&зад",                  IDM_GOBACKWARD
-        MENUITEM "На&пред",               IDM_GOFORWARD
+        MENUITEM "РќР°&Р·Р°Рґ",                  IDM_GOBACKWARD
+        MENUITEM "РќР°&РїСЂРµРґ",               IDM_GOFORWARD
         MENUITEM SEPARATOR
-        MENUITEM "&Съхрани фона като...", IDM_SAVEBACKGROUND
-        MENUITEM "Постави като &фон на работния плот",     IDM_SETWALLPAPER
-        MENUITEM "&Копирай фона",       IDM_COPYBACKGROUND
-        MENUITEM "Постави като елемент на &работния плот",   IDM_SETDESKTOPITEM
+        MENUITEM "&РЎСЉС…СЂР°РЅРё С„РѕРЅР° РєР°С‚Рѕ...", IDM_SAVEBACKGROUND
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ &С„РѕРЅ РЅР° СЂР°Р±РѕС‚РЅРёСЏ РїР»РѕС‚",     IDM_SETWALLPAPER
+        MENUITEM "&РљРѕРїРёСЂР°Р№ С„РѕРЅР°",       IDM_COPYBACKGROUND
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ РµР»РµРјРµРЅС‚ РЅР° &СЂР°Р±РѕС‚РЅРёСЏ РїР»РѕС‚",   IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "Маркирай &всичко",            IDM_SELECTALL
-        MENUITEM "&Вмъкни",                 IDM_PASTE
+        MENUITEM "РњР°СЂРєРёСЂР°Р№ &РІСЃРёС‡РєРѕ",            IDM_SELECTALL
+        MENUITEM "&Р’РјСЉРєРЅРё",                 IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Създай препра&тка",       IDM_CREATESHORTCUT
-        MENUITEM "Добави към &отметките",     IDM_ADDFAVORITES
-        MENUITEM "Пре&гледай изходния код",           IDM_VIEWSOURCE
+        MENUITEM "РЎСЉР·РґР°Р№ РїСЂРµРїСЂР°&С‚РєР°",       IDM_CREATESHORTCUT
+        MENUITEM "Р”РѕР±Р°РІРё РєСЉРј &РѕС‚РјРµС‚РєРёС‚Рµ",     IDM_ADDFAVORITES
+        MENUITEM "РџСЂРµ&РіР»РµРґР°Р№ РёР·С…РѕРґРЅРёСЏ РєРѕРґ",           IDM_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "Ко&дировка",              IDM_LANGUAGE
+        MENUITEM "РљРѕ&РґРёСЂРѕРІРєР°",              IDM_LANGUAGE
         MENUITEM SEPARATOR
-        MENUITEM "Пе&чат",                 IDM_PRINT
-        MENUITEM "Опр&есни",               _IDM_REFRESH
+        MENUITEM "РџРµ&С‡Р°С‚",                 IDM_PRINT
+        MENUITEM "РћРїСЂ&РµСЃРЅРё",               _IDM_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Сво&йства",            IDM_PROPERTIES
+        MENUITEM "РЎРІРѕ&Р№СЃС‚РІР°",            IDM_PROPERTIES
     }
 
     POPUP "" /* Image */
     {
-        MENUITEM "&Отвори връзката",               IDM_FOLLOWLINKC
-        MENUITEM "Отвори връзката в &нов прозорец", IDM_FOLLOWLINKN
-        MENUITEM "Запи&ши целта като...",       IDM_SAVETARGET
-        MENUITEM "Раз&печатай целта",            IDM_PRINTTARGET
+        MENUITEM "&РћС‚РІРѕСЂРё РІСЂСЉР·РєР°С‚Р°",               IDM_FOLLOWLINKC
+        MENUITEM "РћС‚РІРѕСЂРё РІСЂСЉР·РєР°С‚Р° РІ &РЅРѕРІ РїСЂРѕР·РѕСЂРµС†", IDM_FOLLOWLINKN
+        MENUITEM "Р—Р°РїРё&С€Рё С†РµР»С‚Р° РєР°С‚Рѕ...",       IDM_SAVETARGET
+        MENUITEM "Р Р°Р·&РїРµС‡Р°С‚Р°Р№ С†РµР»С‚Р°",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "По&кажи изображението",            IDM_SHOWPICTURE
-        MENUITEM "&Съхрани изображението като...",      IDM_SAVEPICTURE
-        MENUITEM "Изпрати изображението по по&щата...",       IDM_MP_EMAILPICTURE
-        MENUITEM "&Разпечатай изображението...",        IDM_MP_PRINTPICTURE
-        MENUITEM "И&ди в Моите Снимки",       IDM_MP_MYPICS
-        MENUITEM "Постави като &фон",       IDM_SETWALLPAPER
-        MENUITEM "Постави като елемент на &работния плот...",  IDM_SETDESKTOPITEM
+        MENUITEM "РџРѕ&РєР°Р¶Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ",            IDM_SHOWPICTURE
+        MENUITEM "&РЎСЉС…СЂР°РЅРё РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ РєР°С‚Рѕ...",      IDM_SAVEPICTURE
+        MENUITEM "РР·РїСЂР°С‚Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ РїРѕ РїРѕ&С‰Р°С‚Р°...",       IDM_MP_EMAILPICTURE
+        MENUITEM "&Р Р°Р·РїРµС‡Р°С‚Р°Р№ РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ...",        IDM_MP_PRINTPICTURE
+        MENUITEM "Р&РґРё РІ РњРѕРёС‚Рµ РЎРЅРёРјРєРё",       IDM_MP_MYPICS
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ &С„РѕРЅ",       IDM_SETWALLPAPER
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ РµР»РµРјРµРЅС‚ РЅР° &СЂР°Р±РѕС‚РЅРёСЏ РїР»РѕС‚...",  IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Изрежи",                     IDM_CUT
-        MENUITEM "&Копирай",                    IDM_COPY
-        MENUITEM "Копирай препра&тката",           IDM_COPYSHORTCUT
-        MENUITEM "&Вмъкни",                   IDM_PASTE
+        MENUITEM "&РР·СЂРµР¶Рё",                     IDM_CUT
+        MENUITEM "&РљРѕРїРёСЂР°Р№",                    IDM_COPY
+        MENUITEM "РљРѕРїРёСЂР°Р№ РїСЂРµРїСЂР°&С‚РєР°С‚Р°",           IDM_COPYSHORTCUT
+        MENUITEM "&Р’РјСЉРєРЅРё",                   IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Добави към от&метките...",     IDM_ADDFAVORITES
+        MENUITEM "Р”РѕР±Р°РІРё РєСЉРј РѕС‚&РјРµС‚РєРёС‚Рµ...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "Сво&йства",              IDM_PROPERTIES
+        MENUITEM "РЎРІРѕ&Р№СЃС‚РІР°",              IDM_PROPERTIES
     }
 
     POPUP "" /* Control */
     {
-        MENUITEM "&Отмени",       IDM_UNDO
+        MENUITEM "&РћС‚РјРµРЅРё",       IDM_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Изрежи",        IDM_CUT
-        MENUITEM "&Копирай",       IDM_COPY
-        MENUITEM "&Вмъкни",      IDM_PASTE
-        MENUITEM "Из&трий",     IDM_DELETE
+        MENUITEM "&РР·СЂРµР¶Рё",        IDM_CUT
+        MENUITEM "&РљРѕРїРёСЂР°Р№",       IDM_COPY
+        MENUITEM "&Р’РјСЉРєРЅРё",      IDM_PASTE
+        MENUITEM "РР·&С‚СЂРёР№",     IDM_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Маркирай &всичко", IDM_SELECTALL
+        MENUITEM "РњР°СЂРєРёСЂР°Р№ &РІСЃРёС‡РєРѕ", IDM_SELECTALL
     }
 
     POPUP "" /* Table */
     {
-        POPUP "&Избери"
+        POPUP "&РР·Р±РµСЂРё"
         {
-            MENUITEM "&Клетка",         IDM_CELLSELECT
-            MENUITEM "&Ред",          IDM_ROWSELECT
-            MENUITEM "&Колона",       IDM_COLUMNSELECT
-            MENUITEM "&Таблица",        IDM_TABLESELECT
+            MENUITEM "&РљР»РµС‚РєР°",         IDM_CELLSELECT
+            MENUITEM "&Р РµРґ",          IDM_ROWSELECT
+            MENUITEM "&РљРѕР»РѕРЅР°",       IDM_COLUMNSELECT
+            MENUITEM "&РўР°Р±Р»РёС†Р°",        IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
-        MENUITEM "&Свойства на клетката",  IDM_CELLPROPERTIES
-        MENUITEM "&Свойства на таблицата", IDM_TABLEPROPERTIES
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР° РЅР° РєР»РµС‚РєР°С‚Р°",  IDM_CELLPROPERTIES
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР° РЅР° С‚Р°Р±Р»РёС†Р°С‚Р°", IDM_TABLEPROPERTIES
     }
 
     POPUP "" /* 1DSite Select */
     {
-        MENUITEM "&Изрежи",        IDM_CUT
-        MENUITEM "&Копирай",       IDM_COPY
-        MENUITEM "&Вмъкни",       IDM_PASTE
-        MENUITEM "Маркирай &всичко", IDM_SELECTALL
-        MENUITEM "&Печат",      IDM_PRINT
+        MENUITEM "&РР·СЂРµР¶Рё",        IDM_CUT
+        MENUITEM "&РљРѕРїРёСЂР°Р№",       IDM_COPY
+        MENUITEM "&Р’РјСЉРєРЅРё",       IDM_PASTE
+        MENUITEM "РњР°СЂРєРёСЂР°Р№ &РІСЃРёС‡РєРѕ", IDM_SELECTALL
+        MENUITEM "&РџРµС‡Р°С‚",      IDM_PRINT
         MENUITEM SEPARATOR
     }
 
     POPUP "" /* Anchor */
     {
-        MENUITEM "&Отвори",                IDM_FOLLOWLINKC
-        MENUITEM "Отвори в &нов прозорец",  IDM_FOLLOWLINKN
-        MENUITEM "Запи&ши целта като...",   IDM_SAVETARGET
-        MENUITEM "Раз&печатай целта",        IDM_PRINTTARGET
+        MENUITEM "&РћС‚РІРѕСЂРё",                IDM_FOLLOWLINKC
+        MENUITEM "РћС‚РІРѕСЂРё РІ &РЅРѕРІ РїСЂРѕР·РѕСЂРµС†",  IDM_FOLLOWLINKN
+        MENUITEM "Р—Р°РїРё&С€Рё С†РµР»С‚Р° РєР°С‚Рѕ...",   IDM_SAVETARGET
+        MENUITEM "Р Р°Р·&РїРµС‡Р°С‚Р°Р№ С†РµР»С‚Р°",        IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "&Изрежи",                  IDM_CUT
-        MENUITEM "&Копирай",                IDM_COPY
-        MENUITEM "Копирай препра&тката",       IDM_COPYSHORTCUT
-        MENUITEM "&Вмъкни",               IDM_PASTE
+        MENUITEM "&РР·СЂРµР¶Рё",                  IDM_CUT
+        MENUITEM "&РљРѕРїРёСЂР°Р№",                IDM_COPY
+        MENUITEM "РљРѕРїРёСЂР°Р№ РїСЂРµРїСЂР°&С‚РєР°С‚Р°",       IDM_COPYSHORTCUT
+        MENUITEM "&Р’РјСЉРєРЅРё",               IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Добави към от&метките...", IDM_ADDFAVORITES
+        MENUITEM "Р”РѕР±Р°РІРё РєСЉРј РѕС‚&РјРµС‚РєРёС‚Рµ...", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "&Свойства",          IDM_PROPERTIES
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР°",          IDM_PROPERTIES
     }
 
     POPUP "" /* Context Unknown */
@@ -141,52 +141,52 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* DYNSRC Image */
     {
-        MENUITEM "&Отвори връзката",               IDM_FOLLOWLINKC
-        MENUITEM "Отвори връзката в &нов прозорец", IDM_FOLLOWLINKN
-        MENUITEM "Запи&ши целта като...",       IDM_SAVETARGET
-        MENUITEM "Раз&печатай целта",            IDM_PRINTTARGET
+        MENUITEM "&РћС‚РІРѕСЂРё РІСЂСЉР·РєР°С‚Р°",               IDM_FOLLOWLINKC
+        MENUITEM "РћС‚РІРѕСЂРё РІСЂСЉР·РєР°С‚Р° РІ &РЅРѕРІ РїСЂРѕР·РѕСЂРµС†", IDM_FOLLOWLINKN
+        MENUITEM "Р—Р°РїРё&С€Рё С†РµР»С‚Р° РєР°С‚Рѕ...",       IDM_SAVETARGET
+        MENUITEM "Р Р°Р·&РїРµС‡Р°С‚Р°Р№ С†РµР»С‚Р°",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "По&кажи изображението",            IDM_SHOWPICTURE
-        MENUITEM "&Съхрани видео изображението като...",        IDM_SAVEPICTURE
-        MENUITEM "Постави като &фон",       IDM_SETWALLPAPER
-        MENUITEM "Постави като елемент на &работния плот...",  IDM_SETDESKTOPITEM
+        MENUITEM "РџРѕ&РєР°Р¶Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ",            IDM_SHOWPICTURE
+        MENUITEM "&РЎСЉС…СЂР°РЅРё РІРёРґРµРѕ РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ РєР°С‚Рѕ...",        IDM_SAVEPICTURE
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ &С„РѕРЅ",       IDM_SETWALLPAPER
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ РµР»РµРјРµРЅС‚ РЅР° &СЂР°Р±РѕС‚РЅРёСЏ РїР»РѕС‚...",  IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Изрежи",                     IDM_CUT
-        MENUITEM "&Копирай",                    IDM_COPY
-        MENUITEM "Копирай препра&тката",           IDM_COPYSHORTCUT
-        MENUITEM "&Вмъкни",                   IDM_PASTE
+        MENUITEM "&РР·СЂРµР¶Рё",                     IDM_CUT
+        MENUITEM "&РљРѕРїРёСЂР°Р№",                    IDM_COPY
+        MENUITEM "РљРѕРїРёСЂР°Р№ РїСЂРµРїСЂР°&С‚РєР°С‚Р°",           IDM_COPYSHORTCUT
+        MENUITEM "&Р’РјСЉРєРЅРё",                   IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Добави към от&метките...",     IDM_ADDFAVORITES
+        MENUITEM "Р”РѕР±Р°РІРё РєСЉРј РѕС‚&РјРµС‚РєРёС‚Рµ...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "Възпроизведи",                     IDM_DYNSRCPLAY
-        MENUITEM "Спри",                     IDM_DYNSRCSTOP
-        MENUITEM "&Свойства",              IDM_PROPERTIES
+        MENUITEM "Р’СЉР·РїСЂРѕРёР·РІРµРґРё",                     IDM_DYNSRCPLAY
+        MENUITEM "РЎРїСЂРё",                     IDM_DYNSRCSTOP
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР°",              IDM_PROPERTIES
     }
 
     POPUP "" /* ART Image */
     {
-        MENUITEM "&Отвори връзката",               IDM_FOLLOWLINKC
-        MENUITEM "Отвори връзката в &нов прозорец", IDM_FOLLOWLINKN
-        MENUITEM "Запи&ши целта като...",       IDM_SAVETARGET
-        MENUITEM "Раз&печатай целта",            IDM_PRINTTARGET
+        MENUITEM "&РћС‚РІРѕСЂРё РІСЂСЉР·РєР°С‚Р°",               IDM_FOLLOWLINKC
+        MENUITEM "РћС‚РІРѕСЂРё РІСЂСЉР·РєР°С‚Р° РІ &РЅРѕРІ РїСЂРѕР·РѕСЂРµС†", IDM_FOLLOWLINKN
+        MENUITEM "Р—Р°РїРё&С€Рё С†РµР»С‚Р° РєР°С‚Рѕ...",       IDM_SAVETARGET
+        MENUITEM "Р Р°Р·&РїРµС‡Р°С‚Р°Р№ С†РµР»С‚Р°",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "По&кажи изображението",            IDM_SHOWPICTURE
-        MENUITEM "&Съхрани изображението като...",      IDM_SAVEPICTURE
-        MENUITEM "Постави като &фон",       IDM_SETWALLPAPER
-        MENUITEM "Постави като елемент на &работния плот...",  IDM_SETDESKTOPITEM
+        MENUITEM "РџРѕ&РєР°Р¶Рё РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ",            IDM_SHOWPICTURE
+        MENUITEM "&РЎСЉС…СЂР°РЅРё РёР·РѕР±СЂР°Р¶РµРЅРёРµС‚Рѕ РєР°С‚Рѕ...",      IDM_SAVEPICTURE
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ &С„РѕРЅ",       IDM_SETWALLPAPER
+        MENUITEM "РџРѕСЃС‚Р°РІРё РєР°С‚Рѕ РµР»РµРјРµРЅС‚ РЅР° &СЂР°Р±РѕС‚РЅРёСЏ РїР»РѕС‚...",  IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "&Изрежи",                     IDM_CUT
-        MENUITEM "&Копирай",                    IDM_COPY
-        MENUITEM "Копирай препра&тката",           IDM_COPYSHORTCUT
-        MENUITEM "&Вмъкни",                   IDM_PASTE
+        MENUITEM "&РР·СЂРµР¶Рё",                     IDM_CUT
+        MENUITEM "&РљРѕРїРёСЂР°Р№",                    IDM_COPY
+        MENUITEM "РљРѕРїРёСЂР°Р№ РїСЂРµРїСЂР°&С‚РєР°С‚Р°",           IDM_COPYSHORTCUT
+        MENUITEM "&Р’РјСЉРєРЅРё",                   IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Добави към от&метките...",     IDM_ADDFAVORITES
+        MENUITEM "Р”РѕР±Р°РІРё РєСЉРј РѕС‚&РјРµС‚РєРёС‚Рµ...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM "Възпроизведи",                     IDM_IMGARTPLAY
-        MENUITEM "Спри",                     IDM_IMGARTSTOP
-        MENUITEM "Върни се в началото",                   IDM_IMGARTREWIND
+        MENUITEM "Р’СЉР·РїСЂРѕРёР·РІРµРґРё",                     IDM_IMGARTPLAY
+        MENUITEM "РЎРїСЂРё",                     IDM_IMGARTSTOP
+        MENUITEM "Р’СЉСЂРЅРё СЃРµ РІ РЅР°С‡Р°Р»РѕС‚Рѕ",                   IDM_IMGARTREWIND
         MENUITEM SEPARATOR
-        MENUITEM "&Свойства",              IDM_PROPERTIES
+        MENUITEM "&РЎРІРѕР№СЃС‚РІР°",              IDM_PROPERTIES
     }
 
     POPUP "" /* Debug */
@@ -211,29 +211,29 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Vertical Scrollbar */
     {
-        MENUITEM "Превърти тук",  IDM_SCROLL_HERE
+        MENUITEM "РџСЂРµРІСЉСЂС‚Рё С‚СѓРє",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Най-горе",          IDM_SCROLL_TOP
-        MENUITEM "Най-долу",       IDM_SCROLL_BOTTOM
+        MENUITEM "РќР°Р№-РіРѕСЂРµ",          IDM_SCROLL_TOP
+        MENUITEM "РќР°Р№-РґРѕР»Сѓ",       IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
-        MENUITEM "Страница нагоре",      IDM_SCROLL_PAGEUP
-        MENUITEM "Страница надолу",    IDM_SCROLL_PAGEDOWN
+        MENUITEM "РЎС‚СЂР°РЅРёС†Р° РЅР°РіРѕСЂРµ",      IDM_SCROLL_PAGEUP
+        MENUITEM "РЎС‚СЂР°РЅРёС†Р° РЅР°РґРѕР»Сѓ",    IDM_SCROLL_PAGEDOWN
         MENUITEM SEPARATOR
-        MENUITEM "Превърти нагоре",    IDM_SCROLL_UP
-        MENUITEM "Превърти надолу",  IDM_SCROLL_DOWN
+        MENUITEM "РџСЂРµРІСЉСЂС‚Рё РЅР°РіРѕСЂРµ",    IDM_SCROLL_UP
+        MENUITEM "РџСЂРµРІСЉСЂС‚Рё РЅР°РґРѕР»Сѓ",  IDM_SCROLL_DOWN
     }
 
     POPUP "" /* Horizontal Scrollbar */
     {
-        MENUITEM "Превърти тук",  IDM_SCROLL_HERE
+        MENUITEM "РџСЂРµРІСЉСЂС‚Рё С‚СѓРє",  IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "Най-вляво",    IDM_SCROLL_LEFTEDGE
-        MENUITEM "Най-вдясно",   IDM_SCROLL_RIGHTEDGE
+        MENUITEM "РќР°Р№-РІР»СЏРІРѕ",    IDM_SCROLL_LEFTEDGE
+        MENUITEM "РќР°Р№-РІРґСЏСЃРЅРѕ",   IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
-        MENUITEM "Страница наляво",    IDM_SCROLL_PAGELEFT
-        MENUITEM "Страница надясно",   IDM_SCROLL_PAGERIGHT
+        MENUITEM "РЎС‚СЂР°РЅРёС†Р° РЅР°Р»СЏРІРѕ",    IDM_SCROLL_PAGELEFT
+        MENUITEM "РЎС‚СЂР°РЅРёС†Р° РЅР°РґСЏСЃРЅРѕ",   IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
-        MENUITEM "Превърти наляво",  IDM_SCROLL_LEFT
-        MENUITEM "Превърти надясно", IDM_SCROLL_RIGHT
+        MENUITEM "РџСЂРµРІСЉСЂС‚Рё РЅР°Р»СЏРІРѕ",  IDM_SCROLL_LEFT
+        MENUITEM "РџСЂРµРІСЉСЂС‚Рё РЅР°РґСЏСЃРЅРѕ", IDM_SCROLL_RIGHT
     }
 }

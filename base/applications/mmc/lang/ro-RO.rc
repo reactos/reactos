@@ -14,7 +14,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eșire\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", IDM_HELP_ABOUT
     END
@@ -32,7 +32,7 @@ BEGIN
     BEGIN
         MENUITEM "List", IDM_WINDOWS_LIST
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre…", IDM_HELP_ABOUT
     END

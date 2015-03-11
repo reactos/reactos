@@ -3,7 +3,7 @@
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:       base/applications/mscutils/eventvwr/lang/tr-TR.rc
  * PURPOSE:    Turkish Language File for ReactOS Event Viewer
- * TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
@@ -127,19 +127,19 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\n\
-Event Source:   %s\n\
-Event Category: %s\n\
-Event ID:       %s\n\
-Date:           %s\n\
-Time:           %s\n\
-User:           %s\n\
-Computer:       %s\n\
-Description:\n%s"
+    IDS_COPY "Olay Türü:      %s\r\n\
+Olay Kaynağı:   %s\r\n\
+Olay Ulamı:     %s\r\n\
+Olay Kimliği:   %s\r\n\
+Târih:          %s\r\n\
+Saat:           %s\r\n\
+Kullanıcı:      %s\r\n\
+Bilgisayar:     %s\r\n\
+Tanım:\r\n%s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "Hiçbiri"
+    IDS_NONE "Biri bile"
     IDS_NOT_AVAILABLE "Yok"
 END

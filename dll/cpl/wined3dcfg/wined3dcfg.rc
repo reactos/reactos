@@ -27,6 +27,9 @@ IDI_CPLICON ICON "resources/wined3dcfg.ico"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif

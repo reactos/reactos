@@ -2,6 +2,7 @@
 #include <psdk/ntverp.h>
 
 /* DDK/IFS/NDK Headers */
+#define _NTSYSTEM_
 #include <excpt.h>
 #include <setjmp.h>
 #include <ntdef.h>

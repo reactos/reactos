@@ -23,9 +23,9 @@ LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Innehåll"
+    IDS_CONTENTS     "&InnehÃ¥ll"
     IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Sök"
+    IDS_SEARCH       "&SÃ¶k"
     IDS_FAVORITES    "Favor&iter"
 
     IDS_HIDETABS     "Hide &Tabs"
@@ -35,15 +35,15 @@ END
 STRINGTABLE
 BEGIN
     IDTB_EXPAND      "Visa"
-    IDTB_CONTRACT    "Dölj"
+    IDTB_CONTRACT    "DÃ¶lj"
     IDTB_STOP        "Stoppa"
     IDTB_REFRESH     "Uppdatera"
-    IDTB_BACK        "Bakåt"
+    IDTB_BACK        "BakÃ¥t"
     IDTB_HOME        "Hem"
     IDTB_SYNC        "Synkronisera"
     IDTB_PRINT       "Skriv ut"
     IDTB_OPTIONS     "Alternativ"
-    IDTB_FORWARD     "Framåt"
+    IDTB_FORWARD     "FramÃ¥t"
 END
 
 MENU_POPUP MENU

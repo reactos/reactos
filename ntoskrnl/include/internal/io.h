@@ -1164,7 +1164,7 @@ IopDeleteFile(
 
 NTSTATUS
 NTAPI
-IopSecurityFile(
+IopGetSetSecurityObject(
     IN PVOID ObjectBody,
     IN SECURITY_OPERATION_CODE OperationCode,
     IN PSECURITY_INFORMATION SecurityInformation,

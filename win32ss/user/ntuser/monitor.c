@@ -542,7 +542,8 @@ NtUserEnumDisplayMonitors(
     OPTIONAL OUT PRECTL prcUnsafeMonitorList,
     OPTIONAL IN DWORD dwListSize)
 {
-    INT cMonitors, iRet = -1, i;
+    UINT cMonitors, i;
+    INT iRet = -1;
     HMONITOR *phMonitorList = NULL;
     PRECTL prcMonitorList = NULL;
     RECTL rc, *pRect;
@@ -619,7 +620,7 @@ NtUserEnumDisplayMonitors(
         (phUnsafeMonitorList == NULL && prcUnsafeMonitorList == NULL))
     {
         /* Simple case - just return monitors count */
-        TRACE("cMonitors = %d\n", cMonitors);
+        TRACE("cMonitors = %u\n", cMonitors);
         iRet = cMonitors;
         goto cleanup;
     }
@@ -636,7 +637,7 @@ NtUserEnumDisplayMonitors(
     }
     if (prcUnsafeMonitorList != NULL && dwListSize != 0)
     {
-        prcMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * dwListSize, USERTAG_MONITORRECTS);
+        prcMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof(RECT) * dwListSize,USERTAG_MONITORRECTS);
         if (prcMonitorList == NULL)
         {
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -649,13 +650,16 @@ NtUserEnumDisplayMonitors(
                                        dwListSize, MONITOR_DEFAULTTONULL);
 
     if (hdc != NULL && pRect != NULL && prcMonitorList != NULL)
-        for (i = 0; i < cMonitors; i++)
+    {
+        for (i = 0; i < min(cMonitors, dwListSize); i++)
         {
+            _Analysis_assume_(i < dwListSize);
             prcMonitorList[i].left -= DcRect.left;
             prcMonitorList[i].right -= DcRect.left;
             prcMonitorList[i].top -= DcRect.top;
             prcMonitorList[i].bottom -= DcRect.top;
         }
+    }
 
     /* Output result */
     if (phUnsafeMonitorList != NULL && dwListSize != 0)

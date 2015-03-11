@@ -6,7 +6,7 @@
     This information includes which of the win32k debug channels will be
     enabled for the current process and which level of a channel will be active.
     This information will be stored in ppi->DbgChannelLevel.
-    In this way user mode can control how win32k debugging will work when 
+    In this way user mode can control how win32k debugging will work when
     the following macros are used: ERR, FIXME, WARN, TRACE
 
     By default only the ERR channel will be active. Remember that other
@@ -21,7 +21,7 @@
     The operation to enable/disable (+/-) and the name of the channel is required
     Channels are devided by commas
     No spaces are allowed
-    The syntax is case sensitive. Levels must be lowercase and 
+    The syntax is case sensitive. Levels must be lowercase and
     the names of the channels must be exactly like they are defined in DBG_DEFAULT_CHANNEL
     This syntax can be mixed with wine debug channels without problems
 
@@ -118,7 +118,7 @@
         DbgChUserWinpos,
         DbgChCount
     };
-    
+
     #define DISABLED_LEVEL 0x0
     #define ERR_LEVEL      0x1
     #define FIXME_LEVEL    0x2
@@ -157,34 +157,32 @@
     #define STUB         DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__RELFILE__,__LINE__);
 
 #else
-    #define DBG_GET_PPI 
+    #define DBG_GET_PPI
     #define DBG_DEFAULT_CHANNEL(x)
 
     #define DBG_ENABLE_CHANNEL(ppi,ch,level)
     #define DBG_DISABLE_CHANNEL(ppi,ch,level)
     #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level)
 
-    #define DBG_PRINT(ppi,ch,level) 
+    #define DBG_PRINT(ppi,ch,level)
 
-    #define ERR(fmt, ...)     
-    #define FIXME(fmt, ...)   
-    #define WARN(fmt, ...)    
-    #define TRACE(fmt, ...)   
+    #define ERR(fmt, ...)
+    #define FIXME(fmt, ...)
+    #define WARN(fmt, ...)
+    #define TRACE(fmt, ...)
 
-    #define ERR_CH(ch,fmt, ...)  
+    #define ERR_CH(ch,fmt, ...)
     #define FIXME_CH(ch,fmt, ...)
-    #define WARN_CH(ch,fmt, ...) 
+    #define WARN_CH(ch,fmt, ...)
     #define TRACE_CH(ch,fmt, ...)
 
-    #define ERR_PPI(ppi,ch,fmt, ...)   
-    #define FIXME_PPI(ppi,ch,fmt, ...) 
-    #define WARN_PPI(ppi,ch,fmt, ...)  
-    #define TRACE_PPI(ppi,ch,fmt, ...) 
+    #define ERR_PPI(ppi,ch,fmt, ...)
+    #define FIXME_PPI(ppi,ch,fmt, ...)
+    #define WARN_PPI(ppi,ch,fmt, ...)
+    #define TRACE_PPI(ppi,ch,fmt, ...)
 
     #define STUB
 
 #endif
-
-#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 
 BOOL DbgInitDebugChannels();

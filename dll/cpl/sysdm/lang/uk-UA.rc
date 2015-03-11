@@ -25,7 +25,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Відвідаєте <A HREF=""http://www.reactos.org/"">домашню сторінку ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 150, 10
+    CONTROL "Відвідаєте <A HREF=""http://www.reactos.org/"">домашню сторінку ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
     PUSHBUTTON "&Ліцензія...", IDC_LICENCE, 170, 199, 78, 14
 END
 
@@ -56,16 +56,16 @@ BEGIN
     LTEXT "Потрібно мати права адміністратора, щоб виконати більшу частину цих змін.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "Швидкодія", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Візуальні ефекти, використання процесора, оперативної та віртуальної пам'яті.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON "Параметри", IDC_PERFOR, 194, 48, 50, 14
+    PUSHBUTTON "Параметри", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "Профілі користувачів", IDC_STATIC, 6, 75, 244, 48
     LTEXT "Параметри робочого стола, які стосуються входу до системи.", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON "Параметри", IDC_USERPROFILE, 194, 103, 50, 14
+    PUSHBUTTON "Параметри", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Завантаження й відновлення", IDC_STATIC, 6, 131, 244, 52
     LTEXT "Завантаження й відновлення системи, налагоджувальна інформація.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON "Параметри", IDC_STAREC, 194, 162, 50, 14
-    PUSHBUTTON "Налаштування системи", IDC_SYSSETTINGS, 2, 192, 80, 15
-    PUSHBUTTON "Змінні оточення", IDC_ENVVAR, 84, 192, 80, 14
-    PUSHBUTTON "Звіт про помилки", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON "Параметри", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON "Налаштування системи", IDC_SYSSETTINGS, 6, 192, 80, 15
+    PUSHBUTTON "Змінні оточення", IDC_ENVVAR, 88, 192, 80, 15
+    PUSHBUTTON "Звіт про помилки", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
@@ -158,7 +158,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Завантаження операційної системи", IDC_STATIC, 7, 12, 238, 95
     LTEXT "&Операційна система за замовчуванням:", IDC_STATIC, 14, 26, 100, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX "&Показувати список операційних систем:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -178,7 +178,7 @@ BEGIN
     GROUPBOX "Записати налагоджувальну інформацію", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT "&Файл дампа пам'яті:", IDC_STATIC, 17, 202, 150, 8
-    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "За&мінювати наявний файл", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 195, 259, 50, 14

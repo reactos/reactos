@@ -30,7 +30,7 @@ BEGIN
     IDS_CONTENTS     "&Obsah"
     IDS_INDEX        "I&ndex"
     IDS_SEARCH       "&Hledat"
-    IDS_FAVORITES    "Oblí&bené"
+    IDS_FAVORITES    "OblÃ­&benÃ©"
 
     IDS_HIDETABS     "Hide &Tabs"
     IDS_SHOWTABS     "Show &Tabs"
@@ -39,15 +39,15 @@ END
 STRINGTABLE
 BEGIN
     IDTB_EXPAND      "Rozbalit"
-    IDTB_CONTRACT    "Skrýt"
+    IDTB_CONTRACT    "SkrÃ½t"
     IDTB_STOP        "Zastavit"
     IDTB_REFRESH     "Obnovit"
-    IDTB_BACK        "Zpìt"
-    IDTB_HOME        "Domù"
+    IDTB_BACK        "ZpÄ›t"
+    IDTB_HOME        "DomÅ¯"
     IDTB_SYNC        "Synchronizovat"
     IDTB_PRINT       "Tisk"
     IDTB_OPTIONS     "Volby"
-    IDTB_FORWARD     "Vpøed"
+    IDTB_FORWARD     "VpÅ™ed"
 END
 
 MENU_POPUP MENU

@@ -4,8 +4,12 @@
 #define SESSION_DIR L"\\Sessions"
 
 /* Window Station Status Flags */
-#define WSS_LOCKED	(1)
-#define WSS_NOINTERACTIVE	(2)
+#define WSS_LOCKED        (1)
+#define WSS_NOINTERACTIVE (2)
+#define WSS_NOIO          (4)
+#define WSS_SHUTDOWN      (8)
+#define WSS_DYING         (16)
+#define WSS_REALSHUTDOWN  (32)
 
 typedef struct _WINSTATION_OBJECT
 {
@@ -31,6 +35,11 @@ typedef struct _WINSTATION_OBJECT
     INT            iClipSequenceNumber;
     INT            fClipboardChanged : 1;
     INT            fInDelayedRendering : 1;
+
+    PWND           spwndClipboardListener;
+    LUID           luidEndSession;
+    LUID           luidUser;
+    PVOID          psidUser;
 
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
@@ -95,10 +104,12 @@ IntValidateWindowStationHandle(
    HWINSTA WindowStation,
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
-   PWINSTATION_OBJECT *Object);
+   PWINSTATION_OBJECT *Object,
+   POBJECT_HANDLE_INFORMATION pObjectHandleInfo);
 
 BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 
 BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL IntEndDesktopGraphics(VOID);
+BOOL FASTCALL CheckWinstaAttributeAccess(ACCESS_MASK);
 /* EOF */

@@ -1,4 +1,8 @@
-﻿[Section]
+﻿; UTF-8
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
 Name = Inkscape
 Version = 0.48.5
 License = GPL
@@ -11,3 +15,7 @@ CDPath = none
 
 [Section.0407]
 Description = Inkscape ist ein Editor für Vektorgrafiken, lizensiert unter der GNU General Public License.
+
+[Section.041f]
+Description = Inkscape, GNU Umûmî Kamu Ruhsatı altında ruhsatlanmış bir yöney çizge düzenleyicisidir.
+Size = 32,9 MB

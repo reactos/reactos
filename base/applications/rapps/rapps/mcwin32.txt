@@ -32,6 +32,6 @@ Size = 2,35 Mo
 [Section.041f]
 Name = Midnight Commander (Windows için)
 Version = Yapı 185 (4.8.12)
-License = GPL 3. sürüm
+License = GPL sürüm 3
 Description = GNU Midnight Commander'ın 32 bitlik Windows uyarlamasıdır.
 Size = 2,35 MB

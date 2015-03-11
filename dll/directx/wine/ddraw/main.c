@@ -424,7 +424,7 @@ HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *contex
         cont_enum = callback(NULL, driver_desc, driver_name, context, 0);
 
         /* The Battle.net System Checker expects both a NULL device and a GUID-based device */
-        if (cont_enum && (flags & ~DDENUM_ATTACHEDSECONDARYDEVICES))
+        if (cont_enum && (flags & DDENUM_ATTACHEDSECONDARYDEVICES))
             ddraw_enumerate_secondary_devices(wined3d, callback, context);
     }
     __EXCEPT_PAGE_FAULT

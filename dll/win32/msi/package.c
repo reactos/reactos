@@ -361,7 +361,7 @@ static UINT create_temp_property_table(MSIPACKAGE *package)
     return rc;
 }
 
-UINT msi_clone_properties(MSIPACKAGE *package)
+UINT msi_clone_properties( MSIDATABASE *db )
 {
     static const WCHAR query_select[] = {
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
@@ -378,7 +378,7 @@ UINT msi_clone_properties(MSIPACKAGE *package)
     MSIQUERY *view_select;
     UINT rc;
 
-    rc = MSI_DatabaseOpenViewW( package->db, query_select, &view_select );
+    rc = MSI_DatabaseOpenViewW( db, query_select, &view_select );
     if (rc != ERROR_SUCCESS)
         return rc;
 
@@ -399,7 +399,7 @@ UINT msi_clone_properties(MSIPACKAGE *package)
         if (rc != ERROR_SUCCESS)
             break;
 
-        rc = MSI_DatabaseOpenViewW( package->db, query_insert, &view_insert );
+        rc = MSI_DatabaseOpenViewW( db, query_insert, &view_insert );
         if (rc != ERROR_SUCCESS)
         {
             msiobj_release( &rec_select->hdr );
@@ -415,7 +415,7 @@ UINT msi_clone_properties(MSIPACKAGE *package)
 
             TRACE("insert failed, trying update\n");
 
-            rc = MSI_DatabaseOpenViewW( package->db, query_update, &view_update );
+            rc = MSI_DatabaseOpenViewW( db, query_update, &view_update );
             if (rc != ERROR_SUCCESS)
             {
                 WARN("open view failed %u\n", rc);
@@ -1150,7 +1150,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
         package->BaseURL = strdupW( base_url );
 
         create_temp_property_table( package );
-        msi_clone_properties( package );
+        msi_clone_properties( package->db );
         msi_adjust_privilege_properties( package );
 
         package->ProductCode = msi_dup_property( package->db, szProductCode );
@@ -1246,7 +1246,7 @@ UINT msi_create_empty_local_file( LPWSTR path, LPCWSTR suffix )
     return ERROR_SUCCESS;
 }
 
-static enum platform parse_platform( WCHAR *str )
+enum platform parse_platform( const WCHAR *str )
 {
     if (!str[0] || !strcmpW( str, szIntel )) return PLATFORM_INTEL;
     else if (!strcmpW( str, szIntel64 )) return PLATFORM_INTEL64;
@@ -1652,11 +1652,8 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         }
         index++;
     }
-    if (index)
-    {
-        msi_clone_properties( package );
-        msi_adjust_privilege_properties( package );
-    }
+    if (index) msi_adjust_privilege_properties( package );
+
     r = msi_set_original_database_property( package->db, szPackage );
     if (r != ERROR_SUCCESS)
     {

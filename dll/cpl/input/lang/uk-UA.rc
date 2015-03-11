@@ -15,7 +15,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Виберіть потрібні розкладки для кожної мови введення зі списку. Для зміни списку використовуйте кнопки ""Додати"" і ""Видалити"".", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "Замов&чування", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "Встановити за замов&чуванням", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "В&идалити...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 142, 70, 14
@@ -25,12 +25,12 @@ END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced Settings"
+CAPTION "Додаткові параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "System Configuration", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "&Turn off advanced text services", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Select this check box to turn off advanced text services in all programs.\nThis is not recommended for East Asian users because this closes the language bar.", -1, 14, 40, 230, 35
+    GROUPBOX "Конфігурація системи", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Вимкнути додаткові текстові служби", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Встановіть цей прапорець для вимикання додаткових текстових служб у всіх програмах.\nЦе не рекомендується для Східно-азіатських користувачів, тому що закриває мовну панель.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

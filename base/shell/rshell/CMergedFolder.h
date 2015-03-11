@@ -19,11 +19,6 @@
  */
 #pragma once
 
-extern IID IID_IAugmentedShellFolder;
-extern IID IID_IAugmentedShellFolder2;
-extern IID IID_IAugmentedShellFolder3;
-extern CLSID CLSID_MergedFolder;
-
 interface IAugmentedShellFolder : public IShellFolder
 {
     virtual HRESULT STDMETHODCALLTYPE AddNameSpace(LPGUID, IShellFolder *, LPCITEMIDLIST, ULONG) = 0;
@@ -55,13 +50,13 @@ class CMergedFolder :
     public IShellFolder2,
     public IPersistFolder2,
     public IAugmentedShellFolder3     // -- undocumented
-    //public IShellService,              // -- undocumented
+    //public IShellService,              // DEPRECATED IE4 interface: https://msdn.microsoft.com/en-us/library/windows/desktop/bb774870%28v=vs.85%29.aspx
     //public ITranslateShellChangeNotify,// -- undocumented
     //public IStorage,
     //public IPersistPropertyBag,
     //public IShellIconOverlay,          // -- undocumented
     //public ICompositeFolder,           // -- undocumented
-    //public IItemNameLimits,            // -- undocumented
+    //public IItemNameLimits,            // https://msdn.microsoft.com/en-us/library/windows/desktop/bb761776%28v=vs.85%29.aspx
 {
 private:
     CComPtr<IShellFolder> m_UserLocal;
@@ -137,13 +132,13 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE GetAttributesOf(
         UINT cidl,
-        LPCITEMIDLIST *apidl,
+        PCUITEMID_CHILD_ARRAY apidl,
         SFGAOF *rgfInOut);
 
     virtual HRESULT STDMETHODCALLTYPE GetUIObjectOf(
         HWND hwndOwner,
         UINT cidl,
-        LPCITEMIDLIST *apidl,
+        PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid,
         UINT *prgfInOut,
         void **ppvOut);

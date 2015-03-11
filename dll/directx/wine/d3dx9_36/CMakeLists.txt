@@ -4,6 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(d3dx9_36.dll d3dx9_36.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    animation.c
     core.c
     d3dx9_36_main.c
     effect.c
@@ -37,6 +38,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_link_libraries(d3dx9_36 mingwex)
 endif()
 
-add_importlibs(d3dx9_36 d3dcompiler_43 d3dxof user32 ole32 gdi32 msvcrt kernel32 ntdll)
+add_importlibs(d3dx9_36 d3dcompiler_43 d3dxof d3dwine user32 ole32 gdi32 msvcrt kernel32 ntdll)
 add_pch(d3dx9_36 d3dx9_36_private.h SOURCE)
 add_cd_file(TARGET d3dx9_36 DESTINATION reactos/system32 FOR all)

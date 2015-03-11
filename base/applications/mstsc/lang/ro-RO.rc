@@ -62,6 +62,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 culori (15 biți)"
     IDS_HIGHCOLOR16 "65,536 culori (16 biți)"
     IDS_HIGHCOLOR24 "16,777,216 culori (24 biți)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu pixeli"
     IDS_FULLSCREEN "Pe tot ecranul"
     IDS_BROWSESERVER "<Căutare mai multe…>"

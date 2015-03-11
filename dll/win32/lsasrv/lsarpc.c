@@ -44,6 +44,8 @@ LsarStartRpcServer(VOID)
         return;
     }
 
+    DsSetupInit();
+
     Status = RpcServerListen(1, 20, TRUE);
     if (Status != RPC_S_OK)
     {
@@ -2104,8 +2106,28 @@ NTSTATUS WINAPI LsarLookupPrivilegeDisplayName(
     PRPC_UNICODE_STRING *DisplayName,
     USHORT *LanguageReturned)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupPrivilegeDisplayName(%p, %p, %u, %u, %p, %p)\n",
+          PolicyHandle, Name, ClientLanguage, ClientSystemDefaultLanguage, DisplayName, LanguageReturned);
+
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_LOOKUP_NAMES,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle\n");
+        return Status;
+    }
+
+    Status = LsarpLookupPrivilegeDisplayName(Name,
+                                             ClientLanguage,
+                                             ClientSystemDefaultLanguage,
+                                             DisplayName,
+                                             LanguageReturned);
+
+    return Status;
 }
 
 

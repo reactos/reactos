@@ -90,7 +90,7 @@ BEGIN
             MENUITEM "&Gălbui de post-it\tCtrl+2",     ID_BACK_2
         END
     END
-    POPUP "&?"
+    POPUP "Aj&utor"
     BEGIN
         MENUITEM "&Despre Wine Wordpad…",    ID_ABOUT
     END

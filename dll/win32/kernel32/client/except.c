@@ -370,7 +370,7 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
-        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);
+        DPRINT1("Exception text: %lx\n", ExceptionRecord.ExceptionInformation[2]);
     }
 
     /* Trace the wine special error and show the modulename and functionname */
@@ -431,6 +431,7 @@ SetErrorMode(IN UINT uMode)
  */
 LPTOP_LEVEL_EXCEPTION_FILTER
 WINAPI
+DECLSPEC_HOTPATCH
 SetUnhandledExceptionFilter(IN LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
 {
     PVOID EncodedPointer, EncodedOldPointer;
@@ -681,12 +682,16 @@ SetLastError(IN DWORD dwErrCode)
 /*
  * @implemented
  */
-VOID
+DWORD
 WINAPI
 BaseSetLastNTError(IN NTSTATUS Status)
 {
+    DWORD dwErrCode;
+
     /* Convert from NT to Win32, then set */
-    SetLastError(RtlNtStatusToDosError(Status));
+    dwErrCode = RtlNtStatusToDosError(Status);
+    SetLastError(dwErrCode);
+    return dwErrCode;
 }
 
 /*

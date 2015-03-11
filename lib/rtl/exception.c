@@ -1,4 +1,5 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         User-Mode Exception Support
  * FILE:            lib/rtl/exception.c

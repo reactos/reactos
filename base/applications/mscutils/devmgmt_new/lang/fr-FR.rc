@@ -10,18 +10,18 @@ BEGIN
   BEGIN
     MENUITEM "Imprimer",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Propriétés",              IDC_PROP, GRAYED
+    MENUITEM "PropriÃ©tÃ©s",              IDC_PROP, GRAYED
   END
   POPUP "Affichage"
   BEGIN
-    MENUITEM "Périphériques par type",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Périphériques par connexion",   IDC_STATIC, GRAYED
+    MENUITEM "PÃ©riphÃ©riques par type",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "PÃ©riphÃ©riques par connexion",   IDC_STATIC, GRAYED
     MENUITEM "Ressources par type",       IDC_STATIC, GRAYED
     MENUITEM "Ressources par connexion", IDC_STATIC, GRAYED
   END
   POPUP "Aide"
   BEGIN
-    MENUITEM "À propos",                   IDC_ABOUT
+    MENUITEM "Ã€ propos",                   IDC_ABOUT
   END
 END
 
@@ -29,16 +29,16 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Propriétés",              IDC_PROP, GRAYED
+    MENUITEM "PropriÃ©tÃ©s",              IDC_PROP, GRAYED
   END
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "À propos du Gestionnaire de Périphériques"
+CAPTION "Ã€ propos du Gestionnaire de PÃ©riphÃ©riques"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Gestionnaire de Périphériques v0.1\nCopyright (C) 2006\npar Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
+  LTEXT "Gestionnaire de PÃ©riphÃ©riques v0.1\nCopyright (C) 2006\npar Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 26
   PUSHBUTTON "Fermer", IDOK, 75, 162, 44, 15
   ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -46,12 +46,12 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiÃ©e par la Free Software Foundation; dans sa version 2  (ou selon votre prÃ©fÃ©rence) toute version ultÃ©rieure.\r\n\r\nCe programme est distribuÃ© dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans mÃªme une garantie implicite de COMMERCIABILITÃ‰ ou DE CONFORMITÃ‰ Ã€ UNE UTILISATION PARTICULIÃˆRE. \r\n\r\nVoir la Licence Publique GÃ©nÃ©rale GNU pour plus de dÃ©tails. Vous devriez avoir reÃ§u un exemplaire de la Licence Publique GÃ©nÃ©rale GNU avec ce programme ; si ce n'est pas le cas, Ã©crivez Ã  la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP      "Propriétés"
+  IDS_TOOLTIP_PROP      "PropriÃ©tÃ©s"
   IDS_TOOLTIP_REFRESH   "Actualiser"
   IDS_TOOLTIP_HELP      "Aide"
   IDS_TOOLTIP_EXIT      "Quitter"
@@ -60,18 +60,18 @@ END
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Gestionnaire de périphériques ReactOS"
+  IDS_APPNAME "Gestionnaire de pÃ©riphÃ©riques ReactOS"
   IDS_HINT_BLANK        " "
   IDS_HINT_EXIT         " Quitte le programme."
-  IDS_HINT_REFRESH      " Actualise la liste des périphériques."
-  IDS_HINT_PROP         " Ouvre la feuille de propriétés pour la sélection actuelle."
-  IDS_HINT_HELP         " Affiche la fenêtre d'aide."
-  IDS_HINT_ABOUT        " À propos du Gestionnaire de Périphériques de ReactOS."
+  IDS_HINT_REFRESH      " Actualise la liste des pÃ©riphÃ©riques."
+  IDS_HINT_PROP         " Ouvre la feuille de propriÃ©tÃ©s pour la sÃ©lection actuelle."
+  IDS_HINT_HELP         " Affiche la fenÃªtre d'aide."
+  IDS_HINT_ABOUT        " Ã€ propos du Gestionnaire de PÃ©riphÃ©riques de ReactOS."
 
-  IDS_HINT_SYS_RESTORE  " Restaure cette fenêtre à sa taille normale."
-  IDS_HINT_SYS_MOVE     " Bouge cette fenêtre."
-  IDS_HINT_SYS_SIZE     " Redimensionne cette fenêtre."
-  IDS_HINT_SYS_MINIMIZE " Réduit cette fenêtre à une icône."
-  IDS_HINT_SYS_MAXIMIZE " Étend cette fenêtre à l'écran."
-  IDS_HINT_SYS_CLOSE    " Ferme cette fenêtre."
+  IDS_HINT_SYS_RESTORE  " Restaure cette fenÃªtre Ã  sa taille normale."
+  IDS_HINT_SYS_MOVE     " Bouge cette fenÃªtre."
+  IDS_HINT_SYS_SIZE     " Redimensionne cette fenÃªtre."
+  IDS_HINT_SYS_MINIMIZE " RÃ©duit cette fenÃªtre Ã  une icÃ´ne."
+  IDS_HINT_SYS_MAXIMIZE " Ã‰tend cette fenÃªtre Ã  l'Ã©cran."
+  IDS_HINT_SYS_CLOSE    " Ferme cette fenÃªtre."
 END

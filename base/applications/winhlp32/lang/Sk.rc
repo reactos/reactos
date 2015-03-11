@@ -22,21 +22,21 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 MAIN_MENU MENU
 {
- POPUP "&S˙bor" {
-   MENUITEM "&Otvoriù...", MNID_FILE_OPEN
+ POPUP "&S√∫bor" {
+   MENUITEM "&Otvori≈•...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
-   MENUITEM "&TlaËiù", MNID_FILE_PRINT
-   MENUITEM "&Nastavenie tlaËe...", MNID_FILE_SETUP
+   MENUITEM "&Tlaƒçi≈•", MNID_FILE_PRINT
+   MENUITEM "&Nastavenie tlaƒçe...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-   MENUITEM "U&konËiù", MNID_FILE_EXIT
+   MENUITEM "U&konƒçi≈•", MNID_FILE_EXIT
  }
- POPUP "&Upraviù" {
-   MENUITEM "KopÌ&rovaù...", MNID_EDIT_COPYDLG
+ POPUP "&Upravi≈•" {
+   MENUITEM "Kop√≠&rova≈•...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Skomentovaù...", MNID_EDIT_ANNOTATE
+   MENUITEM "&Skomentova≈•...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Z·loûka" {
-   MENUITEM "&Definovaù...", MNID_BKMK_DEFINE
+ POPUP "&Z√°lo≈æka" {
+   MENUITEM "&Definova≈•...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
   MENUITEM "History",		MNID_OPTS_HISTORY
@@ -49,7 +49,7 @@ MAIN_MENU MENU
  }
  POPUP "&Pomoc" {
    MENUITEM "Pomoc &na pomoci", MNID_HELP_HELPON
-   MENUITEM "Vûdy na &vrchu", MNID_HELP_HELPTOP
+   MENUITEM "V≈ædy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM "&Info...", MNID_HELP_ABOUT
  }
 }
@@ -75,14 +75,14 @@ STRINGTABLE
 STID_WINE_HELP, 	"Wine Pomoc"
 STID_WHERROR, 		"CHYBA"
 STID_WARNING,  		"VAROVANIE"
-STID_INFO,  		"Inform·cie"
-STID_NOT_IMPLEMENTED, 	"NeimplementovanÈ"
-STID_HLPFILE_ERROR_s, 	"Chyba poËas ËÌtania s˙boru `%s'"
+STID_INFO,  		"Inform√°cie"
+STID_NOT_IMPLEMENTED, 	"Neimplementovan√©"
+STID_HLPFILE_ERROR_s, 	"Chyba poƒças ƒç√≠tania s√∫boru `%s'"
 STID_INDEX, 		"&Obsah"
 STID_CONTENTS,		"Summary"
-STID_BACK, 		"&Sp‰ù"
-STID_ALL_FILES, 	"Vöetky s˙bory (*.*)"
-STID_HELP_FILES_HLP, 	"S˙bory pomoci (*.hlp)"
+STID_BACK, 		"&Sp√§≈•"
+STID_ALL_FILES, 	"V≈°etky s√∫bory (*.*)"
+STID_HELP_FILES_HLP, 	"S√∫bory pomoci (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 STID_PSH_INDEX,		"Help topics: "

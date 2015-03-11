@@ -28,20 +28,20 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 MAIN_MENU MENU
 {
  POPUP "&Soubor" {
-  MENUITEM "&Otev¯Ìt", MNID_FILE_OPEN
+  MENUITEM "&Otev≈ô√≠t", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Tisk", MNID_FILE_PRINT
-  MENUITEM "Na&stavenÌ tisku...", MNID_FILE_SETUP
+  MENUITEM "Na&staven√≠ tisku...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "&Konec", MNID_FILE_EXIT
  }
- POPUP "⁄prav&y" {
-   MENUITEM "&KopÌrovat...", MNID_EDIT_COPYDLG
+ POPUP "√öprav&y" {
+   MENUITEM "&Kop√≠rovat...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "P&oznamenat si...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Z·loûka" {
-   MENUITEM "P¯i&dat...", MNID_BKMK_DEFINE
+ POPUP "&Z√°lo≈æka" {
+   MENUITEM "P≈ôi&dat...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
   MENUITEM "History",		MNID_OPTS_HISTORY
@@ -52,9 +52,9 @@ MAIN_MENU MENU
     MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
   END
  }
- POPUP "&N·povÏda" {
-   MENUITEM "N·p&ovÏda k n·povÏdÏ", MNID_HELP_HELPON
-   MENUITEM "Vûdy na &vrchu", MNID_HELP_HELPTOP
+ POPUP "&N√°povƒõda" {
+   MENUITEM "N√°p&ovƒõda k n√°povƒõdƒõ", MNID_HELP_HELPON
+   MENUITEM "V≈ædy na &vrchu", MNID_HELP_HELPTOP
    MENUITEM "&Informace...", MNID_HELP_ABOUT
  }
 }
@@ -77,17 +77,17 @@ END
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"N·povÏda Wine"
+STID_WINE_HELP, 	"N√°povƒõda Wine"
 STID_WHERROR, 		"CHYBA"
-STID_WARNING,  		"VAROV¡NÕ"
+STID_WARNING,  		"VAROV√ÅN√ç"
 STID_INFO,  		"Informace"
-STID_NOT_IMPLEMENTED, 	"NenÌ implementov·no"
-STID_HLPFILE_ERROR_s, 	"Nelze p¯eËÌst soubor n·povÏdy `%s'"
+STID_NOT_IMPLEMENTED, 	"Nen√≠ implementov√°no"
+STID_HLPFILE_ERROR_s, 	"Nelze p≈ôeƒç√≠st soubor n√°povƒõdy `%s'"
 STID_INDEX, 		"&Obsah"
 STID_CONTENTS,		"Summary"
-STID_BACK, 		"&ZpÏt"
-STID_ALL_FILES, 	"Vöechny soubory (*.*)"
-STID_HELP_FILES_HLP, 	"Soubory n·povÏdy (*.hlp)"
+STID_BACK, 		"&Zpƒõt"
+STID_ALL_FILES, 	"V≈°echny soubory (*.*)"
+STID_HELP_FILES_HLP, 	"Soubory n√°povƒõdy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
 STID_PSH_INDEX,		"Help topics: "

@@ -203,7 +203,10 @@ typedef struct _NOTIFYICONDATAA {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
-#if _WIN32_IE >= 0x0500
+#if (NTDDI_VERSION < NTDDI_WIN2K)
+	CHAR szTip[64];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 	CHAR szTip[128];
 	DWORD dwState;
 	DWORD dwStateMask;
@@ -217,8 +220,11 @@ typedef struct _NOTIFYICONDATAA {
 #else
 	CHAR szTip[64];
 #endif
-#if _WIN32_IE >= 0x600
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 	GUID guidItem;
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+	HICON hBalloonIcon;
 #endif
 } NOTIFYICONDATAA,*PNOTIFYICONDATAA;
 
@@ -229,7 +235,10 @@ typedef struct _NOTIFYICONDATAW {
 	UINT uFlags;
 	UINT uCallbackMessage;
 	HICON hIcon;
-#if _WIN32_IE >= 0x0500
+#if (NTDDI_VERSION < NTDDI_WIN2K)
+	CHAR szTip[64];
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 	WCHAR szTip[128];
 	DWORD dwState;
 	DWORD dwStateMask;
@@ -243,8 +252,11 @@ typedef struct _NOTIFYICONDATAW {
 #else
 	WCHAR szTip[64];
 #endif
-#if _WIN32_IE >= 0x600
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 	GUID guidItem;
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    HICON hBalloonIcon;
 #endif
 } NOTIFYICONDATAW,*PNOTIFYICONDATAW;
 

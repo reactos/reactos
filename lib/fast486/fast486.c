@@ -179,6 +179,12 @@ Fast486IntAckCallback(PFAST486_STATE State)
     return 0x01;
 }
 
+static VOID NTAPI
+Fast486FpuCallback(PFAST486_STATE State)
+{
+    UNREFERENCED_PARAMETER(State);
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
@@ -190,6 +196,7 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
+                  FAST486_FPU_PROC       FpuCallback,
                   PULONG                 Tlb)
 {
     /* Set the callbacks (or use default ones if some are NULL) */
@@ -199,6 +206,7 @@ Fast486Initialize(PFAST486_STATE         State,
     State->IoWriteCallback  = (IoWriteCallback  ? IoWriteCallback  : Fast486IoWriteCallback );
     State->BopCallback      = (BopCallback      ? BopCallback      : Fast486BopCallback     );
     State->IntAckCallback   = (IntAckCallback   ? IntAckCallback   : Fast486IntAckCallback  );
+    State->FpuCallback      = (FpuCallback      ? FpuCallback      : Fast486FpuCallback     );
 
     /* Set the TLB (if given) */
     State->Tlb = Tlb;
@@ -220,6 +228,7 @@ Fast486Reset(PFAST486_STATE State)
     FAST486_IO_WRITE_PROC  IoWriteCallback  = State->IoWriteCallback;
     FAST486_BOP_PROC       BopCallback      = State->BopCallback;
     FAST486_INT_ACK_PROC   IntAckCallback   = State->IntAckCallback;
+    FAST486_FPU_PROC       FpuCallback      = State->FpuCallback;
     PULONG                 Tlb              = State->Tlb;
 
     /* Clear the entire structure */
@@ -273,6 +282,7 @@ Fast486Reset(PFAST486_STATE State)
     State->IoWriteCallback  = IoWriteCallback;
     State->BopCallback      = BopCallback;
     State->IntAckCallback   = IntAckCallback;
+    State->FpuCallback      = FpuCallback;
     State->Tlb              = Tlb;
 }
 

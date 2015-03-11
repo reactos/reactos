@@ -22,12 +22,12 @@ LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_ENTIRENETWORK "Hele netværket"
+    IDS_ENTIRENETWORK "Hele netvÃ¦rket"
 }
 
 IDD_PROXYDLG DIALOG 36, 24, 228, 145
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Skriv netværkskodeord"
+CAPTION "Skriv netvÃ¦rkskodeord"
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Skriv dit brugernavn og kodeord:", IDC_EXPLAIN, 6, 6, 150, 18

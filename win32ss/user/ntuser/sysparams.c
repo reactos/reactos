@@ -295,6 +295,7 @@ SpiUpdatePerUserSystemParameters()
     gspv.bMenuDropAlign = 1;
     gspv.bDropShadow = 1;
     gspv.dwMenuShowDelay = 100;
+    gspv.dwForegroundFlashCount = 3;
 
     gspv.iScrSaverTimeout = SpiLoadTimeOut();
     gspv.bScrSaverActive = FALSE;
@@ -373,7 +374,7 @@ SpiStoreSz(PCWSTR pwszKey, PCWSTR pwszValue, PCWSTR pwsz)
                         pwszValue,
                         REG_SZ,
                         (PWSTR)pwsz,
-                        wcslen(pwsz) * sizeof(WCHAR));
+                        (wcslen(pwsz) + 1) * sizeof(WCHAR));
 }
 
 static
@@ -569,14 +570,18 @@ SpiSetUserPref(DWORD dwMask, PVOID pvValue, FLONG fl)
     if (fl & SPIF_UPDATEINIFILE)
     {
         /* Read current value */
-        RegReadUserSetting(KEY_DESKTOP,
-                           VAL_USERPREFMASK,
-                           REG_BINARY,
-                           &dwRegMask,
-                           sizeof(DWORD));
+        if (!RegReadUserSetting(KEY_DESKTOP,
+                                VAL_USERPREFMASK,
+                                REG_BINARY,
+                                &dwRegMask,
+                                sizeof(DWORD)))
+        {
+            WARN("Failed to read UserPreferencesMask setting\n");
+            dwRegMask = 0;
+        }
 
         /* Set or clear bit according to bValue */
-        dwRegMask = bValue ? dwRegMask | dwMask : dwRegMask & ~dwMask;
+        dwRegMask = bValue ? (dwRegMask | dwMask) : (dwRegMask & ~dwMask);
 
         /* write back value */
         RegWriteUserSetting(KEY_DESKTOP,

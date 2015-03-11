@@ -542,16 +542,42 @@ static HRESULT WINAPI d3d8_device_CreateAdditionalSwapChain(IDirect3DDevice8 *if
     struct d3d8_device *device = impl_from_IDirect3DDevice8(iface);
     struct wined3d_swapchain_desc desc;
     struct d3d8_swapchain *object;
+    UINT i, count;
+    HRESULT hr;
 
     TRACE("iface %p, present_parameters %p, swapchain %p.\n",
             iface, present_parameters, swapchain);
 
+    if (!present_parameters->Windowed)
+    {
+        WARN("Trying to create an additional fullscreen swapchain, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    wined3d_mutex_lock();
+    count = wined3d_device_get_swapchain_count(device->wined3d_device);
+    for (i = 0; i < count; ++i)
+    {
+        struct wined3d_swapchain *wined3d_swapchain;
+
+        wined3d_swapchain = wined3d_device_get_swapchain(device->wined3d_device, i);
+        wined3d_swapchain_get_desc(wined3d_swapchain, &desc);
+
+        if (!desc.windowed)
+        {
+            wined3d_mutex_unlock();
+            WARN("Trying to create an additional swapchain in fullscreen mode, returning D3DERR_INVALIDCALL.\n");
+            return D3DERR_INVALIDCALL;
+        }
+    }
+    wined3d_mutex_unlock();
+
     wined3d_swapchain_desc_from_present_parameters(&desc, present_parameters);
-    if (SUCCEEDED(d3d8_swapchain_create(device, &desc, &object)))
+    if (SUCCEEDED(hr = d3d8_swapchain_create(device, &desc, &object)))
         *swapchain = &object->IDirect3DSwapChain8_iface;
     present_parameters_from_wined3d_swapchain_desc(present_parameters, &desc);
 
-    return D3D_OK;
+    return hr;
 }
 
 static HRESULT CDECL reset_enum_callback(struct wined3d_resource *resource)
@@ -605,6 +631,12 @@ static HRESULT WINAPI d3d8_device_Reset(IDirect3DDevice8 *iface,
     HRESULT hr;
 
     TRACE("iface %p, present_parameters %p.\n", iface, present_parameters);
+
+    if (device->device_state == D3D8_DEVICE_STATE_LOST)
+    {
+        WARN("App not active, returning D3DERR_DEVICELOST.\n");
+        return D3DERR_DEVICELOST;
+    }
 
     wined3d_mutex_lock();
 
@@ -894,7 +926,7 @@ static HRESULT d3d8_device_create_surface(struct d3d8_device *device, UINT width
     wined3d_mutex_lock();
 
     if (FAILED(hr = wined3d_texture_create(device->wined3d_device, &desc,
-            1, flags, NULL, &d3d8_null_wined3d_parent_ops, &texture)))
+            1, flags, NULL, NULL, &d3d8_null_wined3d_parent_ops, &texture)))
     {
         wined3d_mutex_unlock();
         WARN("Failed to create texture, hr %#x.\n", hr);
@@ -972,7 +1004,6 @@ static HRESULT WINAPI d3d8_device_CopyRects(IDirect3DDevice8 *iface,
     struct wined3d_resource_desc wined3d_desc;
     struct wined3d_resource *wined3d_resource;
     UINT src_w, src_h;
-    HRESULT hr;
 
     TRACE("iface %p, src_surface %p, src_rects %p, rect_count %u, dst_surface %p, dst_points %p.\n",
             iface, src_surface, src_rects, rect_count, dst_surface, dst_points);
@@ -1004,23 +1035,12 @@ static HRESULT WINAPI d3d8_device_CopyRects(IDirect3DDevice8 *iface,
     dst_format = wined3d_desc.format;
 
     /* Check that the source and destination formats match */
-    if (src_format != dst_format && WINED3DFMT_UNKNOWN != dst_format)
+    if (src_format != dst_format)
     {
         WARN("Source %p format must match the destination %p format, returning D3DERR_INVALIDCALL.\n",
                 src_surface, dst_surface);
         wined3d_mutex_unlock();
         return D3DERR_INVALIDCALL;
-    }
-    else if (WINED3DFMT_UNKNOWN == dst_format)
-    {
-        TRACE("Converting destination surface from WINED3DFMT_UNKNOWN to the source format.\n");
-        if (FAILED(hr = wined3d_surface_update_desc(dst->wined3d_surface, wined3d_desc.width, wined3d_desc.height,
-                src_format, wined3d_desc.multisample_type, wined3d_desc.multisample_quality, NULL, 0)))
-        {
-            WARN("Failed to update surface desc, hr %#x.\n", hr);
-            wined3d_mutex_unlock();
-            return hr;
-        }
     }
 
     /* Quick if complete copy ... */
@@ -2977,7 +2997,7 @@ static HRESULT CDECL device_parent_create_swapchain_surface(struct wined3d_devic
     texture_desc = *desc;
     texture_desc.resource_type = WINED3D_RTYPE_TEXTURE;
     if (FAILED(hr = wined3d_texture_create(device->wined3d_device, &texture_desc, 1,
-            WINED3D_SURFACE_MAPPABLE, &device->IDirect3DDevice8_iface, &d3d8_null_wined3d_parent_ops, &texture)))
+            WINED3D_SURFACE_MAPPABLE, NULL, &device->IDirect3DDevice8_iface, &d3d8_null_wined3d_parent_ops, &texture)))
     {
         WARN("Failed to create texture, hr %#x.\n", hr);
         return hr;

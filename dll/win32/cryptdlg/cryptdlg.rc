@@ -21,25 +21,17 @@
 
 #include "cryptres.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 #ifdef LANGUAGE_DA_DK
     #include "lang/cryptdlg_Da.rc"
 #endif
-#ifdef LANGUAGE_EN_US
-    #include "lang/cryptdlg_En.rc"
-#endif
-#ifdef LANGUAGE_KO_KR
-    #include "lang/cryptdlg_Ko.rc"
-#endif
-#ifdef LANGUAGE_NL_NL
-    #include "lang/cryptdlg_Nl.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/cryptdlg_Pl.rc"
-#endif
-
-/* UTF-8 */
 #ifdef LANGUAGE_DE_DE
     #include "lang/cryptdlg_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/cryptdlg_En.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/cryptdlg_Fr.rc"
@@ -53,11 +45,20 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/cryptdlg_It.rc"
 #endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/cryptdlg_Ko.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "lang/cryptdlg_Lt.rc"
 #endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/cryptdlg_Nl.rc"
+#endif
 #ifdef LANGUAGE_NO_NO
     #include "lang/cryptdlg_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/cryptdlg_Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/cryptdlg_Pt.rc"

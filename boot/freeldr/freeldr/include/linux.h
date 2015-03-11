@@ -23,24 +23,25 @@
 #ifndef __LINUX_H
 #define __LINUX_H
 
-#ifdef __i386__
-#define LINUX_LOADER_TYPE_LILO            0x01
-#define LINUX_LOADER_TYPE_LOADLIN        0x11
-#define LINUX_LOADER_TYPE_BOOTSECT        0x21
-#define LINUX_LOADER_TYPE_SYSLINUX        0x31
-#define    LINUX_LOADER_TYPE_ETHERBOOT        0x41
+#ifdef _M_IX86
+
+#define LINUX_LOADER_TYPE_LILO          0x01
+#define LINUX_LOADER_TYPE_LOADLIN       0x11
+#define LINUX_LOADER_TYPE_BOOTSECT      0x21
+#define LINUX_LOADER_TYPE_SYSLINUX      0x31
+#define LINUX_LOADER_TYPE_ETHERBOOT     0x41
 #define LINUX_LOADER_TYPE_FREELOADER    0x81
 
 #define LINUX_COMMAND_LINE_MAGIC        0xA33F
 
-#define LINUX_SETUP_HEADER_ID            0x53726448            // 'HdrS'
+#define LINUX_SETUP_HEADER_ID           0x53726448  // 'HdrS'
 
-#define LINUX_BOOT_SECTOR_MAGIC            0xAA55
+#define LINUX_BOOT_SECTOR_MAGIC         0xAA55
 
-#define LINUX_KERNEL_LOAD_ADDRESS        0x100000
+#define LINUX_KERNEL_LOAD_ADDRESS       0x100000
 
 #define LINUX_FLAG_LOAD_HIGH            0x01
-#define LINUX_FLAG_CAN_USE_HEAP            0x80
+#define LINUX_FLAG_CAN_USE_HEAP         0x80
 
 #define LINUX_MAX_INITRD_ADDRESS        0x38000000
 
@@ -140,6 +141,7 @@ BOOLEAN    LinuxReadSetupSector(PFILE LinuxKernelFile);
 BOOLEAN    LinuxReadKernel(PFILE LinuxKernelFile);
 BOOLEAN    LinuxCheckKernelVersion(VOID);
 BOOLEAN    LinuxReadInitrd(PFILE LinuxInitrdFile);
-#endif /* __i386__ */
+
+#endif // _M_IX86
 
 #endif // defined __LINUX_H

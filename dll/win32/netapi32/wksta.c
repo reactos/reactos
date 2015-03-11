@@ -276,6 +276,7 @@ NetWkstaTransportEnum(LMSTR ServerName, DWORD level, PBYTE* pbuf,
 /************************************************************
  *                NetWkstaUserGetInfo  (NETAPI32.@)
  */
+#if 0
 NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
                                           PBYTE* bufptr)
 {
@@ -413,10 +414,12 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
     }
     return NERR_Success;
 }
+#endif
 
 /************************************************************
  *                NetWkstaUserEnum  (NETAPI32.@)
  */
+#if 0
 NET_API_STATUS WINAPI
 NetWkstaUserEnum(LMSTR servername, DWORD level, LPBYTE* bufptr,
                  DWORD prefmaxlen, LPDWORD entriesread,
@@ -426,6 +429,7 @@ NetWkstaUserEnum(LMSTR servername, DWORD level, LPBYTE* bufptr,
           level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
     return ERROR_INVALID_PARAMETER;
 }
+#endif
 
 /************************************************************
  *                NetpGetComputerName  (NETAPI32.@)
@@ -464,6 +468,7 @@ NET_API_STATUS WINAPI I_NetNameValidate(LPVOID p1, LPWSTR wkgrp, LPVOID p3,
     return ERROR_INVALID_PARAMETER;
 }
 
+#if 0
 NET_API_STATUS WINAPI NetWkstaGetInfo( LMSTR servername, DWORD level,
                                        LPBYTE* bufptr)
 {
@@ -566,4 +571,4 @@ NET_API_STATUS NET_API_FUNCTION NetGetJoinInformation(
 
     return NERR_Success;
 }
-
+#endif

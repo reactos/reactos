@@ -42,10 +42,10 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->bDelInstaller = FALSE;
 
     pSettingsInfo->Maximized = FALSE;
-    pSettingsInfo->Left = 0;
-    pSettingsInfo->Top = 0;
-    pSettingsInfo->Right = 680;
-    pSettingsInfo->Bottom = 450;
+    pSettingsInfo->Left = CW_USEDEFAULT;
+    pSettingsInfo->Top = CW_USEDEFAULT;
+    pSettingsInfo->Width = 680;
+    pSettingsInfo->Height = 450;
 }
 
 static BOOL
@@ -82,9 +82,9 @@ SaveSettings(HWND hwnd)
 
         SettingsInfo.Left = wp.rcNormalPosition.left;
         SettingsInfo.Top  = wp.rcNormalPosition.top;
-        SettingsInfo.Right  = wp.rcNormalPosition.right;
-        SettingsInfo.Bottom = wp.rcNormalPosition.bottom;
-        SettingsInfo.Maximized = (IsZoomed(hwnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
+        SettingsInfo.Width  = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+        SettingsInfo.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+        SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE || (wp.showCmd == SW_SHOWMINIMIZED && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
 
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
@@ -333,20 +333,12 @@ InitCategoriesList(VOID)
 BOOL
 InitControls(HWND hwnd)
 {
-    if (SettingsInfo.bSaveWndPos)
-    {
-        MoveWindow(hwnd, SettingsInfo.Left, SettingsInfo.Top,
-                   SettingsInfo.Right - SettingsInfo.Left,
-                   SettingsInfo.Bottom - SettingsInfo.Top, TRUE);
-
-        if (SettingsInfo.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
-    }
 
     if (CreateStatusBar(hwnd) &&
-        CreateToolBar(hwnd) &&
-        CreateListView(hwnd) &&
-        CreateTreeView(hwnd) &&
-        CreateRichEdit(hwnd) &&
+        CreateToolBar(hwnd)   &&
+        CreateListView(hwnd)  &&
+        CreateTreeView(hwnd)  &&
+        CreateRichEdit(hwnd)  &&
         CreateVSplitBar(hwnd) &&
         CreateHSplitBar(hwnd))
     {
@@ -959,10 +951,10 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
                                szWindowClass,
                                szWindowName,
                                WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-                               CW_USEDEFAULT,
-                               CW_USEDEFAULT,
-                               680,
-                               450,
+                               (SettingsInfo.bSaveWndPos ? SettingsInfo.Left   : CW_USEDEFAULT),
+                               (SettingsInfo.bSaveWndPos ? SettingsInfo.Top    : CW_USEDEFAULT),
+                               (SettingsInfo.bSaveWndPos ? SettingsInfo.Width  : 680),
+                               (SettingsInfo.bSaveWndPos ? SettingsInfo.Height : 450),
                                NULL,
                                NULL,
                                hInstance,
@@ -970,8 +962,8 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
 
     if (!hMainWnd) goto Exit;
 
-    /* Show it */
-    ShowWindow(hMainWnd, nShowCmd);
+    /* Maximize it if we must */
+    ShowWindow(hMainWnd, (SettingsInfo.bSaveWndPos && SettingsInfo.Maximized ? SW_MAXIMIZE : nShowCmd));
     UpdateWindow(hMainWnd);
 
     if (SettingsInfo.bUpdateAtStart)

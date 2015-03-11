@@ -31,7 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddeml);
 
 static LRESULT CALLBACK WDML_ClientProc(HWND, UINT, WPARAM, LPARAM);	/* only for one client, not conv list */
 const char WDML_szClientConvClassA[] = "DDEMLAnsiClient";
-const WCHAR WDML_szClientConvClassW[] = {'D','D','E','M','L','U','n','i','c','o','d','e','C','l','i','e','n','t',0};
+const WCHAR WDML_szClientConvClassW[] = L"DDEMLUnicodeClient";
 
 /******************************************************************************
  * DdeConnectList [USER32.@]  Establishes conversation with DDE servers
@@ -91,7 +91,7 @@ HCONV WINAPI DdeConnect(DWORD idInst, HSZ hszService, HSZ hszTopic,
     WDML_CONV*		pConv = NULL;
     ATOM		aSrv = 0, aTpc = 0;
 
-    ERR("(0x%x,%p,%p,%p)\n", idInst, hszService, hszTopic, pCC);
+    TRACE("(0x%x,%p,%p,%p)\n", idInst, hszService, hszTopic, pCC);
 
     pInstance = WDML_GetInstance(idInst);
     if (!pInstance)
@@ -180,12 +180,12 @@ HCONV WINAPI DdeConnect(DWORD idInst, HSZ hszService, HSZ hszTopic,
     pConv = WDML_GetConvFromWnd(hwndClient);
     if (pConv == NULL || pConv->hwndServer == 0)
     {
-	ERR("Done with INITIATE, but no Server window available %p\n", (pConv ? pConv->hwndServer : NULL));
+	WARN("Done with INITIATE, but no Server window available\n");
 	pConv = NULL;
 	pInstance->lastError = DMLERR_NO_CONV_ESTABLISHED;
 	goto theEnd;
     }
-    ERR("Connected to Server window (%p)\n", pConv->hwndServer);
+    TRACE("Connected to Server window (%p)\n", pConv->hwndServer);
     pConv->wConvst = XST_CONNECTED;
 
     /* finish init of pConv */
@@ -1012,7 +1012,7 @@ static HDDEDATA WDML_SyncWaitTransactionReply(HCONV hConv, DWORD dwTimeout, cons
     DWORD	err;
     WDML_CONV*	pConv;
 
-    ERR("Starting wait for a timeout of %d ms\n", dwTimeout);
+    TRACE("Starting wait for a timeout of %d ms\n", dwTimeout);
 
     start = GetTickCount();
     while ((elapsed = GetTickCount() - start) < dwTimeout)
@@ -1032,18 +1032,16 @@ static HDDEDATA WDML_SyncWaitTransactionReply(HCONV hConv, DWORD dwTimeout, cons
                 pConv = WDML_GetConv(hConv, FALSE);
                 if (pConv == NULL)
                 {
-                    ERR("conversation no longer available\n");
                     /* conversation no longer available... return failure */
                     return 0;
                 }
-                ERR("Msg hWnd %p & Client %p\n",msg.hwnd,pConv->hwndClient);
                 if (msg.hwnd == pConv->hwndClient)
                 {
                     /* check that either pXAct has been processed or no more xActions are pending */
                     BOOL ret = (pConv->transactions == pXAct);
                     if (WDML_HandleReply(pConv, &msg, &hdd, ack) == WDML_QS_HANDLED)
                     {
-                        ERR("WDML_HandleReply returned WDML_QS_HANDLED\n");
+                        TRACE("WDML_HandleReply returned WDML_QS_HANDLED\n");
                         ret = TRUE;
                     }
                     else
@@ -1057,14 +1055,13 @@ static HDDEDATA WDML_SyncWaitTransactionReply(HCONV hConv, DWORD dwTimeout, cons
                 }
                 else
                 {
-                    ERR("Dispatching message\n");
                     DispatchMessageW(&msg);
                 }
             }
 	}
     }
 
-    ERR("Timeout !!\n");
+    TRACE("Timeout !!\n");
 
     pConv = WDML_GetConv(hConv, FALSE);
     if (pConv != NULL)
@@ -1144,7 +1141,6 @@ HDDEDATA WINAPI DdeClientTransaction(LPBYTE pData, DWORD cbData, HCONV hConv, HS
     if (pConv == NULL)
     {
 	/* cannot set error... cannot get back to DDE instance */
-        ERR("No Conv!\n");
         return 0;
     }
 
@@ -1287,18 +1283,16 @@ static LRESULT CALLBACK WDML_ClientProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPA
     UINT	uiLo, uiHi;
     WDML_CONV*	pConv = NULL;
     HSZ		hszSrv, hszTpc;
-    char		buf[256];
-    WDML_INSTANCE*	pInstance;
 
-    ERR("%p %04x %08lx %08lx\n", hwnd, iMsg, wParam , lParam);
+    TRACE("%p %04x %08lx %08lx\n", hwnd, iMsg, wParam , lParam);
 
-	/* in the initial WM_INITIATE sendmessage */
     if (iMsg == WM_DDE_ACK &&
-	(!(pConv = WDML_GetConvFromWnd(hwnd)) || pConv->wStatus == XST_INIT1))
+	/* in the initial WM_INITIATE sendmessage */
+	((pConv = WDML_GetConvFromWnd(hwnd)) == NULL || pConv->wStatus == XST_INIT1))
     {
-
-        ERR("WM_DDE_ACK\n");
 	/* In response to WM_DDE_INITIATE, save server window  */
+	char		buf[256];
+	WDML_INSTANCE*	pInstance;
 
         /* note: sent messages do not need packing */
 	uiLo = LOWORD(lParam);

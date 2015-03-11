@@ -11,14 +11,14 @@ BEGIN
     LTEXT "", IDC_MONITORNAME, 40, 17, 190, 20, SS_NOPREFIX
     LISTBOX IDC_MONITORLIST, 40, 13, 196, 30, WS_VSCROLL
     PUSHBUTTON "&Propiedades", IDC_MONITORPROPERTIES, 177, 35, 59, 14, WS_DISABLED
-    GROUPBOX "Configuración del monitor ", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
-    LTEXT "&Frecuencia de actualización de la pantalla:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
+    GROUPBOX "ConfiguraciÃ³n del monitor ", IDS_MONITORSETTINGSGROUP, 7, 58, 237, 63
+    LTEXT "&Frecuencia de actualizaciÃ³n de la pantalla:", IDS_REFRESHRATELABEL, 13, 73, 225, 8
     COMBOBOX IDC_REFRESHRATE, 13, 85, 225, 200, WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
     AUTOCHECKBOX "&Ocultar los modos que este monitor no puede mostrar", IDC_PRUNINGCHECK, 13, 106, 225, 10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USEDEFFRQUENCY "Usar configuración por defecto"
+    IDS_USEDEFFRQUENCY "Usar configuraciÃ³n por defecto"
     IDS_FREQFMT "%u Hercios"
 END

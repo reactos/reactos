@@ -227,6 +227,13 @@ UCHAR
     PFAST486_STATE State
 );
 
+typedef
+VOID
+(NTAPI *FAST486_FPU_PROC)
+(
+    PFAST486_STATE State
+);
+
 typedef union _FAST486_REG
 {
     union
@@ -422,6 +429,8 @@ typedef struct _FAST486_FPU_DATA_REG
     UCHAR Sign;
 } FAST486_FPU_DATA_REG, *PFAST486_FPU_DATA_REG;
 
+typedef const FAST486_FPU_DATA_REG *PCFAST486_FPU_DATA_REG;
+
 typedef union _FAST486_FPU_STATUS_REG
 {
     USHORT Value;
@@ -473,6 +482,7 @@ struct _FAST486_STATE
     FAST486_IO_WRITE_PROC IoWriteCallback;
     FAST486_BOP_PROC BopCallback;
     FAST486_INT_ACK_PROC IntAckCallback;
+    FAST486_FPU_PROC FpuCallback;
     FAST486_REG GeneralRegs[FAST486_NUM_GEN_REGS];
     FAST486_SEG_REG SegmentRegs[FAST486_NUM_SEG_REGS];
     FAST486_REG InstPtr, SavedInstPtr;
@@ -500,6 +510,10 @@ struct _FAST486_STATE
     FAST486_FPU_STATUS_REG FpuStatus;
     FAST486_FPU_CONTROL_REG FpuControl;
     USHORT FpuTag;
+    FAST486_REG FpuLastInstPtr;
+    USHORT FpuLastCodeSel;
+    FAST486_REG FpuLastOpPtr;
+    USHORT FpuLastDataSel;
 #endif
 };
 
@@ -514,6 +528,7 @@ Fast486Initialize(PFAST486_STATE         State,
                   FAST486_IO_WRITE_PROC  IoWriteCallback,
                   FAST486_BOP_PROC       BopCallback,
                   FAST486_INT_ACK_PROC   IntAckCallback,
+                  FAST486_FPU_PROC       FpuCallback,
                   PULONG                 Tlb);
 
 VOID

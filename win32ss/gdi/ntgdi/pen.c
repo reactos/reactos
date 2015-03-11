@@ -13,9 +13,52 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static
+VOID
+PEN_vInit(
+    PPEN ppen)
+{
+    /* Start with kmode brush attribute */
+    ppen->pBrushAttr = &ppen->BrushAttr;
+}
+
+PBRUSH
+NTAPI
+PEN_AllocPenWithHandle(
+    VOID)
+{
+    PPEN ppen;
+
+    ppen = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_PEN_TYPE, sizeof(PEN));
+    if (ppen == NULL)
+    {
+        return NULL;
+    }
+
+    PEN_vInit(ppen);
+    return ppen;
+}
+
+PBRUSH
+NTAPI
+PEN_AllocExtPenWithHandle(
+    VOID)
+{
+    PPEN ppen;
+
+    ppen = (PBRUSH)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_EXTPEN_TYPE, sizeof(PEN));
+    if (ppen == NULL)
+    {
+        return NULL;
+    }
+
+    PEN_vInit(ppen);
+    return ppen;
+}
+
 PBRUSH
 FASTCALL
-PEN_ShareLockPen(HGDIOBJ hobj)
+PEN_ShareLockPen(HPEN hobj)
 {
     if ((GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_PEN_TYPE) &&
         (GDI_HANDLE_GET_TYPE(hobj) != GDILoObjType_LO_EXTPEN_TYPE))
@@ -77,11 +120,11 @@ IntGdiExtCreatePen(
     if ((bOldStylePen) && (!dwWidth) && ((dwPenStyle & PS_STYLE_MASK) != PS_SOLID))
         dwWidth = 1;
 
-    pbrushPen->ptPenWidth.x = dwWidth;
-    pbrushPen->ptPenWidth.y = 0;
+    pbrushPen->lWidth = dwWidth;
+    pbrushPen->eWidth = (FLOAT)pbrushPen->lWidth;
     pbrushPen->ulPenStyle = dwPenStyle;
     pbrushPen->BrushAttr.lbColor = ulColor;
-    pbrushPen->ulStyle = ulBrushStyle;
+    pbrushPen->iBrushStyle = ulBrushStyle;
     // FIXME: Copy the bitmap first ?
     pbrushPen->hbmClient = (HANDLE)ulClientHatch;
     pbrushPen->dwStyleCount = dwStyleCount;
@@ -213,7 +256,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
                 pExtLogPen = (PEXTLOGPEN)pBuffer;
                 pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
                 pExtLogPen->elpWidth = 0;
-                pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
+                pExtLogPen->elpBrushStyle = pbrushPen->iBrushStyle;
                 pExtLogPen->elpColor = pbrushPen->BrushAttr.lbColor;
                 pExtLogPen->elpHatch = 0;
                 pExtLogPen->elpNumEntries = 0;
@@ -222,7 +265,8 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
             else
             {
                 pLogPen = (PLOGPEN)pBuffer;
-                pLogPen->lopnWidth = pbrushPen->ptPenWidth;
+                pLogPen->lopnWidth.x = pbrushPen->lWidth;
+                pLogPen->lopnWidth.y = 0;
                 pLogPen->lopnStyle = pbrushPen->ulPenStyle;
                 pLogPen->lopnColor = pbrushPen->BrushAttr.lbColor;
             }
@@ -239,8 +283,8 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
             if (cbCount < cbRetCount) return 0;
             pExtLogPen = (PEXTLOGPEN)pBuffer;
             pExtLogPen->elpPenStyle = pbrushPen->ulPenStyle;
-            pExtLogPen->elpWidth = pbrushPen->ptPenWidth.x;
-            pExtLogPen->elpBrushStyle = pbrushPen->ulStyle;
+            pExtLogPen->elpWidth = pbrushPen->lWidth;
+            pExtLogPen->elpBrushStyle = pbrushPen->iBrushStyle;
             pExtLogPen->elpColor = pbrushPen->BrushAttr.lbColor;
             pExtLogPen->elpHatch = (ULONG_PTR)pbrushPen->hbmClient;
             pExtLogPen->elpNumEntries = pbrushPen->dwStyleCount;

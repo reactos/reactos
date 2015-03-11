@@ -8,8 +8,6 @@
 
 #include <win32k.h>
 
-#include <winlogon.h>
-
 DBG_DEFAULT_CHANNEL(UserMisc);
 
 /* Registered logon process ID */
@@ -169,8 +167,8 @@ NtUserCallOneParam(
              if (count == 0) count = 8;
 
              psmwp = (PSMWP) UserCreateObject( gHandleTable,
-                                               NULL, 
-                                               NULL, 
+                                               NULL,
+                                               NULL,
                                               (PHANDLE)&hDwp,
                                                TYPE_SETWINDOWPOS,
                                                sizeof(SMWP));
@@ -219,9 +217,6 @@ NtUserCallOneParam(
             gpsi->aiSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
             RETURN(Result);
          }
-
-      case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
-         RETURN( (DWORD_PTR)IntSwitchCaretShowing((PVOID)Param));
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD_PTR)IntSetCaretBlinkTime((UINT)Param));
@@ -346,8 +341,8 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_REPLYMESSAGE:
           RETURN (co_MsqReplyMessage((LRESULT) Param));
       case ONEPARAM_ROUTINE_MESSAGEBEEP:
+          /* TODO: Implement sound sentry */
           RETURN ( UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, Param) );
-		  /* TODO: Implement sound sentry */
       case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
           RETURN(CreateSystemThreads(Param));
       case ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW:
@@ -449,13 +444,6 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
-      case TWOPARAM_ROUTINE_EXITREACTOS:
-          if(hwndSAS == NULL)
-          {
-              ASSERT(hwndSAS);
-              RETURN(STATUS_NOT_FOUND);
-          }
-         RETURN( co_IntSendMessage (hwndSAS, PM_WINLOGON_EXITWINDOWS, (WPARAM) Param1, (LPARAM)Param2));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
@@ -780,11 +768,11 @@ NtUserCallHwndParamLock(
    {
       case TWOPARAM_ROUTINE_VALIDATERGN:
       {
-          PREGION Rgn = RGNOBJAPI_Lock((HRGN)Param, NULL);
+          PREGION Rgn = REGION_LockRgn((HRGN)Param);
           if (Rgn)
           {
               Ret = (DWORD)co_UserRedrawWindow( Window, NULL, Rgn, RDW_VALIDATE);
-              RGNOBJAPI_Unlock(Rgn);
+              REGION_UnlockRgn(Rgn);
           }
           break;
       }

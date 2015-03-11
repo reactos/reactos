@@ -476,6 +476,7 @@ typedef enum _KD_OPTION {
   KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
 
+#ifdef _NTSYSTEM_
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
   IN PVOID NormalContext OPTIONAL,
@@ -493,6 +494,7 @@ typedef VOID
   IN OUT PVOID *NormalContext OPTIONAL,
   IN OUT PVOID *SystemArgument1 OPTIONAL,
   IN OUT PVOID *SystemArgument2 OPTIONAL);
+#endif
 
 typedef struct _KAPC {
   UCHAR Type;
@@ -502,9 +504,13 @@ typedef struct _KAPC {
   ULONG SpareLong0;
   struct _KTHREAD *Thread;
   LIST_ENTRY ApcListEntry;
+#ifdef _NTSYSTEM_
   PKKERNEL_ROUTINE KernelRoutine;
   PKRUNDOWN_ROUTINE RundownRoutine;
   PKNORMAL_ROUTINE NormalRoutine;
+#else
+  PVOID Reserved[3];
+#endif
   PVOID NormalContext;
   PVOID SystemArgument1;
   PVOID SystemArgument2;
@@ -992,6 +998,12 @@ extern PCCHAR KeNumberProcessors;
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Next;
+  PEXCEPTION_ROUTINE Handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
 typedef struct _NT_TIB {
   struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;

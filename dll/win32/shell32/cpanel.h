@@ -26,6 +26,7 @@ typedef struct CPlApplet
 {
     struct CPlApplet *next;       /* linked list */
     HWND              hWnd;
+    LPWSTR            cmd;        /* path to applet */
     unsigned          count;      /* number of subprograms */
     HMODULE           hModule;    /* module of loaded applet */
     APPLET_PROC       proc;       /* entry point address */

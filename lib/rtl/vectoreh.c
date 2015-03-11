@@ -192,6 +192,7 @@ RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
 
 PVOID
 NTAPI
+DECLSPEC_HOTPATCH
 RtlAddVectoredContinueHandler(
     IN ULONG FirstHandler,
     IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)

@@ -13,7 +13,6 @@
 #include <debug.h>
 
 extern ULONG ExpInitializationPhase;
-extern BOOLEAN SysThreadCreated;
 
 PVOID KeUserPopEntrySListEnd;
 PVOID KeUserPopEntrySListFault;
@@ -50,7 +49,7 @@ PHANDLE_TABLE PspCidTable;
 
 PEPROCESS PsInitialSystemProcess = NULL;
 PEPROCESS PsIdleProcess = NULL;
-HANDLE PspInitialSystemProcessHandle;
+HANDLE PspInitialSystemProcessHandle = NULL;
 
 ULONG PsMinimumWorkingSet, PsMaximumWorkingSet;
 struct
@@ -617,7 +616,6 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                               (PVOID*)&SysThread,
                               NULL);
     ObCloseHandle(SysThreadHandle, KernelMode);
-    SysThreadCreated = TRUE;
 
     /* Return success */
     return TRUE;

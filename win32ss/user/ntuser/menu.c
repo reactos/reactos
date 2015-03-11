@@ -209,7 +209,7 @@ BOOL IntDestroyMenu( PMENU pMenu, BOOL bRecurse)
        }
        /* Free the Item */
        DesktopHeapFree(pMenu->head.rpdesk, pMenu->rgItems );
-       pMenu->rgItems = NULL; 
+       pMenu->rgItems = NULL;
        pMenu->cItems = 0;
     }
     return TRUE;
@@ -252,6 +252,11 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
                }
             }
          }
+         if (UserObjectInDestroy(Menu->head.h))
+         {
+            WARN("Menu already dead!\n");
+            return FALSE;
+         }
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
          if (!ret)
          {  // Make sure it is really dead or just marked for deletion.
@@ -281,7 +286,7 @@ int FASTCALL MENU_depth( PMENU pmenu, int depth)
     if( depth > MAXMENUDEPTH) return depth;
     item = pmenu->rgItems;
     subdepth = depth;
-    for( i = 0; item, i < pmenu->cItems && subdepth <= MAXMENUDEPTH; i++, item++)
+    for( i = 0; i < pmenu->cItems && subdepth <= MAXMENUDEPTH; i++, item++)
     {
         if( item->spSubMenu)//VerifyMenu(item->spSubMenu))
         {
@@ -318,7 +323,7 @@ PITEM FASTCALL MENU_FindItem( PMENU *pmenu, UINT *nPos, UINT wFlags )
     else
     {
         PITEM item = menu->rgItems;
-	for (i = 0; item, i < menu->cItems; i++, item++)
+	for (i = 0; i < menu->cItems; i++, item++)
 	{
 	    if (item->spSubMenu)
 	    {
@@ -462,7 +467,7 @@ IntInsertMenuItem(
    SubMenu = MenuObject;
 
    if(!(MenuItem = MENU_InsertItem( SubMenu, uItem, fByPosition ? MF_BYPOSITION : MF_BYCOMMAND, &SubMenu, &uItem ))) return FALSE;
-   
+
    if(!IntSetMenuItemInfo(SubMenu, MenuItem, ItemInfo, lpstr))
    {
       IntRemoveMenuItem(SubMenu, uItem, fByPosition ? MF_BYPOSITION : MF_BYCOMMAND, FALSE);
@@ -473,7 +478,7 @@ IntInsertMenuItem(
    SubMenu->cyMenu = 0;
    MenuItem->hbmpChecked = MenuItem->hbmpUnchecked = 0;
 
-   TRACE("IntInsertMenuItemToList = %i %d\n", uItem, (BOOL)((INT)uItem >= 0));
+   TRACE("IntInsertMenuItemToList = %u %i\n", uItem, (BOOL)((INT)uItem >= 0));
 
    return TRUE;
 }
@@ -684,7 +689,7 @@ IntSetMenuInfo(PMENU Menu, PROSMENUINFO lpmi)
          {
             IntSetMenuInfo( item->spSubMenu, lpmi);
          }
-      }      
+      }
    }
    if (sizeof(MENUINFO) < lpmi->cbSize)
    {
@@ -761,8 +766,8 @@ IntGetMenuItemInfo(PMENU Menu, /* UNUSED PARAM!! */
 
    if (sizeof(ROSMENUITEMINFO) == lpmii->cbSize)
    {
-      lpmii->Rect.left   = MenuItem->xItem; 
-      lpmii->Rect.top    = MenuItem->yItem; 
+      lpmii->Rect.left   = MenuItem->xItem;
+      lpmii->Rect.top    = MenuItem->yItem;
       lpmii->Rect.right  = MenuItem->cxItem; // Do this for now......
       lpmii->Rect.bottom = MenuItem->cyItem;
       lpmii->dxTab = MenuItem->dxTab;
@@ -829,7 +834,7 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
       if (MenuItem->hbmp <= HBMMENU_POPUP_MINIMIZE && MenuItem->hbmp >= HBMMENU_CALLBACK)
          MenuItem->fState |= MFS_HBMMENUBMP;
       else
-         MenuItem->fState &= ~MFS_HBMMENUBMP; 
+         MenuItem->fState &= ~MFS_HBMMENUBMP;
    }
    if(lpmii->fMask & MIIM_CHECKMARKS)
    {
@@ -939,8 +944,8 @@ IntSetMenuItemInfo(PMENU MenuObject, PITEM MenuItem, PROSMENUITEMINFO lpmii, PUN
 
    if (sizeof(ROSMENUITEMINFO) == lpmii->cbSize)
    {
-      MenuItem->xItem  = lpmii->Rect.left; 
-      MenuItem->yItem  = lpmii->Rect.top; 
+      MenuItem->xItem  = lpmii->Rect.left;
+      MenuItem->yItem  = lpmii->Rect.top;
       MenuItem->cxItem = lpmii->Rect.right; // Do this for now......
       MenuItem->cyItem = lpmii->Rect.bottom;
       MenuItem->dxTab = lpmii->dxTab;
@@ -1025,10 +1030,10 @@ UserSetMenuDefaultItem(PMENU MenuObject, UINT uItem, UINT fByPos)
    UINT i;
    PITEM MenuItem = MenuObject->rgItems;
 
-   if (!MenuItem) return FALSE;   
+   if (!MenuItem) return FALSE;
 
    /* reset all default-item flags */
-   for (i = 0; MenuItem, i < MenuObject->cItems; i++, MenuItem++)
+   for (i = 0; i < MenuObject->cItems; i++, MenuItem++)
    {
        MenuItem->fState &= ~MFS_DEFAULT;
    }
@@ -1047,7 +1052,7 @@ UserSetMenuDefaultItem(PMENU MenuObject, UINT uItem, UINT fByPos)
    }
    else
    {
-      for (i = 0; MenuItem, i < MenuObject->cItems; i++, MenuItem++)
+      for (i = 0; i < MenuObject->cItems; i++, MenuItem++)
       {
           if (MenuItem->wID == uItem)
           {
@@ -1324,7 +1329,7 @@ UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags)
       return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType) & 0xff);
    }
    else
-      return (pItem->fType | pItem->fState);  
+      return (pItem->fType | pItem->fState);
 }
 
 HMENU FASTCALL IntGetSubMenu( HMENU hMenu, int nPos)
@@ -1369,7 +1374,7 @@ UINT FASTCALL IntFindSubMenu(HMENU *hMenu, HMENU hSubTarget )
            {
               return i;
            }
-           else 
+           else
            {
               HMENU hsubmenu = hSubMenu;
               UINT pos = IntFindSubMenu( &hsubmenu, hSubTarget );
@@ -1402,7 +1407,8 @@ HMENU FASTCALL UserCreateMenu(PDESKTOP Desktop, BOOL PopupMenu)
       Status = IntValidateWindowStationHandle(CurrentProcess->Win32WindowStation,
                      KernelMode,
                      0,
-                     &WinStaObject);
+                     &WinStaObject,
+                     0);
 
        if (!NT_SUCCESS(Status))
        {
@@ -1610,14 +1616,14 @@ IntGetMenuItemRect(
 
    if ((MenuItem = MENU_FindItem (&Menu, &uItem, MF_BYPOSITION)))
    {
-      Rect->left   = MenuItem->xItem; 
-      Rect->top    = MenuItem->yItem; 
+      Rect->left   = MenuItem->xItem;
+      Rect->top    = MenuItem->yItem;
       Rect->right  = MenuItem->cxItem; // Do this for now......
       Rect->bottom = MenuItem->cyItem;
    }
    else
    {
-      ERR("Failed Item Lookup! %d\n", uItem);
+      ERR("Failed Item Lookup! %u\n", uItem);
       return FALSE;
    }
 
@@ -1659,7 +1665,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
        UserDestroyMenu(hSysMenu);
        return NULL;
    }
-   
+
    SysMenu->fFlags |= MNF_SYSMENU;
    SysMenu->hWnd = Window->head.h;
 
@@ -1811,7 +1817,7 @@ IntSetSystemMenu(PWND Window, PMENU Menu)
    if (Menu && Window != Menu->spwndNotify)
    {
       Menu->spwndNotify = Window;
-   } 
+   }
 
    return TRUE;
 }
@@ -2156,7 +2162,7 @@ NtUserGetMenuBarInfo(
             RETURN(FALSE);
         if (pWnd->pcls->fnid != FNID_MENU)
         {
-            WARN("called on invalid window: %d\n", pWnd->pcls->fnid);
+            WARN("called on invalid window: %u\n", pWnd->pcls->fnid);
             EngSetLastError(ERROR_INVALID_MENU_HANDLE);
             RETURN(FALSE);
         }
@@ -2198,7 +2204,7 @@ NtUserGetMenuBarInfo(
    if (!Menu)
        RETURN(FALSE);
 
-   if (idItem < 0 || idItem > Menu->cItems)
+   if ((idItem < 0) || ((ULONG)idItem > Menu->cItems))
        RETURN(FALSE);
 
    RECTL_vSetEmptyRect(&kmbi.rcBar);
@@ -2320,8 +2326,8 @@ NtUserGetMenuItemRect(
 
    if ((MenuItem = MENU_FindItem (&Menu, &uItem, MF_BYPOSITION)))
    {
-      Rect.left   = MenuItem->xItem; 
-      Rect.top    = MenuItem->yItem; 
+      Rect.left   = MenuItem->xItem;
+      Rect.top    = MenuItem->yItem;
       Rect.right  = MenuItem->cxItem; // Do this for now......
       Rect.bottom = MenuItem->cyItem;
    }
@@ -2427,7 +2433,7 @@ NtUserMenuItemFromPoint(
    PMENU Menu;
    PWND Window = NULL;
    PITEM mi;
-   int i;
+   ULONG i;
    DECLARE_RETURN(int);
 
    TRACE("Enter NtUserMenuItemFromPoint\n");
@@ -2450,8 +2456,8 @@ NtUserMenuItemFromPoint(
    for (i = 0; i < Menu->cItems; i++, mi++)
    {
       RECTL Rect;
-      Rect.left   = mi->xItem; 
-      Rect.top    = mi->yItem; 
+      Rect.left   = mi->xItem;
+      Rect.top    = mi->yItem;
       Rect.right  = mi->cxItem; // Do this for now......
       Rect.bottom = mi->cyItem;
       //MENU_AdjustMenuItemRect(Menu, &Rect); Need gpsi OBMI via callback!

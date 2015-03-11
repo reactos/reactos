@@ -13,7 +13,7 @@ BEGIN
     LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
     LTEXT "DAC-type:", -1, 13, 80, 58, 8
     LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
-    LTEXT "Minne størrelse:", -1, 13, 92, 58, 8
+    LTEXT "Minne stÃ¸rrelse:", -1, 13, 92, 58, 8
     LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
     LTEXT "Kortstreng:", -1, 13, 104, 58, 8
     LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
@@ -42,6 +42,6 @@ BEGIN
     IDS_8BPP "256 Farger"
     IDS_15BPP "Middels farger (15 bit)"
     IDS_16BPP "Middels farger (16 bit)"
-    IDS_24BPP "Høyest farger (24 bit)"
-    IDS_32BPP "Høyest farger (32 bit)"
+    IDS_24BPP "HÃ¸yest farger (24 bit)"
+    IDS_32BPP "HÃ¸yest farger (32 bit)"
 END

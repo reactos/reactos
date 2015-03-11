@@ -586,7 +586,7 @@ INT FilePromptYN (UINT resID)
     for (p = szIn; _istspace (*p); p++)
         ;
 
-    LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, szMsg, RC_STRING_MAX_SIZE);
+    LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, szMsg, ARRAYSIZE(szMsg));
 
     if (_tcsncmp(p, &szMsg[0], 1) == 0)
         return PROMPT_YES;
@@ -650,7 +650,7 @@ INT FilePromptYNA (UINT resID)
     for (p = szIn; _istspace (*p); p++)
         ;
 
-    LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szMsg, RC_STRING_MAX_SIZE);
+    LoadString( CMD_ModuleHandle, STRING_COPY_OPTION, szMsg, ARRAYSIZE(szMsg));
 
     if (_tcsncmp(p, &szMsg[0], 1) == 0)
         return PROMPT_YES;

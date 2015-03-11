@@ -36,7 +36,7 @@ Description = Clona (cu surse deschise a) motorului de joc "Transport Tycoon Del
 Size = 7,0 Mo
 
 [Section.041f]
-License = GPL 2. sürüm
+License = GPL sürüm 2
 Description = "Transport Tycoon Deluxe" oyun motorunun açık kaynak taklidi. Transport Tycoon'un bir kopyası gerekir.
 Size = 7,0 MB
 

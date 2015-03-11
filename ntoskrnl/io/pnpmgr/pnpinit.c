@@ -59,6 +59,8 @@ PiInitCacheGroupInformation(VOID)
     /* ReactOS HACK for SETUPLDR */
     if (KeLoaderBlock->SetupLdrBlock)
     {
+        DPRINT1("WARNING!! In PiInitCacheGroupInformation, using ReactOS HACK for SETUPLDR!!\n");
+
         /* Bogus data */
         PiInitGroupOrderTableCount = 0;
         PiInitGroupOrderTable = (PVOID)0xBABEB00B;

@@ -1,21 +1,21 @@
 
 Empty8042:
-    .word HEX(00eb), HEX(00eb)		// jmp $+2, jmp $+2
+    .word HEX(00eb), HEX(00eb)      // jmp $+2, jmp $+2
     in al, HEX(64)
-    cmp al, HEX(0ff)				// legacy-free machine without keyboard
-    jz Empty8042_ret			// controllers on Intel Macs read back 0xFF
+    cmp al, HEX(0ff)                // legacy-free machine without keyboard
+    jz Empty8042_ret                // controllers on Intel Macs read back 0xFF
     test al, 2
     jnz Empty8042
 Empty8042_ret:
-	ret
+    ret
 
 EnableA20:
     pusha
     call Empty8042
-    mov al, HEX(0D1)				// command write
+    mov al, HEX(0D1)                // command write
     out HEX(064), al
     call Empty8042
-    mov al, HEX(0DF)				// A20 on
+    mov al, HEX(0DF)                // A20 on
     out HEX(060), al
     call Empty8042
     popa
@@ -26,32 +26,32 @@ EnableA20:
  * si = pointer to zero terminated string
  */
 writestr:
-	pushfd
-	pushad
+    pushfd
+    pushad
 writestr_top:
-	lodsb
-	and	al, al
-	jz	writestr_end
-	call	writechr
-	jmp	short writestr_top
+    lodsb
+    and al, al
+    jz   writestr_end
+    call writechr
+    jmp  short writestr_top
 writestr_end:
-	popad
-	popfd
-	ret
+    popad
+    popfd
+    ret
 
 /*
  * writechr
  * al = character to output
  */
 writechr:
-	pushf
-	pusha
-	mov	ah, HEX(0E)
-	xor	bx, bx
-	int	HEX(10)
-	popa
-	popf
-	ret
+    pushf
+    pusha
+    mov ah, HEX(0E)
+    xor bx, bx
+    int HEX(10)
+    popa
+    popf
+    ret
 
 //
 // writehex[248]: Write a hex number in (AL, AX, EAX) to the console
@@ -93,13 +93,13 @@ writehex_common:
     ret
 
 Reboot:
-	cli
+    cli
 
-	/* Set the word at location 40h:72h to 0 (cold reboot) */
-	mov word ptr ds:[HEX(0472)], HEX(0)
+    /* Set the word at location 40h:72h to 0 (cold reboot) */
+    mov word ptr ds:[HEX(0472)], HEX(0)
 
-	/* and jump to location F000h:FFF0h in ROM */
-	ljmp16 HEX(0F000), HEX(0FFF0)
+    /* and jump to location F000h:FFF0h in ROM */
+    ljmp16 HEX(0F000), HEX(0FFF0)
 
 
 ChainLoadBiosBootSectorCode:

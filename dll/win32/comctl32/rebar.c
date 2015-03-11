@@ -1828,15 +1828,23 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
     RECT cr;
     COLORREF old = CLR_NONE, new;
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+    HRGN hrgn;
 
     GetClientRect (infoPtr->hwndSelf, &cr);
+    hrgn = CreateRectRgn(cr.left, cr.top, cr.right, cr.bottom);
 
     oldrow = -1;
     for(i=0; i<infoPtr->uNumBands; i++) {
         RECT rcBand;
+        RECT rcBandReal;
+        HRGN hrgnBand;
+
         lpBand = REBAR_GetBand(infoPtr, i);
+
 	if (HIDDENBAND(lpBand)) continue;
         translate_rect(infoPtr, &rcBand, &lpBand->rcBand);
+
+        rcBandReal = rcBand;
 
 	/* draw band separator between rows */
 	if (lpBand->iRow != oldrow) {
@@ -1862,6 +1870,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 		}
                 TRACE ("drawing band separator bottom (%s)\n",
                        wine_dbgstr_rect(&rcRowSep));
+        rcBandReal = rcRowSep;
 	    }
 	}
 
@@ -1872,6 +1881,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	    if (infoPtr->dwStyle & CCS_VERT) {
                 rcSep.bottom = rcSep.top;
 		rcSep.top -= SEP_WIDTH_SIZE;
+        rcBandReal.top -= SEP_WIDTH_SIZE;
                 if (theme)
                     DrawThemeEdge (theme, hdc, RP_BAND, 0, &rcSep, EDGE_ETCHED, BF_BOTTOM, NULL);
                 else
@@ -1880,6 +1890,7 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
 	    else {
                 rcSep.right = rcSep.left;
 		rcSep.left -= SEP_WIDTH_SIZE;
+        rcBandReal.left -= SEP_WIDTH_SIZE;
                 if (theme)
                     DrawThemeEdge (theme, hdc, RP_BAND, 0, &rcSep, EDGE_ETCHED, BF_RIGHT, NULL);
                 else
@@ -1927,7 +1938,21 @@ static LRESULT REBAR_EraseBkGnd (const REBAR_INFO *infoPtr, HDC hdc)
             if (lpBand->clrBack != CLR_NONE)
                 SetBkColor (hdc, old);
         }
+
+        hrgnBand = CreateRectRgn(rcBandReal.left, rcBandReal.top, rcBandReal.right, rcBandReal.bottom);
+        CombineRgn(hrgn, hrgn, hrgnBand, RGN_DIFF);
+        DeleteObject(hrgnBand);
     }
+
+#if 1
+    {
+        //FIXME: Apparently painting the remaining area is a v6 feature
+        HBRUSH hbrush = CreateSolidBrush(new);
+        FillRgn(hdc, hrgn, hbrush);
+        DeleteObject(hbrush);
+        DeleteObject(hrgn);
+    }
+#endif
     return TRUE;
 }
 

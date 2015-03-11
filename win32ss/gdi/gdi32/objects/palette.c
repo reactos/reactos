@@ -135,25 +135,17 @@ GetDIBColorTable(HDC hDC,
  */
 UINT
 WINAPI
-RealizePalette(HDC hDC) /* [in] Handle of device context */
+RealizePalette(
+    _In_ HDC hdc) /* [in] Handle of device context */
 {
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+    HANDLE_METADC0P(UINT, RealizePalette, GDI_ERROR, hdc);
+
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDILoObjType_LO_DC_TYPE)
     {
-        if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_(hDC);
-        else
-        {
-            HPALETTE Pal = GetCurrentObject(hDC, OBJ_PAL);
-            PLDC pLDC = GdiGetLDC((HDC) Pal);
-            if ( !pLDC ) return FALSE;
-            if (pLDC->iType == LDC_EMFLDC) return EMFDRV_(Pal);
-            return FALSE;
-        }
+        return GDI_ERROR;
     }
-#endif
-    return UserRealizePalette(hDC);
+
+    return UserRealizePalette(hdc);
 }
 
 /*

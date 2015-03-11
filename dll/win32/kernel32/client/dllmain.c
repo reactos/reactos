@@ -17,8 +17,7 @@
 /* GLOBALS *******************************************************************/
 
 PBASE_STATIC_SERVER_DATA BaseStaticServerData;
-
-BOOLEAN BaseRunningInServerProcess;
+BOOLEAN BaseRunningInServerProcess = FALSE;
 
 WCHAR BaseDefaultPathBuffer[6140];
 
@@ -88,8 +87,8 @@ DllMain(HANDLE hDll,
         LPVOID lpReserved)
 {
     NTSTATUS Status;
-    ULONG Dummy;
-    ULONG DummySize = sizeof(Dummy);
+    BASESRV_API_CONNECTINFO ConnectInfo;
+    ULONG ConnectInfoSize = sizeof(ConnectInfo);
     WCHAR SessionDir[256];
 
     DPRINT("DllMain(hInst %p, dwReason %lu)\n",
@@ -117,7 +116,7 @@ DllMain(HANDLE hDll,
             /* Initialize default path to NULL */
             RtlInitUnicodeString(&BaseDefaultPath, NULL);
 
-            /* Setup the right Object Directory path */
+            /* Setup the Object Directory path */
             if (!SessionId)
             {
                 /* Use the raw path */
@@ -133,11 +132,11 @@ DllMain(HANDLE hDll,
                          WIN_OBJ_DIR);
             }
 
-            /* Connect to the base server */
+            /* Connect to the Base Server */
             Status = CsrClientConnectToServer(SessionDir,
                                               BASESRV_SERVERDLL_INDEX,
-                                              &Dummy,
-                                              &DummySize,
+                                              &ConnectInfo,
+                                              &ConnectInfoSize,
                                               &BaseRunningInServerProcess);
             if (!NT_SUCCESS(Status))
             {

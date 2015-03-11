@@ -274,7 +274,7 @@ FASTCALL
 IntSetDefaultRegion(PDC pdc)
 {
     PSURFACE pSurface;
-    PROSRGNDATA prgn;
+    PREGION prgn;
     RECTL rclWnd, rclClip;
 
     IntGdiReleaseRaoRgn(pdc);
@@ -429,6 +429,7 @@ NtGdiGetDCDword(
             break;
 
         case GdiGetEMFRestorDc:
+            SafeResult = pdc->dclevel.lSaveDepth;
             break;
 
         case GdiGetFontLanguageInfo:

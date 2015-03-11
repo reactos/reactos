@@ -1453,9 +1453,9 @@ set_new_acard:
         }
 
         GetPciConfig2(0x48, reg48);
-        if(!(ChipFlags & ICH4_FIX)) {
+//        if(!(ChipFlags & ICH4_FIX)) {
             GetPciConfig2(0x4a, reg4a);
-        }
+//        }
         GetPciConfig2(0x54, reg54);
 //        if(udmamode >= 0) {
             // enable the write buffer to be used in a split (ping/pong) manner.
@@ -1472,7 +1472,7 @@ set_new_acard:
 
         	/* Set UDMA reference clock (33 MHz or more). */
                 SetPciConfig1(0x48, reg48 | (0x0001 << dev));
-                if(!(ChipFlags & ICH4_FIX)) {
+//                if(!(ChipFlags & ICH4_FIX)) {
                     if(deviceExtension->MaxTransferMode == ATA_UDMA3) {
                         // Special case (undocumented overclock !) for PIIX4e
                         SetPciConfig2(0x4a, (reg4a | (0x03 << (dev<<2)) ) );
@@ -1480,18 +1480,15 @@ set_new_acard:
                         SetPciConfig2(0x4a, (reg4a & ~(0x03 << (dev<<2))) |
                                                       (((USHORT)(intel_utimings[i])) << (dev<<2) )  );
                     }
-                }
+//                }
         	/* Set UDMA reference clock (66 MHz or more). */
+                reg54 &= ~(0x1001 << dev);
                 if(i > 2) {
                     reg54 |= (0x1 << dev);
-                } else {
-                    reg54 &= ~(0x1 << dev);
                 }
         	/* Set UDMA reference clock (133 MHz). */
                 if(i >= 5) {
                     reg54 |= (0x1000 << dev);
-                } else {
-                    reg54 &= ~(0x1000 << dev);
                 }
                 SetPciConfig2(0x54, reg54);
 

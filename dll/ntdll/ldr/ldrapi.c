@@ -21,6 +21,7 @@ LONG LdrpLoaderLockAcquisitonCount;
 BOOLEAN LdrpShowRecursiveLoads, LdrpBreakOnRecursiveDllLoads;
 UNICODE_STRING LdrApiDefaultExtension = RTL_CONSTANT_STRING(L".DLL");
 ULONG AlternateResourceModuleCount;
+extern PLDR_MANIFEST_PROBER_ROUTINE LdrpManifestProberRoutine;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -69,9 +70,10 @@ LdrAccessOutOfProcessResource(IN PVOID Unknown,
 
 VOID
 NTAPI
-LdrSetDllManifestProber(IN PVOID ProberFunction)
+LdrSetDllManifestProber(
+    _In_ PLDR_MANIFEST_PROBER_ROUTINE Routine)
 {
-    UNIMPLEMENTED;
+    LdrpManifestProberRoutine = Routine;
 }
 
 BOOLEAN

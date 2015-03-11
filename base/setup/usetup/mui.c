@@ -213,9 +213,12 @@ VOID
 MUIDisplayError(
     IN ULONG ErrorNum,
     OUT PINPUT_RECORD Ir,
-    IN ULONG WaitEvent)
+    IN ULONG WaitEvent,
+    ...)
 {
     const MUI_ERROR * entry;
+    CHAR Buffer[2048];
+    va_list ap;
 
     if (ErrorNum >= ERROR_LAST_ERROR_CODE)
     {
@@ -237,7 +240,11 @@ MUIDisplayError(
         return;
     }
 
-    PopupError(entry[ErrorNum].ErrorText,
+    va_start(ap, WaitEvent);
+    vsprintf(Buffer, entry[ErrorNum].ErrorText, ap);
+    va_end(ap);
+
+    PopupError(Buffer,
                entry[ErrorNum].ErrorStatus,
                Ir,
                WaitEvent);

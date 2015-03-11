@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -65,8 +65,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Di&zin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "A&ra...\tCtrl+F", ID_EDIT_FIND
-        MENUITEM "S&onrakini Ara\tF3", ID_EDIT_FINDNEXT
+        MENUITEM "&Bul...\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "S&onrakini Bul\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Görünüm"
     BEGIN
@@ -125,7 +125,7 @@ BEGIN
             MENUITEM "&Çok Dizeli Dizgi Değeri", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Genişletilebilir Dizgi Değeri", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "A&ra...", ID_EDIT_FIND
+        MENUITEM "&Bul...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Sil", ID_TREE_DELETE
         MENUITEM "&Adını Değiştir", ID_TREE_RENAME
@@ -506,10 +506,10 @@ END
 
 IDD_FIND DIALOGEX 0, 0, 254, 82
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ara"
+CAPTION "Bul"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Sonrakini Ara", IDOK, 197, 7, 50, 14
+    DEFPUSHBUTTON "&Sonrakini Bul", IDOK, 197, 7, 50, 14
     PUSHBUTTON "İptal", IDCANCEL, 197, 24, 50, 14
     GROUPBOX "Bak", IDC_STATIC, 7, 25, 63, 51
     LTEXT "Bakılacaklar", IDC_STATIC, 7, 8, 37, 10

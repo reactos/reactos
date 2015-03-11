@@ -46,18 +46,20 @@ typedef ULONG CSR_API_NUMBER;
 
 typedef struct _CSR_API_CONNECTINFO
 {
-    HANDLE ObjectDirectory;
-    PVOID SharedSectionBase;
-    PVOID SharedStaticServerData;
-    PVOID SharedSectionHeap;
-    ULONG DebugFlags;
-    ULONG SizeOfPebData;
-    ULONG SizeOfTebData;
-    ULONG NumberOfServerDllNames;
+    HANDLE ObjectDirectory; // Unused on Windows >= 2k3
+    PVOID  SharedSectionBase;
+    PVOID  SharedStaticServerData;
+    PVOID  SharedSectionHeap;
+    ULONG  DebugFlags;
+    ULONG  SizeOfPebData;
+    ULONG  SizeOfTebData;
+    ULONG  NumberOfServerDllNames;
     HANDLE ServerProcessId;
 } CSR_API_CONNECTINFO, *PCSR_API_CONNECTINFO;
 
-#define CSRSRV_VERSION 0x10000
+#if defined(_M_IX86)
+C_ASSERT(sizeof(CSR_API_CONNECTINFO) == 0x24);
+#endif
 
 // We must have a size at most equal to the maximum acceptable LPC data size.
 C_ASSERT(sizeof(CSR_API_CONNECTINFO) <= LPC_MAX_DATA_LENGTH);

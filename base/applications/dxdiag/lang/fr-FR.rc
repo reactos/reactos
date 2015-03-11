@@ -216,6 +216,6 @@ BEGIN
     IDS_FORMAT_ADAPTER_MEM "%u Mo"
     IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
     IDS_OPTION_NO "Non"
-    IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
-    IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
+    IDS_D3DTEST_DESCRIPTION "Ceci va démarrer le test de l'interface Direct3D. Continuer ?"
+    IDS_D3DTEST_D3Dx "Ce test va utiliser l'interface Direct3D %u accélérée matériellement."
 END

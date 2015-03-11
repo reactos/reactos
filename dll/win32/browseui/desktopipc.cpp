@@ -51,14 +51,14 @@ public:
 
     LRESULT OnMessage1037(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        DbgPrint("Proxy Desktop message 1037.\n");
+        TRACE("Proxy Desktop message 1037.\n");
         bHandled = TRUE;
         return TRUE;
     }
 
     LRESULT OnOpenNewWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        DbgPrint("Proxy Desktop message 1035 received.\n");
+        TRACE("Proxy Desktop message 1035 received.\n");
         bHandled = TRUE;
         SHOnCWMCommandLine((HANDLE) lParam);
         return 0;
@@ -85,19 +85,19 @@ HWND FindShellProxy(LPITEMIDLIST pidl)
 
         if (shell)
         {
-            DbgPrint("Found main desktop.\n");
+            TRACE("Found main desktop.\n");
             return shell;
         }
     }
     else
     {
-        DbgPrint("Separate folders setting enabled. Ignoring main desktop.\n");
+        TRACE("Separate folders setting enabled. Ignoring main desktop.\n");
     }
 
     HWND proxy = FindWindow(PROXY_DESKTOP_CLASS, NULL);
     if (proxy)
     {
-        DbgPrint("Found proxy desktop.\n");
+        TRACE("Found proxy desktop.\n");
         return proxy;
     }
 
@@ -121,7 +121,7 @@ HANDLE MakeSharedPacket(IEThreadParamBlock * threadParams, LPCWSTR strPath, int 
     {
         directoryPidlLength = ILGetSize(threadParams->directoryPIDL);
         sharedBlockSize += directoryPidlLength;
-        DbgPrint("directoryPidlLength=%d\n", directoryPidlLength);
+        TRACE("directoryPidlLength=%d\n", directoryPidlLength);
     }
 
     // another PIDL
@@ -129,7 +129,7 @@ HANDLE MakeSharedPacket(IEThreadParamBlock * threadParams, LPCWSTR strPath, int 
     {
         pidlSize7C = ILGetSize(threadParams->offset7C);
         sharedBlockSize += pidlSize7C;
-        DbgPrint("pidlSize7C=%d\n", pidlSize7C);
+        TRACE("pidlSize7C=%d\n", pidlSize7C);
     }
 
     // This flag indicates the presence of another pidl?
@@ -139,12 +139,12 @@ HANDLE MakeSharedPacket(IEThreadParamBlock * threadParams, LPCWSTR strPath, int 
         {
             pidlSize80 = ILGetSize(pidl80);
             sharedBlockSize += pidlSize80;
-            DbgPrint("pidlSize80=%d\n", pidlSize7C);
+            TRACE("pidlSize80=%d\n", pidlSize7C);
         }
     }
     else
     {
-        DbgPrint("pidl80 sent by value = %p\n", pidl80);
+        TRACE("pidl80 sent by value = %p\n", pidl80);
         pidlSize80 = 4;
         sharedBlockSize += pidlSize80;
     }
@@ -154,23 +154,23 @@ HANDLE MakeSharedPacket(IEThreadParamBlock * threadParams, LPCWSTR strPath, int 
     {
         pathLength = 2 * lstrlenW(strPath) + 2;
         sharedBlockSize += pathLength;
-        DbgPrint("pathLength=%d\n", pidlSize7C);
+        TRACE("pathLength=%d\n", pidlSize7C);
     }
 
-    DbgPrint("sharedBlockSize=%d\n", sharedBlockSize);
+    TRACE("sharedBlockSize=%d\n", sharedBlockSize);
 
     // Allocate and fill the shared section
     HANDLE hShared = SHAllocShared(0, sharedBlockSize, dwProcessId);
     if (!hShared)
     {
-        DbgPrint("Shared section alloc error.\n");
+        ERR("Shared section alloc error.\n");
         return 0;
     }
 
     PBYTE target = (PBYTE) SHLockShared(hShared, dwProcessId);
     if (!target)
     {
-        DbgPrint("Shared section lock error. %d\n", GetLastError());
+        ERR("Shared section lock error. %d\n", GetLastError());
         SHFreeShared(hShared, dwProcessId);
         return 0;
     }
@@ -353,7 +353,7 @@ extern "C" IEThreadParamBlock *WINAPI SHCreateIETHREADPARAM(
 {
     IEThreadParamBlock                      *result;
 
-    DbgPrint("SHCreateIETHREADPARAM\n");
+    TRACE("SHCreateIETHREADPARAM\n");
 
     result = (IEThreadParamBlock *) LocalAlloc(LMEM_ZEROINIT, 256);
     if (result == NULL)
@@ -376,7 +376,7 @@ extern "C" IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *p
 {
     IEThreadParamBlock                      *result;
 
-    DbgPrint("SHCloneIETHREADPARAM\n");
+    TRACE("SHCloneIETHREADPARAM\n");
 
     result = (IEThreadParamBlock *) LocalAlloc(LMEM_FIXED, 256);
     if (result == NULL)
@@ -402,7 +402,7 @@ extern "C" IEThreadParamBlock *WINAPI SHCloneIETHREADPARAM(IEThreadParamBlock *p
 */
 extern "C" void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param)
 {
-    DbgPrint("SHDestroyIETHREADPARAM\n");
+    TRACE("SHDestroyIETHREADPARAM\n");
 
     if (param == NULL)
         return;
@@ -430,7 +430,7 @@ extern "C" void WINAPI SHDestroyIETHREADPARAM(IEThreadParamBlock *param)
 */
 extern "C" BOOL WINAPI SHOnCWMCommandLine(HANDLE hSharedInfo)
 {
-    DbgPrint("SHOnCWMCommandLine\n");
+    TRACE("SHOnCWMCommandLine\n");
 
     PIE_THREAD_PARAM_BLOCK params = ParseSharedPacket(hSharedInfo);
 
@@ -454,7 +454,7 @@ extern "C" HRESULT WINAPI SHOpenFolderWindow(PIE_THREAD_PARAM_BLOCK parameters)
     WCHAR debugStr[MAX_PATH + 1];
     SHGetPathFromIDListW(parameters->directoryPIDL, debugStr);
 
-    DbgPrint("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
+    TRACE("SHOpenFolderWindow %p(%S)\n", parameters->directoryPIDL, debugStr);
 
     PIE_THREAD_PARAM_BLOCK paramsCopy = SHCloneIETHREADPARAM(parameters);
 
@@ -480,7 +480,7 @@ extern "C" HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, lo
 {
     IEThreadParamBlock                      *parameters;
 
-    DbgPrint("SHOpenNewFrame\n");
+    TRACE("SHOpenNewFrame\n");
 
     parameters = SHCreateIETHREADPARAM(0, 1, paramC, NULL);
     if (parameters == NULL)
@@ -506,7 +506,7 @@ extern "C" HRESULT WINAPI SHOpenNewFrame(LPITEMIDLIST pidl, IUnknown *paramC, lo
 */
 BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
 {
-    DbgPrint("SHCreateFromDesktop\n");
+    TRACE("SHCreateFromDesktop\n");
 
     IEThreadParamBlock * parameters = SHCreateIETHREADPARAM(0, 0, 0, 0);
     if (!parameters)
@@ -545,7 +545,7 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
     // If found, ask it to open the new window
     if (desktop)
     {
-        DbgPrint("Found desktop hwnd=%p\n", desktop);
+        TRACE("Found desktop hwnd=%p\n", desktop);
 
         DWORD dwProcessId;
 
@@ -555,7 +555,7 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
         HANDLE hShared = MakeSharedPacket(parameters, strPath, dwProcessId);
         if (hShared)
         {
-            DbgPrint("Sending open message...\n");
+            TRACE("Sending open message...\n");
 
             PostMessageW(desktop, WM_EXPLORER_OPEN_NEW_WINDOW, 0, (LPARAM) hShared);
         }
@@ -564,7 +564,7 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
         return TRUE;
     }
 
-    DbgPrint("Desktop not found or separate flag requested.\n");
+    TRACE("Desktop not found or separate flag requested.\n");
 
     // Else, start our own message loop!
     HRESULT hr = CoInitialize(NULL);

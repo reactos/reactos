@@ -1,7 +1,7 @@
 /*
- * Norwegian Bokmål language resource file for Credentials UI
+ * Norwegian BokmÃ¥l language resource file for Credentials UI
  *
- * Copyright 2007 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2007 Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,10 +24,10 @@ STRINGTABLE
 {
     IDS_TITLEFORMAT     "Koble til %s"
     IDS_MESSAGEFORMAT   "Kobler til %s"
-    IDS_INCORRECTPASSWORDTITLE  "Klarte ikke logge på"
-    IDS_INCORRECTPASSWORD       "Sørg for at du oppga riktig\nbrukernavn og passord."
-    IDS_CAPSLOCKONTITLE "Caps Lock er på"
-    IDS_CAPSLOCKON      "Å ha Caps Lock på kan føre til at du skriver inn passordet på feil måte.\n\nTrykk på Caps Lock-knappen på tastaturet for å slå av Caps Lock før du\nskriver inn passordet på nytt."
+    IDS_INCORRECTPASSWORDTITLE  "Klarte ikke logge pÃ¥"
+    IDS_INCORRECTPASSWORD       "SÃ¸rg for at du oppga riktig\nbrukernavn og passord."
+    IDS_CAPSLOCKONTITLE "Caps Lock er pÃ¥"
+    IDS_CAPSLOCKON      "Ã… ha Caps Lock pÃ¥ kan fÃ¸re til at du skriver inn passordet pÃ¥ feil mÃ¥te.\n\nTrykk pÃ¥ Caps Lock-knappen pÃ¥ tastaturet for Ã¥ slÃ¥ av Caps Lock fÃ¸r du\nskriver inn passordet pÃ¥ nytt."
 }
 
 IDD_CREDDIALOG DIALOG  0, 0, 213, 149

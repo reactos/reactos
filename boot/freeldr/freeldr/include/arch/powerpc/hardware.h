@@ -27,30 +27,6 @@
 #define CONFIG_CMD(bus, dev_fn, where) \
     (0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
-//
-// ARC Component Configuration Routines
-//
-VOID
-NTAPI
-FldrCreateSystemKey(
-    OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
-);
-
-VOID
-NTAPI
-FldrCreateComponentKey(
-    IN PCONFIGURATION_COMPONENT_DATA SystemKey,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN IDENTIFIER_FLAG Flags,
-    IN ULONG Key,
-    IN ULONG Affinity,
-    IN PCHAR IdentifierString,
-    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size,
-    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
-);
-
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */

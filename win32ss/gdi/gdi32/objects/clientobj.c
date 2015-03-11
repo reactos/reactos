@@ -8,6 +8,7 @@
 #include <precomp.h>
 
 CRITICAL_SECTION gcsClientObjLinks;
+ULONG gcClientObj;
 
 typedef struct _CLIENTOBJLINK
 {
@@ -18,37 +19,28 @@ typedef struct _CLIENTOBJLINK
 
 PCLIENTOBJLINK gapcolHashTable[127];
 
-HGDIOBJ
+BOOL
 WINAPI
-GdiInsertClientObj(
-    _In_ PVOID pvObject,
-    _In_ GDILOOBJTYPE eObjType)
+GdiCreateClientObjLink(
+    _In_ HGDIOBJ hobj,
+    _In_ PVOID pvObject)
 {
     PCLIENTOBJLINK pcol;
     ULONG iHashIndex;
-    HGDIOBJ hobj;
-
-    /* Call win32k to create a client object handle */
-    hobj = NtGdiCreateClientObj(eObjType);
-    if (hobj == NULL)
-    {
-        return NULL;
-    }
-
-    /* Calculate the hash index */
-    iHashIndex = (ULONG_PTR)hobj % _countof(gapcolHashTable);
 
     /* Allocate a link structure */
     pcol = HeapAlloc(GetProcessHeap(), 0, sizeof(*pcol));
     if (pcol == NULL)
     {
-        NtGdiDeleteClientObj(hobj);
-        return NULL;
+        return FALSE;
     }
 
     /* Setup the link structure */
     pcol->hobj = hobj;
     pcol->pvObj = pvObject;
+
+    /* Calculate the hash index */
+    iHashIndex = (ULONG_PTR)hobj % _countof(gapcolHashTable);
 
     /* Enter the critical section */
     EnterCriticalSection(&gcsClientObjLinks);
@@ -56,16 +48,17 @@ GdiInsertClientObj(
     /* Insert the link structure */
     pcol->pcolNext = gapcolHashTable[iHashIndex];
     gapcolHashTable[iHashIndex] = pcol;
+    gcClientObj++;
 
     /* Leave the critical section */
     LeaveCriticalSection(&gcsClientObjLinks);
 
-    return hobj;
+    return TRUE;
 }
 
 PVOID
 WINAPI
-GdiGetClientObject(
+GdiGetClientObjLink(
     _In_ HGDIOBJ hobj)
 {
     ULONG iHashIndex;
@@ -102,7 +95,7 @@ GdiGetClientObject(
 
 PVOID
 WINAPI
-GdiRemoveClientObject(
+GdiRemoveClientObjLink(
     _In_ HGDIOBJ hobj)
 {
     PCLIENTOBJLINK pcol, *ppcol;
@@ -127,6 +120,7 @@ GdiRemoveClientObject(
         {
             /* Update the link pointer, removing this link */
             *ppcol = pcol->pcolNext;
+            gcClientObj--;
 
             /* Get the object pointer */
             pvObject = pcol->pvObj;
@@ -146,5 +140,53 @@ GdiRemoveClientObject(
     LeaveCriticalSection(&gcsClientObjLinks);
 
     /* Return the object pointer, or NULL if we did not find it */
+    return pvObject;
+}
+
+HGDIOBJ
+WINAPI
+GdiCreateClientObj(
+    _In_ PVOID pvObject,
+    _In_ GDILOOBJTYPE eObjType)
+{
+    HGDIOBJ hobj;
+
+    /* Call win32k to create a client object handle */
+    hobj = NtGdiCreateClientObj(eObjType);
+    if (hobj == NULL)
+    {
+        return NULL;
+    }
+
+    /* Create the client object link */
+    if (!GdiCreateClientObjLink(hobj, pvObject))
+    {
+        NtGdiDeleteClientObj(hobj);
+        return NULL;
+    }
+
+    return hobj;
+}
+
+PVOID
+WINAPI
+GdiDeleteClientObj(
+    _In_ HGDIOBJ hobj)
+{
+    PVOID pvObject;
+
+    /* Remove the client object link */
+    pvObject = GdiRemoveClientObjLink(hobj);
+    if (pvObject == NULL)
+    {
+        return NULL;
+    }
+
+    /* Call win32k to delete the handle */
+    if (!NtGdiDeleteClientObj(hobj))
+    {
+        ASSERT(FALSE);
+    }
+
     return pvObject;
 }

@@ -30,8 +30,8 @@ BEGIN
     IDS_SEARCH       "搜寻(&S)"
     IDS_FAVORITES    "最爱(&I)"
 
-    IDS_HIDETABS     "Hide &Tabs"
-    IDS_SHOWTABS     "Show &Tabs"
+    IDS_HIDETABS     "隐藏选项卡(&T)"
+    IDS_SHOWTABS     "显示选项卡(&T)"
 END
 
 STRINGTABLE
@@ -53,13 +53,13 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "同步(&Y)", IDTB_SYNC
+        MENUITEM "返回(&B)", IDTB_BACK
+        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM "首页(&H)", IDTB_HOME
+        MENUITEM "停止(&S)", IDTB_STOP
+        MENUITEM "刷新(&R)", IDTB_REFRESH
+        MENUITEM "打印...(&P)", IDTB_PRINT
     }
 }
 
@@ -92,12 +92,12 @@ MENU_POPUP MENU
     POPUP "" /* Options */
     {
         MENUITEM "", IDTB_EXPAND
-        MENUITEM "S&ync", IDTB_SYNC
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
-        MENUITEM "&Home", IDTB_HOME
-        MENUITEM "&Stop", IDTB_STOP
-        MENUITEM "&Refresh", IDTB_REFRESH
-        MENUITEM "&Print...", IDTB_PRINT
+        MENUITEM "同步(&Y)", IDTB_SYNC
+        MENUITEM "返回(&B)", IDTB_BACK
+        MENUITEM "向前(&F)", IDTB_FORWARD
+        MENUITEM "首頁(&H)", IDTB_HOME
+        MENUITEM "停止(&S)", IDTB_STOP
+        MENUITEM "刷新(&R)", IDTB_REFRESH
+        MENUITEM "列印...(&P)", IDTB_PRINT
     }
 }

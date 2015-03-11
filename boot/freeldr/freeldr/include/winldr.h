@@ -191,4 +191,3 @@ WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID
 WinLdrSetProcessorContext(VOID);
-

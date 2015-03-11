@@ -852,7 +852,7 @@ INT cmd_copy(LPTSTR param)
             if (copy(tmpSrcPath,tmpDestPath, bAppend, dwFlags, bTouch))
             {
                 nFiles++;
-                //LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
+                //LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, ARRAYSIZE(szMsg));
             }
             else
             {

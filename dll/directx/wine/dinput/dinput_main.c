@@ -60,10 +60,6 @@ static inline IDirectInputImpl *impl_from_IDirectInput8W( IDirectInput8W *iface 
     return CONTAINING_RECORD( iface, IDirectInputImpl, IDirectInput8W_iface );
 }
 
-static inline IDirectInputDeviceImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
-{
-    return CONTAINING_RECORD(iface, IDirectInputDeviceImpl, IDirectInputDevice8A_iface);
-}
 static inline IDirectInputDeviceImpl *impl_from_IDirectInputDevice8W(IDirectInputDevice8W *iface)
 {
     return CONTAINING_RECORD(iface, IDirectInputDeviceImpl, IDirectInputDevice8W_iface);

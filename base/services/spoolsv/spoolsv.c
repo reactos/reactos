@@ -38,9 +38,7 @@ UpdateServiceStatus(DWORD dwState)
     ServiceStatus.dwCurrentState = dwState;
 
     if (dwState == SERVICE_RUNNING)
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_PAUSE_CONTINUE | SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-    else if (dwState == SERVICE_PAUSED)
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_PAUSE_CONTINUE;
+        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
     else
         ServiceStatus.dwControlsAccepted = 0;
 
@@ -49,9 +47,7 @@ UpdateServiceStatus(DWORD dwState)
     ServiceStatus.dwCheckPoint = 0;
 
     if (dwState == SERVICE_START_PENDING ||
-        dwState == SERVICE_STOP_PENDING ||
-        dwState == SERVICE_PAUSE_PENDING ||
-        dwState == SERVICE_CONTINUE_PENDING)
+        dwState == SERVICE_STOP_PENDING)
         ServiceStatus.dwWaitHint = 10000;
     else
         ServiceStatus.dwWaitHint = 0;
@@ -74,16 +70,6 @@ ServiceControlHandler(DWORD dwControl,
         case SERVICE_CONTROL_STOP:
             TRACE("  SERVICE_CONTROL_STOP received\n");
             UpdateServiceStatus(SERVICE_STOPPED);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_PAUSE:
-            TRACE("  SERVICE_CONTROL_PAUSE received\n");
-            UpdateServiceStatus(SERVICE_PAUSED);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_CONTINUE:
-            TRACE("  SERVICE_CONTROL_CONTINUE received\n");
-            UpdateServiceStatus(SERVICE_RUNNING);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_INTERROGATE:

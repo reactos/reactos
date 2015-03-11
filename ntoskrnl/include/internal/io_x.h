@@ -51,6 +51,8 @@ VOID
 IopUnQueueIrpFromThread(IN PIRP Irp)
 {
     /* Remove it from the list and reset it */
+    if (IsListEmpty(&Irp->ThreadListEntry))
+        return;
     RemoveEntryList(&Irp->ThreadListEntry);
     InitializeListHead(&Irp->ThreadListEntry);
 }

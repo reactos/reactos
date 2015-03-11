@@ -15,7 +15,10 @@
 
 BOOL
 FASTCALL
-RECTL_bUnionRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2)
+RECTL_bUnionRect(
+    _Out_ RECTL *prclDst,
+    _In_ const RECTL *prcl1,
+    _In_ const RECTL *prcl2)
 {
     if (RECTL_bIsEmptyRect(prcl1))
     {
@@ -47,10 +50,12 @@ RECTL_bUnionRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2)
     return TRUE;
 }
 
-
 BOOL
 FASTCALL
-RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2)
+RECTL_bIntersectRect(
+    _Out_ RECTL* prclDst,
+    _In_ const RECTL* prcl1,
+    _In_ const RECTL* prcl2)
 {
     prclDst->left  = max(prcl1->left, prcl2->left);
     prclDst->right = min(prcl1->right, prcl2->right);
@@ -73,26 +78,30 @@ RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2)
 
 VOID
 FASTCALL
-RECTL_vMakeWellOrdered(RECTL *prcl)
+RECTL_vMakeWellOrdered(
+    _Inout_ RECTL *prcl)
 {
     LONG lTmp;
     if (prcl->left > prcl->right)
     {
         lTmp = prcl->left;
         prcl->left = prcl->right;
-        prcl->right = lTmp;       
+        prcl->right = lTmp;
     }
     if (prcl->top > prcl->bottom)
     {
         lTmp = prcl->top;
         prcl->top = prcl->bottom;
-        prcl->bottom = lTmp;       
+        prcl->bottom = lTmp;
     }
 }
 
-VOID 
+VOID
 FASTCALL
-RECTL_vInflateRect(RECTL *rect, INT dx, INT dy)
+RECTL_vInflateRect(
+    _Inout_ RECTL *rect,
+    _In_ INT dx,
+    _In_ INT dy)
 {
     rect->left -= dx;
     rect->top -= dy;

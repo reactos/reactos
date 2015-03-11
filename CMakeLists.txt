@@ -102,11 +102,6 @@ else()
     #useful stuff!
     include(CMakeParseArguments)
 
-    if(ENABLE_CCACHE)
-        set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
-        set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
-    endif()
-
     # Default to Debug for the build type
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
 "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
@@ -142,7 +137,7 @@ else()
         add_definitions(-D_WINKD_=1)
     endif()
 
-    if(CMAKE_VERSION STREQUAL "2.8.12.1-ReactOS")
+    if(CMAKE_VERSION MATCHES "ReactOS")
         set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
     else()
         set(PCH 0 CACHE BOOL "Whether to use precompiled headers")

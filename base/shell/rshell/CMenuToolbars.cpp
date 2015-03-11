@@ -32,13 +32,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CMenuToolbars);
 
-extern "C"
-HRESULT WINAPI SHGetImageList(
-    _In_   int iImageList,
-    _In_   REFIID riid,
-    _Out_  void **ppv
-    );
-
 // FIXME: Enable if/when wine comctl supports this flag properly
 #define USE_TBSTYLE_EX_VERTICAL 0
 
@@ -79,9 +72,6 @@ HRESULT CMenuToolbarBase::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case TBN_HOTITEMCHANGE:
             //return OnHotItemChange(reinterpret_cast<LPNMTBHOTITEM>(hdr), theResult);
             return S_OK;
-
-        case NM_RCLICK:
-            return OnContextMenu(reinterpret_cast<LPNMMOUSE>(hdr));
 
         case NM_CUSTOMDRAW:
             return OnCustomDraw(reinterpret_cast<LPNMTBCUSTOMDRAW>(hdr), theResult);
@@ -391,6 +381,11 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 
     SubclassWindow(Create(hwndParent, tbStyles, tbExStyles));
 
+    SetWindowTheme(m_hWnd, L"", L"");
+
+    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+    m_menuBand->AdjustForTheme(m_useFlatMenus);
+
     // If needed, create the pager.
     if (m_usePager)
     {
@@ -645,14 +640,15 @@ HRESULT CMenuToolbarBase::ChangePopupItem(CMenuToolbarBase * toolbar, INT item)
 LRESULT CMenuToolbarBase::IsTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
     TBBUTTON btn;
+    INT idx = (INT)wParam;
 
     if (m_hotBar != this)
         return S_FALSE;
 
-    if (wParam < 0)
+    if (idx < 0)
         return S_FALSE;
 
-    if (!GetButton(wParam, &btn))
+    if (!GetButton(idx, &btn))
         return E_FAIL;
 
     if (m_hotItem == btn.idCommand)
@@ -666,21 +662,21 @@ LRESULT CMenuToolbarBase::IsTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
 LRESULT CMenuToolbarBase::ChangeTrackedItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
 {
+    TBBUTTON btn;
     BOOL wasTracking = LOWORD(lParam);
     BOOL mouse = HIWORD(lParam);
+    INT idx = (INT)wParam;
 
-    TBBUTTON btn;
-
-    if (wParam < 0)
+    if (idx < 0)
     {
         m_isTrackingPopup = FALSE;
         return m_menuBand->_ChangeHotItem(NULL, -1, HICF_MOUSE);
     }
 
-    if (!GetButton(wParam, &btn))
+    if (!GetButton(idx, &btn))
         return E_FAIL;
 
-    TRACE("ChangeTrackedItem %d, %d\n", wParam, wasTracking);
+    TRACE("ChangeTrackedItem %d, %d\n", idx, wasTracking);
     m_isTrackingPopup = wasTracking;
     return m_menuBand->_ChangeHotItem(this, btn.idCommand, mouse ? HICF_MOUSE : 0);
 }
@@ -689,32 +685,32 @@ HRESULT CMenuToolbarBase::PopupSubMenu(UINT iItem, UINT index, IShellMenu* child
 {
     // Calculate the submenu position and exclude area
     RECT rc = { 0 };
-    RECT rcx = { 0 };
 
     if (!GetItemRect(index, &rc))
         return E_FAIL;
-
-    HWND topWnd;
-    GetWindow(&topWnd);
-    GetWindowRect(topWnd, &rcx);
-
+    
     POINT a = { rc.left, rc.top };
     POINT b = { rc.right, rc.bottom };
-    POINT c = { rcx.left, rcx.top };
-    POINT d = { rcx.right, rcx.bottom };
 
     ClientToScreen(m_hWnd, &a);
     ClientToScreen(m_hWnd, &b);
-    ClientToScreen(topWnd, &c);
-    ClientToScreen(topWnd, &d);
 
     POINTL pt = { a.x, b.y };
-    RECTL rcl = { c.x, c.y, d.x, d.y };
+    RECTL rcl = { a.x, a.y, b.x, b.y };
 
     if (m_initFlags & SMINIT_VERTICAL)
     {
-        pt.x = b.x - 3;
-        pt.y = a.y - 3;
+        // FIXME: Hardcoding this here feels hacky.
+        if (IsAppThemed())
+        {
+            pt.x = b.x - 1;
+            pt.y = a.y - 1;
+        }
+        else
+        {
+            pt.x = b.x - 3;
+            pt.y = a.y - 3;
+        }
     }
 
     // Display the submenu
@@ -775,7 +771,7 @@ HRESULT CMenuToolbarBase::TrackContextMenu(IContextMenu* contextMenu, POINT pt)
 HRESULT CMenuToolbarBase::BeforeCancelPopup()
 {
     m_cancelingPopup = TRUE;
-    DbgPrint("BeforeCancelPopup\n");
+    TRACE("BeforeCancelPopup\n");
     return S_OK;
 }
 
@@ -802,12 +798,29 @@ HRESULT CMenuToolbarBase::ProcessClick(INT iItem)
 
     TRACE("Executing...\n");
 
-    return m_menuBand->_MenuItemHotTrack(MPOS_EXECUTE);
+    return m_menuBand->_MenuItemSelect(MPOS_EXECUTE);
 }
 
-HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex)
+HRESULT CMenuToolbarBase::ProcessContextMenu(INT iItem)
+{
+    INT index;
+    DWORD_PTR data;
+
+    GetDataFromId(iItem, &index, &data);
+
+    DWORD pos = GetMessagePos();
+    POINT pt = { GET_X_LPARAM(pos), GET_Y_LPARAM(pos) };
+
+    return InternalContextMenu(iItem, index, data, pt);
+}
+
+HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex, BOOL isLButton)
 {
     TBBUTTON btn;
+
+    GetButton(iIndex, &btn);
+    if (!isLButton)
+        return ProcessContextMenu(btn.idCommand);
 
     if ((m_initFlags & SMINIT_VERTICAL) 
         || m_popupBar
@@ -817,7 +830,6 @@ HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex)
         return S_OK;
     }
 
-    GetButton(iIndex, &btn);
     return ProcessClick(btn.idCommand);
 }
 
@@ -845,17 +857,6 @@ HRESULT CMenuToolbarBase::PrepareExecuteItem(INT iItem)
 HRESULT CMenuToolbarBase::ExecuteItem()
 {
     return InternalExecuteItem(m_executeItem, m_executeItem, m_executeData);
-}
-
-HRESULT CMenuToolbarBase::OnContextMenu(NMMOUSE * rclick)
-{
-    INT iItem = rclick->dwItemSpec;
-    INT index = rclick->dwHitInfo;
-    DWORD_PTR data = rclick->dwItemData;
-
-    GetDataFromId(iItem, &index, &data);
-
-    return InternalContextMenu(iItem, index, data, rclick->pt);
 }
 
 HRESULT CMenuToolbarBase::KeyboardItemChange(DWORD dwSelectType)
@@ -1188,7 +1189,6 @@ HRESULT CMenuStaticToolbar::FillToolbar(BOOL clearFirst)
 
             SMINFO * sminfo = new SMINFO();
             sminfo->dwMask = SMIM_ICON | SMIM_FLAGS;
-            // FIXME: remove before deleting the toolbar or it will leak
 
             HRESULT hr = m_menuBand->_CallCBWithItemId(info.wID, SMC_GETINFO, 0, reinterpret_cast<LPARAM>(sminfo));
             if (FAILED_UNEXPECTEDLY(hr))

@@ -180,7 +180,7 @@ DxEngLockShareSem()
 {
     DPRINT1("ReactX Calling : DxEngLockShareSem\n");
     if(!ghsemShareDevLock) ghsemShareDevLock = EngCreateSemaphore(); // Hax, should be in dllmain.c
-    IntGdiAcquireSemaphore(ghsemShareDevLock);
+    EngAcquireSemaphore(ghsemShareDevLock);
     return TRUE;
 }
 
@@ -202,7 +202,7 @@ APIENTRY
 DxEngUnlockShareSem()
 {
     DPRINT1("ReactX Calling : DxEngUnlockShareSem\n");
-    IntGdiReleaseSemaphore(ghsemShareDevLock);
+    EngReleaseSemaphore(ghsemShareDevLock);
     return TRUE;
 }
 

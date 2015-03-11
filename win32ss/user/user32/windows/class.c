@@ -712,7 +712,7 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
             case GCW_ATOM:
                 Ret = (ULONG_PTR)Class->atomClassName;
                 break;
-#ifdef NEW_CURSORICON
+
             case GCLP_HCURSOR:
                 Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spcur))->h : 0;
                 break;
@@ -724,22 +724,6 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
             case GCLP_HICONSM:
                 Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicnSm))->h : 0;
                 break;
-#else
-            case GCLP_HCURSOR:
-                /* FIXME - get handle from pointer to CURSOR object */
-                Ret = (ULONG_PTR)Class->hCursor;
-                break;
-
-            case GCLP_HICON:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIcon;
-                break;
-
-            case GCLP_HICONSM:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
-                break;
-#endif
 
             case GCLP_WNDPROC:
                 Ret = IntGetClsWndProc(Wnd, Class, TRUE);
@@ -803,7 +787,6 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
                 Ret = (ULONG_PTR)Class->atomClassName;
                 break;
 
-#ifdef NEW_CURSORICON
             case GCLP_HCURSOR:
                 Ret = Class->spcur ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spcur))->h : 0;
                 break;
@@ -815,22 +798,6 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
             case GCLP_HICONSM:
                 Ret = Class->spicnSm ? (ULONG_PTR)((PPROCMARKHEAD)SharedPtrToUser(Class->spicnSm))->h : 0;
                 break;
-#else
-            case GCLP_HCURSOR:
-                /* FIXME - get handle from pointer to CURSOR object */
-                Ret = (ULONG_PTR)Class->hCursor;
-                break;
-
-            case GCLP_HICON:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIcon;
-                break;
-
-            case GCLP_HICONSM:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)(Class->hIconSm ? Class->hIconSm : Class->hIconSmIntern);
-                break;
-#endif
 
             case GCLP_WNDPROC:
                 Ret = IntGetClsWndProc(Wnd, Class, FALSE);

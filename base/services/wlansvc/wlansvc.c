@@ -21,34 +21,9 @@ SERVICE_STATUS_HANDLE ServiceStatusHandle;
 SERVICE_STATUS SvcStatus;
 static WCHAR ServiceName[] = L"WlanSvc";
 
+DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter);
+
 /* FUNCTIONS *****************************************************************/
-static DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
-{
-    RPC_STATUS Status;
-
-    Status = RpcServerUseProtseqEpW(L"ncalrpc", 20, L"wlansvc", NULL);
-    if (Status != RPC_S_OK)
-    {
-        DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
-        return 0;
-    }
-
-    Status = RpcServerRegisterIf(wlansvc_interface_v1_0_s_ifspec, NULL, NULL);
-    if (Status != RPC_S_OK)
-    {
-        DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-        return 0;
-    }
-
-    Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0);
-    if (Status != RPC_S_OK)
-    {
-        DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
-    }
-
-    DPRINT("RpcServerListen finished\n");
-    return 0;
-}
 
 static void UpdateServiceStatus(HANDLE hServiceStatus, DWORD NewStatus, DWORD Increment)
 {

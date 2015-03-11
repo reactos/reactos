@@ -1,11 +1,12 @@
 /*
    rdesktop: A Remote Desktop Protocol client.
    Parsing primitives
-   Copyright (C) Matthew Chapman 1999-2005
+   Copyright (C) Matthew Chapman 1999-2008
+   Copyright 2012 Henrik Andersson <hean01@cendio.se> for Cendio AB
 
-   This program is free software; you can redistribute it and/or modify
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
+   the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
    This program is distributed in the hope that it will be useful,
@@ -13,9 +14,8 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License along
-   with this program; if not, write to the Free Software Foundation, Inc.,
-   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /* Parser state */
@@ -42,6 +42,8 @@ typedef struct stream
 #define s_check(s)		((s)->p <= (s)->end)
 #define s_check_rem(s,n)	((s)->p + n <= (s)->end)
 #define s_check_end(s)		((s)->p == (s)->end)
+#define s_length(s)		((s)->end - (s)->data)
+#define s_reset(s)		((s)->end = (s)->p = (s)->data)
 
 #if defined(L_ENDIAN) && !defined(NEED_ALIGN)
 #define in_uint16_le(s,v)	{ v = *(uint16 *)((s)->p); (s)->p += 2; }

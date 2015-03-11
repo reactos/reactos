@@ -139,6 +139,12 @@ SetMapMode(
 {
     PDC_ATTR pdcattr;
 
+    /* Handle METADC16 here, since we don't have a DCATTR. */
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE) \
+    {
+        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
+    }
+
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
@@ -147,27 +153,13 @@ SetMapMode(
         return 0;
     }
 
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetMapMode(hdc, iMode);
-        else
-        {
-            SetLastError(ERROR_INVALID_HANDLE);
-            return 0;
-        }
-    }
-#endif
-
     /* Force change if Isotropic is set for recompute. */
     if ((iMode != pdcattr->iMapMode) || (iMode == MM_ISOTROPIC))
     {
         pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, 0, 0, 0);
+        return GetAndSetDCDWord(hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
     }
 
-    /* Simply return the old mode, which equals the new mode */
     return pdcattr->iMapMode;
 }
 
@@ -324,30 +316,10 @@ ModifyWorldTransform(
 {
     PDC_ATTR pdcattr;
 
-#if 0
-// Handle something other than a normal dc object.
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return FALSE;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                if (dwMode ==  MWT_MAX+1)
-                    if (!EMFDRV_SetWorldTransform(hdc, pxform) ) return FALSE;
-                return EMFDRV_ModifyWorldTransform(hdc, pxform, dwMode); // Ported from wine.
-            }
-            return FALSE;
-        }
-    }
-#endif
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_METADC16_TYPE)
+        return FALSE;
+
+    HANDLE_METADC(BOOL, ModifyWorldTransform, FALSE, hdc, pxform, dwMode);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -488,26 +460,8 @@ SetViewportExtEx(
     _Out_opt_ LPSIZE lpSize)
 {
     PDC_ATTR pdcattr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetViewportExtEx();
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetViewportExtEx();
-            }
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, SetViewportExtEx, FALSE, hdc, nXExtent, nYExtent, lpSize);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -569,28 +523,10 @@ SetWindowOrgEx(
     _In_ int Y,
     _Out_opt_ LPPOINT lpPoint)
 {
-#if 0
     PDC_ATTR pdcattr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetWindowOrgEx();
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetWindowOrgEx();
-            }
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, SetWindowOrgEx, FALSE, hdc, X, Y, lpPoint);
+
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (pdcattr == NULL)
@@ -598,7 +534,7 @@ SetWindowOrgEx(
         /* Do not set LastError here! */
         return FALSE;
     }
-
+#if 0
     if (lpPoint)
     {
         lpPoint->x = pdcattr->ptlWindowOrg.x;
@@ -624,7 +560,7 @@ SetWindowOrgEx(
     pdcattr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
     return TRUE;
 #endif
-    return NtGdiSetWindowOrgEx(hdc,X,Y,lpPoint);
+    return NtGdiSetWindowOrgEx(hdc, X, Y, lpPoint);
 }
 
 /*
@@ -639,28 +575,8 @@ SetWindowExtEx(
     _Out_opt_ LPSIZE lpSize)
 {
     PDC_ATTR pdcattr;
-    ULONG ulType;
 
-    /* Check what type of DC that is */
-    ulType = GDI_HANDLE_GET_TYPE(hdc);
-    switch (ulType)
-    {
-        case GDILoObjType_LO_ALTDC_TYPE:
-        case GDILoObjType_LO_DC_TYPE:
-            /* Handle this in the path below */
-            break;
-#if 0// FIXME: we don't support this
-        case GDILoObjType_LO_METADC16_TYPE:
-            return MFDRV_SetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
-
-        case GDILoObjType_LO_METAFILE_TYPE:
-            return EMFDRV_SetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
-#endif
-        default:
-            /* Other types are not allowed */
-            SetLastError(ERROR_INVALID_HANDLE);
-            return FALSE;
-    }
+    HANDLE_METADC(BOOL, SetWindowExtEx, FALSE, hdc, nXExtent, nYExtent, lpSize);
 
     /* Get the DC attr */
     pdcattr = GdiGetDcAttr(hdc);
@@ -729,28 +645,9 @@ SetViewportOrgEx(
     _In_ int Y,
     _Out_opt_ LPPOINT lpPoint)
 {
-#if 0
     PDC_ATTR pdcattr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetViewportOrgEx();
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetViewportOrgEx();
-            }
-        }
-    }
-#endif
+
+    HANDLE_METADC(BOOL, SetViewportOrgEx, FALSE, hdc, X, Y, lpPoint);
 
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
@@ -760,6 +657,7 @@ SetViewportOrgEx(
         return FALSE;
     }
 
+#if 0
     if (lpPoint)
     {
         lpPoint->x = pdcattr->ptlViewportOrg.x;
@@ -788,26 +686,8 @@ ScaleViewportExtEx(
     _In_ INT yDenom,
     _Out_ LPSIZE lpSize)
 {
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(a0) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_;
-            }
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, ScaleViewportExtEx, FALSE, hdc, xNum, xDenom, yNum, yDenom, lpSize);
+
     if (!GdiGetDcAttr(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -830,26 +710,7 @@ ScaleWindowExtEx(
     _In_ INT yDenom,
     _Out_ LPSIZE lpSize)
 {
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_;
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_;
-            }
-        }
-    }
-#endif
+    HANDLE_METADC(BOOL, ScaleWindowExtEx, FALSE, hdc, xNum, xDenom, yNum, yDenom, lpSize);
 
     if (!GdiGetDcAttr(hdc))
     {
@@ -899,26 +760,8 @@ SetLayout(
     _In_ HDC hdc,
     _In_ DWORD dwLayout)
 {
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetLayout( hdc, dwLayout);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return 0;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetLayout( hdc, dwLayout);
-            }
-        }
-    }
-#endif
+    HANDLE_METADC(DWORD, SetLayout, GDI_ERROR, hdc, dwLayout);
+
     if (!GdiGetDcAttr(hdc))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -950,7 +793,7 @@ SetLayoutWidth(
         return GDI_ERROR;
     }
 
-    return NtGdiSetLayout( hdc, wox, dwLayout);
+    return NtGdiSetLayout(hdc, wox, dwLayout);
 }
 
 /*
@@ -997,28 +840,11 @@ OffsetViewportOrgEx(
     _In_ int nYOffset,
     _Out_opt_ LPPOINT lpPoint)
 {
+    //PDC_ATTR pdcattr;
+
+    HANDLE_METADC(BOOL, OffsetViewportOrgEx, FALSE, hdc, nXOffset, nYOffset, lpPoint);
 #if 0
-    PDC_ATTR pdcattr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_OffsetViewportOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_OffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-            }
-        }
-    }
-#endif
+
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (!pdcattr)
@@ -1066,28 +892,11 @@ OffsetWindowOrgEx(
     _In_ int nYOffset,
     _Out_opt_ LPPOINT lpPoint)
 {
+    //PDC_ATTR pdcattr;
+
+    HANDLE_METADC(BOOL, OffsetWindowOrgEx, FALSE, hdc, nXOffset, nYOffset, lpPoint);
+
 #if 0
-    PDC_ATTR pdcattr;
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
-    {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_OffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_OffsetWindowOrgEx(hdc, nXOffset, nYOffset, lpPoint);
-            }
-        }
-    }
-#endif
     /* Get the DC attribute */
     pdcattr = GdiGetDcAttr(hdc);
     if (!pdcattr)

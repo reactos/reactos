@@ -384,7 +384,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
     PcrBasePage = Pcr >> MM_PAGE_SHIFT;
     if (Pcr == 0)
     {
-        UiMessageBox("Can't allocate PCR\n");
+        UiMessageBox("Can't allocate PCR.");
         return;
     }
     RtlZeroMemory((PVOID)Pcr, 2 * MM_PAGE_SIZE);
@@ -400,7 +400,7 @@ void WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock)
     GdtIdt = (PKGDTENTRY)MmAllocateMemoryWithType(NumPages * MM_PAGE_SIZE, LoaderMemoryData);
     if (GdtIdt == NULL)
     {
-        UiMessageBox("Can't allocate pages for GDT+IDT!\n");
+        UiMessageBox("Can't allocate pages for GDT+IDT!");
         return;
     }
 

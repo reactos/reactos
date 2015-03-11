@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  29-02-2008
  */
 
@@ -6,7 +6,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vytvoriù linku"
+CAPTION "Vytvori≈• linku"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1", -1, 115, 15, 160, 24
@@ -15,7 +15,7 @@ END
 
 IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vytvoriù linku"
+CAPTION "Vytvori≈• linku"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Text1",-1,10,0,225,40
@@ -25,14 +25,14 @@ END
 
 IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Vytvoriù odkaz"
+CAPTION "Vytvori≈• odkaz"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Tento sprievodca V·m pomÙûe vytvoriù odkazy na miestne alebo\nsieùovÈ programy, s˙bory, prieËinky, poËÌtaËe, alebo internetovÈ\nadresy.", -1, 120, 15, 200, 30
-    LTEXT "Zadajte umiestnenie poloûky:", -1, 120, 50, 120, 10
+    LTEXT "Tento sprievodca V√°m pom√¥≈æe vytvori≈• odkazy na miestne alebo\nsie≈•ov√© programy, s√∫bory, prieƒçinky, poƒç√≠taƒçe, alebo internetov√©\nadresy.", -1, 120, 15, 200, 30
+    LTEXT "Zadajte umiestnenie polo≈æky:", -1, 120, 50, 120, 10
     EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-    PUSHBUTTON "&Prehæad·vaù...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-    LTEXT "Kliknite na tlaËidlo œalej pre pokraËovanie.", -1, 120, 97, 162, 10
+    PUSHBUTTON "&Prehƒæad√°va≈•...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+    LTEXT "Kliknite na tlaƒçidlo ƒéalej pre pokraƒçovanie.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -40,17 +40,17 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Select a Title for the Program"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&NapÌöte n·zov pre tento odkaz:", -1, 120, 15, 150, 10
+    LTEXT "&Nap√≠≈°te n√°zov pre tento odkaz:", -1, 120, 15, 150, 10
     EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-    LTEXT "Kliknite na tlaËidlo DokonËiù pre vytvorenie odkazu.", -1, 118, 97, 178, 17
+    LTEXT "Kliknite na tlaƒçidlo Dokonƒçi≈• pre vytvorenie odkazu.", -1, 118, 97, 178, 17
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Pridaù alebo odstr·niù programy"
-    IDS_CPLSYSTEMDESCRIPTION "NastavÌ programy a vytvorÌ odkazy."
-    IDS_CREATE_SHORTCUT "Vytvoriù odkaz"
-    IDS_ERROR_NOT_FOUND "S˙bor %s nebol n·jden˝."
+    IDS_CPLSYSTEMNAME "Prida≈• alebo odstr√°ni≈• programy"
+    IDS_CPLSYSTEMDESCRIPTION "Nastav√≠ programy a vytvor√≠ odkazy."
+    IDS_CREATE_SHORTCUT "Vytvori≈• odkaz"
+    IDS_ERROR_NOT_FOUND "S√∫bor %s nebol n√°jden√Ω."
 END
 
 STRINGTABLE

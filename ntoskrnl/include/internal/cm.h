@@ -1575,6 +1575,14 @@ CmSaveKey(
     IN ULONG Flags
 );
 
+NTSTATUS
+NTAPI
+CmSaveMergedKeys(
+    IN PCM_KEY_CONTROL_BLOCK HighKcb,
+    IN PCM_KEY_CONTROL_BLOCK LowKcb,
+    IN HANDLE FileHandle
+);
+
 //
 // Startup and Shutdown
 //

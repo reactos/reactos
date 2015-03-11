@@ -4,142 +4,142 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "�d���ݒ�"
+CAPTION "電源設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
-    LTEXT "���̃R���s���[�^�ɍł��K�����d���ݒ��I�����Ă��������B���̐ݒ��ύX����ƁA�I�����ꂽ�d���ݒ���ύX�����_�ɒ��ӂ��Ă��������B", -1, 37, 6, 209, 36
-    GROUPBOX "�d���ݒ�(&O)", -1, 6, 43, 240, 50
+    LTEXT "このコンピュータに最も適した電源設定を選択してください。下の設定を変更すると、選択された電源設定も変更される点に注意してください。", -1, 37, 6, 209, 36
+    GROUPBOX "電源設定(&O)", -1, 6, 43, 240, 50
     COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
-    PUSHBUTTON "���O��t���ĕۑ�(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
-    PUSHBUTTON "�폜(&D)", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
-    GROUPBOX "�s��", IDC_GRPDETAIL, 6, 95, 240, 136
-    LTEXT "�R���s���[�^�̏��:", IDC_SAT, 12, 109, 60, 12
-    LTEXT "�d���ɐڑ�", IDC_SAC, 123, 110, 45, 15
+    PUSHBUTTON "名前を付けて保存(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+    PUSHBUTTON "削除(&D)", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+    GROUPBOX "不明", IDC_GRPDETAIL, 6, 95, 240, 136
+    LTEXT "コンピュータの状態:", IDC_SAT, 12, 109, 60, 12
+    LTEXT "電源に接続", IDC_SAC, 123, 110, 45, 15
     ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
-    LTEXT "�o�b�e���g�p", IDC_SDC, 195, 110, 45, 15
+    LTEXT "バッテリ使用", IDC_SDC, 195, 110, 45, 15
     ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
-    LTEXT "���j�^�̓d����؂�(&M):", IDC_MONITOR, 13, 148, 84, 10
+    LTEXT "モニタの電源を切る(&M):", IDC_MONITOR, 13, 148, 84, 10
     COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "�n�[�h�f�B�X�N�̓d����؂�(&I):", IDC_DISK, 13, 171, 84, 10
+    LTEXT "ハードディスクの電源を切る(&I):", IDC_DISK, 13, 171, 84, 10
     COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "�V�X�e�� �X�^���o�C(&T):", IDC_STANDBY, 13, 191, 84, 10
+    LTEXT "システム スタンバイ(&T):", IDC_STANDBY, 13, 191, 84, 10
     COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "�V�X�e�����x�~��Ԃɂ���(&H):", IDC_HYBERNATE, 13, 212, 84, 10
+    LTEXT "システムを休止状態にする(&H):", IDC_HYBERNATE, 13, 212, 84, 10
     COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEALARMS DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "�A���[��"
+CAPTION "アラーム"
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX "�o�b�e���ቺ�A���[��", -1, 6, 7, 239, 104
-    CONTROL "�d�����x�������ɒB������o�b�e���ቺ�A���[���Œm�点��(&L):", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
-    LTEXT "�s��", IDC_ALARMVALUE1, 209, 20, 33, 10
+    GROUPBOX "バッテリ低下アラーム", -1, 6, 7, 239, 104
+    CONTROL "電源レベルが次に達したらバッテリ低下アラームで知らせる(&L):", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    LTEXT "不明", IDC_ALARMVALUE1, 209, 20, 33, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
     LTEXT "100%", -1, 214, 43, 25, 10
-    PUSHBUTTON "�A���[���̓���(&M)...", -1, 17, 69, 70, 14, WS_DISABLED
-    LTEXT "�ʒm���@:", -1, 95, 71, 57, 10
-    LTEXT "�s��", IDC_ALARMMSG1, 154, 71, 84, 10
-    LTEXT "����:", -1, 95, 83, 55, 10
-    LTEXT "�s��", IDC_ALARMAKTION1, 154, 83, 84, 10
-    LTEXT "�v���O�����̎��s:", -1, 95, 95, 55, 10
-    LTEXT "�s��", IDC_ALARMPROG1, 154, 95, 84, 10
-    GROUPBOX "�o�b�e�����E�A���[��", -1, 6, 120, 239, 106
-    CONTROL "�d�����x�������ɒB������o�b�e�����E�A���[���Œm�点��(&C):", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
-    LTEXT "�s��", IDC_ALARMVALUE2, 209, 133, 33, 10
+    PUSHBUTTON "アラームの動作(&M)...", -1, 17, 69, 70, 14, WS_DISABLED
+    LTEXT "通知方法:", -1, 95, 71, 57, 10
+    LTEXT "不明", IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT "動作:", -1, 95, 83, 55, 10
+    LTEXT "不明", IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT "プログラムの実行:", -1, 95, 95, 55, 10
+    LTEXT "不明", IDC_ALARMPROG1, 154, 95, 84, 10
+    GROUPBOX "バッテリ限界アラーム", -1, 6, 120, 239, 106
+    CONTROL "電源レベルが次に達したらバッテリ限界アラームで知らせる(&C):", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    LTEXT "不明", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
     LTEXT "100%", -1, 214, 154, 25, 10
-    PUSHBUTTON "�A���[���̓���(&M)...", -1, 17, 183, 70, 14, WS_DISABLED
-    LTEXT "�ʒm���@:", -1, 95, 185, 50, 10
-    LTEXT "�s��", IDC_ALARMMSG2, 154, 185, 84, 10
-    LTEXT "����:", -1, 95, 198, 45, 10
-    LTEXT "�s��", IDC_ALARMAKTION2, 154, 198, 84, 10
-    LTEXT "�v���O�����̎��s:", -1, 95, 211, 50, 10
-    LTEXT "�s��", IDC_ALARMPROG2, 154, 211, 84, 10
+    PUSHBUTTON "アラームの動作(&M)...", -1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT "通知方法:", -1, 95, 185, 50, 10
+    LTEXT "不明", IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT "動作:", -1, 95, 198, 45, 10
+    LTEXT "不明", IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT "プログラムの実行:", -1, 95, 211, 50, 10
+    LTEXT "不明", IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "�ڍאݒ�"
+CAPTION "詳細設定"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ACDC, IDI_ACDC, 7, 7, 20, 20
-    LTEXT "�g�p����ȓd�͐ݒ��I�����Ă��������B", -1, 37, 6, 207, 20
-    GROUPBOX "�I�v�V����", -1, 6, 30, 240, 65
-    CONTROL "�A�C�R������Ƀ^�X�N �o�[�ɕ\\������(&S)", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
-    CONTROL "�X�^���o�C����񕜂���Ƃ��Ƀp�X���[�h�̓��͂����߂�(&P)", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
-    CONTROL "�o�b�e�����g�p����Ƃ��́A���Â��\\������(&D)", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
-    GROUPBOX "�d���{�^��", -1, 6, 101, 240, 127
-    LTEXT "�|�[�^�u�� �R���s���[�^������Ƃ�(&W):", IDC_SLIDCLOSE, 15, 115, 222, 10
+    LTEXT "使用する省電力設定を選択してください。", -1, 37, 6, 207, 20
+    GROUPBOX "オプション", -1, 6, 30, 240, 65
+    CONTROL "アイコンを常にタスク バーに表示する(&S)", IDC_SYSTRAYBATTERYMETER, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 43, 220, 10
+    CONTROL "スタンバイから回復するときにパスワードの入力を求める(&P)", IDC_PASSWORDLOGON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 60, 220, 10
+    CONTROL "バッテリを使用するときは、薄暗く表示する(&D)", IDC_VIDEODIMDISPLAY, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX "電源ボタン", -1, 6, 101, 240, 127
+    LTEXT "ポータブル コンピュータを閉じたとき(&W):", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "�R���s���[�^�̓d���{�^�����������Ƃ�(&E):", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    LTEXT "コンピュータの電源ボタンを押したとき(&E):", IDC_SPOWERBUTTON, 15, 153, 222, 10
     COMBOBOX IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT "�R���s���[�^�̃X���[�v �{�^�����������Ƃ�(&N):", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    LTEXT "コンピュータのスリープ ボタンを押したとき(&N):", IDC_SSLEEPBUTTON, 15, 191, 222, 10
     COMBOBOX IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPPAGEHIBERNATE DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "�x�~���"
+CAPTION "休止状態"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_HIBERNATE, IDI_HIBERNATE, 7, 7, 20, 20
-    LTEXT "�x�~��ԂɂȂ�ƁA�R���s���[�^�̓�������ɂ�����̂����ׂăn�[�h �f�B�X�N�Ɋi�[���Ă���V���b�g�_�E�����܂��B�x�~��Ԃ����������ƁA�R���s���[�^�͈ȑO�̏�Ԃɖ߂�܂��B ", -1, 37, 6, 210, 35
-    GROUPBOX "�x�~���", -1, 6, 41, 240, 32
-    CONTROL "�x�~��Ԃ�L���ɂ���(&H)", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
-    GROUPBOX "�x�~�̂��߂̃f�B�X�N�̈�", -1, 6, 80, 240, 76
-    LTEXT "�f�B�X�N�̋󂫗̈�:", -1, 15, 95, 140, 10
-    LTEXT "�s��", IDC_FREESPACE, 160, 95, 80, 10
-    LTEXT "�x�~��ԂɕK�v�ȃf�B�X�N�̈�:", -1, 15, 115, 140, 10
-    LTEXT "�s��", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
-    LTEXT "�x�~��Ԃ��T�|�[�g����ɂ́A�f�B�X�N�̋󂫗̈�𑝂₷�K�v������܂��B ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
+    LTEXT "休止状態になると、コンピュータはメモリ上にあるものをすべてハード ディスクに格納してからシャットダウンします。休止状態が解除されると、コンピュータは以前の状態に戻ります。 ", -1, 37, 6, 210, 35
+    GROUPBOX "休止状態", -1, 6, 41, 240, 32
+    CONTROL "休止状態を有効にする(&H)", IDC_HIBERNATEFILE, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX "休止のためのディスク領域", -1, 6, 80, 240, 76
+    LTEXT "ディスクの空き領域:", -1, 15, 95, 140, 10
+    LTEXT "不明", IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT "休止状態に必要なディスク領域:", -1, 15, 115, 140, 10
+    LTEXT "不明", IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT "休止状態をサポートするには、ディスクの空き領域を増やす必要があります。 ", IDC_TOLESSFREESPACE, 15, 135, 224, 20
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "�d���I�v�V����"
-    IDS_CPLDESCRIPTION_1 "�R���s���[�^�̏ȓd�͐ݒ���\\�����܂��B"
+    IDS_CPLNAME_1 "電源オプション"
+    IDS_CPLDESCRIPTION_1 "コンピュータの省電力設定を構成します。"
     IDS_PROCENT "%i%%"
-    IDS_SOUND "��"
-    IDS_TEXT "�e�L�X�g"
-    IDS_CONFIG1 "[%1] �̓d���ݒ�"
-    IDS_CONFIG2 "%1�̏ڍאݒ�"
-    IDS_SIZEBYTS "%i �o�C�g"
+    IDS_SOUND "音"
+    IDS_TEXT "テキスト"
+    IDS_CONFIG1 "[%1] の電源設定"
+    IDS_CONFIG2 "%1の詳細設定"
+    IDS_SIZEBYTS "%i バイト"
     IDS_SIZEMB "%i MB"
-    IDS_NOACTION "�������Ȃ�"
-    IDS_PowerActionNone1 "�������Ȃ�"
-    IDS_PowerActionUnknown "�s��"
-    IDS_PowerActionSleep "�X�^���o�C"
-    IDS_PowerActionHibernate "�x�~���"
-    IDS_PowerActionShutdown "�V���b�g�_�E��"
-    IDS_PowerActionRestart "�ċN��"
-    IDS_PowerActionShutdownOff "�V���b�g�_�E�����ēd����؂�"
-    IDS_PowerActionWarmEject "���͂����߂�"
-    IDS_PowerActionNone2 "�Ȃ�"
-    IDS_TIMEOUT1 "1 ����"
-    IDS_TIMEOUT2 "2 ����"
-    IDS_TIMEOUT3 "3 ����"
-    IDS_TIMEOUT4 "5 ����"
-    IDS_TIMEOUT5 "10 ����"
-    IDS_TIMEOUT6 "15 ����"
-    IDS_TIMEOUT7 "20 ����"
-    IDS_TIMEOUT8 "25 ����"
-    IDS_TIMEOUT9 "30 ����"
-    IDS_TIMEOUT10 "45 ����"
-    IDS_TIMEOUT11 "1 ���Ԍ�"
-    IDS_TIMEOUT12 "2 ���Ԍ�"
-    IDS_TIMEOUT13 "3 ���Ԍ�"
-    IDS_TIMEOUT14 "4 ���Ԍ�"
-    IDS_TIMEOUT15 "5 ���Ԍ�"
-    IDS_TIMEOUT16 "�Ȃ�"
-    IDS_DEL_SCHEME "���̓d���ݒ���폜���܂���?"
-    IDS_DEL_SCHEME_TITLE "�d���ݒ�̍폜"
+    IDS_NOACTION "何もしない"
+    IDS_PowerActionNone1 "何もしない"
+    IDS_PowerActionUnknown "不明"
+    IDS_PowerActionSleep "スタンバイ"
+    IDS_PowerActionHibernate "休止状態"
+    IDS_PowerActionShutdown "シャットダウン"
+    IDS_PowerActionRestart "再起動"
+    IDS_PowerActionShutdownOff "シャットダウンして電源を切る"
+    IDS_PowerActionWarmEject "入力を求める"
+    IDS_PowerActionNone2 "なし"
+    IDS_TIMEOUT1 "1 分後"
+    IDS_TIMEOUT2 "2 分後"
+    IDS_TIMEOUT3 "3 分後"
+    IDS_TIMEOUT4 "5 分後"
+    IDS_TIMEOUT5 "10 分後"
+    IDS_TIMEOUT6 "15 分後"
+    IDS_TIMEOUT7 "20 分後"
+    IDS_TIMEOUT8 "25 分後"
+    IDS_TIMEOUT9 "30 分後"
+    IDS_TIMEOUT10 "45 分後"
+    IDS_TIMEOUT11 "1 時間後"
+    IDS_TIMEOUT12 "2 時間後"
+    IDS_TIMEOUT13 "3 時間後"
+    IDS_TIMEOUT14 "4 時間後"
+    IDS_TIMEOUT15 "5 時間後"
+    IDS_TIMEOUT16 "なし"
+    IDS_DEL_SCHEME "この電源設定を削除しますか?"
+    IDS_DEL_SCHEME_TITLE "電源設定の削除"
 END

@@ -146,11 +146,14 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
  *
  * Flushes the calling thread's current batch.
  */
-VOID
+__kernel_entry
+NTSTATUS
 APIENTRY
-NtGdiFlush(VOID)
+NtGdiFlush(
+    VOID)
 {
-  SynchonizeDriver(GCAPS2_SYNCFLUSH);
+    SynchonizeDriver(GCAPS2_SYNCFLUSH);
+    return STATUS_SUCCESS;
 }
 
 /*

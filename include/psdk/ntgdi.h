@@ -1,6 +1,7 @@
 /*
  * NtGdi Entrypoints
  */
+#pragma once
 #ifndef _NTGDI_
 #define _NTGDI_
 
@@ -10,6 +11,10 @@
 
 #ifndef _WINDOWBLT_NOTIFICATION_
 #define _WINDOWBLT_NOTIFICATION_
+#endif
+
+#ifdef  COMBOX_SANDBOX
+#define DX_LONGHORN_PRESERVEDC
 #endif
 
 #define TRACE_SURFACE_ALLOCS        (DBG || 0)
@@ -77,11 +82,32 @@ typedef struct tagDOWNLOADDESIGNVECTOR
     DESIGNVECTOR dv;
 } DOWNLOADDESIGNVECTOR;
 
+/* NtGdiResetDC */
+typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;
+
+#if 0
+typedef struct _HLSURF_INFORMATION_PROBE {
+    union {
+        HLSURF_INFORMATION_SURFACE       Surface;
+        HLSURF_INFORMATION_PRESENTFLAGS  PresentFlags;
+        HLSURF_INFORMATION_TOKENUPDATEID UpdateId;
+        HLSURF_INFORMATION_SET_SIGNALING SetSignaling;
+        DWMSURFACEDATA                   SurfaceData;
+        HLSURF_INFORMATION_DIRTYREGIONS  DirtyRegions;
+        HLSURF_INFORMATION_REDIRSTYLE    RedirStyle;
+        HLSURF_INFORMATION_SET_GERNERATE_MOVE_DATA SetGenerateMoveData;
+    } u;
+} HLSURF_INFORMATION_PROBE, *PHLSURF_INFORMATION_PROBE;
+#endif // 0
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
-NtGdiInit(VOID);
+NtGdiInit(
+    VOID);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -104,6 +130,23 @@ NtGdiSetDIBitsToDeviceInternal(
     _In_opt_ HANDLE hcmXform
 );
 
+#if WINVER >= 0x601
+__kernel_entry
+W32KAPI
+HBITMAP
+APIENTRY
+NtGdiCreateSessionMappedDIBSection(
+    _In_opt_ HDC hdc,
+    _In_opt_ HANDLE hSectionApp,
+    _In_ DWORD dwOffset,
+    _In_reads_bytes_opt_(cjHeader) LPBITMAPINFO pbmi,
+    _In_ DWORD iUsage,
+    _In_ UINT cjHeader,
+    _In_ FLONG fl,
+    _In_ ULONG_PTR dwColorSpace);
+#endif
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -114,40 +157,40 @@ NtGdiGetFontResourceInfoInternalW(
     _In_ UINT cjBuf,
     _Out_ LPDWORD pdwBytes,
     _Out_writes_bytes_(cjBuf) LPVOID pvBuf,
-    _In_ DWORD iType
-);
+    _In_ DWORD iType);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
     _In_ HDC hdc,
-    IN OPTIONAL LPWSTR pwc,
+    _In_reads_opt_(cwc) LPWSTR pwc,
     _In_ INT cwc,
-    OUT OPTIONAL LPWORD pgi,
-    _In_ DWORD iMode
-);
+    _Out_writes_opt_(cwc) LPWORD pgi,
+    _In_ DWORD iMode);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiGetGlyphIndicesWInternal(
     _In_ HDC hdc,
-    IN OPTIONAL LPWSTR pwc,
+    _In_reads_opt_(cwc) LPWSTR pwc,
     _In_ INT cwc,
-    OUT OPTIONAL LPWORD pgi,
+    _Out_writes_opt_(cwc) LPWORD pgi,
     _In_ DWORD iMode,
-    _In_ BOOL bSubset
-);
+    _In_ BOOL bSubset);
 
+__kernel_entry
 W32KAPI
 HPALETTE
 APIENTRY
 NtGdiCreatePaletteInternal(
-    IN LPLOGPALETTE pLogPal,
-    _In_ UINT cEntries
-);
+    _In_reads_bytes_(cEntries * 4 + 4) LPLOGPALETTE pLogPal,
+    _In_ UINT cEntries);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -163,6 +206,7 @@ NtGdiArcInternal(
     _In_ INT x4,
     _In_ INT y4);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -176,7 +220,7 @@ NtGdiStretchDIBitsInternal(
     _In_ INT ySrc,
     _In_ INT cxSrc,
     _In_ INT cySrc,
-    _In_opt_ LPBYTE pjInit,
+    _In_reads_bytes_opt_(cjMaxBits) LPBYTE pjInit,
     _In_ LPBITMAPINFO pbmi,
     _In_ DWORD dwUsage,
     _In_ DWORD dwRop4,
@@ -184,16 +228,18 @@ NtGdiStretchDIBitsInternal(
     _In_ UINT cjMaxBits,
     _In_opt_ HANDLE hcmXform);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetOutlineTextMetricsInternalW(
     _In_ HDC hdc,
     _In_ ULONG cjotm,
-    _Out_opt_ OUTLINETEXTMETRICW *potmw,
+    _Out_writes_bytes_opt_(cjotm) OUTLINETEXTMETRICW *potmw,
     _Out_ TMDIFF *ptmd);
 
 _Success_(return != FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -203,6 +249,7 @@ NtGdiGetAndSetDCDword(
     _In_ DWORD dwIn,
     _Out_ DWORD *pdwResult);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
@@ -210,170 +257,181 @@ NtGdiGetDCObject(
     _In_ HDC hdc,
     _In_ INT itype);
 
+__kernel_entry
 W32KAPI
 HDC
 APIENTRY
 NtGdiGetDCforBitmap(
     _In_ HBITMAP hsurf);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetMonitorID(
     _In_ HDC hdc,
-    _In_ DWORD dwSize,
-    _Out_ LPWSTR pszMonitorID);
+    _In_ DWORD cjSize,
+    _Out_writes_bytes_(cjSize) LPWSTR pszMonitorID);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiGetLinkedUFIs(
     _In_ HDC hdc,
-    OUT OPTIONAL PUNIVERSAL_FONT_ID pufiLinkedUFIs,
-    _In_ INT BufferSize
-);
+    _Out_writes_opt_(cBufferSize) PUNIVERSAL_FONT_ID pufiLinkedUFIs,
+    _In_ INT cBufferSize);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSetLinkedUFIs(
     _In_ HDC hdc,
-    IN PUNIVERSAL_FONT_ID pufiLinks,
-    _In_ ULONG uNumUFIs
-);
+     _In_reads_(uNumUFIs) PUNIVERSAL_FONT_ID pufiLinks,
+    _In_ ULONG uNumUFIs);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetUFI(
     _In_ HDC hdc,
-    OUT PUNIVERSAL_FONT_ID pufi,
-    OUT OPTIONAL DESIGNVECTOR *pdv,
-    OUT ULONG *pcjDV,
-    OUT ULONG *pulBaseCheckSum,
-    OUT FLONG *pfl
-);
+    _Out_ PUNIVERSAL_FONT_ID pufi,
+    _Out_opt_ DESIGNVECTOR *pdv,
+    _Out_ ULONG *pcjDV,
+    _Out_ ULONG *pulBaseCheckSum,
+    _Out_ FLONG *pfl);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiForceUFIMapping(
     _In_ HDC hdc,
-    IN PUNIVERSAL_FONT_ID pufi
-);
+    _In_ PUNIVERSAL_FONT_ID pufi);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetUFIPathname(
-    IN PUNIVERSAL_FONT_ID pufi,
-    OUT OPTIONAL ULONG* pcwc,
-    OUT OPTIONAL LPWSTR pwszPathname,
-    OUT OPTIONAL ULONG* pcNumFiles,
+    _In_ PUNIVERSAL_FONT_ID pufi,
+    _Deref_out_range_(0, MAX_PATH * 3) ULONG* pcwc,
+    _Out_writes_to_opt_(MAX_PATH * 3, *pcwc) LPWSTR pwszPathname,
+    _Out_opt_ ULONG* pcNumFiles,
     _In_ FLONG fl,
-    OUT OPTIONAL BOOL *pbMemFont,
-    OUT OPTIONAL ULONG *pcjView,
-    OUT OPTIONAL PVOID pvView,
-    OUT OPTIONAL BOOL *pbTTC,
-    OUT OPTIONAL ULONG *piTTC
-);
+    _Out_opt_ BOOL *pbMemFont,
+    _Out_opt_ ULONG *pcjView,
+    _Out_opt_ PVOID pvView,
+    _Out_opt_ BOOL *pbTTC,
+    _Out_opt_ ULONG *piTTC);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiAddRemoteFontToDC(
     _In_ HDC hdc,
-    _In_ PVOID pvBuffer,
+    _In_reads_bytes_(cjBuffer) PVOID pvBuffer,
     _In_ ULONG cjBuffer,
-    IN OPTIONAL PUNIVERSAL_FONT_ID pufi
-);
+    _In_opt_ PUNIVERSAL_FONT_ID pufi);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiAddFontMemResourceEx(
-    _In_ PVOID pvBuffer,
+    _In_reads_bytes_(cjBuffer) PVOID pvBuffer,
     _In_ DWORD cjBuffer,
-    IN DESIGNVECTOR *pdv,
+    _In_reads_bytes_opt_(cjDV) DESIGNVECTOR *pdv,
     _In_ ULONG cjDV,
-    OUT DWORD *pNumFonts
-);
+    _Out_ DWORD *pNumFonts);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiRemoveFontMemResourceEx(
     _In_ HANDLE hMMFont);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiUnmapMemFont(
     _In_ PVOID pvView);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiRemoveMergeFont(
     _In_ HDC hdc,
-    IN UNIVERSAL_FONT_ID *pufi
-);
+    _In_ UNIVERSAL_FONT_ID *pufi);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
-NtGdiAnyLinkedFonts(VOID);
+NtGdiAnyLinkedFonts(
+    VOID);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetEmbUFI(
     _In_ HDC hdc,
-    OUT PUNIVERSAL_FONT_ID pufi,
-    OUT OPTIONAL DESIGNVECTOR *pdv,
-    OUT ULONG *pcjDV,
-    OUT ULONG *pulBaseCheckSum,
-    OUT FLONG  *pfl,
-    OUT KERNEL_PVOID *embFontID
-);
+    _Out_ PUNIVERSAL_FONT_ID pufi,
+    _Out_opt_ DESIGNVECTOR *pdv,
+    _Out_ ULONG *pcjDV,
+    _Out_ ULONG *pulBaseCheckSum,
+    _Out_ FLONG  *pfl,
+    _Out_ KERNEL_PVOID *embFontID);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
-NtGdiGetEmbedFonts(VOID);
+NtGdiGetEmbedFonts(
+    VOID);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiChangeGhostFont(
-    IN KERNEL_PVOID *pfontID,
-    _In_ BOOL bLoad
-);
+    _In_ KERNEL_PVOID *pfontID,
+    _In_ BOOL bLoad);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiAddEmbFontToDC(
     _In_ HDC hdc,
-    IN VOID **pFontID
-);
+    _In_ PVOID *pFontID);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiFontIsLinked(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 ULONG_PTR
 APIENTRY
 NtGdiPolyPolyDraw(
     _In_ HDC hdc,
     _In_ PPOINT ppt,
-    _In_ PULONG pcpt,
+    _In_reads_(ccpt) PULONG pcpt,
     _In_ ULONG ccpt,
     _In_ INT iFunc);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
@@ -386,26 +444,28 @@ NtGdiDoPalette(
     _In_ DWORD iFunc,
     _In_ BOOL bInbound);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiComputeXformCoefficients(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetWidthTable(
     _In_ HDC hdc,
     _In_ ULONG cSpecial,
-    IN WCHAR *pwc,
+    _In_reads_(cwc) WCHAR *pwc,
     _In_ ULONG cwc,
-    OUT USHORT *psWidth,
-    OUT OPTIONAL WIDTHDATA *pwd,
-    OUT FLONG *pflInfo
-);
+    _Out_writes_(cwc) USHORT *psWidth,
+    _Out_opt_ WIDTHDATA *pwd,
+    _Out_ FLONG *pflInfo);
 
 _Success_(return != 0)
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -413,8 +473,9 @@ NtGdiDescribePixelFormat(
     _In_ HDC hdc,
     _In_ INT ipfd,
     _In_ UINT cjpfd,
-    _When_(cjpfd != 0, _Out_) PPIXELFORMATDESCRIPTOR ppfd);
+    _Out_writes_bytes_(cjpfd) PPIXELFORMATDESCRIPTOR ppfd);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -422,42 +483,45 @@ NtGdiSetPixelFormat(
     _In_ HDC hdc,
     _In_ INT ipfd);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSwapBuffers(
     _In_ HDC hdc);
 
+/* Not in MS ntgdi.h */
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiSetupPublicCFONT(
     _In_ HDC hdc,
-    IN OPTIONAL HFONT hf,
-    _In_ ULONG ulAve
-);
+    _In_opt_ HFONT hf,
+    _In_ ULONG ulAve);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDxgGenericThunk(
     _In_ ULONG_PTR ulIndex,
     _In_ ULONG_PTR ulHandle,
-    IN OUT SIZE_T *pdwSizeOfPtr1,
-    IN OUT  PVOID pvPtr1,
-    IN OUT SIZE_T *pdwSizeOfPtr2,
-    IN OUT  PVOID pvPtr2
-);
+    _Inout_ SIZE_T *pdwSizeOfPtr1,
+    _Inout_  PVOID pvPtr1,
+    _Inout_ SIZE_T *pdwSizeOfPtr2,
+    _Inout_  PVOID pvPtr2);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdAddAttachedSurface(
     _In_ HANDLE hSurface,
     _In_ HANDLE hSurfaceAttached,
-    IN OUT PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
-);
+    _Inout_ PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -465,75 +529,89 @@ NtGdiDdAttachSurface(
     _In_ HANDLE hSurfaceFrom,
     _In_ HANDLE hSurfaceTo);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdBlt(
     _In_ HANDLE hSurfaceDest,
     _In_ HANDLE hSurfaceSrc,
-    IN OUT PDD_BLTDATA puBltData
-);
+    _Inout_ PDD_BLTDATA puBltData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdCanCreateSurface(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-);
+    _Inout_ PDD_CANCREATESURFACEDATA puCanCreateSurfaceData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdColorControl(
     _In_ HANDLE hSurface,
-    IN OUT PDD_COLORCONTROLDATA puColorControlData
-);
+    _Inout_ PDD_COLORCONTROLDATA puColorControlData);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiDdCreateDirectDrawObject(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdCreateSurface(
     _In_ HANDLE hDirectDraw,
-    IN HANDLE* hSurface,
-    IN OUT DDSURFACEDESC* puSurfaceDescription,
-    IN OUT DD_SURFACE_GLOBAL* puSurfaceGlobalData,
-    IN OUT DD_SURFACE_LOCAL* puSurfaceLocalData,
-    IN OUT DD_SURFACE_MORE* puSurfaceMoreData,
-    IN OUT DD_CREATESURFACEDATA* puCreateSurfaceData,
-    OUT HANDLE* puhSurface
-);
+    _In_ HANDLE* hSurface,
+    _Inout_ DDSURFACEDESC* puSurfaceDescription,
+    _Inout_ DD_SURFACE_GLOBAL* puSurfaceGlobalData,
+    _Inout_ DD_SURFACE_LOCAL* puSurfaceLocalData,
+    _Inout_ DD_SURFACE_MORE* puSurfaceMoreData,
+    _Inout_ DD_CREATESURFACEDATA* puCreateSurfaceData,
+    _Out_ HANDLE* puhSurface);
 
+#ifdef DX_LONGHORN_PRESERVEDC
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiDdChangeSurfacePointer(
+    _In_ HANDLE hSurface,
+    _In_ PVOID pSurfacePointer);
+#endif /* DX_LONGHORN_PRESERVEDC */
+
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiDdCreateSurfaceObject(
     _In_ HANDLE hDirectDrawLocal,
     _In_ HANDLE hSurface,
-    IN PDD_SURFACE_LOCAL puSurfaceLocal,
-    IN PDD_SURFACE_MORE puSurfaceMore,
-    IN PDD_SURFACE_GLOBAL puSurfaceGlobal,
-    _In_ BOOL bComplete
-);
+    _In_ PDD_SURFACE_LOCAL puSurfaceLocal,
+    _In_ PDD_SURFACE_MORE puSurfaceMore,
+    _In_ PDD_SURFACE_GLOBAL puSurfaceGlobal,
+    _In_ BOOL bComplete);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDdDeleteSurfaceObject(
     _In_ HANDLE hSurface);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDdDeleteDirectDrawObject(
     _In_ HANDLE hDirectDrawLocal);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -541,6 +619,7 @@ NtGdiDdDestroySurface(
     _In_ HANDLE hSurface,
     _In_ BOOL bRealDestroy);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -549,113 +628,114 @@ NtGdiDdFlip(
     _In_ HANDLE hSurfaceTarget,
     _In_ HANDLE hSurfaceCurrentLeft,
     _In_ HANDLE hSurfaceTargetLeft,
-    IN OUT PDD_FLIPDATA puFlipData
-);
+    _Inout_ PDD_FLIPDATA puFlipData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetAvailDriverMemory(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
-);
+    _Inout_ PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetBltStatus(
     _In_ HANDLE hSurface,
-    IN OUT PDD_GETBLTSTATUSDATA puGetBltStatusData
-);
+    _Inout_ PDD_GETBLTSTATUSDATA puGetBltStatusData);
 
+__kernel_entry
 W32KAPI
 HDC
 APIENTRY
 NtGdiDdGetDC(
     _In_ HANDLE hSurface,
-    IN PALETTEENTRY* puColorTable
-);
+    _In_ PALETTEENTRY* puColorTable);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetDriverInfo(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETDRIVERINFODATA puGetDriverInfoData
-);
+    _Inout_ PDD_GETDRIVERINFODATA puGetDriverInfoData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetFlipStatus(
     _In_ HANDLE hSurface,
-    IN OUT PDD_GETFLIPSTATUSDATA puGetFlipStatusData
-);
+    _Inout_ PDD_GETFLIPSTATUSDATA puGetFlipStatusData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetScanLine(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETSCANLINEDATA puGetScanLineData
-);
+    _Inout_ PDD_GETSCANLINEDATA puGetScanLineData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdSetExclusiveMode(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
-);
+    _Inout_ PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdFlipToGDISurface(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData
-);
+    _Inout_ PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdLock(
     _In_ HANDLE hSurface,
-    IN OUT PDD_LOCKDATA puLockData,
-    _In_ HDC hdcClip
-);
+    _Inout_ PDD_LOCKDATA puLockData,
+    _In_ HDC hdcClip);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDdQueryDirectDrawObject(
     _In_ HANDLE hDirectDrawLocal,
-    OUT PDD_HALINFO pHalInfo,
-    OUT DWORD* pCallBackFlags,
-    OUT OPTIONAL LPD3DNTHAL_CALLBACKS puD3dCallbacks,
-    OUT OPTIONAL LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
-    OUT OPTIONAL PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
-    OUT OPTIONAL LPDDSURFACEDESC puD3dTextureFormats,
-    OUT DWORD* puNumHeaps,
-    OUT OPTIONAL VIDEOMEMORY* puvmList,
-    OUT DWORD* puNumFourCC,
-    OUT OPTIONAL DWORD* puFourCC
-);
+    _Out_ PDD_HALINFO pHalInfo,
+    _Out_writes_(3) DWORD* pCallBackFlags,
+    _Out_opt_ LPD3DNTHAL_CALLBACKS puD3dCallbacks,
+    _Out_opt_ LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
+    _Out_opt_ PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
+    _Out_opt_ LPDDSURFACEDESC puD3dTextureFormats,
+    _Out_ DWORD* puNumHeaps,
+    _Out_opt_ VIDEOMEMORY* puvmList,
+    _Out_ DWORD* puNumFourCC,
+    _Out_opt_ DWORD* puFourCC);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDdReenableDirectDrawObject(
     _In_ HANDLE hDirectDrawLocal,
-    IN OUT BOOL* pubNewMode
-);
+    _Inout_ BOOL* pubNewMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDdReleaseDC(
     _In_ HANDLE hSurface);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -663,56 +743,57 @@ NtGdiDdResetVisrgn(
     _In_ HANDLE hSurface,
     _In_ HWND hwnd);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdSetColorKey(
     _In_ HANDLE hSurface,
-    IN OUT PDD_SETCOLORKEYDATA puSetColorKeyData
-);
+    _Inout_ PDD_SETCOLORKEYDATA puSetColorKeyData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdSetOverlayPosition(
     _In_ HANDLE hSurfaceSource,
     _In_ HANDLE hSurfaceDestination,
-    IN OUT PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
-);
+    _Inout_ PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData);
 
+__kernel_entry
 W32KAPI
-DWORD
+NTSTATUS
 APIENTRY
 NtGdiDdUnattachSurface(
     _In_ HANDLE hSurface,
-    _In_ HANDLE hSurfaceAttached
-);
+    _In_ HANDLE hSurfaceAttached);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdUnlock(
     _In_ HANDLE hSurface,
-    IN OUT PDD_UNLOCKDATA puUnlockData
-);
+    _Inout_ PDD_UNLOCKDATA puUnlockData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdUpdateOverlay(
     _In_ HANDLE hSurfaceDestination,
     _In_ HANDLE hSurfaceSource,
-    IN OUT PDD_UPDATEOVERLAYDATA puUpdateOverlayData
-);
+    _Inout_ PDD_UPDATEOVERLAYDATA puUpdateOverlayData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdWaitForVerticalBlank(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
-);
+    _Inout_ PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
@@ -721,58 +802,61 @@ NtGdiDdGetDxHandle(
     _In_opt_ HANDLE hSurface,
     _In_ BOOL bRelease);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDdSetGammaRamp(
     _In_ HANDLE hDirectDraw,
     _In_ HDC hdc,
-    _In_ LPVOID lpGammaRamp);
+    _In_reads_bytes_(sizeof(GAMMARAMP)) LPVOID lpGammaRamp);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdLockD3D(
     _In_ HANDLE hSurface,
-    IN OUT PDD_LOCKDATA puLockData
-);
+    _Inout_ PDD_LOCKDATA puLockData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdUnlockD3D(
     _In_ HANDLE hSurface,
-    IN OUT PDD_UNLOCKDATA puUnlockData
-);
+    _Inout_ PDD_UNLOCKDATA puUnlockData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdCreateD3DBuffer(
     _In_ HANDLE hDirectDraw,
-    IN OUT HANDLE* hSurface,
-    IN OUT DDSURFACEDESC* puSurfaceDescription,
-    IN OUT DD_SURFACE_GLOBAL* puSurfaceGlobalData,
-    IN OUT DD_SURFACE_LOCAL* puSurfaceLocalData,
-    IN OUT DD_SURFACE_MORE* puSurfaceMoreData,
-    IN OUT DD_CREATESURFACEDATA* puCreateSurfaceData,
-    IN OUT HANDLE* puhSurface
-);
+    _Inout_ HANDLE* hSurface,
+    _Inout_ DDSURFACEDESC* puSurfaceDescription,
+    _Inout_ DD_SURFACE_GLOBAL* puSurfaceGlobalData,
+    _Inout_ DD_SURFACE_LOCAL* puSurfaceLocalData,
+    _Inout_ DD_SURFACE_MORE* puSurfaceMoreData,
+    _Inout_ DD_CREATESURFACEDATA* puCreateSurfaceData,
+    _Inout_ HANDLE* puhSurface);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdCanCreateD3DBuffer(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-);
+    _Inout_ PDD_CANCREATESURFACEDATA puCanCreateSurfaceData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdDestroyD3DBuffer(
     _In_ HANDLE hSurface);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -780,91 +864,91 @@ NtGdiD3dContextCreate(
     _In_ HANDLE hDirectDrawLocal,
     _In_ HANDLE hSurfColor,
     _In_ HANDLE hSurfZ,
-    IN OUT D3DNTHAL_CONTEXTCREATEI *pdcci
-);
+    _Inout_ D3DNTHAL_CONTEXTCREATEI *pdcci);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiD3dContextDestroy(
-    IN LPD3DNTHAL_CONTEXTDESTROYDATA pdcdd
-);
+    _In_ LPD3DNTHAL_CONTEXTDESTROYDATA pdcdd);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiD3dContextDestroyAll(
-    OUT LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcdad
-);
+    _Out_ LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcdad);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiD3dValidateTextureStageState(
-    IN OUT LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
-);
+    _Inout_ LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiD3dDrawPrimitives2(
     _In_ HANDLE hCmdBuf,
     _In_ HANDLE hVBuf,
-    IN OUT LPD3DNTHAL_DRAWPRIMITIVES2DATA pded,
-    IN OUT FLATPTR* pfpVidMemCmd,
-    IN OUT DWORD* pdwSizeCmd,
-    IN OUT FLATPTR* pfpVidMemVtx,
-    IN OUT DWORD* pdwSizeVtx
-);
+    _Inout_ LPD3DNTHAL_DRAWPRIMITIVES2DATA pded,
+    _Inout_ FLATPTR* pfpVidMemCmd,
+    _Inout_ DWORD* pdwSizeCmd,
+    _Inout_ FLATPTR* pfpVidMemVtx,
+    _Inout_ DWORD* pdwSizeVtx);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetDriverState(
-    IN OUT PDD_GETDRIVERSTATEDATA pdata
-);
+    _Inout_ PDD_GETDRIVERSTATEDATA pdata);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdCreateSurfaceEx(
     _In_ HANDLE hDirectDraw,
     _In_ HANDLE hSurface,
-    _In_ DWORD dwSurfaceHandle
-);
+    _In_ DWORD dwSurfaceHandle);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpCanCreateVideoPort(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_CANCREATEVPORTDATA puCanCreateVPortData
-);
+    _Inout_ PDD_CANCREATEVPORTDATA puCanCreateVPortData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpColorControl(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_VPORTCOLORDATA puVPortColorData
-);
+    _Inout_ PDD_VPORTCOLORDATA puVPortColorData);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiDvpCreateVideoPort(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_CREATEVPORTDATA puCreateVPortData
-);
+    _Inout_ PDD_CREATEVPORTDATA puCreateVPortData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpDestroyVideoPort(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_DESTROYVPORTDATA puDestroyVPortData
-);
+    _Inout_ PDD_DESTROYVPORTDATA puDestroyVPortData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -872,100 +956,100 @@ NtGdiDvpFlipVideoPort(
     _In_ HANDLE hVideoPort,
     _In_ HANDLE hDDSurfaceCurrent,
     _In_ HANDLE hDDSurfaceTarget,
-    IN OUT PDD_FLIPVPORTDATA puFlipVPortData
-);
+    _Inout_ PDD_FLIPVPORTDATA puFlipVPortData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortBandwidth(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData
-);
+    _Inout_ PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortField(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTFIELDDATA puGetVPortFieldData
-);
+    _Inout_ PDD_GETVPORTFIELDDATA puGetVPortFieldData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortFlipStatus(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData
-);
+    _Inout_ PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortInputFormats(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData
-);
+    _Inout_ PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortLine(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTLINEDATA puGetVPortLineData
-);
+    _Inout_ PDD_GETVPORTLINEDATA puGetVPortLineData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortOutputFormats(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData
-);
+    _Inout_ PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoPortConnectInfo(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETVPORTCONNECTDATA puGetVPortConnectData
-);
+    _Inout_ PDD_GETVPORTCONNECTDATA puGetVPortConnectData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpGetVideoSignalStatus(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTSIGNALDATA puGetVPortSignalData
-);
+    _Inout_ PDD_GETVPORTSIGNALDATA puGetVPortSignalData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpUpdateVideoPort(
     _In_ HANDLE hVideoPort,
-    IN HANDLE* phSurfaceVideo,
-    IN HANDLE* phSurfaceVbi,
-    IN OUT PDD_UPDATEVPORTDATA puUpdateVPortData
-);
+    _In_ HANDLE* phSurfaceVideo,
+    _In_ HANDLE* phSurfaceVbi,
+    _Inout_ PDD_UPDATEVPORTDATA puUpdateVPortData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpWaitForVideoPortSync(
     _In_ HANDLE hVideoPort,
-    IN OUT PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData
-);
+    _Inout_ PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDvpAcquireNotification(
     _In_ HANDLE hVideoPort,
-    IN OUT HANDLE* hEvent,
-    IN LPDDVIDEOPORTNOTIFY pNotify
-);
+    _Inout_ HANDLE* hEvent,
+    _In_ LPDDVIDEOPORTNOTIFY pNotify);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -973,95 +1057,96 @@ NtGdiDvpReleaseNotification(
     _In_ HANDLE hVideoPort,
     _In_ HANDLE hEvent);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetMoCompGuids(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData
-);
+    _Inout_ PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetMoCompFormats(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData
-);
+    _Inout_ PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetMoCompBuffInfo(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData
-);
+    _Inout_ PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdGetInternalMoCompInfo(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_GETINTERNALMOCOMPDATA puGetInternalData
-);
+    _Inout_ PDD_GETINTERNALMOCOMPDATA puGetInternalData);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiDdCreateMoComp(
     _In_ HANDLE hDirectDraw,
-    IN OUT PDD_CREATEMOCOMPDATA puCreateMoCompData
-);
+    _Inout_ PDD_CREATEMOCOMPDATA puCreateMoCompData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdDestroyMoComp(
     _In_ HANDLE hMoComp,
-    IN OUT PDD_DESTROYMOCOMPDATA puDestroyMoCompData
-);
+    _Inout_ PDD_DESTROYMOCOMPDATA puDestroyMoCompData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdBeginMoCompFrame(
     _In_ HANDLE hMoComp,
-    IN OUT PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData
-);
+    _Inout_ PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdEndMoCompFrame(
     _In_ HANDLE hMoComp,
-    IN OUT PDD_ENDMOCOMPFRAMEDATA puEndFrameData
-);
+    _Inout_ PDD_ENDMOCOMPFRAMEDATA puEndFrameData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdRenderMoComp(
     _In_ HANDLE hMoComp,
-    IN OUT PDD_RENDERMOCOMPDATA puRenderMoCompData
-);
+    _Inout_ PDD_RENDERMOCOMPDATA puRenderMoCompData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdQueryMoCompStatus(
     _In_ HANDLE hMoComp,
-    IN OUT PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData
-);
+    _Inout_ PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiDdAlphaBlt(
     _In_ HANDLE hSurfaceDest,
     _In_opt_ HANDLE hSurfaceSrc,
-    IN OUT PDD_BLTDATA puBltData
-);
+    _Inout_ PDD_BLTDATA puBltData);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1079,6 +1164,7 @@ NtGdiAlphaBlend(
     _In_ BLENDFUNCTION BlendFunction,
     _In_ HANDLE hcmXform);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1090,6 +1176,7 @@ NtGdiGradientFill(
     _In_ ULONG nMesh,
     _In_ ULONG ulMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1098,18 +1185,21 @@ NtGdiSetIcmMode(
     _In_ ULONG nCommand,
     _In_ ULONG ulMode);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiCreateColorSpace(
     _In_ PLOGCOLORSPACEEXW pLogColorSpace);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDeleteColorSpace(
     _In_ HANDLE hColorSpace);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1117,6 +1207,7 @@ NtGdiSetColorSpace(
     _In_ HDC hdc,
     _In_ HCOLORSPACE hColorSpace);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
@@ -1130,6 +1221,7 @@ NtGdiCreateColorTransform(
     _In_reads_bytes_opt_(cjTargetProfile) PVOID pvTargetProfile,
     _In_ ULONG cjTargetProfile);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1137,39 +1229,41 @@ NtGdiDeleteColorTransform(
     _In_ HDC hdc,
     _In_ HANDLE hColorTransform);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiCheckBitmapBits(
     _In_ HDC hdc,
     _In_ HANDLE hColorTransform,
-    _In_ PVOID pvBits,
+    _In_reads_bytes_(dwStride * dwHeight) PVOID pvBits,
     _In_ ULONG bmFormat,
     _In_ DWORD dwWidth,
     _In_ DWORD dwHeight,
     _In_ DWORD dwStride,
-    OUT PBYTE paResults
-);
+    _Out_writes_bytes_(dwWidth * dwHeight) PBYTE paResults);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiColorCorrectPalette(
     _In_ HDC hdc,
     _In_ HPALETTE hpal,
-    _In_ ULONG FirstEntry,
-    _In_ ULONG NumberOfEntries,
-    IN OUT PALETTEENTRY *ppalEntry,
-    _In_ ULONG Command
-);
+    _In_ ULONG uFirstEntry,
+    _In_ ULONG cPalEntries,
+    _Inout_updates_(cPalEntries) PALETTEENTRY *ppalEntry,
+    _In_ ULONG uCommand);
 
+__kernel_entry
 W32KAPI
 ULONG_PTR
 APIENTRY
 NtGdiGetColorSpaceforBitmap(
     _In_ HBITMAP hsurf);
 
-_Success_(return != FALSE)
+_Success_(return!=FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1177,6 +1271,7 @@ NtGdiGetDeviceGammaRamp(
     _In_ HDC hdc,
     _Out_writes_bytes_(sizeof(GAMMARAMP)) LPVOID lpGammaRamp);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1184,31 +1279,35 @@ NtGdiSetDeviceGammaRamp(
     _In_ HDC hdc,
     _In_reads_bytes_(sizeof(GAMMARAMP)) LPVOID lpGammaRamp);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiIcmBrushInfo(
     _In_ HDC hdc,
     _In_ HBRUSH hbrush,
-    IN OUT PBITMAPINFO pbmiDIB,
-    IN OUT PVOID pvBits,
-    IN OUT ULONG *pulBits,
-    OUT OPTIONAL DWORD *piUsage,
-    OUT OPTIONAL BOOL *pbAlreadyTran,
-    _In_ ULONG Command
-);
+    _Inout_updates_bytes_(sizeof(BITMAPINFO) + ((/*MAX_COLORTABLE*/256 - 1) * sizeof(RGBQUAD))) PBITMAPINFO pbmiDIB,
+    _Inout_updates_bytes_(*pulBits) PVOID pvBits,
+    _Inout_ ULONG *pulBits,
+    _Out_opt_ DWORD *piUsage,
+    _Out_opt_ BOOL *pbAlreadyTran,
+    _In_ ULONG Command);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
-NtGdiFlush(VOID);
+NtGdiFlush(
+    VOID);
 
+__kernel_entry
 W32KAPI
 HDC
 APIENTRY
 NtGdiCreateMetafileDC(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1216,49 +1315,54 @@ NtGdiMakeInfoDC(
     _In_ HDC hdc,
     _In_ BOOL bSet);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiCreateClientObj(
     _In_ ULONG ulType);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDeleteClientObj(
     _In_ HANDLE h);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
 NtGdiGetBitmapBits(
     _In_ HBITMAP hbm,
     _In_ ULONG cjMax,
-    OUT OPTIONAL PBYTE pjOut
-);
+    _Out_writes_bytes_opt_(cjMax) PBYTE pjOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDeleteObjectApp(
     _In_ HANDLE hobj);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiGetPath(
     _In_ HDC hdc,
-    OUT OPTIONAL LPPOINT pptlBuf,
-    OUT OPTIONAL LPBYTE pjTypes,
-    _In_ INT cptBuf
-);
+    _Out_writes_opt_(cptBuf) LPPOINT pptlBuf,
+    _Out_writes_opt_(cptBuf) LPBYTE pjTypes,
+    _In_ INT cptBuf);
 
+__kernel_entry
 W32KAPI
 HDC
 APIENTRY
 NtGdiCreateCompatibleDC(
     _In_opt_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -1267,14 +1371,15 @@ NtGdiCreateDIBitmapInternal(
     _In_ INT cx,
     _In_ INT cy,
     _In_ DWORD fInit,
-    _In_opt_ LPBYTE pjInit,
-    _In_opt_ LPBITMAPINFO pbmi,
+    _In_reads_bytes_opt_(cjMaxBits) LPBYTE pjInit,
+    _In_reads_bytes_opt_(cjMaxInitInfo) LPBITMAPINFO pbmi,
     _In_ DWORD iUsage,
     _In_ UINT cjMaxInitInfo,
     _In_ UINT cjMaxBits,
     _In_ FLONG f,
     _In_ HANDLE hcmXform);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -1282,13 +1387,14 @@ NtGdiCreateDIBSection(
     _In_ HDC hdc,
     _In_opt_ HANDLE hSectionApp,
     _In_ DWORD dwOffset,
-    _In_ LPBITMAPINFO pbmi,
+    _In_reads_bytes_opt_(cjHeader) LPBITMAPINFO pbmi,
     _In_ DWORD iUsage,
     _In_ UINT cjHeader,
     _In_ FLONG fl,
     _In_ ULONG_PTR dwColorSpace,
-    _Out_opt_ PVOID *ppvBits);
+    _Outptr_ PVOID *ppvBits);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
@@ -1296,17 +1402,19 @@ NtGdiCreateSolidBrush(
     _In_ COLORREF cr,
     _In_opt_ HBRUSH hbr);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
 NtGdiCreateDIBBrush(
-    _In_ PVOID pv,
+    _In_reads_bytes_(cj) PVOID pv,
     _In_ FLONG fl,
     _In_ UINT  cj,
     _In_ BOOL  b8X8,
     _In_ BOOL bPen,
     _In_ PVOID pClient);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
@@ -1315,6 +1423,7 @@ NtGdiCreatePatternBrushInternal(
     _In_ BOOL bPen,
     _In_ BOOL b8X8);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
@@ -1323,6 +1432,7 @@ NtGdiCreateHatchBrushInternal(
     _In_ COLORREF clrr,
     _In_ BOOL bPen);
 
+__kernel_entry
 W32KAPI
 HPEN
 APIENTRY
@@ -1334,11 +1444,12 @@ NtGdiExtCreatePen(
     _In_ ULONG_PTR lClientHatch,
     _In_ ULONG_PTR lHatch,
     _In_ ULONG cstyle,
-    _In_opt_ PULONG pulStyle,
+    _In_reads_opt_(cstyle) PULONG pulStyle,
     _In_ ULONG cjDIB,
     _In_ BOOL bOldStylePen,
     _In_opt_ HBRUSH hbrush);
 
+__kernel_entry
 W32KAPI
 HRGN
 APIENTRY
@@ -1348,6 +1459,7 @@ NtGdiCreateEllipticRgn(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 HRGN
 APIENTRY
@@ -1359,6 +1471,7 @@ NtGdiCreateRoundRectRgn(
     _In_ INT xWidth,
     _In_ INT yHeight);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
@@ -1370,55 +1483,60 @@ NtGdiCreateServerMetaFile(
     _In_ DWORD xExt,
     _In_ DWORD yExt);
 
+__kernel_entry
 W32KAPI
 HRGN
 APIENTRY
 NtGdiExtCreateRegion(
     _In_opt_ LPXFORM px,
     _In_ DWORD cj,
-    _In_ LPRGNDATA prgn);
+    _In_reads_bytes_(cj) LPRGNDATA prgndata);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiMakeFontDir(
     _In_ FLONG flEmbed,
     _Out_writes_bytes_(cjFontDir) PBYTE pjFontDir,
-    _In_ unsigned cjFontDir,
-    _In_z_bytecount_(cjPathname) LPWSTR pwszPathname,
-    _In_ unsigned cjPathname);
+    _In_ UINT cjFontDir,
+    _In_reads_bytes_(cjPathname) LPWSTR pwszPathname,
+    _In_ UINT cjPathname);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiPolyDraw(
     _In_ HDC hdc,
-    _In_count_(cpt) LPPOINT ppt,
-    _In_count_(cpt) LPBYTE pjAttr,
+    _In_reads_(cpt) LPPOINT ppt,
+    _In_reads_(cpt) LPBYTE pjAttr,
     _In_ ULONG cpt);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiPolyTextOutW(
     _In_ HDC hdc,
-    _In_ POLYTEXTW *pptw,
+    _In_reads_(cStr) POLYTEXTW *pptw,
     _In_ UINT cStr,
     _In_ DWORD dwCodePage);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetServerMetaFileBits(
     _In_ HANDLE hmo,
     _In_ ULONG cjData,
-    OUT OPTIONAL LPBYTE pjData,
-    OUT PDWORD piType,
-    OUT PDWORD pmm,
-    OUT PDWORD pxExt,
-    OUT PDWORD pyExt
-);
+    _Out_writes_bytes_opt_(cjData) LPBYTE pjData,
+    _Out_ PDWORD piType,
+    _Out_ PDWORD pmm,
+    _Out_ PDWORD pxExt,
+    _Out_ PDWORD pyExt);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1427,13 +1545,16 @@ NtGdiEqualRgn(
     _In_ HRGN hrgn2);
 
 _Must_inspect_result_
+_Success_(return!=FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetBitmapDimension(
     _In_ HBITMAP hbm,
-    _When_(return != FALSE, _Out_) LPSIZE psize);
+    _Out_ LPSIZE psize);
 
+__kernel_entry
 W32KAPI
 UINT
 APIENTRY
@@ -1441,6 +1562,7 @@ NtGdiGetNearestPaletteIndex(
     _In_ HPALETTE hpal,
     _In_ COLORREF crColor);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1449,6 +1571,7 @@ NtGdiPtVisible(
     _In_ INT x,
     _In_ INT y);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1456,17 +1579,19 @@ NtGdiRectVisible(
     _In_ HDC hdc,
     _In_ LPRECT prc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiRemoveFontResourceW(
-    _In_z_count_(cwc) WCHAR *pwszFiles,
+    _In_reads_(cwc) WCHAR *pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ ULONG fl,
     _In_ DWORD dwPidTid,
     _In_opt_ DESIGNVECTOR *pdv);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1474,6 +1599,7 @@ NtGdiResizePalette(
     _In_ HPALETTE hpal,
     _In_ UINT cEntry);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1483,6 +1609,7 @@ NtGdiSetBitmapDimension(
     _In_ INT cy,
     _In_opt_ LPSIZE psizeOut);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -1491,12 +1618,14 @@ NtGdiOffsetClipRgn(
     _In_ INT x,
     _In_ INT y);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiSetMetaRgn(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1505,6 +1634,8 @@ NtGdiSetTextJustification(
     _In_ INT lBreakExtra,
     _In_ INT cBreak);
 
+_Success_(return!=ERROR)
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -1512,20 +1643,21 @@ NtGdiGetAppClipBox(
     _In_ HDC hdc,
     _Out_ LPRECT prc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetTextExtentExW(
     _In_ HDC hdc,
-    IN OPTIONAL LPWSTR lpwsz,
+    _In_reads_opt_(cwc) LPWSTR pwsz,
     _In_ ULONG cwc,
     _In_ ULONG dxMax,
-    OUT OPTIONAL ULONG *pcCh,
-    OUT OPTIONAL PULONG pdxOut,
-    OUT LPSIZE psize,
-    _In_ FLONG fl
-);
+    _Out_opt_ ULONG *pcCh,
+    _Out_writes_to_opt_(cwc, *pcCh) PULONG pdxOut,
+    _Out_ LPSIZE psize,
+    _In_ FLONG fl);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1533,23 +1665,23 @@ NtGdiGetCharABCWidthsW(
     _In_ HDC hdc,
     _In_ UINT wchFirst,
     _In_ ULONG cwch,
-    IN OPTIONAL PWCHAR pwch,
+    _In_reads_opt_(cwch) PWCHAR pwch,
     _In_ FLONG fl,
-    OUT PVOID pvBuf
-);
+    _Out_writes_bytes_(cwch * sizeof(ABC)) PVOID pvBuf);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiGetCharacterPlacementW(
     _In_ HDC hdc,
-    IN LPWSTR pwsz,
+    _In_reads_z_(nCount) LPWSTR pwsz,
     _In_ INT nCount,
     _In_ INT nMaxExtent,
-    IN OUT LPGCP_RESULTSW pgcpw,
-    _In_ DWORD dwFlags
-);
+    _Inout_ LPGCP_RESULTSW pgcpw,
+    _In_ DWORD dwFlags);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1561,12 +1693,14 @@ NtGdiAngleArc(
     _In_ DWORD dwStartAngle,
     _In_ DWORD dwSweepAngle);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiBeginPath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1574,73 +1708,87 @@ NtGdiSelectClipPath(
     _In_ HDC hdc,
     _In_ INT iMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiCloseFigure(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEndPath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiAbortPath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiFillPath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiStrokeAndFillPath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiStrokePath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiWidenPath(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiFlattenPath(
     _In_ HDC hdc);
 
+/* Not in MS ntgdi.h */
+__kernel_entry
 W32KAPI
 NTSTATUS
 APIENTRY
-NtGdiFlushUserBatch(VOID);
+NtGdiFlushUserBatch(
+    VOID);
 
+__kernel_entry
 W32KAPI
 HRGN
 APIENTRY
 NtGdiPathToRegion(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSetMiterLimit(
     _In_ HDC hdc,
     _In_ DWORD dwNew,
-    _Out_opt_ PDWORD pdwOut);
+    _Inout_opt_ PDWORD pdwOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1650,6 +1798,7 @@ NtGdiSetFontXform(
     _In_ DWORD dwyScale);
 
 _Success_(return != FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1657,6 +1806,7 @@ NtGdiGetMiterLimit(
     _In_ HDC hdc,
     _Out_ PDWORD pdwOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1667,6 +1817,7 @@ NtGdiEllipse(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1677,6 +1828,7 @@ NtGdiRectangle(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1689,22 +1841,24 @@ NtGdiRoundRect(
     _In_ INT x3,
     _In_ INT y3);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiPlgBlt(
     _In_ HDC hdcTrg,
-    _In_ LPPOINT pptlTrg,
+    _In_reads_(3) LPPOINT pptlTrg,
     _In_ HDC hdcSrc,
     _In_ INT xSrc,
     _In_ INT ySrc,
     _In_ INT cxSrc,
     _In_ INT cySrc,
-    _In_ HBITMAP hbmMask,
+    _In_opt_ HBITMAP hbmMask,
     _In_ INT xMask,
     _In_ INT yMask,
     _In_ DWORD crBackColor);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1723,6 +1877,7 @@ NtGdiMaskBlt(
     _In_ DWORD dwRop4,
     _In_ DWORD crBackColor);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1733,6 +1888,7 @@ NtGdiExtFloodFill(
     _In_ COLORREF crColor,
     _In_ UINT iFillType);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1741,6 +1897,7 @@ NtGdiFillRgn(
     _In_ HRGN hrgn,
     _In_ HBRUSH hbrush);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1751,6 +1908,7 @@ NtGdiFrameRgn(
     _In_ INT xWidth,
     _In_ INT yHeight);
 
+__kernel_entry
 W32KAPI
 COLORREF
 APIENTRY
@@ -1760,6 +1918,7 @@ NtGdiSetPixel(
     _In_ INT y,
     _In_ COLORREF crColor);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -1768,46 +1927,52 @@ NtGdiGetPixel(
     _In_ INT x,
     _In_ INT y);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiStartPage(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEndPage(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiStartDoc(
     _In_ HDC hdc,
-    IN DOCINFOW *pdi,
-    OUT BOOL *pbBanding,
-    _In_ INT iJob
-);
+    _In_ DOCINFOW *pdi,
+    _Out_ BOOL *pbBanding,
+    _In_ INT iJob);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEndDoc(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiAbortDoc(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiUpdateColors(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1815,19 +1980,19 @@ NtGdiGetCharWidthW(
     _In_ HDC hdc,
     _In_ UINT wcFirst,
     _In_ UINT cwc,
-    IN OPTIONAL PWCHAR pwc,
+    _In_reads_opt_(cwc) PWCHAR pwc,
     _In_ FLONG fl,
-    OUT PVOID pvBuf
-);
+    _Out_writes_bytes_(cwc * sizeof(ULONG)) PVOID pvBuf);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetCharWidthInfo(
     _In_ HDC hdc,
-    OUT PCHWIDTHINFO pChWidthInfo
-);
+    _Out_ PCHWIDTHINFO pChWidthInfo);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -1835,23 +2000,24 @@ NtGdiDrawEscape(
     _In_ HDC hdc,
     _In_ INT iEsc,
     _In_ INT cjIn,
-    IN OPTIONAL LPSTR pjIn
-);
+    _In_reads_bytes_opt_(cjIn) LPSTR pjIn);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiExtEscape(
-    _In_ HDC hdc,
-    IN OPTIONAL PWCHAR pDriver,
-    _In_ INT nDriver,
+    _In_opt_ HDC hdc,
+    _In_reads_opt_(cwcDriver) PWCHAR pDriver,
+    _In_ INT cwcDriver,
     _In_ INT iEsc,
     _In_ INT cjIn,
-    IN OPTIONAL LPSTR pjIn,
+    _In_reads_bytes_opt_(cjIn) LPSTR pjIn,
     _In_ INT cjOut,
-    OUT OPTIONAL LPSTR pjOut
-);
+    _Out_writes_bytes_opt_(cjOut) LPSTR pjOut);
 
+_Success_(return != GDI_ERROR)
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
@@ -1859,63 +2025,88 @@ NtGdiGetFontData(
     _In_ HDC hdc,
     _In_ DWORD dwTable,
     _In_ DWORD dwOffset,
-    OUT OPTIONAL PVOID pvBuf,
-    _In_ ULONG cjBuf
-);
+    _Out_writes_bytes_to_opt_(cjBuf, return) PVOID pvBuf,
+    _In_ ULONG cjBuf);
 
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetFontFileData(
+    _In_ UINT uFileCollectionID,
+    _In_ UINT uFileIndex,
+    _In_ PULONGLONG pullFileOffset,
+    _Out_writes_bytes_(cjBuf) PVOID pvBuf,
+    _In_ SIZE_T cjBuf);
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+__kernel_entry
+W32KAPI
+DWORD
+APIENTRY
+NtGdiGetFontFileInfo(
+    _In_ UINT uFileCollectionID,
+    _In_ UINT uFileIndex,
+    _Out_writes_bytes_(cjSize) PFONT_FILE_INFO pffi,
+    _In_ SIZE_T cjSize,
+    _Out_opt_ PSIZE_T pcjActualSize);
+#endif /* (_WIN32_WINNT >= _WIN32_WINNT_WIN7) */
+
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetGlyphOutline(
     _In_ HDC hdc,
-    IN WCHAR wch,
+    _In_ WCHAR wch,
     _In_ UINT iFormat,
-    OUT LPGLYPHMETRICS pgm,
+    _Out_ LPGLYPHMETRICS pgm,
     _In_ ULONG cjBuf,
-    OUT OPTIONAL PVOID pvBuf,
-    IN LPMAT2 pmat2,
-    _In_ BOOL bIgnoreRotation
-);
+    _Out_writes_bytes_opt_(cjBuf) PVOID pvBuf,
+    _In_ LPMAT2 pmat2,
+    _In_ BOOL bIgnoreRotation);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetETM(
     _In_ HDC hdc,
-    OUT EXTTEXTMETRIC *petm
-);
+    _Out_opt_ EXTTEXTMETRIC *petm);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetRasterizerCaps(
-    OUT LPRASTERIZER_STATUS praststat,
-    _In_ ULONG cjBytes
-);
+    _Out_writes_bytes_(cjBytes) LPRASTERIZER_STATUS praststat,
+    _In_ ULONG cjBytes);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetKerningPairs(
     _In_ HDC hdc,
     _In_ ULONG cPairs,
-    OUT OPTIONAL KERNINGPAIR *pkpDst
-);
+    _Out_writes_to_opt_(cPairs, return) KERNINGPAIR *pkpDst);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiMonoBitmap(
     _In_ HBITMAP hbm);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
 NtGdiGetObjectBitmapHandle(
     _In_ HBRUSH hbr,
-    OUT UINT *piUsage
-);
+    _Out_ UINT *piUsage);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
@@ -1923,29 +2114,20 @@ NtGdiEnumObjects(
     _In_ HDC hdc,
     _In_ INT iObjectType,
     _In_ ULONG cjBuf,
-    OUT OPTIONAL PVOID pvBuf
-);
+    _Out_writes_bytes_opt_(cjBuf) PVOID pvBuf);
 
-// Note from SDK:
-//
-// NtGdiResetDC
-// The exact size of the buffer at pdm is pdm->dmSize + pdm->dmDriverExtra.
-// But this can't be specified with current annotation language.
-//
-// typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;
-//
-// :end note.
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiResetDC(
     _In_ HDC hdc,
     _In_ LPDEVMODEW pdm,
-    OUT PBOOL pbBanding,
-    IN OPTIONAL VOID *pDriverInfo2, // this is "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
-    OUT VOID *ppUMdhpdev
-);
+    _Out_ PBOOL pbBanding,
+    _In_opt_ DRIVER_INFO_2W *pDriverInfo2,
+    _At_((PUMDHPDEV*)ppUMdhpdev, _Out_) PVOID ppUMdhpdev);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -1954,6 +2136,7 @@ NtGdiSetBoundsRect(
     _In_ LPRECT prc,
     _In_ DWORD f);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1961,6 +2144,7 @@ NtGdiGetColorAdjustment(
     _In_ HDC hdc,
     _Out_ PCOLORADJUSTMENT pcaOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -1968,36 +2152,38 @@ NtGdiSetColorAdjustment(
     _In_ HDC hdc,
     _In_ PCOLORADJUSTMENT pca);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiCancelDC(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 HDC
 APIENTRY
 NtGdiOpenDCW(
-    IN OPTIONAL PUNICODE_STRING pustrDevice,
-    IN DEVMODEW *pdm,  // See note for NtGdiResetDC
-    IN PUNICODE_STRING pustrLogAddr,
+    _In_opt_ PUNICODE_STRING pustrDevice,
+    _In_ DEVMODEW *pdm,
+    _In_ PUNICODE_STRING pustrLogAddr,
     _In_ ULONG iType,
     _In_ BOOL bDisplay,
-    IN OPTIONAL HANDLE hspool,
-    IN OPTIONAL VOID *pDriverInfo2, // this is  "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
-    OUT VOID *pUMdhpdev
-);
+    _In_opt_ HANDLE hspool,
+    _In_opt_ DRIVER_INFO_2W *pDriverInfo2,
+    _At_((PUMDHPDEV*)pUMdhpdev, _Out_) PVOID pUMdhpdev);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetDCDword(
     _In_ HDC hdc,
     _In_ UINT u,
-    OUT DWORD *Result
-);
+    _Out_ DWORD *Result);
 
 _Success_(return!=FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2006,6 +2192,7 @@ NtGdiGetDCPoint(
     _In_ UINT iPoint,
     _Out_ PPOINTL pptOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2015,9 +2202,9 @@ NtGdiScaleViewportExtEx(
     _In_ INT xDenom,
     _In_ INT yNum,
     _In_ INT yDenom,
-    OUT OPTIONAL LPSIZE pszOut
-);
+    _Out_opt_ LPSIZE pszOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2027,9 +2214,9 @@ NtGdiScaleWindowExtEx(
     _In_ INT xDenom,
     _In_ INT yNum,
     _In_ INT yDenom,
-    OUT OPTIONAL LPSIZE pszOut
-);
+    _Out_opt_ LPSIZE pszOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2040,6 +2227,7 @@ NtGdiSetVirtualResolution(
     _In_ INT cxVirtualDeviceMm,
     _In_ INT cyVirtualDeviceMm);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2049,6 +2237,7 @@ NtGdiSetSizeDevice(
     _In_ INT cyVirtualDevice);
 
 _Success_(return !=FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2057,6 +2246,7 @@ NtGdiGetTransform(
     _In_ DWORD iXform,
     _Out_ LPXFORM pxf);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2065,6 +2255,7 @@ NtGdiModifyWorldTransform(
     _In_opt_ LPXFORM pxf,
     _In_ DWORD iXform);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2073,6 +2264,7 @@ NtGdiCombineTransform(
     _In_ LPXFORM pxfSrc1,
     _In_ LPXFORM pxfSrc2);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2083,6 +2275,7 @@ NtGdiTransformPoints(
     _In_ INT c,
     _In_ INT iMode);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
@@ -2090,33 +2283,34 @@ NtGdiConvertMetafileRect(
     _In_ HDC hdc,
     _Inout_ PRECTL prect);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiGetTextCharsetInfo(
     _In_ HDC hdc,
-    OUT OPTIONAL LPFONTSIGNATURE lpSig,
-    _In_ DWORD dwFlags
-);
+    _Out_opt_ LPFONTSIGNATURE lpSig,
+    _In_ DWORD dwFlags);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDoBanding(
     _In_ HDC hdc,
     _In_ BOOL bStart,
-    OUT POINTL *pptl,
-    OUT PSIZE pSize
-);
+    _Out_ POINTL *pptl,
+    _Out_ PSIZE pSize);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetPerBandInfo(
     _In_ HDC hdc,
-    IN OUT PERBANDINFO *ppbi
-);
+    _Inout_ PERBANDINFO *ppbi);
 
+__kernel_entry
 W32KAPI
 NTSTATUS
 APIENTRY
@@ -2124,27 +2318,27 @@ NtGdiGetStats(
     _In_ HANDLE hProcess,
     _In_ INT iIndex,
     _In_ INT iPidType,
-    OUT PVOID pResults,
-    _In_ UINT cjResultSize
-);
+    _Out_writes_bytes_(cjResultSize) PVOID pResults,
+    _In_ UINT cjResultSize);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSetMagicColors(
     _In_ HDC hdc,
-    IN PALETTEENTRY peMagic,
-    _In_ ULONG Index
-);
+    _In_ PALETTEENTRY peMagic,
+    _In_ ULONG Index);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
 NtGdiSelectBrush(
     _In_ HDC hdc,
-    _In_ HBRUSH hbrush
-);
+    _In_ HBRUSH hbrush);
 
+__kernel_entry
 W32KAPI
 HPEN
 APIENTRY
@@ -2152,6 +2346,7 @@ NtGdiSelectPen(
     _In_ HDC hdc,
     _In_ HPEN hpen);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -2159,6 +2354,7 @@ NtGdiSelectBitmap(
     _In_ HDC hdc,
     _In_ HBITMAP hbm);
 
+__kernel_entry
 W32KAPI
 HFONT
 APIENTRY
@@ -2166,14 +2362,16 @@ NtGdiSelectFont(
     _In_ HDC hdc,
     _In_ HFONT hf);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiExtSelectClipRgn(
     _In_ HDC hdc,
-    _In_ HRGN hrgn,
+    _In_opt_ HRGN hrgn,
     _In_ INT iMode);
 
+__kernel_entry
 W32KAPI
 HPEN
 APIENTRY
@@ -2181,9 +2379,10 @@ NtGdiCreatePen(
     _In_ INT iPenStyle,
     _In_ INT iPenWidth,
     _In_ COLORREF cr,
-    _In_ HBRUSH hbr);
+    _In_opt_ HBRUSH hbr);
 
 #ifdef _WINDOWBLT_NOTIFICATION_
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2193,13 +2392,14 @@ NtGdiBitBlt(
     _In_ INT y,
     _In_ INT cx,
     _In_ INT cy,
-    _In_ HDC hdcSrc,
+    _In_opt_ HDC hdcSrc,
     _In_ INT xSrc,
     _In_ INT ySrc,
     _In_ DWORD rop4,
     _In_ DWORD crBackColor,
     _In_ FLONG fl);
 #else
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2209,13 +2409,14 @@ NtGdiBitBlt(
     _In_ INT y,
     _In_ INT cx,
     _In_ INT cy,
-    _In_ HDC hdcSrc,
+    _In_opt_ HDC hdcSrc,
     _In_ INT xSrc,
     _In_ INT ySrc,
     _In_ DWORD rop4,
     _In_ DWORD crBackColor);
 #endif
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2228,6 +2429,7 @@ NtGdiTileBitBlt(
     _In_ DWORD rop4,
     _In_ DWORD crBackColor);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2244,35 +2446,38 @@ NtGdiTransparentBlt(
     _In_ INT cySrc,
     _In_ COLORREF TransColor);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetTextExtent(
     _In_ HDC hdc,
-    _In_z_count_(cwc) LPWSTR lpwsz,
+    _In_reads_(cwc) LPWSTR lpwsz,
     _In_ INT cwc,
     _Out_ LPSIZE psize,
     _In_ UINT flOpts);
 
 _Success_(return != FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetTextMetricsW(
     _In_ HDC hdc,
-    _Out_bytecap_(cj) TMW_INTERNAL * ptm,
+    _Out_writes_bytes_(cj) TMW_INTERNAL *ptm,
     _In_ ULONG cj);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiGetTextFaceW(
     _In_ HDC hdc,
     _In_ INT cChar,
-    OUT OPTIONAL LPWSTR pszOut,
-    _In_ BOOL bAliasName
-);
+    _Out_writes_to_opt_(cChar, return) LPWSTR pszOut,
+    _In_ BOOL bAliasName);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2281,6 +2486,7 @@ NtGdiGetRandomRgn(
     _In_ HRGN hrgn,
     _In_ INT iRgn);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2289,13 +2495,13 @@ NtGdiExtTextOutW(
     _In_ INT x,
     _In_ INT y,
     _In_ UINT flOpts,
-    IN OPTIONAL LPRECT prcl,
-    _In_z_count_(cwc) LPWSTR pwsz,
-    _In_ INT cwc,
-    IN OPTIONAL LPINT pdx,
-    _In_ DWORD dwCodePage
-);
+    _In_opt_ LPRECT prcl,
+    _In_reads_opt_(cwc) LPWSTR pwsz,
+    _In_range_(0, 0xffff) INT cwc,
+    _In_reads_opt_(_Inexpressible_(cwc)) LPINT pdx,
+    _In_ DWORD dwCodePage);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2306,6 +2512,7 @@ NtGdiIntersectClipRect(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 HRGN
 APIENTRY
@@ -2315,6 +2522,7 @@ NtGdiCreateRectRgn(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2326,28 +2534,32 @@ NtGdiPatBlt(
     _In_ INT cy,
     _In_ DWORD dwRop);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiPolyPatBlt(
     _In_ HDC hdc,
     _In_ DWORD rop4,
-    _In_ PPOLYPATBLT pPoly,
-    _In_ DWORD Count,
-    _In_ DWORD Mode);
+    _In_reads_(cPoly) PPOLYPATBLT pPoly,
+    _In_ DWORD cPoly,
+    _In_ DWORD dwMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiUnrealizeObject(
     _In_ HANDLE h);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiGetStockObject(
     _In_ INT iObject);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -2356,6 +2568,50 @@ NtGdiCreateCompatibleBitmap(
     _In_ INT cx,
     _In_ INT cy);
 
+__kernel_entry
+W32KAPI
+HBITMAP
+APIENTRY
+NtGdiCreateBitmapFromDxSurface(
+    _In_ HDC hdc,
+    _In_ UINT uiWidth,
+    _In_ UINT uiHeight,
+    _In_ DWORD Format,
+    _In_opt_ HANDLE hDxSharedSurface);
+
+__kernel_entry
+W32KAPI
+HBITMAP
+APIENTRY
+NtGdiCreateBitmapFromDxSurface2(
+    _In_ HDC hdc,
+    _In_ UINT uiWidth,
+    _In_ UINT uiHeight,
+    _In_ DWORD Format,
+    _In_ DWORD SubresourceIndex,
+    _In_ BOOL bSharedSurfaceNtHandle,
+    _In_opt_ HANDLE hDxSharedSurface);
+
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiBeginGdiRendering(
+    _In_ HBITMAP hbm,
+    _In_ BOOL bDiscard,
+    _In_ PVOID KernelModeDeviceHandle);
+
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiEndGdiRendering(
+    _In_ HBITMAP hbm,
+    _In_ BOOL bDiscard,
+    _Out_ BOOL* pbDeviceRemoved,
+    _In_ PVOID KernelModeDeviceHandle);
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2365,6 +2621,7 @@ NtGdiLineTo(
     _In_ INT y);
 
 _Success_(return != FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2375,14 +2632,16 @@ NtGdiMoveTo(
     _Out_opt_ LPPOINT pptOut);
 
 _Success_(return != 0)
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiExtGetObjectW(
     _In_ HANDLE h,
     _In_ INT cj,
-    _Out_opt_bytecap_(cj) LPVOID pvOut);
+    _Out_writes_bytes_opt_(cj) LPVOID pvOut);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2391,13 +2650,15 @@ NtGdiGetDeviceCaps(
     _In_ INT i);
 
 _Success_(return!=FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiGetDeviceCapsAll (
-    _In_ HDC hdc,
+    _In_opt_ HDC hdc,
     _Out_ PDEVCAPS pDevCaps);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2407,7 +2668,7 @@ NtGdiStretchBlt(
     _In_ INT yDst,
     _In_ INT cxDst,
     _In_ INT cyDst,
-    _In_ HDC hdcSrc,
+    _In_opt_ HDC hdcSrc,
     _In_ INT xSrc,
     _In_ INT ySrc,
     _In_ INT cxSrc,
@@ -2415,7 +2676,8 @@ NtGdiStretchBlt(
     _In_ DWORD dwRop,
     _In_ DWORD dwBackColor);
 
-_Success_(return != FALSE)
+_Success_(return!=FALSE)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2425,6 +2687,7 @@ NtGdiSetBrushOrg(
     _In_ INT y,
     _Out_opt_ LPPOINT pptOut);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -2435,12 +2698,14 @@ NtGdiCreateBitmap(
     _In_ UINT cBPP,
     _In_opt_ LPBYTE pjInit);
 
+__kernel_entry
 W32KAPI
 HPALETTE
 APIENTRY
 NtGdiCreateHalftonePalette(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2448,6 +2713,7 @@ NtGdiRestoreDC(
     _In_ HDC hdc,
     _In_ INT iLevel);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2458,12 +2724,14 @@ NtGdiExcludeClipRect(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiSaveDC(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2473,6 +2741,7 @@ NtGdiCombineRgn(
     _In_opt_ HRGN hrgnSrc2,
     _In_ INT iMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2483,14 +2752,17 @@ NtGdiSetRectRgn(
     _In_ INT xRight,
     _In_ INT yBottom);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
 NtGdiSetBitmapBits(
     _In_ HBITMAP hbm,
     _In_ ULONG cj,
-    _In_bytecount_(cj) PBYTE pjInit);
+    _In_reads_bytes_(cj) PBYTE pjInit);
 
+_Success_(return!=0)
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2499,12 +2771,13 @@ NtGdiGetDIBitsInternal(
     _In_ HBITMAP hbm,
     _In_ UINT iStartScan,
     _In_ UINT cScans,
-    _Out_opt_ LPBYTE pBits,
+    _Out_writes_bytes_opt_(cjMaxBits) LPBYTE pjBits,
     _Inout_ LPBITMAPINFO pbmi,
     _In_ UINT iUsage,
     _In_ UINT cjMaxBits,
     _In_ UINT cjMaxInfo);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2514,6 +2787,7 @@ NtGdiOffsetRgn(
     _In_ INT cy);
 
 _Success_(return!=ERROR)
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
@@ -2521,15 +2795,16 @@ NtGdiGetRgnBox(
     _In_ HRGN hrgn,
     _Out_ LPRECT prcOut);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiRectInRegion(
     _In_ HRGN hrgn,
-    IN OUT LPRECT prcl
-);
+    _Inout_ LPRECT prcl);
 
 _Success_(return!=0)
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
@@ -2538,6 +2813,7 @@ NtGdiGetBoundsRect(
     _Out_ LPRECT prc,
     _In_ DWORD f);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2546,6 +2822,7 @@ NtGdiPtInRegion(
     _In_ INT x,
     _In_ INT y);
 
+__kernel_entry
 W32KAPI
 COLORREF
 APIENTRY
@@ -2553,12 +2830,14 @@ NtGdiGetNearestColor(
     _In_ HDC hdc,
     _In_ COLORREF cr);
 
+__kernel_entry
 W32KAPI
 UINT
 APIENTRY
 NtGdiGetSystemPaletteUse(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 UINT
 APIENTRY
@@ -2567,14 +2846,16 @@ NtGdiSetSystemPaletteUse(
     _In_ UINT ui);
 
 _Success_(return!=0)
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetRegionData(
     _In_ HRGN hrgn,
     _In_ ULONG cjBuffer,
-    _Out_opt_bytecap_(cjBuffer) LPRGNDATA lpRgnData);
+    _Out_writes_bytes_to_opt_(cjBuffer, return) LPRGNDATA lpRgnData);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2582,53 +2863,58 @@ NtGdiInvertRgn(
     _In_ HDC hdc,
     _In_ HRGN hrgn);
 
+__kernel_entry
 INT
 W32KAPI
 APIENTRY
 NtGdiAddFontResourceW(
-    _In_z_count_(cwc) WCHAR *pwszFiles,
+    _In_reads_(cwc) WCHAR *pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
     _In_ FLONG f,
     _In_ DWORD dwPidTid,
     _In_opt_ DESIGNVECTOR *pdv);
 
-#if (_WIN32_WINNT >= 0x0500)
+__kernel_entry
 W32KAPI
 HFONT
 APIENTRY
 NtGdiHfontCreate(
-    _In_bytecount_(cjElfw) ENUMLOGFONTEXDVW *pelfw,
+    _In_reads_bytes_(cjElfw) ENUMLOGFONTEXDVW *pelfw,
     _In_ ULONG cjElfw,
     _In_ LFTYPE lft,
     _In_ FLONG fl,
     _In_ PVOID pvCliData);
-#else
-W32KAPI
-HFONT
-APIENTRY
-NtGdiHfontCreate(
-    _In_bytecount_(cjElfw) LPEXTLOGFONTW pelfw,
-    _In_ ULONG cjElfw,
-    _In_ LFTYPE lft,
-    _In_ FLONG fl,
-    _In_ PVOID pvCliData
-);
-#endif
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiSetFontEnumeration(
     _In_ ULONG ulType);
 
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiEnumFonts(
+    _In_ HDC hdc,
+    _In_ ULONG iEnumType,
+    _In_ FLONG flWin31Compat,
+    _In_ ULONG cchFaceName,
+    _In_reads_opt_(cchFaceName) LPCWSTR pwszFaceName,
+    _In_ ULONG lfCharSet,
+    _Inout_ ULONG *pulCount,
+    _Out_writes_bytes_opt_(*pulCount) PVOID pvUserModeBuffer);
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEnumFontClose(
     _In_ ULONG_PTR idEnum);
 
-#if (_WIN32_WINNT >= 0x0500)
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2636,11 +2922,10 @@ NtGdiEnumFontChunk(
     _In_ HDC hdc,
     _In_ ULONG_PTR idEnum,
     _In_ ULONG cjEfdw,
-    OUT ULONG *pcjEfdw,
-    OUT PENUMFONTDATAW pefdw
-);
-#endif
+    _Out_ ULONG *pcjEfdw,
+    _Out_ PENUMFONTDATAW pefdw);
 
+__kernel_entry
 W32KAPI
 ULONG_PTR
 APIENTRY
@@ -2649,20 +2934,20 @@ NtGdiEnumFontOpen(
     _In_ ULONG iEnumType,
     _In_ FLONG flWin31Compat,
     _In_ ULONG cwchMax,
-    IN OPTIONAL LPWSTR pwszFaceName,
+    _In_opt_ LPWSTR pwszFaceName,
     _In_ ULONG lfCharSet,
-    OUT ULONG *pulCount
-);
+    _Out_ ULONG *pulCount);
 
+__kernel_entry
 W32KAPI
 INT
 APIENTRY
 NtGdiQueryFonts(
-    OUT PUNIVERSAL_FONT_ID pufiFontList,
+    _Out_writes_(nBufferSize) PUNIVERSAL_FONT_ID pufiFontList,
     _In_ ULONG nBufferSize,
-    OUT PLARGE_INTEGER pTimeStamp
-);
+    _Out_ PLARGE_INTEGER pTimeStamp);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2672,77 +2957,89 @@ NtGdiConsoleTextOut(
     _In_ UINT nStrings,
     _In_ RECTL *prclBounds);
 
+__kernel_entry
 W32KAPI
 NTSTATUS
 APIENTRY
 NtGdiFullscreenControl(
-    IN FULLSCREENCONTROL FullscreenCommand,
-    IN PVOID FullscreenInput,
+    _In_ FULLSCREENCONTROL FullscreenCommand,
+    _In_ PVOID FullscreenInput,
     _In_ DWORD FullscreenInputLength,
-    OUT PVOID FullscreenOutput,
-    IN OUT PULONG FullscreenOutputLength
-);
+    _Out_ PVOID FullscreenOutput,
+    _Inout_ PULONG FullscreenOutputLength);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiGetCharSet(
     _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEnableEudc(
     _In_ BOOL b);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEudcLoadUnloadLink(
-    IN OPTIONAL LPCWSTR pBaseFaceName,
+    _In_reads_opt_(cwcBaseFaceName) LPCWSTR pBaseFaceName,
     _In_ UINT cwcBaseFaceName,
-    IN LPCWSTR pEudcFontPath,
+    _In_reads_(cwcEudcFontPath) LPCWSTR pEudcFontPath,
     _In_ UINT cwcEudcFontPath,
     _In_ INT iPriority,
     _In_ INT iFontLinkType,
-    _In_ BOOL bLoadLin
-);
+    _In_ BOOL bLoadLin);
 
+__kernel_entry
 W32KAPI
 UINT
 APIENTRY
 NtGdiGetStringBitmapW(
     _In_ HDC hdc,
-    IN LPWSTR pwsz,
+    _In_ LPWSTR pwsz,
     _In_ UINT cwc,
-    OUT BYTE *lpSB,
-    _In_ UINT cj
-);
+    _Out_writes_bytes_(cj) BYTE *lpSB,
+    _In_ UINT cj);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiGetEudcTimeStampEx(
-    _In_opt_z_count_(cwcBaseFaceName) LPWSTR lpBaseFaceName,
+    _In_reads_opt_(cwcBaseFaceName) LPWSTR lpBaseFaceName,
     _In_ ULONG cwcBaseFaceName,
     _In_ BOOL bSystemTimeStamp);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiQueryFontAssocInfo(
     _In_ HDC hdc);
 
-#if (_WIN32_WINNT >= 0x0500)
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiGetFontUnicodeRanges(
     _In_ HDC hdc,
-    _Out_opt_ LPGLYPHSET pgs);
-#endif
+    _Out_ _Post_bytecount_(return) LPGLYPHSET pgs);
 
 #ifdef LANGPACK
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+__kernel_entry
+W32KAPI
+BOOL
+NtGdiGetRealizationInfo(
+    _In_ HDC hdc,
+    _Out_ PFONT_REALIZATION_INFO pri);
+#else
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2751,22 +3048,43 @@ NtGdiGetRealizationInfo(
     _Out_ PREALIZATION_INFO pri,
     _In_ HFONT hf);
 #endif
+#endif
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiAddRemoteMMInstanceToDC(
     _In_ HDC hdc,
-    _In_ DOWNLOADDESIGNVECTOR *pddv,
+    _In_reads_bytes_(cjDDV) DOWNLOADDESIGNVECTOR *pddv,
     _In_ ULONG cjDDV);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiUnloadPrinterDriver(
-    _In_z_bytecount_(cbDriverName) LPWSTR pDriverName,
+    _In_reads_bytes_(cbDriverName) LPWSTR pDriverName,
     _In_ ULONG cbDriverName);
 
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiInitSpool(
+    VOID);
+
+__kernel_entry
+W32KAPI
+INT
+APIENTRY
+NtGdiGetSpoolMessage(
+    DWORD u1,
+    DWORD u2,
+    DWORD u3,
+    DWORD u4);
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2775,6 +3093,7 @@ NtGdiEngAssociateSurface(
     _In_ HDEV hdev,
     _In_ FLONG flHooks);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2783,6 +3102,7 @@ NtGdiEngEraseSurface(
     _In_ RECTL *prcl,
     _In_ ULONG iColor);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -2793,30 +3113,35 @@ NtGdiEngCreateBitmap(
     _In_ FLONG fl,
     _In_opt_ PVOID pvBits);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngDeleteSurface(
     _In_ HSURF hsurf);
 
+__kernel_entry
 W32KAPI
 SURFOBJ*
 APIENTRY
 NtGdiEngLockSurface(
     _In_ HSURF hsurf);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiEngUnlockSurface(
     _In_ SURFOBJ *pso);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngMarkBandingSurface(
     _In_ HSURF hsurf);
 
+__kernel_entry
 W32KAPI
 HSURF
 APIENTRY
@@ -2825,6 +3150,7 @@ NtGdiEngCreateDeviceSurface(
     _In_ SIZEL sizl,
     _In_ ULONG iFormatCompat);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
@@ -2833,6 +3159,7 @@ NtGdiEngCreateDeviceBitmap(
     _In_ SIZEL sizl,
     _In_ ULONG iFormatCompat);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2844,6 +3171,7 @@ NtGdiEngCopyBits(
     _In_ RECTL *prclDst,
     _In_ POINTL *pptlSrc);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2857,9 +3185,10 @@ NtGdiEngStretchBlt(
     _In_ POINTL *pptlHTOrg,
     _In_ RECTL *prclDest,
     _In_ RECTL *prclSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlMask,
     _In_ ULONG iMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2870,12 +3199,13 @@ NtGdiEngBitBlt(
     _In_opt_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
     _In_ RECTL *prclTrg,
-    _When_(psoSrc, _In_) POINTL *pptlSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
     _In_opt_ BRUSHOBJ *pbo,
-    _When_(pbo, _In_) POINTL *pptlBrush,
+    _In_opt_ POINTL *pptlBrush,
     _In_ ROP4 rop4);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
@@ -2889,9 +3219,10 @@ NtGdiEngPlgBlt(
     _In_ POINTL *pptlBrushOrg,
     _In_ POINTFIX *pptfx,
     _In_ RECTL *prcl,
-    _When_(psoMsk, _In_) POINTL *pptl,
+    _In_opt_ POINTL *pptl,
     _In_ ULONG iMode);
 
+__kernel_entry
 W32KAPI
 HPALETTE
 APIENTRY
@@ -2903,592 +3234,688 @@ NtGdiEngCreatePalette(
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngDeletePalette(
     _In_ HPALETTE hPal);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngStrokePath(
-    IN SURFOBJ *pso,
-    IN PATHOBJ *ppo,
-    IN CLIPOBJ *pco,
-    IN XFORMOBJ *pxo,
-    IN BRUSHOBJ *pbo,
-    IN POINTL *pptlBrushOrg,
-    IN LINEATTRS *plineattrs,
-    IN MIX mix
-);
+    _In_ SURFOBJ *pso,
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,
+    _In_ XFORMOBJ *pxo,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ LINEATTRS *plineattrs,
+    _In_ MIX mix);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngFillPath(
-    IN SURFOBJ *pso,
-    IN PATHOBJ *ppo,
-    IN CLIPOBJ *pco,
-    IN BRUSHOBJ *pbo,
-    IN POINTL *pptlBrushOrg,
-    IN MIX mix,
-    IN FLONG flOptions
-);
+    _In_ SURFOBJ *pso,
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ MIX mix,
+    _In_ FLONG flOptions);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngStrokeAndFillPath(
-    IN SURFOBJ *pso,
-    IN PATHOBJ *ppo,
-    IN CLIPOBJ *pco,IN XFORMOBJ *pxo,
-    IN BRUSHOBJ *pboStroke,
-    IN LINEATTRS *plineattrs,
-    IN BRUSHOBJ *pboFill,
-    IN POINTL *pptlBrushOrg,
-    IN MIX mix,
-    IN FLONG flOptions
-);
+    _In_ SURFOBJ *pso,
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,IN XFORMOBJ *pxo,
+    _In_ BRUSHOBJ *pboStroke,
+    _In_ LINEATTRS *plineattrs,
+    _In_ BRUSHOBJ *pboFill,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ MIX mix,
+    _In_ FLONG flOptions);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngPaint(
-    IN SURFOBJ *pso,
-    IN CLIPOBJ *pco,
-    IN BRUSHOBJ *pbo,
-    IN POINTL *pptlBrushOrg,
-    IN MIX mix
-);
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ MIX mix);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngLineTo(
-    IN SURFOBJ *pso,
-    IN CLIPOBJ *pco,
-    IN BRUSHOBJ *pbo,
+    _In_ SURFOBJ *pso,
+    _In_ CLIPOBJ *pco,
+    _In_ BRUSHOBJ *pbo,
     _In_ LONG x1,
     _In_ LONG y1,
     _In_ LONG x2,
     _In_ LONG y2,
-    IN RECTL *prclBounds,
-    IN MIX mix
-);
+    _In_ RECTL *prclBounds,
+    _In_ MIX mix);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngAlphaBlend(
-    IN SURFOBJ *psoDest,
-    IN SURFOBJ *psoSrc,
-    IN CLIPOBJ *pco,
-    IN XLATEOBJ *pxlo,
-    IN RECTL *prclDest,
-    IN RECTL *prclSrc,
-    IN BLENDOBJ *pBlendObj
-);
+    _In_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoSrc,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclDest,
+    _In_ RECTL *prclSrc,
+    _In_ BLENDOBJ *pBlendObj);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngGradientFill(
-    IN SURFOBJ *psoDest,
-    IN CLIPOBJ *pco,
-    IN XLATEOBJ *pxlo,
-    IN TRIVERTEX *pVertex,
+    _In_ SURFOBJ *psoDest,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_reads_(nVertex) TRIVERTEX *pVertex,
     _In_ ULONG nVertex,
-    IN PVOID pMesh,
+    _In_ /* _In_reads_(nMesh) */ PVOID pMesh,
     _In_ ULONG nMesh,
-    IN RECTL *prclExtents,
-    IN POINTL *pptlDitherOrg,
-    _In_ ULONG ulMode
-);
+    _In_ RECTL *prclExtents,
+    _In_ POINTL *pptlDitherOrg,
+    _In_ ULONG ulMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngTransparentBlt(
-    IN SURFOBJ *psoDst,
-    IN SURFOBJ *psoSrc,
-    IN CLIPOBJ *pco,
-    IN XLATEOBJ *pxlo,
-    IN RECTL *prclDst,
-    IN RECTL *prclSrc,
+    _In_ SURFOBJ *psoDst,
+    _In_ SURFOBJ *psoSrc,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_ RECTL *prclDst,
+    _In_ RECTL *prclSrc,
     _In_ ULONG iTransColor,
-    _In_ ULONG ulReserved
-);
+    _In_ ULONG ulReserved);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngTextOut(
-    IN SURFOBJ *pso,
-    IN STROBJ *pstro,
-    IN FONTOBJ *pfo,
-    IN CLIPOBJ *pco,
-    IN RECTL *prclExtra,
-    IN RECTL *prclOpaque,
-    IN BRUSHOBJ *pboFore,
-    IN BRUSHOBJ *pboOpaque,
-    IN POINTL *pptlOrg,
-    IN MIX mix
-);
+    _In_ SURFOBJ *pso,
+    _In_ STROBJ *pstro,
+    _In_ FONTOBJ *pfo,
+    _In_ CLIPOBJ *pco,
+    _In_ RECTL *prclExtra,
+    _In_ RECTL *prclOpaque,
+    _In_ BRUSHOBJ *pboFore,
+    _In_ BRUSHOBJ *pboOpaque,
+    _In_ POINTL *pptlOrg,
+    _In_ MIX mix);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngStretchBltROP(
-    IN SURFOBJ *psoTrg,
-    IN SURFOBJ *psoSrc,
-    IN SURFOBJ *psoMask,
-    IN CLIPOBJ *pco,
-    IN XLATEOBJ *pxlo,
-    IN COLORADJUSTMENT *pca,
-    IN POINTL *pptlBrushOrg,
-    IN RECTL *prclTrg,
-    IN RECTL *prclSrc,
-    IN POINTL *pptlMask,
+    _In_ SURFOBJ *psoTrg,
+    _In_ SURFOBJ *psoSrc,
+    _In_ SURFOBJ *psoMask,
+    _In_ CLIPOBJ *pco,
+    _In_ XLATEOBJ *pxlo,
+    _In_ COLORADJUSTMENT *pca,
+    _In_ POINTL *pptlBrushOrg,
+    _In_ RECTL *prclTrg,
+    _In_ RECTL *prclSrc,
+    _In_ POINTL *pptlMask,
     _In_ ULONG iMode,
-    IN BRUSHOBJ *pbo,
-    IN ROP4 rop4
-);
+    _In_ BRUSHOBJ *pbo,
+    _In_ ROP4 rop4);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiXLATEOBJ_cGetPalette(
-    IN XLATEOBJ *pxlo,
+    _In_ XLATEOBJ *pxlo,
     _In_ ULONG iPal,
     _In_ ULONG cPal,
-    OUT ULONG *pPal
-);
+    _Out_writes_(cPal) ULONG *pPal);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiCLIPOBJ_cEnumStart(
-    IN CLIPOBJ *pco,
+    _In_ CLIPOBJ *pco,
     _In_ BOOL bAll,
     _In_ ULONG iType,
     _In_ ULONG iDirection,
-    _In_ ULONG cLimit
-);
+    _In_ ULONG cLimit);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiCLIPOBJ_bEnum(
-    IN CLIPOBJ *pco,
+    _In_ CLIPOBJ *pco,
     _In_ ULONG cj,
-    OUT ULONG *pul
-);
+    _Out_writes_bytes_(cj) ULONG *pul);
 
+__kernel_entry
 W32KAPI
 PATHOBJ*
 APIENTRY
 NtGdiCLIPOBJ_ppoGetPath(
-    IN CLIPOBJ *pco
-);
+    _In_ CLIPOBJ *pco);
 
+__kernel_entry
 W32KAPI
 CLIPOBJ*
 APIENTRY
-NtGdiEngCreateClip(VOID);
+NtGdiEngCreateClip(
+    VOID);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiEngDeleteClip(
-    IN CLIPOBJ*pco
-);
+    _In_ CLIPOBJ*pco);
 
+__kernel_entry
 W32KAPI
 PVOID
 APIENTRY
 NtGdiBRUSHOBJ_pvAllocRbrush(
-    IN BRUSHOBJ *pbo,
-    _In_ ULONG cj
-);
+    _In_ BRUSHOBJ *pbo,
+    _In_ ULONG cj);
 
+__kernel_entry
 W32KAPI
 PVOID
 APIENTRY
 NtGdiBRUSHOBJ_pvGetRbrush(
-    IN BRUSHOBJ *pbo
-);
+    _In_ BRUSHOBJ *pbo);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiBRUSHOBJ_ulGetBrushColor(
-    IN BRUSHOBJ *pbo
-);
+    _In_ BRUSHOBJ *pbo);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiBRUSHOBJ_hGetColorTransform(
-    IN BRUSHOBJ *pbo
-);
+    _In_ BRUSHOBJ *pbo);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiXFORMOBJ_bApplyXform(
-    IN XFORMOBJ *pxo,
+    _In_ XFORMOBJ *pxo,
     _In_ ULONG iMode,
     _In_ ULONG cPoints,
-    IN  PVOID pvIn,
-    OUT PVOID pvOut
-);
+    _In_reads_(cPoints) PPOINTL pptIn,
+    _Out_writes_(cPoints) PPOINTL pptOut);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiXFORMOBJ_iGetXform(
-    IN XFORMOBJ *pxo,
-    OUT OPTIONAL XFORML *pxform
-);
+    _In_ XFORMOBJ *pxo,
+    _Out_opt_ XFORML *pxform);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiFONTOBJ_vGetInfo(
-    IN FONTOBJ *pfo,
+    _In_ FONTOBJ *pfo,
     _In_ ULONG cjSize,
-    OUT FONTINFO *pfi
-);
+    _Out_writes_bytes_(cjSize) FONTINFO *pfi);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiFONTOBJ_cGetGlyphs(
-    IN FONTOBJ *pfo,
+    _In_ FONTOBJ *pfo,
     _In_ ULONG iMode,
     _In_ ULONG cGlyph,
-    IN HGLYPH *phg,
-    OUT PVOID *ppvGlyph
-);
+    _In_ HGLYPH *phg,
+    _At_((GLYPHDATA**)ppvGlyph, _Outptr_) PVOID *ppvGlyph);
 
+__kernel_entry
 W32KAPI
 XFORMOBJ*
 APIENTRY
 NtGdiFONTOBJ_pxoGetXform(
-    IN FONTOBJ *pfo
-);
+    _In_ FONTOBJ *pfo);
 
+__kernel_entry
 W32KAPI
 IFIMETRICS*
 APIENTRY
 NtGdiFONTOBJ_pifi(
-    IN FONTOBJ *pfo
-);
+    _In_ FONTOBJ *pfo);
 
+__kernel_entry
 W32KAPI
 FD_GLYPHSET*
 APIENTRY
 NtGdiFONTOBJ_pfdg(
-    IN FONTOBJ *pfo
-);
+    _In_ FONTOBJ *pfo);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiFONTOBJ_cGetAllGlyphHandles(
-    IN FONTOBJ *pfo,
-    OUT OPTIONAL HGLYPH *phg
-);
+    _In_ FONTOBJ *pfo,
+    _Out_opt_ _Post_count_(return) HGLYPH *phg);
 
+__kernel_entry
 W32KAPI
 PVOID
 APIENTRY
 NtGdiFONTOBJ_pvTrueTypeFontFile(
-    IN FONTOBJ *pfo,
-    OUT ULONG *pcjFile
-);
+    _In_ FONTOBJ *pfo,
+    _Out_ ULONG *pcjFile);
 
+__kernel_entry
 W32KAPI
 PFD_GLYPHATTR
 APIENTRY
 NtGdiFONTOBJ_pQueryGlyphAttrs(
-    IN FONTOBJ *pfo,
-    _In_ ULONG iMode
-);
+    _In_ FONTOBJ *pfo,
+    _In_ ULONG iMode);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSTROBJ_bEnum(
-    IN STROBJ *pstro,
-    OUT ULONG *pc,
-    OUT PGLYPHPOS *ppgpos
-);
+    _In_ STROBJ *pstro,
+    _Out_ ULONG *pc,
+    _Outptr_result_buffer_(*pc) PGLYPHPOS *ppgpos);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSTROBJ_bEnumPositionsOnly(
-    IN STROBJ *pstro,
-    OUT ULONG *pc,
-    OUT PGLYPHPOS *ppgpos
-);
+    _In_ STROBJ *pstro,
+    _Out_ ULONG *pc,
+    _Outptr_result_buffer_(*pc) PGLYPHPOS *ppgpos);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiSTROBJ_vEnumStart(
     _Inout_ STROBJ *pstro);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiSTROBJ_dwGetCodePage(
-    IN STROBJ *pstro
-);
+    _In_ STROBJ *pstro);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSTROBJ_bGetAdvanceWidths(
-    IN STROBJ*pstro,
+    _In_ STROBJ*pstro,
     _In_ ULONG iFirst,
     _In_ ULONG c,
-    OUT POINTQF*pptqD
-);
+    _Out_writes_(c) POINTQF*pptqD);
 
+__kernel_entry
 W32KAPI
 FD_GLYPHSET*
 APIENTRY
 NtGdiEngComputeGlyphSet(
     _In_ INT nCodePage,
     _In_ INT nFirstChar,
-    _In_ INT cChars
-);
+    _In_ INT cChars);
 
+__kernel_entry
 W32KAPI
 ULONG
 APIENTRY
 NtGdiXLATEOBJ_iXlate(
-    IN XLATEOBJ *pxlo,
-    _In_ ULONG iColor
-);
+    _In_ XLATEOBJ *pxlo,
+    _In_ ULONG iColor);
 
+__kernel_entry
 W32KAPI
 HANDLE
 APIENTRY
 NtGdiXLATEOBJ_hGetColorTransform(
-    IN XLATEOBJ *pxlo
-);
+    _In_ XLATEOBJ *pxlo);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vGetBounds(
-    IN PATHOBJ *ppo,
-    OUT PRECTFX prectfx
-);
+    _In_ PATHOBJ *ppo,
+    _Out_ PRECTFX prectfx);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiPATHOBJ_bEnum(
-    IN PATHOBJ *ppo,
-    OUT PATHDATA *ppd
-);
+    _In_ PATHOBJ *ppo,
+    _Out_ PATHDATA *ppd);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vEnumStart(
-    IN PATHOBJ *ppo
-);
+    _In_ PATHOBJ *ppo);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiEngDeletePath(
-    IN PATHOBJ *ppo
-);
+    _In_ PATHOBJ *ppo);
 
+__kernel_entry
 W32KAPI
-VOID
+NTSTATUS
 APIENTRY
 NtGdiPATHOBJ_vEnumStartClipLines(
-    IN PATHOBJ *ppo,
-    IN CLIPOBJ *pco,
-    IN SURFOBJ *pso,
-    IN LINEATTRS *pla
-);
+    _In_ PATHOBJ *ppo,
+    _In_ CLIPOBJ *pco,
+    _In_ SURFOBJ *pso,
+    _In_ LINEATTRS *pla);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiPATHOBJ_bEnumClipLines(
-    IN PATHOBJ *ppo,
+    _In_ PATHOBJ *ppo,
     _In_ ULONG cb,
-    OUT CLIPLINE *pcl
-);
+    _Out_writes_bytes_(cb) CLIPLINE *pcl);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiEngCheckAbort(
-    IN SURFOBJ *pso
-);
+    _In_ SURFOBJ *pso);
 
+__kernel_entry
 W32KAPI
 DHPDEV
 APIENTRY
 NtGdiGetDhpdev(
-    IN HDEV hdev
-);
+    _In_ HDEV hdev);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
 NtGdiHT_Get8BPPFormatPalette(
-    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
-    IN USHORT RedGamma,
-    IN USHORT GreenGamma,
-    IN USHORT BlueGamma
-);
+    _Out_opt_ _Post_count_(return) LPPALETTEENTRY pPaletteEntry,
+    _In_ USHORT RedGamma,
+    _In_ USHORT GreenGamma,
+    _In_ USHORT BlueGamma);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
 NtGdiHT_Get8BPPMaskPalette(
-    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
+    _Out_opt_ _Post_count_(return) LPPALETTEENTRY pPaletteEntry,
     _In_ BOOL Use8BPPMaskPal,
-    IN BYTE CMYMask,
-    IN USHORT RedGamma,
-    IN USHORT GreenGamma,
-    IN USHORT BlueGamma
-);
+    _In_ BYTE CMYMask,
+    _In_ USHORT RedGamma,
+    _In_ USHORT GreenGamma,
+    _In_ USHORT BlueGamma);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiUpdateTransform(
-    _In_ HDC hdc
-);
+    _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 DWORD
 APIENTRY
 NtGdiSetLayout(
     _In_ HDC hdc,
     _In_ LONG wox,
-    _In_ DWORD dwLayout
-);
+    _In_ DWORD dwLayout);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiMirrorWindowOrg(
-    _In_ HDC hdc
-);
+    _In_ HDC hdc);
 
+__kernel_entry
 W32KAPI
 LONG
 APIENTRY
 NtGdiGetDeviceWidth(
-    _In_ HDC hdc
-);
+    _In_ HDC hdc);
 
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiSetUMPDSandboxState(
+    _In_ BOOL bEnabled);
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiSetPUMPDOBJ(
-    IN HUMPD humpd,
+    _In_opt_ HUMPD humpd,
     _In_ BOOL bStoreID,
-    OUT HUMPD *phumpd,
-    OUT BOOL *pbWOW64
-);
+    _Inout_opt_ HUMPD *phumpd,
+    _Out_opt_ BOOL *pbWOW64);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiBRUSHOBJ_DeleteRbrush(
-    IN BRUSHOBJ *pbo,
-    IN BRUSHOBJ *pboB
-);
+    _In_opt_ BRUSHOBJ *pbo,
+    _In_opt_ BRUSHOBJ *pboB);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiUMPDEngFreeUserMem(
-    IN KERNEL_PVOID *ppv
-);
+    _In_ KERNEL_PVOID *ppv);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
 NtGdiSetBitmapAttributes(
-    IN HBITMAP hbm,
-    _In_ DWORD dwFlags
-);
+    _In_ HBITMAP hbm,
+    _In_ DWORD dwFlags);
 
+__kernel_entry
 W32KAPI
 HBITMAP
 APIENTRY
 NtGdiClearBitmapAttributes(
-    IN HBITMAP hbm,
-    _In_ DWORD dwFlags
-);
+    _In_ HBITMAP hbm,
+    _In_ DWORD dwFlags);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
 NtGdiSetBrushAttributes(
     _In_ HBRUSH hbm,
-    _In_ DWORD dwFlags
-);
+    _In_ DWORD dwFlags);
 
+__kernel_entry
 W32KAPI
 HBRUSH
 APIENTRY
 NtGdiClearBrushAttributes(
     _In_ HBRUSH hbm,
-    _In_ DWORD dwFlags
-);
+    _In_ DWORD dwFlags);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiDrawStream(
     _In_ HDC hdcDst,
     _In_ ULONG cjIn,
-    IN VOID *pvIn
-);
+    _In_reads_bytes_(cjIn) VOID *pvIn);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiMakeObjectXferable(
     _In_ HANDLE h,
-    _In_ DWORD dwProcessId
-);
+    _In_ DWORD dwProcessId);
 
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
 NtGdiMakeObjectUnXferable(
-    _In_ HANDLE h
-);
+    _In_ HANDLE h);
 
+#ifdef PRIVATE_DWM_INTERFACE
+
+__kernel_entry
+W32KAPI
+BOOL
+NtGdiSfmRegisterLogicalSurfaceForSignaling(
+    _In_ HLSURF hlsurf,
+    BOOL fSignalOnDirty);
+
+__kernel_entry
+W32KAPI
+BOOL
+NtGdiDwmGetHighColorMode(
+    _Out_ DXGI_FORMAT* pdxgiFormat);
+
+__kernel_entry
+W32KAPI
+BOOL
+NtGdiDwmSetHighColorMode(
+    _In_ DXGI_FORMAT dxgiFormat);
+
+__kernel_entry
+W32KAPI
+HANDLE
+NtGdiDwmCaptureScreen(
+    _In_ const RECT* prcCapture,
+    _In_ DXGI_FORMAT dxgiFormat);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdCreateFullscreenSprite(
+    _In_ HDC hdc,
+    _In_ COLORREF crKey,
+    _Out_ HANDLE* phSprite,
+    _Out_ HDC* phdcSprite);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdNotifyFullscreenSpriteUpdate(
+    _In_ HDC hdc,
+    _In_ HANDLE hSprite);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiDdDestroyFullscreenSprite(
+    _In_ HDC hdc,
+    _In_ HANDLE hSprite);
+
+__kernel_entry
+W32KAPI
+ULONG
+APIENTRY
+NtGdiDdQueryVisRgnUniqueness(
+    VOID);
+
+__kernel_entry
 W32KAPI
 BOOL
 APIENTRY
-NtGdiInitSpool(VOID);
+NtGdiHLSurfGetInformation(
+    _In_ HLSURF hlsurf,
+    _In_ HLSURF_INFORMATION_CLASS InformationClass,
+    _In_reads_bytes_opt_(*pcjInfoBuffer) PVOID pvInfoBuffer,
+    _Inout_ PULONG pcjInfoBuffer);
 
-/* FIXME wrong prototypes fix the build */
+__kernel_entry
 W32KAPI
-INT
+BOOL
 APIENTRY
-NtGdiGetSpoolMessage( DWORD u1,
-                      DWORD u2,
-                      DWORD u3,
-                      DWORD u4);
-#endif
+NtGdiHLSurfSetInformation(
+    _In_ HLSURF hlsurf,
+    _In_ HLSURF_INFORMATION_CLASS InformationClass,
+    _In_reads_bytes_opt_(cjInfoBuffer) PVOID pvInfoBuffer,
+    _In_ ULONG cjInfoBuffer);
+
+__kernel_entry
+W32KAPI
+BOOL
+APIENTRY
+NtGdiDwmCreatedBitmapRemotingOutput(
+    VOID);
+
+__kernel_entry
+W32KAPI
+NTSTATUS
+APIENTRY
+NtGdiGetCurrentDpiInfo(
+    _In_ HMONITOR hmon,
+    _Out_ PVOID pvStruct);
+
+#endif /* PRIVATE_DWM_INTERFACE */
+
+#endif /* _NTGDI_ */

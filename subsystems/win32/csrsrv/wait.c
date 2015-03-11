@@ -419,7 +419,7 @@ CsrNotifyWait(IN PLIST_ENTRY WaitList,
                                                 WaitArgument2,
                                                 0,
                                                 FALSE);
-            
+
             /*
              * We've already done a wait, so leave unless
              * we want to notify all the waits...

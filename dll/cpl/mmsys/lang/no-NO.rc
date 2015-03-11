@@ -11,14 +11,14 @@ BEGIN
     CONTROL "", IDC_MUTE_ICON, "Static", SS_ICON | WS_VISIBLE, 17, 45, 32, 32
     CONTROL "", IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
     LTEXT "Lavt", -1, 62, 66, 30, 17
-    LTEXT "Høyt", -1, 195, 66, 30, 17
+    LTEXT "HÃ¸yt", -1, 195, 66, 30, 17
     CHECKBOX "&Demp", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     CHECKBOX "Plasser volum &ikon i oppgavelinjen", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
     PUSHBUTTON "A&vansert...", IDC_ADVANCED_BTN, 150, 105, 75, 15
-    GROUPBOX "Høytaller innstilling", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
+    GROUPBOX "HÃ¸ytaller innstilling", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Bruk innstillingen under for å endre individuell høytaller volum og andre innstillinger.", -1, 70, 155, 150, 36
-    PUSHBUTTON "&Høytallervolum...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
+    LTEXT "Bruk innstillingen under for Ã¥ endre individuell hÃ¸ytaller volum og andre innstillinger.", -1, 70, 155, 150, 36
+    PUSHBUTTON "&HÃ¸ytallervolum...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
     PUSHBUTTON "A&vansert...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
@@ -27,12 +27,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Lyder"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Et lydoppsett er et sett med lyder som tilordnes hendelser i ReactOS og programmer. Du kan velge et eksisterende oppsett eller lagre et du har endret på.", -1, 8, 7, 230, 40
+    LTEXT "Et lydoppsett er et sett med lyder som tilordnes hendelser i ReactOS og programmer. Du kan velge et eksisterende oppsett eller lagre et du har endret pÃ¥.", -1, 8, 7, 230, 40
     LTEXT "Lydo&ppsett :", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Lag&re som...", IDC_SAVEAS_BTN, 134, 70, 50, 15
     PUSHBUTTON "&Slett", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Hvis du vil endre lyder, klikker du på en programhendelse i listen nedenfor, og velger deretter en lyd som skal brukes. Du kan lagre endringer som et nytt lydoppsett.", -1, 8, 90, 230, 40
+    LTEXT "Hvis du vil endre lyder, klikker du pÃ¥ en programhendelse i listen nedenfor, og velger deretter en lyd som skal brukes. Du kan lagre endringer som et nytt lydoppsett.", -1, 8, 90, 230, 40
     LTEXT "&Programhendelser:", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
     LTEXT "&Lyder:", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
@@ -108,13 +108,13 @@ END
 
 IDD_SPEAKERS DIALOG 0, 0, 257, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Høytaller"
+CAPTION "HÃ¸ytaller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 4379, -1, 7, 8, 20, 20
-    LTEXT "Velg høytaller oppsett som det mest likt oppsett som du har på din datamaskin.", -1, 36, 8, 215, 27
+    LTEXT "Velg hÃ¸ytaller oppsett som det mest likt oppsett som du har pÃ¥ din datamaskin.", -1, 36, 8, 215, 27
     CONTROL 110, 5376, "STATIC", SS_BITMAP | SS_CENTERIMAGE, 37, 40, 209, 112, WS_EX_TRANSPARENT
-    LTEXT "H&øytaller oppsett:", 8502, 53, 169, 55, 10
+    LTEXT "H&Ã¸ytaller oppsett:", 8502, 53, 169, 55, 10
     COMBOBOX 5401, 52, 182, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -123,7 +123,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ytelse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Disse innstillingene kontrollere hvordan ReactOS spiller lyd. Denne kan hjelpe deg med å feilsøke lyd-relatert problemer.", 8492, 34, 7, 218, 23
+    LTEXT "Disse innstillingene kontrollere hvordan ReactOS spiller lyd. Denne kan hjelpe deg med Ã¥ feilsÃ¸ke lyd-relatert problemer.", 8492, 34, 7, 218, 23
     GROUPBOX "Lyd avspilling", 8494, 7, 32, 243, 152
     ICON 4379, 8512, 8, 8, 20, 20
     LTEXT "&Maskinvare akselerasjon:", 8495, 13, 56, 111, 14
@@ -144,7 +144,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ytelse"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Disse innstillingene kontollerer hvordan ReactOS tar opp lyd. De kan hjelpe deg å feilsøke lyd-relaterte problemer.", 8492, 34, 7, 217, 20
+    LTEXT "Disse innstillingene kontollerer hvordan ReactOS tar opp lyd. De kan hjelpe deg Ã¥ feilsÃ¸ke lyd-relaterte problemer.", 8492, 34, 7, 217, 20
     GROUPBOX "Lyd opptak", 8494, 7, 29, 242, 122
     ICON 4380, 8512, 8, 7, 20, 20
     LTEXT "&Maskinvare akselerasjon:", 8495, 13, 46, 103, 17
@@ -170,8 +170,8 @@ BEGIN
     LTEXT "Denne datamaskinen kan ikke spille av lyd fordi ReactOS lydtjeneste er ikke aktivert.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Aktiverer ReactOS lyd", 10253, 60, 68, 150, 9
     LTEXT "Notater", 10246, 58, 87, 150, 11
-    LTEXT "1. Du trenger å være en administrator for å aktivere denne tjenesten. Hvis du ikke er en administrator, vil du bli spurt etter et administrator navn og passord.", 10247, 60, 100, 150, 40
-    LTEXT "2. Etter at du aktiverer ReactOS lyd vil du trenge å starte maskinen på nytt.", 10248, 60, 140, 150, 40
+    LTEXT "1. Du trenger Ã¥ vÃ¦re en administrator for Ã¥ aktivere denne tjenesten. Hvis du ikke er en administrator, vil du bli spurt etter et administrator navn og passord.", 10247, 60, 100, 150, 40
+    LTEXT "2. Etter at du aktiverer ReactOS lyd vil du trenge Ã¥ starte maskinen pÃ¥ nytt.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
@@ -179,39 +179,39 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Flere kanaler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Beskrivelse får du her.", 9506, 8, 4, 212, 24
+    LTEXT "Beskrivelse fÃ¥r du her.", 9506, 8, 4, 212, 24
     LTEXT "Lav", 9473, 65, 31, 14, 8
     LTEXT "", 9472, 5, 31, 55, 8
     CONTROL "Slider1", 9475, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 29, 108, 17
-    LTEXT "Høyt", 9474, 202, 31, 17, 8
+    LTEXT "HÃ¸yt", 9474, 202, 31, 17, 8
     LTEXT "Lav", 9477, 65, 50, 14, 8
     LTEXT "", 9476, 5, 50, 55, 8
     CONTROL "Slider1", 9479, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 48, 108, 17
-    LTEXT "Høyt", 9478, 202, 50, 17, 8
+    LTEXT "HÃ¸yt", 9478, 202, 50, 17, 8
     LTEXT "Lav", 9481, 65, 69, 14, 8
     LTEXT "", 9480, 5, 69, 55, 8
     CONTROL "Slider1", 9483, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 67, 108, 17
-    LTEXT "Høyt", 9482, 202, 69, 17, 8
+    LTEXT "HÃ¸yt", 9482, 202, 69, 17, 8
     LTEXT "Lav", 9485, 65, 88, 14, 8
     LTEXT "", 9484, 5, 88, 55, 8
     CONTROL "Slider1", 9487, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 86, 108, 17
-    LTEXT "Høyt", 9486, 202, 88, 17, 8
+    LTEXT "HÃ¸yt", 9486, 202, 88, 17, 8
     LTEXT "Lav", 9489, 65, 107, 14, 8
     LTEXT "", 9488, 5, 107, 55, 8
     CONTROL "Slider1", 9491, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 105, 108, 17
-    LTEXT "Høyt", 9490, 202, 107, 17, 8
+    LTEXT "HÃ¸yt", 9490, 202, 107, 17, 8
     LTEXT "Lav", 9493, 65, 126, 14, 8
     LTEXT "", 9492, 5, 126, 55, 8
     CONTROL "Slider1", 9495, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 124, 108, 17
-    LTEXT "Høyt", 9494, 202, 126, 17, 8
+    LTEXT "HÃ¸yt", 9494, 202, 126, 17, 8
     LTEXT "Lav", 9497, 65, 145, 14, 8
     LTEXT "", 9496, 5, 145, 55, 8
     CONTROL "Slider1", 9499, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 143, 108, 17
-    LTEXT "Høyt", 9498, 202, 145, 17, 8
+    LTEXT "HÃ¸yt", 9498, 202, 145, 17, 8
     LTEXT "Lav", 9501, 65, 164, 14, 8
     LTEXT "", 9500, 5, 164, 55, 8
     CONTROL "Slider1", 9503, "MSCTLS_TRACKBAR32", WS_TABSTOP | 0x00000401, 87, 162, 108, 17
-    LTEXT "Høyt", 9502, 202, 164, 17, 8
+    LTEXT "HÃ¸yt", 9502, 202, 164, 17, 8
     AUTOCHECKBOX "&Flytt alle slide indicators av gangen", 9504, 5, 185, 216, 9
     PUSHBUTTON "Gjenopprett &standard", 9505, 110, 199, 110, 14
 END
@@ -223,15 +223,15 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS lyd", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "ReactOS lydtjeneste er nå aktivert. Uansett, lyden vil kanskje ikke fungere optimalt før du starter ReactOS på nytt. Hvis du ønsker å starte på nytt nå, først lagre ditt arbeid og lukk alle dine programmer.", 10261, 60, 25, 150, 50
-    LTEXT "For å starte ReactOS på nytt, trykk på OK.", 10262, 60, 75, 150, 20
-    LTEXT "Hvis du trykker avbryt, vil du trenge å starte på nytt senere for at ReactOS lyd skal fungere riktig.", 10263, 60, 100, 150, 40
+    LTEXT "ReactOS lydtjeneste er nÃ¥ aktivert. Uansett, lyden vil kanskje ikke fungere optimalt fÃ¸r du starter ReactOS pÃ¥ nytt. Hvis du Ã¸nsker Ã¥ starte pÃ¥ nytt nÃ¥, fÃ¸rst lagre ditt arbeid og lukk alle dine programmer.", 10261, 60, 25, 150, 50
+    LTEXT "For Ã¥ starte ReactOS pÃ¥ nytt, trykk pÃ¥ OK.", 10262, 60, 75, 150, 20
+    LTEXT "Hvis du trykker avbryt, vil du trenge Ã¥ starte pÃ¥ nytt senere for at ReactOS lyd skal fungere riktig.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Lyder og lydenheter"
-    IDS_CPLDESCRIPTION "Endre lydenheten for din datamaskin, eller konfigurer innstillinger for dine høytaller og opptak enheter."
+    IDS_CPLDESCRIPTION "Endre lydenheten for din datamaskin, eller konfigurer innstillinger for dine hÃ¸ytaller og opptak enheter."
     IDS_NO_SOUND "(Ingen)"
     IDS_NO_DEVICES "Ingen enheter"
     5825 "Programfeil"
@@ -239,8 +239,8 @@ BEGIN
     5827 "Kritisk batteri Alarm"
     5828 "Enhet tilkoblet"
     5829 "Enhet frakoblet"
-    5830 "Enhet misslykkes å koble seg til"
-    5831 "Tøm papirkurven"
+    5830 "Enhet misslykkes Ã¥ koble seg til"
+    5831 "TÃ¸m papirkurven"
     5832 "Svakt batteri alarm"
     5833 "Maksimere"
     5834 "Meny kommando"
@@ -248,8 +248,8 @@ BEGIN
     5836 "Minimere"
     5837 "Ny e-post beskjed"
     5838 "Start navigasjon"
-    5839 "Åpne program"
-    5840 "Utskrift fullført"
+    5839 "Ã…pne program"
+    5840 "Utskrift fullfÃ¸rt"
     5841 "Restore Down"
     5842 "Restore Up"
     5843 "Asterisk"
@@ -258,10 +258,10 @@ BEGIN
     5846 "Avslutt ReactOS"
     5847 "Kritisk Stopp"
     5848 "System notifikasjon"
-    5849 "Spørsmål"
+    5849 "SpÃ¸rsmÃ¥l"
     5850 "Start ReactOS"
     5851 "Start Meny"
     5852 "ReactOS Logg av"
-    5853 "ReactOS Logg på"
+    5853 "ReactOS Logg pÃ¥"
     5854 "ReactOS Explorer"
 END

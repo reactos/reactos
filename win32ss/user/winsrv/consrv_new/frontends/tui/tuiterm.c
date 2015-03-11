@@ -813,11 +813,6 @@ static FRONTEND_VTBL TuiVtbl =
     TuiSetMenuClose,
 };
 
-// static BOOL
-// DtbgIsDesktopVisible(VOID)
-// {
-    // return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
-// }
 static BOOLEAN
 IsConsoleMode(VOID)
 {

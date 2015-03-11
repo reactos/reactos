@@ -23,9 +23,27 @@
 
 #include "CMenuDeskBar.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
+/* As far as I can tell, the submenu hierarchy looks like this:
+*
+* The DeskBar's Child is the Band it contains.
+* The DeskBar's Parent is the SID_SMenuPopup of the Site.
+*
+* The Band's Child is the IMenuPopup of the child submenu.
+* The Band's Parent is the SID_SMenuPopup of the Site (the DeskBar).
+*
+* When the DeskBar receives a selection event:
+* If it requires closing the window, it will notify the Child (Band) using CancelLevel.
+* If it has to spread upwards (everything but CancelLevel), it will notify the Parent.
+*
+* When the Band receives a selection event, this is where it gets fuzzy:
+* In which cases does it call the Parent? Probably not CancelLevel.
+* In which cases does it call the Child?
+* How does it react to calls?
+*
+*/
 
-const static GUID CGID_MenuDeskBar = { 0x5C9F0A12, 0x959E, 0x11D0, { 0xA3, 0xA4, 0x00, 0xA0, 0xC9, 0x08, 0x26, 0x36 } };
+
+WINE_DEFAULT_DEBUG_CHANNEL(CMenuDeskBar);
 
 extern "C"
 HRESULT WINAPI CMenuDeskBar_Constructor(REFIID riid, LPVOID *ppv)
@@ -89,13 +107,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::ContextSensitiveHelp(BOOL fEnterMode)
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnFocusChangeIS(IUnknown *punkObj, BOOL fSetFocus)
 {
-    CComPtr<IInputObjectSite> ios;
-
-    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObjectSite, &ios));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return ios->OnFocusChangeIS(punkObj, fSetFocus);
+    return IUnknown_OnFocusChangeIS(m_Client, punkObj, fSetFocus);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds,
@@ -116,7 +128,7 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Exec(const GUID *pguidCmdGroup, DWORD nC
         case 3: // load complete
             return S_OK;
         case 4: // set font metrics
-            return S_OK;
+            return _AdjustForTheme(nCmdexecopt);
         }
     }
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
@@ -177,24 +189,12 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::UIActivateIO(BOOL fActivate, LPMSG lpMsg
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::HasFocusIO()
 {
-    CComPtr<IInputObject> io;
-
-    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return io->HasFocusIO();
+    return IUnknown_HasFocusIO(m_Client);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    CComPtr<IInputObject> io;
-
-    HRESULT hr = m_Client->QueryInterface(IID_PPV_ARG(IInputObject, &io));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
-
-    return io->TranslateAcceleratorIO(lpMsg);
+    return IUnknown_TranslateAcceleratorIO(m_Client, lpMsg);
 }
 
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetClient(IUnknown *punkClient)
@@ -288,6 +288,37 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::GetSite(REFIID riid, void **ppvSite)
     return m_Site->QueryInterface(riid, ppvSite);
 }
 
+static void AdjustForExcludeArea(BOOL alignLeft, BOOL alignTop, BOOL preferVertical, PINT px, PINT py, INT cx, INT cy, RECTL rcExclude) {
+    RECT rcWindow = { *px, *py, *px + cx, *py + cy };
+    
+    if (rcWindow.right > rcExclude.left && rcWindow.left < rcExclude.right &&
+        rcWindow.bottom > rcExclude.top && rcWindow.top < rcExclude.bottom)
+    {
+        if (preferVertical)
+        {
+            if (alignTop && rcWindow.bottom > rcExclude.top)
+                *py = rcExclude.top - cy;
+            else if (!alignTop && rcWindow.top < rcExclude.bottom)
+                *py = rcExclude.bottom;
+            else if (alignLeft && rcWindow.right > rcExclude.left)
+                *px = rcExclude.left - cx;
+            else if (!alignLeft && rcWindow.left < rcExclude.right)
+                *px = rcExclude.right;
+        }
+        else
+        {
+            if (alignLeft && rcWindow.right > rcExclude.left)
+                *px = rcExclude.left - cx;
+            else if (!alignLeft && rcWindow.left < rcExclude.right)
+                *px = rcExclude.right;
+            else if (alignTop && rcWindow.bottom > rcExclude.top)
+                *py = rcExclude.top - cy;
+            else if (!alignTop && rcWindow.top < rcExclude.bottom)
+                *py = rcExclude.bottom;
+        }
+    }
+}
+
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP_POPUPFLAGS dwFlags)
 {
     HRESULT hr;
@@ -341,56 +372,142 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::Popup(POINTL *ppt, RECTL *prcExclude, MP
 
     RECT rcWorkArea;
     GetWindowRect(GetDesktopWindow(), &rcWorkArea);
-    int waHeight = rcWorkArea.bottom - rcWorkArea.top;
+    int cxWorkArea = rcWorkArea.right - rcWorkArea.left;
+    int cyWorkArea = rcWorkArea.bottom - rcWorkArea.top;
 
     int x = ppt->x;
     int y = ppt->y;
     int cx = rc.right - rc.left;
     int cy = rc.bottom - rc.top;
 
-    switch (dwFlags & 0xFF000000)
+    // TODO: Make alignLeft default to TRUE in LTR systems or whenever necessary.
+    BOOL alignLeft = FALSE;
+    BOOL alignTop = FALSE;
+    BOOL preferVertical = FALSE;
+    switch (dwFlags & MPPF_POS_MASK)
     {
+    case MPPF_TOP:
+        alignTop = TRUE;
+        preferVertical = TRUE;
+        break;
+    case MPPF_LEFT:
+        alignLeft = TRUE;
+        break;
     case MPPF_BOTTOM:
-        x = ppt->x;
-        y = ppt->y - rc.bottom;
+        alignTop = FALSE;
+        preferVertical = TRUE;
         break;
     case MPPF_RIGHT:
-        x = ppt->x + rc.left;
-        y = ppt->y + rc.top;
-        break;
-    case MPPF_TOP | MPPF_ALIGN_LEFT:
-        x = ppt->x - rc.right;
-        y = ppt->y + rc.top;
-        break;
-    case MPPF_TOP | MPPF_ALIGN_RIGHT:
-        x = ppt->x;
-        y = ppt->y + rc.top;
+        alignLeft = FALSE;
         break;
     }
+
+    // Try the selected alignment and verify that it doesn't escape the work area.
+    if (alignLeft)
+    {
+        x = ppt->x - cx;
+    }
+    else
+    {
+        x = ppt->x;
+    }
+
+    if (alignTop)
+    {
+        y = ppt->y - cy;
+    }
+    else
+    {
+        y = ppt->y;
+    }
+
+    if (prcExclude)
+        AdjustForExcludeArea(alignLeft, alignTop, preferVertical, &x, &y, cx, cy, *prcExclude);
+
+    // Verify that it doesn't escape the work area, and flip.
+    if (alignLeft) 
+    {
+        if (x < rcWorkArea.left && (ppt->x+cx) <= rcWorkArea.right)
+        {
+            alignLeft = FALSE;
+            if (prcExclude)
+                x = prcExclude->right - ((x + cx) - prcExclude->left);
+            else
+                x = ppt->x;
+        }
+    }
+    else
+    {
+        if ((ppt->x + cx) > rcWorkArea.right && x >= rcWorkArea.left)
+        {
+            alignLeft = TRUE;
+            if (prcExclude)
+                x = prcExclude->left - cx + (prcExclude->right - x);
+            else
+                x = ppt->x - cx;
+        }
+    }
+
+    BOOL flipV = FALSE;
+    if (alignTop)
+    {
+        if (y < rcWorkArea.top && (ppt->y + cy) <= rcWorkArea.bottom)
+        {
+            alignTop = FALSE;
+            if (prcExclude)
+                y = prcExclude->bottom - ((y + cy) - prcExclude->top);
+            else
+                y = ppt->y;
+
+            flipV = true;
+        }
+    }
+    else
+    {
+        if ((ppt->y + cy) > rcWorkArea.bottom && y >= rcWorkArea.top)
+        {
+            alignTop = TRUE;
+            if (prcExclude)
+                y = prcExclude->top - cy + (prcExclude->bottom - y);
+            else
+                y = ppt->y - cy;
+
+            flipV = true;
+        }
+    }
+
+    if (prcExclude)
+        AdjustForExcludeArea(alignLeft, alignTop, preferVertical, &x, &y, cx, cy, *prcExclude);
+
+    if (x < rcWorkArea.left)
+        x = rcWorkArea.left;
+
+    if (cx > cxWorkArea)
+        cx = cxWorkArea;
 
     if (x + cx > rcWorkArea.right)
-    {
-        // FIXME: Works, but it's oversimplified.
-        x = prcExclude->left - cx;
-        dwFlags = (dwFlags & (~MPPF_TOP)) | MPPF_LEFT;
-    }
+        x = rcWorkArea.right - cx;
 
     if (y < rcWorkArea.top)
-    {
         y = rcWorkArea.top;
-    }
 
-    if (cy > waHeight)
-    {
-        cy = waHeight;
-    }
+    if (cy > cyWorkArea)
+        cy = cyWorkArea;
 
     if (y + cy > rcWorkArea.bottom)
-    {
         y = rcWorkArea.bottom - cy;
-    }
 
-    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, SWP_SHOWWINDOW);
+    int flags = SWP_SHOWWINDOW | SWP_NOACTIVATE;
+
+    this->SetWindowPos(HWND_TOPMOST, x, y, cx, cy, flags);
+
+    if (flipV)
+    {
+        if (dwFlags & MPPF_INITIALSELECT)
+            dwFlags = (dwFlags ^ MPPF_INITIALSELECT) | MPPF_FINALSELECT;
+        else if (dwFlags & MPPF_FINALSELECT)
+            dwFlags = (dwFlags ^ MPPF_FINALSELECT) | MPPF_INITIALSELECT;
+    }
 
     m_ShowFlags = dwFlags;
     m_Shown = true;
@@ -479,26 +596,6 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::SetSubMenu(IMenuPopup *pmp, BOOL fSet)
 HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 {
     CComPtr<IDeskBar> safeThis = this;
-
-    /* As far as I can tell, the submenu hierarchy looks like this:
-     *
-     * The DeskBar's Child is the Band it contains.
-     * The DeskBar's Parent is the SID_SMenuPopup of the Site.
-     *
-     * The Band's Child is the IMenuPopup of the child submenu.
-     * The Band's Parent is the SID_SMenuPopup of the Site (the DeskBar).
-     *
-     * When the DeskBar receives a selection event:
-     * If it requires closing the window, it will notify the Child (Band) using CancelLevel.
-     * If it has to spread upwards (everything but CancelLevel), it will notify the Parent.
-     *
-     * When the Band receives a selection event, this is where it gets fuzzy:
-     * In which cases does it call the Parent? Probably not CancelLevel.
-     * In which cases does it call the Child?
-     * How does it react to calls?
-     *
-     */
-
     CComPtr<IMenuPopup> oldParent = m_SubMenuParent;
 
     TRACE("OnSelect dwSelectType=%d\n", this, dwSelectType);
@@ -526,9 +623,11 @@ HRESULT STDMETHODCALLTYPE CMenuDeskBar::OnSelect(DWORD dwSelectType)
 
 HRESULT CMenuDeskBar::_CloseBar()
 {
-    CComPtr<IDeskBar> safeThis = this;
     CComPtr<IDeskBarClient> dbc;
     HRESULT hr;
+
+    // Ensure that our data isn't destroyed while we are working
+    CComPtr<IDeskBar> safeThis = this;
 
     m_Shown = false;
 
@@ -564,20 +663,15 @@ BOOL CMenuDeskBar::_IsSubMenuParent(HWND hwnd)
     while (popup)
     {
         HRESULT hr;
-        CComPtr<IOleWindow> window;
-
-        hr = popup->QueryInterface(IID_PPV_ARG(IOleWindow, &window));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return FALSE;
-
         HWND parent;
 
-        hr = window->GetWindow(&parent);
-        if (SUCCEEDED(hr) && hwnd == parent)
+        hr = IUnknown_GetWindow(popup, &parent);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+        if (hwnd == parent)
             return TRUE;
 
-        popup = NULL;
-        hr = IUnknown_GetSite(window, IID_PPV_ARG(IMenuPopup, &popup));
+        hr = IUnknown_GetSite(popup, IID_PPV_ARG(IMenuPopup, &popup));
         if (FAILED(hr))
             return FALSE;
     }
@@ -713,4 +807,20 @@ LRESULT CMenuDeskBar::_OnAppActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     }
 #endif
     return 0;
+}
+
+LRESULT CMenuDeskBar::_OnWinIniChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (wParam == SPI_SETFLATMENU)
+        return _OnNotify(uMsg, wParam, lParam, bHandled);
+
+    return 0;
+}
+
+HRESULT CMenuDeskBar::_AdjustForTheme(BOOL bFlatStyle)
+{
+    DWORD style = bFlatStyle ? WS_BORDER : WS_CLIPCHILDREN|WS_DLGFRAME;
+    DWORD mask = WS_BORDER|WS_CLIPCHILDREN|WS_DLGFRAME;
+    SHSetWindowBits(m_hWnd, GWL_STYLE, mask, style);
+    return S_OK;
 }

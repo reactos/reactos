@@ -128,8 +128,8 @@ UserDrawWindowFrame(HDC hdc,
    HBRUSH hbrush = NtGdiSelectBrush( hdc, gpsi->hbrGray );
    NtGdiPatBlt( hdc, rect->left, rect->top, rect->right - rect->left - width, height, PATINVERT );
    NtGdiPatBlt( hdc, rect->left, rect->top + height, width, rect->bottom - rect->top - height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -height, PATINVERT );
-   NtGdiPatBlt( hdc, rect->right - 1, rect->top, -width, rect->bottom - rect->top - height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->left + width, rect->bottom - 1, rect->right - rect->left - width, -(LONG)height, PATINVERT );
+   NtGdiPatBlt( hdc, rect->right - 1, rect->top, -(LONG)width, rect->bottom - rect->top - height, PATINVERT );
    NtGdiSelectBrush( hdc, hbrush );
 }
 
@@ -301,11 +301,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    RECT sizingRect, mouseRect, origRect, unmodRect;
    HDC hdc;
    LONG hittest = (LONG)(wParam & 0x0f);
-#ifdef NEW_CURSORICON
    PCURICON_OBJECT DragCursor = NULL, OldCursor = NULL;
-#else
-   HCURSOR hDragCursor = 0, hOldCursor = 0;
-#endif
    POINT minTrack, maxTrack;
    POINT capturePoint, pt;
    ULONG Style, ExStyle;
@@ -413,7 +409,6 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
    }
 
    hdc = UserGetDCEx( pWndParent, 0, DCX_CACHE );
-#ifdef NEW_CURSORICON
    if (iconic)
    {
        DragCursor = pwnd->pcls->spicn;
@@ -434,14 +429,6 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
            }
        }
    }
-#else
-   if ( iconic ) /* create a cursor for dragging */
-   {
-      hDragCursor = pwnd->pcls->hIcon;
-      if ( !hDragCursor ) hDragCursor = (HCURSOR)co_IntSendMessage( UserHMGetHandle(pwnd), WM_QUERYDRAGICON, 0, 0 );
-      if ( !hDragCursor ) iconic = FALSE;
-   }
-#endif
 
    /* repaint the window before moving it around */
    co_UserRedrawWindow( pwnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
@@ -500,11 +487,7 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
 	      moved = TRUE;
           if ( iconic ) /* ok, no system popup tracking */
           {
-#ifdef NEW_CURSORICON
               OldCursor = UserSetCursor(DragCursor, FALSE);
-#else
-              hOldCursor = IntSetCursor(hDragCursor);
-#endif
               UserShowCursor( TRUE );
           }
           else if(!DragFullWindows)
@@ -588,21 +571,14 @@ DefWndDoSizeMove(PWND pwnd, WORD wParam)
       if ( moved ) /* restore cursors, show icon title later on */
       {
           UserShowCursor( FALSE );
-#ifdef NEW_CURSORICON
           OldCursor = UserSetCursor(OldCursor, FALSE);
-#else
-          IntSetCursor( hOldCursor );
-#endif
       }
-#ifdef NEW_CURSORICON
+
       /* It could be that the cursor was already changed while we were proceeding,
        * so we must unreference whatever cursor was current at the time we restored the old one.
        * Maybe it is DragCursor, but maybe it is another one and DragCursor got already freed.
        */
-      UserDereferenceObject(OldCursor);
-#else
-      IntDestroyCursor( hDragCursor, FALSE );
-#endif
+      if (OldCursor) UserDereferenceObject(OldCursor);
    }
    else if ( moved && !DragFullWindows )
       UserDrawMovingFrame( hdc, &sizingRect, thickframe );
@@ -754,6 +730,155 @@ DefWndHandleSysCommand(PWND pWnd, WPARAM wParam, LPARAM lParam)
    return(Hook ? 1 : 0); // Don't call us again from user space.
 }
 
+PWND FASTCALL
+co_IntFindChildWindowToOwner(PWND Root, PWND Owner)
+{
+   PWND Ret;
+   PWND Child, OwnerWnd;
+
+   for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
+   {
+      OwnerWnd = Child->spwndOwner;
+      if(!OwnerWnd)
+         continue;
+
+      if (!(Child->style & WS_POPUP) ||
+          !(Child->style & WS_VISIBLE) ||
+          /* Fixes CMD pop up properties window from having foreground. */
+           Owner->head.pti->MessageQueue != Child->head.pti->MessageQueue)
+         continue;
+
+      if(OwnerWnd == Owner)
+      {
+         Ret = Child;
+         return Ret;
+      }
+   }
+   return NULL;
+}
+
+LRESULT
+DefWndHandleSetCursor(PWND pWnd, WPARAM wParam, LPARAM lParam)
+{
+   PWND pwndPopUP = NULL;
+   WORD Msg = HIWORD(lParam);
+
+   /* Not for child windows. */
+   if (UserHMGetHandle(pWnd) != (HWND)wParam)
+   {
+      return FALSE;
+   }
+
+   switch((short)LOWORD(lParam))
+   {
+      case HTERROR:
+      {
+         //// This is the real fix for CORE-6129! This was a "Code Whole".
+         USER_REFERENCE_ENTRY Ref;
+
+         if (Msg == WM_LBUTTONDOWN)
+         {
+            // Find a pop up window to bring active.
+            pwndPopUP = co_IntFindChildWindowToOwner(UserGetDesktopWindow(), pWnd);
+            if (pwndPopUP)
+            {
+               // Not a child pop up from desktop.
+               if ( pwndPopUP != UserGetDesktopWindow()->spwndChild )
+               {
+                  // Get original active window.
+                  PWND pwndOrigActive = gpqForeground->spwndActive;
+
+                  co_WinPosSetWindowPos(pWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+                  UserRefObjectCo(pwndPopUP, &Ref);
+                  //UserSetActiveWindow(pwndPopUP);
+                  co_IntSetForegroundWindow(pwndPopUP); // HACK
+                  UserDerefObjectCo(pwndPopUP);
+
+                  // If the change was made, break out.
+                  if (pwndOrigActive != gpqForeground->spwndActive)
+                     break;
+               }
+            }
+         }
+         ////
+	 if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+	     Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
+	 {
+             if (pwndPopUP)
+             {
+                 FLASHWINFO fwi =
+                    {sizeof(FLASHWINFO),
+                     UserHMGetHandle(pwndPopUP),
+                     FLASHW_ALL,
+                     gspv.dwForegroundFlashCount,
+                     (gpsi->dtCaretBlink >> 3)};
+
+                 // Now shake that window!
+                 IntFlashWindowEx(pwndPopUP, &fwi);
+             }
+	     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_MESSAGE_BEEP, 0);
+	 }
+	 break;
+      }
+
+      case HTCLIENT:
+      {
+         if (pWnd->pcls->spcur)
+         {
+            UserSetCursor(pWnd->pcls->spcur, FALSE);
+	 }
+	 return FALSE;
+      }
+
+      case HTLEFT:
+      case HTRIGHT:
+      {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZEWE), FALSE);
+         return TRUE;
+      }
+
+      case HTTOP:
+      case HTBOTTOM:
+      {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENS), FALSE);
+         return TRUE;
+       }
+
+       case HTTOPLEFT:
+       case HTBOTTOMRIGHT:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENWSE), FALSE);
+         return TRUE;
+       }
+
+       case HTBOTTOMLEFT:
+       case HTTOPRIGHT:
+       {
+         if (pWnd->style & WS_MAXIMIZE)
+         {
+            break;
+         }
+         UserSetCursor(SYSTEMCUR(SIZENESW), FALSE);
+         return TRUE;
+       }
+   }
+   UserSetCursor(SYSTEMCUR(ARROW), FALSE);
+   return FALSE;
+}
+
 VOID FASTCALL DefWndPrint( PWND pwnd, HDC hdc, ULONG uFlags)
 {
   /*
@@ -864,6 +989,23 @@ IntDefWindowProc(
       case WM_CTLCOLOR:
            return (LRESULT) DefWndControlColor((HDC)wParam, HIWORD(lParam));
 
+      case WM_SETCURSOR:
+      {
+         if (Wnd->style & WS_CHILD)
+         {
+             /* with the exception of the border around a resizable wnd,
+              * give the parent first chance to set the cursor */
+             if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
+             {
+                 PWND parent = Wnd->spwndParent;//IntGetParent( Wnd );
+                 if (parent != UserGetDesktopWindow() &&
+                     co_IntSendMessage( UserHMGetHandle(parent), WM_SETCURSOR, wParam, lParam))
+                    return TRUE;
+             }
+         }
+         return DefWndHandleSetCursor(Wnd, wParam, lParam);
+      }
+
       case WM_ACTIVATE:
        /* The default action in Windows is to set the keyboard focus to
         * the window, if it's being activated and not minimized */
@@ -946,7 +1088,6 @@ IntDefWindowProc(
          hDC = IntBeginPaint(Wnd, &Ps);
          if (hDC)
          {
-#ifdef NEW_CURSORICON
              if (((Wnd->style & WS_MINIMIZE) != 0) && (Wnd->pcls->spicn))
              {
                  RECT ClientRect;
@@ -958,22 +1099,7 @@ IntDefWindowProc(
                  y = (ClientRect.bottom - ClientRect.top - UserGetSystemMetrics(SM_CYICON)) / 2;
                  UserDrawIconEx(hDC, x, y, Wnd->pcls->spicn, 0, 0, 0, 0, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE);
              }
-#else
-             HICON hIcon;
-             if (((Wnd->style & WS_MINIMIZE) != 0) && (hIcon = Wnd->pcls->hIcon))
-             {
-                 RECT ClientRect;
-                 INT x, y;
-                 PCURICON_OBJECT pIcon;
-                 if (!(pIcon = UserGetCurIconObject(hIcon))) return 0;
-                 ERR("Doing Paint and Client area is empty!\n");
-                 IntGetClientRect(Wnd, &ClientRect);
-                 x = (ClientRect.right - ClientRect.left - UserGetSystemMetrics(SM_CXICON)) / 2;
-                 y = (ClientRect.bottom - ClientRect.top - UserGetSystemMetrics(SM_CYICON)) / 2;
-                 UserDrawIconEx( hDC, x, y, pIcon, 0, 0, 0, 0, DI_NORMAL | DI_COMPAT | DI_DEFAULTSIZE );
-                 UserDereferenceObject(pIcon);
-             }
-#endif
+
              IntEndPaint(Wnd, &Ps);
          }
          return (0);
@@ -1023,7 +1149,7 @@ IntDefWindowProc(
           return (DefWndHandleWindowPosChanging(Wnd, (WINDOWPOS*)lParam));
       }
 
-      case WM_WINDOWPOSCHANGED: 
+      case WM_WINDOWPOSCHANGED:
       {
           return (DefWndHandleWindowPosChanged(Wnd, (WINDOWPOS*)lParam));
       }
@@ -1071,24 +1197,19 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
 {
     PCURICON_OBJECT pIcon = NULL;
     HICON hIcon;
-   // First thing to do, init the Window Logo icons.
-   if (!gpsi->hIconSmWindows) co_IntSetWndIcons();
 
    //FIXME: Some callers use this function as if it returns a boolean saying "this window has an icon".
    //FIXME: Hence we must return a pointer with no reference count.
    //FIXME: This is bad and we should feel bad.
+   //FIXME: Stop whining over wine code.
 
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp);
    if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp);
-#ifdef NEW_CURSORICON
+
    if (!hIcon && pWnd->pcls->spicnSm)
        return pWnd->pcls->spicnSm;
    if (!hIcon && pWnd->pcls->spicn)
        return pWnd->pcls->spicn;
-#else
-   if (!hIcon) hIcon = pWnd->pcls->hIconSm;
-   if (!hIcon) hIcon = pWnd->pcls->hIcon;
-#endif
 
    if (!hIcon && (pWnd->style & DS_MODALFRAME))
    {

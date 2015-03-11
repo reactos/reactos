@@ -33,7 +33,8 @@ char *i386ExceptionDescriptionText[] =
     "Exception 12: MACHINE CHECK\n\n"
 };
 
-#define SCREEN_ATTR 0x1f
+#define SCREEN_ATTR 0x1F    // Bright white on blue background
+
 void
 i386PrintChar(char chr, ULONG x, ULONG y)
 {
@@ -163,7 +164,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               TrapFrame->SegSs, Special->Ldtr, Special->Idtr.Limit);
     InstructionPointer = (PUCHAR)TrapFrame->Rip;
 #endif
-    PrintText("\nInstructionstream: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x \n",
+    PrintText("\nInstruction stream: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x \n",
               InstructionPointer[0], InstructionPointer[1],
               InstructionPointer[2], InstructionPointer[3],
               InstructionPointer[4], InstructionPointer[5],
@@ -240,4 +241,3 @@ FrLdrBugCheck(ULONG BugCode)
 {
     FrLdrBugCheckEx(BugCode, 0, 0);
 }
-

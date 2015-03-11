@@ -59,6 +59,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 farieb (15 bitov)"
     IDS_HIGHCOLOR16 "65,536 farieb (16 bitov)"
     IDS_HIGHCOLOR24 "16,777,216 farieb (24 bitov)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu pixelov"
     IDS_FULLSCREEN "Celá obrazovka"
     IDS_BROWSESERVER "<Prehľadávať pre viac...>"

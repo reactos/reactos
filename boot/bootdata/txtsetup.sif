@@ -1,6 +1,9 @@
 [Version]
 Signature = "$ReactOS$"
 
+; Directories relative to the installation directory.
+; For specifying absolute directories, use the SystemPartitionFiles section,
+; or use names starting with \.
 [Directories]
 ; <directory_id> = <path>
 1 = "\"
@@ -13,7 +16,7 @@ Signature = "$ReactOS$"
 
 [DiskSpaceRequirements]
 ; Required free system partition disk space in MB
-FreeSysPartDiskSpace=350
+FreeSysPartDiskSpace=550
 
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
@@ -22,6 +25,7 @@ sacdrv.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
+vgafonts.cab=,,,,,,,,,,,,1
 bootvid.dll=,,,,,,,,,,,,2
 c_437.nls=,,,,,,,,,,,,2
 c_1252.nls=,,,,,,,,,,,,2
@@ -30,6 +34,7 @@ cdrom.sys=,,,,,,x,,,,,,4
 class2.sys=,,,,,,x,,,,,,4
 isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
+kdvbox.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
 i8042prt.sys=,,,,,,,,,,,,4
@@ -63,6 +68,8 @@ wmilib.sys=,,,,,,,,,,,,4
 ksecdd.sys=,,,,,,,,,,,,4
 mountmgr.sys=,,,,,,x,,,,,,4
 
+[SystemPartitionFiles]
+
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp
 *PNP0A03 = pci
@@ -89,6 +96,7 @@ GenDisk = disk
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt
+ROOT\SWENUM = swenum
 
 [BootBusExtenders.Load]
 acpi = acpi.sys

@@ -10,10 +10,10 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALL "Install"
+    IDS_INSTALL "安装"
     IDS_PRINT "列印"
     IDS_STRING "ReactOS 给所有人一个自由的操作系统！1234567890"
-    IDS_OPEN "Open Font..."
+    IDS_OPEN "打开字体档案..."
     IDS_ERROR "错误"
     IDS_ERROR_NOMEM "没有足够的内存来完成操作。"
     IDS_ERROR_NOFONT "％1不是一个有效的字体档案。"

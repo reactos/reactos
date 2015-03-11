@@ -5,7 +5,7 @@
  * FILE:             subsys/win32k/ntuser/prop.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
- 
+
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserProp);
 
@@ -16,7 +16,7 @@ IntGetProp(PWND Window, ATOM Atom)
 {
    PLIST_ENTRY ListEntry;
    PPROPERTY Property;
-   int i;
+   UINT i;
 
    ListEntry = Window->PropListHead.Flink;
 
@@ -26,7 +26,7 @@ IntGetProp(PWND Window, ATOM Atom)
 
       if (ListEntry == NULL)
       {
-          ERR("Corrupted (or uninitialized?) property list for window %p. Prop count %d. Atom %d.\n",
+          ERR("Corrupted (or uninitialized?) property list for window %p. Prop count %u. Atom %u.\n",
               Window, Window->PropListItems, Atom);
           return NULL;
       }

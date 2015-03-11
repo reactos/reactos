@@ -26,11 +26,6 @@
 
 #define USE_CUSTOM_EXPLORERBAND 1
 
-extern "C"
-BOOL WINAPI Shell_GetImageLists(
-    _Out_  HIMAGELIST *phiml,
-    _Out_  HIMAGELIST *phimlSmall);
-
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
 #include "newatlinterfaces.h"
@@ -148,34 +143,6 @@ extern HRESULT CreateBaseBarSite(REFIID riid, void **ppv);
 
 // temporary
 extern HRESULT CreateInternetToolbar(REFIID riid, void **ppv);
-
-
-HMENU SHGetMenuFromID(HMENU topMenu, int theID)
-{
-    MENUITEMINFO                            menuItemInfo;
-
-    menuItemInfo.cbSize = sizeof(menuItemInfo);
-    menuItemInfo.fMask = MIIM_SUBMENU;
-    if (!GetMenuItemInfo(topMenu, theID, FALSE, &menuItemInfo))
-        return NULL;
-    return menuItemInfo.hSubMenu;
-}
-
-void SHCheckMenuItem(HMENU theMenu, int theID, BOOL checked)
-{
-    MENUITEMINFO                            menuItemInfo;
-
-    menuItemInfo.cbSize = sizeof(menuItemInfo);
-    menuItemInfo.fMask = MIIM_STATE;
-    if (GetMenuItemInfo(theMenu, theID, FALSE, &menuItemInfo))
-    {
-        if (checked)
-            menuItemInfo.fState |= MF_CHECKED;
-        else
-            menuItemInfo.fState &= ~MF_CHECKED;
-        SetMenuItemInfo(theMenu, theID, FALSE, &menuItemInfo);
-    }
-}
 
 void DeleteMenuItems(HMENU theMenu, unsigned int firstIDToDelete, unsigned int lastIDToDelete)
 {
@@ -624,6 +591,7 @@ public:
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -664,6 +632,7 @@ public:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_MEASUREITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
@@ -985,9 +954,7 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         ::SendMessage(fCurrentShellViewWindow, WM_SETREDRAW, 0, 0);
 
     // set site
-    hResult = newShellView->QueryInterface(IID_PPV_ARG(IObjectWithSite, &objectWithSite));
-    if (SUCCEEDED(hResult) && objectWithSite.p != NULL)
-        hResult = objectWithSite->SetSite(static_cast<IDropTarget *>(this));
+    hResult = IUnknown_SetSite(newShellView, static_cast<IDropTarget *>(this));
 
     // update folder and view
     saveCurrentShellFolder = fCurrentShellFolder;
@@ -2582,8 +2549,6 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::_SetFocus(LPTOOLBARITEM ptbi, HWND hwnd
     return E_NOTIMPL;
 }
 
-extern HRESULT IUnknown_HasFocusIO(IUnknown * punk);
-extern HRESULT IUnknown_TranslateAcceleratorIO(IUnknown * punk, MSG * pmsg);
 HRESULT STDMETHODCALLTYPE CShellBrowser::v_MayTranslateAccelerator(MSG *pmsg)
 {
     for (int i = 0; i < 3; i++)
@@ -3199,6 +3164,12 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     LRESULT ret = RelayMsgToShellView(uMsg, wParam, menuIndex, bHandled);
 
     return ret;
+}
+
+LRESULT CShellBrowser::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    ::SetFocus(fCurrentShellViewWindow);
+    return 0;
 }
 
 LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

@@ -8,8 +8,7 @@ Resursele în română din ReactOS au suferit în timp o serie de modificări - 
 
 * Convenții adoptate
 
-Normele de traducere curente conțin în mare parte normele de traducere adoptate și în alte traduceri și localizări de logică computațională. Cele mai importante în această privință se regăsesc la i18n.ro și anume în „ghidul traducătorului”:
-http://i18n.ro/Ghidul_traducătorului_de_software
+Normele de traducere curente conțin în mare parte normele de traducere adoptate și în alte traduceri și localizări de logică computațională. Cele mai importante în această privință se regăsesc la i18n.ro și anume în „ghidul traducătorului” [1]:
 Astfel:
  1. Se folosesc diacriticele corecte ale limbii române.
  2. Traducerile trebuiesc adaptate respectând topica limbii române.
@@ -20,16 +19,18 @@ Astfel:
  7. Se evită politețea excesivă prin omiterea expresiilor de politețe explicite.
  8. Este recomandată o formulare independentă de gen (gramatical).
  9. Se evită utilizarea diacriticelor ca taste active (acceleratori sau taste de acces).
- 10. Se evită utilizarea pe post de taste de acces (evidențiate prin subliniere), a literelor „i”, „l” și „I”, din cauza lățimii lor reduse care le face dificilă reperarea, și a literelor „g”, „j”, „p”, „q” și „y” care ar intersecta marcajul de evidențiere.
+ 10. Pentru tastele de acces (care răspund la combinația de taste «Alt» + «tastă», evidențiate prin sublinierea tastei respective):
+  - Se folosesc doar litere sau cifre (recomandare de la Microsoft [2]: „Access keys are alphanumeric keys”). Sunt deci de evitat alte simboluri sau semne de punctuație.
+  - Sunt de evitat (tot conform aceiași recomandări [2]) literele sau cifrele care fac reperarea lor un exercițiu dificil, cum e grupul „l”, „1”, „i” și „I” (din cauza lățimii lor reduse), sau „g”, „j”, „p”, „q” și „y” (care intersectează marcajul de evidențiere).
  11. Ghilimelele folosite în limba română sunt perechea ghilimelele-deschise (99 jos) cu ghilimele-închise (99 sus), și ghilimelele unghiulare.
-La acestea se adaugă și câteva norme (deduse) din „greșeli frecvente” raportate tot la i18n.ro: http://i18n.ro/Greșeli_frecvente
+La acestea se adaugă și câteva norme (deduse) din „greșeli frecvente” raportate tot la i18n.ro [3].
  12. Se evită articularea inutilă, însă adaptarea mesajelor traduse trebuie totuși să primeaze.
  13. Nu se traduc numele proprii, însă numele traductibile ale componentelor/subcomponentelor unui program sau pachet de programe pot fi traduse.
  14. Nu se capitalizează decât prima literă dintr-un text.
 
 * Particularizări locale
 
-În resursele românești din ReactOS există și o serie de particularizări care fie nu se regăsesc în alte traduceri fie din cauza diferențelor de natură ale proiectelor, fie e vorba de termeni încă disputați sau neadoptați în localizările altor proiecte din diverse motive. Multe dintre acestea au fost menționate/discutate în grupul „Diacritice” (http://groups.google.com/group/diacritice). Câteva dintre cele mai relevante:
+În resursele românești din ReactOS există și o serie de particularizări care fie nu se regăsesc în alte traduceri fie din cauza diferențelor de natură ale proiectelor, fie e vorba de termeni încă disputați sau neadoptați în localizările altor proiecte din diverse motive. Multe dintre acestea au fost menționate/discutate în grupul „Diacritice” [4]. Câteva dintre cele mai relevante:
  15. În glosar sunt preferate:
   - „logică computațională” vs. „software”
   - „configurare”/„particularizare” vs. „Setare”
@@ -39,10 +40,16 @@ La acestea se adaugă și câteva norme (deduse) din „greșeli frecvente” ra
  16. Acceleratorii (combinațiile de taste de gen „«Ctrl» + «tastă»”) rămân aceiași ca în limba engleză.
  17. Tastele de acces (combinațiile de taste de gen „«Alt» + «tastă»”) nu rămân neapărat la fel ca în limba engleză. În mulțimea de taste cu această utilizare:
   - Se recomandă a evita utilizarea literelor „s” și „t” pe post de taste de acces pentru a preveni confuzia între acestea și diacriticele „ș” și „ț”.
-  - „f” și „n” sunt rezervate pentru „Confirmă” și respectiv „Anulează”; „a” pentru „Aplică” (dacă există în aceiași fereastră).
-  - În cazul ferestrelor-asistent, „a”, „o”, „f” și „n” sunt rezervate pentru „Înainte”, „Înapoi”, „Sfârșit” și „Anulează”.
+  - „f” și „n” sunt rezervate pentru „Confirmă” și respectiv „Anulează”; „a” pentru „Aplică” (dacă există în aceiași fereastră). În cazul ferestrelor de tip asistent, „a”, „o”, „f” și „n” sunt rezervate respectiv pentru „Înainte”, „Înapoi”, „Sfârșit” și „Anulează”. [NOTĂ]
   - În cazul interfețelor grafice opțiunilor „Da” și „Nu” le corespund tastele de acces „a” și „u”. (În cazul interfețelor linie-de-comandă, corespunzătoare opțiunilor „Da|Nu”, care NU sunt taste de acces, rămân „d” și „n”.)
  18. Din considerente de lizibilitate, în cazul programelor executate în linie-de-comandă se folosesc doar ghilimele unghiulare. Tot ghilimelele unghiulare sunt preferate și pentru citarea tastelor fizice în mesajele elementelor GUI.
  19. Enunțul de la convenția 2 se poate extinde la „traducerile trebuiesc adaptate respectând (și beneficiind de) particularitățile limbii române”, iar următoarele zece coonvenții ce urmează după el (3-13) definesc de fapt reguli implicite aplicabile în lipsa unui context bine definit în toate aspectele sale. Unde este posibil, o adaptare la context este dezirabilă:
   - În cazul opțiunilor despre care există suficiente informații de context, este recomandată flexionarea. De exemplu, opțiunea nulă pentru lista de animații pentru ecran inactiv se poate flexiona în siguranță specificându-i-se genul gramatical feminin - „(nespecificată)”.
   - În cazul unor subiecte unice (dintr-un context local sau global), se folosește forma articulată. Exemple: „Calculatorul meu” (numai unul, conținut concret), „Sistemul de operare” (unic în cadrul său), „Documentele mele” (conținut concret) vs. „Locații în rețea” (nedefinit), „Linie de comandă” (cu multiple posibile instanțe distincte/independente), etc.
+
+[1] http://i18n.ro/Ghidul_traducătorului_de_software
+[2] https://msdn.microsoft.com/en-us/library/ms971323.aspx#atg_keyboardshortcuts_selecting_access_keys
+[3] http://i18n.ro/Greșeli_frecvente
+[4] http://groups.google.com/group/diacritice
+___________________________
+[NOTĂ] Această convenție deviază de la recomandarea Microsoft [2] de a nu aloca taste de acces pentru controalele cărora le corespund efectele implicite ale tastelor «Enter» și «Esc», sau care ar putea interfera cu alte grupuri de formulare-client ce utilizează șabloanele „Confirmă”-„Anulează”-„Aplică” și „Înapoi”-„Înainte”/„Sfârșit”-„Anulează”. Totuși, alocarea de taste de acces nu intră în conflict cu efectul acționării tastelor fizice (dimpotrivă, navigând utilizând tasta «Tab» într-o fereastră de dialog poate schimba efectul implicit al tastei «Enter» pe o altceva decât butonul-control de confirmare a întregii ferestre de dialog). Evitarea suprapunerii cu alte combinații de acces din formularele-client este și ea realizabilă (și recomandată prin urmare în lista de convenții).

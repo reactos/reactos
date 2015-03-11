@@ -49,6 +49,7 @@ CPlApplet*    Control_UnloadApplet(CPlApplet* applet)
     
     FreeLibrary(applet->hModule);
     next = applet->next;
+    HeapFree(GetProcessHeap(), 0, applet->cmd);
     HeapFree(GetProcessHeap(), 0, applet);
     return next;
 }
@@ -56,6 +57,7 @@ CPlApplet*    Control_UnloadApplet(CPlApplet* applet)
 CPlApplet*    Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
 {
     CPlApplet*    applet;
+    DWORD len;
     unsigned     i;
     CPLINFO    info;
     NEWCPLINFOW newinfo;
@@ -63,16 +65,32 @@ CPlApplet*    Control_LoadApplet(HWND hWnd, LPCWSTR cmd, CPanel* panel)
     if (!(applet = (CPlApplet *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*applet))))
        return applet;
 
+    len = ExpandEnvironmentStringsW(cmd, NULL, 0);
+    if (len > 0)
+    {
+        if (!(applet->cmd = HeapAlloc(GetProcessHeap(), 0, (len+1) * sizeof(WCHAR))))
+        {
+            WARN("Cannot allocate memory for applet path\n");
+            goto theError;
+        }
+        ExpandEnvironmentStringsW(cmd, applet->cmd, len+1);
+    }
+    else
+    {
+        WARN("Cannot expand applet path\n");
+        goto theError;
+    }
+
     applet->hWnd = hWnd;
 
-    if (!(applet->hModule = LoadLibraryW(cmd)))
+    if (!(applet->hModule = LoadLibraryW(applet->cmd)))
     {
-        WARN("Cannot load control panel applet %s\n", debugstr_w(cmd));
+        WARN("Cannot load control panel applet %s\n", debugstr_w(applet->cmd));
         goto theError;
     }
     if (!(applet->proc = (APPLET_PROC)GetProcAddress(applet->hModule, "CPlApplet")))
     {
-        WARN("Not a valid control panel applet %s\n", debugstr_w(cmd));
+        WARN("Not a valid control panel applet %s\n", debugstr_w(applet->cmd));
         goto theError;
     }
     if (!applet->proc(hWnd, CPL_INIT, 0L, 0L))
@@ -155,9 +173,9 @@ static void Control_WndProc_Create(HWND hWnd, const CREATESTRUCTW* cs)
    panel->hWnd = hWnd;
 }
 
-#define    XICON    32
+#define XICON    32
 #define XSTEP    128
-#define    YICON    32
+#define YICON    32
 #define YSTEP    64
 
 static BOOL    Control_Localize(const CPanel* panel, int cx, int cy,
@@ -463,7 +481,7 @@ static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
  * Control_RunDLLW            [SHELL32.@]
  *
  */
-EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
+void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
 {
     CPanel Panel;
 
@@ -520,10 +538,10 @@ HRESULT WINAPI Control_FillCache_RunDLLA(HWND hWnd, HANDLE hModule, DWORD w, DWO
 
 
 /*************************************************************************
- * RunDLL_CallEntry16                [SHELL32.122]
- * the name is probably wrong
+ * RunDll_CallEntry16                [SHELL32.122]
+ * the name is OK (when written with Dll, and not DLL as in Wine!)
  */
-EXTERN_C void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
+void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
                                 LPCSTR cmdline, INT cmdshow )
 {
 #if !defined(__CYGWIN__) && !defined (__MINGW32__) && !defined(_MSC_VER)

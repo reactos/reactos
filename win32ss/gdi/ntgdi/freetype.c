@@ -153,8 +153,17 @@ InitFontSupport(VOID)
     FontCacheNumEntries = 0;
     /* Fast Mutexes must be allocated from non paged pool */
     FontListLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    if (FontListLock == NULL)
+    {
+        return FALSE;
+    }
+
     ExInitializeFastMutex(FontListLock);
     FreeTypeLock = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+    if (FreeTypeLock == NULL)
+    {
+        return FALSE;
+    }
     ExInitializeFastMutex(FreeTypeLock);
 
     ulError = FT_Init_FreeType(&library);
@@ -417,7 +426,15 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     Entry->Font = FontGDI;
     Entry->NotEnum = (Characteristics & FR_NOT_ENUM);
     RtlInitAnsiString(&AnsiFaceName, (LPSTR)Face->family_name);
-    RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
+    Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
+        EngFreeMem(FontGDI);
+        FT_Done_Face(Face);
+        ExFreePoolWithTag(Entry, TAG_FONT);
+        return 0;
+    }
 
     if (Characteristics & FR_PRIVATE)
     {
@@ -786,14 +803,24 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     FT_WinFNT_HeaderRec Win;
     FT_Error Error;
     char *Cp;
+    NTSTATUS status;
 
     Needed = sizeof(OUTLINETEXTMETRICW);
 
     RtlInitAnsiString(&FamilyNameA, FontGDI->face->family_name);
-    RtlAnsiStringToUnicodeString(&FamilyNameW, &FamilyNameA, TRUE);
+    status = RtlAnsiStringToUnicodeString(&FamilyNameW, &FamilyNameA, TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        return 0;
+    }
 
     RtlInitAnsiString(&StyleNameA, FontGDI->face->style_name);
-    RtlAnsiStringToUnicodeString(&StyleNameW, &StyleNameA, TRUE);
+    status = RtlAnsiStringToUnicodeString(&StyleNameW, &StyleNameA, TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        RtlFreeUnicodeString(&FamilyNameW);
+        return 0;
+    }
 
     /* These names should be read from the TT name table */
 
@@ -939,6 +966,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     ANSI_STRING EntryFaceNameA;
     UNICODE_STRING EntryFaceNameW;
     FONTGDI *FontGDI;
+    NTSTATUS status;
 
     Entry = Head->Flink;
     while (Entry != Head)
@@ -949,7 +977,12 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         ASSERT(FontGDI);
 
         RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
-        RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        if (!NT_SUCCESS(status))
+        {
+            break;
+        }
+
         if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
         {
             EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
@@ -1007,6 +1040,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     TEXTMETRICW *TM;
     NEWTEXTMETRICW *Ntm;
     DWORD fs0;
+    NTSTATUS status;
 
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
@@ -1078,7 +1112,11 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, PCWSTR FaceName, PFONTGDI FontGDI)
     RtlInitAnsiString(&StyleA, FontGDI->face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
     StyleW.MaximumLength = sizeof(Info->EnumLogFontEx.elfStyle);
-    RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
+    status = RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
+    if (!NT_SUCCESS(status))
+    {
+        return;
+    }
 
     Info->EnumLogFontEx.elfLogFont.lfCharSet = DEFAULT_CHARSET;
     Info->EnumLogFontEx.elfScript[0] = L'\0';
@@ -1192,6 +1230,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
     ANSI_STRING EntryFaceNameA;
     UNICODE_STRING EntryFaceNameW;
     FONTGDI *FontGDI;
+    NTSTATUS status;
 
     Entry = Head->Flink;
     while (Entry != Head)
@@ -1202,7 +1241,12 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         ASSERT(FontGDI);
 
         RtlInitAnsiString(&EntryFaceNameA, FontGDI->face->family_name);
-        RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
+        if (!NT_SUCCESS(status))
+        {
+            return FALSE;
+        }
+
         if ((LF_FACESIZE - 1) * sizeof(WCHAR) < EntryFaceNameW.Length)
         {
             EntryFaceNameW.Length = (LF_FACESIZE - 1) * sizeof(WCHAR);
@@ -1232,6 +1276,7 @@ typedef struct FontFamilyInfoCallbackContext
     DWORD Size;
 } FONT_FAMILY_INFO_CALLBACK_CONTEXT, *PFONT_FAMILY_INFO_CALLBACK_CONTEXT;
 
+_Function_class_(RTL_QUERY_REGISTRY_ROUTINE)
 static NTSTATUS APIENTRY
 FontFamilyInfoQueryRegistryCallback(IN PWSTR ValueName, IN ULONG ValueType,
                                     IN PVOID ValueData, IN ULONG ValueLength,
@@ -1779,7 +1824,7 @@ ftGdiGetGlyphOutline(
         for (n = 0; n < ft_face->num_charmaps; n++)
         {
             charmap = ft_face->charmaps[n];
-            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -2230,7 +2275,7 @@ TextIntGetTextExtentPoint(PDC dc,
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -2505,7 +2550,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
         }
     }
     else
-        DPRINT1("Encoding %u not supported\n", face->charmap->encoding);
+        DPRINT1("Encoding %i not supported\n", face->charmap->encoding);
 
     size = sizeof(GLYPHSET) + sizeof(WCRANGE) * (num_ranges - 1);
     if (glyphset)
@@ -3356,7 +3401,7 @@ GreExtTextOutW(
     Start.y = YStart;
     IntLPtoDP(dc, &Start, 1);
 
-    RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
+    RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
     SourcePoint.x = 0;
@@ -3366,10 +3411,10 @@ GreExtTextOutW(
     BrushOrigin.x = 0;
     BrushOrigin.y = 0;
 
-    psurf = dc->dclevel.pSurface;
-
-    if(!psurf)
-        psurf = psurfDefaultBitmap;
+    if (!dc->dclevel.pSurface)
+    {
+        goto fail;
+    }
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
@@ -3388,6 +3433,7 @@ GreExtTextOutW(
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
 
+        psurf = dc->dclevel.pSurface;
         IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
@@ -3432,7 +3478,7 @@ GreExtTextOutW(
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("Found charmap encoding: %u\n", charmap->encoding);
+            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
             if (charmap->encoding != 0)
             {
                 found = charmap;
@@ -3497,7 +3543,7 @@ GreExtTextOutW(
     {
         ULONGLONG TextWidth = 0;
         LPCWSTR TempText = String;
-        int Start;
+        int iStart;
 
         /*
          * Calculate width of the text.
@@ -3505,16 +3551,16 @@ GreExtTextOutW(
 
         if (NULL != Dx)
         {
-            Start = Count < 2 ? 0 : Count - 2;
+            iStart = Count < 2 ? 0 : Count - 2;
             TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
         }
         else
         {
-            Start = 0;
+            iStart = 0;
         }
-        TempText = String + Start;
+        TempText = String + iStart;
 
-        for (i = Start; i < Count; i++)
+        for (i = iStart; i < Count; i++)
         {
             if (fuOptions & ETO_GLYPH_INDEX)
                 glyph_index = *TempText;
@@ -3579,12 +3625,13 @@ GreExtTextOutW(
     /* Lock blit with a dummy rect */
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
+    psurf = dc->dclevel.pSurface;
     SurfObj = &psurf->SurfObj ;
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-	if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
+    if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
         DC_vUpdateBackgroundBrush(dc) ;
 
     if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
@@ -3660,7 +3707,6 @@ GreExtTextOutW(
                 ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
             MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
-
         }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
@@ -3673,71 +3719,75 @@ GreExtTextOutW(
         MaskRect.right = realglyph->bitmap.width;
         MaskRect.bottom = realglyph->bitmap.rows;
 
-        /*
-         * We should create the bitmap out of the loop at the biggest possible
-         * glyph size. Then use memset with 0 to clear it and sourcerect to
-         * limit the work of the transbitblt.
-         */
+        /* Check if the bitmap has any pixels */
+        if ((bitSize.cx != 0) && (bitSize.cy != 0))
+        {
+            /*
+             * We should create the bitmap out of the loop at the biggest possible
+             * glyph size. Then use memset with 0 to clear it and sourcerect to
+             * limit the work of the transbitblt.
+             */
 
-        HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
-                                       BMF_8BPP, BMF_TOPDOWN,
-                                       realglyph->bitmap.buffer);
-        if ( !HSourceGlyph )
-        {
-            DPRINT1("WARNING: EngLockSurface() failed!\n");
-            // FT_Done_Glyph(realglyph);
-            IntUnLockFreeType;
-            DC_vFinishBlit(dc, NULL);
-            goto fail2;
-        }
-        SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
-        if ( !SourceGlyphSurf )
-        {
+            HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
+                                           BMF_8BPP, BMF_TOPDOWN,
+                                           realglyph->bitmap.buffer);
+            if ( !HSourceGlyph )
+            {
+                DPRINT1("WARNING: EngCreateBitmap() failed!\n");
+                // FT_Done_Glyph(realglyph);
+                IntUnLockFreeType;
+                DC_vFinishBlit(dc, NULL);
+                goto fail2;
+            }
+            SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
+            if ( !SourceGlyphSurf )
+            {
+                EngDeleteSurface((HSURF)HSourceGlyph);
+                DPRINT1("WARNING: EngLockSurface() failed!\n");
+                IntUnLockFreeType;
+                DC_vFinishBlit(dc, NULL);
+                goto fail2;
+            }
+
+            /*
+             * Use the font data as a mask to paint onto the DCs surface using a
+             * brush.
+             */
+
+            if (lprc && (fuOptions & ETO_CLIPPED) &&
+                    DestRect.right >= lprc->right + dc->ptlDCOrig.x)
+            {
+                // We do the check '>=' instead of '>' to possibly save an iteration
+                // through this loop, since it's breaking after the drawing is done,
+                // and x is always incremented.
+                DestRect.right = lprc->right + dc->ptlDCOrig.x;
+                DoBreak = TRUE;
+            }
+            if (lprc && (fuOptions & ETO_CLIPPED) &&
+                    DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
+            {
+                DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+            }
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+            if (!IntEngMaskBlt(
+                SurfObj,
+                SourceGlyphSurf,
+                &dc->co.ClipObj,
+                &exloRGB2Dst.xlo,
+                &exloDst2RGB.xlo,
+                &DestRect,
+                (PPOINTL)&MaskRect,
+                &dc->eboText.BrushObject,
+                &BrushOrigin))
+            {
+                DPRINT1("Failed to MaskBlt a glyph!\n");
+            }
+
+            MouseSafetyOnDrawEnd(dc->ppdev) ;
+
+            EngUnlockSurface(SourceGlyphSurf);
             EngDeleteSurface((HSURF)HSourceGlyph);
-            DPRINT1("WARNING: EngLockSurface() failed!\n");
-            IntUnLockFreeType;
-            DC_vFinishBlit(dc, NULL);
-            goto fail2;
         }
-
-        /*
-         * Use the font data as a mask to paint onto the DCs surface using a
-         * brush.
-         */
-
-        if (lprc && (fuOptions & ETO_CLIPPED) &&
-                DestRect.right >= lprc->right + dc->ptlDCOrig.x)
-        {
-            // We do the check '>=' instead of '>' to possibly save an iteration
-            // through this loop, since it's breaking after the drawing is done,
-            // and x is always incremented.
-            DestRect.right = lprc->right + dc->ptlDCOrig.x;
-            DoBreak = TRUE;
-        }
-        if (lprc && (fuOptions & ETO_CLIPPED) &&
-                DestRect.bottom >= lprc->bottom + dc->ptlDCOrig.y)
-        {
-            DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
-        }
-        MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-        if (!IntEngMaskBlt(
-            SurfObj,
-            SourceGlyphSurf,
-            &dc->co.ClipObj,
-            &exloRGB2Dst.xlo,
-            &exloDst2RGB.xlo,
-            &DestRect,
-            (PPOINTL)&MaskRect,
-            &dc->eboText.BrushObject,
-            &BrushOrigin))
-        {
-            DPRINT1("Failed to MaskBlt a glyph!\n");
-        }
-
-        MouseSafetyOnDrawEnd(dc->ppdev) ;
-
-        EngUnlockSurface(SourceGlyphSurf);
-        EngDeleteSurface((HSURF)HSourceGlyph);
 
         if (DoBreak)
         {
@@ -4296,15 +4346,16 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
+#if 0
 DWORD
 FASTCALL
 GreGetGlyphIndicesW(
-    HDC hdc,
-    LPWSTR pwc,
-    INT cwc,
-    LPWORD pgi,
-    DWORD iMode,
-    DWORD Unknown)
+    _In_ HDC hdc,
+    _In_reads_(cwc) LPWSTR pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) LPWORD pgi,
+    _In_ DWORD iMode,
+    _In_ DWORD dwUnknown)
 {
     PDC dc;
     PDC_ATTR pdcattr;
@@ -4381,25 +4432,30 @@ GreGetGlyphIndicesW(
 
     IntUnLockFreeType;
 
-    RtlCopyMemory( pgi, Buffer, cwc*sizeof(WORD));
+    if (pgi != NULL)
+    {
+        RtlCopyMemory(pgi, Buffer, cwc * sizeof(WORD));
+    }
 
 ErrorRet:
     if (Buffer) ExFreePoolWithTag(Buffer, GDITAG_TEXT);
     return cwc;
 }
-
+#endif // 0
 
 /*
 * @implemented
 */
+__kernel_entry
+W32KAPI
 DWORD
 APIENTRY
 NtGdiGetGlyphIndicesW(
-    IN HDC hdc,
-    IN OPTIONAL LPWSTR UnSafepwc,
-    IN INT cwc,
-    OUT OPTIONAL LPWORD UnSafepgi,
-    IN DWORD iMode)
+    _In_ HDC hdc,
+    _In_reads_opt_(cwc) LPWSTR pwc,
+    _In_ INT cwc,
+    _Out_writes_opt_(cwc) LPWORD pgi,
+    _In_ DWORD iMode)
 {
     PDC dc;
     PDC_ATTR pdcattr;
@@ -4414,8 +4470,16 @@ NtGdiGetGlyphIndicesW(
     PWSTR Buffer = NULL;
     ULONG Size, pwcSize;
     PWSTR Safepwc = NULL;
+    LPWSTR UnSafepwc = pwc;
+    LPWORD UnSafepgi = pgi;
 
     if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
+
+    if ((UnSafepwc == NULL) || (UnSafepgi == NULL))
+    {
+        DPRINT1("UnSafepwc == %p, UnSafepgi = %p\n", UnSafepwc, UnSafepgi);
+        return -1;
+    }
 
     dc = DC_LockDc(hdc);
     if (!dc)
@@ -4513,7 +4577,10 @@ NtGdiGetGlyphIndicesW(
 
 ErrorRet:
     ExFreePoolWithTag(Buffer, GDITAG_TEXT);
-    ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
+    if (Safepwc != NULL)
+    {
+        ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
+    }
     if (NT_SUCCESS(Status)) return cwc;
     EngSetLastError(Status);
     return GDI_ERROR;

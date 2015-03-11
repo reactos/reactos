@@ -1507,16 +1507,33 @@ Fast486WriteModrmDwordOperands(PFAST486_STATE State,
 FORCEINLINE
 VOID
 FASTCALL
+Fast486FpuException(PFAST486_STATE State)
+{
+    if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_NE)
+    {
+        /* Call the #MF handler */
+        Fast486Exception(State, FAST486_EXCEPTION_MF); 
+    }
+    else
+    {
+        /* Use the external interrupt */
+        State->FpuCallback(State);
+    }
+}
+
+FORCEINLINE
+BOOLEAN
+FASTCALL
 Fast486FpuNormalize(PFAST486_STATE State,
                     PFAST486_FPU_DATA_REG Data)
 {
     UINT LeadingZeros;
 
-    if (FPU_IS_NORMALIZED(Data)) return;
+    if (FPU_IS_NORMALIZED(Data)) return TRUE;
     if (FPU_IS_ZERO(Data))
     {
         Data->Exponent = 0;
-        return;
+        return TRUE;
     }
 
     LeadingZeros = CountLeadingZeros64(Data->Mantissa);
@@ -1528,19 +1545,29 @@ Fast486FpuNormalize(PFAST486_STATE State,
     }
     else
     {
-        /* Make it denormalized */
-        Data->Mantissa <<= Data->Exponent - 1;
-        Data->Exponent = 1;
-
-        /* Underflow */
+        /* Raise the underflow exception */
         State->FpuStatus.Ue = TRUE;
+
+        if (State->FpuControl.Um)
+        {
+            /* Make it denormalized */
+            Data->Mantissa <<= Data->Exponent - 1;
+            Data->Exponent = 1;
+        }
+        else
+        {
+            Fast486FpuException(State);
+            return FALSE;
+        }
     }
+
+    return TRUE;
 }
 
 FORCEINLINE
 USHORT
 FASTCALL
-Fast486GetValueTag(PFAST486_FPU_DATA_REG Data)
+Fast486FpuGetValueTag(PFAST486_FPU_DATA_REG Data)
 {
     if (FPU_IS_ZERO(Data)) return FPU_TAG_ZERO;
     else if (FPU_IS_NAN(Data)) return FPU_TAG_SPECIAL;
@@ -1548,23 +1575,35 @@ Fast486GetValueTag(PFAST486_FPU_DATA_REG Data)
 }
 
 FORCEINLINE
-VOID
+BOOLEAN
 FASTCALL
 Fast486FpuPush(PFAST486_STATE State,
-               PFAST486_FPU_DATA_REG Data)
+               PCFAST486_FPU_DATA_REG Data)
 {
     State->FpuStatus.Top--;
 
     if (FPU_GET_TAG(0) == FPU_TAG_EMPTY)
     {
         FPU_ST(0) = *Data;
-        FPU_SET_TAG(0, Fast486GetValueTag(Data));
+        FPU_UPDATE_TAG(0);
+
+        return TRUE;
     }
-    else State->FpuStatus.Ie = TRUE;
+    else
+    {
+        /* Raise the stack fault and invalid operation exception */
+        State->FpuStatus.Sf = State->FpuStatus.Ie = TRUE;
+        
+        /* Set the C1 condition code bit (stack overflow) */
+        State->FpuStatus.Code1 = TRUE;
+
+        if (!State->FpuControl.Im) Fast486FpuException(State);
+        return FALSE;
+    }
 }
 
 FORCEINLINE
-VOID
+BOOLEAN
 FASTCALL
 Fast486FpuPop(PFAST486_STATE State)
 {
@@ -1572,8 +1611,20 @@ Fast486FpuPop(PFAST486_STATE State)
     {
         FPU_SET_TAG(0, FPU_TAG_EMPTY);
         State->FpuStatus.Top++;
+
+        return TRUE;
     }
-    else State->FpuStatus.Ie = TRUE;
+    else
+    {
+        /* Raise the stack fault and invalid operation exception */
+        State->FpuStatus.Sf = State->FpuStatus.Ie = TRUE;
+
+        /* Clear the C1 condition code bit (stack underflow) */
+        State->FpuStatus.Code1 = FALSE;
+
+        if (!State->FpuControl.Im) Fast486FpuException(State);
+        return FALSE;
+    }
 }
 
 #endif

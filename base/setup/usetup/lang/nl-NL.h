@@ -1539,8 +1539,10 @@ MUI_ERROR nlNLErrorEntries[] =
         "ENTER = Computer opnieuw opstarten"
     },
     {
-        //ERROR_INSUFFICIENT_DISKSPACE,
-        "Onvoldoende vrije ruimte in de geselecteerde partitie.\n"
+        //ERROR_INSUFFICIENT_PARTITION_SIZE,
+        "The selected partition is not large enough to install ReactOS.\n"
+        "The install partition must have a size of at least %lu MB.\n"
+        "\n"
         "  * Druk op een toets om door te gaan.",
         NULL
     },

@@ -2,24 +2,24 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "El instalador de ReactOS ha detectado que usted está ejecutando ReactOS sobre el emulador VMware(r).", -1, 117, 8, 140, 24
-    LTEXT "Si usted desea instalar el controlador SVGA VMware(r), haga clic en 'Siguiente', de lo contrario haga clic en 'Cancelar'.", -1, 117, 140, 140, 24
+    LTEXT "El instalador de ReactOS ha detectado que se está ejecutando sobre el emulador VMware(r).", -1, 117, 8, 140, 24
+    LTEXT "Para instalar el controlador SVGA de VMware(r) haga clic en 'Siguiente', de lo contrario haga clic en 'Cancelar'.", -1, 117, 140, 140, 24
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "El Instalador de ReactOS no viene con el controlador SVGA VMware(r).\n\nPor lo tanto vaya a 'VM' en la barra de menú de VMware(r) workstation y seleccione 'Install VMware(r) tools...'\n\nhaga clic en 'Siguiente' para continuar o en 'Cancelar' para saltar la instalación del controlador SVGA.", -1, 25, 25, 225, 85
+    LTEXT "El controlador SVGA de VMware(r) no viene incluido con el Instalador de ReactOS.\n\nPor lo tanto vaya a 'VM' en la barra de menú de VMware(r) workstation y seleccione 'Install VMware(r) Tools...'\n\nhaga clic en 'Siguiente' para continuar o en 'Cancelar' para saltar la instalación del controlador SVGA.", -1, 25, 25, 225, 85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "{STATUS}", IDC_INSTALLINGSTATUS, 25, 68, 225, 8
@@ -28,10 +28,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "El controlador SVGA VMware(r) ha sido instalado satisfactoriamente.\nPor favor elija su resolución de pantalla favorita:", -1, 25, 5, 225, 20
+    LTEXT "El controlador SVGA de VMware(r) ha sido instalado correctamente.\nSeleccione una resolución de pantalla:", -1, 25, 5, 225, 20
     PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -43,13 +43,13 @@ BEGIN
     PUSHBUTTON "1792x1344", 3136, 195, 30, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "1856x1392", 3248, 195, 45, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "1920x1440", 3360, 195, 60, 50, 15, BS_AUTORADIOBUTTON
-    LTEXT "Por favor seleccione su calidad del color favorita:", -1, 25, 93, 225, 12
+    LTEXT "Elija una profundidad de color:", -1, 25, 93, 225, 12
     COMBOBOX IDC_COLORQUALITY, 25, 105, 75, 80, CBS_DROPDOWNLIST | WS_TABSTOP
 END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "El instalador de ReactOS es incapaz de instalar el controlador SVGA VMware(R).\n\nHaga clic en 'Finalizar' para continuar con el proceso de instalación.", -1, 25, 25, 225, 85
@@ -57,45 +57,45 @@ END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "El controlador SVGA VMware(r) está ya instalado.\n\nPor favor, seleccione que desea hacer:", -1, 25, 5, 225, 30
+    LTEXT "El controlador SVGA de VMware(r) está ya instalado.\n\nPor favor, seleccione que desea hacer:", -1, 25, 5, 225, 30
     PUSHBUTTON "Configurar las opciones de pantalla", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "Usar un controlador gráfico distinto", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "Desinstalar el controlador SVGA VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "Usar un controlador gráfico diferente", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "Desinstalar el controlador SVGA de VMware(r)", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
     LTEXT "Haga clic en 'Siguiente' para continuar o en 'Cancelar' para salir del asistente.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Por favor seleccione el controlador gráfico que desea usar:", -1, 25, 25, 225, 15
+    LTEXT "Por favor seleccione el controlador gráfico que desee usar:", -1, 25, 25, 225, 15
     PUSHBUTTON "Controlador VGA de ReactOS", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "Controlador VBE de ReactOS (SVGA)", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
-    LTEXT "Haga clic en 'Finalizar' para completar la operación o en 'Cancelar' para salir de la instalación sin cambios.", -1, 25, 93, 225, 20
+    LTEXT "Haga clic en 'Finalizar' para completar la operación o en 'Cancelar' para salir de la instalación sin realizar ningún cambio.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Instalación del Controlador de Video"
+CAPTION "Instalación del controlador de vídeo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "El instalador de ReactOS va a proceder a desinstalar su controlador SVGA VMware(r)!!!\n\n\nHaga clic en 'Finalizar' para desinstalar el controlador o en 'Cancelar' para dejarlo como está.", -1, 25, 25, 225, 85
+    LTEXT "El instalador de ReactOS va a proceder a desinstalar su controlador SVGA VMware(r)\n\n\nHaga clic en 'Finalizar' para desinstalar el controlador o en 'Cancelar' para dejarlo tal cual.", -1, 25, 25, 225, 85
 END
 
 STRINGTABLE
 BEGIN
     IDS_WIZARD_NAME "VMware(r) detectado"
-    IDS_FAILEDTOLOCATEDRIVERS "El instalador de ReactOS no puede encontrar los archivos requeridos.\nPor favor asegúrese que el CD-ROM de VMware(r) tools está insertado."
-    IDS_FAILEDTOCOPYFILES "El instalador de ReactOS falló al copiar los archivos requeridos.\nPor favor asegúrese que el CD-ROM de VMware(r) tools está insertado.\n"
-    IDS_FAILEDTOACTIVATEDRIVER "Fallo al activar el controlador SVGA VMware(r)!"
-    IDS_FAILEDTOSELVGADRIVER "Fallo al activar el controlador VGA de ReactOS!"
-    IDS_FAILEDTOSELVBEDRIVER "Fallo al activar el controlador VBE de ReactOS!"
-    IDS_UNINSTNOTICE "Los archivos del controlador SVGA VMware(r) aun no han sido eliminados.\nPor favor elimínelos manualmente despues de reiniciar el sistema."
-    IDS_FAILEDTOADDREGENTRIES "Failed to create registry entries for the VMware(r) SVGA driver!"
+    IDS_FAILEDTOLOCATEDRIVERS "El instalador de ReactOS no puede encontrar los archivos necesarios.\nAsegúrese que el CD-ROM de las VMware(r) Tools está insertado."
+    IDS_FAILEDTOCOPYFILES "El instalador de ReactOS falló al copiar los archivos necesarios.\nAsegúrese que el CD-ROM de las VMware(r) Tools está insertado.\n"
+    IDS_FAILEDTOACTIVATEDRIVER "No se pudo activar el controlador SVGA de VMware(r)."
+    IDS_FAILEDTOSELVGADRIVER "No se pudo activar el controlador VGA de ReactOS."
+    IDS_FAILEDTOSELVBEDRIVER "No se pudo activar el controlador VBE de ReactOS."
+    IDS_UNINSTNOTICE "Los archivos del controlador SVGA VMware(r) aún no han sido eliminados.\nElimínelos manualmente una vez haya reiniciado el sistema."
+    IDS_FAILEDTOADDREGENTRIES "No se pudieron crear las entradas del registro necesarias para el controlador SVGA de VMware(r)."
 END
 
 STRINGTABLE
@@ -107,25 +107,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCHINGFORCDROM "Buscando el CD_ROM de VMware(r) Tools..."
-    IDS_COPYINGFILES "Copiando ficheros..."
-    IDS_ENABLINGDRIVER "Habilitando el controlador VMware(r) SVGA..."
+    IDS_SEARCHINGFORCDROM "Buscando el CD-ROM de VMware(r) Tools..."
+    IDS_COPYINGFILES "Copiando archivos..."
+    IDS_ENABLINGDRIVER "Activando el controlador SVGA de VMware(r)..."
 END
 
 STRINGTABLE
 BEGIN
-    IDD_INSERT_VMWARE_TOOLSTITLE "Ayudante de instalación controlador VMware (r) SVGA"
-    IDD_INSERT_VMWARE_TOOLSSUBTITLE "Por favor inserte el CD-Rom de VMware tool."
-    IDD_INSTALLING_VMWARE_TOOLSTITLE "Ayudante de instalación controlador VMware (r) SVGA"
-    IDD_INSTALLING_VMWARE_TOOLSSUBTITLE "Busque y copie el controlador de VMware (r) SVGA."
-    IDD_CONFIGTITLE "Ayudante de instalación controlador VMware (r) SVGA"
+    IDD_INSERT_VMWARE_TOOLSTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
+    IDD_INSERT_VMWARE_TOOLSSUBTITLE "Por favor inserte el CD-ROM de las VMware Tools."
+    IDD_INSTALLING_VMWARE_TOOLSTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
+    IDD_INSTALLING_VMWARE_TOOLSSUBTITLE "Busque y copie el controlador de VMware(r) SVGA."
+    IDD_CONFIGTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
     IDD_CONFIGSUBTITLE "Seleccione la resolución de su pantalla."
-    IDD_INSTALLATION_FAILEDTITLE "Ayudante de instalación controlador VMware (r) SVGA"
-    IDD_INSTALLATION_FAILEDSUBTITLE "El Ayudante de instalación del controlador VMware (r) SVGA a fallado."
-    IDD_CHOOSEACTIONTITLE "Ayudante de instalación controlador VMware (r) SVGA"
-    IDD_CHOOSEACTIONSUBTITLE "Escoja lo que quiera hacer."
-    IDD_SELECTDRIVERTITLE "Ayudante de instalación controlador VMware (r) SVGA"
+    IDD_INSTALLATION_FAILEDTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
+    IDD_INSTALLATION_FAILEDSUBTITLE "El asistente de instalación del controlador SVGA de VMware(r) ha fallado."
+    IDD_CHOOSEACTIONTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
+    IDD_CHOOSEACTIONSUBTITLE "Elija la opción que desee."
+    IDD_SELECTDRIVERTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
     IDD_SELECTDRIVERSUBTITLE "Seleccione un controlador."
-    IDD_DOUNINSTALLTITLE "Ayudante de instalación controlador VMware (r) SVGA"
+    IDD_DOUNINSTALLTITLE "Asistente de instalación del controlador SVGA de VMware(r)"
     IDD_DOUNINSTALLSUBTITLE "Desinstale el controlador."
 END

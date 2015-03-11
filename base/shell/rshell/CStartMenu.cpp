@@ -23,12 +23,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(CStartMenu);
 
-// TODO: declare these GUIDs and interfaces in the right place (whatever that may be)
-IID IID_IAugmentedShellFolder = { 0x91EA3F8C, 0xC99B, 0x11D0, { 0x98, 0x15, 0x00, 0xC0, 0x4F, 0xD9, 0x19, 0x72 } };
-IID IID_IAugmentedShellFolder2 = { 0x8DB3B3F4, 0x6CFE, 0x11D1, { 0x8A, 0xE9, 0x00, 0xC0, 0x4F, 0xD9, 0x18, 0xD0 } };
-IID IID_IAugmentedShellFolder3 = { 0x4F755EA8, 0x247D, 0x479B, { 0x91, 0x81, 0x22, 0x7D, 0x09, 0xC2, 0xE0, 0x01 } };
-CLSID CLSID_MergedFolder = { 0x26FDC864, 0xBE88, 0x46E7, { 0x92, 0x35, 0x03, 0x2D, 0x8E, 0xA5, 0x16, 0x2E } };
-
 //#define TEST_TRACKPOPUPMENU_SUBMENUS
 
 
@@ -238,8 +232,8 @@ private:
 
     HRESULT OnExec(LPSMDATA psmd)
     {
-        // HACK: Instead of running explorer.exe with the path, we should be using ShellExecute to "open" the path directly!
-        // Remove once ShellExecute can handle CLSID path components.
+        // HACK: Because our ShellExecute can't handle CLSID components in paths, we can't launch the paths using the "open" verb.
+        // FIXME: Change this back to using the path as the filename and the "open" verb, once ShellExecute can handle CLSID path components.
 
         if (psmd->uId == IDM_CONTROLPANEL)
             ShellExecuteW(NULL, NULL, L"explorer.exe", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", NULL, SW_SHOWNORMAL);
@@ -502,7 +496,6 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
             return hr;
 
         StrRetToBuf(&str, pcidlPrograms, szDisplayName, _countof(szDisplayName));
-        ILFree((LPITEMIDLIST)pcidlPrograms);
         ILFree(pidlProgramsAbsolute);
 
         hr = psf->ParseDisplayName(NULL, NULL, szDisplayName, NULL, &pidlPrograms, NULL);

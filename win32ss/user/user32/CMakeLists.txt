@@ -18,6 +18,7 @@ list(APPEND SOURCE
     controls/static.c
     misc/dde.c
     misc/ddeclient.c
+    misc/ddemisc.c
     misc/ddeserver.c
     misc/desktop.c
     misc/display.c
@@ -39,7 +40,7 @@ list(APPEND SOURCE
     windows/caret.c
     windows/class.c
     windows/clipboard.c
-#   windows/cursoricon.c
+    windows/cursoricon.c
     windows/dc.c
     windows/defwnd.c
     windows/dialog.c
@@ -61,12 +62,6 @@ list(APPEND SOURCE
     windows/winpos.c
     ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     include/user32.h)
-
-if(USE_NEW_CURSORICON)
-    list(APPEND SOURCE windows/cursoricon_new.c)
-else()
-    list(APPEND SOURCE windows/cursoricon.c)
-endif()
 
 add_library(user32 SHARED
     ${SOURCE}

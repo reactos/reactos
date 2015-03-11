@@ -40,6 +40,11 @@ typedef struct _GUI_CONSOLE_DATA
     HANDLE hGuiInitEvent;
     HANDLE hGuiTermEvent;
 
+    // HANDLE InputThreadHandle;
+    ULONG_PTR InputThreadId;
+    HWINSTA WinSta;
+    HDESK   Desktop;
+
     BOOLEAN IsWindowVisible;
 
     POINT OldCursor;

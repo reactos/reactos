@@ -140,10 +140,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME_1 "�}�E�X"
-    IDS_CPLDESCRIPTION_1 "�}�E�X�̐ݒ���J�X�^�}�C�Y���܂��B"
-    IDS_CPLNAME_2 "�L�[�{�[�h"
-    IDS_CPLDESCRIPTION_2 "�L�[�{�[�h�̐ݒ���J�X�^�}�C�Y���܂��B"
+    IDS_CPLNAME_1 "マウス"
+    IDS_CPLDESCRIPTION_1 "マウスの設定をカスタマイズします。"
+    IDS_CPLNAME_2 "キーボード"
+    IDS_CPLDESCRIPTION_2 "キーボードの設定をカスタマイズします。"
     IDS_ARROW "Normal Select"
     IDS_HELP "Help Select"
     IDS_APPSTARTING "Working in Background"

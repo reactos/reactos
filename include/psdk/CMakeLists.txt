@@ -121,6 +121,7 @@ list(APPEND SOURCE
     wincodec.idl
     wincodecsdk.idl
     winsxs.idl
+    wmiutils.idl
     wtypes.idl
     wuapi.idl
     xmldom.idl

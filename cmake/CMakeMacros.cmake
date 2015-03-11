@@ -265,7 +265,7 @@ macro(dir_to_num dir var)
 endmacro()
 
 function(add_cd_file)
-    cmake_parse_arguments(_CD "NO_CAB" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
+    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
@@ -286,8 +286,10 @@ function(add_cd_file)
     endif()
 
     #do we add it to all CDs?
-    if(_CD_FOR STREQUAL all)
-        set(_CD_FOR "bootcd;livecd;regtest")
+    list(FIND _CD_FOR all __cd)
+    if(NOT __cd EQUAL -1)
+        list(REMOVE_AT _CD_FOR __cd)
+        list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
     endif()
 
     #do we add it to bootcd?
@@ -304,6 +306,10 @@ function(add_cd_file)
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                #add it also into the hybridcd if not specified otherwise
+                if(NOT _CD_NOT_IN_HYBRIDCD)
+                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
+                endif()
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
@@ -339,8 +345,26 @@ function(add_cd_file)
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            #add it also into the hybridcd if not specified otherwise
+            if(NOT _CD_NOT_IN_HYBRIDCD)
+                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
+            endif()
         endforeach()
     endif() #end livecd
+
+    #do we need also to add it to hybridcd?
+    list(FIND _CD_FOR hybridcd __cd)
+    if(NOT __cd EQUAL -1)
+        foreach(item ${_CD_FILE})
+            if(_CD_NAME_ON_CD)
+                #rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+        endforeach()
+    endif() #end hybridcd
 
     #do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
@@ -397,6 +421,11 @@ function(create_iso_lists)
         DESTINATION reactos
         NO_CAB FOR bootcd regtest)
 
+    add_cd_file(
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
+        DESTINATION livecd
+        FOR hybridcd)
+
     get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.lst "${_filelist}")
@@ -405,6 +434,11 @@ function(create_iso_lists)
     get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
     string(REPLACE ";" "\n" _filelist "${_filelist}")
     file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.lst "${_filelist}")
+    unset(_filelist)
+
+    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.lst "${_filelist}")
     unset(_filelist)
 
     get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
@@ -516,9 +550,14 @@ function(set_module_type MODULE TYPE)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
 
+    # Add the module to the module group list, if it is defined
+    if(DEFINED CURRENT_MODULE_GROUP)
+        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
+    endif()
+
     # Set subsystem. Also take this as an occasion
     # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll) 
+    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll)
             OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
         set(__subsystem native)
     elseif(${TYPE} STREQUAL win32cui)
@@ -628,6 +667,22 @@ function(set_module_type MODULE TYPE)
 
     # do compiler specific stuff
     set_module_type_toolchain(${MODULE} ${TYPE})
+endfunction()
+
+function(start_module_group __name)
+    if(DEFINED CURRENT_MODULE_GROUP)
+        message(FATAL_ERROR "CURRENT_MODULE_GROUP is already set ('${CURRENT_MODULE_GROUP}')")
+    endif()
+    set(CURRENT_MODULE_GROUP ${__name} PARENT_SCOPE)
+endfunction()
+
+function(end_module_group)
+    get_property(__modulelist GLOBAL PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST)
+    add_custom_target(${CURRENT_MODULE_GROUP})
+    foreach(__module ${__modulelist})
+        add_dependencies(${CURRENT_MODULE_GROUP} ${__module})
+    endforeach()
+    set(CURRENT_MODULE_GROUP PARENT_SCOPE)
 endfunction()
 
 function(preprocess_file __in __out)

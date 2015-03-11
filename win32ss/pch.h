@@ -26,6 +26,7 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ntstrsafe.h>
+#include <ntintsafe.h>
 #include <ntddkbd.h>
 
 /* Win32 headers */
@@ -33,6 +34,7 @@
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define MAKEINTATOM(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #define WINBASEAPI
+#define STARTF_USESHOWWINDOW 1
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4
 #include <stdarg.h>
@@ -59,6 +61,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <prntfont.h>
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
+#include <imm.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>

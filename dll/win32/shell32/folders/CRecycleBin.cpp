@@ -21,6 +21,7 @@
 
 #include <precomp.h>
 
+#include <mmsystem.h>
 #include <ntquery.h>
 
 #define MAX_PROPERTY_SHEET_PAGE 32
@@ -571,6 +572,22 @@ HRESULT WINAPI CRecycleBin::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_C
         IDropTarget * pDt = NULL;
         hr = QueryInterface(IID_PPV_ARG(IDropTarget, &pDt));
         pObj = pDt;
+    }
+    else if(IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
+    {
+        // FIXME: This is not correct, it does not show the right icons
+        LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
+        pObj = IExtractIconA_Constructor(pidlItem);
+        SHFree(pidlItem);
+        hr = S_OK;
+    }
+    else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1))
+    {
+        // FIXME: This is not correct, it does not show the right icons
+        LPITEMIDLIST pidlItem = ILCombine(pidl, apidl[0]);
+        pObj = IExtractIconW_Constructor(pidlItem);
+        SHFree(pidlItem);
+        hr = S_OK;
     }
     else
         hr = E_NOINTERFACE;
@@ -1398,7 +1415,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
                                DWORD dwKeyState, POINTL pt, DWORD *pdwEffect)
 {
     TRACE("(%p) object dropped on recycle bin, effect %u\n", this, *pdwEffect);
-    
+
     /* TODO: pdwEffect should be read and make the drop object be permanently deleted in the move case (shift held) */
 
     FORMATETC fmt;
@@ -1413,7 +1430,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
     }
     else
     {
-        /* 
+        /*
          * TODO call SetData on the data object with format CFSTR_TARGETCLSID
          * set to the Recycle Bin's class identifier CLSID_RecycleBin.
          */
@@ -1421,7 +1438,7 @@ HRESULT WINAPI CRecycleBin::Drop(IDataObject *pDataObject,
     return S_OK;
 }
 
-DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter) 
+DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
 {
     CoInitialize(NULL);
     CComPtr<IDataObject> pDataObject;
@@ -1434,7 +1451,7 @@ DWORD WINAPI DoDeleteThreadProc(LPVOID lpParameter)
     return 0;
 }
 
-HRESULT WINAPI DoDeleteDataObject(IDataObject *pda) 
+HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
 {
     TRACE("performing delete");
     HRESULT hr;
@@ -1482,7 +1499,7 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
     {
         psfFrom = psfDesktop;
     }
-    else 
+    else
     {
         hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfFrom));
         if (FAILED(hr))
@@ -1550,4 +1567,196 @@ HRESULT WINAPI DoDeleteDataObject(IDataObject *pda)
     ReleaseStgMedium(&medium);
 
     return hr;
+}
+
+/*************************************************************************
+ *              SHEmptyRecycleBinA (SHELL32.@)
+ */
+HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
+{
+    LPWSTR szRootPathW = NULL;
+    int len;
+    HRESULT hr;
+
+    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_a(pszRootPath), dwFlags);
+
+    if (pszRootPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
+        if (len == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
+        szRootPathW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!szRootPathW)
+            return E_OUTOFMEMORY;
+        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, szRootPathW);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+    }
+
+    hr = SHEmptyRecycleBinW(hwnd, szRootPathW, dwFlags);
+    HeapFree(GetProcessHeap(), 0, szRootPathW);
+
+    return hr;
+}
+
+HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
+{
+    WCHAR szPath[MAX_PATH] = {0}, szBuffer[MAX_PATH];
+    DWORD dwSize, dwType, count;
+    LONG ret;
+    IShellFolder *pDesktop, *pRecycleBin;
+    PIDLIST_ABSOLUTE pidlRecycleBin;
+    PITEMID_CHILD pidl;
+    HRESULT hr = S_OK;
+    LPENUMIDLIST penumFiles;
+    STRRET StrRet;
+
+    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
+
+    if (!(dwFlags & SHERB_NOCONFIRMATION))
+    {
+        hr = SHGetDesktopFolder(&pDesktop);
+        if (FAILED(hr))
+            return hr;
+        hr = SHGetFolderLocation(NULL, CSIDL_BITBUCKET, NULL, 0, &pidlRecycleBin);
+        if (FAILED(hr))
+        {
+            pDesktop->Release();
+            return hr;
+        }
+        hr = pDesktop->BindToObject(pidlRecycleBin, NULL, IID_PPV_ARG(IShellFolder, &pRecycleBin));
+        CoTaskMemFree(pidlRecycleBin);
+        pDesktop->Release();
+        if (FAILED(hr))
+            return hr;
+        hr = pRecycleBin->EnumObjects(hwnd, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS | SHCONTF_INCLUDEHIDDEN, &penumFiles);
+        if (FAILED(hr))
+        {
+            pRecycleBin->Release();
+            return hr;
+        }
+
+        count = 0;
+        if (hr != S_FALSE)
+        {
+            while (penumFiles->Next(1, &pidl, NULL) == S_OK)
+            {
+                count++;
+                pRecycleBin->GetDisplayNameOf(pidl, SHGDN_NORMAL, &StrRet);
+                StrRetToBuf(&StrRet, pidl, szBuffer, _countof(szBuffer));
+                CoTaskMemFree(pidl);
+            }
+            penumFiles->Release();
+        }
+        pRecycleBin->Release();
+
+        switch (count)
+        {
+            case 0:
+                /* no files, don't need confirmation */
+                break;
+
+            case 1:
+                /* we have only one item inside the bin, so show a message box with its name */
+                if (ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_DELETEITEM_TEXT), MAKEINTRESOURCEW(IDS_EMPTY_BITBUCKET),
+                                   MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2, szBuffer) == IDNO)
+                {
+                    return S_OK;
+                }
+                break;
+
+            default:
+                /* we have more than one item, so show a message box with the count of the items */
+                StringCbPrintfW(szBuffer, sizeof(szBuffer), L"%u", count);
+                if (ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_DELETEMULTIPLE_TEXT), MAKEINTRESOURCEW(IDS_EMPTY_BITBUCKET),
+                                   MB_ICONEXCLAMATION | MB_YESNO | MB_DEFBUTTON2, szBuffer) == IDNO)
+                {
+                    return S_OK;
+                }
+                break;
+        }
+    }
+
+    if (dwFlags & SHERB_NOPROGRESSUI)
+    {
+        ret = EmptyRecycleBinW(pszRootPath);
+    }
+    else
+    {
+       /* FIXME
+        * show a progress dialog
+        */
+        ret = EmptyRecycleBinW(pszRootPath);
+    }
+
+    if (!ret)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    if (!(dwFlags & SHERB_NOSOUND))
+    {
+        dwSize = sizeof(szPath);
+        ret = RegGetValueW(HKEY_CURRENT_USER,
+                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
+                           NULL,
+                           RRF_RT_REG_SZ,
+                           &dwType,
+                           (PVOID)szPath,
+                           &dwSize);
+        if (ret != ERROR_SUCCESS)
+            return S_OK;
+
+        if (dwType != REG_EXPAND_SZ) /* type dismatch */
+            return S_OK;
+
+        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+        PlaySoundW(szPath, NULL, SND_FILENAME);
+    }
+    return S_OK;
+}
+
+HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
+{
+    LPWSTR szRootPathW = NULL;
+    int len;
+    HRESULT hr;
+
+    TRACE("%s, %p\n", debugstr_a(pszRootPath), pSHQueryRBInfo);
+
+    if (pszRootPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
+        if (len == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
+        szRootPathW = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!szRootPathW)
+            return E_OUTOFMEMORY;
+        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, szRootPathW);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+    }
+
+    hr = SHQueryRecycleBinW(szRootPathW, pSHQueryRBInfo);
+    HeapFree(GetProcessHeap(), 0, szRootPathW);
+
+    return hr;
+}
+
+HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
+{
+    FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
+
+    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
+        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
+    {
+        return E_INVALIDARG;
+    }
+
+    pSHQueryRBInfo->i64Size = 0;
+    pSHQueryRBInfo->i64NumItems = 0;
+
+    return S_OK;
 }

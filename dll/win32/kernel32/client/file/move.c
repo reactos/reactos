@@ -92,13 +92,7 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     }
 
     /* Reserve enough to read previous string + to append our with required null chars */
-    BufferLength = NewPath->Length + ExistingPath->Length + STRING_LENGTH + 3 * sizeof(WCHAR);
-    /* Check we didn't overflow */
-    if (BufferLength < STRING_LENGTH)
-    {
-        NtClose(KeyHandle);
-        return STATUS_BUFFER_TOO_SMALL;
-    }
+    BufferLength = NewPath->Length + ExistingPath->Length + STRING_LENGTH + 3 * sizeof(UNICODE_NULL);
 
     while (TRUE)
     {
@@ -122,7 +116,8 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
         /* If buffer was too small, then, reallocate one which is big enough */
         StringLength = DataSize;
         RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-        BufferLength = ExistingPath->Length + StringLength + NewPath->Length + 3 * sizeof(WCHAR);
+        BufferLength = ExistingPath->Length + StringLength + NewPath->Length + 3 * sizeof(UNICODE_NULL);
+        /* Check we didn't overflow */
         if (BufferLength < StringLength)
         {
             NtClose(KeyHandle);
@@ -148,9 +143,11 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
     {
         PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)Buffer;
 
-        /* Get data, our buffer begin and then where we should append data (+ null char) */
+        /* Get data, our buffer begin and then where we should append data
+         * (- null char, this is REG_MULTI_SZ, it already includes double termination, we keep only one)
+         */
         BufferBegin = PartialInfo->Data;
-        BufferWrite = (PWSTR)((ULONG_PTR)PartialInfo->Data + PartialInfo->DataLength + sizeof(WCHAR));
+        BufferWrite = (PWSTR)((ULONG_PTR)PartialInfo->Data + PartialInfo->DataLength - sizeof(UNICODE_NULL));
     }
 
     /* First copy existing */
@@ -302,7 +299,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
                                    NULL);
         /* Attempt to open source file */
         Status = NtOpenFile(&SourceHandle,
-                            FILE_READ_ATTRIBUTES | DELETE | SYNCHRONIZE, 
+                            FILE_READ_ATTRIBUTES | DELETE | SYNCHRONIZE,
                             &ObjectAttributes,
                             &IoStatusBlock,
                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
@@ -472,7 +469,7 @@ MoveFileWithProgressW(IN LPCWSTR lpExistingFileName,
         if (Status != STATUS_NOT_SAME_DEVICE || !(dwFlags & MOVEFILE_COPY_ALLOWED))
         {
             /* ReactOS hack! To be removed once all FSD have proper renaming support
-             * Just leave status to error and leave 
+             * Just leave status to error and leave
              */
             if (Status == STATUS_NOT_IMPLEMENTED)
             {

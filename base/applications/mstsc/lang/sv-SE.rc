@@ -62,6 +62,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 Färger (15 bit)"
     IDS_HIGHCOLOR16 "65,536 Färger (16 bit)"
     IDS_HIGHCOLOR24 "16,777,216 Färger (24 bit)"
+    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
     IDS_PIXEL "%lux%lu Pixlar"
     IDS_FULLSCREEN "Fullskärm"
     IDS_BROWSESERVER "<Bläddra efter fler...>"

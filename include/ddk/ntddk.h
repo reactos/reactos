@@ -1939,6 +1939,12 @@ typedef struct _HAL_PLATFORM_INFORMATION {
  *                              Kernel Types                                  *
  ******************************************************************************/
 
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+  struct _EXCEPTION_REGISTRATION_RECORD *Next;
+  PEXCEPTION_ROUTINE Handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+
 typedef struct _NT_TIB {
   struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
   PVOID StackBase;

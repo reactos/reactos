@@ -488,9 +488,9 @@ BEGIN
     IDS_AREA_SQUARE_METER "Metros cuadrado"
     IDS_AREA_SQUARE_MILES "Millas cuadradas"
     IDS_AREA_SQUARE_MILLIMETERS "Milímetros cuadrados"
-    IDS_AREA_SQUARE_SHAKU "Square shaku"
-    IDS_AREA_SQUARE_TSUEN "Square tsuen"
-    IDS_AREA_SQUARE_VA "Square va" /* ??? (unused in the source code) */
+    IDS_AREA_SQUARE_SHAKU "Shaku cuadrado"
+    IDS_AREA_SQUARE_TSUEN "Tsuen cuadrados"
+    IDS_AREA_SQUARE_VA "Va cuadrados" /* ??? (unused in the source code) */
     IDS_AREA_SQUARE_YARD "Yarda cuadrada"
     IDS_AREA_TAN "Tan"
     IDS_AREA_TSUBO "Tsubo"

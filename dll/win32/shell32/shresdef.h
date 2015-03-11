@@ -199,9 +199,17 @@
 #define IDS_DEFAULT_CLUSTER_SIZE 326
 #define IDS_FORMATDRIVE          328
 #define IDS_RENAME               329
-#define IDS_INSERT               330
+#define IDS_PASTE                330
 #define IDS_DESCRIPTION          331
 #define IDS_COPY_OF              332
+
+/* Strings for file operations*/
+#define IDS_FILEOOP_COPYING      333
+#define IDS_FILEOOP_MOVING       334
+#define IDS_FILEOOP_DELETING     335
+#define IDS_FILEOOP_FROM_TO      336
+#define IDS_FILEOOP_FROM         337
+#define IDS_FILEOOP_PREFLIGHT    338
 
 #define IDS_MENU_EMPTY           34561
 
@@ -288,16 +296,16 @@
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
+#define IDD_NOOPEN       27
 
 /* Not used dialogs */
-#define IDD_FILE_COPY            27
-#define IDD_SHUTDOWN             28
-#define IDD_LOG_OFF              29
-#define IDD_DISCONNECT           30
-#define IDD_CONFIRM_FILE_REPLACE 31
-#define IDD_AUTOPLAY1            32
-#define IDD_MIXED_CONTENT1       33
-#define IDD_MIXED_CONTENT2       34
+#define IDD_SHUTDOWN             29
+#define IDD_LOG_OFF              30
+#define IDD_DISCONNECT           31
+#define IDD_CONFIRM_FILE_REPLACE 32
+#define IDD_AUTOPLAY1            33
+#define IDD_MIXED_CONTENT1       34
+#define IDD_MIXED_CONTENT2       35
 
 /* Icons */
 #define IDI_SHELL_DOCUMENT           1
@@ -532,7 +540,6 @@
 
 /* Registrar scripts (RGS) */
 #define IDR_ADMINFOLDERSHORTCUT 128
-#define IDR_AUTOCOMPLETE        129
 #define IDR_CONTROLPANEL        130
 #define IDR_DRAGDROPHELPER      131
 #define IDR_FOLDEROPTIONS       132
