@@ -850,11 +850,6 @@ typedef struct _TIME_FIELDS
 } TIME_FIELDS, *PTIME_FIELDS;
 
 //
-// Activation Context
-//
-typedef PVOID PACTIVATION_CONTEXT;
-
-//
 // Activation Context Frame
 //
 typedef struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME
@@ -1199,6 +1194,7 @@ typedef struct _RTL_HANDLE_TABLE
     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
+#ifdef NTOS_MODE_USER
 //
 // Exception Record
 //
@@ -1207,6 +1203,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
     struct _EXCEPTION_REGISTRATION_RECORD *Next;
     PEXCEPTION_ROUTINE Handler;
 } EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+#endif /* NTOS_MODE_USER */
 
 //
 // Current Directory Structures
