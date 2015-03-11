@@ -23,6 +23,10 @@ typedef struct _DESKTOP
     PWIN32HEAP pheapDesktop;
     ULONG_PTR ulHeapSize;
     LIST_ENTRY PtiList;
+
+    /* One console input thread per desktop, maintained by CONSRV */
+    DWORD dwConsoleThreadId;
+
     /* Use for tracking mouse moves. */
     PWND spwndTrack;
     DWORD htEx;

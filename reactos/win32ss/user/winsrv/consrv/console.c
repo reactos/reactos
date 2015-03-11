@@ -342,7 +342,7 @@ NTSTATUS NTAPI
 ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
                    IN OUT PCONSOLE_INFO ConsoleInfo,
                    IN OUT PVOID ExtraConsoleInfo,
-                   IN ULONG ProcessId);
+                   IN PCSR_PROCESS ConsoleLeaderProcess);
 NTSTATUS NTAPI
 ConSrvDeinitTerminal(IN OUT PTERMINAL Terminal);
 
@@ -513,12 +513,13 @@ NTSTATUS NTAPI
 ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
                   OUT PCONSRV_CONSOLE* NewConsole,
                   IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
-                  IN ULONG ConsoleLeaderProcessId)
+                  IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status;
     HANDLE ConsoleHandle;
     PCONSRV_CONSOLE Console;
     CONSOLE_INFO ConsoleInfo;
+    ULONG ConsoleLeaderProcessId = HandleToUlong(ConsoleLeaderProcess->ClientId.UniqueProcess);
     SIZE_T Length = 0;
 
     TERMINAL Terminal; /* The ConSrv terminal for this console */
@@ -545,7 +546,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     Status = ConSrvInitTerminal(&Terminal,
                                 &ConsoleInfo,
                                 ConsoleInitInfo,
-                                ConsoleLeaderProcessId);
+                                ConsoleLeaderProcess);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CONSRV: Failed to initialize a terminal, Status = 0x%08lx\n", Status);

@@ -942,7 +942,7 @@ NTSTATUS NTAPI
 TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
                 IN OUT PCONSOLE_INFO ConsoleInfo,
                 IN OUT PVOID ExtraConsoleInfo,
-                IN ULONG ProcessId)
+                IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     if (FrontEnd == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;

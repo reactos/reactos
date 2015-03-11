@@ -100,6 +100,7 @@ list(APPEND SOURCE
     user/ntuser/caret.c
     user/ntuser/class.c
     user/ntuser/clipboard.c
+    user/ntuser/console.c
     user/ntuser/csr.c
     user/ntuser/cursoricon.c
     user/ntuser/dde.c

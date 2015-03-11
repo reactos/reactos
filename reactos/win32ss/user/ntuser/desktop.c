@@ -1651,6 +1651,103 @@ NtUserPaintDesktop(HDC hDC)
 }
 
 /*
+ * NtUserResolveDesktop
+ *
+ * The NtUserResolveDesktop function retrieves handles to the desktop and
+ * the window station specified by the desktop path string.
+ *
+ * Parameters
+ *    ProcessHandle
+ *       Handle to a user process.
+ *
+ *    DesktopPath
+ *       The desktop path string.
+ *
+ * Return Value
+ *    Handle to the desktop (direct return value) and
+ *    handle to the associated window station (by pointer).
+ *    NULL in case of failure.
+ *
+ * Remarks
+ *    Callable by CSRSS only.
+ *
+ * Status
+ *    @implemented
+ */
+
+HDESK
+APIENTRY
+NtUserResolveDesktop(
+    IN HANDLE ProcessHandle,
+    IN PUNICODE_STRING DesktopPath,
+    DWORD dwUnknown,
+    OUT HWINSTA* phWinSta)
+{
+    NTSTATUS Status;
+    PEPROCESS Process = NULL;
+    HWINSTA hWinSta = NULL;
+    HDESK hDesktop  = NULL;
+
+    /* Allow only the Console Server to perform this operation (via CSRSS) */
+    if (PsGetCurrentProcess() != gpepCSRSS)
+        return NULL;
+
+    /* Get the process object the user handle was referencing */
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       *PsProcessType,
+                                       UserMode,
+                                       (PVOID*)&Process,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return NULL;
+
+    // UserEnterShared();
+
+    _SEH2_TRY
+    {
+        UNICODE_STRING CapturedDesktopPath;
+
+        /* Capture the user desktop path string */
+        Status = IntSafeCopyUnicodeStringTerminateNULL(&CapturedDesktopPath,
+                                                       DesktopPath);
+        if (!NT_SUCCESS(Status)) _SEH2_YIELD(goto Quit);
+
+        /* Call the internal function */
+        Status = IntParseDesktopPath(Process,
+                                     &CapturedDesktopPath,
+                                     &hWinSta,
+                                     &hDesktop);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("IntParseDesktopPath failed, Status = 0x%08lx\n", Status);
+            hWinSta  = NULL;
+            hDesktop = NULL;
+        }
+
+        /* Return the window station handle */
+        *phWinSta = hWinSta;
+
+        /* Free the captured string */
+        if (CapturedDesktopPath.Buffer)
+            ExFreePoolWithTag(CapturedDesktopPath.Buffer, TAG_STRING);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+Quit:
+    // UserLeave();
+
+    /* Dereference the process object */
+    ObDereferenceObject(Process);
+
+    /* Return the desktop handle */
+    return hDesktop;
+}
+
+/*
  * NtUserSwitchDesktop
  *
  * Sets the current input (interactive) desktop.

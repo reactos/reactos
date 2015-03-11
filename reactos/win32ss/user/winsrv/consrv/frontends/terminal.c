@@ -96,7 +96,7 @@ NTSTATUS NTAPI
 TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
                 IN OUT PCONSOLE_INFO ConsoleInfo,
                 IN OUT PVOID ExtraConsoleInfo,
-                IN ULONG ProcessId);
+                IN PCSR_PROCESS ConsoleLeaderProcess);
 NTSTATUS NTAPI
 TuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
 #endif
@@ -105,7 +105,7 @@ NTSTATUS NTAPI
 GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
                 IN OUT PCONSOLE_INFO ConsoleInfo,
                 IN OUT PVOID ExtraConsoleInfo,
-                IN ULONG ProcessId);
+                IN PCSR_PROCESS ConsoleLeaderProcess);
 NTSTATUS NTAPI
 GuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
 /***************/
@@ -114,7 +114,7 @@ typedef
 NTSTATUS (NTAPI *FRONTEND_LOAD)(IN OUT PFRONTEND FrontEnd,
                                 IN OUT PCONSOLE_INFO ConsoleInfo,
                                 IN OUT PVOID ExtraConsoleInfo,
-                                IN ULONG ProcessId);
+                                IN PCSR_PROCESS ConsoleLeaderProcess);
 
 typedef
 NTSTATUS (NTAPI *FRONTEND_UNLOAD)(IN OUT PFRONTEND FrontEnd);
@@ -156,7 +156,7 @@ static NTSTATUS
 ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
                    IN OUT PCONSOLE_INFO ConsoleInfo,
                    IN OUT PVOID ExtraConsoleInfo,
-                   IN ULONG ProcessId)
+                   IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG i;
@@ -171,7 +171,7 @@ ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
         Status = FrontEndLoadingMethods[i].FrontEndLoad(FrontEnd,
                                                         ConsoleInfo,
                                                         ExtraConsoleInfo,
-                                                        ProcessId);
+                                                        ConsoleLeaderProcess);
         if (NT_SUCCESS(Status))
         {
             /* Save the unload callback */
@@ -206,7 +206,7 @@ NTSTATUS NTAPI
 ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
                    IN OUT PCONSOLE_INFO ConsoleInfo,
                    IN OUT PVOID ExtraConsoleInfo,
-                   IN ULONG ProcessId)
+                   IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status;
     PFRONTEND FrontEnd;
@@ -218,7 +218,7 @@ ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
     Status = ConSrvLoadFrontEnd(FrontEnd,
                                 ConsoleInfo,
                                 ExtraConsoleInfo,
-                                ProcessId);
+                                ConsoleLeaderProcess);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CONSRV: Failed to initialize a frontend, Status = 0x%08lx\n", Status);

@@ -1721,10 +1721,17 @@ NtUserCloseWindowStation(
 /* Console commands for NtUserConsoleControl */
 typedef enum _CONSOLECONTROL
 {
-    GuiConsoleWndClassAtom,
+    ConsoleCtrlDesktopConsoleThread = 0,
+    GuiConsoleWndClassAtom = 1,
     ConsoleMakePalettePublic = 5,
     ConsoleAcquireDisplayOwnership,
 } CONSOLECONTROL, *PCONSOLECONTROL;
+
+typedef struct _DESKTOP_CONSOLE_THREAD
+{
+    HDESK DesktopHandle;
+    ULONG_PTR ThreadId;
+} DESKTOP_CONSOLE_THREAD, *PDESKTOP_CONSOLE_THREAD;
 
 NTSTATUS
 APIENTRY
@@ -2860,13 +2867,13 @@ NtUserRemoveProp(
     HWND hWnd,
     ATOM Atom);
 
-DWORD
-NTAPI
+HDESK
+APIENTRY
 NtUserResolveDesktop(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    IN HANDLE ProcessHandle,
+    IN PUNICODE_STRING DesktopPath,
+    DWORD dwUnknown,
+    OUT HWINSTA* phWinSta);
 
 DWORD
 NTAPI

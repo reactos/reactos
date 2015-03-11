@@ -414,7 +414,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSRV_API_CONNECTINFO ConnectInfo = (PCONSRV_API_CONNECTINFO)ConnectionInfo;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
-    CONSOLE_INIT_INFO ConsoleInitInfo;
 
     if ( ConnectionInfo       == NULL ||
          ConnectionInfoLength == NULL ||
@@ -433,22 +432,50 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     DPRINT("ConnectInfo->IsConsoleApp = %s\n", ConnectInfo->IsConsoleApp ? "True" : "False");
     if (!ConnectInfo->IsConsoleApp) return STATUS_SUCCESS;
 
-    /* Initialize the console initialization info structure */
-    ConsoleInitInfo.ConsoleStartInfo = &ConnectInfo->ConsoleStartInfo;
-    ConsoleInitInfo.IsWindowVisible  = ConnectInfo->IsWindowVisible;
-    ConsoleInitInfo.TitleLength      = ConnectInfo->TitleLength;
-    ConsoleInitInfo.ConsoleTitle     = ConnectInfo->ConsoleTitle;
-    ConsoleInitInfo.DesktopLength    = ConnectInfo->DesktopLength;
-    ConsoleInitInfo.Desktop          = ConnectInfo->Desktop;
-    ConsoleInitInfo.AppNameLength    = ConnectInfo->AppNameLength;
-    ConsoleInitInfo.AppName          = ConnectInfo->AppName;
-    ConsoleInitInfo.CurDirLength     = ConnectInfo->CurDirLength;
-    ConsoleInitInfo.CurDir           = ConnectInfo->CurDir;
-
     /* If we don't inherit from an existing console, then create a new one... */
     if (ConnectInfo->ConsoleStartInfo.ConsoleHandle == NULL)
     {
+        CONSOLE_INIT_INFO ConsoleInitInfo;
+
         DPRINT("ConSrvConnect - Allocate a new console\n");
+
+        /* Initialize the console initialization info structure */
+        ConsoleInitInfo.ConsoleStartInfo = &ConnectInfo->ConsoleStartInfo;
+        ConsoleInitInfo.IsWindowVisible  = ConnectInfo->IsWindowVisible;
+        ConsoleInitInfo.TitleLength      = ConnectInfo->TitleLength;
+        ConsoleInitInfo.ConsoleTitle     = ConnectInfo->ConsoleTitle;
+        ConsoleInitInfo.DesktopLength    = 0;
+        ConsoleInitInfo.Desktop          = NULL;
+        ConsoleInitInfo.AppNameLength    = ConnectInfo->AppNameLength;
+        ConsoleInitInfo.AppName          = ConnectInfo->AppName;
+        ConsoleInitInfo.CurDirLength     = ConnectInfo->CurDirLength;
+        ConsoleInitInfo.CurDir           = ConnectInfo->CurDir;
+
+        /*
+         * Contrary to the case of SrvAllocConsole, the desktop string is
+         * allocated in the process' heap, so we need to retrieve it by
+         * using NtReadVirtualMemory.
+         */
+        if (ConnectInfo->DesktopLength)
+        {
+            ConsoleInitInfo.DesktopLength = ConnectInfo->DesktopLength;
+
+            ConsoleInitInfo.Desktop = ConsoleAllocHeap(HEAP_ZERO_MEMORY,
+                                                       ConsoleInitInfo.DesktopLength);
+            if (ConsoleInitInfo.Desktop == NULL)
+                return STATUS_NO_MEMORY;
+
+            Status = NtReadVirtualMemory(ProcessData->Process->ProcessHandle,
+                                         ConnectInfo->Desktop,
+                                         ConsoleInitInfo.Desktop,
+                                         ConsoleInitInfo.DesktopLength,
+                                         NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                ConsoleFreeHeap(ConsoleInitInfo.Desktop);
+                return Status;
+            }
+        }
 
         /*
          * We are about to create a new console. However when ConSrvNewProcess
@@ -467,6 +494,12 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
                                        &ConnectInfo->ConsoleStartInfo.OutputHandle,
                                        &ConnectInfo->ConsoleStartInfo.ErrorHandle,
                                        &ConsoleInitInfo);
+
+        /* Free our local desktop string if any */
+        if (ConsoleInitInfo.DesktopLength)
+            ConsoleFreeHeap(ConsoleInitInfo.Desktop);
+
+        /* Check for success */
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console allocation failed\n");

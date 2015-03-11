@@ -494,10 +494,14 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
     ConSrvFreeHandlesTable(ProcessData);
 
     /* Initialize a new Console owned by this process */
+    DPRINT("Initialization of console '%S' for process '%S' on desktop '%S'\n",
+           ConsoleInitInfo->ConsoleTitle ? ConsoleInitInfo->ConsoleTitle : L"n/a",
+           ConsoleInitInfo->AppName ? ConsoleInitInfo->AppName : L"n/a",
+           ConsoleInitInfo->Desktop ? ConsoleInitInfo->Desktop : L"n/a");
     Status = ConSrvInitConsole(&ConsoleHandle,
                                &Console,
                                ConsoleInitInfo,
-                               HandleToUlong(ProcessData->Process->ClientId.UniqueProcess));
+                               ProcessData->Process);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");

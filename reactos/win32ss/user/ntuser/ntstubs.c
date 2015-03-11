@@ -403,92 +403,6 @@ NtUserYieldTask(VOID)
    return 0;
 }
 
-NTSTATUS
-APIENTRY
-NtUserConsoleControl(
-    IN CONSOLECONTROL ConsoleCtrl,
-    IN PVOID ConsoleCtrlInfo,
-    IN ULONG ConsoleCtrlInfoLength)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    /* Allow only the Console Server to perform this operation (via CSRSS) */
-    if (PsGetCurrentProcess() != gpepCSRSS)
-        return STATUS_ACCESS_DENIED;
-
-    UserEnterExclusive();
-
-    switch (ConsoleCtrl)
-    {
-        case GuiConsoleWndClassAtom:
-        {
-            if (ConsoleCtrlInfoLength != sizeof(ATOM))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-
-            _SEH2_TRY
-            {
-                ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
-                gaGuiConsoleWndClass = *(ATOM*)ConsoleCtrlInfo;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
-            break;
-        }
-
-        case ConsoleMakePalettePublic:
-        {
-            HPALETTE hPalette;
-
-            if (ConsoleCtrlInfoLength != sizeof(HPALETTE))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-
-            _SEH2_TRY
-            {
-                ProbeForRead(ConsoleCtrlInfo, ConsoleCtrlInfoLength, 1);
-                hPalette = *(HPALETTE*)ConsoleCtrlInfo;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
-            /* Make the palette handle public */
-            GreSetObjectOwnerEx(hPalette,
-                                GDI_OBJ_HMGR_PUBLIC,
-                                GDIOBJFLAG_IGNOREPID);
-
-            break;
-        }
-
-        case ConsoleAcquireDisplayOwnership:
-        {
-            ERR("NtUserConsoleControl - ConsoleAcquireDisplayOwnership is UNIMPLEMENTED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-        }
-
-        default:
-            ERR("Calling invalid control %d in NtUserConsoleControl\n", ConsoleCtrl);
-            Status = STATUS_INVALID_INFO_CLASS;
-            break;
-    }
-
-    UserLeave();
-
-    return Status;
-}
-
 DWORD
 APIENTRY
 NtUserCreateInputContext(
@@ -738,15 +652,10 @@ NtUserRegisterRawInputDevices(
     return 0;
 }
 
-DWORD
-APIENTRY
-NtUserResolveDesktop(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+DWORD APIENTRY
+NtUserResolveDesktopForWOW(DWORD Unknown0)
 {
-    STUB;
+    STUB
     return 0;
 }
 
@@ -811,11 +720,11 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
             }
             _SEH2_END;
 
-            if (NT_SUCCESS(Status))
-                Status = UserInitiateShutdown(Thread, &CapturedFlags);
+            Status = UserInitiateShutdown(Thread, &CapturedFlags);
 
             /* Return the modified value to the caller */
             _SEH2_TRY
@@ -853,12 +762,11 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
             }
             _SEH2_END;
 
-            if (NT_SUCCESS(Status))
-                Status = UserEndShutdown(Thread, ShutdownStatus);
-
+            Status = UserEndShutdown(Thread, ShutdownStatus);
             break;
         }
 
@@ -884,12 +792,11 @@ NtUserSetInformationThread(IN HANDLE ThreadHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(break);
             }
             _SEH2_END;
 
-            if (NT_SUCCESS(Status))
-                Status = InitCsrApiPort(CsrPortHandle);
-
+            Status = InitCsrApiPort(CsrPortHandle);
             break;
         }
 
@@ -1103,20 +1010,6 @@ NtUserUpdateLayeredWindow(
 {
    STUB
 
-   return 0;
-}
-
-/*
- * NtUserResolveDesktopForWOW
- *
- * Status
- *    @unimplemented
- */
-
-DWORD APIENTRY
-NtUserResolveDesktopForWOW(DWORD Unknown0)
-{
-   STUB
    return 0;
 }
 
