@@ -576,6 +576,10 @@ Fast486SetSegment
     USHORT Selector
 );
 
+VOID
+NTAPI
+Fast486Rewind(PFAST486_STATE State);
+
 #endif // _FAST486_H_
 
 /* EOF */

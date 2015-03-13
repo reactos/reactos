@@ -13,9 +13,11 @@
 #include "cpu.h"
 
 #include "emulator.h"
+#include "memory.h"
 #include "callback.h"
 #include "bop.h"
 #include <isvbop.h>
+#include <pseh/pseh2.h>
 
 #include "clock.h"
 #include "bios/rom.h"
@@ -112,6 +114,8 @@ VOID CpuStep(VOID)
 
 VOID CpuSimulate(VOID)
 {
+    EXCEPTION_RECORD LocalExceptionRecord;
+
     if (CpuCallLevel > MaxCpuCallLevel)
     {
         DisplayMessage(L"Too many CPU levels of recursion (%d, expected maximum %d)",
@@ -125,7 +129,29 @@ VOID CpuSimulate(VOID)
     DPRINT("CpuSimulate --> Level %d\n", CpuCallLevel);
 
     CpuRunning = TRUE;
-    while (VdmRunning && CpuRunning) ClockUpdate();
+    while (VdmRunning && CpuRunning)
+    {
+        _SEH2_TRY
+        {
+            while (VdmRunning && CpuRunning) ClockUpdate();
+        }
+        _SEH2_EXCEPT(LocalExceptionRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord,
+                     EXCEPTION_EXECUTE_HANDLER)
+        {
+            BOOLEAN Writing = (LocalExceptionRecord.ExceptionInformation[0] == 1);
+            DWORD FaultingAddress = (DWORD)LocalExceptionRecord.ExceptionInformation[1];
+
+            /* Make sure this was an access violation */
+            ASSERT(LocalExceptionRecord.ExceptionCode == EXCEPTION_ACCESS_VIOLATION);
+
+            /* Fix the CPU state */
+            Fast486Rewind(&EmulatorContext);
+
+            /* Call the handler */
+            MemExceptionHandler(FaultingAddress, Writing);
+        }
+        _SEH2_END;
+    }
 
     DPRINT("CpuSimulate <-- Level %d\n", CpuCallLevel);
     CpuCallLevel--;

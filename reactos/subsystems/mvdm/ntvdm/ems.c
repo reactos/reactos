@@ -15,6 +15,7 @@
 #include <ndk/rtltypes.h>
 #include <ndk/rtlfuncs.h>
 #include "ems.h"
+#include "memory.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -294,23 +295,26 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
     }
 }
 
+static VOID NTAPI EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+}
+
+static BOOLEAN NTAPI EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
+{
+    // TODO: NOT IMPLEMENTED
+    UNIMPLEMENTED;
+    return TRUE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-}
-
-VOID EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
-{
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
-}
 
 VOID EmsInitialize(VOID)
 {
     ULONG i;
+
+    RtlZeroMemory(BitmapBuffer, sizeof(BitmapBuffer));
     RtlInitializeBitMap(&AllocBitmap, BitmapBuffer, EMS_TOTAL_PAGES);
 
     for (i = 0; i < EMS_MAX_HANDLES; i++)
@@ -320,5 +324,16 @@ VOID EmsInitialize(VOID)
         InitializeListHead(&HandleTable[i].PageList);
     }
 
+    MemInstallFastMemoryHook(SEG_OFF_TO_PTR(EMS_SEGMENT, 0),
+                             EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
+                             EmsReadMemory,
+                             EmsWriteMemory);
+
     RegisterBiosInt32(EMS_INTERRUPT_NUM, EmsIntHandler);
+}
+
+VOID EmsCleanup(VOID)
+{
+    MemRemoveFastMemoryHook(SEG_OFF_TO_PTR(EMS_SEGMENT, 0),
+                            EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE);
 }

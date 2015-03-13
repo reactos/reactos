@@ -37,6 +37,7 @@ list(APPEND SOURCE
     emulator.c
     int32.c
     io.c
+    memory.c
     utils.c
     vddsup.c
     ntvdm.c
@@ -45,6 +46,6 @@ list(APPEND SOURCE
 
 add_executable(ntvdm ${SOURCE})
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
-target_link_libraries(ntvdm fast486)
+target_link_libraries(ntvdm fast486 ${PSEH_LIB})
 add_importlibs(ntvdm user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntvdm DESTINATION reactos/system32 FOR all)

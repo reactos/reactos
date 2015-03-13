@@ -14,6 +14,7 @@
 #include "vga.h"
 #include <bios/vidbios.h>
 
+#include "memory.h"
 #include "io.h"
 
 /* PRIVATE VARIABLES **********************************************************/
@@ -417,6 +418,16 @@ __InvalidateConsoleDIBits(IN HANDLE hConsoleOutput,
 
 static inline DWORD VgaGetAddressSize(VOID);
 static VOID VgaUpdateTextCursor(VOID);
+
+static inline DWORD VgaGetVideoBaseAddress(VOID)
+{
+    return MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
+}
+
+static inline DWORD VgaGetVideoLimitAddress(VOID)
+{
+    return MemoryLimit[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
+}
 
 static VOID VgaUpdateCursorPosition(VOID)
 {
@@ -1745,16 +1756,6 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-DWORD VgaGetVideoBaseAddress(VOID)
-{
-    return MemoryBase[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
-}
-
-DWORD VgaGetVideoLimitAddress(VOID)
-{
-    return MemoryLimit[(VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03];
-}
-
 COORD VgaGetDisplayResolution(VOID)
 {
     COORD Resolution;
@@ -1881,12 +1882,15 @@ VOID VgaHorizontalRetrace(VOID)
     InHorizontalRetrace = TRUE;
 }
 
-VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
+VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     DWORD i;
     DWORD VideoAddress;
+    PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n", Address, Size);
+    Address = max(min(Address, VgaGetVideoLimitAddress() - 1), VgaGetVideoBaseAddress());
+    Size = min(Size, VgaGetVideoLimitAddress() - Address + 1);
 
     /* Ignore if video RAM access is disabled */
     if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return;
@@ -1897,7 +1901,7 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
         VideoAddress = VgaTranslateReadAddress(Address + i);
 
         /* Copy the value to the buffer */
-        Buffer[i] = VgaMemory[VideoAddress];
+        BufPtr[i] = VgaMemory[VideoAddress];
     }
 
     /* Load the latch registers */
@@ -1907,18 +1911,21 @@ VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
     VgaLatchRegisters[3] = VgaMemory[(3 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
 }
 
-VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
+BOOLEAN NTAPI VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
     DWORD i, j;
     DWORD VideoAddress;
+    PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n", Address, Size);
+    Address = max(min(Address, VgaGetVideoLimitAddress() - 1), VgaGetVideoBaseAddress());
+    Size = min(Size, VgaGetVideoLimitAddress() - Address + 1);
 
     /* Ignore if video RAM access is disabled */
-    if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return;
+    if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return TRUE;
 
     /* Also ignore if write access to all planes is disabled */
-    if ((VgaSeqRegisters[VGA_SEQ_MASK_REG] & 0x0F) == 0x00) return;
+    if ((VgaSeqRegisters[VGA_SEQ_MASK_REG] & 0x0F) == 0x00) return TRUE;
 
     /* Loop through each byte */
     for (i = 0; i < Size; i++)
@@ -1951,9 +1958,11 @@ VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size)
             }
 
             /* Copy the value to the VGA memory */
-            VgaMemory[VideoAddress + j * VGA_BANK_SIZE] = VgaTranslateByteForWriting(Buffer[i], j);
+            VgaMemory[VideoAddress + j * VGA_BANK_SIZE] = VgaTranslateByteForWriting(BufPtr[i], j);
         }
     }
+
+    return TRUE;
 }
 
 VOID VgaClearMemory(VOID)
@@ -2074,6 +2083,9 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
 
     /* Clear the VGA memory */
     VgaClearMemory();
+    
+    /* Register the memory hook */
+    MemInstallFastMemoryHook((PVOID)0xA0000, 0x20000, VgaReadMemory, VgaWriteMemory);
 
     /* Register the I/O Ports */
     RegisterIoPort(0x3CC, VgaReadPort, NULL);           // VGA_MISC_READ
@@ -2112,6 +2124,7 @@ VOID VgaCleanup(VOID)
     }
 
     VgaDetachFromConsole(FALSE);
+    MemRemoveFastMemoryHook((PVOID)0xA0000, 0x20000);
 
     CloseHandle(AnotherEvent);
     CloseHandle(EndEvent);

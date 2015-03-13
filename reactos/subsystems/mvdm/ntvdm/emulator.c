@@ -11,6 +11,7 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "memory.h"
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
@@ -66,143 +67,35 @@ LPCWSTR ExceptionName[] =
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static inline VOID
-EmulatorMoveMemory(OUT VOID UNALIGNED *Destination,
-                   IN const VOID UNALIGNED *Source,
-                   IN SIZE_T Length)
-{
-#if 1
-    /*
-     * We use a switch here to detect small moves of memory, as these
-     * constitute the bulk of our moves.
-     * Using RtlMoveMemory for all these small moves would be slow otherwise.
-     */
-    switch (Length)
-    {
-        case 0:
-            return;
-
-        case sizeof(UCHAR):
-            *(PUCHAR)Destination = *(PUCHAR)Source;
-            return;
-
-        case sizeof(USHORT):
-            *(PUSHORT)Destination = *(PUSHORT)Source;
-            return;
-
-        case sizeof(ULONG):
-            *(PULONG)Destination = *(PULONG)Source;
-            return;
-
-        case sizeof(ULONGLONG):
-            *(PULONGLONG)Destination = *(PULONGLONG)Source;
-            return;
-
-        default:
-#if defined(__GNUC__)
-            __builtin_memmove(Destination, Source, Length);
-#else
-            RtlMoveMemory(Destination, Source, Length);
-#endif
-    }
-
-#else // defined(_MSC_VER)
-
-    PUCHAR Dest = (PUCHAR)Destination;
-    PUCHAR Src  = (PUCHAR)Source;
-
-    SIZE_T Count, NewSize = Length;
-
-    /* Move dword */
-    Count   = NewSize >> 2; // NewSize / sizeof(ULONG);
-    NewSize = NewSize  & 3; // NewSize % sizeof(ULONG);
-    __movsd(Dest, Src, Count);
-    Dest += Count << 2; // Count * sizeof(ULONG);
-    Src  += Count << 2;
-
-    /* Move word */
-    Count   = NewSize >> 1; // NewSize / sizeof(USHORT);
-    NewSize = NewSize  & 1; // NewSize % sizeof(USHORT);
-    __movsw(Dest, Src, Count);
-    Dest += Count << 1; // Count * sizeof(USHORT);
-    Src  += Count << 1;
-
-    /* Move byte */
-    Count   = NewSize; // NewSize / sizeof(UCHAR);
-    // NewSize = NewSize; // NewSize % sizeof(UCHAR);
-    __movsb(Dest, Src, Count);
-
-#endif
-}
-
 VOID WINAPI EmulatorReadMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
 
-    // BIG HACK!!!! To make BIOS images working correctly,
-    // until Aleksander rewrites memory management!!
+    /* Mirror 0x000FFFF0 at 0xFFFFFFF0 */
     if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
 
     /* If the A20 line is disabled, mask bit 20 */
-    if (!A20Line) Address &= ~(1 << 20);
+    if (!A20Line) Address &= ~(1 << 20); 
 
-    /* Make sure the requested address is valid */
-    if ((Address + Size) >= MAX_ADDRESS) return;
+    if (Address >= MAX_ADDRESS) return;
+    Size = min(Size, MAX_ADDRESS - Address);
 
-    /*
-     * Check if we are going to read the VGA memory and
-     * copy it into the virtual address space if needed.
-     */
-    if (((Address + Size) >= VgaGetVideoBaseAddress())
-        && (Address < VgaGetVideoLimitAddress()))
-    {
-        DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
-        DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
-                           - VgaAddress + 1;
-        LPBYTE DestBuffer = (LPBYTE)REAL_TO_PHYS(VgaAddress);
-
-        /* Read from the VGA memory */
-        VgaReadMemory(VgaAddress, DestBuffer, ActualSize);
-    }
-
-    /* Read the data from the virtual address space and store it in the buffer */
-    EmulatorMoveMemory(Buffer, REAL_TO_PHYS(Address), Size);
+    /* Read while calling fast memory hooks */
+    MemRead(Address, Buffer, Size);
 }
 
 VOID WINAPI EmulatorWriteMemory(PFAST486_STATE State, ULONG Address, PVOID Buffer, ULONG Size)
 {
     UNREFERENCED_PARAMETER(State);
 
-    // BIG HACK!!!! To make BIOS images working correctly,
-    // until Aleksander rewrites memory management!!
-    if (Address >= 0xFFFFFFF0) Address -= 0xFFF00000;
-
     /* If the A20 line is disabled, mask bit 20 */
-    if (!A20Line) Address &= ~(1 << 20);
+    if (!A20Line) Address &= ~(1 << 20); 
 
-    /* Make sure the requested address is valid */
-    if ((Address + Size) >= MAX_ADDRESS) return;
+    if (Address >= MAX_ADDRESS) return;
+    Size = min(Size, MAX_ADDRESS - Address);
 
-    /* Make sure we don't write to the ROM area */
-    if ((Address + Size) >= ROM_AREA_START && (Address < ROM_AREA_END)) return;
-
-    /* Read the data from the buffer and store it in the virtual address space */
-    EmulatorMoveMemory(REAL_TO_PHYS(Address), Buffer, Size);
-
-    /*
-     * Check if we modified the VGA memory.
-     */
-    if (((Address + Size) >= VgaGetVideoBaseAddress())
-        && (Address < VgaGetVideoLimitAddress()))
-    {
-        DWORD VgaAddress = max(Address, VgaGetVideoBaseAddress());
-        DWORD ActualSize = min(Address + Size - 1, VgaGetVideoLimitAddress())
-                           - VgaAddress + 1;
-        LPBYTE SrcBuffer = (LPBYTE)REAL_TO_PHYS(VgaAddress);
-
-        /* Write to the VGA memory */
-        VgaWriteMemory(VgaAddress, SrcBuffer, ActualSize);
-    }
+    /* Write while calling fast memory hooks */
+    MemWrite(Address, Buffer, Size);
 }
 
 UCHAR WINAPI EmulatorIntAcknowledge(PFAST486_STATE State)
@@ -566,56 +459,12 @@ VOID DumpMemory(BOOLEAN TextFormat)
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 {
-#ifdef STANDALONE
-
-    /* Allocate 16 MB memory for the 16-bit address space */
-    BaseAddress = HeapAlloc(GetProcessHeap(), /*HEAP_ZERO_MEMORY*/ 0, MAX_ADDRESS);
-    if (BaseAddress == NULL)
+    /* Initialize memory */
+    if (!MemInitialize())
     {
-        wprintf(L"FATAL: Failed to allocate VDM memory.\n");
+        wprintf(L"Memory initialization failed.\n");
         return FALSE;
     }
-
-#else
-
-    NTSTATUS Status;
-    SIZE_T MemorySize = MAX_ADDRESS; // See: kernel32/client/vdm.c!BaseGetVdmConfigInfo
-
-    /*
-     * The reserved region starts from the very first page.
-     * We need to commit the reserved first 16 MB virtual address.
-     */
-    BaseAddress = (PVOID)1; // NULL has another signification for NtAllocateVirtualMemory
-
-    /*
-     * Since to get NULL, we allocated from 0x1, account for this.
-     * See also: kernel32/client/proc.c!CreateProcessInternalW
-     */
-    MemorySize -= 1;
-
-    /* Commit the reserved memory */
-    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                     &BaseAddress,
-                                     0,
-                                     &MemorySize,
-                                     MEM_COMMIT,
-                                     PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        wprintf(L"FATAL: Failed to commit VDM memory, Status 0x%08lx\n", Status);
-        return FALSE;
-    }
-
-    ASSERT(BaseAddress == NULL);
-
-#endif
-
-    /*
-     * For diagnostics purposes, we fill the memory with INT 0x03 codes
-     * so that if a program wants to execute random code in memory, we can
-     * retrieve the exact CS:IP where the problem happens.
-     */
-    RtlFillMemory(BaseAddress, MAX_ADDRESS, 0xCC);
 
     /* Initialize I/O ports */
     /* Initialize RAM */
@@ -700,11 +549,6 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
 VOID EmulatorCleanup(VOID)
 {
-#ifndef STANDALONE
-    NTSTATUS Status;
-    SIZE_T MemorySize = MAX_ADDRESS;
-#endif
-
     VgaCleanup();
 
     /* Close the input thread handle */
@@ -713,6 +557,7 @@ VOID EmulatorCleanup(VOID)
 
     PS2Cleanup();
 
+    EmsCleanup();
     SpeakerCleanup();
     CmosCleanup();
     // PitCleanup();
@@ -721,29 +566,7 @@ VOID EmulatorCleanup(VOID)
     // DmaCleanup();
 
     CpuCleanup();
-
-#ifdef STANDALONE
-
-    /* Free the memory allocated for the 16-bit address space */
-    if (BaseAddress != NULL) HeapFree(GetProcessHeap(), 0, BaseAddress);
-
-#else
-
-    /* The reserved region starts from the very first page */
-    // BaseAddress = (PVOID)1;
-
-    /* Since to get NULL, we allocated from 0x1, account for this */
-    MemorySize -= 1;
-
-    Status = NtFreeVirtualMemory(NtCurrentProcess(),
-                                 &BaseAddress,
-                                 &MemorySize,
-                                 MEM_DECOMMIT);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NTVDM: Failed to decommit VDM memory, Status 0x%08lx\n", Status);
-    }
-#endif
+    MemCleanup();
 }
 
 

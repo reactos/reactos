@@ -12,15 +12,13 @@
 /* DEFINITIONS ****************************************************************/
 
 #define EMS_INTERRUPT_NUM   0x67
-#define EMS_SEGMENT         0xE000
+#define EMS_SEGMENT         0xD000
 #define EMS_MAX_HANDLES     16
 #define EMS_TOTAL_PAGES     256
 #define EMS_PAGE_BITS       14
 #define EMS_PAGE_SIZE       (1 << EMS_PAGE_BITS)
 #define EMS_ADDRESS         0xA00000
 #define EMS_PHYSICAL_PAGES  4
-#define EMS_START_ADDRESS   (EMS_SEGMENT << 4)
-#define EMS_END_ADDRESS     (EMS_START_ADDRESS + EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE)
 
 #define EMS_STATUS_OK                   0x00
 #define EMS_STATUS_INTERNAL_ERROR       0x80
@@ -66,9 +64,8 @@ typedef struct _EMS_COPY_DATA
 
 /* FUNCTIONS ******************************************************************/
 
-VOID EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size);
-VOID EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size);
 VOID EmsInitialize(VOID);
+VOID EmsCleanup(VOID);
 
 #endif // _EMS_H_
 
