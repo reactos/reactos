@@ -2,7 +2,7 @@
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
  * FILE:            memory.h
- * PURPOSE:         Expanded Memory Support
+ * PURPOSE:         Memory Management
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
