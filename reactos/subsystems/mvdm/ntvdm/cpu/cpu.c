@@ -139,7 +139,7 @@ VOID CpuSimulate(VOID)
                      EXCEPTION_EXECUTE_HANDLER)
         {
             BOOLEAN Writing = (LocalExceptionRecord.ExceptionInformation[0] == 1);
-            DWORD FaultingAddress = (DWORD)LocalExceptionRecord.ExceptionInformation[1];
+            ULONG FaultAddress = (ULONG)LocalExceptionRecord.ExceptionInformation[1];
 
             /* Make sure this was an access violation */
             ASSERT(LocalExceptionRecord.ExceptionCode == EXCEPTION_ACCESS_VIOLATION);
@@ -148,7 +148,7 @@ VOID CpuSimulate(VOID)
             Fast486Rewind(&EmulatorContext);
 
             /* Call the handler */
-            MemExceptionHandler(FaultingAddress, Writing);
+            MemExceptionHandler(FaultAddress, Writing);
         }
         _SEH2_END;
     }

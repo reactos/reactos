@@ -179,6 +179,13 @@ typedef enum
 
 #define getMODE() ((getMSW() & MSW_PE) ? VDM_PM : VDM_V86)
 
+typedef VOID
+(WINAPI *PVDD_MEMORY_HANDLER)
+(
+    PVOID FaultAddress,
+    ULONG RWMode
+);
+
 PBYTE
 WINAPI
 Sim32pGetVDMPointer
@@ -223,6 +230,25 @@ VdmUnmapFlat
     IN ULONG    Offset,
     IN PVOID    Buffer,
     IN VDM_MODE Mode
+);
+
+BOOL
+WINAPI
+VDDInstallMemoryHook
+(
+    IN HANDLE hVdd,
+    IN PVOID  pStart,
+    IN DWORD  dwCount,
+    IN PVDD_MEMORY_HANDLER MemoryHandler
+);
+
+BOOL
+WINAPI
+VDDDeInstallMemoryHook
+(
+    IN HANDLE hVdd,
+    IN PVOID  pStart,
+    IN DWORD  dwCount
 );
 
 #ifdef __cplusplus

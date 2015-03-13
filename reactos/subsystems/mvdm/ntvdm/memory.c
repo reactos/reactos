@@ -17,6 +17,24 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+typedef struct _MEM_HOOK
+{
+    LIST_ENTRY Entry;
+    HANDLE hVdd;
+    ULONG Count;
+
+    union
+    {
+        PVDD_MEMORY_HANDLER VddHandler;
+
+        struct
+        {
+            PMEMORY_READ_HANDLER  FastReadHandler;
+            PMEMORY_WRITE_HANDLER FastWriteHandler;
+        };
+    };
+} MEM_HOOK, *PMEM_HOOK;
+
 static LIST_ENTRY HookList;
 static PMEM_HOOK PageTable[TOTAL_PAGES];
 
@@ -171,16 +189,16 @@ MemWrite(ULONG Address, PVOID Buffer, ULONG Size)
 }
 
 VOID
-MemExceptionHandler(DWORD Address, BOOLEAN Writing)
+MemExceptionHandler(ULONG FaultAddress, BOOLEAN Writing)
 {
-    PMEM_HOOK Hook = PageTable[Address >> 12];
-    DPRINT("The memory at 0x%08X could not be %s.\n", Address, Writing ? "written" : "read");
+    PMEM_HOOK Hook = PageTable[FaultAddress >> 12];
+    DPRINT("The memory at 0x%08X could not be %s.\n", FaultAddress, Writing ? "written" : "read");
 
     /* Exceptions are only supposed to happen when using VDD-style memory hooks */
-    ASSERT(Address < MAX_ADDRESS && Hook != NULL && Hook->hVdd != NULL);
+    ASSERT(FaultAddress < MAX_ADDRESS && Hook != NULL && Hook->hVdd != NULL);
 
     /* Call the VDD handler */
-    Hook->VddHandler(Address, Writing);
+    Hook->VddHandler((PVOID)FaultAddress, (ULONG)Writing);
 }
 
 BOOL
@@ -191,8 +209,8 @@ MemInstallFastMemoryHook(PVOID Address,
 {
     PMEM_HOOK Hook;
     ULONG i;
-    ULONG FirstPage = (ULONG)Address >> 12;
-    ULONG LastPage = ((ULONG)Address + Size - 1) >> 12;
+    ULONG FirstPage = (ULONG_PTR)Address >> 12;
+    ULONG LastPage = ((ULONG_PTR)Address + Size - 1) >> 12;
 
     /* Make sure none of these pages are already allocated */
     for (i = FirstPage; i <= LastPage; i++)
@@ -200,7 +218,8 @@ MemInstallFastMemoryHook(PVOID Address,
         if (PageTable[i] != NULL) return FALSE;
     }
 
-    Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(MEM_HOOK));
+    /* Create and initialize a new hook entry */
+    Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
     if (Hook == NULL) return FALSE;
 
     Hook->hVdd = NULL;
@@ -208,8 +227,10 @@ MemInstallFastMemoryHook(PVOID Address,
     Hook->FastReadHandler = ReadHandler;
     Hook->FastWriteHandler = WriteHandler;
 
+    /* Add the hook entry to the page table... */
     for (i = FirstPage; i <= LastPage; i++) PageTable[i] = Hook;
 
+    /* ... and to the list of hooks */
     InsertTailList(&HookList, &Hook->Entry);
     return TRUE;
 }
@@ -217,15 +238,16 @@ MemInstallFastMemoryHook(PVOID Address,
 BOOL
 MemRemoveFastMemoryHook(PVOID Address, ULONG Size)
 {
+    PMEM_HOOK Hook;
     ULONG i;
-    ULONG FirstPage = (ULONG)Address >> 12;
-    ULONG LastPage = ((ULONG)Address + Size - 1) >> 12;
+    ULONG FirstPage = (ULONG_PTR)Address >> 12;
+    ULONG LastPage = ((ULONG_PTR)Address + Size - 1) >> 12;
 
     if (Size == 0) return FALSE;
 
     for (i = FirstPage; i <= LastPage; i++)
     {
-        PMEM_HOOK Hook = PageTable[i];
+        Hook = PageTable[i];
         if (Hook == NULL || Hook->hVdd != NULL) continue;
 
         if (--Hook->Count == 0)
@@ -241,18 +263,82 @@ MemRemoveFastMemoryHook(PVOID Address, ULONG Size)
     return TRUE;
 }
 
+
+
+PBYTE
+WINAPI
+Sim32pGetVDMPointer(IN ULONG   Address,
+                    IN BOOLEAN ProtectedMode)
+{
+    // FIXME
+    UNREFERENCED_PARAMETER(ProtectedMode);
+
+    /*
+     * HIWORD(Address) == Segment  (if ProtectedMode == FALSE)
+     *                 or Selector (if ProtectedMode == TRUE )
+     * LOWORD(Address) == Offset
+     */
+    return (PBYTE)FAR_POINTER(Address);
+}
+
+PBYTE
+WINAPI
+MGetVdmPointer(IN ULONG   Address,
+               IN ULONG   Size,
+               IN BOOLEAN ProtectedMode)
+{
+    UNREFERENCED_PARAMETER(Size);
+    return Sim32pGetVDMPointer(Address, ProtectedMode);
+}
+
+PVOID
+WINAPI
+VdmMapFlat(IN USHORT   Segment,
+           IN ULONG    Offset,
+           IN VDM_MODE Mode)
+{
+    // FIXME
+    UNREFERENCED_PARAMETER(Mode);
+
+    return SEG_OFF_TO_PTR(Segment, Offset);
+}
+
 BOOL
 WINAPI
-VDDInstallMemoryHook(HANDLE hVdd,
-                     PVOID pStart,
-                     DWORD dwCount,
-                     PVDD_MEMORY_HANDLER pHandler)
+VdmFlushCache(IN USHORT   Segment,
+              IN ULONG    Offset,
+              IN ULONG    Size,
+              IN VDM_MODE Mode)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return TRUE;
+}
+
+BOOL
+WINAPI
+VdmUnmapFlat(IN USHORT   Segment,
+             IN ULONG    Offset,
+             IN PVOID    Buffer,
+             IN VDM_MODE Mode)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return TRUE;
+}
+
+BOOL
+WINAPI
+VDDInstallMemoryHook(IN HANDLE hVdd,
+                     IN PVOID  pStart,
+                     IN DWORD  dwCount,
+                     IN PVDD_MEMORY_HANDLER MemoryHandler)
 {
     NTSTATUS Status;
     PMEM_HOOK Hook;
     ULONG i;
-    ULONG FirstPage = (ULONG)pStart >> 12;
-    ULONG LastPage = ((ULONG)pStart + dwCount - 1) >> 12;
+    ULONG FirstPage = (ULONG_PTR)pStart >> 12;
+    ULONG LastPage = ((ULONG_PTR)pStart + dwCount - 1) >> 12;
     PVOID Address = (PVOID)(FirstPage * PAGE_SIZE);
     SIZE_T Size = (LastPage - FirstPage + 1) * PAGE_SIZE;
 
@@ -266,12 +352,13 @@ VDDInstallMemoryHook(HANDLE hVdd,
         if (PageTable[i] != NULL) return FALSE;
     }
 
-    Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(MEM_HOOK));
+    /* Create and initialize a new hook entry */
+    Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
     if (Hook == NULL) return FALSE;
 
     Hook->hVdd = hVdd;
     Hook->Count = LastPage - FirstPage + 1;
-    Hook->VddHandler = pHandler;
+    Hook->VddHandler = MemoryHandler;
 
     /* Decommit the pages */
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &Address, &Size, MEM_DECOMMIT);
@@ -281,22 +368,25 @@ VDDInstallMemoryHook(HANDLE hVdd,
         return FALSE;
     }
 
+    /* Add the hook entry to the page table... */
     for (i = FirstPage; i <= LastPage; i++) PageTable[i] = Hook;
 
+    /* ... and to the list of hooks */
     InsertTailList(&HookList, &Hook->Entry);
     return TRUE;
 }
 
 BOOL
 WINAPI
-VDDDeInstallMemoryHook(HANDLE hVdd,
-                       PVOID pStart,
-                       DWORD dwCount)
+VDDDeInstallMemoryHook(IN HANDLE hVdd,
+                       IN PVOID  pStart,
+                       IN DWORD  dwCount)
 {
     NTSTATUS Status;
+    PMEM_HOOK Hook;
     ULONG i;
-    ULONG FirstPage = (ULONG)pStart >> 12;
-    ULONG LastPage = ((ULONG)pStart + dwCount - 1) >> 12;
+    ULONG FirstPage = (ULONG_PTR)pStart >> 12;
+    ULONG LastPage = ((ULONG_PTR)pStart + dwCount - 1) >> 12;
     PVOID Address = (PVOID)(FirstPage * PAGE_SIZE);
     SIZE_T Size = (LastPage - FirstPage + 1) * PAGE_SIZE;
 
@@ -313,7 +403,7 @@ VDDDeInstallMemoryHook(HANDLE hVdd,
 
     for (i = FirstPage; i <= LastPage; i++)
     {
-        PMEM_HOOK Hook = PageTable[i];
+        Hook = PageTable[i];
         if (Hook == NULL) continue;
 
         if (Hook->hVdd != hVdd)
@@ -335,6 +425,8 @@ VDDDeInstallMemoryHook(HANDLE hVdd,
     return TRUE;
 }
 
+
+
 BOOLEAN
 MemInitialize(VOID)
 {
@@ -346,6 +438,8 @@ MemInitialize(VOID)
     /*
      * The reserved region starts from the very first page.
      * We need to commit the reserved first 16 MB virtual address.
+     *
+     * NOTE: NULL has another signification for NtAllocateVirtualMemory.
      */
     BaseAddress = (PVOID)1;
 
@@ -398,10 +492,11 @@ MemCleanup(VOID)
 {
     NTSTATUS Status;
     SIZE_T MemorySize = MAX_ADDRESS;
+    PLIST_ENTRY Pointer;
 
-    while (HookList.Flink != &HookList)
+    while (!IsListEmpty(&HookList))
     {
-        PLIST_ENTRY Pointer = RemoveHeadList(&HookList);
+        Pointer = RemoveHeadList(&HookList);
         RtlFreeHeap(RtlGetProcessHeap(), 0, CONTAINING_RECORD(Pointer, MEM_HOOK, Entry));
     }
 
@@ -420,3 +515,5 @@ MemCleanup(VOID)
         DPRINT1("NTVDM: Failed to decommit VDM memory, Status 0x%08lx\n", Status);
     }
 }
+
+/* EOF */
