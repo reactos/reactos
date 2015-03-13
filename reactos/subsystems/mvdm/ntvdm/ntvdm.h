@@ -38,6 +38,11 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
  */
 // #define STANDALONE
 
+/*
+ * Activate this line for Win2k compliancy
+ */
+// #define WIN2K_COMPLIANT
+
 /* FUNCTIONS ******************************************************************/
 
 #ifndef STANDALONE

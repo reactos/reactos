@@ -251,6 +251,42 @@ VDDDeInstallMemoryHook
     IN DWORD  dwCount
 );
 
+BOOL
+WINAPI
+VDDAllocMem
+(
+    IN HANDLE hVdd,
+    IN PVOID  Address,
+    IN ULONG  Size
+);
+
+BOOL
+WINAPI
+VDDFreeMem
+(
+    IN HANDLE hVdd,
+    IN PVOID  Address,
+    IN ULONG  Size
+);
+
+BOOL
+WINAPI
+VDDIncludeMem
+(
+    IN HANDLE hVdd,
+    IN PVOID  Address,
+    IN ULONG  Size
+);
+
+BOOL
+WINAPI
+VDDExcludeMem
+(
+    IN HANDLE hVdd,
+    IN PVOID  Address,
+    IN ULONG  Size
+);
+
 #ifdef __cplusplus
 }
 #endif

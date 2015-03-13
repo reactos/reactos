@@ -425,6 +425,50 @@ VDDDeInstallMemoryHook(IN HANDLE hVdd,
     return TRUE;
 }
 
+BOOL
+WINAPI
+VDDAllocMem(IN HANDLE hVdd,
+            IN PVOID  Address,
+            IN ULONG  Size)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+VDDFreeMem(IN HANDLE hVdd,
+           IN PVOID  Address,
+           IN ULONG  Size)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+VDDIncludeMem(IN HANDLE hVdd,
+              IN PVOID  Address,
+              IN ULONG  Size)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL
+WINAPI
+VDDExcludeMem(IN HANDLE hVdd,
+              IN PVOID  Address,
+              IN ULONG  Size)
+{
+    // FIXME
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 
 
 BOOLEAN
@@ -494,7 +538,8 @@ MemCleanup(VOID)
     SIZE_T MemorySize = MAX_ADDRESS;
     PLIST_ENTRY Pointer;
 
-    while (!IsListEmpty(&HookList))
+    // while (!IsListEmpty(&HookList))
+    while (HookList.Flink != &HookList)
     {
         Pointer = RemoveHeadList(&HookList);
         RtlFreeHeap(RtlGetProcessHeap(), 0, CONTAINING_RECORD(Pointer, MEM_HOOK, Entry));
