@@ -99,7 +99,7 @@ DWORD _RpcCloseHandle(
 {
     PWLANSVCHANDLE lpWlanSvcHandle;
 
-    lpWlanSvcHandle = WlanSvcGetHandleEntry(phClientHandle);
+    lpWlanSvcHandle = WlanSvcGetHandleEntry(*phClientHandle);
     if (!lpWlanSvcHandle)
     {
         return ERROR_INVALID_HANDLE;
