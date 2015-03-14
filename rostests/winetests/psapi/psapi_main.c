@@ -28,7 +28,7 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "winnt.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "winnls.h"
 #include "psapi.h"
 #include "wine/test.h"
