@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <ntstatus.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include "ws2_32.h"
 
 #define RECV_BUF   4
