@@ -23,8 +23,9 @@
  */
 
 #include "precomp.h"
-#include <psdk/stierr.h>
-#include <wine/winternl.h>
+
+#define NTOS_MODE_USER
+#include <ndk/psfuncs.h>
 
 void ProcessPage_OnEndProcess(void)
 {
