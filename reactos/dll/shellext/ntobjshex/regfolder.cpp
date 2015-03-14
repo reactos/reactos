@@ -1,15 +1,20 @@
 /*
-* PROJECT:     ReactOS shell extensions
-* LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll\shellext\ntobjshex\ntobjns.cpp
-* PURPOSE:     NT Object Namespace shell extension
-* PROGRAMMERS: David Quintana <gigaherz@gmail.com>
-*/
+ * PROJECT:     ReactOS shell extensions
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll\shellext\ntobjshex\ntobjns.cpp
+ * PURPOSE:     NT Object Namespace shell extension
+ * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ */
 
 #include "precomp.h"
 #include "ntobjutil.h"
 #include <ntquery.h>
 #include "util.h"
+
+#define DFM_MERGECONTEXTMENU 1 // uFlags LPQCMINFO
+#define DFM_INVOKECOMMAND 2 // idCmd pszArgs
+#define DFM_INVOKECOMMANDEX 12 // idCmd PDFMICS
+#define DFM_GETDEFSTATICID 14 // idCmd * 0
 
 #define SHCIDS_ALLFIELDS 0x80000000L
 #define SHCIDS_CANONICALONLY 0x10000000L
@@ -30,156 +35,6 @@ enum RegistryColumns
     REGISTRY_COLUMN_NAME = 0,
     REGISTRY_COLUMN_TYPE = 1,
     REGISTRY_COLUMN_VALUE = 2,
-};
-
-class CRegistryFolderContextMenu :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu
-{
-    PCIDLIST_ABSOLUTE m_pcidlFolder;
-    PCITEMID_CHILD    m_pcidlChild;
-    UINT              m_idFirst;
-
-    enum ItemOffsets
-    {
-        ITEM_Open = 0,
-        ITEM_OpenNewWindow
-    };
-
-public:
-    CRegistryFolderContextMenu() :
-        m_pcidlFolder(NULL),
-        m_pcidlChild(NULL),
-        m_idFirst(0)
-    {
-
-    }
-
-    virtual ~CRegistryFolderContextMenu()
-    {
-        if (m_pcidlFolder)
-            ILFree((LPITEMIDLIST) m_pcidlFolder);
-        if (m_pcidlChild)
-            ILFree((LPITEMIDLIST) m_pcidlChild);
-    }
-
-    HRESULT Initialize(PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
-    {
-        m_pcidlFolder = ILClone(parent);
-        if (cidl != 1)
-            return E_INVALIDARG;
-        m_pcidlChild = ILClone(apidl[0]);
-        return S_OK;
-    }
-
-    // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
-    {
-        MENUITEMINFOW mii;
-
-        m_idFirst = idCmdFirst;
-
-        const RegPidlEntry * entry = (RegPidlEntry *) m_pcidlChild;
-
-        static WCHAR open [] = L"Open";
-        static WCHAR opennewwindow [] = L"Open in new window";
-
-        if (entry->entryType == REG_ENTRY_KEY)
-        {
-            ZeroMemory(&mii, sizeof(mii));
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-            mii.fType = MFT_STRING;
-            mii.wID = (idCmdFirst = m_idFirst + ITEM_Open);
-            mii.dwTypeData = open;
-            mii.cch = _countof(open);
-            mii.fState = MFS_ENABLED | MFS_DEFAULT;
-            mii.hSubMenu = NULL;
-            InsertMenuItemW(hmenu, idCmdFirst, TRUE, &mii);
-
-            if (!(uFlags & CMF_DEFAULTONLY) && idCmdFirst <= idCmdLast)
-            {
-                ZeroMemory(&mii, sizeof(mii));
-                mii.cbSize = sizeof(mii);
-                mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-                mii.fType = MFT_STRING;
-                mii.wID = (idCmdFirst = m_idFirst + ITEM_OpenNewWindow);
-                mii.dwTypeData = opennewwindow;
-                mii.cch = _countof(opennewwindow);
-                mii.fState = MFS_ENABLED;
-                mii.hSubMenu = NULL;
-                InsertMenuItemW(hmenu, idCmdFirst, FALSE, &mii);
-            }
-        }
-
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst - m_idFirst);
-    }
-
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
-    {
-        LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
-
-        if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_Open) || !lpici->lpVerb)
-        {
-            SHELLEXECUTEINFO sei = { 0 };
-            sei.cbSize = sizeof(sei);
-            sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-            sei.lpIDList = fullPidl;
-            sei.lpClass = L"folder";
-            sei.hwnd = lpici->hwnd;
-            sei.nShow = lpici->nShow;
-            sei.lpVerb = L"open";
-            BOOL bRes = ::ShellExecuteEx(&sei);
-
-            ILFree(fullPidl);
-
-            return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
-        }
-        else if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_OpenNewWindow))
-        {
-            SHELLEXECUTEINFO sei = { 0 };
-            sei.cbSize = sizeof(sei);
-            sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-            sei.lpIDList = fullPidl;
-            sei.lpClass = L"folder";
-            sei.hwnd = lpici->hwnd;
-            sei.nShow = lpici->nShow;
-            sei.lpVerb = L"opennewwindow";
-            BOOL bRes = ::ShellExecuteEx(&sei);
-
-            ILFree(fullPidl);
-
-            return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
-        }
-        return E_NOTIMPL;
-    }
-
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax)
-    {
-        if (idCmd == m_idFirst)
-        {
-            if (uType == GCS_VERBW)
-            {
-                return StringCchCopyW((LPWSTR) pszName, cchMax, L"open");
-            }
-        }
-        else if (idCmd == (m_idFirst + 1))
-        {
-            if (uType == GCS_VERBW)
-            {
-                return StringCchCopyW((LPWSTR) pszName, cchMax, L"opennewwindow");
-            }
-        }
-        return E_NOTIMPL;
-    }
-
-    DECLARE_NOT_AGGREGATABLE(CRegistryFolderContextMenu)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    BEGIN_COM_MAP(CRegistryFolderContextMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    END_COM_MAP()
-
 };
 
 class CRegistryFolderExtractIcon :
@@ -497,6 +352,16 @@ public:
         return flags & mask;
     }
 
+    BOOL IsFolder(LPCITEMIDLIST pcidl)
+    {
+        RegPidlEntry * entry;
+        HRESULT hr = FindPidlInList(pcidl, &entry);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+
+        return (entry->entryType == REG_ENTRY_KEY);
+    }
+
     HRESULT FormatContentsForDisplay(RegPidlEntry * info, PCWSTR * strContents)
     {
         PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
@@ -565,7 +430,6 @@ public:
         }
 
     }
-
 };
 
 class CRegistryFolderEnum :
@@ -803,7 +667,36 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::CompareIDs(
     LPCITEMIDLIST pidl2)
 {
     TRACE("CompareIDs\n");
-    return m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+
+    HRESULT hr = m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+    if (hr != S_OK)
+        return hr;
+
+    LPCITEMIDLIST rest1 = ILGetNext(pidl1);
+    LPCITEMIDLIST rest2 = ILGetNext(pidl2);
+
+    bool hasNext1 = (rest1->mkid.cb > 0);
+    bool hasNext2 = (rest2->mkid.cb > 0);
+
+    if (hasNext1 || hasNext2)
+    {
+        if (hasNext1 && !hasNext2)
+            return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+        if (hasNext2 && !hasNext1)
+            return MAKE_HRESULT(0, 0, (USHORT) 1);
+
+        LPCITEMIDLIST first1 = ILCloneFirst(pidl1);
+
+        CComPtr<IShellFolder> psfNext;
+        hr = BindToObject(first1, NULL, IID_PPV_ARG(IShellFolder, &psfNext));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return psfNext->CompareIDs(lParam, rest1, rest2);
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CRegistryFolder::CreateViewObject(
@@ -864,15 +757,56 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetUIObjectOf(
 {
     TRACE("GetUIObjectOf\n");
 
-    if (IsEqualIID(riid, IID_IContextMenu))
+    if (IsEqualIID(riid, IID_IContextMenu) ||
+        IsEqualIID(riid, IID_IContextMenu2) ||
+        IsEqualIID(riid, IID_IContextMenu3))
     {
-        return ShellObjectCreatorInit<CRegistryFolderContextMenu>(m_shellPidl, cidl, apidl, riid, ppvOut);
-        //return CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, ContextMenuCallback, 0, NULL, (IContextMenu**) ppvOut);
+        CComPtr<IContextMenu> pcm;
+
+        HKEY keys [1];
+
+        int nkeys = _countof(keys);
+        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        {
+            RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+        }
+        else
+        {
+            nkeys = 0;
+        }
+
+        HRESULT hr = CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, DefCtxMenuCallback, nkeys, keys, &pcm);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return pcm->QueryInterface(riid, ppvOut);
     }
 
     if (IsEqualIID(riid, IID_IExtractIconW))
     {
         return ShellObjectCreatorInit<CRegistryFolderExtractIcon>(m_shellPidl, cidl, apidl, riid, ppvOut);
+    }
+
+    if (IsEqualIID(riid, IID_IDataObject))
+    {
+        return CIDLData_CreateFromIDArray(m_shellPidl, cidl, apidl, (IDataObject**) ppvOut);
+    }
+
+    if (IsEqualIID(riid, IID_IQueryAssociations))
+    {
+        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        {
+            CComPtr<IQueryAssociations> pqa;
+            HRESULT hr = AssocCreate(CLSID_QueryAssociations, IID_PPV_ARG(IQueryAssociations, &pqa));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            hr = pqa->Init(ASSOCF_INIT_DEFAULTTOFOLDER, L"NTObjShEx.RegFolder", NULL, hwndOwner);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            return pqa->QueryInterface(riid, ppvOut);
+        }
     }
 
     return E_NOTIMPL;
@@ -907,12 +841,13 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        LPCITEMIDLIST pidlFirst = ILCloneFirst(pidl);
         LPCITEMIDLIST pidlNext = ILGetNext(pidl);
 
         if (pidlNext && pidlNext->mkid.cb > 0)
         {
             CComPtr<IShellFolder> psfChild;
-            hr = BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -929,6 +864,8 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
 
             PathAppendW(path, temp);
         }
+
+        ILFree((LPITEMIDLIST) pidlFirst);
     }
     else
     {
@@ -1216,6 +1153,20 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         *pViewMode = FVM_DETAILS;
         return S_OK;
     }
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT CRegistryFolder::DefCtxMenuCallback(IShellFolder * /*psf*/, HWND /*hwnd*/, IDataObject * /*pdtobj*/, UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/)
+{
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
     }
     return E_NOTIMPL;
 }

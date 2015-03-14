@@ -1,22 +1,33 @@
 HKCR
 {
-	NoRemove CLSID
-	{
-		ForceRemove {845B0FB2-66E0-416B-8F91-314E23F7C12D} = s 'NT Object Namespace Extension'
-		{
-			InprocServer32 = s '%MODULE%'
-			{
-				val ThreadingModel = s 'Both'
-			}
-            val InfoTip = s 'Allows browsing of the NT Object Namespace'
-            DefaultIcon = s '%MODULE%,0'
-            ShellFolder
-            {
-                val Attributes = d '0xA8000000'
-                val BrowserFlags = d '0x22'
-            }
-		}
-	}
+  NTObjShEx.NTDirectory.1 = s 'NT Namespace Directory Class'
+  {
+    CLSID = s '{845B0FB2-66E0-416B-8F91-314E23F7C12D}'
+  }
+  NTObjShEx.NTDirectory = s 'NT Namespace Directory Class'
+  {
+    CLSID = s '{845B0FB2-66E0-416B-8F91-314E23F7C12D}'
+    CurVer = s 'WMIFldr.CWMIFldr.1'
+  }
+  NoRemove CLSID
+  {
+    ForceRemove {845B0FB2-66E0-416B-8F91-314E23F7C12D} = s 'NT Object Namespace Extension'
+    {
+      ProgID = s 'NTObjShEx.NTDirectory.1'
+      VersionIndependentProgID = s 'NTObjShEx.NTDirectory'
+      InprocServer32 = s '%MODULE%'
+      {
+        val ThreadingModel = s 'Both'
+      }
+      val InfoTip = s 'Allows browsing of the NT Object Namespace'
+      DefaultIcon = s '%MODULE%,0'
+      ShellFolder
+      {
+        val Attributes = d '0xA8000000'
+        val BrowserFlags = d '0x22'
+      }
+    }
+  }
 }
 HKLM
 {

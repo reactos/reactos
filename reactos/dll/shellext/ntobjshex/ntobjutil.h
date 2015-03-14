@@ -93,7 +93,7 @@ struct RegPidlEntry
     DWORD contentType;
     USHORT contentsLength;
 
-    WCHAR entryName[0];
+    WCHAR entryName[ANYSIZE_ARRAY];
 
 };
 
