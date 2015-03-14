@@ -5861,10 +5861,11 @@ RtlCompareMemory (
   _In_ const VOID *Source2,
   _In_ SIZE_T Length);
 
-#define RtlMoveMemory memmove
-#define RtlCopyMemory memcpy
-#define RtlFillMemory(d,l,f) memset((d), (f), (l))
-#define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
+#define RtlMoveMemory(Dest,Source,Length) memmove((Dest),(Source),(Length))
+#define RtlCopyMemory(Dest,Source,Length) memcpy((Dest),(Source),(Length))
+#define RtlFillMemory(Dest,Length,Fill) memset((Dest),(Fill),(Length))
+#define RtlZeroMemory(Dest,Length) RtlFillMemory((Dest),(Length),0)
+#define RtlEqualMemory(Dest,Source,Length) (!memcmp((Dest),(Source),(Length)))
 
 FORCEINLINE
 PVOID

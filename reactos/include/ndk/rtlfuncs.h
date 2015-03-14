@@ -2084,8 +2084,10 @@ RtlCompareMemoryUlong(
     _In_ ULONG Pattern
 );
 
+#ifndef RtlEqualMemory
 #define RtlEqualMemory(Destination, Source, Length) \
     (!memcmp(Destination, Source, Length))
+#endif
 
 #define RtlCopyBytes RtlCopyMemory
 #define RtlFillBytes RtlFillMemory
