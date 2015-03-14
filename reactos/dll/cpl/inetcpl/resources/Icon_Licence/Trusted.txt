@@ -1,0 +1,1 @@
+The file trusted.ico was retrived from here http://lists.freedesktop.org/archives/tango-artists/attachments/20051206/3614f9f6/dialog-ok.svg and is released under public domain.

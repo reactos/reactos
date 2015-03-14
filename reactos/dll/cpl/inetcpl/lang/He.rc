@@ -48,15 +48,17 @@ CAPTION "כללי"
 BEGIN
 
     GROUPBOX    " דף הבית ", IDC_STATIC, 4, 4, 312, 56
+    ICON ICO_HOME, ICO_HOME, 10, 15, 21, 20
     LTEXT       "באפשרותך לבחור את הכתובת שתשמש כדף הבית שלך.",
-                IDC_STATIC, 10, 14, 300, 10
-    EDITTEXT    IDC_HOME_EDIT, 10, 26, 300, 12, WS_VISIBLE | ES_AUTOHSCROLL
+                IDC_STATIC, 40, 14, 265, 10
+    EDITTEXT    IDC_HOME_EDIT, 40, 26, 270, 12, WS_VISIBLE | ES_AUTOHSCROLL
     PUSHBUTTON  "העמוד ה&נוכחי", IDC_HOME_CURRENT, 58, 42, 80, 14
     PUSHBUTTON  "עמוד &בררת המחדל", IDC_HOME_DEFAULT, 144, 42, 80, 14
     PUSHBUTTON  "עמוד &ריק", IDC_HOME_BLANK, 230, 42, 80, 14
     GROUPBOX    "היסטורית גלישה ", IDC_STATIC, 4, 66, 312, 42
+    ICON ICO_HISTORY, ICO_HISTORY, 10, 78, 80, 14
     LTEXT       "הינך יכול למחוק את המטמון, עוגיות, היסוריה ועוד ...",
-                IDC_STATIC, 10, 76, 300, 10
+                 IDC_STATIC, 40, 76, 270, 10
     PUSHBUTTON  "מחק קבצים...", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "הגדרות...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
@@ -111,8 +113,9 @@ CAPTION "תוכן"
 BEGIN
 
     GROUPBOX    "אישורים ", IDC_STATIC, 4, 4, 312, 50
+    ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
     LTEXT       "אישורים משמשים כדי לזהות אותך וגם כדי לזהות רשויות ומפיצים.",
-                IDC_STATIC, 58, 14, 252, 18
+                IDC_STATIC, 40, 14, 252, 18
     PUSHBUTTON  "אישורים...", IDC_CERT, 146, 34, 80, 14
     PUSHBUTTON	"מפיצים...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 

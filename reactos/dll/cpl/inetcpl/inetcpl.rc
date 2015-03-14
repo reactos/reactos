@@ -104,5 +104,10 @@
 #include "wine/wine_common_ver.rc"
 
 /* @makedep: inetcpl.ico */
-ICO_MAIN ICON "inetcpl.ico"
-ICO_INTERNET ICON "inetcpl.ico"
+ICO_MAIN ICON "resources/inetcpl.ico"
+ICO_INTERNET ICON "resources/inetcpl.ico"
+ICO_CERTIFICATES ICON "resources/certificates.ico"
+ICO_RESTRICTED ICON "resources/restricted.ico"
+ICO_HISTORY ICON "resources/history.ico"
+ICO_TRUSTED ICON "resources/trusted.ico"
+ICO_HOME ICON "resources/home.ico"

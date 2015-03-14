@@ -45,15 +45,17 @@ CAPTION "일반"
 BEGIN
 
     GROUPBOX    "홈 페이지 ", IDC_STATIC, 4, 4, 312, 56
+    ICON ICO_HOME, ICO_HOME, 10, 15, 21, 20
     LTEXT       "홈페이지로 사용할 주소를 선택할 수 있습니다.",
-                IDC_STATIC, 10, 14, 300, 10
-    EDITTEXT    IDC_HOME_EDIT, 10, 26, 300, 12, WS_VISIBLE | ES_AUTOHSCROLL
+                IDC_STATIC, 40, 14, 265, 10
+    EDITTEXT    IDC_HOME_EDIT, 40, 26, 270, 12, WS_VISIBLE | ES_AUTOHSCROLL
     PUSHBUTTON  "현재 페이지(&C)", IDC_HOME_CURRENT, 58, 42, 80, 14
     PUSHBUTTON  "기본 페이지(&D)", IDC_HOME_DEFAULT, 144, 42, 80, 14
     PUSHBUTTON  "빈 페이지(&B)", IDC_HOME_BLANK, 230, 42, 80, 14
     GROUPBOX    "방문 기록 ", IDC_STATIC, 4, 66, 312, 42
+    ICON ICO_HISTORY, ICO_HISTORY, 10, 78, 80, 14
     LTEXT       "당신은 캐시된 페이지,쿠키나 다른 데이터를 지울 수 있습니다.",
-                IDC_STATIC, 10, 76, 300, 10
+                 IDC_STATIC, 40, 76, 270, 10
     PUSHBUTTON  "파일들 지우기(&F)...", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "설정(&S)...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
@@ -107,8 +109,9 @@ CAPTION "내용"
 BEGIN
 
     GROUPBOX    "인증서 ", IDC_STATIC, 4, 4, 312, 50
+    ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
     LTEXT       "인증서는 당신의 개인 식별과 인증기관과 게시자 식별에 사용됩니다.",
-                IDC_STATIC, 58, 14, 252, 18
+                IDC_STATIC, 40, 14, 252, 18
     PUSHBUTTON  "인증서...", IDC_CERT, 146, 34, 80, 14
     PUSHBUTTON	"발행자...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
