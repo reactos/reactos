@@ -38,6 +38,9 @@ Description = Otwarty program graficzny przeznaczony głównie dla dzieci.
 Description = Un editor grafic bitmap, adresat copiilor.
 Size = 13,5 Mo
 
+[Section.0419]
+Description = Свободный графический редактор для детей.
+
 [Section.041f]
 Description = Küçük çocuklar için yapılmış bir açık kaynak bit eşlem çizge düzenleyicisi.
 Size = 13,5 MB
