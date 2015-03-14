@@ -362,66 +362,88 @@ public:
         return (entry->entryType == REG_ENTRY_KEY);
     }
 
+    HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
+    {
+        switch (contentType)
+        {
+        case 0:
+        {
+            PCWSTR strTodo = L"";
+            DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbCopyW(strValue, bufferLength, strTodo);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_SZ:
+        case REG_EXPAND_SZ:
+        {
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(contentsLength + sizeof(WCHAR));
+            StringCbCopyNW(strValue, contentsLength + sizeof(WCHAR), (LPCWSTR) td, contentsLength);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_DWORD:
+        {
+            DWORD bufferLength = 64 * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, L"0x%08x (%d)",
+                *(DWORD*) td, *(DWORD*) td);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_QWORD:
+        {
+            DWORD bufferLength = 64 * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%d)",
+                *(LARGE_INTEGER*) td, ((LARGE_INTEGER*) td)->QuadPart);
+            *strContents = strValue;
+            return S_OK;
+        }
+        default:
+        {
+            PCWSTR strTodo = L"<TODO: Convert value for display>";
+            DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbCopyW(strValue, bufferLength, strTodo);
+            *strContents = strValue;
+            return S_OK;
+        }
+        }
+    }
+
     HRESULT FormatContentsForDisplay(RegPidlEntry * info, PCWSTR * strContents)
     {
         PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
-        if (info->contentsLength > 0)
+        if (info->entryType == REG_ENTRY_VALUE_WITH_CONTENT)
         {
-            if (info->entryType == REG_ENTRY_VALUE_WITH_CONTENT)
+            if (info->contentsLength > 0)
             {
-                switch (info->contentType)
-                {
-                case REG_SZ:
-                case REG_EXPAND_SZ:
-                {
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(info->contentsLength + sizeof(WCHAR));
-                    StringCbCopyNW(strValue, info->contentsLength + sizeof(WCHAR), (LPCWSTR) td, info->contentsLength);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                case REG_DWORD:
-                {
-                    DWORD bufferLength = 64 * sizeof(WCHAR);
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                    StringCbPrintfW(strValue, bufferLength, L"0x%08x (%d)",
-                        *(DWORD*) td, *(DWORD*) td);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                case REG_QWORD:
-                {
-                    DWORD bufferLength = 64 * sizeof(WCHAR);
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                    StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%d)",
-                        *(LARGE_INTEGER*) td, ((LARGE_INTEGER*) td)->QuadPart);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                default:
-                {
-                    PCWSTR strTodo = L"<TODO: Convert value for display>";
-                    DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                    StringCbCopyW(strValue, bufferLength, strTodo);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                }
+                return FormatValueData(info->contentType, td, info->contentsLength, strContents);
             }
-            else
+        }
+        else if (info->entryType == REG_ENTRY_VALUE)
+        {
+            PVOID valueData;
+            DWORD valueLength;
+            HRESULT hr = ReadRegistryValue(NULL, m_ntPath, info->entryName, &valueData, &valueLength);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (valueLength > 0)
             {
-                PCWSTR strTodo = L"<TODO: Query non-embedded value>";
-                DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
-                PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                StringCbCopyW(strValue, bufferLength, strTodo);
-                *strContents = strValue;
-                return S_OK;
+                hr = FormatValueData(info->contentType, valueData, valueLength, strContents);
+
+                CoTaskMemFree(valueData);
+
+                return hr;
             }
         }
         else
         {
-            PCWSTR strEmpty = L"(Empty)";
+            PCWSTR strEmpty = L"";
             DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
             PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
             StringCbCopyW(strValue, bufferLength, strEmpty);
@@ -429,6 +451,12 @@ public:
             return S_OK;
         }
 
+        PCWSTR strEmpty = L"(Empty)";
+        DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
+        PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+        StringCbCopyW(strValue, bufferLength, strEmpty);
+        *strContents = strValue;
+        return S_OK;
     }
 };
 
@@ -1003,11 +1031,26 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
         {
             if (pscid->pid == PID_STG_NAME)
             {
-                return MakeVariantString(pv, info->entryName);
+                if (info->entryNameLength > 0)
+                {
+                    return MakeVariantString(pv, info->entryName);
+                }
+                return  MakeVariantString(pv, L"(Default)");
             }
             else if (pscid->pid == PID_STG_STORAGETYPE)
             {
-                return MakeVariantString(pv, RegistryTypeNames[info->entryType]);
+                if (info->entryType == REG_ENTRY_KEY)
+                {
+                    if (info->contentsLength > 0)
+                    {
+                        PWSTR td = (PWSTR)(((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+
+                        return MakeVariantString(pv, td);
+                    }
+                    return MakeVariantString(pv, L"Key");
+                }
+
+                return MakeVariantString(pv, RegistryTypeNames[info->contentType]);
             }
             else if (pscid->pid == PID_STG_CONTENTS)
             {
@@ -1065,6 +1108,18 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
         case REGISTRY_COLUMN_TYPE:
             psd->fmt = LVCFMT_LEFT;
+
+            if (info->entryType == REG_ENTRY_KEY)
+            {
+                if (info->contentsLength > 0)
+                {
+                    PWSTR td = (PWSTR) (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+
+                    return MakeStrRetFromString(td, info->contentsLength, &(psd->str));
+                }
+
+                return MakeStrRetFromString(L"Key", &(psd->str));
+            }
 
             return MakeStrRetFromString(RegistryTypeNames[info->entryType], &(psd->str));
 
