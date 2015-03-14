@@ -40,7 +40,7 @@ BEGIN
     LTEXT "Menedżer urządzeń wyświetla wszystkie urządzenia sprzętowe zainstalowane w komputerze. Możesz użyć Menedżera urządzeń, aby zmienić właściwości każdego urządzenia.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Menedżer urządzeń", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
     GROUPBOX "Kreator sprzętu", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Kreator sprzętu pomaga w instalacji, deinstalacji, odłączaniu, usuwaniu i konfiguracji sprzętu.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Kreator sprzętu", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
     GROUPBOX "Profile sprzętu", IDC_STATIC, 6, 149, 244, 61

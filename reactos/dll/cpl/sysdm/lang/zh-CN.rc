@@ -33,7 +33,7 @@ BEGIN
     LTEXT "设备管理器列出所有安装在计算机上的硬件设备。请使用设备管理器来更改设备的属性。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "设备管理器(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "添加硬件向导", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "“添加硬件向导”帮助您安装新的硬件。", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "添加硬件向导(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "硬件配置文件", IDC_STATIC, 6, 149, 244, 61

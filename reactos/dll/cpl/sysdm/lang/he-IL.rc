@@ -33,7 +33,7 @@ BEGIN
     LTEXT "מנהל ההתקנים מציג אל כל התקני החומרה המותקנים במחשב שלך. השתמש במנהל ההתקנים כדי לשנות את המאפיינים של כל התקן.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "מנהל ההתקנים...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "אשף הוספת חומרה", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "The Hardware wizard helps you install, uninstall, repair, unplug, eject, and configure your hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "אשף הוספת חומרה...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "פרופילי חומרה", IDC_STATIC, 6, 149, 244, 61

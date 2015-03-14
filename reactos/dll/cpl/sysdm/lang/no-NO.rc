@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Enhetsbehandler viser alt av maskinvare enheter som er innstallert på din datamaskin. Bruk enhetsbehandleren for å endre egenskapene for alle enhetene.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Enhetsbehandler...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Maskinvare veiviser", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Maskinvare veiviseren hjelper deg å installere, avinnstallere, reparere, koble fra, utløse, og konfigurere din maskinvare.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Maskinvare veiviser...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Maskinvare profiler", IDC_STATIC, 6, 149, 244, 61

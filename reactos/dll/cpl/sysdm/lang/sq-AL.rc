@@ -31,7 +31,7 @@ BEGIN
     PUSHBUTTON "&Menagjues Pjesëve...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     LTEXT "Menagjues Pjesëve liston të gjitha pajisjet elektronike të instaluara në kompjuterin tuaj. Përdorimi managjuesit pjesëve për të ndryshuar vetitë e çdo pajisje.", IDC_STATIC, 42, 18, 204, 24
     GROUPBOX "Megjistari Pjesëve Elektronike", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Magjistari pjesëve elektronike ju ndihmon për të instaluar, Ç'instaluar, Riparuar, Heq, Nxjerr, dhe konfiguruar pjesër elektronike tuaja.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "Magjistari Pjesëve elektronike...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Profile Pjesëve Elektronike", IDC_STATIC, 6, 149, 244, 61

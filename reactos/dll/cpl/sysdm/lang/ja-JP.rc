@@ -31,7 +31,7 @@ BEGIN
     LTEXT "デバイスマネージャはコンピュータに装着されているすべてのハードウェアを表示 します。各デバイスのプロパティを変更するにはデバイスマネージャを使用 してください。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "デバイス マネージャ(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "ハードウェア ウィザード", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "ハードウェアウィザードはハードウェアのインストール、アンインストール、修復、 取り外し、取り出し、設定の手助けをします。", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "ハードウェア ウィザード(&H)...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "ハードウェア プロファイル", IDC_STATIC, 6, 149, 244, 61

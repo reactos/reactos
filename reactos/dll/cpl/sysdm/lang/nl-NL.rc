@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Apparaatbeheer geeft een overzicht van alle hardware die op de computer is geïnstalleerd. U kunt in Apparaatbeheer tevens de eigenschappen van elk apparaat wijzigen.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Apparaatbeheer...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Wizard Hardware", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Met de wizard Hardware kunt u hardware installeren, verwijderen, repareren ontkoppelen, uitwerpen en configureren.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "Wizard &Hardware...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Hardwareprofielen", IDC_STATIC, 6, 149, 244, 61
