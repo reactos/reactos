@@ -72,6 +72,8 @@ macro(set_cpp)
         if(MSVC)
             add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++)
             include_directories(${REACTOS_SOURCE_DIR}/include/c++/stlport)
+        else()
+            replace_compile_flags("-nostdinc" " ")
         endif()
     endif()
 

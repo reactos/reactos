@@ -38,6 +38,10 @@ endif()
 
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
+
+# Prevent GCC from searching any of the default directories
+add_compile_flags("-nostdinc")
+
 if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
