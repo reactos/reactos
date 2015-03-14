@@ -18,7 +18,6 @@ HWND hToolBar = NULL;
 HMENU hMainMenu = NULL;
 
 TCHAR szAppTitle[256] = _T("");
-TCHAR szPrevFile[MAX_PATH] = _T("");
 TCHAR szDefaultFilter[MAX_PATH] = _T("");
 TCHAR *szFilter = NULL;
 
@@ -429,7 +428,6 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 
     MaxFilePos = mciStatus.dwReturn;
     wDeviceId = mciOpen.wDeviceID;
-    StringCbCopy(szPrevFile, sizeof(szPrevFile), lpFileName);
 
     EnableMenuItems(hwnd);
 
@@ -689,27 +687,14 @@ static VOID
 OpenMediaFile(HWND hwnd, LPTSTR lpFileName)
 {
     MCIERROR mciError;
-    TCHAR szLocalFileName[MAX_PATH];
 
-    if (lpFileName == NULL)
-    {
-        if (szPrevFile[0] == _T('\0'))
-            return;
-
-        StringCbCopy(szLocalFileName, sizeof(szLocalFileName), szPrevFile);
-    }
-    else
-    {
-        StringCbCopy(szLocalFileName, sizeof(szLocalFileName), lpFileName);
-    }
-
-    if (GetFileAttributes(szLocalFileName) == INVALID_FILE_ATTRIBUTES)
+    if (GetFileAttributes(lpFileName) == INVALID_FILE_ATTRIBUTES)
         return;
 
     if (wDeviceId)
         CloseMediaFile(hwnd);
 
-    mciError = OpenMciDevice(hwnd, NULL, szLocalFileName);
+    mciError = OpenMciDevice(hwnd, NULL, lpFileName);
     if (mciError != 0)
     {
         ShowMCIError(hwnd, mciError);
@@ -1103,10 +1088,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                     else
                     {
-                        if (szPrevFile[0] == _T('\0'))
-                            OpenFileDialog(hwnd);
-                        else
-                            OpenMediaFile(hwnd, NULL);
+                        OpenFileDialog(hwnd);
                     }
                     break;
                 }
@@ -1137,7 +1119,6 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     return 0;
 
                 case IDM_CLOSE_FILE:
-                    szPrevFile[0] = _T('\0');
                     CloseMediaFile(hwnd);
                     break;
 
