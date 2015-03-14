@@ -297,14 +297,43 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
 
 static VOID NTAPI EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    ULONG i;
+    ULONG RelativeAddress = Address - TO_LINEAR(EMS_SEGMENT, 0);
+    ULONG FirstPage = RelativeAddress / EMS_PAGE_SIZE;
+    ULONG LastPage = (RelativeAddress + Size - 1) / EMS_PAGE_SIZE;
+    ULONG Offset, Length;
+
+    for (i = FirstPage; i <= LastPage; i++)
+    {
+        Offset = (i == FirstPage) ? Address & (EMS_PAGE_SIZE - 1) : 0;
+        Length = ((i == LastPage)
+                 ? (Address + Size - (LastPage << EMS_PAGE_BITS))
+                 : EMS_PAGE_SIZE) - Offset;
+
+        if (Mapping[i]) RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Mapping[i] + Offset), Length);
+        Buffer = (PVOID)((ULONG_PTR)Buffer + Length);
+    }
 }
 
 static BOOLEAN NTAPI EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 {
-    // TODO: NOT IMPLEMENTED
-    UNIMPLEMENTED;
+    ULONG i;
+    ULONG RelativeAddress = Address - TO_LINEAR(EMS_SEGMENT, 0);
+    ULONG FirstPage = RelativeAddress / EMS_PAGE_SIZE;
+    ULONG LastPage = (RelativeAddress + Size - 1) / EMS_PAGE_SIZE;
+    ULONG Offset, Length;
+
+    for (i = FirstPage; i <= LastPage; i++)
+    {
+        Offset = (i == FirstPage) ? Address & (EMS_PAGE_SIZE - 1) : 0;
+        Length = ((i == LastPage)
+                 ? (Address + Size - (LastPage << EMS_PAGE_BITS))
+                 : EMS_PAGE_SIZE) - Offset;
+
+        if (Mapping[i]) RtlCopyMemory((PVOID)((ULONG_PTR)Mapping[i] + Offset), Buffer, Length);
+        Buffer = (PVOID)((ULONG_PTR)Buffer + Length);
+    }
+
     return TRUE;
 }
 

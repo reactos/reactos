@@ -209,6 +209,7 @@ MemInstallFastMemoryHook(PVOID Address,
     ULONG i;
     ULONG FirstPage = (ULONG_PTR)Address >> 12;
     ULONG LastPage = ((ULONG_PTR)Address + Size - 1) >> 12;
+    PLIST_ENTRY Pointer;
 
     /* Make sure none of these pages are already allocated */
     for (i = FirstPage; i <= LastPage; i++)
@@ -216,20 +217,39 @@ MemInstallFastMemoryHook(PVOID Address,
         if (PageTable[i] != NULL) return FALSE;
     }
 
-    /* Create and initialize a new hook entry */
-    Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
-    if (Hook == NULL) return FALSE;
+    for (Pointer = HookList.Flink; Pointer != &HookList; Pointer = Pointer->Flink)
+    {
+        Hook = CONTAINING_RECORD(Pointer, MEM_HOOK, Entry);
 
-    Hook->hVdd = NULL;
-    Hook->Count = LastPage - FirstPage + 1;
-    Hook->FastReadHandler = ReadHandler;
-    Hook->FastWriteHandler = WriteHandler;
+        if (Hook->hVdd == NULL
+            && Hook->FastReadHandler == ReadHandler
+            && Hook->FastWriteHandler == WriteHandler)
+        {
+            break;
+        }
+    }
 
-    /* Add the hook entry to the page table... */
+    if (Pointer == &HookList)
+    {
+        /* Create and initialize a new hook entry... */
+        Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
+        if (Hook == NULL) return FALSE;
+
+        Hook->hVdd = NULL;
+        Hook->Count = 0;
+        Hook->FastReadHandler = ReadHandler;
+        Hook->FastWriteHandler = WriteHandler;
+
+        /* ... and add it to the list of hooks */
+        InsertTailList(&HookList, &Hook->Entry);
+    }
+
+    /* Increase the number of pages this hook has */
+    Hook->Count += LastPage - FirstPage + 1;
+
+    /* Add the hook entry to the page table */
     for (i = FirstPage; i <= LastPage; i++) PageTable[i] = Hook;
 
-    /* ... and to the list of hooks */
-    InsertTailList(&HookList, &Hook->Entry);
     return TRUE;
 }
 
@@ -339,6 +359,7 @@ VDDInstallMemoryHook(IN HANDLE hVdd,
     ULONG LastPage = ((ULONG_PTR)pStart + dwCount - 1) >> 12;
     PVOID Address = (PVOID)(FirstPage * PAGE_SIZE);
     SIZE_T Size = (LastPage - FirstPage + 1) * PAGE_SIZE;
+    PLIST_ENTRY Pointer;
 
     /* Check validity of the VDD handle */
     if (hVdd == NULL || hVdd == INVALID_HANDLE_VALUE) return FALSE;
@@ -350,27 +371,45 @@ VDDInstallMemoryHook(IN HANDLE hVdd,
         if (PageTable[i] != NULL) return FALSE;
     }
 
-    /* Create and initialize a new hook entry */
-    Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
-    if (Hook == NULL) return FALSE;
+    for (Pointer = HookList.Flink; Pointer != &HookList; Pointer = Pointer->Flink)
+    {
+        Hook = CONTAINING_RECORD(Pointer, MEM_HOOK, Entry);
+        if (Hook->hVdd == hVdd && Hook->VddHandler == MemoryHandler) break;
+    }
 
-    Hook->hVdd = hVdd;
-    Hook->Count = LastPage - FirstPage + 1;
-    Hook->VddHandler = MemoryHandler;
+    if (Pointer == &HookList)
+    {
+        /* Create and initialize a new hook entry... */
+        Hook = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Hook));
+        if (Hook == NULL) return FALSE;
+
+        Hook->hVdd = hVdd;
+        Hook->Count = 0;
+        Hook->VddHandler = MemoryHandler;
+
+        /* ... and add it to the list of hooks */
+        InsertTailList(&HookList, &Hook->Entry);
+    }
 
     /* Decommit the pages */
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &Address, &Size, MEM_DECOMMIT);
     if (!NT_SUCCESS(Status))
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Hook);
+        if (Pointer == &HookList)
+        {
+            RemoveEntryList(&Hook->Entry);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Hook);
+        }
+
         return FALSE;
     }
 
-    /* Add the hook entry to the page table... */
+    /* Increase the number of pages this hook has */
+    Hook->Count += LastPage - FirstPage + 1;
+
+    /* Add the hook entry to the page table */
     for (i = FirstPage; i <= LastPage; i++) PageTable[i] = Hook;
 
-    /* ... and to the list of hooks */
-    InsertTailList(&HookList, &Hook->Entry);
     return TRUE;
 }
 
