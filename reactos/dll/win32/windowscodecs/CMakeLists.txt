@@ -9,7 +9,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng

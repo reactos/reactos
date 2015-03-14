@@ -1,6 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(winscard.dll winscard.spec)
 
 list(APPEND SOURCE

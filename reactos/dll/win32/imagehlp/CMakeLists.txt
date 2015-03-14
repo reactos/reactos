@@ -1,6 +1,6 @@
 
 add_definitions(-D_IMAGEHLP_SOURCE_)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(imagehlp.dll imagehlp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
