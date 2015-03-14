@@ -368,7 +368,7 @@ endmacro()
 set(PSEH_LIB "pseh")
 
 # Macros
-if(PCH AND (NOT ENABLE_CCACHE))
+if(PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE))
     add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
     macro(add_pch _target _pch _sources)
         # When including x.h GCC looks for x.h.gch first
