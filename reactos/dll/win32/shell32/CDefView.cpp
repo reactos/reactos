@@ -860,16 +860,34 @@ INT CALLBACK CDefView::fill_list( LPVOID ptr, LPVOID arg )
 HRESULT CDefView::FillList()
 {
     CComPtr<IEnumIDList> pEnumIDList;
-    PITEMID_CHILD    pidl;
-    DWORD        dwFetched;
-    HRESULT        hRes;
-    HDPA        hdpa;
+    PITEMID_CHILD pidl;
+    DWORD         dwFetched;
+    HRESULT       hRes;
+    HDPA          hdpa;
+    HKEY          hKey;
+    DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
 
     TRACE("%p\n", this);
 
-    /* get the itemlist from the shfolder*/
-    /* FIXME: make showing hidden files a setting. */
-    hRes = m_pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, &pEnumIDList);
+    /* determine if there is a setting to show all the hidden files/folders */
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        DWORD dataLength, flagVal;
+
+        dataLength = sizeof(flagVal);
+        if (RegQueryValueExW(hKey, L"Hidden", NULL, NULL, (LPBYTE)&flagVal, &dataLength) == ERROR_SUCCESS)
+        {
+            /* if the value is 1, then show all hidden files/folders */
+            if (flagVal == 1)
+                dFlags |= SHCONTF_INCLUDEHIDDEN;
+        }
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
+
+    /* get the itemlist from the shfolder */
+    hRes = m_pSFParent->EnumObjects(m_hWnd, dFlags, &pEnumIDList);
     if (hRes != S_OK)
     {
         if (hRes == S_FALSE)

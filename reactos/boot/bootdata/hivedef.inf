@@ -1842,6 +1842,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-10
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ListviewShadow",0x00010001,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","HideFileExt",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","StartMenuLogoff",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","Hidden",0x00010003,1
 
 ; default shell
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon",,0x00000012
