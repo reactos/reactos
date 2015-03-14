@@ -25,8 +25,11 @@ ExcludeFromSelect = SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 ExcludeFromSelect = WDMAUDIO_CopyFilesOnlyId
 
 [GenericMfg]
+;%WDM_KMIXER.DeviceDesc%   = WDM_KMIXER,   SW\{B7EAFDC0-A680-11D0-96D8-00AA0051E51D}
+;%WDM_SYSAUDIO.DeviceDesc% = WDM_SYSAUDIO, SW\{A7C7A5B0-5AF3-11D1-9CED-00A024BF0407}
 %WDM_WDMAUD.DeviceDesc%   = WDM_WDMAUD,   SW\{CD171DE3-69E5-11D2-B56D-0000F8754380}
-%WDM_DRMKAUD.DeviceDesc%  = WDM_DRMKAUD,  SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
+;%WDM_DRMKAUD.DeviceDesc%  = WDM_DRMKAUD,  SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
+
 %WDMAUDIO_CopyFilesOnlyId.DeviceDesc% = WDMAUDIO.CopyFilesOnly, WDMAUDIO_CopyFilesOnlyId
 
 [WDMAUDIO.CopyFilesOnly]
@@ -43,11 +46,69 @@ AddReg = DeviceRegistration
 CopyFiles = WDM.CopyFiles
 
 [DeviceRegistration]
+; Kmixer swenum install
+;HKLM,%RunOnce%,"WDM_KMIXER0",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_MIXER%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
+;HKLM,%RunOnce%,"WDM_KMIXER1",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_AUDIO%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
+
+; Sysaudio swenum install
+;HKLM,%RunOnce%,"WDM_SYSAUDIO",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_SYSAUDIO.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_SYSAUDIO%,%17%\WDMAUDIO.inf,WDM_SYSAUDIO.Interface.Install"
+
 ; WDMAud install
 HKLM,%RunOnce%,"WDM_WDMAUD",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_WDMAUD.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_WDMAUD%,%17%\WDMAUDIO.inf,WDM_WDMAUD.Interface.Install"
-; DRMKAUD install
-HKLM,%RunOnce%,"WDM_DRMKAUD",,"rundll32.exe streamci,StreamingDeviceSetup %WDM_DRMKAUD.DeviceId%,%KSNAME_DRMKAUD%,%KSCATEGORY_DRM_DESCRAMBLE%,%17%\WDMAUDIO.inf,WDM_DRMKAUD.Interface.Install"
 
+; DRMKAUD install
+;HKLM,%RunOnce%,"WDM_DRMKAUD",,"rundll32.exe streamci,StreamingDeviceSetup %WDM_DRMKAUD.DeviceId%,%KSNAME_DRMKAUD%,%KSCATEGORY_DRM_DESCRAMBLE%,%17%\WDMAUDIO.inf,WDM_DRMKAUD.Interface.Install"
+
+;--------------------------------------------------------------------------------
+; SysAudio Install
+[WDM_SYSAUDIO.Interface.Install]
+AddReg=WDM_SYSAUDIO.Interface.AddReg
+
+[WDM_SYSAUDIO.Interface.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%WDM_SYSAUDIO.FriendlyName%
+
+[WDM_SYSAUDIO]
+CopyFiles = WDM_SYSAUDIO.CopyFiles
+
+
+[WDM_SYSAUDIO.CopyFiles]
+sysaudio.sys
+
+[WDM_SYSAUDIO.Services]
+AddService = sysaudio,0x00000002, sysaudio_Service_Inst
+
+[sysaudio_Service_Inst]
+DisplayName    = %sysaudio.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\system32\drivers\sysaudio.sys
+
+;--------------------------------------------------------------------------------
+; KMixer Install
+[WDM_KMIXER.Interface.Install]
+AddReg=WDM_KMIXER.Interface.AddReg
+
+[WDM_KMIXER.Interface.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%WDM_KMIXER.FriendlyName%
+
+[WDM_KMIXER]
+CopyFiles = WDM_KMIXER.CopyFiles
+
+[WDM_KMIXER.CopyFiles]
+kmixer.sys
+
+[WDM_KMIXER.Services]
+AddService = kmixer,  0x00000002, kmixer_Service_Inst
+
+[kmixer_Service_Inst]
+DisplayName    = %kmixer.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\system32\drivers\kmixer.sys
 ;--------------------------------------------------------------------------------
 ; WDMAUD Install
 [WDM_WDMAUD.Interface.Install]
@@ -119,6 +180,8 @@ RunOnce = "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce"
 Proxy.CLSID               = "{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
 KSNAME_Filter             = "{9B365890-165F-11D0-A195-0020AFD156E4}"
 KSNAME_DRMKAUD            = "{ABD61E00-9350-47e2-A632-4438B90C6641}"
+WDM_SYSAUDIO.DeviceId     = "{A7C7A5B0-5AF3-11D1-9CED-00A024BF0407}"
+KSCATEGORY_SYSAUDIO       = "{A7C7A5B1-5AF3-11D1-9CED-00A024BF0407}"
 WDM_DRMKAUD.DeviceId      = "{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}"
 KSCATEGORY_DRM_DESCRAMBLE = "{FFBB6E3F-CCFE-4D84-90D9-421418B03A8E}"
 KSCATEGORY_DATATRANSFORM  =  "{2EB07EA0-7E70-11D0-A5D6-28DB04C10000}"
@@ -129,6 +192,12 @@ KSCATEGORY_WDMAUD         = "{3E227E76-690D-11D2-8161-0000F8775BF1}"
 
 
 ;Localizable
+WDM_KMIXER.DeviceDesc     = "ReactOS Wave Audio Mixer"
+WDM_KMIXER.FriendlyName   = "ReactOS Wave Audio Mixer"
+kmixer.SvcDesc            = "ReactOS Wave Audio Mixer"
+WDM_SYSAUDIO.DeviceDesc   = "ReactOS System audio device"
+WDM_SYSAUDIO.FriendlyName = "ReactOS System audio device"
+sysaudio.SvcDesc          = "ReactOS System audio device"
 WDM_DRMKAUD.DeviceDesc    = "ReactOS Trusted Audio Drivers"
 WDM_DRMKAUD.FriendlyName  = "ReactOS Trusted Audio Drivers"
 drmkaud.SvcDesc           = "ReactOS Trusted Audio Drivers"

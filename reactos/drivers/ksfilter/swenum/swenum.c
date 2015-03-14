@@ -110,7 +110,7 @@ SwDispatchPnp(
     Status = KsServiceBusEnumPnpRequest(DeviceObject, Irp);
 
     /* check if the request was for a pdo */
-    if (!ChildDevice)
+    if (ChildDevice)
     {
         if (Status != STATUS_NOT_SUPPORTED)
         {
@@ -144,9 +144,9 @@ SwDispatchPnp(
     if (!NT_SUCCESS(Status))
     {
         /* failed to get pnp object */
-        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return Status;
+        return STATUS_NOT_SUPPORTED;
     }
 
     /* sanity check */

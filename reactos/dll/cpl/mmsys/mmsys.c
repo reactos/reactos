@@ -544,7 +544,7 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
         }
 
         wcscpy(pBuffer, L"inf\\machine.inf");
-        InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM");
+        InstallSoftwareBusPnpEnumerator(szBuffer, L"ROOT\\SWENUM\0");
     }
 
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);

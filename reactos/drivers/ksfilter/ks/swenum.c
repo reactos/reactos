@@ -98,7 +98,7 @@ KspRegisterDeviceAssociation(
     RtlInitUnicodeString(&ReferenceString, DeviceEntry->DeviceName);
 
     /* register device interface */
-    Status = IoRegisterDeviceInterface(BusDeviceExtension->PhysicalDeviceObject, &DeviceEntry->DeviceGuid, NULL, &BusInstanceEntry->SymbolicLink);
+    Status = IoRegisterDeviceInterface(BusDeviceExtension->PhysicalDeviceObject, &BusInstanceEntry->InterfaceGuid, &ReferenceString, &BusInstanceEntry->SymbolicLink);
 
     /* check for success */
     if (!NT_SUCCESS(Status))
@@ -255,8 +255,8 @@ KspCreateDeviceAssociation(
     IN PHANDLE hKey,
     IN PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension,
     IN PBUS_DEVICE_ENTRY DeviceEntry,
-    IN LPWSTR ReferenceString,
-    IN LPWSTR InterfaceString)
+    IN LPWSTR InterfaceString,
+    IN LPWSTR ReferenceString)
 {
     GUID InterfaceGUID;
     NTSTATUS Status;
@@ -699,8 +699,8 @@ KspDoReparseForIrp(
 
     /* construct buffer */
     swprintf(Buffer, L"%s\\%s", DeviceEntry->PDODeviceName, DeviceEntry->Instance);
-
-    ExFreePool(IoStack->FileObject->FileName.Buffer);
+    // HACK
+    //ExFreePool(IoStack->FileObject->FileName.Buffer);
 
     /* store new file name */
     RtlInitUnicodeString(&IoStack->FileObject->FileName, Buffer);
@@ -906,7 +906,7 @@ KspQueryId(
         ASSERT(DeviceEntry->Instance);
 
         /* calculate length */
-        Length = wcslen(DeviceEntry->Instance) + 1;
+        Length = wcslen(DeviceEntry->Instance) + 2;
 
         /* allocate buffer */
         Name = AllocateItem(PagedPool, Length * sizeof(WCHAR));
@@ -945,11 +945,11 @@ KspQueryId(
         Length = wcslen(BusDeviceExtension->BusIdentifier);
         Length += wcslen(DeviceEntry->BusId);
 
-        /* extra length for '\\' and zero byte */
-        Length += 2;
+        /* extra length for '\\' and 2 zero bytes */
+        Length += 4;
 
         /* allocate buffer */
-        Name = ExAllocatePool(PagedPool, Length * sizeof(WCHAR));
+        Name = AllocateItem(PagedPool, Length * sizeof(WCHAR));
         if (!Name)
         {
             /* failed to allocate buffer */
@@ -957,7 +957,10 @@ KspQueryId(
         }
 
         /* construct id */
-        swprintf(Name, L"%s\\%s", BusDeviceExtension->BusIdentifier, DeviceEntry->BusId);
+        wcscpy(Name, BusDeviceExtension->BusIdentifier);
+        wcscat(Name, L"\\");
+        wcscat(Name, DeviceEntry->BusId);
+        //swprintf(Name, L"%s\\%s", BusDeviceExtension->BusIdentifier, DeviceEntry->BusId);
 
         /* store result */
         Irp->IoStatus.Information = (ULONG_PTR)Name;
@@ -1205,7 +1208,7 @@ KspBusWorkerRoutine(
 
                 if (Diff.QuadPart > Int32x32To64(15000, 10000))
                 {
-                     DPRINT1("DeviceID %S  Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n", DeviceEntry->DeviceName, DeviceEntry->Instance, DeviceEntry->TimeCreated.QuadPart, Time.QuadPart, Diff.QuadPart);
+                     //DPRINT1("DeviceID %S  Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n", DeviceEntry->DeviceName, DeviceEntry->Instance, DeviceEntry->TimeCreated.QuadPart, Time.QuadPart, Diff.QuadPart);
 
                      /* release spin lock */
                      KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
@@ -1509,6 +1512,9 @@ KsCreateBusEnumObject(
     UNICODE_STRING ServiceKeyPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\");
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
     PDEV_EXTENSION DeviceExtension;
+    PBUS_DEVICE_ENTRY DeviceEntry;
+    PLIST_ENTRY Entry;
+    KIRQL OldLevel;
 
     DPRINT1("KsCreateBusEnumObject %S BusDeviceObject %p\n", ServiceRelativePath, BusDeviceObject);
 
@@ -1677,6 +1683,39 @@ KsCreateBusEnumObject(
         FreeItem(BusDeviceExtension);
     }
 
+    /* acquire device entry lock */
+    KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
+
+    /* now iterate all device entries */
+    Entry = BusDeviceExtension->Common.Entry.Flink;
+    while(Entry != &BusDeviceExtension->Common.Entry)
+    {
+        /* get device entry */
+        DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
+        if (!DeviceEntry->PDO)
+        {
+            /* release device entry lock */
+            KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+
+            /* create pdo */
+            Status = KspCreatePDO(BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
+
+            /* acquire device entry lock */
+            KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
+
+            /* done */
+            break;
+        }
+        /* move to next entry */
+        Entry = Entry->Flink;
+    }
+
+    /* release device entry lock */
+    KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+
+
+    /* invalidate device relations */
+    IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
     DPRINT("KsCreateBusEnumObject Status %x\n", Status);
     /* done */
     return Status;
@@ -1908,7 +1947,8 @@ KsServiceBusEnumCreateRequest(
             Status =  KspDoReparseForIrp(Irp, DeviceEntry);
             DPRINT("REPARSE Irp %p '%wZ'\n", Irp, &IoStack->FileObject->FileName);
 
-            Irp->IoStatus.Status = Status;
+            Irp->IoStatus.Status = Status; 
+            Irp->IoStatus.Information = IO_REPARSE;
             return Status;
         }
 
@@ -2051,11 +2091,8 @@ KsServiceBusEnumPnpRequest(
             /* set state no notstarted */
             DeviceEntry->DeviceState = NotStarted;
 
-        /* time to create PDO */
-        KspCreatePDO(BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
-
-        /* invalidate device relations */
-        IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
+            /* complete pending irps */
+            KspCompletePendingIrps(DeviceEntry, STATUS_DEVICE_REMOVED);
 
             /* done */
             Status = STATUS_SUCCESS;
