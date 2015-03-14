@@ -926,7 +926,8 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         }
 
         /* You should not have made it this far */
-        ASSERTMSG("System is still up and running?!", FALSE);
+        // ASSERTMSG("System is still up and running?!", FALSE);
+        DPRINT1("System is still up and running, you may not have chosen a yet supported power option: %u\n", PopAction.Action);
         break;
     }
 
