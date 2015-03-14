@@ -2128,6 +2128,7 @@ MsqCleanupThreadMsgs(PTHREADINFO pti)
    {
       CurrentEntry = RemoveHeadList(&pti->DispatchingMessagesHead);
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE, DispatchingListEntry);
+      InitializeListHead(&CurrentSentMessage->DispatchingListEntry);
       CurrentSentMessage->CompletionEvent = NULL;
       CurrentSentMessage->Result = NULL;
 
