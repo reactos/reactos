@@ -24,7 +24,7 @@
 
 #include "precomp.h"
 #include <psdk/stierr.h>
-#include <psdk/winternl.h>
+#include <wine/winternl.h>
 
 void ProcessPage_OnEndProcess(void)
 {

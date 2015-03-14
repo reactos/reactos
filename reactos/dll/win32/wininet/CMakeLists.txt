@@ -4,7 +4,7 @@ add_definitions(
     -D_WINE
     -Dclose=_close)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
                     ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
 spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)

@@ -26,7 +26,7 @@
 #include <stdarg.h>
 #include <limits.h>
 
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <wine/debug.h>
 
 #include "winesup.h"
