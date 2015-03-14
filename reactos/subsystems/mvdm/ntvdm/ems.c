@@ -23,7 +23,7 @@ static RTL_BITMAP AllocBitmap;
 static ULONG BitmapBuffer[(EMS_TOTAL_PAGES + sizeof(ULONG) - 1) / sizeof(ULONG)];
 static EMS_PAGE PageTable[EMS_TOTAL_PAGES];
 static EMS_HANDLE HandleTable[EMS_MAX_HANDLES];
-static PVOID Mapping[EMS_PHYSICAL_PAGES] = {{NULL}};
+static PVOID Mapping[EMS_PHYSICAL_PAGES] = { NULL };
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

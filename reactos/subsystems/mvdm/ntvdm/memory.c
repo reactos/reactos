@@ -36,7 +36,7 @@ typedef struct _MEM_HOOK
 } MEM_HOOK, *PMEM_HOOK;
 
 static LIST_ENTRY HookList;
-static PMEM_HOOK PageTable[TOTAL_PAGES] = {{NULL}};
+static PMEM_HOOK PageTable[TOTAL_PAGES] = { NULL };
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
