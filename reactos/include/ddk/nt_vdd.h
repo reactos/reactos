@@ -28,9 +28,7 @@
 extern "C" {
 #endif
 
-/*
- * VDM Control
- */
+/* VDM Control */
 
 VOID
 WINAPI
@@ -41,251 +39,236 @@ WINAPI
 VDDTerminateVDM(VOID);
 
 
-/*
- * IRQ services
- */
+/* IRQ services */
 
 WORD
 WINAPI
-VDDReserveIrqLine
-(
-    IN HANDLE hVdd,
-    IN WORD   IrqLine
-);
+VDDReserveIrqLine(
+  _In_ HANDLE hVdd,
+  _In_ WORD IrqLine);
 
 BOOL
 WINAPI
-VDDReleaseIrqLine
-(
-    IN HANDLE hVdd,
-    IN WORD   IrqLine
-);
+VDDReleaseIrqLine(
+  _In_ HANDLE hVdd,
+  _In_ WORD IrqLine);
 
 
-/*
- * I/O Port services
- */
+/* I/O Port services */
 
-typedef VOID (WINAPI *PFNVDD_INB)   (WORD iport, PBYTE data);
-typedef VOID (WINAPI *PFNVDD_INW)   (WORD iport, PWORD data);
-typedef VOID (WINAPI *PFNVDD_INSB)  (WORD iport, PBYTE data, WORD count);
-typedef VOID (WINAPI *PFNVDD_INSW)  (WORD iport, PWORD data, WORD count);
-typedef VOID (WINAPI *PFNVDD_OUTB)  (WORD iport, BYTE  data);
-typedef VOID (WINAPI *PFNVDD_OUTW)  (WORD iport, WORD  data);
-typedef VOID (WINAPI *PFNVDD_OUTSB) (WORD iport, PBYTE data, WORD count);
-typedef VOID (WINAPI *PFNVDD_OUTSW) (WORD iport, PWORD data, WORD count);
+typedef VOID
+(WINAPI *PFNVDD_INB)(
+  WORD iport,
+  PBYTE data);
 
-typedef struct _VDD_IO_HANDLERS
-{
-    PFNVDD_INB   inb_handler;
-    PFNVDD_INW   inw_handler;
-    PFNVDD_INSB  insb_handler;
-    PFNVDD_INSW  insw_handler;
-    PFNVDD_OUTB  outb_handler;
-    PFNVDD_OUTW  outw_handler;
-    PFNVDD_OUTSB outsb_handler;
-    PFNVDD_OUTSW outsw_handler;
+typedef VOID
+(WINAPI *PFNVDD_INW)(
+  WORD iport,
+  PWORD data);
+
+typedef VOID
+(WINAPI *PFNVDD_INSB)(
+  WORD iport,
+  PBYTE data,
+  WORD count);
+
+typedef VOID
+(WINAPI *PFNVDD_INSW)(
+  WORD iport,
+  PWORD data,
+  WORD count);
+
+typedef VOID
+(WINAPI *PFNVDD_OUTB)(
+  WORD iport,
+  BYTE data);
+
+typedef VOID
+(WINAPI *PFNVDD_OUTW)(
+  WORD iport,
+  WORD data);
+
+typedef VOID
+(WINAPI *PFNVDD_OUTSB)(
+  WORD iport,
+  PBYTE data,
+  WORD count);
+
+typedef VOID
+(WINAPI *PFNVDD_OUTSW)(
+  WORD iport,
+  PWORD data,
+  WORD count);
+
+typedef struct _VDD_IO_HANDLERS {
+  PFNVDD_INB inb_handler;
+  PFNVDD_INW inw_handler;
+  PFNVDD_INSB insb_handler;
+  PFNVDD_INSW insw_handler;
+  PFNVDD_OUTB outb_handler;
+  PFNVDD_OUTW outw_handler;
+  PFNVDD_OUTSB outsb_handler;
+  PFNVDD_OUTSW outsw_handler;
 } VDD_IO_HANDLERS, *PVDD_IO_HANDLERS;
 
-typedef struct _VDD_IO_PORTRANGE
-{
-    WORD First;
-    WORD Last;
+typedef struct _VDD_IO_PORTRANGE {
+  WORD First;
+  WORD Last;
 } VDD_IO_PORTRANGE, *PVDD_IO_PORTRANGE;
 
 BOOL
 WINAPI
-VDDInstallIOHook
-(
-    IN HANDLE            hVdd,
-    IN WORD              cPortRange,
-    IN PVDD_IO_PORTRANGE pPortRange,
-    IN PVDD_IO_HANDLERS  IOhandler
-);
+VDDInstallIOHook(
+  _In_ HANDLE hVdd,
+  _In_ WORD cPortRange,
+  _In_ PVDD_IO_PORTRANGE pPortRange,
+  _In_ PVDD_IO_HANDLERS IOhandler);
 
 VOID
 WINAPI
-VDDDeInstallIOHook
-(
-    IN HANDLE            hVdd,
-    IN WORD              cPortRange,
-    IN PVDD_IO_PORTRANGE pPortRange
-);
+VDDDeInstallIOHook(
+  _In_ HANDLE hVdd,
+  _In_ WORD cPortRange,
+  _In_ PVDD_IO_PORTRANGE pPortRange);
 
 
-/*
- * DMA services
- */
+/* DMA services */
 
-typedef struct _VDD_DMA_INFO
-{
-    WORD    addr;
-    WORD    count;
-    WORD    page;
-    BYTE    status;
-    BYTE    mode;
-    BYTE    mask;
+typedef struct _VDD_DMA_INFO {
+  WORD addr;
+  WORD count;
+  WORD page;
+  BYTE status;
+  BYTE mode;
+  BYTE mask;
 } VDD_DMA_INFO, *PVDD_DMA_INFO;
 
-#define VDD_DMA_ADDR    0x01
-#define VDD_DMA_COUNT   0x02
-#define VDD_DMA_PAGE    0x04
-#define VDD_DMA_STATUS  0x08
-#define VDD_DMA_ALL     (VDD_DMA_ADDR | VDD_DMA_COUNT | VDD_DMA_PAGE | VDD_DMA_STATUS)
+#define VDD_DMA_ADDR   0x01
+#define VDD_DMA_COUNT  0x02
+#define VDD_DMA_PAGE   0x04
+#define VDD_DMA_STATUS 0x08
+#define VDD_DMA_ALL    (VDD_DMA_ADDR | VDD_DMA_COUNT | VDD_DMA_PAGE | VDD_DMA_STATUS)
 
 DWORD
 WINAPI
-VDDRequestDMA
-(
-    IN HANDLE    hVdd,
-    IN WORD      iChannel,
-    IN OUT PVOID Buffer,
-    IN DWORD     length
-);
+VDDRequestDMA(
+  _In_ HANDLE hVdd,
+  _In_ WORD iChannel,
+  _Inout_ PVOID Buffer,
+  _In_ DWORD length);
 
 BOOL
 WINAPI
-VDDQueryDMA
-(
-    IN HANDLE        hVdd,
-    IN WORD          iChannel,
-    IN PVDD_DMA_INFO pDmaInfo
-);
+VDDQueryDMA(
+  _In_ HANDLE hVdd,
+  _In_ WORD iChannel,
+  _In_ PVDD_DMA_INFO pDmaInfo);
 
 BOOL
 WINAPI
-VDDSetDMA
-(
-    IN HANDLE        hVdd,
-    IN WORD          iChannel,
-    IN WORD          fDMA,
-    IN PVDD_DMA_INFO pDmaInfo
-);
+VDDSetDMA(
+  _In_ HANDLE hVdd,
+  _In_ WORD iChannel,
+  _In_ WORD fDMA,
+  _In_ PVDD_DMA_INFO pDmaInfo);
 
 
-/*
- * Memory services
- */
+/* Memory services */
 
-typedef enum
-{
-    VDM_V86,
-    VDM_PM
+typedef enum {
+  VDM_V86,
+  VDM_PM
 } VDM_MODE;
 
 #ifndef MSW_PE
-#define MSW_PE  0x0001
+#define MSW_PE 0x0001
 #endif
 
 #define getMODE() ((getMSW() & MSW_PE) ? VDM_PM : VDM_V86)
 
 typedef VOID
-(WINAPI *PVDD_MEMORY_HANDLER)
-(
-    PVOID FaultAddress,
-    ULONG RWMode
-);
+(WINAPI *PVDD_MEMORY_HANDLER)(
+  PVOID FaultAddress,
+  ULONG RWMode);
 
 PBYTE
 WINAPI
-Sim32pGetVDMPointer
-(
-    IN ULONG   Address,
-    IN BOOLEAN ProtectedMode
-);
+Sim32pGetVDMPointer(
+  _In_ ULONG Address,
+  _In_ BOOLEAN ProtectedMode);
 
 PBYTE
 WINAPI
-MGetVdmPointer
-(
-    IN ULONG   Address,
-    IN ULONG   Size,
-    IN BOOLEAN ProtectedMode
-);
+MGetVdmPointer(
+  _In_ ULONG Address,
+  _In_ ULONG Size,
+  _In_ BOOLEAN ProtectedMode);
 
 PVOID
 WINAPI
-VdmMapFlat
-(
-    IN USHORT   Segment,
-    IN ULONG    Offset,
-    IN VDM_MODE Mode
-);
+VdmMapFlat(
+  _In_ USHORT Segment,
+  _In_ ULONG Offset,
+  _In_ VDM_MODE Mode);
 
 BOOL
 WINAPI
-VdmFlushCache
-(
-    IN USHORT   Segment,
-    IN ULONG    Offset,
-    IN ULONG    Size,
-    IN VDM_MODE Mode
-);
+VdmFlushCache(
+  _In_ USHORT Segment,
+  _In_ ULONG Offset,
+  _In_ ULONG Size,
+  _In_ VDM_MODE Mode);
 
 BOOL
 WINAPI
-VdmUnmapFlat
-(
-    IN USHORT   Segment,
-    IN ULONG    Offset,
-    IN PVOID    Buffer,
-    IN VDM_MODE Mode
-);
+VdmUnmapFlat(
+  _In_ USHORT Segment,
+  _In_ ULONG Offset,
+  _In_ PVOID Buffer,
+  _In_ VDM_MODE Mode);
 
 BOOL
 WINAPI
-VDDInstallMemoryHook
-(
-    IN HANDLE hVdd,
-    IN PVOID  pStart,
-    IN DWORD  dwCount,
-    IN PVDD_MEMORY_HANDLER MemoryHandler
-);
+VDDInstallMemoryHook(
+  _In_ HANDLE hVdd,
+  _In_ PVOID pStart,
+  _In_ DWORD dwCount,
+  _In_ PVDD_MEMORY_HANDLER MemoryHandler);
 
 BOOL
 WINAPI
-VDDDeInstallMemoryHook
-(
-    IN HANDLE hVdd,
-    IN PVOID  pStart,
-    IN DWORD  dwCount
-);
+VDDDeInstallMemoryHook(
+  _In_ HANDLE hVdd,
+  _In_ PVOID pStart,
+  _In_ DWORD dwCount);
 
 BOOL
 WINAPI
-VDDAllocMem
-(
-    IN HANDLE hVdd,
-    IN PVOID  Address,
-    IN ULONG  Size
-);
+VDDAllocMem(
+  _In_ HANDLE hVdd,
+  _In_ PVOID Address,
+  _In_ ULONG Size);
 
 BOOL
 WINAPI
-VDDFreeMem
-(
-    IN HANDLE hVdd,
-    IN PVOID  Address,
-    IN ULONG  Size
-);
+VDDFreeMem(
+  _In_ HANDLE hVdd,
+  _In_ PVOID Address,
+  _In_ ULONG Size);
 
 BOOL
 WINAPI
-VDDIncludeMem
-(
-    IN HANDLE hVdd,
-    IN PVOID  Address,
-    IN ULONG  Size
-);
+VDDIncludeMem(
+  _In_ HANDLE hVdd,
+  _In_ PVOID Address,
+  _In_ ULONG Size);
 
 BOOL
 WINAPI
-VDDExcludeMem
-(
-    IN HANDLE hVdd,
-    IN PVOID  Address,
-    IN ULONG  Size
-);
+VDDExcludeMem(
+  _In_ HANDLE hVdd,
+  _In_ PVOID Address,
+  _In_ ULONG Size);
 
 #ifdef __cplusplus
 }
