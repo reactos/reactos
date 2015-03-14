@@ -195,6 +195,14 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
+        /* Get EMM Version */
+        case 0x46:
+        {
+            setAH(EMS_STATUS_OK);
+            setAL(EMS_VERSION_NUM);
+            break;
+        }
+
         /* Move/Exchange Memory */
         case 0x57:
         {

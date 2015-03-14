@@ -26,6 +26,8 @@
 #include "vidbios32.h"
 #include "moubios32.h"
 
+#include "ems.h"
+
 #include "io.h"
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
@@ -665,6 +667,9 @@ Bios32Post(VOID)
 
     SearchAndInitRoms(&BiosContext);
 
+    /* Initialize EMS */
+    EmsInitialize();
+
     /*
      * End of the 32-bit POST portion. We then fall back into 16-bit where
      * the rest of the POST code is executed, typically calling INT 19h
@@ -726,6 +731,7 @@ BOOLEAN Bios32Initialize(VOID)
 
 VOID Bios32Cleanup(VOID)
 {
+    EmsCleanup();
     MouseBios32Cleanup();
     VidBios32Cleanup();
     KbdBios32Cleanup();

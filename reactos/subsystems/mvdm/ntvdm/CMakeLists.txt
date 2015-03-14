@@ -10,6 +10,7 @@ list(APPEND SOURCE
     bios/bios32/kbdbios32.c
     bios/bios32/vidbios32.c
     bios/bios32/moubios32.c
+    bios/bios32/ems.c
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c
@@ -33,7 +34,6 @@ list(APPEND SOURCE
     dos/mouse32.c
     dos/dem.c
     clock.c
-    ems.c
     emulator.c
     int32.c
     io.c
