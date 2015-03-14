@@ -93,12 +93,13 @@ WinMain (HINSTANCE hThisInstance,
 {
 	int argc;
 	WCHAR** argv;
+	WCHAR szFileName[MAX_PATH] = L"";
 	DWORD dwSize;
 	HWND hMainWnd;
 	MSG msg;
 	WNDCLASSEXW wincl;
 	LPCWSTR fileName;
-    
+
     switch (GetUserDefaultUILanguage())
     {
     case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -108,7 +109,7 @@ WinMain (HINSTANCE hThisInstance,
     default:
       break;
     }
-    
+
 	g_hInstance = hThisInstance;
 
 	/* Get unicode command line */
@@ -116,7 +117,6 @@ WinMain (HINSTANCE hThisInstance,
 	if (argc < 2)
 	{
 		OPENFILENAMEW fontOpen;
-		WCHAR szFileName[MAX_PATH] = L"";
 		HLOCAL dialogTitle = NULL;
 
 		/* Gets the title for the dialog box ready */
