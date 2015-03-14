@@ -30,6 +30,6 @@
 #include "winbase.h"
 #include "winnt.h"
 #include "winreg.h"
-#include "winternl.h"
 
+#include "wine/winternl.h"
 #include "wine/test.h"

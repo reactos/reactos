@@ -26,7 +26,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnt.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "winerror.h"
 #include "winuser.h"
 #include "wine/exception.h"

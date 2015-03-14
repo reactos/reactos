@@ -34,7 +34,7 @@
 #define WIN32_NO_STATUS
 
 #include "wine/test.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 static NTSTATUS (WINAPI *pNtClose)( PHANDLE );
 static NTSTATUS (WINAPI *pNtOpenFile)    ( PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PIO_STATUS_BLOCK, ULONG, ULONG );

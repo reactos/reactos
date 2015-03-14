@@ -23,7 +23,7 @@
  */
 
 #include "ntdll_test.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "stdio.h"
 #include "winnt.h"
 #include "winnls.h"

@@ -36,7 +36,7 @@
 #include "winnls.h"
 #include "winuser.h"
 #include "wine/test.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 #ifndef __WINE_WINTERNL_H
 typedef unsigned short RTL_ATOM, *PRTL_ATOM;

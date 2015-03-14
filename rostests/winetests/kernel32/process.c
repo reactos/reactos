@@ -31,8 +31,8 @@
 #include "winuser.h"
 #include "wincon.h"
 #include "winnls.h"
-#include "winternl.h"
 
+#include "wine/winternl.h"
 #include "wine/test.h"
 
 /* PROCESS_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */

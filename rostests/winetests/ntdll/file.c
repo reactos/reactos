@@ -34,7 +34,7 @@
 #define WIN32_NO_STATUS
 
 #include "wine/test.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "winuser.h"
 #include "wine/winioctl.h"
 
