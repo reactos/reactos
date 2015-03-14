@@ -1798,9 +1798,7 @@ static BOOL is_incomplete_chunk(const UCHAR *compressed, ULONG compressed_size, 
 }
 
 #define DECOMPRESS_BROKEN_TRUNCATED    1
-#define DECOMPRESS_BROKEN_FRAGMENT0    2
-#define DECOMPRESS_BROKEN_FRAGMENT1    4
-#define DECOMPRESS_BROKEN_FRAGMENT4095 8
+#define DECOMPRESS_BROKEN_FRAGMENT     2
 
 static void test_RtlDecompressBuffer(void)
 {
@@ -1824,9 +1822,7 @@ static void test_RtlDecompressBuffer(void)
             STATUS_SUCCESS,
             "Wine",
             4,
-            DECOMPRESS_BROKEN_FRAGMENT4095 |
-            DECOMPRESS_BROKEN_FRAGMENT1 |
-            DECOMPRESS_BROKEN_FRAGMENT0
+            DECOMPRESS_BROKEN_FRAGMENT
         },
         /* 8 byte uncompressed chunk */
         {
@@ -1835,9 +1831,7 @@ static void test_RtlDecompressBuffer(void)
             STATUS_SUCCESS,
             "WineWine",
             8,
-            DECOMPRESS_BROKEN_FRAGMENT4095 |
-            DECOMPRESS_BROKEN_FRAGMENT1 |
-            DECOMPRESS_BROKEN_FRAGMENT0
+            DECOMPRESS_BROKEN_FRAGMENT
         },
         /* 4 byte compressed chunk */
         {
@@ -1897,9 +1891,7 @@ static void test_RtlDecompressBuffer(void)
             STATUS_SUCCESS,
             "Wine",
             4,
-            DECOMPRESS_BROKEN_FRAGMENT4095 |
-            DECOMPRESS_BROKEN_FRAGMENT1 |
-            DECOMPRESS_BROKEN_FRAGMENT0
+            DECOMPRESS_BROKEN_FRAGMENT
         },
         /* compressed chunk using backwards reference with 4 bit offset, 12 bit length */
         {
@@ -1930,9 +1922,7 @@ static void test_RtlDecompressBuffer(void)
             STATUS_SUCCESS,
             "Wine",
             4,
-            DECOMPRESS_BROKEN_FRAGMENT4095 |
-            DECOMPRESS_BROKEN_FRAGMENT1 |
-            DECOMPRESS_BROKEN_FRAGMENT0
+            DECOMPRESS_BROKEN_FRAGMENT
         },
         /* compressed chunk with invalid magic */
         {
@@ -2057,7 +2047,8 @@ static void test_RtlDecompressBuffer(void)
         memset(buf, 0x11, sizeof(buf));
         status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
                                       test_lznt[i].compressed_size, &final_size);
-        ok(status == test_lznt[i].status, "%d: got wrong status 0x%08x\n", i, status);
+        ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT)), "%d: got wrong status 0x%08x\n", i, status);
         if (!status)
         {
             ok(final_size == test_lznt[i].uncompressed_size,
@@ -2073,7 +2064,8 @@ static void test_RtlDecompressBuffer(void)
         memset(buf, 0x11, sizeof(buf));
         status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1 | COMPRESSION_ENGINE_MAXIMUM, buf, sizeof(buf),
                                       test_lznt[i].compressed, test_lznt[i].compressed_size, &final_size);
-        ok(status == test_lznt[i].status, "%d: got wrong status 0x%08x\n", i, status);
+        ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT)), "%d: got wrong status 0x%08x\n", i, status);
         if (!status)
         {
             ok(final_size == test_lznt[i].uncompressed_size,
@@ -2145,7 +2137,7 @@ static void test_RtlDecompressBuffer(void)
         status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
                                         test_lznt[i].compressed_size, 0, &final_size, workspace);
         ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
-           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT0)), "%d: got wrong status 0x%08x\n", i, status);
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT)), "%d: got wrong status 0x%08x\n", i, status);
         if (!status)
         {
             ok(final_size == test_lznt[i].uncompressed_size,
@@ -2162,7 +2154,7 @@ static void test_RtlDecompressBuffer(void)
         status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
                                         test_lznt[i].compressed_size, 1, &final_size, workspace);
         ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
-           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT1)), "%d: got wrong status 0x%08x\n", i, status);
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT)), "%d: got wrong status 0x%08x\n", i, status);
         if (!status)
         {
             if (test_lznt[i].uncompressed_size == 0)
@@ -2191,7 +2183,7 @@ static void test_RtlDecompressBuffer(void)
         status = pRtlDecompressFragment(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_lznt[i].compressed,
                                         test_lznt[i].compressed_size, 4095, &final_size, workspace);
         ok(status == test_lznt[i].status || broken(status == STATUS_BAD_COMPRESSION_BUFFER &&
-           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT4095)), "%d: got wrong status 0x%08x\n", i, status);
+           (test_lznt[i].broken_flags & DECOMPRESS_BROKEN_FRAGMENT)), "%d: got wrong status 0x%08x\n", i, status);
         if (!status)
         {
             todo_wine
@@ -2226,7 +2218,8 @@ static void test_RtlDecompressBuffer(void)
     memset(buf, 0x11, sizeof(buf));
     status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, sizeof(buf), test_multiple_chunks,
                                   sizeof(test_multiple_chunks), &final_size);
-    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
     if (!status)
     {
         ok(final_size == 4100, "got wrong final_size %d\n", final_size);
@@ -2240,7 +2233,8 @@ static void test_RtlDecompressBuffer(void)
     memset(buf, 0x11, sizeof(buf));
     status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 4097, test_multiple_chunks,
                                   sizeof(test_multiple_chunks), &final_size);
-    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
     if (!status)
     {
         ok(final_size == 4097, "got wrong final_size %d\n", final_size);
@@ -2254,7 +2248,8 @@ static void test_RtlDecompressBuffer(void)
     memset(buf, 0x11, sizeof(buf));
     status = pRtlDecompressBuffer(COMPRESSION_FORMAT_LZNT1, buf, 4096, test_multiple_chunks,
                                   sizeof(test_multiple_chunks), &final_size);
-    ok(status == STATUS_SUCCESS, "got wrong status 0x%08x\n", status);
+    ok(status == STATUS_SUCCESS || broken(status == STATUS_BAD_COMPRESSION_BUFFER),
+       "got wrong status 0x%08x\n", status);
     if (!status)
     {
         ok(final_size == 4, "got wrong final_size %d\n", final_size);
