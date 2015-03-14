@@ -1,4 +1,6 @@
 
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
 list(APPEND SOURCE
     avisplitter.c
     dsoundrender.c
