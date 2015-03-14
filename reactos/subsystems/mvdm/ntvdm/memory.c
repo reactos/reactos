@@ -36,7 +36,7 @@ typedef struct _MEM_HOOK
 } MEM_HOOK, *PMEM_HOOK;
 
 static LIST_ENTRY HookList;
-static PMEM_HOOK PageTable[TOTAL_PAGES];
+static PMEM_HOOK PageTable[TOTAL_PAGES] = {{NULL}};
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -144,8 +144,6 @@ MemRead(ULONG Address, PVOID Buffer, ULONG Size)
     ULONG i, Offset, Length;
     ULONG FirstPage = Address >> 12;
     ULONG LastPage = (Address + Size - 1) >> 12;
-
-    MemFastMoveMemory(Buffer, REAL_TO_PHYS(Address), Size);
 
     if (FirstPage == LastPage)
     {
@@ -538,8 +536,7 @@ MemCleanup(VOID)
     SIZE_T MemorySize = MAX_ADDRESS;
     PLIST_ENTRY Pointer;
 
-    // while (!IsListEmpty(&HookList))
-    while (HookList.Flink != &HookList)
+    while (!IsListEmpty(&HookList))
     {
         Pointer = RemoveHeadList(&HookList);
         RtlFreeHeap(RtlGetProcessHeap(), 0, CONTAINING_RECORD(Pointer, MEM_HOOK, Entry));

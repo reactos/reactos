@@ -139,7 +139,7 @@ VOID CpuSimulate(VOID)
                      EXCEPTION_EXECUTE_HANDLER)
         {
             BOOLEAN Writing = (LocalExceptionRecord.ExceptionInformation[0] == 1);
-            ULONG FaultAddress = (ULONG)LocalExceptionRecord.ExceptionInformation[1];
+            ULONG FaultAddress = (ULONG)PHYS_TO_REAL(LocalExceptionRecord.ExceptionInformation[1]);
 
             /* Make sure this was an access violation */
             ASSERT(LocalExceptionRecord.ExceptionCode == EXCEPTION_ACCESS_VIOLATION);

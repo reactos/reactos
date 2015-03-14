@@ -23,7 +23,7 @@ static RTL_BITMAP AllocBitmap;
 static ULONG BitmapBuffer[(EMS_TOTAL_PAGES + sizeof(ULONG) - 1) / sizeof(ULONG)];
 static EMS_PAGE PageTable[EMS_TOTAL_PAGES];
 static EMS_HANDLE HandleTable[EMS_MAX_HANDLES];
-static PVOID Mapping[EMS_PHYSICAL_PAGES] = { NULL };
+static PVOID Mapping[EMS_PHYSICAL_PAGES] = {{NULL}};
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -42,7 +42,7 @@ static USHORT EmsFree(USHORT Handle)
          Entry = Entry->Flink)
     {
         PEMS_PAGE PageEntry = (PEMS_PAGE)CONTAINING_RECORD(Entry, EMS_PAGE, Entry);
-        ULONG PageNumber = (ULONG)(((ULONG_PTR)PageEntry - (ULONG_PTR)PageTable) / sizeof(EMS_PAGE));
+        ULONG PageNumber = ARRAY_INDEX(PageEntry, PageTable);
 
         /* Free the page */
         RtlClearBits(&AllocBitmap, PageNumber, 1);
@@ -223,10 +223,10 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                     break;
                 }
 
-                SourcePtr = (PUCHAR)(EMS_ADDRESS
-                                     + ARRAY_INDEX(PageEntry, PageTable)
-                                     * EMS_PAGE_SIZE
-                                     + Data->SourceOffset);
+                SourcePtr = (PUCHAR)REAL_TO_PHYS(EMS_ADDRESS
+                                                 + ARRAY_INDEX(PageEntry, PageTable)
+                                                 * EMS_PAGE_SIZE
+                                                 + Data->SourceOffset);
             }
             else
             {
@@ -253,10 +253,10 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                     break;
                 }
 
-                DestPtr = (PUCHAR)(EMS_ADDRESS
-                                   + ARRAY_INDEX(PageEntry, PageTable)
-                                   * EMS_PAGE_SIZE
-                                   + Data->DestOffset);
+                DestPtr = (PUCHAR)REAL_TO_PHYS(EMS_ADDRESS
+                                               + ARRAY_INDEX(PageEntry, PageTable)
+                                               * EMS_PAGE_SIZE
+                                               + Data->DestOffset);
             }
             else
             {
@@ -324,7 +324,7 @@ VOID EmsInitialize(VOID)
         InitializeListHead(&HandleTable[i].PageList);
     }
 
-    MemInstallFastMemoryHook(SEG_OFF_TO_PTR(EMS_SEGMENT, 0),
+    MemInstallFastMemoryHook((PVOID)TO_LINEAR(EMS_SEGMENT, 0),
                              EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
                              EmsReadMemory,
                              EmsWriteMemory);
@@ -334,6 +334,6 @@ VOID EmsInitialize(VOID)
 
 VOID EmsCleanup(VOID)
 {
-    MemRemoveFastMemoryHook(SEG_OFF_TO_PTR(EMS_SEGMENT, 0),
+    MemRemoveFastMemoryHook((PVOID)TO_LINEAR(EMS_SEGMENT, 0),
                             EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE);
 }
