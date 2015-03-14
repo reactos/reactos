@@ -27,7 +27,7 @@
 #define WIN32_NO_STATUS
 #include <wine/test.h>
 #include <winsock2.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <ws2tcpip.h>
 #include <wsipx.h>
 #include <wsnwlink.h>
