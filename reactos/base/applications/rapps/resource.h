@@ -45,6 +45,11 @@
 #define IDC_INSTALL_TEXT         1010
 #define IDC_CD_INSTALL           1011
 #define IDC_DOWNLOAD_INSTALL     1012
+#define IDC_PROXY_DEFAULT        1013
+#define IDC_NO_PROXY             1014
+#define IDC_USE_PROXY            1015
+#define IDC_PROXY_SERVER         1016
+#define IDC_NO_PROXY_FOR         1017
 
 /* Dialogs */
 #define IDD_SETTINGS_DIALOG      300

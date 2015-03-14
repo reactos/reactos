@@ -57,6 +57,11 @@ InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
 
     SetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
                    Info->szDownloadDir);
+
+    CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT+Info->Proxy);
+
+    SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
+    SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
 }
 
 static
@@ -96,6 +101,18 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                     IS_CHECKED(NewSettingsInfo.bDelInstaller, IDC_DEL_AFTER_INSTALL);
                     break;
 
+                case IDC_PROXY_DEFAULT:
+                    NewSettingsInfo.Proxy = 0;
+                    break;
+
+                case IDC_NO_PROXY:
+                    NewSettingsInfo.Proxy = 1;
+                    break;
+
+                case IDC_USE_PROXY:
+                    NewSettingsInfo.Proxy = 2;
+                    break;
+
                 case IDC_DEFAULT_SETTINGS:
                     FillDefaultSettings(&NewSettingsInfo);
                     InitSettingsControls(hDlg, &NewSettingsInfo);
@@ -104,10 +121,20 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                 case IDOK:
                 {
                     WCHAR szDir[MAX_PATH];
+                    WCHAR szProxy[MAX_PATH];
+                    WCHAR szNoProxy[MAX_PATH];
                     DWORD dwAttr;
 
                     GetWindowTextW(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT),
                                    szDir, MAX_PATH);
+
+                    GetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER),
+                                   szProxy, MAX_PATH);
+                    StringCbCopyW(NewSettingsInfo.szProxyServer, sizeof(NewSettingsInfo.szProxyServer), szProxy);
+
+                    GetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR),
+                                   szNoProxy, MAX_PATH);
+                    StringCbCopyW(NewSettingsInfo.szNoProxyFor, sizeof(NewSettingsInfo.szNoProxyFor), szNoProxy);
 
                     dwAttr = GetFileAttributesW(szDir);
                     if (dwAttr != INVALID_FILE_ATTRIBUTES &&
@@ -132,9 +159,11 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                                 EndDialog(hDlg, LOWORD(wParam));
                             }
                         }
-
-                        SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
-                        break;
+                        else
+                        {
+                            SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
+                            break;
+                        }
                     }
 
                     SettingsInfo = NewSettingsInfo;

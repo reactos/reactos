@@ -220,6 +220,8 @@ ThreadFunc(LPVOID Context)
     HANDLE hOut = INVALID_HANDLE_VALUE;
     unsigned char lpBuffer[4096];
     const LPWSTR lpszAgent = L"RApps/1.0";
+    URL_COMPONENTS urlComponents;
+    size_t urlLength;
 
     /* built the path for the download */
     p = wcsrchr(AppInfo->szUrlDownload, L'/');
@@ -264,16 +266,41 @@ ThreadFunc(LPVOID Context)
     dl = CreateDl(Context, &bCancelled);
     if (dl == NULL) goto end;
 
-    hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    switch(SettingsInfo.Proxy)
+    {
+        case 0: /* preconfig */
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+            break;
+        case 1: /* direct (no proxy) */
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+            break;
+        case 2: /* use proxy */
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PROXY, SettingsInfo.szProxyServer, SettingsInfo.szNoProxyFor, 0);
+            break;
+        default: /* preconfig */
+            hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+            break;
+    }
     if (!hOpen) goto end;
 
     hFile = InternetOpenUrlW(hOpen, AppInfo->szUrlDownload, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE|INTERNET_FLAG_KEEP_CONNECTION, 0);
-    if(!hFile) goto end;
+    if (!hFile) goto end;
+
+    memset(&urlComponents, 0, sizeof(urlComponents));
+    urlComponents.dwStructSize = sizeof(urlComponents);
+    if(FAILED(StringCbLengthW(AppInfo->szUrlDownload, sizeof(AppInfo->szUrlDownload), &urlLength))) goto end;
+    urlComponents.dwSchemeLength = urlLength*sizeof(WCHAR);
+    urlComponents.lpszScheme = malloc(urlComponents.dwSchemeLength);
+    if(!InternetCrackUrlW(AppInfo->szUrlDownload, urlLength+1, ICU_DECODE | ICU_ESCAPE, &urlComponents)) goto end;
+    if(urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+        HttpQueryInfo(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwBufLen, 0);
+    if(urlComponents.nScheme == INTERNET_SCHEME_FTP)
+        dwContentLen = FtpGetFileSize(hFile, &dwBufLen);
+    free(urlComponents.lpszScheme);
 
     hOut = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
     if (hOut == INVALID_HANDLE_VALUE) goto end;
 
-    HttpQueryInfo(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwBufLen, 0);
 
     do
     {

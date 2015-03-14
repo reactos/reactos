@@ -104,6 +104,10 @@ typedef struct
     INT Top;
     INT Width;
     INT Height;
+    /* Proxy settings */
+    INT Proxy;
+    WCHAR szProxyServer[MAX_PATH];
+    WCHAR szNoProxyFor[MAX_PATH];
 
 } SETTINGS_INFO, *PSETTINGS_INFO;
 

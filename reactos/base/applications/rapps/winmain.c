@@ -46,6 +46,10 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->Top = CW_USEDEFAULT;
     pSettingsInfo->Width = 680;
     pSettingsInfo->Height = 450;
+
+    pSettingsInfo->Proxy = 0;
+    StringCbCopyW(pSettingsInfo->szProxyServer, sizeof(pSettingsInfo->szProxyServer), L"");
+    StringCbCopyW(pSettingsInfo->szNoProxyFor, sizeof(pSettingsInfo->szNoProxyFor), L"");
 }
 
 static BOOL
