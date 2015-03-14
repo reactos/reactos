@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Acerca de", CMD_ABOUT
-        MENUITEM "&Información...", CMD_ABOUT_WINE
+        MENUITEM "&Información...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

@@ -70,7 +70,7 @@ BEGIN
         MENUITEM "M&anualul manualului", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Despre…", CMD_ABOUT
-        MENUITEM "&Info…", CMD_ABOUT_WINE
+        MENUITEM "&Info…", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

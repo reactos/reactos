@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "Laguntzari buruz laguntza", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Ohar-blokari buruz", CMD_ABOUT
-        MENUITEM "&Informazioa...", CMD_ABOUT_WINE
+        MENUITEM "&Informazioa...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

@@ -48,7 +48,7 @@ static BOOL Append(LPWSTR *ppszText, DWORD *pdwTextLen, LPCWSTR pszAppendText, D
 }
 
 BOOL
-ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln)
+ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *pencFile, int *piEoln)
 {
     DWORD dwSize;
     LPBYTE pBytes = NULL;
@@ -58,7 +58,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int
     DWORD dwCharCount;
     BOOL bSuccess = FALSE;
     BYTE b = 0;
-    int iEncoding = ENCODING_ANSI;
+    int encFile = ENCODING_ANSI;
     int iCodePage = 0;
     WCHAR szCrlf[2] = {'\r', '\n'};
     DWORD adwEolnCount[3] = {0, 0, 0};
@@ -85,21 +85,21 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int
     /* Look for Byte Order Marks */
     if ((dwSize >= 2) && (pBytes[0] == 0xFF) && (pBytes[1] == 0xFE))
     {
-        iEncoding = ENCODING_UNICODE;
+        encFile = ENCODING_UNICODE;
         dwPos += 2;
     }
     else if ((dwSize >= 2) && (pBytes[0] == 0xFE) && (pBytes[1] == 0xFF))
     {
-        iEncoding = ENCODING_UNICODE_BE;
+        encFile = ENCODING_UNICODE_BE;
         dwPos += 2;
     }
     else if ((dwSize >= 3) && (pBytes[0] == 0xEF) && (pBytes[1] == 0xBB) && (pBytes[2] == 0xBF))
     {
-        iEncoding = ENCODING_UTF8;
+        encFile = ENCODING_UTF8;
         dwPos += 3;
     }
 
-    switch(iEncoding)
+    switch(encFile)
     {
     case ENCODING_UNICODE_BE:
         for (i = dwPos; i < dwSize-1; i += 2)
@@ -117,9 +117,9 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int
 
     case ENCODING_ANSI:
     case ENCODING_UTF8:
-        if (iEncoding == ENCODING_ANSI)
+        if (encFile == ENCODING_ANSI)
             iCodePage = CP_ACP;
-        else if (iEncoding == ENCODING_UTF8)
+        else if (encFile == ENCODING_UTF8)
             iCodePage = CP_UTF8;
 
         if ((dwSize - dwPos) > 0)
@@ -166,7 +166,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int
         case '\n':
             if (!Append(ppszText, pdwTextLen, &pszText[dwPos], i - dwPos))
                 return FALSE;
-            if (!Append(ppszText, pdwTextLen, szCrlf, sizeof(szCrlf) / sizeof(szCrlf[0])))
+            if (!Append(ppszText, pdwTextLen, szCrlf, ARRAY_SIZE(szCrlf)))
                 return FALSE;
             dwPos = i + 1;
 
@@ -202,7 +202,7 @@ ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int
         *piEoln = EOLN_LF;
     if (adwEolnCount[EOLN_CR] > adwEolnCount[*piEoln])
         *piEoln = EOLN_CR;
-    *piEncoding = iEncoding;
+    *pencFile = encFile;
 
     bSuccess = TRUE;
 
@@ -221,7 +221,7 @@ done:
     return bSuccess;
 }
 
-static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding)
+static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int encFile)
 {
     LPBYTE pBytes = NULL;
     LPBYTE pAllocBuffer = NULL;
@@ -236,7 +236,7 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 
     while(dwPos < dwTextLen)
     {
-        switch(iEncoding)
+        switch(encFile)
         {
             case ENCODING_UNICODE:
                 pBytes = (LPBYTE) &pszText[dwPos];
@@ -262,9 +262,9 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 
             case ENCODING_ANSI:
             case ENCODING_UTF8:
-                if (iEncoding == ENCODING_ANSI)
+                if (encFile == ENCODING_ANSI)
                     iCodePage = CP_ACP;
-                else if (iEncoding == ENCODING_UTF8)
+                else if (encFile == ENCODING_UTF8)
                     iCodePage = CP_UTF8;
 
                 iRequiredBytes = WideCharToMultiByte(iCodePage, 0, &pszText[dwPos], dwTextLen - dwPos, NULL, 0, NULL, NULL);
@@ -315,17 +315,17 @@ done:
     return bSuccess;
 }
 
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln)
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int encFile, int iEoln)
 {
     WCHAR wcBom;
     LPCWSTR pszLF = L"\n";
     DWORD dwPos, dwNext;
 
     /* Write the proper byte order marks if not ANSI */
-    if (iEncoding != ENCODING_ANSI)
+    if (encFile != ENCODING_ANSI)
     {
         wcBom = 0xFEFF;
-        if (!WriteEncodedText(hFile, &wcBom, 1, iEncoding))
+        if (!WriteEncodedText(hFile, &wcBom, 1, encFile))
             return FALSE;
     }
 
@@ -350,20 +350,20 @@ BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, in
             {
             case EOLN_LF:
                 /* Write text (without eoln) */
-                if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
+                if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, encFile))
                     return FALSE;
                 /* Write eoln */
-                if (!WriteEncodedText(hFile, pszLF, 1, iEncoding))
+                if (!WriteEncodedText(hFile, pszLF, 1, encFile))
                     return FALSE;
                 break;
             case EOLN_CR:
                 /* Write text (including \r as eoln) */
-                if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 1, iEncoding))
+                if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 1, encFile))
                     return FALSE;
                 break;
             case EOLN_CRLF:
                 /* Write text (including \r\n as eoln) */
-                if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 2, iEncoding))
+                if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 2, encFile))
                     return FALSE;
                 break;
             default:
@@ -373,7 +373,7 @@ BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, in
         else
         {
             /* Write text (without eoln, since this is the end of the file) */
-            if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
+            if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, encFile))
                 return FALSE;
         }
 

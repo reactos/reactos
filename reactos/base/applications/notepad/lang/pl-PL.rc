@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "Pomo&c", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Notatnik - informacje", CMD_ABOUT
-        MENUITEM "&ReactOS - informacje", CMD_ABOUT_WINE
+        MENUITEM "&ReactOS - informacje", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

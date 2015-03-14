@@ -21,7 +21,7 @@
 
 #pragma once
 
-#define SIZEOF(a) (sizeof(a)/sizeof((a)[0]))
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof((a)[0]))
 
 #include "notepad_res.h"
 
@@ -33,10 +33,22 @@
 
 #define MAX_STRING_LEN      255
 
-#define ENCODING_ANSI       0
+/* Values are indexes of the items in the Encoding combobox. */
+typedef enum
+{
+    ENCODING_AUTO    = -1,
+    ENCODING_ANSI    =  0,
+    ENCODING_UTF16LE =  1,
+    ENCODING_UTF16BE =  2,
+    ENCODING_UTF8    =  3
+} ENCODING;
+// #define ENCODING_ANSI       0
 #define ENCODING_UNICODE    1
 #define ENCODING_UNICODE_BE 2
-#define ENCODING_UTF8       3
+// #define ENCODING_UTF8       3
+
+// #define MIN_ENCODING   0
+// #define MAX_ENCODING   3
 
 #define EOLN_CRLF           0
 #define EOLN_LF             1
@@ -68,7 +80,8 @@ typedef struct
     TCHAR szHeader[MAX_PATH];
     TCHAR szFooter[MAX_PATH];
     TCHAR szStatusBarLineCol[MAX_PATH];
-    int iEncoding;
+
+    ENCODING encFile;
     int iEoln;
 
     FINDREPLACE find;
@@ -81,12 +94,12 @@ extern NOTEPAD_GLOBALS Globals;
 VOID SetFileName(LPCTSTR szFileName);
 
 /* from text.c */
-BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln);
-BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln);
+BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *pencFile, int *piEoln);
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int encFile, int iEoln);
 
 /* from settings.c */
-void LoadSettings(void);
-void SaveSettings(void);
+void NOTEPAD_LoadSettingsFromRegistry(void);
+void NOTEPAD_SaveSettingsToRegistry(void);
 
 /* from main.c */
 BOOL NOTEPAD_FindNext(FINDREPLACE *, BOOL , BOOL );

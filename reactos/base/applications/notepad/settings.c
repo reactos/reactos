@@ -105,7 +105,13 @@ static BOOL QueryString(HKEY hKey, LPCTSTR pszValueName, LPTSTR pszResult, DWORD
     return QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultSize * sizeof(TCHAR));
 }
 
-void LoadSettings(void)
+/***********************************************************************
+ *
+ *           NOTEPAD_LoadSettingsFromRegistry
+ *
+ *  Load settings from registry HKCU\Software\Microsoft\Notepad.
+ */
+void NOTEPAD_LoadSettingsFromRegistry(void)
 {
     HKEY hKey = NULL;
     HFONT hFont;
@@ -124,7 +130,7 @@ void LoadSettings(void)
         QueryByte(hKey, _T("lfCharSet"), &Globals.lfFont.lfCharSet);
         QueryByte(hKey, _T("lfClipPrecision"), &Globals.lfFont.lfClipPrecision);
         QueryDword(hKey, _T("lfEscapement"), (DWORD*)&Globals.lfFont.lfEscapement);
-        QueryString(hKey, _T("lfFaceName"), Globals.lfFont.lfFaceName, sizeof(Globals.lfFont.lfFaceName) / sizeof(Globals.lfFont.lfFaceName[0]));
+        QueryString(hKey, _T("lfFaceName"), Globals.lfFont.lfFaceName, ARRAY_SIZE(Globals.lfFont.lfFaceName));
         QueryByte(hKey, _T("lfItalic"), &Globals.lfFont.lfItalic);
         QueryDword(hKey, _T("lfOrientation"), (DWORD*)&Globals.lfFont.lfOrientation);
         QueryByte(hKey, _T("lfOutPrecision"), &Globals.lfFont.lfOutPrecision);
@@ -136,8 +142,8 @@ void LoadSettings(void)
         QueryDword(hKey, _T("iPointSize"), &dwPointSize);
         QueryBool(hKey, _T("fWrap"), &Globals.bWrapLongLines);
         QueryBool(hKey, _T("fStatusBar"), &Globals.bShowStatusBar);
-        QueryString(hKey, _T("szHeader"), Globals.szHeader, sizeof(Globals.szHeader) / sizeof(Globals.szHeader[0]));
-        QueryString(hKey, _T("szTrailer"), Globals.szFooter, sizeof(Globals.szFooter) / sizeof(Globals.szFooter[0]));
+        QueryString(hKey, _T("szHeader"), Globals.szHeader, ARRAY_SIZE(Globals.szHeader));
+        QueryString(hKey, _T("szTrailer"), Globals.szFooter, ARRAY_SIZE(Globals.szFooter));
         QueryDword(hKey, _T("iMarginLeft"), (DWORD*)&Globals.lMarginLeft);
         QueryDword(hKey, _T("iMarginTop"), (DWORD*)&Globals.lMarginTop);
         QueryDword(hKey, _T("iMarginRight"), (DWORD*)&Globals.lMarginRight);
@@ -179,15 +185,22 @@ static BOOL SaveString(HKEY hKey, LPCTSTR pszValueNameT, LPCTSTR pszValue)
     return RegSetValueEx(hKey, pszValueNameT, 0, REG_SZ, (LPBYTE) pszValue, (DWORD) _tcslen(pszValue) * sizeof(*pszValue)) == ERROR_SUCCESS;
 }
 
-void SaveSettings(void)
+/***********************************************************************
+ *
+ *           NOTEPAD_SaveSettingsToRegistry
+ *
+ *  Save settings to registry HKCU\Software\Microsoft\Notepad.
+ */
+void NOTEPAD_SaveSettingsToRegistry(void)
 {
     HKEY hKey;
     DWORD dwDisposition;
 
     GetWindowRect(Globals.hMainWnd, &Globals.main_rect);
 
-    if (RegCreateKeyEx(HKEY_CURRENT_USER, s_szRegistryKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition)
-        == ERROR_SUCCESS)
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, s_szRegistryKey,
+                       0, NULL, 0, KEY_ALL_ACCESS, NULL,
+                       &hKey, &dwDisposition) == ERROR_SUCCESS)
     {
         SaveDword(hKey, _T("lfCharSet"), Globals.lfFont.lfCharSet);
         SaveDword(hKey, _T("lfClipPrecision"), Globals.lfFont.lfClipPrecision);
@@ -214,6 +227,7 @@ void SaveSettings(void)
         SaveDword(hKey, _T("iWindowPosY"), Globals.main_rect.top);
         SaveDword(hKey, _T("iWindowPosDX"), Globals.main_rect.right - Globals.main_rect.left);
         SaveDword(hKey, _T("iWindowPosDY"), Globals.main_rect.bottom - Globals.main_rect.top);
+
         RegCloseKey(hKey);
     }
 }

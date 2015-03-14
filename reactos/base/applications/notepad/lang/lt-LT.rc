@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "&Pagalba", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Apie Notepad", CMD_ABOUT
-        MENUITEM "Apie &ReactOS", CMD_ABOUT_WINE
+        MENUITEM "Apie &ReactOS", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

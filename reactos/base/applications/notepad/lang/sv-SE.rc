@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "Anvisningar för hjälpen", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "Om &Anteckningar", CMD_ABOUT
-        MENUITEM "Inf&ormation...", CMD_ABOUT_WINE
+        MENUITEM "Inf&ormation...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
