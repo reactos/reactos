@@ -74,7 +74,6 @@ WdmAudTimerRoutine(
     IN PVOID Context)
 {
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-    NTSTATUS Status;
 
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -92,8 +91,6 @@ WdmaudAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\wdmaud");
-    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\wdmaud");
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
