@@ -22,7 +22,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <winnt.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <winerror.h>
 #include <stdio.h>
 #include "wine/test.h"

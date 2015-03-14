@@ -24,7 +24,7 @@
 #include "winbase.h"
 #include "initguid.h"
 #include "dshow.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 #include "fil_data.h"
 

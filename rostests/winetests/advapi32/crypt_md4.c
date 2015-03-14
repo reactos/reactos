@@ -26,7 +26,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 typedef struct
 {

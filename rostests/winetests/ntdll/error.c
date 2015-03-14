@@ -31,7 +31,7 @@
 #include "winbase.h"
 #include "rpcnterr.h"
 #include "winreg.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 /* FIXME!!! this test checks only mappings, defined by MSDN
  * It is necessary to add other mappings and to test them
