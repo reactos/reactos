@@ -378,7 +378,7 @@ InitImageList(UINT NumImages, UINT StartResource)
     HIMAGELIST hImageList;
     UINT i, k;
     INT Ret;
-
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Ret);
 
     /* Create the toolbar icon image list */
     hImageList = ImageList_Create(TB_BMP_WIDTH,

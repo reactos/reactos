@@ -80,7 +80,7 @@ INT main (int argc,char **p)
 	/*command line parsing stuff*/
 	LPTSTR tmp;
 	INT i;
-	BOOL bQuote;
+	//BOOL bQuote;
 
 	/*file list implementation*/
 	LPTSTR *files;
@@ -116,7 +116,7 @@ INT main (int argc,char **p)
 	/*parse command line for /a and file name(s)*/
 	for(i=1;i <argc;i++)
 	{
-		bQuote=FALSE;
+		//bQuote=FALSE;
 		add=0;
 
 		if(_tcsnicmp(p[i],_T("/a"),2) == 0)
