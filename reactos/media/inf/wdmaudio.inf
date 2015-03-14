@@ -30,8 +30,6 @@ ExcludeFromSelect = WDMAUDIO_CopyFilesOnlyId
 %WDM_WDMAUD.DeviceDesc%   = WDM_WDMAUD,   SW\{CD171DE3-69E5-11D2-B56D-0000F8754380}
 ;%WDM_DRMKAUD.DeviceDesc%  = WDM_DRMKAUD,  SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 
-%WDMAUDIO_CopyFilesOnlyId.DeviceDesc% = WDMAUDIO.CopyFilesOnly, WDMAUDIO_CopyFilesOnlyId
-
 [WDMAUDIO.CopyFilesOnly]
 CopyFiles=WDM.CopyFiles, FX.CopyList
 
@@ -44,6 +42,12 @@ CopyFiles = WDM.CopyFiles
 [WDMAUDIO.Registration.NT]
 AddReg = DeviceRegistration
 CopyFiles = WDM.CopyFiles
+
+;; copied to system32\drivers
+[WDM.CopyFiles]
+drmk.sys,,,0x0100
+portcls.sys,,,0x0100
+
 
 [DeviceRegistration]
 ; Kmixer swenum install
@@ -160,10 +164,6 @@ StartType      = 3                  ; SERVICE_DEMAND_START
 ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
 ServiceBinary  = %10%\system32\drivers\drmkaud.sys
 
-;; copied to system32\drivers
-[WDM.CopyFiles]
-drmk.sys,,,0x0100
-portcls.sys,,,0x0100
 
 ;; Destination Directory List
 [DestinationDirs]

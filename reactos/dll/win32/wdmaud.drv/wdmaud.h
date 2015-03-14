@@ -8,12 +8,16 @@
 #define COM_NO_WINDOWS_H
 
 #include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+
 #include <winuser.h>
 #include <mmddk.h>
 #include <mmebuddy.h>
 #include <ksmedia.h>
 #include <interface.h>
 #include <devioctl.h>
+#include <setupapi.h>
 
 BOOL
 WdmAudInitUserModeMixer(VOID);

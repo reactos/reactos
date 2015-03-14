@@ -49,9 +49,6 @@ WdmAudControlDeviceType(
 {
     ULONG Result = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-    //PWDMAUD_DEVICE_EXTENSION DeviceExtension;
-
-    //DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
@@ -231,13 +228,9 @@ WdmAudGetDeviceInterface(
     IN  PIRP Irp,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo)
 {
-    //PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     LPWSTR Device;
     ULONG Size, Length;
-
-    /* get device extension */
-    //DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* get device interface string input length */
     Size = DeviceInfo->u.Interface.DeviceInterfaceStringSize;
@@ -420,19 +413,11 @@ IoCompletion (
         /* grab next mdl */
         Mdl = NextMdl;
     }
-
+    //IoFreeMdl(Mdl);
     /* clear mdl list */
-    Irp->MdlAddress = NULL;
+    Irp->MdlAddress = Context->Mdl;
 
-   /* check if mdl is locked */
-    if (Context->Mdl->MdlFlags & MDL_PAGES_LOCKED)
-    {
-        /* unlock pages */
-        MmUnlockPages(Context->Mdl);
-    }
 
-    /* now free the mdl */
-    IoFreeMdl(Context->Mdl);
 
     DPRINT("IoCompletion Irp %p IoStatus %lx Information %lx Length %lu\n", Irp, Irp->IoStatus.Status, Irp->IoStatus.Information, Length);
 
@@ -441,6 +426,9 @@ IoCompletion (
         /* failed */
         Irp->IoStatus.Information = 0;
     }
+
+    /* dereference file object */
+    ObDereferenceObject(Context->FileObject);
 
     /* free context */
     FreeItem(Context);
@@ -502,8 +490,6 @@ WdmAudReadWrite(
     /* remove mdladdress as KsProbeStreamIrp will interprete it as an already probed audio buffer */
     Irp->MdlAddress = NULL;
 
-    /* check for success */
-
     if (IoStack->MajorFunction == IRP_MJ_WRITE)
     {
         /* probe the write stream irp */
@@ -520,6 +506,7 @@ WdmAudReadWrite(
     {
         DPRINT1("KsProbeStreamIrp failed with Status %x Cancel %u\n", Status, Irp->Cancel);
         Irp->MdlAddress = Mdl;
+        FreeItem(Context);
         return SetIrpIoStatus(Irp, Status, 0);
     }
 
@@ -532,8 +519,13 @@ WdmAudReadWrite(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Invalid pin handle %p\n", DeviceInfo->hDevice);
+        Irp->MdlAddress = Mdl;
+        FreeItem(Context);
         return SetIrpIoStatus(Irp, Status, 0);
     }
+
+    /* store file object whose reference is released in the completion callback */
+    Context->FileObject = FileObject;
 
     /* skip current irp stack location */
     IoSkipCurrentIrpStackLocation(Irp);
@@ -541,30 +533,16 @@ WdmAudReadWrite(
     /* get next stack location */
     IoStack = IoGetNextIrpStackLocation(Irp);
 
-    if (Read)
-    {
-        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_READ_STREAM;
-    }
-    else
-    {
-        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_WRITE_STREAM;
-    }
-
-    /* attach file object */
+    /* prepare stack location */
     IoStack->FileObject = FileObject;
     IoStack->Parameters.Write.Length = Length;
     IoStack->MajorFunction = IRP_MJ_WRITE;
-
+    IoStack->Parameters.DeviceIoControl.IoControlCode = (Read ? IOCTL_KS_READ_STREAM : IOCTL_KS_WRITE_STREAM);
     IoSetCompletionRoutine(Irp, IoCompletion, (PVOID)Context, TRUE, TRUE, TRUE);
-
 
     /* mark irp as pending */
 //    IoMarkIrpPending(Irp);
     /* call the driver */
     Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
-
-    /* dereference file object */
-    ObDereferenceObject(FileObject);
-
     return Status;
 }
