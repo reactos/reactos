@@ -66,6 +66,7 @@ ExecuteKill(char * lpPid)
 int main(int argc, char *argv[])
 {
   char tail;
+  DBG_UNREFERENCED_LOCAL_VARIABLE(tail);
 
   if (argc < 2)
   {

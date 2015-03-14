@@ -2056,8 +2056,8 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 	switch(nmsg) {
 		case WM_CLOSE:
 			if (Globals.saveSettings)
-				save_registry_settings();  
-			
+				save_registry_settings();
+
 			DestroyWindow(hwnd);
 
 			 /* clear handle variables */
@@ -4278,7 +4278,7 @@ static BOOL show_frame(HWND hwndParent, int cmdshow, LPCWSTR path)
 					WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
 					0, 0, 0, 0,
 					Globals.hMainWnd, 0, Globals.hInstance, &ccs);
-  
+
 	CheckMenuItem(Globals.hMenuOptions, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
 	CheckMenuItem(Globals.hMenuOptions, ID_VIEW_SAVESETTINGS, MF_BYCOMMAND);
 
@@ -4313,7 +4313,7 @@ static BOOL show_frame(HWND hwndParent, int cmdshow, LPCWSTR path)
 
 #ifndef __WINE__
 	 /* Shell Namespace as default: */
-	child = alloc_child_window(path, get_path_pidl(path,Globals.hMainWnd), Globals.hMainWnd);
+	child = alloc_child_window(path, get_path_pidl((LPWSTR)path,Globals.hMainWnd), Globals.hMainWnd);
 #else
 	child = alloc_child_window(path, NULL, Globals.hMainWnd);
 #endif

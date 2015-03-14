@@ -276,6 +276,8 @@ ScreenWrite(
 	ULONG Columns, Rows;
 	ULONG CursorX, CursorY;
 	ULONG i, j;
+	DBG_UNREFERENCED_LOCAL_VARIABLE(VideoMemory);
+	DBG_UNREFERENCED_LOCAL_VARIABLE(VideoMemorySize);
 
 	DPRINT("ScreenWrite() called\n");
 
