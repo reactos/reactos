@@ -294,45 +294,57 @@ public:
     HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
     {
         if (LOWORD(lParam) != 0)
+        {
+            DbgPrint("Unsupported sorting mode.\n");
             return E_INVALIDARG;
-
-        if (second->cb > first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->cb < first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (second->entryNameLength > first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->entryNameLength < first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
+        }
 
         if (HIWORD(lParam) == SHCIDS_ALLFIELDS)
         {
-            int ord = memcmp(second, first, first->cb);
+            int minsize = min(first->cb, second->cb);
+            int ord = memcmp(second, first, minsize);
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+            if (second->cb > first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            if (second->cb < first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
         else if (HIWORD(lParam) == SHCIDS_CANONICALONLY)
         {
-            int ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength);
+            int minlength = min(first->entryNameLength, second->entryNameLength);
+            int ord = StrCmpNW(first->entryName, second->entryName, minlength);
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+            if (second->entryNameLength > first->entryNameLength)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            if (second->entryNameLength < first->entryNameLength)
+                return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
         else
         {
-            int ord = (int) second->objectType - (int) first->objectType;
+            bool f1 = (first->objectType == DIRECTORY_OBJECT) || (first->objectType == KEY_OBJECT);
+            bool f2 = (second->objectType == DIRECTORY_OBJECT) || (second->objectType == KEY_OBJECT);
 
-            if (ord > 0)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (ord < 0)
+            if (f1 && !f2)
                 return MAKE_HRESULT(0, 0, (USHORT) -1);
+            if (f2 && !f1)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
 
-            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength / sizeof(WCHAR));
+            int minlength = min(first->entryNameLength, second->entryNameLength);
+            int ord = StrCmpNW(first->entryName, second->entryName, minlength);
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+            if (second->entryNameLength > first->entryNameLength)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            if (second->entryNameLength < first->entryNameLength)
+                return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
 
         return S_OK;
