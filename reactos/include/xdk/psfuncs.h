@@ -41,15 +41,16 @@ NtOpenProcess(
   _In_ POBJECT_ATTRIBUTES ObjectAttributes,
   _In_opt_ PCLIENT_ID ClientId);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationProcess(
-  IN HANDLE ProcessHandle,
-  IN PROCESSINFOCLASS ProcessInformationClass,
-  OUT PVOID ProcessInformation OPTIONAL,
-  IN ULONG ProcessInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE ProcessHandle,
+  _In_ PROCESSINFOCLASS ProcessInformationClass,
+  _Out_ PVOID ProcessInformation,
+  _In_ ULONG ProcessInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 

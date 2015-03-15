@@ -507,6 +507,7 @@ NtQueryInformationJobObject(
 );
 
 #ifndef _NTDDK_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -515,7 +516,7 @@ NtQueryInformationProcess(
     _In_ PROCESSINFOCLASS ProcessInformationClass,
     _Out_ PVOID ProcessInformation,
     _In_ ULONG ProcessInformationLength,
-    _Out_opt_ PULONG ReturnLength OPTIONAL
+    _Out_opt_ PULONG ReturnLength
 );
 #endif
 

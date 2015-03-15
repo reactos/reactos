@@ -373,7 +373,7 @@ NTAPI
 NtWaitForSingleObject(
     _In_ HANDLE Object,
     _In_ BOOLEAN Alertable,
-    _In_opt_ PLARGE_INTEGER Time
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSAPI
