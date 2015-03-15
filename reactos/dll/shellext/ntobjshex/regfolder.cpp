@@ -86,6 +86,7 @@ public:
         switch (entry->entryType)
         {
         case REG_ENTRY_KEY:
+        case REG_ENTRY_ROOT:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_REGISTRYKEY;
             *pwFlags = flags;
@@ -126,6 +127,7 @@ class CRegistryPidlManager
 {
 private:
     PWSTR m_ntPath;
+    HKEY m_hRoot;
 
     HDPA m_hDpa;
     UINT m_hDpaCount;
@@ -146,6 +148,7 @@ private:
 public:
     CRegistryPidlManager() :
         m_ntPath(NULL),
+        m_hRoot(NULL),
         m_hDpa(NULL),
         m_hDpaCount(0)
     {
@@ -156,18 +159,28 @@ public:
         DPA_DestroyCallback(m_hDpa, s_DpaDeleteCallback, this);
     }
 
-    HRESULT Initialize(PWSTR ntPath)
+    HRESULT Initialize(PWSTR ntPath, HKEY hRoot)
     {
         m_ntPath = ntPath;
+        m_hRoot = hRoot;
 
         m_hDpa = DPA_Create(10);
 
         if (!m_hDpa)
             return E_OUTOFMEMORY;
 
-        HRESULT hr = EnumerateRegistryKey(m_hDpa, m_ntPath, NULL, &m_hDpaCount);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
+        if (wcslen(m_ntPath) == 0 && m_hRoot == NULL)
+        {
+            HRESULT hr = EnumerateRootKeys(m_hDpa, &m_hDpaCount);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
+        else
+        {
+            HRESULT hr = EnumerateRegistryKey(m_hDpa, m_ntPath, m_hRoot, &m_hDpaCount);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
 
         return S_OK;
     }
@@ -346,7 +359,8 @@ public:
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = 0;
 
-        if (entry->entryType == REG_ENTRY_KEY)
+        if ((entry->entryType == REG_ENTRY_KEY) ||
+            (entry->entryType == REG_ENTRY_ROOT))
             flags |= SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE;
 
         return flags & mask;
@@ -359,7 +373,8 @@ public:
         if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
 
-        return (entry->entryType == REG_ENTRY_KEY);
+        return (entry->entryType == REG_ENTRY_KEY) ||
+            (entry->entryType == REG_ENTRY_ROOT);
     }
 
     HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
@@ -430,7 +445,14 @@ public:
             DWORD valueLength;
             HRESULT hr = ReadRegistryValue(NULL, m_ntPath, info->entryName, &valueData, &valueLength);
             if (FAILED_UNEXPECTEDLY(hr))
-                return hr;
+            {
+                PCWSTR strEmpty = L"(Error reading value)";
+                DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
+                PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+                StringCbCopyW(strValue, bufferLength, strEmpty);
+                *strContents = strValue;
+                return S_OK;
+            }
 
             if (valueLength > 0)
             {
@@ -522,6 +544,7 @@ public:
                 switch (tinfo->entryType)
                 {
                 case REG_ENTRY_KEY:
+                case REG_ENTRY_ROOT:
                     flagsOk = (m_Flags & SHCONTF_FOLDERS) != 0;
                     break;
                 default:
@@ -651,19 +674,26 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        WCHAR path[MAX_PATH];
-
-        StringCbCopyW(path, _countof(path), m_NtPath);
-
-        PathAppendW(path, info->entryName);
-
         LPITEMIDLIST first = ILCloneFirst(pidl);
         LPCITEMIDLIST rest = ILGetNext(pidl);
 
         LPITEMIDLIST fullPidl = ILCombine(m_shellPidl, first);
 
         CComPtr<IShellFolder> psfChild;
-        hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, IID_PPV_ARG(IShellFolder, &psfChild));
+        if (wcslen(m_NtPath) == 0 && m_hRoot == NULL)
+        {
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, L"", info->rootKey, IID_PPV_ARG(IShellFolder, &psfChild));
+        }
+        else
+        {
+            WCHAR path[MAX_PATH];
+
+            StringCbCopyW(path, _countof(path), m_NtPath);
+
+            PathAppendW(path, info->entryName);
+
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, m_hRoot, IID_PPV_ARG(IShellFolder, &psfChild));
+        }
 
         ILFree(fullPidl);
         ILFree(first);
@@ -928,8 +958,9 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetClassID(CLSID *lpClassId)
 HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
 {
     m_shellPidl = ILClone(pidl);
+    m_hRoot = NULL;
 
-    PCWSTR ntPath = L"\\REGISTRY";
+    PCWSTR ntPath = L"";
 
     if (!m_PidlManager)
     {
@@ -938,19 +969,20 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
         StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
     }
 
-    return m_PidlManager->Initialize(m_NtPath);
+    return m_PidlManager->Initialize(m_NtPath, m_hRoot);
 }
 
 // Internal
-HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath)
+HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath, HKEY hRoot)
 {
     m_shellPidl = ILClone(pidl);
+    m_hRoot = hRoot;
 
     if (!m_PidlManager)
         m_PidlManager = new CRegistryPidlManager();
 
     StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
-    return m_PidlManager->Initialize(m_NtPath);
+    return m_PidlManager->Initialize(m_NtPath, m_hRoot);
 }
 
 // IPersistFolder2
@@ -1039,6 +1071,11 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
             }
             else if (pscid->pid == PID_STG_STORAGETYPE)
             {
+                if (info->entryType == REG_ENTRY_ROOT)
+                {
+                    return MakeVariantString(pv, L"Key");
+                }
+
                 if (info->entryType == REG_ENTRY_KEY)
                 {
                     if (info->contentsLength > 0)
@@ -1108,6 +1145,11 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
         case REGISTRY_COLUMN_TYPE:
             psd->fmt = LVCFMT_LEFT;
+
+            if (info->entryType == REG_ENTRY_ROOT)
+            {
+                return MakeStrRetFromString(L"Key", &(psd->str));
+            }
 
             if (info->entryType == REG_ENTRY_KEY)
             {

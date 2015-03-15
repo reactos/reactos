@@ -14,6 +14,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntobjshex);
 
 BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_NtObjectFolder, CNtObjectFolder)
+    OBJECT_ENTRY(CLSID_RegistryFolder, CRegistryFolder)
 END_OBJECT_MAP()
 
 HINSTANCE  g_hInstance;

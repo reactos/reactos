@@ -7,7 +7,7 @@ HKCR
   NTObjShEx.NTDirectory = s 'NT Namespace Directory Class'
   {
     CLSID = s '{845B0FB2-66E0-416B-8F91-314E23F7C12D}'
-    CurVer = s 'WMIFldr.CWMIFldr.1'
+    CurVer = s 'NTObjShEx.NTDirectory.1'
   }
   NoRemove CLSID
   {
@@ -20,6 +20,7 @@ HKCR
         val ThreadingModel = s 'Both'
       }
       val InfoTip = s 'Allows browsing of the NT Object Namespace'
+      val LocalizedString = s '@%MODULE%,-101'
       DefaultIcon = s '%MODULE%,0'
       ShellFolder
       {
@@ -45,7 +46,7 @@ HKLM
             {
               NoRemove NameSpace
               {
-                ForceRemove {845B0FB2-66E0-416B-8F91-314E23F7C12D} = s 'NT Object Namespace Extension'
+                ForceRemove {845B0FB2-66E0-416B-8F91-314E23F7C12D} = s 'NT Object Namespace'
                 {
                 }
               }

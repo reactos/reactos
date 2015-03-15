@@ -107,6 +107,11 @@ public:
             *piIndex = -IDI_NTOBJECTPORT;
             *pwFlags = flags;
             return S_OK;
+        case KEY_OBJECT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_REGISTRYKEY;
+            *pwFlags = flags;
+            return S_OK;
         default:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_NTOBJECTITEM;
@@ -624,7 +629,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
         if (info->objectType == KEY_OBJECT)
         {
-            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, (HKEY)NULL, IID_PPV_ARG(IShellFolder, &psfChild));
         }
         else
         {

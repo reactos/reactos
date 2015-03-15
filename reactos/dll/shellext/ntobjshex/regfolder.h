@@ -21,6 +21,7 @@ class CRegistryFolder :
 {
     CRegistryPidlManager * m_PidlManager;
 
+    HKEY m_hRoot;
     WCHAR m_NtPath[MAX_PATH];
 
     LPITEMIDLIST m_shellPidl;
@@ -136,11 +137,11 @@ public:
     virtual HRESULT STDMETHODCALLTYPE MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // Internal
-    HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath);
+    HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath, HKEY hRoot);
 
     static HRESULT CALLBACK DefCtxMenuCallback(IShellFolder *, HWND, IDataObject *, UINT, WPARAM, LPARAM);
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_NTOBJECTFOLDER)
+    DECLARE_REGISTRY_RESOURCEID(IDR_REGISTRYFOLDER)
     DECLARE_NOT_AGGREGATABLE(CRegistryFolder)
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
