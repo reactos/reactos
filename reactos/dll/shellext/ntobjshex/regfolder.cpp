@@ -33,8 +33,9 @@ static const GUID GUID_RegistryColumns = { 0x18a4b504, 0xf6d8, 0x4d8a, { 0x86, 0
 enum RegistryColumns
 {
     REGISTRY_COLUMN_NAME = 0,
-    REGISTRY_COLUMN_TYPE = 1,
-    REGISTRY_COLUMN_VALUE = 2,
+    REGISTRY_COLUMN_TYPE,
+    REGISTRY_COLUMN_VALUE,
+    REGISTRY_COLUMN_END
 };
 
 class CRegistryFolderExtractIcon :
@@ -289,14 +290,11 @@ public:
 
     HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
     {
-        if (LOWORD(lParam) != 0)
+        if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
-            DbgPrint("Unsupported sorting mode.\n");
-            return E_INVALIDARG;
-        }
+            if (lParam != 0)
+                return E_INVALIDARG;
 
-        if (HIWORD(lParam) == SHCIDS_ALLFIELDS)
-        {
             int minsize = min(first->cb, second->cb);
             int ord = memcmp(second, first, minsize);
 
@@ -308,42 +306,71 @@ public:
             if (second->cb < first->cb)
                 return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
-        else if (HIWORD(lParam) == SHCIDS_CANONICALONLY)
-        {
-            int minlength = min(first->entryNameLength, second->entryNameLength);
-            int ord = StrCmpNW(first->entryName, second->entryName, minlength);
-
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
-
-            if (second->entryNameLength > first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (second->entryNameLength < first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
-        }
         else
         {
-            bool f1 = (first->entryType == REG_ENTRY_KEY) || (first->entryType == REG_ENTRY_ROOT);
-            bool f2 = (second->entryType == REG_ENTRY_KEY) || (second->entryType == REG_ENTRY_ROOT);
+            bool canonical = ((lParam & 0xFFFF0000) == SHCIDS_CANONICALONLY);
 
-            if (f1 && !f2)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
-            if (f2 && !f1)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            switch (lParam & 0xFFFF)
+            {
+            case REGISTRY_COLUMN_NAME:
+            {
+                bool f1 = (first->entryType == REG_ENTRY_KEY) || (first->entryType == REG_ENTRY_ROOT);
+                bool f2 = (second->entryType == REG_ENTRY_KEY) || (second->entryType == REG_ENTRY_ROOT);
 
-            int minlength = min(first->entryNameLength, second->entryNameLength);
-            int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+                if (f1 && !f2)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+                if (f2 && !f1)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+                if (canonical)
+                {
+                    // Shortcut: avoid comparing contents if not necessary when the results are not for display.
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
 
-            if (second->entryNameLength > first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (second->entryNameLength < first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
+                int minlength = min(first->entryNameLength, second->entryNameLength);
+                int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+
+                if (ord != 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+                if (!canonical)
+                {
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                return S_OK;
+            }
+            case REGISTRY_COLUMN_TYPE:
+            {
+                int ord = second->contentType - first->contentType;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case REGISTRY_COLUMN_VALUE:
+            {
+                // Can't sort by value
+                return E_INVALIDARG;
+            }
+            default:
+            {
+                DbgPrint("Unsupported sorting mode.\n");
+                return E_INVALIDARG;
+            }
+            }
         }
 
-        return S_OK;
+        return E_INVALIDARG;
     }
 
     HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
@@ -1262,6 +1289,12 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         *pViewMode = FVM_DETAILS;
         return S_OK;
     }
+    case SFVM_COLUMNCLICK:
+        return S_FALSE;
+    case SFVM_BACKGROUNDENUM:
+        return S_OK;
+    case SFVM_DEFITEMCOUNT:
+        return m_PidlManager->GetCount((UINT*) lParam);
     }
     return E_NOTIMPL;
 }

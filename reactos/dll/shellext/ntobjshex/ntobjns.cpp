@@ -33,9 +33,10 @@ static const GUID GUID_NtObjectColumns = { 0xf4c430c3, 0x3a8d, 0x4b56, { 0xa0, 0
 enum NtObjectColumns
 {
     NTOBJECT_COLUMN_NAME = 0,
-    NTOBJECT_COLUMN_TYPE = 1,
-    NTOBJECT_COLUMN_CREATEDATE = 2,
-    NTOBJECT_COLUMN_LINKTARGET = 3,
+    NTOBJECT_COLUMN_TYPE,
+    NTOBJECT_COLUMN_CREATEDATE,
+    NTOBJECT_COLUMN_LINKTARGET,
+    NTOBJECT_COLUMN_END
 };
 
 class CNtObjectFolderExtractIcon :
@@ -293,14 +294,11 @@ public:
 
     HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
     {
-        if (LOWORD(lParam) != 0)
+        if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
-            DbgPrint("Unsupported sorting mode.\n");
-            return E_INVALIDARG;
-        }
+            if (lParam != 0)
+                return E_INVALIDARG;
 
-        if (HIWORD(lParam) == SHCIDS_ALLFIELDS)
-        {
             int minsize = min(first->cb, second->cb);
             int ord = memcmp(second, first, minsize);
 
@@ -312,42 +310,81 @@ public:
             if (second->cb < first->cb)
                 return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
-        else if (HIWORD(lParam) == SHCIDS_CANONICALONLY)
-        {
-            int minlength = min(first->entryNameLength, second->entryNameLength);
-            int ord = StrCmpNW(first->entryName, second->entryName, minlength);
-
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
-
-            if (second->entryNameLength > first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (second->entryNameLength < first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
-        }
         else
         {
-            bool f1 = (first->objectType == DIRECTORY_OBJECT) || (first->objectType == KEY_OBJECT);
-            bool f2 = (second->objectType == DIRECTORY_OBJECT) || (second->objectType == KEY_OBJECT);
+            bool canonical = ((lParam & 0xFFFF0000) == SHCIDS_CANONICALONLY);
 
-            if (f1 && !f2)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
-            if (f2 && !f1)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            switch (lParam & 0xFFFF)
+            {
+            case NTOBJECT_COLUMN_NAME:
+            {
+                bool f1 = (first->objectType == KEY_OBJECT) || (first->objectType == DIRECTORY_OBJECT);
+                bool f2 = (second->objectType == KEY_OBJECT) || (second->objectType == DIRECTORY_OBJECT);
 
-            int minlength = min(first->entryNameLength, second->entryNameLength);
-            int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+                if (f1 && !f2)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+                if (f2 && !f1)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+                if (canonical)
+                {
+                    // Shortcut: avoid comparing contents if not necessary when the results are not for display.
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
 
-            if (second->entryNameLength > first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (second->entryNameLength < first->entryNameLength)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
+                int minlength = min(first->entryNameLength, second->entryNameLength);
+                int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+
+                if (ord != 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+                if (!canonical)
+                {
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                return S_OK;
+            }
+            case NTOBJECT_COLUMN_TYPE:
+            {
+                int ord = second->objectType - first->objectType;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case NTOBJECT_COLUMN_CREATEDATE:
+            {
+                LONGLONG ord = second->objectInformation.CreateTime.QuadPart - first->objectInformation.CreateTime.QuadPart;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case NTOBJECT_COLUMN_LINKTARGET:
+            {
+                // Can't sort by value
+                return E_INVALIDARG;
+            }
+            default:
+            {
+                DbgPrint("Unsupported sorting mode.\n");
+                return E_INVALIDARG;
+            }
+            }
         }
 
-        return S_OK;
+        return E_INVALIDARG;
     }
 
     HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
@@ -1226,6 +1263,12 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         *pViewMode = FVM_DETAILS;
         return S_OK;
     }
+    case SFVM_COLUMNCLICK:
+        return S_FALSE;
+    case SFVM_BACKGROUNDENUM:
+        return S_OK;
+    case SFVM_DEFITEMCOUNT:
+        return m_PidlManager->GetCount((UINT*) lParam);
     }
     return E_NOTIMPL;
 }
