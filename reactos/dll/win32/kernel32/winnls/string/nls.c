@@ -1654,12 +1654,12 @@ static INT WideCharToUtf7(LPCWSTR pszWide, INT cchWide, LPSTR pszUtf7, INT cchUt
             }
             *pszUtf7++ = base64[wsz[0] >> 10];
             *pszUtf7++ = base64[(wsz[0] >> 4) & 0x3F];
-            *pszUtf7++ = base64[(wsz[0] << 2 | wsz[1] >> 14) & 0x3F];
+            *pszUtf7++ = base64[(wsz[0] << 2 | (n >= 2 ? wsz[1] >> 14 : 0)) & 0x3F];
             if (n >= 2)
             {
                 *pszUtf7++ = base64[(wsz[1] >> 8) & 0x3F];
                 *pszUtf7++ = base64[(wsz[1] >> 2) & 0x3F];
-                *pszUtf7++ = base64[(wsz[1] << 4 | wsz[2] >> 12) & 0x3F];
+                *pszUtf7++ = base64[(wsz[1] << 4 | (n >= 3 ? wsz[2] >> 12 : 0)) & 0x3F];
                 if (n >= 3)
                 {
                     *pszUtf7++ = base64[(wsz[2] >> 6) & 0x3F];
