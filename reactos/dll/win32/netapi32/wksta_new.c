@@ -147,7 +147,7 @@ NetGetJoinInformation(
 {
     NET_API_STATUS status;
 
-    TRACE("NetGetJoinInformation(%s %p %p)\n", wine_dbgstr_w(Server),
+    TRACE("NetGetJoinInformation(%s %p %p)\n", debugstr_w(Server),
           Name, type);
 
     if (Name == NULL || type == NULL)
@@ -158,6 +158,179 @@ NetGetJoinInformation(
         status = NetrGetJoinInformation((LPWSTR)Server,
                                         Name,
                                         type);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetUseAdd(
+    LMSTR UncServerName,
+    DWORD Level,
+    LPBYTE Buf,
+    LPDWORD ParmError)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetUseAdd(%s %d %p %p)\n", debugstr_w(UncServerName),
+          Level, Buf, ParmError);
+
+    RpcTryExcept
+    {
+        status = NetrUseAdd(UncServerName,
+                            Level,
+                            (LPUSE_INFO)Buf,
+                            ParmError);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetUseDel(
+    LMSTR UncServerName,
+    LMSTR UseName,
+    DWORD ForceCond)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetUseDel(%s %s %d)\n", debugstr_w(UncServerName),
+          debugstr_w(UseName), ForceCond);
+
+    RpcTryExcept
+    {
+        status = NetrUseDel(UncServerName,
+                            UseName,
+                            ForceCond);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetUseEnum(
+    LMSTR UncServerName,
+    DWORD Level,
+    LPBYTE *BufPtr,
+    DWORD PreferedMaximumSize,
+    LPDWORD EntriesRead,
+    LPDWORD TotalEntries,
+    LPDWORD ResumeHandle)
+{
+    USE_ENUM_STRUCT UseEnumInfo;
+    USE_INFO_0_CONTAINER Container0;
+    USE_INFO_1_CONTAINER Container1;
+    USE_INFO_2_CONTAINER Container2;
+    NET_API_STATUS status;
+
+    TRACE("NetUseEnum(%s, %d, %p, %d, %p, %p, %p)\n", debugstr_w(UncServerName),
+          Level, BufPtr, PreferedMaximumSize, EntriesRead, TotalEntries, ResumeHandle);
+
+    UseEnumInfo.Level = Level;
+    switch (Level)
+    {
+        case 0:
+            UseEnumInfo.UseInfo.Level0 = &Container0;
+            Container0.EntriesRead = 0;
+            Container0.Buffer = NULL;
+            break;
+
+        case 1:
+            UseEnumInfo.UseInfo.Level1 = &Container1;
+            Container1.EntriesRead = 0;
+            Container1.Buffer = NULL;
+            break;
+
+        case 2:
+            UseEnumInfo.UseInfo.Level2 = &Container2;
+            Container2.EntriesRead = 0;
+            Container2.Buffer = NULL;
+            break;
+
+        default:
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    RpcTryExcept
+    {
+        status = NetrUseEnum(UncServerName,
+                             &UseEnumInfo,
+                             PreferedMaximumSize,
+                             TotalEntries,
+                             ResumeHandle);
+        if (status == NERR_Success || status == ERROR_MORE_DATA)
+        {
+            switch (Level)
+            {
+                case 0:
+                    *BufPtr = (LPBYTE)UseEnumInfo.UseInfo.Level0->Buffer;
+                    *EntriesRead = UseEnumInfo.UseInfo.Level0->EntriesRead;
+                    break;
+
+                case 1:
+                    *BufPtr = (LPBYTE)UseEnumInfo.UseInfo.Level1->Buffer;
+                    *EntriesRead = UseEnumInfo.UseInfo.Level1->EntriesRead;
+                    break;
+
+                case 2:
+                    *BufPtr = (LPBYTE)UseEnumInfo.UseInfo.Level2->Buffer;
+                    *EntriesRead = UseEnumInfo.UseInfo.Level2->EntriesRead;
+                    break;
+            }
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetUseGetInfo(
+    LMSTR UncServerName,
+    LMSTR UseName,
+    DWORD Level,
+    LPBYTE *BufPtr)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetUseGetInfo(%s, %s, %d, %p)\n", debugstr_w(UncServerName),
+          debugstr_w(UseName), Level, BufPtr);
+
+    *BufPtr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrUseGetInfo(UncServerName,
+                                UseName,
+                                Level,
+                                (LPUSE_INFO)BufPtr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -241,8 +414,8 @@ NetWkstaUserEnum(
     LPDWORD resumehandle)
 {
     WKSTA_USER_ENUM_STRUCT UserEnumInfo;
-    WKSTA_USER_INFO_0_CONTAINER Level0;
-    WKSTA_USER_INFO_1_CONTAINER Level1;
+    WKSTA_USER_INFO_0_CONTAINER Container0;
+    WKSTA_USER_INFO_1_CONTAINER Container1;
     NET_API_STATUS status;
 
     TRACE("NetWkstaUserEnum(%s, %d, %p, %d, %p, %p, %p)\n", debugstr_w(servername),
@@ -252,15 +425,15 @@ NetWkstaUserEnum(
     switch (level)
     {
         case 0:
-            UserEnumInfo.WkstaUserInfo.Level0 = &Level0;
-            UserEnumInfo.WkstaUserInfo.Level0->EntriesRead = 0;
-            UserEnumInfo.WkstaUserInfo.Level0->Buffer = NULL;
+            UserEnumInfo.WkstaUserInfo.Level0 = &Container0;
+            Container0.EntriesRead = 0;
+            Container0.Buffer = NULL;
             break;
 
         case 1:
-            UserEnumInfo.WkstaUserInfo.Level1 = &Level1;
-            UserEnumInfo.WkstaUserInfo.Level1->EntriesRead = 0;
-            UserEnumInfo.WkstaUserInfo.Level1->Buffer = NULL;
+            UserEnumInfo.WkstaUserInfo.Level1 = &Container1;
+            Container1.EntriesRead = 0;
+            Container1.Buffer = NULL;
             break;
 
         default:
