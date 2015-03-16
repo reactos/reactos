@@ -631,7 +631,7 @@
 @ stdcall SetKeyboardState(ptr)
 @ stdcall SetLastErrorEx(long long)
 @ stdcall SetLayeredWindowAttributes(ptr long long long)
-@ stdcall SetLogonNotifyWindow(long long)
+@ stdcall SetLogonNotifyWindow(long)
 @ stdcall SetMenu(long long)
 @ stdcall SetMenuContextHelpId(long long)
 @ stdcall SetMenuDefaultItem(long long long)
@@ -676,7 +676,7 @@
 @ stdcall SetWindowPlacement(long ptr)
 @ stdcall SetWindowPos(long long long long long long long)
 @ stdcall SetWindowRgn(long long long)
-@ stdcall SetWindowStationUser(long long)
+@ stdcall SetWindowStationUser(long long long long)
 @ stdcall SetWindowText(long str) SetWindowTextA
 @ stdcall SetWindowTextA(long str)
 @ stdcall SetWindowTextW(long wstr)

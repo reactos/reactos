@@ -202,9 +202,9 @@ VOID WINAPI SetDebugErrorLevel( DWORD dwLevel )
 /***********************************************************************
  *		SetWindowStationUser (USER32.@)
  */
-DWORD WINAPI SetWindowStationUser(DWORD x1,DWORD x2)
+DWORD WINAPI SetWindowStationUser(DWORD x1,DWORD x2,DWORD x3,DWORD x4)
 {
-    FIXME("(0x%08x,0x%08x),stub!\n",x1,x2);
+    FIXME("(0x%08x,0x%08x,0x%08x,0x%08x),stub!\n",x1,x2,x3,x4);
     return 1;
 }
 

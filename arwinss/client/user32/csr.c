@@ -117,7 +117,7 @@ BOOL WINAPI RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
  */
 BOOL
 WINAPI
-SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
+SetLogonNotifyWindow (HWND Wnd)
 {
 #if 0
     /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
