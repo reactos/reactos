@@ -1067,6 +1067,8 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
         }
     }
 
+#if 0
+    /* FIXME/TODO: Reenable when they implemented AND localizable (not hardcoded). */
     /* Insert This item at the beginning of the menu. */
     _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 4, MFT_STRING, L"Properties", MFS_DISABLED);
@@ -1075,13 +1077,20 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 1, MFT_STRING, L"Create Shortcut", MFS_DISABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM, MFT_STRING, L"New", MFS_ENABLED);
+#endif
 
     HMENU menubase = BuildFileMenu();
     if (menubase)
     {
         int count = ::GetMenuItemCount(menubase);
+        int count2 = ::GetMenuItemCount(hSubMenu);
 
-        for (int i = 0; i < count; i++)
+        if (count2 > 0 && count > 0)
+        {
+            _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        }
+
+        for (int i = count-1; i >= 0; i--)
         {
             WCHAR label[128];
 
@@ -1096,10 +1105,9 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
 
             mii.fType |= MFT_RADIOCHECK;
 
-            ::InsertMenuItemW(hSubMenu, IDM_MYFILEITEM, FALSE, &mii);
+            ::InsertMenuItemW(hSubMenu, 0, TRUE, &mii);
         }
 
-        _InsertMenuItemW(hSubMenu, IDM_MYFILEITEM, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
 
         ::DestroyMenu(menubase);
     }
