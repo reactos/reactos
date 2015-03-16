@@ -177,6 +177,15 @@ public:
     HRESULT Initialize(PWSTR ntPath)
     {
         m_ntPath = ntPath;
+        m_hDpa = NULL;
+
+        return S_OK;
+    }
+
+    HRESULT Enumerate()
+    {
+        if (m_hDpa)
+            return S_OK;
 
         m_hDpa = DPA_Create(10);
 
@@ -196,7 +205,12 @@ public:
 
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         NtPidlEntry * info = (NtPidlEntry *) pcidl;
@@ -234,9 +248,16 @@ public:
 
     HRESULT FindByName(LPCWSTR strParsingName, NtPidlEntry ** pinfo)
     {
+        HRESULT hr;
+
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
@@ -263,6 +284,18 @@ public:
 
     HRESULT GetPidl(UINT index, NtPidlEntry ** pEntry)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *pEntry = NULL;
 
         NtPidlEntry * entry = (NtPidlEntry *) DPA_GetPtr(m_hDpa, index);
@@ -277,10 +310,21 @@ public:
 
     HRESULT GetCount(UINT * count)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *count = m_hDpaCount;
         return S_OK;
     }
-
 
     static LPITEMIDLIST CreatePidlFromItem(NtPidlEntry * entry)
     {
@@ -292,7 +336,7 @@ public:
         return idl;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
     {
         if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
@@ -387,7 +431,7 @@ public:
         return E_INVALIDARG;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         NtPidlEntry * second = (NtPidlEntry*) &(p->mkid);
@@ -397,7 +441,7 @@ public:
         return CompareIDs(lParam, first, second);
     }
 
-    HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
+    static HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
     {
         LPCITEMIDLIST p = pcidl1;
         NtPidlEntry * first = (NtPidlEntry*) &(p->mkid);
@@ -407,7 +451,7 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    ULONG ConvertAttributes(NtPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(NtPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = SFGAO_HASPROPSHEET | SFGAO_CANLINK;
@@ -564,7 +608,10 @@ CNtObjectFolder::CNtObjectFolder() :
 
 CNtObjectFolder::~CNtObjectFolder()
 {
-    TRACE("Destroying CNtObjectFolder %p\n", this);
+    if (m_shellPidl)
+        ILFree(m_shellPidl);
+    if (m_PidlManager)
+        delete m_PidlManager;
 }
 
 // IShellFolder

@@ -164,6 +164,15 @@ public:
     {
         m_ntPath = ntPath;
         m_hRoot = hRoot;
+        m_hDpa = NULL;
+
+        return S_OK;
+    }
+
+    HRESULT Enumerate()
+    {
+        if (m_hDpa)
+            return S_OK;
 
         m_hDpa = DPA_Create(10);
 
@@ -182,7 +191,6 @@ public:
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
         }
-
         return S_OK;
     }
 
@@ -192,7 +200,12 @@ public:
 
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         RegPidlEntry * info = (RegPidlEntry *) pcidl;
@@ -230,10 +243,18 @@ public:
 
     HRESULT FindByName(LPCWSTR strParsingName, RegPidlEntry ** pinfo)
     {
+        HRESULT hr;
+
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
+
 
         TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
 
@@ -259,6 +280,18 @@ public:
 
     HRESULT GetPidl(UINT index, RegPidlEntry ** pEntry)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *pEntry = NULL;
 
         RegPidlEntry * entry = (RegPidlEntry *) DPA_GetPtr(m_hDpa, index);
@@ -273,6 +306,18 @@ public:
 
     HRESULT GetCount(UINT * count)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *count = m_hDpaCount;
         return S_OK;
     }
@@ -288,7 +333,7 @@ public:
         return idl;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
     {
         if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
@@ -373,7 +418,7 @@ public:
         return E_INVALIDARG;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         RegPidlEntry * second = (RegPidlEntry*) &(p->mkid);
@@ -383,7 +428,7 @@ public:
         return CompareIDs(lParam, first, second);
     }
 
-    HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
+    static HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
     {
         LPCITEMIDLIST p = pcidl1;
         RegPidlEntry * first = (RegPidlEntry*) &(p->mkid);
@@ -393,7 +438,7 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = 0;
@@ -416,7 +461,7 @@ public:
             (entry->entryType == REG_ENTRY_ROOT);
     }
 
-    HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
+    static HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
     {
         switch (contentType)
         {
@@ -647,7 +692,10 @@ CRegistryFolder::CRegistryFolder() :
 
 CRegistryFolder::~CRegistryFolder()
 {
-    TRACE("Destroying CRegistryFolder %p\n", this);
+    if (m_shellPidl)
+        ILFree(m_shellPidl);
+    if (m_PidlManager)
+        delete m_PidlManager;
 }
 
 // IShellFolder
