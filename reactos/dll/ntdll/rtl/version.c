@@ -69,26 +69,26 @@ SetRosSpecificInfo(IN OUT PRTL_OSVERSIONINFOEXW VersionInformation)
 }
 
 /**********************************************************************
- * NAME							EXPORTED
- * 	RtlGetNtProductType
+ * NAME                         EXPORTED
+ *  RtlGetNtProductType
  *
  * DESCRIPTION
- *	Retrieves the OS product type.
+ *  Retrieves the OS product type.
  *
  * ARGUMENTS
- *	ProductType	Pointer to the product type variable.
+ *  ProductType Pointer to the product type variable.
  *
  * RETURN VALUE
- *	TRUE if successful, otherwise FALSE
+ *  TRUE if successful, otherwise FALSE
  *
  * NOTE
- *	ProductType can be one of the following values:
- *	  1	Workstation (WinNT)
- *	  2	Server (LanmanNT)
- *	  3	Advanced Server (ServerNT)
+ *  ProductType can be one of the following values:
+ *    1 Workstation (WinNT)
+ *    2 Server (LanmanNT)
+ *    3 Advanced Server (ServerNT)
  *
  * REVISIONS
- * 	2000-08-10 ekohl
+ *  2000-08-10 ekohl
  *
  * @implemented
  */
@@ -100,53 +100,53 @@ RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
 }
 
 /**********************************************************************
- * NAME							EXPORTED
- *	RtlGetNtVersionNumbers
+ * NAME                         EXPORTED
+ *  RtlGetNtVersionNumbers
  *
  * DESCRIPTION
- *	Get the version numbers of the run time library.
+ *  Get the version numbers of the run time library.
  *
  * ARGUMENTS
- *	pdwMajorVersion [OUT]	Destination for the Major version
- *	pdwMinorVersion [OUT]	Destination for the Minor version
- *	pdwBuildNumber  [OUT]	Destination for the Build version
+ *  pMajorVersion [OUT] Destination for the Major version
+ *  pMinorVersion [OUT] Destination for the Minor version
+ *  pBuildNumber  [OUT] Destination for the Build version
  *
  * RETURN VALUE
- *	Nothing.
+ *  Nothing.
  *
  * NOTES
- *	- Introduced in Windows XP (NT 5.1)
- *	- Since this call didn't exist before XP, we report at least the version
- *	  5.1. This fixes the loading of msvcrt.dll as released with XP Home,
- *	  which fails in DLLMain() if the major version isn't 5.
+ *  - Introduced in Windows XP (NT 5.1)
+ *  - Since this call didn't exist before XP, we report at least the version
+ *    5.1. This fixes the loading of msvcrt.dll as released with XP Home,
+ *    which fails in DLLMain() if the major version isn't 5.
  *
  * @implemented
  */
 VOID NTAPI
-RtlGetNtVersionNumbers(OUT LPDWORD pdwMajorVersion,
-                       OUT LPDWORD pdwMinorVersion,
-                       OUT LPDWORD pdwBuildNumber)
+RtlGetNtVersionNumbers(OUT PULONG pMajorVersion,
+                       OUT PULONG pMinorVersion,
+                       OUT PULONG pBuildNumber)
 {
     PPEB pPeb = NtCurrentPeb();
 
-    if (pdwMajorVersion)
+    if (pMajorVersion)
     {
-        *pdwMajorVersion = pPeb->OSMajorVersion < 5 ? 5 : pPeb->OSMajorVersion;
+        *pMajorVersion = pPeb->OSMajorVersion < 5 ? 5 : pPeb->OSMajorVersion;
     }
 
-    if (pdwMinorVersion)
+    if (pMinorVersion)
     {
         if ( (pPeb->OSMajorVersion  < 5) ||
             ((pPeb->OSMajorVersion == 5) && (pPeb->OSMinorVersion < 1)) )
-            *pdwMinorVersion = 1;
+            *pMinorVersion = 1;
         else
-            *pdwMinorVersion = pPeb->OSMinorVersion;
+            *pMinorVersion = pPeb->OSMinorVersion;
     }
 
-    if (pdwBuildNumber)
+    if (pBuildNumber)
     {
         /* Windows really does this! */
-        *pdwBuildNumber = (0xF0000000 | pPeb->OSBuildNumber);
+        *pBuildNumber = (0xF0000000 | pPeb->OSBuildNumber);
     }
 }
 
@@ -157,50 +157,51 @@ RtlGetNtVersionNumbers(OUT LPDWORD pdwMajorVersion,
 NTSTATUS NTAPI
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
 {
-    LONG i, MaxLength;
+    ULONG Length;
+    PPEB Peb = NtCurrentPeb();
 
-    if (lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
-        lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
+    if (lpVersionInformation->dwOSVersionInfoSize != sizeof(RTL_OSVERSIONINFOW) &&
+        lpVersionInformation->dwOSVersionInfoSize != sizeof(RTL_OSVERSIONINFOEXW))
     {
-        PPEB Peb = NtCurrentPeb();
-
-        lpVersionInformation->dwMajorVersion = Peb->OSMajorVersion;
-        lpVersionInformation->dwMinorVersion = Peb->OSMinorVersion;
-        lpVersionInformation->dwBuildNumber = Peb->OSBuildNumber;
-        lpVersionInformation->dwPlatformId = Peb->OSPlatformId;
-        RtlZeroMemory(lpVersionInformation->szCSDVersion, sizeof(lpVersionInformation->szCSDVersion));
-
-        if(((Peb->OSCSDVersion >> 8) & 0xFF) != 0)
-        {
-            MaxLength = (sizeof(lpVersionInformation->szCSDVersion) / sizeof(lpVersionInformation->szCSDVersion[0])) - 1;
-            i = _snwprintf(lpVersionInformation->szCSDVersion,
-                           MaxLength,
-                           L"Service Pack %d",
-                           ((Peb->OSCSDVersion >> 8) & 0xFF));
-            if (i < 0)
-            {
-                /* Null-terminate if it was overflowed */
-                lpVersionInformation->szCSDVersion[MaxLength] = L'\0';
-            }
-        }
-
-        if (lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
-        {
-            PRTL_OSVERSIONINFOEXW InfoEx = (PRTL_OSVERSIONINFOEXW)lpVersionInformation;
-            InfoEx->wServicePackMajor = (Peb->OSCSDVersion >> 8) & 0xFF;
-            InfoEx->wServicePackMinor = Peb->OSCSDVersion & 0xFF;
-            InfoEx->wSuiteMask = SharedUserData->SuiteMask & 0xFFFF;
-            InfoEx->wProductType = SharedUserData->NtProductType;
-            InfoEx->wReserved = 0;
-
-            /* HACK: ReactOS specific changes, see bug-reports CORE-6611 and CORE-4620 (aka. #5003) */
-            SetRosSpecificInfo(InfoEx);
-        }
-
-        return STATUS_SUCCESS;
+        return STATUS_INVALID_PARAMETER;
     }
 
-    return STATUS_INVALID_PARAMETER;
+    lpVersionInformation->dwMajorVersion = Peb->OSMajorVersion;
+    lpVersionInformation->dwMinorVersion = Peb->OSMinorVersion;
+    lpVersionInformation->dwBuildNumber = Peb->OSBuildNumber;
+    lpVersionInformation->dwPlatformId = Peb->OSPlatformId;
+    RtlZeroMemory(lpVersionInformation->szCSDVersion, sizeof(lpVersionInformation->szCSDVersion));
+
+    /* If we have a CSD version string, initialized by Application Compatibility... */
+    if (Peb->CSDVersion.Length && Peb->CSDVersion.Buffer && Peb->CSDVersion.Buffer[0] != UNICODE_NULL)
+    {
+        /* ... copy it... */
+        Length = min(wcslen(Peb->CSDVersion.Buffer), ARRAYSIZE(lpVersionInformation->szCSDVersion) - 1);
+        wcsncpy(lpVersionInformation->szCSDVersion, Peb->CSDVersion.Buffer, Length);
+    }
+    else
+    {
+        /* ... otherwise we just null-terminate it */
+        Length = 0;
+    }
+
+    /* Always null-terminate the user CSD version string */
+    lpVersionInformation->szCSDVersion[Length] = UNICODE_NULL;
+
+    if (lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
+    {
+        PRTL_OSVERSIONINFOEXW InfoEx = (PRTL_OSVERSIONINFOEXW)lpVersionInformation;
+        InfoEx->wServicePackMajor = (Peb->OSCSDVersion >> 8) & 0xFF;
+        InfoEx->wServicePackMinor = Peb->OSCSDVersion & 0xFF;
+        InfoEx->wSuiteMask = SharedUserData->SuiteMask & 0xFFFF;
+        InfoEx->wProductType = SharedUserData->NtProductType;
+        InfoEx->wReserved = 0;
+
+        /* HACK: ReactOS specific changes, see bug-reports CORE-6611 and CORE-4620 (aka. #5003) */
+        SetRosSpecificInfo(InfoEx);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

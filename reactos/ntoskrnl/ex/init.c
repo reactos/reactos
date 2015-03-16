@@ -41,9 +41,9 @@ typedef struct _INIT_BUFFER
 /* NT Version Info */
 ULONG NtMajorVersion = VER_PRODUCTMAJORVERSION;
 ULONG NtMinorVersion = VER_PRODUCTMINORVERSION;
-#if DBG
+#if DBG /* Checked Build */
 ULONG NtBuildNumber = VER_PRODUCTBUILD | 0xC0000000;
-#else
+#else   /* Free Build */
 ULONG NtBuildNumber = VER_PRODUCTBUILD;
 #endif
 
@@ -920,10 +920,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
     ULONG PerfMemUsed;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
     PMESSAGE_RESOURCE_ENTRY MsgEntry;
-    ANSI_STRING CsdString;
+    ANSI_STRING CSDString;
     size_t Remaining = 0;
     PCHAR RcEnd = NULL;
-    CHAR VersionBuffer [65];
+    CHAR VersionBuffer[65];
 
     /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
@@ -1076,17 +1076,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Setup initial system settings */
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
-    /* Load static defaults for Service Pack 1 and add our SVN revision */
-    /* Format of CSD : SPMajor - SPMinor */
-    CmNtCSDVersion = 0x100 | (KERNEL_VERSION_BUILD_HEX << 16);
-    CmNtCSDReleaseType = 0;
-
-    /* Set Service Pack data for Service Pack 1 */
+    /* Set the Service Pack Number and add it to the CSD Version number if needed */
     CmNtSpBuildNumber = VER_PRODUCTBUILD_QFE;
-    if (!(CmNtCSDVersion & 0xFFFF0000))
+    if (((CmNtCSDVersion & 0xFFFF0000) == 0) && (CmNtCSDReleaseType == 1))
     {
-        /* Check the release type */
-        if (CmNtCSDReleaseType == 1) CmNtSpBuildNumber |= VER_PRODUCTBUILD_QFE << 16;
+        CmNtCSDVersion |= (VER_PRODUCTBUILD_QFE << 16);
     }
 
     /* Add loaded CmNtGlobalFlag value */
@@ -1140,22 +1134,22 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (NT_SUCCESS(Status))
         {
             /* Setup the string */
-            RtlInitAnsiString(&CsdString, (PCHAR)MsgEntry->Text);
+            RtlInitAnsiString(&CSDString, (PCHAR)MsgEntry->Text);
 
             /* Remove trailing newline */
-            while ((CsdString.Length > 0) &&
-                   ((CsdString.Buffer[CsdString.Length - 1] == '\r') ||
-                    (CsdString.Buffer[CsdString.Length - 1] == '\n')))
+            while ((CSDString.Length > 0) &&
+                   ((CSDString.Buffer[CSDString.Length - 1] == '\r') ||
+                    (CSDString.Buffer[CSDString.Length - 1] == '\n')))
             {
                 /* Skip the trailing character */
-                CsdString.Length--;
+                CSDString.Length--;
             }
 
             /* Fill the buffer with version information */
             Status = RtlStringCbPrintfA(Buffer,
                                         sizeof(Buffer),
                                         "%Z %u%c",
-                                        &CsdString,
+                                        &CSDString,
                                         (CmNtCSDVersion & 0xFF00) >> 8,
                                         (CmNtCSDVersion & 0xFF) ?
                                         'A' + (CmNtCSDVersion & 0xFF) - 1 :
@@ -1197,7 +1191,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Check if we have an RC number */
-    if (CmNtCSDVersion & 0xFFFF0000)
+    if ((CmNtCSDVersion & 0xFFFF0000) && (CmNtCSDReleaseType == 1))
     {
         /* Check if we have no version data yet */
         if (!(*Buffer))
@@ -1223,10 +1217,12 @@ ExpInitializeExecutive(IN ULONG Cpu,
         }
 
         /* Add the version format string */
+        /* ReactOS specific: Append also the revision number */
         Status = RtlStringCbPrintfA(RcEnd,
                                     Remaining,
-                                    "r%u",
-                                    /*(CmNtCSDVersion & 0xFFFF0000) >> 16*/
+                                    "v.%u"
+                                    " r%u",
+                                    (CmNtCSDVersion & 0xFFFF0000) >> 16,
                                     KERNEL_VERSION_BUILD_HEX);
         if (!NT_SUCCESS(Status))
         {
@@ -1236,9 +1232,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Now setup the final string */
-    RtlInitAnsiString(&CsdString, Buffer);
+    RtlInitAnsiString(&CSDString, Buffer);
     Status = RtlAnsiStringToUnicodeString(&CmCSDVersionString,
-                                          &CsdString,
+                                          &CSDString,
                                           TRUE);
     if (!NT_SUCCESS(Status))
     {

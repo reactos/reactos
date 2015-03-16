@@ -2079,27 +2079,30 @@ VOID
 NTAPI
 CmpSetVersionData(VOID)
 {
+    NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     UNICODE_STRING ValueData;
+    ANSI_STRING TempString;
     HANDLE SoftwareKeyHandle = NULL;
     HANDLE MicrosoftKeyHandle = NULL;
     HANDLE WindowsNtKeyHandle = NULL;
     HANDLE CurrentVersionKeyHandle = NULL;
-    WCHAR Buffer[128];
-    NTSTATUS Status;
+    WCHAR Buffer[128]; // Buffer large enough to contain a full ULONG in decimal representation,
+                       // and the full 'CurrentType' string.
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"\\REGISTRY\\MACHINE\\SOFTWARE");
+    /*
+     * Open the 'HKLM\Software\Microsoft\Windows NT\CurrentVersion' key
+     * (create the intermediate subkeys if needed).
+     */
 
+    RtlInitUnicodeString(&KeyName, L"\\REGISTRY\\MACHINE\\SOFTWARE");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtCreateKey(&SoftwareKeyHandle,
                          KEY_CREATE_SUB_KEY,
                          &ObjectAttributes,
@@ -2113,16 +2116,12 @@ CmpSetVersionData(VOID)
         return;
     }
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Microsoft");
-
+    RtlInitUnicodeString(&KeyName, L"Microsoft");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                SoftwareKeyHandle,
                                NULL);
-
     Status = NtCreateKey(&MicrosoftKeyHandle,
                          KEY_CREATE_SUB_KEY,
                          &ObjectAttributes,
@@ -2133,19 +2132,15 @@ CmpSetVersionData(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
-        goto done;
+        goto Quit;
     }
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Windows NT");
-
+    RtlInitUnicodeString(&KeyName, L"Windows NT");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                MicrosoftKeyHandle,
                                NULL);
-
     Status = NtCreateKey(&WindowsNtKeyHandle,
                          KEY_CREATE_SUB_KEY,
                          &ObjectAttributes,
@@ -2156,19 +2151,15 @@ CmpSetVersionData(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
-        goto done;
+        goto Quit;
     }
 
-    /* Open the 'CurrentVersion' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"CurrentVersion");
-
+    RtlInitUnicodeString(&KeyName, L"CurrentVersion");
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
                                OBJ_CASE_INSENSITIVE,
                                WindowsNtKeyHandle,
                                NULL);
-
     Status = NtCreateKey(&CurrentVersionKeyHandle,
                          KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
                          &ObjectAttributes,
@@ -2179,30 +2170,22 @@ CmpSetVersionData(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create key %wZ (Status: %08lx)\n", &KeyName, Status);
-        goto done;
+        goto Quit;
     }
 
-    /* Set the 'CurrentType' value */
-    RtlInitUnicodeString(&ValueName,
-                         L"CurrentType");
+    /* Set the 'CurrentVersion' value */
+    RtlInitUnicodeString(&ValueName, L"CurrentVersion");
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  CmVersionString.Buffer,
+                  CmVersionString.Length + sizeof(WCHAR));
 
-#ifdef CONFIG_SMP
-    wcscpy(Buffer, L"Multiprocessor");
-#else
-    wcscpy(Buffer, L"Uniprocessor");
-#endif
-
-    wcscat(Buffer, L" ");
-
-#if (DBG == 1)
-    wcscat(Buffer, L"Checked");
-#else
-    wcscat(Buffer, L"Free");
-#endif
-
-    RtlInitUnicodeString(&ValueData,
-                         Buffer);
-
+    /* Set the 'CurrentBuildNumber' value */
+    RtlInitUnicodeString(&ValueName, L"CurrentBuildNumber");
+    RtlInitEmptyUnicodeString(&ValueData, Buffer, sizeof(Buffer));
+    RtlIntegerToUnicodeString(NtBuildNumber & 0xFFFF, 10, &ValueData);
     NtSetValueKey(CurrentVersionKeyHandle,
                   &ValueName,
                   0,
@@ -2210,7 +2193,88 @@ CmpSetVersionData(VOID)
                   ValueData.Buffer,
                   ValueData.Length + sizeof(WCHAR));
 
-done:;
+    /* Set the 'BuildLab' value */
+    RtlInitUnicodeString(&ValueName, L"BuildLab");
+    RtlInitAnsiString(&TempString, NtBuildLab);
+    Status = RtlAnsiStringToUnicodeString(&ValueData, &TempString, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      ValueData.Buffer,
+                      ValueData.Length + sizeof(WCHAR));
+    }
+
+    /* Set the 'CurrentType' value */
+    RtlInitUnicodeString(&ValueName, L"CurrentType");
+
+    swprintf(Buffer, L"%s %s",
+#ifdef CONFIG_SMP
+             L"Multiprocessor"
+#else
+             L"Uniprocessor"
+#endif
+             ,
+#if (DBG == 1)
+             L"Checked"
+#else
+             L"Free"
+#endif
+             );
+    RtlInitUnicodeString(&ValueData, Buffer);
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  ValueData.Buffer,
+                  ValueData.Length + sizeof(WCHAR));
+
+    /* Set the 'CSDVersion' value */
+    RtlInitUnicodeString(&ValueName, L"CSDVersion");
+    if (CmCSDVersionString.Length != 0)
+    {
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      CmCSDVersionString.Buffer,
+                      CmCSDVersionString.Length + sizeof(WCHAR));
+    }
+    else
+    {
+        NtDeleteValueKey(CurrentVersionKeyHandle, &ValueName);
+    }
+
+    /* Set the 'CSDBuildNumber' value */
+    RtlInitUnicodeString(&ValueName, L"CSDBuildNumber");
+    if (CmNtSpBuildNumber != 0)
+    {
+        RtlInitEmptyUnicodeString(&ValueData, Buffer, sizeof(Buffer));
+        RtlIntegerToUnicodeString(CmNtSpBuildNumber, 10, &ValueData);
+        NtSetValueKey(CurrentVersionKeyHandle,
+                      &ValueName,
+                      0,
+                      REG_SZ,
+                      ValueData.Buffer,
+                      ValueData.Length + sizeof(WCHAR));
+    }
+    else
+    {
+        NtDeleteValueKey(CurrentVersionKeyHandle, &ValueName);
+    }
+
+    /* Set the 'SystemRoot' value */
+    RtlInitUnicodeString(&ValueName, L"SystemRoot");
+    NtSetValueKey(CurrentVersionKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_SZ,
+                  NtSystemRoot.Buffer,
+                  NtSystemRoot.Length + sizeof(WCHAR));
+
+Quit:
     /* Close the keys */
     if (CurrentVersionKeyHandle != NULL)
         NtClose(CurrentVersionKeyHandle);

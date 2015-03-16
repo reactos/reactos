@@ -699,6 +699,14 @@ INIT_FUNCTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     },
 
     {
+        L"Windows",
+        L"CSDReleaseType",
+        &CmNtCSDReleaseType,
+        NULL,
+        NULL
+    },
+
+    {
         L"Nls\\Language",
         L"Default",
         CmDefaultLanguageId,

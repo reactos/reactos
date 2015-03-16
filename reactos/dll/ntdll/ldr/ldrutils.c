@@ -204,6 +204,7 @@ LdrpFreeUnicodeString(IN PUNICODE_STRING StringIn)
     /* Zero it out */
     RtlInitEmptyUnicodeString(StringIn, NULL, 0);
 }
+
 BOOLEAN
 NTAPI
 LdrpCallInitRoutine(IN PDLL_INIT_ROUTINE EntryPoint,

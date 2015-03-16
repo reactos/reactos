@@ -43,7 +43,7 @@ PVOID PspSystemDllSection;
 PVOID PspSystemDllEntryPoint;
 
 UNICODE_STRING PsNtDllPathName =
-    RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
+    RTL_CONSTANT_STRING(L"\\SystemRoot\\System32\\ntdll.dll");
 
 PHANDLE_TABLE PspCidTable;
 
@@ -658,28 +658,23 @@ PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
  */
 BOOLEAN
 NTAPI
-PsGetVersion(IN PULONG MajorVersion OPTIONAL,
-             IN PULONG MinorVersion OPTIONAL,
-             IN PULONG BuildNumber OPTIONAL,
-             IN PUNICODE_STRING CSDVersion OPTIONAL)
+PsGetVersion(OUT PULONG MajorVersion OPTIONAL,
+             OUT PULONG MinorVersion OPTIONAL,
+             OUT PULONG BuildNumber  OPTIONAL,
+             OUT PUNICODE_STRING CSDVersion OPTIONAL)
 {
     if (MajorVersion) *MajorVersion = NtMajorVersion;
     if (MinorVersion) *MinorVersion = NtMinorVersion;
-    if (BuildNumber) *BuildNumber = NtBuildNumber;
+    if (BuildNumber ) *BuildNumber  = NtBuildNumber & 0x3FFF;
 
     if (CSDVersion)
     {
-        CSDVersion->Length = 0;
-        CSDVersion->MaximumLength = 0;
-        CSDVersion->Buffer = NULL;
-#if 0
         CSDVersion->Length = CmCSDVersionString.Length;
-        CSDVersion->MaximumLength = CmCSDVersionString.Maximum;
+        CSDVersion->MaximumLength = CmCSDVersionString.MaximumLength;
         CSDVersion->Buffer = CmCSDVersionString.Buffer;
-#endif
     }
 
-    /* Check the High word */
+    /* Return TRUE if this is a Checked Build */
     return (NtBuildNumber >> 28) == 0xC;
 }
 

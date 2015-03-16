@@ -1775,7 +1775,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     /* Check if we failed */
     if (!NT_SUCCESS(Status))
     {
-        /* Aassume System32 */
+        /* Assume System32 */
         LdrpKnownDllObjectDirectory = NULL;
         RtlInitUnicodeString(&LdrpKnownDllPath, StringBuffer);
         LdrpKnownDllPath.Length -= sizeof(WCHAR);
@@ -2069,6 +2069,40 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                             ProcessExecuteFlags,
                             &ExecuteOptions,
                             sizeof(ULONG));
+
+    // FIXME: Should be done by Application Compatibility features,
+    // by reading the registry, etc...
+    // For now, this is the old code from ntdll!RtlGetVersion().
+    RtlInitEmptyUnicodeString(&Peb->CSDVersion, NULL, 0);
+    if (((Peb->OSCSDVersion >> 8) & 0xFF) != 0)
+    {
+        WCHAR szCSDVersion[128];
+        ULONG i;
+        ULONG Length = ARRAYSIZE(szCSDVersion) - 1;
+        i = _snwprintf(szCSDVersion, Length,
+                       L"Service Pack %d",
+                       ((Peb->OSCSDVersion >> 8) & 0xFF));
+        if (i < 0)
+        {
+            /* Null-terminate if it was overflowed */
+            szCSDVersion[Length] = UNICODE_NULL;
+        }
+
+        Length *= sizeof(WCHAR);
+        Peb->CSDVersion.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                 0,
+                                                 Length + sizeof(UNICODE_NULL));
+        if (Peb->CSDVersion.Buffer)
+        {
+            Peb->CSDVersion.Length = Length;
+            Peb->CSDVersion.MaximumLength = Length + sizeof(UNICODE_NULL);
+
+            RtlCopyMemory(Peb->CSDVersion.Buffer,
+                          szCSDVersion,
+                          Peb->CSDVersion.MaximumLength);
+            Peb->CSDVersion.Buffer[Peb->CSDVersion.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        }
+    }
 
     /* Check if we had Shim Data */
     if (OldShimData)

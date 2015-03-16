@@ -9,9 +9,6 @@ extern ULONG ExpTickCountMultiplier;
 extern ULONG ExpLastTimeZoneBias;
 extern POBJECT_TYPE ExEventPairObjectType;
 extern POBJECT_TYPE _ExEventObjectType, _ExSemaphoreObjectType;
-extern ULONG NtBuildNumber;
-extern ULONG NtMajorVersion;
-extern ULONG NtMinorVersion;
 extern FAST_MUTEX ExpEnvironmentLock;
 extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
@@ -20,9 +17,8 @@ extern LIST_ENTRY ExpSystemResourcesList;
 extern ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 extern ULONG ExpUnicodeCaseTableDataOffset;
 extern PVOID ExpNlsSectionPointer;
-extern CHAR NtBuildLab[];
-extern ULONG CmNtCSDVersion;
 extern ULONG NtGlobalFlag;
+extern UNICODE_STRING NtSystemRoot;
 extern ULONG ExpInitializationPhase;
 extern ULONG ExpAltTimeZoneBias;
 extern LIST_ENTRY ExSystemLookasideListHead;
@@ -32,6 +28,19 @@ extern LIST_ENTRY ExpNonPagedLookasideListHead;
 extern LIST_ENTRY ExpPagedLookasideListHead;
 extern KSPIN_LOCK ExpNonPagedLookasideListLock;
 extern KSPIN_LOCK ExpPagedLookasideListLock;
+
+/*
+ * NT/Cm Version Info variables
+ */
+extern ULONG NtMajorVersion;
+extern ULONG NtMinorVersion;
+extern ULONG NtBuildNumber;
+extern ULONG CmNtSpBuildNumber;
+extern ULONG CmNtCSDVersion;
+extern ULONG CmNtCSDReleaseType;
+extern UNICODE_STRING CmVersionString;
+extern UNICODE_STRING CmCSDVersionString;
+extern CHAR NtBuildLab[];
 
 #ifdef _WIN64
 #define HANDLE_LOW_BITS (PAGE_SHIFT - 4)
