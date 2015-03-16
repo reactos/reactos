@@ -27,8 +27,17 @@
 #define IDS_PLAY             110
 #define IDS_DEFAULTMCIERRMSG 111
 
+#define IDS_MODE_UNKNOWN     120
+#define IDS_MODE_OPEN        121
+#define IDS_MODE_STOP        122
+#define IDS_MODE_PLAY        123
+#define IDS_MODE_PAUSE       124
+#define IDS_MODE_RECORD      125
+#define IDS_MODE_SEEK        126
+#define IDS_MODE_NOT_READY   127
+
 /* Menu */
-#define IDR_MAINMENU 500
+#define IDR_MAINMENU    500
 
 /* Accelerators */
 #define ID_ACCELERATORS 800
