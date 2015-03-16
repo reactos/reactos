@@ -28,6 +28,50 @@
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
 
+/* GDI handle table can hold 0x10000 handles */
+#define GDI_HANDLE_COUNT 0x10000
+#define GDI_GLOBAL_PROCESS (0x0)
+#define GDI_CFONT_MAX 16
+
+/* Handle Masks and shifts */
+#define GDI_ENTRY_STOCK_MASK 0x00000080
+#define GDI_ENTRY_REUSE_MASK 0x0000ff00
+#define GDI_ENTRY_REUSE_INC 0x00000100
+#define GDI_ENTRY_BASETYPE_MASK 0x001f0000
+#define GDI_ENTRY_FLAGS_MASK 0xff000000
+#define GDI_ENTRY_REUSECNT_SHIFT 8
+#define GDI_ENTRY_UPPER_SHIFT 16
+
+/* Handle macros */
+#define GDI_HANDLE_CREATE(i, t)    \
+    ((HANDLE)(((i) & GDI_HANDLE_INDEX_MASK) | ((t) & GDI_HANDLE_TYPE_MASK)))
+
+#define GDI_HANDLE_GET_INDEX(h)    \
+    (((ULONG_PTR)(h)) & GDI_HANDLE_INDEX_MASK)
+
+#define GDI_HANDLE_GET_TYPE(h)     \
+    (((ULONG_PTR)(h)) & GDI_HANDLE_TYPE_MASK)
+
+#define GDI_HANDLE_IS_TYPE(h, t)   \
+    ((t) == (((ULONG_PTR)(h)) & GDI_HANDLE_TYPE_MASK))
+
+#define GDI_HANDLE_IS_STOCKOBJ(h)  \
+    (0 != (((ULONG_PTR)(h)) & GDI_HANDLE_STOCK_MASK))
+
+#define GDI_HANDLE_SET_STOCKOBJ(h) \
+    ((h) = (HANDLE)(((ULONG_PTR)(h)) | GDI_HANDLE_STOCK_MASK))
+
+#define GDI_HANDLE_GET_UPPER(h)     \
+    (((ULONG_PTR)(h)) & GDI_HANDLE_UPPER_MASK)
+
+#define GDI_HANDLE_GET_REUSECNT(h)     \
+    (((ULONG_PTR)(h)) >> GDI_HANDLE_REUSECNT_SHIFT)
+
+#define GDI_ENTRY_GET_REUSECNT(e)     \
+    ((((ULONG_PTR)(e)) & GDI_ENTRY_REUSE_MASK) >> GDI_ENTRY_REUSECNT_SHIFT)
+
+#define GDI_OBJECT_GET_TYPE_INDEX(t) \
+    ((t & GDI_HANDLE_BASETYPE_MASK) >> GDI_HANDLE_BASETYPE_SHIFT)
 #include "gdidbg.c"
 
 /* static */ /* FIXME: -fno-unit-at-a-time breaks this */
