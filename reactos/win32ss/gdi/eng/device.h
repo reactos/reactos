@@ -3,6 +3,11 @@
 
 #define TAG_GDEV 'gdev'
 
+VOID
+NTAPI
+PDEVOBJ_vRefreshModeList(
+    PPDEVOBJ ppdev);
+
 extern PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
 extern PGRAPHICS_DEVICE gpVgaGraphicsDevice;
 
