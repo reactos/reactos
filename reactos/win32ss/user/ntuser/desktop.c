@@ -11,6 +11,8 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserDesktop);
 
+#include <reactos/buildno.h>
+
 static NTSTATUS
 UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta);
 
@@ -241,23 +243,27 @@ InitDesktopImpl(VOID)
 
 static int GetSystemVersionString(LPWSTR buffer)
 {
-   RTL_OSVERSIONINFOEXW versionInfo;
-   int len;
+    int len;
+#if 0 // Disabled until versioning in win32k gets correctly implemented (hbelusca).
+    RTL_OSVERSIONINFOEXW versionInfo;
 
-   versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+    versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
 
-   if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
-      return 0;
+    if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
+        return 0;
 
-   if (versionInfo.dwMajorVersion <= 4)
-      len = swprintf(buffer,
-                     L"ReactOS Version %lu.%lu %s Build %lu",
-                     versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
-   else
-      len = swprintf(buffer,
-                     L"ReactOS %s (Build %lu)",
-                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
+    if (versionInfo.dwMajorVersion <= 4)
+        len = swprintf(buffer,
+                       L"ReactOS Version %lu.%lu %s Build %lu",
+                       versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
+                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+    else
+        len = swprintf(buffer,
+                       L"ReactOS %s (Build %lu)",
+                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+#else
+    len = swprintf(buffer, L"ReactOS Version %S %S", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
+#endif
 
    return len;
 }
@@ -988,37 +994,33 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 BOOL FASTCALL
 IntPaintDesktop(HDC hDC)
 {
-   RECTL Rect;
-   HBRUSH DesktopBrush, PreviousBrush;
-   HWND hWndDesktop;
-   BOOL doPatBlt = TRUE;
-   PWND WndDesktop;
-   static WCHAR s_wszSafeMode[] = L"Safe Mode";
-   int len;
-   COLORREF color_old;
-   UINT align_old;
-   int mode_old;
+    RECTL Rect;
+    HBRUSH DesktopBrush, PreviousBrush;
+    HWND hWndDesktop;
+    BOOL doPatBlt = TRUE;
+    PWND WndDesktop;
+    static WCHAR s_wszSafeMode[] = L"Safe Mode";
+    int len;
+    COLORREF color_old;
+    UINT align_old;
+    int mode_old;
 
-   if (GdiGetClipBox(hDC, &Rect) == ERROR)
-   {
-       return FALSE;
-   }
+    if (GdiGetClipBox(hDC, &Rect) == ERROR)
+        return FALSE;
 
-   hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
+    hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
 
-   WndDesktop = UserGetWindowObject(hWndDesktop); // rpdesk->pDeskInfo->spwnd;
-   if (!WndDesktop)
-   {
-      return FALSE;
-   }
+    WndDesktop = UserGetWindowObject(hWndDesktop); // rpdesk->pDeskInfo->spwnd;
+    if (!WndDesktop)
+        return FALSE;
 
     if (!UserGetSystemMetrics(SM_CLEANBOOT))
     {
         DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
 
         /*
-        * Paint desktop background
-        */
+         * Paint desktop background
+         */
         if (gspv.hbmWallpaper != NULL)
         {
             SIZE sz;
@@ -1077,7 +1079,6 @@ IntPaintDesktop(HDC hDC)
                                         gspv.cyWallpaper,
                                         SRCCOPY,
                                         0);
-
                 }
                 else if (gspv.WallpaperMode == wmTile)
                 {
@@ -1124,43 +1125,43 @@ IntPaintDesktop(HDC hDC)
         /* Black desktop background in Safe Mode */
         DesktopBrush = StockObjects[BLACK_BRUSH];
     }
-    /* Back ground is set to none, clear the screen */
+    /* Background is set to none, clear the screen */
     if (doPatBlt)
     {
-      PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
-      NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-      NtGdiSelectBrush(hDC, PreviousBrush);
+        PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+        NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+        NtGdiSelectBrush(hDC, PreviousBrush);
     }
 
-   /*
-    * Display system version on the desktop background
-    */
+    /*
+     * Display system version on the desktop background
+     */
 
-   if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
-   {
-      static WCHAR s_wszVersion[256] = {0};
-      RECTL rect;
+    if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
+    {
+        static WCHAR s_wszVersion[256] = {0};
+        RECTL rect;
 
-      if (*s_wszVersion)
-      {
-         len = wcslen(s_wszVersion);
-      }
-      else
-      {
-         len = GetSystemVersionString(s_wszVersion);
-      }
+        if (*s_wszVersion)
+        {
+            len = wcslen(s_wszVersion);
+        }
+        else
+        {
+            len = GetSystemVersionString(s_wszVersion);
+        }
 
-      if (len)
-      {
-         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
-         {
-            rect.right = UserGetSystemMetrics(SM_CXSCREEN);
-            rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-         }
+        if (len)
+        {
+            if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
+            {
+                rect.right = UserGetSystemMetrics(SM_CXSCREEN);
+                rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+            }
 
-         color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
-         align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
-         mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
+            color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
+            align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
+            mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
 
             if(!UserGetSystemMetrics(SM_CLEANBOOT))
             {
@@ -1186,12 +1187,12 @@ IntPaintDesktop(HDC hDC)
                 GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
             }
 
-         IntGdiSetBkMode(hDC, mode_old);
-         IntGdiSetTextAlign(hDC, align_old);
-         IntGdiSetTextColor(hDC, color_old);
-      }
-   }
-   return TRUE;
+            IntGdiSetBkMode(hDC, mode_old);
+            IntGdiSetTextAlign(hDC, align_old);
+            IntGdiSetTextColor(hDC, color_old);
+        }
+    }
+    return TRUE;
 }
 
 static NTSTATUS
