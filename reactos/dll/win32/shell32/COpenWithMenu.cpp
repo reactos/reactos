@@ -211,7 +211,7 @@ HICON COpenWithList::GetIcon(SApp *pApp)
         WCHAR wszPath[MAX_PATH];
 
         GetPathFromCmd(wszPath, pApp->wszCmd);
-        pApp->hIcon = ExtractIconW(shell32_hInstance, wszPath, 0);
+        ExtractIconExW(wszPath, 0, NULL, &pApp->hIcon, 1);
     }
 
     TRACE("%ls icon: %p\n", pApp->wszFilename, pApp->hIcon);
