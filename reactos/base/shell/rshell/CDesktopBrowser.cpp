@@ -22,7 +22,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
-#define SHDESK_TAG 0x4b534544
+#define SHDESK_TAG 'KSED'
 
 static const WCHAR szProgmanClassName [] = L"Progman";
 static const WCHAR szProgmanWindowName [] = L"Program Manager";
@@ -497,7 +497,7 @@ RegisterProgmanWindowClass(VOID)
     wcProgman.hInstance = shell32_hInstance;
     wcProgman.hIcon = NULL;
     wcProgman.hCursor = LoadCursorW(NULL, IDC_ARROW);
-    wcProgman.hbrBackground = (HBRUSH) (COLOR_BACKGROUND + 1);
+    wcProgman.hbrBackground = NULL;
     wcProgman.lpszMenuName = NULL;
     wcProgman.lpszClassName = szProgmanClassName;
 

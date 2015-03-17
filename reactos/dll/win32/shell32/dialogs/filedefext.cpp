@@ -306,8 +306,10 @@ CFileDefExt::InitOpensWithField(HWND hwndDlg)
                 ShowWindow(hIconCtrl, SW_SHOW);
                 RECT rcIcon, rcDescr;
                 GetWindowRect(hIconCtrl, &rcIcon);
-                if (rcIcon.left == rcIcon.right)
-                    ERR("Icon control has invalid width: %d-%d\n", rcIcon.left, rcIcon.right);
+
+                rcIcon.right = rcIcon.left + GetSystemMetrics(SM_CXSMICON);
+                rcIcon.bottom = rcIcon.top + GetSystemMetrics(SM_CYSMICON);
+
                 MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcIcon, 2);
                 GetWindowRect(hDescrCtrl, &rcDescr);
                 MapWindowPoints(NULL, hwndDlg, (LPPOINT)&rcDescr, 2);

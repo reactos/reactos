@@ -1217,13 +1217,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
         }
 
         /* Add the version format string */
-        /* ReactOS specific: Append also the revision number */
         Status = RtlStringCbPrintfA(RcEnd,
                                     Remaining,
-                                    "v.%u"
-                                    " r%u",
-                                    (CmNtCSDVersion & 0xFFFF0000) >> 16,
-                                    KERNEL_VERSION_BUILD_HEX);
+                                    "v.%u",
+                                    (CmNtCSDVersion & 0xFFFF0000) >> 16);
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
@@ -1429,12 +1426,15 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (CmCSDVersionString.Length)
     {
         /* Print the version string */
+        /* ReactOS specific: Append also the revision number */
         Status = RtlStringCbPrintfExA(StringBuffer,
                                       Remaining,
                                       &EndBuffer,
                                       &Remaining,
                                       0,
+                                      " r%u"
                                       ": %wZ",
+                                      KERNEL_VERSION_BUILD_HEX,
                                       &CmCSDVersionString);
         if (!NT_SUCCESS(Status))
         {

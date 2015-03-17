@@ -2674,7 +2674,9 @@ HandleTrayContextMenu:
             ExecResourceCmd(IDS_HELP_COMMAND);
             break;
         case IDHK_EXPLORE:
-            ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1); 
+            //FIXME: We don't support this yet:
+            //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
+            ShellExecuteW(0, NULL, L"explorer.exe", NULL, NULL, 1); 
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);

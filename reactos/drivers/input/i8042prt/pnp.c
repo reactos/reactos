@@ -476,7 +476,7 @@ StartProcedure(
         {
             WARN_(I8042PRT, "i8042ConnectMouseInterrupt failed: %lx\n", Status);
         }
-        
+
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
         /* HACK: the mouse has already been reset in i8042DetectMouse. This second
@@ -656,13 +656,13 @@ i8042RemoveDevice(
 
     DriverExtension = (PI8042_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, DeviceObject->DriverObject);
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    
+
     KeAcquireSpinLock(&DriverExtension->DeviceListLock, &OldIrql);
     RemoveEntryList(&DeviceExtension->ListEntry);
     KeReleaseSpinLock(&DriverExtension->DeviceListLock, OldIrql);
-    
+
     IoDetachDevice(DeviceExtension->LowerDevice);
-    
+
     IoDeleteDevice(DeviceObject);
 }
 
