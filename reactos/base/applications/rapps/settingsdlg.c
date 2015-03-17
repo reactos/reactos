@@ -60,6 +60,12 @@ InitSettingsControls(HWND hDlg, PSETTINGS_INFO Info)
 
     CheckRadioButton(hDlg, IDC_PROXY_DEFAULT, IDC_USE_PROXY, IDC_PROXY_DEFAULT+Info->Proxy);
 
+    if(IDC_PROXY_DEFAULT + Info->Proxy == IDC_USE_PROXY)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
+        EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
+    }
+
     SetWindowTextW(GetDlgItem(hDlg, IDC_PROXY_SERVER), Info->szProxyServer);
     SetWindowTextW(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), Info->szNoProxyFor);
 }
@@ -103,14 +109,20 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
                 case IDC_PROXY_DEFAULT:
                     NewSettingsInfo.Proxy = 0;
+                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
                     break;
 
                 case IDC_NO_PROXY:
                     NewSettingsInfo.Proxy = 1;
+                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), FALSE);
+                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), FALSE);
                     break;
 
                 case IDC_USE_PROXY:
                     NewSettingsInfo.Proxy = 2;
+                    EnableWindow(GetDlgItem(hDlg, IDC_PROXY_SERVER), TRUE);
+                    EnableWindow(GetDlgItem(hDlg, IDC_NO_PROXY_FOR), TRUE);
                     break;
 
                 case IDC_DEFAULT_SETTINGS:

@@ -154,9 +154,6 @@ HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000012
 
 ; Version Information
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00000000,"5.2"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00000000,"Service Pack 2"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00000000,"3790"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","InstallDate",0x00010003,0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","ProductName",2,"ReactOS"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegDone",0x00000002,""

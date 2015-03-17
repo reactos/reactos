@@ -10,7 +10,6 @@
 
 #include "usersrv.h"
 
-#include <winlogon.h>
 #include <commctrl.h>
 
 #include "resource.h"

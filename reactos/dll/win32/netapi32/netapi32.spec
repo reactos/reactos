@@ -236,7 +236,7 @@
 @ stub NetUnjoinDomain
 @ stub NetUnregisterDomainNameChangeNotification
 @ stdcall NetUseAdd(wstr long ptr ptr)
-@ stub NetUseDel
+@ stdcall NetUseDel(wstr wstr long)
 @ stdcall NetUseEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetUseGetInfo(ptr ptr long ptr)
 @ stdcall NetUserAdd(wstr long ptr ptr)

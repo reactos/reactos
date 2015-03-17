@@ -478,7 +478,7 @@ RegisterTypeLibraries (HINF hinf, LPCWSTR szSection)
         hret = SHGetFolderPathW(NULL, csidl, NULL, 0, szPath);
         if (FAILED(hret))
         {
-            FatalError("SHGetFolderPathW failed hret=0x%d\n", hret);
+            FatalError("SHGetFolderPathW failed hret=0x%lx\n", hret);
             continue;
         }
 

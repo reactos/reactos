@@ -33,8 +33,9 @@ static const GUID GUID_RegistryColumns = { 0x18a4b504, 0xf6d8, 0x4d8a, { 0x86, 0
 enum RegistryColumns
 {
     REGISTRY_COLUMN_NAME = 0,
-    REGISTRY_COLUMN_TYPE = 1,
-    REGISTRY_COLUMN_VALUE = 2,
+    REGISTRY_COLUMN_TYPE,
+    REGISTRY_COLUMN_VALUE,
+    REGISTRY_COLUMN_END
 };
 
 class CRegistryFolderExtractIcon :
@@ -163,6 +164,15 @@ public:
     {
         m_ntPath = ntPath;
         m_hRoot = hRoot;
+        m_hDpa = NULL;
+
+        return S_OK;
+    }
+
+    HRESULT Enumerate()
+    {
+        if (m_hDpa)
+            return S_OK;
 
         m_hDpa = DPA_Create(10);
 
@@ -181,7 +191,6 @@ public:
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
         }
-
         return S_OK;
     }
 
@@ -191,7 +200,12 @@ public:
 
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         RegPidlEntry * info = (RegPidlEntry *) pcidl;
@@ -229,10 +243,18 @@ public:
 
     HRESULT FindByName(LPCWSTR strParsingName, RegPidlEntry ** pinfo)
     {
+        HRESULT hr;
+
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
+
 
         TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
 
@@ -258,6 +280,18 @@ public:
 
     HRESULT GetPidl(UINT index, RegPidlEntry ** pEntry)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *pEntry = NULL;
 
         RegPidlEntry * entry = (RegPidlEntry *) DPA_GetPtr(m_hDpa, index);
@@ -272,6 +306,18 @@ public:
 
     HRESULT GetCount(UINT * count)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *count = m_hDpaCount;
         return S_OK;
     }
@@ -287,54 +333,92 @@ public:
         return idl;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
     {
-        if (LOWORD(lParam) != 0)
-            return E_INVALIDARG;
-
-        if (second->cb > first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->cb < first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (second->entryNameLength > first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->entryNameLength < first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (HIWORD(lParam) == SHCIDS_ALLFIELDS)
+        if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
-            int ord = memcmp(second, first, first->cb);
+            if (lParam != 0)
+                return E_INVALIDARG;
+
+            int minsize = min(first->cb, second->cb);
+            int ord = memcmp(second, first, minsize);
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
-        }
-        else if (HIWORD(lParam) == SHCIDS_CANONICALONLY)
-        {
-            int ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+            if (second->cb > first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            if (second->cb < first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
         else
         {
-            int ord = (int) second->entryType - (int) first->entryType;
+            bool canonical = ((lParam & 0xFFFF0000) == SHCIDS_CANONICALONLY);
 
-            if (ord > 0)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (ord < 0)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
+            switch (lParam & 0xFFFF)
+            {
+            case REGISTRY_COLUMN_NAME:
+            {
+                bool f1 = (first->entryType == REG_ENTRY_KEY) || (first->entryType == REG_ENTRY_ROOT);
+                bool f2 = (second->entryType == REG_ENTRY_KEY) || (second->entryType == REG_ENTRY_ROOT);
 
-            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength / sizeof(WCHAR));
+                if (f1 && !f2)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+                if (f2 && !f1)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+                if (canonical)
+                {
+                    // Shortcut: avoid comparing contents if not necessary when the results are not for display.
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                int minlength = min(first->entryNameLength, second->entryNameLength);
+                int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+
+                if (ord != 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+                if (!canonical)
+                {
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                return S_OK;
+            }
+            case REGISTRY_COLUMN_TYPE:
+            {
+                int ord = second->contentType - first->contentType;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case REGISTRY_COLUMN_VALUE:
+            {
+                // Can't sort by value
+                return E_INVALIDARG;
+            }
+            default:
+            {
+                DbgPrint("Unsupported sorting mode.\n");
+                return E_INVALIDARG;
+            }
+            }
         }
 
-        return S_OK;
+        return E_INVALIDARG;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         RegPidlEntry * second = (RegPidlEntry*) &(p->mkid);
@@ -344,7 +428,7 @@ public:
         return CompareIDs(lParam, first, second);
     }
 
-    HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
+    static HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
     {
         LPCITEMIDLIST p = pcidl1;
         RegPidlEntry * first = (RegPidlEntry*) &(p->mkid);
@@ -354,7 +438,7 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = 0;
@@ -377,7 +461,7 @@ public:
             (entry->entryType == REG_ENTRY_ROOT);
     }
 
-    HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
+    static HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
     {
         switch (contentType)
         {
@@ -608,7 +692,10 @@ CRegistryFolder::CRegistryFolder() :
 
 CRegistryFolder::~CRegistryFolder()
 {
-    TRACE("Destroying CRegistryFolder %p\n", this);
+    if (m_shellPidl)
+        ILFree(m_shellPidl);
+    if (m_PidlManager)
+        delete m_PidlManager;
 }
 
 // IShellFolder
@@ -1250,6 +1337,12 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         *pViewMode = FVM_DETAILS;
         return S_OK;
     }
+    case SFVM_COLUMNCLICK:
+        return S_FALSE;
+    case SFVM_BACKGROUNDENUM:
+        return S_OK;
+    case SFVM_DEFITEMCOUNT:
+        return m_PidlManager->GetCount((UINT*) lParam);
     }
     return E_NOTIMPL;
 }

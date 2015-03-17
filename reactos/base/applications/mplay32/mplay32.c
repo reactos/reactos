@@ -19,7 +19,8 @@ HMENU hMainMenu = NULL;
 
 TCHAR szAppTitle[256] = _T("");
 TCHAR szDefaultFilter[MAX_PATH] = _T("");
-TCHAR *szFilter = NULL;
+TCHAR szCurrentFile[MAX_PATH] = _T("");
+LPTSTR szFilter = NULL;
 
 WORD wDeviceId = 0;
 BOOL bRepeat = FALSE;
@@ -27,6 +28,7 @@ BOOL bIsSingleWindow = FALSE;
 UINT MaxFilePos = 0;
 RECT PrevWindowPos;
 
+static DWORD GetDeviceMode(HWND hwnd);
 
 /* ToolBar Buttons */
 static const TBBUTTON Buttons[] =
@@ -88,6 +90,71 @@ void ResizeClientArea(HWND hwnd, int nWidth, int nHeight)
     ptDifference.x = (rcWindowRect.right - rcWindowRect.left) - rcClientRect.right;
     ptDifference.y = (rcWindowRect.bottom - rcWindowRect.top) - rcClientRect.bottom;
     MoveWindow(hwnd, rcWindowRect.left, rcWindowRect.top, nWidth + ptDifference.x, nHeight + ptDifference.y, TRUE);
+}
+
+void UpdateWindowCaption(HWND hwnd)
+{
+    TCHAR szNewTitle[MAX_PATH + 3 + 256];
+    TCHAR szStatus[128];
+
+    if (wDeviceId == 0)
+    {
+        SetWindowText(hwnd, szAppTitle);
+        return;
+    }
+
+    switch (GetDeviceMode(hwnd))
+    {
+        case MCI_MODE_PAUSE:
+        {
+            LoadString(hInstance, IDS_MODE_PAUSE, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        case MCI_MODE_STOP:
+        {
+            LoadString(hInstance, IDS_MODE_STOP, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        case MCI_MODE_PLAY:
+        {
+            LoadString(hInstance, IDS_MODE_PLAY, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        case MCI_MODE_OPEN:
+        {
+            LoadString(hInstance, IDS_MODE_OPEN, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        case MCI_MODE_RECORD:
+        {
+            LoadString(hInstance, IDS_MODE_RECORD, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        case MCI_MODE_SEEK:
+        {
+            LoadString(hInstance, IDS_MODE_SEEK, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        case MCI_MODE_NOT_READY:
+        {
+            LoadString(hInstance, IDS_MODE_NOT_READY, szStatus, ARRAYSIZE(szStatus));
+            break;
+        }
+
+        default:
+        {
+            LoadString(hInstance, IDS_MODE_UNKNOWN, szStatus, ARRAYSIZE(szStatus));
+        }
+    }
+
+    StringCbPrintf(szNewTitle, sizeof(szNewTitle), _T("%s - %s (%s)"), szAppTitle, szCurrentFile, szStatus);
+    SetWindowText(hwnd, szNewTitle);
 }
 
 static VOID
@@ -376,7 +443,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     MCI_STATUS_PARMS mciStatus;
     MCI_OPEN_PARMS mciOpen;
     DWORD dwFlags = MCI_OPEN_ELEMENT | MCI_WAIT;
-    TCHAR szNewTitle[MAX_PATH + 3 + 256];
+    LPTSTR lpStr;
 
     if (wDeviceId)
         CloseMciDevice();
@@ -423,13 +490,22 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
         SendMessage(hTrackBar, TBM_SETTICFREQ, (WPARAM)100000, (LPARAM)0);
     }
 
-    StringCbPrintf(szNewTitle, sizeof(szNewTitle), _T("%s - %s"), szAppTitle, lpFileName);
-    SetWindowText(hwnd, szNewTitle);
-
     MaxFilePos = mciStatus.dwReturn;
     wDeviceId = mciOpen.wDeviceID;
 
+    /* NOTE: Everything above this line may be done instead in OpenMediaFile() */
+
+    lpStr = _tcsrchr(lpFileName, _T('\\'));
+    if (lpStr) // Get only the file name (skip the last path separator)
+        lpStr++;
+    else
+        lpStr = lpFileName;
+
+    StringCbCopy(szCurrentFile, sizeof(szCurrentFile), lpStr);
+
     EnableMenuItems(hwnd);
+
+    UpdateWindowCaption(hwnd);
 
     return 0;
 }
@@ -471,6 +547,8 @@ StopPlayback(HWND hwnd)
     }
 
     mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+
+    UpdateWindowCaption(hwnd);
 
     SendMessage(hToolBar,
                 TB_SETCMDID,
@@ -552,62 +630,6 @@ SeekForwPlayback(HWND hwnd)
     }
 }
 
-static VOID
-TogglePlaybackState(HWND hwnd)
-{
-    MCIERROR mciError;
-    MCI_GENERIC_PARMS mciGeneric;
-    DWORD dwMode;
-    ULONG idBmp = IDB_PLAYICON;
-    ULONG idCmd = IDC_PLAY;
-
-    if (wDeviceId == 0) return;
-
-    dwMode = GetDeviceMode(hwnd);
-    if (dwMode == MCI_MODE_PLAY)
-    {
-        mciGeneric.dwCallback = (DWORD_PTR)hwnd;
-        mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
-        idBmp = IDB_PLAYICON;
-        idCmd = IDC_PLAY;
-    }
-    else if (dwMode == MCI_MODE_PAUSE)
-    {
-        mciGeneric.dwCallback = (DWORD_PTR)hwnd;
-        mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
-        idBmp = IDB_PAUSEICON;
-        idCmd = IDC_PAUSE;
-    }
-
-    if (mciError != 0)
-    {
-        ShowMCIError(hwnd, mciError);
-        return;
-    }
-
-    SendMessage(hToolBar,
-                TB_SETCMDID,
-                0,
-                idCmd);
-    SendMessage(hToolBar,
-                TB_CHANGEBITMAP,
-                idCmd,
-                idBmp - IDB_PLAYICON);
-}
-
-static VOID
-ShowDeviceProperties(HWND hwnd)
-{
-    MCIERROR mciError;
-    MCI_GENERIC_PARMS mciGeneric;
-
-    mciError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
-    if (mciError != 0)
-    {
-        ShowMCIError(hwnd, mciError);
-    }
-}
-
 VOID CALLBACK
 PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
@@ -661,6 +683,8 @@ StartPlayback(HWND hwnd)
         return;
     }
 
+    UpdateWindowCaption(hwnd);
+
     SendMessage(hToolBar,
                 TB_SETCMDID,
                 0,
@@ -672,6 +696,80 @@ StartPlayback(HWND hwnd)
 }
 
 static VOID
+TogglePlaybackState(HWND hwnd)
+{
+    MCIERROR mciError;
+    MCI_GENERIC_PARMS mciGeneric;
+    ULONG idBmp = IDB_PLAYICON;
+    ULONG idCmd = IDC_PLAY;
+
+    if (wDeviceId == 0) return;
+
+    switch (GetDeviceMode(hwnd))
+    {
+        case MCI_MODE_OPEN:
+        case MCI_MODE_STOP:
+        {
+            StartPlayback(hwnd);
+            return;
+        }
+
+        case MCI_MODE_PLAY:
+        {
+            mciGeneric.dwCallback = (DWORD_PTR)hwnd;
+            mciError = mciSendCommand(wDeviceId, MCI_PAUSE, MCI_NOTIFY | MCI_WAIT, (DWORD_PTR)&mciGeneric);
+            idBmp = IDB_PLAYICON;
+            idCmd = IDC_PLAY;
+            break;
+        }
+
+        case MCI_MODE_PAUSE:
+        {
+            mciGeneric.dwCallback = (DWORD_PTR)hwnd;
+            mciError = mciSendCommand(wDeviceId, MCI_RESUME, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
+            idBmp = IDB_PAUSEICON;
+            idCmd = IDC_PAUSE;
+            break;
+        }
+
+        default:
+        {
+            return;
+        }
+    }
+
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+        return;
+    }
+
+    UpdateWindowCaption(hwnd);
+
+    SendMessage(hToolBar,
+                TB_SETCMDID,
+                0,
+                idCmd);
+    SendMessage(hToolBar,
+                TB_CHANGEBITMAP,
+                idCmd,
+                idBmp - IDB_PLAYICON);
+}
+
+static VOID
+ShowDeviceProperties(HWND hwnd)
+{
+    MCIERROR mciError;
+    MCI_GENERIC_PARMS mciGeneric;
+
+    mciError = mciSendCommand(wDeviceId, MCI_CONFIGURE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+    if (mciError != 0)
+    {
+        ShowMCIError(hwnd, mciError);
+    }
+}
+
+static VOID
 CloseMediaFile(HWND hwnd)
 {
     StopPlayback(hwnd);
@@ -680,7 +778,7 @@ CloseMediaFile(HWND hwnd)
         SwitchViewMode(hwnd);
 
     CloseMciDevice();
-    SetWindowText(hwnd, szAppTitle);
+    UpdateWindowCaption(hwnd);
 }
 
 static VOID
@@ -1012,9 +1110,6 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_SIZE:
         {
             RECT Rect;
-            UINT Size;
-            RECT ToolbarRect;
-            MCI_DGV_PUT_PARMS mciPut;
 
             if (hToolBar && hTrackBar)
             {
@@ -1023,11 +1118,14 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                 if (!bIsSingleWindow)
                 {
-                    Size = GetSystemMetrics(SM_CYMENU) + Rect.bottom;
+                    UINT Size = GetSystemMetrics(SM_CYMENU) + Rect.bottom;
                     MoveWindow(hTrackBar, 0, 0, LOWORD(lParam), HIWORD(lParam) - Size, TRUE);
                 }
                 else
                 {
+                    RECT ToolbarRect;
+                    MCI_DGV_PUT_PARMS mciPut;
+
                     MoveWindow(hTrackBar, 180, 0, LOWORD(lParam) - 180, 25, TRUE);
 
                     GetClientRect(hwnd, &Rect);
@@ -1078,18 +1176,10 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case IDC_PAUSE:
                 {
                     if (wDeviceId)
-                    {
-                        DWORD dwMode = GetDeviceMode(hwnd);
-
-                        if ((dwMode == MCI_MODE_STOP) || (dwMode == MCI_MODE_OPEN))
-                            StartPlayback(hwnd);
-                        else if ((dwMode == MCI_MODE_PAUSE) || (dwMode = MCI_MODE_PLAY))
-                            TogglePlaybackState(hwnd);
-                    }
+                        TogglePlaybackState(hwnd);
                     else
-                    {
                         OpenFileDialog(hwnd);
-                    }
+
                     break;
                 }
 

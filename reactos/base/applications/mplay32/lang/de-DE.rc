@@ -43,6 +43,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_MODE_UNKNOWN "Unbekannt"
+    IDS_MODE_OPEN "Geöffnet"
+    IDS_MODE_STOP "Angehalten"
+    IDS_MODE_PLAY "Wiedergabe"
+    IDS_MODE_PAUSE "Pause"
+    IDS_MODE_RECORD "Aufnehmen"
+    IDS_MODE_SEEK "Spulen"
+    IDS_MODE_NOT_READY "Nicht bereit"
     IDS_ALL_TYPES_FILTER "Alle unterstützten"
     IDS_TOOLTIP_PLAY "Wiedergabe"
     IDS_TOOLTIP_STOP "Stopp"

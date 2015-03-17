@@ -43,6 +43,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_MODE_UNKNOWN "Inconnu"
+    IDS_MODE_OPEN "Ouvert"
+    IDS_MODE_STOP "Arrêté"
+    IDS_MODE_PLAY "Lecture"
+    IDS_MODE_PAUSE "En pause"
+    IDS_MODE_RECORD "Enregistrement"
+    IDS_MODE_SEEK "Recherche"
+    IDS_MODE_NOT_READY "Pas prêt"
     IDS_ALL_TYPES_FILTER "Tous les types supportés"
     IDS_TOOLTIP_PLAY "Lecture"
     IDS_TOOLTIP_STOP "Stop"
