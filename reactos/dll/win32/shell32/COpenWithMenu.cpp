@@ -981,7 +981,7 @@ VOID COpenWithDialog::Init(HWND hwnd)
 
         /* Init treeview */
         m_hTreeView = GetDlgItem(hwnd, 14002);
-        m_hImgList = ImageList_Create(16, 16, 0, m_pAppList->GetCount() + 1, m_pAppList->GetCount() + 1);
+        m_hImgList = ImageList_Create(16, 16,  ILC_COLOR24 | ILC_MASK, m_pAppList->GetCount() + 1, m_pAppList->GetCount() + 1);
         (void)TreeView_SetImageList(m_hTreeView, m_hImgList, TVSIL_NORMAL);
 
         /* If there are some recommendations add parent nodes: Recommended and Others */
