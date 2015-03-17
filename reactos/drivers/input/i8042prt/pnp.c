@@ -476,13 +476,15 @@ StartProcedure(
         {
             WARN_(I8042PRT, "i8042ConnectMouseInterrupt failed: %lx\n", Status);
         }
-        
+
         /* Start the mouse */
         Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
         /* HACK: the mouse has already been reset in i8042DetectMouse. This second
            reset prevents some touchpads/mice from working (Dell D531, D600).
-           See CORE-6901
-        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE); */
+           See CORE-6901 */
+#ifndef __I8042PRT_HACK_FOR_NOTEBOOK__
+        i8042IsrWritePort(DeviceExtension, MOU_CMD_RESET, CTRL_WRITE_MOUSE);
+#endif
         KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
     }
 
@@ -654,13 +656,13 @@ i8042RemoveDevice(
 
     DriverExtension = (PI8042_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, DeviceObject->DriverObject);
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    
+
     KeAcquireSpinLock(&DriverExtension->DeviceListLock, &OldIrql);
     RemoveEntryList(&DeviceExtension->ListEntry);
     KeReleaseSpinLock(&DriverExtension->DeviceListLock, OldIrql);
-    
+
     IoDetachDevice(DeviceExtension->LowerDevice);
-    
+
     IoDeleteDevice(DeviceObject);
 }
 
