@@ -896,7 +896,7 @@ WdmAudQueryMixerInfoByLegacy(
     SND_TRACE(L"uMsg %x Flags %x\n", uMsg, Flags);
 
     Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
-    SND_ASSERT( Result == MMSYSERR_NOERROR );
+    // SND_ASSERT( Result == MMSYSERR_NOERROR );
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.hDevice = Handle;
