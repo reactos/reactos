@@ -6,7 +6,7 @@
 Name = Stamina 2.5
 Description = Free typing tutor.
 URLSite = http://stamina.ru
-Size = 4.7 MB
+Size = 4.8 MB
 Category = 8
 URLDownload = http://stamina.ru/files/StaminaSetup.exe
 CDPath = none
@@ -22,8 +22,8 @@ Description = Darmowy program do nauki pisania na klawiaturze.
 
 [Section.0418]
 Description = Tutor gratuit pentru dactilografiere.
-Size = 4,7 Mo
+Size = 4,8 Mo
 
 [Section.041f]
 Description = Ücretsiz düğme takımında yazma öğreticisi.
-Size = 4,7 MB
+Size = 4,8 MB

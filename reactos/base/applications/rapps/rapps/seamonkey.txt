@@ -3,44 +3,44 @@
 
 [Section]
 Name = Mozilla SeaMonkey
-Version = 2.31
+Version = 2.33
 License = MPL/GPL/LGPL
 Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
 Size = 30.05 MB
 Category = 5
 URLSite = http://www.seamonkey-project.org/
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/en-US/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/en-US/SeaMonkey%20Setup%202.33.exe
 CDPath = none
 
 [Section.0407]
 Description = Mozilla Suite lebt. Dies ist das einzige Browser-, Mail-, Chat- and Composerwerkzeug-Bundle welches Sie benötigen.
 Size = 29.92 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/de/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/de/SeaMonkey%20Setup%202.33.exe
 
 [Section.040a]
 Description = La suite de Mozilla está viva. Es el primero y único navegador web, gestor de correo, lector de noticias, Chat y editor HTML que necesitarás.
 Size = 29.91 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/es-ES/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/es-ES/SeaMonkey%20Setup%202.33.exe
 
 [Section.040c]
 Description = La suite Mozilla est en vie. Ceci est le seul et l'unique package navigateur, client mail, client chat et composer dont vous aurez besoin.
 Size = 30,18 Mo
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/fr/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/fr/SeaMonkey%20Setup%202.33.exe
 
 [Section.0410]
 Description = Mozilla Suite è vivo. Questo è l'unico pachetto che include Browser, Mail, Chat, e Composer di cui avrete mai bisogno...
 Size = 29.84 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/it/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/it/SeaMonkey%20Setup%202.33.exe
 
 [Section.0413]
 Description = Mozilla Suite bundelt alle applicaties voor het Web: Browser, Mail, Chat, Composer.
 Size = 30.52 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/nl/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/nl/SeaMonkey%20Setup%202.33.exe
 
 [Section.0415]
 Description = Pakiet Mozilla żyje. W zestawie: przeglądarka, klient poczty, IRC oraz Edytor HTML - wszystko, czego potrzebujesz.
 Size = 30.83 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/pl/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/pl/SeaMonkey%20Setup%202.33.exe
 
 [Section.0418]
 Description = Suita Mozilla. Acest pachet încorporează navigator, poștă electronică, client IRC și editor HTML, acoperind astfel o arie largă de necesități.
@@ -49,9 +49,9 @@ Size = 30,17 Mo
 [Section.0419]
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
 Size = 30.39 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/ru/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/ru/SeaMonkey%20Setup%202.33.exe
 
 [Section.041f]
 Description = Mozilla Bohçası sağ. Bu, hiç gereksinim duymayacağınız, yalnızca Tarayıcı, Posta, Söyleşi ve Yazar bohçasıdır.
 Size = 29,89 MB
-URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.31/win32/tr/SeaMonkey%20Setup%202.31.exe
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/tr/SeaMonkey%20Setup%202.33.exe

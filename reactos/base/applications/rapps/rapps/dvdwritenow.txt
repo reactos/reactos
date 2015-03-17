@@ -4,7 +4,7 @@
 
 [Section]
 Name = DVD Write Now
-Version = 1.5.12 sp2
+Version = 1.5.12 SP2
 License = Freeware
 Description = A free direct CD/DVD recording software. Once installed, you can use your CD/DVD RW as USB Flash or removable hard drives. Along with this you can write to CD/DVD RW recorded with UDF filesystem. You can also read UDF disks created with other software (Microsoft DVD−ROMs, RW disks recorded with Ahead InCD). You need a ZIP decompression program to install it.
 Size = 1.2 MB
