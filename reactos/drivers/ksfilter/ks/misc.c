@@ -11,8 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_KS 'ssKK'
-
 VOID
 CompleteRequest(
     PIRP Irp,
@@ -31,7 +29,7 @@ AllocateItem(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes)
 {
-    PVOID Item = ExAllocatePoolWithTag(PoolType, NumberOfBytes, TAG_KS);
+    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
     if (!Item)
         return Item;
 

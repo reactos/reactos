@@ -11,7 +11,6 @@ typedef struct
     PMDL Mdl;
     ULONG Length;
     ULONG Function;
-    PFILE_OBJECT FileObject;
 }WDMAUD_COMPLETION_CONTEXT, *PWDMAUD_COMPLETION_CONTEXT;
 
 
@@ -67,7 +66,6 @@ typedef struct
     KEVENT InitializationCompletionEvent;
     ULONG WorkItemActive;
 
-    PDEVICE_OBJECT NextDeviceObject;
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
 typedef struct
