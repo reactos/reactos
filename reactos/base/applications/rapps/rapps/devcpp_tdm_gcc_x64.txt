@@ -3,13 +3,13 @@
 
 [Section]
 Name = Orwell Dev-C++ TDM GCC x64
-Version = 5.8.3
+Version = 5.9.2
 License = GPLv2
 Description = A maintained version of Dev-C++. It contains 64 bit TDM-GCC compiler.
-Size = 44.8 MB
+Size = 44.9 MB
 Category = 7
 URLSite = http://orwelldevcpp.blogspot.com/
-URLDownload = http://download.sourceforge.net/project/orwelldevcpp/Setup%20Releases/Dev-Cpp%205.8.3%20TDM-GCC%204.8.1%20Setup.exe
+URLDownload = http://download.sourceforge.net/project/orwelldevcpp/Setup%20Releases/Dev-Cpp%205.9.2%20TDM-GCC%204.8.1%20Setup.exe
 CDPath = none
 
 [Section.0407]
@@ -20,9 +20,9 @@ Description = Una versione sostenuta di Dev-C++. Contiene il compilatore a 64bit
 
 [Section.0418]
 Description = O versiune menținută a Dev-C++. Conține compilatorul TDM-GCC pe 64 biți.
-Size = 44,8 Mo
+Size = 44,9 Mo
 
 [Section.041f]
 License = GPL sürüm 2
 Description = Dev-C++'nın sürdürülen bir sürümü. 64 bitlik TDM-GCC derleyicisi içerir.
-Size = 44,8 MB
+Size = 44,9 MB

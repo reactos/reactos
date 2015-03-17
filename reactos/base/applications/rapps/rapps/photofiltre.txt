@@ -4,13 +4,13 @@
 
 [Section]
 Name = PhotoFiltre 7
-Version = 7.2.0
+Version = 7.2.1
 License = Freeware
 Description = This version with layers but more limited than the Studio X version. PhotoFiltre Studio is a complete image retouching program.
 Size = 5.0 MB
 Category = 3
 URLSite = http://www.photofiltre-studio.com/pf7-en.htm
-URLDownload = http://static.infomaniak.ch/photofiltre/utils/pf7/pf7-setup-en-7.2.0.exe
+URLDownload = http://static.infomaniak.ch/photofiltre/utils/pf7/pf7-setup-en-7.2.1.exe
 CDPath = none
 
 [Section.0407]

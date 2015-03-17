@@ -3,26 +3,26 @@
 
 [Section]
 Name = LibreOffice Help Pack
-Version = For LibreOffice 4.3.5
+Version = For LibreOffice 4.4.1
 License = GPLv3
 Description = Offline help content of LibreOffice.
-Size = 5.06 MB
+Size = 5.12 MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.5/win/x86/LibreOffice_4.3.5_Win_x86_helppack_en-US.msi
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.1/win/x86/LibreOffice_4.4.1_Win_x86_helppack_en-US.msi
 CDPath = none
 
 [Section.0407]
 Name = LibreOffice Help Pack
-Version = Für LibreOffice 4.3.5
+Version = Für LibreOffice 4.4.1
 Description = Offline Hilfe für LibreOffice.
-Size = 7.02 MB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.5/win/x86/LibreOffice_4.3.5_Win_x86_helppack_de.msi
+Size = 7.07 MB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.1/win/x86/LibreOffice_4.4.1_Win_x86_helppack_de.msi
 
 [Section.041f]
 Name = LibreOffice Yardım Paketi
-Version = LibreOffice 4.3.5 için
+Version = LibreOffice 4.4.1 için
 License = GPL sürüm 3
 Description = LibreOffice'in çevrim dışı yardım içeriği.
-Size = 6,79 MB
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.3.5/win/x86/LibreOffice_4.3.5_Win_x86_helppack_tr.msi
+Size = 6,85 MB
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.1/win/x86/LibreOffice_4.4.1_Win_x86_helppack_tr.msi
