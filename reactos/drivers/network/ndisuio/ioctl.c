@@ -190,7 +190,15 @@ SetAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         }
 
         /* Return the bytes read */
-        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(NDIS_OID) + Request.DATA.SET_INFORMATION.BytesRead;
+        if (Status == NDIS_STATUS_INVALID_LENGTH ||
+            Status == NDIS_STATUS_BUFFER_TOO_SHORT)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else if (Status == NDIS_STATUS_SUCCESS)
+        {
+            Irp->IoStatus.Information = sizeof(NDIS_OID) + Request.DATA.SET_INFORMATION.BytesRead;
+        }
 
         DPRINT("Final request status: 0x%x (%d)\n", Status, Irp->IoStatus.Information);
     }
@@ -256,7 +264,15 @@ QueryAdapterOid(PIRP Irp, PIO_STACK_LOCATION IrpSp)
         }
 
         /* Return the bytes written */
-        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(NDIS_OID) + Request.DATA.QUERY_INFORMATION.BytesWritten;
+        if (Status == NDIS_STATUS_INVALID_LENGTH ||
+            Status == NDIS_STATUS_BUFFER_TOO_SHORT)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else if (Status == NDIS_STATUS_SUCCESS)
+        {
+            Irp->IoStatus.Information = sizeof(NDIS_OID) + Request.DATA.QUERY_INFORMATION.BytesWritten;
+        }
 
         DPRINT("Final request status: 0x%x (%d)\n", Status, Irp->IoStatus.Information);
     }
