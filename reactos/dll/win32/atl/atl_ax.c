@@ -22,6 +22,7 @@
 
 #include <ole2.h>
 #include <exdisp.h>
+#include <shlwapi.h>
 #include <wine/atlwin.h>
 
 typedef struct IOCS {
@@ -38,6 +39,8 @@ typedef struct IOCS {
     WNDPROC OrigWndProc;
     BOOL fActive, fInPlace, fWindowless;
 } IOCS;
+
+static const WCHAR wine_atl_iocsW[] = {'_','_','W','I','N','E','_','A','T','L','_','I','O','C','S','\0'};
 
 /**********************************************************************
  * AtlAxWin class window procedure
@@ -134,7 +137,7 @@ static HRESULT IOCS_Detach( IOCS *This ) /* remove subclassing */
     if ( This->hWnd )
     {
         SetWindowLongPtrW( This->hWnd, GWLP_WNDPROC, (ULONG_PTR) This->OrigWndProc );
-        SetWindowLongPtrW( This->hWnd, GWLP_USERDATA, 0 );
+        RemovePropW( This->hWnd, wine_atl_iocsW);
         This->hWnd = NULL;
     }
     if ( This->control )
@@ -890,7 +893,7 @@ static LRESULT IOCS_OnWndProc( IOCS *This, HWND hWnd, UINT uMsg, WPARAM wParam, 
 
 static LRESULT CALLBACK AtlHost_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lParam )
 {
-    IOCS *This = (IOCS*) GetWindowLongPtrW( hWnd, GWLP_USERDATA );
+    IOCS *This = (IOCS*) GetPropW( hWnd, wine_atl_iocsW );
     return IOCS_OnWndProc( This, hWnd, wMsg, wParam, lParam );
 }
 
@@ -899,7 +902,7 @@ static HRESULT IOCS_Attach( IOCS *This, HWND hWnd, IUnknown *pUnkControl ) /* su
     This->hWnd = hWnd;
     IUnknown_QueryInterface( pUnkControl, &IID_IOleObject, (void**)&This->control );
     IOleObject_SetClientSite( This->control, &This->IOleClientSite_iface );
-    SetWindowLongPtrW( hWnd, GWLP_USERDATA, (ULONG_PTR) This );
+    SetPropW( hWnd, wine_atl_iocsW, This );
     This->OrigWndProc = (WNDPROC)SetWindowLongPtrW( hWnd, GWLP_WNDPROC, (ULONG_PTR) AtlHost_wndproc );
 
     return S_OK;
@@ -973,6 +976,48 @@ HRESULT WINAPI AtlAxCreateControl(LPCOLESTR lpszName, HWND hWnd,
             NULL, NULL, NULL );
 }
 
+enum content
+{
+    IsEmpty = 0,
+    IsGUID = 1,
+    IsHTML = 2,
+    IsURL = 3,
+    IsUnknown = 4
+};
+
+static enum content get_content_type(LPCOLESTR name, CLSID *control_id)
+{
+    WCHAR new_urlW[MAX_PATH];
+    DWORD size = MAX_PATH;
+    WCHAR mshtml_prefixW[] = {'m','s','h','t','m','l',':','\0'};
+
+    if (!name || !name[0])
+    {
+        WARN("name %s\n", wine_dbgstr_w(name));
+        return IsEmpty;
+    }
+
+    if (CLSIDFromString(name, control_id) == S_OK ||
+        CLSIDFromProgID(name, control_id) == S_OK)
+        return IsGUID;
+
+    if (PathIsURLW (name) ||
+        UrlApplySchemeW(name, new_urlW, &size, URL_APPLY_GUESSSCHEME|URL_APPLY_GUESSFILE) == S_OK)
+    {
+        *control_id = CLSID_WebBrowser;
+        return IsURL;
+    }
+
+    if (!strncmpiW(name, mshtml_prefixW, 7))
+    {
+        FIXME("mshtml prefix not implemented\n");
+        *control_id = CLSID_WebBrowser;
+        return IsHTML;
+    }
+
+    return IsUnknown;
+}
+
 /***********************************************************************
  *           AtlAxCreateControlEx            [atl100.@]
  *
@@ -987,24 +1032,24 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
     CLSID controlId;
     HRESULT hRes;
     IOleObject *pControl;
-    IUnknown *pUnkControl;
+    IUnknown *pUnkControl = NULL;
     IPersistStreamInit *pPSInit;
-    IUnknown *pContainer;
-    enum {IsGUID=0,IsHTML=1,IsURL=2} content;
+    IUnknown *pContainer = NULL;
+    enum content content;
 
     TRACE("(%s %p %p %p %p %p %p)\n", debugstr_w(lpszName), hWnd, pStream,
             ppUnkContainer, ppUnkControl, iidSink, punkSink);
 
-    hRes = CLSIDFromString( lpszName, &controlId );
-    if ( FAILED(hRes) )
-        hRes = CLSIDFromProgID( lpszName, &controlId );
-    if ( SUCCEEDED( hRes ) )
-        content = IsGUID;
-    else {
-        /* FIXME - check for MSHTML: prefix! */
-        content = IsURL;
-        controlId = CLSID_WebBrowser;
-    }
+    if (ppUnkContainer) *ppUnkContainer = NULL;
+    if (ppUnkControl) *ppUnkControl = NULL;
+
+    content = get_content_type(lpszName, &controlId);
+
+    if (content == IsEmpty)
+        return S_OK;
+
+    if (content == IsUnknown)
+        return CO_E_CLASSSTRING;
 
     hRes = CoCreateInstance( &controlId, 0, CLSCTX_ALL, &IID_IOleObject,
             (void**) &pControl );
@@ -1121,7 +1166,6 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
 #define GET_DWORD(x) (*(const DWORD *)(x))
 #define PUT_BLOCK(x,y) do {if (!advance_array(&output, &allocated, &filled, (x), (y))) return NULL;} while (0)
 #define PUT_WORD(x)  do {WORD w = (x);PUT_BLOCK(&w, 1);} while(0)
-#define PUT_DWORD(x)  do {DWORD w = (x);PUT_BLOCK(&w, 2);} while(0)
     const WORD *tmp, *src = (const WORD *)src_tmpl;
     WORD *output;
     DWORD allocated, filled; /* in WORDs */
@@ -1313,7 +1357,7 @@ HRESULT WINAPI AtlAxGetHost(HWND hWnd, IUnknown **host)
 
     *host = NULL;
 
-    This = (IOCS*) GetWindowLongPtrW( hWnd, GWLP_USERDATA );
+    This = (IOCS*) GetPropW( hWnd, wine_atl_iocsW );
     if ( !This )
     {
         WARN("No container attached to %p\n", hWnd );
@@ -1335,7 +1379,7 @@ HRESULT WINAPI AtlAxGetControl(HWND hWnd, IUnknown **pUnk)
 
     *pUnk = NULL;
 
-    This = (IOCS*) GetWindowLongPtrW( hWnd, GWLP_USERDATA );
+    This = (IOCS*) GetPropW( hWnd, wine_atl_iocsW );
     if ( !This || !This->control )
     {
         WARN("No control attached to %p\n", hWnd );
