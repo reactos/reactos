@@ -51,11 +51,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID ID,
     OutData->if_physaddrlen = Interface->AddressLength;
     OutData->if_adminstatus = MIB_IF_ADMIN_STATUS_UP;
     /* NDIS_HARDWARE_STATUS -> ROUTER_CONNECTION_STATE */
-    Status = GetInterfaceConnectionStatus( Interface, &OutData->if_operstatus );
-
-    /* Not sure what to do here, but not ready seems a safe bet on failure */
-    if( !NT_SUCCESS(Status) )
-        OutData->if_operstatus = NdisHardwareStatusNotReady;
+    GetInterfaceConnectionStatus( Interface, &OutData->if_operstatus );
 
     IFDescr = (PCHAR)&OutData->if_descr[0];
 

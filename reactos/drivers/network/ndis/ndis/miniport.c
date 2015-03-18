@@ -1708,6 +1708,12 @@ NdisMRegisterAdapterShutdownHandler(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
+  if (Adapter->BugcheckContext != NULL)
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Attempted to register again for a shutdown callback\n"));
+      return;
+  }
+
   BugcheckContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_BUGCHECK_CONTEXT));
   if(!BugcheckContext)
     {
