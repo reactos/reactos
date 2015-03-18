@@ -9,6 +9,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ntoskrnl.h>
+#include <winerror.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -63,6 +64,7 @@ PsConvertToGuiThread(VOID)
         if (!NewStack)
         {
             /* Panic in user-mode */
+            NtCurrentTeb()->LastErrorValue = ERROR_NOT_ENOUGH_MEMORY;
             return STATUS_NO_MEMORY;
         }
 

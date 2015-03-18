@@ -1673,7 +1673,6 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
         if (!NT_SUCCESS(Result))
         {
             /* Set the last error and fail */
-            NtCurrentTeb()->LastErrorValue = RtlNtStatusToDosError(Result);
             goto ExitCall;
         }
 
