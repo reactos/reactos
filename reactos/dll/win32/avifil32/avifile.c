@@ -446,13 +446,12 @@ static HRESULT WINAPI IAVIFile_fnDeleteStream(IAVIFile *iface, DWORD fccType, LO
       This->ppStreams[nStream] != NULL) {
     /* ... so delete it now */
     HeapFree(GetProcessHeap(), 0, This->ppStreams[nStream]);
-
-    if (This->fInfo.dwStreams - nStream > 0)
-      memcpy(This->ppStreams + nStream, This->ppStreams + nStream + 1,
-	     (This->fInfo.dwStreams - nStream) * sizeof(IAVIStreamImpl*));
+    This->fInfo.dwStreams--;
+    if (nStream < This->fInfo.dwStreams)
+      memmove(&This->ppStreams[nStream], &This->ppStreams[nStream + 1],
+             (This->fInfo.dwStreams - nStream) * sizeof(This->ppStreams[0]));
 
     This->ppStreams[This->fInfo.dwStreams] = NULL;
-    This->fInfo.dwStreams--;
     This->fDirty = TRUE;
 
     /* This->fInfo will be updated further when asked for */
@@ -1406,11 +1405,21 @@ static HRESULT AVIFILE_AddRecord(IAVIFileImpl *This)
   /* pre-conditions */
   assert(This != NULL && This->ppStreams[0] != NULL);
 
-  if (This->idxRecords == NULL || This->cbIdxRecords == 0) {
-    This->cbIdxRecords += 1024 * sizeof(AVIINDEXENTRY);
-    This->idxRecords = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->cbIdxRecords);
-    if (This->idxRecords == NULL)
+  if (This->idxRecords == NULL || This->cbIdxRecords / sizeof(AVIINDEXENTRY) <= This->nIdxRecords) {
+    DWORD new_count = This->cbIdxRecords + 1024 * sizeof(AVIINDEXENTRY);
+    void *mem;
+    if (!This->idxRecords)
+      mem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, new_count);
+    else
+      mem = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->idxRecords, new_count);
+    if (mem) {
+      This->cbIdxRecords = new_count;
+      This->idxRecords = mem;
+    } else {
+      HeapFree(GetProcessHeap(), 0, This->idxRecords);
+      This->idxRecords = NULL;
       return AVIERR_MEMORY;
+    }
   }
 
   assert(This->nIdxRecords < This->cbIdxRecords/sizeof(AVIINDEXENTRY));
@@ -1442,7 +1451,7 @@ static DWORD   AVIFILE_ComputeMoviStart(IAVIFileImpl *This)
     dwPos += ((pStream->cbFormat + 1) & ~1U);
     if (pStream->lpHandlerData != NULL && pStream->cbHandlerData > 0)
       dwPos += 2 * sizeof(DWORD) + ((pStream->cbHandlerData + 1) & ~1U);
-    if (lstrlenW(pStream->sInfo.szName) > 0)
+    if (pStream->sInfo.szName[0])
       dwPos += 2 * sizeof(DWORD) + ((lstrlenW(pStream->sInfo.szName) + 1) & ~1U);
   }
 
@@ -2201,7 +2210,7 @@ static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This)
     }
 
     /* ... an optional name for this stream ... */
-    if (lstrlenW(pStream->sInfo.szName) > 0) {
+    if (pStream->sInfo.szName[0]) {
       LPSTR str;
 
       ck.ckid   = ckidSTREAMNAME;
