@@ -14,20 +14,28 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
+VOID
 NTAPI
 PspDeleteLdt(PEPROCESS Process)
 {
-    /* FIXME */
-    return STATUS_SUCCESS;
+    /* FIXME - LdtInformation must be null as long as we don't implement VDMs */
+    ASSERT(Process->LdtInformation == NULL);
 }
 
-NTSTATUS
+VOID
 NTAPI
 PspDeleteVdmObjects(PEPROCESS Process)
 {
-    /* FIXME */
-    return STATUS_SUCCESS;
+    /* If there are no VDM objects, just exit */
+    if (PsGetCurrentProcess()->VdmObjects == NULL)
+        return;
+
+    /* FIXME: Need to do more than just freeing the main VdmObjects member! */
+    UNIMPLEMENTED;
+
+    /* Free VDM objects */
+    ExFreePoolWithTag(PsGetCurrentProcess()->VdmObjects, '  eK');
+    PsGetCurrentProcess()->VdmObjects = NULL;
 }
 
 NTSTATUS
