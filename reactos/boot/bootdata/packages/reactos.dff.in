@@ -87,6 +87,9 @@ Signature = "$ReactOS$"
 "modules/optional/b57win32.inf"                       6  optional
 "modules/optional/b57win32.cat"                       6  optional
 "modules/optional/b57xp32.sys"                        2  optional
+"modules/optional/bcmwl5.inf"                         6  optional
+"modules/optional/bcm43xx.cat"                        6  optional
+"modules/optional/bcmwl5.sys"                         2  optional
 "modules/optional/alcxwdm.inf"                        6  optional
 "modules/optional/alcxwdm.sys"                        2  optional
 "modules/optional/mfc42.dll"                          1  optional
