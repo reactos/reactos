@@ -1,0 +1,57 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Microsoft Visual C++ 2012 Redistributable Update 4
+Version = 11.0
+License = Unknown
+Description = Microsoft Visual Studio 2012 Runtime. Contains: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Size = 6.25 MB
+Category = 14
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=30679
+URLDownload = http://download.microsoft.com/download/1/6/B/16B06F60-3B20-4FF2-B699-5E9B7962F9AE/VSU_4/vcredist_x86.exe
+CDPath = none
+
+[Section.0407]
+License = Unbekannt
+Description = Microsoft Visual Studio 2012 Laufzeitsystem Update 4. Beinhaltet: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.040a]
+License = Desconocida
+Description = Librerias Microsoft Visual Studio 2012 Update 4. Incluye: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.040c]
+License = Inconnue
+Description = Bibliothèque Microsoft Visual Studio 2012 Update 4. Contient: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Size = 6.25 Mo
+
+[Section.0410]
+License = Sconosciuta
+Description = Libreria Microsoft Visual Studio 2012 Update 4. Include: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.0413]
+License = Ongekend
+Description = Microsoft Visual Studio 2012 Runtime Update 4. Bevat: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.0415]
+License = Nieznana
+Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2012 Update 4. Zawiera: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.0418]
+License = Necunoscută
+Description = Microsoft Visual Studio 2012 Runtime Update 4. Conține: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Size = 6,25 Mo
+
+[Section.041f]
+Name = Microsoft Visual C++ 2012 Yeniden Dağıtılabilir Paket
+License = Bilinmiyor
+Description = Microsoft Visual Studio 2012 Update 4 Yürütücü. Şunları içerir: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Size = 6,25 MB
+
+[Section.0422]
+License = Невідома
+Description = Бібліотеки Microsoft Visual Studio 2012 Update 4. включає: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+
+[Section.0813]
+License = Ongekend
+Description = Microsoft Visual Studio 2012 Runtime Update 4. Bevat: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
