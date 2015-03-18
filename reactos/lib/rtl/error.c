@@ -160,10 +160,7 @@ void WINAPI RtlSetLastWin32Error( DWORD err )
  */
 void WINAPI RtlSetLastWin32ErrorAndNtStatusFromNtStatus( NTSTATUS status )
 {
-    PTEB Teb = NtCurrentTeb ();
-
-    Teb->LastErrorValue = RtlNtStatusToDosError( status );
-    Teb->LastStatusValue = status;
+    NtCurrentTeb()->LastErrorValue = RtlNtStatusToDosError( status );
 }
 
 /*
