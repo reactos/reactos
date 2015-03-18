@@ -187,6 +187,39 @@ static LONG CDECL fdi_seek(INT_PTR hf, LONG dist, int seektype)
     return SetFilePointer(handle, dist, NULL, seektype);
 }
 
+/* Callbacks for testing FDIIsCabinet with hf == 0 */
+static INT_PTR static_fdi_handle;
+
+static INT_PTR CDECL fdi_open_static(char *pszFile, int oflag, int pmode)
+{
+    ok(0, "FDIIsCabinet shouldn't call pfnopen\n");
+    return 1;
+}
+
+static UINT CDECL fdi_read_static(INT_PTR hf, void *pv, UINT cb)
+{
+    ok(hf == 0, "unexpected hf %lx\n", hf);
+    return fdi_read(static_fdi_handle, pv, cb);
+}
+
+static UINT CDECL fdi_write_static(INT_PTR hf, void *pv, UINT cb)
+{
+    ok(0, "FDIIsCabinet shouldn't call pfnwrite\n");
+    return 0;
+}
+
+static int CDECL fdi_close_static(INT_PTR hf)
+{
+    ok(0, "FDIIsCabinet shouldn't call pfnclose\n");
+    return 0;
+}
+
+static LONG CDECL fdi_seek_static(INT_PTR hf, LONG dist, int seektype)
+{
+    ok(hf == 0, "unexpected hf %lx\n", hf);
+    return fdi_seek(static_fdi_handle, dist, seektype);
+}
+
 static void test_FDICreate(void)
 {
     HFDI hfdi;
@@ -683,6 +716,28 @@ static void test_FDIIsCabinet(void)
 
     fdi_close(fd);
     FDIDestroy(hfdi);
+
+    hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open_static, fdi_read_static,
+                     fdi_write_static, fdi_close_static, fdi_seek_static,
+                     cpuUNKNOWN, &erf);
+    ok(hfdi != NULL, "Expected non-NULL context\n");
+
+    /* FDIIsCabinet accepts hf == 0 even though it's not a valid result of pfnopen */
+    static_fdi_handle = fdi_open(extract, 0, 0);
+    ZeroMemory(&cabinfo, sizeof(FDICABINETINFO));
+    SetLastError(0xdeadbeef);
+    ret = FDIIsCabinet(hfdi, 0, &cabinfo);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
+    ok(cabinfo.cFiles == 4, "Expected 4, got %d\n", cabinfo.cFiles);
+    ok(cabinfo.cFolders == 1, "Expected 1, got %d\n", cabinfo.cFolders);
+    ok(cabinfo.setID == 0xbeef, "Expected 0xbeef, got %d\n", cabinfo.setID);
+    ok(cabinfo.cbCabinet == 182, "Expected 182, got %d\n", cabinfo.cbCabinet);
+    ok(cabinfo.iCabinet == 0, "Expected 0, got %d\n", cabinfo.iCabinet);
+
+    fdi_close(static_fdi_handle);
+    FDIDestroy(hfdi);
+
     delete_test_files();
 }
 
