@@ -5,6 +5,7 @@ list(APPEND WALLPAPER_FILES
     lake.jpg
     ReactOS_CirclesBlue.jpg
     ReactOS_CirclesGold.jpg
+    ReactOS_CirclesGold.bmp
     ReactOS_Light_4-3.jpg
     ReactOS_Light_16-9.jpg
     ReadMe.txt)
