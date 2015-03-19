@@ -24,6 +24,7 @@
 #include <wingdi.h>
 #include <winuser.h>
 #include <commctrl.h>
+#include <reactos/undocuser.h>
 #include "msg.h"
 
 #include "resources.h"
@@ -281,6 +282,37 @@ static INT_PTR CALLBACK nav_page_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM
     return FALSE;
 }
 
+static WNDPROC old_nav_dialog_proc;
+
+static LRESULT CALLBACK new_nav_dialog_proc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+{
+    switch (msg)
+    {
+    case DM_SETDEFID:
+        ok( IsWindowEnabled( GetDlgItem(hwnd, wp) ), "button is not enabled\n" );
+        break;
+    }
+    return CallWindowProcW( old_nav_dialog_proc, hwnd, msg, wp, lp );
+}
+
+static LRESULT CALLBACK hook_proc( int code, WPARAM wp, LPARAM lp )
+{
+    static BOOL done;
+    if (code == HCBT_CREATEWND)
+    {
+        CBT_CREATEWNDW *c = (CBT_CREATEWNDW *)lp;
+
+        /* The first dialog created will be the parent dialog */
+        if (!done && c->lpcs->lpszClass == MAKEINTRESOURCEW(WC_DIALOG))
+        {
+            old_nav_dialog_proc = (WNDPROC)SetWindowLongPtrW( (HWND)wp, GWLP_WNDPROC, (LONG_PTR)new_nav_dialog_proc );
+            done = TRUE;
+        }
+    }
+
+    return CallNextHookEx( NULL, code, wp, lp );
+}
+
 static void test_wiznavigation(void)
 {
     HPROPSHEETPAGE hpsp[4];
@@ -293,6 +325,10 @@ static void test_wiznavigation(void)
     BOOL hwndtoindex_supported = TRUE;
     const INT nextID = 12324;
     const INT backID = 12323;
+    HHOOK hook;
+
+    /* set up a hook proc in order to subclass the main dialog early on */
+    hook = SetWindowsHookExW( WH_CBT, hook_proc, NULL, GetCurrentThreadId() );
 
     /* create the property sheet pages */
     memset(psp, 0, sizeof(PROPSHEETPAGEA) * 4);
@@ -402,6 +438,7 @@ static void test_wiznavigation(void)
     ok(defidres == MAKELRESULT(nextID, DC_HASDEFID), "Expected default button ID to be %d, is %d\n", nextID, LOWORD(defidres));
 
     DestroyWindow(hdlg);
+    UnhookWindowsHookEx( hook );
 }
 
 static void test_buttons(void)
@@ -490,7 +527,7 @@ page_with_custom_default_button_dlg_proc(HWND hdlg, UINT msg, WPARAM wparam, LPA
 
 static void test_custom_default_button(void)
 {
-    HWND hdlg;
+    HWND hdlg, page;
     PROPSHEETPAGEA psp[1];
     PROPSHEETHEADERA psh;
     MSG msg;
@@ -534,7 +571,8 @@ static void test_custom_default_button(void)
 
     /* At this point, the combobox should have keyboard focus, so we press ENTER.
      * Pull the lever, Kronk! */
-    keybd_event(VK_RETURN, 0, 0, 0);
+    page = (HWND)SendMessageW(hdlg, PSM_GETCURRENTPAGEHWND, 0, 0);
+    PostMessageW(GetDlgItem(page, IDC_PS_COMBO1), WM_KEYDOWN, VK_RETURN, 0);
 
     /* Process all the messages in the queue for this thread. */
     while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))

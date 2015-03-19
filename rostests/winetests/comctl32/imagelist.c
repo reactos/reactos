@@ -257,6 +257,51 @@ static void check_bits(HWND hwnd, HIMAGELIST himl, int idx, int size,
 #endif /* VISIBLE */
 }
 
+static void test_begindrag(void)
+{
+    HIMAGELIST himl = createImageList(7,13);
+    HIMAGELIST drag;
+    BOOL ret;
+    int count;
+    POINT hotspot;
+
+    count = ImageList_GetImageCount(himl);
+    ok(count > 2, "Tests need an ImageList with more than 2 images\n");
+
+    /* Two BeginDrag() without EndDrag() in between */
+    ret = ImageList_BeginDrag(himl, 1, 0, 0);
+    drag = ImageList_GetDragImage(NULL, NULL);
+    ok(ret && drag, "ImageList_BeginDrag() failed\n");
+    ret = ImageList_BeginDrag(himl, 0, 3, 5);
+    ok(!ret, "ImageList_BeginDrag() returned TRUE\n");
+    drag = ImageList_GetDragImage(NULL, &hotspot);
+    ok(!!drag, "No active ImageList drag left\n");
+    ok(hotspot.x == 0 && hotspot.y == 0, "New ImageList drag was created\n");
+    ImageList_EndDrag();
+    drag = ImageList_GetDragImage(NULL, NULL);
+    ok(!drag, "ImageList drag was not destroyed\n");
+
+    /* Invalid image index */
+    ImageList_BeginDrag(himl, 0, 0, 0);
+    ret = ImageList_BeginDrag(himl, count, 3, 5);
+    ok(!ret, "ImageList_BeginDrag() returned TRUE\n");
+    drag = ImageList_GetDragImage(NULL, &hotspot);
+    ok(drag && hotspot.x == 0 && hotspot.y == 0, "Active drag should not have been canceled\n");
+    ImageList_EndDrag();
+    drag = ImageList_GetDragImage(NULL, NULL);
+    ok(!drag, "ImageList drag was not destroyed\n");
+    /* Invalid negative image indexes succeed */
+    ret = ImageList_BeginDrag(himl, -17, 0, 0);
+    drag = ImageList_GetDragImage(NULL, NULL);
+    ok(ret && drag, "ImageList drag was created\n");
+    ImageList_EndDrag();
+    ret = ImageList_BeginDrag(himl, -1, 0, 0);
+    drag = ImageList_GetDragImage(NULL, NULL);
+    ok(ret && drag, "ImageList drag was created\n");
+    ImageList_EndDrag();
+    ImageList_Destroy(himl);
+}
+
 static void test_hotspot(void)
 {
     struct hotspot {
@@ -2091,6 +2136,7 @@ START_TEST(imagelist)
     InitCommonControls();
 
     test_create_destroy();
+    test_begindrag();
     test_hotspot();
     test_add_remove();
     test_imagecount();

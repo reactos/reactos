@@ -22,6 +22,9 @@
 //#include <windows.h>
 
 #include <wine/test.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commctrl.h>
 #include "v6util.h"
 
 static PVOID (WINAPI * pAlloc)(LONG);
@@ -33,6 +36,8 @@ static INT (WINAPI * pStr_GetPtrA)(LPCSTR, LPSTR, INT);
 static BOOL (WINAPI * pStr_SetPtrA)(LPSTR, LPCSTR);
 static INT (WINAPI * pStr_GetPtrW)(LPCWSTR, LPWSTR, INT);
 static BOOL (WINAPI * pStr_SetPtrW)(LPWSTR, LPCWSTR);
+
+static HRESULT (WINAPI * LoadIconMetric)(HINSTANCE, PCWSTR, INT, HICON*);
 
 static HMODULE hComctl32 = 0;
 
@@ -75,7 +80,7 @@ static void test_GetPtrAW(void)
         static char dest[MAX_PATH];
         int sourcelen;
         int destsize = MAX_PATH;
-        int count = -1;
+        int count;
 
         sourcelen = strlen(source) + 1;
 
@@ -197,13 +202,103 @@ static void test_TaskDialogIndirect(void)
     ptr = GetProcAddress(hinst, "TaskDialogIndirect");
     if (!ptr)
     {
+#ifdef __REACTOS__
+        /* Skipped on 2k3 */
+        skip("TaskDialogIndirect not exported by name\n");
+#else
         win_skip("TaskDialogIndirect not exported by name\n");
+#endif
         return;
     }
 
     ptr2 = GetProcAddress(hinst, (const CHAR*)345);
     ok(ptr == ptr2, "got wrong pointer for ordinal 345, %p expected %p\n", ptr2, ptr);
 }
+
+static void test_LoadIconMetric(void)
+{
+    static const WCHAR nonExistingFile[] = {'d','o','e','s','n','o','t','e','x','i','s','t','.','i','c','o','\0'};
+    HINSTANCE hinst;
+    void *ptr;
+    HICON icon;
+    HRESULT result;
+    ICONINFO info;
+    BOOL res;
+    INT bytes;
+    BITMAP bmp;
+
+    hinst = LoadLibraryA("comctl32.dll");
+
+    LoadIconMetric = (void *)GetProcAddress(hinst, "LoadIconMetric");
+    if (!LoadIconMetric)
+    {
+#ifdef __REACTOS__
+        /* Skipped on 2k3 */
+        skip("TaskDialogIndirect not exported by name\n");
+#else
+        win_skip("LoadIconMetric not exported by name\n");
+#endif
+        return;
+    }
+
+    ptr = GetProcAddress(hinst, (const CHAR*)380);
+    ok(ptr == LoadIconMetric, "got wrong pointer for ordinal 380, %p expected %p\n",
+       ptr, LoadIconMetric);
+
+    result = LoadIconMetric(NULL, (PCWSTR)IDI_APPLICATION, LIM_SMALL, &icon);
+    ok(result == S_OK, "Expected S_OK, got %x\n", result);
+    if (result == S_OK)
+    {
+        res = GetIconInfo(icon, &info);
+        ok(res, "Failed to get icon info\n");
+        if (res && info.hbmColor)
+        {
+            bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+            ok(bytes > 0, "Failed to get bitmap info for icon\n");
+            if (bytes > 0)
+            {
+                ok(bmp.bmWidth  == GetSystemMetrics( SM_CXSMICON ), "Wrong icon width\n");
+                ok(bmp.bmHeight == GetSystemMetrics( SM_CYSMICON ), "Wrong icon height\n");
+            }
+        }
+        DestroyIcon(icon);
+    }
+
+    result = LoadIconMetric(NULL, (PCWSTR)IDI_APPLICATION, LIM_LARGE, &icon);
+    ok(result == S_OK, "Expected S_OK, got %x\n", result);
+    if (result == S_OK)
+    {
+        res = GetIconInfo(icon, &info);
+        ok(res, "Failed to get icon info\n");
+        if (res && info.hbmColor)
+        {
+            bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+            ok(bytes > 0, "Failed to get bitmap info for icon\n");
+            if (bytes > 0)
+            {
+                ok(bmp.bmWidth  == GetSystemMetrics( SM_CXICON ), "Wrong icon width\n");
+                ok(bmp.bmHeight == GetSystemMetrics( SM_CYICON ), "Wrong icon height\n");
+            }
+        }
+        DestroyIcon(icon);
+    }
+
+    result = LoadIconMetric(NULL, (PCWSTR)IDI_APPLICATION, 0x100, &icon);
+    ok(result == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", result);
+    if (result == S_OK) DestroyIcon(icon);
+
+    icon = (HICON)0x1234;
+    result = LoadIconMetric(NULL, NULL, LIM_LARGE, &icon);
+    ok(result == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", result);
+    ok(icon == (HICON)0, "Expected 0x0, got %p\n", icon);
+    if (result == S_OK) DestroyIcon(icon);
+
+    result = LoadIconMetric(NULL, nonExistingFile, LIM_LARGE, &icon);
+    ok(result == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected 80070715, got %x\n", result);
+    if (result == S_OK) DestroyIcon(icon);
+}
+
 
 START_TEST(misc)
 {
@@ -220,6 +315,7 @@ START_TEST(misc)
         return;
 
     test_TaskDialogIndirect();
+    test_LoadIconMetric();
 
     unload_v6_module(ctx_cookie, hCtx);
 }

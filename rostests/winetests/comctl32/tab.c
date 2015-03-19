@@ -81,28 +81,6 @@ static HWND parent_wnd;
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
-static const struct message create_parent_wnd_seq[] = {
-    { WM_GETMINMAXINFO, sent },
-    { WM_NCCREATE, sent },
-    { WM_NCCALCSIZE, sent|wparam, 0 },
-    { WM_CREATE, sent },
-    { WM_SHOWWINDOW, sent|wparam, 1 },
-    { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
-    { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
-    { WM_ACTIVATEAPP, sent|wparam, 1 },
-    { WM_NCACTIVATE, sent|wparam, 1 },
-    { WM_ACTIVATE, sent|wparam, 1 },
-    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
-    { WM_IME_NOTIFY, sent|defwinproc|optional },
-    { WM_SETFOCUS, sent|wparam|defwinproc, 0 },
-    /* Win9x adds SWP_NOZORDER below */
-    { WM_WINDOWPOSCHANGED, sent},
-    { WM_NCCALCSIZE, sent|wparam|optional, 1 },
-    { WM_SIZE, sent },
-    { WM_MOVE, sent },
-    { 0 }
-};
-
 static const struct message add_tab_to_parent[] = {
     { TCM_INSERTITEMA, sent },
     { TCM_INSERTITEMA, sent|optional },
@@ -159,12 +137,6 @@ static const struct message add_tab_control_parent_seq_interactive[] = {
 };
 
 static const struct message empty_sequence[] = {
-    { 0 }
-};
-
-static const struct message set_min_tab_width_seq[] = {
-    { TCM_SETMINTABWIDTH, sent|wparam, 0 },
-    { TCM_SETMINTABWIDTH, sent|wparam, 0 },
     { 0 }
 };
 

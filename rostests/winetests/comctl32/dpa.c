@@ -276,7 +276,7 @@ static void test_dpa(void)
     ok(rc, "dw2=0x%x\n", dw2);
 
     /* Clone into an old DPA */
-    p = NULL; SetLastError(ERROR_SUCCESS);
+    SetLastError(ERROR_SUCCESS);
     p = pDPA_Clone(dpa, dpa3);
     ok(p == dpa3, "p=%p\n", p);
     rc=CheckDPA(dpa3, 0x123456, &dw3);

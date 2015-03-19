@@ -432,13 +432,6 @@ static const struct message setcheck_ignored_seq[] =
     { 0 }
 };
 
-static const struct message setcheck_uncheck_seq[] =
-{
-    { BM_SETCHECK, sent },
-    { WM_APP, sent|wparam|lparam, 0, 0 },
-    { 0 }
-};
-
 static const struct message setcheck_static_seq[] =
 {
     { BM_SETCHECK, sent },
@@ -764,7 +757,7 @@ if (ret) /* TODO: remove once Wine is fixed */
     ok(!strcmp(buffA, "Button"), "got %s\n", buffA);
     DestroyWindow(hwnd);
 
-    /* explicitely create with versioned class name */
+    /* explicitly create with versioned class name */
     hwnd = CreateWindowExW(0, nameW, testW, BS_CHECKBOX, 0, 0, 50, 14, NULL, 0, 0, NULL);
 todo_wine
     ok(hwnd != NULL, "failed to create a window %s\n", wine_dbgstr_w(nameW));
