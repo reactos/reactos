@@ -385,7 +385,7 @@ static void ie_dialog_about(HWND hwnd)
 #ifdef __REACTOS__
 static void ie_dialog_properties(HWND hwnd)
 {
-    ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), TEXT("shell32.dll, Control_RunDLL inetcpl.cpl"), NULL, SW_SHOWNORMAL);
+    ShellExecuteW(hwnd, NULL, L"inetcpl.cpl", NULL, NULL, 0);
 }
 #endif
 
