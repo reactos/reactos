@@ -196,6 +196,8 @@ UpdateApplicationsList(INT EnumType)
     HICON hIcon;
     HIMAGELIST hImageListView;
 
+    SendMessage(hListView, WM_SETREDRAW, FALSE, 0);
+
     (VOID) ListView_DeleteAllItems(hListView);
 
     /* Create image list */
@@ -253,6 +255,8 @@ UpdateApplicationsList(INT EnumType)
     /* set automatic column width for program names if the list is not empty */
     if (ListView_GetItemCount(hListView) > 0)
         ListView_SetColumnWidth(hListView, 0, LVSCW_AUTOSIZE);
+
+    SendMessage(hListView, WM_SETREDRAW, TRUE, 0);
 }
 
 VOID
