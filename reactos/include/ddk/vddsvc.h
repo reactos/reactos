@@ -86,7 +86,7 @@ Sim32pGetVDMPointer(
   _In_ ULONG Address,
   _In_ BOOLEAN ProtectedMode);
 
-/* This API appears to have been never implemented anywhere... */
+/* This API appears to have never been implemented anywhere... */
 #define Sim32FreeVDMPointer(Address, Size, Buffer, Mode) TRUE
 
 #define GetVDMAddress(usSeg, usOff) (((ULONG)(usSeg) << 4) + (ULONG)(usOff))
