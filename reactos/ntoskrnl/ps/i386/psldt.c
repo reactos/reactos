@@ -27,15 +27,15 @@ NTAPI
 PspDeleteVdmObjects(PEPROCESS Process)
 {
     /* If there are no VDM objects, just exit */
-    if (PsGetCurrentProcess()->VdmObjects == NULL)
+    if (Process->VdmObjects == NULL)
         return;
 
     /* FIXME: Need to do more than just freeing the main VdmObjects member! */
     UNIMPLEMENTED;
 
     /* Free VDM objects */
-    ExFreePoolWithTag(PsGetCurrentProcess()->VdmObjects, '  eK');
-    PsGetCurrentProcess()->VdmObjects = NULL;
+    ExFreePoolWithTag(Process->VdmObjects, '  eK');
+    Process->VdmObjects = NULL;
 }
 
 NTSTATUS
