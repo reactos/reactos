@@ -330,12 +330,15 @@ CAPTION "Сервис"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Проверка диска", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Проверка тома на наличие ошибок.", -1, 40, 25, 160, 20
     PUSHBUTTON "Выполнить &проверку...", 14000, 110, 45, 120, 15, WS_TABSTOP
     GROUPBOX "Дефрагментация диска", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Дефрагментация файлов, хранящихся на этом томе.", -1, 40, 85, 160, 20
     PUSHBUTTON "Выполнить д&ефрагментацию...", 14001, 110, 105, 120, 15, WS_TABSTOP
     GROUPBOX "Архивация", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Архивация файлов, хранящихся на этом томе.", -1, 40, 150, 160, 20
     PUSHBUTTON "Выполнить &архивацию...", 14002, 110, 170, 120, 15, WS_TABSTOP
 END

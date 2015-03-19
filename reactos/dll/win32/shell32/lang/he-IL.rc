@@ -328,12 +328,15 @@ CAPTION "כלים"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "בדיקת שגיאות", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
     PUSHBUTTON "בדוק כעת...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "איחוי", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
     PUSHBUTTON "אחה כעת...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "גיבוי", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
     PUSHBUTTON "גבה כעת...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END

@@ -328,12 +328,15 @@ CAPTION "Outils"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vérification d'erreurs", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Cette option vérifiera le volume pour éviter les\nerreurs.", -1, 40, 25, 160, 20
     PUSHBUTTON "Vérifier maintenant...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Défragmentation", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Cette option va défragmenter les fichiers sur ce volume", -1, 40, 85, 160, 20
     PUSHBUTTON "Défragmenter maintenant...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Sauvegarde", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Cette option va sauvegarder les fichiers sur le volume.", -1, 40, 150, 160, 20
     PUSHBUTTON "Sauvegarder maintenant...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
