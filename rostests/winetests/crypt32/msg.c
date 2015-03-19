@@ -2666,12 +2666,12 @@ static void compare_signer_info(const CMSG_SIGNER_INFO *got,
     ok(got->Issuer.cbData == expected->Issuer.cbData,
      "Expected issuer size %d, got %d\n", expected->Issuer.cbData,
      got->Issuer.cbData);
-    ok(!memcmp(got->Issuer.pbData, got->Issuer.pbData, got->Issuer.cbData),
+    ok(!memcmp(got->Issuer.pbData, expected->Issuer.pbData, got->Issuer.cbData),
      "Unexpected issuer\n");
     ok(got->SerialNumber.cbData == expected->SerialNumber.cbData,
      "Expected serial number size %d, got %d\n", expected->SerialNumber.cbData,
      got->SerialNumber.cbData);
-    ok(!memcmp(got->SerialNumber.pbData, got->SerialNumber.pbData,
+    ok(!memcmp(got->SerialNumber.pbData, expected->SerialNumber.pbData,
      got->SerialNumber.cbData), "Unexpected serial number\n");
     /* FIXME: check more things */
 }

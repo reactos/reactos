@@ -57,7 +57,7 @@ struct BinTests
 
 static const BYTE toEncode1[] = { 0 };
 static const BYTE toEncode2[] = { 1,2 };
-static const BYTE toEncode3[] = { 1,2,3 };
+/* static const BYTE toEncode3[] = { 1,2,3 }; */
 static const BYTE toEncode4[] =
  "abcdefghijlkmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
  "abcdefghijlkmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"

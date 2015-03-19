@@ -3732,7 +3732,7 @@ static void compareAltNameEntry(const CERT_ALT_NAME_ENTRY *expected,
         case CERT_ALT_NAME_IP_ADDRESS:
             ok(U(*got).IPAddress.cbData == U(*expected).IPAddress.cbData,
                "Unexpected IP address length %d\n", U(*got).IPAddress.cbData);
-            ok(!memcmp(U(*got).IPAddress.pbData, U(*got).IPAddress.pbData,
+            ok(!memcmp(U(*got).IPAddress.pbData, U(*expected).IPAddress.pbData,
                        U(*got).IPAddress.cbData), "Unexpected value\n");
             break;
         }
@@ -5762,7 +5762,6 @@ static void test_decodeCTL(DWORD dwEncoding)
     info.SubjectAlgorithm.Parameters.cbData = 0;
     info.ThisUpdate.dwLowDateTime = info.ThisUpdate.dwHighDateTime = 0;
     info.NextUpdate.dwLowDateTime = info.NextUpdate.dwHighDateTime = 0;
-    info.SubjectAlgorithm.pszObjId = oid2;
     info.SubjectAlgorithm.pszObjId = NULL;
     value1.cbData = sizeof(emptySequence);
     value1.pbData = (LPBYTE)emptySequence;
