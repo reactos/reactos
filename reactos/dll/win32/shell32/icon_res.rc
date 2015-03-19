@@ -59,7 +59,10 @@ IDI_SHELL_TT_FONT_FILE ICON "res/icons/156.ico"
 IDI_SHELL_FONT_FILE2 ICON "res/icons/157.ico"
 IDI_SHELL_RUN2 ICON "res/icons/160.ico"
 IDI_SHELL_CONFIRM_DELETE ICON "res/icons/161.ico"
-/* TODO: 165.ico, 166.ico, 167.ico, 168.ico, 169.ico, 170.ico, 171.ico */
+IDI_SHELL_TOOLS_BACKUP ICON "res/icons/165.ico"
+IDI_SHELL_TOOLS_CHKDSK ICON "res/icons/166.ico"
+IDI_SHELL_TOOLS_DEFRAG ICON "res/icons/167.ico"
+/* TODO:  168.ico, 169.ico, 170.ico, 171.ico */
 IDI_SHELL_NETWORK_FOLDER ICON "res/icons/172.ico"
 IDI_SHELL_FAVORITES2 ICON "res/icons/173.ico"
 /* TODO: 174.ico, 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */

@@ -372,7 +372,10 @@
 #define IDI_SHELL_FONT_FILE2       157
 #define IDI_SHELL_RUN2             160
 #define IDI_SHELL_CONFIRM_DELETE   161
-/* TODO: 165.ico, 166.ico, 167.ico, 168.ico, 169.ico, 170.ico, 171.ico */
+#define IDI_SHELL_TOOLS_BACKUP     165
+#define IDI_SHELL_TOOLS_CHKDSK     166
+#define IDI_SHELL_TOOLS_DEFRAG     167
+/* TODO: 168.ico, 169.ico, 170.ico, 171.ico */
 #define IDI_SHELL_NETWORK_FOLDER   172
 #define IDI_SHELL_FAVORITES2       173
 /* TODO: 174.ico, 175.ico, 176.ico, 177.ico, 178.ico, 179.ico, 180.ico, 181.ico */

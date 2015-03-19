@@ -240,32 +240,20 @@ SH_FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UI
  *
  * SH_CreatePropertySheetPage [Internal]
  *
- * creates a property sheet page from an resource name
+ * creates a property sheet page from a resource id
  *
  */
 
 HPROPSHEETPAGE
 SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle)
 {
-    HRSRC hRes = FindResourceW(shell32_hInstance, MAKEINTRESOURCEW(wDialogId), (LPWSTR)RT_DIALOG);
-    if (hRes == NULL)
-    {
-        ERR("failed to find resource id\n");
-        return NULL;
-    }
-
-    LPVOID pTemplate = LoadResource(shell32_hInstance, hRes);
-    if (pTemplate == NULL)
-    {
-        ERR("failed to load resource\n");
-        return NULL;
-    }
-
     PROPSHEETPAGEW Page;
+
     memset(&Page, 0x0, sizeof(PROPSHEETPAGEW));
     Page.dwSize = sizeof(PROPSHEETPAGEW);
-    Page.dwFlags = PSP_DLGINDIRECT;
-    Page.pResource = (DLGTEMPLATE*)pTemplate;
+    Page.dwFlags = PSP_DEFAULT;
+    Page.hInstance = shell32_hInstance;
+    Page.pszTemplate = MAKEINTRESOURCE(wDialogId);
     Page.pfnDlgProc = pfnDlgProc;
     Page.lParam = lParam;
     Page.pszTitle = pwszTitle;

@@ -328,12 +328,15 @@ CAPTION "Araçlar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Hata denetimi", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Bu seçenek sürücüdeki hataları denetler.", -1, 40, 25, 160, 20
     PUSHBUTTON "Şimdi &Denetle...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Disk Birleştirme", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Bu seçenek sürücüdeki dosyaları birleştirir.", -1, 40, 85, 160, 20
     PUSHBUTTON "Şimdi &Birleştir...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Yedekleme", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Bu seçenek sürücüdeki dosyaları yedekler.", -1, 40, 150, 160, 20
     PUSHBUTTON "Şi&mdi Yedekle...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END

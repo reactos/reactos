@@ -329,12 +329,15 @@ CAPTION "Herramientas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Comprobación de errores ", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Esta opción comprobará los errores en la\nunidad.", -1, 40, 25, 160, 20
     PUSHBUTTON "Comprobar ahora...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Desfragmentación ", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Esta opción desfragmentará los archivos en esta\nunidad.", -1, 40, 85, 160, 20
     PUSHBUTTON "Desfragmentar ahora...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Copia de seguridad ", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Esta opción realizará una copia de seguridad de\nlos archivos almacenados en la unidad.", -1, 40, 150, 160, 20
     PUSHBUTTON "Realizar copia de seguridad ahora...", 14002, 90, 170, 130, 15, WS_TABSTOP
 END
