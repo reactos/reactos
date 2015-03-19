@@ -382,6 +382,13 @@ static void ie_dialog_about(HWND hwnd)
     DestroyIcon(icon);
 }
 
+#ifdef __REACTOS__
+static void ie_dialog_properties(HWND hwnd)
+{
+    ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), TEXT("shell32.dll, Control_RunDLL inetcpl.cpl"), NULL, SW_SHOWNORMAL);
+}
+#endif
+
 static void add_tb_separator(HWND hwnd)
 {
     TBBUTTON btn;
@@ -605,6 +612,12 @@ static LRESULT iewnd_OnCommand(InternetExplorer *This, HWND hwnd, UINT msg, WPAR
         case ID_BROWSE_ABOUT:
             ie_dialog_about(hwnd);
             break;
+
+#ifdef __REACTOS__
+        case ID_BROWSE_PROPERTIES:
+            ie_dialog_properties(hwnd);
+            break;
+#endif
 
         case ID_BROWSE_QUIT:
             ShowWindow(hwnd, SW_HIDE);
