@@ -15,6 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Ein offener Interpreter für die PostScript Sprache und PDF.
 
+[Section.040a]
+Description = Un intérprete libre para el lenguaje PostScript y PDF.
+
 [Section.0418]
 Description = Un interpretor pentru limbajul PostScript și pentru PDF.
 Size = 12,65 Mo

@@ -15,6 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Double Commander ist ein Open Source Dateimanager mit zwei nebeneinander liegenden Panels. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
 
+[Section.040a]
+Description = Double Commander es un explorador de archivos multipanel de código abierto. Es necesario utilizar 7-Zip u otro programa alternativo para extraerlo.
+
 [Section.0410]
 Description = Double Commander è un open-source file-manager con due pannelli laterali affiancati. Utilizzare 7-Zip o un' utility simile per estrarlo.
 

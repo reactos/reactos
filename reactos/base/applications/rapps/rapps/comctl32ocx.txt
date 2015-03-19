@@ -21,7 +21,7 @@ URLDownload = http://download.microsoft.com/download/c/e/d/ced699fe-7a40-420b-bd
 
 [Section.040a]
 License = Desconocida
-Description = X es necesario para varias aplicaciones. Incluye: comctl32.ocx, mscomctl.ocx, advpack.dll.
+Description = Necesario para algunas aplicaciones. Incluye: comctl32.ocx, mscomctl.ocx y advpack.dll.
 Size = 910.23 kB
 URLSite = http://www.microsoft.com/es-ES/download/details.aspx?id=10019
 URLDownload = http://download.microsoft.com/download/9/0/9/90935db7-89ec-4344-a9ea-e6913c03f060/VisualBasic6-KB896559-v1-ESN.exe

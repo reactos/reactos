@@ -12,6 +12,9 @@ URLSite = http://dplus-browser.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/dplus-browser/Releases/dplus-0.5b/dplus-0.5b-setup.exe
 CDPath = none
 
+[Section.040a]
+Description = DPlus es un navegador de archivos con interfaz gráfica y un énfasis en la seguridad, el rendimiento y la portabilidad. Se basa en Dillo y es una versión alternativa del proyecto Dillo-Win32.
+
 [Section.0410]
 License = GPL versione 3
 Description = DPlus è un web browser grafico con un accenno alla sicurezza, le prestazioni e portabilità. è basata su Dillo ed è diviso dal progetto Dillo-Win32.

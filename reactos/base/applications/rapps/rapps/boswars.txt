@@ -16,6 +16,9 @@ CDPath = none
 [Section.0407]
 Description = Bos Wars ist ein futuristisches Echtzeitstrategiespiel. Um das Spiel zu starten, installieren Sie die Microsoft Visual C++ 2008 Runtime.
 
+[Section.040a]
+Description = Bos Wars es un juego de estrategia futurista en tiempo real. Para ejecutar el juego es necesario instalar Microsoft Visual C++ 2008 runtime.
+
 [Section.0410]
 Description = Bos Wars è un gioco futuristico di strategia in tempo reale. Per iniziare il gioco, installare Microsoft Visual C + + 2008 runtime.
 

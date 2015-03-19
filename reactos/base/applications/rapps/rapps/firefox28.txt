@@ -2,7 +2,7 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = Mozilla Firefox 28.0
+Name = Mozilla Firefox 28
 Version = 28.0
 License = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
@@ -25,7 +25,7 @@ URLSite = http://www.mozilla.org/de/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/win32/de/Firefox%20Setup%2028.0.exe
 
 [Section.040a]
-Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
+Description = Navegador web popular, libre y gratuito.
 Size = 23.82 MB
 URLSite = http://www.mozilla.org/es-ES/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/win32/es-ES/Firefox%20Setup%2028.0.exe

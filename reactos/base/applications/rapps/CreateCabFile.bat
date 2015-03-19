@@ -1,1 +1,1 @@
-..\..\..\output-MinGW-i386\host-tools\tools\cabman\cabman.exe -M raw -S rappmgr.cab rapps\*.txt
+..\..\..\output-MinGW-i386\host-tools\tools\cabman\cabman.exe -M mszip -S rappmgr.cab rapps\*.txt
