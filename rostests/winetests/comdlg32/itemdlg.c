@@ -679,7 +679,7 @@ static void test_basics(void)
     ok(hr == S_OK, "got 0x%08x.\n", hr);
     hr = IFileSaveDialog_GetFileTypeIndex(pfsd, &filetype);
     ok(hr == S_OK, "got 0x%08x.\n", hr);
-    /* I hope noone relies on this one */
+    /* I hope no one relies on this one */
     todo_wine ok(filetype == 0, "got %d\n", filetype);
     hr = IFileSaveDialog_SetFileTypeIndex(pfsd, 0);
     ok(hr == S_OK, "got 0x%08x.\n", hr);

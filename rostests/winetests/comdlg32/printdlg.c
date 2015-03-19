@@ -531,6 +531,7 @@ static void test_PrintDlgExW(void)
     if (!winetest_interactive)
     {
         skip("interactive PrintDlgEx tests (set WINETEST_INTERACTIVE=1)\n");
+        HeapFree(GetProcessHeap(), 0, pDlg);
         return;
     }
 
