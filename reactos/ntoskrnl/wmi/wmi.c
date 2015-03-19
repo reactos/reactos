@@ -106,7 +106,7 @@ IoWMIWriteEvent(IN PVOID WnodeEventItem)
  */
 NTSTATUS
 NTAPI
-IoWMIOpenBlock(IN GUID *DataBlockGuid,
+IoWMIOpenBlock(IN LPCGUID DataBlockGuid,
                IN ULONG DesiredAccess,
                OUT PVOID *DataBlockObject)
 {
