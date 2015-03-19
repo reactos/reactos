@@ -524,7 +524,7 @@ WmipShutdown(
   _Inout_  PDEVICE_OBJECT DeviceObject,
   _Inout_  PIRP Irp)
 {
-    UNIMPLEMENTED_DBGBREAK();
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
