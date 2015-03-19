@@ -167,21 +167,12 @@ WmipGUIDFromString(
 static
 NTSTATUS
 WmipCreateGuidObject(
-    _In_ PUNICODE_STRING GuidString,
+    _In_ const GUID *Guid,
     _Out_ PWMIP_GUID_OBJECT *OutGuidObject)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    GUID Guid;
     PWMIP_GUID_OBJECT GuidObject;
     NTSTATUS Status;
-
-    /* Convert the string into a GUID structure */
-    Status = WmipGUIDFromString(GuidString, &Guid);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("WMI: Invalid uuid format for guid '%wZ'\n", GuidString);
-        return Status;
-    }
 
     /* Initialize object attributes for an unnamed object */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -207,7 +198,7 @@ WmipCreateGuidObject(
     }
 
     RtlZeroMemory(GuidObject, sizeof(*GuidObject));
-    GuidObject->Guid = Guid;
+    GuidObject->Guid = *Guid;
 
     *OutGuidObject = GuidObject;
 
@@ -217,37 +208,22 @@ WmipCreateGuidObject(
 NTSTATUS
 NTAPI
 WmipOpenGuidObject(
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ACCESS_MASK DesiredAccess,
-    KPROCESSOR_MODE AccessMode,
-    PHANDLE OutGuidObjectHandle,
-    PVOID *OutGuidObject)
+    _In_ LPCGUID Guid,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PHANDLE OutGuidObjectHandle,
+    _Outptr_ PVOID *OutGuidObject)
 {
-    static UNICODE_STRING Prefix = RTL_CONSTANT_STRING(L"\\WmiGuid\\");
-    UNICODE_STRING GuidString;
-    ULONG HandleAttributes;
     PWMIP_GUID_OBJECT GuidObject;
+    ULONG HandleAttributes;
     NTSTATUS Status;
-    PAGED_CODE();
-
-    /* Check if we have the expected prefix */
-    if (!RtlPrefixUnicodeString(&Prefix, ObjectAttributes->ObjectName, FALSE))
-    {
-        DPRINT1("WMI: Invalid prefix for guid object '%wZ'\n",
-                ObjectAttributes->ObjectName);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Extract the GUID string */
-    GuidString = *ObjectAttributes->ObjectName;
-    GuidString.Buffer += Prefix.Length / sizeof(WCHAR);
-    GuidString.Length -= Prefix.Length;
 
     /* Create the GUID object */
-    Status = WmipCreateGuidObject(&GuidString, &GuidObject);
+    Status = WmipCreateGuidObject(Guid, &GuidObject);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create GUID object: 0x%lx\n", Status);
+        *OutGuidObject = NULL;
         return Status;
     }
 
@@ -266,10 +242,54 @@ WmipOpenGuidObject(
     {
         DPRINT1("ObOpenObjectByPointer failed: 0x%lx\n", Status);
         ObfDereferenceObject(GuidObject);
+        GuidObject = NULL;
     }
 
     *OutGuidObject = GuidObject;
 
     return Status;
+}
+
+NTSTATUS
+NTAPI
+WmipOpenGuidObjectByName(
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PHANDLE OutGuidObjectHandle,
+    _Outptr_ PVOID *OutGuidObject)
+{
+    static UNICODE_STRING Prefix = RTL_CONSTANT_STRING(L"\\WmiGuid\\");
+    UNICODE_STRING GuidString;
+    NTSTATUS Status;
+    GUID Guid;
+    PAGED_CODE();
+
+    /* Check if we have the expected prefix */
+    if (!RtlPrefixUnicodeString(&Prefix, ObjectAttributes->ObjectName, FALSE))
+    {
+        DPRINT1("WMI: Invalid prefix for guid object '%wZ'\n",
+                ObjectAttributes->ObjectName);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Extract the GUID string */
+    GuidString = *ObjectAttributes->ObjectName;
+    GuidString.Buffer += Prefix.Length / sizeof(WCHAR);
+    GuidString.Length -= Prefix.Length;
+
+    /* Convert the string into a GUID structure */
+    Status = WmipGUIDFromString(&GuidString, &Guid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WMI: Invalid uuid format for guid '%wZ'\n", GuidString);
+        return Status;
+    }
+
+    return WmipOpenGuidObject(&Guid,
+                              DesiredAccess,
+                              AccessMode,
+                              OutGuidObjectHandle,
+                              OutGuidObject);
 }
 

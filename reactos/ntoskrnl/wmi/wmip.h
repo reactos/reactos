@@ -1,6 +1,8 @@
 
 #pragma once
 
+extern POBJECT_TYPE WmipGuidObjectType;
+
 #define GUID_STRING_LENGTH 36
 
 typedef struct _WMIP_IRP_CONTEXT
@@ -32,8 +34,24 @@ WmipInitializeGuidObjectType(
 NTSTATUS
 NTAPI
 WmipOpenGuidObject(
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ACCESS_MASK DesiredAccess,
-    KPROCESSOR_MODE AccessMode,
-    PHANDLE OutGuidObjectHandle,
-    PVOID *OutGuidObject);
+    _In_ LPCGUID Guid,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PHANDLE OutGuidObjectHandle,
+    _Outptr_ PVOID *OutGuidObject);
+
+NTSTATUS
+NTAPI
+WmipOpenGuidObjectByName(
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Out_ PHANDLE OutGuidObjectHandle,
+    _Outptr_ PVOID *OutGuidObject);
+
+NTSTATUS
+NTAPI
+WmipQueryRawSMBiosTables(
+    _Inout_ ULONG *InOutBufferSize,
+    _Out_opt_ PVOID OutBuffer);
+

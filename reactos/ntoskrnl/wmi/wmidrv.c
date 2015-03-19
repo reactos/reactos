@@ -210,14 +210,14 @@ WmipRegisterGuids(
     }
 
     /* Open a new GUID object */
-    Status = WmipOpenGuidObject(&LocalObjectAttributes,
-                                SPECIFIC_RIGHTS_ALL,
-                                PreviousMode,
-                                &GuidObjectHandle,
-                                &GuidObject);
+    Status = WmipOpenGuidObjectByName(&LocalObjectAttributes,
+                                      SPECIFIC_RIGHTS_ALL,
+                                      PreviousMode,
+                                      &GuidObjectHandle,
+                                      &GuidObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WmipOpenGuidObject failed: 0x%lx\n", Status);
+        DPRINT1("WmipOpenGuidObjectByName failed: 0x%lx\n", Status);
         return Status;
     }
 
@@ -409,14 +409,14 @@ WmipOpenGuidForEvents(
     }
 
     /* Open a new GUID object */
-    Status = WmipOpenGuidObject(&LocalObjectAttributes,
-                                OpenGuidForEvents->DesiredAccess,
-                                PreviousMode,
-                                &GuidObjectHandle,
-                                &GuidObject);
+    Status = WmipOpenGuidObjectByName(&LocalObjectAttributes,
+                                      OpenGuidForEvents->DesiredAccess,
+                                      PreviousMode,
+                                      &GuidObjectHandle,
+                                      &GuidObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WmipOpenGuidObject failed: 0x%lx\n", Status);
+        DPRINT1("WmipOpenGuidObjectByName failed: 0x%lx\n", Status);
         return Status;
     }
 
