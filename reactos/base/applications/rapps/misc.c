@@ -7,8 +7,8 @@
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
-#include <ndk/rtlfuncs.h>
 #include "rapps.h"
+#include <ndk/rtlfuncs.h>
 
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
