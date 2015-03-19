@@ -10,8 +10,8 @@ BEGIN
     END
     POPUP "&Programmes"
     BEGIN
-        MENUITEM "&Installer\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Désinstaller\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Installer\tCtrl+Entrée", ID_INSTALL
+        MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
         MENUITEM "&Modifier", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Supprimer du registre", ID_REGREMOVE
@@ -40,8 +40,8 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Installer\tCtrl+Enter", ID_INSTALL
-        MENUITEM "&Désinstaller\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Installer\tCtrl+Entrée", ID_INSTALL
+        MENUITEM "&Désinstaller\tCtrl+Suppr", ID_UNINSTALL
         MENUITEM "&Modifier", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Supprimer du registre", ID_REGREMOVE
@@ -129,15 +129,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION "\nVersion: "
-    IDS_INFO_DESCRIPTION "\nDescription: "
+    IDS_INFO_VERSION "\nVersion : "
+    IDS_INFO_DESCRIPTION "\nDescription : "
     IDS_INFO_PUBLISHER "\nAuteur : "
     IDS_INFO_HELPLINK "\nLien d'aide : "
     IDS_INFO_HELPPHONE "\nTéléphone d'aide : "
     IDS_INFO_README "\nLisez-moi : "
     IDS_INFO_REGOWNER "\nUtilisateur enregistré : "
     IDS_INFO_PRODUCTID "\nID du produit : "
-    IDS_INFO_CONTACT "\nContact: "
+    IDS_INFO_CONTACT "\nContact : "
     IDS_INFO_UPDATEINFO "\nInformation de mise à jour : "
     IDS_INFO_INFOABOUT "\nInformation à propos : "
     IDS_INFO_COMMENTS "\nCommentaires : "
@@ -150,11 +150,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_AINFO_VERSION "\nVersion: "
-    IDS_AINFO_DESCRIPTION "\nDescription: "
+    IDS_AINFO_VERSION "\nVersion : "
+    IDS_AINFO_DESCRIPTION "\nDescription : "
     IDS_AINFO_SIZE "\nTaille : "
     IDS_AINFO_URLSITE "\nSite internet : "
-    IDS_AINFO_LICENSE "\nLicense: "
+    IDS_AINFO_LICENSE "\nLicence : "
 END
 
 STRINGTABLE
