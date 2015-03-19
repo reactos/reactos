@@ -191,25 +191,19 @@ typedef VOID
   PVOID FaultAddress,
   ULONG RWMode);
 
-PBYTE
-WINAPI
-Sim32pGetVDMPointer(
-  _In_ ULONG Address,
-  _In_ BOOLEAN ProtectedMode);
-
-PBYTE
-WINAPI
-MGetVdmPointer(
-  _In_ ULONG Address,
-  _In_ ULONG Size,
-  _In_ BOOLEAN ProtectedMode);
-
 PVOID
 WINAPI
 VdmMapFlat(
   _In_ USHORT Segment,
   _In_ ULONG Offset,
   _In_ VDM_MODE Mode);
+
+#ifdef _X86_
+
+#define VdmFlushCache(sel, off, len, mode) TRUE
+#define VdmUnmapFlat(sel, off, buf, mode) TRUE
+
+#else
 
 BOOL
 WINAPI
@@ -226,6 +220,8 @@ VdmUnmapFlat(
   _In_ ULONG Offset,
   _In_ PVOID Buffer,
   _In_ VDM_MODE Mode);
+
+#endif
 
 BOOL
 WINAPI

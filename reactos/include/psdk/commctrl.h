@@ -5095,6 +5095,14 @@ TaskDialogIndirect(
 
 #endif /* NOTASKDIALOG */
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+enum _LI_METRIC
+{
+   LIM_SMALL,
+   LIM_LARGE,
+};
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -9,10 +9,44 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define INITGUID
+#include <wmiguid.h>
+#include <wmidata.h>
+#include <wmistr.h>
+
+#include "wmip.h"
+
 #define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+NTAPI
+WmiInitialize(
+    VOID)
+{
+    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"\\Driver\\WMIxWDM");
+    NTSTATUS Status;
+
+    /* Initialize the GUID object type */
+    Status = WmipInitializeGuidObjectType();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WmipInitializeGuidObjectType() failed: 0x%lx\n", Status);
+        return FALSE;
+    }
+
+    /* Create the WMI driver */
+    Status = IoCreateDriver(&DriverName, WmipDriverEntry);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create WMI driver: 0x%lx\n", Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * @unimplemented
@@ -77,12 +111,28 @@ IoWMIWriteEvent(IN PVOID WnodeEventItem)
  */
 NTSTATUS
 NTAPI
-IoWMIOpenBlock(IN GUID *DataBlockGuid,
-               IN ULONG DesiredAccess,
-               OUT PVOID *DataBlockObject)
+IoWMIOpenBlock(
+    _In_ LPCGUID DataBlockGuid,
+    _In_ ULONG DesiredAccess,
+    _Out_ PVOID *DataBlockObject)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    HANDLE GuidObjectHandle;
+    NTSTATUS Status;
+
+    /* Open the GIOD object */
+    Status = WmipOpenGuidObject(DataBlockGuid,
+                                DesiredAccess,
+                                KernelMode,
+                                &GuidObjectHandle,
+                                DataBlockObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WmipOpenGuidObject failed: 0x%lx\n", Status);
+        return Status;
+    }
+
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -90,12 +140,39 @@ IoWMIOpenBlock(IN GUID *DataBlockGuid,
  */
 NTSTATUS
 NTAPI
-IoWMIQueryAllData(IN PVOID DataBlockObject,
-                  IN OUT ULONG *InOutBufferSize,
-                  OUT PVOID OutBuffer)
+IoWMIQueryAllData(
+    IN PVOID DataBlockObject,
+    IN OUT ULONG *InOutBufferSize,
+    OUT PVOID OutBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PWMIP_GUID_OBJECT GuidObject;
+    NTSTATUS Status;
+
+
+    Status = ObReferenceObjectByPointer(DataBlockObject,
+                                        WMIGUID_QUERY,
+                                        WmipGuidObjectType,
+                                        KernelMode);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    GuidObject = DataBlockObject;
+
+    /* Huge HACK! */
+    if (IsEqualGUID(&GuidObject->Guid, &MSSmBios_RawSMBiosTables_GUID))
+    {
+        Status = WmipQueryRawSMBiosTables(InOutBufferSize, OutBuffer);
+    }
+    else
+    {
+        Status = STATUS_NOT_SUPPORTED;
+    }
+
+    ObDereferenceObject(DataBlockObject);
+
+    return Status;
 }
 
 /*

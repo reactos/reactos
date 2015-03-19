@@ -321,6 +321,8 @@ VdmMapFlat(IN USHORT   Segment,
     return SEG_OFF_TO_PTR(Segment, Offset);
 }
 
+#ifndef VdmFlushCache
+
 BOOL
 WINAPI
 VdmFlushCache(IN USHORT   Segment,
@@ -333,6 +335,10 @@ VdmFlushCache(IN USHORT   Segment,
     return TRUE;
 }
 
+#endif
+
+#ifndef VdmUnmapFlat
+
 BOOL
 WINAPI
 VdmUnmapFlat(IN USHORT   Segment,
@@ -344,6 +350,8 @@ VdmUnmapFlat(IN USHORT   Segment,
     UNIMPLEMENTED;
     return TRUE;
 }
+
+#endif
 
 BOOL
 WINAPI

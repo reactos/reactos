@@ -269,7 +269,10 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sid.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/token.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/vf/driver.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmi.c)
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/guidobj.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/smbios.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmi.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/wmi/wmidrv.c)
 
 list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/ex/zw.S)
 

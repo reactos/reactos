@@ -13558,7 +13558,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIOpenBlock(
-  _In_ GUID *DataBlockGuid,
+  _In_ LPCGUID DataBlockGuid,
   _In_ ULONG DesiredAccess,
   _Out_ PVOID *DataBlockObject);
 

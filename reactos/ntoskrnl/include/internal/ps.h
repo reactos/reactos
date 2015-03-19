@@ -313,13 +313,13 @@ PspSetQuotaLimits(
 //
 // VDM and LDT Support
 //
-NTSTATUS
+VOID
 NTAPI
 PspDeleteLdt(
     IN PEPROCESS Process
 );
 
-NTSTATUS
+VOID
 NTAPI
 PspDeleteVdmObjects(
     IN PEPROCESS Process

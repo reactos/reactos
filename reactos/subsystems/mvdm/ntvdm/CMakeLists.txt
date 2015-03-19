@@ -3,7 +3,7 @@ PROJECT(NTVDM)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
 
-spec2def(ntvdm.exe ntvdm.spec)
+spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bios/bios32/bios32.c
