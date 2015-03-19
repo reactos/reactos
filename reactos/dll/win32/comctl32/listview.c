@@ -3998,10 +3998,7 @@ static LRESULT LISTVIEW_MouseMove(LISTVIEW_INFO *infoPtr, WORD fwKeys, INT x, IN
         rect.top = rect.bottom = infoPtr->ptClickPos.y;
 
         InflateRect(&rect, GetSystemMetrics(SM_CXDRAG), GetSystemMetrics(SM_CYDRAG));
-    }
 
-    if (infoPtr->bLButtonDown)
-    {
         if (infoPtr->bMarqueeSelect)
         {
             POINT coords_orig;
