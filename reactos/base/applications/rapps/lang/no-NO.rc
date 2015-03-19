@@ -10,19 +10,19 @@ BEGIN
     END
     POPUP "&Programmer"
     BEGIN
-        MENUITEM "&Installere", ID_INSTALL
-        MENUITEM "&Avinstallere", ID_UNINSTALL
+        MENUITEM "&Installere\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Endre", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Remove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Oppdatere", ID_REFRESH
+        MENUITEM "&Oppdatere\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Hjelp"
     BEGIN
-        MENUITEM "Hjelp", ID_HELP, GRAYED
+        MENUITEM "Hjelp\tF1", ID_HELP, GRAYED
         MENUITEM "Om", ID_ABOUT
     END
 END
@@ -32,7 +32,7 @@ BEGIN
     POPUP "popup"
     BEGIN
         MENUITEM "&Åpne lenke i en nettleser", ID_OPEN_LINK
-        MENUITEM "&Kopier lenke  til utklipptavlen", ID_COPY_LINK
+        MENUITEM "&Kopier lenke til utklipptavlen", ID_COPY_LINK
     END
 END
 
@@ -40,15 +40,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Installere", ID_INSTALL
-        MENUITEM "&Avinstallere", ID_UNINSTALL
+        MENUITEM "&Installere\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallere\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Endre", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Remove from Registry", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Oppdater", ID_REFRESH
+        MENUITEM "&Oppdater\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

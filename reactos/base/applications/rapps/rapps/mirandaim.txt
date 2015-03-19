@@ -9,7 +9,7 @@ Description = Open source multiprotocol instant messaging application - May not 
 Size = 3.77 MB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://files.miranda-im.org/stable/0.10.24.0/miranda-im-v0.10.24-unicode.exe
+URLDownload = http://sourceforge.net/projects/miranda/files/miranda-im/0.10.27.0/miranda-im-v0.10.27-unicode.exe/download?nowrap
 CDPath = none
 
 [Section.0407]

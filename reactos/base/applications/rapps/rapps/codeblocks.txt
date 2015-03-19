@@ -15,6 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthält keinen Compiler.
 
+[Section.040a]
+Description = Un IDE potente, de código abierto y multiplataforma. No viene con compilador.
+
 [Section.0410]
 Description = Un IDE potente, open source, multipiattaforma. Non contiene un compilatore.
 

@@ -7,7 +7,6 @@ list(APPEND SOURCE
     listview.c
     loaddlg.c
     misc.c
-    parser.c
     richedit.c
     settingsdlg.c
     splitter.c

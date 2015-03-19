@@ -18,19 +18,19 @@ BEGIN
     END
     POPUP "&Programy"
     BEGIN
-        MENUITEM "&Instaluj", ID_INSTALL
-        MENUITEM "&Odinstaluj", ID_UNINSTALL
+        MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Odinstaluj\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modyfikuj", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Usuń z rejestru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "O&dśwież", ID_REFRESH
+        MENUITEM "O&dśwież\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ak&tualizuj bazę programów", ID_RESETDB
+        MENUITEM "Ak&tualizuj bazę programów\tCtrl+F5", ID_RESETDB
     END
     POPUP "Pomoc"
     BEGIN
-        MENUITEM "Pomoc", ID_HELP, GRAYED
+        MENUITEM "Pomoc\tF1", ID_HELP, GRAYED
         MENUITEM "O programie", ID_ABOUT
     END
 END
@@ -48,15 +48,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Instaluj", ID_INSTALL
-        MENUITEM "&Odinstaluj", ID_UNINSTALL
+        MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Odinstaluj\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modyfikuj", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Usuń z rejestru", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Odśwież", ID_REFRESH
+        MENUITEM "&Odśwież\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ak&tualizuj bazę programów", ID_RESETDB
+        MENUITEM "Ak&tualizuj bazę programów\tCtrl+F5", ID_RESETDB
     END
 END
 

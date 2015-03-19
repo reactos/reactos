@@ -10,19 +10,19 @@ BEGIN
     END
     POPUP "&Programme"
     BEGIN
-        MENUITEM "&Installieren", ID_INSTALL
-        MENUITEM "&Deinstallieren", ID_UNINSTALL
+        MENUITEM "&Installieren\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Deinstallieren\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändern", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualisieren", ID_REFRESH
+        MENUITEM "&Aktualisieren\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Da&tenbank aktualisieren", ID_RESETDB
+        MENUITEM "Da&tenbank aktualisieren\tCtrl+F5", ID_RESETDB
     END
     POPUP "Hilfe"
     BEGIN
-        MENUITEM "Hilfe", ID_HELP, GRAYED
+        MENUITEM "Hilfe\tF1", ID_HELP, GRAYED
         MENUITEM "Über", ID_ABOUT
     END
 END
@@ -40,15 +40,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Installieren", ID_INSTALL
-        MENUITEM "&Deinstallieren", ID_UNINSTALL
+        MENUITEM "&Installieren\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Deinstallieren\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändern", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Aktualisieren", ID_REFRESH
+        MENUITEM "&Aktualisieren\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Da&tenbank aktualisieren", ID_RESETDB
+        MENUITEM "Da&tenbank aktualisieren\tCtrl+F5", ID_RESETDB
     END
 END
 

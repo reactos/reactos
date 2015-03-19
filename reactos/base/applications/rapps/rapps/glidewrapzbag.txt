@@ -16,7 +16,9 @@ CDPath = none
 Description = glidewrapper ist erforderlich um Diablo2 in ReactOS auszuführen.
 
 [Section.040a]
-Description = glidewrapper es necesario para ejecutar Diablo 2 en ReactOS.
+Name = Adaptador de compatibilidad para Glide de zeckensack
+License = Gratuito
+Description = Necesario para ejecutar Diablo 2 en ReactOS.
 
 [Section.040c]
 Description = glidewrapper est nécessaire pour faire tourner Diablo 2 dans ReactOS.

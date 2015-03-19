@@ -14,19 +14,19 @@ BEGIN
     END
     POPUP "&Programe"
     BEGIN
-        MENUITEM "&Instalo", ID_INSTALL
-        MENUITEM "&Uninstall", ID_UNINSTALL
+        MENUITEM "&Instalo\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Uninstall\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifiko", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Hiq nga Regjistri", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Rifresko", ID_REFRESH
+        MENUITEM "&Rifresko\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Ndihmë"
     BEGIN
-        MENUITEM "Ndihmë", ID_HELP, GRAYED
+        MENUITEM "Ndihmë\tF1", ID_HELP, GRAYED
         MENUITEM "Rreth", ID_ABOUT
     END
 END
@@ -44,15 +44,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Instalo", ID_INSTALL
-        MENUITEM "&Uninstall", ID_UNINSTALL
+        MENUITEM "&Instalo\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Uninstall\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modifiko", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Hiq nga Regjistri", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Rifresko", ID_REFRESH
+        MENUITEM "&Rifresko\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

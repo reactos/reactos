@@ -12,19 +12,19 @@ BEGIN
     END
     POPUP "程序(&P)"
     BEGIN
-        MENUITEM "安装(&I)", ID_INSTALL
-        MENUITEM "卸载(&U)", ID_UNINSTALL
+        MENUITEM "安装(&I)\tCtrl+Enter", ID_INSTALL
+        MENUITEM "卸载(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "修改(&M)", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "从注册表删除(&E)", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "刷新(&R)", ID_REFRESH
+        MENUITEM "刷新(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新数据库(&A)", ID_RESETDB
+        MENUITEM "更新数据库(&A)\tCtrl+F5", ID_RESETDB
     END
     POPUP "帮助"
     BEGIN
-        MENUITEM "帮助内容", ID_HELP, GRAYED
+        MENUITEM "帮助内容\tF1", ID_HELP, GRAYED
         MENUITEM "关于", ID_ABOUT
     END
 END
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "安装(&I)", ID_INSTALL
-        MENUITEM "卸载(&U)", ID_UNINSTALL
+        MENUITEM "安装(&I)\tCtrl+Enter", ID_INSTALL
+        MENUITEM "卸载(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "修改(&M)", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "从注册表删除(&E)", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "刷新(&R)", ID_REFRESH
+        MENUITEM "刷新(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新数据库(&A)", ID_RESETDB
+        MENUITEM "更新数据库(&A)\tCtrl+F5", ID_RESETDB
     END
 END
 

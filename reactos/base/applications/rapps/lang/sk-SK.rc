@@ -15,19 +15,19 @@ BEGIN
     END
     POPUP "&Programy"
     BEGIN
-        MENUITEM "&Inštalovať", ID_INSTALL
-        MENUITEM "O&dinštalovať", ID_UNINSTALL
+        MENUITEM "&Inštalovať\tCtrl+Enter", ID_INSTALL
+        MENUITEM "O&dinštalovať\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Zmeniť", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Odst&rániť z Registrov", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Obnoviť", ID_REFRESH
+        MENUITEM "&Obnoviť\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Pomocník"
     BEGIN
-        MENUITEM "Pomocník", ID_HELP, GRAYED
+        MENUITEM "Pomocník\tF1", ID_HELP, GRAYED
         MENUITEM "Čo je ...", ID_ABOUT
     END
 END
@@ -45,15 +45,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Inštalovať", ID_INSTALL
-        MENUITEM "O&dinštalovať", ID_UNINSTALL
+        MENUITEM "&Inštalovať\tCtrl+Enter", ID_INSTALL
+        MENUITEM "O&dinštalovať\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Zmeniť", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Odst&rániť z Registrov", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Obnoviť", ID_REFRESH
+        MENUITEM "&Obnoviť\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

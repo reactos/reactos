@@ -16,6 +16,9 @@ CDPath = none
 [Section.0407]
 Description = Chromium B.S.U. ist ein Arcade-Style, Top-Scrolling Space Shooter.
 
+[Section.040a]
+Description = Chromium B.S.U. es un juego vertical de disparos espacial al clásico estilo arcade.
+
 [Section.0410]
 Description = Cromo B.S.U. è sparatutto spaziale.
 

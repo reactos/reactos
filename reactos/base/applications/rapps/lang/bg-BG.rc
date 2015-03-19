@@ -14,19 +14,19 @@ BEGIN
     END
     POPUP "&Приложения"
     BEGIN
-        MENUITEM "&Слагане", ID_INSTALL
-        MENUITEM "&Махане", ID_UNINSTALL
+        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване", ID_REFRESH
+        MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Помощ"
     BEGIN
-        MENUITEM "Помощ", ID_HELP, GRAYED
+        MENUITEM "Помощ\tF1", ID_HELP, GRAYED
         MENUITEM "За", ID_ABOUT
     END
 END
@@ -44,15 +44,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Слагане", ID_INSTALL
-        MENUITEM "&Махане", ID_UNINSTALL
+        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Промяна", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "О&пресняване", ID_REFRESH
+        MENUITEM "О&пресняване\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

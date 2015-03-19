@@ -12,19 +12,19 @@ BEGIN
     END
     POPUP "&תכניות"
     BEGIN
-        MENUITEM "התקנה", ID_INSTALL
-        MENUITEM "הסרה", ID_UNINSTALL
+        MENUITEM "התקנה\tCtrl+Enter", ID_INSTALL
+        MENUITEM "הסרה\tCtrl+Del", ID_UNINSTALL
         MENUITEM "שינוי", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "הסרה מהרשום", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "רענון", ID_REFRESH
+        MENUITEM "רענון\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "עזרה"
     BEGIN
-        MENUITEM "עזרה", ID_HELP, GRAYED
+        MENUITEM "עזרה\tF1", ID_HELP, GRAYED
         MENUITEM "אודות", ID_ABOUT
     END
 END
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "התקנה", ID_INSTALL
-        MENUITEM "הסרה", ID_UNINSTALL
+        MENUITEM "התקנה\tCtrl+Enter", ID_INSTALL
+        MENUITEM "הסרה\tCtrl+Del", ID_UNINSTALL
         MENUITEM "שינוי", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "הסרה מהרשום", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "רענן", ID_REFRESH
+        MENUITEM "רענן\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

@@ -27,9 +27,9 @@ License = Sconosciuta
 Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOs due volte.
 
 [Section.040a]
-Name = Driver AC97 para VirtualBox
+Name = Controlador AC97 para VirtualBox
 License = Desconocida
-Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
+Description = Se debe descomprimir en la carpeta "ReactOS" y reiniciar ReactOS dos veces.
 
 [Section.040c]
 Name = Pilote AC97 pour VirtualBox
