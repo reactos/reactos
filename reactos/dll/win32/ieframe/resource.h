@@ -62,6 +62,9 @@
 #define IDS_ADDRESS                    1106
 
 #define IDB_IETOOLBAR                  1400
+#ifdef __REACTOS__
+#define IDC_PAGEICO                    1401
+#endif
 
 /* update status text in BINDSTATUS_* callback */
 #define IDS_STATUSFMT_FIRST            4096
