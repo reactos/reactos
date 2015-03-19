@@ -3,12 +3,12 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/rapps/winmain.c
  * PURPOSE:         Main program
- * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
+ * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
+ *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
-#include "rapps.h"
-
 #include <shellapi.h>
+#include "rapps.h"
 
 #define SEARCH_TIMER_ID 'SR'
 
@@ -49,7 +49,7 @@ FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
 
     pSettingsInfo->Proxy = 0;
     StringCbCopyW(pSettingsInfo->szProxyServer, sizeof(pSettingsInfo->szProxyServer), L"");
-    StringCbCopyW(pSettingsInfo->szNoProxyFor, sizeof(pSettingsInfo->szNoProxyFor), L"");
+    StringCbCopyW(pSettingsInfo->szNoProxyFor,  sizeof(pSettingsInfo->szNoProxyFor),  L"");
 }
 
 static BOOL
@@ -138,6 +138,7 @@ EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info)
     /* Get version info */
     GetApplicationString(ItemInfo->hSubKey, L"DisplayVersion", szText);
     ListView_SetItemText(hListView, Index, 1, szText);
+
     /* Get comments */
     GetApplicationString(ItemInfo->hSubKey, L"Comments", szText);
     ListView_SetItemText(hListView, Index, 2, szText);
@@ -164,7 +165,6 @@ BOOL
 CALLBACK
 EnumAvailableAppProc(PAPPLICATION_INFO Info)
 {
-    PAPPLICATION_INFO ItemInfo;
     INT Index;
 
     if (!SearchPatternMatch(Info->szName, szSearchPattern) &&
@@ -175,16 +175,12 @@ EnumAvailableAppProc(PAPPLICATION_INFO Info)
 
     /* Only add a ListView entry if...
          - no RegName was supplied (so we cannot determine whether the application is installed or not) or
-         - a RegName was supplied and the application is not installed
+         -  a RegName was supplied and the application is not installed
     */
     if (!*Info->szRegName || (!IsInstalledApplication(Info->szRegName, FALSE) && !IsInstalledApplication(Info->szRegName, TRUE)))
     {
-        ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_INFO));
-        if (!ItemInfo) return FALSE;
+        Index = ListViewAddItem(Info->Category, 0, Info->szName, (LPARAM)Info);
 
-        RtlCopyMemory(ItemInfo, Info, sizeof(APPLICATION_INFO));
-
-        Index = ListViewAddItem(Info->Category, 0, Info->szName, (LPARAM)ItemInfo);
         ListView_SetItemText(hListView, Index, 1, Info->szVersion);
         ListView_SetItemText(hListView, Index, 2, Info->szDesc);
     }
@@ -245,13 +241,17 @@ UpdateApplicationsList(INT EnumType)
 
     SelectedEnumType = EnumType;
 
-    LoadStringW(hInst, IDS_APPS_COUNT, szBuffer2, sizeof(szBuffer2) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_APPS_COUNT, szBuffer2, _countof(szBuffer2));
     StringCbPrintfW(szBuffer1, sizeof(szBuffer1),
                     szBuffer2,
                     ListView_GetItemCount(hListView));
     SetStatusBarText(szBuffer1);
 
     SetWelcomeText();
+
+    /* set automatic column width for program names if the list is not empty */
+    if (ListView_GetItemCount(hListView) > 0)
+        ListView_SetColumnWidth(hListView, 0, LVSCW_AUTOSIZE);
 }
 
 VOID
@@ -260,13 +260,13 @@ InitApplicationsList(VOID)
     WCHAR szText[MAX_STR_LEN];
 
     /* Add columns to ListView */
-    LoadStringW(hInst, IDS_APP_NAME, szText, sizeof(szText) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_APP_NAME, szText, _countof(szText));
     ListViewAddColumn(0, szText, 200, LVCFMT_LEFT);
 
-    LoadStringW(hInst, IDS_APP_INST_VERSION, szText, sizeof(szText) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_APP_INST_VERSION, szText, _countof(szText));
     ListViewAddColumn(1, szText, 90, LVCFMT_RIGHT);
 
-    LoadStringW(hInst, IDS_APP_DESCRIPTION, szText, sizeof(szText) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_APP_DESCRIPTION, szText, _countof(szText));
     ListViewAddColumn(3, szText, 250, LVCFMT_LEFT);
 
     UpdateApplicationsList(ENUM_ALL_COMPONENTS);
@@ -289,7 +289,7 @@ AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
     Index = ImageList_AddIcon(hImageTreeView, hIcon);
     DestroyIcon(hIcon);
 
-    LoadStringW(hInst, TextIndex, szText, sizeof(szText) / sizeof(TCHAR));
+    LoadStringW(hInst, TextIndex, szText, _countof(szText));
 
     return TreeViewAddItem(hRootItem, szText, Index, Index, TextIndex);
 }
@@ -352,7 +352,7 @@ InitControls(HWND hwnd)
 
         InitCategoriesList();
 
-        LoadStringW(hInst, IDS_APPS_COUNT, szBuffer2, sizeof(szBuffer2) / sizeof(WCHAR));
+        LoadStringW(hInst, IDS_APPS_COUNT, szBuffer2, _countof(szBuffer2));
         StringCbPrintfW(szBuffer1, sizeof(szBuffer1),
                         szBuffer2,
                         ListView_GetItemCount(hListView));
@@ -385,7 +385,7 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
             {
                 WCHAR szWndText[MAX_STR_LEN];
 
-                LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
+                LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
                 GetWindowTextW(hSearchBar, szWndText, MAX_STR_LEN);
                 if (wcscmp(szBuf, szWndText) == 0)
                 {
@@ -400,7 +400,7 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 GetWindowTextW(hSearchBar, szBuf, MAX_STR_LEN);
                 if (wcslen(szBuf) < 1)
                 {
-                    LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
+                    LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
                     SearchEnabled = FALSE;
                     SetWindowTextW(hSearchBar, szBuf);
                 }
@@ -417,7 +417,7 @@ MainWndOnCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
                     break;
                 }
 
-                LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
+                LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
                 GetWindowTextW(hSearchBar, szWndText, MAX_STR_LEN);
                 if (wcscmp(szBuf, szWndText) != 0)
                 {
@@ -607,12 +607,12 @@ BOOL IsSelectedNodeInstalled(void)
 LRESULT CALLBACK
 MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+
     switch (Msg)
     {
         case WM_CREATE:
             if (!InitControls(hwnd))
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
-
             break;
 
         case WM_COMMAND:
@@ -801,7 +801,8 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 {
                     if (data->hwndFrom == hListView && ((LPNMLISTVIEW)lParam)->iItem != -1)
                     {
-                        SendMessage(hwnd, WM_COMMAND, ID_INSTALL, 0);   //Won't do anything if the program is already installed
+                        /* this won't do anything if the program is already installed */
+                        SendMessage(hwnd, WM_COMMAND, ID_INSTALL, 0);
                     }
                 }
                 break;
@@ -902,6 +903,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WCHAR szWindowClass[] = L"ROSAPPMGR";
     WCHAR szWindowName[MAX_STR_LEN];
     HANDLE hMutex = NULL;
+    HACCEL KeyBrd;
     MSG Msg;
 
     switch (GetUserDefaultUILanguage())
@@ -949,7 +951,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
 
     if (RegisterClassExW(&WndClass) == (ATOM)0) goto Exit;
 
-    LoadStringW(hInst, IDS_APPTITLE, szWindowName, sizeof(szWindowName) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_APPTITLE, szWindowName, _countof(szWindowName));
 
     hMainWnd = CreateWindowExW(WS_EX_WINDOWEDGE,
                                szWindowClass,
@@ -973,15 +975,22 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     if (SettingsInfo.bUpdateAtStart)
         UpdateAppsDB();
 
+    /* Load the menu hotkeys */
+    KeyBrd = LoadAccelerators(NULL, MAKEINTRESOURCE(HOTKEYS));
+
     /* Message Loop */
     while (GetMessage(&Msg, NULL, 0, 0))
     {
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
+        if (!TranslateAccelerator(hMainWnd, KeyBrd, &Msg))
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
     }
 
 Exit:
-    if (hMutex) CloseHandle(hMutex);
+    if (hMutex)
+        CloseHandle(hMutex);
 
     return 0;
 }

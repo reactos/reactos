@@ -12,19 +12,19 @@ BEGIN
     END
     POPUP "Y&azılım"
     BEGIN
-        MENUITEM "&Kur", ID_INSTALL
-        MENUITEM "K&aldır", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile", ID_REFRESH
+        MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım", ID_HELP, GRAYED
+        MENUITEM "&Yardım\tF1", ID_HELP, GRAYED
         MENUITEM "&Üzerine...", ID_ABOUT
     END
 END
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Kur", ID_INSTALL
-        MENUITEM "K&aldır", ID_UNINSTALL
+        MENUITEM "&Kur\tCtrl+Enter", ID_INSTALL
+        MENUITEM "K&aldır\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Değiştir", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Girişi Değer Defteri'nden Kaldır", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile", ID_REFRESH
+        MENUITEM "&Yenile\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Ya&zılım Veri Tabanını Yenile", ID_RESETDB
+        MENUITEM "Ya&zılım Veri Tabanını Yenile\tCtrl+F5", ID_RESETDB
     END
 END
 

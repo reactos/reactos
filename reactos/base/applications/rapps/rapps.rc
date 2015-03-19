@@ -39,6 +39,16 @@ IDI_CAT_SCIENCE ICON "res/cats/science.ico"
 IDI_CAT_TOOLS ICON "res/cats/tools.ico"
 IDI_CAT_VIDEO ICON "res/cats/video.ico"
 
+/* Accelerators -- key bindings */
+HOTKEYS ACCELERATORS
+{
+  VK_F1,     ID_HELP,               VIRTKEY
+  VK_F5,     ID_REFRESH,            VIRTKEY
+  VK_F5,     ID_RESETDB,   CONTROL, VIRTKEY
+  VK_DELETE, ID_UNINSTALL, CONTROL, VIRTKEY
+  VK_RETURN, ID_INSTALL,   CONTROL, VIRTKEY
+}
+
 #include <reactos/manifest_exe.rc>
 
 #include <rappsmsg.rc>

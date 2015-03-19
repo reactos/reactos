@@ -81,6 +81,14 @@ typedef struct
     WCHAR szUrlDownload[MAX_PATH];
     WCHAR szCDPath[MAX_PATH];
 
+    /* caching mechanism related entries */
+    WCHAR cFileName[MAX_PATH];
+    FILETIME ftCacheStamp;
+    LIST_ENTRY List;
+
+    /* optional integrity checks */
+    BYTE MD5Checksum[16];
+
 } APPLICATION_INFO, *PAPPLICATION_INFO;
 
 typedef struct
@@ -166,9 +174,8 @@ VOID InitLogs(VOID);
 VOID FreeLogs(VOID);
 BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 
-/* parser.c */
-INT ParserGetString(LPCWSTR section, LPCWSTR entry, LPWSTR buffer, UINT len, LPCWSTR filename);
-UINT ParserGetInt(LPCWSTR section, LPCWSTR entry, LPCWSTR filename);
+UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
+UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 
 /* richedit.c */
 extern HWND hRichEdit;

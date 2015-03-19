@@ -152,6 +152,9 @@
 #define IDS_CAT_TOOLS            713
 #define IDS_CAT_VIDEO            714
 
+/* Accelerators */
+#define HOTKEYS                  715
+
 /* Other */
 #ifndef IDC_STATIC
 #define IDC_STATIC               -1

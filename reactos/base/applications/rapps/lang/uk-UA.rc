@@ -18,19 +18,19 @@ BEGIN
     END
     POPUP "&Програми"
     BEGIN
-        MENUITEM "&Встановити", ID_INSTALL
-        MENUITEM "Вид&алити", ID_UNINSTALL
+        MENUITEM "&Встановити\tCtrl+Enter", ID_INSTALL
+        MENUITEM "Вид&алити\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Змінити", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Вида&лити з реєстру", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Оновити", ID_REFRESH
+        MENUITEM "&Оновити\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "Дов&ідка", ID_HELP, GRAYED
+        MENUITEM "Дов&ідка\tF1", ID_HELP, GRAYED
         MENUITEM "Про про&граму...", ID_ABOUT
     END
 END
@@ -48,15 +48,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Встановити", ID_INSTALL
-        MENUITEM "В&идалити", ID_UNINSTALL
+        MENUITEM "&Встановити\tCtrl+Enter", ID_INSTALL
+        MENUITEM "В&идалити\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Змінити", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "Вид&алити з реєстру", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Оновити", ID_REFRESH
+        MENUITEM "&Оновити\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

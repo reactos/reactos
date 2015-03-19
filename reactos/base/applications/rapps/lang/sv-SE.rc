@@ -17,19 +17,19 @@ BEGIN
     END
     POPUP "&Program"
     BEGIN
-        MENUITEM "&Installera", ID_INSTALL
-        MENUITEM "&Avinstallera", ID_UNINSTALL
+        MENUITEM "&Installera\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändra", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Ta bort från Registret", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera", ID_REFRESH
+        MENUITEM "&Uppdatera\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Hjälp"
     BEGIN
-        MENUITEM "Hjälp", ID_HELP, GRAYED
+        MENUITEM "Hjälp\tF1", ID_HELP, GRAYED
         MENUITEM "Om...", ID_ABOUT
     END
 END
@@ -47,15 +47,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Installera", ID_INSTALL
-        MENUITEM "&Avinstallera", ID_UNINSTALL
+        MENUITEM "&Installera\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Ändra", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Ta bort från Registret", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Uppdatera", ID_REFRESH
+        MENUITEM "&Uppdatera\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

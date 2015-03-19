@@ -12,19 +12,19 @@ BEGIN
     END
     POPUP "&Programas"
     BEGIN
-        MENUITEM "I&nstalar", ID_INSTALL
-        MENUITEM "&Desinstalar", ID_UNINSTALL
+        MENUITEM "I&nstalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Remover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "A&tualizar", ID_REFRESH
+        MENUITEM "A&tualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
     POPUP "Aj&uda"
     BEGIN
-        MENUITEM "Aj&uda", ID_HELP, GRAYED
+        MENUITEM "Aj&uda\tF1", ID_HELP, GRAYED
         MENUITEM "&Sobre", ID_ABOUT
     END
 END
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "&Instalar", ID_INSTALL
-        MENUITEM "&Desinstalar", ID_UNINSTALL
+        MENUITEM "&Instalar\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Desinstalar\tCtrl+Del", ID_UNINSTALL
         MENUITEM "&Modificar", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "&Remover do Registro", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "&Atualizar", ID_REFRESH
+        MENUITEM "&Atualizar\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Update Da&tabase", ID_RESETDB
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
     END
 END
 

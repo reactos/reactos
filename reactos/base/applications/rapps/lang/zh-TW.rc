@@ -12,19 +12,19 @@ BEGIN
     END
     POPUP "程式(&P)"
     BEGIN
-        MENUITEM "安裝(&I)", ID_INSTALL
-        MENUITEM "解除安裝(&U)", ID_UNINSTALL
+        MENUITEM "安裝(&I)\tCtrl+Enter", ID_INSTALL
+        MENUITEM "解除安裝(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "修改(&M)", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "從登錄檔刪除(&E)", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "重新整理(&R)", ID_REFRESH
+        MENUITEM "重新整理(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新資料庫(&A)", ID_RESETDB
+        MENUITEM "更新資料庫(&A)\tCtrl+F5", ID_RESETDB
     END
     POPUP "幫助"
     BEGIN
-        MENUITEM "幫助內容", ID_HELP, GRAYED
+        MENUITEM "幫助內容\tF1", ID_HELP, GRAYED
         MENUITEM "關於", ID_ABOUT
     END
 END
@@ -42,15 +42,15 @@ IDR_APPLICATIONMENU MENU
 BEGIN
     POPUP "popup"
     BEGIN
-        MENUITEM "安裝(&I)", ID_INSTALL
-        MENUITEM "解除安裝(&U)", ID_UNINSTALL
+        MENUITEM "安裝(&I)\tCtrl+Enter", ID_INSTALL
+        MENUITEM "解除安裝(&U)\tCtrl+Del", ID_UNINSTALL
         MENUITEM "修改(&M)", ID_MODIFY
         MENUITEM SEPARATOR
         MENUITEM "從登錄檔刪除(&E)", ID_REGREMOVE
         MENUITEM SEPARATOR
-        MENUITEM "重新整理(&R)", ID_REFRESH
+        MENUITEM "重新整理(&R)\tF5", ID_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "更新資料庫(&A)", ID_RESETDB
+        MENUITEM "更新資料庫(&A)\tCtrl+F5", ID_RESETDB
     END
 END
 
