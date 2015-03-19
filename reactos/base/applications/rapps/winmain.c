@@ -7,8 +7,9 @@
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
-#include <shellapi.h>
 #include "rapps.h"
+
+#include <shellapi.h>
 
 #define SEARCH_TIMER_ID 'SR'
 

@@ -20,6 +20,7 @@
 #include <shlwapi.h>
 #include <stdio.h>
 #include <strsafe.h>
+#include <ndk/rtlfuncs.h>
 
 #include <rappsmsg.h>
 

@@ -7,7 +7,6 @@
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
-#include <ndk/rtlfuncs.h>
 #include "rapps.h"
 
 #define ADD_TEXT(a, b, c, d) \

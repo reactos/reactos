@@ -8,7 +8,6 @@
  */
 
 #include "rapps.h"
-#include <ndk/rtlfuncs.h>
 
 /* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
