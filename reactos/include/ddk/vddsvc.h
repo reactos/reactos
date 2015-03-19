@@ -34,15 +34,71 @@
 
 VOID
 WINAPI
-call_ica_hw_interrupt
-(
-    INT  ms,
-    BYTE line,
-    INT  count
-);
+call_ica_hw_interrupt(
+  _In_ INT  ms,
+  _In_ BYTE line,
+  _In_ INT  count);
 
-#define VDDSimulateInterrupt(ms, line, count)   \
+#define VDDSimulateInterrupt(ms, line, count) \
     call_ica_hw_interrupt((ms), (line), (count)) // Windows specifies a count of 1 ...
+
+
+/*
+ * Memory services
+ */
+
+#ifdef i386
+
+PBYTE
+WINAPI
+MGetVdmPointer(
+  _In_ ULONG Address,
+  _In_ ULONG Size,
+  _In_ BOOLEAN ProtectedMode);
+
+#define Sim32GetVDMPointer(Address, Size, Mode) \
+    MGetVdmPointer((Address), (Size), (Mode))
+
+#define Sim32FlushVDMPointer(Address, Size, Buffer, Mode) TRUE
+
+#else
+
+PBYTE
+WINAPI
+Sim32GetVDMPointer(
+  _In_ ULONG Address,
+  _In_ ULONG Size,
+  _In_ BOOLEAN ProtectedMode);
+
+BOOLEAN
+WINAPI
+Sim32FlushVDMPointer(
+  _In_ ULONG Address,
+  _In_ ULONG Size,
+  _In_ PBYTE Buffer,
+  _In_ BOOLEAN ProtectedMode);
+
+#endif
+
+PBYTE
+WINAPI
+Sim32pGetVDMPointer(
+  _In_ ULONG Address,
+  _In_ BOOLEAN ProtectedMode);
+
+/* This API appears to have been never implemented anywhere... */
+#define Sim32FreeVDMPointer(Address, Size, Buffer, Mode) TRUE
+
+#define GetVDMAddress(usSeg, usOff) (((ULONG)(usSeg) << 4) + (ULONG)(usOff))
+
+#define GetVDMPointer(Address, Size, Mode) \
+    Sim32GetVDMPointer(Address, Size, Mode)
+
+#define FlushVDMPointer(Address, Size, Buffer, Mode) \
+    Sim32FlushVDMPointer(Address, Size, Buffer, Mode)
+
+#define FreeVDMPointer(Address, Size, Buffer, Mode) \
+    Sim32FreeVDMPointer(Address, Size, Buffer, Mode)
 
 
 /*
