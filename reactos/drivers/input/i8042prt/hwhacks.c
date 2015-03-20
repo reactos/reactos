@@ -59,7 +59,7 @@ const HARDWARE_TABLE i8042HardwareTable[] =
 //    { {{BOARD_VENDOR, "RIOWORKS"}, {BOARD_NAME, "HDAMB"}, {BOARD_VERSION, "Rev E"}}, FL_NOLOOP },
 //    { {{BOARD_VENDOR, "ASUSTeK Computer Inc."}, {BOARD_NAME, "G1S"}, {BOARD_VERSION, "1.0"}}, FL_NOLOOP },
 
-    { {{SYS_VENDOR, "Microsoft Corporation"}, {SYS_PRODUCT, "Virtual Machine"}, {SYS_VERSION, "VS2005R2"} }, FL_INITHACK },
+    { {{SYS_VENDOR, "Microsoft Corporation"}, {SYS_PRODUCT, "Virtual Machine"}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D530                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D531                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D600                   "}}, FL_INITHACK },
