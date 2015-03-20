@@ -24,6 +24,7 @@ BEGIN
     END
     POPUP "设备(&D)"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "属性(&P)", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "音量控制(&V)", IDM_VOLUMECTL

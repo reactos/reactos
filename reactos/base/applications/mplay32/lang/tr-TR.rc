@@ -24,6 +24,7 @@ BEGIN
     END
     POPUP "&Aygıt"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Husûsiyetler", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Ses Düzeyi Denetimi", IDM_VOLUMECTL

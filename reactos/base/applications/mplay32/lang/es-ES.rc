@@ -22,6 +22,7 @@ BEGIN
     END
     POPUP "&Dispositivo"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Propiedades", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "Control de &volumen", IDM_VOLUMECTL

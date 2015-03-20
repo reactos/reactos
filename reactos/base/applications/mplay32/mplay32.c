@@ -483,6 +483,38 @@ GetDeviceFriendlyName(LPTSTR lpDeviceName, LPTSTR lpFriendlyName, DWORD dwFriend
     return mciError;
 }
 
+static BOOL
+DeviceUsesFiles(LPTSTR lpDeviceName)
+{
+    MCIERROR mciError;
+    MCI_OPEN_PARMS mciOpen;
+    MCI_GETDEVCAPS_PARMS mciDevCaps;
+    MCI_GENERIC_PARMS mciGeneric;
+
+    mciOpen.dwCallback = 0;
+    mciOpen.wDeviceID  = 0;
+    mciOpen.lpstrDeviceType  = lpDeviceName;
+    mciOpen.lpstrElementName = NULL;
+    mciOpen.lpstrAlias = NULL;
+
+    mciError = mciSendCommand(0, MCI_OPEN, MCI_OPEN_TYPE | MCI_WAIT, (DWORD_PTR)&mciOpen);
+    if (mciError != 0)
+        return FALSE;
+
+    mciDevCaps.dwCallback  = 0;
+    mciDevCaps.dwReturn = 0;
+    mciDevCaps.dwItem = MCI_GETDEVCAPS_USES_FILES;
+
+    mciError = mciSendCommand(mciOpen.wDeviceID, MCI_GETDEVCAPS, MCI_WAIT | MCI_GETDEVCAPS_ITEM, (DWORD_PTR)&mciDevCaps);
+    if (mciError != 0)
+        return FALSE;
+
+    mciGeneric.dwCallback = 0;
+    mciSendCommand(mciOpen.wDeviceID, MCI_CLOSE, MCI_WAIT, (DWORD_PTR)&mciGeneric);
+
+    return (BOOL)mciDevCaps.dwReturn;
+}
+
 static MCIERROR
 CloseMciDevice(VOID)
 {
@@ -509,7 +541,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
     MCIERROR mciError;
     MCI_STATUS_PARMS mciStatus;
     MCI_OPEN_PARMS mciOpen;
-    DWORD dwFlags = MCI_OPEN_ELEMENT | MCI_WAIT;
+    DWORD dwFlags = MCI_WAIT;
     LPTSTR lpStr;
 
     if (wDeviceId)
@@ -523,6 +555,9 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 
     if (lpType)
         dwFlags |= MCI_OPEN_TYPE;
+
+    if (lpFileName)
+        dwFlags |= MCI_OPEN_ELEMENT;
 
     mciError = mciSendCommand(0, MCI_OPEN, dwFlags, (DWORD_PTR)&mciOpen);
     if (mciError != 0)
@@ -562,11 +597,16 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 
     /* NOTE: Everything above this line may be done instead in OpenMediaFile() */
 
-    lpStr = _tcsrchr(lpFileName, _T('\\'));
-    if (lpStr) // Get only the file name (skip the last path separator)
-        lpStr++;
+    if (lpFileName)
+    {
+        lpStr = _tcsrchr(lpFileName, _T('\\'));
+        if (lpStr) // Get only the file name (skip the last path separator)
+            lpStr++;
+        else
+            lpStr = lpFileName;
+    }
     else
-        lpStr = lpFileName;
+        lpStr = lpType;
 
     StringCbCopy(szCurrentFile, sizeof(szCurrentFile), lpStr);
 
@@ -852,7 +892,7 @@ CloseMediaFile(HWND hwnd)
 }
 
 static VOID
-OpenMediaFile(HWND hwnd, LPTSTR lpFileName)
+OpenMediaFile(HWND hwnd, LPTSTR lpFileName, LPTSTR lpType)
 {
     MCIERROR mciError;
 
@@ -862,7 +902,7 @@ OpenMediaFile(HWND hwnd, LPTSTR lpFileName)
     if (wDeviceId)
         CloseMediaFile(hwnd);
 
-    mciError = OpenMciDevice(hwnd, NULL, lpFileName);
+    mciError = OpenMciDevice(hwnd, lpType, lpFileName);
     if (mciError != 0)
     {
         ShowMCIError(hwnd, mciError);
@@ -872,8 +912,45 @@ OpenMediaFile(HWND hwnd, LPTSTR lpFileName)
     StartPlayback(hwnd);
 }
 
+static DWORD
+InsertDeviceMenuItem(HMENU hMenu, UINT uItem, BOOL fByPosition, UINT uItemID, DWORD dwDeviceIndex)
+{
+    MENUITEMINFO lpmii;
+    MCIERROR mciError;
+    TCHAR szDeviceName[MAX_MCISTR];
+    TCHAR szFriendlyName[MAX_MCISTR];
+
+    mciError = GetDeviceName(dwDeviceIndex, szDeviceName, sizeof(szDeviceName));
+    if (mciError)
+    {
+        return mciError;
+    }
+
+    mciError = GetDeviceFriendlyName(szDeviceName, szFriendlyName, sizeof(szFriendlyName));
+    if (mciError)
+    {
+        return mciError;
+    }
+
+    if (DeviceUsesFiles(szDeviceName))
+    {
+        StringCbCat(szFriendlyName, sizeof(szFriendlyName), _T("..."));
+    }
+
+    ZeroMemory(&lpmii, sizeof(MENUITEMINFO));
+    lpmii.cbSize = sizeof(lpmii);
+    lpmii.fMask = MIIM_DATA | MIIM_TYPE | MIIM_ID;
+    lpmii.wID = uItemID;
+    lpmii.fType = MF_STRING;
+    lpmii.dwTypeData = szFriendlyName;
+    lpmii.dwItemData = dwDeviceIndex;
+    InsertMenuItem(hMenu, uItem, fByPosition, &lpmii);
+
+    return 0;
+}
+
 static VOID
-BuildFileFilter(VOID)
+BuildFileFilterAndDeviceMenu(VOID)
 {
     TCHAR szDeviceName[MAX_MCISTR];
     TCHAR szFriendlyName[MAX_MCISTR];
@@ -891,6 +968,7 @@ BuildFileFilter(VOID)
     DWORD dwFilterSize;
     DWORD dwDeviceSize;
     DWORD dwExtensionLen;
+    DWORD dwPosition = 0;
     DWORD i;
     DWORD j;
     UINT uSizeRemain;
@@ -952,6 +1030,10 @@ BuildFileFilter(VOID)
         {
             continue;
         }
+
+        /* Insert a menu item under the "Device" menu for every found MCI device */
+        InsertDeviceMenuItem(GetSubMenu(hMainMenu, 3), dwPosition, TRUE, IDM_DEVICE_FIRST + dwPosition, j);
+        dwPosition++;
 
         /* Copy the default extension list, that may be overwritten after... */
         StringCbCopy(szExtensionList, dwMaskLen * sizeof(TCHAR), szDefaultExtension);
@@ -1065,7 +1147,7 @@ CleanupFileFilter(VOID)
 }
 
 static VOID
-OpenFileDialog(HWND hwnd)
+OpenFileDialog(HWND hwnd, DWORD dwFilterIndex, LPTSTR lpType)
 {
     OPENFILENAME OpenFileName;
     TCHAR szFile[MAX_PATH + 1] = _T("");
@@ -1087,11 +1169,46 @@ OpenFileDialog(HWND hwnd)
     OpenFileName.lpstrInitialDir = szCurrentDir;
     OpenFileName.Flags           = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_SHAREAWARE;
     OpenFileName.lpstrDefExt     = _T("\0");
+    OpenFileName.nFilterIndex = dwFilterIndex;
 
     if (!GetOpenFileName(&OpenFileName))
         return;
 
-    OpenMediaFile(hwnd, OpenFileName.lpstrFile);
+    OpenMediaFile(hwnd, OpenFileName.lpstrFile, lpType);
+}
+
+static VOID
+HandleDeviceMenuItem(HWND hwnd, UINT uItem)
+{
+    MENUITEMINFO lpmii;
+    TCHAR szDeviceName[MAX_MCISTR];
+    MCIERROR mciError;
+
+    ZeroMemory(&lpmii, sizeof(MENUITEMINFO));
+    lpmii.cbSize = sizeof(lpmii);
+    lpmii.fMask = MIIM_DATA;
+    GetMenuItemInfo(hMainMenu, uItem, FALSE, &lpmii);
+
+    mciError = GetDeviceName(lpmii.dwItemData, szDeviceName, sizeof(szDeviceName));
+    if (mciError)
+    {
+        ShowMCIError(hwnd, mciError);
+        return;
+    }
+
+    if (DeviceUsesFiles(szDeviceName))
+    {
+        OpenFileDialog(hwnd, uItem - IDM_DEVICE_FIRST + 1, szDeviceName);
+        return;
+    }
+
+    mciError = OpenMciDevice(hwnd, szDeviceName, NULL);
+    if (mciError)
+    {
+        ShowMCIError(hwnd, mciError);
+    }
+
+    return;
 }
 
 LRESULT CALLBACK
@@ -1114,7 +1231,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             drophandle = (HDROP)wParam;
             DragQueryFile(drophandle, 0, droppedfile, ARRAYSIZE(droppedfile));
             DragFinish(drophandle);
-            OpenMediaFile(hwnd, droppedfile);
+            OpenMediaFile(hwnd, droppedfile, NULL);
             break;
         }
 
@@ -1241,6 +1358,12 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
         case WM_COMMAND:
         {
+            if (LOWORD(wParam) >= IDM_DEVICE_FIRST)
+            {
+                HandleDeviceMenuItem(hwnd, LOWORD(wParam));
+                break;
+            }
+
             switch (LOWORD(wParam))
             {
                 case IDC_PLAY:
@@ -1249,7 +1372,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     if (wDeviceId)
                         TogglePlaybackState(hwnd);
                     else
-                        OpenFileDialog(hwnd);
+                        OpenFileDialog(hwnd, 1, NULL);
 
                     break;
                 }
@@ -1276,7 +1399,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_OPEN_FILE:
-                    OpenFileDialog(hwnd);
+                    OpenFileDialog(hwnd, 1, NULL);
                     return 0;
 
                 case IDM_CLOSE_FILE:
@@ -1383,7 +1506,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
     hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(ID_ACCELERATORS));
 
-    BuildFileFilter();
+    BuildFileFilterAndDeviceMenu();
 
     DragAcceptFiles(hwnd, TRUE);
 
@@ -1399,7 +1522,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    OpenMediaFile(hwnd, lpCmdLine);
+    OpenMediaFile(hwnd, lpCmdLine, NULL);
 
     /* Message Loop */
     while (GetMessage(&msg, NULL, 0, 0))

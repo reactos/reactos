@@ -52,6 +52,9 @@
 #define IDM_REPEAT     1006
 #define IDM_SWITCHVIEW 1007
 
+/* The device specific items in the device menu start here */
+#define IDM_DEVICE_FIRST 10000
+
 /* ToolBar Icons */
 #define TBICON_PLAY     0
 #define TBICON_STOP     1

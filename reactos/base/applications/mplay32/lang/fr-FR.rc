@@ -22,6 +22,7 @@ BEGIN
     END
     POPUP "Périp&hérique"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Propriétés", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "Contrôle du &volume", IDM_VOLUMECTL

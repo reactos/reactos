@@ -22,6 +22,7 @@ BEGIN
     END
     POPUP "&Устройство"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Свойства", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Громкость", IDM_VOLUMECTL

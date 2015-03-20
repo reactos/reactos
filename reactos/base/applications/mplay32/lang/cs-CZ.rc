@@ -27,6 +27,7 @@ BEGIN
     END
     POPUP "&Zařízení"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Vlastnosti", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "Ovládání &hlasitosti", IDM_VOLUMECTL

@@ -30,6 +30,7 @@ BEGIN
     END
     POPUP "&Urządzenie"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "Właś&ciwości", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Regulacja głośności", IDM_VOLUMECTL
