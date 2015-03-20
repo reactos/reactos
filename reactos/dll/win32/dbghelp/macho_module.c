@@ -966,10 +966,10 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
                                            &pbi, sizeof(pbi), NULL);
         if (status == STATUS_SUCCESS)
         {
-            ULONG dyld_image_info;
+            ULONG_PTR dyld_image_info;
 
             /* Read dyld image info address from PEB */
-            if (ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved,
+            if (ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0],
                                   &dyld_image_info, sizeof(dyld_image_info), NULL))
             {
                 TRACE("got dyld_image_info 0x%08x from PEB %p MacDyldImageInfo %p\n",
@@ -979,6 +979,7 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
             }
         }
 
+#ifndef __LP64__ /* No reading the symtab with nlist(3) in LP64 */
         if (!ret)
         {
             static void* dyld_all_image_infos_addr;
@@ -1002,6 +1003,7 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
                 ret = TRUE;
             }
         }
+#endif
     }
 
     if (macho_info->flags & MACHO_INFO_MODULE)

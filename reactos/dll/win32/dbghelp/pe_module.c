@@ -504,7 +504,7 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module)
 static BOOL pe_load_dwarf(struct module* module)
 {
     struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
-    BOOL                        ret = FALSE;
+    BOOL                        ret;
 
     ret = dwarf2_parse(module,
                        module->module.BaseOfImage - fmap->u.pe.ntheader.OptionalHeader.ImageBase,

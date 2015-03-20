@@ -1469,9 +1469,11 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
     if (!ret && !strchrW(filename, '/'))
     {
         ret = elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
-                                      getenv("PATH"), elf_info) ||
-            elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
-                                    getenv("LD_LIBRARY_PATH"), elf_info);
+                                      getenv("PATH"), elf_info);
+        if (!ret) ret = elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
+                                                getenv("LD_LIBRARY_PATH"), elf_info);
+        if (!ret) ret = elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
+                                                BINDIR, elf_info);
         if (!ret) ret = elf_load_file_from_dll_path(pcs, filename,
                                                     load_offset, dyn_addr, elf_info);
     }
