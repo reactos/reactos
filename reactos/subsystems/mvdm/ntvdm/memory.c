@@ -196,7 +196,7 @@ MemExceptionHandler(ULONG FaultAddress, BOOLEAN Writing)
     ASSERT(FaultAddress < MAX_ADDRESS && Hook != NULL && Hook->hVdd != NULL);
 
     /* Call the VDD handler */
-    Hook->VddHandler((PVOID)FaultAddress, (ULONG)Writing);
+    Hook->VddHandler(REAL_TO_PHYS(FaultAddress), (ULONG)Writing);
 }
 
 BOOL
@@ -363,9 +363,9 @@ VDDInstallMemoryHook(IN HANDLE hVdd,
     NTSTATUS Status;
     PMEM_HOOK Hook;
     ULONG i;
-    ULONG FirstPage = (ULONG_PTR)pStart >> 12;
-    ULONG LastPage = ((ULONG_PTR)pStart + dwCount - 1) >> 12;
-    PVOID Address = (PVOID)(FirstPage * PAGE_SIZE);
+    ULONG FirstPage = (ULONG_PTR)PHYS_TO_REAL(pStart) >> 12;
+    ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(pStart) + dwCount - 1) >> 12;
+    PVOID Address = (PVOID)REAL_TO_PHYS(FirstPage * PAGE_SIZE);
     SIZE_T Size = (LastPage - FirstPage + 1) * PAGE_SIZE;
     PLIST_ENTRY Pointer;
 
@@ -400,7 +400,10 @@ VDDInstallMemoryHook(IN HANDLE hVdd,
     }
 
     /* Decommit the pages */
-    Status = NtFreeVirtualMemory(NtCurrentProcess(), &Address, &Size, MEM_DECOMMIT);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(),
+                                 &Address,
+                                 &Size,
+                                 MEM_DECOMMIT);
     if (!NT_SUCCESS(Status))
     {
         if (Pointer == &HookList)
@@ -430,9 +433,9 @@ VDDDeInstallMemoryHook(IN HANDLE hVdd,
     NTSTATUS Status;
     PMEM_HOOK Hook;
     ULONG i;
-    ULONG FirstPage = (ULONG_PTR)pStart >> 12;
-    ULONG LastPage = ((ULONG_PTR)pStart + dwCount - 1) >> 12;
-    PVOID Address = (PVOID)(FirstPage * PAGE_SIZE);
+    ULONG FirstPage = (ULONG_PTR)PHYS_TO_REAL(pStart) >> 12;
+    ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(pStart) + dwCount - 1) >> 12;
+    PVOID Address = (PVOID)REAL_TO_PHYS(FirstPage * PAGE_SIZE);
     SIZE_T Size = (LastPage - FirstPage + 1) * PAGE_SIZE;
 
     if (dwCount == 0) return FALSE;
@@ -476,9 +479,39 @@ VDDAllocMem(IN HANDLE hVdd,
             IN PVOID  Address,
             IN ULONG  Size)
 {
-    // FIXME
-    UNIMPLEMENTED;
-    return FALSE;
+    NTSTATUS Status;
+    PMEM_HOOK Hook;
+    ULONG i;
+    ULONG FirstPage = (ULONG_PTR)PHYS_TO_REAL(Address) >> 12;
+    ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(Address) + Size - 1) >> 12;
+    SIZE_T RealSize = (LastPage - FirstPage + 1) * PAGE_SIZE;
+
+    if (Size == 0) return FALSE;
+
+    /* Fixup the address */
+    Address = (PVOID)REAL_TO_PHYS(FirstPage * PAGE_SIZE);
+
+    /* Be sure that all the region is held by the VDD */
+    for (i = FirstPage; i <= LastPage; i++)
+    {
+        Hook = PageTable[i];
+        if (Hook == NULL) return FALSE;
+
+        if (Hook->hVdd != hVdd)
+        {
+            DPRINT1("VDDAllocMem: Page %u owned by someone else.\n", i);
+            return FALSE;
+        }
+    }
+
+    /* OK, all the range is held by the VDD. Commit the pages. */
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &Address,
+                                     0,
+                                     &RealSize,
+                                     MEM_COMMIT,
+                                     PAGE_READWRITE);
+    return NT_SUCCESS(Status);
 }
 
 BOOL
@@ -487,9 +520,37 @@ VDDFreeMem(IN HANDLE hVdd,
            IN PVOID  Address,
            IN ULONG  Size)
 {
-    // FIXME
-    UNIMPLEMENTED;
-    return FALSE;
+    NTSTATUS Status;
+    PMEM_HOOK Hook;
+    ULONG i;
+    ULONG FirstPage = (ULONG_PTR)PHYS_TO_REAL(Address) >> 12;
+    ULONG LastPage = ((ULONG_PTR)PHYS_TO_REAL(Address) + Size - 1) >> 12;
+    SIZE_T RealSize = (LastPage - FirstPage + 1) * PAGE_SIZE;
+
+    if (Size == 0) return FALSE;
+
+    /* Fixup the address */
+    Address = (PVOID)REAL_TO_PHYS(FirstPage * PAGE_SIZE);
+
+    /* Be sure that all the region is held by the VDD */
+    for (i = FirstPage; i <= LastPage; i++)
+    {
+        Hook = PageTable[i];
+        if (Hook == NULL) return FALSE;
+
+        if (Hook->hVdd != hVdd)
+        {
+            DPRINT1("VDDFreeMem: Page %u owned by someone else.\n", i);
+            return FALSE;
+        }
+    }
+
+    /* OK, all the range is held by the VDD. Decommit the pages. */
+    Status = NtFreeVirtualMemory(NtCurrentProcess(),
+                                 &Address,
+                                 &RealSize,
+                                 MEM_DECOMMIT);
+    return NT_SUCCESS(Status);
 }
 
 BOOL
