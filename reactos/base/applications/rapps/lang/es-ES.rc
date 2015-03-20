@@ -198,5 +198,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "¡La carpeta especificada no existe!"
     IDS_APP_REG_REMOVE "¿Está seguro de querer borrar del Registro los datos de instalación del programa?"
     IDS_INFORMATION "Información"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "¡No se pudieron borrar del Registro los datos de instalación del programa!"
 END

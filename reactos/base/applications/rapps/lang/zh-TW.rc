@@ -197,5 +197,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。創建嗎？"
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
 END

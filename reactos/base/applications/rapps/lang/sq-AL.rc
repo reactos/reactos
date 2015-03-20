@@ -199,5 +199,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Dosja qe keni zgjedhur nuk ekziston. Krijoje?"
     IDS_APP_REG_REMOVE "Jeni te sigurt qe do ti fshini informacionet e programit te instaluar nga regjistri?"
     IDS_INFORMATION "Informacione"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "E pamundur te fshihen informacionet e programit nga regjistri!"
 END

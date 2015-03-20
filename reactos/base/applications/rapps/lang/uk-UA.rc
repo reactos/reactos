@@ -203,5 +203,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Ви вказали неіснуючу теку!"
     IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
     IDS_INFORMATION "Інформація"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
 END

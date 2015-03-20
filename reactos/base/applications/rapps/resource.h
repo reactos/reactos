@@ -95,6 +95,7 @@
 #define IDS_APP_REG_REMOVE       116
 #define IDS_INFORMATION          117
 #define IDS_UNABLE_TO_REMOVE     118
+#define IDS_UNABLE_TO_DOWNLOAD   119
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

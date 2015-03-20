@@ -191,7 +191,8 @@ CreateDl(HWND Dlg, BOOL *pbCancelled)
     IBindStatusCallbackImpl *This;
 
     This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IBindStatusCallbackImpl));
-    if (!This) return NULL;
+    if (!This)
+        return NULL;
 
     This->vtbl = &dlVtbl;
     This->ref = 1;
@@ -209,9 +210,9 @@ ThreadFunc(LPVOID Context)
     WCHAR path[MAX_PATH];
     LPWSTR p;
     HWND Dlg = (HWND) Context;
-    DWORD len, dwContentLen, dwBytesWritten, dwBytesRead;
+    DWORD dwContentLen, dwBytesWritten, dwBytesRead, dwStatus;
     DWORD dwCurrentBytesRead = 0;
-    DWORD dwBufLen = sizeof(dwContentLen);
+    DWORD dwStatusLen = sizeof(dwStatus);
     BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
     BOOL bCab = FALSE;
@@ -225,15 +226,11 @@ ThreadFunc(LPVOID Context)
 
     /* built the path for the download */
     p = wcsrchr(AppInfo->szUrlDownload, L'/');
-    if (!p) goto end;
 
-    len = wcslen(AppInfo->szUrlDownload);
-    if (len > 4)
-    {
-        if (AppInfo->szUrlDownload[len - 4] == '.' &&
-            AppInfo->szUrlDownload[len - 3] == 'c' &&
-            AppInfo->szUrlDownload[len - 2] == 'a' &&
-            AppInfo->szUrlDownload[len - 1] == 'b')
+    if (!p)
+        goto end;
+
+        if (wcscmp(AppInfo->szUrlDownload, APPLICATION_DATABASE_URL) == 0)
         {
             bCab = TRUE;
             if (!GetStorageDirectory(path, sizeof(path) / sizeof(path[0])))
@@ -241,14 +238,10 @@ ThreadFunc(LPVOID Context)
         }
         else
         {
-            if (FAILED(StringCbCopyW(path, sizeof(path),
-                                     SettingsInfo.szDownloadDir)))
-            {
+            if (FAILED(StringCbCopyW(path, sizeof(path),  SettingsInfo.szDownloadDir)))
                 goto end;
-            }
         }
-    }
-    else goto end;
+
 
     if (GetFileAttributesW(path) == INVALID_FILE_ATTRIBUTES)
     {
@@ -264,7 +257,9 @@ ThreadFunc(LPVOID Context)
     /* download it */
     bTempfile = TRUE;
     dl = CreateDl(Context, &bCancelled);
-    if (dl == NULL) goto end;
+
+    if (dl == NULL)
+        goto end;
 
     switch(SettingsInfo.Proxy)
     {
@@ -281,26 +276,54 @@ ThreadFunc(LPVOID Context)
             hOpen = InternetOpenW(lpszAgent, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
             break;
     }
-    if (!hOpen) goto end;
+
+    if (!hOpen)
+        goto end;
 
     hFile = InternetOpenUrlW(hOpen, AppInfo->szUrlDownload, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE|INTERNET_FLAG_KEEP_CONNECTION, 0);
-    if (!hFile) goto end;
+    if (!hFile)
+        goto end;
+
+    if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
+        goto end;
+
+    if(dwStatus != HTTP_STATUS_OK)
+    {
+        WCHAR szMsgText[MAX_STR_LEN];
+
+        if (!LoadStringW(hInst, IDS_UNABLE_TO_DOWNLOAD, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)))
+            goto end;
+
+        MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
+        goto end;
+    }
+
+    dwStatusLen = sizeof(dwStatus);
 
     memset(&urlComponents, 0, sizeof(urlComponents));
     urlComponents.dwStructSize = sizeof(urlComponents);
-    if(FAILED(StringCbLengthW(AppInfo->szUrlDownload, sizeof(AppInfo->szUrlDownload), &urlLength))) goto end;
+
+    if(FAILED(StringCbLengthW(AppInfo->szUrlDownload, sizeof(AppInfo->szUrlDownload), &urlLength)))
+        goto end;
+    
     urlComponents.dwSchemeLength = urlLength*sizeof(WCHAR);
     urlComponents.lpszScheme = malloc(urlComponents.dwSchemeLength);
-    if(!InternetCrackUrlW(AppInfo->szUrlDownload, urlLength+1, ICU_DECODE | ICU_ESCAPE, &urlComponents)) goto end;
+    
+    if(!InternetCrackUrlW(AppInfo->szUrlDownload, urlLength+1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
+        goto end;
+    
     if(urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
-        HttpQueryInfo(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwBufLen, 0);
+        HttpQueryInfo(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &dwContentLen, &dwStatus, 0);
+
     if(urlComponents.nScheme == INTERNET_SCHEME_FTP)
-        dwContentLen = FtpGetFileSize(hFile, &dwBufLen);
+        dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+
     free(urlComponents.lpszScheme);
 
     hOut = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, 0, NULL);
-    if (hOut == INVALID_HANDLE_VALUE) goto end;
 
+    if (hOut == INVALID_HANDLE_VALUE)
+        goto end;
 
     do
     {
@@ -314,21 +337,24 @@ ThreadFunc(LPVOID Context)
     CloseHandle(hOut);
     hOut = INVALID_HANDLE_VALUE;
 
-    if (bCancelled) goto end;
+    if (bCancelled)
+        goto end;
 
     ShowWindow(Dlg, SW_HIDE);
 
     /* run it */
     if (!bCab)
-    {
         ShellExecuteW( NULL, L"open", path, NULL, NULL, SW_SHOWNORMAL );
-    }
+
 end:
-    if (hOut != INVALID_HANDLE_VALUE) CloseHandle(hOut);
+    if (hOut != INVALID_HANDLE_VALUE)
+        CloseHandle(hOut);
+
     InternetCloseHandle(hFile);
     InternetCloseHandle(hOpen);
 
-    if (dl) IBindStatusCallback_Release(dl);
+    if (dl)
+        IBindStatusCallback_Release(dl);
 
     if (bTempfile)
     {

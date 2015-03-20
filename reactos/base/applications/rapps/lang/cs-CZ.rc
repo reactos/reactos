@@ -200,5 +200,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Zvolená složka neexistuje. Vytvořit?"
     IDS_APP_REG_REMOVE "Určitě odstranit data instalovaného programu z registru?"
     IDS_INFORMATION "Informace"
+    IDS_UNABLE_TO_DOWNLOAD "Soubor se nepodařilo stáhnout! Adresa nenalezena!"
     IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"
 END

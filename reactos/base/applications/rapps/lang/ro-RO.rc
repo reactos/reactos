@@ -201,5 +201,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Dosarul specificat nu există. Doriți crearea lui?"
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru acest program!"
 END

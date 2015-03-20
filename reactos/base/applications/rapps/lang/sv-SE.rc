@@ -202,5 +202,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en ej existerande mapp! Vill du skapa den?"
     IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
     IDS_INFORMATION "Information"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data från registret!"
 END

@@ -195,5 +195,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Le dossier que vous avez spécifié n'existe pas. Le créer ?"
     IDS_APP_REG_REMOVE "Etes-vous sûr de vouloir supprimer les données du programme installé du registre ?"
     IDS_INFORMATION "Information"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Impossible de supprimer les données du programme du registre !"
 END

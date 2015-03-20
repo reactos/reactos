@@ -197,5 +197,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "您选择的文件夹不存在。创建吗？"
     IDS_APP_REG_REMOVE "您确定要从注册表删除该程序的数据吗？"
     IDS_INFORMATION "信息"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "无法从注册表删除该程序的数据！"
 END

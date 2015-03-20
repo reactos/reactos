@@ -197,5 +197,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Belirttiğiniz dizin yok. Belirttiğiniz dizin oluşturulsun mu?"
     IDS_APP_REG_REMOVE "Kurulan izlencenin girişini değer defterinden silmek istediğinizden emin misiniz?"
     IDS_INFORMATION "Bilgi"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
 END

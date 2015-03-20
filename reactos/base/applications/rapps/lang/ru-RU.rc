@@ -195,5 +195,6 @@ BEGIN
     IDS_CHOOSE_FOLDER_ERROR "Вы указали несуществующую папку!"
     IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
     IDS_INFORMATION "Информация"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
 END
