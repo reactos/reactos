@@ -238,3 +238,21 @@ HRESULT WINAPI DwmGetCompositionTimingInfo(HWND hwnd, DWM_TIMING_INFO *info)
 
     return E_NOTIMPL;
 }
+
+/**********************************************************************
+ *           DwmAttachMilContent         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmAttachMilContent(HWND hwnd)
+{
+    FIXME("(%p) stub\n", hwnd);
+    return E_NOTIMPL;
+}
+
+/**********************************************************************
+ *           DwmDetachMilContent         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmDetachMilContent(HWND hwnd)
+{
+    FIXME("(%p) stub\n", hwnd);
+    return E_NOTIMPL;
+}

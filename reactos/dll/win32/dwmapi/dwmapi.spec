@@ -20,9 +20,9 @@
 119 stub DWMAPI_118
 120 stub DWMAPI_120
 
-@ stub DwmAttachMilContent
+@ stdcall DwmAttachMilContent(long)
 @ stdcall DwmDefWindowProc(long long long long ptr)
-@ stub DwmDetachMilContent
+@ stdcall DwmDetachMilContent(long)
 @ stdcall DwmEnableBlurBehindWindow(ptr ptr)
 @ stdcall DwmEnableMMCSS(long)
 @ stdcall DwmExtendFrameIntoClientArea(long ptr)
