@@ -15,6 +15,7 @@
 HINSTANCE hInstance = NULL;
 HWND hTrackBar = NULL;
 HWND hToolBar = NULL;
+HWND hTimeDisplay = NULL;
 HMENU hMainMenu = NULL;
 
 TCHAR szAppTitle[256] = _T("");
@@ -157,6 +158,51 @@ void UpdateWindowCaption(HWND hwnd)
     SetWindowText(hwnd, szNewTitle);
 }
 
+void UpdateTimeDisplay(HWND hwnd)
+{
+    MCI_STATUS_PARMS mciStatus;
+    TCHAR szTime[MAX_MCISTR];
+    DWORD dwTimeFormat;
+
+    if (!wDeviceId)
+    {
+        SetWindowText(hwnd, _T(""));
+        return;
+    }
+
+    mciStatus.dwItem = MCI_STATUS_TIME_FORMAT;
+    mciStatus.dwReturn = 0;
+    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
+    dwTimeFormat = mciStatus.dwReturn;
+
+    mciStatus.dwItem = MCI_STATUS_POSITION;
+    mciStatus.dwReturn = 0;
+    mciSendCommand(wDeviceId, MCI_STATUS, MCI_STATUS_ITEM, (DWORD_PTR)&mciStatus);
+
+    switch(dwTimeFormat)
+    {
+        case MCI_FORMAT_MILLISECONDS:
+        {
+            int s, m, h;
+
+            s = (mciStatus.dwReturn / 1000) % 60;
+            m = ((mciStatus.dwReturn / (1000*60)) % 60);
+            h = ((mciStatus.dwReturn / (1000*60*60)) % 24);
+            StringCbPrintf(szTime, sizeof(szTime), _T("%02lu:%02lu:%02lu"), h, m, s);
+            break;
+        }
+
+        /* The time format is unknown, so use the returned position as is */
+        default:
+        {
+            StringCbPrintf(szTime, sizeof(szTime), _T("%lu"), mciStatus.dwReturn);
+            break;
+        }
+    }
+
+    SetWindowText(hwnd, szTime);
+}
+
 static VOID
 ShowLastWin32Error(HWND hwnd)
 {
@@ -286,6 +332,24 @@ InitControls(HWND hwnd)
         return;
     }
 
+    hTimeDisplay = CreateWindowEx(0,
+                                  L"STATIC",
+                                  NULL,
+                                  WS_CHILD | WS_VISIBLE | SS_CENTER | SS_SUNKEN,
+                                  195,
+                                  4,
+                                  135,
+                                  18,
+                                  hToolBar,
+                                  NULL,
+                                  hInstance,
+                                  NULL);
+    if (!hTimeDisplay)
+    {
+        ShowLastWin32Error(hwnd);
+        return;
+    }
+
     SetImageList(hwnd);
     SendMessage(hToolBar, TB_ADDBUTTONS, NumButtons, (LPARAM)Buttons);
 }
@@ -333,7 +397,8 @@ SwitchViewMode(HWND hwnd)
         }
 
         GetWindowRect(hToolBar, &rcTempRect);
-        MoveWindow(hTrackBar, 180, 0, rcTempRect.right - rcTempRect.left - 180, 25, TRUE);
+        MoveWindow(hTrackBar, 180, 0, rcTempRect.right - rcTempRect.left - 322, 25, TRUE);
+        MoveWindow(hTimeDisplay, rcTempRect.right - rcTempRect.left - 140, 4, 135, 18, TRUE);
 
         CheckMenuItem(hMainMenu, IDM_SWITCHVIEW, MF_BYCOMMAND | MF_CHECKED);
         bIsSingleWindow = TRUE;
@@ -431,6 +496,8 @@ CloseMciDevice(VOID)
         wDeviceId = 0;
     }
 
+    UpdateTimeDisplay(hTimeDisplay);
+
     DisableMenuItems();
 
     return 0;
@@ -505,6 +572,7 @@ OpenMciDevice(HWND hwnd, LPTSTR lpType, LPTSTR lpFileName)
 
     EnableMenuItems(hwnd);
 
+    UpdateTimeDisplay(hTimeDisplay);
     UpdateWindowCaption(hwnd);
 
     return 0;
@@ -535,8 +603,8 @@ StopPlayback(HWND hwnd)
 
     if (wDeviceId == 0) return;
 
-    SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)1);
     KillTimer(hwnd, IDT_PLAYTIMER);
+    SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)1);
 
     mciGeneric.dwCallback = (DWORD_PTR)hwnd;
     mciError = mciSendCommand(wDeviceId, MCI_STOP, MCI_NOTIFY, (DWORD_PTR)&mciGeneric);
@@ -548,6 +616,7 @@ StopPlayback(HWND hwnd)
 
     mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
 
+    UpdateTimeDisplay(hTimeDisplay);
     UpdateWindowCaption(hwnd);
 
     SendMessage(hToolBar,
@@ -659,6 +728,7 @@ PlayTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     else
     {
         SendMessage(hTrackBar, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)dwPos);
+        UpdateTimeDisplay(hTimeDisplay);
     }
 }
 
@@ -1115,6 +1185,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
                 SendMessage(hToolBar, TB_GETITEMRECT, 1, (LPARAM)&Rect);
+                MoveWindow(hTimeDisplay, LOWORD(lParam) - 140, 4, 135, 18, TRUE);
 
                 if (!bIsSingleWindow)
                 {
@@ -1126,7 +1197,7 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     RECT ToolbarRect;
                     MCI_DGV_PUT_PARMS mciPut;
 
-                    MoveWindow(hTrackBar, 180, 0, LOWORD(lParam) - 180, 25, TRUE);
+                    MoveWindow(hTrackBar, 180, 0, LOWORD(lParam) - 322, 25, TRUE);
 
                     GetClientRect(hwnd, &Rect);
                     GetClientRect(hToolBar, &ToolbarRect);
