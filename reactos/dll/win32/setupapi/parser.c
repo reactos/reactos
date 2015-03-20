@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* Partially synced with Wine Staging 1.7.37 */
+
 #include "setupapi_private.h"
 
 #include <ndk/obfuncs.h>
@@ -149,9 +151,9 @@ static void *grow_array( void *array, unsigned int *count, size_t elem )
     if (new_count < 32) new_count = 32;
 
     if (array)
-        new_array = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, array, new_count * elem );
+	new_array = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, array, new_count * elem );
     else
-        new_array = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * elem );
+	new_array = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, new_count * elem );
 
     if (new_array)
         *count = new_count;
@@ -186,7 +188,7 @@ static struct line *find_line( struct inf_file *file, int section_index, const W
 {
     struct section *section;
     struct line *line;
-    int i;
+    unsigned int i;
 
     if (section_index < 0 || section_index >= file->nb_sections) return NULL;
     section = file->sections[section_index];
@@ -311,7 +313,7 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     struct section *strings_section;
     struct line *line;
     struct field *field;
-    unsigned int i,j;
+    unsigned int i, j;
     int dirid;
     WCHAR *dirid_str, *end;
     const WCHAR *ret = NULL;
@@ -397,12 +399,12 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
 /* do string substitutions on the specified text */
 /* the buffer is assumed to be large enough */
 /* returns necessary length not including terminating null */
-unsigned int PARSER_string_substW( const struct inf_file *file, const WCHAR *text, WCHAR *buffer,
-                                   unsigned int size )
+static unsigned int PARSER_string_substW( const struct inf_file *file, const WCHAR *text,
+                                          WCHAR *buffer, unsigned int size )
 {
     const WCHAR *start, *subst, *p;
     unsigned int len, total = 0;
-    int inside = 0;
+    BOOL inside = FALSE;
 
     if (!buffer) size = MAX_STRING_LEN + 1;
     for (p = start = text; *p; p++)
@@ -450,8 +452,8 @@ unsigned int PARSER_string_substW( const struct inf_file *file, const WCHAR *tex
 /* do string substitutions on the specified text */
 /* the buffer is assumed to be large enough */
 /* returns necessary length not including terminating null */
-unsigned int PARSER_string_substA( const struct inf_file *file, const WCHAR *text, char *buffer,
-                                   unsigned int size )
+static unsigned int PARSER_string_substA( const struct inf_file *file, const WCHAR *text,
+                                          char *buffer, unsigned int size )
 {
     WCHAR buffW[MAX_STRING_LEN+1];
     DWORD ret;
@@ -503,14 +505,14 @@ static inline enum parser_state set_state( struct parser *parser, enum parser_st
 
 
 /* check if the pointer points to an end of file */
-static inline int is_eof( const struct parser *parser, const WCHAR *ptr )
+static inline BOOL is_eof( const struct parser *parser, const WCHAR *ptr )
 {
     return (ptr >= parser->end || *ptr == CONTROL_Z);
 }
 
 
 /* check if the pointer points to an end of line */
-static inline int is_eol( const struct parser *parser, const WCHAR *ptr )
+static inline BOOL is_eol( const struct parser *parser, const WCHAR *ptr )
 {
     return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == '\n');
 }
@@ -560,7 +562,7 @@ static int add_section_from_token( struct parser *parser )
 
 
 /* add a field containing the current token to the current line */
-static struct field *add_field_from_token( struct parser *parser, int is_key )
+static struct field *add_field_from_token( struct parser *parser, BOOL is_key )
 {
     struct field *field;
     WCHAR *text;
@@ -680,14 +682,14 @@ static const WCHAR *key_name_state( struct parser *parser, const WCHAR *pos )
 
          case '=':
             push_token( parser, token_end );
-            if (!add_field_from_token( parser, 1 )) return NULL;
+            if (!add_field_from_token( parser, TRUE )) return NULL;
             parser->start = p + 1;
             push_state( parser, VALUE_NAME );
             set_state( parser, LEADING_SPACES );
             return p + 1;
         case ';':
             push_token( parser, token_end );
-            if (!add_field_from_token( parser, 0 )) return NULL;
+            if (!add_field_from_token( parser, FALSE )) return NULL;
             push_state( parser, LINE_START );
             set_state( parser, COMMENT );
             return p + 1;
@@ -732,13 +734,13 @@ static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos )
         {
         case ';':
             push_token( parser, token_end );
-            if (!add_field_from_token( parser, 0 )) return NULL;
+            if (!add_field_from_token( parser, FALSE )) return NULL;
             push_state( parser, LINE_START );
             set_state( parser, COMMENT );
             return p + 1;
         case ',':
             push_token( parser, token_end );
-            if (!add_field_from_token( parser, 0 )) return NULL;
+            if (!add_field_from_token( parser, FALSE )) return NULL;
             parser->start = p + 1;
             push_state( parser, VALUE_NAME );
             set_state( parser, LEADING_SPACES );
@@ -768,7 +770,7 @@ static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos )
         }
     }
     push_token( parser, token_end );
-    if (!add_field_from_token( parser, 0 )) return NULL;
+    if (!add_field_from_token( parser, FALSE )) return NULL;
     set_state( parser, LINE_START );
     return p;
 }
@@ -810,7 +812,7 @@ static const WCHAR *eol_backslash_state( struct parser *parser, const WCHAR *pos
 /* handler for parser QUOTES state */
 static const WCHAR *quotes_state( struct parser *parser, const WCHAR *pos )
 {
-    const WCHAR *p, *token_end = parser->start;
+    const WCHAR *p;
 
     for (p = pos; !is_eol( parser, p ); p++)
     {
@@ -819,7 +821,7 @@ static const WCHAR *quotes_state( struct parser *parser, const WCHAR *pos )
             if (p+1 < parser->end && p[1] == '"')  /* double quotes */
             {
                 push_token( parser, p + 1 );
-                parser->start = token_end = p + 2;
+                parser->start = p + 2;
                 p++;
             }
             else  /* end of quotes */
@@ -885,6 +887,19 @@ static const WCHAR *comment_state( struct parser *parser, const WCHAR *pos )
     while (!is_eol( parser, p )) p++;
     pop_state( parser );
     return p;
+}
+
+
+static void free_inf_file( struct inf_file *file )
+{
+    unsigned int i;
+
+    for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
+    HeapFree( GetProcessHeap(), 0, file->filename );
+    HeapFree( GetProcessHeap(), 0, file->sections );
+    HeapFree( GetProcessHeap(), 0, file->fields );
+    HeapFree( GetProcessHeap(), 0, file->strings );
+    HeapFree( GetProcessHeap(), 0, file );
 }
 
 
@@ -1012,7 +1027,7 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line, DWORD style
     }
     else
     {
-        WCHAR *new_buff = (WCHAR *)buffer;
+        WCHAR *new_buff = buffer;
         /* UCS-16 files should start with the Unicode BOM; we should skip it */
         if (*new_buff == 0xfeff)
             new_buff++;
@@ -1041,7 +1056,7 @@ static struct inf_file *parse_file( HANDLE handle, UINT *error_line, DWORD style
     UnmapViewOfFile( buffer );
     if (err)
     {
-        HeapFree( GetProcessHeap(), 0, file );
+        if (file) free_inf_file( file );
         SetLastError( err );
         file = NULL;
     }
@@ -1251,7 +1266,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
 
     if (handle != INVALID_HANDLE_VALUE)
     {
-        file = parse_file( handle, error, style );
+        file = parse_file( handle, error, style);
         CloseHandle( handle );
     }
     if (!file)
@@ -1293,7 +1308,7 @@ HINF WINAPI SetupOpenInfFileW( PCWSTR name, PCWSTR class, DWORD style, UINT *err
     }
 
     SetLastError( 0 );
-    return (HINF)file;
+    return file;
 }
 
 
@@ -1366,16 +1381,10 @@ HINF WINAPI SetupOpenMasterInf( VOID )
 void WINAPI SetupCloseInfFile( HINF hinf )
 {
     struct inf_file *file = hinf;
-    unsigned int i;
 
     if (!hinf || (hinf == INVALID_HANDLE_VALUE)) return;
 
-    for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
-    HeapFree( GetProcessHeap(), 0, file->filename );
-    HeapFree( GetProcessHeap(), 0, file->sections );
-    HeapFree( GetProcessHeap(), 0, file->fields );
-    HeapFree( GetProcessHeap(), 0, file->strings );
-    HeapFree( GetProcessHeap(), 0, file );
+    free_inf_file( file );
 }
 
 
