@@ -690,7 +690,7 @@ KspDoReparseForIrp(
     Length += 2;
 
     /* allocate buffer */
-    Buffer = AllocateItem(NonPagedPool, Length * sizeof(WCHAR));
+	Buffer = ExAllocatePoolWithTag(NonPagedPool, Length * sizeof(WCHAR), 'mNoI');
     if (!Buffer)
     {
         /* no resources */
@@ -699,8 +699,9 @@ KspDoReparseForIrp(
 
     /* construct buffer */
     swprintf(Buffer, L"%s\\%s", DeviceEntry->PDODeviceName, DeviceEntry->Instance);
-    // HACK
-    //ExFreePool(IoStack->FileObject->FileName.Buffer);
+
+    /* free old buffer*/
+    ExFreePoolWithTag(IoStack->FileObject->FileName.Buffer, 'mNoI');
 
     /* store new file name */
     RtlInitUnicodeString(&IoStack->FileObject->FileName, Buffer);
@@ -1228,8 +1229,14 @@ KspBusWorkerRoutine(
             }
             else if (DeviceEntry->DeviceState == Started)
             {
+				/* release spin lock */
+				KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+
                 /* found pending irps */
                 KspCompletePendingIrps(DeviceEntry, STATUS_REPARSE);
+
+				/* re-acquire lock */
+				KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
             }
         }
 
