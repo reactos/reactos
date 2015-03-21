@@ -19,7 +19,13 @@
 /* GLOBALS ******************************************************************/
 
 POBJECT_TYPE WmipGuidObjectType;
-GENERIC_MAPPING WmipGenericMapping;
+GENERIC_MAPPING WmipGenericMapping =
+{
+    WMIGUID_QUERY,
+    WMIGUID_SET,
+    WMIGUID_EXECUTE,
+    WMIGUID_ALL_ACCESS
+};
 
 
 /* FUNCTIONS *****************************************************************/
@@ -120,7 +126,7 @@ WmipInitializeGuidObjectType(
     ObjectTypeInitializer.MaintainHandleCount = FALSE;
     ObjectTypeInitializer.ValidAccessMask = STANDARD_RIGHTS_ALL | 0xFFF;
     ObjectTypeInitializer.SecurityRequired = TRUE;
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(WMIP_GUID_OBJECT);;
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(WMIP_GUID_OBJECT);
     ObjectTypeInitializer.SecurityProcedure = WmipSecurityMethod;
     ObjectTypeInitializer.DeleteProcedure = WmipDeleteMethod;
     ObjectTypeInitializer.CloseProcedure = WmipCloseMethod;
