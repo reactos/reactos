@@ -272,8 +272,8 @@ KspCreateDeviceAssociation(
 
     /* check if the device is already present */
     Entry = DeviceEntry->DeviceInterfaceList.Flink;
-	DPRINT1("KspCreateDeviceAssociation ReferenceString %S\n", ReferenceString);
-	DPRINT1("KspCreateDeviceAssociation InterfaceString %S\n", InterfaceString);
+    DPRINT1("KspCreateDeviceAssociation ReferenceString %S\n", ReferenceString);
+    DPRINT1("KspCreateDeviceAssociation InterfaceString %S\n", InterfaceString);
 
     while(Entry != &DeviceEntry->DeviceInterfaceList)
     {
@@ -690,7 +690,7 @@ KspDoReparseForIrp(
     Length += 2;
 
     /* allocate buffer */
-	Buffer = ExAllocatePoolWithTag(NonPagedPool, Length * sizeof(WCHAR), 'mNoI');
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, Length * sizeof(WCHAR), 'mNoI');
     if (!Buffer)
     {
         /* no resources */
@@ -1229,14 +1229,14 @@ KspBusWorkerRoutine(
             }
             else if (DeviceEntry->DeviceState == Started)
             {
-				/* release spin lock */
-				KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+                /* release spin lock */
+                KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
 
                 /* found pending irps */
                 KspCompletePendingIrps(DeviceEntry, STATUS_REPARSE);
 
-				/* re-acquire lock */
-				KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
+                /* re-acquire lock */
+                KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
             }
         }
 
