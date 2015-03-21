@@ -2077,7 +2077,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (((Peb->OSCSDVersion >> 8) & 0xFF) != 0)
     {
         WCHAR szCSDVersion[128];
-        ULONG i;
+        LONG i;
         ULONG Length = ARRAYSIZE(szCSDVersion) - 1;
         i = _snwprintf(szCSDVersion, Length,
                        L"Service Pack %d",
