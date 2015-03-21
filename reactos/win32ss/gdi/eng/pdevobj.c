@@ -217,9 +217,15 @@ PDEVOBJ_pSurface(
     {
         /* Call the drivers DrvEnableSurface */
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
+        if (hsurf== NULL)
+        {
+            DPRINT1("Failed to create PDEV surface!");
+            return NULL;
+        }
 
         /* Get a reference to the surface */
         ppdev->pSurface = SURFACE_ShareLockSurface(hsurf);
+        NT_ASSERT(ppdev->pSurface != NULL);
     }
 
     /* Increment reference count */
@@ -469,7 +475,7 @@ PDEVOBJ_bSwitchMode(
     pSurface = PDEVOBJ_pSurface(ppdevTmp);
     if (!pSurface)
     {
-        DPRINT1("DrvEnableSurface failed\n");
+        DPRINT1("PDEVOBJ_pSurface failed\n");
         goto leave;
     }
 
