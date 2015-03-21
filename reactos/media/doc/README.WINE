@@ -75,7 +75,7 @@ reactos/dll/win32/dciman32            # Synced to Wine-1.7.27
 reactos/dll/win32/dwmapi              # Synced to WineStaging-1.7.37
 reactos/dll/win32/faultrep            # Synced to Wine-1.7.27
 reactos/dll/win32/fltlib              # Synced to Wine-1.7.27
-reactos/dll/win32/fusion              # Synced to Wine-1.7.27
+reactos/dll/win32/fusion              # Synced to WineStaging-1.7.37
 reactos/dll/win32/gdiplus             # Synced to Wine-1.7.27
 reactos/dll/win32/hhctrl.ocx          # Synced to Wine-1.7.27
 reactos/dll/win32/hlink               # Synced to Wine-1.7.27

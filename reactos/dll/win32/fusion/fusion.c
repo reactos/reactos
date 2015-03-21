@@ -148,7 +148,7 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
 
     len++;
     if (*pcchPath <= len || !pwzCachePath)
-        hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        hr = E_NOT_SUFFICIENT_BUFFER;
     else if (pwzCachePath)
         strcpyW(pwzCachePath, path);
 
