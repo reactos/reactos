@@ -108,16 +108,14 @@ static void test_GetCachePath(void)
     /* NULL pwzCachePath, pcchPath is 0 */
     size = 0;
     hr = pGetCachePath(ASM_CACHE_GAC, NULL, &size);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
-       "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "Expected E_NOT_SUFFICIENT_BUFFER, got %08x\n", hr);
     ok(size == lstrlenW(cachepath) + 1,
        "Expected %d, got %d\n", lstrlenW(cachepath) + 1, size);
 
     /* NULL pwszCachePath, pcchPath is MAX_PATH */
     size = MAX_PATH;
     hr = pGetCachePath(ASM_CACHE_GAC, NULL, &size);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
-       "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "Expected E_NOT_SUFFICIENT_BUFFER, got %08x\n", hr);
     ok(size == lstrlenW(cachepath) + 1,
        "Expected %d, got %d\n", lstrlenW(cachepath) + 1, size);
 
@@ -142,8 +140,7 @@ static void test_GetCachePath(void)
     lstrcpyW(path, nochange);
     size = lstrlenW(cachepath);
     hr = pGetCachePath(ASM_CACHE_GAC, path, &size);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
-       "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got %08x\n", hr);
+    ok(hr == E_NOT_SUFFICIENT_BUFFER, "Expected E_NOT_SUFFICIENT_BUFFER, got %08x\n", hr);
     ok( !lstrcmpW( nochange, path ), "Expected %s,  got %s\n", wine_dbgstr_w(nochange), wine_dbgstr_w(path));
 
     lstrcpyW(cachepath, windir);

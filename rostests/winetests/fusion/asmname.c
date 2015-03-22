@@ -434,7 +434,7 @@ static void test_CreateAssemblyNameObject(void)
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(lstrlenW(str) == 0, "Expected empty name\n");
+    ok(!str[0], "Expected empty name\n");
     ok(size == 0, "Expected 0, got %d\n", size);
 
     hi = 0xbeefcace;
@@ -470,7 +470,7 @@ static void test_CreateAssemblyNameObject(void)
     str[0] = '\0';
     hr = IAssemblyName_GetName(name, &size, str);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(lstrlenW(str) == 0, "Expected empty name\n");
+    ok(!str[0], "Expected empty name\n");
     ok(size == 1, "Expected 1, got %d\n", size);
 
     hi = 0xbeefcace;
