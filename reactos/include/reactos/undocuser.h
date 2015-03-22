@@ -165,6 +165,7 @@ LONG WINAPI CsrBroadcastSystemMessageExW(DWORD dwflags,
                                          LPARAM lParam,
                                          PBSMINFO pBSMInfo);
 BOOL WINAPI CliImmSetHotKey(DWORD dwID, UINT uModifiers, UINT uVirtualKey, HKL hKl);
+HWND WINAPI SetTaskmanWindow(HWND);
 HWND WINAPI GetTaskmanWindow(VOID);
 HWND WINAPI GetProgmanWindow(VOID);
 BOOL WINAPI SetShellWindow(HWND);
