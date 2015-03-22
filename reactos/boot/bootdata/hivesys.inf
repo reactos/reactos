@@ -1252,6 +1252,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "PNP_TDI", \
  "TDI", \
  "PlugPlay", \
+ "SchedulerGroup", \
  "SpoolerGroup", \
  "UIGroup", \
  "Extended Base"
@@ -1896,6 +1897,18 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRo
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
+
+; Scheduler service
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","DependOnService",0x00010000,"RPCSS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","DisplayName",0x00000000,"Scheduler service"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Group",0x00000000,"SchedulerGroup"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\schedsvc.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\Schedule\Parameters","ServiceMain",0x00000000,"SchedServiceMain"
 
 ; Spooler service
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"RPCSS"

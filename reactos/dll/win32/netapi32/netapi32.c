@@ -201,25 +201,3 @@ NetpNtStatusToApiStatus(NTSTATUS Status)
 
     return ApiStatus;
 }
-
-NET_API_STATUS WINAPI NetScheduleJobAdd(LPCWSTR server, LPBYTE bufptr, LPDWORD jobid)
-{
-    FIXME("stub (%s, %p, %p)\n", debugstr_w(server), bufptr, jobid);
-    return NERR_Success;
-}
-
-NET_API_STATUS WINAPI NetScheduleJobDel(LPCWSTR server, DWORD minjobid, DWORD maxjobid)
-{
-    FIXME("stub (%s, %d, %d)\n", debugstr_w(server), minjobid, maxjobid);
-    return NERR_Success;
-}
-
-NET_API_STATUS WINAPI NetScheduleJobEnum(LPCWSTR server, LPBYTE* bufptr, DWORD prefmaxsize, LPDWORD entriesread,
-                                         LPDWORD totalentries, LPDWORD resumehandle)
-{
-    FIXME("stub (%s, %p, %d, %p, %p, %p)\n", debugstr_w(server), bufptr, prefmaxsize, entriesread, totalentries, resumehandle);
-    *entriesread = 0;
-    *totalentries = 0;
-    return NERR_Success;
-}
-
