@@ -290,15 +290,24 @@ GetAdaptersAddresses(
     if (!pOutBufLen)
         return ERROR_INVALID_PARAMETER;
 
-    if ((Family == AF_INET6) || (Family == AF_UNSPEC))
+    switch(Family)
     {
-        /* One day maybe... */
-        FIXME("IPv6 is not supported in ReactOS!\n");
-        if (Family == AF_INET6)
-        {
+        case AF_INET:
+            break;
+        case AF_INET6:
+            /* One day maybe... */
+            FIXME("IPv6 is not supported in ReactOS!\n");
             /* We got nothing to say in this case */
             return ERROR_NO_DATA;
-        }
+            break;
+        case AF_UNSPEC:
+            WARN("IPv6 addresses ignored, IPv4 only\n");
+            Family = AF_INET;
+            break;
+        default:
+            ERR("Invalid family 0x%x\n", Family);
+            return ERROR_INVALID_PARAMETER;
+            break;
     }
 
     RemainingSize = *pOutBufLen;
