@@ -640,6 +640,7 @@ StopPlayback(HWND hwnd)
 {
     MCIERROR mciError;
     MCI_GENERIC_PARMS mciGeneric;
+    MCI_SEEK_PARMS mciSeek;
 
     if (wDeviceId == 0) return;
 
@@ -654,7 +655,7 @@ StopPlayback(HWND hwnd)
         return;
     }
 
-    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, (DWORD_PTR)&mciSeek);
 
     UpdateTimeDisplay(hTimeDisplay);
     UpdateWindowCaption(hwnd);
@@ -777,10 +778,11 @@ StartPlayback(HWND hwnd)
 {
     MCIERROR mciError;
     MCI_PLAY_PARMS mciPlay;
+    MCI_SEEK_PARMS mciSeek;
 
     SetTimer(hwnd, IDT_PLAYTIMER, 100, (TIMERPROC)PlayTimerProc);
 
-    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, (DWORD_PTR)&mciSeek);
 
     mciPlay.dwCallback = (DWORD_PTR)hwnd;
     mciPlay.dwFrom = 0;
