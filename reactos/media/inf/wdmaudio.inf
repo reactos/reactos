@@ -25,8 +25,8 @@ ExcludeFromSelect = SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 ExcludeFromSelect = WDMAUDIO_CopyFilesOnlyId
 
 [GenericMfg]
-;%WDM_KMIXER.DeviceDesc%   = WDM_KMIXER,   SW\{B7EAFDC0-A680-11D0-96D8-00AA0051E51D}
-;%WDM_SYSAUDIO.DeviceDesc% = WDM_SYSAUDIO, SW\{A7C7A5B0-5AF3-11D1-9CED-00A024BF0407}
+%WDM_KMIXER.DeviceDesc%   = WDM_KMIXER,   SW\{B7EAFDC0-A680-11D0-96D8-00AA0051E51D}
+%WDM_SYSAUDIO.DeviceDesc% = WDM_SYSAUDIO, SW\{A7C7A5B0-5AF3-11D1-9CED-00A024BF0407}
 %WDM_WDMAUD.DeviceDesc%   = WDM_WDMAUD,   SW\{CD171DE3-69E5-11D2-B56D-0000F8754380}
 ;%WDM_DRMKAUD.DeviceDesc%  = WDM_DRMKAUD,  SW\{EEC12DB6-AD9C-4168-8658-B03DAEF417FE}
 
@@ -51,11 +51,11 @@ portcls.sys,,,0x0100
 
 [DeviceRegistration]
 ; Kmixer swenum install
-;HKLM,%RunOnce%,"WDM_KMIXER0",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_MIXER%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
-;HKLM,%RunOnce%,"WDM_KMIXER1",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_AUDIO%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
+HKLM,%RunOnce%,"WDM_KMIXER0",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_MIXER%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
+HKLM,%RunOnce%,"WDM_KMIXER1",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_AUDIO%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
 
 ; Sysaudio swenum install
-;HKLM,%RunOnce%,"WDM_SYSAUDIO",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_SYSAUDIO.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_SYSAUDIO%,%17%\WDMAUDIO.inf,WDM_SYSAUDIO.Interface.Install"
+HKLM,%RunOnce%,"WDM_SYSAUDIO",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_SYSAUDIO.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_SYSAUDIO%,%17%\WDMAUDIO.inf,WDM_SYSAUDIO.Interface.Install"
 
 ; WDMAud install
 HKLM,%RunOnce%,"WDM_WDMAUD",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_WDMAUD.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_WDMAUD%,%17%\WDMAUDIO.inf,WDM_WDMAUD.Interface.Install"
