@@ -73,7 +73,11 @@ KspCreatePDO(
     DeviceExtension->DeviceEntry = DeviceEntry;
     DeviceExtension->BusDeviceExtension = BusDeviceExtension;
 
-    /* TODO: update last creation time in bus device extension */
+    /* not started yet*/
+    DeviceEntry->DeviceState = NotStarted;
+
+    /* get current time */
+    KeQuerySystemTime(&DeviceEntry->TimeCreated);
 
     /* setup flags */
     DeviceObject->Flags |= DO_POWER_PAGABLE;
@@ -1209,10 +1213,10 @@ KspBusWorkerRoutine(
 
                 if (Diff.QuadPart > Int32x32To64(15000, 10000))
                 {
-                     //DPRINT1("DeviceID %S  Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n", DeviceEntry->DeviceName, DeviceEntry->Instance, DeviceEntry->TimeCreated.QuadPart, Time.QuadPart, Diff.QuadPart);
-
                      /* release spin lock */
                      KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+
+                     DPRINT1("DeviceID %S Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n", DeviceEntry->DeviceName, DeviceEntry->Instance, DeviceEntry->TimeCreated.QuadPart, Time.QuadPart, Diff.QuadPart);
 
                      /* deactivate interfaces */
                      //KspEnableBusDeviceInterface(DeviceEntry, FALSE);
@@ -1966,10 +1970,8 @@ KsServiceBusEnumCreateRequest(
         InsertTailList(&DeviceEntry->IrpPendingList, &Irp->Tail.Overlay.ListEntry);
 
         Time.QuadPart = Int32x32To64(1500, -10000);
-        DbgPrint("PENDING Irp %p %wZ\n", Irp, &IoStack->FileObject->FileName);
+        DbgPrint("PENDING Irp %p %wZ DeviceState %d\n", Irp, &IoStack->FileObject->FileName, DeviceEntry->DeviceState);
 
-        /* query current time */
-        KeQuerySystemTime(&DeviceEntry->TimeCreated);
 
         /* set timer */
         KeSetTimer(&BusDeviceExtension->Timer, Time, &BusDeviceExtension->Dpc);
@@ -1996,9 +1998,6 @@ KsServiceBusEnumCreateRequest(
 
         /* insert into irp pending list */
         InsertTailList(&DeviceEntry->IrpPendingList, &Irp->Tail.Overlay.ListEntry);
-
-        /* get current time */
-        KeQuerySystemTime(&DeviceEntry->TimeCreated);
 
         /* invalidate device relations */
         IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
@@ -2123,6 +2122,11 @@ KsServiceBusEnumPnpRequest(
         {
             /* start bus */
             Status = KspStartBusDevice(DeviceObject, ChildDeviceExtension, Irp);
+            if (NT_SUCCESS(Status))
+            {
+                /* complete pending irps*/
+                KspCompletePendingIrps(ChildDeviceExtension->DeviceEntry, STATUS_REPARSE);
+            }
 
             /* set time out */
             Time.QuadPart = Int32x32To64(1500, -10000);
