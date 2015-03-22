@@ -310,9 +310,14 @@ BOOL WINAPI RegisterShellHook(
 	DWORD dwType)
 {
     if (dwType == 3)
+    {
+        SetTaskmanWindow(hWnd);
         return RegisterShellHookWindow(hWnd);
+    }
     else if (dwType == 0)
+    {
         return DeregisterShellHookWindow(hWnd);
+    }
 
     ERR("Unsupported argument");
     return FALSE;
