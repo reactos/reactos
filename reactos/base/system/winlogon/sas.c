@@ -1007,6 +1007,11 @@ DoGenericAction(
 
 DWORD WINAPI SetWindowStationUser(HWINSTA hWinSta, LUID* pluid, PSID psid, DWORD sidSize);
 
+BOOL
+AddAceToWindowStation(
+    IN HWINSTA WinSta,
+    IN PSID Sid);
+
 static
 BOOL AllowWinstaAccess(PWLSESSION Session)
 {
@@ -1068,6 +1073,8 @@ BOOL AllowWinstaAccess(PWLSESSION Session)
         WARN("Couldn't get Authentication id from user token!\n");
         goto Cleanup;
     }
+
+    AddAceToWindowStation(Session->InteractiveWindowStation, psid);
 
     ret = SetWindowStationUser(Session->InteractiveWindowStation,
                                &Stats.AuthenticationId,
