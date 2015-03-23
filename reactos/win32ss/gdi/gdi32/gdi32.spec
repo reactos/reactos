@@ -283,6 +283,7 @@
 @ stdcall GdiFixUpHandle(ptr)
 @ stdcall GdiFlush()
 @ stdcall GdiFullscreenControl(ptr ptr long ptr ptr) NtGdiFullscreenControl
+@ stdcall GdiGetBitmapBitsSize(ptr)
 @ stdcall GdiGetBatchLimit()
 @ stdcall GdiGetCharDimensions(long ptr ptr)
 @ stdcall GdiGetCodePage(long)
