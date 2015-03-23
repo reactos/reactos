@@ -255,8 +255,8 @@
 @ stub NetValidatePasswordPolicyFree
 @ stdcall NetWkstaGetInfo(wstr long ptr)
 @ stdcall NetWkstaSetInfo(wstr long ptr ptr)
-@ stub NetWkstaTransportAdd
-@ stub NetWkstaTransportDel
+@ stdcall NetWkstaTransportAdd(wstr long ptr ptr)
+@ stdcall NetWkstaTransportDel(wstr wstr long)
 @ stdcall NetWkstaTransportEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserGetInfo(wstr long ptr)
