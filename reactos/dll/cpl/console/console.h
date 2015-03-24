@@ -8,6 +8,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winreg.h>
 #include <winuser.h>
 #include <wincon.h>
 #include <commctrl.h>
@@ -19,15 +20,7 @@
     EnableWindow(GetDlgItem((hDlg), (nID)), (bEnable))
 
 /* Shared header with the GUI Terminal Front-End from consrv.dll */
-#include "consolecpl.h"
-
-typedef struct
-{
-    int idIcon;
-    int idName;
-    int idDescription;
-    APPLET_PROC AppletProc;
-} APPLET, *PAPPLET;
+#include "settings.h" // in /winsrv/concfg/
 
 typedef enum _TEXT_TYPE
 {
@@ -35,11 +28,12 @@ typedef enum _TEXT_TYPE
     Popup
 } TEXT_TYPE;
 
-BOOL ApplyConsoleInfo(HWND hwndDlg, PCONSOLE_PROPS pConInfo);
-VOID PaintConsole(LPDRAWITEMSTRUCT drawItem, PCONSOLE_PROPS pConInfo);
-BOOL PaintText(LPDRAWITEMSTRUCT drawItem, PCONSOLE_PROPS pConInfo, TEXT_TYPE TextMode);
+/* Globals */
+extern BOOLEAN AppliedConfig;
+extern PCONSOLE_STATE_INFO ConInfo;
 
-// Globals
-extern HINSTANCE hApplet;
+BOOL ApplyConsoleInfo(HWND hwndDlg, PCONSOLE_STATE_INFO pConInfo);
+VOID PaintConsole(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo);
+BOOL PaintText(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo, TEXT_TYPE TextMode);
 
 #endif /* CONSOLE_H__ */

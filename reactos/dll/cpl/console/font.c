@@ -249,7 +249,7 @@ EnumFontSizesProc(PLOGFONTW lplf,
     else
     {
         ULONG i;
-        for (i = 0; i < sizeof(TrueTypePoints) / sizeof(TrueTypePoints[0]); ++i)
+        for (i = 0; i < ARRAYSIZE(TrueTypePoints); ++i)
         {
             swprintf(FontSize, L"%2d", TrueTypePoints[i]);
 
@@ -276,11 +276,11 @@ EnumFontSizesProc(PLOGFONTW lplf,
 
 static VOID
 FontSizeChange(HWND hwndDlg,
-               PGUI_CONSOLE_INFO GuiInfo);
+               PCONSOLE_STATE_INFO pConInfo);
 
 static VOID
 FontTypeChange(HWND hwndDlg,
-               PGUI_CONSOLE_INFO GuiInfo)
+               PCONSOLE_STATE_INFO pConInfo)
 {
     INT Length, nSel;
     LPWSTR FaceName;
@@ -306,9 +306,9 @@ FontTypeChange(HWND hwndDlg,
     FaceName[Length] = '\0';
 
     Length = min(Length/*wcslen(FaceName) + 1*/, LF_FACESIZE); // wcsnlen
-    wcsncpy(GuiInfo->FaceName, FaceName, LF_FACESIZE);
-    GuiInfo->FaceName[Length] = L'\0';
-    DPRINT1("GuiInfo->FaceName = '%S'\n", GuiInfo->FaceName);
+    wcsncpy(pConInfo->FaceName, FaceName, LF_FACESIZE);
+    pConInfo->FaceName[Length] = L'\0';
+    DPRINT1("pConInfo->FaceName = '%S'\n", pConInfo->FaceName);
 
     /* Enumerate the available sizes for the selected font */
     ZeroMemory(&lf, sizeof(lf));
@@ -325,7 +325,7 @@ FontTypeChange(HWND hwndDlg,
     HeapFree(GetProcessHeap(), 0, FaceName);
 
     // TODO: Select a default font size????
-    FontSizeChange(hwndDlg, GuiInfo);
+    FontSizeChange(hwndDlg, pConInfo);
 
     // InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_FONT_WINDOW_PREVIEW), NULL, TRUE);
     // InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SELECT_FONT_PREVIEW), NULL, TRUE);
@@ -333,7 +333,7 @@ FontTypeChange(HWND hwndDlg,
 
 static VOID
 FontSizeChange(HWND hwndDlg,
-               PGUI_CONSOLE_INFO GuiInfo)
+               PCONSOLE_STATE_INFO pConInfo)
 {
     INT nSel;
     ULONG FontSize;
@@ -352,16 +352,16 @@ FontSizeChange(HWND hwndDlg,
                                           LB_GETITEMDATA, nSel, 0);
     if (FontSize == LB_ERR) return;
 
-    GuiInfo->FontSize.X = LOWORD(FontSize);
-    GuiInfo->FontSize.Y = HIWORD(FontSize);
-    DPRINT1("GuiInfo->FontSize = (%d x %d)\n", GuiInfo->FontSize.X, GuiInfo->FontSize.Y);
+    pConInfo->FontSize.X = LOWORD(FontSize);
+    pConInfo->FontSize.Y = HIWORD(FontSize);
+    DPRINT1("pConInfo->FontSize = (%d x %d)\n", pConInfo->FontSize.X, pConInfo->FontSize.Y);
 
     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_FONT_WINDOW_PREVIEW), NULL, TRUE);
     InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SELECT_FONT_PREVIEW), NULL, TRUE);
 
-    swprintf(FontSizeStr, L"%2d", GuiInfo->FontSize.X);
+    swprintf(FontSizeStr, L"%2d", pConInfo->FontSize.X);
     SetWindowText(GetDlgItem(hwndDlg, IDC_FONT_SIZE_X), FontSizeStr);
-    swprintf(FontSizeStr, L"%2d", GuiInfo->FontSize.Y);
+    swprintf(FontSizeStr, L"%2d", pConInfo->FontSize.Y);
     SetWindowText(GetDlgItem(hwndDlg, IDC_FONT_SIZE_Y), FontSizeStr);
 }
 
@@ -373,9 +373,6 @@ FontProc(HWND hwndDlg,
          WPARAM wParam,
          LPARAM lParam)
 {
-    PCONSOLE_PROPS pConInfo = (PCONSOLE_PROPS)GetWindowLongPtr(hwndDlg, DWLP_USER);
-    PGUI_CONSOLE_INFO GuiInfo = (pConInfo ? pConInfo->TerminalInfo.TermInfo : NULL);
-
     UNREFERENCED_PARAMETER(wParam);
 
     switch (uMsg)
@@ -386,10 +383,6 @@ FontProc(HWND hwndDlg,
             LOGFONTW lf;
             INT idx;
 
-            pConInfo = (PCONSOLE_PROPS)((LPPROPSHEETPAGE)lParam)->lParam;
-            GuiInfo  = pConInfo->TerminalInfo.TermInfo;
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
-
             ZeroMemory(&lf, sizeof(lf));
             lf.lfCharSet  = DEFAULT_CHARSET; // OEM_CHARSET;
             // lf.lfPitchAndFamily = FIXED_PITCH | FF_DONTCARE;
@@ -399,13 +392,13 @@ FontProc(HWND hwndDlg,
                                 (LPARAM)GetDlgItem(hwndDlg, IDC_LBOX_FONTTYPE), 0);
             ReleaseDC(NULL, hDC);
 
-            DPRINT1("GuiInfo->FaceName = '%S'\n", GuiInfo->FaceName);
+            DPRINT1("ConInfo->FaceName = '%S'\n", ConInfo->FaceName);
             idx = (INT)SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
-                                           LB_FINDSTRINGEXACT, 0, (LPARAM)GuiInfo->FaceName);
+                                           LB_FINDSTRINGEXACT, 0, (LPARAM)ConInfo->FaceName);
             if (idx != LB_ERR) SendDlgItemMessageW(hwndDlg, IDC_LBOX_FONTTYPE,
                                                    LB_SETCURSEL, (WPARAM)idx, 0);
 
-            FontTypeChange(hwndDlg, GuiInfo);
+            FontTypeChange(hwndDlg, ConInfo);
 
             return TRUE;
         }
@@ -415,9 +408,9 @@ FontProc(HWND hwndDlg,
             LPDRAWITEMSTRUCT drawItem = (LPDRAWITEMSTRUCT)lParam;
 
             if (drawItem->CtlID == IDC_STATIC_FONT_WINDOW_PREVIEW)
-                PaintConsole(drawItem, pConInfo);
+                PaintConsole(drawItem, ConInfo);
             else if (drawItem->CtlID == IDC_STATIC_SELECT_FONT_PREVIEW)
-                PaintText(drawItem, pConInfo, Screen);
+                PaintText(drawItem, ConInfo, Screen);
 
             return TRUE;
         }
@@ -428,9 +421,9 @@ FontProc(HWND hwndDlg,
             {
                 case PSN_APPLY:
                 {
-                    if (!pConInfo->AppliedConfig)
+                    if (!AppliedConfig)
                     {
-                        return ApplyConsoleInfo(hwndDlg, pConInfo);
+                        return ApplyConsoleInfo(hwndDlg, ConInfo);
                     }
                     else
                     {
@@ -455,14 +448,14 @@ FontProc(HWND hwndDlg,
                     {
                         case IDC_LBOX_FONTTYPE:
                         {
-                            FontTypeChange(hwndDlg, GuiInfo);
+                            FontTypeChange(hwndDlg, ConInfo);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
                         }
 
                         case IDC_LBOX_FONTSIZE:
                         {
-                            FontSizeChange(hwndDlg, GuiInfo);
+                            FontSizeChange(hwndDlg, ConInfo);
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
                         }

@@ -11,14 +11,13 @@
 #define NDEBUG
 #include <debug.h>
 
-static void
-UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
+static VOID
+UpdateDialogElements(HWND hwndDlg, PCONSOLE_STATE_INFO pConInfo)
 {
-    PGUI_CONSOLE_INFO GuiInfo = pConInfo->TerminalInfo.TermInfo;
     HWND hDlgCtrl;
 
     /* Update cursor size */
-    if (pConInfo->ci.CursorSize <= 25)
+    if (pConInfo->CursorSize <= 25)
     {
         /* Small cursor */
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
@@ -29,7 +28,7 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
     }
-    else if (pConInfo->ci.CursorSize <= 50)
+    else if (pConInfo->CursorSize <= 50)
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_MEDIUM_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -39,7 +38,7 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
     }
-    else /* if (pConInfo->ci.CursorSize <= 100) */
+    else /* if (pConInfo->CursorSize <= 100) */
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -53,19 +52,19 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
     /* Update num buffers */
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_NUM_BUFFER);
     SendMessage(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG(999, 1));
-    SetDlgItemInt(hwndDlg, IDC_EDIT_NUM_BUFFER, pConInfo->ci.NumberOfHistoryBuffers, FALSE);
+    SetDlgItemInt(hwndDlg, IDC_EDIT_NUM_BUFFER, pConInfo->NumberOfHistoryBuffers, FALSE);
 
     /* Update buffer size */
     hDlgCtrl = GetDlgItem(hwndDlg, IDC_UPDOWN_BUFFER_SIZE);
     SendMessage(hDlgCtrl, UDM_SETRANGE, 0, MAKELONG(999, 1));
-    SetDlgItemInt(hwndDlg, IDC_EDIT_BUFFER_SIZE, pConInfo->ci.HistoryBufferSize, FALSE);
+    SetDlgItemInt(hwndDlg, IDC_EDIT_BUFFER_SIZE, pConInfo->HistoryBufferSize, FALSE);
 
     /* Update discard duplicates */
     CheckDlgButton(hwndDlg, IDC_CHECK_DISCARD_DUPLICATES,
-                   pConInfo->ci.HistoryNoDup ? BST_CHECKED : BST_UNCHECKED);
+                   pConInfo->HistoryNoDup ? BST_CHECKED : BST_UNCHECKED);
 
     /* Update full/window screen */
-    if (GuiInfo->FullScreen)
+    if (pConInfo->FullScreen)
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_DISPLAY_FULL);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -84,11 +83,11 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
 
     /* Update quick edit */
     CheckDlgButton(hwndDlg, IDC_CHECK_QUICK_EDIT,
-                   pConInfo->ci.QuickEdit ? BST_CHECKED : BST_UNCHECKED);
+                   pConInfo->QuickEdit ? BST_CHECKED : BST_UNCHECKED);
 
     /* Update insert mode */
     CheckDlgButton(hwndDlg, IDC_CHECK_INSERT_MODE,
-                   pConInfo->ci.InsertMode ? BST_CHECKED : BST_UNCHECKED);
+                   pConInfo->InsertMode ? BST_CHECKED : BST_UNCHECKED);
 }
 
 INT_PTR
@@ -98,18 +97,11 @@ OptionsProc(HWND hwndDlg,
             WPARAM wParam,
             LPARAM lParam)
 {
-    PCONSOLE_PROPS pConInfo;
-    PGUI_CONSOLE_INFO GuiInfo;
-
-    pConInfo = (PCONSOLE_PROPS)GetWindowLongPtr(hwndDlg, DWLP_USER);
-
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            pConInfo = (PCONSOLE_PROPS)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
-            UpdateDialogElements(hwndDlg, pConInfo);
+            UpdateDialogElements(hwndDlg, ConInfo);
             return TRUE;
         }
 
@@ -118,28 +110,26 @@ OptionsProc(HWND hwndDlg,
             LPNMUPDOWN  lpnmud =  (LPNMUPDOWN)lParam;
             LPPSHNOTIFY lppsn  = (LPPSHNOTIFY)lParam;
 
-            // if (!pConInfo) break;
-
             if (lppsn->hdr.code == UDN_DELTAPOS)
             {
                 if (lppsn->hdr.idFrom == IDC_UPDOWN_BUFFER_SIZE)
                 {
                     lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 1), 999);
-                    pConInfo->ci.HistoryBufferSize = lpnmud->iPos;
+                    ConInfo->HistoryBufferSize = lpnmud->iPos;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
                 else if (lppsn->hdr.idFrom == IDC_UPDOWN_NUM_BUFFER)
                 {
                     lpnmud->iPos = min(max(lpnmud->iPos + lpnmud->iDelta, 1), 999);
-                    pConInfo->ci.NumberOfHistoryBuffers = lpnmud->iPos;
+                    ConInfo->NumberOfHistoryBuffers = lpnmud->iPos;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
             }
             else if (lppsn->hdr.code == PSN_APPLY)
             {
-                if (!pConInfo->AppliedConfig)
+                if (!AppliedConfig)
                 {
-                    return ApplyConsoleInfo(hwndDlg, pConInfo);
+                    return ApplyConsoleInfo(hwndDlg, ConInfo);
                 }
                 else
                 {
@@ -155,38 +145,35 @@ OptionsProc(HWND hwndDlg,
         {
             LRESULT lResult;
 
-            if (!pConInfo) break;
-            GuiInfo = pConInfo->TerminalInfo.TermInfo;
-
             switch (LOWORD(wParam))
             {
                 case IDC_RADIO_SMALL_CURSOR:
                 {
-                    pConInfo->ci.CursorSize = 25;
+                    ConInfo->CursorSize = 25;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_RADIO_MEDIUM_CURSOR:
                 {
-                    pConInfo->ci.CursorSize = 50;
+                    ConInfo->CursorSize = 50;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_RADIO_LARGE_CURSOR:
                 {
-                    pConInfo->ci.CursorSize = 100;
+                    ConInfo->CursorSize = 100;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_RADIO_DISPLAY_WINDOW:
                 {
-                    GuiInfo->FullScreen = FALSE;
+                    ConInfo->FullScreen = FALSE;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
                 case IDC_RADIO_DISPLAY_FULL:
                 {
-                    GuiInfo->FullScreen = TRUE;
+                    ConInfo->FullScreen = TRUE;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
@@ -195,12 +182,12 @@ OptionsProc(HWND hwndDlg,
                     lResult = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
                     if (lResult == BST_CHECKED)
                     {
-                        pConInfo->ci.QuickEdit = FALSE;
+                        ConInfo->QuickEdit = FALSE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
-                        pConInfo->ci.QuickEdit = TRUE;
+                        ConInfo->QuickEdit = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -211,12 +198,12 @@ OptionsProc(HWND hwndDlg,
                     lResult = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
                     if (lResult == BST_CHECKED)
                     {
-                        pConInfo->ci.InsertMode = FALSE;
+                        ConInfo->InsertMode = FALSE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
-                        pConInfo->ci.InsertMode = TRUE;
+                        ConInfo->InsertMode = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -227,12 +214,12 @@ OptionsProc(HWND hwndDlg,
                    lResult = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
                     if (lResult == BST_CHECKED)
                     {
-                        pConInfo->ci.HistoryNoDup = FALSE;
+                        ConInfo->HistoryNoDup = FALSE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
                     }
                     else if (lResult == BST_UNCHECKED)
                     {
-                        pConInfo->ci.HistoryNoDup = TRUE;
+                        ConInfo->HistoryNoDup = TRUE;
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                     }
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
@@ -247,7 +234,7 @@ OptionsProc(HWND hwndDlg,
                         sizeBuff = GetDlgItemInt(hwndDlg, IDC_EDIT_BUFFER_SIZE, NULL, FALSE);
                         sizeBuff = min(max(sizeBuff, 1), 999);
 
-                        pConInfo->ci.HistoryBufferSize = sizeBuff;
+                        ConInfo->HistoryBufferSize = sizeBuff;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -261,7 +248,7 @@ OptionsProc(HWND hwndDlg,
                         numBuff = GetDlgItemInt(hwndDlg, IDC_EDIT_NUM_BUFFER, NULL, FALSE);
                         numBuff = min(max(numBuff, 1), 999);
 
-                        pConInfo->ci.NumberOfHistoryBuffers = numBuff;
+                        ConInfo->NumberOfHistoryBuffers = numBuff;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;

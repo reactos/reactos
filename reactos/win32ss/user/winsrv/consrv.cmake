@@ -2,7 +2,9 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-include_directories(consrv)
+include_directories(
+    concfg
+    consrv)
 
 list(APPEND CONSRV_SOURCE
     consrv/alias.c
@@ -55,5 +57,5 @@ add_pch(consrv consrv/consrv.h CONSRV_SOURCE)
 #add_object_library(consrv ${CONSRV_SOURCE})
 list(APPEND CONSRV_IMPORT_LIBS psapi)
 list(APPEND CONSRV_DELAY_IMPORT_LIBS ole32)
-list(APPEND CONSRV_TARGET_LINK_LIBS uuid)
+list(APPEND CONSRV_TARGET_LINK_LIBS concfg uuid)
 set_module_type(consrv module UNICODE)

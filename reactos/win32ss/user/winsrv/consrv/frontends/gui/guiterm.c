@@ -31,14 +31,14 @@
 
 typedef struct _GUI_INIT_INFO
 {
-    PCONSOLE_INFO ConsoleInfo;
-    PCONSOLE_START_INFO ConsoleStartInfo;
-    ULONG_PTR ProcessId;
     HANDLE GuiThreadStartupEvent;
     ULONG_PTR InputThreadId;
     HWINSTA WinSta;
     HDESK Desktop;
+    HICON hIcon;
+    HICON hIconSm;
     BOOLEAN IsWindowVisible;
+    GUI_CONSOLE_INFO TermInfo;
 } GUI_INIT_INFO, *PGUI_INIT_INFO;
 
 static BOOL ConsInitialized = FALSE;
@@ -317,7 +317,7 @@ Quit:
 // FIXME: Maybe return a NTSTATUS
 static BOOL
 GuiInit(IN PCONSOLE_INIT_INFO ConsoleInitInfo,
-        IN PCSR_PROCESS ConsoleLeaderProcess,
+        IN HANDLE ConsoleLeaderProcessHandle,
         IN OUT PGUI_INIT_INFO GuiInitInfo)
 {
     BOOL Success = TRUE;
@@ -359,7 +359,7 @@ GuiInit(IN PCONSOLE_INIT_INFO ConsoleInitInfo,
         RtlInitUnicodeString(&DesktopPath, L"Default");
     }
 
-    hDesk = NtUserResolveDesktop(ConsoleLeaderProcess->ProcessHandle,
+    hDesk = NtUserResolveDesktop(ConsoleLeaderProcessHandle,
                                  &DesktopPath,
                                  0,
                                  &hWinSta);
@@ -513,11 +513,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
                 IN PCONSRV_CONSOLE Console)
 {
     PGUI_INIT_INFO GuiInitInfo;
-    PCONSOLE_INFO  ConsoleInfo;
-    PCONSOLE_START_INFO ConsoleStartInfo;
-
     PGUI_CONSOLE_DATA GuiData;
-    GUI_CONSOLE_INFO  TermInfo;
 
     if (This == NULL || Console == NULL || This->Context2 == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -526,12 +522,6 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
 
     GuiInitInfo = This->Context2;
 
-    if (GuiInitInfo->ConsoleInfo == NULL || GuiInitInfo->ConsoleStartInfo == NULL)
-        return STATUS_INVALID_PARAMETER;
-
-    ConsoleInfo      = GuiInitInfo->ConsoleInfo;
-    ConsoleStartInfo = GuiInitInfo->ConsoleStartInfo;
-
     /* Terminal data allocation */
     GuiData = ConsoleAllocHeap(HEAP_ZERO_MEMORY, sizeof(*GuiData));
     if (!GuiData)
@@ -539,7 +529,7 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
         DPRINT1("CONSRV: Failed to create GUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
-    ///// /* HACK */ Console->FrontEndIFace.Context = (PVOID)GuiData; /* HACK */
+    /// /* HACK */ Console->FrontEndIFace.Context = (PVOID)GuiData; /* HACK */
     GuiData->Console      = Console;
     GuiData->ActiveBuffer = Console->ActiveBuffer;
     GuiData->hWindow = NULL;
@@ -550,73 +540,19 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
 
     InitializeCriticalSection(&GuiData->Lock);
 
-
-    /*
-     * Load terminal settings
-     */
-
-    /* 1. Load the default settings */
-    GuiConsoleGetDefaultSettings(&TermInfo, GuiInitInfo->ProcessId);
-
-    if (GuiData->IsWindowVisible)
-    {
-        /* 2. Load the remaining console settings via the registry */
-        if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
-        {
-            /* Load the terminal infos from the registry */
-            GuiConsoleReadUserSettings(&TermInfo,
-                                       ConsoleInfo->ConsoleTitle,
-                                       GuiInitInfo->ProcessId);
-
-            /*
-             * Now, update them with the properties the user might gave to us
-             * via the STARTUPINFO structure before calling CreateProcess
-             * (and which was transmitted via the ConsoleStartInfo structure).
-             * We therefore overwrite the values read in the registry.
-             */
-            if (ConsoleStartInfo->dwStartupFlags & STARTF_USESHOWWINDOW)
-            {
-                TermInfo.ShowWindow = ConsoleStartInfo->wShowWindow;
-            }
-            if (ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
-            {
-                TermInfo.AutoPosition = FALSE;
-                TermInfo.WindowOrigin.x = ConsoleStartInfo->dwWindowOrigin.X;
-                TermInfo.WindowOrigin.y = ConsoleStartInfo->dwWindowOrigin.Y;
-            }
-            if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
-            {
-                TermInfo.FullScreen = TRUE;
-            }
-        }
-    }
-
-
     /*
      * Set up GUI data
      */
-
-    // Font data
-    wcsncpy(GuiData->GuiInfo.FaceName, TermInfo.FaceName, LF_FACESIZE);
-    GuiData->GuiInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
-    GuiData->GuiInfo.FontFamily     = TermInfo.FontFamily;
-    GuiData->GuiInfo.FontSize       = TermInfo.FontSize;
-    GuiData->GuiInfo.FontWeight     = TermInfo.FontWeight;
-
-    // Display
-    GuiData->GuiInfo.FullScreen     = TermInfo.FullScreen;
-    GuiData->GuiInfo.ShowWindow     = TermInfo.ShowWindow;
-    GuiData->GuiInfo.AutoPosition   = TermInfo.AutoPosition;
-    GuiData->GuiInfo.WindowOrigin   = TermInfo.WindowOrigin;
+    RtlCopyMemory(&GuiData->GuiInfo, &GuiInitInfo->TermInfo, sizeof(GuiInitInfo->TermInfo));
 
     /* Initialize the icon handles */
-    if (ConsoleStartInfo->hIcon != NULL)
-        GuiData->hIcon = ConsoleStartInfo->hIcon;
+    if (GuiInitInfo->hIcon != NULL)
+        GuiData->hIcon = GuiInitInfo->hIcon;
     else
         GuiData->hIcon = ghDefaultIcon;
 
-    if (ConsoleStartInfo->hIconSm != NULL)
-        GuiData->hIconSm = ConsoleStartInfo->hIconSm;
+    if (GuiInitInfo->hIconSm != NULL)
+        GuiData->hIconSm = GuiInitInfo->hIconSm;
     else
         GuiData->hIconSm = ghDefaultIconSm;
 
@@ -1250,15 +1186,17 @@ static FRONTEND_VTBL GuiVtbl =
 
 NTSTATUS NTAPI
 GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                IN OUT PCONSOLE_INFO ConsoleInfo,
-                IN OUT PVOID ExtraConsoleInfo,
-                IN PCSR_PROCESS ConsoleLeaderProcess)
+                IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                IN HANDLE ConsoleLeaderProcessHandle)
 {
-    PCONSOLE_INIT_INFO ConsoleInitInfo = ExtraConsoleInfo;
+    PCONSOLE_START_INFO ConsoleStartInfo;
     PGUI_INIT_INFO GuiInitInfo;
 
     if (FrontEnd == NULL || ConsoleInfo == NULL || ConsoleInitInfo == NULL)
         return STATUS_INVALID_PARAMETER;
+
+    ConsoleStartInfo = ConsoleInitInfo->ConsoleStartInfo;
 
     /*
      * Initialize a private initialization info structure for later use.
@@ -1268,18 +1206,92 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
     if (GuiInitInfo == NULL) return STATUS_NO_MEMORY;
 
     /* Initialize GUI terminal emulator common functionalities */
-    if (!GuiInit(ConsoleInitInfo, ConsoleLeaderProcess, GuiInitInfo))
+    if (!GuiInit(ConsoleInitInfo, ConsoleLeaderProcessHandle, GuiInitInfo))
     {
         ConsoleFreeHeap(GuiInitInfo);
         return STATUS_UNSUCCESSFUL;
     }
 
-    // HACK: We suppose that the pointers will be valid in GuiInitFrontEnd...
-    // If not, then copy exactly what we need in GuiInitInfo.
-    GuiInitInfo->ConsoleInfo      = ConsoleInfo;
-    GuiInitInfo->ConsoleStartInfo = ConsoleInitInfo->ConsoleStartInfo;
-    GuiInitInfo->ProcessId        = HandleToUlong(ConsoleLeaderProcess->ClientId.UniqueProcess);
-    GuiInitInfo->IsWindowVisible  = ConsoleInitInfo->IsWindowVisible;
+    /*
+     * Load terminal settings
+     */
+#if 0
+    /* Impersonate the caller in order to retrieve settings in its context */
+    // if (!CsrImpersonateClient(NULL))
+        // return STATUS_UNSUCCESSFUL;
+    CsrImpersonateClient(NULL);
+
+    /* 1. Load the default settings */
+    GuiConsoleGetDefaultSettings(&GuiInitInfo->TermInfo);
+#endif
+
+    GuiInitInfo->TermInfo.ShowWindow = SW_SHOWNORMAL;
+
+    if (ConsoleInitInfo->IsWindowVisible)
+    {
+        /* 2. Load the remaining console settings via the registry */
+        if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
+        {
+#if 0
+            /* Load the terminal infos from the registry */
+            GuiConsoleReadUserSettings(&GuiInitInfo->TermInfo);
+#endif
+
+            /*
+             * Now, update them with the properties the user might gave to us
+             * via the STARTUPINFO structure before calling CreateProcess
+             * (and which was transmitted via the ConsoleStartInfo structure).
+             * We therefore overwrite the values read in the registry.
+             */
+            if (ConsoleStartInfo->dwStartupFlags & STARTF_USESHOWWINDOW)
+            {
+                GuiInitInfo->TermInfo.ShowWindow = ConsoleStartInfo->wShowWindow;
+            }
+            if (ConsoleStartInfo->dwStartupFlags & STARTF_USEPOSITION)
+            {
+                ConsoleInfo->AutoPosition = FALSE;
+                ConsoleInfo->WindowPosition.x = ConsoleStartInfo->dwWindowOrigin.X;
+                ConsoleInfo->WindowPosition.y = ConsoleStartInfo->dwWindowOrigin.Y;
+            }
+            if (ConsoleStartInfo->dwStartupFlags & STARTF_RUNFULLSCREEN)
+            {
+                ConsoleInfo->FullScreen = TRUE;
+            }
+        }
+    }
+
+#if 0
+    /* Revert impersonation */
+    CsrRevertToSelf();
+#endif
+
+    // Font data
+    wcsncpy(GuiInitInfo->TermInfo.FaceName, ConsoleInfo->FaceName, LF_FACESIZE);
+    GuiInitInfo->TermInfo.FaceName[LF_FACESIZE - 1] = UNICODE_NULL;
+    GuiInitInfo->TermInfo.FontFamily = ConsoleInfo->FontFamily;
+    GuiInitInfo->TermInfo.FontSize   = ConsoleInfo->FontSize;
+    GuiInitInfo->TermInfo.FontWeight = ConsoleInfo->FontWeight;
+
+    // Display
+    GuiInitInfo->TermInfo.FullScreen   = ConsoleInfo->FullScreen;
+    // GuiInitInfo->TermInfo.ShowWindow;
+    GuiInitInfo->TermInfo.AutoPosition = ConsoleInfo->AutoPosition;
+    GuiInitInfo->TermInfo.WindowOrigin = ConsoleInfo->WindowPosition;
+
+    /* Initialize the icon handles */
+    // if (ConsoleStartInfo->hIcon != NULL)
+        GuiInitInfo->hIcon = ConsoleStartInfo->hIcon;
+    // else
+        // GuiInitInfo->hIcon = ghDefaultIcon;
+
+    // if (ConsoleStartInfo->hIconSm != NULL)
+        GuiInitInfo->hIconSm = ConsoleStartInfo->hIconSm;
+    // else
+        // GuiInitInfo->hIconSm = ghDefaultIconSm;
+
+    // ASSERT(GuiInitInfo->hIcon && GuiInitInfo->hIconSm);
+
+    GuiInitInfo->IsWindowVisible = ConsoleInitInfo->IsWindowVisible;
 
     /* Finally, initialize the frontend structure */
     FrontEnd->Vtbl     = &GuiVtbl;
