@@ -57,7 +57,7 @@ PoRequestShutdownWait(
     PAGED_CODE();
 
     /* Allocate a new shutdown wait entry */
-    ShutDownWaitEntry = ExAllocatePoolWithTag(PagedPool, 8u, 'LSoP');
+    ShutDownWaitEntry = ExAllocatePoolWithTag(PagedPool, sizeof(*ShutDownWaitEntry), 'LSoP');
     if (ShutDownWaitEntry == NULL)
     {
         return STATUS_NO_MEMORY;
@@ -84,7 +84,7 @@ PoRequestShutdownWait(
     {
         /* We cannot proceed, cleanup and return failure */
         ObDereferenceObject(Thread);
-        ExFreePoolWithTag(ShutDownWaitEntry, 0);
+        ExFreePoolWithTag(ShutDownWaitEntry, 'LSoP');
         Status = STATUS_UNSUCCESSFUL;
     }
 
@@ -138,7 +138,7 @@ PopProcessShutDownLists(VOID)
         ObfDereferenceObject(ShutDownWaitEntry->Thread);
 
         /* Finally free the entry */
-        ExFreePoolWithTag(ShutDownWaitEntry, 0);
+        ExFreePoolWithTag(ShutDownWaitEntry, 'LSoP');
     }
 }
 
