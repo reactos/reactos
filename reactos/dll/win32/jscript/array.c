@@ -40,9 +40,14 @@ static const WCHAR unshiftW[] = {'u','n','s','h','i','f','t',0};
 
 static const WCHAR default_separatorW[] = {',',0};
 
+static inline ArrayInstance *array_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, ArrayInstance, dispex);
+}
+
 static inline ArrayInstance *array_from_vdisp(vdisp_t *vdisp)
 {
-    return (ArrayInstance*)vdisp->u.jsdisp;
+    return array_from_jsdisp(vdisp->u.jsdisp);
 }
 
 static inline ArrayInstance *array_this(vdisp_t *jsthis)
@@ -104,44 +109,38 @@ static WCHAR *idx_to_str(DWORD idx, WCHAR *ptr)
     return ptr+1;
 }
 
-static HRESULT Array_length(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Array_get_length(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    ArrayInstance *This = array_from_vdisp(jsthis);
+    TRACE("%p\n", jsthis);
+
+    *r = jsval_number(array_from_jsdisp(jsthis)->length);
+    return S_OK;
+}
+
+static HRESULT Array_set_length(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
+{
+    ArrayInstance *This = array_from_jsdisp(jsthis);
+    DOUBLE len = -1;
+    DWORD i;
+    HRESULT hres;
 
     TRACE("%p %d\n", This, This->length);
 
-    switch(flags) {
-    case DISPATCH_PROPERTYGET:
-        *r = jsval_number(This->length);
-        break;
-    case DISPATCH_PROPERTYPUT: {
-        DOUBLE len = -1;
-        DWORD i;
-        HRESULT hres;
+    hres = to_number(ctx, value, &len);
+    if(FAILED(hres))
+        return hres;
 
-        hres = to_number(ctx, argv[0], &len);
+    len = floor(len);
+    if(len!=(DWORD)len)
+        return throw_range_error(ctx, JS_E_INVALID_LENGTH, NULL);
+
+    for(i=len; i < This->length; i++) {
+        hres = jsdisp_delete_idx(&This->dispex, i);
         if(FAILED(hres))
             return hres;
-
-        len = floor(len);
-        if(len!=(DWORD)len)
-            return throw_range_error(ctx, JS_E_INVALID_LENGTH, NULL);
-
-        for(i=len; i<This->length; i++) {
-            hres = jsdisp_delete_idx(&This->dispex, i);
-            if(FAILED(hres))
-                return hres;
-        }
-
-        This->length = len;
-        break;
-    }
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
     }
 
+    This->length = len;
     return S_OK;
 }
 
@@ -496,9 +495,7 @@ static HRESULT Array_shift(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsign
         hres = set_length(jsthis, 0);
         if(FAILED(hres))
             return hres;
-    }
 
-    if(!length) {
         if(r)
             *r = jsval_undefined();
         return S_OK;
@@ -995,22 +992,13 @@ static HRESULT Array_unshift(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsi
     return S_OK;
 }
 
-static HRESULT Array_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Array_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
+    ArrayInstance *array = array_from_jsdisp(jsthis);
+
     TRACE("\n");
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    case INVOKE_PROPERTYGET:
-        return array_join(ctx, jsthis->u.jsdisp, array_from_vdisp(jsthis)->length, default_separatorW, r);
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
+    return array_join(ctx, &array->dispex, array->length, default_separatorW, r);
 }
 
 static void Array_destructor(jsdisp_t *dispex)
@@ -1042,7 +1030,7 @@ static void Array_on_put(jsdisp_t *dispex, const WCHAR *name)
 static const builtin_prop_t Array_props[] = {
     {concatW,                Array_concat,               PROPF_METHOD|1},
     {joinW,                  Array_join,                 PROPF_METHOD|1},
-    {lengthW,                Array_length,               0},
+    {lengthW,                NULL,0,                     Array_get_length, Array_set_length},
     {popW,                   Array_pop,                  PROPF_METHOD},
     {pushW,                  Array_push,                 PROPF_METHOD|1},
     {reverseW,               Array_reverse,              PROPF_METHOD},
@@ -1057,7 +1045,7 @@ static const builtin_prop_t Array_props[] = {
 
 static const builtin_info_t Array_info = {
     JSCLASS_ARRAY,
-    {NULL, Array_value, 0},
+    {NULL, NULL,0, Array_get_value},
     sizeof(Array_props)/sizeof(*Array_props),
     Array_props,
     Array_destructor,
@@ -1065,12 +1053,12 @@ static const builtin_info_t Array_info = {
 };
 
 static const builtin_prop_t ArrayInst_props[] = {
-    {lengthW,                Array_length,               0}
+    {lengthW,                NULL,0,                     Array_get_length, Array_set_length}
 };
 
 static const builtin_info_t ArrayInst_info = {
     JSCLASS_ARRAY,
-    {NULL, Array_value, 0},
+    {NULL, NULL,0, Array_get_value},
     sizeof(ArrayInst_props)/sizeof(*ArrayInst_props),
     ArrayInst_props,
     Array_destructor,

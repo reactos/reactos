@@ -10,6 +10,7 @@ list(APPEND SOURCE
     activex.c
     array.c
     bool.c
+    cc_parser.tab.c
     compile.c
     date.c
     decode.c

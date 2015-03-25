@@ -201,26 +201,17 @@ static HRESULT Object_isPrototypeOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
     return E_NOTIMPL;
 }
 
-static HRESULT Object_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Object_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
+    jsstr_t *ret;
+
     TRACE("\n");
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    case DISPATCH_PROPERTYGET: {
-        jsstr_t *ret = jsstr_alloc(default_valueW);
-        if(!ret)
-            return E_OUTOFMEMORY;
-        *r = jsval_string(ret);
-        break;
-    }
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
+    ret = jsstr_alloc(default_valueW);
+    if(!ret)
+        return E_OUTOFMEMORY;
 
+    *r = jsval_string(ret);
     return S_OK;
 }
 
@@ -240,7 +231,7 @@ static const builtin_prop_t Object_props[] = {
 
 static const builtin_info_t Object_info = {
     JSCLASS_OBJECT,
-    {NULL, Object_value, 0},
+    {NULL, NULL,0, Object_get_value},
     sizeof(Object_props)/sizeof(*Object_props),
     Object_props,
     Object_destructor,
@@ -249,7 +240,7 @@ static const builtin_info_t Object_info = {
 
 static const builtin_info_t ObjectInst_info = {
     JSCLASS_OBJECT,
-    {NULL, Object_value, 0},
+    {NULL, NULL,0, Object_get_value},
     0, NULL,
     Object_destructor,
     NULL
