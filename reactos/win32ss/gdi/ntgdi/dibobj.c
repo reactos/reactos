@@ -1916,13 +1916,17 @@ INT APIENTRY DIB_GetDIBImageBytes(INT  width, INT height, INT depth)
 INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
 {
     unsigned int colors, size, masks = 0;
+    unsigned int colorsize;
+
+    colorsize = (coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) :
+                (coloruse == DIB_PAL_INDICES) ? 0 :
+                sizeof(WORD);
 
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)info;
         colors = (core->bcBitCount <= 8) ? 1 << core->bcBitCount : 0;
-        return sizeof(BITMAPCOREHEADER) + colors *
-               ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBTRIPLE) : sizeof(WORD));
+        return sizeof(BITMAPCOREHEADER) + colors * colorsize;
     }
     else  /* Assume BITMAPINFOHEADER */
     {
@@ -1932,7 +1936,7 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
             colors = 1 << info->bmiHeader.biBitCount;
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
         size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
-        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+        return size + colors * colorsize;
     }
 }
 
