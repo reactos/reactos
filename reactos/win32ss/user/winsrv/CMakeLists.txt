@@ -1,4 +1,7 @@
 
+# Console Configuration library
+add_subdirectory(concfg)
+
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/win32ss/include)
@@ -24,9 +27,9 @@ set_subsystem(winsrv console)
 # Add the components
 target_link_libraries(winsrv consrv usersrv)
 # Add win32ksys because of NtUser...()
-target_link_libraries(winsrv win32ksys libcntpr ${PSEH_LIB} ${CONSRV_TARGET_LINK_LIBS})
+target_link_libraries(winsrv ${CONSRV_TARGET_LINK_LIBS} win32ksys libcntpr ${PSEH_LIB})
 
-add_delay_importlibs(winsrv advapi32 ${CONSRV_DELAY_IMPORT_LIBS})
-add_importlibs(winsrv csrsrv gdi32 user32 kernel32 ntdll ${CONSRV_IMPORT_LIBS} ${USERSRV_IMPORT_LIBS})
+add_delay_importlibs(winsrv ${CONSRV_DELAY_IMPORT_LIBS} advapi32)
+add_importlibs(winsrv ${CONSRV_IMPORT_LIBS} ${USERSRV_IMPORT_LIBS} csrsrv gdi32 user32 kernel32 ntdll)
 add_dependencies(winsrv bugcodes)
 add_cd_file(TARGET winsrv DESTINATION reactos/system32 FOR all)
