@@ -525,11 +525,14 @@ void deactivate_document(DocHost *This)
     This->document = NULL;
 }
 
-HRESULT refresh_document(DocHost *This)
+HRESULT refresh_document(DocHost *This, const VARIANT *level)
 {
     IOleCommandTarget *cmdtrg;
     VARIANT vin, vout;
     HRESULT hres;
+
+    if(level && (V_VT(level) != VT_I4 || V_I4(level) != REFRESH_NORMAL))
+        FIXME("Unsupported refresh level %s\n", debugstr_variant(level));
 
     if(!This->document) {
         FIXME("no document\n");

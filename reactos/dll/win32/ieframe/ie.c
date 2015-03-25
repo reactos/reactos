@@ -178,14 +178,16 @@ static HRESULT WINAPI InternetExplorer_Refresh(IWebBrowser2 *iface)
 
     TRACE("(%p)\n", This);
 
-    return refresh_document(&This->doc_host);
+    return refresh_document(&This->doc_host, NULL);
 }
 
 static HRESULT WINAPI InternetExplorer_Refresh2(IWebBrowser2 *iface, VARIANT *Level)
 {
     InternetExplorer *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%p)\n", This, Level);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, Level);
+
+    return refresh_document(&This->doc_host, Level);
 }
 
 static HRESULT WINAPI InternetExplorer_Stop(IWebBrowser2 *iface)

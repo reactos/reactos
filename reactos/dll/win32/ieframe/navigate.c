@@ -759,6 +759,27 @@ static void doc_navigate_task_destr(task_header_t *t)
     heap_free(task);
 }
 
+void on_commandstate_change(DocHost *doc_host, LONG command, VARIANT_BOOL enable)
+{
+    DISPPARAMS dispparams;
+    VARIANTARG params[2];
+
+    TRACE("command=%d enable=%d\n", command, enable);
+
+    dispparams.cArgs = 2;
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = params;
+
+    V_VT(params) = VT_BOOL;
+    V_BOOL(params) = enable;
+
+    V_VT(params+1) = VT_I4;
+    V_I4(params+1) = command;
+
+    call_sink(doc_host->cps.wbe2, DISPID_COMMANDSTATECHANGE, &dispparams);
+}
+
 static void doc_navigate_proc(DocHost *This, task_header_t *t)
 {
     task_doc_navigate_t *task = (task_doc_navigate_t*)t;
@@ -861,6 +882,9 @@ static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mo
         FIXME("Navigation canceled\n");
         return S_OK;
     }
+
+    on_commandstate_change(This, CSC_NAVIGATEBACK, VARIANT_FALSE);
+    on_commandstate_change(This, CSC_NAVIGATEFORWARD, VARIANT_FALSE);
 
     if(This->document)
         deactivate_document(This);
@@ -1053,6 +1077,17 @@ static HRESULT navigate_history(DocHost *This, unsigned travellog_pos)
     if(!This->doc_navigate) {
         FIXME("unsupported doc_navigate FALSE\n");
         return E_NOTIMPL;
+    }
+
+    if (travellog_pos < This->travellog.position)
+    {
+        on_commandstate_change(This, CSC_NAVIGATEBACK, VARIANT_FALSE);
+        on_commandstate_change(This, CSC_NAVIGATEFORWARD, VARIANT_TRUE);
+    }
+    else if (travellog_pos > This->travellog.position)
+    {
+        on_commandstate_change(This, CSC_NAVIGATEBACK, VARIANT_TRUE);
+        on_commandstate_change(This, CSC_NAVIGATEFORWARD, VARIANT_FALSE);
     }
 
     This->travellog.loading_pos = travellog_pos;

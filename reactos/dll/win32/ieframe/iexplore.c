@@ -700,7 +700,7 @@ void register_iewindow_class(void)
     wc.hIcon = LoadIconW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON));
     wc.hIconSm = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON,
                             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
-    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDC_ARROW));
+    wc.hCursor = LoadCursorW(0, (LPWSTR)IDC_ARROW);
     wc.hbrBackground = 0;
     wc.lpszClassName = szIEWinFrame;
     wc.lpszMenuName = NULL;
