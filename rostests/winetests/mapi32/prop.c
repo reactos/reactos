@@ -1232,7 +1232,7 @@ static void test_IProp(void)
 
     /* GetLastError - No errors set */
     lpError = NULL;
-    IPropData_GetLastError(lpIProp, E_INVALIDARG, 0, &lpError);
+    sc = IPropData_GetLastError(lpIProp, E_INVALIDARG, 0, &lpError);
     ok(sc == S_OK && !lpError,
        "GetLastError: Expected S_OK, null, got 0x%08X,%p\n", sc, lpError);
 
