@@ -97,7 +97,7 @@ reactos/dll/win32/itss                # Synced to Wine-1.7.27
 reactos/dll/win32/jscript             # Synced to WineStaging-1.7.37
 reactos/dll/win32/jsproxy             # Synced to Wine-1.7.27
 reactos/dll/win32/loadperf            # Synced to Wine-1.7.27
-reactos/dll/win32/localspl            # Synced to Wine-1.7.27
+reactos/dll/win32/localspl            # Synced to WineStaging-1.7.37
 reactos/dll/win32/localui             # Synced to Wine-1.7.27
 reactos/dll/win32/lz32                # Synced to Wine-1.7.27
 reactos/dll/win32/mapi32              # Synced to Wine-1.7.27
