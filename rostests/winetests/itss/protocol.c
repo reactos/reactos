@@ -41,12 +41,6 @@
         called_ ## func = TRUE; \
     }while(0)
 
-#define CHECK_EXPECT2(func) \
-    do { \
-        ok(expect_ ##func, "unexpected call " #func  "\n"); \
-        called_ ## func = TRUE; \
-    }while(0)
-
 #define SET_CALLED(func) \
     expect_ ## func = called_ ## func = FALSE
 
