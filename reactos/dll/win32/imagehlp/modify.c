@@ -20,10 +20,15 @@
 
 #include "precomp.h"
 
+#include <wine/winternl.h>
+
 static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD WordCount);
 
 /***********************************************************************
  *		BindImage (IMAGEHLP.@)
+ *
+ * NOTES
+ *   See BindImageEx
  */
 BOOL WINAPI BindImage(
   PCSTR ImageName, PCSTR DllPath, PCSTR SymbolPath)
@@ -33,16 +38,113 @@ BOOL WINAPI BindImage(
 
 /***********************************************************************
  *		BindImageEx (IMAGEHLP.@)
+ *
+ * Compute the virtual address of each function imported by a PE image
+ *
+ * PARAMS
+ *
+ *   Flags         [in] Bind options
+ *   ImageName     [in] File name of the image to be bound
+ *   DllPath       [in] Root of the fallback search path in case the ImageName file cannot be opened
+ *   SymbolPath    [in] Symbol file root search path
+ *   StatusRoutine [in] Pointer to a status routine which will be called during the binding process
+ *
+ * RETURNS
+ *   Success: TRUE
+ *   Failure: FALSE
+ *
+ * NOTES
+ *  Binding is not implemented yet, so far this function only enumerates
+ *  all imported dlls/functions and returns TRUE.
  */
 BOOL WINAPI BindImageEx(
   DWORD Flags, PCSTR ImageName, PCSTR DllPath, PCSTR SymbolPath,
   PIMAGEHLP_STATUS_ROUTINE StatusRoutine)
 {
-  FIXME("(%d, %s, %s, %s, %p): stub\n",
-    Flags, debugstr_a(ImageName), debugstr_a(DllPath),
-    debugstr_a(SymbolPath), StatusRoutine
-  );
-  return TRUE;
+    LOADED_IMAGE loaded_image;
+    const IMAGE_IMPORT_DESCRIPTOR *import_desc;
+    ULONG size;
+
+    FIXME("(%d, %s, %s, %s, %p): semi-stub\n",
+        Flags, debugstr_a(ImageName), debugstr_a(DllPath),
+        debugstr_a(SymbolPath), StatusRoutine
+    );
+
+    if (!(MapAndLoad(ImageName, DllPath, &loaded_image, TRUE, TRUE))) return FALSE;
+
+    if (!(import_desc = RtlImageDirectoryEntryToData((HMODULE)loaded_image.MappedAddress, FALSE,
+                                                     IMAGE_DIRECTORY_ENTRY_IMPORT, &size)))
+    {
+        UnMapAndLoad(&loaded_image);
+        return TRUE; /* No imported modules means nothing to bind, so we're done. */
+    }
+
+    /* FIXME: Does native imagehlp support both 32-bit and 64-bit PE executables? */
+#ifdef _WIN64
+    if (loaded_image.FileHeader->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+#else
+    if (loaded_image.FileHeader->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+#endif
+    {
+        FIXME("Wrong architecture in PE header, unable to enumerate imports\n");
+        UnMapAndLoad(&loaded_image);
+        return TRUE;
+    }
+
+    for (; import_desc->Name && import_desc->FirstThunk; ++import_desc)
+    {
+        IMAGE_THUNK_DATA *thunk;
+        char dll_fullname[MAX_PATH];
+        const char *dll_name;
+
+        if (!(dll_name = ImageRvaToVa(loaded_image.FileHeader, loaded_image.MappedAddress,
+                                      import_desc->Name, 0)))
+        {
+            UnMapAndLoad(&loaded_image);
+            SetLastError(ERROR_INVALID_ACCESS); /* FIXME */
+            return FALSE;
+        }
+
+        if (StatusRoutine)
+            StatusRoutine(BindImportModule, ImageName, dll_name, 0, 0);
+
+        if (!SearchPathA(DllPath, dll_name, 0, sizeof(dll_fullname), dll_fullname, 0))
+        {
+            UnMapAndLoad(&loaded_image);
+            SetLastError(ERROR_FILE_NOT_FOUND);
+            return FALSE;
+        }
+
+        if (!(thunk = ImageRvaToVa(loaded_image.FileHeader, loaded_image.MappedAddress,
+                                   import_desc->OriginalFirstThunk ? import_desc->OriginalFirstThunk :
+                                   import_desc->FirstThunk, 0)))
+        {
+            ERR("Can't grab thunk data of %s, going to next imported DLL\n", dll_name);
+            continue;
+        }
+
+        for (; thunk->u1.Ordinal; ++thunk)
+        {
+            /* Ignoring ordinal imports for now */
+            if(!IMAGE_SNAP_BY_ORDINAL(thunk->u1.Ordinal))
+            {
+                IMAGE_IMPORT_BY_NAME *iibn;
+
+                if (!(iibn = ImageRvaToVa(loaded_image.FileHeader, loaded_image.MappedAddress,
+                                          thunk->u1.AddressOfData, 0)))
+                {
+                    ERR("Can't grab import by name info, skipping to next ordinal\n");
+                    continue;
+                }
+
+                if (StatusRoutine)
+                    StatusRoutine(BindImportProcedure, ImageName, dll_fullname, 0, (ULONG_PTR)iibn->Name);
+            }
+        }
+    }
+
+    UnMapAndLoad(&loaded_image);
+    return TRUE;
 }
 
 
