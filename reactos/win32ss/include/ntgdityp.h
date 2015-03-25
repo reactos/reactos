@@ -11,6 +11,8 @@
 #ifndef _NTGDITYP_
 #define _NTGDITYP_
 
+#include "ntwin32.h"
+
 /* ENUMERATIONS **************************************************************/
 
 typedef enum _ARCTYPE
@@ -436,9 +438,7 @@ typedef struct _CFONT
     DWORD           dwCFCount;
 } CFONT, *PCFONT;
 
-//
-// GDI Batch structures.
-//
+/* GDI Batch structures. */
 typedef struct _GDIBATCHHDR
 {
   SHORT Size;
@@ -464,24 +464,13 @@ typedef struct _GDIBSPATBLT
   ULONG ulBrushClr;
 } GDIBSPATBLT, *PGDIBSPATBLT;
 
-#ifndef _NTUSRTYP_
+/* FIXME: this should go to some "public" GDI32 header */
 typedef struct _PATRECT
 {
   RECT r;
   HBRUSH hBrush;
 } PATRECT, * PPATRECT;
-#endif
-#ifndef __WIN32K_NTUSER_H
-typedef struct _W32CLIENTINFO
-{
-    ULONG CI_flags;
-    ULONG cSpins;
-    ULONG ulWindowsVersion;
-    ULONG ulAppCompatFlags;
-    ULONG ulAppCompatFlags2;
-    ULONG W32ClientInfo[57];
-} W32CLIENTINFO, *PW32CLIENTINFO;
-#endif
+
 typedef struct _GDIBSPPATBLT
 {
   GDIBATCHHDR gbHdr;
@@ -539,26 +528,20 @@ typedef struct _GDIBSEXTSELCLPRGN
 {
   GDIBATCHHDR gbHdr;
   int fnMode;
-  RECTL;
+  RECTL rcl;
 } GDIBSEXTSELCLPRGN, *PGDIBSEXTSELCLPRGN;
-//
-//   Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn.
+
+/* Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn. */
 typedef struct _GDIBSOBJECT
 {
   GDIBATCHHDR gbHdr;
   HGDIOBJ hgdiobj;
 } GDIBSOBJECT, *PGDIBSOBJECT;
 
-//
-// Declarations missing in ddk/winddi.h
-//
+/* Declaration missing in ddk/winddi.h */
 typedef VOID (APIENTRY *PFN_DrvMovePanning)(LONG, LONG, FLONG);
-//typedef BOOL (APIENTRY *PFN_DrvOffset)(SURFOBJ*, LONG, LONG, FLONG);
 
-
-//
-// Most of these are defined in ddk/winddi.h
-//
+/* Most of these are defined in ddk/winddi.h */
 typedef struct _DRIVER_FUNCTIONS
 {
     PFN_DrvEnablePDEV              EnablePDEV;

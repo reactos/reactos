@@ -11,15 +11,11 @@
 #ifndef _NTUSRTYP_
 #define _NTUSRTYP_
 
+#include <ntwin32.h>
+
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
-
-typedef struct _PATRECT
-{
-    RECT r;
-    HBRUSH hBrush;
-} PATRECT, * PPATRECT;
 
 /* Bitfields for UserpreferencesMask SPI_ values (with defaults) */
 /* See also http://technet.microsoft.com/nl-nl/library/cc957204(en-us).aspx */
@@ -88,7 +84,7 @@ typedef struct
 
 typedef struct
 {   union
-    { 
+    {
         ICONRESDIR icon;
         CURSORRESDIR  cursor;
     } ResInfo;

@@ -61,4 +61,11 @@
 /* User macros */
 #include "user_x.h"
 
+/* FIXME: this should be in a "public" GDI32 header */
+typedef struct _PATRECT
+{
+    RECT r;
+    HBRUSH hBrush;
+} PATRECT, * PPATRECT;
+
 #endif /* _USER32_PCH_ */
