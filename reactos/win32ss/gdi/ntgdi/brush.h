@@ -90,7 +90,7 @@ typedef struct _EBRUSHOBJ
 #define BR_IS_PEN           0x00000400 /* Pen */
 #define BR_IS_OLDSTYLEPEN   0x00000800 /* Geometric pen */
 #define BR_IS_DIBPALCOLORS  0x00001000
-#define BR_IS_DIBPALINDICE  0x00002000
+#define BR_IS_DIBPALINDICES 0x00002000
 #define BR_IS_DEFAULTSTYLE  0x00004000
 #define BR_IS_MASKING       0x00008000 /* Pattern bitmap is used as transparent mask (?) */
 #define BR_IS_INSIDEFRAME   0x00010000

@@ -223,8 +223,12 @@ typedef DWORD LFTYPE;
 #define METARGN 2 // GetMetaRgn
 #define APIRGN  3
 
-/* Undocumented flag for fdwInit in CreateDIBitmap */
+/* New flag for fdwInit in CreateDIBitmap. See support.microsoft.com/kb/kbview/108497*/
 #define CBM_CREATDIB 2
+
+/* New color use parameter. See support.microsoft.com/kb/kbview/108497 */
+#define DIB_PAL_INDICES 2
+
 
 /* TYPES *********************************************************************/
 
