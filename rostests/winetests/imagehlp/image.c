@@ -390,10 +390,10 @@ static void test_bind_image_ex(void)
     SetLastError(0xdeadbeef);
     ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, "nonexistent.dll", 0, 0,
                        testing_status_routine);
-    todo_wine ok(!ret && ((GetLastError() == ERROR_FILE_NOT_FOUND) ||
-                 (GetLastError() == ERROR_INVALID_PARAMETER)),
-                 "expected ERROR_FILE_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
-                 GetLastError());
+    ok(!ret && ((GetLastError() == ERROR_FILE_NOT_FOUND) ||
+       (GetLastError() == ERROR_INVALID_PARAMETER)),
+       "expected ERROR_FILE_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
+       GetLastError());
 
     file = create_temp_file(temp_file);
     if (file == INVALID_HANDLE_VALUE)
@@ -415,14 +415,14 @@ static void test_bind_image_ex(void)
                        testing_status_routine);
     ok(ret, "BindImageEx failed: %d\n", GetLastError());
 
-    todo_wine ok(status_routine_called[BindImportModule] == 1,
-                 "StatusRoutine was called %d times\n", status_routine_called[BindImportModule]);
+    ok(status_routine_called[BindImportModule] == 1,
+       "StatusRoutine was called %d times\n", status_routine_called[BindImportModule]);
 
-    todo_wine ok((status_routine_called[BindImportProcedure] == 1)
+    ok((status_routine_called[BindImportProcedure] == 1)
 #if defined(_WIN64)
-                 || broken(status_routine_called[BindImportProcedure] == 0) /* < Win8 */
+       || broken(status_routine_called[BindImportProcedure] == 0) /* < Win8 */
 #endif
-                 , "StatusRoutine was called %d times\n", status_routine_called[BindImportProcedure]);
+       , "StatusRoutine was called %d times\n", status_routine_called[BindImportProcedure]);
 
     DeleteFileA(temp_file);
 }
