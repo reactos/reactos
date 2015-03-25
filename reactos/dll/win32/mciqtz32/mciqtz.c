@@ -608,6 +608,7 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
 {
     WINE_MCIQTZ* wma;
     HRESULT hr;
+    DWORD ret = MCI_INTEGER_RETURNED;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
@@ -666,30 +667,33 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
             LONG state = State_Stopped;
             IMediaControl_GetState(wma->pmctrl, -1, &state);
             if (state == State_Stopped)
-                lpParms->dwReturn = MCI_MODE_STOP;
+                lpParms->dwReturn = MAKEMCIRESOURCE(MCI_MODE_STOP, MCI_MODE_STOP);
             else if (state == State_Running) {
                 LONG code;
                 LONG_PTR p1, p2;
 
-                lpParms->dwReturn = MCI_MODE_PLAY;
+                lpParms->dwReturn = MAKEMCIRESOURCE(MCI_MODE_PLAY, MCI_MODE_PLAY);
 
                 do {
                     hr = IMediaEvent_GetEvent(wma->mevent, &code, &p1, &p2, 0);
                     if (hr == S_OK && code == EC_COMPLETE){
-                        lpParms->dwReturn = MCI_MODE_STOP;
+                        lpParms->dwReturn = MAKEMCIRESOURCE(MCI_MODE_STOP, MCI_MODE_STOP);
                         IMediaControl_Stop(wma->pmctrl);
                     }
                 } while (hr == S_OK);
 
             } else if (state == State_Paused)
-                lpParms->dwReturn = MCI_MODE_PAUSE;
+                lpParms->dwReturn = MAKEMCIRESOURCE(MCI_MODE_PAUSE, MCI_MODE_PAUSE);
+            ret = MCI_RESOURCE_RETURNED;
             break;
         }
         case MCI_STATUS_MEDIA_PRESENT:
             FIXME("MCI_STATUS_MEDIA_PRESENT not implemented yet\n");
             return MCIERR_UNRECOGNIZED_COMMAND;
         case MCI_STATUS_TIME_FORMAT:
-            lpParms->dwReturn = wma->time_format;
+            lpParms->dwReturn = MAKEMCIRESOURCE(wma->time_format,
+                                                MCI_FORMAT_RETURN_BASE + wma->time_format);
+            ret = MCI_RESOURCE_RETURNED;
             break;
         case MCI_STATUS_READY:
             FIXME("MCI_STATUS_READY not implemented yet\n");
@@ -705,7 +709,7 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
     if (dwFlags & MCI_NOTIFY)
         mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)), wDevID, MCI_NOTIFY_SUCCESSFUL);
 
-    return 0;
+    return ret;
 }
 
 /***************************************************************************
