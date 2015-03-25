@@ -27,18 +27,10 @@
 #define DBG_ENABLE_EVENT_LOGGING 0
 #define DBG_ENABLE_SERVICE_HOOKS 0
 
-/* CSRSS Interface */
-#include "user/ntuser/csr.h"
-
-/* Misc headers */
-#include "user/ntuser/win32kdebug.h"
-#include "user/ntuser/mmcopy.h"
-#include "user/ntuser/tags.h"
-#include "gdi/ntgdi/rect.h"
-#include "gdi/ntgdi/misc.h"
-
 /* Internal NtGdi Headers */
 typedef struct _DC *PDC;
+#include "gdi/ntgdi/rect.h"
+#include "gdi/ntgdi/misc.h"
 #include "gdi/ntgdi/gdiobj.h"
 #include "gdi/ntgdi/palette.h"
 #include "gdi/eng/surface.h"
@@ -74,7 +66,10 @@ typedef struct _DC *PDC;
 #include "reactx/ntddraw/intddraw.h"
 
 /* Internal NtUser Headers */
+#include "user/ntuser/win32kdebug.h"
 #include "user/ntuser/win32.h"
+#include "user/ntuser/tags.h"
+#ifndef __cplusplus
 #include "user/ntuser/usrheap.h"
 #include "user/ntuser/object.h"
 #include "user/ntuser/ntuser.h"
@@ -106,5 +101,11 @@ typedef struct _DC *PDC;
 #include "user/ntuser/scroll.h"
 #include "user/ntuser/winpos.h"
 #include "user/ntuser/callback.h"
+#include "user/ntuser/mmcopy.h"
+
+/* CSRSS Interface */
+#include "user/ntuser/csr.h"
+
+#endif // __cplusplus
 
 #include "gdi/ntgdi/gdidebug.h"

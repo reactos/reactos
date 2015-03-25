@@ -49,7 +49,7 @@ typedef enum _QS_ROS_TYPES
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;
 extern HANDLE hModuleWin;    // This Win32k Instance.
-extern PCLS SystemClassList;
+extern struct _CLS *SystemClassList;
 extern BOOL RegisteredSysClasses;
 
 typedef struct tagMENUSTATE MENUSTATE, *PMENUSTATE;
@@ -77,17 +77,22 @@ typedef struct _W32THREAD
     PVOID pUMPDObj;
 } W32THREAD, *PW32THREAD;
 
+#ifdef __cplusplus
+typedef struct _THREADINFO : _W32THREAD
+{
+#else
 typedef struct _THREADINFO
 {
     W32THREAD;
+#endif
     PTL                 ptl;
     PPROCESSINFO        ppi;
     struct _USER_MESSAGE_QUEUE* MessageQueue;
     struct tagKL*       KeyboardLayout;
-    PCLIENTTHREADINFO   pcti;
+    struct _CLIENTTHREADINFO  * pcti;
     struct _DESKTOP*    rpdesk;
-    PDESKTOPINFO        pDeskInfo;
-    PCLIENTINFO         pClientInfo;
+    struct _DESKTOPINFO  *  pDeskInfo;
+    struct _CLIENTINFO * pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
     /* Messages that are currently dispatched to other threads */
@@ -112,7 +117,7 @@ typedef struct _THREADINFO
     struct _USER_MESSAGE_QUEUE* pqAttach;
     PTHREADINFO         ptiSibling;
     ULONG               fsHooks;
-    PHOOK               sphkCurrent;
+    struct tagHOOK *    sphkCurrent;
     LPARAM              lParamHkCurrent;
     WPARAM              wParamHkCurrent;
     struct tagSBTRACK*  pSBTrack;
@@ -130,6 +135,7 @@ typedef struct _THREADINFO
     WCHAR               wchInjected;
     UINT                cWindows;
     UINT                cVisWindows;
+#ifndef __cplusplus /// FIXME!
     LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
 
@@ -151,7 +157,7 @@ typedef struct _THREADINFO
 #if DBG
     USHORT acExclusiveLockCount[GDIObjTypeTotal + 1];
 #endif
-
+#endif // __cplusplus
 } THREADINFO;
 
 #include <poppack.h>
@@ -234,14 +240,19 @@ typedef struct _W32PROCESS
 
 #define CLIBS 32
 
+#ifdef __cplusplus
+typedef struct _PROCESSINFO : _W32PROCESS
+{
+#else
 typedef struct _PROCESSINFO
 {
     W32PROCESS;
+#endif
     PTHREADINFO ptiList;
     PTHREADINFO ptiMainThread;
     struct _DESKTOP* rpdeskStartup;
-    PCLS pclsPrivateList;
-    PCLS pclsPublicList;
+    struct _CLS *pclsPrivateList;
+    struct _CLS *pclsPublicList;
     PPROCESSINFO ppiNext;
     INT cThreads;
     HDESK hdeskStartup;
@@ -276,8 +287,10 @@ typedef struct _PROCESSINFO
 
 #if DBG
     BYTE DbgChannelLevel[DbgChCount];
+#ifndef __cplusplus
     DWORD DbgHandleCount[TYPE_CTYPES];
-#endif
+#endif // __cplusplus
+#endif // DBG
 } PROCESSINFO;
 
 #if DBG

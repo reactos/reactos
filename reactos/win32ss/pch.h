@@ -67,13 +67,16 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <pseh/pseh2.h>
 
 /* Public Win32K headers */
-#include <include/callback.h>
+#include <include/ntgdityp.h>
+#include <ntgdi.h>
+#include <include/ntgdihdl.h>
+#include <include/ntgdibad.h>
+
+#ifndef __cplusplus
 #include <include/ntusrtyp.h>
 #include <include/ntuser.h>
-#include <include/ntgdityp.h>
-#include <include/ntgdibad.h>
-#include <include/ntgdihdl.h>
-#include <ntgdi.h>
+#include <include/callback.h>
+#endif // __cplusplus
 
 /* Undocumented user definitions */
 #include <undocuser.h>
@@ -81,6 +84,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* Freetype headers */
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#define InterlockedIncrementUL(Value) InterlockedIncrement((PLONG)Value)
+#define InterlockedDecrementUL(Value) InterlockedDecrement((PLONG)Value)
 
 /* Internal Win32K header */
 #include "win32kp.h"
