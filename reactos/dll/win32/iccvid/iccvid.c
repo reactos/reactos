@@ -62,8 +62,6 @@ static HINSTANCE ICCVID_hModule;
 
 #define ICCVID_MAGIC mmioFOURCC('c', 'v', 'i', 'd')
 #define compare_fourcc(fcc1, fcc2) (((fcc1)^(fcc2))&~0x20202020)
-
-#define DBUG    0
 #define MAX_STRIPS 32
 
 /* ------------------------------------------------------------------------ */
