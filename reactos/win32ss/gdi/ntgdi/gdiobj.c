@@ -159,7 +159,7 @@ apfnCleanup[] =
     NULL,              /* 0d GDIObjType_PFT_TYPE, unused */
     GDIOBJ_vCleanup,   /* 0e GDIObjType_ICMCXF_TYPE */
     NULL,              /* 0f GDIObjType_SPRITE_TYPE, unused */
-    BRUSH_vCleanup,    /* 10 GDIObjType_BRUSH_TYPE, BRUSH, PEN, EXTPEN */
+    NULL,              /* 10 GDIObjType_BRUSH_TYPE, BRUSH, PEN, EXTPEN */
     NULL,              /* 11 GDIObjType_UMPD_TYPE, unused */
     NULL,              /* 12 GDIObjType_UNUSED4_TYPE */
     NULL,              /* 13 GDIObjType_SPACE_TYPE, unused */
@@ -172,6 +172,44 @@ apfnCleanup[] =
     NULL,              /* 1a GDIObjType_RC_TYPE, unused */
     NULL,              /* 1b GDIObjType_TEMP_TYPE, unused */
     DRIVEROBJ_vCleanup,/* 1c GDIObjType_DRVOBJ_TYPE */
+    NULL,              /* 1d GDIObjType_DCIOBJ_TYPE, unused */
+    NULL,              /* 1e GDIObjType_SPOOL_TYPE, unused */
+    NULL,              /* 1f reserved entry */
+};
+
+static const
+GDIOBJDELETEPROC
+apfnDelete[] =
+{
+    NULL,              /* 00 GDIObjType_DEF_TYPE */
+    NULL,              /* 01 GDIObjType_DC_TYPE */
+    NULL,              /* 02 GDIObjType_UNUSED1_TYPE */
+    NULL,              /* 03 GDIObjType_UNUSED2_TYPE */
+    NULL,              /* 04 GDIObjType_RGN_TYPE */
+    NULL,              /* 05 GDIObjType_SURF_TYPE */
+    NULL,              /* 06 GDIObjType_CLIENTOBJ_TYPE */
+    NULL,              /* 07 GDIObjType_PATH_TYPE */
+    NULL,              /* 08 GDIObjType_PAL_TYPE */
+    NULL,              /* 09 GDIObjType_ICMLCS_TYPE */
+    NULL,              /* 0a GDIObjType_LFONT_TYPE */
+    NULL,              /* 0b GDIObjType_RFONT_TYPE, unused */
+    NULL,              /* 0c GDIObjType_PFE_TYPE, unused */
+    NULL,              /* 0d GDIObjType_PFT_TYPE, unused */
+    NULL,              /* 0e GDIObjType_ICMCXF_TYPE */
+    NULL,                 /* 0f GDIObjType_SPRITE_TYPE, unused */
+    BRUSH_vDeleteObject,  /* 10 GDIObjType_BRUSH_TYPE, BRUSH, PEN, EXTPEN */
+    NULL,              /* 11 GDIObjType_UMPD_TYPE, unused */
+    NULL,              /* 12 GDIObjType_UNUSED4_TYPE */
+    NULL,              /* 13 GDIObjType_SPACE_TYPE, unused */
+    NULL,              /* 14 GDIObjType_UNUSED5_TYPE */
+    NULL,              /* 15 GDIObjType_META_TYPE, unused */
+    NULL,              /* 16 GDIObjType_EFSTATE_TYPE, unused */
+    NULL,              /* 17 GDIObjType_BMFD_TYPE, unused */
+    NULL,              /* 18 GDIObjType_VTFD_TYPE, unused */
+    NULL,              /* 19 GDIObjType_TTFD_TYPE, unused */
+    NULL,              /* 1a GDIObjType_RC_TYPE, unused */
+    NULL,              /* 1b GDIObjType_TEMP_TYPE, unused */
+    NULL,              /* 1c GDIObjType_DRVOBJ_TYPE */
     NULL,              /* 1d GDIObjType_DCIOBJ_TYPE, unused */
     NULL,              /* 1e GDIObjType_SPOOL_TYPE, unused */
     NULL,              /* 1f reserved entry */
@@ -547,18 +585,27 @@ GDIOBJ_vFreeObject(POBJ pobj)
     /* Get the object type */
     objt = ((ULONG_PTR)pobj->hHmgr >> 16) & 0x1f;
 
-    /* Call the cleanup procedure */
-    ASSERT(apfnCleanup[objt]);
-    apfnCleanup[objt](pobj);
-
-    /* Check if the object is allocated from a lookaside list */
-    if (pobj->BaseFlags & BASEFLAG_LOOKASIDE)
+    /* Check if we have a delete procedure (for C++ based objects) */
+    if (apfnDelete[objt] != NULL)
     {
-        ExFreeToPagedLookasideList(&gpaLookasideList[objt], pobj);
+        /* Invoke the delete procedure */
+        apfnDelete[objt](pobj);
     }
     else
     {
-        ExFreePoolWithTag(pobj, GDIOBJ_POOL_TAG(objt));
+        /* Call the cleanup procedure */
+        NT_ASSERT(apfnCleanup[objt]);
+        apfnCleanup[objt](pobj);
+
+        /* Check if the object is allocated from a lookaside list */
+        if (pobj->BaseFlags & BASEFLAG_LOOKASIDE)
+        {
+            ExFreeToPagedLookasideList(&gpaLookasideList[objt], pobj);
+        }
+        else
+        {
+            ExFreePoolWithTag(pobj, GDIOBJ_POOL_TAG(objt));
+        }
     }
 }
 

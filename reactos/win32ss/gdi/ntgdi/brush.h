@@ -11,12 +11,8 @@
  * DON'T MODIFY THIS STRUCTURE UNLESS REALLY NEEDED AND EVEN THEN ASK ON
  * A MAILING LIST FIRST.
  */
-typedef struct _BRUSH
+typedef struct _BRUSHBODY
 {
-    /* Header for all gdi objects in the handle table.
-       Do not (re)move this. */
-    BASEOBJECT BaseObject;
-
     ULONG iHatch;           // This is not the brush style, but the hatch style!
     HBITMAP hbmPattern;
     HBITMAP hbmClient;
@@ -34,6 +30,8 @@ typedef struct _BRUSH
     PVOID pvRBrush;
     HDEV hdev;
     //DWORD unk054;
+
+    /* The following members are for PENs only */
     LONG lWidth;
     FLOAT eWidth;
     ULONG ulPenStyle;
@@ -47,7 +45,21 @@ typedef struct _BRUSH
     //DWORD unk078;         // 0x078
     DWORD unk07c;           // 0x07c
     LIST_ENTRY ListHead;    // 0x080
+} BRUSHBODY;
+
+#ifndef __cplusplus
+typedef struct _BRUSH
+{
+    /* Header for all gdi objects in the handle table.
+       Do not (re)move this. */
+    BASEOBJECT BaseObject;
+
+    BRUSHBODY;
 } BRUSH, *PBRUSH;
+#else
+class BRUSH;
+typedef class BRUSH *PBRUSH;
+#endif
 
 typedef struct _EBRUSHOBJ
 {
@@ -68,7 +80,7 @@ typedef struct _EBRUSHOBJ
     struct _PALETTE *   ppalDC;
     struct _PALETTE *   ppalDIB;
 //    DWORD       dwUnknown44;
-    BRUSH *     pbrush;
+    PBRUSH      pbrush;
     FLONG       flattrs;
     DWORD       ulUnique;
 //    DWORD       dwUnknown54;
@@ -109,8 +121,8 @@ BRUSH_GetObject(
 
 VOID
 NTAPI
-BRUSH_vCleanup(
-    PVOID ObjectBody);
+BRUSH_vDeleteObject(
+    PVOID pvObject);
 
 extern HSURF gahsurfHatch[HS_DDI_MAX];
 
@@ -188,5 +200,8 @@ IntGdiCreateSolidBrush(
 HBRUSH APIENTRY
 IntGdiCreateNullBrush(VOID);
 
-VOID FASTCALL
-IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
+VOID
+NTAPI
+IntGdiSetSolidBrushColor(
+    _In_ HBRUSH hbr,
+    _In_ COLORREF crColor);

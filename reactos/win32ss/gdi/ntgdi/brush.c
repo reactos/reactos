@@ -154,6 +154,16 @@ BRUSH_vCleanup(PVOID ObjectBody)
     }
 }
 
+VOID
+NTAPI
+BRUSH_vDeleteObject(
+    PVOID pvObject)
+{
+    BRUSH_vCleanup(pvObject);
+    ExFreePoolWithTag(pvObject, GDITAG_HMGR_BRUSH_TYPE);
+}
+
+
 INT
 FASTCALL
 BRUSH_GetObject(PBRUSH pbrush, INT cjSize, LPLOGBRUSH plogbrush)
@@ -385,7 +395,7 @@ IntGdiCreateNullBrush(VOID)
 }
 
 VOID
-FASTCALL
+NTAPI
 IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
 {
     PBRUSH pbrush;
