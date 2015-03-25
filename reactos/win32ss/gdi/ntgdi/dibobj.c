@@ -1539,6 +1539,56 @@ GreCreateDIBitmapInternal(
     return Bmp;
 }
 
+HBITMAP
+NTAPI
+GreCreateDIBitmapFromPackedDIB(
+    _In_reads_(cjPackedDIB )PVOID pvPackedDIB,
+    _In_ UINT cjPackedDIB,
+    _In_ ULONG uUsage)
+{
+    PBITMAPINFO pbmi;
+    PBYTE pjBits;
+    UINT cjInfo, cjBits;
+    HBITMAP hbm;
+
+    /* We only support BITMAPINFOHEADER, make sure the size is ok */
+    if (cjPackedDIB < sizeof(BITMAPINFOHEADER))
+    {
+        return NULL;
+    }
+
+    /* The packed DIB starts with the BITMAPINFOHEADER */
+    pbmi = pvPackedDIB;
+
+    if (cjPackedDIB < pbmi->bmiHeader.biSize)
+    {
+        return NULL;
+    }
+
+    /* Calculate the info size and make sure the packed DIB is large enough */
+    cjInfo = DIB_BitmapInfoSize(pbmi, uUsage);
+    if (cjPackedDIB <= cjInfo)
+    {
+        return NULL;
+    }
+
+    /* The bitmap bits start after the header */
+    pjBits = (PBYTE)pvPackedDIB + cjInfo;
+    cjBits = cjPackedDIB - cjInfo;
+
+    hbm = GreCreateDIBitmapInternal(NULL,
+                                    pbmi->bmiHeader.biWidth,
+                                    abs(pbmi->bmiHeader.biHeight),
+                                    CBM_INIT | CBM_CREATDIB,
+                                    pjBits,
+                                    pbmi,
+                                    uUsage,
+                                    0,
+                                    cjBits,
+                                    NULL);
+
+    return hbm;
+}
 
 HBITMAP
 APIENTRY
