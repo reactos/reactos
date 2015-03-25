@@ -1,6 +1,11 @@
 
 set(USE_DIBLIB FALSE)
 
+if(NOT MSVC)
+    # HACK: this should be enabled globally!
+    add_compile_flags_language("-std=c++11" "CXX")
+endif()
+
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
 
@@ -146,7 +151,7 @@ list(APPEND SOURCE
     gdi/ntgdi/bezier.c
     gdi/ntgdi/bitblt.c
     gdi/ntgdi/bitmaps.c
-    gdi/ntgdi/brush.c
+    gdi/ntgdi/brush.cpp
     gdi/ntgdi/cliprgn.c
     gdi/ntgdi/coord.c
     gdi/ntgdi/dcattr.c
@@ -227,7 +232,7 @@ if(USE_DIBLIB)
 endif()
 
 add_importlibs(win32k ntoskrnl hal ftfd)
-add_pch(win32k pch.h SOURCE)
+#add_pch(win32k pch.h SOURCE)
 add_cd_file(TARGET win32k DESTINATION reactos/system32 FOR all)
 
 set_source_files_properties(sys-stubs.S PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/w32ksvc.h)

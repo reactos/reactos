@@ -29,6 +29,19 @@
  *   object from being locked by another thread. A shared lock will simply fail,
  *   while an exclusive lock will succeed after the object was unlocked.
  *
+ * Ownership:
+ *
+ * Owner:               POWNED  PUBLIC  NONE    spec
+ * ---------------------------------------------------
+ * LockForRead          +       +       -       PUBLIC
+ * LockForWrite         +       -       -       POWNED
+ * LockAny              +       +       +       NONE
+ * NtGdiDeleteObjectApp +       -       -       PUBLIC
+ * GreDeleteObject      +       +       +       NONE
+ * GreSetOwner(POWNED)  -       -       +       -
+ * GreSetOwner(PUBLIC)  +       -       +       -
+ * GreSetOwner(NONE)    +       -       -       -
+ *
  */
 
 /* INCLUDES ******************************************************************/
@@ -1590,5 +1603,16 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     return TRUE;
 }
 
+/// HACK!
+PGDI_POOL
+GetBrushAttrPool(VOID)
+{
+    PPROCESSINFO ppi;
+
+    ppi = PsGetCurrentProcessWin32Process();
+    NT_ASSERT(ppi != NULL);
+
+    return ppi->pPoolBrushAttr;
+}
 
 /* EOF */

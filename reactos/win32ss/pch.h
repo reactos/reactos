@@ -66,6 +66,10 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Public Win32K headers */
 #include <include/ntgdityp.h>
 #include <ntgdi.h>
@@ -90,5 +94,9 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Internal Win32K header */
 #include "win32kp.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __W32K_H */
