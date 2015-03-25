@@ -34,7 +34,6 @@
 #define expect(expected, got) ok((got) == (expected), "Expected %d, got %d\n", (INT)(expected), (INT)(got))
 #define expectf_(expected, got, precision) ok(fabs((expected) - (got)) <= (precision), "Expected %f, got %f\n", (expected), (got))
 #define expectf(expected, got) expectf_((expected), (got), 0.001)
-#define TABLE_LEN (23)
 
 static const REAL mm_per_inch = 25.4;
 static const REAL point_per_inch = 72.0;
@@ -3776,6 +3775,7 @@ static void test_font_height_scaling(void)
 
     hdc = CreateCompatibleDC(0);
     status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
 
     status = GdipGetDpiY(graphics, &dpi);
     expect(Ok, status);
@@ -5554,6 +5554,61 @@ static void test_GdipFillRectangles(void)
     ReleaseDC(hwnd, hdc);
 }
 
+static void test_GdipGetVisibleClipBounds_memoryDC(void)
+{
+    HDC hdc,dc;
+    HBITMAP bmp;
+    HGDIOBJ old;
+    RECT rect;
+    POINT pt;
+    int width = 0;
+    int height = 0;
+    GpGraphics* graphics = NULL;
+    GpRect boundRect;
+    GpStatus status;
+
+    ok(GetClientRect(hwnd, &rect), "GetClientRect should have succeeded\n");
+    width = rect.right - rect.left;
+    height = rect.bottom - rect.top;
+
+    dc = GetDC(hwnd);
+    hdc = CreateCompatibleDC ( dc );
+    bmp = CreateCompatibleBitmap ( dc, width, height );
+    old = SelectObject (hdc, bmp);
+
+    /*change the window origin is the key test point*/
+    SetWindowOrgEx (hdc, rect.left+10, rect.top+10, &pt);
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    status = GdipGetVisibleClipBoundsI(graphics, &boundRect);
+    expect(Ok, status);
+
+    ok(boundRect.X==rect.left+10 &&
+       boundRect.Y==rect.top+10 &&
+       boundRect.Width==width &&
+       boundRect.Height==height, "Expected GdipGetVisibleClipBoundsI ok\n");
+
+    status = GdipSetClipRectI(graphics, 0, 0, width, height, CombineModeReplace);
+    expect(Ok, status);
+
+    status = GdipGetVisibleClipBoundsI(graphics, &boundRect);
+    expect(Ok, status);
+
+    ok(boundRect.X==rect.left+10 &&
+       boundRect.Y==rect.top+10 &&
+       boundRect.Width==width-10 &&
+       boundRect.Height==height-10, "Expected GdipGetVisibleClipBoundsI ok\n");
+
+    GdipDeleteGraphics(graphics);
+
+    SelectObject (hdc, old);
+    DeleteObject (bmp);
+    DeleteDC (hdc);
+    ReleaseDC(hwnd, dc);
+}
+
 START_TEST(graphics)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -5625,6 +5680,7 @@ START_TEST(graphics)
     test_alpha_hdc();
     test_bitmapfromgraphics();
     test_GdipFillRectangles();
+    test_GdipGetVisibleClipBounds_memoryDC();
 
     GdiplusShutdown(gdiplusToken);
     DestroyWindow( hwnd );

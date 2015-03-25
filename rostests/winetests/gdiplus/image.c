@@ -1703,6 +1703,10 @@ static void test_createhbitmap(void)
     stat = GdipDisposeImage((GpImage*)bitmap);
     expect(Ok, stat);
 
+    /* make (1,0) have no alpha and (2,0) a different blue value. */
+    bits[7] = 0x00;
+    bits[8] = 0x40;
+
     /* create alpha Bitmap */
     stat = GdipCreateBitmapFromScan0(8, 20, 32, PixelFormat32bppARGB, bits, &bitmap);
     expect(Ok, stat);
@@ -1728,18 +1732,103 @@ static void test_createhbitmap(void)
         {
             DWORD val = *(DWORD*)bm.bmBits;
             ok(val == 0x682a2a2a, "got %x, expected 0x682a2a2a\n", val);
+            val = *((DWORD*)bm.bmBits + (bm.bmHeight-1) * bm.bmWidthBytes/4 + 1);
+            ok(val == 0x0, "got %x, expected 0x682a2a2a\n", val);
         }
 
         hdc = CreateCompatibleDC(NULL);
 
         oldhbitmap = SelectObject(hdc, hbitmap);
         pixel = GetPixel(hdc, 5, 5);
+        expect(0x2a2a2a, pixel);
+        pixel = GetPixel(hdc, 1, 0);
+        expect(0x0, pixel);
+
         SelectObject(hdc, oldhbitmap);
 
         DeleteDC(hdc);
 
-        expect(0x2a2a2a, pixel);
 
+        DeleteObject(hbitmap);
+    }
+
+    /* create HBITMAP with bkgnd colour */
+    stat = GdipCreateHBITMAPFromBitmap(bitmap, &hbitmap, 0xff00ff);
+    expect(Ok, stat);
+
+    if (stat == Ok)
+    {
+        ret = GetObjectA(hbitmap, sizeof(BITMAP), &bm);
+        expect(sizeof(BITMAP), ret);
+
+        expect(0, bm.bmType);
+        expect(8, bm.bmWidth);
+        expect(20, bm.bmHeight);
+        expect(32, bm.bmWidthBytes);
+        expect(1, bm.bmPlanes);
+        expect(32, bm.bmBitsPixel);
+        ok(bm.bmBits != NULL, "got DDB, expected DIB\n");
+
+        if (bm.bmBits)
+        {
+            DWORD val = *(DWORD*)bm.bmBits;
+            ok(val == 0x68c12ac1, "got %x, expected 0x682a2a2a\n", val);
+            val = *((DWORD*)bm.bmBits + (bm.bmHeight-1) * bm.bmWidthBytes/4 + 1);
+            ok(val == 0xff00ff, "got %x, expected 0x682a2a2a\n", val);
+        }
+
+        hdc = CreateCompatibleDC(NULL);
+
+        oldhbitmap = SelectObject(hdc, hbitmap);
+        pixel = GetPixel(hdc, 5, 5);
+        expect(0xc12ac1, pixel);
+        pixel = GetPixel(hdc, 1, 0);
+        expect(0xff00ff, pixel);
+        pixel = GetPixel(hdc, 2, 0);
+        expect(0xb12ac1, pixel);
+
+        SelectObject(hdc, oldhbitmap);
+        DeleteDC(hdc);
+        DeleteObject(hbitmap);
+    }
+
+    /* create HBITMAP with bkgnd colour with alpha and show it behaves with no alpha. */
+    stat = GdipCreateHBITMAPFromBitmap(bitmap, &hbitmap, 0x80ff00ff);
+    expect(Ok, stat);
+
+    if (stat == Ok)
+    {
+        ret = GetObjectA(hbitmap, sizeof(BITMAP), &bm);
+        expect(sizeof(BITMAP), ret);
+
+        expect(0, bm.bmType);
+        expect(8, bm.bmWidth);
+        expect(20, bm.bmHeight);
+        expect(32, bm.bmWidthBytes);
+        expect(1, bm.bmPlanes);
+        expect(32, bm.bmBitsPixel);
+        ok(bm.bmBits != NULL, "got DDB, expected DIB\n");
+
+        if (bm.bmBits)
+        {
+            DWORD val = *(DWORD*)bm.bmBits;
+            ok(val == 0x68c12ac1, "got %x, expected 0x682a2a2a\n", val);
+            val = *((DWORD*)bm.bmBits + (bm.bmHeight-1) * bm.bmWidthBytes/4 + 1);
+            ok(val == 0xff00ff, "got %x, expected 0x682a2a2a\n", val);
+        }
+
+        hdc = CreateCompatibleDC(NULL);
+
+        oldhbitmap = SelectObject(hdc, hbitmap);
+        pixel = GetPixel(hdc, 5, 5);
+        expect(0xc12ac1, pixel);
+        pixel = GetPixel(hdc, 1, 0);
+        expect(0xff00ff, pixel);
+        pixel = GetPixel(hdc, 2, 0);
+        expect(0xb12ac1, pixel);
+
+        SelectObject(hdc, oldhbitmap);
+        DeleteDC(hdc);
         DeleteObject(hbitmap);
     }
 
