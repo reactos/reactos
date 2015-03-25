@@ -1379,7 +1379,7 @@ IntCreateDIBitmap(
     else
     {
         handle = GreCreateBitmap(width,
-                                 height,
+                                 abs(height),
                                  1,
                                  1,
                                  NULL);
