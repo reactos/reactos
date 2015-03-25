@@ -53,9 +53,12 @@
 #error broken
 #endif // ]
 
-#pragma warning(disable:6320) /* disable warning about SEH filter */
-#pragma warning(disable:28247) /* duplicated model file annotations */
+#pragma warning(disable:6320) /* Disable warning about SEH filter */
+#pragma warning(disable:28247) /* Duplicated model file annotations */
 #pragma warning(disable:28251) /* Inconsistent annotation */
+#ifndef _M_IX86 // [
+#pragma warning(disable:28110 28111 28161 28162) /* Floating point save */
+#endif // ]
 
 /******************************************************************************/
 //#include "codeanalysis\sourceannotations.h"
@@ -420,6 +423,9 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _At_buffer_(target, iter, bound, annos)     [SAL_at_buffer(p1=_SA_SPECSTRIZE(target), p2=_SA_SPECSTRIZE(iter), p3=_SA_SPECSTRIZE(bound))] [SAL_begin] annos [SAL_end]
 #define _On_failure_(annos)                         [SAL_context(p1="SAL_failed")] _Group_(_Post_ _Group_(annos))
 #define _Always_(annos)                             _Group_(annos) _On_failure_(annos)
+
+#define _Analysis_mode_impl_(mode)                                  _SAL2_NAME(_Analysis_mode_impl) _Group_([SAL_annotes(Name="SAL_analysisMode", p1=_SA_SPECSTRIZE(mode))])
+#define _Analysis_mode_(mode)                                       typedef _Analysis_mode_impl_(mode) int __prefast_analysis_mode_flag__COUNTER__;
 
 #define _Analysis_noreturn_                                         _SAL2_NAME(_Analysis_noreturn_) [SAL_annotes(Name="SAL_terminates")]
 #define _Analysis_assume_(expr)                                     __assume(expr)
@@ -1099,6 +1105,7 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 #define __inner_exceptthat
 #define __inner_typefix(ctype)
 #define _Always_(annos)
+#define _Analysis_mode_(mode)
 #define _Analysis_noreturn_
 #define _Analysis_assume_(expr) ((void)0)
 #define __analysis_assume(expr) ((void)0)

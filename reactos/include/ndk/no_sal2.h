@@ -5,6 +5,7 @@
 
 /* From sal.h */
 #define _Always_(annos)
+#define _Analysis_mode_(mode)
 #define _Analysis_noreturn_
 #define _Analysis_assume_(expr) __analysis_assume(expr)
 #define _At_(target, annos)
@@ -664,6 +665,8 @@
 #define _Kernel_requires_resource_not_held_(kind)
 #define _Kernel_acquires_resource_(kind)
 #define _Landmark_(name)
+#define __prefast_operator_new_null
+#define __prefast_operator_new_throws
 
 /* concurrencysal.h */
 #define _Benign_race_begin_ __pragma(warning(push))
