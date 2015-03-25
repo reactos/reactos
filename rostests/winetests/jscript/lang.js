@@ -1450,6 +1450,24 @@ function returnTest() {
 
 ok(returnTest() === undefined, "returnTest = " + returnTest());
 
+ActiveXObject = 1;
+ok(ActiveXObject === 1, "ActiveXObject = " + ActiveXObject);
+
+Boolean = 1;
+ok(Boolean === 1, "Boolean = " + Boolean);
+
+Object = 1;
+ok(Object === 1, "Object = " + Object);
+
+Array = 1;
+ok(Array === 1, "Array = " + Array);
+
+Date = 1;
+ok(Date === 1, "Date = " + Date);
+
+Error = 1;
+ok(Error === 1, "Error = " + Error);
+
 /* Keep this test in the end of file */
 undefined = 6;
 ok(undefined === 6, "undefined = " + undefined);
