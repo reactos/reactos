@@ -40,9 +40,14 @@
 ---------------------------------------------------------------------------*/
 
 /* EXtended CLip and Window Region Object */
+#ifdef __cplusplus
+typedef struct _XCLIPOBJ : _WNDOBJ
+{
+#else
 typedef struct _XCLIPOBJ
 {
   WNDOBJ;
+#endif
   PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
   RECTL   rclClipRgn;
   PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */

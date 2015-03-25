@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _MSC_VER
+#pragma warning(disable:4200) // zero-sized array in struct/union
+#endif // _MSC_VER
+
 // Palette mode flags
 enum _PALFLAGS
 {

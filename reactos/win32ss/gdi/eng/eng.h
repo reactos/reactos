@@ -32,8 +32,8 @@ IntEngMaskBlt(
 VOID
 FASTCALL
 IntEngWindowChanged(
-    _In_    PWND Window,
-    _In_    FLONG flChanged);
+    _In_ struct _WND *Window,
+    _In_ FLONG flChanged);
 
 ULONGLONG
 APIENTRY

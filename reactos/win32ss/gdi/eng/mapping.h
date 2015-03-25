@@ -16,9 +16,14 @@ typedef struct _FILEVIEW
     PVOID          pSection;
 } FILEVIEW, *PFILEVIEW;
 
+#ifdef __cplusplus
+typedef struct _FONTFILEVIEW : FILEVIEW
+{
+#else
 typedef struct _FONTFILEVIEW
 {
     FILEVIEW;
+#endif
     DWORD          reserved[2];
     PWSTR          pwszPath;
     SIZE_T         ulRegionSize;

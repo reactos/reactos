@@ -220,7 +220,7 @@ DC_LockDc(HDC hdc)
 {
     PDC pdc;
 
-    pdc = GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
+    pdc = (PDC)GDIOBJ_LockObject(hdc, GDIObjType_DC_TYPE);
     if (pdc)
     {
         ASSERT((GDI_HANDLE_GET_TYPE(pdc->BaseObject.hHmgr) == GDILoObjType_LO_DC_TYPE) ||
