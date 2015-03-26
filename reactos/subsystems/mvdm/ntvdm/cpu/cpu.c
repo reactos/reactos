@@ -122,31 +122,30 @@ LONG CpuExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
         /* We only handle access violations so far */
         case EXCEPTION_ACCESS_VIOLATION:
         {
+            BOOLEAN Writing = (ExceptionRecord->ExceptionInformation[0] == 1);
+
             /* Retrieve the address to which a read or write attempt was made */
-            ULONG_PTR Pointer = ExceptionRecord->ExceptionInformation[1];
+            ULONG_PTR Address = ExceptionRecord->ExceptionInformation[1];
 
             /*
              * Check whether the access exception was done inside the virtual memory space
              * (caused by an emulated app) or outside (casued by a bug in ourselves).
              */
-            if ((ULONG_PTR)Pointer < (ULONG_PTR)BaseAddress ||
-                (ULONG_PTR)Pointer > (ULONG_PTR)BaseAddress + MAX_ADDRESS)
+            if (Address <  (ULONG_PTR)BaseAddress ||
+                Address >= (ULONG_PTR)BaseAddress + MAX_ADDRESS)
             {
-                DPRINT1("NTVDM: Access violation at 0x%p outside the virtual memory space!\n", Pointer);
+                DPRINT1("NTVDM: %s access violation at 0x%p outside the virtual memory space!\n",
+                        (Writing ? "Write" : "Read"), Address);
                 return EXCEPTION_CONTINUE_SEARCH;
             }
 
-            /* We are good to go. Dispatch to our memory handlers. */
-            {
-            BOOLEAN Writing = (ExceptionRecord->ExceptionInformation[0] == 1);
-            ULONG FaultAddress = (ULONG)PHYS_TO_REAL(Pointer);
+            /* We are good to go, dispatch to our memory handlers */
 
             /* Fix the CPU state */
             Fast486Rewind(&EmulatorContext);
 
-            /* Call the handler */
-            MemExceptionHandler(FaultAddress, Writing);
-            }
+            /* Call the memory handler */
+            MemExceptionHandler((ULONG)PHYS_TO_REAL(Address), Writing);
 
             // /* Continue executing the exception handler */
             // return EXCEPTION_EXECUTE_HANDLER;
