@@ -93,6 +93,7 @@ class CDefView :
         UINT                      m_uState;
         UINT                      m_cidl;
         PCUITEMID_CHILD_ARRAY     m_apidl;
+        PIDLIST_ABSOLUTE          m_pidlParent;
         LISTVIEW_SORT_INFO        m_sortInfo;
         ULONG                     m_hNotify;            /* change notification handle */
         HACCEL                    m_hAccel;
@@ -354,6 +355,7 @@ CDefView::CDefView() :
     m_uState(0),
     m_cidl(0),
     m_apidl(NULL),
+    m_pidlParent(NULL),
     m_hNotify(0),
     m_hAccel(NULL),
     m_dwAspects(0),
@@ -943,6 +945,7 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         DestroyMenu(m_hMenu);
     RevokeDragDrop(m_hWnd);
     SHChangeNotifyDeregister(m_hNotify);
+    SHFree(m_pidlParent);
     bHandled = FALSE;
     return 0;
 }
@@ -1000,12 +1003,10 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     m_pSFParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     if (ppf2)
     {
-        PIDLIST_ABSOLUTE pidlParent;
-        ppf2->GetCurFolder(&pidlParent);
+        ppf2->GetCurFolder(&m_pidlParent);
         ntreg.fRecursive = TRUE;
-        ntreg.pidl = pidlParent;
-        m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNF_IDLIST, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
-        SHFree(pidlParent);
+        ntreg.pidl = m_pidlParent;
+        m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
     }
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
@@ -1848,12 +1849,48 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     return 0;
 }
 
+/*
+ * This is just a quick hack to make the desktop work correctly.
+ * ITranslateShellChangeNotify's IsChildID is undocumented, but most likely the way that
+ * a folder should know if it should update upon a change notification.
+ * It is exported by merged folders at a minimum.
+ */
+static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE pidl2)
+{
+    if (!pidl1 || !pidl2)
+        return FALSE;
+    if (ILIsParent(pidl1, pidl2, TRUE))
+        return TRUE;
+
+    if (_ILIsDesktop(pidl1))
+    {
+        PIDLIST_ABSOLUTE deskpidl;
+        SHGetFolderLocation(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
+        if (ILIsParent(deskpidl, pidl2, TRUE))
+        {
+            ILFree(deskpidl);
+            return TRUE;
+        }
+        ILFree(deskpidl);
+        SHGetFolderLocation(NULL, CSIDL_COMMON_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
+        if (ILIsParent(deskpidl, pidl2, TRUE))
+        {
+            ILFree(deskpidl);
+            return TRUE;
+        }
+        ILFree(deskpidl);
+    }
+    return FALSE;
+}
+
 /**********************************************************
 * ShellView_OnChange()
 */
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     PCIDLIST_ABSOLUTE *Pidls = reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam);
+    BOOL bParent0 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]);
+    BOOL bParent1 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]);
 
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
 
@@ -1861,21 +1898,29 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     {
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
-            LV_AddItem(ILFindLastID(Pidls[0]));
+            if (bParent0)
+                LV_AddItem(ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
-            LV_DeleteItem(ILFindLastID(Pidls[0]));
+            if (bParent0)
+                LV_DeleteItem(ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_RENAMEFOLDER:
         case SHCNE_RENAMEITEM:
-            LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[1]));
+            if (bParent0 && bParent1)
+                LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[1]));
+            else if (bParent0)
+                LV_DeleteItem(ILFindLastID(Pidls[0]));
+            else if (bParent1)
+                LV_AddItem(ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_UPDATEITEM:
-            LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[0]));
+            if (bParent0)
+                LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_UPDATEDIR:
