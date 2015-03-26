@@ -447,7 +447,7 @@
 726 stdcall -noname CopyStreamUI(ptr ptr ptr)
 727 stdcall SHGetImageList(long ptr ptr)
 730 stdcall RestartDialogEx(long wstr long long)
-731 stub -noname SHRegisterDarwinLink
+731 stdcall -noname -stub SHRegisterDarwinLink(long long long)
 732 stdcall -noname SHReValidateDarwinCache()
 733 stdcall -noname CheckDiskSpace()
 740 stub -noname SHCreateFileDataObject
@@ -459,7 +459,7 @@
 749 stub SHGetShellStyleHInstance
 750 stub SHGetAttributesFromDataObject
 751 stub -noname SHSimulateDropOnClsid
-752 stub -noname SHGetComputerDisplayNameW
+752 stdcall -noname SHGetComputerDisplayNameW(long long long long)
 753 stdcall -noname CheckStagingArea()
 754 stub -noname SHLimitInputEditWithFlags
 755 stdcall -noname PathIsEqualOrSubFolder(wstr wstr)

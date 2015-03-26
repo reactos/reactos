@@ -1402,3 +1402,10 @@ DWORD WINAPI CheckStagingArea(VOID)
     /* Called by native explorer */
     return 0;
 }
+
+EXTERN_C
+DWORD WINAPI SHGetComputerDisplayNameW(DWORD param1, DWORD param2, DWORD param3, DWORD param4)
+{
+    FIXME("SHGetComputerDisplayNameW() stub\n");
+    return E_FAIL;
+}
