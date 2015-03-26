@@ -147,9 +147,8 @@ LONG CpuExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             /* Call the memory handler */
             MemExceptionHandler((ULONG)PHYS_TO_REAL(Address), Writing);
 
-            // /* Continue executing the exception handler */
-            // return EXCEPTION_EXECUTE_HANDLER;
-            return EXCEPTION_CONTINUE_EXECUTION;
+            /* The execution of the CPU opcode handler MUST NOT continue */
+            return EXCEPTION_EXECUTE_HANDLER;
         }
 
         default:
@@ -186,7 +185,7 @@ VOID CpuSimulate(VOID)
         }
         _SEH2_EXCEPT(CpuExceptionFilter(_SEH2_GetExceptionInformation()))
         {
-            DPRINT1("VDM exception handler called\n");
+            DPRINT("VDM exception handler called\n");
         }
         _SEH2_END;
     }
