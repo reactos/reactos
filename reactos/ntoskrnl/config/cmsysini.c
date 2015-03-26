@@ -29,6 +29,7 @@ BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
 BOOLEAN CmpWasSetupBoot;
 BOOLEAN CmpProfileLoaded;
+BOOLEAN CmpNoVolatileCreates;
 ULONG CmpTraceLevel = 0;
 
 extern LONG CmpFlushStarveWriters;
@@ -1470,8 +1471,10 @@ CmpInitializeHiveList(IN USHORT Flag)
                      L"\\Registry\\Machine\\SAM\\SAM");
 
     /* Link S-1-5-18 to .Default */
+    CmpNoVolatileCreates = FALSE;
     CmpLinkKeyToHive(L"\\Registry\\User\\S-1-5-18",
                      L"\\Registry\\User\\.Default");
+    CmpNoVolatileCreates = TRUE;
 }
 
 BOOLEAN
@@ -1530,7 +1533,7 @@ CmInitSystem1(VOID)
     }
 
     /* Build the master hive */
-    Status = CmpInitializeHive((PCMHIVE*)&CmiVolatileHive,
+    Status = CmpInitializeHive(&CmiVolatileHive,
                                HINIT_CREATE,
                                HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
@@ -1601,6 +1604,9 @@ CmInitSystem1(VOID)
 
     /* Close the handle */
     NtClose(KeyHandle);
+
+    /* After this point, do not allow creating keys in the master hive */
+    CmpNoVolatileCreates = TRUE;
 
     /* Initialize the system hive */
     if (!CmpInitializeSystemHive(KeLoaderBlock))
