@@ -13,7 +13,7 @@
 13 stub -noname ShellStatusHostShuttingDown ; ()
 14 stub -noname ShellNotifyThemeUserChange  ; (long long)
 15 stub -noname ShellSwitchWhenInteractiveReady ; (long long)
-16 stub -noname ShellDimScreen ; (ptr ptr)
+16 stdcall -noname ShellDimScreen (ptr ptr)
 17 stub -noname ShellInstallAccountFilterData ; ()
 18 stub -noname ShellStatusHostBegin ; (long)
 19 stub -noname ShellIsUserInteractiveLogonAllowed ; (long)
