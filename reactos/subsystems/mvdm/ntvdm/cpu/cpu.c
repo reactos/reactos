@@ -112,10 +112,60 @@ VOID CpuStep(VOID)
     Fast486StepInto(&EmulatorContext);
 }
 
+LONG CpuExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
+{
+    /* Get the exception record */
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+
+    switch (ExceptionRecord->ExceptionCode)
+    {
+        /* We only handle access violations so far */
+        case EXCEPTION_ACCESS_VIOLATION:
+        {
+            /* Retrieve the address to which a read or write attempt was made */
+            ULONG_PTR Pointer = ExceptionRecord->ExceptionInformation[1];
+
+            /*
+             * Check whether the access exception was done inside the virtual memory space
+             * (caused by an emulated app) or outside (casued by a bug in ourselves).
+             */
+            if ((ULONG_PTR)Pointer < (ULONG_PTR)BaseAddress ||
+                (ULONG_PTR)Pointer > (ULONG_PTR)BaseAddress + MAX_ADDRESS)
+            {
+                DPRINT1("NTVDM: Access violation at 0x%p outside the virtual memory space!\n", Pointer);
+                return EXCEPTION_CONTINUE_SEARCH;
+            }
+
+            /* We are good to go. Dispatch to our memory handlers. */
+            {
+            BOOLEAN Writing = (ExceptionRecord->ExceptionInformation[0] == 1);
+            ULONG FaultAddress = (ULONG)PHYS_TO_REAL(Pointer);
+
+            /* Fix the CPU state */
+            Fast486Rewind(&EmulatorContext);
+
+            /* Call the handler */
+            MemExceptionHandler(FaultAddress, Writing);
+            }
+
+            // /* Continue executing the exception handler */
+            // return EXCEPTION_EXECUTE_HANDLER;
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+
+        default:
+        {
+            DPRINT1("NTVDM: Exception 0x%08lx not handled!\n", ExceptionRecord->ExceptionCode);
+            break;
+        }
+    }
+
+    /* Continue to search for a handler */
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 VOID CpuSimulate(VOID)
 {
-    EXCEPTION_RECORD LocalExceptionRecord;
-
     if (CpuCallLevel > MaxCpuCallLevel)
     {
         DisplayMessage(L"Too many CPU levels of recursion (%d, expected maximum %d)",
@@ -135,20 +185,9 @@ VOID CpuSimulate(VOID)
         {
             while (VdmRunning && CpuRunning) ClockUpdate();
         }
-        _SEH2_EXCEPT(LocalExceptionRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord,
-                     EXCEPTION_EXECUTE_HANDLER)
+        _SEH2_EXCEPT(CpuExceptionFilter(_SEH2_GetExceptionInformation()))
         {
-            BOOLEAN Writing = (LocalExceptionRecord.ExceptionInformation[0] == 1);
-            ULONG FaultAddress = (ULONG)PHYS_TO_REAL(LocalExceptionRecord.ExceptionInformation[1]);
-
-            /* Make sure this was an access violation */
-            ASSERT(LocalExceptionRecord.ExceptionCode == EXCEPTION_ACCESS_VIOLATION);
-
-            /* Fix the CPU state */
-            Fast486Rewind(&EmulatorContext);
-
-            /* Call the handler */
-            MemExceptionHandler(FaultAddress, Writing);
+            DPRINT1("VDM exception handler called\n");
         }
         _SEH2_END;
     }
