@@ -504,11 +504,11 @@
 504 stdcall AssocQueryStringA(long long str str ptr ptr)
 505 stub -noname SHPropertyBag_ReadGUID
 506 stub -noname SHPropertyBag_WriteGUID
-507 stub -noname SHPropertyBag_ReadDWORD
+507 stdcall -stub -noname SHPropertyBag_ReadDWORD(ptr ptr ptr)
 508 stub -noname SHPropertyBag_WriteDWORD
 509 stdcall -noname IUnknown_OnFocusChangeIS(ptr ptr long)
 510 stub -noname SHLockSharedEx
-511 stub -noname PathFileExistsDefExtAndAttributesW
+511 stdcall -stub -noname PathFileExistsDefExtAndAttributesW(wstr long ptr)
 512 stub -ordinal IStream_ReadPidl
 513 stub -ordinal IStream_WritePidl
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
@@ -533,7 +533,7 @@
 533 stub -noname SHGetPerScreenResName
 534 stub -noname SHPropertyBag_ReadBOOL
 535 stub -noname SHPropertyBag_Delete
-536 stub -noname IUnknown_QueryServicePropertyBag
+536 stdcall -stub -noname IUnknown_QueryServicePropertyBag(ptr long ptr ptr)
 537 stub -noname SHBoolSystemParametersInfo
 538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
@@ -557,7 +557,7 @@
 557 stub -noname SHCoCreateExtension
 558 stub -noname SHCoExtensionCollectStats
 559 stub -noname SHGetSignatureInfo
-560 stub -noname SHWindowsPolicyGetValue
+560 stdcall -stub -noname SHWindowsPolicyGetValue(ptr ptr ptr)
 561 stub -noname AssocGetUrlAction
 562 stub -noname SHGetPrivateProfileInt
 563 stub -noname SHGetPrivateProfileSection
