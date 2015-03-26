@@ -20,7 +20,7 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-PDOS_DEVICE_NODE ConIn = NULL, ConOut = NULL;
+PDOS_DEVICE_NODE Con = NULL;
 BYTE ExtendedCode = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -141,30 +141,22 @@ WORD NTAPI ConDrvClose(PDOS_DEVICE_NODE Device)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID ConDrvInitialize(PDOS_DEVICE_NODE *InputDevice, PDOS_DEVICE_NODE *OutputDevice)
+VOID ConDrvInitialize(VOID)
 {
-    ConIn = DosCreateDevice(DOS_DEVATTR_STDIN
-                            | DOS_DEVATTR_CON
-                            | DOS_DEVATTR_CHARACTER,
-                            "CONIN$");
-    ConOut = DosCreateDevice(DOS_DEVATTR_STDOUT
-                             | DOS_DEVATTR_CON
-                             | DOS_DEVATTR_CHARACTER,
-                             "CONOUT$");
-    ASSERT(ConIn != NULL && ConOut != NULL);
+    Con = DosCreateDevice(DOS_DEVATTR_STDIN
+                          | DOS_DEVATTR_STDOUT
+                          | DOS_DEVATTR_CON
+                          | DOS_DEVATTR_CHARACTER,
+                          "CON");
 
-    ConIn->ReadRoutine = ConDrvReadInput;
-    ConIn->InputStatusRoutine = ConDrvInputStatus;
-    ConOut->WriteRoutine = ConDrvWriteOutput;
-    ConIn->OpenRoutine = ConOut->OpenRoutine = ConDrvOpen;
-    ConIn->CloseRoutine = ConOut->CloseRoutine = ConDrvClose;
-
-    if (InputDevice) *InputDevice = ConIn;
-    if (OutputDevice) *OutputDevice = ConOut;
+    Con->ReadRoutine        = ConDrvReadInput;
+    Con->InputStatusRoutine = ConDrvInputStatus;
+    Con->WriteRoutine       = ConDrvWriteOutput;
+    Con->OpenRoutine        = ConDrvOpen;
+    Con->CloseRoutine       = ConDrvClose;
 }
 
 VOID ConDrvCleanup(VOID)
 {
-    if (ConIn) DosDeleteDevice(ConIn);
-    if (ConOut) DosDeleteDevice(ConOut);
+    if (Con) DosDeleteDevice(Con);
 }

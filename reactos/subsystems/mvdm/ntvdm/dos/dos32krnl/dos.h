@@ -201,7 +201,7 @@ VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 BOOLEAN DosBIOSInitialize(VOID);
 VOID EmsDrvInitialize(VOID);
 VOID EmsDrvCleanup(VOID);
-VOID ConDrvInitialize(PDOS_DEVICE_NODE *InputDevice, PDOS_DEVICE_NODE *OutputDevice);
+VOID ConDrvInitialize(VOID);
 VOID ConDrvCleanup(VOID);
 
 /*

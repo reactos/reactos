@@ -311,9 +311,8 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
     {
         PDOS_SFT_ENTRY SftEntry;
         HANDLE StandardHandles[3];
-        PDOS_DEVICE_NODE ConIn = DosGetDevice("CONIN$");
-        PDOS_DEVICE_NODE ConOut = DosGetDevice("CONOUT$");
-        ASSERT(ConIn != NULL && ConOut != NULL);
+        PDOS_DEVICE_NODE Con = DosGetDevice("CON");
+        ASSERT(Con != NULL);
 
         /* Get the native standard handles */
         StandardHandles[0] = GetStdHandle(STD_INPUT_HANDLE);
@@ -322,12 +321,10 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
 
         for (i = 0; i < 3; i++)
         {
-            PDOS_DEVICE_NODE Device = (i == 0) ? ConIn : ConOut;
-
             /* Find the corresponding SFT entry */
             if (IsConsoleHandle(StandardHandles[i]))
             {
-                SftEntry = DosFindDeviceSftEntry(Device);
+                SftEntry = DosFindDeviceSftEntry(Con);
             }
             else
             {
@@ -349,10 +346,10 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
                 if (IsConsoleHandle(StandardHandles[i]))
                 {
                     SftEntry->Type = DOS_SFT_ENTRY_DEVICE;
-                    SftEntry->DeviceNode = Device;
+                    SftEntry->DeviceNode = Con;
 
                     /* Call the open routine */
-                    if (Device->OpenRoutine) Device->OpenRoutine(Device);
+                    if (Con->OpenRoutine) Con->OpenRoutine(Con);
                 }
                 else
                 {
@@ -2854,7 +2851,6 @@ BOOLEAN DosKRNLInitialize(VOID)
     CHAR CurrentDirectory[MAX_PATH];
     CHAR DosDirectory[DOS_DIR_LENGTH];
     LPSTR Path;
-    PDOS_DEVICE_NODE ConInDevice, ConOutDevice;
 
     FILE *Stream;
     WCHAR Buffer[256];
@@ -2915,7 +2911,7 @@ BOOLEAN DosKRNLInitialize(VOID)
     EmsDrvInitialize();
 
     /* Load the CON driver */
-    ConDrvInitialize(&ConInDevice, &ConOutDevice);
+    ConDrvInitialize();
 
 #endif
 
