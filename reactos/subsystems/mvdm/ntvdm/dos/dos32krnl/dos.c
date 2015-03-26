@@ -139,7 +139,7 @@ static BOOL IsConsoleHandle(HANDLE hHandle)
 
 static inline PDOS_SFT_ENTRY DosFindFreeSftEntry(VOID)
 {
-    INT i;
+    UINT i;
 
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
@@ -154,7 +154,7 @@ static inline PDOS_SFT_ENTRY DosFindFreeSftEntry(VOID)
 
 static inline PDOS_SFT_ENTRY DosFindWin32SftEntry(HANDLE Handle)
 {
-    INT i;
+    UINT i;
 
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
@@ -170,7 +170,7 @@ static inline PDOS_SFT_ENTRY DosFindWin32SftEntry(HANDLE Handle)
 
 static inline PDOS_SFT_ENTRY DosFindDeviceSftEntry(PDOS_DEVICE_NODE Device)
 {
-    INT i;
+    UINT i;
 
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
@@ -209,7 +209,6 @@ WORD DosOpenHandle(HANDLE Handle)
 
     /* Check if the handle is already in the SFT */
     SftEntry = DosFindWin32SftEntry(Handle);
-
     if (SftEntry != NULL)
     {
         /* Already in the table, reference it */
@@ -266,7 +265,6 @@ WORD DosOpenDevice(PDOS_DEVICE_NODE Device)
 
     /* Check if the device is already in the SFT */
     SftEntry = DosFindDeviceSftEntry(Device);
-
     if (SftEntry != NULL)
     {
         /* Already in the table, reference it */
@@ -301,7 +299,7 @@ Finish:
 
 static VOID DosCopyHandleTable(LPBYTE DestinationTable)
 {
-    INT i;
+    UINT i;
     PDOS_PSP PspBlock;
     LPBYTE SourceTable;
 
@@ -340,7 +338,6 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
             {
                 /* Create a new SFT entry for it */
                 SftEntry = DosFindFreeSftEntry();
-
                 if (SftEntry == NULL)
                 {
                     DPRINT1("Cannot create standard handle %d, the SFT is full!\n", i);
@@ -1212,15 +1209,17 @@ Done:
 
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 {
-    PDOS_SFT_ENTRY Entry = DosGetSftEntry(FileHandle);
-    PDOS_DEVICE_NODE Node = Entry->DeviceNode;
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
+    PDOS_DEVICE_NODE Node;
 
     /* Make sure it exists and is a device */
-    if (!Entry || Entry->Type != DOS_SFT_ENTRY_DEVICE)
+    if (!SftEntry || SftEntry->Type != DOS_SFT_ENTRY_DEVICE)
     {
         DosLastError = ERROR_FILE_NOT_FOUND;
         return FALSE;
     }
+
+    Node = SftEntry->DeviceNode;
 
     switch (ControlCode)
     {
@@ -2620,7 +2619,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(getBX());
 
-            if (SftEntry->Type != DOS_SFT_ENTRY_WIN32)
+            if (SftEntry == NULL || SftEntry->Type != DOS_SFT_ENTRY_WIN32)
             {
                 /* The handle is invalid */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;

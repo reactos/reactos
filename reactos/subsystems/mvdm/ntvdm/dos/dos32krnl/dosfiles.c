@@ -41,7 +41,7 @@ WORD DosCreateFileEx(LPWORD Handle,
 
     //
     // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
-    // explains what are those AccessShareModes (see the uStyle flag).
+    // explains what those AccessShareModes are (see the uStyle flag).
     //
 
     /* Parse the access mode */
@@ -228,7 +228,6 @@ WORD DosCreateFileEx(LPWORD Handle,
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(FileHandle);
-
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -268,7 +267,6 @@ WORD DosCreateFile(LPWORD Handle,
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(FileHandle);
-
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -297,7 +295,7 @@ WORD DosOpenFile(LPWORD Handle,
 
     //
     // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
-    // explains what are those AccessShareModes (see the uStyle flag).
+    // explains what those AccessShareModes are (see the uStyle flag).
     //
 
     /* Parse the access mode */
@@ -380,7 +378,6 @@ WORD DosOpenFile(LPWORD Handle,
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(FileHandle);
-
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -402,6 +399,12 @@ WORD DosReadFile(WORD FileHandle,
     PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
     DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
+
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
 
     if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
     {
@@ -444,6 +447,12 @@ WORD DosWriteFile(WORD FileHandle,
     PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
     DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
+
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
 
     if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
     {
@@ -491,6 +500,12 @@ WORD DosSeekFile(WORD FileHandle,
            Offset,
            Origin);
 
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
+
     if (SftEntry->Type == DOS_SFT_ENTRY_NONE)
     {
         /* Invalid handle */
@@ -534,6 +549,12 @@ BOOL DosFlushFileBuffers(WORD FileHandle)
 {
     PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
+
     switch (SftEntry->Type)
     {
         case DOS_SFT_ENTRY_WIN32:
@@ -544,14 +565,10 @@ BOOL DosFlushFileBuffers(WORD FileHandle)
         case DOS_SFT_ENTRY_DEVICE:
         {
             if (SftEntry->DeviceNode->FlushInputRoutine)
-            {
                 SftEntry->DeviceNode->FlushInputRoutine(SftEntry->DeviceNode);
-            }
 
             if (SftEntry->DeviceNode->FlushOutputRoutine)
-            {
                 SftEntry->DeviceNode->FlushOutputRoutine(SftEntry->DeviceNode);
-            }
 
             return TRUE;
         }
@@ -563,3 +580,5 @@ BOOL DosFlushFileBuffers(WORD FileHandle)
         }
     }
 }
+
+/* EOF */

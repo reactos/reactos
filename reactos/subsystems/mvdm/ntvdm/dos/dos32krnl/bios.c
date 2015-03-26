@@ -57,6 +57,13 @@ BOOLEAN DosCheckInput(VOID)
 {
     PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(DOS_INPUT_HANDLE);
 
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        DosLastError = ERROR_INVALID_HANDLE; // ERROR_FILE_NOT_FOUND
+        return FALSE;
+    }
+
     switch (SftEntry->Type)
     {
         case DOS_SFT_ENTRY_WIN32:
