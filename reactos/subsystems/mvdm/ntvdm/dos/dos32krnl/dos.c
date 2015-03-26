@@ -2030,7 +2030,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             WORD BytesRead = 0;
             WORD ErrorCode;
 
-            DPRINT1("INT 21h, AH = 3Fh\n");
+            DPRINT("DosReadFile(0x%04X)\n", getBX());
 
             DoEcho = TRUE;
             ErrorCode = DosReadFile(getBX(),

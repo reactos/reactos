@@ -21,13 +21,14 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 PDOS_DEVICE_NODE ConIn = NULL, ConOut = NULL;
+BYTE ExtendedCode = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 WORD NTAPI ConDrvReadInput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
 {
     CHAR Character;
-    WORD BytesRead;
+    WORD BytesRead = 0;
     PCHAR Pointer = (PCHAR)FAR_POINTER(Buffer);
 
     /* Save AX */
@@ -36,17 +37,31 @@ WORD NTAPI ConDrvReadInput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length)
     /*
      * Use BIOS Get Keystroke function
      */
-    for (BytesRead = 0; BytesRead < *Length; BytesRead++)
+    while (BytesRead < *Length)
     {
-        /* Call the BIOS INT 16h, AH=00h "Get Keystroke" */
-        setAH(0x00);
-        Int32Call(&DosContext, BIOS_KBD_INTERRUPT);
+        if (!ExtendedCode)
+        {
+            /* Call the BIOS INT 16h, AH=00h "Get Keystroke" */
+            setAH(0x00);
+            Int32Call(&DosContext, BIOS_KBD_INTERRUPT);
 
-        /* Retrieve the character in AL (scan code is in AH) */
-        Character = getAL();
+            /* Retrieve the character in AL (scan code is in AH) */
+            Character = getAL();
+        }
+        else
+        {
+            /* Return the extended code */
+            Character = ExtendedCode;
+
+            /* And then clear it */
+            ExtendedCode = 0;
+        }
+
+        /* Check if this is a special character */
+        if (Character == 0) ExtendedCode = getAH();
 
         if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-        Pointer[BytesRead] = Character;
+        Pointer[BytesRead++] = Character;
 
         /* Stop on first carriage return */
         if (Character == '\r')
