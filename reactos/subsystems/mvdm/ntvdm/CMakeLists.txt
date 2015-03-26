@@ -29,8 +29,12 @@ list(APPEND SOURCE
     hardware/sound/speaker.c
     hardware/video/vga.c
     dos/dos32krnl/bios.c
+    dos/dos32krnl/condrv.c
+    dos/dos32krnl/device.c
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
+    dos/dos32krnl/emsdrv.c
+    dos/dos32krnl/memory.c
     dos/mouse32.c
     dos/dem.c
     clock.c

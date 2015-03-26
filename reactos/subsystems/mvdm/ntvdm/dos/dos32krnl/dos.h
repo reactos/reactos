@@ -12,6 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "ntvdm.h"
+#include "device.h"
 
 /**/ #include "int32.h" /**/
 
@@ -48,13 +49,7 @@
 #define NUM_DRIVES ('Z' - 'A' + 1)
 #define DOS_CHAR_ATTRIBUTE 0x07
 #define DOS_PROGRAM_NAME_TAG 0x0001
-
-enum DOS_ALLOC_STRATEGY
-{
-    DOS_ALLOC_FIRST_FIT,
-    DOS_ALLOC_BEST_FIT,
-    DOS_ALLOC_LAST_FIT
-};
+#define DEFAULT_JFT_SIZE 20
 
 typedef enum
 {
@@ -63,16 +58,26 @@ typedef enum
     DOS_LOAD_OVERLAY = 0x03
 } DOS_EXEC_TYPE;
 
-#pragma pack(push, 1)
-
-typedef struct _DOS_MCB
+typedef enum
 {
-    CHAR BlockType;
-    WORD OwnerPsp;
-    WORD Size;
-    BYTE Unused[3];
-    CHAR Name[8];
-} DOS_MCB, *PDOS_MCB;
+    DOS_SFT_ENTRY_NONE,
+    DOS_SFT_ENTRY_WIN32,
+    DOS_SFT_ENTRY_DEVICE
+} DOS_SFT_ENTRY_TYPE;
+
+typedef struct _DOS_SFT_ENTRY
+{
+    DOS_SFT_ENTRY_TYPE Type;
+    WORD RefCount;
+
+    union
+    {
+        HANDLE Handle;
+        PDOS_DEVICE_NODE DeviceNode;
+    };
+} DOS_SFT_ENTRY, *PDOS_SFT_ENTRY;
+
+#pragma pack(push, 1)
 
 typedef struct _DOS_FCB
 {
@@ -169,7 +174,11 @@ typedef struct _DOS_COUNTRY_CODE_BUFFER
 
 #pragma pack(pop)
 
+/* VARIABLES ******************************************************************/
+
 extern BOOLEAN DoEcho;
+extern WORD CurrentPsp;
+extern WORD DosLastError;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -190,15 +199,17 @@ BOOLEAN DosCheckInput(VOID);
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 
 BOOLEAN DosBIOSInitialize(VOID);
-
+VOID EmsDrvInitialize(VOID);
+VOID EmsDrvCleanup(VOID);
+VOID ConDrvInitialize(PDOS_DEVICE_NODE *InputDevice, PDOS_DEVICE_NODE *OutputDevice);
+VOID ConDrvCleanup(VOID);
 
 /*
  * DOS Kernel Functions
  * See dos.c
  */
-BOOL IsConsoleHandle(HANDLE hHandle);
 WORD DosOpenHandle(HANDLE Handle);
-HANDLE DosGetRealHandle(WORD DosHandle);
+PDOS_SFT_ENTRY DosGetSftEntry(WORD DosHandle);
 
 WORD DosCreateFileEx(LPWORD Handle,
                      LPWORD CreationStatus,
@@ -214,11 +225,11 @@ WORD DosOpenFile(LPWORD Handle,
                  LPCSTR FilePath,
                  BYTE AccessShareModes);
 WORD DosReadFile(WORD FileHandle,
-                 LPVOID Buffer,
+                 DWORD Buffer,
                  WORD Count,
                  LPWORD BytesRead);
 WORD DosWriteFile(WORD FileHandle,
-                  LPVOID Buffer,
+                  DWORD Buffer,
                   WORD Count,
                   LPWORD BytesWritten);
 WORD DosSeekFile(WORD FileHandle,

@@ -31,8 +31,6 @@
 #define EMS_STATUS_INV_PHYSICAL_PAGE    0x8B
 #define EMS_STATUS_UNKNOWN_FUNCTION     0x8F
 
-#define ARRAY_INDEX(ptr, array) ((ULONG)(((ULONG_PTR)(ptr) - (ULONG_PTR)(array)) / sizeof(*array)))
-
 typedef struct _EMS_HANDLE
 {
     BOOLEAN Allocated;

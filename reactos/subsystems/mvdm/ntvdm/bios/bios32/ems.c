@@ -313,9 +313,9 @@ static VOID NTAPI EmsReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 
     for (i = FirstPage; i <= LastPage; i++)
     {
-        Offset = (i == FirstPage) ? Address & (EMS_PAGE_SIZE - 1) : 0;
+        Offset = (i == FirstPage) ? RelativeAddress & (EMS_PAGE_SIZE - 1) : 0;
         Length = ((i == LastPage)
-                 ? (Address + Size - (LastPage << EMS_PAGE_BITS))
+                 ? (RelativeAddress + Size - (LastPage << EMS_PAGE_BITS))
                  : EMS_PAGE_SIZE) - Offset;
 
         if (Mapping[i]) RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)Mapping[i] + Offset), Length);
@@ -333,9 +333,9 @@ static BOOLEAN NTAPI EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 
     for (i = FirstPage; i <= LastPage; i++)
     {
-        Offset = (i == FirstPage) ? Address & (EMS_PAGE_SIZE - 1) : 0;
+        Offset = (i == FirstPage) ? RelativeAddress & (EMS_PAGE_SIZE - 1) : 0;
         Length = ((i == LastPage)
-                 ? (Address + Size - (LastPage << EMS_PAGE_BITS))
+                 ? (RelativeAddress + Size - (LastPage << EMS_PAGE_BITS))
                  : EMS_PAGE_SIZE) - Offset;
 
         if (Mapping[i]) RtlCopyMemory((PVOID)((ULONG_PTR)Mapping[i] + Offset), Buffer, Length);
