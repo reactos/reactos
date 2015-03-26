@@ -140,7 +140,7 @@ KiDispatchExceptionToUser(
     _SEH2_EXCEPT((LocalExceptRecord = *_SEH2_GetExceptionInformation()->ExceptionRecord),
                  EXCEPTION_EXECUTE_HANDLER)
     {
-        // FIXNE: handle stack overflow
+        // FIXME: handle stack overflow
 
         /* Nothing we can do here */
         _SEH2_YIELD(return);

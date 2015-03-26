@@ -439,7 +439,7 @@ SmpUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
     Parameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
     SmpTerminate(Parameters, 1, RTL_NUMBER_OF(Parameters));
 
-    /* We hould never get here */
+    /* We should never get here */
     ASSERT(FALSE);
     return EXCEPTION_EXECUTE_HANDLER;
 }
