@@ -1,0 +1,45 @@
+﻿; ACPI.INF
+
+; Installation file for WMIACPI driver
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = System
+ClassGUID  = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 03/26/2015,1.00.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+%*PNP0C14.DeviceDesc% = NO_DRV,,*PNP0C14
+
+;------------------- WE DO NOT HAVE WMIACPI.SYS YET---------------------
+
+[NO_DRV]
+
+[NO_DRV.Services]
+AddService = , 0x00000002
+
+[NO_DRV.HW]
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+GenericMfg = "(Generic system devices)"
+*PNP0C14.DeviceDesc = "WMI for ACPI"
+
+[Strings.0405]
+GenericMfg = "(Generická systémová zařízení)"
+
+[Strings.0407]
+GenericMfg = "(Generische Systemgeräte)"
+*PNP0C14.DeviceDesc = "WMI für ACPI"
