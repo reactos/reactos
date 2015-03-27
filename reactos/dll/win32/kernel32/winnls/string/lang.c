@@ -3004,6 +3004,7 @@ NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
 
     /* FIXME: move *.nls resources out of kernel32 into locale.nls */
     Location += NLSRC_OFFSET;
+    Location &= 0xFFFF;
 
     if(cchData == 0)
         return GetLocalisedText(Location, NULL, 0);
