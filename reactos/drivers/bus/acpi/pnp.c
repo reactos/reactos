@@ -188,8 +188,7 @@ Bus_FDO_PnP (
         length = sizeof(DEVICE_RELATIONS) +
                 (((numPdosPresent + prevcount) - 1) * sizeof (PDEVICE_OBJECT));
 
-        relations = (PDEVICE_RELATIONS) ExAllocatePoolWithTag (PagedPool,
-                                        length, 'IPCA');
+        relations = ExAllocatePoolWithTag(PagedPool, length, 'IpcA');
 
         if (NULL == relations) {
             //
@@ -237,7 +236,7 @@ Bus_FDO_PnP (
         // one.
         //
         if (oldRelations) {
-            ExFreePool (oldRelations);
+            ExFreePoolWithTag(oldRelations, 0);
         }
         Irp->IoStatus.Information = (ULONG_PTR) relations;
 
@@ -399,7 +398,7 @@ Bus_DestroyPdo (
     //
 
     if (PdoData->HardwareIDs) {
-        ExFreePoolWithTag (PdoData->HardwareIDs, 'IPCA');
+        ExFreePoolWithTag(PdoData->HardwareIDs, 'DpcA');
         PdoData->HardwareIDs = NULL;
     }
 

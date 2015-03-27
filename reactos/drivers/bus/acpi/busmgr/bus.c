@@ -465,7 +465,7 @@ acpi_bus_generate_event_dpc(PKDPC Dpc,
     ULONG_PTR TypeData = (ULONG_PTR)SystemArgument2;
 	KIRQL OldIrql;
 
-    event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'IPCA');
+    event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'epcA');
 	if (!event)
 		return;
 
@@ -549,7 +549,7 @@ acpi_bus_receive_event (
 
 	memcpy(event, entry, sizeof(struct acpi_bus_event));
 
-	ExFreePoolWithTag(entry, 'IPCA');
+	ExFreePoolWithTag(entry, 'epcA');
 	return_VALUE(0);
 }
 
@@ -1147,7 +1147,7 @@ acpi_bus_add (
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
 
-	device = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_device), 'IPCA');
+	device = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_device), 'DpcA');
 	if (!device) {
 		DPRINT1("Memory allocation error\n");
 		return_VALUE(-12);
@@ -1263,7 +1263,7 @@ acpi_bus_add (
 			uid = info->UniqueId.String;
 		if (info->Valid & ACPI_VALID_CID) {
 			cid_list = &info->CompatibleIdList;
-			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'IPCA');
+			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'DpcA');
 			if (device->pnp.cid_list)
 				memcpy(device->pnp.cid_list, cid_list, cid_list->ListSize);
 			else
@@ -1326,7 +1326,7 @@ acpi_bus_add (
 	}
 
 	if (hid) {
-        device->pnp.hardware_id = ExAllocatePoolWithTag(NonPagedPool, strlen(hid) + 1, 'IPCA');
+        device->pnp.hardware_id = ExAllocatePoolWithTag(NonPagedPool, strlen(hid) + 1, 'DpcA');
         if (device->pnp.hardware_id) {
             snprintf(device->pnp.hardware_id, strlen(hid) + 1, "%s", hid);
             device->flags.hardware_id = 1;
@@ -1435,12 +1435,12 @@ acpi_bus_add (
 end:
 	if (result) {
 		if (device->pnp.cid_list) {
-			ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
+			ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
 		}
         if (device->pnp.hardware_id) {
-            ExFreePoolWithTag(device->pnp.hardware_id, 'IPCA');
+            ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
         }
-		ExFreePoolWithTag(device, 'IPCA');
+		ExFreePoolWithTag(device, 'DpcA');
 		return_VALUE(result);
 	}
 	*child = device;
@@ -1461,13 +1461,13 @@ acpi_bus_remove (
 	acpi_device_unregister(device);
 
 	if (device->pnp.cid_list)
-		ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
+		ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
 
     if (device->pnp.hardware_id)
-        ExFreePoolWithTag(device->pnp.hardware_id, 'IPCA');
+        ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
 
 	if (device)
-		ExFreePoolWithTag(device, 'IPCA');
+		ExFreePoolWithTag(device, 'DpcA');
 
 	return_VALUE(0);
 }
