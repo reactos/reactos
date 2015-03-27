@@ -610,7 +610,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
         {
             First = TRUE;
             Ccb->DirectorySearchPattern.Buffer =
-                ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), TAG_CCB);
+                ExAllocatePoolWithTag(NonPagedPool, SearchPattern->Length + sizeof(WCHAR), CDFS_SEARCH_PATTERN_TAG);
             if (Ccb->DirectorySearchPattern.Buffer == NULL)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -623,7 +623,7 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     else if (Ccb->DirectorySearchPattern.Buffer == NULL)
     {
         First = TRUE;
-        Ccb->DirectorySearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_CCB);
+        Ccb->DirectorySearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), CDFS_SEARCH_PATTERN_TAG);
         if (Ccb->DirectorySearchPattern.Buffer == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;

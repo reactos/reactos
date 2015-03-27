@@ -77,7 +77,7 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
             RemoveHeadList(&Fcb->MessageListHead);
             KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 
-            ExFreePool(Message);
+            ExFreePoolWithTag(Message, 'rFsM');
             Fcb->MessageCount--;
             if (Fcb->MessageCount == 0)
             {
@@ -142,8 +142,9 @@ MsfsWrite(PDEVICE_OBJECT DeviceObject,
     DPRINT("Length: %lu Message: %s\n", Length, (PUCHAR)Buffer);
 
     /* Allocate new message */
-    Message = ExAllocatePool(NonPagedPool,
-                             sizeof(MSFS_MESSAGE) + Length);
+    Message = ExAllocatePoolWithTag(NonPagedPool,
+                                    sizeof(MSFS_MESSAGE) + Length,
+                                    'rFsM');
     if (Message == NULL)
     {
         Irp->IoStatus.Status = STATUS_NO_MEMORY;

@@ -62,8 +62,7 @@ CdfsMakeAbsoluteFilename(PFILE_OBJECT FileObject,
         sizeof(WCHAR);
     AbsoluteFileName->Length = 0;
     AbsoluteFileName->MaximumLength = Length;
-    AbsoluteFileName->Buffer = ExAllocatePool(NonPagedPool,
-        Length);
+    AbsoluteFileName->Buffer = ExAllocatePoolWithTag(NonPagedPool, Length, CDFS_FILENAME_TAG);
     if (AbsoluteFileName->Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -180,7 +179,7 @@ CdfsOpenFile(PDEVICE_EXTENSION DeviceExt,
         FileObject);
 
     if ((FileName == &AbsFileName) && AbsFileName.Buffer)
-        ExFreePool(AbsFileName.Buffer);
+        ExFreePoolWithTag(AbsFileName.Buffer, CDFS_FILENAME_TAG);
 
     return Status;
 }

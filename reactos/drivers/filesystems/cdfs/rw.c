@@ -134,7 +134,9 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         BOOLEAN bFreeBuffer = FALSE;
         if ((ReadOffset % BLOCKSIZE) != 0 || (ToRead % BLOCKSIZE) != 0)
         {
-            PageBuf = ExAllocatePool(NonPagedPool, nBlocks * BLOCKSIZE);
+            PageBuf = ExAllocatePoolWithTag(NonPagedPool,
+                                            nBlocks * BLOCKSIZE,
+                                            CDFS_TAG);
             if (!PageBuf)
             {
                 return STATUS_NO_MEMORY;
@@ -165,7 +167,7 @@ CdfsReadFile(PDEVICE_EXTENSION DeviceExt,
         }
         
         if(bFreeBuffer)
-            ExFreePool(PageBuf);
+            ExFreePoolWithTag(PageBuf, CDFS_TAG);
     }
     
     return Status;

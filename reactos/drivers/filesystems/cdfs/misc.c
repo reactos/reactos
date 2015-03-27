@@ -205,7 +205,9 @@ CdfsShortNameCacheGet
     }
 
     /* We've scanned over all entries and now have a unique one.  Cache it. */
-    ShortNameEntry = ExAllocatePoolWithTag(PagedPool, sizeof(CDFS_SHORT_NAME), TAG_FCB);
+    ShortNameEntry = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(CDFS_SHORT_NAME),
+                                           CDFS_SHORT_NAME_TAG);
     if (!ShortNameEntry) 
     {
         /* We couldn't cache it, but we can return it.  We run the risk of

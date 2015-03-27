@@ -69,7 +69,9 @@ CdfsCreateFCB(PCWSTR FileName)
 {
     PFCB Fcb;
 
-    Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(FCB), TAG_FCB);
+    Fcb = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(FCB),
+                                CDFS_NONPAGED_FCB_TAG);
     if(!Fcb) return NULL;
 
     RtlZeroMemory(Fcb, sizeof(FCB));
@@ -112,11 +114,11 @@ CdfsDestroyFCB(PFCB Fcb)
     {
         Entry = Fcb->ShortNameList.Flink;
         RemoveEntryList(Entry);
-        ExFreePoolWithTag(Entry, TAG_FCB);
+        ExFreePoolWithTag(Entry, CDFS_SHORT_NAME_TAG);
     }
 
     ExDeleteResourceLite(&Fcb->NameListResource);
-    ExFreePoolWithTag(Fcb, TAG_FCB);
+    ExFreePoolWithTag(Fcb, CDFS_NONPAGED_FCB_TAG);
 }
 
 
@@ -237,7 +239,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
     FileObject = IoCreateStreamFileObject(NULL, Vcb->StorageDevice);
 
-    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
+    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), CDFS_CCB_TAG);
     if (newCCB == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -266,7 +268,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         FileObject->FsContext2 = NULL;
-        ExFreePoolWithTag(newCCB, TAG_CCB);
+        ExFreePoolWithTag(newCCB, CDFS_CCB_TAG);
         ObDereferenceObject(FileObject);
         Fcb->FileObject = NULL;
         return _SEH2_GetExceptionCode();
@@ -438,7 +440,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 {
     PCCB  newCCB;
 
-    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
+    newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), CDFS_CCB_TAG);
     if (newCCB == NULL)
     {
         return(STATUS_INSUFFICIENT_RESOURCES);
@@ -467,7 +469,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             FileObject->FsContext2 = NULL;
-            ExFreePoolWithTag(newCCB, TAG_CCB);
+            ExFreePoolWithTag(newCCB, CDFS_CCB_TAG);
             return _SEH2_GetExceptionCode();
         }
         _SEH2_END;

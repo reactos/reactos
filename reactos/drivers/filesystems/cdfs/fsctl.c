@@ -204,8 +204,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("CdfsGetVolumeData\n");
 
-    Buffer = ExAllocatePool(NonPagedPool,
-        CDFS_BASIC_SECTOR);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, CDFS_BASIC_SECTOR, CDFS_TAG);
     if (Buffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -219,7 +218,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         TRUE);
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(Buffer);
+        ExFreePoolWithTag(Buffer, CDFS_TAG);
         return Status;
     }
 
@@ -253,7 +252,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
             TRUE);
         if (!NT_SUCCESS(Status))
         {
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, CDFS_TAG);
             return Status;
         }
 
@@ -264,7 +263,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
             if (Buffer[0] != 1 || Buffer[1] != 'C' || Buffer[2] != 'D' ||
                 Buffer[3] != '0' || Buffer[4] != '0' || Buffer[5] != '1')
             {
-                ExFreePool(Buffer);
+                ExFreePoolWithTag(Buffer, CDFS_TAG);
                 return STATUS_UNRECOGNIZED_VOLUME;
             }
         }
@@ -299,7 +298,7 @@ CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         }
     }
 
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, CDFS_TAG);
 
     return(STATUS_SUCCESS);
 }
@@ -383,9 +382,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
         goto ByeBye;
     }
 
-    Ccb = ExAllocatePoolWithTag(NonPagedPool,
-        sizeof(CCB),
-        TAG_CCB);
+    Ccb = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), CDFS_CCB_TAG);
     if (Ccb == NULL)
     {
         Status =  STATUS_INSUFFICIENT_RESOURCES;
@@ -446,7 +443,7 @@ ByeBye:
         if (DeviceExt && DeviceExt->StreamFileObject)
             ObDereferenceObject(DeviceExt->StreamFileObject);
         if (Fcb)
-            ExFreePool(Fcb);
+            ExFreePoolWithTag(Fcb, CDFS_NONPAGED_FCB_TAG);
         if (NewDeviceObject)
             IoDeleteDevice(NewDeviceObject);
     }
