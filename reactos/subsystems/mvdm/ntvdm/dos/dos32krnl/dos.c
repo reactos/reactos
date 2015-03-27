@@ -1207,37 +1207,46 @@ Done:
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 {
     PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
-    PDOS_DEVICE_NODE Node;
+    PDOS_DEVICE_NODE Node = NULL;
 
-    /* Make sure it exists and is a device */
-    if (!SftEntry || SftEntry->Type != DOS_SFT_ENTRY_DEVICE)
+    /* Make sure it exists */
+    if (!SftEntry)
     {
         DosLastError = ERROR_FILE_NOT_FOUND;
         return FALSE;
     }
 
-    Node = SftEntry->DeviceNode;
+    if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE) Node = SftEntry->DeviceNode;
 
     switch (ControlCode)
     {
         /* Get Device Information */
         case 0x00:
         {
+            WORD InfoWord = 0;
+
             /*
              * See Ralf Brown: http://www.ctyme.com/intr/rb-2820.htm
              * for a list of possible flags.
              */
 
-            /* Return the device information word */
-            setDX(Node->DeviceAttributes);
+            if (Node)
+            {
+                /* Return the device attributes with bit 7 set */
+                InfoWord = Node->DeviceAttributes | (1 << 7);
+            }
+
+            setDX(InfoWord);
             return TRUE;
         }
 
         /* Set Device Information */
         case 0x01:
         {
-            Node->DeviceAttributes = getDX();
-            return TRUE;
+            // TODO: NOT IMPLEMENTED
+            UNIMPLEMENTED;
+
+            return FALSE;
         }
 
         /* Read From Device I/O Control Channel */
@@ -1245,7 +1254,7 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
         {
             WORD Length = getCX();
 
-            if (!(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
+            if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
             {
                 DosLastError = ERROR_INVALID_FUNCTION;
                 return FALSE;
@@ -1269,7 +1278,7 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
         {
             WORD Length = getCX();
 
-            if (!(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
+            if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
             {
                 DosLastError = ERROR_INVALID_FUNCTION;
                 return FALSE;
