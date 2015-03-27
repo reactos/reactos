@@ -763,7 +763,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
 
     if (!CommonInstall())
         goto error;
-    
+
     /* Register components */
     _SEH2_TRY
     {
@@ -782,7 +782,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
         DPRINT1("Catching exception\n");
     }
     _SEH2_END;
-    
+
     SetupCloseInfFile(hSysSetupInf);
 
     /* Run the shell */
@@ -911,6 +911,53 @@ cleanup:
     return ret;
 }
 
+static DWORD CALLBACK
+HotkeyThread(LPVOID Parameter)
+{
+    ATOM hotkey;
+    MSG msg;
+
+    DPRINT("HotkeyThread start\n");
+
+    hotkey = GlobalAddAtomW(L"Setup Shift+F10 Hotkey");
+
+    if (!RegisterHotKey(NULL, hotkey, MOD_SHIFT, VK_F10))
+        DPRINT1("RegisterHotKey failed with %lu\n", GetLastError());
+
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        if (msg.hwnd == NULL && msg.message == WM_HOTKEY && msg.wParam == hotkey)
+        {
+            STARTUPINFOW si = { sizeof(si) };
+            PROCESS_INFORMATION pi;
+
+            if (CreateProcessW(L"cmd.exe",
+                               NULL,
+                               NULL,
+                               NULL,
+                               FALSE,
+                               CREATE_NEW_CONSOLE,
+                               NULL,
+                               NULL,
+                               &si,
+                               &pi))
+            {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            }
+            else
+            {
+                DPRINT1("Failed to launch command prompt: %lu\n", GetLastError());
+            }
+        }
+    }
+
+    UnregisterHotKey(NULL, hotkey);
+    GlobalDeleteAtom(hotkey);
+
+    DPRINT("HotkeyThread terminate\n");
+    return 0;
+}
 
 DWORD WINAPI
 InstallReactOS(HINSTANCE hInstance)
@@ -920,6 +967,7 @@ InstallReactOS(HINSTANCE hInstance)
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
     HINF hShortcutsInf;
+    HANDLE hHotkeyThread;
     BOOL ret;
 
     InitializeSetupActionLog(FALSE);
@@ -964,6 +1012,8 @@ InstallReactOS(HINSTANCE hInstance)
         CreateDirectory(szBuffer, NULL);
     }
 
+    hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);
+
     /* Hack: Install TCP/IP protocol driver */
     ret = InstallInfSection(NULL,
                             L"nettcpip.inf",
@@ -973,7 +1023,7 @@ InstallReactOS(HINSTANCE hInstance)
     {
         DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
     }
-    else 
+    else
     {
         /* Start the TCP/IP protocol driver */
         SetupStartService(L"Tcpip", FALSE);
@@ -993,7 +1043,7 @@ InstallReactOS(HINSTANCE hInstance)
                                       NULL,
                                       INF_STYLE_WIN4,
                                       NULL);
-    if (hShortcutsInf == INVALID_HANDLE_VALUE) 
+    if (hShortcutsInf == INVALID_HANDLE_VALUE)
     {
         FatalError("Failed to open shortcuts.inf");
         return 0;
@@ -1044,6 +1094,12 @@ InstallReactOS(HINSTANCE hInstance)
 
     SetupCloseInfFile(hSysSetupInf);
     SetSetupType(0);
+
+    if (hHotkeyThread)
+    {
+        PostThreadMessage(GetThreadId(hHotkeyThread), WM_QUIT, 0, 0);
+        CloseHandle(hHotkeyThread);
+    }
 
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS done");
     TerminateSetupActionLog();
