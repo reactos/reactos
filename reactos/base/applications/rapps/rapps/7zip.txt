@@ -19,7 +19,7 @@ Description = Ein Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip,
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
 
 [Section.040c]
-Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et autres archives.
+Description = Utilitaire pour créer et ouvrir les fichiers 7zip, zip, tar, rar et d'autres archives.
 Size = 1,14 Mo
 
 [Section.0410]
