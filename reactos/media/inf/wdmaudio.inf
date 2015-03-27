@@ -52,7 +52,7 @@ portcls.sys,,,0x0100
 [DeviceRegistration]
 ; Kmixer swenum install
 HKLM,%RunOnce%,"WDM_KMIXER0",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_MIXER%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
-HKLM,%RunOnce%,"WDM_KMIXER1",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_AUDIO%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
+;HKLM,%RunOnce%,"WDM_KMIXER1",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_KMIXER.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_AUDIO%,%17%\WDMAUDIO.inf,WDM_KMIXER.Interface.Install"
 
 ; Sysaudio swenum install
 HKLM,%RunOnce%,"WDM_SYSAUDIO",,"rundll32.exe streamci.dll,StreamingDeviceSetup %WDM_SYSAUDIO.DeviceId%,%KSNAME_Filter%,%KSCATEGORY_SYSAUDIO%,%17%\WDMAUDIO.inf,WDM_SYSAUDIO.Interface.Install"
@@ -189,7 +189,8 @@ KSCATEGORY_AUDIO          =  "{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
 PKEY_AudioEngine_OEMFormat = "{E4870E26-3CC5-4CD2-BA46-CA0A9A70ED04},3"
 WDM_WDMAUD.DeviceId       = "{CD171DE3-69E5-11D2-B56D-0000F8754380}"
 KSCATEGORY_WDMAUD         = "{3E227E76-690D-11D2-8161-0000F8775BF1}"
-
+WDM_KMIXER.DeviceId       = "{B7EAFDC0-A680-11D0-96D8-00AA0051E51D}"
+KSCATEGORY_MIXER          = "{AD809C00-7B88-11D0-A5D6-28DB04C10000}"
 
 ;Localizable
 WDM_KMIXER.DeviceDesc     = "ReactOS Wave Audio Mixer"
