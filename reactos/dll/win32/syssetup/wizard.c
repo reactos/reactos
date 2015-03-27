@@ -2317,6 +2317,7 @@ InstallWizard(VOID)
     UINT nPages = 0;
     HWND hWnd;
     MSG msg;
+    ATOM hotkey;
 
     /* Clear setup data */
     ZeroMemory(&SetupData, sizeof(SETUPDATA));
@@ -2408,14 +2409,43 @@ InstallWizard(VOID)
     hWnd = (HWND)PropertySheet(&psh);
     ShowWindow(hWnd, SW_SHOW);
 
+    hotkey = GlobalAddAtomW(L"Setup Shift+F10 Hotkey");
+    if (!RegisterHotKey(NULL, hotkey, MOD_SHIFT, VK_F10))
+        DPRINT1("RegisterHotKey failed with %lu\n", GetLastError());
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if(!IsDialogMessage(hWnd, &msg))
+        if (msg.hwnd == NULL && msg.message == WM_HOTKEY && msg.wParam == hotkey)
+        {
+            STARTUPINFOW si = { sizeof(si) };
+            PROCESS_INFORMATION pi;
+
+            if (CreateProcessW(L"cmd.exe",
+                               NULL,
+                               NULL,
+                               NULL,
+                               FALSE,
+                               CREATE_NEW_CONSOLE,
+                               NULL,
+                               NULL,
+                               &si,
+                               &pi))
+            {
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+            }
+            else
+            {
+                DPRINT1("Failed to launch command prompt: %lu\n", GetLastError());
+            }
+        }
+        else if (!IsDialogMessage(hWnd, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
+    UnregisterHotKey(NULL, hotkey);
+    GlobalDeleteAtom(hotkey);
 
     DeleteObject(SetupData.hTitleFont);
 }
