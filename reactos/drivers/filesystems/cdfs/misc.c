@@ -108,6 +108,7 @@ CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
         return FALSE;
     }
 
+    ASSERT(FileName.Length >= sizeof(WCHAR));
     for (i = 0; i < FileName.Length / sizeof(WCHAR) ; i++)
     {
         /* Don't allow spaces in FileName */
@@ -122,11 +123,10 @@ CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
     }
 
     /* Finally, convert the string to call the FsRtl function */
-    DbcsName.MaximumLength = 12;
-    DbcsName.Buffer = DbcsNameBuffer;
+    RtlInitEmptyAnsiString(&DbcsName, DbcsNameBuffer, sizeof(DbcsNameBuffer));
     if (!NT_SUCCESS(RtlUnicodeStringToCountedOemString(&DbcsName,
                                                        &FileName,
-                                                       FALSE )))
+                                                       FALSE)))
     {
 
         return FALSE;
@@ -159,10 +159,7 @@ CdfsShortNameCacheGet
         if (ShortNameEntry->StreamOffset.QuadPart == StreamOffset->QuadPart)
         {
             /* Cache hit */
-            RtlCopyMemory
-                (ShortName->Buffer, ShortNameEntry->Name.Buffer, 
-                ShortNameEntry->Name.Length);
-            ShortName->Length = ShortNameEntry->Name.Length;
+            RtlCopyUnicodeString(ShortName, &ShortNameEntry->Name);
             ExReleaseResourceLite(&DirectoryFcb->NameListResource);
             DPRINT("Yield short name %wZ from cache\n", ShortName);
             return;
@@ -218,13 +215,10 @@ CdfsShortNameCacheGet
     }
 
     ShortNameEntry->StreamOffset = *StreamOffset;
-    ShortNameEntry->Name.Buffer = ShortNameEntry->NameBuffer;
-    ShortNameEntry->Name.Length = ShortName->Length;
-    ShortNameEntry->Name.MaximumLength = sizeof(ShortNameEntry->NameBuffer);
-    RtlCopyMemory
-        (ShortNameEntry->NameBuffer, 
-        ShortName->Buffer, 
-        ShortName->Length);
+    RtlInitEmptyUnicodeString(&ShortNameEntry->Name,
+                              ShortNameEntry->NameBuffer,
+                              sizeof(ShortNameEntry->NameBuffer));
+    RtlCopyUnicodeString(&ShortNameEntry->Name, ShortName);
     InsertTailList(&DirectoryFcb->ShortNameList, &ShortNameEntry->Entry);
     ExReleaseResourceLite(&DirectoryFcb->NameListResource);
 

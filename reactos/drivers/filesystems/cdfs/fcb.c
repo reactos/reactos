@@ -564,16 +564,16 @@ CdfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
         DPRINT ("Offset %lu\n", Offset);
 
         RtlInitUnicodeString(&LongName, Name);
-        ShortName.Length = 0;
-        ShortName.MaximumLength = 26;
-        ShortName.Buffer = ShortNameBuffer;
-        memset(ShortNameBuffer, 0, 26);
+        RtlInitEmptyUnicodeString(&ShortName, ShortNameBuffer, sizeof(ShortNameBuffer));
+        RtlZeroMemory(ShortNameBuffer, sizeof(ShortNameBuffer));
 
         OffsetOfEntry.QuadPart = StreamOffset.QuadPart + Offset;
         CdfsShortNameCacheGet(DirectoryFcb, &OffsetOfEntry, &LongName, &ShortName);
 
         DPRINT("ShortName '%wZ'\n", &ShortName);
 
+        ASSERT(LongName.Length >= sizeof(WCHAR));
+        ASSERT(ShortName.Length >= sizeof(WCHAR));
         if (FsRtlIsNameInExpression(&FileToFindUpcase, &LongName, TRUE, NULL) ||
             FsRtlIsNameInExpression(&FileToFindUpcase, &ShortName, TRUE, NULL))
         {
