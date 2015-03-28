@@ -40,6 +40,9 @@ blank.html HTML "blank.html"
 /* @makedep: blank.html */
 blank2.html HTML "blank.html"
 
+/* @makedep: blank.html */
+123 HTML "blank.html"
+
 /* @makedep: test_tlb.tlb */
 1 TYPELIB test_tlb.tlb
 

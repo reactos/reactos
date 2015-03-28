@@ -7,6 +7,10 @@ function ok(b,m) {
     return external.ok(b, m);
 }
 
+function broken(expr) {
+    return external.broken(expr);
+}
+
 function ondataavailable_test() {
     var evobj, div, b = false;
 
@@ -114,8 +118,35 @@ function test_handler_this() {
     ok(calls == "div2,div2*,div1,div1*,body,body*", "calls = " + calls);
 }
 
+function test_insert_script() {
+    var e = document.createElement("script");
+
+    extern_cnt = 0;
+    e.src = "externscr.js";
+
+    var readystatechange_log = "";
+    e.onreadystatechange = function() {
+        readystatechange_log += "," + e.readyState;
+        ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
+        if(e.readyState === "complete") {
+            ok(readystatechange_log === "append,complete", "readystatechange_log = " + readystatechange_log);
+            external.reportSuccess();
+        }
+    }
+
+    document.body.appendChild(e);
+    ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
+    readystatechange_log = "append";
+}
+
 window.onload = function() {
     try {
+        ok(inlscr_complete_called, "onreadystatechange not fired");
+        ok(extern_res_script_rs === "eval,complete1,",
+            "extern_res_script_rs = " + extern_res_script_rs + " expected eval,complete1,");
+        ok(extern_http_script_rs === "loading,loaded,complete,",
+            "extern_http_script_rs = " + extern_http_script_rs + " expected loading,loaded,complete,");
+
         ok(cnt == 1, "cnt=" + cnt + " exception during loading?");
         ok(this === window, "this !== window");
 
@@ -127,11 +158,10 @@ window.onload = function() {
         test_scriptfor();
         ondataavailable_test();
         test_handler_this();
+        test_insert_script();
     }catch(e) {
         ok(false, "Got an exception: " + e.message);
     }
-
-    external.reportSuccess();
 }
 </script>
 <script>
@@ -164,6 +194,48 @@ img.onload = function() {
     cnt++;
 })();
 </script>
+<script>
+var inlscr_complete_called = false, extern_res_script_rs = "", extern_http_script_rs = "";
+var extern_cnt = 0;
+
+function expect_inlscr_complete() {
+    var elem = document.getElementById("inlscr");
+    ok(elem.readyState === "complete" || broken(elem.readyState === "loading"), "expect_inlscr_complete: elem.readyState = " + elem.readyState);
+    if(elem.readyState === "complete")
+        inlscr_complete_called = true;
+}
+
+function extern_res_script_readystatechange() {
+    var elem = document.getElementById("extscr");
+    if(elem.readyState != "loading")
+        extern_res_script_rs += elem.readyState + extern_cnt + ",";
+    else
+        external.trace("Got loading readyState from external res script.");
+}
+
+function http_script_readystatechange() {
+    var elem = document.getElementById("httpscr");
+    extern_http_script_rs += elem.readyState + ",";
+}
+
+function on_externscr() {
+    var elem = document.getElementById("extscr");
+    ok(elem.readyState === "interactive" || broken(elem.readyState === "loading"),
+        "on_externscr: elem.readyState = " + elem.readyState);
+    extern_res_script_rs += "eval,";
+}
+
+</script>
+<script id="inlscr" onreadystatechange="expect_inlscr_complete();">
+(function() {
+    ok(inlscr_complete_called === false || broken(inlscr_complete_called), "onreadystatechange fired too early");
+
+    var elem = document.getElementById("inlscr");
+    ok(elem.readyState === "interactive", "inlscr: elem.readyState = " + elem.readyState);
+})();
+</script>
+<script id="extscr" onreadystatechange="extern_res_script_readystatechange()" src="externscr.js"></script>
+<script id="httpscr" onreadystatechange="http_script_readystatechange()" src="https://test.winehq.org/tests/empty.js?123456"></script>
 <script>
 document.body.appendChild(img);
 </script>

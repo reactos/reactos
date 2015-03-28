@@ -217,6 +217,7 @@ static BSTR a2bstr(const char *str)
 static IOleClientSite *client_site;
 static IDispatch *sink_disp;
 static READYSTATE plugin_readystate = READYSTATE_UNINITIALIZED;
+static BOOL have_container;
 
 static void set_plugin_readystate(READYSTATE state)
 {
@@ -468,15 +469,19 @@ static HRESULT WINAPI QuickActivate_QuickActivate(IQuickActivate *iface, QACONTA
     ok(!container->pUnkEventSink, "container->pUnkEventSink != NULL\n");
     ok(container->dwAmbientFlags == (QACONTAINER_SUPPORTSMNEMONICS|QACONTAINER_MESSAGEREFLECT|QACONTAINER_USERMODE),
        "container->dwAmbientFlags = %x\n", container->dwAmbientFlags);
-    ok(!container->colorFore, "container->colorFore == 0\n"); /* FIXME */
+    if(have_container)
+        ok(!container->colorFore, "container->colorFore = %d\n", container->colorFore); /* FIXME */
     todo_wine
     ok(container->colorBack, "container->colorBack == 0\n"); /* FIXME */
-    todo_wine
-    ok(container->pFont != NULL, "container->pFont == NULL\n");
+    if(have_container)
+        todo_wine ok(container->pFont != NULL, "container->pFont == NULL\n");
+    else
+        ok(!container->pFont, "container->pFont = %p\n", container->pFont);
     todo_wine
     ok(container->pUndoMgr != NULL, "container->pUndoMgr == NULL\n");
     ok(!container->dwAppearance, "container->dwAppearance = %x\n", container->dwAppearance);
-    ok(!container->lcid, "container->lcid = %x\n", container->lcid);
+    if(have_container)
+        ok(!container->lcid, "container->lcid = %x\n", container->lcid);
     ok(!container->hpal, "container->hpal = %p\n", container->hpal);
     ok(!container->pBindHost, "container->pBindHost != NULL\n");
     ok(!container->pOleControlSite, "container->pOleControlSite != NULL\n");
@@ -2366,6 +2371,7 @@ static void init_test(int behavior)
 
     activex_refcnt = 0;
     no_quickact = behavior == TEST_NOQUICKACT || behavior == TEST_DISPONLY;
+    have_container = TRUE;
 }
 
 static void test_event_call(void)
@@ -2605,6 +2611,73 @@ static void test_nooleobj_ax(void)
     release_doc(doc);
 }
 
+static void test_exec_script(IHTMLDocument2 *doc, const char *codea, const char *langa)
+{
+    IHTMLWindow2 *window;
+    BSTR code, lang;
+    VARIANT v;
+    HRESULT hres;
+
+    hres = IHTMLDocument2_get_parentWindow(doc, &window);
+    ok(hres == S_OK, "get_parentWindow failed: %08x\n", hres);
+
+    code = a2bstr(codea);
+    lang = a2bstr(langa);
+
+    hres = IHTMLWindow2_execScript(window, code, lang, &v);
+    ok(hres == S_OK, "execScript failed: %08x\n", hres);
+    SysFreeString(lang);
+    VariantClear(&v);
+
+    IHTMLWindow2_Release(window);
+}
+
+static void test_create_element(void)
+{
+    IHTMLDocument2 *doc;
+
+    init_test(TEST_FLASH);
+
+    doc = create_doc("<html></html>");
+
+    have_container = FALSE;
+
+    SET_EXPECT(CreateInstance);
+    SET_EXPECT(FreezeEvents_TRUE);
+    SET_EXPECT(QuickActivate);
+    SET_EXPECT(IPersistPropertyBag_InitNew);
+    SET_EXPECT(Invoke_READYSTATE);
+    SET_EXPECT(FreezeEvents_FALSE);
+
+    test_exec_script(doc,
+                     "var test_elem = document.createElement('object');"
+                     "test_elem.classid = 'CLSID:178fc163-f585-4e24-9c13-4bb7f6680746';",
+                     "javascript");
+
+    CHECK_CALLED(CreateInstance);
+    todo_wine CHECK_CALLED(FreezeEvents_TRUE);
+    CHECK_CALLED(QuickActivate);
+    CHECK_CALLED(IPersistPropertyBag_InitNew);
+    CHECK_CALLED(Invoke_READYSTATE);
+    todo_wine CHECK_CALLED(FreezeEvents_FALSE);
+
+    have_container = TRUE;
+
+    SET_EXPECT(DoVerb);
+    test_exec_script(doc,
+                     "document.body.appendChild(test_elem);",
+                     "javascript");
+    todo_wine CHECK_CALLED(DoVerb);
+
+    SET_EXPECT(InPlaceDeactivate);
+    SET_EXPECT(Close);
+    SET_EXPECT(SetClientSite_NULL);
+    release_doc(doc);
+    todo_wine CHECK_CALLED(InPlaceDeactivate);
+    CHECK_CALLED(Close);
+    CHECK_CALLED(SetClientSite_NULL);
+}
+
 static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     return DefWindowProcW(hwnd, msg, wParam, lParam);
@@ -2741,6 +2814,8 @@ START_TEST(activex)
         test_nooleobj_ax();
         trace("Testing event object binding...\n");
         test_event_binding();
+        trace("Testing createElement(object)...\n");
+        test_create_element();
         init_registry(FALSE);
     }else {
         skip("Could not register ActiveX\n");

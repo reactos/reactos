@@ -2988,6 +2988,9 @@ static HRESULT WINAPI OleCommandTarget_Exec(IOleCommandTarget *iface, const GUID
         case 144: /* TODO */
         case 178:
         case 179:
+        case 180:
+        case 181:
+        case 182:
             return E_NOTIMPL;
 
         default:
@@ -6289,7 +6292,7 @@ static void test_clear(IHTMLDocument2 *doc)
     ok(hres == S_OK, "clear failed: %08x\n", hres);
 }
 
-static const OLECMDF expect_cmds[OLECMDID_GETPRINTTEMPLATE+1] = {
+static const OLECMDF expect_cmds[] = {
     0,
     OLECMDF_SUPPORTED,                  /* OLECMDID_OPEN */
     OLECMDF_SUPPORTED,                  /* OLECMDID_NEW */
@@ -6344,7 +6347,7 @@ static void _test_QueryStatus(unsigned line, IUnknown *unk, REFIID cgid, ULONG c
         return;
 
     hres = IOleCommandTarget_QueryStatus(cmdtrg, cgid, 1, &olecmd, NULL);
-    ok(hres == S_OK, "QueryStatus(%u) failed: %08x\n", cmdid, hres);
+    ok(hres == cmdf ? S_OK : OLECMDERR_E_NOTSUPPORTED, "QueryStatus(%u) failed: %08x\n", cmdid, hres);
 
     IOleCommandTarget_Release(cmdtrg);
 
@@ -6377,7 +6380,7 @@ static void test_MSHTML_QueryStatus(IHTMLDocument2 *doc, DWORD cmdf)
 static void test_OleCommandTarget(IHTMLDocument2 *doc)
 {
     IOleCommandTarget *cmdtrg;
-    OLECMD cmds[OLECMDID_GETPRINTTEMPLATE];
+    OLECMD cmds[sizeof(expect_cmds)/sizeof(*expect_cmds)-1];
     int i;
     HRESULT hres;
 
@@ -6386,7 +6389,7 @@ static void test_OleCommandTarget(IHTMLDocument2 *doc)
     if(FAILED(hres))
         return;
 
-    for(i=0; i<OLECMDID_GETPRINTTEMPLATE; i++) {
+    for(i=0; i < sizeof(cmds)/sizeof(*cmds); i++) {
         cmds[i].cmdID = i+1;
         cmds[i].cmdf = 0xf0f0;
     }
@@ -6398,7 +6401,7 @@ static void test_OleCommandTarget(IHTMLDocument2 *doc)
     CHECK_CALLED(QueryStatus_OPEN);
     CHECK_CALLED(QueryStatus_NEW);
 
-    for(i=0; i<OLECMDID_GETPRINTTEMPLATE; i++) {
+    for(i=0; i < sizeof(cmds)/sizeof(*cmds); i++) {
         ok(cmds[i].cmdID == i+1, "cmds[%d].cmdID canged to %x\n", i, cmds[i].cmdID);
         if(i+1 == OLECMDID_FIND)
             continue;
@@ -6619,6 +6622,31 @@ static void test_exec_noargs(IUnknown *unk, DWORD cmdid)
     ok(hres == S_OK, "Exec failed: %08x\n", hres);
 
     IOleCommandTarget_Release(cmdtrg);
+}
+
+static void test_exec_optical_zoom(IHTMLDocument2 *doc, int factor)
+{
+    IOleCommandTarget *cmdtrg;
+    VARIANT v;
+    HRESULT hres;
+
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IOleCommandTarget, (void**)&cmdtrg);
+    ok(hres == S_OK, "QueryInterface(IID_IOleCommandTarget) failed: %08x\n", hres);
+    if(FAILED(hres))
+        return;
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = factor;
+
+    SET_EXPECT(GetOverrideKeyPath);
+    hres = IOleCommandTarget_Exec(cmdtrg, NULL, OLECMDID_OPTICAL_ZOOM,
+            OLECMDEXECOPT_DODEFAULT, &v, NULL);
+    ok(hres == S_OK || broken(hres == OLECMDERR_E_NOTSUPPORTED) /* IE6 */, "Exec failed: %08x\n", hres);
+    CLEAR_CALLED(GetOverrideKeyPath);
+
+    IOleCommandTarget_Release(cmdtrg);
+
+    test_QueryStatus((IUnknown*)doc, NULL, OLECMDID_OPTICAL_ZOOM, 0);
 }
 
 static void test_IsDirty(IHTMLDocument2 *doc, HRESULT exhres)
@@ -7486,6 +7514,8 @@ static void test_HTMLDocument(BOOL do_load, BOOL mime)
     test_MSHTML_QueryStatus(doc, OLECMDF_SUPPORTED);
     test_OleCommandTarget_fail(doc);
     test_OleCommandTarget(doc);
+    test_exec_optical_zoom(doc, 200);
+    test_exec_optical_zoom(doc, 100);
     test_OnAmbientPropertyChange(doc);
     test_Window(doc, TRUE);
     test_external(doc, TRUE);

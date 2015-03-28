@@ -98,7 +98,6 @@ typedef struct {
 } xy_test_t;
 
 static const xy_test_t no_xy = {-10,-10,-10,-10};
-static const xy_test_t zero_xy = {0,0,0,0};
 
 static const char empty_doc_str[] =
     "<html></html>";

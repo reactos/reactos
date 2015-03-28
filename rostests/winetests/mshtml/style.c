@@ -453,6 +453,7 @@ static void test_style2(IHTMLStyle2 *style2)
 
 static void test_style3(IHTMLStyle3 *style3)
 {
+    VARIANT v;
     BSTR str;
     HRESULT hres;
 
@@ -471,6 +472,37 @@ static void test_style3(IHTMLStyle3 *style3)
     ok(hres == S_OK, "get_wordWrap failed: %08x\n", hres);
     ok(!strcmp_wa(str, "break-word"), "get_wordWrap returned %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
+
+    V_VT(&v) = VT_ERROR;
+    hres = IHTMLStyle3_get_zoom(style3, &v);
+    ok(hres == S_OK, "get_zoom failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(zoom) = %d\n", V_VT(&v));
+    ok(!V_BSTR(&v), "V_BSTR(zoom) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("100%");
+    hres = IHTMLStyle3_put_zoom(style3, v);
+    ok(hres == S_OK, "put_zoom failed: %08x\n", hres);
+
+    V_VT(&v) = VT_ERROR;
+    hres = IHTMLStyle3_get_zoom(style3, &v);
+    ok(hres == S_OK, "get_zoom failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(zoom) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "100%"), "V_BSTR(zoom) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 1;
+    hres = IHTMLStyle3_put_zoom(style3, v);
+    ok(hres == S_OK, "put_zoom failed: %08x\n", hres);
+
+    V_VT(&v) = VT_ERROR;
+    hres = IHTMLStyle3_get_zoom(style3, &v);
+    ok(hres == S_OK, "get_zoom failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(zoom) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "1"), "V_BSTR(zoom) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
 }
 
 static void test_style4(IHTMLStyle4 *style4)
@@ -547,6 +579,82 @@ static void test_style5(IHTMLStyle5 *style5)
 
     hres = IHTMLStyle5_put_minWidth(style5, vdefault);
     ok(hres == S_OK, "put_minWidth failed: %08x\n", hres);
+    VariantClear(&vdefault);
+
+    /* maxWidth */
+    hres = IHTMLStyle5_get_maxWidth(style5, &vdefault);
+    ok(hres == S_OK, "get_maxWidth failed: %08x\n", hres);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("200px");
+    hres = IHTMLStyle5_put_maxWidth(style5, v);
+    ok(hres == S_OK, "put_maxWidth failed: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_get_maxWidth(style5, &v);
+    ok(hres == S_OK, "get_maxWidth failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n",V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "200px"), "expect 200px got (%s)\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("70%");
+    hres = IHTMLStyle5_put_maxWidth(style5, v);
+    ok(hres == S_OK, "put_maxWidth failed: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_get_maxWidth(style5, &v);
+    ok(hres == S_OK, "get maxWidth failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "70%"), "expect 70%% got (%s)\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_put_maxWidth(style5,vdefault);
+    ok(hres == S_OK, "put_maxWidth failed: %08x\n", hres);
+    VariantClear(&vdefault);
+
+    /* maxHeight */
+    hres = IHTMLStyle5_get_maxHeight(style5, &vdefault);
+    ok(hres == S_OK, "get maxHeight failed: %08x\n", hres);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("200px");
+    hres = IHTMLStyle5_put_maxHeight(style5, v);
+    ok(hres == S_OK, "put maxHeight failed: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_get_maxHeight(style5, &v);
+    ok(hres == S_OK, "get maxHeight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "200px"), "expect 200px got (%s)\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("70%");
+    hres = IHTMLStyle5_put_maxHeight(style5, v);
+    ok(hres == S_OK, "put maxHeight failed: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_get_maxHeight(style5, &v);
+    ok(hres == S_OK, "get_maxHeight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "70%"), "expect 70%% got (%s)\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("100");
+    hres = IHTMLStyle5_put_maxHeight(style5, v);
+    ok(hres == S_OK, "put maxHeight failed: %08x\n", hres);
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_get_maxHeight(style5, &v);
+    ok(hres == S_OK, "get_maxHeight failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(v) = %d\n", V_VT(&v));
+    ok(!strcmp_wa(V_BSTR(&v), "100px"), "expect 100 got (%s)\n", wine_dbgstr_w(V_BSTR(&v)));
+    VariantClear(&v);
+
+    hres = IHTMLStyle5_put_maxHeight(style5, vdefault);
+    ok(hres == S_OK, "put maxHeight failed:%08x\n", hres);
     VariantClear(&vdefault);
 }
 
@@ -745,6 +853,16 @@ static void test_body_style(IHTMLStyle *style)
     hres = IHTMLStyle_get_fontWeight(style, &str);
     ok(hres == S_OK, "get_fontWeight failed: %08x\n", hres);
     ok(!strcmp_wa(str, "900"), "str != style900\n");
+    SysFreeString(str);
+
+    str = a2bstr("");
+    hres = IHTMLStyle_put_fontWeight(style, str);
+    ok(hres == S_OK, "put_fontWeight failed: %08x\n", hres);
+    SysFreeString(str);
+
+    hres = IHTMLStyle_get_fontWeight(style, &str);
+    ok(hres == S_OK, "get_fontWeight failed: %08x\n", hres);
+    ok(!str, "str != NULL\n");
     SysFreeString(str);
 
     hres = IHTMLStyle_put_fontWeight(style, sDefault);
@@ -2359,6 +2477,21 @@ static void test_body_style(IHTMLStyle *style)
     }  else {
         win_skip("IHTMLStyle_put_listStyle already failed\n");
     }
+
+    str = (void*)0xdeadbeef;
+    hres = IHTMLStyle_get_styleFloat(style, &str);
+    ok(hres == S_OK, "get_styleFloat failed: %08x\n", hres);
+    ok(!str, "styleFloat = %s\n", wine_dbgstr_w(str));
+
+    str = a2bstr("left");
+    hres = IHTMLStyle_put_styleFloat(style, str);
+    ok(hres == S_OK, "put_styleFloat failed: %08x\n", hres);
+    SysFreeString(str);
+
+    str = NULL;
+    hres = IHTMLStyle_get_styleFloat(style, &str);
+    ok(hres == S_OK, "get_styleFloat failed: %08x\n", hres);
+    ok(!strcmp_wa(str, "left"), "styleFloat = %s\n", wine_dbgstr_w(str));
 
     hres = IHTMLStyle_QueryInterface(style, &IID_IHTMLStyle2, (void**)&style2);
     ok(hres == S_OK, "Could not get IHTMLStyle2 iface: %08x\n", hres);

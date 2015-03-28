@@ -5,6 +5,10 @@ function ok(b,m) {
     return external.ok(b, m);
 }
 
+function broken(expr) {
+    return external.broken(expr);
+}
+
 function test_removeAttribute(e) {
     ok(e.removeAttribute('nonexisting') === false, "removeAttribute('nonexisting') didn't return false");
 
@@ -98,11 +102,13 @@ function test_clone_node() {
     ok(cloned.style.filter === "alpha(opacity=50)", "cloned.style.filter = " + cloned.style.filter);
 }
 
-function test_setAttribute() {
-    var input;
+function test_attrs() {
+    var input, s, x, f, b;
 
     document.body.innerHTML = '<input id="inputid"></input>';
     input = document.getElementById("inputid");
+    s = input.style;
+    f = input.fireEvent;
     ok(input.checked === false, "input.checked = " + input.checked);
 
     input.setAttribute("checked", "test");
@@ -113,6 +119,116 @@ function test_setAttribute() {
 
     input.setAttribute("checked", "");
     ok(input.checked === false, "input.checked = " + input.checked);
+
+    input.setAttribute("Checked", 1, 0);
+    ok(input.checked === true, "input.checked = " + input.checked);
+    ok(!("Checked" in input), "Checked added to input");
+
+    input.setAttribute("checked", 0, 0);
+    input.setAttribute("Checked", 1, 1);
+    ok(input.checked === false, "input.checked = " + input.checked);
+    ok("Checked" in input, "checked not added to input");
+    ok(input.Checked === 1, "input.Checked = " + input.Checked);
+
+    input.removeAttribute("Checked", 1);
+    ok(!("Checked" in input), "Checked is still in input");
+    ok(input.checked === false, "input.checked = " + input.checked);
+
+    input.setAttribute("checked", 1, 0);
+    input.setAttribute("Checked", 0);
+    ok(input.checked === true, "input.checked = " + input.checked);
+    ok("Checked" in input, "checked not added to input");
+    ok(input.Checked === 0, "input.Checked = " + input.Checked);
+
+    input.setAttribute("Checked", 2, 2);
+    ok(input.Checked === 0, "input.Checked = " + input.Checked);
+    input.setAttribute("Checked", 3, 3);
+    ok(input.Checked === 3, "input.Checked = " + input.Checked);
+
+    x = input.getAttribute("style");
+    ok(x === s, "getAttribute('style') = " + x);
+    ok(s.cssText === "", "s.cssText = " + s.cssText);
+    x = input.getAttribute("style", 2);
+    ok(x === "", "getAttribute('style') = " + x);
+
+    input.setAttribute("style", "display: none");
+    x = input.getAttribute("style");
+    ok(x === s, "getAttribute('style') = " + x);
+    ok(s.cssText === "", "s.cssText = " + s.cssText);
+    ok(s.display === "", "s.display = " + s.display);
+    x = input.getAttribute("style", 2);
+    ok(x === "", "getAttribute('style') = " + x);
+
+    s.display = "none";
+    ok(s.cssText != "", "s.cssText = " + s.cssText);
+    ok(s.display === "none", "s.display = " + s.display);
+    input.setAttribute("style", "");
+    x = input.getAttribute("style");
+    ok(x === s, "getAttribute('style') = " + x);
+    ok(s.cssText != "", "s.cssText = " + s.cssText);
+    ok(s.display === "none", "s.display = " + s.display);
+    x = input.getAttribute("style", 2);
+    ok(x === "", "getAttribute('style') = " + x);
+
+    input.setAttribute("style", null);
+    x = input.getAttribute("style");
+    ok(input.style === s, "input.style = " + input.style);
+    ok(x === s, "getAttribute('style') = " + x);
+    ok(s.cssText != "", "s.cssText = " + s.cssText);
+    ok(s.display === "none", "s.display = " + s.display);
+
+    x = input.getAttribute("fireEvent");
+    ok(x === input.fireEvent, "input.getAttribute('fireEvent') = " + x);
+    x = input.getAttribute("fireEvent", 2);
+    ok(x === "", "getAttribute('fireEvent') = " + x);
+
+    input.setAttribute("fireEvent", 3);
+    ok(input.fireEvent === 3, "input.fireEvent = " + input.fireEvent);
+    x = input.getAttribute("fireEvent");
+    ok(x === 3, "input.getAttribute('fireEvent') = " + x);
+    x = input.getAttribute("fireEvent", 2);
+    ok(x === "3", "getAttribute('fireEvent') = " + x);
+
+    b = input.removeAttribute("style");
+    ok(b === true, "removeAttribute('style') failed");
+    ok(input.style === s, "input.style = " + input.style);
+    x = input.getAttribute("style");
+    ok(x === s, "getAttribute('style') = " + x);
+    ok(s.display === "", "s.display = " + s.display);
+    ok(s.cssText === "", "s.cssText = " + s.cssText);
+    x = input.getAttribute("style", 2);
+    ok(x === "", "getAttribute('style') = " + x);
+    b = input.removeAttribute("style");
+    ok(b === true, "removeAttribute('style') failed");
+
+    b = false;
+    try {
+        input.setAttribute("tagName", "xxx");
+    }catch(e) {
+        b = true;
+    }
+    ok(b, "Expected exception on setAttribute(tagName)");
+
+    b = false;
+    try {
+        input.setAttribute("parentElement", "xxx");
+    }catch(e) {
+        b = true;
+    }
+    ok(b, "Expected exception on setAttribute(parentElement)");
+
+    b = input.removeAttribute("fireEvent");
+    ok(b === true, "removeAttribute(fireEvent) failed");
+    ok(input.fireEvent === f, "input.fireEvent = " + input.fireEvent);
+    x = input.getAttribute("fireEvent");
+    ok(x === f, "input.getAttribute('fireEvent') = " + x);
+    b = input.removeAttribute("fireEvent");
+    ok(b === false || broken(b === true), "removeAttribute(fireEvent) returned " + b);
+
+    input.fireEvent = 3;
+    x = input.getAttribute("fireEvent");
+    ok(x === 3, "input.getAttribute('fireEvent') = " + x);
+    ok(input.fireEvent === 3, "input.fireEvent' = " + input.fireEvent);
 }
 
 function test_attribute_collection() {
@@ -215,6 +331,29 @@ function test_whitespace_nodes() {
         "t.rows[0].cells[0].childNodes.length = " + t.rows[0].cells[0].childNodes.length);
 }
 
+function test_language_attribute() {
+    document.body.innerHTML = '<div id="did" language="test"></div>';
+    var elem = document.getElementById("did");
+    ok(elem.language === "test", "elem.language = " + elem.language);
+    elem.language = 1;
+    ok(elem.language === "1", "elem.language = " + elem.language);
+}
+
+function test_text_node() {
+    document.body.innerHTML = 'testing text';
+    var text = document.body.childNodes[0], text2;
+    ok(text.data == "testing text", "text.data = " + text.data);
+
+    text2 = text.splitText(7);
+    ok(text.data == "testing", "text.data = " + text.data);
+    ok(text2.data == " text", "text2.data = " + text2.data);
+    ok(text.nextSibling === text2, "text.nextSibling !== text2");
+
+    text2 = text.splitText(0);
+    ok(text.data == "", "text.data = " + text.data);
+    ok(text2.data == "testing", "text2.data = " + text2.data);
+}
+
 var globalVar = false;
 
 function runTests() {
@@ -231,13 +370,15 @@ function runTests() {
     test_document_name_as_index();
     test_remove_style_attribute();
     test_getter_call();
-    test_setAttribute();
+    test_attrs();
     test_attribute_collection();
     test_arg_conv();
     test_override_functions();
     test_forin();
     test_customtag();
     test_whitespace_nodes();
+    test_language_attribute();
+    test_text_node();
 
     var r = window.execScript("globalVar = true;");
     ok(r === undefined, "execScript returned " + r);

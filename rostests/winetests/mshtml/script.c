@@ -146,6 +146,7 @@ DEFINE_EXPECT(ChangeType);
 #define DISPID_EXTERNAL_TRACE          0x300001
 #define DISPID_EXTERNAL_REPORTSUCCESS  0x300002
 #define DISPID_EXTERNAL_TODO_WINE_OK   0x300003
+#define DISPID_EXTERNAL_BROKEN         0x300004
 
 static const GUID CLSID_TestScript =
     {0x178fc163,0xf585,0x4e24,{0x9c,0x13,0x4b,0xb7,0xfa,0xf8,0x07,0x46}};
@@ -594,6 +595,10 @@ static HRESULT WINAPI externalDisp_GetDispID(IDispatchEx *iface, BSTR bstrName, 
         *pid = DISPID_EXTERNAL_TODO_WINE_OK;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "broken")) {
+        *pid = DISPID_EXTERNAL_BROKEN;
+        return S_OK;
+    }
 
     ok(0, "unexpected name %s\n", wine_dbgstr_w(bstrName));
     return DISP_E_UNKNOWNNAME;
@@ -671,6 +676,20 @@ static HRESULT WINAPI externalDisp_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
         todo_wine
         ok(V_BOOL(pdp->rgvarg+1), "%s\n", wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
 
+        return S_OK;
+
+    case DISPID_EXTERNAL_BROKEN:
+        ok(wFlags == INVOKE_FUNC || wFlags == (INVOKE_FUNC|INVOKE_PROPERTYGET), "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_BOOL, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
+        V_VT(pvarRes) = VT_BOOL;
+        V_BOOL(pvarRes) = broken(V_BOOL(pdp->rgvarg)) ? VARIANT_TRUE : VARIANT_FALSE;
         return S_OK;
 
     default:
@@ -1915,7 +1934,7 @@ static void test_func(IDispatchEx *obj)
     V_VT(&var) = VT_I4;
     V_I4(&var) = 100;
     hres = dispex_propput(obj, id, 0, &var, NULL);
-    ok(hres == E_NOTIMPL, "InvokeEx failed: %08x\n", hres);
+    todo_wine ok(hres == E_NOTIMPL, "InvokeEx failed: %08x\n", hres);
 
     hres = dispex_propget(dispex, DISPID_VALUE, &var, NULL);
     ok(hres == E_ACCESSDENIED, "InvokeEx returned: %08x, expected E_ACCESSDENIED\n", hres);
