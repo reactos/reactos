@@ -17,6 +17,7 @@
  */
 
 import "oaidl.idl";
+import "ocidl.idl";
 
 cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
 cpp_quote("#undef FindText")
@@ -334,22 +335,22 @@ interface ITextFont : IDispatch
     HRESULT SetEngrave([in]LONG Value);
     HRESULT GetItalic([retval, out]LONG *pValue);
     HRESULT SetItalic([in]LONG Value);
-    HRESULT GetKerning([retval, out]LONG *pValue);
-    HRESULT SetKerning([in]LONG Value);
+    HRESULT GetKerning([retval, out]float *pValue);
+    HRESULT SetKerning([in]float Value);
     HRESULT GetLanguageID([retval, out]LONG *pValue);
     HRESULT SetLanguageID([in]LONG Value);
     HRESULT GetName([retval, out]BSTR *pValue);
     HRESULT SetName([in]BSTR Value);
     HRESULT GetOutline([retval, out]LONG *pValue);
     HRESULT SetOutline([in]LONG Value);
-    HRESULT GetPosition([retval, out]LONG *pValue);
-    HRESULT SetPosition([in]LONG Value);
+    HRESULT GetPosition([retval, out]float *pValue);
+    HRESULT SetPosition([in]float Value);
     HRESULT GetProtected([retval, out]LONG *pValue);
     HRESULT SetProtected([in]LONG Value);
     HRESULT GetShadow([retval, out]LONG *pValue);
     HRESULT SetShadow([in]LONG Value);
-    HRESULT GetSize([retval, out]LONG *pValue);
-    HRESULT SetSize([in]LONG Value);
+    HRESULT GetSize([retval, out]float *pValue);
+    HRESULT SetSize([in]float Value);
     HRESULT GetSmallCaps([retval, out]LONG *pValue);
     HRESULT SetSmallCaps([in]LONG Value);
     HRESULT GetSpacing([retval, out]float *pValue);
@@ -397,8 +398,8 @@ interface ITextPara : IDispatch
     HRESULT SetListLevelIndex([in]LONG Value);
     HRESULT GetListStart([retval, out]LONG *pValue);
     HRESULT SetListStart([in]LONG Value);
-    HRESULT GetListTab([retval, out]LONG *pValue);
-    HRESULT SetListTab([in]LONG Value);
+    HRESULT GetListTab([retval, out]float *pValue);
+    HRESULT SetListTab([in]float Value);
     HRESULT GetListType([retval, out]LONG *pValue);
     HRESULT SetListType([in]LONG Value);
     HRESULT GetNoLineNumber([retval, out]LONG *pValue);
@@ -413,8 +414,8 @@ interface ITextPara : IDispatch
     HRESULT SetSpaceAfter([in]float Value);
     HRESULT GetSpaceBefore([retval, out]float *pValue);
     HRESULT SetSpaceBefore([in]float Value);
-    HRESULT GetWindowControl([retval, out]float *pValue);
-    HRESULT SetWindowControl([in]float Value);
+    HRESULT GetWidowControl([retval, out]LONG *pValue);
+    HRESULT SetWidowControl([in]LONG Value);
     HRESULT GetTabCount([retval, out]LONG *pCount);
     HRESULT AddTab([in]float tbPos, [in]LONG tbAlign, [in]LONG tbLeader);
     HRESULT ClearAllTabs();
