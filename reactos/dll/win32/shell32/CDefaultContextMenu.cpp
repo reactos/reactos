@@ -514,6 +514,14 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
 
     TRACE("BuildBackgroundContextMenu entered\n");
 
+    SFGAOF rfg = SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    HRESULT hr = m_psf->GetAttributesOf(0, NULL, &rfg);
+    if (FAILED(hr))
+    {
+        ERR("GetAttributesOf failed: %x\n", hr);
+        rfg = 0;
+    }
+
     if (!_ILIsDesktop(m_pidlFolder))
     {
         WCHAR wszBuf[MAX_PATH];
@@ -554,8 +562,7 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
     }
 
     /* Directory is progid of filesystem folders only */
-    LPITEMIDLIST pidlFolderLast = ILFindLastID(m_pidlFolder);
-    if (_ILIsDesktop(pidlFolderLast) || _ILIsDrive(pidlFolderLast) || _ILIsFolder(pidlFolderLast))
+    if (rfg == (SFGAO_FILESYSTEM|SFGAO_FOLDER))
     {
         /* Load context menu handlers */
         TRACE("Add background handlers: %p\n", m_pidlFolder);
@@ -818,7 +825,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         }
 
         /* Directory is only loaded for real filesystem directories */
-        if (_ILIsFolder(m_apidl[0]))
+        if (rfg & SFGAO_FILESYSTEM)
         {
             AddStaticEntryForFileClass(L"Directory");
             if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -830,7 +837,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     }
 
     /* AllFilesystemObjects class is loaded only for files and directories */
-    if (_ILIsFolder(m_apidl[0]) || _ILIsValue(m_apidl[0]))
+    if (rfg & SFGAO_FILESYSTEM)
     {
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"AllFilesystemObjects", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
