@@ -49,6 +49,7 @@ FAT32GetNextCluster(
     if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
         CurrentCluster = 0xffffffff;
 
+    ASSERT(CurrentCluster != 0);
     CcUnpinData(Context);
     *NextCluster = CurrentCluster;
     return STATUS_SUCCESS;
@@ -80,6 +81,7 @@ FAT16GetNextCluster(
     CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
     if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
         CurrentCluster = 0xffffffff;
+    ASSERT(CurrentCluster != 0);
     CcUnpinData(Context);
     *NextCluster = CurrentCluster;
     return STATUS_SUCCESS;
@@ -123,6 +125,7 @@ FAT12GetNextCluster(
         Entry = 0xffffffff;
 
 //    DPRINT("Returning %x\n",Entry);
+    ASSERT(Entry != 0);
     *NextCluster = Entry;
     CcUnpinData(Context);
 //    return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
@@ -667,7 +670,10 @@ GetNextCluster(
            DeviceExt, CurrentCluster);
 
     if (CurrentCluster == 0)
+    {
+        ASSERT(CurrentCluster != 0);
         return STATUS_INVALID_PARAMETER;
+    }
 
     ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
     Status = DeviceExt->GetNextCluster(DeviceExt, CurrentCluster, NextCluster);
