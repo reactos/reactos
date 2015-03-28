@@ -455,6 +455,8 @@ HRESULT WINAPI CControlPanelFolder::CreateViewObject(HWND hwndOwner, REFIID riid
 HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     HRESULT hr = S_OK;
+    static const DWORD dwControlPanelAttributes =
+        SFGAO_HASSUBFOLDER | SFGAO_FOLDER | SFGAO_CANLINK;
 
     TRACE("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
           this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -467,12 +469,19 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    while(cidl > 0 && *apidl)
+    if (!cidl)
     {
-        pdump(*apidl);
-        SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
-        apidl++;
-        cidl--;
+        *rgfInOut &= dwControlPanelAttributes;
+    }
+    else
+    {
+        while(cidl > 0 && *apidl)
+        {
+            pdump(*apidl);
+            SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+            apidl++;
+            cidl--;
+        }
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
