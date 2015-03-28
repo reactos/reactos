@@ -685,7 +685,7 @@ static DWORD MIDI_mciOpen(WINE_MCIMIDI* wmm, DWORD dwFlags, LPMCI_OPEN_PARMSW lp
 
     if (dwFlags & MCI_OPEN_ELEMENT) {
 	TRACE("MCI_OPEN_ELEMENT %s!\n", debugstr_w(lpParms->lpstrElementName));
-	if (lpParms->lpstrElementName && strlenW(lpParms->lpstrElementName) > 0) {
+        if (lpParms->lpstrElementName && lpParms->lpstrElementName[0]) {
 	    wmm->hFile = mmioOpenW((LPWSTR)lpParms->lpstrElementName, NULL,
 				   MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
 	    if (wmm->hFile == 0) {
