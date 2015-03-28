@@ -116,3 +116,4 @@ Signature = "$ReactOS$"
 "modules/optional/gnutls/libp11-kit-0.dll"            53 optional
 "modules/optional/gnutls/libwinpthread-1.dll"         53 optional
 "modules/optional/gnutls/zlib1.dll"                   53 optional
+; DON'T REMOVE THE FOLLOWING NEW LINE ! THIS MEANS YOU !
