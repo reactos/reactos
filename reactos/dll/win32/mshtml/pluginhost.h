@@ -62,7 +62,7 @@ struct HTMLPluginContainer {
 
 extern const IID IID_HTMLPluginContainer DECLSPEC_HIDDEN;
 
-HRESULT create_plugin_host(HTMLDocumentNode*,nsIDOMElement*,IUnknown*,const CLSID*,PluginHost**) DECLSPEC_HIDDEN;
+HRESULT create_plugin_host(HTMLDocumentNode*,HTMLPluginContainer*) DECLSPEC_HIDDEN;
 void update_plugin_window(PluginHost*,HWND,const RECT*) DECLSPEC_HIDDEN;
 void detach_plugin_host(PluginHost*) DECLSPEC_HIDDEN;
 

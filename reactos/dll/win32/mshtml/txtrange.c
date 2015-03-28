@@ -22,6 +22,7 @@ static const WCHAR brW[] = {'b','r',0};
 static const WCHAR hrW[] = {'h','r',0};
 
 typedef struct {
+    DispatchEx dispex;
     IHTMLTxtRange     IHTMLTxtRange_iface;
     IOleCommandTarget IOleCommandTarget_iface;
 
@@ -43,9 +44,7 @@ typedef struct {
     UINT16 type;
     nsIDOMNode *node;
     UINT32 off;
-    nsAString str;
-    const PRUnichar *p;
-} dompos_t;
+} rangepoint_t;
 
 typedef enum {
     RU_UNKNOWN,
@@ -112,6 +111,212 @@ static UINT16 get_node_type(nsIDOMNode *node)
     return type;
 }
 
+static void get_text_node_data(nsIDOMNode *node, nsAString *nsstr, const PRUnichar **str)
+{
+    nsIDOMText *nstext;
+    nsresult nsres;
+
+    nsres = nsIDOMNode_QueryInterface(node, &IID_nsIDOMText, (void**)&nstext);
+    assert(nsres == NS_OK);
+
+    nsAString_Init(nsstr, NULL);
+    nsres = nsIDOMText_GetData(nstext, nsstr);
+    nsIDOMText_Release(nstext);
+    if(NS_FAILED(nsres))
+        ERR("GetData failed: %08x\n", nsres);
+
+    nsAString_GetData(nsstr, str);
+}
+
+static nsIDOMNode *get_child_node(nsIDOMNode *node, UINT32 off)
+{
+    nsIDOMNodeList *node_list;
+    nsIDOMNode *ret = NULL;
+
+    nsIDOMNode_GetChildNodes(node, &node_list);
+    nsIDOMNodeList_Item(node_list, off, &ret);
+    nsIDOMNodeList_Release(node_list);
+
+    return ret;
+}
+
+/* This is very inefficient, but there is no faster way to compute index in
+ * child node list using public API. Gecko has internal nsINode::IndexOf
+ * function that we could consider exporting and use instead. */
+static int get_child_index(nsIDOMNode *parent, nsIDOMNode *child)
+{
+    nsIDOMNodeList *node_list;
+    nsIDOMNode *node;
+    int ret = 0;
+    nsresult nsres;
+
+    nsres = nsIDOMNode_GetChildNodes(parent, &node_list);
+    assert(nsres == NS_OK);
+
+    while(1) {
+        nsres = nsIDOMNodeList_Item(node_list, ret, &node);
+        assert(nsres == NS_OK && node);
+        if(node == child) {
+            nsIDOMNode_Release(node);
+            break;
+        }
+        nsIDOMNode_Release(node);
+        ret++;
+    }
+
+    nsIDOMNodeList_Release(node_list);
+    return ret;
+}
+
+static void init_rangepoint(rangepoint_t *rangepoint, nsIDOMNode *node, UINT32 off)
+{
+    nsIDOMNode_AddRef(node);
+
+    rangepoint->type = get_node_type(node);
+    rangepoint->node = node;
+    rangepoint->off = off;
+}
+
+static inline void free_rangepoint(rangepoint_t *rangepoint)
+{
+    nsIDOMNode_Release(rangepoint->node);
+}
+
+static inline BOOL rangepoint_cmp(const rangepoint_t *point1, const rangepoint_t *point2)
+{
+    return point1->node == point2->node && point1->off == point2->off;
+}
+
+static BOOL rangepoint_next_node(rangepoint_t *iter)
+{
+    nsIDOMNode *node;
+    UINT32 off;
+    nsresult nsres;
+
+    /* Try to move to the child node. */
+    node = get_child_node(iter->node, iter->off);
+    if(node) {
+        free_rangepoint(iter);
+        init_rangepoint(iter, node, 0);
+        nsIDOMNode_Release(node);
+        return TRUE;
+    }
+
+    /* There are no more children in the node. Move to parent. */
+    nsres = nsIDOMNode_GetParentNode(iter->node, &node);
+    assert(nsres == NS_OK);
+    if(!node)
+        return FALSE;
+
+    off = get_child_index(node, iter->node)+1;
+    free_rangepoint(iter);
+    init_rangepoint(iter, node, off);
+    nsIDOMNode_Release(node);
+    return TRUE;
+}
+
+static UINT32 get_child_count(nsIDOMNode *node)
+{
+    nsIDOMNodeList *node_list;
+    UINT32 ret;
+    nsresult nsres;
+
+    nsres = nsIDOMNode_GetChildNodes(node, &node_list);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDOMNodeList_GetLength(node_list, &ret);
+    nsIDOMNodeList_Release(node_list);
+    assert(nsres == NS_OK);
+
+    return ret;
+}
+
+static UINT32 get_text_length(nsIDOMNode *node)
+{
+    nsIDOMText *nstext;
+    UINT32 ret;
+    nsresult nsres;
+
+    nsres = nsIDOMNode_QueryInterface(node, &IID_nsIDOMText, (void**)&nstext);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDOMText_GetLength(nstext, &ret);
+    nsIDOMText_Release(nstext);
+    assert(nsres == NS_OK);
+
+    return ret;
+}
+
+static BOOL rangepoint_prev_node(rangepoint_t *iter)
+{
+    nsIDOMNode *node;
+    UINT32 off;
+    nsresult nsres;
+
+    /* Try to move to the child node. */
+    if(iter->off) {
+        node = get_child_node(iter->node, iter->off-1);
+        assert(node != NULL);
+
+        off = get_node_type(node) == TEXT_NODE ? get_text_length(node) : get_child_count(node);
+        free_rangepoint(iter);
+        init_rangepoint(iter, node, off);
+        nsIDOMNode_Release(node);
+        return TRUE;
+    }
+
+    /* There are no more children in the node. Move to parent. */
+    nsres = nsIDOMNode_GetParentNode(iter->node, &node);
+    assert(nsres == NS_OK);
+    if(!node)
+        return FALSE;
+
+    off = get_child_index(node, iter->node);
+    free_rangepoint(iter);
+    init_rangepoint(iter, node, off);
+    return TRUE;
+}
+
+static void get_start_point(HTMLTxtRange *This, rangepoint_t *ret)
+{
+    nsIDOMNode *node;
+    LONG off;
+
+    nsIDOMRange_GetStartContainer(This->nsrange, &node);
+    nsIDOMRange_GetStartOffset(This->nsrange, &off);
+
+    init_rangepoint(ret, node, off);
+
+    nsIDOMNode_Release(node);
+}
+
+static void get_end_point(HTMLTxtRange *This, rangepoint_t *ret)
+{
+    nsIDOMNode *node;
+    LONG off;
+
+    nsIDOMRange_GetEndContainer(This->nsrange, &node);
+    nsIDOMRange_GetEndOffset(This->nsrange, &off);
+
+    init_rangepoint(ret, node, off);
+
+    nsIDOMNode_Release(node);
+}
+
+static void set_start_point(HTMLTxtRange *This, const rangepoint_t *start)
+{
+    nsresult nsres = nsIDOMRange_SetStart(This->nsrange, start->node, start->off);
+    if(NS_FAILED(nsres))
+        ERR("failed: %08x\n", nsres);
+}
+
+static void set_end_point(HTMLTxtRange *This, const rangepoint_t *end)
+{
+    nsresult nsres = nsIDOMRange_SetEnd(This->nsrange, end->node, end->off);
+    if(NS_FAILED(nsres))
+        ERR("failed: %08x\n", nsres);
+}
+
 static BOOL is_elem_tag(nsIDOMNode *node, LPCWSTR istag)
 {
     nsIDOMElement *elem;
@@ -130,30 +335,6 @@ static BOOL is_elem_tag(nsIDOMNode *node, LPCWSTR istag)
     nsAString_GetData(&tag_str, &tag);
 
     ret = !strcmpiW(tag, istag);
-
-    nsAString_Finish(&tag_str);
-
-    return ret;
-}
-
-static BOOL is_space_elem(nsIDOMNode *node)
-{
-    nsIDOMElement *elem;
-    nsAString tag_str;
-    const PRUnichar *tag;
-    BOOL ret = FALSE;
-    nsresult nsres;
-
-    nsres = nsIDOMNode_QueryInterface(node, &IID_nsIDOMElement, (void**)&elem);
-    if(NS_FAILED(nsres))
-        return FALSE;
-
-    nsAString_Init(&tag_str, NULL);
-    nsIDOMElement_GetTagName(elem, &tag_str);
-    nsIDOMElement_Release(elem);
-    nsAString_GetData(&tag_str, &tag);
-
-    ret = !strcmpiW(tag, brW) || !strcmpiW(tag, hrW);
 
     nsAString_Finish(&tag_str);
 
@@ -220,7 +401,7 @@ static void wstrbuf_append_nodetxt(wstrbuf_t *buf, LPCWSTR str, int len)
     *d = 0;
 }
 
-static void wstrbuf_append_node(wstrbuf_t *buf, nsIDOMNode *node)
+static void wstrbuf_append_node(wstrbuf_t *buf, nsIDOMNode *node, BOOL ignore_text)
 {
 
     switch(get_node_type(node)) {
@@ -228,6 +409,9 @@ static void wstrbuf_append_node(wstrbuf_t *buf, nsIDOMNode *node)
         nsIDOMText *nstext;
         nsAString data_str;
         const PRUnichar *data;
+
+        if(ignore_text)
+            break;
 
         nsIDOMNode_QueryInterface(node, &IID_nsIDOMText, (void**)&nstext);
 
@@ -256,7 +440,7 @@ static void wstrbuf_append_node_rec(wstrbuf_t *buf, nsIDOMNode *node)
 {
     nsIDOMNode *iter, *tmp;
 
-    wstrbuf_append_node(buf, node);
+    wstrbuf_append_node(buf, node, FALSE);
 
     nsIDOMNode_GetFirstChild(node, &iter);
     while(iter) {
@@ -267,210 +451,9 @@ static void wstrbuf_append_node_rec(wstrbuf_t *buf, nsIDOMNode *node)
     }
 }
 
-static BOOL fill_nodestr(dompos_t *pos)
-{
-    nsIDOMText *text;
-    nsresult nsres;
-
-    if(pos->type != TEXT_NODE)
-        return FALSE;
-
-    nsres = nsIDOMNode_QueryInterface(pos->node, &IID_nsIDOMText, (void**)&text);
-    if(NS_FAILED(nsres))
-        return FALSE;
-
-    nsAString_Init(&pos->str, NULL);
-    nsIDOMText_GetData(text, &pos->str);
-    nsIDOMText_Release(text);
-    nsAString_GetData(&pos->str, &pos->p);
-
-    if(pos->off == -1)
-        pos->off = *pos->p ? strlenW(pos->p)-1 : 0;
-
-    return TRUE;
-}
-
-static nsIDOMNode *next_node(nsIDOMNode *iter)
-{
-    nsIDOMNode *ret, *tmp;
-    nsresult nsres;
-
-    if(!iter)
-        return NULL;
-
-    nsres = nsIDOMNode_GetFirstChild(iter, &ret);
-    if(NS_SUCCEEDED(nsres) && ret)
-        return ret;
-
-    nsIDOMNode_AddRef(iter);
-
-    do {
-        nsres = nsIDOMNode_GetNextSibling(iter, &ret);
-        if(NS_SUCCEEDED(nsres) && ret) {
-            nsIDOMNode_Release(iter);
-            return ret;
-        }
-
-        nsres = nsIDOMNode_GetParentNode(iter, &tmp);
-        nsIDOMNode_Release(iter);
-        iter = tmp;
-    }while(NS_SUCCEEDED(nsres) && iter);
-
-    return NULL;
-}
-
-static nsIDOMNode *prev_node(HTMLTxtRange *This, nsIDOMNode *iter)
-{
-    nsIDOMNode *ret, *tmp;
-    nsresult nsres;
-
-    if(!iter) {
-        nsIDOMHTMLElement *nselem;
-
-        nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nselem);
-        nsIDOMHTMLElement_GetLastChild(nselem, &tmp);
-        if(!tmp)
-            return (nsIDOMNode*)nselem;
-
-        while(tmp) {
-            ret = tmp;
-            nsIDOMNode_GetLastChild(ret, &tmp);
-        }
-
-        nsIDOMHTMLElement_Release(nselem);
-
-        return ret;
-    }
-
-    nsres = nsIDOMNode_GetLastChild(iter, &ret);
-    if(NS_SUCCEEDED(nsres) && ret)
-        return ret;
-
-    nsIDOMNode_AddRef(iter);
-
-    do {
-        nsres = nsIDOMNode_GetPreviousSibling(iter, &ret);
-        if(NS_SUCCEEDED(nsres) && ret) {
-            nsIDOMNode_Release(iter);
-            return ret;
-        }
-
-        nsres = nsIDOMNode_GetParentNode(iter, &tmp);
-        nsIDOMNode_Release(iter);
-        iter = tmp;
-    }while(NS_SUCCEEDED(nsres) && iter);
-
-    return NULL;
-}
-
-static nsIDOMNode *get_child_node(nsIDOMNode *node, UINT32 off)
-{
-    nsIDOMNodeList *node_list;
-    nsIDOMNode *ret = NULL;
-
-    nsIDOMNode_GetChildNodes(node, &node_list);
-    nsIDOMNodeList_Item(node_list, off, &ret);
-    nsIDOMNodeList_Release(node_list);
-
-    return ret;
-}
-
-static void get_cur_pos(HTMLTxtRange *This, BOOL start, dompos_t *pos)
-{
-    nsIDOMNode *node;
-    LONG off;
-
-    pos->p = NULL;
-
-    if(!start) {
-        cpp_bool collapsed;
-        nsIDOMRange_GetCollapsed(This->nsrange, &collapsed);
-        start = collapsed;
-    }
-
-    if(start) {
-        nsIDOMRange_GetStartContainer(This->nsrange, &node);
-        nsIDOMRange_GetStartOffset(This->nsrange, &off);
-    }else {
-        nsIDOMRange_GetEndContainer(This->nsrange, &node);
-        nsIDOMRange_GetEndOffset(This->nsrange, &off);
-    }
-
-    pos->type = get_node_type(node);
-    if(pos->type == ELEMENT_NODE) {
-        if(start) {
-            pos->node = get_child_node(node, off);
-            pos->off = 0;
-        }else {
-            pos->node = off ? get_child_node(node, off-1) : prev_node(This, node);
-            pos->off = -1;
-        }
-
-        pos->type = get_node_type(pos->node);
-        nsIDOMNode_Release(node);
-    }else if(start) {
-        pos->node = node;
-        pos->off = off;
-    }else if(off) {
-        pos->node = node;
-        pos->off = off-1;
-    }else {
-        pos->node = prev_node(This, node);
-        pos->off = -1;
-        nsIDOMNode_Release(node);
-    }
-
-    if(pos->type == TEXT_NODE)
-        fill_nodestr(pos);
-}
-
-static void set_range_pos(HTMLTxtRange *This, BOOL start, dompos_t *pos)
-{
-    nsresult nsres;
-
-    if(start) {
-        if(pos->type == TEXT_NODE)
-            nsres = nsIDOMRange_SetStart(This->nsrange, pos->node, pos->off);
-        else
-            nsres = nsIDOMRange_SetStartBefore(This->nsrange, pos->node);
-    }else {
-        if(pos->type == TEXT_NODE && pos->p[pos->off+1])
-            nsres = nsIDOMRange_SetEnd(This->nsrange, pos->node, pos->off+1);
-        else
-            nsres = nsIDOMRange_SetEndAfter(This->nsrange, pos->node);
-    }
-
-    if(NS_FAILED(nsres))
-        ERR("failed: %p %08x\n", pos->node, nsres);
-}
-
-static inline void dompos_release(dompos_t *pos)
-{
-    if(pos->node)
-        nsIDOMNode_Release(pos->node);
-
-    if(pos->p)
-        nsAString_Finish(&pos->str);
-}
-
-static inline void dompos_addref(dompos_t *pos)
-{
-    if(pos->node)
-        nsIDOMNode_AddRef(pos->node);
-
-    if(pos->type == TEXT_NODE)
-        fill_nodestr(pos);
-}
-
-static inline BOOL dompos_cmp(const dompos_t *pos1, const dompos_t *pos2)
-{
-    return pos1->node == pos2->node && pos1->off == pos2->off;
-}
-
 static void range_to_string(HTMLTxtRange *This, wstrbuf_t *buf)
 {
-    nsIDOMNode *iter, *tmp;
-    dompos_t start_pos, end_pos;
+    rangepoint_t end_pos, iter;
     cpp_bool collapsed;
 
     nsIDOMRange_GetCollapsed(This->nsrange, &collapsed);
@@ -481,42 +464,42 @@ static void range_to_string(HTMLTxtRange *This, wstrbuf_t *buf)
         return;
     }
 
-    get_cur_pos(This, FALSE, &end_pos);
-    get_cur_pos(This, TRUE, &start_pos);
+    get_end_point(This, &end_pos);
+    get_start_point(This, &iter);
 
-    if(start_pos.type == TEXT_NODE) {
-        if(start_pos.node == end_pos.node) {
-            wstrbuf_append_nodetxt(buf, start_pos.p+start_pos.off, end_pos.off-start_pos.off+1);
-            iter = start_pos.node;
-            nsIDOMNode_AddRef(iter);
+    do {
+        if(iter.type == TEXT_NODE) {
+            const PRUnichar *str;
+            nsAString nsstr;
+
+            get_text_node_data(iter.node, &nsstr, &str);
+
+            if(iter.node == end_pos.node) {
+                wstrbuf_append_nodetxt(buf, str+iter.off, end_pos.off-iter.off);
+                nsAString_Finish(&nsstr);
+                break;
+            }
+
+            wstrbuf_append_nodetxt(buf, str+iter.off, strlenW(str+iter.off));
+            nsAString_Finish(&nsstr);
         }else {
-            wstrbuf_append_nodetxt(buf, start_pos.p+start_pos.off, strlenW(start_pos.p+start_pos.off));
-            iter = next_node(start_pos.node);
+            nsIDOMNode *node;
+
+            node = get_child_node(iter.node, iter.off);
+            if(node) {
+                wstrbuf_append_node(buf, node, TRUE);
+                nsIDOMNode_Release(node);
+            }
         }
-    }else {
-        iter = start_pos.node;
-        nsIDOMNode_AddRef(iter);
-    }
 
-    while(iter != end_pos.node) {
-        wstrbuf_append_node(buf, iter);
-        tmp = next_node(iter);
-        nsIDOMNode_Release(iter);
-        iter = tmp;
-    }
+        if(!rangepoint_next_node(&iter)) {
+            ERR("End of document?\n");
+            break;
+        }
+    }while(!rangepoint_cmp(&iter, &end_pos));
 
-    nsIDOMNode_AddRef(end_pos.node);
-
-    if(start_pos.node != end_pos.node) {
-        if(end_pos.type == TEXT_NODE)
-            wstrbuf_append_nodetxt(buf, end_pos.p, end_pos.off+1);
-        else
-            wstrbuf_append_node(buf, end_pos.node);
-    }
-
-    nsIDOMNode_Release(iter);
-    dompos_release(&start_pos);
-    dompos_release(&end_pos);
+    free_rangepoint(&iter);
+    free_rangepoint(&end_pos);
 
     if(buf->len) {
         WCHAR *p;
@@ -551,433 +534,270 @@ HRESULT get_node_text(HTMLDOMNode *node, BSTR *ret)
     return hres;
 }
 
-static WCHAR get_pos_char(const dompos_t *pos)
+static WCHAR move_next_char(rangepoint_t *iter)
 {
-    switch(pos->type) {
-    case TEXT_NODE:
-        return pos->p[pos->off];
-    case ELEMENT_NODE:
-        if(is_space_elem(pos->node))
-            return '\n';
-    }
-
-    return 0;
-}
-
-static void end_space(const dompos_t *pos, dompos_t *new_pos)
-{
-    const WCHAR *p;
-
-    *new_pos = *pos;
-    dompos_addref(new_pos);
-
-    if(pos->type != TEXT_NODE)
-        return;
-
-    p = new_pos->p+new_pos->off;
-
-    if(!*p || !isspace(*p))
-        return;
-
-    while(p[1] && isspace(p[1]))
-        p++;
-
-    new_pos->off = p - new_pos->p;
-}
-
-static WCHAR next_char(const dompos_t *pos, dompos_t *new_pos)
-{
-    nsIDOMNode *iter, *tmp;
-    dompos_t last_space, tmp_pos;
-    const WCHAR *p;
+    rangepoint_t last_space;
+    nsIDOMNode *node;
     WCHAR cspace = 0;
+    const WCHAR *p;
 
-    if(pos->type == TEXT_NODE && pos->off != -1 && pos->p[pos->off]) {
-        p = pos->p+pos->off;
+    do {
+        switch(iter->type) {
+        case TEXT_NODE: {
+            const PRUnichar *str;
+            nsAString nsstr;
+            WCHAR c;
 
-        if(isspace(*p))
-            while(isspaceW(*++p));
-        else
-            p++;
-
-        if(*p && isspaceW(*p)) {
-            cspace = ' ';
-            while(p[1] && isspaceW(p[1]))
-                p++;
-        }
-
-        if(*p) {
-            *new_pos = *pos;
-            new_pos->off = p - pos->p;
-            dompos_addref(new_pos);
-
-            return cspace ? cspace : *p;
-        }else {
-            last_space = *pos;
-            last_space.off = p - pos->p;
-            dompos_addref(&last_space);
-        }
-    }
-
-    iter = next_node(pos->node);
-
-    while(iter) {
-        switch(get_node_type(iter)) {
-        case TEXT_NODE:
-            tmp_pos.node = iter;
-            tmp_pos.type = TEXT_NODE;
-            tmp_pos.off = 0;
-            dompos_addref(&tmp_pos);
-
-            p = tmp_pos.p;
-
+            get_text_node_data(iter->node, &nsstr, &str);
+            p = str+iter->off;
             if(!*p) {
-                dompos_release(&tmp_pos);
+                nsAString_Finish(&nsstr);
                 break;
-            }else if(isspaceW(*p)) {
+            }
+
+            c = *p;
+            if(isspaceW(c)) {
+                while(isspaceW(*p))
+                    p++;
+
                 if(cspace)
-                    dompos_release(&last_space);
+                    free_rangepoint(&last_space);
                 else
                     cspace = ' ';
 
-                while(p[1] && isspaceW(p[1]))
-                      p++;
-
-                tmp_pos.off = p-tmp_pos.p;
-
-                if(!p[1]) {
-                    last_space = tmp_pos;
+                iter->off = p-str;
+                c = *p;
+                nsAString_Finish(&nsstr);
+                if(!c) { /* continue to skip spaces */
+                    init_rangepoint(&last_space, iter->node, iter->off);
                     break;
                 }
 
-                *new_pos = tmp_pos;
-                nsIDOMNode_Release(iter);
                 return cspace;
-            }else if(cspace) {
-                *new_pos = last_space;
-                dompos_release(&tmp_pos);
-                nsIDOMNode_Release(iter);
-
-                return cspace;
-            }else if(*p) {
-                tmp_pos.off = 0;
-                *new_pos = tmp_pos;
+            }else {
+                nsAString_Finish(&nsstr);
             }
 
-            nsIDOMNode_Release(iter);
-            return *p;
+            /* If we have a non-space char and we're skipping spaces, stop and return the last found space. */
+            if(cspace) {
+                free_rangepoint(iter);
+                *iter = last_space;
+                return cspace;
+            }
 
+            iter->off++;
+            return c;
+        }
         case ELEMENT_NODE:
-            if(is_elem_tag(iter, brW)) {
-                if(cspace)
-                    dompos_release(&last_space);
-                cspace = '\n';
+            node = get_child_node(iter->node, iter->off);
+            if(!node)
+                break;
 
-                nsIDOMNode_AddRef(iter);
-                last_space.node = iter;
-                last_space.type = ELEMENT_NODE;
-                last_space.off = 0;
-                last_space.p = NULL;
-            }else if(is_elem_tag(iter, hrW)) {
+            if(is_elem_tag(node, brW)) {
                 if(cspace) {
-                    *new_pos = last_space;
-                    nsIDOMNode_Release(iter);
+                    nsIDOMNode_Release(node);
+                    free_rangepoint(iter);
+                    *iter = last_space;
                     return cspace;
                 }
 
-                new_pos->node = iter;
-                new_pos->type = ELEMENT_NODE;
-                new_pos->off = 0;
-                new_pos->p = NULL;
+                cspace = '\n';
+                init_rangepoint(&last_space, iter->node, iter->off+1);
+            }else if(is_elem_tag(node, hrW)) {
+                nsIDOMNode_Release(node);
+                if(cspace) {
+                    free_rangepoint(iter);
+                    *iter = last_space;
+                    return cspace;
+                }
+
+                iter->off++;
                 return '\n';
             }
+
+            nsIDOMNode_Release(node);
         }
-
-        tmp = iter;
-        iter = next_node(iter);
-        nsIDOMNode_Release(tmp);
-    }
-
-    if(cspace) {
-        *new_pos = last_space;
-    }else {
-        *new_pos = *pos;
-        dompos_addref(new_pos);
-    }
+    }while(rangepoint_next_node(iter));
 
     return cspace;
 }
 
-static WCHAR prev_char(HTMLTxtRange *This, const dompos_t *pos, dompos_t *new_pos)
+static WCHAR move_prev_char(rangepoint_t *iter)
 {
-    nsIDOMNode *iter, *tmp;
+    rangepoint_t last_space;
+    nsIDOMNode *node;
+    WCHAR cspace = 0;
     const WCHAR *p;
-    BOOL skip_space = FALSE;
 
-    if(pos->type == TEXT_NODE && isspaceW(pos->p[pos->off]))
-        skip_space = TRUE;
-
-    if(pos->type == TEXT_NODE && pos->off) {
-        p = pos->p+pos->off-1;
-
-        if(skip_space) {
-            while(p >= pos->p && isspace(*p))
-                p--;
-        }
-
-        if(p >= pos->p) {
-            *new_pos = *pos;
-            new_pos->off = p-pos->p;
-            dompos_addref(new_pos);
-            return new_pos->p[new_pos->off];
-        }
-    }
-
-    iter = prev_node(This, pos->node);
-
-    while(iter) {
-        switch(get_node_type(iter)) {
+    do {
+        switch(iter->type) {
         case TEXT_NODE: {
-            dompos_t tmp_pos;
+            const PRUnichar *str;
+            nsAString nsstr;
+            WCHAR c;
 
-            tmp_pos.node = iter;
-            tmp_pos.type = TEXT_NODE;
-            tmp_pos.off = 0;
-            dompos_addref(&tmp_pos);
-
-            p = tmp_pos.p + strlenW(tmp_pos.p)-1;
-
-            if(skip_space) {
-                while(p >= tmp_pos.p && isspaceW(*p))
-                    p--;
-            }
-
-            if(p < tmp_pos.p) {
-                dompos_release(&tmp_pos);
+            if(!iter->off)
                 break;
-            }
 
-            tmp_pos.off = p-tmp_pos.p;
-            *new_pos = tmp_pos;
-            nsIDOMNode_Release(iter);
-            return *p;
-        }
+            get_text_node_data(iter->node, &nsstr, &str);
 
-        case ELEMENT_NODE:
-            if(is_elem_tag(iter, brW)) {
-                if(skip_space) {
-                    skip_space = FALSE;
+            p = str+iter->off-1;
+            c = *p;
+
+            if(isspaceW(c)) {
+                while(p > str && isspaceW(*(p-1)))
+                    p--;
+
+                if(cspace)
+                    free_rangepoint(&last_space);
+                else
+                    cspace = ' ';
+
+                iter->off = p-str;
+                nsAString_Finish(&nsstr);
+                if(p == str) { /* continue to skip spaces */
+                    init_rangepoint(&last_space, iter->node, iter->off);
                     break;
                 }
-            }else if(!is_elem_tag(iter, hrW)) {
-                break;
+
+                return cspace;
+            }else {
+                nsAString_Finish(&nsstr);
             }
 
-            new_pos->node = iter;
-            new_pos->type = ELEMENT_NODE;
-            new_pos->off = 0;
-            new_pos->p = NULL;
-            return '\n';
-        }
+            /* If we have a non-space char and we're skipping spaces, stop and return the last found space. */
+            if(cspace) {
+                free_rangepoint(iter);
+                *iter = last_space;
+                return cspace;
+            }
 
-        tmp = iter;
-        iter = prev_node(This, iter);
-        nsIDOMNode_Release(tmp);
+            iter->off--;
+            return c;
+        }
+        case ELEMENT_NODE:
+            if(!iter->off)
+                break;
+
+            node = get_child_node(iter->node, iter->off-1);
+            if(!node)
+                break;
+
+            if(is_elem_tag(node, brW)) {
+                if(cspace)
+                    free_rangepoint(&last_space);
+                cspace = '\n';
+                init_rangepoint(&last_space, iter->node, iter->off-1);
+            }else if(is_elem_tag(node, hrW)) {
+                nsIDOMNode_Release(node);
+                if(cspace) {
+                    free_rangepoint(iter);
+                    *iter = last_space;
+                    return cspace;
+                }
+
+                iter->off--;
+                return '\n';
+            }
+
+            nsIDOMNode_Release(node);
+        }
+    }while(rangepoint_prev_node(iter));
+
+    if(cspace) {
+        free_rangepoint(iter);
+        *iter = last_space;
+        return cspace;
     }
 
-    *new_pos = *pos;
-    dompos_addref(new_pos);
     return 0;
 }
 
-static LONG move_next_chars(LONG cnt, const dompos_t *pos, BOOL col, const dompos_t *bound_pos,
-        BOOL *bounded, dompos_t *new_pos)
+static LONG move_by_chars(rangepoint_t *iter, LONG cnt)
 {
-    dompos_t iter, tmp;
     LONG ret = 0;
-    WCHAR c;
 
-    if(bounded)
-        *bounded = FALSE;
-
-    if(col)
-        ret++;
-
-    if(ret >= cnt) {
-        end_space(pos, new_pos);
-        return ret;
-    }
-
-    c = next_char(pos, &iter);
-    ret++;
-
-    while(ret < cnt) {
-        tmp = iter;
-        c = next_char(&tmp, &iter);
-        dompos_release(&tmp);
-        if(!c)
-            break;
-
-        ret++;
-        if(bound_pos && dompos_cmp(&tmp, bound_pos)) {
-            *bounded = TRUE;
+    if(cnt >= 0) {
+        while(ret < cnt && move_next_char(iter))
             ret++;
-        }
+    }else {
+        while(ret > cnt && move_prev_char(iter))
+            ret--;
     }
 
-    *new_pos = iter;
     return ret;
 }
 
-static LONG move_prev_chars(HTMLTxtRange *This, LONG cnt, const dompos_t *pos, BOOL end,
-        const dompos_t *bound_pos, BOOL *bounded, dompos_t *new_pos)
+static LONG find_prev_space(rangepoint_t *iter, BOOL first_space)
 {
-    dompos_t iter, tmp;
-    LONG ret = 0;
-    BOOL prev_eq = FALSE;
+    rangepoint_t prev;
     WCHAR c;
 
-    if(bounded)
-        *bounded = FALSE;
-
-    c = prev_char(This, pos, &iter);
-    if(c)
-        ret++;
-
-    while(c && ret < cnt) {
-        tmp = iter;
-        c = prev_char(This, &tmp, &iter);
-        dompos_release(&tmp);
-        if(!c) {
-            if(end)
-                ret++;
-            break;
-        }
-
-        ret++;
-
-        if(prev_eq) {
-            *bounded = TRUE;
-            ret++;
-        }
-
-        prev_eq = bound_pos && dompos_cmp(&iter, bound_pos);
-    }
-
-    *new_pos = iter;
-    return ret;
-}
-
-static LONG find_prev_space(HTMLTxtRange *This, const dompos_t *pos, BOOL first_space, dompos_t *ret)
-{
-    dompos_t iter, tmp;
-    WCHAR c;
-
-    c = prev_char(This, pos, &iter);
-    if(!c || (first_space && isspaceW(c))) {
-        *ret = iter;
+    init_rangepoint(&prev, iter->node, iter->off);
+    c = move_prev_char(&prev);
+    if(!c || (first_space && isspaceW(c)))
         return FALSE;
-    }
 
-    while(1) {
-        tmp = iter;
-        c = prev_char(This, &tmp, &iter);
-        if(!c || isspaceW(c)) {
-            dompos_release(&iter);
-            break;
-        }
-        dompos_release(&tmp);
-    }
+    do {
+        free_rangepoint(iter);
+        init_rangepoint(iter, prev.node, prev.off);
+        c = move_prev_char(&prev);
+    }while(c && !isspaceW(c));
 
-    *ret = tmp;
+    free_rangepoint(&prev);
     return TRUE;
 }
 
-static int find_word_end(const dompos_t *pos, dompos_t *ret)
+static BOOL find_word_end(rangepoint_t *iter, BOOL is_collapsed)
 {
-    dompos_t iter, tmp;
-    int cnt = 1;
+    rangepoint_t prev_iter;
     WCHAR c;
-    c = get_pos_char(pos);
-    if(isspaceW(c)) {
-        *ret = *pos;
-        dompos_addref(ret);
-        return 0;
-    }
+    BOOL ret = FALSE;
 
-    c = next_char(pos, &iter);
-    if(!c) {
-        *ret = iter;
-        return 0;
-    }
-    if(c == '\n') {
-        *ret = *pos;
-        dompos_addref(ret);
-        return 0;
-    }
-
-    while(c && !isspaceW(c)) {
-        tmp = iter;
-        c = next_char(&tmp, &iter);
-        if(c == '\n') {
-            dompos_release(&iter);
-            iter = tmp;
-        }else {
-            cnt++;
-            dompos_release(&tmp);
-        }
-    }
-
-    *ret = iter;
-    return cnt;
-}
-
-static LONG move_next_words(LONG cnt, const dompos_t *pos, dompos_t *new_pos)
-{
-    dompos_t iter, tmp;
-    LONG ret = 0;
-    WCHAR c;
-
-    c = get_pos_char(pos);
-    if(isspaceW(c)) {
-        end_space(pos, &iter);
-        ret++;
-    }else {
-        c = next_char(pos, &iter);
-        if(c && isspaceW(c))
-            ret++;
-    }
-
-    while(c && ret < cnt) {
-        tmp = iter;
-        c = next_char(&tmp, &iter);
-        dompos_release(&tmp);
+    if(!is_collapsed) {
+        init_rangepoint(&prev_iter, iter->node, iter->off);
+        c = move_prev_char(&prev_iter);
+        free_rangepoint(&prev_iter);
         if(isspaceW(c))
-            ret++;
+            return FALSE;
     }
 
-    *new_pos = iter;
+    do {
+        init_rangepoint(&prev_iter, iter->node, iter->off);
+        c = move_next_char(iter);
+        if(c == '\n') {
+            free_rangepoint(iter);
+            *iter = prev_iter;
+            return ret;
+        }
+        if(!c) {
+            if(!ret)
+                ret = !rangepoint_cmp(iter, &prev_iter);
+        }else {
+            ret = TRUE;
+        }
+        free_rangepoint(&prev_iter);
+    }while(c && !isspaceW(c));
+
     return ret;
 }
 
-static LONG move_prev_words(HTMLTxtRange *This, LONG cnt, const dompos_t *pos, dompos_t *new_pos)
+static LONG move_by_words(rangepoint_t *iter, LONG cnt)
 {
-    dompos_t iter, tmp;
     LONG ret = 0;
 
-    iter = *pos;
-    dompos_addref(&iter);
+    if(cnt >= 0) {
+        WCHAR c;
 
-    while(ret < cnt) {
-        if(!find_prev_space(This, &iter, FALSE, &tmp))
-            break;
-
-        dompos_release(&iter);
-        iter = tmp;
-        ret++;
+        while(ret < cnt && (c = move_next_char(iter))) {
+            if(isspaceW(c))
+                ret++;
+        }
+    }else {
+        while(ret > cnt && find_prev_space(iter, FALSE))
+            ret--;
     }
 
-    *new_pos = iter;
     return ret;
 }
 
@@ -990,29 +810,24 @@ static HRESULT WINAPI HTMLTxtRange_QueryInterface(IHTMLTxtRange *iface, REFIID r
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IHTMLTxtRange_iface;
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
         *ppv = &This->IHTMLTxtRange_iface;
     }else if(IsEqualGUID(&IID_IHTMLTxtRange, riid)) {
-        TRACE("(%p)->(IID_IHTMLTxtRange %p)\n", This, ppv);
         *ppv = &This->IHTMLTxtRange_iface;
     }else if(IsEqualGUID(&IID_IOleCommandTarget, riid)) {
-        TRACE("(%p)->(IID_IOleCommandTarget %p)\n", This, ppv);
         *ppv = &This->IOleCommandTarget_iface;
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        *ppv = NULL;
+        WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI HTMLTxtRange_AddRef(IHTMLTxtRange *iface)
@@ -1037,6 +852,7 @@ static ULONG WINAPI HTMLTxtRange_Release(IHTMLTxtRange *iface)
             nsIDOMRange_Release(This->nsrange);
         if(This->doc)
             list_remove(&This->entry);
+        release_dispex(&This->dispex);
         heap_free(This);
     }
 
@@ -1046,16 +862,16 @@ static ULONG WINAPI HTMLTxtRange_Release(IHTMLTxtRange *iface)
 static HRESULT WINAPI HTMLTxtRange_GetTypeInfoCount(IHTMLTxtRange *iface, UINT *pctinfo)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfoCount(&This->dispex.IDispatchEx_iface, pctinfo);
 }
 
 static HRESULT WINAPI HTMLTxtRange_GetTypeInfo(IHTMLTxtRange *iface, UINT iTInfo,
                                                LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfo(&This->dispex.IDispatchEx_iface, iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLTxtRange_GetIDsOfNames(IHTMLTxtRange *iface, REFIID riid,
@@ -1063,9 +879,9 @@ static HRESULT WINAPI HTMLTxtRange_GetIDsOfNames(IHTMLTxtRange *iface, REFIID ri
                                                  LCID lcid, DISPID *rgDispId)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetIDsOfNames(&This->dispex.IDispatchEx_iface, riid, rgszNames,
+            cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLTxtRange_Invoke(IHTMLTxtRange *iface, DISPID dispIdMember,
@@ -1073,9 +889,9 @@ static HRESULT WINAPI HTMLTxtRange_Invoke(IHTMLTxtRange *iface, DISPID dispIdMem
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    return IDispatchEx_Invoke(&This->dispex.IDispatchEx_iface, dispIdMember, riid,
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLTxtRange_get_htmlText(IHTMLTxtRange *iface, BSTR *p)
@@ -1311,31 +1127,26 @@ static HRESULT WINAPI HTMLTxtRange_expand(IHTMLTxtRange *iface, BSTR Unit, VARIA
 
     switch(unit) {
     case RU_WORD: {
-        dompos_t end_pos, start_pos, new_start_pos, new_end_pos;
-        cpp_bool collapsed;
+        rangepoint_t end, start;
+        cpp_bool is_collapsed;
 
-        nsIDOMRange_GetCollapsed(This->nsrange, &collapsed);
+        get_start_point(This, &start);
+        get_end_point(This, &end);
 
-        get_cur_pos(This, TRUE, &start_pos);
-        get_cur_pos(This, FALSE, &end_pos);
+        nsIDOMRange_GetCollapsed(This->nsrange, &is_collapsed);
 
-        if(find_word_end(&end_pos, &new_end_pos) || collapsed) {
-            set_range_pos(This, FALSE, &new_end_pos);
+        if(find_word_end(&end, is_collapsed)) {
+            set_end_point(This, &end);
             *Success = VARIANT_TRUE;
         }
 
-        if(start_pos.type && (get_pos_char(&end_pos) || !dompos_cmp(&new_end_pos, &end_pos))) {
-            if(find_prev_space(This, &start_pos, TRUE, &new_start_pos)) {
-                set_range_pos(This, TRUE, &new_start_pos);
-                *Success = VARIANT_TRUE;
-            }
-            dompos_release(&new_start_pos);
+        if(find_prev_space(&start, TRUE)) {
+            set_start_point(This, &start);
+            *Success = VARIANT_TRUE;
         }
 
-        dompos_release(&new_end_pos);
-        dompos_release(&end_pos);
-        dompos_release(&start_pos);
-
+        free_rangepoint(&end);
+        free_rangepoint(&start);
         break;
     }
 
@@ -1386,45 +1197,28 @@ static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
 
     switch(unit) {
     case RU_CHAR: {
-        dompos_t cur_pos, new_pos;
+        rangepoint_t start;
 
-        get_cur_pos(This, TRUE, &cur_pos);
+        get_start_point(This, &start);
 
-        if(Count > 0) {
-            *ActualCount = move_next_chars(Count, &cur_pos, TRUE, NULL, NULL, &new_pos);
-            set_range_pos(This, FALSE, &new_pos);
-            dompos_release(&new_pos);
+        *ActualCount = move_by_chars(&start, Count);
 
-            IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, FALSE);
-        }else {
-            *ActualCount = -move_prev_chars(This, -Count, &cur_pos, FALSE, NULL, NULL, &new_pos);
-            set_range_pos(This, TRUE, &new_pos);
-            IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
-            dompos_release(&new_pos);
-        }
-
-        dompos_release(&cur_pos);
+        set_start_point(This, &start);
+        IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
+        free_rangepoint(&start);
         break;
     }
 
     case RU_WORD: {
-        dompos_t cur_pos, new_pos;
+        rangepoint_t start;
 
-        get_cur_pos(This, TRUE, &cur_pos);
+        get_start_point(This, &start);
 
-        if(Count > 0) {
-            *ActualCount = move_next_words(Count, &cur_pos, &new_pos);
-            set_range_pos(This, FALSE, &new_pos);
-            dompos_release(&new_pos);
-            IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, FALSE);
-        }else {
-            *ActualCount = -move_prev_words(This, -Count, &cur_pos, &new_pos);
-            set_range_pos(This, TRUE, &new_pos);
-            IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
-            dompos_release(&new_pos);
-        }
+        *ActualCount = move_by_words(&start, Count);
 
-        dompos_release(&cur_pos);
+        set_start_point(This, &start);
+        IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
+        free_rangepoint(&start);
         break;
     }
 
@@ -1455,33 +1249,20 @@ static HRESULT WINAPI HTMLTxtRange_moveStart(IHTMLTxtRange *iface, BSTR Unit,
 
     switch(unit) {
     case RU_CHAR: {
-        dompos_t start_pos, end_pos, new_pos;
-        cpp_bool collapsed;
+        rangepoint_t start;
 
-        get_cur_pos(This, TRUE, &start_pos);
-        get_cur_pos(This, FALSE, &end_pos);
-        nsIDOMRange_GetCollapsed(This->nsrange, &collapsed);
+        get_start_point(This, &start);
 
-        if(Count > 0) {
-            BOOL bounded;
+        *ActualCount = move_by_chars(&start, Count);
 
-            *ActualCount = move_next_chars(Count, &start_pos, collapsed, &end_pos, &bounded, &new_pos);
-            set_range_pos(This, !bounded, &new_pos);
-            if(bounded)
-                IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, FALSE);
-        }else {
-            *ActualCount = -move_prev_chars(This, -Count, &start_pos, FALSE, NULL, NULL, &new_pos);
-            set_range_pos(This, TRUE, &new_pos);
-        }
-
-        dompos_release(&start_pos);
-        dompos_release(&end_pos);
-        dompos_release(&new_pos);
+        set_start_point(This, &start);
+        free_rangepoint(&start);
         break;
     }
 
     default:
         FIXME("unimplemented unit %s\n", debugstr_w(Unit));
+        return E_NOTIMPL;
     }
 
     return S_OK;
@@ -1506,28 +1287,14 @@ static HRESULT WINAPI HTMLTxtRange_moveEnd(IHTMLTxtRange *iface, BSTR Unit,
 
     switch(unit) {
     case RU_CHAR: {
-        dompos_t start_pos, end_pos, new_pos;
-        cpp_bool collapsed;
+        rangepoint_t end;
 
-        get_cur_pos(This, TRUE, &start_pos);
-        get_cur_pos(This, FALSE, &end_pos);
-        nsIDOMRange_GetCollapsed(This->nsrange, &collapsed);
+        get_end_point(This, &end);
 
-        if(Count > 0) {
-            *ActualCount = move_next_chars(Count, &end_pos, collapsed, NULL, NULL, &new_pos);
-            set_range_pos(This, FALSE, &new_pos);
-        }else {
-            BOOL bounded;
+        *ActualCount = move_by_chars(&end, Count);
 
-            *ActualCount = -move_prev_chars(This, -Count, &end_pos, TRUE, &start_pos, &bounded, &new_pos);
-            set_range_pos(This, bounded, &new_pos);
-            if(bounded)
-                IHTMLTxtRange_collapse(&This->IHTMLTxtRange_iface, TRUE);
-        }
-
-        dompos_release(&start_pos);
-        dompos_release(&end_pos);
-        dompos_release(&new_pos);
+        set_end_point(This, &end);
+        free_rangepoint(&end);
         break;
     }
 
@@ -1561,23 +1328,128 @@ static HRESULT WINAPI HTMLTxtRange_select(IHTMLTxtRange *iface)
 static HRESULT WINAPI HTMLTxtRange_pasteHTML(IHTMLTxtRange *iface, BSTR html)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(html));
-    return E_NOTIMPL;
+    nsIDOMDocumentFragment *doc_frag;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(html));
+
+    nsres = nsIDOMRange_Collapse(This->nsrange, TRUE);
+    assert(nsres == NS_OK);
+
+    nsAString_InitDepend(&nsstr, html);
+    nsres = nsIDOMRange_CreateContextualFragment(This->nsrange, &nsstr, &doc_frag);
+    nsAString_Finish(&nsstr);
+    if(NS_FAILED(nsres)) {
+        ERR("CreateContextualFragment failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMRange_InsertNode(This->nsrange, (nsIDOMNode*)doc_frag);
+    nsIDOMDocumentFragment_Release(doc_frag);
+    if(NS_FAILED(nsres)) {
+        ERR("InsertNode failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMRange_Collapse(This->nsrange, FALSE);
+    assert(nsres == NS_OK);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTxtRange_moveToElementText(IHTMLTxtRange *iface, IHTMLElement *element)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%p)\n", This, element);
-    return E_NOTIMPL;
+    HTMLElement *elem;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, element);
+
+    elem = unsafe_impl_from_IHTMLElement(element);
+    if(!elem)
+        return E_INVALIDARG;
+
+    nsres = nsIDOMRange_SelectNodeContents(This->nsrange, elem->node.nsnode);
+    if(NS_FAILED(nsres)) {
+        ERR("SelectNodeContents failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTxtRange_setEndPoint(IHTMLTxtRange *iface, BSTR how,
         IHTMLTxtRange *SourceRange)
 {
     HTMLTxtRange *This = impl_from_IHTMLTxtRange(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(how), SourceRange);
-    return E_NOTIMPL;
+    HTMLTxtRange *src_range;
+    nsIDOMNode *ref_node;
+    INT32 ref_offset;
+    BOOL set_start;
+    int how_type;
+    INT16 cmp;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(how), SourceRange);
+
+    how_type = string_to_nscmptype(how);
+    if(how_type == -1)
+        return E_INVALIDARG;
+
+    src_range = get_range_object(This->doc, SourceRange);
+    if(!src_range)
+        return E_FAIL;
+
+    switch(how_type) {
+    case NS_START_TO_START:
+    case NS_END_TO_START:
+        nsres = nsIDOMRange_GetStartContainer(src_range->nsrange, &ref_node);
+        assert(nsres == NS_OK);
+
+        nsres = nsIDOMRange_GetStartOffset(src_range->nsrange, &ref_offset);
+        assert(nsres == NS_OK);
+
+        set_start = how_type == NS_START_TO_START;
+        break;
+    case NS_END_TO_END:
+    case NS_START_TO_END:
+        nsres = nsIDOMRange_GetEndContainer(src_range->nsrange, &ref_node);
+        assert(nsres == NS_OK);
+
+        nsres = nsIDOMRange_GetEndOffset(src_range->nsrange, &ref_offset);
+        assert(nsres == NS_OK);
+
+        set_start = how_type == NS_START_TO_END;
+        break;
+    DEFAULT_UNREACHABLE;
+    }
+
+    nsres = nsIDOMRange_ComparePoint(This->nsrange, ref_node, ref_offset, &cmp);
+    assert(nsres == NS_OK);
+
+    if(set_start) {
+        if(cmp <= 0) {
+            nsres = nsIDOMRange_SetStart(This->nsrange, ref_node, ref_offset);
+        }else {
+            nsres = nsIDOMRange_Collapse(This->nsrange, FALSE);
+            assert(nsres == NS_OK);
+
+            nsres = nsIDOMRange_SetEnd(This->nsrange, ref_node, ref_offset);
+        }
+    }else {
+        if(cmp >= 0) {
+            nsres = nsIDOMRange_SetEnd(This->nsrange, ref_node, ref_offset);
+        }else {
+            nsres = nsIDOMRange_Collapse(This->nsrange, TRUE);
+            assert(nsres == NS_OK);
+
+            nsres = nsIDOMRange_SetStart(This->nsrange, ref_node, ref_offset);
+        }
+    }
+    assert(nsres == NS_OK);
+
+    nsIDOMNode_Release(ref_node);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTxtRange_compareEndPoints(IHTMLTxtRange *iface, BSTR how,
@@ -1836,6 +1708,17 @@ static const IOleCommandTargetVtbl OleCommandTargetVtbl = {
     RangeCommandTarget_Exec
 };
 
+static const tid_t HTMLTxtRange_iface_tids[] = {
+    IHTMLTxtRange_tid,
+    0
+};
+static dispex_static_data_t HTMLTxtRange_dispex = {
+    NULL,
+    IHTMLTxtRange_tid,
+    NULL,
+    HTMLTxtRange_iface_tids
+};
+
 HRESULT HTMLTxtRange_Create(HTMLDocumentNode *doc, nsIDOMRange *nsrange, IHTMLTxtRange **p)
 {
     HTMLTxtRange *ret;
@@ -1843,6 +1726,8 @@ HRESULT HTMLTxtRange_Create(HTMLDocumentNode *doc, nsIDOMRange *nsrange, IHTMLTx
     ret = heap_alloc(sizeof(HTMLTxtRange));
     if(!ret)
         return E_OUTOFMEMORY;
+
+    init_dispex(&ret->dispex, (IUnknown*)&ret->IHTMLTxtRange_iface, &HTMLTxtRange_dispex);
 
     ret->IHTMLTxtRange_iface.lpVtbl = &HTMLTxtRangeVtbl;
     ret->IOleCommandTarget_iface.lpVtbl = &OleCommandTargetVtbl;

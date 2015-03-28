@@ -204,6 +204,8 @@ static HRESULT WINAPI HTMLElementCollection_QueryInterface(IHTMLElementCollectio
 {
     HTMLElementCollection *This = impl_from_IHTMLElementCollection(iface);
 
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         *ppv = &This->IHTMLElementCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLElementCollection, riid)) {

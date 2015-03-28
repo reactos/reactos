@@ -72,7 +72,7 @@ typedef struct {
 
 typedef struct {
     func_disp_t *func_obj;
-    IDispatch *val;
+    VARIANT val;
 } func_obj_entry_t;
 
 struct dispex_dynamic_data_t {
@@ -215,9 +215,15 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUN
     func_info_t *info;
     HRESULT hres;
 
-    if(data->func_cnt && data->funcs[data->func_cnt-1].id == desc->memid) {
-        info = data->funcs+data->func_cnt-1;
-    }else {
+    for(info = data->funcs; info < data->funcs+data->func_cnt; info++) {
+        if(info->id == desc->memid) {
+            if(info->tid != tid)
+                return; /* Duplicated in other interface */
+            break;
+        }
+    }
+
+    if(info == data->funcs+data->func_cnt) {
         if(data->func_cnt == *size)
             data->funcs = heap_realloc_zero(data->funcs, (*size <<= 1)*sizeof(func_info_t));
 
@@ -324,9 +330,18 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
     }
 
     data = heap_alloc(sizeof(dispex_data_t));
+    if (!data) {
+        ERR("Out of memory\n");
+        return NULL;
+    }
     data->func_cnt = 0;
     data->func_disp_cnt = 0;
     data->funcs = heap_alloc_zero(size*sizeof(func_info_t));
+    if (!data->funcs) {
+        heap_free (data);
+        ERR("Out of memory\n");
+        return NULL;
+    }
     list_add_tail(&dispex_data_list, &data->entry);
 
     while(*tid) {
@@ -357,22 +372,6 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
 
     data->funcs = heap_realloc(data->funcs, data->func_cnt * sizeof(func_info_t));
     qsort(data->funcs, data->func_cnt, sizeof(func_info_t), dispid_cmp);
-
-    for(i = 1; i < data->func_cnt && data->funcs[i-1].id != data->funcs[i].id; i++);
-    if(i < data->func_cnt) {
-        unsigned j = i--;
-
-        /* We have at least one duplicated property. This may happen if more than one
-         * interface implements the same property. We have to remove these duplicated
-         * entries. */
-
-        while(j < data->func_cnt) {
-            while(j+1 < data->func_cnt && data->funcs[j+1].id == data->funcs[j].id)
-                j++;
-            data->funcs[i++] = data->funcs[j++];
-        }
-        data->func_cnt = i;
-    }
 
     data->name_table = heap_alloc(data->func_cnt * sizeof(func_info_t*));
     for(i=0; i < data->func_cnt; i++)
@@ -635,8 +634,9 @@ static HRESULT WINAPI Function_QueryInterface(IUnknown *iface, REFIID riid, void
 {
     func_disp_t *This = impl_from_IUnknown(iface);
 
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IUnknown_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
@@ -818,6 +818,7 @@ static HRESULT invoke_disp_value(DispatchEx *This, IDispatch *func_disp, LCID lc
 static HRESULT get_func_obj_entry(DispatchEx *This, func_info_t *func, func_obj_entry_t **ret)
 {
     dispex_dynamic_data_t *dynamic_data;
+    func_obj_entry_t *entry;
 
     dynamic_data = get_dynamic_data(This);
     if(!dynamic_data)
@@ -829,20 +830,18 @@ static HRESULT get_func_obj_entry(DispatchEx *This, func_info_t *func, func_obj_
             return E_OUTOFMEMORY;
     }
 
-    if(!dynamic_data->func_disps[func->func_disp_idx].func_obj) {
-        func_disp_t *func_obj;
-
-        func_obj = create_func_disp(This, func);
-        if(!func_obj)
+    entry = dynamic_data->func_disps + func->func_disp_idx;
+    if(!entry->func_obj) {
+        entry->func_obj = create_func_disp(This, func);
+        if(!entry->func_obj)
             return E_OUTOFMEMORY;
 
-        dynamic_data->func_disps[func->func_disp_idx].func_obj = func_obj;
-
-        IDispatchEx_AddRef(&func_obj->dispex.IDispatchEx_iface);
-        dynamic_data->func_disps[func->func_disp_idx].val = (IDispatch*)&func_obj->dispex.IDispatchEx_iface;
+        IDispatchEx_AddRef(&entry->func_obj->dispex.IDispatchEx_iface);
+        V_VT(&entry->val) = VT_DISPATCH;
+        V_DISPATCH(&entry->val) = (IDispatch*)&entry->func_obj->dispex.IDispatchEx_iface;
     }
 
-    *ret = dynamic_data->func_disps+func->func_disp_idx;
+    *ret = entry;
     return S_OK;
 }
 
@@ -1116,13 +1115,18 @@ static HRESULT function_invoke(DispatchEx *This, func_info_t *func, WORD flags, 
            && This->dynamic_data->func_disps[func->func_disp_idx].func_obj) {
             func_obj_entry_t *entry = This->dynamic_data->func_disps + func->func_disp_idx;
 
-            if((IDispatch*)&entry->func_obj->dispex.IDispatchEx_iface != entry->val) {
-                if(!entry->val) {
+            if(V_VT(&entry->val) != VT_DISPATCH) {
+                FIXME("calling %s not supported\n", debugstr_variant(&entry->val));
+                return E_NOTIMPL;
+            }
+
+            if((IDispatch*)&entry->func_obj->dispex.IDispatchEx_iface != V_DISPATCH(&entry->val)) {
+                if(!V_DISPATCH(&entry->val)) {
                     FIXME("Calling null\n");
                     return E_FAIL;
                 }
 
-                hres = invoke_disp_value(This, entry->val, 0, flags, dp, res, ei, NULL);
+                hres = invoke_disp_value(This, V_DISPATCH(&entry->val), 0, flags, dp, res, ei, NULL);
                 break;
             }
         }
@@ -1151,16 +1155,11 @@ static HRESULT function_invoke(DispatchEx *This, func_info_t *func, WORD flags, 
         if(FAILED(hres))
             return hres;
 
-        V_VT(res) = VT_DISPATCH;
-        V_DISPATCH(res) = entry->val;
-        if(V_DISPATCH(res))
-            IDispatch_AddRef(V_DISPATCH(res));
-        hres = S_OK;
-        break;
+        V_VT(res) = VT_EMPTY;
+        return VariantCopy(res, &entry->val);
     }
     case DISPATCH_PROPERTYPUT: {
         func_obj_entry_t *entry;
-        VARIANT *v;
 
         if(dp->cArgs != 1 || (dp->cNamedArgs == 1 && *dp->rgdispidNamedArgs != DISPID_PROPERTYPUT)
            || dp->cNamedArgs > 1) {
@@ -1168,22 +1167,17 @@ static HRESULT function_invoke(DispatchEx *This, func_info_t *func, WORD flags, 
             return E_INVALIDARG;
         }
 
-        v = dp->rgvarg;
-        /* FIXME: not exactly right */
-        if(V_VT(v) != VT_DISPATCH)
-            return E_NOTIMPL;
-
+        /*
+         * NOTE: Although we have IDispatchEx tests showing, that it's not allowed to set
+         * function property using InvokeEx, it's possible to do that from jscript.
+         * Native probably uses some undocumented interface in this case, but it should
+         * be fine for us to allow IDispatchEx handle that.
+         */
         hres = get_func_obj_entry(This, func, &entry);
         if(FAILED(hres))
             return hres;
 
-        if(entry->val)
-            IDispatch_Release(entry->val);
-        entry->val = V_DISPATCH(v);
-        if(entry->val)
-            IDispatch_AddRef(entry->val);
-        hres = S_OK;
-        break;
+        return VariantCopy(&entry->val, dp->rgvarg);
     }
     default:
         FIXME("Unimplemented flags %x\n", flags);
@@ -1215,7 +1209,6 @@ static HRESULT invoke_builtin_prop(DispatchEx *This, DISPID id, LCID lcid, WORD 
 
     switch(flags) {
     case DISPATCH_PROPERTYPUT:
-    case DISPATCH_PROPERTYPUT | DISPATCH_PROPERTYPUTREF:
         if(res)
             V_VT(res) = VT_EMPTY;
         hres = builtin_propput(This, func, dp, caller);
@@ -1253,41 +1246,75 @@ static HRESULT invoke_builtin_prop(DispatchEx *This, DISPID id, LCID lcid, WORD 
     return hres;
 }
 
-HRESULT remove_prop(DispatchEx *This, BSTR name, VARIANT_BOOL *success)
+HRESULT remove_attribute(DispatchEx *This, DISPID id, VARIANT_BOOL *success)
 {
-    dynamic_prop_t *prop;
-    DISPID id;
-    HRESULT hres;
+    switch(get_dispid_type(id)) {
+    case DISPEXPROP_CUSTOM:
+        FIXME("DISPEXPROP_CUSTOM not supported\n");
+        return E_NOTIMPL;
 
-    hres = get_builtin_id(This, name, 0, &id);
-    if(hres == S_OK) {
-        DISPID named_id = DISPID_PROPERTYPUT;
+    case DISPEXPROP_DYNAMIC: {
+        DWORD idx = id - DISPID_DYNPROP_0;
+        dynamic_prop_t *prop;
+
+        prop = This->dynamic_data->props+idx;
+        VariantClear(&prop->var);
+        prop->flags |= DYNPROP_DELETED;
+        *success = VARIANT_TRUE;
+        return S_OK;
+    }
+    case DISPEXPROP_BUILTIN: {
         VARIANT var;
-        DISPPARAMS dp = {&var,&named_id,1,1};
-        EXCEPINFO ei;
+        DISPPARAMS dp = {&var,NULL,1,0};
+        dispex_data_t *data;
+        func_info_t *func;
+        HRESULT hres;
+
+        data = get_dispex_data(This);
+        if(!data)
+            return E_FAIL;
+
+        hres = get_builtin_func(data, id, &func);
+        if(FAILED(hres))
+            return hres;
+
+        /* For builtin functions, we set their value to the original function. */
+        if(func->func_disp_idx != -1) {
+            func_obj_entry_t *entry;
+
+            if(!This->dynamic_data || !This->dynamic_data->func_disps
+                || !This->dynamic_data->func_disps[func->func_disp_idx].func_obj) {
+                *success = VARIANT_FALSE;
+                return S_OK;
+            }
+
+            entry = This->dynamic_data->func_disps + func->func_disp_idx;
+            if(V_VT(&entry->val) == VT_DISPATCH
+                    && V_DISPATCH(&entry->val) == (IDispatch*)&entry->func_obj->dispex.IDispatchEx_iface) {
+                *success = VARIANT_FALSE;
+                return S_OK;
+            }
+
+            VariantClear(&entry->val);
+            V_VT(&entry->val) = VT_DISPATCH;
+            V_DISPATCH(&entry->val) = (IDispatch*)&entry->func_obj->dispex.IDispatchEx_iface;
+            IDispatch_AddRef(V_DISPATCH(&entry->val));
+            *success = VARIANT_TRUE;
+            return S_OK;
+        }
 
         V_VT(&var) = VT_EMPTY;
-        memset(&ei, 0, sizeof(ei));
-        hres = invoke_builtin_prop(This, id, 0, DISPATCH_PROPERTYPUT, &dp, NULL, &ei, NULL);
+        hres = builtin_propput(This, func, &dp, NULL);
         if(FAILED(hres))
             return hres;
 
         *success = VARIANT_TRUE;
         return S_OK;
     }
-
-    hres = get_dynamic_prop(This, name, 0, &prop);
-    if(FAILED(hres)) {
-        if(hres != DISP_E_UNKNOWNNAME)
-            return hres;
-        *success = VARIANT_FALSE;
-        return S_OK;
+    default:
+        assert(0);
+        return E_FAIL;
     }
-
-    VariantClear(&prop->var);
-    prop->flags |= DYNPROP_DELETED;
-    *success = VARIANT_TRUE;
-    return S_OK;
 }
 
 static inline DispatchEx *impl_from_IDispatchEx(IDispatchEx *iface)
@@ -1406,6 +1433,9 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
     TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 
+    if(wFlags == (DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF))
+        wFlags = DISPATCH_PROPERTYPUT;
+
     switch(get_dispid_type(id)) {
     case DISPEXPROP_CUSTOM:
         if(!This->data->vtbl || !This->data->vtbl->invoke)
@@ -1438,7 +1468,6 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
                 return DISP_E_UNKNOWNNAME;
             V_VT(pvarRes) = VT_EMPTY;
             return variant_copy(pvarRes, &prop->var);
-        case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF:
         case DISPATCH_PROPERTYPUT:
             if(pdp->cArgs != 1 || (pdp->cNamedArgs == 1 && *pdp->rgdispidNamedArgs != DISPID_PROPERTYPUT)
                || pdp->cNamedArgs > 1) {
@@ -1626,26 +1655,16 @@ static IDispatchExVtbl DispatchExVtbl = {
 
 BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
 {
-    static const IID IID_UndocumentedScriptIface =
-        {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa0}};
-    static const IID IID_IDispatchJS =
-        {0x719c3050,0xf9d3,0x11cf,{0xa4,0x93,0x00,0x40,0x05,0x23,0xa8,0xa6}};
-
-    if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
+    if(IsEqualGUID(&IID_IDispatch, riid))
         *ppv = &This->IDispatchEx_iface;
-    }else if(IsEqualGUID(&IID_IDispatchEx, riid)) {
-        TRACE("(%p)->(IID_IDispatchEx %p)\n", This, ppv);
+    else if(IsEqualGUID(&IID_IDispatchEx, riid))
         *ppv = &This->IDispatchEx_iface;
-    }else if(IsEqualGUID(&IID_IDispatchJS, riid)) {
-        TRACE("(%p)->(IID_IDispatchJS %p) returning NULL\n", This, ppv);
+    else if(IsEqualGUID(&IID_IDispatchJS, riid))
         *ppv = NULL;
-    }else if(IsEqualGUID(&IID_UndocumentedScriptIface, riid)) {
-        TRACE("(%p)->(IID_UndocumentedScriptIface %p) returning NULL\n", This, ppv);
+    else if(IsEqualGUID(&IID_UndocumentedScriptIface, riid))
         *ppv = NULL;
-    }else {
+    else
         return FALSE;
-    }
 
     if(*ppv)
         IUnknown_AddRef((IUnknown*)*ppv);
@@ -1706,8 +1725,7 @@ void release_dispex(DispatchEx *This)
                 iter->func_obj->obj = NULL;
                 IDispatchEx_Release(&iter->func_obj->dispex.IDispatchEx_iface);
             }
-            if(iter->val)
-                IDispatch_Release(iter->val);
+            VariantClear(&iter->val);
         }
 
         heap_free(This->dynamic_data->func_disps);

@@ -118,8 +118,21 @@ static HRESULT WINAPI HTMLFrameBase_put_src(IHTMLFrameBase *iface, BSTR v)
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
     if(!This->content_window || !This->element.node.doc || !This->element.node.doc->basedoc.window) {
-        FIXME("detached element\n");
-        return E_FAIL;
+        nsAString nsstr;
+        nsresult nsres;
+
+        nsAString_InitDepend(&nsstr, v);
+        if(This->nsframe)
+            nsres = nsIDOMHTMLFrameElement_SetSrc(This->nsframe, &nsstr);
+        else
+            nsres = nsIDOMHTMLIFrameElement_SetSrc(This->nsiframe, &nsstr);
+        nsAString_Finish(&nsstr);
+        if(NS_FAILED(nsres)) {
+            ERR("SetSrc failed: %08x\n", nsres);
+            return E_FAIL;
+        }
+
+        return S_OK;
     }
 
     return navigate_url(This->content_window, v, This->element.node.doc->basedoc.window->uri, BINDING_NAVIGATED);
@@ -128,8 +141,22 @@ static HRESULT WINAPI HTMLFrameBase_put_src(IHTMLFrameBase *iface, BSTR v)
 static HRESULT WINAPI HTMLFrameBase_get_src(IHTMLFrameBase *iface, BSTR *p)
 {
     HTMLFrameBase *This = impl_from_IHTMLFrameBase(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString nsstr;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!This->nsframe && !This->nsiframe) {
+        ERR("No attached frame object\n");
+        return E_UNEXPECTED;
+    }
+
+    nsAString_Init(&nsstr, NULL);
+    if(This->nsframe)
+        nsres = nsIDOMHTMLFrameElement_GetSrc(This->nsframe, &nsstr);
+    else
+        nsres = nsIDOMHTMLIFrameElement_GetSrc(This->nsiframe, &nsstr);
+    return return_nsstr(nsres, &nsstr, p);
 }
 
 static HRESULT WINAPI HTMLFrameBase_put_name(IHTMLFrameBase *iface, BSTR v)
@@ -624,15 +651,20 @@ static HRESULT WINAPI HTMLFrameBase2_get_readyState(IHTMLFrameBase2 *iface, BSTR
 static HRESULT WINAPI HTMLFrameBase2_put_allowTransparency(IHTMLFrameBase2 *iface, VARIANT_BOOL v)
 {
     HTMLFrameBase *This = impl_from_IHTMLFrameBase2(iface);
-    FIXME("(%p)->(%x)\n", This, v);
-    return E_NOTIMPL;
+
+    FIXME("(%p)->(%x) semi-stub\n", This, v);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLFrameBase2_get_allowTransparency(IHTMLFrameBase2 *iface, VARIANT_BOOL *p)
 {
     HTMLFrameBase *This = impl_from_IHTMLFrameBase2(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    FIXME("(%p)->(%p) semi-stub\n", This, p);
+
+    *p = VARIANT_TRUE;
+    return S_OK;
 }
 
 static const IHTMLFrameBase2Vtbl HTMLFrameBase2Vtbl = {
@@ -691,12 +723,8 @@ void HTMLFrameBase_Init(HTMLFrameBase *This, HTMLDocumentNode *doc, nsIDOMHTMLEl
     if(NS_FAILED(nsres)) {
         This->nsframe = NULL;
         nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLIFrameElement, (void**)&This->nsiframe);
-        assert(nsres == NS_OK && (nsIDOMNode*)This->nsiframe == This->element.node.nsnode);
+        assert(nsres == NS_OK);
     }else {
-        assert((nsIDOMNode*)This->nsframe == This->element.node.nsnode);
         This->nsiframe = NULL;
     }
-
-    /* Share the reference with nsnode */
-    nsIDOMNode_Release(This->element.node.nsnode);
 }

@@ -2,7 +2,7 @@
 # Update this file when you port a dll/program from WINE.
 
 The ReactOS Project shares quite a bit of code with the WINE project.
-This document should provide a compleate reference for all of the
+This document should provide a complete reference for all of the
 locations in the ReactOS source tree where code is shared between the
 two projects. If you find something is missing from this documentation
 please add it.
@@ -121,7 +121,7 @@ reactos/dll/win32/msctf               # Synced to Wine-1.7.27
 reactos/dll/win32/msftedit            # Synced to Wine-1.7.27
 reactos/dll/win32/msg711.acm          # Synced to Wine-1.7.27
 reactos/dll/win32/msgsm32.acm         # Synced to Wine-1.7.27
-reactos/dll/win32/mshtml              # Synced to Wine-1.7.27
+reactos/dll/win32/mshtml              # Synced to WineStaging-1.7.37
 reactos/dll/win32/mshtml.tlb          # Synced to Wine-1.7.27
 reactos/dll/win32/msi                 # Synced to WineStaging-1.7.37
 reactos/dll/win32/msimg32             # Synced to Wine-1.7.27

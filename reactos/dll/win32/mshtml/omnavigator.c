@@ -192,25 +192,22 @@ static HRESULT WINAPI OmHistory_QueryInterface(IOmHistory *iface, REFIID riid, v
 {
     OmHistory *This = impl_from_IOmHistory(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IOmHistory_iface;
     }else if(IsEqualGUID(&IID_IOmHistory, riid)) {
-        TRACE("(%p)->(IID_IOmHistory %p)\n", This, ppv);
         *ppv = &This->IOmHistory_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        WARN("Unsupported interface %s\n", debugstr_mshtml_guid(riid));
+        *ppv = NULL;
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI OmHistory_AddRef(IOmHistory *iface)
@@ -370,17 +367,17 @@ static HRESULT WINAPI HTMLPluginsCollection_QueryInterface(IHTMLPluginsCollectio
 {
     HTMLPluginsCollection *This = impl_from_IHTMLPluginsCollection(iface);
 
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLPluginsCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLPluginsCollection, riid)) {
-        TRACE("(%p)->(IID_IHTMLPluginCollection %p)\n", This, ppv);
         *ppv = &This->IHTMLPluginsCollection_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }else {
         *ppv = NULL;
-        WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        WARN("Unsupported interface %s\n", debugstr_mshtml_guid(riid));
         return E_NOINTERFACE;
     }
 
@@ -523,17 +520,17 @@ static HRESULT WINAPI HTMLMimeTypesCollection_QueryInterface(IHTMLMimeTypesColle
 {
     HTMLMimeTypesCollection *This = impl_from_IHTMLMimeTypesCollection(iface);
 
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
+
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IHTMLMimeTypesCollection_iface;
     }else if(IsEqualGUID(&IID_IHTMLMimeTypesCollection, riid)) {
-        TRACE("(%p)->(IID_IHTMLMimeTypesCollection %p)\n", This, ppv);
         *ppv = &This->IHTMLMimeTypesCollection_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }else {
+        WARN("Unsupported interface %s\n", debugstr_mshtml_guid(riid));
         *ppv = NULL;
-        WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
         return E_NOINTERFACE;
     }
 
@@ -659,25 +656,22 @@ static HRESULT WINAPI OmNavigator_QueryInterface(IOmNavigator *iface, REFIID rii
 {
     OmNavigator *This = impl_from_IOmNavigator(iface);
 
-    *ppv = NULL;
+    TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
-        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = &This->IOmNavigator_iface;
     }else if(IsEqualGUID(&IID_IOmNavigator, riid)) {
-        TRACE("(%p)->(IID_IOmNavigator %p)\n", This, ppv);
         *ppv = &This->IOmNavigator_iface;
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        WARN("Unsupported interface %s\n", debugstr_mshtml_guid(riid));
+        *ppv = NULL;
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IUnknown_AddRef((IUnknown*)*ppv);
-        return S_OK;
-    }
-
-    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
 static ULONG WINAPI OmNavigator_AddRef(IOmNavigator *iface)

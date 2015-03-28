@@ -616,15 +616,70 @@ static HRESULT WINAPI HTMLStyleSheet_get_media(IHTMLStyleSheet *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyleSheet_put_cssText(IHTMLStyleSheet *iface, BSTR v)
 {
     HTMLStyleSheet *This = impl_from_IHTMLStyleSheet(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    do {
+        nsres = nsIDOMCSSStyleSheet_DeleteRule(This->nsstylesheet, 0);
+    }while(NS_SUCCEEDED(nsres));
+
+    if(v && *v) {
+        nsAString nsstr;
+        UINT32 idx;
+
+        /* FIXME: This won't work for multiple rules in the string. */
+        nsAString_InitDepend(&nsstr, v);
+        nsres = nsIDOMCSSStyleSheet_InsertRule(This->nsstylesheet, &nsstr, 0, &idx);
+        nsAString_Finish(&nsstr);
+        if(NS_FAILED(nsres)) {
+            FIXME("InsertRule failed for string %s. Probably multiple rules passed.\n", debugstr_w(v));
+            return E_FAIL;
+        }
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLStyleSheet_get_cssText(IHTMLStyleSheet *iface, BSTR *p)
 {
     HTMLStyleSheet *This = impl_from_IHTMLStyleSheet(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsIDOMCSSRuleList *nslist = NULL;
+    nsIDOMCSSRule *nsrule;
+    nsAString nsstr;
+    UINT32 len;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMCSSStyleSheet_GetCssRules(This->nsstylesheet, &nslist);
+    if(NS_FAILED(nsres)) {
+        ERR("GetCssRules failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMCSSRuleList_GetLength(nslist, &len);
+    assert(nsres == NS_OK);
+
+    if(len) {
+        nsres = nsIDOMCSSRuleList_Item(nslist, 0, &nsrule);
+        if(NS_FAILED(nsres))
+            ERR("Item failed: %08x\n", nsres);
+    }
+
+    nsIDOMCSSRuleList_Release(nslist);
+    if(NS_FAILED(nsres))
+        return E_FAIL;
+
+    if(!len) {
+        *p = NULL;
+        return S_OK;
+    }
+
+    nsAString_Init(&nsstr, NULL);
+    nsres = nsIDOMCSSRule_GetCssText(nsrule, &nsstr);
+    nsIDOMCSSRule_Release(nsrule);
+    return return_nsstr(nsres, &nsstr, p);
 }
 
 static HRESULT WINAPI HTMLStyleSheet_get_rules(IHTMLStyleSheet *iface,
@@ -636,11 +691,11 @@ static HRESULT WINAPI HTMLStyleSheet_get_rules(IHTMLStyleSheet *iface,
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    /* Gecko has buggy security checks and GetCssRules will fail. We have a correct
-     * implementation and it will work when the bug will be fixed in Gecko. */
     nsres = nsIDOMCSSStyleSheet_GetCssRules(This->nsstylesheet, &nslist);
-    if(NS_FAILED(nsres))
-        WARN("GetCssRules failed: %08x\n", nsres);
+    if(NS_FAILED(nsres)) {
+        ERR("GetCssRules failed: %08x\n", nsres);
+        return E_FAIL;
+    }
 
     *p = HTMLStyleSheetRulesCollection_Create(nslist);
     return S_OK;

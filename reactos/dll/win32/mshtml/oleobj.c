@@ -208,13 +208,9 @@ void set_document_navigation(HTMLDocumentObj *doc, BOOL doc_can_navigate)
 
 static void load_settings(HTMLDocumentObj *doc)
 {
-    nsIMarkupDocumentViewer *markup_document_viewer;
-    nsIContentViewer *content_viewer;
-    nsIDocShell *doc_shell;
     HKEY settings_key;
     DWORD val, size;
     LONG res;
-    nsresult nsres;
 
     static const WCHAR ie_keyW[] = {
         'S','O','F','T','W','A','R','E','\\',
@@ -230,26 +226,8 @@ static void load_settings(HTMLDocumentObj *doc)
     size = sizeof(val);
     res = RegGetValueW(settings_key, zoomW, zoom_factorW, RRF_RT_REG_DWORD, NULL, &val, &size);
     RegCloseKey(settings_key);
-    if(res != ERROR_SUCCESS)
-        return;
-
-    TRACE("Setting ZoomFactor to %u\n", val);
-
-    nsres = get_nsinterface((nsISupports*)doc->nscontainer->navigation, &IID_nsIDocShell, (void**)&doc_shell);
-    assert(nsres == NS_OK);
-
-    nsres = nsIDocShell_GetContentViewer(doc_shell, &content_viewer);
-    assert(nsres == NS_OK && content_viewer);
-
-    nsres = nsISupports_QueryInterface(content_viewer, &IID_nsIMarkupDocumentViewer, (void**)&markup_document_viewer);
-    nsISupports_Release(content_viewer);
-    assert(nsres == NS_OK);
-
-    nsres = nsIMarkupDocumentViewer_SetFullZoom(markup_document_viewer, (float)val/100000);
-    if(NS_FAILED(nsres))
-        ERR("SetFullZoom failed: %08x\n", nsres);
-
-    nsIDocShell_Release(doc_shell);
+    if(res == ERROR_SUCCESS)
+        set_viewer_zoom(doc->nscontainer, (float)val/100000);
 }
 
 static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite *pClientSite)

@@ -571,12 +571,12 @@ static void NSAPI nsDocumentObserver_EndLoad(nsIDocumentObserver *iface, nsIDocu
 }
 
 static void NSAPI nsDocumentObserver_ContentStatesChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsIContent *aContent, nsEventStates *aStateMask)
+        nsIContent *aContent, EventStates aStateMask)
 {
 }
 
 static void NSAPI nsDocumentObserver_DocumentStatesChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
-        nsEventStates *aStateMask)
+        EventStates aStateMask)
 {
 }
 

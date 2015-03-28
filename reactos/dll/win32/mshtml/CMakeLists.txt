@@ -22,8 +22,6 @@ list(APPEND SOURCE
     htmlcurstyle.c
     htmldoc.c
     htmlelem.c
-    htmlelem2.c
-    htmlelem3.c
     htmlelemcol.c
     htmlembed.c
     htmlevent.c

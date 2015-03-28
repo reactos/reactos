@@ -195,11 +195,11 @@ static HRESULT WINAPI HTMLOptionElement_put_text(IHTMLOptionElement *iface, BSTR
     while(1) {
         nsIDOMNode *child;
 
-        nsres = nsIDOMHTMLOptionElement_GetFirstChild(This->nsoption, &child);
+        nsres = nsIDOMHTMLElement_GetFirstChild(This->element.nselem, &child);
         if(NS_FAILED(nsres) || !child)
             break;
 
-        nsres = nsIDOMHTMLOptionElement_RemoveChild(This->nsoption, child, &tmp);
+        nsres = nsIDOMHTMLElement_RemoveChild(This->element.nselem, child, &tmp);
         nsIDOMNode_Release(child);
         if(NS_SUCCEEDED(nsres)) {
             nsIDOMNode_Release(tmp);
@@ -217,7 +217,7 @@ static HRESULT WINAPI HTMLOptionElement_put_text(IHTMLOptionElement *iface, BSTR
         return E_FAIL;
     }
 
-    nsres = nsIDOMHTMLOptionElement_AppendChild(This->nsoption, (nsIDOMNode*)text_node, &tmp);
+    nsres = nsIDOMHTMLElement_AppendChild(This->element.nselem, (nsIDOMNode*)text_node, &tmp);
     if(NS_SUCCEEDED(nsres))
         nsIDOMNode_Release(tmp);
     else
@@ -297,13 +297,44 @@ static HRESULT HTMLOptionElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->element.node, riid, ppv);
 }
 
+static void HTMLOptionElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLOptionElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsoption)
+        note_cc_edge((nsISupports*)This->nsoption, "This->nsoption", cb);
+}
+
+static void HTMLOptionElement_unlink(HTMLDOMNode *iface)
+{
+    HTMLOptionElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsoption) {
+        nsIDOMHTMLOptionElement *nsoption = This->nsoption;
+
+        This->nsoption = NULL;
+        nsIDOMHTMLOptionElement_Release(nsoption);
+    }
+}
+
 static const NodeImplVtbl HTMLOptionElementImplVtbl = {
     HTMLOptionElement_QI,
     HTMLElement_destructor,
     HTMLElement_cpc,
     HTMLElement_clone,
     HTMLElement_handle_event,
-    HTMLElement_get_attr_col
+    HTMLElement_get_attr_col,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLOptionElement_traverse,
+    HTMLOptionElement_unlink
 };
 
 static const tid_t HTMLOptionElement_iface_tids[] = {
@@ -333,10 +364,7 @@ HRESULT HTMLOptionElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nsele
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLOptionElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLOptionElement, (void**)&ret->nsoption);
-
-    /* Share nsoption reference with nsnode */
-    assert(nsres == NS_OK && (nsIDOMNode*)ret->nsoption == ret->element.node.nsnode);
-    nsIDOMNode_Release(ret->element.node.nsnode);
+    assert(nsres == NS_OK);
 
     *elem = &ret->element;
     return S_OK;

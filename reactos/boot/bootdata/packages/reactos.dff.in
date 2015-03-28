@@ -105,7 +105,7 @@ Signature = "$ReactOS$"
 "modules/optional/vmx_mode.dll"                       1  optional
 "modules/optional/vmx_svga.inf"                       6  optional
 "modules/optional/vmx_svga.sys"                       2  optional
-"modules/optional/wine_gecko-2.24-x86.msi"            4  optional
+"modules/optional/wine_gecko-2.34-x86.msi"            4  optional
 "boot/bootdata/bootcdregtest/AHKAppTests.cmd"         7  optional
 "modules/optional/gnutls/libgcc_s_sjlj-1.dll"         53 optional
 "modules/optional/gnutls/libgmp-10.dll"               53 optional

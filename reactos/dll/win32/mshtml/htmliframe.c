@@ -526,6 +526,26 @@ static HRESULT HTMLIFrame_bind_to_tree(HTMLDOMNode *iface)
     return hres;
 }
 
+static void HTMLIFrame_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLIFrame *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->framebase.nsiframe)
+        note_cc_edge((nsISupports*)This->framebase.nsiframe, "This->nsiframe", cb);
+}
+
+static void HTMLIFrame_unlink(HTMLDOMNode *iface)
+{
+    HTMLIFrame *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->framebase.nsiframe) {
+        nsIDOMHTMLIFrameElement *nsiframe = This->framebase.nsiframe;
+
+        This->framebase.nsiframe = NULL;
+        nsIDOMHTMLIFrameElement_Release(nsiframe);
+    }
+}
+
 static const NodeImplVtbl HTMLIFrameImplVtbl = {
     HTMLIFrame_QI,
     HTMLIFrame_destructor,
@@ -541,7 +561,9 @@ static const NodeImplVtbl HTMLIFrameImplVtbl = {
     HTMLIFrame_get_readystate,
     HTMLIFrame_get_dispid,
     HTMLIFrame_invoke,
-    HTMLIFrame_bind_to_tree
+    HTMLIFrame_bind_to_tree,
+    HTMLIFrame_traverse,
+    HTMLIFrame_unlink
 };
 
 static const tid_t HTMLIFrame_iface_tids[] = {

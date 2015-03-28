@@ -371,7 +371,7 @@ HRESULT set_moniker(HTMLOuterWindow *window, IMoniker *mon, IUri *nav_uri, IBind
             remove_target_tasks(window->base.inner_window->task_magic);
         abort_window_bindings(window->base.inner_window);
 
-        hres = load_nsuri(window, nsuri, bscallback, LOAD_FLAGS_BYPASS_CACHE);
+        hres = load_nsuri(window, nsuri, NULL, bscallback, LOAD_FLAGS_BYPASS_CACHE);
         nsISupports_Release((nsISupports*)nsuri); /* FIXME */
         if(SUCCEEDED(hres)) {
             hres = create_pending_window(window, bscallback);
