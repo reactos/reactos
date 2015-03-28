@@ -5517,7 +5517,7 @@ static void _test_language_string(unsigned line, const WCHAR *lang, LCID lcid)
         ok_(__FILE__,line)(res, "LCIDToLocaleName failed: %u\n", GetLastError());
         ok_(__FILE__,line)(!lstrcmpW(lang, buf), "lang = %s, expected %s\n", wine_dbgstr_w(lang), wine_dbgstr_w(buf));
     }else {
-        win_skip("LCIDToLocaleName not available, unable to test language string\n");
+        skip("LCIDToLocaleName not available, unable to test language string\n");
         ok_(__FILE__,line)(lang != NULL, "lang == NULL\n");
     }
 }
