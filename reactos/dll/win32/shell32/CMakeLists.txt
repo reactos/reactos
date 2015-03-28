@@ -19,6 +19,7 @@ list(APPEND SOURCE
     CMenuBand.cpp
     CMenuDeskBar.cpp
     CIDLDataObj.cpp
+    CQueryAssociations.cpp
     dde.cpp
     debughlp.cpp
     CDesktopBrowser.cpp
