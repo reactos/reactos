@@ -311,7 +311,7 @@ SwDispatchCreate(
     /* check if the device object is a child device */
     Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
 
-    DPRINT1("SwDispatchCreate %x\n", Status);
+    DPRINT("SwDispatchCreate %x\n", Status);
 
     /* check for success */
     if (NT_SUCCESS(Status))
@@ -325,7 +325,7 @@ SwDispatchCreate(
         }
         /* perform the create request */
         Status = KsServiceBusEnumCreateRequest(DeviceObject, Irp);
-        DPRINT1("SwDispatchCreate %x\n", Status);
+        DPRINT("SwDispatchCreate %x\n", Status);
     }
 
     /* check the irp is pending */
