@@ -256,10 +256,10 @@ static HRESULT WINAPI Dispatch_Invoke(IDispatch *iface, DISPID dispIdMember, REF
         ok(pdp->cArgs == 0, "cArgs = %d\n", pdp->cArgs);
         ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
         V_VT(pVarResult) = VT_BSTR;
-        res = GetFullPathNameA(script_name, sizeof(fullPath)/sizeof(WCHAR), fullPath, &pos);
-        if(!res || res > sizeof(fullPath)/sizeof(WCHAR))
+        res = GetFullPathNameA(script_name, sizeof(fullPath), fullPath, &pos);
+        if(!res || res > sizeof(fullPath))
             return E_FAIL;
-        if(!(V_BSTR(pVarResult) = SysAllocString(a2bstr(pos))))
+        if(!(V_BSTR(pVarResult) = a2bstr(pos)))
             return E_OUTOFMEMORY;
         break;
     }
@@ -272,10 +272,10 @@ static HRESULT WINAPI Dispatch_Invoke(IDispatch *iface, DISPID dispIdMember, REF
         ok(pdp->cArgs == 0, "cArgs = %d\n", pdp->cArgs);
         ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
         V_VT(pVarResult) = VT_BSTR;
-        res = GetFullPathNameA(script_name, sizeof(fullPath)/sizeof(WCHAR), fullPath, NULL);
-        if(!res || res > sizeof(fullPath)/sizeof(WCHAR))
+        res = GetFullPathNameA(script_name, sizeof(fullPath), fullPath, NULL);
+        if(!res || res > sizeof(fullPath))
             return E_FAIL;
-        if(!(V_BSTR(pVarResult) = SysAllocString(a2bstr(fullPath))))
+        if(!(V_BSTR(pVarResult) = a2bstr(fullPath)))
             return E_OUTOFMEMORY;
         break;
     }
