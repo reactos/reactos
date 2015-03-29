@@ -240,7 +240,7 @@ reactos/base/applications/cmdutils/cscript  # Synced to Wine-1.7.27
 reactos/base/applications/cmdutils/reg      # Synced to Wine-1.7.27
 reactos/base/applications/cmdutils/taskkill # Synced to Wine-1.7.27
 reactos/base/applications/cmdutils/wmic     # Synced to Wine-1.7.27
-reactos/base/applications/cmdutils/wscript  # Synced to Wine-1.7.27
+reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-1.7.37
 reactos/base/applications/cmdutils/xcopy    # Synced to Wine-1.7.27
 reactos/base/applications/games/winmine     # Forked at Wine-1_3_5
 reactos/base/applications/extrac32          # Synced to Wine-1.7.27

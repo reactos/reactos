@@ -174,7 +174,7 @@ static HRESULT WINAPI ActiveScriptSiteWindow_EnableModeless(IActiveScriptSiteWin
     return S_OK;
 }
 
-static IActiveScriptSiteWindowVtbl ActiveScriptSiteWindowVtbl = {
+static const IActiveScriptSiteWindowVtbl ActiveScriptSiteWindowVtbl = {
     ActiveScriptSiteWindow_QueryInterface,
     ActiveScriptSiteWindow_AddRef,
     ActiveScriptSiteWindow_Release,
