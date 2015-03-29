@@ -1632,6 +1632,8 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             {
                 ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
             }
+
+            return NULL;
         }
 
         //
