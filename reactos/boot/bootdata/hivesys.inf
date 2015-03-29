@@ -1348,22 +1348,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\swenum","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\swenum","Type",0x00010001,0x00000001
 
-
-; Afd driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Group",0x00000000,"TDI"
-HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ImagePath",0x00020000,"system32\drivers\afd.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Type",0x00010001,0x00000001
-
-; UniATA/Atapi miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Group",0x00000000,"System Bus Extender"
-HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ImagePath",0x00020000,"system32\drivers\uniata.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Tag",0x00010001,0x00000010
-
 ; Audio Service
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","DisplayName",0x00000000,"Audio Service"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Description",0x00000000,"Provides audio facilities to applications"
@@ -1373,21 +1357,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ImagePath",0x00020000,"%Sy
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Type",0x00010001,0x00000010
-
-; BusLogic 958 miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ImagePath",0x00020000,"system32\drivers\buslogic.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Tag",0x00010001,0x00000020
-
-; Beep device driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\Beep","ImagePath",0x00020000,"system32\drivers\beep.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Type",0x00010001,0x00000001
 
 ; Background Intelligent Transfer Service (BITS)
 HKLM,"SYSTEM\CurrentControlSet\Services\BITS","DisplayName",0x00000000,"BITS"
@@ -1406,33 +1375,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 
-; Cdfs (ISO96660) filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Type",0x00010001,0x00000002
-
-; Cdrom class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Group",0x00000000,"SCSI Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","ImagePath",0x00020000,"system32\drivers\cdrom.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdrom","Type",0x00010001,0x00000001
-
 ; Debug output driver
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Group",0x00000000,"Debug"
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ImagePath",0x00020000,"system32\drivers\debugout.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Type",0x00010001,0x00000001
-
-; Disk class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Group",0x00000000,"SCSI Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\Disk","ImagePath",0x00020000,"system32\drivers\disk.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 
 ; DHCP client service
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","DisplayName",0x00000000,"DHCP Client"
@@ -1482,35 +1430,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\EventLog","TypesSupporte
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","EventMessageFile",0x00020000,"%SystemRoot%\system32\netevent.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Service Control Manager","TypesSupported",0x00010001,0x00000007
 
-; Floppy driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Group",0x00000000,"Primary Disk"
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ImagePath",0x00020000,"system32\drivers\floppy.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Type",0x00010001,0x00000001
-
 ; Filesystem recognizer driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Group",0x00000000,"Boot file system"
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32\drivers\fs_rec.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
-
-; Keyboard class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Group",0x00000000,"Keyboard Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ImagePath",0x00020000,"system32\drivers\kbdclass.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass\Parameters","ConnectMultiplePorts",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
-
-; Kernel Security Support Provider Interface Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ErrorControl",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ImagePath",0x00020000,"system32\drivers\ksecdd.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Type",0x00010001,0x00000001
 
 ; Workstation service
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,"Workstation service"
@@ -1529,22 +1454,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
-
-; Mouse class driver
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Group",0x00000000,"Pointer Class"
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","ImagePath",0x00020000,"system32\drivers\mouclass.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","ConnectMultiplePorts",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"mouclass"
-
-; Mailslot filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Group",0x00000000,"File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","ImagePath",0x00020000,"system32\drivers\msfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Type",0x00010001,0x00000002
 
 ; Multiple UNC provider driver
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
@@ -1569,13 +1478,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","ImagePath",0x00020000,"%SystemRoot%\system32\lsass.exe"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\NetLogon","Start",0x00010001,0x00000003
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Netlogon","Type",0x00010001,0x00000020
-
-; Named Pipe filesystem driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Group",0x00000000,"File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ImagePath",0x00020000,"system32\drivers\npfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","Type",0x00010001,0x00000002
 
 ; NTFS filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ntfs","ErrorControl",0x00010001,0x00000000
@@ -2019,48 +1921,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Group",0x00000000,"Boot File Sy
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ImagePath",0x00020000,"system32\drivers\ext2fs.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Type",0x00010001,0x00000002
-
-; VBE SVGA driver
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Group",0x00000000,"Video Save"
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ImagePath",0x00020000,"system32\drivers\vbemp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Tag",0x00010001,0x00000001
-
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.VRefresh",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.BitsPerPel",0x00010001,8
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.XResolution",0x00010001,640
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.YResolution",0x00010001,480
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.FixedOutput",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.Flags",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.Orientation",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.XPanning",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.YPanning",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.RelativeX",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.RelativeY",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.ToDesktop",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Attach.PrimaryDevice",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","Device Description",0x00020000,"Generic VESA Adapter"
-
-; This is not true but it allows to use 3rd party drivers while having the VBE driver installed
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","VgaCompatible",0x00010001,1
-
-; VGA miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Tag",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","VgaCompatible",0x00010001,1
-
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.VRefresh",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.BitsPerPel",0x00010001,8
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.XResolution",0x00010001,640
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001

@@ -5,59 +5,12 @@ add_subdirectory(packages)
 
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/txtsetup.sif DESTINATION reactos NO_CAB FOR bootcd regtest)
 
-list(APPEND _common_hives
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivecls.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivedef.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivesft.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hivesys.inf)
+add_registry_inf(
+    hivecls.inf
+    hivedef.inf
+    hivesft.inf
+    hivesys.inf)
 
-foreach(_hive ${_common_hives})
-    get_filename_component(_hive_name ${_hive} NAME)
-    set(_converted_hive ${CMAKE_CURRENT_BINARY_DIR}/${_hive_name})
-    add_custom_command(OUTPUT ${_converted_hive}
-                       COMMAND native-utf16le ${_hive} ${_converted_hive}
-                       DEPENDS native-utf16le ${_hive})
-    list(APPEND _converted_common_hives ${_converted_hive})
-endforeach()
-
-add_custom_target(converted_hives DEPENDS ${_converted_common_hives})
-add_cd_file(TARGET converted_hives
-            FILE ${_converted_common_hives}
-            DESTINATION reactos
-            NO_CAB
-            FOR bootcd regtest)
-
-# livecd hives
-list(APPEND _livecd_hives
-    ${_converted_common_hives}
-    ${CMAKE_CURRENT_SOURCE_DIR}/livecd.inf
-    ${CMAKE_CURRENT_SOURCE_DIR}/hiveinst.inf)
-
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sam
-        ${CMAKE_CURRENT_BINARY_DIR}/default
-        ${CMAKE_CURRENT_BINARY_DIR}/security
-        ${CMAKE_CURRENT_BINARY_DIR}/software
-        ${CMAKE_CURRENT_BINARY_DIR}/system
-    COMMAND native-mkhive ${CMAKE_CURRENT_BINARY_DIR} ${_livecd_hives}
-    DEPENDS native-mkhive ${_livecd_hives} ${_converted_common_hives})
-
-add_custom_target(livecd_hives
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/sam
-        ${CMAKE_CURRENT_BINARY_DIR}/default
-        ${CMAKE_CURRENT_BINARY_DIR}/security
-        ${CMAKE_CURRENT_BINARY_DIR}/software
-        ${CMAKE_CURRENT_BINARY_DIR}/system)
-
-add_cd_file(
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/sam
-        ${CMAKE_CURRENT_BINARY_DIR}/default
-        ${CMAKE_CURRENT_BINARY_DIR}/security
-        ${CMAKE_CURRENT_BINARY_DIR}/software
-        ${CMAKE_CURRENT_BINARY_DIR}/system
-    TARGET livecd_hives
-    DESTINATION reactos/system32/config
-    FOR livecd)
 
 #regtest
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/bootcdregtest/regtest.cmd DESTINATION reactos/bin FOR all)

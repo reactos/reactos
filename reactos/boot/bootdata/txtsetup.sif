@@ -519,9 +519,6 @@ Default = "XT-, AT- or extended keyboard (83-105 keys)"
 00000455 = kbdbur.dll
 
 [HiveInfs.Install]
-AddReg=hivecls.inf,AddReg
-AddReg=hivedef.inf,AddReg
-AddReg=hivesft.inf,AddReg
-AddReg=hivesys.inf,AddReg
+AddReg=registry.inf,AddReg
 
 ; EOF

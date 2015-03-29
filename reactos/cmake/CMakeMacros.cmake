@@ -315,7 +315,7 @@ function(add_cd_file)
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
-                add_dependencies(bootcd ${_CD_TARGET} converted_hives)
+                add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
             #add it in reactos.cab
@@ -337,7 +337,7 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         #manage dependency
         if(_CD_TARGET)
-            add_dependencies(livecd ${_CD_TARGET} converted_hives)
+            add_dependencies(livecd ${_CD_TARGET} registry_inf)
         endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
@@ -385,7 +385,7 @@ function(add_cd_file)
             endforeach()
             if(_CD_TARGET)
                 #manage dependency
-                add_dependencies(bootcdregtest ${_CD_TARGET} converted_hives)
+                add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
             endif()
         else()
             #add it in reactos.cab
@@ -668,7 +668,7 @@ endfunction()
 
 function(preprocess_file __in __out)
     set(__arg ${__in})
-    foreach(__def in ${ARGN})
+    foreach(__def ${ARGN})
         list(APPEND __arg -D${__def})
     endforeach()
     if(MSVC)
@@ -707,6 +707,78 @@ else()
         add_library(${_target} ${ARGN})
     endfunction()
 endif()
+
+function(add_registry_inf)
+    # Add to the inf files list
+    foreach(_file ${ARGN})
+        set(_source_file "${CMAKE_CURRENT_SOURCE_DIR}/${_file}")
+        set_property(GLOBAL APPEND PROPERTY REGISTRY_INF_LIST ${_source_file})
+    endforeach()
+endfunction()
+
+function(create_registry_hives)
+
+    # Shortcut to the registry.inf file
+    set(_registry_inf "${CMAKE_BINARY_DIR}/boot/bootdata/registry.inf")
+
+    # Get the list of inf files
+    get_property(_inf_files GLOBAL PROPERTY REGISTRY_INF_LIST)
+
+    # Convert files to utf16le
+    foreach(_file ${_inf_files})
+        get_filename_component(_file_name ${_file} NAME_WE)
+        string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
+        string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
+        add_custom_command(OUTPUT ${_converted_file}
+                           COMMAND native-utf16le ${_file} ${_converted_file}
+                           DEPENDS native-utf16le ${_file})
+        list(APPEND _converted_files ${_converted_file})
+    endforeach()
+
+    # Concatenate all registry files to registry.inf
+    concatenate_files(${_registry_inf} ${_converted_files})
+
+    # Add registry.inf to bootcd
+    add_custom_target(registry_inf DEPENDS ${_registry_inf})
+    add_cd_file(TARGET registry_inf
+                FILE ${_registry_inf}
+                DESTINATION reactos
+                NO_CAB
+                FOR bootcd regtest)
+
+    # livecd hives
+    list(APPEND _livecd_inf_files
+        ${_registry_inf}
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/livecd.inf
+        ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)
+
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+            ${CMAKE_BINARY_DIR}/boot/bootdata/default
+            ${CMAKE_BINARY_DIR}/boot/bootdata/security
+            ${CMAKE_BINARY_DIR}/boot/bootdata/software
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system
+        COMMAND native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/ ${_livecd_inf_files}
+        DEPENDS native-mkhive ${_livecd_inf_files})
+
+    add_custom_target(livecd_hives
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+            ${CMAKE_BINARY_DIR}/boot/bootdata/default
+            ${CMAKE_BINARY_DIR}/boot/bootdata/security
+            ${CMAKE_BINARY_DIR}/boot/bootdata/software
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system)
+
+    add_cd_file(
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+            ${CMAKE_BINARY_DIR}/boot/bootdata/default
+            ${CMAKE_BINARY_DIR}/boot/bootdata/security
+            ${CMAKE_BINARY_DIR}/boot/bootdata/software
+            ${CMAKE_BINARY_DIR}/boot/bootdata/system
+        TARGET livecd_hives
+        DESTINATION reactos/system32/config
+        FOR livecd)
+
+endfunction()
 
 if(KDBG)
     set(ROSSYM_LIB "rossym")

@@ -226,13 +226,10 @@ endif()
 add_dependencies(freeldr_pe asm)
 add_dependencies(freeldr_pe_dbg asm)
 
-# Retrieve the full path to the generated file of the 'freeldr_pe' target
-get_target_property(_freeldr_pe_output_file freeldr_pe LOCATION)
-
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    ${_freeldr_pe_output_file})
+    ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.dll)
 
 add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 
@@ -243,7 +240,7 @@ add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINAT
 concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys
     ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    ${_freeldr_pe_output_file})
+    ${CMAKE_CURRENT_BINARY_DIR}/freeldr_pe.dll)
 
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
