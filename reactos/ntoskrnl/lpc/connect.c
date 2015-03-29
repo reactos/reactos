@@ -164,7 +164,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
             //Status = SeQueryInformationToken(Token, TokenUser, (PVOID*)&TokenUserInfo);
             // FIXME: Need SeQueryInformationToken
             Status = STATUS_SUCCESS;
-            TokenUserInfo = ExAllocatePool(PagedPool, sizeof(TOKEN_USER));
+            TokenUserInfo = ExAllocatePoolWithTag(PagedPool, sizeof(TOKEN_USER), TAG_SE);
             TokenUserInfo->User.Sid = ServerSid;
             PsDereferencePrimaryToken(Token);
 
@@ -179,7 +179,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                 }
 
                 /* Free token information */
-                ExFreePool(TokenUserInfo);
+                ExFreePoolWithTag(TokenUserInfo, TAG_SE);
             }
         }
         else

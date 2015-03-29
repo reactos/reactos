@@ -14,6 +14,7 @@
 #include <debug.h>
 
 #define TAG_ATMT 'TotA' /* Atom table */
+#define TAG_RTHL 'LHtR' /* Heap Lock */
 
 extern ULONG NtGlobalFlag;
 
@@ -159,7 +160,7 @@ NTAPI
 RtlDeleteHeapLock(IN OUT PHEAP_LOCK Lock)
 {
     ExDeleteResourceLite(&Lock->Resource);
-    ExFreePool(Lock);
+    ExFreePoolWithTag(Lock, TAG_RTHL);
 
     return STATUS_SUCCESS;
 }
@@ -200,7 +201,9 @@ NTSTATUS
 NTAPI
 RtlInitializeHeapLock(IN OUT PHEAP_LOCK *Lock)
 {
-    PHEAP_LOCK HeapLock = ExAllocatePool(NonPagedPool, sizeof(HEAP_LOCK));
+    PHEAP_LOCK HeapLock = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(HEAP_LOCK),
+                                                TAG_RTHL);
     if (HeapLock == NULL)
         return STATUS_NO_MEMORY;
 
@@ -580,8 +583,9 @@ RtlpDestroyAtomHandleTable(PRTL_ATOM_TABLE AtomTable)
 PRTL_ATOM_TABLE
 RtlpAllocAtomTable(ULONG Size)
 {
-   PRTL_ATOM_TABLE Table = ExAllocatePool(NonPagedPool,
-                                          Size);
+   PRTL_ATOM_TABLE Table = ExAllocatePoolWithTag(NonPagedPool,
+                                                 Size,
+                                                 TAG_ATMT);
    if (Table != NULL)
    {
       RtlZeroMemory(Table,
@@ -594,7 +598,7 @@ RtlpAllocAtomTable(ULONG Size)
 VOID
 RtlpFreeAtomTable(PRTL_ATOM_TABLE AtomTable)
 {
-   ExFreePool(AtomTable);
+   ExFreePoolWithTag(AtomTable, TAG_ATMT);
 }
 
 PRTL_ATOM_TABLE_ENTRY

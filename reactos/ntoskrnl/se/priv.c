@@ -219,7 +219,7 @@ SePrivilegePolicyCheck(
         {
             /* Calculate size and allocate the structure */
             PrivilegeSize = FIELD_OFFSET(PRIVILEGE_SET, Privilege[PrivilegeCount]);
-            PrivilegeSet = ExAllocatePoolWithTag(PagedPool, PrivilegeSize, 'rPeS');
+            PrivilegeSet = ExAllocatePoolWithTag(PagedPool, PrivilegeSize, TAG_PRIVILEGE_SET);
             *OutPrivilegeSet = PrivilegeSet;
             if (PrivilegeSet == NULL)
             {
@@ -352,8 +352,9 @@ SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
     }
     else
     {
-        *Dest = ExAllocatePool(PoolType,
-                               BufferSize);
+        *Dest = ExAllocatePoolWithTag(PoolType,
+                                      BufferSize,
+                                      TAG_LUID);
         if (*Dest == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -375,7 +376,7 @@ SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
 
     if (!NT_SUCCESS(Status) && AllocatedMem == NULL)
     {
-        ExFreePool(*Dest);
+        ExFreePoolWithTag(*Dest, TAG_LUID);
     }
 
     return Status;
@@ -392,7 +393,7 @@ SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
     if (Privilege != NULL &&
         (PreviousMode != KernelMode || CaptureIfKernel))
     {
-        ExFreePool(Privilege);
+        ExFreePoolWithTag(Privilege, TAG_LUID);
     }
 }
 
@@ -428,7 +429,9 @@ SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
                               Privileges->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
 
         /* Allocate a new privilege set */
-        PrivilegeSet = ExAllocatePool(PagedPool, NewPrivilegeSetSize);
+        PrivilegeSet = ExAllocatePoolWithTag(PagedPool,
+                                             NewPrivilegeSetSize,
+                                             TAG_PRIVILEGE_SET);
         if (PrivilegeSet == NULL)
             return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -447,7 +450,7 @@ SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
 
         /* Free the old privilege set if it was allocated */
         if (AccessState->PrivilegesAllocated != FALSE)
-            ExFreePool(AuxData->PrivilegeSet);
+            ExFreePoolWithTag(AuxData->PrivilegeSet, TAG_PRIVILEGE_SET);
 
         /* Now we are using an allocated privilege set */
         AccessState->PrivilegesAllocated = TRUE;
@@ -477,7 +480,7 @@ NTAPI
 SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
 {
     PAGED_CODE();
-    ExFreePool(Privileges);
+    ExFreePoolWithTag(Privileges, TAG_PRIVILEGE_SET);
 }
 
 /*
