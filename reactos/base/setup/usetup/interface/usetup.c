@@ -3633,7 +3633,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
     if (!SetInstallPathValue(&DestinationPath))
     {
-        DPRINT("SetInstallPathValue() failed\n");
+        DPRINT1("SetInstallPathValue() failed\n");
         MUIDisplayError(ERROR_INITIALIZE_REGISTRY, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -3643,7 +3643,7 @@ RegistryPage(PINPUT_RECORD Ir)
     Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtInitializeRegistry() failed (Status %lx)\n", Status);
+        DPRINT1("NtInitializeRegistry() failed (Status %lx)\n", Status);
         MUIDisplayError(ERROR_CREATE_HIVE, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
@@ -3689,7 +3689,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
         if (!ImportRegistryFile(File, Section, LanguageId, Delete))
         {
-            DPRINT("Importing %S failed\n", File);
+            DPRINT1("Importing %S failed\n", File);
 
             MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
