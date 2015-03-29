@@ -2120,143 +2120,137 @@ LPCWSTR WINAPI pSetupGetField( PINFCONTEXT context, DWORD index )
     return field->text;
 }
 
-
 /***********************************************************************
- *              SetupGetInfFileListW  (SETUPAPI.@)
+ *		SetupGetInfFileListW    (SETUPAPI.@)
  */
-BOOL WINAPI SetupGetInfFileListW(PCWSTR dir, DWORD style, PWSTR buffer,
-                                 DWORD insize, PDWORD outsize)
+BOOL WINAPI
+SetupGetInfFileListW(
+    IN PCWSTR DirectoryPath OPTIONAL,
+    IN DWORD InfStyle,
+    IN OUT PWSTR ReturnBuffer OPTIONAL,
+    IN DWORD ReturnBufferSize OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL)
 {
-    static const WCHAR inf[] = {'\\','*','.','i','n','f',0 };
-    WCHAR *filter, *fullname = NULL, *ptr = buffer;
-    DWORD dir_len, name_len = 20, size ;
-    WIN32_FIND_DATAW finddata;
-    HANDLE hdl;
-    if (style & ~( INF_STYLE_OLDNT | INF_STYLE_WIN4 |
-                   INF_STYLE_CACHE_ENABLE | INF_STYLE_CACHE_DISABLE ))
-    {
-        FIXME( "unknown inf_style(s) 0x%x\n",
-               style & ~( INF_STYLE_OLDNT | INF_STYLE_WIN4 |
-                         INF_STYLE_CACHE_ENABLE | INF_STYLE_CACHE_DISABLE ));
-        if( outsize ) *outsize = 1;
-        return TRUE;
-    }
-    if ((style & ( INF_STYLE_OLDNT | INF_STYLE_WIN4 )) == INF_STYLE_NONE)
-    {
-        FIXME( "inf_style INF_STYLE_NONE not handled\n" );
-        if( outsize ) *outsize = 1;
-        return TRUE;
-    }
-    if (style & ( INF_STYLE_CACHE_ENABLE | INF_STYLE_CACHE_DISABLE ))
-        FIXME("ignored inf_style(s) %s %s\n",
-              ( style & INF_STYLE_CACHE_ENABLE  ) ? "INF_STYLE_CACHE_ENABLE"  : "",
-              ( style & INF_STYLE_CACHE_DISABLE ) ? "INF_STYLE_CACHE_DISABLE" : "");
-    if( dir )
-    {
-        DWORD att;
-        DWORD msize;
-        dir_len = strlenW( dir );
-        if ( !dir_len ) return FALSE;
-        msize = ( 7 + dir_len )  * sizeof( WCHAR ); /* \\*.inf\0 */
-        filter = HeapAlloc( GetProcessHeap(), 0, msize );
-        if( !filter )
-        {
-            SetLastError( ERROR_NOT_ENOUGH_MEMORY );
-            return FALSE;
-        }
-        strcpyW( filter, dir );
-        if ( '\\' == filter[dir_len - 1] )
-            filter[--dir_len] = 0;
+    HANDLE hSearch;
+    LPWSTR pFullFileName = NULL;
+    LPWSTR pFileName; /* Pointer into pFullFileName buffer */
+    LPWSTR pBuffer = ReturnBuffer;
+    WIN32_FIND_DATAW wfdFileInfo;
+    size_t len;
+    DWORD requiredSize = 0;
+    BOOL ret = FALSE;
 
-        att = GetFileAttributesW( filter );
-        if (att != INVALID_FILE_ATTRIBUTES && !(att & FILE_ATTRIBUTE_DIRECTORY))
-        {
-            HeapFree( GetProcessHeap(), 0, filter );
-            SetLastError( ERROR_DIRECTORY );
-            return FALSE;
-        }
+    TRACE("%s %lx %p %ld %p\n", debugstr_w(DirectoryPath), InfStyle,
+        ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    if (InfStyle & ~(INF_STYLE_OLDNT | INF_STYLE_WIN4))
+    {
+        TRACE("Unknown flags: 0x%08lx\n", InfStyle & ~(INF_STYLE_OLDNT  | INF_STYLE_WIN4));
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
+    else if (ReturnBufferSize == 0 && ReturnBuffer != NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
+    else if (ReturnBufferSize > 0 && ReturnBuffer == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        goto cleanup;
+    }
+
+    /* Allocate memory for file filter */
+    if (DirectoryPath != NULL)
+        /* "DirectoryPath\" form */
+        len = strlenW(DirectoryPath) + 1 + 1;
+    else
+        /* "%SYSTEMROOT%\Inf\" form */
+        len = MAX_PATH + 1 + strlenW(InfDirectory) + 1;
+    len += MAX_PATH; /* To contain file name or "*.inf" string */
+    pFullFileName = MyMalloc(len * sizeof(WCHAR));
+    if (pFullFileName == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+
+    /* Fill file filter buffer */
+    if (DirectoryPath)
+    {
+        strcpyW(pFullFileName, DirectoryPath);
+        if (*pFullFileName && pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+            strcatW(pFullFileName, BackSlash);
     }
     else
     {
-        WCHAR infdir[] = {'\\','i','n','f',0 };
-        DWORD msize;
-        dir_len = GetWindowsDirectoryW( NULL, 0 );
-        msize = ( 7 + 4 + dir_len ) * sizeof( WCHAR );
-        filter = HeapAlloc( GetProcessHeap(), 0, msize );
-        if( !filter )
-        {
-            SetLastError( ERROR_NOT_ENOUGH_MEMORY );
-            return FALSE;
-        }
-        GetWindowsDirectoryW( filter, msize );
-        strcatW( filter, infdir );
+        len = GetSystemWindowsDirectoryW(pFullFileName, MAX_PATH);
+        if (len == 0 || len > MAX_PATH)
+            goto cleanup;
+        if (pFullFileName[strlenW(pFullFileName) - 1] != '\\')
+            strcatW(pFullFileName, BackSlash);
+        strcatW(pFullFileName, InfDirectory);
     }
-    strcatW( filter, inf );
+    pFileName = &pFullFileName[strlenW(pFullFileName)];
 
-    hdl = FindFirstFileW( filter , &finddata );
-    if ( hdl == INVALID_HANDLE_VALUE )
+    /* Search for the first file */
+    strcpyW(pFileName, InfFileSpecification);
+    hSearch = FindFirstFileW(pFullFileName, &wfdFileInfo);
+    if (hSearch == INVALID_HANDLE_VALUE)
     {
-        if( outsize ) *outsize = 1;
-        HeapFree( GetProcessHeap(), 0, filter );
-        return TRUE;
+        TRACE("No file returned by %s\n", debugstr_w(pFullFileName));
+        goto cleanup;
     }
-    size = 1;
+
     do
     {
-        static const WCHAR key[] =
-               {'S','i','g','n','a','t','u','r','e',0 };
-        static const WCHAR section[] =
-               {'V','e','r','s','i','o','n',0 };
-        static const WCHAR sig_win4_1[] =
-               {'$','C','h','i','c','a','g','o','$',0 };
-        static const WCHAR sig_win4_2[] =
-               {'$','W','I','N','D','O','W','S',' ','N','T','$',0 };
-        WCHAR signature[ MAX_PATH ];
-        BOOL valid = FALSE;
-        DWORD len = strlenW( finddata.cFileName );
-        if (!fullname || ( name_len < len ))
-        {
-            name_len = ( name_len < len ) ? len : name_len;
-            HeapFree( GetProcessHeap(), 0, fullname );
-            fullname = HeapAlloc( GetProcessHeap(), 0,
-                                  ( 2 + dir_len + name_len) * sizeof( WCHAR ));
-            if( !fullname )
-            {
-                FindClose( hdl );
-                HeapFree( GetProcessHeap(), 0, filter );
-                SetLastError( ERROR_NOT_ENOUGH_MEMORY );
-                return FALSE;
-            }
-            strcpyW( fullname, filter );
-        }
-        fullname[ dir_len + 1] = 0; /* keep '\\' */
-        strcatW( fullname, finddata.cFileName );
-        if (!GetPrivateProfileStringW( section, key, NULL, signature, MAX_PATH, fullname ))
-            signature[0] = 0;
-        if( INF_STYLE_OLDNT & style )
-            valid = strcmpiW( sig_win4_1, signature ) &&
-                    strcmpiW( sig_win4_2, signature );
-        if( INF_STYLE_WIN4 & style )
-            valid = valid || !strcmpiW( sig_win4_1, signature ) ||
-                    !strcmpiW( sig_win4_2, signature );
-        if( valid )
-        {
-            size += 1 + strlenW( finddata.cFileName );
-            if( ptr && insize >= size )
-            {
-                strcpyW( ptr, finddata.cFileName );
-                ptr += 1 + strlenW( finddata.cFileName );
-                *ptr = 0;
-            }
-        }
-    }
-    while( FindNextFileW( hdl, &finddata ));
-    FindClose( hdl );
+        HINF hInf;
 
-    HeapFree( GetProcessHeap(), 0, fullname );
-    HeapFree( GetProcessHeap(), 0, filter );
-    if( outsize ) *outsize = size;
-    return TRUE;
+        strcpyW(pFileName, wfdFileInfo.cFileName);
+        hInf = SetupOpenInfFileW(
+            pFullFileName,
+            NULL, /* Inf class */
+            InfStyle,
+            NULL /* Error line */);
+        if (hInf == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_CLASS_MISMATCH)
+            {
+                /* InfStyle was not correct. Skip this file */
+                continue;
+            }
+            TRACE("Invalid .inf file %s\n", debugstr_w(pFullFileName));
+            continue;
+        }
+
+        len = strlenW(wfdFileInfo.cFileName) + 1;
+        requiredSize += (DWORD)(len * sizeof(WCHAR));
+        if (requiredSize <= ReturnBufferSize)
+        {
+            strcpyW(pBuffer, wfdFileInfo.cFileName);
+            pBuffer = &pBuffer[len];
+        }
+        SetupCloseInfFile(hInf);
+    } while (FindNextFileW(hSearch, &wfdFileInfo));
+    FindClose(hSearch);
+
+    requiredSize += sizeof(WCHAR); /* Final NULL char */
+    if (requiredSize <= ReturnBufferSize)
+    {
+        *pBuffer = '\0';
+        ret = TRUE;
+    }
+    else
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
+    }
+    if (RequiredSize)
+        *RequiredSize = requiredSize;
+
+cleanup:
+    MyFree(pFullFileName);
+    return ret;
 }
 
 /***********************************************************************
