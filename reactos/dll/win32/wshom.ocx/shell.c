@@ -21,8 +21,28 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <dispex.h>
+#include <winreg.h>
 
 #include <wine/unicode.h>
+
+/* FIXME: Vista+*/
+LONG WINAPI RegSetKeyValueW( HKEY hkey, LPCWSTR subkey, LPCWSTR name, DWORD type, const void *data, DWORD len )
+{
+    HKEY hsubkey = NULL;
+    DWORD ret;
+
+    TRACE("(%p,%s,%s,%d,%p,%d)\n", hkey, debugstr_w(subkey), debugstr_w(name), type, data, len );
+
+    if (subkey && subkey[0])  /* need to create the subkey */
+    {
+        if ((ret = RegCreateKeyW( hkey, subkey, &hsubkey )) != ERROR_SUCCESS) return ret;
+        hkey = hsubkey;
+    }
+
+    ret = RegSetValueExW( hkey, name, 0, type, (const BYTE*)data, len );
+    if (hsubkey) RegCloseKey( hsubkey );
+    return ret;
+}
 
 static IWshShell3 WshShell3;
 
@@ -813,9 +833,11 @@ static HRESULT WINAPI WshShell3_QueryInterface(IWshShell3 *iface, REFIID riid, v
 
     *ppv = NULL;
 
-    if(IsEqualGUID(riid, &IID_IUnknown)  ||
-       IsEqualGUID(riid, &IID_IDispatch) ||
-       IsEqualGUID(riid, &IID_IWshShell3))
+    if (IsEqualGUID(riid, &IID_IDispatch) ||
+        IsEqualGUID(riid, &IID_IWshShell3) ||
+        IsEqualGUID(riid, &IID_IWshShell2) ||
+        IsEqualGUID(riid, &IID_IWshShell) ||
+        IsEqualGUID(riid, &IID_IUnknown))
     {
         *ppv = iface;
     }
@@ -825,7 +847,7 @@ static HRESULT WINAPI WshShell3_QueryInterface(IWshShell3 *iface, REFIID riid, v
     }
     else
     {
-        FIXME("Unknown iface %s\n", debugstr_guid(riid));
+        WARN("unknown iface %s\n", debugstr_guid(riid));
         return E_NOINTERFACE;
     }
 
@@ -908,14 +930,22 @@ static HRESULT WINAPI WshShell3_get_Environment(IWshShell3 *iface, VARIANT *type
     return WshEnvironment_Create(env);
 }
 
-static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style, VARIANT *WaitOnReturn, int *exit_code)
+static inline BOOL is_optional_argument(const VARIANT *arg)
+{
+    return V_VT(arg) == VT_ERROR && V_ERROR(arg) == DISP_E_PARAMNOTFOUND;
+}
+
+static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style, VARIANT *wait, DWORD *exit_code)
 {
     SHELLEXECUTEINFOW info;
     int waitforprocess;
-    VARIANT s, w;
+    VARIANT s;
     HRESULT hr;
 
-    TRACE("(%s %s %s %p)\n", debugstr_w(cmd), debugstr_variant(style), debugstr_variant(WaitOnReturn), exit_code);
+    TRACE("(%s %s %s %p)\n", debugstr_w(cmd), debugstr_variant(style), debugstr_variant(wait), exit_code);
+
+    if (!style || !wait || !exit_code)
+        return E_POINTER;
 
     VariantInit(&s);
     hr = VariantChangeType(&s, style, 0, VT_I4);
@@ -925,19 +955,21 @@ static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style,
         return hr;
     }
 
-    VariantInit(&w);
-    hr = VariantChangeType(&w, WaitOnReturn, 0, VT_I4);
-    if (FAILED(hr))
-    {
-        ERR("failed to convert wait argument, 0x%08x\n", hr);
-        return hr;
+    if (is_optional_argument(wait))
+        waitforprocess = 0;
+    else {
+        VARIANT w;
+
+        VariantInit(&w);
+        hr = VariantChangeType(&w, wait, 0, VT_I4);
+        if (FAILED(hr))
+            return hr;
+
+        waitforprocess = V_I4(&w);
     }
 
     memset(&info, 0, sizeof(info));
     info.cbSize = sizeof(info);
-
-    waitforprocess = V_I4(&w);
-
     info.fMask = waitforprocess ? SEE_MASK_NOASYNC | SEE_MASK_NOCLOSEPROCESS : SEE_MASK_DEFAULT;
     info.lpFile = cmd;
     info.nShow = V_I4(&s);
@@ -951,16 +983,11 @@ static HRESULT WINAPI WshShell3_Run(IWshShell3 *iface, BSTR cmd, VARIANT *style,
     {
         if (waitforprocess)
         {
-            if (exit_code)
-            {
-                DWORD code;
-                GetExitCodeProcess(info.hProcess, &code);
-                *exit_code = code;
-            }
+            GetExitCodeProcess(info.hProcess, exit_code);
             CloseHandle(info.hProcess);
         }
         else
-            if (exit_code) *exit_code = 0;
+            *exit_code = 0;
 
         return S_OK;
     }
@@ -1001,16 +1028,289 @@ static HRESULT WINAPI WshShell3_ExpandEnvironmentStrings(IWshShell3 *iface, BSTR
     }
 }
 
-static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR Name, VARIANT* out_Value)
+static HKEY get_root_key(const WCHAR *path)
 {
-    FIXME("(%s %p): stub\n", debugstr_w(Name), out_Value);
-    return E_NOTIMPL;
+    static const struct {
+        const WCHAR full[20];
+        const WCHAR abbrev[5];
+        HKEY hkey;
+    } rootkeys[] = {
+        { {'H','K','E','Y','_','C','U','R','R','E','N','T','_','U','S','E','R',0},     {'H','K','C','U',0}, HKEY_CURRENT_USER },
+        { {'H','K','E','Y','_','L','O','C','A','L','_','M','A','C','H','I','N','E',0}, {'H','K','L','M',0}, HKEY_LOCAL_MACHINE },
+        { {'H','K','E','Y','_','C','L','A','S','S','E','S','_','R','O','O','T',0},     {'H','K','C','R',0}, HKEY_CLASSES_ROOT },
+        { {'H','K','E','Y','_','U','S','E','R','S',0},                                                 {0}, HKEY_USERS },
+        { {'H','K','E','Y','_','C','U','R','R','E','N','T','_','C','O','N','F','I','G',0},             {0}, HKEY_CURRENT_CONFIG }
+    };
+    int i;
+
+    for (i = 0; i < sizeof(rootkeys)/sizeof(rootkeys[0]); i++) {
+        if (!strncmpW(path, rootkeys[i].full, strlenW(rootkeys[i].full)))
+            return rootkeys[i].hkey;
+        if (rootkeys[i].abbrev[0] && !strncmpW(path, rootkeys[i].abbrev, strlenW(rootkeys[i].abbrev)))
+            return rootkeys[i].hkey;
+    }
+
+    return NULL;
 }
 
-static HRESULT WINAPI WshShell3_RegWrite(IWshShell3 *iface, BSTR Name, VARIANT *Value, VARIANT *Type)
+/* Caller is responsible to free 'subkey' if 'value' is not NULL */
+static HRESULT split_reg_path(const WCHAR *path, WCHAR **subkey, WCHAR **value)
 {
-    FIXME("(%s %s %s): stub\n", debugstr_w(Name), debugstr_variant(Value), debugstr_variant(Type));
-    return E_NOTIMPL;
+    *value = NULL;
+
+    /* at least one separator should be present */
+    *subkey = strchrW(path, '\\');
+    if (!*subkey)
+        return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+
+    /* default value or not */
+    if ((*subkey)[strlenW(*subkey)-1] == '\\') {
+        (*subkey)++;
+        *value = NULL;
+    }
+    else {
+        *value = strrchrW(*subkey, '\\');
+        if (*value - *subkey > 1) {
+            unsigned int len = *value - *subkey - 1;
+            WCHAR *ret;
+
+            ret = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
+            if (!ret)
+                return E_OUTOFMEMORY;
+
+            memcpy(ret, *subkey + 1, len*sizeof(WCHAR));
+            ret[len] = 0;
+            *subkey = ret;
+        }
+        (*value)++;
+    }
+
+    return S_OK;
+}
+
+static HRESULT WINAPI WshShell3_RegRead(IWshShell3 *iface, BSTR name, VARIANT *value)
+{
+    DWORD type, datalen, ret;
+    WCHAR *subkey, *val;
+    HRESULT hr;
+    HKEY root;
+
+    TRACE("(%s %p)\n", debugstr_w(name), value);
+
+    if (!name || !value)
+        return E_POINTER;
+
+    root = get_root_key(name);
+    if (!root)
+        return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+
+    hr = split_reg_path(name, &subkey, &val);
+    if (FAILED(hr))
+        return hr;
+
+    type = REG_NONE;
+    datalen = 0;
+    ret = RegGetValueW(root, subkey, val, RRF_RT_ANY, &type, NULL, &datalen);
+    if (ret == ERROR_SUCCESS) {
+        void *data;
+
+        data = HeapAlloc(GetProcessHeap(), 0, datalen);
+        if (!data) {
+            hr = E_OUTOFMEMORY;
+            goto fail;
+        }
+
+        ret = RegGetValueW(root, subkey, val, RRF_RT_ANY, &type, data, &datalen);
+        if (ret) {
+            HeapFree(GetProcessHeap(), 0, data);
+            hr = HRESULT_FROM_WIN32(ret);
+            goto fail;
+        }
+
+        switch (type) {
+        case REG_SZ:
+        case REG_EXPAND_SZ:
+            V_VT(value) = VT_BSTR;
+            V_BSTR(value) = SysAllocStringLen((WCHAR*)data, datalen - sizeof(WCHAR));
+            if (!V_BSTR(value))
+                hr = E_OUTOFMEMORY;
+            break;
+        case REG_DWORD:
+            V_VT(value) = VT_I4;
+            V_I4(value) = *(DWORD*)data;
+            break;
+        case REG_BINARY:
+        {
+            BYTE *ptr = (BYTE*)data;
+            SAFEARRAYBOUND bound;
+            unsigned int i;
+            SAFEARRAY *sa;
+            VARIANT *v;
+
+            bound.lLbound = 0;
+            bound.cElements = datalen;
+            sa = SafeArrayCreate(VT_VARIANT, 1, &bound);
+            if (!sa)
+                break;
+
+            hr = SafeArrayAccessData(sa, (void**)&v);
+            if (FAILED(hr)) {
+                SafeArrayDestroy(sa);
+                break;
+            }
+
+            for (i = 0; i < datalen; i++) {
+                V_VT(&v[i]) = VT_UI1;
+                V_UI1(&v[i]) = ptr[i];
+            }
+            SafeArrayUnaccessData(sa);
+
+            V_VT(value) = VT_ARRAY|VT_VARIANT;
+            V_ARRAY(value) = sa;
+            break;
+        }
+        case REG_MULTI_SZ:
+        {
+            WCHAR *ptr = (WCHAR*)data;
+            SAFEARRAYBOUND bound;
+            SAFEARRAY *sa;
+            VARIANT *v;
+
+            /* get element count first */
+            bound.lLbound = 0;
+            bound.cElements = 0;
+            while (*ptr) {
+                bound.cElements++;
+                ptr += strlenW(ptr)+1;
+            }
+
+            sa = SafeArrayCreate(VT_VARIANT, 1, &bound);
+            if (!sa)
+                break;
+
+            hr = SafeArrayAccessData(sa, (void**)&v);
+            if (FAILED(hr)) {
+                SafeArrayDestroy(sa);
+                break;
+            }
+
+            ptr = (WCHAR*)data;
+            while (*ptr) {
+                V_VT(v) = VT_BSTR;
+                V_BSTR(v) = SysAllocString(ptr);
+                ptr += strlenW(ptr)+1;
+                v++;
+            }
+
+            SafeArrayUnaccessData(sa);
+            V_VT(value) = VT_ARRAY|VT_VARIANT;
+            V_ARRAY(value) = sa;
+            break;
+        }
+        default:
+            FIXME("value type %d not supported\n", type);
+            hr = E_FAIL;
+        };
+
+        HeapFree(GetProcessHeap(), 0, data);
+        if (FAILED(hr))
+            VariantInit(value);
+    }
+    else
+        hr = HRESULT_FROM_WIN32(ret);
+
+fail:
+    if (val)
+        HeapFree(GetProcessHeap(), 0, subkey);
+    return hr;
+}
+
+static HRESULT WINAPI WshShell3_RegWrite(IWshShell3 *iface, BSTR name, VARIANT *value, VARIANT *type)
+{
+    static const WCHAR regexpandszW[] = {'R','E','G','_','E','X','P','A','N','D','_','S','Z',0};
+    static const WCHAR regszW[] = {'R','E','G','_','S','Z',0};
+    static const WCHAR regdwordW[] = {'R','E','G','_','D','W','O','R','D',0};
+    static const WCHAR regbinaryW[] = {'R','E','G','_','B','I','N','A','R','Y',0};
+
+    DWORD regtype, data_len;
+    WCHAR *subkey, *val;
+    const BYTE *data;
+    HRESULT hr;
+    HKEY root;
+    VARIANT v;
+    LONG ret;
+
+    TRACE("(%s %s %s)\n", debugstr_w(name), debugstr_variant(value), debugstr_variant(type));
+
+    if (!name || !value || !type)
+        return E_POINTER;
+
+    root = get_root_key(name);
+    if (!root)
+        return HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND);
+
+    /* value type */
+    if (is_optional_argument(type))
+        regtype = REG_SZ;
+    else {
+        if (V_VT(type) != VT_BSTR)
+            return E_INVALIDARG;
+
+        if (!strcmpW(V_BSTR(type), regszW))
+            regtype = REG_SZ;
+        else if (!strcmpW(V_BSTR(type), regdwordW))
+            regtype = REG_DWORD;
+        else if (!strcmpW(V_BSTR(type), regexpandszW))
+            regtype = REG_EXPAND_SZ;
+        else if (!strcmpW(V_BSTR(type), regbinaryW))
+            regtype = REG_BINARY;
+        else {
+            FIXME("unrecognized value type %s\n", debugstr_w(V_BSTR(type)));
+            return E_FAIL;
+        }
+    }
+
+    /* it's always a string or a DWORD */
+    VariantInit(&v);
+    switch (regtype)
+    {
+    case REG_SZ:
+    case REG_EXPAND_SZ:
+        hr = VariantChangeType(&v, value, 0, VT_BSTR);
+        if (hr == S_OK) {
+            data = (BYTE*)V_BSTR(&v);
+            data_len = SysStringByteLen(V_BSTR(&v)) + sizeof(WCHAR);
+        }
+        break;
+    case REG_DWORD:
+    case REG_BINARY:
+        hr = VariantChangeType(&v, value, 0, VT_I4);
+        data = (BYTE*)&V_I4(&v);
+        data_len = sizeof(DWORD);
+        break;
+    default:
+        FIXME("unexpected regtype %d\n", regtype);
+        return E_FAIL;
+    };
+
+    if (FAILED(hr)) {
+        FIXME("failed to convert value, regtype %d, 0x%08x\n", regtype, hr);
+        return hr;
+    }
+
+    hr = split_reg_path(name, &subkey, &val);
+    if (FAILED(hr))
+        goto fail;
+
+    ret = RegSetKeyValueW(root, subkey, val, regtype, data, data_len);
+    if (ret)
+        hr = HRESULT_FROM_WIN32(ret);
+
+fail:
+    VariantClear(&v);
+    if (val)
+        HeapFree(GetProcessHeap(), 0, subkey);
+    return hr;
 }
 
 static HRESULT WINAPI WshShell3_RegDelete(IWshShell3 *iface, BSTR Name)

@@ -528,7 +528,7 @@ library IWshRuntimeLibrary
             [in] BSTR Command,
             [in, optional] VARIANT* WindowStyle,
             [in, optional] VARIANT* WaitOnReturn,
-            [out, retval] int* out_ExitCode);
+            [out, retval] DWORD* out_ExitCode);
 
         [id(0x03e9)]
         HRESULT Popup(
