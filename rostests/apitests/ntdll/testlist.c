@@ -31,6 +31,7 @@ extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlInitializeBitMap(void);
 extern void func_RtlMemoryStream(void);
+extern void func_RtlReAllocateHeap(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
 
@@ -64,6 +65,7 @@ const struct test winetest_testlist[] =
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
     { "RtlMemoryStream",                func_RtlMemoryStream },
+    { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
 

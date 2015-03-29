@@ -27,6 +27,7 @@ list(APPEND SOURCE
     RtlGetLongestNtPathLength.c
     RtlInitializeBitMap.c
     RtlMemoryStream.c
+    RtlReAllocateHeap.c
     StackOverflow.c
     SystemInfo.c
     Timer.c
