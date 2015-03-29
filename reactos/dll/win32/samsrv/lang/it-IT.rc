@@ -1,0 +1,25 @@
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_DOMAIN_BUILTIN_NAME "Builtin"
+    IDS_GROUP_NONE_NAME "Nessuno"
+    IDS_GROUP_NONE_COMMENT "Utente normale"
+    IDS_ALIAS_ADMINISTRATORS_NAME "Amministratori"
+    IDS_ALIAS_ADMINISTRATORS_COMMENT "Gli amministratori hanno accesso illimitato al computer o al dominio."
+    IDS_ALIAS_GUESTS_NAME "Ospiti"
+    IDS_ALIAS_GUESTS_COMMENT "Gli ospiti hanno gli stessi diritti dei membri del gruppo Users per impostazione predefinita."
+    IDS_ALIAS_POWER_USERS_NAME "Utenti avanzati"
+    IDS_ALIAS_POWER_USERS_COMMENT "Gli utenti avanzati hanno la maggior parte dei diritti amministrativi con alcune restrizioni."
+    IDS_ALIAS_USERS_NAME "Utente"
+    IDS_ALIAS_USERS_COMMENT "Gli utenti non possono apportare modifiche a livello di sistema."
+    /*
+     * ATTENTION: 
+     *   If you translate the administator account name, keep IDS_USER_ADMINISTRATOR_NAME and
+     *   syssetup.dll:IDS_ADMINISTRATOR_NAME synchronized.
+     */
+    IDS_USER_ADMINISTRATOR_NAME "Administrator"
+    IDS_USER_ADMINISTRATOR_COMMENT "Account utilizzato per amministrare il computer o il dominio."
+    IDS_USER_GUEST_NAME "Guest"
+    IDS_USER_GUEST_COMMENT "Account utilizzato dagli ospiti per l'accesso al computer o al dominio."
+END
