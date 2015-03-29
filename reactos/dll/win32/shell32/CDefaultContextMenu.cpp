@@ -760,13 +760,6 @@ CDefaultContextMenu::BuildShellItemContextMenu(
                     }
                 }
             }
-
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"*", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                /* load default extensions */
-                EnumerateDynamicContextHandlerForKey(hKey);
-                RegCloseKey(hKey);
-            }
         }
     }
     else
@@ -844,6 +837,15 @@ CDefaultContextMenu::BuildShellItemContextMenu(
             /* sendto service is registered here */
             EnumerateDynamicContextHandlerForKey(hKey);
             RegCloseKey(hKey);
+        }
+
+        if (!(rfg & SFGAO_FOLDER))
+        {
+            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"*", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                EnumerateDynamicContextHandlerForKey(hKey);
+                RegCloseKey(hKey);
+            }
         }
     }
 
