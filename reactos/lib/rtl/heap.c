@@ -427,6 +427,7 @@ RtlpGetSizeOfBigBlock(PHEAP_ENTRY HeapEntry)
 
     /* Get pointer to the containing record */
     VirtualEntry = CONTAINING_RECORD(HeapEntry, HEAP_VIRTUAL_ALLOC_ENTRY, BusyBlock);
+    ASSERT(VirtualEntry->BusyBlock.Size >= sizeof(HEAP_VIRTUAL_ALLOC_ENTRY));
 
     /* Restore the real size */
     return VirtualEntry->CommitSize - HeapEntry->Size;
@@ -2096,6 +2097,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
 
         /* Initialize the newly allocated block */
         VirtualBlock->BusyBlock.Size = (USHORT)(AllocationSize - Size);
+        ASSERT(VirtualBlock->BusyBlock.Size >= sizeof(HEAP_VIRTUAL_ALLOC_ENTRY));
         VirtualBlock->BusyBlock.Flags = EntryFlags | HEAP_ENTRY_VIRTUAL_ALLOC | HEAP_ENTRY_EXTRA_PRESENT;
         VirtualBlock->CommitSize = AllocationSize;
         VirtualBlock->ReserveSize = AllocationSize;
@@ -2648,7 +2650,8 @@ RtlReAllocateHeap(HANDLE HeapPtr,
         if (InUseEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
         {
             /* Simple in case of a virtual alloc - just an unused size */
-            InUseEntry->Size = (USHORT)((AllocationSize - Size) >> HEAP_ENTRY_SHIFT);
+            InUseEntry->Size = (USHORT)(AllocationSize - Size);
+            ASSERT(InUseEntry->Size >= sizeof(HEAP_VIRTUAL_ALLOC_ENTRY));
         }
         else if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
         {
