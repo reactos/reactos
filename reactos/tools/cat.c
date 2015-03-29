@@ -8,7 +8,6 @@
  *                  Hermès Bélusca - Maïto
  */
 
-#include <io.h>
 #include <fcntl.h>
 #include <stdio.h>
 
