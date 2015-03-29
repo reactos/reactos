@@ -504,33 +504,12 @@ elseif(USE_FOLDER_STRUCTURE)
     endfunction()
 endif()
 
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    macro(to_win_path _cmake_path _native_path)
-        string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
-    endmacro()
-
-    # yeah the parameter mess sucks, but thats what works...
-    function(concatenate_files _file1 _target2 _output)
-        get_target_property(_file2 ${_target2} LOCATION)
-        to_win_path("${_file1}" _real_file1)
-        to_win_path("${_file2}" _real_file2)
-        to_win_path("${_output}" _real_output)
-        add_custom_command(
-            OUTPUT ${_output}
-            COMMAND cmd.exe /C "copy /Y /B ${_real_file1} + ${_real_file2} ${_real_output} > nul"
-            DEPENDS ${_file1}
-            DEPENDS ${_target2})
-    endfunction()
-else()
-    macro(concatenate_files _file1 _target2 _output)
-        get_target_property(_file2 ${_target2} LOCATION)
-        add_custom_command(
-            OUTPUT ${_output}
-            COMMAND cat ${_file1} ${_file2} > ${_output}
-            DEPENDS ${_file1}
-            DEPENDS ${_target2})
-    endmacro()
-endif()
+macro(concatenate_files _output)
+    add_custom_command(
+        OUTPUT ${_output}
+        COMMAND native-cat ${ARGN} > ${_output}
+        DEPENDS ${ARGN} native-cat)
+endmacro()
 
 function(add_importlibs _module)
     add_dependency_node(${_module})
