@@ -23,11 +23,12 @@
 
 void help(void)
 {
-    printf("\n"
-           "ReactOS File Concatenation Tool\n"
-           "\n"
-           "Usage: cat [options] [file [...]]\n"
-           "options - Currently ignored\n");
+    fprintf(stdout,
+            "\n"
+            "ReactOS File Concatenation Tool\n"
+            "\n"
+            "Usage: cat [options] [file [...]]\n"
+            "options - Currently ignored\n");
 }
 
 int main(int argc, char* argv[])
@@ -84,7 +85,7 @@ int main(int argc, char* argv[])
         in = fopen(argv[i], "rb");
         if (in == NULL)
         {
-            printf("Failed to open file '%s'\n", argv[i]);
+            fprintf(stderr, "Failed to open file '%s'\n", argv[i]);
             return -1;
         }
 
@@ -104,7 +105,7 @@ int main(int argc, char* argv[])
                  */
                 if (!feof(in))
                 {
-                    printf("Error while reading file '%s'\n", argv[i]);
+                    fprintf(stderr, "Error while reading file '%s'\n", argv[i]);
                     fclose(in);
                     return -1;
                 }

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     /* Validate the arguments */
     if (argc < 5)
     {
-        printf("Usage: bin2c infile.bin outfile.c outfile.h array_name [array_attribute [header_for_attribute]]\n");
+        fprintf(stdout, "Usage: bin2c infile.bin outfile.c outfile.h array_name [array_attribute [header_for_attribute]]\n");
         return -1;
     }
 
@@ -27,14 +27,14 @@ int main(int argc, char *argv[])
     inFile = fopen(argv[1], "rb");
     if (!inFile)
     {
-        printf("ERROR: Couldn't open data file '%s'.\n", argv[1]);
+        fprintf(stderr, "ERROR: Couldn't open data file '%s'.\n", argv[1]);
         return -1;
     }
     outCFile = fopen(argv[2], "w");
     if (!outCFile)
     {
         fclose(inFile);
-        printf("ERROR: Couldn't create output source file '%s'.\n", argv[2]);
+        fprintf(stderr, "ERROR: Couldn't create output source file '%s'.\n", argv[2]);
         return -1;
     }
     outHFile = fopen(argv[3], "w");
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
     {
         fclose(outCFile);
         fclose(inFile);
-        printf("ERROR: Couldn't create output header file '%s'.\n", argv[3]);
+        fprintf(stderr, "ERROR: Couldn't create output header file '%s'.\n", argv[3]);
         return -1;
     }
 
