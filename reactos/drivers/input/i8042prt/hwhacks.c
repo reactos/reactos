@@ -173,7 +173,7 @@ i8042ParseSMBiosTables(
         Header = (PDMI_HEADER)((PUCHAR)Data + 2);
     }
 
-#if DBG
+#if 0 // DBG
     DbgPrint("i8042prt: Dumping DMI data:\n");
     DbgPrint("BIOS_VENDOR: %s\n", Strings[BIOS_VENDOR]);
     DbgPrint("BIOS_VERSION: %s\n", Strings[BIOS_VERSION]);
