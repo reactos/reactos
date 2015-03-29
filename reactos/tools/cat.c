@@ -8,8 +8,16 @@
  *                  Hermès Bélusca - Maïto
  */
 
-#include <fcntl.h>
 #include <stdio.h>
+
+#ifdef _WIN32
+#include <fcntl.h>
+#else
+#define O_TEXT   0x4000
+#define O_BINARY 0x8000
+#define setmode(fd, mode) // This function is useless in *nix world.
+#define stricmp strcasecmp
+#endif
 
 #define ARRAYSIZE(a) (sizeof(a) / sizeof((a)[0]))
 
