@@ -122,7 +122,7 @@ KspRegisterDeviceAssociation(
         return Status;
     }
 
-    DPRINT1("Registered DeviceInterface %wZ\n", &BusInstanceEntry->SymbolicLink);
+    DPRINT("Registered DeviceInterface %wZ\n", &BusInstanceEntry->SymbolicLink);
 
 
     /* done */
@@ -276,8 +276,8 @@ KspCreateDeviceAssociation(
 
     /* check if the device is already present */
     Entry = DeviceEntry->DeviceInterfaceList.Flink;
-    DPRINT1("KspCreateDeviceAssociation ReferenceString %S\n", ReferenceString);
-    DPRINT1("KspCreateDeviceAssociation InterfaceString %S\n", InterfaceString);
+    DPRINT("KspCreateDeviceAssociation ReferenceString %S\n", ReferenceString);
+    DPRINT("KspCreateDeviceAssociation InterfaceString %S\n", InterfaceString);
 
     while(Entry != &DeviceEntry->DeviceInterfaceList)
     {
@@ -649,7 +649,7 @@ KspEnableBusDeviceInterface(
     {
         /* get bus instance entry */
         InstanceEntry = (PBUS_INSTANCE_ENTRY)CONTAINING_RECORD(Entry, BUS_INSTANCE_ENTRY, Entry);
-        DPRINT1("Enabling %u %wZ Irql %u\n", bEnable, &InstanceEntry->SymbolicLink, KeGetCurrentIrql());
+        DPRINT("Enabling %u %wZ Irql %u\n", bEnable, &InstanceEntry->SymbolicLink, KeGetCurrentIrql());
 
         /* set interface state */
         Status = IoSetDeviceInterfaceState(&InstanceEntry->SymbolicLink, bEnable);
@@ -746,7 +746,7 @@ KspCompletePendingIrps(
         /* store result code */
         Irp->IoStatus.Status = Status;
 
-        DPRINT1("Completing IRP %p Status %x\n", Irp, Status);
+        DPRINT("Completing IRP %p Status %x\n", Irp, Status);
 
         /* complete the request */
         CompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1402,7 +1402,7 @@ KsGetBusEnumIdentifier(
     NTSTATUS Status;
     LPWSTR Buffer;
 
-    DPRINT1("KsGetBusEnumIdentifier\n");
+    DPRINT("KsGetBusEnumIdentifier\n");
 
     /* get stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1484,7 +1484,7 @@ KsGetBusEnumParentFDOFromChildPDO(
 {
     PDEV_EXTENSION DeviceExtension;
 
-    DPRINT1("KsGetBusEnumParentFDOFromChildPDO\n");
+    DPRINT("KsGetBusEnumParentFDOFromChildPDO\n");
 
     /* get device extension */
     DeviceExtension = (PDEV_EXTENSION)DeviceObject->DeviceExtension;
@@ -1547,7 +1547,7 @@ KsCreateBusEnumObject(
     /* store bus device extension */
     DeviceExtension->Ext = (PCOMMON_DEVICE_EXTENSION)BusDeviceExtension;
 
-    DPRINT1("DeviceExtension %p BusDeviceExtension %p\n", DeviceExtension, DeviceExtension->Ext);
+    DPRINT("DeviceExtension %p BusDeviceExtension %p\n", DeviceExtension, DeviceExtension->Ext);
 
 
     /* zero device extension */
@@ -1802,7 +1802,7 @@ KsInstallBusEnumInterface(
     PDEV_EXTENSION DeviceExtension;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
 
-    DPRINT1("KsInstallBusEnumInterface\n");
+    DPRINT("KsInstallBusEnumInterface\n");
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1913,7 +1913,7 @@ KsServiceBusEnumCreateRequest(
     ASSERT(IoStack->FileObject);
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
-         DPRINT1("KsServiceBusEnumCreateRequest PNP Hack\n");
+         DPRINT("KsServiceBusEnumCreateRequest PNP Hack\n");
          Irp->IoStatus.Status = STATUS_SUCCESS;
          return STATUS_SUCCESS;
     }
@@ -1991,7 +1991,7 @@ KsServiceBusEnumCreateRequest(
             DPRINT1("KsServiceBusEnumCreateRequest failed to create PDO with %x\n", Status);
             return Status;
         }
-        DPRINT1("PENDING CREATE Irp %p %wZ\n", Irp, &IoStack->FileObject->FileName);
+        DPRINT("PENDING CREATE Irp %p %wZ\n", Irp, &IoStack->FileObject->FileName);
 
         /* delay processing until pnp is finished with enumeration */
         IoMarkIrpPending(Irp);
@@ -2208,7 +2208,7 @@ KsRemoveBusEnumInterface(
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT1("KsRemoveBusEnumInterface\n");
+    DPRINT("KsRemoveBusEnumInterface\n");
 
     /* get io stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
