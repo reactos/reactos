@@ -6,8 +6,6 @@
  */
 
 #include <apitest.h>
-
-#define WIN32_NO_STATUS
 #include <ndk/rtlfuncs.h>
 
 static
@@ -29,12 +27,48 @@ CheckBuffer(
     return TRUE;
 }
 
+static
+BOOLEAN
+ReAllocBuffer(
+    PUCHAR *Buffer,
+    SIZE_T Size,
+    SIZE_T *OldSizePtr,
+    PCSTR Action)
+{
+    PUCHAR NewBuffer;
+    SIZE_T OldSize = *OldSizePtr;
+
+    RtlFillMemory(*Buffer, OldSize, 0x7a);
+    NewBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  *Buffer,
+                                  Size);
+    if (!NewBuffer)
+    {
+        skip("RtlReAllocateHeap failed for size %lu (%s)\n", Size, Action);
+        return FALSE;
+    }
+    *Buffer = NewBuffer;
+    ok_hex(RtlSizeHeap(RtlGetProcessHeap(), 0, NewBuffer), Size);
+    if (OldSize < Size)
+    {
+        ok(CheckBuffer(NewBuffer, OldSize, 0x7a), "CheckBuffer failed at size 0x%lx -> 0x%lx\n", OldSize, Size);
+        ok(CheckBuffer(NewBuffer + OldSize, Size - OldSize, 0), "HEAP_ZERO_MEMORY not respected for 0x%lx -> 0x%lx\n", OldSize, Size);
+    }
+    else
+    {
+        ok(CheckBuffer(NewBuffer, Size, 0x7a), "CheckBuffer failed at size 0x%lx -> 0x%lx\n", OldSize, Size);
+    }
+    *OldSizePtr = Size;
+    return TRUE;
+}
+
 START_TEST(RtlReAllocateHeap)
 {
     PUCHAR Buffer = NULL;
-    PUCHAR NewBuffer;
     SIZE_T OldSize = 0;
     SIZE_T Size;
+    BOOLEAN Continue = TRUE;
 
     OldSize = 0x100;
     Buffer = RtlReAllocateHeap(RtlGetProcessHeap(),
@@ -55,24 +89,15 @@ START_TEST(RtlReAllocateHeap)
     }
     ok(CheckBuffer(Buffer, OldSize, 0), "HEAP_ZERO_MEMORY not respected for 0x%lx\n", OldSize);
 
-    for (Size = 0x78000; Size < 0x90000; Size += 0x100)
+    for (Size = 0x78000; Size < 0x90000 && Continue; Size += 0x100)
     {
-        RtlFillMemory(Buffer, OldSize, 0x7a);
-        NewBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
-                                      HEAP_ZERO_MEMORY,
-                                      Buffer,
-                                      Size);
-        if (!NewBuffer)
-        {
-            skip("RtlReAllocateHeap failed for size %lu\n", Size);
-            break;
-        }
-        Buffer = NewBuffer;
-        ok_hex(RtlSizeHeap(RtlGetProcessHeap(), 0, Buffer), Size);
-        ok(CheckBuffer(Buffer, OldSize, 0x7a), "CheckBuffer failed at size 0x%lx -> 0x%lx\n", OldSize, Size);
-        ok(CheckBuffer(Buffer + OldSize, Size - OldSize, 0), "HEAP_ZERO_MEMORY not respected for 0x%lx -> 0x%lx\n", OldSize, Size);
-        OldSize = Size;
+        Continue = ReAllocBuffer(&Buffer, Size, &OldSize, "growing");
+    }
+
+    /* and back again */
+    for (Size -= 0x100; Size >= 0x78000 && Continue; Size -= 0x100)
+    {
+        Continue = ReAllocBuffer(&Buffer, Size, &OldSize, "shrinking");
     }
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 }
-
