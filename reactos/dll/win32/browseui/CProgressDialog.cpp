@@ -40,51 +40,47 @@
 
 #define ID_3SECONDS 101
 
+#define BUFFER_SIZE 256
+
 CProgressDialog::CProgressDialog()
 {
-    ULONG  cb = 32 *sizeof(WCHAR);
-    this->lines[0]  = (LPWSTR) heap_alloc_zero(cb);
-    this->lines[1]  = (LPWSTR) heap_alloc_zero(cb);
-    this->lines[2]  = (LPWSTR) heap_alloc_zero(cb);
-    this->cancelMsg = (LPWSTR) heap_alloc_zero(cb);
-    this->title     = (LPWSTR) heap_alloc_zero(cb);
+    this->lines[0]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
+    this->lines[1]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
+    this->lines[2]  = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
+    this->cancelMsg = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
+    this->title     = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
+
+    this->lines[0][0] = this->lines[1][0] = this->lines[2][0] = 0;
+    this->cancelMsg[0] = this->title[0];
 
     this->clockHand = -1;
     this->progressClock[29].ullMark = 0ull;
     this->dwStartTime = GetTickCount();
 
     InitializeCriticalSection(&this->cs);
-    this->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ProgressDialog.cs");
 }
 
 CProgressDialog::~CProgressDialog()
 {
     if (this->hwnd)
         this->end_dialog();
-    heap_free(this->lines[0]);
-    heap_free(this->lines[1]);
-    heap_free(this->lines[2]);
-    heap_free(this->cancelMsg);
-    heap_free(this->title);
-    this->cs.DebugInfo->Spare[0] = 0;
+    HeapFree(GetProcessHeap(), 0, this->lines[0]);
+    HeapFree(GetProcessHeap(), 0, this->lines[1]);
+    HeapFree(GetProcessHeap(), 0, this->lines[2]);
+    HeapFree(GetProcessHeap(), 0, this->cancelMsg);
+    HeapFree(GetProcessHeap(), 0, this->title);
     DeleteCriticalSection(&this->cs);
 }
 
 static void set_buffer(LPWSTR *buffer, LPCWSTR string)
 {
-    static const WCHAR empty_string[] = {0};
-    ULONG len;
+    if (!string)
+    {
+        buffer[0] = 0;
+        return;
+    }
 
-    if (string == NULL)
-        string = empty_string;
-    len = (wcslen(string) + 1)*sizeof(WCHAR);
-
-    LPWSTR tmp = (LPWSTR) heap_realloc(*buffer, len);
-    if (tmp)
-        *buffer = tmp;
-    else
-        len = wcslen(*buffer) + 1;
-
+    ULONG len = max((wcslen(string) + 1)*sizeof(WCHAR), BUFFER_SIZE);
     StringCchCopyW(*buffer, len, string);
 }
 
@@ -95,15 +91,13 @@ struct create_params
     HWND hwndParent;
 };
 
-static LPWSTR load_string(HINSTANCE hInstance, UINT uiResourceId)
+static void load_string(LPWSTR *buffer, HINSTANCE hInstance, UINT uiResourceId)
 {
     WCHAR string[256];
-    LPWSTR ret;
 
     LoadStringW(hInstance, uiResourceId, string, sizeof(string)/sizeof(string[0]));
-    ret = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (wcslen(string) + 1) * sizeof(WCHAR));
-    StrCpyW(ret, string);
-    return ret;
+
+    set_buffer(buffer, string);
 }
 
 void CProgressDialog::set_progress_marquee()
@@ -210,8 +204,7 @@ static INT_PTR CALLBACK dialog_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 This->isCancelled = TRUE;
 
                 if (!This->cancelMsg[0]) {
-                    heap_free(This->cancelMsg);
-                    This->cancelMsg = load_string(_AtlBaseModule.GetResourceInstance(), IDS_CANCELLING);
+                    load_string(&This->cancelMsg, _AtlBaseModule.GetResourceInstance(), IDS_CANCELLING);
                 }
 
                 This->set_progress_marquee();
@@ -238,7 +231,6 @@ static INT_PTR CALLBACK dialog_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 // A guess for time remaining based on the start time and current position
                 DWORD timeLeftI = (DWORD) runDiff * ((double) sizeLeft) / ((double) This->progressClock[This->clockHand].ullMark);
 
-                heap_realloc(&This->lines[2], 128);
                 StrFromTimeIntervalW(This->lines[2], 128, timeLeftD * 0.3 + timeLeftI * 0.7 , 2);
                 This->update_dialog( UPDATE_LINE1 << 2 );
             }

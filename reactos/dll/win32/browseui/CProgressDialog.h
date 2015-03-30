@@ -81,21 +81,4 @@ BEGIN_COM_MAP(CProgressDialog)
 END_COM_MAP()
 };
 
-static inline void *heap_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-static inline void *heap_alloc_zero(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
-}
-static inline void *heap_realloc(void *mem, size_t size)
-{
-    return mem ? HeapReAlloc(GetProcessHeap(), 0, mem, size) : heap_alloc(size);
-}
-static inline BOOL heap_free(void *mem)
-{
-    return HeapFree(GetProcessHeap(), 0, mem);
-}
-
 #endif /* _PROGRESSDIALOG_H_ */
