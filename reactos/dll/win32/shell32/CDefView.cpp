@@ -1942,12 +1942,9 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return FALSE;
     }
 
-    CComPtr<IContextMenu2> pCM2;
-    HRESULT hres = m_pCM.p->QueryInterface(IID_PPV_ARG(IContextMenu2, &pCM2));
-    if(FAILED(hres))
-        return FALSE;
-
-    if (pCM2.p->HandleMenuMsg(uMsg, (WPARAM)m_hWnd, lParam) == S_OK)
+    LRESULT result;
+    HRESULT hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+    if (SUCCEEDED(hres))
         return TRUE;
     else
         return FALSE;
