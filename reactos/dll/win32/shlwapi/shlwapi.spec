@@ -551,7 +551,7 @@
 551 stub -noname IShellFolder_CompareIDs
 552 stub -noname SHEvaluateSystemCommandTemplate
 553 stdcall IsInternetESCEnabled()
-554 stdcall -noname SHGetAllAccessSA()
+554 stdcall -noname -stub SHGetAllAccessSA()
 555 stdcall AssocQueryStringByKeyA(long long ptr str ptr ptr)
 556 stub -noname SHCoExtensionAllowed
 557 stub -noname SHCoCreateExtension
