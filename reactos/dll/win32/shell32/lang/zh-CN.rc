@@ -597,17 +597,17 @@ BEGIN
     AUTOCHECKBOX "启用压缩(&E)", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Check Disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-    GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    GROUPBOX "Check disk options", -1, 7, 6, 179, 40
     PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+    AUTOCHECKBOX "Automatically fix file system errors", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 

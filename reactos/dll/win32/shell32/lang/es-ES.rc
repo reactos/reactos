@@ -594,7 +594,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Comprobación de disco"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Iniciar", IDOK, 53, 100, 60, 14
+    DEFPUSHBUTTON "Iniciar", IDOK, 63, 95, 60, 14
     GROUPBOX "Opciones de comprobación de disco ", -1, 7, 6, 225, 50
     PUSHBUTTON "Cancelar", IDCANCEL, 118, 100, 60, 14
     AUTOCHECKBOX "Reparar &automáticamente errores en el sistema de archivos", 14000, 16, 15, 200, 10

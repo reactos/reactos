@@ -588,17 +588,17 @@ BEGIN
     AUTOCHECKBOX "Z&apnúť kompresiu", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Kontrola disku"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Spustiť", IDOK, 53, 100, 60, 14
-    GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 50
+    DEFPUSHBUTTON "&Spustiť", IDOK, 63, 95, 60, 14
+    GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 40
     PUSHBUTTON "Zrušiť", IDCANCEL, 118, 100, 60, 14
     AUTOCHECKBOX "&Automaticky opraviť chyby v systéme súborov", 14000, 16, 15, 165, 10
     AUTOCHECKBOX "Vy&hľadať a pokúsiť sa obnoviť chybné sektory", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 

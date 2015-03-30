@@ -593,7 +593,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Проверка на диска"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Начало", IDOK, 53, 100, 60, 14
+    DEFPUSHBUTTON "Начало", IDOK, 63, 95, 60, 14
     GROUPBOX "Настройки за проверката", -1, 7, 6, 229, 50
     PUSHBUTTON "Отказ", IDCANCEL, 118, 100, 60, 14
     AUTOCHECKBOX "Самопоправяне на системните грешки на файловете", 14000, 16, 15, 210, 10
