@@ -105,7 +105,7 @@ reactos/dll/win32/mciavi32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/mcicda              # Synced to Wine-1.7.27
 reactos/dll/win32/mciqtz32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/mciseq              # Synced to WineStaging-1.7.37
-reactos/dll/win32/mciwave             # Synced to Wine-1.7.27
+reactos/dll/win32/mciwave             # Synced to WineStaging-1.7.37
 reactos/dll/win32/mgmtapi             # Synced to Wine-1.7.27
 reactos/dll/win32/mlang               # Synced to Wine-1.7.27
 reactos/dll/win32/mmdevapi            # Synced to Wine-1.7.27
@@ -256,7 +256,7 @@ reactos/modules/rosapps/winfile             # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
-check Wine current souces first as it may already be fixed.
+check Wine current sources first as it may already be fixed.
 
 reactos/lib/3rdparty/strmbase               # Synced to Wine-1.7.27
 
