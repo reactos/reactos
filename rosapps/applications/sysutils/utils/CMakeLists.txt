@@ -1,4 +1,5 @@
 #add_subdirectory(binpatch)
+add_subdirectory(cat)
 #add_subdirectory(driver)
 #add_subdirectory(infinst)
 #add_subdirectory(nts2w32err)
