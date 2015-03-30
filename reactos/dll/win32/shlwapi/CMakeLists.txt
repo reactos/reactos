@@ -17,6 +17,7 @@ list(APPEND SOURCE
     path.c
     reg.c
     regstream.c
+    rosordinal.c
     shlwapi_main.c
     stopwatch.c
     string.c

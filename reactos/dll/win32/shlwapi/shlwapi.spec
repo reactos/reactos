@@ -542,7 +542,7 @@
 542 stdcall -noname GetUIVersion()
 543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
 544 stub -noname QuerySourceCreateFromKey
-545 stub -noname SHForwardContextMenuMsg
+545 stdcall -noname SHForwardContextMenuMsg(ptr long long long ptr long)
 546 stub -noname IUnknown_DoContextMenuPopup
 547 stdcall DelayLoadFailureHook(str str) kernel32.DelayLoadFailureHook
 548 stub -noname SHAreIconsEqual
