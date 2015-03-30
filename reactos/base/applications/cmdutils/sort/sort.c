@@ -1,39 +1,31 @@
 /*
- *    SORT - reads line of a file and sorts them in order
- *    Copyright  1995  Jim Lynch
+ * PROJECT:   SORT - Adapted for ReactOS
+ * LICENSE:   GPL - See COPYING in the top level directory
+ * PURPOSE:   Reads line of a file and sorts them in order
+ * COPYRIGHT: Copyright 1995 Jim Lynch
  *
- *    Adapted for ReactOS
- *
- *    This program is free software; you can redistribute it and/or modify
- *    it under the terms of the GNU General Public License as published by
- *    the Free Software Foundation; either version 2 of the License, or
- *    (at your option) any later version.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with this program; if not, write to the Free Software
- *    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
-#include <malloc.h>
 
-#define MAXRECORDS  65536   /* maximum number of records that can be sorted */
-#define MAXLEN      4095    /* maximum record length */
+#define MAXRECORDS 65536 /* maximum number of records that can be sorted */
+#define MAXLEN 4095 /* maximum record length */
 
-int rev;        /* reverse flag */
-int help;       /* help flag */
-int sortcol;    /* sort column */
-int err = 0;    /* error counter */
+/* Reverse flag */
+int rev;
 
-int
-cmpr(const void *a, const void *b)
+/* Help flag */
+int help;
+
+/* Sort column */
+int sortcol;
+
+/* Error counter */
+int err = 0;
+
+int cmpr(const void *a, const void *b)
 {
     char *A, *B;
 
@@ -43,31 +35,47 @@ cmpr(const void *a, const void *b)
     if (sortcol > 0)
     {
         if (strlen(A) > sortcol)
+        {
             A += sortcol;
+        }
         else
+        {
             A = "";
+        }
         if (strlen(B) > sortcol)
+        {
             B += sortcol;
+        }
         else
+        {
             B = "";
+        }
     }
 
     if (!rev)
+    {
         return strcmp(A, B);
+    }
     else
+    {
         return strcmp(B, A);
+    }
 }
 
-void
-usage(void)
+void usage(void)
 {
     fputs("SORT\n", stderr);
-    fputs("Sorts input and writes output to a file, console or a device.\n", stderr);
+    fputs("Sorts input and writes output to a file, console or a device.\n",
+          stderr);
 
     if (err)
+    {
         fputs("Invalid parameter\n", stderr);
+    }
 
-    fputs("    SORT [options] < [drive:1][path1]file1 > [drive2:][path2]file2\n", stderr);
+    fputs("    SORT [options] < [drive:1][path1]file1 > [drive2:][path2]file2\n",
+          stderr);
+
     fputs("    Command | SORT [options] > [drive:][path]file\n", stderr);
     fputs("    Options:\n", stderr);
     fputs("    /R   Reverse order\n", stderr);
@@ -79,9 +87,10 @@ int main(int argc, char **argv)
 {
     char temp[MAXLEN + 1];
     char **list;
-    char *cp;   /* option character pointer */
-    int  nr;
-    int  i;
+
+    /* Option character pointer */
+    char *cp;
+    int i, nr;
 
     sortcol = 0;
     rev = 0;
@@ -105,7 +114,9 @@ int main(int argc, char **argv)
                 case '+':
                     sortcol = atoi(cp + 1);
                     if (sortcol)
+                    {
                         sortcol--;
+                    }
                     break;
 
                 default:
@@ -130,10 +141,14 @@ int main(int argc, char **argv)
     for (nr = 0; nr < MAXRECORDS; nr++)
     {
         if (fgets(temp, MAXLEN, stdin) == NULL)
+        {
             break;
+        }
 
         if(strlen(temp))
-            temp[strlen(temp)-1]='\0';
+        {
+            temp[strlen(temp) - 1] = '\0';
+        }
 
         list[nr] = (char *) malloc(strlen(temp) + 1);
         if (list[nr] == NULL)
@@ -146,7 +161,6 @@ int main(int argc, char **argv)
                 free(list[i]);
             }
             free(list);
-
             exit(3);
         }
 
@@ -168,12 +182,12 @@ int main(int argc, char **argv)
         exit(4);
     }
 
-    qsort((void *) list, nr, sizeof(char *), cmpr);
+    qsort((void *)list, nr, sizeof(char *), cmpr);
 
     for (i = 0; i < nr; i++)
     {
         fputs(list[i], stdout);
-        fputs("\n",stdout);
+        fputs("\n", stdout);
     }
 
     /* Cleanup memory */
@@ -182,8 +196,6 @@ int main(int argc, char **argv)
         free(list[i]);
     }
     free(list);
-
     return 0;
 }
-
 /* EOF */
