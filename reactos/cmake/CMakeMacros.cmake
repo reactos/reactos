@@ -504,12 +504,27 @@ elseif(USE_FOLDER_STRUCTURE)
     endfunction()
 endif()
 
-macro(concatenate_files _output)
-    add_custom_command(
-        OUTPUT ${_output}
-        COMMAND native-cat ${ARGN} > ${_output}
-        DEPENDS ${ARGN} native-cat)
-endmacro()
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    function(concatenate_files _output _file1)
+        file(TO_NATIVE_PATH "${_output}" _real_output)
+        file(TO_NATIVE_PATH "${_file1}" _file_list)
+        foreach(_file ${ARGN})
+            file(TO_NATIVE_PATH "${_file}" _real_file)
+            set(_file_list "${_file_list} + ${_real_file}")
+        endforeach()
+        add_custom_command(
+            OUTPUT ${_output}
+            COMMAND cmd.exe /C "copy /Y /B ${_file_list} ${_real_output} > nul"
+            DEPENDS ${_file1} ${ARGN})
+    endfunction()
+else()
+    macro(concatenate_files _output)
+        add_custom_command(
+            OUTPUT ${_output}
+            COMMAND cat ${ARGN} > ${_output}
+            DEPENDS ${ARGN})
+    endmacro()
+endif()
 
 function(add_importlibs _module)
     add_dependency_node(${_module})

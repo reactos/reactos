@@ -6,7 +6,6 @@ if(MSVC)
 endif()
 
 add_executable(bin2c bin2c.c)
-add_executable(cat cat.c)
 add_executable(gendib gendib/gendib.c)
 add_executable(geninc geninc/geninc.c)
 add_executable(mkshelllink mkshelllink/mkshelllink.c)
