@@ -567,7 +567,7 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
     }
 
     /* Directory is progid of filesystem folders only */
-    if (rfg == (SFGAO_FILESYSTEM|SFGAO_FOLDER))
+    if ((rfg & (SFGAO_FILESYSTEM|SFGAO_FOLDER)) == (SFGAO_FILESYSTEM|SFGAO_FOLDER))
     {
         /* Load context menu handlers */
         TRACE("Add background handlers: %p\n", m_pidlFolder);
