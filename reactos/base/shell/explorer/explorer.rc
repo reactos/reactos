@@ -28,7 +28,7 @@ CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"
 STRINGTABLE
 BEGIN
     //IDS_HELP_COMMAND "helpctr.exe>-FromStartHelp"
-    IDS_HELP_COMMAND "https://www.reactos.org/"
+    IDS_HELP_COMMAND "http://www.reactos.org/"
 END
 
 IDA_TASKBAR  ACCELERATORS

@@ -2653,13 +2653,13 @@ HandleTrayContextMenu:
         }
 
         pszParameters = wcschr(szCommand, L'>');
-        if (!pszParameters)
-            return E_FAIL;
+        if (pszParameters)
+        {
+            *pszParameters = 0;
+            pszParameters++;
+        }
 
-        *pszParameters = 0;
-        pszParameters++;
-
-        ShellExecuteW(m_hWnd, NULL, szCommand, pszParameters, NULL, 0);
+        ShellExecuteW(m_hWnd, NULL, szCommand, pszParameters, NULL, SW_SHOWNORMAL);
         return S_OK;
     }
 
