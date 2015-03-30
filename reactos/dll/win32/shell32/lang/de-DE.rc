@@ -595,7 +595,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Starten", IDOK, 63, 95, 60, 14
     GROUPBOX "Optionen für die Datenträgerprüfung", -1, 7, 6, 179, 40
-    PUSHBUTTON "S&chließen", IDCANCEL, 118, 100, 60, 14
+    PUSHBUTTON "S&chließen", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "&Dateisystemfehler automatisch korrigieren", 14000, 16, 15, 165, 10
     AUTOCHECKBOX "&Fehlerhafte Sektoren suchen/wiederherstellen", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8

@@ -595,7 +595,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Почати", IDOK, 63, 95, 60, 14
     GROUPBOX "Опції перевірки диску", -1, 7, 6, 179, 40
-    PUSHBUTTON "Скасувати", IDCANCEL, 118, 100, 60, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Виправити помилки файлової системи", 14000, 16, 15, 165, 10
     AUTOCHECKBOX "&Спробувати відновити погані сектори", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8

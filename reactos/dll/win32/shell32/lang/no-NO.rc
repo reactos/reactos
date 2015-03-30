@@ -595,7 +595,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
     GROUPBOX "Alternativer for diskkontroll", -1, 7, 6, 179, 40
-    PUSHBUTTON "Avbryt", IDCANCEL, 118, 100, 60, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Reparer feil i filsysten automatisk", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Søk etter og forsøk å reparere skadet sektorer", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8

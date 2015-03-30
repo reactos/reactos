@@ -595,7 +595,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "&Başlat", IDOK, 63, 95, 60, 14
     GROUPBOX "Disk denetimi seçenekleri", -1, 7, 6, 179, 40
-    PUSHBUTTON "İptal", IDCANCEL, 118, 100, 60, 14
+    PUSHBUTTON "İptal", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "&Dosya sistemi hatalarını otomatik olarak düzelt", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "B&ozuk bölümleri tarayıp düzeltmeye çalış", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8

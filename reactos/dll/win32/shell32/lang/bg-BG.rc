@@ -595,7 +595,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Начало", IDOK, 63, 95, 60, 14
     GROUPBOX "Настройки за проверката", -1, 7, 6, 229, 50
-    PUSHBUTTON "Отказ", IDCANCEL, 118, 100, 60, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Самопоправяне на системните грешки на файловете", 14000, 16, 15, 210, 10
     AUTOCHECKBOX "Об&хождане и опит за възстановяване на лошите сектори", 14001, 16, 30, 210, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 42, 60, 170, 8

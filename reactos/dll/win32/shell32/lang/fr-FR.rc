@@ -595,7 +595,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "Démarrer", IDOK, 63, 95, 60, 14
     GROUPBOX "Options de vérification", -1, 7, 6, 179, 40
-    PUSHBUTTON "Annuler", IDCANCEL, 118, 100, 60, 14
+    PUSHBUTTON "Annuler", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Scanner pour rechercher et réparer les secteurs défectueux", 14001, 16, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
