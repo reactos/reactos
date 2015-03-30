@@ -2983,6 +2983,10 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
     MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
 
+    // FIXME: Check the validity of the InstallDir; however what to do
+    // if it is invalid but we are in unattended setup? (case of somebody
+    // specified an invalid installation directory in the unattended file).
+
     if (IsUnattendedSetup)
     {
         return InstallDirectoryPage1(InstallDir,
@@ -3004,6 +3008,15 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
         {
+            /*
+             * Check for the validity of the installation directory and pop up
+             * an error if it is not the case. Then the user can fix its input.
+             */
+            if (!IsValidPath(InstallDir, Length))
+            {
+                MUIDisplayError(ERROR_DIRECTORY_NAME, Ir, POPUP_WAIT_ENTER);
+                return INSTALL_DIRECTORY_PAGE;
+            }
             return InstallDirectoryPage1(InstallDir,
                                          DiskEntry,
                                          PartEntry);
