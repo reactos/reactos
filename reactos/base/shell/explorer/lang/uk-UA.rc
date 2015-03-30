@@ -13,16 +13,16 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM "&Налаштування дати та часу", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "Н&алаштування сповіщень...", ID_SHELL_CMD_CUST_NOTIF
         MENUITEM SEPARATOR
-        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
-        MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM "Вікна &каскадом", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Вікна &горизонтально", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Вікна &вертикально", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Показати робочий стіл", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Скасувати", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
-        MENUITEM "Диспетчер завдань", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Диспетчер завдань", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Закріпити панель завдань", ID_LOCKTASKBAR
         MENUITEM "В&ластивості", ID_SHELL_CMD_PROPERTIES
@@ -91,10 +91,10 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     AUTORADIOBUTTON "&Меню ""Пуск""", IDC_TASKBARPROP_STARTMENU, 7, 7, 105, 10
     LTEXT "Цей стиль меню забезпечує зручний доступ до папок, часто використовуваних програм та пошуку.", IDC_STATIC, 20, 17, 150, 24, WS_DISABLED
-    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 53, 14, WS_DISABLED
+    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCUST, 192, 4, 60, 14, WS_DISABLED
     AUTORADIOBUTTON "Класичне меню ""Пуск""", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 47, 105, 10, WS_DISABLED
     LTEXT "Цей стиль меню має класичний вигляд і функціональність", -1, 20, 57, 150, 24, WS_DISABLED
-    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 44, 53, 14, WS_DISABLED
+    PUSHBUTTON "Н&алаштувати...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 44, 60, 14, WS_DISABLED
     GROUPBOX "Конфіденційність", IDC_STATIC, 7, 100, 238, 42
     AUTOCHECKBOX "Зберігати та відображати список недавно відкритих &файлів", IDC_TASKBARPROP_RECENTFILES, 14, 114, 224, 10, WS_DISABLED
     AUTOCHECKBOX "Зберігати та відображати список недавно відкритих &програм", IDC_TASKBARPROP_RECENTFOLDERS, 14, 128, 224, 10, WS_DISABLED
@@ -109,7 +109,7 @@ BEGIN
     GROUPBOX "Значки", IDC_STATIC, 6, 33, 240, 58, WS_DISABLED
     LTEXT "Можна уникнути захаращення області повідомлень, приховуючи значки, які давно не використовувалися.", IDC_STATIC, 13, 48, 223, 16, WS_DISABLED
     AUTOCHECKBOX "&Приховувати невживані значки", IDC_TASKBARPROP_HIDEICONS, 13, 70, 125, 10, WS_DISABLED
-    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_ICONCUST, 188, 70, 50, 14, WS_DISABLED
+    PUSHBUTTON "&Налаштувати...", IDC_TASKBARPROP_ICONCUST, 183, 70, 60, 14, WS_DISABLED
     GROUPBOX "Системні значки", IDC_STATIC, 6, 97, 240, 84, WS_DISABLED
     LTEXT "Оберіть системні значки для постійного відображення.", IDC_STATIC, 13, 112, 223, 16, WS_DISABLED
     AUTOCHECKBOX "&Годинник", IDC_TASKBARPROP_CLOCK, 13, 126, 200, 10, WS_DISABLED
@@ -129,11 +129,11 @@ END
 
 IDD_TASKBARPROP_ADVANCED DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Advanced"
+CAPTION "Додатково"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX "Advanced options", IDC_STATIC, 6, 6, 240, 121
-    AUTOCHECKBOX "Show s&econds", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
+    GROUPBOX "Додаткові налаштування", IDC_STATIC, 6, 6, 240, 121
+    AUTOCHECKBOX "&Показувати секунди", IDC_TASKBARPROP_SECONDS, 13, 18, 200, 10
     AUTOCHECKBOX "&Відображати зразки вікон (ескізи)", IDC_TASKBARPROP_WNDPREV, 13, 31, 200, 10
 END
 
