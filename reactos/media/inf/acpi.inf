@@ -81,8 +81,10 @@ GenericMfg = "(dispozitiv de sistem generic)"
 *PNP0C08.DeviceDesc = "Dispozitive ACPI"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
+
 GenericMfg = "(Стандартные системные устройства)"
-*PNP0C08.DeviceDesc = "ACPI Устройства"
+*PNP0C08.DeviceDesc = "ACPI устройства"
 
 [Strings.041B]
 GenericMfg = "(Generické systémové zariadenia)"

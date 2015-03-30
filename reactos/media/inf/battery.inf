@@ -96,6 +96,14 @@ GenericMfg = "(acumulator generic)"
 ACPI\PNP0C0A.DeviceDesc = "Metodă de control acumulator conformă cu ACPI"
 ACPI\ACPI0003.DeviceDesc = "Adaptor CA"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+BatteryClassName = "Батареи"
+
+GenericMfg = "(Стандартные батареи)"
+ACPI\PNP0C0A.DeviceDesc = "Батареи с ACPI-совместимым методом управления"
+ACPI\ACPI0003.DeviceDesc = "AC адаптер"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 BatteryClassName = "Батареї"

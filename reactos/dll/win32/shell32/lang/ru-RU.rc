@@ -698,18 +698,18 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Подтверждение замены файла"
     IDS_OVERWRITEFOLDER_TEXT "Эта папка уже содержит папку с именем '%1'.\n\nЕсли в папке содержатся файлы с одинаковыми именами, то они так же будут\nзаменены. Продолжить?"
 
-    IDS_FILEOOP_COPYING "Copying"
-    IDS_FILEOOP_MOVING "Moving"
-    IDS_FILEOOP_DELETING "Deleting"
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "Копирование"
+    IDS_FILEOOP_MOVING "Перемещение"
+    IDS_FILEOOP_DELETING "Удаление"
+    IDS_FILEOOP_FROM_TO "Из %1 в %2"
+    IDS_FILEOOP_FROM "Из %1"
+    IDS_FILEOOP_PREFLIGHT "Подготовка"
 
     /* message box strings */
     IDS_RESTART_TITLE "Перезагрузка"
     IDS_RESTART_PROMPT "Вы действительно хотите перезагрузить ReactOS?"
     IDS_SHUTDOWN_TITLE "Завершение работы"
-    IDS_SHUTDOWN_PROMPT "Закончить работу с ReactOS?"
+    IDS_SHUTDOWN_PROMPT "Вы действительно хотите завершить работу ReactOS?"
     IDS_LOGOFF_TITLE "Завершение сеанса"
     IDS_LOGOFF_PROMPT "Вы действительно хотите выйти из системы?"
 

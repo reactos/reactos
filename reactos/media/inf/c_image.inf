@@ -38,3 +38,7 @@ ImageClassName = "Obraz"
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 ImageClassName = "Imagine"
+
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+ImageClassName = "Образ"

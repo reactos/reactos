@@ -94,7 +94,10 @@ GenCdRom.DeviceDesc = "Dispozitiv CD-ROM"
 GenericMfg = "(dispozitive DVD/CD-ROM generice)"
 
 [Strings.0419]
-CDROMClassName = "Дисковод DVD/CD-ROM"
+ReactOS = "Команда ReactOS"
+CDROMClassName = "DVD/CD-ROM приводы"
+GenCdRom.DeviceDesc = "CD-ROM привод"
+GenericMfg = "(Стандартные DVD/CD-ROM приводы)"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

@@ -7,8 +7,8 @@ STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
-Использование: DISKPART [/S <имя файла>] [/T <тайм-аут>] [/?]\n\n\
-/S <имя файла>\tЗапускает указанный скрипт.\n\
+Использование: DISKPART [/S <имя_файла>] [/T <тайм-аут>] [/?]\n\n\
+/S <имя_файла>\tЗапускает указанный скрипт.\n\
 /T <тайм-аут>\tTimeout in seconds to prevent diskpart usage overlap.\n\
 /?\t\tОтображает эту справку.\n\n"
     IDS_APP_LICENSE "Распространяется под лицензией GNU GPLv2\n"
@@ -27,7 +27,7 @@ BEGIN
     IDS_DETAIL_INFO_TARGET "Цель"
     IDS_DETAIL_INFO_LUN_ID "LUN ID"
     IDS_DETAIL_INFO_LOC_PATH "Location Path"
-    IDS_DETAIL_INFO_CURR_RO_STATE "Current Read-only State"
+    IDS_DETAIL_INFO_CURR_RO_STATE "Текущее состояние ""Только для чтения"""
     IDS_DETAIL_INFO_RO "Только для чтения"
     IDS_DETAIL_INFO_BOOT_DSK "Загрузочный диск"
     IDS_DETAIL_INFO_PAGE_FILE_DSK "Pagefile диск"
@@ -40,7 +40,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_LIST_DISK_HEAD "Диск ###  Состояние\tРазмер\tСвободно\tДин\tGPT\n"
-    IDS_LIST_DISK_LINE "--------  ------\t----\t----\t---\t---\n"
+    IDS_LIST_DISK_LINE "--------  ---------\t------\t--------\t---\t---\n"
     IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
 END
 

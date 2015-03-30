@@ -39,7 +39,7 @@ ALIAS [псевдоним=[команда]]\n\n\
 CALL [диск:][путь]имя_файла [параметры]\n\n\
   параметры   Набор параметров командной строки, необходимых\n\
               пакетному файлу."
-    STRING_CD_HELP "Вывод имени либо смена текущего каталога.\n\n\
+    STRING_CD_HELP "Вывод текущего каталога либо его смена.\n\n\
 CHDIR [/D][диск:][путь]\n\
 CHDIR[..|.]\n\
 CD [/D][диск:][путь]\n\
@@ -362,7 +362,7 @@ REPLACE [диск1:][путь1]имя_файла [диск2:][путь2] [/P] [/
   /W                       Ожидание вставки диска перед началом выполнения.\n\
   /U                       Замена только файлов, более старых, чем исходные.\n\
                            Этот ключ несовместим с ключом /A.\n"
-    STRING_REPLACE_HELP2 "Необходимо указать путь к исходным файлам.\n"
+    STRING_REPLACE_HELP2 "Необходимо указать путь к исходным файлам\n"
     STRING_REPLACE_HELP3 "Ни один файл не заменен\n"
     STRING_REPLACE_HELP4 "%lu файл(ов) заменено\n"
     STRING_REPLACE_HELP5 "Замена %s\n"
@@ -392,7 +392,7 @@ TITLE [строка]\n\n\
 строка       Будущий заголовок окна командной строки.\n"
     STRING_TIME_HELP1 "Вывод или изменение времени.\n\n\
 TIME [/T][время]\n\n\
-  /T    не изменять время\n\n\
+  /T    только вывести время\n\n\
 TIME без параметров выводит текущее время и запрашивает\n\
 новое время.  Нажатие ENTER сохранит текущее время.\n"
     STRING_TIME_HELP2 "Введите новое время: "
@@ -427,7 +427,7 @@ VER [/C] [/R] [/W]\n\n\
   /C  Отображание авторов.\n\
   /R  Displays redistribution information.\n\
   /W  Отображаение предоставляемых гарантий."
-    STRING_VERSION_HELP2 " предоставляется БЕЗ ВСЯКИХ ГАРАНТИЙ; для подробности\n\
+    STRING_VERSION_HELP2 " предоставляется БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ; для подробности\n\
 введите: `ver /w'. This is free software, and you are welcome to redistribute\n\
 it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
 listing of credits."
@@ -446,7 +446,7 @@ listing of credits."
     STRING_VOL_HELP1 " Том в устройстве %c имеет метку %s\n"
     STRING_VOL_HELP2 " Том в устройстве %c не имеет метки\n"
     STRING_VOL_HELP3 " Серийный номер тома: %04X-%04X\n"
-    STRING_VOL_HELP4 "Выводит метку тома и серийный номер.\n\nVOL [диск:]"
+    STRING_VOL_HELP4 "Выводит метку тома и серийный номер, если они существуют.\n\nVOL [диск:]"
     STRING_WINDOW_HELP1 "Меняет вид окна консоли\n\n\
 WINDOW [/POS[=]лево,верх,ширина,высота]\n\
               [MIN | MAX | RESTORE] ['заголовок']\n\n\
@@ -469,13 +469,13 @@ RESTORE       восстанавливает окно\n\
     STRING_ASSOC_ERROR "Не найдено файловых ассоциаций для расширения %s\n"
     STRING_BATCH_ERROR "Ошибка открытия командного файла\n"
     STRING_CHCP_ERROR1 "Текущая кодовая страница: %u\n"
-    STRING_CHCP_ERROR4 "Ошибочная кодовая страница\n"
-    STRING_CHOICE_ERROR "Ошибочный параметр. Ожидается формат: /C[:]параметры"
-    STRING_CHOICE_ERROR_TXT "Ошибочный параметр. Ожидается формат: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Ошибочный параметр: %s"
-    STRING_CMD_ERROR1 "Не могу перенаправить ввод из файла %s\n"
+    STRING_CHCP_ERROR4 "Неверная кодовая страница\n"
+    STRING_CHOICE_ERROR "Неверный параметр. Ожидается формат: /C[:]параметры"
+    STRING_CHOICE_ERROR_TXT "Неверный параметр. Ожидается формат: /T[:]c,nn"
+    STRING_CHOICE_ERROR_OPTION "Неверный параметр: %s"
+    STRING_CMD_ERROR1 "Невозможно перенаправить ввод из файла %s\n"
     STRING_CMD_ERROR2 "Ошибка создания временного файла для pipe-данных\n"
-    STRING_CMD_ERROR3 "Не могу перенаправить в файл %s\n"
+    STRING_CMD_ERROR3 "Невозможно перенаправить в файл %s\n"
     STRING_CMD_ERROR4 "Запуск %s...\n"
     STRING_CMD_ERROR5 "Запуск cmdexit.bat...\n"
     STRING_COLOR_ERROR1 "Одинаковые цвета! (Цвета фона и текста не могут быть одинаковыми)"
@@ -496,7 +496,7 @@ RESTORE       восстанавливает окно\n\
     STRING_FOR_ERROR2 "скобок не обнаружено."
     STRING_FOR_ERROR3 "'do' отсутствует."
     STRING_FOR_ERROR4 "нет команды после 'do'."
-    STRING_FREE_ERROR1 "Неправильное имя диска"
+    STRING_FREE_ERROR1 "Неверное имя диска"
     STRING_FREE_ERROR2 "не отмечено"
     STRING_GOTO_ERROR1 "Не определена метка для GOTO"
     STRING_GOTO_ERROR2 "Метка '%s' не найдена\n"
@@ -504,10 +504,10 @@ RESTORE       восстанавливает окно\n\
     STRING_MD_ERROR2 "Путь к новому каталогу не существует.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Ошибка]\n"
-    STRING_REN_ERROR1 "Выполнение MoveFile() было не успешным. Ошибка: %lu\n"
+    STRING_REN_ERROR1 "Выполнение MoveFile() было не удачным. Ошибка: %lu\n"
     STRING_START_ERROR1 "На данный момент нет поддержки пакетных файлов!"
-    STRING_TIME_ERROR1 "Неправильное время."
-    STRING_TYPE_ERROR1 "Неправильный параметр '/%s'\n"
+    STRING_TIME_ERROR1 "Неверное время."
+    STRING_TYPE_ERROR1 "Неверный параметр '/%s'\n"
     STRING_WINDOW_ERROR1 "окно не найдено"
     STRING_ERROR_PARAMETERF_ERROR "Некорректный формат параметра - %c\n"
     STRING_ERROR_INVALID_SWITCH "Неверный параметр - /%c\n"
@@ -515,9 +515,9 @@ RESTORE       восстанавливает окно\n\
     STRING_ERROR_PATH_NOT_FOUND "Путь не найден\n"
     STRING_ERROR_FILE_NOT_FOUND "Файл не найден\n"
     STRING_ERROR_REQ_PARAM_MISSING "Отсутствует необходимый параметр\n"
-    STRING_ERROR_INVALID_DRIVE "Ошибочное определение диска\n"
-    STRING_ERROR_INVALID_PARAM_FORMAT "Ошибочный формат параметра - %s\n"
-    STRING_ERROR_BADCOMMAND "Неправильная команда или неверное имя файла - %s\n"
+    STRING_ERROR_INVALID_DRIVE "Неверное определение диска\n"
+    STRING_ERROR_INVALID_PARAM_FORMAT "Неверный формат параметра - %s\n"
+    STRING_ERROR_BADCOMMAND "Неверная команда или неверное имя файла - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Нехватка памяти.\n"
     STRING_ERROR_CANNOTPIPE "Ошибка!  Невозможно использовать pipe!  Невозможно создать временный файл!\n"
     STRING_ERROR_D_PAUSEMSG "Для продолжения нажмите любую клавишу . . ."
@@ -530,20 +530,20 @@ RESTORE       восстанавливает окно\n\
     STRING_REPLACE_ERROR5 "Доступ запрещен - %s\n"
     STRING_REPLACE_ERROR6 "Не найдено файлов - %s\n"
     STRING_REPLACE_ERROR7 "Расширенная ошибка 32\n"
-    STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
+    STRING_CMD_INFOLINE "  ReactOS Командная строка                            Введите HELP для Справки  "
     STRING_REACTOS_VERSION "Операционная система ReactOS [Версия %s-%s]\n"
     STRING_CMD_SHELLINFO "\nИнтерпретатор командной строки ReactOS\nВерсия %s %s"
     STRING_VERSION_RUNNING_ON "Запущен на: "
-    STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"
+    STRING_VERSION_RUNVER "%s [Версия %d.%d.%d] %s"
     STRING_COPY_FILE "        %d файл(ов) скопировано\n"
     STRING_DELETE_WIPE "очищено"
     STRING_FOR_ERROR "неправильное задание переменной."
     STRING_SCREEN_COL "неправильное значение для колонок"
     STRING_SCREEN_ROW "неправильное значение для строк"
     STRING_TIMER_TIME "Timer %d is %s: "
-    STRING_MKLINK_CREATED_SYMBOLIC "Символическая ссылка создана для %s <<===>> %s\n"
-    STRING_MKLINK_CREATED_HARD "Жесткая связь создана для %s <<===>> %s\n"
-    STRING_MKLINK_CREATED_JUNCTION "Ссылка-каталог создана для %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_SYMBOLIC "Символьная ссылка создана для %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_HARD "Жесткая ссылка создана для %s <<===>> %s\n"
+    STRING_MKLINK_CREATED_JUNCTION "Точка соединения создана для %s <<===>> %s\n"
     STRING_MORE "Еще? "
     STRING_CANCEL_BATCH_FILE "\r\nЗавершить выполнение пакетного файла [Y(да)/N(нет)]? "
     STRING_INVALID_OPERAND "Неверный операнд."

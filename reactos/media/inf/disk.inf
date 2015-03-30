@@ -90,6 +90,14 @@ Disk.DeviceDesc = "Dispozitiv disc"
 OpticalDisk.DeviceDesc = "Dispozitiv disc optic"
 Disk.ServiceDesc = "Modul-pilot de disc"
 
+[Strings]
+ReactOS = "Команда ReactOS"
+GenericMfg = "(Стандартные дисковые накопители)"
+DiskClassName = "Дисковые устройства"
+Disk.DeviceDesc = "Дисковое устройство"
+OpticalDisk.DeviceDesc = "Оптическое дисковое устройство"
+Disk.ServiceDesc = "Драйвер диска"
+
 [Strings.0422]
 ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартні приводи дисків)"
