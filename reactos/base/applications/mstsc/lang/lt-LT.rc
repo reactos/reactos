@@ -9,7 +9,7 @@ BEGIN
     GROUPBOX "Prisijungimo nuostatos", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Ryšio nuostatos", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Įveskite serverio adresą", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Įveskite serverio adresą.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Serveris:", IDC_STATIC, 47, 41, 30, 8
     LTEXT "Vartotojo vardas:", IDC_STATIC, 47, 58, 60, 8
     COMBOBOX IDC_SERVERCOMBO, 107, 39, 113, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP

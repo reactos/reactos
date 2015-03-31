@@ -11,7 +11,7 @@ BEGIN
     GROUPBOX "Prihlasovacie nastavenia", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Nastavenia spojenia", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Vložte adresu servera", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Vložte adresu servera.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Server:", IDC_STATIC, 47, 41, 25, 8
     LTEXT "Používateľské meno:", IDC_STATIC, 47, 58, 38, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
@@ -20,7 +20,7 @@ BEGIN
     PUSHBUTTON "Uložiť &ako...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "&Otvoriť...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Uložiť aktuálne nastavenie pripojenia alebo otvoriť existujúci konfiguračný súbor", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Uložiť aktuálne nastavenie pripojenia alebo otvoriť existujúci konfiguračný súbor.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175

@@ -7,7 +7,7 @@ BEGIN
     GROUPBOX "Impostazioni di accesso", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Impostazioni di connessione", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Digitare il nome o indirizzo del computer", IDC_STATIC, 47, 24, 150, 8
+    LTEXT "Digitare il nome o indirizzo del computer.", IDC_STATIC, 47, 24, 150, 8
     LTEXT "Computer:", IDC_STATIC, 47, 41, 35, 8
     LTEXT "Nome utente:", IDC_STATIC, 47, 58, 68, 8
     COMBOBOX IDC_SERVERCOMBO, 90, 39, 136, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
@@ -16,7 +16,7 @@ BEGIN
     PUSHBUTTON "Salva con nome", IDC_SAVEAS, 107, 139, 58, 14
     PUSHBUTTON "Apri", IDC_OPEN, 169, 139, 58, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Salvare le impostazioni correnti o aprire una configurazione salvata", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Salvare le impostazioni correnti o aprire una configurazione salvata.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175

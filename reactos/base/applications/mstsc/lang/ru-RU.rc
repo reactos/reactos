@@ -9,7 +9,7 @@ BEGIN
     GROUPBOX "Параметры входа", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Параметры подключения", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Введите адрес сервера", IDC_STATIC, 47, 24, 100, 8
+    LTEXT "Введите адрес сервера.", IDC_STATIC, 47, 24, 100, 8
     LTEXT "Сервер:", IDC_STATIC, 52, 41, 31, 8
     LTEXT "Имя пользователя:", IDC_STATIC, 15, 58, 67, 8
     COMBOBOX IDC_SERVERCOMBO, 86, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP

@@ -9,7 +9,7 @@ BEGIN
     GROUPBOX "Configuración del inicio de sesión", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Configuración de la conexión", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Introduzca la dirección del servidor", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Introduzca la dirección del servidor.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Servidor:", IDC_STATIC, 47, 41, 28, 8
     LTEXT "Nombre de usuario:", IDC_STATIC, 47, 58, 70, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
