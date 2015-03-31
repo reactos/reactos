@@ -100,29 +100,19 @@ WORD NTAPI ConDrvWriteOutput(PDOS_DEVICE_NODE Device, DWORD Buffer, PWORD Length
     WORD BytesWritten;
     PCHAR Pointer = (PCHAR)FAR_POINTER(Buffer);
 
-    /*
-     * Use BIOS Teletype function
-     */
-
-    /* Save AX and BX */
+    /* Save AX */
     USHORT AX = getAX();
-    USHORT BX = getBX();
 
-    // FIXME: Use BIOS Write String function INT 10h, AH=13h ??
     for (BytesWritten = 0; BytesWritten < *Length; BytesWritten++)
     {
-        /* Set the parameters */
+        /* Set the character */
         setAL(Pointer[BytesWritten]);
-        setBL(DOS_CHAR_ATTRIBUTE);
-        setBH(Bda->VideoPage);
 
-        /* Call the BIOS INT 10h, AH=0Eh "Teletype Output" */
-        setAH(0x0E);
-        Int32Call(&DosContext, BIOS_VIDEO_INTERRUPT);
+        /* Call the BIOS INT 29h "Fast Console Output" function */
+        Int32Call(&DosContext, 0x29);
     }
 
-    /* Restore AX and BX */
-    setBX(BX);
+    /* Restore AX */
     setAX(AX);
     return DOS_DEVSTAT_DONE;
 }
