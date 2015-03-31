@@ -451,12 +451,6 @@ START_TEST(batch)
     int argc;
     char **argv;
 
-    if(!winetest_interactive)
-    {
-        skip("Skipping cmd tests. CORE-6810.\n");
-        return;
-    }
-
     if (!cmd_available()) {
         win_skip("cmd not installed, skipping cmd tests\n");
         return;
