@@ -257,7 +257,7 @@ DWORD DosStartProcess(
     IN LPCSTR CommandLine,
     IN LPCSTR Environment OPTIONAL
 );
-VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode);
+VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident);
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
 
 BOOLEAN DosKRNLInitialize(VOID);

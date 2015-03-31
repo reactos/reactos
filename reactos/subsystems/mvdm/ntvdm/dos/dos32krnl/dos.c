@@ -1117,7 +1117,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
 }
 #endif
 
-VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
+VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
 {
     WORD i;
     WORD McbSegment = FIRST_MCB_SEGMENT;
@@ -1132,10 +1132,13 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
     /* Check if this PSP is it's own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
 
-    for (i = 0; i < PspBlock->HandleTableSize; i++)
+    if (KeepResident == 0)
     {
-        /* Close the handle */
-        DosCloseHandle(i);
+        for (i = 0; i < PspBlock->HandleTableSize; i++)
+        {
+            /* Close the handle */
+            DosCloseHandle(i);
+        }
     }
 
     /* Free the memory used by the process */
@@ -1145,10 +1148,30 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
         CurrentMcb = SEGMENT_TO_MCB(McbSegment);
 
         /* Make sure the MCB is valid */
-        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType !='Z') break;
+        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z') break;
 
-        /* If this block was allocated by the process, free it */
-        if (CurrentMcb->OwnerPsp == Psp) DosFreeMemory(McbSegment + 1);
+        /* Check if this block was allocated by the process */
+        if (CurrentMcb->OwnerPsp == Psp)
+        {
+            if (KeepResident == 0)
+            {
+                /* Free this entire block */
+                DosFreeMemory(McbSegment + 1);
+            }
+            else if (KeepResident < CurrentMcb->Size)
+            {
+                /* Reduce the size of the block */
+                DosResizeMemory(McbSegment + 1, KeepResident, NULL);
+
+                /* No further paragraphs need to stay resident */
+                KeepResident = 0;
+            }
+            else
+            {
+                /* Just reduce the amount of paragraphs we need to keep resident */
+                KeepResident -= CurrentMcb->Size;
+            }
+        }
 
         /* If this was the last block, quit */
         if (CurrentMcb->BlockType == 'Z') break;
@@ -1311,7 +1334,7 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 VOID WINAPI DosInt20h(LPWORD Stack)
 {
     /* This is the exit interrupt */
-    DosTerminateProcess(Stack[STACK_CS], 0);
+    DosTerminateProcess(Stack[STACK_CS], 0, 0);
 }
 
 VOID WINAPI DosInt21h(LPWORD Stack)
@@ -1329,7 +1352,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Terminate Program */
         case 0x00:
         {
-            DosTerminateProcess(Stack[STACK_CS], 0);
+            DosTerminateProcess(Stack[STACK_CS], 0, 0);
             break;
         }
 
@@ -1742,6 +1765,14 @@ VOID WINAPI DosInt21h(LPWORD Stack)
              */
             setAX(PspBlock->DosVersion);
 
+            break;
+        }
+
+        /* Terminate and Stay Resident */
+        case 0x31:
+        {
+            DPRINT1("Process going resident: %u paragraphs kept\n", getDX());
+            DosTerminateProcess(CurrentPsp, getAL(), getDX());
             break;
         }
 
@@ -2377,7 +2408,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Terminate With Return Code */
         case 0x4C:
         {
-            DosTerminateProcess(CurrentPsp, getAL());
+            DosTerminateProcess(CurrentPsp, getAL(), 0);
             break;
         }
 
