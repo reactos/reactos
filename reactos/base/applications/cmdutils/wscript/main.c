@@ -412,11 +412,11 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPWSTR cmdline, int cm
 
     WINE_TRACE("(%p %p %s %x)\n", hInst, hPrevInst, wine_dbgstr_w(cmdline), cmdshow);
 
-    argv = CommandLineToArgvW(cmdline, &argc);
+    argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     if(!argv)
         return 1;
 
-    for(i=0; i<argc; i++) {
+    for(i=1; i<argc; i++) {
         if(*argv[i] == '/' || *argv[i] == '-') {
             if(!set_host_properties(argv[i]))
                 return 1;
