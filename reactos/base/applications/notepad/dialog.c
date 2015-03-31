@@ -127,7 +127,7 @@ static void AlertPrintError(void)
 
     LoadString(Globals.hInstance, STRING_UNTITLED, szUntitled, ARRAY_SIZE(szUntitled));
 
-    DIALOG_StringMsgBox(Globals.hMainWnd, STRING_NOTSAVED,
+    DIALOG_StringMsgBox(Globals.hMainWnd, STRING_PRINTERROR,
                         Globals.szFileName[0] ? Globals.szFileName : szUntitled,
                         MB_ICONEXCLAMATION | MB_OK);
 }
