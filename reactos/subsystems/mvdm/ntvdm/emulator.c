@@ -316,34 +316,6 @@ PumpConsoleInput(LPVOID Parameter)
     return 0;
 }
 
-static VOID EnableExtraHardware(HANDLE ConsoleInput)
-{
-    DWORD ConInMode;
-
-    if (GetConsoleMode(ConsoleInput, &ConInMode))
-    {
-#if 0
-        // GetNumberOfConsoleMouseButtons();
-        // GetSystemMetrics(SM_CMOUSEBUTTONS);
-        // GetSystemMetrics(SM_MOUSEPRESENT);
-        if (MousePresent)
-        {
-#endif
-            /* Support mouse input events if there is a mouse on the system */
-            ConInMode |= ENABLE_MOUSE_INPUT;
-#if 0
-        }
-        else
-        {
-            /* Do not support mouse input events if there is no mouse on the system */
-            ConInMode &= ~ENABLE_MOUSE_INPUT;
-        }
-#endif
-
-        SetConsoleMode(ConsoleInput, ConInMode);
-    }
-}
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 static VOID
@@ -497,14 +469,6 @@ BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput)
 
     /* Register the I/O Ports */
     RegisterIoPort(CONTROL_SYSTEM_PORT61H, Port61hRead, Port61hWrite);
-
-    /* Set the console input mode */
-    // FIXME: Activate ENABLE_WINDOW_INPUT when we will want to perform actions
-    // upon console window events (screen buffer resize, ...).
-    SetConsoleMode(ConsoleInput, ENABLE_PROCESSED_INPUT /* | ENABLE_WINDOW_INPUT */);
-    // SetConsoleMode(ConsoleOutput, ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT);
-
-    /**/EnableExtraHardware(ConsoleInput);/**/
 
     /* Initialize the PS/2 port */
     PS2Initialize();

@@ -650,6 +650,22 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     return TRUE;
 }
 
+static BOOLEAN DosControlBreak(VOID)
+{
+    setCF(0);
+
+    /* Call interrupt 0x23 */
+    Int32Call(&DosContext, 0x23);
+
+    if (getCF())
+    {
+        DosTerminateProcess(CurrentPsp, 0, 0);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 PDOS_SFT_ENTRY DosGetSftEntry(WORD DosHandle)
@@ -981,7 +997,8 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     if (Result != ERROR_SUCCESS) goto Quit;
 
     /* Attach to the console */
-    VidBiosAttachToConsole(); // FIXME: And in fact, attach the full NTVDM UI to the console
+    ConsoleAttach();
+    VidBiosAttachToConsole();
 
     // HACK: Simulate a ENTER key release scancode on the PS/2 port because
     // some apps expect to read a key release scancode (> 0x80) when they
@@ -994,7 +1011,8 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     CpuSimulate();
 
     /* Detach from the console */
-    VidBiosDetachFromConsole(); // FIXME: And in fact, detach the full NTVDM UI from the console
+    VidBiosDetachFromConsole();
+    ConsoleDetach();
 
 Quit:
     return Result;
@@ -1125,9 +1143,10 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
 
-    DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X\n",
+    DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X, KeepResident 0x%04X\n",
            Psp,
-           ReturnCode);
+           ReturnCode,
+           KeepResident);
 
     /* Check if this PSP is it's own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
@@ -1464,15 +1483,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             DPRINT("Char input without echo\n");
 
-            // FIXME: Under DOS 2+, input handle may be redirected!!!!
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
             // FIXME: For 0x07, do not check Ctrl-C/Break.
             //        For 0x08, do check those control sequences and if needed,
             //        call INT 0x23.
-
-            // /* Let the BOP repeat if needed */
-            // if (getCF()) break;
 
             setAL(Character);
             break;
@@ -1508,18 +1523,55 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             while (Count < InputBuffer->MaxLength)
             {
-                // FIXME!! This function should interpret backspaces etc...
-
                 /* Try to read a character (wait) */
                 Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
-                // FIXME: Check whether Ctrl-C / Ctrl-Break is pressed, and call INT 23h if so.
+                switch (Character)
+                {
+                    /* Extended character */
+                    case '\0':
+                    {
+                        /* Read the scancode */
+                        DosReadCharacter(DOS_INPUT_HANDLE);
+                        break;
+                    }
 
-                /* Echo the character and append it to the buffer */
-                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-                InputBuffer->Buffer[Count] = Character;
+                    /* Ctrl-C */
+                    case 0x03:
+                    {
+                        if (DosControlBreak()) return;
+                        break;
+                    }
 
-                Count++; /* Carriage returns are also counted */
+                    /* Backspace */
+                    case '\b':
+                    {
+                        if (Count > 0)
+                        {
+                            Count--;
+
+                            /* Erase the character */
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, ' ');
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+                        }
+
+                        break;
+                    }
+
+                    default:
+                    {
+                        if (Character == 0x0A || Character == 0x0D
+                            || (Character >= 0x20 && Character <= 0x7F))
+                        {
+                            /* Echo the character and append it to the buffer */
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+                            InputBuffer->Buffer[Count] = Character;
+
+                            Count++; /* Carriage returns are also counted */
+                        }
+                    }
+                }
 
                 if (Character == '\r') break;
             }
@@ -2836,11 +2888,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
 VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 {
-    UNREFERENCED_PARAMETER(Stack);
-
-    /* Stop the VDM task */
-    ResetEvent(VdmTaskEvent);
-    CpuUnsimulate();
+    /* Set CF to terminate the running process */
+    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
 
 VOID WINAPI DosFastConOut(LPWORD Stack)

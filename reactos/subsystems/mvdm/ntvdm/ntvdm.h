@@ -68,6 +68,8 @@ CreateVdmMenu(HANDLE ConOutHandle);
 /*static*/ VOID
 DestroyVdmMenu(VOID);
 
+BOOL ConsoleAttach(VOID);
+VOID ConsoleDetach(VOID);
 VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent);
 VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent);
 

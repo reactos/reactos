@@ -245,12 +245,16 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
         /* Set the highest bit */
         BiosKeyboardMap[VirtualKey] |= (1 << 7);
 
-        /* Find out which character this is */
         Character = 0;
-        if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
+
+        /* If ALT isn't held down, find out which character this is */
+        if (!((BiosKeyboardMap[VK_MENU] | BiosKeyboardMap[VK_RMENU] | BiosKeyboardMap[VK_LMENU]) & (1 << 7)))
         {
-            /* Not ASCII */
-            Character = 0;
+            if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
+            {
+                /* Not ASCII */
+                Character = 0;
+            }
         }
 
         /* Push it onto the BIOS keyboard queue */
