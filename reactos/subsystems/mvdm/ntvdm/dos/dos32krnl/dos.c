@@ -1539,6 +1539,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     /* Ctrl-C */
                     case 0x03:
                     {
+                        DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
+                        DosPrintCharacter(DOS_OUTPUT_HANDLE, 'C');
+
                         if (DosControlBreak()) return;
                         break;
                     }
@@ -1561,15 +1564,19 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
                     default:
                     {
-                        if (Character == 0x0A || Character == 0x0D
-                            || (Character >= 0x20 && Character <= 0x7F))
-                        {
-                            /* Echo the character and append it to the buffer */
-                            DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-                            InputBuffer->Buffer[Count] = Character;
+                        /* Append it to the buffer */
+                        InputBuffer->Buffer[Count] = Character;
+                        Count++; /* Carriage returns are also counted */
 
-                            Count++; /* Carriage returns are also counted */
+                        /* Check if this is a special character */
+                        if (Character < 0x20 && Character != 0x0A && Character != 0x0D)
+                        {
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
+                            Character += 'A' - 1;
                         }
+
+                        /* Echo the character */
+                        DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
                     }
                 }
 
