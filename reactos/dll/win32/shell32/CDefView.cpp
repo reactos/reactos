@@ -787,6 +787,7 @@ BOOLEAN CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl)); /*set the item's data*/
     lvItem.pszText = LPSTR_TEXTCALLBACKW;                 /*get text on a callback basis*/
     lvItem.iImage = I_IMAGECALLBACK;                      /*get the image on a callback basis*/
+    lvItem.stateMask = LVIS_CUT;
 
     if (m_ListView.InsertItem(&lvItem) == -1)
         return FALSE;
@@ -881,7 +882,10 @@ HRESULT CDefView::FillList()
         {
             /* if the value is 1, then show all hidden files/folders */
             if (flagVal == 1)
+            {
                 dFlags |= SHCONTF_INCLUDEHIDDEN;
+                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
+            }
         }
 
         /* close the key */
@@ -1754,6 +1758,17 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             if(lpdi->item.mask & LVIF_IMAGE)    /* image requested */
             {
                 lpdi->item.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
+            }
+            if(lpdi->item.mask & LVIF_STATE)
+            {
+                ULONG attributes = SFGAO_HIDDEN;
+                if (SUCCEEDED(m_pSFParent->GetAttributesOf(1, &pidl, &attributes)))
+                {
+                    if (attributes & SFGAO_HIDDEN)
+                    {
+                        lpdi->item.state |= LVIS_CUT;
+                    }
+                }
             }
             lpdi->item.mask |= LVIF_DI_SETITEM;
             break;
