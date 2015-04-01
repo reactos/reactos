@@ -106,7 +106,7 @@ HRESULT WINAPI CNetFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", this,
            pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
 
-    return SHELL32_BindToChild(pidlRoot, NULL, pidl, riid, ppvOut);
+    return E_NOTIMPL;
 }
 
 /**************************************************************************
@@ -127,12 +127,7 @@ HRESULT WINAPI CNetFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserv
 
 HRESULT WINAPI CNetFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    int nReturn;
-
-    TRACE("(%p)->(0x%08lx,pidl1=%p,pidl2=%p)\n", this, lParam, pidl1, pidl2);
-    nReturn = SHELL32_CompareIDs(this, lParam, pidl1, pidl2);
-    TRACE("-- %i\n", nReturn);
-    return nReturn;
+    return E_NOTIMPL;
 }
 
 /**************************************************************************
@@ -198,13 +193,7 @@ HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
         *rgfInOut = dwNethoodAttributes;
     else
     {
-        while (cidl > 0 && *apidl)
-        {
-            pdump(*apidl);
-            SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
-            apidl++;
-            cidl--;
-        }
+        /* FIXME: Implement when enumerating items is implemented */
     }
 
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
