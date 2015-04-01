@@ -30,17 +30,14 @@ CNewMenu::CNewMenu()
     m_pItems = NULL;
     m_pLinkItem = NULL;
     m_pSite = NULL;
-    m_hbmFolder = NULL;
-    m_hbmLink = NULL;
+    m_hiconFolder = NULL;
+    m_hiconLink = NULL;
+    m_idCmdFirst = 0;
 }
 
 CNewMenu::~CNewMenu()
 {
     UnloadAllItems();
-    if (m_hbmFolder)
-        DeleteObject(m_hbmFolder);
-    if (m_hbmLink)
-        DeleteObject(m_hbmLink);
 }
 
 void CNewMenu::UnloadItem(SHELLNEW_ITEM *pItem)
@@ -50,8 +47,8 @@ void CNewMenu::UnloadItem(SHELLNEW_ITEM *pItem)
     free(pItem->pwszDesc);
     free(pItem->pwszExt);
 
-    if (pItem->hBitmap)
-        DeleteObject(pItem->hBitmap);
+    if (pItem->hIcon)
+        DestroyIcon(pItem->hIcon);
 
     HeapFree(GetProcessHeap(), 0, pItem);
 }
@@ -73,29 +70,6 @@ void CNewMenu::UnloadAllItems()
     if (m_pLinkItem)
         UnloadItem(m_pLinkItem);
     m_pLinkItem = NULL;
-}
-
-static HBITMAP IconToBitmap(HICON hIcon)
-{
-    HDC hdc, hdcScr;
-    HBITMAP hbm, hbmOld;
-    RECT rc;
-
-    hdcScr = GetDC(NULL);
-    hdc = CreateCompatibleDC(hdcScr);
-    SetRect(&rc, 0, 0, GetSystemMetrics(SM_CXMENUCHECK), GetSystemMetrics(SM_CYMENUCHECK));
-    hbm = CreateCompatibleBitmap(hdcScr, rc.right, rc.bottom);
-    ReleaseDC(NULL, hdcScr);
-
-    hbmOld = (HBITMAP)SelectObject(hdc, hbm);
-    FillRect(hdc, &rc, (HBRUSH)(COLOR_MENU + 1));
-    if (!DrawIconEx(hdc, 0, 0, hIcon, rc.right, rc.bottom, 0, NULL, DI_NORMAL))
-        ERR("DrawIcon failed: %x\n", GetLastError());
-    SelectObject(hdc, hbmOld);
-
-    DeleteDC(hdc);
-
-    return hbm;
 }
 
 CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
@@ -179,10 +153,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
     pNewItem->pwszExt = _wcsdup(pwszExt);
     pNewItem->pwszDesc = _wcsdup(fi.szTypeName);
     if (fi.hIcon)
-    {
-        pNewItem->hBitmap = IconToBitmap(fi.hIcon);
-        DestroyIcon(fi.hIcon);
-    }
+        pNewItem->hIcon = fi.hIcon;
 
     return pNewItem;
 }
@@ -262,16 +233,11 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     /* Insert new folder action */
     if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEWFOLDER, wszBuf, _countof(wszBuf)))
         wszBuf[0] = 0;
-    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
-    mii.fType = MFT_STRING;
+    mii.fMask = MIIM_ID | MIIM_BITMAP | MIIM_STRING;
     mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmd;
-    if (m_hbmFolder)
-    {
-        mii.fMask |= MIIM_CHECKMARKS;
-        mii.hbmpChecked = mii.hbmpUnchecked = m_hbmFolder;
-    }
+    mii.hbmpItem = HBMMENU_CALLBACK;
     if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
         ++idCmd;
 
@@ -281,11 +247,6 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmd;
-    if (m_hbmLink)
-    {
-        mii.fMask |= MIIM_CHECKMARKS;
-        mii.hbmpChecked = mii.hbmpUnchecked = m_hbmLink;
-    }
     if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
         ++idCmd;
 
@@ -296,22 +257,16 @@ CNewMenu::InsertShellNewItems(HMENU hMenu, UINT idCmdFirst, UINT Pos)
     InsertMenuItemW(hMenu, Pos++, TRUE, &mii);
 
     /* Insert rest of items */
-    mii.fType = MFT_STRING;
-    mii.fState = MFS_ENABLED;
+    mii.fMask = MIIM_ID | MIIM_BITMAP | MIIM_STRING;
+    mii.fType = 0;
 
     SHELLNEW_ITEM *pCurItem = m_pItems;
     while (pCurItem)
     {
         TRACE("szDesc %s\n", debugstr_w(pCurItem->pwszDesc));
-        mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
         mii.dwTypeData = pCurItem->pwszDesc;
         mii.cch = wcslen(mii.dwTypeData);
         mii.wID = idCmd;
-        if (pCurItem->hBitmap)
-        {
-            mii.fMask |= MIIM_CHECKMARKS;
-            mii.hbmpChecked = mii.hbmpUnchecked = pCurItem->hBitmap;
-        }
         if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
             ++idCmd;
         pCurItem = pCurItem->pNext;
@@ -562,6 +517,8 @@ CNewMenu::QueryContextMenu(HMENU hMenu,
     MENUITEMINFOW mii;
     UINT cItems = 0;
 
+    m_idCmdFirst = idCmdFirst;
+
     TRACE("%p %p %u %u %u %u\n", this,
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
@@ -637,15 +594,71 @@ CNewMenu::HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
     return S_OK;
 }
 
+HRESULT
+WINAPI
+CNewMenu::HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
+{
+    switch (uMsg)
+    {
+    case WM_MEASUREITEM:
+        {
+            MEASUREITEMSTRUCT* lpmis = reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
+            if (!lpmis || lpmis->CtlType != ODT_MENU)
+                break;
+
+            if (lpmis->itemWidth < (UINT)GetSystemMetrics(SM_CXMENUCHECK))
+                lpmis->itemWidth = GetSystemMetrics(SM_CXMENUCHECK);
+            if (lpmis->itemHeight < 16)
+                lpmis->itemHeight = 16;
+
+            if (plResult)
+                *plResult = TRUE;
+            break;
+        }
+    case WM_DRAWITEM:
+        {
+            DRAWITEMSTRUCT* lpdis = reinterpret_cast<DRAWITEMSTRUCT*>(lParam);
+            if (!lpdis || lpdis->CtlType != ODT_MENU)
+                break;
+
+            DWORD id = LOWORD(lpdis->itemID) - m_idCmdFirst;
+            HICON hIcon = 0;
+            if (id == 0)
+                hIcon = m_hiconFolder;  
+            else if (id == 1)
+                hIcon = m_hiconLink;
+            else
+            {
+                SHELLNEW_ITEM *pItem = FindItemFromIdOffset(id);
+                if (pItem)
+                    hIcon = pItem->hIcon;
+            }
+
+            if (!hIcon)
+                break;
+
+            DrawIconEx(lpdis->hDC, 
+                       2, 
+                       lpdis->rcItem.top + (lpdis->rcItem.bottom - lpdis->rcItem.top - 16) / 2, 
+                       hIcon, 
+                       16, 
+                       16, 
+                       0, NULL, DI_NORMAL);
+
+            if(plResult)
+                *plResult = TRUE;
+        }
+    }
+
+    return S_OK;
+}
+
 HRESULT WINAPI
 CNewMenu::Initialize(LPCITEMIDLIST pidlFolder,
                      IDataObject *pdtobj, HKEY hkeyProgID)
 {
     /* Load folder and shortcut icons */
-    HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 0, 0, LR_SHARED);
-    m_hbmFolder = hIcon ? IconToBitmap(hIcon) : NULL;
-    hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 0, 0, LR_SHARED);
-    m_hbmLink = hIcon ? IconToBitmap(hIcon) : NULL;
-
+    m_hiconFolder = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_FOLDER), IMAGE_ICON, 16, 16, LR_SHARED);
+    m_hiconLink = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT), IMAGE_ICON, 16, 16, LR_SHARED);
     return S_OK;
 }
