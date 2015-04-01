@@ -58,7 +58,9 @@ typedef struct _CONSOLE_STATE_INFO
     WCHAR       ConsoleTitle[ANYSIZE_ARRAY];
 } CONSOLE_STATE_INFO, *PCONSOLE_STATE_INFO;
 
+#ifdef _M_IX86
 C_ASSERT(sizeof(CONSOLE_STATE_INFO) == 0xD0);
+#endif
 
 #pragma pack(pop)
 
