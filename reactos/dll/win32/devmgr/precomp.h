@@ -2,6 +2,7 @@
 #define __DEVMGR_H
 
 #include <stdarg.h>
+#include <stdlib.h> 
 
 #define WIN32_NO_STATUS
 #include <windef.h>
