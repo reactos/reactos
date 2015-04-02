@@ -241,7 +241,7 @@ INT cmd_chdir (LPTSTR param)
             error_invalid_drive();
             return 1;
         }
-        ConOutPuts(szCurrent);
+        ConOutPrintf(_T("%s\n"), szCurrent);
         return 0;
     }
 
@@ -249,7 +249,7 @@ INT cmd_chdir (LPTSTR param)
     GetCurrentDirectory(MAX_PATH, szCurrent);
     if (param[0] == _T('\0'))
     {
-        ConOutPuts(szCurrent);
+        ConOutPrintf(_T("%s\n"), szCurrent);
         return 0;
     }
 
