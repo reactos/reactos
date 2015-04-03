@@ -141,7 +141,7 @@
 
 #ifdef INCLUDE_CMD_CHDIR
 
-/* help functions for getting current path from drive
+/* helper functions for getting current path from drive
    without changing drive. Return code 0 = ok, 1 = fail.
    INT GetRootPath("C:",outbuffer,chater size of outbuffer);
    the first param can have any size, if the the two frist
@@ -184,28 +184,29 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
     TCHAR OutPath[MAX_PATH];
     TCHAR OutPathTemp[MAX_PATH];
 
-    /* The use of both of these together will correct the case of a path
-     where as one alone or GetFullPath will not.  Exameple:
-      c:\windows\SYSTEM32 => C:\WINDOWS\system32 */
-    if (GetFullPathName(InPath, MAX_PATH, OutPathTemp, NULL))
-    {
-        GetPathCase(OutPathTemp, OutPath);
+    /* Retrieve the full path name from the (possibly relative) InPath */
+    if (GetFullPathName(InPath, MAX_PATH, OutPathTemp, NULL) == 0)
+        goto Fail;
 
-        /* Use _tchdir, since unlike SetCurrentDirectory it updates
-         * the current-directory-on-drive environment variables. */
-        if (_tchdir(OutPath) != 0)
-        {
-            ConErrFormatMessage(GetLastError());
-            nErrorLevel = 1;
-            return FALSE;
-        }
+    /* Convert the full path to its correct case.
+     * Example: c:\windows\SYSTEM32 => C:\WINDOWS\System32 */
+    GetPathCase(OutPathTemp, OutPath);
 
-        /* Keep original drive in ordinary CD/CHDIR (without /D switch). */
-        if (oldpath != NULL && _tcsncicmp(OutPath, oldpath, 2) != 0)
-            SetCurrentDirectory(oldpath);
-    }
+    /* Use _tchdir, since unlike SetCurrentDirectory it updates
+     * the current-directory-on-drive environment variables. */
+    if (_tchdir(OutPath) != 0)
+        goto Fail;
+
+    /* Keep original drive in ordinary CD/CHDIR (without /D switch). */
+    if (oldpath != NULL && _tcsncicmp(OutPath, oldpath, 2) != 0)
+        SetCurrentDirectory(oldpath);
 
     return TRUE;
+
+Fail:
+    ConErrFormatMessage(GetLastError());
+    nErrorLevel = 1;
+    return FALSE;
 }
 
 
@@ -215,8 +216,9 @@ BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
  */
 INT cmd_chdir (LPTSTR param)
 {
-    TCHAR szCurrent[MAX_PATH];
     BOOL bChangeDrive = FALSE;
+    LPTSTR tmp;
+    TCHAR szCurrent[MAX_PATH];
 
     /* Filter out special cases first */
 
@@ -227,8 +229,12 @@ INT cmd_chdir (LPTSTR param)
         return 0;
     }
 
-    /* Remove " */
+    /* Remove extra quotes and strip trailing whitespace */
     StripQuotes(param);
+    tmp = param + _tcslen(param) - 1;
+    while (tmp > param && _istspace(*tmp))
+        tmp--;
+    *(tmp + 1) = _T('\0');
 
     /* Set Error Level to Success */
     nErrorLevel = 0;
@@ -263,7 +269,10 @@ INT cmd_chdir (LPTSTR param)
     }
 
     if (!SetRootPath(bChangeDrive ? NULL : szCurrent, param))
+    {
+        nErrorLevel = 1;
         return 1;
+    }
 
     return 0;
 }
@@ -324,8 +333,8 @@ INT cmd_mkdir (LPTSTR param)
     if (argc == 0)
     {
         ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
-        nErrorLevel = 1;
         freep(p);
+        nErrorLevel = 1;
         return 1;
     }
 
