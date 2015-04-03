@@ -639,6 +639,11 @@ USBCCGP_LegacyEnum(
     //
     // init function descriptors
     //
+    if (FDODeviceExtension->FunctionDescriptorCount != 0)
+    {
+        DPRINT1("USBCCGP_LegacyEnum called with FunctionDescriptorCount=%lu. Adding another %lu descriptors will probably overflow\n", FDODeviceExtension->FunctionDescriptorCount, FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces);
+        ASSERT(FDODeviceExtension->FunctionDescriptorCount == 0);
+    }
     for (Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
     {
         // get interface descriptor
