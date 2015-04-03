@@ -1,0 +1,18 @@
+#include <windef.h>
+#include <winuser.h>
+
+#include "resource.h"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+

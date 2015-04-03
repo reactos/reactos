@@ -657,10 +657,26 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
 
             if (SUCCEEDED(hr))
             {
+                HKEY hkVerb;
                 DWORD cbVerb = sizeof(wszVerb);
+                LONG res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkVerb);
+                if (res == ERROR_SUCCESS)
+                {
+                    res = RegLoadMUIStringW(hkVerb, 
+                                            NULL,
+                                            wszVerb,
+                                            cbVerb,
+                                            NULL,
+                                            0,
+                                            NULL);
+                    if (res == ERROR_SUCCESS)
+                    {
+                        /* use description for the menu entry */
+                        mii.dwTypeData = wszVerb; 
+                    }
 
-                if (RegGetValueW(HKEY_CLASSES_ROOT, wszKey, NULL, RRF_RT_REG_SZ, NULL, wszVerb, &cbVerb) == ERROR_SUCCESS)
-                    mii.dwTypeData = wszVerb; /* use description for the menu entry */
+                    RegCloseKey(hkVerb);
+                }
             }
         }
 
