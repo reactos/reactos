@@ -137,15 +137,19 @@ VOID ConInString(LPTSTR lpInput, DWORD dwLength)
 
 static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 {
-    DWORD dwWritten;
+    DWORD dwNumBytes = 0;
     HANDLE hOutput = GetStdHandle(nStdHandle);
     PVOID p;
+
+    /* If we don't write anything, just return */
+    if (!str || len == 0)
+        return;
 
     /* Check whether we are writing to a console and if so, write to it */
     if (IsConsoleHandle(hOutput))
     {
-        if (WriteConsole(hOutput, str, len, &dwWritten, NULL))
-            return;
+        WriteConsole(hOutput, str, len, &dwNumBytes, NULL);
+        return;
     }
 
     /* We're writing to a file or pipe instead of the console. Convert the
@@ -164,30 +168,38 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 #endif
         /*
          * Find any newline character in the buffer,
-         * send the part BEFORE the newline, then send
-         * a carriage-return + newline, and then send
+         * write the part BEFORE the newline, then write
+         * a carriage-return + newline, and then write
          * the remaining part of the buffer.
          *
          * This fixes output in files and serial console.
          */
-        while (str && *(PWCHAR)str && len > 0)
+        while (len > 0)
         {
-            p = wcspbrk((PWCHAR)str, L"\r\n");
-            if (p)
+            /* Loop until we find a \r or \n character */
+            // FIXME: What about the pair \r\n ?
+            p = str;
+            while (*(PWCHAR)p != L'\r' && *(PWCHAR)p != L'\n' && len > 0)
             {
-                len -= ((PWCHAR)p - (PWCHAR)str) + 1;
-                WriteFile(hOutput, str, ((PWCHAR)p - (PWCHAR)str) * sizeof(WCHAR), &dwWritten, NULL);
-                WriteFile(hOutput, L"\r\n", 2 * sizeof(WCHAR), &dwWritten, NULL);
-                str = (PVOID)((PWCHAR)p + 1);
+                /* Advance one character */
+                p = (PVOID)((PWCHAR)p + 1);
+                len--;
             }
-            else
+
+            /* Write everything up to \r or \n */
+            dwNumBytes = ((PWCHAR)p - (PWCHAR)str) * sizeof(WCHAR);
+            WriteFile(hOutput, str, dwNumBytes, &dwNumBytes, NULL);
+
+            /* If we hit \r or \n ... */
+            if (*(PWCHAR)p == L'\r' || *(PWCHAR)p == L'\n')
             {
-                WriteFile(hOutput, str, len * sizeof(WCHAR), &dwWritten, NULL);
-                break;
+                /* ... send a carriage-return + newline sequence and skip \r or \n */
+                WriteFile(hOutput, L"\r\n", 2 * sizeof(WCHAR), &dwNumBytes, NULL);
+                str = (PVOID)((PWCHAR)p + 1);
+                len--;
             }
         }
 
-        // WriteFile(hOutput, str, len * sizeof(WCHAR), &dwWritten, NULL);
 #ifndef _UNICODE
         cmd_free(buffer);
 #endif
@@ -206,30 +218,38 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 #endif
         /*
          * Find any newline character in the buffer,
-         * send the part BEFORE the newline, then send
-         * a carriage-return + newline, and then send
+         * write the part BEFORE the newline, then write
+         * a carriage-return + newline, and then write
          * the remaining part of the buffer.
          *
          * This fixes output in files and serial console.
          */
-        while (str && *(PCHAR)str && len > 0)
+        while (len > 0)
         {
-            p = strpbrk((PCHAR)str, "\r\n");
-            if (p)
+            /* Loop until we find a \r or \n character */
+            // FIXME: What about the pair \r\n ?
+            p = str;
+            while (*(PCHAR)p != '\r' && *(PCHAR)p != '\n' && len > 0)
             {
-                len -= ((PCHAR)p - (PCHAR)str) + 1;
-                WriteFile(hOutput, str, ((PCHAR)p - (PCHAR)str), &dwWritten, NULL);
-                WriteFile(hOutput, "\r\n", 2, &dwWritten, NULL);
-                str = (PVOID)((PCHAR)p + 1);
+                /* Advance one character */
+                p = (PVOID)((PCHAR)p + 1);
+                len--;
             }
-            else
+
+            /* Write everything up to \r or \n */
+            dwNumBytes = ((PCHAR)p - (PCHAR)str) * sizeof(CHAR);
+            WriteFile(hOutput, str, dwNumBytes, &dwNumBytes, NULL);
+
+            /* If we hit \r or \n ... */
+            if (*(PCHAR)p == '\r' || *(PCHAR)p == '\n')
             {
-                WriteFile(hOutput, str, len, &dwWritten, NULL);
-                break;
+                /* ... send a carriage-return + newline sequence and skip \r or \n */
+                WriteFile(hOutput, "\r\n", 2, &dwNumBytes, NULL);
+                str = (PVOID)((PCHAR)p + 1);
+                len--;
             }
         }
 
-        // WriteFile(hOutput, str, len, &dwWritten, NULL);
 #ifdef _UNICODE
         cmd_free(buffer);
 #endif
