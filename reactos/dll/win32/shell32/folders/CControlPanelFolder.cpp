@@ -478,7 +478,12 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
         while(cidl > 0 && *apidl)
         {
             pdump(*apidl);
-            SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+            if (_ILIsCPanelStruct(*apidl))
+                *rgfInOut &= SFGAO_CANLINK;
+            else if (_ILIsSpecialFolder(*apidl))
+                SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+            else
+                ERR("Got an unkown pidl here!\n");
             apidl++;
             cidl--;
         }
