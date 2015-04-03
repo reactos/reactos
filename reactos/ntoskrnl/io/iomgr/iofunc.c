@@ -3201,7 +3201,8 @@ NtWriteFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Return the exception code */
+            /* Release the file object and return the exception code */
+            ObDereferenceObject(FileObject);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
