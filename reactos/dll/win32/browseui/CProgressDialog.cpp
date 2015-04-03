@@ -50,8 +50,8 @@ CProgressDialog::CProgressDialog()
     this->cancelMsg = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
     this->title     = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
 
-    this->lines[0][0] = this->lines[1][0] = this->lines[2][0] = 0;
-    this->cancelMsg[0] = this->title[0];
+    this->lines[0][0] = this->lines[1][0] = this->lines[2][0] = UNICODE_NULL;
+    this->cancelMsg[0] = this->title[0] = UNICODE_NULL;
 
     this->clockHand = -1;
     this->progressClock[29].ullMark = 0ull;
@@ -76,12 +76,11 @@ static void set_buffer(LPWSTR *buffer, LPCWSTR string)
 {
     if (!string)
     {
-        buffer[0] = 0;
+        (*buffer)[0] = UNICODE_NULL;
         return;
     }
 
-    ULONG len = max((wcslen(string) + 1)*sizeof(WCHAR), BUFFER_SIZE);
-    StringCchCopyW(*buffer, len, string);
+    StringCbCopyW(*buffer, BUFFER_SIZE, string);
 }
 
 struct create_params
