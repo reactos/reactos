@@ -190,9 +190,15 @@ int CControlPanelEnum::RegisterRegistryCPanelApps(HKEY hkey_root, LPCSTR szRepPa
         {
             DWORD nameLen = MAX_PATH;
             DWORD valueLen = MAX_PATH;
+            char buffer[MAX_PATH];
 
             if (RegEnumValueA(hkey, idx, name, &nameLen, NULL, NULL, (LPBYTE)&value, &valueLen) != ERROR_SUCCESS)
                 break;
+
+            if (ExpandEnvironmentStringsA(value, buffer, MAX_PATH))
+            {
+                strcpy(value, buffer);
+            }
 
             if (RegisterCPanelApp(value))
                 ++cnt;
@@ -285,9 +291,6 @@ BOOL CControlPanelEnum::CreateCPanelEnumList(DWORD dwFlags)
 CControlPanelFolder::CControlPanelFolder()
 {
     pidlRoot = NULL;    /* absolute pidl */
-    dwAttributes = 0;        /* attributes returned by GetAttributesOf FIXME: use it */
-    apidl = NULL;
-    cidl = 0;
 }
 
 CControlPanelFolder::~CControlPanelFolder()
@@ -521,14 +524,21 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
         *ppvOut = NULL;
 
         if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1)) {
-            // TODO
-            // create a seperate item struct
-            //
-            pObj = (IContextMenu *)this;
-            this->apidl = apidl;
-            this->cidl = cidl;
-            pObj->AddRef();
-            hr = S_OK;
+            
+            /* HACK: We should use callbacks from CDefaultContextMenu instead of creating one on our own */
+            BOOL bHasCpl = FALSE;
+            for (UINT i = 0; i < cidl; i++)
+            {
+                if(_ILIsCPanelStruct(apidl[i]))
+                {
+                    bHasCpl = TRUE;
+                }
+            }
+
+            if (bHasCpl)
+                hr = ShellObjectCreatorInit<CCPLItemMenu>(cidl, apidl, riid, &pObj);
+            else
+                hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
         } else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1)) {
             hr = IDataObject_Constructor(hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
         } else if (IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1)) {
@@ -777,14 +787,29 @@ HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST pidl, LPWSTR szIconFile, UINT cchM
     return S_OK;
 }
 
-/**************************************************************************
-* IContextMenu2 Implementation
-*/
 
-/**************************************************************************
-* ICPanel_IContextMenu_QueryContextMenu()
-*/
-HRESULT WINAPI CControlPanelFolder::QueryContextMenu(
+CCPLItemMenu::CCPLItemMenu()
+{
+    m_apidl = NULL;
+    m_cidl = 0;
+}
+
+HRESULT WINAPI CCPLItemMenu::Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
+{
+    m_cidl = cidl;
+    m_apidl = const_cast<PCUITEMID_CHILD_ARRAY>(_ILCopyaPidl(apidl, m_cidl));
+    if (m_cidl && !m_apidl)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
+}
+
+CCPLItemMenu::~CCPLItemMenu()
+{
+    _ILFreeaPidl(const_cast<PITEMID_CHILD *>(m_apidl), m_cidl);
+}
+
+HRESULT WINAPI CCPLItemMenu::QueryContextMenu(
     HMENU hMenu,
     UINT indexMenu,
     UINT idCmdFirst,
@@ -818,43 +843,37 @@ HRESULT WINAPI CControlPanelFolder::QueryContextMenu(
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
 }
 
+EXTERN_C
+void WINAPI Control_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow);
+
 /**************************************************************************
 * ICPanel_IContextMenu_InvokeCommand()
 */
-HRESULT WINAPI CControlPanelFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT WINAPI CCPLItemMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     WCHAR szPath[MAX_PATH];
     char szTarget[MAX_PATH];
-    STRRET strret;
     WCHAR* pszPath;
     INT Length, cLength;
     CComPtr<IPersistFile>                ppf;
     CComPtr<IShellLinkA>                isl;
     HRESULT hResult;
 
-    PIDLCPanelStruct *pcpanel = _ILGetCPanelPointer(apidl[0]);
+    PIDLCPanelStruct *pCPanel = _ILGetCPanelPointer(m_apidl[0]);
+    if(!pCPanel)
+        return E_FAIL;
 
     TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_OPEN)) //FIXME
     {
-        LPITEMIDLIST lpIDList = ILCombine(pidlRoot, apidl[0]);
+        CHAR szParams[MAX_PATH];
 
-        if (!pcpanel)
-        {
-            /* UGLY HACK! */
-            LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageW(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-            HRESULT hr;
+        strcpy(szParams, pCPanel->szName);
+        strcat(szParams, ",");
+        strcat(szParams, pCPanel->szName + pCPanel->offsDispName);
 
-            if (lpSB == NULL)
-                return E_FAIL;
-
-            hr = lpSB->BrowseObject(lpIDList, 0);
-            return hr;
-        }
-
-        /* Note: we pass the applet name to Control_RunDLL to distinguish between multiple applets in one .cpl file */
-        ShellExecuteA(NULL, "cplopen", pcpanel->szName, pcpanel->szName + pcpanel->offsDispName, NULL, 0);
+        Control_RunDLLA (NULL, NULL, szParams, SW_NORMAL);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
     {
@@ -865,18 +884,17 @@ HRESULT WINAPI CControlPanelFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         if (!pszPath)
             return E_FAIL;
 
-        if (GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strret) != S_OK)
-            return E_FAIL;
+        CHAR* pszDisplayName = pCPanel->szName + pCPanel->offsDispName;
 
         Length =  MAX_PATH - (pszPath - szPath);
-        cLength = strlen(strret.cStr);
+        cLength = strlen(pszDisplayName);
         if (Length < cLength + 5)
         {
             FIXME("\n");
             return E_FAIL;
         }
 
-        if (MultiByteToWideChar(CP_ACP, 0, strret.cStr, cLength + 1, pszPath, Length))
+        if (MultiByteToWideChar(CP_ACP, 0, pszDisplayName, cLength + 1, pszPath, Length))
         {
             pszPath += cLength;
             Length -= cLength;
@@ -893,16 +911,8 @@ HRESULT WINAPI CControlPanelFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         }
         wcscpy(pszPath, L".lnk");
 
-        pcpanel = _ILGetCPanelPointer(ILFindLastID(apidl[0]));
-        if (pcpanel)
-        {
-            strncpy(szTarget, pcpanel->szName, MAX_PATH);
-        }
-        else
-        {
-            FIXME("Couldn't retrieve pointer to cpl structure\n");
-            return E_FAIL;
-        }
+        strncpy(szTarget, pCPanel->szName, MAX_PATH);
+
         hResult = CShellLink::_CreatorClass::CreateInstance(NULL, IID_PPV_ARG(IShellLinkA, &isl));
         if (SUCCEEDED(hResult))
         {
@@ -919,7 +929,7 @@ HRESULT WINAPI CControlPanelFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
  *  ICPanel_IContextMenu_GetCommandString()
  *
  */
-HRESULT WINAPI CControlPanelFolder::GetCommandString(
+HRESULT WINAPI CCPLItemMenu::GetCommandString(
     UINT_PTR idCommand,
     UINT uFlags,
     UINT* lpReserved,
@@ -935,7 +945,7 @@ HRESULT WINAPI CControlPanelFolder::GetCommandString(
 /**************************************************************************
 * ICPanel_IContextMenu_HandleMenuMsg()
 */
-HRESULT WINAPI CControlPanelFolder::HandleMenuMsg(
+HRESULT WINAPI CCPLItemMenu::HandleMenuMsg(
     UINT uMsg,
     WPARAM wParam,
     LPARAM lParam)
