@@ -1601,6 +1601,10 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             m_ListView.SortItems(ListViewCompareItems, &m_sortInfo);
             break;
 
+        case FCIDM_SHVIEW_SELECTALL:
+            m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
+            break;
+
         case FCIDM_SHVIEW_REFRESH:
             Refresh();
             break;
