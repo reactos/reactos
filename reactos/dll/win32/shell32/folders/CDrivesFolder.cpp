@@ -375,11 +375,10 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
                 *rgfInOut &= dwDriveAttributes;
             else if (_ILIsControlPanel(apidl[i]))
                 *rgfInOut &= dwControlPanelAttributes;
-            else
-            {
-                pdump(apidl[i]);
+            else if (_ILIsSpecialFolder(*apidl))
                 SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
-            }
+            else
+                ERR("Got unknown pidl type!\n");
         }
     }
 
