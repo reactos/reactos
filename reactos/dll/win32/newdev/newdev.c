@@ -933,6 +933,7 @@ ClientSideInstallW(
     HANDLE hPipe = INVALID_HANDLE_VALUE;
     PWSTR DeviceInstance = NULL;
     PWSTR InstallEventName = NULL;
+    HANDLE hInstallEvent;
 
     /* Open the pipe */
     hPipe = CreateFileW(lpNamedPipeName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -983,6 +984,21 @@ ClientSideInstallW(
     }
 
     ReturnValue = DevInstallW(NULL, NULL, DeviceInstance, ShowWizard ? SW_SHOWNOACTIVATE : SW_HIDE);
+    if(!ReturnValue)
+    {
+        ERR("DevInstallW failed with error %lu\n", GetLastError());
+        goto cleanup;
+    }
+
+    hInstallEvent = CreateEventW(NULL, TRUE, FALSE, InstallEventName);
+    if(!hInstallEvent)
+    {
+        TRACE("CreateEventW('%ls') failed with error %lu\n", InstallEventName, GetLastError());
+        goto cleanup;
+    }
+
+    SetEvent(hInstallEvent);
+    CloseHandle(hInstallEvent);
 
 cleanup:
     if(hPipe != INVALID_HANDLE_VALUE)
