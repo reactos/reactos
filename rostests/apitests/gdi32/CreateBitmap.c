@@ -31,38 +31,38 @@ void Test_CreateBitmap_Params()
 
     SetLastError(0);
     hbmp = CreateBitmap(1, -1, 1, 0, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
     SetLastError(0);
     hbmp = CreateBitmap(-1, 1, 1, 0, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
     SetLastError(0);
     hbmp = CreateBitmap(-1, 1, 1, 1, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
     SetLastError(0);
     hbmp = CreateBitmap(1, -1, 1, 1, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
     /* Check if an overflow in cPlanes * cBitsPixel is handled */
     SetLastError(0);
     hbmp = CreateBitmap(1, 1, 2, 0x80000004, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
     /* Check for maximum width */
     hbmp = CreateBitmap(0x7FFFFFF, 1, 1, 1, NULL);
-    ok(hbmp != 0, "\n");
+    ok(hbmp != 0, "CreateBitmap failed\n");
     DeleteObject(hbmp);
 
     SetLastError(0);
     hbmp = CreateBitmap(0x8000000, 1, 1, 1, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
     /* Check for maximum height */
@@ -72,24 +72,46 @@ void Test_CreateBitmap_Params()
 
     SetLastError(0);
     hbmp = CreateBitmap(1, 0x1FFFFFFF, 1, 1, NULL);
-    ok(hbmp == 0, "\n");
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(0);
 
-    /* Check for overflow in width * height */
-    hbmp = CreateBitmap(0x2000, 0x4000, 1, 1, NULL); //128 MB.Should work.
-    ok(hbmp != 0, "\n");
+    SetLastError(0);
+    hbmp = CreateBitmap(1, -1, 1, 1, NULL);
+    ok(hbmp == 0, "CreateBitmap should fail\n");
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    /* Test huge allocation (256 GB) */
+    SetLastError(0);
+    hbmp = CreateBitmap(0x40000, 0x40000, 32, 1, NULL);
+    ok(hbmp == 0, "CreateBitmap should fail\n");
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    /* Test planes / bpp */
+    hbmp = CreateBitmap(10, 10, 32, 1, NULL);
+    ok(hbmp != 0, "CreateBitmap failed\n");
+    DeleteObject(hbmp);
+    hbmp = CreateBitmap(10, 10, 5, 5, NULL);
+    ok(hbmp != 0, "CreateBitmap failed\n");
     DeleteObject(hbmp);
 
-    /* XP doesn't allow to create bitmaps larger than 128 Mb */
     SetLastError(0);
-    hbmp = CreateBitmap(0x2000, 0x4001, 1, 1, NULL);//More than 128MB.Should fail.
-    ok(hbmp == 0, "\n");
-    ok_err(0);
+    hbmp = CreateBitmap(10, 10, 33, 1, NULL);
+    ok(hbmp == 0, "CreateBitmap should fail\n");
+    ok_err(ERROR_INVALID_PARAMETER);
 
-    /* Check huge allocation */
     SetLastError(0);
-    hbmp = CreateBitmap(0x2000, 0x20000, 32, 1, NULL);
-    ok(hbmp == 0, "\n");
+    hbmp = CreateBitmap(10, 10, 1, 33, NULL);
+    ok(hbmp == 0, "CreateBitmap should fail\n");
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0);
+    hbmp = CreateBitmap(10, 10, 6, 6, NULL);
+    ok(hbmp == 0, "CreateBitmap should fail\n");
+    ok_err(ERROR_INVALID_PARAMETER);
+
+    SetLastError(0);
+    hbmp = CreateBitmap(10, 10, 8, 8, NULL);
+    ok(hbmp == 0, "CreateBitmap should fail\n");
     ok_err(ERROR_INVALID_PARAMETER);
 
 }
