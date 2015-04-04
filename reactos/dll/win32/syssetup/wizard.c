@@ -19,7 +19,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define VMWINST
+#undef VMWINST
 
 #define PM_REGISTRATION_NOTIFY (WM_APP + 1)
 /* Private Message used to communicate progress from the background
