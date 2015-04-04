@@ -179,7 +179,7 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
             /* Loop until we find a \r or \n character */
             // FIXME: What about the pair \r\n ?
             p = str;
-            while (*(PWCHAR)p != L'\r' && *(PWCHAR)p != L'\n' && len > 0)
+            while (len > 0 && *(PWCHAR)p != L'\r' && *(PWCHAR)p != L'\n')
             {
                 /* Advance one character */
                 p = (PVOID)((PWCHAR)p + 1);
@@ -191,7 +191,7 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
             WriteFile(hOutput, str, dwNumBytes, &dwNumBytes, NULL);
 
             /* If we hit \r or \n ... */
-            if (*(PWCHAR)p == L'\r' || *(PWCHAR)p == L'\n')
+            if (len > 0 && (*(PWCHAR)p == L'\r' || *(PWCHAR)p == L'\n'))
             {
                 /* ... send a carriage-return + newline sequence and skip \r or \n */
                 WriteFile(hOutput, L"\r\n", 2 * sizeof(WCHAR), &dwNumBytes, NULL);
@@ -229,7 +229,7 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
             /* Loop until we find a \r or \n character */
             // FIXME: What about the pair \r\n ?
             p = str;
-            while (*(PCHAR)p != '\r' && *(PCHAR)p != '\n' && len > 0)
+            while (len > 0 && *(PCHAR)p != '\r' && *(PCHAR)p != '\n')
             {
                 /* Advance one character */
                 p = (PVOID)((PCHAR)p + 1);
@@ -241,7 +241,7 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
             WriteFile(hOutput, str, dwNumBytes, &dwNumBytes, NULL);
 
             /* If we hit \r or \n ... */
-            if (*(PCHAR)p == '\r' || *(PCHAR)p == '\n')
+            if (len > 0 && (*(PCHAR)p == '\r' || *(PCHAR)p == '\n'))
             {
                 /* ... send a carriage-return + newline sequence and skip \r or \n */
                 WriteFile(hOutput, "\r\n", 2, &dwNumBytes, NULL);
