@@ -40,7 +40,7 @@ void Test_GetClipBox()
     SetLastError(ERROR_SUCCESS);
     ret = GetClipBox((HDC)0x12345, &rect);
     ok(ret == ERROR, "Expected ERROR, got %d\n", ret);
-    ok(GetLastError() == 0, "Expected 0, got %ld\n", GetLastError());
+    ok((GetLastError() == 0) || (GetLastError() == ERROR_INVALID_HANDLE), "Expected 0, got %ld\n", GetLastError());
 
     //ret = GetClipBox(hdc, &rect);
     //ok_int(ret, SIMPLEREGION);

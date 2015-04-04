@@ -30,7 +30,7 @@ void Test_OffsetClipRgn()
     /* Test invalid DC */
     SetLastError(0x12345);
     ok_int(OffsetClipRgn((HDC)(ULONG_PTR)0x12345, 0, 0), ERROR);
-    ok_int(GetLastError(), 0x12345);
+    ok((GetLastError() == 0x12345) || (GetLastError() == ERROR_INVALID_HANDLE), "Expected 0x12345 or ERROR_INVALID_HANDLE, got %ld\n", GetLastError());
     SetLastError(0x12345);
 
     /* Test without a clip region set */

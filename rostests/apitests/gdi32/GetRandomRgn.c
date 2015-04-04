@@ -74,12 +74,12 @@ void Test_GetRandomRgn_Params()
     ret = GetRandomRgn(hdc, hrgn, 0);
     ok_int(ret, 0);
     ok_long(GetLastError(), 0xbadbad00);
-
+#if 0 // this is vista+
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(hdc, hrgn, 5);
     ok_int(ret, 1);
     ok_long(GetLastError(), 0xbadbad00);
-
+#endif
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(hdc, hrgn, 6);
     ok_int(ret, 0);
@@ -240,10 +240,12 @@ void Test_GetRandomRgn_SYSRGN()
     ok_int(ret, 1);
     GetRgnBox(hrgn1, &rect);
     DPtoLP(ghdcWindow, (LPPOINT)&rect, 2);
+#if 0 // FIXME: this needs calculation
     ok_long(rect.left, 104);
     ok_long(rect.top, 124);
     ok_long(rect.right, 209);
     ok_long(rect.bottom, 196);
+#endif
 
     MoveWindow(ghwnd, 200, 400, 200, 200, 0);
 
@@ -251,11 +253,12 @@ void Test_GetRandomRgn_SYSRGN()
     ok_int(ret, 1);
     GetRgnBox(hrgn1, &rect2);
     DPtoLP(ghdcWindow, (LPPOINT)&rect2, 2);
+#if 0 // FIXME: this needs calculation
     ok_long(rect2.left, rect.left + 100);
     ok_long(rect2.top, rect.top + 300);
     ok_long(rect2.right, rect.right + 200 - 13);
     ok_long(rect2.bottom, rect.bottom + 400);
-
+#endif
 
     DeleteObject(hrgn1);
     DeleteDC(hdc);
@@ -269,6 +272,8 @@ void Test_GetRandomRgn_RGN5()
     INT ret;
     RECT rect, rect2;
     HBITMAP hbmp;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(hrgn2);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(rect2);
 
     hrgn1 = CreateRectRgn(11, 17, 23, 42);
     if (!hrgn1)
@@ -283,7 +288,7 @@ void Test_GetRandomRgn_RGN5()
         printf("Coun't create a dc\n");
         return;
     }
-
+#if 0 // this is vista+
     ret = GetRandomRgn(hdc, hrgn1, RGN5);
     ok_int(ret, 1);
     GetRgnBox(hrgn1, &rect);
@@ -302,6 +307,7 @@ void Test_GetRandomRgn_RGN5()
     ok_long(rect.top, 0);
     ok_long(rect.right, 1);
     ok_long(rect.bottom, 1);
+#endif
 
     hbmp = CreateCompatibleBitmap(hdc, 4, 7);
     SelectObject(hdc, hbmp);
@@ -314,6 +320,7 @@ void Test_GetRandomRgn_RGN5()
     ok_long(rect.bottom, 7);
     DeleteObject(hbmp);
 
+#if 0 // this is vista+
     MoveWindow(ghwnd, 100, 100, 100, 100, 0);
     ret = GetRandomRgn(ghdcWindow, hrgn1, RGN5);
     ok_int(ret, 1);
@@ -334,7 +341,7 @@ void Test_GetRandomRgn_RGN5()
     ok_long(rect2.top, rect.top + 300);
     ok_long(rect2.right, rect.right + 200 - 13);
     ok_long(rect2.bottom, rect.bottom + 400);
-
+#endif
 
     DeleteObject(hrgn1);
     DeleteDC(hdc);
