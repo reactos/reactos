@@ -1554,9 +1554,10 @@ LRESULT CDefView::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 */
 LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    DWORD                                dwCmdID;
-    DWORD                                dwCmd;
-    HWND                                hwndCmd;
+    DWORD dwCmdID;
+    DWORD dwCmd;
+    HWND  hwndCmd;
+    int   nCount; 
 
     dwCmdID = GET_WM_COMMAND_ID(wParam, lParam);
     dwCmd = GET_WM_COMMAND_CMD(wParam, lParam);
@@ -1603,6 +1604,12 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
         case FCIDM_SHVIEW_SELECTALL:
             m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
+            break;
+
+        case FCIDM_SHVIEW_INVERTSELECTION:
+            nCount = m_ListView.GetItemCount();
+            for (int i=0; i < nCount; i++)
+                m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ? 0 : LVIS_SELECTED, LVIS_SELECTED);
             break;
 
         case FCIDM_SHVIEW_REFRESH:
