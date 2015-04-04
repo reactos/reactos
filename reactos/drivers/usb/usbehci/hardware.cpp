@@ -1171,7 +1171,7 @@ CUSBHardwareDevice::SetPortFeature(
             // enable port power
             //
             Value = EHCI_READ_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId)) | EHCI_PRT_POWER;
-            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC, Value);
+            EHCI_WRITE_REGISTER_ULONG(EHCI_PORTSC + (4 * PortId), Value);
 
             //
             // delay is 20 ms
