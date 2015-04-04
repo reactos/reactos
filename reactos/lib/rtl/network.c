@@ -102,9 +102,9 @@ Done:
 /*
  * @implemented
  */
-LPSTR
+PSTR
 NTAPI
-RtlIpv4AddressToStringA(IN struct in_addr *Addr,
+RtlIpv4AddressToStringA(IN const struct in_addr *Addr,
                         OUT PCHAR S)
 {
     INT Length;
@@ -124,7 +124,7 @@ RtlIpv4AddressToStringA(IN struct in_addr *Addr,
  */
 NTSTATUS
 NTAPI
-RtlIpv4AddressToStringExA(IN struct in_addr *Address,
+RtlIpv4AddressToStringExA(IN const struct in_addr *Address,
                           IN USHORT Port,
                           OUT PCHAR AddressString,
                           IN OUT PULONG AddressStringLength)
@@ -156,9 +156,9 @@ RtlIpv4AddressToStringExA(IN struct in_addr *Address,
 /*
  * @implemented
  */
-LPWSTR
+PWSTR
 NTAPI
-RtlIpv4AddressToStringW(IN struct in_addr *Addr,
+RtlIpv4AddressToStringW(IN const struct in_addr *Addr,
                         OUT PWCHAR S)
 {
     INT Length;
@@ -177,7 +177,7 @@ RtlIpv4AddressToStringW(IN struct in_addr *Addr,
  */
 NTSTATUS
 NTAPI
-RtlIpv4AddressToStringExW(IN struct in_addr *Address,
+RtlIpv4AddressToStringExW(IN const struct in_addr *Address,
                           IN USHORT Port,
                           OUT PWCHAR AddressString,
                           IN OUT PULONG AddressStringLength)
@@ -388,13 +388,13 @@ RtlIpv4StringToAddressExW(
 /*
 * @unimplemented
 */
-NTSTATUS
+PSTR
 NTAPI
-RtlIpv6AddressToStringA(IN struct in6_addr *Addr,
+RtlIpv6AddressToStringA(IN const struct in6_addr *Addr,
                         OUT PCHAR S)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return NULL;
 }
 
 /*
@@ -402,9 +402,9 @@ RtlIpv6AddressToStringA(IN struct in6_addr *Addr,
 */
 NTSTATUS
 NTAPI
-RtlIpv6AddressToStringExA(IN struct in6_addr *Address,
+RtlIpv6AddressToStringExA(IN const struct in6_addr *Address,
                           IN ULONG ScopeId,
-                          IN ULONG Port,
+                          IN USHORT Port,
                           OUT PCHAR AddressString,
                           IN OUT PULONG AddressStringLength)
 {
@@ -415,13 +415,13 @@ RtlIpv6AddressToStringExA(IN struct in6_addr *Address,
 /*
 * @unimplemented
 */
-NTSTATUS
+PWSTR
 NTAPI
-RtlIpv6AddressToStringW(IN struct in6_addr *Addr,
+RtlIpv6AddressToStringW(IN const struct in6_addr *Addr,
                         OUT PWCHAR S)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return NULL;
 }
 
 /*
@@ -429,7 +429,7 @@ RtlIpv6AddressToStringW(IN struct in6_addr *Addr,
 */
 NTSTATUS
 NTAPI
-RtlIpv6AddressToStringExW(IN struct in6_addr *Address,
+RtlIpv6AddressToStringExW(IN const struct in6_addr *Address,
                           IN ULONG ScopeId,
                           IN USHORT Port,
                           IN OUT PWCHAR AddressString,
@@ -444,8 +444,8 @@ RtlIpv6AddressToStringExW(IN struct in6_addr *Address,
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressA(IN PCHAR Name,
-                        OUT PCHAR *Terminator,
+RtlIpv6StringToAddressA(IN PCSTR Name,
+                        OUT PCSTR *Terminator,
                         OUT struct in6_addr *Addr)
 {
     UNIMPLEMENTED;
@@ -457,7 +457,7 @@ RtlIpv6StringToAddressA(IN PCHAR Name,
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressExA(IN PCHAR AddressString,
+RtlIpv6StringToAddressExA(IN PCSTR AddressString,
                           OUT struct in6_addr *Address,
                           OUT PULONG ScopeId,
                           OUT PUSHORT Port)
@@ -471,8 +471,8 @@ RtlIpv6StringToAddressExA(IN PCHAR AddressString,
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressW(IN PWCHAR Name,
-                        OUT PCHAR *Terminator,
+RtlIpv6StringToAddressW(IN PCWSTR Name,
+                        OUT PCWSTR *Terminator,
                         OUT struct in6_addr *Addr)
 {
     UNIMPLEMENTED;
@@ -484,7 +484,7 @@ RtlIpv6StringToAddressW(IN PWCHAR Name,
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressExW(IN PWCHAR AddressName,
+RtlIpv6StringToAddressExW(IN PCWSTR AddressName,
                           OUT struct in6_addr *Address,
                           OUT PULONG ScopeId,
                           OUT PUSHORT Port)
