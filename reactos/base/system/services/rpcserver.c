@@ -1909,6 +1909,7 @@ DWORD RChangeServiceConfigW(
             goto done;
         }
 
+        wcscpy(lpDisplayNameW, lpDisplayName);
         if (lpService->lpDisplayName != lpService->lpServiceName)
             HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
 
@@ -4816,14 +4817,14 @@ DWORD RChangeServiceConfig2A(
     if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
         LPSERVICE_DESCRIPTIONW lpServiceDescriptionW;
-        //LPSERVICE_DESCRIPTIONA lpServiceDescriptionA;
+        LPSERVICE_DESCRIPTIONA lpServiceDescriptionA;
 
-        //lpServiceDescriptionA = Info.psd;
+        lpServiceDescriptionA = Info.psd;
 
-        ///if (lpServiceDescriptionA &&
-        ///lpServiceDescriptionA->lpDescription)
-        ///{
-            dwLength = (DWORD)((strlen(Info.lpDescription) + 1) * sizeof(WCHAR));
+        if (lpServiceDescriptionA &&
+            lpServiceDescriptionA->lpDescription)
+        {
+            dwLength = (DWORD)((strlen(lpServiceDescriptionA->lpDescription) + 1) * sizeof(WCHAR));
 
             lpServiceDescriptionW = HeapAlloc(GetProcessHeap(),
                                               HEAP_ZERO_MEMORY,
@@ -4837,14 +4838,14 @@ DWORD RChangeServiceConfig2A(
 
             MultiByteToWideChar(CP_ACP,
                                 0,
-                                Info.lpDescription,
+                                lpServiceDescriptionA->lpDescription,
                                 -1,
                                 lpServiceDescriptionW->lpDescription,
                                 dwLength);
 
             ptr = lpServiceDescriptionW;
             InfoW.psd = lpServiceDescriptionW;
-        ///}
+        }
     }
     else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {

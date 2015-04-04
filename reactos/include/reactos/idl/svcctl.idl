@@ -192,7 +192,6 @@ typedef struct _SC_RPC_CONFIG_INFOA {
         [case(6)] LPSERVICE_RPC_REQUIRED_PRIVILEGES_INFO psrp;
         [case(7)] LPSERVICE_PRESHUTDOWN_INFO psps;
     } DUMMYUNIONNAME;
-    [string] LPSTR lpDescription; //FIXME
 } SC_RPC_CONFIG_INFOA, *LPSC_RPC_CONFIG_INFOA;
 
 typedef struct _SC_RPC_CONFIG_INFOW {
