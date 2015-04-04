@@ -1,0 +1,13 @@
+[Section]
+Name = K-Meleon
+Version = 75.0 RC2
+License = GPL
+Description = An extremely fast, customizable and still lightweight web browser based on the Gecko layout engine.
+Size = 26.1 MB
+Category = 5
+URLSite = http://kmeleon.sourceforge.net
+URLDownload = http://download.sourceforge.net/project/kmeleon/k-meleon-dev/K-Meleon75.0RC2.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein extrem schneller, erweiterbarer und dennoch kleiner Web Browser basierend auf der Gecko Layout Engine.
