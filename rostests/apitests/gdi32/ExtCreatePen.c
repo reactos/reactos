@@ -18,12 +18,12 @@
 
 #define ok_elp(hPen, elp, pstyle, width, bstyle, color, hatch, cstyle) \
     ok(GetObjectA(hPen, sizeof(elpBuffer), elp) != 0, "GetObject failed\n"); \
-    ok((elp)->elpPenStyle == (pstyle), "Wrong elpPenStyle, expected 0x%lx, got 0x%lx\n", pstyle, (elp)->elpPenStyle); \
-    ok((elp)->elpWidth == width, "Wrong elpWidth, expected %lu, got %lu\n", width, (elp)->elpWidth); \
-    ok((elp)->elpBrushStyle == (bstyle), "Wrong elpBrushStyle, expected 0x%lx, got 0x%lx\n", bstyle, (elp)->elpBrushStyle); \
-    ok((elp)->elpColor == color, "Wrong elpColor, expected 0x%lx, got 0x%lx\n", color, (elp)->elpColor); \
-    ok((elp)->elpHatch == hatch, "Wrong elpHatch, expected 0x%p, got 0x%p\n", (PVOID)hatch, (PVOID)(elp)->elpColor); \
-    ok((elp)->elpNumEntries == cstyle, "Wrong elpNumEntries, expected %lu got %lu\n", cstyle, (elp)->elpNumEntries);
+    ok((elp)->elpPenStyle == (pstyle), "Wrong elpPenStyle, expected 0x%lx, got 0x%lx\n", (DWORD)pstyle, (elp)->elpPenStyle); \
+    ok((elp)->elpWidth == width, "Wrong elpWidth, expected %lu, got %lu\n", (DWORD)width, (elp)->elpWidth); \
+    ok((elp)->elpBrushStyle == (bstyle), "Wrong elpBrushStyle, expected 0x%x, got 0x%x\n", bstyle, (elp)->elpBrushStyle); \
+    ok((elp)->elpColor == color, "Wrong elpColor, expected 0x%lx, got 0x%lx\n", (COLORREF)color, (elp)->elpColor); \
+    ok((elp)->elpHatch == hatch, "Wrong elpHatch, expected 0x%p, got 0x%p\n", (PVOID)hatch, (PVOID)(elp)->elpHatch); \
+    ok((elp)->elpNumEntries == cstyle, "Wrong elpNumEntries, expected %lu got %lu\n", (DWORD)cstyle, (elp)->elpNumEntries);
 
 void Test_ExtCreatePen_Params()
 {
@@ -177,10 +177,10 @@ void Test_ExtCreatePen_Params()
     ok(GetObjectA(hPen, sizeof(EXTLOGPEN), pelp) == sizeof(EXTLOGPEN), "GetObject failed\n");
     ok(pelp->elpPenStyle == PS_NULL, "Wrong elpPenStyle, expected PS_NULL, got 0x%lx\n", pelp->elpPenStyle);
     ok(pelp->elpWidth == 0, "Wrong elpWidth, expected 0, got %lu\n", pelp->elpWidth);
-    ok(pelp->elpBrushStyle == BS_SOLID, "Wrong elpBrushStyle, expected BS_SOLID, got 0x%lx\n", pelp->elpBrushStyle);
+    ok(pelp->elpBrushStyle == BS_SOLID, "Wrong elpBrushStyle, expected BS_SOLID, got 0x%x\n", pelp->elpBrushStyle);
     ok(pelp->elpColor == 0, "Wrong elpColor, expected 0, got 0x%lx\n", pelp->elpColor);
     ok(pelp->elpHatch == 0, "Wrong elpHatch, expected 0, got 0x%p\n", (PVOID)pelp->elpColor);
-    ok(pelp->elpNumEntries == 0, "Wrong elpNumEntries, expected %lu got %lu\n", 0, pelp->elpNumEntries);
+    ok(pelp->elpNumEntries == 0, "Wrong elpNumEntries, expected %u got %lu\n", 0, pelp->elpNumEntries);
 
     /* Test PS_NULL with styles */
     SetLastError(0xdeadc0de);
@@ -431,25 +431,25 @@ Test_ExtCreatePen_Helper(
 
 #define ok2(expression, text, expected, got) \
     ok(expression, text \
-       "(dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%lu, lbHatch=%p)\n", \
+       "(dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%u, lbHatch=%p)\n", \
        expected, got, dwPenStyle, dwWidth, dwStyleCount, pdwStyles, lbStyle, (PVOID)lbHatch);
 
     //ok(bGotException == bExpectException, "ExtCreatePen expected exception=%lu for "
     //   "dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%lu, lbHatch=%p\n",
     //   bExpectException, dwPenStyle, dwWidth, dwStyleCount, pdwStyles, lbStyle, (PVOID)lbHatch);
 
-    ok2(bGotException == bExpectException, "ExtCreatePen expception, expected %lu, got %lu", bExpectException, bGotException);
+    ok2(bGotException == bExpectException, "ExtCreatePen expception, expected %u, got %u", bExpectException, bGotException);
 
     if (!bExpectSuccess)
     {
         ok(hpen == NULL, "ExtCreatePen should fail for "
-           "dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%lu, lbHatch=%p\n",
+           "dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%u, lbHatch=%p\n",
            dwPenStyle, dwWidth, dwStyleCount, pdwStyles, lbStyle, (PVOID)lbHatch);
     }
     else
     {
         ok(hpen != NULL, "ExtCreatePen failed for "
-           "dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%lu, lbHatch=%p\n",
+           "dwPenStyle=0x%lx, dwWidth=%lu, dwStyleCount=%lu, pdwStyles=%p, lbStyle=%u, lbHatch=%p\n",
            dwPenStyle, dwWidth, dwStyleCount, pdwStyles, lbStyle, (PVOID)lbHatch);
         if (hpen != NULL)
         {
@@ -464,7 +464,7 @@ Test_ExtCreatePen_Helper(
 
             ok2(pelp->elpPenStyle == elpExpect.elpPenStyle, "elpPenStyle, expected 0x%lx, got 0x%lx\n", elpExpect.elpPenStyle, pelp->elpPenStyle);
             ok2(pelp->elpWidth == elpExpect.elpWidth, "elpWidth, expected 0x%lx, got 0x%lx\n", elpExpect.elpWidth, pelp->elpWidth);
-            ok2(pelp->elpBrushStyle == elpExpect.elpBrushStyle, "elpBrushStyle, expected 0x%lx, got 0x%lx\n", elpExpect.elpBrushStyle, pelp->elpBrushStyle);
+            ok2(pelp->elpBrushStyle == elpExpect.elpBrushStyle, "elpBrushStyle, expected 0x%x, got 0x%x\n", elpExpect.elpBrushStyle, pelp->elpBrushStyle);
             ok2(pelp->elpColor == elpExpect.elpColor, "elpColor, expected 0x%lx, got 0x%lx\n", elpExpect.elpColor, pelp->elpColor);
             ok2(pelp->elpHatch == elpExpect.elpHatch, "elpHatch, expected 0x%lx, got 0x%lx\n", elpExpect.elpHatch, pelp->elpHatch);
             ok2(pelp->elpNumEntries == elpExpect.elpNumEntries, "elpNumEntries, expected 0x%lx, got 0x%lx\n", elpExpect.elpNumEntries, pelp->elpNumEntries);
