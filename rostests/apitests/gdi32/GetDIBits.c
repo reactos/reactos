@@ -271,10 +271,24 @@ void Test_GetDIBits()
 
     /* Test with different biBitCount set */
     pbi->bmiHeader.biBitCount = 4;
-    pbi->bmiHeader.biSizeImage = 0;
+    pbi->bmiHeader.biSizeImage = 1;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 0, NULL, pbi, DIB_RGB_COLORS), 1);
     ok_int(pbi->bmiHeader.biSizeImage, 36);
     ok_int(pbi->bmiHeader.biBitCount, 4);
+
+    /* Test with different biBitCount set */
+    pbi->bmiHeader.biBitCount = 8;
+    pbi->bmiHeader.biSizeImage = 1000;
+    ok_int(GetDIBits(hdcScreen, hbmp, 0, 0, NULL, pbi, DIB_RGB_COLORS), 1);
+    ok_int(pbi->bmiHeader.biSizeImage, 60);
+    ok_int(pbi->bmiHeader.biBitCount, 8);
+
+    /* Test with invalid biBitCount set */
+    pbi->bmiHeader.biBitCount = 123;
+    pbi->bmiHeader.biSizeImage = -12;
+    ok_int(GetDIBits(hdcScreen, hbmp, 0, 0, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_int(pbi->bmiHeader.biSizeImage, -12);
+    ok_int(pbi->bmiHeader.biBitCount, 123);
 
     /* Set bitmap dimensions */
     ok_int(SetBitmapDimensionEx(hbmp, 110, 220, NULL), 1);
@@ -320,16 +334,21 @@ void Test_GetDIBits()
     ok_int(pbi->bmiHeader.biCompression, 0);
     ok_int(pbi->bmiHeader.biSizeImage, 0);
 
-    /* Get the bitmap bits */
+    /* Get the bitmap info */
     pbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     pbi->bmiHeader.biWidth = 4;
     pbi->bmiHeader.biHeight = 4;
-    pbi->bmiHeader.biPlanes = 1;
+    pbi->bmiHeader.biPlanes = 3;
     pbi->bmiHeader.biBitCount = 32;
     pbi->bmiHeader.biCompression = BI_RGB;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 1);
+    ok_int(pbi->bmiHeader.biSizeImage, 64);
+    ok_int(pbi->bmiHeader.biPlanes, 1);
     pbi->bmiHeader.biWidth = 0;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    pbi->bmiHeader.biWidth = 2;
+    ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 1);
+    ok_int(pbi->bmiHeader.biSizeImage, 32);
     pbi->bmiHeader.biWidth = -3;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
     pbi->bmiHeader.biWidth = 4;
@@ -343,11 +362,23 @@ void Test_GetDIBits()
     pbi->bmiHeader.biPlanes = 23;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 1);
     ok_int(pbi->bmiHeader.biPlanes, 1);
+    SetLastError(0xdeadbabe);
+    ok_int(GetDIBits((HDC)0xff00ff00, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_err(0x57);
+    SetLastError(0xdeadbabe);
+    ok_int(GetDIBits(hdcScreen, (HBITMAP)0xff00ff00, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_err(0xdeadbabe);
+    SetLastError(0xdeadbabe);
+    ok_int(GetDIBits((HDC)0xff00ff00, (HBITMAP)0xff00ff00, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_err(0x57);
+    SetLastError(0xdeadbabe);
+    ok_int(GetDIBits(NULL, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
+    ok_err(0x57);
+
     pbi->bmiHeader.biCompression = BI_JPEG;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
     pbi->bmiHeader.biCompression = BI_PNG;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 5, NULL, pbi, DIB_RGB_COLORS), 0);
-
 
     /* Get the bitmap bits */
     pbi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -364,10 +395,22 @@ void Test_GetDIBits()
     cjSizeImage = ((pbi->bmiHeader.biWidth * pbi->bmiHeader.biBitCount + 31) / 32) * 4 * pbi->bmiHeader.biHeight;
     pvBits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 512);
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 4);
+    ok_int(pbi->bmiHeader.biSize, sizeof(BITMAPINFOHEADER));
+    ok_int(pbi->bmiHeader.biWidth, 4);
+    ok_int(pbi->bmiHeader.biHeight, 4);
+    ok_int(pbi->bmiHeader.biPlanes, 1);
+    ok_int(pbi->bmiHeader.biBitCount, 32);
+    ok_int(pbi->bmiHeader.biCompression, BI_RGB);
+    ok_int(pbi->bmiHeader.biSizeImage, 64);
+    ok_int(pbi->bmiHeader.biXPelsPerMeter, 0);
+    ok_int(pbi->bmiHeader.biYPelsPerMeter, 0);
+    ok_int(pbi->bmiHeader.biClrUsed, 0);
+    ok_int(pbi->bmiHeader.biClrImportant, 0);
 
     /* Set biBitCount to 0 */
     pbi->bmiHeader.biBitCount = 0;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
+    ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, (PVOID)(LONG_PTR)-1, pbi, DIB_RGB_COLORS), 0);
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, NULL, pbi, DIB_RGB_COLORS), 1);
     ok_int(GetDIBits(NULL, hbmp, 0, 4, NULL, pbi, DIB_RGB_COLORS), 0);
 
@@ -380,6 +423,10 @@ void Test_GetDIBits()
     pbi->bmiHeader.biBitCount = 24;
     pbi->bmiHeader.biWidth = 3;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 4);
+
+    /* Try invalid biBitCount */
+    pbi->bmiHeader.biBitCount = 17;
+    ok_int(GetDIBits(hdcScreen, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
 
     /* Set only biBitCount and pjInit */
     ZeroMemory(pbi, bisize);
@@ -405,19 +452,19 @@ void Test_GetDIBits()
     pbi->bmiHeader.biSizeImage = 0;
     ok_int(GetDIBits(hdcScreen, hbmp, 0, 0, NULL, pbi, DIB_RGB_COLORS), 0);
 
+    /* Calculate bitmap size and allocate a buffer */
     cjSizeImage = ((pbi->bmiHeader.biWidth * pbi->bmiHeader.biBitCount + 31) / 32) * 4 * pbi->bmiHeader.biHeight;
+    ok_int(cjSizeImage, 20);
     pvBits = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cjSizeImage);
 
+    /* Test using a compatible DC */
     hdcMem = CreateCompatibleDC(0);
     ok(hdcMem != 0, "CreateCompatibleDC failed, skipping tests\n");
     if (hdcMem == NULL) return;
+    ok_int(GetDIBits(hdcMem, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
+    ok_int(GetDIBits(hdcMem, ghbmpDIB4, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 4);
 
-    // FIXME: broken
-    //ok(SelectObject(hdcMem, ghbmpDIB4) != 0, "Failed to select 4bpp DIB %p into DC %p\n", ghbmpDIB4, hdcMem);;
-    //ok_int(GetDIBits(hdcMem, hbmp, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 0);
-    //ok_int(GetDIBits(hdcMem, ghbmpDIB4, 0, 4, pvBits, pbi, DIB_RGB_COLORS), 3);
-
-
+    HeapFree(GetProcessHeap(), 0, pvBits);
     DeleteDC(hdcMem);
     ReleaseDC(NULL, hdcScreen);
 }

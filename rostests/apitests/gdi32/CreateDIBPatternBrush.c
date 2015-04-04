@@ -10,6 +10,9 @@
 #include <wingdi.h>
 #include "init.h"
 
+/* New color use parameter. See support.microsoft.com/kb/kbview/108497 */
+#define DIB_PAL_INDICES 2
+
 void Test_CreateDIBPatternBrush()
 {
 
@@ -30,6 +33,7 @@ void Test_CreateDIBPatternBrushPt()
     };
     HBRUSH hbr, hbrOld;
     HPALETTE hpalOld;
+    LOGBRUSH logbrush;
 
     SetLastError(0);
     ok_hdl(CreateDIBPatternBrushPt(NULL, 0), NULL);
@@ -58,6 +62,13 @@ void Test_CreateDIBPatternBrushPt()
     hbr = CreateDIBPatternBrushPt(&PackedDIB, DIB_PAL_COLORS);
     ok(hbr != 0, "CreateDIBPatternBrushPt failed, skipping tests.\n");
     if (!hbr) return;
+
+    /* Check the logbrush */
+    ok(GetObject(hbr, sizeof(logbrush), &logbrush), "GetObject() failed\n");
+    ok_int(logbrush.lbStyle, BS_DIBPATTERN);
+    ok_hex(logbrush.lbColor, 0);
+    ok(logbrush.lbHatch == (ULONG_PTR)&PackedDIB,
+       "invalid lbHatch. Got %p, expected %p\n", (PVOID)logbrush.lbHatch, &PackedDIB);
 
     /* Select the brush into the dc */
     hbrOld = SelectObject(ghdcDIB32, hbr);
@@ -100,10 +111,17 @@ void Test_CreateDIBPatternBrushPt()
     PackedDIB.ajBuffer[2] = 1;
     PackedDIB.ajBuffer[3] = 0;
 
-    /* Create a DIB brush with unkdocumented iUsage == 2 */
-    hbr = CreateDIBPatternBrushPt(&PackedDIB, 2);
+    /* Create a DIB brush with DIB_PAL_INDICES */
+    hbr = CreateDIBPatternBrushPt(&PackedDIB, DIB_PAL_INDICES);
     ok(hbr != 0, "CreateSolidBrush failed, skipping tests.\n");
     if (!hbr) return;
+
+    /* Check the logbrush */
+    ok(GetObject(hbr, sizeof(logbrush), &logbrush), "GetObject() failed\n");
+    ok_int(logbrush.lbStyle, BS_DIBPATTERN);
+    ok_hex(logbrush.lbColor, 0);
+    ok(logbrush.lbHatch == (ULONG_PTR)&PackedDIB,
+       "invalid lbHatch. Got %p, expected %p\n", (PVOID)logbrush.lbHatch, &PackedDIB);
 
     /* Select the brush into the dc */
     hbrOld = SelectObject(ghdcDIB32, hbr);
@@ -155,8 +173,7 @@ void Test_CreateDIBPatternBrushPt_RLE8()
 
     /* Create a DIB brush with palette indices */
     hbr = CreateDIBPatternBrushPt(&PackedDIB, DIB_PAL_COLORS);
-    ok(hbr != 0, "CreateDIBPatternBrushPt failed, skipping tests.\n");
-    if (!hbr) return;
+    ok(hbr == 0, "CreateDIBPatternBrushPt should fail.\n");
 
 
 }

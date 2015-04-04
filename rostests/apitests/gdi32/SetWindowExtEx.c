@@ -96,7 +96,14 @@ void Test_SetWindowExtEx()
 	//pDC_Attr = pEntry->UserData;
 	//ASSERT(pDC_Attr);
 
-    /* Test setting it without changing the map mode (MM_TEXT) */
+    /* Test setting 0 extents without changing the map mode (MM_TEXT) */
+    ret = SetWindowExtEx(hDC, 0, 0, &WindowExt);
+    TEST(ret == 1);
+    TEST(WindowExt.cx == 1);
+    TEST(WindowExt.cy == 1);
+
+    /* Test setting proper extents without changing the map mode (MM_TEXT) */
+    WindowExt.cx = WindowExt.cy = 0;
     ret = SetWindowExtEx(hDC, 10, 20, &WindowExt);
     TEST(ret == 1);
     TEST(WindowExt.cx == 1);

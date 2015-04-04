@@ -24,6 +24,10 @@ void Test_PatBlt_Params()
     ret = PatBlt(hdcTarget, 0, 0, 1, 1, PATCOPY & 0x00FF0000);
     ok_long(ret, 1);
 
+    /* Test a rop that contains arbitrary values outside the operation index */
+    ret = PatBlt(hdcTarget, 0, 0, 1, 1, (PATCOPY & 0x00FF0000) | 0xab00cdef);
+    ok_long(ret, 1);
+
     /* Test an invalid rop  */
     SetLastError(0);
     ok_long(PatBlt(hdcTarget, 0, 0, 1, 1, SRCCOPY) , 0);
