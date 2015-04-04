@@ -538,6 +538,6 @@ void Test_ExtCreatePen_Params2()
 START_TEST(ExtCreatePen)
 {
     Test_ExtCreatePen_Params();
-    Test_ExtCreatePen_Params2();
+    //Test_ExtCreatePen_Params2();
 }
 
