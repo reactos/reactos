@@ -1,4 +1,4 @@
-; BATTERY.INF
+﻿; BATTERY.INF
 
 [Version]
 Signature  = "$Windows NT$"
@@ -30,10 +30,21 @@ HKR, , Installer32, 0, "batt.dll,BatteryClassInstall"
 
 [GenericMfg]
 %ACPI\PNP0C0A.DeviceDesc% = CmBatt,ACPI\PNP0C0A
-%ACPI\ACPI0003.DeviceDesc% = CmBatt,ACPI\ACPI0003
+%ACPI\ACPI0003.DeviceDesc% = AcAdapter,ACPI\ACPI0003
+
+[AcAdapter]
+AddReg=AcAdapter_Addreg
+CopyFiles = CmBatt_CopyFiles
+
+[AcAdapter_Addreg]
+HKR,,PowerSourceType,%REG_BINARY%,01,00,00,00
 
 [CmBatt]
+AddReg=CmBatt_Addreg
 CopyFiles = CmBatt_CopyFiles
+
+[CmBatt_Addreg]
+HKR,,PowerSourceType,%REG_BINARY%,00,00,00,00
 
 [CmBatt_CopyFiles]
 cmbatt.sys
