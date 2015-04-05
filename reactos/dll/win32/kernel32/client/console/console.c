@@ -1346,15 +1346,19 @@ WINAPI
 DECLSPEC_HOTPATCH
 FreeConsole(VOID)
 {
+    BOOL Success = TRUE;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_FREECONSOLE FreeConsoleRequest = &ApiMessage.Data.FreeConsoleRequest;
     HANDLE ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+
+    RtlEnterCriticalSection(&ConsoleLock);
 
     /* We must have a non-trivial handle to close */
     if (ConsoleHandle == NULL) // IsConsoleHandle(ConsoleHandle)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        Success = FALSE;
+        goto Quit;
     }
 
     /* Set up the data to send to the Console Server */
@@ -1370,7 +1374,8 @@ FreeConsole(VOID)
     if (!NT_SUCCESS(ApiMessage.Status))
     {
         BaseSetLastNTError(ApiMessage.Status);
-        return FALSE;
+        Success = FALSE;
+        goto Quit;
     }
 
     /* Reset the console handle */
@@ -1380,7 +1385,9 @@ FreeConsole(VOID)
     CloseHandle(InputWaitHandle);
     InputWaitHandle = INVALID_HANDLE_VALUE;
 
-    return TRUE;
+Quit:
+    RtlLeaveCriticalSection(&ConsoleLock);
+    return Success;
 }
 
 
@@ -2007,18 +2014,15 @@ SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 {
     BOOL Ret;
 
-    RtlEnterCriticalSection(&BaseDllDirectoryLock);
-    if (Add)
-    {
-        Ret = AddConsoleCtrlHandler(HandlerRoutine);
-    }
-    else
-    {
-        Ret = RemoveConsoleCtrlHandler(HandlerRoutine);
-    }
+    RtlEnterCriticalSection(&ConsoleLock);
 
-    RtlLeaveCriticalSection(&BaseDllDirectoryLock);
-    return(Ret);
+    if (Add)
+        Ret = AddConsoleCtrlHandler(HandlerRoutine);
+    else
+        Ret = RemoveConsoleCtrlHandler(HandlerRoutine);
+
+    RtlLeaveCriticalSection(&ConsoleLock);
+    return Ret;
 }
 
 
