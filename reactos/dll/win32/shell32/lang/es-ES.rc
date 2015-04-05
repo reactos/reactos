@@ -199,6 +199,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Propiedades avanzadas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Elija las propiedades avanzadas que desee para este acceso directo.", -1, 5, 25, 210, 14
     CHECKBOX "Ejecutar con credenciales diferentes", 14000, 25, 50, 150, 10
     LTEXT "Esta opción puede permitirle ejecutar este acceso directo como otro usuario, o continuar como usted mismo mientras protege su equipo y datos de una actividad de programa no autorizada.", -1, 50, 60, 175, 40
@@ -390,7 +391,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Elija el programa que desea usar para abrir el siguiente archivo:", -1, 44, 12, 211, 10
-    LTEXT "Archivo:    ", 14001, 44, 25, 188, 10
+    LTEXT "Archivo:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programas ", -1, 7, 42, 269, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Utilizar &siempre el programa seleccionado para abrir este tipo de archivos", 14003, 15, 193, 250, 10

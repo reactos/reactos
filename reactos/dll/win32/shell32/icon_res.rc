@@ -123,6 +123,7 @@ IDI_SHELL_ADD_REM_PROGRAMS ICON "res/icons/271.ico"
 IDI_SHELL_TUNES ICON "res/icons/277.ico"
 /* TODO: 278.ico */
 IDI_SHELL_USER_ACCOUNTS ICON "res/icons/279.ico"
+IDI_SHELL_EXTENDED_PROPERTIES ICON "res/icons/280.ico"
 /* TODO: 281.ico, 282.ico, 283.ico, 284.ico */
 IDI_SHELL_HELP_FILE ICON "res/icons/289.ico"
 IDI_SHELL_GO ICON "res/icons/290.ico"

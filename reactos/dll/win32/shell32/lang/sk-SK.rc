@@ -198,6 +198,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Rozšírené vlastnosti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Vyberte rozšírené vlastnosti určené pre tento odkaz.", -1, 5, 30, 210, 10
     CHECKBOX "&Spustiť s inými povereniami", 14000, 25, 50, 150, 10
     LTEXT "Táto možnosť umožňuje spustiť tento odkaz ako iný používateľ, alebo pokračovať so svojím používateľským oprávnením, ale s ochranou počítača a údajov pred neoprávnenými aktivitami programu.", -1, 50, 60, 170, 40
@@ -389,7 +390,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Vyberte program, v ktorom sa má otvoriť tento súbor:", -1, 44, 12, 211, 10
-    LTEXT "Súbor:    ", 14001, 44, 25, 188, 10
+    LTEXT "Súbor:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "N&a otvorenie týchto súborov vždy použiť vybratý program", 14003, 20, 193, 225, 10

@@ -204,6 +204,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Rozšířené vlastnosti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Zvolte rozšířené vlastnosti, které požadujtete pro tohoto zástupce.", -1, 5, 30, 210, 10
     CHECKBOX "Spustit s jinými pověřeními", 14000, 25, 50, 150, 10
     LTEXT "Tato možnost umožní spustit tohoto zástupce jako jiný uživatel nebo při spuštění se současným uživatelem chránit počítač před nepovolenou aktivitou programu.", -1, 50, 60, 175, 40
@@ -395,7 +396,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Vyberte program, ve kterém chcete otevřít tento soubor: ", -1, 44, 12, 211, 10
-    LTEXT "Soubor:    ", 14001, 44, 25, 188, 10
+    LTEXT "Soubor:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
     CONTROL "Programy", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Vždy použít vybraný program k otevření tohoto typu souboru", 14003, 20, 193, 225, 10

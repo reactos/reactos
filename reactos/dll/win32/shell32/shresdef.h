@@ -426,6 +426,7 @@
 #define IDI_SHELL_TUNES            277
 /* TODO: 278.ico */
 #define IDI_SHELL_USER_ACCOUNTS    279
+#define IDI_SHELL_EXTENDED_PROPERTIES 280
 /* TODO: 281.ico, 282.ico, 283.ico, 284.ico */
 #define IDI_SHELL_HELP_FILE        289
 #define IDI_SHELL_GO               290

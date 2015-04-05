@@ -198,6 +198,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 210, 10
     CHECKBOX "Als anderer Benutzer ausführen", 14000, 25, 50, 150, 10
     LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter einem anderen oder Ihrem eigenen Benutzerkonto auszuführen während der Computer und Ihre Daten vor unautorisierten Programmaktivitäten geschützt werden können.", -1, 50, 60, 175, 40

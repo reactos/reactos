@@ -198,6 +198,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "拡張プロパティ"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "このショートカットに使用する拡張プロパティを選択してください。", -1, 5, 30, 210, 10
     CHECKBOX "異なる人物証明情報で実行する", 14000, 25, 50, 150, 10
     LTEXT "このオプションを使用するとこのショートカットを別のユーザーとして実行できます。また、自分自身で実行する場合、許可されていないプログラムの活動からコンピュータとデータを保護できます。", -1, 50, 60, 175, 40
@@ -389,7 +390,7 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "このファイルを開くために使用するプログラムを選択してください:", -1, 44, 12, 211, 10
-    LTEXT "ファイル:    ", 14001, 44, 25, 188, 10
+    LTEXT "ファイル:    ", 14001, 44, 25, 188, 20
     GROUPBOX "プログラムの一覧(&P)", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "この種類のファイルを開くときは、常に選択したプログラムを使用する(&A)", 14003, 20, 193, 225, 10
