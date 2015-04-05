@@ -51,7 +51,7 @@ BltMask(SURFOBJ* psoDest,
         POINTL* pptlBrush,
         ROP4 Rop4)
 {
-    LONG x, y;
+    LONG x, y, cx, cy;
     BYTE *pjMskLine, *pjMskCurrent;
     BYTE fjMaskBit0, fjMaskBit;
     /* Pattern brushes */
@@ -87,6 +87,14 @@ BltMask(SURFOBJ* psoDest,
     }
     else
         psoPattern = NULL;
+
+    cx = prclDest->right - prclDest->left;
+    cy = prclDest->bottom - prclDest->top;
+    if ((pptlMask->x + cx > psoMask->sizlBitmap.cx) ||
+        (pptlMask->y + cy > psoMask->sizlBitmap.cy))
+    {
+        return FALSE;
+    }
 
     pjMskLine = (PBYTE)psoMask->pvScan0 + pptlMask->y * psoMask->lDelta + (pptlMask->x >> 3);
     fjMaskBit0 = 0x80 >> (pptlMask->x & 0x07);
