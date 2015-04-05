@@ -152,7 +152,13 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
     dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, ENV_BUFFER_SIZE);
     if (dwBuffer > ENV_BUFFER_SIZE)
     {
+        LPTSTR pszOldPathExt = pszPathExt;
         pszPathExt = (LPTSTR)cmd_realloc (pszPathExt, dwBuffer * sizeof (TCHAR));
+        if (pszPathExt == NULL)
+        {
+            cmd_free(pszOldPathExt);
+            return FALSE;
+        }
         GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, dwBuffer);
         _tcslwr(pszPathExt);
     }
@@ -184,7 +190,14 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
     dwBuffer = GetEnvironmentVariable (_T("PATH"), pszPath, ENV_BUFFER_SIZE);
     if (dwBuffer > ENV_BUFFER_SIZE)
     {
+        LPTSTR pszOldPath = pszPath;
         pszPath = (LPTSTR)cmd_realloc (pszPath, dwBuffer * sizeof (TCHAR));
+        if (pszPath == NULL)
+        {
+            cmd_free(pszOldPath);
+            cmd_free(pszPathExt);
+            return FALSE;
+        }
         GetEnvironmentVariable (_T("PATH"), pszPath, dwBuffer);
     }
 
