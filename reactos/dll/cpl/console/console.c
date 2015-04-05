@@ -18,10 +18,12 @@ INT_PTR CALLBACK LayoutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 INT_PTR CALLBACK ColorsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE hApplet = NULL;
-BOOLEAN AppliedConfig = FALSE;
 
-/* Local copy of the console informations */
+/* Local copy of the console information */
 PCONSOLE_STATE_INFO ConInfo = NULL;
+/* What to do with the console information */
+static BOOL SetConsoleInfo  = FALSE;
+static BOOL SaveConsoleInfo = FALSE;
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGEW *psp,
@@ -40,8 +42,8 @@ InitPropSheetPage(PROPSHEETPAGEW *psp,
 static VOID
 InitDefaultConsoleInfo(PCONSOLE_STATE_INFO pConInfo)
 {
-    /* FIXME: Get also the defaults from the registry */
-    ConCfgInitDefaultSettings(pConInfo);
+    // FIXME: Also retrieve the value of REG_DWORD CurrentPage.
+    ConCfgGetDefaultSettings(pConInfo);
 }
 
 static INT_PTR
@@ -82,90 +84,53 @@ ApplyProc(HWND hwndDlg,
     return FALSE;
 }
 
-BOOL
-ApplyConsoleInfo(HWND hwndDlg,
-                 PCONSOLE_STATE_INFO pConInfo)
+VOID
+ApplyConsoleInfo(HWND hwndDlg)
 {
-    BOOL SetParams  = FALSE;
-    BOOL SaveParams = FALSE;
+    static BOOL ConsoleInfoAlreadySaved = FALSE;
+    
+    /*
+     * We alread applied all the console properties (and saved if needed).
+     * Nothing more needs to be done.
+     */
+    if (ConsoleInfoAlreadySaved)
+        goto Done;
 
     /*
      * If we are setting the default parameters, just save them,
-     * otherwise display the save-confirmation dialog.
+     * otherwise display the confirmation & apply dialog.
      */
-    if (pConInfo->hWnd == NULL)
+    if (ConInfo->hWnd == NULL)
     {
-        SetParams  = FALSE;
-        SaveParams = TRUE; // FIXME: What happens if one clicks on CANCEL??
+        SetConsoleInfo  = FALSE;
+        SaveConsoleInfo = TRUE;
     }
     else
     {
         INT_PTR res = DialogBoxW(hApplet, MAKEINTRESOURCEW(IDD_APPLYOPTIONS), hwndDlg, ApplyProc);
 
-        SetParams  = (res != IDCANCEL);
-        SaveParams = (res == IDC_RADIO_APPLY_ALL);
+        SetConsoleInfo  = (res != IDCANCEL);
+        SaveConsoleInfo = (res == IDC_RADIO_APPLY_ALL);
 
-        if (SetParams == FALSE)
+        if (SetConsoleInfo == FALSE)
         {
-            /* Don't destroy when user presses cancel */
+            /* Don't destroy when the user presses cancel */
             SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
-            // return TRUE;
+            return;
         }
     }
 
-    if (SetParams)
-    {
-        HANDLE hSection;
-        PCONSOLE_STATE_INFO pSharedInfo;
+    /*
+     * We applied all the console properties (and saved if needed).
+     * Set the flag so that if this function is called again, we won't
+     * need to redo everything again.
+     */
+    ConsoleInfoAlreadySaved = TRUE;
 
-        /*
-         * Create a memory section to share with CONSRV, and map it.
-         */
-        hSection = CreateFileMappingW(INVALID_HANDLE_VALUE,
-                                      NULL,
-                                      PAGE_READWRITE,
-                                      0,
-                                      pConInfo->cbSize,
-                                      NULL);
-        if (!hSection)
-        {
-            DPRINT1("Error when creating file mapping, error = %d\n", GetLastError());
-            return FALSE;
-        }
-
-        pSharedInfo = MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-        if (!pSharedInfo)
-        {
-            DPRINT1("Error when mapping view of file, error = %d\n", GetLastError());
-            CloseHandle(hSection);
-            return FALSE;
-        }
-
-        /* We are applying the chosen configuration */
-        AppliedConfig = TRUE;
-
-        /* Copy the console information into the section */
-        RtlCopyMemory(pSharedInfo, pConInfo, pConInfo->cbSize);
-
-        /* Unmap it */
-        UnmapViewOfFile(pSharedInfo);
-
-        /* Signal to CONSRV that it can apply the new configuration */
-        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
-        SendMessage(pConInfo->hWnd,
-                    WM_SETCONSOLEINFO,
-                    (WPARAM)hSection, 0);
-
-        /* Close the section and return */
-        CloseHandle(hSection);
-    }
-
-    if (SaveParams)
-    {
-        ConCfgWriteUserSettings(pConInfo);
-    }
-
-    return TRUE;
+Done:
+    /* Options have been applied */
+    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+    return;
 }
 
 /* First Applet */
@@ -286,7 +251,56 @@ InitApplet(HANDLE hSectionOrWnd)
     InitPropSheetPage(&psp[i++], IDD_PROPPAGECOLORS , ColorsProc );
 
     Result = PropertySheetW(&psh);
+    
+    if (SetConsoleInfo)
+    {
+        HANDLE hSection;
 
+        /*
+         * Create a memory section to share with CONSRV, and map it.
+         */
+        hSection = CreateFileMappingW(INVALID_HANDLE_VALUE,
+                                      NULL,
+                                      PAGE_READWRITE,
+                                      0,
+                                      ConInfo->cbSize,
+                                      NULL);
+        if (!hSection)
+        {
+            DPRINT1("Error when creating file mapping, error = %d\n", GetLastError());
+            goto Quit;
+        }
+
+        pSharedInfo = MapViewOfFile(hSection, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+        if (!pSharedInfo)
+        {
+            DPRINT1("Error when mapping view of file, error = %d\n", GetLastError());
+            CloseHandle(hSection);
+            goto Quit;
+        }
+
+        /* Copy the console information into the section */
+        RtlCopyMemory(pSharedInfo, ConInfo, ConInfo->cbSize);
+
+        /* Unmap it */
+        UnmapViewOfFile(pSharedInfo);
+
+        /* Signal to CONSRV that it can apply the new configuration */
+        SendMessage(ConInfo->hWnd,
+                    WM_SETCONSOLEINFO,
+                    (WPARAM)hSection, 0);
+
+        /* Close the section and return */
+        CloseHandle(hSection);
+    }
+
+    if (SaveConsoleInfo)
+    {
+        /* Default settings saved when ConInfo->hWnd == NULL */
+        ConCfgWriteUserSettings(ConInfo, ConInfo->hWnd == NULL);
+    }
+    
+Quit:
     /* Cleanup */
     HeapFree(GetProcessHeap(), 0, ConInfo);
     ConInfo = NULL;

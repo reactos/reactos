@@ -535,24 +535,24 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     /*
      * Load the console settings
      */
-
-    /* Impersonate the caller in order to retrieve settings in its context */
-    if (!CsrImpersonateClient(NULL))
-        return STATUS_BAD_IMPERSONATION_LEVEL;
-
-    /* 1. Load the default settings */
     RtlZeroMemory(ConsoleInfo, sizeof(ConsoleInfoBuffer));
     ConsoleInfo->cbSize = sizeof(ConsoleInfoBuffer);
-    ConCfgGetDefaultSettings(ConsoleInfo);
 
-    /* 2. Get the title of the console (initialize ConsoleInfo->ConsoleTitle) */
+    /* 1. Get the title of the console (initialize ConsoleInfo->ConsoleTitle) */
     Length = min(ConsoleInitInfo->TitleLength,
                  (ConsoleInfo->cbSize - FIELD_OFFSET(CONSOLE_STATE_INFO, ConsoleTitle) - sizeof(UNICODE_NULL)) / sizeof(WCHAR));
     wcsncpy(ConsoleInfo->ConsoleTitle, ConsoleInitInfo->ConsoleTitle, Length);
     ConsoleInfo->ConsoleTitle[Length] = UNICODE_NULL; // NULL-terminate it.
 
+    /* 2. Impersonate the caller in order to retrieve settings in its context */
+    if (!CsrImpersonateClient(NULL))
+        return STATUS_BAD_IMPERSONATION_LEVEL;
+
+    /* 3. Load the default settings */
+    ConCfgGetDefaultSettings(ConsoleInfo);
+
     /*
-     * 3. Load per-application terminal settings.
+     * 4. Load per-application terminal settings.
      *
      * Check whether the process creating the console was launched via
      * a shell-link. ConsoleInfo->ConsoleTitle may be updated with the
@@ -567,7 +567,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
     }
 
     /*
-     * 4. Load the remaining console settings via the registry.
+     * 5. Load the remaining console settings via the registry.
      */
     if ((ConsoleInitInfo->ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
     {
@@ -576,7 +576,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
          * or we failed to load shell-link console properties.
          * Therefore, load the console infos for the application from the registry.
          */
-        ConCfgReadUserSettings(ConsoleInfo);
+        ConCfgReadUserSettings(ConsoleInfo, FALSE);
 
         /*
          * Now, update them with the properties the user might gave to us
@@ -617,7 +617,7 @@ ConSrvInitConsole(OUT PHANDLE NewConsoleHandle,
 #endif
     }
 
-    /* Revert impersonation */
+    /* 6. Revert impersonation */
     CsrRevertToSelf();
 
     /* Set-up the code page */
@@ -1044,7 +1044,7 @@ CSR_API(SrvAttachConsole)
         PROCESS_BASIC_INFORMATION ProcessInfo;
         ULONG Length = sizeof(ProcessInfo);
 
-        /* Get the real parent's ID */
+        /* Get the real parent's PID */
 
         Status = NtQueryInformationProcess(TargetProcess->ProcessHandle,
                                            ProcessBasicInformation,

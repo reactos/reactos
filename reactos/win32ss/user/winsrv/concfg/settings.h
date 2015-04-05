@@ -75,13 +75,18 @@ C_ASSERT(sizeof(CONSOLE_STATE_INFO) == 0xD0);
 
 /* FUNCTIONS ******************************************************************/
 
-BOOL ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
-                            PHKEY hSubKey,
-                            REGSAM samDesired,
-                            BOOL bCreate);
+BOOLEAN
+ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
+                       PHKEY hSubKey,
+                       REGSAM samDesired,
+                       BOOLEAN Create);
+BOOLEAN
+ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                       IN BOOLEAN DefaultSettings);
+BOOLEAN
+ConCfgWriteUserSettings(IN PCONSOLE_STATE_INFO ConsoleInfo,
+                        IN BOOLEAN DefaultSettings);
 
-BOOL ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo);
-BOOL ConCfgWriteUserSettings(IN PCONSOLE_STATE_INFO ConsoleInfo);
 VOID ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo);
 VOID ConCfgGetDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo);
 

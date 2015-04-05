@@ -115,13 +115,13 @@ TranslateConsoleName(OUT LPWSTR DestString,
     while ((DestString = wcschr(DestString, PATH_SEPARATOR))) *DestString = L'_';
 }
 
-BOOL
+BOOLEAN
 ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
                        PHKEY hSubKey,
                        REGSAM samDesired,
-                       BOOL bCreate)
+                       BOOLEAN Create)
 {
-    BOOL bRet = TRUE;
+    BOOLEAN RetVal = TRUE;
     NTSTATUS Status;
     WCHAR szBuffer[MAX_PATH] = L"Console\\";
     WCHAR szBuffer2[MAX_PATH] = L"";
@@ -161,37 +161,38 @@ ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
     wcsncat(szBuffer, szBuffer2, MAX_PATH - wcslen(szBuffer) - 1);
 
     /* Create or open the registry key */
-    if (bCreate)
+    if (Create)
     {
         /* Create the key */
-        bRet = (RegCreateKeyExW(hKey,
-                                szBuffer,
-                                0, NULL,
-                                REG_OPTION_NON_VOLATILE,
-                                samDesired,
-                                NULL,
-                                hSubKey,
-                                NULL) == ERROR_SUCCESS);
+        RetVal = (RegCreateKeyExW(hKey,
+                                  szBuffer,
+                                  0, NULL,
+                                  REG_OPTION_NON_VOLATILE,
+                                  samDesired,
+                                  NULL,
+                                  hSubKey,
+                                  NULL) == ERROR_SUCCESS);
     }
     else
     {
         /* Open the key */
-        bRet = (RegOpenKeyExW(hKey,
-                              szBuffer,
-                              0,
-                              samDesired,
-                              hSubKey) == ERROR_SUCCESS);
+        RetVal = (RegOpenKeyExW(hKey,
+                                szBuffer,
+                                0,
+                                samDesired,
+                                hSubKey) == ERROR_SUCCESS);
     }
 
     /* Close the parent key and return success or not */
     NtClose(hKey);
-    return bRet;
+    return RetVal;
 }
 
-BOOL
-ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
+BOOLEAN
+ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                       IN BOOLEAN DefaultSettings)
 {
-    BOOL  RetVal = FALSE;
+    BOOLEAN RetVal = FALSE;
     HKEY  hKey;
     DWORD dwNumSubKeys = 0;
     DWORD dwIndex;
@@ -203,9 +204,8 @@ ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
     DWORD Value;
     DWORD dwValue;
 
-    if (!ConCfgOpenUserSettings(ConsoleInfo->ConsoleTitle,
-                                &hKey, KEY_READ,
-                                FALSE))
+    if (!ConCfgOpenUserSettings(DefaultSettings ? L"" : ConsoleInfo->ConsoleTitle,
+                                &hKey, KEY_READ, FALSE))
     {
         DPRINT("ConCfgOpenUserSettings failed\n");
         return FALSE;
@@ -346,16 +346,16 @@ ConCfgReadUserSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
     return RetVal;
 }
 
-BOOL
-ConCfgWriteUserSettings(IN PCONSOLE_STATE_INFO ConsoleInfo)
+BOOLEAN
+ConCfgWriteUserSettings(IN PCONSOLE_STATE_INFO ConsoleInfo,
+                        IN BOOLEAN DefaultSettings)
 {
-    BOOL GlobalSettings = (ConsoleInfo->ConsoleTitle[0] == L'\0'); // FIXME
     HKEY hKey;
     DWORD Storage = 0;
 
 #define SetConsoleSetting(SettingName, SettingType, SettingSize, Setting, DefaultValue)         \
 do {                                                                                            \
-    if (GlobalSettings || (!GlobalSettings && (*(Setting) != (DefaultValue))))                  \
+    if (DefaultSettings || (!DefaultSettings && (*(Setting) != (DefaultValue))))                \
     {                                                                                           \
         RegSetValueExW(hKey, (SettingName), 0, (SettingType), (PBYTE)(Setting), (SettingSize)); \
     }                                                                                           \
@@ -368,9 +368,8 @@ do {                                                                            
     WCHAR szValueName[15];
     UINT i;
 
-    if (!ConCfgOpenUserSettings(ConsoleInfo->ConsoleTitle,
-                                &hKey, KEY_WRITE,
-                                TRUE))
+    if (!ConCfgOpenUserSettings(DefaultSettings ? L"" : ConsoleInfo->ConsoleTitle,
+                                &hKey, KEY_WRITE, TRUE))
     {
         return FALSE;
     }
@@ -489,9 +488,6 @@ ConCfgInitDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
     RtlCopyMemory(ConsoleInfo->ColorTable, s_Colors, sizeof(s_Colors));
 
     ConsoleInfo->CodePage = 0;
-
-    /* Default settings --> console title is NULL */
-    ConsoleInfo->ConsoleTitle[0] = UNICODE_NULL;
 }
 
 VOID
@@ -509,8 +505,8 @@ ConCfgGetDefaultSettings(IN OUT PCONSOLE_STATE_INFO ConsoleInfo)
      *    If the HKCU\Console key doesn't exist, create it
      *    and store the default values inside.
      */
-    if (!ConCfgReadUserSettings(ConsoleInfo))
-        ConCfgWriteUserSettings(ConsoleInfo);
+    if (!ConCfgReadUserSettings(ConsoleInfo, TRUE))
+        ConCfgWriteUserSettings(ConsoleInfo, TRUE);
 }
 
 /* EOF */

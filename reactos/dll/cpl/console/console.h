@@ -29,10 +29,9 @@ typedef enum _TEXT_TYPE
 } TEXT_TYPE;
 
 /* Globals */
-extern BOOLEAN AppliedConfig;
 extern PCONSOLE_STATE_INFO ConInfo;
 
-BOOL ApplyConsoleInfo(HWND hwndDlg, PCONSOLE_STATE_INFO pConInfo);
+VOID ApplyConsoleInfo(HWND hwndDlg);
 VOID PaintConsole(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo);
 BOOL PaintText(LPDRAWITEMSTRUCT drawItem, PCONSOLE_STATE_INFO pConInfo, TEXT_TYPE TextMode);
 

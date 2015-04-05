@@ -421,17 +421,8 @@ FontProc(HWND hwndDlg,
             {
                 case PSN_APPLY:
                 {
-                    if (!AppliedConfig)
-                    {
-                        return ApplyConsoleInfo(hwndDlg, ConInfo);
-                    }
-                    else
-                    {
-                        /* Options have already been applied */
-                        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
-                        return TRUE;
-                    }
-                    break;
+                    ApplyConsoleInfo(hwndDlg);
+                    return TRUE;
                 }
             }
 

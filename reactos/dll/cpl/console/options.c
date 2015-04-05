@@ -127,16 +127,8 @@ OptionsProc(HWND hwndDlg,
             }
             else if (lppsn->hdr.code == PSN_APPLY)
             {
-                if (!AppliedConfig)
-                {
-                    return ApplyConsoleInfo(hwndDlg, ConInfo);
-                }
-                else
-                {
-                    /* Options have already been applied */
-                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
-                    return TRUE;
-                }
+                ApplyConsoleInfo(hwndDlg);
+                return TRUE;
             }
             break;
         }
