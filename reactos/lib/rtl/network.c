@@ -9,7 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-
+#include <ntstrsafe.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -106,18 +106,29 @@ PSTR
 NTAPI
 RtlIpv4AddressToStringA(
     _In_ const struct in_addr *Addr,
-    _Out_writes_(16) PCHAR S)
+    _Out_writes_(IPV4_ADDR_STRING_MAX_LEN) PCHAR S)
 {
-    INT Length;
+    NTSTATUS Status;
+    PSTR End;
 
-    if (!S) return (PSTR)~0;
+    if (!S)
+        return (PSTR)~0;
 
-    Length = sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                            Addr->S_un.S_un_b.s_b2,
-                                            Addr->S_un.S_un_b.s_b3,
-                                            Addr->S_un.S_un_b.s_b4);
+    Status = RtlStringCchPrintfExA(S,
+                                   IPV4_ADDR_STRING_MAX_LEN,
+                                   &End,
+                                   NULL,
+                                   0,
+                                   "%u.%u.%u.%u",
+                                   Addr->S_un.S_un_b.s_b1,
+                                   Addr->S_un.S_un_b.s_b2,
+                                   Addr->S_un.S_un_b.s_b3,
+                                   Addr->S_un.S_un_b.s_b4);
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return (PSTR)~0;
 
-    return S + Length;
+    return End;
 }
 
 /*
@@ -131,23 +142,38 @@ RtlIpv4AddressToStringExA(
     _Out_writes_to_(*AddressStringLength, *AddressStringLength) PCHAR AddressString,
     _Inout_ PULONG AddressStringLength)
 {
-    CHAR Buffer[IPV4_ADDR_STRING_MAX_LEN+IPV4_PORT_STRING_MAX_LEN];
+    CHAR Buffer[IPV4_ADDR_STRING_MAX_LEN + IPV4_PORT_STRING_MAX_LEN];
+    NTSTATUS Status;
     ULONG Length;
+    PSTR End;
 
     if (!Address || !AddressString || !AddressStringLength)
         return STATUS_INVALID_PARAMETER;
 
-    Length = sprintf(Buffer, "%u.%u.%u.%u", Address->S_un.S_un_b.s_b1,
-                                            Address->S_un.S_un_b.s_b2,
-                                            Address->S_un.S_un_b.s_b3,
-                                            Address->S_un.S_un_b.s_b4);
+    Status = RtlStringCchPrintfExA(Buffer,
+                                   RTL_NUMBER_OF(Buffer),
+                                   &End,
+                                   NULL,
+                                   0,
+                                   Port ? "%u.%u.%u.%u:%u"
+                                        : "%u.%u.%u.%u",
+                                   Address->S_un.S_un_b.s_b1,
+                                   Address->S_un.S_un_b.s_b2,
+                                   Address->S_un.S_un_b.s_b3,
+                                   Address->S_un.S_un_b.s_b4,
+                                   WN2H(Port));
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return STATUS_INVALID_PARAMETER;
 
-    if (Port) Length += sprintf(Buffer + Length, ":%u", WN2H(Port));
-
+    Length = End - Buffer;
     if (*AddressStringLength > Length)
     {
+        Status = RtlStringCchCopyA(AddressString,
+                                   *AddressStringLength,
+                                   Buffer);
+        ASSERT(Status == STATUS_SUCCESS);
         *AddressStringLength = Length + 1;
-        strcpy(AddressString, Buffer);
         return STATUS_SUCCESS;
     }
 
@@ -162,17 +188,29 @@ PWSTR
 NTAPI
 RtlIpv4AddressToStringW(
     _In_ const struct in_addr *Addr,
-    _Out_writes_(16) PWCHAR S)
+    _Out_writes_(IPV4_ADDR_STRING_MAX_LEN) PWCHAR S)
 {
-    INT Length;
+    NTSTATUS Status;
+    PWSTR End;
 
-    if (!S) return (PWSTR)~0;
+    if (!S)
+        return (PWSTR)~0;
 
-    Length = swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                         Addr->S_un.S_un_b.s_b2,
-                                         Addr->S_un.S_un_b.s_b3,
-                                         Addr->S_un.S_un_b.s_b4);
-    return S + Length;
+    Status = RtlStringCchPrintfExW(S,
+                                   IPV4_ADDR_STRING_MAX_LEN,
+                                   &End,
+                                   NULL,
+                                   0,
+                                   L"%u.%u.%u.%u",
+                                   Addr->S_un.S_un_b.s_b1,
+                                   Addr->S_un.S_un_b.s_b2,
+                                   Addr->S_un.S_un_b.s_b3,
+                                   Addr->S_un.S_un_b.s_b4);
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return (PWSTR)~0;
+
+    return End;
 }
 
 /*
@@ -186,23 +224,38 @@ RtlIpv4AddressToStringExW(
     _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWCHAR AddressString,
     _Inout_ PULONG AddressStringLength)
 {
-    WCHAR Buffer[IPV4_ADDR_STRING_MAX_LEN+IPV4_PORT_STRING_MAX_LEN];
+    WCHAR Buffer[IPV4_ADDR_STRING_MAX_LEN + IPV4_PORT_STRING_MAX_LEN];
+    NTSTATUS Status;
     ULONG Length;
+    PWSTR End;
 
     if (!Address || !AddressString || !AddressStringLength)
         return STATUS_INVALID_PARAMETER;
 
-    Length = swprintf(Buffer, L"%u.%u.%u.%u", Address->S_un.S_un_b.s_b1,
-                                              Address->S_un.S_un_b.s_b2,
-                                              Address->S_un.S_un_b.s_b3,
-                                              Address->S_un.S_un_b.s_b4);
+    Status = RtlStringCchPrintfExW(Buffer,
+                                   RTL_NUMBER_OF(Buffer),
+                                   &End,
+                                   NULL,
+                                   0,
+                                   Port ? L"%u.%u.%u.%u:%u"
+                                        : L"%u.%u.%u.%u",
+                                   Address->S_un.S_un_b.s_b1,
+                                   Address->S_un.S_un_b.s_b2,
+                                   Address->S_un.S_un_b.s_b3,
+                                   Address->S_un.S_un_b.s_b4,
+                                   WN2H(Port));
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return STATUS_INVALID_PARAMETER;
 
-    if (Port) Length += swprintf(Buffer + Length, L":%u", WN2H(Port));
-
+    Length = End - AddressString;
     if (*AddressStringLength > Length)
     {
+        Status = RtlStringCchCopyW(AddressString,
+                                   *AddressStringLength,
+                                   Buffer);
+        ASSERT(Status == STATUS_SUCCESS);
         *AddressStringLength = Length + 1;
-        wcscpy(AddressString, Buffer);
         return STATUS_SUCCESS;
     }
 
