@@ -57,7 +57,6 @@
 #define STRING_MOVE_ERROR2         343
 #define STRING_PATH_ERROR          345
 #define STRING_REN_ERROR1          346
-#define STRING_START_ERROR1        347
 #define STRING_TIME_ERROR1         348
 #define STRING_TYPE_ERROR1         349
 #define STRING_WINDOW_ERROR1       350

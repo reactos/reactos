@@ -505,7 +505,6 @@ RESTORE       восстанавливает окно\n\
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Ошибка]\n"
     STRING_REN_ERROR1 "Выполнение MoveFile() было не удачным. Ошибка: %lu\n"
-    STRING_START_ERROR1 "На данный момент нет поддержки пакетных файлов!"
     STRING_TIME_ERROR1 "Неверное время."
     STRING_TYPE_ERROR1 "Неверный параметр '/%s'\n"
     STRING_WINDOW_ERROR1 "окно не найдено"

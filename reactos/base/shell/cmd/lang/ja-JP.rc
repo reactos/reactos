@@ -503,7 +503,6 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[エラー]\n"
     STRING_REN_ERROR1 "MoveFile() failed. エラー: %lu\n"
-    STRING_START_ERROR1 "現時点ではバッチはサポートされていません!"
     STRING_TIME_ERROR1 "無効な時刻です。"
     STRING_TYPE_ERROR1 "'/%s' は無効なオプションです\n"
     STRING_WINDOW_ERROR1 "ウィンドウが見つかりません。"
