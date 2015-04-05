@@ -416,8 +416,7 @@ ScmDeleteServiceRecord(PSERVICE lpService)
         ScmDereferenceServiceImage(lpService->lpImage);
 
     /* Decrement the group reference counter */
-    if (lpService->lpGroup)
-        lpService->lpGroup->dwRefCount--;
+    ScmSetServiceGroup(lpService, NULL);
 
     /* FIXME: SecurityDescriptor */
 
