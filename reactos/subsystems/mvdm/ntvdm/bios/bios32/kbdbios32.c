@@ -232,33 +232,51 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     /* Check if this is a key press or release */
     if (!(ScanCode & (1 << 7)))
     {
-        /* Key press */
-        if (VirtualKey == VK_NUMLOCK ||
-            VirtualKey == VK_CAPITAL ||
-            VirtualKey == VK_SCROLL  ||
-            VirtualKey == VK_INSERT)
-        {
-            /* For toggle keys, toggle the lowest bit in the keyboard map */
-            BiosKeyboardMap[VirtualKey] ^= ~(1 << 0);
-        }
-
-        /* Set the highest bit */
+        /* Key press, set the highest bit */
         BiosKeyboardMap[VirtualKey] |= (1 << 7);
 
-        Character = 0;
-
-        /* If ALT isn't held down, find out which character this is */
-        if (!((BiosKeyboardMap[VK_MENU] | BiosKeyboardMap[VK_RMENU] | BiosKeyboardMap[VK_LMENU]) & (1 << 7)))
+        switch (VirtualKey)
         {
-            if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
+            case VK_NUMLOCK:
+            case VK_CAPITAL:
+            case VK_SCROLL:
+            case VK_INSERT:
             {
-                /* Not ASCII */
+                /* For toggle keys, toggle the lowest bit in the keyboard map */
+                BiosKeyboardMap[VirtualKey] ^= ~(1 << 0);
+                break;
+            }
+
+            case VK_CONTROL:
+            case VK_SHIFT:
+            case VK_LSHIFT:
+            case VK_RSHIFT:
+            case VK_MENU:
+            case VK_LMENU:
+            case VK_RMENU:
+            {
+                /* Modifier keys don't go in the buffer */
+                break;
+            }
+
+            default:
+            {
                 Character = 0;
+
+                /* If ALT isn't held down, find out which character this is */
+                if (!(Bda->KeybdShiftFlags & (BDA_KBDFLAG_ALT | BDA_KBDFLAG_LALT | BDA_KBDFLAG_RALT)))
+                {
+                    if (ToAscii(VirtualKey, ScanCode, BiosKeyboardMap, &Character, 0) == 0)
+                    {
+                        /* Not ASCII */
+                        Character = 0;
+                    }
+                }
+
+                /* Push it onto the BIOS keyboard queue */
+                BiosKbdBufferPush(MAKEWORD(Character, ScanCode));
             }
         }
-
-        /* Push it onto the BIOS keyboard queue */
-        BiosKbdBufferPush(MAKEWORD(Character, ScanCode));
     }
     else
     {
@@ -270,6 +288,7 @@ static VOID WINAPI BiosKeyboardIrq(LPWORD Stack)
     Bda->KeybdShiftFlags = 0;
 
     /* Set the appropriate flags based on the state */
+    if (BiosKeyboardMap[VK_SHIFT]    & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
     if (BiosKeyboardMap[VK_RSHIFT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_RSHIFT;
     if (BiosKeyboardMap[VK_LSHIFT]   & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_LSHIFT;
     if (BiosKeyboardMap[VK_CONTROL]  & (1 << 7)) Bda->KeybdShiftFlags |= BDA_KBDFLAG_CTRL;
