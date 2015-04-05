@@ -808,12 +808,13 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
     DPRINT("Waiting for pnp notification event\n");
     Status = KeWaitForSingleObject(&IopPnpNotifyEvent,
                                    UserRequest,
-                                   KernelMode,
+                                   UserMode,
                                    FALSE,
                                    NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) || Status == STATUS_USER_APC)
     {
-        DPRINT1("KeWaitForSingleObject() failed (Status %lx)\n", Status);
+        DPRINT("KeWaitForSingleObject() failed (Status %lx)\n", Status);
+        ASSERT(Status == STATUS_USER_APC);
         return Status;
     }
 
