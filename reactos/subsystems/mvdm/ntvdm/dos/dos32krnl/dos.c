@@ -2552,7 +2552,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             setES(0x0000);
             setBX(0x0000);
 
-            DisplayMessage(L"Required for AARD code, do you remember? :P");
+            DPRINT1("INT 21h, AH=52h: This application requires the internal DOS List of lists (SYSVARS). UNIMPLEMENTED");
             break;
         }
 
