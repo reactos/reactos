@@ -710,7 +710,7 @@ int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
 }
 
 
-static BOOL
+BOOL
 ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs)
 {
   ME_DisplayItem *pRun = cursor->pRun, *pOtherRun;

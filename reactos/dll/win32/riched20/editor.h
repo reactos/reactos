@@ -201,6 +201,7 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod) DECLSPEC_
 /* caret.c */
 void ME_SetCursorToStart(ME_TextEditor *editor, ME_Cursor *cursor) DECLSPEC_HIDDEN;
 int ME_SetSelection(ME_TextEditor *editor, int from, int to) DECLSPEC_HIDDEN;
+BOOL ME_MoveCursorWords(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs) DECLSPEC_HIDDEN;
 void ME_HideCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
 void ME_ShowCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
 void ME_MoveCaret(ME_TextEditor *ed) DECLSPEC_HIDDEN;
