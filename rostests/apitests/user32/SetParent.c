@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS API tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test for CreateWindow stuff
+ * PURPOSE:         Test for SetParent
  * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
@@ -114,7 +114,7 @@ WndProc(
 }
 
 
-START_TEST(CreateWindowEx)
+START_TEST(SetParent)
 {
     HWND hWnd;
     MSG msg;

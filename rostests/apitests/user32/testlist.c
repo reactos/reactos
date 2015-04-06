@@ -5,7 +5,6 @@
 
 extern void func_AttachThreadInput(void);
 extern void func_CreateIconFromResourceEx(void);
-extern void func_CreateWindowEx(void);
 extern void func_DeferWindowPos(void);
 extern void func_DestroyCursorIcon(void);
 extern void func_DrawIconEx(void);
@@ -26,6 +25,7 @@ extern void func_ScrollWindowEx(void);
 extern void func_SendMessageTimeout(void);
 extern void func_SetActiveWindow(void);
 extern void func_SetCursorPos(void);
+extern void func_SetParent(void);
 extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
 extern void func_WndProc(void);
@@ -35,7 +35,6 @@ const struct test winetest_testlist[] =
 {
     { "AttachThreadInput", func_AttachThreadInput },
     { "CreateIconFromResourceEx", func_CreateIconFromResourceEx },
-    { "CreateWindowEx", func_CreateWindowEx },
     { "DeferWindowPos", func_DeferWindowPos },
     { "DestroyCursorIcon", func_DestroyCursorIcon },
     { "DrawIconEx", func_DrawIconEx },
@@ -56,6 +55,7 @@ const struct test winetest_testlist[] =
     { "SendMessageTimeout", func_SendMessageTimeout },
     { "SetActiveWindow", func_SetActiveWindow },
     { "SetCursorPos", func_SetCursorPos },
+    { "SetParent", func_SetParent },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },

@@ -3,7 +3,6 @@ list(APPEND SOURCE
     AttachThreadInput.c
     helper.c
     CreateIconFromResourceEx.c
-    CreateWindowEx.c
     DeferWindowPos.c
     DestroyCursorIcon.c
     DrawIconEx.c
@@ -24,6 +23,7 @@ list(APPEND SOURCE
     SendMessageTimeout.c
     SetActiveWindow.c
     SetCursorPos.c
+    SetParent.c
     SystemParametersInfo.c
     TrackMouseEvent.c
     WndProc.c
