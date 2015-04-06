@@ -1109,7 +1109,9 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                 call_marshaller(pStubMsg, pArg, &params[i]);
             break;
         case STUBLESS_FREE:
-            if (params[i].attr.ServerAllocSize)
+            if (params[i].attr.MustFree)
+                break;
+            else if (params[i].attr.ServerAllocSize)
             {
                 HeapFree(GetProcessHeap(), 0, *(void **)pArg);
             }
