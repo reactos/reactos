@@ -2071,7 +2071,7 @@ SmpProcessFileRenames(VOID)
                                           InformationClass);
 
             /* Check if we seem to have failed because the file was readonly */
-            if ((NT_SUCCESS(Status) &&
+            if ((!NT_SUCCESS(Status) &&
                 (InformationClass == FileRenameInformation) &&
                 (Status == STATUS_OBJECT_NAME_COLLISION) &&
                 (Buffer->ReplaceIfExists)))
