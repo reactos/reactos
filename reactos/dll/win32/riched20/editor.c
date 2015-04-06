@@ -3304,8 +3304,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
   }
   case EM_SETSEL:
   {
-    handle_EM_EXSETSEL( editor, wParam, lParam );
-    return 0;
+    return handle_EM_EXSETSEL( editor, wParam, lParam );
   }
   case EM_SETSCROLLPOS:
   {
