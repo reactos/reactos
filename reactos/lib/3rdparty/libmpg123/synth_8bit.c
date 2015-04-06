@@ -29,7 +29,7 @@
 /* Mono-related synths; they wrap over _some_ synth_1to1_8bit (could be generic, could be i386). */
 #define SYNTH_NAME       fr->synths.plain[r_1to1][f_8]
 #define MONO_NAME        synth_1to1_8bit_mono
-#define MONO2STEREO_NAME synth_1to1_8bit_mono2stereo
+#define MONO2STEREO_NAME synth_1to1_8bit_m2s
 #include "synth_mono.h"
 #undef SYNTH_NAME
 #undef MONO_NAME
@@ -50,7 +50,7 @@
 #define BASE_SYNTH_NAME  fr->synths.plain[r_1to1][f_16]
 #define SYNTH_NAME       synth_1to1_8bit_wrap
 #define MONO_NAME        synth_1to1_8bit_wrap_mono
-#define MONO2STEREO_NAME synth_1to1_8bit_wrap_mono2stereo
+#define MONO2STEREO_NAME synth_1to1_8bit_wrap_m2s
 #include "synth_8bit.h"
 #undef BASE_SYNTH_NAME
 #undef SYNTH_NAME
@@ -73,7 +73,7 @@
 /* Mono-related synths; they wrap over _some_ synth_2to1_8bit (could be generic, could be i386). */
 #define SYNTH_NAME       fr->synths.plain[r_2to1][f_8]
 #define MONO_NAME        synth_2to1_8bit_mono
-#define MONO2STEREO_NAME synth_2to1_8bit_mono2stereo
+#define MONO2STEREO_NAME synth_2to1_8bit_m2s
 #include "synth_mono.h"
 #undef SYNTH_NAME
 #undef MONO_NAME
@@ -102,7 +102,7 @@
 /* Mono-related synths; they wrap over _some_ synth_4to1_8bit (could be generic, could be i386). */
 #define SYNTH_NAME       fr->synths.plain[r_4to1][f_8]
 #define MONO_NAME        synth_4to1_8bit_mono
-#define MONO2STEREO_NAME synth_4to1_8bit_mono2stereo
+#define MONO2STEREO_NAME synth_4to1_8bit_m2s
 #include "synth_mono.h"
 #undef SYNTH_NAME
 #undef MONO_NAME
@@ -130,7 +130,7 @@
 /* These are all in one header, there's no flexibility to gain. */
 #define SYNTH_NAME       synth_ntom_8bit
 #define MONO_NAME        synth_ntom_8bit_mono
-#define MONO2STEREO_NAME synth_ntom_8bit_mono2stereo
+#define MONO2STEREO_NAME synth_ntom_8bit_m2s
 #include "synth_ntom.h"
 #undef SYNTH_NAME
 #undef MONO_NAME

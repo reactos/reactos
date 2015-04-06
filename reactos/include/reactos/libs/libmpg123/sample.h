@@ -14,11 +14,11 @@
 
 /* Special case is fixed point math... which does work, but not that nice yet.  */
 #ifdef REAL_IS_FIXED
-static inline short idiv_signed_rounded(long x, int shift)
+static inline int16_t idiv_signed_rounded(int32_t x, int shift)
 {
 	x >>= (shift - 1);
 	x += (x & 1);
-	return (short)(x >> 1);
+	return (int16_t)(x >> 1);
 }
 #  define REAL_PLUS_32767       ( 32767 << 15 )
 #  define REAL_MINUS_32768      ( -32768 << 15 )
@@ -36,7 +36,7 @@ static inline short idiv_signed_rounded(long x, int shift)
 # if (defined REAL_IS_FLOAT) && (defined IEEE_FLOAT)
 /* This function is only available for IEEE754 single-precision values
    This is nearly identical to proper rounding, just -+0.5 is rounded to 0 */
-static inline short ftoi16(float x)
+static inline int16_t ftoi16(float x)
 {
 	union
 	{
@@ -44,7 +44,7 @@ static inline short ftoi16(float x)
 		int32_t i;
 	} u_fi;
 	u_fi.f = x + 12582912.0f; /* Magic Number: 2^23 + 2^22 */
-	return (short)u_fi.i;
+	return (int16_t)u_fi.i;
 }
 #  define REAL_TO_SHORT_ACCURATE(x)      ftoi16(x)
 # else
@@ -88,12 +88,32 @@ static inline short ftoi16(float x)
 /* The actual storage of a decoded sample is separated in the following macros.
    We can handle different types, we could also handle dithering here. */
 
+#ifdef NEWOLD_WRITE_SAMPLE
+
+/* This is the old new mpg123 WRITE_SAMPLE, fixed for newer GCC by MPlayer folks.
+   Makes a huge difference on old machines. */
+#if WORDS_BIGENDIAN 
+#define MANTISSA_OFFSET 1
+#else
+#define MANTISSA_OFFSET 0
+#endif
+#define WRITE_SHORT_SAMPLE(samples,sum,clip) { \
+  union { double dtemp; int itemp[2]; } u; int v; \
+  u.dtemp = ((((65536.0 * 65536.0 * 16)+(65536.0 * 0.5))* 65536.0)) + (sum);\
+  v = u.itemp[MANTISSA_OFFSET] - 0x80000000; \
+  if( v > 32767) { *(samples) = 0x7fff; (clip)++; } \
+  else if( v < -32768) { *(samples) = -0x8000; (clip)++; } \
+  else { *(samples) = v; }  \
+}
+
+#else
 /* Macro to produce a short (signed 16bit) output sample from internal representation,
    which may be float, double or indeed some integer for fixed point handling. */
 #define WRITE_SHORT_SAMPLE(samples,sum,clip) \
   if( (sum) > REAL_PLUS_32767) { *(samples) = 0x7fff; (clip)++; } \
   else if( (sum) < REAL_MINUS_32768) { *(samples) = -0x8000; (clip)++; } \
   else { *(samples) = REAL_TO_SHORT(sum); }
+#endif
 
 /* Same as above, but always using accurate rounding. Would we want softer clipping here, too? */
 #define WRITE_SHORT_SAMPLE_ACCURATE(samples,sum,clip) \
@@ -119,7 +139,7 @@ static inline short ftoi16(float x)
 /* Produce an 8bit sample, via 16bit intermediate. */
 #define WRITE_8BIT_SAMPLE(samples,sum,clip) \
 { \
-	short write_8bit_tmp; \
+	int16_t write_8bit_tmp; \
 	if( (sum) > REAL_PLUS_32767) { write_8bit_tmp = 0x7fff; (clip)++; } \
 	else if( (sum) < REAL_MINUS_32768) { write_8bit_tmp = -0x8000; (clip)++; } \
 	else { write_8bit_tmp = REAL_TO_SHORT(sum); } \

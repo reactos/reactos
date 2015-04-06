@@ -1,7 +1,7 @@
 /*
 	stringbuf: mimicking a bit of C++ to more safely handle strings
 
-	copyright 2006-8 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2006-10 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
@@ -128,4 +128,59 @@ int attribute_align_arg mpg123_set_string(mpg123_string* sb, const char* stuff)
 {
 	sb->fill = 0;
 	return mpg123_add_string(sb, stuff);
+}
+
+size_t attribute_align_arg mpg123_strlen(mpg123_string *sb, int utf8)
+{
+	size_t i;
+	size_t bytelen;
+
+	/* Notions of empty string. If there's only a single character, it has to be the trailing zero, and if the first is the trailing zero anyway, we got empty. */
+	if(sb->fill < 2 || sb->p[0] == 0) return 0;
+
+	/* Find the first non-null character from the back.
+	   We already established that the first character is non-null
+	   That at fill-2 has to be null, though. */
+	for(i=sb->fill-2; i>0; --i)
+	if(sb->p[i] != 0) break;
+
+	/* For simple byte strings, we are done now. */
+	bytelen = i+1;
+
+	if(!utf8) return bytelen;
+	else
+	{
+		/* Work out the actual count of UTF8 bytes.
+		   This employs no particular encoding error checking. */
+		size_t len = 0;
+		for(i=0; i<bytelen; ++i)
+		{
+			/* Every byte that is not a continuation byte ( 0xc0 == 10xx xxxx ) stands for a character. */
+			if((sb->p[i] & 0xc0) != 0x80) len++;
+		}
+		return len;
+	}
+}
+
+int attribute_align_arg mpg123_chomp_string(mpg123_string *sb)
+{
+	ssize_t i;
+	if(!sb || !sb->fill) return 0;
+
+	/* Ensure that it is zero-terminated. */
+	sb->p[sb->fill-1] = 0;
+	for(i=sb->fill-2; i>=0; --i)
+	{
+		char *c = sb->p+i;
+		/* Stop at the first proper character. */
+		if(*c && *c != '\r' && *c != '\n') break;
+		else *c = 0;
+	}
+	/* initial fill at least 1, so i at least -1,
+	   +2 means nothing happened for fill=1 .
+	   With i=0, we got one non-null character, fill shall be 2
+	   to accomodate the trailing zero. */
+	sb->fill = (size_t)i+2;
+
+	return 1;
 }
