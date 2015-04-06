@@ -3735,9 +3735,8 @@ static void test_EM_SETTEXTEX(void)
   
   ok (result == 1, 
       "EM_SETTEXTEX returned %d, instead of 1\n",result);
-  ok(lstrlenW(buf) == 0,
-      "EM_SETTEXTEX with NULL lParam should clear rich edit.\n");
-  
+  ok(!buf[0], "EM_SETTEXTEX with NULL lParam should clear rich edit.\n");
+
   /* put some text back: !ST_SELECTION && Unicode && !\rtf */
   setText.flags = 0;
   SendMessageA(hwndRichEdit, EM_SETTEXTEX, (WPARAM)&setText, (LPARAM)TestItem1);
@@ -5224,8 +5223,7 @@ static void test_EM_STREAMIN(void)
   result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
   ok (result  == 0,
       "EM_STREAMIN: Test 2 returned %ld, expected 0\n", result);
-  ok (strlen(buffer)  == 0,
-      "EM_STREAMIN: Test 2 set wrong text: Result: %s\n",buffer);
+  ok(!buffer[0], "EM_STREAMIN: Test 2 set wrong text: Result: %s\n",buffer);
   ok(es.dwError == -16, "EM_STREAMIN: Test 2 set error %d, expected %d\n", es.dwError, -16);
 
   es.dwCookie = (DWORD_PTR)&streamText3;
@@ -5236,8 +5234,7 @@ static void test_EM_STREAMIN(void)
   result = SendMessageA(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM)buffer);
   ok (result  == 0,
       "EM_STREAMIN: Test 3 returned %ld, expected 0\n", result);
-  ok (strlen(buffer)  == 0,
-      "EM_STREAMIN: Test 3 set wrong text: Result: %s\n",buffer);
+  ok(!buffer[0], "EM_STREAMIN: Test 3 set wrong text: Result: %s\n",buffer);
   ok(es.dwError == -16, "EM_STREAMIN: Test 3 set error %d, expected %d\n", es.dwError, -16);
 
   es.dwCookie = (DWORD_PTR)&streamTextUTF8BOM;
@@ -7381,7 +7378,7 @@ static void test_EM_FINDWORDBREAK_A(void)
         char buf[2];
         buf[0] = delimiter_tests[i].c;
         buf[1] = 0;
-        SendMessageW(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)buf);
+        SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)buf);
         result = SendMessageA(hwndRichEdit, EM_FINDWORDBREAK, WB_ISDELIMITER, 0);
         if (buf[0] == 0x20)
             todo_wine

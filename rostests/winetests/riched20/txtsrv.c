@@ -29,6 +29,8 @@
 #include <winbase.h>
 #include <objbase.h>
 #include <richedit.h>
+#include <tom.h>
+#include <richole.h>
 #include <initguid.h>
 #include <textserv.h>
 #include <wine/test.h>
@@ -861,6 +863,72 @@ static void test_COM(void)
     IUnknown_Release(unk_obj.inner_unk);
 }
 
+static ULONG get_refcount(IUnknown *iface)
+{
+    IUnknown_AddRef(iface);
+    return IUnknown_Release(iface);
+}
+
+static void test_QueryInterface(void)
+{
+    HRESULT hres;
+    IRichEditOle *reole, *txtsrv_reole;
+    ITextDocument *txtdoc, *txtsrv_txtdoc;
+    ULONG refcount;
+
+    if(!init_texthost())
+        return;
+
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+
+    /* IID_IRichEditOle */
+    hres = ITextServices_QueryInterface(txtserv, &IID_IRichEditOle, (void **)&txtsrv_reole);
+    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08x\n", hres);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    refcount = get_refcount((IUnknown *)txtsrv_reole);
+    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+    hres = IRichEditOle_QueryInterface(txtsrv_reole, &IID_ITextDocument, (void **)&txtdoc);
+    ok(hres == S_OK, "IRichEditOle_QueryInterface: 0x%08x\n", hres);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    refcount = get_refcount((IUnknown *)txtsrv_reole);
+    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+
+    ITextDocument_Release(txtdoc);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    IRichEditOle_Release(txtsrv_reole);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+
+    /* IID_ITextDocument */
+    hres = ITextServices_QueryInterface(txtserv, &IID_ITextDocument, (void **)&txtsrv_txtdoc);
+    ok(hres == S_OK, "ITextServices_QueryInterface: 0x%08x\n", hres);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    refcount = get_refcount((IUnknown *)txtsrv_txtdoc);
+    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+    hres = ITextDocument_QueryInterface(txtsrv_txtdoc, &IID_IRichEditOle, (void **)&reole);
+    ok(hres == S_OK, "ITextDocument_QueryInterface: 0x%08x\n", hres);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+    refcount = get_refcount((IUnknown *)txtsrv_txtdoc);
+    ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+
+    IRichEditOle_Release(reole);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+    ITextDocument_Release(txtsrv_txtdoc);
+    refcount = get_refcount((IUnknown *)txtserv);
+    ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+
+    free_texthost();
+}
+
 START_TEST( txtsrv )
 {
     setup_thiscall_wrappers();
@@ -886,6 +954,7 @@ START_TEST( txtsrv )
         test_TxSetText();
         test_TxGetNaturalSize();
         test_TxDraw();
+        test_QueryInterface();
     }
     if (wrapperCodeMem) VirtualFree(wrapperCodeMem, 0, MEM_RELEASE);
 }

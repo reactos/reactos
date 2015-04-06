@@ -941,6 +941,451 @@ static void test_ITextSelection_Collapse(void)
   release_interfaces(&w, &reOle, &txtDoc, &txtSel);
 }
 
+static void test_ITextRange_SetStart(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+  LONG first, lim, start, end;
+  static const CHAR test_text1[] = "TestSomeText";
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 8;
+  ITextDocument_Range(txtDoc, first, lim, &txtRge);
+  hres = ITextRange_SetStart(txtRge, first);
+  ok(hres == S_FALSE, "ITextRange_SetStart\n");
+
+#define TEST_TXTRGE_SETSTART(cp, expected_start, expected_end)  \
+  hres = ITextRange_SetStart(txtRge, cp);                       \
+  ok(hres == S_OK, "ITextRange_SetStart\n");                    \
+  ITextRange_GetStart(txtRge, &start);                          \
+  ITextRange_GetEnd(txtRge, &end);                              \
+  ok(start == expected_start, "got wrong start value: %d\n", start);  \
+  ok(end == expected_end, "got wrong end value: %d\n", end);
+
+  TEST_TXTRGE_SETSTART(2, 2, 8)
+  TEST_TXTRGE_SETSTART(-1, 0, 8)
+  TEST_TXTRGE_SETSTART(13, 12, 12)
+
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+}
+
+static void test_ITextRange_SetEnd(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+  LONG first, lim, start, end;
+  static const CHAR test_text1[] = "TestSomeText";
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 8;
+  ITextDocument_Range(txtDoc, first, lim, &txtRge);
+  hres = ITextRange_SetEnd(txtRge, lim);
+  ok(hres == S_FALSE, "ITextRange_SetEnd\n");
+
+#define TEST_TXTRGE_SETEND(cp, expected_start, expected_end)    \
+  hres = ITextRange_SetEnd(txtRge, cp);                         \
+  ok(hres == S_OK, "ITextRange_SetEnd\n");                      \
+  ITextRange_GetStart(txtRge, &start);                          \
+  ITextRange_GetEnd(txtRge, &end);                              \
+  ok(start == expected_start, "got wrong start value: %d\n", start);  \
+  ok(end == expected_end, "got wrong end value: %d\n", end);
+
+  TEST_TXTRGE_SETEND(6, 4, 6)
+  TEST_TXTRGE_SETEND(14, 4, 13)
+  TEST_TXTRGE_SETEND(-1, 0, 0)
+
+  ITextRange_Release(txtRge);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+}
+
+static void test_ITextSelection_SetStart(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextSelection *txtSel = NULL;
+  HRESULT hres;
+  LONG first, lim, start, end;
+  static const CHAR test_text1[] = "TestSomeText";
+
+  create_interfaces(&w, &reOle, &txtDoc, &txtSel);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 8;
+  SendMessageA(w, EM_SETSEL, first, lim);
+  hres = ITextSelection_SetStart(txtSel, first);
+  ok(hres == S_FALSE, "ITextSelection_SetStart\n");
+
+#define TEST_TXTSEL_SETSTART(cp, expected_start, expected_end)        \
+  hres = ITextSelection_SetStart(txtSel, cp);                         \
+  ok(hres == S_OK, "ITextSelection_SetStart\n");                      \
+  SendMessageA(w, EM_GETSEL, (LPARAM)&start, (WPARAM)&end);           \
+  ok(start == expected_start, "got wrong start value: %d\n", start);  \
+  ok(end == expected_end, "got wrong end value: %d\n", end);
+
+  TEST_TXTSEL_SETSTART(2, 2, 8)
+  TEST_TXTSEL_SETSTART(-1, 0, 8)
+  TEST_TXTSEL_SETSTART(13, 12, 12)
+
+  release_interfaces(&w, &reOle, &txtDoc, &txtSel);
+}
+
+static void test_ITextSelection_SetEnd(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextSelection *txtSel = NULL;
+  HRESULT hres;
+  LONG first, lim, start, end;
+  static const CHAR test_text1[] = "TestSomeText";
+
+  create_interfaces(&w, &reOle, &txtDoc, &txtSel);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 8;
+  SendMessageA(w, EM_SETSEL, first, lim);
+  hres = ITextSelection_SetEnd(txtSel, lim);
+  ok(hres == S_FALSE, "ITextSelection_SetEnd\n");
+
+#define TEST_TXTSEL_SETEND(cp, expected_start, expected_end)          \
+  hres = ITextSelection_SetEnd(txtSel, cp);                           \
+  ok(hres == S_OK, "ITextSelection_SetEnd\n");                        \
+  SendMessageA(w, EM_GETSEL, (LPARAM)&start, (WPARAM)&end);           \
+  ok(start == expected_start, "got wrong start value: %d\n", start);  \
+  ok(end == expected_end, "got wrong end value: %d\n", end);
+
+  TEST_TXTSEL_SETEND(6, 4, 6)
+  TEST_TXTSEL_SETEND(14, 4, 13)
+  TEST_TXTSEL_SETEND(-1, 0, 0)
+
+  release_interfaces(&w, &reOle, &txtDoc, &txtSel);
+}
+
+static void test_ITextRange_GetFont(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  ITextFont *txtFont = NULL, *txtFont1 = NULL;
+  HRESULT hres;
+  int first, lim;
+  int refcount;
+  static const CHAR test_text1[] = "TestSomeText";
+  LONG value;
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 4;
+  ITextDocument_Range(txtDoc, first, lim, &txtRge);
+  refcount = get_refcount((IUnknown *)txtRge);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+
+  hres = ITextRange_GetFont(txtRge, &txtFont);
+  ok(hres == S_OK, "ITextRange_GetFont\n");
+  refcount = get_refcount((IUnknown *)txtFont);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+  refcount = get_refcount((IUnknown *)txtRge);
+  ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+  hres = ITextRange_GetFont(txtRge, &txtFont1);
+  ok(hres == S_OK, "ITextRange_GetFont\n");
+  ok(txtFont1 != txtFont, "A new pointer should be return\n");
+  refcount = get_refcount((IUnknown *)txtFont1);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+  ITextFont_Release(txtFont1);
+  refcount = get_refcount((IUnknown *)txtRge);
+  ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+  ITextRange_Release(txtRge);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+
+  hres = ITextFont_GetOutline(txtFont, &value);
+  ok(hres == CO_E_RELEASED, "ITextFont after ITextDocument destroyed\n");
+
+  ITextFont_Release(txtFont);
+}
+
+static void test_ITextSelection_GetFont(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextSelection *txtSel = NULL;
+  ITextFont *txtFont = NULL, *txtFont1 = NULL;
+  HRESULT hres;
+  int first, lim;
+  int refcount;
+  static const CHAR test_text1[] = "TestSomeText";
+  LONG value;
+
+  create_interfaces(&w, &reOle, &txtDoc, &txtSel);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 4;
+  SendMessageA(w, EM_SETSEL, first, lim);
+  refcount = get_refcount((IUnknown *)txtSel);
+  ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+  hres = ITextSelection_GetFont(txtSel, &txtFont);
+  ok(hres == S_OK, "ITextSelection_GetFont\n");
+  refcount = get_refcount((IUnknown *)txtFont);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+  refcount = get_refcount((IUnknown *)txtSel);
+  ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+
+  hres = ITextSelection_GetFont(txtSel, &txtFont1);
+  ok(hres == S_OK, "ITextSelection_GetFont\n");
+  ok(txtFont1 != txtFont, "A new pointer should be return\n");
+  refcount = get_refcount((IUnknown *)txtFont1);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+  ITextFont_Release(txtFont1);
+  refcount = get_refcount((IUnknown *)txtSel);
+  ok(refcount == 3, "got wrong ref count: %d\n", refcount);
+
+  release_interfaces(&w, &reOle, &txtDoc, &txtSel);
+
+  hres = ITextFont_GetOutline(txtFont, &value);
+  ok(hres == CO_E_RELEASED, "ITextFont after ITextDocument destroyed\n");
+
+  ITextFont_Release(txtFont);
+}
+
+static void test_ITextRange_GetPara(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  ITextPara *txtPara = NULL, *txtPara1 = NULL;
+  HRESULT hres;
+  int first, lim;
+  int refcount;
+  static const CHAR test_text1[] = "TestSomeText";
+  LONG value;
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  first = 4, lim = 4;
+  ITextDocument_Range(txtDoc, first, lim, &txtRge);
+  refcount = get_refcount((IUnknown *)txtRge);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+
+  hres = ITextRange_GetPara(txtRge, &txtPara);
+  ok(hres == S_OK, "ITextRange_GetPara\n");
+  refcount = get_refcount((IUnknown *)txtPara);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+  refcount = get_refcount((IUnknown *)txtRge);
+  ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+  hres = ITextRange_GetPara(txtRge, &txtPara1);
+  ok(hres == S_OK, "ITextRange_GetPara\n");
+  ok(txtPara1 != txtPara, "A new pointer should be return\n");
+  refcount = get_refcount((IUnknown *)txtPara1);
+  ok(refcount == 1, "got wrong ref count: %d\n", refcount);
+  ITextPara_Release(txtPara1);
+  refcount = get_refcount((IUnknown *)txtRge);
+  ok(refcount == 2, "got wrong ref count: %d\n", refcount);
+
+  ITextRange_Release(txtRge);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+
+  hres = ITextPara_GetStyle(txtPara, &value);
+  ok(hres == CO_E_RELEASED, "ITextPara after ITextDocument destroyed\n");
+
+  ITextPara_Release(txtPara);
+}
+
+static void test_ITextRange_GetText(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+  BSTR bstr = NULL;
+  static const CHAR test_text1[] = "TestSomeText";
+  static const WCHAR bufW1[] = {'T', 'e', 's', 't', 0};
+  static const WCHAR bufW2[] = {'T', 'e', 'x', 't', '\r', 0};
+  static const WCHAR bufW3[] = {'T', 'e', 'x', 't', 0};
+  static const WCHAR bufW4[] = {'T', 'e', 's', 't', 'S', 'o', 'm',
+                                'e', 'T', 'e', 'x', 't', '\r', 0};
+  static const WCHAR bufW5[] = {'\r', 0};
+
+
+#define TEST_TXTRGE_GETTEXT(first, lim, expected_string)                \
+  create_interfaces(&w, &reOle, &txtDoc, NULL);                         \
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);                   \
+  ITextDocument_Range(txtDoc, first, lim, &txtRge);                     \
+  hres = ITextRange_GetText(txtRge, &bstr);                             \
+  ok(hres == S_OK, "ITextRange_GetText\n");                             \
+  ok(!lstrcmpW(bstr, expected_string), "got wrong text: %s\n", wine_dbgstr_w(bstr)); \
+  SysFreeString(bstr);                                                  \
+  ITextRange_Release(txtRge);                                           \
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+
+  TEST_TXTRGE_GETTEXT(0, 4, bufW1)
+  TEST_TXTRGE_GETTEXT(4, 0, bufW1)
+  TEST_TXTRGE_GETTEXT(8, 12, bufW3)
+  TEST_TXTRGE_GETTEXT(8, 13, bufW2)
+  TEST_TXTRGE_GETTEXT(12, 13, bufW5)
+  TEST_TXTRGE_GETTEXT(0, 13, bufW4)
+  TEST_TXTRGE_GETTEXT(1, 1, NULL)
+}
+
+static void test_ITextRange_SetRange(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+  int start, end;
+  static const CHAR test_text1[] = "TestSomeText";
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+  ITextDocument_Range(txtDoc, 0, 0, &txtRge);
+
+#define TEST_TXTRGE_SETRANGE(first, lim, expected_start, expected_end, expected_return) \
+  hres = ITextRange_SetRange(txtRge, first, lim);                       \
+  ok(hres == expected_return, "ITextRange_SetRange\n");                 \
+  ITextRange_GetStart(txtRge, &start);                                  \
+  ITextRange_GetEnd(txtRge, &end);                                      \
+  ok(start == expected_start, "got wrong start value: %d\n", start);    \
+  ok(end == expected_end, "got wrong end value: %d\n", end);
+
+  TEST_TXTRGE_SETRANGE(2, 4, 2, 4, S_OK)
+  TEST_TXTRGE_SETRANGE(2, 4, 2, 4, S_FALSE)
+  TEST_TXTRGE_SETRANGE(4, 2, 2, 4, S_FALSE)
+  TEST_TXTRGE_SETRANGE(14, 14, 12, 12, S_OK)
+  TEST_TXTRGE_SETRANGE(15, 15, 12, 12, S_FALSE)
+  TEST_TXTRGE_SETRANGE(14, 1, 1, 13, S_OK)
+  TEST_TXTRGE_SETRANGE(-1, 4, 0, 4, S_OK)
+
+  ITextRange_Release(txtRge);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+}
+
+static void test_ITextRange_IsEqual(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge1 = NULL, *txtRge2 = NULL;
+  HRESULT hres;
+  static const CHAR test_text1[] = "TestSomeText";
+  LONG res;
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+  ITextDocument_Range(txtDoc, 2, 4, &txtRge1);
+  ITextDocument_Range(txtDoc, 2, 4, &txtRge2);
+
+#define TEST_TXTRGE_ISEQUAL(expected_hres, expected_res)                \
+  hres = ITextRange_IsEqual(txtRge1, txtRge2, &res);                    \
+  ok(hres == expected_hres, "ITextRange_IsEqual\n");                    \
+  ok(res == expected_res, "got wrong return value: %d\n", res);
+
+  TEST_TXTRGE_ISEQUAL(S_OK, tomTrue)
+  ITextRange_SetRange(txtRge2, 1, 2);
+  TEST_TXTRGE_ISEQUAL(S_FALSE, tomFalse)
+
+  ITextRange_SetRange(txtRge1, 1, 1);
+  ITextRange_SetRange(txtRge2, 2, 2);
+  TEST_TXTRGE_ISEQUAL(S_FALSE, tomFalse)
+
+  ITextRange_SetRange(txtRge2, 1, 1);
+  TEST_TXTRGE_ISEQUAL(S_OK, tomTrue)
+
+  hres = ITextRange_IsEqual(txtRge1, txtRge1, &res);
+  ok(hres == S_OK, "ITextRange_IsEqual\n");
+  ok(res == tomTrue, "got wrong return value: %d\n", res);
+
+  hres = ITextRange_IsEqual(txtRge1, txtRge2, NULL);
+  ok(hres == S_OK, "ITextRange_IsEqual\n");
+
+  hres = ITextRange_IsEqual(txtRge1, NULL, NULL);
+  ok(hres == S_FALSE, "ITextRange_IsEqual\n");
+
+  ITextRange_Release(txtRge1);
+  ITextRange_Release(txtRge2);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+}
+
+static void test_ITextRange_GetStoryLength(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+  LONG count;
+  static const CHAR test_text1[] = "TestSomeText";
+  int len = strlen(test_text1) + 1;
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+  ITextDocument_Range(txtDoc, 0, 0, &txtRge);
+
+  hres = ITextRange_GetStoryLength(txtRge, &count);
+  ok(hres == S_OK, "ITextRange_GetStoryLength\n");
+  ok(count == len, "got wrong length: %d\n", count);
+
+  ITextRange_SetRange(txtRge, 1, 2);
+  hres = ITextRange_GetStoryLength(txtRge, &count);
+  ok(hres == S_OK, "ITextRange_GetStoryLength\n");
+  ok(count == len, "got wrong length: %d\n", count);
+
+  hres = ITextRange_GetStoryLength(txtRge, NULL);
+  ok(hres == E_INVALIDARG, "ITextRange_GetStoryLength\n");
+
+  ITextRange_Release(txtRge);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+}
+
+static void test_ITextSelection_GetStoryLength(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextSelection *txtSel = NULL;
+  HRESULT hres;
+  LONG count;
+  static const CHAR test_text1[] = "TestSomeText";
+  int len = strlen(test_text1) + 1;
+
+  create_interfaces(&w, &reOle, &txtDoc, &txtSel);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  hres = ITextSelection_GetStoryLength(txtSel, &count);
+  ok(hres == S_OK, "ITextSelection_GetStoryLength\n");
+  ok(count == len, "got wrong length: %d\n", count);
+
+  SendMessageA(w, EM_SETSEL, 1, 2);
+  hres = ITextSelection_GetStoryLength(txtSel, &count);
+  ok(hres == S_OK, "ITextSelection_GetStoryLength\n");
+  ok(count == len, "got wrong length: %d\n", count);
+
+  hres = ITextSelection_GetStoryLength(txtSel, NULL);
+  ok(hres == E_INVALIDARG, "ITextSelection_GetStoryLength\n");
+
+  release_interfaces(&w, &reOle, &txtDoc, &txtSel);
+}
+
 START_TEST(richole)
 {
   /* Must explicitly LoadLibrary(). The test has no references to functions in
@@ -953,10 +1398,22 @@ START_TEST(richole)
   test_ITextSelection_GetText();
   test_ITextSelection_GetChar();
   test_ITextSelection_GetStart_GetEnd();
+  test_ITextSelection_SetStart();
+  test_ITextSelection_SetEnd();
   test_ITextSelection_Collapse();
+  test_ITextSelection_GetFont();
+  test_ITextSelection_GetStoryLength();
   test_ITextDocument_Range();
   test_ITextRange_GetChar();
   test_ITextRange_GetStart_GetEnd();
   test_ITextRange_GetDuplicate();
   test_ITextRange_Collapse();
+  test_ITextRange_SetStart();
+  test_ITextRange_SetEnd();
+  test_ITextRange_GetFont();
+  test_ITextRange_GetPara();
+  test_ITextRange_GetText();
+  test_ITextRange_SetRange();
+  test_ITextRange_IsEqual();
+  test_ITextRange_GetStoryLength();
 }
