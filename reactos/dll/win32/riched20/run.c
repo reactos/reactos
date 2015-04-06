@@ -181,9 +181,10 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor,
                           int *pOfs)
 {
   ME_DisplayItem *item, *next_item;
+  int endOfs = nCharOfs, len = ME_GetTextLength(editor);
 
   nCharOfs = max(nCharOfs, 0);
-  nCharOfs = min(nCharOfs, ME_GetTextLength(editor));
+  nCharOfs = min(nCharOfs, len);
 
   /* Find the paragraph at the offset. */
   next_item = editor->pBuffer->pFirst->member.para.next_para;
@@ -206,7 +207,11 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor,
   nCharOfs -= item->member.run.nCharOfs;
 
   if (ppRun) *ppRun = item;
-  if (pOfs) *pOfs = nCharOfs;
+  if (pOfs) {
+    if (((*ppRun)->member.run.nFlags & MERF_ENDPARA) && endOfs > len)
+      *pOfs = (*ppRun)->member.run.len;
+    else *pOfs = nCharOfs;
+  }
 }
 
 /******************************************************************************

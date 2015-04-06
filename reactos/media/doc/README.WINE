@@ -170,7 +170,7 @@ reactos/dll/win32/qmgrprxy            # Synced to Wine-1.7.27
 reactos/dll/win32/query               # Synced to Wine-1.7.27
 reactos/dll/win32/rasapi32            # Synced to Wine-1.7.27
 reactos/dll/win32/resutils            # Synced to Wine-1.7.27
-reactos/dll/win32/riched20            # Synced to Wine-1.7.27
+reactos/dll/win32/riched20            # Synced to WineStaging-1.7.37
 reactos/dll/win32/riched32            # Synced to Wine-1.7.27
 reactos/dll/win32/rpcrt4              # Synced to Wine-1.7.17
 reactos/dll/win32/rsabase             # Synced to Wine-1.7.27
