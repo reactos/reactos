@@ -4422,6 +4422,43 @@ static void test_EM_EXSETSEL(void)
     DestroyWindow(hwndRichEdit);
 }
 
+static void check_EM_SETSEL(HWND hwnd, const struct exsetsel_s *setsel, int id) {
+    LRESULT result;
+    int start, end;
+
+    result = SendMessageA(hwnd, EM_SETSEL, setsel->min, setsel->max);
+
+    ok(result == setsel->expected_retval, "EM_SETSEL(%d): expected: %ld actual: %ld\n", id, setsel->expected_retval, result);
+
+    SendMessageA(hwnd, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+
+    if (setsel->_getsel_todo_wine) {
+        todo_wine {
+            ok(start == setsel->expected_getsel_start && end == setsel->expected_getsel_end, "EM_SETSEL(%d): expected (%d,%d) actual:(%d,%d)\n", id, setsel->expected_getsel_start, setsel->expected_getsel_end, start, end);
+        }
+    } else {
+        ok(start == setsel->expected_getsel_start && end == setsel->expected_getsel_end, "EM_SETSEL(%d): expected (%d,%d) actual:(%d,%d)\n", id, setsel->expected_getsel_start, setsel->expected_getsel_end, start, end);
+    }
+}
+
+static void test_EM_SETSEL(void)
+{
+    HWND hwndRichEdit = new_richedit(NULL);
+    int i;
+    const int num_tests = sizeof(exsetsel_tests)/sizeof(struct exsetsel_s);
+
+    /* sending some text to the window */
+    SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"testing selection");
+    /*                                                 01234567890123456*/
+    /*                                                          10      */
+
+    for (i = 0; i < num_tests; i++) {
+        check_EM_SETSEL(hwndRichEdit, &exsetsel_tests[i], i);
+    }
+
+    DestroyWindow(hwndRichEdit);
+}
+
 static void test_EM_REPLACESEL(int redraw)
 {
     HWND hwndRichEdit = new_richedit(NULL);
@@ -7626,6 +7663,7 @@ START_TEST( editor )
   test_EM_GETLIMITTEXT();
   test_WM_SETFONT();
   test_EM_GETMODIFY();
+  test_EM_SETSEL();
   test_EM_EXSETSEL();
   test_WM_PASTE();
   test_EM_STREAMIN();
