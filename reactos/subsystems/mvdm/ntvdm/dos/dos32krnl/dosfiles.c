@@ -12,6 +12,7 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "../../memory.h"
 
 #include "dos.h"
 #include "dos/dem.h"
@@ -409,9 +410,16 @@ WORD DosReadFile(WORD FileHandle,
     if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
     {
         DWORD BytesRead32 = 0;
+        LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
+        ASSERT(LocalBuffer != NULL);
 
         /* Read the file */
-        if (!ReadFile(SftEntry->Handle, FAR_POINTER(Buffer), Count, &BytesRead32, NULL))
+        if (ReadFile(SftEntry->Handle, LocalBuffer, Count, &BytesRead32, NULL))
+        {
+            /* Write to the memory */
+            MemWrite(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, LOWORD(BytesRead32));
+        }
+        else
         {
             /* Store the error code */
             Result = (WORD)GetLastError();
@@ -419,6 +427,7 @@ WORD DosReadFile(WORD FileHandle,
 
         /* The number of bytes read is always 16-bit */
         *BytesRead = LOWORD(BytesRead32);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
     }
     else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
     {
@@ -457,9 +466,14 @@ WORD DosWriteFile(WORD FileHandle,
     if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
     {
         DWORD BytesWritten32 = 0;
+        LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
+        ASSERT(LocalBuffer != NULL);
+
+        /* Read from the memory */
+        MemRead(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, Count);
 
         /* Write the file */
-        if (!WriteFile(SftEntry->Handle, FAR_POINTER(Buffer), Count, &BytesWritten32, NULL))
+        if (!WriteFile(SftEntry->Handle, LocalBuffer, Count, &BytesWritten32, NULL))
         {
             /* Store the error code */
             Result = (WORD)GetLastError();
@@ -467,6 +481,7 @@ WORD DosWriteFile(WORD FileHandle,
 
         /* The number of bytes written is always 16-bit */
         *BytesWritten = LOWORD(BytesWritten32);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
     }
     else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
     {
