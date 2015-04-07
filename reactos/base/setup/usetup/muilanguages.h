@@ -610,7 +610,7 @@ const MUI_LANGUAGE LanguageList[] =
     {L"00000437", L"0", L"1", L"2", L"Georgian", L"1", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, kaGELayouts },
 #endif
 #ifdef LANGUAGE_DE_DE
-    {L"00000407", L"1252", L"850", L"10000", L"German (Germany)", L"49", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deDELayouts },
+    {L"00000407", L"1252", L"850", L"10000", L"German (Germany)", L"94", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deDELayouts },
 #endif
 #ifdef LANGUAGE_DE_CH
     {L"00000807", L"1252", L"850", L"10000", L"German (Switzerland)", L"41", deDEPages, deDEErrorEntries, deDEStrings, LatinFonts, deCHLayouts },
