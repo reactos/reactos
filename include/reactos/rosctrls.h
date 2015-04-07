@@ -165,6 +165,11 @@ public:
         spacing.cy = HIWORD(ret);
     }
 
+    UINT GetItemState(int i, UINT mask)
+    {
+        return SendMessage(LVM_GETITEMSTATE, i, (LPARAM)mask);
+    }
+
     void SetItemState(int i, UINT state, UINT mask)
     {
         LV_ITEM item;

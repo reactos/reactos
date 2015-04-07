@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "เกี่ยวกับช่วยเหลีอ", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
-        MENUITEM "รายละเอียด...", CMD_ABOUT_WINE
+        MENUITEM "รายละเอียด...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

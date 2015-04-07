@@ -1262,6 +1262,9 @@
 /* Define to the soname of the libtiff library. */
 #define SONAME_LIBTIFF "libtiff"
 
+/* Define to the soname of the libtxc_dxtn library. */
+#define SONAME_LIBTXC_DXTN "dxtn"
+
 /* Define to the soname of the libv4l1 library. */
 /* #undef SONAME_LIBV4L1 */
 

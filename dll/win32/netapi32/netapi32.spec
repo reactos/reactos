@@ -204,7 +204,7 @@
 @ stdcall NetScheduleJobAdd(wstr ptr ptr)
 @ stdcall NetScheduleJobDel(wstr long long)
 @ stdcall NetScheduleJobEnum(wstr ptr long ptr ptr ptr)
-@ stub NetScheduleJobGetInfo
+@ stdcall NetScheduleJobGetInfo(wstr long ptr)
 @ stub NetServerComputerNameAdd
 @ stub NetServerComputerNameDel
 @ stdcall NetServerDiskEnum(wstr long ptr long ptr ptr ptr)
@@ -236,7 +236,7 @@
 @ stub NetUnjoinDomain
 @ stub NetUnregisterDomainNameChangeNotification
 @ stdcall NetUseAdd(wstr long ptr ptr)
-@ stub NetUseDel
+@ stdcall NetUseDel(wstr wstr long)
 @ stdcall NetUseEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetUseGetInfo(ptr ptr long ptr)
 @ stdcall NetUserAdd(wstr long ptr ptr)
@@ -255,8 +255,8 @@
 @ stub NetValidatePasswordPolicyFree
 @ stdcall NetWkstaGetInfo(wstr long ptr)
 @ stdcall NetWkstaSetInfo(wstr long ptr ptr)
-@ stub NetWkstaTransportAdd
-@ stub NetWkstaTransportDel
+@ stdcall NetWkstaTransportAdd(wstr long ptr ptr)
+@ stdcall NetWkstaTransportDel(wstr wstr long)
 @ stdcall NetWkstaTransportEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserEnum(wstr long ptr long ptr ptr ptr)
 @ stdcall NetWkstaUserGetInfo(wstr long ptr)

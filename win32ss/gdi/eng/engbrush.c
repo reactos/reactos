@@ -9,7 +9,7 @@
 
 #include <win32k.h>
 
-DBG_DEFAULT_CHANNEL(GdiFont);
+DBG_DEFAULT_CHANNEL(EngBrush);
 
 static const ULONG gaulHatchBrushes[HS_DDI_MAX][8] =
 {
@@ -271,6 +271,11 @@ FixupDIBBrushPalette(
                                    0,
                                    0,
                                    0);
+    if (ppalNew == NULL)
+    {
+        ERR("Failed to allcate palette for brush\n");
+        return NULL;
+    }
 
     /* Loop all colors */
     for (i = 0; i < ppalDIB->NumColors; i++)
@@ -357,6 +362,12 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     {
         /* Create a palette with the colors from the DC */
         ppalPattern = FixupDIBBrushPalette(psurfPattern->ppal, pebo->ppalDC);
+        if (ppalPattern == NULL)
+        {
+            ERR("FixupDIBBrushPalette() failed.\n");
+            return FALSE;
+        }
+
         pebo->ppalDIB = ppalPattern;
     }
     else

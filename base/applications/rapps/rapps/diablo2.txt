@@ -16,7 +16,7 @@ CDPath = none
 Description = Diablo 2 Shareware. zeckensacks glide wrapper wird zum Ausführen benötigt.
 
 [Section.040a]
-Description = Diablo 2 Shareware. zeckensack's glide wrapper es necesario para su ejecución.
+Description = Diablo 2 Shareware. El adaptador de compatibilidad para Glide de zeckensack es necesario para poder ejecutar el juego.
 
 [Section.040c]
 Description = Diablo 2 Shareware. zeckensack's glide wrapper est requis pour le faire tourner.

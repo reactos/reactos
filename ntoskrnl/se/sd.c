@@ -281,8 +281,9 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
             {
                 if (*Present)
                 {
-                    CapturedQos = ExAllocatePool(PoolType,
-                                                 sizeof(SECURITY_QUALITY_OF_SERVICE));
+                    CapturedQos = ExAllocatePoolWithTag(PoolType,
+                                                        sizeof(SECURITY_QUALITY_OF_SERVICE),
+                                                        TAG_QOS);
                     if (CapturedQos != NULL)
                     {
                         RtlCopyMemory(CapturedQos,
@@ -312,8 +313,9 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
                         if (((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
                             sizeof(SECURITY_QUALITY_OF_SERVICE))
                         {
-                            CapturedQos = ExAllocatePool(PoolType,
-                                                         sizeof(SECURITY_QUALITY_OF_SERVICE));
+                            CapturedQos = ExAllocatePoolWithTag(PoolType,
+                                                                sizeof(SECURITY_QUALITY_OF_SERVICE),
+                                                                TAG_QOS);
                             if (CapturedQos != NULL)
                             {
                                 RtlCopyMemory(CapturedQos,
@@ -371,7 +373,7 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
     if (CapturedSecurityQualityOfService != NULL &&
         (AccessMode != KernelMode || CaptureIfKernel))
     {
-        ExFreePool(CapturedSecurityQualityOfService);
+        ExFreePoolWithTag(CapturedSecurityQualityOfService, TAG_QOS);
     }
 }
 
@@ -904,9 +906,11 @@ SeSetSecurityDescriptorInfoEx(
     }
     SaclLength = Sacl ? ROUND_UP((ULONG)Sacl->AclSize, 4) : 0;
 
-    NewSd = ExAllocatePool(NonPagedPool,
-                           sizeof(SECURITY_DESCRIPTOR_RELATIVE) + OwnerLength + GroupLength +
-                           DaclLength + SaclLength);
+    NewSd = ExAllocatePoolWithTag(NonPagedPool,
+                                  sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
+                                  OwnerLength + GroupLength +
+                                  DaclLength + SaclLength,
+                                  TAG_SD);
     if (NewSd == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;

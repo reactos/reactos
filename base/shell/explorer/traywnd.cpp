@@ -2653,13 +2653,13 @@ HandleTrayContextMenu:
         }
 
         pszParameters = wcschr(szCommand, L'>');
-        if (!pszParameters)
-            return E_FAIL;
+        if (pszParameters)
+        {
+            *pszParameters = 0;
+            pszParameters++;
+        }
 
-        *pszParameters = 0;
-        pszParameters++;
-
-        ShellExecuteW(m_hWnd, NULL, szCommand, pszParameters, NULL, 0);
+        ShellExecuteW(m_hWnd, NULL, szCommand, pszParameters, NULL, SW_SHOWNORMAL);
         return S_OK;
     }
 
@@ -2674,7 +2674,9 @@ HandleTrayContextMenu:
             ExecResourceCmd(IDS_HELP_COMMAND);
             break;
         case IDHK_EXPLORE:
-            ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1); 
+            //FIXME: We don't support this yet:
+            //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
+            ShellExecuteW(0, NULL, L"explorer.exe", NULL, NULL, 1); 
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);

@@ -602,6 +602,7 @@ NtUserEnumDisplaySettings(
         /* Get the registry settings */
         Status = UserEnumRegistryDisplaySettings(pustrDevice, &dmReg);
         pdm = &dmReg;
+        pdm->dmSize = sizeof(DEVMODEW);
     }
     else if (iModeNum == ENUM_CURRENT_SETTINGS)
     {

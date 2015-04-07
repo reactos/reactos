@@ -147,12 +147,12 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 
 #define INT8_MAX ((signed char)127)
 #define UINT8_MAX ((unsigned char)0xffU)
-#define BYTE_MAX 0xff
-#define SHORT_MAX 32767
+#define BYTE_MAX ((unsigned char)0xff)
+#define SHORT_MAX ((short)32767)
 #define INT16_MAX ((short)32767)
-#define USHORT_MAX 0xffff
-#define UINT16_MAX ((unsigned short)0xffffU)
-#define WORD_MAX 0xffff
+#define USHORT_MAX ((unsigned short)0xffff)
+#define UINT16_MAX ((unsigned short)0xffff)
+#define WORD_MAX ((unsigned short)0xffff)
 #define INT_MAX 2147483647
 #define INT32_MAX 2147483647
 #define UINT_MAX 0xffffffff
@@ -196,15 +196,15 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 /* Error values */
 #define INT8_ERROR ((signed char)(-1))
 #define UINT8_ERROR ((unsigned char)0xff)
-#define BYTE_ERROR 0xff
-#define SHORT_ERROR (-1)
+#define BYTE_ERROR ((unsigned char)0xff)
+#define SHORT_ERROR ((short)(-1))
 #define INT16_ERROR ((short)(-1))
-#define USHORT_ERROR 0xffff
-#define UINT16_ERROR ((unsigned short)0xffffU)
-#define WORD_ERROR 0xffff
+#define USHORT_ERROR ((unsigned short)0xffff)
+#define UINT16_ERROR ((unsigned short)0xffff)
+#define WORD_ERROR ((unsigned short)0xffff)
 #define INT_ERROR (-1)
 #define INT32_ERROR (-1)
-#define UINT_ERROR 0xffffffff
+#define UINT_ERROR 0xffffffffU
 #define UINT32_ERROR 0xffffffffU
 #define LONG_ERROR (-1L)
 #define ULONG_ERROR 0xffffffffUL
@@ -228,25 +228,25 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define _SIZE_T_ERROR 0xffffffffffffffffULL
 #else /* _WIN64 */
 #define INT_PTR_ERROR (-1)
-#define UINT_PTR_ERROR 0xffffffff
+#define UINT_PTR_ERROR 0xffffffffU
 #define LONG_PTR_ERROR (-1L)
 #define ULONG_PTR_ERROR 0xffffffffUL
 #define DWORD_PTR_ERROR 0xffffffffUL
 #define PTRDIFF_T_ERROR (-1)
-#define SIZE_T_ERROR 0xffffffff
+#define SIZE_T_ERROR 0xffffffffU
 #define SSIZE_T_ERROR (-1L)
 #define _SIZE_T_ERROR 0xffffffffUL
 #endif /* _WIN64 */
 
 /* special definitons (the CHAR ones should not be defined here!) */
 #define _INTSAFE_CHAR CHAR
-#define _INTSAFE_CHAR_ERROR 0xff
+#define _INTSAFE_CHAR_ERROR ((signed char)(-1))
 #ifdef _CHAR_UNSIGNED
- #define _INTSAFE_CHAR_MIN 0
- #define _INTSAFE_CHAR_MAX 0xff
+ #define _INTSAFE_CHAR_MIN ((unsigned char)0)
+ #define _INTSAFE_CHAR_MAX ((unsigned char)0xff)
 #else
- #define _INTSAFE_CHAR_MIN (-128)
- #define _INTSAFE_CHAR_MAX 127
+ #define _INTSAFE_CHAR_MIN ((signed char)(-128))
+ #define _INTSAFE_CHAR_MAX ((signed char)127)
 #endif /* _CHAR_UNSIGNED */
 
 #define size_t_ERROR SIZE_T_ERROR

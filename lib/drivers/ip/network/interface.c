@@ -134,6 +134,11 @@ BOOLEAN HasPrefix(
         A2S(Address), A2S(Prefix)));
 #endif
 
+    /* Don't report matches for empty prefixes */
+    if (Length == 0) {
+        return FALSE;
+    }
+
     /* Check that initial integral bytes match */
     while (Length > 8) {
         if (*pAddress++ != *pPrefix++)
@@ -152,37 +157,54 @@ PIP_INTERFACE GetDefaultInterface(VOID)
 {
    KIRQL OldIrql;
    ULONG Index = 0;
+   ULONG IfStatus;
    
    IF_LIST_ITER(CurrentIF);
 
    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
    /* DHCP hack: Always return the adapter without an IP address */
    ForEachInterface(CurrentIF) {
-      if (CurrentIF->Context) {
-          if (AddrIsUnspecified(&CurrentIF->Unicast)) {
-              TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+      if (CurrentIF->Context && AddrIsUnspecified(&CurrentIF->Unicast)) {
+          TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+          GetInterfaceConnectionStatus(CurrentIF, &IfStatus);
+          if (IfStatus == MIB_IF_OPER_STATUS_OPERATIONAL) {
               return CurrentIF;
           }
+
+          TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
       }
    } EndFor(CurrentIF);   
    
    /* Try to continue from the next adapter */
    ForEachInterface(CurrentIF) {
-      if (CurrentIF->Context) {
-          if (Index++ == NextDefaultAdapter) {
+      if (CurrentIF->Context && (Index++ == NextDefaultAdapter)) {
+          TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+          GetInterfaceConnectionStatus(CurrentIF, &IfStatus);
+          if (IfStatus == MIB_IF_OPER_STATUS_OPERATIONAL) {
               NextDefaultAdapter++;
-              TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
               return CurrentIF;
           }
+
+          TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
       }
    } EndFor(CurrentIF);
    
    /* No luck, so we'll choose the first adapter this time */
+   Index = 0;
    ForEachInterface(CurrentIF) {
       if (CurrentIF->Context) {
-          NextDefaultAdapter = 1;
+          Index++;
           TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
-          return CurrentIF;
+
+          GetInterfaceConnectionStatus(CurrentIF, &IfStatus);
+          if (IfStatus == MIB_IF_OPER_STATUS_OPERATIONAL) {
+              NextDefaultAdapter = Index;
+              return CurrentIF;
+          }
+
+          TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
       }
    } EndFor(CurrentIF);
    
@@ -229,26 +251,15 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
     return NULL;
 }
 
-NTSTATUS GetInterfaceConnectionStatus(PIP_INTERFACE Interface, PULONG Result)
+VOID GetInterfaceConnectionStatus(PIP_INTERFACE Interface, PULONG Result)
 {
-    NTSTATUS Status;
+    PLAN_ADAPTER Adapter = Interface->Context;
 
-    /* Query OID_GEN_MEDIA_CONNECT_STATUS for connection status information */
-    Status = TcpipLanGetDwordOid(Interface, OID_GEN_MEDIA_CONNECT_STATUS, Result);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* Translate the result into MIB_IF_OPER_STATUS_XXX */
-    if (*Result == NdisMediaStateConnected)
-    {
-        /* Up and running */
+    /* Loopback has no adapter context */
+    if (Adapter == NULL || Adapter->State == LAN_STATE_STARTED) {
         *Result = MIB_IF_OPER_STATUS_OPERATIONAL;
     }
-    else
-    {
-        /* Down */
+    else {
         *Result = MIB_IF_OPER_STATUS_DISCONNECTED;
     }
-
-    return STATUS_SUCCESS;
 }

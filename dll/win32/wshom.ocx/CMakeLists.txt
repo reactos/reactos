@@ -1,5 +1,9 @@
 
 add_definitions(-D__WINESRC__)
+
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(wshom.ocx wshom.ocx.spec)
 add_idl_headers(wshom_idlheader wshom.idl)
@@ -24,7 +28,7 @@ list(APPEND wshom_rc_deps
 set_source_files_properties(wshom.rc PROPERTIES OBJECT_DEPENDS "${wshom_rc_deps}")
 set_module_type(wshom win32ocx)
 target_link_libraries(wshom uuid wine)
-add_importlibs(wshom oleaut32 ole32 shell32 msvcrt kernel32 ntdll)
+add_importlibs(wshom oleaut32 ole32 shell32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(wshom stdole2 wshom_idlheader)
 add_pch(wshom wshom_private.h SOURCE)
 add_cd_file(TARGET wshom DESTINATION reactos/system32 FOR all)

@@ -281,6 +281,18 @@ WlanGetInterfaceCapability(IN HANDLE hClientHandle,
     return ERROR_SUCCESS;        
 }  
 
+DWORD WINAPI WlanRegisterNotification(IN HANDLE hClientHandle,
+                                      IN DWORD dwNotifSource,
+                                      IN BOOL bIgnoreDuplicate,
+                                      WLAN_NOTIFICATION_CALLBACK funcCallback,
+                                      PVOID pCallbackContext,
+                                      PVOID pReserved,
+                                      PDWORD pdwPrevNotifSource)
+{
+    UNIMPLEMENTED;
+    return ERROR_SUCCESS;
+}
+
 DWORD
 WINAPI
 WlanReasonCodeToString(IN DWORD dwReasonCode,

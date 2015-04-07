@@ -46,4 +46,9 @@ DoesFileExist(
     PWSTR PathName,
     PWSTR FileName);
 
+BOOLEAN
+IsValidPath(
+    PWCHAR InstallDir,
+    ULONG Length);
+
 /* EOF */

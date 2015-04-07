@@ -672,6 +672,8 @@ typedef enum {
 #define PF_RDTSC_INSTRUCTION_AVAILABLE 8
 #define PF_PAE_ENABLED 9
 #define PF_XMMI64_INSTRUCTIONS_AVAILABLE 10
+#define PF_NX_ENABLED 12
+
 /* also in ddk/ntifs.h */
 #define FILE_ACTION_ADDED                   0x00000001
 #define FILE_ACTION_REMOVED                 0x00000002
@@ -4351,6 +4353,7 @@ typedef struct _ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION {
   PCWSTR lpAssemblyManifestPath;
   PCWSTR lpAssemblyPolicyPath;
   PCWSTR lpAssemblyDirectoryName;
+  DWORD ulFileCount;
 } ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION, *PACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION;
 typedef const ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *PCACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION;
 
@@ -4506,10 +4509,11 @@ RtlCompareMemory (
   _In_ const VOID *Source2,
   _In_ SIZE_T Length);
 
-#define RtlMoveMemory memmove
-#define RtlCopyMemory memcpy
-#define RtlFillMemory(d,l,f) memset((d), (f), (l))
-#define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
+#define RtlMoveMemory(Dest,Source,Length) memmove((Dest),(Source),(Length))
+#define RtlCopyMemory(Dest,Source,Length) memcpy((Dest),(Source),(Length))
+#define RtlFillMemory(Dest,Length,Fill) memset((Dest),(Fill),(Length))
+#define RtlZeroMemory(Dest,Length) RtlFillMemory((Dest),(Length),0)
+#define RtlEqualMemory(Dest,Source,Length) (!memcmp((Dest),(Source),(Length)))
 
 FORCEINLINE
 PVOID

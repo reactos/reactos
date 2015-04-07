@@ -550,8 +550,12 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
                 *rgfInOut &= dwMyComputerAttributes;
             else if (_ILIsNetHood(apidl[i]))
                 *rgfInOut &= dwMyNetPlacesAttributes;
+            else if (_ILIsSpecialFolder(apidl[i]))
+                SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
+            else if(_ILIsFolder(apidl[i]) || _ILIsValue(apidl[i]))
+                SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
             else
-                SHELL32_GetItemAttributes((IShellFolder *)this, apidl[i], rgfInOut);
+                ERR("Got an unknown pidl type!!!\n");
         }
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */

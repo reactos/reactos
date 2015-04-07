@@ -204,6 +204,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Rozšířené vlastnosti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Zvolte rozšířené vlastnosti, které požadujtete pro tohoto zástupce.", -1, 5, 30, 210, 10
     CHECKBOX "Spustit s jinými pověřeními", 14000, 25, 50, 150, 10
     LTEXT "Tato možnost umožní spustit tohoto zástupce jako jiný uživatel nebo při spuštění se současným uživatelem chránit počítač před nepovolenou aktivitou programu.", -1, 50, 60, 175, 40
@@ -334,12 +335,15 @@ CAPTION "Nástroje"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Kontrola chyb", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Tento nástroj otestuje svazek na chyby.", -1, 40, 25, 160, 20
     PUSHBUTTON "Zkontrolovat...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentace", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Tento nástroj zdefragmentuje soubory na svazku", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmentovat...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Záloha", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Tímto nástrojem zazálohuje soubory na svazku.", -1, 40, 150, 160, 20
     PUSHBUTTON "Zálohovat...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -392,7 +396,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Vyberte program, ve kterém chcete otevřít tento soubor: ", -1, 44, 12, 211, 10
-    LTEXT "Soubor:    ", 14001, 44, 25, 188, 10
+    LTEXT "Soubor:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programy", -1, 7, 42, 249, 187
     CONTROL "Programy", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Vždy použít vybraný program k otevření tohoto typu souboru", 14003, 20, 193, 225, 10
@@ -591,17 +595,17 @@ BEGIN
     AUTOCHECKBOX "&Aktivovat kompresi", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Zkontrolovat disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-    GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 50
-    PUSHBUTTON "Storno", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Automaticky opravovat chyby souborového systému", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    GROUPBOX "Možnosti kontroly disku", -1, 7, 6, 179, 40
+    PUSHBUTTON "Storno", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Automaticky opravovat chyby souborového systému", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Vyhledat a pokusit se obnovit vadné sektory", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 

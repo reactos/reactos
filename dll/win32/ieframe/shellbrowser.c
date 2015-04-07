@@ -703,9 +703,14 @@ static HRESULT WINAPI DocObjectService_FireBeforeNavigate2(
     V_VT(params+6) = (VT_DISPATCH);
     V_DISPATCH(params+6) = (IDispatch*)This->doc_host->wb;
 
+    /* Keep reference to This. It may be released in event handler. */
+    IShellBrowser_AddRef(&This->IShellBrowser_iface);
+
     TRACE(">>>\n");
     call_sink(This->doc_host->cps.wbe2, DISPID_BEFORENAVIGATE2, &dp);
     TRACE("<<<\n");
+
+    IShellBrowser_Release(&This->IShellBrowser_iface);
 
     SysFreeString(V_BSTR(&var_url));
     SysFreeString(V_BSTR(&var_headers));
@@ -759,6 +764,9 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
     V_VT(&url_var) = VT_BSTR;
     V_BSTR(&url_var) = url;
 
+    /* Keep reference to This. It may be released in event handler. */
+    IShellBrowser_AddRef(&This->IShellBrowser_iface);
+
     TRACE(">>>\n");
     call_sink(This->doc_host->cps.wbe2, DISPID_NAVIGATECOMPLETE2, &dp);
     TRACE("<<<\n");
@@ -766,6 +774,7 @@ static HRESULT WINAPI DocObjectService_FireNavigateComplete2(
     SysFreeString(url);
 
     This->doc_host->busy = VARIANT_FALSE;
+    IShellBrowser_Release(&This->IShellBrowser_iface);
     return S_OK;
 }
 

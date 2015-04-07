@@ -14,10 +14,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_CPLSYSTEM ICON "resources/applet.ico"
 IDI_USERPROF ICON "resources/devmgr.ico"
-IDI_HARDPROF ICON "resources/devmgr.ico"
-IDI_DEVMGR ICON "resources/devmgr.ico"
+IDI_HARDPROF ICON "resources/hwprofile.ico"
+IDI_DEVMGR ICON "resources/dev.ico"
 IDI_UP ICON "resources/up.ico"
 IDI_DOWN ICON "resources/down.ico"
+IDI_ADDHW ICON "resources/addhw.ico"
 IDB_ROSBMP BITMAP "resources/rosbitmap.bmp"
 IDB_ROSMASK BITMAP "resources/rosbitmap_mask.bmp"
 

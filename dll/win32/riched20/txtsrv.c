@@ -20,6 +20,7 @@
 
 #include "editor.h"
 
+
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
 #define THISCALL(func) __thiscall_ ## func
@@ -65,7 +66,15 @@ static HRESULT WINAPI ITextServicesImpl_QueryInterface(IUnknown *iface, REFIID r
       *ppv = &This->IUnknown_inner;
    else if (IsEqualIID(riid, &IID_ITextServices))
       *ppv = &This->ITextServices_iface;
-   else {
+   else if (IsEqualIID(riid, &IID_IRichEditOle) || IsEqualIID(riid, &IID_ITextDocument)) {
+      if (!This->editor->reOle)
+         if (!CreateIRichEditOle(This->outer_unk, This->editor, (void **)(&This->editor->reOle)))
+            return E_OUTOFMEMORY;
+      if (IsEqualIID(riid, &IID_ITextDocument))
+         ME_GetITextDocumentInterface(This->editor->reOle, ppv);
+      else
+         *ppv = This->editor->reOle;
+   } else {
       *ppv = NULL;
       FIXME("Unknown interface: %s\n", debugstr_guid(riid));
       return E_NOINTERFACE;
@@ -94,7 +103,7 @@ static ULONG WINAPI ITextServicesImpl_Release(IUnknown *iface)
 
    if (!ref)
    {
-      ITextHost_Release(This->pMyHost);
+      ME_DestroyEditor(This->editor);
       This->csTxtSrv.DebugInfo->Spare[0] = 0;
       DeleteCriticalSection(&This->csTxtSrv);
       CoTaskMemFree(This);

@@ -200,6 +200,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Дополнительные свойства"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Установите нужные свойства для этого ярлыка.", -1, 5, 30, 210, 10
     CHECKBOX "Запускать с другими учетными данными", 14000, 25, 50, 150, 10
     LTEXT "Позволяет использовать этот ярлык для запуска программы от &имени администратора, в то же время продолжая работу от своего имени, что защищает компьютер от несанкционированных действий других программ.", -1, 50, 60, 175, 40
@@ -330,12 +331,15 @@ CAPTION "Сервис"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Проверка диска", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Проверка тома на наличие ошибок.", -1, 40, 25, 160, 20
     PUSHBUTTON "Выполнить &проверку...", 14000, 110, 45, 120, 15, WS_TABSTOP
     GROUPBOX "Дефрагментация диска", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Дефрагментация файлов, хранящихся на этом томе.", -1, 40, 85, 160, 20
     PUSHBUTTON "Выполнить д&ефрагментацию...", 14001, 110, 105, 120, 15, WS_TABSTOP
     GROUPBOX "Архивация", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Архивация файлов, хранящихся на этом томе.", -1, 40, 150, 160, 20
     PUSHBUTTON "Выполнить &архивацию...", 14002, 110, 170, 120, 15, WS_TABSTOP
 END
@@ -388,7 +392,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Выберите программу для открытия этого файла.", -1, 44, 12, 211, 10
-    LTEXT "Файл:    ", 14001, 44, 25, 188, 10
+    LTEXT "Файл:    ", 14001, 44, 25, 188, 20
     GROUPBOX "Программы", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Использовать ее для всех файлов такого типа", 14003, 20, 193, 225, 10
@@ -695,18 +699,18 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Подтверждение замены файла"
     IDS_OVERWRITEFOLDER_TEXT "Эта папка уже содержит папку с именем '%1'.\n\nЕсли в папке содержатся файлы с одинаковыми именами, то они так же будут\nзаменены. Продолжить?"
 
-    IDS_FILEOOP_COPYING "Copying"
-    IDS_FILEOOP_MOVING "Moving"
-    IDS_FILEOOP_DELETING "Deleting"
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_COPYING "Копирование"
+    IDS_FILEOOP_MOVING "Перемещение"
+    IDS_FILEOOP_DELETING "Удаление"
+    IDS_FILEOOP_FROM_TO "Из %1 в %2"
+    IDS_FILEOOP_FROM "Из %1"
+    IDS_FILEOOP_PREFLIGHT "Подготовка"
 
     /* message box strings */
     IDS_RESTART_TITLE "Перезагрузка"
     IDS_RESTART_PROMPT "Вы действительно хотите перезагрузить ReactOS?"
     IDS_SHUTDOWN_TITLE "Завершение работы"
-    IDS_SHUTDOWN_PROMPT "Закончить работу с ReactOS?"
+    IDS_SHUTDOWN_PROMPT "Вы действительно хотите завершить работу ReactOS?"
     IDS_LOGOFF_TITLE "Завершение сеанса"
     IDS_LOGOFF_PROMPT "Вы действительно хотите выйти из системы?"
 

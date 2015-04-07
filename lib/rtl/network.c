@@ -9,7 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-
+#include <ntstrsafe.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -102,21 +102,33 @@ Done:
 /*
  * @implemented
  */
-LPSTR
+PSTR
 NTAPI
-RtlIpv4AddressToStringA(IN struct in_addr *Addr,
-                        OUT PCHAR S)
+RtlIpv4AddressToStringA(
+    _In_ const struct in_addr *Addr,
+    _Out_writes_(IPV4_ADDR_STRING_MAX_LEN) PCHAR S)
 {
-    INT Length;
+    NTSTATUS Status;
+    PSTR End;
 
-    if (!S) return (LPSTR)~0;
+    if (!S)
+        return (PSTR)~0;
 
-    Length = sprintf(S, "%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                            Addr->S_un.S_un_b.s_b2,
-                                            Addr->S_un.S_un_b.s_b3,
-                                            Addr->S_un.S_un_b.s_b4);
+    Status = RtlStringCchPrintfExA(S,
+                                   IPV4_ADDR_STRING_MAX_LEN,
+                                   &End,
+                                   NULL,
+                                   0,
+                                   "%u.%u.%u.%u",
+                                   Addr->S_un.S_un_b.s_b1,
+                                   Addr->S_un.S_un_b.s_b2,
+                                   Addr->S_un.S_un_b.s_b3,
+                                   Addr->S_un.S_un_b.s_b4);
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return (PSTR)~0;
 
-    return S + Length;
+    return End;
 }
 
 /*
@@ -124,28 +136,44 @@ RtlIpv4AddressToStringA(IN struct in_addr *Addr,
  */
 NTSTATUS
 NTAPI
-RtlIpv4AddressToStringExA(IN struct in_addr *Address,
-                          IN USHORT Port,
-                          OUT PCHAR AddressString,
-                          IN OUT PULONG AddressStringLength)
+RtlIpv4AddressToStringExA(
+    _In_ const struct in_addr *Address,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PCHAR AddressString,
+    _Inout_ PULONG AddressStringLength)
 {
-    CHAR Buffer[IPV4_ADDR_STRING_MAX_LEN+IPV4_PORT_STRING_MAX_LEN];
+    CHAR Buffer[IPV4_ADDR_STRING_MAX_LEN + IPV4_PORT_STRING_MAX_LEN];
+    NTSTATUS Status;
     ULONG Length;
+    PSTR End;
 
     if (!Address || !AddressString || !AddressStringLength)
         return STATUS_INVALID_PARAMETER;
 
-    Length = sprintf(Buffer, "%u.%u.%u.%u", Address->S_un.S_un_b.s_b1,
-                                            Address->S_un.S_un_b.s_b2,
-                                            Address->S_un.S_un_b.s_b3,
-                                            Address->S_un.S_un_b.s_b4);
+    Status = RtlStringCchPrintfExA(Buffer,
+                                   RTL_NUMBER_OF(Buffer),
+                                   &End,
+                                   NULL,
+                                   0,
+                                   Port ? "%u.%u.%u.%u:%u"
+                                        : "%u.%u.%u.%u",
+                                   Address->S_un.S_un_b.s_b1,
+                                   Address->S_un.S_un_b.s_b2,
+                                   Address->S_un.S_un_b.s_b3,
+                                   Address->S_un.S_un_b.s_b4,
+                                   WN2H(Port));
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return STATUS_INVALID_PARAMETER;
 
-    if (Port) Length += sprintf(Buffer + Length, ":%u", WN2H(Port));
-
+    Length = End - Buffer;
     if (*AddressStringLength > Length)
     {
+        Status = RtlStringCchCopyA(AddressString,
+                                   *AddressStringLength,
+                                   Buffer);
+        ASSERT(Status == STATUS_SUCCESS);
         *AddressStringLength = Length + 1;
-        strcpy(AddressString, Buffer);
         return STATUS_SUCCESS;
     }
 
@@ -156,20 +184,33 @@ RtlIpv4AddressToStringExA(IN struct in_addr *Address,
 /*
  * @implemented
  */
-LPWSTR
+PWSTR
 NTAPI
-RtlIpv4AddressToStringW(IN struct in_addr *Addr,
-                        OUT PWCHAR S)
+RtlIpv4AddressToStringW(
+    _In_ const struct in_addr *Addr,
+    _Out_writes_(IPV4_ADDR_STRING_MAX_LEN) PWCHAR S)
 {
-    INT Length;
+    NTSTATUS Status;
+    PWSTR End;
 
-    if (!S) return (LPWSTR)~0;
+    if (!S)
+        return (PWSTR)~0;
 
-    Length = swprintf(S, L"%u.%u.%u.%u", Addr->S_un.S_un_b.s_b1,
-                                         Addr->S_un.S_un_b.s_b2,
-                                         Addr->S_un.S_un_b.s_b3,
-                                         Addr->S_un.S_un_b.s_b4);
-    return S + Length;
+    Status = RtlStringCchPrintfExW(S,
+                                   IPV4_ADDR_STRING_MAX_LEN,
+                                   &End,
+                                   NULL,
+                                   0,
+                                   L"%u.%u.%u.%u",
+                                   Addr->S_un.S_un_b.s_b1,
+                                   Addr->S_un.S_un_b.s_b2,
+                                   Addr->S_un.S_un_b.s_b3,
+                                   Addr->S_un.S_un_b.s_b4);
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return (PWSTR)~0;
+
+    return End;
 }
 
 /*
@@ -177,28 +218,44 @@ RtlIpv4AddressToStringW(IN struct in_addr *Addr,
  */
 NTSTATUS
 NTAPI
-RtlIpv4AddressToStringExW(IN struct in_addr *Address,
-                          IN USHORT Port,
-                          OUT PWCHAR AddressString,
-                          IN OUT PULONG AddressStringLength)
+RtlIpv4AddressToStringExW(
+    _In_ const struct in_addr *Address,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWCHAR AddressString,
+    _Inout_ PULONG AddressStringLength)
 {
-    WCHAR Buffer[IPV4_ADDR_STRING_MAX_LEN+IPV4_PORT_STRING_MAX_LEN];
+    WCHAR Buffer[IPV4_ADDR_STRING_MAX_LEN + IPV4_PORT_STRING_MAX_LEN];
+    NTSTATUS Status;
     ULONG Length;
+    PWSTR End;
 
     if (!Address || !AddressString || !AddressStringLength)
         return STATUS_INVALID_PARAMETER;
 
-    Length = swprintf(Buffer, L"%u.%u.%u.%u", Address->S_un.S_un_b.s_b1,
-                                              Address->S_un.S_un_b.s_b2,
-                                              Address->S_un.S_un_b.s_b3,
-                                              Address->S_un.S_un_b.s_b4);
+    Status = RtlStringCchPrintfExW(Buffer,
+                                   RTL_NUMBER_OF(Buffer),
+                                   &End,
+                                   NULL,
+                                   0,
+                                   Port ? L"%u.%u.%u.%u:%u"
+                                        : L"%u.%u.%u.%u",
+                                   Address->S_un.S_un_b.s_b1,
+                                   Address->S_un.S_un_b.s_b2,
+                                   Address->S_un.S_un_b.s_b3,
+                                   Address->S_un.S_un_b.s_b4,
+                                   WN2H(Port));
+    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+        return STATUS_INVALID_PARAMETER;
 
-    if (Port) Length += swprintf(Buffer + Length, L":%u", WN2H(Port));
-
+    Length = End - AddressString;
     if (*AddressStringLength > Length)
     {
+        Status = RtlStringCchCopyW(AddressString,
+                                   *AddressStringLength,
+                                   Buffer);
+        ASSERT(Status == STATUS_SUCCESS);
         *AddressStringLength = Length + 1;
-        wcscpy(AddressString, Buffer);
         return STATUS_SUCCESS;
     }
 
@@ -388,10 +445,56 @@ RtlIpv4StringToAddressExW(
 /*
 * @unimplemented
 */
+PSTR
+NTAPI
+RtlIpv6AddressToStringA(
+    _In_ const struct in6_addr *Addr,
+    _Out_writes_(46) PSTR S)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+/*
+* @unimplemented
+*/
 NTSTATUS
 NTAPI
-RtlIpv6AddressToStringA(IN struct in6_addr *Addr,
-                        OUT PCHAR S)
+RtlIpv6AddressToStringExA(
+    _In_ const struct in6_addr *Address,
+    _In_ ULONG ScopeId,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PSTR AddressString,
+    _Inout_ PULONG AddressStringLength)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+* @unimplemented
+*/
+PWSTR
+NTAPI
+RtlIpv6AddressToStringW(
+    _In_ const struct in6_addr *Addr,
+    _Out_writes_(46) PWSTR S)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+/*
+* @unimplemented
+*/
+NTSTATUS
+NTAPI
+RtlIpv6AddressToStringExW(
+    _In_ const struct in6_addr *Address,
+    _In_ ULONG ScopeId,
+    _In_ USHORT Port,
+    _Out_writes_to_(*AddressStringLength, *AddressStringLength) PWCHAR AddressString,
+    _Inout_ PULONG AddressStringLength)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -402,11 +505,10 @@ RtlIpv6AddressToStringA(IN struct in6_addr *Addr,
 */
 NTSTATUS
 NTAPI
-RtlIpv6AddressToStringExA(IN struct in6_addr *Address,
-                          IN ULONG ScopeId,
-                          IN ULONG Port,
-                          OUT PCHAR AddressString,
-                          IN OUT PULONG AddressStringLength)
+RtlIpv6StringToAddressA(
+    _In_ PCSTR String,
+    _Out_ PCSTR *Terminator,
+    _Out_ struct in6_addr *Addr)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -417,8 +519,11 @@ RtlIpv6AddressToStringExA(IN struct in6_addr *Address,
 */
 NTSTATUS
 NTAPI
-RtlIpv6AddressToStringW(IN struct in6_addr *Addr,
-                        OUT PWCHAR S)
+RtlIpv6StringToAddressExA(
+    _In_ PCSTR AddressString,
+    _Out_ struct in6_addr *Address,
+    _Out_ PULONG ScopeId,
+    _Out_ PUSHORT Port)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -429,11 +534,10 @@ RtlIpv6AddressToStringW(IN struct in6_addr *Addr,
 */
 NTSTATUS
 NTAPI
-RtlIpv6AddressToStringExW(IN struct in6_addr *Address,
-                          IN ULONG ScopeId,
-                          IN USHORT Port,
-                          IN OUT PWCHAR AddressString,
-                          IN OUT PULONG AddressStringLength)
+RtlIpv6StringToAddressW(
+    _In_ PCWSTR String,
+    _Out_ PCWSTR *Terminator,
+    _Out_ struct in6_addr *Addr)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -444,50 +548,11 @@ RtlIpv6AddressToStringExW(IN struct in6_addr *Address,
 */
 NTSTATUS
 NTAPI
-RtlIpv6StringToAddressA(IN PCHAR Name,
-                        OUT PCHAR *Terminator,
-                        OUT struct in6_addr *Addr)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
-* @unimplemented
-*/
-NTSTATUS
-NTAPI
-RtlIpv6StringToAddressExA(IN PCHAR AddressString,
-                          OUT struct in6_addr *Address,
-                          OUT PULONG ScopeId,
-                          OUT PUSHORT Port)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
-* @unimplemented
-*/
-NTSTATUS
-NTAPI
-RtlIpv6StringToAddressW(IN PWCHAR Name,
-                        OUT PCHAR *Terminator,
-                        OUT struct in6_addr *Addr)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
-* @unimplemented
-*/
-NTSTATUS
-NTAPI
-RtlIpv6StringToAddressExW(IN PWCHAR AddressName,
-                          OUT struct in6_addr *Address,
-                          OUT PULONG ScopeId,
-                          OUT PUSHORT Port)
+RtlIpv6StringToAddressExW(
+    _In_ PCWSTR AddressString,
+    _Out_ struct in6_addr *Address,
+    _Out_ PULONG ScopeId,
+    _Out_ PUSHORT Port)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

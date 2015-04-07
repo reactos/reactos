@@ -28,7 +28,7 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <shlobj.h>
 #include <undocshell.h>
 #include <shlwapi.h>
@@ -310,9 +310,14 @@ BOOL WINAPI RegisterShellHook(
 	DWORD dwType)
 {
     if (dwType == 3)
+    {
+        SetTaskmanWindow(hWnd);
         return RegisterShellHookWindow(hWnd);
+    }
     else if (dwType == 0)
+    {
         return DeregisterShellHookWindow(hWnd);
+    }
 
     ERR("Unsupported argument");
     return FALSE;
@@ -1217,10 +1222,10 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 	if( r == ERROR_SUCCESS )
 	{
 		type = REG_BINARY;
-		r = RegQueryValueExW( hkey, szwSettings, 
+		r = RegQueryValueExW( hkey, szwSettings,
 			NULL, &type, (LPBYTE)cs, (LPDWORD)&length );
 		RegCloseKey( hkey );
-			
+
 	}
 
 	/* if we can't read from the registry, create default values */
@@ -1242,7 +1247,7 @@ BOOL WINAPI ReadCabinetState(CABINETSTATE *cs, int length)
 		cs->fAdminsCreateCommonGroups = TRUE;
 		cs->fMenuEnumFilter  = 96;
 	}
-	
+
 	return TRUE;
 }
 
@@ -1264,7 +1269,7 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
 		 NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
 	if( r == ERROR_SUCCESS )
 	{
-		r = RegSetValueExW( hkey, szwSettings, 0, 
+		r = RegSetValueExW( hkey, szwSettings, 0,
 			REG_BINARY, (LPBYTE) cs, cs->cLength);
 
 		RegCloseKey( hkey );
@@ -1546,7 +1551,7 @@ DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 /************************************************************************
  *	DoEnvironmentSubst			[SHELL32.53]
  *
- * See DoEnvironmentSubstA.  
+ * See DoEnvironmentSubstA.
  */
 DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 {

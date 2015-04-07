@@ -175,10 +175,18 @@ WaitForSettingsDialog(HWND hwndDlg,
                     DispatchMessage(&msg);
                 }
             }
+            else
+            {
+                return FALSE;
+            }
+        }
+        else if (dwResult == WAIT_OBJECT_0)
+        {
+            return TRUE;
         }
         else
         {
-            return TRUE;
+            return FALSE;
         }
     }
 }

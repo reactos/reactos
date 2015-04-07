@@ -72,6 +72,7 @@ struct NtPidlSymlinkData
 // REGISTRY browser
 enum REG_ENTRY_TYPE
 {
+    REG_ENTRY_ROOT,
     REG_ENTRY_KEY,
     REG_ENTRY_VALUE,
     REG_ENTRY_VALUE_WITH_CONTENT
@@ -88,12 +89,18 @@ struct RegPidlEntry
     
     USHORT entryNameLength;
 
-    // For Value entries, this contains the value contents, if it's resonably small.
-    // For Key entries, this contains the custom class name
-    DWORD contentType;
-    USHORT contentsLength;
+    union {
+        struct {
+            // For Value entries, this contains the value contents, if it's resonably small.
+            // For Key entries, this contains the custom class name
+            DWORD contentType;
+            USHORT contentsLength;
+        };
 
-    WCHAR entryName[0];
+        HKEY rootKey;
+    };
+
+    WCHAR entryName[ANYSIZE_ARRAY];
 
 };
 
@@ -102,3 +109,6 @@ struct RegPidlEntry
 
 HRESULT EnumerateNtDirectory(HDPA hdpa, PCWSTR path, UINT * hdpaCount);
 HRESULT EnumerateRegistryKey(HDPA hdpa, PCWSTR path, HKEY root, UINT * hdpaCount);
+HRESULT EnumerateRootKeys(HDPA hdpa, UINT * hdpaCount);
+
+HRESULT ReadRegistryValue(HKEY root, PCWSTR path, PCWSTR valueName, PVOID * valueData, PDWORD valueLength);

@@ -962,8 +962,8 @@ HardwareDlgProc(IN HWND hwndDlg,
 
             case WM_DESTROY:
             {
-            	/* zero hpd pointer in window data, because it can be used later (WM_DESTROY has not to be last message) */
-            	SetWindowLongPtr(hwndDlg, DWL_USER, (DWORD_PTR)NULL);
+                /* zero hpd pointer in window data, because it can be used later (WM_DESTROY has not to be last message) */
+                SetWindowLongPtr(hwndDlg, DWL_USER, (DWORD_PTR)NULL);
                 
                 /* free devices list */
                 FreeDevicesList(hpd);

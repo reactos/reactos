@@ -64,6 +64,9 @@ static const WCHAR onerrorW[] = {'o','n','e','r','r','o','r',0};
 static const WCHAR focusW[] = {'f','o','c','u','s',0};
 static const WCHAR onfocusW[] = {'o','n','f','o','c','u','s',0};
 
+static const WCHAR focusinW[] = {'f','o','c','u','s','i','n',0};
+static const WCHAR onfocusinW[] = {'o','n','f','o','c','u','s','i','n',0};
+
 static const WCHAR helpW[] = {'h','e','l','p',0};
 static const WCHAR onhelpW[] = {'o','n','h','e','l','p',0};
 
@@ -173,6 +176,8 @@ static const event_info_t event_info[] = {
         EVENT_BIND_TO_BODY},
     {focusW,             onfocusW,             EVENTT_HTML,   DISPID_EVMETH_ONFOCUS,
         EVENT_DEFAULTLISTENER},
+    {focusinW,           onfocusinW,           EVENTT_HTML,   DISPID_EVMETH_ONFOCUSIN,
+        EVENT_BUBBLE},
     {helpW,              onhelpW,              EVENTT_KEY,    DISPID_EVMETH_ONHELP,
         EVENT_BUBBLE|EVENT_CANCELABLE},
     {keydownW,           onkeydownW,           EVENTT_KEY,    DISPID_EVMETH_ONKEYDOWN,
@@ -184,7 +189,7 @@ static const event_info_t event_info[] = {
     {loadW,              onloadW,              EVENTT_HTML,   DISPID_EVMETH_ONLOAD,
         EVENT_BIND_TO_BODY},
     {mousedownW,         onmousedownW,         EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEDOWN,
-        EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+        EVENT_DEFAULTLISTENER|EVENT_BUBBLE|EVENT_CANCELABLE},
     {mousemoveW,         onmousemoveW,         EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEMOVE,
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
     {mouseoutW,          onmouseoutW,          EVENTT_MOUSE,  DISPID_EVMETH_ONMOUSEOUT,
@@ -534,7 +539,7 @@ static HRESULT WINAPI HTMLEventObj_get_keyCode(IHTMLEventObj *iface, LONG *p)
 static HRESULT WINAPI HTMLEventObj_get_button(IHTMLEventObj *iface, LONG *p)
 {
     HTMLEventObj *This = impl_from_IHTMLEventObj(iface);
-    UINT16 button = 0;
+    INT16 button = 0;
 
     TRACE("(%p)->(%p)\n", This, p);
 

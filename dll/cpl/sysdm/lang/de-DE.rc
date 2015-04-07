@@ -40,7 +40,7 @@ BEGIN
     LTEXT "Der Geräte-Manager zeigt alle Hardware-Geräte ihres Computers an. Benutzen Sie den Geräte-Manager, um die Eigenschaften eines Gerätes zu ändern.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Geräte-Manager...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
     GROUPBOX "Hardware-Assistent", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Der Hardware-Assistent hilft ihnen, Hardware zu installieren, zu deinstallieren, zu reparieren und zu konfigurieren.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Hardware-Assistent...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
     GROUPBOX "Hardware-Profile", IDC_STATIC, 6, 149, 244, 61

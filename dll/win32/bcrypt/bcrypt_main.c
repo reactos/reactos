@@ -107,3 +107,10 @@ NTSTATUS WINAPI BCryptGetFipsAlgorithmMode(BOOLEAN *enabled)
     *enabled = FALSE;
     return STATUS_SUCCESS;
 }
+
+NTSTATUS WINAPI BCryptGetProperty(BCRYPT_HANDLE obj, LPCWSTR prop, UCHAR *buffer, ULONG count, ULONG *res, ULONG flags)
+{
+    FIXME("%p, %s, %p, %u, %p, %08x - stub\n", obj, wine_dbgstr_w(prop), buffer, count, res, flags);
+
+    return STATUS_NOT_IMPLEMENTED;
+}

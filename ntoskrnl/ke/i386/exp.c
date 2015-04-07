@@ -549,6 +549,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         {
             /* FIXME: Handle FPU Emulation */
             //ASSERT(FALSE);
+            UNIMPLEMENTED;
         }
     }
 

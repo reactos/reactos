@@ -198,6 +198,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Avanserte egenskaper"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Velg avansert egenskaper som du vil for denne snarveien.", -1, 5, 30, 210, 10
     CHECKBOX "Kjør som administrator", 14000, 25, 50, 150, 10
     LTEXT "Med dette valget kan du kjøre denne snarveien med som en administrator, mens du beskytter din datamaskin og data fra uautorisert program aktivitet.", -1, 50, 60, 175, 40
@@ -328,12 +329,15 @@ CAPTION "Verktøy"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Feilsøking", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Dette alternativet vil kontrollere volumet for \nfeil.", -1, 40, 25, 160, 20
     PUSHBUTTON "Kontroller nå...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentering", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Dette alternativet defragmenterer filene på volumet.", -1, 40, 85, 160, 20
     PUSHBUTTON "Defragmenter nå...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Sikkerhetskopi", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Dette alternativet tar sikkerhetskopi av filene på volumet.", -1, 40, 150, 160, 20
     PUSHBUTTON "Ta sikkerhetskopi...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -386,7 +390,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Velg programmet du vil bruke for å åpne denne filen:", -1, 44, 12, 211, 10
-    LTEXT "Fil:    ", 14001, 44, 25, 188, 10
+    LTEXT "Fil:    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Program", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "&Alltid bruk valgte program for å åpne denne filtypen", 14003, 20, 193, 225, 10
@@ -585,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "&Utfør komprimering", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Kontroller disken"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-    GROUPBOX "Alternativer for diskkontroll", -1, 7, 6, 179, 50
-    PUSHBUTTON "Avbryt", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Reparer feil i filsysten automatisk", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Start", IDOK, 63, 95, 60, 14
+    GROUPBOX "Alternativer for diskkontroll", -1, 7, 6, 179, 40
+    PUSHBUTTON "Avbryt", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Reparer feil i filsysten automatisk", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Søk etter og forsøk å reparere skadet sektorer", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 

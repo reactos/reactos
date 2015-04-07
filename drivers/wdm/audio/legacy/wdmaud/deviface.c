@@ -153,16 +153,18 @@ WdmAudOpenSysAudioDevices(
                 return Status;
             }
 
-            InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
-            DeviceExtension->NumSysAudioDevices++;
-
             DPRINT("Opening device %S\n", Entry->SymbolicLink.Buffer);
             Status = WdmAudOpenSysAudioDevice(Entry->SymbolicLink.Buffer, &hSysAudio);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to open sysaudio %x\n", Status);
+                FreeItem(Entry->SymbolicLink.Buffer);
+                FreeItem(Entry);
                 return Status;
             }
+
+            InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
+            DeviceExtension->NumSysAudioDevices++;
 
             /* get the file object */
             Status = ObReferenceObjectByHandle(hSysAudio, FILE_READ_DATA | FILE_WRITE_DATA, *IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
@@ -186,8 +188,6 @@ WdmAudRegisterDeviceInterface(
     IN PWDMAUD_DEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS Status;
-    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\wdmaud");
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\wdmaud");
     UNICODE_STRING SymbolicLinkName;
 
     Status = IoRegisterDeviceInterface(PhysicalDeviceObject, &KSCATEGORY_WDMAUD, NULL, &SymbolicLinkName);
@@ -195,20 +195,7 @@ WdmAudRegisterDeviceInterface(
     {
         IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
         RtlFreeUnicodeString(&SymbolicLinkName);
-        DeviceExtension->DeviceInterfaceSupport = TRUE;
-        return Status;
-    }
-
-    /* failed to register device interface
-     * create a symbolic link instead
-     */
-    DeviceExtension->DeviceInterfaceSupport = FALSE;
-
-    Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-    if (!NT_SUCCESS(Status))
-    {
-        IoDeleteDevice(PhysicalDeviceObject); //FIXME
-        DPRINT("Failed to create wdmaud symlink!\n");
+        //DeviceExtension->DeviceInterfaceSupport = TRUE;
         return Status;
     }
 

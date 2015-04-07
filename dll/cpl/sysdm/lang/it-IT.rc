@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Gestione dispositivi elenca tutti i dispositivi installati nel computer. Usate la gestione dispositivi per modificare le impostazioni di un dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Gestione dispositivi...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
     GROUPBOX "Hardware Wizard", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Hardware wizard aiuta ad installare, disinstallare, ripristinare, scollegare, estrarre e configurare l'hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Hardware Wizard...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
     GROUPBOX "Profili Hardware", IDC_STATIC, 6, 149, 244, 61

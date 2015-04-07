@@ -17,6 +17,8 @@
 
 #include "dos.h"
 #include "dos/dem.h"
+#include "device.h"
+#include "memory.h"
 
 #include "bios/bios.h"
 
@@ -27,381 +29,21 @@
 
 CALLBACK16 DosContext;
 
-static WORD CurrentPsp = SYSTEM_PSP;
-static WORD DosLastError = 0;
 static DWORD DiskTransferArea;
 /*static*/ BYTE CurrentDrive;
 static CHAR LastDrive = 'E';
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
-
-static struct
-{
-    HANDLE Handle;
-    WORD   RefCount;
-} DosSystemFileTable[DOS_SFT_SIZE];
-
-static BYTE DosAllocStrategy = DOS_ALLOC_BEST_FIT;
-static BOOLEAN DosUmbLinked = FALSE;
+static DOS_SFT_ENTRY DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosErrorLevel = 0x0000;
+
+/* PUBLIC VARIABLES ***********************************************************/
 
 /* Echo state for INT 21h, AH = 01h and AH = 3Fh */
 BOOLEAN DoEcho = FALSE;
+WORD CurrentPsp = SYSTEM_PSP;
+WORD DosLastError = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-/*
- * Memory management functions
- */
-static VOID DosCombineFreeBlocks(WORD StartBlock)
-{
-    PDOS_MCB CurrentMcb = SEGMENT_TO_MCB(StartBlock), NextMcb;
-
-    /* If this is the last block or it's not free, quit */
-    if (CurrentMcb->BlockType == 'Z' || CurrentMcb->OwnerPsp != 0) return;
-
-    while (TRUE)
-    {
-        /* Get a pointer to the next MCB */
-        NextMcb = SEGMENT_TO_MCB(StartBlock + CurrentMcb->Size + 1);
-
-        /* Check if the next MCB is free */
-        if (NextMcb->OwnerPsp == 0)
-        {
-            /* Combine them */
-            CurrentMcb->Size += NextMcb->Size + 1;
-            CurrentMcb->BlockType = NextMcb->BlockType;
-            NextMcb->BlockType = 'I';
-        }
-        else
-        {
-            /* No more adjoining free blocks */
-            break;
-        }
-    }
-}
-
-static WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
-{
-    WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
-    PDOS_MCB CurrentMcb, NextMcb;
-    BOOLEAN SearchUmb = FALSE;
-
-    DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
-
-    if (DosUmbLinked && (DosAllocStrategy & (DOS_ALLOC_HIGH | DOS_ALLOC_HIGH_LOW)))
-    {
-        /* Search UMB first */
-        Segment = UMB_START_SEGMENT;
-        SearchUmb = TRUE;
-    }
-
-    while (TRUE)
-    {
-        /* Get a pointer to the MCB */
-        CurrentMcb = SEGMENT_TO_MCB(Segment);
-
-        /* Make sure it's valid */
-        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z')
-        {
-            DPRINT("The DOS memory arena is corrupted!\n");
-            DosLastError = ERROR_ARENA_TRASHED;
-            return 0;
-        }
-
-        /* Only check free blocks */
-        if (CurrentMcb->OwnerPsp != 0) goto Next;
-
-        /* Combine this free block with adjoining free blocks */
-        DosCombineFreeBlocks(Segment);
-
-        /* Update the maximum block size */
-        if (CurrentMcb->Size > MaxSize) MaxSize = CurrentMcb->Size;
-
-        /* Check if this block is big enough */
-        if (CurrentMcb->Size < Size) goto Next;
-
-        switch (DosAllocStrategy & 0x3F)
-        {
-            case DOS_ALLOC_FIRST_FIT:
-            {
-                /* For first fit, stop immediately */
-                Result = Segment;
-                goto Done;
-            }
-
-            case DOS_ALLOC_BEST_FIT:
-            {
-                /* For best fit, update the smallest block found so far */
-                if ((Result == 0) || (CurrentMcb->Size < SEGMENT_TO_MCB(Result)->Size))
-                {
-                    Result = Segment;
-                }
-
-                break;
-            }
-
-            case DOS_ALLOC_LAST_FIT:
-            {
-                /* For last fit, make the current block the result, but keep searching */
-                Result = Segment;
-                break;
-            }
-        }
-
-Next:
-        /* If this was the last MCB in the chain, quit */
-        if (CurrentMcb->BlockType == 'Z')
-        {
-            /* Check if nothing was found while searching through UMBs */
-            if ((Result == 0) && SearchUmb && (DosAllocStrategy & DOS_ALLOC_HIGH_LOW))
-            {
-                /* Search low memory */
-                Segment = FIRST_MCB_SEGMENT;
-                continue;
-            }
-
-            break;
-        }
-
-        /* Otherwise, update the segment and continue */
-        Segment += CurrentMcb->Size + 1;
-    }
-
-Done:
-
-    /* If we didn't find a free block, return 0 */
-    if (Result == 0)
-    {
-        DosLastError = ERROR_NOT_ENOUGH_MEMORY;
-        if (MaxAvailable) *MaxAvailable = MaxSize;
-        return 0;
-    }
-
-    /* Get a pointer to the MCB */
-    CurrentMcb = SEGMENT_TO_MCB(Result);
-
-    /* Check if the block is larger than requested */
-    if (CurrentMcb->Size > Size)
-    {
-        /* It is, split it into two blocks */
-        NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
-
-        /* Initialize the new MCB structure */
-        NextMcb->BlockType = CurrentMcb->BlockType;
-        NextMcb->Size = CurrentMcb->Size - Size - 1;
-        NextMcb->OwnerPsp = 0;
-
-        /* Update the current block */
-        CurrentMcb->BlockType = 'M';
-        CurrentMcb->Size = Size;
-    }
-
-    /* Take ownership of the block */
-    CurrentMcb->OwnerPsp = CurrentPsp;
-
-    /* Return the segment of the data portion of the block */
-    return Result + 1;
-}
-
-static BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
-{
-    BOOLEAN Success = TRUE;
-    WORD Segment = BlockData - 1, ReturnSize = 0, NextSegment;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment), NextMcb;
-
-    DPRINT("DosResizeMemory: BlockData 0x%04X, NewSize 0x%04X\n",
-           BlockData,
-           NewSize);
-
-    /* Make sure this is a valid, allocated block */
-    if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
-    {
-        Success = FALSE;
-        DosLastError = ERROR_INVALID_HANDLE;
-        goto Done;
-    }
-
-    ReturnSize = Mcb->Size;
-
-    /* Check if we need to expand or contract the block */
-    if (NewSize > Mcb->Size)
-    {
-        /* We can't expand the last block */
-        if (Mcb->BlockType != 'M')
-        {
-            Success = FALSE;
-            goto Done;
-        }
-
-        /* Get the pointer and segment of the next MCB */
-        NextSegment = Segment + Mcb->Size + 1;
-        NextMcb = SEGMENT_TO_MCB(NextSegment);
-
-        /* Make sure the next segment is free */
-        if (NextMcb->OwnerPsp != 0)
-        {
-            DPRINT("Cannot expand memory block: next segment is not free!\n");
-            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
-            Success = FALSE;
-            goto Done;
-        }
-
-        /* Combine this free block with adjoining free blocks */
-        DosCombineFreeBlocks(NextSegment);
-
-        /* Set the maximum possible size of the block */
-        ReturnSize += NextMcb->Size + 1;
-
-        if (ReturnSize < NewSize)
-        {
-            DPRINT("Cannot expand memory block: insufficient free segments available!\n");
-            DosLastError = ERROR_NOT_ENOUGH_MEMORY;
-            Success = FALSE;
-            goto Done;
-        }
-
-        /* Maximize the current block */
-        Mcb->Size = ReturnSize;
-        Mcb->BlockType = NextMcb->BlockType;
-
-        /* Invalidate the next block */
-        NextMcb->BlockType = 'I';
-
-        /* Check if the block is larger than requested */
-        if (Mcb->Size > NewSize)
-        {
-            DPRINT("Block too large, reducing size from 0x%04X to 0x%04X\n",
-                   Mcb->Size,
-                   NewSize);
-
-            /* It is, split it into two blocks */
-            NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-    
-            /* Initialize the new MCB structure */
-            NextMcb->BlockType = Mcb->BlockType;
-            NextMcb->Size = Mcb->Size - NewSize - 1;
-            NextMcb->OwnerPsp = 0;
-
-            /* Update the current block */
-            Mcb->BlockType = 'M';
-            Mcb->Size = NewSize;
-        }
-    }
-    else if (NewSize < Mcb->Size)
-    {
-        DPRINT("Shrinking block from 0x%04X to 0x%04X\n",
-                Mcb->Size,
-                NewSize);
-
-        /* Just split the block */
-        NextMcb = SEGMENT_TO_MCB(Segment + NewSize + 1);
-        NextMcb->BlockType = Mcb->BlockType;
-        NextMcb->Size = Mcb->Size - NewSize - 1;
-        NextMcb->OwnerPsp = 0;
-
-        /* Update the MCB */
-        Mcb->BlockType = 'M';
-        Mcb->Size = NewSize;
-    }
-
-Done:
-    /* Check if the operation failed */
-    if (!Success)
-    {
-        DPRINT("DosResizeMemory FAILED. Maximum available: 0x%04X\n",
-               ReturnSize);
-
-        /* Return the maximum possible size */
-        if (MaxAvailable) *MaxAvailable = ReturnSize;
-    }
-    
-    return Success;
-}
-
-static BOOLEAN DosFreeMemory(WORD BlockData)
-{
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
-
-    DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
-
-    /* Make sure the MCB is valid */
-    if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
-    {
-        DPRINT("MCB block type '%c' not valid!\n", Mcb->BlockType);
-        return FALSE;
-    }
-
-    /* Mark the block as free */
-    Mcb->OwnerPsp = 0;
-
-    return TRUE;
-}
-
-static BOOLEAN DosLinkUmb(VOID)
-{
-    DWORD Segment = FIRST_MCB_SEGMENT;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
-
-    DPRINT("Linking UMB\n");
-
-    /* Check if UMBs are already linked */
-    if (DosUmbLinked) return FALSE;
-
-    /* Find the last block */
-    while ((Mcb->BlockType == 'M') && (Segment <= 0xFFFF))
-    {
-        Segment += Mcb->Size + 1;
-        Mcb = SEGMENT_TO_MCB(Segment);
-    }
-
-    /* Make sure it's valid */
-    if (Mcb->BlockType != 'Z') return FALSE;
-
-    /* Connect the MCB with the UMB chain */
-    Mcb->BlockType = 'M';
-
-    DosUmbLinked = TRUE;
-    return TRUE;
-}
-
-static BOOLEAN DosUnlinkUmb(VOID)
-{
-    DWORD Segment = FIRST_MCB_SEGMENT;
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment);
-
-    DPRINT("Unlinking UMB\n");
-
-    /* Check if UMBs are already unlinked */
-    if (!DosUmbLinked) return FALSE;
-
-    /* Find the block preceding the MCB that links it with the UMB chain */
-    while (Segment <= 0xFFFF)
-    {
-        if ((Segment + Mcb->Size) == (FIRST_MCB_SEGMENT + USER_MEMORY_SIZE))
-        {
-            /* This is the last non-UMB segment */
-            break;
-        }
-
-        /* Advance to the next MCB */
-        Segment += Mcb->Size + 1;
-        Mcb = SEGMENT_TO_MCB(Segment);
-    }
-
-    /* Mark the MCB as the last MCB */
-    Mcb->BlockType = 'Z';
-
-    DosUmbLinked = FALSE;
-    return TRUE;
-}
-
-static VOID DosChangeMemoryOwner(WORD Segment, WORD NewOwner)
-{
-    PDOS_MCB Mcb = SEGMENT_TO_MCB(Segment - 1);
-
-    /* Just set the owner */
-    Mcb->OwnerPsp = NewOwner;
-}
 
 static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
                                     LPCSTR ProgramName)
@@ -471,13 +113,8 @@ static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
     return DestSegment;
 }
 
-
-
-
-
-
 /* Taken from base/shell/cmd/console.c */
-BOOL IsConsoleHandle(HANDLE hHandle)
+static BOOL IsConsoleHandle(HANDLE hHandle)
 {
     DWORD dwMode;
 
@@ -500,12 +137,59 @@ BOOL IsConsoleHandle(HANDLE hHandle)
     return GetConsoleMode(hHandle, &dwMode);
 }
 
+static inline PDOS_SFT_ENTRY DosFindFreeSftEntry(VOID)
+{
+    UINT i;
+
+    for (i = 0; i < DOS_SFT_SIZE; i++)
+    {
+        if (DosSystemFileTable[i].Type == DOS_SFT_ENTRY_NONE)
+        {
+            return &DosSystemFileTable[i];
+        }
+    }
+
+    return NULL;
+}
+
+static inline PDOS_SFT_ENTRY DosFindWin32SftEntry(HANDLE Handle)
+{
+    UINT i;
+
+    for (i = 0; i < DOS_SFT_SIZE; i++)
+    {
+        if (DosSystemFileTable[i].Type == DOS_SFT_ENTRY_WIN32
+            && DosSystemFileTable[i].Handle == Handle)
+        {
+            return &DosSystemFileTable[i];
+        }
+    }
+
+    return NULL;
+}
+
+static inline PDOS_SFT_ENTRY DosFindDeviceSftEntry(PDOS_DEVICE_NODE Device)
+{
+    UINT i;
+
+    for (i = 0; i < DOS_SFT_SIZE; i++)
+    {
+        if (DosSystemFileTable[i].Type == DOS_SFT_ENTRY_DEVICE
+            && DosSystemFileTable[i].DeviceNode == Device)
+        {
+            return &DosSystemFileTable[i];
+        }
+    }
+
+    return NULL;
+}
+
 WORD DosOpenHandle(HANDLE Handle)
 {
-    BYTE i;
     WORD DosHandle;
     PDOS_PSP PspBlock;
     LPBYTE HandleTable;
+    PDOS_SFT_ENTRY SftEntry;
 
     /* The system PSP has no handle table */
     if (CurrentPsp == SYSTEM_PSP) return INVALID_DOS_HANDLE;
@@ -524,64 +208,98 @@ WORD DosOpenHandle(HANDLE Handle)
     if (DosHandle == PspBlock->HandleTableSize) return INVALID_DOS_HANDLE;
 
     /* Check if the handle is already in the SFT */
-    for (i = 0; i < DOS_SFT_SIZE; i++)
+    SftEntry = DosFindWin32SftEntry(Handle);
+    if (SftEntry != NULL)
     {
-        /* Check if this is the same handle */
-        if (DosSystemFileTable[i].Handle != Handle) continue;
-
         /* Already in the table, reference it */
-        DosSystemFileTable[i].RefCount++;
-
-        /* Set the JFT entry to that SFT index */
-        HandleTable[DosHandle] = i;
-
-        /* Return the new handle */
-        return DosHandle;
+        SftEntry->RefCount++;
+        goto Finish;
     }
 
-    /* Add the handle to the SFT */
-    for (i = 0; i < DOS_SFT_SIZE; i++)
+    /* Find a free SFT entry to use */
+    SftEntry = DosFindFreeSftEntry();
+    if (SftEntry == NULL)
     {
-        /* Make sure this is an empty table entry */
-        if (DosSystemFileTable[i].Handle != INVALID_HANDLE_VALUE) continue;
-
-        /* Initialize the empty table entry */
-        DosSystemFileTable[i].Handle   = Handle;
-        DosSystemFileTable[i].RefCount = 1;
-
-        /* Set the JFT entry to that SFT index */
-        HandleTable[DosHandle] = i;
-
-        /* Return the new handle */
-        return DosHandle;
+        /* The SFT is full */
+        return INVALID_DOS_HANDLE;
     }
 
-    /* The SFT is full */
-    return INVALID_DOS_HANDLE;
+    /* Initialize the empty table entry */
+    SftEntry->Type       = DOS_SFT_ENTRY_WIN32;
+    SftEntry->Handle     = Handle;
+    SftEntry->RefCount   = 1;
+
+Finish:
+
+    /* Set the JFT entry to that SFT index */
+    HandleTable[DosHandle] = ARRAY_INDEX(SftEntry, DosSystemFileTable);
+
+    /* Return the new handle */
+    return DosHandle;
 }
 
-HANDLE DosGetRealHandle(WORD DosHandle)
+WORD DosOpenDevice(PDOS_DEVICE_NODE Device)
 {
+    WORD DosHandle;
     PDOS_PSP PspBlock;
     LPBYTE HandleTable;
+    PDOS_SFT_ENTRY SftEntry;
+
+    DPRINT("DosOpenDevice(\"%Z\")\n", &Device->Name);
 
     /* The system PSP has no handle table */
-    if (CurrentPsp == SYSTEM_PSP) return INVALID_HANDLE_VALUE;
+    if (CurrentPsp == SYSTEM_PSP) return INVALID_DOS_HANDLE;
 
     /* Get a pointer to the handle table */
     PspBlock = SEGMENT_TO_PSP(CurrentPsp);
     HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
 
-    /* Make sure the handle is open */
-    if (HandleTable[DosHandle] == 0xFF) return INVALID_HANDLE_VALUE;
+    /* Find a free entry in the JFT */
+    for (DosHandle = 0; DosHandle < PspBlock->HandleTableSize; DosHandle++)
+    {
+        if (HandleTable[DosHandle] == 0xFF) break;
+    }
 
-    /* Return the Win32 handle */
-    return DosSystemFileTable[HandleTable[DosHandle]].Handle;
+    /* If there are no free entries, fail */
+    if (DosHandle == PspBlock->HandleTableSize) return INVALID_DOS_HANDLE;
+
+    /* Check if the device is already in the SFT */
+    SftEntry = DosFindDeviceSftEntry(Device);
+    if (SftEntry != NULL)
+    {
+        /* Already in the table, reference it */
+        SftEntry->RefCount++;
+        goto Finish;
+    }
+
+    /* Find a free SFT entry to use */
+    SftEntry = DosFindFreeSftEntry();
+    if (SftEntry == NULL)
+    {
+        /* The SFT is full */
+        return INVALID_DOS_HANDLE;
+    }
+
+    /* Initialize the empty table entry */
+    SftEntry->Type       = DOS_SFT_ENTRY_DEVICE;
+    SftEntry->DeviceNode = Device;
+    SftEntry->RefCount   = 1;
+
+Finish:
+
+    /* Call the open routine, if it exists */
+    if (Device->OpenRoutine) Device->OpenRoutine(Device);
+
+    /* Set the JFT entry to that SFT index */
+    HandleTable[DosHandle] = ARRAY_INDEX(SftEntry, DosSystemFileTable);
+
+    /* Return the new handle */
+    return DosHandle;
 }
 
 static VOID DosCopyHandleTable(LPBYTE DestinationTable)
 {
-    INT i;
+    UINT i;
     PDOS_PSP PspBlock;
     LPBYTE SourceTable;
 
@@ -591,31 +309,73 @@ static VOID DosCopyHandleTable(LPBYTE DestinationTable)
     /* Check if this is the initial process */
     if (CurrentPsp == SYSTEM_PSP)
     {
-        /* Set up the standard I/O devices */
-        for (i = 0; i <= 2; i++)
+        PDOS_SFT_ENTRY SftEntry;
+        HANDLE StandardHandles[3];
+        PDOS_DEVICE_NODE Con = DosGetDevice("CON");
+        ASSERT(Con != NULL);
+
+        /* Get the native standard handles */
+        StandardHandles[0] = GetStdHandle(STD_INPUT_HANDLE);
+        StandardHandles[1] = GetStdHandle(STD_OUTPUT_HANDLE);
+        StandardHandles[2] = GetStdHandle(STD_ERROR_HANDLE);
+
+        for (i = 0; i < 3; i++)
         {
-            /* Set the index in the SFT */
-            DestinationTable[i] = (BYTE)i;
+            /* Find the corresponding SFT entry */
+            if (IsConsoleHandle(StandardHandles[i]))
+            {
+                SftEntry = DosFindDeviceSftEntry(Con);
+            }
+            else
+            {
+                SftEntry = DosFindWin32SftEntry(StandardHandles[i]);
+            }
+
+            if (SftEntry == NULL)
+            {
+                /* Create a new SFT entry for it */
+                SftEntry = DosFindFreeSftEntry();
+                if (SftEntry == NULL)
+                {
+                    DPRINT1("Cannot create standard handle %d, the SFT is full!\n", i);
+                    continue;
+                }
+
+                SftEntry->RefCount = 0;
+
+                if (IsConsoleHandle(StandardHandles[i]))
+                {
+                    SftEntry->Type = DOS_SFT_ENTRY_DEVICE;
+                    SftEntry->DeviceNode = Con;
+
+                    /* Call the open routine */
+                    if (Con->OpenRoutine) Con->OpenRoutine(Con);
+                }
+                else
+                {
+                    SftEntry->Type = DOS_SFT_ENTRY_WIN32;
+                    SftEntry->Handle = StandardHandles[i];
+                }
+            }
+
+            SftEntry->RefCount++;
+            DestinationTable[i] = ARRAY_INDEX(SftEntry, DosSystemFileTable);
+        }
+    }
+    else
+    {
+        /* Get the parent PSP block and handle table */
+        PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+        SourceTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+        /* Copy the first 20 handles into the new table */
+        for (i = 0; i < DEFAULT_JFT_SIZE; i++)
+        {
+            DestinationTable[i] = SourceTable[i];
 
             /* Increase the reference count */
-            DosSystemFileTable[i].RefCount++;
+            DosSystemFileTable[SourceTable[i]].RefCount++;
         }
-
-        /* Done */
-        return;
-    }
-
-    /* Get the parent PSP block and handle table */
-    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
-    SourceTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
-
-    /* Copy the first 20 handles into the new table */
-    for (i = 0; i < 20; i++)
-    {
-        DestinationTable[i] = SourceTable[i];
-
-        /* Increase the reference count */
-        DosSystemFileTable[SourceTable[i]].RefCount++;
     }
 }
 
@@ -634,12 +394,12 @@ static BOOLEAN DosResizeHandleTable(WORD NewSize)
         return TRUE;
     }
 
-    if (PspBlock->HandleTableSize > 20)
+    if (PspBlock->HandleTableSize > DEFAULT_JFT_SIZE)
     {
         /* Get the segment of the current table */
         Segment = (LOWORD(PspBlock->HandleTablePtr) >> 4) + HIWORD(PspBlock->HandleTablePtr);
 
-        if (NewSize <= 20)
+        if (NewSize <= DEFAULT_JFT_SIZE)
         {
             /* Get the current handle table */
             HandleTable = FAR_POINTER(PspBlock->HandleTablePtr);
@@ -679,7 +439,7 @@ static BOOLEAN DosResizeHandleTable(WORD NewSize)
             PspBlock->HandleTableSize = NewSize;
         }
     }
-    else if (NewSize > 20)
+    else if (NewSize > DEFAULT_JFT_SIZE)
     {
         Segment = DosAllocateMemory(NewSize, NULL);
         if (Segment == 0) return FALSE;
@@ -702,9 +462,9 @@ static BOOLEAN DosResizeHandleTable(WORD NewSize)
 
 static BOOLEAN DosCloseHandle(WORD DosHandle)
 {
-    BYTE SftIndex;
     PDOS_PSP PspBlock;
     LPBYTE HandleTable;
+    PDOS_SFT_ENTRY SftEntry;
 
     DPRINT("DosCloseHandle: DosHandle 0x%04X\n", DosHandle);
 
@@ -718,18 +478,45 @@ static BOOLEAN DosCloseHandle(WORD DosHandle)
     /* Make sure the handle is open */
     if (HandleTable[DosHandle] == 0xFF) return FALSE;
 
+    /* Make sure the SFT entry is valid */
+    SftEntry = &DosSystemFileTable[HandleTable[DosHandle]];
+    if (SftEntry->Type == DOS_SFT_ENTRY_NONE) return FALSE;
+
     /* Decrement the reference count of the SFT entry */
-    SftIndex = HandleTable[DosHandle];
-    DosSystemFileTable[SftIndex].RefCount--;
+    SftEntry->RefCount--;
 
     /* Check if the reference count fell to zero */
-    if (!DosSystemFileTable[SftIndex].RefCount)
+    if (!SftEntry->RefCount)
     {
-        /* Close the file, it's no longer needed */
-        CloseHandle(DosSystemFileTable[SftIndex].Handle);
+        switch (SftEntry->Type)
+        {
+            case DOS_SFT_ENTRY_WIN32:
+            {
+                /* Close the win32 handle and clear it */
+                CloseHandle(SftEntry->Handle);
 
-        /* Clear the handle */
-        DosSystemFileTable[SftIndex].Handle = INVALID_HANDLE_VALUE;
+                break;
+            }
+
+            case DOS_SFT_ENTRY_DEVICE:
+            {
+                PDOS_DEVICE_NODE Node = SftEntry->DeviceNode;
+
+                /* Call the close routine, if it exists */
+                if (Node->CloseRoutine) SftEntry->DeviceNode->CloseRoutine(SftEntry->DeviceNode);
+
+                break;
+            }
+
+            default:
+            {
+                /* Shouldn't happen */
+                ASSERT(FALSE);
+            }
+        }
+
+        /* Invalidate the SFT entry */
+        SftEntry->Type = DOS_SFT_ENTRY_NONE;
     }
 
     /* Clear the entry in the JFT */
@@ -775,12 +562,6 @@ static BOOLEAN DosDuplicateHandle(WORD OldHandle, WORD NewHandle)
     /* Return success */
     return TRUE;
 }
-
-
-
-
-
-
 
 static BOOLEAN DosChangeDrive(BYTE Drive)
 {
@@ -869,7 +650,42 @@ static BOOLEAN DosChangeDirectory(LPSTR Directory)
     return TRUE;
 }
 
+static BOOLEAN DosControlBreak(VOID)
+{
+    setCF(0);
+
+    /* Call interrupt 0x23 */
+    Int32Call(&DosContext, 0x23);
+
+    if (getCF())
+    {
+        DosTerminateProcess(CurrentPsp, 0, 0);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+PDOS_SFT_ENTRY DosGetSftEntry(WORD DosHandle)
+{
+    PDOS_PSP PspBlock;
+    LPBYTE HandleTable;
+
+    /* The system PSP has no handle table */
+    if (CurrentPsp == SYSTEM_PSP) return NULL;
+
+    /* Get a pointer to the handle table */
+    PspBlock = SEGMENT_TO_PSP(CurrentPsp);
+    HandleTable = (LPBYTE)FAR_POINTER(PspBlock->HandleTablePtr);
+
+    /* Make sure the handle is open */
+    if (HandleTable[DosHandle] == 0xFF) return NULL;
+
+    /* Return a pointer to the SFT entry */
+    return &DosSystemFileTable[HandleTable[DosHandle]];
+}
 
 VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment)
 {
@@ -1020,19 +836,22 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         /* Make sure it does not pass 0xFFFF */
         if (ExeSize > 0xFFFF) ExeSize = 0xFFFF;
 
-        /* Reduce the size one by one until the allocation is successful */
-        for (i = Header->e_maxalloc; i >= Header->e_minalloc; i--, ExeSize--)
-        {
-            /* Try to allocate that much memory */
-            Segment = DosAllocateMemory((WORD)ExeSize, NULL);
-            if (Segment != 0) break;
-        }
+        /* Try to allocate that much memory */
+        Segment = DosAllocateMemory((WORD)ExeSize, &MaxAllocSize);
 
-        /* Check if at least the lowest allocation was successful */
         if (Segment == 0)
         {
-            Result = DosLastError;
-            goto Cleanup;
+            /* Check if there's at least enough memory for the minimum size */
+            if (MaxAllocSize < (ExeSize - Header->e_maxalloc + Header->e_minalloc))
+            {
+                Result = DosLastError;
+                goto Cleanup;
+            }
+
+            /* Allocate that minimum amount */
+            ExeSize = MaxAllocSize;
+            Segment = DosAllocateMemory((WORD)ExeSize, NULL);
+            ASSERT(Segment != 0);
         }
 
         /* Initialize the PSP */
@@ -1178,7 +997,8 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     if (Result != ERROR_SUCCESS) goto Quit;
 
     /* Attach to the console */
-    VidBiosAttachToConsole(); // FIXME: And in fact, attach the full NTVDM UI to the console
+    ConsoleAttach();
+    VidBiosAttachToConsole();
 
     // HACK: Simulate a ENTER key release scancode on the PS/2 port because
     // some apps expect to read a key release scancode (> 0x80) when they
@@ -1191,7 +1011,8 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
     CpuSimulate();
 
     /* Detach from the console */
-    VidBiosDetachFromConsole(); // FIXME: And in fact, detach the full NTVDM UI from the console
+    VidBiosDetachFromConsole();
+    ConsoleDetach();
 
 Quit:
     return Result;
@@ -1314,7 +1135,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
 }
 #endif
 
-VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
+VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
 {
     WORD i;
     WORD McbSegment = FIRST_MCB_SEGMENT;
@@ -1322,17 +1143,21 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
 
-    DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X\n",
+    DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X, KeepResident 0x%04X\n",
            Psp,
-           ReturnCode);
+           ReturnCode,
+           KeepResident);
 
     /* Check if this PSP is it's own parent */
     if (PspBlock->ParentPsp == Psp) goto Done;
 
-    for (i = 0; i < PspBlock->HandleTableSize; i++)
+    if (KeepResident == 0)
     {
-        /* Close the handle */
-        DosCloseHandle(i);
+        for (i = 0; i < PspBlock->HandleTableSize; i++)
+        {
+            /* Close the handle */
+            DosCloseHandle(i);
+        }
     }
 
     /* Free the memory used by the process */
@@ -1342,10 +1167,30 @@ VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode)
         CurrentMcb = SEGMENT_TO_MCB(McbSegment);
 
         /* Make sure the MCB is valid */
-        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType !='Z') break;
+        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z') break;
 
-        /* If this block was allocated by the process, free it */
-        if (CurrentMcb->OwnerPsp == Psp) DosFreeMemory(McbSegment + 1);
+        /* Check if this block was allocated by the process */
+        if (CurrentMcb->OwnerPsp == Psp)
+        {
+            if (KeepResident == 0)
+            {
+                /* Free this entire block */
+                DosFreeMemory(McbSegment + 1);
+            }
+            else if (KeepResident < CurrentMcb->Size)
+            {
+                /* Reduce the size of the block */
+                DosResizeMemory(McbSegment + 1, KeepResident, NULL);
+
+                /* No further paragraphs need to stay resident */
+                KeepResident = 0;
+            }
+            else
+            {
+                /* Just reduce the amount of paragraphs we need to keep resident */
+                KeepResident -= CurrentMcb->Size;
+            }
+        }
 
         /* If this was the last block, quit */
         if (CurrentMcb->BlockType == 'Z') break;
@@ -1403,14 +1248,17 @@ Done:
 
 BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 {
-    HANDLE Handle = DosGetRealHandle(FileHandle);
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
+    PDOS_DEVICE_NODE Node = NULL;
 
-    if (Handle == INVALID_HANDLE_VALUE)
+    /* Make sure it exists */
+    if (!SftEntry)
     {
-        /* Doesn't exist */
         DosLastError = ERROR_FILE_NOT_FOUND;
         return FALSE;
     }
+
+    if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE) Node = SftEntry->DeviceNode;
 
     switch (ControlCode)
     {
@@ -1424,25 +1272,70 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
              * for a list of possible flags.
              */
 
-            if (Handle == DosSystemFileTable[DOS_INPUT_HANDLE].Handle)
+            if (Node)
             {
-                /* Console input */
-                InfoWord |= 1 << 0;
-
-                /* It is a device */
-                InfoWord |= 1 << 7;
-            }
-            else if (Handle == DosSystemFileTable[DOS_OUTPUT_HANDLE].Handle)
-            {
-                /* Console output */
-                InfoWord |= 1 << 1;
-
-                /* It is a device */
-                InfoWord |= 1 << 7;
+                /* Return the device attributes with bit 7 set */
+                InfoWord = Node->DeviceAttributes | (1 << 7);
             }
 
-            /* Return the device information word */
             setDX(InfoWord);
+            return TRUE;
+        }
+
+        /* Set Device Information */
+        case 0x01:
+        {
+            // TODO: NOT IMPLEMENTED
+            UNIMPLEMENTED;
+
+            return FALSE;
+        }
+
+        /* Read From Device I/O Control Channel */
+        case 0x02:
+        {
+            WORD Length = getCX();
+
+            if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
+            {
+                DosLastError = ERROR_INVALID_FUNCTION;
+                return FALSE;
+            }
+
+            /* Do nothing if there is no IOCTL routine */
+            if (!Node->IoctlReadRoutine)
+            {
+                setAX(0);
+                return TRUE;
+            }
+
+            Node->IoctlReadRoutine(Node, MAKELONG(getDX(), getDS()), &Length);
+
+            setAX(Length);
+            return TRUE;
+        }
+
+        /* Write To Device I/O Control Channel */
+        case 0x03:
+        {
+            WORD Length = getCX();
+
+            if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
+            {
+                DosLastError = ERROR_INVALID_FUNCTION;
+                return FALSE;
+            }
+
+            /* Do nothing if there is no IOCTL routine */
+            if (!Node->IoctlWriteRoutine)
+            {
+                setAX(0);
+                return TRUE;
+            }
+
+            Node->IoctlWriteRoutine(Node, MAKELONG(getDX(), getDS()), &Length);
+
+            setAX(Length);
             return TRUE;
         }
 
@@ -1460,7 +1353,7 @@ BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle)
 VOID WINAPI DosInt20h(LPWORD Stack)
 {
     /* This is the exit interrupt */
-    DosTerminateProcess(Stack[STACK_CS], 0);
+    DosTerminateProcess(Stack[STACK_CS], 0, 0);
 }
 
 VOID WINAPI DosInt21h(LPWORD Stack)
@@ -1478,7 +1371,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Terminate Program */
         case 0x00:
         {
-            DosTerminateProcess(Stack[STACK_CS], 0);
+            DosTerminateProcess(Stack[STACK_CS], 0, 0);
             break;
         }
 
@@ -1590,15 +1483,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             DPRINT("Char input without echo\n");
 
-            // FIXME: Under DOS 2+, input handle may be redirected!!!!
             Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
             // FIXME: For 0x07, do not check Ctrl-C/Break.
             //        For 0x08, do check those control sequences and if needed,
             //        call INT 0x23.
-
-            // /* Let the BOP repeat if needed */
-            // if (getCF()) break;
 
             setAL(Character);
             break;
@@ -1634,18 +1523,62 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             while (Count < InputBuffer->MaxLength)
             {
-                // FIXME!! This function should interpret backspaces etc...
-
                 /* Try to read a character (wait) */
                 Character = DosReadCharacter(DOS_INPUT_HANDLE);
 
-                // FIXME: Check whether Ctrl-C / Ctrl-Break is pressed, and call INT 23h if so.
+                switch (Character)
+                {
+                    /* Extended character */
+                    case '\0':
+                    {
+                        /* Read the scancode */
+                        DosReadCharacter(DOS_INPUT_HANDLE);
+                        break;
+                    }
 
-                /* Echo the character and append it to the buffer */
-                DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-                InputBuffer->Buffer[Count] = Character;
+                    /* Ctrl-C */
+                    case 0x03:
+                    {
+                        DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
+                        DosPrintCharacter(DOS_OUTPUT_HANDLE, 'C');
 
-                Count++; /* Carriage returns are also counted */
+                        if (DosControlBreak()) return;
+                        break;
+                    }
+
+                    /* Backspace */
+                    case '\b':
+                    {
+                        if (Count > 0)
+                        {
+                            Count--;
+
+                            /* Erase the character */
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, ' ');
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '\b');
+                        }
+
+                        break;
+                    }
+
+                    default:
+                    {
+                        /* Append it to the buffer */
+                        InputBuffer->Buffer[Count] = Character;
+                        Count++; /* Carriage returns are also counted */
+
+                        /* Check if this is a special character */
+                        if (Character < 0x20 && Character != 0x0A && Character != 0x0D)
+                        {
+                            DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
+                            Character += 'A' - 1;
+                        }
+
+                        /* Echo the character */
+                        DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
+                    }
+                }
 
                 if (Character == '\r') break;
             }
@@ -1894,6 +1827,14 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Terminate and Stay Resident */
+        case 0x31:
+        {
+            DPRINT1("Process going resident: %u paragraphs kept\n", getDX());
+            DosTerminateProcess(CurrentPsp, getAL(), getDX());
+            break;
+        }
+
         /* Extended functionalities */
         case 0x33:
         {
@@ -2130,13 +2071,24 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Open File */
+        /* Open File or Device */
         case 0x3D:
         {
             WORD FileHandle;
-            WORD ErrorCode = DosOpenFile(&FileHandle,
-                                         (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX()),
-                                         getAL());
+            WORD ErrorCode;
+            LPCSTR FileName = (LPCSTR)SEG_OFF_TO_PTR(getDS(), getDX());
+            PDOS_DEVICE_NODE Device = DosGetDevice(FileName);
+
+            if (Device)
+            {
+                FileHandle = DosOpenDevice(Device);
+                ErrorCode =  (FileHandle != INVALID_DOS_HANDLE)
+                             ? ERROR_SUCCESS : ERROR_TOO_MANY_OPEN_FILES;
+            }
+            else
+            {
+                ErrorCode = DosOpenFile(&FileHandle, FileName, getAL());
+            }
 
             if (ErrorCode == ERROR_SUCCESS)
             {
@@ -2152,7 +2104,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-        /* Close File */
+        /* Close File or Device */
         case 0x3E:
         {
             if (DosCloseHandle(getBX()))
@@ -2174,11 +2126,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             WORD BytesRead = 0;
             WORD ErrorCode;
 
-            DPRINT("INT 21h, AH = 3Fh\n");
+            DPRINT("DosReadFile(0x%04X)\n", getBX());
 
             DoEcho = TRUE;
             ErrorCode = DosReadFile(getBX(),
-                                    SEG_OFF_TO_PTR(getDS(), getDX()),
+                                    MAKELONG(getDX(), getDS()),
                                     getCX(),
                                     &BytesRead);
             DoEcho = FALSE;
@@ -2202,7 +2154,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         {
             WORD BytesWritten = 0;
             WORD ErrorCode = DosWriteFile(getBX(),
-                                          SEG_OFF_TO_PTR(getDS(), getDX()),
+                                          MAKELONG(getDX(), getDS()),
                                           getCX(),
                                           &BytesWritten);
 
@@ -2335,9 +2287,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         case 0x45:
         {
             WORD NewHandle;
-            HANDLE Handle = DosGetRealHandle(getBX());
+            PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(getBX());
 
-            if (Handle == INVALID_HANDLE_VALUE)
+            if (SftEntry == NULL || SftEntry->Type == DOS_SFT_ENTRY_NONE) 
             {
                 /* The handle is invalid */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -2346,7 +2298,26 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             }
 
             /* Open a new handle to the same entry */
-            NewHandle = DosOpenHandle(Handle);
+            switch (SftEntry->Type)
+            {
+                case DOS_SFT_ENTRY_WIN32:
+                {
+                    NewHandle = DosOpenHandle(SftEntry->Handle);
+                    break;
+                }
+
+                case DOS_SFT_ENTRY_DEVICE:
+                {
+                    NewHandle = DosOpenDevice(SftEntry->DeviceNode);
+                    break;
+                }
+
+                default:
+                {
+                    /* Shouldn't happen */
+                    ASSERT(FALSE);
+                }
+            }
 
             if (NewHandle == INVALID_DOS_HANDLE)
             {
@@ -2496,7 +2467,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Terminate With Return Code */
         case 0x4C:
         {
-            DosTerminateProcess(CurrentPsp, getAL());
+            DosTerminateProcess(CurrentPsp, getAL(), 0);
             break;
         }
 
@@ -2581,7 +2552,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             setES(0x0000);
             setBX(0x0000);
 
-            DisplayMessage(L"Required for AARD code, do you remember? :P");
+            DPRINT1("INT 21h, AH=52h: This application requires the internal DOS List of lists (SYSVARS). UNIMPLEMENTED");
             break;
         }
 
@@ -2742,9 +2713,9 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Lock/Unlock Region of File */
         case 0x5C:
         {
-            HANDLE Handle = DosGetRealHandle(getBX());
+            PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(getBX());
 
-            if (Handle == INVALID_HANDLE_VALUE)
+            if (SftEntry == NULL || SftEntry->Type != DOS_SFT_ENTRY_WIN32)
             {
                 /* The handle is invalid */
                 Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
@@ -2755,7 +2726,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             if (getAL() == 0x00)
             {
                 /* Lock region of file */
-                if (LockFile(Handle,
+                if (LockFile(SftEntry->Handle,
                              MAKELONG(getCX(), getDX()), 0,
                              MAKELONG(getSI(), getDI()), 0))
                 {
@@ -2770,7 +2741,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             else if (getAL() == 0x01)
             {
                 /* Unlock region of file */
-                if (UnlockFile(Handle,
+                if (UnlockFile(SftEntry->Handle,
                                MAKELONG(getCX(), getDX()), 0,
                                MAKELONG(getSI(), getDI()), 0))
                 {
@@ -2924,11 +2895,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
 VOID WINAPI DosBreakInterrupt(LPWORD Stack)
 {
-    UNREFERENCED_PARAMETER(Stack);
-
-    /* Stop the VDM task */
-    ResetEvent(VdmTaskEvent);
-    CpuUnsimulate();
+    /* Set CF to terminate the running process */
+    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
 }
 
 VOID WINAPI DosFastConOut(LPWORD Stack)
@@ -3031,19 +2999,15 @@ BOOLEAN DosKRNLInitialize(VOID)
     /* Initialize the SFT */
     for (i = 0; i < DOS_SFT_SIZE; i++)
     {
-        DosSystemFileTable[i].Handle   = INVALID_HANDLE_VALUE;
+        DosSystemFileTable[i].Type     = DOS_SFT_ENTRY_NONE;
         DosSystemFileTable[i].RefCount = 0;
     }
 
-    /* Get handles to standard I/O devices */
-    DosSystemFileTable[0].Handle = GetStdHandle(STD_INPUT_HANDLE);
-    DosSystemFileTable[1].Handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    DosSystemFileTable[2].Handle = GetStdHandle(STD_ERROR_HANDLE);
+    /* Load the EMS driver */
+    EmsDrvInitialize();
 
-    /* Initialize the reference counts */
-    DosSystemFileTable[0].RefCount =
-    DosSystemFileTable[1].RefCount =
-    DosSystemFileTable[2].RefCount = 1;
+    /* Load the CON driver */
+    ConDrvInitialize();
 
 #endif
 

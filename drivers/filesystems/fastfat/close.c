@@ -46,29 +46,6 @@ VfatCloseFile(
     }
     else
     {
-        if (FileObject->DeletePending)
-        {
-            if (pFcb->Flags & FCB_DELETE_PENDING)
-            {
-                VfatDelEntry(DeviceExt, pFcb, NULL);
-
-                FsRtlNotifyFullReportChange(DeviceExt->NotifySync,
-                                            &(DeviceExt->NotifyList),
-                                            (PSTRING)&pFcb->PathNameU,
-                                            pFcb->PathNameU.Length - pFcb->LongNameU.Length,
-                                            NULL,
-                                            NULL,
-                                            ((*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) ?
-                                            FILE_NOTIFY_CHANGE_DIR_NAME : FILE_NOTIFY_CHANGE_FILE_NAME),
-                                            FILE_ACTION_REMOVED,
-                                            NULL);
-            }
-            else
-            {
-                Status = STATUS_DELETE_PENDING;
-            }
-        }
-
         vfatReleaseFCB(DeviceExt, pFcb);
     }
 

@@ -1,0 +1,7 @@
+; Kernel Security Support Provider Interface Driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","ImagePath",0x00020000,"system32\drivers\ksecdd.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ksecdd","Type",0x00010001,0x00000001

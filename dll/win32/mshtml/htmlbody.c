@@ -789,13 +789,23 @@ static HRESULT HTMLBodyElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->textcont.element.node, riid, ppv);
 }
 
-static void HTMLBodyElement_destructor(HTMLDOMNode *iface)
+static void HTMLBodyElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
 {
     HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
 
-    nsIDOMHTMLBodyElement_Release(This->nsbody);
+    if(This->nsbody)
+        note_cc_edge((nsISupports*)This->nsbody, "This->nsbody", cb);
+}
 
-    HTMLElement_destructor(&This->textcont.element.node);
+static void HTMLBodyElement_unlink(HTMLDOMNode *iface)
+{
+    HTMLBodyElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsbody) {
+        nsIDOMHTMLBodyElement *nsbody = This->nsbody;
+        This->nsbody = NULL;
+        nsIDOMHTMLBodyElement_Release(nsbody);
+    }
 }
 
 static event_target_t **HTMLBodyElement_get_event_target(HTMLDOMNode *iface)
@@ -807,6 +817,11 @@ static event_target_t **HTMLBodyElement_get_event_target(HTMLDOMNode *iface)
         : &This->textcont.element.node.event_target;
 }
 
+static BOOL HTMLBodyElement_is_text_edit(HTMLDOMNode *iface)
+{
+    return TRUE;
+}
+
 static const cpc_entry_t HTMLBodyElement_cpc[] = {
     {&DIID_HTMLTextContainerEvents},
     {&IID_IPropertyNotifySink},
@@ -816,12 +831,23 @@ static const cpc_entry_t HTMLBodyElement_cpc[] = {
 
 static const NodeImplVtbl HTMLBodyElementImplVtbl = {
     HTMLBodyElement_QI,
-    HTMLBodyElement_destructor,
+    HTMLElement_destructor,
     HTMLBodyElement_cpc,
     HTMLElement_clone,
     HTMLElement_handle_event,
     HTMLElement_get_attr_col,
-    HTMLBodyElement_get_event_target
+    HTMLBodyElement_get_event_target,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLBodyElement_traverse,
+    HTMLBodyElement_unlink,
+    HTMLBodyElement_is_text_edit
 };
 
 static const tid_t HTMLBodyElement_iface_tids[] = {

@@ -482,7 +482,7 @@ HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len)
     if (*len <= buffer_size)
         lstrcpyW(buf, name->path);
     else
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
 
     return S_OK;
 }

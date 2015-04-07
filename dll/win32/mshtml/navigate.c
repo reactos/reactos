@@ -28,12 +28,6 @@
 static const WCHAR emptyW[] = {0};
 static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
 
-enum {
-    BOM_NONE,
-    BOM_UTF8,
-    BOM_UTF16
-};
-
 struct nsProtocolStream {
     nsIInputStream nsIInputStream_iface;
 
@@ -41,17 +35,6 @@ struct nsProtocolStream {
 
     char buf[1024];
     DWORD buf_size;
-};
-
-struct BSCallbackVtbl {
-    void (*destroy)(BSCallback*);
-    HRESULT (*init_bindinfo)(BSCallback*);
-    HRESULT (*start_binding)(BSCallback*);
-    HRESULT (*stop_binding)(BSCallback*,HRESULT);
-    HRESULT (*read_data)(BSCallback*,IStream*);
-    HRESULT (*on_progress)(BSCallback*,ULONG,LPCWSTR);
-    HRESULT (*on_response)(BSCallback*,DWORD,LPCWSTR);
-    HRESULT (*beginning_transaction)(BSCallback*,WCHAR**);
 };
 
 static inline nsProtocolStream *impl_from_nsIInputStream(nsIInputStream *iface)
@@ -206,6 +189,8 @@ static nsProtocolStream *create_nsprotocol_stream(void)
 
 static void release_request_data(request_data_t *request_data)
 {
+    if(request_data->post_stream)
+        nsIInputStream_Release(request_data->post_stream);
     heap_free(request_data->headers);
     if(request_data->post_data)
         GlobalFree(request_data->post_data);
@@ -596,7 +581,7 @@ static const IServiceProviderVtbl ServiceProviderVtbl = {
     BSCServiceProvider_QueryService
 };
 
-static void init_bscallback(BSCallback *This, const BSCallbackVtbl *vtbl, IMoniker *mon, DWORD bindf)
+void init_bscallback(BSCallback *This, const BSCallbackVtbl *vtbl, IMoniker *mon, DWORD bindf)
 {
     This->IBindStatusCallback_iface.lpVtbl = &BindStatusCallbackVtbl;
     This->IServiceProvider_iface.lpVtbl = &ServiceProviderVtbl;
@@ -614,7 +599,7 @@ static void init_bscallback(BSCallback *This, const BSCallbackVtbl *vtbl, IMonik
     This->mon = mon;
 }
 
-static HRESULT read_stream(BSCallback *This, IStream *stream, void *buf, DWORD size, DWORD *ret_size)
+HRESULT read_stream(BSCallback *This, IStream *stream, void *buf, DWORD size, DWORD *ret_size)
 {
     DWORD read_size = 0, skip=0;
     BYTE *data = buf;
@@ -794,7 +779,7 @@ HRESULT start_binding(HTMLInnerWindow *inner_window, BSCallback *bscallback, IBi
     }
 
     if(FAILED(hres)) {
-        bscallback->vtbl->stop_binding(bscallback, hres);
+        bscallback->window = NULL;
         return hres;
     }
 
@@ -802,7 +787,7 @@ HRESULT start_binding(HTMLInnerWindow *inner_window, BSCallback *bscallback, IBi
     IBindCtx_Release(bctx);
     if(FAILED(hres)) {
         WARN("BindToStorage failed: %08x\n", hres);
-        bscallback->vtbl->stop_binding(bscallback, hres);
+        bscallback->window = NULL;
         return hres;
     }
 
@@ -812,179 +797,10 @@ HRESULT start_binding(HTMLInnerWindow *inner_window, BSCallback *bscallback, IBi
     return S_OK;
 }
 
-typedef struct {
-    BSCallback bsc;
-
-    DWORD size;
-    char *buf;
-    HRESULT hres;
-} BufferBSC;
-
-static inline BufferBSC *BufferBSC_from_BSCallback(BSCallback *iface)
-{
-    return CONTAINING_RECORD(iface, BufferBSC, bsc);
-}
-
-static void BufferBSC_destroy(BSCallback *bsc)
-{
-    BufferBSC *This = BufferBSC_from_BSCallback(bsc);
-
-    heap_free(This->buf);
-    heap_free(This);
-}
-
-static HRESULT BufferBSC_init_bindinfo(BSCallback *bsc)
-{
-    return S_OK;
-}
-
-static HRESULT BufferBSC_start_binding(BSCallback *bsc)
-{
-    return S_OK;
-}
-
-static HRESULT BufferBSC_stop_binding(BSCallback *bsc, HRESULT result)
-{
-    BufferBSC *This = BufferBSC_from_BSCallback(bsc);
-
-    This->hres = result;
-
-    if(FAILED(result)) {
-        heap_free(This->buf);
-        This->buf = NULL;
-        This->size = 0;
-    }
-
-    return S_OK;
-}
-
-static HRESULT BufferBSC_read_data(BSCallback *bsc, IStream *stream)
-{
-    BufferBSC *This = BufferBSC_from_BSCallback(bsc);
-    DWORD readed;
-    HRESULT hres;
-
-    if(!This->buf) {
-        This->buf = heap_alloc(128);
-        if(!This->buf)
-            return E_OUTOFMEMORY;
-        This->size = 128;
-    }
-
-    do {
-        if(This->bsc.readed >= This->size) {
-            This->size <<= 1;
-            This->buf = heap_realloc(This->buf, This->size);
-        }
-
-        hres = read_stream(&This->bsc, stream, This->buf+This->bsc.readed, This->size-This->bsc.readed, &readed);
-    }while(hres == S_OK);
-
-    return S_OK;
-}
-
-static HRESULT BufferBSC_on_progress(BSCallback *bsc, ULONG status_code, LPCWSTR status_text)
-{
-    return S_OK;
-}
-
-static HRESULT BufferBSC_on_response(BSCallback *bsc, DWORD response_code,
-        LPCWSTR response_headers)
-{
-    return S_OK;
-}
-
-static HRESULT BufferBSC_beginning_transaction(BSCallback *bsc, WCHAR **additional_headers)
-{
-    return S_FALSE;
-}
-
-static const BSCallbackVtbl BufferBSCVtbl = {
-    BufferBSC_destroy,
-    BufferBSC_init_bindinfo,
-    BufferBSC_start_binding,
-    BufferBSC_stop_binding,
-    BufferBSC_read_data,
-    BufferBSC_on_progress,
-    BufferBSC_on_response,
-    BufferBSC_beginning_transaction
-};
-
-
-HRESULT bind_mon_to_wstr(HTMLInnerWindow *window, IMoniker *mon, WCHAR **ret)
-{
-    BufferBSC *bsc;
-    int cp = CP_ACP;
-    WCHAR *text;
-    HRESULT hres;
-
-    bsc = heap_alloc_zero(sizeof(*bsc));
-    if(!bsc)
-        return E_OUTOFMEMORY;
-
-    init_bscallback(&bsc->bsc, &BufferBSCVtbl, mon, 0);
-    bsc->hres = E_FAIL;
-
-    hres = start_binding(window, &bsc->bsc, NULL);
-    if(SUCCEEDED(hres))
-        hres = bsc->hres;
-    if(FAILED(hres)) {
-        IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
-        return hres;
-    }
-
-    if(!bsc->bsc.readed) {
-        *ret = NULL;
-        return S_OK;
-    }
-
-    switch(bsc->bsc.bom) {
-    case BOM_UTF16:
-        if(bsc->bsc.readed % sizeof(WCHAR)) {
-            FIXME("The buffer is not a valid utf16 string\n");
-            hres = E_FAIL;
-            break;
-        }
-
-        text = heap_alloc(bsc->bsc.readed+sizeof(WCHAR));
-        if(!text) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-
-        memcpy(text, bsc->buf, bsc->bsc.readed);
-        text[bsc->bsc.readed/sizeof(WCHAR)] = 0;
-        break;
-
-    case BOM_UTF8:
-        cp = CP_UTF8;
-        /* fallthrough */
-    default: {
-        DWORD len;
-
-        len = MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, NULL, 0);
-        text = heap_alloc((len+1)*sizeof(WCHAR));
-        if(!text) {
-            hres = E_OUTOFMEMORY;
-            break;
-        }
-
-        MultiByteToWideChar(cp, 0, bsc->buf, bsc->bsc.readed, text, len);
-        text[len] = 0;
-    }
-    }
-
-    IBindStatusCallback_Release(&bsc->bsc.IBindStatusCallback_iface);
-    if(FAILED(hres))
-        return hres;
-
-    *ret = text;
-    return S_OK;
-}
-
 static HRESULT read_post_data_stream(nsIInputStream *stream, BOOL contains_headers, struct list *headers_list,
         request_data_t *request_data)
 {
+    nsISeekableStream *seekable_stream;
     UINT64 available = 0;
     UINT32 data_len = 0;
     char *data, *post_data;
@@ -1065,9 +881,21 @@ static HRESULT read_post_data_stream(nsIInputStream *stream, BOOL contains_heade
         post_data = new_data;
     }
 
-    post_data[data_len] = 0;
+    if(post_data)
+        post_data[data_len] = 0;
     request_data->post_data = post_data;
     request_data->post_data_len = data_len;
+
+    nsres = nsIInputStream_QueryInterface(stream, &IID_nsISeekableStream, (void**)&seekable_stream);
+    assert(nsres == NS_OK);
+
+    nsres = nsISeekableStream_Seek(seekable_stream, NS_SEEK_SET, 0);
+    assert(nsres == NS_OK);
+
+    nsISeekableStream_Release(seekable_stream);
+
+    nsIInputStream_AddRef(stream);
+    request_data->post_stream = stream;
     TRACE("post_data = %s\n", debugstr_an(request_data->post_data, request_data->post_data_len));
     return S_OK;
 }
@@ -1182,6 +1010,8 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
                 break;
             case BOM_UTF16:
                 This->nschannel->charset = heap_strdupA(UTF16_STR);
+            case BOM_NONE:
+                /* FIXME: Get charset from HTTP headers */;
             }
 
             if(!This->nschannel->content_type) {
@@ -2125,7 +1955,7 @@ static HRESULT navigate_fragment(HTMLOuterWindow *window, IUri *uri)
         sprintfW(selector, selector_formatW, frag);
         nsAString_InitDepend(&selector_str, selector);
         /* NOTE: Gecko doesn't set result to NULL if there is no match, so nselem must be initialized */
-        nsres = nsIDOMNodeSelector_QuerySelector(window->base.inner_window->doc->nsnode_selector, &selector_str, &nselem);
+        nsres = nsIDOMHTMLDocument_QuerySelector(window->base.inner_window->doc->nsdoc, &selector_str, &nselem);
         nsAString_Finish(&selector_str);
         heap_free(selector);
         if(NS_SUCCEEDED(nsres) && nselem) {
@@ -2267,7 +2097,7 @@ HRESULT super_navigate(HTMLOuterWindow *window, IUri *uri, DWORD flags, const WC
     return hres;
 }
 
-HRESULT navigate_new_window(HTMLOuterWindow *window, IUri *uri, const WCHAR *name, IHTMLWindow2 **ret)
+HRESULT navigate_new_window(HTMLOuterWindow *window, IUri *uri, const WCHAR *name, request_data_t *request_data, IHTMLWindow2 **ret)
 {
     IWebBrowser2 *web_browser;
     IHTMLWindow2 *new_window;
@@ -2275,7 +2105,12 @@ HRESULT navigate_new_window(HTMLOuterWindow *window, IUri *uri, const WCHAR *nam
     nsChannelBSC *bsc;
     HRESULT hres;
 
-    hres = create_channelbsc(NULL, NULL, NULL, 0, FALSE, &bsc);
+    if(request_data)
+        hres = create_channelbsc(NULL, request_data->headers,
+                request_data->post_data, request_data->post_data_len, FALSE,
+                &bsc);
+    else
+        hres = create_channelbsc(NULL, NULL, NULL, 0, FALSE, &bsc);
     if(FAILED(hres))
         return hres;
 
@@ -2386,23 +2221,32 @@ static HRESULT navigate_uri(HTMLOuterWindow *window, IUri *uri, const WCHAR *dis
 
     TRACE("%s\n", debugstr_w(display_uri));
 
-    if(window->doc_obj && window->doc_obj->webbrowser && window == window->doc_obj->basedoc.window) {
+    if(window->doc_obj && window->doc_obj->webbrowser) {
         DWORD post_data_len = request_data ? request_data->post_data_len : 0;
         void *post_data = post_data_len ? request_data->post_data : NULL;
         const WCHAR *headers = request_data ? request_data->headers : NULL;
 
         if(!(flags & BINDING_REFRESH)) {
+            BSTR frame_name = NULL;
             BOOL cancel = FALSE;
 
+            if(window != window->doc_obj->basedoc.window) {
+                hres = IHTMLWindow2_get_name(&window->base.IHTMLWindow2_iface, &frame_name);
+                if(FAILED(hres))
+                    return hres;
+            }
+
             hres = IDocObjectService_FireBeforeNavigate2(window->doc_obj->doc_object_service, NULL, display_uri, 0x40,
-                    NULL, post_data, post_data_len ? post_data_len+1 : 0, headers, TRUE, &cancel);
+                    frame_name, post_data, post_data_len ? post_data_len+1 : 0, headers, TRUE, &cancel);
+            SysFreeString(frame_name);
             if(SUCCEEDED(hres) && cancel) {
                 TRACE("Navigation canceled\n");
                 return S_OK;
             }
         }
 
-        return super_navigate(window, uri, flags, headers, post_data, post_data_len);
+        if(window == window->doc_obj->basedoc.window)
+            return super_navigate(window, uri, flags, headers, post_data, post_data_len);
     }
 
     if(window->doc_obj && window == window->doc_obj->basedoc.window) {
@@ -2422,7 +2266,7 @@ static HRESULT navigate_uri(HTMLOuterWindow *window, IUri *uri, const WCHAR *dis
     if(FAILED(hres))
         return hres;
 
-    hres = load_nsuri(window, nsuri, NULL, LOAD_FLAGS_NONE);
+    hres = load_nsuri(window, nsuri, request_data ? request_data->post_stream : NULL, NULL, LOAD_FLAGS_NONE);
     nsISupports_Release((nsISupports*)nsuri);
     return hres;
 }
@@ -2482,23 +2326,32 @@ static HRESULT translate_uri(HTMLOuterWindow *window, IUri *orig_uri, BSTR *ret_
     return S_OK;
 }
 
-HRESULT submit_form(HTMLOuterWindow *window, IUri *submit_uri, nsIInputStream *post_stream)
+HRESULT submit_form(HTMLOuterWindow *window, const WCHAR *target, IUri *submit_uri, nsIInputStream *post_stream)
 {
     request_data_t request_data = {NULL};
-    BSTR display_uri;
-    IUri *uri;
     HRESULT hres;
 
     hres = read_post_data_stream(post_stream, TRUE, NULL, &request_data);
     if(FAILED(hres))
         return hres;
 
-    hres = translate_uri(window, submit_uri, &display_uri, &uri);
-    if(SUCCEEDED(hres)) {
-        hres = navigate_uri(window, uri, display_uri, &request_data, BINDING_NAVIGATED|BINDING_SUBMIT);
-        IUri_Release(uri);
-        SysFreeString(display_uri);
-    }
+    if(window) {
+        IUri *uri;
+        BSTR display_uri;
+
+        window->readystate_locked++;
+
+        hres = translate_uri(window, submit_uri, &display_uri, &uri);
+        if(SUCCEEDED(hres)) {
+            hres = navigate_uri(window, uri, display_uri, &request_data, BINDING_NAVIGATED|BINDING_SUBMIT);
+            IUri_Release(uri);
+            SysFreeString(display_uri);
+        }
+
+        window->readystate_locked--;
+    }else
+        hres = navigate_new_window(window, submit_uri, target, &request_data, NULL);
+
     release_request_data(&request_data);
     return hres;
 }

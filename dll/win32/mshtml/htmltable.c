@@ -274,15 +274,37 @@ static HRESULT WINAPI HTMLTable_get_cellSpacing(IHTMLTable *iface, VARIANT *p)
 static HRESULT WINAPI HTMLTable_put_cellPadding(IHTMLTable *iface, VARIANT v)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+    nsAString val;
+    HRESULT hres;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    hres = var2str(&v, &val);
+    if(FAILED(hres))
+        return hres;
+
+    nsres = nsIDOMHTMLTableElement_SetCellPadding(This->nstable, &val);
+    nsAString_Finish(&val);
+    if(NS_FAILED(nsres)) {
+        ERR("Set Width(%s) failed, err = %08x\n", debugstr_variant(&v), nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLTable_get_cellPadding(IHTMLTable *iface, VARIANT *p)
 {
     HTMLTable *This = impl_from_IHTMLTable(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString val;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&val, NULL);
+    nsres = nsIDOMHTMLTableElement_GetCellPadding(This->nstable, &val);
+    return return_nsstr_variant(nsres, &val, p);
 }
 
 static HRESULT WINAPI HTMLTable_put_background(IHTMLTable *iface, BSTR v)
@@ -979,6 +1001,26 @@ static HRESULT HTMLTable_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->element.node, riid, ppv);
 }
 
+static void HTMLTable_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLTable *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nstable)
+        note_cc_edge((nsISupports*)This->nstable, "This->nstable", cb);
+}
+
+static void HTMLTable_unlink(HTMLDOMNode *iface)
+{
+    HTMLTable *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nstable) {
+        nsIDOMHTMLTableElement *nstable = This->nstable;
+
+        This->nstable = NULL;
+        nsIDOMHTMLTableElement_Release(nstable);
+    }
+}
+
 static const cpc_entry_t HTMLTable_cpc[] = {
     {&DIID_HTMLTableEvents},
     HTMLELEMENT_CPC,
@@ -991,7 +1033,18 @@ static const NodeImplVtbl HTMLTableImplVtbl = {
     HTMLTable_cpc,
     HTMLElement_clone,
     HTMLElement_handle_event,
-    HTMLElement_get_attr_col
+    HTMLElement_get_attr_col,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLTable_traverse,
+    HTMLTable_unlink
 };
 
 static const tid_t HTMLTable_iface_tids[] = {
@@ -1026,10 +1079,7 @@ HRESULT HTMLTable_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, HTMLE
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLTable_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableElement, (void**)&ret->nstable);
-
-    /* Share the reference with nsnode */
-    assert(nsres == NS_OK && (nsIDOMNode*)ret->nstable == ret->element.node.nsnode);
-    nsIDOMNode_Release(ret->element.node.nsnode);
+    assert(nsres == NS_OK);
 
     *elem = &ret->element;
     return S_OK;

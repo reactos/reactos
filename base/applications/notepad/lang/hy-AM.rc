@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "&Օգնությոն օգտագործում", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Ծրագրի մասին", CMD_ABOUT
-        MENUITEM "&Տեղեկություն...", CMD_ABOUT_WINE
+        MENUITEM "&Տեղեկություն...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

@@ -198,6 +198,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Erweiterte Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Wählen Sie die erweiterten Einstellungen für diese Verknüpfung.", -1, 5, 30, 210, 10
     CHECKBOX "Als anderer Benutzer ausführen", 14000, 25, 50, 150, 10
     LTEXT "Diese Einstellung ermöglicht es, diese Verknüpfung unter einem anderen oder Ihrem eigenen Benutzerkonto auszuführen während der Computer und Ihre Daten vor unautorisierten Programmaktivitäten geschützt werden können.", -1, 50, 60, 175, 40
@@ -328,12 +329,15 @@ CAPTION "Extras"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Fehlerüberprüfung", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Bei Wahl dieser Option wird der Datenträger\nauf Fehler überprüft.", -1, 40, 25, 160, 20
     PUSHBUTTON "Jetzt &prüfen...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Defragmentierung", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Bei Wahl dieser Option werden die Dateien auf\ndem Datenträger defragmentiert.", -1, 40, 85, 160, 20
     PUSHBUTTON "Jetzt &defragmentieren...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Sicherung", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Bei Wahl dieser Option werden die auf dem\nDatenträger gespeicherten Dateien gesichert.", -1, 40, 150, 160, 20
     PUSHBUTTON "Jetzt &sichern...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -585,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "&Komprimierung aktivieren", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Überprüfen des Datenträgers"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "&Starten", IDOK, 53, 100, 60, 14
-    GROUPBOX "Optionen für die Datenträgerprüfung", -1, 7, 6, 179, 50
-    PUSHBUTTON "S&chließen", IDCANCEL, 118, 100, 60, 14
+    DEFPUSHBUTTON "&Starten", IDOK, 63, 95, 60, 14
+    GROUPBOX "Optionen für die Datenträgerprüfung", -1, 7, 6, 179, 40
+    PUSHBUTTON "S&chließen", IDCANCEL, 128, 95, 60, 14
     AUTOCHECKBOX "&Dateisystemfehler automatisch korrigieren", 14000, 16, 15, 165, 10
     AUTOCHECKBOX "&Fehlerhafte Sektoren suchen/wiederherstellen", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 0, 7, 60, 179, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
@@ -613,18 +617,19 @@ BEGIN
     PUSHBUTTON "Abbrechen", IDCANCEL, 167, 181, 50, 14
 END
 
-IDD_NOOPEN DIALOGEX 0, 0, 240, 75
+IDD_NOOPEN DIALOGEX 0, 0, 240, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Warnung"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "Diese Datei wird entweder durch das Betriebssystem oder durch\n\
-eine andere Anwendung verwendet. Diese Datei zu verändern kann Ihr System beschädigen\n\
+    LTEXT "Diese Datei wird entweder durch das Betriebssystem oder\n\
+durch eine andere Anwendung verwendet. Diese Datei zu\n\
+verändern kann Ihr System beschädigen\n\
 oder die Funktion beeinträchtigen.\n\n\
 Sind Sie sicher, dass Sie diese Datei öffnen möchten?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "&Ja", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "&Nein", IDNO, 180, 55, 50, 14
+    DEFPUSHBUTTON "&Ja", IDYES, 125, 60, 50, 14
+    PUSHBUTTON "&Nein", IDNO, 180, 60, 50, 14
 END
 
 STRINGTABLE

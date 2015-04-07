@@ -788,7 +788,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Fonts,
         CSIDL_Type_WindowsPath,
         FontsW,
-        MAKEINTRESOURCEW(IDS_FONTS)
+        FontsW
     },
     { /* 0x15 - CSIDL_TEMPLATES */
         &FOLDERID_Templates,

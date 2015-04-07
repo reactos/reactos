@@ -258,14 +258,10 @@ VOID ScreenEventHandler(PWINDOW_BUFFER_SIZE_RECORD ScreenEvent);
 BOOL VgaAttachToConsole(VOID);
 VOID VgaDetachFromConsole(BOOL ChangeMode);
 
-DWORD VgaGetVideoBaseAddress(VOID);
-DWORD VgaGetVideoLimitAddress(VOID);
 COORD VgaGetDisplayResolution(VOID);
 VOID VgaRefreshDisplay(VOID);
 VOID VgaHorizontalRetrace(VOID);
 VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height);
-VOID VgaReadMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
-VOID VgaWriteMemory(DWORD Address, LPBYTE Buffer, DWORD Size);
 VOID VgaClearMemory(VOID);
 
 BOOLEAN VgaInitialize(HANDLE TextHandle);

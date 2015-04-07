@@ -31,6 +31,7 @@ extern PGDI_HANDLE_TABLE GdiHandleTable;
 typedef PVOID PGDIOBJ;
 
 typedef VOID (NTAPI *GDICLEANUPPROC)(PVOID ObjectBody);
+typedef VOID (NTAPI *GDIOBJDELETEPROC)(PVOID ObjectBody);
 
 /* Every GDI Object must have this standard type of header.
  * It's for thread locking. */

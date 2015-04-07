@@ -289,14 +289,16 @@ static HRESULT WINAPI WebBrowser_Refresh(IWebBrowser2 *iface)
 
     TRACE("(%p)\n", This);
 
-    return refresh_document(&This->doc_host);
+    return refresh_document(&This->doc_host, NULL);
 }
 
 static HRESULT WINAPI WebBrowser_Refresh2(IWebBrowser2 *iface, VARIANT *Level)
 {
     WebBrowser *This = impl_from_IWebBrowser2(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(Level));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(Level));
+
+    return refresh_document(&This->doc_host, Level);
 }
 
 static HRESULT WINAPI WebBrowser_Stop(IWebBrowser2 *iface)
@@ -934,7 +936,12 @@ static HRESULT WINAPI WebBrowser_get_RegisterAsDropTarget(IWebBrowser2 *iface,
         VARIANT_BOOL *pbRegister)
 {
     WebBrowser *This = impl_from_IWebBrowser2(iface);
+
     FIXME("(%p)->(%p)\n", This, pbRegister);
+
+    if(!pbRegister)
+        return E_INVALIDARG;
+
     *pbRegister=0;
     return S_OK;
 }

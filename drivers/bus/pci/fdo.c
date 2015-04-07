@@ -154,7 +154,7 @@ FdoEnumerateDevices(
             Status = FdoLocateChildDevice(&Device, DeviceExtension, SlotNumber, &PciConfig);
             if (!NT_SUCCESS(Status))
             {
-                Device = (PPCI_DEVICE)ExAllocatePoolWithTag(NonPagedPool, sizeof(PCI_DEVICE),TAG_PCI);
+                Device = ExAllocatePoolWithTag(NonPagedPool, sizeof(PCI_DEVICE), TAG_PCI);
                 if (!Device)
                 {
                     /* FIXME: Cleanup resources for already discovered devices */
@@ -232,11 +232,12 @@ FdoQueryBusRelations(
     {
         /* FIXME: Another bus driver has already created a DEVICE_RELATIONS
                   structure so we must merge this structure with our own */
+        DPRINT1("FIXME: leaking old bus relations\n");
     }
 
     Size = sizeof(DEVICE_RELATIONS) +
            sizeof(Relations->Objects) * (DeviceExtension->DeviceListCount - 1);
-    Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, Size);
+    Relations = ExAllocatePoolWithTag(PagedPool, Size, TAG_PCI);
     if (!Relations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -369,7 +370,7 @@ FdoQueryBusRelations(
             RtlFreeUnicodeString(&PdoDeviceExtension->DeviceLocation);
         }
 
-        ExFreePool(Relations);
+        ExFreePoolWithTag(Relations, TAG_PCI);
         return ErrorStatus;
     }
 

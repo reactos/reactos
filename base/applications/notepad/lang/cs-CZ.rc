@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "Pomoc k ná&povědě", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&O programu...", CMD_ABOUT
-        MENUITEM "In&fo...", CMD_ABOUT_WINE
+        MENUITEM "In&fo...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

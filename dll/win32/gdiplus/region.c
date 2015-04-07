@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Google (Lei Zhang)
+ * Copyright (C) 2013 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -63,6 +64,28 @@
 
 #define FLAGS_NOFLAGS   0x0
 #define FLAGS_INTPATH   0x4000
+
+struct memory_buffer
+{
+    const BYTE *buffer;
+    INT size, pos;
+};
+
+struct region_header
+{
+    DWORD size;
+    DWORD checksum;
+    DWORD magic;
+    DWORD num_children;
+};
+
+struct path_header
+{
+    DWORD size;
+    DWORD magic;
+    DWORD count;
+    DWORD flags;
+};
 
 /* Header size as far as header->size is concerned. This doesn't include
  * header->size or header->checksum
@@ -510,12 +533,221 @@ GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *rect,
     return GdipCreateRegionRect(&rectf, region);
 }
 
+static inline void init_memory_buffer(struct memory_buffer *mbuf, const BYTE *buffer, INT size)
+{
+    mbuf->buffer = buffer;
+    mbuf->size = size;
+    mbuf->pos = 0;
+}
+
+static inline const void *buffer_read(struct memory_buffer *mbuf, INT size)
+{
+    if (mbuf->size - mbuf->pos >= size)
+    {
+        const void *data = mbuf->buffer + mbuf->pos;
+        mbuf->pos += size;
+        return data;
+    }
+    return NULL;
+}
+
+static GpStatus read_element(struct memory_buffer *mbuf, GpRegion *region, region_element *node, INT *count)
+{
+    GpStatus status;
+    const DWORD *type;
+
+    type = buffer_read(mbuf, sizeof(DWORD));
+    if (!type) return Ok;
+
+    TRACE("type %#x\n", *type);
+
+    node->type = *type;
+
+    switch (node->type)
+    {
+    case CombineModeReplace:
+    case CombineModeIntersect:
+    case CombineModeUnion:
+    case CombineModeXor:
+    case CombineModeExclude:
+    case CombineModeComplement:
+    {
+        region_element *left, *right;
+
+        left = GdipAlloc(sizeof(region_element));
+        if (!left) return OutOfMemory;
+        right = GdipAlloc(sizeof(region_element));
+        if (!right)
+        {
+            GdipFree(left);
+            return OutOfMemory;
+        }
+
+        status = read_element(mbuf, region, left, count);
+        if (status == Ok)
+        {
+            status = read_element(mbuf, region, right, count);
+            if (status == Ok)
+            {
+                node->elementdata.combine.left = left;
+                node->elementdata.combine.right = right;
+                region->num_children += 2;
+                return Ok;
+            }
+        }
+
+        GdipFree(left);
+        GdipFree(right);
+        return status;
+    }
+
+    case RegionDataRect:
+    {
+        const GpRectF *rc;
+
+        rc = buffer_read(mbuf, sizeof(GpRectF));
+        if (!rc)
+        {
+            ERR("failed to read rect data\n");
+            return InvalidParameter;
+        }
+
+        node->elementdata.rect = *rc;
+        *count += 1;
+        return Ok;
+    }
+
+    case RegionDataPath:
+    {
+        GpPath *path;
+        const struct path_header *path_header;
+        const BYTE *types;
+
+        path_header = buffer_read(mbuf, sizeof(struct path_header));
+        if (!path_header)
+        {
+            ERR("failed to read path header\n");
+            return InvalidParameter;
+        }
+        if (path_header->magic != VERSION_MAGIC)
+        {
+            ERR("invalid path header magic %#x\n", path_header->magic);
+            return InvalidParameter;
+        }
+
+        /* Windows always fails to create an empty path in a region */
+        if (!path_header->count)
+        {
+            TRACE("refusing to create an empty path in a region\n");
+            return GenericError;
+        }
+
+        status = GdipCreatePath(FillModeAlternate, &path);
+        if (status) return status;
+
+        node->elementdata.path = path;
+
+        if (!lengthen_path(path, path_header->count))
+            return OutOfMemory;
+
+        path->pathdata.Count = path_header->count;
+
+        if (path_header->flags & ~FLAGS_INTPATH)
+            FIXME("unhandled path flags %#x\n", path_header->flags);
+
+        if (path_header->flags & FLAGS_INTPATH)
+        {
+            const packed_point *pt;
+            DWORD i;
+
+            pt = buffer_read(mbuf, sizeof(packed_point) * path_header->count);
+            if (!pt)
+            {
+                ERR("failed to read packed %u path points\n", path_header->count);
+                return InvalidParameter;
+            }
+
+            for (i = 0; i < path_header->count; i++)
+            {
+                path->pathdata.Points[i].X = (REAL)pt[i].X;
+                path->pathdata.Points[i].Y = (REAL)pt[i].Y;
+            }
+        }
+        else
+        {
+            const GpPointF *ptf;
+
+            ptf = buffer_read(mbuf, sizeof(GpPointF) * path_header->count);
+            if (!ptf)
+            {
+                ERR("failed to read %u path points\n", path_header->count);
+                return InvalidParameter;
+            }
+            memcpy(path->pathdata.Points, ptf, sizeof(GpPointF) * path_header->count);
+        }
+
+        types = buffer_read(mbuf, path_header->count);
+        if (!types)
+        {
+            ERR("failed to read %u path types\n", path_header->count);
+            return InvalidParameter;
+        }
+        memcpy(path->pathdata.Types, types, path_header->count);
+        if (path_header->count & 3)
+        {
+            if (!buffer_read(mbuf, 4 - (path_header->count & 3)))
+            {
+                ERR("failed to read rounding %u bytes\n", 4 - (path_header->count & 3));
+                return InvalidParameter;
+            }
+        }
+
+        *count += 1;
+        return Ok;
+    }
+
+    case RegionDataEmptyRect:
+    case RegionDataInfiniteRect:
+        *count += 1;
+        return Ok;
+
+    default:
+        FIXME("element type %#x is not supported\n", *type);
+        break;
+    }
+
+    return InvalidParameter;
+}
+
 GpStatus WINGDIPAPI GdipCreateRegionRgnData(GDIPCONST BYTE *data, INT size, GpRegion **region)
 {
-    FIXME("(%p, %d, %p): stub\n", data, size, region);
+    GpStatus status;
+    struct memory_buffer mbuf;
+    const struct region_header *region_header;
+    INT count;
 
-    *region = NULL;
-    return NotImplemented;
+    if (!data || !size) return InvalidParameter;
+
+    TRACE("%p, %d, %p\n", data, size, region);
+
+    init_memory_buffer(&mbuf, data, size);
+
+    region_header = buffer_read(&mbuf, sizeof(struct region_header));
+    if (!region_header || region_header->magic != VERSION_MAGIC)
+        return InvalidParameter;
+
+    status = GdipCreateRegion(region);
+    if (status != Ok) return status;
+
+    count = 0;
+    status = read_element(&mbuf, *region, &(*region)->node, &count);
+    if (status == Ok && !count)
+        status = InvalidParameter;
+
+    if (status != Ok)
+        GdipDeleteRegion(*region);
+
+    return status;
 }
 
 
@@ -726,15 +958,9 @@ static void write_element(const region_element* element, DWORD *buffer,
         {
             INT i;
             const GpPath* path = element->elementdata.path;
-            struct _pathheader
-            {
-                DWORD size;
-                DWORD magic;
-                DWORD count;
-                DWORD flags;
-            } *pathheader;
+            struct path_header *pathheader;
 
-            pathheader = (struct _pathheader *)(buffer + *filled);
+            pathheader = (struct path_header *)(buffer + *filled);
 
             pathheader->flags = is_integer_path(path) ? FLAGS_INTPATH : FLAGS_NOFLAGS;
             /* 3 for headers, once again size doesn't count itself */
@@ -811,13 +1037,7 @@ static void write_element(const region_element* element, DWORD *buffer,
 GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *region, BYTE *buffer, UINT size,
         UINT *needed)
 {
-    struct _region_header
-    {
-        DWORD size;
-        DWORD checksum;
-        DWORD magic;
-        DWORD num_children;
-    } *region_header;
+    struct region_header *region_header;
     INT filled = 0;
     UINT required;
     GpStatus status;
@@ -835,7 +1055,7 @@ GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *region, BYTE *buffer, UINT size,
         return InsufficientBuffer;
     }
 
-    region_header = (struct _region_header *)buffer;
+    region_header = (struct region_header *)buffer;
     region_header->size = sizeheader_size + get_element_size(&region->node);
     region_header->checksum = 0;
     region_header->magic = VERSION_MAGIC;

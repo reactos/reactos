@@ -617,7 +617,7 @@ static int run_test( const char *name )
     /* show test results even if traces are disabled */
     /*if (winetest_debug)*/
     {
-        fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
+        fprintf( stdout, "\n%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
                  test->name, successes + failures + todo_successes + todo_failures,
                  todo_successes, failures + todo_failures,
                  (failures + todo_failures != 1) ? "failures" : "failure",

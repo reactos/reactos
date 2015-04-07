@@ -23,3 +23,7 @@
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
+
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif

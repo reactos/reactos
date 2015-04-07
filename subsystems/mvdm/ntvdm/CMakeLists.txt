@@ -3,13 +3,14 @@ PROJECT(NTVDM)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fast486)
 
-spec2def(ntvdm.exe ntvdm.spec)
+spec2def(ntvdm.exe ntvdm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bios/bios32/bios32.c
     bios/bios32/kbdbios32.c
     bios/bios32/vidbios32.c
     bios/bios32/moubios32.c
+    bios/bios32/ems.c
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c
@@ -28,15 +29,19 @@ list(APPEND SOURCE
     hardware/sound/speaker.c
     hardware/video/vga.c
     dos/dos32krnl/bios.c
+    dos/dos32krnl/condrv.c
+    dos/dos32krnl/device.c
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
+    dos/dos32krnl/emsdrv.c
+    dos/dos32krnl/memory.c
     dos/mouse32.c
     dos/dem.c
     clock.c
-    ems.c
     emulator.c
     int32.c
     io.c
+    memory.c
     utils.c
     vddsup.c
     ntvdm.c
@@ -45,6 +50,6 @@ list(APPEND SOURCE
 
 add_executable(ntvdm ${SOURCE})
 set_module_type(ntvdm win32cui UNICODE IMAGEBASE 0x0F000000)
-target_link_libraries(ntvdm fast486)
+target_link_libraries(ntvdm fast486 ${PSEH_LIB})
 add_importlibs(ntvdm user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntvdm DESTINATION reactos/system32 FOR all)

@@ -11,12 +11,8 @@
  * DON'T MODIFY THIS STRUCTURE UNLESS REALLY NEEDED AND EVEN THEN ASK ON
  * A MAILING LIST FIRST.
  */
-typedef struct _BRUSH
+typedef struct _BRUSHBODY
 {
-    /* Header for all gdi objects in the handle table.
-       Do not (re)move this. */
-    BASEOBJECT BaseObject;
-
     ULONG iHatch;           // This is not the brush style, but the hatch style!
     HBITMAP hbmPattern;
     HBITMAP hbmClient;
@@ -34,6 +30,8 @@ typedef struct _BRUSH
     PVOID pvRBrush;
     HDEV hdev;
     //DWORD unk054;
+
+    /* The following members are for PENs only */
     LONG lWidth;
     FLOAT eWidth;
     ULONG ulPenStyle;
@@ -47,7 +45,21 @@ typedef struct _BRUSH
     //DWORD unk078;         // 0x078
     DWORD unk07c;           // 0x07c
     LIST_ENTRY ListHead;    // 0x080
+} BRUSHBODY;
+
+#ifndef __cplusplus
+typedef struct _BRUSH
+{
+    /* Header for all gdi objects in the handle table.
+       Do not (re)move this. */
+    BASEOBJECT BaseObject;
+
+    BRUSHBODY;
 } BRUSH, *PBRUSH;
+#else
+class BRUSH;
+typedef class BRUSH *PBRUSH;
+#endif
 
 typedef struct _EBRUSHOBJ
 {
@@ -68,7 +80,7 @@ typedef struct _EBRUSHOBJ
     struct _PALETTE *   ppalDC;
     struct _PALETTE *   ppalDIB;
 //    DWORD       dwUnknown44;
-    BRUSH *     pbrush;
+    PBRUSH      pbrush;
     FLONG       flattrs;
     DWORD       ulUnique;
 //    DWORD       dwUnknown54;
@@ -90,15 +102,13 @@ typedef struct _EBRUSHOBJ
 #define BR_IS_PEN           0x00000400 /* Pen */
 #define BR_IS_OLDSTYLEPEN   0x00000800 /* Geometric pen */
 #define BR_IS_DIBPALCOLORS  0x00001000
-#define BR_IS_DIBPALINDICE  0x00002000
+#define BR_IS_DIBPALINDICES 0x00002000
 #define BR_IS_DEFAULTSTYLE  0x00004000
 #define BR_IS_MASKING       0x00008000 /* Pattern bitmap is used as transparent mask (?) */
 #define BR_IS_INSIDEFRAME   0x00010000
 #define BR_CACHED_ENGINE    0x00040000
 #define BR_CACHED_IS_SOLID  0x80000000
 
-#define  BRUSH_FreeBrush(pBrush) GDIOBJ_FreeObj((POBJ)pBrush, GDIObjType_BRUSH_TYPE)
-#define  BRUSH_FreeBrushByHandle(hBrush) GDIOBJ_FreeObjByHandle((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)
 #define  BRUSH_ShareLockBrush(hBrush) ((PBRUSH)GDIOBJ_ShareLockObj((HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSH_ShareUnlockBrush(pBrush) GDIOBJ_vDereferenceObject((POBJ)pBrush)
 
@@ -111,8 +121,8 @@ BRUSH_GetObject(
 
 VOID
 NTAPI
-BRUSH_vCleanup(
-    PVOID ObjectBody);
+BRUSH_vDeleteObject(
+    PVOID pvObject);
 
 extern HSURF gahsurfHatch[HS_DDI_MAX];
 
@@ -190,5 +200,8 @@ IntGdiCreateSolidBrush(
 HBRUSH APIENTRY
 IntGdiCreateNullBrush(VOID);
 
-VOID FASTCALL
-IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
+VOID
+NTAPI
+IntGdiSetSolidBrushColor(
+    _In_ HBRUSH hbr,
+    _In_ COLORREF crColor);

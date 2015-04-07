@@ -691,11 +691,6 @@ BOOL __cdecl FDIIsCabinet(HFDI hfdi, INT_PTR hf, PFDICABINETINFO pfdici)
 
   if (!fdi) return FALSE;
 
-  if (!hf) {
-    SetLastError(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-
   if (!pfdici) {
     SetLastError(ERROR_BAD_ARGUMENTS);
     return FALSE;

@@ -94,27 +94,27 @@ ConioInputEventToUnicode(PCONSOLE Console, PINPUT_RECORD InputEvent)
 #ifdef TUITERM_COMPILE
 NTSTATUS NTAPI
 TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                IN OUT PCONSOLE_INFO ConsoleInfo,
-                IN OUT PVOID ExtraConsoleInfo,
-                IN PCSR_PROCESS ConsoleLeaderProcess);
+                IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                IN HANDLE ConsoleLeaderProcessHandle);
 NTSTATUS NTAPI
 TuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
 #endif
 
 NTSTATUS NTAPI
 GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                IN OUT PCONSOLE_INFO ConsoleInfo,
-                IN OUT PVOID ExtraConsoleInfo,
-                IN PCSR_PROCESS ConsoleLeaderProcess);
+                IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                IN HANDLE ConsoleLeaderProcessHandle);
 NTSTATUS NTAPI
 GuiUnloadFrontEnd(IN OUT PFRONTEND FrontEnd);
 /***************/
 
 typedef
 NTSTATUS (NTAPI *FRONTEND_LOAD)(IN OUT PFRONTEND FrontEnd,
-                                IN OUT PCONSOLE_INFO ConsoleInfo,
-                                IN OUT PVOID ExtraConsoleInfo,
-                                IN PCSR_PROCESS ConsoleLeaderProcess);
+                                IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                                IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                                IN HANDLE ConsoleLeaderProcessHandle);
 
 typedef
 NTSTATUS (NTAPI *FRONTEND_UNLOAD)(IN OUT PFRONTEND FrontEnd);
@@ -154,9 +154,9 @@ static struct
 
 static NTSTATUS
 ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                   IN OUT PCONSOLE_INFO ConsoleInfo,
-                   IN OUT PVOID ExtraConsoleInfo,
-                   IN PCSR_PROCESS ConsoleLeaderProcess)
+                   IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                   IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                   IN HANDLE ConsoleLeaderProcessHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG i;
@@ -164,14 +164,14 @@ ConSrvLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
     /*
      * Choose an adequate terminal front-end to load, and load it
      */
-    for (i = 0; i < sizeof(FrontEndLoadingMethods) / sizeof(FrontEndLoadingMethods[0]); ++i)
+    for (i = 0; i < ARRAYSIZE(FrontEndLoadingMethods); ++i)
     {
         DPRINT("CONSRV: Trying to load %s frontend...\n",
                FrontEndLoadingMethods[i].FrontEndName);
         Status = FrontEndLoadingMethods[i].FrontEndLoad(FrontEnd,
                                                         ConsoleInfo,
-                                                        ExtraConsoleInfo,
-                                                        ConsoleLeaderProcess);
+                                                        ConsoleInitInfo,
+                                                        ConsoleLeaderProcessHandle);
         if (NT_SUCCESS(Status))
         {
             /* Save the unload callback */
@@ -204,9 +204,9 @@ static TERMINAL_VTBL ConSrvTermVtbl;
 
 NTSTATUS NTAPI
 ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
-                   IN OUT PCONSOLE_INFO ConsoleInfo,
-                   IN OUT PVOID ExtraConsoleInfo,
-                   IN PCSR_PROCESS ConsoleLeaderProcess)
+                   IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                   IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                   IN HANDLE ConsoleLeaderProcessHandle)
 {
     NTSTATUS Status;
     PFRONTEND FrontEnd;
@@ -217,8 +217,8 @@ ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
 
     Status = ConSrvLoadFrontEnd(FrontEnd,
                                 ConsoleInfo,
-                                ExtraConsoleInfo,
-                                ConsoleLeaderProcess);
+                                ConsoleInitInfo,
+                                ConsoleLeaderProcessHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CONSRV: Failed to initialize a frontend, Status = 0x%08lx\n", Status);
@@ -229,7 +229,7 @@ ConSrvInitTerminal(IN OUT PTERMINAL Terminal,
 
     /* Initialize the ConSrv terminal */
     Terminal->Vtbl = &ConSrvTermVtbl;
-    // Terminal->Console will be initialized by ConDrvRegisterTerminal
+    // Terminal->Console will be initialized by ConDrvAttachTerminal
     Terminal->Context = FrontEnd; /* We store the frontend pointer in the terminal private context */
 
     return STATUS_SUCCESS;

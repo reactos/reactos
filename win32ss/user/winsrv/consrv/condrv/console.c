@@ -265,8 +265,8 @@ ConDrvInitConsole(OUT PCONSOLE* NewConsole,
 }
 
 NTSTATUS NTAPI
-ConDrvRegisterTerminal(IN PCONSOLE Console,
-                       IN PTERMINAL Terminal)
+ConDrvAttachTerminal(IN PCONSOLE Console,
+                     IN PTERMINAL Terminal)
 {
     NTSTATUS Status;
 
@@ -303,7 +303,7 @@ ConDrvRegisterTerminal(IN PCONSOLE Console,
 }
 
 NTSTATUS NTAPI
-ConDrvDeregisterTerminal(IN PCONSOLE Console)
+ConDrvDetachTerminal(IN PCONSOLE Console)
 {
     if (Console == NULL) return STATUS_INVALID_PARAMETER;
 
@@ -365,7 +365,7 @@ ConDrvDeleteConsole(IN PCONSOLE Console)
 
     /* Deregister the terminal */
     DPRINT("Deregister terminal\n");
-    ConDrvDeregisterTerminal(Console);
+    ConDrvDetachTerminal(Console);
     DPRINT("Terminal deregistered\n");
 
     /***

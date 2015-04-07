@@ -36,7 +36,7 @@ BEGIN
     LTEXT "Správce zařízení zobrazuje seznam všech hardwarových zařízení nainstalovaných na tomto počítači. Ve Správci zařízení lze změnit vlastnosti libovolného zařízení.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Správce zařízení...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Průvodce hardwarem", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Průvodce hardwarem umožňuje přidávat, odebírat, opravovat, odpojovat, vysouvat a konfigurovat hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Průvodce hardwarem...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Hardwarové profily", IDC_STATIC, 6, 149, 244, 61

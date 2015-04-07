@@ -183,7 +183,7 @@ static HRESULT do_preprocess(const Registrar *This, LPCOLESTR data, strbuf *buf)
 
 static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOOL do_register)
 {
-    LPCOLESTR iter = *pstr;
+    LPCOLESTR iter;
     HRESULT hres;
     LONG lres;
     HKEY hkey = 0;
@@ -379,7 +379,7 @@ static HRESULT do_process_root_key(LPCOLESTR data, BOOL do_register)
 {
     LPCOLESTR iter = data;
     strbuf buf;
-    HRESULT hres = S_OK;
+    HRESULT hres;
     unsigned int i;
 
     strbuf_init(&buf);

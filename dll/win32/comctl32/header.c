@@ -378,10 +378,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
         if (ret) return phdi->rect.right;
     }
     else
-    {
-        HEADER_FillItemFrame(infoPtr, hdc, &r, phdi, bHotTrack);
         HEADER_DrawItemFrame(infoPtr, hdc, &r, phdi);
-    }
 
     if (phdi->bDown) {
         r.left += 2;
@@ -399,7 +396,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	BITMAP bmp;
 
         HEADER_PrepareCallbackItems(infoPtr, iItem, HDI_TEXT|HDI_IMAGE);
-	cw = tw = iw = bw = 0;
+        cw = iw = bw = 0;
 	rw = r.right - r.left;
 	rh = r.bottom - r.top;
 

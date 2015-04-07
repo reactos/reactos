@@ -135,8 +135,14 @@
 #define __internal_kernel_driver
 #define __kernel_code
 #define __kernel_driver
-#define __prefast_operator_new_null
-#define __prefast_operator_new_throws
+#define __prefast_operator_new_null \
+    void* __cdecl operator new(size_t size) throw(); \
+    void* __cdecl operator new[](size_t size) throw(); \
+    _Analysis_mode_(_Analysis_operator_new_null_)
+#define __prefast_operator_new_throws \
+    void* __cdecl operator new(size_t size) throw(std::bad_alloc); \
+    void* __cdecl operator new[](size_t size) throw(std::bad_alloc); \
+    _Analysis_mode_(_Analysis_operator_new_throw_)
 #define __user_code
 #define __user_driver
 #define ___drv_unit_internal_kernel_driver

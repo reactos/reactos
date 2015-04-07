@@ -22,6 +22,7 @@ BEGIN
     END
     POPUP "&Device"
     BEGIN
+        MENUITEM SEPARATOR
         MENUITEM "&Properties", IDM_DEVPROPS
         MENUITEM SEPARATOR
         MENUITEM "&Volume Control", IDM_VOLUMECTL
@@ -43,6 +44,14 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_MODE_UNKNOWN "Unknown"
+    IDS_MODE_OPEN "Opened"
+    IDS_MODE_STOP "Stopped"
+    IDS_MODE_PLAY "Playing"
+    IDS_MODE_PAUSE "Paused"
+    IDS_MODE_RECORD "Recording"
+    IDS_MODE_SEEK "Seeking"
+    IDS_MODE_NOT_READY "Not ready"
     IDS_ALL_TYPES_FILTER "Alle kompaktible filer"
     IDS_TOOLTIP_PLAY "Spill av"
     IDS_TOOLTIP_STOP "Stopp"

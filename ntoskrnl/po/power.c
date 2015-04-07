@@ -59,7 +59,7 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
     IoFreeIrp(Irp);
 
     ObDereferenceObject(RequestPowerItem->TopDeviceObject);
-    ExFreePool(Context);
+    ExFreePoolWithTag(Context, 'IRoP');
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -528,7 +528,9 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
         && MinorFunction != IRP_MN_WAIT_WAKE)
         return STATUS_INVALID_PARAMETER_2;
 
-    RequestPowerItem = ExAllocatePool(NonPagedPool, sizeof(REQUEST_POWER_ITEM));
+    RequestPowerItem = ExAllocatePoolWithTag(NonPagedPool,
+                                             sizeof(REQUEST_POWER_ITEM),
+                                             'IRoP');
     if (!RequestPowerItem)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -544,7 +546,7 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     if (!Irp)
     {
         ObDereferenceObject(TopDeviceObject);
-        ExFreePool(RequestPowerItem);
+        ExFreePoolWithTag(RequestPowerItem, 'IRoP');
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -926,7 +928,8 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         }
 
         /* You should not have made it this far */
-        ASSERTMSG("System is still up and running?!", FALSE);
+        // ASSERTMSG("System is still up and running?!", FALSE);
+        DPRINT1("System is still up and running, you may not have chosen a yet supported power option: %u\n", PopAction.Action);
         break;
     }
 

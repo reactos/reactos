@@ -7,7 +7,7 @@ BEGIN
     GROUPBOX "Paràmetres d'entrada", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Paràmetres de connexió", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Entreu l'adreça del servidor", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Entreu l'adreça del servidor.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Servidor:", IDC_STATIC, 47, 41, 25, 8
     LTEXT "Nom d'usuari:", IDC_STATIC, 47, 58, 38, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
@@ -16,7 +16,7 @@ BEGIN
     PUSHBUTTON "Desa com...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Obre...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Guarda els paràmetres de la connexió actual o obre una configuració existent", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Guarda els paràmetres de la connexió actual o obre una configuració existent.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
@@ -27,7 +27,7 @@ BEGIN
     GROUPBOX "Colors", IDC_STATIC, 7, 83, 228, 85
     ICON "", IDC_REMICON, 15, 19, 20, 20
     ICON "", IDC_COLORSICON, 15, 98, 20, 20
-    LTEXT "Trieu el tamany de pantalla del escriptori remot. Arrossegueu el cursor al extrem dret per a pantalla complerta", IDC_STATIC, 53, 22, 175, 21
+    LTEXT "Trieu el tamany de pantalla del escriptori remot. Arrossegueu el cursor al extrem dret per a pantalla complerta.", IDC_STATIC, 53, 22, 175, 21
     CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
     COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10

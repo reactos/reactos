@@ -51,6 +51,9 @@ static const WCHAR voidW[] = {'v','o','i','d',0};
 static const WCHAR whileW[] = {'w','h','i','l','e',0};
 static const WCHAR withW[] = {'w','i','t','h',0};
 
+static const WCHAR elifW[] = {'e','l','i','f',0};
+static const WCHAR endW[] = {'e','n','d',0};
+
 static const struct {
     const WCHAR *word;
     int token;
@@ -97,6 +100,11 @@ static int lex_error(parser_ctx_t *ctx, HRESULT hres)
 static BOOL is_identifier_char(WCHAR c)
 {
     return isalnumW(c) || c == '$' || c == '_' || c == '\\';
+}
+
+static BOOL is_identifier_first_char(WCHAR c)
+{
+    return isalphaW(c) || c == '$' || c == '_' || c == '\\';
 }
 
 static int check_keyword(parser_ctx_t *ctx, const WCHAR *word, const WCHAR **lval)
@@ -217,6 +225,16 @@ static BOOL skip_comment(parser_ctx_t *ctx)
     }
 
     return TRUE;
+}
+
+static BOOL skip_spaces(parser_ctx_t *ctx)
+{
+    while(ctx->ptr < ctx->end && (isspaceW(*ctx->ptr) || *ctx->ptr == 0xFEFF /* UTF16 BOM */)) {
+        if(is_endline(*ctx->ptr++))
+            ctx->nl = TRUE;
+    }
+
+    return ctx->ptr != ctx->end;
 }
 
 static BOOL unescape(WCHAR *str)
@@ -376,7 +394,7 @@ literal_t *new_boolean_literal(parser_ctx_t *ctx, BOOL bval)
     return ret;
 }
 
-static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **literal)
+static BOOL parse_double_literal(parser_ctx_t *ctx, LONG int_part, double *ret)
 {
     LONGLONG d, hlp;
     int exp = 0;
@@ -423,13 +441,15 @@ static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **li
                 ctx->ptr++;
             }else if(!isdigitW(*ctx->ptr)) {
                 WARN("Expected exponent part\n");
-                return lex_error(ctx, E_FAIL);
+                lex_error(ctx, E_FAIL);
+                return FALSE;
             }
         }
 
         if(ctx->ptr == ctx->end) {
             WARN("unexpected end of file\n");
-            return lex_error(ctx, E_FAIL);
+            lex_error(ctx, E_FAIL);
+            return FALSE;
         }
 
         while(ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
@@ -445,14 +465,15 @@ static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **li
 
     if(is_identifier_char(*ctx->ptr)) {
         WARN("wrong char after zero\n");
-        return lex_error(ctx, JS_E_MISSING_SEMICOLON);
+        lex_error(ctx, JS_E_MISSING_SEMICOLON);
+        return FALSE;
     }
 
-    *literal = new_double_literal(ctx, exp>=0 ? d*pow(10, exp) : d/pow(10, -exp));
-    return tNumericLiteral;
+    *ret = exp>=0 ? d*pow(10, exp) : d/pow(10, -exp);
+    return TRUE;
 }
 
-static int parse_numeric_literal(parser_ctx_t *ctx, literal_t **literal)
+static BOOL parse_numeric_literal(parser_ctx_t *ctx, double *ret)
 {
     LONG l, d;
 
@@ -461,7 +482,7 @@ static int parse_numeric_literal(parser_ctx_t *ctx, literal_t **literal)
         if(*ctx->ptr == 'x' || *ctx->ptr == 'X') {
             if(++ctx->ptr == ctx->end) {
                 ERR("unexpected end of file\n");
-                return 0;
+                return FALSE;
             }
 
             while(ctx->ptr < ctx->end && (d = hex_to_int(*ctx->ptr)) != -1) {
@@ -471,11 +492,12 @@ static int parse_numeric_literal(parser_ctx_t *ctx, literal_t **literal)
 
             if(ctx->ptr < ctx->end && is_identifier_char(*ctx->ptr)) {
                 WARN("unexpected identifier char\n");
-                return lex_error(ctx, JS_E_MISSING_SEMICOLON);
+                lex_error(ctx, JS_E_MISSING_SEMICOLON);
+                return FALSE;
             }
 
-            *literal = new_double_literal(ctx, l);
-            return tNumericLiteral;
+            *ret = l;
+            return TRUE;
         }
 
         if(isdigitW(*ctx->ptr)) {
@@ -497,30 +519,28 @@ static int parse_numeric_literal(parser_ctx_t *ctx, literal_t **literal)
             /* FIXME: Do we need it here? */
             if(ctx->ptr < ctx->end && (is_identifier_char(*ctx->ptr) || *ctx->ptr == '.')) {
                 WARN("wrong char after octal literal: '%c'\n", *ctx->ptr);
-                return lex_error(ctx, JS_E_MISSING_SEMICOLON);
+                lex_error(ctx, JS_E_MISSING_SEMICOLON);
+                return FALSE;
             }
 
-            *literal = new_double_literal(ctx, val);
-            return tNumericLiteral;
+            *ret = val;
+            return TRUE;
         }
 
         if(is_identifier_char(*ctx->ptr)) {
             WARN("wrong char after zero\n");
-            return lex_error(ctx, JS_E_MISSING_SEMICOLON);
+            lex_error(ctx, JS_E_MISSING_SEMICOLON);
+            return FALSE;
         }
     }
 
-    return parse_double_literal(ctx, l, literal);
+    return parse_double_literal(ctx, l, ret);
 }
 
 static int next_token(parser_ctx_t *ctx, void *lval)
 {
     do {
-        while(ctx->ptr < ctx->end && isspaceW(*ctx->ptr)) {
-            if(is_endline(*ctx->ptr++))
-                ctx->nl = TRUE;
-        }
-        if(ctx->ptr == ctx->end)
+        if(!skip_spaces(ctx))
             return tEOF;
     }while(skip_comment(ctx) || skip_html_comment(ctx));
 
@@ -538,8 +558,15 @@ static int next_token(parser_ctx_t *ctx, void *lval)
         return parse_identifier(ctx, lval);
     }
 
-    if(isdigitW(*ctx->ptr))
-        return parse_numeric_literal(ctx, lval);
+    if(isdigitW(*ctx->ptr)) {
+        double n;
+
+        if(!parse_numeric_literal(ctx, &n))
+            return -1;
+
+        *(literal_t**)lval = new_double_literal(ctx, n);
+        return tNumericLiteral;
+    }
 
     switch(*ctx->ptr) {
     case '{':
@@ -559,8 +586,13 @@ static int next_token(parser_ctx_t *ctx, void *lval)
         return '}';
 
     case '.':
-        if(++ctx->ptr < ctx->end && isdigitW(*ctx->ptr))
-            return parse_double_literal(ctx, 0, lval);
+        if(++ctx->ptr < ctx->end && isdigitW(*ctx->ptr)) {
+            double n;
+            if(!parse_double_literal(ctx, 0, &n))
+                return -1;
+            *(literal_t**)lval = new_double_literal(ctx, n);
+            return tNumericLiteral;
+        }
         return '.';
 
     case '<':
@@ -759,11 +791,7 @@ static int next_token(parser_ctx_t *ctx, void *lval)
 }
 
 struct _cc_var_t {
-    BOOL is_num;
-    union {
-        BOOL b;
-        DOUBLE n;
-    } u;
+    ccval_t val;
     struct _cc_var_t *next;
     unsigned name_len;
     WCHAR name[0];
@@ -781,18 +809,18 @@ void release_cc(cc_ctx_t *cc)
     heap_free(cc);
 }
 
-static BOOL add_cc_var(cc_ctx_t *cc, const WCHAR *name, cc_var_t *v)
+static BOOL new_cc_var(cc_ctx_t *cc, const WCHAR *name, int len, ccval_t v)
 {
     cc_var_t *new_v;
-    unsigned len;
 
-    len = strlenW(name);
+    if(len == -1)
+        len = strlenW(name);
 
     new_v = heap_alloc(sizeof(cc_var_t) + (len+1)*sizeof(WCHAR));
     if(!new_v)
         return FALSE;
 
-    memcpy(new_v, v, sizeof(*v));
+    new_v->val = v;
     memcpy(new_v->name, name, (len+1)*sizeof(WCHAR));
     new_v->name_len = len;
     new_v->next = cc->vars;
@@ -812,10 +840,9 @@ static cc_var_t *find_cc_var(cc_ctx_t *cc, const WCHAR *name, unsigned name_len)
     return NULL;
 }
 
-static int init_cc(parser_ctx_t *ctx)
+static BOOL init_cc(parser_ctx_t *ctx)
 {
     cc_ctx_t *cc;
-    cc_var_t v;
 
     static const WCHAR _win32W[] = {'_','w','i','n','3','2',0};
     static const WCHAR _win64W[] = {'_','w','i','n','6','4',0};
@@ -826,37 +853,142 @@ static int init_cc(parser_ctx_t *ctx)
     static const WCHAR _jscript_versionW[] = {'_','j','s','c','r','i','p','t','_','v','e','r','s','i','o','n',0};
 
     if(ctx->script->cc)
-        return 0;
+        return TRUE;
 
     cc = heap_alloc(sizeof(cc_ctx_t));
-    if(!cc)
-        return lex_error(ctx, E_OUTOFMEMORY);
+    if(!cc) {
+        lex_error(ctx, E_OUTOFMEMORY);
+        return FALSE;
+    }
 
     cc->vars = NULL;
-    v.is_num = FALSE;
-    v.u.b = TRUE;
-    if(!add_cc_var(cc, _jscriptW, &v)
-       || !add_cc_var(cc, sizeof(void*) == 8 ? _win64W : _win32W, &v)
-       || !add_cc_var(cc, sizeof(void*) == 8 ? _amd64W : _x86W, &v)) {
-        release_cc(cc);
-        return lex_error(ctx, E_OUTOFMEMORY);
-    }
 
-    v.is_num = TRUE;
-    v.u.n = JSCRIPT_BUILD_VERSION;
-    if(!add_cc_var(cc, _jscript_buildW, &v)) {
+    if(!new_cc_var(cc, _jscriptW, -1, ccval_bool(TRUE))
+       || !new_cc_var(cc, sizeof(void*) == 8 ? _win64W : _win32W, -1, ccval_bool(TRUE))
+       || !new_cc_var(cc, sizeof(void*) == 8 ? _amd64W : _x86W, -1, ccval_bool(TRUE))
+       || !new_cc_var(cc, _jscript_versionW, -1, ccval_num(JSCRIPT_MAJOR_VERSION + (DOUBLE)JSCRIPT_MINOR_VERSION/10.0))
+       || !new_cc_var(cc, _jscript_buildW, -1, ccval_num(JSCRIPT_BUILD_VERSION))) {
         release_cc(cc);
-        return lex_error(ctx, E_OUTOFMEMORY);
-    }
-
-    v.u.n = JSCRIPT_MAJOR_VERSION + (DOUBLE)JSCRIPT_MINOR_VERSION/10.0;
-    if(!add_cc_var(cc, _jscript_versionW, &v)) {
-        release_cc(cc);
-        return lex_error(ctx, E_OUTOFMEMORY);
+        lex_error(ctx, E_OUTOFMEMORY);
+        return FALSE;
     }
 
     ctx->script->cc = cc;
+    return TRUE;
+}
+
+static BOOL parse_cc_identifier(parser_ctx_t *ctx, const WCHAR **ret, unsigned *ret_len)
+{
+    if(*ctx->ptr != '@') {
+        lex_error(ctx, JS_E_EXPECTED_AT);
+        return FALSE;
+    }
+
+    if(!is_identifier_first_char(*++ctx->ptr)) {
+        lex_error(ctx, JS_E_EXPECTED_IDENTIFIER);
+        return FALSE;
+    }
+
+    *ret = ctx->ptr;
+    while(++ctx->ptr < ctx->end && is_identifier_char(*ctx->ptr));
+    *ret_len = ctx->ptr - *ret;
+    return TRUE;
+}
+
+int try_parse_ccval(parser_ctx_t *ctx, ccval_t *r)
+{
+    if(!skip_spaces(ctx))
+        return -1;
+
+    if(isdigitW(*ctx->ptr)) {
+        double n;
+
+        if(!parse_numeric_literal(ctx, &n))
+            return -1;
+
+        *r = ccval_num(n);
+        return 1;
+    }
+
+    if(*ctx->ptr == '@') {
+        const WCHAR *ident;
+        unsigned ident_len;
+        cc_var_t *cc_var;
+
+        if(!parse_cc_identifier(ctx, &ident, &ident_len))
+            return -1;
+
+        cc_var = find_cc_var(ctx->script->cc, ident, ident_len);
+        *r = cc_var ? cc_var->val : ccval_num(NAN);
+        return 1;
+    }
+
+    if(!check_keyword(ctx, trueW, NULL)) {
+        *r = ccval_bool(TRUE);
+        return 1;
+    }
+
+    if(!check_keyword(ctx, falseW, NULL)) {
+        *r = ccval_bool(FALSE);
+        return 1;
+    }
+
     return 0;
+}
+
+static int skip_code(parser_ctx_t *ctx, BOOL exec_else)
+{
+    int if_depth = 1;
+    const WCHAR *ptr;
+
+    while(1) {
+        ptr = strchrW(ctx->ptr, '@');
+        if(!ptr) {
+            WARN("No @end\n");
+            return lex_error(ctx, JS_E_EXPECTED_CCEND);
+        }
+        ctx->ptr = ptr+1;
+
+        if(!check_keyword(ctx, endW, NULL)) {
+            if(--if_depth)
+                continue;
+            return 0;
+        }
+
+        if(exec_else && !check_keyword(ctx, elifW, NULL)) {
+            if(if_depth > 1)
+                continue;
+
+            if(!skip_spaces(ctx) || *ctx->ptr != '(')
+                return lex_error(ctx, JS_E_MISSING_LBRACKET);
+
+            if(!parse_cc_expr(ctx))
+                return -1;
+
+            if(!get_ccbool(ctx->ccval))
+                continue; /* skip block of code */
+
+            /* continue parsing */
+            ctx->cc_if_depth++;
+            return 0;
+        }
+
+        if(exec_else && !check_keyword(ctx, elseW, NULL)) {
+            if(if_depth > 1)
+                continue;
+
+            /* parse else block */
+            ctx->cc_if_depth++;
+            return 0;
+        }
+
+        if(!check_keyword(ctx, ifW, NULL)) {
+            if_depth++;
+            continue;
+        }
+
+        ctx->ptr++;
+    }
 }
 
 static int cc_token(parser_ctx_t *ctx, void *lval)
@@ -866,37 +998,78 @@ static int cc_token(parser_ctx_t *ctx, void *lval)
 
     static const WCHAR cc_onW[] = {'c','c','_','o','n',0};
     static const WCHAR setW[] = {'s','e','t',0};
-    static const WCHAR elifW[] = {'e','l','i','f',0};
-    static const WCHAR endW[] = {'e','n','d',0};
 
     ctx->ptr++;
 
     if(!check_keyword(ctx, cc_onW, NULL))
-        return init_cc(ctx);
+        return init_cc(ctx) ? 0 : -1;
 
     if(!check_keyword(ctx, setW, NULL)) {
-        FIXME("@set not implemented\n");
-        return lex_error(ctx, E_NOTIMPL);
+        const WCHAR *ident;
+        unsigned ident_len;
+        cc_var_t *var;
+
+        if(!init_cc(ctx))
+            return -1;
+
+        if(!skip_spaces(ctx))
+            return lex_error(ctx, JS_E_EXPECTED_AT);
+
+        if(!parse_cc_identifier(ctx, &ident, &ident_len))
+            return -1;
+
+        if(!skip_spaces(ctx) || *ctx->ptr != '=')
+            return lex_error(ctx, JS_E_EXPECTED_ASSIGN);
+        ctx->ptr++;
+
+        if(!parse_cc_expr(ctx)) {
+            WARN("parsing CC expression failed\n");
+            return -1;
+        }
+
+        var = find_cc_var(ctx->script->cc, ident, ident_len);
+        if(var) {
+            var->val = ctx->ccval;
+        }else {
+            if(!new_cc_var(ctx->script->cc, ident, ident_len, ctx->ccval))
+                return lex_error(ctx, E_OUTOFMEMORY);
+        }
+
+        return 0;
     }
 
     if(!check_keyword(ctx, ifW, NULL)) {
-        FIXME("@if not implemented\n");
-        return lex_error(ctx, E_NOTIMPL);
+        if(!init_cc(ctx))
+            return -1;
+
+        if(!skip_spaces(ctx) || *ctx->ptr != '(')
+            return lex_error(ctx, JS_E_MISSING_LBRACKET);
+
+        if(!parse_cc_expr(ctx))
+            return -1;
+
+        if(get_ccbool(ctx->ccval)) {
+            /* continue parsing block inside if */
+            ctx->cc_if_depth++;
+            return 0;
+        }
+
+        return skip_code(ctx, TRUE);
     }
 
-    if(!check_keyword(ctx, elifW, NULL)) {
-        FIXME("@elif not implemented\n");
-        return lex_error(ctx, E_NOTIMPL);
-    }
+    if(!check_keyword(ctx, elifW, NULL) || !check_keyword(ctx, elseW, NULL)) {
+        if(!ctx->cc_if_depth)
+            return lex_error(ctx, JS_E_SYNTAX);
 
-    if(!check_keyword(ctx, elseW, NULL)) {
-        FIXME("@else not implemented\n");
-        return lex_error(ctx, E_NOTIMPL);
+        return skip_code(ctx, FALSE);
     }
 
     if(!check_keyword(ctx, endW, NULL)) {
-        FIXME("@end not implemented\n");
-        return lex_error(ctx, E_NOTIMPL);
+        if(!ctx->cc_if_depth)
+            return lex_error(ctx, JS_E_SYNTAX);
+
+        ctx->cc_if_depth--;
+        return 0;
     }
 
     if(!ctx->script->cc)
@@ -911,12 +1084,12 @@ static int cc_token(parser_ctx_t *ctx, void *lval)
 
     var = find_cc_var(ctx->script->cc, ctx->ptr, id_len);
     ctx->ptr += id_len;
-    if(!var || var->is_num) {
-        *(literal_t**)lval = new_double_literal(ctx, var ? var->u.n : NAN);
+    if(!var || var->val.is_num) {
+        *(literal_t**)lval = new_double_literal(ctx, var ? var->val.u.n : NAN);
         return tNumericLiteral;
     }
 
-    *(literal_t**)lval = new_boolean_literal(ctx, var->u.b);
+    *(literal_t**)lval = new_boolean_literal(ctx, var->val.u.b);
     return tBooleanLiteral;
 }
 

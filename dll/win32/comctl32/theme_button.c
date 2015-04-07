@@ -20,6 +20,7 @@
  */
 
 #include "comctl32.h"
+WINE_DEFAULT_DEBUG_CHANNEL(theme_button);
 
 #define BUTTON_TYPE 0x0f /* bit mask for the available button types */
 
@@ -33,7 +34,7 @@ typedef enum
 	STATE_DEFAULTED
 } ButtonState;
 
-typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags);
+typedef void (*pfThemedPaint)(HTHEME theme, HWND hwnd, HDC hdc, ButtonState drawState, UINT dtFlags, BOOL focused);
 
 static UINT get_drawtext_flags(DWORD style, DWORD ex_style)
 {
@@ -86,7 +87,7 @@ static inline WCHAR *get_button_text(HWND hwnd)
     return text;
 }
 
-static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags)
+static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 {
     static const int states[] = { PBS_NORMAL, PBS_DISABLED, PBS_HOT, PBS_PRESSED, PBS_DEFAULTED };
 
@@ -108,10 +109,25 @@ static void PB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (focused)
+    {
+        MARGINS margins;
+        RECT focusRect = bgRect;
+
+        GetThemeMargins(theme, hDC, BP_PUSHBUTTON, state, TMT_CONTENTMARGINS, NULL, &margins);
+
+        focusRect.left += margins.cxLeftWidth;
+        focusRect.top += margins.cyTopHeight;
+        focusRect.right -= margins.cxRightWidth;
+        focusRect.bottom -= margins.cyBottomHeight;
+
+        DrawFocusRect( hDC, &focusRect );
+    }
+
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
-static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags)
+static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 {
     static const int cb_states[3][5] =
     {
@@ -129,8 +145,7 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     static const int cb_size = 13;
 
     RECT bgRect, textRect;
-    HFONT font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
+    HFONT font, hPrevFont = NULL;
     LRESULT checkState = SendMessageW(hwnd, BM_GETCHECK, 0, 0);
     DWORD dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     int part = ((dwStyle & BUTTON_TYPE) == BS_RADIOBUTTON) || ((dwStyle & BUTTON_TYPE) == BS_AUTORADIOBUTTON)
@@ -140,6 +155,23 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
               ? cb_states[ checkState ][ drawState ]
               : rb_states[ checkState ][ drawState ];
     WCHAR *text = get_button_text(hwnd);
+    LOGFONTW lf;
+    BOOL created_font = FALSE;
+
+    HRESULT hr = GetThemeFont(theme, hDC, part, state, TMT_FONT, &lf);
+    if (SUCCEEDED(hr)) {
+        font = CreateFontIndirectW(&lf);
+        if (!font)
+            TRACE("Failed to create font\n");
+        else {
+            TRACE("font = %s\n", debugstr_w(lf.lfFaceName));
+            hPrevFont = SelectObject(hDC, font);
+            created_font = TRUE;
+        }
+    } else {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+        hPrevFont = SelectObject(hDC, font);
+    }
 
     GetClientRect(hwnd, &bgRect);
     GetThemeBackgroundContentRect(theme, hDC, part, state, &bgRect, &textRect);
@@ -152,27 +184,58 @@ static void CB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
     bgRect.right = bgRect.left + cb_size;
     textRect.left = bgRect.right + 6;
 
-    if (IsThemeBackgroundPartiallyTransparent(theme, part, state))
-        DrawThemeParentBackground(hwnd, hDC, NULL);
+    DrawThemeParentBackground(hwnd, hDC, NULL);
+
     DrawThemeBackground(theme, hDC, part, state, &bgRect, NULL);
     if (text)
     {
         DrawThemeText(theme, hDC, part, state, text, lstrlenW(text), dtFlags, 0, &textRect);
+
+        if (focused)
+        {
+            RECT focusRect;
+
+            focusRect = textRect;
+
+            DrawTextW(hDC, text, lstrlenW(text), &focusRect, dtFlags | DT_CALCRECT);
+
+            if (focusRect.right < textRect.right) focusRect.right++;
+            focusRect.bottom = textRect.bottom;
+
+            DrawFocusRect( hDC, &focusRect );
+        }
+
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (created_font) DeleteObject(font);
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
-static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags)
+static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UINT dtFlags, BOOL focused)
 {
     static const int states[] = { GBS_NORMAL, GBS_DISABLED, GBS_NORMAL, GBS_NORMAL, GBS_NORMAL };
 
     RECT bgRect, textRect, contentRect;
-    HFONT font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
-    HFONT hPrevFont = font ? SelectObject(hDC, font) : NULL;
     int state = states[ drawState ];
     WCHAR *text = get_button_text(hwnd);
+    LOGFONTW lf;
+    HFONT font, hPrevFont = NULL;
+    BOOL created_font = FALSE;
+
+    HRESULT hr = GetThemeFont(theme, hDC, BP_GROUPBOX, state, TMT_FONT, &lf);
+    if (SUCCEEDED(hr)) {
+        font = CreateFontIndirectW(&lf);
+        if (!font)
+            TRACE("Failed to create font\n");
+        else {
+            hPrevFont = SelectObject(hDC, font);
+            created_font = TRUE;
+        }
+    } else {
+        font = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
+        hPrevFont = SelectObject(hDC, font);
+    }
 
     GetClientRect(hwnd, &bgRect);
     textRect = bgRect;
@@ -206,6 +269,7 @@ static void GB_draw(HTHEME theme, HWND hwnd, HDC hDC, ButtonState drawState, UIN
         HeapFree(GetProcessHeap(), 0, text);
     }
 
+    if (created_font) DeleteObject(font);
     if (hPrevFont) SelectObject(hDC, hPrevFont);
 }
 
@@ -253,7 +317,7 @@ static BOOL BUTTON_Paint(HTHEME theme, HWND hwnd, HDC hParamDC)
     else drawState = STATE_DISABLED;
 
     hDC = hParamDC ? hParamDC : BeginPaint(hwnd, &ps);
-    paint(theme, hwnd, hDC, drawState, dtFlags);
+    paint(theme, hwnd, hDC, drawState, dtFlags, state & BST_FOCUS);
     if (!hParamDC) EndPaint(hwnd, &ps);
     return TRUE;
 }

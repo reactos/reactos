@@ -49,6 +49,7 @@ enum type_id
 };
 
 HRESULT get_typeinfo(enum type_id, ITypeInfo **) DECLSPEC_HIDDEN;
+void release_typelib(void) DECLSPEC_HIDDEN;
 
 HRESULT NetFwMgr_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;
 HRESULT NetFwPolicy_create(IUnknown *, LPVOID *) DECLSPEC_HIDDEN;

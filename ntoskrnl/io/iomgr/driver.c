@@ -243,7 +243,7 @@ IopNormalizeImagePath(
     _In_ PUNICODE_STRING ServiceName)
 {
     UNICODE_STRING SystemRootString = RTL_CONSTANT_STRING(L"\\SystemRoot\\");
-    UNICODE_STRING DriversPathString = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\drivers\\");
+    UNICODE_STRING DriversPathString = RTL_CONSTANT_STRING(L"\\SystemRoot\\System32\\drivers\\");
     UNICODE_STRING DotSysString = RTL_CONSTANT_STRING(L".sys");
     UNICODE_STRING InputImagePath;
 

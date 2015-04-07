@@ -178,7 +178,7 @@ i8042MouHandle(
 			break;
 
 		default:
-			ERR_(I8042PRT, "Unexpected state 0x%u!\n", DeviceExtension->MouseState);
+			ERR_(I8042PRT, "Unexpected state 0x%lx!\n", DeviceExtension->MouseState);
 			ASSERT(FALSE);
 	}
 }

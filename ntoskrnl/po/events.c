@@ -91,7 +91,7 @@ PopGetSysButtonCompletion(
 	if (!SysButtonContext->WorkItem)
 	{
 		DPRINT("IoAllocateWorkItem() failed\n");
-		ExFreePool(SysButtonContext);
+		ExFreePoolWithTag(SysButtonContext, 'IWOP');
 		return STATUS_SUCCESS;
 	}
 	IoQueueWorkItem(
@@ -139,7 +139,7 @@ PopGetSysButton(
 	else
 	{
 		DPRINT1("IoBuildDeviceIoControlRequest() failed\n");
-		ExFreePool(SysButtonContext);
+		ExFreePoolWithTag(SysButtonContext, 'IWOP');
 	}
 
 	IoFreeWorkItem(CurrentWorkItem);
@@ -258,10 +258,12 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 			DPRINT(" )\n");
 		}
 
-		SysButtonContext = ExAllocatePool(NonPagedPool, sizeof(SYS_BUTTON_CONTEXT));
+		SysButtonContext = ExAllocatePoolWithTag(NonPagedPool,
+                                                 sizeof(SYS_BUTTON_CONTEXT),
+                                                 'IWOP');
 		if (!SysButtonContext)
 		{
-			DPRINT1("ExAllocatePool() failed\n");
+			DPRINT1("ExAllocatePoolWithTag() failed\n");
 			ZwClose(FileHandle);
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
@@ -273,7 +275,7 @@ PopAddRemoveSysCapsCallback(IN PVOID NotificationStructure,
 		{
 			DPRINT1("IoAllocateWorkItem() failed\n");
 			ZwClose(FileHandle);
-			ExFreePool(SysButtonContext);
+			ExFreePoolWithTag(SysButtonContext, 'IWOP');
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
 		IoQueueWorkItem(

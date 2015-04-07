@@ -224,18 +224,14 @@ ident_len(LPCTSTR p)
     ident[identlen] = 0; \
     p += identlen;
 
-static BOOL
-seta_identval(LPCTSTR ident, INT* result)
+static INT
+seta_identval(LPCTSTR ident)
 {
     LPCTSTR identVal = GetEnvVarOrSpecial ( ident );
     if ( !identVal )
-    {
-        /* TODO FIXME - what to do upon failure? */
-        *result = 0;
-        return FALSE;
-    }
-    *result = _tcstol ( identVal, NULL, 0 );
-    return TRUE;
+        return 0;
+    else
+        return _tcstol ( identVal, NULL, 0 );
 }
 
 static BOOL
@@ -303,8 +299,7 @@ seta_unaryTerm(LPCTSTR* p_, INT* result)
         LPTSTR ident;
         INT identlen;
         PARSE_IDENT(ident,identlen,p);
-        if ( !seta_identval ( ident, result ) )
-            return FALSE;
+        *result = seta_identval ( ident );
     }
     else
     {
@@ -404,8 +399,15 @@ seta_bitAndTerm(LPCTSTR* p_, INT* result)
         switch ( op )
         {
         case '<':
-            lval <<= rval;
+        {
+            /* Shift left has to be a positive number, 0-31 otherwise 0 is returned,
+             * which differs from the compiler (for example gcc) so being explicit. */
+            if (rval < 0 || rval >= (8 * sizeof(lval)))
+                lval = 0;
+            else
+                lval <<= rval;
             break;
+        }
         case '>':
             lval >>= rval;
             break;
@@ -467,16 +469,23 @@ seta_assignment(LPCTSTR* p_, INT* result)
         if ( !seta_assignment ( &p, &exprval ) )
             return FALSE;
 
-        if ( !seta_identval ( ident, &identval ) )
-            identval = 0;
+        identval = seta_identval ( ident );
+
         switch ( op )
         {
         case '=':
             identval = exprval;
             break;
         case '<':
-            identval <<= exprval;
+        {
+            /* Shift left has to be a positive number, 0-31 otherwise 0 is returned,
+             * which differs from the compiler (for example gcc) so being explicit. */
+            if (exprval < 0 || exprval >= (8 * sizeof(identval)))
+                identval = 0;
+            else
+                identval <<= exprval;
             break;
+        }
         case '>':
             identval >>= exprval;
             break;

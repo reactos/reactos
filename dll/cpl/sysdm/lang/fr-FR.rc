@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Le Gestionnaire de Périphériques liste tous les périphériques matériels de votre ordinateur. Utiliser le Gestionnaire de périphériques pour changer les propriétés d'un périphérique.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Gestionnaire de Périphériques...", IDC_HARDWARE_DEVICE_MANAGER, 135, 48, 110, 14
     GROUPBOX "Assistant Matériel", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "L'Assistant Matériel vous aide à installer, désinstaller, réparer, débrancher, éjecter et configurer votre matériel.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Assistant Matériel...", IDC_HARDWARE_WIZARD, 135, 120, 110, 14
     GROUPBOX "Profils Matériels", IDC_STATIC, 6, 149, 244, 61

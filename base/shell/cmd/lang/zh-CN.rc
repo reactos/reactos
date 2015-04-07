@@ -465,7 +465,6 @@ RESTORE       恢复窗口\n\
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[错误]\n"
     STRING_REN_ERROR1 "MoveFile() 失败。错误码：%lu\n"
-    STRING_START_ERROR1 "现在没有批处理支持！"
     STRING_TIME_ERROR1 "无效时间。"
     STRING_TYPE_ERROR1 "无效选项 '/%s'\n"
     STRING_WINDOW_ERROR1 "未找到窗口"

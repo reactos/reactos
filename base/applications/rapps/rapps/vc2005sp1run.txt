@@ -2,14 +2,14 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
-Version = 7.1
+Name = Microsoft Visual C++ 2005 SP1 Redistributable
+Version = 6.0
 License = Unknown
 Description = Microsoft Visual Studio 2005 Runtime SP1. Contains: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
-Size = 2.6 MB
+Size = 2.58 MB
 Category = 14
-URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=5638
-URLDownload = http://download.microsoft.com/download/e/1/c/e1c773de-73ba-494a-a5ba-f24906ecf088/vcredist_x86.exe
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=26347
+URLDownload = http://download.microsoft.com/download/8/B/4/8B42259F-5D70-43F4-AC2E-4B208FD8D66A/vcredist_x86.EXE
 CDPath = none
 
 [Section.0407]
@@ -23,7 +23,7 @@ Description = Librerias Microsoft Visual Studio 2005 SP1. Incluye: atl80.dll, mf
 [Section.040c]
 License = Inconnue
 Description = Bibliothèque Microsoft Visual Studio 2005 SP1. Contient: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
-Size = 2,6 Mo
+Size = 2,58 Mo
 
 [Section.0410]
 License = Sconosciuta
@@ -40,13 +40,13 @@ Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2005 SP1. Zawier
 [Section.0418]
 License = Necunoscută
 Description = Microsoft Visual Studio 2005 Runtime SP1. Conține: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
-Size = 2,6 Mo
+Size = 2,58 Mo
 
 [Section.041f]
 Name = Microsoft Visual C++ 2005 SP1 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
 Description = Microsoft Visual Studio 2005 Yürütücü SP1. Şunları içerir: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
-Size = 2,6 MB
+Size = 2,58 MB
 
 [Section.0422]
 License = Невідома

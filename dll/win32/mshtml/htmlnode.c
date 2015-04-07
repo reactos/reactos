@@ -21,6 +21,8 @@
 static HTMLDOMNode *get_node_obj(IHTMLDOMNode*);
 static HRESULT create_node(HTMLDocumentNode*,nsIDOMNode*,HTMLDOMNode**);
 
+static ExternalCycleCollectionParticipant node_ccp;
+
 typedef struct {
     DispatchEx dispex;
     IHTMLDOMChildrenCollection IHTMLDOMChildrenCollection_iface;
@@ -462,7 +464,9 @@ static HRESULT WINAPI HTMLDOMNode_QueryInterface(IHTMLDOMNode *iface,
 static ULONG WINAPI HTMLDOMNode_AddRef(IHTMLDOMNode *iface)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(iface);
-    LONG ref = ccref_incr(&This->ccref, (nsISupports*)&This->IHTMLDOMNode_iface);
+    LONG ref;
+
+    ref = ccref_incr(&This->ccref, (nsISupports*)&This->IHTMLDOMNode_iface);
 
     TRACE("(%p) ref=%d\n", This, ref);
 
@@ -472,17 +476,9 @@ static ULONG WINAPI HTMLDOMNode_AddRef(IHTMLDOMNode *iface)
 static ULONG WINAPI HTMLDOMNode_Release(IHTMLDOMNode *iface)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(iface);
-    LONG ref = ccref_decr(&This->ccref, (nsISupports*)&This->IHTMLDOMNode_iface);
+    LONG ref = ccref_decr(&This->ccref, (nsISupports*)&This->IHTMLDOMNode_iface, /*&node_ccp*/ NULL);
 
     TRACE("(%p) ref=%d\n", This, ref);
-
-    if(!ref) {
-        if(This->vtbl->unlink)
-            This->vtbl->unlink(This);
-        This->vtbl->destructor(This);
-        release_dispex(&This->dispex);
-        heap_free(This);
-    }
 
     return ref;
 }
@@ -1143,8 +1139,6 @@ static const IHTMLDOMNode2Vtbl HTMLDOMNode2Vtbl = {
     HTMLDOMNode2_get_ownerDocument
 };
 
-static nsXPCOMCycleCollectionParticipant node_ccp;
-
 HRESULT HTMLDOMNode_QI(HTMLDOMNode *This, REFIID riid, void **ppv)
 {
     TRACE("(%p)->(%s %p)\n", This, debugstr_mshtml_guid(riid), ppv);
@@ -1272,12 +1266,6 @@ static HRESULT create_node(HTMLDocumentNode *doc, nsIDOMNode *nsnode, HTMLDOMNod
     return S_OK;
 }
 
-static void NSAPI HTMLDOMNode_unmark_if_purple(void *p)
-{
-    HTMLDOMNode *This = impl_from_IHTMLDOMNode(p);
-    ccref_unmark_if_purple(&This->ccref);
-}
-
 static nsresult NSAPI HTMLDOMNode_traverse(void *ccp, void *p, nsCycleCollectionTraversalCallback *cb)
 {
     HTMLDOMNode *This = impl_from_IHTMLDOMNode(p);
@@ -1326,12 +1314,25 @@ static nsresult NSAPI HTMLDOMNode_unlink(void *p)
     return NS_OK;
 }
 
+static void NSAPI HTMLDOMNode_delete_cycle_collectable(void *p)
+{
+    HTMLDOMNode *This = impl_from_IHTMLDOMNode(p);
+
+    TRACE("(%p)\n", This);
+
+    if(This->vtbl->unlink)
+        This->vtbl->unlink(This);
+    This->vtbl->destructor(This);
+    release_dispex(&This->dispex);
+    heap_free(This);
+}
+
 void init_node_cc(void)
 {
     static const CCObjCallback node_ccp_callback = {
-        HTMLDOMNode_unmark_if_purple,
         HTMLDOMNode_traverse,
-        HTMLDOMNode_unlink
+        HTMLDOMNode_unlink,
+        HTMLDOMNode_delete_cycle_collectable
     };
 
     ccp_init(&node_ccp, &node_ccp_callback);

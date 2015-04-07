@@ -25,9 +25,8 @@ const WCHAR szPreviewText[] =
 
 VOID
 PaintConsole(LPDRAWITEMSTRUCT drawItem,
-             PCONSOLE_PROPS pConInfo)
+             PCONSOLE_STATE_INFO pConInfo)
 {
-    PGUI_CONSOLE_INFO GuiInfo = pConInfo->TerminalInfo.TermInfo;
     HBRUSH hBrush;
     RECT cRect, fRect;
     DWORD startx, starty;
@@ -41,8 +40,8 @@ PaintConsole(LPDRAWITEMSTRUCT drawItem,
     sizex = drawItem->rcItem.right  - drawItem->rcItem.left;
     sizey = drawItem->rcItem.bottom - drawItem->rcItem.top ;
 
-    if ( GuiInfo->WindowOrigin.x == MAXDWORD &&
-         GuiInfo->WindowOrigin.y == MAXDWORD )
+    if ( pConInfo->WindowPosition.x == MAXDWORD &&
+         pConInfo->WindowPosition.y == MAXDWORD )
     {
         startx = sizex / 3;
         starty = sizey / 3;
@@ -51,14 +50,14 @@ PaintConsole(LPDRAWITEMSTRUCT drawItem,
     {
         // TODO:
         // Calculate pos correctly when console centered
-        startx = GuiInfo->WindowOrigin.x;
-        starty = GuiInfo->WindowOrigin.y;
+        startx = pConInfo->WindowPosition.x;
+        starty = pConInfo->WindowPosition.y;
     }
 
     // TODO:
     // Stretch console when bold fonts are selected
-    endx = startx + pConInfo->ci.ConsoleSize.X; // drawItem->rcItem.right - startx + 15;
-    endy = starty + pConInfo->ci.ConsoleSize.Y; // starty + sizey / 3;
+    endx = startx + pConInfo->WindowSize.X; // drawItem->rcItem.right - startx + 15;
+    endy = starty + pConInfo->WindowSize.Y; // starty + sizey / 3;
 
     /* Draw console size */
     SetRect(&cRect, startx, starty, endx, endy);
@@ -89,7 +88,7 @@ PaintConsole(LPDRAWITEMSTRUCT drawItem,
     FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_SCROLLBAR));
 
     /* Draw console background */
-    hBrush = CreateSolidBrush(pConInfo->ci.Colors[BkgdAttribFromAttrib(pConInfo->ci.ScreenAttrib)]);
+    hBrush = CreateSolidBrush(pConInfo->ColorTable[BkgdAttribFromAttrib(pConInfo->ScreenAttributes)]);
     SetRect(&fRect, startx + 3, starty + 6, cRect.right - 6, cRect.bottom - 3);
     FillRect(drawItem->hDC, &fRect, hBrush);
     DeleteObject((HGDIOBJ)hBrush);
@@ -97,27 +96,26 @@ PaintConsole(LPDRAWITEMSTRUCT drawItem,
 
 BOOL
 PaintText(LPDRAWITEMSTRUCT drawItem,
-          PCONSOLE_PROPS pConInfo,
+          PCONSOLE_STATE_INFO pConInfo,
           TEXT_TYPE TextMode)
 {
-    PGUI_CONSOLE_INFO GuiInfo = pConInfo->TerminalInfo.TermInfo;
     USHORT CurrentAttrib;
     COLORREF pbkColor, ptColor;
     COLORREF nbkColor, ntColor;
     HBRUSH hBrush;
     HFONT Font, OldFont;
 
-    COORD FontSize = GuiInfo->FontSize;
+    COORD FontSize = pConInfo->FontSize;
 
     if (TextMode == Screen)
-        CurrentAttrib = pConInfo->ci.ScreenAttrib;
+        CurrentAttrib = pConInfo->ScreenAttributes;
     else if (TextMode == Popup)
-        CurrentAttrib = pConInfo->ci.PopupAttrib;
+        CurrentAttrib = pConInfo->PopupAttributes;
     else
         return FALSE;
 
-    nbkColor = pConInfo->ci.Colors[BkgdAttribFromAttrib(CurrentAttrib)];
-    ntColor  = pConInfo->ci.Colors[TextAttribFromAttrib(CurrentAttrib)];
+    nbkColor = pConInfo->ColorTable[BkgdAttribFromAttrib(CurrentAttrib)];
+    ntColor  = pConInfo->ColorTable[TextAttribFromAttrib(CurrentAttrib)];
 
     hBrush = CreateSolidBrush(nbkColor);
     if (!hBrush) return FALSE;
@@ -129,7 +127,7 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
                        FontSize.X,
                        0,
                        TA_BASELINE,
-                       GuiInfo->FontWeight,
+                       pConInfo->FontWeight,
                        FALSE,
                        FALSE,
                        FALSE,
@@ -137,8 +135,8 @@ PaintText(LPDRAWITEMSTRUCT drawItem,
                        OUT_DEFAULT_PRECIS,
                        CLIP_DEFAULT_PRECIS,
                        DEFAULT_QUALITY,
-                       FIXED_PITCH | GuiInfo->FontFamily,
-                       GuiInfo->FaceName);
+                       FIXED_PITCH | pConInfo->FontFamily,
+                       pConInfo->FaceName);
     if (Font == NULL)
     {
         DPRINT1("PaintText: CreateFont failed\n");
@@ -174,9 +172,6 @@ LayoutProc(HWND hwndDlg,
            WPARAM wParam,
            LPARAM lParam)
 {
-    PCONSOLE_PROPS pConInfo = (PCONSOLE_PROPS)GetWindowLongPtr(hwndDlg, DWLP_USER);
-    PGUI_CONSOLE_INFO GuiInfo = (pConInfo ? pConInfo->TerminalInfo.TermInfo : NULL);
-
     UNREFERENCED_PARAMETER(hwndDlg);
     UNREFERENCED_PARAMETER(wParam);
 
@@ -188,10 +183,6 @@ LayoutProc(HWND hwndDlg,
             LONG  xVirtScr,  yVirtScr; // Coordinates of the top-left virtual screen
             LONG cxVirtScr, cyVirtScr; // Width and Height of the virtual screen
             LONG cxFrame  , cyFrame  ; // Thickness of the window frame
-
-            pConInfo = (PCONSOLE_PROPS)((LPPROPSHEETPAGE)lParam)->lParam;
-            GuiInfo  = pConInfo->TerminalInfo.TermInfo;
-            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
 
             /* Multi-monitor support */
             xVirtScr  = GetSystemMetrics(SM_XVIRTUALSCREEN);
@@ -206,20 +197,20 @@ LayoutProc(HWND hwndDlg,
             SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_HEIGHT, UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
             SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_WIDTH , UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 
-            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, pConInfo->ci.ScreenBufferSize.Y, FALSE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH , pConInfo->ci.ScreenBufferSize.X, FALSE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, pConInfo->ci.ConsoleSize.Y, FALSE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH , pConInfo->ci.ConsoleSize.X, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, ConInfo->ScreenBufferSize.Y, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH , ConInfo->ScreenBufferSize.X, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, ConInfo->WindowSize.Y, FALSE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH , ConInfo->WindowSize.X, FALSE);
 
             SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT, UDM_SETRANGE, 0,
                                 (LPARAM)MAKELONG(xVirtScr + cxVirtScr - cxFrame, xVirtScr - cxFrame));
             SendDlgItemMessageW(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , UDM_SETRANGE, 0,
                                 (LPARAM)MAKELONG(yVirtScr + cyVirtScr - cyFrame, yVirtScr - cyFrame));
 
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, GuiInfo->WindowOrigin.x, TRUE);
-            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , GuiInfo->WindowOrigin.y, TRUE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, ConInfo->WindowPosition.x, TRUE);
+            SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , ConInfo->WindowPosition.y, TRUE);
 
-            if (GuiInfo->AutoPosition)
+            if (ConInfo->AutoPosition)
             {
                 EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, FALSE);
                 EnableDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , FALSE);
@@ -227,14 +218,14 @@ LayoutProc(HWND hwndDlg,
                 EnableDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP , FALSE);
             }
             CheckDlgButton(hwndDlg, IDC_CHECK_SYSTEM_POS_WINDOW,
-                           GuiInfo->AutoPosition ? BST_CHECKED : BST_UNCHECKED);
+                           ConInfo->AutoPosition ? BST_CHECKED : BST_UNCHECKED);
 
             return TRUE;
         }
 
         case WM_DRAWITEM:
         {
-            PaintConsole((LPDRAWITEMSTRUCT)lParam, pConInfo);
+            PaintConsole((LPDRAWITEMSTRUCT)lParam, ConInfo);
             return TRUE;
         }
 
@@ -337,12 +328,12 @@ LayoutProc(HWND hwndDlg,
                     }
                 }
 
-                pConInfo->ci.ScreenBufferSize.X = (SHORT)swidth;
-                pConInfo->ci.ScreenBufferSize.Y = (SHORT)sheight;
-                pConInfo->ci.ConsoleSize.X = (SHORT)wwidth;
-                pConInfo->ci.ConsoleSize.Y = (SHORT)wheight;
-                GuiInfo->WindowOrigin.x = left;
-                GuiInfo->WindowOrigin.y = top;
+                ConInfo->ScreenBufferSize.X = (SHORT)swidth;
+                ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
+                ConInfo->WindowSize.X = (SHORT)wwidth;
+                ConInfo->WindowSize.Y = (SHORT)wheight;
+                ConInfo->WindowPosition.x = left;
+                ConInfo->WindowPosition.y = top;
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             }
             break;
@@ -371,8 +362,8 @@ LayoutProc(HWND hwndDlg,
                             SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, wwidth, TRUE);
                         }
 
-                        pConInfo->ci.ScreenBufferSize.X = (SHORT)swidth;
-                        pConInfo->ci.ConsoleSize.X      = (SHORT)wwidth;
+                        ConInfo->ScreenBufferSize.X = (SHORT)swidth;
+                        ConInfo->WindowSize.X       = (SHORT)wwidth;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -398,8 +389,8 @@ LayoutProc(HWND hwndDlg,
                             SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, swidth, TRUE);
                         }
 
-                        pConInfo->ci.ScreenBufferSize.X = (SHORT)swidth;
-                        pConInfo->ci.ConsoleSize.X      = (SHORT)wwidth;
+                        ConInfo->ScreenBufferSize.X = (SHORT)swidth;
+                        ConInfo->WindowSize.X       = (SHORT)wwidth;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -424,8 +415,8 @@ LayoutProc(HWND hwndDlg,
                             SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, wheight, TRUE);
                         }
 
-                        pConInfo->ci.ScreenBufferSize.Y = (SHORT)sheight;
-                        pConInfo->ci.ConsoleSize.Y      = (SHORT)wheight;
+                        ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
+                        ConInfo->WindowSize.Y       = (SHORT)wheight;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -451,8 +442,8 @@ LayoutProc(HWND hwndDlg,
                             SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, sheight, TRUE);
                         }
 
-                        pConInfo->ci.ScreenBufferSize.Y = (SHORT)sheight;
-                        pConInfo->ci.ConsoleSize.Y      = (SHORT)wheight;
+                        ConInfo->ScreenBufferSize.Y = (SHORT)sheight;
+                        ConInfo->WindowSize.Y       = (SHORT)wheight;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -468,8 +459,8 @@ LayoutProc(HWND hwndDlg,
                         left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
                         top  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
 
-                        GuiInfo->WindowOrigin.x = left;
-                        GuiInfo->WindowOrigin.y = top;
+                        ConInfo->WindowPosition.x = left;
+                        ConInfo->WindowPosition.y = top;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
                     break;
@@ -485,9 +476,9 @@ LayoutProc(HWND hwndDlg,
                         left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, TRUE);
                         top  = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP , NULL, TRUE);
 
-                        GuiInfo->AutoPosition   = FALSE;
-                        GuiInfo->WindowOrigin.x = left;
-                        GuiInfo->WindowOrigin.y = top;
+                        ConInfo->AutoPosition     = FALSE;
+                        ConInfo->WindowPosition.x = left;
+                        ConInfo->WindowPosition.y = top;
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
@@ -498,8 +489,8 @@ LayoutProc(HWND hwndDlg,
                     }
                     else if (res == BST_UNCHECKED)
                     {
-                        GuiInfo->AutoPosition = TRUE;
-                        // Do not touch GuiInfo->WindowOrigin !!
+                        ConInfo->AutoPosition = TRUE;
+                        // Do not touch ConInfo->WindowPosition !!
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 
                         SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);

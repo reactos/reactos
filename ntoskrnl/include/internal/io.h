@@ -81,6 +81,11 @@
 #define RD_SYMLINK_CREATE_FAILED 5
 
 //
+// Max traversal of reparse points for a single open in IoParseDevice
+//
+#define IOP_MAX_REPARSE_TRAVERSAL 0x20
+
+//
 // We can call the Ob Inlined API, it's the same thing
 //
 #define IopAllocateMdlFromLookaside                     \

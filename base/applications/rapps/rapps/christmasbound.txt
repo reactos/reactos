@@ -15,6 +15,10 @@ CDPath = none
 [Section.0407]
 Description = Ein Spiel, ähnlich zu Frozen Fruits.
 
+[Section.040a]
+License = Gratuito
+Description = Un juego similar a Frozen Fruits.
+
 [Section.0410]
 Description = Un gioco simile a Frozen Fuits.
 

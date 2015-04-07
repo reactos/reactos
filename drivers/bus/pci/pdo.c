@@ -150,7 +150,7 @@ PdoQueryBusInformation(
     DPRINT("Called\n");
 
     DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    BusInformation = ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
+    BusInformation = ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), TAG_PCI);
     Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
     if (BusInformation != NULL)
     {
@@ -1475,7 +1475,7 @@ PdoQueryDeviceRelations(
         return Irp->IoStatus.Status;
 
     /* We can do this because we only return 1 PDO for TargetDeviceRelation */
-    DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
+    DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(*DeviceRelations), TAG_PCI);
     if (!DeviceRelations)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1621,7 +1621,7 @@ PdoPnpControl(
                 KeReleaseSpinLock(&FdoDeviceExtension->DeviceListLock, OldIrql);
 
                 /* Free the device */
-                ExFreePool(DeviceExtension->PciDevice);
+                ExFreePoolWithTag(DeviceExtension->PciDevice, TAG_PCI);
 
                 /* Complete the IRP */
                 Irp->IoStatus.Status = STATUS_SUCCESS;

@@ -2,7 +2,7 @@
 # Update this file when you port a dll/program from WINE.
 
 The ReactOS Project shares quite a bit of code with the WINE project.
-This document should provide a compleate reference for all of the
+This document should provide a complete reference for all of the
 locations in the ReactOS source tree where code is shared between the
 two projects. If you find something is missing from this documentation
 please add it.
@@ -52,40 +52,40 @@ reactos/dll/directx/wine/wined3d        # Synced to WineStaging-1.7.37
 reactos/dll/win32/activeds            # Synced to Wine-1.7.27
 reactos/dll/win32/actxprxy            # Synced to Wine-1.7.27
 reactos/dll/win32/advpack             # Synced to WineStaging-1.7.37
-reactos/dll/win32/atl                 # Synced to Wine-1.7.27
-reactos/dll/win32/atl80               # Synced to Wine-1.7.27
-reactos/dll/win32/atl100              # Synced to Wine-1.7.27
-reactos/dll/win32/avifil32            # Synced to Wine-1.7.27
-reactos/dll/win32/bcrypt              # Synced to Wine-1.7.27
+reactos/dll/win32/atl                 # Synced to WineStaging-1.7.37
+reactos/dll/win32/atl80               # Synced to WineStaging-1.7.37
+reactos/dll/win32/atl100              # Synced to WineStaging-1.7.37
+reactos/dll/win32/avifil32            # Synced to WineStaging-1.7.37
+reactos/dll/win32/bcrypt              # Synced to WineStaging-1.7.37
 reactos/dll/win32/browseui            # Out of sync
-reactos/dll/win32/cabinet             # Synced to Wine-1.7.27
+reactos/dll/win32/cabinet             # Synced to WineStaging-1.7.37
 reactos/dll/win32/clusapi             # Synced to Wine-1.7.27
 reactos/dll/win32/comcat              # Synced to Wine-1.7.27
-reactos/dll/win32/comctl32            # Synced to Wine-1.7.27
-reactos/dll/win32/comdlg32            # Synced to Wine-1.7.27
+reactos/dll/win32/comctl32            # Synced to WineStaging-1.7.37
+reactos/dll/win32/comdlg32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/compstui            # Synced to Wine-1.7.27
 reactos/dll/win32/credui              # Synced to Wine-1.7.27
-reactos/dll/win32/crypt32             # Synced to Wine-1.7.27
+reactos/dll/win32/crypt32             # Synced to WineStaging-1.7.37
 reactos/dll/win32/cryptdlg            # Synced to Wine-1.7.27
 reactos/dll/win32/cryptdll            # Synced to Wine-1.7.27
-reactos/dll/win32/cryptnet            # Synced to Wine-1.7.27
+reactos/dll/win32/cryptnet            # Synced to WineStaging-1.7.37
 reactos/dll/win32/cryptui             # Synced to Wine-1.7.27
-reactos/dll/win32/dbghelp             # Synced to Wine-1.7.27
+reactos/dll/win32/dbghelp             # Synced to WineStaging-1.7.37
 reactos/dll/win32/dciman32            # Synced to Wine-1.7.27
-reactos/dll/win32/dwmapi              # Synced to Wine-1.7.27
+reactos/dll/win32/dwmapi              # Synced to WineStaging-1.7.37
 reactos/dll/win32/faultrep            # Synced to Wine-1.7.27
 reactos/dll/win32/fltlib              # Synced to Wine-1.7.27
-reactos/dll/win32/fusion              # Synced to Wine-1.7.27
-reactos/dll/win32/gdiplus             # Synced to Wine-1.7.27
+reactos/dll/win32/fusion              # Synced to WineStaging-1.7.37
+reactos/dll/win32/gdiplus             # Synced to WineStaging-1.7.37
 reactos/dll/win32/hhctrl.ocx          # Synced to Wine-1.7.27
 reactos/dll/win32/hlink               # Synced to Wine-1.7.27
-reactos/dll/win32/hnetcfg             # Synced to Wine-1.7.27
+reactos/dll/win32/hnetcfg             # Synced to WineStaging-1.7.37
 reactos/dll/win32/httpapi             # Synced to Wine-1.7.27
-reactos/dll/win32/iccvid              # Synced to Wine-1.7.27
+reactos/dll/win32/iccvid              # Synced to WineStaging-1.7.37
 reactos/dll/win32/icmp                # Out of sync
-reactos/dll/win32/ieframe             # Synced to Wine-1.7.27
+reactos/dll/win32/ieframe             # Synced to WineStaging-1.7.37
 reactos/dll/win32/imaadp32.acm        # Synced to Wine-1.7.27
-reactos/dll/win32/imagehlp            # Synced to Wine-1.7.27
+reactos/dll/win32/imagehlp            # Synced to WineStaging-1.7.37
 reactos/dll/win32/imm32               # Synced to Wine-1.7.27
 reactos/dll/win32/inetcomm            # Synced to Wine-1.7.27
 reactos/dll/win32/inetmib1            # Synced to Wine-1.7.27
@@ -94,20 +94,20 @@ reactos/dll/win32/inseng              # Synced to Wine-1.7.27
 reactos/dll/win32/iphlpapi            # Out of sync
 reactos/dll/win32/itircl              # Synced to Wine-1.7.27
 reactos/dll/win32/itss                # Synced to Wine-1.7.27
-reactos/dll/win32/jscript             # Synced to Wine-1.7.27
+reactos/dll/win32/jscript             # Synced to WineStaging-1.7.37
 reactos/dll/win32/jsproxy             # Synced to Wine-1.7.27
 reactos/dll/win32/loadperf            # Synced to Wine-1.7.27
-reactos/dll/win32/localspl            # Synced to Wine-1.7.27
+reactos/dll/win32/localspl            # Synced to WineStaging-1.7.37
 reactos/dll/win32/localui             # Synced to Wine-1.7.27
 reactos/dll/win32/lz32                # Synced to Wine-1.7.27
 reactos/dll/win32/mapi32              # Synced to Wine-1.7.27
-reactos/dll/win32/mciavi32            # Synced to Wine-1.7.27
+reactos/dll/win32/mciavi32            # Synced to WineStaging-1.7.37
 reactos/dll/win32/mcicda              # Synced to Wine-1.7.27
-reactos/dll/win32/mciqtz32            # Synced to Wine-1.7.27
-reactos/dll/win32/mciseq              # Synced to Wine-1.7.27
-reactos/dll/win32/mciwave             # Synced to Wine-1.7.27
+reactos/dll/win32/mciqtz32            # Synced to WineStaging-1.7.37
+reactos/dll/win32/mciseq              # Synced to WineStaging-1.7.37
+reactos/dll/win32/mciwave             # Synced to WineStaging-1.7.37
 reactos/dll/win32/mgmtapi             # Synced to Wine-1.7.27
-reactos/dll/win32/mlang               # Synced to Wine-1.7.27
+reactos/dll/win32/mlang               # Synced to WineStaging-1.7.37
 reactos/dll/win32/mmdevapi            # Synced to Wine-1.7.27
 reactos/dll/win32/mpr                 # Synced to Wine-1.7.27
 reactos/dll/win32/mprapi              # Synced to Wine-1.7.27
@@ -121,7 +121,7 @@ reactos/dll/win32/msctf               # Synced to Wine-1.7.27
 reactos/dll/win32/msftedit            # Synced to Wine-1.7.27
 reactos/dll/win32/msg711.acm          # Synced to Wine-1.7.27
 reactos/dll/win32/msgsm32.acm         # Synced to Wine-1.7.27
-reactos/dll/win32/mshtml              # Synced to Wine-1.7.27
+reactos/dll/win32/mshtml              # Synced to WineStaging-1.7.37
 reactos/dll/win32/mshtml.tlb          # Synced to Wine-1.7.27
 reactos/dll/win32/msi                 # Synced to WineStaging-1.7.37
 reactos/dll/win32/msimg32             # Synced to Wine-1.7.27
@@ -170,7 +170,7 @@ reactos/dll/win32/qmgrprxy            # Synced to Wine-1.7.27
 reactos/dll/win32/query               # Synced to Wine-1.7.27
 reactos/dll/win32/rasapi32            # Synced to Wine-1.7.27
 reactos/dll/win32/resutils            # Synced to Wine-1.7.27
-reactos/dll/win32/riched20            # Synced to Wine-1.7.27
+reactos/dll/win32/riched20            # Synced to WineStaging-1.7.37
 reactos/dll/win32/riched32            # Synced to Wine-1.7.27
 reactos/dll/win32/rpcrt4              # Synced to Wine-1.7.17
 reactos/dll/win32/rsabase             # Synced to Wine-1.7.27
@@ -223,7 +223,7 @@ reactos/dll/win32/wintrust            # Synced to Wine-1.7.27
 reactos/dll/win32/wldap32             # Synced to Wine-1.7.27
 reactos/dll/win32/wmi                 # Synced to Wine-1.7.27
 reactos/dll/win32/wmiutils            # Synced to Wine-1.7.27
-reactos/dll/win32/wshom.ocx           # Synced to Wine-1.7.27
+reactos/dll/win32/wshom.ocx           # Synced to WineStaging-1.7.37
 reactos/dll/win32/wtsapi32            # Synced to Wine-1.7.27
 reactos/dll/win32/wuapi               # Synced to Wine-1.7.27
 reactos/dll/win32/xinput1_1           # Synced to Wine-1.7.27
@@ -240,7 +240,7 @@ reactos/base/applications/cmdutils/cscript  # Synced to Wine-1.7.27
 reactos/base/applications/cmdutils/reg      # Synced to Wine-1.7.27
 reactos/base/applications/cmdutils/taskkill # Synced to Wine-1.7.27
 reactos/base/applications/cmdutils/wmic     # Synced to Wine-1.7.27
-reactos/base/applications/cmdutils/wscript  # Synced to Wine-1.7.27
+reactos/base/applications/cmdutils/wscript  # Synced to WineStaging-1.7.37
 reactos/base/applications/cmdutils/xcopy    # Synced to Wine-1.7.27
 reactos/base/applications/games/winmine     # Forked at Wine-1_3_5
 reactos/base/applications/extrac32          # Synced to Wine-1.7.27
@@ -256,7 +256,7 @@ reactos/modules/rosapps/winfile             # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
-check Wine current souces first as it may already be fixed.
+check Wine current sources first as it may already be fixed.
 
 reactos/lib/3rdparty/strmbase               # Synced to Wine-1.7.27
 

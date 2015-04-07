@@ -43,6 +43,7 @@ DECLSPEC_HIDDEN BOOL NETAPI_IsLocalComputer( LMCSTR name )
     return ret && !strcmpiW( name, buf );
 }
 
+#if 0
 static void wprint_mac(WCHAR* buffer, int len, const MIB_IFROW *ifRow)
 {
     int i;
@@ -72,6 +73,7 @@ static void wprint_mac(WCHAR* buffer, int len, const MIB_IFROW *ifRow)
     }
     buffer[2*i]=0;
 }
+#endif
 
 /* Theoretically this could be too short, except that MS defines
  * MAX_ADAPTER_NAME as 128, and MAX_INTERFACE_NAME_LEN as 256, and both
@@ -84,6 +86,7 @@ static void wprint_mac(WCHAR* buffer, int len, const MIB_IFROW *ifRow)
 #define NBT_TRANSPORT_NAME_HEADER "\\Device\\NetBT_Tcpip_"
 #define UNKNOWN_TRANSPORT_NAME_HEADER "\\Device\\UnknownTransport_"
 
+#if 0
 static void wprint_name(WCHAR *buffer, int len, ULONG transport,
  PMIB_IFROW ifRow)
 {
@@ -109,6 +112,7 @@ static void wprint_name(WCHAR *buffer, int len, ULONG transport,
         *ptr1 = *ptr2;
     *ptr1 = '\0';
 }
+#endif
 
 /***********************************************************************
  *                NetWkstaTransportEnum  (NETAPI32.@)
@@ -125,6 +129,7 @@ struct WkstaTransportEnumData
 
 /**********************************************************************/
 
+#if 0
 static BOOL WkstaEnumAdaptersCallback(UCHAR totalLANAs, UCHAR lanaIndex,
  ULONG transport, const NetBIOSAdapterImpl *data, void *closure)
 {
@@ -214,9 +219,11 @@ static BOOL WkstaEnumAdaptersCallback(UCHAR totalLANAs, UCHAR lanaIndex,
         ret = FALSE;
     return ret;
 }
+#endif
 
 /**********************************************************************/
 
+#if 0
 NET_API_STATUS WINAPI 
 NetWkstaTransportEnum(LMSTR ServerName, DWORD level, PBYTE* pbuf,
       DWORD prefmaxlen, LPDWORD read_entries,
@@ -271,6 +278,7 @@ NetWkstaTransportEnum(LMSTR ServerName, DWORD level, PBYTE* pbuf,
     }
     return ret;
 }
+#endif
 
 
 /************************************************************

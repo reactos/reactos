@@ -1,15 +1,20 @@
 /*
-* PROJECT:     ReactOS shell extensions
-* LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll\shellext\ntobjshex\ntobjns.cpp
-* PURPOSE:     NT Object Namespace shell extension
-* PROGRAMMERS: David Quintana <gigaherz@gmail.com>
-*/
+ * PROJECT:     ReactOS shell extensions
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll\shellext\ntobjshex\ntobjns.cpp
+ * PURPOSE:     NT Object Namespace shell extension
+ * PROGRAMMERS: David Quintana <gigaherz@gmail.com>
+ */
 
 #include "precomp.h"
 #include "ntobjutil.h"
 #include <ntquery.h>
 #include "util.h"
+
+#define DFM_MERGECONTEXTMENU 1 // uFlags LPQCMINFO
+#define DFM_INVOKECOMMAND 2 // idCmd pszArgs
+#define DFM_INVOKECOMMANDEX 12 // idCmd PDFMICS
+#define DFM_GETDEFSTATICID 14 // idCmd * 0
 
 #define SHCIDS_ALLFIELDS 0x80000000L
 #define SHCIDS_CANONICALONLY 0x10000000L
@@ -28,158 +33,9 @@ static const GUID GUID_RegistryColumns = { 0x18a4b504, 0xf6d8, 0x4d8a, { 0x86, 0
 enum RegistryColumns
 {
     REGISTRY_COLUMN_NAME = 0,
-    REGISTRY_COLUMN_TYPE = 1,
-    REGISTRY_COLUMN_VALUE = 2,
-};
-
-class CRegistryFolderContextMenu :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu
-{
-    PCIDLIST_ABSOLUTE m_pcidlFolder;
-    PCITEMID_CHILD    m_pcidlChild;
-    UINT              m_idFirst;
-
-    enum ItemOffsets
-    {
-        ITEM_Open = 0,
-        ITEM_OpenNewWindow
-    };
-
-public:
-    CRegistryFolderContextMenu() :
-        m_pcidlFolder(NULL),
-        m_pcidlChild(NULL),
-        m_idFirst(0)
-    {
-
-    }
-
-    virtual ~CRegistryFolderContextMenu()
-    {
-        if (m_pcidlFolder)
-            ILFree((LPITEMIDLIST) m_pcidlFolder);
-        if (m_pcidlChild)
-            ILFree((LPITEMIDLIST) m_pcidlChild);
-    }
-
-    HRESULT Initialize(PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
-    {
-        m_pcidlFolder = ILClone(parent);
-        if (cidl != 1)
-            return E_INVALIDARG;
-        m_pcidlChild = ILClone(apidl[0]);
-        return S_OK;
-    }
-
-    // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
-    {
-        MENUITEMINFOW mii;
-
-        m_idFirst = idCmdFirst;
-
-        const RegPidlEntry * entry = (RegPidlEntry *) m_pcidlChild;
-
-        static WCHAR open [] = L"Open";
-        static WCHAR opennewwindow [] = L"Open in new window";
-
-        if (entry->entryType == REG_ENTRY_KEY)
-        {
-            ZeroMemory(&mii, sizeof(mii));
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-            mii.fType = MFT_STRING;
-            mii.wID = (idCmdFirst = m_idFirst + ITEM_Open);
-            mii.dwTypeData = open;
-            mii.cch = _countof(open);
-            mii.fState = MFS_ENABLED | MFS_DEFAULT;
-            mii.hSubMenu = NULL;
-            InsertMenuItemW(hmenu, idCmdFirst, TRUE, &mii);
-
-            if (!(uFlags & CMF_DEFAULTONLY) && idCmdFirst <= idCmdLast)
-            {
-                ZeroMemory(&mii, sizeof(mii));
-                mii.cbSize = sizeof(mii);
-                mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-                mii.fType = MFT_STRING;
-                mii.wID = (idCmdFirst = m_idFirst + ITEM_OpenNewWindow);
-                mii.dwTypeData = opennewwindow;
-                mii.cch = _countof(opennewwindow);
-                mii.fState = MFS_ENABLED;
-                mii.hSubMenu = NULL;
-                InsertMenuItemW(hmenu, idCmdFirst, FALSE, &mii);
-            }
-        }
-
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst - m_idFirst);
-    }
-
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
-    {
-        LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
-
-        if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_Open) || !lpici->lpVerb)
-        {
-            SHELLEXECUTEINFO sei = { 0 };
-            sei.cbSize = sizeof(sei);
-            sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-            sei.lpIDList = fullPidl;
-            sei.lpClass = L"folder";
-            sei.hwnd = lpici->hwnd;
-            sei.nShow = lpici->nShow;
-            sei.lpVerb = L"open";
-            BOOL bRes = ::ShellExecuteEx(&sei);
-
-            ILFree(fullPidl);
-
-            return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
-        }
-        else if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_OpenNewWindow))
-        {
-            SHELLEXECUTEINFO sei = { 0 };
-            sei.cbSize = sizeof(sei);
-            sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-            sei.lpIDList = fullPidl;
-            sei.lpClass = L"folder";
-            sei.hwnd = lpici->hwnd;
-            sei.nShow = lpici->nShow;
-            sei.lpVerb = L"opennewwindow";
-            BOOL bRes = ::ShellExecuteEx(&sei);
-
-            ILFree(fullPidl);
-
-            return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
-        }
-        return E_NOTIMPL;
-    }
-
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax)
-    {
-        if (idCmd == m_idFirst)
-        {
-            if (uType == GCS_VERBW)
-            {
-                return StringCchCopyW((LPWSTR) pszName, cchMax, L"open");
-            }
-        }
-        else if (idCmd == (m_idFirst + 1))
-        {
-            if (uType == GCS_VERBW)
-            {
-                return StringCchCopyW((LPWSTR) pszName, cchMax, L"opennewwindow");
-            }
-        }
-        return E_NOTIMPL;
-    }
-
-    DECLARE_NOT_AGGREGATABLE(CRegistryFolderContextMenu)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    BEGIN_COM_MAP(CRegistryFolderContextMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    END_COM_MAP()
-
+    REGISTRY_COLUMN_TYPE,
+    REGISTRY_COLUMN_VALUE,
+    REGISTRY_COLUMN_END
 };
 
 class CRegistryFolderExtractIcon :
@@ -231,6 +87,7 @@ public:
         switch (entry->entryType)
         {
         case REG_ENTRY_KEY:
+        case REG_ENTRY_ROOT:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_REGISTRYKEY;
             *pwFlags = flags;
@@ -271,6 +128,7 @@ class CRegistryPidlManager
 {
 private:
     PWSTR m_ntPath;
+    HKEY m_hRoot;
 
     HDPA m_hDpa;
     UINT m_hDpaCount;
@@ -291,6 +149,7 @@ private:
 public:
     CRegistryPidlManager() :
         m_ntPath(NULL),
+        m_hRoot(NULL),
         m_hDpa(NULL),
         m_hDpaCount(0)
     {
@@ -301,19 +160,37 @@ public:
         DPA_DestroyCallback(m_hDpa, s_DpaDeleteCallback, this);
     }
 
-    HRESULT Initialize(PWSTR ntPath)
+    HRESULT Initialize(PWSTR ntPath, HKEY hRoot)
     {
         m_ntPath = ntPath;
+        m_hRoot = hRoot;
+        m_hDpa = NULL;
+
+        return S_OK;
+    }
+
+    HRESULT Enumerate()
+    {
+        if (m_hDpa)
+            return S_OK;
 
         m_hDpa = DPA_Create(10);
 
         if (!m_hDpa)
             return E_OUTOFMEMORY;
 
-        HRESULT hr = EnumerateRegistryKey(m_hDpa, m_ntPath, NULL, &m_hDpaCount);
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-
+        if (wcslen(m_ntPath) == 0 && m_hRoot == NULL)
+        {
+            HRESULT hr = EnumerateRootKeys(m_hDpa, &m_hDpaCount);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
+        else
+        {
+            HRESULT hr = EnumerateRegistryKey(m_hDpa, m_ntPath, m_hRoot, &m_hDpaCount);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+        }
         return S_OK;
     }
 
@@ -323,7 +200,12 @@ public:
 
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         RegPidlEntry * info = (RegPidlEntry *) pcidl;
@@ -361,10 +243,18 @@ public:
 
     HRESULT FindByName(LPCWSTR strParsingName, RegPidlEntry ** pinfo)
     {
+        HRESULT hr;
+
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
+
 
         TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
 
@@ -390,6 +280,18 @@ public:
 
     HRESULT GetPidl(UINT index, RegPidlEntry ** pEntry)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *pEntry = NULL;
 
         RegPidlEntry * entry = (RegPidlEntry *) DPA_GetPtr(m_hDpa, index);
@@ -404,6 +306,18 @@ public:
 
     HRESULT GetCount(UINT * count)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *count = m_hDpaCount;
         return S_OK;
     }
@@ -419,54 +333,92 @@ public:
         return idl;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
     {
-        if (LOWORD(lParam) != 0)
-            return E_INVALIDARG;
-
-        if (second->cb > first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->cb < first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (second->entryNameLength > first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->entryNameLength < first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (HIWORD(lParam) == SHCIDS_ALLFIELDS)
+        if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
-            int ord = memcmp(second, first, first->cb);
+            if (lParam != 0)
+                return E_INVALIDARG;
+
+            int minsize = min(first->cb, second->cb);
+            int ord = memcmp(second, first, minsize);
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
-        }
-        else if (HIWORD(lParam) == SHCIDS_CANONICALONLY)
-        {
-            int ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+            if (second->cb > first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            if (second->cb < first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
         else
         {
-            int ord = (int) second->entryType - (int) first->entryType;
+            bool canonical = ((lParam & 0xFFFF0000) == SHCIDS_CANONICALONLY);
 
-            if (ord > 0)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (ord < 0)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
+            switch (lParam & 0xFFFF)
+            {
+            case REGISTRY_COLUMN_NAME:
+            {
+                bool f1 = (first->entryType == REG_ENTRY_KEY) || (first->entryType == REG_ENTRY_ROOT);
+                bool f2 = (second->entryType == REG_ENTRY_KEY) || (second->entryType == REG_ENTRY_ROOT);
 
-            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength / sizeof(WCHAR));
+                if (f1 && !f2)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+                if (f2 && !f1)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+                if (canonical)
+                {
+                    // Shortcut: avoid comparing contents if not necessary when the results are not for display.
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                int minlength = min(first->entryNameLength, second->entryNameLength);
+                int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+
+                if (ord != 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+                if (!canonical)
+                {
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                return S_OK;
+            }
+            case REGISTRY_COLUMN_TYPE:
+            {
+                int ord = second->contentType - first->contentType;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case REGISTRY_COLUMN_VALUE:
+            {
+                // Can't sort by value
+                return E_INVALIDARG;
+            }
+            default:
+            {
+                DbgPrint("Unsupported sorting mode.\n");
+                return E_INVALIDARG;
+            }
+            }
         }
 
-        return S_OK;
+        return E_INVALIDARG;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         RegPidlEntry * second = (RegPidlEntry*) &(p->mkid);
@@ -476,7 +428,7 @@ public:
         return CompareIDs(lParam, first, second);
     }
 
-    HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
+    static HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
     {
         LPCITEMIDLIST p = pcidl1;
         RegPidlEntry * first = (RegPidlEntry*) &(p->mkid);
@@ -486,77 +438,118 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = 0;
 
-        if (entry->entryType == REG_ENTRY_KEY)
+        if ((entry->entryType == REG_ENTRY_KEY) ||
+            (entry->entryType == REG_ENTRY_ROOT))
             flags |= SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_BROWSABLE;
 
         return flags & mask;
+    }
+
+    BOOL IsFolder(LPCITEMIDLIST pcidl)
+    {
+        RegPidlEntry * entry;
+        HRESULT hr = FindPidlInList(pcidl, &entry);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+
+        return (entry->entryType == REG_ENTRY_KEY) ||
+            (entry->entryType == REG_ENTRY_ROOT);
+    }
+
+    static HRESULT FormatValueData(DWORD contentType, PVOID td, DWORD contentsLength, PCWSTR * strContents)
+    {
+        switch (contentType)
+        {
+        case 0:
+        {
+            PCWSTR strTodo = L"";
+            DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbCopyW(strValue, bufferLength, strTodo);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_SZ:
+        case REG_EXPAND_SZ:
+        {
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(contentsLength + sizeof(WCHAR));
+            StringCbCopyNW(strValue, contentsLength + sizeof(WCHAR), (LPCWSTR) td, contentsLength);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_DWORD:
+        {
+            DWORD bufferLength = 64 * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, L"0x%08x (%d)",
+                *(DWORD*) td, *(DWORD*) td);
+            *strContents = strValue;
+            return S_OK;
+        }
+        case REG_QWORD:
+        {
+            DWORD bufferLength = 64 * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%d)",
+                *(LARGE_INTEGER*) td, ((LARGE_INTEGER*) td)->QuadPart);
+            *strContents = strValue;
+            return S_OK;
+        }
+        default:
+        {
+            PCWSTR strTodo = L"<TODO: Convert value for display>";
+            DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+            PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+            StringCbCopyW(strValue, bufferLength, strTodo);
+            *strContents = strValue;
+            return S_OK;
+        }
+        }
     }
 
     HRESULT FormatContentsForDisplay(RegPidlEntry * info, PCWSTR * strContents)
     {
         PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
-        if (info->contentsLength > 0)
+        if (info->entryType == REG_ENTRY_VALUE_WITH_CONTENT)
         {
-            if (info->entryType == REG_ENTRY_VALUE_WITH_CONTENT)
+            if (info->contentsLength > 0)
             {
-                switch (info->contentType)
-                {
-                case REG_SZ:
-                case REG_EXPAND_SZ:
-                {
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(info->contentsLength + sizeof(WCHAR));
-                    StringCbCopyNW(strValue, info->contentsLength + sizeof(WCHAR), (LPCWSTR) td, info->contentsLength);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                case REG_DWORD:
-                {
-                    DWORD bufferLength = 64 * sizeof(WCHAR);
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                    StringCbPrintfW(strValue, bufferLength, L"0x%08x (%d)",
-                        *(DWORD*) td, *(DWORD*) td);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                case REG_QWORD:
-                {
-                    DWORD bufferLength = 64 * sizeof(WCHAR);
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                    StringCbPrintfW(strValue, bufferLength, L"0x%016llx (%d)",
-                        *(LARGE_INTEGER*) td, ((LARGE_INTEGER*) td)->QuadPart);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                default:
-                {
-                    PCWSTR strTodo = L"<TODO: Convert value for display>";
-                    DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
-                    PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                    StringCbCopyW(strValue, bufferLength, strTodo);
-                    *strContents = strValue;
-                    return S_OK;
-                }
-                }
+                return FormatValueData(info->contentType, td, info->contentsLength, strContents);
             }
-            else
+        }
+        else if (info->entryType == REG_ENTRY_VALUE)
+        {
+            PVOID valueData;
+            DWORD valueLength;
+            HRESULT hr = ReadRegistryValue(NULL, m_ntPath, info->entryName, &valueData, &valueLength);
+            if (FAILED_UNEXPECTEDLY(hr))
             {
-                PCWSTR strTodo = L"<TODO: Query non-embedded value>";
-                DWORD bufferLength = (wcslen(strTodo) + 1) * sizeof(WCHAR);
+                PCWSTR strEmpty = L"(Error reading value)";
+                DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
                 PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
-                StringCbCopyW(strValue, bufferLength, strTodo);
+                StringCbCopyW(strValue, bufferLength, strEmpty);
                 *strContents = strValue;
                 return S_OK;
+            }
+
+            if (valueLength > 0)
+            {
+                hr = FormatValueData(info->contentType, valueData, valueLength, strContents);
+
+                CoTaskMemFree(valueData);
+
+                return hr;
             }
         }
         else
         {
-            PCWSTR strEmpty = L"(Empty)";
+            PCWSTR strEmpty = L"";
             DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
             PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
             StringCbCopyW(strValue, bufferLength, strEmpty);
@@ -564,8 +557,13 @@ public:
             return S_OK;
         }
 
+        PCWSTR strEmpty = L"(Empty)";
+        DWORD bufferLength = (wcslen(strEmpty) + 1) * sizeof(WCHAR);
+        PWSTR strValue = (PWSTR) CoTaskMemAlloc(bufferLength);
+        StringCbCopyW(strValue, bufferLength, strEmpty);
+        *strContents = strValue;
+        return S_OK;
     }
-
 };
 
 class CRegistryFolderEnum :
@@ -630,6 +628,7 @@ public:
                 switch (tinfo->entryType)
                 {
                 case REG_ENTRY_KEY:
+                case REG_ENTRY_ROOT:
                     flagsOk = (m_Flags & SHCONTF_FOLDERS) != 0;
                     break;
                 default:
@@ -693,7 +692,10 @@ CRegistryFolder::CRegistryFolder() :
 
 CRegistryFolder::~CRegistryFolder()
 {
-    TRACE("Destroying CRegistryFolder %p\n", this);
+    if (m_shellPidl)
+        ILFree(m_shellPidl);
+    if (m_PidlManager)
+        delete m_PidlManager;
 }
 
 // IShellFolder
@@ -759,19 +761,26 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
-        WCHAR path[MAX_PATH];
-
-        StringCbCopyW(path, _countof(path), m_NtPath);
-
-        PathAppendW(path, info->entryName);
-
         LPITEMIDLIST first = ILCloneFirst(pidl);
         LPCITEMIDLIST rest = ILGetNext(pidl);
 
         LPITEMIDLIST fullPidl = ILCombine(m_shellPidl, first);
 
         CComPtr<IShellFolder> psfChild;
-        hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, IID_PPV_ARG(IShellFolder, &psfChild));
+        if (wcslen(m_NtPath) == 0 && m_hRoot == NULL)
+        {
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, L"", info->rootKey, IID_PPV_ARG(IShellFolder, &psfChild));
+        }
+        else
+        {
+            WCHAR path[MAX_PATH];
+
+            StringCbCopyW(path, _countof(path), m_NtPath);
+
+            PathAppendW(path, info->entryName);
+
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, m_hRoot, IID_PPV_ARG(IShellFolder, &psfChild));
+        }
 
         ILFree(fullPidl);
         ILFree(first);
@@ -803,7 +812,36 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::CompareIDs(
     LPCITEMIDLIST pidl2)
 {
     TRACE("CompareIDs\n");
-    return m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+
+    HRESULT hr = m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+    if (hr != S_OK)
+        return hr;
+
+    LPCITEMIDLIST rest1 = ILGetNext(pidl1);
+    LPCITEMIDLIST rest2 = ILGetNext(pidl2);
+
+    bool hasNext1 = (rest1->mkid.cb > 0);
+    bool hasNext2 = (rest2->mkid.cb > 0);
+
+    if (hasNext1 || hasNext2)
+    {
+        if (hasNext1 && !hasNext2)
+            return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+        if (hasNext2 && !hasNext1)
+            return MAKE_HRESULT(0, 0, (USHORT) 1);
+
+        LPCITEMIDLIST first1 = ILCloneFirst(pidl1);
+
+        CComPtr<IShellFolder> psfNext;
+        hr = BindToObject(first1, NULL, IID_PPV_ARG(IShellFolder, &psfNext));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return psfNext->CompareIDs(lParam, rest1, rest2);
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CRegistryFolder::CreateViewObject(
@@ -864,15 +902,56 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetUIObjectOf(
 {
     TRACE("GetUIObjectOf\n");
 
-    if (IsEqualIID(riid, IID_IContextMenu))
+    if (IsEqualIID(riid, IID_IContextMenu) ||
+        IsEqualIID(riid, IID_IContextMenu2) ||
+        IsEqualIID(riid, IID_IContextMenu3))
     {
-        return ShellObjectCreatorInit<CRegistryFolderContextMenu>(m_shellPidl, cidl, apidl, riid, ppvOut);
-        //return CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, ContextMenuCallback, 0, NULL, (IContextMenu**) ppvOut);
+        CComPtr<IContextMenu> pcm;
+
+        HKEY keys [1];
+
+        int nkeys = _countof(keys);
+        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        {
+            RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+        }
+        else
+        {
+            nkeys = 0;
+        }
+
+        HRESULT hr = CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, DefCtxMenuCallback, nkeys, keys, &pcm);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return pcm->QueryInterface(riid, ppvOut);
     }
 
     if (IsEqualIID(riid, IID_IExtractIconW))
     {
         return ShellObjectCreatorInit<CRegistryFolderExtractIcon>(m_shellPidl, cidl, apidl, riid, ppvOut);
+    }
+
+    if (IsEqualIID(riid, IID_IDataObject))
+    {
+        return CIDLData_CreateFromIDArray(m_shellPidl, cidl, apidl, (IDataObject**) ppvOut);
+    }
+
+    if (IsEqualIID(riid, IID_IQueryAssociations))
+    {
+        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        {
+            CComPtr<IQueryAssociations> pqa;
+            HRESULT hr = AssocCreate(CLSID_QueryAssociations, IID_PPV_ARG(IQueryAssociations, &pqa));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            hr = pqa->Init(ASSOCF_INIT_DEFAULTTOFOLDER, L"NTObjShEx.RegFolder", NULL, hwndOwner);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            return pqa->QueryInterface(riid, ppvOut);
+        }
     }
 
     return E_NOTIMPL;
@@ -907,12 +986,13 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        LPCITEMIDLIST pidlFirst = ILCloneFirst(pidl);
         LPCITEMIDLIST pidlNext = ILGetNext(pidl);
 
         if (pidlNext && pidlNext->mkid.cb > 0)
         {
             CComPtr<IShellFolder> psfChild;
-            hr = BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -929,6 +1009,8 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
 
             PathAppendW(path, temp);
         }
+
+        ILFree((LPITEMIDLIST) pidlFirst);
     }
     else
     {
@@ -963,8 +1045,9 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetClassID(CLSID *lpClassId)
 HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
 {
     m_shellPidl = ILClone(pidl);
+    m_hRoot = NULL;
 
-    PCWSTR ntPath = L"\\REGISTRY";
+    PCWSTR ntPath = L"";
 
     if (!m_PidlManager)
     {
@@ -973,19 +1056,20 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl)
         StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
     }
 
-    return m_PidlManager->Initialize(m_NtPath);
+    return m_PidlManager->Initialize(m_NtPath, m_hRoot);
 }
 
 // Internal
-HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath)
+HRESULT STDMETHODCALLTYPE CRegistryFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath, HKEY hRoot)
 {
     m_shellPidl = ILClone(pidl);
+    m_hRoot = hRoot;
 
     if (!m_PidlManager)
         m_PidlManager = new CRegistryPidlManager();
 
     StringCbCopy(m_NtPath, _countof(m_NtPath), ntPath);
-    return m_PidlManager->Initialize(m_NtPath);
+    return m_PidlManager->Initialize(m_NtPath, m_hRoot);
 }
 
 // IPersistFolder2
@@ -1066,11 +1150,31 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
         {
             if (pscid->pid == PID_STG_NAME)
             {
-                return MakeVariantString(pv, info->entryName);
+                if (info->entryNameLength > 0)
+                {
+                    return MakeVariantString(pv, info->entryName);
+                }
+                return  MakeVariantString(pv, L"(Default)");
             }
             else if (pscid->pid == PID_STG_STORAGETYPE)
             {
-                return MakeVariantString(pv, RegistryTypeNames[info->entryType]);
+                if (info->entryType == REG_ENTRY_ROOT)
+                {
+                    return MakeVariantString(pv, L"Key");
+                }
+
+                if (info->entryType == REG_ENTRY_KEY)
+                {
+                    if (info->contentsLength > 0)
+                    {
+                        PWSTR td = (PWSTR)(((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+
+                        return MakeVariantString(pv, td);
+                    }
+                    return MakeVariantString(pv, L"Key");
+                }
+
+                return MakeVariantString(pv, RegistryTypeNames[info->contentType]);
             }
             else if (pscid->pid == PID_STG_CONTENTS)
             {
@@ -1128,6 +1232,23 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
 
         case REGISTRY_COLUMN_TYPE:
             psd->fmt = LVCFMT_LEFT;
+
+            if (info->entryType == REG_ENTRY_ROOT)
+            {
+                return MakeStrRetFromString(L"Key", &(psd->str));
+            }
+
+            if (info->entryType == REG_ENTRY_KEY)
+            {
+                if (info->contentsLength > 0)
+                {
+                    PWSTR td = (PWSTR) (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
+
+                    return MakeStrRetFromString(td, info->contentsLength, &(psd->str));
+                }
+
+                return MakeStrRetFromString(L"Key", &(psd->str));
+            }
 
             return MakeStrRetFromString(RegistryTypeNames[info->entryType], &(psd->str));
 
@@ -1216,6 +1337,26 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         *pViewMode = FVM_DETAILS;
         return S_OK;
     }
+    case SFVM_COLUMNCLICK:
+        return S_FALSE;
+    case SFVM_BACKGROUNDENUM:
+        return S_OK;
+    case SFVM_DEFITEMCOUNT:
+        return m_PidlManager->GetCount((UINT*) lParam);
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT CRegistryFolder::DefCtxMenuCallback(IShellFolder * /*psf*/, HWND /*hwnd*/, IDataObject * /*pdtobj*/, UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/)
+{
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
     }
     return E_NOTIMPL;
 }

@@ -10,6 +10,7 @@
 #include "desk.h"
 
 #include <cplext.h>
+#include <debug.h>
 
 #define NUM_APPLETS    (1)
 
@@ -209,6 +210,82 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     return FALSE;
 }
 
+void
+WINAPI
+InstallScreenSaverW(
+    IN HWND hWindow,
+    IN HANDLE hInstance,
+    IN LPCWSTR pszFile,
+    IN UINT nCmdShow)
+{
+    WCHAR pszSystemDir[MAX_PATH];
+    WCHAR pszDrive[2];
+    WCHAR pszPath[MAX_PATH];
+    WCHAR pszFilename[MAX_PATH];
+    WCHAR pszExt[MAX_PATH];
+    LPWSTR pszOutName;
+    UINT uCompressionType=FILE_COMPRESSION_NONE;
+    DWORD dwSourceSize;
+    DWORD dwTargetSize;
+    DWORD rc;
+
+    if (!pszFile)
+    {
+        DPRINT("InstallScreenSaver() null file\n");
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return;
+    }
+    DPRINT("InstallScreenSaver() Installing screensaver %ls\n", pszFile);
+
+    rc = SetupGetFileCompressionInfoW(pszFile, &pszOutName, &dwSourceSize, &dwTargetSize, &uCompressionType);
+    if (ERROR_SUCCESS != rc)
+    {
+        DPRINT("InstallScreenSaver() SetupGetFileCompressionInfo failed with error 0x%lx\n", rc);
+        SetLastError(rc);
+        return;
+    }
+    if (!GetSystemDirectoryW((LPWSTR)pszSystemDir, sizeof(pszSystemDir)/sizeof(WCHAR)))
+    {
+        MyFree(pszOutName);
+        DPRINT("InstallScreenSaver() GetSystemDirectory failed with error 0x%lx\n", GetLastError());
+        return;
+    }
+    _wsplitpath(pszOutName, pszDrive, pszPath, pszFilename, pszExt);
+    MyFree(pszOutName);
+    StringCbCatW(pszSystemDir, sizeof(pszSystemDir), L"\\");
+    StringCbCatW(pszSystemDir, sizeof(pszSystemDir), pszFilename);
+    StringCbCatW(pszSystemDir, sizeof(pszSystemDir), pszExt);
+    rc = SetupDecompressOrCopyFileW(pszFile, pszSystemDir, &uCompressionType);
+    DPRINT("InstallScreenSaver() Copying to %ls, compression type %d return 0x%lx\n", pszFile, uCompressionType, rc);
+}
+
+void
+WINAPI
+InstallScreenSaverA(
+    IN HWND hWindow,
+    IN HANDLE hInstance,
+    IN LPCSTR pszFile,
+    IN UINT nCmdShow)
+{
+    LPWSTR lpwString;
+
+    if (!pszFile)
+    {
+        DPRINT("InstallScreenSaver() null file\n");
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return;
+    }
+    DPRINT("InstallScreenSaver() Install from file %s\n", pszFile);
+    lpwString = pSetupMultiByteToUnicode(pszFile, 0);
+    if (!lpwString)
+    {
+        DPRINT("InstallScreenSaver() not enough memory to convert string to unicode\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return;
+    }
+    InstallScreenSaverW(hWindow, hInstance, lpwString, nCmdShow);
+    MyFree(lpwString);
+}
 
 BOOL WINAPI
 DllMain(HINSTANCE hInstDLL, DWORD dwReason, LPVOID lpvReserved)

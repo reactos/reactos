@@ -15,6 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Ein grafisches Interface für Ghostscript.
 
+[Section.040a]
+Description = Una interfaz gráfica para Ghostscript.
+
 [Section.0418]
 License = Licență publică gratuită „Aladdin”
 Description = O interfață grafică pentru GhostScript.

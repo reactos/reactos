@@ -12,7 +12,7 @@ static const LARGE_INTEGER __emptyLargeInteger = {{0, 0}};
 static const ULARGE_INTEGER __emptyULargeInteger = {{0, 0}};
 static const IO_STATUS_BLOCK __emptyIoStatusBlock = {{0}, 0};
 
-#if defined(_WIN32K_)
+#if defined(_WIN32K_) && !defined(__cplusplus)
 static const LARGE_STRING __emptyLargeString = {0, 0, 0, NULL};
 #endif
 
@@ -152,7 +152,12 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     {
         _SEH2_TRY
         {
+#ifdef __cplusplus
+            ProbeForRead(UnsafeSrc, sizeof(*UnsafeSrc), 1);
+            RtlCopyMemory(Dest, UnsafeSrc, sizeof(*UnsafeSrc));
+#else
             *Dest = ProbeForReadUnicodeString(UnsafeSrc);
+#endif
             if(Dest->Buffer != NULL)
             {
                 if (Dest->Length != 0)
@@ -162,7 +167,7 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                                  sizeof(WCHAR));
 
                     /* Allocate space for the buffer */
-                    Buffer = ExAllocatePoolWithTag(PagedPool,
+                    Buffer = (PWCHAR)ExAllocatePoolWithTag(PagedPool,
                                                    Dest->Length + sizeof(WCHAR),
                                                    'RTSU');
                     if (Buffer == NULL)

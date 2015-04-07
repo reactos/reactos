@@ -506,7 +506,7 @@ CSR_API(SrvGetConsoleTitle)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -539,7 +539,7 @@ CSR_API(SrvSetConsoleTitle)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 

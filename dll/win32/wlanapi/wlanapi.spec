@@ -19,7 +19,7 @@
 @ stub WlanQueryAutoConfigParameter
 @ stdcall WlanQueryInterface (ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall WlanReasonCodeToString (long long ptr ptr)
-@ stub WlanRegisterNotification
+@ stdcall WlanRegisterNotification (ptr long long ptr ptr ptr ptr)
 @ stdcall WlanRenameProfile (ptr ptr ptr ptr ptr)
 @ stub WlanSaveTemporaryProfile
 @ stdcall WlanScan (ptr ptr ptr ptr ptr)

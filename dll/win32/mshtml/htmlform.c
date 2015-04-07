@@ -368,13 +368,15 @@ static HRESULT WINAPI HTMLFormElement_submit(IHTMLFormElement *iface)
 {
     HTMLFormElement *This = impl_from_IHTMLFormElement(iface);
     HTMLOuterWindow *window = NULL, *this_window = NULL;
+    nsAString action_uri_str, target_str, method_str;
     nsIInputStream *post_stream;
-    nsAString action_uri_str, target_str;
+    BOOL is_post_submit = FALSE;
     IUri *uri;
     nsresult nsres;
     HRESULT hres;
+    BOOL use_new_window = FALSE;
 
-    TRACE("(%p)->()\n", This);
+    TRACE("(%p)\n", This);
 
     if(This->element.node.doc) {
         HTMLDocumentNode *doc = This->element.node.doc;
@@ -388,22 +390,33 @@ static HRESULT WINAPI HTMLFormElement_submit(IHTMLFormElement *iface)
 
     nsAString_Init(&target_str, NULL);
     nsres = nsIDOMHTMLFormElement_GetTarget(This->nsform, &target_str);
-    if(NS_SUCCEEDED(nsres)) {
-        BOOL use_new_window;
+    if(NS_SUCCEEDED(nsres))
         window = get_target_window(this_window, &target_str, &use_new_window);
-        if(use_new_window)
-            FIXME("submit to new window is not supported\n");
-    }
-    nsAString_Finish(&target_str);
-    if(!window)
+
+    if(!window && !use_new_window) {
+        nsAString_Finish(&target_str);
         return S_OK;
+    }
+
+    nsAString_Init(&method_str, NULL);
+    nsres = nsIDOMHTMLFormElement_GetMethod(This->nsform, &method_str);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *method;
+
+        static const PRUnichar postW[] = {'p','o','s','t',0};
+
+        nsAString_GetData(&method_str, &method);
+        TRACE("method is %s\n", debugstr_w(method));
+        is_post_submit = !strcmpiW(method, postW);
+    }
+    nsAString_Finish(&method_str);
 
     /*
-     * FIXME: We currently don't use our submit implementation for sub-windows because
-     * load_nsuri can't support post data. We should fix it.
+     * FIXME: We currently use our submit implementation for POST submit. We should always use it.
      */
-    if(!window->doc_obj || window->doc_obj->basedoc.window != window) {
+    if(window && !is_post_submit) {
         nsres = nsIDOMHTMLFormElement_Submit(This->nsform);
+        nsAString_Finish(&target_str);
         IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
         if(NS_FAILED(nsres)) {
             ERR("Submit failed: %08x\n", nsres);
@@ -426,13 +439,16 @@ static HRESULT WINAPI HTMLFormElement_submit(IHTMLFormElement *iface)
     }
     nsAString_Finish(&action_uri_str);
     if(SUCCEEDED(hres)) {
-        window->readystate_locked++;
-        hres = submit_form(window, uri, post_stream);
-        window->readystate_locked--;
+        const PRUnichar *target;
+
+        nsAString_GetData(&target_str, &target);
+        hres = submit_form(window, target, uri, post_stream);
         IUri_Release(uri);
     }
 
-    IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
+    nsAString_Finish(&target_str);
+    if(window)
+        IHTMLWindow2_Release(&window->base.IHTMLWindow2_iface);
     if(post_stream)
         nsIInputStream_Release(post_stream);
     return hres;
@@ -565,6 +581,9 @@ static HRESULT HTMLFormElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
         *ppv = &This->IHTMLFormElement_iface;
     }else if(IsEqualGUID(&IID_IHTMLFormElement, riid)) {
         TRACE("(%p)->(IID_IHTMLFormElement %p)\n", This, ppv);
+        *ppv = &This->IHTMLFormElement_iface;
+    }else if(IsEqualGUID(&DIID_DispHTMLFormElement, riid)) {
+        TRACE("(%p)->(DIID_DispHTMLFormElement %p)\n", This, ppv);
         *ppv = &This->IHTMLFormElement_iface;
     }
 
@@ -710,6 +729,26 @@ static HRESULT HTMLFormElement_handle_event(HTMLDOMNode *iface, eventid_t eid, n
     return HTMLElement_handle_event(&This->element.node, eid, event, prevent_default);
 }
 
+static void HTMLFormElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLFormElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsform)
+        note_cc_edge((nsISupports*)This->nsform, "This->nsform", cb);
+}
+
+static void HTMLFormElement_unlink(HTMLDOMNode *iface)
+{
+    HTMLFormElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsform) {
+        nsIDOMHTMLFormElement *nsform = This->nsform;
+
+        This->nsform = NULL;
+        nsIDOMHTMLFormElement_Release(nsform);
+    }
+}
+
 static const NodeImplVtbl HTMLFormElementImplVtbl = {
     HTMLFormElement_QI,
     HTMLElement_destructor,
@@ -724,7 +763,10 @@ static const NodeImplVtbl HTMLFormElementImplVtbl = {
     NULL,
     NULL,
     HTMLFormElement_get_dispid,
-    HTMLFormElement_invoke
+    HTMLFormElement_invoke,
+    NULL,
+    HTMLFormElement_traverse,
+    HTMLFormElement_unlink
 };
 
 static const tid_t HTMLFormElement_iface_tids[] = {
@@ -755,10 +797,7 @@ HRESULT HTMLFormElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem,
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLFormElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLFormElement, (void**)&ret->nsform);
-
-    /* Share the reference with nsnode */
-    assert(nsres == NS_OK && (nsIDOMNode*)ret->nsform == ret->element.node.nsnode);
-    nsIDOMNode_Release(ret->element.node.nsnode);
+    assert(nsres == NS_OK);
 
     *elem = &ret->element;
     return S_OK;

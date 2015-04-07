@@ -87,6 +87,9 @@ Signature = "$ReactOS$"
 "modules/optional/b57win32.inf"                       6  optional
 "modules/optional/b57win32.cat"                       6  optional
 "modules/optional/b57xp32.sys"                        2  optional
+"modules/optional/bcmwl5.inf"                         6  optional
+"modules/optional/bcm43xx.cat"                        6  optional
+"modules/optional/bcmwl5.sys"                         2  optional
 "modules/optional/alcxwdm.inf"                        6  optional
 "modules/optional/alcxwdm.sys"                        2  optional
 "modules/optional/mfc42.dll"                          1  optional
@@ -102,7 +105,7 @@ Signature = "$ReactOS$"
 "modules/optional/vmx_mode.dll"                       1  optional
 "modules/optional/vmx_svga.inf"                       6  optional
 "modules/optional/vmx_svga.sys"                       2  optional
-"modules/optional/wine_gecko-2.24-x86.msi"            4  optional
+"modules/optional/wine_gecko-2.34-x86.msi"            4  optional
 "boot/bootdata/bootcdregtest/AHKAppTests.cmd"         7  optional
 "modules/optional/gnutls/libgcc_s_sjlj-1.dll"         53 optional
 "modules/optional/gnutls/libgmp-10.dll"               53 optional
@@ -113,3 +116,4 @@ Signature = "$ReactOS$"
 "modules/optional/gnutls/libp11-kit-0.dll"            53 optional
 "modules/optional/gnutls/libwinpthread-1.dll"         53 optional
 "modules/optional/gnutls/zlib1.dll"                   53 optional
+; DON'T REMOVE THE FOLLOWING NEW LINE ! THIS MEANS YOU !

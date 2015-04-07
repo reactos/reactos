@@ -7,7 +7,7 @@ BEGIN
     GROUPBOX "Настройки за влизане", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Настройки за свързване", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Въведете адреса на сървъра", IDC_STATIC, 47, 24, 150, 8
+    LTEXT "Въведете адреса на сървъра.", IDC_STATIC, 47, 24, 150, 8
     LTEXT "Сървър:", IDC_STATIC, 37, 41, 30, 8
     LTEXT "Потребител:", IDC_STATIC, 37, 58, 48, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
@@ -16,7 +16,7 @@ BEGIN
     PUSHBUTTON "Запис като...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Отваряне...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Запис настройките на текущото свързване или отваряне на съществуваща настройка", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Запис настройките на текущото свързване или отваряне на съществуваща настройка.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
@@ -27,7 +27,7 @@ BEGIN
     GROUPBOX "Цветове", IDC_STATIC, 7, 83, 228, 85
     ICON "", IDC_REMICON, 15, 19, 20, 20
     ICON "", IDC_COLORSICON, 15, 98, 20, 20
-    LTEXT "Задаване размера на далечната работна площ. Завлачете плъзгача най- вдясно за цял екран", IDC_STATIC, 53, 22, 175, 21
+    LTEXT "Задаване размера на далечната работна площ. Завлачете плъзгача най- вдясно за цял екран.", IDC_STATIC, 53, 22, 175, 21
     CONTROL "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
     COMBOBOX IDC_BPPCOMBO, 56, 102, 128, 80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL "", IDC_COLORIMAGE, "Static", SS_OWNERDRAW | SS_SUNKEN, 56, 121, 127, 10

@@ -231,8 +231,12 @@ typedef struct _CCB
   ULONG LastOffset;
 } CCB, *PCCB;
 
-#define TAG_CCB 'BCCI'
-#define TAG_FCB 'BCFI'
+#define CDFS_TAG                'sfdC'
+#define CDFS_CCB_TAG            'ccdC'
+#define CDFS_NONPAGED_FCB_TAG   'nfdC'
+#define CDFS_SHORT_NAME_TAG     'sgdC'
+#define CDFS_SEARCH_PATTERN_TAG 'eedC'
+#define CDFS_FILENAME_TAG       'nFdC'
 
 typedef struct
 {

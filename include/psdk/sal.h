@@ -53,9 +53,12 @@
 #error broken
 #endif // ]
 
-#pragma warning(disable:6320) /* disable warning about SEH filter */
-#pragma warning(disable:28247) /* duplicated model file annotations */
+#pragma warning(disable:6320) /* Disable warning about SEH filter */
+#pragma warning(disable:28247) /* Duplicated model file annotations */
 #pragma warning(disable:28251) /* Inconsistent annotation */
+#ifndef _M_IX86 // [
+#pragma warning(disable:28110 28111 28161 28162) /* Floating point save */
+#endif // ]
 
 /******************************************************************************/
 //#include "codeanalysis\sourceannotations.h"
@@ -421,6 +424,9 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _On_failure_(annos)                         [SAL_context(p1="SAL_failed")] _Group_(_Post_ _Group_(annos))
 #define _Always_(annos)                             _Group_(annos) _On_failure_(annos)
 
+#define _Analysis_mode_impl_(mode)                                  _SAL2_NAME(_Analysis_mode_impl) _Group_([SAL_annotes(Name="SAL_analysisMode", p1=_SA_SPECSTRIZE(mode))])
+#define _Analysis_mode_(mode)                                       typedef _Analysis_mode_impl_(mode) int __prefast_analysis_mode_flag__COUNTER__;
+
 #define _Analysis_noreturn_                                         _SAL2_NAME(_Analysis_noreturn_) [SAL_annotes(Name="SAL_terminates")]
 #define _Analysis_assume_(expr)                                     __assume(expr)
 #define __analysis_assume(expr)                                     __assume(expr)
@@ -599,6 +605,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_ret_range_(lb,ub)
 //#define _Deref_ret_z_
 //#define _Deref2_pre_readonly_
+//#define _Enum_is_bitflag_
 #define _Field_range_(min,max)                                      _SAL2_NAME(_Field_range_) _Group_(_SA_annotes2(SAL_range,min,max))
 #define _Field_size_(size)                                          _SAL2_NAME(_Field_size_) _Group_(_Notnull_ _Writable_elements_(size))
 #define _Field_size_opt_(size)                                      _SAL2_NAME(_Field_size_opt_) _Group_(_Maybenull_ _Writable_elements_(size))
@@ -723,7 +730,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Literal_                                                   _SAL2_NAME(_Literal_) _Group_([SAL_pre] [SAL_annotes(Name="SAL_constant", p1="__yes")])
 #define _Maybenull_                                                 [SAL_annotes(Name="SAL_null", p1="__maybe")]
 #define _Maybevalid_                                                [SAL_annotes(Name="SAL_valid", p1="__maybe")]
-//#define _Maybe_raises_SEH_exception
+#define _Maybe_raises_SEH_exception_                                _SAL2_NAME(_Maybe_raises_SEH_exception_) _Group_(_Pre_ [SAL_annotes(Name="SAL_inTry", p1="__yes")])
 #define _Must_inspect_result_                                       _SAL2_NAME(_Must_inspect_result_) _Group_(_Post_ [SAL_annotes(Name="SAL_mustInspect")] [SA_Post(MustCheck=SA_Yes)])
 #define _Notliteral_                                                _SAL2_NAME(_Notliteral_) _Group_([SAL_pre] [SAL_annotes(Name="SAL_constant", p1="__no")] )
 #define _Notnull_                                                   [SAL_annotes(Name="SAL_null", p1="__no")]
@@ -979,7 +986,6 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Prepost_z_                                                 _SAL2_NAME(_Prepost_z_) _Group_(_Pre_z_ _Post_z_)
 #define _Printf_format_string_                                      _SAL2_NAME(_Printf_format_string_) _Group_([SA_FormatString(Style="printf")] )
 //#define _Raises_SEH_exception_
-#define _Maybe_raises_SEH_exception_                                _SAL2_NAME(_Maybe_raises_SEH_exception_) _Group_(_Pre_ [SAL_annotes(Name="SAL_inTry", p1="__yes")])
 #define _Readable_bytes_(size)                                      _SAL2_NAME(_Readable_bytes_) _Group_(_SA_annotes1(SAL_readableTo, byteCount(size)))
 #define _Readable_elements_(size)                                   _SAL2_NAME(_Readable_elements_) _Group_([SAL_annotes(Name="SAL_readableTo", p1="elementCount(size)")])
 #define _Reserved_                                                  _SAL2_NAME(_Reserved_) _Group_([SA_Pre(Null=SA_Yes)])
@@ -1043,6 +1049,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Return_type_success_(expr)                                 _SAL2_NAME(_Return_type_success_) _Group_([SA_Success(Condition=_SA_SPECSTRIZE(expr))])
 #define _Scanf_format_string_                                       _SAL2_NAME(_Scanf_format_string_) _Group_([SA_FormatString(Style="scanf")])
 #define _Scanf_s_format_string_                                     _SAL2_NAME(_Scanf_s_format_string_) _Group_([SA_FormatString(Style="scanf_s")])
+#define _Strict_type_match_                                         _SAL2_NAME(_Strict_type_match_) _Group_([SAL_annotes(Name="SAL_strictType2")])
 #define _Struct_size_bytes_(size)                                   _SAL2_NAME(_Struct_size_bytes_) _Group_(_Writable_bytes_(byteCount(size)))
 #define _Success_(expr)                                             _SAL2_NAME(_Success_) _Group_([SA_Success(Condition=_SA_SPECSTRIZE(expr))])
 #define _Unchanged_(expr)                                           _SAL2_NAME(_Unchanged_) _Group_([SAL_at(p1=_SA_SPECSTRIZE(expr))] _Group_(_Post_equal_to_(expr) _Const_))
@@ -1098,6 +1105,7 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 #define __inner_exceptthat
 #define __inner_typefix(ctype)
 #define _Always_(annos)
+#define _Analysis_mode_(mode)
 #define _Analysis_noreturn_
 #define _Analysis_assume_(expr) ((void)0)
 #define __analysis_assume(expr) ((void)0)
@@ -1402,7 +1410,7 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 #define _Literal_
 #define _Maybenull_
 #define _Maybevalid_
-#define _Maybe_raises_SEH_exception
+#define _Maybe_raises_SEH_exception_
 #define _Must_inspect_result_
 #define _Notliteral_
 #define _Notnull_
@@ -1660,7 +1668,6 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 #define _Prepost_z_
 #define _Printf_format_string_
 #define _Raises_SEH_exception_
-#define _Maybe_raises_SEH_exception_
 #define _Readable_bytes_(size)
 #define _Readable_elements_(size)
 #define _Reserved_
@@ -1724,6 +1731,7 @@ __PRIMOP(int, _In_function_class_(__In_impl_ char*);)
 #define _Return_type_success_(expr)
 #define _Scanf_format_string_
 #define _Scanf_s_format_string_
+#define _Strict_type_match_
 #define _Struct_size_bytes_(size)
 #define _Success_(expr)
 #define _Unchanged_(e)

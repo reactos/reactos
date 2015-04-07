@@ -144,9 +144,14 @@ UserInitialize(VOID)
     if (gpsi->hbrGray == NULL)
     {
         hPattern55AABitmap = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)wPattern55AA);
+        if (hPattern55AABitmap == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        //NT_VERIFY(GreSetBitmapOwner(hPattern55AABitmap, GDI_OBJ_HMGR_PUBLIC));
         gpsi->hbrGray = IntGdiCreatePatternBrush(hPattern55AABitmap);
         GreDeleteObject(hPattern55AABitmap);
-        GreSetBrushOwner(gpsi->hbrGray, GDI_OBJ_HMGR_PUBLIC);
+        if (gpsi->hbrGray == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     return STATUS_SUCCESS;

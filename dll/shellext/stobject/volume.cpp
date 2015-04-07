@@ -216,12 +216,12 @@ static void _ShowContextMenu(CSysTray * pSysTray)
 {
     WCHAR strAdjust[128];
     WCHAR strOpen[128];
-    LoadStringW(g_hInstance, IDS_VOL_ADJUST, strAdjust, _countof(strAdjust));
     LoadStringW(g_hInstance, IDS_VOL_OPEN, strOpen, _countof(strOpen));
+    LoadStringW(g_hInstance, IDS_VOL_ADJUST, strAdjust, _countof(strAdjust));
 
     HMENU hPopup = CreatePopupMenu();
-    AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
     AppendMenuW(hPopup, MF_STRING, IDS_VOL_OPEN, strOpen);
+    AppendMenuW(hPopup, MF_STRING, IDS_VOL_ADJUST, strAdjust);
 
     DWORD flags = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTALIGN | TPM_BOTTOMALIGN;
     DWORD msgPos = GetMessagePos();

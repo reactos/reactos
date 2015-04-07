@@ -332,12 +332,12 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
 
 static BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
 {
-    IID *iid = _ILGetGUIDPointer(pidl);
+    GUID *guid = _ILGetGUIDPointer(pidl);
 
     TRACE("(%p)\n", pidl);
 
-    if (iid)
-        return IsEqualIID(iid, CLSID_ControlPanel);
+    if (guid)
+        return IsEqualIID(*guid, CLSID_ControlPanel);
     return FALSE;
 }
 
@@ -375,11 +375,10 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
                 *rgfInOut &= dwDriveAttributes;
             else if (_ILIsControlPanel(apidl[i]))
                 *rgfInOut &= dwControlPanelAttributes;
-            else
-            {
-                pdump(apidl[i]);
+            else if (_ILIsSpecialFolder(*apidl))
                 SHELL32_GetItemAttributes(this, apidl[i], rgfInOut);
-            }
+            else
+                ERR("Got unknown pidl type!\n");
         }
     }
 

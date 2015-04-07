@@ -137,6 +137,7 @@ co_IntHideCaret(PTHRDCARETINFO CaretInfo)
       pWnd = UserGetWindowObject(CaretInfo->hWnd);
       CaretInfo->Showing = 0;
 
+      co_IntDrawCaret(pWnd, CaretInfo);
       IntNotifyWinEvent(EVENT_OBJECT_HIDE, pWnd, OBJID_CARET, CHILDID_SELF, 0);
       return TRUE;
    }
@@ -200,9 +201,10 @@ co_IntSetCaretPos(int X, int Y)
       if(ThreadQueue->CaretInfo->Pos.x != X || ThreadQueue->CaretInfo->Pos.y != Y)
       {
          co_IntHideCaret(ThreadQueue->CaretInfo);
-         ThreadQueue->CaretInfo->Showing = 0;
+         ThreadQueue->CaretInfo->Showing = 1;
          ThreadQueue->CaretInfo->Pos.x = X;
          ThreadQueue->CaretInfo->Pos.y = Y;
+         co_IntDrawCaret(pWnd, ThreadQueue->CaretInfo);
 
          IntSetTimer(pWnd, IDCARETTIMER, gpsi->dtCaretBlink, CaretSystemTimerProc, TMRF_SYSTEM);
          IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_CARET, CHILDID_SELF, 0);

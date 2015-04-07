@@ -19,7 +19,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define VMWINST
+#undef VMWINST
 
 #define PM_REGISTRATION_NOTIFY (WM_APP + 1)
 /* Private Message used to communicate progress from the background
@@ -2410,7 +2410,7 @@ InstallWizard(VOID)
 
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if(!IsDialogMessage(hWnd, &msg))
+        if (!IsDialogMessage(hWnd, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

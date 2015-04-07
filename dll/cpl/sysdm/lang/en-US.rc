@@ -31,7 +31,7 @@ BEGIN
     LTEXT "The Device Manager lists all the hardware devices installed on your computer. Use the Device Manager to change the properties of any device.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Device Manager...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Hardware Wizard", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "The Hardware wizard helps you install, uninstall, repair, unplug, eject, and configure your hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Hardware Wizard...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Hardware Profiles", IDC_STATIC, 6, 149, 244, 61

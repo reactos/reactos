@@ -809,7 +809,7 @@ CSR_API(SrvOpenConsole)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -868,7 +868,7 @@ CSR_API(SrvDuplicateHandle)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -938,7 +938,7 @@ CSR_API(SrvGetHandleInformation)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -986,7 +986,7 @@ CSR_API(SrvSetHandleInformation)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -1032,7 +1032,7 @@ CSR_API(SrvCloseHandle)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 
@@ -1057,7 +1057,7 @@ CSR_API(SrvVerifyConsoleIoHandle)
     Status = ConSrvGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Can't get console\n");
+        DPRINT1("Can't get console, status %lx\n", Status);
         return Status;
     }
 

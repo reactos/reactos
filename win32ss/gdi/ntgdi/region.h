@@ -23,9 +23,6 @@ extern HRGN hrgnDefault;
 
 /* Functions ******************************************************************/
 
-#define  REGION_FreeRgn(pRgn)  GDIOBJ_FreeObj((POBJ)pRgn, GDIObjType_RGN_TYPE)
-#define  REGION_FreeRgnByHandle(hRgn)  GDIOBJ_FreeObjByHandle((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
-
 PREGION FASTCALL REGION_AllocRgnWithHandle(INT n);
 PREGION FASTCALL REGION_AllocUserRgnWithHandle(INT n);
 VOID FASTCALL REGION_UnionRectWithRgn(PREGION rgn, const RECTL *rect);

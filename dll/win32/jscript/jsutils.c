@@ -236,6 +236,9 @@ HRESULT jsval_copy(jsval_t v, jsval_t *r)
 
 HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
 {
+    if(V_VT(var) == (VT_VARIANT|VT_BYREF))
+        var = V_VARIANTREF(var);
+
     switch(V_VT(var)) {
     case VT_EMPTY:
         *r = jsval_undefined();
@@ -277,6 +280,9 @@ HRESULT variant_to_jsval(VARIANT *var, jsval_t *r)
         return S_OK;
     case VT_INT:
         *r = jsval_number(V_INT(var));
+        return S_OK;
+    case VT_UI4:
+        *r = jsval_number(V_UI4(var));
         return S_OK;
     case VT_UNKNOWN:
         if(V_UNKNOWN(var)) {

@@ -19,6 +19,10 @@ Size = 854 kB
 URLSite = http://mh-nexus.de/de/
 URLDownload = http://mh-nexus.de/downloads/HxDSetupDE.zip
 
+[Section.040a]
+License = Gratuito
+Description = Un buen editor hexadecimal. Para extraerlo es necesario emplear una utilidad del estilo a 7-Zip.
+
 [Section.0415]
 Description = Dobry edytor Hex. Do wypakowania pliku potrzebny jest program archiwizujący np. 7-Zip.
 

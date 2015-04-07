@@ -2414,6 +2414,8 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
+  BOOL enable_finish = ((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH);
+
 #ifdef __REACTOS__
   HWND hwndCancel = GetDlgItem(hwndDlg, IDCANCEL);
   INT iDefItem = 0;
@@ -2422,13 +2424,13 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
 
   TRACE("%d\n", dwFlags);
 
-  EnableWindow(hwndBack, FALSE);
-  EnableWindow(hwndNext, FALSE);
-  EnableWindow(hwndFinish, FALSE);
+  EnableWindow(hwndBack, dwFlags & PSWIZB_BACK);
+  EnableWindow(hwndNext, dwFlags & PSWIZB_NEXT);
+  EnableWindow(hwndFinish, enable_finish);
 
 #ifndef __REACTOS__
   /* set the default pushbutton to an enabled button */
-  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
+  if (enable_finish)
     SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
   else if (dwFlags & PSWIZB_NEXT)
     SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
@@ -2437,13 +2439,6 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   else
     SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
 #endif
-
-
-  if (dwFlags & PSWIZB_BACK)
-    EnableWindow(hwndBack, TRUE);
-
-  if (dwFlags & PSWIZB_NEXT)
-    EnableWindow(hwndNext, TRUE);
 
   if (!psInfo->hasFinish)
   {
@@ -2454,9 +2449,6 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
       
       /* Show the Finish button */
       ShowWindow(hwndFinish, SW_SHOW);
-
-      if (!(dwFlags & PSWIZB_DISABLEDFINISH))
-        EnableWindow(hwndFinish, TRUE);
     }
     else
     {
@@ -2466,8 +2458,6 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
       ShowWindow(hwndNext, SW_SHOW);
     }
   }
-  else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
-    EnableWindow(hwndFinish, TRUE);
 
 #ifdef __REACTOS__
   /* set the default pushbutton to an enabled button */

@@ -1621,7 +1621,7 @@ LRESULT CInternetToolbar::OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bH
                 Exec(&CGID_Explorer, 0x1d, 2, &parmIn, NULL);
             }
             else if (selectedItem != 0)
-                hResult = travelLog->Travel(browserService, -selectedItem);
+                hResult = travelLog->Travel(browserService, selectedItem);
             DestroyMenu(newMenu);
             break;
         case gViewsCommandID:

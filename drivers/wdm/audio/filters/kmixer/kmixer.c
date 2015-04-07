@@ -40,13 +40,15 @@ KMix_Unload(IN PDRIVER_OBJECT DriverObject)
 
 NTSTATUS
 NTAPI
-KMix_InstallDevice(
-    IN  PDRIVER_OBJECT  DriverObject)
+KMix_AddDevice(
+    IN  PDRIVER_OBJECT  DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
     NTSTATUS Status;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\kmixer");
     PDEVICE_OBJECT DeviceObject;
     PKMIXER_DEVICE_EXT DeviceExtension;
+    PDEVICE_OBJECT NextDeviceObject;
 
     DPRINT1("KMix_InstallDevice called\n");
 
@@ -80,8 +82,12 @@ KMix_InstallDevice(
 
      /* set io flags */
      DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
+
      /* clear initializing flag */
      DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
+
+     NextDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+     KsSetDevicePnpAndBaseObject(DeviceExtension->KsDeviceHeader, NextDeviceObject, DeviceObject);
 
     DPRINT("KMix_InstallDevice result %x\n", Status);
     return STATUS_SUCCESS;
@@ -110,6 +116,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp;
     DriverObject->MajorFunction[IRP_MJ_PNP] = KMix_Pnp;
     DriverObject->DriverUnload = KMix_Unload;
+    DriverObject->DriverExtension->AddDevice = KMix_AddDevice;
 
-    return KMix_InstallDevice(DriverObject);
+    return STATUS_SUCCESS;
 }

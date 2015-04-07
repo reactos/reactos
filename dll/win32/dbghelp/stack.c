@@ -233,15 +233,6 @@ BOOL WINAPI StackWalk64(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
     if (!cpu->stack_walk(&csw, frame, ctx)) return FALSE;
 
     /* we don't handle KdHelp */
-    frame->KdHelp.Thread = 0xC000FADE;
-    frame->KdHelp.ThCallbackStack = 0x10;
-    frame->KdHelp.ThCallbackBStore = 0;
-    frame->KdHelp.NextCallback = 0;
-    frame->KdHelp.FramePointer = 0;
-    frame->KdHelp.KiCallUserMode = 0xD000DAFE;
-    frame->KdHelp.KeUserCallbackDispatcher = 0xE000F000;
-    frame->KdHelp.SystemRangeStart = 0xC0000000;
-    frame->KdHelp.Reserved[0] /* KiUserExceptionDispatcher */ = 0xE0005000;
 
     return TRUE;
 }

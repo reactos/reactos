@@ -38,6 +38,11 @@ DWORD WINAPI SetLastConsoleEventActive(VOID);
  */
 // #define STANDALONE
 
+/*
+ * Activate this line for Win2k compliancy
+ */
+// #define WIN2K_COMPLIANT
+
 /* FUNCTIONS ******************************************************************/
 
 #ifndef STANDALONE
@@ -63,6 +68,8 @@ CreateVdmMenu(HANDLE ConOutHandle);
 /*static*/ VOID
 DestroyVdmMenu(VOID);
 
+BOOL ConsoleAttach(VOID);
+VOID ConsoleDetach(VOID);
 VOID MenuEventHandler(PMENU_EVENT_RECORD MenuEvent);
 VOID FocusEventHandler(PFOCUS_EVENT_RECORD FocusEvent);
 

@@ -1,0 +1,13 @@
+[Section]
+Name = Fall
+Version = 0.1.3
+License = GPL
+Description = Penguins are falling from and iceberg and you have to bounce them into the docks.
+Size = 371 kB
+Category = 4
+URLSite = http://insomnia.sourceforge.net/fall/fall.html
+URLDownload = http://download.sourceforge.net/project/insomnia/fall/stable/Fall-win32.zip
+CDPath = none
+
+[Section.0407]
+Description = Pinguine fallen von einem Eisberg herunter und man muss sie auf sicheres Land befördern.

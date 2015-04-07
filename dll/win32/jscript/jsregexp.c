@@ -51,11 +51,14 @@ static const WCHAR idx7W[] = {'$','7',0};
 static const WCHAR idx8W[] = {'$','8',0};
 static const WCHAR idx9W[] = {'$','9',0};
 
-static const WCHAR emptyW[] = {0};
+static inline RegExpInstance *regexp_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, RegExpInstance, dispex);
+}
 
 static inline RegExpInstance *regexp_from_vdisp(vdisp_t *vdisp)
 {
-    return (RegExpInstance*)vdisp->u.jsdisp;
+    return regexp_from_jsdisp(vdisp->u.jsdisp);
 }
 
 static void set_last_index(RegExpInstance *This, DWORD last_index)
@@ -238,41 +241,51 @@ static HRESULT regexp_match(script_ctx_t *ctx, jsdisp_t *dispex, jsstr_t *jsstr,
     return S_OK;
 }
 
-static HRESULT RegExp_source(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT RegExp_get_source(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
 
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        RegExpInstance *This = regexp_from_vdisp(jsthis);
-        *r = jsval_string(jsstr_addref(This->str));
-        break;
-    }
-    default:
-        FIXME("Unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
+    *r = jsval_string(jsstr_addref(regexp_from_jsdisp(jsthis)->str));
     return S_OK;
 }
 
-static HRESULT RegExp_global(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT RegExp_set_source(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT RegExp_ignoreCase(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT RegExp_get_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     FIXME("\n");
     return E_NOTIMPL;
 }
 
-static HRESULT RegExp_multiline(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT RegExp_set_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT RegExp_get_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT RegExp_set_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT RegExp_get_multiline(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT RegExp_set_multiline(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
 {
     FIXME("\n");
     return E_NOTIMPL;
@@ -293,33 +306,27 @@ static INT index_from_val(script_ctx_t *ctx, jsval_t v)
     return is_int32(n) ? n : 0;
 }
 
-static HRESULT RegExp_lastIndex(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT RegExp_get_lastIndex(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
+    RegExpInstance *regexp = regexp_from_jsdisp(jsthis);
+
     TRACE("\n");
 
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        RegExpInstance *regexp = regexp_from_vdisp(jsthis);
+    return jsval_copy(regexp->last_index_val, r);
+}
 
-        return jsval_copy(regexp->last_index_val, r);
-    }
-    case DISPATCH_PROPERTYPUT: {
-        RegExpInstance *regexp = regexp_from_vdisp(jsthis);
-        HRESULT hres;
+static HRESULT RegExp_set_lastIndex(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
+{
+    RegExpInstance *regexp = regexp_from_jsdisp(jsthis);
+    HRESULT hres;
 
-        hres = jsval_copy(argv[0], &regexp->last_index_val);
-        if(FAILED(hres))
-            return hres;
+    TRACE("\n");
 
-        regexp->last_index = index_from_val(ctx, argv[0]);
-        break;
-    }
-    default:
-        FIXME("unimplemented flags: %x\n", flags);
-        return E_NOTIMPL;
-    }
+    hres = jsval_copy(value, &regexp->last_index_val);
+    if(FAILED(hres))
+        return hres;
 
+    regexp->last_index = index_from_val(ctx, value);
     return S_OK;
 }
 
@@ -586,11 +593,11 @@ static void RegExp_destructor(jsdisp_t *dispex)
 
 static const builtin_prop_t RegExp_props[] = {
     {execW,                  RegExp_exec,                  PROPF_METHOD|1},
-    {globalW,                RegExp_global,                0},
-    {ignoreCaseW,            RegExp_ignoreCase,            0},
-    {lastIndexW,             RegExp_lastIndex,             0},
-    {multilineW,             RegExp_multiline,             0},
-    {sourceW,                RegExp_source,                0},
+    {globalW,                NULL,0,                       RegExp_get_global,     RegExp_set_global},
+    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase, RegExp_set_ignoreCase},
+    {lastIndexW,             NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
+    {multilineW,             NULL,0,                       RegExp_get_multiline,  RegExp_set_multiline},
+    {sourceW,                NULL,0,                       RegExp_get_source,     RegExp_set_source},
     {testW,                  RegExp_test,                  PROPF_METHOD|1},
     {toStringW,              RegExp_toString,              PROPF_METHOD}
 };
@@ -605,11 +612,11 @@ static const builtin_info_t RegExp_info = {
 };
 
 static const builtin_prop_t RegExpInst_props[] = {
-    {globalW,                RegExp_global,                0},
-    {ignoreCaseW,            RegExp_ignoreCase,            0},
-    {lastIndexW,             RegExp_lastIndex,             0},
-    {multilineW,             RegExp_multiline,             0},
-    {sourceW,                RegExp_source,                0}
+    {globalW,                NULL,0,                       RegExp_get_global,     RegExp_set_global},
+    {ignoreCaseW,            NULL,0,                       RegExp_get_ignoreCase, RegExp_set_ignoreCase},
+    {lastIndexW,             NULL,0,                       RegExp_get_lastIndex,  RegExp_set_lastIndex},
+    {multilineW,             NULL,0,                       RegExp_get_multiline,  RegExp_set_multiline},
+    {sourceW,                NULL,0,                       RegExp_get_source,     RegExp_set_source}
 };
 
 static const builtin_info_t RegExpInst_info = {
@@ -831,142 +838,98 @@ HRESULT regexp_string_match(script_ctx_t *ctx, jsdisp_t *re, jsstr_t *jsstr, jsv
     return hres;
 }
 
-static HRESULT global_idx(script_ctx_t *ctx, DWORD flags, DWORD idx, jsval_t *r)
+static HRESULT global_idx(script_ctx_t *ctx, DWORD idx, jsval_t *r)
 {
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        jsstr_t *ret;
+    jsstr_t *ret;
 
-        ret = jsstr_substr(ctx->last_match, ctx->match_parens[idx].index, ctx->match_parens[idx].length);
-        if(!ret)
-            return E_OUTOFMEMORY;
+    ret = jsstr_substr(ctx->last_match, ctx->match_parens[idx].index, ctx->match_parens[idx].length);
+    if(!ret)
+        return E_OUTOFMEMORY;
 
-        *r = jsval_string(ret);
-        break;
-    }
-    case DISPATCH_PROPERTYPUT:
-        break;
-    default:
-        FIXME("unsupported flags\n");
-        return E_NOTIMPL;
-    }
-
+    *r = jsval_string(ret);
     return S_OK;
 }
 
-static HRESULT RegExpConstr_idx1(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx1(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 0, r);
+    return global_idx(ctx, 0, r);
 }
 
-static HRESULT RegExpConstr_idx2(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx2(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 1, r);
+    return global_idx(ctx, 1, r);
 }
 
-static HRESULT RegExpConstr_idx3(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx3(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 2, r);
+    return global_idx(ctx, 2, r);
 }
 
-static HRESULT RegExpConstr_idx4(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx4(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 3, r);
+    return global_idx(ctx, 3, r);
 }
 
-static HRESULT RegExpConstr_idx5(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx5(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 4, r);
+    return global_idx(ctx, 4, r);
 }
 
-static HRESULT RegExpConstr_idx6(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx6(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 5, r);
+    return global_idx(ctx, 5, r);
 }
 
-static HRESULT RegExpConstr_idx7(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx7(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 6, r);
+    return global_idx(ctx, 6, r);
 }
 
-static HRESULT RegExpConstr_idx8(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx8(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 7, r);
+    return global_idx(ctx, 7, r);
 }
 
-static HRESULT RegExpConstr_idx9(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_idx9(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
-    return global_idx(ctx, flags, 8, r);
+    return global_idx(ctx, 8, r);
 }
 
-static HRESULT RegExpConstr_leftContext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_leftContext(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
+    jsstr_t *ret;
+
     TRACE("\n");
 
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        jsstr_t *ret;
+    ret = jsstr_substr(ctx->last_match, 0, ctx->last_match_index);
+    if(!ret)
+        return E_OUTOFMEMORY;
 
-        ret = jsstr_substr(ctx->last_match, 0, ctx->last_match_index);
-        if(!ret)
-            return E_OUTOFMEMORY;
-
-        *r = jsval_string(ret);
-        break;
-    }
-    case DISPATCH_PROPERTYPUT:
-        break;
-    default:
-        FIXME("unsupported flags\n");
-        return E_NOTIMPL;
-    }
-
+    *r = jsval_string(ret);
     return S_OK;
 }
 
-static HRESULT RegExpConstr_rightContext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-         unsigned argc, jsval_t *argv, jsval_t *r)
+static HRESULT RegExpConstr_get_rightContext(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
+    jsstr_t *ret;
+
     TRACE("\n");
 
-    switch(flags) {
-    case DISPATCH_PROPERTYGET: {
-        jsstr_t *ret;
+    ret = jsstr_substr(ctx->last_match, ctx->last_match_index+ctx->last_match_length,
+            jsstr_length(ctx->last_match) - ctx->last_match_index - ctx->last_match_length);
+    if(!ret)
+        return E_OUTOFMEMORY;
 
-        ret = jsstr_substr(ctx->last_match, ctx->last_match_index+ctx->last_match_length,
-                jsstr_length(ctx->last_match) - ctx->last_match_index - ctx->last_match_length);
-        if(!ret)
-            return E_OUTOFMEMORY;
-
-        *r = jsval_string(ret);
-        break;
-    }
-    case DISPATCH_PROPERTYPUT:
-        break;
-    default:
-        FIXME("unsupported flags\n");
-        return E_NOTIMPL;
-    }
-
+    *r = jsval_string(ret);
     return S_OK;
 }
 
@@ -1026,22 +989,22 @@ static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
 }
 
 static const builtin_prop_t RegExpConstr_props[] = {
-    {idx1W,           RegExpConstr_idx1,           0},
-    {idx2W,           RegExpConstr_idx2,           0},
-    {idx3W,           RegExpConstr_idx3,           0},
-    {idx4W,           RegExpConstr_idx4,           0},
-    {idx5W,           RegExpConstr_idx5,           0},
-    {idx6W,           RegExpConstr_idx6,           0},
-    {idx7W,           RegExpConstr_idx7,           0},
-    {idx8W,           RegExpConstr_idx8,           0},
-    {idx9W,           RegExpConstr_idx9,           0},
-    {leftContextW,    RegExpConstr_leftContext,    0},
-    {rightContextW,   RegExpConstr_rightContext,   0}
+    {idx1W,           NULL,0,  RegExpConstr_get_idx1,         builtin_set_const},
+    {idx2W,           NULL,0,  RegExpConstr_get_idx2,         builtin_set_const},
+    {idx3W,           NULL,0,  RegExpConstr_get_idx3,         builtin_set_const},
+    {idx4W,           NULL,0,  RegExpConstr_get_idx4,         builtin_set_const},
+    {idx5W,           NULL,0,  RegExpConstr_get_idx5,         builtin_set_const},
+    {idx6W,           NULL,0,  RegExpConstr_get_idx6,         builtin_set_const},
+    {idx7W,           NULL,0,  RegExpConstr_get_idx7,         builtin_set_const},
+    {idx8W,           NULL,0,  RegExpConstr_get_idx8,         builtin_set_const},
+    {idx9W,           NULL,0,  RegExpConstr_get_idx9,         builtin_set_const},
+    {leftContextW,    NULL,0,  RegExpConstr_get_leftContext,  builtin_set_const},
+    {rightContextW,   NULL,0,  RegExpConstr_get_rightContext, builtin_set_const}
 };
 
 static const builtin_info_t RegExpConstr_info = {
     JSCLASS_FUNCTION,
-    {NULL, Function_value, 0},
+    DEFAULT_FUNCTION_VALUE,
     sizeof(RegExpConstr_props)/sizeof(*RegExpConstr_props),
     RegExpConstr_props,
     NULL,

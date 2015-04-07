@@ -14,6 +14,7 @@
 #include "int32.h"
 
 #include "dos.h"
+#include "memory.h"
 #include "bios/bios.h"
 
 // This is needed because on UNICODE this symbol is redirected to
@@ -27,6 +28,8 @@
 #undef FreeEnvironmentStrings
 #define FreeEnvironmentStrings FreeEnvironmentStringsA
 
+#define CHARACTER_ADDRESS 0x007000FF /* 0070:00FF */
+
 /* PRIVATE VARIABLES **********************************************************/
 
 // static BYTE CurrentDrive;
@@ -38,53 +41,67 @@
 
 CHAR DosReadCharacter(WORD FileHandle)
 {
-    CHAR Character = '\0';
+    PCHAR Character = (PCHAR)FAR_POINTER(CHARACTER_ADDRESS);
     WORD BytesRead;
 
+    *Character = '\0';
     DPRINT("DosReadCharacter\n");
 
     /* Use the file reading function */
-    DosReadFile(FileHandle, &Character, 1, &BytesRead);
+    DosReadFile(FileHandle, CHARACTER_ADDRESS, 1, &BytesRead);
 
-    return Character;
+    return *Character;
 }
 
 BOOLEAN DosCheckInput(VOID)
 {
-    HANDLE Handle = DosGetRealHandle(DOS_INPUT_HANDLE);
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(DOS_INPUT_HANDLE);
 
-    if (IsConsoleHandle(Handle))
+    if (SftEntry == NULL)
     {
-        /* Save AX */
-        USHORT AX = getAX();
-
-        /* Call the BIOS */
-        setAH(0x01); // or 0x11 for enhanced, but what to choose?
-        Int32Call(&DosContext, BIOS_KBD_INTERRUPT);
-
-        /* Restore AX */
-        setAX(AX);
-
-        /* Return keyboard status */
-        return (getZF() == 0);
+        /* Invalid handle */
+        DosLastError = ERROR_INVALID_HANDLE; // ERROR_FILE_NOT_FOUND
+        return FALSE;
     }
-    else
-    {
-        DWORD FileSizeHigh;
-        DWORD FileSize = GetFileSize(Handle, &FileSizeHigh);
-        LONG LocationHigh = 0;
-        DWORD Location = SetFilePointer(Handle, 0, &LocationHigh, FILE_CURRENT);
 
-        return ((Location != FileSize) || (LocationHigh != FileSizeHigh));
+    switch (SftEntry->Type)
+    {
+        case DOS_SFT_ENTRY_WIN32:
+        {
+            DWORD FileSizeHigh;
+            DWORD FileSize = GetFileSize(SftEntry->Handle, &FileSizeHigh);
+            LONG LocationHigh = 0;
+            DWORD Location = SetFilePointer(SftEntry->Handle, 0, &LocationHigh, FILE_CURRENT);
+
+            return ((Location != FileSize) || (LocationHigh != FileSizeHigh));
+        }
+
+        case DOS_SFT_ENTRY_DEVICE:
+        {
+            WORD Result;
+
+            if (!SftEntry->DeviceNode->InputStatusRoutine) return FALSE;
+            
+            Result = SftEntry->DeviceNode->InputStatusRoutine(SftEntry->DeviceNode);
+            return !(Result & DOS_DEVSTAT_BUSY);
+        }
+
+        default:
+        {
+            /* Invalid handle */
+            DosLastError = ERROR_INVALID_HANDLE;
+            return FALSE;
+        }
     }
 }
 
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character)
 {
     WORD BytesWritten;
+    *((PCHAR)FAR_POINTER(CHARACTER_ADDRESS)) = Character;
 
     /* Use the file writing function */
-    DosWriteFile(FileHandle, &Character, 1, &BytesWritten);
+    DosWriteFile(FileHandle, CHARACTER_ADDRESS, 1, &BytesWritten);
 }
 
 BOOLEAN DosBIOSInitialize(VOID)

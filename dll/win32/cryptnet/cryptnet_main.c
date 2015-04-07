@@ -1186,10 +1186,27 @@ static BOOL WINAPI CRYPT_CreateBlob(LPCSTR pszObjectOid,
 typedef BOOL (WINAPI *AddContextToStore)(HCERTSTORE hCertStore,
  const void *pContext, DWORD dwAddDisposition, const void **ppStoreContext);
 
+static BOOL decode_base64_blob( const CRYPT_DATA_BLOB *in, CRYPT_DATA_BLOB *out )
+{
+    BOOL ret;
+    DWORD len = in->cbData;
+
+    while (len && !in->pbData[len - 1]) len--;
+    if (!CryptStringToBinaryA( (char *)in->pbData, len, CRYPT_STRING_BASE64_ANY,
+                               NULL, &out->cbData, NULL, NULL )) return FALSE;
+
+    if (!(out->pbData = CryptMemAlloc( out->cbData ))) return FALSE;
+    ret = CryptStringToBinaryA( (char *)in->pbData, len, CRYPT_STRING_BASE64_ANY,
+                                out->pbData, &out->cbData, NULL, NULL );
+    if (!ret) CryptMemFree( out->pbData );
+    return ret;
+}
+
 static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
  DWORD dwExpectedContentTypeFlags, AddContextToStore addFunc, void **ppvContext)
 {
     BOOL ret = TRUE;
+    CRYPT_DATA_BLOB blob;
 
     if (!pObject->cBlob)
     {
@@ -1199,9 +1216,20 @@ static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
     }
     else if (pObject->cBlob == 1)
     {
-        if (!CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &pObject->rgBlob[0],
-         dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL,
-         NULL, NULL, NULL, NULL, (const void **)ppvContext))
+        if (decode_base64_blob(&pObject->rgBlob[0], &blob))
+        {
+            ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &blob,
+             dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY, 0,
+             NULL, NULL, NULL, NULL, NULL, (const void **)ppvContext);
+            CryptMemFree(blob.pbData);
+        }
+        else
+        {
+            ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &pObject->rgBlob[0],
+             dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY, 0,
+             NULL, NULL, NULL, NULL, NULL, (const void **)ppvContext);
+        }
+        if (!ret)
         {
             SetLastError(CRYPT_E_NO_MATCH);
             ret = FALSE;
@@ -1219,10 +1247,21 @@ static BOOL CRYPT_CreateContext(const CRYPT_BLOB_ARRAY *pObject,
 
             for (i = 0; i < pObject->cBlob; i++)
             {
-                if (CryptQueryObject(CERT_QUERY_OBJECT_BLOB,
-                 &pObject->rgBlob[i], dwExpectedContentTypeFlags,
-                 CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL, NULL, NULL, NULL,
-                 NULL, &context))
+                if (decode_base64_blob(&pObject->rgBlob[i], &blob))
+                {
+                    ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB, &blob,
+                     dwExpectedContentTypeFlags, CERT_QUERY_FORMAT_FLAG_BINARY,
+                     0, NULL, NULL, NULL, NULL, NULL, &context);
+                    CryptMemFree(blob.pbData);
+                }
+                else
+                {
+                    ret = CryptQueryObject(CERT_QUERY_OBJECT_BLOB,
+                     &pObject->rgBlob[i], dwExpectedContentTypeFlags,
+                     CERT_QUERY_FORMAT_FLAG_BINARY, 0, NULL, NULL, NULL, NULL,
+                     NULL, &context);
+                }
+                if (ret)
                 {
                     if (!addFunc(store, context, CERT_STORE_ADD_ALWAYS, NULL))
                         ret = FALSE;

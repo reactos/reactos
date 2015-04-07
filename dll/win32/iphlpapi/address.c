@@ -9,7 +9,7 @@
 #include "iphlpapi_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
-
+#if 1
 /* Helper for GetAdaptersAddresses:
  * Retrieves the list of network adapters from tcpip.sys */
 static
@@ -283,6 +283,8 @@ GetAdaptersAddresses(
     ULONG i;
     ULONG TotalSize = 0, RemainingSize;
     BYTE* Ptr = (BYTE*)pAdapterAddresses;
+    DWORD MIN_SIZE = 15 * 1024;
+    PIP_ADAPTER_ADDRESSES PreviousAA = NULL;
 
     FIXME("GetAdaptersAddresses - Semi Stub: Family %u, Flags 0x%08x, Reserved %p, pAdapterAddress %p, pOutBufLen %p.\n",
         Family, Flags, Reserved, pAdapterAddresses, pOutBufLen);
@@ -290,15 +292,32 @@ GetAdaptersAddresses(
     if (!pOutBufLen)
         return ERROR_INVALID_PARAMETER;
 
-    if ((Family == AF_INET6) || (Family == AF_UNSPEC))
+    // FIXME: the exact needed size should be computed first, BEFORE doing any write to the output buffer.
+    // As suggested by MSDN, require a 15 KB buffer, which allows to React properly to length checks.
+    if(!Ptr || *pOutBufLen < MIN_SIZE)
     {
-        /* One day maybe... */
-        FIXME("IPv6 is not supported in ReactOS!\n");
-        if (Family == AF_INET6)
-        {
+        *pOutBufLen = MIN_SIZE;
+        return ERROR_BUFFER_OVERFLOW;
+    }
+
+    switch(Family)
+    {
+        case AF_INET:
+            break;
+        case AF_INET6:
+            /* One day maybe... */
+            FIXME("IPv6 is not supported in ReactOS!\n");
             /* We got nothing to say in this case */
             return ERROR_NO_DATA;
-        }
+            break;
+        case AF_UNSPEC:
+            WARN("IPv6 addresses ignored, IPv4 only\n");
+            Family = AF_INET;
+            break;
+        default:
+            ERR("Invalid family 0x%x\n", Family);
+            return ERROR_INVALID_PARAMETER;
+            break;
     }
 
     RemainingSize = *pOutBufLen;
@@ -325,7 +344,7 @@ GetAdaptersAddresses(
     /* Let's see if we got any adapter. */
     for (i = 0; i < InterfacesCount; i++)
     {
-        PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr, PreviousAA = NULL;
+        PIP_ADAPTER_ADDRESSES CurrentAA = (PIP_ADAPTER_ADDRESSES)Ptr;
         ULONG CurrentAASize = 0;
 
         if (InterfacesList[i].tei_entity == IF_ENTITY)
@@ -336,6 +355,10 @@ GetAdaptersAddresses(
 
             /* Remember we got one */
             AdaptersCount++;
+
+            /* Set the pointer to this instance in the previous one*/
+            if(PreviousAA)
+                PreviousAA->Next = CurrentAA;
 
             /* Of course we need some space for the base structure. */
             CurrentAASize = sizeof(IP_ADAPTER_ADDRESSES);
@@ -400,7 +423,6 @@ GetAdaptersAddresses(
                 CurrentAA->Mtu = Entry->if_mtu;
                 CurrentAA->IfType = Entry->if_type;
                 CurrentAA->OperStatus = Entry->if_operstatus;
-                CurrentAA->Next = PreviousAA;
                 /* Next items */
                 Ptr = (BYTE*)(CurrentAA + 1);
 
@@ -619,6 +641,7 @@ Success:
     HeapFree(GetProcessHeap(), 0, InterfacesList);
     NtClose(TcpFile);
     *pOutBufLen = TotalSize;
+    TRACE("TotalSize: %x\n", *pOutBufLen);
     return ERROR_SUCCESS;
 
 Error:
@@ -628,3 +651,4 @@ Error:
     NtClose(TcpFile);
     return RtlNtStatusToDosError(Status);
 }
+#endif

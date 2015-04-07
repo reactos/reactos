@@ -71,7 +71,7 @@ static HRESULT WINAPI HlinkTarget_Navigate(IHlinkTarget *iface, DWORD grfHLNF, L
         FIXME("JumpLocation not supported\n");
 
     if(!This->doc_obj->client)
-        return navigate_new_window(This->window, This->window->uri, NULL, NULL);
+        return navigate_new_window(This->window, This->window->uri, NULL, NULL, NULL);
 
     return IOleObject_DoVerb(&This->IOleObject_iface, OLEIVERB_SHOW, NULL, NULL, -1, NULL, NULL);
 }

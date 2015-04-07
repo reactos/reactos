@@ -93,6 +93,8 @@ static const WCHAR attrDisplay[] =
     {'d','i','s','p','l','a','y',0};
 static const WCHAR attrFilter[] =
     {'f','i','l','e','t','e','r',0};
+static const WCHAR attrFloat[] =
+    {'f','l','o','a','t',0};
 static const WCHAR attrFontFamily[] =
     {'f','o','n','t','-','f','a','m','i','l','y',0};
 static const WCHAR attrFontSize[] =
@@ -127,6 +129,10 @@ static const WCHAR attrMarginRight[] =
     {'m','a','r','g','i','n','-','r','i','g','h','t',0};
 static const WCHAR attrMarginTop[] =
     {'m','a','r','g','i','n','-','t','o','p',0};
+static const WCHAR attrMaxHeight[] =
+    {'m','a','x','-','h','e','i','g','h','t',0};
+static const WCHAR attrMaxWidth[] =
+    {'m','a','x','-','w','i','d','t','h',0};
 static const WCHAR attrMinHeight[] =
     {'m','i','n','-','h','e','i','g','h','t',0};
 static const WCHAR attrMinWidth[] =
@@ -230,6 +236,7 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrDirection,            DISPID_IHTMLSTYLE2_DIRECTION},
     {attrDisplay,              DISPID_IHTMLSTYLE_DISPLAY},
     {attrFilter,               DISPID_IHTMLSTYLE_FILTER},
+    {attrFloat,                DISPID_IHTMLSTYLE_STYLEFLOAT},
     {attrFontFamily,           DISPID_IHTMLSTYLE_FONTFAMILY},
     {attrFontSize,             DISPID_IHTMLSTYLE_FONTSIZE},
     {attrFontStyle,            DISPID_IHTMLSTYLE_FONTSTYLE},
@@ -247,6 +254,8 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrMarginLeft,           DISPID_IHTMLSTYLE_MARGINLEFT},
     {attrMarginRight,          DISPID_IHTMLSTYLE_MARGINRIGHT},
     {attrMarginTop,            DISPID_IHTMLSTYLE_MARGINTOP},
+    {attrMaxHeight,            DISPID_IHTMLSTYLE5_MAXHEIGHT},
+    {attrMaxWidth,             DISPID_IHTMLSTYLE5_MAXWIDTH},
     {attrMinHeight,            DISPID_IHTMLSTYLE4_MINHEIGHT},
     {attrMinWidth,             DISPID_IHTMLSTYLE5_MINWIDTH},
     {attrOutline,              DISPID_IHTMLSTYLE6_OUTLINE},
@@ -276,6 +285,8 @@ static const style_tbl_entry_t style_tbl[] = {
     {attrWordWrap,             DISPID_IHTMLSTYLE3_WORDWRAP},
     {attrZIndex,               DISPID_IHTMLSTYLE_ZINDEX}
 };
+
+C_ASSERT(sizeof(style_tbl)/sizeof(*style_tbl) == STYLEID_MAX_VALUE);
 
 static const WCHAR valLineThrough[] =
     {'l','i','n','e','-','t','h','r','o','u','g','h',0};
@@ -912,19 +923,13 @@ static HRESULT WINAPI HTMLStyle_put_fontWeight(IHTMLStyle *iface, BSTR v)
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
     /* fontWeight can only be one of the following */
-    if(!v || strcmpiW(szNormal, v) == 0    || strcmpiW(styleBold, v) == 0    ||
-             strcmpiW(styleBolder, v) == 0 || strcmpiW(styleLighter, v) == 0 ||
-             strcmpiW(style100, v) == 0    || strcmpiW(style200, v) == 0     ||
-             strcmpiW(style300, v) == 0    || strcmpiW(style400, v) == 0     ||
-             strcmpiW(style500, v) == 0    || strcmpiW(style600, v) == 0     ||
-             strcmpiW(style700, v) == 0    || strcmpiW(style800, v) == 0     ||
-             strcmpiW(style900, v) == 0
-             )
-    {
-        return set_nsstyle_attr(This->nsstyle, STYLEID_FONT_WEIGHT, v, 0);
-    }
+    if(v && *v && strcmpiW(szNormal, v) && strcmpiW(styleBold, v) &&  strcmpiW(styleBolder, v)
+            && strcmpiW(styleLighter, v) && strcmpiW(style100, v) && strcmpiW(style200, v)
+            && strcmpiW(style300, v) && strcmpiW(style400, v) && strcmpiW(style500, v) && strcmpiW(style600, v)
+            && strcmpiW(style700, v) && strcmpiW(style800, v) && strcmpiW(style900, v))
+        return E_INVALIDARG;
 
-    return E_INVALIDARG;
+    return set_nsstyle_attr(This->nsstyle, STYLEID_FONT_WEIGHT, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_fontWeight(IHTMLStyle *iface, BSTR *p)
@@ -2115,15 +2120,19 @@ static HRESULT WINAPI HTMLStyle_get_height(IHTMLStyle *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle_put_styleFloat(IHTMLStyle *iface, BSTR v)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_style_attr(This, STYLEID_FLOAT, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle_get_styleFloat(IHTMLStyle *iface, BSTR *p)
 {
     HTMLStyle *This = impl_from_IHTMLStyle(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_style_attr(This, STYLEID_FLOAT, p);
 }
 
 static HRESULT WINAPI HTMLStyle_put_clear(IHTMLStyle *iface, BSTR v)
@@ -2892,7 +2901,7 @@ static HRESULT WINAPI HTMLStyle_removeAttribute(IHTMLStyle *iface, BSTR strAttri
         }
 
         if(i == sizeof(style_tbl)/sizeof(*style_tbl))
-            return remove_prop(&This->dispex, strAttributeName, pfSuccess);
+            return remove_attribute(&This->dispex, dispid, pfSuccess);
         style_entry = style_tbl+i;
     }
 
@@ -3137,12 +3146,12 @@ static const dispex_static_data_vtbl_t HTMLStyle_dispex_vtbl = {
 };
 
 static const tid_t HTMLStyle_iface_tids[] = {
-    IHTMLStyle_tid,
-    IHTMLStyle2_tid,
-    IHTMLStyle3_tid,
-    IHTMLStyle4_tid,
-    IHTMLStyle5_tid,
     IHTMLStyle6_tid,
+    IHTMLStyle5_tid,
+    IHTMLStyle4_tid,
+    IHTMLStyle3_tid,
+    IHTMLStyle2_tid,
+    IHTMLStyle_tid,
     0
 };
 static dispex_static_data_t HTMLStyle_dispex = {

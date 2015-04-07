@@ -940,9 +940,9 @@ IsConsoleMode(VOID)
 
 NTSTATUS NTAPI
 TuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
-                IN OUT PCONSOLE_INFO ConsoleInfo,
-                IN OUT PVOID ExtraConsoleInfo,
-                IN PCSR_PROCESS ConsoleLeaderProcess)
+                IN OUT PCONSOLE_STATE_INFO ConsoleInfo,
+                IN OUT PCONSOLE_INIT_INFO ConsoleInitInfo,
+                IN HANDLE ConsoleLeaderProcessHandle)
 {
     if (FrontEnd == NULL || ConsoleInfo == NULL)
         return STATUS_INVALID_PARAMETER;

@@ -7,7 +7,7 @@ BEGIN
     GROUPBOX "Ρυθμίσεις logon", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Ρυθμίσεις Σύνδεσης", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Δώστε τη διεύθυνση του διακομιστή", IDC_STATIC, 47, 24, 81, 8
+    LTEXT "Δώστε τη διεύθυνση του διακομιστή.", IDC_STATIC, 47, 24, 81, 8
     LTEXT "Διακομιστής:", IDC_STATIC, 47, 41, 30, 8
     LTEXT "Όνομα χρήστη:", IDC_STATIC, 47, 58, 38, 8
     COMBOBOX IDC_SERVERCOMBO, 89, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP

@@ -130,6 +130,26 @@ DoesPathExist(
 }
 
 
+BOOLEAN
+IsValidPath(
+    PWCHAR InstallDir,
+    ULONG Length)
+{
+    UINT i;
+
+    // TODO: Add check for 8.3 too.
+
+    /* Check for whitespaces */
+    for (i = 0; i < Length; i++)
+    {
+        if (isspace(InstallDir[i]))
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 NTSTATUS
 SetupCreateDirectory(
     PWCHAR PathName)

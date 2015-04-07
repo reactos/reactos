@@ -22,5 +22,5 @@ FORCEINLINE
 PEDRIVEROBJ
 DRIVEROBJ_TryLockObject(HDRVOBJ hdo)
 {
-    return GDIOBJ_TryLockObject(hdo, GDIObjType_DRVOBJ_TYPE);
+    return (PEDRIVEROBJ)GDIOBJ_TryLockObject(hdo, GDIObjType_DRVOBJ_TYPE);
 }

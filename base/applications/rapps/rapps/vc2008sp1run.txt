@@ -2,14 +2,14 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = Microsoft Visual C++ 2008 SP1 Redistributable Package
-Version = 8.0
+Name = Microsoft Visual C++ 2008 SP1 Redistributable
+Version = 9.0
 License = Unknown
 Description = Microsoft Visual Studio 2008 SP1 Runtime. Contains: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
-Size = 4.02 MB
+Size = 4.27 MB
 Category = 14
-URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=5582
-URLDownload = http://download.microsoft.com/download/d/d/9/dd9a82d0-52ef-40db-8dab-795376989c03/vcredist_x86.exe
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=26368
+URLDownload = http://download.microsoft.com/download/5/D/8/5D8C65CB-C849-4025-8E95-C3966CAFD8AE/vcredist_x86.exe
 CDPath = none
 
 [Section.0407]
@@ -23,7 +23,7 @@ Description = Librerias Microsoft Visual Studio 2008 SP1. Incluye: atl90.dll, mf
 [Section.040c]
 License = Inconnue
 Description = Bibliothèque Microsoft Visual Studio 2008 SP1. Contient: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
-Size = 4,02 Mo
+Size = 4,27 Mo
 
 [Section.0410]
 License = Sconosciuta
@@ -40,13 +40,13 @@ Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2008 SP1. Zawier
 [Section.0418]
 License = Necunoscută
 Description = Microsoft Visual Studio 2008 SP1 Runtime. Conține: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
-Size = 4,02 Mo
+Size = 4,27 Mo
 
 [Section.041f]
 Name = Microsoft Visual C++ 2008 SP1 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor
 Description = Microsoft Visual Studio 2008 SP1 Yürütücü. Şunları içerir: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
-Size = 4,02 MB
+Size = 4,27 MB
 
 [Section.0422]
 License = Невідома

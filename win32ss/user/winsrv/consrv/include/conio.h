@@ -198,7 +198,27 @@ typedef struct _CONSOLE_INPUT_BUFFER
 
 
 typedef struct _TERMINAL TERMINAL, *PTERMINAL;
-/* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
+
+/*
+ * Structure used to hold console information
+ */
+typedef struct _CONSOLE_INFO
+{
+    ULONG   InputBufferSize;
+    COORD   ScreenBufferSize;
+    COORD   ConsoleSize;    /* The size of the console */
+
+    ULONG   CursorSize;
+    BOOLEAN CursorBlinkOn;
+    BOOLEAN ForceCursorOff;
+
+    USHORT  ScreenAttrib; // CHAR_INFO ScreenFillAttrib
+    USHORT  PopupAttrib;
+
+    ULONG   CodePage;
+
+} CONSOLE_INFO, *PCONSOLE_INFO;
+
 typedef struct _TERMINAL_VTBL
 {
     /*

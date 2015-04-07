@@ -691,20 +691,20 @@ ProcessDisplayRegistry(
     Entry = GetCurrentListEntry(List);
     if (Entry == NULL)
     {
-        DPRINT("GetCurrentListEntry() failed\n");
+        DPRINT1("GetCurrentListEntry() failed\n");
         return FALSE;
     }
 
     if (!SetupFindFirstLineW(InfFile, L"Display", (WCHAR*)GetListEntryUserData(Entry), &Context))
     {
-        DPRINT("SetupFindFirstLineW() failed\n");
+        DPRINT1("SetupFindFirstLineW() failed\n");
         return FALSE;
     }
 
     /* Enable the right driver */
     if (!INF_GetDataField(&Context, 3, &ServiceName))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -720,7 +720,7 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
@@ -729,7 +729,7 @@ ProcessDisplayRegistry(
 
     if (!INF_GetDataField(&Context, 4, &Buffer))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -742,13 +742,13 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 5, &Buffer))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -761,13 +761,13 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
     if (!INF_GetDataField(&Context, 6, &Buffer))
     {
-        DPRINT("INF_GetDataField() failed\n");
+        DPRINT1("INF_GetDataField() failed\n");
         return FALSE;
     }
 
@@ -780,7 +780,7 @@ ProcessDisplayRegistry(
                                    sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
@@ -928,7 +928,7 @@ GetDefaultLanguageIndex(VOID)
 PGENERIC_LIST
 CreateLanguageList(
     HINF InfFile,
-    WCHAR *DefaultLanguage) 
+    WCHAR *DefaultLanguage)
 {
     CHAR Buffer[128];
     PGENERIC_LIST List;
@@ -956,7 +956,7 @@ CreateLanguageList(
     if (!SetupFindFirstLineW (InfFile, L"Language", NULL, &Context))
     {
         DestroyGenericList(List, FALSE);
-        return NULL; 
+        return NULL;
     }
 
     do

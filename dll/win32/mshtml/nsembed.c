@@ -512,7 +512,6 @@ static BOOL load_xul(const PRUnichar *gre_path)
     NS_DLSYM(ccref_incr);
     NS_DLSYM(ccref_decr);
     NS_DLSYM(ccref_init);
-    NS_DLSYM(ccref_unmark_if_purple);
     NS_DLSYM(ccp_init);
     NS_DLSYM(describe_cc_node);
     NS_DLSYM(note_cc_edge);
@@ -1139,6 +1138,28 @@ BOOL is_gecko_path(const char *path)
     return ret;
 }
 
+void set_viewer_zoom(NSContainer *nscontainer, float factor)
+{
+    nsIContentViewer *content_viewer;
+    nsIDocShell *doc_shell;
+    nsresult nsres;
+
+    TRACE("Setting to %f\n", factor);
+
+    nsres = get_nsinterface((nsISupports*)nscontainer->navigation, &IID_nsIDocShell, (void**)&doc_shell);
+    assert(nsres == NS_OK);
+
+    nsres = nsIDocShell_GetContentViewer(doc_shell, &content_viewer);
+    assert(nsres == NS_OK && content_viewer);
+    nsIDocShell_Release(doc_shell);
+
+    nsres = nsIContentViewer_SetFullZoom(content_viewer, factor);
+    if(NS_FAILED(nsres))
+        ERR("SetFullZoom failed: %08x\n", nsres);
+
+    nsIContentViewer_Release(content_viewer);
+}
+
 struct nsWeakReference {
     nsIWeakReference nsIWeakReference_iface;
 
@@ -1702,8 +1723,24 @@ static nsresult NSAPI nsEmbeddingSiteWindow_GetDimensions(nsIEmbeddingSiteWindow
         UINT32 flags, LONG *x, LONG *y, LONG *cx, LONG *cy)
 {
     NSContainer *This = impl_from_nsIEmbeddingSiteWindow(iface);
-    WARN("(%p)->(%08x %p %p %p %p)\n", This, flags, x, y, cx, cy);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    RECT r;
+
+    TRACE("(%p)->(%x %p %p %p %p)\n", This, flags, x, y, cx, cy);
+
+    if(!GetWindowRect(This->hwnd, &r)) {
+        ERR("GetWindowRect failed\n");
+        return NS_ERROR_FAILURE;
+    }
+
+    if(x)
+        *x = r.left;
+    if(y)
+        *y = r.top;
+    if(cx)
+        *cx = r.right-r.left;
+    if(cy)
+        *cy = r.bottom-r.top;
+    return NS_OK;
 }
 
 static nsresult NSAPI nsEmbeddingSiteWindow_SetFocus(nsIEmbeddingSiteWindow *iface)

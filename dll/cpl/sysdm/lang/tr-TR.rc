@@ -33,7 +33,7 @@ BEGIN
     LTEXT "Aygıt Yöneticisi, bilgisayarınızdaki kurulu donanım aygıtlarının tümünü dizelgeler. Bir aygıtın husûiyetlerini değiştirmek için Aygıt Yöneticisi'ni kullanınız.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Aygıt Yöneticisi...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Donanım Yardımcısı", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Donanım Yardımcısı; donanımınızı kurmanıza, kaldırmanıza, onarmanıza, çıkarmanıza ve yapılandırmanıza yardım eder.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Donanım Yardımcısı...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Donanım Profilleri", IDC_STATIC, 6, 149, 244, 61

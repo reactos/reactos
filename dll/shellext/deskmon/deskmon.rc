@@ -11,6 +11,8 @@
 
 #include <reactos/manifest_dll.rc>
 
+IDC_MONITORICO ICON "resources/monitor.ico"
+
 /* UTF-8 */
 #pragma code_page(65001)
 

@@ -244,6 +244,9 @@ else()
     add_subdirectory(tools/wpp)
     add_subdirectory(win32ss)
 
+    # Create the registry hives
+    create_registry_hives()
+
     # Create {bootcd, livecd, bootcdregtest}.lst
     create_iso_lists()
 

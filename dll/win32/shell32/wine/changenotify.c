@@ -255,28 +255,6 @@ static BOOL should_notify( LPCITEMIDLIST changed, LPCITEMIDLIST watched, BOOL su
         return TRUE;
     if( sub && ILIsParent( watched, changed, FALSE ) )
         return TRUE;
-#ifdef __REACTOS__
-    if (sub && _ILIsDesktop(watched)) {
-        LPITEMIDLIST deskpidl;
-        WCHAR wszPath[MAX_PATH];
-        SHGetSpecialFolderPathW(0, wszPath, CSIDL_DESKTOPDIRECTORY, FALSE);
-        deskpidl = SHSimpleIDListFromPathW(wszPath);
-        if (ILIsParent(deskpidl, changed, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-        SHGetSpecialFolderPathW(0, wszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
-        deskpidl = SHSimpleIDListFromPathW(wszPath);
-        if (ILIsParent(deskpidl, changed, TRUE))
-        {
-            ILFree(deskpidl);
-            return TRUE;
-        }
-        ILFree(deskpidl);
-    }
-#endif
     return FALSE;
 }
 

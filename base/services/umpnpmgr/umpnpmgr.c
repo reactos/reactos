@@ -3016,6 +3016,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     BOOL DeviceInstalled = FALSE;
     DWORD BytesWritten;
     DWORD Value;
+    HANDLE hInstallEvent;
     HANDLE hPipe = INVALID_HANDLE_VALUE;
     LPVOID Environment = NULL;
     PROCESS_INFORMATION ProcessInfo;
@@ -3056,7 +3057,7 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 
     DPRINT1("Installing: %S\n", DeviceInstance);
 
-    /* Create a random UUID for the named pipe */
+    /* Create a random UUID for the named pipe & event*/
     UuidCreate(&RandomUuid);
     swprintf(UuidString, L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
         RandomUuid.Data1, RandomUuid.Data2, RandomUuid.Data3,
@@ -3064,11 +3065,20 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
         RandomUuid.Data4[3], RandomUuid.Data4[4], RandomUuid.Data4[5],
         RandomUuid.Data4[6], RandomUuid.Data4[7]);
 
+    /* Create the event */
+    wcscpy(InstallEventName, L"Global\\PNP_Device_Install_Event_0.");
+    wcscat(InstallEventName, UuidString);
+    hInstallEvent = CreateEventW(NULL, TRUE, FALSE, InstallEventName);
+    if (!hInstallEvent)
+    {
+        DPRINT1("CreateEventW('%ls') failed with error %lu\n", InstallEventName, GetLastError());
+        goto cleanup;
+    }
+
     /* Create the named pipe */
     wcscpy(PipeName, L"\\\\.\\pipe\\PNP_Device_Install_Pipe_0.");
     wcscat(PipeName, UuidString);
     hPipe = CreateNamedPipeW(PipeName, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_BYTE, 1, 512, 512, 0, NULL);
-
     if (hPipe == INVALID_HANDLE_VALUE)
     {
         DPRINT1("CreateNamedPipeW failed with error %u\n", GetLastError());
@@ -3123,9 +3133,6 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     }
 
     /* Pass the data. The following output is partly compatible to Windows XP SP2 (researched using a modified newdev.dll to log this stuff) */
-    wcscpy(InstallEventName, L"Global\\PNP_Device_Install_Event_0.");
-    wcscat(InstallEventName, UuidString);
-
     Value = sizeof(InstallEventName);
     WriteFile(hPipe, &Value, sizeof(Value), &BytesWritten, NULL);
     WriteFile(hPipe, InstallEventName, Value, &BytesWritten, NULL);
@@ -3141,16 +3148,13 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     /* Wait for newdev.dll to finish processing */
     WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
 
-    /* The following check for success is probably not compatible to Windows, but should do its job */
-    if (!GetExitCodeProcess(ProcessInfo.hProcess, &Value))
-    {
-        DPRINT1("GetExitCodeProcess failed with error %u\n", GetLastError());
-        goto cleanup;
-    }
-
-    DeviceInstalled = Value;
+    /* If the event got signalled, this is success */
+    DeviceInstalled = WaitForSingleObject(hInstallEvent, 0) == WAIT_OBJECT_0;
 
 cleanup:
+    if (hInstallEvent)
+        CloseHandle(hInstallEvent);
+
     if (hPipe != INVALID_HANDLE_VALUE)
         CloseHandle(hPipe);
 

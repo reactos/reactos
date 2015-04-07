@@ -1570,6 +1570,12 @@ MUI_ERROR roROErrorEntries[] =
         "ENTER = Repornire calculator"
     },
     {
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
         "Partiîia selectatÇ este prea micÇ pentru a instala ReactOS.\n"
         "Partiîia de instalare trebuie sÇ fie de cel puîin %lu Mocteîi.\n"

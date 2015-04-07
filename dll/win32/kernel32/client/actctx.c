@@ -406,10 +406,10 @@ QueryActCtxW(IN DWORD dwFlags,
     }
 
     /* Now call the native API */
-    DPRINT1("SXS: %s() Calling Native API with Native Flags %lx for Win32 Flags %lx\n",
-            __FUNCTION__,
-            NativeFlags,
-            dwFlags);
+    DPRINT("SXS: %s() Calling Native API with Native Flags %lx for Win32 Flags %lx\n",
+           __FUNCTION__,
+           NativeFlags,
+           dwFlags);
     Status = RtlQueryInformationActivationContext(NativeFlags,
                                                   hActCtx,
                                                   pvSubInstance,

@@ -384,13 +384,44 @@ static void HTMLTableCell_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
+static void HTMLTableCell_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLTableCell *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nscell)
+        note_cc_edge((nsISupports*)This->nscell, "This->nstablecell", cb);
+}
+
+static void HTMLTableCell_unlink(HTMLDOMNode *iface)
+{
+    HTMLTableCell *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nscell) {
+        nsIDOMHTMLTableCellElement *nscell = This->nscell;
+
+        This->nscell = NULL;
+        nsIDOMHTMLTableCellElement_Release(nscell);
+    }
+}
+
 static const NodeImplVtbl HTMLTableCellImplVtbl = {
     HTMLTableCell_QI,
     HTMLTableCell_destructor,
     HTMLElement_cpc,
     HTMLElement_clone,
     HTMLElement_handle_event,
-    HTMLElement_get_attr_col
+    HTMLElement_get_attr_col,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLTableCell_traverse,
+    HTMLTableCell_unlink
 };
 
 static const tid_t HTMLTableCell_iface_tids[] = {
@@ -421,10 +452,7 @@ HRESULT HTMLTableCell_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, H
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLTableCell_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableCellElement, (void**)&ret->nscell);
-
-    /* Share nscell reference with nsnode */
-    assert(nsres == NS_OK && (nsIDOMNode*)ret->nscell == ret->element.node.nsnode);
-    nsIDOMNode_Release(ret->element.node.nsnode);
+    assert(nsres == NS_OK);
 
     *elem = &ret->element;
     return S_OK;

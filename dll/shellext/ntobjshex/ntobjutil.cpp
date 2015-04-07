@@ -372,6 +372,7 @@ HRESULT EnumerateRegistryKey(HDPA hdpa, PCWSTR path, HKEY root, UINT * hdpaCount
         entry->cb = FIELD_OFFSET(RegPidlEntry, entryName);
         entry->magic = REGISTRY_PIDL_MAGIC;
         entry->entryType = otype;
+        entry->contentType = type;
 
         if (cchName > 0)
         {
@@ -409,6 +410,109 @@ HRESULT EnumerateRegistryKey(HDPA hdpa, PCWSTR path, HKEY root, UINT * hdpaCount
 
         DPA_AppendPtr(hdpa, entry);
         (*hdpaCount)++;
+    }
+
+    RegCloseKey(hkey);
+
+    return S_OK;
+}
+
+HRESULT EnumerateRootKeys(HDPA hdpa, UINT * hdpaCount)
+{
+    *hdpaCount = 0;
+
+    static struct {
+        HKEY key;
+        PCWSTR keyName;
+    } rootKeys [] = {
+        { HKEY_CLASSES_ROOT, L"HKEY_CLASSES_ROOT" },
+        { HKEY_CURRENT_USER, L"HKEY_CURRENT_USER" },
+        { HKEY_LOCAL_MACHINE, L"HKEY_LOCAL_MACHINE" },
+        { HKEY_USERS, L"HKEY_USERS" },
+        { HKEY_CURRENT_CONFIG, L"HKEY_CURRENT_CONFIG" }
+    };
+    
+    for (UINT i = 0; i < _countof(rootKeys); i++)
+    {
+        PCWSTR name = rootKeys[i].keyName;
+        DWORD cchName = wcslen(rootKeys[i].keyName);
+        
+        REG_ENTRY_TYPE otype = REG_ENTRY_ROOT;
+
+        DWORD entryBufferLength = FIELD_OFFSET(RegPidlEntry, entryName) + sizeof(WCHAR) + cchName * sizeof(WCHAR);
+
+        RegPidlEntry* entry = (RegPidlEntry*) CoTaskMemAlloc(entryBufferLength);
+        if (!entry)
+            return E_OUTOFMEMORY;
+
+        memset(entry, 0, entryBufferLength);
+
+        entry->cb = FIELD_OFFSET(NtPidlEntry, entryName);
+        entry->magic = REGISTRY_PIDL_MAGIC;
+        entry->entryType = otype;
+        entry->rootKey = rootKeys[i].key;
+
+        if (cchName > 0)
+        {
+            entry->entryNameLength = cchName * sizeof(WCHAR);
+            StringCbCopyNW(entry->entryName, entryBufferLength, name, entry->entryNameLength);
+            entry->cb += entry->entryNameLength + sizeof(WCHAR);
+        }
+        else
+        {
+            entry->entryNameLength = 0;
+            entry->entryName[0] = 0;
+            entry->cb += sizeof(WCHAR);
+        }
+        
+        DPA_AppendPtr(hdpa, entry);
+        (*hdpaCount)++;
+
+    }
+
+    return S_OK;
+}
+
+HRESULT ReadRegistryValue(HKEY root, PCWSTR path, PCWSTR valueName, PVOID * valueData, PDWORD valueLength)
+{
+    HKEY hkey;
+
+    DWORD res;
+    if (root)
+    {
+        res = RegOpenKeyExW(root, *path == '\\' ? path + 1 : path, 0, STANDARD_RIGHTS_READ | KEY_QUERY_VALUE, &hkey);
+    }
+    else
+    {
+        res = NtOpenObject(KEY_OBJECT, (PHANDLE) &hkey, STANDARD_RIGHTS_READ | KEY_QUERY_VALUE, path);
+    }
+    if (!NT_SUCCESS(res))
+    {
+        ERR("RegOpenKeyExW failed for path %S with status=%x\n", path, res);
+        return HRESULT_FROM_NT(res);
+    }
+
+    res = RegQueryValueExW(hkey, valueName, NULL, NULL, NULL, valueLength);
+
+    if (*valueLength > 0)
+    {
+        *valueData = (PBYTE) CoTaskMemAlloc(*valueLength);
+
+        res = RegQueryValueExW(hkey, valueName, NULL, NULL, (PBYTE) *valueData, valueLength);
+        if (!NT_SUCCESS(res))
+        {
+            CoTaskMemFree(*valueData);
+            *valueData = NULL;
+
+            RegCloseKey(hkey);
+
+            ERR("RegOpenKeyExW failed for path %S with status=%x\n", path, res);
+            return HRESULT_FROM_NT(res);
+        }
+    }
+    else
+    {
+        *valueData = NULL;
     }
 
     RegCloseKey(hkey);

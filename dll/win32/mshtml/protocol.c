@@ -578,9 +578,9 @@ static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         DWORD grfPI, HANDLE_PTR dwReserved)
 {
     ResProtocol *This = ResProtocol_from_IInternetProtocol(iface);
+    WCHAR *url_dll, *url_file, *url, *mime, *res_type = (LPWSTR)RT_HTML, *ptr;
     DWORD grfBINDF = 0, len;
     BINDINFO bindinfo;
-    LPWSTR url_dll, url_file, url, mime, res_type = (LPWSTR)RT_HTML;
     HMODULE hdll;
     HRSRC src;
     HRESULT hres;
@@ -629,6 +629,12 @@ static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         url_file = res_type;
         res_type = MAKEINTRESOURCEW(RT_HTML);
     }
+
+    /* Ignore query and hash parts. */
+    if((ptr = strchrW(url_file, '?')))
+        *ptr = 0;
+    if(*url_file && (ptr = strchrW(url_file+1, '#')))
+        *ptr = 0;
 
     hdll = LoadLibraryExW(url_dll, NULL, LOAD_LIBRARY_AS_DATAFILE);
     if(!hdll) {

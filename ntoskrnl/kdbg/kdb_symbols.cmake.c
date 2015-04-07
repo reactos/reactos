@@ -599,7 +599,7 @@ KdbSymProcessSymbols(
         // HACK: module dll names don't identify the real files
         UNICODE_STRING SystemRoot;
         UNICODE_STRING ModuleNameCopy;
-        RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot\\system32\\Drivers\\");
+        RtlInitUnicodeString(&SystemRoot, L"\\SystemRoot\\System32\\Drivers\\");
         ModuleNameCopy.Length = 0;
         ModuleNameCopy.MaximumLength =
             LdrEntry->BaseDllName.MaximumLength + SystemRoot.MaximumLength;

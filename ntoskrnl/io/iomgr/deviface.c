@@ -103,7 +103,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_NON_VOLATILE,
+                         REG_OPTION_VOLATILE,
                          NULL);
     ZwClose(ClassesKey);
     if (!NT_SUCCESS(Status))
@@ -154,11 +154,11 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_NON_VOLATILE,
+                         REG_OPTION_VOLATILE,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open %wZ%wZ\\%wZ\n", &BaseKeyU, &GuidString, &SubKeyName);
+        DPRINT1("Failed to open %wZ%wZ\\%wZ Status %x\n", &BaseKeyU, &GuidString, &SubKeyName, Status);
         goto cleanup;
     }
 
@@ -172,7 +172,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
                          &ObjectAttributes,
                          0,
                          NULL,
-                         REG_OPTION_NON_VOLATILE,
+                         REG_OPTION_VOLATILE,
                          NULL);
     if (!NT_SUCCESS(Status))
     {

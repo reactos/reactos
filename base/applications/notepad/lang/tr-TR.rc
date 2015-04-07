@@ -67,7 +67,7 @@ BEGIN
         MENUITEM "&Yardım İçin Yardım", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Bilgi...", CMD_ABOUT
-        MENUITEM "&Üzerine...", CMD_ABOUT_WINE
+        MENUITEM "&Üzerine...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

@@ -465,7 +465,7 @@ acpi_bus_generate_event_dpc(PKDPC Dpc,
     ULONG_PTR TypeData = (ULONG_PTR)SystemArgument2;
 	KIRQL OldIrql;
 
-    event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'IPCA');
+    event = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_bus_event), 'epcA');
 	if (!event)
 		return;
 
@@ -549,7 +549,7 @@ acpi_bus_receive_event (
 
 	memcpy(event, entry, sizeof(struct acpi_bus_event));
 
-	ExFreePoolWithTag(entry, 'IPCA');
+	ExFreePoolWithTag(entry, 'epcA');
 	return_VALUE(0);
 }
 
@@ -721,11 +721,13 @@ acpi_bus_notify (
 	//blocking_notifier_call_chain(&acpi_bus_notify_list,
 	//	type, (void *)handle);
 
+	acpi_bus_get_device(handle, &device);
+
 	switch (type) {
 
 	case ACPI_NOTIFY_BUS_CHECK:
 		DPRINT("Received BUS CHECK notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		acpi_bus_check_scope(handle);
 		/*
 		 * TBD: We'll need to outsource certain events to non-ACPI
@@ -735,7 +737,7 @@ acpi_bus_notify (
 
 	case ACPI_NOTIFY_DEVICE_CHECK:
 		DPRINT("Received DEVICE CHECK notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		acpi_bus_check_device(handle);
 		/*
 		 * TBD: We'll need to outsource certain events to non-ACPI
@@ -745,7 +747,7 @@ acpi_bus_notify (
 
 	case ACPI_NOTIFY_DEVICE_WAKE:
 		DPRINT("Received DEVICE WAKE notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		acpi_bus_check_device(handle);
 		/*
 		 * TBD: We'll need to outsource certain events to non-ACPI
@@ -755,41 +757,40 @@ acpi_bus_notify (
 
 	case ACPI_NOTIFY_EJECT_REQUEST:
 		DPRINT1("Received EJECT REQUEST notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		/* TBD */
 		break;
 
 	case ACPI_NOTIFY_DEVICE_CHECK_LIGHT:
 		DPRINT1("Received DEVICE CHECK LIGHT notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		/* TBD: Exactly what does 'light' mean? */
 		break;
 
 	case ACPI_NOTIFY_FREQUENCY_MISMATCH:
 		DPRINT1("Received FREQUENCY MISMATCH notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		/* TBD */
 		break;
 
 	case ACPI_NOTIFY_BUS_MODE_MISMATCH:
 		DPRINT1("Received BUS MODE MISMATCH notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		/* TBD */
 		break;
 
 	case ACPI_NOTIFY_POWER_FAULT:
 		DPRINT1("Received POWER FAULT notification for device [%s]\n",
-			device->pnp.bus_id);
+			device ? device->pnp.bus_id : "n/a");
 		/* TBD */
 		break;
 
 	default:
-		DPRINT1("Received unknown/unsupported notification [%08x]\n",
-			type);
+		DPRINT1("Received unknown/unsupported notification [%08x] for device [%s]\n",
+			type, device ? device->pnp.bus_id : "n/a");
 		break;
 	}
 
-	acpi_bus_get_device(handle, &device);
 	if (device) {
 		driver = device->driver;
 		if (driver && driver->ops.notify &&
@@ -1147,7 +1148,7 @@ acpi_bus_add (
 	if (!child)
 		return_VALUE(AE_BAD_PARAMETER);
 
-	device = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_device), 'IPCA');
+	device = ExAllocatePoolWithTag(NonPagedPool,sizeof(struct acpi_device), 'DpcA');
 	if (!device) {
 		DPRINT1("Memory allocation error\n");
 		return_VALUE(-12);
@@ -1263,7 +1264,7 @@ acpi_bus_add (
 			uid = info->UniqueId.String;
 		if (info->Valid & ACPI_VALID_CID) {
 			cid_list = &info->CompatibleIdList;
-			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'IPCA');
+			device->pnp.cid_list = ExAllocatePoolWithTag(NonPagedPool,cid_list->ListSize, 'DpcA');
 			if (device->pnp.cid_list)
 				memcpy(device->pnp.cid_list, cid_list, cid_list->ListSize);
 			else
@@ -1326,7 +1327,7 @@ acpi_bus_add (
 	}
 
 	if (hid) {
-        device->pnp.hardware_id = ExAllocatePoolWithTag(NonPagedPool, strlen(hid) + 1, 'IPCA');
+        device->pnp.hardware_id = ExAllocatePoolWithTag(NonPagedPool, strlen(hid) + 1, 'DpcA');
         if (device->pnp.hardware_id) {
             snprintf(device->pnp.hardware_id, strlen(hid) + 1, "%s", hid);
             device->flags.hardware_id = 1;
@@ -1435,12 +1436,12 @@ acpi_bus_add (
 end:
 	if (result) {
 		if (device->pnp.cid_list) {
-			ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
+			ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
 		}
         if (device->pnp.hardware_id) {
-            ExFreePoolWithTag(device->pnp.hardware_id, 'IPCA');
+            ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
         }
-		ExFreePoolWithTag(device, 'IPCA');
+		ExFreePoolWithTag(device, 'DpcA');
 		return_VALUE(result);
 	}
 	*child = device;
@@ -1461,13 +1462,13 @@ acpi_bus_remove (
 	acpi_device_unregister(device);
 
 	if (device->pnp.cid_list)
-		ExFreePoolWithTag(device->pnp.cid_list, 'IPCA');
+		ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
 
     if (device->pnp.hardware_id)
-        ExFreePoolWithTag(device->pnp.hardware_id, 'IPCA');
+        ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
 
 	if (device)
-		ExFreePoolWithTag(device, 'IPCA');
+		ExFreePoolWithTag(device, 'DpcA');
 
 	return_VALUE(0);
 }
@@ -1672,7 +1673,7 @@ acpi_bus_init (void)
 	/*
 	 * Register the for all standard device notifications.
 	 */
-	status = AcpiInstallNotifyHandler(ACPI_ROOT_OBJECT, ACPI_SYSTEM_NOTIFY, &acpi_bus_notify, NULL);
+	status = AcpiInstallNotifyHandler(ACPI_ROOT_OBJECT, ACPI_SYSTEM_NOTIFY, acpi_bus_notify, NULL);
 	if (ACPI_FAILURE(status)) {
 		DPRINT1("Unable to register for device notifications\n");
 		result = AE_NOT_FOUND;
@@ -1703,7 +1704,7 @@ acpi_bus_init (void)
 	/* Mimic structured exception handling */
 error2:
 	AcpiRemoveNotifyHandler(ACPI_ROOT_OBJECT,
-		ACPI_SYSTEM_NOTIFY, &acpi_bus_notify);
+		ACPI_SYSTEM_NOTIFY, acpi_bus_notify);
 error1:
 	AcpiTerminate();
 	return_VALUE(AE_NOT_FOUND);
@@ -1752,7 +1753,7 @@ acpi_init (void)
 
 	DPRINT("Subsystem revision %08x\n",ACPI_CA_VERSION);
 
-        KeInitializeSpinLock(&acpi_bus_event_lock);
+	KeInitializeSpinLock(&acpi_bus_event_lock);
 	KeInitializeEvent(&AcpiEventQueue, NotificationEvent, FALSE);
 	ExInitializeFastMutex(&acpi_bus_drivers_lock);
 

@@ -31,7 +31,7 @@ BEGIN
     LTEXT "Enhedshåntering viser alle dine hardware enheder installeret på din computer. Brug Enhedshåntering til at skifte indstillinger for alle Hardware Enheder.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Enhedshåntering...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Hardware Guide", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Hardware Guiden hjælper dig med at Installer, Afinstaller, Reparerer, Afmontere, Fjerne, og konfigurer din hardware.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Hardware Guide...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Hardware Profiler", IDC_STATIC, 6, 149, 244, 61

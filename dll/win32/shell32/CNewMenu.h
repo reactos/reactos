@@ -27,7 +27,7 @@ class CNewMenu :
 	public CComCoClass<CNewMenu, &CLSID_NewMenu>,
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
 	public IObjectWithSite,
-	public IContextMenu2,
+	public IContextMenu3,
 	public IShellExtInit
 {
 private:
@@ -47,7 +47,7 @@ private:
 		PBYTE pData;
 		ULONG cbData;
 		LPWSTR pwszDesc;
-		HBITMAP hBitmap;
+		HICON hIcon;
 		SHELLNEW_ITEM *pNext;
 	};
 
@@ -56,7 +56,8 @@ private:
     SHELLNEW_ITEM *m_pLinkItem;
     CComPtr<IUnknown> m_pSite;
     HMENU m_hSubMenu;
-    HBITMAP m_hbmFolder, m_hbmLink;
+    HICON m_hiconFolder, m_hiconLink;
+    UINT m_idCmdFirst;
 
     SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);
     void UnloadItem(SHELLNEW_ITEM *pItem);
@@ -80,6 +81,9 @@ public:
 	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
 	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
+	// IContextMenu3
+	virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+
 	// IContextMenu2
 	virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -93,6 +97,7 @@ DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CNewMenu)
 	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+	COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
 	COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
 	COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
 	COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)

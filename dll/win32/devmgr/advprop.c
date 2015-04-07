@@ -319,6 +319,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
             {
                 LV_COLUMN lvc;
                 HWND hDriversListView;
+                WCHAR szBuffer[260];
 
                 dap = (PDEVADVPROP_INFO)lParam;
                 if (dap != NULL)
@@ -341,6 +342,13 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                     UpdateDriverDetailsDlg(hwndDlg,
                                            hDriversListView,
                                            dap);
+
+                    if (ListView_GetItemCount(hDriversListView) == 0)
+                    {
+                        if(LoadStringW(hDllInstance, IDS_NODRIVERS, szBuffer, _countof(szBuffer)))
+                            MessageBoxW(hwndDlg, szBuffer, dap->szDevName, MB_OK);
+                        EndDialog(hwndDlg, IDCANCEL);
+                    }
                 }
 
                 Ret = TRUE;

@@ -1702,6 +1702,222 @@ typedef struct tagMCI_WAVE_SET_PARMS {
 	WORD wReserved5;
 } MCI_WAVE_SET_PARMS,*PMCI_WAVE_SET_PARMS,*LPMCI_WAVE_SET_PARMS;
 
+typedef struct tagWAVEOUTCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEOUTCAPS2A, *LPWAVEOUTCAPS2A;
+
+typedef struct tagWAVEOUTCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEOUTCAPS2W, *LPWAVEOUTCAPS2W;
+
+typedef struct tagWAVEINCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEINCAPS2A, *LPWAVEINCAPS2A;
+
+typedef struct tagWAVEINCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD dwFormats;
+  WORD wChannels;
+  WORD wReserved1;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} WAVEINCAPS2W, *LPWAVEINCAPS2W;
+
+typedef struct tagMIDIOUTCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wVoices;
+  WORD wNotes;
+  WORD wChannelMask;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIOUTCAPS2A, *LPMIDIOUTCAPS2A;
+
+typedef struct tagMIDIOUTCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wVoices;
+  WORD wNotes;
+  WORD wChannelMask;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIOUTCAPS2W, *LPMIDIOUTCAPS2W;
+
+typedef struct tagMIDIINCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIINCAPS2A, *LPMIDIINCAPS2A;
+
+typedef struct tagMIDIINCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIDIINCAPS2W, *LPMIDIINCAPS2W;
+
+typedef struct tagAUXCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} AUXCAPS2A, *LPAUXCAPS2A;
+
+typedef struct tagAUXCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  WORD wTechnology;
+  WORD wReserved1;
+  DWORD dwSupport;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} AUXCAPS2W, *LPAUXCAPS2W;
+
+typedef struct tagMIXERCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  CHAR szPname[MAXPNAMELEN];
+  DWORD fdwSupport;
+  DWORD cDestinations;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIXERCAPS2A,*LPMIXERCAPS2A;
+
+typedef struct tagMIXERCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  MMVERSION vDriverVersion;
+  WCHAR szPname[MAXPNAMELEN];
+  DWORD fdwSupport;
+  DWORD cDestinations;
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} MIXERCAPS2W,*LPMIXERCAPS2W;
+
+typedef struct tagJOYCAPS2A {
+  WORD wMid;
+  WORD wPid;
+  CHAR szPname[MAXPNAMELEN];
+  UINT wXmin;
+  UINT wXmax;
+  UINT wYmin;
+  UINT wYmax;
+  UINT wZmin;
+  UINT wZmax;
+  UINT wNumButtons;
+  UINT wPeriodMin;
+  UINT wPeriodMax;
+  UINT wRmin;
+  UINT wRmax;
+  UINT wUmin;
+  UINT wUmax;
+  UINT wVmin;
+  UINT wVmax;
+  UINT wCaps;
+  UINT wMaxAxes;
+  UINT wNumAxes;
+  UINT wMaxButtons;
+  CHAR szRegKey[MAXPNAMELEN];
+  CHAR szOEMVxD[MAX_JOYSTICKOEMVXDNAME];
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} JOYCAPS2A, *LPJOYCAPS2A;
+
+typedef struct tagJOYCAPS2W {
+  WORD wMid;
+  WORD wPid;
+  WCHAR szPname[MAXPNAMELEN];
+  UINT wXmin;
+  UINT wXmax;
+  UINT wYmin;
+  UINT wYmax;
+  UINT wZmin;
+  UINT wZmax;
+  UINT wNumButtons;
+  UINT wPeriodMin;
+  UINT wPeriodMax;
+  UINT wRmin;
+  UINT wRmax;
+  UINT wUmin;
+  UINT wUmax;
+  UINT wVmin;
+  UINT wVmax;
+  UINT wCaps;
+  UINT wMaxAxes;
+  UINT wNumAxes;
+  UINT wMaxButtons;
+  WCHAR szRegKey[MAXPNAMELEN];
+  WCHAR szOEMVxD[MAX_JOYSTICKOEMVXDNAME];
+  GUID ManufacturerGuid;
+  GUID ProductGuid;
+  GUID NameGuid;
+} JOYCAPS2W, *LPJOYCAPS2W;
+
 LRESULT WINAPI CloseDriver(_In_ HDRVR, _In_ LPARAM, _In_ LPARAM);
 HDRVR WINAPI OpenDriver(_In_ LPCWSTR, _In_ LPCWSTR, _In_ LPARAM);
 LRESULT WINAPI SendDriverMessage(_In_ HDRVR, _In_ UINT, _In_ LPARAM, _In_ LPARAM);

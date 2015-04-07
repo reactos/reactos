@@ -1235,7 +1235,7 @@ CreateWindowStationAndDesktops(
     Session->InteractiveWindowStation = CreateWindowStationW(
         Session->InteractiveWindowStationName,
         0,
-        GENERIC_ALL,
+        MAXIMUM_ALLOWED,
         &DefaultSecurity);
     if (!Session->InteractiveWindowStation)
     {
@@ -1256,7 +1256,7 @@ CreateWindowStationAndDesktops(
         NULL,
         NULL,
         0, /* FIXME: Add DF_ALLOWOTHERACCOUNTHOOK flag? */
-        GENERIC_ALL,
+        MAXIMUM_ALLOWED,
         &UserDesktopSecurity);
     if (!Session->ApplicationDesktop)
     {
@@ -1272,7 +1272,7 @@ CreateWindowStationAndDesktops(
         NULL,
         NULL,
         0,
-        GENERIC_ALL,
+        MAXIMUM_ALLOWED,
         &DefaultSecurity);
     if (!Session->WinlogonDesktop)
     {
@@ -1288,7 +1288,7 @@ CreateWindowStationAndDesktops(
         NULL,
         NULL,
         0,
-        GENERIC_ALL,
+        MAXIMUM_ALLOWED,
         &DefaultSecurity);
     if(!Session->ScreenSaverDesktop)
     {

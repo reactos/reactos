@@ -60,9 +60,25 @@ PDEVOBJ_AllocPDEV()
 
     RtlZeroMemory(ppdev, sizeof(PDEVOBJ));
 
+    ppdev->hsemDevLock = EngCreateSemaphore();
+    if (ppdev->hsemDevLock == NULL)
+    {
+        ExFreePoolWithTag(ppdev, GDITAG_PDEV);
+        return NULL;
+    }
+
     ppdev->cPdevRefs = 1;
 
     return ppdev;
+}
+
+static
+VOID
+PDEVOBJ_vDeletePDEV(
+    PPDEVOBJ ppdev)
+{
+    EngDeleteSemaphore(ppdev->hsemDevLock);
+    ExFreePoolWithTag(ppdev, GDITAG_PDEV);
 }
 
 VOID
@@ -124,7 +140,7 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
             gppdevPrimary = NULL;
 
         /* Free it */
-        ExFreePoolWithTag(ppdev, GDITAG_PDEV );
+        PDEVOBJ_vDeletePDEV(ppdev);
     }
 
     /* Unlock loader */
@@ -217,9 +233,15 @@ PDEVOBJ_pSurface(
     {
         /* Call the drivers DrvEnableSurface */
         hsurf = ppdev->pldev->pfn.EnableSurface(ppdev->dhpdev);
+        if (hsurf== NULL)
+        {
+            DPRINT1("Failed to create PDEV surface!");
+            return NULL;
+        }
 
         /* Get a reference to the surface */
         ppdev->pSurface = SURFACE_ShareLockSurface(hsurf);
+        NT_ASSERT(ppdev->pSurface != NULL);
     }
 
     /* Increment reference count */
@@ -317,7 +339,7 @@ EngpCreatePDEV(
         DPRINT1("Could not load display driver '%ls', '%ls'\n",
                 pGraphicsDevice->pDiplayDrivers,
                 pdm->dmDeviceName);
-        ExFreePoolWithTag(ppdev, GDITAG_PDEV);
+        PDEVOBJ_vRelease(ppdev);
         return NULL;
     }
 
@@ -330,7 +352,6 @@ EngpCreatePDEV(
         ppdev->pfnMovePointer = EngMovePointer;
 
     ppdev->pGraphicsDevice = pGraphicsDevice;
-    ppdev->hsemDevLock = EngCreateSemaphore();
     // Should we change the ative mode of pGraphicsDevice ?
     ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
 
@@ -469,7 +490,7 @@ PDEVOBJ_bSwitchMode(
     pSurface = PDEVOBJ_pSurface(ppdevTmp);
     if (!pSurface)
     {
-        DPRINT1("DrvEnableSurface failed\n");
+        DPRINT1("PDEVOBJ_pSurface failed\n");
         goto leave;
     }
 

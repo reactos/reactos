@@ -33,7 +33,7 @@ BEGIN
     LTEXT "Enhetshanteraren visar all hårdvara i din dator. Använd enhetshanteraren för att ändra egenskaper på dina enheter.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Enhetshanteraren...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "Guiden anslut ny hårdvara", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "Guiden anslut ny hårdvara hjälper dig att installera, avinstallera, reparera, koppla ur, mata ut och konfigurera din hårdvara.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Guiden anslut ny hårdvara...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "Hårdvaruprofiler", IDC_STATIC, 6, 149, 244, 61

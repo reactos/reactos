@@ -97,7 +97,7 @@ extern int parser_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 144 "parser.y" /* yacc.c:1909  */
+#line 145 "parser.y" /* yacc.c:1909  */
 
     int                     ival;
     const WCHAR             *srcptr;

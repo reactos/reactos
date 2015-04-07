@@ -51,14 +51,14 @@ MakeBeep(ULONG Frequency,
     IO_STATUS_BLOCK IoStatusBlock;
     BEEP_SET_PARAMETERS BeepSetParameters;
 
+    /* A null frequency means we stop beeping */
+    if (Frequency == 0) Duration = 0;
+
     /*
      * Do nothing if we are replaying exactly the same sound
      * (this avoids hiccups due to redoing the same beeps).
      */
     if (Frequency == LastFrequency && Duration == LastDuration) return;
-
-    /* A null frequency means we stop beeping */
-    if (Frequency == 0) Duration = 0;
 
     /*
      * For small durations we automatically reset the beep so

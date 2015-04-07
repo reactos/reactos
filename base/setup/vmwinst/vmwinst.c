@@ -38,10 +38,6 @@
 
 #include "vmwinst.h"
 
-extern VOID CALLBACK InstallHinfSectionW(HWND hwnd, HINSTANCE ModuleHandle,
-                                         PCWSTR CmdLineBuffer, INT nCmdShow);
-
-
 HINSTANCE hAppInstance;
 BOOL StartVMwConfigWizard, DriverFilesFound, ActivateVBE = FALSE, UninstallDriver = FALSE;
 

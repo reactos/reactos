@@ -382,6 +382,13 @@ static void ie_dialog_about(HWND hwnd)
     DestroyIcon(icon);
 }
 
+#ifdef __REACTOS__
+static void ie_dialog_properties(HWND hwnd)
+{
+    ShellExecuteW(hwnd, NULL, L"inetcpl.cpl", NULL, NULL, 0);
+}
+#endif
+
 static void add_tb_separator(HWND hwnd)
 {
     TBBUTTON btn;
@@ -606,6 +613,12 @@ static LRESULT iewnd_OnCommand(InternetExplorer *This, HWND hwnd, UINT msg, WPAR
             ie_dialog_about(hwnd);
             break;
 
+#ifdef __REACTOS__
+        case ID_BROWSE_PROPERTIES:
+            ie_dialog_properties(hwnd);
+            break;
+#endif
+
         case ID_BROWSE_QUIT:
             ShowWindow(hwnd, SW_HIDE);
             break;
@@ -687,7 +700,7 @@ void register_iewindow_class(void)
     wc.hIcon = LoadIconW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON));
     wc.hIconSm = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON,
                             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
-    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDC_ARROW));
+    wc.hCursor = LoadCursorW(0, (LPWSTR)IDC_ARROW);
     wc.hbrBackground = 0;
     wc.lpszClassName = szIEWinFrame;
     wc.lpszMenuName = NULL;

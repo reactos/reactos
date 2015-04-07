@@ -3558,7 +3558,7 @@ KdbpCliInterpretInitFile()
 
 /*!\brief Called when KDB is initialized
  *
- * Reads the KDBinit file from the SystemRoot\system32\drivers\etc directory and executes it.
+ * Reads the KDBinit file from the SystemRoot\System32\drivers\etc directory and executes it.
  */
 VOID
 KdbpCliInit()
@@ -3574,7 +3574,7 @@ KdbpCliInit()
     ULONG OldEflags;
 
     /* Initialize the object attributes */
-    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\system32\\drivers\\etc\\KDBinit");
+    RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\drivers\\etc\\KDBinit");
     InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
 
     /* Open the file */
@@ -3584,7 +3584,7 @@ KdbpCliInit()
                         FILE_NO_INTERMEDIATE_BUFFERING);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Could not open \\SystemRoot\\system32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT("Could not open \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
         return;
     }
 
@@ -3594,7 +3594,7 @@ KdbpCliInit()
     if (!NT_SUCCESS(Status))
     {
         ZwClose(hFile);
-        DPRINT("Could not query size of \\SystemRoot\\system32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
+        DPRINT("Could not query size of \\SystemRoot\\System32\\drivers\\etc\\KDBinit (Status 0x%x)", Status);
         return;
     }
     FileSize = FileStdInfo.EndOfFile.u.LowPart;

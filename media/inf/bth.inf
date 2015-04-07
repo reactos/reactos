@@ -74,3 +74,9 @@ BluetoothClassName="Odbiorniki radiowe Bluetooth"
 ReactOS="Echipa ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB generic"
 BluetoothClassName="Radiouri Bluetooth"
+
+[Strings.0419]
+ReactOS="Команда ReactOS"
+BTUSB.DeviceDesc="Стандартный USB Bluetooth радиомодуль"
+BluetoothClassName="Радиомодули Bluetooth"
+

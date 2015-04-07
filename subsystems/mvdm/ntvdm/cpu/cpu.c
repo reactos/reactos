@@ -13,9 +13,11 @@
 #include "cpu.h"
 
 #include "emulator.h"
+#include "memory.h"
 #include "callback.h"
 #include "bop.h"
 #include <isvbop.h>
+#include <pseh/pseh2.h>
 
 #include "clock.h"
 #include "bios/rom.h"
@@ -110,6 +112,56 @@ VOID CpuStep(VOID)
     Fast486StepInto(&EmulatorContext);
 }
 
+LONG CpuExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
+{
+    /* Get the exception record */
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+
+    switch (ExceptionRecord->ExceptionCode)
+    {
+        /* We only handle access violations so far */
+        case EXCEPTION_ACCESS_VIOLATION:
+        {
+            BOOLEAN Writing = (ExceptionRecord->ExceptionInformation[0] == 1);
+
+            /* Retrieve the address to which a read or write attempt was made */
+            ULONG_PTR Address = ExceptionRecord->ExceptionInformation[1];
+
+            /*
+             * Check whether the access exception was done inside the virtual memory space
+             * (caused by an emulated app) or outside (casued by a bug in ourselves).
+             */
+            if (Address <  (ULONG_PTR)BaseAddress ||
+                Address >= (ULONG_PTR)BaseAddress + MAX_ADDRESS)
+            {
+                DPRINT1("NTVDM: %s access violation at 0x%p outside the virtual memory space!\n",
+                        (Writing ? "Write" : "Read"), Address);
+                return EXCEPTION_CONTINUE_SEARCH;
+            }
+
+            /* We are good to go, dispatch to our memory handlers */
+
+            /* Fix the CPU state */
+            Fast486Rewind(&EmulatorContext);
+
+            /* Call the memory handler */
+            MemExceptionHandler((ULONG)PHYS_TO_REAL(Address), Writing);
+
+            /* The execution of the CPU opcode handler MUST NOT continue */
+            return EXCEPTION_EXECUTE_HANDLER;
+        }
+
+        default:
+        {
+            DPRINT1("NTVDM: Exception 0x%08lx not handled!\n", ExceptionRecord->ExceptionCode);
+            break;
+        }
+    }
+
+    /* Continue to search for a handler */
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 VOID CpuSimulate(VOID)
 {
     if (CpuCallLevel > MaxCpuCallLevel)
@@ -125,7 +177,18 @@ VOID CpuSimulate(VOID)
     DPRINT("CpuSimulate --> Level %d\n", CpuCallLevel);
 
     CpuRunning = TRUE;
-    while (VdmRunning && CpuRunning) ClockUpdate();
+    while (VdmRunning && CpuRunning)
+    {
+        _SEH2_TRY
+        {
+            while (VdmRunning && CpuRunning) ClockUpdate();
+        }
+        _SEH2_EXCEPT(CpuExceptionFilter(_SEH2_GetExceptionInformation()))
+        {
+            DPRINT("VDM exception handler called\n");
+        }
+        _SEH2_END;
+    }
 
     DPRINT("CpuSimulate <-- Level %d\n", CpuCallLevel);
     CpuCallLevel--;

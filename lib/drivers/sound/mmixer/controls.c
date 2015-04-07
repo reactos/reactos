@@ -1358,7 +1358,10 @@ MMixerHandlePhysicalConnection(
 
         /* sanity checks */
         ASSERT(PinsCount != 0);
-        ASSERT(PinsCount == 1);
+        if (PinsCount != 1)
+        {
+            DPRINT1("MMixerHandlePhysicalConnection Expected 1 pin but got %lu\n", PinsCount);
+        }
 
         /* create destination line */
         Status = MMixerBuildMixerDestinationLine(MixerContext, MixerInfo, MixerData->hDevice, Pins[0], bInput);

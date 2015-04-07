@@ -68,21 +68,6 @@ typedef struct _UNWIND_INFO
  */
 } UNWIND_INFO, *PUNWIND_INFO;
 
-#define GetUnwindCodeEntry(info, index) \
-    ((info)->UnwindCode[index])
-
-#define GetLanguageSpecificDataPtr(info) \
-    ((PVOID)&GetUnwindCodeEntry((info),((info)->CountOfCodes + 1) & ~1))
-
-#define GetExceptionHandler(base, info) \
-    ((PEXCEPTION_HANDLER)((base) + *(PULONG)GetLanguageSpecificDataPtr(info)))
-
-#define GetChainedFunctionEntry(base, info) \
-    ((PRUNTIME_FUNCTION)((base) + *(PULONG)GetLanguageSpecificDataPtr(info)))
-
-#define GetExceptionDataPtr(info) \
-    ((PVOID)((PULONG)GetLanguageSpecificData(info) + 1)
-
 static BOOL x86_64_get_addr(HANDLE hThread, const CONTEXT* ctx,
                             enum cpu_addr ca, ADDRESS64* addr)
 {

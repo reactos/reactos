@@ -1,6 +1,11 @@
 
 set(USE_DIBLIB FALSE)
 
+if(NOT MSVC)
+    # HACK: this should be enabled globally!
+    add_compile_flags_language("-std=c++11" "CXX")
+endif()
+
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
 
@@ -146,7 +151,6 @@ list(APPEND SOURCE
     gdi/ntgdi/bezier.c
     gdi/ntgdi/bitblt.c
     gdi/ntgdi/bitmaps.c
-    gdi/ntgdi/brush.c
     gdi/ntgdi/cliprgn.c
     gdi/ntgdi/coord.c
     gdi/ntgdi/dcattr.c
@@ -215,6 +219,7 @@ add_asm_files(win32k_asm ${ASM_SOURCE})
 
 add_library(win32k SHARED
     ${SOURCE}
+    gdi/ntgdi/brush.cpp
     ${win32k_asm}
     win32k.rc
     ${CMAKE_CURRENT_BINARY_DIR}/win32k.def)

@@ -1,7 +1,7 @@
 /*
 	id3: ID3v2.3 and ID3v2.4 parsing (a relevant subset)
 
-	copyright 2006-2008 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2006-2013 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
@@ -13,9 +13,9 @@
 #ifndef NO_ID3V2 /* Only the main parsing routine will always be there. */
 
 /* We know the usual text frames plus some specifics. */
-#define KNOWN_FRAMES 4
-static const char frame_type[KNOWN_FRAMES][5] = { "COMM", "TXXX", "RVA2", "USLT" };
-enum frame_types { unknown = -2, text = -1, comment, extra, rva2, uslt };
+#define KNOWN_FRAMES 5
+static const char frame_type[KNOWN_FRAMES][5] = { "COMM", "TXXX", "RVA2", "USLT", "APIC" };
+enum frame_types { unknown = -2, text = -1, comment, extra, rva2, uslt, picture };
 
 /* UTF support definitions */
 
@@ -25,7 +25,7 @@ static void convert_latin1  (mpg123_string *sb, const unsigned char* source, siz
 static void convert_utf16bom(mpg123_string *sb, const unsigned char* source, size_t len, const int noquiet);
 static void convert_utf8    (mpg123_string *sb, const unsigned char* source, size_t len, const int noquiet);
 
-static const text_converter text_converters[4] = 
+static const text_converter text_converters[4] =
 {
 	convert_latin1,
 	/* We always check for (multiple) BOM in 16bit unicode. Without BOM, UTF16 BE is the default.
@@ -35,7 +35,7 @@ static const text_converter text_converters[4] =
 	convert_utf8
 };
 
-const unsigned int encoding_widths[4] = { 1, 2, 2, 1 };
+static const unsigned int encoding_widths[4] = { 1, 2, 2, 1 };
 
 /* the code starts here... */
 
@@ -59,6 +59,8 @@ void init_id3(mpg123_handle *fr)
 	fr->id3v2.text     = NULL;
 	fr->id3v2.extras   = 0;
 	fr->id3v2.extra    = NULL;
+	fr->id3v2.pictures   = 0;
+	fr->id3v2.picture    = NULL;
 }
 
 /* Managing of the text, comment and extra lists. */
@@ -77,6 +79,15 @@ static void init_mpg123_text(mpg123_text *txt)
 	txt->lang[2] = 0;
 }
 
+static void init_mpg123_picture(mpg123_picture *pic)
+{
+	mpg123_init_string(&pic->mime_type);
+	mpg123_init_string(&pic->description);
+	pic->type = 0;
+	pic->size = 0;
+	pic->data = NULL;
+}
+
 /* Free memory of one element. */
 static void free_mpg123_text(mpg123_text *txt)
 {
@@ -84,14 +95,32 @@ static void free_mpg123_text(mpg123_text *txt)
 	mpg123_free_string(&txt->description);
 }
 
+static void free_mpg123_picture(mpg123_picture * pic)
+{
+	mpg123_free_string(&pic->mime_type);
+	mpg123_free_string(&pic->description);
+	if (pic->data != NULL)
+		free(pic->data);
+}
+
 /* Free memory of whole list. */
 #define free_comment(mh) free_id3_text(&((mh)->id3v2.comment_list), &((mh)->id3v2.comments))
 #define free_text(mh)    free_id3_text(&((mh)->id3v2.text),         &((mh)->id3v2.texts))
 #define free_extra(mh)   free_id3_text(&((mh)->id3v2.extra),        &((mh)->id3v2.extras))
+#define free_picture(mh) free_id3_picture(&((mh)->id3v2.picture),   &((mh)->id3v2.pictures))
 static void free_id3_text(mpg123_text **list, size_t *size)
 {
 	size_t i;
 	for(i=0; i<*size; ++i) free_mpg123_text(&((*list)[i]));
+
+	free(*list);
+	*list = NULL;
+	*size = 0;
+}
+static void free_id3_picture(mpg123_picture **list, size_t *size)
+{
+	size_t i;
+	for(i=0; i<*size; ++i) free_mpg123_picture(&((*list)[i]));
 
 	free(*list);
 	*list = NULL;
@@ -102,6 +131,7 @@ static void free_id3_text(mpg123_text **list, size_t *size)
 #define add_comment(mh) add_id3_text(&((mh)->id3v2.comment_list), &((mh)->id3v2.comments))
 #define add_text(mh)    add_id3_text(&((mh)->id3v2.text),         &((mh)->id3v2.texts))
 #define add_extra(mh)   add_id3_text(&((mh)->id3v2.extra),        &((mh)->id3v2.extras))
+#define add_picture(mh)   add_id3_picture(&((mh)->id3v2.picture),       &((mh)->id3v2.pictures))
 static mpg123_text *add_id3_text(mpg123_text **list, size_t *size)
 {
 	mpg123_text *x = safe_realloc(*list, sizeof(mpg123_text)*(*size+1));
@@ -113,11 +143,24 @@ static mpg123_text *add_id3_text(mpg123_text **list, size_t *size)
 
 	return &((*list)[*size-1]); /* Return pointer to the added text. */
 }
+static mpg123_picture *add_id3_picture(mpg123_picture **list, size_t *size)
+{
+	mpg123_picture *x = safe_realloc(*list, sizeof(mpg123_picture)*(*size+1));
+	if(x == NULL) return NULL; /* bad */
+
+	*list  = x;
+	*size += 1;
+	init_mpg123_picture(&((*list)[*size-1]));
+
+	return &((*list)[*size-1]); /* Return pointer to the added picture. */
+}
+
 
 /* Remove the last item. */
 #define pop_comment(mh) pop_id3_text(&((mh)->id3v2.comment_list), &((mh)->id3v2.comments))
 #define pop_text(mh)    pop_id3_text(&((mh)->id3v2.text),         &((mh)->id3v2.texts))
 #define pop_extra(mh)   pop_id3_text(&((mh)->id3v2.extra),        &((mh)->id3v2.extras))
+#define pop_picture(mh)   pop_id3_picture(&((mh)->id3v2.picture),       &((mh)->id3v2.pictures))
 static void pop_id3_text(mpg123_text **list, size_t *size)
 {
 	mpg123_text *x;
@@ -136,11 +179,30 @@ static void pop_id3_text(mpg123_text **list, size_t *size)
 		*size = 0;
 	}
 }
+static void pop_id3_picture(mpg123_picture **list, size_t *size)
+{
+	mpg123_picture *x;
+	if(*size < 1) return;
 
-/* OK, back t the higher level functions. */
+	free_mpg123_picture(&((*list)[*size-1]));
+	if(*size > 1)
+	{
+		x = safe_realloc(*list, sizeof(mpg123_picture)*(*size-1));
+		if(x != NULL){ *list  = x; *size -= 1; }
+	}
+	else
+	{
+		free(*list);
+		*list = NULL;
+		*size = 0;
+	}
+}
+
+/* OK, back to the higher level functions. */
 
 void exit_id3(mpg123_handle *fr)
 {
+	free_picture(fr);
 	free_comment(fr);
 	free_extra(fr);
 	free_text(fr);
@@ -186,7 +248,7 @@ void id3_link(mpg123_handle *fr)
 	ID3v2 standard says that there should be one text frame of specific type per tag, and subsequent tags overwrite old values.
 	So, I always replace the text that may be stored already (perhaps with a list of zero-separated strings, though).
 */
-void store_id3_text(mpg123_string *sb, char *source, size_t source_size, const int noquiet, const int notranslate)
+static void store_id3_text(mpg123_string *sb, unsigned char *source, size_t source_size, const int noquiet, const int notranslate)
 {
 	if(!source_size)
 	{
@@ -209,7 +271,7 @@ void store_id3_text(mpg123_string *sb, char *source, size_t source_size, const i
 		return;
 	}
 
-	id3_to_utf8(sb, ((unsigned char *)source)[0], (unsigned char*)source+1, source_size-1, noquiet);
+	id3_to_utf8(sb, source[0], source+1, source_size-1, noquiet);
 
 	if(sb->fill) debug1("UTF-8 string (the first one): %s", sb->p);
 	else if(noquiet) error("unable to convert string to UTF-8 (out of memory, junk input?)!");
@@ -247,14 +309,14 @@ void id3_to_utf8(mpg123_string *sb, unsigned char encoding, const unsigned char 
 	text_converters[encoding](sb, source, source_size, noquiet);
 }
 
-char *next_text(char* prev, int encoding, size_t limit)
+static unsigned char *next_text(unsigned char* prev, unsigned char encoding, size_t limit)
 {
-	char *text = prev;
+	unsigned char *text = prev;
 	size_t width = encoding_widths[encoding];
 
 	/* So I go lengths to find zero or double zero...
 	   Remember bug 2834636: Only check for aligned NULLs! */
-	while(text-prev < (long)limit)
+	while(text-prev < (ssize_t)limit)
 	{
 		if(text[0] == 0)
 		{
@@ -279,7 +341,7 @@ char *next_text(char* prev, int encoding, size_t limit)
 	return text;
 }
 
-static const char *enc_name(int enc)
+static const char *enc_name(unsigned char enc)
 {
 	switch(enc)
 	{
@@ -291,7 +353,7 @@ static const char *enc_name(int enc)
 	}
 }
 
-static void process_text(mpg123_handle *fr, char *realdata, size_t realsize, char *id)
+static void process_text(mpg123_handle *fr, unsigned char *realdata, size_t realsize, char *id)
 {
 	/* Text encoding          $xx */
 	/* The text (encoded) ... */
@@ -307,24 +369,82 @@ static void process_text(mpg123_handle *fr, char *realdata, size_t realsize, cha
 	if(VERBOSE4) fprintf(stderr, "Note: ID3v2 %c%c%c%c text frame: %s\n", id[0], id[1], id[2], id[3], t->text.p);
 }
 
+static void process_picture(mpg123_handle *fr, unsigned char *realdata, size_t realsize)
+{
+	unsigned char encoding = realdata[0];
+	mpg123_picture *i = NULL;
+	unsigned char* workpoint;
+	if(realsize == 0)
+	{
+		debug("Empty id3 data!");
+		return;
+	}
+	if(VERBOSE4) fprintf(stderr, "Note: Storing picture from APIC frame.\n");
+	/* decompose realdata accordingly */
+	i = add_picture(fr);
+	if(i == NULL)
+	{
+		if(NOQUIET) error("Unable to attach new picture!");
+		return;
+	}
+	realdata++; realsize--;
+	/* get mime type (encoding is always latin-1) */
+	workpoint = next_text(realdata, 0, realsize);
+	if (workpoint == NULL) {
+		pop_picture(fr);
+		if (NOQUIET) error("Unable to get mime type for picture; skipping picture.");
+		return;
+	}
+	id3_to_utf8(&i->mime_type, 0, realdata, workpoint - realdata, NOQUIET);
+	realsize -= workpoint - realdata;
+	realdata = workpoint;
+	/* get picture type */
+	i->type = realdata[0];
+	realdata++; realsize--;
+	/* get description (encoding is encoding) */
+	workpoint = next_text(realdata, encoding, realsize);
+	if (workpoint == NULL) {
+		if (NOQUIET) error("Unable to get description for picture; skipping picture.");
+		pop_picture(fr);
+		return;
+	}
+	id3_to_utf8(&i->description, encoding, realdata, workpoint - realdata, NOQUIET);
+	realsize -= workpoint - realdata;
+	if (realsize == 0) {
+		if (NOQUIET) error("No picture data defined; skipping picture.");
+		pop_picture(fr);
+		return;
+	}
+	/* store_id3_picture(i, picture, realsize, NOQUIET)) */
+	i->data = (unsigned char*)malloc(realsize);
+	if (i->data == NULL) {
+		if (NOQUIET) error("Unable to allocate memory for picture; skipping picture");
+		pop_picture(fr);
+		return;
+	}
+	memcpy(i->data, workpoint, realsize);
+	i->size = realsize;
+	if(VERBOSE4) fprintf(stderr, "Note: ID3v2 APIC picture frame of type: %d\n", i->type);
+}
+
 /* Store a new comment that perhaps is a RVA / RVA_ALBUM/AUDIOPHILE / RVA_MIX/RADIO one
    Special gimmik: It also stores USLT to the texts. Stucture is the same as for comments. */
-static void process_comment(mpg123_handle *fr, enum frame_types tt, char *realdata, size_t realsize, int rva_level, char *id)
+static void process_comment(mpg123_handle *fr, enum frame_types tt, unsigned char *realdata, size_t realsize, int rva_level, char *id)
 {
 	/* Text encoding          $xx */
 	/* Language               $xx xx xx */
 	/* Short description (encoded!)      <text> $00 (00) */
 	/* Then the comment text (encoded) ... */
-	char  encoding = realdata[0];
-	char *lang    = realdata+1; /* I'll only use the 3 bytes! */
-	char *descr   = realdata+4;
-	char *text = NULL;
+	unsigned char  encoding = realdata[0];
+	unsigned char *lang     = realdata+1; /* I'll only use the 3 bytes! */
+	unsigned char *descr    = realdata+4;
+	unsigned char *text     = NULL;
 	mpg123_text *xcom = NULL;
 	mpg123_text localcom; /* UTF-8 variant for local processing. */
 
-	if((int)realsize < descr-realdata)
+	if(realsize < (size_t)(descr-realdata))
 	{
-		if(NOQUIET) error1("Invalid frame size of %lu (too small for anything).", (unsigned long)realsize);
+		if(NOQUIET) error1("Invalid frame size of %"SIZE_P" (too small for anything).", (size_p)realsize);
 		return;
 	}
 	xcom = (tt == uslt ? add_text(fr) : add_comment(fr));
@@ -393,14 +513,14 @@ static void process_comment(mpg123_handle *fr, enum frame_types tt, char *realda
 	free_mpg123_text(&localcom);
 }
 
-void process_extra(mpg123_handle *fr, char* realdata, size_t realsize, int rva_level, char *id)
+static void process_extra(mpg123_handle *fr, unsigned char* realdata, size_t realsize, int rva_level, char *id)
 {
 	/* Text encoding          $xx */
 	/* Description        ... $00 (00) */
 	/* Text ... */
-	char encoding = realdata[0];
-	char *descr  = realdata+1; /* remember, the encoding is descr[-1] */
-	char *text;
+	unsigned char encoding = realdata[0];
+	unsigned char *descr   = realdata+1; /* remember, the encoding is descr[-1] */
+	unsigned char *text;
 	mpg123_text *xex;
 	mpg123_text localex;
 
@@ -485,7 +605,7 @@ void process_extra(mpg123_handle *fr, char* realdata, size_t realsize, int rva_l
    Note that not all frames survived to 2.4; the mapping goes to 2.3 .
    A notable miss is the old RVA frame, which is very unspecific anyway.
    This function returns -1 when a not known 3 char ID was encountered, 0 otherwise. */
-int promote_framename(mpg123_handle *fr, char *id) /* fr because of VERBOSE macros */
+static int promote_framename(mpg123_handle *fr, char *id) /* fr because of VERBOSE macros */
 {
 	size_t i;
 	char *old[] =
@@ -536,7 +656,6 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 	unsigned char flags = 0;
 	int ret = 1;
 	int ret2;
-	unsigned char* tagdata = NULL;
 	unsigned char major = first4bytes & 0xff;
 	debug1("ID3v2: major tag version: %i", major);
 	if(major == 0xff) return 0; /* Invalid... */
@@ -574,7 +693,6 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 		res =  (((unsigned long) (buf)[0]) << 16) \
 		     | (((unsigned long) (buf)[1]) << 8) \
 		     |  ((unsigned long) (buf)[2]) \
-		,1 \
 	)
 
 	/* length-10 or length-20 (footer present); 4 synchsafe integers == 28 bit number  */
@@ -588,10 +706,17 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 #ifndef NO_ID3V2
 	if(VERBOSE2) fprintf(stderr,"Note: ID3v2.%i rev %i tag of %lu bytes\n", major, buf[0], length);
 	/* skip if unknown version/scary flags, parse otherwise */
-	if((flags & UNKNOWN_FLAGS) || (major > 4) || (major < 2))
+	if(fr->p.flags & MPG123_SKIP_ID3V2 || ((flags & UNKNOWN_FLAGS) || (major > 4) || (major < 2)))
 	{
-		/* going to skip because there are unknown flags set */
-		if(NOQUIET) warning2("ID3v2: Won't parse the ID3v2 tag with major version %u and flags 0x%xu - some extra code may be needed", major, flags);
+		if(NOQUIET)
+		{
+			if(fr->p.flags & MPG123_SKIP_ID3V2)
+			{
+				if(VERBOSE3) fprintf(stderr, "Note: Skipping ID3v2 tag per user request.\n");
+			}
+			else /* Must be because of scary Tag properties. */
+			warning2("ID3v2: Won't parse the ID3v2 tag with major version %u and flags 0x%xu - some extra code may be needed", major, flags);
+		}
 #endif
 		if((ret2 = fr->rd->skip_bytes(fr,length)) < 0) /* will not store data in backbuff! */
 		ret = ret2;
@@ -599,6 +724,7 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 	}
 	else
 	{
+		unsigned char* tagdata = NULL;
 		fr->id3v2.version = major;
 		/* try to interpret that beast */
 		if((tagdata = (unsigned char*) malloc(length+1)) != NULL)
@@ -647,6 +773,7 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 						{
 							/* 4 or 3 bytes id */
 							strncpy(id, (char*) tagdata+pos, head_part);
+							id[head_part] = 0; /* terminate for 3 or 4 bytes */
 							pos += head_part;
 							tagpos += head_part;
 							/* size as 32 bits or 28 bits */
@@ -693,7 +820,7 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 								if(NOQUIET) warning("ID3v2: skipping invalid/unsupported frame");
 								continue;
 							}
-							
+
 							for(i = 0; i < KNOWN_FRAMES; ++i)
 							if(!strncmp(frame_type[i], id, 4)){ tt = i; break; }
 
@@ -736,10 +863,10 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 								{
 									case comment:
 									case uslt:
-										process_comment(fr, tt, (char*)realdata, realsize, comment+1, id);
+										process_comment(fr, tt, realdata, realsize, comment+1, id);
 									break;
 									case extra: /* perhaps foobar2000's work */
-										process_extra(fr, (char*)realdata, realsize, extra+1, id);
+										process_extra(fr, realdata, realsize, extra+1, id);
 									break;
 									case rva2: /* "the" RVA tag */
 									{
@@ -773,8 +900,13 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 									break;
 									/* non-rva metainfo, simply store... */
 									case text:
-										process_text(fr, (char*)realdata, realsize, id);
+										process_text(fr, realdata, realsize, id);
 									break;
+									case picture:
+										if (fr->p.flags & MPG123_PICTURE)
+										process_picture(fr, realdata, realsize);
+
+										break;
 									default: if(NOQUIET) error1("ID3v2: unknown frame type %i", tt);
 								}
 								if((flags & UNSYNC_FLAG) || (fflags & UNSYNC_FFLAG)) free(realdata);
@@ -797,7 +929,7 @@ int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes)
 			else
 			{
 				/* There are tags with zero length. Strictly not an error, then. */
-				if(length > 0 && NOQUIET) error("ID3v2: Duh, not able to read ID3v2 tag data.");
+				if(length > 0 && NOQUIET && ret2 != MPG123_NEED_MORE) error("ID3v2: Duh, not able to read ID3v2 tag data.");
 				ret = ret2;
 			}
 tagparse_cleanup:
@@ -858,7 +990,7 @@ static void convert_latin1(mpg123_string *sb, const unsigned char* s, size_t l, 
 	 1: big endian
 
 	This modifies source and len to indicate the data _after_ the BOM(s).
-	Note on nasty data: The last encountered BOM determines the endianess.
+	Note on nasty data: The last encountered BOM determines the endianness.
 	I have seen data with multiple BOMS, namely from "the" id3v2 program.
 	Not nice, but what should I do?
 */
@@ -905,7 +1037,7 @@ static void convert_utf16bom(mpg123_string *sb, const unsigned char* s, size_t l
 	debug1("convert_utf16 with length %lu", (unsigned long)l);
 
 	bom_endian = check_bom(&s, &l);
-	debug1("UTF16 endianess check: %i", bom_endian);
+	debug1("UTF16 endianness check: %i", bom_endian);
 
 	if(bom_endian == -1) /* little-endian */
 	{
@@ -963,7 +1095,7 @@ static void convert_utf16bom(mpg123_string *sb, const unsigned char* s, size_t l
 			*p++ = 0x80 | ((codepoint>>6) & 0x3f);
 			*p++ = 0x80 | (codepoint & 0x3f);
 		}
-		else if (codepoint < 0x200000) 
+		else if (codepoint < 0x200000)
 		{
 			*p++ = (unsigned char) (0xf0 | codepoint>>18);
 			*p++ = (unsigned char) (0x80 | ((codepoint>>12) & 0x3f));

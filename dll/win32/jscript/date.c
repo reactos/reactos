@@ -83,9 +83,14 @@ static const WCHAR setYearW[] = {'s','e','t','Y','e','a','r',0};
 static const WCHAR UTCW[] = {'U','T','C',0};
 static const WCHAR parseW[] = {'p','a','r','s','e',0};
 
+static inline DateInstance *date_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, DateInstance, dispex);
+}
+
 static inline DateInstance *date_this(vdisp_t *jsthis)
 {
-    return is_vclass(jsthis, JSCLASS_DATE) ? (DateInstance*)jsthis->u.jsdisp : NULL;
+    return is_vclass(jsthis, JSCLASS_DATE) ? date_from_jsdisp(jsthis->u.jsdisp) : NULL;
 }
 
 /*ECMA-262 3rd Edition    15.9.1.2 */
@@ -1906,20 +1911,11 @@ static HRESULT Date_setYear(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
     return S_OK;
 }
 
-static HRESULT Date_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Date_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     TRACE("\n");
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    default:
-        FIXME("unimplemented flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
+    return dateobj_to_string(date_from_jsdisp(jsthis), r);
 }
 
 static const builtin_prop_t Date_props[] = {
@@ -1971,7 +1967,7 @@ static const builtin_prop_t Date_props[] = {
 
 static const builtin_info_t Date_info = {
     JSCLASS_DATE,
-    {NULL, Date_value, 0},
+    {NULL, NULL,0, Date_get_value},
     sizeof(Date_props)/sizeof(*Date_props),
     Date_props,
     NULL,
@@ -1980,7 +1976,7 @@ static const builtin_info_t Date_info = {
 
 static const builtin_info_t DateInst_info = {
     JSCLASS_DATE,
-    {NULL, Date_value, 0},
+    {NULL, NULL,0, Date_get_value},
     0, NULL,
     NULL,
     NULL
@@ -2495,7 +2491,7 @@ static const builtin_prop_t DateConstr_props[] = {
 
 static const builtin_info_t DateConstr_info = {
     JSCLASS_FUNCTION,
-    {NULL, Function_value, 0},
+    DEFAULT_FUNCTION_VALUE,
     sizeof(DateConstr_props)/sizeof(*DateConstr_props),
     DateConstr_props,
     NULL,

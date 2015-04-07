@@ -12,8 +12,11 @@ IDI_NTOBJECTDIROPEN ICON "resources/3.ico"
 IDI_NTOBJECTITEM    ICON "resources/4.ico"
 IDI_NTOBJECTDEVICE  ICON "resources/5.ico"
 IDI_NTOBJECTPORT    ICON "resources/6.ico"
+IDI_REGISTRYKEY     ICON "resources/7.ico"
+IDI_REGISTRYVALUE   ICON "resources/8.ico"
 
 IDR_NTOBJECTFOLDER REGISTRY "resources/rgs/ntobjectfolder.rgs"
+IDR_REGISTRYFOLDER REGISTRY "resources/rgs/regfolder.rgs"
 
 /* UTF-8 */
 #pragma code_page(65001)

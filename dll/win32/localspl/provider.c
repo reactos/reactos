@@ -83,9 +83,7 @@ static const WCHAR bs_ports_bsW[] = {'\\','P','o','r','t','s','\\',0};
 static const WCHAR configuration_fileW[] = {'C','o','n','f','i','g','u','r','a','t','i','o','n',' ','F','i','l','e',0};
 static const WCHAR datatypeW[] = {'D','a','t','a','t','y','p','e',0};
 static const WCHAR data_fileW[] = {'D','a','t','a',' ','F','i','l','e',0};
-static const WCHAR default_devmodeW[] = {'D','e','f','a','u','l','t',' ','D','e','v','M','o','d','e',0};
 static const WCHAR dependent_filesW[] = {'D','e','p','e','n','d','e','n','t',' ','F','i','l','e','s',0};
-static const WCHAR descriptionW[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR driverW[] = {'D','r','i','v','e','r',0};
 static const WCHAR emptyW[] = {0};
 static const WCHAR fmt_driversW[] = { 'S','y','s','t','e','m','\\',
@@ -100,13 +98,10 @@ static const WCHAR fmt_printprocessorsW[] = { 'S','y','s','t','e','m','\\',
                                   'P','r','i','n','t','\\',
                                   'E','n','v','i','r','o','n','m','e','n','t','s','\\','%','s','\\',
                                   'P','r','i','n','t',' ','P','r','o','c','e','s','s','o','r','s',0 };
-static const WCHAR hardwareidW[] = {'H','a','r','d','w','a','r','e','I','D',0};
 static const WCHAR help_fileW[] = {'H','e','l','p',' ','F','i','l','e',0};
 static const WCHAR ia64_envnameW[] = {'W','i','n','d','o','w','s',' ','I','A','6','4',0};
 static const WCHAR ia64_subdirW[] = {'i','a','6','4',0};
 static const WCHAR localportW[] = {'L','o','c','a','l',' ','P','o','r','t',0};
-static const WCHAR locationW[] = {'L','o','c','a','t','i','o','n',0};
-static const WCHAR manufacturerW[] = {'M','a','n','u','f','a','c','t','u','r','e','r',0};
 static const WCHAR monitorW[] = {'M','o','n','i','t','o','r',0};
 static const WCHAR monitorsW[] = {'S','y','s','t','e','m','\\',
                                 'C','u', 'r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
@@ -114,10 +109,6 @@ static const WCHAR monitorsW[] = {'S','y','s','t','e','m','\\',
                                 'P','r','i','n','t','\\',
                                 'M','o','n','i','t','o','r','s','\\',0};
 static const WCHAR monitorUIW[] = {'M','o','n','i','t','o','r','U','I',0};
-static const WCHAR nameW[] = {'N','a','m','e',0};
-static const WCHAR oem_urlW[] = {'O','E','M',' ','U','r','l',0};
-static const WCHAR parametersW[] = {'P','a','r','a','m','e','t','e','r','s',0};
-static const WCHAR portW[] = {'P','o','r','t',0};
 static const WCHAR previous_namesW[] = {'P','r','e','v','i','o','u','s',' ','N','a','m','e','s',0};
 static const WCHAR printersW[] = {'S','y','s','t','e','m','\\',
                                   'C','u', 'r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',

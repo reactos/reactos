@@ -110,7 +110,7 @@ SwDispatchPnp(
     Status = KsServiceBusEnumPnpRequest(DeviceObject, Irp);
 
     /* check if the request was for a pdo */
-    if (!ChildDevice)
+    if (ChildDevice)
     {
         if (Status != STATUS_NOT_SUPPORTED)
         {
@@ -144,9 +144,9 @@ SwDispatchPnp(
     if (!NT_SUCCESS(Status))
     {
         /* failed to get pnp object */
-        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return Status;
+        return STATUS_NOT_SUPPORTED;
     }
 
     /* sanity check */
@@ -311,7 +311,7 @@ SwDispatchCreate(
     /* check if the device object is a child device */
     Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
 
-    DPRINT1("SwDispatchCreate %x\n", Status);
+    DPRINT("SwDispatchCreate %x\n", Status);
 
     /* check for success */
     if (NT_SUCCESS(Status))
@@ -325,7 +325,7 @@ SwDispatchCreate(
         }
         /* perform the create request */
         Status = KsServiceBusEnumCreateRequest(DeviceObject, Irp);
-        DPRINT1("SwDispatchCreate %x\n", Status);
+        DPRINT("SwDispatchCreate %x\n", Status);
     }
 
     /* check the irp is pending */

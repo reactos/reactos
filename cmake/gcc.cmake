@@ -38,6 +38,10 @@ endif()
 
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
+
+# Prevent GCC from searching any of the default directories
+add_compile_flags("-nostdinc")
+
 if(GCC_VERSION VERSION_GREATER 4.7)
     add_compile_flags("-mstackrealign")
 endif()
@@ -368,7 +372,7 @@ endmacro()
 set(PSEH_LIB "pseh")
 
 # Macros
-if(PCH AND (NOT ENABLE_CCACHE))
+if(PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE))
     add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
     macro(add_pch _target _pch _sources)
         # When including x.h GCC looks for x.h.gch first

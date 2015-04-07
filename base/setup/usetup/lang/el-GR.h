@@ -1524,6 +1524,12 @@ MUI_ERROR elGRErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_DIRECTORY_NAME,
+        "Invalid directory name.\n"
+        "\n"
+        "  * Press any key to continue."
+    },
+    {
         //ERROR_PARTITION_TABLE_FULL,
         "You can not create a new primary or extended partition in the\n"
         "partition table of this disk because the partition table is full.\n"

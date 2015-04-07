@@ -398,6 +398,16 @@ UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+/*
+ RealUserDrawCaption: This function is passed through RegisterUserApiHook to uxtheme
+                      to call it when the classic caption is needed to be drawn.
+ */
+LRESULT WINAPI
+RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags)
+{
+    return DefWndNCPaint(hWnd, HRGN_WINDOW, -1);
+}
+
 static void
 UserPaintCaption(HWND hwnd)
 {
@@ -411,6 +421,11 @@ UserPaintCaption(HWND hwnd)
      */
     if(gpsi->dwSRVIFlags & SRVINFO_APIHOOK)
     {
+        /* 
+         * This will cause uxtheme to either paint the themed caption or call
+         * RealUserDrawCaption in order to draw the classic caption when themes
+         * are disabled but the themes service is enabled
+         */
         SendMessage(hwnd, WM_NCUAHDRAWCAPTION,0,0);
     }
     else

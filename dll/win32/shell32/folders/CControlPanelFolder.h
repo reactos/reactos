@@ -26,15 +26,12 @@ class CControlPanelFolder :
     public CComCoClass<CControlPanelFolder, &CLSID_ControlPanel>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2,
-    public IContextMenu2
+    public IPersistFolder2
 {
     private:
         /* both paths are parsible from the desktop */
         LPITEMIDLIST pidlRoot;  /* absolute pidl */
         int dwAttributes;       /* attributes returned by GetAttributesOf FIXME: use it */
-        LPCITEMIDLIST *apidl;
-        UINT cidl;
 
         HRESULT WINAPI ExecuteFromIdList(LPCITEMIDLIST pidl);
 
@@ -73,14 +70,6 @@ class CControlPanelFolder :
         // IPersistFolder2
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
 
-        // IContextMenu
-        virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-        virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-        virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
-
-        // IContextMenu2
-        virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
         DECLARE_REGISTRY_RESOURCEID(IDR_CONTROLPANEL)
         DECLARE_NOT_AGGREGATABLE(CControlPanelFolder)
 
@@ -92,9 +81,35 @@ class CControlPanelFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder, IPersistFolder)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         END_COM_MAP()
+};
+
+class CCPLItemMenu:
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IContextMenu2
+{
+private:
+    LPCITEMIDLIST *m_apidl;
+    UINT m_cidl;
+
+public:
+    CCPLItemMenu();
+    ~CCPLItemMenu();
+    HRESULT WINAPI Initialize(UINT cidl, PCUITEMID_CHILD_ARRAY apidl);
+    HRESULT WINAPI FinalConstruct();
+
+    // IContextMenu
+    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+
+    // IContextMenu2
+    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    BEGIN_COM_MAP(CCPLItemMenu)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+    END_COM_MAP()
 };
 
 #endif /* _SHFLDR_CPANEL_H_ */

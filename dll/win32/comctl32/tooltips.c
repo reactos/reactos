@@ -221,7 +221,7 @@ TOOLTIPS_customdraw_fill(const TOOLTIPS_INFO *infoPtr, NMTTCUSTOMDRAW *lpnmttcd,
 static inline DWORD
 TOOLTIPS_notify_customdraw (DWORD dwDrawStage, NMTTCUSTOMDRAW *lpnmttcd)
 {
-    LRESULT result = CDRF_DODEFAULT;
+    LRESULT result;
     lpnmttcd->nmcd.dwDrawStage = dwDrawStage;
 
     TRACE("Notifying stage %d, flags %x, id %x\n", lpnmttcd->nmcd.dwDrawStage,
@@ -471,12 +471,13 @@ TOOLTIPS_GetTipText (const TOOLTIPS_INFO *infoPtr, INT nTool, WCHAR *buffer)
 {
     TTTOOL_INFO *toolPtr = &infoPtr->tools[nTool];
 
-    if (IS_INTRESOURCE(toolPtr->lpszText) && toolPtr->hinst) {
-	/* load a resource */
-	TRACE("load res string %p %x\n",
-	       toolPtr->hinst, LOWORD(toolPtr->lpszText));
-	LoadStringW (toolPtr->hinst, LOWORD(toolPtr->lpszText),
-		       buffer, INFOTIPSIZE);
+    /* always NULL-terminate the buffer, just in case we fail to load the string */
+    buffer[0] = '\0';
+    if (IS_INTRESOURCE(toolPtr->lpszText)) {
+        HINSTANCE hinst = toolPtr->hinst ? toolPtr->hinst : GetModuleHandleW(NULL);
+        /* load a resource */
+        TRACE("load res string %p %x\n", hinst, LOWORD(toolPtr->lpszText));
+        LoadStringW (hinst, LOWORD(toolPtr->lpszText), buffer, INFOTIPSIZE);
     }
     else if (toolPtr->lpszText) {
 	if (toolPtr->lpszText == LPSTR_TEXTCALLBACKW) {
@@ -492,7 +493,6 @@ TOOLTIPS_GetTipText (const TOOLTIPS_INFO *infoPtr, INT nTool, WCHAR *buffer)
     }
     else {
 	/* no text available */
-        buffer[0] = '\0';
     }
 
     TRACE("%s\n", debugstr_w(buffer));

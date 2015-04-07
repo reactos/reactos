@@ -1506,6 +1506,12 @@ MUI_ERROR frFRErrorEntries[] =
         "ENTRêE = RedÇmarrer l'ordinateur"
     },
     {
+        //ERROR_DIRECTORY_NAME,
+        "Nom de rÇpertoire invalide.\n"
+        "\n"
+        "  * Appuyer sur une touche pour continuer."
+    },
+    {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
         "The selected partition is not large enough to install ReactOS.\n"
         "The install partition must have a size of at least %lu MB.\n"

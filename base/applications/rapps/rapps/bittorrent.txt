@@ -5,7 +5,7 @@
 Name = BitTorrent
 Version = 7.9.2
 License = Freeware for non-commercial uses
-Description = The Original BitTorrent Client.
+Description = The original BitTorrent client.
 Size = 1.61 MB
 Category = 5
 URLSite = http://www.bittorrent.com/
@@ -15,6 +15,10 @@ CDPath = none
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
 Description = Der Original BitTorrent Client.
+
+[Section.040a]
+License = Gratuito para uso no comercial
+Description = El cliente de BitTorrent original.
 
 [Section.0410]
 Description = L'originale Client BitTorrent.

@@ -12,6 +12,7 @@
 #define NDEBUG
 
 #include "emulator.h"
+#include "../../memory.h"
 
 #include "dos.h"
 #include "dos/dem.h"
@@ -41,7 +42,7 @@ WORD DosCreateFileEx(LPWORD Handle,
 
     //
     // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
-    // explains what are those AccessShareModes (see the uStyle flag).
+    // explains what those AccessShareModes are (see the uStyle flag).
     //
 
     /* Parse the access mode */
@@ -228,7 +229,6 @@ WORD DosCreateFileEx(LPWORD Handle,
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(FileHandle);
-
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -268,7 +268,6 @@ WORD DosCreateFile(LPWORD Handle,
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(FileHandle);
-
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -297,7 +296,7 @@ WORD DosOpenFile(LPWORD Handle,
 
     //
     // The article about OpenFile API: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365430(v=vs.85).aspx
-    // explains what are those AccessShareModes (see the uStyle flag).
+    // explains what those AccessShareModes are (see the uStyle flag).
     //
 
     /* Parse the access mode */
@@ -380,7 +379,6 @@ WORD DosOpenFile(LPWORD Handle,
 
     /* Open the DOS handle */
     DosHandle = DosOpenHandle(FileHandle);
-
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -394,129 +392,110 @@ WORD DosOpenFile(LPWORD Handle,
 }
 
 WORD DosReadFile(WORD FileHandle,
-                 LPVOID Buffer,
+                 DWORD Buffer,
                  WORD Count,
                  LPWORD BytesRead)
 {
     WORD Result = ERROR_SUCCESS;
-    DWORD BytesRead32 = 0;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
     DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
-
-    if (IsConsoleHandle(Handle))
+    if (SftEntry == NULL)
     {
-        CHAR Character;
-
-        /*
-         * Use BIOS Get Keystroke function
-         */
-
-        /* Save AX */
-        USHORT AX = getAX();
-
-        for (BytesRead32 = 0; BytesRead32 < Count; BytesRead32++)
-        {
-            /* Call the BIOS INT 16h, AH=00h "Get Keystroke" */
-            setAH(0x00);
-            Int32Call(&DosContext, BIOS_KBD_INTERRUPT);
-
-            /* Retrieve the character in AL (scan code is in AH) */
-            Character = getAL();
-
-            if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, Character);
-
-            ((PCHAR)Buffer)[BytesRead32] = Character;
-
-            /* Stop on first carriage return */
-            if (Character == '\r')
-            {
-                if (DoEcho) DosPrintCharacter(DOS_OUTPUT_HANDLE, '\n');
-                break;
-            }
-
-            // BytesRead32++;
-        }
-
-        /* Restore AX */
-        setAX(AX);
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
     }
-    else
+
+    if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
     {
+        DWORD BytesRead32 = 0;
+        LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
+        ASSERT(LocalBuffer != NULL);
+
         /* Read the file */
-        if (!ReadFile(Handle, Buffer, Count /* * sizeof(CHAR) */, &BytesRead32, NULL))
+        if (ReadFile(SftEntry->Handle, LocalBuffer, Count, &BytesRead32, NULL))
+        {
+            /* Write to the memory */
+            MemWrite(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, LOWORD(BytesRead32));
+        }
+        else
         {
             /* Store the error code */
             Result = (WORD)GetLastError();
         }
-    }
 
-    /* The number of bytes read is always 16-bit */
-    *BytesRead = LOWORD(BytesRead32);
+        /* The number of bytes read is always 16-bit */
+        *BytesRead = LOWORD(BytesRead32);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
+    }
+    else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
+    {
+        if (!SftEntry->DeviceNode->ReadRoutine) return ERROR_INVALID_FUNCTION;
+
+        /* Read the device */
+        SftEntry->DeviceNode->ReadRoutine(SftEntry->DeviceNode, Buffer, &Count);
+        *BytesRead = Count;
+    }
+    else
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
 
     /* Return the error code */
     return Result;
 }
 
 WORD DosWriteFile(WORD FileHandle,
-                  LPVOID Buffer,
+                  DWORD Buffer,
                   WORD Count,
                   LPWORD BytesWritten)
 {
     WORD Result = ERROR_SUCCESS;
-    DWORD BytesWritten32 = 0;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
     DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
-
-    if (IsConsoleHandle(Handle))
+    if (SftEntry == NULL)
     {
-        /*
-         * Use BIOS Teletype function
-         */
-
-        /* Save AX and BX */
-        USHORT AX = getAX();
-        USHORT BX = getBX();
-
-        // FIXME: Use BIOS Write String function INT 10h, AH=13h ??
-
-        for (BytesWritten32 = 0; BytesWritten32 < Count; BytesWritten32++)
-        {
-            /* Set the parameters */
-            setAL(((PCHAR)Buffer)[BytesWritten32]);
-            setBL(DOS_CHAR_ATTRIBUTE);
-            setBH(Bda->VideoPage);
-
-            /* Call the BIOS INT 10h, AH=0Eh "Teletype Output" */
-            setAH(0x0E);
-            Int32Call(&DosContext, BIOS_VIDEO_INTERRUPT);
-
-            // BytesWritten32++;
-        }
-
-        /* Restore AX and BX */
-        setBX(BX);
-        setAX(AX);
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
     }
-    else
+
+    if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
     {
+        DWORD BytesWritten32 = 0;
+        LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
+        ASSERT(LocalBuffer != NULL);
+
+        /* Read from the memory */
+        MemRead(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, Count);
+
         /* Write the file */
-        if (!WriteFile(Handle, Buffer, Count /* * sizeof(CHAR) */, &BytesWritten32, NULL))
+        if (!WriteFile(SftEntry->Handle, LocalBuffer, Count, &BytesWritten32, NULL))
         {
             /* Store the error code */
             Result = (WORD)GetLastError();
         }
-    }
 
-    /* The number of bytes written is always 16-bit */
-    *BytesWritten = LOWORD(BytesWritten32);
+        /* The number of bytes written is always 16-bit */
+        *BytesWritten = LOWORD(BytesWritten32);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
+    }
+    else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
+    {
+        if (!SftEntry->DeviceNode->WriteRoutine) return ERROR_INVALID_FUNCTION;
+
+        /* Read the device */
+        SftEntry->DeviceNode->WriteRoutine(SftEntry->DeviceNode, Buffer, &Count);
+        *BytesWritten = Count;
+    }
+    else
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
 
     /* Return the error code */
     return Result;
@@ -529,15 +508,29 @@ WORD DosSeekFile(WORD FileHandle,
 {
     WORD Result = ERROR_SUCCESS;
     DWORD FilePointer;
-    HANDLE Handle = DosGetRealHandle(FileHandle);
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
     DPRINT("DosSeekFile: FileHandle 0x%04X, Offset 0x%08X, Origin 0x%02X\n",
            FileHandle,
            Offset,
            Origin);
 
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return ERROR_INVALID_HANDLE;
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (SftEntry->Type == DOS_SFT_ENTRY_NONE)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
+    else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
+    {
+        /* For character devices, always return success */
+        return ERROR_SUCCESS;
+    }
 
     /* Check if the origin is valid */
     if (Origin != FILE_BEGIN && Origin != FILE_CURRENT && Origin != FILE_END)
@@ -545,17 +538,7 @@ WORD DosSeekFile(WORD FileHandle,
         return ERROR_INVALID_FUNCTION;
     }
 
-    /* Move the file pointer */
-    if (IsConsoleHandle(Handle))
-    {
-        /* Always succeeds when seeking a console handle */
-        FilePointer = 0;
-        Result = ERROR_SUCCESS;
-    }
-    else
-    {
-        FilePointer = SetFilePointer(Handle, Offset, NULL, Origin);
-    }
+    FilePointer = SetFilePointer(SftEntry->Handle, Offset, NULL, Origin);
 
     /* Check if there's a possibility the operation failed */
     if (FilePointer == INVALID_SET_FILE_POINTER)
@@ -579,17 +562,38 @@ WORD DosSeekFile(WORD FileHandle,
 
 BOOL DosFlushFileBuffers(WORD FileHandle)
 {
-    HANDLE Handle = DosGetRealHandle(FileHandle);
+    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
 
-    /* Make sure the handle is valid */
-    if (Handle == INVALID_HANDLE_VALUE) return FALSE;
+    if (SftEntry == NULL)
+    {
+        /* Invalid handle */
+        return ERROR_INVALID_HANDLE;
+    }
 
-    /*
-     * This function can either flush files back to disks, or flush
-     * console input buffers, in which case there is no need to check
-     * whether the handle is a console handle. FlushFileBuffers()
-     * automatically does this check and calls FlushConsoleInputBuffer()
-     * if needed.
-     */
-    return FlushFileBuffers(Handle);
+    switch (SftEntry->Type)
+    {
+        case DOS_SFT_ENTRY_WIN32:
+        {
+            return FlushFileBuffers(SftEntry->Handle);
+        }
+
+        case DOS_SFT_ENTRY_DEVICE:
+        {
+            if (SftEntry->DeviceNode->FlushInputRoutine)
+                SftEntry->DeviceNode->FlushInputRoutine(SftEntry->DeviceNode);
+
+            if (SftEntry->DeviceNode->FlushOutputRoutine)
+                SftEntry->DeviceNode->FlushOutputRoutine(SftEntry->DeviceNode);
+
+            return TRUE;
+        }
+        
+        default:
+        {
+            /* Invalid handle */
+            return FALSE;
+        }
+    }
 }
+
+/* EOF */

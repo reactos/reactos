@@ -319,6 +319,9 @@ NTSTATUS TiCloseFileObject(
             break;
     }
 
+    if (NT_SUCCESS(Status))
+        ExFreePoolWithTag(Context, TRANS_CONTEXT_TAG);
+
     Irp->IoStatus.Status = Status;
 
     return Irp->IoStatus.Status;

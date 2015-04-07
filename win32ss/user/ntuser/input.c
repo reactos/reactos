@@ -523,8 +523,15 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 
            MsqDestroyMessageQueue(ptiFrom);
 
+           if (CurIcon)
+           {
+              // Could be global. Keep it above the water line!
+              UserReferenceObject(CurIcon);
+           }
+
            if (CurIcon && UserObjectInDestroy(UserHMGetHandle(CurIcon)))
            {
+              UserDereferenceObject(CurIcon);
               CurIcon = NULL;
            }
 
@@ -533,8 +540,8 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
            // Pass cursor From if To is null. Pass test_SetCursor parent_id == current pti ID.
            if (CurIcon && ptiTo->MessageQueue->CursorObject == NULL)
            {
+              ERR("ptiTo receiving ptiFrom Cursor\n");
               ptiTo->MessageQueue->CursorObject = CurIcon;
-              UserReferenceObject(CurIcon);
            }
 
            ptiFrom->MessageQueue->cThreads++;

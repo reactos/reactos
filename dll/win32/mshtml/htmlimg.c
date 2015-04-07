@@ -671,6 +671,26 @@ static HRESULT HTMLImgElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
     return IHTMLImgElement_get_readyState(&This->IHTMLImgElement_iface, p);
 }
 
+static void HTMLImgElement_traverse(HTMLDOMNode *iface, nsCycleCollectionTraversalCallback *cb)
+{
+    HTMLImgElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsimg)
+        note_cc_edge((nsISupports*)This->nsimg, "This->nsimg", cb);
+}
+
+static void HTMLImgElement_unlink(HTMLDOMNode *iface)
+{
+    HTMLImgElement *This = impl_from_HTMLDOMNode(iface);
+
+    if(This->nsimg) {
+        nsIDOMHTMLImageElement *nsimg = This->nsimg;
+
+        This->nsimg = NULL;
+        nsIDOMHTMLImageElement_Release(nsimg);
+    }
+}
+
 static const NodeImplVtbl HTMLImgElementImplVtbl = {
     HTMLImgElement_QI,
     HTMLElement_destructor,
@@ -683,7 +703,12 @@ static const NodeImplVtbl HTMLImgElementImplVtbl = {
     NULL,
     NULL,
     NULL,
-    HTMLImgElement_get_readystate
+    HTMLImgElement_get_readystate,
+    NULL,
+    NULL,
+    NULL,
+    HTMLImgElement_traverse,
+    HTMLImgElement_unlink
 };
 
 static const tid_t HTMLImgElement_iface_tids[] = {
@@ -713,10 +738,7 @@ HRESULT HTMLImgElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem, 
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLImgElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLImageElement, (void**)&ret->nsimg);
-
-    /* Share nsimg reference with nsnode */
-    assert(nsres == NS_OK && (nsIDOMNode*)ret->nsimg == ret->element.node.nsnode);
-    nsIDOMNode_Release(ret->element.node.nsnode);
+    assert(nsres == NS_OK);
 
     *elem = &ret->element;
     return S_OK;

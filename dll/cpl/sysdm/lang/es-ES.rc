@@ -33,7 +33,7 @@ BEGIN
     LTEXT "El Administrador de dispositivos muestra una lista de todos los dispositivos de hardware instalados en su equipo. Puede usarlo para cambiar las propiedades de cualquier dispositivo.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "&Administrador de dispositivos...", IDC_HARDWARE_DEVICE_MANAGER, 138, 48, 106, 15
     GROUPBOX "Asistente de instalación de hardware ", IDC_STATIC, 6, 79, 244, 61
-    ICON IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT "El asistente de instalación de hardware ayuda instalar, desinstalar, reparar, desconectar, expulsar, y configurar dispositivos.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "&Asistente de hardware...", IDC_HARDWARE_WIZARD, 138, 120, 106, 15
     GROUPBOX "Perfiles de hardware ", IDC_STATIC, 6, 149, 244, 61

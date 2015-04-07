@@ -198,6 +198,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Propriétés étendues"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
+    ICON IDI_SHELL_EXTENDED_PROPERTIES, IDI_SHELL_EXTENDED_PROPERTIES, 5, 5, 21, 20, SS_ICON
     LTEXT "Choisissez la propriété étendue que vous voulez pour ce raccourci.", -1, 5, 30, 210, 10
     CHECKBOX "Exécuter avec des droits différents", 14000, 25, 50, 150, 10
     LTEXT "Cette option peut vous permettre d'utiliser ce raccourci en tant qu'autre utilisateur ou de continuer vous-même en protégeant votre ordinateur et vos données des activés de programme non autorisées.", -1, 50, 60, 175, 40
@@ -328,12 +329,15 @@ CAPTION "Outils"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Vérification d'erreurs", -1, 5, 5, 230, 60
+    ICON IDI_SHELL_TOOLS_CHKDSK, IDC_STATIC, 13, 25, 21, 20
     LTEXT "Cette option vérifiera le volume pour éviter les\nerreurs.", -1, 40, 25, 160, 20
     PUSHBUTTON "Vérifier maintenant...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "Défragmentation", -1, 5, 65, 230, 60
+    ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
     LTEXT "Cette option va défragmenter les fichiers sur ce volume", -1, 40, 85, 160, 20
     PUSHBUTTON "Défragmenter maintenant...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "Sauvegarde", -1, 5, 130, 230, 60
+    ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
     LTEXT "Cette option va sauvegarder les fichiers sur le volume.", -1, 40, 150, 160, 20
     PUSHBUTTON "Sauvegarder maintenant...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
@@ -386,7 +390,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
     LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 12, 211, 10
-    LTEXT "Fichier :    ", 14001, 44, 25, 188, 10
+    LTEXT "Fichier :    ", 14001, 44, 25, 188, 20
     GROUPBOX "&Programmes", -1, 7, 42, 249, 187
     CONTROL "Programmes", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Toujours utiliser le progr&amme sélectionné pour ouvrir ce type de fichier", 14003, 20, 193, 225, 10
@@ -585,17 +589,17 @@ BEGIN
     AUTOCHECKBOX "Activer la compression", 28675, 16, 152, 155, 10
 END
 
-IDD_CHECK_DISK DIALOGEX 50, 50, 194, 120
+IDD_CHECK_DISK DIALOGEX 50, 50, 194, 115
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Vérifier le disque"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "Démarrer", IDOK, 53, 100, 60, 14
-    GROUPBOX "Options de vérification", -1, 7, 6, 179, 50
-    PUSHBUTTON "Annuler", IDCANCEL, 118, 100, 60, 14
-    AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 16, 15, 155, 10
+    DEFPUSHBUTTON "Démarrer", IDOK, 63, 95, 60, 14
+    GROUPBOX "Options de vérification", -1, 7, 6, 179, 40
+    PUSHBUTTON "Annuler", IDCANCEL, 128, 95, 60, 14
+    AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 12, 15, 155, 10
     AUTOCHECKBOX "&Scanner pour rechercher et réparer les secteurs défectueux", 14001, 16, 30, 165, 10
-    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+    CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 

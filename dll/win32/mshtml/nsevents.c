@@ -212,7 +212,6 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 {
     nsEventListener *This = impl_from_nsIDOMEventListener(iface);
     HTMLDocumentNode *doc = This->This->doc;
-    nsIDOMHTMLElement *nsbody = NULL;
     HTMLDocumentObj *doc_obj = NULL;
     nsresult nsres = NS_OK;
 
@@ -247,8 +246,12 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
                 &doc->basedoc.window->base.IHTMLWindow2_iface, 0);
 
     if(doc->nsdoc) {
-        nsIDOMHTMLDocument_GetBody(doc->nsdoc, &nsbody);
-        if(nsbody) {
+        nsIDOMHTMLElement *nsbody;
+
+        flush_pending_tasks(doc->basedoc.task_magic);
+
+        nsres = nsIDOMHTMLDocument_GetBody(doc->nsdoc, &nsbody);
+        if(NS_SUCCEEDED(nsres) && nsbody) {
             fire_event(doc, EVENTID_LOAD, TRUE, (nsIDOMNode*)nsbody, event, (IDispatch*)&doc->window->base.IDispatchEx_iface);
             nsIDOMHTMLElement_Release(nsbody);
         }

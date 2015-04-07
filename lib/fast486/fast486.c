@@ -333,4 +333,14 @@ Fast486SetSegment(PFAST486_STATE State,
     Fast486LoadSegment(State, Segment, Selector);
 }
 
+VOID
+NTAPI
+Fast486Rewind(PFAST486_STATE State)
+{
+    /* This function is used when an instruction has been interrupted remotely */
+    State->PrefixFlags = 0;
+    State->InstPtr.Long = State->SavedInstPtr.Long;
+    State->PrefetchValid = FALSE;
+}
+
 /* EOF */

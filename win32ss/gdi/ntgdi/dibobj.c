@@ -1379,7 +1379,7 @@ IntCreateDIBitmap(
     else
     {
         handle = GreCreateBitmap(width,
-                                 height,
+                                 abs(height),
                                  1,
                                  1,
                                  NULL);
@@ -1539,6 +1539,56 @@ GreCreateDIBitmapInternal(
     return Bmp;
 }
 
+HBITMAP
+NTAPI
+GreCreateDIBitmapFromPackedDIB(
+    _In_reads_(cjPackedDIB )PVOID pvPackedDIB,
+    _In_ UINT cjPackedDIB,
+    _In_ ULONG uUsage)
+{
+    PBITMAPINFO pbmi;
+    PBYTE pjBits;
+    UINT cjInfo, cjBits;
+    HBITMAP hbm;
+
+    /* We only support BITMAPINFOHEADER, make sure the size is ok */
+    if (cjPackedDIB < sizeof(BITMAPINFOHEADER))
+    {
+        return NULL;
+    }
+
+    /* The packed DIB starts with the BITMAPINFOHEADER */
+    pbmi = pvPackedDIB;
+
+    if (cjPackedDIB < pbmi->bmiHeader.biSize)
+    {
+        return NULL;
+    }
+
+    /* Calculate the info size and make sure the packed DIB is large enough */
+    cjInfo = DIB_BitmapInfoSize(pbmi, uUsage);
+    if (cjPackedDIB <= cjInfo)
+    {
+        return NULL;
+    }
+
+    /* The bitmap bits start after the header */
+    pjBits = (PBYTE)pvPackedDIB + cjInfo;
+    cjBits = cjPackedDIB - cjInfo;
+
+    hbm = GreCreateDIBitmapInternal(NULL,
+                                    pbmi->bmiHeader.biWidth,
+                                    abs(pbmi->bmiHeader.biHeight),
+                                    CBM_INIT | CBM_CREATDIB,
+                                    pjBits,
+                                    pbmi,
+                                    uUsage,
+                                    0,
+                                    cjBits,
+                                    NULL);
+
+    return hbm;
+}
 
 HBITMAP
 APIENTRY
@@ -1866,13 +1916,17 @@ INT APIENTRY DIB_GetDIBImageBytes(INT  width, INT height, INT depth)
 INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
 {
     unsigned int colors, size, masks = 0;
+    unsigned int colorsize;
+
+    colorsize = (coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) :
+                (coloruse == DIB_PAL_INDICES) ? 0 :
+                sizeof(WORD);
 
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
         const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)info;
         colors = (core->bcBitCount <= 8) ? 1 << core->bcBitCount : 0;
-        return sizeof(BITMAPCOREHEADER) + colors *
-               ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBTRIPLE) : sizeof(WORD));
+        return sizeof(BITMAPCOREHEADER) + colors * colorsize;
     }
     else  /* Assume BITMAPINFOHEADER */
     {
@@ -1882,7 +1936,7 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
             colors = 1 << info->bmiHeader.biBitCount;
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
         size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
-        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+        return size + colors * colorsize;
     }
 }
 

@@ -8,6 +8,7 @@ CAPTION "Bağdaştırıcı"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Bağdaştırıcı Türü", -1, 7, 3, 237, 50
+    ICON IDC_DESK_ADAPTER, IDC_DESK_ADAPTER, 13, 11, 21, 20, SS_ICON
     LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
     PUSHBUTTON "&Husûsiyetler", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
     GROUPBOX "Bağdaştırıcı Bilgisi", -1, 7, 56, 237, 75

@@ -34,7 +34,7 @@ typedef struct _StaticShellEntry_
 
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu2
+    public IContextMenu3
 {
     private:
         CComPtr<IShellFolder> m_psf;
@@ -74,6 +74,7 @@ class CDefaultContextMenu :
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
         HRESULT TryToBrowse(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags);
         HRESULT InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, PStaticShellEntry pEntry);
+        PDynamicShellEntry GetDynamicEntry(UINT idCmd);
 
     public:
         CDefaultContextMenu();
@@ -88,9 +89,13 @@ class CDefaultContextMenu :
         // IContextMenu2
         virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+        // IContextMenu3
+        virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+
         BEGIN_COM_MAP(CDefaultContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+        COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
         END_COM_MAP()
 };
 
@@ -514,6 +519,14 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
 
     TRACE("BuildBackgroundContextMenu entered\n");
 
+    SFGAOF rfg = SFGAO_FILESYSTEM | SFGAO_FOLDER;
+    HRESULT hr = m_psf->GetAttributesOf(0, NULL, &rfg);
+    if (FAILED(hr))
+    {
+        ERR("GetAttributesOf failed: %x\n", hr);
+        rfg = 0;
+    }
+
     if (!_ILIsDesktop(m_pidlFolder))
     {
         WCHAR wszBuf[MAX_PATH];
@@ -554,8 +567,7 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
     }
 
     /* Directory is progid of filesystem folders only */
-    LPITEMIDLIST pidlFolderLast = ILFindLastID(m_pidlFolder);
-    if (_ILIsDesktop(pidlFolderLast) || _ILIsDrive(pidlFolderLast) || _ILIsFolder(pidlFolderLast))
+    if ((rfg & (SFGAO_FILESYSTEM|SFGAO_FOLDER)) == (SFGAO_FILESYSTEM|SFGAO_FOLDER))
     {
         /* Load context menu handlers */
         TRACE("Add background handlers: %p\n", m_pidlFolder);
@@ -645,10 +657,26 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
 
             if (SUCCEEDED(hr))
             {
+                HKEY hkVerb;
                 DWORD cbVerb = sizeof(wszVerb);
+                LONG res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkVerb);
+                if (res == ERROR_SUCCESS)
+                {
+                    res = RegLoadMUIStringW(hkVerb, 
+                                            NULL,
+                                            wszVerb,
+                                            cbVerb,
+                                            NULL,
+                                            0,
+                                            NULL);
+                    if (res == ERROR_SUCCESS)
+                    {
+                        /* use description for the menu entry */
+                        mii.dwTypeData = wszVerb; 
+                    }
 
-                if (RegGetValueW(HKEY_CLASSES_ROOT, wszKey, NULL, RRF_RT_REG_SZ, NULL, wszVerb, &cbVerb) == ERROR_SUCCESS)
-                    mii.dwTypeData = wszVerb; /* use description for the menu entry */
+                    RegCloseKey(hkVerb);
+                }
             }
         }
 
@@ -753,13 +781,6 @@ CDefaultContextMenu::BuildShellItemContextMenu(
                     }
                 }
             }
-
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"*", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                /* load default extensions */
-                EnumerateDynamicContextHandlerForKey(hKey);
-                RegCloseKey(hKey);
-            }
         }
     }
     else
@@ -818,7 +839,7 @@ CDefaultContextMenu::BuildShellItemContextMenu(
         }
 
         /* Directory is only loaded for real filesystem directories */
-        if (_ILIsFolder(m_apidl[0]))
+        if (rfg & SFGAO_FILESYSTEM)
         {
             AddStaticEntryForFileClass(L"Directory");
             if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
@@ -830,13 +851,22 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     }
 
     /* AllFilesystemObjects class is loaded only for files and directories */
-    if (_ILIsFolder(m_apidl[0]) || _ILIsValue(m_apidl[0]))
+    if (rfg & SFGAO_FILESYSTEM)
     {
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"AllFilesystemObjects", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
             /* sendto service is registered here */
             EnumerateDynamicContextHandlerForKey(hKey);
             RegCloseKey(hKey);
+        }
+
+        if (!(rfg & SFGAO_FOLDER))
+        {
+            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"*", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+            {
+                EnumerateDynamicContextHandlerForKey(hKey);
+                RegCloseKey(hKey);
+            }
         }
     }
 
@@ -1338,29 +1368,36 @@ CDefaultContextMenu::DoFormat(
     return S_OK;
 }
 
-HRESULT
-CDefaultContextMenu::DoDynamicShellExtensions(
-    LPCMINVOKECOMMANDINFO lpcmi)
+PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
 {
-    UINT idCmd = LOWORD(lpcmi->lpVerb);
     PDynamicShellEntry pEntry = m_pDynamicEntries;
-
-    TRACE("verb %p first %x last %x", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
 
     while(pEntry && idCmd > pEntry->iIdCmdFirst + pEntry->NumIds)
         pEntry = pEntry->pNext;
 
     if (!pEntry)
+        return NULL;
+
+    if (idCmd < pEntry->iIdCmdFirst || idCmd > pEntry->iIdCmdFirst + pEntry->NumIds)
+        return NULL;
+
+    return pEntry;
+}
+
+HRESULT
+CDefaultContextMenu::DoDynamicShellExtensions(
+    LPCMINVOKECOMMANDINFO lpcmi)
+{    
+    TRACE("verb %p first %x last %x", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
+
+    UINT idCmd = LOWORD(lpcmi->lpVerb);
+    PDynamicShellEntry pEntry = GetDynamicEntry(idCmd);
+    if (!pEntry)
         return E_FAIL;
 
-    if (idCmd >= pEntry->iIdCmdFirst && idCmd <= pEntry->iIdCmdFirst + pEntry->NumIds)
-    {
-        /* invoke the dynamic context menu */
-        lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd - pEntry->iIdCmdFirst);
-        return pEntry->pCM->InvokeCommand(lpcmi);
-    }
-
-    return E_FAIL;
+    /* invoke the dynamic context menu */
+    lpcmi->lpVerb = MAKEINTRESOURCEA(idCmd - pEntry->iIdCmdFirst);
+    return pEntry->pCM->InvokeCommand(lpcmi);
 }
 
 DWORD
@@ -1585,7 +1622,53 @@ CDefaultContextMenu::HandleMenuMsg(
     WPARAM wParam,
     LPARAM lParam)
 {
+    /* FIXME: Should we implement this as well? */
     return S_OK;
+}
+
+HRESULT 
+WINAPI 
+CDefaultContextMenu::HandleMenuMsg2(
+    UINT uMsg, 
+    WPARAM wParam, 
+    LPARAM lParam, 
+    LRESULT *plResult)
+{
+    switch (uMsg)
+    {
+    case WM_INITMENUPOPUP:
+    {
+        PDynamicShellEntry pEntry = m_pDynamicEntries;
+        while (pEntry)
+        {
+            SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
+            pEntry = pEntry->pNext;
+        }
+        break;
+    }
+    case WM_DRAWITEM:
+    {
+        DRAWITEMSTRUCT* pDrawStruct = reinterpret_cast<DRAWITEMSTRUCT*>(lParam);
+        PDynamicShellEntry pEntry = GetDynamicEntry(pDrawStruct->itemID);
+        if(pEntry)
+            SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
+        break;
+    }
+    case WM_MEASUREITEM:
+    {
+        MEASUREITEMSTRUCT* pMeasureStruct = reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
+        PDynamicShellEntry pEntry = GetDynamicEntry(pMeasureStruct->itemID);
+        if(pEntry)
+            SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
+        break;
+    }
+    case WM_MENUCHAR :
+        /* FIXME */
+        break;
+    default:
+        ERR("Got unknown message:%d\n", uMsg);
+    }
+   return S_OK;
 }
 
 static

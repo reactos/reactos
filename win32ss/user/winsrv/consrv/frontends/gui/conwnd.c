@@ -212,7 +212,7 @@ AppendMenuItems(HMENU hMenu,
             if (LoadStringW(ConSrvDllInstance,
                             Items[i].uID,
                             szMenuString,
-                            sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+                            ARRAYSIZE(szMenuString)) > 0)
             {
                 if (Items[i].SubMenu != NULL)
                 {
@@ -491,7 +491,7 @@ VOID
 DeleteFonts(PGUI_CONSOLE_DATA GuiData)
 {
     ULONG i;
-    for (i = 0; i < sizeof(GuiData->Font) / sizeof(GuiData->Font[0]); ++i)
+    for (i = 0; i < ARRAYSIZE(GuiData->Font); ++i)
     {
         if (GuiData->Font[i] != NULL) DeleteObject(GuiData->Font[i]);
         GuiData->Font[i] = NULL;
@@ -2443,12 +2443,6 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        case PM_APPLY_CONSOLE_INFO:
-        {
-            GuiApplyUserSettings(GuiData, (HANDLE)wParam, (BOOL)lParam);
-            break;
-        }
-
         /*
          * Undocumented message sent by Windows' console.dll for applying console info.
          * See http://www.catch22.net/sites/default/source/files/setconsoleinfo.c
@@ -2457,8 +2451,7 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
          */
         case WM_SETCONSOLEINFO:
         {
-            DPRINT1("WM_SETCONSOLEINFO message\n");
-            GuiApplyWindowsConsoleSettings(GuiData, (HANDLE)wParam);
+            GuiApplyUserSettings(GuiData, (HANDLE)wParam);
             break;
         }
 

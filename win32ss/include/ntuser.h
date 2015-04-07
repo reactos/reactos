@@ -1,8 +1,8 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
-typedef struct _PROCESSINFO *PPROCESSINFO;
-typedef struct _THREADINFO *PTHREADINFO;
+struct _PROCESSINFO;
+struct _THREADINFO;
 struct _DESKTOP;
 struct _WND;
 struct tagPOPUPMENU;
@@ -21,8 +21,8 @@ typedef struct _USER_HANDLE_ENTRY
     union
     {
         PVOID pi;
-        PTHREADINFO pti; /* pointer to Win32ThreadInfo */
-        PPROCESSINFO ppi; /* pointer to W32ProcessInfo */
+        struct _THREADINFO *pti; /* pointer to Win32ThreadInfo */
+        struct _PROCESSINFO *ppi; /* pointer to W32ProcessInfo */
     };
     unsigned char type; /* object type (0 if free) */
     unsigned char flags;
@@ -141,7 +141,7 @@ typedef struct _DESKTOPINFO
     HWND hShellWindow;
     struct _WND *spwndShell;
 
-    PPROCESSINFO ppiShellProcess;
+    struct _PROCESSINFO *ppiShellProcess;
 
     union
     {
@@ -178,7 +178,7 @@ typedef struct _HEAD
 typedef struct _THROBJHEAD
 {
     HEAD;
-    PTHREADINFO pti;
+    struct _THREADINFO *pti;
 } THROBJHEAD, *PTHROBJHEAD;
 
 typedef struct _THRDESKHEAD
@@ -200,7 +200,7 @@ typedef struct _PROCMARKHEAD
 {
     HEAD;
     ULONG hTaskWow;
-    PPROCESSINFO ppi;
+    struct _PROCESSINFO *ppi;
 } PROCMARKHEAD, *PPROCMARKHEAD;
 
 #define UserHMGetHandle(obj) ((obj)->head.h)
@@ -218,7 +218,7 @@ typedef struct tagHOOK
     ULONG_PTR offPfn;
     ULONG flags; /* Some internal flags */
     INT ihmod;
-    PTHREADINFO ptiHooked;
+    struct _THREADINFO *ptiHooked;
     struct _DESKTOP *rpdesk;
     /* ReactOS */
     LIST_ENTRY Chain; /* Hook chain entry */
@@ -309,7 +309,7 @@ typedef struct _CLIENTINFO
     LPDWORD lpdwRegisteredClasses;
     ULONG Win32ClientInfo3[26];
 /* It's just a pointer reference not to be used w the structure in user space. */
-    PPROCESSINFO ppi;
+    struct _PROCESSINFO *ppi;
 } CLIENTINFO, *PCLIENTINFO;
 
 /* Make sure it fits into the TEB */
@@ -1032,8 +1032,8 @@ typedef struct _BROADCASTPARM
     LUID luid;
 } BROADCASTPARM, *PBROADCASTPARM;
 
-PTHREADINFO GetW32ThreadInfo(VOID);
-PPROCESSINFO GetW32ProcessInfo(VOID);
+struct _THREADINFO *GetW32ThreadInfo(VOID);
+struct _PROCESSINFO *GetW32ProcessInfo(VOID);
 
 typedef struct _WNDMSG
 {

@@ -211,6 +211,14 @@
 @ stdcall VdmMapFlat(long long long)
 ;@ stdcall VdmUnmapFlat(long long ptr long)  ; Not exported on x86
 
+@ stdcall VDDInstallMemoryHook(long ptr long ptr)
+@ stdcall VDDDeInstallMemoryHook(long ptr long)
+
+@ stdcall VDDAllocMem(long ptr long)
+@ stdcall VDDFreeMem(long ptr long)
+@ stdcall VDDIncludeMem(long ptr long)
+@ stdcall VDDExcludeMem(long ptr long)
+
 @ stdcall call_ica_hw_interrupt(long long long)
 @ stdcall VDDReserveIrqLine(long long)
 @ stdcall VDDReleaseIrqLine(long long)

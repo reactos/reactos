@@ -93,6 +93,7 @@ class CDefView :
         UINT                      m_uState;
         UINT                      m_cidl;
         PCUITEMID_CHILD_ARRAY     m_apidl;
+        PIDLIST_ABSOLUTE          m_pidlParent;
         LISTVIEW_SORT_INFO        m_sortInfo;
         ULONG                     m_hNotify;            /* change notification handle */
         HACCEL                    m_hAccel;
@@ -354,6 +355,7 @@ CDefView::CDefView() :
     m_uState(0),
     m_cidl(0),
     m_apidl(NULL),
+    m_pidlParent(NULL),
     m_hNotify(0),
     m_hAccel(NULL),
     m_dwAspects(0),
@@ -785,6 +787,7 @@ BOOLEAN CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
     lvItem.lParam = reinterpret_cast<LPARAM>(ILClone(pidl)); /*set the item's data*/
     lvItem.pszText = LPSTR_TEXTCALLBACKW;                 /*get text on a callback basis*/
     lvItem.iImage = I_IMAGECALLBACK;                      /*get the image on a callback basis*/
+    lvItem.stateMask = LVIS_CUT;
 
     if (m_ListView.InsertItem(&lvItem) == -1)
         return FALSE;
@@ -860,16 +863,37 @@ INT CALLBACK CDefView::fill_list( LPVOID ptr, LPVOID arg )
 HRESULT CDefView::FillList()
 {
     CComPtr<IEnumIDList> pEnumIDList;
-    PITEMID_CHILD    pidl;
-    DWORD        dwFetched;
-    HRESULT        hRes;
-    HDPA        hdpa;
+    PITEMID_CHILD pidl;
+    DWORD         dwFetched;
+    HRESULT       hRes;
+    HDPA          hdpa;
+    HKEY          hKey;
+    DWORD         dFlags = SHCONTF_NONFOLDERS | SHCONTF_FOLDERS;
 
     TRACE("%p\n", this);
 
-    /* get the itemlist from the shfolder*/
-    /* FIXME: make showing hidden files a setting. */
-    hRes = m_pSFParent->EnumObjects(m_hWnd, SHCONTF_NONFOLDERS | SHCONTF_FOLDERS | SHCONTF_INCLUDEHIDDEN, &pEnumIDList);
+    /* determine if there is a setting to show all the hidden files/folders */
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        DWORD dataLength, flagVal;
+
+        dataLength = sizeof(flagVal);
+        if (RegQueryValueExW(hKey, L"Hidden", NULL, NULL, (LPBYTE)&flagVal, &dataLength) == ERROR_SUCCESS)
+        {
+            /* if the value is 1, then show all hidden files/folders */
+            if (flagVal == 1)
+            {
+                dFlags |= SHCONTF_INCLUDEHIDDEN;
+                m_ListView.SendMessageW(LVM_SETCALLBACKMASK, LVIS_CUT, 0);
+            }
+        }
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
+
+    /* get the itemlist from the shfolder */
+    hRes = m_pSFParent->EnumObjects(m_hWnd, dFlags, &pEnumIDList);
     if (hRes != S_OK)
     {
         if (hRes == S_FALSE)
@@ -925,6 +949,7 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         DestroyMenu(m_hMenu);
     RevokeDragDrop(m_hWnd);
     SHChangeNotifyDeregister(m_hNotify);
+    SHFree(m_pidlParent);
     bHandled = FALSE;
     return 0;
 }
@@ -982,12 +1007,10 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     m_pSFParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     if (ppf2)
     {
-        PIDLIST_ABSOLUTE pidlParent;
-        ppf2->GetCurFolder(&pidlParent);
+        ppf2->GetCurFolder(&m_pidlParent);
         ntreg.fRecursive = TRUE;
-        ntreg.pidl = pidlParent;
-        m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNF_IDLIST, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
-        SHFree(pidlParent);
+        ntreg.pidl = m_pidlParent;
+        m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
     }
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
@@ -1049,6 +1072,8 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
         }
     }
 
+#if 0
+    /* FIXME/TODO: Reenable when they implemented AND localizable (not hardcoded). */
     /* Insert This item at the beginning of the menu. */
     _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 4, MFT_STRING, L"Properties", MFS_DISABLED);
@@ -1057,13 +1082,20 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM + 1, MFT_STRING, L"Create Shortcut", MFS_DISABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
     _InsertMenuItemW(hSubMenu, 0, TRUE, IDM_MYFILEITEM, MFT_STRING, L"New", MFS_ENABLED);
+#endif
 
     HMENU menubase = BuildFileMenu();
     if (menubase)
     {
         int count = ::GetMenuItemCount(menubase);
+        int count2 = ::GetMenuItemCount(hSubMenu);
 
-        for (int i = 0; i < count; i++)
+        if (count2 > 0 && count > 0)
+        {
+            _InsertMenuItemW(hSubMenu, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        }
+
+        for (int i = count-1; i >= 0; i--)
         {
             WCHAR label[128];
 
@@ -1078,10 +1110,9 @@ void CDefView::PrepareShowFileMenu(HMENU hSubMenu)
 
             mii.fType |= MFT_RADIOCHECK;
 
-            ::InsertMenuItemW(hSubMenu, IDM_MYFILEITEM, FALSE, &mii);
+            ::InsertMenuItemW(hSubMenu, 0, TRUE, &mii);
         }
 
-        _InsertMenuItemW(hSubMenu, IDM_MYFILEITEM, FALSE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED);
 
         ::DestroyMenu(menubase);
     }
@@ -1523,9 +1554,10 @@ LRESULT CDefView::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 */
 LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    DWORD                                dwCmdID;
-    DWORD                                dwCmd;
-    HWND                                hwndCmd;
+    DWORD dwCmdID;
+    DWORD dwCmd;
+    HWND  hwndCmd;
+    int   nCount; 
 
     dwCmdID = GET_WM_COMMAND_ID(wParam, lParam);
     dwCmd = GET_WM_COMMAND_CMD(wParam, lParam);
@@ -1568,6 +1600,16 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             m_sortInfo.bIsAscending = TRUE;
             m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
             m_ListView.SortItems(ListViewCompareItems, &m_sortInfo);
+            break;
+
+        case FCIDM_SHVIEW_SELECTALL:
+            m_ListView.SetItemState(-1, LVIS_SELECTED, LVIS_SELECTED);
+            break;
+
+        case FCIDM_SHVIEW_INVERTSELECTION:
+            nCount = m_ListView.GetItemCount();
+            for (int i=0; i < nCount; i++)
+                m_ListView.SetItemState(i, m_ListView.GetItemState(i, LVIS_SELECTED) ? 0 : LVIS_SELECTED, LVIS_SELECTED);
             break;
 
         case FCIDM_SHVIEW_REFRESH:
@@ -1728,6 +1770,17 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             {
                 lpdi->item.iImage = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
             }
+            if(lpdi->item.mask & LVIF_STATE)
+            {
+                ULONG attributes = SFGAO_HIDDEN;
+                if (SUCCEEDED(m_pSFParent->GetAttributesOf(1, &pidl, &attributes)))
+                {
+                    if (attributes & SFGAO_HIDDEN)
+                    {
+                        lpdi->item.state |= LVIS_CUT;
+                    }
+                }
+            }
             lpdi->item.mask |= LVIF_DI_SETITEM;
             break;
 
@@ -1822,12 +1875,48 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     return 0;
 }
 
+/*
+ * This is just a quick hack to make the desktop work correctly.
+ * ITranslateShellChangeNotify's IsChildID is undocumented, but most likely the way that
+ * a folder should know if it should update upon a change notification.
+ * It is exported by merged folders at a minimum.
+ */
+static BOOL ILIsParentOrSpecialParent(PCIDLIST_ABSOLUTE pidl1, PCIDLIST_ABSOLUTE pidl2)
+{
+    if (!pidl1 || !pidl2)
+        return FALSE;
+    if (ILIsParent(pidl1, pidl2, TRUE))
+        return TRUE;
+
+    if (_ILIsDesktop(pidl1))
+    {
+        PIDLIST_ABSOLUTE deskpidl;
+        SHGetFolderLocation(NULL, CSIDL_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
+        if (ILIsParent(deskpidl, pidl2, TRUE))
+        {
+            ILFree(deskpidl);
+            return TRUE;
+        }
+        ILFree(deskpidl);
+        SHGetFolderLocation(NULL, CSIDL_COMMON_DESKTOPDIRECTORY, NULL, 0, &deskpidl);
+        if (ILIsParent(deskpidl, pidl2, TRUE))
+        {
+            ILFree(deskpidl);
+            return TRUE;
+        }
+        ILFree(deskpidl);
+    }
+    return FALSE;
+}
+
 /**********************************************************
 * ShellView_OnChange()
 */
 LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     PCIDLIST_ABSOLUTE *Pidls = reinterpret_cast<PCIDLIST_ABSOLUTE*>(wParam);
+    BOOL bParent0 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[0]);
+    BOOL bParent1 = ILIsParentOrSpecialParent(m_pidlParent, Pidls[1]);
 
     TRACE("(%p)(%p,%p,0x%08x)\n", this, Pidls[0], Pidls[1], lParam);
 
@@ -1835,21 +1924,29 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     {
         case SHCNE_MKDIR:
         case SHCNE_CREATE:
-            LV_AddItem(ILFindLastID(Pidls[0]));
+            if (bParent0)
+                LV_AddItem(ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_RMDIR:
         case SHCNE_DELETE:
-            LV_DeleteItem(ILFindLastID(Pidls[0]));
+            if (bParent0)
+                LV_DeleteItem(ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_RENAMEFOLDER:
         case SHCNE_RENAMEITEM:
-            LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[1]));
+            if (bParent0 && bParent1)
+                LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[1]));
+            else if (bParent0)
+                LV_DeleteItem(ILFindLastID(Pidls[0]));
+            else if (bParent1)
+                LV_AddItem(ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_UPDATEITEM:
-            LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[0]));
+            if (bParent0)
+                LV_RenameItem(ILFindLastID(Pidls[0]), ILFindLastID(Pidls[0]));
             break;
 
         case SHCNE_UPDATEDIR:
@@ -1871,12 +1968,9 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return FALSE;
     }
 
-    CComPtr<IContextMenu2> pCM2;
-    HRESULT hres = m_pCM.p->QueryInterface(IID_PPV_ARG(IContextMenu2, &pCM2));
-    if(FAILED(hres))
-        return FALSE;
-
-    if (pCM2.p->HandleMenuMsg(uMsg, (WPARAM)m_hWnd, lParam) == S_OK)
+    LRESULT result;
+    HRESULT hres = SHForwardContextMenuMsg(m_pCM, uMsg, wParam, lParam, &result, TRUE);
+    if (SUCCEEDED(hres))
         return TRUE;
     else
         return FALSE;

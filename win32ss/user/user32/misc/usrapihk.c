@@ -28,6 +28,7 @@ INT WINAPI RealSetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
 BOOL WINAPI RealSystemParametersInfoA(UINT,UINT,PVOID,UINT);
 BOOL WINAPI RealSystemParametersInfoW(UINT,UINT,PVOID,UINT);
 DWORD WINAPI GetRealWindowOwner(HWND);
+LRESULT WINAPI RealUserDrawCaption(HWND hWnd, HDC hDC, LPCRECT lpRc, UINT uFlags);
 
 /* GLOBALS *******************************************************************/
 
@@ -154,7 +155,7 @@ ResetUserApiHook(PUSERAPIHOOK puah)
   puah->SystemParametersInfoW = (FARPROC)RealSystemParametersInfoW;
   puah->ForceResetUserApiHook = (FARPROC)ForceResetUserApiHook;
   puah->DrawFrameControl = (FARPROC)RealDrawFrameControl;
-  puah->DrawCaption = (FARPROC)NtUserDrawCaption;
+  puah->DrawCaption = (FARPROC)RealUserDrawCaption;
   puah->MDIRedrawFrame = (FARPROC)RealMDIRedrawFrame;
   puah->GetRealWindowOwner = (FARPROC)GetRealWindowOwner;
 }

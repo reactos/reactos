@@ -51,7 +51,7 @@ IDI_MICROPHONE_ICON ICON "resources/4378.ico"
 4386 ICON "resources/4386.ico"
 4387 ICON "resources/4387.ico"
 4388 ICON "resources/4388.ico"
-4390 ICON "resources/4390.ico"
+IDI_NO_HW ICON "resources/4390.ico"
 IDI_MUTED_ICON ICON "resources/4393.ico"
 IDI_SHUTDOWN_ICON ICON "resources/4394.ico"
 

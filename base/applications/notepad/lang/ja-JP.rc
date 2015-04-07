@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "ヘルプの使い方(&H)", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "バージョン情報(&A)", CMD_ABOUT
-        MENUITEM "情報(&O)", CMD_ABOUT_WINE
+        MENUITEM "情報(&O)", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

@@ -8,6 +8,7 @@
 #define IDI_USERPROF  53
 #define IDI_UP        2500
 #define IDI_DOWN      2501
+#define IDI_ADDHW     2502
 
 #define IDB_ROSBMP 55
 #define IDB_ROSMASK 56

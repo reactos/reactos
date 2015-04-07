@@ -369,6 +369,9 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
         PCUITEMID_CHILD_ARRAY apidl, DWORD * rgfInOut)
 {
     HRESULT hr = S_OK;
+    static const DWORD dwDriveAttributes =
+        SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
+        SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANRENAME | SFGAO_CANLINK;
 
     TRACE("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n", this, cidl, apidl,
           rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -389,7 +392,13 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
         hr = SHBindToParent(pidlRoot, IID_PPV_ARG(IShellFolder, &psfParent), &rpidl);
         if(SUCCEEDED(hr))
         {
-            SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
+            if (_ILIsDrive(rpidl))
+                *rgfInOut &= dwDriveAttributes;
+            if (_ILIsFolder(rpidl) || _ILIsValue(rpidl))
+                SHELL32_GetItemAttributes(this, rpidl, rgfInOut);
+            else
+                ERR("Got an unknown type of pidl!!!\n");
+
             psfParent->Release();
         }
     }
@@ -398,7 +407,10 @@ HRESULT WINAPI CFSFolder::GetAttributesOf(UINT cidl,
         while (cidl > 0 && *apidl)
         {
             pdump(*apidl);
-            SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+            if(_ILIsFolder(*apidl) || _ILIsValue(*apidl))
+                SHELL32_GetItemAttributes(this, *apidl, rgfInOut);
+            else
+                ERR("Got an unknown type of pidl!!!\n");
             apidl++;
             cidl--;
         }

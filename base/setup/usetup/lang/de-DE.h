@@ -1491,10 +1491,16 @@ MUI_ERROR deDEErrorEntries[] =
         "eingetragen werden.\n"
         "EINGABETASTE = Computer neu starten"
     },
-        {
+    {
         //ERROR_UPDATE_GEOID,
         "Der geografische Standort konnte nicht eingestellt werden.\n"
         "EINGABETASTE = Computer neu starten"
+    },
+    {
+        //ERROR_DIRECTORY_NAME,
+        "UnzulÑssiger Verzeichnisname.\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,

@@ -66,6 +66,7 @@
 #include "drvdefext.h"
 #include "CMenuBand.h"
 #include "CMenuDeskBar.h"
+#include "CQueryAssociations.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

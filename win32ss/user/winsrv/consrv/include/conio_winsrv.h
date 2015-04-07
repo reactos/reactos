@@ -47,7 +47,7 @@ struct _WINSRV_CONSOLE;
 #endif
 
 typedef struct _FRONTEND FRONTEND, *PFRONTEND;
-/* HACK: */ typedef struct _CONSOLE_INFO *PCONSOLE_INFO;
+
 typedef struct _FRONTEND_VTBL
 {
     // NTSTATUS (NTAPI *UnloadFrontEnd)(IN OUT PFRONTEND This);

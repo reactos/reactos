@@ -425,4 +425,8 @@ BEGIN
     21242+NLSRC_OFFSET "Midway Islands"
     30967+NLSRC_OFFSET "Sint Maarten (Dutch part)"
     31706+NLSRC_OFFSET "Saint Martin (French part)"
+    (7299303+NLSRC_OFFSET)&0xffff "Democratic Republic of Timor-Leste"
+    (10028789+NLSRC_OFFSET)&0xffff "Åland Islands"
+    (161832015+NLSRC_OFFSET)&0xffff "Saint-Barthélemy"
+    (161832256+NLSRC_OFFSET)&0xffff "U.S. Minor Outlying Islands"
 END

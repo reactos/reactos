@@ -45,9 +45,9 @@ VOID NOTEPAD_EnableSearchMenu()
  */
 VOID SetFileName(LPCTSTR szFileName)
 {
-    StringCchCopy(Globals.szFileName, SIZEOF(Globals.szFileName), szFileName);
+    StringCchCopy(Globals.szFileName, ARRAY_SIZE(Globals.szFileName), szFileName);
     Globals.szFileTitle[0] = 0;
-    GetFileTitle(szFileName, Globals.szFileTitle, SIZEOF(Globals.szFileTitle));
+    GetFileTitle(szFileName, Globals.szFileTitle, ARRAY_SIZE(Globals.szFileTitle));
 }
 
 /***********************************************************************
@@ -60,26 +60,26 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 {
     switch (wParam)
     {
-    case CMD_NEW: DIALOG_FileNew(); break;
-    case CMD_OPEN: DIALOG_FileOpen(); break;
-    case CMD_SAVE: DIALOG_FileSave(); break;
-    case CMD_SAVE_AS: DIALOG_FileSaveAs(); break;
-    case CMD_PRINT: DIALOG_FilePrint(); break;
+    case CMD_NEW:        DIALOG_FileNew(); break;
+    case CMD_OPEN:       DIALOG_FileOpen(); break;
+    case CMD_SAVE:       DIALOG_FileSave(); break;
+    case CMD_SAVE_AS:    DIALOG_FileSaveAs(); break;
+    case CMD_PRINT:      DIALOG_FilePrint(); break;
     case CMD_PAGE_SETUP: DIALOG_FilePageSetup(); break;
-    case CMD_EXIT: DIALOG_FileExit(); break;
+    case CMD_EXIT:       DIALOG_FileExit(); break;
 
-    case CMD_UNDO: DIALOG_EditUndo(); break;
-    case CMD_CUT: DIALOG_EditCut(); break;
-    case CMD_COPY: DIALOG_EditCopy(); break;
-    case CMD_PASTE: DIALOG_EditPaste(); break;
-    case CMD_DELETE: DIALOG_EditDelete(); break;
+    case CMD_UNDO:       DIALOG_EditUndo(); break;
+    case CMD_CUT:        DIALOG_EditCut(); break;
+    case CMD_COPY:       DIALOG_EditCopy(); break;
+    case CMD_PASTE:      DIALOG_EditPaste(); break;
+    case CMD_DELETE:     DIALOG_EditDelete(); break;
     case CMD_SELECT_ALL: DIALOG_EditSelectAll(); break;
-    case CMD_TIME_DATE: DIALOG_EditTimeDate(); break;
+    case CMD_TIME_DATE:  DIALOG_EditTimeDate(); break;
 
-    case CMD_SEARCH: DIALOG_Search(); break;
+    case CMD_SEARCH:      DIALOG_Search(); break;
     case CMD_SEARCH_NEXT: DIALOG_SearchNext(); break;
-    case CMD_REPLACE: DIALOG_Replace(); break;
-    case CMD_GOTO: DIALOG_GoTo(); break;
+    case CMD_REPLACE:     DIALOG_Replace(); break;
+    case CMD_GOTO:        DIALOG_GoTo(); break;
 
     case CMD_WRAP: DIALOG_EditWrap(); break;
     case CMD_FONT: DIALOG_SelectFont(); break;
@@ -87,8 +87,8 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
     case CMD_STATUSBAR: DIALOG_ViewStatusBar(); break;
 
     case CMD_HELP_CONTENTS: DIALOG_HelpContents(); break;
-    case CMD_HELP_SEARCH: DIALOG_HelpSearch(); break;
-    case CMD_HELP_ON_HELP: DIALOG_HelpHelp(); break;
+    case CMD_HELP_SEARCH:   DIALOG_HelpSearch(); break;
+    case CMD_HELP_ON_HELP:  DIALOG_HelpHelp(); break;
 
     case CMD_ABOUT:
         DialogBox(GetModuleHandle(NULL),
@@ -97,7 +97,7 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
                   AboutDialogProc);
         break;
 
-    case CMD_ABOUT_WINE: DIALOG_HelpAboutWine(); break;
+    case CMD_HELP_ABOUT_NOTEPAD: DIALOG_HelpAboutNotepad(); break;
 
     default:
         break;
@@ -217,9 +217,9 @@ BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
         /* Can't find target */
         if (bShowAlert)
         {
-            LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, SIZEOF(szResource));
-            _sntprintf(szText, SIZEOF(szText), szResource, pFindReplace->lpstrFindWhat);
-            LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
+            LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, ARRAY_SIZE(szResource));
+            _sntprintf(szText, ARRAY_SIZE(szText), szResource, pFindReplace->lpstrFindWhat);
+            LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, ARRAY_SIZE(szResource));
             MessageBox(Globals.hFindReplaceDlg, szText, szResource, MB_OK);
         }
         bSuccess = FALSE;
@@ -268,13 +268,16 @@ static VOID NOTEPAD_InitData(VOID)
 
     p += LoadString(Globals.hInstance, STRING_TEXT_FILES_TXT, p, MAX_STRING_LEN) + 1;
     _tcscpy(p, txt_files);
-    p += SIZEOF(txt_files);
+    p += ARRAY_SIZE(txt_files);
 
     p += LoadString(Globals.hInstance, STRING_ALL_FILES, p, MAX_STRING_LEN) + 1;
     _tcscpy(p, all_files);
-    p += SIZEOF(all_files);
+    p += ARRAY_SIZE(all_files);
     *p = '\0';
     Globals.find.lpstrFindWhat = NULL;
+
+    Globals.hDevMode = NULL;
+    Globals.hDevNames = NULL;
 }
 
 /***********************************************************************
@@ -288,7 +291,7 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, LPARAM index)
 
     CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
         MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
-    if ( !Globals.bWrapLongLines )
+    if (!Globals.bWrapLongLines)
     {
         CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
             MF_BYCOMMAND | (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
@@ -381,7 +384,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_DESTROY:
         SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)Globals.EditProc);
-        SaveSettings();
+        NOTEPAD_SaveSettingsToRegistry();
         PostQuitMessage(0);
         break;
 
@@ -450,7 +453,7 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         TCHAR szFileName[MAX_PATH];
         HDROP hDrop = (HDROP) wParam;
 
-        DragQueryFile(hDrop, 0, szFileName, SIZEOF(szFileName));
+        DragQueryFile(hDrop, 0, szFileName, ARRAY_SIZE(szFileName));
         DragFinish(hDrop);
         DoOpenFile(szFileName);
         break;
@@ -483,21 +486,9 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 static int AlertFileDoesNotExist(LPCTSTR szFileName)
 {
-    int nResult;
-    TCHAR szMessage[MAX_STRING_LEN];
-    TCHAR szResource[MAX_STRING_LEN];
-
-    LoadString(Globals.hInstance, STRING_DOESNOTEXIST, szResource, SIZEOF(szResource));
-    wsprintf(szMessage, szResource, szFileName);
-
-    LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
-
-    nResult = MessageBox(Globals.hMainWnd,
-                         szMessage,
-                         szResource,
-                         MB_ICONEXCLAMATION | MB_YESNO);
-
-    return(nResult);
+    return DIALOG_StringMsgBox(Globals.hMainWnd, STRING_DOESNOTEXIST,
+                               szFileName,
+                               MB_ICONEXCLAMATION | MB_YESNO);
 }
 
 static BOOL HandleCommandLine(LPTSTR cmdline)
@@ -617,7 +608,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance = hInstance;
-    LoadSettings();
+    NOTEPAD_LoadSettingsFromRegistry();
 
     ZeroMemory(&wndclass, sizeof(wndclass));
     wndclass.cbSize = sizeof(wndclass);

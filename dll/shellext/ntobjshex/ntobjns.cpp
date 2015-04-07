@@ -11,6 +11,11 @@
 #include <ntquery.h>
 #include "util.h"
 
+#define DFM_MERGECONTEXTMENU 1 // uFlags LPQCMINFO
+#define DFM_INVOKECOMMAND 2 // idCmd pszArgs
+#define DFM_INVOKECOMMANDEX 12 // idCmd PDFMICS
+#define DFM_GETDEFSTATICID 14 // idCmd * 0
+
 #define SHCIDS_ALLFIELDS 0x80000000L
 #define SHCIDS_CANONICALONLY 0x10000000L
 
@@ -28,161 +33,10 @@ static const GUID GUID_NtObjectColumns = { 0xf4c430c3, 0x3a8d, 0x4b56, { 0xa0, 0
 enum NtObjectColumns
 {
     NTOBJECT_COLUMN_NAME = 0,
-    NTOBJECT_COLUMN_TYPE = 1,
-    NTOBJECT_COLUMN_CREATEDATE = 2,
-    NTOBJECT_COLUMN_LINKTARGET = 3,
-};
-
-class CNtObjectFolderContextMenu :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu
-{
-    PCIDLIST_ABSOLUTE m_pcidlFolder;
-    PCITEMID_CHILD    m_pcidlChild;
-    UINT              m_idFirst;
-
-    enum ItemOffsets
-    {
-        ITEM_Open = 0,
-        ITEM_OpenNewWindow
-    };
-
-public:
-    CNtObjectFolderContextMenu() :
-        m_pcidlFolder(NULL),
-        m_pcidlChild(NULL),
-        m_idFirst(0)
-    {
-
-    }
-
-    virtual ~CNtObjectFolderContextMenu()
-    {
-        if (m_pcidlFolder)
-            ILFree((LPITEMIDLIST) m_pcidlFolder);
-        if (m_pcidlChild)
-            ILFree((LPITEMIDLIST) m_pcidlChild);
-    }
-
-    HRESULT Initialize(PCIDLIST_ABSOLUTE parent, UINT cidl, PCUITEMID_CHILD_ARRAY apidl)
-    {
-        m_pcidlFolder = ILClone(parent);
-        if (cidl != 1)
-            return E_INVALIDARG;
-        m_pcidlChild = ILClone(apidl[0]);
-        return S_OK;
-    }
-
-    // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
-    {
-        MENUITEMINFOW mii;
-
-        m_idFirst = idCmdFirst;
-
-        const NtPidlEntry * entry = (NtPidlEntry *) m_pcidlChild;
-
-        static WCHAR open [] = L"Open";
-        static WCHAR opennewwindow [] = L"Open in new window";
-
-        if ((entry->objectType == DIRECTORY_OBJECT) ||
-            (entry->objectType == SYMBOLICLINK_OBJECT) ||
-            (entry->objectType == KEY_OBJECT))
-        {
-            ZeroMemory(&mii, sizeof(mii));
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-            mii.fType = MFT_STRING;
-            mii.wID = (idCmdFirst = m_idFirst + ITEM_Open);
-            mii.dwTypeData = open;
-            mii.cch = _countof(open);
-            mii.fState = MFS_ENABLED | MFS_DEFAULT;
-            mii.hSubMenu = NULL;
-            InsertMenuItemW(hmenu, idCmdFirst, TRUE, &mii);
-
-            if (!(uFlags & CMF_DEFAULTONLY) && idCmdFirst <= idCmdLast)
-            {
-                ZeroMemory(&mii, sizeof(mii));
-                mii.cbSize = sizeof(mii);
-                mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-                mii.fType = MFT_STRING;
-                mii.wID = (idCmdFirst = m_idFirst + ITEM_OpenNewWindow);
-                mii.dwTypeData = opennewwindow;
-                mii.cch = _countof(opennewwindow);
-                mii.fState = MFS_ENABLED;
-                mii.hSubMenu = NULL;
-                InsertMenuItemW(hmenu, idCmdFirst, FALSE, &mii);
-            }
-        }
-
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, idCmdFirst - m_idFirst);
-    }
-
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
-    {
-        LPITEMIDLIST fullPidl = ILCombine(m_pcidlFolder, m_pcidlChild);
-
-        if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_Open) || !lpici->lpVerb)
-        {
-            SHELLEXECUTEINFO sei = { 0 };
-            sei.cbSize = sizeof(sei);
-            sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-            sei.lpIDList = fullPidl;
-            sei.lpClass = L"folder";
-            sei.hwnd = lpici->hwnd;
-            sei.nShow = lpici->nShow;
-            sei.lpVerb = L"open";
-            BOOL bRes = ::ShellExecuteEx(&sei);
-
-            ILFree(fullPidl);
-
-            return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
-        }
-        else if (LOWORD(lpici->lpVerb) == (m_idFirst + ITEM_OpenNewWindow))
-        {
-            SHELLEXECUTEINFO sei = { 0 };
-            sei.cbSize = sizeof(sei);
-            sei.fMask = SEE_MASK_IDLIST | SEE_MASK_CLASSNAME;
-            sei.lpIDList = fullPidl;
-            sei.lpClass = L"folder";
-            sei.hwnd = lpici->hwnd;
-            sei.nShow = lpici->nShow;
-            sei.lpVerb = L"opennewwindow";
-            BOOL bRes = ::ShellExecuteEx(&sei);
-
-            ILFree(fullPidl);
-
-            return bRes ? S_OK : HRESULT_FROM_WIN32(GetLastError());
-        }
-        return E_NOTIMPL;
-    }
-
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax)
-    {
-        if (idCmd == m_idFirst)
-        {
-            if (uType == GCS_VERBW)
-            {
-                return StringCchCopyW((LPWSTR) pszName, cchMax, L"open");
-            }
-        }
-        else if (idCmd == (m_idFirst + 1))
-        {
-            if (uType == GCS_VERBW)
-            {
-                return StringCchCopyW((LPWSTR) pszName, cchMax, L"opennewwindow");
-            }
-        }
-        return E_NOTIMPL;
-    }
-
-    DECLARE_NOT_AGGREGATABLE(CNtObjectFolderContextMenu)
-    DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-    BEGIN_COM_MAP(CNtObjectFolderContextMenu)
-        COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    END_COM_MAP()
-
+    NTOBJECT_COLUMN_TYPE,
+    NTOBJECT_COLUMN_CREATEDATE,
+    NTOBJECT_COLUMN_LINKTARGET,
+    NTOBJECT_COLUMN_END
 };
 
 class CNtObjectFolderExtractIcon :
@@ -254,6 +108,11 @@ public:
             *piIndex = -IDI_NTOBJECTPORT;
             *pwFlags = flags;
             return S_OK;
+        case KEY_OBJECT:
+            GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
+            *piIndex = -IDI_REGISTRYKEY;
+            *pwFlags = flags;
+            return S_OK;
         default:
             GetModuleFileNameW(g_hInstance, szIconFile, cchMax);
             *piIndex = -IDI_NTOBJECTITEM;
@@ -318,6 +177,15 @@ public:
     HRESULT Initialize(PWSTR ntPath)
     {
         m_ntPath = ntPath;
+        m_hDpa = NULL;
+
+        return S_OK;
+    }
+
+    HRESULT Enumerate()
+    {
+        if (m_hDpa)
+            return S_OK;
 
         m_hDpa = DPA_Create(10);
 
@@ -337,7 +205,12 @@ public:
 
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         NtPidlEntry * info = (NtPidlEntry *) pcidl;
@@ -375,9 +248,16 @@ public:
 
     HRESULT FindByName(LPCWSTR strParsingName, NtPidlEntry ** pinfo)
     {
+        HRESULT hr;
+
         if (!m_hDpa)
         {
-            return E_FAIL;
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
         }
 
         TRACE("Searching for '%S' in a list of %d items\n", strParsingName, m_hDpaCount);
@@ -404,6 +284,18 @@ public:
 
     HRESULT GetPidl(UINT index, NtPidlEntry ** pEntry)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *pEntry = NULL;
 
         NtPidlEntry * entry = (NtPidlEntry *) DPA_GetPtr(m_hDpa, index);
@@ -418,10 +310,21 @@ public:
 
     HRESULT GetCount(UINT * count)
     {
+        HRESULT hr;
+
+        if (!m_hDpa)
+        {
+            hr = Enumerate();
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            if (!m_hDpa)
+                return E_FAIL;
+        }
+
         *count = m_hDpaCount;
         return S_OK;
     }
-
 
     static LPITEMIDLIST CreatePidlFromItem(NtPidlEntry * entry)
     {
@@ -433,54 +336,102 @@ public:
         return idl;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
     {
-        if (LOWORD(lParam) != 0)
-            return E_INVALIDARG;
-
-        if (second->cb > first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->cb < first->cb)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (second->entryNameLength > first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) 1);
-        if (second->entryNameLength < first->entryNameLength)
-            return MAKE_HRESULT(0, 0, (USHORT) -1);
-
-        if (HIWORD(lParam) == SHCIDS_ALLFIELDS)
+        if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
-            int ord = memcmp(second, first, first->cb);
+            if (lParam != 0)
+                return E_INVALIDARG;
+
+            int minsize = min(first->cb, second->cb);
+            int ord = memcmp(second, first, minsize);
 
             if (ord != 0)
                 return MAKE_HRESULT(0, 0, (USHORT) ord);
-        }
-        else if (HIWORD(lParam) == SHCIDS_CANONICALONLY)
-        {
-            int ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+            if (second->cb > first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) 1);
+            if (second->cb < first->cb)
+                return MAKE_HRESULT(0, 0, (USHORT) -1);
         }
         else
         {
-            int ord = (int) second->objectType - (int) first->objectType;
+            bool canonical = ((lParam & 0xFFFF0000) == SHCIDS_CANONICALONLY);
 
-            if (ord > 0)
-                return MAKE_HRESULT(0, 0, (USHORT) 1);
-            if (ord < 0)
-                return MAKE_HRESULT(0, 0, (USHORT) -1);
+            switch (lParam & 0xFFFF)
+            {
+            case NTOBJECT_COLUMN_NAME:
+            {
+                bool f1 = (first->objectType == KEY_OBJECT) || (first->objectType == DIRECTORY_OBJECT);
+                bool f2 = (second->objectType == KEY_OBJECT) || (second->objectType == DIRECTORY_OBJECT);
 
-            ord = StrCmpNW(second->entryName, first->entryName, first->entryNameLength / sizeof(WCHAR));
+                if (f1 && !f2)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+                if (f2 && !f1)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
 
-            if (ord != 0)
-                return MAKE_HRESULT(0, 0, (USHORT) ord);
+                if (canonical)
+                {
+                    // Shortcut: avoid comparing contents if not necessary when the results are not for display.
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                int minlength = min(first->entryNameLength, second->entryNameLength);
+                int ord = StrCmpNW(first->entryName, second->entryName, minlength);
+
+                if (ord != 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) ord);
+
+                if (!canonical)
+                {
+                    if (second->entryNameLength > first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) 1);
+                    if (second->entryNameLength < first->entryNameLength)
+                        return MAKE_HRESULT(0, 0, (USHORT) -1);
+                }
+
+                return S_OK;
+            }
+            case NTOBJECT_COLUMN_TYPE:
+            {
+                int ord = second->objectType - first->objectType;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case NTOBJECT_COLUMN_CREATEDATE:
+            {
+                LONGLONG ord = second->objectInformation.CreateTime.QuadPart - first->objectInformation.CreateTime.QuadPart;
+                if (ord > 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) 1);
+                if (ord < 0)
+                    return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                return S_OK;
+            }
+            case NTOBJECT_COLUMN_LINKTARGET:
+            {
+                // Can't sort by value
+                return E_INVALIDARG;
+            }
+            default:
+            {
+                DbgPrint("Unsupported sorting mode.\n");
+                return E_INVALIDARG;
+            }
+            }
         }
 
-        return S_OK;
+        return E_INVALIDARG;
     }
 
-    HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         NtPidlEntry * second = (NtPidlEntry*) &(p->mkid);
@@ -490,7 +441,7 @@ public:
         return CompareIDs(lParam, first, second);
     }
 
-    HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
+    static HRESULT CompareIDs(LPARAM lParam, LPCITEMIDLIST pcidl1, LPCITEMIDLIST pcidl2)
     {
         LPCITEMIDLIST p = pcidl1;
         NtPidlEntry * first = (NtPidlEntry*) &(p->mkid);
@@ -500,7 +451,7 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    ULONG ConvertAttributes(NtPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(NtPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = SFGAO_HASPROPSHEET | SFGAO_CANLINK;
@@ -517,6 +468,17 @@ public:
         return flags & mask;
     }
 
+    BOOL IsFolder(LPCITEMIDLIST pcidl)
+    {
+        NtPidlEntry * entry;
+        HRESULT hr = FindPidlInList(pcidl, &entry);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return FALSE;
+
+        return (entry->objectType == DIRECTORY_OBJECT) ||
+            (entry->objectType == SYMBOLICLINK_OBJECT) ||
+            (entry->objectType == KEY_OBJECT);
+    }
 };
 
 class CNtObjectFolderEnum :
@@ -646,7 +608,10 @@ CNtObjectFolder::CNtObjectFolder() :
 
 CNtObjectFolder::~CNtObjectFolder()
 {
-    TRACE("Destroying CNtObjectFolder %p\n", this);
+    if (m_shellPidl)
+        ILFree(m_shellPidl);
+    if (m_PidlManager)
+        delete m_PidlManager;
 }
 
 // IShellFolder
@@ -716,7 +681,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
             return E_ACCESSDENIED;
 
         WCHAR path[MAX_PATH];
+
         StringCbCopyW(path, _countof(path), m_NtPath);
+
         PathAppendW(path, info->entryName);
 
         LPITEMIDLIST first = ILCloneFirst(pidl);
@@ -758,7 +725,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
 
         if (info->objectType == KEY_OBJECT)
         {
-            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = ShellObjectCreatorInit<CRegistryFolder>(fullPidl, path, (HKEY)NULL, IID_PPV_ARG(IShellFolder, &psfChild));
         }
         else
         {
@@ -795,7 +762,36 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::CompareIDs(
     LPCITEMIDLIST pidl2)
 {
     TRACE("CompareIDs\n");
-    return m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+
+    HRESULT hr = m_PidlManager->CompareIDs(lParam, pidl1, pidl2);
+    if (hr != S_OK)
+        return hr;
+
+    LPCITEMIDLIST rest1 = ILGetNext(pidl1);
+    LPCITEMIDLIST rest2 = ILGetNext(pidl2);
+
+    bool hasNext1 = (rest1->mkid.cb > 0);
+    bool hasNext2 = (rest2->mkid.cb > 0);
+
+    if (hasNext1 || hasNext2)
+    {
+        if (hasNext1 && !hasNext2)
+            return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+        if (hasNext2 && !hasNext1)
+            return MAKE_HRESULT(0, 0, (USHORT) 1);
+
+        LPCITEMIDLIST first1 = ILCloneFirst(pidl1);
+
+        CComPtr<IShellFolder> psfNext;
+        hr = BindToObject(first1, NULL, IID_PPV_ARG(IShellFolder, &psfNext));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return psfNext->CompareIDs(lParam, rest1, rest2);
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::CreateViewObject(
@@ -856,15 +852,56 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetUIObjectOf(
 {
     TRACE("GetUIObjectOf\n");
 
-    if (IsEqualIID(riid, IID_IContextMenu))
+    if (IsEqualIID(riid, IID_IContextMenu) ||
+        IsEqualIID(riid, IID_IContextMenu2) ||
+        IsEqualIID(riid, IID_IContextMenu3))
     {
-        return ShellObjectCreatorInit<CNtObjectFolderContextMenu>(m_shellPidl, cidl, apidl, riid, ppvOut);
-        //return CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, ContextMenuCallback, 0, NULL, (IContextMenu**) ppvOut);
+        CComPtr<IContextMenu> pcm;
+
+        HKEY keys [1];
+
+        int nkeys = _countof(keys);
+        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        {
+            RegOpenKey(HKEY_CLASSES_ROOT, L"Folder", keys + 0);
+        }
+        else
+        {
+            nkeys = 0;
+        }
+
+        HRESULT hr = CDefFolderMenu_Create2(m_shellPidl, hwndOwner, cidl, apidl, this, DefCtxMenuCallback, nkeys, keys, &pcm);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return pcm->QueryInterface(riid, ppvOut);
     }
 
     if (IsEqualIID(riid, IID_IExtractIconW))
     {
         return ShellObjectCreatorInit<CNtObjectFolderExtractIcon>(m_shellPidl, cidl, apidl, riid, ppvOut);
+    }
+
+    if (IsEqualIID(riid, IID_IDataObject))
+    {
+        return CIDLData_CreateFromIDArray(m_shellPidl, cidl, apidl, (IDataObject**)ppvOut);
+    }
+
+    if (IsEqualIID(riid, IID_IQueryAssociations))
+    {
+        if (cidl == 1 && m_PidlManager->IsFolder(apidl[0]))
+        {
+            CComPtr<IQueryAssociations> pqa;
+            HRESULT hr = AssocCreate(CLSID_QueryAssociations, IID_PPV_ARG(IQueryAssociations, &pqa));
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            hr = pqa->Init(ASSOCF_INIT_DEFAULTTOFOLDER, L"NTObjShEx.NTDirectory", NULL, hwndOwner);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            return pqa->QueryInterface(riid, ppvOut);
+        }
     }
 
     return E_NOTIMPL;
@@ -899,12 +936,13 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        LPCITEMIDLIST pidlFirst = ILCloneFirst(pidl);
         LPCITEMIDLIST pidlNext = ILGetNext(pidl);
 
         if (pidlNext && pidlNext->mkid.cb > 0)
         {
             CComPtr<IShellFolder> psfChild;
-            hr = BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+            hr = BindToObject(pidlFirst, NULL, IID_PPV_ARG(IShellFolder, &psfChild));
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -921,6 +959,8 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
 
             PathAppendW(path, temp);
         }
+
+        ILFree((LPITEMIDLIST)pidlFirst);
     }
     else
     {
@@ -971,7 +1011,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl)
 // Internal
 HRESULT STDMETHODCALLTYPE CNtObjectFolder::Initialize(LPCITEMIDLIST pidl, PCWSTR ntPath)
 {
-    TRACE("INITIALIZE %p CNtObjectFolder with ntPath %S\n", this, ntPath);
+    m_shellPidl = ILClone(pidl);
 
     if (!m_PidlManager)
         m_PidlManager = new CNtObjectPidlManager();
@@ -1270,6 +1310,26 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::MessageSFVCB(UINT uMsg, WPARAM wParam
         *pViewMode = FVM_DETAILS;
         return S_OK;
     }
+    case SFVM_COLUMNCLICK:
+        return S_FALSE;
+    case SFVM_BACKGROUNDENUM:
+        return S_OK;
+    case SFVM_DEFITEMCOUNT:
+        return m_PidlManager->GetCount((UINT*) lParam);
+    }
+    return E_NOTIMPL;
+}
+
+HRESULT CNtObjectFolder::DefCtxMenuCallback(IShellFolder * /*psf*/, HWND /*hwnd*/, IDataObject * /*pdtobj*/, UINT uMsg, WPARAM /*wParam*/, LPARAM /*lParam*/)
+{
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
     }
     return E_NOTIMPL;
 }

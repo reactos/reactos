@@ -21,8 +21,6 @@
 
 #include "editor.h"
 
-#include <tom.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 /* there is no way to be consistent across different sets of headers - mingw, Wine, Win32 SDK*/
@@ -34,21 +32,49 @@ DEFINE_GUID(IID_ITextHost2, 0x13e670f5,0x1a5a,0x11cf,0xab,0xeb,0x00,0xaa,0x00,0x
 DEFINE_GUID(IID_ITextDocument, 0x8cc497c0, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
 DEFINE_GUID(IID_ITextRange, 0x8cc497c2, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
 DEFINE_GUID(IID_ITextSelection, 0x8cc497c1, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
+DEFINE_GUID(IID_ITextFont, 0x8cc497c3, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
+DEFINE_GUID(IID_ITextPara, 0x8cc497c4, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
 
 typedef struct ITextSelectionImpl ITextSelectionImpl;
 typedef struct IOleClientSiteImpl IOleClientSiteImpl;
 typedef struct ITextRangeImpl ITextRangeImpl;
+typedef struct ITextFontImpl ITextFontImpl;
+typedef struct ITextParaImpl ITextParaImpl;
 
 typedef struct IRichEditOleImpl {
+    IUnknown IUnknown_inner;
     IRichEditOle IRichEditOle_iface;
     ITextDocument ITextDocument_iface;
+    IUnknown *outer_unk;
     LONG ref;
 
     ME_TextEditor *editor;
     ITextSelectionImpl *txtSel;
     IOleClientSiteImpl *clientSite;
     struct list rangelist;
+    struct list fontlist;
+    struct list paralist;
 } IRichEditOleImpl;
+
+struct ITextParaImpl {
+    ITextPara ITextPara_iface;
+    LONG ref;
+    struct list entry;
+
+    IRichEditOleImpl *reOle;
+    ITextRangeImpl *txtRge;
+    ITextSelectionImpl *txtSel;
+};
+
+struct ITextFontImpl {
+    ITextFont ITextFont_iface;
+    LONG ref;
+    struct list entry;
+
+    IRichEditOleImpl *reOle;
+    ITextRangeImpl *txtRge;
+    ITextSelectionImpl *txtSel;
+};
 
 struct ITextRangeImpl {
     ITextRange ITextRange_iface;
@@ -83,44 +109,55 @@ static inline IRichEditOleImpl *impl_from_ITextDocument(ITextDocument *iface)
     return CONTAINING_RECORD(iface, IRichEditOleImpl, ITextDocument_iface);
 }
 
-static HRESULT WINAPI
-IRichEditOle_fnQueryInterface(IRichEditOle *me, REFIID riid, LPVOID *ppvObj)
+static inline IRichEditOleImpl *impl_from_IUnknown(IUnknown *iface)
 {
-    IRichEditOleImpl *This = impl_from_IRichEditOle(me);
+    return CONTAINING_RECORD(iface, IRichEditOleImpl, IUnknown_inner);
+}
 
-    TRACE("%p %s\n", This, debugstr_guid(riid) );
+static HRESULT WINAPI IRichEditOleImpl_inner_fnQueryInterface(IUnknown *iface, REFIID riid, LPVOID *ppvObj)
+{
+    IRichEditOleImpl *This = impl_from_IUnknown(iface);
+
+    TRACE("%p %s\n", This, debugstr_guid(riid));
 
     *ppvObj = NULL;
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_IRichEditOle))
+    if (IsEqualGUID(riid, &IID_IUnknown))
+        *ppvObj = &This->IUnknown_inner;
+    else if (IsEqualGUID(riid, &IID_IRichEditOle))
         *ppvObj = &This->IRichEditOle_iface;
     else if (IsEqualGUID(riid, &IID_ITextDocument))
         *ppvObj = &This->ITextDocument_iface;
     if (*ppvObj)
     {
-        IRichEditOle_AddRef(me);
+        IUnknown_AddRef((IUnknown *)*ppvObj);
         return S_OK;
     }
-    FIXME("%p: unhandled interface %s\n", This, debugstr_guid(riid) );
+
+    if (IsEqualGUID(riid, &IID_ITextServices))
+    {
+        static int once;
+        if (!once++) FIXME("%p: unhandled interface IID_ITextServices\n", This);
+        return E_NOINTERFACE;
+    }
+
+    FIXME("%p: unhandled interface %s\n", This, debugstr_guid(riid));
  
     return E_NOINTERFACE;   
 }
 
-static ULONG WINAPI
-IRichEditOle_fnAddRef(IRichEditOle *me)
+static ULONG WINAPI IRichEditOleImpl_inner_fnAddRef(IUnknown *iface)
 {
-    IRichEditOleImpl *This = impl_from_IRichEditOle(me);
-    ULONG ref = InterlockedIncrement( &This->ref );
+    IRichEditOleImpl *This = impl_from_IUnknown(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("%p ref = %u\n", This, ref);
 
     return ref;
 }
 
-static ULONG WINAPI
-IRichEditOle_fnRelease(IRichEditOle *me)
+static ULONG WINAPI IRichEditOleImpl_inner_fnRelease(IUnknown *iface)
 {
-    IRichEditOleImpl *This = impl_from_IRichEditOle(me);
+    IRichEditOleImpl *This = impl_from_IUnknown(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE ("%p ref=%u\n", This, ref);
@@ -128,15 +165,51 @@ IRichEditOle_fnRelease(IRichEditOle *me)
     if (!ref)
     {
         ITextRangeImpl *txtRge;
-        TRACE ("Destroying %p\n", This);
+        ITextFontImpl *txtFont;
+        ITextParaImpl *txtPara;
+
+        TRACE("Destroying %p\n", This);
         This->txtSel->reOle = NULL;
+        This->editor->reOle = NULL;
         ITextSelection_Release(&This->txtSel->ITextSelection_iface);
         IOleClientSite_Release(&This->clientSite->IOleClientSite_iface);
         LIST_FOR_EACH_ENTRY(txtRge, &This->rangelist, ITextRangeImpl, entry)
             txtRge->reOle = NULL;
+        LIST_FOR_EACH_ENTRY(txtFont, &This->fontlist, ITextFontImpl, entry)
+            txtFont->reOle = NULL;
+        LIST_FOR_EACH_ENTRY(txtPara, &This->paralist, ITextParaImpl, entry)
+            txtPara->reOle = NULL;
         heap_free(This);
     }
     return ref;
+}
+
+static const IUnknownVtbl reo_unk_vtbl =
+{
+    IRichEditOleImpl_inner_fnQueryInterface,
+    IRichEditOleImpl_inner_fnAddRef,
+    IRichEditOleImpl_inner_fnRelease
+};
+
+static HRESULT WINAPI
+IRichEditOle_fnQueryInterface(IRichEditOle *me, REFIID riid, LPVOID *ppvObj)
+{
+    IRichEditOleImpl *This = impl_from_IRichEditOle(me);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
+}
+
+static ULONG WINAPI
+IRichEditOle_fnAddRef(IRichEditOle *me)
+{
+    IRichEditOleImpl *This = impl_from_IRichEditOle(me);
+    return IUnknown_AddRef(This->outer_unk);
+}
+
+static ULONG WINAPI
+IRichEditOle_fnRelease(IRichEditOle *me)
+{
+    IRichEditOleImpl *This = impl_from_IRichEditOle(me);
+    return IUnknown_Release(This->outer_unk);
 }
 
 static HRESULT WINAPI
@@ -445,6 +518,1395 @@ static const IRichEditOleVtbl revt = {
     IRichEditOle_fnImportDataObject
 };
 
+/* ITextPara interface */
+static inline ITextParaImpl *impl_from_ITextPara(ITextPara *iface)
+{
+    return CONTAINING_RECORD(iface, ITextParaImpl, ITextPara_iface);
+}
+
+static HRESULT WINAPI ITextPara_fnQueryInterface(ITextPara *me, REFIID riid, void **ppvObj)
+{
+    *ppvObj = NULL;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+        || IsEqualGUID(riid, &IID_ITextPara)
+        || IsEqualGUID(riid, &IID_IDispatch))
+    {
+        *ppvObj = me;
+        ITextPara_AddRef(me);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ITextPara_fnAddRef(ITextPara *me)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI ITextPara_fnRelease(ITextPara *me)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE ("%p ref=%u\n", This, ref);
+    if (ref == 0)
+    {
+        if (This->txtRge)
+            ITextRange_Release(&This->txtRge->ITextRange_iface);
+        else
+            ITextSelection_Release(&This->txtSel->ITextSelection_iface);
+        This->txtRge = NULL;
+        This->txtSel = NULL;
+        if (This->reOle)
+        {
+            list_remove(&This->entry);
+            This->reOle = NULL;
+        }
+        heap_free(This);
+    }
+    return ref;
+}
+
+static HRESULT WINAPI ITextPara_fnGetTypeInfoCount(ITextPara *me, UINT *pctinfo)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetTypeInfo(ITextPara *me, UINT iTInfo, LCID lcid,
+                                              ITypeInfo **ppTInfo)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetIDsOfNames(ITextPara *me, REFIID riid,
+                                                LPOLESTR *rgszNames, UINT cNames,
+                                                LCID lcid, DISPID *rgDispId)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnInvoke(ITextPara *me, DISPID dispIdMember, REFIID riid,
+                                         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+                                         VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                                         UINT *puArgErr)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetDuplicate(ITextPara *me, ITextPara **ppPara)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetDuplicate(ITextPara *me, ITextPara *pPara)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnCanChange(ITextPara *me, LONG *pB)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnIsEqual(ITextPara *me, ITextPara *pPara, LONG *pB)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnReset(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetStyle(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetStyle(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetAlignment(ITextPara *me, LONG *pValue)
+{
+    static int once;
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    if (!once++) FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetAlignment(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetHyphenation(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetHyphenation(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetFirstLineIndent(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetKeepTogether(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetKeepTogether(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetKeepWithNext(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetKeepWithNext(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetLeftIndent(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetLineSpacing(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetLineSpacingRule(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetListAlignment(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetListAlignment(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetListLevelIndex(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetListLevelIndex(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetListStart(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetListStart(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetListTab(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetListTab(ITextPara *me, float Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetListType(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetListType(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetNoLineNumber(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetNoLineNumber(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetPageBreakBefore(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetPageBreakBefore(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetRightIndent(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetRightIndent(ITextPara *me, float Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetIndents(ITextPara *me, float StartIndent, float LeftIndent,
+                                             float RightIndent)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetLineSpacing(ITextPara *me, LONG LineSpacingRule, float LineSpacing)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetSpaceAfter(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetSpaceAfter(ITextPara *me, float Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetSpaceBefore(ITextPara *me, float *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetSpaceBefore(ITextPara *me, float Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetWindowControl(ITextPara *me, LONG *pValue)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnSetWindowControl(ITextPara *me, LONG Value)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetTabCount(ITextPara *me, LONG *pCount)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnAddTab(ITextPara *me, float tbPos, LONG tbAlign, LONG tbLeader)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnClearAllTabs(ITextPara *me)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnDeleteTab(ITextPara *me, float tbPos)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextPara_fnGetTab(ITextPara *me, LONG iTab, float *ptbPos,
+                                         LONG *ptbAlign, LONG *ptbLeader)
+{
+    ITextParaImpl *This = impl_from_ITextPara(me);
+    if (!This->reOle)
+         return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static const ITextParaVtbl tpvt = {
+    ITextPara_fnQueryInterface,
+    ITextPara_fnAddRef,
+    ITextPara_fnRelease,
+    ITextPara_fnGetTypeInfoCount,
+    ITextPara_fnGetTypeInfo,
+    ITextPara_fnGetIDsOfNames,
+    ITextPara_fnInvoke,
+    ITextPara_fnGetDuplicate,
+    ITextPara_fnSetDuplicate,
+    ITextPara_fnCanChange,
+    ITextPara_fnIsEqual,
+    ITextPara_fnReset,
+    ITextPara_fnGetStyle,
+    ITextPara_fnSetStyle,
+    ITextPara_fnGetAlignment,
+    ITextPara_fnSetAlignment,
+    ITextPara_fnGetHyphenation,
+    ITextPara_fnSetHyphenation,
+    ITextPara_fnGetFirstLineIndent,
+    ITextPara_fnGetKeepTogether,
+    ITextPara_fnSetKeepTogether,
+    ITextPara_fnGetKeepWithNext,
+    ITextPara_fnSetKeepWithNext,
+    ITextPara_fnGetLeftIndent,
+    ITextPara_fnGetLineSpacing,
+    ITextPara_fnGetLineSpacingRule,
+    ITextPara_fnGetListAlignment,
+    ITextPara_fnSetListAlignment,
+    ITextPara_fnGetListLevelIndex,
+    ITextPara_fnSetListLevelIndex,
+    ITextPara_fnGetListStart,
+    ITextPara_fnSetListStart,
+    ITextPara_fnGetListTab,
+    ITextPara_fnSetListTab,
+    ITextPara_fnGetListType,
+    ITextPara_fnSetListType,
+    ITextPara_fnGetNoLineNumber,
+    ITextPara_fnSetNoLineNumber,
+    ITextPara_fnGetPageBreakBefore,
+    ITextPara_fnSetPageBreakBefore,
+    ITextPara_fnGetRightIndent,
+    ITextPara_fnSetRightIndent,
+    ITextPara_fnSetIndents,
+    ITextPara_fnSetLineSpacing,
+    ITextPara_fnGetSpaceAfter,
+    ITextPara_fnSetSpaceAfter,
+    ITextPara_fnGetSpaceBefore,
+    ITextPara_fnSetSpaceBefore,
+    ITextPara_fnGetWindowControl,
+    ITextPara_fnSetWindowControl,
+    ITextPara_fnGetTabCount,
+    ITextPara_fnAddTab,
+    ITextPara_fnClearAllTabs,
+    ITextPara_fnDeleteTab,
+    ITextPara_fnGetTab
+};
+/* ITextPara interface */
+
+/* ITextFont interface */
+static inline ITextFontImpl *impl_from_ITextFont(ITextFont *iface)
+{
+    return CONTAINING_RECORD(iface, ITextFontImpl, ITextFont_iface);
+}
+
+static HRESULT WINAPI ITextFont_fnQueryInterface(ITextFont *me, REFIID riid, void **ppvObj)
+{
+    *ppvObj = NULL;
+    if (IsEqualGUID(riid, &IID_IUnknown)
+        || IsEqualGUID(riid, &IID_ITextFont)
+        || IsEqualGUID(riid, &IID_IDispatch))
+    {
+        *ppvObj = me;
+        ITextFont_AddRef(me);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ITextFont_fnAddRef(ITextFont *me)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI ITextFont_fnRelease(ITextFont *me)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE ("%p ref=%u\n", This, ref);
+    if (ref == 0)
+    {
+        if (This->txtRge)
+            ITextRange_Release(&This->txtRge->ITextRange_iface);
+        else
+            ITextSelection_Release(&This->txtSel->ITextSelection_iface);
+        This->txtRge = NULL;
+        This->txtSel = NULL;
+        if (This->reOle)
+        {
+            list_remove(&This->entry);
+            This->reOle = NULL;
+        }
+        heap_free(This);
+    }
+    return ref;
+}
+
+static HRESULT WINAPI ITextFont_fnGetTypeInfoCount(ITextFont *me, UINT *pctinfo)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetTypeInfo(ITextFont *me, UINT iTInfo, LCID lcid,
+                                              ITypeInfo **ppTInfo)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetIDsOfNames(ITextFont *me, REFIID riid,
+                                                LPOLESTR *rgszNames, UINT cNames,
+                                                LCID lcid, DISPID *rgDispId)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnInvoke(ITextFont *me, DISPID dispIdMember, REFIID riid,
+                                         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+                                         VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                                         UINT *puArgErr)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetDuplicate(ITextFont *me, ITextFont **ppFont)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetDuplicate(ITextFont *me, ITextFont *pFont)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnCanChange(ITextFont *me, LONG *pB)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnIsEqual(ITextFont *me, ITextFont *pFont, LONG *pB)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnReset(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetStyle(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetStyle(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetAllCaps(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetAllCaps(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetAnimation(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetAnimation(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetBackColor(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetBackColor(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetBold(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = tomFalse;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetBold(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetEmboss(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetEmboss(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetForeColor(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = tomAutoColor;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetForeColor(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetHidden(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetHidden(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetEngrave(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetEngrave(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetItalic(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = tomFalse;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetItalic(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetKerning(ITextFont *me, float *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetKerning(ITextFont *me, float Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetLanguageID(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetLanguageID(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetName(ITextFont *me, BSTR *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    WCHAR font[] = {'S', 'y', 's', 't', 'e', 'm', 0};
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("Stub\n");
+    *pValue = SysAllocString(font);
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetName(ITextFont *me, BSTR Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetOutline(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetOutline(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetPosition(ITextFont *me, float *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetPosition(ITextFont *me, float Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetProtected(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetProtected(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetShadow(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetShadow(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetSize(ITextFont *me, float *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = 12.0;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetSize(ITextFont *me, float Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetSmallCaps(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetSmallCaps(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetSpacing(ITextFont *me, float *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetSpacing(ITextFont *me, float Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetStrikeThrough(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = tomFalse;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetStrikeThrough(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetSubscript(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+      return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = tomFalse;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetSubscript(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetSuperscript(ITextFont *me, LONG *pValue)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("Stub\n");
+    *pValue = tomFalse;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetSuperscript(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetUnderline(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!pValue)
+        return E_INVALIDARG;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("Stub\n");
+    *pValue = tomNone;
+    return S_OK;
+}
+
+static HRESULT WINAPI ITextFont_fnSetUnderline(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnGetWeight(ITextFont *me, LONG *pValue)
+{
+    static int once;
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    if (!once++) FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ITextFont_fnSetWeight(ITextFont *me, LONG Value)
+{
+    ITextFontImpl *This = impl_from_ITextFont(me);
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("not implemented: %p\n", This);
+    return E_NOTIMPL;
+}
+
+static const ITextFontVtbl tfvt = {
+    ITextFont_fnQueryInterface,
+    ITextFont_fnAddRef,
+    ITextFont_fnRelease,
+    ITextFont_fnGetTypeInfoCount,
+    ITextFont_fnGetTypeInfo,
+    ITextFont_fnGetIDsOfNames,
+    ITextFont_fnInvoke,
+    ITextFont_fnGetDuplicate,
+    ITextFont_fnSetDuplicate,
+    ITextFont_fnCanChange,
+    ITextFont_fnIsEqual,
+    ITextFont_fnReset,
+    ITextFont_fnGetStyle,
+    ITextFont_fnSetStyle,
+    ITextFont_fnGetAllCaps,
+    ITextFont_fnSetAllCaps,
+    ITextFont_fnGetAnimation,
+    ITextFont_fnSetAnimation,
+    ITextFont_fnGetBackColor,
+    ITextFont_fnSetBackColor,
+    ITextFont_fnGetBold,
+    ITextFont_fnSetBold,
+    ITextFont_fnGetEmboss,
+    ITextFont_fnSetEmboss,
+    ITextFont_fnGetForeColor,
+    ITextFont_fnSetForeColor,
+    ITextFont_fnGetHidden,
+    ITextFont_fnSetHidden,
+    ITextFont_fnGetEngrave,
+    ITextFont_fnSetEngrave,
+    ITextFont_fnGetItalic,
+    ITextFont_fnSetItalic,
+    ITextFont_fnGetKerning,
+    ITextFont_fnSetKerning,
+    ITextFont_fnGetLanguageID,
+    ITextFont_fnSetLanguageID,
+    ITextFont_fnGetName,
+    ITextFont_fnSetName,
+    ITextFont_fnGetOutline,
+    ITextFont_fnSetOutline,
+    ITextFont_fnGetPosition,
+    ITextFont_fnSetPosition,
+    ITextFont_fnGetProtected,
+    ITextFont_fnSetProtected,
+    ITextFont_fnGetShadow,
+    ITextFont_fnSetShadow,
+    ITextFont_fnGetSize,
+    ITextFont_fnSetSize,
+    ITextFont_fnGetSmallCaps,
+    ITextFont_fnSetSmallCaps,
+    ITextFont_fnGetSpacing,
+    ITextFont_fnSetSpacing,
+    ITextFont_fnGetStrikeThrough,
+    ITextFont_fnSetStrikeThrough,
+    ITextFont_fnGetSubscript,
+    ITextFont_fnSetSubscript,
+    ITextFont_fnGetSuperscript,
+    ITextFont_fnSetSuperscript,
+    ITextFont_fnGetUnderline,
+    ITextFont_fnSetUnderline,
+    ITextFont_fnGetWeight,
+    ITextFont_fnSetWeight
+};
+/* ITextFont interface */
+
 /* ITextRange interface */
 static inline ITextRangeImpl *impl_from_ITextRange(ITextRange *iface)
 {
@@ -535,14 +1997,40 @@ static HRESULT WINAPI ITextRange_fnInvoke(ITextRange *me, DISPID dispIdMember, R
     return E_NOTIMPL;
 }
 
+static HRESULT range_GetText(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, BSTR *pbstr)
+{
+    int nChars, endOfs;
+    BOOL bEOP;
+
+    endOfs = ME_GetCursorOfs(end);
+    nChars = endOfs - ME_GetCursorOfs(start);
+    if (!nChars)
+    {
+        *pbstr = NULL;
+        return S_OK;
+    }
+
+    *pbstr = SysAllocStringLen(NULL, nChars);
+    if (!*pbstr)
+        return E_OUTOFMEMORY;
+
+    bEOP = (end->pRun->next->type == diTextEnd && endOfs > ME_GetTextLength(editor));
+    ME_GetTextW(editor, *pbstr, nChars, start, nChars, FALSE, bEOP);
+    TRACE("%s\n", wine_dbgstr_w(*pbstr));
+
+    return S_OK;
+}
+
 static HRESULT WINAPI ITextRange_fnGetText(ITextRange *me, BSTR *pbstr)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
+    ME_Cursor start, end;
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    ME_CursorFromCharOfs(This->reOle->editor, This->start, &start);
+    ME_CursorFromCharOfs(This->reOle->editor, This->end, &end);
+    return range_GetText(This->reOle->editor, &start, &end, pbstr);
 }
 
 static HRESULT WINAPI ITextRange_fnSetText(ITextRange *me, BSTR bstr)
@@ -638,14 +2126,27 @@ static HRESULT WINAPI ITextRange_fnGetStart(ITextRange *me, LONG *pcpFirst)
     return S_OK;
 }
 
+static HRESULT range_SetStart(ME_TextEditor *editor, LONG cpFirst, LONG *start, LONG *end)
+{
+    int len = ME_GetTextLength(editor);
+
+    TRACE("%d\n", cpFirst);
+    if (cpFirst == *start)
+        return S_FALSE;
+    cpFirst = min(cpFirst, len);
+    cpFirst = max(cpFirst, 0);
+    *end = max(*end, cpFirst);
+    *start = cpFirst;
+    return S_OK;
+}
+
 static HRESULT WINAPI ITextRange_fnSetStart(ITextRange *me, LONG cpFirst)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    return range_SetStart(This->reOle->editor, cpFirst, &This->start, &This->end);
 }
 
 static HRESULT WINAPI ITextRange_fnGetEnd(ITextRange *me, LONG *pcpLim)
@@ -661,24 +2162,65 @@ static HRESULT WINAPI ITextRange_fnGetEnd(ITextRange *me, LONG *pcpLim)
     return S_OK;
 }
 
+static HRESULT range_SetEnd(ME_TextEditor *editor, LONG cpLim, LONG *start, LONG *end)
+{
+    int len = ME_GetTextLength(editor) + 1;
+
+    TRACE("%d\n", cpLim);
+    if (cpLim == *end)
+        return S_FALSE;
+    cpLim = min(cpLim, len);
+    cpLim = max(cpLim, 0);
+    *start = min(*start, cpLim);
+    *end = cpLim;
+    return S_OK;
+}
+
 static HRESULT WINAPI ITextRange_fnSetEnd(ITextRange *me, LONG cpLim)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    return range_SetEnd(This->reOle->editor, cpLim, &This->start, &This->end);
+}
+
+static HRESULT CreateITextFont(IRichEditOleImpl *reOle, ITextFontImpl **ptxtFont)
+{
+    ITextFontImpl *txtFont = NULL;
+    txtFont = heap_alloc(sizeof(ITextFontImpl));
+    if (!txtFont)
+        return E_OUTOFMEMORY;
+
+    txtFont->ITextFont_iface.lpVtbl = &tfvt;
+    txtFont->ref = 1;
+    txtFont->reOle = reOle;
+    list_add_head(&reOle->fontlist, &txtFont->entry);
+    *ptxtFont = txtFont;
+    return S_OK;
 }
 
 static HRESULT WINAPI ITextRange_fnGetFont(ITextRange *me, ITextFont **pFont)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
+    ITextFontImpl *txtFont = NULL;
+    HRESULT hres;
+
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    TRACE("%p\n", This);
+    if (!pFont)
+        return E_INVALIDARG;
+    hres = CreateITextFont(This->reOle, &txtFont);
+    if (!hres)
+    {
+        txtFont->txtSel = NULL;
+        txtFont->txtRge = This;
+        ITextRange_AddRef(me);
+        *pFont = &txtFont->ITextFont_iface;
+    }
+    return hres;
 }
 
 static HRESULT WINAPI ITextRange_fnSetFont(ITextRange *me, ITextFont *pFont)
@@ -691,14 +2233,42 @@ static HRESULT WINAPI ITextRange_fnSetFont(ITextRange *me, ITextFont *pFont)
     return E_NOTIMPL;
 }
 
+static HRESULT CreateITextPara(IRichEditOleImpl *reOle, ITextParaImpl **ptxtPara)
+{
+    ITextParaImpl *txtPara = NULL;
+    txtPara = heap_alloc(sizeof(ITextParaImpl));
+    if (!txtPara)
+        return E_OUTOFMEMORY;
+
+    txtPara->ITextPara_iface.lpVtbl = &tpvt;
+    txtPara->ref = 1;
+    txtPara->reOle = reOle;
+    list_add_head(&reOle->paralist, &txtPara->entry);
+    *ptxtPara = txtPara;
+    return S_OK;
+}
+
 static HRESULT WINAPI ITextRange_fnGetPara(ITextRange *me, ITextPara **ppPara)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
+    ITextParaImpl *txtPara = NULL;
+    HRESULT hres;
+
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    TRACE("%p\n", This);
+    if (!ppPara)
+        return E_INVALIDARG;
+    hres = CreateITextPara(This->reOle, &txtPara);
+    if (!hres)
+    {
+        txtPara->txtSel = NULL;
+        txtPara->txtRge = This;
+        ITextRange_AddRef(me);
+        *ppPara = &txtPara->ITextPara_iface;
+    }
+    return hres;
 }
 
 static HRESULT WINAPI ITextRange_fnSetPara(ITextRange *me, ITextPara *pPara)
@@ -717,8 +2287,10 @@ static HRESULT WINAPI ITextRange_fnGetStoryLength(ITextRange *me, LONG *pcch)
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    if (!pcch)
+        return E_INVALIDARG;
+    *pcch = ME_GetTextLength(This->reOle->editor) + 1;
+    return S_OK;
 }
 
 static HRESULT WINAPI ITextRange_fnGetStoryType(ITextRange *me, LONG *pValue)
@@ -783,14 +2355,36 @@ static HRESULT WINAPI ITextRange_fnSetIndex(ITextRange *me, LONG Unit, LONG Inde
     return E_NOTIMPL;
 }
 
+static void cp2range(ME_TextEditor *editor, LONG *cp1, LONG *cp2)
+{
+    int len = ME_GetTextLength(editor) + 1;
+    *cp1 = max(*cp1, 0);
+    *cp2 = max(*cp2, 0);
+    *cp1 = min(*cp1, len);
+    *cp2 = min(*cp2, len);
+    if (*cp1 > *cp2)
+    {
+        int tmp = *cp1;
+        *cp1 = *cp2;
+        *cp2 = tmp;
+    }
+    if (*cp1 == len)
+        *cp1 = *cp2 = len - 1;
+}
+
 static HRESULT WINAPI ITextRange_fnSetRange(ITextRange *me, LONG cpActive, LONG cpOther)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    cp2range(This->reOle->editor, &cpActive, &cpOther);
+    if (cpActive == This->start && cpOther == This->end)
+        return S_FALSE;
+
+    This->start = cpActive;
+    This->end = cpOther;
+    return S_OK;
 }
 
 static HRESULT WINAPI ITextRange_fnInRange(ITextRange *me, ITextRange *pRange, LONG *pb)
@@ -813,14 +2407,29 @@ static HRESULT WINAPI ITextRange_fnInStory(ITextRange *me, ITextRange *pRange, L
     return E_NOTIMPL;
 }
 
+static HRESULT range_IsEqual(LONG start, LONG end, ITextRange *pRange, LONG *pb)
+{
+    ITextRangeImpl *pRangeImpl = impl_from_ITextRange(pRange);
+    if (start == pRangeImpl->start && end == pRangeImpl->end)
+    {
+        if (pb)
+            *pb = tomTrue;
+        return S_OK;
+    }
+    if (pb)
+        *pb = tomFalse;
+    return S_FALSE;
+}
+
 static HRESULT WINAPI ITextRange_fnIsEqual(ITextRange *me, ITextRange *pRange, LONG *pb)
 {
     ITextRangeImpl *This = impl_from_ITextRange(me);
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented %p\n", This);
-    return E_NOTIMPL;
+    if (!pRange)
+        return S_FALSE;
+    return range_IsEqual(This->start, This->end, pRange, pb);
 }
 
 static HRESULT WINAPI ITextRange_fnSelect(ITextRange *me)
@@ -1385,26 +2994,12 @@ ITextDocument_fnRange(ITextDocument* me, LONG cp1, LONG cp2,
     ITextRange** ppRange)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
-    const int len = ME_GetTextLength(This->editor) + 1;
 
     TRACE("%p %p %d %d\n", This, ppRange, cp1, cp2);
     if (!ppRange)
         return E_INVALIDARG;
 
-    cp1 = max(cp1, 0);
-    cp2 = max(cp2, 0);
-    cp1 = min(cp1, len);
-    cp2 = min(cp2, len);
-    if (cp1 > cp2)
-    {
-        LONG tmp;
-        tmp = cp1;
-        cp1 = cp2;
-        cp2 = tmp;
-    }
-    if (cp1 == len)
-        cp1 = cp2 = len - 1;
-
+    cp2range(This->editor, &cp1, &cp2);
     return CreateITextRange(This, cp1, cp2, ppRange);
 }
 
@@ -1537,8 +3132,6 @@ static HRESULT WINAPI ITextSelection_fnGetText(ITextSelection *me, BSTR *pbstr)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
     ME_Cursor *start = NULL, *end = NULL;
-    int nChars, endOfs;
-    BOOL bEOP;
 
     if (!This->reOle)
         return CO_E_RELEASED;
@@ -1547,23 +3140,7 @@ static HRESULT WINAPI ITextSelection_fnGetText(ITextSelection *me, BSTR *pbstr)
         return E_INVALIDARG;
 
     ME_GetSelection(This->reOle->editor, &start, &end);
-    endOfs = ME_GetCursorOfs(end);
-    nChars = endOfs - ME_GetCursorOfs(start);
-    if (!nChars)
-    {
-        *pbstr = NULL;
-        return S_OK;
-    }
-
-    *pbstr = SysAllocStringLen(NULL, nChars);
-    if (!*pbstr)
-        return E_OUTOFMEMORY;
-
-    bEOP = (end->pRun->next->type == diTextEnd && endOfs > ME_GetTextLength(This->reOle->editor));
-    ME_GetTextW(This->reOle->editor, *pbstr, nChars, start, nChars, FALSE, bEOP);
-    TRACE("%s\n", wine_dbgstr_w(*pbstr));
-
-    return S_OK;
+    return range_GetText(This->reOle->editor, start, end, pbstr);
 }
 
 static HRESULT WINAPI ITextSelection_fnSetText(ITextSelection *me, BSTR bstr)
@@ -1604,11 +3181,17 @@ static HRESULT WINAPI ITextSelection_fnSetChar(ITextSelection *me, LONG ch)
 static HRESULT WINAPI ITextSelection_fnGetDuplicate(ITextSelection *me, ITextRange **ppRange)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    int start, end;
+
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("%p %p\n", This, ppRange);
+    if (!ppRange)
+        return E_INVALIDARG;
+
+    ME_GetSelectionOfs(This->reOle->editor, &start, &end);
+    return CreateITextRange(This->reOle, start, end, ppRange);
 }
 
 static HRESULT WINAPI ITextSelection_fnGetFormattedText(ITextSelection *me, ITextRange **ppRange)
@@ -1648,11 +3231,16 @@ static HRESULT WINAPI ITextSelection_fnGetStart(ITextSelection *me, LONG *pcpFir
 static HRESULT WINAPI ITextSelection_fnSetStart(ITextSelection *me, LONG cpFirst)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    int start, end;
+    HRESULT hres;
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    ME_GetSelectionOfs(This->reOle->editor, &start, &end);
+    hres = range_SetStart(This->reOle->editor, cpFirst, &start, &end);
+    if (!hres)
+        ME_SetSelection(This->reOle->editor, start, end);
+    return hres;
 }
 
 static HRESULT WINAPI ITextSelection_fnGetEnd(ITextSelection *me, LONG *pcpLim)
@@ -1672,21 +3260,39 @@ static HRESULT WINAPI ITextSelection_fnGetEnd(ITextSelection *me, LONG *pcpLim)
 static HRESULT WINAPI ITextSelection_fnSetEnd(ITextSelection *me, LONG cpLim)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    int start, end;
+    HRESULT hres;
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    ME_GetSelectionOfs(This->reOle->editor, &start, &end);
+    hres = range_SetEnd(This->reOle->editor, cpLim, &start, &end);
+    if (!hres)
+        ME_SetSelection(This->reOle->editor, start, end);
+    return hres;
 }
 
 static HRESULT WINAPI ITextSelection_fnGetFont(ITextSelection *me, ITextFont **pFont)
 {
     ITextSelectionImpl *This = impl_from_ITextSelection(me);
+    ITextFontImpl *txtFont = NULL;
+    HRESULT hres;
+
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    TRACE("%p\n", This);
+    if (!pFont)
+        return E_INVALIDARG;
+    hres = CreateITextFont(This->reOle, &txtFont);
+    if (!hres)
+    {
+        txtFont->txtSel = This;
+        txtFont->txtRge = NULL;
+        ITextSelection_AddRef(me);
+        *pFont = &txtFont->ITextFont_iface;
+    }
+    return hres;
 }
 
 static HRESULT WINAPI ITextSelection_fnSetFont(ITextSelection *me, ITextFont *pFont)
@@ -1725,8 +3331,10 @@ static HRESULT WINAPI ITextSelection_fnGetStoryLength(ITextSelection *me, LONG *
     if (!This->reOle)
         return CO_E_RELEASED;
 
-    FIXME("not implemented\n");
-    return E_NOTIMPL;
+    if (!pcch)
+        return E_INVALIDARG;
+    *pcch = ME_GetTextLength(This->reOle->editor) + 1;
+    return S_OK;
 }
 
 static HRESULT WINAPI ITextSelection_fnGetStoryType(ITextSelection *me, LONG *pValue)
@@ -2292,7 +3900,7 @@ CreateTextSelection(IRichEditOleImpl *reOle)
     return txtSel;
 }
 
-LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
+LRESULT CreateIRichEditOle(IUnknown *outer_unk, ME_TextEditor *editor, LPVOID *ppvObj)
 {
     IRichEditOleImpl *reo;
 
@@ -2300,6 +3908,7 @@ LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
     if (!reo)
         return 0;
 
+    reo->IUnknown_inner.lpVtbl = &reo_unk_vtbl;
     reo->IRichEditOle_iface.lpVtbl = &revt;
     reo->ITextDocument_iface.lpVtbl = &tdvt;
     reo->ref = 1;
@@ -2318,8 +3927,14 @@ LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
         return 0;
     }
     TRACE("Created %p\n",reo);
-    *ppObj = reo;
     list_init(&reo->rangelist);
+    list_init(&reo->fontlist);
+    list_init(&reo->paralist);
+    if (outer_unk)
+        reo->outer_unk = outer_unk;
+    else
+        reo->outer_unk = &reo->IUnknown_inner;
+    *ppvObj = &reo->IRichEditOle_iface;
 
     return 1;
 }
@@ -2526,4 +4141,10 @@ void ME_CopyReObject(REOBJECT* dst, const REOBJECT* src)
     if (dst->poleobj)   IOleObject_AddRef(dst->poleobj);
     if (dst->pstg)      IStorage_AddRef(dst->pstg);
     if (dst->polesite)  IOleClientSite_AddRef(dst->polesite);
+}
+
+void ME_GetITextDocumentInterface(IRichEditOle *iface, LPVOID *ppvObj)
+{
+    IRichEditOleImpl *This = impl_from_IRichEditOle(iface);
+    *ppvObj = &This->ITextDocument_iface;
 }

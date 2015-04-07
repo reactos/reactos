@@ -63,7 +63,10 @@ HKCU,"Control Panel\Desktop","ScreenSaveActive",2,"0"
 HKCU,"Control Panel\Desktop","ScreenSaverIsSecure",2,"1"
 HKCU,"Control Panel\Desktop","ScreenSaveTimeOut",0,"600"
 HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",2,"20000"
+HKCU,"Control Panel\Desktop","Pattern",2,"(None)"
 HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
+HKCU,"Control Panel\Desktop","TileWallpaper",2,"0"
+HKCU,"Control Panel\Desktop","WallpaperStyle",2,"0"
 HKCU,"Control Panel\Desktop","FontSmoothing",0,"1"
 HKCU,"Control Panel\Desktop","FontSmoothingOrientation",0x00010003,0x00000001
 HKCU,"Control Panel\Desktop","FontSmoothingType",0x00010003,0x00000001
@@ -79,8 +82,6 @@ HKCU,"Control Panel\Desktop","PowerOffTimeOut",2,"0"
 HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
 HKCU,"Control Panel\Desktop","WheelScrollLines",2,"3"
 HKCU,"Control Panel\Desktop","WheelScrollChars",2,"3"
-HKCU,"Control Panel\Desktop","TileWallpaper",2,"0"
-HKCU,"Control Panel\Desktop","Pattern",2,"(None)"
 
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",2,"16"
 HKCU,"Control Panel\Desktop\WindowMetrics","ScrollHeight",2,"16"
@@ -1842,6 +1843,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-10
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","ListviewShadow",0x00010001,0x00000001
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","HideFileExt",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","StartMenuLogoff",0x00010001,0x00000001
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced","Hidden",0x00010003,1
 
 ; default shell
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon",,0x00000012

@@ -5,6 +5,7 @@
 
 /* From sal.h */
 #define _Always_(annos)
+#define _Analysis_mode_(mode)
 #define _Analysis_noreturn_
 #define _Analysis_assume_(expr) __analysis_assume(expr)
 #define _At_(target, annos)
@@ -183,6 +184,7 @@
 #define _Deref_ret_range_(lb,ub)
 #define _Deref_ret_z_
 #define _Deref2_pre_readonly_
+#define _Enum_is_bitflag_
 #define _Field_range_(min,max)
 #define _Field_size_(size)
 #define _Field_size_bytes_(size)
@@ -308,7 +310,7 @@
 #define _Literal_
 #define _Maybenull_
 #define _Maybevalid_
-#define _Maybe_raises_SEH_exception
+#define _Maybe_raises_SEH_exception_
 #define _Must_inspect_result_
 #define _Notliteral_
 #define _Notnull_
@@ -566,7 +568,6 @@
 #define _Prepost_z_
 #define _Printf_format_string_
 #define _Raises_SEH_exception_
-#define _Maybe_raises_SEH_exception_
 #define _Readable_bytes_(size)
 #define _Readable_elements_(size)
 #define _Reserved_
@@ -629,6 +630,7 @@
 #define _Return_type_success_(expr)
 #define _Scanf_format_string_
 #define _Scanf_s_format_string_
+#define _Strict_type_match_
 #define _Struct_size_bytes_(size)
 #define _Success_(expr)
 #define _Unchanged_(e)
@@ -663,6 +665,8 @@
 #define _Kernel_requires_resource_not_held_(kind)
 #define _Kernel_acquires_resource_(kind)
 #define _Landmark_(name)
+#define __prefast_operator_new_null
+#define __prefast_operator_new_throws
 
 /* concurrencysal.h */
 #define _Benign_race_begin_ __pragma(warning(push))

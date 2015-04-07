@@ -65,7 +65,7 @@ BEGIN
         MENUITEM "&Használat", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&About", CMD_ABOUT
-        MENUITEM "Inf&ormáció...", CMD_ABOUT_WINE
+        MENUITEM "Inf&ormáció...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

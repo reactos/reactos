@@ -860,6 +860,7 @@ SetupDiInstallClassExW(
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS);
         if (!SetupDiGetDeviceInstallParamsW(hDeviceInfo, NULL, &InstallParams))
             goto cleanup;
+
         InstallParams.Flags &= ~(DI_NOVCP | DI_NOBROWSE | DI_QUIETINSTALL);
         InstallParams.Flags |= Flags & (DI_NOVCP | DI_NOBROWSE | DI_QUIETINSTALL);
         if (Flags & DI_NOVCP)
@@ -939,9 +940,9 @@ SetupDiInstallClassExW(
             if (!ret)
                 goto cleanup;
 
-            /* Install .Services section */
+            /* OPTIONAL: Install .Services section */
             lstrcatW(SectionName, DotServices);
-            ret = SetupInstallServicesFromInfSectionExW(
+            SetupInstallServicesFromInfSectionExW(
                 hInf,
                 SectionName,
                 0,
@@ -949,9 +950,6 @@ SetupDiInstallClassExW(
                 NULL,
                 NULL,
                 NULL);
-            if (!ret)
-                goto cleanup;
-
             ret = TRUE;
         }
 

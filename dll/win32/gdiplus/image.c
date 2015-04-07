@@ -565,8 +565,8 @@ GpStatus convert_pixels(INT width, INT height,
     }
 
 #define convert_indexed_to_rgb(getpixel_function, setpixel_function) do { \
-    for (x=0; x<width; x++) \
-        for (y=0; y<height; y++) { \
+    for (y=0; y<height; y++) \
+        for (x=0; x<width; x++) { \
             BYTE index; \
             ARGB argb; \
             BYTE *color = (BYTE *)&argb; \
@@ -578,8 +578,8 @@ GpStatus convert_pixels(INT width, INT height,
 } while (0);
 
 #define convert_rgb_to_rgb(getpixel_function, setpixel_function) do { \
-    for (x=0; x<width; x++) \
-        for (y=0; y<height; y++) { \
+    for (y=0; y<height; y++) \
+        for (x=0; x<width; x++) { \
             BYTE r, g, b, a; \
             getpixel_function(&r, &g, &b, &a, src_bits+src_stride*y, x); \
             setpixel_function(r, g, b, a, dst_bits+dst_stride*y, x); \
@@ -588,8 +588,8 @@ GpStatus convert_pixels(INT width, INT height,
 } while (0);
 
 #define convert_rgb_to_indexed(getpixel_function, setpixel_function) do { \
-    for (x=0; x<width; x++) \
-        for (y=0; y<height; y++) { \
+    for (y=0; y<height; y++) \
+        for (x=0; x<width; x++) { \
             BYTE r, g, b, a; \
             getpixel_function(&r, &g, &b, &a, src_bits+src_stride*y, x); \
             setpixel_function(r, g, b, a, dst_bits+dst_stride*y, x, palette); \
@@ -1466,6 +1466,18 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromResource(HINSTANCE hInstance,
     return stat;
 }
 
+static inline DWORD blend_argb_no_bkgnd_alpha(DWORD src, DWORD bkgnd)
+{
+    BYTE b = (BYTE)src;
+    BYTE g = (BYTE)(src >> 8);
+    BYTE r = (BYTE)(src >> 16);
+    DWORD alpha  = (BYTE)(src >> 24);
+    return ((b     + ((BYTE)bkgnd         * (255 - alpha) + 127) / 255) |
+            (g     + ((BYTE)(bkgnd >> 8)  * (255 - alpha) + 127) / 255) << 8 |
+            (r     + ((BYTE)(bkgnd >> 16) * (255 - alpha) + 127) / 255) << 16 |
+            (alpha << 24));
+}
+
 GpStatus WINGDIPAPI GdipCreateHBITMAPFromBitmap(GpBitmap* bitmap,
     HBITMAP* hbmReturn, ARGB background)
 {
@@ -1506,6 +1518,17 @@ GpStatus WINGDIPAPI GdipCreateHBITMAPFromBitmap(GpBitmap* bitmap,
 
         if (stat == Ok)
             stat = GdipBitmapUnlockBits(bitmap, &lockeddata);
+
+        if (stat == Ok && (background & 0xffffff))
+        {
+            DWORD *ptr;
+            UINT i;
+            for (ptr = (DWORD*)bits, i = 0; i < width * height; ptr++, i++)
+            {
+                if ((*ptr & 0xff000000) == 0xff000000) continue;
+                *ptr = blend_argb_no_bkgnd_alpha(*ptr, background);
+            }
+        }
     }
     else
         stat = GenericError;
@@ -3836,11 +3859,6 @@ GpStatus WINGDIPAPI GdipSaveImageToFile(GpImage *image, GDIPCONST WCHAR* filenam
  * Encoding functions -
  *   These functions encode an image in different image file formats.
  */
-#define BITMAP_FORMAT_BMP   0x4d42 /* "BM" */
-#define BITMAP_FORMAT_JPEG  0xd8ff
-#define BITMAP_FORMAT_GIF   0x4947
-#define BITMAP_FORMAT_PNG   0x5089
-#define BITMAP_FORMAT_APM   0xcdd7
 
 static GpStatus encode_image_WIC(GpImage *image, IStream* stream,
     GDIPCONST CLSID* clsid, GDIPCONST EncoderParameters* params)

@@ -2,7 +2,12 @@
 
 /* icons */
 #define ICO_MAIN            100
+#define ICO_RESTRICTED      4481
+#define ICO_TRUSTED         4480
 #define ICO_INTERNET        1313
+#define ICO_CERTIFICATES    1314
+#define ICO_HISTORY         1315
+#define ICO_HOME            1316
 
 /* strings */
 #define IDS_CPL_NAME        1

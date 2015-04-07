@@ -14,6 +14,9 @@ CDPath = none
 [Section.0407]
 Description = Ein Spiel, ähnlich zu Frozen Fruits.
 
+[Section.040a]
+Description = Un juego similar a Frozen Fruits.
+
 [Section.0410]
 Name = Bound Around (Versione di prova)
 Description = Un gioco simile a Frozen Fruits.

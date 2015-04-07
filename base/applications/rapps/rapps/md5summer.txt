@@ -1,0 +1,21 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = MD5summer
+Version = 1.2.0.11
+License = Freeware
+Description = MD5summer is an application for Microsoft Windows which generates and verifies md5 checksums.
+Size = 452kB
+Category = 12
+URLSite = http://www.md5summer.org/
+URLDownload = http://www.md5summer.org/md5v12011.zip
+CDPath = none
+
+[Section.0407]
+Description = MD5summer ist eine Windows Anwendung, welche MD5 Checksummen generiert und verifiziert.
+
+[Section.041f]
+License = Ücretsiz
+Description = MD5summer, md5 sağlama toplamlarını oluşturan ve doğrulayan, Microsoft Windows için bir uygulamadır.
+Size = 452 KB

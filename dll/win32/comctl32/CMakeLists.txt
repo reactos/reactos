@@ -22,6 +22,7 @@ list(APPEND SOURCE
     flatsb.c
     header.c
     hotkey.c
+    icon.c
     imagelist.c
     ipaddress.c
     listview.c
@@ -41,6 +42,7 @@ list(APPEND SOURCE
     theme_dialog.c
     theme_edit.c
     theme_listbox.c
+    theme_scrollbar.c
     theming.c
     toolbar.c
     tooltips.c

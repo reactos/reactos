@@ -1,7 +1,7 @@
 
 add_definitions(-D__WINESRC__)
 add_definitions(-D_WINE)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(msvfw32.dll msvfw32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE

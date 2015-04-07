@@ -28,7 +28,7 @@ HKCR
 						'topic' = s 'AppProperties'
 					}
 				}
-				'Manage'
+				'Manage' = e '@%%SystemRoot%%\system32\mycomput.dll,-400'
 				{
 					'command' = e 'explorer.exe /n,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\::{D20EA4E1-3957-11d2-A40B-0C5020524153}'
 					val 'SuppressionPolicy' = d '&H4000003c'

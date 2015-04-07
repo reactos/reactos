@@ -1169,6 +1169,8 @@ WINSETUPAPI BOOL WINAPI DelayedMove(PCWSTR, PCWSTR);
 WINSETUPAPI BOOL WINAPI DoesUserHavePrivilege(PCWSTR);
 WINSETUPAPI BOOL WINAPI FileExists(PCWSTR, PWIN32_FIND_DATAW);
 WINSETUPAPI DWORD WINAPI GetSetFileTimestamp(PCWSTR, PFILETIME, PFILETIME, PFILETIME, BOOLEAN);
+WINSETUPAPI VOID WINAPI InstallHinfSectionA(_In_ HWND, _In_ HINSTANCE, _In_ PCSTR, _In_ INT);
+WINSETUPAPI VOID WINAPI InstallHinfSectionW(_In_ HWND, _In_ HINSTANCE, _In_ PCWSTR, _In_ INT);
 WINSETUPAPI BOOL WINAPI IsUserAdmin(VOID);
 WINSETUPAPI VOID WINAPI MyFree(PVOID);
 WINSETUPAPI PVOID WINAPI MyMalloc(DWORD);
@@ -2426,6 +2428,7 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 
 #ifdef UNICODE
 #define PSP_FILE_CALLBACK PSP_FILE_CALLBACK_W
+#define InstallHinfSection InstallHinfSectionW
 #define SetupAddInstallSectionToDiskSpaceList	SetupAddInstallSectionToDiskSpaceListW
 #define SetupAddSectionToDiskSpaceList	SetupAddSectionToDiskSpaceListW
 #define SetupAddToDiskSpaceList	SetupAddToDiskSpaceListW
@@ -2548,6 +2551,7 @@ WINSETUPAPI PSTR WINAPI UnicodeToMultiByte(PCWSTR lpUnicodeStr, UINT uCodePage);
 #define SetupUninstallOEMInf    SetupUninstallOEMInfW
 #else
 #define PSP_FILE_CALLBACK PSP_FILE_CALLBACK_A
+#define InstallHinfSection InstallHinfSectionA
 #define SetupAddInstallSectionToDiskSpaceList	SetupAddInstallSectionToDiskSpaceListA
 #define SetupAddSectionToDiskSpaceList	SetupAddSectionToDiskSpaceListA
 #define SetupAddToDiskSpaceList	SetupAddToDiskSpaceListA

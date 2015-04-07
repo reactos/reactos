@@ -446,8 +446,6 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
     HKEY regKey;
     TCHAR szBuffer[2];
     DWORD bufferSize = sizeof(szBuffer);
-    DWORD varType = REG_SZ;
-    LONG result;
     BITMAP bitmap;
 
     AddListViewItems(hwndDlg, pData);
@@ -461,21 +459,25 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
     LoadString(hApplet, IDS_TILE, szString, sizeof(szString) / sizeof(TCHAR));
     SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_INSERTSTRING, PLACEMENT_TILE, (LPARAM)szString);
 
-    /* Load the default settings from the registry */
-    result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
-    if (result != ERROR_SUCCESS)
+    SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
+    pData->placementSelection = PLACEMENT_CENTER;
+
+    pData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+    if (pData->hBitmap != NULL)
     {
-        /* reg key open failed; maybe it does not exist? create it! */
-        DWORD dwDisposition = 0;
-        result = RegCreateKeyEx( HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, NULL, 0, KEY_ALL_ACCESS, NULL,
-            &regKey, &dwDisposition );
-        /* Now the key must be created & opened and regKey points to opened key */
-        /* On error result will not contain ERROR_SUCCESS. I don't know how to handle */
-        /* this case :( */
+        GetObject(pData->hBitmap, sizeof(BITMAP), &bitmap);
+
+        pData->cxSource = bitmap.bmWidth;
+        pData->cySource = bitmap.bmHeight;
     }
 
-    result = RegQueryValueEx(regKey, TEXT("WallpaperStyle"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
-    if (result == ERROR_SUCCESS)
+    /* Load the default settings from the registry */
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_QUERY_VALUE, &regKey) != ERROR_SUCCESS)
+    {
+        return;
+    }
+
+    if (RegQueryValueEx(regKey, TEXT("WallpaperStyle"), 0, NULL, (LPBYTE)szBuffer, &bufferSize) == ERROR_SUCCESS)
     {
         if (_ttoi(szBuffer) == 0)
         {
@@ -489,14 +491,8 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
             pData->placementSelection = PLACEMENT_STRETCH;
         }
     }
-    else
-    {
-        SendDlgItemMessage(hwndDlg, IDC_PLACEMENT_COMBO, CB_SETCURSEL, PLACEMENT_CENTER, 0);
-        pData->placementSelection = PLACEMENT_CENTER;
-    }
 
-    result = RegQueryValueEx(regKey, TEXT("TileWallpaper"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
-    if (result == ERROR_SUCCESS)
+    if (RegQueryValueEx(regKey, TEXT("TileWallpaper"), 0, NULL, (LPBYTE)szBuffer, &bufferSize) == ERROR_SUCCESS)
     {
         if (_ttoi(szBuffer) == 1)
         {
@@ -506,15 +502,6 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
     }
 
     RegCloseKey(regKey);
-
-    pData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    if (pData->hBitmap != NULL)
-    {
-        GetObject(pData->hBitmap, sizeof(BITMAP), &bitmap);
-
-        pData->cxSource = bitmap.bmWidth;
-        pData->cySource = bitmap.bmHeight;
-    }
 }
 
 

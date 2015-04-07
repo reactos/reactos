@@ -31,6 +31,19 @@ WdmAudInitWorkerRoutine(
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+
+    if (DeviceExtension->FileObject == NULL)
+    {
+        /* find available sysaudio devices */
+        Status = WdmAudOpenSysAudioDevices(DeviceObject, DeviceExtension);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("WdmAudOpenSysAudioDevices failed with %x\n", Status);
+            return;
+        }
+    }
+
+
     /* get device count */
     DeviceCount = GetSysAudioDeviceCount(DeviceObject);
 
@@ -74,20 +87,19 @@ WdmAudTimerRoutine(
 
 NTSTATUS
 NTAPI
-WdmAudInstallDevice(
-    IN  PDRIVER_OBJECT  DriverObject)
+WdmaudAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\wdmaud");
-    UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\DosDevices\\wdmaud");
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT("WdmAudInstallDevice called\n");
+    DPRINT("WdmaudAddDevice called\n");
 
     Status = IoCreateDevice(DriverObject,
                             sizeof(WDMAUD_DEVICE_EXTENSION),
-                            &DeviceName,
+                            NULL,
                             FILE_DEVICE_KS,
                             0,
                             FALSE,
@@ -113,7 +125,7 @@ WdmAudInstallDevice(
     }
 
     /* register device interfaces */
-    Status = WdmAudRegisterDeviceInterface(DeviceObject, DeviceExtension);
+    Status = WdmAudRegisterDeviceInterface(PhysicalDeviceObject, DeviceExtension);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("WdmRegisterDeviceInterface failed with %x\n", Status);
@@ -136,25 +148,19 @@ WdmAudInstallDevice(
     /* initialize timer */
     IoInitializeTimer(DeviceObject, WdmAudTimerRoutine, (PVOID)WdmAudTimerRoutine);
 
-    /* find available sysaudio devices */
-    Status = WdmAudOpenSysAudioDevices(DeviceObject, DeviceExtension);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("WdmAudOpenSysAudioDevices failed with %x\n", Status);
-        IoDeleteSymbolicLink(&SymlinkName);
-        IoDeleteDevice(DeviceObject);
-        return Status;
-    }
-
     /* allocate ks device header */
     Status = KsAllocateDeviceHeader(&DeviceExtension->DeviceHeader, 0, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("KsAllocateDeviceHeader failed with %x\n", Status);
-        IoDeleteSymbolicLink(&SymlinkName);
         IoDeleteDevice(DeviceObject);
         return Status;
     }
+
+    /* attach to device stack */
+    DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+    KsSetDevicePnpAndBaseObject(DeviceExtension->DeviceHeader, DeviceExtension->NextDeviceObject, DeviceObject);
+
 
     /* start the timer */
     IoStartTimer(DeviceObject);
@@ -203,10 +209,10 @@ WdmAudCreate(
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStack;
     PWDMAUD_CLIENT pClient;
-    //PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     /* get device extension */
-    //DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject((KSDEVICE_HEADER)DeviceObject->DeviceExtension);
@@ -216,6 +222,13 @@ WdmAudCreate(
         return Status;
     }
 #endif
+
+    if (DeviceExtension->FileObject == NULL)
+    {
+        /* initialize */
+        WdmAudInitWorkerRoutine(DeviceObject, NULL);
+    }
+
 
     Status = WdmAudOpenSysaudio(DeviceObject, &pClient);
     if (!NT_SUCCESS(Status))
@@ -354,6 +367,7 @@ DriverEntry(
     Driver->MajorFunction[IRP_MJ_WRITE] = WdmAudReadWrite;
     Driver->MajorFunction[IRP_MJ_READ] = WdmAudReadWrite;
     Driver->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
+    Driver->DriverExtension->AddDevice = WdmaudAddDevice;
 
-    return WdmAudInstallDevice(Driver);
+    return STATUS_SUCCESS;
 }

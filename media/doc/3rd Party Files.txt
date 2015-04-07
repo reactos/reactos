@@ -63,7 +63,7 @@ Used Version: 0.1.8
 Website: http://www.mega-nerd.com/SRC/download.html
 
 Title:  libmpg123 (used by winemp3.acm)
-Used Version: 1.12.3
+Used Version: 1.22.1
 Website: http://www.mpg123.de/
 
 Title:  STLport

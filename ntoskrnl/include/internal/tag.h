@@ -164,16 +164,14 @@
 /* formerly located in rtl/handle.c */
 #define TAG_HDTB  'BTDH'
 
-/* formerly located in se/acl.c */
-#define TAG_ACL    'cAeS'
-
-/* formerly located in se/sid.c */
-#define TAG_SID    'iSeS'
-
-/* formerly located in se/sd.c */
-#define TAG_SD     'dSeS'
-
-/* formerly located in se/token.c */
+/* Security Manager Tags */
+#define TAG_SE                '  eS'
+#define TAG_ACL               'cAeS'
+#define TAG_SID               'iSeS'
+#define TAG_SD                'dSeS'
+#define TAG_QOS               'sQeS'
+#define TAG_LUID              'uLeS'
+#define TAG_PRIVILEGE_SET     'rPeS'
 #define TAG_TOKEN_USERS       'uKOT'
 #define TAG_TOKEN_PRIVILAGES  'pKOT'
 #define TAG_TOKEN_ACL         'kDOT'

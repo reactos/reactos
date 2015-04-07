@@ -19,7 +19,7 @@ Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
 Description = Un buon CD Ripper/Convertitore di file Audio.
 
 [Section.040a]
-Description = Un buen CD Ripper/ conversor de archivos de audio.
+Description = Un buen extractor de pistas de CDs de música y conversor de archivos de audio.
 
 [Section.040c]
 Description = Un très bon extracteur de CD/convertisseur de fichier audio.

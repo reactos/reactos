@@ -34,9 +34,14 @@ static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 #define NUMBER_TOSTRING_BUF_SIZE 64
 #define NUMBER_DTOA_SIZE 18
 
+static inline NumberInstance *number_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, NumberInstance, dispex);
+}
+
 static inline NumberInstance *number_from_vdisp(vdisp_t *vdisp)
 {
-    return (NumberInstance*)vdisp->u.jsdisp;
+    return number_from_jsdisp(vdisp->u.jsdisp);
 }
 
 static inline NumberInstance *number_this(vdisp_t *jsthis)
@@ -490,23 +495,13 @@ static HRESULT Number_valueOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     return S_OK;
 }
 
-static HRESULT Number_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+static HRESULT Number_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    NumberInstance *number = number_from_vdisp(jsthis);
+    NumberInstance *number = number_from_jsdisp(jsthis);
 
-    switch(flags) {
-    case INVOKE_FUNC:
-        return throw_type_error(ctx, JS_E_FUNCTION_EXPECTED, NULL);
-    case DISPATCH_PROPERTYGET:
-        *r = jsval_number(number->value);
-        break;
+    TRACE("(%p)\n", number);
 
-    default:
-        FIXME("flags %x\n", flags);
-        return E_NOTIMPL;
-    }
-
+    *r = jsval_number(number->value);
     return S_OK;
 }
 
@@ -521,7 +516,7 @@ static const builtin_prop_t Number_props[] = {
 
 static const builtin_info_t Number_info = {
     JSCLASS_NUMBER,
-    {NULL, Number_value, 0},
+    {NULL, NULL,0, Number_get_value},
     sizeof(Number_props)/sizeof(*Number_props),
     Number_props,
     NULL,
@@ -530,7 +525,7 @@ static const builtin_info_t Number_info = {
 
 static const builtin_info_t NumberInst_info = {
     JSCLASS_NUMBER,
-    {NULL, Number_value, 0},
+    {NULL, NULL,0, Number_get_value},
     0, NULL,
     NULL,
     NULL

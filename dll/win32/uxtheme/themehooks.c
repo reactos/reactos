@@ -186,6 +186,12 @@ ThemeDefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {      
     if(!IsAppThemed())
     {
+        if (Msg == WM_NCUAHDRAWCAPTION)
+        {
+            user32ApiHook.DrawCaption(hWnd, NULL, NULL, 0);
+            return 0;
+        }
+
         return user32ApiHook.DefWindowProcW(hWnd, 
                                             Msg, 
                                             wParam, 
@@ -204,6 +210,12 @@ ThemeDefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     if(!IsAppThemed())
     {
+        if (Msg == WM_NCUAHDRAWCAPTION)
+        {
+            user32ApiHook.DrawCaption(hWnd, NULL, NULL, 0);
+            return 0;
+        }
+
         return user32ApiHook.DefWindowProcA(hWnd, 
                                             Msg, 
                                             wParam, 

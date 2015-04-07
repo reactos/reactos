@@ -7,8 +7,8 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/rosapps/)
     add_subdirectory(rosapps)
 endif()
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/wallpaper/)
-    add_subdirectory(wallpaper)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/wallpapers/)
+    add_subdirectory(wallpapers)
 endif()
 
 ## Extra files for Hybrid CD. You need to put them under hybridcd_extras

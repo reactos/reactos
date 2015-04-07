@@ -4323,6 +4323,9 @@ NTAPI
 RtlQueryDepthSList(
   _In_ PSLIST_HEADER ListHead);
 
+#ifndef _RTL_RUN_ONCE_DEF
+#define _RTL_RUN_ONCE_DEF
+
 #define RTL_RUN_ONCE_CHECK_ONLY 0x00000001UL
 #define RTL_RUN_ONCE_ASYNC 0x00000002UL
 #define RTL_RUN_ONCE_INIT_FAILED 0x00000004UL
@@ -4343,6 +4346,8 @@ RtlRunOnceComplete(
     PRTL_RUN_ONCE,
     DWORD,
     PVOID);
+
+#endif
 
 #define RTL_CONDITION_VARIABLE_INIT {0}
 #define RTL_CONDITION_VARIABLE_LOCKMODE_SHARED 0x1
@@ -5705,6 +5710,7 @@ typedef struct _ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION {
   PCWSTR lpAssemblyManifestPath;
   PCWSTR lpAssemblyPolicyPath;
   PCWSTR lpAssemblyDirectoryName;
+  DWORD ulFileCount;
 } ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION, *PACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION;
 typedef const ACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION *PCACTIVATION_CONTEXT_ASSEMBLY_DETAILED_INFORMATION;
 
@@ -5860,10 +5866,11 @@ RtlCompareMemory (
   _In_ const VOID *Source2,
   _In_ SIZE_T Length);
 
-#define RtlMoveMemory memmove
-#define RtlCopyMemory memcpy
-#define RtlFillMemory(d,l,f) memset((d), (f), (l))
-#define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
+#define RtlMoveMemory(Dest,Source,Length) memmove((Dest),(Source),(Length))
+#define RtlCopyMemory(Dest,Source,Length) memcpy((Dest),(Source),(Length))
+#define RtlFillMemory(Dest,Length,Fill) memset((Dest),(Fill),(Length))
+#define RtlZeroMemory(Dest,Length) RtlFillMemory((Dest),(Length),0)
+#define RtlEqualMemory(Dest,Source,Length) (!memcmp((Dest),(Source),(Length)))
 
 FORCEINLINE
 PVOID

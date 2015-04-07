@@ -163,7 +163,7 @@ typedef struct _DirSwitchesFlags
 {
     BOOL bBareFormat;   /* Bare Format */
     BOOL bTSeperator;   /* Thousands seperator */
-    BOOL bWideList;     /* Wide list format	*/
+    BOOL bWideList;     /* Wide list format */
     BOOL bWideListColSort;  /* Wide list format but sorted by column */
     BOOL bLowerCase;    /* Uses lower case */
     BOOL bNewLongList;  /* New long list */
@@ -264,7 +264,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
         /* When a switch is expecting */
         if (cCurSwitch == _T('/'))
         {
-            while (*Line == _T(' '))
+            while (_istspace(*Line))
                 Line++;
 
             bNegative = (*Line == _T('-'));
@@ -334,12 +334,12 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
             }
             else
             {
-                error_invalid_switch ((TCHAR)_totupper (*Line));
+                error_invalid_switch ((TCHAR)_totupper(*Line));
                 return FALSE;
             }
 
             /* Make sure there's no extra characters at the end of the switch */
-            if (Line[1] && Line[1] != _T('/') && Line[1] != _T(' '))
+            if (Line[1] && Line[1] != _T('/') && !_istspace(Line[1]))
             {
                 error_parameter_format(Line[1]);
                 return FALSE;
@@ -354,7 +354,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
 
             if (cCurChar == _T('/'))
                 cCurSwitch = _T('/');
-            else if (cCurChar == _T(' '))
+            else if (_istspace(cCurChar))
                 /* do nothing */;
             else
             {
@@ -363,7 +363,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                 bIntoQuotes = FALSE;
                 while (*Line)
                 {
-                    if (!bIntoQuotes && (*Line == _T('/') || *Line == _T(' ')))
+                    if (!bIntoQuotes && (*Line == _T('/') || _istspace(*Line)))
                         break;
                     bIntoQuotes ^= (*Line == _T('"'));
                     Line++;
@@ -394,7 +394,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
             /* We are waiting for switch parameters */
 
             /* Check if there are no more switch parameters */
-            if ((cCurChar == _T('/')) || ( cCurChar == _T(' ')))
+            if ((cCurChar == _T('/')) || _istspace(cCurChar))
             {
                 /* Wrong desicion path, reprocess current character */
                 cCurSwitch = _T(' ');
@@ -403,7 +403,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
             /* Process parameter switch */
             switch(cCurSwitch)
             {
-            case _T('A'):	/* Switch parameters for /A (attributes filter) */
+            case _T('A'):   /* Switch parameters for /A (attributes filter) */
                 if (cCurChar == _T('-'))
                     bPNegative = TRUE;
                 else if (cCurUChar == _T('D'))
@@ -452,7 +452,7 @@ DirReadParam(LPTSTR Line,               /* [IN] The line with the parameters & s
                     return FALSE;
                 }
                 break;
-            case _T('T'):	/* Switch parameters for /T (time field) */
+            case _T('T'):   /* Switch parameters for /T (time field) */
                 if (cCurUChar == _T('C'))
                     lpFlags->stTimeField.eTimeField= TF_CREATIONDATE ;
                 else if (cCurUChar == _T('A'))
@@ -1155,7 +1155,7 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of 
         /* Calculate criteria */
         switch(lpFlags->stOrderBy.eCriteria[i])
         {
-        case ORDER_SIZE:		/* Order by size /o:s */
+        case ORDER_SIZE:        /* Order by size /o:s */
             /* concat the 32bit integers to a 64bit */
             u64File1.LowPart = lpFile1->nFileSizeLow;
             u64File1.HighPart = lpFile1->nFileSizeHigh;
@@ -1171,20 +1171,20 @@ CompareFiles(LPWIN32_FIND_DATA lpFile1, /* [IN] A pointer to WIN32_FIND_DATA of 
                 iComp = 0;
             break;
 
-        case ORDER_DIRECTORY:	/* Order by directory attribute /o:g */
+        case ORDER_DIRECTORY:   /* Order by directory attribute /o:g */
             iComp = ((lpFile2->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)-
                 (lpFile1->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY));
             break;
 
-        case ORDER_EXTENSION:	/* Order by extension name /o:e */
+        case ORDER_EXTENSION:   /* Order by extension name /o:e */
             iComp = _tcsicmp(getExt(lpFile1->cFileName),getExt(lpFile2->cFileName));
             break;
 
-        case ORDER_NAME:		/* Order by filename /o:n */
+        case ORDER_NAME:        /* Order by filename /o:n */
             iComp = _tcsicmp(lpFile1->cFileName, lpFile2->cFileName);
             break;
 
-        case ORDER_TIME:		/* Order by file's time /o:t */
+        case ORDER_TIME:        /* Order by file's time /o:t */
             /* We compare files based on the time field selected by /t */
             switch(lpFlags->stTimeField.eTimeField)
             {
@@ -1333,7 +1333,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     if (ptrStartNode == NULL)
     {
         WARN("DEBUG: Cannot allocate memory for ptrStartNode!\n");
-        return 1;	/* Error cannot allocate memory for 1st object */
+        return 1;   /* Error cannot allocate memory for 1st object */
     }
     ptrNextNode = ptrStartNode;
 

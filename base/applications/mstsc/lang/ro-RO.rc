@@ -14,7 +14,7 @@ BEGIN
     GROUPBOX "Preferințe de conectare", IDC_STATIC, 7, 7, 228, 89
     GROUPBOX "Gestiune conexiuni", IDC_STATIC, 7, 103, 228, 65
     ICON "", IDC_LOGONICON, 15, 19, 20, 20
-    LTEXT "Introduceți adresa unui server", IDC_STATIC, 47, 24, 111, 8
+    LTEXT "Introduceți adresa unui server.", IDC_STATIC, 47, 24, 111, 8
     LTEXT "Server:", IDC_STATIC, 47, 41, 25, 8
     LTEXT "Nume utilizator:", IDC_STATIC, 47, 58, 58, 8
     COMBOBOX IDC_SERVERCOMBO, 79, 39, 141, 150, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP

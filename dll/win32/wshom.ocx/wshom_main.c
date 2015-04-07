@@ -108,7 +108,7 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID r
         return S_OK;
     }
 
-    FIXME("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
+    WARN("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppv);
     return E_NOINTERFACE;
 }
 

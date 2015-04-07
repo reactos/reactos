@@ -36,6 +36,8 @@ extern LRESULT CALLBACK THEMING_EditSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                   ULONG_PTR) DECLSPEC_HIDDEN;
 extern LRESULT CALLBACK THEMING_ListBoxSubclassProc (HWND, UINT, WPARAM, LPARAM,
                                                      ULONG_PTR) DECLSPEC_HIDDEN;
+extern LRESULT CALLBACK THEMING_ScrollbarSubclassProc (HWND, UINT, WPARAM, LPARAM,
+                                                       ULONG_PTR) DECLSPEC_HIDDEN;
 
 static const WCHAR dialogClass[] = {'#','3','2','7','7','0',0};
 static const WCHAR comboLboxClass[] = {'C','o','m','b','o','L','b','o','x',0};
@@ -51,7 +53,8 @@ static const struct ThemingSubclass
     {WC_COMBOBOXW,         THEMING_ComboSubclassProc},
     {comboLboxClass,       THEMING_ListBoxSubclassProc},
     {WC_EDITW,             THEMING_EditSubclassProc},
-    {WC_LISTBOXW,          THEMING_ListBoxSubclassProc}
+    {WC_LISTBOXW,          THEMING_ListBoxSubclassProc},
+    {WC_SCROLLBARW,        THEMING_ScrollbarSubclassProc}
 };
 
 #define NUM_SUBCLASSES        (sizeof(subclasses)/sizeof(subclasses[0]))
@@ -87,6 +90,7 @@ MAKE_SUBCLASS_PROC(2)
 MAKE_SUBCLASS_PROC(3)
 MAKE_SUBCLASS_PROC(4)
 MAKE_SUBCLASS_PROC(5)
+MAKE_SUBCLASS_PROC(6)
 
 static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
     subclass_proc0,
@@ -94,7 +98,8 @@ static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
     subclass_proc2,
     subclass_proc3,
     subclass_proc4,
-    subclass_proc5
+    subclass_proc5,
+    subclass_proc6
 };
 
 /***********************************************************************

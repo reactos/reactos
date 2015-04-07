@@ -1153,13 +1153,14 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
 
     /* create an element with text of URL */
     if (insert_link_at_caret) {
-        nsIDOMNode *text_node, *unused_node;
+        nsIDOMNode *unused_node;
+        nsIDOMText *text_node;
 
-        nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &ns_url, (nsIDOMText **)&text_node);
+        nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &ns_url, &text_node);
 
         /* wrap the <a> tags around the text element */
-        nsIDOMHTMLElement_AppendChild(anchor_elem, text_node, &unused_node);
-        nsIDOMNode_Release(text_node);
+        nsIDOMHTMLElement_AppendChild(anchor_elem, (nsIDOMNode*)text_node, &unused_node);
+        nsIDOMText_Release(text_node);
         nsIDOMNode_Release(unused_node);
     }
 

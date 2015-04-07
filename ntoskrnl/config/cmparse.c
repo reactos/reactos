@@ -1266,6 +1266,11 @@ CmpParseKey(IN PVOID ParseObject,
                                                        ParentKcb,
                                                        Object);
                         }
+                        else if (Hive == &CmiVolatileHive->Hive && CmpNoVolatileCreates)
+                        {
+                            /* Creating keys in the master hive is not allowed */
+                            Status = STATUS_INVALID_PARAMETER;
+                        }
                         else
                         {
                             /* Do the create */
