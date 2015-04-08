@@ -2285,7 +2285,7 @@ TEMP_DIR="%USERPROFILE%\Local Settings\Temp"
 
 
 ; LANG_SPANISH SUBLANG_NEUTRAL
-[Strings.0a]
+[Strings.000A]
 POWERCFG_NAME_0="Equipo doméstico o de oficina"
 POWERCFG_DESC_0="Este perfil es ideal para gran parte de los usuarios domésticos que dejan el equipo encendido todo el día."
 POWERCFG_NAME_1="Portátil"
