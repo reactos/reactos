@@ -665,7 +665,9 @@ static HRESULT dom_pi_get_qualified_item(const xmlNodePtr node, BSTR name, BSTR 
 static HRESULT dom_pi_get_named_item(const xmlNodePtr node, BSTR name, IXMLDOMNode **item)
 {
     FIXME("(%p)->(%s %p): stub\n", node, debugstr_w(name), item );
-    return E_NOTIMPL;
+    if (item)
+        *item = NULL;
+    return S_FALSE;
 }
 
 static HRESULT dom_pi_set_named_item(xmlNodePtr node, IXMLDOMNode *newItem, IXMLDOMNode **namedItem)

@@ -458,15 +458,19 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
         xmlnode *before_node_obj = get_node_obj(before);
         IXMLDOMNode_Release(before);
         if(!before_node_obj) return E_FAIL;
+    }
 
-        /* unlink from current parent first */
-        if(node_obj->parent)
-        {
-            hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
-            if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
-        }
+    /* unlink from current parent first */
+    if(node_obj->parent)
+    {
+        hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
+        if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
+    }
+    doc = node_obj->node->doc;
 
-        doc = node_obj->node->doc;
+    if(before)
+    {
+        xmlnode *before_node_obj = get_node_obj(before);
 
         /* refs count including subtree */
         if (doc != before_node_obj->node->doc)
@@ -479,14 +483,6 @@ HRESULT node_insert_before(xmlnode *This, IXMLDOMNode *new_child, const VARIANT 
     }
     else
     {
-        /* unlink from current parent first */
-        if(node_obj->parent)
-        {
-            hr = IXMLDOMNode_removeChild(node_obj->parent, node_obj->iface, NULL);
-            if (hr == S_OK) xmldoc_remove_orphan(node_obj->node->doc, node_obj->node);
-        }
-        doc = node_obj->node->doc;
-
         if (doc != This->node->doc)
             refcount = xmlnode_get_inst_cnt(node_obj);
 

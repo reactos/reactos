@@ -35,7 +35,6 @@
 
 static const xmlChar DT_prefix[] = "dt";
 static const xmlChar DT_href[] = "urn:schemas-microsoft-com:datatypes";
-static const xmlChar XDR_prefix[] = "xdr";
 static const xmlChar XDR_href[] = "urn:schemas-microsoft-com:xml-data";
 static const xmlChar XSD_prefix[] = "xsd";
 static const xmlChar XSD_href[] = "http://www.w3.org/2001/XMLSchema";
@@ -48,7 +47,6 @@ static const xmlChar xs_attribute[] = "attribute";
 static const xmlChar xs_AttributeType[] = "AttributeType";
 static const xmlChar xs_base[] = "base";
 static const xmlChar xs_choice[] = "choice";
-static const xmlChar xs_complexContent[] = "complexContent";
 static const xmlChar xs_complexType[] = "complexType";
 static const xmlChar xs_content[] = "content";
 static const xmlChar xs_datatype[] = "datatype";
@@ -58,7 +56,6 @@ static const xmlChar xs_documentation[] = "documentation";
 static const xmlChar xs_element[] = "element";
 static const xmlChar xs_ElementType[] = "ElementType";
 static const xmlChar xs_eltOnly[] = "eltOnly";
-static const xmlChar xs_empty[] = "empty";
 static const xmlChar xs_enumeration[] = "enumeration";
 static const xmlChar xs_extension[] = "extension";
 static const xmlChar xs_group[] = "group";
@@ -72,7 +69,6 @@ static const xmlChar xs_model[] = "model";
 static const xmlChar xs_name[] = "name";
 static const xmlChar xs_namespace[] = "namespace";
 static const xmlChar xs_no[] = "no";
-static const xmlChar xs_one[] = "one";
 static const xmlChar xs_open[] = "open";
 static const xmlChar xs_optional[] = "optional";
 static const xmlChar xs_order[] = "order";
@@ -81,7 +77,6 @@ static const xmlChar xs_ref[] = "ref";
 static const xmlChar xs_required[] = "required";
 static const xmlChar xs_restriction[] = "restriction";
 static const xmlChar xs_schema[] = "schema";
-static const xmlChar xs_Schema[] = "Schema";
 static const xmlChar xs_seq[] = "seq";
 static const xmlChar xs_sequence[] = "sequence";
 static const xmlChar xs_simpleContent[] = "simpleContent";
@@ -96,7 +91,6 @@ static const xmlChar xs_use[] = "use";
 static const xmlChar xs_value[] = "value";
 static const xmlChar xs_values[] = "values";
 static const xmlChar xs_xsd_string[] = "xsd:string";
-static const xmlChar xs_yes[] = "yes";
 
 typedef enum _CONTENT_TYPE
 {
