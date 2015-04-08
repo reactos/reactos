@@ -462,7 +462,7 @@ UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground)
     whdd = MSVIDEO_GetHddPtr(hdd);
     if (!whdd) return FALSE;
 
-    if (!whdd || !(whdd->begun)) 
+    if (!whdd->begun)
     {
         ret = 0;
         goto out;

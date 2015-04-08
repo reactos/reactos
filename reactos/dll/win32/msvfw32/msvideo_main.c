@@ -1439,7 +1439,7 @@ BOOL VFWAPI ICSeqCompressFrameStart(PCOMPVARS pc, LPBITMAPINFO lpbiIn)
     }
     pc->cbState = sizeof(ICCOMPRESS);
 
-    pc->lpBitsOut = HeapAlloc(GetProcessHeap(), 0, pc->lpbiOut->bmiHeader.biSizeImage);
+    pc->lpBitsOut = HeapAlloc(GetProcessHeap(), 0, pc->lpbiIn->bmiHeader.biSizeImage);
     if (!pc->lpBitsOut)
     {
        HeapFree(GetProcessHeap(), 0, pc->lpbiIn);

@@ -79,7 +79,7 @@ BOOL VFWAPIV MCIWndRegisterClass(void)
     wc.cbWndExtra = sizeof(MCIWndInfo*);
     wc.hInstance = MSVFW32_hModule;
     wc.hIcon = 0;
-    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDC_ARROW));
+    wc.hCursor = LoadCursorW(0, (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = mciWndClassW;

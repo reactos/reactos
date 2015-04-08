@@ -136,7 +136,7 @@ reactos/dll/win32/mssip32             # Synced to Wine-1.7.27
 reactos/dll/win32/mstask              # Synced to Wine-1.7.27
 reactos/dll/win32/msvcrt20            # Out of sync
 reactos/dll/win32/msvcrt40            # Out of sync
-reactos/dll/win32/msvfw32             # Synced to Wine-1.7.27
+reactos/dll/win32/msvfw32             # Synced to WineStaging-1.7.37
 reactos/dll/win32/msvidc32            # Synced to Wine-1.7.27
 reactos/dll/win32/msxml               # Synced to Wine-1.7.27
 reactos/dll/win32/msxml2              # Synced to Wine-1.7.27
