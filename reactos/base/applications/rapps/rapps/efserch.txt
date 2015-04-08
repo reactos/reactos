@@ -4,7 +4,7 @@
 Name = Effective File search
 Version = 6.8.1
 Licence = Freeware
-Description = File search compatible with ReactOS
+Description = File search utility compatible with ReactOS.
 Size = 944 kB
 Category = 12
 URLSite = http://www.sowsoft.com
@@ -12,4 +12,7 @@ URLDownload = http://www.sowsoft.com/download/efsearch.zip
 CDPath = none
 
 [Section.0407]
-Description = ReactOS kompatibles Dateisuchprogramm
+Description = ReactOS kompatibles Dateisuchprogramm.
+
+[Section.0a]
+Description = Buscador de archivos compatible con ReactOS.

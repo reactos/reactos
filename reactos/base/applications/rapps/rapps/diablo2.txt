@@ -2,10 +2,10 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = Diablo II
+Name = Diablo II (Shareware)
 Version = 1.4
 License = Shareware
-Description = Diablo 2 Shareware. zeckensack's glide wrapper is required to run it.
+Description = Zeckensack's Glide wrapper is required to run it.
 Size = 131.9 MB
 Category = 4
 URLSite = http://www.blizzard.com/diablo2/
@@ -13,36 +13,36 @@ URLDownload = http://pub.zoneofgames.ru/demos/diabloiidemo.exe
 CDPath = none
 
 [Section.0407]
-Description = Diablo 2 Shareware. zeckensacks glide wrapper wird zum Ausführen benötigt.
+Description = Zeckensacks Glide Wrapper wird zum Ausführen benötigt.
 
-[Section.040a]
-Description = Diablo 2 Shareware. El adaptador de compatibilidad para Glide de zeckensack es necesario para poder ejecutar el juego.
+[Section.0a]
+Description = El adaptador de compatibilidad para Glide de Zeckensack es necesario para poder ejecutar el juego.
 
 [Section.040c]
-Description = Diablo 2 Shareware. zeckensack's glide wrapper est requis pour le faire tourner.
+Description = Zeckensack's Glide wrapper est requis pour le faire tourner.
 Size = 131,9 Mo
 
 [Section.0410]
-Description = Diablo 2 Shareware. zeckensack's glide wrappe è richiesto per avviarlo.
+Description = Zeckensack's Glide wrappe è richiesto per avviarlo.
 
 [Section.0413]
-Description = Diablo 2 Shareware. Maakt gebruik van zeckensack's glide wrapper.
+Description = Maakt gebruik van Zeckensack's Glide wrapper.
 
 [Section.0415]
-Description = Diablo 2 Shareware. Do poprawnego działania wymagany jest zainstalowany zeckensacks glide wrapper.
+Description = Do poprawnego działania wymagany jest zainstalowany Zeckensacks Glide wrapper.
 
 [Section.0418]
 License = Versiune de evaluare
-Description = Diablo 2 Shareware. Pentru execuție este necesar (pachetul) zeckensack's glide wrapper.
+Description = Pentru execuție este necesar (pachetul) Zeckensack's Glide wrapper.
 Size = 131,9 Mo
 
 [Section.041f]
 License = Paylaşımlı
-Description = Diablo 2 Paylaşımlı. Çalıştırmak için zeckensack'ın glide wrapper'ı gereklidir.
+Description = Çalıştırmak için Zeckensack'ın Glide wrapper'ı gereklidir.
 Size = 131,9 MB
 
 [Section.0422]
-Description = Diablo 2 Shareware. Для запуску потрібен zeckensack's glide wrapper.
+Description = Для запуску потрібен Zeckensack's Glide wrapper.
 
 [Section.0813]
-Description = Diablo 2 Shareware. Maakt gebruik van zeckensack's glide wrapper.
+Description = Maakt gebruik van Zeckensack's Glide wrapper.

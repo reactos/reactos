@@ -5,7 +5,7 @@
 Name = Simple Direct Media Layer (SDL) Mixer
 Version = 1.2.12
 License = LGPL
-Description = Needed for some open source games to run. You need 7-Zip or a similar utility to extract it.
+Description = Needed for some open source games to run. You will need a tool like 7-Zip to extract it.
 Size = 548.02 kB
 Category = 14
 URLSite = http://www.libsdl.org/projects/SDL_mixer/
@@ -16,10 +16,10 @@ CDPath = none
 Description = Nutný pro spuštění některých open source her. K rozbalení je nutný 7-zip nebo podobný nástroj.
 
 [Section.0407]
-Description = Erforderlich um einige Open Source Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+Description = Erforderlich um einige quelloffene Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
 
-[Section.040a]
-Description = Necesario para ejecutar varios juegos de código abierto. Necesita 7-Zip o una utilidad similar para extraerlo.
+[Section.0a]
+Description = Necesario para ejecutar varios juegos de código abierto. Se necesita 7-Zip o una utilidad similar para extraerlo.
 
 [Section.040c]
 Description = Nécessaire pour faire tourner certains jeux open source. Vous aurez besoin de 7-Zip ou d'un outil similaire pour l'extraire.

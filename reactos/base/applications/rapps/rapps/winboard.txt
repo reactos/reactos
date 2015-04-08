@@ -5,7 +5,7 @@
 Name = WinBoard
 Version = 4.2.7b
 License = GPLv3
-Description = WinBoard is a graphical chessboard for the Windows/ReactOS that can serve as a user interface for GNU Chess, Crafty, and other chess engines, for the Internet chess servers, and for electronic mail correspondence chess.
+Description = A graphical chessboard for the Windows/ReactOS that can serve as a user interface for GNU Chess, Crafty, and other chess engines, for the Internet chess servers, and for electronic mail correspondence chess.
 Size = 5.93 MB
 Category = 4
 URLSite = http://www.gnu.org/software/xboard/
@@ -13,10 +13,10 @@ URLDownload = http://ftp.gnu.org/old-gnu/xboard/winboard/winboard-4_2_7b.exe
 CDPath = none
 
 [Section.0407]
-Description = WinBoard ist ein grafisches Schachbrett für Windows/ReactOS welches als Nutzerinterface für GNU Chess, Crafty oder andere Schachprogramme, für Internet Schachserver und für Briefschach dient.
+Description = Ein grafisches Schachbrett für Windows/ReactOS welches als Nutzerinterface für GNU Chess, Crafty oder andere Schachprogramme, für Internet Schachserver und für Briefschach dient.
 
-[Section.040a]
-Description = Tablero de ajedrez para Windows/ReactOS que puede ser utilizado como interfaz para GNU Chess, Crafty, y otros motores de ajedrez, para servidores de ajedrez en internet, y para partidas por correo electrónico.
+[Section.0a]
+Description = Tablero de ajedrez para Windows/ReactOS que puede ser utilizado como interfaz para GNU Chess, Crafty, y otros motores de ajedrez, para servidores de ajedrez en internet, así como para partidas por correo electrónico.
 
 [Section.040c]
 Description = WinBoard est un jeu d'échec graphique pour Windows/ReactOS qui peut servir d'interface utilisateur pour GNU Chess, Crafty et d'autres moteurs d'échecs, pour les serveurs d'échec internet et pour le jeu d'échec par courriel.

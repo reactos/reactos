@@ -5,7 +5,7 @@
 Name = Mozilla Firefox 28
 Version = 28.0
 License = MPL/GPL/LGPL
-Description = The most popular and one of the best free Web Browsers out there.
+Description = A popular Web browser. Free and open source, made by a global community.
 Size = 24.03 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/
@@ -19,12 +19,12 @@ URLSite = http://www.mozilla.org/cs/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/win32/cs/Firefox%20Setup%2028.0.exe
 
 [Section.0407]
-Description = Der populärste und einer der besten freien Webbrowser.
+Description = Ein populärer, freier und quelloffener Webbrowser.
 Size = 23.87 MB
 URLSite = http://www.mozilla.org/de/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/28.0/win32/de/Firefox%20Setup%2028.0.exe
 
-[Section.040a]
+[Section.0a]
 Description = Navegador web popular, libre y gratuito.
 Size = 23.82 MB
 URLSite = http://www.mozilla.org/es-ES/

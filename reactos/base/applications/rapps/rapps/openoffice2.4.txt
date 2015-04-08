@@ -5,7 +5,7 @@
 Name = OpenOffice 2.4
 Version = 2.4.3
 License = LGPL
-Description = The open source office suite.
+Description = Open source office suite.
 Size = 113 MB
 Category = 6
 URLSite = http://www.openoffice.org/
@@ -13,12 +13,12 @@ URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/stab
 CDPath = none
 
 [Section.0407]
-Description = DIE Open Source Office Suite.
+Description = Quelloffene Office Suite.
 Size = 114.25 MB
 URLSite = http://www.openoffice.org/de/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/de/2.4.3/OOo_2.4.3_Win32Intel_install_de.exe
 
-[Section.040a]
+[Section.0a]
 Description = La suite de ofimática de código abierto.
 Size = 113.87 MB
 URLSite = http://www.openoffice.org/es/

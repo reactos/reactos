@@ -16,8 +16,11 @@ CDPath = none
 Description = Ein Spiel, ähnlich zu Frozen Fruits.
 URLSite = http://www.blueskied.com/freeware-spiele/runterladen.htm
 
+[Section.0a]
+Description = Un juego parecido a Frozen Fruits.
+
 [Section.0410]
-Description = Un gioco simile a Frozen Fuits
+Description = Un gioco simile a Frozen Fruits.
 
 [Section.0418]
 License = Gratuită

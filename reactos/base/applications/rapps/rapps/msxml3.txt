@@ -5,7 +5,7 @@
 Name = Microsoft XML 3
 Version = 3.0
 License = Unknown
-Description = MSXML3 is needed for some MSI Installers. Contains: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Description = Needed for some MSI Installers. Contains: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1.85 MB
 Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=28494391-052B-42FF-9674-F752BDCA9582&displaylang=en
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = MSXML3 wird von einigen MSI Installern benötigt. Beinhaltet: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Description = Wird von einigen MSI Installern benötigt. Beinhaltet: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = MSXML3 para varios instaladores MSI. Incluye: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Description = Necesario para algunos instaladores MSI. Incluye: msxml3.dll, msxml3a.dll, msxml3r.dll.
 
 [Section.040c]
 License = Inconnue

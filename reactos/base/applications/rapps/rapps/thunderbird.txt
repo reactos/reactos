@@ -5,7 +5,7 @@
 Name = Mozilla Thunderbird 31
 Version = 31.5.0
 License = MPL/GPL/LGPL
-Description = The most popular and one of the best free Mail Clients out there.
+Description = Popular and open source e-mail client.
 Size = 25.25 MB
 Category = 5
 URLSite = https://www.mozilla.org/en-US/thunderbird/
@@ -13,13 +13,13 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.5.0
 CDPath = none
 
 [Section.0407]
-Description = Der populärste und einer der besten freien Mail-Clients.
+Description = Populärer und quelloffener E-Mail-Client.
 Size = 25.1 MB
 URLSite = https://www.mozilla.org/de/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.5.0/win32/de/Thunderbird%20Setup%2031.5.0.exe
 
-[Section.040a]
-Description = El más popular y uno de los mejores clientes mail que hay.
+[Section.0a]
+Description = Cliente de correo electrónico popular y de código abierto.
 Size = 25.04 MB
 URLSite = https://www.mozilla.org/es-ES/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.5.0/win32/es-ES/Thunderbird%20Setup%2031.5.0.exe

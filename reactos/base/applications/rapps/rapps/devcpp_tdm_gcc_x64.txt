@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Eine gepflegte Version von Dev-C++. Der 64 bit TDM-GCC Compiler liegt bei.
 
-[Section.040a]
+[Section.0a]
 Description = Una versión en desarrollo de Dev-C++. Viene con el compilador de 64 bits TDM-GCC.
 
 [Section.0410]

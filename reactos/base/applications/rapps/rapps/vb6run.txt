@@ -5,7 +5,7 @@
 Name = Microsoft Visual Basic 6 Runtime
 Version = 6.0
 License = Unknown
-Description = Microsoft Visual Basic 6 Runtime. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Description = Needed by applications written in Visual Basic 6. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 Size = 1.02 MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/192461/
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Microsoft Visual Basic 6 Laufzeitsystem. Beinhaltet: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Description = Benötigt für Visual Basic 6 basierte Anwendungen. Beinhaltet: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Librerias Microsoft Visual Basic 6. Incluye: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Description = Necesario para aplicaciones escritas en Visual Basic 6. Incluye: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 
 [Section.040c]
 License = Inconnue

@@ -5,7 +5,7 @@
 Name = SumatraPDF
 Version = 3.0
 License = GPLv3
-Description = Sumatra PDF is a slim, free, open-source PDF reader. Portable out of the box.
+Description = A slim, free, open-source PDF reader. Portable out of the box.
 Size = 4.34 MB
 Category = 6
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader.html
@@ -13,11 +13,11 @@ URLDownload = http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-insta
 CDPath = none
 
 [Section.0407]
-Description = Sumatra PDF ist ein freies, schlankes, Open-Source PDF-Anzeigeprogramm.
+Description = Ein freies, schlankes, quelloffenes PDF-Anzeigeprogramm.
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-de.html
 
-[Section.040a]
-Description = Sumatra PDF es un lector PDF ligero, libre y open-source.
+[Section.0a]
+Description = Un lector PDF ligero, libre y de código abierto que no necesita instalación.
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-es.html
 
 [Section.040c]

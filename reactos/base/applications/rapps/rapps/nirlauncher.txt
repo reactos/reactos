@@ -18,6 +18,10 @@ Description = Ein Paket von mehr als 180 Utilities für Windows.
 [Section.040c]
 Description = Un ensemble de plus de 180 utilitaires pour Windows.
 
+[Section.0a]
+Licence = Gratuita
+Description = Un paquete con más de 180 utilidades.
+
 [Section.0418]
 Licence = Gratuită
 Description = Un pachet cu peste 180 de utilitare.

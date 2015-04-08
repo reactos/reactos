@@ -13,7 +13,7 @@ CDPath = none
 [Section.0407]
 Description = Ein FB2 eBook Reader. Unterstützung für folgende Formate: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. ZIP und GZ Archive werden ebenfalls unterstützt.
 
-[Section.040a]
+[Section.0a]
 Description = Un lector de libros electrónicos. Soporta los formatos fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc) y tcr, además de libros comprimidos en archivos ZIP y GZ.
 
 [Section.0410]

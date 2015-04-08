@@ -5,7 +5,7 @@
 Name = Tile World
 Version = 1.3.0
 License = GPL
-Description = Nice clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you dont need the copyrighted original.
+Description = Nice clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you don't need the copyrighted original.
 Size = 1.16 MB
 Category = 4
 URLSite = http://www.muppetlabs.com/~breadbox/software/tworld/
@@ -15,8 +15,8 @@ CDPath = none
 [Section.0407]
 Description = Schöner Klon von Chip's Challenge ursprünglich etnwickelt für Atari Lynx. Enthält CCLP2 Graphics Pack, deshalb wird das urheberrechtlich geschützte Original nicht benötigt.
 
-[Section.040a]
-Description = Clon de Chip's Challenge originalmente creado para Atari Lynx. Incluye el paquete gráfico gratuito CCLP2, así que no es necesario el original con copyright.
+[Section.0a]
+Description = Clon de «Chip's Challenge» creado originalmente para Atari Lynx. Incluye el paquete gráfico gratuito CCLP2, por lo que no es necesario tener los archivos originales.
 
 [Section.040c]
 Description = Clone sympathique de Chip's Challenge originelment fait pour Atari Lynx. Il inclut le pack de graphisme gratuit CCLP2, ainsi vous n'avez pas besoin de l'original sous copyrigth.

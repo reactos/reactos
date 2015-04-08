@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Das klassische Hover CTF Spiel, dass auf der Windows 95 CD zu finden war.
 
-[Section.040a]
+[Section.0a]
 Description = El clásico juego Hover CTF (captura la bandera) incluido en el CD de Windows 95.
 
 [Section.0410]

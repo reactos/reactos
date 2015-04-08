@@ -16,7 +16,7 @@ CDPath = none
 [Section.0407]
 Description = Eine kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, kann man CD/DVD RW als USB Flash oder Wechseldatenträger beschreiben. Auch kann man hiermit auf CD/DVD RW schreiben, welche mit dem UDF Dateisystem beschrieben wurden. Auch kann man mit dieser Software UDF Disks, welche mit anderer Software erstellt wurden, lesen. (Microsoft DVD−ROMs, RW Disks erstellt mit Ahead InCD). Es wird für die Installation ein ZIP Dekomprimierprogramm benötigt.
 
-[Section.040a]
+[Section.0a]
 License = Gratuito
 Description = Un programa gratuito de grabación de CD/DVD. Una vez instalado, es posible utilizar CD/DVDs regrabables como memorias flash o discos duros extraíbles. Aparte, también permite escribir CD/DVDs regrabables que utilicen el sistema de archivos UDF. Además permite leer discos creados con otros programas(DVD−ROMs de Microsoft, discos regrabables hechos con Ahead InCD). Para instalarlo es necesario utilizar un extractor ZIP.
 

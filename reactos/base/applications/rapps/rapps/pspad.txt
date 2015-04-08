@@ -6,7 +6,7 @@
 Name = PSPad
 Version = 4.5.9
 License = Freeware
-Description = A text editor.
+Description = A lightweight text editor.
 Size = 4.50 MB
 Category = 6
 URLSite = http://www.pspad.com
@@ -14,11 +14,11 @@ URLDownload = http://fossies.org/windows/misc/pspad459inst_en.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Texteditor.
+Description = Ein leichtgewichtiger Texteditor.
 URLSite = http://www.pspad.com/de/
 
-[Section.040a]
-Description = Un editor de text.
+[Section.0a]
+Description = Un pequeño editor de texto.
 URLSite = http://www.pspad.com/es/
 
 [Section.040c]

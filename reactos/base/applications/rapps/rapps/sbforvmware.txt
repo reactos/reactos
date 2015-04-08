@@ -5,7 +5,7 @@
 Name = SoundBlaster Driver for VMWare
 Version = 5.12.1.5017
 License = Unknown
-Description = Unzip in the ReactOS's folder then restart ReactOS twice.
+Description = Audio driver for SoundBlaster-compatible devices. Unzip in the ReactOS folder and restart twice.
 Size = 2.22 MB
 Category = 13
 URLDownload = http://svn.reactos.org/packages/sb_vmware.exe
@@ -19,12 +19,12 @@ Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 [Section.0407]
 Name = SoundBlaster Treiber für VMWare
 License = Unbekannt
-Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+Description = Sound Treiber für SoundBlaster-kompatible Geräte. Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
 
-[Section.040a]
-Name = Driver SoundBlaster para VMWare
+[Section.0a]
+Name = Controlador SoundBlaster para VMWare
 License = Desconocida
-Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
+Description = Controlador de audio para dispositivos compatibles con SoundBlaster. Se debe descomprimir en la carpeta «ReactOS» y reiniciar dos veces.
 
 [Section.040c]
 Name = Pilote SoundBlaster pour VMWare

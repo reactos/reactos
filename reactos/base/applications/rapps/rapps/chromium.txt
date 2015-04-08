@@ -6,7 +6,7 @@
 Name = Chromium B.S.U.
 Version = 0.9.13.2
 License = GPL
-Description = Chromium B.S.U. is an arcade-style, top-scrolling space shooter.
+Description = An arcade-style, top-scrolling space shooter.
 Size = 2.3 MB
 Category = 4
 URLSite = http://chromium-bsu.sourceforge.net
@@ -14,10 +14,10 @@ URLDownload = http://download.sourceforge.net/project/chromium-bsu/Chromium%20B.
 CDPath = none
 
 [Section.0407]
-Description = Chromium B.S.U. ist ein Arcade-Style, Top-Scrolling Space Shooter.
+Description = Ein Arcade-Style, Top-Scrolling Space Shooter.
 
-[Section.040a]
-Description = Chromium B.S.U. es un juego vertical de disparos espacial al clásico estilo arcade.
+[Section.0a]
+Description = Un juego vertical de disparos espacial al clásico estilo arcade.
 
 [Section.0410]
 Description = Cromo B.S.U. è sparatutto spaziale.

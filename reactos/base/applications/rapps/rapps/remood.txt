@@ -5,7 +5,7 @@
 Name = ReMooD
 Version = 0.8a
 License = GPL
-Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy experience with new features and more stability.
+Description = A source port of Doom Legacy. It aims to provide the classic legacy experience with new features and more stability.
 Size = 1.15 MB
 Category = 4
 URLSite = http://remood.sourceforge.net/
@@ -13,13 +13,13 @@ URLDownload = http://download.sourceforge.net/project/remood/ReMooD/0.8a/remoods
 CDPath = none
 
 [Section.0407]
-Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
+Description = Ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
 
 [Section.0410]
 Description = ReMooD è un porting sorgente di Doom Legacy. Punta a provedere la classica esperienza ereditaria con nuove funzionalità e maggiore stabilità.
 
-[Section.040a]
-Description = ReMood es un port de Doom Legacy. Su fin es proporcionar la clásica experiencia anterior con nuevas características y mayor estabilidad.
+[Section.0a]
+Description = Una versión derivada de Doom Legacy. Su fin es revivir la experiencia clásica con nuevas características y mayor estabilidad.
 
 [Section.040c]
 Description = ReMood est un portage du source de Doom Legacy. Son but est de fournir l'expérience classique de Legacy avec de nouvelles fonctionnalités et plus de stabilité.

@@ -13,9 +13,9 @@ URLDownload = http://download.sourceforge.net/project/lgames/binaries/lmarbles-1
 CDPath = none
 
 [Section.0407]
-Description = Atomix-Klon verwendet SDL Bibliotheken.
+Description = Atomix-Klon. Verwendet SDL Bibliotheken.
 
-[Section.040a]
+[Section.0a]
 Description = Clon de Atomix usando las librerias SDL.
 
 [Section.040c]

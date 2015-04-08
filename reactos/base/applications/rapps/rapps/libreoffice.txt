@@ -13,10 +13,10 @@ URLDownload = http://download.documentfoundation.org/libreoffice/stable/4.4.1/wi
 CDPath = none
 
 [Section.0407]
-Description = Vorher bekannt als OpenOffice. Open Source Office Suite.
+Description = Vorher bekannt als OpenOffice. Quelloffene Office Suite.
 
-[Section.040a]
-Description = La suite de ofimática de código abierto.
+[Section.0a]
+Description = La suite de ofimática de código abierto. Descendiente de OpenOffice.
 
 [Section.040c]
 Description = Précédemment appelé OpenOffice. Suite bureautique open source.

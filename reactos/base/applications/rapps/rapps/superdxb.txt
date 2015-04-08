@@ -6,7 +6,7 @@
 Name = Super DX-Ball
 Version = 1.1
 License = Shareware
-Description = Super DX-Ball is a vibrant and colorful brick-breaking game.
+Description = A vibrant and colorful brick-breaking game.
 Size = 3.8 MB
 Category = 4
 URLSite = http://www.blitwise.com/superdxb.html
@@ -14,10 +14,13 @@ URLDownload = http://www.blitwise.com/superdxb.exe
 CDPath = none
 
 [Section.0407]
-Description = Super DX-Ball ist ein lebendiges und buntes Brick-Breaking-Spiel.
+Description = Ein lebendiges und buntes Brick-Breaking-Spiel.
+
+[Section.0a]
+Description = Un juego vibrante y colorido de romper bloques.
 
 [Section.0410]
-Description = Super DX-Ball è un gioco spacca blocchi vibrante e colorato
+Description = Super DX-Ball è un gioco spacca blocchi vibrante e colorato.
 
 [Section.0415]
 Description = Super DX-Ball - pełna koloru i animacji gra polegająca na zbijaniu klocków.

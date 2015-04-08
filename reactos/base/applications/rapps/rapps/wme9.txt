@@ -5,7 +5,7 @@
 Name = Windows Media Encoder 9
 Version = 9.0
 License = Unknown
-Description = Windows Media Encoder 9
+Description = Convert and broadcast audio and video in Windows Media formats.
 Size = 9.46 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=17792
@@ -14,9 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
+Description = Konvertieren und Broadcast von Audio und Video im Windows Media Format.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
+Description = Convierte y emite audio y vídeo en los formatos de Windows Media.
 
 [Section.040c]
 License = Inconnue

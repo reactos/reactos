@@ -5,7 +5,7 @@
 Name = Microsoft .NET Framework Version 1.1 Redistributable Package
 Version = 1.1
 License = Unknown
-Description = Microsoft .NET Framework Version 1.1 - Redistributable Package.
+Description = Components needed to run managed Windows applications compiled in an Intermediate language like C#.
 Size = 23.14 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-US/download/details.aspx?id=26
@@ -13,38 +13,39 @@ URLDownload = http://download.microsoft.com/download/a/a/c/aac39226-8825-44ce-90
 CDPath = none
 
 [Section.0407]
-Description = Microsoft .NET Framework Version 1.1 - Redistributable Paket.
+Description = Runtime für C# Windows Anwendungen.
 Size = 23.15 MB
 URLSite = http://www.microsoft.com/de-DE/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/4/f/3/4f3ac857-e063-45d0-9835-83894f20e808/dotnetfx.exe
 
-[Section.040a]
-Description = Microsoft .NET Framework versión 1.1 - Paquete redistribuible.
+[Section.0a]
+Description = Componentes necesarios para ejecutar programas escritos en lenguajes intermedios como C#.
+License = Desconocida
 Size = 23.15 MB
 URLSite = http://www.microsoft.com/es-ES/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/8/f/0/8f023ff4-2dc1-4f10-9618-333f5b9f8040/dotnetfx.exe
 
 [Section.040c]
-Description = Microsoft .NET Framework version 1.1 - Paquet redistribuable.
+Description = Paquet redistribuable.
 Size = 23,15 Mo
 URLSite = http://www.microsoft.com/fr-FR/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/e/d/a/eda9d4ea-8ec9-4431-8efa-75391fb91421/dotnetfx.exe
 
 [Section.0410]
-Description = Microsoft .NET Framework Version 1.1 - Redistributable Package.
+Description = Redistributable Package.
 Size = 23.15 MB
 URLSite = http://www.microsoft.com/it-IT/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/1/f/a/1fa816d7-a8d6-4f15-b682-b96239e68ab7/dotnetfx.exe
 
 [Section.0415]
-Description = Microsoft .NET Framework Wersja 1.1 - Pakiet Dystrybucyjny.
+Description = Pakiet Dystrybucyjny.
 Size = 23.15 MB
 URLSite = http://www.microsoft.com/pl-PL/download/details.aspx?id=26
 URLDownload = http://download.microsoft.com/download/c/9/f/c9f672f3-c14b-4cff-9671-d419842d792d/dotnetfx.exe
 
 [Section.0418]
 License = Nespecificată
-Description = Platforma Microsoft .NET versiunea 1.1 - Pachet redistributabil.
+Description = Pachet redistributabil.
 Size = 23,14 Mo
 
 [Section.041f]

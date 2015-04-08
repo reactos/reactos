@@ -5,7 +5,7 @@
 Name = OpenOffice 4.1
 Version = 4.1.1
 License = LGPL
-Description = The open source office suite.
+Description = Open source office suite.
 Size = 140.9 MB
 Category = 6
 URLSite = http://www.openoffice.org/
@@ -13,12 +13,12 @@ URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1
 CDPath = none
 
 [Section.0407]
-Description = DIE Open Source Office Suite.
+Description = Quelloffene Office Suite.
 Size = 164.9 MB
 URLSite = http://www.openoffice.org/de/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/de/Apache_OpenOffice_4.1.1_Win_x86_install_de.exe
 
-[Section.040a]
+[Section.0a]
 Description = La suite de ofimática de código abierto.
 Size = 130.4 MB
 URLSite = http://www.openoffice.org/es/

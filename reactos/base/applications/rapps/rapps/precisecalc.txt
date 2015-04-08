@@ -5,12 +5,18 @@
 Name = Precise Calculator
 Version = 2.5
 License = GPLv3
-Description = Precise Calculator is a free and open source scientific calculator for Windows. You need a ZIP decompression program to install it.
+Description = A free and open source scientific calculator for Windows. You will need a ZIP decompression program to install it.
 Size = 151 kB
 Category = 11
 URLSite = http://preccalc.sourceforge.net
 URLDownload = http://download.sourceforge.net/preccalc/preccalc-32bit.zip
 CDPath = none
+
+[Section.0407]
+Description = Ein freier und quelloffener wissenschaftlicher Rechner für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+
+[Section.0a]
+Description = Una calculadora científica gratuita y de código abierto. Es necesario un descompresor de archivos zip para abrirlo.
 
 [Section.041f]
 Name = Precise Hesap Makinesi

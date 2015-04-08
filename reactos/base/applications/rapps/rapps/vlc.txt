@@ -5,18 +5,19 @@
 Name = VLC media player
 Version = 2.2.0
 License = GPL
-Description = A media player.
+Description = A fully featured FOSS media player with built-in codecs.
 Size = 27.19 MB
 Category = 2
 URLSite = http://www.videolan.org/vlc/
-URLDownload = http://mirror.de.leaseweb.net/videolan/vlc/2.2.0/win32/vlc-2.2.0-win32.exe
+URLDownload = http://get.videolan.org/vlc/2.2.0/win32/vlc-2.2.0-win32.exe
+SHA1 = 560497a560eaf13ad46489b9239487401e575548
 CDPath = none
 
 [Section.0407]
-Description = Ein Mediaplayer.
+Description = Ein voll funktionsfähiger FOSS Media-Player mit eingebauten Codecs.
 
-[Section.040a]
-Description = Reproductor multimedia.
+[Section.0a]
+Description = Completo reproductor multimedia, de código abierto y con códecs propios.
 
 [Section.040c]
 Description = Un lecteur media.

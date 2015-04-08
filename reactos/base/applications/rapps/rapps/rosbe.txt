@@ -18,8 +18,8 @@ Description = Dovoluje zkompilovat zdrojový kód systému ReactOS. Pro další 
 [Section.0407]
 Description = Erlaubt es Ihnen den ReactOS Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
 
-[Section.040a]
-Description = Te permite compilar el código de ReactOS. Para más instrucciones consulta la wiki de ReactOS.
+[Section.0a]
+Description = Te permite compilar el código de ReactOS. Para más información consulta la Wiki de ReactOS.
 
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS. Pour plus d'instructions, reportez-vous au wiki ReactOS.

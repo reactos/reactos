@@ -5,7 +5,7 @@
 Name = Wine Mono .NET Framework
 Version = 4.5.4
 License = GPLv2, LGPLv2, MIT, BSD, MS-PL, MPLv1.1
-Description = Wine Mono .NET Framework
+Description = Free reimplementation of .NET Framework used by the Wine libraries.
 Size = 53.7 MB
 Category = 14
 URLSite = http://sourceforge.net/projects/wine/files/Wine Mono
@@ -13,10 +13,10 @@ URLDownload = http://download.sourceforge.net/wine/Wine%20Mono/4.5.4/wine-mono-4
 CDPath = none
 
 [Section.0407]
-Description = Wine Mono .NET Framework
+Description = Freie Neu-Umsetzung des .NET Frameworks, welche von den Wine-Bibliotheken verwendet wird.
 
-[Section.040a]
-Description = Wine Mono .NET Framework
+[Section.0a]
+Description = Reimplementación libre de .NET Framework utilizadas por las bibliotecas de Wine.
 
 [Section.040c]
 Description = Wine Mono .NET Framework

@@ -18,8 +18,8 @@ Description = Dovoluje zkompilovat zdrojový kód systému ReactOS ARM. Pro dal�
 [Section.0407]
 Description = Erlaubt es Ihnen den ReactOS ARM Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
 
-[Section.040a]
-Description = Te permite compilar el código de ReactOS ARM. Para más instrucciones consulta la wiki de ReactOS.
+[Section.0a]
+Description = Te permite compilar el código de ReactOS para ARM. Para más instrucciones consulta la Wiki de ReactOS.
 
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS pour ARM. Pour plus d'instruction, reportez-vous au wiki ReactOS.

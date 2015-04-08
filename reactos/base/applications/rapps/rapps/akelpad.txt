@@ -6,15 +6,18 @@
 Name = AkelPad
 Version = 4.9.1
 License = GPL
-Description = AkelPad - is an open source editor for plain text. It is designed to be a small and fast. 
+Description = An open source plain text editor designed to be small and fast. 
 Size = 1.11 MB
 Category = 6
 URLSite = http://akelpad.sourceforge.net/
 URLDownload = http://switch.dl.sourceforge.net/project/akelpad/AkelPad%204/4.9.1/AkelPad-4.9.1-setup.exe
 CDPath = none
 
-[Section.040a]
-Description = AkelPad es un editor de texto plano de código abierto. Se diseñó para ser ligero y rápido. 
+[Section.0a]
+Description = Un editor de texto plano de código abierto. Se diseñó para ser ligero y rápido. 
+
+[Section.0407]
+Description = Kleiner, schneller und quelloffener Text Editor. 
 
 [Section.0418]
 Description = AkelPad - editor de text simplu. Este un program cu sursă deschisă, conceput pentru a fi mic și rapid.

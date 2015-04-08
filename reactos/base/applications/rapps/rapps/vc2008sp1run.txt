@@ -5,7 +5,7 @@
 Name = Microsoft Visual C++ 2008 SP1 Redistributable
 Version = 9.0
 License = Unknown
-Description = Microsoft Visual Studio 2008 SP1 Runtime. Contains: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
+Description = Needed by applications compiled with Visual Studio 2008. Contains: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 Size = 4.27 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=26368
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Microsoft Visual Studio 2008 SP1 Laufzeitsystem. Enthält: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
+Description = Benötigt für Visual Studio 2008 basierte Anwendungen. Enthält: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Librerias Microsoft Visual Studio 2008 SP1. Incluye: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
+Description = Necesario para aplicaciones compiladas con Visual Studio 2008. Incluye: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 
 [Section.040c]
 License = Inconnue

@@ -13,9 +13,9 @@ URLDownload = http://download.sourceforge.net/project/lgames/binaries/lbreakout2
 CDPath = none
 
 [Section.0407]
-Description = Breakout-Klon verwendet SDL Bibliothek.
+Description = Breakout-Klon. Verwendet SDL Bibliothek.
 
-[Section.040a]
+[Section.0a]
 Description = Clon de Breakout usando las librerias SDL.
 
 [Section.040c]

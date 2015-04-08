@@ -5,7 +5,7 @@
 Name = Microsoft Visual C++ 2013 Redistributable
 Version = 12.0
 License = Unknown
-Description = Microsoft Visual Studio 2013 Runtime. Contains: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Description = Needed by applications compiled with Visual Studio 2013. Contains: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
 Size = 6.20 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=40784
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Microsoft Visual Studio 2013 Laufzeitsystem. Beinhaltet: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Description = Benötigt für Visual Studio 2013 basierte Anwendungen. Beinhaltet: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Librerias Microsoft Visual Studio 2013. Incluye: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Description = Necesario para aplicaciones compiladas con Visual Studio 2013. Incluye: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
 
 [Section.040c]
 License = Inconnue

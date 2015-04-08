@@ -5,7 +5,7 @@
 Name = MikTEX 2.9
 Version = 2.9.5105
 License = Freeware
-Description = MiKTeX is an up-to-date implementation of TeX/LaTeX and related programs for Windows.
+Description = An up-to-date implementation of TeX/LaTeX and related programs for Windows.
 Size = 163.18 MB
 Category = 6
 URLSite = http://www.miktex.org/
@@ -13,7 +13,11 @@ URLDownload = http://ftp.gwdg.de/pub/ctan/systems/win32/miktex/setup/basic-mikte
 CDPath = none
 
 [Section.0407]
-Description = MiKTeX ist eine aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
+Description = Eine aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
+
+[Section.0a]
+License = Gratuita
+Description = MikTEX es una implementación actualizada de TeX/LaTeX y otros programas.
 
 [Section.0418]
 License = Gratuită

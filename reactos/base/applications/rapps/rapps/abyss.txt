@@ -5,7 +5,7 @@
 Name = Abyss Web server X1
 Version = 2.9.3.6
 License = Freeware
-Description = Abyss Web Server enables you to host your Web sites on your computer. It supports secure SSL/TLS connections (HTTPS) as well as a wide range of Web technologies. It can also run advanced PHP, Perl, Python, ASP, ASP.NET, and Ruby on Rails Web applications, which can be backed by databases such as MySQL, SQLite, MS SQL Server, MS Access, or Oracle.
+Description = Enables you to host your Web sites on your computer. It supports secure SSL/TLS connections (HTTPS) as well as a wide range of Web technologies. It can also run advanced PHP, Perl, Python, ASP, ASP.NET, and Ruby on Rails Web applications, which can be backed by databases such as MySQL, SQLite, MS SQL Server, MS Access, or Oracle.
 Size = 2.09 MB
 Category = 5
 URLSite = http://www.aprelium.com/
@@ -13,10 +13,10 @@ URLDownload = http://www.aprelium.com/data/abwsx1.exe
 CDPath = none
 
 [Section.0407]
-Description = Abyss Web Server ermöglicht es Webseiten auf Ihrem Computer zu hosten. Er unterstützt sichere SSL/TLS Verbindungen (HTTPS) sowie eine Vielfalt an Web Technologien. Er kann ebenfalls PHP, Perl, Python, ASP, ASP.NET, und Ruby on Rails Web Anwendungen ausführen, welche von Datenbanken, wie MySQL, SQLite, MS SQL Server, MS Access, oder Oracle unterstützt werden können.
+Description = Ermöglicht es Webseiten auf Ihrem Computer zu hosten. Er unterstützt sichere SSL/TLS Verbindungen (HTTPS) sowie eine Vielfalt an Web Technologien. Er kann ebenfalls PHP, Perl, Python, ASP, ASP.NET, und Ruby on Rails Web Anwendungen ausführen, welche von Datenbanken, wie MySQL, SQLite, MS SQL Server, MS Access, oder Oracle unterstützt werden können.
 
-[Section.040a]
-Description = Abyss Web Server permite alojar sitios Web localmente en el equipo. Soporta conexiones seguras SSL / TLS (HTTPS) así como una gran cantidad de tecnologías web. También puede ejecutar aplicaciones web en PHP, Perl, Python, ASP, ASP.Net, Ruby y Ruby on Rails, que pueden ser asociadas con bases de datos tales como MySQL, SQLite, MS SQL Server, MS Access u Oracle.
+[Section.0a]
+Description = Permite alojar sitios Web localmente en el equipo. Soporta conexiones seguras SSL / TLS (HTTPS) así como una gran cantidad de tecnologías web. También puede ejecutar aplicaciones web en PHP, Perl, Python, ASP, ASP.Net, Ruby y Ruby on Rails, que pueden ser asociadas con bases de datos tales como MySQL, SQLite, MS SQL Server, MS Access u Oracle.
 
 [Section.040c]
 Description = Abyss Web Server vous permet d'héberger vos sites internet sur votre ordinateur. Il supporte les connexions sécurisées SSL/TLS (HTTPS) ainsi qu'un grand nombre de technologies web. Il peut également faire tourner des applications web PHP, Perl, Python, ASP, ASP.Net, Ruby et Ruby on Rails, qui peuvent être associées à des bases de données telles que MySQL, SQLite, MS SQL Server, MS Access ou Oracle.

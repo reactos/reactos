@@ -5,7 +5,7 @@
 Name = Mozilla Thunderbird
 Version = 3.1.20
 License = MPL/GPL/LGPL
-Description = The most popular and one of the best free Mail Clients out there.
+Description = Popular and open source e-mail client.
 Size = 9.06 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/thunderbird/
@@ -13,13 +13,13 @@ URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20
 CDPath = none
 
 [Section.0407]
-Description = Der populärste und einer der besten freien Mail-Clients.
+Description = Populärer und quelloffener E-Mail-Client.
 Size = 8.91 MB
 URLSite = https://www.mozilla.org/de/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/de/Thunderbird%20Setup%203.1.20.exe
 
-[Section.040a]
-Description = El más popular y uno de los mejores clientes mail que hay.
+[Section.0a]
+Description = Cliente de correo electrónico popular y de código abierto.
 Size = 8.88 MB
 URLSite = https://www.mozilla.org/es-ES/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/3.1.20/win32/es-ES/Thunderbird%20Setup%203.1.20.exe

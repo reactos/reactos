@@ -5,7 +5,7 @@
 Name = Code::Blocks TDM-GCC (version 4.8.1, 32 bit)
 Version = 13.12
 License = GPLv3
-Description = A open source, cross-platform, powerful IDE. It contains TDM-GCC (version 4.8.1, 32 bit) compiler.
+Description = An open source, cross-platform, powerful IDE. It contains TDM-GCC (version 4.8.1, 32 bit) compiler.
 Size = 100 MB
 Category = 7
 URLSite = http://www.codeblocks.org/
@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthät den TDM-GCC (version 4.8.1, 32 bit) Compiler.
 
-[Section.040a]
+[Section.0a]
 Description = Un IDE potente, de código abierto y multiplataforma. Viene con el compilador TDM-GCC (version 4.8.1, 32 bit).
 
 [Section.0410]

@@ -14,7 +14,7 @@ CDPath = none
 [Section.0407]
 Description = Ein Spiel, ähnlich zu Frozen Fruits.
 
-[Section.040a]
+[Section.0a]
 Description = Un juego similar a Frozen Fruits.
 
 [Section.0410]

@@ -1,0 +1,19 @@
+﻿; UTF-8
+; Spanish translation by Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
+
+[Section]
+Name = GIMP
+Version = 2.8.14
+License = GPL
+Description = An acronym for GNU Image Manipulation Program. It is a freely distributed program for such tasks as photo retouching, image composition and image authoring.
+Size = 87.7 MB
+Category = 3
+URLSite = http://www.gimp.org/
+URLDownload = http://download.gimp.org/pub/gimp/v2.8/windows/gimp-2.8.14-setup-1.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Akronym für GNU Image Manipulation Program. Es ist ein frei verfügbares Programm für Aufgaben wie Foto-Retusche, Bildkomposition und Bild-Authoring.
+
+[Section.0a]
+Description = Es un acrónimo en inglés de «Programa de Manipulación de Imágenes GNU». Se distribuye libremente y está pensado para el retoque fotográfico, composición de imágenes y dibujo.

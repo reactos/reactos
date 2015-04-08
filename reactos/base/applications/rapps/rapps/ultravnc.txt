@@ -13,10 +13,10 @@ URLDownload = http://www.uvnc.eu/download/1205/UltraVNC_1_2_05_X86_Setup.exe
 CDPath = none
 
 [Section.0407]
-Description = Open Source VNC Client/Server.
+Description = Quelloffener VNC Client/Server.
 
-[Section.040a]
-Description = Cliente/Servidor VNC de código abierto.
+[Section.0a]
+Description = Cliente/servidor VNC de código abierto.
 
 [Section.040c]
 Description = Client/serveur VNC open source.

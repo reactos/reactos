@@ -5,15 +5,18 @@
 Name = D+ Browser
 Version = 0.5b
 License = GPLv3
-Description = DPlus is a graphical web browser with an emphasis on security, performance and portability. It is based on Dillo and it is forked from Dillo-Win32 project.
+Description = A graphical web browser with an emphasis on security, performance and portability. It is based on Dillo and it is forked from Dillo-Win32 project.
 Size = 1.36 MB
 Category = 5
 URLSite = http://dplus-browser.sourceforge.net/
 URLDownload = http://download.sourceforge.net/project/dplus-browser/Releases/dplus-0.5b/dplus-0.5b-setup.exe
 CDPath = none
 
-[Section.040a]
-Description = DPlus es un navegador de archivos con interfaz gráfica y un énfasis en la seguridad, el rendimiento y la portabilidad. Se basa en Dillo y es una versión alternativa del proyecto Dillo-Win32.
+[Section.0a]
+Description = Un navegador de archivos con interfaz gráfica y un énfasis en la seguridad, el rendimiento y la portabilidad. Se basa en Dillo y es una versión alternativa del proyecto Dillo-Win32.
+
+[Section.0407]
+Description = Ein grafischer Web-Browser mit einem Schwerpunkt auf Sicherheit, Leistung und Mobilität. Er basiert auf Dillo und wurde vom Dillo-Win32-Projekt geforked.
 
 [Section.0410]
 License = GPL versione 3

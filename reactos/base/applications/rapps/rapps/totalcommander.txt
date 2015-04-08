@@ -5,7 +5,7 @@
 Name = Total Commander
 Version = 8.51a
 License = Shareware
-Description = Total Commander is a file manager with two panels side by side.
+Description = A file manager for power users with two panels side by side.
 Size = 3.55 MB
 Category = 12
 URLSite = http://www.ghisler.com/
@@ -13,8 +13,11 @@ URLDownload = http://totalcmd2.s3.amazonaws.com/tcmd851ax32.exe
 CDPath = none
 
 [Section.0407]
-Description = Total Commander ist ein Dateimanager mit zwei nebeneinander liegenden Panels.
+Description = Ein Dateimanager für Power User mit zwei nebeneinander liegenden Panels.
 URLSite = http://www.ghisler.com/deutsch.htm
+
+[Section.0a]
+Description = Un navegador de archivos multipanel para usuarios avanzados.
 
 [Section.0410]
 Description = Total Commander è un file manager con due pannelli affiancati.

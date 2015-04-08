@@ -5,7 +5,7 @@
 Name = Mozilla Firefox 36
 Version = 36.0.1
 License = MPL/GPL/LGPL
-Description = The most popular and one of the best free Web Browsers out there.
+Description = A popular Web browser. Free and open source, made by a global community.
 Size = 37.79 MB
 Category = 5
 URLSite = http://www.mozilla.org/en-US/
@@ -19,12 +19,12 @@ URLSite = http://www.mozilla.org/cs/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/36.0.1/win32/cs/Firefox%20Setup%2036.0.1.exe
 
 [Section.0407]
-Description = Der populärste und einer der besten freien Webbrowser.
+Description = Ein populärer, freier und quelloffener Webbrowser.
 Size = 37.61 MB
 URLSite = http://www.mozilla.org/de/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/36.0.1/win32/de/Firefox%20Setup%2036.0.1.exe
 
-[Section.040a]
+[Section.0a]
 Description = Navegador web popular, libre y gratuito.
 Size = 37.53 MB
 URLSite = http://www.mozilla.org/es-ES/

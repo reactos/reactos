@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
-Description = Zusätzlich Plugins zur Unterstützung von weiteren Dateitypen.
+Description = Zusätzliche Plugins zur Unterstützung von weiteren Dateitypen.
 
-[Section.040a]
+[Section.0a]
 License = Gratuito (para uso personal)
-Description = Complementos adicionales para soportar más formatos.
+Description = Complementos adicionales para visualizar más formatos.
 
 [Section.040c]
 License = Gratuit (pour un usage personnel)

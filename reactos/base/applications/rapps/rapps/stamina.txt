@@ -3,7 +3,9 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = Stamina 2.5
+Name = Stamina
+Version = 2.5
+License = Freeware
 Description = Free typing tutor.
 URLSite = http://stamina.ru
 Size = 4.8 MB
@@ -13,6 +15,9 @@ CDPath = none
 
 [Section.0407]
 Description = Ein freies Schreiblernprogramm.
+
+[Section.0a]
+Description = Programa para aprender a escribir a máquina.
 
 [Section.0410]
 Description = Tutore di scrittura gratuita.

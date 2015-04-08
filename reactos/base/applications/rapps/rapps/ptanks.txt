@@ -16,6 +16,9 @@ CDPath = none
 [Section.0407]
 Description = Das schnellste Artillerie-Spiel, das Sie jemals gespielt haben.
 
+[Section.0a]
+Description = Un divertido y rápido juego de artillería.
+
 [Section.0410]
 Description = Il gioco d'artiglieria più veloce a cui potrai giocare.
 

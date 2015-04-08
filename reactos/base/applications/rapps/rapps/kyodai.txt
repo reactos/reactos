@@ -16,6 +16,9 @@ CDPath = none
 [Section.0407]
 Description = Eines der besten Mahjongg Solitaire Spiele im Netz.
 
+[Section.0a]
+Description = Uno de los mejores solitarios Mahjongg en existencia.
+
 [Section.0410]
 Description = Uno dei migliori giochi di Mahjongg Solitaire.
 

@@ -5,7 +5,7 @@
 Name = Microsoft Visual C++ 2012 Redistributable Update 4
 Version = 11.0
 License = Unknown
-Description = Microsoft Visual Studio 2012 Runtime. Contains: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Description = Needed by applications compiled with Visual Studio 2012. Contains: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
 Size = 6.25 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=30679
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Microsoft Visual Studio 2012 Laufzeitsystem Update 4. Beinhaltet: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Description = Benötigt für Visual Studio 2012 basierte Anwendungen. Beinhaltet: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Librerias Microsoft Visual Studio 2012 Update 4. Incluye: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+Description = Necesario para aplicaciones compiladas con Visual Studio 2012. Incluye: atl110.dll, mfc110.dll, mfc110u.dll, mfcm110.dll, mfcm110u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
 
 [Section.040c]
 License = Inconnue

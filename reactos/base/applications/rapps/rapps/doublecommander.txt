@@ -5,7 +5,7 @@
 Name = Double Commander
 Version = 0.6.0 Beta
 License = GPL
-Description = Double Commander is an open source file manager with two panels side by side. You need 7-Zip or a similar Utility to extract it.
+Description = An open source file manager with two panels side by side. You will need a tool like 7-Zip to extract it.
 Size = 9.4 MB
 Category = 12
 URLSite = http://doublecmd.sourceforge.net/
@@ -13,10 +13,10 @@ URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windo
 CDPath = none
 
 [Section.0407]
-Description = Double Commander ist ein Open Source Dateimanager mit zwei nebeneinander liegenden Panels. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+Description = Ein quelloffener Dateimanager mit zwei nebeneinander liegenden Panels. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
 
-[Section.040a]
-Description = Double Commander es un explorador de archivos multipanel de código abierto. Es necesario utilizar 7-Zip u otro programa alternativo para extraerlo.
+[Section.0a]
+Description = Un explorador de archivos multipanel de código abierto. Es necesario utilizar 7-Zip u otro programa alternativo para extraerlo.
 
 [Section.0410]
 Description = Double Commander è un open-source file-manager con due pannelli laterali affiancati. Utilizzare 7-Zip o un' utility simile per estrarlo.

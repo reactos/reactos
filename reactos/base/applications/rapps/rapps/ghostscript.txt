@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Ein offener Interpreter für die PostScript Sprache und PDF.
 
-[Section.040a]
+[Section.0a]
 Description = Un intérprete libre para el lenguaje PostScript y PDF.
 
 [Section.0418]

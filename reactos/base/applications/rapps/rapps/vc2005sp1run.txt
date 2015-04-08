@@ -5,7 +5,7 @@
 Name = Microsoft Visual C++ 2005 SP1 Redistributable
 Version = 6.0
 License = Unknown
-Description = Microsoft Visual Studio 2005 Runtime SP1. Contains: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Description = Needed by applications compiled with Visual Studio 2005. Contains: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 Size = 2.58 MB
 Category = 14
 URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=26347
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Microsoft Visual Studio 2005 Laufzeitsystem SP1. Beinhaltet: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Description = Benötigt für Visual Studio 2005 basierte Anwendungen. Beinhaltet: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Librerias Microsoft Visual Studio 2005 SP1. Incluye: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
+Description = Necesario para aplicaciones compiladas con Studio 2005. Incluye: atl80.dll, mfc80.dll, mfcm80.dll, mfcm80u.dll, msdia80.dll, msvcm80.dll, msvcp80.dll, msvcr80.dll, vcomp.dll.
 
 [Section.040c]
 License = Inconnue

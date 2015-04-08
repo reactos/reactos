@@ -5,7 +5,7 @@
 Name = Media Player Classic Home Cinema
 Version = 1.7.8
 License = GPL
-Description = A media player.
+Description = An alternative media player.
 Size = 10.9 MB
 Category = 2
 URLSite = http://mpc-hc.org/
@@ -13,10 +13,10 @@ URLDownload = http://download.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20
 CDPath = none
 
 [Section.0407]
-Description = Ein Mediaplayer.
+Description = Ein alternativer Mediaplayer.
 
-[Section.040a]
-Description = Reproductor multimedia.
+[Section.0a]
+Description = Reproductor multimedia alternativo.
 
 [Section.040c]
 Description = Un lecteur media.

@@ -5,7 +5,7 @@
 Name = Mozilla SeaMonkey
 Version = 2.33
 License = MPL/GPL/LGPL
-Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
+Description = Mozilla Suite is alive. This is the one and only bundle including Browser, Mail, Chat, and Composer that you will ever need.
 Size = 30.05 MB
 Category = 5
 URLSite = http://www.seamonkey-project.org/
@@ -17,8 +17,8 @@ Description = Mozilla Suite lebt. Dies ist das einzige Browser-, Mail-, Chat- an
 Size = 29.92 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/de/SeaMonkey%20Setup%202.33.exe
 
-[Section.040a]
-Description = La suite de Mozilla está viva. Es el primero y único navegador web, gestor de correo, lector de noticias, Chat y editor HTML que necesitarás.
+[Section.0a]
+Description = La suite de Mozilla está viva. Es la única suite que incluye navegador web, gestor de correo electrónico, lector de noticias, chat y editor HTML.
 Size = 29.91 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/es-ES/SeaMonkey%20Setup%202.33.exe
 

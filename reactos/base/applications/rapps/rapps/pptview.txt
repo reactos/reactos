@@ -5,7 +5,7 @@
 Name = Microsoft Powerpoint Viewer
 Version = 2010
 License = Unknown
-Description = Microsoft Powerpoint Viewer
+Description = Freeware presentation viewer for Office formats (*.ppt).
 Size = 60.28 MB
 Category = 6
 URLSite = http://support.microsoft.com/kb/180071/
@@ -14,10 +14,13 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
+Description = Freeware Präsentations Viewer für Office-Formate (*.ppt).
 Size = 60.43 MB
 URLDownload = http://download.microsoft.com/download/9/F/7/9F742C8F-8C70-4498-B4D1-539BE36A1077/PowerPointViewer.exe
 
-[Section.040a]
+[Section.0a]
+Name = Visor de Microsoft Powerpoint
+Description = Visor de presentaciones gratuito para formatos de Office (*.ppt).
 License = Desconocida
 Size = 60.48 MB
 URLDownload = http://download.microsoft.com/download/C/1/A/C1AAD042-4407-4470-97CB-863B869F9EDF/PowerPointViewer.exe

@@ -5,7 +5,7 @@
 Name = AbiWord
 Version = 2.6.8
 License = GPL
-Description = Word processor.
+Description = Snappy and open source word processor.
 Size = 5.64 MB
 Category = 6
 URLSite = http://www.abisource.com/
@@ -13,10 +13,10 @@ URLDownload = http://www.abisource.com/downloads/abiword/2.6.8/Windows/abiword-s
 CDPath = none
 
 [Section.0407]
-Description = Textverarbeitung.
+Description = Quelloffene Textverarbeitung.
 
-[Section.040a]
-Description = Procesador de textos.
+[Section.0a]
+Description = Procesador de textos rápido y de código abierto.
 
 [Section.040c]
 Description = Éditeur de texte.

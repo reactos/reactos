@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Kostenlose virtuelle Tastatur.
 
-[Section.040a]
+[Section.0a]
 License = Gratuito
 Description = Aplicación gratuita de teclado virtual.
 

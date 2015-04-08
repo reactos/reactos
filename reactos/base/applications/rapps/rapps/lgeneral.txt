@@ -13,9 +13,9 @@ URLDownload = http://download.sourceforge.net/project/lgames/binaries/lgeneral-1
 CDPath = none
 
 [Section.0407]
-Description = Panzer-General-Klon verwendet SDL Bibliotheken.
+Description = Panzer-General-Klon. Verwendet SDL Bibliotheken.
 
-[Section.040a]
+[Section.0a]
 Description = Clon de Panzer General usando las librerias SDL.
 
 [Section.040c]

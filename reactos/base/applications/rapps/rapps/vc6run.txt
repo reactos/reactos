@@ -5,7 +5,7 @@
 Name = Microsoft Visual C++ 6 Redistributable Package
 Version = 6.0
 License = Unknown
-Description = Microsoft Visual Studio 6 Runtime. Contains: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Needed by applications compiled with Visual Studio 6. Contains: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 Size = 1.75 MB
 Category = 14
 URLSite = http://support.microsoft.com/kb/259403/
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Microsoft Visual Studio 6 Laufzeitsystem. Beinhaltet: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Benötigt für Visual Studio 6 basierte Anwendungen. Beinhaltet: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Librerias Microsoft Visual Studio 6. Incluye: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
+Description = Necesario para aplicaciones compiladas con Visual Studio 6. Incluye: advpack.dll, asycfilt.dll, atla.dll, atlu.dll, comcat.dll, mfc42.dll, mfc42u.dll, msvcirt.dll, msvcp60.dll, msvcrt.dll, oleaut32.dll, olepro32.dll.
 
 [Section.040c]
 License = Inconnue

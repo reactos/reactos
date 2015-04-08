@@ -5,7 +5,7 @@
 Name = Microsoft Word Viewer
 Version = 2003
 License = Unknown
-Description = Microsoft Word Viewer
+Description = Freeware document viewing application for Office formats (*.doc)
 Size = 24.5 MB
 Category = 6
 URLSite = http://support.microsoft.com/kb/180071/
@@ -14,10 +14,13 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
+Description = Freeware Dokumentbetrachter für Office-Formate (*.doc)
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/d/4/b/d4b23f0e-c8b6-4383-878d-1a8184b7db56/wordview_de-de.exe
 
-[Section.040a]
+[Section.0a]
+Name = Visor de Microsoft Word
+Description = Visor gratuito de documentos en formato Office (*.doc)
 License = Desconocida
 Size = 24.53 MB
 URLDownload = http://download.microsoft.com/download/4/4/c/44c2d552-8b40-464f-8470-b4976d7ba60b/wordview_es-es.exe

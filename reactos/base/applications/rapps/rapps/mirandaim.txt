@@ -3,24 +3,24 @@
 
 [Section]
 Name = Miranda IM
-Version = 0.10.24
+Version = 0.10.27
 License = GPL
-Description = Open source multiprotocol instant messaging application - May not work completely.
-Size = 3.77 MB
+Description = Open source multiprotocol instant messaging application. May not work completely.
+Size = 7.6 MB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://sourceforge.net/projects/miranda/files/miranda-im/0.10.27.0/miranda-im-v0.10.27-unicode.exe/download?nowrap
+URLDownload = http://download.sourceforge.net/project/miranda/miranda-im/0.10.27.0/miranda-im-v0.10.27-unicode.exe?nowrap
 CDPath = none
 
 [Section.0407]
-Description = Open source Multiprotokoll Instant Messaging Anwendung - funktioniert möglicherweise nicht vollständig.
+Description = Quelloffene Multiprotokoll Instant Messaging Anwendung. Funktioniert möglicherweise nicht vollständig.
 
-[Section.040a]
-Description = Aplicación de mensajería instantánea multiprotocolo de código abierto - Puede no funcionar en su totalidad.
+[Section.0a]
+Description = Aplicación de mensajería instantánea multiprotocolo de código abierto. Puede que no funcione del todo bien.
 
 [Section.040c]
 Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
-Size = 3,77 Mo
+Size = 7,6 Mo
 
 [Section.0410]
 Description = Multi-protocollo open source per applicazioni di messaggistica istantanea - potrebbe non funzionare del tutto.
@@ -33,11 +33,11 @@ Description = Otwarty komunikator internetowy, obsługujący wiele różnych pro
 
 [Section.0418]
 Description = Aplicație de mesagerie instant multiprotocol (cu surse deschise) - posibil cu limitări în funcționalitate.
-Size = 3,77 Mo
+Size = 7,6 Mo
 
 [Section.041f]
 Description = Açık kaynak, çoklu iletişim kâideli, evgin iletileşme uygulaması. Eksiksiz olarak çalışmayabilir.
-Size = 3,77 MB
+Size = 7,6 MB
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

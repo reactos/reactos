@@ -2,10 +2,10 @@
 ; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
-Name = AC97 Driver for VirtualBox
+Name = AC'97 Driver for VirtualBox
 Version = 5.10.00.3610
 License = Unknown
-Description = Unzip in the ReactOS's folder then restart ReactOS twice.
+Description = Audio driver for AC'97-compatible devices. Unzip in the ReactOS folder and restart twice.
 Size = 185.5 kB
 Category = 13
 URLDownload = http://svn.reactos.org/packages/ac97_vbox.exe
@@ -19,17 +19,17 @@ Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 [Section.0407]
 Name = AC97 Treiber für VirtualBox
 License = Unbekannt
-Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+Description = Sound Treiber für AC'97-kompatible Geräte. Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
 
 [Section.0410]
 Name = Driver AC97 per VirtualBox
 License = Sconosciuta
 Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOs due volte.
 
-[Section.040a]
-Name = Controlador AC97 para VirtualBox
+[Section.0a]
+Name = Controlador AC'97 para VirtualBox
 License = Desconocida
-Description = Se debe descomprimir en la carpeta "ReactOS" y reiniciar ReactOS dos veces.
+Description = Controlador de audio para dispositivos compatibles con AC'97. Se debe descomprimir en la carpeta «ReactOS» y reiniciar dos veces.
 
 [Section.040c]
 Name = Pilote AC97 pour VirtualBox

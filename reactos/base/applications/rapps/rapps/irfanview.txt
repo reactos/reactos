@@ -16,9 +16,9 @@ CDPath = none
 License = Freeware für nichtkommerzielle Nutzung
 Description = Anzeigeprogramm für alle Arten von Grafik-/Audio- oder Video-Dateien.
 
-[Section.040a]
+[Section.0a]
 License = Gratuito (para uso personal)
-Description = Visor para toda clase de archivos de imagen,audio y video.
+Description = Visor para toda clase de archivos de imagen, audio y video.
 
 [Section.040c]
 License = Gratuit (pour un usage personnel)

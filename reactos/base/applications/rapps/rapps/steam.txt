@@ -4,7 +4,7 @@
 [Section]
 Name = Steam
 License = Freeware
-Description = The Steam gaming platform used by many games these days.
+Description = Popular Internet game distribution platform and social network. Includes DRM.
 Size = 1.59 MB
 Category = 4
 URLSite = http://steampowered.com/
@@ -12,11 +12,11 @@ URLDownload = http://storefront.steampowered.com/download/SteamInstall.msi
 CDPath = none
 
 [Section.0407]
-Description = Die Steam Spieleplattform, die von viele Spielen verwendet wird.
+Description = Beliebte Internet Spiel-Vertriebsplattform und soziales Netz. Enthält DRM.
 URLSite = http://store.steampowered.com/?l=german
 
-[Section.040a]
-Description = La plataforma de juego Steam usada por muchos juegos actuales.
+[Section.0a]
+Description = Plataforma de distribución de juegos por Internet y red social. Incluye DRM.
 URLSite = http://store.steampowered.com/?l=spanish
 
 [Section.040c]

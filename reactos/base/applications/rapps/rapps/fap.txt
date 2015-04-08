@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Kleiner und einfacher Mediaplayer.
 
-[Section.040a]
+[Section.0a]
 Description = Reproductor de audio simple y ligero.
 
 [Section.040c]

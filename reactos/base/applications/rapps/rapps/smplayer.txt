@@ -16,8 +16,8 @@ CDPath = none
 Description = Grafische Oberfläche für MPlayer.
 URLSite = http://smplayer.sourceforge.net/de/
 
-[Section.040a]
-Description = Interfaz gráfico para Mplayer (reproductor multimedia).
+[Section.0a]
+Description = Interfaz gráfica para Mplayer, el reproductor multimedia.
 URLSite = http://smplayer.sourceforge.net/es/
 
 [Section.040c]

@@ -5,7 +5,7 @@
 Name = Foxit Reader
 Version = 7.1.0.0306
 License = Freeware
-Description = The best PDF reader next to Adobe Reader itself.
+Description = Alternative PDF reader, rivaling Adobe Reader functionality-wise.
 Size = 36.80 MB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
@@ -14,11 +14,11 @@ CDPath = none
 
 [Section.0407]
 Version = 7.0.8.1216
-Description = Neben Adobe Reader der beste PDF Reader.
+Description = Alternativer PDF Reader. Neben Adobe Reader der beste PDF Reader.
 Size = 50.62 MB
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe
 
-[Section.040a]
+[Section.0a]
 License = Gratuito
 Description = Uno de los mejores lectores de PDF, parecido a Adobe Reader.
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.0/L10N/FoxitReader708.1216_prom_L10N_Setup.exe

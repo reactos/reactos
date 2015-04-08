@@ -16,9 +16,9 @@ CDPath = none
 License = Freeware für nichtkommerzielle Nutzung
 Description = Kleiner und schneller BitTorrent Client.
 
-[Section.040a]
+[Section.0a]
 License = Gratuito para uso no comercial
-Description = Pequeño y rápido cliente BitTorrent.
+Description = Un cliente BitTorrent pequeño y rápido.
 
 [Section.040c]
 License = Gratuit pour une utilisation non-commerciale

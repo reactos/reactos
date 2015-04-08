@@ -5,7 +5,7 @@
 Name = SciTE
 Version = 3.5.4
 License = Freeware
-Description = SciTE is a SCIntilla based text editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
+Description = A SCIntilla based text editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
 Size = 751 kB
 Category = 7
 URLSite = http://www.scintilla.org/
@@ -13,10 +13,10 @@ URLDownload = http://download.sourceforge.net/project/scintilla/SciTE/3.5.4/Sc35
 CDPath = none
 
 [Section.0407]
-Description = SciTE ist ein SCIntilla basierter Text Editor. Ursprünglich wurde er erstellt, um Scintilla vorzuführen, wuchs aber zu einem nützlichen Editor mit der Fähigkeit Programme zu erstellen und auszuführen.
+Description = Ein SCIntilla basierter Text Editor. Ursprünglich wurde er erstellt, um Scintilla vorzuführen, wuchs aber zu einem nützlichen Editor mit der Fähigkeit Programme zu erstellen und auszuführen.
 
-[Section.040a]
-Description = Editor de texto basado en SCIntilla. Originalmente creado para demostrar Scintilla, a crecido para ser un gran editor con capacidad para crear y ejecutar programas.
+[Section.0a]
+Description = Editor de texto basado en SCIntilla. Originalmente creado para demostrar Scintilla, ha terminado siendo un gran editor con capacidad para crear y ejecutar programas.
 
 [Section.040c]
 Description = SciTE est un éditeur de texte basé sur SCIntilla. Originelement réalisé pour montrer Scintilla, il a évolué pour devenir un éditeur généralement utile avec des options pour compiler et lancer des programmes.

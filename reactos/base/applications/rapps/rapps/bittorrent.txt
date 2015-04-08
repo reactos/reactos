@@ -16,7 +16,7 @@ CDPath = none
 License = Freeware für nichtkommerzielle Nutzung
 Description = Der Original BitTorrent Client.
 
-[Section.040a]
+[Section.0a]
 License = Gratuito para uso no comercial
 Description = El cliente de BitTorrent original.
 

@@ -16,6 +16,9 @@ CDPath = none
 Description = Das Original C64 Snoopy Remake.
 URLSite = http://www.blueskied.com/spiele-spielen/snoopy.htm
 
+[Section.0a]
+Description = Nueva versión del juego Snoopy para Commodore 64.
+
 [Section.0410]
 Description = Il remake del gioco Snoopy per Commodore 64.
 

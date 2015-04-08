@@ -15,7 +15,7 @@ CDPath = none
 [Section.0407]
 Description = Ein Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip, zip, tar, rar und vielen anderen Archivformaten.
 
-[Section.040a]
+[Section.0a]
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
 
 [Section.040c]

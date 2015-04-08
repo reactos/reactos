@@ -5,7 +5,7 @@
 Name = DosBlaster
 Version = 2.5
 License = GPL
-Description = DosBlaster is a shell extension which makes it possible to open any DOS executable in DOSBox via right click. This version contains DOSBox 0.70, but can be simply updated by installing a newer DOSBox into the DosBlaster folders.
+Description = A shell extension which makes it possible to open any DOS executable in DOSBox via right click. This version contains DOSBox 0.70, but can be simply updated by installing a newer DOSBox into the DosBlaster folders.
 Size = 2.05 MB
 Category = 15
 URLSite = http://dosblaster.sourceforge.net/
@@ -13,10 +13,10 @@ URLDownload = http://download.sourceforge.net/project/dosblaster/DosBlaster%202.
 CDPath = none
 
 [Section.0407]
-Description = DosBlaster ist eine Shell Extension, die es ermöglicht jede DOS Anwendung via Rechtsklick in DOSBox zu öffnen. Diese Version beinhaltet DOSBox 0.70, kann aber sehr einfach aktualisiert werden, indem man ein neueres DOSBox in die DosBlaster Ordner installiert.
+Description = Eine Shell Extension, die es ermöglicht jede DOS Anwendung via Rechtsklick in DOSBox zu öffnen. Diese Version beinhaltet DOSBox 0.70, kann aber sehr einfach aktualisiert werden, indem man ein neueres DOSBox in die DosBlaster Ordner installiert.
 
-[Section.040a]
-Description = DosBlaster es una extensión del explorador de archivos que permite abrir cualquier ejecutable DOS en DOSBox haciendo clic derecho del ratón. Esta versión contiene DOSBox 0.70, pero se puede actualizar fácilmente instalando una nueva versión de DOSBox en la carpeta de DosBlaster.
+[Section.0a]
+Description = Una extensión del explorador de archivos que permite abrir cualquier ejecutable DOS en DOSBox haciendo clic derecho del ratón. Esta versión contiene DOSBox 0.70, pero se puede actualizar fácilmente instalando una nueva versión de DOSBox en la carpeta de DosBlaster.
 
 [Section.040c]
 Description = DosBlaster est une extension Shell qui permet d'ouvrir n'importe quel exécutable DOS dans DOSBox via un click droit. Cette version contient DOSBox 0.70 mais peut être simplement mise à jour en installant une nouvelle version de DOSBox dans les répertoires de DosBlaster.

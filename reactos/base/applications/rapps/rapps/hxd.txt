@@ -6,7 +6,7 @@
 Name = HxD
 Version = 1.7.7.0
 License = Freeware
-Description = A good hex editor. You need 7-Zip or a similar Utility to extract it.
+Description = A good hexadecimal editor. You will need a tool like 7-Zip to extract it.
 Size = 852 kB
 Category = 7
 URLSite = http://mh-nexus.de/en/
@@ -19,7 +19,7 @@ Size = 854 kB
 URLSite = http://mh-nexus.de/de/
 URLDownload = http://mh-nexus.de/downloads/HxDSetupDE.zip
 
-[Section.040a]
+[Section.0a]
 License = Gratuito
 Description = Un buen editor hexadecimal. Para extraerlo es necesario emplear una utilidad del estilo a 7-Zip.
 

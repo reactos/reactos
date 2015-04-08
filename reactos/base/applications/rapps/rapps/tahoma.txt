@@ -16,9 +16,9 @@ CDPath = none
 License = Unbekannt
 Description = Tahoma Font Pack, der von einigen Anwendungen benötigt wird (Steam). Beinhaltet: Tahoma.ttf, Tahomabd.ttf.
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
-Description = Paquete de fuente Tahoma, necesaria para ciertas aplicaciones (Steam). Incluye: Tahoma.ttf, Tahomabd.ttf.
+Description = Paquete tipográfico Tahoma, necesario para ciertas aplicaciones (como Steam). Incluye: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.040c]
 License = Inconnue

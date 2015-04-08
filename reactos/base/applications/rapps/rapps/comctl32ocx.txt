@@ -19,7 +19,7 @@ Size = 908.73 kB
 URLSite = http://www.microsoft.com/de-DE/download/details.aspx?id=10019
 URLDownload = http://download.microsoft.com/download/c/e/d/ced699fe-7a40-420b-bdd7-10b38caef4c6/VisualBasic6-KB896559-v1-DEU.exe
 
-[Section.040a]
+[Section.0a]
 License = Desconocida
 Description = Necesario para algunas aplicaciones. Incluye: comctl32.ocx, mscomctl.ocx y advpack.dll.
 Size = 910.23 kB

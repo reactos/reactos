@@ -5,7 +5,7 @@
 Name = Simple Direct Media Layer (SDL) Runtime
 Version = 1.2.15
 License = LGPL
-Description = Needed for many open source games to run. You need 7-Zip or a similar utility to extract it.
+Description = Needed for many open source games to run. You will need a tool like 7-Zip to extract it.
 Size = 136.67 kB
 Category = 14
 URLSite = http://www.libsdl.org/
@@ -16,12 +16,10 @@ CDPath = none
 Description = Nutný pro spuštění některých open source her. K rozbalení je nutný 7-zip nebo podobný nástroj.
 
 [Section.0407]
-Name = Simple Direct Media Layer (SDL) Laufzeitsystem
-Description = Erforderlich um einige Open Source Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+Description = Erforderlich um einige quelloffene Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
 
-[Section.040a]
-Name = Libería Simple Direct Media Layer (SDL)
-Description = Necesario para ejecutar varios juegos de código abierto. Necesita 7-Zip o una utilidad similar para extraerlo.
+[Section.0a]
+Description = Necesario para ejecutar muchos juegos de código abierto. Se necesita 7-Zip o una utilidad similar para extraerlo.
 
 [Section.040c]
 Name = Bibliothèque Simple Direct Media Layer (SDL)

@@ -5,7 +5,7 @@
 Name = DOSBox
 Version = 0.74
 License = GPL
-Description = DOSBox is a DOS emulator.
+Description = An open-source DOS emulator.
 Size = 1.38 MB
 Category = 15
 URLSite = http://www.dosbox.com/
@@ -13,10 +13,10 @@ URLDownload = http://download.sourceforge.net/project/dosbox/dosbox/0.74/DOSBox0
 CDPath = none
 
 [Section.0407]
-Description = DOSBox ist ein DOS Emulator.
+Description = Ein quelloffener DOS-Emulator.
 
-[Section.040a]
-Description = DOSBox es un emulador de DOS.
+[Section.0a]
+Description = Un emulador de DOS de código abierto.
 
 [Section.040c]
 Description = DOSBox est un émulateur DOS.

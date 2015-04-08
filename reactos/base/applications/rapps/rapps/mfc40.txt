@@ -17,7 +17,7 @@ Name = OLE Anzeige und Microsoft Foundation Classes Version 4
 License = Unbekannt
 Description = MFC 4 wird von einigen Anwendungen benötigt. Beinhaltet: mfc40.dll, msvcrt40.dll.
 
-[Section.040a]
+[Section.0a]
 Name = Visor OLE y Microsoft Foundation Classes Version 4
 License = Desconocida
 Description = MFC 4 es necesario para varias aplicaciones. Incluye: mfc40.dll, msvcrt40.dll.

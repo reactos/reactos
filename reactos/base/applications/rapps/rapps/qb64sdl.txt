@@ -6,7 +6,7 @@
 Name = QB64 (SDL version)
 Version = 0.980
 License = Freeware
-Description = QB64 is a self-hosting BASIC compiler for Microsoft Windows, Linux and Mac OS X, designed to be compatible with Microsoft QBasic and Microsoft QuickBASIC. You need 7-Zip or a similar utility to extract it.
+Description = A self-hosting BASIC compiler for Microsoft Windows, Linux and Mac OS X, designed to be compatible with Microsoft QBasic and Microsoft QuickBASIC. You will need a tool like 7-Zip to extract it.
 Size = 39.0 MB
 Category = 7
 URLSite = http://www.qb64.net/
@@ -14,10 +14,13 @@ URLDownload = http://www.qb64.net/qb64v0980-win.7z
 CDPath = none
 
 [Section.0407]
-Description = QB64 ist ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
+Description = Ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
+
+[Section.0a]
+Description = Es un compilador auto-compilable de BASIC para Windows, Linux y Mac OS X, diseñado para ser compatible con Microsoft QuickBasic. Es necesario utilizar algo como 7-Zip para descomprimirlo.
 
 [Section.0410]
-Description = QB64 è un compilatore auto ospitante per Microsoft Windows, Linux e Mac OS X, progettato per essere compatibile con Microsoft QuickBasic. Necessita di 7-Zip o uno strumento simile per essere estratto.
+Description = QB64 è un compilatore auto ospitante di BASIC per Microsoft Windows, Linux e Mac OS X, progettato per essere compatibile con Microsoft QuickBasic. Necessita di 7-Zip o uno strumento simile per essere estratto.
 
 [Section.0415]
 Description = QB64 to kompilator BASIC zdolny do kompilacji własnego kodu źródłowego. Działa w systemach Windows, Linux i Mac OS X. Jest kompatybilny z Microsoft QBasic i QuickBASIC. Wymaga programu archiwizującego do wypakowania.

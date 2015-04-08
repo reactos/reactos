@@ -5,7 +5,7 @@
 Name = Notepad++
 Version = 6.7.5
 License = GPL
-Description = A text editor.
+Description = A full featured, free text editor with many plug-ins.
 Size = 7.89 MB
 Category = 6
 URLSite = http://notepad-plus-plus.org/
@@ -13,10 +13,10 @@ URLDownload = http://download.tuxfamily.org/notepadplus/6.7.5/npp.6.7.5.Installe
 CDPath = none
 
 [Section.0407]
-Description = Ein Texteditor.
+Description = Ein voll funktionsfähiger, kostenloser Texteditor mit vielen Plugins.
 
-[Section.040a]
-Description = Un editor de text.
+[Section.0a]
+Description = Un editor de texto completo, libre y con gran cantidad de extensiones.
 
 [Section.040c]
 Description = Un éditeur de texte.

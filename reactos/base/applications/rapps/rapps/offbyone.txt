@@ -5,7 +5,7 @@
 Name = Off By One Browser
 Version = 3.5d
 License = Freeware
-Description = The Off By One Browser is a very small and fast web browser with full HTML 3.2 support.
+Description = A very small and fast web browser with full HTML 3.2 support.
 Size = 1010.89 kB
 Category = 5
 URLSite = http://offbyone.com/
@@ -16,10 +16,10 @@ CDPath = none
 Description = Off-By-One-Browser je velmi malý a rychlý webový prohlížeč s plnou podporou HTML 3.2.
 
 [Section.0407]
-Description = Der Off-By-One-Browser ist ein sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
+Description = Ein sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
 
-[Section.040a]
-Description = Es un pequeño y rápido navegador web con completo soporte HTML 3.2.
+[Section.0a]
+Description = Es un navegador web pequeño y rápido. Soporta HTML 3.2.
 
 [Section.040c]
 Description = Le navigateur Off By One est un navigateur internet très petit et rapide avec un support complet de HTML 3.2.

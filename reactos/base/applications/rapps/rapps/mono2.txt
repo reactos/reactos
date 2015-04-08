@@ -13,10 +13,10 @@ URLDownload = http://download.mono-project.com/archive/3.2.3/windows-installer/m
 CDPath = none
 
 [Section.0407]
-Description = Open Source .NET Framework.
+Description = Quelloffenes .NET Framework.
 
-[Section.040a]
-Description = Versión open-source de .NET Framework.
+[Section.0a]
+Description = Versión de .NET Framework de código abierto.
 
 [Section.040c]
 Description = Framework .NET open source.
