@@ -1364,10 +1364,10 @@ START_TEST(profile)
     /* See if we can find the standard color profile */
     ret = GetSystemDirectoryA( profilefile1, sizeof(profilefile1) );
     ok( ret > 0, "GetSystemDirectoryA() returns %d, LastError = %d\n", ret, GetLastError());
-    ok( lstrlenA(profilefile1) > 0 && lstrlenA(profilefile1) < MAX_PATH, 
+    ok(profilefile1[0] && lstrlenA(profilefile1) < MAX_PATH,
         "Expected length between 0 and MAX_PATH, got %d\n", lstrlenA(profilefile1));
     MultiByteToWideChar(CP_ACP, 0, profilefile1, -1, profilefile1W, MAX_PATH);
-    ok( lstrlenW(profilefile1W) > 0 && lstrlenW(profilefile1W) < MAX_PATH, 
+    ok(profilefile1W[0] && lstrlenW(profilefile1W) < MAX_PATH,
         "Expected length between 0 and MAX_PATH, got %d\n", lstrlenW(profilefile1W));
     lstrcpyA(profilefile2, profilefile1);
     lstrcpyW(profilefile2W, profilefile1W);
