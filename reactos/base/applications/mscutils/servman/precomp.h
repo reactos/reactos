@@ -104,7 +104,7 @@ BOOL DoControlService(LPWSTR ServiceName, HWND hProgress, DWORD Control);
 
 /* progress.c */
 #define DEFAULT_STEP 0
-BOOL RunActionWithProgress(HWND hParent, LPWSTR ServiceName, LPWSTR DisplayName, UINT Action);
+BOOL RunActionWithProgress(HWND hParent, LPWSTR ServiceName, LPWSTR DisplayName, UINT Action, PVOID Param);
 VOID IncrementProgressBar(HANDLE hProgress, UINT NewPos);
 VOID CompleteProgressBar(HANDLE hProgress);
 

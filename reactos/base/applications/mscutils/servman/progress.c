@@ -20,6 +20,7 @@ typedef struct _PROGRESS_DATA
     ULONG Action;
     BOOL StopDepends;
     LPWSTR ServiceList;
+    PVOID Param;
 
 } PROGRESS_DATA, *PPROGRESS_DATA;
 
@@ -75,7 +76,7 @@ unsigned int __stdcall ActionThread(void* Param)
         /* Start the service */
         if (DoStartService(ProgressData->ServiceName,
                            ProgressData->hProgress,
-                           NULL))
+                           ProgressData->Param))
         {
             /* We're done, slide the progress bar up to the top */
             CompleteProgressBar(ProgressData->hProgress);
@@ -322,7 +323,8 @@ BOOL
 RunActionWithProgress(HWND hParent,
                       LPWSTR ServiceName,
                       LPWSTR DisplayName,
-                      UINT Action)
+                      UINT Action,
+                      PVOID Param)
 {
     PROGRESS_DATA ProgressData;
     LPWSTR ServiceList;
@@ -357,6 +359,7 @@ RunActionWithProgress(HWND hParent,
     ProgressData.Action = Action;
     ProgressData.StopDepends = StopDepends;
     ProgressData.ServiceList = ServiceList;
+    ProgressData.Param = Param;
 
     Result = DialogBoxParamW(hInstance,
                              MAKEINTRESOURCEW(IDD_DLG_PROGRESS),

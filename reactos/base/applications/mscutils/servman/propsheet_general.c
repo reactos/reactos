@@ -247,26 +247,6 @@ SaveDlgInfo(PSERVICEPROPSHEET dlgInfo,
     }
 }
 
-static
-VOID
-OnStart(HWND hwndDlg,
-        PSERVICEPROPSHEET dlgInfo)
-{
-    WCHAR szStartParams[256];
-    LPWSTR lpStartParams = NULL;
-
-    if (GetDlgItemText(hwndDlg, IDC_START_PARAM, szStartParams, 256) > 0)
-        lpStartParams = szStartParams;
-
-    //if (DoStart(dlgInfo->Info, lpStartParams))
-    {
-        UpdateServiceStatus(dlgInfo->pService);
-        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-        SetButtonStates(dlgInfo, hwndDlg);
-        SetServiceStatusText(dlgInfo, hwndDlg);
-    }
-}
-
 /*
  * General Property dialog callback.
  * Controls messages to the General dialog
@@ -312,52 +292,64 @@ GeneralPageProc(HWND hwndDlg,
                 break;
 
                 case IDC_START:
+                {
+                    WCHAR szStartParams[256];
+                    LPWSTR lpStartParams = NULL;
+
+                    if (GetDlgItemText(hwndDlg, IDC_START_PARAM, szStartParams, 256) > 0)
+                        lpStartParams = szStartParams;
+
                     RunActionWithProgress(hwndDlg,
                                           dlgInfo->pService->lpServiceName,
                                           dlgInfo->pService->lpDisplayName,
-                                          ACTION_START);
+                                          ACTION_START,
+                                          lpStartParams);
 
                     UpdateServiceStatus(dlgInfo->pService);
                     ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
                     SetButtonStates(dlgInfo, hwndDlg);
                     SetServiceStatusText(dlgInfo, hwndDlg);
-                break;
+                    break;
+                }
 
                 case IDC_STOP:
                     RunActionWithProgress(hwndDlg,
                                           dlgInfo->pService->lpServiceName,
                                           dlgInfo->pService->lpDisplayName,
-                                          ACTION_STOP);
+                                          ACTION_STOP,
+                                          NULL);
 
                     UpdateServiceStatus(dlgInfo->pService);
                     ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
                     SetButtonStates(dlgInfo, hwndDlg);
                     SetServiceStatusText(dlgInfo, hwndDlg);
-                break;
+                    break;
 
                 case IDC_PAUSE:
                     RunActionWithProgress(hwndDlg,
                                           dlgInfo->pService->lpServiceName,
                                           dlgInfo->pService->lpDisplayName,
-                                          ACTION_PAUSE);
+                                          ACTION_PAUSE,
+                                          NULL);
 
                     UpdateServiceStatus(dlgInfo->pService);
                     ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
                     SetButtonStates(dlgInfo, hwndDlg);
                     SetServiceStatusText(dlgInfo, hwndDlg);
-                break;
+                    break;
 
                 case IDC_RESUME:
                     RunActionWithProgress(hwndDlg,
                                           dlgInfo->pService->lpServiceName,
                                           dlgInfo->pService->lpDisplayName,
-                                          ACTION_RESUME);
+                                          ACTION_RESUME,
+                                          NULL);
 
                     UpdateServiceStatus(dlgInfo->pService);
                     ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
                     SetButtonStates(dlgInfo, hwndDlg);
                     SetServiceStatusText(dlgInfo, hwndDlg);
-                break;
+                    break;
 
                 case IDC_EDIT:
                 {
@@ -370,12 +362,12 @@ GeneralPageProc(HWND hwndDlg,
                     SendMessage(hName, EM_SETREADONLY, FALSE, 0);
                     SendMessage(hDesc, EM_SETREADONLY, FALSE, 0);
                     SendMessage(hExePath, EM_SETREADONLY, FALSE, 0);
+                    break;
                 }
-                break;
 
                 case IDC_START_PARAM:
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                break;
+                    break;
             }
             break;
 

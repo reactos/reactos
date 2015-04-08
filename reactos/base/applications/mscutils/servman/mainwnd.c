@@ -475,7 +475,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
             RunActionWithProgress(Info->hMainWnd,
                                   Info->pCurrentService->lpServiceName,
                                   Info->pCurrentService->lpDisplayName,
-                                  ACTION_START);
+                                  ACTION_START,
+                                  NULL); //FIXME: Add start params
 
             UpdateServiceStatus(Info->pCurrentService);
             ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
@@ -489,7 +490,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
             RunActionWithProgress(Info->hMainWnd,
                                   Info->pCurrentService->lpServiceName,
                                   Info->pCurrentService->lpDisplayName,
-                                  ACTION_STOP);
+                                  ACTION_STOP,
+                                  NULL);
 
             UpdateServiceStatus(Info->pCurrentService);
             ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
@@ -502,7 +504,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
             RunActionWithProgress(Info->hMainWnd,
                                   Info->pCurrentService->lpServiceName,
                                   Info->pCurrentService->lpDisplayName,
-                                  ACTION_PAUSE);
+                                  ACTION_PAUSE,
+                                  NULL);
 
             UpdateServiceStatus(Info->pCurrentService);
             ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
@@ -514,7 +517,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
             RunActionWithProgress(Info->hMainWnd,
                                   Info->pCurrentService->lpServiceName,
                                   Info->pCurrentService->lpDisplayName,
-                                  ACTION_RESUME);
+                                  ACTION_RESUME,
+                                  NULL);
 
             UpdateServiceStatus(Info->pCurrentService);
             ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
@@ -526,7 +530,8 @@ MainWndCommand(PMAIN_WND_INFO Info,
             RunActionWithProgress(Info->hMainWnd,
                                   Info->pCurrentService->lpServiceName,
                                   Info->pCurrentService->lpDisplayName,
-                                  ACTION_RESTART);
+                                  ACTION_RESTART,
+                                  NULL);
 
             UpdateServiceStatus(Info->pCurrentService);
             ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
