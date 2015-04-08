@@ -651,7 +651,7 @@ BOOL WINAPI GetStandardColorSpaceProfileW( PCWSTR machine, DWORD id, PWSTR profi
             lstrcatW( rgbprofile, rgbprofilefile );
             len = lstrlenW( rgbprofile ) * sizeof(WCHAR);
 
-            if (*size < len || !profile)
+            if (*size < len)
             {
                 *size = len;
                 SetLastError( ERROR_MORE_DATA );
