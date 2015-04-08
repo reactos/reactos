@@ -17,9 +17,9 @@
 #include <strsafe.h>
 #else
 #include <windows.h>
-#include <Commctrl.h>
+#include <commctrl.h>
 #include <process.h>
-#include <Strsafe.h>
+#include <strsafe.h>
 #endif
 #include "resource.h"
 
