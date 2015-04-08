@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/mainwnd.c
  * PURPOSE:     Main window message handler
- * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-20015 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -11,7 +11,7 @@
 
 #include <windowsx.h>
 
-static const TCHAR szMainWndClass[] = TEXT("ServManWndClass");
+static const WCHAR szMainWndClass[] = L"ServManWndClass";
 
 BOOL bSortAscending = TRUE;
 
@@ -126,17 +126,17 @@ UpdateMainStatusBar(PMAIN_WND_INFO Info)
 VOID
 UpdateServiceCount(PMAIN_WND_INFO Info)
 {
-    LPTSTR lpNumServices;
+    LPWSTR lpNumServices;
 
     if (AllocAndLoadString(&lpNumServices,
                            hInstance,
                            IDS_NUM_SERVICES))
     {
-        TCHAR szNumServices[32];
+        WCHAR szNumServices[32];
 
         INT NumListedServ = ListView_GetItemCount(Info->hListView);
 
-        _sntprintf(szNumServices,
+        _snwprintf(szNumServices,
                    31,
                    lpNumServices,
                    NumListedServ);
@@ -257,7 +257,7 @@ CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
         Param1 = (ENUM_SERVICE_STATUS_PROCESS *)lParam2;
         Param2 = (ENUM_SERVICE_STATUS_PROCESS *)lParam1;
     }
-    return _tcsicmp(Param1->lpDisplayName, Param2->lpDisplayName);
+    return _wcsicmp(Param1->lpDisplayName, Param2->lpDisplayName);
 }
 
 
@@ -344,24 +344,24 @@ InitMainWnd(PMAIN_WND_INFO Info)
 {
     if (!pCreateToolbar(Info))
     {
-        DisplayString(_T("error creating toolbar"));
+        DisplayString(L"error creating toolbar");
         return FALSE;
     }
 
     if (!CreateListView(Info))
     {
-        DisplayString(_T("error creating list view"));
+        DisplayString(L"error creating list view");
         return FALSE;
     }
 
     if (!CreateStatusBar(Info))
-        DisplayString(_T("error creating status bar"));
+        DisplayString(L"error creating status bar");
 
     /* Create Popup Menu */
     Info->hShortcutMenu = LoadMenu(hInstance,
                                    MAKEINTRESOURCE(IDR_POPUP));
 
-    Info->bIsUserAnAdmin = IsUserAnAdmin();
+    Info->bIsUserAnAdmin = TRUE;// IsUserAnAdmin();
     if (Info->bIsUserAnAdmin)
     {
         HMENU hMainMenu = GetMenu(Info->hMainWnd);
@@ -418,7 +418,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             SendMessage(Info->hStatus,
                         SB_SETTEXT,
                         1,
-                        _T('\0'));
+                        L'\0');
         }
         break;
 
@@ -457,11 +457,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
             }
             else
             {
-                TCHAR Buf[60];
+                WCHAR Buf[60];
                 LoadString(hInstance,
                            IDS_DELETE_STOP,
                            Buf,
-                           sizeof(Buf) / sizeof(TCHAR));
+                           sizeof(Buf) / sizeof(WCHAR));
                 DisplayString(Buf);
             }
 
@@ -472,50 +472,73 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case ID_START:
         {
-            if (DoStart(Info, NULL))
-            {
-                UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
-                SetMenuAndButtonStates(Info);
-                SetFocus(Info->hListView);
-            }
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_START);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
+
         }
         break;
 
         case ID_STOP:
-            if (DoStop(Info))
-            {
-                UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
-                SetMenuAndButtonStates(Info);
-                SetFocus(Info->hListView);
-            }
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_STOP);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
+
         break;
 
         case ID_PAUSE:
-            DoPause(Info);
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_PAUSE);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
         break;
 
         case ID_RESUME:
-            DoResume(Info);
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_RESUME);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
         break;
 
         case ID_RESTART:
-            if (DoStop(Info))
-            {
-                DoStart(Info, NULL);
-                UpdateServiceStatus(Info->pCurrentService);
-                ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
-                SetMenuAndButtonStates(Info);
-                SetFocus(Info->hListView);
-            }
+            RunActionWithProgress(Info->hMainWnd,
+                                  Info->pCurrentService->lpServiceName,
+                                  Info->pCurrentService->lpDisplayName,
+                                  ACTION_RESTART);
+
+            UpdateServiceStatus(Info->pCurrentService);
+            ChangeListViewText(Info, Info->pCurrentService, LVSTATUS);
+            SetMenuAndButtonStates(Info);
+            SetFocus(Info->hListView);
         break;
 
         case ID_HELP:
-            MessageBox(NULL,
-                       _T("Help is not yet implemented\n"),
-                       _T("Note!"),
-                       MB_OK | MB_ICONINFORMATION);
+            MessageBoxW(NULL,
+                        L"Help is not yet implemented\n",
+                        L"Note!",
+                        MB_OK | MB_ICONINFORMATION);
             SetFocus(Info->hListView);
         break;
 

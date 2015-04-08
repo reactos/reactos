@@ -3,11 +3,19 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/stop_dependencies.c
  * PURPOSE:     Routines related to stopping dependent services
- * COPYRIGHT:   Copyright 2006-2010 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2006-2015 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
 #include "precomp.h"
+
+typedef struct _STOP_DATA
+{
+    LPWSTR ServiceName;
+    LPWSTR DisplayName;
+    LPWSTR ServiceList;
+     
+} STOP_DATA, *PSTOP_DATA;
 
 static LPWSTR
 AddServiceToList(LPWSTR *lpServiceList,
@@ -46,7 +54,7 @@ AddServiceToList(LPWSTR *lpServiceList,
         dwCurSize = 0;
 
         /* Get the list size */
-        while (TRUE)
+        for (;;)
         {
             /* Break when we hit the double null */
             if (*ptr == L'\0' && *(ptr + 1) == L'\0')
@@ -98,13 +106,6 @@ BuildListOfServicesToStop(LPWSTR *lpServiceList,
             if (lpServiceStatus[i].ServiceStatus.dwCurrentState != SERVICE_STOPPED &&
                 lpServiceStatus[i].ServiceStatus.dwCurrentState != SERVICE_STOP_PENDING)
             {
-                /* Does this service have any dependents? */
-                if (TV2_HasDependantServices(lpServiceStatus[i].lpServiceName))
-                {
-                    /* recall this function with the dependent */
-                    BuildListOfServicesToStop(lpServiceList, lpServiceStatus[i].lpServiceName);
-                }
-
                 /* Add the service to the list */
                 *lpServiceList = AddServiceToList(lpServiceList, lpServiceStatus[i].lpServiceName);
 
@@ -143,7 +144,7 @@ AddServiceNamesToStop(HWND hServiceListBox,
     lpStr = lpServiceList;
 
     /* Loop through all the services in the list */
-    while (TRUE)
+    for (;;)
     {
         /* Break when we hit the double null */
         if (*lpStr == L'\0' && *(lpStr + 1) == L'\0')
@@ -174,117 +175,100 @@ AddServiceNamesToStop(HWND hServiceListBox,
 }
 
 static BOOL
-DoInitDependsDialog(PMAIN_WND_INFO pInfo,
-                    HWND hDlg)
+InitDialog(HWND hDlg,
+           UINT Message,
+           WPARAM wParam,
+           LPARAM lParam)
 {
+    PSTOP_DATA StopData;
     HWND hServiceListBox;
     LPWSTR lpPartialStr, lpStr;
     DWORD fullLen;
     HICON hIcon = NULL;
     BOOL bRet = FALSE;
 
-    if (pInfo)
+    StopData = (PSTOP_DATA)lParam;
+
+
+    /* Load the icon for the window */
+    hIcon = (HICON)LoadImageW(hInstance,
+                                MAKEINTRESOURCE(IDI_SM_ICON),
+                                IMAGE_ICON,
+                                GetSystemMetrics(SM_CXSMICON),
+                                GetSystemMetrics(SM_CXSMICON),
+                                0);
+    if (hIcon)
     {
-        /* Tag the info to the window */
-        SetWindowLongPtrW(hDlg,
-                          GWLP_USERDATA,
-                          (LONG_PTR)pInfo);
-
-        /* Load the icon for the window */
-        hIcon = (HICON)LoadImageW(hInstance,
-                                  MAKEINTRESOURCE(IDI_SM_ICON),
-                                  IMAGE_ICON,
-                                  GetSystemMetrics(SM_CXSMICON),
-                                  GetSystemMetrics(SM_CXSMICON),
-                                  0);
-        if (hIcon)
-        {
-            /* Set it */
-            SendMessageW(hDlg,
-                         WM_SETICON,
-                         ICON_SMALL,
-                         (LPARAM)hIcon);
-            DestroyIcon(hIcon);
-        }
-
-        /* Load the stop depends note */
-        if (AllocAndLoadString(&lpPartialStr,
-                               hInstance,
-                               IDS_STOP_DEPENDS))
-        {
-            /* Get the length required */
-            fullLen = wcslen(lpPartialStr) + wcslen(pInfo->pCurrentService->lpDisplayName) + 1;
-
-            lpStr = HeapAlloc(ProcessHeap,
-                              0,
-                              fullLen * sizeof(WCHAR));
-            if (lpStr)
-            {
-                /* Add the service name to the depends note */
-                _snwprintf(lpStr,
-                           fullLen,
-                           lpPartialStr,
-                           pInfo->pCurrentService->lpDisplayName);
-
-                /* Add the string to the dialog */
-                SendDlgItemMessageW(hDlg,
-                                    IDC_STOP_DEPENDS,
-                                    WM_SETTEXT,
-                                    0,
-                                    (LPARAM)lpStr);
-
-                HeapFree(ProcessHeap,
-                         0,
-                         lpStr);
-
-                bRet = TRUE;
-            }
-
-            LocalFree(lpPartialStr);
-        }
-
-        /* Display the list of services which need stopping */
-        hServiceListBox = GetDlgItem(hDlg,
-                                     IDC_STOP_DEPENDS_LB);
-        if (hServiceListBox)
-        {
-            AddServiceNamesToStop(hServiceListBox,
-                                  (LPWSTR)pInfo->pTag);
-        }
+        /* Set it */
+        SendMessageW(hDlg,
+                        WM_SETICON,
+                        ICON_SMALL,
+                        (LPARAM)hIcon);
+        DestroyIcon(hIcon);
     }
 
+    /* Load the stop depends note */
+    if (AllocAndLoadString(&lpPartialStr,
+                            hInstance,
+                            IDS_STOP_DEPENDS))
+    {
+        /* Get the length required */
+        fullLen = wcslen(lpPartialStr) + wcslen(StopData->DisplayName) + 1;
+
+        lpStr = HeapAlloc(ProcessHeap,
+                          0,
+                          fullLen * sizeof(WCHAR));
+        if (lpStr)
+        {
+            /* Add the service name to the depends note */
+            _snwprintf(lpStr,
+                        fullLen,
+                        lpPartialStr,
+                        StopData->DisplayName);
+
+            /* Add the string to the dialog */
+            SendDlgItemMessageW(hDlg,
+                                IDC_STOP_DEPENDS,
+                                WM_SETTEXT,
+                                0,
+                                (LPARAM)lpStr);
+
+            HeapFree(ProcessHeap,
+                        0,
+                        lpStr);
+
+            bRet = TRUE;
+        }
+
+        LocalFree(lpPartialStr);
+    }
+
+    /* Display the list of services which need stopping */
+    hServiceListBox = GetDlgItem(hDlg, IDC_STOP_DEPENDS_LB);
+    if (hServiceListBox)
+    {
+        AddServiceNamesToStop(hServiceListBox,
+                              (LPWSTR)StopData->ServiceList);
+    }
+ 
     return bRet;
 }
 
 INT_PTR CALLBACK
 StopDependsDialogProc(HWND hDlg,
-                      UINT message,
+                      UINT Message,
                       WPARAM wParam,
                       LPARAM lParam)
 {
-    PMAIN_WND_INFO pInfo = NULL;
 
-    /* Get the window context */
-    pInfo = (PMAIN_WND_INFO)GetWindowLongPtrW(hDlg,
-                                              GWLP_USERDATA);
-    if (pInfo == NULL && message != WM_INITDIALOG)
-    {
-        return FALSE;
-    }
-
-    switch (message)
+    switch (Message)
     {
         case WM_INITDIALOG:
         {
-            BOOL bRet = FALSE;
-
-            pInfo = (PMAIN_WND_INFO)lParam;
-            if (pInfo != NULL)
-            {
-                bRet = DoInitDependsDialog(pInfo, hDlg);
-            }
-
-            return bRet;
+            return InitDialog(hDlg,
+                              Message,
+                              wParam,
+                              lParam);
         }
 
         case WM_COMMAND:
@@ -302,5 +286,29 @@ StopDependsDialogProc(HWND hDlg,
         }
     }
 
+    return FALSE;
+}
+
+BOOL
+CreateStopDependsDialog(HWND hParent,
+                        LPWSTR ServiceName,
+                        LPWSTR DisplayName,
+                        LPWSTR ServiceList)
+{
+    STOP_DATA StopData;
+    INT_PTR Result;
+
+    StopData.ServiceName = ServiceName;
+    StopData.DisplayName = DisplayName;
+    StopData.ServiceList = ServiceList;
+
+    Result = DialogBoxParamW(hInstance,
+                             MAKEINTRESOURCEW(IDD_DLG_DEPEND_STOP),
+                             hParent,
+                             StopDependsDialogProc,
+                             (LPARAM)&StopData);
+    if (Result == IDOK)
+        return TRUE;
+    
     return FALSE;
 }
