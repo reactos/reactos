@@ -1300,6 +1300,7 @@ static void test_XDR_datatypes(void)
 
         VariantClear(&type);
         hr = IXMLDOMNode_get_nodeTypedValue(node, &type);
+        EXPECT_HR(hr, S_OK);
         ok(V_VT(&type) == VT_BSTR, "got variant type %i\n", V_VT(&v));
         VariantClear(&type);
         IXMLDOMNode_Release(node);
