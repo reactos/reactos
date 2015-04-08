@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/orwelldevcpp/Setup%20Relea
 CDPath = none
 
 [Section.0407]
-Description = Eine gepflegte Version von Dev-C++. Der 64 bit TDM-GCC Compiler liegt bei.
+Description = Gepflegte Version von Dev-C++. Der 64 bit TDM-GCC Compiler liegt bei.
 
 [Section.0a]
 Description = Una versión en desarrollo de Dev-C++. Viene con el compilador de 64 bits TDM-GCC.

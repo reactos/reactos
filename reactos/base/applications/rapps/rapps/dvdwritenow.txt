@@ -14,7 +14,7 @@ URLDownload = http://dwn.alter.org.ua/downloads/dwn_1_5_12_sp2.zip
 CDPath = none
 
 [Section.0407]
-Description = Eine kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, kann man CD/DVD RW als USB Flash oder Wechseldatenträger beschreiben. Auch kann man hiermit auf CD/DVD RW schreiben, welche mit dem UDF Dateisystem beschrieben wurden. Auch kann man mit dieser Software UDF Disks, welche mit anderer Software erstellt wurden, lesen. (Microsoft DVD−ROMs, RW Disks erstellt mit Ahead InCD). Es wird für die Installation ein ZIP Dekomprimierprogramm benötigt.
+Description = Kostenlose CD/DVD Brennsoftware. Sobald es installiert ist, kann man CD/DVD RW als USB Flash oder Wechseldatenträger beschreiben. Auch kann man hiermit auf CD/DVD RW schreiben, welche mit dem UDF Dateisystem beschrieben wurden. Auch kann man mit dieser Software UDF Disks, welche mit anderer Software erstellt wurden, lesen. (Microsoft DVD−ROMs, RW Disks erstellt mit Ahead InCD). Es wird für die Installation ein ZIP Dekomprimierprogramm benötigt.
 
 [Section.0a]
 License = Gratuito

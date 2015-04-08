@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/scintilla/SciTE/3.5.4/Sc35
 CDPath = none
 
 [Section.0407]
-Description = Ein SCIntilla basierter Text Editor. Ursprünglich wurde er erstellt, um Scintilla vorzuführen, wuchs aber zu einem nützlichen Editor mit der Fähigkeit Programme zu erstellen und auszuführen.
+Description = SCIntilla basierter Text Editor. Ursprünglich wurde er erstellt, um Scintilla vorzuführen, wuchs aber zu einem nützlichen Editor mit der Fähigkeit Programme zu erstellen und auszuführen.
 
 [Section.0a]
 Description = Editor de texto basado en SCIntilla. Originalmente creado para demostrar Scintilla, ha terminado siendo un gran editor con capacidad para crear y ejecutar programas.

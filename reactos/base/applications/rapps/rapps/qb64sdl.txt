@@ -14,7 +14,7 @@ URLDownload = http://www.qb64.net/qb64v0980-win.7z
 CDPath = none
 
 [Section.0407]
-Description = Ein Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
+Description = Self-Hosting BASIC-Compiler für Microsoft Windows, Linux und Mac OS X, entwickelt, um mit Microsoft QBasic und Microsoft QuickBASIC kompatibel zu sein. Sie müssen 7-Zip oder ein ähnliches Dienstprogramm installiert haben, um es zu extrahieren.
 
 [Section.0a]
 Description = Es un compilador auto-compilable de BASIC para Windows, Linux y Mac OS X, diseñado para ser compatible con Microsoft QuickBasic. Es necesario utilizar algo como 7-Zip para descomprimirlo.

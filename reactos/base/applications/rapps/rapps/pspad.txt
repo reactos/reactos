@@ -14,7 +14,7 @@ URLDownload = http://fossies.org/windows/misc/pspad459inst_en.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein leichtgewichtiger Texteditor.
+Description = Leichtgewichtiger Texteditor.
 URLSite = http://www.pspad.com/de/
 
 [Section.0a]

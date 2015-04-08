@@ -16,7 +16,7 @@ CDPath = none
 Description = Off-By-One-Browser je velmi malý a rychlý webový prohlížeč s plnou podporou HTML 3.2.
 
 [Section.0407]
-Description = Ein sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
+Description = Sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
 
 [Section.0a]
 Description = Es un navegador web pequeño y rápido. Soporta HTML 3.2.

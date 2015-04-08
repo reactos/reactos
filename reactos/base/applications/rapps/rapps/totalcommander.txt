@@ -13,7 +13,7 @@ URLDownload = http://totalcmd2.s3.amazonaws.com/tcmd851ax32.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Dateimanager für Power User mit zwei nebeneinander liegenden Panels.
+Description = Dateimanager für Power User mit zwei nebeneinander liegenden Panels.
 URLSite = http://www.ghisler.com/deutsch.htm
 
 [Section.0a]

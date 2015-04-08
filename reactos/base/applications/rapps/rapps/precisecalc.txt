@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/preccalc/preccalc-32bit.zip
 CDPath = none
 
 [Section.0407]
-Description = Ein freier und quelloffener wissenschaftlicher Rechner für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+Description = Freier und quelloffener wissenschaftlicher Rechner für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
 
 [Section.0a]
 Description = Una calculadora científica gratuita y de código abierto. Es necesario un descompresor de archivos zip para abrirlo.

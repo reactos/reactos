@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/peazip/5.5.3/peazip-5.5.3.
 CDPath = none
 
 [Section.0407]
-Description = Ein freier, plattformübergreifender, quelloffener Datei- und Archivmanager. Er unterstützt über 150 Archiv-Formate.
+Description = Freier, plattformübergreifender, quelloffener Datei- und Archivmanager. Er unterstützt über 150 Archiv-Formate.
 
 [Section.0a]
 Description = Un administrador de archivos y compresor de código abierto y multiplataforma. Soporta más de 150 formatos de archivo.

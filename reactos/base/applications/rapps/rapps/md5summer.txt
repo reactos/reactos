@@ -13,7 +13,7 @@ URLDownload = http://www.md5summer.org/md5v12011.zip
 CDPath = none
 
 [Section.0407]
-Description = Eine Windows Anwendung, welche MD5 Checksummen generiert und verifiziert.
+Description = Anwendung, welche MD5 Checksummen generiert und verifiziert.
 
 [Section.041f]
 License = Ücretsiz

@@ -13,7 +13,7 @@ URLDownload = http://www.blueskied.com/summer/SummerBound_setup.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Spiel, ähnlich zu Frozen Fruits.
+Description = Spiel ähnlich zu Frozen Fruits.
 URLSite = http://www.blueskied.com/freeware-spiele/runterladen.htm
 
 [Section.0a]

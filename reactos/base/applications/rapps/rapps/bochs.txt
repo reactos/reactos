@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/project/bochs/bochs/2.6.7/Bochs-2.
 CDPath = none
 
 [Section.0407]
-Description = Ein portabler, quelloffener IA-32 (x86) PC-Emulator geschrieben in C++, der auf den meisten populären Plattformen läuft. 
+Description = Portabler, quelloffener IA-32 (x86) PC-Emulator geschrieben in C++, der auf den meisten populären Plattformen läuft. 
 
 [Section.0a]
 Description = Un emulador de PC IA-32 (x86) multiplataforma y de código abierto escrito en C++, funciona en gran cantidad de arquitecturas.

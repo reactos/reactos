@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/project/chromium-bsu/Chromium%20B.
 CDPath = none
 
 [Section.0407]
-Description = Ein Arcade-Style, Top-Scrolling Space Shooter.
+Description = Arcade-Style, Top-Scrolling Space Shooter.
 
 [Section.0a]
 Description = Un juego vertical de disparos espacial al clásico estilo arcade.

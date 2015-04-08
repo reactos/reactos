@@ -14,7 +14,7 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Freeware Dokumentbetrachter für Office-Formate (*.doc)
+Description = Freeware Dokumentbetrachter für Office-Formate (*.doc).
 Size = 24.56 MB
 URLDownload = http://download.microsoft.com/download/d/4/b/d4b23f0e-c8b6-4383-878d-1a8184b7db56/wordview_de-de.exe
 

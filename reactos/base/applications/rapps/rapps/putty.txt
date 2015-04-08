@@ -13,7 +13,7 @@ URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.64-installe
 CDPath = none
 
 [Section.0407]
-Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client.
+Description = Freier SSH-, Telnet-, rlogin- und TCP-Client.
 
 [Section.0a]
 Description = Un cliente SSH, Telnet, rlogin y TCP libre y gratuito.

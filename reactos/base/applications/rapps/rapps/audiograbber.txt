@@ -13,7 +13,7 @@ URLDownload = http://ftp.freenet.de/pub/filepilot/fpt/audio/bearbeitung/audiogra
 CDPath = none
 
 [Section.0407]
-Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
+Description = Sehr guter CD-Ripper/Audio-Datei-Konverter.
 
 [Section.0410]
 Description = Un buon CD Ripper/Convertitore di file Audio.

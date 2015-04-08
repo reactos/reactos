@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/project/zaz/Zaz-1.0.0-Setup.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein freies Arcade Action Puzzle Spiel, ein wenig wie Frozen Bubble.
+Description = Freies Arcade Action Puzzle Spiel, ein wenig wie Frozen Bubble.
 
 [Section.0a]
 Description = Zaz es un juego de acción arcade parecido a Frozen Bubble.

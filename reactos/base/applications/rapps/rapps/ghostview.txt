@@ -13,7 +13,7 @@ URLDownload = http://pages.cs.wisc.edu/~ghost/gsview/download/gsv50w32.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein grafisches Interface für Ghostscript.
+Description = Grafisches Interface für Ghostscript.
 
 [Section.0a]
 Description = Una interfaz gráfica para Ghostscript.

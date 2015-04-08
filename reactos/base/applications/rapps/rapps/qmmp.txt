@@ -14,7 +14,7 @@ URLDownload = http://qmmp.ylsoftware.com/files/windows/qmmp-0.8.3-win32.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Audio-Player, der mit Hilfe der Qt Bibliothek geschrieben wurde. Die Benutzeroberfläche ist ähnlich zu WinAMP oder XMMS. Alternative Benutzeroberflächen sind ebenfalls verfügbar.
+Description = Audio-Player, der mit Hilfe der Qt Bibliothek geschrieben wurde. Die Benutzeroberfläche ist ähnlich zu WinAMP oder XMMS. Alternative Benutzeroberflächen sind ebenfalls verfügbar.
 
 [Section.0a]
 Name = Qmmp (Reproductor multimedia Qt)

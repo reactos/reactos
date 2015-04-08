@@ -13,7 +13,7 @@ URLDownload = http://www.webalice.it/guido.vinaio/releases/setup_SuperFinderXT.e
 CDPath = none
 
 [Section.0407]
-Description = Eine schnelle und effektive Suchanwendung.
+Description = Schnelle und effektive Suchanwendung.
 
 [Section.0a]
 Description = Una aplicación de búsqueda rápida y completa.

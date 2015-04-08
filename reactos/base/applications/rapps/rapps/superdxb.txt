@@ -14,7 +14,7 @@ URLDownload = http://www.blitwise.com/superdxb.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein lebendiges und buntes Brick-Breaking-Spiel.
+Description = Lebendiges und buntes Brick-Breaking-Spiel.
 
 [Section.0a]
 Description = Un juego vibrante y colorido de romper bloques.

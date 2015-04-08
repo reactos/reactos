@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/remood/ReMooD/0.8a/remoods
 CDPath = none
 
 [Section.0407]
-Description = Ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
+Description = Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten.
 
 [Section.0410]
 Description = ReMooD è un porting sorgente di Doom Legacy. Punta a provedere la classica esperienza ereditaria con nuove funzionalità e maggiore stabilità.

@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/13.12/
 CDPath = none
 
 [Section.0407]
-Description = Eine quelloffene, plattformübergreifende, mächtige IDE. Diese enthät den TDM-GCC (version 4.8.1, 32 bit) Compiler.
+Description = Quelloffene, plattformübergreifende, mächtige IDE. Diese enthät den TDM-GCC (version 4.8.1, 32 bit) Compiler.
 
 [Section.0a]
 Description = Un IDE potente, de código abierto y multiplataforma. Viene con el compilador TDM-GCC (version 4.8.1, 32 bit).

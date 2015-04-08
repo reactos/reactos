@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20
 CDPath = none
 
 [Section.0407]
-Description = Ein alternativer Mediaplayer.
+Description = Alternativer Mediaplayer.
 
 [Section.0a]
 Description = Reproductor multimedia alternativo.

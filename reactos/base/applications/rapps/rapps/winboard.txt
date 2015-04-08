@@ -13,7 +13,7 @@ URLDownload = http://ftp.gnu.org/old-gnu/xboard/winboard/winboard-4_2_7b.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein grafisches Schachbrett für Windows/ReactOS welches als Nutzerinterface für GNU Chess, Crafty oder andere Schachprogramme, für Internet Schachserver und für Briefschach dient.
+Description = Grafisches Schachbrett für Windows/ReactOS welches als Nutzerinterface für GNU Chess, Crafty oder andere Schachprogramme, für Internet Schachserver und für Briefschach dient.
 
 [Section.0a]
 Description = Tablero de ajedrez para Windows/ReactOS que puede ser utilizado como interfaz para GNU Chess, Crafty, y otros motores de ajedrez, para servidores de ajedrez en internet, así como para partidas por correo electrónico.

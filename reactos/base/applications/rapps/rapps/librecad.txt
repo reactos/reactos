@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/librecad/Windows/2.0.7/LibreCAD-In
 CDPath = none
 
 [Section.0407]
-Description = Ein kostenloses und quelloffenes 2D-CAD Programm für Windows, Linux und OS X.
+Description = Kostenloses und quelloffenes 2D-CAD Programm für Windows, Linux und OS X.
 
 [Section.0a]
 Description = Un editor CAD (de diseño asistido) 2D para Windows, Linux y OS X.

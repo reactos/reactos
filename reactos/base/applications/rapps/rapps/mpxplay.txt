@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/project/mpxplay/Mpxplay/Mpxplay%20
 CDPath = none
 
 [Section.0407]
-Description = Ein konsolenbasierter 32-bit Audio Player für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+Description = Konsolenbasierter 32-bit Audio Player für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
 
 [Section.0a]
 Description = Un reproductor de audio en consola de 32-bit. Se descomprime con 7-Zip u otra utilidad similar.

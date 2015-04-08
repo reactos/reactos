@@ -14,7 +14,7 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Freeware Präsentations Viewer für Office-Formate (*.ppt).
+Description = Freeware Präsentationsbetrachter für Office-Formate (*.ppt).
 Size = 60.43 MB
 URLDownload = http://download.microsoft.com/download/9/F/7/9F742C8F-8C70-4498-B4D1-539BE36A1077/PowerPointViewer.exe
 

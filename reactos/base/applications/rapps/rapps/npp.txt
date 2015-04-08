@@ -13,7 +13,7 @@ URLDownload = http://download.tuxfamily.org/notepadplus/6.7.5/npp.6.7.5.Installe
 CDPath = none
 
 [Section.0407]
-Description = Ein voll funktionsfähiger, kostenloser Texteditor mit vielen Plugins.
+Description = Voll funktionsfähiger, kostenloser Texteditor mit vielen Plugins.
 
 [Section.0a]
 Description = Un editor de texto completo, libre y con gran cantidad de extensiones.

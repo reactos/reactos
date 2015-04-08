@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/inkscape/inkscape/0.48.5/Inkscape-
 CDPath = none
 
 [Section.0407]
-Description = Ein Editor für Vektorgrafiken, lizensiert unter der GNU General Public License.
+Description = Editor für Vektorgrafiken, lizensiert unter der GNU General Public License.
 
 [Section.0a]
 Description = Un editor de gráficos vectoriales bajo la licencia GNU GPL.

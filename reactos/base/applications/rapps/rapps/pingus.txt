@@ -14,7 +14,7 @@ URLDownload = http://pingus.googlecode.com/files/Pingus-0.7.6.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein freies Lemings-ähnliches Puzzle Spiel.
+Description = Freies Lemings-ähnliches Puzzle Spiel.
 
 [Section.0a]
 Description = Un juego de puzles parecido a los Lemmings.

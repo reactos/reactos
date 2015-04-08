@@ -14,7 +14,7 @@ URLDownload = http://stamina.ru/files/StaminaSetup.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein freies Schreiblernprogramm.
+Description = Freies Schreiblernprogramm.
 
 [Section.0a]
 Description = Programa para aprender a escribir a máquina.

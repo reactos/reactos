@@ -14,7 +14,7 @@ URLDownload = http://static.infomaniak.ch/photofiltre/utils/pf7/pf7-setup-en-7.2
 CDPath = none
 
 [Section.0407]
-Description = Ein komplettes Bildretuschier-Programm. Version mit Layers, aber eingeschänkter als die Studio-X Version.
+Description = Komplettes Bildretuschier-Programm. Version mit Layers, aber eingeschänkter als die Studio-X Version.
 
 [Section.0a]
 Description = Un programa de retoque fotográfico. Esta versión viene con capas, pero es mucho más limitada que la versión Studio X.

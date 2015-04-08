@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/dosbox/dosbox/0.74/DOSBox0
 CDPath = none
 
 [Section.0407]
-Description = Ein quelloffener DOS-Emulator.
+Description = Quelloffener DOS-Emulator.
 
 [Section.0a]
 Description = Un emulador de DOS de código abierto.

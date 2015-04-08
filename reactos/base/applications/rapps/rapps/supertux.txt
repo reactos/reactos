@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/project/supertux.berlios/supertux-
 CDPath = none
 
 [Section.0407]
-Description = Ein zweidimensionales, freies, quelloffenes Plattformspiel. 
+Description = Zweidimensionales, freies, quelloffenes Plattformspiel. 
 
 [Section.0a]
 Description = Un juego 2D plataformero de código abierto.

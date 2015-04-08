@@ -13,7 +13,7 @@ URLDownload = http://downloads.ghostscript.com/public/gs915w32.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein offener Interpreter für die PostScript Sprache und PDF.
+Description = Offener Interpreter für die PostScript Sprache und PDF.
 
 [Section.0a]
 Description = Un intérprete libre para el lenguaje PostScript y PDF.

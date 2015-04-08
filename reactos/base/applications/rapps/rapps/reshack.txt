@@ -14,7 +14,7 @@ URLDownload = http://www.angusj.com/resourcehacker/reshack_setup.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Freeware-Tool zum anzeigen, ändern, umbenennen, hinzufügen, löschen und extrahieren von Ressourcen in 32-Bit & 64-Bit-Windows Anwendungen und Ressourcen-Dateien (*.res).
+Description = Freeware-Tool zum Anzeigen, Ändern, Umbenennen, Hinzufügen, Löschen und Extrahieren von Ressourcen in 32-Bit & 64-Bit-Windows Anwendungen und Ressourcen-Dateien (*.res).
 
 [Section.0a]
 Description = Una utilidad gratuita para ver, editar, renombrar, borrar y extraer recursos de ejecutables de Windows y archivos derivados (*.res).

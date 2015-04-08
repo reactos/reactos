@@ -14,7 +14,7 @@ URLDownload = http://dl.sv.nongnu.org/releases/glob2/0.9.4/glob2-0.9.4.4.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Echtzeitstrategiespiel. Das Spiel vereinfacht das Mikromanagement, indem es Einheiten automatisch mit Aufträgen versieht.
+Description = Echtzeitstrategiespiel. Das Spiel vereinfacht das Mikromanagement, indem es Einheiten automatisch mit Aufträgen versieht.
 
 [Section.0a]
 Description = Un juego de estrategia en tiempo real. El juego minimiza la supervisión excesiva asignando tareas a las unidades de forma automática.

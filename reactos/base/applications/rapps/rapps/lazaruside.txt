@@ -14,7 +14,7 @@ URLDownload = http://download.sourceforge.net/project/lazarus/Lazarus%20Windows%
 CDPath = none
 
 [Section.0407]
-Description = Eine plattformunabhängige IDE, mit der man Pascal-Programme erstellen kann. Es verwendet den Free Pascal Compiler um die Programme zu erzeugen.
+Description = Plattformunabhängige IDE, mit der man Pascal-Programme erstellen kann. Es verwendet den Free Pascal Compiler um die Programme zu erzeugen.
 
 [Section.0a]
 Description = Un IDE multiplataforma para la creación de programas en Object Pascal. Utiliza el compilador Free Pascal para compilar los proyectos.

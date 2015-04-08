@@ -13,7 +13,7 @@ URLDownload = http://downloads.sourceforge.net/sourceforge/gnucash/gnucash%20%28
 CDPath = none
 
 [Section.0407]
-Description = Eine Privat und Small-Business Finanzbuchhaltungssoftware, unter der GNU GPL lizenziert und frei für GNU / Linux, BSD, Solaris, Mac OS X und Microsoft Windows verfügbar.
+Description = Privat und Small-Business Finanzbuchhaltungssoftware, unter der GNU GPL lizenziert und frei für GNU / Linux, BSD, Solaris, Mac OS X und Microsoft Windows verfügbar.
 
 [Section.0a]
 Description = Un programa de contabilidad personal y de PYMEs liberado bajo los términos de la GNU GPL. Está disponible para GNU/Linux, BSD, Solaris, Mac OS X y Microsoft Windows.

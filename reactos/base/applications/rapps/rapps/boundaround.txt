@@ -12,7 +12,7 @@ URLDownload = http://www.blueskied.com/BoundAround_Demo.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Spiel, ähnlich zu Frozen Fruits.
+Description = Spiel ähnlich zu Frozen Fruits.
 
 [Section.0a]
 Description = Un juego similar a Frozen Fruits.

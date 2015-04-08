@@ -10,4 +10,4 @@ URLDownload = http://download.sourceforge.net/project/kmeleon/k-meleon-dev/K-Mel
 CDPath = none
 
 [Section.0407]
-Description = Ein extrem schneller, erweiterbarer und dennoch kleiner Web Browser basierend auf der Gecko Layout Engine.
+Description = Extrem schneller, erweiterbarer und dennoch kleiner Web Browser basierend auf der Gecko Layout Engine.

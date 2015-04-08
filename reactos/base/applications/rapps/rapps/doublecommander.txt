@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/doublecmd/DC%20for%20Windo
 CDPath = none
 
 [Section.0407]
-Description = Ein quelloffener Dateimanager mit zwei nebeneinander liegenden Panels. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+Description = Quelloffener Dateimanager mit zwei nebeneinander liegenden Panels. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
 
 [Section.0a]
 Description = Un explorador de archivos multipanel de código abierto. Es necesario utilizar 7-Zip u otro programa alternativo para extraerlo.

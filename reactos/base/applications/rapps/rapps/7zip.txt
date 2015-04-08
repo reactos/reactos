@@ -13,7 +13,7 @@ URLDownload = http://download.sourceforge.net/project/sevenzip/7-Zip/9.38/7z938.
 CDPath = none
 
 [Section.0407]
-Description = Ein Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip, zip, tar, rar und vielen anderen Archivformaten.
+Description = Dateiarchivierungswerkzeug zum Erstellen und Öffnen von 7zip, zip, tar, rar und vielen anderen Archivformaten.
 
 [Section.0a]
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.

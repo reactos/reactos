@@ -15,7 +15,7 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Ein Font Pack, der Mono und Sans Schriften beinhaltet. Bitte in den "ReactOS" Ordner entpacken.
+Description = Font Pack, der Mono und Sans Schriften beinhaltet. Bitte in den "ReactOS" Ordner entpacken.
 
 [Section.0a]
 Description = Paquete de fuentes de Mozilla Fira. Incluye las fuentes Mono y Sans. Debe descomprimirse en la carpeta ReactOS.

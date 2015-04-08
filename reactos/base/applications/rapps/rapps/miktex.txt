@@ -13,7 +13,7 @@ URLDownload = http://ftp.gwdg.de/pub/ctan/systems/win32/miktex/setup/basic-mikte
 CDPath = none
 
 [Section.0407]
-Description = Eine aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
+Description = Aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
 
 [Section.0a]
 License = Gratuita

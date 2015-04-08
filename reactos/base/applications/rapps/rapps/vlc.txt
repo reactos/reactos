@@ -14,7 +14,7 @@ SHA1 = 560497a560eaf13ad46489b9239487401e575548
 CDPath = none
 
 [Section.0407]
-Description = Ein voll funktionsfähiger FOSS Media-Player mit eingebauten Codecs.
+Description = Voll funktionsfähiger FOSS Media-Player mit eingebauten Codecs.
 
 [Section.0a]
 Description = Completo reproductor multimedia, de código abierto y con códecs propios.

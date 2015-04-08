@@ -14,7 +14,7 @@ CDPath = none
 
 [Section.0407]
 License = Unbekannt
-Description = Freeware Tabellen Viewer für Office-Formate (* .xls).
+Description = Freeware Tabellenbetrachter für Office-Formate (* .xls).
 Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/F/8/8/F88CB355-ECAA-4B74-87D6-C05C81D215BF/ExcelViewer.exe
 

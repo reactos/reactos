@@ -16,7 +16,7 @@ CDPath = none
 Description = Open source bitmapový editor určený dětem.
 
 [Section.0407]
-Description = Ein quelloffenes Bitmap Zeichenprogramm für kleine Kinder.
+Description = Quelloffenes Bitmap Zeichenprogramm für kleine Kinder.
 
 [Section.0a]
 Description = Editor gráfico de imágenes de código abierto, pensado para niños pequeños.

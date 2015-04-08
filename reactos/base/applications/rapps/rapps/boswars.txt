@@ -14,7 +14,7 @@ URLDownload = http://www.boswars.org/dist/releases/BosWars-2.6.1.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein futuristisches Echtzeitstrategiespiel. Benötigt die Microsoft Visual C++ 2008 Runtime.
+Description = Futuristisches Echtzeitstrategiespiel. Benötigt die Microsoft Visual C++ 2008 Runtime.
 
 [Section.0a]
 Description = Un juego de estrategia futurista en tiempo real. Para ejecutar el juego es necesario instalar Microsoft Visual C++ 2008 runtime.

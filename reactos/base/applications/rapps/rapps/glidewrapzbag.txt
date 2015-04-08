@@ -13,7 +13,7 @@ URLDownload = http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe
 CDPath = none
 
 [Section.0407]
-Description = Ein Glide API Emulator (emuliert 3dfx-Karten mit OpenGL). Ist erforderlich um Diablo2 in ReactOS auszuführen.
+Description = Glide API Emulator (emuliert 3dfx-Karten mit OpenGL). Ist erforderlich um Diablo2 in ReactOS auszuführen.
 
 [Section.0a]
 Name = Adaptador de compat. para Glide de zeckensack

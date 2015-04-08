@@ -14,7 +14,7 @@ URLDownload = http://www.dftpd.com/files/IndiFTPD/1.0.9_beta/Windows/Intel/indif
 CDPath = none
 
 [Section.0407]
-Description = Ein eigenständiger FTP Server in einer einzigen Anwendung. Er wurde erstellt für Situationen, in denen ein Anwender keinen Server auf dem System installieren/konfigurieren möchte (oder nicht die Rechte dafür besitzt) und schnell einen Server lauffähig bekommen will.
+Description = Eigenständiger FTP Server in einer einzigen Anwendung. Er wurde erstellt für Situationen, in denen ein Anwender keinen Server auf dem System installieren/konfigurieren möchte (oder nicht die Rechte dafür besitzt) und schnell einen Server lauffähig bekommen will.
 
 [Section.0a]
 Description = Un servidor FTP autónomo que funciona como un único ejecutable. Útil para situaciones en las que no se quiere/puede instalar un servidor en el sistema y se necesita tener algo rápido que lo supla en un momento.
