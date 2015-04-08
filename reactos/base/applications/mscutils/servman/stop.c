@@ -62,6 +62,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
 
         while (ServiceStatus.dwCurrentState != SERVICE_STOPPED)
         {
+            int i;
             /* Fixup the wait time */
             WaitTime = ServiceStatus.dwWaitHint / 10;
 
@@ -69,7 +70,7 @@ DoStopService(_In_z_ LPWSTR ServiceName,
             else if (WaitTime > 10000) WaitTime = 10000;
 
             /* We don't wanna wait for up to 10 secs without incrementing */
-            for (int i = WaitTime / 1000; i > 0; i--)
+            for (i = WaitTime / 1000; i > 0; i--)
             {
                 Sleep(1000);
                 if (hProgress)
