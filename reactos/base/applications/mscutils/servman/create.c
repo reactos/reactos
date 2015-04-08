@@ -12,11 +12,11 @@
 typedef struct _CREATE_DATA
 {
     HWND hSelf;
-    LPTSTR ServiceName;
-    LPTSTR DisplayName;
-    LPTSTR BinPath;
-    LPTSTR Description;
-    LPTSTR Options;
+    LPWSTR ServiceName;
+    LPWSTR DisplayName;
+    LPWSTR BinPath;
+    LPWSTR Description;
+    LPWSTR Options;
 
 } CREATE_DATA, *PCREATE_DATA;
 
@@ -30,28 +30,28 @@ DoCreate(PCREATE_DATA Data)
     BOOL bRet = FALSE;
 
     /* open handle to the SCM */
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager)
     {
-        hSc = CreateService(hSCManager,
-                            Data->ServiceName,
-                            Data->DisplayName,
-                            SERVICE_ALL_ACCESS,
-                            SERVICE_WIN32_OWN_PROCESS,
-                            SERVICE_DEMAND_START,
-                            SERVICE_ERROR_NORMAL,
-                            Data->BinPath,
-                            NULL,
-                            NULL,
-                            NULL,
-                            NULL,
-                            NULL);
+        hSc = CreateServiceW(hSCManager,
+                             Data->ServiceName,
+                             Data->DisplayName,
+                             SERVICE_ALL_ACCESS,
+                             SERVICE_WIN32_OWN_PROCESS,
+                             SERVICE_DEMAND_START,
+                             SERVICE_ERROR_NORMAL,
+                             Data->BinPath,
+                             NULL,
+                             NULL,
+                             NULL,
+                             NULL,
+                             NULL);
 
         if (hSc)
         {
-            LPTSTR lpSuccess;
+            LPWSTR lpSuccess;
 
             /* Set the service description as CreateService
                does not do this for us */
@@ -78,29 +78,29 @@ DoCreate(PCREATE_DATA Data)
     return bRet;
 }
 
-static LPTSTR
+static LPWSTR
 GetStringFromDialog(PCREATE_DATA Data,
                     UINT id)
 {
     HWND hwnd;
-    LPTSTR lpString = NULL;
+    LPWSTR lpString = NULL;
     INT iLen = 0;
 
     hwnd = GetDlgItem(Data->hSelf,
                       id);
     if (hwnd)
     {
-        iLen = GetWindowTextLength(hwnd);
+        iLen = GetWindowTextLengthW(hwnd);
         if (iLen)
         {
-            lpString = (LPTSTR)HeapAlloc(ProcessHeap,
+            lpString = (LPWSTR)HeapAlloc(ProcessHeap,
                                          0,
-                                         (iLen + 1) * sizeof(TCHAR));
+                                         (iLen + 1) * sizeof(WCHAR));
             if (lpString)
             {
-                GetWindowText(hwnd,
-                              lpString,
-                              iLen + 1);
+                GetWindowTextW(hwnd,
+                               lpString,
+                               iLen + 1);
             }
         }
     }
@@ -167,34 +167,33 @@ CreateHelpDialogProc(HWND hDlg,
 {
     HWND hHelp;
     HICON hIcon = NULL;
-    TCHAR Buf[1000];
+    WCHAR Buf[1000];
 
     switch (message)
     {
         case WM_INITDIALOG:
         {
-            hIcon = (HICON) LoadImage(hInstance,
-                              MAKEINTRESOURCE(IDI_SM_ICON),
-                              IMAGE_ICON,
-                              16,
-                              16,
-                              0);
+            hIcon = (HICON) LoadImageW(hInstance,
+                                       MAKEINTRESOURCE(IDI_SM_ICON),
+                                       IMAGE_ICON,
+                                       16,
+                                       16,
+                                       0);
 
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hIcon);
+            SendMessageW(hDlg,
+                         WM_SETICON,
+                         ICON_SMALL,
+                         (LPARAM)hIcon);
 
             hHelp = GetDlgItem(hDlg,
                                IDC_CREATE_HELP);
 
-            LoadString(hInstance,
-                       IDS_HELP_OPTIONS,
-                       Buf,
-                       sizeof(Buf) / sizeof(TCHAR));
+            LoadStringW(hInstance,
+                        IDS_HELP_OPTIONS,
+                        Buf,
+                        sizeof(Buf) / sizeof(WCHAR));
 
-            SetWindowText(hHelp,
-                          Buf);
+            SetWindowTextW(hHelp, Buf);
 
             return TRUE;
         }

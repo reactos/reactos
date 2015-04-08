@@ -120,11 +120,11 @@ TV2_GetDependants(LPWSTR lpServiceName,
 VOID
 TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         HTREEITEM hParent,
-                        LPTSTR lpServiceName)
+                        LPWSTR lpServiceName)
 {
 
     LPENUM_SERVICE_STATUSW lpServiceStatus;
-    LPTSTR lpNoDepends;
+    LPWSTR lpNoDepends;
     DWORD count, i;
     BOOL bHasChildren;
 
@@ -175,7 +175,7 @@ TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
 
 BOOL
 TV2_Initialize(PSERVICEPROPSHEET pDlgInfo,
-               LPTSTR lpServiceName)
+               LPWSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 

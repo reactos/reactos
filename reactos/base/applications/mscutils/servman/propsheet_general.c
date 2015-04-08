@@ -59,7 +59,7 @@ static VOID
 SetServiceStatusText(PSERVICEPROPSHEET dlgInfo,
                      HWND hwndDlg)
 {
-    LPTSTR lpStatus;
+    LPWSTR lpStatus;
     UINT id;
 
     if (dlgInfo->pService->ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
@@ -75,11 +75,11 @@ SetServiceStatusText(PSERVICEPROPSHEET dlgInfo,
                            hInstance,
                            id))
     {
-        SendDlgItemMessage(hwndDlg,
-                           IDC_SERV_STATUS,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)lpStatus);
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_SERV_STATUS,
+                            WM_SETTEXT,
+                            0,
+                            (LPARAM)lpStatus);
         LocalFree(lpStatus);
     }
 }
@@ -89,12 +89,12 @@ SetServiceStatusText(PSERVICEPROPSHEET dlgInfo,
  * values and sets it to value of the selected item
  */
 static VOID
-SetStartupType(LPTSTR lpServiceName,
+SetStartupType(LPWSTR lpServiceName,
                HWND hwndDlg)
 {
     HWND hList;
     LPQUERY_SERVICE_CONFIG pServiceConfig;
-    LPTSTR lpBuf;
+    LPWSTR lpBuf;
     DWORD StartUp = 0;
     UINT i;
 
@@ -106,10 +106,10 @@ SetStartupType(LPTSTR lpServiceName,
                                hInstance,
                                i))
         {
-            SendMessage(hList,
-                        CB_ADDSTRING,
-                        0,
-                        (LPARAM)lpBuf);
+            SendMessageW(hList,
+                         CB_ADDSTRING,
+                         0,
+                         (LPARAM)lpBuf);
             LocalFree(lpBuf);
         }
     }
@@ -125,10 +125,10 @@ SetStartupType(LPTSTR lpServiceName,
             case SERVICE_DISABLED:     StartUp = 2; break;
         }
 
-        SendMessage(hList,
-                    CB_SETCURSEL,
-                    StartUp,
-                    0);
+        SendMessageW(hList,
+                     CB_SETCURSEL,
+                     StartUp,
+                     0);
 
         HeapFree(ProcessHeap,
                  0,
@@ -145,30 +145,30 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
                 HWND hwndDlg)
 {
     LPQUERY_SERVICE_CONFIG pServiceConfig;
-    LPTSTR lpDescription;
+    LPWSTR lpDescription;
 
     /* set the service name */
-    SendDlgItemMessage(hwndDlg,
-                       IDC_SERV_NAME,
-                       WM_SETTEXT,
-                       0,
-                       (LPARAM)dlgInfo->pService->lpServiceName);
+    SendDlgItemMessageW(hwndDlg,
+                        IDC_SERV_NAME,
+                        WM_SETTEXT,
+                        0,
+                        (LPARAM)dlgInfo->pService->lpServiceName);
 
     /* set the display name */
-    SendDlgItemMessage(hwndDlg,
-                       IDC_DISP_NAME,
-                       WM_SETTEXT,
-                       0,
-                       (LPARAM)dlgInfo->pService->lpDisplayName);
+    SendDlgItemMessageW(hwndDlg,
+                        IDC_DISP_NAME,
+                        WM_SETTEXT,
+                        0,
+                        (LPARAM)dlgInfo->pService->lpDisplayName);
 
     /* set the description */
     if ((lpDescription = GetServiceDescription(dlgInfo->pService->lpServiceName)))
     {
-        SendDlgItemMessage(hwndDlg,
-                           IDC_DESCRIPTION,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)lpDescription);
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_DESCRIPTION,
+                            WM_SETTEXT,
+                            0,
+                            (LPARAM)lpDescription);
 
         HeapFree(ProcessHeap,
                  0,
@@ -178,11 +178,11 @@ InitGeneralPage(PSERVICEPROPSHEET dlgInfo,
     pServiceConfig = GetServiceConfig(dlgInfo->pService->lpServiceName);
     if (pServiceConfig)
     {
-        SendDlgItemMessage(hwndDlg,
-                           IDC_EXEPATH,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)pServiceConfig->lpBinaryPathName);
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_EXEPATH,
+                            WM_SETTEXT,
+                            0,
+                            (LPARAM)pServiceConfig->lpBinaryPathName);
         HeapFree(ProcessHeap,
                          0,
                          pServiceConfig);
@@ -258,7 +258,7 @@ OnStart(HWND hwndDlg,
     if (GetDlgItemText(hwndDlg, IDC_START_PARAM, szStartParams, 256) > 0)
         lpStartParams = szStartParams;
 
-    if (DoStart(dlgInfo->Info, lpStartParams))
+    //if (DoStart(dlgInfo->Info, lpStartParams))
     {
         UpdateServiceStatus(dlgInfo->pService);
         ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
@@ -312,37 +312,51 @@ GeneralPageProc(HWND hwndDlg,
                 break;
 
                 case IDC_START:
-                    OnStart(hwndDlg, dlgInfo);
+                    RunActionWithProgress(hwndDlg,
+                                          dlgInfo->pService->lpServiceName,
+                                          dlgInfo->pService->lpDisplayName,
+                                          ACTION_START);
+
+                    UpdateServiceStatus(dlgInfo->pService);
+                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(dlgInfo, hwndDlg);
+                    SetServiceStatusText(dlgInfo, hwndDlg);
                 break;
 
                 case IDC_STOP:
-                    if (DoStop(dlgInfo->Info))
-                    {
-                        UpdateServiceStatus(dlgInfo->pService);
-                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                        SetButtonStates(dlgInfo, hwndDlg);
-                        SetServiceStatusText(dlgInfo, hwndDlg);
-                    }
+                    RunActionWithProgress(hwndDlg,
+                                          dlgInfo->pService->lpServiceName,
+                                          dlgInfo->pService->lpDisplayName,
+                                          ACTION_STOP);
+
+                    UpdateServiceStatus(dlgInfo->pService);
+                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(dlgInfo, hwndDlg);
+                    SetServiceStatusText(dlgInfo, hwndDlg);
                 break;
 
                 case IDC_PAUSE:
-                    if (DoPause(dlgInfo->Info))
-                    {
-                        UpdateServiceStatus(dlgInfo->pService);
-                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                        SetButtonStates(dlgInfo, hwndDlg);
-                        SetServiceStatusText(dlgInfo, hwndDlg);
-                    }
+                    RunActionWithProgress(hwndDlg,
+                                          dlgInfo->pService->lpServiceName,
+                                          dlgInfo->pService->lpDisplayName,
+                                          ACTION_PAUSE);
+
+                    UpdateServiceStatus(dlgInfo->pService);
+                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(dlgInfo, hwndDlg);
+                    SetServiceStatusText(dlgInfo, hwndDlg);
                 break;
 
                 case IDC_RESUME:
-                    if (DoResume(dlgInfo->Info))
-                    {
-                        UpdateServiceStatus(dlgInfo->pService);
-                        ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
-                        SetButtonStates(dlgInfo, hwndDlg);
-                        SetServiceStatusText(dlgInfo, hwndDlg);
-                    }
+                    RunActionWithProgress(hwndDlg,
+                                          dlgInfo->pService->lpServiceName,
+                                          dlgInfo->pService->lpDisplayName,
+                                          ACTION_RESUME);
+
+                    UpdateServiceStatus(dlgInfo->pService);
+                    ChangeListViewText(dlgInfo->Info, dlgInfo->pService, LVSTATUS);
+                    SetButtonStates(dlgInfo, hwndDlg);
+                    SetServiceStatusText(dlgInfo, hwndDlg);
                 break;
 
                 case IDC_EDIT:

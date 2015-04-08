@@ -12,14 +12,14 @@
 HTREEITEM
 AddItemToTreeView(HWND hTreeView,
                   HTREEITEM hParent,
-                  LPTSTR lpDisplayName,
-                  LPTSTR lpServiceName,
+                  LPWSTR lpDisplayName,
+                  LPWSTR lpServiceName,
                   ULONG ServiceType,
                   BOOL bHasChildren)
 {
     TV_ITEM tvi;
     TV_INSERTSTRUCT tvins;
-    LPTSTR lpName;
+    LPWSTR lpName;
     DWORD dwSize;
 
     ZeroMemory(&tvi, sizeof(tvi));
@@ -27,7 +27,7 @@ AddItemToTreeView(HWND hTreeView,
 
     tvi.mask = TVIF_TEXT | TVIF_PARAM | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_CHILDREN;
     tvi.pszText = lpDisplayName;
-    tvi.cchTextMax = _tcslen(lpDisplayName);
+    tvi.cchTextMax = wcslen(lpDisplayName);
     tvi.cChildren = bHasChildren;
 
     /* Select the image for this service */
@@ -53,14 +53,14 @@ AddItemToTreeView(HWND hTreeView,
 
     if (lpServiceName)
     {
-        dwSize = _tcslen(lpServiceName) + 1;
+        dwSize = wcslen(lpServiceName) + 1;
         /* Attach the service name */
-        lpName = (LPTSTR)HeapAlloc(GetProcessHeap(),
+        lpName = (LPWSTR)HeapAlloc(GetProcessHeap(),
                                    0,
-                                   dwSize * sizeof(TCHAR));
+                                   dwSize * sizeof(WCHAR));
         if (lpName)
         {
-            StringCchCopy(lpName, dwSize, lpServiceName);
+            StringCchCopyW(lpName, dwSize, lpServiceName);
             tvi.lParam = (LPARAM)lpName;
         }
     }
@@ -76,7 +76,7 @@ TreeView_GetItemParam(HWND hTreeView,
                       HTREEITEM hItem)
 {
     LPARAM lParam = 0;
-    TVITEM tv = {0};
+    TVITEMW tv = {0};
 
     tv.mask = TVIF_PARAM | TVIF_HANDLE;
     tv.hItem = hItem;
@@ -94,7 +94,7 @@ DestroyItem(HWND hTreeView,
             HTREEITEM hItem)
 {
     HTREEITEM hChildItem;
-    LPTSTR lpServiceName;
+    LPWSTR lpServiceName;
 
     /* Does this item have any children */
     hChildItem = TreeView_GetChild(hTreeView, hItem);
@@ -105,7 +105,7 @@ DestroyItem(HWND hTreeView,
     }
 
     /* Get the string and free it */
-    lpServiceName = (LPTSTR)TreeView_GetItemParam(hTreeView, hItem);
+    lpServiceName = (LPWSTR)TreeView_GetItemParam(hTreeView, hItem);
     if (lpServiceName)
     {
         HeapFree(GetProcessHeap(),
@@ -229,7 +229,7 @@ DependenciesPageProc(HWND hwndDlg,
                             if (!TreeView_GetChild(pDlgInfo->hDependsTreeView1, lpnmtv->itemNew.hItem))
                             {
                                 /* It's not, add the children */
-                                TV1_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                                TV1_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPWSTR)lpnmtv->itemNew.lParam);
                             }
                         }
                         else if (lpnmtv->hdr.idFrom == IDC_DEPEND_TREE2)
@@ -238,7 +238,7 @@ DependenciesPageProc(HWND hwndDlg,
                             if (!TreeView_GetChild(pDlgInfo->hDependsTreeView2, lpnmtv->itemNew.hItem))
                             {
                                 /* It's not, add the children */
-                                TV2_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPTSTR)lpnmtv->itemNew.lParam);
+                                TV2_AddDependantsToTree(pDlgInfo, lpnmtv->itemNew.hItem, (LPWSTR)lpnmtv->itemNew.lParam);
                             }
                         }
                     }

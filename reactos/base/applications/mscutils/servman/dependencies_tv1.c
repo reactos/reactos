@@ -9,20 +9,20 @@
 
 #include "precomp.h"
 
-LPTSTR
+LPWSTR
 TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
                   SC_HANDLE hService)
 {
     LPQUERY_SERVICE_CONFIG lpServiceConfig;
-    LPTSTR lpStr = NULL;
+    LPWSTR lpStr = NULL;
     DWORD bytesNeeded;
     DWORD bytes;
 
     /* Get the info for this service */
-    if (!QueryServiceConfig(hService,
-                            NULL,
-                            0,
-                            &bytesNeeded) &&
+    if (!QueryServiceConfigW(hService,
+                             NULL,
+                             0,
+                             &bytesNeeded) &&
         GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
         lpServiceConfig = HeapAlloc(ProcessHeap,
@@ -30,10 +30,10 @@ TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
                                     bytesNeeded);
         if (lpServiceConfig)
         {
-            if (QueryServiceConfig(hService,
-                                   lpServiceConfig,
-                                   bytesNeeded,
-                                   &bytesNeeded))
+            if (QueryServiceConfigW(hService,
+                                    lpServiceConfig,
+                                    bytesNeeded,
+                                    &bytesNeeded))
             {
                 /* Does this service have any dependencies? */
                 if (lpServiceConfig->lpDependencies &&
@@ -43,7 +43,7 @@ TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
                     bytes = 0;
 
                     /* Work out how many bytes we need to hold the list */
-                    while (TRUE)
+                    for (;;)
                     {
                         bytes++;
 
@@ -57,7 +57,7 @@ TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
                     }
 
                     /* Allocate and copy the list */
-                    bytes *= sizeof(TCHAR);
+                    bytes *= sizeof(WCHAR);
                     lpStr = HeapAlloc(ProcessHeap,
                                       0,
                                       bytes);
@@ -82,24 +82,24 @@ TV1_GetDependants(PSERVICEPROPSHEET pDlgInfo,
 VOID
 TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
                         HTREEITEM hParent,
-                        LPTSTR lpServiceName)
+                        LPWSTR lpServiceName)
 {
     SC_HANDLE hSCManager;
     SC_HANDLE hService;
     LPQUERY_SERVICE_CONFIG lpServiceConfig;
-    LPTSTR lpDependants;
-    LPTSTR lpStr;
-    LPTSTR lpNoDepends;
+    LPWSTR lpDependants;
+    LPWSTR lpStr;
+    LPWSTR lpNoDepends;
     BOOL bHasChildren;
 
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_ALL_ACCESS);
+    hSCManager = OpenSCManagerW(NULL,
+                                NULL,
+                                SC_MANAGER_ALL_ACCESS);
     if (hSCManager)
     {
-        hService = OpenService(hSCManager,
-                               lpServiceName,
-                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
+        hService = OpenServiceW(hSCManager,
+                                lpServiceName,
+                                SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
         if (hService)
         {
             /* Get a list of service dependents */
@@ -179,7 +179,7 @@ TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo,
 
 BOOL
 TV1_Initialize(PSERVICEPROPSHEET pDlgInfo,
-               LPTSTR lpServiceName)
+               LPWSTR lpServiceName)
 {
     BOOL bRet = FALSE;
 

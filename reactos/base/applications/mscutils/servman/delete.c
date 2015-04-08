@@ -29,7 +29,7 @@ DoDeleteService(PMAIN_WND_INFO Info,
         {
             if (DeleteService(hSc))
             {
-                LPTSTR lpSuccess;
+                LPWSTR lpSuccess;
 
                 /* report success to user */
                 if (AllocAndLoadString(&lpSuccess,
@@ -74,44 +74,44 @@ DeleteDialogProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-            LPTSTR lpDescription;
+            LPWSTR lpDescription;
 
             Info = (PMAIN_WND_INFO)lParam;
             if (Info != NULL)
             {
-                SetWindowLongPtr(hDlg,
-                                 GWLP_USERDATA,
-                                 (LONG_PTR)Info);
+                SetWindowLongPtrW(hDlg,
+                                  GWLP_USERDATA,
+                                  (LONG_PTR)Info);
 
-                hIcon = (HICON)LoadImage(hInstance,
-                                         MAKEINTRESOURCE(IDI_SM_ICON),
-                                         IMAGE_ICON,
-                                         16,
-                                         16,
-                                         0);
+                hIcon = (HICON)LoadImageW(hInstance,
+                                          MAKEINTRESOURCE(IDI_SM_ICON),
+                                          IMAGE_ICON,
+                                          16,
+                                          16,
+                                          0);
                 if (hIcon)
                 {
-                    SendMessage(hDlg,
-                                WM_SETICON,
-                                ICON_SMALL,
-                                (LPARAM)hIcon);
+                    SendMessageW(hDlg,
+                                 WM_SETICON,
+                                 ICON_SMALL,
+                                 (LPARAM)hIcon);
                     DestroyIcon(hIcon);
                 }
 
-                SendDlgItemMessage(hDlg,
-                                   IDC_DEL_NAME,
-                                   WM_SETTEXT,
-                                   0,
-                                   (LPARAM)Info->pCurrentService->lpDisplayName);
+                SendDlgItemMessageW(hDlg,
+                                    IDC_DEL_NAME,
+                                    WM_SETTEXT,
+                                    0,
+                                    (LPARAM)Info->pCurrentService->lpDisplayName);
 
                 lpDescription = GetServiceDescription(Info->pCurrentService->lpServiceName);
                 if (lpDescription)
                 {
-                    SendDlgItemMessage(hDlg,
-                                       IDC_DEL_DESC,
-                                       WM_SETTEXT,
-                                       0,
-                                       (LPARAM)lpDescription);
+                    SendDlgItemMessageW(hDlg,
+                                        IDC_DEL_DESC,
+                                        WM_SETTEXT,
+                                        0,
+                                        (LPARAM)lpDescription);
                     HeapFree(ProcessHeap,
                              0,
                              lpDescription);

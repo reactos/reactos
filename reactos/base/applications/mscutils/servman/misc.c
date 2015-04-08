@@ -47,7 +47,7 @@ LengthOfStrResource(IN HINSTANCE hInst,
 }
 
 INT
-AllocAndLoadString(OUT LPTSTR *lpTarget,
+AllocAndLoadString(OUT LPWSTR *lpTarget,
                    IN HINSTANCE hInst,
                    IN UINT uID)
 {
@@ -57,12 +57,12 @@ AllocAndLoadString(OUT LPTSTR *lpTarget,
                              uID);
     if (ln++ > 0)
     {
-        (*lpTarget) = (LPTSTR)LocalAlloc(LMEM_FIXED,
-                                         ln * sizeof(TCHAR));
+        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                         ln * sizeof(WCHAR));
         if ((*lpTarget) != NULL)
         {
             INT Ret;
-            if (!(Ret = LoadString(hInst, uID, *lpTarget, ln)))
+            if (!(Ret = LoadStringW(hInst, uID, *lpTarget, ln)))
             {
                 LocalFree((HLOCAL)(*lpTarget));
             }
@@ -75,11 +75,11 @@ AllocAndLoadString(OUT LPTSTR *lpTarget,
 DWORD
 LoadAndFormatString(IN HINSTANCE hInstance,
                     IN UINT uID,
-                    OUT LPTSTR *lpTarget,
+                    OUT LPWSTR *lpTarget,
                     ...)
 {
     DWORD Ret = 0;
-    LPTSTR lpFormat;
+    LPWSTR lpFormat;
     va_list lArgs;
 
     if (AllocAndLoadString(&lpFormat,
@@ -89,13 +89,13 @@ LoadAndFormatString(IN HINSTANCE hInstance,
         va_start(lArgs, lpTarget);
         /* let's use Format to format it because it has the ability to allocate
            memory automatically */
-        Ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                            lpFormat,
-                            0,
-                            0,
-                            (LPTSTR)lpTarget,
-                            0,
-                            &lArgs);
+        Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                             lpFormat,
+                             0,
+                             0,
+                             (LPWSTR)lpTarget,
+                             0,
+                             &lArgs);
         va_end(lArgs);
 
         LocalFree((HLOCAL)lpFormat);
@@ -112,7 +112,7 @@ StatusBarLoadAndFormatString(IN HWND hStatusBar,
                              ...)
 {
     BOOL Ret = FALSE;
-    LPTSTR lpFormat, lpStr;
+    LPWSTR lpFormat, lpStr;
     va_list lArgs;
 
     if (AllocAndLoadString(&lpFormat,
@@ -122,21 +122,21 @@ StatusBarLoadAndFormatString(IN HWND hStatusBar,
         va_start(lArgs, uID);
         /* let's use FormatMessage to format it because it has the ability to allocate
            memory automatically */
-        Ret = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                            lpFormat,
-                            0,
-                            0,
-                            (VOID*)&lpStr,
-                            0,
-                            &lArgs);
+        Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                             lpFormat,
+                             0,
+                             0,
+                             (VOID*)&lpStr,
+                             0,
+                             &lArgs);
         va_end(lArgs);
 
         if (lpStr != NULL)
         {
-            Ret = (BOOL)SendMessage(hStatusBar,
-                                    SB_SETTEXT,
-                                    (WPARAM)PartId,
-                                    (LPARAM)lpStr);
+            Ret = (BOOL)SendMessageW(hStatusBar,
+                                     SB_SETTEXT,
+                                     (WPARAM)PartId,
+                                     (LPARAM)lpStr);
             LocalFree((HLOCAL)lpStr);
         }
 
@@ -153,16 +153,16 @@ StatusBarLoadString(IN HWND hStatusBar,
                     IN UINT uID)
 {
     BOOL Ret = FALSE;
-    LPTSTR lpStr;
+    LPWSTR lpStr;
 
     if (AllocAndLoadString(&lpStr,
                            hInstance,
                            uID) > 0)
     {
-        Ret = (BOOL)SendMessage(hStatusBar,
-                                SB_SETTEXT,
-                                (WPARAM)PartId,
-                                (LPARAM)lpStr);
+        Ret = (BOOL)SendMessageW(hStatusBar,
+                                 SB_SETTEXT,
+                                 (WPARAM)PartId,
+                                 (LPARAM)lpStr);
         LocalFree((HLOCAL)lpStr);
     }
 
@@ -171,17 +171,17 @@ StatusBarLoadString(IN HWND hStatusBar,
 
 
 INT
-GetTextFromEdit(OUT LPTSTR lpString,
+GetTextFromEdit(OUT LPWSTR lpString,
                 IN HWND hDlg,
                 IN UINT Res)
 {
-    INT len = GetWindowTextLength(GetDlgItem(hDlg, Res));
+    INT len = GetWindowTextLengthW(GetDlgItem(hDlg, Res));
     if(len > 0)
     {
-        GetDlgItemText(hDlg,
-                       Res,
-                       lpString,
-                       len + 1);
+        GetDlgItemTextW(hDlg,
+                        Res,
+                        lpString,
+                        len + 1);
     }
     else
         lpString = NULL;
@@ -191,26 +191,26 @@ GetTextFromEdit(OUT LPTSTR lpString,
 
 VOID GetError(VOID)
 {
-    LPTSTR lpMsgBuf = NULL;
+    LPWSTR lpMsgBuf = NULL;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                  FORMAT_MESSAGE_FROM_SYSTEM |
-                  FORMAT_MESSAGE_IGNORE_INSERTS,
-                  NULL,
-                  GetLastError(),
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (VOID*)&lpMsgBuf,
-                  0,
-                  NULL );
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                   FORMAT_MESSAGE_FROM_SYSTEM |
+                   FORMAT_MESSAGE_IGNORE_INSERTS,
+                   NULL,
+                   GetLastError(),
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (VOID*)&lpMsgBuf,
+                   0,
+                   NULL );
 
-    MessageBox(NULL, lpMsgBuf, _T("Error!"), MB_OK | MB_ICONERROR);
+    MessageBoxW(NULL, lpMsgBuf, L"Error!", MB_OK | MB_ICONERROR);
 
     LocalFree(lpMsgBuf);
 }
 
-VOID DisplayString(PTCHAR Msg)
+VOID DisplayString(LPWSTR Msg)
 {
-    MessageBox(NULL, Msg, _T("Note!"), MB_ICONEXCLAMATION|MB_OK);
+    MessageBoxW(NULL, Msg, L"Note!", MB_ICONEXCLAMATION|MB_OK);
 }
 
 
@@ -239,12 +239,12 @@ InitImageList(UINT StartResource,
     ret = 0;
     for (i = StartResource; i <= EndResource && ret != -1; i++)
     {
-        hImage = LoadImage(hInstance,
-                           MAKEINTRESOURCE(i),
-                           type,
-                           Width,
-                           Height,
-                           LR_LOADTRANSPARENT);
+        hImage = LoadImageW(hInstance,
+                            MAKEINTRESOURCEW(i),
+                            type,
+                            Width,
+                            Height,
+                            LR_LOADTRANSPARENT);
         if (hImage == NULL)
         {
             ImageList_Destroy(himl);
