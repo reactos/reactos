@@ -354,10 +354,6 @@ ConDrvPause(PCONSOLE Console);
 VOID NTAPI
 ConDrvUnpause(PCONSOLE Console);
 
-NTSTATUS
-ConSrvConsoleCtrlEvent(IN ULONG CtrlEvent,
-                       IN PCONSOLE_PROCESS_DATA ProcessData);
-
 
 #define GetConsoleInputBufferMode(Console)  \
     (Console)->InputBuffer.Mode
