@@ -36,13 +36,10 @@ static HINSTANCE MSRLE32_hModule = 0;
 
 #define compare_fourcc(fcc1, fcc2) (((fcc1)^(fcc2))&~0x20202020)
 
-#define ABS(a)                ((a) < 0 ? -(a) : (a))
-#define SQR(a)                ((a) * (a))
-
 static inline WORD ColorCmp(WORD clr1, WORD clr2)
 {
   UINT a = clr1 - clr2;
-  return SQR(a);
+  return a * a;
 }
 static inline WORD Intensity(RGBQUAD clr)
 {
