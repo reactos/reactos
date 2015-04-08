@@ -70,6 +70,9 @@ static BOOL load_driver(const WCHAR *name, DriverFuncs *driver)
     LDFC(GetAudioSessionManager);
 #undef LDFC
 
+    /* optional - do not fail if not found */
+    driver->pGetPropValue = (void*)GetProcAddress(driver->module, "GetPropValue");
+
     driver->priority = driver->pGetPriority();
     lstrcpyW(driver->module_name, driver_module);
 
@@ -83,7 +86,7 @@ static BOOL init_driver(void)
 {
     static const WCHAR drv_value[] = {'A','u','d','i','o',0};
 
-    static WCHAR default_list[] = {'a','l','s','a',',','o','s','s',',',
+    static WCHAR default_list[] = {'p','u','l','s','e',',','a','l','s','a',',','o','s','s',',',
         'c','o','r','e','a','u','d','i','o',0};
 
     DriverFuncs driver;

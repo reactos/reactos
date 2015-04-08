@@ -79,6 +79,8 @@ typedef struct _DriverFuncs {
             IAudioClient **out);
     HRESULT (WINAPI *pGetAudioSessionManager)(IMMDevice *device,
             IAudioSessionManager2 **out);
+    HRESULT (WINAPI *pGetPropValue)(GUID *guid,
+            const PROPERTYKEY *prop, PROPVARIANT *out);
 } DriverFuncs;
 
 extern DriverFuncs drvs DECLSPEC_HIDDEN;
