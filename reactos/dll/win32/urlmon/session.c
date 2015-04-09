@@ -713,6 +713,7 @@ HRESULT WINAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBuf
 
         heap_free(user_agent);
         user_agent = new_user_agent;
+        update_user_agent(user_agent);
 
         LeaveCriticalSection(&session_cs);
         break;

@@ -245,7 +245,7 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     DWORD scheme, size;
     LPWSTR mime = NULL;
     WCHAR null_char = 0;
-    BSTR url;
+    BSTR ext;
     HRESULT hres;
 
     TRACE("(%p)->(%p %p %p %08x %p)\n", This, pUri, pOIProtSink,
@@ -294,17 +294,19 @@ static HRESULT WINAPI FileProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUr
     if(FAILED(hres))
         return hres;
 
-    hres = IUri_GetDisplayUri(pUri, &url);
-    if(hres == S_OK) {
-        hres = FindMimeFromData(NULL, url, NULL, 0, NULL, 0, &mime, 0);
-        SysFreeString(url);
-        if(SUCCEEDED(hres)) {
-            IInternetProtocolSink_ReportProgress(pOIProtSink,
-                    (grfBINDF & BINDF_FROMURLMON) ?
-                     BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE : BINDSTATUS_MIMETYPEAVAILABLE,
-                    mime);
-            CoTaskMemFree(mime);
+    hres = IUri_GetExtension(pUri, &ext);
+    if(SUCCEEDED(hres)) {
+        if(hres == S_OK && *ext) {
+            hres = find_mime_from_ext(ext, &mime);
+            if(SUCCEEDED(hres)) {
+                IInternetProtocolSink_ReportProgress(pOIProtSink,
+                        (grfBINDF & BINDF_FROMURLMON) ?
+                        BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE : BINDSTATUS_MIMETYPEAVAILABLE,
+                        mime);
+                CoTaskMemFree(mime);
+            }
         }
+        SysFreeString(ext);
     }
 
     IInternetProtocolSink_ReportData(pOIProtSink,

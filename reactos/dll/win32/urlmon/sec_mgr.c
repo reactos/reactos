@@ -729,7 +729,7 @@ static HRESULT generate_security_id(IUri *uri, BYTE *secid, DWORD *secid_len, DW
 
         if(len+sizeof(DWORD) > *secid_len) {
             SysFreeString(display_uri);
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            return E_NOT_SUFFICIENT_BUFFER;
         }
 
         WideCharToMultiByte(CP_ACP, 0, display_uri, -1, (LPSTR)secid, len, NULL, NULL);
@@ -765,7 +765,7 @@ static HRESULT generate_security_id(IUri *uri, BYTE *secid, DWORD *secid_len, DW
         if(len+sizeof(DWORD) > *secid_len) {
             SysFreeString(host);
             SysFreeString(scheme);
-            return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+            return E_NOT_SUFFICIENT_BUFFER;
         }
 
         WideCharToMultiByte(CP_ACP, 0, scheme, -1, (LPSTR)secid, len, NULL, NULL);

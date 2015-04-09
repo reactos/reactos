@@ -83,8 +83,11 @@ IInternetProtocol *get_mime_filter(LPCWSTR) DECLSPEC_HIDDEN;
 BOOL is_registered_protocol(LPCWSTR) DECLSPEC_HIDDEN;
 HRESULT register_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL) DECLSPEC_HIDDEN;
 HINTERNET get_internet_session(IInternetBindInfo*) DECLSPEC_HIDDEN;
-LPWSTR get_useragent(void) DECLSPEC_HIDDEN;
+WCHAR *get_useragent(void) DECLSPEC_HIDDEN;
+void update_user_agent(WCHAR*) DECLSPEC_HIDDEN;
 void free_session(void) DECLSPEC_HIDDEN;
+
+HRESULT find_mime_from_ext(const WCHAR*,WCHAR**) DECLSPEC_HIDDEN;
 
 HRESULT bind_to_storage(IUri*,IBindCtx*,REFIID,void**) DECLSPEC_HIDDEN;
 HRESULT bind_to_object(IMoniker*,IUri*,IBindCtx*,REFIID,void**ppv) DECLSPEC_HIDDEN;
@@ -236,9 +239,7 @@ typedef struct {
 
 tls_data_t *get_tls_data(void) DECLSPEC_HIDDEN;
 
-#ifndef __REACTOS__
 void unregister_notif_wnd_class(void) DECLSPEC_HIDDEN;
-#endif
 HWND get_notif_hwnd(void) DECLSPEC_HIDDEN;
 void release_notif_hwnd(HWND) DECLSPEC_HIDDEN;
 
