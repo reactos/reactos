@@ -26,6 +26,11 @@ import "dimm.idl";
 import "shtypes.idl";
 import "dispex.idl";
 
+#ifndef __WIDL__
+#define progid(str)
+#define vi_progid(str)
+#endif
+
 cpp_quote("#include <olectl.h>")
 
 cpp_quote("DEFINE_GUID(SID_SEditCommandTarget,  0x3050f4b5,0x98b5,0x11cf,0xbb,0x82,0x00,0xaa,0x00,0xbd,0xce,0x0b);")
@@ -6943,7 +6948,7 @@ interface IHTMLLinkElement : IDispatch
     [propput, id(DISPID_IHTMLLINKELEMENT_MEDIA), displaybind, bindable]
     HRESULT media([in] BSTR v);
 
-    [propget, id(DISPID_IHTMLLINKELEMENT_MEDIA), displaybind, bindable]\
+    [propget, id(DISPID_IHTMLLINKELEMENT_MEDIA), displaybind, bindable]
     HRESULT media([out, retval] BSTR *p);
 }
 
@@ -7922,7 +7927,7 @@ methods:
 
 [
     noncreatable,
-    uuid(3050F24D-98B5-11CF-BB82-00AA00BDCE0B)
+    uuid(3050F251-98B5-11CF-BB82-00AA00BDCE0B)
 ]
 coclass HTMLFormElement
 {
@@ -10444,9 +10449,6 @@ dispinterface DispHTMLButtonElement
 properties:
 methods:
     WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;
-
-    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
-    IDispatch *constructor();
 
     [propget, id(DISPID_IHTMLBUTTONELEMENT_TYPE)]
     BSTR type();
@@ -14295,13 +14297,13 @@ interface IHTMLDocument6 : IDispatch
     HRESULT onstorage([in] VARIANT v);
 
     [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGE), displaybind, bindable]
-    HRESULT onstorage([out] VARIANT *p);
+    HRESULT onstorage([retval, out] VARIANT *p);
 
     [propput, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
     HRESULT onstoragecommit([in] VARIANT v);
 
     [propget, id(DISPID_IHTMLDOCUMENT6_ONSTORAGECOMMIT), displaybind, bindable]
-    HRESULT onstoragecommit([out] VARIANT *p);
+    HRESULT onstoragecommit([retval, out] VARIANT *p);
 
     [id(DISPID_IHTMLDOCUMENT6_IE8_GETELEMENTBYID)]
     HRESULT getElementById(

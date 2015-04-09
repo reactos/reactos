@@ -3855,7 +3855,7 @@ interface ITransferAdviseSink : IUnknown
     HRESULT FileFailure([in] IShellItem *item,
                         [in, unique, string] LPCWSTR itemname,
                         [in] HRESULT hr,
-                        [out, unique, size_is(crename)] LPWSTR rename,
+                        [in, out, unique, size_is(crename)] LPWSTR rename,
                         [in] ULONG crename);
     HRESULT SubStreamFailure([in] IShellItem *item,
                              [in, string] LPCWSTR stream,
@@ -4195,6 +4195,7 @@ interface IFileOperation : IUnknown
 [
     uuid(6CCB7BE0-6807-11d0-B810-00C04FD706EC),
     object,
+    local,
     pointer_default(unique)
 ]
 interface IShellTaskScheduler : IUnknown

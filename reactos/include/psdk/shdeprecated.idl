@@ -447,8 +447,8 @@ interface IBrowserService2 : IBrowserService
     LRESULT WndProcBS(
         [in] HWND hwnd,
         [in] UINT uMsg,
-        [in, out] WPARAM wParam,
-        [in, out] LPARAM lParam);
+        [in] WPARAM wParam,
+        [in] LPARAM lParam);
 
     HRESULT SetAsDefFolderSettings();
 
@@ -558,8 +558,8 @@ interface IBrowserService2 : IBrowserService
         [in] HWND hwndBar,
         [in] BOOL fBroadcast,
         [in] UINT uMsg,
-        [in, out] WPARAM wParam,
-        [in, out] LPARAM lParam);
+        [in] WPARAM wParam,
+        [in] LPARAM lParam);
 
     HRESULT GetFolderSetData(
         [in, out] struct tagFolderSetData *pfsd);
