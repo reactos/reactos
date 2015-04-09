@@ -170,7 +170,6 @@ static const WCHAR wszWineHQSite[] =
 static const WCHAR wszWineHQIP[] =
     {'2','0','9','.','3','2','.','1','4','1','.','3',0};
 static const CHAR wszIndexHtmlA[] = "index.html";
-static const WCHAR wszIndexHtml[] = {'i','n','d','e','x','.','h','t','m','l',0};
 static const WCHAR cache_fileW[] = {'c',':','\\','c','a','c','h','e','.','h','t','m',0};
 static const CHAR dwl_htmlA[] = "dwl.html";
 static const WCHAR dwl_htmlW[] = {'d','w','l','.','h','t','m','l',0};
@@ -772,7 +771,7 @@ static HRESULT WINAPI Protocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         }
         IHttpNegotiate2_Release(http_negotiate2);
         ok(hres == E_FAIL, "GetRootSecurityId failed: %08x, expected E_FAIL\n", hres);
-        ok(size == no_callback ? 512 : 13, "size=%d\n", size);
+        ok(size == (no_callback ? 512 : 13), "size=%d\n", size);
 
         if(!no_callback) {
             SET_EXPECT(QueryService_IHttpSecurity);

@@ -119,9 +119,6 @@ static const WCHAR url16[] = {'f','i','l','e',':','/','/','/','c',':',0};
 static const WCHAR url17[] = {'f','i','l','e',':','/','/','/','c',':','c','\\',0};
 static const WCHAR url18[] = {'c',':','\\','t','e','s','t','.','h','t','m',0};
 
-static const WCHAR url4e[] = {'f','i','l','e',':','s','o','m','e',' ','f','i','l','e',
-        '.','j','p','g',0};
-
 static const WCHAR winetestW[] = {'w','i','n','e','t','e','s','t',0};
 static const WCHAR security_urlW[] = {'w','i','n','e','t','e','s','t',':','t','e','s','t','i','n','g',0};
 static const WCHAR security_url2W[] = {'w','i','n','e','t','e','s','t',':','t','e','s','t','i','n','g','2',0};

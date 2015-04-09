@@ -82,7 +82,6 @@ DEFINE_EXPECT(OnDataAvailable);
 DEFINE_EXPECT(GetBindInfo);
 
 static const CHAR wszIndexHtmlA[] = "index.html";
-static const WCHAR wszIndexHtml[] = {'i','n','d','e','x','.','h','t','m','l',0};
 static WCHAR INDEX_HTML[MAX_PATH];
 static const char szHtmlDoc[] = "<HTML></HTML>";
 
