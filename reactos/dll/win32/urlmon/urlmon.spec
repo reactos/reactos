@@ -85,7 +85,7 @@
 184 stdcall HlinkNavigateString(ptr wstr)
 185 stdcall HlinkSimpleNavigateToMoniker(ptr wstr wstr ptr ptr ptr long long)
 186 stdcall HlinkSimpleNavigateToString(wstr wstr wstr ptr ptr ptr long long)
-#187 IEInstallScope
+187 stdcall -stub IEInstallScope(ptr)
 #188 InstallFlash
 #189 IntlPercentEncodeNormalize
 190 stdcall IsAsyncMoniker(ptr)
