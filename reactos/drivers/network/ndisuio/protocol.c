@@ -187,6 +187,7 @@ NduReceive(NDIS_HANDLE ProtocolBindingContext,
         if (Status != NDIS_STATUS_SUCCESS)
         {
             DPRINT1("Failed to transfer data with status 0x%x\n", Status);
+            ExFreePool(PacketBuffer);
             CleanupAndFreePacket(Packet, TRUE);
             return NDIS_STATUS_NOT_ACCEPTED;
         }
