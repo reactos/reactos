@@ -186,6 +186,11 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    {
+        skip("connection failed, skipping\n");
+        goto done;
+    }
     ok(ret, "failed to send request %u\n", GetLastError());
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
@@ -209,6 +214,11 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    {
+        skip("connection failed, skipping\n");
+        goto done;
+    }
     ok(ret, "failed to send request %u\n", GetLastError());
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
@@ -253,6 +263,11 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    {
+        skip("connection failed, skipping\n");
+        goto done;
+    }
     ok(ret, "failed to send request %u\n", GetLastError());
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
@@ -276,6 +291,11 @@ static void test_connection_cache( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    {
+        skip("connection failed, skipping\n");
+        goto done;
+    }
     ok(ret, "failed to send request %u\n", GetLastError());
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
@@ -288,6 +308,7 @@ static void test_connection_cache( void )
     ok(status == 200, "request failed unexpectedly %u\n", status);
 
     setup_test( &info, winhttp_close_handle, __LINE__ );
+done:
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
     WinHttpCloseHandle( ses );
@@ -353,6 +374,11 @@ static void test_redirect( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    {
+        skip("connection failed, skipping\n");
+        goto done;
+    }
     ok(ret, "failed to send request %u\n", GetLastError());
 
     setup_test( &info, winhttp_receive_response, __LINE__ );
@@ -365,6 +391,7 @@ static void test_redirect( void )
     ok(status == 200, "request failed unexpectedly %u\n", status);
 
     setup_test( &info, winhttp_close_handle, __LINE__ );
+done:
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
     WinHttpCloseHandle( ses );
@@ -435,6 +462,15 @@ static void test_async( void )
 
     setup_test( &info, winhttp_send_request, __LINE__ );
     ret = WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 );
+    if (!ret && GetLastError() == ERROR_WINHTTP_CANNOT_CONNECT)
+    {
+        skip("connection failed, skipping\n");
+        WinHttpCloseHandle( req );
+        WinHttpCloseHandle( con );
+        WinHttpCloseHandle( ses );
+        CloseHandle( info.wait );
+        return;
+    }
     ok(ret, "failed to send request %u\n", GetLastError());
 
     WaitForSingleObject( info.wait, INFINITE );

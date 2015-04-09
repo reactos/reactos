@@ -38,40 +38,37 @@ static WCHAR escape[]   = {' ','!','"','#','$','%','&','\'','(',')','*','+',',',
 static const WCHAR url1[]  =
     {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url2[] =
-    {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',
-     '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url3[] = {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':',0};
-static const WCHAR url4[] =
+static const WCHAR url2[] = {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':',0};
+static const WCHAR url3[] =
     {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url5[] = {'h','t','t','p',':','/','/',0};
-static const WCHAR url6[] =
+static const WCHAR url4[] = {'h','t','t','p',':','/','/',0};
+static const WCHAR url5[] =
     {'f','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g',':','8','0','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url7[] =
+static const WCHAR url6[] =
     {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g',':','4','2','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url8[] =
+static const WCHAR url7[] =
     {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','s','i','t','e','/','a','b','o','u','t',
      '%','2','0','!','%','2','2','%','2','3','$','%','2','5','&','\'','(',')','*','+',',','-','.','/',':',';','%','3','C','=','%','3','E','?','@','%',
      '5','B','%','5','C','%','5','D','%','5','E','_','%','6','0','%','7','B','%','7','C','%','7','D','%','7','E',0};
-static const WCHAR url9[] =
+static const WCHAR url8[] =
     {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g',':','0','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url10[] =
+static const WCHAR url9[] =
     {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g',':','8','0','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url11[] =
+static const WCHAR url10[] =
     {'h','t','t','p','s',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
      '@','w','w','w','.','w','i','n','e','h','q','.','o','r','g',':','4','4','3','/','s','i','t','e','/','a','b','o','u','t','?','q','u','e','r','y',0};
-static const WCHAR url12[] =
+static const WCHAR url11[] =
     {'h','t','t','p',':','/','/','e','x','a','m','p','l','e','.','n','e','t','/','p','a','t','h','?','v','a','r','1','=','e','x','a','m','p','l','e','@','e','x','a','m','p','l','e','.','c','o','m','&','v','a','r','2','=','x','&','v','a','r','3','=','y', 0};
-static const WCHAR url13[] =
+static const WCHAR url12[] =
     {'h','t','t','p','s',':','/','/','t','o','o','l','s','.','g','o','o','g','l','e','.','c','o','m','/','s','e','r','v','i','c','e','/','u','p','d','a','t','e','2','?','w','=','3',':','B','x','D','H','o','W','y','8','e','z','M',0};
-static const WCHAR url14[] =
+static const WCHAR url13[] =
     {'h','t','t','p',':','/','/','w','i','n','e','h','q','.','o',' ','g','/','p','a','t','h',' ','w','i','t','h',' ','s','p','a','c','e','s',0};
-static const WCHAR url15[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','t','e','s','t',0};
+static const WCHAR url14[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','t','e','s','t',0};
 
 static const WCHAR url_k1[]  =
     {'h','t','t','p',':','/','/','u','s','e','r','n','a','m','e',':','p','a','s','s','w','o','r','d',
@@ -214,7 +211,7 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
     ok( len == 56, "expected len 56 got %u\n", len );
-    ok( !lstrcmpW( url, url3 ), "url doesn't match\n" );
+    ok( !lstrcmpW( url, url2 ), "url doesn't match\n" );
 
     /* valid password, NULL username */
     fill_url_components( &uc );
@@ -243,7 +240,7 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
     ok( len == 38, "expected len 38 got %u\n", len );
-    ok( !lstrcmpW( url, url4 ), "url doesn't match\n" );
+    ok( !lstrcmpW( url, url3 ), "url doesn't match\n" );
 
     /* empty username, empty password */
     fill_url_components( &uc );
@@ -254,7 +251,7 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
     ok( len == 56, "expected len 56 got %u\n", len );
-    ok( !lstrcmpW( url, url5 ), "url doesn't match\n" );
+    ok( !lstrcmpW( url, url4 ), "url doesn't match\n" );
 
     /* nScheme has lower precedence than lpszScheme */
     fill_url_components( &uc );
@@ -264,8 +261,8 @@ static void WinHttpCreateUrl_test( void )
     len = 256;
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
-    ok( len == lstrlenW( url6 ), "expected len %d got %u\n", lstrlenW( url6 ) + 1, len );
-    ok( !lstrcmpW( url, url6 ), "url doesn't match\n" );
+    ok( len == lstrlenW( url5 ), "expected len %d got %u\n", lstrlenW( url5 ) + 1, len );
+    ok( !lstrcmpW( url, url5 ), "url doesn't match\n" );
 
     /* non-standard port */
     uc.lpszScheme = http;
@@ -276,7 +273,7 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
     ok( len == 59, "expected len 59 got %u\n", len );
-    ok( !lstrcmpW( url, url7 ), "url doesn't match\n" );
+    ok( !lstrcmpW( url, url6 ), "url doesn't match\n" );
 
     /* escape extra info */
     fill_url_components( &uc );
@@ -287,7 +284,7 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, ICU_ESCAPE, url, &len );
     ok( ret, "expected success\n" );
     ok( len == 113, "expected len 113 got %u\n", len );
-    ok( !lstrcmpW( url, url8 ), "url doesn't match\n" );
+    ok( !lstrcmpW( url, url7 ), "url doesn't match\n" );
 
     /* NULL lpszScheme, 0 nScheme and nPort */
     fill_url_components( &uc );
@@ -300,7 +297,7 @@ static void WinHttpCreateUrl_test( void )
     ret = WinHttpCreateUrl( &uc, 0, url, &len );
     ok( ret, "expected success\n" );
     ok( len == 58, "expected len 58 got %u\n", len );
-    ok( !lstrcmpW( url, url9 ), "url doesn't match\n" );
+    ok( !lstrcmpW( url, url8 ), "url doesn't match\n" );
 
     HeapFree( GetProcessHeap(), 0, url );
 }
@@ -480,7 +477,7 @@ static void WinHttpCrackUrl_test( void )
     ok( uc.dwExtraInfoLength == 0, "unexpected extra info length: %u\n", uc.dwExtraInfoLength );
 
     reset_url_components( &uc );
-    ret = WinHttpCrackUrl( url5, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url4, 0, 0, &uc );
     ok( !ret, "WinHttpCrackUrl succeeded\n" );
 
     reset_url_components( &uc );
@@ -496,7 +493,7 @@ static void WinHttpCrackUrl_test( void )
     /* decoding without buffers */
     reset_url_components( &uc );
     SetLastError(0xdeadbeef);
-    ret = WinHttpCrackUrl( url8, 0, ICU_DECODE, &uc );
+    ret = WinHttpCrackUrl( url7, 0, ICU_DECODE, &uc );
     error = GetLastError();
     ok( !ret, "WinHttpCrackUrl succeeded\n" );
     ok( error == ERROR_INVALID_PARAMETER, "got %u, expected ERROR_INVALID_PARAMETER\n", error );
@@ -517,7 +514,7 @@ static void WinHttpCrackUrl_test( void )
     uc.dwExtraInfoLength = 40;
     path[0] = 0;
 
-    ret = WinHttpCrackUrl( url8, 0, ICU_DECODE, &uc );
+    ret = WinHttpCrackUrl( url7, 0, ICU_DECODE, &uc );
     ok( ret, "WinHttpCrackUrl failed %u\n", GetLastError() );
     ok( !memcmp( uc.lpszUrlPath + 11, escape, 21 * sizeof(WCHAR) ), "unexpected path\n" );
     ok( uc.dwUrlPathLength == 32, "unexpected path length %u\n", uc.dwUrlPathLength );
@@ -541,7 +538,7 @@ static void WinHttpCrackUrl_test( void )
     uc.dwExtraInfoLength = 20;
     path[0] = 0;
 
-    ret = WinHttpCrackUrl( url7, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url6, 0, 0, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( !memcmp( uc.lpszHostName, winehq, sizeof(winehq) ), "unexpected host name: %s\n", wine_dbgstr_w(uc.lpszHostName) );
     ok( uc.dwHostNameLength == 14, "unexpected host name length: %d\n", uc.dwHostNameLength );
@@ -549,17 +546,17 @@ static void WinHttpCrackUrl_test( void )
 
     /* decoding without buffers */
     reset_url_components( &uc );
-    ret = WinHttpCrackUrl( url9, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url8, 0, 0, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nPort == 0, "unexpected port: %u\n", uc.nPort );
 
     reset_url_components( &uc );
-    ret = WinHttpCrackUrl( url10, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url9, 0, 0, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nPort == 80, "unexpected port: %u\n", uc.nPort );
 
     reset_url_components( &uc );
-    ret = WinHttpCrackUrl( url11, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url10, 0, 0, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nPort == 443, "unexpected port: %u\n", uc.nPort );
 
@@ -578,19 +575,19 @@ static void WinHttpCrackUrl_test( void )
     ok( error == ERROR_WINHTTP_UNRECOGNIZED_SCHEME, "got %u, expected ERROR_WINHTTP_UNRECOGNIZED_SCHEME\n", error );
 
     reset_url_components( &uc );
-    ret = WinHttpCrackUrl( url12, 0, 0, &uc);
+    ret = WinHttpCrackUrl( url11, 0, 0, &uc);
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme\n" );
-    ok( uc.lpszScheme == url12,"unexpected scheme\n" );
+    ok( uc.lpszScheme == url11,"unexpected scheme\n" );
     ok( uc.dwSchemeLength == 4, "unexpected scheme length\n" );
     ok( uc.lpszUserName == NULL, "unexpected username\n" );
     ok( uc.lpszPassword == NULL, "unexpected password\n" );
-    ok( uc.lpszHostName == url12 + 7, "unexpected hostname\n" );
+    ok( uc.lpszHostName == url11 + 7, "unexpected hostname\n" );
     ok( uc.dwHostNameLength == 11, "unexpected hostname length\n" );
     ok( uc.nPort == 80, "unexpected port: %u\n", uc.nPort );
-    ok( uc.lpszUrlPath == url12 + 18, "unexpected path\n" );
+    ok( uc.lpszUrlPath == url11 + 18, "unexpected path\n" );
     ok( uc.dwUrlPathLength == 5, "unexpected path length\n" );
-    ok( uc.lpszExtraInfo == url12 + 23, "unexpected extra info\n" );
+    ok( uc.lpszExtraInfo == url11 + 23, "unexpected extra info\n" );
     ok( uc.dwExtraInfoLength == 39, "unexpected extra info length\n" );
 
     uc.lpszScheme = scheme;
@@ -606,7 +603,7 @@ static void WinHttpCrackUrl_test( void )
     uc.lpszExtraInfo = NULL;
     uc.dwExtraInfoLength = 0;
     uc.nPort = 0;
-    ret = WinHttpCrackUrl( url13, 0, ICU_DECODE, &uc );
+    ret = WinHttpCrackUrl( url12, 0, ICU_DECODE, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
 
     uc.lpszScheme = scheme;
@@ -622,7 +619,7 @@ static void WinHttpCrackUrl_test( void )
     uc.lpszExtraInfo = NULL;
     uc.dwExtraInfoLength = 0;
     uc.nPort = 0;
-    ret = WinHttpCrackUrl( url14, 0, ICU_ESCAPE|ICU_DECODE, &uc );
+    ret = WinHttpCrackUrl( url13, 0, ICU_ESCAPE|ICU_DECODE, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( !lstrcmpW( uc.lpszHostName, hostnameW ), "unexpected host name\n" );
     ok( !lstrcmpW( uc.lpszUrlPath, pathW ), "unexpected path\n" );
@@ -642,19 +639,19 @@ static void WinHttpCrackUrl_test( void )
     uc.dwUrlPathLength = ~0u;
     uc.lpszExtraInfo = NULL;
     uc.dwExtraInfoLength = ~0u;
-    ret = WinHttpCrackUrl( url15, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url14, 0, 0, &uc );
     ok( ret, "WinHttpCrackUrl failed le=%u\n", GetLastError() );
     ok( !uc.lpszScheme, "unexpected scheme %s\n", wine_dbgstr_w(uc.lpszScheme) );
     ok( !uc.dwSchemeLength, "unexpected length %u\n", uc.dwSchemeLength );
     ok( uc.nScheme == INTERNET_SCHEME_HTTP, "unexpected scheme %u\n", uc.nScheme );
-    ok( !lstrcmpW( uc.lpszHostName, url15 + 7 ), "unexpected hostname %s\n", wine_dbgstr_w(uc.lpszHostName) );
+    ok( !lstrcmpW( uc.lpszHostName, url14 + 7 ), "unexpected hostname %s\n", wine_dbgstr_w(uc.lpszHostName) );
     ok( uc.dwHostNameLength == 14, "unexpected length %u\n", uc.dwHostNameLength );
     ok( uc.nPort == 80, "unexpected port %u\n", uc.nPort );
     ok( !uc.lpszUserName, "unexpected username\n" );
     ok( !uc.dwUserNameLength, "unexpected length %u\n", uc.dwUserNameLength );
     ok( !uc.lpszPassword, "unexpected password\n" );
     ok( !uc.dwPasswordLength, "unexpected length %u\n", uc.dwPasswordLength );
-    ok( !lstrcmpW( uc.lpszUrlPath, url15 + 21 ), "unexpected path %s\n", wine_dbgstr_w(uc.lpszUrlPath) );
+    ok( !lstrcmpW( uc.lpszUrlPath, url14 + 21 ), "unexpected path %s\n", wine_dbgstr_w(uc.lpszUrlPath) );
     ok( uc.dwUrlPathLength == 5, "unexpected length %u\n", uc.dwUrlPathLength );
     ok( !uc.lpszExtraInfo[0], "unexpected extra info %s\n", wine_dbgstr_w(uc.lpszExtraInfo) );
     ok( uc.dwExtraInfoLength == 0, "unexpected length %u\n", uc.dwExtraInfoLength );
@@ -675,7 +672,7 @@ static void WinHttpCrackUrl_test( void )
     uc.lpszExtraInfo = NULL;
     uc.dwExtraInfoLength = 0;
     SetLastError( 0xdeadbeef );
-    ret = WinHttpCrackUrl( url15, 0, 0, &uc );
+    ret = WinHttpCrackUrl( url14, 0, 0, &uc );
     error = GetLastError();
     ok( !ret, "WinHttpCrackUrl succeeded\n" );
     ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
