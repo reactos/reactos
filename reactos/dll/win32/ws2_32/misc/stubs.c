@@ -930,39 +930,4 @@ BOOL EXPORT WSApSetPostRoutine(PVOID Routine)
     return FALSE;
 }
 
-/*
- * @unimplemented
- */
-INT
-EXPORT
-GetAddrInfoW(IN PCWSTR pszNodeName,
-             IN PCWSTR pszServiceName,
-             IN const ADDRINFOW *ptHints,
-             OUT PADDRINFOW *pptResult)
-{
-    UNIMPLEMENTED
-
-    WSASetLastError(EAI_FAIL);
-    return EAI_FAIL;
-}
-
-/*
- * @unimplemented
- */
-INT
-EXPORT
-GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
-             IN socklen_t SockaddrLength,
-             OUT PWCHAR pNodeBuffer,
-             IN DWORD NodeBufferSize,
-             OUT PWCHAR pServiceBuffer,
-             IN DWORD ServiceBufferSize,
-             IN INT Flags)
-{
-    UNIMPLEMENTED
-
-    WSASetLastError(EAI_FAIL);
-    return EAI_FAIL;
-}
-
 /* EOF */

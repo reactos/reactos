@@ -19,7 +19,8 @@ list(APPEND SOURCE
 
 add_library(ws2_32 SHARED
     ${SOURCE}
-    misc/async.c
+    wine/async.c
+    wine/socket.c
     ws2_32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
