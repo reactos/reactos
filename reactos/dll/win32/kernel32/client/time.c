@@ -62,7 +62,7 @@ FileTimeToDosDateTime(IN CONST FILETIME *lpFileTime,
                  ((TimeFields.Year - 1980) << 9);
     *lpFatTime = (TimeFields.Second >> 1) |
                  (TimeFields.Minute << 5) |
-                 (TimeFields.Hour << 16);
+                 (TimeFields.Hour << 11);
 
     return TRUE;
 }
