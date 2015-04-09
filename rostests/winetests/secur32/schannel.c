@@ -518,7 +518,7 @@ static void test_remote_cert(PCCERT_CONTEXT remote_cert)
         cert_cnt++;
     }
 
-    ok(cert_cnt == 2, "cert_cnt = %u\n", cert_cnt);
+    ok(cert_cnt == 3, "cert_cnt = %u\n", cert_cnt);
     ok(incl_remote, "context does not contain cert itself\n");
 }
 
@@ -534,7 +534,7 @@ static void init_cred(SCHANNEL_CRED *cred)
     cred->aphMappers = NULL;
     cred->cSupportedAlgs = 0;
     cred->palgSupportedAlgs = NULL;
-    cred->grbitEnabledProtocols = SP_PROT_SSL3_CLIENT;
+    cred->grbitEnabledProtocols = SP_PROT_TLS1_CLIENT;
     cred->dwMinimumCipherStrength = 0;
     cred->dwMaximumCipherStrength = 0;
     cred->dwSessionLifespan = 0;
@@ -686,7 +686,7 @@ static void test_communication(void)
     ok(status == SEC_E_OK, "AcquireCredentialsHandleA failed: %08x\n", status);
     if (status != SEC_E_OK) return;
 
-    test_supported_protocols(&cred_handle, SP_PROT_SSL3_CLIENT);
+    test_supported_protocols(&cred_handle, SP_PROT_TLS1_CLIENT);
 
     /* Initialize the connection */
     init_buffers(&buffers[0], 4, buf_size);
@@ -701,6 +701,19 @@ static void test_communication(void)
     buffers[1].cBuffers = 1;
     buffers[1].pBuffers[0].BufferType = SECBUFFER_TOKEN;
     buffers[0].pBuffers[0].cbBuffer = 1;
+    memset(buffers[1].pBuffers[0].pvBuffer, 0xfa, buf_size);
+    status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
+            ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
+            0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
+todo_wine
+    ok(status == SEC_E_INVALID_TOKEN, "Expected SEC_E_INVALID_TOKEN, got %08x\n", status);
+todo_wine
+    ok(buffers[0].pBuffers[0].cbBuffer == 0, "Output buffer size was not set to 0.\n");
+
+    buffers[1].cBuffers = 1;
+    buffers[1].pBuffers[0].BufferType = SECBUFFER_TOKEN;
+    buffers[0].pBuffers[0].cbBuffer = 1;
+    memset(buffers[1].pBuffers[0].pvBuffer, 0, buf_size);
     status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);
@@ -708,6 +721,7 @@ static void test_communication(void)
 todo_wine
     ok(buffers[0].pBuffers[0].cbBuffer == 0, "Output buffer size was not set to 0.\n");
 
+    buffers[0].pBuffers[0].cbBuffer = 0;
     status = pInitializeSecurityContextA(&cred_handle, &context, (SEC_CHAR *)"localhost",
             ISC_REQ_CONFIDENTIALITY|ISC_REQ_STREAM,
             0, 0, &buffers[1], 0, NULL, &buffers[0], &attrs, NULL);

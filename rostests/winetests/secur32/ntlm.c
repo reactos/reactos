@@ -1366,9 +1366,8 @@ START_TEST(ntlm)
     InitFunctionPtrs();
 
     if(pFreeCredentialsHandle && pDeleteSecurityContext &&
-       pDeleteSecurityContext && pAcquireCredentialsHandleA &&
-       pInitializeSecurityContextA && pCompleteAuthToken &&
-       pQuerySecurityPackageInfoA)
+       pAcquireCredentialsHandleA && pInitializeSecurityContextA &&
+       pCompleteAuthToken && pQuerySecurityPackageInfoA)
     {
         if(!testAcquireCredentialsHandle())
             goto cleanup;
