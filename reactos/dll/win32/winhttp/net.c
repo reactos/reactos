@@ -733,16 +733,8 @@ ULONG netconn_query_data_available( netconn_t *conn )
     if(!netconn_connected(conn))
         return 0;
 
-    if(conn->secure) {
+    if(conn->secure)
         return conn->peek_len;
-    }else {
-#ifdef FIONREAD
-        ULONG unread;
-
-        if(!ioctlsocket(conn->socket, FIONREAD, &unread))
-            return unread;
-#endif
-    }
 
     return 0;
 }

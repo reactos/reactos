@@ -209,19 +209,25 @@ typedef struct
     BOOL  read_chunked_size; /* chunk size remaining */
     DWORD read_pos;       /* current read position in read_buf */
     DWORD read_size;      /* valid data size in read_buf */
-    char  read_buf[4096]; /* buffer for already read but not returned data */
+    char  read_buf[8192]; /* buffer for already read but not returned data */
     header_t *headers;
     DWORD num_headers;
     WCHAR **accept_types;
     DWORD num_accept_types;
     struct authinfo *authinfo;
     struct authinfo *proxy_authinfo;
+    HANDLE task_wait;
+    HANDLE task_cancel;
+    HANDLE task_thread;
+    struct list task_queue;
+    CRITICAL_SECTION task_cs;
 } request_t;
 
 typedef struct _task_header_t task_header_t;
 
 struct _task_header_t
 {
+    struct list entry;
     request_t *request;
     void (*proc)( task_header_t * );
 };
@@ -298,6 +304,7 @@ BOOL set_server_for_hostname( connect_t *, LPCWSTR, INTERNET_PORT ) DECLSPEC_HID
 void destroy_authinfo( struct authinfo * ) DECLSPEC_HIDDEN;
 
 extern HRESULT WinHttpRequest_create( void ** ) DECLSPEC_HIDDEN;
+void release_typelib( void ) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc( SIZE_T size )
 {
