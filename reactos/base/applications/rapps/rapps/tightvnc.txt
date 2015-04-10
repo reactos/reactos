@@ -1,0 +1,13 @@
+[Section]
+Name = TightVNC
+Version = 2.7.10
+License = GPLv2
+Description = A free remote control software package.
+Size = 2.0 MB
+Category = 5
+URLSite = http://www.tightvnc.com/
+URLDownload = http://www.tightvnc.com/download/2.7.10/tightvnc-2.7.10-setup-32bit.msi
+CDPath = none
+
+[Section.0407]
+Description = Freies Fernbedienungsoftwarepaket.
