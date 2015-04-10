@@ -1420,7 +1420,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         if ((info->state.mode != MM_ISOTROPIC) && (info->state.mode != MM_ANISOTROPIC))
 	    break;
         if (!lpScaleWindowExtEx->xNum || !lpScaleWindowExtEx->xDenom ||
-            !lpScaleWindowExtEx->xNum || !lpScaleWindowExtEx->yDenom)
+            !lpScaleWindowExtEx->yNum || !lpScaleWindowExtEx->yDenom)
             break;
         info->state.wndExtX = MulDiv(info->state.wndExtX, lpScaleWindowExtEx->xNum,
                                lpScaleWindowExtEx->xDenom);
@@ -2292,6 +2292,7 @@ BOOL WINAPI EnumEnhMetaFile(
 	SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	return FALSE;
     }
+    info->state.mode = MM_TEXT;
     info->state.wndOrgX = 0;
     info->state.wndOrgY = 0;
     info->state.wndExtX = 1;
@@ -2342,71 +2343,69 @@ BOOL WINAPI EnumEnhMetaFile(
         old_arcdir = SetArcDirection(hdc, AD_COUNTERCLOCKWISE);
         old_polyfill = SetPolyFillMode(hdc, ALTERNATE);
         old_stretchblt = SetStretchBltMode(hdc, BLACKONWHITE);
-    }
 
-    info->state.mode = MM_TEXT;
+        if ( IS_WIN9X() )
+        {
+            /* Win95 leaves the vp/win ext/org info alone */
+            info->init_transform.eM11 = 1.0;
+            info->init_transform.eM12 = 0.0;
+            info->init_transform.eM21 = 0.0;
+            info->init_transform.eM22 = 1.0;
+            info->init_transform.eDx  = 0.0;
+            info->init_transform.eDy  = 0.0;
+        }
+        else
+        {
+            /* WinNT combines the vp/win ext/org info into a transform */
+            double xscale, yscale;
+            xscale = (double)vp_size.cx / (double)win_size.cx;
+            yscale = (double)vp_size.cy / (double)win_size.cy;
+            info->init_transform.eM11 = xscale;
+            info->init_transform.eM12 = 0.0;
+            info->init_transform.eM21 = 0.0;
+            info->init_transform.eM22 = yscale;
+            info->init_transform.eDx  = (double)vp_org.x - xscale * (double)win_org.x;
+            info->init_transform.eDy  = (double)vp_org.y - yscale * (double)win_org.y;
 
-    if ( IS_WIN9X() )
-    {
-        /* Win95 leaves the vp/win ext/org info alone */
-        info->init_transform.eM11 = 1.0;
-        info->init_transform.eM12 = 0.0;
-        info->init_transform.eM21 = 0.0;
-        info->init_transform.eM22 = 1.0;
-        info->init_transform.eDx  = 0.0;
-        info->init_transform.eDy  = 0.0;
-    }
-    else
-    {
-        /* WinNT combines the vp/win ext/org info into a transform */
-        double xscale, yscale;
-        xscale = (double)vp_size.cx / (double)win_size.cx;
-        yscale = (double)vp_size.cy / (double)win_size.cy;
-        info->init_transform.eM11 = xscale;
-        info->init_transform.eM12 = 0.0;
-        info->init_transform.eM21 = 0.0;
-        info->init_transform.eM22 = yscale;
-        info->init_transform.eDx  = (double)vp_org.x - xscale * (double)win_org.x;
-        info->init_transform.eDy  = (double)vp_org.y - yscale * (double)win_org.y;
+            CombineTransform(&info->init_transform, &savedXform, &info->init_transform);
+        }
 
-        CombineTransform(&info->init_transform, &savedXform, &info->init_transform);
-    }
+        if ( lpRect && WIDTH(emh->rclFrame) && HEIGHT(emh->rclFrame) )
+        {
+            double xSrcPixSize, ySrcPixSize, xscale, yscale;
+            XFORM xform;
 
-    if ( lpRect && WIDTH(emh->rclFrame) && HEIGHT(emh->rclFrame) )
-    {
-        double xSrcPixSize, ySrcPixSize, xscale, yscale;
-        XFORM xform;
+            TRACE("rect: %d,%d - %d,%d. rclFrame: %d,%d - %d,%d\n",
+               lpRect->left, lpRect->top, lpRect->right, lpRect->bottom,
+               emh->rclFrame.left, emh->rclFrame.top, emh->rclFrame.right,
+               emh->rclFrame.bottom);
 
-        TRACE("rect: %d,%d - %d,%d. rclFrame: %d,%d - %d,%d\n",
-           lpRect->left, lpRect->top, lpRect->right, lpRect->bottom,
-           emh->rclFrame.left, emh->rclFrame.top, emh->rclFrame.right,
-           emh->rclFrame.bottom);
+            xSrcPixSize = (double) emh->szlMillimeters.cx / emh->szlDevice.cx;
+            ySrcPixSize = (double) emh->szlMillimeters.cy / emh->szlDevice.cy;
+            xscale = (double) WIDTH(*lpRect) * 100.0 /
+                     WIDTH(emh->rclFrame) * xSrcPixSize;
+            yscale = (double) HEIGHT(*lpRect) * 100.0 /
+                     HEIGHT(emh->rclFrame) * ySrcPixSize;
+            TRACE("xscale = %f, yscale = %f\n", xscale, yscale);
 
-        xSrcPixSize = (double) emh->szlMillimeters.cx / emh->szlDevice.cx;
-        ySrcPixSize = (double) emh->szlMillimeters.cy / emh->szlDevice.cy;
-        xscale = (double) WIDTH(*lpRect) * 100.0 /
-                 WIDTH(emh->rclFrame) * xSrcPixSize;
-        yscale = (double) HEIGHT(*lpRect) * 100.0 /
-                 HEIGHT(emh->rclFrame) * ySrcPixSize;
-        TRACE("xscale = %f, yscale = %f\n", xscale, yscale);
+            xform.eM11 = xscale;
+            xform.eM12 = 0;
+            xform.eM21 = 0;
+            xform.eM22 = yscale;
+            xform.eDx = (double) lpRect->left - (double) WIDTH(*lpRect) / WIDTH(emh->rclFrame) * emh->rclFrame.left;
+            xform.eDy = (double) lpRect->top - (double) HEIGHT(*lpRect) / HEIGHT(emh->rclFrame) * emh->rclFrame.top;
 
-        xform.eM11 = xscale;
-        xform.eM12 = 0;
-        xform.eM21 = 0;
-        xform.eM22 = yscale;
-        xform.eDx = (double) lpRect->left - (double) WIDTH(*lpRect) / WIDTH(emh->rclFrame) * emh->rclFrame.left;
-        xform.eDy = (double) lpRect->top - (double) HEIGHT(*lpRect) / HEIGHT(emh->rclFrame) * emh->rclFrame.top;
+            CombineTransform(&info->init_transform, &xform, &info->init_transform);
+        }
 
-        CombineTransform(&info->init_transform, &xform, &info->init_transform);
-    }
-
-    /* WinNT resets the current vp/win org/ext */
-    if ( !IS_WIN9X() && hdc )
-    {
-        SetMapMode(hdc, MM_TEXT);
-        SetWindowOrgEx(hdc, 0, 0, NULL);
-        SetViewportOrgEx(hdc, 0, 0, NULL);
-        EMF_Update_MF_Xform(hdc, info);
+        /* WinNT resets the current vp/win org/ext */
+        if ( !IS_WIN9X() )
+        {
+            SetMapMode(hdc, MM_TEXT);
+            SetWindowOrgEx(hdc, 0, 0, NULL);
+            SetViewportOrgEx(hdc, 0, 0, NULL);
+            EMF_Update_MF_Xform(hdc, info);
+        }
     }
 
     ret = TRUE;
