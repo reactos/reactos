@@ -1,5 +1,5 @@
-# ReactOS WINE porting guide for 0.3
-# Update this file when you port a dll/program from WINE.
+# ReactOS WINE porting/syncing reference file
+# Update this file when you port/sync a dll/program from WINE.
 
 The ReactOS Project shares quite a bit of code with the WINE project.
 This document should provide a complete reference for all of the
@@ -12,12 +12,6 @@ and is based on WINE sources, check the latest Winehq CVS and see if
 it has been fixed there. If so, please submit a patch to
 ros-dev@reactos.org. Otherwise please send a patch to both
 wine-patches@winehq.com and ros-dev@reactos.org
-
-When porting a new DLL from Wine to ReactOS, please do the following steps
-- Create a new directory in dll/win32/ of the same name as the new Wine DLL
-- Add a new entry in dll/win32/win32.rbuild
-- Follow the guide "Update process for autosync DLLs" at the bottom of this file
-
 
 The following build tools are shared with Wine.
 
@@ -340,30 +334,3 @@ secur32 -
 
 ws2_32 -
   reactos/dll/win32/ws2_32/misc/async.c         # Synced to Wine-1.5.4
-
-Update process for autosync DLLs
-
-*** This process can only be done on Microsoft Windows ***
-- Download wineimport.cmd at svn://svn.reactos.org/project-tools/trunk/
-- Download cvs command line program and be sure to put it in your path
-  (available at http://ftp.gnu.org/non-gnu/cvs/binary/stable/x86-woe/ )
-- Download svn command line program and be sure to put it in your path
-  (available at http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=91 )
-- Download patch command line program and be sure to put it in your path
-  (available at http://gnuwin32.sourceforge.net/packages/patch.htm )
-- Optionally, download junction.exe and put it in your path
-  (available at http://www.sysinternals.com/Utilities/Junction.html )
-- Cd to the directory containing wineimport.cmd
-- Run
-  "wineimport.cmd fullprocessing {path_to_your_reactos_directory} {name_of_the_wine_dll}"
-- In case of error, you can
-  1) add missing definitions to ReactOS headers
-  2) fix {name_of_the_wine_dll}_ros.diff patch file, by removing outdated changes
-  3) or modify Wine code, by adding a {name_of_the_wine_dll}_ros.diff patch,
-     which will be applied after Wine source checkout
-     DO NOT DIRECTLY MODIFY WINE SOURCE CODE
-- Once Wine DLL compiles, install and run ReactOS and search for regressions
-- In case of regression, you can
-  1) Fix ReactOS code (not in the shared DLL)
-  2) or update the {name_of_the_wine_dll}_ros.diff patch file
-- Commit your changes with the "Autosyncing with Wine HEAD" commit message
