@@ -64,15 +64,15 @@ INT WINAPI IdnToNameprepUnicode(DWORD dwFlags, LPCWSTR lpUnicodeCharStr, INT cch
     }
 
     if(cchUnicodeChar == -1)
-        cchUnicodeChar = strlenW(lpUnicodeCharStr)+1;
+        cchUnicodeChar = (UINT)strlenW(lpUnicodeCharStr)+1;
     if(!cchUnicodeChar || (cchUnicodeChar==1 && lpUnicodeCharStr[0]==0)) {
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
 
-    for(label_start=0; label_start<cchUnicodeChar;) {
+    for(label_start=0; label_start<(UINT)cchUnicodeChar;) {
         ascii_only = TRUE;
-        for(i=label_start; i<cchUnicodeChar; i++) {
+        for(i=label_start; i<(UINT)cchUnicodeChar; i++) {
             ch = lpUnicodeCharStr[i];
 
             if(i!=cchUnicodeChar-1 && !ch) {
@@ -116,12 +116,12 @@ INT WINAPI IdnToNameprepUnicode(DWORD dwFlags, LPCWSTR lpUnicodeCharStr, INT cch
                 SetLastError(ERROR_INVALID_NAME);
                 return 0;
             }
-            if(label_end < cchUnicodeChar)
+            if(label_end < (UINT)cchUnicodeChar)
                 label_end++;
 
             if(!lpNameprepCharStr) {
                 out += label_end-label_start;
-            }else if(out+label_end-label_start <= cchNameprepChar) {
+            }else if(out+label_end-label_start <= (UINT)cchNameprepChar) {
                 memcpy(lpNameprepCharStr+out, lpUnicodeCharStr+label_start,
                         (label_end-label_start)*sizeof(WCHAR));
                 if(lpUnicodeCharStr[label_end-1] > 0x7f)
@@ -186,14 +186,14 @@ INT WINAPI IdnToNameprepUnicode(DWORD dwFlags, LPCWSTR lpUnicodeCharStr, INT cch
             return 0;
         }
 
-        if(label_end < cchUnicodeChar) {
+        if(label_end < (UINT)cchUnicodeChar) {
             norm_str[norm_len++] = lpUnicodeCharStr[label_end] ? '.' : 0;
             label_end++;
         }
 
         if(!lpNameprepCharStr) {
             out += norm_len;
-        }else if(out+norm_len <= cchNameprepChar) {
+        }else if(out+norm_len <= (UINT)cchNameprepChar) {
             memcpy(lpNameprepCharStr+out, norm_str, norm_len*sizeof(WCHAR));
             out += norm_len;
         }else {
