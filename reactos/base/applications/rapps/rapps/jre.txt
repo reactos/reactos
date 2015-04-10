@@ -11,3 +11,8 @@ CDPath = none
 
 [Section.0407]
 Description = Sie wollen Java Programme nutzen? Wenn ja, laden Sie die Java Runtime Environment herunter.
+
+[Section.0418]
+License = Licență Oracle pentru cod binar
+Description = Platformă necesară pentru aplicațiile Java.
+Size = 28,1 Mo

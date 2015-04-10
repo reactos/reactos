@@ -36,7 +36,7 @@ Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsług�
 
 [Section.0418]
 License = Gratuită
-Description = Un navigator web foarte mic și rapid compatibil cu HTML 3.2.
+Description = Navigator web foarte mic și rapid, compatibil cu HTML 3.2.
 Size = 1010,89 ko
 
 [Section.041f]

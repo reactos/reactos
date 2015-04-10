@@ -32,7 +32,7 @@ Description = Maakt het mogelijk om Windows gedeelde printers te gebruiken met R
 Description = Narzędzie pozwalające na dostęp z poziomu ReactOSa do współdzielonych folderów/drukarek Windows.
 
 [Section.0418]
-Description = Acest instrument permite accesarea în ReactOS a dosarelor/imprimantelor partajate din Windows.
+Description = Instrument care permite accesarea în ReactOS a dosarelor și imprimantelor partajate din Windows.
 Size = 2,13 Mo
 
 [Section.041f]

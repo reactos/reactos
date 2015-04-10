@@ -27,7 +27,7 @@ Description = QB64 to kompilator BASIC zdolny do kompilacji własnego kodu źró
 
 [Section.0418]
 License = Gratuită
-Description = QB64 este un compilator BASIC auto-compilabil pentru Windows, Linux și Mac OS X, conceput pentru a fi compatibil cu Microsoft QBasic și Microsoft QuickBASIC. Este necesar un utilitar de derarhivare de tip ZIP.
+Description = Compilator BASIC auto-compilabil pentru Windows, Linux și Mac OS X, conceput pentru a fi compatibil cu Microsoft QBasic și Microsoft QuickBASIC. Este necesar un utilitar de derarhivare de tip ZIP.
 Size = 39,0 Mo
 
 [Section.041f]

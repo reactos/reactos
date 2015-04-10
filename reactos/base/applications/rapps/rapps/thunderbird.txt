@@ -49,7 +49,7 @@ URLSite = https://www.mozilla.org/pl/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.5.0/win32/pl/Thunderbird%20Setup%2031.5.0.exe
 
 [Section.0418]
-Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
+Description = Client popular de poștă electronică, cu surse deschise.
 Size = 25,61 Mo
 URLSite = https://www.mozilla.org/ro/thunderbird/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/31.5.0/win32/ro/Thunderbird%20Setup%2031.5.0.exe

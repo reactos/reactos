@@ -38,8 +38,8 @@ License = Nieznana
 Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2008 SP1. Zawiera: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 
 [Section.0418]
-License = Necunoscută
-Description = Microsoft Visual Studio 2008 SP1 Runtime. Conține: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2008. Conține: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
 Size = 4,27 Mo
 
 [Section.041f]

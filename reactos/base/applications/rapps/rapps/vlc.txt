@@ -33,7 +33,7 @@ Description = Een mediaspeler.
 Description = Odtwarzacz multimediów.
 
 [Section.0418]
-Description = Lector multimedia.
+Description = Lector multimedia complet, gratuit cu surse deschise și codecuri încorporate.
 Size = 27,19 Mo
 
 [Section.0419]

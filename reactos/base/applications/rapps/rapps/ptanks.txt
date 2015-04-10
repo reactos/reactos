@@ -27,7 +27,7 @@ Description = Szybka gra artyleryjska
 
 [Section.0418]
 License = Versiune de evaluare
-Description = Cel mai rapid joc de artilerie pe care-l veți juca vreodată.
+Description = Joc rapid de artilerie.
 Size = 2,86 Mo
 
 [Section.041f]

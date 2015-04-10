@@ -34,7 +34,8 @@ License = Ongekend
 License = Nieznana
 
 [Section.0418]
-License = Necunoscută
+License = Nespecificată
+Description = Program de conversie și difuziune de conținut audio și video în formaturi Windows Media.
 Size = 9,46 Mo
 
 [Section.041b]

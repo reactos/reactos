@@ -46,7 +46,8 @@ Size = 51.15 MB
 URLDownload = http://download.microsoft.com/download/5/B/A/5BAB0B5A-706D-444C-B90A-1D97DB4C43A8/ExcelViewer.exe
 
 [Section.0418]
-License = Necunoscută
+License = Nespecificată
+Description = Aplicație de lectură a foilor de calcul de tip Microsoft Office Excel (*.xls)
 Size = 51,14 Mo
 URLDownload = http://download.microsoft.com/download/D/D/2/DD28D077-97F3-47C0-9389-0B987918888B/ExcelViewer.exe
 

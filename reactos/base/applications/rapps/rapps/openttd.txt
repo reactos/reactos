@@ -32,7 +32,7 @@ Description = Open-bron kloon van de "Transport Tycoon Deluxe" spelletjesmotor. 
 Description = Otwarty klon silnika gry "Transport Tycoon Deluxe". Do poprawnego działania potrzebna jest kopia gry Transport Tycoon.
 
 [Section.0418]
-Description = Clona (cu surse deschise a) motorului de joc "Transport Tycoon Deluxe". Este necesară o copie a jocului Transport Tycoon.
+Description = Clona (cu surse deschise a) motorului de joc „Transport Tycoon Deluxe”. Ar putea fi necesară o copie a jocului Transport Tycoon.
 Size = 7,0 Mo
 
 [Section.041f]

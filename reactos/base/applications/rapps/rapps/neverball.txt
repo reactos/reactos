@@ -15,5 +15,9 @@ CDPath = none
 [Section.0407]
 Description = Neigen Sie den Boden, um einen Ball durch einen Hindernisparcours zu rollen, bevor die Zeit abläuft. Neverball ist teils ein Puzzle-Spiel, teils ein Action-Spiel und ganz ein Test der Geschicklichkeit. Zum extrahieren wird 7-Zip oder ähnlich benötigt.
 
+[Section.0418]
+Description = Joc în parte de tip enigmă, în parte de tip acțiune, și un test de aptitudine per total. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 72,2 Mo
+
 [Section.0a]
 Description = Gira el suelo para mover una bola a través de una pista de obstáculos a contra reloj. Neverball es mitad puzle, mitad juego de acción y toda una prueba de habilidad. Se necesita una herramienta como 7-Zip para extraer el juego.

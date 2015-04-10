@@ -38,7 +38,7 @@ Description = Edytor tekstu.
 
 [Section.0418]
 License = Gratuită
-Description = Un editor de text.
+Description = Editor ușor de text.
 Size = 4,50 Mo
 
 [Section.0419]

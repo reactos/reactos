@@ -38,8 +38,8 @@ License = Nieznana
 Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2012 Update 4. Zawiera: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
 
 [Section.0418]
-License = Necunoscută
-Description = Microsoft Visual Studio 2012 Runtime Update 4. Conține: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2012. Conține: atl110.dll, mfc110.dll, mfc90u.dll, mfcm110.dll, mfcm90u.dll, msdia110.dll, msvcm110.dll, msvcp110.dll, msvcr110.dll, vcomp110.dll.
 Size = 6,25 Mo
 
 [Section.041f]

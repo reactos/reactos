@@ -48,9 +48,9 @@ License = Nieznana
 Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
 
 [Section.0418]
-Name = Modul pilot SoundBlaster pentru VMWare
+Name = Modúl-pilot SoundBlaster pentru VMWare
 License = Nespecificată
-Description = Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
+Description = Modúl-pilot audio pentru dispozitive compatibile cu SoundBlaster. Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
 Size = 2,22 Mo
 
 [Section.0419]

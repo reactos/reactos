@@ -36,7 +36,7 @@ URLSite = http://www.microsoft.com/pl-PL/download/details.aspx?id=1639
 
 [Section.0418]
 License = Nespecificată
-Description = Platforma Microsoft .NET versiunea 2.0 - Service Pack 2.
+Description = Pachet necesar pentru execuția în Windows a aplicațiilor gestionate, scrise într-un limbaj ca C#.
 Size = 23,84 Mo
 
 [Section.041f]

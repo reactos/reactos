@@ -15,6 +15,10 @@ CDPath = none
 [Section.0407]
 Description = Kostenloses und quelloffenes 2D-CAD Programm für Windows, Linux und OS X.
 
+[Section.0418]
+Description = Aplicație 2D-CAD gratuită, cu surse deschise, pentru Windows, Linux, și OS X.
+Size = 25,5 Mo
+
 [Section.0a]
 Description = Un editor CAD (de diseño asistido) 2D para Windows, Linux y OS X.
 

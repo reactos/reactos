@@ -26,7 +26,7 @@ Description = SuperTux è un gioco open-source gratuito in 2D.
 Description = SuperTux to darmowa dwu wymiarowa gra platformowa OpenSource.
 
 [Section.0418]
-Description = SuperTux este un joc gratuit, cu surse deschise, pe platformă bi-dimensională.
+Description = Joc 2D gratuit, cu surse deschise.
 Size = 7,3 Mo
 
 [Section.041f]

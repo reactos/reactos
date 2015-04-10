@@ -35,7 +35,7 @@ Mogą one zostać oparte o MySQL, SQLite, MS SQL Server, MS Access, lub Oracle.
 
 [Section.0418]
 License = Gratuită
-Description = Abyss Web Server permite găzduirea de pagini Web. Oferă conexiuni securizate SSL/TLS (HTTPS) și multe alte tehnologii Web. Poate executa aplicații Web avansate în PHP, Perl, Python, ASP, ASP.NET și Ruby on Rails, ce legături la diverse baze de date externe.
+Description = Program pentru găzduirea de situri web. Oferă conexiuni securizate SSL/TLS (HTTPS) și multe alte tehnologii Web. Poate executa aplicații Web avansate în PHP, Perl, Python, ASP, ASP.NET și Ruby on Rails, ce legături la diverse baze de date externe.
 Size = 2,09 Mo
 
 [Section.041f]

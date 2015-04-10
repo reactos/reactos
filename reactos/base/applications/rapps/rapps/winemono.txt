@@ -29,7 +29,7 @@ Description = Wine Mono .NET Framework
 Description = Wine Mono .NET Framework
 
 [Section.0418]
-Description = Platforma Wine Mono .NET
+Description = Reimplementara gratuită a platformei .NET utilizată de bibliotecile Wine.
 Size = 53,7 Mo
 
 [Section.041f]

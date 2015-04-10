@@ -32,7 +32,7 @@ Description = Pakiet Dystrybucyjny.
 
 [Section.0418]
 License = Nespecificată
-Description = Pachet redistributabl.
+Description = Pachet necesar pentru execuția în Windows a aplicațiilor gestionate, scrise într-un limbaj ca C#.
 Size = 22,42 Mo
 
 [Section.041f]

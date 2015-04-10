@@ -26,7 +26,7 @@ Description = Cromo B.S.U. è sparatutto spaziale.
 Description = Chromium B.S.U to gra w stylu Arcade, z widokiem z góry.
 
 [Section.0418]
-Description = Chromium B.S.U. este un joc de vânătoare în spațiul cosmic (arcadă 2D).
+Description = Joc de tip arcadă de vânătoare în spațiul cosmic.
 Size = 2,3 Mo
 
 [Section.041f]

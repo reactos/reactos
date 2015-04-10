@@ -15,6 +15,11 @@ CDPath = none
 [Section.0407]
 Description = Media Player welcher Erweiterbarkeit mit Plug-Ins und Skins ermöglicht und Musikvisualisierung, Playlist und Medienbibliothek bietet. Er wird durch eine große Online-Community unterstützt.
 
+[Section.0418]
+License = Gratuită, cu funcționalități opționale negratuite
+Description = Lector media cu diverse extensii, având o largă comunitate de utilizatori.
+Size = 14,3 Mo
+
 [Section.041f]
 Version = 5.666 Eksiksiz
 License = Ücretsiz Seçkin

@@ -52,7 +52,7 @@ URLSite = http://www.openoffice.org/pl/
 URLDownload = http://archive.services.openoffice.org/pub/openoffice-archive/localized/pl/2.4.2/OOo_2.4.2_Win32Intel_install_pl.exe
 
 [Section.0418]
-Description = Suita de aplicații de birotică cu surse deschise.
+Description = Suită de aplicații de birotică, cu surse deschise.
 Size = 113 Mo
 URLSite = http://www.openoffice.org/ro/
 

@@ -32,7 +32,7 @@ Description = Tekstverwerker.
 Description = Edytor tekstu.
 
 [Section.0418]
-Description = Procesor de text.
+Description = Procesor de text, rapid, cu surse deschise.
 Size = 5,64 Mo
 
 [Section.041f]

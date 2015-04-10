@@ -60,7 +60,7 @@ URLSite = http://www.mozilla.org/pl/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/36.0.1/win32/pl/Firefox%20Setup%2036.0.1.exe
 
 [Section.0418]
-Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
+Description = Navigator web popular. Gratuit, cu surse deschise, creat de o comunitate globală.
 Size = 38,11 Mo
 URLSite = http://www.mozilla.org/ro/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/36.0.1/win32/ro/Firefox%20Setup%2036.0.1.exe

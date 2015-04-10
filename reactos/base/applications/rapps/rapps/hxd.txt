@@ -31,7 +31,7 @@ Description = Un buon editor hexadecimale. Necessita 7-Zip o un programma simile
 
 [Section.0418]
 License = Gratuită
-Description = Un bun editor hexazecimal. E necesar un utilitar de dezarhivare de tip ZIP.
+Description = Editor hexazecimal. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 859 ko
 URLDownload = http://mh-nexus.de/downloads/HxDSetupROM.zip
 

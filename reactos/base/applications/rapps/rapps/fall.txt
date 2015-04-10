@@ -11,3 +11,7 @@ CDPath = none
 
 [Section.0407]
 Description = Pinguine fallen von einem Eisberg herunter und man muss sie auf sicheres Land befördern.
+
+[Section.0418]
+Description = Joc cu pinguini care cad de pe aisberg, iar jucătorul trebuie să-i salte pe docuri.
+Size = 371 ko

@@ -11,3 +11,8 @@ CDPath = none
 
 [Section.0407]
 Description = Sehr gutes Bereinigungswerkzeug für den PC.
+
+[Section.0418]
+License = Gratuită
+Description = Utilitar pentru mentenanța ordinii în configurația sistemului.
+Size = 5,1 Mo

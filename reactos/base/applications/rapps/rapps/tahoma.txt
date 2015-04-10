@@ -36,7 +36,7 @@ Description = Tahoma lettertypes gebruikt door een aantal programma's (Steam). B
 Description = Pakiet Czcionki Tahoma wymagany przez niektóre programy (np. Steam). Zawiera: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.0418]
-License = Necunoscută
+License = Nespecificată
 Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.ttf, Tahomabd.ttf.
 Size = 305,12 ko
 

@@ -32,7 +32,7 @@ Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and and
 Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, i innych plików archiwizacyjnych.
 
 [Section.0418]
-Description = Un utilitar de arhivare a fișierelor, compatibil cu 7zip, zip, tar, rar și multe alte formate de arhive.
+Description = Utilitar de arhivare a fișierelor, compatibil cu 7zip, zip, tar, rar și multe alte formate de arhive.
 Size = 1,14 Mo
 
 [Section.0419]

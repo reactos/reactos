@@ -38,8 +38,8 @@ License = Nieznana
 Description = Biblioteki uruchomieniowe Microsoft Visual Basic 6. Zawiera: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 
 [Section.0418]
-License = Necunoscută
-Description = Microsoft Visual Basic 6 Runtime. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Basic 6. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 Size = 1,02 Mo
 
 [Section.041f]

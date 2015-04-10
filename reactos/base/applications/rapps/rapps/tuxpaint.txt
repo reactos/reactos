@@ -35,7 +35,7 @@ Description = Een open-bron grafische ontwerker voor kinderen.
 Description = Otwarty program graficzny przeznaczony głównie dla dzieci.
 
 [Section.0418]
-Description = Un editor grafic bitmap, adresat copiilor.
+Description = Editor grafic bitmap, adresat copiilor.
 Size = 13,5 Mo
 
 [Section.0419]

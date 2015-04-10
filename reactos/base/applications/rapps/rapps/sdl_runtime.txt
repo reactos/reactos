@@ -37,7 +37,7 @@ Name = Biblioteka uruchomieniowa Simple Direct Media Layer (SDL)
 Description = Wymagana przez wiele gier (głównie o otwartym źródle). Do jej rozpakowania potrzebny jest program 7-Zip lub podobny.
 
 [Section.0418]
-Description = Necesar pentru execuția multor jocuri (cu surse deschise). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
+Description = Necesar pentru execuția multor jocuri (cu surse deschise). Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 136,67 ko
 
 [Section.041f]

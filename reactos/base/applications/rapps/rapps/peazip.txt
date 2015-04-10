@@ -25,7 +25,7 @@ Description = PeaZip è un manager di file e archivi gratis, multipiattaforma e 
 PeaZip to darmowy, wieloplatformowy menedżer plików i archiwów, o otwartym źródle. Obsługuje ponad 150 formatów archiwów.
 
 [Section.0418]
-Description = PeaZip este un gestionar de fișiere și arhive gratuit, multi-platformă, cu sursă deschisă. Recunoaște peste 150 tipuri de arhive.
+Description = Gestionar de fișiere și arhivare gratuit, multiplatformă, cu surse deschise. Recunoaște peste 150 tipuri de arhive.
 Size = 5,9 Mo
 
 [Section.041f]

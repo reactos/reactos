@@ -20,7 +20,7 @@ Description = Un editor de texto plano de código abierto. Se diseñó para ser 
 Description = Kleiner, schneller und quelloffener Text Editor. 
 
 [Section.0418]
-Description = AkelPad - editor de text simplu. Este un program cu sursă deschisă, conceput pentru a fi mic și rapid.
+Description = Editor simplu de text, cu surse deschise, conceput pentru a fi mic și rapid.
 Size = 1,11 Mo
 
 [Section.0419]

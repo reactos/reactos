@@ -11,3 +11,7 @@ CDPath = none
 
 [Section.0407]
 Description = Freies Fernbedienungsoftwarepaket.
+
+[Section.0418]
+Description = Program gratuit de control la distanță.
+Size = 2,0 Mo

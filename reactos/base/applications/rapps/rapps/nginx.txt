@@ -11,3 +11,8 @@ CDPath = none
 
 [Section.0407]
 Description = HTTP- und Reverse Proxy Server, sowie Mail Proxy Server, erstellt von Igor Sysoev.
+
+[Section.0418]
+License = FreeBSD
+Description = Server HTTP, cu funcționalități de mandatar-invers (reverse proxy) și mandatar poștal, creat de Igor Sysoev.
+Size = 1,2 Mo

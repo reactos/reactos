@@ -38,7 +38,7 @@ URLSite = http://store.steampowered.com/?l=polish
 
 [Section.0418]
 License = Gratuită
-Description = Platforma de joc Steam, utilizată de multe jocuri în zilele de astăzi.
+Description = Platformă populară de distribuție a jocurilor și rețea de socializare. Include mecanisme de gestiune a drepturilor de autor (DRM).
 Size = 1,59 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 

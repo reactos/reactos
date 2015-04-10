@@ -53,7 +53,7 @@ License = Nieznana
 Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
 
 [Section.0418]
-Name = Modul pilot AC97 pentru VirtualBox
+Name = Modúl-pilot AC97 pentru VirtualBox
 License = Nespecificată
 Description = Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
 Size = 185,5 ko

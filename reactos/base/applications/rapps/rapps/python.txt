@@ -32,7 +32,7 @@ Description = Een opmerkelijk krachtige dynamische programmeertaal.
 Description = Potęży i dynamiczny język programowania.
 
 [Section.0418]
-Description = Un limbaj de programare dinamic și puternic.
+Description = Limbaj de programare dinamic și puternic.
 Size = 27,4 Mo
 
 [Section.041f]

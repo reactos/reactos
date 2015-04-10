@@ -11,3 +11,7 @@ CDPath = none
 
 [Section.0407]
 Description = Ermöglicht den Zugriff auf ReiserFS Partitionen unter Windows Systemen.
+
+[Section.0418]
+Description = Utilitar pentru accesarea de partiții ReiserFS din sistemul Windows.
+Size = 54 ko

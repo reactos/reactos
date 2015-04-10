@@ -11,3 +11,7 @@ CDPath = none
 
 [Section.0407]
 Description = Extrem schneller, erweiterbarer und dennoch kleiner Web Browser basierend auf der Gecko Layout Engine.
+
+[Section.0418]
+Description = Navigator web extrem de rapid, particularizabil, și totuși ușor, bazat pe motorul de afișare Gecko.
+Size = 26,1 Mo

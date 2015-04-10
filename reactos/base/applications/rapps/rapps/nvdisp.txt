@@ -13,3 +13,9 @@ CDPath = none
 Name = NVidia Display Treiber
 License = Unbekannt
 Description = Display Treiber für RIVA TNT2, GeForce/Quadro 1/2/3/4 Karten von NVidia.
+
+[Section.0418]
+Name = Modúl-pilot video pentru NVidia
+License = Nespecificată
+Description = Modúl-pilot video pentru plăcile grafice RIVA TNT2, GeForce/Quadro 1/2/3/4.
+Size = 18,5 Mo

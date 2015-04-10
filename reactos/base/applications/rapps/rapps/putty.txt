@@ -32,7 +32,7 @@ Description = Een gratis SSH, Telnet, rlogin en pure TCP afnemer.
 Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz bezpośrednie TCP.
 
 [Section.0418]
-Description = Un client gratuit de SSH, Telnet, rlogin, și TCP brut.
+Description = Client gratuit de SSH, Telnet, rlogin, și TCP brut.
 Size = 1,84 Mo
 
 [Section.041f]

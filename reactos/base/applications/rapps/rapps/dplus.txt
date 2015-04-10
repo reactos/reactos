@@ -23,7 +23,7 @@ License = GPL versione 3
 Description = DPlus è un web browser grafico con un accenno alla sicurezza, le prestazioni e portabilità. è basata su Dillo ed è diviso dal progetto Dillo-Win32.
 
 [Section.0418]
-Description = DPlus este un navigator web cu accent pe securitate, performanță și portabilitate. Este bazat pe Dillo și este preluat din proiectul Dillo-Win32.
+Description = Navigator web cu accent pe securitate, performanță, și portabilitate. Este bazat pe Dillo și este preluat din proiectul Dillo-Win32.
 Size = 1,36 Mo
 
 [Section.041f]

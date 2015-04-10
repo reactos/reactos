@@ -28,7 +28,7 @@ Description = Darmowe oprogramowanie do nagrywania CD/DVD. Po zainstalowaniu, mo
 
 [Section.0418]
 License = Gratuită
-Description = Un program de înscriere CD/DVD directă. Odată instalat, puteți utiliza CD/DVD ca memorie USB sau disc dur detașabil. Pe lângă aceasta, veți putea scrie pe CD/DVD inscripționate cu sistem de fișiere UDF. Se pot de asemenea citi discuri UDF create cu alte programe. (Microsoft DVD-ROM, discuri RW inscripționate cu Ahead InCD). Este necesar un program de decompresie ZIP pentru a-l instala.
+Description = Program de înscriere CD/DVD directă. Odată instalat, puteți utiliza CD/DVD ca memorie USB sau disc dur detașabil. Pe lângă aceasta, veți putea scrie pe CD/DVD inscripționate cu sistem de fișiere UDF. Se pot de asemenea citi discuri UDF create cu alte programe. (Microsoft DVD-ROM, discuri RW inscripționate cu Ahead InCD). Este necesar un program de decompresie ZIP pentru a-l instala.
 Size = 1,2 Mo
 
 [Section.0419]

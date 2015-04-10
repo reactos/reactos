@@ -27,7 +27,7 @@ Description = Un ambiente di sviluppo integrato (IDE) cross-platform che consent
 
 [Section.0418]
 License = GPL, LGPL modificată
-Description = Un mediu integrat de dezvoltare (IDE) multi-platformă care vă permite crearea de programe Object Pascal, atât vizuale (GUI) cât și ne-vizuale, și utilizează compilatorul Free Pascal pentru a genera executabile.
+Description = Mediu integrat de dezvoltare (IDE) multiplatformă care vă permite crearea de programe Object Pascal. Pentru compilarea proiectelor este utilizat compilatorul Free Pascal.
 Size = 107 Mo
 
 [Section.041f]

@@ -16,6 +16,10 @@ CDPath = none
 [Section.0407]
 Description = Editor für Vektorgrafiken, lizensiert unter der GNU General Public License.
 
+[Section.0418]
+Description = Editor de grafică vectorială oferit sub Licența Publică Generală GNU.
+Size = 33 Mo
+
 [Section.0a]
 Description = Un editor de gráficos vectoriales bajo la licencia GNU GPL.
 

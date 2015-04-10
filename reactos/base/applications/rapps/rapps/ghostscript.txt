@@ -19,7 +19,7 @@ Description = Offener Interpreter für die PostScript Sprache und PDF.
 Description = Un intérprete libre para el lenguaje PostScript y PDF.
 
 [Section.0418]
-Description = Un interpretor pentru limbajul PostScript și pentru PDF.
+Description = Interpretor pentru limbajul PostScript și pentru PDF.
 Size = 12,65 Mo
 
 [Section.041f]

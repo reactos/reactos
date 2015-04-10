@@ -30,7 +30,7 @@ Description = Pakiet czcionek Mozilla Fira Font, zawiera czcionki Mono i Sans. W
 
 [Section.0418]
 License = Nespecificată
-Description = Pachetul Mozilla Fira Font, include fonturile Mono și Sans. Dezarhivați în dosarul ReactOS.
+Description = Pachet care include fonturi Mono și Sans. Dezarhivați în dosarul ReactOS.
 Size = 2,36 Mo
 
 [Section.041f]

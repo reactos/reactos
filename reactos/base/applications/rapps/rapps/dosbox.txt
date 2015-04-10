@@ -29,7 +29,7 @@ Description = DOSBox è un emulatore DOS.
 Description = DOSBox - emulator DOSa.
 
 [Section.0418]
-Description = DOSBox este un emulator DOS.
+Description = Emulator DOS, cu surse deschise.
 Size = 1,38 Mo
 
 [Section.041f]

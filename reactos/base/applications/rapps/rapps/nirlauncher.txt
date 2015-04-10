@@ -24,7 +24,7 @@ Description = Un paquete con más de 180 utilidades.
 
 [Section.0418]
 Licence = Gratuită
-Description = Un pachet cu peste 180 de utilitare.
+Description = Pachet cu peste 180 de utilitare.
 Size = 20,53 Mo
 
 [Section.041f]

@@ -23,7 +23,7 @@ Description = Un eBook Reader. Legge i formati fb2, fbz, txt, epub, html, doc, d
 Description = Czytnik eBooków. Obsługuje formaty: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Obsługiwane są także pliki w archivach ZIP i GZ.
 
 [Section.0418]
-Description = Un cititor de cărți electronice. Poate citi fișiere de tip: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Include suport pentru arhive ZIP și GZ.
+Description = Lector de cărți electronice. Poate citi fișiere de tip: fb2, fbz, txt, epub, html, doc, docx, odt, rtf, mobi, prc (PalmDoc), tcr. Include suport pentru arhive ZIP și GZ.
 Size = 4,56 Mo
 
 [Section.041f]

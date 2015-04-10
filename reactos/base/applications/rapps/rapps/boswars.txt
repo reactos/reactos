@@ -26,7 +26,7 @@ Description = Bos Wars è un gioco futuristico di strategia in tempo reale. Per 
 Description = Bos Wars to futurystyczna gra strategiczna czasu rzeczywistego. Aby uruchomić grę, zainstaluj Microsoft Visual C++ 2008 runtime.
 
 [Section.0418]
-Description = Bos Wars e o strategie în timp real, futuristă. Pentru a porni jocul, instalați Microsoft Visual C++ 2008 Runtime.
+Description = Joc de strategie futurist, în timp real. Necesită „Microsoft Visual C++ 2008 SP1 Redistributable”.
 Size = 62,3 Mo
 
 [Section.041f]

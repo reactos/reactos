@@ -50,7 +50,7 @@ Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez cz�
 
 [Section.0418]
 License = Nespecificată
-Description = Modul logic necesar unor aplicații. Conține: comctl32.ocx, mscomctl.ocx, advpack.dll.
+Description = Modúl logic necesar unor aplicații. Conține: comctl32.ocx, mscomctl.ocx, advpack.dll.
 Size = 913,73 ko
 
 [Section.041f]

@@ -29,7 +29,7 @@ Description = 32-bitowy port GNU Midnight Commander dla Windows.
 
 [Section.0418]
 Version = Versiunea 186 (4.8.12)
-Description = GNU Midnight Commander pentru Windows pe 32-biți.
+Description = Portarea Windows a programului GNU Midnight Commander pe 32-biți.
 Size = 2,35 Mo
 
 [Section.041f]

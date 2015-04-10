@@ -38,8 +38,8 @@ License = Nieznana
 Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2010 SP1. Zawiera: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 
 [Section.0418]
-License = Necunoscută
-Description = Microsoft Visual Studio 2010 Runtime SP1. Conține: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2010. Conține: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
 Size = 8,57 Mo
 
 [Section.041f]

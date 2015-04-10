@@ -15,6 +15,11 @@ CDPath = none
 [Section.0407]
 Description = Anwendung, welche MD5 Checksummen generiert und verifiziert.
 
+[Section.0418]
+License = Gratuită
+Description = O aplicație care generează și verifică sume de control md5.
+Size = 452 ko
+
 [Section.041f]
 License = Ücretsiz
 Description = MD5summer, md5 sağlama toplamlarını oluşturan ve doğrulayan, Microsoft Windows için bir uygulamadır.

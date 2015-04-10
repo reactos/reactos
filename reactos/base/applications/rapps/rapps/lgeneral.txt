@@ -32,7 +32,7 @@ Description = Panzer General kloon, gebruikt SDL.
 Description = Klon gry Panzer General napisany przy użyciu biblioteki SDL.
 
 [Section.0418]
-Description = Clonă Panzer General utilizând bibliotecile SDL.
+Description = Clonă a jocului „Panzer General”. Utilizează bibliotecile SDL.
 Size = 1,92 Mo
 
 [Section.041f]

@@ -32,7 +32,7 @@ Description = Open-bron VNC afnemer/aanbieder.
 Description = Otwarty klient/serwer VNC.
 
 [Section.0418]
-Description = Client/server VNC (cu surse deschise).
+Description = Sistem client/server computațional de rețea virtuală (VNC) cu surse deschise.
 Size = 3,24 Mo
 
 [Section.041f]

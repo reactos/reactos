@@ -27,7 +27,7 @@ Description = Resource Hacker to darmowe narzędzie do podglądu, modyfikacji, z
 
 [Section.0418]
 License = Gratuită
-Description = Resource Hacker este un utilitar gratuit pentru inspectarea, modificarea, redenumirea, adăugarea, ștergerea și extragerea resurselor din fișierele resursă (*.res) și fișierele executabile pe 32 și 64 de biți pentru Windows.
+Description = Utilitar gratuit pentru inspectarea, modificarea, redenumirea, adăugarea, ștergerea și extragerea resurselor din fișierele resursă (*.res) și fișierele executabile pe 32 și 64 de biți pentru Windows.
 Size = 730 ko
 
 [Section.041f]

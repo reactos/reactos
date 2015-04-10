@@ -38,8 +38,8 @@ License = Nieznana
 Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2013. Zawiera: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
 
 [Section.0418]
-License = Necunoscută
-Description = Microsoft Visual Studio 2013 Runtime. Conține: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2013. Conține: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
 Size = 6,20 Mo
 
 [Section.041f]

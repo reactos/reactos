@@ -32,7 +32,7 @@ Description = Eenvoudige en lichte audio speler.
 Description = Prosty i lekki odtwarzacz audio.
 
 [Section.0418]
-Description = Un lector audio simplu și ușor.
+Description = Lector audio, simplu și ușor.
 Size = 1,9 Mo
 
 [Section.041f]

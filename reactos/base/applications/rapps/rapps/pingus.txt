@@ -26,7 +26,7 @@ Description = Pingus è un gioco gratuito simile a Lemmings.
 Description = Pingus to darmowa gra logiczna podobna do gry Lemmings
 
 [Section.0418]
-Description = Pingus este un joc-enigmă asemănător cu Lemmings.
+Description = Joc-enigmă asemănător cu „Lemmings”.
 Size = 16,0 Mo
 
 [Section.041f]

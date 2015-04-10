@@ -14,5 +14,10 @@ CDPath = none
 [Section.0407]
 Description = ReactOS kompatibles Dateisuchprogramm.
 
+[Section.0418]
+Licence = Gratuită
+Description = Program de căutare a fișierelor, compatibil cu ReactOS
+Size = 944 ko
+
 [Section.0a]
 Description = Buscador de archivos compatible con ReactOS.

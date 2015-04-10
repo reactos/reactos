@@ -46,7 +46,8 @@ Size = 24.58 MB
 URLDownload = http://download.microsoft.com/download/c/e/1/ce1e1286-67a2-4069-a8c4-b3552f18dfa8/wordview_pl-pl.exe
 
 [Section.0418]
-License = Necunoscută
+License = Nespecificată
+Description = Aplicație de lectură a documentelor de tip Microsoft Office Word (*.doc)
 Size = 24,56 Mo
 URLDownload = http://download.microsoft.com/download/1/2/3/123d3dc8-6f3f-473f-ac1d-3e38969605e8/wordview_ro-ro.exe
 

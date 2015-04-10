@@ -27,7 +27,7 @@ Description = Super DX-Ball - pełna koloru i animacji gra polegająca na zbijan
 
 [Section.0418]
 License = Versiune de evaluare
-Description = Un joc ce implică spargerea de cărămizi.
+Description = Joc vibrant și colorat ce implică spargerea de cărămizi.
 Size = 3,8 Mo
 
 [Section.041f]

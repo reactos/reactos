@@ -26,7 +26,7 @@ Description = Bochs è un emulatore pc IA-32 (x86) scritto in C++ open source e 
 Description = Bochs to przenośny (portable) emulator platformy IA-32 (x86) napisany w C++, działa na wielu popularnych platformach sprzętowych.
 
 [Section.0418]
-Description = Bochs este un emulator PC (x86) cu surse deschise și portabilitate înaltă, scris în C++, compatibil cu majoritatea platformelor.
+Description = Emulator de PC (x86) cu surse deschise și portabilitate înaltă, scris în C++, compatibil cu majoritatea platformelor.
 Size = 4,8 Mo
 
 [Section.041f]

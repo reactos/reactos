@@ -28,7 +28,7 @@ Description = Double Commander is een open-bron file-manager met twee panelen zi
 Description = Double Commander to menedżer plików, o otwartym źródle, z klasycznym układem dwóch paneli obok siebie. Do rozpakowania archiwum potrzebny jest 7-zip lub podobny program.
 
 [Section.0418]
-Description = Double Commander este un gestionar (cu surse deschise) de fișiere după modelul «două paneluri alăturate».  Este necesar 7-Zip sau un utilitar similar de dezarhivare pentru a-l putea extrage.
+Description = Gestionar (cu surse deschise) de fișiere după modelul paneluri-alăturate. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 9,4 Mo
 
 [Section.0419]

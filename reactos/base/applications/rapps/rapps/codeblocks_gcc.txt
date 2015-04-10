@@ -23,7 +23,7 @@ Description = Un IDE potente, open source, multipiattaforma. Contiene il compila
 
 [Section.0418]
 Name = Code::Blocks TDM-GCC (versiunea 4.7.1 pe 32 biți)
-Description = Un IDE (mediu de dezvoltare integrat) puternic, multi-platformă, cu sursă deschisă. Conține compilatorul TDM-GCC (versiunea 4.7.1 pe 32 biți).
+Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Conține compilatorul TDM-GCC (versiunea 4.7.1 pe 32 biți).
 Size = 97,8 Mo
 
 [Section.041f]

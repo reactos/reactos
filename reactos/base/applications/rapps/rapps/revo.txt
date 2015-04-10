@@ -11,3 +11,8 @@ CDPath = none
 
 [Section.0407]
 Description = Hilft Software zu deinstallieren und einfach ungewollte Programme loszuwerden.
+
+[Section.0418]
+License = Gratuită
+Description = Program de dezinstalare a programelor și de eliminare a programelor nedorite.
+Size = 2,5 Mo

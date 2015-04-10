@@ -32,7 +32,7 @@ Description = Open-bron multi-protocol instant message toepassing - werkt mogeli
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
 
 [Section.0418]
-Description = Aplicație de mesagerie instant multiprotocol (cu surse deschise) - posibil cu limitări în funcționalitate.
+Description = Aplicație de mesagerie instant multiprotocol (cu surse deschise). Este posibil să întâmpinați limitări de funcționalitate.
 Size = 7,6 Mo
 
 [Section.041f]

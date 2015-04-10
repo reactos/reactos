@@ -24,7 +24,7 @@ Description = Un IDE potente, open source, multipiattaforma. Non contiene un com
 
 [Section.0418]
 Name = Code::Blocks (fără compilator)
-Description = Un IDE (mediu de dezvoltare integrat) puternic, multi-platformă, cu sursă deschisă. Nu conține nici un compilator.
+Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Nu conține nici un compilator.
 Size = 29,2 Mo
 
 [Section.041f]

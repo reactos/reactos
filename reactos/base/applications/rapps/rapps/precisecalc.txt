@@ -15,6 +15,10 @@ CDPath = none
 [Section.0407]
 Description = Freier und quelloffener wissenschaftlicher Rechner für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
 
+[Section.0418]
+Description = Calculatr științific gratuit, cu surse deschise. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 151 ko
+
 [Section.0a]
 Description = Una calculadora científica gratuita y de código abierto. Es necesario un descompresor de archivos zip para abrirlo.
 

@@ -26,7 +26,7 @@ Description = Globulation 2 è un gioco di strategia in tempo reale. Il gioco mi
 Description = Globulation 2 to gra strategiczna czasu rzeczywistego. Gra minimalizuje zarządzanie automatycznie przydzielając zadania jednostkom.
 
 [Section.0418]
-Description = Globulation 2 este un joc de strategie în timp real. Jocul minimizează microgestiunea prin alocarea automată de sarcini unităților.
+Description = Joc de strategie în timp real. Jocul minimizează microgestiunea prin alocarea automată de sarcini unităților.
 Size = 13,5 Mo
 
 [Section.041f]

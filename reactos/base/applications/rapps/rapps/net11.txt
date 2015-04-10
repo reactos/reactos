@@ -45,7 +45,7 @@ URLDownload = http://download.microsoft.com/download/c/9/f/c9f672f3-c14b-4cff-96
 
 [Section.0418]
 License = Nespecificată
-Description = Pachet redistributabil.
+Description = Componente necesare pentru execuția în Windows aplicațiilor gestionate, scrise într-un limbaj ca C#.
 Size = 23,14 Mo
 
 [Section.041f]

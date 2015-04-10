@@ -35,7 +35,7 @@ Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit 
 Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym źródle). Do jej rozpakowania potrzebny jest 7-Zip lub podobny program.
 
 [Section.0418]
-Description = Necesar pentru execuția unor jocuri (cu surse deschise). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
+Description = Pachet necesar pentru execuția unor jocuri (cu surse deschise). Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 548,02 ko
 
 [Section.041f]

@@ -32,7 +32,7 @@ Description = DosBlaster is een Shell uitbreiding dat het mogelijk maakt om een 
 Description = DosBlaster to rozszerzenie powłoki, które umożliwia otwarcie każdego DOS-owego pliku wykonywalnego w DOSBox za pomocą prawego klawisza myszki. Ta wersja zawiera DosBox 0.70, ale można go łatwo zaktualizować, instalując nowszą wersje DOSBox do folderów DosBlaster.
 
 [Section.0418]
-Description = DosBlaster este o extensie de interfațare ce oferă posibilitatea deschiderii unui executabil DOS în aplicația DOSBox prin clic dreapta. Această versiune conține DOSBox 0.70, însă poate fi actualizată instalând în dosarele DosBlaster o versiune mai nouă de DOSBox.
+Description = O extensie a interfeței de utilizator a sistemului, cu posibilitatea lansării de programe DOS prin clic dreapta. Această versiune conține DOSBox 0.70, însă poate fi actualizată instalând în dosarele DosBlaster o versiune mai nouă de DOSBox.
 Size = 2,05 Mo
 
 [Section.041f]

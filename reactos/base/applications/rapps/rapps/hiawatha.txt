@@ -11,3 +11,7 @@ CDPath = none
 
 [Section.0407]
 Description = Quelloffener Webserver mit einem Augenmerk auf Sicherheit.
+
+[Section.0418]
+Description = Server web cu surse deschise, având securitatea în prim plan.
+Size = 3,4 Mo

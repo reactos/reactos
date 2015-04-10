@@ -30,7 +30,7 @@ Description = Total Commander to popularny menedżer plików z dwoma panelami, u
 
 [Section.0418]
 License = Versiune de evaluare
-Description = Total Commander este un gestionar de fișiere după modelul «două paneluri alăturate».
+Description = Gestionar de fișiere după modelul paneluri-alăturate, pentru utilizatori avansați.
 Size = 3,55 Mo
 
 [Section.041f]

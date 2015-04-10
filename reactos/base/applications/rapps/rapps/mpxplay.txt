@@ -26,7 +26,7 @@ Description = Mpxplay è una console audio 32-bit per Windows. Necessita 7-Zip o
 Description = Mpxplay to 32 bitowy odtwarzacz audio (działający w konsoli) dla Windows. Wymaga programu archiwizującego (np. 7-Zip) do wypakowania.
 
 [Section.0418]
-Description = Mpxplay este un lector audio de tip consolă, pe 32-biți pentru Windows. E necesar un utilitar de dezarhivare de tip ZIP.
+Description = Lector audio de tip consolă, pe 32-biți pentru Windows. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 520 ko
 
 [Section.0419]

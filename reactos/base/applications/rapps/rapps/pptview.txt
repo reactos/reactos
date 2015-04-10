@@ -47,8 +47,8 @@ URLDownload = http://download.microsoft.com/download/9/E/4/9E4A5F9A-210D-44B7-AD
 
 [Section.0418]
 Name = Lector Microsoft Powerpoint
-License = Necunoscută
-Description = Lector Microsoft Powerpoint
+License = Nespecificată
+Description = Aplicație de lectură a prezentărilor de tip Microsoft Office Powerpoint (*.ppt)
 Size = 60,4 Mo
 URLDownload = http://download.microsoft.com/download/5/6/E/56E4DBA3-D725-43EA-B1E5-DC148022999C/PowerPointViewer.exe
 

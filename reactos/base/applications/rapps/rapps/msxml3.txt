@@ -39,7 +39,7 @@ Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera
 
 [Section.0418]
 License = Nespecificată
-Description = MSXML3 este necesar unor Instalatori MSI. Conține: msxml3.dll, msxml3a.dll, msxml3r.dll.
+Description = Modúl necesar unor programe de instalare MSI. Conține: msxml3.dll, msxml3a.dll, msxml3r.dll.
 Size = 1,85 Mo
 
 [Section.041f]

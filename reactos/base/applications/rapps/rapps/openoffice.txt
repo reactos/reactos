@@ -49,7 +49,7 @@ URLSite = http://www.openoffice.org/pl/
 URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/pl/Apache_OpenOffice_4.1.1_Win_x86_install_pl.exe
 
 [Section.0418]
-Description = Suita de aplicații de birotică cu surse deschise.
+Description = Suită de aplicații de birotică cu surse deschise.
 Size = 140,9 Mo
 URLSite = http://www.openoffice.org/ro/
 

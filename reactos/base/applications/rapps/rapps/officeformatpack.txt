@@ -12,3 +12,9 @@ CDPath = none
 [Section.0407]
 License = Unbekannt
 Description = Wird zum Öffnen von *.docx, *.xlsx, etc unter Word/Excel Viewer und Office 2003 benötigt.
+
+[Section.0418]
+Name = Pachet de compatibilitate pentru Microsoft Office
+License = Nespecificată
+Description = Pachet pentru suita de aplicații Microsoft Office 2003, necesar pentru a deschide formaturile de fișiere *.docx, *.xlsx, etc.
+Size = 37,0 Mo

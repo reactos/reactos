@@ -24,7 +24,7 @@ Description = Un gioco simile a Frozen Fruits.
 
 [Section.0418]
 License = Gratuită
-Description = Un joc similar jocului Frozen Fruits.
+Description = Joc similar jocului „Frozen Fruits”.
 Size = 764 ko
 
 [Section.041f]
