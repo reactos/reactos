@@ -516,9 +516,11 @@ static HRESULT WINAPI MediaSeekingPassThru_GetPositions(IMediaSeeking * iface, L
     if (SUCCEEDED(hr)) {
         hr = IMediaSeeking_GetPositions(seek, pCurrent, pStop);
         IMediaSeeking_Release(seek);
+    } else if (hr == VFW_E_NOT_CONNECTED) {
+        *pCurrent = 0;
+        *pStop = 0;
+        hr = S_OK;
     }
-    else
-        return E_NOTIMPL;
     return hr;
 }
 
