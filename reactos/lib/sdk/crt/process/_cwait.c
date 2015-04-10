@@ -3,30 +3,39 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/process/cwait.c
  * PURPOSE:     Waits for a process to exit
- * PROGRAMER:   Ariadne
- * UPDATE HISTORY:
- *              04/03/99: Created
  */
 
 #include <precomp.h>
 
+/* Taken from Wine msvcrt/process.c */
+
 /*
  * @implemented
  */
-int _cwait(int* pnStatus, int hProc, int nAction)
+intptr_t CDECL _cwait(int *status, intptr_t pid, int action)
 {
-    DWORD ExitCode;
+  HANDLE hPid = (HANDLE)pid;
+  int doserrno;
 
-	nAction = 0;
-	if (WaitForSingleObject((void*)ULongToPtr(hProc), INFINITE) != WAIT_OBJECT_0) {
-		_set_errno(ECHILD);
-		return -1;
-	}
+  if (!WaitForSingleObject(hPid, INFINITE))
+  {
+    if (status)
+    {
+      DWORD stat;
+      GetExitCodeProcess(hPid, &stat);
+      *status = (int)stat;
+    }
+    return pid;
+  }
+  doserrno = GetLastError();
 
-	if (!GetExitCodeProcess((void*)ULongToPtr(hProc), &ExitCode))
-		return -1;
-	if (pnStatus != NULL)
-        *pnStatus = (int)ExitCode;
-    CloseHandle((HANDLE)ULongToPtr(hProc));
-    return hProc;
+  if (doserrno == ERROR_INVALID_HANDLE)
+  {
+    *_errno() =  ECHILD;
+    *__doserrno() = doserrno;
+  }
+  else
+    _dosmaperr(doserrno);
+
+  return status ? *status = -1 : -1;
 }

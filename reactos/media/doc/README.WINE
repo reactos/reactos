@@ -290,6 +290,7 @@ kernel32 -
 msvcrt -
   reactos/lib/sdk/crt/except/cpp.c              # Synced at 20080528
   reactos/lib/sdk/crt/except/cppexcept.c        # Synced at 20071111
+  reactos/lib/sdk/crt/process/_cwait.c          # Synced to WineStaging-1.7.37
   reactos/lib/sdk/crt/signal/xcptinfo.c         # Synced to Wine-1.7.17
   reactos/lib/sdk/crt/string/scanf.c/h          # Synced to Wine-1.7.17
   reactos/lib/sdk/crt/strings/wcs.c             # Synced at 20080611
