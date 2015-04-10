@@ -1,0 +1,13 @@
+[Section]
+Name = Revo Uninstaller
+Version = 1.95
+License = Freeware
+Description = Helps to uninstall software and remove unwanted programs installed easily.
+Size = 2.5 MB
+Category = 12
+URLSite = http://www.revouninstaller.com/
+URLDownload = http://9d4da85dff3fdd198886-459beec849893df302ec58f8a71b3ad1.r61.cf1.rackcdn.com/revosetup.exe
+CDPath = none
+
+[Section.0407]
+Description = Hilft Software zu deinstallieren und einfach ungewollte Programme loszuwerden.
