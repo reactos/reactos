@@ -256,10 +256,6 @@ RtlImageNtHeader(IN PVOID Base)
 {
     PIMAGE_NT_HEADERS NtHeader;
 
-    ULONG c = 1;
-    ULONG s = FIELD_OFFSET(IMAGE_OPTIONAL_HEADER32, DataDirectory[c]);
-    (void)s;
-
     /* Call the new API */
     RtlImageNtHeaderEx(RTL_IMAGE_NT_HEADER_EX_FLAG_NO_RANGE_CHECK,
                        Base,
