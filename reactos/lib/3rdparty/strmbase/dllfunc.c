@@ -154,7 +154,7 @@ HRESULT WINAPI AMovieDllRegisterServer2(BOOL bRegister)
     if (bRegister)
         hr = SetupRegisterAllClasses(g_Templates, g_cTemplates, szFileName, TRUE );
 
-    hr = CoInitialize(NULL);
+    CoInitialize(NULL);
 
     TRACE("Getting IFilterMapper2\r\n");
     hr = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,

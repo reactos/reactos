@@ -119,7 +119,6 @@ static ULONG WINAPI IEnumPinsImpl_Release(IEnumPins * iface)
 static HRESULT WINAPI IEnumPinsImpl_Next(IEnumPins * iface, ULONG cPins, IPin ** ppPins, ULONG * pcFetched)
 {
     IEnumPinsImpl *This = impl_from_IEnumPins(iface);
-    HRESULT hr = S_OK;
     ULONG i = 0;
 
     TRACE("(%p)->(%u, %p, %p)\n", iface, cPins, ppPins, pcFetched);
@@ -136,7 +135,7 @@ static HRESULT WINAPI IEnumPinsImpl_Next(IEnumPins * iface, ULONG cPins, IPin **
     if (This->Version != This->receive_version(This->base))
         return VFW_E_ENUM_OUT_OF_SYNC;
 
-    while (i < cPins && hr == S_OK)
+    while (i < cPins)
     {
        IPin *pin;
        pin = This->receive_pin(This->base, This->uIndex + i);

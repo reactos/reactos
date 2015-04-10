@@ -226,6 +226,8 @@ HRESULT WINAPI CreatePosPassThru(IUnknown* pUnkOuter, BOOL bRenderer, IPin *pPin
     ISeekingPassThru *passthru;
 
     hr = CoCreateInstance(&CLSID_SeekingPassThru, pUnkOuter, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void**)ppPassThru);
+    if (FAILED(hr))
+        return hr;
 
     IUnknown_QueryInterface(*ppPassThru, &IID_ISeekingPassThru, (void**)&passthru);
     hr = ISeekingPassThru_Init(passthru, bRenderer, pPin);

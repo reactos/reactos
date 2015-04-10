@@ -258,7 +258,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current sources first as it may already be fixed.
 
-reactos/lib/3rdparty/strmbase               # Synced to Wine-1.7.27
+reactos/lib/3rdparty/strmbase               # Synced to WineStaging-1.7.37
 
 reactos/lib/rtl/actctx.c                    # Partly synced with WineStaging-1.7.37
 
