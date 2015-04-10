@@ -30,6 +30,51 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/* decode a string with given Base (8, 10 or 16) */
+static
+NTSTATUS
+RtlpStringToUlongBase(
+    _In_ PCWSTR String,
+    _In_ ULONG Base,
+    _Out_ PCWSTR *Terminator,
+    _Out_ PULONG Out)
+{
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    ULONG Result = 0;
+    ULONG Digit;
+
+    while (1)
+    {
+        Digit = towlower(*String);
+        if (isdigit(Digit) && (Base >= 10 || Digit <= L'7'))
+            Digit -= L'0';
+        else if (Digit >= L'a' && Digit <= L'f' && Base >= 16)
+            Digit -= (L'a' - 10);
+        else
+            break;
+
+        Status = RtlULongMult(Result, Base, &Result);
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+        }
+
+        Status = RtlULongAdd(Result, Digit, &Result);
+        if (!NT_SUCCESS(Status))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+        }
+        String++;
+    }
+
+    *Terminator = String;
+    *Out = Result;
+    return Status;
+}
+
+
 static
 NTSTATUS
 RtlpStringToUlong(
@@ -38,11 +83,7 @@ RtlpStringToUlong(
     _Out_ PCWSTR *Terminator,
     _Out_ PULONG Out)
 {
-    /* If we never see any digits, we'll return this */
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    ULONG Result = 0;
     ULONG Base = 10;
-    ULONG Digit;
 
     if (String[0] == L'0')
     {
@@ -63,43 +104,63 @@ RtlpStringToUlong(
     /* Strict forbids anything but decimal */
     if (Strict && Base != 10)
     {
-        Status = STATUS_INVALID_PARAMETER;
-        goto Done;
+        *Terminator = String;
+        return STATUS_INVALID_PARAMETER;
     }
+    return RtlpStringToUlongBase(String, Base, Terminator, Out);
+}
 
-    while (1)
+/* Tell us what possible base the string could be in, 10 or 16 by looking at the characters.
+   Invalid characters break the operation */
+static
+ULONG
+RtlpClassifyChars(PCWSTR S, PULONG Base)
+{
+    ULONG Len = 0;
+    *Base = 0;
+    for (Len = 0; S[Len]; ++Len)
     {
-        if (*String >= L'0' && *String <= L'7')
-            Digit = *String - L'0';
-        else if (*String >= L'0' && *String <= L'9' && Base >= 10)
-            Digit = *String - L'0';
-        else if (*String >= L'A' && *String <= L'F' && Base >= 16)
-            Digit = 10 + (*String - L'A');
-        else if (*String >= L'a' && *String <= L'f' && Base >= 16)
-            Digit = 10 + (*String - L'a');
+        if (iswascii(S[Len]) && isdigit(S[Len]))
+            *Base = max(*Base, 10);
+        else if (iswascii(S[Len]) && isxdigit(S[Len]))
+            *Base = 16;
         else
             break;
-
-        Status = RtlULongMult(Result, Base, &Result);
-        if (!NT_SUCCESS(Status))
-        {
-            Status = STATUS_INVALID_PARAMETER;
-            break;
-        }
-
-        Status = RtlULongAdd(Result, Digit, &Result);
-        if (!NT_SUCCESS(Status))
-        {
-            Status = STATUS_INVALID_PARAMETER;
-            break;
-        }
-
-        String++;
     }
+    return Len;
+}
 
-Done:
+/* Worker function to extract the ipv4 part of a string. */
+NTSTATUS
+NTAPI
+RtlpIpv4StringToAddressParserW(
+    _In_ PCWSTR String,
+    _In_ BOOLEAN Strict,
+    _Out_ PCWSTR *Terminator,
+    _Out_writes_(4) ULONG *Values,
+    _Out_ INT *Parts)
+{
+    NTSTATUS Status;
+    *Parts = 0;
+    do
+    {
+        Status = RtlpStringToUlong(String, Strict, &String, &Values[*Parts]);
+        (*Parts)++;
+
+        if (*String != L'.')
+            break;
+
+        /* Already four parts, but a dot follows? */
+        if (*Parts == 4)
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+        }
+        /* Skip the dot */
+        String++;
+    } while (NT_SUCCESS(Status));
+
     *Terminator = String;
-    *Out = Result;
     return Status;
 }
 
@@ -353,30 +414,16 @@ RtlIpv4StringToAddressW(
     INT Parts = 0;
     INT i;
 
-    do
-    {
-        Status = RtlpStringToUlong(String, Strict, &String, &Values[Parts]);
-        Parts++;
-
-        if (*String != L'.')
-            break;
-
-        /* Already four parts, but a dot follows? */
-        if (Parts == 4)
-        {
-            Status = STATUS_INVALID_PARAMETER;
-            goto Done;
-        }
-
-        /* Skip the dot */
-        String++;
-    } while (NT_SUCCESS(Status));
-
+    Status = RtlpIpv4StringToAddressParserW(String,
+                                            Strict,
+                                            Terminator,
+                                            Values,
+                                            &Parts);
     if (Strict && Parts < 4)
         Status = STATUS_INVALID_PARAMETER;
 
     if (!NT_SUCCESS(Status))
-        goto Done;
+        return Status;
 
     /* Combine the parts */
     Result = Values[Parts - 1];
@@ -386,16 +433,12 @@ RtlIpv4StringToAddressW(
 
         if (Values[i] > 0xFF || (Result & (0xFF << Shift)) != 0)
         {
-            Status = STATUS_INVALID_PARAMETER;
-            goto Done;
+            return STATUS_INVALID_PARAMETER;
         }
         Result |= Values[i] << Shift;
     }
 
     Addr->S_un.S_addr = RtlUlongByteSwap(Result);
-
-Done:
-    *Terminator = String;
     return Status;
 }
 
@@ -695,7 +738,7 @@ RtlIpv6AddressToStringExW(
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
@@ -704,12 +747,30 @@ RtlIpv6StringToAddressA(
     _Out_ PCSTR *Terminator,
     _Out_ struct in6_addr *Addr)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ANSI_STRING StringA;
+    UNICODE_STRING StringW;
+    PCWSTR TerminatorW = NULL;
+
+    Status = RtlInitAnsiStringEx(&StringA, String);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlAnsiStringToUnicodeString(&StringW, &StringA, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlIpv6StringToAddressW(StringW.Buffer, &TerminatorW, Addr);
+    /* on windows the terminator is not always written, so we mimic that behavior. */
+    if (TerminatorW)
+        *Terminator = String + (TerminatorW - StringW.Buffer);
+
+    RtlFreeUnicodeString(&StringW);
+    return Status;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
@@ -719,12 +780,26 @@ RtlIpv6StringToAddressExA(
     _Out_ PULONG ScopeId,
     _Out_ PUSHORT Port)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ANSI_STRING AddressA;
+    UNICODE_STRING AddressW;
+
+    Status = RtlInitAnsiStringEx(&AddressA, AddressString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlAnsiStringToUnicodeString(&AddressW, &AddressA, TRUE);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = RtlIpv6StringToAddressExW(AddressW.Buffer, Address, ScopeId, Port);
+
+    RtlFreeUnicodeString(&AddressW);
+    return Status;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
@@ -733,12 +808,146 @@ RtlIpv6StringToAddressW(
     _Out_ PCWSTR *Terminator,
     _Out_ struct in6_addr *Addr)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    INT n, j;
+    INT StartSkip = -1, Parts = 0;
+    ULONG Base, Len;
+    NTSTATUS Status = STATUS_SUCCESS;
+    enum { None, Number, Colon, DoubleColon } Last = None;
+    BOOLEAN SkipoutLastHex = FALSE;
+
+    if (!String || !Terminator || !Addr)
+        return STATUS_INVALID_PARAMETER;
+
+    for (n = 0; n < 8;)
+    {
+        Len = RtlpClassifyChars(String, &Base);
+        if (Len == 0)
+        {
+            /* not a number, and no ':' or already encountered an ':' */
+            if (String[0] != ':' || Last == Colon)
+                break;
+
+            /* double colon, 1 or more fields set to 0. mark the position, and move on. */
+            if (StartSkip == -1 && String[1] == ':')
+            {
+                /* this case was observed in windows, but it does not seem correct. */
+                if (!n)
+                {
+                    Addr->s6_words[n++] = 0;
+                    Addr->s6_words[n++] = 0;
+                }
+                StartSkip = n;
+                String += 2;
+                Last = DoubleColon;
+            }
+            else if (String[1] == ':' || Last != Number)
+            {
+                /* a double colon after we already encountered one, or a the last parsed item was not a number. */
+                break;
+            }
+            else
+            {
+                ++String;
+                Last = Colon;
+            }
+        }
+        else if (Len > 4)
+        {
+            /* it seems that when encountering more than 4 chars, the terminator is not updated,
+                unless the previously encountered item is a double colon.... */
+            Status = STATUS_INVALID_PARAMETER;
+            if (Last != DoubleColon)
+                return Status;
+            String += Len;
+            break;
+        }
+        else
+        {
+            ULONG Value;
+            if (String[Len] == '.' && n <= 6)
+            {
+                ULONG Values[4];
+                INT PartsV4 = 0;
+                /* this could be an ipv4 address inside an ipv6 address http://tools.ietf.org/html/rfc2765 */
+                Last = Number;
+                Status = RtlpIpv4StringToAddressParserW(String, TRUE, &String, Values, &PartsV4);
+                for(j = 0; j < PartsV4; ++j)
+                {
+                    if (Values[j] > 255)
+                    {
+                        Status = STATUS_INVALID_PARAMETER;
+                        if (j != 3)
+                            return Status;
+                        break;
+                    }
+                    if ((j == PartsV4 - 1) &&
+                        (j < 3 ||
+                         (*String == ':' && StartSkip == -1) ||
+                         (StartSkip == -1 && n < 6) ||
+                         Status == STATUS_INVALID_PARAMETER))
+                    {
+                        Status = STATUS_INVALID_PARAMETER;
+                        break;
+                    }
+                    Addr->s6_bytes[n * 2 + j] = Values[j] & 0xff;
+                }
+                /* mark enough parts as converted in case we are the last item to be converted */
+                n += 2;
+                /* mark 2 parts as converted in case we are not the last item, and we encountered a double colon. */
+                Parts+=2;
+                break;
+            }
+
+            if (String[Len] != ':' && n < 7 && StartSkip == -1)
+            {
+                /* if we decoded atleast some numbers, update the terminator to point to the first invalid char */
+                if (Base)
+                    String += Len;
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            if (Len == 1 && towlower(String[Len]) == 'x' && String[0] == '0')
+            {
+                Len = RtlpClassifyChars(String + 2, &Base);
+                if (Len > 0 && Len <= 4)
+                {
+                    *Terminator = String + 1;
+                    String += 2;
+                    SkipoutLastHex = TRUE;
+                }
+            }
+
+            Status = RtlpStringToUlongBase(String, 16, &String, &Value);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            if (StartSkip != -1)
+                Parts++;
+            Addr->s6_words[n++] = WN2H(Value);
+            Last = Number;
+            if (SkipoutLastHex)
+                break;
+        }
+    }
+
+    if (StartSkip != -1 && Status != STATUS_INVALID_PARAMETER && Last != Colon)
+    {
+        /* we found a '::' somewhere, so expand that. */
+        memmove(&Addr->s6_words[8-Parts], &Addr->s6_words[StartSkip], Parts * sizeof(Addr->s6_words[0]));
+        memset(&Addr->s6_words[StartSkip], 0, (8-StartSkip-Parts) * sizeof(Addr->s6_words[0]));
+        n = 8;
+    }
+
+    /* we have already set the terminator */
+    if (SkipoutLastHex)
+        return n < 8 ? STATUS_INVALID_PARAMETER : Status;
+    *Terminator = String;
+    return n < 8 ? STATUS_INVALID_PARAMETER : Status;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
@@ -748,8 +957,63 @@ RtlIpv6StringToAddressExW(
     _Out_ PULONG ScopeId,
     _Out_ PUSHORT Port)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG ConvertedPort = 0, ConvertedScope = 0;
+    if (!AddressString || !Address || !ScopeId || !Port)
+        return STATUS_INVALID_PARAMETER;
+
+    if (*AddressString == '[')
+    {
+        ConvertedPort = 1;
+        ++AddressString;
+    }
+    Status = RtlIpv6StringToAddressW(AddressString, &AddressString, Address);
+    if (!NT_SUCCESS(Status))
+        return STATUS_INVALID_PARAMETER;
+
+    if (*AddressString == '%')
+    {
+        ++AddressString;
+        Status = RtlpStringToUlongBase(AddressString, 10, &AddressString, &ConvertedScope);
+        if (!NT_SUCCESS(Status))
+            return STATUS_INVALID_PARAMETER;
+    }
+    else if (*AddressString && !(ConvertedPort && *AddressString == ']'))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (ConvertedPort)
+    {
+        if (*AddressString++ !=']')
+            return STATUS_INVALID_PARAMETER;
+        if (*AddressString ==':')
+        {
+            ULONG Base = 10;
+            if (*++AddressString == '0')
+            {
+                if (towlower(*++AddressString) != 'x')
+                    return STATUS_INVALID_PARAMETER;
+                ++AddressString;
+                Base = 16;
+            }
+            Status = RtlpStringToUlongBase(AddressString, Base, &AddressString, &ConvertedPort);
+            if (!NT_SUCCESS(Status) || ConvertedPort > 0xffff)
+                return STATUS_INVALID_PARAMETER;
+        }
+        else
+        {
+            ConvertedPort = 0;
+        }
+    }
+
+    if (*AddressString == 0)
+    {
+        *ScopeId = ConvertedScope;
+        *Port = WN2H(ConvertedPort);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_INVALID_PARAMETER;
 }
 
 /* EOF */
