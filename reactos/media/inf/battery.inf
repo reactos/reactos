@@ -105,7 +105,7 @@ ReactOS = "Echipa ReactOS"
 BatteryClassName = "Acumulatori"
 GenericMfg = "(acumulator generic)"
 ACPI\PNP0C0A.DeviceDesc = "Metodă de control acumulator conformă cu ACPI"
-ACPI\ACPI0003.DeviceDesc = "Adaptor CA"
+ACPI\ACPI0003.DeviceDesc = "Adaptor de curent alternativ"
 
 [Strings.0419]
 ReactOS = "Команда ReactOS"

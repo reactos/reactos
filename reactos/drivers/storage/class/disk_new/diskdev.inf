@@ -94,3 +94,26 @@ DiskId1 = "Microsoft Corp. Installation Disk #1 (DiskDrive)"
 MS = "Microsoft Corp."
 disk.SvcDesc="Disk Drive"
 
+
+[Strings.0418]
+MS.DeviceDesc0 = "Dispozitiv de disc"
+MS.DeviceDesc1 = "Dispozitiv de disc optic"
+DiskId1 = "Disc de instalare #1 (DiskDrive) al Microsoft Corp."
+MS = "Microsoft Corp."
+disk.SvcDesc="Dispozitiv de disc"
+
+
+[Strings.0418]
+MS.DeviceDesc0 = "Dispozitiv de disc"
+MS.DeviceDesc1 = "Dispozitiv de disc optic"
+DiskId1 = "Disc de instalare #1 (DiskDrive) al Microsoft Corp."
+MS = "Microsoft Corp."
+disk.SvcDesc="Dispozitiv de disc"
+
+[Strings.0418]
+MS.DeviceDesc0 = "Dispozitiv de disc"
+MS.DeviceDesc1 = "Dispozitiv de disc optic"
+DiskId1 = "Disc de instalare #1 (DiskDrive) al Microsoft Corp."
+MS = "Microsoft Corp."
+disk.SvcDesc="Dispozitiv de disc"
+

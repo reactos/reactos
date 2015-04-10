@@ -78,7 +78,7 @@ GenericBulkOnlyTransport.DeviceDesc = "Dispositivo de armazenamento USB"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
-GenericMfg = "(dispozitiv generic USB)"
+GenericMfg = "(dispozitive generice USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Dispozitiv USB de stocare"
 
 [Strings.0419]

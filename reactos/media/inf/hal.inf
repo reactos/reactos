@@ -70,7 +70,7 @@ e_isa_up.DeviceDesc = "Standardowy komputer PC"
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 ComputerClassName = "Calculator"
-GenericMfg = "(calculator generic)"
+GenericMfg = "(calculatoare generice)"
 acpipic_up.DeviceDesc = "PC uniprocesor ACPI"
 e_isa_up.DeviceDesc = "PC uniprocesor standard"
 

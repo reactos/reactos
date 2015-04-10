@@ -83,3 +83,12 @@ AcctonEN1207D.DeviceDesc = "Adaptador Ethernet Accton EN-1207D (RTL8139)"
 DLinkDFE538TX.DeviceDesc = "Adaptador Ethernet D-Link DFE-538TX (RTL8139)"
 LevelOneFPC0106TX.DeviceDesc = "Adaptador Ethernet LevelOne FPC-0106Tx (RTL8139)"
 CompaqHNE300.DeviceDesc = "Adaptador Ethernet Compaq HNE-300 (RTL8139C)"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
+
+Realtek8139.DeviceDesc = "Adaptor Ethernet Realtek RTL8139"
+AcctonEN1207D.DeviceDesc = "Adaptor Ethernet Accton EN-1207D (RTL8139)"
+DLinkDFE538TX.DeviceDesc = "Adaptor Ethernet D-Link DFE-538TX (RTL8139)"
+LevelOneFPC0106TX.DeviceDesc = "Adaptor Ethernet LevelOne FPC-0106Tx (RTL8139)"
+CompaqHNE300.DeviceDesc = "Adaptor Ethernet Compaq HNE-300 (RTL8139C)"

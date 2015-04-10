@@ -88,9 +88,9 @@ GenericMfg = "(dispozitiv disc generic)"
 DiskClassName = "Dispozitive disc"
 Disk.DeviceDesc = "Dispozitiv disc"
 OpticalDisk.DeviceDesc = "Dispozitiv disc optic"
-Disk.ServiceDesc = "Modul-pilot de disc"
+Disk.ServiceDesc = "Modúl-pilot de disc"
 
-[Strings]
+[Strings.0419]
 ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартные дисковые накопители)"
 DiskClassName = "Дисковые устройства"

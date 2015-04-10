@@ -295,6 +295,24 @@ HKR,,"TypesSupported",0x00010001,7
 
 
 
+[Strings.0418]
+DDK_SAMPLE="Mostră de producător DDK"
+CDClassName = "Dispozitive DVD/CD-ROM"
+
+;; Manufacturer specific strings
+ATAPI_CHGR      = "Dispozitive Atapi 2.5 Changer"
+
+GenManufacturer = "(Dispozitive CD-ROM standard)"
+
+[Strings.0418]
+DDK_SAMPLE="Mostră de producător DDK"
+CDClassName = "Dispozitive DVD/CD-ROM"
+
+;; Manufacturer specific strings
+ATAPI_CHGR      = "Dispozitive Atapi 2.5 Changer"
+
+GenManufacturer = "(Dispozitive CD-ROM standard)"
+
 [Strings]
 DDK_SAMPLE="DDK Sample Provider"
 CDClassName = "DVD/CD-ROM drives"
@@ -341,4 +359,12 @@ cdaudio_ServiceDesc = "CD-Audio Filter Driver"
 changer_ServiceDesc = "CD-Changer Filter Driver"
 redbook_ServiceDesc = "Digital CD Audio Playback Filter Driver"
 
+[Strings.0418]
+DDK_SAMPLE="Mostră de producător DDK"
+CDClassName = "Dispozitive DVD/CD-ROM"
+
+;; Manufacturer specific strings
+ATAPI_CHGR      = "Dispozitive Atapi 2.5 Changer"
+
+GenManufacturer = "(Dispozitive CD-ROM standard)"
 

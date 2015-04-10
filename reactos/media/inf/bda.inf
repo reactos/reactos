@@ -212,11 +212,8 @@ Category_BdaTuner="Filtru sursă BDA"
 Category_BdaComponent="Componentă receptor BDA"
 Category_BdaRenderer="Filtru de redare BDA"
 PlugIn_BdaDevice="Extensie control dispozitiv BDA"
-PlugIn_BdaCA="Extensie BDA pentru Acces Condiționat"
-Pin.Name.AtscTS="Transport-MPEG2"
-Pin.Name.IPV4="IPv4"
-Pin.Name.MPE="MPE"
-Pin.Name.NABTS="NABTS"
+PlugIn_BdaCA="Extensie BDA pentru acces condițional"
+Pin.Name.AtscTS="Transport MPEG2"
 
 [Strings.0422]
 ReactOS = "Команда ReactOS"

@@ -43,3 +43,8 @@ GenericMfg = "(Generická systémová zařízení)"
 [Strings.0407]
 GenericMfg = "(Generische Systemgeräte)"
 *PNP0C14.DeviceDesc = "WMI für ACPI"
+
+[Strings.0418]
+ReactOS = "Echipa ReactOS"
+GenericMfg = "(dispozitive generice de sistem)"
+*PNP0C14.DeviceDesc = "WMI pentru ACPI"

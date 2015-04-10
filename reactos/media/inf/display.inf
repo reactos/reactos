@@ -125,7 +125,7 @@ VGA.DeviceDesc = "Adaptador de vídeo compatível com VGA"
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 DisplayClassName = "Adaptoare grafice"
-StdMfg = "(adaptoar grafic standard)"
+StdMfg = "(adaptoare grafice standard)"
 VGA.DeviceDesc = "Placă grafică compatibilă VGA"
 
 [Strings.0419]

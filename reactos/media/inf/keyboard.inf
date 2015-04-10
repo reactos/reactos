@@ -159,7 +159,7 @@ StdMfg = "(Teclado padrão)"
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 KeyboardClassName = "Tastaturi"
-HID.KeyboardDevice = "Tastatură-HID"
+HID.KeyboardDevice = "Tastatură-dispozitiv de interfațare umană"
 StdMfg = "(tastatură standard)"
 LocationOverride = "conectat la portul de tastatură"
 *PNP0303.DeviceDesc = "Tastatură IBM PC/AT"

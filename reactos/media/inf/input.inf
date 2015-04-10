@@ -109,7 +109,7 @@ StdMfg                = "(Dispositivos de interfaz humana estándar)"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
-HID.ClassName = "Dispozitive de Interfațare Umană (HID)"
+HID.ClassName = "Dispozitive de interfațare umană"
 HID.DeviceDesc = "Dispozitiv USB de interfațare umană"
 HID_DEVICE =  "Dispozitiv compatibil de interfațare umană"
 StdMfg = "(dispozitive generice de interfațare umană)"

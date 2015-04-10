@@ -1353,7 +1353,7 @@ PCI\CC_0106.DeviceDesc  = "Standardowy kontroler Serial ATA"
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 HDCClassName = "Dispozitive de control IDE ATA/ATAPI"
-GenericMfg = "(dispozitiv generic de control HDD)"
+GenericMfg = "(dispozitive generice de control HDD)"
 PCI\VEN_1191&DEV_0005.DeviceDesc="Dispozitiv de control Acard ATP850 ATA-33"
 PCI\VEN_1191&DEV_0006.DeviceDesc="Dispozitiv de control Acard ATP860A ATA-66"
 PCI\VEN_1191&DEV_0007.DeviceDesc="Dispozitiv de control Acard ATP860R ATA-66"
@@ -1528,8 +1528,8 @@ PCI\VEN_105a&DEV_6617.DeviceDesc="Dispozitiv de control Promise PDC20617 ATA-133
 PCI\VEN_105a&DEV_6626.DeviceDesc="Dispozitiv de control Promise PDC20618 ATA-133"
 PCI\VEN_105a&DEV_6629.DeviceDesc="Dispozitiv de control Promise PDC20619 ATA-133"
 PCI\VEN_105a&DEV_6620.DeviceDesc="Dispozitiv de control Promise PDC20620 ATA-133"
-PCI\VEN_105a&DEV_6621.DeviceDesc="Promise PDC20621 ATA-133 controller"
-PCI\VEN_105a&DEV_6622.DeviceDesc="Promise PDC20622 ATA-133 controller"
+PCI\VEN_105a&DEV_6621.DeviceDesc="Dispozitiv de control Promise PDC20621 ATA-133"
+PCI\VEN_105a&DEV_6622.DeviceDesc="Dispozitiv de control Promise PDC20622 ATA-133"
 PCI\VEN_1166&DEV_0211.DeviceDesc="Dispozitiv de control ServerWorks ROSB4 ATA-33"
 PCI\VEN_1166&DEV_0212&REV_92.DeviceDesc="Dispozitiv de control ServerWorks CSB5 ATA-100"
 PCI\VEN_1166&DEV_0212.DeviceDesc="Dispozitiv de control ServerWorks CSB5 ATA-66"
@@ -1633,7 +1633,7 @@ PCI\VEN_ffff&DEV_ffff&REV_ff.DeviceDesc="Dispozitiv de control IDE"
 
 ;Compatible adapters
 
-UniATA_Name = "Modul pilot ATA Universal"
+UniATA_Name = "Modúl-pilot ATA universal"
 *PNP0600.PriDeviceDesc  = "Dispozitiv de control IDE primar"
 *PNP0600.SecDeviceDesc  = "Dispozitiv de control IDE secundar"
 PCI\CC_0101.DeviceDesc  = "Dispozitiv de control Dual Channel PCI BusMaster IDE"

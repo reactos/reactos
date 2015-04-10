@@ -217,7 +217,7 @@ PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Controlador USB Intel 82371AB/EB/M
 [Strings.0418]
 ReactOS = "Echipa ReactOS"
 USBClassName = "Dispozitive de control USB"
-GenericMfg = "(dispozitiv generic de control USB)"
+GenericMfg = "(dispozitive generice de control USB)"
 PCI\CC_0C0300.DeviceDesc = "Dispozitive de control USB UHCI"
 PCI\CC_0C0310.DeviceDesc = "Dispozitive de control USB OHCI"
 PCI\CC_0C0320.DeviceDesc = "Dispozitive de control USB EHCI"
