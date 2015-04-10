@@ -20,71 +20,75 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Xcopy Command"
+#define REACTOS_STR_FILE_DESCRIPTION  "xcopy command"
 #define REACTOS_STR_INTERNAL_NAME     "xcopy"
 #define REACTOS_STR_ORIGINAL_FILENAME "xcopy.exe"
 #include <reactos/version.rc>
 
+#ifdef LANGUAGE_DA_DK
+    #include "lang/da-DK.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+
 /* UTF-8 */
 #pragma code_page(65001)
 
-#ifdef LANGUAGE_DA_DK
-    #include "lang/Da.rc"
-#endif
 #ifdef LANGUAGE_DE_DE
-    #include "lang/De.rc"
-#endif
-#ifdef LANGUAGE_EN_US
-    #include "lang/En.rc"
-#endif
-#ifdef LANGUAGE_ES_ES
-    #include "lang/Es.rc"
+    #include "lang/de-DE.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "lang/Fr.rc"
+    #include "lang/fr-FR.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "lang/It.rc"
+    #include "lang/it-IT.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "lang/Ja.rc"
+    #include "lang/ja-JP.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "lang/Ko.rc"
+    #include "lang/ko-KR.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "lang/Lt.rc"
+    #include "lang/lt-LT.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "lang/Nl.rc"
+    #include "lang/nl-NL.rc"
 #endif
-#ifdef LANGUAGE_NO_NO
-    #include "lang/No.rc"
-#endif
-#ifdef LANGUAGE_PL_PL
-    #include "lang/Pl.rc"
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "lang/Pt.rc"
+    #include "lang/pt-PT.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "lang/Ro.rc"
+    #include "lang/ro-RO.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "lang/Ru.rc"
+    #include "lang/ru-RU.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "lang/Si.rc"
-#endif
-#ifdef LANGUAGE_SR_SP
-    #include "lang/Sr.rc"
-#endif
-#ifdef LANGUAGE_SV_SE
-    #include "lang/Sv.rc"
+    #include "lang/sl-SI.rc"
 #endif
 #ifdef LANGUAGE_SQ_AL
-    #include "lang/Sq.rc"
+    #include "lang/sq-AL.rc"
+#endif
+#ifdef LANGUAGE_SR_SP
+    #include "lang/sr-SP.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "lang/Uk.rc"
+    #include "lang/uk-UA.rc"
 #endif
