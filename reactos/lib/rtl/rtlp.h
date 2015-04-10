@@ -34,6 +34,8 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
+extern PVOID MmHighestUserAddress;
+
 NTSTATUS
 NTAPI
 RtlpSafeCopyMemory(

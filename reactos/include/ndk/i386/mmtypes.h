@@ -37,6 +37,11 @@ extern "C" {
 #define MM_PAGE_FRAME_NUMBER_SIZE         20
 
 //
+// User space range limit
+//
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
+
+//
 // Address of the shared user page
 //
 #define MM_SHARED_USER_DATA_VA 0x7FFE0000

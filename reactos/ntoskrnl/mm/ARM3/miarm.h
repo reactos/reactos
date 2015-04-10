@@ -29,7 +29,6 @@
 
 #define MI_SYSTEM_VIEW_SIZE                     (32 * _1MB)
 
-#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
 #define MI_DEFAULT_SYSTEM_RANGE_START           (PVOID)0x80000000
 #define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
