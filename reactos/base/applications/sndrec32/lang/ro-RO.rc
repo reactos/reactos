@@ -29,9 +29,9 @@ BEGIN
     BEGIN
         MENUITEM "&Nou", ID_FILE_NEW
         MENUITEM "&Deschidere…", ID_FILE_OPEN
-        MENUITEM "Pă&strează", ID_FILE_SAVE, GRAYED
-        MENUITEM "&Păstrare în…", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "&Reconstituire…", ID_FILE_RESTORE, GRAYED
+        MENUITEM "&Păstrează", ID_FILE_SAVE, GRAYED
+        MENUITEM "Păst&rare în…", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "Re&constituire…", ID_FILE_RESTORE, GRAYED
         MENUITEM "Pr&oprietăți…", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", ID_FILE_EXIT

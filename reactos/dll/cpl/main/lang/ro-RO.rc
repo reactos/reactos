@@ -1,4 +1,7 @@
-/* 2011.11.20 - Fulea Ștefan: minor changes */
+/*
+ * Translators: Petru Dumitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -76,10 +79,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Colecție", -1, 5, 5, 181, 45
     COMBOBOX IDC_COMBO_CURSOR_SCHEME, 12, 15, 167, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Pă&strare…", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
+    PUSHBUTTON "&Păstrare…", IDC_BUTTON_SAVEAS_SCHEME, 65, 31, 60, 14
     PUSHBUTTON "Șt&erge", IDC_BUTTON_DELETE_SCHEME, 128, 31, 50, 14
     CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 196, 9, 45, 41, WS_EX_STATICEDGE
-    LTEXT "&Particularizare", -1, 5, 57, 70, 10
+    LTEXT "Pa&rticularizare", -1, 5, 57, 70, 10
     LISTBOX IDC_LISTBOX_CURSOR, 5, 68, 236, 124, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
     CHECKBOX "Acti&vează umbra indicatorului", IDC_CHECK_CURSOR_SHADOW, 5, 198, 105, 10
     PUSHBUTTON "Indicator i&mplicit", IDC_BUTTON_USE_DEFAULT_CURSOR, 117, 196, 65, 14

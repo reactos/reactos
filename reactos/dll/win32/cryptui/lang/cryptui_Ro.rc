@@ -4,6 +4,7 @@
  * Copyright 2008 Juan Lang
  * Copyright 2010 Claudia Cotună
  *                Michael Stefaniuc
+ *           2014 Ștefan Fulea
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -129,7 +130,7 @@ STRINGTABLE
     IDS_PURPOSE_CTL_USAGE_SIGNING "Vă permite să semnați digital o listă de certificate acreditate"
     IDS_PURPOSE_EFS "Permite criptarea datelor de pe disc"
     IDS_PURPOSE_EFS_RECOVERY "Recupererea fișierelor"
-    IDS_PURPOSE_WHQL "Verificarea modulelor pilot din Windows"
+    IDS_PURPOSE_WHQL "Verificarea modulelor-pilot din Windows"
     IDS_PURPOSE_NT5 "Verificarea componentelor de sistem din Windows"
     IDS_PURPOSE_OEM_WHQL "Verificarea componentelor de sistem din Windows OEM"
     IDS_PURPOSE_EMBEDDED_NT "Verificarea componentelor de sistem din Windows Embedded"

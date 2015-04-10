@@ -1382,7 +1382,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Fi≠ierul TXTSETUP.SIF conÓine o semn«tur« invalid«.",
+        "Fi≠ierul TXTSETUP.SIF conÓine o semn«tur« nevalid«.",
         "ENTER = Repornire calculator"
     },
     {
@@ -1555,7 +1555,7 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Nu se poate seta sistemul de localizare.\n",
+        "Nu se poate institui sistemul de localizare.\n",
         "ENTER = Repornire calculator"
     },
     {
@@ -1566,14 +1566,14 @@ MUI_ERROR roROErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Nu s-a reu≠it setarea geo id.",
+        "Nu s-a reu≠it instituirea de geo id.",
         "ENTER = Repornire calculator"
     },
     {
         //ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Numele de director este nevalid.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * TastaÓi pentru a continua."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,

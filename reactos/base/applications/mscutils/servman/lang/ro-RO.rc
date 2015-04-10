@@ -117,7 +117,7 @@ BEGIN
     CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW |
             WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES |
             TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
-    LTEXT "Unele servicii depind de alte servicii sau module de sistem și de ordinea încărcării în grup. Dacă o componentă de sistem este oprită sau nu are o funcționare corespunzătoare, serviciile dependente pot fi și ele afectate.", IDC_STATIC, 8, 7, 238, 26
+    LTEXT "Unele servicii depind de alte servicii sau modúle de sistem și de ordinea încărcării în grup. Dacă o componentă de sistem este oprită sau nu are o funcționare corespunzătoare, serviciile dependente pot fi și ele afectate.", IDC_STATIC, 8, 7, 238, 26
     LTEXT "Acest serviciu depinde de următoarele componente:", IDC_STATIC, 8, 57, 236, 9
     LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
 END

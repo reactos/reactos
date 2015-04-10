@@ -42,12 +42,12 @@ BEGIN
         END
         POPUP "C&onfigurație", IDM_SETTINGS
         BEGIN
-            MENUITEM "Panou de &control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "Panoul de &control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "&Securitate…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "Conexiuni în &rețea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Imprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Bară de activități și Meniul „Pornire”", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+            MENUITEM "S&ecuritate…", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "Conexiuni la &rețea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "I&mprimante și faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Bara de activități și Meniul „Pornire”", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "&Căut&are", IDM_SEARCH
         BEGIN
@@ -142,5 +142,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Preferințe bară de activități și meniu Pornire"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bara de activități și meniul „Pornire”"
 END

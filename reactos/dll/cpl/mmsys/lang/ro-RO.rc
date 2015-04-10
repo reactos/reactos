@@ -1,4 +1,7 @@
-/* 2011.12.18 - Fulea Ștefan: minor changes */
+/*
+ * Translators: Petru Dumitriu (petrimetri at gmail dot com)
+ *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -21,7 +24,7 @@ BEGIN
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
     LTEXT "Folosiți opțiunile de mai jos pentru a ajusta volumul fiecărui difuzor în parte sau pentru alte modificări în configurația difuzoarelor.", -1, 70, 155, 150, 36
     PUSHBUTTON "V&olum difuzoare…", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
-    PUSHBUTTON "Avan&sate…", IDC_ADVANCED2_BTN, 150, 195, 75, 15
+    PUSHBUTTON "Avansat&e…", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
@@ -87,7 +90,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "Vol&um…", IDC_VOLUME5_BTN, 85, 145, 70, 15
     PUSHBUTTON "Avansat&e…", IDC_ADV5_BTN, 160, 145, 70, 15
-    PUSHBUTTON "&Testare…", IDC_TEST_HARDWARE, 160, 175, 70, 15
+    PUSHBUTTON "Testa&re…", IDC_TEST_HARDWARE, 160, 175, 70, 15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -102,7 +105,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Păstrare colecție"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Pă&strați colecția sub numele:", -1, 7, 7, 212, 9
+    LTEXT "&Păstrați colecția sub numele:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "Con&firmă", IDOK, 93, 36, 60, 14
     PUSHBUTTON "A&nulează", IDCANCEL, 157, 36, 60, 14

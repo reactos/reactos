@@ -8,24 +8,24 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_WELCOMEPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Asistentul de instalare a descoperit faptul că ReactOS este executat în VMware(r).", -1, 117, 8, 140, 24
-    LTEXT "Dacă doriți instalarea modulelor pilot VMware(r) SVGA, apăsați pe „Înainte”, altfel omiteți această instalare apăsând „Anulează”.", -1, 117, 130, 140, 34
+    LTEXT "Dacă doriți instalarea modulelor-pilot VMware(r) SVGA, apăsați pe „Înainte”, altfel omiteți această instalare apăsând „Anulează”.", -1, 117, 130, 140, 34
 END
 
 IDD_INSERT_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Asistentul de instalare nu are inclus modulul pilot VMware(r) SVGA.\n\nDe aceea, mergeți la „VM” din meniul stației de lucru VMware(r) și alegeți instalarea instrumentelor VMware\n\n\nApăsați „Înainte” pentru a continua sau „Anulează” pentru a omite instalarea modulului pilot video SVGA.", -1, 25, 25, 225, 85
+    LTEXT "Asistentul de instalare nu are inclus modulul-pilot VMware(r) SVGA.\n\nDe aceea, mergeți la „VM” din meniul stației de lucru VMware(r) și alegeți instalarea instrumentelor VMware\n\n\nApăsați „Înainte” pentru a continua sau „Anulează” pentru a omite instalarea modulului-pilot video SVGA.", -1, 25, 25, 225, 85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "{STATUS}", IDC_INSTALLINGSTATUS, 25, 68, 225, 8
@@ -34,10 +34,10 @@ END
 
 IDD_CONFIG DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Modulul pilot video VMware(r) SVGA a fost instalat cu succes. Alegeți rezoluția preferată a ecranului:", -1, 25, 5, 225, 20
+    LTEXT "Modulul-pilot video VMware(r) SVGA a fost instalat cu succes. Alegeți rezoluția preferată a ecranului:", -1, 25, 5, 225, 20
     PUSHBUTTON "640x480", 1120, 25, 30, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "800x600", 1400, 25, 45, 65, 15, BS_AUTORADIOBUTTON
     PUSHBUTTON "1024x768", 1792, 25, 60, 65, 15, BS_AUTORADIOBUTTON
@@ -55,41 +55,41 @@ END
 
 IDD_INSTALLATION_FAILED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Asistentul de instalare nu a reușit instalarea modulului pilot VMware(r) SVGA.\n\n\nAlegeți „Sfârșit” pentru a reveni la instalarea ReactOS.", -1, 25, 25, 225, 85
+    LTEXT "Asistentul de instalare nu a reușit instalarea modulului-pilot VMware(r) SVGA.\n\n\nAlegeți „Sfârșit” pentru a reveni la instalarea ReactOS.", -1, 25, 25, 225, 85
 END
 
 IDD_CHOOSEACTION DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Modulul pilot video VMware(r) SVGA este deja instalat.\n\nPuteți în continuare să:", -1, 25, 5, 225, 30
+    LTEXT "Modulul-pilot video VMware(r) SVGA este deja instalat.\n\nPuteți în continuare să:", -1, 25, 5, 225, 30
     PUSHBUTTON "&Configurați preferințele ecranului", IDC_CONFIGSETTINGS, 25, 40, 200, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "&Utilizați un alt modul pilot video", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "&Dezinstalați modulul pilot VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "&Utilizați un alt modúl-pilot video", IDC_USEOTHERDRIVER, 25, 55, 200, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "&Dezinstalați modulul-pilot VMware(r) SVGA", IDC_UNINSTALL, 25, 70, 200, 15, BS_AUTORADIOBUTTON
     LTEXT "Alegeți „Înainte” pentru a continua sau „Anulează” pentru a părăsi acest asistent.", -1, 25, 93, 225, 19
 END
 
 IDD_SELECTDRIVER DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Alegeți modulul grafic pe care doriți să-l folosiți:", -1, 25, 25, 225, 15
-    PUSHBUTTON "Modulul pilot VGA al ReactOS", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
-    PUSHBUTTON "Modulul pilot VBE (SVGA) al ReactOS", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
+    LTEXT "Alegeți modulul-pilot grafic pe care doriți să-l folosiți:", -1, 25, 25, 225, 15
+    PUSHBUTTON "Modulul-pilot VGA al ReactOS", IDC_VGA, 25, 40, 225, 15, BS_AUTORADIOBUTTON
+    PUSHBUTTON "Modulul-pilot VBE (SVGA) al ReactOS", IDC_VBE, 25, 55, 225, 15, BS_AUTORADIOBUTTON
     LTEXT "Apăsați „Sfârșit” pentru a încheia acțiunea sau „Anulează” pentru a părăsi asistentul de instalare fără nici o modificare.", -1, 25, 93, 225, 20
 END
 
 IDD_DOUNINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Asistent de instalare module video"
+CAPTION "Asistent de instalare modúle-pilot video"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Asistentul de instalare e pe cale de a vă dezinstala modulul pilot VMware(r) SVGA!!!\n\n\nApăsați „Sfârșit” pentru a dezinstala modulul pilot sau „Anulează” pentru a-l lăsa așa cum este.", -1, 25, 25, 225, 85
+    LTEXT "Asistentul de instalare e pe cale de a vă dezinstala modulul-pilot VMware(r) SVGA!!!\n\n\nApăsați „Sfârșit” pentru a dezinstala modulul-pilot sau „Anulează” pentru a-l lăsa așa cum este.", -1, 25, 25, 225, 85
 END
 
 STRINGTABLE
@@ -97,11 +97,11 @@ BEGIN
     IDS_WIZARD_NAME "VMware(r) depistat"
     IDS_FAILEDTOLOCATEDRIVERS "Asistentul de instalare nu a reușit găsirea fișierelor necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r)."
     IDS_FAILEDTOCOPYFILES "Asistentul de instalare nu a reușit să copieze fișierele necesare.\nVerificați dacă este introdus suportul CD-ROM cu instrumentele VMware(r).\n"
-    IDS_FAILEDTOACTIVATEDRIVER "Activarea modulului pilot VMware(r) SVGA a eșuat!"
-    IDS_FAILEDTOSELVGADRIVER "Activarea modulului pilot VMware(r) VGA a eșuat!"
-    IDS_FAILEDTOSELVBEDRIVER "Activarea modulului pilot VMware(r) VBE a eșuat!"
-    IDS_UNINSTNOTICE "Fișierele modulului pilot VMware(r) SVGA încă nu au fost șterse.\nȘtergeți aceste fișiere manual, după repornirea calculatorului."
-    IDS_FAILEDTOADDREGENTRIES "Crearea intrărilor în registru pentru modulul pilot VMware(r) SVGA a eșuat!"
+    IDS_FAILEDTOACTIVATEDRIVER "Activarea modulului-pilot VMware(r) SVGA a eșuat!"
+    IDS_FAILEDTOSELVGADRIVER "Activarea modulului-pilot VMware(r) VGA a eșuat!"
+    IDS_FAILEDTOSELVBEDRIVER "Activarea modulului-pilot VMware(r) VBE a eșuat!"
+    IDS_UNINSTNOTICE "Fișierele modulului-pilot VMware(r) SVGA încă nu au fost șterse.\nȘtergeți aceste fișiere manual, după repornirea calculatorului."
+    IDS_FAILEDTOADDREGENTRIES "Crearea intrărilor în registru pentru modulul-pilot VMware(r) SVGA a eșuat!"
 END
 
 STRINGTABLE
@@ -115,23 +115,23 @@ STRINGTABLE
 BEGIN
     IDS_SEARCHINGFORCDROM "Se accesează suportul CD-ROM cu instrumentele VMware(r)…"
     IDS_COPYINGFILES "Se copie fișierele…"
-    IDS_ENABLINGDRIVER "Se activează modulul pilot VMware(r) SVGA…"
+    IDS_ENABLINGDRIVER "Se activează modulul-pilot VMware(r) SVGA…"
 END
 
 STRINGTABLE
 BEGIN
-    IDD_INSERT_VMWARE_TOOLSTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
+    IDD_INSERT_VMWARE_TOOLSTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
     IDD_INSERT_VMWARE_TOOLSSUBTITLE "Introduceți suportul CD-ROM cu instrumentele VMware."
-    IDD_INSTALLING_VMWARE_TOOLSTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
-    IDD_INSTALLING_VMWARE_TOOLSSUBTITLE "Căutarea și copierea modulului pilot VMware (r) SVGA."
-    IDD_CONFIGTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
+    IDD_INSTALLING_VMWARE_TOOLSTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
+    IDD_INSTALLING_VMWARE_TOOLSSUBTITLE "Căutarea și copierea modulului-pilot VMware (r) SVGA."
+    IDD_CONFIGTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
     IDD_CONFIGSUBTITLE "Alegeți rezoluția preferată a ecranului."
-    IDD_INSTALLATION_FAILEDTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
-    IDD_INSTALLATION_FAILEDSUBTITLE "Instalarea modulului pilot VMware (r) SVGA a eșuat."
-    IDD_CHOOSEACTIONTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
+    IDD_INSTALLATION_FAILEDTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
+    IDD_INSTALLATION_FAILEDSUBTITLE "Instalarea modulului-pilot VMware (r) SVGA a eșuat."
+    IDD_CHOOSEACTIONTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
     IDD_CHOOSEACTIONSUBTITLE "Alegeți în continuare."
-    IDD_SELECTDRIVERTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
-    IDD_SELECTDRIVERSUBTITLE "Alegeți un modul pilot."
-    IDD_DOUNINSTALLTITLE "Asistent de instalare al modulului pilot VMware (r) SVGA"
-    IDD_DOUNINSTALLSUBTITLE "Dezinstalați modulul pilot."
+    IDD_SELECTDRIVERTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
+    IDD_SELECTDRIVERSUBTITLE "Alegeți un modúl-pilot."
+    IDD_DOUNINSTALLTITLE "Asistent de instalare al modulului-pilot VMware (r) SVGA"
+    IDD_DOUNINSTALLSUBTITLE "Dezinstalați modulul-pilot."
 END

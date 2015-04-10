@@ -24,7 +24,7 @@ IDD_SYSTEM_DIALOG DIALOGEX 0, 0, 462, 220
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Acest instrument oferă informații detaliate despre componentele ReactX și modulele pilot instalate în sistem. De asemenea, vă permite testarea funcționalităților, diagnosticarea problemelor, precum și modificarea configurației de sistem pentru obținerea de rezultate optime.", -1, 10, 10, 443, 17
+    LTEXT "Acest instrument oferă informații detaliate despre componentele ReactX și modulele-pilot instalate în sistem. De asemenea, vă permite testarea funcționalităților, diagnosticarea problemelor, precum și modificarea configurației de sistem pentru obținerea de rezultate optime.", -1, 10, 10, 443, 17
     LTEXT "Dacă aveți la cunoștință careva probleme la o anumită categorie, mergeți la compartimentul corespunzător de mai sus. Altfel, puteți utiliza butonul „Următorul compartiment” de mai jos pentru a trece secvențial prin fiecare categorie.", -1, 10, 30, 443, 25
     GROUPBOX "Informații despre sistem", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Data/Ora curentă:", -1, 70, 70, 80, 10, SS_RIGHT
@@ -70,8 +70,8 @@ BEGIN
     LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 150, 10
     LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 150, 10
-    GROUPBOX "Modulul pilot", -1, 270, 10, 190, 100
-    RTEXT "Modulul primar:", -1, 275, 25, 55, 10
+    GROUPBOX "Modúl-pilot", -1, 270, 10, 190, 100
+    RTEXT "Modulul-pilot primar:", -1, 275, 25, 55, 10
     RTEXT "Versiune:", -1, 275, 35, 55, 10
     RTEXT "Dată:", -1, 275, 45, 55, 10
     RTEXT "Semnăt. WHQL:", -1, 275, 55, 55, 10
@@ -118,7 +118,7 @@ BEGIN
     LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
     LTEXT "", IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
     LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
-    GROUPBOX "Modulul pilot", -1, 270, 10, 190, 100
+    GROUPBOX "Modúl-pilot", -1, 270, 10, 190, 100
     RTEXT "Nume:", -1, 275, 25, 55, 10
     RTEXT "Versiune:", -1, 275, 35, 55, 10
     RTEXT "Dată:", -1, 275, 45, 55, 10

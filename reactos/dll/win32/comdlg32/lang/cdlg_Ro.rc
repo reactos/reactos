@@ -66,7 +66,7 @@ Introduceți un număr între 1 și %d."
     PD32_CANT_FIND_PRINTER  "Nu se poate găsi imprimanta."
     PD32_OUT_OF_MEMORY      "Memorie insuficientă."
     PD32_GENERIC_ERROR      "S-a produs o eroare."
-    PD32_DRIVER_UNKNOWN     "Modulul pilot de imprimantă este necunoscut."
+    PD32_DRIVER_UNKNOWN     "Modulul-pilot de imprimantă este necunoscut."
     PD32_NO_DEVICES         "Este necesară instalarea unei imprimante înainte de a putea efectua activități aferente imprimantei (cum ar fi accesarea opțiunilor de pagină sau imprimarea unui document). Instalați o imprimantă apoi reîncercați."
 
     PD32_DEFAULT_PRINTER                  "Imprimantă implicită; "
@@ -135,7 +135,7 @@ STRINGTABLE
 {
     IDS_FONT_SIZE   "Alegeți o mărime de font între %d și %d puncte."
     IDS_SAVE_BUTTON "&Păstrează"
-    IDS_SAVE_IN     "Pă&strează în:"
+    IDS_SAVE_IN     "Păst&rează în:"
     IDS_SAVE        "Păstrare"
     IDS_SAVE_AS     "Păstrare în:"
     IDS_OPEN_FILE   "Deschidere fișier"

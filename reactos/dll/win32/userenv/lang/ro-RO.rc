@@ -1,16 +1,15 @@
 /* 
  * FILE:        dll/win32/userenv/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * LAST CHANGE: 2011-12-17  disable diacritics in paths (temporary)
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SystemDrive%\\Documente si preferinte"
-    IDS_APPDATA "Date aplicatii"
+    IDS_PROFILEPATH "%SystemDrive%\\Documente și preferințe"
+    IDS_APPDATA "Date aplicații"
     IDS_DESKTOP "Birou"
     IDS_FAVORITES "Favorite"
     IDS_STARTMENU "Meniul Pornire"
@@ -21,17 +20,17 @@ BEGIN
     IDS_MYPICTURES "Documentele mele\\Imagini"
     IDS_MYMUSIC "Documentele mele\\Audio"
     IDS_MYVIDEOS "Documentele mele\\Video"
-    IDS_TEMPLATES "Sabloane"
+    IDS_TEMPLATES "Șabloane"
     IDS_RECENT "Recente"
     IDS_SENDTO "Trimitere"
     IDS_PRINTHOOD "Imprimante"
-    IDS_NETHOOD "Retele"
-    IDS_LOCALSETTINGS "Preferinte locale"
-    IDS_LOCALAPPDATA "Preferinte locale\\Date aplicatii"
-    IDS_TEMP "Preferinte locale\\Temp"
-    IDS_CACHE "Preferinte locale\\Fisiere de Internet temporare"
-    IDS_HISTORY "Preferinte locale\\Istoric"
+    IDS_NETHOOD "Rețele"
+    IDS_LOCALSETTINGS "Preferințe locale"
+    IDS_LOCALAPPDATA "Preferințe locale\\Date aplicații"
+    IDS_TEMP "Preferințe locale\\Temp"
+    IDS_CACHE "Preferințe locale\\Fișiere de Internet temporare"
+    IDS_HISTORY "Preferințe locale\\Istoric"
     IDS_COOKIES "Cookies"
-    IDS_PROGRAMFILES "%SystemDrive%\\Fisiere program"
-    IDS_COMMONFILES "Fisiere comune"
+    IDS_PROGRAMFILES "%SystemDrive%\\Fișiere program"
+    IDS_COMMONFILES "Fișiere comune"
 END

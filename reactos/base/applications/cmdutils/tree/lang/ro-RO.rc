@@ -1,8 +1,9 @@
+/* Transl. Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "Afișează o structura de fișiere a unui director sau unități de stocare.\n\n\
+    IDS_USAGE "Afișează o structură de fișiere a unui director sau unități de stocare.\n\n\
 TREE [unitate:][cale] [/F] [/A]\n\n\
 \t/F   Afișează numele fișierelor din fiecare director.\n\
 \t/A   Folosește ASCII în loc de caractere extinse.\n"

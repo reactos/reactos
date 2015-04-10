@@ -60,8 +60,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Asistentul poate încerca detectarea și instalarea automată a componentelor fizice. Altfel, dacă știți exact modelul dispozitivului, îl veți putea manual alege dintr-o listă.", -1, 21, 8, 280, 24
     LTEXT "Ce preferați să facă asistentul?", -1, 23, 40, 275, 8
-    AUTORADIOBUTTON "Să &caute și automat să instaleze modulul pilot necesar (Recomandat)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "Să instaleze modulul pilot pe care îl voi specifica &manual (Avansat)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Să &caute și automat să instaleze modulul-pilot necesar (Recomandat)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "Să instaleze modulul-pilot pe care îl voi specifica &manual (Avansat)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOG 0, 0, 317, 143

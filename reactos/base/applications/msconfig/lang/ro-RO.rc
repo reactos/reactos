@@ -68,8 +68,8 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Moduri de pornire sistem", -1, 10, 10, 340, 150, 0, WS_EX_TRANSPARENT
-    CONTROL "&Pornire normală - încarcă toate serviciile și modulele pilot", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
-    CONTROL "Pornire de &diagnostic - încarcă doar modulele pilot de bază", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
+    CONTROL "&Pornire normală - încarcă toate serviciile și modulele-pilot", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
+    CONTROL "Pornire de &diagnostic - încarcă doar modulele-pilot de bază", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
     CONTROL "Pornire &selectivă", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
     AUTOCHECKBOX "P&rocesează fișierul SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
     AUTOCHECKBOX "În&carcă serviciile de sistem", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10

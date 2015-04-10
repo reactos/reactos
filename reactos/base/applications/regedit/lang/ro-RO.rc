@@ -239,7 +239,7 @@ BEGIN
     LTEXT "Nedeterminată", IDC_UNDETERMINED, 18, 230, 50, 8, WS_DISABLED
     LTEXT "Partajată", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
     LTEXT "Dispozitiv, exclusivă", IDC_DEVICE_EXCLUSIVE, 75, 230, 74, 8, WS_DISABLED
-    LTEXT "Modul pilot, exclusivă", IDC_DRIVER_EXCLUSIVE, 75, 240, 74, 8, WS_DISABLED
+    LTEXT "Modúl-pilot, exclusivă", IDC_DRIVER_EXCLUSIVE, 75, 240, 74, 8, WS_DISABLED
     RTEXT "Tip interfață:", IDC_STATIC, 158, 220, 57, 8
     LTEXT "", IDC_INTERFACETYPE, 218, 220, 66, 8
     RTEXT "Număr magistrală:", IDC_STATIC, 155, 230, 60, 8

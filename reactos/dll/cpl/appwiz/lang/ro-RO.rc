@@ -59,7 +59,7 @@ STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "Se descarcă…"
     IDS_INSTALLING "Se instalează…"
-    IDS_INVALID_SHA "Suma de verificare a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
+    IDS_INVALID_SHA "Suma de control a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
 END
 
 ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95

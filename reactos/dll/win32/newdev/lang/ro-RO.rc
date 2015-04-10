@@ -15,12 +15,12 @@ CAPTION "Asistent de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Bun venit!", IDC_WELCOMETITLE, 120, 8, 195, 16
-    LTEXT "Acest asistent va instala module pilot pentru dispozitivul:", IDC_STATIC, 120, 21, 195, 16
+    LTEXT "Acest asistent va instala modúle-pilot pentru dispozitivul:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Apăsați „Înainte” pentru a continua.", IDC_STATIC, 120, 169, 195, 16
     LTEXT "DISPOZITIV NECUNOSCUT", IDC_DEVICE, 148, 36, 147, 12
     LTEXT "AVERTISMENT: INSTALAREA UNUI DISPOZITIV NECUNOSCUT POATE AVEA EFECTE GRAVE ASUPRA CALCULATORULUI DUMNEAVOASTRĂ!", IDC_STATIC, 120, 59, 195, 16
-    CONTROL "Instalează modulele pilot a&utomat", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
-    CONTROL "Instalează modulele pilot din locație &specificată", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
+    CONTROL "Instalează modulele-pilot a&utomat", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
+    CONTROL "Instalează modulele-pilot din locație &specificată", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
 END
 
 IDD_NODRIVER DIALOGEX 0, 0, 317, 193
@@ -29,8 +29,8 @@ CAPTION "Asistent de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalarea a eșuat", IDC_FINISHTITLE, 120, 8, 195, 16
-    LTEXT "Dispozitivul nu a putut fi instalat pentru că modulele pilot nu au fost găsite.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "Apăsați „Înapoi” dacă dețineți un disc sau cunoașteți calea către modulele pilot.", IDC_STATIC, 120, 98, 195, 16
+    LTEXT "Dispozitivul nu a putut fi instalat pentru că modulele-pilot nu au fost găsite.", IDC_STATIC, 120, 32, 195, 16
+    LTEXT "Apăsați „Înapoi” dacă dețineți un disc sau cunoașteți calea către modulele-pilot.", IDC_STATIC, 120, 98, 195, 16
     CONTROL "N&u doresc recurența acestui dialog", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
@@ -50,7 +50,7 @@ CAPTION "Asistent de instalare dispozitiv"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Specific locații de căutare", IDC_RADIO_SEARCHHERE, "Button", BS_AUTORADIOBUTTON, 27, 11, 239, 12
-    CONTROL "Specific manual modulele pilot", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
+    CONTROL "Specific manual modulele-pilot", IDC_RADIO_CHOOSE, "Button", BS_AUTORADIOBUTTON, 27, 98, 171, 12
     CONTROL "Caută pe unitățile detașabile", IDC_CHECK_MEDIA, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 33, 163, 12
     CONTROL "Caută acest dosar", IDC_CHECK_PATH, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 47, 54, 162, 12
     PUSHBUTTON "Spe&cificare…", IDC_BROWSE, 248, 70, 60, 14
@@ -98,7 +98,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_INSTALLWIZARDTITLE "Asistent pentru un nou dispozitiv"
-    IDS_UPDATEWIZARDTITLE "Asistent pentru actualizare modul-pilot"
+    IDS_UPDATEWIZARDTITLE "Asistent pentru actualizare modúl-pilot"
     IDS_CHSOURCE_TITLE "Alegere opțiuni de căutare și instalare"
     IDS_SEARCHDRV_TITLE "Căutare…"
     IDS_INSTALLDRV_TITLE "Instalare…"
