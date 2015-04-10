@@ -209,7 +209,7 @@ wdmaud.SvcDesc            = "Driver for ReactOS WINMM-WDM-Audio"
 
 
 [Strings.0418]
-WDM_DRMKAUD.DeviceDesc    = "Module-pilot audio de încredere ale ReactOS"
-WDM_DRMKAUD.FriendlyName  = "Module-pilot audio de încredere ale ReactOS"
-drmkaud.SvcDesc           = "Module-pilot audio de încredere ale ReactOS"
+WDM_DRMKAUD.DeviceDesc    = "Module-pilot audio de Ã®ncredere ale ReactOS"
+WDM_DRMKAUD.FriendlyName  = "Module-pilot audio de Ã®ncredere ale ReactOS"
+drmkaud.SvcDesc           = "Module-pilot audio de Ã®ncredere ale ReactOS"
 WDMAUDIO_CopyFilesOnlyId.DeviceDesc = "Module-pilot audio WDM ale ReactOS"
