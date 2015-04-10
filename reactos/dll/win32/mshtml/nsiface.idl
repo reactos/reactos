@@ -2948,7 +2948,6 @@ interface nsIDOMWindowUtils : nsISupports
     nsresult SetDisplayPortMarginsForElement(float aLeftMargin, float aTopMargin, float aRightMargin, float aBottomMargin,
             uint32_t aAlignmentX, uint32_t aAlignmentY, nsIDOMElement *aElement, uint32_t aPriority);
     nsresult SetDisplayPortBaseForElement(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, nsIDOMElement *aElement);
-    nsresult SetCriticalDisplayPortForElement(float aXPx, float aYPx, float aWidthPx, float aHeightPx, nsIDOMElement *aElement);
     nsresult SetResolution(float aXResolution, float aYResolution);
     nsresult GetResolution(float *aXResolution, float *aYResolution);
     nsresult GetIsResolutionSet(bool *aIsResolutionSet);
