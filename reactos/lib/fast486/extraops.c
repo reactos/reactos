@@ -356,7 +356,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLar)
             /* Exception occurred */
             return;
         }
-    
+
         Selector = LOWORD(Value);
     }
     else
@@ -440,7 +440,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeLsl)
             /* Exception occurred */
             return;
         }
-    
+
         Selector = LOWORD(Value);
     }
     else
@@ -1642,7 +1642,7 @@ FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBtc)
 
 FAST486_OPCODE_HANDLER(Fast486ExtOpcodeBsf)
 {
-    INT i;
+    UINT i;
     ULONG Value = 0;
     BOOLEAN OperandSize, AddressSize;
     FAST486_MOD_REG_RM ModRegRm;

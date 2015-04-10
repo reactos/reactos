@@ -52,7 +52,7 @@
 #endif
 
 FORCEINLINE
-INT
+UINT
 FASTCALL
 Fast486GetCurrentPrivLevel(PFAST486_STATE State)
 {
@@ -447,7 +447,7 @@ Fast486ReadDescriptorEntry(PFAST486_STATE State,
     if (!(Selector & SEGMENT_TABLE_INDICATOR))
     {
         /* Make sure the GDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1u))
         {
             *EntryValid = FALSE;
             return TRUE;
@@ -468,7 +468,7 @@ Fast486ReadDescriptorEntry(PFAST486_STATE State,
     else
     {
         /* Make sure the LDT contains the entry */
-        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1))
+        if (GET_SEGMENT_INDEX(Selector) >= (State->Ldtr.Limit + 1u))
         {
             *EntryValid = FALSE;
             return TRUE;
@@ -1512,7 +1512,7 @@ Fast486FpuException(PFAST486_STATE State)
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_NE)
     {
         /* Call the #MF handler */
-        Fast486Exception(State, FAST486_EXCEPTION_MF); 
+        Fast486Exception(State, FAST486_EXCEPTION_MF);
     }
     else
     {
@@ -1593,7 +1593,7 @@ Fast486FpuPush(PFAST486_STATE State,
     {
         /* Raise the stack fault and invalid operation exception */
         State->FpuStatus.Sf = State->FpuStatus.Ie = TRUE;
-        
+
         /* Set the C1 condition code bit (stack overflow) */
         State->FpuStatus.Code1 = TRUE;
 

@@ -209,7 +209,7 @@ Fast486RotateOperation(PFAST486_STATE State,
         case 2:
         {
             Result = (Value << Count) | (State->Flags.Cf << (Count - 1));
-            
+
             /* Complete the calculation, but make sure we don't shift by too much */
             if ((Bits - Count) < 31) Result |= Value >> (Bits - Count + 1);
 
@@ -993,7 +993,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
             Quotient = State->GeneralRegs[FAST486_REG_EAX].LowWord / Value;
             Remainder = State->GeneralRegs[FAST486_REG_EAX].LowWord % Value;
 
-            if (Quotient > 0xFF) 
+            if (Quotient > 0xFF)
             {
                 /* Divide error */
                 Fast486Exception(State, FAST486_EXCEPTION_DE);
@@ -1023,7 +1023,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF6)
             Quotient = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord / (CHAR)Value;
             Remainder = (SHORT)State->GeneralRegs[FAST486_REG_EAX].LowWord % (CHAR)Value;
 
-            if (Quotient > 127 || Quotient < -128) 
+            if (Quotient > 127 || Quotient < -128)
             {
                 /* Divide error */
                 Fast486Exception(State, FAST486_EXCEPTION_DE);
@@ -1142,7 +1142,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeGroupF7)
         case 3:
         {
             /* Calculate the result */
-            ULONG Result = -Value;
+            ULONG Result = -(LONG)Value;
             if (!OperandSize) Result &= 0xFFFF;
 
             /* Update the flags */

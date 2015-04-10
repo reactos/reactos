@@ -4154,7 +4154,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodePushFlags)
 FAST486_OPCODE_HANDLER(Fast486OpcodePopFlags)
 {
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
-    INT Cpl = Fast486GetCurrentPrivLevel(State);
+    UINT Cpl = Fast486GetCurrentPrivLevel(State);
     FAST486_FLAGS_REG NewFlags;
 
     NO_LOCK_PREFIX();
@@ -4487,11 +4487,11 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeRetFar)
 
     if ((State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE) && !State->Flags.Vm)
     {
-        INT i;
-        INT OldCpl = Fast486GetCurrentPrivLevel(State);
+        UINT i;
+        UINT OldCpl = Fast486GetCurrentPrivLevel(State);
         ULONG StackPtr;
         ULONG StackSel;
-        
+
         if (GET_SEGMENT_RPL(Segment) > OldCpl)
         {
             /* Pop ESP */
@@ -4658,7 +4658,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeIret)
     /* Check for protected mode */
     if (State->ControlRegisters[FAST486_REG_CR0] & FAST486_CR0_PE)
     {
-        INT OldCpl = Fast486GetCurrentPrivLevel(State);
+        UINT OldCpl = Fast486GetCurrentPrivLevel(State);
 
         if (State->Flags.Vm)
         {
@@ -5291,7 +5291,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetAl)
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovOffsetEax)
 {
     BOOLEAN OperandSize, AddressSize;
-    
+
     OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* Make sure this is the right instruction */
@@ -5864,7 +5864,7 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeScas)
             || (!AddressSize && (State->GeneralRegs[FAST486_REG_ECX].LowWord == 0)))
         {
             /* Do nothing */
-            return; 
+            return;
         }
     }
 

@@ -65,7 +65,7 @@ UnsignedMult128(ULONGLONG Multiplicand,
     ULONG MultiplicandLow, MultiplicandHigh, MultiplierLow, MultiplierHigh;
     ULONG IntermediateLow, IntermediateHigh;
     ULONGLONG LowProduct, Intermediate, Intermediate1, Intermediate2;
-    
+
     MultiplicandLow = (ULONG)(Multiplicand & 0xFFFFFFFFULL);
     MultiplicandHigh = (ULONG)(Multiplicand >> 32);
     MultiplierLow = (ULONG)(Multiplier & 0xFFFFFFFFULL);
@@ -229,7 +229,7 @@ Fast486FpuFromInteger(PFAST486_STATE State,
 
     Result->Mantissa = (ULONGLONG)Value;
     ZeroCount = CountLeadingZeros64(Result->Mantissa);
-    
+
     Result->Mantissa <<= ZeroCount;
     Result->Exponent = FPU_REAL10_BIAS + 63 - ZeroCount;
 }
@@ -248,7 +248,7 @@ Fast486FpuToInteger(PFAST486_STATE State,
         *Result = 0LL;
         return TRUE;
     }
-    
+
     if (FPU_IS_NAN(Value) || !FPU_IS_NORMALIZED(Value)
         || (UnbiasedExp < 0) || (UnbiasedExp > 63))
     {
@@ -580,8 +580,8 @@ Fast486FpuAdd(PFAST486_STATE State,
         else TempResult.Sign = FALSE;
 
         /* Invert the negative mantissa */
-        if (FirstAdjusted.Sign) FirstAdjusted.Mantissa = -FirstAdjusted.Mantissa;
-        if (SecondAdjusted.Sign) SecondAdjusted.Mantissa = -SecondAdjusted.Mantissa;
+        if (FirstAdjusted.Sign) FirstAdjusted.Mantissa = -(LONGLONG)FirstAdjusted.Mantissa;
+        if (SecondAdjusted.Sign) SecondAdjusted.Mantissa = -(LONGLONG)SecondAdjusted.Mantissa;
 
         /* Calculate the mantissa of the result */
         TempResult.Mantissa = FirstAdjusted.Mantissa + SecondAdjusted.Mantissa;
@@ -615,7 +615,7 @@ Fast486FpuAdd(PFAST486_STATE State,
             TempResult.Exponent++;
         }
     }
-    
+
     /* Normalize the result and return it */
     Fast486FpuNormalize(State, &TempResult);
     *Result = TempResult;
@@ -720,7 +720,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
     }
 
     if (FPU_IS_INFINITY(FirstOperand) || FPU_IS_INFINITY(SecondOperand))
-    {   
+    {
         /* The result will be infinity */
         Result->Sign = FirstOperand->Sign ^ SecondOperand->Sign;
         Result->Exponent = FPU_MAX_EXPONENT + 1;
@@ -755,7 +755,7 @@ Fast486FpuMultiply(PFAST486_STATE State,
     {
         /* Raise the underflow exception */
         State->FpuStatus.Ue = TRUE;
-        
+
         if (!State->FpuControl.Um)
         {
             Fast486FpuException(State);
@@ -811,7 +811,7 @@ Fast486FpuDivide(PFAST486_STATE State,
 
         if (State->FpuControl.Im)
         {
-            /* Return the indefinite NaN */ 
+            /* Return the indefinite NaN */
             Result->Sign = TRUE;
             Result->Exponent = FPU_MAX_EXPONENT + 1;
             Result->Mantissa = FPU_INDEFINITE_MANTISSA;
@@ -856,7 +856,7 @@ Fast486FpuDivide(PFAST486_STATE State,
     /* Divide the two mantissas */
     Remainder = UnsignedDivMod128(0ULL,
                                   /* Notice the 64 above - this is the high part */
-                                  FirstOperand->Mantissa, 
+                                  FirstOperand->Mantissa,
                                   SecondOperand->Mantissa,
                                   &QuotientLow,
                                   &QuotientHigh);
@@ -1774,7 +1774,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDA)
     SourceOperand = &MemoryData;
 
     /* Perform the requested operation */
-    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand); 
+    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);
 
 #endif
 }
@@ -1896,7 +1896,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                 Value.Exponent = *((PUSHORT)&Buffer[8]) & (FPU_MAX_EXPONENT + 1);
                 Value.Sign = *((PUCHAR)&Buffer[9]) >> 7;
 
-                Fast486FpuPush(State, &Value); 
+                Fast486FpuPush(State, &Value);
                 break;
             }
 
@@ -1939,7 +1939,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
                     return;
                 }
 
-                Fast486FpuPop(State); 
+                Fast486FpuPop(State);
                 break;
             }
 
@@ -2469,7 +2469,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDE)
     }
 
     /* Perform the requested operation */
-    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);  
+    Fast486FpuArithmeticOperation(State, ModRegRm.Register, SourceOperand, DestOperand);
     if (!ModRegRm.Memory) Fast486FpuPop(State);
 
 #endif
@@ -2653,7 +2653,7 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDF)
                     return;
                 }
 
-                Fast486FpuPop(State); 
+                Fast486FpuPop(State);
                 break;
             }
 

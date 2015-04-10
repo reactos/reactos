@@ -287,7 +287,7 @@ Fast486InterruptInternal(PFAST486_STATE State,
             /* Task call */
             return Fast486TaskSwitch(State, FAST486_TASK_CALL, IdtEntry->Selector);
         }
-        
+
         if (GateSize != (State->SegmentRegs[FAST486_REG_CS].Size))
         {
             /* The gate size doesn't match the current operand size, so set the OPSIZE flag. */
@@ -545,7 +545,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
     /* Make sure the entry exists in the GDT (not LDT!) */
     if ((GET_SEGMENT_INDEX(Selector) == 0)
         || (Selector & SEGMENT_TABLE_INDICATOR)
-        || GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1))
+        || GET_SEGMENT_INDEX(Selector) >= (State->Gdtr.Size + 1u))
     {
         Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_TS, Selector);
         return FALSE;
@@ -598,7 +598,7 @@ Fast486TaskSwitch(PFAST486_STATE State, FAST486_TASK_SWITCH_TYPE Type, USHORT Se
         && ((NewTssDescriptor.Signature != FAST486_BUSY_TSS_SIGNATURE)
         || (Type != FAST486_TASK_RETURN)))
     {
-        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector); 
+        Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_GP, Selector);
         return FALSE;
     }
 
