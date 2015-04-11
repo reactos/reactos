@@ -81,7 +81,8 @@ PKPDR_PAGE PdrPage;
 
 BOOLEAN
 MempSetupPaging(IN PFN_NUMBER StartPage,
-                IN PFN_COUNT NumberOfPages)
+                IN PFN_NUMBER NumberOfPages,
+                IN BOOLEAN KernelMapping)
 {
     return TRUE;
 }
@@ -245,9 +246,7 @@ MempAllocatePageTables(VOID)
 }
 
 VOID
-WinLdrSetProcessorContext(PVOID GdtIdt,
-                          IN ULONG Pcr,
-                          IN ULONG Tss)
+WinLdrSetProcessorContext(VOID)
 {
     ARM_CONTROL_REGISTER ControlRegister;
     ARM_TTB_REGISTER TtbRegister;
@@ -271,4 +270,32 @@ WinLdrSetProcessorContext(PVOID GdtIdt,
     ControlRegister.ForceAp = TRUE;
     ControlRegister.ExtendedPageTables = TRUE;
     KeArmControlRegisterSet(ControlRegister);
+}
+
+VOID
+WinLdrSetupMachineDependent(
+    PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+}
+
+VOID DiskStopFloppyMotor(VOID)
+{
+}
+
+VOID
+RealEntryPoint(VOID)
+{
+    BootMain("");
+}
+
+VOID
+NTAPI
+FrLdrBugCheckWithMessage(
+    ULONG BugCode,
+    PCHAR File,
+    ULONG Line,
+    PSTR Format,
+    ...)
+{
+
 }

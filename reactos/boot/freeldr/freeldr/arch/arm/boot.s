@@ -6,7 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#include "ksarm.h"
+#include <ksarm.h>
 
     //.title "ARM FreeLDR Entry Point"
     //.include "ntoskrnl/include/internal/arm/kxarm.h"
@@ -16,9 +16,12 @@
     NESTED_ENTRY _start
     PROLOG_END _start
 
-    b ArmInit
+    //b ArmInit
 
     ENTRY_END _start
 
-L_ArmInit:
-    .long ArmInit
+//L_ArmInit:
+//    .long ArmInit
+
+    END
+/* EOF */

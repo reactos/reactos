@@ -27,10 +27,6 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
-if((ARCH STREQUAL "arm") AND (SARCH STREQUAL "omap-zoom2"))
-    add_definitions(-D_ZOOM2_)
-endif()
-
 list(APPEND FREELDR_COMMON_SOURCE
     include/freeldr.h
     arcname.c
@@ -168,13 +164,10 @@ if(ARCH STREQUAL "i386" AND NOT MSVC)
     target_link_libraries(freeldr_common mini_hal)
 endif()
 
-if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
-    list(APPEND FREELDR_BASE_SOURCE windows/setupldr.c)
-endif()
-
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
+    windows/setupldr.c
     lib/inffile/inffile.c
     lib/rtl/libsupp.c)
 
@@ -191,8 +184,13 @@ if(NOT MSVC AND SEPARATE_DBG)
 endif()
 
 if(MSVC)
-    add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text ")
-    add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
+    if(ARCH STREQUAL "arm")
+        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER")
+        add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER")
+    else()
+        add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text ")
+        add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
+    endif()
 else()
     add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
     add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
@@ -229,12 +227,17 @@ add_dependencies(freeldr_pe_dbg asm)
 # Retrieve the full path to the generated file of the 'freeldr_pe' target
 get_target_property(_freeldr_pe_output_file freeldr_pe LOCATION)
 
-concatenate_files(
-    ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys
-    ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
-    ${_freeldr_pe_output_file})
+if(NOT ARCH STREQUAL "arm")
 
-add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
+    concatenate_files(
+        ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys
+        ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
+        ${_freeldr_pe_output_file})
+
+    add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
+else()
+    add_custom_target(freeldr ALL DEPENDS ${_freeldr_pe_output_file})
+endif()
 
 # rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)

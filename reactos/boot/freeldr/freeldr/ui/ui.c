@@ -476,4 +476,9 @@ BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
     return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
 
+#else
+BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
+{
+    return FALSE;
+}
 #endif

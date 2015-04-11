@@ -107,13 +107,6 @@ ArmDiskGetBootPath(OUT PCHAR BootPath,
     return TRUE;
 }
 
-BOOLEAN
-ArmInitializeBootDevices(VOID)
-{
-    /* Emulate old behavior */
-    return (ArmHwDetect() != NULL);
-}
-
 PCONFIGURATION_COMPONENT_DATA
 ArmHwDetect(VOID)
 {
@@ -159,11 +152,19 @@ ArmHwDetect(VOID)
     return RootNode;
 }
 
+BOOLEAN
+ArmInitializeBootDevices(VOID)
+{
+    /* Emulate old behavior */
+    return (ArmHwDetect() != NULL);
+}
+
 FREELDR_MEMORY_DESCRIPTOR ArmMemoryMap[32];
 
 PFREELDR_MEMORY_DESCRIPTOR
 ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
 {
+    ULONG i;
     ASSERT(ArmBoardBlock->MemoryMapEntryCount <= 32);
 
     /* Return whatever the board returned to us (CS0 Base + Size and FLASH0) */
@@ -177,7 +178,10 @@ ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
             ArmMemoryMap[i].MemoryType = MemoryFirmwarePermanent;
     }
 
-    return ArmBoardBlock->MemoryMapEntryCount;
+    *MemoryMapSize = ArmBoardBlock->MemoryMapEntryCount;
+
+    // FIXME
+    return NULL;
 }
 
 VOID

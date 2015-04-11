@@ -158,6 +158,9 @@ else()
     elseif(ARCH STREQUAL "arm")
         # _M_ARM is already defined by toolchain
         add_definitions(-D_ARM_ -D__arm__)
+        if(SARCH STREQUAL "omap-zoom2")
+            add_definitions(-D_ZOOM2_)
+        endif()
     endif()
 
     # Other
@@ -166,7 +169,7 @@ else()
     elseif(ARCH STREQUAL "amd64")
         add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
     elseif(ARCH STREQUAL "arm")
-        add_definitions(-DUSE_COMPILER_EXCEPTIONS)
+        add_definitions(-DUSE_COMPILER_EXCEPTIONS -DNO_UNDERSCORE_PREFIX)
     endif()
 
     # Activate support for assembly source files

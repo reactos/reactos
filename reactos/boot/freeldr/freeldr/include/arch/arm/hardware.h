@@ -9,11 +9,15 @@
 #pragma once
 
 #ifndef __REGISTRY_H
-#include "../../reactos/registry.h"
+//#include "../../reactos/registry.h"
 #endif
 
 #include "../../../../../armllb/inc/osloader.h"
 #include "../../../../../armllb/inc/machtype.h"
+
+#define FREELDR_BASE       0x0001F000
+#define FREELDR_PE_BASE    0x0001F000
+#define MAX_FREELDR_PE_SIZE 0xFFFFFF
 
 extern PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 extern ULONG FirstLevelDcacheSize;
@@ -26,4 +30,11 @@ extern ULONG SecondLevelIcacheSize;
 extern ULONG SecondLevelIcacheFillSize;
 
 extern ULONG gDiskReadBuffer, gFileSysBuffer;
-#define DiskReadBuffer gDiskReadBuffer
+#define DiskReadBuffer ((PVOID)gDiskReadBuffer)
+
+#define DriveMapGetBiosDriveNumber(DeviceName) 0
+
+FORCEINLINE VOID Reboot(VOID)
+{
+    DbgBreakPoint();
+}
