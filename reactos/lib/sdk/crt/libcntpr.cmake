@@ -133,6 +133,18 @@ elseif(ARCH STREQUAL "amd64")
         except/amd64/ehandler.c
         math/cos.c
         math/sin.c)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND LIBCNTPR_ASM_SOURCE
+        math/arm/floor.s
+        math/arm/log10.s
+        math/arm/pow.s
+        math/arm/__dtou64.s
+        math/arm/__u64tod.s
+        math/arm/__rt_sdiv.s
+        math/arm/__rt_sdiv64.s
+        math/arm/__rt_udiv.s
+        math/arm/__rt_udiv64.s
+    )
 endif()
 
 if(ARCH STREQUAL "i386")
