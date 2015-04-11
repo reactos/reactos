@@ -162,20 +162,14 @@ ConioComputeUpdateRect(IN PTEXTMODE_SCREEN_BUFFER Buff,
                        IN PCOORD Start,
                        IN UINT Length)
 {
-    if (Buff->ScreenBufferSize.X <= Start->X + Length)
+    if ((UINT)Buff->ScreenBufferSize.X <= Start->X + Length)
     {
-        UpdateRect->Left = 0;
-    }
-    else
-    {
-        UpdateRect->Left = Start->X;
-    }
-    if (Buff->ScreenBufferSize.X <= Start->X + Length)
-    {
+        UpdateRect->Left  = 0;
         UpdateRect->Right = Buff->ScreenBufferSize.X - 1;
     }
     else
     {
+        UpdateRect->Left  = Start->X;
         UpdateRect->Right = Start->X + Length - 1;
     }
     UpdateRect->Top = Start->Y;
@@ -391,7 +385,7 @@ ConDrvChangeScreenBufferAttributes(IN PCONSOLE Console,
                                    IN USHORT NewScreenAttrib,
                                    IN USHORT NewPopupAttrib)
 {
-    DWORD X, Y, Length;
+    ULONG X, Y, Length;
     PCHAR_INFO Ptr;
 
     COORD  TopLeft = {0};
@@ -796,7 +790,7 @@ ConDrvReadConsoleOutputString(IN PCONSOLE Console,
      * if we are going to overflow...
      */
     // Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos); // Doesn't work
-    for (i = 0; i < min(NumCodesToRead, Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y); ++i)
+    for (i = 0; i < min(NumCodesToRead, (ULONG)Buffer->ScreenBufferSize.X * Buffer->ScreenBufferSize.Y); ++i)
     {
         // Ptr = ConioCoordToPointer(Buffer, Xpos, Ypos); // Doesn't work either
         Ptr = &Buffer->Buffer[Xpos + Ypos * Buffer->ScreenBufferSize.X];
@@ -855,7 +849,7 @@ ConDrvWriteConsoleOutputString(IN PCONSOLE Console,
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID WriteBuffer = NULL;
     PWCHAR tmpString = NULL;
-    DWORD X, Y, Length; // , Written = 0;
+    ULONG X, Y, Length; // , Written = 0;
     ULONG CodeSize;
     PCHAR_INFO Ptr;
 
@@ -989,7 +983,7 @@ ConDrvFillConsoleOutput(IN PCONSOLE Console,
                         IN PCOORD WriteCoord,
                         OUT PULONG NumCodesWritten OPTIONAL)
 {
-    DWORD X, Y, Length; // , Written = 0;
+    ULONG X, Y, Length; // , Written = 0;
     PCHAR_INFO Ptr;
 
     if (Console == NULL || Buffer == NULL || WriteCoord == NULL)

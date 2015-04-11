@@ -561,7 +561,7 @@ ConioWriteConsole(PFRONTEND FrontEnd,
                 EndX = (Buff->CursorPosition.X + TAB_WIDTH) & ~(TAB_WIDTH - 1);
                 EndX = min(EndX, (UINT)Buff->ScreenBufferSize.X);
                 Ptr = ConioCoordToPointer(Buff, Buff->CursorPosition.X, Buff->CursorPosition.Y);
-                while (Buff->CursorPosition.X < EndX)
+                while ((UINT)Buff->CursorPosition.X < EndX)
                 {
                     Ptr->Char.UnicodeChar = L' ';
                     Ptr->Attributes = Buff->ScreenDefaultAttrib;

@@ -1916,8 +1916,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         if ((windy % HeightUnit) >= (HeightUnit / 2)) ++chary;
 
         // Compensate for added scroll bars in new window
-        if (charx < Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
-        if (chary < Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
+        if (charx < (DWORD)Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
+        if (chary < (DWORD)Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
 
         charx = windx / (int)WidthUnit ;
         chary = windy / (int)HeightUnit;
@@ -1929,8 +1929,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         // Resize window
         if ((charx != Buff->ViewSize.X) || (chary != Buff->ViewSize.Y))
         {
-            Buff->ViewSize.X = (charx <= Buff->ScreenBufferSize.X) ? charx : Buff->ScreenBufferSize.X;
-            Buff->ViewSize.Y = (chary <= Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
+            Buff->ViewSize.X = (charx <= (DWORD)Buff->ScreenBufferSize.X) ? charx : Buff->ScreenBufferSize.X;
+            Buff->ViewSize.Y = (chary <= (DWORD)Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
         }
 
         ResizeConWnd(GuiData, WidthUnit, HeightUnit);

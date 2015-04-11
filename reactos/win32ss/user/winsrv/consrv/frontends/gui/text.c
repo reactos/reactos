@@ -199,7 +199,7 @@ CopyLines(PTEXTMODE_SCREEN_BUFFER Buffer,
      * array, because of the way things are stored inside it. The downside is
      * that it makes the code more complicated.
      */
-    for (yPos = Begin->Y; (yPos <= End->Y) && (NumChars > 0); yPos++)
+    for (yPos = Begin->Y; (yPos <= (ULONG)End->Y) && (NumChars > 0); yPos++)
     {
         xBeg = (yPos == Begin->Y ? Begin->X : 0);
         xEnd = (yPos ==   End->Y ?   End->X : Buffer->ScreenBufferSize.X - 1);
@@ -366,8 +366,8 @@ GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     RightChar  = rcFramebuffer->right  / GuiData->CharWidth;
     BottomLine = rcFramebuffer->bottom / GuiData->CharHeight;
 
-    if (RightChar  >= Buffer->ScreenBufferSize.X) RightChar  = Buffer->ScreenBufferSize.X - 1;
-    if (BottomLine >= Buffer->ScreenBufferSize.Y) BottomLine = Buffer->ScreenBufferSize.Y - 1;
+    if (RightChar  >= (ULONG)Buffer->ScreenBufferSize.X) RightChar  = Buffer->ScreenBufferSize.X - 1;
+    if (BottomLine >= (ULONG)Buffer->ScreenBufferSize.Y) BottomLine = Buffer->ScreenBufferSize.Y - 1;
 
     LastAttribute = ConioCoordToPointer(Buffer, LeftChar, TopLine)->Attributes;
 
