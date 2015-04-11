@@ -46,17 +46,17 @@ BEGIN
         MENUITEM "&Каскадом", ID_WINDOWS_CASCADE
         MENUITEM "На передні&й план", ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "Sh&ut Down"
+    POPUP "&Завершення роботи"
     BEGIN
-        MENUITEM "Stand &By",                  ID_SHUTDOWN_STANDBY
-        MENUITEM "&Hibernate",                 ID_SHUTDOWN_HIBERNATE
-        MENUITEM "T&urn Off",                  ID_SHUTDOWN_POWEROFF
-        MENUITEM "&Restart",                   ID_SHUTDOWN_REBOOT
-        MENUITEM "&Log Off %s",                ID_SHUTDOWN_LOGOFF
-        MENUITEM "&Switch User\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
-        MENUITEM "Loc&k Computer\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "&Eject Computer",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "Перехід до режиму &очікування",                  ID_SHUTDOWN_STANDBY
+        MENUITEM "Перехід до &сну",                 ID_SHUTDOWN_HIBERNATE
+        MENUITEM "Ви&мкнення",                  ID_SHUTDOWN_POWEROFF
+        MENUITEM "&Перезавантаження",                   ID_SHUTDOWN_REBOOT
+        MENUITEM "&Завершення сеансу %s",                ID_SHUTDOWN_LOGOFF
+        MENUITEM "Змінити &користувача\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
+        MENUITEM "За&блокувати комп'ютер\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
+        MENUITEM "&Від'єднатися",                ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "Зняти комп'ютер з &док-станції",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Довідка"
     BEGIN
