@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -46,14 +46,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MODE_UNKNOWN "Unknown"
-    IDS_MODE_OPEN "Opened"
-    IDS_MODE_STOP "Stopped"
-    IDS_MODE_PLAY "Playing"
-    IDS_MODE_PAUSE "Paused"
-    IDS_MODE_RECORD "Recording"
-    IDS_MODE_SEEK "Seeking"
-    IDS_MODE_NOT_READY "Not ready"
+    IDS_MODE_UNKNOWN "Bilinmiyor"
+    IDS_MODE_OPEN "Açık"
+    IDS_MODE_STOP "Durduruldu"
+    IDS_MODE_PLAY "Çalıyor"
+    IDS_MODE_PAUSE "Duraklatıldı"
+    IDS_MODE_RECORD "Kaydediliyor"
+    IDS_MODE_SEEK "Sarıyor"
+    IDS_MODE_NOT_READY "Anık değil"
     IDS_ALL_TYPES_FILTER "Desteklenen Kütükler"
     IDS_TOOLTIP_PLAY "Çal"
     IDS_TOOLTIP_STOP "Durdur"
@@ -62,7 +62,7 @@ BEGIN
     IDS_TOOLTIP_SEEKBACK "Geri Sar"
     IDS_TOOLTIP_SEEKFORW "İleri Sar"
     IDS_TOOLTIP_FORWARD "Bir Sonrakine Geç"
-    IDS_TOOLTIP_PAUSE "Pause"
+    IDS_TOOLTIP_PAUSE "Duraklat"
     IDS_APPTITLE "Çoklu Ortam Oynatıcısı"
     IDS_PLAY "Çal"
     IDS_DEFAULTMCIERRMSG "Bu yanlışlığın tanımı yoktur."

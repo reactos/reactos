@@ -1,5 +1,5 @@
 /*
- * Copyright: 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+ * Copyright: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,8 +32,8 @@ STRINGTABLE
     IDS_SEMICOLON           """;"" bekleniyordu."
     IDS_LBRACKET            """("" bekleniyordu."
     IDS_RBRACKET            """)"" bekleniyordu."
-    IDS_EXPECTED_IDENTIFIER "Expected identifier"
-    IDS_EXPECTED_ASSIGN     "Expected '='"
+    IDS_EXPECTED_IDENTIFIER "Tanımlayıcı bekleniyordu."
+    IDS_EXPECTED_ASSIGN     """="" bekleniyordu."
     IDS_INVALID_CHAR        "Geçersiz damga."
     IDS_UNTERMINATED_STR    "Sonlandırılmamış dizgi değişmezi."
     IDS_MISPLACED_RETURN    """return"" deyişi işlecin dışında."
@@ -41,9 +41,9 @@ STRINGTABLE
     IDS_INVALID_CONTINUE    "Döngü dışında ""continue"" olamaz."
     IDS_LABEL_REDEFINED     "Etiket yeniden tanımlandı."
     IDS_LABEL_NOT_FOUND     "Etiket bulunamadı."
-    IDS_EXPECTED_CCEND      "Expected '@end'"
+    IDS_EXPECTED_CCEND      """@end"" bekleniyordu."
     IDS_DISABLED_CC         "Şartlı derleme kapalı."
-    IDS_EXPECTED_AT         "Expected '@'"
+    IDS_EXPECTED_AT         """@"" bekleniyordu."
     IDS_NOT_FUNC            "İşleç bekleniyordu."
     IDS_NOT_DATE            """[nesne]"" bir zaman nesnesi değil."
     IDS_NOT_NUM             "Sayı bekleniyordu."

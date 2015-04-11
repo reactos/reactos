@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -18,7 +18,7 @@ BEGIN
     PUSHBUTTON "Ayrı Sakla...", IDC_SAVEAS, 123, 139, 50, 14
     PUSHBUTTON "Aç...", IDC_OPEN, 177, 139, 50, 14
     ICON "", IDC_CONNICON, 16, 114, 20, 20
-    LTEXT "Şimdiki bağlantı ayarlarını saklayabilir ya da var olan bir ayar kütüğünü açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
+    LTEXT "Şimdiki bağlantı ayarlarını saklayabilir ya da var olan bir yapılandırmayı açabilirsiniz.", IDC_STATIC, 50, 115, 172, 20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
@@ -57,7 +57,7 @@ BEGIN
     IDS_HIGHCOLOR15 "32,768 (15 Bitlik) Renk"
     IDS_HIGHCOLOR16 "65,536 (16 Bitlik) Renk"
     IDS_HIGHCOLOR24 "16,777,216 (24 Bitlik) Renk"
-    IDS_HIGHCOLOR32 "Highest Quality (32 bit)"
+    IDS_HIGHCOLOR32 "En Yüksek Nitelik (32 Bitlik)"
     IDS_PIXEL "%lu*%lu Nokta"
     IDS_FULLSCREEN "Tüm Görüntülük"
     IDS_BROWSESERVER "(Daha Çoğu İçin Göz At...)"

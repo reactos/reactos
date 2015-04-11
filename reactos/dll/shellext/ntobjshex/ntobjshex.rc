@@ -28,3 +28,7 @@ IDR_REGISTRYFOLDER REGISTRY "resources/rgs/regfolder.rgs"
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
+
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif

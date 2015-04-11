@@ -1,0 +1,9 @@
+/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "NT Nesne Ad Alanı"
+    IDS_REGISTRY_NAME "Dizge Değer Defteri"
+END

@@ -18,3 +18,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif
