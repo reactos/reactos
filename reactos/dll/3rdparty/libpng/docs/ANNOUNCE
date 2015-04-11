@@ -1,5 +1,4 @@
-
-Libpng 1.5.14 - January 24, 2013
+Libpng 1.6.17 - March 26, 2015
 
 This is a public release of libpng, intended for use in production codes.
 
@@ -8,64 +7,61 @@ Files available for download:
 Source files with LF line endings (for Unix/Linux) and with a
 "configure" script
 
-   libpng-1.5.14.tar.xz (LZMA-compressed, recommended)
-   libpng-1.5.14.tar.gz
-   libpng-1.5.14.tar.bz2
+   libpng-1.6.17.tar.xz (LZMA-compressed, recommended)
+   libpng-1.6.17.tar.gz
 
 Source files with CRLF line endings (for Windows), without the
 "configure" script
 
-   lpng1514.7z  (LZMA-compressed, recommended)
-   lpng1514.zip
+   lpng1617.7z  (LZMA-compressed, recommended)
+   lpng1617.zip
 
 Other information:
 
-   libpng-1.5.14-README.txt
-   libpng-1.5.14-LICENSE.txt
+   libpng-1.6.17-README.txt
+   libpng-1.6.17-LICENSE.txt
+   libpng-1.6.17-*.asc (armored detached GPG signatures)
 
-Changes since the last public release (1.5.13):
-  Added -DZ_SOLO to contrib/pngminim/*/makefile to work with zlib-1.2.7
-  Warn about the incorrect runtime library setting for VS2010 debug DLL builds.
-  Fixed build when using #define PNG_NO_READ_GAMMA in png_do_compose() in
-    pngrtran.c (Domani Hannes).
-  Check for png_ptr==NULL earlier in png_zalloc().
-  Ignore, with a warning, out-of-range value of num_trans in png_set_tRNS().
-  Rearranged building of ARM NEON optimizations. The ARM specific code is
-    split out entirely to the arm subdirectory and changes to configure.ac and
-    Makefile.am to add new stuff are reduced.  Now material code changes,
-    although for build test purposes, --enable-arm-neon now builds on non-ARM
-    systems.
-  Rebuilt Makefile.in, configure, etc., with autoconf-2.69 and automake-1.12.5.
-  Fixed cases of unquoted DESTDIR in Makefile.am
-  Fixed a minor bug in types to malloc and major bug in handling compressed
-    iTXt. Compressed iTXt could not be handled.
-  Cleaned up whitespace in the synopsis portion of the manpage "libpng.3"
-  Disassembled the version number in scripts/options.awk (necessary for
-    building on SunOs).
-  Fixed Windows build issues, enabled ARM compilation. Various warnings issued
-    by earlier versions of GCC fixed for Cygwin and Min/GW (which both use old
-    GCCs.) ARM support is enabled by default in zlib.props (unsupported by
-    Microsoft) and ARM compilation is made possible by deleting the check for
-    x86. The test programs cannot be run because they are not signed.
-  Fixed 'make distcheck' on SUN OS - libpng.so was not being removed
-  Replaced AM_CONFIG_HEADER(config.h) with AC_CONFIG_HEADERS([config.h])
-    in configure.ac
-  De-configured build fixes to make a range of deconfiguration options (such
-    as switching off read or write support) work in more cases.  Also upgraded
-    pngtest and pngvalid to the libpng 1.6 versions (with some modifications)
-    which provide more extensive testing.  Replaced pngtest.png because pngtest
-    writes the ancillary chunks in a different order.
-  Check validity of "num_unknowns" parameter of png_set_unknown_chunks()
-    (Bug report from yuris).
-  Revised test for validity of "num_unknowns" to eliminate compiler warnings.
-  Check the validity of the "nentries" parameter of png_set_sPLT() and the
-  "num_text" parameter of png_set_text_2().
+Changes since the last public release (1.6.16):
 
-  ===========================================================================
-                       NOTICE November 17, 2012:
-     The location of the git repository at SourceForge has changed.
-               Visit http://libpng.sf.net/ for details.
-  ===========================================================================
+  Removed duplicate PNG_SAFE_LIMITS_SUPPORTED handling from pngconf.h
+  Corrected the width limit calculation in png_check_IHDR().
+  Removed user limits from pngfix. Also pass NULL pointers to
+    png_read_row to skip the unnecessary row de-interlace stuff.
+  Added testing of png_set_packing() to pngvalid.c
+  Regenerated configure scripts in the *.tar distributions with libtool-2.4.4
+  Implement previously untested cases of libpng transforms in pngvalid.c
+  Fixed byte order in 2-byte filler, in png_do_read_filler().
+  Made the check for out-of-range values in png_set_tRNS() detect
+    values that are exactly 2^bit_depth, and work on 16-bit platforms.
+  Merged some parts of libpng-1.6.17beta01 and libpng-1.7.0beta47.
+  Added #ifndef __COVERITY__ where needed in png.c, pngrutil.c and
+    pngset.c to avoid warnings about dead code.
+  Do not build png_product2() when it is unused.
+  Display user limits in the output from pngtest.
+  Eliminated the PNG_SAFE_LIMITS macro and restored the 1-million-column
+    and 1-million-row default limits in pnglibconf.dfa, that can be reset
+    by the user at build time or run time.  This provides a more robust
+    defense against DOS and as-yet undiscovered overflows.
+  Added PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED macro, on by default.
+  Allow user to call png_get_IHDR() with NULL arguments (Reuben Hawkins).
+  Rebuilt configure scripts with automake-1.15 and libtool-2.4.6
+  Moved png_set_filter() prototype into a PNG_WRITE_SUPPORTED block
+    of png.h.
+  Avoid runtime checks when converting integer to png_byte with
+    Visual Studio (Sergey Kosarevsky)
+  Removed some comments that the configure script did not handle
+    properly from scripts/pnglibconf.dfa and pnglibconf.h.prebuilt.
+  Free the unknown_chunks structure even when it contains no data.
+  Updated CMakeLists.txt to add OSX framework, change YES/NO to ON/OFF
+    for consistency, and remove some useless tests (Alexey Petruchik).
+  Remove pnglibconf.h, pnglibconf.c, pnglibconf.pre, pnglibconf.dfn,
+    and pnglibconf.out instead of pnglibconf.* in "make clean" (Cosmin).
+  Fixed simplified 8-bit-linear to sRGB alpha. The calculated alpha
+    value was wrong.  It's not clear if this affected the final stored
+    value; in the obvious code path the upper and lower 8-bits of the
+    alpha value were identical and the alpha was truncated to 8-bits
+    rather than dividing by 257 (John Bowler).
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

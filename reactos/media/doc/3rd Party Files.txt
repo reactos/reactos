@@ -81,3 +81,7 @@ Website: http://www.ijg.org/
 Title: mbed TLS
 Used Version: 1.3.10
 Website: https://tls.mbed.org/
+
+Title: libpng
+Used Version: 1.6.17
+Website: http://libpng.sourceforge.net/

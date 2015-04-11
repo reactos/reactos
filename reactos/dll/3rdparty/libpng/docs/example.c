@@ -2,10 +2,13 @@
 #if 0 /* in case someone actually tries to compile this */
 
 /* example.c - an example of using libpng
- * Last changed in libpng 1.5.10 [March 8, 2012]
- * Maintained 1998-2012 Glenn Randers-Pehrson
- * Maintained 1996, 1997 Andreas Dilger
- * Written 1995, 1996 Guy Eric Schalnat, Group 42, Inc.
+ * Last changed in libpng 1.6.15 [November 20, 2014]
+ * Maintained 1998-2014 Glenn Randers-Pehrson
+ * Maintained 1996, 1997 Andreas Dilger)
+ * Written 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
+ * To the extent possible under law, the authors have waived
+ * all copyright and related or neighboring rights to this file.
+ * This work is published from: United States.
  */
 
 /* This is an example of how to use libpng to read and write PNG files.
@@ -13,8 +16,6 @@
  * read it, do so first.  This was designed to be a starting point of an
  * implementation.  This is not officially part of libpng, is hereby placed
  * in the public domain, and therefore does not require a copyright notice.
- * To the extent possible under law, the authors have waived all copyright and
- * related or neighboring rights to this file.
  *
  * This file does not currently compile, because it is missing certain
  * parts, like allocating memory to hold an image.  You will have to
@@ -23,11 +24,192 @@
  * see also the programs in the contrib directory.
  */
 
-#define _POSIX_SOURCE 1  /* libpng and zlib are POSIX-compliant.  You may
-                          * change this if your application uses non-POSIX
-                          * extensions. */
+/* The simple, but restricted, approach to reading a PNG file or data stream
+ * just requires two function calls, as in the following complete program.
+ * Writing a file just needs one function call, so long as the data has an
+ * appropriate layout.
+ *
+ * The following code reads PNG image data from a file and writes it, in a
+ * potentially new format, to a new file.  While this code will compile there is
+ * minimal (insufficient) error checking; for a more realistic version look at
+ * contrib/examples/pngtopng.c
+ */
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <png.h>
+#include <zlib.h>
 
-#include "png.h"
+int main(int argc, const char **argv)
+{
+   if (argc == 3)
+   {
+      png_image image; /* The control structure used by libpng */
+
+      /* Initialize the 'png_image' structure. */
+      memset(&image, 0, (sizeof image));
+      image.version = PNG_IMAGE_VERSION;
+
+      /* The first argument is the file to read: */
+      if (png_image_begin_read_from_file(&image, argv[1]) != 0)
+      {
+         png_bytep buffer;
+
+         /* Set the format in which to read the PNG file; this code chooses a
+          * simple sRGB format with a non-associated alpha channel, adequate to
+          * store most images.
+          */
+         image.format = PNG_FORMAT_RGBA;
+
+         /* Now allocate enough memory to hold the image in this format; the
+          * PNG_IMAGE_SIZE macro uses the information about the image (width,
+          * height and format) stored in 'image'.
+          */
+         buffer = malloc(PNG_IMAGE_SIZE(image));
+
+         /* If enough memory was available read the image in the desired format
+          * then write the result out to the new file.  'background' is not
+          * necessary when reading the image because the alpha channel is
+          * preserved; if it were to be removed, for example if we requested
+          * PNG_FORMAT_RGB, then either a solid background color would have to
+          * be supplied or the output buffer would have to be initialized to the
+          * actual background of the image.
+          *
+          * The fourth argument to png_image_finish_read is the 'row_stride' -
+          * this is the number of components allocated for the image in each
+          * row.  It has to be at least as big as the value returned by
+          * PNG_IMAGE_ROW_STRIDE, but if you just allocate space for the
+          * default, minimum, size using PNG_IMAGE_SIZE as above you can pass
+          * zero.
+          *
+          * The final argument is a pointer to a buffer for the colormap;
+          * colormaps have exactly the same format as a row of image pixels (so
+          * you choose what format to make the colormap by setting
+          * image.format).  A colormap is only returned if
+          * PNG_FORMAT_FLAG_COLORMAP is also set in image.format, so in this
+          * case NULL is passed as the final argument.  If you do want to force
+          * all images into an index/color-mapped format then you can use:
+          *
+          *    PNG_IMAGE_COLORMAP_SIZE(image)
+          *
+          * to find the maximum size of the colormap in bytes.
+          */
+         if (buffer != NULL &&
+            png_image_finish_read(&image, NULL/*background*/, buffer,
+               0/*row_stride*/, NULL/*colormap*/) != 0)
+         {
+            /* Now write the image out to the second argument.  In the write
+             * call 'convert_to_8bit' allows 16-bit data to be squashed down to
+             * 8 bits; this isn't necessary here because the original read was
+             * to the 8-bit format.
+             */
+            if (png_image_write_to_file(&image, argv[2], 0/*convert_to_8bit*/,
+               buffer, 0/*row_stride*/, NULL/*colormap*/) != 0)
+            {
+               /* The image has been written successfully. */
+               exit(0);
+            }
+         }
+
+         else
+         {
+            /* Calling png_free_image is optional unless the simplified API was
+             * not run to completion.  In this case if there wasn't enough
+             * memory for 'buffer' we didn't complete the read, so we must free
+             * the image:
+             */
+            if (buffer == NULL)
+               png_free_image(&image);
+
+            else
+               free(buffer);
+      }
+
+      /* Something went wrong reading or writing the image.  libpng stores a
+       * textual message in the 'png_image' structure:
+       */
+      fprintf(stderr, "pngtopng: error: %s\n", image.message);
+      exit (1);
+   }
+
+   fprintf(stderr, "pngtopng: usage: pngtopng input-file output-file\n");
+   exit(1);
+}
+
+/* That's it ;-)  Of course you probably want to do more with PNG files than
+ * just converting them all to 32-bit RGBA PNG files; you can do that between
+ * the call to png_image_finish_read and png_image_write_to_file.  You can also
+ * ask for the image data to be presented in a number of different formats.  You
+ * do this by simply changing the 'format' parameter set before allocating the
+ * buffer.
+ *
+ * The format parameter consists of five flags that define various aspects of
+ * the image, you can simply add these together to get the format or you can use
+ * one of the predefined macros from png.h (as above):
+ *
+ * PNG_FORMAT_FLAG_COLOR: if set the image will have three color components per
+ *    pixel (red, green and blue), if not set the image will just have one
+ *    luminance (grayscale) component.
+ *
+ * PNG_FORMAT_FLAG_ALPHA: if set each pixel in the image will have an additional
+ *    alpha value; a linear value that describes the degree the image pixel
+ *    covers (overwrites) the contents of the existing pixel on the display.
+ *
+ * PNG_FORMAT_FLAG_LINEAR: if set the components of each pixel will be returned
+ *    as a series of 16-bit linear values, if not set the components will be
+ *    returned as a series of 8-bit values encoded according to the 'sRGB'
+ *    standard.  The 8-bit format is the normal format for images intended for
+ *    direct display, because almost all display devices do the inverse of the
+ *    sRGB transformation to the data they receive.  The 16-bit format is more
+ *    common for scientific data and image data that must be further processed;
+ *    because it is linear simple math can be done on the component values.
+ *    Regardless of the setting of this flag the alpha channel is always linear,
+ *    although it will be 8 bits or 16 bits wide as specified by the flag.
+ *
+ * PNG_FORMAT_FLAG_BGR: if set the components of a color pixel will be returned
+ *    in the order blue, then green, then red.  If not set the pixel components
+ *    are in the order red, then green, then blue.
+ *
+ * PNG_FORMAT_FLAG_AFIRST: if set the alpha channel (if present) precedes the
+ *    color or grayscale components.  If not set the alpha channel follows the
+ *    components.
+ *
+ * You do not have to read directly from a file.  You can read from memory or,
+ * on systems that support it, from a <stdio.h> FILE*.  This is controlled by
+ * the particular png_image_read_from_ function you call at the start.  Likewise
+ * on write you can write to a FILE* if your system supports it.  Check the
+ * macro PNG_STDIO_SUPPORTED to see if stdio support has been included in your
+ * libpng build.
+ *
+ * If you read 16-bit (PNG_FORMAT_FLAG_LINEAR) data you may need to write it in
+ * the 8-bit format for display.  You do this by setting the convert_to_8bit
+ * flag to 'true'.
+ *
+ * Don't repeatedly convert between the 8-bit and 16-bit forms.  There is
+ * significant data loss when 16-bit data is converted to the 8-bit encoding and
+ * the current libpng implementation of conversion to 16-bit is also
+ * significantly lossy.  The latter will be fixed in the future, but the former
+ * is unavoidable - the 8-bit format just doesn't have enough resolution.
+ */
+
+/* If your program needs more information from the PNG data it reads, or if you
+ * need to do more complex transformations, or minimize transformations, on the
+ * data you read, then you must use one of the several lower level libpng
+ * interfaces.
+ *
+ * All these interfaces require that you do your own error handling - your
+ * program must be able to arrange for control to return to your own code any
+ * time libpng encounters a problem.  There are several ways to do this, but the
+ * standard way is to use the ANSI-C (C90) <setjmp.h> interface to establish a
+ * return point within your own code.  You must do this if you do not use the
+ * simplified interface (above).
+ *
+ * The first step is to include the header files you need, including the libpng
+ * header file.  Include any standard headers and feature test macros your
+ * program requires before including png.h:
+ */
+#include <png.h>
 
  /* The png_jmpbuf() macro, used in error handling, became available in
   * libpng version 1.0.6.  If you want to be able to run your code with older
@@ -223,7 +405,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    /* Expand paletted or RGB images with transparency to full alpha channels
     * so the data will be available as RGBA quartets.
     */
-   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS) != 0)
       png_set_tRNS_to_alpha(png_ptr);
 
    /* Set the background color to draw transparent and alpha images over.
@@ -235,7 +417,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
 
    png_color_16 my_background, *image_background;
 
-   if (png_get_bKGD(png_ptr, info_ptr, &image_background))
+   if (png_get_bKGD(png_ptr, info_ptr, &image_background) != 0)
       png_set_background(png_ptr, image_background,
                          PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
    else
@@ -259,9 +441,9 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    /* If we don't have another value */
    else
    {
-      screen_gamma = 2.2;  /* A good guess for a PC monitor in a dimly
-                              lit room */
-      screen_gamma = 1.7 or 1.0;  /* A good guess for Mac systems */
+      screen_gamma = PNG_DEFAULT_sRGB;  /* A good guess for a PC monitor
+                                           in a dimly lit room */
+      screen_gamma = PNG_GAMMA_MAC_18 or 1.0; /* Good guesses for Mac systems */
    }
 
    /* Tell libpng to handle the gamma conversion for you.  The final call
@@ -272,12 +454,12 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
 
    int intent;
 
-   if (png_get_sRGB(png_ptr, info_ptr, &intent))
-      png_set_gamma(png_ptr, screen_gamma, 0.45455);
+   if (png_get_sRGB(png_ptr, info_ptr, &intent) != 0)
+      png_set_gamma(png_ptr, screen_gamma, PNG_DEFAULT_sRGB);
    else
    {
       double image_gamma;
-      if (png_get_gAMA(png_ptr, info_ptr, &image_gamma))
+      if (png_get_gAMA(png_ptr, info_ptr, &image_gamma) != 0)
          png_set_gamma(png_ptr, screen_gamma, image_gamma);
       else
          png_set_gamma(png_ptr, screen_gamma, 0.45455);
@@ -287,7 +469,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    /* Quantize RGB files down to 8 bit palette or reduce palettes
     * to the number of colors available on your screen.
     */
-   if (color_type & PNG_COLOR_MASK_COLOR)
+   if ((color_type & PNG_COLOR_MASK_COLOR) != 0)
    {
       int num_palette;
       png_colorp palette;
@@ -302,7 +484,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
             MAX_SCREEN_COLORS, NULL, 0);
       }
       /* This reduces the image to the palette supplied in the file */
-      else if (png_get_PLTE(png_ptr, info_ptr, &palette, &num_palette))
+      else if (png_get_PLTE(png_ptr, info_ptr, &palette, &num_palette) != 0)
       {
          png_uint_16p histogram = NULL;
 
@@ -312,7 +494,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
                         max_screen_colors, histogram, 0);
       }
    }
-#endif /* PNG_READ_QUANTIZE_SUPPORTED */
+#endif /* READ_QUANTIZE */
 
    /* Invert monochrome files to have 0 as white and 1 as black */
    png_set_invert_mono(png_ptr);
@@ -321,7 +503,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
     * [0,65535] to the original [0,7] or [0,31], or whatever range the
     * colors were originally in:
     */
-   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_sBIT))
+   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_sBIT) != 0)
    {
       png_color_8p sig_bit_p;
 
@@ -330,7 +512,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    }
 
    /* Flip the RGB pixels to BGR (or RGBA to BGRA) */
-   if (color_type & PNG_COLOR_MASK_COLOR)
+   if ((color_type & PNG_COLOR_MASK_COLOR) != 0)
       png_set_bgr(png_ptr);
 
    /* Swap the RGBA or GA data to ARGB or AG (or BGRA to ABGR) */
@@ -350,7 +532,7 @@ void read_png(FILE *fp, unsigned int sig_read)  /* File is already open */
    number_passes = png_set_interlace_handling(png_ptr);
 #else
    number_passes = 1;
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
+#endif /* READ_INTERLACING */
 
 
    /* Optional call to gamma correct and add the background to the palette
@@ -549,7 +731,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     * png_progressive_combine_row() passing in the new row and the
     * old row, as demonstrated above.  You can call this function for
     * NULL rows (it will just return) and for non-interlaced images
-    * (it just does the png_memcpy for you) if it will make the code
+    * (it just does the memcpy for you) if it will make the code
     * easier.  Thus, you can just do this for all cases:
     */
 
@@ -562,7 +744,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     * to pass the current row as new_row, and the function will combine
     * the old row and the new row.
     */
-#endif /* PNG_READ_INTERLACING_SUPPORTED */
+#endif /* READ_INTERLACING */
 }
 
 end_callback(png_structp png_ptr, png_infop info)
@@ -664,7 +846,7 @@ void write_png(char *file_name /* , ... other image information ... */)
 
    /* Set the palette if there is one.  REQUIRED for indexed-color images */
    palette = (png_colorp)png_malloc(png_ptr, PNG_MAX_PALETTE_LENGTH
-             * png_sizeof(png_color));
+             * (sizeof (png_color)));
    /* ... Set palette colors ... */
    png_set_PLTE(png_ptr, info_ptr, palette, PNG_MAX_PALETTE_LENGTH);
    /* You must not free palette here, because png_set_PLTE only makes a link to
@@ -750,7 +932,7 @@ void write_png(char *file_name /* , ... other image information ... */)
     */
 
    /* Once we write out the header, the compression type on the text
-    * chunks gets changed to PNG_TEXT_COMPRESSION_NONE_WR or
+    * chunk gets changed to PNG_TEXT_COMPRESSION_NONE_WR or
     * PNG_TEXT_COMPRESSION_zTXt_WR, so it doesn't get written out again
     * at the end.
     */
@@ -788,7 +970,7 @@ void write_png(char *file_name /* , ... other image information ... */)
    png_set_packswap(png_ptr);
 
    /* Turn on interlace handling if you are not using png_write_image() */
-   if (interlacing)
+   if (interlacing != 0)
       number_passes = png_set_interlace_handling(png_ptr);
 
    else
@@ -805,7 +987,7 @@ void write_png(char *file_name /* , ... other image information ... */)
 
    png_bytep row_pointers[height];
 
-   if (height > PNG_UINT_32_MAX/png_sizeof(png_bytep))
+   if (height > PNG_UINT_32_MAX/(sizeof (png_bytep)))
      png_error (png_ptr, "Image is too tall to process in memory");
 
    /* Set up pointers into your "image" byte array */
