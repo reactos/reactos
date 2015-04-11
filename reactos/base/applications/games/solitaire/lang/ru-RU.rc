@@ -12,13 +12,13 @@ BEGIN
     GROUPBOX "Карты", -1, 7, 7, 90, 40
     AUTORADIOBUTTON "По &одной", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "По &три", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
-    GROUPBOX "Scoring", -1, 100, 7, 75, 53
-    AUTORADIOBUTTON "&Standard", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "&Vegas", IDC_OPT_VEGAS, 107, 32, 60, 10
-    AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
+    GROUPBOX "Счёт", -1, 100, 7, 75, 53
+    AUTORADIOBUTTON "на &очки", IDC_OPT_STANDARD, 107, 19, 60, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&на деньги", IDC_OPT_VEGAS, 107, 32, 60, 10
+    AUTORADIOBUTTON "не &ведётся", IDC_OPT_NOSCORE, 107, 45, 60, 10
     AUTOCHECKBOX "&Показывать время", IDC_OPT_SHOWTIME, 7 ,51 ,75 ,10, WS_TABSTOP
     AUTOCHECKBOX "&Строка состояния", IDC_OPT_STATUSBAR, 7, 66, 75, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
+    AUTOCHECKBOX "П&еретаскивание контура", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Отмена", IDCANCEL, 101, 97, 50, 14
 END
@@ -51,10 +51,10 @@ BEGIN
     IDS_SOL_NAME "Пасьянс"
     IDS_SOL_ABOUT "Пасьянс от J Brown\n\nCardLib версии 1.0."
     IDS_SOL_QUIT "Закончить текущую игру?"
-    IDS_SOL_WIN "Congratulations, you win!!"
-    IDS_SOL_DEAL "Deal again?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    IDS_SOL_WIN "Поздравляем, вы выиграли!"
+    IDS_SOL_DEAL "Раздать ещё раз?"
+    IDS_SOL_SCORE "Счёт: %d"
+    IDS_SOL_TIME "Время: %d"
 END
 
 /* Меню */
