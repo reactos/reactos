@@ -529,7 +529,7 @@ MonSelGetMonitorRect(IN OUT PMONITORSELWND infoPtr,
 {
     RECT rc, rcClient;
 
-    if (Index < 0 || Index >= infoPtr->MonitorsCount)
+    if (Index < 0 || (UINT)Index >= infoPtr->MonitorsCount)
         return -1;
 
     if (!infoPtr->CanDisplay)
@@ -1459,7 +1459,7 @@ MonitorSelWndProc(IN HWND hwnd,
                                 Index++;
                         }
 
-                        if (infoPtr->SelectedMonitor < infoPtr->MonitorsCount)
+                        if (infoPtr->SelectedMonitor < (INT)infoPtr->MonitorsCount)
                         {
                             MonSelSetCurSelMonitor(infoPtr,
                                                    Index,

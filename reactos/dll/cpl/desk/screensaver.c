@@ -528,12 +528,13 @@ SetScreenSaver(HWND hwndDlg, PDATA pData)
         /* Set the screensaver */
         if (pData->ScreenSaverItems[pData->Selection].bIsScreenSaver)
         {
+            SIZE_T Length = _tcslen(pData->ScreenSaverItems[pData->Selection].szFilename) * sizeof(TCHAR);
             RegSetValueEx(regKey,
                           _T("SCRNSAVE.EXE"),
                           0,
                           REG_SZ,
                           (PBYTE)pData->ScreenSaverItems[pData->Selection].szFilename,
-                          _tcslen(pData->ScreenSaverItems[pData->Selection].szFilename) * sizeof(TCHAR));
+                          (DWORD)Length);
 
             SystemParametersInfo(SPI_SETSCREENSAVEACTIVE, TRUE, 0, SPIF_UPDATEINIFILE);
         }

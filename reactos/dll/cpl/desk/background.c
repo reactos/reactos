@@ -137,7 +137,7 @@ GdipGetSupportedFileExtensions(VOID)
     size = 0;
     for (i = 0; i < num; ++i)
     {
-        size = size + wcslen(codecInfo[i].FilenameExtension) + 1;
+        size = size + (UINT)wcslen(codecInfo[i].FilenameExtension) + 1;
     }
 
     size = (size + 1) * sizeof(WCHAR);
@@ -238,7 +238,7 @@ AddWallpapersFromDirectory(UINT uCounter, HWND hwndBackgroundList, BackgroundIte
                 }
 
                 PathRemoveExtension(backgroundItem->szDisplayName);
-                
+
                 hr = StringCbCopy(backgroundItem->szFilename, sizeof(backgroundItem->szFilename), filename);
                 if (FAILED(hr))
                 {
@@ -605,8 +605,8 @@ OnBrowseButton(HWND hwndDlg, PDATA pData)
     HRESULT hr;
     TCHAR filterdesc[MAX_PATH];
     TCHAR *c;
-    UINT sizeRemain;
-    DWORD buffersize;
+    size_t sizeRemain;
+    SIZE_T buffersize;
     BOOL success;
 
     hwndBackgroundList = GetDlgItem(hwndDlg, IDC_BACKGROUND_LIST);
@@ -975,12 +975,22 @@ SetWallpaper(PDATA pData)
 
         if (SUCCEEDED(StringCchLength(pData->backgroundItems[pData->backgroundSelection].szFilename, MAX_PATH, &length)))
         {
-            RegSetValueEx(regKey, TEXT("ConvertedWallpaper"), 0, REG_SZ, (BYTE*)pData->backgroundItems[pData->backgroundSelection].szFilename, (length + 1) * sizeof(TCHAR));
+            RegSetValueEx(regKey,
+                          TEXT("ConvertedWallpaper"),
+                          0,
+                          REG_SZ,
+                          (BYTE*)pData->backgroundItems[pData->backgroundSelection].szFilename,
+                          (DWORD)((length + 1) * sizeof(TCHAR)));
         }
 
         if (SUCCEEDED(StringCchLength(szWallpaper, MAX_PATH, &length)))
         {
-            RegSetValueEx(regKey, TEXT("OriginalWallpaper"), 0, REG_SZ, (BYTE *)szWallpaper, (length + 1) * sizeof(TCHAR));
+            RegSetValueEx(regKey,
+                          TEXT("OriginalWallpaper"),
+                          0,
+                          REG_SZ,
+                          (BYTE *)szWallpaper,
+                          (DWORD)((length + 1) * sizeof(TCHAR)));
         }
 
         SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_UPDATEINIFILE);

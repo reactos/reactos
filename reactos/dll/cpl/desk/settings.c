@@ -146,7 +146,7 @@ AddDisplayDevice(IN PDATA pData, IN const DISPLAY_DEVICE *DisplayDevice)
     LPTSTR name = NULL;
     LPTSTR key = NULL;
     LPTSTR devid = NULL;
-    DWORD descriptionSize, nameSize, keySize, devidSize;
+    SIZE_T descriptionSize, nameSize, keySize, devidSize;
     PSETTINGS_ENTRY Current;
     DWORD ResolutionsCount = 1;
     DWORD i;

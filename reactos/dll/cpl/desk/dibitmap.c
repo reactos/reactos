@@ -57,7 +57,7 @@ DibLoadImage(LPTSTR lpFilename)
     ZeroMemory(lpBitmap->info, sizeof(BITMAPINFO));
     lpBitmap->info->bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
     lpBitmap->info->bmiHeader.biWidth       = lpBitmap->width;
-    lpBitmap->info->bmiHeader.biHeight      = -lpBitmap->height;
+    lpBitmap->info->bmiHeader.biHeight      = -(INT)lpBitmap->height;
     lpBitmap->info->bmiHeader.biPlanes      = 1;
     lpBitmap->info->bmiHeader.biBitCount    = 32;
     lpBitmap->info->bmiHeader.biCompression = BI_RGB;
