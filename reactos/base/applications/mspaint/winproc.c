@@ -700,7 +700,7 @@ MainWindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
                 case IDM_HELPHELPTOPICS:
-                    //HtmlHelp(hMainWnd, "help\\Paint.chm", 0, 0);
+                    HtmlHelp(hMainWnd, _T("help\\Paint.chm"), 0, 0);
                     break;
                 case IDM_FILEEXIT:
                     SendMessage(hwnd, WM_CLOSE, wParam, lParam);

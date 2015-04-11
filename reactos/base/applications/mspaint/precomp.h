@@ -13,6 +13,7 @@
 #include <tchar.h>
 #include <stdlib.h>
 #include <shellapi.h>
+#include <htmlhelp.h>
 
 #include "definitions.h"
 #include "drawing.h"
