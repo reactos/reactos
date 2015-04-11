@@ -20,7 +20,7 @@ AreaName    SETS    "|.text|"
 FuncName    SETS    "$Name"
 PrologName  SETS    "$Name":CC:"_Prolog"
 FuncEndName SETS    "$Name":CC:"_end"
-    AREA |.pdata|,ALIGN=2,PDATA
+    //AREA |.pdata|,ALIGN=2,PDATA
     ALIGN 2
     EXPORT $FuncName [FUNC]
 $FuncName
@@ -67,16 +67,16 @@ $FuncEndName
     TRAP_EPILOG $SystemCall
         fixme
     MEND
-    
+
     #define CR 13
     #define LF 10
     #define NUL 0
-    
+
     #define ASCII dcb
-    
+
     MACRO
     UNIMPLEMENTED $Name
-    MEND    
+    MEND
 
 #else
 

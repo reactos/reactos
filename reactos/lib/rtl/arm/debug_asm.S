@@ -6,34 +6,33 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-    .title "ARM Kernel/User NT Debugging and Exception"
-    .include "ntoskrnl/include/internal/arm/kxarm.h"
-    .include "ntoskrnl/include/internal/arm/ksarm.h"
+#include <ksarm.h>
 
     TEXTAREA
+
     NESTED_ENTRY DbgBreakPoint
     PROLOG_END DbgBreakPoint
-    
+
     //
     // Do a breakpoint and return
     //
     bkpt BREAKPOINT_BREAK
     bx lr
     ENTRY_END DbgBreakPoint
-    
+
     NESTED_ENTRY DebugService
     PROLOG_END DebugService
-    
+
     //
     // Do a breakpoint and return
     //
     bkpt BREAKPOINT_PRINT // Could be prompt too, we check this later
     bx lr
     ENTRY_END DebugService
-    
+
     NESTED_ENTRY DebugService2
     PROLOG_END DebugService2
-    
+
     //
     // FIXME-TODO: Do a breakpoint and return
     //
@@ -59,21 +58,24 @@
     str r9, [a1, #CsR9]
     str r10, [a1, #CsR10]
     str r11, [a1, #CsR11]
-    str r12, [a1, #CsR12]    
+    str r12, [a1, #CsR12]
     str sp, [a1, #CsSp]
     str lr, [a1, #CsLr]
-    str pc, [a1, #CsPc]
+//    str pc, [a1, #CsPc] // FIXME: error A2193: this instruction generates unpredictable behavior
     mrs ip, spsr
-    str ip, [a1, #CsPsr]
-    
+    str ip, [a1, #CsCpsr]
+
     //
     // Set flags
     //
     mov ip, #CONTEXT_FULL
     str ip, [a1, #CsContextFlags]
-    
+
     //
     // Return
     //
     bx lr
     ENTRY_END RtlCaptureContext
+
+    END
+/* EOF */
