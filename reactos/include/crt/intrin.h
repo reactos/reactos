@@ -16,8 +16,8 @@
 #endif /* _M_IX86 */
 
 #if defined(_M_ARM)
-#include <arm_neon.h>
-#include <armintr.h>
+//#include <arm_neon.h>
+//#include <armintr.h>
 #endif /* _M_ARM */
 
 #if defined(__cplusplus)

@@ -4577,7 +4577,11 @@ FORCEINLINE struct _TEB * NtCurrentTeb(void)
 }
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
+  #ifdef NONAMELESSUNION
+    return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->DUMMYUNIONNAME.FiberData;
+  #else
     return ((PNT_TIB )(ULONG_PTR)_MoveFromCoprocessor(CP15_TPIDRURW))->FiberData;
+  #endif
 }
 #elif defined(_M_PPC)
 FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
