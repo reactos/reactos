@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 #pragma once
 
@@ -45,7 +45,7 @@ static MUI_ENTRY trTRLanguagePageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -103,7 +103,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         8,
         21,
-        "\x07  ReactOS'u kurmadan áçkmak iáin F3'e basçnçz.",
+        "\x07  ReactOS'u kurmadan áçkmak iáin ò3'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -121,7 +121,7 @@ static MUI_ENTRY trTRWelcomePageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr  R = Onar veyÉ YÅkselt  L = Ruhsat F3 = Äçk",
+        "Giriü = SÅrdÅr  R = Onar veyÉ YÅkselt  L = Ruhsat ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -209,13 +209,13 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         8,
         25,
-        "\x07  ReactOS'u kurmadan áçkmak iáin F3'e basçnçz.",
+        "\x07  ReactOS'u kurmadan áçkmak iáin ò3'e basçnçz.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -427,7 +427,7 @@ static MUI_ENTRY trTRDevicePageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -543,7 +543,7 @@ static MUI_ENTRY trTRComputerPageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -680,7 +680,7 @@ static MUI_ENTRY trTRDisplayPageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -766,7 +766,7 @@ static MUI_ENTRY trTRBootPageEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -865,7 +865,7 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -911,7 +911,7 @@ static MUI_ENTRY trTRInstallDirectoryEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1003,7 +1003,7 @@ static MUI_ENTRY trTRBootLoaderEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "Giriü = SÅrdÅr   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1055,7 +1055,7 @@ static MUI_ENTRY trTRKeyboardSettingsEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1107,7 +1107,7 @@ static MUI_ENTRY trTRLayoutSettingsEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1183,7 +1183,7 @@ static MUI_ENTRY trTRSelectFSEntries[] =
     {
         0,
         0,
-        "Giriü = SÅrdÅr   Äçkçü = òptal   F3 = Äçk",
+        "Giriü = SÅrdÅr   Äçkçü = òptal   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
@@ -1230,7 +1230,7 @@ static MUI_ENTRY trTRDeletePartitionEntries[] =
     {
         0,
         0,
-        "D = BîlÅm Sil   Äçkçü = òptal   F3 = Äçk",
+        "D = BîlÅm Sil   Äçkçü = òptal   ò3 = Äçk",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1283,8 +1283,8 @@ MUI_ERROR trTRErrorEntries[] =
         "yeniden áalçütçrmaya gereksinim duyacaksçnçz.\n"
         "\n"
         "  \x07  Kur'u sÅrdÅrmek iáin Giriü'e basçnçz.\n"
-        "  \x07  Kur'dan áçkmak iáin F3'e basçnçz.",
-        "F3 = Äçk  Giriü = SÅrdÅr"
+        "  \x07  Kur'dan áçkmak iáin ò3'e basçnçz.",
+        "ò3 = Äçk  Giriü = SÅrdÅr"
     },
     {
         //ERROR_NO_HDD
@@ -1348,9 +1348,9 @@ MUI_ERROR trTRErrorEntries[] =
         "\n"         
         "BîlÅmleri oluüturmak veyÉ silmek bîlÅm tablosunu yok edebilir.\n"
         "\n"
-        "  \x07  Kur'dan áçkmak iáin F3'e basçnçz.\n"
+        "  \x07  Kur'dan áçkmak iáin ò3'e basçnçz.\n"
         "  \x07  SÅrdÅrmek iáin Giriü'e basçnçz.",
-        "F3 = Äçk   Giriü = SÅrdÅr"
+        "ò3 = Äçk   Giriü = SÅrdÅr"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1482,22 +1482,22 @@ MUI_ERROR trTRErrorEntries[] =
     },
     {
         //ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Geáersiz dizin adç.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
     {
         //ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "Seáili bîlÅm ReactOS'u kurmak iáin yetecek îláÅde bÅyÅk deßil.\n"
+        "Kurulum bîlÅmÅ en az %lu MB bÅyÅklÅßÅnde olmalç.\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz.",
         NULL
     },
     {
         //ERROR_PARTITION_TABLE_FULL,
-        "BîlÅm tablosu dolu oldußundan dolayç bu diskin bîlÅm tablosunda\n"
-        "yeni bir ana bîlÅm ya da geniületilmiü bîlÅm oluüturamazsçnçz.\n"
+        "BîlÅm tablosu dolu oldußundan dolayç bu diskin bîlÅm tablosunda yeni bir ana bîlÅm\n"
+        "ya da yeni bir geniületilmiü bîlÅm oluüturamazsçnçz.\n"
         "\n"
         "  * SÅrdÅrmek iáin bir dÅßmeye basçnçz."
     },
@@ -1618,13 +1618,13 @@ MUI_STRING trTRStrings[] =
     {STRING_PLEASEWAIT,
     "   LÅtfen bekleyiniz..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   Giriü = Kur  P = Ana BîlÅm Oluütur  E = Geniületilmiü BîlÅm Oluütur  F3 = Äçk"},
+    "   Giriü = Kur  P = Ana BîlÅm Oluütur  E = Geniületilmiü BîlÅm Oluütur  ò3 = Äçk"},
     {STRING_INSTALLCREATELOGICAL,
-    "   ENTER = Kur   L = Mantçklçk BîlÅm Oluütur   F3 = Äçk"},
+    "   ENTER = Kur   L = Mantçklçk BîlÅm Oluütur   ò3 = Äçk"},
     {STRING_INSTALLDELETEPARTITION,
-    "   Giriü = Kur   D = BîlÅmÅ Sil   F3 = Äçk"},
+    "   Giriü = Kur   D = BîlÅmÅ Sil   ò3 = Äçk"},
     {STRING_DELETEPARTITION,
-    "   D = BîlÅmÅ Sil   F3 = Äçk"},
+    "   D = BîlÅmÅ Sil   ò3 = Äçk"},
     {STRING_PARTITIONSIZE,
     "Yeni bîlÅmÅn bÅyÅklÅßÅnÅ giriniz:"},
     {STRING_CHOOSENEWPARTITION,
@@ -1636,7 +1636,7 @@ MUI_STRING trTRStrings[] =
     {STRING_HDDSIZE,
     "LÅtfen yeni bîlÅmÅn bÅyÅklÅßÅnÅ megaáoklu olarak giriniz."},
     {STRING_CREATEPARTITION,
-    "   Giriü = BîlÅm Oluütur   Äçkçü = òptal   F3 = Äçk"},
+    "   Giriü = BîlÅm Oluütur   Äçkçü = òptal   ò3 = Äçk"},
     {STRING_PARTFORMAT,
     "Bu bîlÅm ileride biáimlendirilecektir."},
     {STRING_NONFORMATTEDPART,
@@ -1646,7 +1646,7 @@ MUI_STRING trTRStrings[] =
     {STRING_CHECKINGPART,
     "Kur, üimdi seáili bîlÅmÅ gîzden geáiriyor."},
     {STRING_QUITCONTINUE,
-    "F3 = Äçk   Giriü = SÅrdÅr"},
+    "ò3 = Äçk   Giriü = SÅrdÅr"},
     {STRING_REBOOTCOMPUTER,
     "Giriü = Bilgisayarç Yeniden Baülat"},
     {STRING_TXTSETUPFAILED,
