@@ -1,4 +1,5 @@
 ﻿; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Effective File search
@@ -11,13 +12,19 @@ URLSite = http://www.sowsoft.com
 URLDownload = http://www.sowsoft.com/download/efsearch.zip
 CDPath = none
 
+[Section.0a]
+Description = Buscador de archivos compatible con ReactOS.
+
 [Section.0407]
 Description = ReactOS kompatibles Dateisuchprogramm.
 
 [Section.0418]
 Licence = Gratuită
-Description = Program de căutare a fișierelor, compatibil cu ReactOS
+Description = Program de căutare a fișierelor, compatibil cu ReactOS.
 Size = 944 ko
 
-[Section.0a]
-Description = Buscador de archivos compatible con ReactOS.
+[Section.041f]
+Name = Etkili Kütük Arama
+Licence = Ücretsiz
+Description = ReactOS'la uyumlu kütük arama.
+Size = 944 KB

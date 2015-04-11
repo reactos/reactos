@@ -52,6 +52,6 @@ Size = 30.39 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/ru/SeaMonkey%20Setup%202.33.exe
 
 [Section.041f]
-Description = Mozilla Bohçası sağ. Bu, hiç gereksinim duymayacağınız, yalnızca Tarayıcı, Posta, Söyleşi ve Yazar bohçasıdır.
+Description = Mozilla Bohçası sağ. Bu, bir gereksinim duymayacağınız, yalnızca Tarayıcı, Posta, Söyleşi ve Yazar bohçasıdır.
 Size = 29,89 MB
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/seamonkey/releases/2.33/win32/tr/SeaMonkey%20Setup%202.33.exe

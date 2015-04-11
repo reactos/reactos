@@ -1,3 +1,6 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = K-Meleon
 Version = 75.0 RC2
@@ -11,6 +14,10 @@ CDPath = none
 
 [Section.0407]
 Description = Extrem schneller, erweiterbarer und dennoch kleiner Web Browser basierend auf der Gecko Layout Engine.
+
+[Section.041f]
+Description = Gecko dizgi motoru tabanlı, aşırı hızlı, husûsîleştirilebilir ve şimdi bile yeğni bir Umûmî Ağ tarayıcısı.
+Size = 26,1 MB
 
 [Section.0418]
 Description = Navigator web extrem de rapid, particularizabil, și totuși ușor, bazat pe motorul de afișare Gecko.

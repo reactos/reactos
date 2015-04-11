@@ -1,5 +1,6 @@
 ; UTF-8
 ; Spanish translation by Ismael Ferreras Morezuelas (swyter)
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
 
 [Section]
 Name = Neverball
@@ -21,3 +22,8 @@ Size = 72,2 Mo
 
 [Section.0a]
 Description = Gira el suelo para mover una bola a través de una pista de obstáculos a contra reloj. Neverball es mitad puzle, mitad juego de acción y toda una prueba de habilidad. Se necesita una herramienta como 7-Zip para extraer el juego.
+
+[Section.041f]
+License = GPL sürüm 2
+Description = Süre bitmeden önce bir engel gidişi boyunca bir topu yuvarlamak için odayı eğiniz. Neverball, tikelik bulmaca oyunu, tikelik devingen oyun ve büsbütün bir ustalık sınamasıdır. Oyunu çıkartmak için 7-Zip benzeri bir araç gereklidir.
+Size = 72,2 MB

@@ -1,3 +1,6 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = TightVNC
 Version = 2.7.10
@@ -11,6 +14,11 @@ CDPath = none
 
 [Section.0407]
 Description = Freies Fernbedienungsoftwarepaket.
+
+[Section.041f]
+License = GPL sürüm 2
+Description = Ücretsiz bir uzaktan denetim yazılımı paketi.
+Size = 2,0 MB
 
 [Section.0418]
 Description = Program gratuit de control la distanță.

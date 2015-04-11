@@ -1,3 +1,6 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = NVidia Display drivers
 Version = 52.16
@@ -13,6 +16,12 @@ CDPath = none
 Name = NVidia Display Treiber
 License = Unbekannt
 Description = Display Treiber für RIVA TNT2, GeForce/Quadro 1/2/3/4 Karten von NVidia.
+
+[Section.041f]
+Name = NVidia Görüntü Sürücüleri
+License = Bilinmiyor
+Description = NVidia'dan RIVA TNT2, GeForce/Quadro 1/2/3/4 kartları için görüntü sürücüsü.
+Size = 18,5 MB
 
 [Section.0418]
 Name = Modúl-pilot video pentru NVidia

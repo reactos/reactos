@@ -1,3 +1,6 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = Fall
 Version = 0.1.3
@@ -11,6 +14,11 @@ CDPath = none
 
 [Section.0407]
 Description = Pinguine fallen von einem Eisberg herunter und man muss sie auf sicheres Land befördern.
+
+[Section.041f]
+Name = Düşüş
+Description = Penguenler buz dağından düşüyor ve siz onları limanların içine sektirmelisiniz.
+Size = 371 KB
 
 [Section.0418]
 Description = Joc cu pinguini care cad de pe aisberg, iar jucătorul trebuie să-i salte pe docuri.

@@ -1,3 +1,6 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
 [Section]
 Name = Hiawatha
 Version = 9.12
@@ -11,6 +14,11 @@ CDPath = none
 
 [Section.0407]
 Description = Quelloffener Webserver mit einem Augenmerk auf Sicherheit.
+
+[Section]
+License = GPL sürüm 2
+Description = Güvenlik üzerine odaklı açık kaynak bir Umûmî Ağ sunucusu.
+Size = 3,4 MB
 
 [Section.0418]
 Description = Server web cu surse deschise, av�nd securitatea �n prim plan.
