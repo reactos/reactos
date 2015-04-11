@@ -39,6 +39,11 @@ extern "C" {
 #define MM_PAGE_FRAME_NUMBER_SIZE         20
 
 //
+// User space range limit
+//
+#define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
+
+//
 // Sanity checks for Paging Macros
 //
 #ifdef C_ASSERT

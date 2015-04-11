@@ -3740,6 +3740,14 @@ typedef struct _CONTEXT {
 
 #define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER)
 
+typedef struct _NEON128 {
+    ULONGLONG Low;
+    LONGLONG High;
+} NEON128, *PNEON128;
+
+#define ARM_MAX_BREAKPOINTS 8
+#define ARM_MAX_WATCHPOINTS 1
+
 typedef struct _CONTEXT {
     /* The flags values within this flag control the contents of
        a CONTEXT record.
@@ -3778,7 +3786,24 @@ typedef struct _CONTEXT {
     DWORD Sp;
     DWORD Lr;
     DWORD Pc;
-    DWORD Psr;
+    DWORD Cpsr;
+
+    /* Floating Point/NEON Registers */
+    DWORD Fpscr;
+    DWORD Padding;
+    union {
+        NEON128 Q[16];
+        ULONGLONG D[32];
+        DWORD S[32];
+    } DUMMYUNIONNAME;
+
+    /* Debug registers */
+    DWORD Bvr[ARM_MAX_BREAKPOINTS];
+    DWORD Bcr[ARM_MAX_BREAKPOINTS];
+    DWORD Wvr[ARM_MAX_WATCHPOINTS];
+    DWORD Wcr[ARM_MAX_WATCHPOINTS];
+
+    DWORD Padding2[2];
 } CONTEXT;
 
 #else
