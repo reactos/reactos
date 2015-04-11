@@ -5,10 +5,10 @@
 Name = Steam
 License = Freeware
 Description = Popular Internet game distribution platform and social network. Includes DRM.
-Size = 1.59 MB
+Size = 1.08 MB
 Category = 4
-URLSite = http://steampowered.com/
-URLDownload = http://storefront.steampowered.com/download/SteamInstall.msi
+URLSite = http://store.steampowered.com/
+URLDownload = http://media.steampowered.com/client/installer/SteamSetup.exe
 CDPath = none
 
 [Section.0407]
@@ -21,7 +21,7 @@ URLSite = http://store.steampowered.com/?l=spanish
 
 [Section.040c]
 Description = La plateforme de jeu Steam utilisée par beaucoup de jeux de nos jours.
-Size = 1,59 Mo
+Size = 1,08 Mo
 URLSite = http://store.steampowered.com/?l=french
 
 [Section.0410]
@@ -39,13 +39,13 @@ URLSite = http://store.steampowered.com/?l=polish
 [Section.0418]
 License = Gratuită
 Description = Platformă populară de distribuție a jocurilor și rețea de socializare. Include mecanisme de gestiune a drepturilor de autor (DRM).
-Size = 1,59 Mo
+Size = 1,08 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 
 [Section.041f]
 License = Ücretsiz
 Description = Bugünlerde Steam oyun platformu birçok oyun eliyle kullanılmaktadır.
-Size = 1,59 MB
+Size = 1,08 MB
 URLSite = http://store.steampowered.com/?l=turkish
 
 [Section.0422]
