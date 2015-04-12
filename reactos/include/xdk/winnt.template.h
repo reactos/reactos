@@ -70,6 +70,7 @@ $define(ULONG=DWORD)
 $define(USHORT=WORD)
 $define(UCHAR=BYTE)
 $include(ntbasedef.h)
+$include(interlocked.h)
 $include(winnt_old.h)
 
 #ifdef __cplusplus

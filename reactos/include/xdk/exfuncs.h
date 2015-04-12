@@ -677,12 +677,12 @@ ExInterlockedAddLargeInteger(
   _In_ LARGE_INTEGER Increment,
   _Inout_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock);
 
-#if defined(_WIN64)
+#if !defined(_M_IX86)
 #define ExInterlockedAddLargeStatistic(Addend, Increment) \
     (VOID)InterlockedAdd64(&(Addend)->QuadPart, Increment)
 #else
 #define ExInterlockedAddLargeStatistic(Addend, Increment) \
-    _InterlockedAddLargeStatistic((PLONGLONG)&(Addend)->QuadPart, Increment)
+    (VOID)_InterlockedAddLargeStatistic((PLONGLONG)&(Addend)->QuadPart, Increment)
 #endif
 
 NTKERNELAPI

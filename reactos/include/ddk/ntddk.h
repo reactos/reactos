@@ -3342,6 +3342,8 @@ extern NTKERNELAPI ULONG64 MmUserProbeAddress;
 #elif defined(_M_MIPS)
 
 #elif defined(_M_ARM)
+
+#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 #else
 #error Unknown Architecture
 #endif

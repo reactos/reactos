@@ -1,4 +1,17 @@
 
+#if defined(__ROS_LONG64__)
+#undef InterlockedExchange
+#define InterlockedExchange(a,b) _InterlockedExchange((long*)a,b)
+#undef InterlockedExchangeAdd
+#define InterlockedExchangeAdd(a,b) _InterlockedExchangeAdd((long*)a,b)
+#undef InterlockedCompareExchange
+#define InterlockedCompareExchange(a,b,c) _InterlockedCompareExchange((long*)a,b,c)
+#undef InterlockedIncrement
+#define InterlockedIncrement(a) _InterlockedIncrement((long*)a)
+#undef InterlockedDecrement
+#define InterlockedDecrement(a) _InterlockedDecrement((long*)a)
+#endif
+
 #undef __C89_NAMELESS
 #undef __C89_NAMELESSSTRUCTNAME
 #undef __C89_NAMELESSSTRUCTNAME1
@@ -4635,42 +4648,6 @@ FORCEINLINE PVOID GetFiberData(void)
 {
     return *((PVOID *)GetCurrentFiber());
 }
-
-#define BitScanForward _BitScanForward
-#define BitScanReverse _BitScanReverse
-#define BitTest _bittest
-#define BitTestAndComplement _bittestandcomplement
-#define BitTestAndSet _bittestandset
-#define BitTestAndReset _bittestandreset
-#define InterlockedBitTestAndSet _interlockedbittestandset
-#define InterlockedBitTestAndReset _interlockedbittestandreset
-#define InterlockedAnd16 _InterlockedAnd16
-#define InterlockedCompareExchange16 _InterlockedCompareExchange16
-#define InterlockedOr16 _InterlockedOr16
-#define InterlockedIncrement16 _InterlockedIncrement16
-#define InterlockedDecrement16 _InterlockedDecrement16
-
-#ifdef _M_AMD64
-#define BitScanForward64 _BitScanForward64
-#define BitScanReverse64 _BitScanReverse64
-
-#define InterlockedAnd _InterlockedAnd
-#define InterlockedExchange _InterlockedExchange
-#define InterlockedOr _InterlockedOr
-
-#define InterlockedAnd64 _InterlockedAnd64
-#define InterlockedOr64 _InterlockedOr64
-
-#define InterlockedBitTestAndSet64 _interlockedbittestandset64
-#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
-
-#endif
-
-#ifdef _WIN64
-#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd64((LONG64 *)a, b)
-#else
-#define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
-#endif
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
