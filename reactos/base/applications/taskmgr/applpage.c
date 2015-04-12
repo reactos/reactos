@@ -89,6 +89,23 @@ GetSystemColorDepth(VOID)
     return ColorDepth;
 }
 
+void AppPageCleanup(void)
+{
+    int i;
+    LV_ITEM item;
+    LPAPPLICATION_PAGE_LIST_ITEM pData;
+    for (i = 0; i < ListView_GetItemCount(hApplicationPageListCtrl); i++)
+    {
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        (void)ListView_GetItem(hApplicationPageListCtrl, &item);
+        pData = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
+        HeapFree(GetProcessHeap(), 0, pData);
+    }
+}
+
+
 INT_PTR CALLBACK
 ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -151,6 +168,7 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 #ifdef RUN_APPS_PAGE
         EndLocalThread(&hApplicationThread, dwApplicationThread);
 #endif
+        AppPageCleanup();
         break;
 
     case WM_COMMAND:

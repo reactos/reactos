@@ -330,12 +330,12 @@ void PerfDataRefresh(void)
     }
 
     /* Now alloc a new PERFDATA array and fill in the data */
+    pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PERFDATA) * ProcessCount);
     if (pPerfDataOld) {
         HeapFree(GetProcessHeap(), 0, pPerfDataOld);
     }
     pPerfDataOld = pPerfData;
-    /* Clear out process perf data structures with HEAP_ZERO_MEMORY flag: */
-    pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PERFDATA) * ProcessCount);
+
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     for (Idx=0; Idx<ProcessCount; Idx++) {
         /* Get the old perf data for this process (if any) */
