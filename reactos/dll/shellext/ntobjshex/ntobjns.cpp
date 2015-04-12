@@ -213,21 +213,21 @@ public:
                 return E_FAIL;
         }
 
-        NtPidlEntry * info = (NtPidlEntry *) pcidl;
+        const NtPidlEntry * info = (const NtPidlEntry *) pcidl;
         if ((info->cb < sizeof(NtPidlEntry)) || (info->magic != NT_OBJECT_PIDL_MAGIC))
         {
             ERR("FindPidlInList: Requested pidl is not of the correct type.\n");
             return E_INVALIDARG;
         }
 
-        TRACE("Searching for pidl { cb=%d } in a list of %d items\n", pcidl->mkid.cb, m_hDpaCount);
+        TRACE("Searching for pidl { name='%S' } in a list of %d items\n", info->entryName, m_hDpaCount);
 
         for (UINT i = 0; i < m_hDpaCount; i++)
         {
-            NtPidlEntry * pInfo = (NtPidlEntry *) DPA_GetPtr(m_hDpa, i);
+            const NtPidlEntry * pInfo = (const NtPidlEntry *) DPA_GetPtr(m_hDpa, i);
             ASSERT(pInfo);
 
-            hr = CompareIDs(0, pInfo, pcidl);
+            hr = CompareIDs(SHCIDS_CANONICALONLY, pInfo, info);
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -238,11 +238,13 @@ public:
             }
             else
             {
-                TRACE("Comparison returned %d\n", (int) (short) (hr & 0xFFFF));
+                TRACE("Comparison returned %d for '%S'\n", (int) (short) (hr & 0xFFFF), pInfo->entryName);
             }
         }
 
         ERR("PIDL NOT FOUND: Requested filename: %S\n", info->entryName);
+        *pinfo = NULL;
+
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
@@ -284,11 +286,9 @@ public:
 
     HRESULT GetPidl(UINT index, NtPidlEntry ** pEntry)
     {
-        HRESULT hr;
-
         if (!m_hDpa)
         {
-            hr = Enumerate();
+            HRESULT hr = Enumerate();
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -310,11 +310,9 @@ public:
 
     HRESULT GetCount(UINT * count)
     {
-        HRESULT hr;
-
         if (!m_hDpa)
         {
-            hr = Enumerate();
+            HRESULT hr = Enumerate();
             if (FAILED_UNEXPECTEDLY(hr))
                 return hr;
 
@@ -377,23 +375,33 @@ public:
                         return MAKE_HRESULT(0, 0, (USHORT) 1);
                     if (second->entryNameLength < first->entryNameLength)
                         return MAKE_HRESULT(0, 0, (USHORT) -1);
+
+                    int minlength = min(first->entryNameLength, second->entryNameLength);
+                    if (minlength > 0)
+                    {
+                        int ord = memcmp(first->entryName, second->entryName, minlength);
+                        if (ord != 0)
+                            return MAKE_HRESULT(0, 0, (USHORT) ord);
+                    }
+                    return S_OK;
                 }
-
-                int minlength = min(first->entryNameLength, second->entryNameLength);
-                int ord = StrCmpNW(first->entryName, second->entryName, minlength);
-
-                if (ord != 0)
-                    return MAKE_HRESULT(0, 0, (USHORT) ord);
-
-                if (!canonical)
+                else
                 {
+                    int minlength = min(first->entryNameLength, second->entryNameLength);
+                    if (minlength > 0)
+                    {
+                        int ord = StrCmpNW(first->entryName, second->entryName, minlength / sizeof(WCHAR));
+                        if (ord != 0)
+                            return MAKE_HRESULT(0, 0, (USHORT) ord);
+                    }
+
                     if (second->entryNameLength > first->entryNameLength)
                         return MAKE_HRESULT(0, 0, (USHORT) 1);
                     if (second->entryNameLength < first->entryNameLength)
                         return MAKE_HRESULT(0, 0, (USHORT) -1);
-                }
 
-                return S_OK;
+                    return S_OK;
+                }
             }
             case NTOBJECT_COLUMN_TYPE:
             {
@@ -623,7 +631,6 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
     LPITEMIDLIST *ppidl,
     ULONG *pdwAttributes)
 {
-    HRESULT hr;
     NtPidlEntry * info;
 
     if (!ppidl)
@@ -637,7 +644,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::ParseDisplayName(
 
     TRACE("CNtObjectFolder::ParseDisplayName name=%S (ntPath=%S)\n", lpszDisplayName, m_NtPath);
 
-    hr = m_PidlManager->FindByName(lpszDisplayName, &info);
+    HRESULT hr = m_PidlManager->FindByName(lpszDisplayName, &info);
     if (FAILED(hr))
     {
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
@@ -669,11 +676,10 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
     void **ppvOut)
 {
     const NtPidlEntry * info;
-    HRESULT hr;
 
     if (IsEqualIID(riid, IID_IShellFolder))
     {
-        hr = m_PidlManager->FindPidlInList(pidl, &info);
+        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
@@ -830,15 +836,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-#ifndef DISABLE_STRICT_PIDL_CHECK
         HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-#else
-        info = (const NtPidlEntry *) pidl;
-        if (info->magic != NT_OBJECT_PIDL_MAGIC)
-            return E_INVALIDARG;
-#endif
 
         // Update attributes.
         *rgfInOut = m_PidlManager->ConvertAttributes(info, rgfInOut);
@@ -918,19 +918,12 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
     STRRET *lpName)
 {
     const NtPidlEntry * info;
-    HRESULT hr;
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
-#ifndef DISABLE_STRICT_PIDL_CHECK
-    hr = m_PidlManager->FindPidlInList(pidl, &info);
+    HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-#else
-    info = (const NtPidlEntry *) pidl;
-    if (info->magic != NT_OBJECT_PIDL_MAGIC)
-        return E_INVALIDARG;
-#endif
 
     if ((GET_SHGDN_RELATION(uFlags) == SHGDN_NORMAL) &&
         (GET_SHGDN_FOR(uFlags) & SHGDN_FORPARSING))
@@ -1102,15 +1095,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
 
     if (pidl)
     {
-#ifndef DISABLE_STRICT_PIDL_CHECK
         HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-#else
-        info = (const NtPidlEntry *) pidl;
-        if (info->magic != NT_OBJECT_PIDL_MAGIC)
-            return E_INVALIDARG;
-#endif
 
         static const GUID storage = PSGUID_STORAGE;
         if (IsEqualGUID(pscid->fmtid, storage))
@@ -1185,15 +1172,9 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
 
     if (pidl)
     {
-#ifndef DISABLE_STRICT_PIDL_CHECK
         HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-#else
-        info = (const NtPidlEntry *) pidl;
-        if (info->magic != NT_OBJECT_PIDL_MAGIC)
-            return E_INVALIDARG;
-#endif
 
         switch (iColumn)
         {

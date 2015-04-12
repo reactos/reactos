@@ -48,6 +48,3 @@ DEFINE_GUID(CLSID_NtObjectFolder,
 
 #include "ntobjns.h"
 #include "regfolder.h"
-
-// Workaround for missing entries
-#define DISABLE_STRICT_PIDL_CHECKS
