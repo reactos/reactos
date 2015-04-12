@@ -4,13 +4,13 @@
 
 [Section]
 Name = Inkscape
-Version = 0.48.5
+Version = 0.91
 License = GPL
 Description = A vector graphics editor licensed under the GNU General Public License.
-Size = 33 MB
+Size = 41.31 MB
 Category = 3
 URLSite = http://www.inkscape.org/
-URLDownload = http://download.sourceforge.net/inkscape/inkscape/0.48.5/Inkscape-0.48.5-1-win32.exe
+URLDownload = https://inkscape.global.ssl.fastly.net/media/resources/file/Inkscape-0.91-1.exe
 CDPath = none
 
 [Section.0407]
@@ -18,11 +18,11 @@ Description = Editor für Vektorgrafiken, lizensiert unter der GNU General Publi
 
 [Section.0418]
 Description = Editor de grafică vectorială oferit sub Licența Publică Generală GNU.
-Size = 33 Mo
+Size = 41,31 Mo
 
 [Section.0a]
 Description = Un editor de gráficos vectoriales bajo la licencia GNU GPL.
 
 [Section.041f]
 Description = Inkscape, GNU Umûmî Kamu Ruhsatı altında ruhsatlanmış bir yöney çizge düzenleyicisidir.
-Size = 32,9 MB
+Size = 41,31 MB

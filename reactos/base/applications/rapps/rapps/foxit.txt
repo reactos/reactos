@@ -3,13 +3,13 @@
 
 [Section]
 Name = Foxit Reader
-Version = 7.1.0.0306
+Version = 7.1.0.0320
 License = Freeware
 Description = Alternative PDF reader, rivaling Adobe Reader functionality-wise.
-Size = 36.80 MB
+Size = 36.59 MB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
-URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.1/en_us/FoxitReader710.0306_prom_enu_Setup.exe
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.1/en_us/FoxitReader710.0320_prom_enu_Setup.exe
 CDPath = none
 
 [Section.0407]

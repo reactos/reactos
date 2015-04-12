@@ -3,13 +3,13 @@
 
 [Section]
 Name = NirLauncher
-Version = 1.19.26
+Version = 1.19.28
 License = Freeware
 Description = A package of more than 180 utilities for Windows.
-Size = 20.53 MB
+Size = 20.59 MB
 Category = 12
 URLSite = http://launcher.nirsoft.net/
-URLDownload = http://download.nirsoft.net/nirsoft_package_1.19.26.zip
+URLDownload = http://download.nirsoft.net/nirsoft_package_1.19.28.zip
 CDPath = none
 
 [Section.0407]
@@ -25,7 +25,7 @@ Description = Un paquete con más de 180 utilidades.
 [Section.0418]
 Licence = Gratuită
 Description = Pachet cu peste 180 de utilitare.
-Size = 20,53 Mo
+Size = 20,59 Mo
 
 [Section.041f]
 License = Ücretsiz

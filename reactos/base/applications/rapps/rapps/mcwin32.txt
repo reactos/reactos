@@ -3,20 +3,20 @@
 
 [Section]
 Name = Midnight Commander
-Version = Build 186 (4.8.12)
+Version = Build 189 (4.8.13)
 License = GPLv3
 Description = 32-bit Windows port of GNU Midnight Commander.
 Size = 2.35 MB
 Category = 12
 URLSite = http://sourceforge.net/projects/mcwin32/
-URLDownload = http://download.sourceforge.net/project/mcwin32/mcwin32-build186-setup.exe
+URLDownload = http://download.sourceforge.net/project/mcwin32/mcwin32-build189-setup.exe
 CDPath = none
 
 [Section.0407]
 Description = 32-bit Windows port des GNU Midnight Commander.
 
 [Section.0410]
-Version = Revisione 186 (4.8.12)
+Version = Revisione 186 (4.8.13)
 License = GPL versione 3
 Description = Un porting Windows 32bit di Midnight Commander.
 
@@ -28,12 +28,12 @@ License = GPL wersja 3
 Description = 32-bitowy port GNU Midnight Commander dla Windows.
 
 [Section.0418]
-Version = Versiunea 186 (4.8.12)
+Version = Versiunea 186 (4.8.13)
 Description = Portarea Windows a programului GNU Midnight Commander pe 32-biți.
 Size = 2,35 Mo
 
 [Section.041f]
-Version = Yapı 186 (4.8.12)
+Version = Yapı 186 (4.8.13)
 License = GPL sürüm 3
 Description = GNU Midnight Commander'ın 32 bitlik Windows uyarlamasıdır.
 Size = 2,35 MB

@@ -3,7 +3,7 @@
 
 [Section]
 Name = Click-N-Type Virtual Keyboard
-Version = 3.03
+Version = 3.03.415
 License = Freeware
 Description = Freeware virtual keyboard application.
 Size = 1.3 MB
