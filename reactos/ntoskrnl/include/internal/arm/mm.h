@@ -16,6 +16,10 @@
 #define CPT_SHIFT 10
 #define CPT_SIZE  (1 << CPT_SHIFT)
 
+/* MMPTE related defines */
+#define MM_EMPTY_PTE_LIST  ((ULONG)0xFFFFF)
+#define MM_EMPTY_LIST  ((ULONG_PTR)-1)
+
 //
 // Base Addresses
 //
@@ -86,7 +90,7 @@ typedef struct _PAGE_TABLE_ARM
 
 typedef struct _PAGE_DIRECTORY_ARM
 {
-    union 
+    union
     {
         HARDWARE_PDE_ARMV6 Pde[4096];
         HARDWARE_LARGE_PTE_ARMV6 Pte[4096];
@@ -108,8 +112,8 @@ struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
-#define MI_MAKE_DIRTY_PAGE(x)      
-#define MI_MAKE_ACCESSED_PAGE(x)      
+#define MI_MAKE_DIRTY_PAGE(x)
+#define MI_MAKE_ACCESSED_PAGE(x)
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
@@ -144,7 +148,7 @@ PULONG MmGetPageDirectory(VOID);
 /* Retrives the PDE entry for the given VA */
 #define MiGetPdeAddress(x) ((PMMPDE)(PDE_BASE + (((ULONG)(x) >> 20) << 2)))
 #define MiAddressToPde(x)  MiGetPdeAddress(x)
-    
+
 /* Retrieves the PTE entry for the given VA */
 #define MiGetPteAddress(x) ((PMMPTE)(PTE_BASE + (((ULONG)(x) >> 12) << 2)))
 #define MiAddressToPte(x)  MiGetPteAddress(x)
@@ -153,7 +157,7 @@ PULONG MmGetPageDirectory(VOID);
 #define MiGetPdeOffset(x)       (((ULONG)(x)) >> 20)
 #define MiGetPteOffset(x)       ((((ULONG)(x)) << 12) >> 24)
 #define MiAddressToPteOffset(x) MiGetPteOffset(x)
-    
+
 /* Convert a PTE into a corresponding address */
 #define MiPteToAddress(x) ((PVOID)((ULONG)(x) << 10))
 #define MiPdeToAddress(x) ((PVOID)((ULONG)(x) << 18))
@@ -163,5 +167,5 @@ PULONG MmGetPageDirectory(VOID);
 
 #define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
     ((((x)) % (4*1024*1024)) / (4*1024))
-    
+
 #define MM_CACHE_LINE_SIZE 64

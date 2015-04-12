@@ -82,6 +82,11 @@ extern "C" {
 #define KSEG0_BASE              0x80000000
 
 //
+// Number of pool lookaside lists per pool in the PRCB
+//
+#define NUMBER_POOL_LOOKASIDE_LISTS 32
+
+//
 // Trap Frame Definition
 //
 typedef struct _KTRAP_FRAME

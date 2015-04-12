@@ -84,6 +84,9 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MiIsPteOnPdeBoundary(PointerPte) \
     ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
 #elif _M_ARM
+#define PPE_PER_PAGE 1
+#define PDE_PER_PAGE 4096
+#define PTE_PER_PAGE 256
 #define PD_COUNT  1
 #define PDE_COUNT 4096
 #define PTE_COUNT 256
@@ -311,6 +314,8 @@ extern const ULONG MmProtectToValue[32];
 #define SESSION_POOL_LOOKASIDES 21
 #elif defined(_M_IX86)
 #define SESSION_POOL_LOOKASIDES 26
+#elif defined(_M_ARM)
+#define SESSION_POOL_LOOKASIDES 26 // CHECKME
 #else
 #error Not Defined!
 #endif
@@ -379,6 +384,11 @@ extern const ULONG MmProtectToValue[32];
 #define POOL_FREE_IRQL_INVALID 9
 #define POOL_BILLED_PROCESS_INVALID 13
 #define POOL_HEADER_SIZE_INVALID 32
+
+#ifdef _M_ARM
+#define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
+#endif
+
 
 typedef struct _POOL_DESCRIPTOR
 {

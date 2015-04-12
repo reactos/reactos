@@ -8554,6 +8554,8 @@ KeRaiseIrqlToSynchLevel(VOID);
 
 #elif defined(_M_ARM)
 #include <armddk.h>
+
+#define KeMemoryBarrierWithoutFence() _ReadWriteBarrier()
 #else
 #error Unknown Architecture
 #endif

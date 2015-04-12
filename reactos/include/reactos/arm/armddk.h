@@ -29,7 +29,7 @@
 // FIXME: mmtypes.h?
 //
 #define KIP0PCRADDRESS          0xFFDFF000
-#define KI_USER_SHARED_DATA     0xFFDF0000
+#define KI_USER_SHARED_DATA     0xFFFF9000
 #define USPCR                   0x7FFF0000
 #define PCR                     ((KPCR * const)KIP0PCRADDRESS)
 #define USERPCR                 ((volatile KPCR * const)USPCR)
@@ -246,7 +246,7 @@ extern volatile struct _KSYSTEM_TIME KeTickCount;
 
 #define ASSERT_BREAKPOINT BREAKPOINT_COMMAND_STRING + 1
 
-#define DbgRaiseAssertionFailure() __break(ASSERT_BREAKPOINT)
+#define DbgRaiseAssertionFailure() __emit(0xdefc)
 
 #define PCR_MINOR_VERSION 1
 #define PCR_MAJOR_VERSION 1
