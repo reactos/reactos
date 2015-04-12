@@ -257,14 +257,6 @@ Large(
     ok_eq_print(Value##Type.QuadPart, ExpectedValue, Print);                \
 } while (0)
 
-/* TODO: missing in wdm.h! */
-#define InterlockedCompareExchangeAcquire InterlockedCompareExchange
-#define InterlockedCompareExchangeRelease InterlockedCompareExchange
-#define InterlockedIncrementAcquire InterlockedIncrement
-#define InterlockedIncrementRelease InterlockedIncrement
-#define InterlockedDecrementAcquire InterlockedDecrement
-#define InterlockedDecrementRelease InterlockedDecrement
-
 static
 VOID
 TestInterlockedFunctional(VOID)
