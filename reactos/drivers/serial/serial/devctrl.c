@@ -832,7 +832,7 @@ SerialDeviceControl(
 				IoMarkIrpPending(Irp);
 
 				WaitingIrp = InterlockedCompareExchangePointer(
-					&DeviceExtension->WaitOnMaskIrp,
+					(PVOID*)&DeviceExtension->WaitOnMaskIrp,
 					Irp,
 					NULL);
 

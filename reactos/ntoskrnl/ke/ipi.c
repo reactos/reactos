@@ -178,7 +178,7 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
         {
             while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->TargetSet, 0, 0));
         }
-        (void)InterlockedExchangePointer(&Prcb->SignalDone, NULL);
+        (void)InterlockedExchangePointer((PVOID*)&Prcb->SignalDone, NULL);
     }
 #endif
    return TRUE;

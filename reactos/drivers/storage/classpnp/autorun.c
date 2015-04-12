@@ -160,7 +160,7 @@ ClassSendEjectionNotification(
     // non-MMC-compliant devices also from sense codes.
     //
 
-    DBGTRACE(ClassDebugTrace, ("ClassSendEjectionNotification: media EJECT_REQUEST"));    
+    DBGTRACE(ClassDebugTrace, ("ClassSendEjectionNotification: media EJECT_REQUEST"));
     ClasspSendNotification(FdoExtension,
                            &GUID_IO_MEDIA_EJECT_REQUEST,
                            0,
@@ -412,7 +412,7 @@ ClasspInterpretGesnData(
                            &GUID_IO_GENERIC_GESN_EVENT,
                            sizeof(NOTIFICATION_EVENT_STATUS_HEADER) + dataLength,
                            Header)
-*/                           
+*/
 
     switch (Header->NotificationClass) {
 
@@ -450,7 +450,7 @@ ClasspInterpretGesnData(
         KeQuerySystemTime(&(externalData.SystemTime));
         externalData.SystemTime.QuadPart *= (LONGLONG)KeQueryTimeIncrement();
 
-        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media DEVICE_EXTERNAL_REQUEST"));        
+        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media DEVICE_EXTERNAL_REQUEST"));
         ClasspSendNotification(FdoExtension,
                                &GUID_IO_DEVICE_EXTERNAL_REQUEST,
                                sizeof(DEVICE_EVENT_EXTERNAL_REQUEST),
@@ -541,7 +541,7 @@ ClasspInterpretGesnData(
                    busyData.Estimated100msToReady
                    ));
 
-        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media BECOMING_READY"));                
+        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media BECOMING_READY"));
         ClasspSendNotification(FdoExtension,
                                &GUID_IO_DEVICE_BECOMING_READY,
                                sizeof(DEVICE_EVENT_BECOMING_READY),
@@ -555,7 +555,7 @@ ClasspInterpretGesnData(
 
     }
     
-    } // end switch on notification class    
+    } // end switch on notification class
     return;
 }
 
@@ -660,7 +660,7 @@ ClasspInternalSetMediaChangeState(
                                sizeof(ULONG),
                                &data);
 
-    } 
+    }
     else if (NewState == MediaNotPresent) {
 
         DBGTRACE(ClassDebugTrace, ("ClasspInternalSetMediaChangeState: media REMOVAL"));
@@ -858,12 +858,12 @@ ClasspMediaChangeDetectionCompletion(
         
         PSENSE_DATA senseData = srb->SenseInfoBuffer;
         
-        if ((senseData->SenseKey == SCSI_SENSE_NOT_READY) && 
+        if ((senseData->SenseKey == SCSI_SENSE_NOT_READY) &&
             (senseData->AdditionalSenseCode == SCSI_ADSENSE_LUN_NOT_READY)){
             srb->SrbStatus = SRB_STATUS_SUCCESS;
         }
-    }       
-        
+    }
+
 
     //
     // use ClassInterpretSenseInfo() to check for media state, and also
@@ -882,7 +882,7 @@ ClasspMediaChangeDetectionCompletion(
                                 &status,
                                 NULL);
 
-    } 
+    }
     else {
         
         fdoData->LoggedTURFailureSinceLastIO = FALSE;
@@ -910,7 +910,7 @@ ClasspMediaChangeDetectionCompletion(
             status = STATUS_SUCCESS;
         }
 
-        if (!NT_SUCCESS(status)) {            
+        if (!NT_SUCCESS(status)) {
             DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion: GESN failed with status %x", status));
         } else {
 
@@ -1067,7 +1067,7 @@ ClasspPrepareMcnIrp(
     if (status == REMOVE_COMPLETE) {
         ASSERT(status != REMOVE_COMPLETE);
         return NULL;
-    } 
+    }
     else if (status == REMOVE_PENDING) {
         ClassReleaseRemoveLock(FdoExtension->DeviceObject, irp);
         return NULL;
@@ -3363,7 +3363,7 @@ ClasspFailurePredict(
     //
 
     InterlockedExchange((PLONG)&info->CountDown, info->Period);
-    workItem = InterlockedExchangePointer(&info->WorkQueueItem, NULL);
+    workItem = InterlockedExchangePointer((PVOID*)&info->WorkQueueItem, NULL);
 
     if (ClasspCanSendPollingIrp(fdoExtension)) {
 

@@ -5,7 +5,6 @@
 #define free libwine_free
 #define realloc libwine_realloc
 #define _strdup libwine__strdup
-#define interlocked_xchg_add InterlockedExchangeAdd
 
 #include "debug.c"
 

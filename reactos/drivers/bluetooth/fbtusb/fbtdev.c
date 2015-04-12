@@ -1042,7 +1042,7 @@ IdleNotificationRequestComplete_Exit:
     idleCallbackInfo = DeviceExtension->IdleCallbackInfo;
     DeviceExtension->IdleCallbackInfo = NULL;
 
-    idleIrp = (PIRP) InterlockedExchangePointer(&DeviceExtension->PendingIdleIrp, NULL);
+    idleIrp = (PIRP) InterlockedExchangePointer((PVOID*)&DeviceExtension->PendingIdleIrp, NULL);
     InterlockedExchange(&DeviceExtension->IdleReqPend, 0);
 
     KeReleaseSpinLock(&DeviceExtension->IdleReqStateLock, oldIrql);
@@ -1104,7 +1104,7 @@ VOID NTAPI CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension)
     if(!CanDeviceSuspend(DeviceExtension))
     {
         FreeBT_DbgPrint(3, ("Device is not idle\n"));
-        irp = (PIRP) InterlockedExchangePointer(&DeviceExtension->PendingIdleIrp, NULL);
+        irp = (PIRP) InterlockedExchangePointer((PVOID*)&DeviceExtension->PendingIdleIrp, NULL);
 
     }
 

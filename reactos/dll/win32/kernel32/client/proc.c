@@ -1437,7 +1437,7 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
                         StartupInfo->lpTitle = TitleString.Buffer;
 
                         /* We finished with the ANSI version, try to cache it */
-                        if (!InterlockedCompareExchangePointer(&BaseAnsiStartupInfo,
+                        if (!InterlockedCompareExchangePointer((PVOID*)&BaseAnsiStartupInfo,
                                                                StartupInfo,
                                                                NULL))
                         {

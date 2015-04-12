@@ -244,7 +244,7 @@ pSetupStringTableAddString(HSTRING_TABLE hStringTable,
             return (DWORD)-1;
         memset(&pNewSlots[pStringTable->dwMaxSlots], 0, sizeof(TABLE_SLOT) * (dwNewMaxSlots - pStringTable->dwMaxSlots));
         memcpy(pNewSlots, pStringTable->pSlots, sizeof(TABLE_SLOT) * pStringTable->dwMaxSlots);
-        pNewSlots = InterlockedExchangePointer(&pStringTable->pSlots, pNewSlots);
+        pNewSlots = InterlockedExchangePointer((PVOID*)&pStringTable->pSlots, pNewSlots);
         MyFree(pNewSlots);
         pStringTable->dwMaxSlots = dwNewMaxSlots;
 

@@ -428,7 +428,7 @@ PspSetQuotaLimits(
         QuotaBlock->QuotaEntry[2].Limit = PspDefaultQuotaBlock.QuotaEntry[2].Limit;
 
         /* Try to exchange the quota block, if that failed, just drop it */
-        OldQuotaBlock = InterlockedCompareExchangePointer(&Process->QuotaBlock,
+        OldQuotaBlock = InterlockedCompareExchangePointer((PVOID*)&Process->QuotaBlock,
                                                           QuotaBlock,
                                                           &PspDefaultQuotaBlock);
         if (OldQuotaBlock == &PspDefaultQuotaBlock)

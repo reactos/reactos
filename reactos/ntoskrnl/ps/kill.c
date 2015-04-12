@@ -177,7 +177,7 @@ PspReapRoutine(IN PVOID Context)
     do
     {
         /* Write magic value and return the next entry to process */
-        NextEntry = InterlockedExchangePointer(&PspReaperListHead.Flink,
+        NextEntry = InterlockedExchangePointer((PVOID*)&PspReaperListHead.Flink,
                                                (PVOID)1);
         ASSERT((NextEntry != NULL) && (NextEntry != (PVOID)1));
 
@@ -200,7 +200,7 @@ PspReapRoutine(IN PVOID Context)
         } while ((NextEntry != NULL) && (NextEntry != (PVOID)1));
 
         /* Remove magic value, keep looping if it got changed */
-    } while (InterlockedCompareExchangePointer(&PspReaperListHead.Flink,
+    } while (InterlockedCompareExchangePointer((PVOID*)&PspReaperListHead.Flink,
                                                0,
                                                (PVOID)1) != (PVOID)1);
 }
