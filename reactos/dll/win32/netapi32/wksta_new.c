@@ -138,6 +138,7 @@ WKSSVC_IMPERSONATE_HANDLE_unbind(WKSSVC_IMPERSONATE_HANDLE pszSystemName,
 }
 
 
+#if 0
 NET_API_STATUS
 NET_API_FUNCTION
 NetGetJoinInformation(
@@ -167,6 +168,7 @@ NetGetJoinInformation(
 
     return status;
 }
+#endif
 
 
 NET_API_STATUS
@@ -342,6 +344,7 @@ NetUseGetInfo(
 }
 
 
+#if 0
 NET_API_STATUS
 WINAPI
 NetWkstaGetInfo(
@@ -353,6 +356,9 @@ NetWkstaGetInfo(
 
     TRACE("NetWkstaGetInfo(%s, %d, %p)\n", debugstr_w(servername),
           level, bufptr);
+
+    if (bufptr == NULL)
+        return ERROR_INVALID_PARAMETER;
 
     *bufptr = NULL;
 
@@ -370,6 +376,7 @@ NetWkstaGetInfo(
 
     return status;
 }
+#endif
 
 
 NET_API_STATUS
@@ -460,6 +467,7 @@ NetWkstaTransportDel(
 }
 
 
+#if 0
 NET_API_STATUS
 WINAPI
 NetWkstaTransportEnum(
@@ -621,6 +629,7 @@ NetWkstaUserGetInfo(
 
     return status;
 }
+#endif
 
 
 NET_API_STATUS
