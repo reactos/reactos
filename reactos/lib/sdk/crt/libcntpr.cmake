@@ -135,7 +135,7 @@ elseif(ARCH STREQUAL "amd64")
         math/sin.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_SOURCE
-        math/arm/__rt_udiv.c
+        math/arm/__rt_div.c
     )
     list(APPEND LIBCNTPR_ASM_SOURCE
         math/arm/floor.s
@@ -143,7 +143,6 @@ elseif(ARCH STREQUAL "arm")
         math/arm/pow.s
         math/arm/__dtou64.s
         math/arm/__u64tod.s
-        math/arm/__rt_sdiv.s
         math/arm/__rt_sdiv64.s
         math/arm/__rt_udiv64.s
     )
