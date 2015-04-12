@@ -106,6 +106,10 @@ void PerfDataUninitialize(void)
         pCur = pCur->Flink;
         HeapFree(GetProcessHeap(), 0, pEntry);
     }
+
+    if (SystemProcessorTimeInfo) {
+        HeapFree(GetProcessHeap(), 0, SystemProcessorTimeInfo);
+    }
 }
 
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)

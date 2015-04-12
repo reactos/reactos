@@ -59,6 +59,22 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, ULONG nMaxCo
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 int ProcessRunning(ULONG ProcessId);
 
+void Cleanup(void)
+{
+    int i;
+    LV_ITEM item;
+    LPPROCESS_PAGE_LIST_ITEM pData;
+    for (i = 0; i < ListView_GetItemCount(hProcessPageListCtrl); i++)
+    {
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        (void)ListView_GetItem(hProcessPageListCtrl, &item);
+        pData = (LPPROCESS_PAGE_LIST_ITEM)item.lParam;
+        HeapFree(GetProcessHeap(), 0, pData);
+    }
+}
+
 int ProcGetIndexByProcessId(DWORD dwProcessId)
 {
     int     i;
@@ -170,6 +186,7 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         EndLocalThread(&hProcessThread, dwProcessThread);
 #endif
         SaveColumnSettings();
+        Cleanup();
         break;
 
     case WM_COMMAND:
