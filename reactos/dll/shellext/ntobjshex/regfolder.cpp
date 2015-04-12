@@ -194,7 +194,7 @@ public:
         return S_OK;
     }
 
-    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, RegPidlEntry ** pinfo)
+    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, const RegPidlEntry ** pinfo)
     {
         HRESULT hr;
 
@@ -323,7 +323,7 @@ public:
     }
 
 
-    static LPITEMIDLIST CreatePidlFromItem(RegPidlEntry * entry)
+    static LPITEMIDLIST CreatePidlFromItem(const RegPidlEntry * entry)
     {
         LPITEMIDLIST idl = (LPITEMIDLIST) CoTaskMemAlloc(entry->cb + 2);
         if (!idl)
@@ -333,7 +333,7 @@ public:
         return idl;
     }
 
-    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, RegPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, const RegPidlEntry * first, const RegPidlEntry * second)
     {
         if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
@@ -418,7 +418,7 @@ public:
         return E_INVALIDARG;
     }
 
-    static HRESULT CompareIDs(LPARAM lParam, RegPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, const RegPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         RegPidlEntry * second = (RegPidlEntry*) &(p->mkid);
@@ -438,7 +438,7 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    static ULONG ConvertAttributes(RegPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(const RegPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = 0;
@@ -452,7 +452,7 @@ public:
 
     BOOL IsFolder(LPCITEMIDLIST pcidl)
     {
-        RegPidlEntry * entry;
+        const RegPidlEntry * entry;
         HRESULT hr = FindPidlInList(pcidl, &entry);
         if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
@@ -512,7 +512,7 @@ public:
         }
     }
 
-    HRESULT FormatContentsForDisplay(RegPidlEntry * info, PCWSTR * strContents)
+    HRESULT FormatContentsForDisplay(const RegPidlEntry * info, PCWSTR * strContents)
     {
         PVOID td = (((PBYTE) info) + FIELD_OFFSET(RegPidlEntry, entryName) + info->entryNameLength + sizeof(WCHAR));
 
@@ -752,7 +752,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::BindToObject(
     REFIID riid,
     void **ppvOut)
 {
-    RegPidlEntry * info;
+    const RegPidlEntry * info;
     HRESULT hr;
 
     if (IsEqualIID(riid, IID_IShellFolder))
@@ -866,8 +866,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetAttributesOf(
     PCUITEMID_CHILD_ARRAY apidl,
     SFGAOF *rgfInOut)
 {
-    RegPidlEntry * info;
-    HRESULT hr;
+    const RegPidlEntry * info;
 
     TRACE("GetAttributesOf\n");
 
@@ -881,9 +880,15 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-        hr = m_PidlManager->FindPidlInList(pidl, &info);
+#ifndef DISABLE_STRICT_PIDL_CHECK
+        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+#else
+        info = (const RegPidlEntry *) pidl;
+        if (info->magic != REGISTRY_PIDL_MAGIC)
+            return E_INVALIDARG;
+#endif
 
         // Update attributes.
         *rgfInOut = m_PidlManager->ConvertAttributes(info, rgfInOut);
@@ -962,14 +967,20 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDisplayNameOf(
     SHGDNF uFlags,
     STRRET *lpName)
 {
-    RegPidlEntry * info;
+    const RegPidlEntry * info;
     HRESULT hr;
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
+#ifndef DISABLE_STRICT_PIDL_CHECK
     hr = m_PidlManager->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+#else
+    info = (const RegPidlEntry *) pidl;
+    if (info->magic != REGISTRY_PIDL_MAGIC)
+        return E_INVALIDARG;
+#endif
 
     if ((GET_SHGDN_RELATION(uFlags) == SHGDN_NORMAL) &&
         (GET_SHGDN_FOR(uFlags) & SHGDN_FORPARSING))
@@ -1134,16 +1145,22 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsEx(
     const SHCOLUMNID *pscid,
     VARIANT *pv)
 {
-    RegPidlEntry * info;
+    const RegPidlEntry * info;
     HRESULT hr;
 
     TRACE("GetDetailsEx\n");
 
     if (pidl)
     {
+#ifndef DISABLE_STRICT_PIDL_CHECK
         hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+#else
+        info = (const RegPidlEntry *) pidl;
+        if (info->magic != REGISTRY_PIDL_MAGIC)
+            return E_INVALIDARG;
+#endif
 
         static const GUID storage = PSGUID_STORAGE;
         if (IsEqualGUID(pscid->fmtid, storage))
@@ -1208,16 +1225,22 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::GetDetailsOf(
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    RegPidlEntry * info;
+    const RegPidlEntry * info;
     HRESULT hr;
 
     TRACE("GetDetailsOf\n");
 
     if (pidl)
     {
+#ifndef DISABLE_STRICT_PIDL_CHECK
         hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+#else
+        info = (const RegPidlEntry *) pidl;
+        if (info->magic != REGISTRY_PIDL_MAGIC)
+            return E_INVALIDARG;
+#endif
 
         switch (iColumn)
         {

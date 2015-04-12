@@ -199,7 +199,7 @@ public:
         return S_OK;
     }
 
-    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, NtPidlEntry ** pinfo)
+    HRESULT FindPidlInList(PCUITEMID_CHILD pcidl, const NtPidlEntry ** pinfo)
     {
         HRESULT hr;
 
@@ -326,7 +326,7 @@ public:
         return S_OK;
     }
 
-    static LPITEMIDLIST CreatePidlFromItem(NtPidlEntry * entry)
+    static LPITEMIDLIST CreatePidlFromItem(const NtPidlEntry * entry)
     {
         LPITEMIDLIST idl = (LPITEMIDLIST) CoTaskMemAlloc(entry->cb + 2);
         if (!idl)
@@ -336,7 +336,7 @@ public:
         return idl;
     }
 
-    static HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, NtPidlEntry * second)
+    static HRESULT CompareIDs(LPARAM lParam, const NtPidlEntry * first, const NtPidlEntry * second)
     {
         if ((lParam & 0xFFFF0000) == SHCIDS_ALLFIELDS)
         {
@@ -431,7 +431,7 @@ public:
         return E_INVALIDARG;
     }
 
-    static HRESULT CompareIDs(LPARAM lParam, NtPidlEntry * first, LPCITEMIDLIST pcidl)
+    static HRESULT CompareIDs(LPARAM lParam, const NtPidlEntry * first, LPCITEMIDLIST pcidl)
     {
         LPCITEMIDLIST p = pcidl;
         NtPidlEntry * second = (NtPidlEntry*) &(p->mkid);
@@ -451,7 +451,7 @@ public:
         return CompareIDs(lParam, first, pcidl2);
     }
 
-    static ULONG ConvertAttributes(NtPidlEntry * entry, PULONG inMask)
+    static ULONG ConvertAttributes(const NtPidlEntry * entry, PULONG inMask)
     {
         ULONG mask = inMask ? *inMask : 0xFFFFFFFF;
         ULONG flags = SFGAO_HASPROPSHEET | SFGAO_CANLINK;
@@ -470,7 +470,7 @@ public:
 
     BOOL IsFolder(LPCITEMIDLIST pcidl)
     {
-        NtPidlEntry * entry;
+        const NtPidlEntry * entry;
         HRESULT hr = FindPidlInList(pcidl, &entry);
         if (FAILED_UNEXPECTEDLY(hr))
             return FALSE;
@@ -668,7 +668,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::BindToObject(
     REFIID riid,
     void **ppvOut)
 {
-    NtPidlEntry * info;
+    const NtPidlEntry * info;
     HRESULT hr;
 
     if (IsEqualIID(riid, IID_IShellFolder))
@@ -816,8 +816,7 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
     PCUITEMID_CHILD_ARRAY apidl,
     SFGAOF *rgfInOut)
 {
-    NtPidlEntry * info;
-    HRESULT hr;
+    const NtPidlEntry * info;
 
     TRACE("GetAttributesOf\n");
 
@@ -831,9 +830,15 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetAttributesOf(
     {
         PCUITEMID_CHILD pidl = apidl[i];
 
-        hr = m_PidlManager->FindPidlInList(pidl, &info);
+#ifndef DISABLE_STRICT_PIDL_CHECK
+        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+#else
+        info = (const NtPidlEntry *) pidl;
+        if (info->magic != NT_OBJECT_PIDL_MAGIC)
+            return E_INVALIDARG;
+#endif
 
         // Update attributes.
         *rgfInOut = m_PidlManager->ConvertAttributes(info, rgfInOut);
@@ -912,14 +917,20 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDisplayNameOf(
     SHGDNF uFlags,
     STRRET *lpName)
 {
-    NtPidlEntry * info;
+    const NtPidlEntry * info;
     HRESULT hr;
 
     TRACE("GetDisplayNameOf %p\n", pidl);
 
+#ifndef DISABLE_STRICT_PIDL_CHECK
     hr = m_PidlManager->FindPidlInList(pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
+#else
+    info = (const NtPidlEntry *) pidl;
+    if (info->magic != NT_OBJECT_PIDL_MAGIC)
+        return E_INVALIDARG;
+#endif
 
     if ((GET_SHGDN_RELATION(uFlags) == SHGDN_NORMAL) &&
         (GET_SHGDN_FOR(uFlags) & SHGDN_FORPARSING))
@@ -1085,16 +1096,21 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsEx(
     const SHCOLUMNID *pscid,
     VARIANT *pv)
 {
-    NtPidlEntry * info;
-    HRESULT hr;
+    const NtPidlEntry * info;
 
     TRACE("GetDetailsEx\n");
 
     if (pidl)
     {
-        hr = m_PidlManager->FindPidlInList(pidl, &info);
+#ifndef DISABLE_STRICT_PIDL_CHECK
+        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+#else
+        info = (const NtPidlEntry *) pidl;
+        if (info->magic != NT_OBJECT_PIDL_MAGIC)
+            return E_INVALIDARG;
+#endif
 
         static const GUID storage = PSGUID_STORAGE;
         if (IsEqualGUID(pscid->fmtid, storage))
@@ -1163,16 +1179,21 @@ HRESULT STDMETHODCALLTYPE CNtObjectFolder::GetDetailsOf(
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    NtPidlEntry * info;
-    HRESULT hr;
+    const NtPidlEntry * info;
 
     TRACE("GetDetailsOf\n");
 
     if (pidl)
     {
-        hr = m_PidlManager->FindPidlInList(pidl, &info);
+#ifndef DISABLE_STRICT_PIDL_CHECK
+        HRESULT hr = m_PidlManager->FindPidlInList(pidl, &info);
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
+#else
+        info = (const NtPidlEntry *) pidl;
+        if (info->magic != NT_OBJECT_PIDL_MAGIC)
+            return E_INVALIDARG;
+#endif
 
         switch (iColumn)
         {
