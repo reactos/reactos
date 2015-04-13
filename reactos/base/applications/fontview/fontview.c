@@ -145,6 +145,7 @@ WinMain (HINSTANCE hThisInstance,
 		} else {
 			/* If the user decides to close out of the open dialog effectively
 			exiting the program altogether */
+			LocalFree(dialogTitle);
 			return 0;
 		}
 
