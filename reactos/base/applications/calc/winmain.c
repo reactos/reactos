@@ -1346,40 +1346,49 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 #endif
             return TRUE;
         case IDM_VIEW_STANDARD:
-            calc.layout = CALC_LAYOUT_STANDARD;
-            calc.action = IDM_VIEW_STANDARD;
-            DestroyWindow(hWnd);
-            save_config();
+            if (calc.layout != CALC_LAYOUT_STANDARD)
+            {
+                calc.layout = CALC_LAYOUT_STANDARD;
+                calc.action = IDM_VIEW_STANDARD;
+                DestroyWindow(hWnd);
+                save_config();
 
-            CheckMenuRadioItem(GetMenu(hWnd),
-                               IDM_VIEW_STANDARD,
-                               IDM_VIEW_CONVERSION,
-                               IDM_VIEW_STANDARD,
-                               MF_BYCOMMAND);
+                CheckMenuRadioItem(GetMenu(hWnd),
+                    IDM_VIEW_STANDARD,
+                    IDM_VIEW_CONVERSION,
+                    IDM_VIEW_STANDARD,
+                    MF_BYCOMMAND);
+            }
             return TRUE;
         case IDM_VIEW_SCIENTIFIC:
-            calc.layout = CALC_LAYOUT_SCIENTIFIC;
-            calc.action = IDM_VIEW_SCIENTIFIC;
-            DestroyWindow(hWnd);
-            save_config();
+            if (calc.layout != CALC_LAYOUT_SCIENTIFIC)
+            {
+                calc.layout = CALC_LAYOUT_SCIENTIFIC;
+                calc.action = IDM_VIEW_SCIENTIFIC;
+                DestroyWindow(hWnd);
+                save_config();
 
-            CheckMenuRadioItem(GetMenu(hWnd),
-                               IDM_VIEW_STANDARD,
-                               IDM_VIEW_CONVERSION,
-                               IDM_VIEW_SCIENTIFIC,
-                               MF_BYCOMMAND);
+                CheckMenuRadioItem(GetMenu(hWnd),
+                    IDM_VIEW_STANDARD,
+                    IDM_VIEW_CONVERSION,
+                    IDM_VIEW_SCIENTIFIC,
+                    MF_BYCOMMAND);
+            }
             return TRUE;
         case IDM_VIEW_CONVERSION:
-            calc.layout = CALC_LAYOUT_CONVERSION;
-            calc.action = IDM_VIEW_CONVERSION;
-            DestroyWindow(hWnd);
-            save_config();
+            if (calc.layout != CALC_LAYOUT_CONVERSION)
+            {
+                calc.layout = CALC_LAYOUT_CONVERSION;
+                calc.action = IDM_VIEW_CONVERSION;
+                DestroyWindow(hWnd);
+                save_config();
 
-            CheckMenuRadioItem(GetMenu(hWnd),
-                               IDM_VIEW_STANDARD,
-                               IDM_VIEW_CONVERSION,
-                               IDM_VIEW_CONVERSION,
-                               MF_BYCOMMAND);
+                CheckMenuRadioItem(GetMenu(hWnd),
+                    IDM_VIEW_STANDARD,
+                    IDM_VIEW_CONVERSION,
+                    IDM_VIEW_CONVERSION,
+                    MF_BYCOMMAND);
+            }
             return TRUE;
         case IDM_VIEW_HEX:
         case IDM_VIEW_DEC:
