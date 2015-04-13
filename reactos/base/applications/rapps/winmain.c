@@ -198,6 +198,13 @@ UpdateApplicationsList(INT EnumType)
 
     SendMessage(hListView, WM_SETREDRAW, FALSE, 0);
 
+    if (EnumType == -1) EnumType = SelectedEnumType;
+
+    if (IS_INSTALLED_ENUM(SelectedEnumType))
+        FreeInstalledAppList();
+    else if (IS_AVAILABLE_ENUM(SelectedEnumType))
+        FreeAvailableAppList();
+
     (VOID) ListView_DeleteAllItems(hListView);
 
     /* Create image list */
@@ -215,13 +222,6 @@ UpdateApplicationsList(INT EnumType)
 
     ImageList_AddIcon(hImageListView, hIcon);
     DestroyIcon(hIcon);
-
-    if (EnumType == -1) EnumType = SelectedEnumType;
-
-    if (IS_INSTALLED_ENUM(SelectedEnumType))
-        FreeInstalledAppList();
-    else if (IS_AVAILABLE_ENUM(SelectedEnumType))
-        FreeAvailableAppList();
 
     if (IS_INSTALLED_ENUM(EnumType))
     {
