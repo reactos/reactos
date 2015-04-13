@@ -583,6 +583,8 @@ MemInitialize(VOID)
     NTSTATUS Status;
     SIZE_T MemorySize = MAX_ADDRESS; // See: kernel32/client/vdm.c!BaseGetVdmConfigInfo
 
+    InitializeListHead(&HookList);
+
 #ifndef STANDALONE
 
     /*
@@ -625,8 +627,6 @@ MemInitialize(VOID)
 #ifndef STANDALONE
     ASSERT(BaseAddress == NULL);
 #endif
-
-    InitializeListHead(&HookList);
 
     /*
      * For diagnostics purposes, we fill the memory with INT 0x03 codes
