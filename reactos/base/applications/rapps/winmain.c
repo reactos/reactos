@@ -202,8 +202,9 @@ UpdateApplicationsList(INT EnumType)
 
     if (IS_INSTALLED_ENUM(SelectedEnumType))
         FreeInstalledAppList();
-    else if (IS_AVAILABLE_ENUM(SelectedEnumType))
-        FreeAvailableAppList();
+    /* FIXME: reenable when caching is fixed */
+    /*    else if (IS_AVAILABLE_ENUM(SelectedEnumType))
+            FreeAvailableAppList(); */
 
     (VOID) ListView_DeleteAllItems(hListView);
 
