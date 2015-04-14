@@ -8,6 +8,7 @@ spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
 add_rpc_files(client
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/atsvc.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/dssetup.idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/idl/srvsvc.idl
     ${REACTOS_SOURCE_DIR}/include/reactos/idl/wkssvc.idl)
 
 list(APPEND SOURCE
@@ -26,12 +27,14 @@ list(APPEND SOURCE
     netbios.c
     schedule.c
     share.c
+    srvsvc.c
     user.c
     wksta.c
     wksta_new.c
     netapi32.h
     ${CMAKE_CURRENT_BINARY_DIR}/atsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/dssetup_c.c
+    ${CMAKE_CURRENT_BINARY_DIR}/srvsvc_c.c
     ${CMAKE_CURRENT_BINARY_DIR}/wkssvc_c.c)
 
 add_library(netapi32 SHARED

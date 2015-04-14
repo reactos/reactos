@@ -183,7 +183,7 @@
 @ stdcall NetQueryDisplayInformation(wstr long long long long ptr ptr)
 @ stub NetRegisterDomainNameChangeNotification
 @ stub NetRemoteComputerSupports
-@ stub NetRemoteTOD
+@ stdcall NetRemoteTOD(wstr ptr)
 @ stub NetRemoveAlternateComputerName
 @ stub NetRenameMachineInDomain
 @ stub NetReplExportDirAdd
