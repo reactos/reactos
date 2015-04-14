@@ -90,6 +90,7 @@ SndMixerCreate(HWND hWndNotification)
 VOID
 SndMixerDestroy(PSND_MIXER Mixer)
 {
+    ClearMixerCache(Mixer);
     SndMixerClose(Mixer);
     HeapFree(GetProcessHeap(),
              0,

@@ -1018,9 +1018,13 @@ MainWindowProc(HWND hwnd,
         {
             MixerWindow = GetWindowData(hwnd,
                                         MIXER_WINDOW);
-            if (MixerWindow->Mixer != NULL)
+            if (MixerWindow != NULL)
             {
-                SndMixerDestroy(MixerWindow->Mixer);
+                if (MixerWindow->Mixer != NULL)
+                {
+                    SndMixerDestroy(MixerWindow->Mixer);
+                }
+                HeapFree(hAppHeap, 0, MixerWindow);
             }
             break;
         }
