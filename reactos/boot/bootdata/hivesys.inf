@@ -1437,6 +1437,15 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
+; Server service
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","DisplayName",0x00000000,"Server service"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\srvsvc.dll"
+
 ; Workstation service
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,"Workstation service"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001

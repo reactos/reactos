@@ -1,0 +1,1408 @@
+/*
+ * Server Service interface definition
+ */
+
+#include <ms-dtyp.idl>
+
+typedef [handle, string] wchar_t *SRVSVC_HANDLE;
+
+typedef struct _CONNECTION_INFO_0
+{
+    DWORD coni0_id;
+} CONNECTION_INFO_0, *PCONNECTION_INFO_0, *LPCONNECTION_INFO_0;
+
+typedef struct _CONNECT_INFO_0_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPCONNECTION_INFO_0 Buffer;
+} CONNECT_INFO_0_CONTAINER, *PCONNECT_INFO_0_CONTAINER, *LPCONNECT_INFO_0_CONTAINER;
+
+typedef struct _CONNECTION_INFO_1
+{
+    DWORD coni1_id;
+    DWORD coni1_type;
+    DWORD coni1_num_opens;
+    DWORD coni1_num_users;
+    DWORD coni1_time;
+    [string] wchar_t *coni1_username;
+    [string] wchar_t *coni1_netname;
+} CONNECTION_INFO_1, *PCONNECTION_INFO_1, *LPCONNECTION_INFO_1;
+
+typedef struct _CONNECT_INFO_1_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPCONNECTION_INFO_1 Buffer;
+} CONNECT_INFO_1_CONTAINER, *PCONNECT_INFO_1_CONTAINER, *LPCONNECT_INFO_1_CONTAINER;
+
+typedef [switch_type(DWORD)] union _CONNECT_ENUM_UNION
+{
+    [case(0)] CONNECT_INFO_0_CONTAINER *Level0;
+    [case(1)] CONNECT_INFO_1_CONTAINER *Level1;
+} CONNECT_ENUM_UNION;
+
+typedef struct _CONNECT_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] CONNECT_ENUM_UNION ConnectInfo;
+} CONNECT_ENUM_STRUCT, *PCONNECT_ENUM_STRUCT, *LPCONNECT_ENUM_STRUCT;
+
+typedef struct _FILE_INFO_2
+{
+    DWORD fi2_id;
+} FILE_INFO_2, *PFILE_INFO_2, *LPFILE_INFO_2;
+
+typedef struct _FILE_INFO_2_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPFILE_INFO_2 Buffer;
+} FILE_INFO_2_CONTAINER, *PFILE_INFO_2_CONTAINER, *LPFILE_INFO_2_CONTAINER;
+
+typedef struct _FILE_INFO_3
+{
+    DWORD fi3_id;
+    DWORD fi3_permissions;
+    DWORD fi3_num_locks;
+    [string] wchar_t *fi3_pathname;
+    [string] wchar_t *fi3_username;
+} FILE_INFO_3, *PFILE_INFO_3, *LPFILE_INFO_3;
+
+typedef struct _FILE_INFO_3_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPFILE_INFO_3 Buffer;
+} FILE_INFO_3_CONTAINER, *PFILE_INFO_3_CONTAINER, *LPFILE_INFO_3_CONTAINER;
+
+typedef [switch_type(DWORD)] union _FILE_ENUM_UNION
+{
+    [case(2)] FILE_INFO_2_CONTAINER* Level2;
+    [case(3)] FILE_INFO_3_CONTAINER* Level3;
+} FILE_ENUM_UNION;
+
+typedef struct _FILE_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] FILE_ENUM_UNION FileInfo;
+} FILE_ENUM_STRUCT, *PFILE_ENUM_STRUCT, *LPFILE_ENUM_STRUCT;
+
+typedef [switch_type(unsigned long)] union _FILE_INFO
+{
+    [case(2)] LPFILE_INFO_2 FileInfo2;
+    [case(3)] LPFILE_INFO_3 FileInfo3;
+} FILE_INFO, *PFILE_INFO, *LPFILE_INFO;
+
+typedef struct _SESSION_INFO_0
+{
+    [string] wchar_t *sesi0_cname;
+} SESSION_INFO_0, *PSESSION_INFO_0, *LPSESSION_INFO_0;
+
+typedef struct _SESSION_INFO_0_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSESSION_INFO_0 Buffer;
+} SESSION_INFO_0_CONTAINER, *PSESSION_INFO_0_CONTAINER, *LPSESSION_INFO_0_CONTAINER;
+
+typedef struct _SESSION_INFO_1
+{
+    [string] wchar_t *sesi1_cname;
+    [string] wchar_t *sesi1_username;
+    DWORD sesi1_num_opens;
+    DWORD sesi1_time;
+    DWORD sesi1_idle_time;
+    DWORD sesi1_user_flags;
+} SESSION_INFO_1, *PSESSION_INFO_1, *LPSESSION_INFO_1;
+
+typedef struct _SESSION_INFO_1_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSESSION_INFO_1 Buffer;
+} SESSION_INFO_1_CONTAINER, *PSESSION_INFO_1_CONTAINER, *LPSESSION_INFO_1_CONTAINER;
+
+typedef struct _SESSION_INFO_2
+{
+    [string] wchar_t *sesi2_cname;
+    [string] wchar_t *sesi2_username;
+    DWORD sesi2_num_opens;
+    DWORD sesi2_time;
+    DWORD sesi2_idle_time;
+    DWORD sesi2_user_flags;
+    [string] wchar_t *sesi2_cltype_name;
+} SESSION_INFO_2, *PSESSION_INFO_2, *LPSESSION_INFO_2;
+
+typedef struct _SESSION_INFO_2_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSESSION_INFO_2 Buffer;
+} SESSION_INFO_2_CONTAINER, *PSESSION_INFO_2_CONTAINER, *LPSESSION_INFO_2_CONTAINER;
+
+typedef struct _SESSION_INFO_10
+{
+    [string] wchar_t *sesi10_cname;
+    [string] wchar_t *sesi10_username;
+    DWORD sesi10_time;
+    DWORD sesi10_idle_time;
+} SESSION_INFO_10, *PSESSION_INFO_10, *LPSESSION_INFO_10;
+
+typedef struct _SESSION_INFO_10_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSESSION_INFO_10 Buffer;
+} SESSION_INFO_10_CONTAINER, *PSESSION_INFO_10_CONTAINER, *LPSESSION_INFO_10_CONTAINER;
+
+typedef struct _SESSION_INFO_502
+{
+    [string] wchar_t *sesi502_cname;
+    [string] wchar_t *sesi502_username;
+    DWORD sesi502_num_opens;
+    DWORD sesi502_time;
+    DWORD sesi502_idle_time;
+    DWORD sesi502_user_flags;
+    [string] wchar_t *sesi502_cltype_name;
+    [string] wchar_t *sesi502_transport;
+} SESSION_INFO_502, *PSESSION_INFO_502, *LPSESSION_INFO_502;
+
+typedef struct _SESSION_INFO_502_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSESSION_INFO_502 Buffer;
+} SESSION_INFO_502_CONTAINER, *PSESSION_INFO_502_CONTAINER, *LPSESSION_INFO_502_CONTAINER;
+
+typedef [switch_type(DWORD)] union _SESSION_ENUM_UNION
+{
+    [case(0)] SESSION_INFO_0_CONTAINER *Level0;
+    [case(1)] SESSION_INFO_1_CONTAINER *Level1;
+    [case(2)] SESSION_INFO_2_CONTAINER *Level2;
+    [case(10)] SESSION_INFO_10_CONTAINER *Level10;
+    [case(502)] SESSION_INFO_502_CONTAINER *Level502;
+} SESSION_ENUM_UNION;
+
+typedef struct _SESSION_ENUM_STRUCT {
+    DWORD Level;
+    [switch_is(Level)] SESSION_ENUM_UNION SessionInfo;
+} SESSION_ENUM_STRUCT, *PSESSION_ENUM_STRUCT, *LPSESSION_ENUM_STRUCT;
+
+typedef struct _SHARE_INFO_502_I
+{
+    [string] WCHAR *shi502_netname;
+    DWORD shi502_type;
+    [string] WCHAR *shi502_remark;
+    DWORD shi502_permissions;
+    DWORD shi502_max_uses;
+    DWORD shi502_current_uses;
+    [string] WCHAR *shi502_path;
+    [string] WCHAR *shi502_passwd;
+    DWORD shi502_reserved;
+    [size_is(shi502_reserved)] unsigned char *shi502_security_descriptor;
+} SHARE_INFO_502_I, *PSHARE_INFO_502_I, *LPSHARE_INFO_502_I;
+
+typedef struct _SHARE_INFO_503_I
+{
+    [string] WCHAR *shi503_netname;
+    DWORD shi503_type;
+    [string] WCHAR *shi503_remark;
+    DWORD shi503_permissions;
+    DWORD shi503_max_uses;
+    DWORD shi503_current_uses;
+    [string] WCHAR *shi503_path;
+    [string] WCHAR *shi503_passwd;
+    [string] WCHAR *shi503_servername;
+    DWORD shi503_reserved;
+    [size_is(shi503_reserved)] PUCHAR shi503_security_descriptor;
+} SHARE_INFO_503_I, *PSHARE_INFO_503_I, *LPSHARE_INFO_503_I;
+
+typedef struct _SHARE_INFO_503_CONTAINER
+{   DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSHARE_INFO_503_I Buffer;
+}   SHARE_INFO_503_CONTAINER, *PSHARE_INFO_503_CONTAINER, *LPSHARE_INFO_503_CONTAINER;
+
+typedef struct _SHARE_INFO_1501_I
+{
+    DWORD shi1501_reserved;
+    [size_is(shi1501_reserved)] unsigned char *shi1501_security_descriptor;
+} SHARE_INFO_1501_I, *PSHARE_INFO_1501_I, *LPSHARE_INFO_1501_I;
+
+typedef struct _SHARE_INFO_0
+{
+    [string] wchar_t *shi0_netname;
+} SHARE_INFO_0, *PSHARE_INFO_0, *LPSHARE_INFO_0;
+
+typedef struct _SHARE_INFO_0_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSHARE_INFO_0 Buffer;
+} SHARE_INFO_0_CONTAINER;
+
+typedef struct _SHARE_INFO_1
+{
+    [string] wchar_t *shi1_netname;
+    DWORD shi1_type;
+    [string] wchar_t *shi1_remark;
+} SHARE_INFO_1, *PSHARE_INFO_1, *LPSHARE_INFO_1;
+
+typedef struct _SHARE_INFO_1_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSHARE_INFO_1 Buffer;
+} SHARE_INFO_1_CONTAINER;
+
+typedef struct _SHARE_INFO_2
+{
+    [string] wchar_t *shi2_netname;
+    DWORD shi2_type;
+    [string] wchar_t *shi2_remark;
+    DWORD shi2_permissions;
+    DWORD shi2_max_uses;
+    DWORD shi2_current_uses;
+    [string] wchar_t *shi2_path;
+    [string] wchar_t *shi2_passwd;
+} SHARE_INFO_2, *PSHARE_INFO_2, *LPSHARE_INFO_2;
+
+typedef struct _SHARE_INFO_2_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSHARE_INFO_2 Buffer;
+} SHARE_INFO_2_CONTAINER, *PSHARE_INFO_2_CONTAINER, *LPSHARE_INFO_2_CONTAINER;
+
+typedef struct _SHARE_INFO_501
+{
+    [string] wchar_t *shi501_netname;
+    DWORD shi501_type;
+    [string] wchar_t *shi501_remark;
+    DWORD shi501_flags;
+} SHARE_INFO_501, *PSHARE_INFO_501, *LPSHARE_INFO_501;
+
+typedef struct _SHARE_INFO_501_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSHARE_INFO_501 Buffer;
+} SHARE_INFO_501_CONTAINER, *PSHARE_INFO_501_CONTAINER, *LPSHARE_INFO_501_CONTAINER;
+
+typedef struct _SHARE_INFO_502_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSHARE_INFO_502_I Buffer;
+} SHARE_INFO_502_CONTAINER, *PSHARE_INFO_502_CONTAINER, *LPSHARE_INFO_502_CONTAINER;
+
+typedef [switch_type(DWORD)] union _SHARE_ENUM_UNION
+{
+    [case(0)] SHARE_INFO_0_CONTAINER *Level0;
+    [case(1)] SHARE_INFO_1_CONTAINER *Level1;
+    [case(2)] SHARE_INFO_2_CONTAINER *Level2;
+    [case(501)] SHARE_INFO_501_CONTAINER *Level501;
+    [case(502)] SHARE_INFO_502_CONTAINER *Level502;
+    [case(503)] SHARE_INFO_503_CONTAINER *Level503;
+} SHARE_ENUM_UNION;
+
+typedef struct _SHARE_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] SHARE_ENUM_UNION ShareInfo;
+}   SHARE_ENUM_STRUCT, *PSHARE_ENUM_STRUCT, *LPSHARE_ENUM_STRUCT;
+
+typedef struct _SHARE_INFO_1004
+{
+    [string] wchar_t *shi1004_remark;
+} SHARE_INFO_1004, *PSHARE_INFO_1004, *LPSHARE_INFO_1004;
+
+typedef struct _SHARE_INFO_1006
+{
+    DWORD shi1006_max_uses;
+} SHARE_INFO_1006, *PSHARE_INFO_1006, *LPSHARE_INFO_1006;
+
+typedef struct _SHARE_INFO_1005
+{
+    DWORD shi1005_flags;
+} SHARE_INFO_1005, *PSHARE_INFO_1005, *LPSHARE_INFO_1005;
+
+//JMP: order differs in documentation
+typedef [switch_type(unsigned long)] union _SHARE_INFO
+// for Get & Set info
+{
+    [case(0)] LPSHARE_INFO_0 ShareInfo0;
+    [case(1)] LPSHARE_INFO_1 ShareInfo1;
+    [case(2)] LPSHARE_INFO_2 ShareInfo2;
+    [case(502)] LPSHARE_INFO_502_I ShareInfo502;
+    [case(1004)] LPSHARE_INFO_1004 ShareInfo1004;
+    [case(1006)] LPSHARE_INFO_1006 ShareInfo1006;
+    [case(1501)] LPSHARE_INFO_1501_I ShareInfo1501;
+    [default] ;
+    [case(1005)] LPSHARE_INFO_1005 ShareInfo1005;
+    [case(501)] LPSHARE_INFO_501 ShareInfo501;
+    [case(503)] LPSHARE_INFO_503_I ShareInfo503;
+} SHARE_INFO, *PSHARE_INFO, *LPSHARE_INFO;
+
+typedef struct _SERVER_INFO_100
+{
+    DWORD sv100_platform_id;
+    [string] wchar_t *sv100_name;
+} SERVER_INFO_100, *PSERVER_INFO_100, *LPSERVER_INFO_100;
+
+typedef struct _SERVER_INFO_101
+{
+    DWORD  sv101_platform_id;
+    [string] wchar_t *sv101_name;
+    DWORD  sv101_version_major;
+    DWORD  sv101_version_minor;
+    DWORD  sv101_type;
+    [string] wchar_t *sv101_comment;
+} SERVER_INFO_101, *PSERVER_INFO_101, *LPSERVER_INFO_101;
+
+typedef struct _SERVER_INFO_102
+{
+    DWORD sv102_platform_id;
+    [string] wchar_t *sv102_name;
+    DWORD sv102_version_major;
+    DWORD sv102_version_minor;
+    DWORD sv102_type;
+    [string] wchar_t *sv102_comment;
+    DWORD sv102_users;
+    long sv102_disc;
+    int sv102_hidden;
+    DWORD sv102_announce;
+    DWORD sv102_anndelta;
+    DWORD sv102_licenses;
+    [string] wchar_t *sv102_userpath;
+} SERVER_INFO_102, *PSERVER_INFO_102, *LPSERVER_INFO_102;
+
+typedef struct _SERVER_INFO_103 
+{
+    DWORD sv103_platform_id;
+    [string] wchar_t *sv103_name;
+    DWORD sv103_version_major;
+    DWORD sv103_version_minor;
+    DWORD sv103_type;
+    [string] wchar_t *sv103_comment;
+    DWORD sv103_users;
+    LONG  sv103_disc;
+    BOOL  sv103_hidden;
+    DWORD sv103_announce;
+    DWORD sv103_anndelta;
+    DWORD sv103_licenses;
+    [string] wchar_t* sv103_userpath;
+    DWORD sv103_capabilities;
+} SERVER_INFO_103, *PSERVER_INFO_103, *LPSERVER_INFO_103;
+
+typedef struct _SERVER_INFO_502
+{
+    DWORD sv502_sessopens;
+    DWORD sv502_sessvcs;
+    DWORD sv502_opensearch;
+    DWORD sv502_sizreqbuf;
+    DWORD sv502_initworkitems;
+    DWORD sv502_maxworkitems;
+    DWORD sv502_rawworkitems;
+    DWORD sv502_irpstacksize;
+    DWORD sv502_maxrawbuflen;
+    DWORD sv502_sessusers;
+    DWORD sv502_sessconns;
+    DWORD sv502_maxpagedmemoryusage;
+    DWORD sv502_maxnonpagedmemoryusage;
+    int sv502_enablesoftcompat;
+    int sv502_enableforcedlogoff;
+    int sv502_timesource;
+    int sv502_acceptdownlevelapis;
+    int sv502_lmannounce;
+} SERVER_INFO_502, *PSERVER_INFO_502, *LPSERVER_INFO_502;
+
+typedef struct _SERVER_INFO_503
+{
+    DWORD sv503_sessopens;
+    DWORD sv503_sessvcs;
+    DWORD sv503_opensearch;
+    DWORD sv503_sizreqbuf;
+    DWORD sv503_initworkitems;
+    DWORD sv503_maxworkitems;
+    DWORD sv503_rawworkitems;
+    DWORD sv503_irpstacksize;
+    DWORD sv503_maxrawbuflen;
+    DWORD sv503_sessusers;
+    DWORD sv503_sessconns;
+    DWORD sv503_maxpagedmemoryusage;
+    DWORD sv503_maxnonpagedmemoryusage;
+    int sv503_enablesoftcompat;
+    int sv503_enableforcedlogoff;
+    int sv503_timesource;
+    int sv503_acceptdownlevelapis;
+    int sv503_lmannounce;
+    [string] wchar_t *sv503_domain;
+    DWORD sv503_maxcopyreadlen;
+    DWORD sv503_maxcopywritelen;
+    DWORD sv503_minkeepsearch;
+    DWORD sv503_maxkeepsearch;
+    DWORD sv503_minkeepcomplsearch;
+    DWORD sv503_maxkeepcomplsearch;
+    DWORD sv503_threadcountadd;
+    DWORD sv503_numblockthreads;
+    DWORD sv503_scavtimeout;
+    DWORD sv503_minrcvqueue;
+    DWORD sv503_minfreeworkitems;
+    DWORD sv503_xactmemsize;
+    DWORD sv503_threadpriority;
+    DWORD sv503_maxmpxct;
+    DWORD sv503_oplockbreakwait;
+    DWORD sv503_oplockbreakresponsewait;
+    int sv503_enableoplocks;
+    int sv503_enableoplockforceclose;
+    int sv503_enablefcbopens;
+    int sv503_enableraw;
+    int sv503_enablesharednetdrives;
+    DWORD sv503_minfreeconnections;
+    DWORD sv503_maxfreeconnections;
+} SERVER_INFO_503, *PSERVER_INFO_503, *LPSERVER_INFO_503;
+
+typedef struct _SERVER_INFO_599
+{
+    DWORD sv599_sessopens;
+    DWORD sv599_sessvcs;
+    DWORD sv599_opensearch;
+    DWORD sv599_sizreqbuf;
+    DWORD sv599_initworkitems;
+    DWORD sv599_maxworkitems;
+    DWORD sv599_rawworkitems;
+    DWORD sv599_irpstacksize;
+    DWORD sv599_maxrawbuflen;
+    DWORD sv599_sessusers;
+    DWORD sv599_sessconns;
+    DWORD sv599_maxpagedmemoryusage;
+    DWORD sv599_maxnonpagedmemoryusage;
+    int sv599_enablesoftcompat;
+    int sv599_enableforcedlogoff;
+    int sv599_timesource;
+    int sv599_acceptdownlevelapis;
+    int sv599_lmannounce;
+    [string] wchar_t *sv599_domain;
+    DWORD sv599_maxcopyreadlen;
+    DWORD sv599_maxcopywritelen;
+    DWORD sv599_minkeepsearch;
+    DWORD sv599_maxkeepsearch;
+    DWORD sv599_minkeepcomplsearch;
+    DWORD sv599_maxkeepcomplsearch;
+    DWORD sv599_threadcountadd;
+    DWORD sv599_numblockthreads;
+    DWORD sv599_scavtimeout;
+    DWORD sv599_minrcvqueue;
+    DWORD sv599_minfreeworkitems;
+    DWORD sv599_xactmemsize;
+    DWORD sv599_threadpriority;
+    DWORD sv599_maxmpxct;
+    DWORD sv599_oplockbreakwait;
+    DWORD sv599_oplockbreakresponsewait;
+    int sv599_enableoplocks;
+    int sv599_enableoplockforceclose;
+    int sv599_enablefcbopens;
+    int sv599_enableraw;
+    int sv599_enablesharednetdrives;
+    DWORD sv599_minfreeconnections;
+    DWORD sv599_maxfreeconnections;
+    DWORD sv599_initsesstable;
+    DWORD sv599_initconntable;
+    DWORD sv599_initfiletable;
+    DWORD sv599_initsearchtable;
+    DWORD sv599_alertschedule;
+    DWORD sv599_errorthreshold;
+    DWORD sv599_networkerrorthreshold;
+    DWORD sv599_diskspacethreshold;
+    DWORD sv599_reserved;
+    DWORD sv599_maxlinkdelay;
+    DWORD sv599_minlinkthroughput;
+    DWORD sv599_linkinfovalidtime;
+    DWORD sv599_scavqosinfoupdatetime;
+    DWORD sv599_maxworkitemidletime;
+} SERVER_INFO_599, *PSERVER_INFO_599, *LPSERVER_INFO_599;
+
+typedef struct _SERVER_INFO_1005
+{
+    [string] wchar_t *sv1005_comment;
+} SERVER_INFO_1005, *PSERVER_INFO_1005, *LPSERVER_INFO_1005;
+
+typedef struct _SERVER_INFO_1107
+{
+    DWORD sv1107_users;
+} SERVER_INFO_1107, *PSERVER_INFO_1107, *LPSERVER_INFO_1107;
+
+typedef struct _SERVER_INFO_1010
+{
+    long sv1010_disc;
+} SERVER_INFO_1010, *PSERVER_INFO_1010, *LPSERVER_INFO_1010;
+
+typedef struct _SERVER_INFO_1016
+{
+    int sv1016_hidden;
+} SERVER_INFO_1016, *PSERVER_INFO_1016, *LPSERVER_INFO_1016;
+
+typedef struct _SERVER_INFO_1017
+{
+    DWORD sv1017_announce;
+} SERVER_INFO_1017, *PSERVER_INFO_1017, *LPSERVER_INFO_1017;
+
+typedef struct _SERVER_INFO_1018
+{
+    DWORD sv1018_anndelta;
+} SERVER_INFO_1018, *PSERVER_INFO_1018, *LPSERVER_INFO_1018;
+
+typedef struct _SERVER_INFO_1501
+{
+    DWORD sv1501_sessopens;
+} SERVER_INFO_1501, *PSERVER_INFO_1501, *LPSERVER_INFO_1501;
+
+typedef struct _SERVER_INFO_1502
+{
+    DWORD sv1502_sessvcs;
+} SERVER_INFO_1502, *PSERVER_INFO_1502, *LPSERVER_INFO_1502;
+
+typedef struct _SERVER_INFO_1503
+{
+    DWORD sv1503_opensearch;
+} SERVER_INFO_1503, *PSERVER_INFO_1503, *LPSERVER_INFO_1503;
+
+typedef struct _SERVER_INFO_1506
+{
+    DWORD sv1506_maxworkitems;
+} SERVER_INFO_1506, *PSERVER_INFO_1506, *LPSERVER_INFO_1506;
+
+typedef struct _SERVER_INFO_1510
+{
+    DWORD sv1510_sessusers;
+} SERVER_INFO_1510, *PSERVER_INFO_1510, *LPSERVER_INFO_1510;
+
+typedef struct _SERVER_INFO_1511
+{
+    DWORD sv1511_sessconns;
+} SERVER_INFO_1511, *PSERVER_INFO_1511, *LPSERVER_INFO_1511;
+
+typedef struct _SERVER_INFO_1512
+{
+    DWORD sv1512_maxnonpagedmemoryusage;
+} SERVER_INFO_1512, *PSERVER_INFO_1512, *LPSERVER_INFO_1512;
+
+typedef struct _SERVER_INFO_1513
+{
+    DWORD sv1513_maxpagedmemoryusage;
+} SERVER_INFO_1513, *PSERVER_INFO_1513, *LPSERVER_INFO_1513;
+
+typedef struct _SERVER_INFO_1514
+{
+    int sv1514_enablesoftcompat;
+} SERVER_INFO_1514, *PSERVER_INFO_1514, *LPSERVER_INFO_1514;
+
+typedef struct _SERVER_INFO_1515
+{
+    int sv1515_enableforcedlogoff;
+} SERVER_INFO_1515, *PSERVER_INFO_1515, *LPSERVER_INFO_1515;
+
+typedef struct _SERVER_INFO_1516
+{
+    int sv1516_timesource;
+} SERVER_INFO_1516, *PSERVER_INFO_1516, *LPSERVER_INFO_1516;
+
+typedef struct _SERVER_INFO_1518
+{
+    int sv1518_lmannounce;
+} SERVER_INFO_1518, *PSERVER_INFO_1518, *LPSERVER_INFO_1518;
+
+typedef struct _SERVER_INFO_1523
+{
+    DWORD sv1523_maxkeepsearch;
+} SERVER_INFO_1523, *PSERVER_INFO_1523, *LPSERVER_INFO_1523;
+
+typedef struct _SERVER_INFO_1528
+{
+    DWORD sv1528_scavtimeout;
+} SERVER_INFO_1528, *PSERVER_INFO_1528, *LPSERVER_INFO_1528;
+
+typedef struct _SERVER_INFO_1529
+{
+    DWORD sv1529_minrcvqueue;
+} SERVER_INFO_1529, *PSERVER_INFO_1529, *LPSERVER_INFO_1529;
+
+typedef struct _SERVER_INFO_1530
+{
+    DWORD sv1530_minfreeworkitems;
+} SERVER_INFO_1530, *PSERVER_INFO_1530, *LPSERVER_INFO_1530;
+
+typedef struct _SERVER_INFO_1533
+{
+    DWORD sv1533_maxmpxct;
+} SERVER_INFO_1533, *PSERVER_INFO_1533, *LPSERVER_INFO_1533;
+
+typedef struct _SERVER_INFO_1534
+{
+    DWORD sv1534_oplockbreakwait;
+} SERVER_INFO_1534, *PSERVER_INFO_1534, *LPSERVER_INFO_1534;
+
+typedef struct _SERVER_INFO_1535
+{
+    DWORD sv1535_oplockbreakresponsewait;
+} SERVER_INFO_1535, *PSERVER_INFO_1535, *LPSERVER_INFO_1535;
+
+typedef struct _SERVER_INFO_1536
+{
+    int sv1536_enableoplocks;
+} SERVER_INFO_1536, *PSERVER_INFO_1536, *LPSERVER_INFO_1536;
+
+typedef struct _SERVER_INFO_1538
+{
+    int sv1538_enablefcbopens;
+} SERVER_INFO_1538, *PSERVER_INFO_1538, *LPSERVER_INFO_1538;
+
+typedef struct _SERVER_INFO_1539
+{
+    int sv1539_enableraw;
+} SERVER_INFO_1539, *PSERVER_INFO_1539, *LPSERVER_INFO_1539;
+
+typedef struct _SERVER_INFO_1540
+{
+    int sv1540_enablesharednetdrives;
+} SERVER_INFO_1540, *PSERVER_INFO_1540, *LPSERVER_INFO_1540;
+
+typedef struct _SERVER_INFO_1541
+{
+    int sv1541_minfreeconnections;
+} SERVER_INFO_1541, *PSERVER_INFO_1541, *LPSERVER_INFO_1541;
+
+typedef struct _SERVER_INFO_1542
+{
+    int sv1542_maxfreeconnections;
+} SERVER_INFO_1542, *PSERVER_INFO_1542, *LPSERVER_INFO_1542;
+
+typedef struct _SERVER_INFO_1543
+{
+    DWORD sv1543_initsesstable;
+} SERVER_INFO_1543, *PSERVER_INFO_1543, *LPSERVER_INFO_1543;
+
+typedef struct _SERVER_INFO_1544
+{
+    DWORD sv1544_initconntable;
+} SERVER_INFO_1544, *PSERVER_INFO_1544, *LPSERVER_INFO_1544;
+
+typedef struct _SERVER_INFO_1545
+{
+    DWORD sv1545_initfiletable;
+} SERVER_INFO_1545, *PSERVER_INFO_1545, *LPSERVER_INFO_1545;
+
+typedef struct _SERVER_INFO_1546
+{
+    DWORD sv1546_initsearchtable;
+} SERVER_INFO_1546, *PSERVER_INFO_1546, *LPSERVER_INFO_1546;
+
+typedef struct _SERVER_INFO_1547
+{
+    DWORD sv1547_alertschedule;
+} SERVER_INFO_1547, *PSERVER_INFO_1547, *LPSERVER_INFO_1547;
+
+typedef struct _SERVER_INFO_1548
+{
+    DWORD sv1548_errorthreshold;
+} SERVER_INFO_1548, *PSERVER_INFO_1548, *LPSERVER_INFO_1548;
+
+typedef struct _SERVER_INFO_1549
+{
+    DWORD sv1549_networkerrorthreshold;
+} SERVER_INFO_1549, *PSERVER_INFO_1549, *LPSERVER_INFO_1549;
+
+typedef struct _SERVER_INFO_1550
+{
+    DWORD sv1550_diskspacethreshold;
+} SERVER_INFO_1550, *PSERVER_INFO_1550, *LPSERVER_INFO_1550;
+
+typedef struct _SERVER_INFO_1552
+{
+    DWORD sv1552_maxlinkdelay;
+} SERVER_INFO_1552, *PSERVER_INFO_1552, *LPSERVER_INFO_1552;
+
+typedef struct _SERVER_INFO_1553
+{
+    DWORD sv1553_minlinkthroughput;
+} SERVER_INFO_1553, *PSERVER_INFO_1553, *LPSERVER_INFO_1553;
+
+typedef struct _SERVER_INFO_1554
+{
+    DWORD sv1554_linkinfovalidtime;
+} SERVER_INFO_1554, *PSERVER_INFO_1554, *LPSERVER_INFO_1554;
+
+typedef struct _SERVER_INFO_1555
+{
+    DWORD sv1555_scavqosinfoupdatetime;
+} SERVER_INFO_1555, *PSERVER_INFO_1555, *LPSERVER_INFO_1555;
+
+typedef struct _SERVER_INFO_1556
+{
+    DWORD sv1556_maxworkitemidletime;
+} SERVER_INFO_1556, *PSERVER_INFO_1556, *LPSERVER_INFO_1556;
+
+typedef [switch_type(unsigned long)] union _SERVER_INFO
+{
+    [case(100)] LPSERVER_INFO_100 ServerInfo100;
+    [case(101)] LPSERVER_INFO_101 ServerInfo101;
+    [case(102)] LPSERVER_INFO_102 ServerInfo102;
+    [case(103)] LPSERVER_INFO_103 ServerInfo103;
+    [case(502)] LPSERVER_INFO_502 ServerInfo502;
+    [case(503)] LPSERVER_INFO_503 ServerInfo503;
+    [case(599)] LPSERVER_INFO_599 ServerInfo599;
+    [case(1005)] LPSERVER_INFO_1005 ServerInfo1005;
+    [case(1107)] LPSERVER_INFO_1107 ServerInfo1107;
+    [case(1010)] LPSERVER_INFO_1010 ServerInfo1010;
+    [case(1016)] LPSERVER_INFO_1016 ServerInfo1016;
+    [case(1017)] LPSERVER_INFO_1017 ServerInfo1017;
+    [case(1018)] LPSERVER_INFO_1018 ServerInfo1018;
+    [case(1501)] LPSERVER_INFO_1501 ServerInfo1501;
+    [case(1502)] LPSERVER_INFO_1502 ServerInfo1502;
+    [case(1503)] LPSERVER_INFO_1503 ServerInfo1503;
+    [case(1506)] LPSERVER_INFO_1506 ServerInfo1506;
+    [case(1510)] LPSERVER_INFO_1510 ServerInfo1510;
+    [case(1511)] LPSERVER_INFO_1511 ServerInfo1511;
+    [case(1512)] LPSERVER_INFO_1512 ServerInfo1512;
+    [case(1513)] LPSERVER_INFO_1513 ServerInfo1513;
+    [case(1514)] LPSERVER_INFO_1514 ServerInfo1514;
+    [case(1515)] LPSERVER_INFO_1515 ServerInfo1515;
+    [case(1516)] LPSERVER_INFO_1516 ServerInfo1516;
+    [case(1518)] LPSERVER_INFO_1518 ServerInfo1518;
+    [case(1523)] LPSERVER_INFO_1523 ServerInfo1523;
+    [case(1528)] LPSERVER_INFO_1528 ServerInfo1528;
+    [case(1529)] LPSERVER_INFO_1529 ServerInfo1529;
+    [case(1530)] LPSERVER_INFO_1530 ServerInfo1530;
+    [case(1533)] LPSERVER_INFO_1533 ServerInfo1533;
+    [case(1534)] LPSERVER_INFO_1534 ServerInfo1534;
+    [case(1535)] LPSERVER_INFO_1535 ServerInfo1535;
+    [case(1536)] LPSERVER_INFO_1536 ServerInfo1536;
+    [case(1538)] LPSERVER_INFO_1538 ServerInfo1538;
+    [case(1539)] LPSERVER_INFO_1539 ServerInfo1539;
+    [case(1540)] LPSERVER_INFO_1540 ServerInfo1540;
+    [case(1541)] LPSERVER_INFO_1541 ServerInfo1541;
+    [case(1542)] LPSERVER_INFO_1542 ServerInfo1542;
+    [case(1543)] LPSERVER_INFO_1543 ServerInfo1543;
+    [case(1544)] LPSERVER_INFO_1544 ServerInfo1544;
+    [case(1545)] LPSERVER_INFO_1545 ServerInfo1545;
+    [case(1546)] LPSERVER_INFO_1546 ServerInfo1546;
+    [case(1547)] LPSERVER_INFO_1547 ServerInfo1547;
+    [case(1548)] LPSERVER_INFO_1548 ServerInfo1548;
+    [case(1549)] LPSERVER_INFO_1549 ServerInfo1549;
+    [case(1550)] LPSERVER_INFO_1550 ServerInfo1550;
+    [case(1552)] LPSERVER_INFO_1552 ServerInfo1552;
+    [case(1553)] LPSERVER_INFO_1553 ServerInfo1553;
+    [case(1554)] LPSERVER_INFO_1554 ServerInfo1554;
+    [case(1555)] LPSERVER_INFO_1555 ServerInfo1555;
+    [case(1556)] LPSERVER_INFO_1556 ServerInfo1556;
+} SERVER_INFO, *PSERVER_INFO, *LPSERVER_INFO;
+
+typedef struct _DISK_INFO
+{
+    [string] WCHAR Disk[3];
+} DISK_INFO, *PDISK_INFO, *LPDISK_INFO;
+
+typedef struct _DISK_ENUM_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead), length_is(EntriesRead)] LPDISK_INFO Buffer;
+} DISK_ENUM_CONTAINER;
+
+typedef struct _SERVER_TRANSPORT_INFO_0
+{
+    DWORD svti0_numberofvcs;
+    [string] wchar_t *svti0_transportname;
+    [size_is(svti0_transportaddresslength)] unsigned char *svti0_transportaddress;
+    DWORD svti0_transportaddresslength;
+    [string] wchar_t *svti0_networkaddress;
+} SERVER_TRANSPORT_INFO_0, *PSERVER_TRANSPORT_INFO_0, *LPSERVER_TRANSPORT_INFO_0;
+
+typedef struct _SERVER_XPORT_INFO_0_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_0 Buffer;
+} SERVER_XPORT_INFO_0_CONTAINER, *PSERVER_XPORT_INFO_0_CONTAINER;
+
+typedef struct _SERVER_TRANSPORT_INFO_1
+{
+    DWORD svti1_numberofvcs;
+    [string] wchar_t *svti1_transportname;
+    [size_is(svti1_transportaddresslength)] unsigned char *svti1_transportaddress;
+    DWORD svti1_transportaddresslength;
+    [string] wchar_t *svti1_networkaddress;
+    [string] wchar_t *svti1_domain;
+} SERVER_TRANSPORT_INFO_1, *PSERVER_TRANSPORT_INFO_1, *LPSERVER_TRANSPORT_INFO_1;
+
+typedef struct _SERVER_XPORT_INFO_1_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_1 Buffer;
+} SERVER_XPORT_INFO_1_CONTAINER, *PSERVER_XPORT_INFO_1_CONTAINER;
+
+typedef struct _SERVER_TRANSPORT_INFO_2
+{
+    DWORD svti2_numberofvcs;
+    [string] wchar_t *svti2_transportname;
+    [size_is(svti2_transportaddresslength)] unsigned char *svti2_transportaddress;
+    DWORD svti2_transportaddresslength;
+    [string] wchar_t *svti2_networkaddress;
+    [string] wchar_t *svti2_domain;
+    unsigned long svti2_flags;
+} SERVER_TRANSPORT_INFO_2, *PSERVER_TRANSPORT_INFO_2, *LPSERVER_TRANSPORT_INFO_2;
+
+typedef struct _SERVER_XPORT_INFO_2_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_2 Buffer;
+} SERVER_XPORT_INFO_2_CONTAINER, *PSERVER_XPORT_INFO_2_CONTAINER;
+
+typedef struct _SERVER_TRANSPORT_INFO_3
+{
+    DWORD svti3_numberofvcs;
+    [string] wchar_t *svti3_transportname;
+    [size_is(svti3_transportaddresslength)] unsigned char *svti3_transportaddress;
+    DWORD svti3_transportaddresslength;
+    [string] wchar_t *svti3_networkaddress;
+    [string] wchar_t *svti3_domain;
+    unsigned long svti3_flags;
+    DWORD svti3_passwordlength;
+    unsigned char svti3_password[256];
+} SERVER_TRANSPORT_INFO_3, *PSERVER_TRANSPORT_INFO_3, *LPSERVER_TRANSPORT_INFO_3;
+
+typedef struct _SERVER_XPORT_INFO_3_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_3 Buffer;
+} SERVER_XPORT_INFO_3_CONTAINER, *PSERVER_XPORT_INFO_3_CONTAINER;
+
+typedef [switch_type(unsigned long)] union _TRANSPORT_INFO
+{
+    [case(0)] SERVER_TRANSPORT_INFO_0 Transport0;
+    [case(1)] SERVER_TRANSPORT_INFO_1 Transport1;
+    [case(2)] SERVER_TRANSPORT_INFO_2 Transport2;
+    [case(3)] SERVER_TRANSPORT_INFO_3 Transport3;
+} TRANSPORT_INFO, *PTRANSPORT_INFO, *LPTRANSPORT_INFO;
+
+typedef [switch_type(DWORD)] union _SERVER_XPORT_ENUM_UNION
+{
+    [case(0)] PSERVER_XPORT_INFO_0_CONTAINER Level0;
+    [case(1)] PSERVER_XPORT_INFO_1_CONTAINER Level1;
+    [case(2)] PSERVER_XPORT_INFO_2_CONTAINER Level2;
+    [case(3)] PSERVER_XPORT_INFO_3_CONTAINER Level3;
+} SERVER_XPORT_ENUM_UNION;
+
+typedef struct _SERVER_XPORT_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] SERVER_XPORT_ENUM_UNION XportInfo;
+} SERVER_XPORT_ENUM_STRUCT, *PSERVER_XPORT_ENUM_STRUCT, *LPSERVER_XPORT_ENUM_STRUCT;
+
+typedef [context_handle] void *SHARE_DEL_HANDLE;
+typedef SHARE_DEL_HANDLE *PSHARE_DEL_HANDLE;
+
+typedef struct _ADT_SECURITY_DESCRIPTOR
+{
+    DWORD Length;
+    [size_is(Length)] unsigned char *Buffer;
+} ADT_SECURITY_DESCRIPTOR, *PADT_SECURITY_DESCRIPTOR;
+
+typedef struct _STAT_SERVER_0
+{
+    DWORD sts0_start;
+    DWORD sts0_fopens;
+    DWORD sts0_devopens;
+    DWORD sts0_jobsqueued;
+    DWORD sts0_sopens;
+    DWORD sts0_stimedout;
+    DWORD sts0_serrorout;
+    DWORD sts0_pwerrors;
+    DWORD sts0_permerrors;
+    DWORD sts0_syserrors;
+    DWORD sts0_bytessent_low;
+    DWORD sts0_bytessent_high;
+    DWORD sts0_bytesrcvd_low;
+    DWORD sts0_bytesrcvd_high;
+    DWORD sts0_avresponse;
+    DWORD sts0_reqbufneed;
+    DWORD sts0_bigbufneed;
+} STAT_SERVER_0, *PSTAT_SERVER_0, *LPSTAT_SERVER_0;
+
+typedef struct _TIME_OF_DAY_INFO
+{
+    DWORD tod_elapsedt;
+    DWORD tod_msecs;
+    DWORD tod_hours;
+    DWORD tod_mins;
+    DWORD tod_secs;
+    DWORD tod_hunds;
+    long tod_timezone;
+    DWORD tod_tinterval;
+    DWORD tod_day;
+    DWORD tod_month;
+    DWORD tod_year;
+    DWORD tod_weekday;
+} TIME_OF_DAY_INFO, *PTIME_OF_DAY_INFO, *LPTIME_OF_DAY_INFO;
+
+typedef struct _NET_DFS_ENTRY_ID
+{
+    GUID Uid;
+    [string] WCHAR *Prefix;
+} NET_DFS_ENTRY_ID, *LPNET_DFS_ENTRY_ID;
+
+typedef struct _NET_DFS_ENTRY_ID_CONTAINER
+{
+    unsigned long Count;
+    [size_is(Count)] LPNET_DFS_ENTRY_ID Buffer;
+} NET_DFS_ENTRY_ID_CONTAINER, *LPNET_DFS_ENTRY_ID_CONTAINER;
+
+typedef struct _DFS_SITENAME_INFO
+{
+    unsigned long SiteFlags;
+    [string,unique] WCHAR *SiteName;
+} DFS_SITENAME_INFO, *PDFS_SITENAME_INFO, *LPDFS_SITENAME_INFO;
+
+typedef struct _DFS_SITELIST_INFO
+{
+    unsigned long cSites;
+    [size_is(cSites)] DFS_SITENAME_INFO Site[];
+} DFS_SITELIST_INFO, *PDFS_SITELIST_INFO, *LPDFS_SITELIST_INFO;
+
+typedef struct _SERVER_ALIAS_INFO_0
+{
+    [string] LMSTR srvai0_alias;
+    [string] LMSTR srvai0_target;
+    BOOLEAN srvai0_default;
+    ULONG srvai0_reserved;
+}SERVER_ALIAS_INFO_0, *PSERVER_ALIAS_INFO_0, *LPSERVER_ALIAS_INFO_0;
+
+typedef struct _SERVER_ALIAS_INFO_0_CONTAINER
+{
+    DWORD EntriesRead;
+    [size_is(EntriesRead)] LPSERVER_ALIAS_INFO_0 Buffer;
+} SERVER_ALIAS_INFO_0_CONTAINER;
+
+typedef struct _SERVER_ALIAS_ENUM_STRUCT
+{
+    DWORD Level;
+    [switch_is(Level)] union SERVER_ALIAS_ENUM_UNION
+    {
+        [case(0)] SERVER_ALIAS_INFO_0_CONTAINER *Level0;
+    } ServerAliasInfo;
+} SERVER_ALIAS_ENUM_STRUCT, *PSERVER_ALIAS_ENUM_STRUCT, *LPSERVER_ALIAS_ENUM_STRUCT;
+
+typedef [switch_type(unsigned long)] union _SERVER_ALIAS_INFO
+{
+    [case(0)] LPSERVER_ALIAS_INFO_0 ServerAliasInfo0;
+} SERVER_ALIAS_INFO, *PSERVER_ALIAS_INFO, *LPSERVER_ALIAS_INFO;
+
+
+[
+    uuid(4B324FC8-1670-01D3-1278-5A47BF6EE188),
+    version(3.0),
+//    ms_union,
+    pointer_default(unique),
+    endpoint("ncacn_np:[\\pipe\\srvsvc]")
+#ifndef __midl
+    ,implicit_handle(handle_t hBinding)
+#endif
+]
+interface srvsvc
+{
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum0NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum1NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum2NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum3NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum4NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum5NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum6NotUsedOnWire(void);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum7NotUsedOnWire(void);
+
+    NET_API_STATUS
+    __stdcall
+    NetrConnectionEnum(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *Qualifier,
+        [in, out] LPCONNECT_ENUM_STRUCT InfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrFileEnum(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *BasePath,
+        [in, string, unique] WCHAR *UserName,
+        [in, out] PFILE_ENUM_STRUCT InfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrFileGetInfo(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD FileId,
+        [in] DWORD Level,
+        [out, switch_is(Level)] LPFILE_INFO InfoStruct);
+
+    NET_API_STATUS
+    __stdcall
+    NetrFileClose(
+        [in,string,unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD FileId);
+
+    NET_API_STATUS
+    __stdcall
+    NetrSessionEnum(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *ClientName,
+        [in, string, unique] WCHAR *UserName,
+        [in, out] PSESSION_ENUM_STRUCT InfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrSessionDel(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *ClientName,
+        [in, string, unique] WCHAR *UserName);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareAdd(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] LPSHARE_INFO InfoStruct,
+        [in, out, unique] DWORD *ParmErr);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareEnum(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, out] LPSHARE_ENUM_STRUCT InfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareGetInfo(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *NetName,
+        [in] DWORD Level,
+        [out, switch_is(Level)] LPSHARE_INFO InfoStruct);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareSetInfo(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *NetName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] LPSHARE_INFO ShareInfo,
+        [in, out, unique] DWORD *ParmErr);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareDel (
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *NetName,
+        [in] DWORD Reserved);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareDelSticky(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *NetName,
+        [in] DWORD Reserved);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareCheck(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *Device,
+        [out] DWORD *Type);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerGetInfo(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [out, switch_is(Level)] LPSERVER_INFO InfoStruct);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerSetInfo(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] LPSERVER_INFO ServerInfo,
+        [in, out, unique] DWORD *ParmErr);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerDiskEnum(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in, out] DISK_ENUM_CONTAINER *DiskInfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerStatisticsGet(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *Service,
+        [in] DWORD Level,
+        [in] DWORD Options,
+        [out] LPSTAT_SERVER_0 *InfoStruct);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerTransportAdd(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in] LPSERVER_TRANSPORT_INFO_0 Buffer);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerTransportEnum(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, out] LPSERVER_XPORT_ENUM_STRUCT InfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerTransportDel(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in] LPSERVER_TRANSPORT_INFO_0 Buffer);
+
+    NET_API_STATUS
+    __stdcall
+    NetrRemoteTOD(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [out] LPTIME_OF_DAY_INFO *BufferPtr);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum29NotUsedOnWire(void);
+
+    NET_API_STATUS
+    __stdcall
+    NetprPathType(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *PathName,
+        [out] DWORD *PathType,
+        [in] DWORD Flags);
+
+    NET_API_STATUS
+    __stdcall
+    NetprPathCanonicalize(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *PathName,
+        [out, size_is(OutbufLen)] unsigned char *Outbuf,
+        [in, range(0, 64000)] DWORD OutbufLen,
+        [in, string] WCHAR *Prefix,
+        [in, out] DWORD *PathType,
+        [in] DWORD Flags);
+
+    long
+    __stdcall
+    NetprPathCompare(
+        [in, string,unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *PathName1,
+        [in, string] WCHAR *PathName2,
+        [in] DWORD PathType,
+        [in] DWORD Flags);
+
+    NET_API_STATUS
+    __stdcall
+    NetprNameValidate(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *Name,
+        [in] DWORD NameType,
+        [in] DWORD Flags);
+
+    NET_API_STATUS
+    __stdcall
+    NetprNameCanonicalize(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *Name,
+        [out, size_is(OutbufLen)] WCHAR *Outbuf,
+        [in, range(0, 64000)] DWORD OutbufLen,
+        [in] DWORD NameType,
+        [in] DWORD Flags);
+
+    long
+    __stdcall
+    NetprNameCompare(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *Name1,
+        [in, string] WCHAR *Name2,
+        [in] DWORD NameType,
+        [in] DWORD Flags);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareEnumSticky(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, out] LPSHARE_ENUM_STRUCT InfoStruct,
+        [in] DWORD PreferedMaximumLength,
+        [out] DWORD *TotalEntries,
+        [in, out, unique] DWORD *ResumeHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareDelStart(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *NetName,
+        [in] DWORD Reserved,
+        [out] PSHARE_DEL_HANDLE ContextHandle);
+
+    NET_API_STATUS
+    __stdcall
+    NetrShareDelCommit(
+        [in, out] PSHARE_DEL_HANDLE ContextHandle);
+
+    DWORD
+    __stdcall
+    NetrpGetFileSecurity(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *ShareName,
+        [in, string] WCHAR *lpFileName,
+        [in] SECURITY_INFORMATION RequestedInformation,
+        [out] PADT_SECURITY_DESCRIPTOR *SecurityDescriptor);
+
+    DWORD
+    __stdcall
+    NetrpSetFileSecurity(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *ShareName,
+        [in, string] WCHAR *lpFileName,
+        [in] SECURITY_INFORMATION SecurityInformation,
+        [in] PADT_SECURITY_DESCRIPTOR SecurityDescriptor);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerTransportAddEx(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] LPTRANSPORT_INFO Buffer);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum42NotUsedOnWire(void);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsGetVersion(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [out] DWORD *Version);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsCreateLocalPartition(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *ShareName,
+        [in] GUID *EntryUid,
+        [in, string] WCHAR *EntryPrefix,
+        [in, string] WCHAR *ShortName,
+        [in] LPNET_DFS_ENTRY_ID_CONTAINER RelationInfo,
+        [in] int Force);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsDeleteLocalPartition(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] GUID *Uid,
+        [in, string] WCHAR *Prefix);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsSetLocalVolumeState(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] GUID *Uid,
+        [in, string] WCHAR *Prefix,
+        [in] unsigned long State);
+
+    // This method not used on the wire
+    void
+    __stdcall
+    Opnum47NotUsedOnWire(void);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsCreateExitPoint(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] GUID *Uid,
+        [in, string] WCHAR *Prefix,
+        [in] unsigned long Type,
+        [in, range(0,32) ] DWORD ShortPrefixLen,
+        [out, size_is(ShortPrefixLen)] WCHAR *ShortPrefix);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsDeleteExitPoint(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] GUID *Uid,
+        [in, string] WCHAR *Prefix,
+        [in] unsigned long Type);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsModifyPrefix(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] GUID *Uid,
+        [in, string] WCHAR *Prefix);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsFixLocalVolume(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string] WCHAR *VolumeName,
+        [in] unsigned long EntryType,
+        [in] unsigned long ServiceType,
+        [in, string] WCHAR *StgId,
+        [in] GUID *EntryUid,
+        [in, string] WCHAR *EntryPrefix,
+        [in] LPNET_DFS_ENTRY_ID_CONTAINER RelationInfo,
+        [in] unsigned long CreateDisposition);
+
+    NET_API_STATUS
+    __stdcall
+    NetrDfsManagerReportSiteInfo(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, out, unique] LPDFS_SITELIST_INFO *ppSiteInfo);
+
+    NET_API_STATUS
+    __stdcall
+    NetrServerTransportDelEx(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in] DWORD Level,
+        [in, switch_is(Level)] LPTRANSPORT_INFO Buffer);
+}
