@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Vizitoni <A HREF=""http://www.reactos.org/"">Faqeb ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL "Vizitoni <A HREF=""http://www.reactos.org/"">Faqeb ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Shiko &licencës...", IDC_LICENCE, 170, 199, 78, 13
 END
 

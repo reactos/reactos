@@ -17,7 +17,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Visiter la <A HREF=""http://www.reactos.org/"">page d'accueil ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 10
+    CONTROL "Visiter la <A HREF=""http://www.reactos.org/"">page d'accueil ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "Voir la &licence...", IDC_LICENCE, 170, 199, 78, 14
 END
 
