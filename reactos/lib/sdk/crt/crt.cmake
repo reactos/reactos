@@ -476,7 +476,10 @@ elseif(ARCH STREQUAL "amd64")
     endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND LIBCNTPR_SOURCE
-        math/arm/__rt_div.c
+        math/arm/__rt_sdiv.c
+        math/arm/__rt_sdiv64_worker.c
+        math/arm/__rt_udiv.c
+        math/arm/__rt_udiv64_worker.c
     )
     list(APPEND CRT_ASM_SOURCE
         math/arm/floor.s
