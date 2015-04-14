@@ -116,6 +116,7 @@ extern void SaveSettings(void)
 
     if (RegCreateKey(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
     {
+        RegCloseKey(hKey);
         if (RegOpenKeyEx(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
         {
             TCHAR szBuffer[MAX_PATH];
