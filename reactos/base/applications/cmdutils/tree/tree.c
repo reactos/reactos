@@ -130,7 +130,7 @@ static void DrawTree(const wchar_t* strPath,
             if ((BYTE)prevLine[j] == 195 || (BYTE)prevLine[j] == 179 ||
                 (BYTE)prevLine[j] == L'+' || (BYTE)prevLine[j] == L'|')
             {
-                if (bUseAscii)
+                if (!bUseAscii)
                 {
                     wchar_t a[] = {179, 0};
                     wcscat(consoleOut, a);
