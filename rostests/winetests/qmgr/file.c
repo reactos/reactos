@@ -38,12 +38,10 @@
 #include <bits.h>
 
 /* Globals used by many tests */
-#define NUM_FILES 1
 static const WCHAR test_remoteName[] = {'r','e','m','o','t','e', 0};
 static const WCHAR test_localName[] = {'l','o','c','a','l', 0};
 static WCHAR test_localFile[MAX_PATH];
 static  WCHAR test_remoteUrl[MAX_PATH];
-static const ULONG test_fileCount = NUM_FILES;
 static const WCHAR test_displayName[] = {'T','e','s','t', 0};
 static IBackgroundCopyJob *test_job;
 static IBackgroundCopyManager *test_manager;
