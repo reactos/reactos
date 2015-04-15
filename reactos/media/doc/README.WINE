@@ -157,7 +157,7 @@ reactos/dll/win32/pdh                 # Synced to Wine-1.7.27
 reactos/dll/win32/pidgen              # Synced to Wine-1.7.27
 reactos/dll/win32/powrprof            # Forked at Wine-1.0rc5
 reactos/dll/win32/printui             # Synced to Wine-1.7.27
-reactos/dll/win32/propsys             # Synced to Wine-1.7.27
+reactos/dll/win32/propsys             # Synced to WineStaging-1.7.37
 reactos/dll/win32/pstorec             # Synced to Wine-1.7.27
 reactos/dll/win32/qmgr                # Synced to Wine-1.7.27
 reactos/dll/win32/qmgrprxy            # Synced to Wine-1.7.27

@@ -280,12 +280,12 @@ HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY pkey, LPWSTR psz, UINT cch
 
     /* GUIDSTRING_MAX accounts for null terminator, +1 for space character. */
     if (cch <= GUIDSTRING_MAX + 1)
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
 
     if (!pkey)
     {
         psz[0] = '\0';
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
     }
 
     sprintfW(psz, guid_fmtW, pkey->fmtid.Data1, pkey->fmtid.Data2,
@@ -323,7 +323,7 @@ HRESULT WINAPI PSStringFromPropertyKey(REFPROPERTYKEY pkey, LPWSTR psz, UINT cch
                 *p++ = *ptr--;
         }
 
-        return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        return E_NOT_SUFFICIENT_BUFFER;
     }
 }
 
