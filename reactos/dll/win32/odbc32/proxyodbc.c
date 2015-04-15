@@ -54,6 +54,7 @@ static BOOL ODBC_LoadDriverManager(void);
 static BOOL ODBC_LoadDMFunctions(void);
 
 WINE_DEFAULT_DEBUG_CHANNEL(odbc);
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 static SQLRETURN (*pSQLAllocConnect)(SQLHENV,SQLHDBC*);
 static SQLRETURN (*pSQLAllocEnv)(SQLHENV*);
@@ -1919,11 +1920,19 @@ SQLRETURN WINAPI SQLDrivers(
     SQLSMALLINT        cbDriverAttrMax,
     SQLSMALLINT           *pcbDriverAttr)
 {
-        TRACE("\n");
+        SQLRETURN ret;
+
+        TRACE("direction=%d\n", fDirection);
 
         if (!pSQLDrivers) return SQL_ERROR;
-        return pSQLDrivers(henv, fDirection, szDriverDesc, cbDriverDescMax, pcbDriverDesc,
-                           szDriverAttributes, cbDriverAttrMax, pcbDriverAttr);
+        ret = pSQLDrivers(henv, fDirection, szDriverDesc, cbDriverDescMax, pcbDriverDesc,
+                          szDriverAttributes, cbDriverAttrMax, pcbDriverAttr);
+
+        if (ret == SQL_NO_DATA && fDirection == SQL_FETCH_FIRST)
+            ERR_(winediag)("No ODBC drivers could be found. "
+                           "Check the settings for your libodbc provider.\n");
+
+        return ret;
 }
 
 
@@ -2652,11 +2661,19 @@ SQLRETURN WINAPI SQLDriversW(
     SQLSMALLINT        cbDriverAttrMax,
     SQLSMALLINT           *pcbDriverAttr)
 {
-        TRACE("\n");
+        SQLRETURN ret;
+
+        TRACE("direction=%d\n", fDirection);
 
         if (!pSQLDriversW) return SQL_ERROR;
-        return pSQLDriversW(henv, fDirection, szDriverDesc, cbDriverDescMax, pcbDriverDesc,
-                            szDriverAttributes, cbDriverAttrMax, pcbDriverAttr);
+        ret = pSQLDriversW(henv, fDirection, szDriverDesc, cbDriverDescMax, pcbDriverDesc,
+                           szDriverAttributes, cbDriverAttrMax, pcbDriverAttr);
+
+        if (ret == SQL_NO_DATA && fDirection == SQL_FETCH_FIRST)
+            ERR_(winediag)("No ODBC drivers could be found. "
+                           "Check the settings for your libodbc provider.\n");
+
+        return ret;
 }
 
 /*************************************************************************
