@@ -1,7 +1,7 @@
 @ stub DsAddSidHistoryA
 @ stub DsAddSidHistoryW
-@ stub DsBindA
-@ stub DsBindW
+@ stdcall DsBindA(str str ptr)
+@ stdcall DsBindW(wstr wstr ptr)
 @ stub DsBindWithCredA
 @ stub DsBindWithCredW
 @ stub DsBindWithSpnA

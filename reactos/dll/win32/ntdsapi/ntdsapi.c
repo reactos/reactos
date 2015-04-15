@@ -50,6 +50,24 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
 }
 
 /***********************************************************************
+ *             DsBindA (NTDSAPI.@)
+ */
+DWORD WINAPI DsBindA(LPCSTR controller, LPCSTR domain, HANDLE *handle)
+ {
+    FIXME("(%s,%s, %p): stub!\n", debugstr_a(controller), debugstr_a(domain), handle);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *             DsBindW (NTDSAPI.@)
+ */
+DWORD WINAPI DsBindW(LPCWSTR controller, LPCWSTR domain, HANDLE *handle)
+ {
+    FIXME("(%s,%s, %p): stub!\n", debugstr_w(controller), debugstr_w(domain), handle);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
  *             DsMakeSpnW (NTDSAPI.@)
  */
 DWORD WINAPI DsMakeSpnW(LPCWSTR svc_class, LPCWSTR svc_name,
