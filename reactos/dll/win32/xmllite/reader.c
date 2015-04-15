@@ -2661,7 +2661,7 @@ static HRESULT WINAPI xmlreader_GetQualifiedName(IXmlReader* iface, LPCWSTR *nam
 
     TRACE("(%p)->(%p %p)\n", This, name, len);
     *name = This->strvalues[StringValue_QualifiedName].str;
-    *len  = This->strvalues[StringValue_QualifiedName].len;
+    if (len) *len  = This->strvalues[StringValue_QualifiedName].len;
     return S_OK;
 }
 

@@ -323,7 +323,7 @@ static HRESULT writeroutput_flush_stream(xmlwriteroutput *output)
 
     buffer = &output->buffer;
 
-    /* It will loop forever until everything is written or an error occured. */
+    /* It will loop forever until everything is written or an error occurred. */
     do {
         written = 0;
         hr = ISequentialStream_Write(output->stream, buffer->data + offset, buffer->written, &written);
