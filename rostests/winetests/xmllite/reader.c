@@ -763,7 +763,7 @@ static void test_read_xmldeclaration(void)
         ok(!lstrcmpW(name_val[i].val, val), "expected %s, got %s\n", wine_dbgstr_w(name_val[i].val), wine_dbgstr_w(val));
 
         hr = IXmlReader_MoveToNextAttribute(reader);
-        ok(hr == (i < count - 1) ? S_OK : S_FALSE, "got %08x\n", hr);
+        ok(hr == ((i < count - 1) ? S_OK : S_FALSE), "got %08x\n", hr);
     }
 
     hr = IXmlReader_GetDepth(reader, &count);
