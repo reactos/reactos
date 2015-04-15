@@ -210,10 +210,12 @@ HRESULT WINAPI ObjectFromLresult( LRESULT result, REFIID riid, WPARAM wParam, vo
         return E_FAIL;
 
     data = GlobalAlloc(GMEM_FIXED, size);
+    if(!data) {
+        UnmapViewOfFile(view);
+        return E_OUTOFMEMORY;
+    }
     memcpy(data, view, size);
     UnmapViewOfFile(view);
-    if(!data)
-        return E_OUTOFMEMORY;
 
     hr = CreateStreamOnHGlobal(data, TRUE, &stream);
     if(FAILED(hr)) {
