@@ -299,16 +299,14 @@ static void init(void)
     HRESULT res;
 
     res = VarBstrFromBool(VARIANT_TRUE, LANG_USER_DEFAULT, VAR_LOCALBOOL, &bstr);
-    ok(res == S_OK && (lstrlenW(bstr) > 0),
-        "Expected localized string for 'True'\n");
+    ok(res == S_OK && bstr[0], "Expected localized string for 'True'\n");
     /* lstrcpyW / lstrcatW do not work on win95 */
     memcpy(sz12_true, sz12, sizeof(sz12));
     if (bstr) memcpy(&sz12_true[2], bstr, SysStringByteLen(bstr) + sizeof(WCHAR));
     SysFreeString(bstr);
 
     res = VarBstrFromBool(VARIANT_FALSE, LANG_USER_DEFAULT, VAR_LOCALBOOL, &bstr);
-    ok(res == S_OK && (lstrlenW(bstr) > 0),
-        "Expected localized string for 'False'\n");
+    ok(res == S_OK && bstr[0], "Expected localized string for 'False'\n");
     memcpy(sz12_false, sz12, sizeof(sz12));
     if (bstr) memcpy(&sz12_false[2], bstr, SysStringByteLen(bstr) + sizeof(WCHAR));
     SysFreeString(bstr);
@@ -335,12 +333,6 @@ static void setdec64(DECIMAL* dec, BYTE scl, BYTE sgn, ULONG hi32, ULONG mid32, 
     dec->Hi32 = hi32;
     S1(U1(*dec)).Mid32 = mid32;
     S1(U1(*dec)).Lo32 = lo32;
-}
-
-static inline int strcmpW( const WCHAR *str1, const WCHAR *str2 )
-{
-    while (*str1 && (*str1 == *str2)) { str1++; str2++; }
-    return *str1 - *str2;
 }
 
 /* return the string text of a given variant type */
@@ -1395,11 +1387,11 @@ static void test_VarParseNumFromStr(void)
 
   /* VB oct char bigger than 7 */
   CONVERT("&o128", NUMPRS_HEX_OCT);
-/*
-  Native versions 2.x of oleaut32 allow this to succeed: later versions and Wine don't
-  EXPECTFAIL;
-  EXPECTRGB(0,FAILDIG);
-*/
+  EXPECT(2,NUMPRS_HEX_OCT,0x40,4,3,0);
+  EXPECTRGB(0,1);
+  EXPECTRGB(1,2);
+  EXPECTRGB(3,FAILDIG);
+
   /** NUMPRS_PARENS **/
 
   /* Empty parens = error */
@@ -6063,7 +6055,6 @@ static void test_VarAnd(void)
                 else if (leftvt == VT_I4 || rightvt == VT_I4 ||
                     leftvt == VT_UINT || rightvt == VT_UINT ||
                     leftvt == VT_INT || rightvt == VT_INT ||
-                    leftvt == VT_UINT || rightvt == VT_UINT ||
                     leftvt == VT_R4 || rightvt == VT_R4 ||
                     leftvt == VT_R8 || rightvt == VT_R8 ||
                     leftvt == VT_CY || rightvt == VT_CY ||
@@ -7407,10 +7398,10 @@ static void test_VarPow(void)
     hres = pVarPow(&cy, &right, &result);
     if (hres == S_OK)
     {
-        ok(hres == S_OK && V_VT(&result) == VT_R8,
+        ok(V_VT(&result) == VT_R8,
            "VARPOW: expected coerced hres 0x%X type VT_R8, got hres 0x%X type %s!\n",
            S_OK, hres, vtstr(V_VT(&result)));
-        ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 4.0),
+        ok(EQ_DOUBLE(V_R8(&result), 4.0),
            "VARPOW: CY value %f, expected %f\n", V_R8(&result), 4.0);
     }
     else
@@ -7444,10 +7435,10 @@ static void test_VarPow(void)
     hres = pVarPow(&dec, &right, &result);
     if (hres == S_OK)
     {
-        ok(hres == S_OK && V_VT(&result) == VT_R8,
+        ok(V_VT(&result) == VT_R8,
            "VARPOW: expected coerced hres 0x%X type VT_R8, got hres 0x%X type %s!\n",
            S_OK, hres, vtstr(V_VT(&result)));
-        ok(hres == S_OK && EQ_DOUBLE(V_R8(&result), 4.0),
+        ok(EQ_DOUBLE(V_R8(&result), 4.0),
            "VARPOW: DECIMAL value %f, expected %f\n", V_R8(&result), 4.0);
     }
     else

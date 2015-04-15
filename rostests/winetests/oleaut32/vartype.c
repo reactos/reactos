@@ -6463,7 +6463,7 @@ static void test_recinfo(void)
     ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(testcopy.bstr == NULL, "got %p\n", testcopy.bstr);
 
-    /* now destination contains inteface pointer */
+    /* now the destination contains the interface pointer */
     memset(&testcopy, 0, sizeof(testcopy));
     testcopy.disp = &dispatch.IDispatch_iface;
     dispatch.ref = 10;

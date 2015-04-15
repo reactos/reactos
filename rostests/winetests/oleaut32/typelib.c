@@ -5600,7 +5600,7 @@ static void test_dep(void) {
     ok(hr == S_OK, "got: %x\n", hr);
 
     hr = ITypeInfo_GetRefTypeInfo(ptInfo, refType, &ptInfoExt);
-    todo_wine ok(hr == S_OK || broken(hr == TYPE_E_CANTLOADLIBRARY) /* win 2000 */, "got: %x\n", hr);
+    ok(hr == S_OK || broken(hr == TYPE_E_CANTLOADLIBRARY) /* win 2000 */, "got: %x\n", hr);
 
     ITypeInfo_Release(ptInfo);
     if(ptInfoExt)
