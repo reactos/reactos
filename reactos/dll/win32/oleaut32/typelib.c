@@ -1765,18 +1765,6 @@ static inline TLBFuncDesc *TLB_get_funcdesc_by_memberid(TLBFuncDesc *funcdescs,
     return NULL;
 }
 
-static inline TLBFuncDesc *TLB_get_funcdesc_by_name(TLBFuncDesc *funcdescs,
-        UINT n, const OLECHAR *name)
-{
-    while(n){
-        if(!lstrcmpiW(TLB_get_bstr(funcdescs->Name), name))
-            return funcdescs;
-        ++funcdescs;
-        --n;
-    }
-    return NULL;
-}
-
 static inline TLBVarDesc *TLB_get_vardesc_by_memberid(TLBVarDesc *vardescs,
         UINT n, MEMBERID memid)
 {
@@ -2102,10 +2090,6 @@ static HRESULT TLB_size_instance(ITypeInfoImpl *info, SYSKIND sys,
  *
  *  Functions for reading MSFT typelibs (those created by CreateTypeLib2)
  */
-static inline unsigned int MSFT_Tell(const TLBContext *pcx)
-{
-    return pcx->pos;
-}
 
 static inline void MSFT_Seek(TLBContext *pcx, LONG where)
 {
@@ -7611,6 +7595,45 @@ static HRESULT ITypeInfoImpl_GetDispatchRefTypeInfo( ITypeInfo *iface,
         return E_FAIL;
 }
 
+struct search_res_tlb_params
+{
+    const GUID *guid;
+    ITypeLib *pTLib;
+};
+
+static BOOL CALLBACK search_res_tlb(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LONG_PTR lParam)
+{
+    struct search_res_tlb_params *params = (LPVOID)lParam;
+    static const WCHAR formatW[] = {'\\','%','d',0};
+    WCHAR szPath[MAX_PATH+1];
+    ITypeLib *pTLib = NULL;
+    HRESULT ret;
+    DWORD len;
+
+    if (IS_INTRESOURCE(lpszName) == FALSE)
+        return TRUE;
+
+    if (!(len = GetModuleFileNameW(hModule, szPath, MAX_PATH)))
+        return TRUE;
+
+    if (snprintfW(szPath + len, sizeof(szPath)/sizeof(WCHAR) - len, formatW, LOWORD(lpszName)) < 0)
+        return TRUE;
+
+    ret = LoadTypeLibEx(szPath, REGKIND_NONE, &pTLib);
+    if (SUCCEEDED(ret))
+    {
+        ITypeLibImpl *impl = impl_from_ITypeLib(pTLib);
+        if (IsEqualGUID(params->guid, impl->guid))
+        {
+            params->pTLib = pTLib;
+            return FALSE; /* stop enumeration */
+        }
+        ITypeLib_Release(pTLib);
+    }
+
+    return TRUE;
+}
+
 /* ITypeInfo::GetRefTypeInfo
  *
  * If a type description references other type descriptions, it retrieves
@@ -7704,20 +7727,33 @@ static HRESULT WINAPI ITypeInfo_fnGetRefTypeInfo(
                 ITypeLib_AddRef(pTLib);
                 result = S_OK;
             } else {
+                static const WCHAR TYPELIBW[] = {'T','Y','P','E','L','I','B',0};
+                struct search_res_tlb_params params;
                 BSTR libnam;
 
                 TRACE("typeinfo in imported typelib that isn't already loaded\n");
 
-                result = query_typelib_path(TLB_get_guid_null(ref_type->pImpTLInfo->guid),
-                        ref_type->pImpTLInfo->wVersionMajor,
-                        ref_type->pImpTLInfo->wVersionMinor,
-                        This->pTypeLib->syskind,
-                        ref_type->pImpTLInfo->lcid, &libnam, TRUE);
-                if(FAILED(result))
-                    libnam = SysAllocString(ref_type->pImpTLInfo->name);
+                /* Search in resource table */
+                params.guid  = TLB_get_guid_null(ref_type->pImpTLInfo->guid);
+                params.pTLib = NULL;
+                EnumResourceNamesW(NULL, TYPELIBW, search_res_tlb, (LONG_PTR)&params);
+                pTLib  = params.pTLib;
+                result = S_OK;
 
-                result = LoadTypeLib(libnam, &pTLib);
-                SysFreeString(libnam);
+                if (!pTLib)
+                {
+                    /* Search on disk */
+                    result = query_typelib_path(TLB_get_guid_null(ref_type->pImpTLInfo->guid),
+                            ref_type->pImpTLInfo->wVersionMajor,
+                            ref_type->pImpTLInfo->wVersionMinor,
+                            This->pTypeLib->syskind,
+                            ref_type->pImpTLInfo->lcid, &libnam, TRUE);
+                    if (FAILED(result))
+                        libnam = SysAllocString(ref_type->pImpTLInfo->name);
+
+                    result = LoadTypeLib(libnam, &pTLib);
+                    SysFreeString(libnam);
+                }
 
                 if(SUCCEEDED(result)) {
                     ref_type->pImpTLInfo->pImpTypeLib = impl_from_ITypeLib(pTLib);
@@ -9183,7 +9219,7 @@ static DWORD WMSFT_append_arraydesc(ARRAYDESC *desc, WMSFT_TLBFile *file)
         file->arraydesc_seg.data = heap_alloc(file->arraydesc_seg.len);
     else
         file->arraydesc_seg.data = heap_realloc(file->arraydesc_seg.data, file->arraydesc_seg.len);
-    encoded = (DWORD*)((char *)file->arraydesc_seg.data) + offs;
+    encoded = (DWORD*)((char *)file->arraydesc_seg.data + offs);
 
     encoded[0] = WMSFT_append_typedesc(&desc->tdescElem, file, NULL, NULL);
     encoded[1] = desc->cDims | ((desc->cDims * 2 * sizeof(DWORD)) << 16);

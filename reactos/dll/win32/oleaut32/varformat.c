@@ -2312,7 +2312,7 @@ HRESULT WINAPI VarFormatNumber(LPVARIANT pVarIn, INT nDigits, INT nLeading, INT 
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimal,
                    sizeof(decimal)/sizeof(WCHAR));
     numfmt.lpThousandSep = thousands;
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, thousands,
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, thousands,
                    sizeof(thousands)/sizeof(WCHAR));
 
     if (GetNumberFormatW(LOCALE_USER_DEFAULT, 0, V_BSTR(&vStr), &numfmt,

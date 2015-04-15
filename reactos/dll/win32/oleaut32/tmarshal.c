@@ -176,8 +176,6 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
         return xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
     }
 
-    hres = E_FAIL;
-
     TRACE("...%s...\n",debugstr_guid(riid));
     
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);

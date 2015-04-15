@@ -2281,6 +2281,15 @@ HRESULT WINAPI OleLoadPictureEx( LPSTREAM lpstream, LONG lSize, BOOL fRunmode,
 }
 
 /***********************************************************************
+ * OleSavePictureFile (OLEAUT32.423)
+ */
+HRESULT WINAPI OleSavePictureFile(IDispatch *picture, BSTR filename)
+{
+  FIXME("(%p %s): stub\n", picture, debugstr_w(filename));
+  return CTL_E_FILENOTFOUND;
+}
+
+/***********************************************************************
  * OleLoadPicturePath (OLEAUT32.424)
  */
 HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
