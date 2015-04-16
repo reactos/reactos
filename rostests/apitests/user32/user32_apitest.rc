@@ -5,3 +5,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_TEST ICON "test.ico"
 TESTCURSOR CURSOR "test.cur"
+
+TESTDIALOG DIALOG 0,0, 200,200
+CLASS "TestDialogClass"
+CAPTION  "Testdialog"
+FONT 8, "MS Shell Dlg"
+{
+    PUSHBUTTON "a button", 1, 5,5, 100,20
+}

@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     AttachThreadInput.c
     helper.c
+    CreateDialog.c
     CreateIconFromResourceEx.c
     DeferWindowPos.c
     DestroyCursorIcon.c

@@ -4,6 +4,7 @@
 #include <apitest.h>
 
 extern void func_AttachThreadInput(void);
+extern void func_CreateDialog(void);
 extern void func_CreateIconFromResourceEx(void);
 extern void func_DeferWindowPos(void);
 extern void func_DestroyCursorIcon(void);
@@ -34,6 +35,7 @@ extern void func_wsprintf(void);
 const struct test winetest_testlist[] =
 {
     { "AttachThreadInput", func_AttachThreadInput },
+    { "CreateDialog", func_CreateDialog },
     { "CreateIconFromResourceEx", func_CreateIconFromResourceEx },
     { "DeferWindowPos", func_DeferWindowPos },
     { "DestroyCursorIcon", func_DestroyCursorIcon },
