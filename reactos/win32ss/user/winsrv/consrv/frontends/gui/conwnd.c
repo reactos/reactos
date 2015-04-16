@@ -1498,19 +1498,20 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     BOOL Err = FALSE;
     PCONSRV_CONSOLE Console = GuiData->Console;
 
-    // FIXME: It's here that we need to check whether we has focus or not
-    // and whether we are in edit mode or not, to know if we need to deal
-    // with the mouse, or not.
+    // FIXME: It's here that we need to check whether we have focus or not
+    // and whether we are or not in edit mode, in order to know if we need
+    // to deal with the mouse.
 
     if (GuiData->IgnoreNextMouseSignal)
     {
         if (msg != WM_LBUTTONDOWN &&
             msg != WM_MBUTTONDOWN &&
-            msg != WM_RBUTTONDOWN)
+            msg != WM_RBUTTONDOWN &&
+            msg != WM_XBUTTONDOWN)
         {
             /*
              * If this mouse signal is not a button-down action
-             * then it is the last signal being ignored.
+             * then this is the last one being ignored.
              */
             GuiData->IgnoreNextMouseSignal = FALSE;
         }
@@ -1672,6 +1673,26 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwEventFlags  = 0;
                 break;
 
+            case WM_XBUTTONDOWN:
+            {
+                /* Get which X-button was pressed */
+                WORD wButton = GET_XBUTTON_WPARAM(wParam);
+
+                /* Check for X-button validity */
+                if (wButton & ~(XBUTTON1 | XBUTTON2))
+                {
+                    DPRINT1("X-button 0x%04x invalid\n", wButton);
+                    Err = TRUE;
+                    break;
+                }
+
+                SetCapture(GuiData->hWindow);
+                dwButtonState = (wButton == XBUTTON1 ? FROM_LEFT_3RD_BUTTON_PRESSED
+                                                     : FROM_LEFT_4TH_BUTTON_PRESSED);
+                dwEventFlags  = 0;
+                break;
+            }
+
             case WM_LBUTTONUP:
                 ReleaseCapture();
                 dwButtonState = 0;
@@ -1690,6 +1711,24 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwEventFlags  = 0;
                 break;
 
+            case WM_XBUTTONUP:
+            {
+                /* Get which X-button was released */
+                WORD wButton = GET_XBUTTON_WPARAM(wParam);
+
+                /* Check for X-button validity */
+                if (wButton & ~(XBUTTON1 | XBUTTON2))
+                {
+                    DPRINT1("X-button 0x%04x invalid\n", wButton);
+                    /* Ok, just release the button anyway... */
+                }
+
+                ReleaseCapture();
+                dwButtonState = 0;
+                dwEventFlags  = 0;
+                break;
+            }
+
             case WM_LBUTTONDBLCLK:
                 dwButtonState = FROM_LEFT_1ST_BUTTON_PRESSED;
                 dwEventFlags  = DOUBLE_CLICK;
@@ -1704,6 +1743,25 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwButtonState = RIGHTMOST_BUTTON_PRESSED;
                 dwEventFlags  = DOUBLE_CLICK;
                 break;
+
+            case WM_XBUTTONDBLCLK:
+            {
+                /* Get which X-button was double-clicked */
+                WORD wButton = GET_XBUTTON_WPARAM(wParam);
+
+                /* Check for X-button validity */
+                if (wButton & ~(XBUTTON1 | XBUTTON2))
+                {
+                    DPRINT1("X-button 0x%04x invalid\n", wButton);
+                    Err = TRUE;
+                    break;
+                }
+
+                dwButtonState = (wButton == XBUTTON1 ? FROM_LEFT_3RD_BUTTON_PRESSED
+                                                     : FROM_LEFT_4TH_BUTTON_PRESSED);
+                dwEventFlags  = DOUBLE_CLICK;
+                break;
+            }
 
             case WM_MOUSEMOVE:
                 dwButtonState = 0;
@@ -1734,6 +1792,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             case WM_LBUTTONDOWN:
             case WM_MBUTTONDOWN:
             case WM_RBUTTONDOWN:
+            case WM_XBUTTONDOWN:
                 GuiData->IgnoreNextMouseSignal = TRUE;
             default:
                 break;
@@ -1747,6 +1806,10 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
                 dwButtonState |= FROM_LEFT_2ND_BUTTON_PRESSED;
             if (wKeyState & MK_RBUTTON)
                 dwButtonState |= RIGHTMOST_BUTTON_PRESSED;
+            if (wKeyState & MK_XBUTTON1)
+                dwButtonState |= FROM_LEFT_3RD_BUTTON_PRESSED;
+            if (wKeyState & MK_XBUTTON2)
+                dwButtonState |= FROM_LEFT_4TH_BUTTON_PRESSED;
 
             if (GetKeyState(VK_RMENU) & 0x8000)
                 dwControlKeyState |= RIGHT_ALT_PRESSED;
@@ -2263,12 +2326,15 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
+        case WM_XBUTTONDOWN:
         case WM_LBUTTONUP:
         case WM_MBUTTONUP:
         case WM_RBUTTONUP:
+        case WM_XBUTTONUP:
         case WM_LBUTTONDBLCLK:
         case WM_MBUTTONDBLCLK:
         case WM_RBUTTONDBLCLK:
+        case WM_XBUTTONDBLCLK:
         case WM_MOUSEMOVE:
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
