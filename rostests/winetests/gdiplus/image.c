@@ -1504,7 +1504,6 @@ static void test_createfromwmf(void)
     stat = GdipCreateMetafileFromWmf(hwmf, TRUE,
         (WmfPlaceableFileHeader*)wmfimage, (GpMetafile**)&img);
     expect(Ok, stat);
-    if (stat != Ok) return; // ReactOS
 
     stat = GdipGetImageBounds(img, &bounds, &unit);
     expect(Ok, stat);
