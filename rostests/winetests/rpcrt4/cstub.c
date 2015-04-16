@@ -288,12 +288,6 @@ static const MIDL_SERVER_INFO if3_server_info =
     0,
     0};
 
-
-static const PRPC_STUB_FUNCTION if3_table[] =
-{
-    if1_fn1_Stub
-};
-
 static CInterfaceStubVtbl if3_stub_vtbl =
 {
     {
@@ -337,15 +331,6 @@ static const MIDL_SERVER_INFO if4_server_info =
     0,
     0,
     0};
-
-
-static const PRPC_STUB_FUNCTION if4_table[] =
-{
-    STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-};
 
 static CInterfaceStubVtbl if4_stub_vtbl =
 {
