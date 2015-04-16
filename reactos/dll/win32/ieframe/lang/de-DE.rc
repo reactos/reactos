@@ -1,0 +1,78 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "&Datei"
+    {
+        POPUP "&Neu"
+        {
+            MENUITEM "&Fenster",                 ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "Ö&ffnen...",                    ID_BROWSE_OPEN
+        MENUITEM "Spe&ichern",                       ID_BROWSE_SAVE
+        MENUITEM "Speichern &unter...",                 ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Seite ein&richten...",            ID_BROWSE_PRINT_FORMAT
+        MENUITEM "&Drucken...",                   ID_BROWSE_PRINT
+        MENUITEM "Druck&vorschau",              ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "Eigen&schaften",                 ID_BROWSE_PROPERTIES
+        MENUITEM "B&eenden",                      ID_BROWSE_QUIT
+    }
+    POPUP "&Ansicht"
+    {
+        POPUP "S&ymbolleisten"
+        {
+            MENUITEM "&Standardleiste",           ID_BROWSE_BAR_STD
+            MENUITEM "&Adressleiste",            ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "&Favoriten"
+    {
+        MENUITEM "&Zu Favoriten hinzufügen...",        ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "&Hilfe"
+    {
+        MENUITEM "&Über Internet Explorer", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "Zurück"
+    IDS_TB_FORWARD          "Vorwärts"
+    IDS_TB_STOP             "Stop"
+    IDS_TB_REFRESH          "Aktualisieren"
+    IDS_TB_HOME             "Startseite"
+    IDS_TB_PRINT            "Drucken..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "Adresse"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "Suche nach %s"
+    IDS_BEGINDOWNLOADDATA   "Beginne %s herunterzuladen"
+    IDS_ENDDOWNLOADDATA     "Lade %s herunter"
+    IDS_SENDINGREQUEST      "Frage %s an"
+}
+
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_MODALFRAME | WS_CAPTION
+CAPTION "URL öffnen"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Geben Sie die URL an, die Sie im Internet Explorer öffnen möchten",-1, 35,5,160,25
+    LTEXT "Öffnen:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "OK", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 145, 50, 50, 14
+}
