@@ -564,6 +564,8 @@ GuiInitFrontEnd(IN OUT PFRONTEND This,
 
     /* A priori don't ignore mouse signals */
     GuiData->IgnoreNextMouseSignal = FALSE;
+    /* Initialize HACK FOR CORE-8394. See conwnd.c!OnMouse for more details. */
+    GuiData->HackCORE8394IgnoreNextMove = FALSE;
 
     /* Close button and the corresponding system menu item are enabled by default */
     GuiData->IsCloseButtonEnabled = TRUE;

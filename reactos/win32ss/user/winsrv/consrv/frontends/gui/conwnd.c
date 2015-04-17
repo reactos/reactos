@@ -1498,6 +1498,21 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
     BOOL Err = FALSE;
     PCONSRV_CONSOLE Console = GuiData->Console;
 
+    /*
+     * HACK FOR CORE-8394 (Part 2):
+     *
+     * Check whether we should ignore the next mouse move event.
+     * In either case we reset the HACK flag.
+     *
+     * See Part 1 of this hack below.
+     */
+    if (GuiData->HackCORE8394IgnoreNextMove && msg == WM_MOUSEMOVE)
+    {
+        GuiData->HackCORE8394IgnoreNextMove = FALSE;
+        goto Quit;
+    }
+    GuiData->HackCORE8394IgnoreNextMove = FALSE;
+
     // FIXME: It's here that we need to check whether we have focus or not
     // and whether we are or not in edit mode, in order to know if we need
     // to deal with the mouse.
@@ -1784,8 +1799,17 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         /*
-         * HACK FOR CORE-8394: Ignore the next mouse move signal
-         * just after mouse down click actions.
+         * HACK FOR CORE-8394 (Part 1):
+         *
+         * It appears that depending on which VM ReactOS runs, the next mouse
+         * signal coming after a button-down action can be a mouse-move (e.g.
+         * on VBox, whereas on QEMU it is not the case). However it is NOT a
+         * rule, so that we cannot use the IgnoreNextMouseSignal flag to just
+         * "ignore" the next mouse event, thinking it would always be a mouse-
+         * move signal.
+         *
+         * To work around this problem (that should really be fixed in Win32k),
+         * we use a second flag to ignore this possible next mouse move signal.
          */
         switch (msg)
         {
@@ -1793,7 +1817,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             case WM_MBUTTONDOWN:
             case WM_RBUTTONDOWN:
             case WM_XBUTTONDOWN:
-                GuiData->IgnoreNextMouseSignal = TRUE;
+                GuiData->HackCORE8394IgnoreNextMove = TRUE;
             default:
                 break;
         }
