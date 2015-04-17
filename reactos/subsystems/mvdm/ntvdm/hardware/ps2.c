@@ -405,7 +405,7 @@ BOOLEAN PS2Initialize(VOID)
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
 
-    IrqTimer = CreateHardwareTimer(HARDWARE_TIMER_ONESHOT, 10, GeneratePS2Irq);
+    IrqTimer = CreateHardwareTimer(HARDWARE_TIMER_ONESHOT, 100, GeneratePS2Irq);
 
     return TRUE;
 }

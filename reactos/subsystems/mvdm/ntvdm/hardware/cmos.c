@@ -501,9 +501,9 @@ VOID CmosInitialize(VOID)
     RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);
     RegisterIoPort(CMOS_DATA_PORT   , CmosReadPort, CmosWritePort);
 
-    ClockTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 1000, RtcTimeUpdate);
+    ClockTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 1, RtcTimeUpdate);
     PeriodicTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED | HARDWARE_TIMER_PRECISE,
-                                        1000000, /* 1,000,000 ns = 1 ms */
+                                        1000,
                                         RtcPeriodicTick);
 }
 

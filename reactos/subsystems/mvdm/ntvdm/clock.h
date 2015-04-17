@@ -35,7 +35,7 @@ typedef struct _HARDWARE_TIMER
 PHARDWARE_TIMER CreateHardwareTimer
 (
     ULONG Flags,
-    ULONG Delay, /* milliseconds for normal timers, nanoseconds for precise timers */
+    ULONG Frequency, // in Hz
     PHARDWARE_TIMER_PROC Callback
 );
 VOID EnableHardwareTimer(PHARDWARE_TIMER Timer);
