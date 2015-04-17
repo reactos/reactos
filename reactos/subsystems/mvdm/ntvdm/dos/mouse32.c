@@ -42,11 +42,19 @@ extern VOID WINAPI BiosMouseIrq(LPWORD Stack);
 
 static VOID PaintMouseCursor(VOID)
 {
+    COORD Position = DriverState.Position;
+
+    /* Apply the clipping rectangle */
+    if (Position.X < DriverState.MinX) Position.X = DriverState.MinX;
+    if (Position.X > DriverState.MaxX) Position.X = DriverState.MaxX;
+    if (Position.Y < DriverState.MinY) Position.Y = DriverState.MinY;
+    if (Position.Y > DriverState.MaxY) Position.Y = DriverState.MaxY;
+
     if (Bda->VideoMode <= 3)
     {
         WORD Character;
-        WORD CellX = DriverState.Position.X / 8;
-        WORD CellY = DriverState.Position.Y / 8;
+        WORD CellX = Position.X / 8;
+        WORD CellY = Position.Y / 8;
         DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Bda->VideoPage * Bda->VideoPageSize);
 
         EmulatorReadMemory(&EmulatorContext,
@@ -74,10 +82,18 @@ static VOID PaintMouseCursor(VOID)
 
 static VOID EraseMouseCursor(VOID)
 {
+    COORD Position = DriverState.Position;
+
+    /* Apply the clipping rectangle */
+    if (Position.X < DriverState.MinX) Position.X = DriverState.MinX;
+    if (Position.X > DriverState.MaxX) Position.X = DriverState.MaxX;
+    if (Position.Y < DriverState.MinY) Position.Y = DriverState.MinY;
+    if (Position.Y > DriverState.MaxY) Position.Y = DriverState.MaxY;
+
     if (Bda->VideoMode <= 3)
     {
-        WORD CellX = DriverState.Position.X / 8;
-        WORD CellY = DriverState.Position.Y / 8;
+        WORD CellX = Position.X / 8;
+        WORD CellY = Position.Y / 8;
         DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Bda->VideoPage * Bda->VideoPageSize);
 
         EmulatorWriteMemory(&EmulatorContext,
@@ -121,8 +137,8 @@ static VOID FromMouseCoordinates(PCOORD Position)
         Resolution.Y *= 8;
     }
 
-    Position->X = (((Position->X - DriverState.MinX) * Resolution.X) / Width);
-    Position->Y = (((Position->Y - DriverState.MinY) * Resolution.Y) / Height);
+    Position->X = ((Position->X - DriverState.MinX) * Resolution.X) / Width;
+    Position->Y = ((Position->Y - DriverState.MinY) * Resolution.Y) / Height;
 }
 
 static VOID CallMouseUserHandlers(USHORT CallMask)
@@ -231,13 +247,6 @@ static inline VOID DosUpdatePosition(PCOORD NewPosition)
 
     if (DriverState.ShowCount > 0) EraseMouseCursor();
     DriverState.Position = *NewPosition;
-
-    /* Apply the clipping rectangle */
-    if (DriverState.Position.X < DriverState.MinX) DriverState.Position.X = DriverState.MinX;
-    if (DriverState.Position.X > DriverState.MaxX) DriverState.Position.X = DriverState.MaxX;
-    if (DriverState.Position.Y < DriverState.MinY) DriverState.Position.Y = DriverState.MinY;
-    if (DriverState.Position.Y > DriverState.MaxY) DriverState.Position.Y = DriverState.MaxY;
-
     if (DriverState.ShowCount > 0) PaintMouseCursor();
 
     /* Call the mouse handlers */
@@ -494,18 +503,38 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         /* Define Horizontal Cursor Range */
         case 0x07:
         {
-            DPRINT("Setting mouse horizontal range: %u - %u\n", getCX(), getDX());
-            DriverState.MinX = getCX();
-            DriverState.MaxX = getDX();
+            WORD Min = getCX();
+            WORD Max = getDX();
+
+            if (!VgaGetDoubleVisionState(NULL, NULL))
+            {
+                /* Text mode */
+                Min &= ~0x07;
+                Max |= 0x07;
+            }
+
+            DPRINT("Setting mouse horizontal range: %u - %u\n", Min, Max);
+            DriverState.MinX = Min;
+            DriverState.MaxX = Max;
             break;
         }
 
         /* Define Vertical Cursor Range */
         case 0x08:
         {
-            DPRINT("Setting mouse vertical range: %u - %u\n", getCX(), getDX());
-            DriverState.MinY = getCX();
-            DriverState.MaxY = getDX();
+            WORD Min = getCX();
+            WORD Max = getDX();
+
+            if (!VgaGetDoubleVisionState(NULL, NULL))
+            {
+                /* Text mode */
+                Min &= ~0x07;
+                Max |= 0x07;
+            }
+
+            DPRINT("Setting mouse vertical range: %u - %u\n", Min, Max);
+            DriverState.MinY = Min;
+            DriverState.MaxY = Max;
             break;
         }
 
