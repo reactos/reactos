@@ -445,9 +445,9 @@ MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
                 MiDereferenceImports(CurrentImports);
 
                 /* Check if we had valid imports */
-                if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) ||
-                    (CurrentImports != MM_SYSLDR_NO_IMPORTS) ||
-                    !((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
+                if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) &&
+                    (CurrentImports != MM_SYSLDR_NO_IMPORTS) &&
+                    !((ULONG_PTR)CurrentImports & MM_SYSLDR_SINGLE_ENTRY))
                 {
                     /* Free them */
                     ExFreePoolWithTag(CurrentImports, TAG_LDR_IMPORTS);
