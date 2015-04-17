@@ -3680,13 +3680,10 @@ CHubController::HandleQueryInterface(
         //
         // Interface version 0
         //
-        if (IoStack->Parameters.QueryInterface.Version >= 0)
-        {
-            InterfaceHub->Size = IoStack->Parameters.QueryInterface.Size;
-            InterfaceHub->BusContext = PVOID(this);
-            InterfaceHub->InterfaceReference = USBI_InterfaceReference;
-            InterfaceHub->InterfaceDereference = USBI_InterfaceDereference;
-        }
+        InterfaceHub->Size = IoStack->Parameters.QueryInterface.Size;
+        InterfaceHub->BusContext = PVOID(this);
+        InterfaceHub->InterfaceReference = USBI_InterfaceReference;
+        InterfaceHub->InterfaceDereference = USBI_InterfaceDereference;
 
         //
         // Interface version 1
@@ -3768,17 +3765,14 @@ CHubController::HandleQueryInterface(
         //
         // interface version 0
         //
-        if (IoStack->Parameters.QueryInterface.Version >= 0)
-        {
-            InterfaceDI->Size = IoStack->Parameters.QueryInterface.Size;
-            InterfaceDI->BusContext = PVOID(this);
-            InterfaceDI->InterfaceReference = USBI_InterfaceReference;
-            InterfaceDI->InterfaceDereference = USBI_InterfaceDereference;
-            InterfaceDI->GetUSBDIVersion = USBDI_GetUSBDIVersion;
-            InterfaceDI->QueryBusTime = USBDI_QueryBusTime;
-            InterfaceDI->SubmitIsoOutUrb = USBDI_SubmitIsoOutUrb;
-            InterfaceDI->QueryBusInformation = USBDI_QueryBusInformation;
-        }
+        InterfaceDI->Size = IoStack->Parameters.QueryInterface.Size;
+        InterfaceDI->BusContext = PVOID(this);
+        InterfaceDI->InterfaceReference = USBI_InterfaceReference;
+        InterfaceDI->InterfaceDereference = USBI_InterfaceDereference;
+        InterfaceDI->GetUSBDIVersion = USBDI_GetUSBDIVersion;
+        InterfaceDI->QueryBusTime = USBDI_QueryBusTime;
+        InterfaceDI->SubmitIsoOutUrb = USBDI_SubmitIsoOutUrb;
+        InterfaceDI->QueryBusInformation = USBDI_QueryBusInformation;
 
         //
         // interface version 1
