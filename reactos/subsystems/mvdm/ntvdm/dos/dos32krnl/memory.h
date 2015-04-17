@@ -18,6 +18,7 @@ enum DOS_ALLOC_STRATEGY
     DOS_ALLOC_LAST_FIT
 };
 
+#pragma pack(push, 1)
 typedef struct _DOS_MCB
 {
     CHAR BlockType;
@@ -26,6 +27,7 @@ typedef struct _DOS_MCB
     BYTE Unused[3];
     CHAR Name[8];
 } DOS_MCB, *PDOS_MCB;
+#pragma pack(pop)
 
 /* VARIABLES ******************************************************************/
 
