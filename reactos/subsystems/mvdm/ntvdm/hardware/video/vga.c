@@ -1890,11 +1890,11 @@ COORD VgaGetDisplayResolution(VOID)
     return Resolution;
 }
 
-BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Vertical, PBOOLEAN Horizontal)
+BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Horizontal, PBOOLEAN Vertical)
 {
     if (GraphicsConsoleBuffer == NULL) return FALSE;
-    if (Vertical) *Vertical = DoubleWidth;
-    if (Horizontal) *Horizontal = DoubleHeight;
+    if (Horizontal) *Horizontal = DoubleWidth;
+    if (Vertical)   *Vertical   = DoubleHeight;
     return TRUE;
 }
 
