@@ -414,11 +414,7 @@ LPWSTR GetINIFullPath(LPCWSTR lpFileName)
 UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName)
 {
     PWSTR lpFullFileName = GetINIFullPath(lpFileName);
-    LPSTR  lpRequiredBuf = HeapAlloc(GetProcessHeap(), 0, nSize);
     DWORD dwResult;
-
-    if (!lpRequiredBuf)
-        return FALSE;
 
     /* we don't have cached section strings for the current system language, create them */
     if(bCachedSectionStatus == FALSE)
@@ -457,7 +453,7 @@ UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPC
                                         lpFullFileName);
 
     if (dwResult != 0)
-        goto skip;
+        return TRUE;
 
     /* 2nd - if they weren't present check for neutral sub-langs/ generic translations (e.g. "Section.0a") */
     dwResult = GetPrivateProfileStringW(szCachedINISectionLocaleNeutral,
@@ -468,7 +464,7 @@ UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPC
                                         lpFullFileName);
 
     if (dwResult != 0)
-        goto skip;
+        return TRUE;
 
     /* 3rd - if they weren't present fallback to standard english strings (just "Section") */
     dwResult = GetPrivateProfileStringW(L"Section",
@@ -478,18 +474,7 @@ UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPC
                                         nSize,
                                         lpFullFileName);
 
-    if (dwResult == 0)
-    {
-        HeapFree(GetProcessHeap(), 0, lpRequiredBuf);
-        return FALSE;
-    }
-
-skip:
-
-    /* get rid of the dynamically allocated ANSI buffer */
-    HeapFree(GetProcessHeap(), 0, lpRequiredBuf);
-
-    return TRUE;
+    return (dwResult != 0 ? TRUE : FALSE);
 }
 
 UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName)

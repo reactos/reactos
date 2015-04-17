@@ -147,21 +147,6 @@ EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info)
     return TRUE;
 }
 
-VOID
-FreeAvailableAppList(VOID)
-{
-    INT Count = ListView_GetItemCount(hListView) - 1;
-    PVOID Info;
-
-    while (Count >= 0)
-    {
-        Info = ListViewGetlParam(Count);
-        if (Info)
-            HeapFree(GetProcessHeap(), 0, Info);
-        Count--;
-    }
-}
-
 BOOL
 CALLBACK
 EnumAvailableAppProc(PAPPLICATION_INFO Info)
@@ -202,9 +187,6 @@ UpdateApplicationsList(INT EnumType)
 
     if (IS_INSTALLED_ENUM(SelectedEnumType))
         FreeInstalledAppList();
-    /* FIXME: reenable when caching is fixed */
-    /*    else if (IS_AVAILABLE_ENUM(SelectedEnumType))
-            FreeAvailableAppList(); */
 
     (VOID) ListView_DeleteAllItems(hListView);
 
@@ -887,11 +869,13 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
             FreeLogs();
 
-            if (IS_AVAILABLE_ENUM(SelectedEnumType))
-                FreeAvailableAppList();
+            FreeCachedAvailableEntries();
+
             if (IS_INSTALLED_ENUM(SelectedEnumType))
                 FreeInstalledAppList();
-            if (hImageTreeView) ImageList_Destroy(hImageTreeView);
+
+            if (hImageTreeView)
+                ImageList_Destroy(hImageTreeView);
 
             PostQuitMessage(0);
             return 0;

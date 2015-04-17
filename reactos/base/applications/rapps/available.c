@@ -246,7 +246,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
 
 skip_if_cached:
 
-        if (Info->Category == -1)
+        if (Info->Category == FALSE)
             continue;
 
         if (EnumType != Info->Category && EnumType != ENUM_ALL_AVAILABLE)
@@ -277,4 +277,22 @@ skip_if_cached:
     FindClose(hFind);
 
     return TRUE;
+}
+
+VOID FreeCachedAvailableEntries(VOID)
+{
+     PAPPLICATION_INFO Info;
+ 
+    /* loop and deallocate all the cached app infos in the list */
+    for (pCachedEntry = CachedEntriesHead.Flink; pCachedEntry != &CachedEntriesHead;)
+    {
+         Info = CONTAINING_RECORD(pCachedEntry, APPLICATION_INFO, List);
+ 
+        /* grab a reference to the next linked entry before getting rid of the current one */
+        pCachedEntry = pCachedEntry->Flink;
+ 
+        /* flush them down the toilet :D */
+        RemoveEntryList(&Info->List);
+        HeapFree(GetProcessHeap(), 0, Info);
+    }
 }

@@ -125,6 +125,7 @@ typedef BOOL (CALLBACK *AVAILENUMPROC)(PAPPLICATION_INFO Info);
 BOOL EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc);
 BOOL ShowAvailableAppInfo(INT Index);
 BOOL UpdateAppsDB(VOID);
+VOID FreeCachedAvailableEntries(VOID);
 
 /* installdlg.c */
 BOOL InstallApplication(INT Index);
