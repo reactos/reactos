@@ -347,6 +347,8 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    PSBDATA pSBData;
    DWORD OldPos = 0;
    BOOL bChangeParams = FALSE; /* Don't show/hide scrollbar if params don't change */
+   UINT MaxPage;
+   int MaxPos;
 
    ASSERT_REFS_CO(Window);
 
@@ -404,14 +406,12 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    /* Set the scroll range */
    if (lpsi->fMask & SIF_RANGE)
    {
-      /* Invalid range -> range is set to (0,0) */
-      if ((lpsi->nMin > lpsi->nMax) ||
-                  ((UINT)(lpsi->nMax - lpsi->nMin) >= 0x80000000))
+      if (lpsi->nMin > lpsi->nMax)
       {
-         Info->nMin = 0;
-         Info->nMax = 0;
-         pSBData->posMin = 0;
-         pSBData->posMax = 0;
+         Info->nMin = lpsi->nMin;
+         Info->nMax = lpsi->nMin;
+         pSBData->posMin = lpsi->nMin;
+         pSBData->posMax = lpsi->nMin;
          bChangeParams = TRUE;
       }
       else if (Info->nMin != lpsi->nMin || Info->nMax != lpsi->nMax)
@@ -425,23 +425,22 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    }
 
    /* Make sure the page size is valid */
-   if (Info->nPage < 0)
+   MaxPage = abs(Info->nMax - Info->nMin) + 1;
+   if (Info->nPage > MaxPage)
    {
-      pSBData->page = Info->nPage = 0;
-   }
-   else if ((Info->nMax - Info->nMin + 1UL) < Info->nPage)
-   {
-      pSBData->page = Info->nPage = Info->nMax - Info->nMin + 1;
+      pSBData->page = Info->nPage = MaxPage;
    }
 
    /* Make sure the pos is inside the range */
+   MaxPos = Info->nMax + 1 - (int)max(Info->nPage, 1);
+   ASSERT(MaxPos >= Info->nMin);
    if (Info->nPos < Info->nMin)
    {
       pSBData->pos = Info->nPos = Info->nMin;
    }
-   else if (Info->nPos > (Info->nMax - max((int)Info->nPage - 1, 0)))
+   else if (Info->nPos > MaxPos)
    {
-      pSBData->pos = Info->nPos = Info->nMax - max(Info->nPage - 1, 0);
+      pSBData->pos = Info->nPos = MaxPos;
    }
 
    /*
