@@ -3992,9 +3992,10 @@ NtUserSetWindowFNID(HWND hWnd,
 
    // From user land we only set these.
    if (fnID != FNID_DESTROY)
-   { //       Hacked so we can mark desktop~!
-      if ( (/*(fnID < FNID_BUTTON)*/ (fnID < FNID_FIRST) && (fnID > FNID_GHOST)) ||
-           Wnd->fnid != 0 )
+   {
+      /* HACK: The minimum should be FNID_BUTTON, but menu code relies on this */
+      if (fnID < FNID_FIRST || fnID > FNID_GHOST ||
+          Wnd->fnid != 0)
       {
          EngSetLastError(ERROR_INVALID_PARAMETER);
          RETURN( FALSE);
