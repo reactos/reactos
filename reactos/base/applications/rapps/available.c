@@ -25,7 +25,7 @@
     if (!ParserGetString(a, b, MAX_PATH, FindFileData.cFileName)) \
         b[0] = '\0';
 
-LIST_ENTRY CachedEntriesHead = {0};
+LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };
 PLIST_ENTRY pCachedEntry = NULL;
 
 BOOL
