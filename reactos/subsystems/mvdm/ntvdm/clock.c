@@ -14,12 +14,13 @@
 #include "emulator.h"
 #include "cpu/cpu.h"
 
-// #include "clock.h"
+#include "clock.h"
 
 #include "hardware/cmos.h"
 #include "hardware/ps2.h"
 #include "hardware/pit.h"
 #include "hardware/video/vga.h"
+#include "hardware/mouse.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/kefuncs.h>
@@ -28,8 +29,7 @@
 
 /*
  * Activate IPS_DISPLAY if you want to display the
- * number of instructions per second, as well as
- * the computed number of ticks for the PIT.
+ * number of instructions per second.
  */
 // #define IPS_DISPLAY
 
@@ -38,27 +38,27 @@
  */
 // #define WORKING_TIMER
 
-
 /* Processor speed */
 #define STEPS_PER_CYCLE 256
-#define IRQ1_CYCLES     16
-#define IRQ12_CYCLES    16
 
 /* VARIABLES ******************************************************************/
 
+static LIST_ENTRY Timers;
 static LARGE_INTEGER StartPerfCount, Frequency;
-
-static LARGE_INTEGER LastTimerTick, LastRtcTick, Counter;
-static LONGLONG TimerTicks;
-static DWORD StartTickCount, CurrentTickCount;
-static DWORD LastClockUpdate;
-static DWORD LastVerticalRefresh;
-
-static DWORD LastIrq1Tick = 0, LastIrq12Tick = 0;
+static DWORD StartTickCount;
 
 #ifdef IPS_DISPLAY
-    static DWORD LastCyclePrintout;
-    static ULONGLONG Cycles = 0;
+static ULONGLONG Cycles = 0ULL;
+#endif
+
+/* PRIVATE FUNCTIONS **********************************************************/
+
+#ifdef IPS_DISPLAY
+static VOID FASTCALL IpsDisplayCallback(ULONGLONG ElapsedTime)
+{
+    DPRINT1("NTVDM: %I64u Instructions Per Second\n", Cycles / ElapsedTime);
+    Cycles = 0ULL;
+}
 #endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -67,112 +67,159 @@ VOID ClockUpdate(VOID)
 {
     extern BOOLEAN CpuRunning;
     UINT i;
-    // LARGE_INTEGER Counter;
-
-#ifdef WORKING_TIMER
-    DWORD PitResolution;
-#endif
-    DWORD RtcFrequency;
+    PLIST_ENTRY Entry;
+    LARGE_INTEGER Counter;
 
     while (VdmRunning && CpuRunning)
     {
+        /* Get the current number of ticks */
+        DWORD CurrentTickCount = GetTickCount();
 
 #ifdef WORKING_TIMER
-    PitResolution = PitGetResolution();
+        if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
+        {
+            /* Calculate the approximate performance counter value instead */
+            Counter.QuadPart = StartPerfCount.QuadPart
+                               + ((CurrentTickCount - StartTickCount)
+                               * Frequency.QuadPart) / 1000;
+        }
+        else
 #endif
-    RtcFrequency = RtcGetTicksPerSecond();
+        {
+            /* Get the current performance counter value */
+            /// DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
+            NtQueryPerformanceCounter(&Counter, NULL);
+            /// SetThreadAffinityMask(GetCurrentThread(), oldmask);
+        }
 
-    /* Get the current number of ticks */
-    CurrentTickCount = GetTickCount();
+        /* Continue CPU emulation */
+        for (i = 0; VdmRunning && CpuRunning && (i < STEPS_PER_CYCLE); i++)
+        {
+            CpuStep();
 
-#ifdef WORKING_TIMER
-    if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
+#ifdef IPS_DISPLAY
+            ++Cycles;
+#endif
+        }
+
+        for (Entry = Timers.Flink; Entry != &Timers; Entry = Entry->Flink)
+        {
+            ULONGLONG Ticks = (ULONGLONG)-1;
+            PHARDWARE_TIMER Timer = CONTAINING_RECORD(Entry, HARDWARE_TIMER, Link);
+
+            ASSERT((Timer->EnableCount > 0) && (Timer->Flags & HARDWARE_TIMER_ENABLED));
+
+            if (Timer->Delay)
+            {
+                if (Timer->Flags & HARDWARE_TIMER_PRECISE)
+                {
+                    /* Use the performance counter for precise timers */
+                    if (Counter.QuadPart <= Timer->LastTick.QuadPart) continue;
+                    Ticks = (Counter.QuadPart - Timer->LastTick.QuadPart) / Timer->Delay;
+                }
+                else
+                {
+                    /* Use the regular tick count for normal timers */
+                    if (CurrentTickCount <= Timer->LastTick.LowPart) continue;
+                    Ticks = (CurrentTickCount - Timer->LastTick.LowPart) / (ULONG)Timer->Delay;
+                }
+
+                if (Ticks == 0) continue;
+            }
+
+            Timer->Callback(Ticks);
+
+            if (Timer->Flags & HARDWARE_TIMER_ONESHOT)
+            {
+                /* Disable this timer */
+                DisableHardwareTimer(Timer);
+            }
+
+            /* Update the time of the last timer tick */
+            Timer->LastTick.QuadPart += Ticks * Timer->Delay;
+        }
+    }
+}
+
+PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONG Delay, PHARDWARE_TIMER_PROC Callback)
+{
+    PHARDWARE_TIMER Timer;
+    
+    Timer = (PHARDWARE_TIMER)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(HARDWARE_TIMER));
+    if (Timer == NULL) return NULL;
+
+    Timer->Flags = Flags & ~HARDWARE_TIMER_ENABLED;
+    Timer->EnableCount = 0;
+    Timer->Callback = Callback;
+    SetHardwareTimerDelay(Timer, (ULONGLONG)Delay);
+
+    if (Flags & HARDWARE_TIMER_ENABLED) EnableHardwareTimer(Timer);
+    return Timer;
+}
+
+VOID EnableHardwareTimer(PHARDWARE_TIMER Timer)
+{
+    /* Increment the count */
+    Timer->EnableCount++;
+
+    /* Check if the count is above 0 but the timer isn't enabled */
+    if ((Timer->EnableCount > 0) && !(Timer->Flags & HARDWARE_TIMER_ENABLED))
     {
-        /* Calculate the approximate performance counter value instead */
-        Counter.QuadPart = StartPerfCount.QuadPart
-                           + (CurrentTickCount - StartTickCount)
-                           * (Frequency.QuadPart / 1000);
+        if (Timer->Flags & HARDWARE_TIMER_PRECISE)
+        {
+            NtQueryPerformanceCounter(&Timer->LastTick, NULL);
+        }
+        else
+        {
+            Timer->LastTick.LowPart = GetTickCount();
+        }
+
+        Timer->Flags |= HARDWARE_TIMER_ENABLED;
+        InsertTailList(&Timers, &Timer->Link);
+    }
+}
+
+VOID DisableHardwareTimer(PHARDWARE_TIMER Timer)
+{
+    /* Decrement the count */
+    Timer->EnableCount--;
+
+    /* Check if the count is 0 or less but the timer is enabled */
+    if ((Timer->EnableCount <= 0) && (Timer->Flags & HARDWARE_TIMER_ENABLED))
+    {
+        /* Disable the timer */
+        Timer->Flags &= ~HARDWARE_TIMER_ENABLED;
+        RemoveEntryList(&Timer->Link);
+    }
+}
+
+VOID SetHardwareTimerDelay(PHARDWARE_TIMER Timer, ULONGLONG NewDelay)
+{
+    if (Timer->Flags & HARDWARE_TIMER_PRECISE)
+    {
+        /* Convert the delay from nanoseconds to performance counter ticks */
+        Timer->Delay = (NewDelay * Frequency.QuadPart + 500000000ULL) / 1000000000ULL;
     }
     else
-#endif
     {
-        /* Get the current performance counter value */
-        /// DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
-        NtQueryPerformanceCounter(&Counter, NULL);
-        /// SetThreadAffinityMask(GetCurrentThread(), oldmask);
+        Timer->Delay = NewDelay;
     }
+}
 
-    /* Get the number of PIT ticks that have passed */
-    TimerTicks = ((Counter.QuadPart - LastTimerTick.QuadPart)
-                 * PIT_BASE_FREQUENCY) / Frequency.QuadPart;
-
-    /* Update the PIT */
-    if (TimerTicks > 0)
-    {
-        PitClock(TimerTicks);
-        LastTimerTick = Counter;
-    }
-
-    /* Check for RTC update */
-    if ((CurrentTickCount - LastClockUpdate) >= 1000)
-    {
-        RtcTimeUpdate();
-        LastClockUpdate = CurrentTickCount;
-    }
-
-    /* Check for RTC periodic tick */
-    if ((Counter.QuadPart - LastRtcTick.QuadPart)
-        >= (Frequency.QuadPart / (LONGLONG)RtcFrequency))
-    {
-        RtcPeriodicTick();
-        LastRtcTick = Counter;
-    }
-
-    /* Check for vertical retrace */
-    if ((CurrentTickCount - LastVerticalRefresh) >= 15)
-    {
-        VgaRefreshDisplay();
-        LastVerticalRefresh = CurrentTickCount;
-    }
-
-    if ((CurrentTickCount - LastIrq1Tick) >= IRQ1_CYCLES)
-    {
-        GenerateIrq1();
-        LastIrq1Tick = CurrentTickCount;
-    }
-
-    if ((CurrentTickCount - LastIrq12Tick) >= IRQ12_CYCLES)
-    {
-        GenerateIrq12();
-        LastIrq12Tick = CurrentTickCount;
-    }
-
-    /* Horizontal retrace occurs as fast as possible */
-    VgaHorizontalRetrace();
-
-    /* Continue CPU emulation */
-    for (i = 0; VdmRunning && CpuRunning && (i < STEPS_PER_CYCLE); i++)
-    {
-        CpuStep();
-#ifdef IPS_DISPLAY
-        ++Cycles;
-#endif
-    }
-
-#ifdef IPS_DISPLAY
-    if ((CurrentTickCount - LastCyclePrintout) >= 1000)
-    {
-        DPRINT1("NTVDM: %I64u Instructions Per Second; TimerTicks = %I64d\n", Cycles * 1000 / (CurrentTickCount - LastCyclePrintout), TimerTicks);
-        LastCyclePrintout = CurrentTickCount;
-        Cycles = 0;
-    }
-#endif
-
-    }
+VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer)
+{
+    if (Timer->Flags & HARDWARE_TIMER_ENABLED) RemoveEntryList(&Timer->Link);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Timer);
 }
 
 BOOLEAN ClockInitialize(VOID)
 {
+#ifdef IPS_DISPLAY
+    PHARDWARE_TIMER IpsTimer;
+#endif
+
+    InitializeListHead(&Timers);
+
     /* Initialize the performance counter (needed for hardware timers) */
     /* Find the starting performance */
     NtQueryPerformanceCounter(&StartPerfCount, &Frequency);
@@ -185,15 +232,16 @@ BOOLEAN ClockInitialize(VOID)
     /* Find the starting tick count */
     StartTickCount = GetTickCount();
 
-    /* Set the different last counts to the starting count */
-    LastClockUpdate = LastVerticalRefresh =
 #ifdef IPS_DISPLAY
-    LastCyclePrintout =
-#endif
-    StartTickCount;
 
-    /* Set the last timer ticks to the current time */
-    LastTimerTick = LastRtcTick = StartPerfCount;
+    IpsTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 1000, IpsDisplayCallback);
+    if (IpsTimer == NULL)
+    {
+        wprintf(L"FATAL: Cannot create IPS display timer.\n");
+        return FALSE;
+    }
+
+#endif
 
     return TRUE;
 }

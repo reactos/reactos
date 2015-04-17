@@ -16,10 +16,12 @@
 #include "io.h"
 #include "pit.h"
 #include "pic.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
 static PIT_CHANNEL PitChannels[PIT_CHANNELS];
+static PHARDWARE_TIMER MasterClock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -451,6 +453,17 @@ static VOID PitDecrementCount(PPIT_CHANNEL Channel, DWORD Count)
     }
 }
 
+static VOID FASTCALL PitClock(ULONGLONG Count)
+{
+    UCHAR i;
+
+    for (i = 0; i < PIT_CHANNELS; i++)
+    {
+        // if (!PitChannels[i].Counting) continue;
+        PitDecrementCount(&PitChannels[i], Count);
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID PitSetOutFunction(BYTE Channel, LPVOID Param, PIT_OUT_FUNCTION OutFunction)
@@ -480,38 +493,6 @@ WORD PitGetReloadValue(BYTE Channel)
         return PitChannels[Channel].ReloadValue;
 }
 
-DWORD PitGetResolution(VOID)
-{
-    UCHAR i;
-    DWORD MinReloadValue = 65536;
-
-    for (i = 0; i < PIT_CHANNELS; i++)
-    {
-        DWORD ReloadValue = PitChannels[i].ReloadValue;
-
-        /* 0 means 65536 */
-        if (ReloadValue == 0) ReloadValue = 65536;
-
-        if (ReloadValue < MinReloadValue) MinReloadValue = ReloadValue;
-    }
-
-    /* Return the frequency resolution */
-    return PIT_BASE_FREQUENCY / MinReloadValue;
-}
-
-VOID PitClock(DWORD Count)
-{
-    UCHAR i;
-
-    if (Count == 0) return;
-
-    for (i = 0; i < PIT_CHANNELS; i++)
-    {
-        // if (!PitChannels[i].Counting) continue;
-        PitDecrementCount(&PitChannels[i], Count);
-    }
-}
-
 VOID PitInitialize(VOID)
 {
     /* Set up the timers to their default value */
@@ -527,6 +508,11 @@ VOID PitInitialize(VOID)
     RegisterIoPort(PIT_DATA_PORT(0), PitReadPort, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(1), PitReadPort, PitWritePort);
     RegisterIoPort(PIT_DATA_PORT(2), PitReadPort, PitWritePort);
+
+    /* Register the hardware timer */
+    MasterClock = CreateHardwareTimer(HARDWARE_TIMER_ENABLED | HARDWARE_TIMER_PRECISE,
+                                      1000000000ULL / PIT_BASE_FREQUENCY,
+                                      PitClock);
 }
 
 /* EOF */

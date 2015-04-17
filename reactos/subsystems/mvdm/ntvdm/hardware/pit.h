@@ -79,9 +79,6 @@ VOID PitSetOutFunction(BYTE Channel, LPVOID Param, PIT_OUT_FUNCTION OutFunction)
 VOID PitSetGate(BYTE Channel, BOOLEAN State);
 WORD PitGetReloadValue(BYTE Channel);
 
-DWORD PitGetResolution(VOID);
-VOID PitClock(DWORD Count);
-
 VOID PitInitialize(VOID);
 
 #endif // _PIT_H_

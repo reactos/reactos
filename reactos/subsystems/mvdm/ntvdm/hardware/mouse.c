@@ -12,31 +12,43 @@
 
 #include "mouse.h"
 #include "ps2.h"
-// #include "pic.h"
+#include "clock.h"
+#include "video/vga.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static const BYTE ScrollMagic[3]      = { 200, 100, 80 };
+static const BYTE ExtraButtonMagic[3] = { 200, 200, 80 };
+
+static HANDLE MouseMutex;
+static PHARDWARE_TIMER StreamTimer;
+static MOUSE_PACKET LastPacket;
 static MOUSE_MODE Mode, PreviousMode;
 static COORD Position;
-static ULONG WidthMm, HeightMm, WidthPixels, HeightPixels;
-static ULONG SampleRate;
-static ULONG Resolution;
-static BOOLEAN Scaling;
+static BYTE Resolution; /* Completely ignored */
+static BOOLEAN Scaling; /* Completely ignored */
 static BOOLEAN Reporting;
 static BYTE MouseId;
 static ULONG ButtonState;
 static SHORT HorzCounter;
 static SHORT VertCounter;
 static CHAR ScrollCounter;
+static BOOLEAN EventsOccurred = FALSE;
+static BYTE DataByteWait = 0;
+static BYTE ScrollMagicCounter = 0, ExtraButtonMagicCounter = 0;
 
 static BYTE PS2Port = 1;
+
+/* PUBLIC VARIABLES ***********************************************************/
+
+UINT MouseCycles = 10;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID MouseResetConfig(VOID)
 {
     /* Reset the configuration to defaults */
-    SampleRate = 100;
+    MouseCycles = 10;
     Resolution = 4;
     Scaling = FALSE;
     Reporting = FALSE;
@@ -45,7 +57,7 @@ static VOID MouseResetConfig(VOID)
 static VOID MouseResetCounters(VOID)
 {
     /* Reset all flags and counters */
-    ButtonState = HorzCounter = VertCounter = ScrollCounter = 0;
+    HorzCounter = VertCounter = ScrollCounter = 0;
 }
 
 static VOID MouseReset(VOID)
@@ -57,41 +69,49 @@ static VOID MouseReset(VOID)
     /* Enter streaming mode and the reset the mouse ID */
     Mode = MOUSE_STREAMING_MODE;
     MouseId = 0;
+    ScrollMagicCounter = ExtraButtonMagicCounter = 0;
 
     /* Send the Basic Assurance Test success code and the device ID */
     PS2QueuePush(PS2Port, MOUSE_BAT_SUCCESS);
     PS2QueuePush(PS2Port, MouseId);
 }
 
-#if 0
 static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 {
     /* Clear the packet */
     RtlZeroMemory(Packet, sizeof(*Packet));
 
+    /* Acquire the mutex */
+    WaitForSingleObject(MouseMutex, INFINITE);
+
     Packet->Flags |= MOUSE_ALWAYS_SET;
 
-    /* Check for horizontal overflows */
-    if ((HorzCounter < MOUSE_MIN) || (HorzCounter > MOUSE_MAX))
+    /* Set the sign flags */
+    if (HorzCounter < 0)
     {
-        if (HorzCounter > MOUSE_MAX) HorzCounter = MOUSE_MAX;
-        if (HorzCounter < MOUSE_MIN) HorzCounter = MOUSE_MIN;
+        Packet->Flags |= MOUSE_X_SIGN;
+        HorzCounter = -HorzCounter;
+    }
 
+    if (VertCounter < 0)
+    {
+        Packet->Flags |= MOUSE_Y_SIGN;
+        VertCounter = -VertCounter;
+    }
+
+    /* Check for horizontal overflows */
+    if (HorzCounter > MOUSE_MAX)
+    {
+        HorzCounter = MOUSE_MAX;
         Packet->Flags |= MOUSE_X_OVERFLOW;
     }
 
     /* Check for vertical overflows */
-    if ((VertCounter < MOUSE_MIN) || (VertCounter > MOUSE_MAX))
+    if (VertCounter > MOUSE_MAX)
     {
-        if (VertCounter > MOUSE_MIN) VertCounter = MOUSE_MIN;
-        if (VertCounter < MOUSE_MIN) VertCounter = MOUSE_MIN;
-
+        VertCounter = MOUSE_MAX;
         Packet->Flags |= MOUSE_Y_OVERFLOW;
     }
-
-    /* Set the sign flags */
-    if (HorzCounter & MOUSE_SIGN_BIT) Packet->Flags |= MOUSE_X_SIGN;
-    if (HorzCounter & MOUSE_SIGN_BIT) Packet->Flags |= MOUSE_Y_SIGN;
 
     /* Set the button flags */
     if (ButtonState & FROM_LEFT_1ST_BUTTON_PRESSED) Packet->Flags |= MOUSE_LEFT_BUTTON;
@@ -116,36 +136,94 @@ static VOID MouseGetPacket(PMOUSE_PACKET Packet)
 
     /* Reset the counters */
     MouseResetCounters();
-}
-#endif
 
-/*static*/ VOID MouseUpdatePosition(PCOORD NewPosition)
-{
-    /* Update the counters */
-    HorzCounter += ((NewPosition->X - Position.X) * WidthMm  * Resolution) / WidthPixels;
-    VertCounter += ((NewPosition->Y - Position.Y) * HeightMm * Resolution) / HeightPixels;
-
-    /* Update the position */
-    Position = *NewPosition;
+    /* Release the mutex */
+    ReleaseMutex(MouseMutex);
 }
 
-/*static*/ VOID MouseUpdateButtons(ULONG NewButtonState)
+static VOID MouseDispatchPacket(PMOUSE_PACKET Packet)
 {
-    ButtonState = NewButtonState;
-}
-
-/*static*/ VOID MouseScroll(LONG Direction)
-{
-    ScrollCounter += Direction;
-}
-
-/*static*/ COORD MouseGetPosition(VOID)
-{
-    return Position;
+    PS2QueuePush(PS2Port, Packet->Flags);
+    PS2QueuePush(PS2Port, Packet->HorzCounter);
+    PS2QueuePush(PS2Port, Packet->VertCounter);
+    if (MouseId >= 3) PS2QueuePush(PS2Port, Packet->Extra);
 }
 
 static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
 {
+    /* Check if we were waiting for a data byte */
+    if (DataByteWait)
+    {
+        PS2QueuePush(PS2Port, MOUSE_ACK);
+
+        switch (DataByteWait)
+        {
+            /* Set Resolution */
+            case 0xE8:
+            {
+                Resolution = Command;
+                break;
+            }
+
+            /* Set Sample Rate */
+            case 0xF3:
+            {
+                /* Check for the scroll wheel enabling sequence */
+                if (MouseId == 0)
+                {
+                    if (Command == ScrollMagic[ScrollMagicCounter])
+                    {
+                        ScrollMagicCounter++;
+                        if (ScrollMagicCounter == 3) MouseId = 3;
+                    }
+                    else
+                    {
+                        ScrollMagicCounter = 0;
+                    }
+                }
+
+                /* Check for the 5-button enabling sequence */
+                if (MouseId == 3)
+                {
+                    if (Command == ExtraButtonMagic[ExtraButtonMagicCounter])
+                    {
+                        ExtraButtonMagicCounter++;
+                        if (ExtraButtonMagicCounter == 3) MouseId = 4;
+                    }
+                    else
+                    {
+                        ExtraButtonMagicCounter = 0;
+                    }
+                }
+
+                MouseCycles = 1000 / (UINT)Command;
+                break;
+            }
+
+            default:
+            {
+                /* Shouldn't happen */
+                ASSERT(FALSE);
+            }
+        }
+
+        DataByteWait = 0;
+    }
+
+    /* Check if we're in wrap mode */
+    if (Mode == MOUSE_WRAP_MODE)
+    {
+        /*
+         * In this mode, we just echo whatever byte we get,
+         * except for the 0xEC and 0xFF commands.
+         */
+        if (Command != 0xEC && Command != 0xFF)
+        {
+            PS2QueuePush(PS2Port, Command);
+            return;
+        }
+    }
+
     switch (Command)
     {
         /* Set 1:1 Scaling */
@@ -166,17 +244,27 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
 
         /* Set Resolution */
         case 0xE8:
+        /* Set Sample Rate */
+        case 0xF3:
         {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
+            PS2QueuePush(PS2Port, MOUSE_ACK);
+            DataByteWait = Command;
             break;
         }
 
         /* Read Status */
         case 0xE9:
         {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
+            BYTE Status = ButtonState & 7;
+            PS2QueuePush(PS2Port, MOUSE_ACK);
+
+            if (Scaling) Status |= 1 << 4;
+            if (Reporting) Status |= 1 << 5;
+            if (Mode == MOUSE_REMOTE_MODE) Status |= 1 << 6;
+
+            PS2QueuePush(PS2Port, Status);
+            PS2QueuePush(PS2Port, Resolution);
+            PS2QueuePush(PS2Port, (BYTE)(1000 / MouseCycles));
             break;
         }
 
@@ -193,8 +281,9 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         /* Read Packet */
         case 0xEB:
         {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
+            PS2QueuePush(PS2Port, MOUSE_ACK);
+            MouseGetPacket(&LastPacket);
+            MouseDispatchPacket(&LastPacket);
             break;
         }
 
@@ -247,14 +336,6 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
             break;
         }
 
-        /* Set Sample Rate */
-        case 0xF3:
-        {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
-            break;
-        }
-
         /* Enable Reporting */
         case 0xF4:
         {
@@ -283,8 +364,8 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         /* Resend */
         case 0xFE:
         {
-            // TODO: NOT IMPLEMENTED
-            UNIMPLEMENTED;
+            PS2QueuePush(PS2Port, MOUSE_ACK);
+            MouseDispatchPacket(&LastPacket);
             break;
         }
 
@@ -303,49 +384,76 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
     }
 }
 
+static VOID FASTCALL MouseStreamingCallback(ULONGLONG ElapsedTime)
+{
+    UNREFERENCED_PARAMETER(ElapsedTime);
+
+    /* Check if we're not in streaming mode, not reporting, or there's nothing to report */
+    if (Mode != MOUSE_STREAMING_MODE || !Reporting || !EventsOccurred) return;
+
+    MouseGetPacket(&LastPacket);
+    MouseDispatchPacket(&LastPacket);
+
+    EventsOccurred = FALSE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+VOID MouseGetDataFast(PCOORD CurrentPosition, PBYTE CurrentButtonState)
+{
+    WaitForSingleObject(MouseMutex, INFINITE);
+    *CurrentPosition = Position;
+    *CurrentButtonState = LOBYTE(ButtonState);
+    ReleaseMutex(MouseMutex);
+}
 
 VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
 {
-extern COORD DosNewPosition;
-extern WORD  DosButtonState;
+    COORD NewPosition = MouseEvent->dwMousePosition;
+    BOOLEAN DoubleWidth = FALSE, DoubleHeight = FALSE;
 
-    // FIXME: Sync our private data
-    MouseUpdatePosition(&MouseEvent->dwMousePosition);
-    MouseUpdateButtons(MouseEvent->dwButtonState);
+    if (!VgaGetDoubleVisionState(&DoubleWidth, &DoubleHeight))
+    {
+        /* Text mode */
+        NewPosition.X *= 8;
+        NewPosition.Y *= 8;
+    }
 
-    // HACK: Bypass PS/2 and instead, notify the MOUSE.COM driver directly
-    DosNewPosition = MouseEvent->dwMousePosition;
-    DosButtonState = LOWORD(MouseEvent->dwButtonState);
+    /* Adjust for double vision */
+    if (DoubleWidth) NewPosition.X /= 2;
+    if (DoubleHeight) NewPosition.Y /= 2;
 
-    // PS2QueuePush(PS2Port, Data);
+    WaitForSingleObject(MouseMutex, INFINITE);
+
+    /* Update the counters */
+    HorzCounter += NewPosition.X - Position.X;
+    VertCounter += NewPosition.Y - Position.Y;
+
+    /* Update the position */
+    Position = NewPosition;
+
+    /* Update the button state */
+    ButtonState = MouseEvent->dwButtonState;
+
+    if (MouseEvent->dwEventFlags & MOUSE_WHEELED)
+    {
+        ScrollCounter += (SHORT)HIWORD(MouseEvent->dwButtonState);
+    }
+
+    EventsOccurred = TRUE;
+    ReleaseMutex(MouseMutex);
 }
 
 BOOLEAN MouseInit(BYTE PS2Connector)
 {
-    HWND hWnd;
-    HDC hDC;
-
-    /* Get the console window */
-    hWnd = GetConsoleWindow();
-    if (hWnd == NULL) return FALSE;
-
-    /* Get the console window's device context */
-    hDC = GetWindowDC(hWnd);
-    if (hDC == NULL) return FALSE;
-
-    /* Get the parameters */
-    WidthMm      = (ULONG)GetDeviceCaps(hDC, HORZSIZE);
-    HeightMm     = (ULONG)GetDeviceCaps(hDC, VERTSIZE);
-    WidthPixels  = (ULONG)GetDeviceCaps(hDC, HORZRES);
-    HeightPixels = (ULONG)GetDeviceCaps(hDC, VERTRES);
-
-    /* Release the device context */
-    ReleaseDC(hWnd, hDC);
-
     /* Finish to plug the mouse to the specified PS/2 port */
     PS2Port = PS2Connector;
     PS2SetDeviceCmdProc(PS2Port, NULL, MouseCommand);
+
+    MouseMutex = CreateMutex(NULL, FALSE, NULL);
+    if (MouseMutex == NULL) return FALSE;
+
+    StreamTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 10, MouseStreamingCallback);
 
     MouseReset();
     return TRUE;

@@ -13,36 +13,45 @@
 #include "emulator.h"
 #include "cpu/cpu.h"
 #include "int32.h"
+#include "hardware/mouse.h"
+#include "hardware/ps2.h"
+#include "hardware/pic.h"
+#include "hardware/video/vga.h"
 
 #include "mouse32.h"
 #include "bios/bios.h"
+#include "bios/bios32/bios32p.h"
 
 #include "io.h"
 #include "dos32krnl/dos.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static BOOLEAN DriverEnabled = TRUE;
-static MOUSE_DRIVER_STATE DriverState;
+#define MICKEYS_PER_CELL_HORIZ 8
+#define MICKEYS_PER_CELL_VERT 16
 
-/**/
-COORD DosNewPosition;
-WORD  DosButtonState;
-/**/
+static MOUSE_PACKET Packet;
+static INT ByteCounter = 0;
+static BOOLEAN DriverEnabled = FALSE;
+static MOUSE_DRIVER_STATE DriverState;
+static DWORD OldIrqHandler;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+extern VOID WINAPI BiosMouseIrq(LPWORD Stack);
 
 static VOID PaintMouseCursor(VOID)
 {
     if (Bda->VideoMode <= 3)
     {
         WORD Character;
+        WORD CellX = DriverState.Position.X / 8;
+        WORD CellY = DriverState.Position.Y / 8;
         DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Bda->VideoPage * Bda->VideoPageSize);
 
         EmulatorReadMemory(&EmulatorContext,
                            VideoAddress
-                           + (DriverState.Position.Y * Bda->ScreenColumns
-                           + DriverState.Position.X) * sizeof(WORD),
+                           + (CellY * Bda->ScreenColumns + CellX) * sizeof(WORD),
                            (LPVOID)&Character,
                            sizeof(WORD));
 
@@ -52,8 +61,7 @@ static VOID PaintMouseCursor(VOID)
 
         EmulatorWriteMemory(&EmulatorContext,
                             VideoAddress
-                            + (DriverState.Position.Y * Bda->ScreenColumns
-                            + DriverState.Position.X) * sizeof(WORD),
+                            + (CellY * Bda->ScreenColumns + CellX) * sizeof(WORD),
                             (LPVOID)&Character,
                             sizeof(WORD));
     }
@@ -68,12 +76,13 @@ static VOID EraseMouseCursor(VOID)
 {
     if (Bda->VideoMode <= 3)
     {
+        WORD CellX = DriverState.Position.X / 8;
+        WORD CellY = DriverState.Position.Y / 8;
         DWORD VideoAddress = TO_LINEAR(TEXT_VIDEO_SEG, Bda->VideoPage * Bda->VideoPageSize);
 
         EmulatorWriteMemory(&EmulatorContext,
                             VideoAddress
-                            + (DriverState.Position.Y * Bda->ScreenColumns
-                            + DriverState.Position.X) * sizeof(WORD),
+                            + (CellY * Bda->ScreenColumns + CellX) * sizeof(WORD),
                             (LPVOID)&DriverState.Character,
                             sizeof(WORD));
     }
@@ -84,10 +93,45 @@ static VOID EraseMouseCursor(VOID)
     }
 }
 
+static VOID ToMouseCoordinates(PCOORD Position)
+{
+    COORD Resolution = VgaGetDisplayResolution();
+    WORD Width = DriverState.MaxX - DriverState.MinX + 1;
+    WORD Height = DriverState.MaxY - DriverState.MinY + 1;
+
+    if (!VgaGetDoubleVisionState(NULL, NULL))
+    {
+        Resolution.X *= 8;
+        Resolution.Y *= 8;
+    }
+
+    Position->X = DriverState.MinX + ((Position->X * Width) / Resolution.X);
+    Position->Y = DriverState.MinY + ((Position->Y * Height) / Resolution.Y);
+}
+
+static VOID FromMouseCoordinates(PCOORD Position)
+{
+    COORD Resolution = VgaGetDisplayResolution();
+    WORD Width = DriverState.MaxX - DriverState.MinX + 1;
+    WORD Height = DriverState.MaxY - DriverState.MinY + 1;
+
+    if (!VgaGetDoubleVisionState(NULL, NULL))
+    {
+        Resolution.X *= 8;
+        Resolution.Y *= 8;
+    }
+
+    Position->X = (((Position->X - DriverState.MinX) * Resolution.X) / Width);
+    Position->Y = (((Position->Y - DriverState.MinY) * Resolution.Y) / Height);
+}
+
 static VOID CallMouseUserHandlers(USHORT CallMask)
 {
     USHORT i;
     USHORT AX, BX, CX, DX, SI, DI;
+    COORD Position = DriverState.Position;
+
+    ToMouseCoordinates(&Position);
 
     /* Call handler 0 */
     if ((DriverState.Handler0.CallMask & CallMask) != 0 &&
@@ -108,10 +152,10 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
 
         setAX(CallMask);
         setBX(DriverState.ButtonState);
-        setCX(DriverState.Position.X);
-        setDX(DriverState.Position.Y);
-        setSI(DriverState.MickeysPerCellHoriz);
-        setDI(DriverState.MickeysPerCellVert);
+        setCX(Position.X);
+        setDX(Position.Y);
+        setSI(MICKEYS_PER_CELL_HORIZ);
+        setDI(MICKEYS_PER_CELL_VERT);
 
         DPRINT("Calling Handler0 %04X:%04X with CallMask 0x%04X\n",
                HIWORD(DriverState.Handler0.Callback),
@@ -150,10 +194,10 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
 
             setAX(CallMask);
             setBX(DriverState.ButtonState);
-            setCX(DriverState.Position.X);
-            setDX(DriverState.Position.Y);
-            setSI(DriverState.MickeysPerCellHoriz);
-            setDI(DriverState.MickeysPerCellVert);
+            setCX(Position.X);
+            setDX(Position.Y);
+            setSI(MICKEYS_PER_CELL_HORIZ);
+            setDI(MICKEYS_PER_CELL_VERT);
 
             DPRINT1("Calling Handler[%d] %04X:%04X with CallMask 0x%04X\n",
                     i,
@@ -174,6 +218,127 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
     }
 }
 
+static inline VOID DosUpdatePosition(PCOORD NewPosition)
+{
+    COORD Resolution = VgaGetDisplayResolution();
+
+    /* Check for text mode */
+    if (!VgaGetDoubleVisionState(NULL, NULL))
+    {
+        Resolution.X *= 8;
+        Resolution.Y *= 8;
+    }
+
+    if (DriverState.ShowCount > 0) EraseMouseCursor();
+    DriverState.Position = *NewPosition;
+
+    /* Apply the clipping rectangle */
+    if (DriverState.Position.X < DriverState.MinX) DriverState.Position.X = DriverState.MinX;
+    if (DriverState.Position.X > DriverState.MaxX) DriverState.Position.X = DriverState.MaxX;
+    if (DriverState.Position.Y < DriverState.MinY) DriverState.Position.Y = DriverState.MinY;
+    if (DriverState.Position.Y > DriverState.MaxY) DriverState.Position.Y = DriverState.MaxY;
+
+    if (DriverState.ShowCount > 0) PaintMouseCursor();
+
+    /* Call the mouse handlers */
+    CallMouseUserHandlers(0x0001); // We use MS MOUSE v1.0+ format
+}
+
+static inline VOID DosUpdateButtons(BYTE ButtonState)
+{
+    USHORT i;
+    USHORT CallMask = 0x0000; // We use MS MOUSE v1.0+ format
+
+    for (i = 0; i < NUM_MOUSE_BUTTONS; i++)
+    {
+        BOOLEAN OldState = (DriverState.ButtonState >> i) & 1;
+        BOOLEAN NewState = (ButtonState >> i) & 1;
+
+        if (NewState > OldState)
+        {
+            /* Mouse press */
+            DriverState.PressCount[i]++;
+            DriverState.LastPress[i] = DriverState.Position;
+
+            CallMask |= (1 << (2 * i + 1));
+        }
+        else if (NewState < OldState)
+        {
+            /* Mouse release */
+            DriverState.ReleaseCount[i]++;
+            DriverState.LastRelease[i] = DriverState.Position;
+
+            CallMask |= (1 << (2 * i + 2));
+        }
+    }
+
+    DriverState.ButtonState = ButtonState;
+
+    /* Call the mouse handlers */
+    CallMouseUserHandlers(CallMask);
+}
+
+static VOID WINAPI DosMouseIrq(LPWORD Stack)
+{
+    COORD Position;
+    BYTE ButtonState;
+
+    switch (ByteCounter)
+    {
+        case 0:
+        {
+            Packet.Flags = IOReadB(PS2_DATA_PORT);
+            break;
+        }
+
+        case 1:
+        {
+            Packet.HorzCounter = IOReadB(PS2_DATA_PORT);
+            break;
+        }
+
+        case 2:
+        {
+            Packet.VertCounter = IOReadB(PS2_DATA_PORT);
+            break;
+        }
+
+        default:
+        {
+            /* Shouldn't happen */
+            ASSERT(FALSE);
+        }
+    }
+
+    if (++ByteCounter == 3)
+    {
+        SHORT DeltaX = Packet.HorzCounter;
+        SHORT DeltaY = Packet.VertCounter;
+
+        /* Adjust the sign */
+        if (Packet.Flags & MOUSE_X_SIGN) DeltaX = -DeltaX;
+        if (Packet.Flags & MOUSE_Y_SIGN) DeltaY = -DeltaY;
+
+        DriverState.HorizCount += DeltaX;
+        DriverState.VertCount  += DeltaY;
+
+        ByteCounter = 0;
+    }
+
+    /*
+     * Get the absolute position directly from the mouse, this is the only
+     * way to perfectly synchronize the host and guest mouse pointer.
+     */
+    MouseGetDataFast(&Position, &ButtonState);
+
+    /* Call the update subroutines */
+    DosUpdatePosition(&Position);
+    DosUpdateButtons(ButtonState);
+
+    /* Complete the IRQ */
+    PicIRQComplete(Stack);
+}
+
 static VOID WINAPI DosMouseService(LPWORD Stack)
 {
     switch (getAX())
@@ -183,9 +348,14 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         {
             SHORT i;
 
-            DriverEnabled = TRUE;
             DriverState.ShowCount = 0;
             DriverState.ButtonState = 0;
+
+            /* Initialize the default clipping range */
+            DriverState.MinX = 0;
+            DriverState.MaxX = MOUSE_MAX_HORIZ - 1;
+            DriverState.MinY = 0;
+            DriverState.MaxY = MOUSE_MAX_VERT - 1;
 
             /* Set the default text cursor */
             DriverState.TextCursor.ScreenMask = 0xFFFF; /* Display everything */
@@ -237,10 +407,6 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                 DriverState.PressCount[i] = DriverState.ReleaseCount[i] = 0;
             }
 
-            /* Initialize the resolution */
-            DriverState.MickeysPerCellHoriz = 8;
-            DriverState.MickeysPerCellVert = 16;
-
             /* Return mouse information */
             setAX(0xFFFF);  // Hardware & driver installed
             setBX(NUM_MOUSE_BUTTONS);
@@ -252,7 +418,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x01:
         {
             DriverState.ShowCount++;
-            if (DriverState.ShowCount > 0) PaintMouseCursor();
+            if (DriverState.ShowCount == 1) PaintMouseCursor();
 
             break;
         }
@@ -261,7 +427,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x02:
         {
             DriverState.ShowCount--;
-            if (DriverState.ShowCount <= 0) EraseMouseCursor();
+            if (DriverState.ShowCount == 0) EraseMouseCursor();
 
             break;
         }
@@ -269,23 +435,22 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         /* Return Position And Button Status */
         case 0x03:
         {
+            COORD Position = DriverState.Position;
+            ToMouseCoordinates(&Position);
+
             setBX(DriverState.ButtonState);
-            setCX(DriverState.Position.X);
-            setDX(DriverState.Position.Y);
+            setCX(Position.X);
+            setDX(Position.Y);
             break;
         }
 
         /* Position Mouse Cursor */
         case 0x04:
         {
-            POINT Point;
+            COORD Position = { getCX(), getDX() };
+            FromMouseCoordinates(&Position);
 
-            Point.x = getCX();
-            Point.y = getDX();
-
-            ClientToScreen(GetConsoleWindow(), &Point);
-            SetCursorPos(Point.x, Point.y);
-
+            DriverState.Position = Position;
             break;
         }
 
@@ -293,11 +458,13 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x05:
         {
             WORD Button = getBX();
+            COORD LastPress = DriverState.LastPress[Button];
+            ToMouseCoordinates(&LastPress);
 
             setAX(DriverState.ButtonState);
             setBX(DriverState.PressCount[Button]);
-            setCX(DriverState.LastPress[Button].X);
-            setDX(DriverState.LastPress[Button].Y);
+            setCX(LastPress.X);
+            setDX(LastPress.Y);
 
             /* Reset the counter */
             DriverState.PressCount[Button] = 0;
@@ -309,17 +476,37 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         case 0x06:
         {
             WORD Button = getBX();
+            COORD LastRelease = DriverState.LastRelease[Button];
+            ToMouseCoordinates(&LastRelease);
 
             setAX(DriverState.ButtonState);
             setBX(DriverState.ReleaseCount[Button]);
-            setCX(DriverState.LastRelease[Button].X);
-            setDX(DriverState.LastRelease[Button].Y);
+            setCX(LastRelease.X);
+            setDX(LastRelease.Y);
 
             /* Reset the counter */
             DriverState.ReleaseCount[Button] = 0;
 
             break;
 
+        }
+
+        /* Define Horizontal Cursor Range */
+        case 0x07:
+        {
+            DPRINT("Setting mouse horizontal range: %u - %u\n", getCX(), getDX());
+            DriverState.MinX = getCX();
+            DriverState.MaxX = getDX();
+            break;
+        }
+
+        /* Define Vertical Cursor Range */
+        case 0x08:
+        {
+            DPRINT("Setting mouse vertical range: %u - %u\n", getCX(), getDX());
+            DriverState.MinY = getCX();
+            DriverState.MaxY = getDX();
+            break;
         }
 
         /* Define Graphics Cursor */
@@ -395,8 +582,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
         /* Define Mickey/Pixel Ratio */
         case 0x0F:
         {
-            DriverState.MickeysPerCellHoriz = getCX();
-            DriverState.MickeysPerCellVert  = getDX();
+            /* This call should be completely ignored */
             break;
         }
 
@@ -588,14 +774,14 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             setES(0x0000);
             setBX(0x0000);
 
-            DriverEnabled = FALSE;
+            DosMouseDisable();
             break;
         }
 
         /* Enable Mouse Driver */
         case 0x20:
         {
-            DriverEnabled = TRUE;
+            DosMouseEnable();
             break;
         }
 
@@ -608,6 +794,38 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+VOID DosMouseEnable(VOID)
+{
+    if (!DriverEnabled)
+    {
+        DriverEnabled = TRUE;
+
+        /* Get the old IRQ handler */
+        OldIrqHandler = ((PDWORD)BaseAddress)[MOUSE_IRQ_INT];
+
+        /* Set the IRQ handler */
+        RegisterDosInt32(MOUSE_IRQ_INT, DosMouseIrq);
+
+        /* Enable packet reporting */
+        IOWriteB(PS2_CONTROL_PORT, 0xD4);
+        IOWriteB(PS2_DATA_PORT, 0xF4);
+
+        /* Read the mouse ACK reply */
+        PS2PortQueueRead(1);
+    }
+}
+
+VOID DosMouseDisable(VOID)
+{
+    if (DriverEnabled)
+    {
+        /* Restore the old IRQ handler */
+        ((PDWORD)BaseAddress)[MOUSE_IRQ_INT] = OldIrqHandler;
+
+        DriverEnabled = FALSE;
+    }
+}
+
 VOID DosMouseUpdatePosition(PCOORD NewPosition)
 {
     SHORT DeltaX = NewPosition->X - DriverState.Position.X;
@@ -615,8 +833,8 @@ VOID DosMouseUpdatePosition(PCOORD NewPosition)
 
     if (!DriverEnabled) return;
 
-    DriverState.HorizCount += (DeltaX * (SHORT)DriverState.MickeysPerCellHoriz) / 8;
-    DriverState.VertCount  += (DeltaY * (SHORT)DriverState.MickeysPerCellVert ) / 8;
+    DriverState.HorizCount += (DeltaX * MICKEYS_PER_CELL_HORIZ) / 8;
+    DriverState.VertCount  += (DeltaY * MICKEYS_PER_CELL_VERT) / 8;
 
     if (DriverState.ShowCount > 0) EraseMouseCursor();
     DriverState.Position = *NewPosition;
@@ -671,10 +889,12 @@ BOOLEAN DosMouseInitialize(VOID)
     /* Initialize the interrupt handler */
     RegisterDosInt32(DOS_MOUSE_INTERRUPT, DosMouseService);
 
+    DosMouseEnable();
     return TRUE;
 }
 
 VOID DosMouseCleanup(VOID)
 {
     if (DriverState.ShowCount > 0) EraseMouseCursor();
+    DosMouseDisable();
 }

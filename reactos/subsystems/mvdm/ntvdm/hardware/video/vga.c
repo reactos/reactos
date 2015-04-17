@@ -16,6 +16,7 @@
 
 #include "memory.h"
 #include "io.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -244,6 +245,9 @@ static HANDLE ConsoleMutex = NULL;
 /* DoubleVision support */
 static BOOLEAN DoubleWidth  = FALSE;
 static BOOLEAN DoubleHeight = FALSE;
+
+static PHARDWARE_TIMER VSyncTimer;
+static PHARDWARE_TIMER HSyncTimer;
 
 /*
  * VGA Hardware
@@ -1754,59 +1758,11 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
     }
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-COORD VgaGetDisplayResolution(VOID)
-{
-    COORD Resolution;
-    BYTE MaximumScanLine = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
-
-    /* The low 8 bits are in the display registers */
-    Resolution.X = VgaCrtcRegisters[VGA_CRTC_END_HORZ_DISP_REG];
-    Resolution.Y = VgaCrtcRegisters[VGA_CRTC_VERT_DISP_END_REG];
-
-    /* Set the top bits from the overflow register */
-    if (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VDE8)
-    {
-        Resolution.Y |= 1 << 8;
-    }
-    if (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VDE9)
-    {
-        Resolution.Y |= 1 << 9;
-    }
-
-    /* Increase the values by 1 */
-    Resolution.X++;
-    Resolution.Y++;
-
-    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
-    {
-        /* Multiply the horizontal resolution by the 9/8 dot mode */
-        Resolution.X *= (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & VGA_SEQ_CLOCK_98DM)
-                        ? 8 : 9;
-
-        /* The horizontal resolution is halved in 8-bit mode */
-        if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT) Resolution.X /= 2;
-    }
-
-    if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
-    {
-        /* Halve the vertical resolution */
-        Resolution.Y >>= 1;
-    }
-    else
-    {
-        /* Divide the vertical resolution by the maximum scan line (== font size in text mode) */
-        Resolution.Y /= MaximumScanLine;
-    }
-
-    /* Return the resolution */
-    return Resolution;
-}
-
-VOID VgaRefreshDisplay(VOID)
+static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
 {
     HANDLE ConsoleBufferHandle = NULL;
+
+    UNREFERENCED_PARAMETER(ElapsedTime);
 
     /* Set the vertical retrace flag */
     InVerticalRetrace = TRUE;
@@ -1876,10 +1832,75 @@ VOID VgaRefreshDisplay(VOID)
     NeedsUpdate = FALSE;
 }
 
-VOID VgaHorizontalRetrace(VOID)
+static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
 {
+    UNREFERENCED_PARAMETER(ElapsedTime);
+
     /* Set the flag */
     InHorizontalRetrace = TRUE;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+COORD VgaGetDisplayResolution(VOID)
+{
+    COORD Resolution;
+    BYTE MaximumScanLine = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
+
+    /* The low 8 bits are in the display registers */
+    Resolution.X = VgaCrtcRegisters[VGA_CRTC_END_HORZ_DISP_REG];
+    Resolution.Y = VgaCrtcRegisters[VGA_CRTC_VERT_DISP_END_REG];
+
+    /* Set the top bits from the overflow register */
+    if (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VDE8)
+    {
+        Resolution.Y |= 1 << 8;
+    }
+    if (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VDE9)
+    {
+        Resolution.Y |= 1 << 9;
+    }
+
+    /* Increase the values by 1 */
+    Resolution.X++;
+    Resolution.Y++;
+
+    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+    {
+        /* Multiply the horizontal resolution by the 9/8 dot mode */
+        Resolution.X *= (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & VGA_SEQ_CLOCK_98DM)
+                        ? 8 : 9;
+
+        /* The horizontal resolution is halved in 8-bit mode */
+        if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT) Resolution.X /= 2;
+    }
+
+    if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+    {
+        /* Halve the vertical resolution */
+        Resolution.Y >>= 1;
+    }
+    else
+    {
+        /* Divide the vertical resolution by the maximum scan line (== font size in text mode) */
+        Resolution.Y /= MaximumScanLine;
+    }
+
+    /* Return the resolution */
+    return Resolution;
+}
+
+BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Vertical, PBOOLEAN Horizontal)
+{
+    if (GraphicsConsoleBuffer == NULL) return FALSE;
+    if (Vertical) *Vertical = DoubleWidth;
+    if (Horizontal) *Horizontal = DoubleHeight;
+    return TRUE;
+}
+
+VOID VgaRefreshDisplay(VOID)
+{
+    VgaVerticalRetrace(0);
 }
 
 VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
@@ -2106,12 +2127,18 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3D8, VgaReadPort, VgaWritePort);   // CGA_MODE_CTRL_REG
     RegisterIoPort(0x3D9, VgaReadPort, VgaWritePort);   // CGA_PAL_CTRL_REG
 
+    HSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 0, VgaHorizontalRetrace);
+    VSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 16, VgaVerticalRetrace);
+
     /* Return success */
     return TRUE;
 }
 
 VOID VgaCleanup(VOID)
 {
+    DestroyHardwareTimer(VSyncTimer);
+    DestroyHardwareTimer(HSyncTimer);
+
     if (ScreenMode == GRAPHICS_MODE)
     {
         /* Leave the current graphics mode */

@@ -17,6 +17,7 @@
 
 #include "io.h"
 #include "hardware/mouse.h"
+#include "hardware/ps2.h"
 
 // HACK: For the PS/2 bypass and MOUSE.COM driver direct call
 #include "dos/mouse32.h"
@@ -28,13 +29,6 @@
 // Mouse IRQ 12
 static VOID WINAPI BiosMouseIrq(LPWORD Stack)
 {
-    // HACK!! Call directly the MOUSE.COM driver instead of going
-    // through the regular interfaces!!
-    extern COORD DosNewPosition;
-    extern WORD  DosButtonState;
-    DosMouseUpdatePosition(&DosNewPosition);
-    DosMouseUpdateButtons(DosButtonState);
-
     PicIRQComplete(Stack);
 }
 
@@ -118,6 +112,7 @@ BOOLEAN MouseBios32Initialize(VOID)
 {
     /* Set up the HW vector interrupts */
     EnableHwIRQ(12, BiosMouseIrq);
+
     return TRUE;
 }
 

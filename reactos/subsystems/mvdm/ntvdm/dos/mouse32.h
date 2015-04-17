@@ -16,6 +16,9 @@
 /* DEFINES ********************************************************************/
 
 #define DOS_MOUSE_INTERRUPT 0x33
+#define MOUSE_IRQ_INT       0x74
+#define MOUSE_MAX_HORIZ     640
+#define MOUSE_MAX_VERT      200
 
 enum
 {
@@ -47,8 +50,7 @@ typedef struct _MOUSE_DRIVER_STATE
     COORD LastRelease[NUM_MOUSE_BUTTONS];
     SHORT HorizCount;
     SHORT VertCount;
-    WORD MickeysPerCellHoriz;
-    WORD MickeysPerCellVert;
+    WORD MinX, MaxX, MinY, MaxY;
 
     /*
      * User Subroutine Handlers called on mouse events
@@ -72,9 +74,8 @@ typedef struct _MOUSE_DRIVER_STATE
 
 /* FUNCTIONS ******************************************************************/
 
-VOID DosMouseUpdatePosition(PCOORD NewPosition);
-VOID DosMouseUpdateButtons(WORD ButtonStatus);
-
+VOID DosMouseEnable(VOID);
+VOID DosMouseDisable(VOID);
 BOOLEAN DosMouseInitialize(VOID);
 VOID DosMouseCleanup(VOID);
 

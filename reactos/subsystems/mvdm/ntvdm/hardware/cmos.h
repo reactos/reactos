@@ -128,8 +128,6 @@ C_ASSERT(sizeof(CMOS_MEMORY) == 0x40);
 
 BOOLEAN IsNmiEnabled(VOID);
 DWORD RtcGetTicksPerSecond(VOID);
-VOID RtcPeriodicTick(VOID);
-VOID RtcTimeUpdate(VOID);
 
 VOID CmosInitialize(VOID);
 VOID CmosCleanup(VOID);

@@ -260,9 +260,9 @@ VOID VgaDetachFromConsole(BOOL ChangeMode);
 
 COORD VgaGetDisplayResolution(VOID);
 VOID VgaRefreshDisplay(VOID);
-VOID VgaHorizontalRetrace(VOID);
 VOID VgaWriteFont(UINT FontNumber, CONST UCHAR *FontData, UINT Height);
 VOID VgaClearMemory(VOID);
+BOOLEAN VgaGetDoubleVisionState(PBOOLEAN Vertical, PBOOLEAN Horizontal);
 
 BOOLEAN VgaInitialize(HANDLE TextHandle);
 VOID VgaCleanup(VOID);

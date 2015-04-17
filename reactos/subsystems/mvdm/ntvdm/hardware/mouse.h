@@ -16,9 +16,7 @@
 /* DEFINES ********************************************************************/
 
 /* Mouse packet constants */
-#define MOUSE_MIN -256
 #define MOUSE_MAX 255
-#define MOUSE_SIGN_BIT (1 << 8)
 
 /* Mouse packet flags */
 #define MOUSE_LEFT_BUTTON   (1 << 0)
@@ -69,6 +67,7 @@ typedef struct _MOUSE_PACKET
 /* FUNCTIONS ******************************************************************/
 
 VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent);
+VOID MouseGetDataFast(PCOORD CurrentPosition, PBYTE CurrentButtonState);
 BOOLEAN MouseInit(BYTE PS2Connector);
 
 #endif // _MOUSE_H_

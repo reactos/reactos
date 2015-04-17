@@ -26,9 +26,7 @@ typedef VOID (WINAPI *PS2_DEVICE_CMDPROC)(LPVOID Param, BYTE Command);
 VOID PS2SetDeviceCmdProc(BYTE PS2Port, LPVOID Param, PS2_DEVICE_CMDPROC DeviceCommand);
 
 BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data);
-
-VOID GenerateIrq1(VOID);
-VOID GenerateIrq12(VOID);
+BOOLEAN PS2PortQueueRead(BYTE PS2Port);
 
 BOOLEAN PS2Initialize(VOID);
 VOID PS2Cleanup(VOID);

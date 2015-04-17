@@ -54,6 +54,8 @@ enum
     EMULATOR_EXCEPTION_PAGE_FAULT
 };
 #endif
+
+extern BOOLEAN CpuRunning;
 extern FAST486_STATE EmulatorContext;
 
 /* FUNCTIONS ******************************************************************/

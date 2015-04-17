@@ -15,6 +15,7 @@
 
 #include "io.h"
 #include "pic.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -24,14 +25,82 @@ static CMOS_MEMORY CmosMemory;
 static BOOLEAN NmiEnabled = TRUE;
 static CMOS_REGISTERS SelectedRegister = CMOS_REG_STATUS_D;
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+static PHARDWARE_TIMER ClockTimer;
+static PHARDWARE_TIMER PeriodicTimer;
 
-BOOLEAN IsNmiEnabled(VOID)
+/* PRIVATE FUNCTIONS **********************************************************/
+
+static VOID RtcUpdatePeriodicTimer(VOID)
 {
-    return NmiEnabled;
+    BYTE RateSelect = CmosMemory.StatusRegA & 0x0F;
+
+    if (RateSelect == 0)
+    {
+        /* No periodic interrupt */
+        DisableHardwareTimer(PeriodicTimer);
+        return;
+    }
+
+    /* 1 and 2 act like 8 and 9 */
+    if (RateSelect <= 2) RateSelect += 7;
+
+    SetHardwareTimerDelay(PeriodicTimer, 1000000000ULL / (ULONGLONG)(1 << (16 - RateSelect)));
+    EnableHardwareTimer(PeriodicTimer);
 }
 
-VOID CmosWriteAddress(BYTE Value)
+static VOID FASTCALL RtcPeriodicTick(ULONGLONG ElapsedTime)
+{
+    UNREFERENCED_PARAMETER(ElapsedTime);
+
+    /* Set PF */
+    CmosMemory.StatusRegC |= CMOS_STC_PF;
+
+    /* Check if there should be an interrupt on a periodic timer tick */
+    if (CmosMemory.StatusRegB & CMOS_STB_INT_PERIODIC)
+    {
+        CmosMemory.StatusRegC |= CMOS_STC_IRQF;
+
+        /* Interrupt! */
+        PicInterruptRequest(RTC_IRQ_NUMBER);
+    }
+}
+
+/* Should be called every second */
+static VOID FASTCALL RtcTimeUpdate(ULONGLONG ElapsedTime)
+{
+    SYSTEMTIME CurrentTime;
+
+    UNREFERENCED_PARAMETER(ElapsedTime);
+
+    /* Get the current time */
+    GetLocalTime(&CurrentTime);
+
+    /* Set UF */
+    CmosMemory.StatusRegC |= CMOS_STC_UF;
+
+    /* Check if the time matches the alarm time */
+    if ((CurrentTime.wHour   == CmosMemory.AlarmHour  ) &&
+        (CurrentTime.wMinute == CmosMemory.AlarmMinute) &&
+        (CurrentTime.wSecond == CmosMemory.AlarmSecond))
+    {
+        /* Set the alarm flag */
+        CmosMemory.StatusRegC |= CMOS_STC_AF;
+
+        /* Set IRQF if there should be an interrupt */
+        if (CmosMemory.StatusRegB & CMOS_STB_INT_ON_ALARM) CmosMemory.StatusRegC |= CMOS_STC_IRQF;
+    }
+
+    /* Check if there should be an interrupt on update */
+    if (CmosMemory.StatusRegB & CMOS_STB_INT_ON_UPDATE) CmosMemory.StatusRegC |= CMOS_STC_IRQF;
+
+    if (CmosMemory.StatusRegC & CMOS_STC_IRQF)
+    {
+        /* Interrupt! */
+        PicInterruptRequest(RTC_IRQ_NUMBER);
+    }
+}
+
+static VOID CmosWriteAddress(BYTE Value)
 {
     /* Update the NMI enabled flag */
     NmiEnabled = !(Value & CMOS_DISABLE_NMI);
@@ -51,7 +120,7 @@ VOID CmosWriteAddress(BYTE Value)
     }
 }
 
-BYTE CmosReadData(VOID)
+static BYTE CmosReadData(VOID)
 {
     BYTE Value;
     SYSTEMTIME CurrentTime;
@@ -181,7 +250,7 @@ BYTE CmosReadData(VOID)
     return Value;
 }
 
-VOID CmosWriteData(BYTE Value)
+static VOID CmosWriteData(BYTE Value)
 {
     BOOLEAN ChangeTime = FALSE;
     SYSTEMTIME CurrentTime;
@@ -296,6 +365,7 @@ VOID CmosWriteData(BYTE Value)
         case CMOS_REG_STATUS_A:
         {
             CmosMemory.StatusRegA = Value & 0x7F; // Bit 7 is read-only
+            RtcUpdatePeriodicTimer();
             break;
         }
 
@@ -342,13 +412,13 @@ VOID CmosWriteData(BYTE Value)
     SelectedRegister = CMOS_REG_STATUS_D;
 }
 
-BYTE WINAPI CmosReadPort(USHORT Port)
+static BYTE WINAPI CmosReadPort(USHORT Port)
 {
     ASSERT(Port == CMOS_DATA_PORT);
     return CmosReadData();
 }
 
-VOID WINAPI CmosWritePort(USHORT Port, BYTE Data)
+static VOID WINAPI CmosWritePort(USHORT Port, BYTE Data)
 {
     if (Port == CMOS_ADDRESS_PORT)
         CmosWriteAddress(Data);
@@ -356,68 +426,12 @@ VOID WINAPI CmosWritePort(USHORT Port, BYTE Data)
         CmosWriteData(Data);
 }
 
-DWORD RtcGetTicksPerSecond(VOID)
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN IsNmiEnabled(VOID)
 {
-    BYTE RateSelect = CmosMemory.StatusRegB & 0x0F;
-
-    if (RateSelect == 0)
-    {
-        /* No periodic interrupt */
-        return 0;
-    }
-
-    /* 1 and 2 act like 8 and 9 */
-    if (RateSelect <= 2) RateSelect += 7;
-
-    return 1 << (16 - RateSelect);
-}
-
-VOID RtcPeriodicTick(VOID)
-{
-    /* Set PF */
-    CmosMemory.StatusRegC |= CMOS_STC_PF;
-
-    /* Check if there should be an interrupt on a periodic timer tick */
-    if (CmosMemory.StatusRegB & CMOS_STB_INT_PERIODIC)
-    {
-        CmosMemory.StatusRegC |= CMOS_STC_IRQF;
-
-        /* Interrupt! */
-        PicInterruptRequest(RTC_IRQ_NUMBER);
-    }
-}
-
-/* Should be called every second */
-VOID RtcTimeUpdate(VOID)
-{
-    SYSTEMTIME CurrentTime;
-
-    /* Get the current time */
-    GetLocalTime(&CurrentTime);
-
-    /* Set UF */
-    CmosMemory.StatusRegC |= CMOS_STC_UF;
-
-    /* Check if the time matches the alarm time */
-    if ((CurrentTime.wHour   == CmosMemory.AlarmHour  ) &&
-        (CurrentTime.wMinute == CmosMemory.AlarmMinute) &&
-        (CurrentTime.wSecond == CmosMemory.AlarmSecond))
-    {
-        /* Set the alarm flag */
-        CmosMemory.StatusRegC |= CMOS_STC_AF;
-
-        /* Set IRQF if there should be an interrupt */
-        if (CmosMemory.StatusRegB & CMOS_STB_INT_ON_ALARM) CmosMemory.StatusRegC |= CMOS_STC_IRQF;
-    }
-
-    /* Check if there should be an interrupt on update */
-    if (CmosMemory.StatusRegB & CMOS_STB_INT_ON_UPDATE) CmosMemory.StatusRegC |= CMOS_STC_IRQF;
-
-    if (CmosMemory.StatusRegC & CMOS_STC_IRQF)
-    {
-        /* Interrupt! */
-        PicInterruptRequest(RTC_IRQ_NUMBER);
-    }
+    return NmiEnabled;
 }
 
 VOID CmosInitialize(VOID)
@@ -486,6 +500,11 @@ VOID CmosInitialize(VOID)
     /* Register the I/O Ports */
     RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);
     RegisterIoPort(CMOS_DATA_PORT   , CmosReadPort, CmosWritePort);
+
+    ClockTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 1000, RtcTimeUpdate);
+    PeriodicTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED | HARDWARE_TIMER_PRECISE,
+                                        1000000, /* 1,000,000 ns = 1 ms */
+                                        RtcPeriodicTick);
 }
 
 VOID CmosCleanup(VOID)
@@ -493,6 +512,9 @@ VOID CmosCleanup(VOID)
     DWORD CmosSize = sizeof(CmosMemory);
 
     if (hCmosRam == INVALID_HANDLE_VALUE) return;
+
+    DestroyHardwareTimer(PeriodicTimer);
+    DestroyHardwareTimer(ClockTimer);
 
     /* Flush the CMOS memory back to the RAM file and close it */
     SetFilePointer(hCmosRam, 0, NULL, FILE_BEGIN);

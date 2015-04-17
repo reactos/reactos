@@ -15,6 +15,7 @@
 #include "io.h"
 #include "ps2.h"
 #include "pic.h"
+#include "clock.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -48,6 +49,8 @@ static BYTE ControllerCommand = 0x00;
 static BYTE StatusRegister = 0x00;
 // static BYTE InputBuffer  = 0x00; // PS/2 Input  Buffer
 static BYTE OutputBuffer = 0x00; // PS/2 Output Buffer
+
+static PHARDWARE_TIMER IrqTimer = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -262,7 +265,30 @@ static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
     }
 }
 
-static BOOLEAN PS2PortQueueRead(BYTE PS2Port)
+static VOID FASTCALL GeneratePS2Irq(ULONGLONG ElapsedTime)
+{
+    UNREFERENCED_PARAMETER(ElapsedTime);
+
+    /* Generate an IRQ 1 if there is data ready in the output queue */
+    if (PS2PortQueueRead(0))
+    {
+        /* Generate an interrupt if interrupts for the first PS/2 port are enabled */
+        if (ControllerConfig & 0x01) PicInterruptRequest(1);
+        return;
+    }
+
+    /* Generate an IRQ 12 if there is data ready in the output queue */
+    if (PS2PortQueueRead(1))
+    {
+        /* Generate an interrupt if interrupts for the second PS/2 port are enabled */
+        if (ControllerConfig & 0x02) PicInterruptRequest(12);
+        return;
+    }
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+BOOLEAN PS2PortQueueRead(BYTE PS2Port)
 {
     BOOLEAN Result = TRUE;
     PPS2_PORT Port;
@@ -316,8 +342,6 @@ Done:
     return Result;
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
 VOID PS2SetDeviceCmdProc(BYTE PS2Port, LPVOID Param, PS2_DEVICE_CMDPROC DeviceCommand)
 {
     if (PS2Port >= PS2_PORTS) return;
@@ -354,41 +378,12 @@ BOOLEAN PS2QueuePush(BYTE PS2Port, BYTE Data)
     /* The queue is not empty anymore */
     Port->QueueEmpty = FALSE;
 
-/*
-    // Get the data
-    OutputBuffer = Port->Queue[Port->QueueStart];
-    StatusRegister |= (1 << 0); // There is something to read
-    // FIXME: Sometimes StatusRegister |= (1 << 5); for the second PS/2 port
-
-    if (PS2Port == 0)
-        PicInterruptRequest(1);
-    else if (PS2Port == 1)
-        PicInterruptRequest(12);
-*/
+    /* Schedule the IRQ */
+    EnableHardwareTimer(IrqTimer);
 
 Done:
     ReleaseMutex(Port->QueueMutex);
     return Result;
-}
-
-VOID GenerateIrq1(VOID)
-{
-    /* Generate an interrupt if interrupts for the first PS/2 port are enabled */
-    if (ControllerConfig & 0x01)
-    {
-        /* Generate an IRQ 1 if there is data ready in the output queue */
-        if (PS2PortQueueRead(0)) PicInterruptRequest(1);
-    }
-}
-
-VOID GenerateIrq12(VOID)
-{
-    /* Generate an interrupt if interrupts for the second PS/2 port are enabled */
-    if (ControllerConfig & 0x02)
-    {
-        /* Generate an IRQ 12 if there is data ready in the output queue */
-        if (PS2PortQueueRead(1)) PicInterruptRequest(12);
-    }
 }
 
 BOOLEAN PS2Initialize(VOID)
@@ -410,11 +405,15 @@ BOOLEAN PS2Initialize(VOID)
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
 
+    IrqTimer = CreateHardwareTimer(HARDWARE_TIMER_ONESHOT, 20, GeneratePS2Irq);
+
     return TRUE;
 }
 
 VOID PS2Cleanup(VOID)
 {
+    DestroyHardwareTimer(IrqTimer);
+
     CloseHandle(Ports[1].QueueMutex);
     CloseHandle(Ports[0].QueueMutex);
 }
