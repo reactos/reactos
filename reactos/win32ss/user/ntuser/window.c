@@ -1463,7 +1463,7 @@ NtUserBuildHwndList(
 static void IntSendParentNotify( PWND pWindow, UINT msg )
 {
     if ( (pWindow->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
-         !(pWindow->style & WS_EX_NOPARENTNOTIFY))
+         !(pWindow->ExStyle & WS_EX_NOPARENTNOTIFY))
     {
         if (VerifyWnd(pWindow->spwndParent) && pWindow->spwndParent != UserGetDesktopWindow())
         {
