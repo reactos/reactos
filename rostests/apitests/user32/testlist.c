@@ -27,6 +27,7 @@ extern void func_SendMessageTimeout(void);
 extern void func_SetActiveWindow(void);
 extern void func_SetCursorPos(void);
 extern void func_SetParent(void);
+extern void func_SetScrollInfo(void);
 extern void func_SystemParametersInfo(void);
 extern void func_TrackMouseEvent(void);
 extern void func_WndProc(void);
@@ -58,6 +59,7 @@ const struct test winetest_testlist[] =
     { "SetActiveWindow", func_SetActiveWindow },
     { "SetCursorPos", func_SetCursorPos },
     { "SetParent", func_SetParent },
+    { "SetScrollInfo", func_SetScrollInfo },
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },
