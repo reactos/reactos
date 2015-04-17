@@ -39,7 +39,7 @@
 // #define WORKING_TIMER
 
 /* Processor speed */
-#define STEPS_PER_CYCLE 256
+#define STEPS_PER_CYCLE 1024
 
 /* VARIABLES ******************************************************************/
 

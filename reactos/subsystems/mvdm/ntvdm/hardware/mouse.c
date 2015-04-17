@@ -208,6 +208,7 @@ static VOID WINAPI MouseCommand(LPVOID Param, BYTE Command)
         }
 
         DataByteWait = 0;
+        return;
     }
 
     /* Check if we're in wrap mode */

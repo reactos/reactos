@@ -30,8 +30,6 @@
 #define MICKEYS_PER_CELL_HORIZ 8
 #define MICKEYS_PER_CELL_VERT 16
 
-static MOUSE_PACKET Packet;
-static INT ByteCounter = 0;
 static BOOLEAN DriverEnabled = FALSE;
 static MOUSE_DRIVER_STATE DriverState;
 static DWORD OldIrqHandler;
@@ -289,50 +287,25 @@ static inline VOID DosUpdateButtons(BYTE ButtonState)
 
 static VOID WINAPI DosMouseIrq(LPWORD Stack)
 {
+    BYTE Flags;
+    SHORT DeltaX, DeltaY;
     COORD Position;
     BYTE ButtonState;
 
-    switch (ByteCounter)
-    {
-        case 0:
-        {
-            Packet.Flags = IOReadB(PS2_DATA_PORT);
-            break;
-        }
+    /* Read the whole packet at once */
+    Flags = IOReadB(PS2_DATA_PORT);
+    PS2PortQueueRead(1);
+    DeltaX = IOReadB(PS2_DATA_PORT);
+    PS2PortQueueRead(1);
+    DeltaY = IOReadB(PS2_DATA_PORT);
 
-        case 1:
-        {
-            Packet.HorzCounter = IOReadB(PS2_DATA_PORT);
-            break;
-        }
+    /* Adjust the sign */
+    if (Flags & MOUSE_X_SIGN) DeltaX = -DeltaX;
+    if (Flags & MOUSE_Y_SIGN) DeltaY = -DeltaY;
 
-        case 2:
-        {
-            Packet.VertCounter = IOReadB(PS2_DATA_PORT);
-            break;
-        }
-
-        default:
-        {
-            /* Shouldn't happen */
-            ASSERT(FALSE);
-        }
-    }
-
-    if (++ByteCounter == 3)
-    {
-        SHORT DeltaX = Packet.HorzCounter;
-        SHORT DeltaY = Packet.VertCounter;
-
-        /* Adjust the sign */
-        if (Packet.Flags & MOUSE_X_SIGN) DeltaX = -DeltaX;
-        if (Packet.Flags & MOUSE_Y_SIGN) DeltaY = -DeltaY;
-
-        DriverState.HorizCount += DeltaX;
-        DriverState.VertCount  += DeltaY;
-
-        ByteCounter = 0;
-    }
+    /* Update the counters */
+    DriverState.HorizCount += DeltaX;
+    DriverState.VertCount  += DeltaY;
 
     /*
      * Get the absolute position directly from the mouse, this is the only
@@ -834,13 +807,6 @@ VOID DosMouseEnable(VOID)
 
         /* Set the IRQ handler */
         RegisterDosInt32(MOUSE_IRQ_INT, DosMouseIrq);
-
-        /* Enable packet reporting */
-        IOWriteB(PS2_CONTROL_PORT, 0xD4);
-        IOWriteB(PS2_DATA_PORT, 0xF4);
-
-        /* Read the mouse ACK reply */
-        PS2PortQueueRead(1);
     }
 }
 

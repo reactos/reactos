@@ -110,6 +110,24 @@ VOID BiosMousePs2Interface(LPWORD Stack)
 
 BOOLEAN MouseBios32Initialize(VOID)
 {
+    BYTE ControllerConfig;
+
+    /* Clear the mouse queue */
+    while (PS2PortQueueRead(1)) continue;
+
+    /* Enable packet reporting */
+    IOWriteB(PS2_CONTROL_PORT, 0xD4);
+    IOWriteB(PS2_DATA_PORT, 0xF4);
+
+    /* Read the mouse ACK reply */
+    PS2PortQueueRead(1);
+
+    /* Enable IRQ12 */
+    IOWriteB(PS2_CONTROL_PORT, 0x20);
+    ControllerConfig = IOReadB(PS2_DATA_PORT);
+    IOWriteB(PS2_CONTROL_PORT, 0x60);
+    IOWriteB(PS2_DATA_PORT, ControllerConfig | 0x02);
+
     /* Set up the HW vector interrupts */
     EnableHwIRQ(12, BiosMouseIrq);
 

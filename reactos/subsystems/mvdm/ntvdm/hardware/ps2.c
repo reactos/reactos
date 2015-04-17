@@ -42,7 +42,7 @@ typedef struct _PS2_PORT
 #define PS2_PORTS  2
 static PS2_PORT Ports[PS2_PORTS];
 
-#define PS2_DEFAULT_CONFIG  0x47
+#define PS2_DEFAULT_CONFIG  0x45
 static BYTE ControllerConfig = PS2_DEFAULT_CONFIG;
 static BYTE ControllerCommand = 0x00;
 
@@ -405,7 +405,7 @@ BOOLEAN PS2Initialize(VOID)
     RegisterIoPort(PS2_CONTROL_PORT, PS2ReadPort, PS2WritePort);
     RegisterIoPort(PS2_DATA_PORT   , PS2ReadPort, PS2WritePort);
 
-    IrqTimer = CreateHardwareTimer(HARDWARE_TIMER_ONESHOT, 20, GeneratePS2Irq);
+    IrqTimer = CreateHardwareTimer(HARDWARE_TIMER_ONESHOT, 10, GeneratePS2Irq);
 
     return TRUE;
 }
