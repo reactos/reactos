@@ -1,0 +1,7 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_NTOBJFLD_NAME "Espace de noms des objets NT"
+    IDS_REGISTRY_NAME "Registre système"
+END
