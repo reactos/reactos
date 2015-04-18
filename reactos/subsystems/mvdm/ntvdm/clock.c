@@ -33,11 +33,6 @@
  */
 // #define IPS_DISPLAY
 
-/*
- * Activate WORKING_TIMER when the PIT timing problem is fixed.
- */
-// #define WORKING_TIMER
-
 /* Processor speed */
 #define STEPS_PER_CYCLE 1024
 
@@ -75,22 +70,10 @@ VOID ClockUpdate(VOID)
         /* Get the current number of ticks */
         DWORD CurrentTickCount = GetTickCount();
 
-#ifdef WORKING_TIMER
-        if ((PitResolution <= 1000) && (RtcFrequency <= 1000))
-        {
-            /* Calculate the approximate performance counter value instead */
-            Counter.QuadPart = StartPerfCount.QuadPart
-                               + ((CurrentTickCount - StartTickCount)
-                               * Frequency.QuadPart) / 1000;
-        }
-        else
-#endif
-        {
-            /* Get the current performance counter value */
-            /// DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
-            NtQueryPerformanceCounter(&Counter, NULL);
-            /// SetThreadAffinityMask(GetCurrentThread(), oldmask);
-        }
+        /* Get the current performance counter value */
+        /// DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
+        NtQueryPerformanceCounter(&Counter, NULL);
+        /// SetThreadAffinityMask(GetCurrentThread(), oldmask);
 
         /* Continue CPU emulation */
         for (i = 0; VdmRunning && CpuRunning && (i < STEPS_PER_CYCLE); i++)
