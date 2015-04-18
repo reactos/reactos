@@ -1610,7 +1610,7 @@ NetLocalGroupGetMembers(
 
                 TRACE("Name: %S\n", EnumContext->Names[i].Name.Buffer);
 
-                MembersInfo1->lgrmi1_name = (LPWSTR)Ptr;
+                MembersInfo1->lgrmi1_name = Ptr;
 
                 memcpy(MembersInfo1->lgrmi1_name,
                        EnumContext->Names[i].Name.Buffer,
@@ -1631,7 +1631,7 @@ NetLocalGroupGetMembers(
 
                 MembersInfo2->lgrmi2_sidusage = EnumContext->Names[i].Use;
 
-                MembersInfo2->lgrmi2_domainandname = (LPWSTR)Ptr;
+                MembersInfo2->lgrmi2_domainandname = Ptr;
 
                 if (EnumContext->Names[i].DomainIndex >= 0)
                 {
@@ -1654,7 +1654,7 @@ NetLocalGroupGetMembers(
                 break;
 
             case 3:
-                MembersInfo3->lgrmi3_domainandname = (PSID)Ptr;
+                MembersInfo3->lgrmi3_domainandname = Ptr;
 
                 if (EnumContext->Names[i].DomainIndex >= 0)
                 {
