@@ -145,7 +145,7 @@ int OSK_DlgClose(void)
  */
 int OSK_DlgTimer(void)
 {
-    /* FIXME: To be deleted when Reactos will support WS_EX_NOACTIVATE */
+    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     HWND hWndActiveWindow;
 
     hWndActiveWindow = GetForegroundWindow();
@@ -177,7 +177,7 @@ BOOL OSK_DlgCommand(WPARAM wCommand, HWND hWndControl)
     BOOL bKeyUp;
     LONG WindowStyle;
 
-    /* FIXME: To be deleted when Reactos will support WS_EX_NOACTIVATE */
+    /* FIXME: To be deleted when ReactOS will support WS_EX_NOACTIVATE */
     if (Globals.hActiveWnd)
     {
         MSG msg;

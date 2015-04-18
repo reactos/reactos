@@ -110,7 +110,7 @@ enum
     XFORM_FORMAT_LTOL = 0x20,
     XFORM_NO_TRANSLATION = 0x40,
 
-    /* Reactos specific */
+    /* ReactOS specific */
     XFORM_INTEGER = 0x1000,
 };
 

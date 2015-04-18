@@ -80,7 +80,7 @@ ACPI\PNP0C0A.DeviceDesc = "ACPI-konforme Kontrollmethodenbatterie"
 ACPI\ACPI0003.DeviceDesc = "Netzteil"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 BatteryClassName = "Baterías"
 
 GenericMfg = "(Baterías genéricas)"

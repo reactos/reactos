@@ -53,7 +53,7 @@ acpipic_up.DeviceDesc = "Jednoprocesorové PC s ACPI rozhraním"
 e_isa_up.DeviceDesc = "Standardní jednoprocesorové PC"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 ComputerClassName = "Equipo"
 
 GenericMfg = "(Equipos genéricos)"

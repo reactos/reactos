@@ -1023,7 +1023,7 @@ PCI\CC_0105.DeviceDesc  = "Generischer ATA Controller"
 PCI\CC_0106.DeviceDesc  = "Generischer Serial ATA Controller"
 
 [Strings.0a]
-ReactOS                 = "Equipo de Reactos"
+ReactOS                 = "Equipo de ReactOS"
 HDCClassName            = "Controladores IDE ATA/ATAPI genéricos"
 GenericMfg              = "(Controladores de disco duro genéricos)"
 

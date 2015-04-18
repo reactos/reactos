@@ -72,7 +72,7 @@ GenericMfg = "(Obecné disketové jednotky)"
 Floppy.DeviceDesc = "Obecná disketová jednotka"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 
 FloppyClassName = "Disqueteras"
 GenericMfg = "(Disqueteras genéricas)"

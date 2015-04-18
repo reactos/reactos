@@ -192,7 +192,7 @@ Pin.Name.MPE="MPE"
 Pin.Name.NABTS="NABTS"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 
 [Strings.0415]
 ReactOS = "Ekipa ReactOS"

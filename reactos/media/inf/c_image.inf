@@ -28,7 +28,7 @@ ReactOS = "ReactOS Team"
 ImageClassName = "Image"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 ImageClassName = "Imagen"
 
 [Strings.0415]

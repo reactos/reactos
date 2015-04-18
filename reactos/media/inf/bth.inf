@@ -61,7 +61,7 @@ BTUSB.DeviceDesc="Obecný USB Bluetooth vysílač"
 BluetoothClassName="Bluetooth vysílače"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB genérica"
 BluetoothClassName="Radios Bluetooth"
 

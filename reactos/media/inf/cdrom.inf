@@ -69,7 +69,7 @@ CDROMClassName = "DVD/CD-ROM Laufwerke"
 CDROMClassName = "Οδηγοί DVD/CD-ROM"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 CDROMClassName = "Unidades de DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Unidad CD-ROM"
 GenericMfg = "(Unidades de DVD/CD-ROM genéricas)"

@@ -67,7 +67,7 @@ OpticalDisk.DeviceDesc = "Optická disková jednotka"
 Disk.ServiceDesc = "Ovladač disku"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 GenericMfg = "(Unidades de disco genéricas)"
 DiskClassName = "Unidades de disco"
 Disk.DeviceDesc = "Unidad de disco"

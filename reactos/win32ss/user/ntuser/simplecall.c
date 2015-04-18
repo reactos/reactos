@@ -109,7 +109,7 @@ NtUserCallNoParam(DWORD Routine)
          RETURN(0);
       }
 
-      /* this is a Reactos only case and is needed for gui-on-demand */
+      /* this is a ReactOS only case and is needed for gui-on-demand */
       case NOPARAM_ROUTINE_ISCONSOLEMODE:
           RETURN( ScreenDeviceContext == NULL );
 

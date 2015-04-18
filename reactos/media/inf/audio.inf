@@ -76,7 +76,7 @@ AUDIOClassName = "Řadiče zvuku a obrazu"
 AUDIOClassName = "Audio-, Video- und Gamecontroller"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 AUDIOClassName = "Dispositivos de sonido, vídeo y juegos"
 
 [Strings.0415]

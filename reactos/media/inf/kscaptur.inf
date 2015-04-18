@@ -38,13 +38,13 @@ msyuv.dll
 tsbyuv.dll
 
 [VfWWDM]
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"Reactos WDM Image Capture"
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"Reactos WDM Image Capture"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"ReactOS WDM Image Capture"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"ReactOS WDM Image Capture"
 HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Driver",,"vfwwdm.drv"
 
 [VfWWDM.NT]
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"Reactos WDM Image Capture (Win32)"
-HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"Reactos WDM Image Capture (Win32)"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Description",,"ReactOS WDM Image Capture (Win32)"
+HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"FriendlyName",,"ReactOS WDM Image Capture (Win32)"
 HKLM,%MediaResourcesMSVideo%\MSVideo.VFWWDM,"Driver",,"vfwwdm32.dll"
 
 [VfWWDM.AddReg.NT]

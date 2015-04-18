@@ -202,7 +202,7 @@ IntelProcessor.DeviceDesc = "Επεξεργαστής Intel"
 Standard = "Πρότυπος επεξεργαστής"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 Processor.DeviceDesc = "Procesador"
 IntelProcessor.DeviceDesc = "Procesador Intel"
 AMDProcessor.DeviceDesc = "Procesador AMD"

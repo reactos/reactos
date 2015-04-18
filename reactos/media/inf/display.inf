@@ -92,7 +92,7 @@ StdMfg = "(Πρότυποι προσαρμογείς οθόνης)"
 VGA.DeviceDesc = "VGA-συμβατή κάρτα γραφικών"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 DisplayClassName = "Adaptadores de pantalla"
 
 StdMfg = "(Adaptador de pantalla estándar)"

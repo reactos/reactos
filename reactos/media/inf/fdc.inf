@@ -83,7 +83,7 @@ GenericMfg = "(Γενικοί ελεγκτές δισκέτας)"
 *PNP0700.DeviceDesc = "Γενικός ελεγκτής δισκέτας"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 FDCClassName = "Controladores de disquete"
 
 GenericMfg = "(Controlador estándar de disquetes)"

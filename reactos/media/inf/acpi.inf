@@ -54,7 +54,7 @@ GenericMfg = "(Generische Systemgeräte)"
 *PNP0C08.DeviceDesc = "ACPI Hardware"
 
 [Strings.0a]
-ReactOS = "Equipo de Reactos"
+ReactOS = "Equipo de ReactOS"
 
 GenericMfg = "(Dispositivos del sistema estándar)"
 *PNP0C08.DeviceDesc = "Hardware ACPI"
