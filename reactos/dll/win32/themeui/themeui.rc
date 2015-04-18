@@ -1,0 +1,8 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION "Theme UI Library\0"
+#define REACTOS_STR_INTERNAL_NAME "themeui\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "themeui.dll\0"
+
+#include <reactos/version.rc>
+
+1 ICON "themeui.ico"
