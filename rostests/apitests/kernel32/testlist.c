@@ -11,6 +11,7 @@ extern void func_GetModuleFileName(void);
 extern void func_interlck(void);
 extern void func_lstrcpynW(void);
 extern void func_MultiByteToWideChar(void);
+extern void func_PrivMoveFileIdentityW(void);
 extern void func_SetCurrentDirectory(void);
 extern void func_SetUnhandledExceptionFilter(void);
 extern void func_TerminateProcess(void);
@@ -25,6 +26,7 @@ const struct test winetest_testlist[] =
     { "interlck",                    func_interlck },
     { "lstrcpynW",                   func_lstrcpynW },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
+    { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
     { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter },
     { "TerminateProcess",            func_TerminateProcess },

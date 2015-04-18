@@ -8,6 +8,7 @@ list(APPEND SOURCE
     interlck.c
     lstrcpynW.c
     MultiByteToWideChar.c
+    PrivMoveFileIdentityW.c
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
     TerminateProcess.c
