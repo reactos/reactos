@@ -52,7 +52,8 @@ protected:
         GDILOOBJTYPE loobjtype,
         OWNER owner)
     {
-        return 0;
+        /// FIXME: should check owner!
+        return reinterpret_cast<CBASEOBJECT*>(GDIOBJ_ShareLockObj(hobj, loobjtype));
     }
 
     VOID
