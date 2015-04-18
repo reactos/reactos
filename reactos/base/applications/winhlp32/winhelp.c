@@ -290,7 +290,7 @@ static HLPFILE_WINDOWINFO*     WINHELP_GetPopupWindowInfo(HLPFILE* hlpfile,
     /* Calculate horizontal size and position of a popup window */
     GetWindowRect(parent->hMainWnd, &parent_rect);
     wi.size.cx = (parent_rect.right  - parent_rect.left) / 2;
-    wi.size.cy = 10; /* need a non null value, so that border are taken into account while computing */
+    wi.size.cy = 10; /* need a non null value, so that borders are taken into account while computing */
 
     wi.origin.x = (short)LOWORD(mouse);
     wi.origin.y = (short)HIWORD(mouse);
