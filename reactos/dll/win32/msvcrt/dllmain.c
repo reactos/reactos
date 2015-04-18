@@ -97,6 +97,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         TRACE("Detach\n");
         /* Deinit of the WINE code */
         msvcrt_free_io();
+        if (reserved) break;
         msvcrt_free_mt_locks();
         //msvcrt_free_console();
         //msvcrt_free_args();
@@ -107,12 +108,12 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         if(global_locale)
           MSVCRT__free_locale(global_locale);
 
-    if (__winitenv && __winitenv != _wenviron)
+        if (__winitenv && __winitenv != _wenviron)
             FreeEnvironment((char**)__winitenv);
         if (_wenviron)
             FreeEnvironment((char**)_wenviron);
 
-    if (__initenv && __initenv != _environ)
+        if (__initenv && __initenv != _environ)
             FreeEnvironment(__initenv);
         if (_environ)
             FreeEnvironment(_environ);
