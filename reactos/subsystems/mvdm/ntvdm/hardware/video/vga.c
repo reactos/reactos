@@ -629,13 +629,13 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
     {
         /* The lowest two bits are the plane number */
         Plane = Offset & 0x03;
-        Offset >>= 2;
+        Offset &= ~3;
     }
     else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
     {
         /* The LSB is the plane number */
         Plane = Offset & 0x01;
-        Offset >>= 1;
+        Offset &= ~1;
     }
     else
     {
@@ -643,9 +643,6 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
         Plane = VgaGcRegisters[VGA_GC_READ_MAP_SEL_REG] & 0x03;
     }
 
-    /* Multiply the offset by the address size */
-    Offset *= VgaGetAddressSize();
-    
     return Offset + Plane * VGA_BANK_SIZE;
 }
 
@@ -656,17 +653,14 @@ static inline DWORD VgaTranslateWriteAddress(DWORD Address)
     /* Check for chain-4 and odd-even mode */
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
     {
-        /* Shift the offset to the right by 2 */
-        Offset >>= 2;
+        /* Clear the lowest two bits since they're used to select the bank */
+        Offset &= ~3;
     }
     else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
     {
-        /* Shift the offset to the right by 1 */
-        Offset >>= 1;
+        /* Clear the lowest bit since it's used to select odd/even */
+        Offset &= ~1;
     }
-
-    /* Multiply the offset by the address size */
-    Offset *= VgaGetAddressSize();
 
     /* Return the offset on plane 0 */
     return Offset;
