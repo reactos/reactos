@@ -32,7 +32,7 @@ CreateFreeLoaderIniForDos(
     PWCHAR ArcPath);
 
 NTSTATUS
-CreateFreeLoaderIniForReactos(
+CreateFreeLoaderIniForReactOS(
     PWCHAR IniPath,
     PWCHAR ArcPath);
 

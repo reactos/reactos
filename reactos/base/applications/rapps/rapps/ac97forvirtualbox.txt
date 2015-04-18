@@ -24,7 +24,7 @@ Description = Sound Treiber für AC'97-kompatible Geräte. Entpacken in das "Rea
 [Section.0410]
 Name = Driver AC97 per VirtualBox
 License = Sconosciuta
-Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOs due volte.
+Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOS due volte.
 
 [Section.0a]
 Name = Controlador AC'97 para VirtualBox

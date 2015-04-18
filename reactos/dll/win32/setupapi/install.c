@@ -1722,11 +1722,11 @@ static VOID FixupServiceBinaryPath(
     IN OUT LPWSTR *ServiceBinary)
 {
     LPWSTR Buffer;
-    WCHAR ReactosDir[MAX_PATH];
+    WCHAR ReactOSDir[MAX_PATH];
     DWORD RosDirLength, ServiceLength, Win32Length;
 
-    GetWindowsDirectoryW(ReactosDir, MAX_PATH);
-    RosDirLength = strlenW(ReactosDir);
+    GetWindowsDirectoryW(ReactOSDir, MAX_PATH);
+    RosDirLength = strlenW(ReactOSDir);
     ServiceLength = strlenW(*ServiceBinary);
 
     /* Check and fix two things:
@@ -1737,7 +1737,7 @@ static VOID FixupServiceBinaryPath(
     if (ServiceLength < RosDirLength)
         return;
 
-    if (!wcsnicmp(*ServiceBinary, ReactosDir, RosDirLength))
+    if (!wcsnicmp(*ServiceBinary, ReactOSDir, RosDirLength))
     {
         /* Yes, the first part is the C:\ReactOS\, just skip it */
         MoveMemory(*ServiceBinary, *ServiceBinary + RosDirLength + 1,
@@ -2212,7 +2212,7 @@ BOOL WINAPI SetupCopyOEMInfA(
             if (RequiredSize) *RequiredSize = size;
             goto cleanup;
         }
-            
+
         if (DestinationInfFileNameSize != 0)
         {
             if (WideCharToMultiByte(CP_ACP, 0, DestinationInfFileNameW, -1,

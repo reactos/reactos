@@ -629,7 +629,7 @@ Quit:
 }
 
 static NTSTATUS FASTCALL
-UserExitReactos(PCSR_THREAD CsrThread, UINT Flags)
+UserExitReactOS(PCSR_THREAD CsrThread, UINT Flags)
 {
     NTSTATUS Status;
     LUID CallerLuid;
@@ -805,11 +805,11 @@ UserClientShutdown(IN PCSR_PROCESS CsrProcess,
 CSR_API(SrvExitWindowsEx)
 {
     NTSTATUS Status;
-    PUSER_EXIT_REACTOS ExitReactosRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactosRequest;
+    PUSER_EXIT_REACTOS ExitReactOSRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactOSRequest;
 
-    Status = UserExitReactos(CsrGetClientThread(), ExitReactosRequest->Flags);
-    ExitReactosRequest->Success   = NT_SUCCESS(Status);
-    ExitReactosRequest->LastError = GetLastError();
+    Status = UserExitReactOS(CsrGetClientThread(), ExitReactOSRequest->Flags);
+    ExitReactOSRequest->Success   = NT_SUCCESS(Status);
+    ExitReactOSRequest->LastError = GetLastError();
 
     return Status;
 }

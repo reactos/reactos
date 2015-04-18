@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/exit.c
@@ -98,7 +98,7 @@ ExitWindowsWorker(UINT uFlags,
     MSG msg;
 
     USER_API_MESSAGE ApiMessage;
-    PUSER_EXIT_REACTOS ExitReactosRequest = &ApiMessage.Data.ExitReactosRequest;
+    PUSER_EXIT_REACTOS ExitReactOSRequest = &ApiMessage.Data.ExitReactOSRequest;
 
     /*
      * 1- FIXME: Call NtUserCallOneParam(uFlags, ONEPARAM_ROUTINE_PREPAREFORLOGOFF);
@@ -110,24 +110,24 @@ ExitWindowsWorker(UINT uFlags,
      *    We can shutdown synchronously or asynchronously.
      */
 
-    // ExitReactosRequest->LastError = ERROR_SUCCESS;
-    ExitReactosRequest->Flags = uFlags;
+    // ExitReactOSRequest->LastError = ERROR_SUCCESS;
+    ExitReactOSRequest->Flags = uFlags;
 
     CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                         NULL,
                         CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
-                        sizeof(*ExitReactosRequest));
+                        sizeof(*ExitReactOSRequest));
 
     /* Set the last error accordingly */
     if (NT_SUCCESS(ApiMessage.Status) || ApiMessage.Status == STATUS_CANT_WAIT)
     {
-        if (ExitReactosRequest->LastError != ERROR_SUCCESS)
-            UserSetLastError(ExitReactosRequest->LastError);
+        if (ExitReactOSRequest->LastError != ERROR_SUCCESS)
+            UserSetLastError(ExitReactOSRequest->LastError);
     }
     else
     {
         UserSetLastNTError(ApiMessage.Status);
-        ExitReactosRequest->Success = FALSE;
+        ExitReactOSRequest->Success = FALSE;
     }
 
     /*
@@ -136,7 +136,7 @@ ExitWindowsWorker(UINT uFlags,
      * return the real state of the operation now.
      */
     if (NT_SUCCESS(ApiMessage.Status))
-        return ExitReactosRequest->Success;
+        return ExitReactOSRequest->Success;
 
     /*
      * In case something failed: we have a non-success status and:

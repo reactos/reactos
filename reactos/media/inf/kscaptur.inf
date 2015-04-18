@@ -55,7 +55,7 @@ HKLM,%MMDrivers%,MSVideo8,,VfWWDM32.dll
 system.ini,drivers,,"MSVideo.VfWWDM=vfwwdm.drv"
 
 [VfWWDM32.DelFile]
-vfwwdm32.dll 
+vfwwdm32.dll
 
 [VfWWDM.Files]
 vfwwdm.drv

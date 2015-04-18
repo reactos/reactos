@@ -93,7 +93,7 @@ typedef struct _USER_API_MESSAGE
     ULONG Reserved;
     union
     {
-        USER_EXIT_REACTOS ExitReactosRequest;
+        USER_EXIT_REACTOS ExitReactOSRequest;
         USER_END_TASK EndTaskRequest;
         USER_LOGON LogonRequest;
         USER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest;

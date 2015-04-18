@@ -452,7 +452,7 @@ CreateFreeLoaderEntry(
 }
 
 NTSTATUS
-CreateFreeLoaderIniForReactos(
+CreateFreeLoaderIniForReactOS(
     PWCHAR IniPath,
     PWCHAR ArcPath)
 {
@@ -2068,11 +2068,11 @@ InstallFatBootcodeToPartition(
             wcscpy(DstPath, SystemRootPath->Buffer);
             wcscat(DstPath, L"\\freeldr.ini");
 
-            Status = CreateFreeLoaderIniForReactos(DstPath,
+            Status = CreateFreeLoaderIniForReactOS(DstPath,
                                                    DestinationArcPath->Buffer);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
+                DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
                 return Status;
             }
 
@@ -2267,11 +2267,11 @@ InstallFatBootcodeToPartition(
             wcscat(DstPath, L"\\freeldr.ini");
 
             DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
-            Status = CreateFreeLoaderIniForReactos(DstPath,
+            Status = CreateFreeLoaderIniForReactOS(DstPath,
                                                    DestinationArcPath->Buffer);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
+                DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
                 return Status;
             }
 
@@ -2409,10 +2409,10 @@ InstallFatBootcodeToFloppy(
     wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
 
     DPRINT("Create new 'freeldr.ini'\n");
-    Status = CreateFreeLoaderIniForReactos(DstPath, DestinationArcPath->Buffer);
+    Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CreateFreeLoaderIniForReactos() failed (Status %lx)\n", Status);
+        DPRINT1("CreateFreeLoaderIniForReactOS() failed (Status %lx)\n", Status);
         return Status;
     }
 
