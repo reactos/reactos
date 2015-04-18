@@ -70,8 +70,6 @@ TestPrivMoveFileIdentityW(VOID)
         return;
     }
 
-    printf("%S\n", Self);
-
     if (!QueryFileInfo(Self, &FileBasicInfo, &FileStandardInfo))
     {
         win_skip("Failed querying self\n");
