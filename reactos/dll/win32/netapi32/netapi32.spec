@@ -140,7 +140,7 @@
 @ stub NetDfsSetSecurity
 @ stub NetDfsSetStdContainerSecurity
 @ stub NetEnumerateComputerNames
-@ stub NetEnumerateTrustedDomains
+@ stdcall NetEnumerateTrustedDomains(wstr ptr)
 @ stub NetErrorLogClear
 @ stub NetErrorLogRead
 @ stub NetErrorLogWrite

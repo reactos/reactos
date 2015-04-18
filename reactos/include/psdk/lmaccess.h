@@ -583,6 +583,11 @@ typedef struct _NETLOGON_INFO_3 {
 	DWORD netlog3_reserved5;
 } NETLOGON_INFO_3,*PNETLOGON_INFO_3;
 
+#ifndef _NTDEF_
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+typedef NTSTATUS *PNTSTATUS;
+#endif
+
 #if 0
 /* MS has these defined, but the RxNetAccessXX functions aren't documented nor do
    they exist in any headers */
@@ -639,6 +644,7 @@ NET_API_STATUS WINAPI NetGetDCName(LPCWSTR,LPCWSTR,PBYTE*);
 NET_API_STATUS WINAPI NetGetAnyDCName(LPCWSTR,LPCWSTR,PBYTE*);
 NET_API_STATUS WINAPI I_NetLogonControl(LPCWSTR,DWORD,DWORD,PBYTE*);
 NET_API_STATUS WINAPI I_NetLogonControl2(LPCWSTR,DWORD,DWORD,PBYTE,PBYTE*);
+NTSTATUS WINAPI NetEnumerateTrustedDomains(LPWSTR,LPWSTR*);
 #ifdef __cplusplus
 }
 #endif

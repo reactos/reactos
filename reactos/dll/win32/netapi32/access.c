@@ -260,3 +260,15 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
                  debugstr_w(domainname), bufptr);
   return NERR_DCNotFound; /* say we can't find a domain controller */  
 }
+
+/************************************************************
+ *                NetEnumerateTrustedDomains  (NETAPI32.@)
+ *
+ * On success, *DomainNames is a multi-sz allocated using NetApiBufferAllocate
+ */
+NTSTATUS WINAPI
+NetEnumerateTrustedDomains(LPWSTR ServerName, LPWSTR *DomainNames)
+{
+    FIXME("(%s, %p) stub!\n", debugstr_w(ServerName), DomainNames);
+    return STATUS_NOT_IMPLEMENTED;
+}
