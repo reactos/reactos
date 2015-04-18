@@ -45,6 +45,18 @@ BEGIN
     LTEXT "Kliko Finish per te krijuar një shortcut.", -1, 118, 97, 178, 17
 END
 
+ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instaluesi Wine Gecko"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS nuk mund të gjej një paketë Wine Gecko e cila është e nevojshme për aplikimet e ngulura HTML të funksionoj në rregull. ReactOS mund ta shkarkoje automatikisht dhe ta instalojë për ju.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Instalo", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Anulo", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Shto/Hiq Programe"
@@ -58,16 +70,4 @@ BEGIN
     IDS_DOWNLOADING "Shkarkim..."
     IDS_INSTALLING "Instalim..."
     IDS_INVALID_SHA "Kontroll i papritur ne shkarkimin e skedarit. Duke lënë instalimin e dokumentave të korruptuar."
-END
-
-ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instaluesi Wine Gecko"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS nuk mund të gjej një paketë Wine Gecko e cila është e nevojshme për aplikimet e ngulura HTML të funksionoj në rregull. ReactOS mund ta shkarkoje automatikisht dhe ta instalojë për ju.",
-          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
-    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Instalo", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Anulo", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END

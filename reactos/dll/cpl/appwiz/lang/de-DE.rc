@@ -41,6 +41,18 @@ BEGIN
     LTEXT "Klicken Sie auf Fertig stellen, um die Verknüpfung zu erstellen.", -1, 118, 97, 178, 17
 END
 
+ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Wine Gecko Installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS konnte kein Gecko-Paket finden, welches für die korrekte Ausführung von Anwendungen mit eingebettetem HTML benötigt wird. ReactOS kann es automatisch für Sie herunterladen und installieren.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Installieren", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Abbrechen", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Programme hinzufügen/entfernen"
@@ -54,16 +66,4 @@ BEGIN
     IDS_DOWNLOADING "Lade herunter..."
     IDS_INSTALLING "Installiere..."
     IDS_INVALID_SHA "Die heruntergeladene Datei hat eine unerwartete Prüfsumme. Abbruch der Installation aufgrund beschädigter Datei."
-END
-
-ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Wine Gecko Installation"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS konnte kein Gecko-Paket finden, welches für die korrekte Ausführung von Anwendungen mit eingebettetem HTML benötigt wird. ReactOS kann es automatisch für Sie herunterladen und installieren.",
-          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
-    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Installieren", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Abbrechen", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END

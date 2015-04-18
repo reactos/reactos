@@ -43,6 +43,18 @@ BEGIN
     LTEXT "Kısayolu oluşturmak için ""Bitir""e tıklayınız.", -1, 118, 97, 178, 17
 END
 
+ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Wine Gecko Kurucusu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "ReactOS, HTML gömülü uygulamaları düzgün çalıştırmak için gereken bir Wine Gecko paketi bulamadı. ReactOS, sizin için onu kendiliğinden indirebilir ve kurabilir.",
+          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
+    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Kur", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "İptal", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "İzlence Ekle ve Kaldır"
@@ -56,16 +68,4 @@ BEGIN
     IDS_DOWNLOADING "İndiriliyor..."
     IDS_INSTALLING "Kuruluyor..."
     IDS_INVALID_SHA "İndirilen kütüğün sağlama toplamı beklenmeyen. Bozuk kütüğün kurulumu iptal ediliyor."
-END
-
-ID_DWL_GECKO_DIALOG DIALOG  0, 0, 260, 95
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Wine Gecko Kurucusu"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS, HTML gömülü uygulamaları düzgün çalıştırmak için gereken bir Wine Gecko paketi bulamadı. ReactOS, sizin için onu kendiliğinden indirebilir ve kurabilir.",
-          ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
-    CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Kur", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "İptal", IDCANCEL, 144, 76, 50, 14, WS_GROUP | WS_TABSTOP
 END
