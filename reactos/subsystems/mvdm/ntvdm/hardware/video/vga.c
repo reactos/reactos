@@ -1910,7 +1910,7 @@ VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n", Address, Size);
-    Address = max(min(Address, VgaGetVideoLimitAddress() - 1), VgaGetVideoBaseAddress());
+    Address = min(max(Address, VgaGetVideoLimitAddress() - 1), VgaGetVideoBaseAddress());
     Size = min(Size, VgaGetVideoLimitAddress() - Address + 1);
 
     /* Ignore if video RAM access is disabled */
@@ -1939,7 +1939,7 @@ BOOLEAN NTAPI VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
     PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n", Address, Size);
-    Address = max(min(Address, VgaGetVideoLimitAddress() - 1), VgaGetVideoBaseAddress());
+    Address = min(max(Address, VgaGetVideoLimitAddress() - 1), VgaGetVideoBaseAddress());
     Size = min(Size, VgaGetVideoLimitAddress() - Address + 1);
 
     /* Ignore if video RAM access is disabled */
