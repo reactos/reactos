@@ -141,7 +141,7 @@ VOID ClockUpdate(VOID)
     }
 }
 
-PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONG Frequency, PHARDWARE_TIMER_PROC Callback)
+PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONGLONG Delay, PHARDWARE_TIMER_PROC Callback)
 {
     PHARDWARE_TIMER Timer;
     
@@ -151,7 +151,7 @@ PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONG Frequency, PHARDWARE_TIME
     Timer->Flags = Flags & ~HARDWARE_TIMER_ENABLED;
     Timer->EnableCount = 0;
     Timer->Callback = Callback;
-    SetHardwareTimerDelay(Timer, 1000000000ULL / (ULONGLONG)Frequency);
+    SetHardwareTimerDelay(Timer, Delay);
 
     if (Flags & HARDWARE_TIMER_ENABLED) EnableHardwareTimer(Timer);
     return Timer;
@@ -234,7 +234,7 @@ BOOLEAN ClockInitialize(VOID)
 
 #ifdef IPS_DISPLAY
 
-    IpsTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 1, IpsDisplayCallback);
+    IpsTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(1), IpsDisplayCallback);
     if (IpsTimer == NULL)
     {
         wprintf(L"FATAL: Cannot create IPS display timer.\n");

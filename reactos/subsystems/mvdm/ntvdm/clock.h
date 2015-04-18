@@ -18,6 +18,9 @@
 #define HARDWARE_TIMER_ONESHOT (1 << 1)
 #define HARDWARE_TIMER_PRECISE (1 << 2)
 
+/* Converts a frequency in Hertz into a duration in nanoseconds */
+#define HZ_TO_NS(Freq) (ULONGLONG)(1000000000ULL / (ULONGLONG)(Freq))
+
 typedef VOID (FASTCALL *PHARDWARE_TIMER_PROC)(ULONGLONG ElapsedTime);
 
 typedef struct _HARDWARE_TIMER
@@ -35,7 +38,7 @@ typedef struct _HARDWARE_TIMER
 PHARDWARE_TIMER CreateHardwareTimer
 (
     ULONG Flags,
-    ULONG Frequency, // in Hz
+    ULONGLONG Delay, /* nanoseconds */
     PHARDWARE_TIMER_PROC Callback
 );
 VOID EnableHardwareTimer(PHARDWARE_TIMER Timer);

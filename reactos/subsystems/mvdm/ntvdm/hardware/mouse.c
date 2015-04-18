@@ -454,7 +454,9 @@ BOOLEAN MouseInit(BYTE PS2Connector)
     MouseMutex = CreateMutex(NULL, FALSE, NULL);
     if (MouseMutex == NULL) return FALSE;
 
-    StreamTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 100, MouseStreamingCallback);
+    StreamTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED,
+                                      HZ_TO_NS(100),
+                                      MouseStreamingCallback);
 
     MouseReset();
     return TRUE;

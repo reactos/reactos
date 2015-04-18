@@ -511,7 +511,7 @@ VOID PitInitialize(VOID)
 
     /* Register the hardware timer */
     MasterClock = CreateHardwareTimer(HARDWARE_TIMER_ENABLED | HARDWARE_TIMER_PRECISE,
-                                      PIT_BASE_FREQUENCY,
+                                      HZ_TO_NS(PIT_BASE_FREQUENCY),
                                       PitClock);
 }
 

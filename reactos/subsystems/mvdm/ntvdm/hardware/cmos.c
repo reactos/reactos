@@ -44,7 +44,7 @@ static VOID RtcUpdatePeriodicTimer(VOID)
     /* 1 and 2 act like 8 and 9 */
     if (RateSelect <= 2) RateSelect += 7;
 
-    SetHardwareTimerDelay(PeriodicTimer, 1000000000ULL / (ULONGLONG)(1 << (16 - RateSelect)));
+    SetHardwareTimerDelay(PeriodicTimer, HZ_TO_NS(1 << (16 - RateSelect)));
     EnableHardwareTimer(PeriodicTimer);
 }
 
@@ -501,9 +501,11 @@ VOID CmosInitialize(VOID)
     RegisterIoPort(CMOS_ADDRESS_PORT, NULL        , CmosWritePort);
     RegisterIoPort(CMOS_DATA_PORT   , CmosReadPort, CmosWritePort);
 
-    ClockTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 1, RtcTimeUpdate);
+    ClockTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED,
+                                     HZ_TO_NS(1),
+                                     RtcTimeUpdate);
     PeriodicTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED | HARDWARE_TIMER_PRECISE,
-                                        1000,
+                                        HZ_TO_NS(1000),
                                         RtcPeriodicTick);
 }
 

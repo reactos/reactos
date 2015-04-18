@@ -2127,8 +2127,8 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3D8, VgaReadPort, VgaWritePort);   // CGA_MODE_CTRL_REG
     RegisterIoPort(0x3D9, VgaReadPort, VgaWritePort);   // CGA_PAL_CTRL_REG
 
-    HSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 31469, VgaHorizontalRetrace);
-    VSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, 60, VgaVerticalRetrace);
+    HSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(31469), VgaHorizontalRetrace);
+    VSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(60), VgaVerticalRetrace);
 
     /* Return success */
     return TRUE;
