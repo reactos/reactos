@@ -13,6 +13,8 @@ IDI_VOLMUTE ICON "resources/4.ico"
 
 IDR_SYSTRAY REGISTRY "resources/rgs/systray.rgs"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
