@@ -13,7 +13,6 @@
 #include <ndk/rtltypes.h>
 
 static const WCHAR FileName[] = L"TestFile.xxx";
-static const WCHAR Self[] = L"kernel32_apitest.exe";
 
 static BOOL (WINAPI * pPrivMoveFileIdentityW)(LPCWSTR, LPCWSTR, DWORD);
 
@@ -61,8 +60,17 @@ TestPrivMoveFileIdentityW(VOID)
     LARGE_INTEGER CreationTime, EndOfFile;
     HANDLE hDest;
     NTSTATUS Status;
+    WCHAR Self[MAX_PATH];
 
     DeleteFileW(FileName);
+
+    if (GetModuleFileNameW(NULL, Self, MAX_PATH) == 0)
+    {
+        win_skip("Failed finding self\n");
+        return;
+    }
+
+    printf("%S\n", Self);
 
     if (!QueryFileInfo(Self, &FileBasicInfo, &FileStandardInfo))
     {
