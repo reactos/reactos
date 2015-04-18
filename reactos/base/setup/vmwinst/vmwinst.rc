@@ -14,6 +14,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER BITMAP "resources/header.bmp"
 
+#include <reactos/manifest_exe.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
