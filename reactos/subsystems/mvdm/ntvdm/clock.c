@@ -40,9 +40,12 @@
 
 static LIST_ENTRY Timers;
 static LARGE_INTEGER StartPerfCount, Frequency;
-static DWORD StartTickCount;
+// static ULONG StartTickCount;
+static LARGE_INTEGER Counter;
+static ULONG CurrentTickCount;
 
 #ifdef IPS_DISPLAY
+static PHARDWARE_TIMER IpsTimer;
 static ULONGLONG Cycles = 0ULL;
 #endif
 
@@ -63,15 +66,12 @@ VOID ClockUpdate(VOID)
     extern BOOLEAN CpuRunning;
     UINT i;
     PLIST_ENTRY Entry;
-    LARGE_INTEGER Counter;
 
     while (VdmRunning && CpuRunning)
     {
-        /* Get the current number of ticks */
-        DWORD CurrentTickCount = GetTickCount();
-
-        /* Get the current performance counter value */
+        /* Get the current counters */
         /// DWORD_PTR oldmask = SetThreadAffinityMask(GetCurrentThread(), 0);
+        CurrentTickCount = GetTickCount();
         NtQueryPerformanceCounter(&Counter, NULL);
         /// SetThreadAffinityMask(GetCurrentThread(), oldmask);
 
@@ -197,10 +197,6 @@ VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer)
 
 BOOLEAN ClockInitialize(VOID)
 {
-#ifdef IPS_DISPLAY
-    PHARDWARE_TIMER IpsTimer;
-#endif
-
     InitializeListHead(&Timers);
 
     /* Initialize the performance counter (needed for hardware timers) */
@@ -213,7 +209,7 @@ BOOLEAN ClockInitialize(VOID)
     }
 
     /* Find the starting tick count */
-    StartTickCount = GetTickCount();
+    // StartTickCount = GetTickCount();
 
 #ifdef IPS_DISPLAY
 
