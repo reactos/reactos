@@ -10,10 +10,9 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "bios/bios32/bios32p.h"
-#include <ndk/rtltypes.h>
-#include <ndk/rtlfuncs.h>
 #include "ems.h"
 #include "memory.h"
 

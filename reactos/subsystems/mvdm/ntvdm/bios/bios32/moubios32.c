@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 
 #include "moubios32.h"

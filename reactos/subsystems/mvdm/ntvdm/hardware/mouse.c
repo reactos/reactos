@@ -10,8 +10,10 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "mouse.h"
 #include "ps2.h"
+
 #include "clock.h"
 #include "video/vga.h"
 

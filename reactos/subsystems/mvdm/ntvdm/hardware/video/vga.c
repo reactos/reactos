@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "vga.h"
 #include <bios/vidbios.h>
@@ -356,26 +357,26 @@ __RegisterConsoleVDM(IN DWORD dwRegisterFlags,
         VDMBufferSize = dwVDMBufferSize;
 
         /* HACK: Cache -- to be removed in the real implementation */
-        CharBuff = HeapAlloc(GetProcessHeap(),
-                             HEAP_ZERO_MEMORY,
-                             VDMBufferSize.X * VDMBufferSize.Y
-                                             * sizeof(CHAR_INFO));
+        CharBuff = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   VDMBufferSize.X * VDMBufferSize.Y
+                                                   * sizeof(*CharBuff));
         ASSERT(CharBuff);
 
-        VDMBuffer = HeapAlloc(GetProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              VDMBufferSize.X * VDMBufferSize.Y
-                                              * sizeof(CHAR_CELL));
+        VDMBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    VDMBufferSize.X * VDMBufferSize.Y
+                                                    * sizeof(*VDMBuffer));
         *lpVDMBuffer = VDMBuffer;
         return (VDMBuffer != NULL);
     }
     else
     {
         /* HACK: Cache -- to be removed in the real implementation */
-        if (CharBuff) HeapFree(GetProcessHeap(), 0, CharBuff);
+        if (CharBuff) RtlFreeHeap(RtlGetProcessHeap(), 0, CharBuff);
         CharBuff = NULL;
 
-        if (VDMBuffer) HeapFree(GetProcessHeap(), 0, VDMBuffer);
+        if (VDMBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, VDMBuffer);
         VDMBuffer = NULL;
 
         VDMBufferSize.X = VDMBufferSize.Y = 0;
@@ -500,10 +501,10 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     }
 
 #ifdef USE_REAL_REGISTERCONSOLEVDM
-    CharBuff = HeapAlloc(GetProcessHeap(),
-                         HEAP_ZERO_MEMORY,
-                         TextResolution.X * TextResolution.Y
-                                          * sizeof(CHAR_INFO));
+    CharBuff = RtlAllocateHeap(RtlGetProcessHeap(),
+                               HEAP_ZERO_MEMORY,
+                               TextResolution.X * TextResolution.Y
+                                                * sizeof(*CharBuff));
     ASSERT(CharBuff);
 #endif
 
@@ -568,7 +569,7 @@ static BOOL VgaAttachToConsoleInternal(PCOORD Resolution)
     }
 
 #ifdef USE_REAL_REGISTERCONSOLEVDM
-    if (CharBuff) HeapFree(GetProcessHeap(), 0, CharBuff);
+    if (CharBuff) RtlFreeHeap(RtlGetProcessHeap(), 0, CharBuff);
 #endif
 
     VgaUpdateCursorPosition();
@@ -773,14 +774,14 @@ static BOOLEAN VgaInitializePalette(VOID)
     LPLOGPALETTE Palette, TextPalette;
 
     /* Allocate storage space for the palettes */
-    Palette = (LPLOGPALETTE)HeapAlloc(GetProcessHeap(),
-                                      HEAP_ZERO_MEMORY,
-                                      sizeof(LOGPALETTE) +
-                                      VGA_MAX_COLORS * sizeof(PALETTEENTRY));
-    TextPalette = (LPLOGPALETTE)HeapAlloc(GetProcessHeap(),
-                                          HEAP_ZERO_MEMORY,
-                                          sizeof(LOGPALETTE) + 
-                                          (VGA_AC_PAL_F_REG + 1) * sizeof(PALETTEENTRY));
+    Palette = RtlAllocateHeap(RtlGetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(LOGPALETTE) +
+                                  VGA_MAX_COLORS * sizeof(PALETTEENTRY));
+    TextPalette = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  sizeof(LOGPALETTE) + 
+                                      (VGA_AC_PAL_F_REG + 1) * sizeof(PALETTEENTRY));
     if ((Palette == NULL) || (TextPalette == NULL)) goto Cleanup;
 
     /* Initialize the palettes */
@@ -813,8 +814,8 @@ static BOOLEAN VgaInitializePalette(VOID)
 
 Cleanup:
     /* Free the palettes */
-    if (Palette) HeapFree(GetProcessHeap(), 0, Palette);
-    if (TextPalette) HeapFree(GetProcessHeap(), 0, TextPalette);
+    if (Palette) RtlFreeHeap(RtlGetProcessHeap(), 0, Palette);
+    if (TextPalette) RtlFreeHeap(RtlGetProcessHeap(), 0, TextPalette);
 
     if (!Result)
     {

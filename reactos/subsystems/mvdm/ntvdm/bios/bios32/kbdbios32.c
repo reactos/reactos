@@ -10,14 +10,14 @@
 
 #define NDEBUG
 
-#include "emulator.h"
-#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
-#include "int32.h"
+#include "ntvdm.h"
 
 #include "kbdbios32.h"
 #include <bios/kbdbios.h>
 #include "bios32p.h"
 
+#include "int32.h"
+#include "cpu/cpu.h" // for EMULATOR_FLAG_ZF
 #include "io.h"
 #include "hardware/ps2.h"
 

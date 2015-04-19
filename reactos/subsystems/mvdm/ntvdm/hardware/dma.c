@@ -11,9 +11,11 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
-#include "io.h"
 #include "dma.h"
+
+#include "io.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 

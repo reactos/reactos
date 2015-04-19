@@ -11,6 +11,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "io.h"
 

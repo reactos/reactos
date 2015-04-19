@@ -14,6 +14,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "utils.h"
 
@@ -22,9 +23,6 @@
 
 #include "bios/bios.h"
 #include "mouse32.h"
-
-/* Extra PSDK/NDK Headers */
-#include <ndk/obtypes.h>
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -201,7 +199,7 @@ CommandThreadProc(LPVOID Parameter)
     CHAR Desktop[MAX_PATH];
     CHAR Title[MAX_PATH];
     ULONG EnvSize = 256;
-    PVOID Env = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
+    PVOID Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
 
     UNREFERENCED_PARAMETER(Parameter);
     ASSERT(Env != NULL);
@@ -236,7 +234,7 @@ Command:
             {
                 /* Expand the environment size */
                 EnvSize = CommandInfo.EnvLen;
-                CommandInfo.Env = Env = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
+                CommandInfo.Env = Env = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
 
                 /* Repeat the request */
                 goto Command;
@@ -259,7 +257,7 @@ Command:
     }
     while (AcceptCommands);
 
-    HeapFree(GetProcessHeap(), 0, Env);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Env);
     return 0;
 }
 #endif

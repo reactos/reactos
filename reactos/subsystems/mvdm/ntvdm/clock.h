@@ -10,8 +10,6 @@
 #ifndef _CLOCK_H_
 #define _CLOCK_H_
 
-#include <ndk/rtlfuncs.h>
-
 /* DEFINITIONS ****************************************************************/
 
 #define HARDWARE_TIMER_ENABLED (1 << 0)

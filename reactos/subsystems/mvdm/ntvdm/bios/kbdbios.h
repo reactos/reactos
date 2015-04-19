@@ -9,10 +9,6 @@
 #ifndef _KBDBIOS_H_
 #define _KBDBIOS_H_
 
-/* INCLUDES *******************************************************************/
-
-#include "ntvdm.h"
-
 /* DEFINES ********************************************************************/
 
 #define BIOS_KBD_INTERRUPT      0x16

@@ -9,10 +9,6 @@
 #ifndef _MOUBIOS32_H_
 #define _MOUBIOS32_H_
 
-/* INCLUDES *******************************************************************/
-
-#include "ntvdm.h"
-
 /* DEFINES ********************************************************************/
 
 #if 0 // This code is for the MOUSE.COM driver

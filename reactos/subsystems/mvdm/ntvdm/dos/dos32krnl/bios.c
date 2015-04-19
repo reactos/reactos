@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "int32.h"
 
@@ -221,7 +222,7 @@ BOOLEAN DosBIOSInitialize(VOID)
     Stream = _wfopen(DOS_CONFIG_PATH, L"r");
     if (Stream != NULL)
     {
-        while (fgetws(Buffer, sizeof(Buffer)/sizeof(Buffer[0]), Stream))
+        while (fgetws(Buffer, ARRAYSIZE(Buffer), Stream))
         {
             // TODO: Parse the line
         }

@@ -10,7 +10,9 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
+
 #include "cpu/cpu.h"
 #include "int32.h"
 #include "hardware/mouse.h"
@@ -187,7 +189,7 @@ static VOID CallMouseUserHandlers(USHORT CallMask)
         setDI(DI);
     }
 
-    for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+    for (i = 0; i < ARRAYSIZE(DriverState.Handlers); ++i)
     {
         /* Call the suitable handlers */
         if ((DriverState.Handlers[i].CallMask & CallMask) != 0 &&
@@ -654,7 +656,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                  * Find the handler entry corresponding to the given
                  * callback and undefine it.
                  */
-                for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+                for (i = 0; i < ARRAYSIZE(DriverState.Handlers); ++i)
                 {
                     if (DriverState.Handlers[i].Callback == Callback)
                     {
@@ -672,7 +674,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                  * Find the handler entry corresponding to the given
                  * callmask and undefine it.
                  */
-                for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+                for (i = 0; i < ARRAYSIZE(DriverState.Handlers); ++i)
                 {
                     if (DriverState.Handlers[i].CallMask == CallMask)
                     {
@@ -694,7 +696,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
 
                 USHORT EmptyHandler = 0xFFFF; // Invalid handler
 
-                for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+                for (i = 0; i < ARRAYSIZE(DriverState.Handlers); ++i)
                 {
                     /* Find the first empty handler */
                     if (EmptyHandler == 0xFFFF &&
@@ -719,7 +721,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
                  * an empty handler, set it.
                  */
                 if (!Success && EmptyHandler != 0xFFFF
-                    /* && EmptyHandler < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]) */)
+                    /* && EmptyHandler < ARRAYSIZE(DriverState.Handlers) */)
                 {
                     DriverState.Handlers[EmptyHandler].CallMask = CallMask;
                     DriverState.Handlers[EmptyHandler].Callback = Callback;
@@ -744,7 +746,7 @@ static VOID WINAPI DosMouseService(LPWORD Stack)
             /*
              * Find the handler entry corresponding to the given callmask.
              */
-            for (i = 0; i < sizeof(DriverState.Handlers)/sizeof(DriverState.Handlers[0]); ++i)
+            for (i = 0; i < ARRAYSIZE(DriverState.Handlers); ++i)
             {
                 if (DriverState.Handlers[i].CallMask == CallMask)
                 {

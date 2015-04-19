@@ -9,8 +9,6 @@
 #ifndef _DEVICE_H_
 #define _DEVICE_H_
 
-#include <ndk/rtlfuncs.h>
-
 /* DEFINITIONS ****************************************************************/
 
 #define MAX_DEVICE_NAME 8

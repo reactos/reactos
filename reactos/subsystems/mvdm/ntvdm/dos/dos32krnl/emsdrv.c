@@ -10,6 +10,8 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
+
 #include "dos.h"
 #include "dos/dem.h"
 #include "device.h"

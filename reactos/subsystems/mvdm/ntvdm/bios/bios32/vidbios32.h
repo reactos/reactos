@@ -11,10 +11,6 @@
 #ifndef _VIDBIOS32_H_
 #define _VIDBIOS32_H_
 
-/* INCLUDES *******************************************************************/
-
-#include "ntvdm.h"
-
 /* DEFINES ********************************************************************/
 
 // #define BIOS_VIDEO_INTERRUPT    0x10

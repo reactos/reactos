@@ -11,19 +11,16 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
-#include "cpu/cpu.h"
-
 #include "clock.h"
 
+#include "cpu/cpu.h"
 #include "hardware/cmos.h"
 #include "hardware/ps2.h"
 #include "hardware/pit.h"
 #include "hardware/video/vga.h"
 #include "hardware/mouse.h"
-
-/* Extra PSDK/NDK Headers */
-#include <ndk/kefuncs.h>
 
 /* DEFINES ********************************************************************/
 
@@ -128,7 +125,7 @@ PHARDWARE_TIMER CreateHardwareTimer(ULONG Flags, ULONGLONG Delay, PHARDWARE_TIME
 {
     PHARDWARE_TIMER Timer;
     
-    Timer = (PHARDWARE_TIMER)RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(HARDWARE_TIMER));
+    Timer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*Timer));
     if (Timer == NULL) return NULL;
 
     Timer->Flags = Flags & ~HARDWARE_TIMER_ENABLED;

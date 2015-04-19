@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "memory.h"
 
@@ -34,10 +35,6 @@
 
 #include "vddsup.h"
 #include "io.h"
-
-/* Extra PSDK/NDK Headers */
-#include <ndk/psfuncs.h>
-#include <ndk/mmfuncs.h>
 
 /* PRIVATE VARIABLES **********************************************************/
 

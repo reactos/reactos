@@ -12,9 +12,11 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
-#include "io.h"
 #include "pit.h"
+
+#include "io.h"
 #include "pic.h"
 #include "clock.h"
 

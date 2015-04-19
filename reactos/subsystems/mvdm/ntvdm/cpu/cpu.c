@@ -10,14 +10,14 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
+#include "emulator.h"
 #include "cpu.h"
 
-#include "emulator.h"
 #include "memory.h"
 #include "callback.h"
 #include "bop.h"
 #include <isvbop.h>
-#include <pseh/pseh2.h>
 
 #include "clock.h"
 #include "bios/rom.h"

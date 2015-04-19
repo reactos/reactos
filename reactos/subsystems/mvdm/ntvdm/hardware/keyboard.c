@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "keyboard.h"
 #include "ps2.h"
 

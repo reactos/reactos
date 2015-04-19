@@ -13,9 +13,9 @@
 
 #include <stdio.h>
 #include <stdarg.h>
-#include <conio.h>
 #include <wchar.h>
 
+/* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
@@ -29,6 +29,15 @@
 #include <vddsvc.h>
 
 DWORD WINAPI SetLastConsoleEventActive(VOID);
+
+#define NTOS_MODE_USER
+#include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/rtltypes.h>
+
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
 
 #include <debug.h>
 

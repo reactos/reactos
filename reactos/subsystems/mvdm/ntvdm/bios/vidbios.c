@@ -11,6 +11,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "cpu/cpu.h"
 #include "cpu/bop.h"
@@ -2235,13 +2236,13 @@ static VOID VgaChangePalette(BYTE ModeNumber)
     {
         /* VGA modes */
         Palette = VgaPalette;
-        Size    = sizeof(VgaPalette)/sizeof(VgaPalette[0]);
+        Size    = ARRAYSIZE(VgaPalette);
     }
     else if (ModeNumber == 0x10) // || (ModeNumber == 0x0D) || (ModeNumber == 0x0E)
     {
         /* EGA HiRes mode */
         Palette = EgaPalette__HiRes;
-        Size    = sizeof(EgaPalette__HiRes)/sizeof(EgaPalette__HiRes[0]);
+        Size    = ARRAYSIZE(EgaPalette__HiRes);
     }
 #if 0
     else if ((ModeNumber == 0x04) || (ModeNumber == 0x05))
@@ -2251,14 +2252,14 @@ static VOID VgaChangePalette(BYTE ModeNumber)
          * bright versions of CGA palettes 0 and 1
          */
         Palette = CgaPalette2;
-        Size    = sizeof(CgaPalette2)/sizeof(CgaPalette2[0]);
+        Size    = ARRAYSIZE(CgaPalette2);
     }
 #endif
     else // if ((ModeNumber == 0x0D) || (ModeNumber == 0x0E))
     {
         /* EGA modes */
         Palette = EgaPalette__16Colors;
-        Size    = sizeof(EgaPalette__16Colors)/sizeof(EgaPalette__16Colors[0]);
+        Size    = ARRAYSIZE(EgaPalette__16Colors);
     }
 
     VgaSetPalette(Palette, Size);
@@ -2388,7 +2389,7 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
 
     /* Retrieve the real mode number and check its validity */
     ModeNumber &= 0x7F;
-    // if (ModeNumber >= sizeof(VideoModes)/sizeof(VideoModes[0]))
+    // if (ModeNumber >= ARRAYSIZE(VideoModes))
     if (ModeNumber > BIOS_MAX_VIDEO_MODE)
     {
         DPRINT1("VidBiosSetVideoMode -- Mode %02Xh invalid\n", ModeNumber);
@@ -3045,7 +3046,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     // FIXME: Use BL and DL for the number of screen rows
 
                     /* Write the default font to the VGA font plane */
-                    VgaWriteFont(0, Font8x8, sizeof(Font8x8)/sizeof(Font8x8[0]) / VGA_FONT_CHARACTERS);
+                    VgaWriteFont(0, Font8x8, ARRAYSIZE(Font8x8) / VGA_FONT_CHARACTERS);
 
                     /* Update the BIOS INT 43h vector */
                     // Far pointer to the 8x8 characters 00h-...
@@ -3060,7 +3061,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     // FIXME: Use BL and DL for the number of screen rows
 
                     /* Write the default font to the VGA font plane */
-                    VgaWriteFont(0, Font8x16, sizeof(Font8x16)/sizeof(Font8x16[0]) / VGA_FONT_CHARACTERS);
+                    VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
 
                     /* Update the BIOS INT 43h vector */
                     // Far pointer to the 8x16 characters 00h-...
@@ -3293,7 +3294,7 @@ BOOLEAN VidBiosInitialize(VOID)
                   Font8x14, sizeof(Font8x14));
 
     /* Write the default font to the VGA font plane */
-    VgaWriteFont(0, Font8x16, sizeof(Font8x16)/sizeof(Font8x16[0]) / VGA_FONT_CHARACTERS);
+    VgaWriteFont(0, Font8x16, ARRAYSIZE(Font8x16) / VGA_FONT_CHARACTERS);
 
     //
     // FIXME: At the moment we always set a VGA mode. In the future,

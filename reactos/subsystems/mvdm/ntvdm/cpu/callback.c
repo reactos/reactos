@@ -19,10 +19,11 @@
 
 #define NDEBUG
 
-#include "cpu.h"
-#include "callback.h"
+#include "ntvdm.h"
 #include "emulator.h"
+#include "callback.h"
 
+#include "cpu.h"
 #include "bop.h"
 #include <isvbop.h>
 

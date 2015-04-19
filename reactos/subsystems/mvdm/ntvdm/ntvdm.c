@@ -12,9 +12,9 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
-#include "cpu/cpu.h"
 
 #include "bios/bios.h"
+#include "cpu/cpu.h"
 
 #include "resource.h"
 
@@ -85,7 +85,7 @@ AppendMenuItems(HMENU hMenu,
             if (LoadStringW(GetModuleHandle(NULL),
                             Items[i].uID,
                             szMenuString,
-                            sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+                            ARRAYSIZE(szMenuString)) > 0)
             {
                 if (Items[i].SubMenu != NULL)
                 {
@@ -169,7 +169,7 @@ static VOID ShowHideMousePointer(HANDLE ConOutHandle, BOOLEAN ShowPtr)
     if (LoadStringW(GetModuleHandle(NULL),
                     (!ShowPtr ? IDS_SHOW_MOUSE : IDS_HIDE_MOUSE),
                     szMenuString,
-                    sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
+                    ARRAYSIZE(szMenuString)) > 0)
     {
         ModifyMenu(hConsoleMenu, ID_SHOWHIDE_MOUSE,
                    MF_BYCOMMAND, ID_SHOWHIDE_MOUSE, szMenuString);
@@ -226,9 +226,9 @@ DisplayMessage(LPCWSTR Format, ...)
      * an auxiliary buffer; otherwise use the static buffer.
      */
     MsgLen = _vscwprintf(Format, Parameters) + 1; // NULL-terminated
-    if (MsgLen > sizeof(StaticBuffer)/sizeof(StaticBuffer[0]))
+    if (MsgLen > ARRAYSIZE(StaticBuffer))
     {
-        Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, MsgLen * sizeof(WCHAR));
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, MsgLen * sizeof(WCHAR));
         if (Buffer == NULL)
         {
             /* Allocation failed, use the static buffer and display a suitable error message */
@@ -238,7 +238,7 @@ DisplayMessage(LPCWSTR Format, ...)
         }
     }
 #else
-    MsgLen = sizeof(Buffer)/sizeof(Buffer[0]);
+    MsgLen = ARRAYSIZE(Buffer);
 #endif
 
     /* Display the message */
@@ -248,7 +248,7 @@ DisplayMessage(LPCWSTR Format, ...)
 
 #ifndef WIN2K_COMPLIANT
     /* Free the buffer if needed */
-    if (Buffer != StaticBuffer) HeapFree(GetProcessHeap(), 0, Buffer);
+    if (Buffer != StaticBuffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 #endif
 
     va_end(Parameters);

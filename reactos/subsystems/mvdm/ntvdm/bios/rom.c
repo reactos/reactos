@@ -10,11 +10,12 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "cpu/callback.h"
-#include "utils.h"
-
 #include "rom.h"
+
+#include "utils.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

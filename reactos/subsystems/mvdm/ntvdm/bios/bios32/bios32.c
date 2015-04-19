@@ -13,6 +13,7 @@
 /* For BIOS Version number */
 #include <reactos/buildno.h>
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "cpu/cpu.h" // for EMULATOR_FLAG_CF
 #include "cpu/bop.h"
@@ -32,9 +33,6 @@
 #include "hardware/cmos.h"
 #include "hardware/pic.h"
 #include "hardware/pit.h"
-
-/* Extra PSDK/NDK Headers */
-#include <ndk/kefuncs.h>
 
 /* PRIVATE VARIABLES **********************************************************/
 

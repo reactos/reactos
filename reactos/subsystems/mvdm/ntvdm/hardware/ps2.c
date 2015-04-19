@@ -11,9 +11,11 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
-#include "io.h"
 #include "ps2.h"
+
+#include "io.h"
 #include "pic.h"
 #include "clock.h"
 

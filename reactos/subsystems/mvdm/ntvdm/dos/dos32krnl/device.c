@@ -10,11 +10,13 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
+#include "device.h"
+
 #include "dos.h"
 #include "dos/dem.h"
 #include "memory.h"
-#include "device.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -212,9 +214,7 @@ PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName)
         return FALSE;
     }
 
-    Node = (PDOS_DEVICE_NODE)RtlAllocateHeap(RtlGetProcessHeap(),
-                                             HEAP_ZERO_MEMORY,
-                                             sizeof(DOS_DEVICE_NODE));
+    Node = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*Node));
     if (Node == NULL) return NULL;
 
     Node->DeviceAttributes = Attributes;

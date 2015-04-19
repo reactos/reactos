@@ -10,17 +10,12 @@
 
 #define NDEBUG
 
-#include "emulator.h"
+#include "ntvdm.h"
 #include "speaker.h"
 #include "hardware/pit.h"
 
 /* Extra PSDK/NDK Headers */
 #include <ndk/iofuncs.h>
-#include <ndk/obfuncs.h>
-#include <ndk/rtlfuncs.h>
-
-/* Extra PSDK/NDK Headers */
-#include <ndk/kefuncs.h>
 
 /* DDK Driver Headers */
 #include <ntddbeep.h>

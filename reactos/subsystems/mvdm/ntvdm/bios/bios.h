@@ -11,7 +11,6 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "ntvdm.h"
 #include "kbdbios.h"
 #include "vidbios.h"
 

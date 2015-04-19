@@ -10,7 +10,7 @@
 
 #define NDEBUG
 
-#include "emulator.h"
+#include "ntvdm.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

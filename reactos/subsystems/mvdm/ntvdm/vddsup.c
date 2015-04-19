@@ -10,6 +10,7 @@
 
 #define NDEBUG
 
+#include "ntvdm.h"
 #include "emulator.h"
 #include "vddsup.h"
 
@@ -41,7 +42,7 @@ static VDD_MODULE VDDList[MAX_VDD_MODULES] = {{NULL}};
 static USHORT GetNextFreeVDDEntry(VOID)
 {
     USHORT Entry = MAX_VDD_MODULES;
-    for (Entry = 0; Entry < sizeof(VDDList)/sizeof(VDDList[0]); ++Entry)
+    for (Entry = 0; Entry < ARRAYSIZE(VDDList); ++Entry)
     {
         if (VDDList[Entry].hDll == NULL) break;
     }
@@ -296,7 +297,7 @@ static BOOL LoadInstallableVDD(VOID)
 
     /* Allocate the buffer */
     BufSize = (BufSize < 2*sizeof(WCHAR) ? 2*sizeof(WCHAR) : BufSize);
-    VDDList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, BufSize);
+    VDDList = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, BufSize);
     if (VDDList == NULL)
     {
         DisplayMessage(ERROR_MEMORYVDD);
@@ -338,7 +339,7 @@ static BOOL LoadInstallableVDD(VOID)
     VDDList = VDDValueName;
 
 Quit:
-    if (VDDList) HeapFree(GetProcessHeap(), 0, VDDList);
+    if (VDDList) RtlFreeHeap(RtlGetProcessHeap(), 0, VDDList);
     RegCloseKey(hVDDKey);
     return Success;
 }

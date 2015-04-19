@@ -12,7 +12,7 @@
 
 #define NDEBUG
 
-#include "emulator.h"
+#include "ntvdm.h"
 #include "int32.h"
 
 #include "vidbios32.h"
