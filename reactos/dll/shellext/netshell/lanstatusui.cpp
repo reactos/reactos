@@ -1132,7 +1132,7 @@ CLanStatus::QueryInterface(
         AddRef();
         return S_OK;
     }
-    MessageBoxW(NULL, L"IOleCommandTarget_fnQueryInterface", NULL, MB_OK);
+
     return E_NOINTERFACE;
 }
 

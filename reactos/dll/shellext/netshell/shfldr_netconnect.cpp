@@ -27,8 +27,8 @@
 */
 
 class CNetworkConnections final :
-    public IShellFolder2,
     public IPersistFolder2,
+    public IShellFolder2,
     public IShellExecuteHookW
 {
     public:
@@ -170,26 +170,22 @@ HRESULT WINAPI CNetworkConnections::QueryInterface(REFIID riid, LPVOID *ppvObj)
     *ppvObj = NULL;
 
     if (IsEqualIID(riid, IID_IUnknown) ||
-        IsEqualIID(riid, IID_IShellFolder) ||
-        IsEqualIID(riid, IID_IShellFolder2))
-    {
-        *ppvObj = static_cast<IShellFolder2*>(this);
-    }
-    else if (IsEqualIID (riid, IID_IPersistFolder) ||
-             IsEqualIID (riid, IID_IPersistFolder2))
+        IsEqualIID (riid, IID_IPersist) ||
+        IsEqualIID (riid, IID_IPersistFolder) ||
+        IsEqualIID (riid, IID_IPersistFolder2))
     {
         *ppvObj = static_cast<IPersistFolder2*>(this);
+    }
+    else if (IsEqualIID(riid, IID_IShellFolder) ||
+             IsEqualIID(riid, IID_IShellFolder2))
+    {
+        *ppvObj = static_cast<IShellFolder2*>(this);
     }
     else if (IsEqualIID(riid, IID_IShellExecuteHookW))
     {
         *ppvObj = static_cast<IShellExecuteHookW*>(this);
     }
-#if 0
-    else if (IsEqualIID(riid, IID_IPersistIDList))
-    {
-        //*ppvObj = static_cast<IPersistIDList*>(this);
-    }
-#endif
+
     if (*ppvObj)
     {
         AddRef();
@@ -197,11 +193,9 @@ HRESULT WINAPI CNetworkConnections::QueryInterface(REFIID riid, LPVOID *ppvObj)
     }
 
     /* TODO:
-     * IID_IPersistFreeThreadedObject
-     * IID_IBrowserFrameOptions
-     * IID_IShellIconOverlay
-     * IID_IPersistIDList
-     * IID_IPersist
+     * IID_IShellExtInit
+     * IID_IOleCommandTarget
+     * IID_IShellFolderViewCB
      */
 
     return E_NOINTERFACE;
