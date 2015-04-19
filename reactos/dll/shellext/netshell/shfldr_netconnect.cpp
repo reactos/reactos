@@ -111,6 +111,8 @@ class CNetConUiObject final :
         virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
     private:
+        ~CNetConUiObject();
+
         LONG m_ref;
         PCUITEMID_CHILD m_pidl;
         IUnknown *m_pUnknown;
@@ -139,13 +141,21 @@ HRESULT ShowNetConnectionStatus(IOleCommandTarget * lpOleCmd, INetConnection * p
 
 CNetworkConnections::CNetworkConnections() :
     m_ref(0),
-    m_pidlRoot(_ILCreateNetConnect()),
-    m_lpOleCmd(NULL)
+    m_pidlRoot(_ILCreateNetConnect())
 {
+    HRESULT hr;
+    hr = CoCreateInstance(CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, IID_IOleCommandTarget, reinterpret_cast<PVOID*>(&m_lpOleCmd));
+    if (FAILED(hr))
+    {
+        ERR("CoCreateInstance failed with %lx\n", hr);
+        m_lpOleCmd = NULL;
+    }
 }
 
 CNetworkConnections::~CNetworkConnections()
 {
+    if (m_lpOleCmd)
+        m_lpOleCmd->Release();
     SHFree(m_pidlRoot);
 }
 
@@ -670,6 +680,14 @@ CNetConUiObject::CNetConUiObject(PCUITEMID_CHILD pidl, IOleCommandTarget *lpOleC
       m_pUnknown(NULL),
       m_lpOleCmd(lpOleCmd)
 {
+    if (m_lpOleCmd)
+        m_lpOleCmd->AddRef();
+}
+
+CNetConUiObject::~CNetConUiObject()
+{
+    if (m_lpOleCmd)
+        m_lpOleCmd->Release();
 }
 
 /************************************************************************
@@ -856,7 +874,7 @@ ShowNetConnectionStatus(
     if (pNetConnect->GetProperties(&pProperties) != S_OK)
         return E_FAIL;
 
-    hr = lpOleCmd->Exec(&pProperties->guidId, 2, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+    hr = lpOleCmd->Exec(&pProperties->guidId, OLECMDID_NEW, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
 
     NcFreeNetconProperties(pProperties);
     return hr;

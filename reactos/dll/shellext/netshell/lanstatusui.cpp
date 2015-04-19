@@ -34,7 +34,7 @@ typedef struct
     UINT Status;
 } LANSTATUSUI_CONTEXT;
 
-class CLanStatus :
+class CLanStatus final :
     public IOleCommandTarget
 {
     public:
@@ -1149,16 +1149,12 @@ ULONG
 WINAPI
 CLanStatus::Release()
 {
-#if 0 // WTF?!
     ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
         delete this;
 
     return refCount;
-#else
-    return 1;
-#endif
 }
 
 HRESULT
