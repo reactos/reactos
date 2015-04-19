@@ -116,10 +116,7 @@ add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
 
 if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
     add_compile_flags("-Wno-maybe-uninitialized")
-    add_compile_flags("-Wno-error=unused-but-set-variable")
 endif()
-
-add_compile_flags("-Wno-error=type-limits")
 
 if(ARCH STREQUAL "amd64")
     add_compile_flags("-Wno-format")
@@ -427,7 +424,8 @@ function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_addres
 endfunction()
 
 function(allow_warnings __module)
-    add_target_compile_flags(${__module} "-Wno-error")
+    # We don't allow warnings in trunk, this needs to be reworked. See CORE-6959.
+    #add_target_compile_flags(${__module} "-Wno-error")
 endfunction()
 
 macro(add_asm_files _target)

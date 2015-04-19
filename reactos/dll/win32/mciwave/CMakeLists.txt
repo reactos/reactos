@@ -17,5 +17,5 @@ add_importlibs(mciwave user32 winmm msvcrt kernel32 ntdll)
 add_cd_file(TARGET mciwave DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    add_target_compile_flags(mciwave "-Wno-error=overflow")
+    add_target_compile_flags(mciwave "-Wno-overflow")
 endif()

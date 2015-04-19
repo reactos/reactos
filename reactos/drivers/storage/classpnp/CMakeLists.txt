@@ -33,11 +33,6 @@ add_library(classpnp SHARED
     class.rc
     ${CMAKE_CURRENT_BINARY_DIR}/classpnp.def)
 
-if((ARCH STREQUAL "i386") AND (NOT MSVC))
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=switch")
-endif()
-
 add_pch(classpnp classp.h SOURCE)
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 set_module_type(classpnp kernelmodedriver)

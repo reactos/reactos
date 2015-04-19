@@ -34,6 +34,5 @@ add_importlibs(ntdll_winetest user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntdll_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)
-    allow_warnings(ntdll_winetest)
     add_target_compile_flags(ntdll_winetest "-Wno-format")
 endif()

@@ -26,9 +26,8 @@ add_importlibs(cmipci portcls hal ntoskrnl)
 
 if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(portcls "-Wno-write-strings -Wno-switch")
-    #allow_warnings(portcls)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-write-strings -Wno-switch -Wno-error")
+    #add_target_compile_flags(cmipci "-Wno-write-strings -Wno-switch")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-write-strings -Wno-switch")
 endif()
 
 add_pch(cmipci precomp.h SOURCE)

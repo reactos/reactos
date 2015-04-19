@@ -32,5 +32,4 @@ add_pch(mesa_swrast precomp.h SOURCE)
 
 if(NOT MSVC)
     add_target_compile_flags(mesa_swrast "-Wno-unused-variable")
-    allow_warnings(mesa_swrast)
 endif()
