@@ -13,6 +13,27 @@
 static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
 {
     {
+        ID_NAME(CLSID_AdminFolderShortcut),
+        {
+            {    0x0,   &IID_IShellFolder2 },
+            {    0x0,       &IID_IShellFolder },
+            {    0x0,           &IID_IUnknown },
+            {    0x4,   &IID_IPersistFolder3 },
+            {    0x4,       &IID_IPersistFolder2 },
+            {    0x4,           &IID_IPersistFolder },
+            {    0x4,               &IID_IPersist },
+            {    0x8,   &IID_IShellLinkA },
+            {    0xc,   &IID_IShellLinkW },
+            {   0x10,   &IID_IPersistFile },
+            {   0x14,   &IID_IExtractIconW },
+            {   0x18,   &IID_IQueryInfo },
+            {   0x20,   &IID_IPersistStream },
+            {   0x20,   &IID_IPersistStreamInit },
+            {   0x24,   &IID_IPersistPropertyBag },
+            {   0x28,   &IID_IBrowserFrameOptions },
+        }
+    },
+    {
         ID_NAME(CLSID_ExplorerBand),
         {
             {  -0xb4,   &IID_IDeskBand },

@@ -706,9 +706,6 @@ HRESULT WINAPI CNetConUiObject::QueryInterface(REFIID iid, LPVOID *ppvObject)
         return S_OK;
     }
 
-    //LPOLESTR pStr;
-    //StringFromCLSID(iid, &pStr);
-    //MessageBoxW(NULL, L"ISF_NetConnect_IContextMenu2_QueryInterface unhandled", pStr, MB_OK);
     return E_NOINTERFACE;
 }
 

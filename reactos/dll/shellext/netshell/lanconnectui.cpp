@@ -25,9 +25,9 @@ typedef struct
 } NET_ITEM, *PNET_ITEM;
 
 class CNetConnectionPropertyUi final :
+    public INetConnectionConnectUi,
     public INetConnectionPropertyUi2,
-    public INetLanConnectionUiInfo,
-    public INetConnectionConnectUi
+    public INetLanConnectionUiInfo
 {
     public:
         CNetConnectionPropertyUi();
@@ -522,7 +522,6 @@ CNetConnectionPropertyUi::QueryInterface(
     REFIID iid,
     LPVOID *ppvObj)
 {
-    LPOLESTR pStr;
     *ppvObj = NULL;
 
     if (IsEqualIID (iid, IID_IUnknown) ||
@@ -546,9 +545,6 @@ CNetConnectionPropertyUi::QueryInterface(
         return S_OK;
     }
 
-    StringFromCLSID((CLSID)iid, &pStr);
-    MessageBoxW(NULL, pStr, L"INetConnectionPropertyUi_fnQueryInterface", MB_OK);
-    CoTaskMemFree(pStr);
     return E_NOINTERFACE;
 }
 

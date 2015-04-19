@@ -4,6 +4,7 @@ add_definitions(-DWINE_NO_UNICODE_MACROS)
 list(APPEND SOURCE
     browseui.c
     ieframe.c
+    netcfgx.c
     netshell.c
     shdocvw.c
     shell32.c

@@ -103,6 +103,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
             {    0x0,       &IID_IUnknown },
             {    0x4,   &IID_INetConnectionPropertyUi2 },
             {    0x4,       &IID_INetConnectionPropertyUi },
+            {   0x10,   &IID_INetLanConnectionUiInfo },
         },
         L"Both"
     },

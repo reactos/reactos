@@ -24,6 +24,8 @@
 #include <oleacc.h>
 #include <oaidl.h>
 #include <netcon.h>
+#include <netcfgx.h>
+#include <netcfgn.h>
 #include <mshtmhst.h>
 #include <perhist.h>
 #include <shlguid.h>
