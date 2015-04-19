@@ -1988,6 +1988,10 @@ FAST486_OPCODE_HANDLER(Fast486FpuOpcodeDB)
             case 0x20:
             /* FDISI */
             case 0x21:
+            /* FSETPM */
+            case 0x24:
+            /* FRSTPM */
+            case 0x25:
             {
                 /* These do nothing */
                 break;
