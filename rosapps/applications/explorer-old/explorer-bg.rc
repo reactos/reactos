@@ -138,7 +138,7 @@ END
 IDD_DESKBAR_DESKTOP DIALOGEX 0, 0, 212, 194
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Свойства на работната площ"
-FONT 7, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Изберете начин на подреждане:", IDC_STATIC, 7, 7, 166, 8
     CONTROL "Горен ляв надолу", IDC_ICON_ALIGN_0, "Button", BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP, 6, 25, 60, 44
