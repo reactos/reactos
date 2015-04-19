@@ -59,12 +59,3 @@ add_pch(explorer_old precomp.h SOURCE)
 add_dependencies(explorer_old psdk)
 add_cd_file(TARGET explorer_old DESTINATION reactos FOR all)
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/explorer-cfg-template.xml DESTINATION reactos FOR all)
-
-if(NOT MSVC)
-    add_compile_flags("-Wno-error=narrowing")
-
-    # GCC bug #59472
-    if(LTCG)
-        add_target_link_flags(explorer_old "-Wno-error")
-    endif()
-endif()

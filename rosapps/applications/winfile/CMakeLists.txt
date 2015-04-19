@@ -7,8 +7,7 @@ target_link_libraries(winefile uuid)
 
 add_cd_file(TARGET winefile DESTINATION reactos/system32 FOR all)
 
-if(NOT MSVC)
-    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-    #add_target_compile_flags(winefile "-Wno-format")
-    allow_warnings(winefile)
-endif()
+#if(NOT MSVC)
+#    FIXME: http://www.cmake.org/Bug/view.php?id=12998
+#    add_target_compile_flags(winefile "-Wno-format")
+#endif()
