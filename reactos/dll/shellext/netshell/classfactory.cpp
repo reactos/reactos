@@ -72,13 +72,13 @@ CNetshellClassFactory::CreateInstance(
 {
     *ppvObject = NULL;
 
-    if (IsEqualCLSID(m_clsid, CLSID_NetworkConnections))
+    if (IsEqualCLSID(m_clsid, CLSID_ConnectionFolder))
         return ISF_NetConnect_Constructor(pUnkOuter, riid, ppvObject);
     else if (IsEqualCLSID(m_clsid, CLSID_ConnectionManager))
         return INetConnectionManager_Constructor(pUnkOuter, riid, ppvObject);
-    else if (IsEqualCLSID(m_clsid, CLSID_LANConnectUI))
+    else if (IsEqualCLSID(m_clsid, CLSID_LanConnectionUi))
         return LanConnectUI_Constructor(pUnkOuter, riid, ppvObject);
-    else if (IsEqualCLSID(m_clsid, CLSID_LanConnectStatusUI))
+    else if (IsEqualCLSID(m_clsid, CLSID_ConnectionTray))
         return LanConnectStatusUI_Constructor(pUnkOuter, riid, ppvObject);
 
     return E_NOINTERFACE;

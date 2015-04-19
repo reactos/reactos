@@ -321,7 +321,7 @@ CNetConnection::GetUiObjectClassId(CLSID *pclsid)
 {
     if (m_Props.MediaType == NCM_LAN)
     {
-        CopyMemory(pclsid, &CLSID_LANConnectUI, sizeof(CLSID));
+        CopyMemory(pclsid, &CLSID_LanConnectionUi, sizeof(CLSID));
         return S_OK;
     }
 

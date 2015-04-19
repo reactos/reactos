@@ -22,7 +22,7 @@ the actions "Status" / "Properties" are implemented.
 
 === Status Dialog & Notification Area ===
 
-The status dialog is implemented by IOleCommandTarget interface(CLSID_LanConnectStatusUI). This interface manages all status dialogs
+The status dialog is implemented by IOleCommandTarget interface(CLSID_ConnectionTray). This interface manages all status dialogs
 for all available dialogs. The interface is implemented as a singleton to advoid multiple notification icons
 appear in the Notification area of the explorer. Everytime the IShellFolder object is created (ISF_NetConnect_Constructor), 
 it creates a reference to IOleCommandTarget interface and calls its IOleCommandTarget::Exec function with CGID_ShellServiceObject.

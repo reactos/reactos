@@ -207,7 +207,7 @@ PITEMID_CHILD _ILCreateNetConnect()
     {
         LPPIDLDATA pData = _ILGetDataPointer(pidlOut);
 
-        memcpy(&(pData->u.guid.guid), &CLSID_NetworkConnections, sizeof(GUID));
+        memcpy(&(pData->u.guid.guid), &CLSID_ConnectionFolder, sizeof(GUID));
     }
     return pidlOut;
 }
@@ -231,7 +231,7 @@ BOOL _ILIsNetConnect(LPCITEMIDLIST pidl)
     const IID *piid = _ILGetGUIDPointer(const_cast<LPITEMIDLIST>(pidl));
 
     if (piid)
-        return IsEqualIID(*piid, CLSID_NetworkConnections);
+        return IsEqualIID(*piid, CLSID_ConnectionFolder);
 
     return FALSE;
 }

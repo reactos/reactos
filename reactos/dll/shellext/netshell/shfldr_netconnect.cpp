@@ -144,7 +144,7 @@ CNetworkConnections::CNetworkConnections() :
     m_pidlRoot(_ILCreateNetConnect())
 {
     HRESULT hr;
-    hr = CoCreateInstance(CLSID_LanConnectStatusUI, NULL, CLSCTX_INPROC_SERVER, IID_IOleCommandTarget, reinterpret_cast<PVOID*>(&m_lpOleCmd));
+    hr = CoCreateInstance(CLSID_ConnectionTray, NULL, CLSCTX_INPROC_SERVER, IID_IOleCommandTarget, reinterpret_cast<PVOID*>(&m_lpOleCmd));
     if (FAILED(hr))
     {
         ERR("CoCreateInstance failed with %lx\n", hr);
@@ -1115,7 +1115,7 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
     if (!lpClassId)
         return E_POINTER;
 
-    *lpClassId = CLSID_NetworkConnections;
+    *lpClassId = CLSID_ConnectionFolder;
 
     return S_OK;
 }
