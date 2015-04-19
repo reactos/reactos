@@ -33,7 +33,7 @@ STRINGTABLE
 IDD_PROXYDLG DIALOGEX 36, 24, 220, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "ネットワーク パスワードの入力"
-FONT 9, "MS Shell Dlg"
+FONT 9, "MS UI Gothic"
 {
  LTEXT "ユーザ名とパスワードを入力して下さい:", -1, 6, 6, 210, 15
  LTEXT "プロキシ", -1, 6, 26, 50, 18
@@ -53,7 +53,7 @@ FONT 9, "MS Shell Dlg"
 IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "認証が必要です"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS UI Gothic"
 {
  LTEXT "ユーザ名とパスワードを入力して下さい:", -1, 6, 6, 210, 15
  LTEXT "サーバ", -1, 6, 26, 50, 18
@@ -73,7 +73,7 @@ FONT 8, "MS Shell Dlg"
 IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Security Warning"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS UI Gothic"
 {
  LTEXT "There is a problem with the certificate for this site.", -1, 40, 6, 200, 20
  LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20
