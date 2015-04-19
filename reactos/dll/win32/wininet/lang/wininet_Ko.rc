@@ -53,7 +53,7 @@ FONT 9, "MS Shell Dlg"
 IDD_AUTHDLG DIALOGEX 36, 24, 220, 146
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "인증 필요"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 {
  LTEXT "당신의 사용자 이름과 암호를 입력하십시오:", -1, 6, 6, 210, 15
  LTEXT "서버", -1, 6, 26, 50, 18
@@ -73,7 +73,7 @@ FONT 8, "MS Shell Dlg"
 IDD_INVCERTDLG DIALOGEX 3, 24, 250, 86
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "보안 경고"
-FONT 8, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg"
 {
  LTEXT "이 사이트의 인증서에 문제가 있습니다.", -1, 40, 6, 200, 20
  LTEXT "", IDC_CERT_ERROR, 40, 26, 200, 20

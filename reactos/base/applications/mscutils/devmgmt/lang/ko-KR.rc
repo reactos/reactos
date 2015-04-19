@@ -44,7 +44,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
 CAPTION "장치 관리자에 대하여"
-FONT 8, "MS Shell Dlg", 0, 0
+FONT 9, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
     LTEXT "Device Manager v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30

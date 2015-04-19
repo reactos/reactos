@@ -44,7 +44,7 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 16, 190, 182
 CAPTION "关于设备管理器"
-FONT 8, "MS Shell Dlg", 0, 0
+FONT 9, "MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
     LTEXT "设备管理器 v0.1 版权所有 (C) 2006\n作者 Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
