@@ -43,8 +43,10 @@ class CEnumIDList final :
         virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
 
     private:
-        LONG        ref;
-        LPENUMLIST  mpFirst;
-        LPENUMLIST  mpLast;
-        LPENUMLIST  mpCurrent;
+        ~CEnumIDList();
+
+        LONG        m_ref;
+        LPENUMLIST  m_pFirst;
+        LPENUMLIST  m_pLast;
+        LPENUMLIST  m_pCurrent;
 };

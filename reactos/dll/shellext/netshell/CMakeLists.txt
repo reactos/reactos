@@ -5,7 +5,7 @@ set_cpp(WITH_RUNTIME)
 
 if(NOT MSVC)
     # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
+    add_compile_flags_language("-std=c++11 -Wshadow" "CXX")
 endif()
 
 remove_definitions(-D_WIN32_WINNT=0x502)

@@ -30,9 +30,9 @@ class CNetConnectionManager final :
         virtual HRESULT WINAPI Clone(IEnumNetConnection **ppenum);
 
     private:
-        LONG ref;
-        PINetConnectionItem pHead;
-        PINetConnectionItem pCurrent;
+        LONG m_ref;
+        PINetConnectionItem m_pHead;
+        PINetConnectionItem m_pCurrent;
 };
 
 class CNetConnection final :
@@ -40,6 +40,7 @@ class CNetConnection final :
 {
     public:
         CNetConnection(PINetConnectionItem pItem);
+        ~CNetConnection();
 
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -56,18 +57,18 @@ class CNetConnection final :
         HRESULT WINAPI Rename(LPCWSTR pszwDuplicateName);
 
     private:
-        LONG ref;
-        NETCON_PROPERTIES Props;
-        DWORD dwAdapterIndex;
+        LONG m_ref;
+        NETCON_PROPERTIES m_Props;
+        DWORD m_dwAdapterIndex;
 };
 
 VOID NormalizeOperStatus(MIB_IFROW *IfEntry, NETCON_PROPERTIES * Props);
 
-CNetConnectionManager::CNetConnectionManager()
+CNetConnectionManager::CNetConnectionManager() :
+    m_ref(0),
+    m_pHead(NULL),
+    m_pCurrent(NULL)
 {
-    ref = 0;
-    pHead = NULL;
-    pCurrent = NULL;
 }
 
 HRESULT
@@ -81,7 +82,7 @@ CNetConnectionManager::QueryInterface(
     if (IsEqualIID(iid, IID_IUnknown) ||
         IsEqualIID(iid, IID_INetConnectionManager))
     {
-        *ppvObj = (INetConnectionManager*)this;
+        *ppvObj = static_cast<INetConnectionManager*>(this);
         AddRef();
         return S_OK;
     }
@@ -93,7 +94,7 @@ ULONG
 WINAPI
 CNetConnectionManager::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -102,7 +103,7 @@ ULONG
 WINAPI
 CNetConnectionManager::Release()
 {
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
         delete this;
@@ -124,7 +125,7 @@ CNetConnectionManager::EnumConnections(
     if (Flags != NCME_DEFAULT)
         return E_FAIL;
 
-    *ppEnum = (IEnumNetConnection*)this;
+    *ppEnum = static_cast<IEnumNetConnection*>(this);
     AddRef();
     return S_OK;
 }
@@ -133,25 +134,30 @@ CNetConnectionManager::EnumConnections(
  * INetConnection Interface
  */
 
-CNetConnection::CNetConnection(PINetConnectionItem pItem)
+CNetConnection::CNetConnection(PINetConnectionItem pItem) :
+    m_ref(0),
+    m_Props(pItem->Props),
+    m_dwAdapterIndex(pItem->dwAdapterIndex)
 {
-    ref = 0;
-    dwAdapterIndex = pItem->dwAdapterIndex;
-    CopyMemory(&Props, &pItem->Props, sizeof(NETCON_PROPERTIES));
-
     if (pItem->Props.pszwName)
     {
-        Props.pszwName = (LPWSTR)CoTaskMemAlloc((wcslen(pItem->Props.pszwName)+1)*sizeof(WCHAR));
-        if (Props.pszwName)
-            wcscpy(Props.pszwName, pItem->Props.pszwName);
+        m_Props.pszwName = static_cast<PWSTR>(CoTaskMemAlloc((wcslen(pItem->Props.pszwName)+1)*sizeof(WCHAR)));
+        if (m_Props.pszwName)
+            wcscpy(m_Props.pszwName, pItem->Props.pszwName);
     }
 
     if (pItem->Props.pszwDeviceName)
     {
-        Props.pszwDeviceName = (LPWSTR)CoTaskMemAlloc((wcslen(pItem->Props.pszwDeviceName)+1)*sizeof(WCHAR));
-        if (Props.pszwDeviceName)
-            wcscpy(Props.pszwDeviceName, pItem->Props.pszwDeviceName);
+        m_Props.pszwDeviceName = static_cast<PWSTR>(CoTaskMemAlloc((wcslen(pItem->Props.pszwDeviceName)+1)*sizeof(WCHAR)));
+        if (m_Props.pszwDeviceName)
+            wcscpy(m_Props.pszwDeviceName, pItem->Props.pszwDeviceName);
     }
+}
+
+CNetConnection::~CNetConnection()
+{
+    CoTaskMemFree(m_Props.pszwName);
+    CoTaskMemFree(m_Props.pszwDeviceName);
 }
 
 HRESULT
@@ -177,7 +183,7 @@ ULONG
 WINAPI
 CNetConnection::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -186,14 +192,10 @@ ULONG
 WINAPI
 CNetConnection::Release()
 {
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
-    {
-        CoTaskMemFree(Props.pszwName);
-        CoTaskMemFree(Props.pszwDeviceName);
         delete this;
-    }
 
     return refCount;
 }
@@ -243,32 +245,32 @@ CNetConnection::GetProperties(NETCON_PROPERTIES **ppProps)
     if (!ppProps)
         return E_POINTER;
 
-    pProperties = (NETCON_PROPERTIES*)CoTaskMemAlloc(sizeof(NETCON_PROPERTIES));
+    pProperties = static_cast<NETCON_PROPERTIES*>(CoTaskMemAlloc(sizeof(NETCON_PROPERTIES)));
     if (!pProperties)
         return E_OUTOFMEMORY;
 
-    CopyMemory(pProperties, &Props, sizeof(NETCON_PROPERTIES));
+    CopyMemory(pProperties, &m_Props, sizeof(NETCON_PROPERTIES));
     pProperties->pszwName = NULL;
 
-    if (Props.pszwDeviceName)
+    if (m_Props.pszwDeviceName)
     {
-        pProperties->pszwDeviceName = (LPWSTR)CoTaskMemAlloc((wcslen(Props.pszwDeviceName)+1)*sizeof(WCHAR));
+        pProperties->pszwDeviceName = static_cast<LPWSTR>(CoTaskMemAlloc((wcslen(m_Props.pszwDeviceName)+1)*sizeof(WCHAR)));
         if (pProperties->pszwDeviceName)
-            wcscpy(pProperties->pszwDeviceName, Props.pszwDeviceName);
+            wcscpy(pProperties->pszwDeviceName, m_Props.pszwDeviceName);
     }
 
     *ppProps = pProperties;
 
     /* get updated adapter characteristics */
     ZeroMemory(&IfEntry, sizeof(IfEntry));
-    IfEntry.dwIndex = dwAdapterIndex;
-    if(GetIfEntry(&IfEntry) != NO_ERROR)
+    IfEntry.dwIndex = m_dwAdapterIndex;
+    if (GetIfEntry(&IfEntry) != NO_ERROR)
         return NOERROR;
 
     NormalizeOperStatus(&IfEntry, pProperties);
 
 
-    hr = StringFromCLSID((CLSID)Props.guidId, &pStr);
+    hr = StringFromCLSID((CLSID)m_Props.guidId, &pStr);
     if (SUCCEEDED(hr))
     {
         wcscpy(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\");
@@ -290,18 +292,18 @@ CNetConnection::GetProperties(NETCON_PROPERTIES **ppProps)
             {
                 /* use updated name */
                 dwSize = wcslen(szName) + 1;
-                pProperties->pszwName = (LPWSTR)CoTaskMemAlloc(dwSize * sizeof(WCHAR));
+                pProperties->pszwName = static_cast<PWSTR>(CoTaskMemAlloc(dwSize * sizeof(WCHAR)));
                 if (pProperties->pszwName)
                     CopyMemory(pProperties->pszwName, szName, dwSize * sizeof(WCHAR));
             }
             else
             {
                 /* use cached name */
-                if (Props.pszwName)
+                if (m_Props.pszwName)
                 {
-                    pProperties->pszwName = (LPWSTR)CoTaskMemAlloc((wcslen(Props.pszwName)+1)*sizeof(WCHAR));
+                    pProperties->pszwName = static_cast<PWSTR>(CoTaskMemAlloc((wcslen(m_Props.pszwName)+1)*sizeof(WCHAR)));
                     if (pProperties->pszwName)
-                        wcscpy(pProperties->pszwName, Props.pszwName);
+                        wcscpy(pProperties->pszwName, m_Props.pszwName);
                 }
             }
             RegCloseKey(hKey);
@@ -316,7 +318,7 @@ HRESULT
 WINAPI
 CNetConnection::GetUiObjectClassId(CLSID *pclsid)
 {
-    if (Props.MediaType == NCM_LAN)
+    if (m_Props.MediaType == NCM_LAN)
     {
         CopyMemory(pclsid, &CLSID_LANConnectUI, sizeof(CLSID));
         return S_OK;
@@ -338,20 +340,20 @@ CNetConnection::Rename(LPCWSTR pszwDuplicateName)
     if (pszwDuplicateName == NULL || wcslen(pszwDuplicateName) == 0)
         return S_OK;
 
-    if (Props.pszwName)
+    if (m_Props.pszwName)
     {
-        CoTaskMemFree(Props.pszwName);
-        Props.pszwName = NULL;
+        CoTaskMemFree(m_Props.pszwName);
+        m_Props.pszwName = NULL;
     }
 
     dwSize = (wcslen(pszwDuplicateName) + 1) * sizeof(WCHAR);
-    Props.pszwName = (LPWSTR)CoTaskMemAlloc(dwSize);
-    if (Props.pszwName == NULL)
+    m_Props.pszwName = static_cast<PWSTR>(CoTaskMemAlloc(dwSize));
+    if (m_Props.pszwName == NULL)
         return E_OUTOFMEMORY;
 
-    wcscpy(Props.pszwName, pszwDuplicateName);
+    wcscpy(m_Props.pszwName, pszwDuplicateName);
 
-    hr = StringFromCLSID((CLSID)Props.guidId, &pStr);
+    hr = StringFromCLSID((CLSID)m_Props.guidId, &pStr);
     if (SUCCEEDED(hr))
     {
         wcscpy(szName, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\");
@@ -360,7 +362,7 @@ CNetConnection::Rename(LPCWSTR pszwDuplicateName)
 
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, szName, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS)
         {
-            RegSetValueExW(hKey, L"Name", NULL, REG_SZ, (LPBYTE)Props.pszwName, dwSize);
+            RegSetValueExW(hKey, L"Name", NULL, REG_SZ, (LPBYTE)m_Props.pszwName, dwSize);
             RegCloseKey(hKey);
         }
 
@@ -380,7 +382,7 @@ HRESULT WINAPI IConnection_Constructor(INetConnection **ppv, PINetConnectionItem
         return E_OUTOFMEMORY;
 
     pConnection->AddRef();
-    *ppv = (INetConnection *)pConnection;
+    *ppv = pConnection;
 
     return S_OK;
 }
@@ -405,11 +407,11 @@ CNetConnectionManager::Next(
     if (celt != 1)
         return E_FAIL;
 
-    if (!pCurrent)
+    if (!m_pCurrent)
         return S_FALSE;
 
-    hr = IConnection_Constructor(rgelt, pCurrent);
-    pCurrent = pCurrent->Next;
+    hr = IConnection_Constructor(rgelt, m_pCurrent);
+    m_pCurrent = m_pCurrent->Next;
 
     return hr;
 }
@@ -418,8 +420,8 @@ HRESULT
 WINAPI
 CNetConnectionManager::Skip(ULONG celt)
 {
-    while(pCurrent && celt-- > 0)
-        pCurrent = pCurrent->Next;
+    while (m_pCurrent && celt-- > 0)
+        m_pCurrent = m_pCurrent->Next;
 
     if (celt)
        return S_FALSE;
@@ -432,7 +434,7 @@ HRESULT
 WINAPI
 CNetConnectionManager::Reset()
 {
-    pCurrent = pHead;
+    m_pCurrent = m_pHead;
     return S_OK;
 }
 
@@ -450,7 +452,7 @@ GetAdapterIndexFromNetCfgInstanceId(PIP_ADAPTER_INFO pAdapterInfo, LPWSTR szNetC
     IP_ADAPTER_INFO * pCurrentAdapter;
 
     pCurrentAdapter = pAdapterInfo;
-    while(pCurrentAdapter)
+    while (pCurrentAdapter)
     {
         szBuffer[0] = L'\0';
         if (MultiByteToWideChar(CP_ACP, 0, pCurrentAdapter->AdapterName, -1, szBuffer, sizeof(szBuffer)/sizeof(szBuffer[0])))
@@ -472,7 +474,7 @@ NormalizeOperStatus(
     MIB_IFROW *IfEntry,
     NETCON_PROPERTIES    * Props)
 {
-    switch(IfEntry->dwOperStatus)
+    switch (IfEntry->dwOperStatus)
     {
         case MIB_IF_OPER_STATUS_NON_OPERATIONAL:
             Props->Status = NCS_HARDWARE_DISABLED;
@@ -518,7 +520,7 @@ CNetConnectionManager::EnumerateINetConnections()
     if (GetIfTable(NULL, &dwSize, TRUE) != ERROR_INSUFFICIENT_BUFFER)
         return FALSE;
 
-    pIfTable = (PMIB_IFTABLE)CoTaskMemAlloc(dwSize);
+    pIfTable = static_cast<PMIB_IFTABLE>(CoTaskMemAlloc(dwSize));
     if (!pIfTable)
         return FALSE;
 
@@ -537,7 +539,7 @@ CNetConnectionManager::EnumerateINetConnections()
         return FALSE;
     }
 
-    pAdapterInfo = (PIP_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+    pAdapterInfo = static_cast<PIP_ADAPTER_INFO>(CoTaskMemAlloc(dwSize));
     if (!pAdapterInfo)
     {
         CoTaskMemFree(pIfTable);
@@ -593,11 +595,11 @@ CNetConnectionManager::EnumerateINetConnections()
         /* get detailed adapter info */
         ZeroMemory(&IfEntry, sizeof(IfEntry));
         IfEntry.dwIndex = dwAdapterIndex;
-        if(GetIfEntry(&IfEntry) != NO_ERROR)
+        if (GetIfEntry(&IfEntry) != NO_ERROR)
             break;
 
         /* allocate new INetConnectionItem */
-        PINetConnectionItem pNew = (PINetConnectionItem)CoTaskMemAlloc(sizeof(INetConnectionItem));
+        PINetConnectionItem pNew = static_cast<PINetConnectionItem>(CoTaskMemAlloc(sizeof(INetConnectionItem)));
         if (!pNew)
             break;
 
@@ -607,7 +609,7 @@ CNetConnectionManager::EnumerateINetConnections()
         CLSIDFromString(szNetCfg, &pNew->Props.guidId);
         NormalizeOperStatus(&IfEntry, &pNew->Props);
 
-        switch(IfEntry.dwType)
+        switch (IfEntry.dwType)
         {
             case IF_TYPE_ETHERNET_CSMACD:
                 pNew->Props.MediaType = NCM_LAN;
@@ -628,7 +630,7 @@ CNetConnectionManager::EnumerateINetConnections()
             dwSize = sizeof(szAdapterNetCfg);
             if (RegQueryValueExW(hSubKey, L"Name", NULL, NULL, (LPBYTE)szAdapterNetCfg, &dwSize) == ERROR_SUCCESS)
             {
-                pNew->Props.pszwName = (LPWSTR)CoTaskMemAlloc((wcslen(szAdapterNetCfg)+1) * sizeof(WCHAR));
+                pNew->Props.pszwName = static_cast<PWSTR>(CoTaskMemAlloc((wcslen(szAdapterNetCfg)+1) * sizeof(WCHAR)));
                 if (pNew->Props.pszwName)
                     wcscpy(pNew->Props.pszwName, szAdapterNetCfg);
             }
@@ -646,7 +648,7 @@ CNetConnectionManager::EnumerateINetConnections()
         SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DEVICEDESC, NULL, NULL, 0, &dwSize);
         if (dwSize != 0)
         {
-            pNew->Props.pszwDeviceName = (LPWSTR)CoTaskMemAlloc(dwSize);
+            pNew->Props.pszwDeviceName = static_cast<PWSTR>(CoTaskMemAlloc(dwSize));
             if (pNew->Props.pszwDeviceName)
                 SetupDiGetDeviceRegistryPropertyW(hInfo, &DevInfo, SPDRP_DEVICEDESC, NULL, (PBYTE)pNew->Props.pszwDeviceName, dwSize, &dwSize);
         }
@@ -654,16 +656,16 @@ CNetConnectionManager::EnumerateINetConnections()
         if (pCurrent)
             pCurrent->Next = pNew;
         else
-            pHead = pNew;
+            m_pHead = pNew;
 
         pCurrent = pNew;
-    }while(TRUE);
+    } while (TRUE);
 
     CoTaskMemFree(pIfTable);
     CoTaskMemFree(pAdapterInfo);
     SetupDiDestroyDeviceInfoList(hInfo);
 
-    this->pCurrent = pHead;
+    m_pCurrent = m_pHead;
     return TRUE;
 }
 

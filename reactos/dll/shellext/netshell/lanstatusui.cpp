@@ -175,7 +175,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
 
     ZeroMemory(&IfEntry, sizeof(IfEntry));
     IfEntry.dwIndex = pContext->dwAdapterIndex;
-    if(GetIfEntry(&IfEntry) != NO_ERROR)
+    if (GetIfEntry(&IfEntry) != NO_ERROR)
     {
         return;
     }
@@ -381,7 +381,7 @@ AddIPAddressToListView(
         }
         SubIndex++;
         pCur = pCur->Next;
-    }while(pCur && pCur->IpAddress.String[0]);
+    } while (pCur && pCur->IpAddress.String[0]);
 }
 
 static
@@ -423,7 +423,7 @@ LANStatusUiDetailsDlg(
     HWND hDlgCtrl;
     RECT rect;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             pContext = (LANSTATUSUI_CONTEXT*)lParam;
@@ -444,16 +444,16 @@ LANStatusUiDetailsDlg(
             pAdapterInfo = NULL;
             if (GetAdaptersInfo(NULL, &dwSize) == ERROR_BUFFER_OVERFLOW)
             {
-                pAdapterInfo = (PIP_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+                pAdapterInfo = static_cast<PIP_ADAPTER_INFO>(CoTaskMemAlloc(dwSize));
                 if (pAdapterInfo)
                 {
                     if (GetAdaptersInfo(pAdapterInfo, &dwSize) == NO_ERROR)
                     {
                         pCurAdapter = pAdapterInfo;
-                        while(pCurAdapter && pCurAdapter->Index != pContext->dwAdapterIndex)
+                        while (pCurAdapter && pCurAdapter->Index != pContext->dwAdapterIndex)
                             pCurAdapter = pCurAdapter->Next;
 
-                        if(pCurAdapter->Index != pContext->dwAdapterIndex)
+                        if (pCurAdapter->Index != pContext->dwAdapterIndex)
                             pCurAdapter = NULL;
                     }
                 }
@@ -498,7 +498,7 @@ LANStatusUiDetailsDlg(
             dwSize = 0;
             if (GetPerAdapterInfo(pContext->dwAdapterIndex, NULL, &dwSize) == ERROR_BUFFER_OVERFLOW)
             {
-                pPerAdapter = (PIP_PER_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+                pPerAdapter = static_cast<PIP_PER_ADAPTER_INFO>(CoTaskMemAlloc(dwSize));
                 if (pPerAdapter)
                 {
                     if (GetPerAdapterInfo(pContext->dwAdapterIndex, pPerAdapter, &dwSize) == ERROR_SUCCESS)
@@ -544,7 +544,7 @@ LANStatusUiAdvancedDlg(
     DWORD dwIpAddr;
 
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
@@ -633,8 +633,7 @@ FindNetworkAdapter(HDEVINFO hInfo, SP_DEVINFO_DATA *pDevInfo, LPWSTR pGuid)
         {
             return TRUE;
         }
-    }
-    while(TRUE);
+    } while (TRUE);
 
     return FALSE;
 }
@@ -702,7 +701,7 @@ DisableNetworkAdapter(INetConnection * pNet, LANSTATUSUI_CONTEXT * pContext, HWN
         return;
     }
 
-    pPnp = (LPWSTR)CoTaskMemAlloc(dwSize);
+    pPnp = static_cast<PWSTR>(CoTaskMemAlloc(dwSize));
     if (!pPnp)
     {
         RegCloseKey(hKey);
@@ -755,7 +754,7 @@ LANStatusUiDlg(
     LANSTATUSUI_CONTEXT * pContext;
     LPPSHNOTIFY lppsn;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
@@ -817,7 +816,7 @@ InitializePropertyDialog(
         return;
     }
 
-    pAdapterInfo = (PIP_ADAPTER_INFO)CoTaskMemAlloc(dwSize);
+    pAdapterInfo = static_cast<PIP_ADAPTER_INFO>(CoTaskMemAlloc(dwSize));
     if (!pAdapterInfo)
     {
         CoTaskMemFree(pAdapterInfo);
@@ -840,7 +839,7 @@ InitializePropertyDialog(
     }
 
     pCurAdapter = pAdapterInfo;
-    while(pCurAdapter->Index != dwAdapterIndex)
+    while (pCurAdapter->Index != dwAdapterIndex)
         pCurAdapter = pCurAdapter->Next;
 
 
@@ -912,7 +911,7 @@ LANStatusDlg(
 {
     LANSTATUSUI_CONTEXT * pContext;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             pContext = (LANSTATUSUI_CONTEXT *)lParam;
@@ -969,7 +968,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
     if (pHead)
     {
        pItem = pHead;
-       while(pItem)
+       while (pItem)
        {
            hr = pItem->pNet->GetProperties(&pProps);
            if (SUCCEEDED(hr))
@@ -1018,11 +1017,11 @@ CLanStatus::InitializeNetTaskbarNotifications()
         if (hr == S_OK)
         {
             TRACE("new connection\n");
-            pItem = (NOTIFICATION_ITEM*)CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM));
+            pItem = static_cast<NOTIFICATION_ITEM*>(CoTaskMemAlloc(sizeof(NOTIFICATION_ITEM)));
             if (!pItem)
                 break;
 
-            pContext = (LANSTATUSUI_CONTEXT*)CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT));
+            pContext = static_cast<LANSTATUSUI_CONTEXT*>(CoTaskMemAlloc(sizeof(LANSTATUSUI_CONTEXT)));
             if (!pContext)
             {
                 CoTaskMemFree(pItem);
@@ -1091,7 +1090,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
             } else
                 ERR("CreateDialogParamW failed\n");
         }
-    } while(hr == S_OK);
+    } while (hr == S_OK);
 
     lpNetMan = pNetConMan;
     pEnumCon->Release();
@@ -1104,7 +1103,7 @@ CLanStatus::ShowStatusDialogByCLSID(const GUID *pguidCmdGroup)
     NOTIFICATION_ITEM *pItem;
 
     pItem = pHead;
-    while(pItem)
+    while (pItem)
     {
         if (IsEqualGUID(pItem->guidItem, *pguidCmdGroup))
         {

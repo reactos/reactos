@@ -3,7 +3,7 @@
 /**************************************************************************
  *  AddToEnumList()
  */
-BOOL 
+BOOL
 CEnumIDList::AddToEnumList(LPITEMIDLIST pidl)
 {
     LPENUMLIST pNew;
@@ -11,37 +11,50 @@ CEnumIDList::AddToEnumList(LPITEMIDLIST pidl)
     if (!pidl)
         return FALSE;
 
-    pNew = (LPENUMLIST)SHAlloc(sizeof(ENUMLIST));
-    if(pNew)
+    pNew = static_cast<LPENUMLIST>(SHAlloc(sizeof(ENUMLIST)));
+    if (pNew)
     {
         pNew->pNext = NULL;
         pNew->pidl = pidl;
 
-        if(!mpFirst)
+        if (!m_pFirst)
         {
-            mpFirst = pNew;
-            mpCurrent = pNew;
+            m_pFirst = pNew;
+            m_pCurrent = pNew;
         }
 
-        if(mpLast)
+        if (m_pLast)
         {
             /*add the new item to the end of the list */
-            mpLast->pNext = pNew;
+            m_pLast->pNext = pNew;
         }
 
         /*update the last item pointer */
-        mpLast = pNew;
+        m_pLast = pNew;
         return TRUE;
     }
     return FALSE;
 }
 
-CEnumIDList::CEnumIDList()
+CEnumIDList::CEnumIDList() :
+    m_ref(0),
+    m_pFirst(NULL),
+    m_pLast(NULL),
+    m_pCurrent(NULL)
 {
-    ref = 0;
-    mpCurrent = NULL;
-    mpLast = NULL;
-    mpFirst = NULL;
+}
+
+CEnumIDList::~CEnumIDList()
+{
+    LPENUMLIST pDelete;
+
+    while (m_pFirst)
+    {
+        pDelete = m_pFirst;
+        m_pFirst = pDelete->pNext;
+        SHFree(pDelete->pidl);
+        SHFree(pDelete);
+    }
 }
 
 HRESULT
@@ -54,7 +67,7 @@ CEnumIDList::QueryInterface(
 
     if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IEnumIDList))
     {
-        *ppvObj = (IEnumIDList*)this;
+        *ppvObj = static_cast<IEnumIDList*>(this);
         AddRef();
         return S_OK;
     }
@@ -66,7 +79,7 @@ ULONG
 WINAPI
 CEnumIDList::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -74,20 +87,11 @@ CEnumIDList::AddRef()
 ULONG
 WINAPI CEnumIDList::Release()
 {
-    LPENUMLIST pDelete;
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
-    if (!refCount) 
-    {
-        while (mpFirst)
-        {
-            pDelete = mpFirst;
-            mpFirst = pDelete->pNext;
-            SHFree(pDelete->pidl);
-            SHFree(pDelete);
-        }
+    if (!refCount)
         delete this;
-    }
+
     return refCount;
 }
 
@@ -102,7 +106,7 @@ CEnumIDList::Next(
     HRESULT hr = S_OK;
     LPITEMIDLIST temp;
 
-    if(pceltFetched)
+    if (pceltFetched)
         *pceltFetched = 0;
 
     *rgelt=0;
@@ -112,19 +116,19 @@ CEnumIDList::Next(
         return E_INVALIDARG;
     }
 
-    if (celt > 0 && !mpCurrent)
+    if (celt > 0 && !m_pCurrent)
     {
         return S_FALSE;
     }
 
     for (i = 0; i < celt; i++)
     {
-        if (!mpCurrent)
+        if (!m_pCurrent)
             break;
 
-        temp = ILClone(mpCurrent->pidl);
+        temp = ILClone(m_pCurrent->pidl);
         rgelt[i] = temp;
-        mpCurrent = mpCurrent->pNext;
+        m_pCurrent = m_pCurrent->pNext;
     }
 
     if (pceltFetched)
@@ -142,12 +146,12 @@ CEnumIDList::Skip(ULONG celt)
 
     for (dwIndex = 0; dwIndex < celt; dwIndex++)
     {
-        if (!mpCurrent)
+        if (!m_pCurrent)
         {
             hr = S_FALSE;
             break;
         }
-        mpCurrent = mpCurrent->pNext;
+        m_pCurrent = m_pCurrent->pNext;
     }
 
     return hr;
@@ -157,7 +161,7 @@ HRESULT
 WINAPI
 CEnumIDList::Reset()
 {
-    mpCurrent = mpFirst;
+    m_pCurrent = m_pFirst;
     return S_OK;
 }
 
@@ -173,7 +177,7 @@ CEnumIDList::Clone(
 
 LPPIDLDATA _ILGetDataPointer(LPCITEMIDLIST pidl)
 {
-    if(pidl && pidl->mkid.cb != 0x00)
+    if (pidl && pidl->mkid.cb != 0x00)
         return (LPPIDLDATA) &(pidl->mkid.abID);
     return NULL;
 }
@@ -183,7 +187,7 @@ LPITEMIDLIST _ILAlloc(BYTE type, unsigned int size)
     LPITEMIDLIST pidlOut = NULL;
 
     pidlOut = (LPITEMIDLIST)SHAlloc(size + 5);
-    if(pidlOut)
+    if (pidlOut)
     {
         LPPIDLDATA pData;
 
@@ -243,7 +247,7 @@ LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem)
 
     pidl = _ILAlloc(0x99, sizeof(PIDLDATA));
     pdata = _ILGetDataPointer(pidl);
-    pdata->u.value.pItem = (INetConnection*)pItem;
+    pdata->u.value.pItem = pItem;
 
     return pidl;
 }

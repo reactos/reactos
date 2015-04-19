@@ -33,6 +33,7 @@ class CNetworkConnections final :
 {
     public:
         CNetworkConnections();
+        ~CNetworkConnections();
 
         /* IUnknown */
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -40,7 +41,7 @@ class CNetworkConnections final :
         virtual ULONG WINAPI Release();
 
         // IShellFolder
-        virtual HRESULT WINAPI ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, LPITEMIDLIST *ppidl, DWORD *pdwAttributes);
+        virtual HRESULT WINAPI ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
         virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
         virtual HRESULT WINAPI BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
         virtual HRESULT WINAPI BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
@@ -51,7 +52,7 @@ class CNetworkConnections final :
         virtual HRESULT WINAPI GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
         virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl, LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut);
 
-        /* ShellFolder2 */
+        /* IShellFolder2 */
         virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
         virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
         virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
@@ -69,11 +70,10 @@ class CNetworkConnections final :
         virtual HRESULT WINAPI Execute(LPSHELLEXECUTEINFOW pei);
 
     private:
-        LONG ref;
+        LONG m_ref;
         /* both paths are parsible from the desktop */
-        LPITEMIDLIST pidlRoot;	/* absolute pidl */
-        LPITEMIDLIST pidl; /* enumerated pidl */
-        IOleCommandTarget * lpOleCmd;
+        LPITEMIDLIST m_pidlRoot;	/* absolute pidl */
+        IOleCommandTarget *m_lpOleCmd;
 };
 
 class CNetConUiObject final :
@@ -110,10 +110,10 @@ class CNetConUiObject final :
         virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
 
     private:
-        LONG ref;
-        LPCITEMIDLIST apidl;
-        IUnknown *pUnknown;
-        IOleCommandTarget * lpOleCmd;
+        LONG m_ref;
+        LPCITEMIDLIST m_apidl;
+        IUnknown *m_pUnknown;
+        IOleCommandTarget *m_lpOleCmd;
 };
 
 static const shvheader NetConnectSFHeader[] = {
@@ -137,8 +137,15 @@ static const shvheader NetConnectSFHeader[] = {
 HRESULT ShowNetConnectionStatus(IOleCommandTarget * lpOleCmd, INetConnection * pNetConnect, HWND hwnd);
 
 CNetworkConnections::CNetworkConnections()
+    : m_ref(0),
+      m_pidlRoot(_ILCreateNetConnect()),
+      m_lpOleCmd(NULL)
 {
-    pidlRoot = _ILCreateNetConnect();	/* my qualified pidl */
+}
+
+CNetworkConnections::~CNetworkConnections()
+{
+    SHFree(m_pidlRoot);
 }
 
 /**************************************************************************
@@ -155,21 +162,21 @@ HRESULT WINAPI CNetworkConnections::QueryInterface(REFIID riid, LPVOID *ppvObj)
         IsEqualIID(riid, IID_IShellFolder) ||
         IsEqualIID(riid, IID_IShellFolder2))
     {
-        *ppvObj = (IShellFolder2*)this;
+        *ppvObj = static_cast<IShellFolder2*>(this);
     }
     else if (IsEqualIID (riid, IID_IPersistFolder) ||
              IsEqualIID (riid, IID_IPersistFolder2))
     {
-        *ppvObj = (IPersistFolder2*)this;
+        *ppvObj = static_cast<IPersistFolder2*>(this);
     }
     else if (IsEqualIID(riid, IID_IShellExecuteHookW))
     {
-        *ppvObj = (IShellExecuteHookW*)this;
+        *ppvObj = static_cast<IShellExecuteHookW*>(this);
     }
 #if 0
     else if (IsEqualIID(riid, IID_IPersistIDList))
     {
-        //*ppvObj = (IPersistIDList*)this;
+        //*ppvObj = static_cast<IPersistIDList*>(this);
     }
 #endif
     if (*ppvObj)
@@ -191,20 +198,18 @@ HRESULT WINAPI CNetworkConnections::QueryInterface(REFIID riid, LPVOID *ppvObj)
 
 ULONG WINAPI CNetworkConnections::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
 
 ULONG WINAPI CNetworkConnections::Release()
 {
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
-    {
-        SHFree(pidlRoot);
         delete this;
-    }
+
     return refCount;
 }
 
@@ -263,7 +268,7 @@ static BOOL CreateNetConnectEnumList(CEnumIDList *list, DWORD dwFlags)
         {
             break;
         }
-    }while(TRUE);
+    } while (TRUE);
 
     pEnumCon->Release();
     pNetConMan->Release();
@@ -278,7 +283,7 @@ HRESULT WINAPI CNetworkConnections::EnumObjects(
                HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList)
 {
     CEnumIDList *pList = new CEnumIDList;
-    *ppEnumIDList = (LPENUMIDLIST)pList;
+    *ppEnumIDList = static_cast<LPENUMIDLIST>(pList);
     if (!pList)
         return E_OUTOFMEMORY;
 
@@ -338,7 +343,7 @@ HRESULT WINAPI CNetworkConnections::CreateViewObject(
     {
         ZeroMemory(&cvf, sizeof(cvf));
         cvf.cbSize = sizeof(cvf);
-        cvf.pshf = (IShellFolder*)this;
+        cvf.pshf = static_cast<IShellFolder*>(this);
 
         IShellView* pShellView;
         hr = SHCreateShellFolderViewEx(&cvf, &pShellView);
@@ -375,7 +380,7 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    if(cidl == 0)
+    if (cidl == 0)
         *rgfInOut = dwNetConnectAttributes;
     else
         *rgfInOut = dwNetConnectItemAttributes;
@@ -423,10 +428,10 @@ HRESULT WINAPI CNetworkConnections::GetUIObjectOf(
 
     *ppvOut = NULL;
 
-    if ((IsEqualIID (riid, IID_IContextMenu) || IsEqualIID (riid, IID_IContextMenu2) || IsEqualIID(riid, IID_IContextMenu3) ||
+    if ((IsEqualIID(riid, IID_IContextMenu) || IsEqualIID (riid, IID_IContextMenu2) || IsEqualIID(riid, IID_IContextMenu3) ||
          IsEqualIID(riid, IID_IQueryInfo) || IsEqualIID(riid, IID_IExtractIconW)) && cidl >= 1)
     {
-        return IContextMenuImpl_Constructor(riid, apidl[0], ppvOut, lpOleCmd);
+        return IContextMenuImpl_Constructor(riid, apidl[0], ppvOut, m_lpOleCmd);
     }
     else
         hr = E_NOINTERFACE;
@@ -449,7 +454,7 @@ HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
     if (!strRet)
         return E_INVALIDARG;
 
-    pszName = (WCHAR*)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+    pszName = static_cast<LPWSTR>(CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR)));
     if (!pszName)
         return E_OUTOFMEMORY;
 
@@ -593,7 +598,7 @@ HRESULT WINAPI CNetworkConnections::GetDetailsOf(
         return E_FAIL;
 
 
-    switch(iColumn)
+    switch (iColumn)
     {
         case COLUMN_TYPE:
             if (pProperties->MediaType  == NCM_LAN || pProperties->MediaType == NCM_SHAREDACCESSHOST_RAS)
@@ -663,11 +668,11 @@ HRESULT WINAPI CNetworkConnections::MapColumnToSCID(UINT column, SHCOLUMNID *psc
 */
 
 CNetConUiObject::CNetConUiObject(LPCITEMIDLIST apidl, IOleCommandTarget *lpOleCmd)
+    : m_ref(0),
+      m_apidl(apidl),
+      m_pUnknown(NULL),
+      m_lpOleCmd(lpOleCmd)
 {
-    this->apidl = apidl;
-    pUnknown = NULL;
-    this->lpOleCmd = lpOleCmd;
-    ref = 0;
 }
 
 /************************************************************************
@@ -678,17 +683,17 @@ HRESULT WINAPI CNetConUiObject::QueryInterface(REFIID iid, LPVOID *ppvObject)
     *ppvObject = NULL;
 
     if (IsEqualIID(iid, IID_IContextMenu) || IsEqualIID(iid, IID_IContextMenu2) || IsEqualIID(iid, IID_IContextMenu3))
-        *ppvObject = (IContextMenu3*)this;
+        *ppvObject = static_cast<IContextMenu3*>(this);
     else if (IsEqualIID(iid, IID_IObjectWithSite))
-        *ppvObject = (IObjectWithSite*)this;
+        *ppvObject = static_cast<IObjectWithSite*>(this);
     else if (IsEqualIID(iid, IID_IQueryInfo))
-        *ppvObject = (IQueryInfo*)this;
-    else if(IsEqualIID(iid, IID_IExtractIconW))
-        *ppvObject = (IExtractIconW*)this;
+        *ppvObject = static_cast<IQueryInfo*>(this);
+    else if (IsEqualIID(iid, IID_IExtractIconW))
+        *ppvObject = static_cast<IExtractIconW*>(this);
 
     if (*ppvObject)
     {
-        InterlockedIncrement(&ref);
+        AddRef();
         return S_OK;
     }
 
@@ -705,7 +710,7 @@ ULONG WINAPI CNetConUiObject::AddRef()
 {
     ULONG refCount;
 
-    refCount = InterlockedIncrement(&ref);
+    refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -717,7 +722,7 @@ ULONG WINAPI CNetConUiObject::Release()
 {
     ULONG refCount;
 
-    refCount = InterlockedDecrement(&ref);
+    refCount = InterlockedDecrement(&m_ref);
     if (!refCount)
         delete this;
 
@@ -782,7 +787,7 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
     VALUEStruct * val;
     NETCON_PROPERTIES * pProperties;
 
-    val = _ILGetValueStruct(apidl);
+    val = _ILGetValueStruct(m_apidl);
     if (!val)
         return E_FAIL;
 
@@ -903,7 +908,7 @@ ShowNetConnectionProperties(
         hr = pNCP->AddPages(hwnd, PropSheetExCallback, (LPARAM)&pinfo);
         if (SUCCEEDED(hr))
         {
-            if(PropertySheetW(&pinfo) < 0)
+            if (PropertySheetW(&pinfo) < 0)
                 hr = E_FAIL;
         }
     }
@@ -920,14 +925,14 @@ HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
     VALUEStruct * val;
 
-    val = _ILGetValueStruct(apidl);
+    val = _ILGetValueStruct(m_apidl);
     if (!val)
         return E_FAIL;
 
     if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS) ||
         lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_STATUS-1)) //HACK for Windows XP
     {
-        return ShowNetConnectionStatus(lpOleCmd, val->pItem, lpcmi->hwnd);
+        return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, lpcmi->hwnd);
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_NET_PROPERTIES) ||
              lpcmi->lpVerb == MAKEINTRESOURCEA(10099)) //HACK for Windows XP
@@ -978,13 +983,13 @@ HRESULT WINAPI CNetConUiObject::GetSite(REFIID riid, PVOID *ppvSite)
     HRESULT hr;
     IUnknown *pUnknown;
 
-    if (!this->pUnknown)
+    if (!m_pUnknown)
     {
         *ppvSite = NULL;
         return E_FAIL;
     }
 
-    hr = this->pUnknown->QueryInterface(riid, (LPVOID*)&pUnknown);
+    hr = m_pUnknown->QueryInterface(riid, reinterpret_cast<PVOID*>(&pUnknown));
     if (SUCCEEDED(hr))
     {
         pUnknown->AddRef();
@@ -998,20 +1003,20 @@ HRESULT WINAPI CNetConUiObject::GetSite(REFIID riid, PVOID *ppvSite)
 
 HRESULT WINAPI CNetConUiObject::SetSite(IUnknown *pUnkSite)
 {
-    if(!pUnkSite)
+    if (!pUnkSite)
     {
-        if (this->pUnknown)
+        if (m_pUnknown)
         {
-            this->pUnknown->Release();
-            this->pUnknown = NULL;
+            m_pUnknown->Release();
+            m_pUnknown = NULL;
         }
     }
     else
     {
         pUnkSite->AddRef();
-        if (this->pUnknown)
-            this->pUnknown->Release();
-        this->pUnknown = pUnkSite;
+        if (m_pUnknown)
+            m_pUnknown->Release();
+        m_pUnknown = pUnkSite;
     }
 
     return S_OK;
@@ -1037,7 +1042,7 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
         return E_FAIL;
     }
 
-    val = _ILGetValueStruct(apidl);
+    val = _ILGetValueStruct(m_apidl);
     if (!val)
     {
         ERR("_ILGetValueStruct failed\n");
@@ -1107,8 +1112,8 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CNetworkConnections::Initialize(LPCITEMIDLIST pidl)
 {
-    SHFree(pidlRoot);
-    pidlRoot = ILClone(pidl);
+    SHFree(m_pidlRoot);
+    m_pidlRoot = ILClone(pidl);
 
     return S_OK;
 }
@@ -1121,7 +1126,7 @@ HRESULT WINAPI CNetworkConnections::GetCurFolder(LPITEMIDLIST *pidl)
     if (!pidl)
         return E_POINTER;
 
-    *pidl = ILClone(pidlRoot);
+    *pidl = ILClone(m_pidlRoot);
 
     return S_OK;
 }
@@ -1144,7 +1149,7 @@ HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
     if (pProperties->Status == NCS_CONNECTED)
     {
         NcFreeNetconProperties(pProperties);
-        return ShowNetConnectionStatus(lpOleCmd, val->pItem, pei->hwnd);
+        return ShowNetConnectionStatus(m_lpOleCmd, val->pItem, pei->hwnd);
     }
 
     NcFreeNetconProperties(pProperties);

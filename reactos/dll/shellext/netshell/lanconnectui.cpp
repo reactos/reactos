@@ -31,6 +31,7 @@ class CNetConnectionPropertyUi final :
 {
     public:
         CNetConnectionPropertyUi();
+        ~CNetConnectionPropertyUi();
 
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -57,20 +58,37 @@ class CNetConnectionPropertyUi final :
         BOOL GetDeviceInstanceID(OUT LPOLESTR *DeviceInstanceID); 
         static INT_PTR CALLBACK LANPropertiesUIDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        INetConnection * pCon;
-        INetCfgLock *NCfgLock;
-        INetCfg * pNCfg;
-        NETCON_PROPERTIES * pProperties;
-        LONG ref;
+        INetConnection * m_pCon;
+        INetCfgLock *m_NCfgLock;
+        INetCfg * m_pNCfg;
+        NETCON_PROPERTIES * m_pProperties;
+        LONG m_ref;
 };
 
-CNetConnectionPropertyUi::CNetConnectionPropertyUi()
+CNetConnectionPropertyUi::CNetConnectionPropertyUi() :
+    m_pCon(NULL),
+    m_NCfgLock(NULL),
+    m_pNCfg(NULL),
+    m_pProperties(NULL),
+    m_ref(0)
 {
-    ref = 0;
-    pCon = NULL;
-    pNCfg = NULL;
-    NCfgLock = NULL;
-    pProperties = NULL;
+}
+
+CNetConnectionPropertyUi::~CNetConnectionPropertyUi()
+{
+    if (m_pNCfg)
+    {
+        m_pNCfg->Uninitialize();
+        m_pNCfg->Release();
+    }
+    if (m_NCfgLock)
+    {
+        m_NCfgLock->Release();
+    }
+    if (m_pProperties)
+    {
+        NcFreeNetconProperties(m_pProperties);
+    }
 }
 
 HPROPSHEETPAGE
@@ -127,7 +145,7 @@ CNetConnectionPropertyUi::GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent *
         hr = pNCg->GetDisplayName(&pName);
         if (SUCCEEDED(hr))
         {
-            if (!_wcsicmp(pName, pProperties->pszwDeviceName))
+            if (!_wcsicmp(pName, m_pProperties->pszwDeviceName))
             {
                 *pOut = pNCg;
                 pEnumCfg->Release();
@@ -160,7 +178,7 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
         pNCfg->Release();
         return;
     }
-    while(pENetCfg->Next(1, &pNCfgComp, &Num) == S_OK)
+    while (pENetCfg->Next(1, &pNCfgComp, &Num) == S_OK)
     {
         hr = pNCfgComp->GetCharacteristics(&dwCharacteristics);
         if (SUCCEEDED(hr) && (dwCharacteristics & NCF_HIDDEN))
@@ -188,7 +206,7 @@ CNetConnectionPropertyUi::EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GU
             }
         }
 
-        pItem = (NET_ITEM*)CoTaskMemAlloc(sizeof(NET_ITEM));
+        pItem = static_cast<NET_ITEM*>(CoTaskMemAlloc(sizeof(NET_ITEM)));
         if (!pItem)
             continue;
 
@@ -217,13 +235,13 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
     LPWSTR pDisplayName;
     LVITEMW li;
 
-    SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)pProperties->pszwDeviceName);
-    if (pProperties->dwCharacter & NCCF_SHOW_ICON)
+    SendDlgItemMessageW(hwndDlg, IDC_NETCARDNAME, WM_SETTEXT, 0, (LPARAM)m_pProperties->pszwDeviceName);
+    if (m_pProperties->dwCharacter & NCCF_SHOW_ICON)
     {
         /* check show item on taskbar*/
         SendDlgItemMessageW(hwndDlg, IDC_SHOWTASKBAR, BM_SETCHECK, BST_CHECKED, 0);
     }
-    if (pProperties->dwCharacter & NCCF_NOTIFY_DISCONNECTED)
+    if (m_pProperties->dwCharacter & NCCF_NOTIFY_DISCONNECTED)
     {
         /* check notify item */
         SendDlgItemMessageW(hwndDlg, IDC_NOTIFYNOCONNECTION, BM_SETCHECK, BST_CHECKED, 0);
@@ -255,7 +273,7 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
         return;
     }
 
-    NCfgLock = pNCfgLock;
+    m_NCfgLock = pNCfgLock;
     hr = pNCfg->Initialize(NULL);
     if (FAILED(hr))
     {
@@ -266,7 +284,7 @@ CNetConnectionPropertyUi::InitializeLANPropertiesUIDlg(HWND hwndDlg)
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETCLIENT, NET_TYPE_CLIENT);
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETSERVICE, NET_TYPE_SERVICE);
     EnumComponents(hDlgCtrl, pNCfg, &GUID_DEVCLASS_NETTRANS, NET_TYPE_PROTOCOL);
-    this->pNCfg = pNCfg;
+    m_pNCfg = pNCfg;
 
     ZeroMemory(&li, sizeof(li));
     li.mask = LVIF_STATE;
@@ -337,7 +355,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
     LPOLESTR pStr;
     HKEY hKey;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
             page = (PROPSHEETPAGE*)lParam;
@@ -351,9 +369,9 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
             if (lppsn->hdr.code == PSN_APPLY)
             {
                 This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                if (This->pNCfg)
+                if (This->m_pNCfg)
                 {
-                    hr = This->pNCfg->Apply();
+                    hr = This->m_pNCfg->Apply();
                     if (FAILED(hr))
                         return PSNRET_INVALID;
                 }
@@ -364,7 +382,7 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
                     dwShowIcon = 0;
 
 
-                if (StringFromCLSID((CLSID)This->pProperties->guidId, &pStr) == ERROR_SUCCESS)
+                if (StringFromCLSID((CLSID)This->m_pProperties->guidId, &pStr) == ERROR_SUCCESS)
                 {
                     swprintf(szKey, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\%s\\Connection", pStr);
                     CoTaskMemFree(pStr);
@@ -381,9 +399,9 @@ CNetConnectionPropertyUi::LANPropertiesUIDlg(
             else if (lppsn->hdr.code == PSN_CANCEL)
             {
                 This = (CNetConnectionPropertyUi*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                if (This->pNCfg)
+                if (This->m_pNCfg)
                 {
-                    hr = This->pNCfg->Cancel();
+                    hr = This->m_pNCfg->Cancel();
                     if (SUCCEEDED(hr))
                         return PSNRET_NOERROR;
                     else
@@ -465,7 +483,7 @@ CNetConnectionPropertyUi::GetDeviceInstanceID(
     WCHAR szKeyName[2*MAX_PATH];
     WCHAR szInstanceID[2*MAX_PATH];
 
-    if (StringFromCLSID(pProperties->guidId, &pStr) != ERROR_SUCCESS)
+    if (StringFromCLSID(m_pProperties->guidId, &pStr) != ERROR_SUCCESS)
     {
         // failed to convert guid to string
         return FALSE;
@@ -484,7 +502,7 @@ CNetConnectionPropertyUi::GetDeviceInstanceID(
     if (RegGetValueW(hKey, NULL, L"PnpInstanceId", RRF_RT_REG_SZ, NULL, (PVOID)szInstanceID, &dwInstanceID) == ERROR_SUCCESS)
     {
         szInstanceID[MAX_PATH-1] = L'\0';
-        pResult = (LPOLESTR)CoTaskMemAlloc((wcslen(szInstanceID) + 1) * sizeof(WCHAR));
+        pResult = static_cast<LPOLESTR>(CoTaskMemAlloc((wcslen(szInstanceID) + 1) * sizeof(WCHAR)));
         if (pResult != 0)
         {
             wcscpy(pResult, szInstanceID);
@@ -537,7 +555,7 @@ ULONG
 WINAPI
 CNetConnectionPropertyUi::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -546,25 +564,10 @@ ULONG
 WINAPI
 CNetConnectionPropertyUi::Release()
 {
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
-    {
-        if (pNCfg)
-        {
-            pNCfg->Uninitialize();
-            pNCfg->Release();
-        }
-        if (NCfgLock)
-        {
-            NCfgLock->Release();
-        }
-        if (pProperties)
-        {
-            NcFreeNetconProperties(pProperties);
-        }
         delete this;
-    }
 
     return refCount;
 }
@@ -583,14 +586,14 @@ CNetConnectionPropertyUi::AddPages(
 
     initEx.dwSize = sizeof(initEx);
     initEx.dwICC = ICC_LISTVIEW_CLASSES;
-    if(!InitCommonControlsEx(&initEx))
+    if (!InitCommonControlsEx(&initEx))
         return E_FAIL;
 
-    hr = pCon->GetProperties(&pProperties);
+    hr = m_pCon->GetProperties(&m_pProperties);
     if (FAILED(hr))
         return hr;
 
-    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)this, pProperties->pszwName);
+    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)this, m_pProperties->pszwName);
     if (hProp)
     {
         ret = (*pfnAddPage)(hProp, lParam);
@@ -619,7 +622,7 @@ HRESULT
 WINAPI
 CNetConnectionPropertyUi::GetDeviceGuid(GUID *pGuid)
 {
-    CopyMemory(pGuid, &pProperties->guidId, sizeof(GUID));
+    CopyMemory(pGuid, &m_pProperties->guidId, sizeof(GUID));
     return S_OK;
 }
 
@@ -627,13 +630,13 @@ HRESULT
 WINAPI
 CNetConnectionPropertyUi::SetConnection(INetConnection* pCon)
 {
-    if (this->pCon)
-        this->pCon->Release();
+    if (m_pCon)
+        m_pCon->Release();
 
     if (!pCon)
         return E_POINTER;
 
-    this->pCon = pCon;
+    m_pCon = pCon;
 
     pCon->AddRef();
     return S_OK;
@@ -645,12 +648,12 @@ CNetConnectionPropertyUi::Connect(
     HWND hwndParent,
     DWORD dwFlags)
 {
-    if (!pCon)
+    if (!m_pCon)
         return E_POINTER; //FIXME
 
 
     if (dwFlags & NCUC_NO_UI)
-        return pCon->Connect();
+        return m_pCon->Connect();
 
     return E_FAIL;
 }

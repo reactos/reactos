@@ -16,14 +16,14 @@ class CNetshellClassFactory :
         virtual HRESULT WINAPI LockServer(BOOL fLock);
     
     private:
-        LONG ref;
-        CLSID clsid;
+        LONG m_ref;
+        CLSID m_clsid;
 };
 
-CNetshellClassFactory::CNetshellClassFactory(REFCLSID rclsid)
+CNetshellClassFactory::CNetshellClassFactory(REFCLSID rclsid) :
+    m_ref(0),
+    m_clsid(rclsid)
 {
-    ref = 0;
-    clsid = rclsid;
 }
 
 HRESULT
@@ -33,10 +33,10 @@ CNetshellClassFactory::QueryInterface(
     LPVOID *ppvObj)
 {
     *ppvObj = NULL;
-    if(IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IClassFactory))
+    if (IsEqualIID(riid, IID_IUnknown) || IsEqualIID(riid, IID_IClassFactory))
     {
-        *ppvObj = (IClassFactory*)this;
-        InterlockedIncrement(&ref);
+        *ppvObj = static_cast<IClassFactory*>(this);
+        AddRef();
         return S_OK;
     }
     return E_NOINTERFACE;
@@ -46,7 +46,7 @@ ULONG
 WINAPI
 CNetshellClassFactory::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -55,13 +55,11 @@ ULONG
 WINAPI
 CNetshellClassFactory::Release()
 {
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
-    {
         CoTaskMemFree(this);
-        return 0;
-    }
+
     return refCount;
 }
 
@@ -74,13 +72,13 @@ CNetshellClassFactory::CreateInstance(
 {
     *ppvObject = NULL;
 
-    if (IsEqualCLSID(clsid, CLSID_NetworkConnections))
+    if (IsEqualCLSID(m_clsid, CLSID_NetworkConnections))
         return ISF_NetConnect_Constructor(pUnkOuter, riid, ppvObject);
-    else if (IsEqualCLSID(clsid, CLSID_ConnectionManager))
+    else if (IsEqualCLSID(m_clsid, CLSID_ConnectionManager))
         return INetConnectionManager_Constructor(pUnkOuter, riid, ppvObject);
-    else if (IsEqualCLSID(clsid, CLSID_LANConnectUI))
+    else if (IsEqualCLSID(m_clsid, CLSID_LANConnectUI))
         return LanConnectUI_Constructor(pUnkOuter, riid, ppvObject);
-    else if (IsEqualCLSID(clsid, CLSID_LanConnectStatusUI))
+    else if (IsEqualCLSID(m_clsid, CLSID_LanConnectStatusUI))
         return LanConnectStatusUI_Constructor(pUnkOuter, riid, ppvObject);
 
     return E_NOINTERFACE;
