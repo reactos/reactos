@@ -57,7 +57,7 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_ShellDispatchInproc),
         {
-            {    0x0,                       &IID_IUnknown },
+            {    0x0,   &IID_IUnknown },
         }
     },
 #endif

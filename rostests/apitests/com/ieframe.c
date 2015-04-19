@@ -15,12 +15,20 @@ static const CLASS_AND_INTERFACES ExpectedInterfaces[] =
     {
         ID_NAME(CLSID_ShellWindows),
         {
-            {  -0xa0,       &IID_IMarshal },
-            {  -0x20,       &IID_IClientSecurity },
-            {    0x0,       &IID_IMultiQI },
+            {  -0xa0,   &IID_IMarshal },
+            {  -0x20,   &IID_IClientSecurity },
+            {    0x0,   &IID_IMultiQI },
+            {    0x0,       &IID_IUnknown },
+            { FARAWY,   &IID_IShellWindows },
+            { FARAWY,   &IID_IDispatch },
+        }
+    },
+    {
+        ID_NAME(CLSID_CURLSearchHook),
+        {
+            {    0x0,   &IID_IURLSearchHook2 },
+            {    0x0,       &IID_IURLSearchHook },
             {    0x0,           &IID_IUnknown },
-            { FARAWY,       &IID_IShellWindows },
-            { FARAWY,       &IID_IDispatch },
         }
     },
 };

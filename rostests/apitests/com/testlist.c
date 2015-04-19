@@ -6,6 +6,7 @@
 extern void func_browseui(void);
 extern void func_ieframe(void);
 extern void func_interfaces(void);
+extern void func_netshell(void);
 extern void func_shdocvw(void);
 extern void func_shell32(void);
 
@@ -14,6 +15,7 @@ const struct test winetest_testlist[] =
     { "browseui", func_browseui },
     { "ieframe", func_ieframe },
     { "interfaces", func_interfaces },
+    { "netshell", func_netshell },
     { "shdocvw", func_shdocvw },
     { "shell32", func_shell32 },
 
