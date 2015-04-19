@@ -15,14 +15,14 @@ HKCR
             }
             val LocalizedString = s '@%MODULE%,-10000'
         }
-        ForceRemove {7007ACC5-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections'
+        ForceRemove {7007ACC5-3202-11D1-AAD2-00805FC1270E} = s 'LAN Connection UI'
         {
             InprocServer32 = s '%MODULE%'
             {
                 val ThreadingModel = s 'Both'
             }
         }
-        ForceRemove {7007ACCF-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections'
+        ForceRemove {7007ACCF-3202-11D1-AAD2-00805FC1270E} = s 'Network Connections Status Icon'
         {
             InprocServer32 = s '%MODULE%'
             {
@@ -43,7 +43,7 @@ HKLM
         {
           NoRemove Explorer
           {
-            NoRemove MyComputer
+            NoRemove ControlPanel
             {
               NoRemove NameSpace
               {
