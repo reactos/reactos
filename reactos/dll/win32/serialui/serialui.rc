@@ -8,6 +8,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME "serialui.dll"
 #include <reactos/version.rc>
 
+#include <reactos/manifest_dll.rc>
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* UTF-8 */

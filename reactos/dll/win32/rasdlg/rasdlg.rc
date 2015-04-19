@@ -34,6 +34,8 @@
 101 BITMAP "res/bitmaps/101.bmp"
 102 BITMAP "res/bitmaps/102.bmp"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 

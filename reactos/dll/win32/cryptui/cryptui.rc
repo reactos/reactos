@@ -46,6 +46,8 @@ IDB_CERT_WATERMARK BITMAP "res/certwatermark.bmp"
 /* @makedep: certheader.bmp */
 IDB_CERT_HEADER BITMAP "res/certheader.bmp"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 

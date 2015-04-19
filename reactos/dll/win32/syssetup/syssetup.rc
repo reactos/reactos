@@ -22,6 +22,8 @@ IDI_ICON3 ICON "resources/3.ico"
 IDI_ICON4 ICON "resources/4.ico"
 IDI_ICON5 ICON "resources/5.ico"
 
+#include <reactos/manifest_dll.rc>
+
 STRINGTABLE
 BEGIN
     IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://winext2fsd.sourceforge.net/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/"

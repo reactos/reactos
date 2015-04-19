@@ -26,6 +26,8 @@
 /* @makedep: banner.bmp */
 IDB_BANNER BITMAP "res/banner.bmp"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 

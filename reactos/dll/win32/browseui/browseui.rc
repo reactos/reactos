@@ -45,32 +45,12 @@ IDR_EXPLORERBAND REGISTRY "res/explorerband.rgs"
 IDR_PROGRESSDIALOG REGISTRY "res/progressdialog.rgs"
 IDR_AUTOCOMPLETE REGISTRY "res/autocomplete.rgs"
 
+#include <reactos/manifest_dll.rc>
+
 /*
  * Everything specific to any language goes
  * in one of the specific files.
  */
-//#include "lang/ca-ES.rc"
-//#include "lang/cs-CZ.rc"
-//#include "lang/da-DK.rc"
-//#include "lang/el-GR.rc"
-//#include "lang/en-GB.rc"
-//#include "lang/fi-FI.rc"
-//#include "lang/fr-FR.rc"
-//#include "lang/he-IL.rc"
-//#include "lang/hu-HU.rc"
-//#include "lang/it-IT.rc"
-//#include "lang/ja-JP.rc"
-//#include "lang/ko-KR.rc"
-//#include "lang/nl-NL.rc"
-//#include "lang/no-NO.rc"
-//#include "lang/pt-BR.rc"
-//#include "lang/pt-PT.rc"
-//#include "lang/ru-RU.rc"
-//#include "lang/sl-SI.rc"
-//#include "lang/sk-SK.rc"
-//#include "lang/sv-SE.rc"
-//#include "lang/zh-CN.rc"
-//#include "lang/zh-TW.rc"
 
 /* UTF-8 */
 #pragma code_page(65001)

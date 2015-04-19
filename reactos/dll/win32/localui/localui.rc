@@ -36,6 +36,8 @@
 
 #include "wine/wine_common_ver.rc"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 

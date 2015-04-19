@@ -77,6 +77,8 @@ END
 #include "avi_res.rc"
 #include "rgs_res.rc"
 
+#include <reactos/manifest_dll.rc>
+
 /*
  * Everything specific to any language goes
  * in one of the specific files.

@@ -12,6 +12,8 @@
 IDI_COMPNAME ICON "res/101.ico"
 IDI_WARNINGICO ICON "res/102.ico"
 
+#include <reactos/manifest_dll.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
