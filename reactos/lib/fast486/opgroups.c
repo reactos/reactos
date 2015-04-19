@@ -70,6 +70,7 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
         case 1:
         {
             Result = FirstValue | SecondValue;
+            State->Flags.Cf = State->Flags.Of = FALSE;
             break;
         }
 
@@ -112,6 +113,7 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
         case 4:
         {
             Result = FirstValue & SecondValue;
+            State->Flags.Cf = State->Flags.Of = FALSE;
             break;
         }
 
@@ -134,6 +136,7 @@ Fast486ArithmeticOperation(PFAST486_STATE State,
         case 6:
         {
             Result = FirstValue ^ SecondValue;
+            State->Flags.Cf = State->Flags.Of = FALSE;
             break;
         }
 
