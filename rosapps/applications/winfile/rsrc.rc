@@ -50,6 +50,8 @@ IDB_DRIVEBAR BITMAP DISCARDABLE drivebar.bmp
 /* @makedep: images.bmp */
 IDB_IMAGES BITMAP DISCARDABLE images.bmp
 
+#include <reactos/manifest_exe.rc>
+
 /* include localised resources */
 
 /* UTF-8 */
