@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #define _WINVER 0x501
+#define SYMOPT_ALLOW_ABSOLUTE_SYMBOLS 0x00000800
 #include <windows.h>
 #include <shlwapi.h>
 #include <dbghelp.h>
