@@ -6,7 +6,7 @@
 #include "resource.h"
 
 
-void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t *BytesUnits, bool Fractional)
+void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, const wchar_t *BytesUnits, bool Fractional)
 {
     wchar_t Text[1000];
     wchar_t Text2[1000];

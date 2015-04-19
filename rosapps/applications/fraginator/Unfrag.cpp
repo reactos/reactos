@@ -143,7 +143,7 @@ Defragment *StartDefragThread (wstring Drive, DefragType Method, HANDLE &Handle)
 
 
 // Main Initialization
-int wmain (int argc, wchar_t **argv)
+extern "C" int wmain (int argc, wchar_t **argv)
 {
     vector<wstring>       Drives;
     vector<Defragment *> Defrags;
@@ -157,10 +157,10 @@ int wmain (int argc, wchar_t **argv)
     {
         if (wcslen(argv[c]) == 2  &&  argv[c][1] == L':')
         {
-            Drives.push_back (wcsupr(argv[c]));
+            Drives.push_back (_wcsupr(argv[c]));
         }
         else
-        if (argv[c][0] == L'-'  ||  argv[c][0] == L'/'  &&  wcslen(argv[c]) == 2)
+        if (argv[c][0] == L'-'  ||  (argv[c][0] == L'/'  &&  wcslen(argv[c]) == 2))
         {
             switch (tolower(argv[c][1]))
             {

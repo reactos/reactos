@@ -94,7 +94,7 @@ bool DriveVolume::Open (wstring Name)
             swprintf (SerialText, L"%x-%x", (VolSN & 0xffff0000) >> 16,
                 VolSN & 0x0000ffff);
 
-            wcsupr (SerialText);
+            _wcsupr (SerialText);
             VolInfo.Serial     = SerialText;
         }
         else
