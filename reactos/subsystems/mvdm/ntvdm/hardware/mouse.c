@@ -429,8 +429,8 @@ VOID MouseEventHandler(PMOUSE_EVENT_RECORD MouseEvent)
     WaitForSingleObject(MouseMutex, INFINITE);
 
     /* Update the counters */
-    HorzCounter += NewPosition.X - Position.X;
-    VertCounter += NewPosition.Y - Position.Y;
+    HorzCounter += (NewPosition.X - Position.X) << DoubleWidth;
+    VertCounter += (NewPosition.Y - Position.Y) << DoubleHeight;
 
     /* Update the position */
     Position = NewPosition;
