@@ -675,7 +675,6 @@ FASTCALL
 UserReferenceObject(PVOID obj)
 {
    PHEAD ObjHead = obj;
-   ASSERT(ObjHead->cLockObj >= 0);
    ASSERT(ObjHead->cLockObj < 0x10000);
 
    ObjHead->cLockObj++;
