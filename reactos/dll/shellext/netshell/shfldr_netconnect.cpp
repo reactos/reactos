@@ -33,7 +33,6 @@ class CNetworkConnections final :
 {
     public:
         CNetworkConnections();
-        ~CNetworkConnections();
 
         /* IUnknown */
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -41,38 +40,40 @@ class CNetworkConnections final :
         virtual ULONG WINAPI Release();
 
         // IShellFolder
-        virtual HRESULT WINAPI ParseDisplayName (HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
+        virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
         virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
-        virtual HRESULT WINAPI BindToObject(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI BindToStorage(LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI CompareIDs(LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+        virtual HRESULT WINAPI BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
+        virtual HRESULT WINAPI BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut);
+        virtual HRESULT WINAPI CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2);
         virtual HRESULT WINAPI CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut);
-        virtual HRESULT WINAPI GetAttributesOf (UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
+        virtual HRESULT WINAPI GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apidl, DWORD *rgfInOut);
         virtual HRESULT WINAPI GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut);
-        virtual HRESULT WINAPI GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet);
-        virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl, LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST *pPidlOut);
+        virtual HRESULT WINAPI GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
+        virtual HRESULT WINAPI SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
 
         /* IShellFolder2 */
         virtual HRESULT WINAPI GetDefaultSearchGUID(GUID *pguid);
         virtual HRESULT WINAPI EnumSearches(IEnumExtraSearch **ppenum);
         virtual HRESULT WINAPI GetDefaultColumn(DWORD dwRes, ULONG *pSort, ULONG *pDisplay);
         virtual HRESULT WINAPI GetDefaultColumnState(UINT iColumn, DWORD *pcsFlags);
-        virtual HRESULT WINAPI GetDetailsEx(LPCITEMIDLIST pidl, const SHCOLUMNID *pscid, VARIANT *pv);
-        virtual HRESULT WINAPI GetDetailsOf(LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS *psd);
+        virtual HRESULT WINAPI GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *pscid, VARIANT *pv);
+        virtual HRESULT WINAPI GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
         virtual HRESULT WINAPI MapColumnToSCID(UINT column, SHCOLUMNID *pscid);
 
         // IPersistFolder2
         virtual HRESULT WINAPI GetClassID(CLSID *lpClassId);
-        virtual HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
-        virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST *pidl);
+        virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidl);
+        virtual HRESULT WINAPI GetCurFolder(PIDLIST_ABSOLUTE *pidl);
 
         // IShellExecuteHookW
         virtual HRESULT WINAPI Execute(LPSHELLEXECUTEINFOW pei);
 
     private:
+        ~CNetworkConnections();
+
         LONG m_ref;
         /* both paths are parsible from the desktop */
-        LPITEMIDLIST m_pidlRoot;	/* absolute pidl */
+        PIDLIST_ABSOLUTE m_pidlRoot;
         IOleCommandTarget *m_lpOleCmd;
 };
 
@@ -83,7 +84,7 @@ class CNetConUiObject final :
     public IExtractIconW
 {
     public:
-        CNetConUiObject(LPCITEMIDLIST apidl, IOleCommandTarget *lpOleCmd);
+        CNetConUiObject(PCUITEMID_CHILD pidl, IOleCommandTarget *lpOleCmd);
 
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -111,7 +112,7 @@ class CNetConUiObject final :
 
     private:
         LONG m_ref;
-        LPCITEMIDLIST m_apidl;
+        PCUITEMID_CHILD m_pidl;
         IUnknown *m_pUnknown;
         IOleCommandTarget *m_lpOleCmd;
 };
@@ -136,10 +137,10 @@ static const shvheader NetConnectSFHeader[] = {
 
 HRESULT ShowNetConnectionStatus(IOleCommandTarget * lpOleCmd, INetConnection * pNetConnect, HWND hwnd);
 
-CNetworkConnections::CNetworkConnections()
-    : m_ref(0),
-      m_pidlRoot(_ILCreateNetConnect()),
-      m_lpOleCmd(NULL)
+CNetworkConnections::CNetworkConnections() :
+    m_ref(0),
+    m_pidlRoot(_ILCreateNetConnect()),
+    m_lpOleCmd(NULL)
 {
 }
 
@@ -218,7 +219,7 @@ ULONG WINAPI CNetworkConnections::Release()
 */
 HRESULT WINAPI CNetworkConnections::ParseDisplayName (
                HWND hwndOwner, LPBC pbcReserved, LPOLESTR lpszDisplayName,
-               DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
+               DWORD * pchEaten, PIDLIST_RELATIVE * ppidl, DWORD * pdwAttributes)
 {
     HRESULT hr = E_UNEXPECTED;
 
@@ -239,7 +240,7 @@ static BOOL CreateNetConnectEnumList(CEnumIDList *list, DWORD dwFlags)
     IEnumNetConnection *pEnumCon;
     INetConnection *INetCon;
     ULONG Count;
-    LPITEMIDLIST pidl;
+    PITEMID_CHILD pidl;
 
     /* get an instance to of IConnectionManager */
     hr = INetConnectionManager_Constructor(NULL, IID_INetConnectionManager, (LPVOID*)&pNetConMan);
@@ -296,7 +297,7 @@ HRESULT WINAPI CNetworkConnections::EnumObjects(
 *		ISF_NetConnect_fnBindToObject
 */
 HRESULT WINAPI CNetworkConnections::BindToObject (
-               LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+               PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     return E_NOTIMPL;
 }
@@ -305,7 +306,7 @@ HRESULT WINAPI CNetworkConnections::BindToObject (
 *	ISF_NetConnect_fnBindToStorage
 */
 HRESULT WINAPI CNetworkConnections::BindToStorage(
-               LPCITEMIDLIST pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
+               PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
     *ppvOut = NULL;
     return E_NOTIMPL;
@@ -316,12 +317,8 @@ HRESULT WINAPI CNetworkConnections::BindToStorage(
 */
 
 HRESULT WINAPI CNetworkConnections::CompareIDs(
-               LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+               LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    //IGenericSFImpl *This = (IGenericSFImpl *)iface;
-
-
-
     return E_NOTIMPL;
 }
 
@@ -404,9 +401,9 @@ HRESULT WINAPI CNetworkConnections::GetAttributesOf(
 *
 */
 
-HRESULT IContextMenuImpl_Constructor(REFIID riid, LPCITEMIDLIST apidl, LPVOID * ppvOut, IOleCommandTarget * lpOleCmd)
+HRESULT IContextMenuImpl_Constructor(REFIID riid, PCUITEMID_CHILD pidl, LPVOID * ppvOut, IOleCommandTarget * lpOleCmd)
 {
-    CNetConUiObject *pMenu = new CNetConUiObject(apidl, lpOleCmd);
+    CNetConUiObject *pMenu = new CNetConUiObject(pidl, lpOleCmd);
     if (!pMenu)
         return E_OUTOFMEMORY;
 
@@ -444,12 +441,12 @@ HRESULT WINAPI CNetworkConnections::GetUIObjectOf(
 *	ISF_NetConnect_fnGetDisplayNameOf
 *
 */
-HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
+HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
     LPWSTR pszName;
     HRESULT hr = E_FAIL;
     NETCON_PROPERTIES * pProperties;
-    VALUEStruct * val;
+    const VALUEStruct * val;
 
     if (!strRet)
         return E_INVALIDARG;
@@ -510,10 +507,10 @@ HRESULT WINAPI CNetworkConnections::GetDisplayNameOf(LPCITEMIDLIST pidl, DWORD d
 *  ppidlOut  [out] simple pidl returned
 */
 HRESULT WINAPI CNetworkConnections::SetNameOf (
-               HWND hwndOwner, LPCITEMIDLIST pidl,	/*simple pidl */
-               LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
+               HWND hwndOwner, PCUITEMID_CHILD pidl,	/*simple pidl */
+               LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD * pPidlOut)
 {
-    VALUEStruct * val;
+    const VALUEStruct * val;
 
     val = _ILGetValueStruct(pidl);
     if (!val)
@@ -554,17 +551,17 @@ HRESULT WINAPI CNetworkConnections::GetDefaultColumnState(UINT iColumn, DWORD * 
 }
 
 HRESULT WINAPI CNetworkConnections::GetDetailsEx(
-               LPCITEMIDLIST pidl, const SHCOLUMNID * pscid, VARIANT * pv)
+               PCUITEMID_CHILD pidl, const SHCOLUMNID * pscid, VARIANT * pv)
 {
     return E_NOTIMPL;
 }
 
 HRESULT WINAPI CNetworkConnections::GetDetailsOf(
-               LPCITEMIDLIST pidl, UINT iColumn, SHELLDETAILS * psd)
+               PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS * psd)
 {
     WCHAR buffer[MAX_PATH] = {0};
     HRESULT hr = E_FAIL;
-    VALUEStruct * val;
+    const VALUEStruct * val;
     NETCON_PROPERTIES * pProperties;
 
     if (iColumn >= NETCONNECTSHELLVIEWCOLUMNS)
@@ -667,9 +664,9 @@ HRESULT WINAPI CNetworkConnections::MapColumnToSCID(UINT column, SHCOLUMNID *psc
 * IContextMenu2 Implementation
 */
 
-CNetConUiObject::CNetConUiObject(LPCITEMIDLIST apidl, IOleCommandTarget *lpOleCmd)
+CNetConUiObject::CNetConUiObject(PCUITEMID_CHILD pidl, IOleCommandTarget *lpOleCmd)
     : m_ref(0),
-      m_apidl(apidl),
+      m_pidl(pidl),
       m_pUnknown(NULL),
       m_lpOleCmd(lpOleCmd)
 {
@@ -784,10 +781,10 @@ HRESULT WINAPI CNetConUiObject::QueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
-    VALUEStruct * val;
+    const VALUEStruct * val;
     NETCON_PROPERTIES * pProperties;
 
-    val = _ILGetValueStruct(m_apidl);
+    val = _ILGetValueStruct(m_pidl);
     if (!val)
         return E_FAIL;
 
@@ -923,9 +920,9 @@ ShowNetConnectionProperties(
 */
 HRESULT WINAPI CNetConUiObject::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    VALUEStruct * val;
+    const VALUEStruct * val;
 
-    val = _ILGetValueStruct(m_apidl);
+    val = _ILGetValueStruct(m_pidl);
     if (!val)
         return E_FAIL;
 
@@ -1032,7 +1029,7 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
     int *piIndex,
     UINT *pwFlags)
 {
-    VALUEStruct *val;
+    const VALUEStruct *val;
     NETCON_PROPERTIES *pProperties;
 
     *pwFlags = 0;
@@ -1042,7 +1039,7 @@ HRESULT WINAPI CNetConUiObject::GetIconLocation(
         return E_FAIL;
     }
 
-    val = _ILGetValueStruct(m_apidl);
+    val = _ILGetValueStruct(m_pidl);
     if (!val)
     {
         ERR("_ILGetValueStruct failed\n");
@@ -1110,7 +1107,7 @@ HRESULT WINAPI CNetworkConnections::GetClassID(CLSID *lpClassId)
  *
  * NOTES: it makes no sense to change the pidl
  */
-HRESULT WINAPI CNetworkConnections::Initialize(LPCITEMIDLIST pidl)
+HRESULT WINAPI CNetworkConnections::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     SHFree(m_pidlRoot);
     m_pidlRoot = ILClone(pidl);
@@ -1121,7 +1118,7 @@ HRESULT WINAPI CNetworkConnections::Initialize(LPCITEMIDLIST pidl)
 /**************************************************************************
  *	ISF_NetConnect_PersistFolder2_GetCurFolder
  */
-HRESULT WINAPI CNetworkConnections::GetCurFolder(LPITEMIDLIST *pidl)
+HRESULT WINAPI CNetworkConnections::GetCurFolder(PIDLIST_ABSOLUTE *pidl)
 {
     if (!pidl)
         return E_POINTER;
@@ -1136,7 +1133,7 @@ HRESULT WINAPI CNetworkConnections::GetCurFolder(LPITEMIDLIST *pidl)
  */
 HRESULT WINAPI CNetworkConnections::Execute(LPSHELLEXECUTEINFOW pei)
 {
-    VALUEStruct *val;
+    const VALUEStruct *val;
     NETCON_PROPERTIES * pProperties;
 
     val = _ILGetValueStruct(ILFindLastID((ITEMIDLIST*)pei->lpIDList));

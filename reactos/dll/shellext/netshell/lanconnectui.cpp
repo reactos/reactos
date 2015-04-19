@@ -31,7 +31,6 @@ class CNetConnectionPropertyUi final :
 {
     public:
         CNetConnectionPropertyUi();
-        ~CNetConnectionPropertyUi();
 
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -51,6 +50,8 @@ class CNetConnectionPropertyUi final :
         virtual HRESULT WINAPI Disconnect(HWND hwndParent, DWORD dwFlags);
 
     private:
+        ~CNetConnectionPropertyUi();
+
         BOOL GetINetCfgComponent(INetCfg *pNCfg, INetCfgComponent ** pOut);
         VOID EnumComponents(HWND hDlgCtrl, INetCfg *pNCfg, const GUID *CompGuid, UINT Type);
         VOID InitializeLANPropertiesUIDlg(HWND hwndDlg);

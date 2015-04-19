@@ -4,7 +4,7 @@
  *  AddToEnumList()
  */
 BOOL
-CEnumIDList::AddToEnumList(LPITEMIDLIST pidl)
+CEnumIDList::AddToEnumList(PITEMID_CHILD pidl)
 {
     LPENUMLIST pNew;
 
@@ -99,17 +99,15 @@ HRESULT
 WINAPI
 CEnumIDList::Next(
     ULONG celt,
-    LPITEMIDLIST * rgelt,
+    PITEMID_CHILD *rgelt,
     ULONG *pceltFetched)
 {
     ULONG i;
     HRESULT hr = S_OK;
-    LPITEMIDLIST temp;
+    PITEMID_CHILD temp;
 
     if (pceltFetched)
         *pceltFetched = 0;
-
-    *rgelt=0;
 
     if (celt > 1 && !pceltFetched)
     {
@@ -170,15 +168,13 @@ WINAPI
 CEnumIDList::Clone(
     LPENUMIDLIST * ppenum)
 {
-    //IEnumIDListImpl *This = (IEnumIDListImpl *)iface;
-
     return E_NOTIMPL;
 }
 
-LPPIDLDATA _ILGetDataPointer(LPCITEMIDLIST pidl)
+LPPIDLDATA _ILGetDataPointer(LPITEMIDLIST pidl)
 {
     if (pidl && pidl->mkid.cb != 0x00)
-        return (LPPIDLDATA) &(pidl->mkid.abID);
+        return reinterpret_cast<LPPIDLDATA>(&pidl->mkid.abID);
     return NULL;
 }
 
@@ -186,7 +182,7 @@ LPITEMIDLIST _ILAlloc(BYTE type, unsigned int size)
 {
     LPITEMIDLIST pidlOut = NULL;
 
-    pidlOut = (LPITEMIDLIST)SHAlloc(size + 5);
+    pidlOut = static_cast<LPITEMIDLIST>(SHAlloc(size + 5));
     if (pidlOut)
     {
         LPPIDLDATA pData;
@@ -202,9 +198,9 @@ LPITEMIDLIST _ILAlloc(BYTE type, unsigned int size)
     return pidlOut;
 }
 
-LPITEMIDLIST _ILCreateNetConnect()
+PITEMID_CHILD _ILCreateNetConnect()
 {
-    LPITEMIDLIST pidlOut;
+    PITEMID_CHILD pidlOut;
 
     pidlOut = _ILAlloc(PT_GUID, sizeof(PIDLDATA));
     if (pidlOut)
@@ -216,9 +212,9 @@ LPITEMIDLIST _ILCreateNetConnect()
     return pidlOut;
 }
 
-IID* _ILGetGUIDPointer(LPCITEMIDLIST pidl)
+GUID* _ILGetGUIDPointer(LPITEMIDLIST pidl)
 {
-    LPPIDLDATA pdata =_ILGetDataPointer(pidl);
+    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
 
     if (!pdata)
         return NULL;
@@ -232,7 +228,7 @@ IID* _ILGetGUIDPointer(LPCITEMIDLIST pidl)
 
 BOOL _ILIsNetConnect(LPCITEMIDLIST pidl)
 {
-    IID *piid = _ILGetGUIDPointer(pidl);
+    const IID *piid = _ILGetGUIDPointer(const_cast<LPITEMIDLIST>(pidl));
 
     if (piid)
         return IsEqualIID(*piid, CLSID_NetworkConnections);
@@ -240,9 +236,9 @@ BOOL _ILIsNetConnect(LPCITEMIDLIST pidl)
     return FALSE;
 }
 
-LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem)
+PITEMID_CHILD ILCreateNetConnectItem(INetConnection * pItem)
 {
-    LPITEMIDLIST pidl;
+    PITEMID_CHILD pidl;
     LPPIDLDATA pdata;
 
     pidl = _ILAlloc(0x99, sizeof(PIDLDATA));
@@ -252,12 +248,12 @@ LPITEMIDLIST ILCreateNetConnectItem(INetConnection * pItem)
     return pidl;
 }
 
-VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl)
+const VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl)
 {
-    LPPIDLDATA pdata = _ILGetDataPointer(pidl);
+    LPPIDLDATA pdata = _ILGetDataPointer(const_cast<LPITEMIDLIST>(pidl));
 
     if (pdata && pdata->type==0x99)
-        return (VALUEStruct*)&(pdata->u.value);
+        return reinterpret_cast<const VALUEStruct*>(&pdata->u.value);
 
     return NULL;
 }

@@ -53,16 +53,16 @@ class CLanStatus :
         HRESULT InitializeNetTaskbarNotifications();
         HRESULT ShowStatusDialogByCLSID(const GUID *pguidCmdGroup);
         
-        INetConnectionManager *lpNetMan;
-        LONG ref;
-        NOTIFICATION_ITEM *pHead;
+        INetConnectionManager *m_lpNetMan;
+        LONG m_ref;
+        NOTIFICATION_ITEM *m_pHead;
 };
 
-CLanStatus::CLanStatus()
+CLanStatus::CLanStatus() :
+    m_lpNetMan(NULL),
+    m_ref(0),
+    m_pHead(NULL)
 {
-    ref = 0;
-    lpNetMan = NULL;
-    pHead = NULL;
 }
 
 VOID
@@ -965,9 +965,9 @@ CLanStatus::InitializeNetTaskbarNotifications()
 
     TRACE("InitializeNetTaskbarNotifications\n");
 
-    if (pHead)
+    if (m_pHead)
     {
-       pItem = pHead;
+       pItem = m_pHead;
        while (pItem)
        {
            hr = pItem->pNet->GetProperties(&pProps);
@@ -1074,7 +1074,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
                     if (pLast)
                         pLast->pNext = pItem;
                     else
-                        pHead = pItem;
+                        m_pHead = pItem;
 
                     pLast = pItem;
                     Index++;
@@ -1092,7 +1092,7 @@ CLanStatus::InitializeNetTaskbarNotifications()
         }
     } while (hr == S_OK);
 
-    lpNetMan = pNetConMan;
+    m_lpNetMan = pNetConMan;
     pEnumCon->Release();
     return S_OK;
 }
@@ -1102,7 +1102,7 @@ CLanStatus::ShowStatusDialogByCLSID(const GUID *pguidCmdGroup)
 {
     NOTIFICATION_ITEM *pItem;
 
-    pItem = pHead;
+    pItem = m_pHead;
     while (pItem)
     {
         if (IsEqualGUID(pItem->guidItem, *pguidCmdGroup))
@@ -1140,7 +1140,7 @@ ULONG
 WINAPI
 CLanStatus::AddRef()
 {
-    ULONG refCount = InterlockedIncrement(&ref);
+    ULONG refCount = InterlockedIncrement(&m_ref);
 
     return refCount;
 }
@@ -1150,7 +1150,7 @@ WINAPI
 CLanStatus::Release()
 {
 #if 0 // WTF?!
-    ULONG refCount = InterlockedDecrement(&ref);
+    ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
         delete this;

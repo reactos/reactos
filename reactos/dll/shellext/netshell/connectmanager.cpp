@@ -40,7 +40,6 @@ class CNetConnection final :
 {
     public:
         CNetConnection(PINetConnectionItem pItem);
-        ~CNetConnection();
 
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -57,6 +56,8 @@ class CNetConnection final :
         HRESULT WINAPI Rename(LPCWSTR pszwDuplicateName);
 
     private:
+        ~CNetConnection();
+
         LONG m_ref;
         NETCON_PROPERTIES m_Props;
         DWORD m_dwAdapterIndex;

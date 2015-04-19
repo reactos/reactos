@@ -61,11 +61,10 @@ HRESULT ShowNetConnectionProperties(INetConnection * pNetConnect, HWND hwnd);
 HRESULT WINAPI ISF_NetConnect_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 /* enumlist.c */
-LPITEMIDLIST _ILCreateNetConnect(void);
-LPITEMIDLIST ILCreateNetConnectItem(INetConnection *pItem);
+PITEMID_CHILD _ILCreateNetConnect(void);
+PITEMID_CHILD ILCreateNetConnectItem(INetConnection *pItem);
 BOOL _ILIsNetConnect(LPCITEMIDLIST pidl);
-//BOOL AddToEnumList(IEnumIDList *iface, LPITEMIDLIST pidl);
-VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl);
+const VALUEStruct * _ILGetValueStruct(LPCITEMIDLIST pidl);
 
 /* classfactory.c */
 HRESULT IClassFactory_fnConstructor(REFCLSID rclsid, REFIID riid, LPVOID *ppvOut);

@@ -1,6 +1,6 @@
 #include "precomp.h"
 
-class CNetshellClassFactory :
+class CNetshellClassFactory final :
     public IClassFactory
 {
     public:
@@ -58,7 +58,7 @@ CNetshellClassFactory::Release()
     ULONG refCount = InterlockedDecrement(&m_ref);
 
     if (!refCount)
-        CoTaskMemFree(this);
+        delete this;
 
     return refCount;
 }

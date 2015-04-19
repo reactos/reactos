@@ -21,7 +21,7 @@ typedef struct tagPIDLDATA
 typedef struct tagENUMLIST
 {
     struct tagENUMLIST *pNext;
-    LPITEMIDLIST pidl;
+    PITEMID_CHILD pidl;
 } ENUMLIST, *LPENUMLIST;
 
 class CEnumIDList final :
@@ -29,7 +29,7 @@ class CEnumIDList final :
 {
     public:
         CEnumIDList();
-        BOOL AddToEnumList(LPITEMIDLIST pidl);
+        BOOL AddToEnumList(PITEMID_CHILD pidl);
 
         // IUnknown
         virtual HRESULT WINAPI QueryInterface(REFIID riid, LPVOID *ppvOut);
@@ -37,7 +37,7 @@ class CEnumIDList final :
         virtual ULONG WINAPI Release();
 
         // IEnumIDList
-        virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, LPITEMIDLIST *rgelt, ULONG *pceltFetched);
+        virtual HRESULT STDMETHODCALLTYPE Next(ULONG celt, PITEMID_CHILD *rgelt, ULONG *pceltFetched);
         virtual HRESULT STDMETHODCALLTYPE Skip(ULONG celt);
         virtual HRESULT STDMETHODCALLTYPE Reset();
         virtual HRESULT STDMETHODCALLTYPE Clone(IEnumIDList **ppenum);
