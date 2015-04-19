@@ -30,8 +30,8 @@ STRINGTABLE
     IDS_CAPSLOCKON      "Having Caps Lock on may cause you to enter your password incorrectly.\n\nPress the Caps Lock key on your keyboard to turn off Caps Lock before\nentering your password."
 }
 
-IDD_CREDDIALOG DIALOG  0, 0, 213, 149
-STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_CREDDIALOG DIALOGEX  0, 0, 213, 149
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
