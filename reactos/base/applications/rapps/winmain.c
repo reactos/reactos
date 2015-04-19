@@ -127,10 +127,17 @@ EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info)
     INT Index;
 
     if (!SearchPatternMatch(lpName, szSearchPattern))
+    {
+        RegCloseKey(Info->hSubKey);
         return TRUE;
+    }
 
     ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
-    if (!ItemInfo) return FALSE;
+    if (!ItemInfo)
+    {
+        RegCloseKey(Info->hSubKey);
+        return FALSE;
+    }
 
     RtlCopyMemory(ItemInfo, Info, sizeof(INSTALLED_INFO));
 

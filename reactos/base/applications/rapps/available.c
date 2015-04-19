@@ -26,7 +26,7 @@
         b[0] = '\0';
 
 LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };
-PLIST_ENTRY pCachedEntry = NULL;
+PLIST_ENTRY pCachedEntry = &CachedEntriesHead;
 
 BOOL
 ShowAvailableAppInfo(INT Index)
@@ -150,13 +150,6 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     WCHAR szCabPath[MAX_PATH];
     PAPPLICATION_INFO Info;
     HRESULT hr;
-
-    /* initialize the cached list if hasn't been yet */
-    if (pCachedEntry == NULL)
-    {
-        InitializeListHead(&CachedEntriesHead);
-        pCachedEntry = &CachedEntriesHead;
-    }
 
     if (!GetStorageDirectory(szPath, _countof(szPath)))
         return FALSE;
