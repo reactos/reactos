@@ -4405,16 +4405,24 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeEnter)
     if (NestingLevel > 0) Fast486StackPush(State, FramePointer.Long);
 
     /* Set EBP to the frame pointer */
-    State->GeneralRegs[FAST486_REG_EBP] = FramePointer;
+    if (Size) State->GeneralRegs[FAST486_REG_EBP].Long = FramePointer.Long;
+    else State->GeneralRegs[FAST486_REG_EBP].LowWord = FramePointer.LowWord;
 
     /* Reserve space for the frame */
-    if (Size) State->GeneralRegs[FAST486_REG_ESP].Long -= (ULONG)FrameSize;
-    else State->GeneralRegs[FAST486_REG_ESP].LowWord -= FrameSize;
+    if (State->SegmentRegs[FAST486_REG_SS].Size)
+    {
+        State->GeneralRegs[FAST486_REG_ESP].Long -= (ULONG)FrameSize;
+    }
+    else
+    {
+        State->GeneralRegs[FAST486_REG_ESP].LowWord -= FrameSize;
+    }
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
 {
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+    ULONG Value;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0xC9);
@@ -4422,26 +4430,22 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLeave)
     NO_LOCK_PREFIX();
     TOGGLE_OPSIZE(Size);
 
-    if (Size)
+    if (State->SegmentRegs[FAST486_REG_SS].Size)
     {
         /* Set the stack pointer (ESP) to the base pointer (EBP) */
         State->GeneralRegs[FAST486_REG_ESP].Long = State->GeneralRegs[FAST486_REG_EBP].Long;
-
-        /* Pop the saved base pointer from the stack */
-        Fast486StackPop(State, &State->GeneralRegs[FAST486_REG_EBP].Long);
     }
     else
     {
-        ULONG Value;
-
         /* Set the stack pointer (SP) to the base pointer (BP) */
         State->GeneralRegs[FAST486_REG_ESP].LowWord = State->GeneralRegs[FAST486_REG_EBP].LowWord;
+    }
 
-        /* Pop the saved base pointer from the stack */
-        if (Fast486StackPop(State, &Value))
-        {
-            State->GeneralRegs[FAST486_REG_EBP].LowWord = LOWORD(Value);
-        }
+    /* Pop the saved base pointer from the stack */
+    if (Fast486StackPop(State, &Value))
+    {
+        if (Size) State->GeneralRegs[FAST486_REG_EBP].Long = Value;
+        else State->GeneralRegs[FAST486_REG_EBP].LowWord = LOWORD(Value);
     }
 }
 
