@@ -301,6 +301,7 @@ Fast486StackPush(PFAST486_STATE State,
                  ULONG Value)
 {
     BOOLEAN Size = State->SegmentRegs[FAST486_REG_CS].Size;
+    ULONG StackPointer = State->GeneralRegs[FAST486_REG_ESP].Long;
 
     /* The OPSIZE prefix toggles the size */
     TOGGLE_OPSIZE(Size);
@@ -320,7 +321,9 @@ Fast486StackPush(PFAST486_STATE State,
         /* Store the value in SS:[ESP - 4] */
         if (!Fast486WriteMemory(State,
                                 FAST486_REG_SS,
-                                State->GeneralRegs[FAST486_REG_ESP].Long - sizeof(ULONG),
+                                State->SegmentRegs[FAST486_REG_SS].Size
+                                ? StackPointer - sizeof(ULONG)
+                                : LOWORD(StackPointer - sizeof(ULONG)),
                                 &Value,
                                 sizeof(ULONG)))
         {
@@ -328,8 +331,16 @@ Fast486StackPush(PFAST486_STATE State,
             return FALSE;
         }
 
-        /* Subtract ESP by 4 */
-        State->GeneralRegs[FAST486_REG_ESP].Long -= sizeof(ULONG);
+        if (State->SegmentRegs[FAST486_REG_SS].Size)
+        {
+            /* Subtract ESP by 4 */
+            State->GeneralRegs[FAST486_REG_ESP].Long -= sizeof(ULONG);
+        }
+        else
+        {
+            /* Subtract SP by 4 */
+            State->GeneralRegs[FAST486_REG_ESP].LowWord -= sizeof(ULONG);
+        }
     }
     else
     {
@@ -346,7 +357,9 @@ Fast486StackPush(PFAST486_STATE State,
         /* Store the value in SS:[SP - 2] */
         if (!Fast486WriteMemory(State,
                                 FAST486_REG_SS,
-                                LOWORD(State->GeneralRegs[FAST486_REG_ESP].LowWord - sizeof(USHORT)),
+                                State->SegmentRegs[FAST486_REG_SS].Size
+                                ? StackPointer - sizeof(USHORT)
+                                : LOWORD(StackPointer - sizeof(USHORT)),
                                 &ShortValue,
                                 sizeof(USHORT)))
         {
@@ -354,8 +367,16 @@ Fast486StackPush(PFAST486_STATE State,
             return FALSE;
         }
 
-        /* Subtract SP by 2 */
-        State->GeneralRegs[FAST486_REG_ESP].LowWord -= sizeof(USHORT);
+        if (State->SegmentRegs[FAST486_REG_SS].Size)
+        {
+            /* Subtract ESP by 2 */
+            State->GeneralRegs[FAST486_REG_ESP].Long -= sizeof(USHORT);
+        }
+        else
+        {
+            /* Subtract SP by 2 */
+            State->GeneralRegs[FAST486_REG_ESP].LowWord -= sizeof(USHORT);
+        }
     }
 
     return TRUE;
