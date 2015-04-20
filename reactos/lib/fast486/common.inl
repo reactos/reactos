@@ -408,7 +408,9 @@ Fast486StackPop(PFAST486_STATE State,
         /* Read the value from SS:ESP */
         if (!Fast486ReadMemory(State,
                                FAST486_REG_SS,
-                               State->GeneralRegs[FAST486_REG_ESP].Long,
+                               State->SegmentRegs[FAST486_REG_SS].Size
+                               ? State->GeneralRegs[FAST486_REG_ESP].Long
+                               : State->GeneralRegs[FAST486_REG_ESP].LowWord,
                                FALSE,
                                &LongValue,
                                sizeof(LongValue)))
@@ -417,8 +419,16 @@ Fast486StackPop(PFAST486_STATE State,
             return FALSE;
         }
 
-        /* Increment ESP by 4 */
-        State->GeneralRegs[FAST486_REG_ESP].Long += sizeof(ULONG);
+        if (State->SegmentRegs[FAST486_REG_SS].Size)
+        {
+            /* Increment ESP by 4 */
+            State->GeneralRegs[FAST486_REG_ESP].Long += sizeof(ULONG);
+        }
+        else
+        {
+            /* Increment SP by 4 */
+            State->GeneralRegs[FAST486_REG_ESP].LowWord += sizeof(ULONG);
+        }
 
         /* Store the value in the result */
         *Value = LongValue;
@@ -438,7 +448,9 @@ Fast486StackPop(PFAST486_STATE State,
         /* Read the value from SS:SP */
         if (!Fast486ReadMemory(State,
                                FAST486_REG_SS,
-                               State->GeneralRegs[FAST486_REG_ESP].LowWord,
+                               State->SegmentRegs[FAST486_REG_SS].Size
+                               ? State->GeneralRegs[FAST486_REG_ESP].Long
+                               : State->GeneralRegs[FAST486_REG_ESP].LowWord,
                                FALSE,
                                &ShortValue,
                                sizeof(ShortValue)))
@@ -447,8 +459,16 @@ Fast486StackPop(PFAST486_STATE State,
             return FALSE;
         }
 
-        /* Increment SP by 2 */
-        State->GeneralRegs[FAST486_REG_ESP].LowWord += sizeof(USHORT);
+        if (State->SegmentRegs[FAST486_REG_SS].Size)
+        {
+            /* Increment ESP by 2 */
+            State->GeneralRegs[FAST486_REG_ESP].Long += sizeof(USHORT);
+        }
+        else
+        {
+            /* Increment SP by 2 */
+            State->GeneralRegs[FAST486_REG_ESP].LowWord += sizeof(USHORT);
+        }
 
         /* Store the value in the result */
         *Value = ShortValue;
