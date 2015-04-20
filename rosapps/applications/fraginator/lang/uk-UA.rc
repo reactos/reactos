@@ -1,33 +1,33 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDD_MAIN DIALOGEX 0, 0, 346, 103
+IDD_MAIN DIALOGEX 0, 0, 375, 103
 STYLE DS_SHELLFONT | DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_DRIVES_LIST,78,52,29,111,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_METHODS_LIST,135,52,77,79,CBS_DROPDOWNLIST |
+    COMBOBOX        IDC_METHODS_LIST,159,52,73,111,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_PRIORITY_LIST,223,52,59,91,CBS_DROPDOWNLIST |
+    COMBOBOX        IDC_PRIORITY_LIST,241,52,73,111,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Старт",IDC_STARTSTOP,294,7,45,15
-    PUSHBUTTON      "Допомога",ID_MAIN_HELP,294,28,45,15
-    PUSHBUTTON      "Вихід",IDC_QUIT,294,49,45,15
+    PUSHBUTTON      "Старт",IDC_STARTSTOP,322,7,45,15
+    PUSHBUTTON      "Допомога",ID_MAIN_HELP,322,29,45,15
+    PUSHBUTTON      "Вихід",IDC_QUIT,322,51,45,15
     CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
-                    WS_BORDER,7,7,63,58
-    LTEXT           "Виберіть диск:",-1,78,40,50,8
-    LTEXT           "Виберіть дію:",-1,135,40,58,8
+                    WS_BORDER,7,7,78,58
+    LTEXT           "Виберіть диск:",-1,78,40,73,8
+    LTEXT           "Виберіть дію:",-1,159,40,73,8
     CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
-                    0x1,7,71,299,10
+                    0x1,7,71,320,10
     CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
-                    SS_SUNKEN | WS_GROUP,7,86,332,10
-    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,91,8
-    LTEXT           "100.00%",IDC_PERCENT,311,71,28,8,0,WS_EX_RIGHT
-    LTEXT           "Пріоритет Процесу:",-1,223,40,51,8
+                    SS_SUNKEN | WS_GROUP,7,86,359,10
+    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
+    LTEXT           "Пріоритет Процесу:",-1,241,40,73,8
 END
 
-IDD_REPORT DIALOGEX  0, 0, 391, 169
+IDD_REPORT DIALOGEX  0, 0, 405, 169
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Рапорт"
 FONT 8, "MS Shell Dlg"
@@ -36,49 +36,49 @@ BEGIN
     DEFPUSHBUTTON   "Кілобайт",IDC_KILOBYTES,61,148,50,14
     DEFPUSHBUTTON   "Мегабайт",IDC_MEGABYTES,115,148,50,14
     DEFPUSHBUTTON   "Гігабайт",IDC_GIGABYTES,169,148,50,14
-    DEFPUSHBUTTON   "Так",IDC_REPORTOK,334,148,50,14
-    RTEXT           "Том",-1,7,7,24,8
-    LTEXT           "Об'єм",-1,7,51,28,8
-    RTEXT           "(Буква Диску)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
-    RTEXT           "(Розмір Диску, Байтів)",IDC_DISKSIZEBYTES,63,51,117,10,
+    DEFPUSHBUTTON   "Так",IDC_REPORTOK,348,148,50,14
+    LTEXT           "Том",-1,7,7,75,8
+    LTEXT           "Об'єм",-1,7,51,75,8
+    LTEXT           "(Буква Диску)",IDC_DRIVELETTER,83,7,117,10,SS_SUNKEN
+    LTEXT           "(Розмір Диску, Байтів)",IDC_DISKSIZEBYTES,83,51,117,10,
                     SS_SUNKEN
-    RTEXT           "(Розмір диску, Кластерів)",IDC_DISKSIZECLUSTERS,63,73,117,
+    LTEXT           "(Розмір диску, Кластерів)",IDC_DISKSIZECLUSTERS,83,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Всього кластерів",-1,7,73,43,8
-    RTEXT           "(Розмір кластера)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+    LTEXT           "Всього кластерів",-1,7,73,75,8
+    LTEXT           "(Розмір кластера)",IDC_DISKCLUSTERSIZE,83,84,117,10,
                     SS_SUNKEN
-    LTEXT           "Розмір кластера",-1,7,84,36,8
-    RTEXT           "(Кіль-сть файлів)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
-    RTEXT           "(Розмір файлів, байтів)",IDC_FILESSIZEBYTES,267,29,117,10,
+    LTEXT           "Розмір кластера",-1,7,84,75,8
+    LTEXT           "(Кіль-сть файлів)",IDC_FILESCOUNT,281,18,117,10,SS_SUNKEN
+    LTEXT           "(Розмір файлів, байтів)",IDC_FILESSIZEBYTES,281,29,117,10,
                     SS_SUNKEN
-    LTEXT           "# файлів",-1,194,18,28,8
-    LTEXT           "Загальний розмір",-1,194,29,31,8
-    LTEXT           "Розмір на диску",-1,194,40,39,8
-    RTEXT           "(Загальний розмір, байтів)",IDC_FILESSIZEONDISK,267,40,117,10,
+    LTEXT           "# файлів",-1,205,18,75,8
+    LTEXT           "Загальний розмір",-1,205,29,75,8
+    LTEXT           "Розмір на диску",-1,205,40,75,8
+    LTEXT           "(Загальний розмір, байтів)",IDC_FILESSIZEONDISK,281,40,117,10,
                     SS_SUNKEN
-    RTEXT           "(Files slack bytes)",IDC_FILESSLACKBYTES,267,51,117,10,
+    LTEXT           "(Files slack Bytes)",IDC_FILESSLACKBYTES,281,51,117,10,
                     SS_SUNKEN
-    LTEXT           "Wasted slack",-1,194,51,44,8
-    RTEXT           "(Disk Free, Байтів)",IDC_DISKFREEBYTES,63,62,117,10,
+    LTEXT           "Wasted slack",-1,205,51,75,8
+    LTEXT           "(Disk Free, Байтів)",IDC_DISKFREEBYTES,83,62,117,10,
                     SS_SUNKEN
-    LTEXT           "Вільне місце",-1,7,62,36,8
-    RTEXT           "(Фрагментовані файли, кількість)",IDC_FILESFRAGGED,267,62,117,
+    LTEXT           "Вільне місце",-1,7,62,75,8
+    LTEXT           "(Фрагментовані файли, кількість)",IDC_FILESFRAGGED,281,62,117,
                     10,SS_SUNKEN
-    LTEXT           "Фрагментовані файли",-1,194,62,52,8
-    RTEXT           "(Кіль-сть директорій)",IDC_DIRSCOUNT,267,7,117,10,SS_SUNKEN
-    LTEXT           "# директорій",-1,194,7,48,8
-    RTEXT           "Файлова Система",-1,7,40,36,8
-    RTEXT           "(Назва Файлової Системи)",IDC_FILESYSTEM,63,40,117,10,
+    LTEXT           "Фрагментовані файли",-1,205,62,75,8
+    LTEXT           "(Кіль-сть директорій)",IDC_DIRSCOUNT,281,7,117,10,SS_SUNKEN
+    LTEXT           "# директорій",-1,205,7,75,8
+    LTEXT           "Файлова Система",-1,7,40,75,8
+    LTEXT           "(Назва Файлової Системи)",IDC_FILESYSTEM,83,40,117,10,
                     SS_SUNKEN
-    RTEXT           "Мітка Тому",-1,7,18,44,8
-    RTEXT           "(Назва Тому)",IDC_VOLUMELABEL,63,18,117,10,SS_SUNKEN
-    RTEXT           "Serial",-1,7,29,18,8
-    RTEXT           "(Volume Serial)",IDC_VOLUMESERIAL,63,29,117,10,
+    LTEXT           "Мітка Тому",-1,7,18,75,8
+    LTEXT           "(Назва Тому)",IDC_VOLUMELABEL,83,18,117,10,SS_SUNKEN
+    LTEXT           "Serial",-1,7,29,75,8
+    LTEXT           "(Volume Serial)",IDC_VOLUMESERIAL,83,29,117,10,
                     SS_SUNKEN
-    RTEXT           "(Average Frags Per File)",IDC_AVERAGEFRAGS,267,73,117,
+    LTEXT           "(Average Frags Per File)",IDC_AVERAGEFRAGS,281,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Фрагметнів в файлі в середньому",-1,194,73,60,20
+    LTEXT           "Фрагметнів в файлі в середньому",-1,205,73,75,20
     LTEXT           "XX.X% файлів на цьому диску фрагментовані. Бажано провести SSSSSSS дефрагментацію.",
-                    IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
-    LTEXT           "Рекомендації:",-1,7,96,62,8
+                    IDC_RECOMMEND,7,106,391,38,SS_SUNKEN
+    LTEXT           "Рекомендації:",-1,7,96,75,8
 END

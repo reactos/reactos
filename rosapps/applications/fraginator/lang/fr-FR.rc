@@ -1,33 +1,33 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-IDD_MAIN DIALOGEX 0, 0, 346, 103
+IDD_MAIN DIALOGEX 0, 0, 375, 103
 STYLE DS_SHELLFONT | DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_DRIVES_LIST,78,52,29,111,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_METHODS_LIST,135,52,77,79,CBS_DROPDOWNLIST |
+    COMBOBOX        IDC_METHODS_LIST,159,52,73,111,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_PRIORITY_LIST,223,52,59,91,CBS_DROPDOWNLIST |
+    COMBOBOX        IDC_PRIORITY_LIST,241,52,73,111,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Démarrer",IDC_STARTSTOP,294,7,45,15
-    PUSHBUTTON      "Aide",ID_MAIN_HELP,294,28,45,15
-    PUSHBUTTON      "Quitter",IDC_QUIT,294,49,45,15
+    PUSHBUTTON      "Démarrer",IDC_STARTSTOP,322,7,45,15
+    PUSHBUTTON      "Aide",ID_MAIN_HELP,322,29,45,15
+    PUSHBUTTON      "Quitter",IDC_QUIT,322,51,45,15
     CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
-                    WS_BORDER,7,7,63,58
-    LTEXT           "Choisissez un lecteur :",-1,78,40,50,8
-    LTEXT           "Choisissez une action :",-1,135,40,58,8
+                    WS_BORDER,7,7,78,58
+    LTEXT           "Choisissez un lecteur:",-1,78,40,73,8
+    LTEXT           "Choisissez une action:",-1,159,40,73,8
     CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
-                    0x1,7,71,299,10
+                    0x1,7,71,320,10
     CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
-                    SS_SUNKEN | WS_GROUP,7,86,332,10
-    LTEXT           "Je suis un singe, ententez-moi eeK",IDC_WISECRACKS,78,15,91,8
-    LTEXT           "100.00%",IDC_PERCENT,311,71,28,8,0,WS_EX_RIGHT
-    LTEXT           "Priorité du processus :",-1,223,40,51,8
+                    SS_SUNKEN | WS_GROUP,7,86,359,10
+    LTEXT           "Je suis un singe, ententez-moi eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
+    LTEXT           "Priorité du processus:",-1,241,40,73,8
 END
 
-IDD_REPORT DIALOGEX  0, 0, 391, 169
+IDD_REPORT DIALOGEX  0, 0, 405, 169
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Rapport"
 FONT 8, "MS Shell Dlg"
@@ -36,49 +36,49 @@ BEGIN
     DEFPUSHBUTTON   "Kilooctets",IDC_KILOBYTES,61,148,50,14
     DEFPUSHBUTTON   "Mégaoctets",IDC_MEGABYTES,115,148,50,14
     DEFPUSHBUTTON   "Gigaoctets",IDC_GIGABYTES,169,148,50,14
-    DEFPUSHBUTTON   "OK",IDC_REPORTOK,334,148,50,14
-    RTEXT           "Volume",-1,7,7,24,8
-    LTEXT           "Capacité",-1,7,51,28,8
-    RTEXT           "(Lettre du lecteur)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
-    RTEXT           "(Taille du disque, Octets)",IDC_DISKSIZEBYTES,63,51,117,10,
+    DEFPUSHBUTTON   "OK",IDC_REPORTOK,348,148,50,14
+    LTEXT           "Volume",-1,7,7,75,8
+    LTEXT           "Capacité",-1,7,51,75,8
+    LTEXT           "(Lettre du lecteur)",IDC_DRIVELETTER,83,7,117,10,SS_SUNKEN
+    LTEXT           "(Taille du disque, Octets)",IDC_DISKSIZEBYTES,83,51,117,10,
                     SS_SUNKEN
-    RTEXT           "(Taille du disque, Clusters)",IDC_DISKSIZECLUSTERS,63,73,117,
+    LTEXT           "(Taille du disque, Clusters)",IDC_DISKSIZECLUSTERS,83,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Nombre de clusters",-1,7,73,43,8
-    RTEXT           "(Taille d'un Cluster)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+    LTEXT           "Nombre de clusters",-1,7,73,75,8
+    LTEXT           "(Taille d'un Cluster)",IDC_DISKCLUSTERSIZE,83,84,117,10,
                     SS_SUNKEN
-    LTEXT           "Taille d'un cluster",-1,7,84,36,8
-    RTEXT           "(Nombre de fichiers)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
-    RTEXT           "(Taille des fichiers, octets)",IDC_FILESSIZEBYTES,267,29,117,10,
+    LTEXT           "Taille d'un cluster",-1,7,84,75,8
+    LTEXT           "(Nombre de fichiers)",IDC_FILESCOUNT,281,18,117,10,SS_SUNKEN
+    LTEXT           "(Taille des fichiers, octets)",IDC_FILESSIZEBYTES,281,29,117,10,
                     SS_SUNKEN
-    LTEXT           "# des fichiers",-1,194,18,28,8
-    LTEXT           "Taille totale",-1,194,29,31,8
-    LTEXT           "Taille sur le disque",-1,194,40,39,8
-    RTEXT           "(Taille totale, octets)",IDC_FILESSIZEONDISK,267,40,117,10,
+    LTEXT           "# des fichiers",-1,205,18,75,8
+    LTEXT           "Taille totale",-1,205,29,75,8
+    LTEXT           "Taille sur le disque",-1,205,40,75,8
+    LTEXT           "(Taille totale, octets)",IDC_FILESSIZEONDISK,281,40,117,10,
                     SS_SUNKEN
-    RTEXT           "(Octets perdus par les fichiers)",IDC_FILESSLACKBYTES,267,51,117,10,
+    LTEXT           "(Octets perdus par les fichiers)",IDC_FILESSLACKBYTES,281,51,117,10,
                     SS_SUNKEN
-    LTEXT           "Espace perdu",-1,194,51,44,8
-    RTEXT           "(Espace libre, octets)",IDC_DISKFREEBYTES,63,62,117,10,
+    LTEXT           "Espace perdu",-1,205,51,75,8
+    LTEXT           "(Espace libre, octets)",IDC_DISKFREEBYTES,83,62,117,10,
                     SS_SUNKEN
-    LTEXT           "Espace libre",-1,7,62,36,8
-    RTEXT           "(Fichiers fragmentés, nombre)",IDC_FILESFRAGGED,267,62,117,
+    LTEXT           "Espace libre",-1,7,62,75,8
+    LTEXT           "(Fichiers fragmentés, nombre)",IDC_FILESFRAGGED,281,62,117,
                     10,SS_SUNKEN
-    LTEXT           "Fichiers fragmentés",-1,194,62,52,8
-    RTEXT           "(Nombre de répertoires)",IDC_DIRSCOUNT,267,7,117,10,SS_SUNKEN
-    LTEXT           "# répertoires",-1,194,7,48,8
-    RTEXT           "Système de fichiers",-1,7,40,36,8
-    RTEXT           "(Nom du système de fichiers)",IDC_FILESYSTEM,63,40,117,10,
+    LTEXT           "Fichiers fragmentés",-1,205,62,75,8
+    LTEXT           "(Nombre de répertoires)",IDC_DIRSCOUNT,281,7,117,10,SS_SUNKEN
+    LTEXT           "# répertoires",-1,205,7,75,8
+    LTEXT           "Système de fichiers",-1,7,40,75,8
+    LTEXT           "(Nom du système de fichiers)",IDC_FILESYSTEM,83,40,117,10,
                     SS_SUNKEN
-    RTEXT           "Nom du volume",-1,7,18,44,8
-    RTEXT           "(Nom du volume)",IDC_VOLUMELABEL,63,18,117,10,SS_SUNKEN
-    RTEXT           "Numéro de série",-1,7,29,18,8
-    RTEXT           "(Numéro de série du volume)",IDC_VOLUMESERIAL,63,29,117,10,
+    LTEXT           "Nom du volume",-1,7,18,75,8
+    LTEXT           "(Nom du volume)",IDC_VOLUMELABEL,83,18,117,10,SS_SUNKEN
+    LTEXT           "Numéro de série",-1,7,29,75,8
+    LTEXT           "(Numéro de série du volume)",IDC_VOLUMESERIAL,83,29,117,10,
                     SS_SUNKEN
-    RTEXT           "(Fragements par fichier en moyenne)",IDC_AVERAGEFRAGS,267,73,117,
+    LTEXT           "(Fragements par fichier en moyenne)",IDC_AVERAGEFRAGS,281,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Fragements par fichier en moyenne",-1,194,73,60,20
+    LTEXT           "Fragements par fichier en moyenne",-1,205,73,75,20
     LTEXT           "XX.X% des fichiers sur ce lecteur sont fragmentés. Il est recommandé que vous effectuiez une défragmentation.",
-                    IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
-    LTEXT           "Recommandations :",-1,7,96,62,8
+                    IDC_RECOMMEND,7,106,391,38,SS_SUNKEN
+    LTEXT           "Recommandations :",-1,7,96,75,8
 END

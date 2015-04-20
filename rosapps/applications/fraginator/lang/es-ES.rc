@@ -1,33 +1,33 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-IDD_MAIN DIALOGEX 0, 0, 346, 103
+IDD_MAIN DIALOGEX 0, 0, 375, 103
 STYLE DS_SHELLFONT | DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_DRIVES_LIST,78,52,29,111,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_METHODS_LIST,135,52,77,79,CBS_DROPDOWNLIST |
+    COMBOBOX        IDC_METHODS_LIST,159,52,73,111,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_PRIORITY_LIST,223,52,59,91,CBS_DROPDOWNLIST |
+    COMBOBOX        IDC_PRIORITY_LIST,241,52,73,111,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Comenzar",IDC_STARTSTOP,294,7,45,15
-    PUSHBUTTON      "Ayuda",ID_MAIN_HELP,294,28,45,15
-    PUSHBUTTON      "Salir",IDC_QUIT,294,49,45,15
+    PUSHBUTTON      "Comenzar",IDC_STARTSTOP,322,7,45,15
+    PUSHBUTTON      "Ayuda",ID_MAIN_HELP,322,29,45,15
+    PUSHBUTTON      "Salir",IDC_QUIT,322,51,45,15
     CONTROL         110,-1,"Static",SS_BITMAP | SS_SUNKEN |
-                    WS_BORDER,7,7,63,58
-    LTEXT           "Seleccione una unidad:",-1,78,40,50,8
-    LTEXT           "Seleccione una acción:",-1,135,40,58,8
+                    WS_BORDER,7,7,78,58
+    LTEXT           "Seleccione una unidad:",-1,78,40,73,8
+    LTEXT           "Seleccione una acción:",-1,159,40,73,8
     CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER |
-                    0x1,7,71,299,10
+                    0x1,7,71,320,10
     CONTROL         "Static",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP |
-                    SS_SUNKEN | WS_GROUP,7,86,332,10
-    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,91,8
-    LTEXT           "100.00%",IDC_PERCENT,311,71,28,8,0,WS_EX_RIGHT
-    LTEXT           "Prioridad del proceso:",-1,223,40,51,8
+                    SS_SUNKEN | WS_GROUP,7,86,359,10
+    LTEXT           "I am a monkey, hear me eeK",IDC_WISECRACKS,78,15,115,8
+    LTEXT           "100.00%",IDC_PERCENT,337,71,30,8,0,WS_EX_RIGHT
+    LTEXT           "Prioridad del proceso:",-1,241,40,73,8
 END
 
-IDD_REPORT DIALOGEX  0, 0, 391, 169
+IDD_REPORT DIALOGEX  0, 0, 405, 169
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Informe"
 FONT 8, "MS Shell Dlg"
@@ -36,49 +36,49 @@ BEGIN
     DEFPUSHBUTTON   "Kilobytes",IDC_KILOBYTES,61,148,50,14
     DEFPUSHBUTTON   "Megabytes",IDC_MEGABYTES,115,148,50,14
     DEFPUSHBUTTON   "Gigabytes",IDC_GIGABYTES,169,148,50,14
-    DEFPUSHBUTTON   "Aceptar",IDC_REPORTOK,334,148,50,14
-    RTEXT           "Volumen",-1,7,7,24,8
-    LTEXT           "Capacidad",-1,7,51,28,8
-    RTEXT           "(Letra de la unidad)",IDC_DRIVELETTER,63,7,117,10,SS_SUNKEN
-    RTEXT           "(Tamaño del disco, Bytes)",IDC_DISKSIZEBYTES,63,51,117,10,
+    DEFPUSHBUTTON   "Aceptar",IDC_REPORTOK,348,148,50,14
+    LTEXT           "Volumen",-1,7,7,75,8
+    LTEXT           "Capacidad",-1,7,51,75,8
+    LTEXT           "(Letra de la unidad)",IDC_DRIVELETTER,83,7,117,10,SS_SUNKEN
+    LTEXT           "(Tamaño del disco, Bytes)",IDC_DISKSIZEBYTES,83,51,117,10,
                     SS_SUNKEN
-    RTEXT           "(Tamaño del disco, Clusters)",IDC_DISKSIZECLUSTERS,63,73,117,
+    LTEXT           "(Tamaño del disco, Clusters)",IDC_DISKSIZECLUSTERS,83,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Clusters totales",-1,7,73,43,8
-    RTEXT           "(Tamaño del Cluster)",IDC_DISKCLUSTERSIZE,63,84,117,10,
+    LTEXT           "Clusters totales",-1,7,73,75,8
+    LTEXT           "(Tamaño del Cluster)",IDC_DISKCLUSTERSIZE,83,84,117,10,
                     SS_SUNKEN
-    LTEXT           "Tamaño del Cluster",-1,7,84,36,8
-    RTEXT           "(Cantidad de archivos)",IDC_FILESCOUNT,267,18,117,10,SS_SUNKEN
-    RTEXT           "(Tamaño de archivos, bytes)",IDC_FILESSIZEBYTES,267,29,117,10,
+    LTEXT           "Tamaño del Cluster",-1,7,84,75,8
+    LTEXT           "(Cantidad de archivos)",IDC_FILESCOUNT,281,18,117,10,SS_SUNKEN
+    LTEXT           "(Tamaño de archivos, Bytes)",IDC_FILESSIZEBYTES,281,29,117,10,
                     SS_SUNKEN
-    LTEXT           "# de archivos",-1,194,18,28,8
-    LTEXT           "Tamaño total",-1,194,29,31,8
-    LTEXT           "Tamaño en disco",-1,194,40,39,8
-    RTEXT           "(Tamaño total, bytes)",IDC_FILESSIZEONDISK,267,40,117,10,
+    LTEXT           "# de archivos",-1,205,18,75,8
+    LTEXT           "Tamaño total",-1,205,29,75,8
+    LTEXT           "Tamaño en disco",-1,205,40,75,8
+    LTEXT           "(Tamaño total, Bytes)",IDC_FILESSIZEONDISK,281,40,117,10,
                     SS_SUNKEN
-    RTEXT           "(Files slack bytes)",IDC_FILESSLACKBYTES,267,51,117,10,
+    LTEXT           "(Files slack Bytes)",IDC_FILESSLACKBYTES,281,51,117,10,
                     SS_SUNKEN
-    LTEXT           "Wasted slack",-1,194,51,44,8
-    RTEXT           "(Espacio libre, Bytes)",IDC_DISKFREEBYTES,63,62,117,10,
+    LTEXT           "Wasted slack",-1,205,51,75,8
+    LTEXT           "(Espacio libre, Bytes)",IDC_DISKFREEBYTES,83,62,117,10,
                     SS_SUNKEN
-    LTEXT           "Espacio libre",-1,7,62,36,8
-    RTEXT           "(Archivos fragmentados, cantidad)",IDC_FILESFRAGGED,267,62,117,
+    LTEXT           "Espacio libre",-1,7,62,75,8
+    LTEXT           "(Archivos fragmentados, cantidad)",IDC_FILESFRAGGED,281,62,117,
                     10,SS_SUNKEN
-    LTEXT           "Archivos fragmentados",-1,194,62,52,8
-    RTEXT           "(Cantidad de directorios)",IDC_DIRSCOUNT,267,7,117,10,SS_SUNKEN
-    LTEXT           "# de directorios",-1,194,7,48,8
-    RTEXT           "Sistema de archivos",-1,7,40,36,8
-    RTEXT           "(Nombre del sistema de archivos)",IDC_FILESYSTEM,63,40,117,10,
+    LTEXT           "Archivos fragmentados",-1,205,62,75,8
+    LTEXT           "(Cantidad de directorios)",IDC_DIRSCOUNT,281,7,117,10,SS_SUNKEN
+    LTEXT           "# de directorios",-1,205,7,75,8
+    LTEXT           "Sistema de archivos",-1,7,40,75,8
+    LTEXT           "(Nombre del sistema de archivos)",IDC_FILESYSTEM,83,40,117,10,
                     SS_SUNKEN
-    RTEXT           "Etiqueta del volumen",-1,7,18,44,8
-    RTEXT           "(Etiqueta del volumen)",IDC_VOLUMELABEL,63,18,117,10,SS_SUNKEN
-    RTEXT           "Serie",-1,7,29,18,8
-    RTEXT           "(Serie del volumen)",IDC_VOLUMESERIAL,63,29,117,10,
+    LTEXT           "Etiqueta del volumen",-1,7,18,75,8
+    LTEXT           "(Etiqueta del volumen)",IDC_VOLUMELABEL,83,18,117,10,SS_SUNKEN
+    LTEXT           "Serie",-1,7,29,75,8
+    LTEXT           "(Serie del volumen)",IDC_VOLUMESERIAL,83,29,117,10,
                     SS_SUNKEN
-    RTEXT           "(Media de fragmentos por archivo)",IDC_AVERAGEFRAGS,267,73,117,
+    LTEXT           "(Media de fragmentos por archivo)",IDC_AVERAGEFRAGS,281,73,117,
                     10,SS_SUNKEN
-    LTEXT           "Media de fragmentos por archivo",-1,194,73,60,20
+    LTEXT           "Media de fragmentos por archivo",-1,205,73,75,20
     LTEXT           "XX.X% de los archivos de esta unidad están fragmentados. Es recomendable que realice una SSSSSSS defragmentación.",
-                    IDC_RECOMMEND,7,106,377,38,SS_SUNKEN
-    LTEXT           "Recomendaciones:",-1,7,96,62,8
+                    IDC_RECOMMEND,7,106,391,38,SS_SUNKEN
+    LTEXT           "Recomendaciones:",-1,7,96,75,8
 END

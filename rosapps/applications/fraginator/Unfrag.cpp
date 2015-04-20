@@ -141,7 +141,7 @@ Defragment *StartDefragThread (wstring Drive, DefragType Method, HANDLE &Handle)
     return (Defragger);
 }
 
-
+#ifdef _CUI_
 // Main Initialization
 extern "C" int wmain (int argc, wchar_t **argv)
 {
@@ -160,7 +160,7 @@ extern "C" int wmain (int argc, wchar_t **argv)
             Drives.push_back (_wcsupr(argv[c]));
         }
         else
-        if (argv[c][0] == L'-'  ||  (argv[c][0] == L'/'  &&  wcslen(argv[c]) == 2))
+        if ((argv[c][0] == L'-'  ||  argv[c][0] == L'/')  &&  wcslen(argv[c]) == 2)
         {
             switch (tolower(argv[c][1]))
             {
@@ -461,3 +461,4 @@ extern "C" int wmain (int argc, wchar_t **argv)
 
     return (0);
 }
+#endif
