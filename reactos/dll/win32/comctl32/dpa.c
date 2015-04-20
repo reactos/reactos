@@ -291,16 +291,14 @@ BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
            hdpa1->nItemCount, hdpa2->nItemCount);
 
 
-    /* working but untrusted implementation */
-
-    pWork1 = &(hdpa1->ptrs[hdpa1->nItemCount - 1]);
-    pWork2 = &(hdpa2->ptrs[hdpa2->nItemCount - 1]);
-
     nIndex = hdpa1->nItemCount - 1;
     nCount = hdpa2->nItemCount - 1;
 
     do
     {
+        pWork1 = &hdpa1->ptrs[nIndex];
+        pWork2 = &hdpa2->ptrs[nCount];
+
         if (nIndex < 0) {
             if ((nCount >= 0) && (dwFlags & DPAM_UNION)) {
                 /* Now insert the remaining new items into DPA 1 */
@@ -331,10 +329,8 @@ BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
                 return FALSE;
 
             nCount--;
-            pWork2--;
             *pWork1 = ptr;
             nIndex--;
-            pWork1--;
         }
         else if (nResult > 0)
         {
@@ -349,7 +345,6 @@ BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
                 (pfnMerge)(DPAMM_DELETE, ptr, NULL, lParam);
             }
             nIndex--;
-            pWork1--;
         }
         else
         {
@@ -365,7 +360,6 @@ BOOL WINAPI DPA_Merge (HDPA hdpa1, HDPA hdpa2, DWORD dwFlags,
                 DPA_InsertPtr (hdpa1, nIndex+1, ptr);
             }
             nCount--;
-            pWork2--;
         }
 
     }
