@@ -15,10 +15,8 @@
 #define EMS_INTERRUPT_NUM   0x67
 #define EMS_SEGMENT         0xD000
 #define EMS_MAX_HANDLES     16
-#define EMS_TOTAL_PAGES     256
 #define EMS_PAGE_BITS       14
 #define EMS_PAGE_SIZE       (1 << EMS_PAGE_BITS)
-#define EMS_ADDRESS         0xA00000
 #define EMS_PHYSICAL_PAGES  4
 
 #define EMS_STATUS_OK                   0x00
@@ -63,7 +61,7 @@ typedef struct _EMS_COPY_DATA
 
 /* FUNCTIONS ******************************************************************/
 
-VOID EmsInitialize(VOID);
+BOOLEAN EmsInitialize(ULONG TotalPages);
 VOID EmsCleanup(VOID);
 
 #endif // _EMS_H_

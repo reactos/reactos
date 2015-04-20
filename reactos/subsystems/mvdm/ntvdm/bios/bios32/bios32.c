@@ -666,7 +666,11 @@ Bios32Post(VOID)
     SearchAndInitRoms(&BiosContext);
 
     /* Initialize EMS */
-    EmsInitialize();
+    if (!EmsInitialize(EMS_TOTAL_PAGES))
+    {
+        DPRINT1("Could not initialize EMS. EMS will not be available.\n"
+                "Try reducing the number of EMS pages.\n");
+    }
 
     /*
      * End of the 32-bit POST portion. We then fall back into 16-bit where

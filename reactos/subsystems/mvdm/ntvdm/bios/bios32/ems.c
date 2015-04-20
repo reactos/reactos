@@ -19,10 +19,12 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static RTL_BITMAP AllocBitmap;
-static ULONG BitmapBuffer[(EMS_TOTAL_PAGES + sizeof(ULONG) - 1) / sizeof(ULONG)];
-static EMS_PAGE PageTable[EMS_TOTAL_PAGES];
+static PULONG BitmapBuffer = NULL;
+static PEMS_PAGE PageTable = NULL;
 static EMS_HANDLE HandleTable[EMS_MAX_HANDLES];
 static PVOID Mapping[EMS_PHYSICAL_PAGES] = { NULL };
+static ULONG EmsTotalPages = 0;
+static PVOID EmsMemory = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -137,7 +139,8 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
     PageEntry = GetLogicalPage(HandleEntry, LogicalPage);
     if (!PageEntry) return EMS_STATUS_INV_LOGICAL_PAGE; 
 
-    Mapping[PhysicalPage] = (PVOID)(EMS_ADDRESS + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE);
+    Mapping[PhysicalPage] = (PVOID)((ULONG_PTR)EmsMemory
+                            + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE);
     return EMS_STATUS_OK;
 }
 
@@ -165,7 +168,7 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
         {
             setAH(EMS_STATUS_OK);
             setBX(RtlNumberOfClearBits(&AllocBitmap));
-            setDX(EMS_TOTAL_PAGES);
+            setDX(EmsTotalPages);
             break;
         }
 
@@ -230,10 +233,9 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                     break;
                 }
 
-                SourcePtr = (PUCHAR)REAL_TO_PHYS(EMS_ADDRESS
-                                                 + ARRAY_INDEX(PageEntry, PageTable)
-                                                 * EMS_PAGE_SIZE
-                                                 + Data->SourceOffset);
+                SourcePtr = (PUCHAR)((ULONG_PTR)EmsMemory
+                                     + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE
+                                     + Data->SourceOffset);
             }
             else
             {
@@ -260,10 +262,9 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
                     break;
                 }
 
-                DestPtr = (PUCHAR)REAL_TO_PHYS(EMS_ADDRESS
-                                               + ARRAY_INDEX(PageEntry, PageTable)
-                                               * EMS_PAGE_SIZE
-                                               + Data->DestOffset);
+                DestPtr = (PUCHAR)((ULONG_PTR)EmsMemory
+                                   + ARRAY_INDEX(PageEntry, PageTable) * EMS_PAGE_SIZE
+                                   + Data->DestOffset);
             }
             else
             {
@@ -346,12 +347,9 @@ static BOOLEAN NTAPI EmsWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID EmsInitialize(VOID)
+BOOLEAN EmsInitialize(ULONG TotalPages)
 {
     ULONG i;
-
-    RtlZeroMemory(BitmapBuffer, sizeof(BitmapBuffer));
-    RtlInitializeBitMap(&AllocBitmap, BitmapBuffer, EMS_TOTAL_PAGES);
 
     for (i = 0; i < EMS_MAX_HANDLES; i++)
     {
@@ -360,16 +358,65 @@ VOID EmsInitialize(VOID)
         InitializeListHead(&HandleTable[i].PageList);
     }
 
+    EmsTotalPages = TotalPages;
+    BitmapBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   ((TotalPages + 31) / 32) * sizeof(ULONG));
+    if (BitmapBuffer == NULL) return FALSE;
+
+    RtlInitializeBitMap(&AllocBitmap, BitmapBuffer, TotalPages);
+
+    PageTable = (PEMS_PAGE)RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           TotalPages * sizeof(EMS_PAGE));
+    if (PageTable == NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
+        BitmapBuffer = NULL;
+
+        return FALSE;
+    }
+
+    EmsMemory = (PVOID)RtlAllocateHeap(RtlGetProcessHeap(), 0, TotalPages * EMS_PAGE_SIZE);
+    if (EmsMemory == NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PageTable);
+        PageTable = NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
+        BitmapBuffer = NULL;
+
+        return FALSE;
+    }
+
     MemInstallFastMemoryHook((PVOID)TO_LINEAR(EMS_SEGMENT, 0),
                              EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE,
                              EmsReadMemory,
                              EmsWriteMemory);
 
     RegisterBiosInt32(EMS_INTERRUPT_NUM, EmsIntHandler);
+    return TRUE;
 }
 
 VOID EmsCleanup(VOID)
 {
     MemRemoveFastMemoryHook((PVOID)TO_LINEAR(EMS_SEGMENT, 0),
                             EMS_PHYSICAL_PAGES * EMS_PAGE_SIZE);
+
+    if (EmsMemory)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EmsMemory);
+        EmsMemory = NULL;
+    }
+
+    if (PageTable)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PageTable);
+        PageTable = NULL;
+    }
+
+    if (BitmapBuffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, BitmapBuffer);
+        BitmapBuffer = NULL;
+    }
 }
