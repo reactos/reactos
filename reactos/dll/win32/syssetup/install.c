@@ -754,12 +754,92 @@ error:
     return FALSE;
 }
 
+/* Install a section of a .inf file
+ * Returns TRUE if success, FALSE if failure. Error code can
+ * be retrieved with GetLastError()
+ */
+static
+BOOL
+InstallInfSection(
+    IN HWND hWnd,
+    IN LPCWSTR InfFile,
+    IN LPCWSTR InfSection OPTIONAL,
+    IN LPCWSTR InfService OPTIONAL)
+{
+    WCHAR Buffer[MAX_PATH];
+    HINF hInf = INVALID_HANDLE_VALUE;
+    UINT BufferSize;
+    PVOID Context = NULL;
+    BOOL ret = FALSE;
+
+    /* Get Windows directory */
+    BufferSize = MAX_PATH - 5 - wcslen(InfFile);
+    if (GetWindowsDirectoryW(Buffer, BufferSize) > BufferSize)
+    {
+        /* Function failed */
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
+    }
+    /* We have enough space to add some information in the buffer */
+    if (Buffer[wcslen(Buffer) - 1] != '\\')
+        wcscat(Buffer, L"\\");
+    wcscat(Buffer, L"Inf\\");
+    wcscat(Buffer, InfFile);
+
+    /* Install specified section */
+    hInf = SetupOpenInfFileW(Buffer, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        goto cleanup;
+
+    Context = SetupInitDefaultQueueCallback(hWnd);
+    if (Context == NULL)
+        goto cleanup;
+
+    ret = TRUE;
+    if (ret && InfSection)
+    {
+        ret = SetupInstallFromInfSectionW(
+            hWnd, hInf,
+            InfSection, SPINST_ALL,
+            NULL, NULL, SP_COPY_NEWER,
+            SetupDefaultQueueCallbackW, Context,
+            NULL, NULL);
+    }
+    if (ret && InfService)
+    {
+        ret = SetupInstallServicesFromInfSectionW(
+            hInf, InfService, 0);
+    }
+
+cleanup:
+    if (Context)
+        SetupTermDefaultQueueCallback(Context);
+    if (hInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hInf);
+    return ret;
+}
+
 DWORD WINAPI
 InstallLiveCD(IN HINSTANCE hInstance)
 {
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     BOOL bRes;
+
+    /* Hack: Install TCP/IP protocol driver */
+    bRes = InstallInfSection(NULL,
+                            L"nettcpip.inf",
+                            L"MS_TCPIP.PrimaryInstall",
+                            L"MS_TCPIP.PrimaryInstall.Services");
+    if (!bRes && GetLastError() != ERROR_FILE_NOT_FOUND)
+    {
+        DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
+    }
+    else
+    {
+        /* Start the TCP/IP protocol driver */
+        SetupStartService(L"Tcpip", FALSE);
+    }
 
     if (!CommonInstall())
         goto error;
@@ -844,71 +924,6 @@ SetSetupType(DWORD dwSetupType)
         return FALSE;
 
     return TRUE;
-}
-
-/* Install a section of a .inf file
- * Returns TRUE if success, FALSE if failure. Error code can
- * be retrieved with GetLastError()
- */
-static
-BOOL
-InstallInfSection(
-    IN HWND hWnd,
-    IN LPCWSTR InfFile,
-    IN LPCWSTR InfSection OPTIONAL,
-    IN LPCWSTR InfService OPTIONAL)
-{
-    WCHAR Buffer[MAX_PATH];
-    HINF hInf = INVALID_HANDLE_VALUE;
-    UINT BufferSize;
-    PVOID Context = NULL;
-    BOOL ret = FALSE;
-
-    /* Get Windows directory */
-    BufferSize = MAX_PATH - 5 - wcslen(InfFile);
-    if (GetWindowsDirectoryW(Buffer, BufferSize) > BufferSize)
-    {
-        /* Function failed */
-        SetLastError(ERROR_GEN_FAILURE);
-        goto cleanup;
-    }
-    /* We have enough space to add some information in the buffer */
-    if (Buffer[wcslen(Buffer) - 1] != '\\')
-        wcscat(Buffer, L"\\");
-    wcscat(Buffer, L"Inf\\");
-    wcscat(Buffer, InfFile);
-
-    /* Install specified section */
-    hInf = SetupOpenInfFileW(Buffer, NULL, INF_STYLE_WIN4, NULL);
-    if (hInf == INVALID_HANDLE_VALUE)
-        goto cleanup;
-
-    Context = SetupInitDefaultQueueCallback(hWnd);
-    if (Context == NULL)
-        goto cleanup;
-
-    ret = TRUE;
-    if (ret && InfSection)
-    {
-        ret = SetupInstallFromInfSectionW(
-            hWnd, hInf,
-            InfSection, SPINST_ALL,
-            NULL, NULL, SP_COPY_NEWER,
-            SetupDefaultQueueCallbackW, Context,
-            NULL, NULL);
-    }
-    if (ret && InfService)
-    {
-        ret = SetupInstallServicesFromInfSectionW(
-            hInf, InfService, 0);
-    }
-
-cleanup:
-    if (Context)
-        SetupTermDefaultQueueCallback(Context);
-    if (hInf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(hInf);
-    return ret;
 }
 
 static DWORD CALLBACK

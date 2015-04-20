@@ -1807,7 +1807,7 @@ StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
         RegistrationData->hwndDlg = hwndDlg;
         RegistrationData->DllCount = DllCount;
         RegistrationThread = CreateThread(NULL, 0, RegistrationProc,
-                                          (LPVOID) RegistrationData, 0, NULL);
+                                          RegistrationData, 0, NULL);
         if (RegistrationThread != NULL)
         {
             CloseHandle(RegistrationThread);
