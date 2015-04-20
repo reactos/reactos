@@ -23,8 +23,8 @@ the actions "Status" / "Properties" are implemented.
 === Status Dialog & Notification Area ===
 
 The status dialog is implemented by IOleCommandTarget interface(CLSID_ConnectionTray). This interface manages all status dialogs
-for all available dialogs. The interface is implemented as a singleton to advoid multiple notification icons
-appear in the Notification area of the explorer. Everytime the IShellFolder object is created (ISF_NetConnect_Constructor), 
+for all available dialogs. The interface is implemented as a singleton to avoid multiple notification icons
+appearing in the Notification area of the explorer. Every time the IShellFolder object is created (ISF_NetConnect_Constructor), 
 it creates a reference to IOleCommandTarget interface and calls its IOleCommandTarget::Exec function with CGID_ShellServiceObject.
 This causes IOleCommandTarget interface to enumerate all available network connections, check if they should be shown (NCCF_SHOW_ICON flag set
 in the NETCON_PROPERTIES dwCharacter), and add them to notification area with Shell_NotifyIcon. For that purpose a hidden window is created (dialog
@@ -39,9 +39,9 @@ the WM_SHOWSTATUSDLG msg to specific window.
 The network connections property dialog is implemented by the INetConnectionPropertyUi2 interface. The class id is obtained by calling
 INetConnection::GetUiObjectClassId of the current selected network connection. After obtaining the interface by calling CoCreateInstance, the
 selected network connection is stored as reference by calling INetConnectionPropertyUi::SetConnection. The next step is to call 
-INetConnectionPropertyUi::AddPages to add custom property pages to the property sheet set. If the function suceeds, the caller can then invoke
+INetConnectionPropertyUi::AddPages to add custom property pages to the property sheet set. If the function succeeds, the caller can then invoke
 PropertySheetW function to display the properties. 
-	Note: If the context doesnt match, i.e. the INetConnectionPropertyUi2 cannot work together
+	Note: If the context doesn't match, i.e. the INetConnectionPropertyUi2 cannot work together
 		with current INetConnection, then it should fail INetConnectionPropertyUi::AddPages
 	Note: The function ShowNetConnectionProperties in shlfdr_netconnect.c shows how to invoke the Network Connections Property Dialog
 
@@ -52,7 +52,3 @@ function. When a user accepts changes, it calls INetCfg::Apply or when it aborts
 * The notification icons are only added once IShellFolder of netshell is created for the first time
 * Status changes of an adapter are not automatically updated because the information is cached
 * There seems to be an icon problem which makes icon blink in the status dialog
-
-Last Update 31/10/2008
-
-
