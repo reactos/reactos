@@ -237,6 +237,7 @@ Command:
                 CommandInfo.Env = Env = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
 
                 /* Repeat the request */
+                CommandInfo.VDMState |= VDM_FLAG_RETRY;
                 goto Command;
             }
 
