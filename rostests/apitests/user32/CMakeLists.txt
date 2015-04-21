@@ -15,6 +15,7 @@ list(APPEND SOURCE
     GetPeekMessage.c
     GetSystemMetrics.c
     GetUserObjectInformation.c
+    GetWindowPlacement.c
     InitializeLpkHooks.c
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
