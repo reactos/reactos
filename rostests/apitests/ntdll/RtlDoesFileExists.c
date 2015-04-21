@@ -139,6 +139,7 @@ START_TEST(RtlDoesFileExists)
         { L"C:\\/\\%ls",                                TRUE },
         { L"C:\\%ls\\",                                 TRUE },
         { L"C:\\%ls\\ThisFolderExists",                 TRUE },
+        { L"C:\\%ls\\ThisFolderExists\\",               TRUE },
         { L"C:\\%ls\\ThisFolderExists ",                TRUE },
         { L"C:\\%ls\\ThisFolderExists  ",               TRUE },
         { L"C:\\%ls\\ThisFolderExists   ",              TRUE },
@@ -170,6 +171,13 @@ START_TEST(RtlDoesFileExists)
         { L"NUL",                                       FALSE },
         { L"CON",                                       FALSE },
         { L"COM1",                                      FALSE },
+        { L"\\?",                                       FALSE },
+        { L"\\??",                                      FALSE },
+        { L"\\??\\",                                    FALSE },
+        { L"\\??\\C",                                   FALSE },
+        { L"\\??\\C:",                                  FALSE },
+        { L"\\??\\C:\\",                                FALSE }, // TRUE on Win7
+        { L"\\??\\C:\\%ls\\ThisFolderExists",           FALSE }, // TRUE on Win7
     };
     ULONG i;
     WCHAR FileName[MAX_PATH];
