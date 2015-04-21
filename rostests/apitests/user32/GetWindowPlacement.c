@@ -39,6 +39,7 @@ START_TEST(GetWindowPlacement)
     ok(ret == FALSE, "ret = %d\n", ret);
     ok(error == ERROR_NOACCESS, "error = %lu\n", error);
 
+    FillMemory(buffer, sizeof(buffer), 0x55);
     SetLastError(0xfeedfab1);
     ret = GetWindowPlacement(GetDesktopWindow(), (PVOID)(ALIGN_UP_BY(buffer, 16) + 1));
     error = GetLastError();

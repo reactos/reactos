@@ -3038,20 +3038,18 @@ NtUserGetWindowPlacement(HWND hWnd,
    }
 
    Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
-   if(!NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
       RETURN( FALSE);
    }
-   if(Safepl.length != sizeof(WINDOWPLACEMENT))
-   {
-      RETURN( FALSE);
-   }
+
+   Safepl.length = sizeof(WINDOWPLACEMENT);
 
    IntGetWindowPlacement(Wnd, &Safepl);
 
    Status = MmCopyToCaller(lpwndpl, &Safepl, sizeof(WINDOWPLACEMENT));
-   if(!NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
       RETURN( FALSE);
