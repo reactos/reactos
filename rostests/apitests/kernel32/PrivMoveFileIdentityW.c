@@ -8,7 +8,6 @@
 #include <apitest.h>
 
 #define WIN32_NO_STATUS
-#include <stdio.h>
 #include <ndk/iofuncs.h>
 #include <ndk/rtltypes.h>
 
@@ -101,12 +100,12 @@ TestPrivMoveFileIdentityW(VOID)
     ok(FileStandardInfo.EndOfFile.QuadPart == 0LL, "File wasn't created empty: %I64d\n", FileStandardInfo.EndOfFile.QuadPart);
     SetLastError(0xdeadbeef);
     ok(pPrivMoveFileIdentityW(Self, FileName, 0) == FALSE, "PrivMoveFileIdentityW succeed\n");
-    ok(GetLastError() == ERROR_SHARING_VIOLATION, "Last error: %lx\n", GetLastError());
+    ok(GetLastError() == ERROR_SHARING_VIOLATION, "Last error: %#lx\n", GetLastError());
     ok(QueryFileInfo(FileName, &FileBasicInfo, &FileStandardInfo) == TRUE, "QueryFileInfo returned FALSE\n");
     ok(FileBasicInfo.CreationTime.QuadPart != CreationTime.QuadPart, "Equal creation times\n");
     ok(FileStandardInfo.EndOfFile.QuadPart == 0LL, "File wasn't created empty: %I64d\n", FileStandardInfo.EndOfFile.QuadPart);
     SetLastError(0xdeadbeef);
-    ok(pPrivMoveFileIdentityW(Self, FileName, 2) == TRUE, "PrivMoveFileIdentityW failed with %lx\n", GetLastError());
+    ok(pPrivMoveFileIdentityW(Self, FileName, 2) == TRUE, "PrivMoveFileIdentityW failed with %#lx\n", GetLastError());
     ok(QueryFileInfo(FileName, &FileBasicInfo, &FileStandardInfo) == TRUE, "QueryFileInfo returned FALSE\n");
     ok(FileBasicInfo.CreationTime.QuadPart == CreationTime.QuadPart, "Creation time didn't change\n");
     ok(FileStandardInfo.EndOfFile.QuadPart == 0LL, "File not empty anymore: %I64d\n", FileStandardInfo.EndOfFile.QuadPart);
@@ -129,7 +128,7 @@ TestPrivMoveFileIdentityW(VOID)
     ok(QueryFileInfo(FileName2, &FileBasicInfo, &FileStandardInfo) == TRUE, "QueryFileInfo returned FALSE\n");
     ok(FileBasicInfo.CreationTime.QuadPart != CreationTime.QuadPart, "Equal creation times\n");
     SetLastError(0xdeadbeef);
-    ok(pPrivMoveFileIdentityW(FileName, FileName2, 3) == TRUE, "PrivMoveFileIdentityW failed with %lx\n", GetLastError());
+    ok(pPrivMoveFileIdentityW(FileName, FileName2, 3) == TRUE, "PrivMoveFileIdentityW failed with %#lx\n", GetLastError());
     ok(QueryFileInfo(FileName2, &FileBasicInfo, &FileStandardInfo) == TRUE, "QueryFileInfo returned FALSE\n");
     ok(FileBasicInfo.CreationTime.QuadPart == CreationTime.QuadPart, "Creation time didn't change\n");
     ok(OpenFile(FileNameA, &ReOpen, OF_EXIST) == HFILE_ERROR, "Source file still exists\n");
