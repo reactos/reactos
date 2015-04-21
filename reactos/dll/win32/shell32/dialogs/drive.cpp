@@ -316,7 +316,7 @@ InitializeFormatDriveDlg(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         }
     }
 
-    StringCchPrintfW(szText + cchText, _countof(szText) - cchText, L" (%c)", szDrive[0]);
+    StringCchPrintfW(szText + cchText, _countof(szText) - cchText, L" (%c:)", szDrive[0]);
 
     /* set window text */
     SetWindowTextW(hwndDlg, szText);
