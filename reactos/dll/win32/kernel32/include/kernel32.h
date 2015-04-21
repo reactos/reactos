@@ -142,6 +142,10 @@ extern WaitForInputIdleType UserWaitForInputIdleRoutine;
 #define BASEP_COPY_PUBLIC_MASK      0xF
 #define BASEP_COPY_BASEP_MASK       0xFFFFFFF0
 
+/* Flags for PrivMoveFileIdentityW */
+#define PRIV_DELETE_ON_SUCCESS      0x1
+#define PRIV_ALLOW_NON_TRACKABLE    0x2
+
 /* GLOBAL VARIABLES **********************************************************/
 
 extern BOOL bIsFileApiAnsi;

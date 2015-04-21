@@ -886,14 +886,379 @@ Cleanup:
 }
 
 /*
- * @unimplemented
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+BasepOpenFileForMove(IN LPCWSTR File,
+                     OUT PUNICODE_STRING RelativeNtName,
+                     OUT LPWSTR * NtName,
+                     OUT PHANDLE FileHandle,
+                     OUT POBJECT_ATTRIBUTES ObjectAttributes,
+                     IN ACCESS_MASK DesiredAccess,
+                     IN ULONG ShareAccess,
+                     IN ULONG OpenOptions)
+{
+    RTL_RELATIVE_NAME_U RelativeName;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_ATTRIBUTE_TAG_INFORMATION TagInfo;
+    ULONG IntShareAccess;
+    BOOLEAN HasRelative = FALSE;
+
+    _SEH2_TRY
+    {
+        /* Zero output */
+        RelativeNtName->Length = 
+        RelativeNtName->MaximumLength = 0;
+        RelativeNtName->Buffer = NULL;
+        *NtName = NULL;
+
+        if (!RtlDosPathNameToRelativeNtPathName_U(File, RelativeNtName, NULL, &RelativeName))
+        {
+            Status = STATUS_OBJECT_PATH_NOT_FOUND;
+            _SEH2_LEAVE;
+        }
+
+        HasRelative = TRUE;
+        *NtName = RelativeNtName->Buffer;
+
+        if (RelativeName.RelativeName.Length)
+        {
+            RelativeNtName->Length = RelativeName.RelativeName.Length;
+            RelativeNtName->MaximumLength = RelativeName.RelativeName.MaximumLength;
+            RelativeNtName->Buffer = RelativeName.RelativeName.Buffer;
+        }
+        else
+        {
+            RelativeName.ContainingDirectory = 0;
+        }
+
+        InitializeObjectAttributes(ObjectAttributes,
+                                   RelativeNtName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   RelativeName.ContainingDirectory,
+                                   NULL);
+        /* Force certain flags here, given ops we'll do */
+        IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_WRITE;
+        OpenOptions |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT;
+
+        /* We'll try to read reparse tag */
+        Status = NtOpenFile(FileHandle,
+                            DesiredAccess | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                            ObjectAttributes,
+                            &IoStatusBlock,
+                            IntShareAccess,
+                            OpenOptions | FILE_OPEN_REPARSE_POINT);
+        if (NT_SUCCESS(Status))
+        {
+            /* Attempt the read */
+            Status = NtQueryInformationFile(*FileHandle,
+                                            &IoStatusBlock,
+                                            &TagInfo,
+                                            sizeof(FILE_ATTRIBUTE_TAG_INFORMATION),
+                                            FileAttributeTagInformation);
+
+            /* Return if failure with a status that wouldn't mean the FSD cannot support reparse points */
+            if (!NT_SUCCESS(Status) &&
+                (Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_PARAMETER))
+            {
+                _SEH2_LEAVE;
+            }
+
+            if (NT_SUCCESS(Status))
+            {
+                /* This cannot happen on mount points */
+                if (TagInfo.FileAttributes & FILE_ATTRIBUTE_DEVICE ||
+                    TagInfo.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    _SEH2_LEAVE;
+                }
+            }
+
+            NtClose(*FileHandle);
+            *FileHandle = INVALID_HANDLE_VALUE;
+
+            IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_DELETE;
+        }
+        else if (Status == STATUS_INVALID_PARAMETER)
+        {
+            IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_WRITE;
+        }
+        else
+        {
+            _SEH2_LEAVE;
+        }
+
+        /* Reattempt to open normally, following reparse point if needed */
+        Status = NtOpenFile(FileHandle,
+                            DesiredAccess | SYNCHRONIZE,
+                            ObjectAttributes,
+                            &IoStatusBlock,
+                            IntShareAccess,
+                            OpenOptions);
+    }
+    _SEH2_FINALLY
+    {
+        if (HasRelative)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
+}
+
+/*
+ * @implemented
  */
 BOOL
 WINAPI
-PrivMoveFileIdentityW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
+PrivMoveFileIdentityW(IN LPCWSTR lpSource, IN LPCWSTR lpDestination, IN DWORD dwFlags)
 {
-    STUB;
-    return FALSE;
+    ACCESS_MASK SourceAccess;
+    UNICODE_STRING NtSource, NtDestination;
+    LPWSTR RelativeSource, RelativeDestination;
+    HANDLE SourceHandle, DestinationHandle;
+    OBJECT_ATTRIBUTES ObjectAttributesSource, ObjectAttributesDestination;
+    NTSTATUS Status, OldStatus = STATUS_SUCCESS;
+    ACCESS_MASK DestAccess;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION SourceInformation, DestinationInformation;
+    FILE_DISPOSITION_INFORMATION FileDispositionInfo;
+
+    DPRINT("PrivMoveFileIdentityW(%S, %S, %x)\n", lpSource, lpDestination, dwFlags);
+
+    SourceHandle = INVALID_HANDLE_VALUE;
+    NtSource.Length =
+    NtSource.MaximumLength = 0;
+    NtSource.Buffer = NULL;
+    RelativeSource = NULL;
+    DestinationHandle = INVALID_HANDLE_VALUE;
+    NtDestination.Length =
+    NtDestination.MaximumLength = 0;
+    NtDestination.Buffer = NULL;
+    RelativeDestination = NULL;
+
+    /* FILE_WRITE_DATA is required for later on notification */
+    SourceAccess = FILE_READ_ATTRIBUTES | FILE_WRITE_DATA;
+    if (dwFlags & PRIV_DELETE_ON_SUCCESS)
+    {
+        SourceAccess |= DELETE;
+    }
+
+    _SEH2_TRY
+    {
+        /* We will loop twice:
+         * First we attempt to open with FILE_WRITE_DATA for notification
+         * If it fails and we have flag for non-trackable files, we retry
+         * without FILE_WRITE_DATA.
+         * If that one fails, then, we quit for real
+         */
+        while (TRUE)
+        {
+            Status = BasepOpenFileForMove(lpSource,
+                                          &NtSource,
+                                          &RelativeSource,
+                                          &SourceHandle,
+                                          &ObjectAttributesSource,
+                                          SourceAccess,
+                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                          FILE_OPEN_NO_RECALL);
+            if (NT_SUCCESS(Status))
+            {
+                break;
+            }
+
+            /* If we already attempted the opening without FILE_WRITE_DATA
+             * or if we cannot move on non-trackable files, fail.
+             */
+            if (!(SourceAccess & FILE_WRITE_DATA) || !(dwFlags & PRIV_ALLOW_NON_TRACKABLE))
+            {
+                _SEH2_LEAVE;
+            }
+
+            if (RelativeSource)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSource);
+                RelativeSource = NULL;
+            }
+
+            if (SourceHandle != INVALID_HANDLE_VALUE)
+            {
+                NtClose(SourceHandle);
+                SourceHandle = INVALID_HANDLE_VALUE;
+            }
+
+            SourceAccess &= ~FILE_WRITE_DATA;
+
+            /* Remember fist failure in the path */
+            if (NT_SUCCESS(OldStatus))
+            {
+                OldStatus = Status;
+            }
+        }
+
+        DestAccess = FILE_WRITE_ATTRIBUTES;
+        /* If we could preserve FILE_WRITE_DATA for source, attempt to get it for destination
+         * Still for notification purposes
+         */
+        if (SourceAccess & FILE_WRITE_DATA)
+        {
+            DestAccess |= FILE_WRITE_DATA;
+        }
+
+        /* cf comment for first loop */
+        while (TRUE)
+        {
+            Status = BasepOpenFileForMove(lpDestination,
+                                          &NtDestination,
+                                          &RelativeDestination,
+                                          &DestinationHandle,
+                                          &ObjectAttributesDestination,
+                                          DestAccess,
+                                          FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                          FILE_OPEN_NO_RECALL);
+            if (NT_SUCCESS(Status))
+            {
+                break;
+            }
+
+            /* If we already attempted the opening without FILE_WRITE_DATA
+             * or if we cannot move on non-trackable files, fail.
+             */
+            if (!(DestAccess & FILE_WRITE_DATA) || !(dwFlags & PRIV_ALLOW_NON_TRACKABLE))
+            {
+                _SEH2_LEAVE;
+            }
+
+            if (RelativeDestination)
+            {
+                RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeDestination);
+                RelativeDestination = NULL;
+            }
+
+            if (DestinationHandle != INVALID_HANDLE_VALUE)
+            {
+                NtClose(DestinationHandle);
+                DestinationHandle = INVALID_HANDLE_VALUE;
+            }
+
+            DestAccess &= ~FILE_WRITE_DATA;
+
+            /* Remember fist failure in the path */
+            if (NT_SUCCESS(OldStatus))
+            {
+                OldStatus = Status;
+            }
+        }
+
+        /* Get the creation time from source */
+        Status = NtQueryInformationFile(SourceHandle,
+                                        &IoStatusBlock,
+                                        &SourceInformation,
+                                        sizeof(SourceInformation),
+                                        FileBasicInformation);
+        if (NT_SUCCESS(Status))
+        {
+            /* Then, prepare to set it for destination */
+            RtlZeroMemory(&DestinationInformation, sizeof(DestinationInformation));
+            DestinationInformation.CreationTime.QuadPart = SourceInformation.CreationTime.QuadPart;
+
+            /* And set it, that's all folks! */
+            Status = NtSetInformationFile(DestinationHandle,
+                                          &IoStatusBlock,
+                                          &DestinationInformation,
+                                          sizeof(DestinationInformation),
+                                          FileBasicInformation);
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (!(dwFlags & PRIV_ALLOW_NON_TRACKABLE))
+            {
+                _SEH2_LEAVE;
+            }
+
+            /* Remember the failure for later notification */
+            if (NT_SUCCESS(OldStatus))
+            {
+                OldStatus = Status;
+            }
+        }
+
+        /* If we could open with FILE_WRITE_DATA both source and destination,
+         * then, notify
+         */
+        if (DestAccess & FILE_WRITE_DATA && SourceAccess & FILE_WRITE_DATA)
+        {
+            Status = BasepNotifyTrackingService(&SourceHandle,
+                                                &ObjectAttributesSource,
+                                                DestinationHandle,
+                                                &NtDestination);
+#if 1 // ReactOS HACK
+            /* FIXME: To be removed once BasepNotifyTrackingService is implemented */
+            if (Status == STATUS_NOT_IMPLEMENTED)
+                Status = STATUS_SUCCESS;
+#endif
+            if (!NT_SUCCESS(Status))
+            {
+                if (dwFlags & PRIV_ALLOW_NON_TRACKABLE)
+                {
+                    if (NT_SUCCESS(OldStatus))
+                        OldStatus = Status;
+                }
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+        if (RelativeSource)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSource);
+
+        if (RelativeDestination)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeDestination);
+    }
+    _SEH2_END;
+
+    /* If caller asked for source deletion, if everything succeed, proceed */
+    if (NT_SUCCESS(Status) && dwFlags & PRIV_DELETE_ON_SUCCESS)
+    {
+        FileDispositionInfo.DeleteFile = TRUE;
+
+        Status = NtSetInformationFile(SourceHandle,
+                                      &IoStatusBlock,
+                                      &FileDispositionInfo,
+                                      sizeof(FileDispositionInfo),
+                                      FileDispositionInformation);
+    }
+
+    /* Cleanup/close portion */
+    if (DestinationHandle != INVALID_HANDLE_VALUE)
+    {
+        NtClose(DestinationHandle);
+    }
+
+    if (SourceHandle != INVALID_HANDLE_VALUE)
+    {
+        NtClose(SourceHandle);
+    }
+
+    /* Set last error if any, and quit */
+    if (NT_SUCCESS(Status))
+    {
+        if (!NT_SUCCESS(OldStatus))
+        {
+            BaseSetLastNTError(OldStatus);
+        }
+    }
+    else
+    {
+        BaseSetLastNTError(Status);
+    }
+
+    return NT_SUCCESS(Status);
 }
 
 /* EOF */
