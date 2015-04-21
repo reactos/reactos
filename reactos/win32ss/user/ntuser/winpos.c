@@ -397,7 +397,7 @@ WinPosInitInternalPos(PWND Wnd, RECTL *RestoreRect)
    POINT Size;
    RECTL Rect = *RestoreRect;
 
-   if (Wnd->spwndParent != UserGetDesktopWindow())
+   if (Wnd->spwndParent && Wnd->spwndParent != UserGetDesktopWindow())
    {
       RECTL_vOffsetRect(&Rect,
                         -Wnd->spwndParent->rcClient.left,
