@@ -104,14 +104,14 @@ START_TEST(GetWindowPlacement)
     ok(wp->length == sizeof(*wp), "wp.length = %u\n", wp->length);
     ok(wp->flags == 0, "wp.flags = %x\n", wp->flags);
     ok(wp->showCmd == SW_SHOWNORMAL, "wp.showCmd = %u\n", wp->showCmd);
-    ok(wp->ptMinPosition.x == (UINT)-1, "wp.ptMinPosition.x = %u\n", wp->ptMinPosition.x);
-    ok(wp->ptMinPosition.y == (UINT)-1, "wp.ptMinPosition.x = %u\n", wp->ptMinPosition.y);
-    ok(wp->ptMaxPosition.x == (UINT)-1, "wp.ptMaxPosition.x = %u\n", wp->ptMaxPosition.x);
-    ok(wp->ptMaxPosition.y == (UINT)-1, "wp.ptMaxPosition.y = %u\n", wp->ptMaxPosition.y);
-    ok(wp->rcNormalPosition.left == 0, "wp.rcNormalPosition.left = %u\n", wp->rcNormalPosition.left);
-    ok(wp->rcNormalPosition.top == 0, "wp.rcNormalPosition.top = %u\n", wp->rcNormalPosition.top);
+    ok(wp->ptMinPosition.x == -1, "wp.ptMinPosition.x = %ld\n", wp->ptMinPosition.x);
+    ok(wp->ptMinPosition.y == -1, "wp.ptMinPosition.x = %ld\n", wp->ptMinPosition.y);
+    ok(wp->ptMaxPosition.x == -1, "wp.ptMaxPosition.x = %ld\n", wp->ptMaxPosition.x);
+    ok(wp->ptMaxPosition.y == -1, "wp.ptMaxPosition.y = %ld\n", wp->ptMaxPosition.y);
+    ok(wp->rcNormalPosition.left == 0, "wp.rcNormalPosition.left = %ld\n", wp->rcNormalPosition.left);
+    ok(wp->rcNormalPosition.top == 0, "wp.rcNormalPosition.top = %ld\n", wp->rcNormalPosition.top);
     ok(wp->rcNormalPosition.right != 0 &&
-       wp->rcNormalPosition.right != 0x55555555, "wp.rcNormalPosition.right = %u\n", wp->rcNormalPosition.right);
+       wp->rcNormalPosition.right != 0x55555555, "wp.rcNormalPosition.right = %ld\n", wp->rcNormalPosition.right);
     ok(wp->rcNormalPosition.bottom != 0 &&
-       wp->rcNormalPosition.bottom != 0x55555555, "wp.rcNormalPosition.bottom = %u\n", wp->rcNormalPosition.bottom);
+       wp->rcNormalPosition.bottom != 0x55555555, "wp.rcNormalPosition.bottom = %ld\n", wp->rcNormalPosition.bottom);
 }
