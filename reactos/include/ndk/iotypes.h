@@ -621,6 +621,13 @@ typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION
     ULONG ReparseTag;
 } FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
 
+typedef struct _FILE_TRACKING_INFORMATION
+{
+    HANDLE DestinationFile;
+    ULONG ObjectInformationLength;
+    CHAR ObjectInformation[1];
+} FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
+
 //
 // File System Information structures for NtQueryInformationFile
 //
