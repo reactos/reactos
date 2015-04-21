@@ -12,6 +12,12 @@
 /* DEFINITIONS ****************************************************************/
 
 #define MAX_DEVICE_NAME 8
+#define REQUEST_LOCATION 0x00700100 // 0070:0100
+#define DEVICE_CODE_SIZE 10
+#define DEVICE_PRIVATE_AREA(Driver) (Driver + sizeof(DOS_DRIVER) + DEVICE_CODE_SIZE)
+
+#define BOP_DRV_STRATEGY  0x42
+#define BOP_DRV_INTERRUPT 0x43
 
 #define DOS_DEVATTR_STDIN       (1 << 0)
 #define DOS_DEVATTR_STDOUT      (1 << 1)
@@ -80,6 +86,7 @@ typedef WORD (NTAPI *PDOS_DEVICE_PEEK_ROUTINE)
 struct _DOS_DEVICE_NODE
 {
     LIST_ENTRY Entry;
+    DWORD Driver;
     WORD DeviceAttributes;
     ANSI_STRING Name;
     CHAR NameBuffer[MAX_DEVICE_NAME];
@@ -95,7 +102,6 @@ struct _DOS_DEVICE_NODE
     PDOS_DEVICE_GENERIC_ROUTINE OpenRoutine;
     PDOS_DEVICE_GENERIC_ROUTINE CloseRoutine;
     PDOS_DEVICE_IO_ROUTINE OutputUntilBusyRoutine;
-    DWORD Driver;
 };
 
 #pragma pack(push, 1)
@@ -190,7 +196,16 @@ typedef struct _DOS_OUTPUT_BUSY_REQUEST
 
 PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName);
 PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName);
+PDOS_DEVICE_NODE DosCreateDeviceEx
+(
+    WORD Attributes,
+    PCHAR DeviceName,
+    WORD PrivateDataSize
+);
 VOID DosDeleteDevice(PDOS_DEVICE_NODE DeviceNode);
+VOID DeviceStrategyBop(VOID);
+VOID DeviceInterruptBop(VOID);
+DWORD DosLoadDriver(LPCSTR DriverFile);
 
 #endif // _DEVICE_H_
 

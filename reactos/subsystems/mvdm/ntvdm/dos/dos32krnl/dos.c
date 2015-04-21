@@ -20,11 +20,14 @@
 #include "dos/dem.h"
 #include "device.h"
 #include "memory.h"
+#include "himem.h"
 
 #include "bios/bios.h"
 
 #include "io.h"
 #include "hardware/ps2.h"
+
+#include "emsdrv.h"
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -2934,9 +2937,39 @@ VOID WINAPI DosFastConOut(LPWORD Stack)
 
 VOID WINAPI DosInt2Fh(LPWORD Stack)
 {
-    DPRINT1("DOS Internal System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
-            getAH(), getAL());
-    Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+    switch (getAH())
+    {
+        /* Extended Memory Specification */
+        case 0x43:
+        {
+            DWORD DriverEntry;
+            if (!XmsGetDriverEntry(&DriverEntry)) break;
+
+            if (getAL() == 0x00)
+            {
+                /* The driver is loaded */
+                setAL(0x80);
+            }
+            else if (getAL() == 0x10)
+            {
+                setES(HIWORD(DriverEntry));
+                setBX(LOWORD(DriverEntry));
+            }
+            else
+            {
+                DPRINT1("Unknown DOS XMS Function: INT 0x2F, AH = 43h, AL = %xh\n", getAL());
+            }
+
+            break;
+        }
+        
+        default:
+        {
+            DPRINT1("DOS Internal System Function INT 0x2F, AH = %xh, AL = %xh NOT IMPLEMENTED!\n",
+                    getAH(), getAL());
+            Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+        }
+    }
 }
 
 BOOLEAN DosKRNLInitialize(VOID)
@@ -3004,12 +3037,6 @@ BOOLEAN DosKRNLInitialize(VOID)
         DosSystemFileTable[i].RefCount = 0;
     }
 
-    /* Load the EMS driver */
-    EmsDrvInitialize();
-
-    /* Load the CON driver */
-    ConDrvInitialize();
-
 #endif
 
     /* Initialize the callback context */
@@ -3023,6 +3050,19 @@ BOOLEAN DosKRNLInitialize(VOID)
 //  RegisterDosInt32(0x24, DosInt24h        ); // Critical Error
     RegisterDosInt32(0x29, DosFastConOut    ); // DOS 2+ Fast Console Output
     RegisterDosInt32(0x2F, DosInt2Fh        );
+
+    /* Load the EMS driver */
+    if (!EmsDrvInitialize(EMS_TOTAL_PAGES))
+    {
+        DPRINT1("Could not initialize EMS. EMS will not be available.\n"
+                "Try reducing the number of EMS pages.\n");
+    }
+
+    /* Load the XMS driver (HIMEM) */
+    XmsInitialize();
+
+    /* Load the CON driver */
+    ConDrvInitialize();
 
     return TRUE;
 }

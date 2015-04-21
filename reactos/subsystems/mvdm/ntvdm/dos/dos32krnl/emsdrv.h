@@ -1,13 +1,13 @@
 /*
  * COPYRIGHT:       GPLv2+ - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            ems.h
- * PURPOSE:         Expanded Memory Support
+ * FILE:            emsdrv.h
+ * PURPOSE:         DOS EMS Driver
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  */
 
-#ifndef _EMS_H_
-#define _EMS_H_
+#ifndef _EMSDRV_H_
+#define _EMSDRV_H_
 
 /* DEFINITIONS ****************************************************************/
 
@@ -59,11 +59,9 @@ typedef struct _EMS_COPY_DATA
 
 #pragma pack(pop)
 
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
-BOOLEAN EmsInitialize(ULONG TotalPages);
-VOID EmsCleanup(VOID);
-
-#endif // _EMS_H_
-
-/* EOF */
+BOOLEAN EmsDrvInitialize(ULONG TotalPages);
+VOID EmsDrvCleanup(VOID);

@@ -19,6 +19,7 @@
 #include "utils.h"
 
 #include "dem.h"
+#include "dos/dos32krnl/device.h"
 #include "cpu/bop.h"
 
 #include "bios/bios.h"
@@ -27,14 +28,6 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 /**/extern BYTE CurrentDrive;/**/
-
-/* DEFINES ********************************************************************/
-
-/* BOP Identifiers */
-#define BOP_LOAD_DOS    0x2B    // DOS Loading and Initializing BOP. In parameter (following bytes) we take a NULL-terminated string indicating the name of the DOS kernel file.
-#define BOP_START_DOS   0x2C    // DOS Starting BOP. In parameter (following bytes) we take a NULL-terminated string indicating the name of the DOS kernel file.
-#define BOP_DOS         0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
-#define BOP_CMD         0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -86,6 +79,20 @@ Quit:
                 EmulatorTerminate();
             }
 
+            break;
+        }
+
+        /* Call 32-bit Driver Strategy Routine */
+        case BOP_DRV_STRATEGY:
+        {
+            DeviceStrategyBop();
+            break;
+        }
+
+        /* Call 32-bit Driver Interrupt Routine */
+        case BOP_DRV_INTERRUPT:
+        {
+            DeviceInterruptBop();
             break;
         }
 

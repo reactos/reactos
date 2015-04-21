@@ -10,7 +10,6 @@ list(APPEND SOURCE
     bios/bios32/kbdbios32.c
     bios/bios32/vidbios32.c
     bios/bios32/moubios32.c
-    bios/bios32/ems.c
     bios/bios.c
     bios/kbdbios.c
     bios/rom.c
@@ -34,6 +33,7 @@ list(APPEND SOURCE
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
     dos/dos32krnl/emsdrv.c
+    dos/dos32krnl/himem.c
     dos/dos32krnl/memory.c
     dos/mouse32.c
     dos/dem.c

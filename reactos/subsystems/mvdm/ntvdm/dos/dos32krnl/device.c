@@ -12,6 +12,7 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
+#include "cpu/bop.h"
 #include "device.h"
 
 #include "dos.h"
@@ -20,27 +21,54 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static const BYTE StrategyRoutine[] = {
+    LOBYTE(EMULATOR_BOP),
+    HIBYTE(EMULATOR_BOP),
+    BOP_DOS,
+    BOP_DRV_STRATEGY,
+    0xCB // retf
+};
+
+static const BYTE InterruptRoutine[] = {
+    LOBYTE(EMULATOR_BOP),
+    HIBYTE(EMULATOR_BOP),
+    BOP_DOS,
+    BOP_DRV_INTERRUPT,
+    0xCB // retf
+};
+
+C_ASSERT((sizeof(StrategyRoutine) + sizeof(InterruptRoutine)) == DEVICE_CODE_SIZE);
+
 static LIST_ENTRY DeviceList = { &DeviceList, &DeviceList };
+static DWORD FirstDriver = 0xFFFFFFFF;
+static PDOS_REQUEST_HEADER DeviceRequest;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID DosCallDriver(DWORD Driver, PDOS_REQUEST_HEADER Request)
 {
     PDOS_DRIVER DriverBlock = (PDOS_DRIVER)FAR_POINTER(Driver);
-    PDOS_REQUEST_HEADER RemoteRequest;
+    PDOS_REQUEST_HEADER RemoteRequest = FAR_POINTER(REQUEST_LOCATION);
+    WORD ES = getES();
+    WORD BX = getBX();
 
-    /* Call the strategy routine first */
-    Call16(HIWORD(Driver), DriverBlock->StrategyRoutine);
-    RemoteRequest = (PDOS_REQUEST_HEADER)SEG_OFF_TO_PTR(getES(), getBX());
+    /* Set ES:BX to the location of the request */
+    setES(HIWORD(REQUEST_LOCATION));
+    setBX(LOWORD(REQUEST_LOCATION));
 
     /* Copy the request structure to ES:BX */
     RtlMoveMemory(RemoteRequest, Request, Request->RequestLength);
 
-    /* Call the interrupt routine */
+    /* Call the strategy routine, and then the interrupt routine */
+    Call16(HIWORD(Driver), DriverBlock->StrategyRoutine);
     Call16(HIWORD(Driver), DriverBlock->InterruptRoutine);
 
     /* Get the request structure from ES:BX */
-    RtlMoveMemory(Request, RemoteRequest, RemoteRequest->RequestLength);
+    RtlMoveMemory(Request, RemoteRequest, Request->RequestLength);
+
+    /* Restore ES:BX */
+    setES(ES);
+    setBX(BX);
 }
 
 static inline WORD NTAPI DosDriverReadInternal(PDOS_DEVICE_NODE DeviceNode,
@@ -183,41 +211,65 @@ static WORD NTAPI DosDriverDispatchOutputUntilBusy(PDOS_DEVICE_NODE DeviceNode,
     return Request.Header.Status;
 }
 
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName)
+static VOID DosAddDriver(DWORD Driver)
 {
-    PLIST_ENTRY i;
-    PDOS_DEVICE_NODE Node;
-    ANSI_STRING DeviceNameString;
+    PDOS_DRIVER LastDriver;
 
-    RtlInitAnsiString(&DeviceNameString, DeviceName);
-
-    for (i = DeviceList.Flink; i != &DeviceList; i = i->Flink)
+    if (LOWORD(FirstDriver) == 0xFFFF)
     {
-        Node = CONTAINING_RECORD(i, DOS_DEVICE_NODE, Entry);
-        if (RtlEqualString(&Node->Name, &DeviceNameString, TRUE)) return Node;
+        /* This is the first driver */
+        FirstDriver = Driver;
+        return;
     }
 
-    return NULL;
+    /* The list isn't empty, so find the last driver in it */
+    LastDriver = (PDOS_DRIVER)FAR_POINTER(FirstDriver);
+    while (LOWORD(LastDriver->Link) != 0xFFFF)
+    {
+        LastDriver = (PDOS_DRIVER)FAR_POINTER(LastDriver->Link);
+    }
+
+    /* Add the new driver to the list */
+    LastDriver->Link = Driver;
 }
 
-PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName)
+static VOID DosRemoveDriver(DWORD Driver)
 {
-    BYTE i;
-    PDOS_DEVICE_NODE Node;
+    DWORD CurrentDriver = FirstDriver;
 
-    /* Make sure this is a character device */
-    if (!(Attributes & DOS_DEVATTR_CHARACTER))
+    if (FirstDriver == Driver)
     {
-        DPRINT1("ERROR: Block devices are not supported.\n");
-        return FALSE;
+        /* Update the first driver */
+        FirstDriver = ((PDOS_DRIVER)FAR_POINTER(FirstDriver))->Link;
+        return;
     }
 
-    Node = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*Node));
+    while (LOWORD(CurrentDriver) != 0xFFFF)
+    {
+        PDOS_DRIVER DriverHeader = (PDOS_DRIVER)FAR_POINTER(CurrentDriver);
+
+        if (DriverHeader->Link == Driver)
+        {
+            /* Remove it from the list */
+            DriverHeader->Link = ((PDOS_DRIVER)FAR_POINTER(DriverHeader->Link))->Link;
+            return;
+        }
+
+        CurrentDriver = DriverHeader->Link;
+    }
+}
+
+static PDOS_DEVICE_NODE DosCreateDeviceNode(DWORD Driver)
+{
+    BYTE i;
+    PDOS_DRIVER DriverHeader = (PDOS_DRIVER)FAR_POINTER(Driver);
+    PDOS_DEVICE_NODE Node = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            HEAP_ZERO_MEMORY,
+                                            sizeof(*Node));
     if (Node == NULL) return NULL;
 
-    Node->DeviceAttributes = Attributes;
+    Node->Driver = Driver;
+    Node->DeviceAttributes = DriverHeader->DeviceAttributes;
 
     /* Initialize the name string */
     Node->Name.Buffer = Node->NameBuffer;
@@ -225,8 +277,8 @@ PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName)
 
     for (i = 0; i < MAX_DEVICE_NAME; i++)
     {
-        if (DeviceName[i] == '\0' || DeviceName[i] == ' ') break;
-        Node->Name.Buffer[i] = DeviceName[i];
+        if (DriverHeader->DeviceName[i] == ' ') break;
+        Node->Name.Buffer[i] = DriverHeader->DeviceName[i];
     }
 
     Node->Name.Length = i;
@@ -235,10 +287,266 @@ PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName)
     return Node;
 }
 
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName)
+{
+    PLIST_ENTRY i;
+    DWORD CurrentDriver = FirstDriver;
+    ANSI_STRING DeviceNameString;
+
+    RtlInitAnsiString(&DeviceNameString, DeviceName);
+
+    while (LOWORD(CurrentDriver) != 0xFFFF)
+    {
+        PDOS_DEVICE_NODE Node;
+        PDOS_DRIVER DriverHeader = (PDOS_DRIVER)FAR_POINTER(CurrentDriver);
+
+        /* Get the device node for this driver */
+        for (i = DeviceList.Flink; i != &DeviceList; i = i->Flink)
+        {
+            Node = CONTAINING_RECORD(i, DOS_DEVICE_NODE, Entry);
+            if (Node->Driver == CurrentDriver) break;
+        }
+
+        if (i == &DeviceList)
+        {
+            DPRINT1("The driver at %04X:%04X has no associated device node. "
+                    "Installing automagically.\n",
+                    HIWORD(CurrentDriver),
+                    LOWORD(CurrentDriver));
+
+            /* Create the device node */
+            Node = DosCreateDeviceNode(CurrentDriver);
+            Node->IoctlReadRoutine = DosDriverDispatchIoctlRead;
+            Node->ReadRoutine = DosDriverDispatchRead;
+            Node->PeekRoutine = DosDriverDispatchPeek;
+            Node->InputStatusRoutine = DosDriverDispatchInputStatus;
+            Node->FlushInputRoutine = DosDriverDispatchFlushInput;
+            Node->IoctlWriteRoutine = DosDriverDispatchIoctlWrite;
+            Node->WriteRoutine = DosDriverDispatchWrite;
+            Node->OutputStatusRoutine = DosDriverDispatchOutputStatus;
+            Node->FlushOutputRoutine = DosDriverDispatchFlushOutput;
+            Node->OpenRoutine = DosDriverDispatchOpen;
+            Node->CloseRoutine = DosDriverDispatchClose;
+            Node->OutputUntilBusyRoutine = DosDriverDispatchOutputUntilBusy;
+        }
+
+        if (RtlEqualString(&Node->Name, &DeviceNameString, TRUE)) return Node;
+        CurrentDriver = DriverHeader->Link;
+    }
+
+    return NULL;
+}
+
+PDOS_DEVICE_NODE DosCreateDeviceEx(WORD Attributes, PCHAR DeviceName, WORD PrivateDataSize)
+{
+    BYTE i;
+    WORD Segment;
+    PDOS_DRIVER DriverHeader;
+    PDOS_DEVICE_NODE Node;
+
+    /* Make sure this is a character device */
+    if (!(Attributes & DOS_DEVATTR_CHARACTER))
+    {
+        DPRINT1("ERROR: Block devices are not supported.\n");
+        return NULL;
+    }
+
+    /* Create a driver header for this device */
+    Segment = DosAllocateMemory(sizeof(DOS_DRIVER) + 10 + PrivateDataSize, NULL);
+    if (Segment == 0) return NULL;
+
+    /* Fill the header with data */
+    DriverHeader = SEG_OFF_TO_PTR(Segment, 0);
+    DriverHeader->Link = 0xFFFFFFFF;
+    DriverHeader->DeviceAttributes = Attributes;
+    DriverHeader->StrategyRoutine = sizeof(DOS_DRIVER);
+    DriverHeader->InterruptRoutine = sizeof(DOS_DRIVER) + sizeof(StrategyRoutine);
+
+    RtlFillMemory(DriverHeader->DeviceName, MAX_DEVICE_NAME, ' ');
+    for (i = 0; i < MAX_DEVICE_NAME; i++)
+    {
+        if (DeviceName[i] == '\0' || DeviceName[i] == ' ') break;
+        DriverHeader->DeviceName[i] = DeviceName[i];
+    }
+
+    /* Write the routines */
+    RtlMoveMemory(SEG_OFF_TO_PTR(Segment, DriverHeader->StrategyRoutine),
+                  StrategyRoutine,
+                  sizeof(StrategyRoutine));
+    RtlMoveMemory(SEG_OFF_TO_PTR(Segment, DriverHeader->StrategyRoutine),
+                  InterruptRoutine,
+                  sizeof(InterruptRoutine));
+
+    /* Create the node */
+    Node = DosCreateDeviceNode(MAKELONG(0, Segment));
+    if (Node == NULL)
+    {
+        DosFreeMemory(Segment);
+        return NULL;
+    }
+
+    DosAddDriver(Node->Driver);
+    return Node;
+}
+
+PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName)
+{
+    /* Call the extended API */
+    return DosCreateDeviceEx(Attributes, DeviceName, 0);
+}
+
 VOID DosDeleteDevice(PDOS_DEVICE_NODE DeviceNode)
 {
+    DosRemoveDriver(DeviceNode->Driver);
+
+    ASSERT(LOWORD(DeviceNode->Driver) == 0);
+    DosFreeMemory(HIWORD(DeviceNode->Driver));
+
     RemoveEntryList(&DeviceNode->Entry);
     RtlFreeHeap(RtlGetProcessHeap(), 0, DeviceNode);
+}
+
+VOID DeviceStrategyBop(VOID)
+{
+    /* Save ES:BX */
+    DeviceRequest = (PDOS_REQUEST_HEADER)SEG_OFF_TO_PTR(getES(), getBX());
+}
+
+VOID DeviceInterruptBop(VOID)
+{
+    PLIST_ENTRY i;
+    PDOS_DEVICE_NODE Node;
+    DWORD DriverAddress = (getCS() << 4) + getIP() - sizeof(DOS_DRIVER) - 9;
+
+    /* Get the device node for this driver */
+    for (i = DeviceList.Flink; i != &DeviceList; i = i->Flink)
+    {
+        Node = CONTAINING_RECORD(i, DOS_DEVICE_NODE, Entry);
+        if (TO_LINEAR(HIWORD(Node->Driver), LOWORD(Node->Driver)) == DriverAddress) break;
+    }
+
+    if (i == &DeviceList)
+    {
+        DPRINT1("Device interrupt BOP from an unknown location.\n");
+        return;
+    }
+
+    switch (DeviceRequest->CommandCode)
+    {
+        case DOS_DEVCMD_IOCTL_READ:
+        {
+            PDOS_IOCTL_RW_REQUEST Request = (PDOS_IOCTL_RW_REQUEST)DeviceRequest;
+
+            DeviceRequest->Status = Node->IoctlReadRoutine(
+                Node,
+                Request->BufferPointer,
+                &Request->Length
+            );
+
+            break;
+        }
+
+        case DOS_DEVCMD_READ:
+        {
+            PDOS_RW_REQUEST Request = (PDOS_RW_REQUEST)DeviceRequest;
+
+            DeviceRequest->Status = Node->ReadRoutine(
+                Node,
+                Request->BufferPointer,
+                &Request->Length
+            );
+
+            break;
+        }
+
+        case DOS_DEVCMD_PEEK:
+        {
+            PDOS_PEEK_REQUEST Request = (PDOS_PEEK_REQUEST)DeviceRequest;
+            DeviceRequest->Status = Node->PeekRoutine(Node, &Request->Character);
+            break;
+        }
+
+        case DOS_DEVCMD_INSTAT:
+        {
+            DeviceRequest->Status = Node->InputStatusRoutine(Node);
+            break;
+        }
+
+        case DOS_DEVCMD_FLUSH_INPUT:
+        {
+            DeviceRequest->Status = Node->FlushInputRoutine(Node);
+            break;
+        }
+
+        case DOS_DEVCMD_IOCTL_WRITE:
+        {
+            PDOS_IOCTL_RW_REQUEST Request = (PDOS_IOCTL_RW_REQUEST)DeviceRequest;
+
+            DeviceRequest->Status = Node->IoctlWriteRoutine(
+                Node,
+                Request->BufferPointer,
+                &Request->Length
+            );
+
+            break;
+        }
+
+        case DOS_DEVCMD_WRITE:
+        {
+            PDOS_RW_REQUEST Request = (PDOS_RW_REQUEST)DeviceRequest;
+
+            DeviceRequest->Status = Node->WriteRoutine(Node,
+                Request->BufferPointer,
+                &Request->Length
+            );
+
+            break;
+        }
+
+        case DOS_DEVCMD_OUTSTAT:
+        {
+            DeviceRequest->Status = Node->OutputStatusRoutine(Node);
+            break;
+        }
+
+        case DOS_DEVCMD_FLUSH_OUTPUT:
+        {
+            DeviceRequest->Status = Node->FlushOutputRoutine(Node);
+            break;
+        }
+
+        case DOS_DEVCMD_OPEN:
+        {
+            DeviceRequest->Status = Node->OpenRoutine(Node);
+            break;
+        }
+
+        case DOS_DEVCMD_CLOSE:
+        {
+            DeviceRequest->Status = Node->CloseRoutine(Node);
+            break;
+        }
+
+        case DOS_DEVCMD_OUTPUT_BUSY:
+        {
+            PDOS_OUTPUT_BUSY_REQUEST Request = (PDOS_OUTPUT_BUSY_REQUEST)DeviceRequest;
+
+            DeviceRequest->Status = Node->OutputUntilBusyRoutine(
+                Node,
+                Request->BufferPointer,
+                &Request->Length
+            );
+
+            break;
+        }
+
+        default:
+        {
+            DPRINT1("Unknown device command code: %u\n", DeviceRequest->CommandCode);
+        }
+    }
 }
 
 DWORD DosLoadDriver(LPCSTR DriverFile)
@@ -334,10 +642,8 @@ DWORD DosLoadDriver(LPCSTR DriverFile)
             goto Next;
         }
 
-        /* Create the device */
-        DeviceNode = DosCreateDevice(DriverHeader->DeviceAttributes,
-                                     DriverHeader->DeviceName);
-        DeviceNode->Driver = Driver;
+        /* Create the device node */
+        DeviceNode = DosCreateDeviceNode(Driver);
         DeviceNode->IoctlReadRoutine = DosDriverDispatchIoctlRead;
         DeviceNode->ReadRoutine = DosDriverDispatchRead;
         DeviceNode->PeekRoutine = DosDriverDispatchPeek;
@@ -351,6 +657,7 @@ DWORD DosLoadDriver(LPCSTR DriverFile)
         DeviceNode->CloseRoutine = DosDriverDispatchClose;
         DeviceNode->OutputUntilBusyRoutine = DosDriverDispatchOutputUntilBusy;
 
+        DosAddDriver(Driver);
         DriversLoaded++;
 
 Next:

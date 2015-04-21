@@ -21,9 +21,6 @@
 // #define BIOS_TIME_INTERRUPT         0x1A
 // #define BIOS_SYS_TIMER_INTERRUPT    0x1C
 
-/* 16 MB of EMS memory */
-#define EMS_TOTAL_PAGES 1024
-
 /* FUNCTIONS ******************************************************************/
 
 BOOLEAN Bios32Initialize(VOID);

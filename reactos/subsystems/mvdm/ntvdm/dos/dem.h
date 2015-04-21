@@ -17,6 +17,14 @@
 
 #include "dos32krnl/dos.h"
 
+/* DEFINES ********************************************************************/
+
+/* BOP Identifiers */
+#define BOP_LOAD_DOS    0x2B    // DOS Loading and Initializing BOP. In parameter (following bytes) we take a NULL-terminated string indicating the name of the DOS kernel file.
+#define BOP_START_DOS   0x2C    // DOS Starting BOP. In parameter (following bytes) we take a NULL-terminated string indicating the name of the DOS kernel file.
+#define BOP_DOS         0x50    // DOS System BOP (for NTIO.SYS and NTDOS.SYS)
+#define BOP_CMD         0x54    // DOS Command Interpreter BOP (for COMMAND.COM)
+
 /* FUNCTIONS ******************************************************************/
 
 DWORD

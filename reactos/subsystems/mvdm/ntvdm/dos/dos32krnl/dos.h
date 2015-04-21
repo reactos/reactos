@@ -50,6 +50,9 @@
 #define DOS_PROGRAM_NAME_TAG 0x0001
 #define DEFAULT_JFT_SIZE 20
 
+/* 16 MB of EMS memory */
+#define EMS_TOTAL_PAGES 1024
+
 typedef enum
 {
     DOS_LOAD_AND_EXECUTE = 0x00,
@@ -198,8 +201,6 @@ BOOLEAN DosCheckInput(VOID);
 VOID DosPrintCharacter(WORD FileHandle, CHAR Character);
 
 BOOLEAN DosBIOSInitialize(VOID);
-VOID EmsDrvInitialize(VOID);
-VOID EmsDrvCleanup(VOID);
 VOID ConDrvInitialize(VOID);
 VOID ConDrvCleanup(VOID);
 
