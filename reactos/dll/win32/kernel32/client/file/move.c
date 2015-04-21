@@ -194,6 +194,132 @@ BasepNotifyTrackingService(IN PHANDLE ExistingHandle,
 /*
  * @implemented
  */
+NTSTATUS
+WINAPI
+BasepOpenFileForMove(IN LPCWSTR File,
+                     OUT PUNICODE_STRING RelativeNtName,
+                     OUT LPWSTR * NtName,
+                     OUT PHANDLE FileHandle,
+                     OUT POBJECT_ATTRIBUTES ObjectAttributes,
+                     IN ACCESS_MASK DesiredAccess,
+                     IN ULONG ShareAccess,
+                     IN ULONG OpenOptions)
+{
+    RTL_RELATIVE_NAME_U RelativeName;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_ATTRIBUTE_TAG_INFORMATION TagInfo;
+    ULONG IntShareAccess;
+    BOOLEAN HasRelative = FALSE;
+
+    _SEH2_TRY
+    {
+        /* Zero output */
+        RelativeNtName->Length = 
+        RelativeNtName->MaximumLength = 0;
+        RelativeNtName->Buffer = NULL;
+        *NtName = NULL;
+
+        if (!RtlDosPathNameToRelativeNtPathName_U(File, RelativeNtName, NULL, &RelativeName))
+        {
+            Status = STATUS_OBJECT_PATH_NOT_FOUND;
+            _SEH2_LEAVE;
+        }
+
+        HasRelative = TRUE;
+        *NtName = RelativeNtName->Buffer;
+
+        if (RelativeName.RelativeName.Length)
+        {
+            RelativeNtName->Length = RelativeName.RelativeName.Length;
+            RelativeNtName->MaximumLength = RelativeName.RelativeName.MaximumLength;
+            RelativeNtName->Buffer = RelativeName.RelativeName.Buffer;
+        }
+        else
+        {
+            RelativeName.ContainingDirectory = 0;
+        }
+
+        InitializeObjectAttributes(ObjectAttributes,
+                                   RelativeNtName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   RelativeName.ContainingDirectory,
+                                   NULL);
+        /* Force certain flags here, given ops we'll do */
+        IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_WRITE;
+        OpenOptions |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT;
+
+        /* We'll try to read reparse tag */
+        Status = NtOpenFile(FileHandle,
+                            DesiredAccess | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                            ObjectAttributes,
+                            &IoStatusBlock,
+                            IntShareAccess,
+                            OpenOptions | FILE_OPEN_REPARSE_POINT);
+        if (NT_SUCCESS(Status))
+        {
+            /* Attempt the read */
+            Status = NtQueryInformationFile(*FileHandle,
+                                            &IoStatusBlock,
+                                            &TagInfo,
+                                            sizeof(FILE_ATTRIBUTE_TAG_INFORMATION),
+                                            FileAttributeTagInformation);
+
+            /* Return if failure with a status that wouldn't mean the FSD cannot support reparse points */
+            if (!NT_SUCCESS(Status) &&
+                (Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_PARAMETER))
+            {
+                _SEH2_LEAVE;
+            }
+
+            if (NT_SUCCESS(Status))
+            {
+                /* This cannot happen on mount points */
+                if (TagInfo.FileAttributes & FILE_ATTRIBUTE_DEVICE ||
+                    TagInfo.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
+                {
+                    _SEH2_LEAVE;
+                }
+            }
+
+            NtClose(*FileHandle);
+            *FileHandle = INVALID_HANDLE_VALUE;
+
+            IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_DELETE;
+        }
+        else if (Status == STATUS_INVALID_PARAMETER)
+        {
+            IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_WRITE;
+        }
+        else
+        {
+            _SEH2_LEAVE;
+        }
+
+        /* Reattempt to open normally, following reparse point if needed */
+        Status = NtOpenFile(FileHandle,
+                            DesiredAccess | SYNCHRONIZE,
+                            ObjectAttributes,
+                            &IoStatusBlock,
+                            IntShareAccess,
+                            OpenOptions);
+    }
+    _SEH2_FINALLY
+    {
+        if (HasRelative)
+        {
+            RtlReleaseRelativeName(&RelativeName);
+        }
+    }
+    _SEH2_END;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
 DWORD
 WINAPI
 BasepMoveFileCopyProgress(IN LARGE_INTEGER TotalFileSize,
@@ -885,130 +1011,6 @@ Cleanup:
     return Ret;
 }
 
-/*
- * @implemented
- */
-NTSTATUS
-WINAPI
-BasepOpenFileForMove(IN LPCWSTR File,
-                     OUT PUNICODE_STRING RelativeNtName,
-                     OUT LPWSTR * NtName,
-                     OUT PHANDLE FileHandle,
-                     OUT POBJECT_ATTRIBUTES ObjectAttributes,
-                     IN ACCESS_MASK DesiredAccess,
-                     IN ULONG ShareAccess,
-                     IN ULONG OpenOptions)
-{
-    RTL_RELATIVE_NAME_U RelativeName;
-    NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
-    FILE_ATTRIBUTE_TAG_INFORMATION TagInfo;
-    ULONG IntShareAccess;
-    BOOLEAN HasRelative = FALSE;
-
-    _SEH2_TRY
-    {
-        /* Zero output */
-        RelativeNtName->Length = 
-        RelativeNtName->MaximumLength = 0;
-        RelativeNtName->Buffer = NULL;
-        *NtName = NULL;
-
-        if (!RtlDosPathNameToRelativeNtPathName_U(File, RelativeNtName, NULL, &RelativeName))
-        {
-            Status = STATUS_OBJECT_PATH_NOT_FOUND;
-            _SEH2_LEAVE;
-        }
-
-        HasRelative = TRUE;
-        *NtName = RelativeNtName->Buffer;
-
-        if (RelativeName.RelativeName.Length)
-        {
-            RelativeNtName->Length = RelativeName.RelativeName.Length;
-            RelativeNtName->MaximumLength = RelativeName.RelativeName.MaximumLength;
-            RelativeNtName->Buffer = RelativeName.RelativeName.Buffer;
-        }
-        else
-        {
-            RelativeName.ContainingDirectory = 0;
-        }
-
-        InitializeObjectAttributes(ObjectAttributes,
-                                   RelativeNtName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   RelativeName.ContainingDirectory,
-                                   NULL);
-        /* Force certain flags here, given ops we'll do */
-        IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_WRITE;
-        OpenOptions |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT;
-
-        /* We'll try to read reparse tag */
-        Status = NtOpenFile(FileHandle,
-                            DesiredAccess | FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                            ObjectAttributes,
-                            &IoStatusBlock,
-                            IntShareAccess,
-                            OpenOptions | FILE_OPEN_REPARSE_POINT);
-        if (NT_SUCCESS(Status))
-        {
-            /* Attempt the read */
-            Status = NtQueryInformationFile(*FileHandle,
-                                            &IoStatusBlock,
-                                            &TagInfo,
-                                            sizeof(FILE_ATTRIBUTE_TAG_INFORMATION),
-                                            FileAttributeTagInformation);
-
-            /* Return if failure with a status that wouldn't mean the FSD cannot support reparse points */
-            if (!NT_SUCCESS(Status) &&
-                (Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_PARAMETER))
-            {
-                _SEH2_LEAVE;
-            }
-
-            if (NT_SUCCESS(Status))
-            {
-                /* This cannot happen on mount points */
-                if (TagInfo.FileAttributes & FILE_ATTRIBUTE_DEVICE ||
-                    TagInfo.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT)
-                {
-                    _SEH2_LEAVE;
-                }
-            }
-
-            NtClose(*FileHandle);
-            *FileHandle = INVALID_HANDLE_VALUE;
-
-            IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_DELETE;
-        }
-        else if (Status == STATUS_INVALID_PARAMETER)
-        {
-            IntShareAccess = ShareAccess | FILE_SHARE_READ | FILE_SHARE_WRITE;
-        }
-        else
-        {
-            _SEH2_LEAVE;
-        }
-
-        /* Reattempt to open normally, following reparse point if needed */
-        Status = NtOpenFile(FileHandle,
-                            DesiredAccess | SYNCHRONIZE,
-                            ObjectAttributes,
-                            &IoStatusBlock,
-                            IntShareAccess,
-                            OpenOptions);
-    }
-    _SEH2_FINALLY
-    {
-        if (HasRelative)
-        {
-            RtlReleaseRelativeName(&RelativeName);
-        }
-    }
-    _SEH2_END;
-
-    return Status;
-}
 
 /*
  * @implemented
