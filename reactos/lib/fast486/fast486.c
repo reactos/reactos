@@ -340,7 +340,10 @@ Fast486Rewind(PFAST486_STATE State)
     /* This function is used when an instruction has been interrupted remotely */
     State->PrefixFlags = 0;
     State->InstPtr.Long = State->SavedInstPtr.Long;
+
+#ifndef FAST486_NO_PREFETCH
     State->PrefetchValid = FALSE;
+#endif
 }
 
 /* EOF */
