@@ -58,7 +58,7 @@ GetDriveNameWithLetter(LPWSTR pwszText, UINT cchTextMax, LPCWSTR pwszDrive)
         }
     }
 
-    StringCchPrintfW(pwszText + cchText, cchTextMax - cchText, L" (%c)", pwszDrive[0]);
+    StringCchPrintfW(pwszText + cchText, cchTextMax - cchText, L" (%c:)", pwszDrive[0]);
 }
 
 static VOID
