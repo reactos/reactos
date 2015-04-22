@@ -137,12 +137,27 @@ SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST
     {
         psh.pszCaption = wszName;
         psh.dwFlags |= PSH_PROPTITLE;
+        pwszDrive[2] = 0;
         if (wszName[0] == UNICODE_NULL)
         {
-            /* FIXME: check if disk is a really a local hdd */
-            UINT i = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, wszName, sizeof(wszName) / sizeof(WCHAR) - 6);
-            StringCchPrintf(wszName + i, sizeof(wszName) / sizeof(WCHAR) - i, L" (%s)", pwszDrive);
+            UINT len;
+            switch (GetDriveTypeW(pwszDrive))
+            {
+                case DRIVE_CDROM:
+                    len = LoadStringW(shell32_hInstance, IDS_DRIVE_CDROM, wszName, _countof(wszName));
+                    break;
+                case DRIVE_REMOTE:
+                    len = LoadStringW(shell32_hInstance, IDS_DRIVE_NETWORK, wszName, _countof(wszName));
+                    break;
+                case DRIVE_FIXED:
+                default:
+                    len = LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, wszName, _countof(wszName));
+                    break;
+            }
+            StringCchPrintf(wszName + len, _countof(wszName) - len, L" (%s)", pwszDrive);
         }
+        else
+            StringCchPrintf(wszName + wcslen(wszName), _countof(wszName) - wcslen(wszName), L" (%s)", pwszDrive);
     }
 
     CComPtr<IDataObject> pDataObj;
