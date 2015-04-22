@@ -46,9 +46,10 @@ static ULONG BitmapBuffer[(XMS_BLOCKS + 31) / 32];
 
 static inline PXMS_HANDLE GetHandleRecord(WORD Handle)
 {
-    PXMS_HANDLE Entry = &HandleTable[Handle - 1];
+    PXMS_HANDLE Entry;
     if (Handle == 0 || Handle >= XMS_MAX_HANDLES) return NULL;
 
+    Entry = &HandleTable[Handle - 1];
     return Entry->Size ? Entry : NULL;
 }
 

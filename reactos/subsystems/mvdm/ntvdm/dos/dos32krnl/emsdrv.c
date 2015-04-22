@@ -35,12 +35,18 @@ static PVOID EmsMemory = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+static PEMS_HANDLE GetHandleRecord(USHORT Handle)
+{
+    if (Handle >= EMS_MAX_HANDLES) return NULL;
+    return &HandleTable[Handle];
+}
+
 static USHORT EmsFree(USHORT Handle)
 {
     PLIST_ENTRY Entry;
-    PEMS_HANDLE HandleEntry = &HandleTable[Handle];
+    PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
-    if (Handle >= EMS_MAX_HANDLES || !HandleEntry->Allocated)
+    if (HandleEntry == NULL || !HandleEntry->Allocated)
     {
         return EMS_STATUS_INVALID_HANDLE;
     }
@@ -131,7 +137,7 @@ static PEMS_PAGE GetLogicalPage(PEMS_HANDLE Handle, USHORT LogicalPage)
 static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
 {
     PEMS_PAGE PageEntry;
-    PEMS_HANDLE HandleEntry = &HandleTable[Handle];
+    PEMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
     if (PhysicalPage >= EMS_PHYSICAL_PAGES) return EMS_STATUS_INV_PHYSICAL_PAGE;
     if (LogicalPage == 0xFFFF)
@@ -141,7 +147,10 @@ static USHORT EmsMap(USHORT Handle, UCHAR PhysicalPage, USHORT LogicalPage)
         return EMS_STATUS_OK;
     }
 
-    if (Handle >= EMS_MAX_HANDLES || !HandleEntry->Allocated) return EMS_STATUS_INVALID_HANDLE;
+    if (HandleEntry == NULL || !HandleEntry->Allocated)
+    {
+        return EMS_STATUS_INVALID_HANDLE;
+    }
 
     PageEntry = GetLogicalPage(HandleEntry, LogicalPage);
     if (!PageEntry) return EMS_STATUS_INV_LOGICAL_PAGE; 
@@ -224,9 +233,9 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             if (Data->SourceType)
             {
                 /* Expanded memory */
-                HandleEntry = &HandleTable[Data->SourceHandle];
+                HandleEntry = GetHandleRecord(Data->SourceHandle);
 
-                if (Data->SourceHandle >= EMS_MAX_HANDLES || !HandleEntry->Allocated)
+                if (HandleEntry == NULL || !HandleEntry->Allocated)
                 {
                     setAL(EMS_STATUS_INVALID_HANDLE);
                     break;
@@ -253,9 +262,9 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             if (Data->DestType)
             {
                 /* Expanded memory */
-                HandleEntry = &HandleTable[Data->DestHandle];
+                HandleEntry = GetHandleRecord(Data->DestHandle);
 
-                if (Data->SourceHandle >= EMS_MAX_HANDLES || !HandleEntry->Allocated)
+                if (HandleEntry == NULL || !HandleEntry->Allocated)
                 {
                     setAL(EMS_STATUS_INVALID_HANDLE);
                     break;
