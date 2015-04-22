@@ -98,7 +98,7 @@ typedef struct {
     INTERNET_PORT port;
     BOOL is_https;
     struct sockaddr_storage addr;
-    socklen_t addr_len;
+    int addr_len;
     char addr_str[INET6_ADDRSTRLEN];
 
     WCHAR *scheme_host_port;
@@ -402,8 +402,11 @@ typedef struct
     LPWSTR statusText;
     DWORD bytesToWrite;
     DWORD bytesWritten;
+
+    CRITICAL_SECTION headers_section;  /* section to protect the headers array */
     HTTPHEADERW *custHeaders;
     DWORD nCustHeaders;
+
     FILETIME last_modified;
     HANDLE hCacheFile;
     req_file_t *req_file;
@@ -455,8 +458,7 @@ DWORD HTTP_Connect(appinfo_t*,LPCWSTR,
         LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
         DWORD dwInternalFlags, HINTERNET*) DECLSPEC_HIDDEN;
 
-BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
-	struct sockaddr *psa, socklen_t *sa_len) DECLSPEC_HIDDEN;
+BOOL GetAddress(const WCHAR*,INTERNET_PORT,SOCKADDR*,int*,char*) DECLSPEC_HIDDEN;
 
 DWORD get_cookie_header(const WCHAR*,const WCHAR*,WCHAR**) DECLSPEC_HIDDEN;
 DWORD set_cookie(const WCHAR*,const WCHAR*,const WCHAR*,const WCHAR*,DWORD) DECLSPEC_HIDDEN;
@@ -465,7 +467,6 @@ void INTERNET_SetLastError(DWORD dwError) DECLSPEC_HIDDEN;
 DWORD INTERNET_GetLastError(void) DECLSPEC_HIDDEN;
 DWORD INTERNET_AsyncCall(task_header_t*) DECLSPEC_HIDDEN;
 LPSTR INTERNET_GetResponseBuffer(void) DECLSPEC_HIDDEN;
-LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen) DECLSPEC_HIDDEN;
 
 VOID SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
                        DWORD dwInternetStatus, LPVOID lpvStatusInfo,
@@ -494,33 +495,7 @@ BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
 LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
 int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value) DECLSPEC_HIDDEN;
-#ifndef __REACTOS__
-int sock_get_error(int) DECLSPEC_HIDDEN;
-#else
-
-#define sock_get_error(x) WSAGetLastError()
-const char *inet_ntop(int, const void *, char *, socklen_t);
-
-static inline long unix_recv(int socket, void *buffer, size_t length, int flags)
-{
-    return recv(socket, buffer, length, flags);
-}
-#define recv unix_recv
-
-static inline int unix_ioctl(int filedes, long request, void *arg)
-{
-    return ioctlsocket(filedes, request, arg);
-}
-#define ioctlsocket unix_ioctl
-
-static inline int unix_getsockopt(int socket, int level, int option_name, void *option_value, socklen_t *option_len)
-{
-    return getsockopt(socket, level, option_name, option_value, option_len);
-}
-#define getsockopt unix_getsockopt
-
-#endif /* !__REACTOS__ */
-
+int sock_get_error(void) DECLSPEC_HIDDEN;
 int sock_send(int fd, const void *msg, size_t len, int flags) DECLSPEC_HIDDEN;
 int sock_recv(int fd, void *msg, size_t len, int flags) DECLSPEC_HIDDEN;
 
@@ -538,6 +513,8 @@ static inline req_file_t *req_file_addref(req_file_t *req_file)
 BOOL init_urlcache(void) DECLSPEC_HIDDEN;
 void free_urlcache(void) DECLSPEC_HIDDEN;
 void free_cookie(void) DECLSPEC_HIDDEN;
+
+void init_winsock(void) DECLSPEC_HIDDEN;
 
 #define MAX_REPLY_LEN	 	0x5B4
 

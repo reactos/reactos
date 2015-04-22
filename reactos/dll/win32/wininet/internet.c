@@ -28,8 +28,6 @@
 
 #include "internet.h"
 
-#define RESPONSE_TIMEOUT        30
-
 typedef struct
 {
     DWORD  dwError;
@@ -487,11 +485,12 @@ static void free_global_proxy( void )
 static BOOL parse_proxy_url( proxyinfo_t *info, const WCHAR *url )
 {
     static const WCHAR fmt[] = {'%','s',':','%','u',0};
-    WCHAR hostname[INTERNET_MAX_HOST_NAME_LENGTH] = {0};
-    WCHAR username[INTERNET_MAX_USER_NAME_LENGTH] = {0};
-    WCHAR password[INTERNET_MAX_PASSWORD_LENGTH] = {0};
+    WCHAR hostname[INTERNET_MAX_HOST_NAME_LENGTH];
+    WCHAR username[INTERNET_MAX_USER_NAME_LENGTH];
+    WCHAR password[INTERNET_MAX_PASSWORD_LENGTH];
     URL_COMPONENTSW uc;
 
+    hostname[0] = username[0] = password[0] = 0;
     memset( &uc, 0, sizeof(uc) );
     uc.dwStructSize      = sizeof(uc);
     uc.lpszHostName      = hostname;
@@ -801,9 +800,6 @@ static VOID APPINFO_Destroy(object_header_t *hdr)
     heap_free(lpwai->proxyBypass);
     heap_free(lpwai->proxyUsername);
     heap_free(lpwai->proxyPassword);
-#ifdef __REACTOS__
-    WSACleanup();
-#endif
 }
 
 static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
@@ -999,11 +995,6 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
     LPCWSTR lpszProxy, LPCWSTR lpszProxyBypass, DWORD dwFlags)
 {
     appinfo_t *lpwai = NULL;
-#ifdef __REACTOS__
-    WSADATA wsaData;
-    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (error) ERR("WSAStartup failed: %d\n", error);
-#endif
 
     if (TRACE_ON(wininet)) {
 #define FE(x) { x, #x }
@@ -1227,13 +1218,21 @@ BOOL WINAPI InternetGetConnectedStateExW(LPDWORD lpdwStatus, LPWSTR lpszConnecti
 
     /* Must be zero */
     if(dwReserved)
-	return FALSE;
+        return FALSE;
 
     if (lpdwStatus) {
         WARN("always returning LAN connection.\n");
         *lpdwStatus = INTERNET_CONNECTION_LAN;
     }
-    return LoadStringW(WININET_hModule, IDS_LANCONNECTION, lpszConnectionName, dwNameLen) > 0;
+
+    /* When the buffer size is zero LoadStringW fills the buffer with a pointer to
+     * the resource, avoid it as we must not change the buffer in this case */
+    if(lpszConnectionName && dwNameLen) {
+        *lpszConnectionName = '\0';
+        LoadStringW(WININET_hModule, IDS_LANCONNECTION, lpszConnectionName, dwNameLen);
+    }
+
+    return TRUE;
 }
 
 
@@ -3418,14 +3417,15 @@ BOOL WINAPI InternetCheckConnectionW( LPCWSTR lpszUrl, DWORD dwFlags, DWORD dwRe
       socklen_t sa_len = sizeof(saddr);
       int fd;
 
-      if (!GetAddress(hostW, port, (struct sockaddr *)&saddr, &sa_len))
+      if (!GetAddress(hostW, port, (struct sockaddr *)&saddr, &sa_len, NULL))
           goto End;
+      init_winsock();
       fd = socket(saddr.ss_family, SOCK_STREAM, 0);
       if (fd != -1)
       {
           if (connect(fd, (struct sockaddr *)&saddr, sa_len) == 0)
               rc = TRUE;
-          close(fd);
+          closesocket(fd);
       }
   }
   else
@@ -3858,72 +3858,6 @@ LPSTR INTERNET_GetResponseBuffer(void)
         lpwite = INTERNET_AllocThreadError();
     TRACE("\n");
     return lpwite->response;
-}
-
-/***********************************************************************
- *           INTERNET_GetNextLine  (internal)
- *
- * Parse next line in directory string listing
- *
- * RETURNS
- *   Pointer to beginning of next line
- *   NULL on failure
- *
- */
-
-LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
-{
-    /* ReactOS: use select instead of poll */
-    fd_set infd;
-    struct timeval tv;
-    BOOL bSuccess = FALSE;
-    INT nRecv = 0;
-    LPSTR lpszBuffer = INTERNET_GetResponseBuffer();
-
-    TRACE("\n");
-
-    FD_ZERO(&infd);
-    FD_SET(nSocket,&infd);
-    tv.tv_sec = RESPONSE_TIMEOUT;
-    tv.tv_usec = 0;
-
-    while (nRecv < MAX_REPLY_LEN)
-    {
-        if (select(0, &infd, NULL, NULL, &tv) > 0)
-        {
-            if (sock_recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
-            {
-                INTERNET_SetLastError(ERROR_FTP_TRANSFER_IN_PROGRESS);
-                goto lend;
-            }
-
-            if (lpszBuffer[nRecv] == '\n')
-	    {
-		bSuccess = TRUE;
-                break;
-	    }
-            if (lpszBuffer[nRecv] != '\r')
-                nRecv++;
-        }
-	else
-	{
-            INTERNET_SetLastError(ERROR_INTERNET_TIMEOUT);
-            goto lend;
-        }
-    }
-
-lend:
-    if (bSuccess)
-    {
-        lpszBuffer[nRecv] = '\0';
-	*dwLen = nRecv - 1;
-        TRACE(":%d %s\n", nRecv, lpszBuffer);
-        return lpszBuffer;
-    }
-    else
-    {
-        return NULL;
-    }
 }
 
 /**********************************************************

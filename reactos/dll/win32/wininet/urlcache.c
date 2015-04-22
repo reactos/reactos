@@ -1205,7 +1205,6 @@ static void dos_date_time_to_file_time(WORD fatdate, WORD fattime,
 
 static int urlcache_decode_url(const char *url, WCHAR *decoded_url, int decoded_len)
 {
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     URL_COMPONENTSA uc;
     DWORD len, part_len;
     WCHAR *host_name;
@@ -1217,10 +1216,8 @@ static int urlcache_decode_url(const char *url, WCHAR *decoded_url, int decoded_
         uc.nScheme = INTERNET_SCHEME_UNKNOWN;
 
     if(uc.nScheme!=INTERNET_SCHEME_HTTP && uc.nScheme!=INTERNET_SCHEME_HTTPS)
-#endif
         return MultiByteToWideChar(CP_UTF8, 0, url, -1, decoded_url, decoded_len);
 
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     if(!decoded_url)
         decoded_len = 0;
 
@@ -1257,7 +1254,6 @@ static int urlcache_decode_url(const char *url, WCHAR *decoded_url, int decoded_
     len += part_len;
 
     return len;
-#endif /* !__REACTOS__ */
 }
 
 /***********************************************************************
@@ -1873,7 +1869,6 @@ BOOL WINAPI GetUrlCacheEntryInfoA(LPCSTR lpszUrlName,
 
 static int urlcache_encode_url(const WCHAR *url, char *encoded_url, int encoded_len)
 {
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     URL_COMPONENTSW uc;
     DWORD len, part_len;
     WCHAR *punycode;
@@ -1887,10 +1882,8 @@ static int urlcache_encode_url(const WCHAR *url, char *encoded_url, int encoded_
         uc.nScheme = INTERNET_SCHEME_UNKNOWN;
 
     if(uc.nScheme!=INTERNET_SCHEME_HTTP && uc.nScheme!=INTERNET_SCHEME_HTTPS)
-#endif
         return WideCharToMultiByte(CP_UTF8, 0, url, -1, encoded_url, encoded_len, NULL, NULL);
 
-#ifndef __REACTOS__ /* FIXME: Vista+ */
     len = WideCharToMultiByte(CP_UTF8, 0, url, uc.lpszHostName-url,
             encoded_url, encoded_len, NULL, NULL);
     if(!len)
@@ -1931,7 +1924,6 @@ static int urlcache_encode_url(const WCHAR *url, char *encoded_url, int encoded_
 
     TRACE("got (%d)%s\n", len, debugstr_a(encoded_url));
     return len;
-#endif /* !__REACTOS__ */
 }
 
 static BOOL urlcache_encode_url_alloc(const WCHAR *url, char **encoded_url)

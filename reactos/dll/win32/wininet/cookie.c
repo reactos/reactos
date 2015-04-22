@@ -342,7 +342,6 @@ static BOOL load_persistent_cookie(LPCWSTR domain, LPCWSTR path)
         *pend = 0;
         data = heap_strdupAtoW(pbeg);
 
-        pbeg = pend+1;
         pbeg = strchr(pend+1, '\n');
         if(!pbeg)
             break;
