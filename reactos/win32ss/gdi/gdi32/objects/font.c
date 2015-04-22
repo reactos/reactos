@@ -2211,7 +2211,7 @@ GdiAddFontResourceW(
 
         if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
         {
-            DPRINT1("Font not found. The Buffer is: %ls, the FileName is: %S", lpszBuffer, lpszFilename);
+            DPRINT1("Font not found. The Buffer is: %ls, the FileName is: %S\n", lpszBuffer, lpszFilename);
             return 0;
         }
     }
