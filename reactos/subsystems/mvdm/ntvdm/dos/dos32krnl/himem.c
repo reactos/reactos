@@ -164,6 +164,20 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
             break;
         }
 
+        /* Global Enable A20 */
+        case 0x03:
+        {
+            EmulatorSetA20(TRUE);
+            break;
+        }
+
+        /* Global Disable A20 */
+        case 0x04:
+        {
+            EmulatorSetA20(FALSE);
+            break;
+        }
+
         /* Query Free Extended Memory */
         case 0x08:
         {

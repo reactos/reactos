@@ -35,7 +35,7 @@ static PVOID EmsMemory = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static PEMS_HANDLE GetHandleRecord(USHORT Handle)
+static inline PEMS_HANDLE GetHandleRecord(USHORT Handle)
 {
     if (Handle >= EMS_MAX_HANDLES) return NULL;
     return &HandleTable[Handle];
