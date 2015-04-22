@@ -10,6 +10,7 @@
 #include <precomp.h>
 
 #include <math.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -2181,7 +2182,7 @@ NewEnumFontFamiliesExW(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
@@ -2190,7 +2191,45 @@ GdiAddFontResourceW(
     FLONG fl,
     DESIGNVECTOR *pdv)
 {
-    return NtGdiAddFontResourceW((PWSTR)lpszFilename, 0, 0, fl, 0, pdv);
+    INT Ret;
+    WCHAR lpszBuffer[MAX_PATH];
+    WCHAR lpszAbsPath[MAX_PATH];
+    UNICODE_STRING NtAbsPath;
+
+    /* FIXME: We don't support multiple files passed in lpszFilename
+     *        as L"abcxxxxx.pfm|abcxxxxx.pfb"
+     */
+
+    /* Does the file exist in CurrentDirectory or in the Absolute Path passed? */
+    GetCurrentDirectoryW(MAX_PATH, lpszBuffer);
+
+    if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
+    {
+        /* Nope. Then let's check Fonts folder */
+        GetWindowsDirectoryW(lpszBuffer, MAX_PATH);
+        StringCbCatW(lpszBuffer, sizeof(lpszBuffer), L"\\Fonts");
+
+        if (!SearchPathW(lpszBuffer, lpszFilename, NULL, MAX_PATH, lpszAbsPath, NULL))
+        {
+            DPRINT1("Font not found. The Buffer is: %ls, the FileName is: %S", lpszBuffer, lpszFilename);
+            return 0;
+        }
+    }
+
+    /* We found the font file so: */
+    if (!RtlDosPathNameToNtPathName_U(lpszAbsPath, &NtAbsPath, NULL, NULL))
+    {
+        DPRINT1("Can't convert Path! Path: %ls\n", lpszAbsPath);
+        return 0;
+    }
+
+    /* The Nt call expects a null-terminator included in cwc param. */
+    ASSERT(NtAbsPath.Buffer[NtAbsPath.Length / sizeof(WCHAR)] == UNICODE_NULL);
+    Ret = NtGdiAddFontResourceW(NtAbsPath.Buffer, NtAbsPath.Length / sizeof(WCHAR) + 1, 1, fl, 0, pdv);
+
+    RtlFreeUnicodeString(&NtAbsPath);
+
+    return Ret;
 }
 
 /*

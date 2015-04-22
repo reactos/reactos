@@ -427,48 +427,51 @@ RealizeFontInit(HFONT hFont)
 INT
 APIENTRY
 NtGdiAddFontResourceW(
-    IN WCHAR *pwszFiles,
+    IN WCHAR *pwcFiles,
     IN ULONG cwc,
     IN ULONG cFiles,
     IN FLONG fl,
     IN DWORD dwPidTid,
     IN OPTIONAL DESIGNVECTOR *pdv)
 {
-  UNICODE_STRING SafeFileName;
-  PWSTR src;
-  NTSTATUS Status;
-  int Ret;
+    UNICODE_STRING SafeFileName;
+    INT Ret;
 
-  /* FIXME: Protect with SEH? */
-  RtlInitUnicodeString(&SafeFileName, pwszFiles);
+    DBG_UNREFERENCED_PARAMETER(cFiles);
+    DBG_UNREFERENCED_PARAMETER(dwPidTid);
+    DBG_UNREFERENCED_PARAMETER(pdv);
 
-  /* Reserve for prepending '\??\' */
-  SafeFileName.Length += 4 * sizeof(WCHAR);
-  SafeFileName.MaximumLength += 4 * sizeof(WCHAR);
+    /* cwc = Length + trailing zero. */
+    if (cwc <= 1 || cwc > UNICODE_STRING_MAX_CHARS)
+        return 0;
 
-  src = SafeFileName.Buffer;
-  SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
-  if(!SafeFileName.Buffer)
-  {
-    EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
+    SafeFileName.MaximumLength = cwc * sizeof(WCHAR);
+    SafeFileName.Length = SafeFileName.MaximumLength - sizeof(UNICODE_NULL);
+    SafeFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                SafeFileName.MaximumLength,
+                                                TAG_STRING);
+    if (!SafeFileName.Buffer)
+    {
+        return 0;
+    }
 
-  /* Prepend '\??\' */
-  RtlCopyMemory(SafeFileName.Buffer, L"\\??\\", 4 * sizeof(WCHAR));
+    _SEH2_TRY
+    {
+        ProbeForRead(pwcFiles, cwc * sizeof(WCHAR), sizeof(WCHAR));
+        RtlCopyMemory(SafeFileName.Buffer, pwcFiles, SafeFileName.Length);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
+        _SEH2_YIELD(return 0);
+    }
+    _SEH2_END;
 
-  Status = MmCopyFromCaller(SafeFileName.Buffer + 4, src, SafeFileName.MaximumLength - (4 * sizeof(WCHAR)));
-  if(!NT_SUCCESS(Status))
-  {
+    SafeFileName.Buffer[SafeFileName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    Ret = IntGdiAddFontResource(&SafeFileName, fl);
+
     ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
-    SetLastNtError(Status);
-    return 0;
-  }
-
-  Ret = IntGdiAddFontResource(&SafeFileName, (DWORD)fl);
-
-  ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
-  return Ret;
+    return Ret;
 }
 
  /*
