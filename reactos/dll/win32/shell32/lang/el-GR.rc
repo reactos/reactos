@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Τοπικός δίσκος"
     IDS_DRIVE_CDROM "Μονάδα CD"
     IDS_DRIVE_NETWORK "Δίσκος δικτύου"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Άνοιγμαμε"

@@ -223,20 +223,39 @@ CDrvDefExt::PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT pDrawItem)
         HBRUSH hbrOld = (HBRUSH)SelectObject(pDrawItem->hDC, hMagBrush);
         INT xRadial = xCenter + (INT)(cos(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cx/2);
         INT yRadial = yCenter - (INT)(sin(M_PI+m_FreeSpacePerc/100.0f*M_PI*2.0f)*cy/2);
-        Pie(pDrawItem->hDC,
-            pDrawItem->rcItem.left, pDrawItem->rcItem.top,
-            pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10,
-            pDrawItem->rcItem.left, yCenter,
-            xRadial, yRadial);
+        if (m_FreeSpacePerc > 0)
+        {
+            Pie(pDrawItem->hDC,
+                pDrawItem->rcItem.left,
+                pDrawItem->rcItem.top,
+                pDrawItem->rcItem.right,
+                pDrawItem->rcItem.bottom - 10,
+                pDrawItem->rcItem.left,
+                yCenter,
+                xRadial,
+                yRadial);
 
-        SelectObject(pDrawItem->hDC, hBlueBrush);
-        Pie(pDrawItem->hDC,
-            pDrawItem->rcItem.left, pDrawItem->rcItem.top,
-            pDrawItem->rcItem.right, pDrawItem->rcItem.bottom - 10,
-            xRadial, yRadial,
-            pDrawItem->rcItem.left, yCenter);
-        SelectObject(pDrawItem->hDC, hbrOld);
-
+            SelectObject(pDrawItem->hDC, hBlueBrush);
+            Pie(pDrawItem->hDC,
+                pDrawItem->rcItem.left,
+                pDrawItem->rcItem.top,
+                pDrawItem->rcItem.right,
+                pDrawItem->rcItem.bottom - 10,
+                xRadial,
+                yRadial,
+                pDrawItem->rcItem.left,
+                yCenter);
+            SelectObject(pDrawItem->hDC, hbrOld);
+        }
+        else
+        {
+            SelectObject(pDrawItem->hDC, hBlueBrush);
+            Ellipse(pDrawItem->hDC,
+                    pDrawItem->rcItem.left,
+                    pDrawItem->rcItem.top,
+                    pDrawItem->rcItem.right,
+                    pDrawItem->rcItem.bottom - 10);
+        }
         HPEN hOldPen = (HPEN)SelectObject(pDrawItem->hDC, hDarkMagPen);
         for (INT x = pDrawItem->rcItem.left; x < pDrawItem->rcItem.right; ++x)
         {
@@ -272,6 +291,11 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
         SetDlgItemTextW(hwndDlg, 14000, wszVolumeName);
         SetDlgItemTextW(hwndDlg, 14002, wszFileSystem);
     }
+    else
+    {
+        LoadStringW(shell32_hInstance, IDS_FS_UNKNOWN, wszFileSystem, _countof(wszFileSystem));
+        SetDlgItemTextW(hwndDlg, 14002, wszFileSystem);
+    }
 
     /* Set drive type and icon */
     UINT DriveType = GetDriveTypeW(m_wszDrive);
@@ -283,6 +307,10 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
         case DRIVE_RAMDISK: IconId = IDI_SHELL_RAMDISK; break;
         default: IconId = IDI_SHELL_DRIVE; TypeStrId = IDS_DRIVE_FIXED;
     }
+
+    if (DriveType != DRIVE_FIXED)
+        EnableWindow(GetDlgItem(hwndDlg, 14000), false);
+
     HICON hIcon = (HICON)LoadImage(shell32_hInstance, MAKEINTRESOURCE(IconId), IMAGE_ICON, 32, 32, LR_SHARED);
     if (hIcon)
         SendDlgItemMessageW(hwndDlg, 14016, STM_SETICON, (WPARAM)hIcon, 0);
@@ -315,6 +343,23 @@ CDrvDefExt::InitGeneralPage(HWND hwndDlg)
 
         if (StrFormatByteSizeW(TotalNumberOfBytes.QuadPart, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14008, wszBuf);
+    }
+    else
+    {
+        m_FreeSpacePerc = 0;
+
+        if (SH_FormatByteSize(0, wszBuf, _countof(wszBuf)))
+        {
+            SetDlgItemTextW(hwndDlg, 14003, wszBuf);
+            SetDlgItemTextW(hwndDlg, 14005, wszBuf);
+            SetDlgItemTextW(hwndDlg, 14007, wszBuf);
+        }
+        if (StrFormatByteSizeW(0, wszBuf, _countof(wszBuf)))
+        {
+            SetDlgItemTextW(hwndDlg, 14004, wszBuf);
+            SetDlgItemTextW(hwndDlg, 14006, wszBuf);
+            SetDlgItemTextW(hwndDlg, 14008, wszBuf);
+        }
     }
 
     /* Set drive description */

@@ -759,6 +759,7 @@ BEGIN
     IDS_DRIVE_FIXED "Místní disk"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Síťový Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Otevřít v"

@@ -762,6 +762,7 @@ BEGIN
     IDS_DRIVE_FIXED "Local Disk"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Network Disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "打开方式"

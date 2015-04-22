@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Lokal Disk"
     IDS_DRIVE_CDROM "CD stasjon"
     IDS_DRIVE_NETWORK "Nettverk disk"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Åpne med"

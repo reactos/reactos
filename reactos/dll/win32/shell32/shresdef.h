@@ -107,6 +107,7 @@
 #define IDS_DRIVE_FIXED          72
 #define IDS_DRIVE_CDROM          73
 #define IDS_DRIVE_NETWORK        74
+#define IDS_FS_UNKNOWN           75
 
 #define IDS_LOGOFF_TITLE  78
 #define IDS_LOGOFF_PROMPT 79

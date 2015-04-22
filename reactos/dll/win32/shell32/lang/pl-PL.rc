@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Dysk lokalny"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Dysk sieciowy"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Otwórz za pomocą"

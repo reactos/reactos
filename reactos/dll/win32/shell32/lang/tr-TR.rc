@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Yerel Disk"
     IDS_DRIVE_CDROM "Optik Sürücü"
     IDS_DRIVE_NETWORK "Ağ Sürücüsü"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Birlikte Aç"

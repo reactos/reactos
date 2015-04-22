@@ -757,6 +757,7 @@ BEGIN
     IDS_DRIVE_FIXED "Disku Vendorë"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Disku Rrjetit"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Hap me"

@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "כונן מקומי"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "כונן רשת"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "פתיחה באמצעות"

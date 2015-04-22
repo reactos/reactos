@@ -755,6 +755,7 @@ BEGIN
     IDS_DRIVE_FIXED "Disc local"
     IDS_DRIVE_CDROM "CD-ROM"
     IDS_DRIVE_NETWORK "Disc din rețea"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Deschide cu"

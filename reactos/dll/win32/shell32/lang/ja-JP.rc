@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "ローカル ディスク"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "ネットワーク ディスク"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "プログラムから開く"

@@ -753,6 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Disco Local"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Disco de Rede"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Abre com..."

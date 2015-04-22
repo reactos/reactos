@@ -755,6 +755,7 @@ BEGIN
     IDS_DRIVE_FIXED "Локальный диск"
     IDS_DRIVE_CDROM "CDROM"
     IDS_DRIVE_NETWORK "Сетевой диск"
+    IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "Открыть с помощью"
