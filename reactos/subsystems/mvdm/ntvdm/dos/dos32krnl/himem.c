@@ -20,7 +20,9 @@
 #include "himem.h"
 
 #define XMS_DEVICE_NAME "XMSXXXX0"
-#define XMS_BOP 0x52
+
+/* BOP Identifiers */
+#define BOP_XMS 0x52
 
 /* PRIVATE VARIABLES **********************************************************/
 
@@ -32,7 +34,7 @@ static const BYTE EntryProcedure[] = {
     0x90, // nop
     LOBYTE(EMULATOR_BOP),
     HIBYTE(EMULATOR_BOP),
-    XMS_BOP,
+    BOP_XMS,
     0xCB // retf
 };
 
@@ -264,7 +266,7 @@ VOID XmsInitialize(VOID)
                              XMS_DEVICE_NAME,
                              sizeof(EntryProcedure));
 
-    RegisterBop(XMS_BOP, XmsBopProcedure);
+    RegisterBop(BOP_XMS, XmsBopProcedure);
 
     /* Copy the entry routine to the device private area */
     RtlMoveMemory(FAR_POINTER(DEVICE_PRIVATE_AREA(Node->Driver)),
@@ -274,6 +276,6 @@ VOID XmsInitialize(VOID)
 
 VOID XmsCleanup(VOID)
 {
-    RegisterBop(XMS_BOP, NULL);
+    RegisterBop(BOP_XMS, NULL);
     DosDeleteDevice(Node);
 }

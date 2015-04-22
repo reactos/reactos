@@ -375,7 +375,7 @@ PDOS_DEVICE_NODE DosCreateDeviceEx(WORD Attributes, PCHAR DeviceName, WORD Priva
     RtlMoveMemory(SEG_OFF_TO_PTR(Segment, DriverHeader->StrategyRoutine),
                   StrategyRoutine,
                   sizeof(StrategyRoutine));
-    RtlMoveMemory(SEG_OFF_TO_PTR(Segment, DriverHeader->StrategyRoutine),
+    RtlMoveMemory(SEG_OFF_TO_PTR(Segment, DriverHeader->InterruptRoutine),
                   InterruptRoutine,
                   sizeof(InterruptRoutine));
 
