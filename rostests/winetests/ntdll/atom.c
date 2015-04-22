@@ -432,9 +432,9 @@ static void test_Global(void)
 {
     NTSTATUS    res;
     RTL_ATOM    atom;
-    char        ptr[sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR)];
+    ULONG       ptr[(sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR)) / sizeof(ULONG)];
     ATOM_BASIC_INFORMATION*     abi = (ATOM_BASIC_INFORMATION*)ptr;
-    ULONG       ptr_size = sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR);
+    ULONG       ptr_size = sizeof(ptr);
 
     if (pNtAddAtomNT4)
         res = pNtAddAtomNT4(testAtom1, &atom);
