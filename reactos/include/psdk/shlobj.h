@@ -249,6 +249,8 @@ int          WINAPI RestartDialog(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD);
 int          WINAPI RestartDialogEx(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD, DWORD);
 BOOL         WINAPI IsUserAnAdmin(void);
 
+#define KF_FLAG_DEFAULT_PATH        0x00000400
+
 #define SHFMT_ERROR     0xFFFFFFFFL  /* Error on last format, drive may be formattable */
 #define SHFMT_CANCEL    0xFFFFFFFEL  /* Last format was cancelled */
 #define SHFMT_NOFORMAT  0xFFFFFFFDL  /* Drive is not formattable */
