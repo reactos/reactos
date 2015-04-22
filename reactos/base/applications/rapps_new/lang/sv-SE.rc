@@ -1,0 +1,207 @@
+/*
+ * PROJECT:     ReactOS RAPPS
+ * FILE:        base/applications/rapps/lang/sv-SE.rc
+ * PURPOSE:     Swedish resource file
+ * Translation: Jaix Bly
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Arkiv"
+    BEGIN
+        MENUITEM "&Inställningar", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "A&vsluta", ID_EXIT
+    END
+    POPUP "&Program"
+    BEGIN
+        MENUITEM "&Installera\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Ändra", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Uppdatera\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Hjälp"
+    BEGIN
+        MENUITEM "Hjälp\tF1", ID_HELP, GRAYED
+        MENUITEM "Om...", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Öppna länk i webläsare", ID_OPEN_LINK
+        MENUITEM "&Kopiera länk till urklipp", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Installera\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Avinstallera\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Ändra", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Ta bort från Registret", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Uppdatera\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Inställningar"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Allmänna", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Spara fönsterposition", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Uppdatera listan med tillgängliga program vid start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "&Logga ur installation och borttagning program", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Nerladding", -1, 4, 65, 240, 51
+    LTEXT "Mapp för nerladdningar:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Välj", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Ta bort programinstallerare efter installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Standard", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Programinstallation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Installera från disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Ladda ner och installera", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Ladda ner..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Avbryt", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "Om"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS Programhanterare\nCopyright (C) 2009\nav Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    PUSHBUTTON "Stäng", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Installera"
+    IDS_TOOLTIP_UNINSTALL "Avinstallera"
+    IDS_TOOLTIP_MODIFY "Redigera"
+    IDS_TOOLTIP_SETTINGS "Inställingar"
+    IDS_TOOLTIP_REFRESH "Uppdatera"
+    IDS_TOOLTIP_EXIT "Avsluta"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Namn"
+    IDS_APP_INST_VERSION "Version"
+    IDS_APP_DESCRIPTION "Beskrivning"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nVersion: "
+    IDS_INFO_DESCRIPTION "\nBeskrivning: "
+    IDS_INFO_PUBLISHER "\nUtgivare: "
+    IDS_INFO_HELPLINK "\nHjälplänk: "
+    IDS_INFO_HELPPHONE "\nHjälptelefon: "
+    IDS_INFO_README "\nLäs mig: "
+    IDS_INFO_REGOWNER "\nRegistrerad ägare: "
+    IDS_INFO_PRODUCTID "\nProdukt ID: "
+    IDS_INFO_CONTACT "\nKontakt: "
+    IDS_INFO_UPDATEINFO "\nUppdaterinsinformation: "
+    IDS_INFO_INFOABOUT "\nInformation om: "
+    IDS_INFO_COMMENTS "\nKommentarer: "
+    IDS_INFO_INSTLOCATION "\nInstallationsplacering: "
+    IDS_INFO_INSTALLSRC "\nInstallationskälla: "
+    IDS_INFO_UNINSTALLSTR "\nAvinstallationssträng: "
+    IDS_INFO_MODIFYPATH "\nÄndra sökväg: "
+    IDS_INFO_INSTALLDATE "\nInstallationsdatum: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nVersion: "
+    IDS_AINFO_DESCRIPTION "\nBeskrivning: "
+    IDS_AINFO_SIZE "\nStorlek: "
+    IDS_AINFO_URLSITE "\nHemsida: "
+    IDS_AINFO_LICENSE "\nLicens: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Audio"
+    IDS_CAT_DEVEL "Utveckling"
+    IDS_CAT_DRIVERS "Drivrutiner"
+    IDS_CAT_EDU "Edutainment"
+    IDS_CAT_ENGINEER "Engineering"
+    IDS_CAT_FINANCE "Finans"
+    IDS_CAT_GAMES "Spel & kul"
+    IDS_CAT_GRAPHICS "Grafik"
+    IDS_CAT_INTERNET "Internet & Nätverk"
+    IDS_CAT_LIBS "Bibliotek"
+    IDS_CAT_OFFICE "Kontor"
+    IDS_CAT_OTHER "Annat"
+    IDS_CAT_SCIENCE "Vetenskap"
+    IDS_CAT_TOOLS "Verktyg"
+    IDS_CAT_VIDEO "Video"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS programhanterare"
+    IDS_SEARCH_TEXT "Sök..."
+    IDS_INSTALL "Installera"
+    IDS_UNINSTALL "Avinstallera"
+    IDS_MODIFY "Ändra"
+    IDS_APPS_COUNT "Programantal: %d"
+    IDS_WELCOME_TITLE "Välkommen till ReactOS programhanterare!\n\n"
+    IDS_WELCOME_TEXT "Välj en kategori till vänster, och sedan ett program för att installera eller avinstallera.\nReactOS Web sida: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Installerat"
+    IDS_AVAILABLEFORINST "Tillgängliga for installation"
+    IDS_UPDATES "Uppdateringar"
+    IDS_APPLICATIONS "Program"
+    IDS_CHOOSE_FOLDER_TEXT "Välj en mapp som kommer att användas för nerladdning av program:"
+    IDS_CHOOSE_FOLDER_ERROR "Du har specificrat en ej existerande mapp! Vill du skapa den?"
+    IDS_APP_REG_REMOVE "Är du säker på att du vill ta bort data det installerade programmets data från registret?"
+    IDS_INFORMATION "Information"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_REMOVE "Det gick ej att ta bort programmets data från registret!"
+END

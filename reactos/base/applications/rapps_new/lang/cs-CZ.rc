@@ -1,0 +1,205 @@
+/* FILE:       applications/rapps/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2014-04-20
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Nastavení", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&Konec", ID_EXIT
+    END
+    POPUP "&Programy"
+    BEGIN
+        MENUITEM "&Instalovat\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Odinstalovat\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Změnit", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Odstranit z &registru", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "Ob&novit\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat databázi\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Nápověda"
+    BEGIN
+        MENUITEM "Nápověda\tF1", ID_HELP, GRAYED
+        MENUITEM "O programu...", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Otevřít odkaz v prohlížeči", ID_OPEN_LINK
+        MENUITEM "&Kopírovat odkaz do schránky", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Instalovat\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Odinstalovat\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Změnit", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Odstranit z &registru", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "Ob&novit\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Aktualizovat databázi\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Nastavení"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Obecné", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Uložit pozici okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Aktualizovat seznam dostupných programů při startu programu", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "Ukládat &záznam instalací a odstranění programů", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Stahování", -1, 4, 65, 240, 51
+    LTEXT "Složka se staženými soubory:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "&Procházet...", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Smazat instalátor programu po dokončení instalace", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "Systémové nastavení proxy", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Bez proxy serveru", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Nepoužívat pro", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Výchozí", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Storno", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalace programu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Instalovat z média (CD nebo DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Stáhnout a instalovat", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Storno", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Stahování..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Storno", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "O programu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS Správce aplikací\nCopyright (C) 2009\nDmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    PUSHBUTTON "Zavřít", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Instalovat"
+    IDS_TOOLTIP_UNINSTALL "Odinstalovat"
+    IDS_TOOLTIP_MODIFY "Změnit"
+    IDS_TOOLTIP_SETTINGS "Nastavení"
+    IDS_TOOLTIP_REFRESH "Obnovit"
+    IDS_TOOLTIP_EXIT "Konec"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Název"
+    IDS_APP_INST_VERSION "Verze"
+    IDS_APP_DESCRIPTION "Popis"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nVerze: "
+    IDS_INFO_DESCRIPTION "\nPopis: "
+    IDS_INFO_PUBLISHER "\nVydavatel: "
+    IDS_INFO_HELPLINK "\nInternetová pomoc: "
+    IDS_INFO_HELPPHONE "\nTelefonní pomoc: "
+    IDS_INFO_README "\nReadme: "
+    IDS_INFO_REGOWNER "\nRegistrovaný vlastník: "
+    IDS_INFO_PRODUCTID "\nID produktu: "
+    IDS_INFO_CONTACT "\nKontakt: "
+    IDS_INFO_UPDATEINFO "\nInformace o aktualizacích: "
+    IDS_INFO_INFOABOUT "\nInformace o: "
+    IDS_INFO_COMMENTS "\nKomentáře: "
+    IDS_INFO_INSTLOCATION "\nUmístění instalace: "
+    IDS_INFO_INSTALLSRC "\nZdroj instalace: "
+    IDS_INFO_UNINSTALLSTR "\nOdinstalační řetězec: "
+    IDS_INFO_MODIFYPATH "\nCesta úpravy: "
+    IDS_INFO_INSTALLDATE "\nDatum instalace: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nVerze: "
+    IDS_AINFO_DESCRIPTION "\nPopis: "
+    IDS_AINFO_SIZE "\nVelikost: "
+    IDS_AINFO_URLSITE "\nDomovská stránka: "
+    IDS_AINFO_LICENSE "\nLicense: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Audio"
+    IDS_CAT_DEVEL "Vývoj"
+    IDS_CAT_DRIVERS "Ovladače"
+    IDS_CAT_EDU "Škola hrou"
+    IDS_CAT_ENGINEER "Strojírenství"
+    IDS_CAT_FINANCE "Finance"
+    IDS_CAT_GAMES "Hry a zábava"
+    IDS_CAT_GRAPHICS "Grafika"
+    IDS_CAT_INTERNET "Internet a sítě"
+    IDS_CAT_LIBS "Knihovny"
+    IDS_CAT_OFFICE "Kancelář"
+    IDS_CAT_OTHER "Ostatní"
+    IDS_CAT_SCIENCE "Věda"
+    IDS_CAT_TOOLS "Nástroje"
+    IDS_CAT_VIDEO "Video"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS Správce aplikací"
+    IDS_SEARCH_TEXT "Hledat..."
+    IDS_INSTALL "Instalovat"
+    IDS_UNINSTALL "Odinstalovat"
+    IDS_MODIFY "Změnit"
+    IDS_APPS_COUNT "Počet aplikací: %d"
+    IDS_WELCOME_TITLE "Vítejte v ReactOS Správci aplikací!\n\n"
+    IDS_WELCOME_TEXT "Na levé straně zvolte kategorii, pak vpravo zvolte aplikaci, která bude nainstalována nebo odinstalována.\nWebová stránka ReactOS: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Nainstalováno"
+    IDS_AVAILABLEFORINST "Lze instalovat"
+    IDS_UPDATES "Aktualizace"
+    IDS_APPLICATIONS "Aplikace"
+    IDS_CHOOSE_FOLDER_TEXT "Zvolte složku, do které se budou ukládat stažené soubory: "
+    IDS_CHOOSE_FOLDER_ERROR "Zvolená složka neexistuje. Vytvořit?"
+    IDS_APP_REG_REMOVE "Určitě odstranit data instalovaného programu z registru?"
+    IDS_INFORMATION "Informace"
+    IDS_UNABLE_TO_DOWNLOAD "Soubor se nepodařilo stáhnout! Adresa nenalezena!"
+    IDS_UNABLE_TO_REMOVE "Nepodařilo se odstranit data programu z registru!"
+END

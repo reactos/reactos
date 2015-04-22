@@ -1,0 +1,70 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = OpenOffice 4.1
+Version = 4.1.1
+License = LGPL
+Description = Open source office suite.
+Size = 140.9 MB
+Category = 6
+URLSite = http://www.openoffice.org/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/en-US/Apache_OpenOffice_4.1.1_Win_x86_install_en-US.exe
+CDPath = none
+
+[Section.0407]
+Description = Quelloffene Office Suite.
+Size = 164.9 MB
+URLSite = http://www.openoffice.org/de/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/de/Apache_OpenOffice_4.1.1_Win_x86_install_de.exe
+
+[Section.0a]
+Description = La suite de ofimática de código abierto.
+Size = 130.4 MB
+URLSite = http://www.openoffice.org/es/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/es/Apache_OpenOffice_4.1.1_Win_x86_install_es.exe
+
+[Section.040c]
+Description = LA suite bureautique open source.
+Size = 132,5 Mo
+URLSite = http://www.openoffice.org/fr/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/fr/Apache_OpenOffice_4.1.1_Win_x86_install_fr.exe
+
+[Section.0410]
+Description = La suite di office Open Source.
+Size = 136.3 MB
+URLSite = http://www.openoffice.org/it/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/it/Apache_OpenOffice_4.1.1_Win_x86_install_it.exe
+
+[Section.0413]
+Description = Open-bron Office Pakket.
+Size = 138.9 MB
+URLSite = http://www.openoffice.org/nl/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/nl/Apache_OpenOffice_4.1.1_Win_x86_install_nl.exe
+
+[Section.0415]
+Description = Otwarty pakiet biurowy.
+Size = 131.6 MB
+URLSite = http://www.openoffice.org/pl/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/pl/Apache_OpenOffice_4.1.1_Win_x86_install_pl.exe
+
+[Section.0418]
+Description = Suită de aplicații de birotică cu surse deschise.
+Size = 140,9 Mo
+URLSite = http://www.openoffice.org/ro/
+
+[Section.041f]
+Description = Bir açık kaynak ofis paketi.
+Size = 128,3 MB
+URLSite = http://www.openoffice.org/tr/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/tr/Apache_OpenOffice_4.1.1_Win_x86_install_tr.exe
+
+[Section.0422]
+Description = Відкритий офісний пакет.
+URLSite = http://www.openoffice.org/ua/
+
+[Section.0813]
+Description = Open-bron Office Pakket.
+Size = 138.9 MB
+URLSite = http://www.openoffice.org/nl/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.1/binaries/nl/Apache_OpenOffice_4.1.1_Win_x86_install_nl.exe

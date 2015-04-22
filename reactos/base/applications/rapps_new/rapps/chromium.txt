@@ -1,0 +1,34 @@
+; UTF-8
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Chromium B.S.U.
+Version = 0.9.13.2
+License = GPL
+Description = An arcade-style, top-scrolling space shooter.
+Size = 2.3 MB
+Category = 4
+URLSite = http://chromium-bsu.sourceforge.net
+URLDownload = http://download.sourceforge.net/project/chromium-bsu/Chromium%20B.S.U.%20Win32%20binary/chromium-0.9.13.2.exe
+CDPath = none
+
+[Section.0407]
+Description = Arcade-Style, Top-Scrolling Space Shooter.
+
+[Section.0a]
+Description = Un juego vertical de disparos espacial al clásico estilo arcade.
+
+[Section.0410]
+Description = Cromo B.S.U. è sparatutto spaziale.
+
+[Section.0415]
+Description = Chromium B.S.U to gra w stylu Arcade, z widokiem z góry.
+
+[Section.0418]
+Description = Joc de tip arcadă de vânătoare în spațiul cosmic.
+Size = 2,3 Mo
+
+[Section.041f]
+Description = Chromium B.S.U., atari salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.
+Size = 2,3 MB

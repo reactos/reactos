@@ -1,0 +1,96 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Mozilla Firefox 3.6
+Version = 3.6.28
+License = MPL/GPL/LGPL
+Description = A popular Web browser. Free and open source, made by a global community.
+Size = 8.22 MB
+Category = 5
+URLSite = http://www.mozilla.org/en-US/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/en-US/Firefox%20Setup%203.6.28.exe
+CDPath = none
+
+[Section.0405]
+Description = Nejpopulárnější a jeden z nejlepších svobodných webových prohlížečů.
+Size = 8.06 MB
+URLSite = http://www.mozilla.org/cs/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/cs/Firefox%20Setup%203.6.28.exe
+
+[Section.0407]
+Description = Populärer, freier und quelloffener Webbrowser.
+Size = 8.22 MB
+URLSite = http://www.mozilla.org/de/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/de/Firefox%20Setup%203.6.28.exe
+
+[Section.0a]
+Description = Navegador web popular, libre y gratuito.
+Size = 8.05 MB
+URLSite = http://www.mozilla.org/es-ES/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/es-ES/Firefox%20Setup%203.6.28.exe
+
+[Section.040c]
+Description = Le navigateur web gratuit le plus populaire et l'un des meilleurs.
+Size = 8,28 Mo
+URLSite = http://www.mozilla.org/fr/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/fr/Firefox%20Setup%203.6.28.exe
+
+[Section.0410]
+Description = Il più popolare e uno dei migliori web browser gratuiti.
+Size = 8.05 MB
+URLSite = http://www.mozilla.org/it/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/it/Firefox%20Setup%203.6.28.exe
+
+[Section.0413]
+Description = De meest populaire en een van de beste gratis Web browsers.
+Size = 8.87 MB
+URLSite = http://www.mozilla.org/nl/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/nl/Firefox%20Setup%203.6.28.exe
+
+[Section.0414]
+Description = Mest populære og best også gratis nettleserene der ute.
+Size = 8.06 MB
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/nb-NO/Firefox%20Setup%203.6.28.exe
+
+[Section.0415]
+Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
+Size = 8.90 MB
+URLSite = http://www.mozilla.org/pl/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/pl/Firefox%20Setup%203.6.28.exe
+
+[Section.0418]
+Description = Navigator web popular. Este gratuit, cu surse deschise, creat de o comunitate globală.
+Size = 8,46 Mo
+URLSite = http://www.mozilla.org/ro/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/ro/Firefox%20Setup%203.6.28.exe
+
+[Section.0419]
+Description = Один из самых популярных и лучших бесплатных браузеров.
+Size = 8.46 MB
+URLSite = http://www.mozilla.org/ru/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/ru/Firefox%20Setup%203.6.28.exe
+
+[Section.041b] 
+Description = Najpopulárnejší a jeden z najlepších slobodný webových prehliadačov.
+Size = 8.53 MB
+URLSite = http://www.mozilla.org/sk/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/sk/Firefox%20Setup%203.6.28.exe
+
+[Section.041f]
+Description = Özgür Umûmî Ağ tarayıcıları arasında en tutulanı ve en iyilerinden biri.
+Size = 8,07 MB
+URLSite = http://www.mozilla.org/tr/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/tr/Firefox%20Setup%203.6.28.exe
+
+[Section.0422]
+Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
+Size = 8.45 MB
+URLSite = http://www.mozilla.org/uk/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/uk/Firefox%20Setup%203.6.28.exe
+
+[Section.0813]
+Description = De meest populaire en een van de beste gratis Web browsers.
+Size = 8.87 MB
+URLSite = http://www.mozilla.org/nl/
+URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/nl/Firefox%20Setup%203.6.28.exe

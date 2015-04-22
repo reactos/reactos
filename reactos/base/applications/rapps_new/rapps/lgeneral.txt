@@ -1,0 +1,46 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = LGeneral
+Version = 1.1
+License = GPL
+Description = Panzer General Clone using SDL libs.
+Size = 1.92 MB
+Category = 4
+URLSite = http://lgames.sourceforge.net/index.php?project=LGeneral
+URLDownload = http://download.sourceforge.net/project/lgames/binaries/lgeneral-1.1-win32.exe
+CDPath = none
+
+[Section.0407]
+Description = Panzer-General-Klon. Verwendet SDL Bibliotheken.
+
+[Section.0a]
+Description = Clon de Panzer General usando las librerias SDL.
+
+[Section.040c]
+Description = Clone de Pansez General utilisant la bibliothèque SDL.
+Size = 1,92 Mo
+
+[Section.0410]
+Description = Clone di Pansez General che utilizza librerie SDL.
+
+[Section.0413]
+Description = Panzer General kloon, gebruikt SDL.
+
+[Section.0415]
+Description = Klon gry Panzer General napisany przy użyciu biblioteki SDL.
+
+[Section.0418]
+Description = Clonă a jocului „Panzer General”. Utilizează bibliotecile SDL.
+Size = 1,92 Mo
+
+[Section.041f]
+Description = SDL kitaplıklarını kullanan Panzer General taklidi.
+Size = 1,92 MB
+
+[Section.0422]
+Description = Клон гри Panzer General, що використовує бібліотеки SDL.
+
+[Section.0813]
+Description = Panzer General kloon, gebruikt SDL.

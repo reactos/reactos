@@ -1,0 +1,57 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Microsoft Visual C++ 2013 Redistributable
+Version = 12.0
+License = Unknown
+Description = Needed by applications compiled with Visual Studio 2013. Contains: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Size = 6.20 MB
+Category = 14
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=40784
+URLDownload = http://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x86.exe
+CDPath = none
+
+[Section.0407]
+License = Unbekannt
+Description = Benötigt für Visual Studio 2013 basierte Anwendungen. Beinhaltet: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.0a]
+License = Desconocida
+Description = Necesario para aplicaciones compiladas con Visual Studio 2013. Incluye: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.040c]
+License = Inconnue
+Description = Bibliothèque Microsoft Visual Studio 2013. Contient: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Size = 6.20 Mo
+
+[Section.0410]
+License = Sconosciuta
+Description = Libreria Microsoft Visual Studio 2013. Include: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.0413]
+License = Ongekend
+Description = Microsoft Visual Studio 2013 Runtime. Bevat: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.0415]
+License = Nieznana
+Description = Biblioteki uruchomieniowe Microsoft Visual Studio 2013. Zawiera: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.0418]
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2013. Conține: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Size = 6,20 Mo
+
+[Section.041f]
+Name = Microsoft Visual C++ 2013 Yeniden Dağıtılabilir Paket
+License = Bilinmiyor
+Description = Microsoft Visual Studio 2013 Yürütücü. Şunları içerir: atl120.dll, mfc120.dll, mfc120u.dll, mfcm120.dll, mfcm120u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Size = 6,20 MB
+
+[Section.0422]
+License = Невідома
+Description = Бібліотеки Microsoft Visual Studio 2013. включає: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+
+[Section.0813]
+License = Ongekend
+Description = Microsoft Visual Studio 2013 Runtime. Bevat: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.

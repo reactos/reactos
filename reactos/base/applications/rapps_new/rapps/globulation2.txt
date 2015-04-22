@@ -1,0 +1,34 @@
+; UTF-8
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Globulation2
+Version = 0.9.4.4
+License = GPL
+Description = A real-time strategy game. The game minimizes gaming micromanagement by automatically assigning tasks to units.
+Size = 13.5 MB
+Category = 4 
+URLSite = http://www.globulation2.org
+URLDownload = http://dl.sv.nongnu.org/releases/glob2/0.9.4/glob2-0.9.4.4.exe
+CDPath = none
+
+[Section.0407]
+Description = Echtzeitstrategiespiel. Das Spiel vereinfacht das Mikromanagement, indem es Einheiten automatisch mit Aufträgen versieht.
+
+[Section.0a]
+Description = Un juego de estrategia en tiempo real. El juego minimiza la supervisión excesiva asignando tareas a las unidades de forma automática.
+
+[Section.0410]
+Description = Globulation 2 è un gioco di strategia in tempo reale. Il gioco minimizza la supervisone eccessiva assegnando in automatico compiti alle unità.
+
+[Section.0415]
+Description = Globulation 2 to gra strategiczna czasu rzeczywistego. Gra minimalizuje zarządzanie automatycznie przydzielając zadania jednostkom.
+
+[Section.0418]
+Description = Joc de strategie în timp real. Jocul minimizează microgestiunea prin alocarea automată de sarcini unităților.
+Size = 13,5 Mo
+
+[Section.041f]
+Description = Globulation 2, gerçek zamanlı bir izlem oyunudur. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikro yönetimini en aza indirir.
+Size = 13,5 MB

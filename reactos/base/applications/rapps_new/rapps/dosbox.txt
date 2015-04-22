@@ -1,0 +1,40 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = DOSBox
+Version = 0.74
+License = GPL
+Description = An open-source DOS emulator.
+Size = 1.38 MB
+Category = 15
+URLSite = http://www.dosbox.com/
+URLDownload = http://download.sourceforge.net/project/dosbox/dosbox/0.74/DOSBox0.74-win32-installer.exe
+CDPath = none
+
+[Section.0407]
+Description = Quelloffener DOS-Emulator.
+
+[Section.0a]
+Description = Un emulador de DOS de código abierto.
+
+[Section.040c]
+Description = DOSBox est un émulateur DOS.
+Size = 1,38 Mo
+
+[Section.0410]
+Description = DOSBox è un emulatore DOS.
+
+[Section.0415]
+Description = DOSBox - emulator DOSa.
+
+[Section.0418]
+Description = Emulator DOS, cu surse deschise.
+Size = 1,38 Mo
+
+[Section.041f]
+Description = DOSBox bir DOS öykünücüsüdür.
+Size = 1,38 MB
+
+[Section.0422]
+Description = DOSBox - емулятор DOSу.

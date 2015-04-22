@@ -1,0 +1,33 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Summer Bound
+Version = 1.4
+License = Freeware
+Description = A game similar Frozen Fruits.
+Size = 764 kB
+Category = 4
+URLSite = http://www.blueskied.com/summer_bound.htm
+URLDownload = http://www.blueskied.com/summer/SummerBound_setup.exe
+CDPath = none
+
+[Section.0407]
+Description = Spiel ähnlich zu Frozen Fruits.
+URLSite = http://www.blueskied.com/freeware-spiele/runterladen.htm
+
+[Section.0a]
+Description = Un juego parecido a Frozen Fruits.
+
+[Section.0410]
+Description = Un gioco simile a Frozen Fruits.
+
+[Section.0418]
+License = Gratuită
+Description = Joc similar jocului „Frozen Fruits”.
+Size = 764 ko
+
+[Section.041f]
+License = Ücretsiz
+Description = Frozen Fruits'e benzeyen bir oyun.
+Size = 764 KB

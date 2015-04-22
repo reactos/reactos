@@ -1,0 +1,53 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Notepad++
+Version = 6.7.5
+License = GPL
+Description = A full featured, free text editor with many plug-ins.
+Size = 7.89 MB
+Category = 6
+URLSite = http://notepad-plus-plus.org/
+URLDownload = http://download.tuxfamily.org/notepadplus/6.7.5/npp.6.7.5.Installer.exe
+CDPath = none
+
+[Section.0407]
+Description = Voll funktionsfähiger, kostenloser Texteditor mit vielen Plugins.
+
+[Section.0a]
+Description = Un editor de texto completo, libre y con gran cantidad de extensiones.
+
+[Section.040c]
+Description = Un éditeur de texte.
+Size = 7,89 Mo
+URLSite = http://notepad-plus-plus.org/fr/
+
+[Section.0410]
+Description = Un editor di testo.
+
+[Section.0413]
+Description = Een teksteditor.
+
+[Section.0415]
+Description = Edytor tekstu.
+
+[Section.0418]
+Description = Editor complet și gratuit de text, cu multe extensii.
+Size = 7,89 Mo
+
+[Section.0419]
+Description = Текстовый редактор.
+
+[Section.041b]
+Description = Textový editor.
+
+[Section.041f]
+Description = Bir metin düzenleyicisi.
+Size = 7,89 MB
+
+[Section.0422]
+Description = Текстовый редактор.
+
+[Section.0813]
+Description = Een teksteditor.

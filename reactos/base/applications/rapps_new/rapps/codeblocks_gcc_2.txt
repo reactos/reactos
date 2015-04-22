@@ -1,0 +1,33 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Code::Blocks TDM-GCC (version 4.8.1, 32 bit)
+Version = 13.12
+License = GPLv3
+Description = An open source, cross-platform, powerful IDE. It contains TDM-GCC (version 4.8.1, 32 bit) compiler.
+Size = 100 MB
+Category = 7
+URLSite = http://www.codeblocks.org/
+URLDownload = http://download.sourceforge.net/project/codeblocks/Binaries/13.12/Windows/codeblocks-13.12mingw-setup-TDM-GCC-481.exe
+CDPath = none
+
+[Section.0407]
+Description = Quelloffene, plattformübergreifende, mächtige IDE. Diese enthät den TDM-GCC (version 4.8.1, 32 bit) Compiler.
+
+[Section.0a]
+Description = Un IDE potente, de código abierto y multiplataforma. Viene con el compilador TDM-GCC (version 4.8.1, 32 bit).
+
+[Section.0410]
+Description = Un IDE potente, open source, multipiattaforma. Contiene il compilatore TDM-GCC (versione 4.8.1, 32 bit).
+
+[Section.0418]
+Name = Code::Blocks TDM-GCC (versiunea 4.8.1 pe 32 biți)
+Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Conține compilatorul TDM-GCC (versiunea 4.8.1 pe 32 biți).
+Size = 100 Mo
+
+[Section.041f]
+Name = Code::Blocks TDM-GCC (sürüm 4.8.1, 32 bitlik)
+License = GPL sürüm 3
+Description = Açık kaynak, çapraz platform, güçlü bir tümleşik geliştirme ortamı. TDM-GCC (sürüm 4.8.1, 32 bitlik) derleyicisini içerir.
+Size = 100 MB

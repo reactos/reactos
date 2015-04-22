@@ -1,0 +1,34 @@
+; UTF-8
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Pingus
+Version = 0.7.6
+License = GPL
+Description = A free Lemmings-like puzzle game.
+Size = 16.0 MB
+Category = 4
+URLSite = http://pingus.seul.org
+URLDownload = http://pingus.googlecode.com/files/Pingus-0.7.6.exe
+CDPath = none
+
+[Section.0407]
+Description = Freies Lemings-ähnliches Puzzle Spiel.
+
+[Section.0a]
+Description = Un juego de puzles parecido a los Lemmings.
+
+[Section.0410]
+Description = Pingus è un gioco gratuito simile a Lemmings.
+
+[Section.0415]
+Description = Pingus to darmowa gra logiczna podobna do gry Lemmings
+
+[Section.0418]
+Description = Joc-enigmă asemănător cu „Lemmings”.
+Size = 16,0 Mo
+
+[Section.041f]
+Description = Pingus, ücretsiz, Lemmings gibi bir bulmaca oyunudur.
+Size = 16,0 MB

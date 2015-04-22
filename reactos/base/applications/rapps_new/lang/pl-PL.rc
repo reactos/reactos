@@ -1,0 +1,208 @@
+/*
+ *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
+ *    Use ReactOS forum PM or IRC to contact me
+ *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (Apr, 2011)
+ *    http://www.reactos.org
+ *    IRC: irc.freenode.net #reactos-pl;
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Plik"
+    BEGIN
+        MENUITEM "&Ustawienia", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "&Wyjście", ID_EXIT
+    END
+    POPUP "&Programy"
+    BEGIN
+        MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Odinstaluj\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Modyfikuj", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Usuń z rejestru", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "O&dśwież\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Ak&tualizuj bazę programów\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Pomoc"
+    BEGIN
+        MENUITEM "Pomoc\tF1", ID_HELP, GRAYED
+        MENUITEM "O programie", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Otwórz link w przeglądarce", ID_OPEN_LINK
+        MENUITEM "&Skopiuj link do przeglądarki", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Instaluj\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Odinstaluj\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Modyfikuj", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Usuń z rejestru", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Odśwież\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Ak&tualizuj bazę programów\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Ustawienia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Ogólne", -1, 4, 2, 240, 61
+    AUTOCHECKBOX "&Zapisz pozycję okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+    AUTOCHECKBOX "&Aktualizuj listę dostępnych programów przy każdym uruchomieniu", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+    AUTOCHECKBOX "Zap&isuj dziennik instalacji i usuwania programów", IDC_LOG_ENABLED, 15, 46, 219, 12
+    GROUPBOX "Pobieranie", -1, 4, 65, 240, 51
+    LTEXT "Katalog dla pobranych plików:", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+    PUSHBUTTON "&Wybierz", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "&Usuń instalatory programów po ich zainstalowaniu", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Domyślne", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "OK", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalacja programu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "&Zainstaluj z dysku (CD lub DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Pobierz i zainstaluj", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Anuluj", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Ściągnij..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Anuluj", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "O programie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Menedżer aplikacji ReactOS\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+    PUSHBUTTON "Zamknij", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Instaluj"
+    IDS_TOOLTIP_UNINSTALL "Odinstaluj"
+    IDS_TOOLTIP_MODIFY "Modyfikuj"
+    IDS_TOOLTIP_SETTINGS "Ustawienia"
+    IDS_TOOLTIP_REFRESH "Odśwież"
+    IDS_TOOLTIP_EXIT "Wyjście"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Nazwa"
+    IDS_APP_INST_VERSION "Wersja"
+    IDS_APP_DESCRIPTION "Opis"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nWersja: "
+    IDS_INFO_DESCRIPTION "\nOpis: "
+    IDS_INFO_PUBLISHER "\nAutor: "
+    IDS_INFO_HELPLINK "\nLink do pomocy: "
+    IDS_INFO_HELPPHONE "\nInfolinia: "
+    IDS_INFO_README "\nPrzeczytaj.to: "
+    IDS_INFO_REGOWNER "\nWłaściciel: "
+    IDS_INFO_PRODUCTID "\nProductID: "
+    IDS_INFO_CONTACT "\nKontakt: "
+    IDS_INFO_UPDATEINFO "\nAktualizacje: "
+    IDS_INFO_INFOABOUT "\nInformacje: "
+    IDS_INFO_COMMENTS "\nKomentarze: "
+    IDS_INFO_INSTLOCATION "\nŚcieżka instalacji: "
+    IDS_INFO_INSTALLSRC "\nŹródło instalacji: "
+    IDS_INFO_UNINSTALLSTR "\nKomenda deinstalacji: "
+    IDS_INFO_MODIFYPATH "\nModyfikacja ścieżki instalacji: "
+    IDS_INFO_INSTALLDATE "\nData instalacji: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nWersja: "
+    IDS_AINFO_DESCRIPTION "\nOpis: "
+    IDS_AINFO_SIZE "\nRozmiar: "
+    IDS_AINFO_URLSITE "\nStrona: "
+    IDS_AINFO_LICENSE "\nLicencja: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Dźwięk"
+    IDS_CAT_DEVEL "Programowanie"
+    IDS_CAT_DRIVERS "Sterowniki"
+    IDS_CAT_EDU "Edukacja"
+    IDS_CAT_ENGINEER "Inżynieria"
+    IDS_CAT_FINANCE "Finanse"
+    IDS_CAT_GAMES "Gry i rozrywka"
+    IDS_CAT_GRAPHICS "Grafika"
+    IDS_CAT_INTERNET "Internet i Sieci"
+    IDS_CAT_LIBS "Biblioteki"
+    IDS_CAT_OFFICE "Biurowe"
+    IDS_CAT_OTHER "Inne"
+    IDS_CAT_SCIENCE "Nauka"
+    IDS_CAT_TOOLS "Narzędzia"
+    IDS_CAT_VIDEO "Wideo"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Menedżer aplikacji ReactOS"
+    IDS_SEARCH_TEXT "Szukaj..."
+    IDS_INSTALL "Instaluj"
+    IDS_UNINSTALL "Odinstaluj"
+    IDS_MODIFY "Modyfikuj"
+    IDS_APPS_COUNT "Licznik aplikacji: %d"
+    IDS_WELCOME_TITLE "Witamy w Menedżerze aplikacji ReactOS!\n\n"
+    IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Zainstalowane"
+    IDS_AVAILABLEFORINST "Dostępne"
+    IDS_UPDATES "Uaktualnienia"
+    IDS_APPLICATIONS "Aplikacje"
+    IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog, w którym będa zapisywane pobrane programy:"
+    IDS_CHOOSE_FOLDER_ERROR "Wybrałeś nieistniejący katalog! Czy chcesz utworzyć nowy?"
+    IDS_APP_REG_REMOVE "Czy na pewno chcesz usunąć wpis tego programu z rejestru?"
+    IDS_INFORMATION "Informacja"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_REMOVE "Nie można było usunąć wpisu z rejestru!"
+END

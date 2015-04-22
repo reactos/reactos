@@ -1,0 +1,29 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Microsoft Office Compatibility Pack for Word, Excel, and PowerPoint File Formats
+Version = 4
+License = Unknown
+Description = Needed to open *.docx, *.xlsx, etc on Word/Excel Viewer and Office 2003.
+Size = 37.0 MB
+Category = 6
+URLSite = http://www.microsoft.com/en-us/download/details.aspx?id=3
+URLDownload = http://download.microsoft.com/download/9/2/2/9222D67F-7630-4F49-BD26-476B51517FC1/FileFormatConverters.exe
+CDPath = none
+
+[Section.0407]
+License = Unbekannt
+Description = Wird zum Öffnen von *.docx, *.xlsx, etc unter Word/Excel Viewer und Office 2003 benötigt.
+
+[Section.041f]
+Name = Word, Excel ve PowerPoint Kütük Biçimleri İçin Microsoft Office Uyumluluk Paketi
+License = Bilinmiyor
+Description = Word ve Excel Viewer'lar ve Office 2003 üzerinde *.docx, *.xlsx ve benzerlerini açmak için gerekli.
+Size = 37,0 MB
+
+[Section.0418]
+Name = Pachet de compatibilitate pentru Microsoft Office
+License = Nespecificată
+Description = Pachet pentru suita de aplicații Microsoft Office 2003, necesar pentru a deschide formaturile de fișiere *.docx, *.xlsx, etc.
+Size = 37,0 Mo

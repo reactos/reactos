@@ -1,0 +1,43 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Mono .NET Development Framework
+Version = 3.12.1
+License = Unknown
+Description = Open-source .NET Framework.
+Size = 127.40 MB
+Category = 14
+URLSite = http://www.mono-project.com/
+URLDownload = http://download.mono-project.com/archive/3.12.1/windows-installer/mono-3.12.1-gtksharp-2.12.26-win32-0.msi
+CDPath = none
+
+[Section.0407]
+Description = Quelloffenes .NET Framework.
+
+[Section.0a]
+Description = Versión de .NET Framework de código abierto.
+
+[Section.040c]
+Description = Framework .NET open source.
+Size = 127,40 Mo
+
+[Section.0410]
+Description = Versione Open-source di .NET Framework.
+
+[Section.0415]
+Description = Pakiet Mono .NET Framework dla Programistów.
+
+[Section.0418]
+License = Nespecificată
+Description = Platformă .NET (cu surse deschise).
+Size = 127,40 Mo
+
+[Section.041f]
+Name = Mono .NET Geliştirme Çatısı
+License = Bilinmiyor
+Description = Açık kaynak .NET Çatısı.
+Size = 127,40 MB
+
+[Section.0422]
+Description = Відкритий .NET Фреймворк.

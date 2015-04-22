@@ -1,0 +1,51 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Audio Grabber
+Version = 1.83 SE
+License = Freeware
+Description = A very good CD Ripper/Audio File Converter.
+Size = 3.43 MB
+Category = 1
+URLSite = http://www.audiograbber.de/
+URLDownload = http://ftp.freenet.de/pub/filepilot/fpt/audio/bearbeitung/audiograbber/agsetup183se.exe
+CDPath = none
+
+[Section.0407]
+Description = Sehr guter CD-Ripper/Audio-Datei-Konverter.
+
+[Section.0410]
+Description = Un buon CD Ripper/Convertitore di file Audio.
+
+[Section.0a]
+Description = Un buen extractor de pistas de CDs de música y conversor de archivos de audio.
+
+[Section.040c]
+Description = Un très bon extracteur de CD/convertisseur de fichier audio.
+Size = 3,43 Mo
+
+[Section.0410]
+Description = Un ottimo CD Ripper/Audio File Converter.
+
+[Section.0413]
+Description = Een goede CD Ripper/Audio-bestandsomzetter.
+
+[Section.0415]
+Description = Bardzo dobry CD Ripper/konwerter plików audio.
+
+[Section.0418]
+License = Gratuită
+Description = Program de extragere conținuturi CD audio și de conversie a fișierelor de sunet.
+Size = 3,43 Mo
+
+[Section.041f]
+License = Ücretsiz
+Description = Çok iyi bir CD ripleyicisi ve ses kütüğü dönüştürücüsü.
+Size = 3,43 MB
+
+[Section.0422]
+Description = Чудовий CD Ріппер/Конвертер аудіо файлів.
+
+[Section.0813]
+Description = Een goede CD Ripper/Audio-bestandsomzetter.

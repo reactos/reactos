@@ -1,0 +1,27 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Winamp
+Version = 5.666 Full
+License = Freemium
+Description = A media player that supports extensibility with plug-ins and skins, and features music visualization, playlist and a media library, supported by a large online community.
+Size = 14.3 MB
+Category = 1
+URLSite = http://www.winamp.com/
+URLDownload = http://winampplugins.co.uk/Winamp/winamp5666_full_all_redux.exe
+CDPath = none
+
+[Section.0407]
+Description = Media Player welcher Erweiterbarkeit mit Plug-Ins und Skins ermöglicht und Musikvisualisierung, Playlist und Medienbibliothek bietet. Er wird durch eine große Online-Community unterstützt.
+
+[Section.0418]
+License = Gratuită, cu funcționalități opționale negratuite
+Description = Lector media cu diverse extensii, având o largă comunitate de utilizatori.
+Size = 14,3 Mo
+
+[Section.041f]
+Version = 5.666 Eksiksiz
+License = Ücretsiz Seçkin
+Description = Winamp, eklentilerle ve dış görünümlerle genişletilebilirliği destekleyen, mûsikî farazîleştirmeyi, çalma dizelgesini ve büyük bir çevrim içi topluluk eliyle desteklenen bir ortam kitaplığını barındıran bir ortam oynatıcısıdır.
+Size = 14,3 MB

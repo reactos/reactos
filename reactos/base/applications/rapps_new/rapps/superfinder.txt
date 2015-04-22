@@ -1,0 +1,48 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Super Finder XT
+Version = 1.6.3.2
+License = Freeware
+Description = A fast and feature rich search application.
+Size = 4.94 MB
+Category = 12
+URLSite = http://fsl.sytes.net/ssearchxt.html
+URLDownload = http://www.webalice.it/guido.vinaio/releases/setup_SuperFinderXT.exe
+CDPath = none
+
+[Section.0407]
+Description = Schnelle und effektive Suchanwendung.
+
+[Section.0a]
+Description = Una aplicación de búsqueda rápida y completa.
+
+[Section.040c]
+Description = Une application de recherche rapide et riche en fonctionnalités.
+Size = 4,94 Mo
+
+[Section.0410]
+Description = Un applicazione veloce e ricca di funzionalità di ricerca.
+
+[Section.0413]
+Description = Een snelle zoekapplicatie rijk aan mogelijkheden.
+
+[Section.0415]
+Description = Szybka i bogata w opcje aplikacja szukająca.
+
+[Section.0418]
+License = Gratuită
+Description = Aplicație rapidă de căutări complexe de text.
+Size = 4,94 Mo
+
+[Section.041f]
+License = Ücretsiz
+Description = Hızlı ve husûsiyet zengini bir arama uygulaması.
+Size = 4,94 MB
+
+[Section.0422]
+Description = Швидка та потужна програма пошуку.
+
+[Section.0813]
+Description = Een snelle zoekapplicatie rijk aan mogelijkheden.

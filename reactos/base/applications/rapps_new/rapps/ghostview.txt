@@ -1,0 +1,29 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = GSview
+Version = 5.0
+License = Aladdin Free Public License
+Description = A graphical interface for Ghostscript.
+Size = 1.94 MB
+Category = 6
+URLSite = http://pages.cs.wisc.edu/~ghost/gsview/
+URLDownload = http://pages.cs.wisc.edu/~ghost/gsview/download/gsv50w32.exe
+CDPath = none
+
+[Section.0407]
+Description = Grafisches Interface für Ghostscript.
+
+[Section.0a]
+Description = Una interfaz gráfica para Ghostscript.
+
+[Section.0418]
+License = Licență publică gratuită „Aladdin”
+Description = O interfață grafică pentru GhostScript.
+Size = 1,94 Mo
+
+[Section.041f]
+License = Aladdin Özgür Kamu Ruhsatı
+Description = Ghostscript için bir çizgelik arayüz.
+Size = 1,94 MB

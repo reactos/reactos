@@ -1,0 +1,204 @@
+/* Превод на Български/ Bulgarian translation */
+/* http://www.reactos.org/wiki/Bulgarian_translation */
+/* LOCATION: base/applications/rapps/lang */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "На&стройки", ID_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "Из&ход", ID_EXIT
+    END
+    POPUP "&Приложения"
+    BEGIN
+        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Промяна", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "О&пресняване\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+    POPUP "Помощ"
+    BEGIN
+        MENUITEM "Помощ\tF1", ID_HELP, GRAYED
+        MENUITEM "За", ID_ABOUT
+    END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Отваряне на връзката в обзорник", ID_OPEN_LINK
+        MENUITEM "&Запомняне на връзката в кошницата", ID_COPY_LINK
+    END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+    POPUP "popup"
+    BEGIN
+        MENUITEM "&Слагане\tCtrl+Enter", ID_INSTALL
+        MENUITEM "&Махане\tCtrl+Del", ID_UNINSTALL
+        MENUITEM "&Промяна", ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "О&пресняване\tF5", ID_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Update Da&tabase\tCtrl+F5", ID_RESETDB
+    END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 254, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Настройки"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Общи", -1, 4, 2, 244, 61
+    AUTOCHECKBOX "&Съхраняване разположението на прозореца", IDC_SAVE_WINDOW_POS, 15, 12, 223, 12
+    AUTOCHECKBOX "Об&новяване на списъка с достъпните приложения при пускане", IDC_UPDATE_AVLIST, 15, 29, 227, 12
+    AUTOCHECKBOX "&Вписване на слаганията и маханията на приложения", IDC_LOG_ENABLED, 15, 46, 223, 12
+    GROUPBOX "Сваляне", -1, 4, 65, 244, 51
+    LTEXT "Папка за свалените файлове", -1, 16, 75, 100, 9
+    EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
+    PUSHBUTTON "Из&бор", IDC_CHOOSE, 187, 85, 50, 14
+    AUTOCHECKBOX "След слагане, използваните файлове да се изтриват", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+    GROUPBOX "Proxy", -1, 4, 116, 240, 76
+    CONTROL "System proxy settings", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
+    CONTROL "Direct (No proxy)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
+    CONTROL "Proxy", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "No proxy for", -1, 27, 175, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "Подразбирано", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
+    PUSHBUTTON "Добре", IDOK, 116, 195, 60, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 181, 195, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Слагане на приложение"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    AUTORADIOBUTTON "Слагане от оптичен носител", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "&Сваляне и слагане", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+    PUSHBUTTON "Добре", IDOK, 86, 78, 60, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Сваляне"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
+    PUSHBUTTON "Отказ", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "За"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Управителят за приложожения на РеактОС\nВъзпроизводствени права (C) 2009\nДмитрий Чапъйшев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 150, 39
+    PUSHBUTTON "Затваряне", IDOK, 133, 46, 50, 14
+    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLTIP_INSTALL "Слагане"
+    IDS_TOOLTIP_UNINSTALL "Махане"
+    IDS_TOOLTIP_MODIFY "Промяна"
+    IDS_TOOLTIP_SETTINGS "Настройки"
+    IDS_TOOLTIP_REFRESH "Опресняване"
+    IDS_TOOLTIP_EXIT "Изход"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_NAME "Име"
+    IDS_APP_INST_VERSION "Издание"
+    IDS_APP_DESCRIPTION "Описание"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_INFO_VERSION "\nВерсия: "
+    IDS_INFO_DESCRIPTION "\nОписание: "
+    IDS_INFO_PUBLISHER "\nИздател: "
+    IDS_INFO_HELPLINK "\nВръзка за помощ: "
+    IDS_INFO_HELPPHONE "\nТелефон за помощ: "
+    IDS_INFO_README "\nПрочети ме: "
+    IDS_INFO_REGOWNER "\nВписан собственик: "
+    IDS_INFO_PRODUCTID "\nОзначител на произведението: "
+    IDS_INFO_CONTACT "\nСвръзка: "
+    IDS_INFO_UPDATEINFO "\nСведения за обновяване: "
+    IDS_INFO_INFOABOUT "\nСведения за: "
+    IDS_INFO_COMMENTS "\nЗабележки: "
+    IDS_INFO_INSTLOCATION "\nСложено в: "
+    IDS_INFO_INSTALLSRC "\nСложено от: "
+    IDS_INFO_UNINSTALLSTR "\nНиз за премахване: "
+    IDS_INFO_MODIFYPATH "\nПът за изменения: "
+    IDS_INFO_INSTALLDATE "\nДата на слагане: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_AINFO_VERSION "\nВерсия: "
+    IDS_AINFO_DESCRIPTION "\nОписание: "
+    IDS_AINFO_SIZE "\nРазмер: "
+    IDS_AINFO_URLSITE "\nДомашна страница: "
+    IDS_AINFO_LICENSE "\nРазрешително: "
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CAT_AUDIO "Звук"
+    IDS_CAT_DEVEL "Разработка"
+    IDS_CAT_DRIVERS "Водачи (драйвери)"
+    IDS_CAT_EDU "Образование"
+    IDS_CAT_ENGINEER "Инженерство"
+    IDS_CAT_FINANCE "Финанси"
+    IDS_CAT_GAMES "Игри и забавления"
+    IDS_CAT_GRAPHICS "графика"
+    IDS_CAT_INTERNET "Интернет и мрежа"
+    IDS_CAT_LIBS "Библиотеки"
+    IDS_CAT_OFFICE "Служебни"
+    IDS_CAT_OTHER "Други"
+    IDS_CAT_SCIENCE "Наука"
+    IDS_CAT_TOOLS "Средства"
+    IDS_CAT_VIDEO "Видео"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "Управителят за приложения на РеактОС"
+    IDS_SEARCH_TEXT "Търсене"
+    IDS_INSTALL "Слагане"
+    IDS_UNINSTALL "Махане"
+    IDS_MODIFY "Промяна"
+    IDS_APPS_COUNT "Брой приложения: %d"
+    IDS_WELCOME_TITLE "Управителят на приложенията на РеактОС ви приветства"
+    IDS_WELCOME_TEXT "Изберете раздел от лявата страна, след което изберете приложение за слагане или премахване.\nСтраницата на РеактОС: "
+    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_INSTALLED "Сложено"
+    IDS_AVAILABLEFORINST "Налично за слагане"
+    IDS_UPDATES "Обновления"
+    IDS_APPLICATIONS "Приложения"
+    IDS_CHOOSE_FOLDER_TEXT "Изберете папка, в която да се свалят приложенията:"
+    IDS_CHOOSE_FOLDER_ERROR "Указали сте несъществуваща папка!"
+    IDS_APP_REG_REMOVE "Уверен ли сте, че искате да изтриете данните за сложеното приложение от регистъра?"
+    IDS_INFORMATION "Сведения"
+    IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_REMOVE "Премахването на данните за приложението от регистъра е невъзможно!"
+END

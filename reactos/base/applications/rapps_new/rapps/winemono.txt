@@ -1,0 +1,39 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Wine Mono .NET Framework
+Version = 4.5.6
+License = GPLv2, LGPLv2, MIT, BSD, MS-PL, MPLv1.1
+Description = Free reimplementation of .NET Framework used by the Wine libraries.
+Size = 53.7 MB
+Category = 14
+URLSite = http://sourceforge.net/projects/wine/files/Wine Mono
+URLDownload = http://download.sourceforge.net/wine/Wine%20Mono/4.5.6/wine-mono-4.5.6.msi
+CDPath = none
+
+[Section.0407]
+Description = Freie Neu-Umsetzung des .NET Frameworks, welche von den Wine-Bibliotheken verwendet wird.
+
+[Section.0a]
+Description = Reimplementación libre de .NET Framework utilizadas por las bibliotecas de Wine.
+
+[Section.040c]
+Description = Wine Mono .NET Framework
+Size = 53,7 Mo
+
+[Section.0410]
+Description = Wine Mono .NET Framework
+
+[Section.0415]
+Description = Wine Mono .NET Framework
+
+[Section.0418]
+Description = Reimplementara gratuită a platformei .NET utilizată de bibliotecile Wine.
+Size = 53,7 Mo
+
+[Section.041f]
+Name = Wine Mono .NET Çatısı
+License = GPL sürüm 2, LGPL sürüm 2, MIT, BSD, MS-PL, MPL sürüm 1.1
+Description = Wine Mono .NET Çatısı
+Size = 53,7 MB

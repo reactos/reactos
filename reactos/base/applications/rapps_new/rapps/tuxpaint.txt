@@ -1,0 +1,52 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = TuxPaint
+Version = 0.9.22
+License = GPL
+Description = An open source bitmap graphics editor geared towards young children.
+Size = 13.5 MB
+Category = 3
+URLSite = http://tuxpaint.org/
+URLDownload = http://download.sourceforge.net/project/tuxpaint/tuxpaint/0.9.22/tuxpaint-0.9.22-win32-installer.exe
+CDPath = none
+
+[Section.0405]
+Description = Open source bitmapový editor určený dětem.
+
+[Section.0407]
+Description = Quelloffenes Bitmap Zeichenprogramm für kleine Kinder.
+
+[Section.0a]
+Description = Editor gráfico de imágenes de código abierto, pensado para niños pequeños.
+
+[Section.040c]
+Description = Un éditeur graphic bitmap open source orienté pour les jeunes enfants.
+Size = 13,5 Mo
+
+[Section.0410]
+Description = Un editore grafico per bitmap open source creato per i bambini.
+
+[Section.0413]
+Description = Een open-bron grafische ontwerker voor kinderen.
+
+[Section.0415]
+Description = Otwarty program graficzny przeznaczony głównie dla dzieci.
+
+[Section.0418]
+Description = Editor grafic bitmap, adresat copiilor.
+Size = 13,5 Mo
+
+[Section.0419]
+Description = Свободный графический редактор для детей.
+
+[Section.041f]
+Description = Küçük çocuklar için yapılmış bir açık kaynak bit eşlem çizge düzenleyicisi.
+Size = 13,5 MB
+
+[Section.0422]
+Description = Відкритий графічний редактор для малих дітей.
+
+[Section.0813]
+Description = Een open-bron grafische ontwerker voor kinderen.

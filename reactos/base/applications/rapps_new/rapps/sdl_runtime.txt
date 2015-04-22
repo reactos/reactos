@@ -1,0 +1,53 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Simple Direct Media Layer (SDL) Runtime
+Version = 1.2.15
+License = LGPL
+Description = Needed for many open source games to run. You will need a tool like 7-Zip to extract it.
+Size = 136.67 kB
+Category = 14
+URLSite = http://www.libsdl.org/
+URLDownload = http://www.libsdl.org/release/SDL-1.2.15-win32.zip
+CDPath = none
+
+[Section.0405]
+Description = Nutný pro spuštění některých open source her. K rozbalení je nutný 7-zip nebo podobný nástroj.
+
+[Section.0407]
+Description = Erforderlich um einige quelloffene Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+
+[Section.0a]
+Description = Necesario para ejecutar muchos juegos de código abierto. Se necesita 7-Zip o una utilidad similar para extraerlo.
+
+[Section.040c]
+Name = Bibliothèque Simple Direct Media Layer (SDL)
+Description = Nécessaire pour faire tourner certains jeux open source. Vous aurez besoin de 7-Zip ou d'un outil similaire pour l'extraire.
+Size = 136,67 ko
+
+[Section.0410]
+Description = Necessario per il corretto funzionamento di alcuni giochi OpenSource. Necessita di 7-zip o utility simili per essere estratto.
+
+[Section.0413]
+Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.
+
+[Section.0415]
+Name = Biblioteka uruchomieniowa Simple Direct Media Layer (SDL)
+Description = Wymagana przez wiele gier (głównie o otwartym źródle). Do jej rozpakowania potrzebny jest program 7-Zip lub podobny.
+
+[Section.0418]
+Description = Necesar pentru execuția multor jocuri (cu surse deschise). Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 136,67 ko
+
+[Section.041f]
+Name = SDL (Bayağı Doğrudan Ortam Katmanı) Yürütücü
+Description = Birçok açık kaynak oyunu çalıştırmak için gereklidir. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
+Size = 136,67 KB
+
+[Section.0422]
+Name = Бібліотека Simple Direct Media Layer (SDL)
+Description = Необхідна для роботи багатьох відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати її.
+
+[Section.0813]
+Description = Gebruikt door veel open-bron-spelletjes. Gebruik 7-zip om het uit te pakken.

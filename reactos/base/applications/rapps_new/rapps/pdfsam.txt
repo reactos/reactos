@@ -1,0 +1,13 @@
+[Section]
+Name = PDFsam
+Version = 2.2.4
+License = GPLv2
+Description = A free, open source, platform independent tool designed to perform split, merge and other manipulations on pdf document. Java Runtime needed!
+Size = 15.6 MB
+Category = 6
+URLSite = http://www.pdfsam.org/
+URLDownload = http://download.sourceforge.net/project/pdfsam/pdfsam/2.2.4/pdfsam-v2_2_4.msi
+CDPath = none
+
+[Section.0407]
+Description = Freies, quelloffenes, Plattformunabhängiges Werkzeug zum spiltten, zusammenfügen und anderer Manipulationen an PDF Dokumenten. Java Runtime benötigt!

@@ -1,0 +1,57 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Microsoft Visual Basic 6 Runtime
+Version = 6.0
+License = Unknown
+Description = Needed by applications written in Visual Basic 6. Contains: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Size = 1.02 MB
+Category = 14
+URLSite = http://support.microsoft.com/kb/192461/
+URLDownload = http://download.microsoft.com/download/5/a/d/5ad868a0-8ecd-4bb0-a882-fe53eb7ef348/VB6.0-KB290887-X86.exe
+CDPath = none
+
+[Section.0407]
+License = Unbekannt
+Description = Benötigt für Visual Basic 6 basierte Anwendungen. Beinhaltet: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0a]
+License = Desconocida
+Description = Necesario para aplicaciones escritas en Visual Basic 6. Incluye: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+
+[Section.040c]
+License = Inconnue
+Description = Bibliothèque Microsoft Visual Basic 6. Contient: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Size = 1,02 Mo
+
+[Section.0410]
+License = Sconosciuta
+Description = Libreria Microsoft Visual Basic 6.Contiene: advpack.dll, asycfilt.dll, comcat.dll, msvbvm50.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0413]
+License = Ongekend
+Description = Microsoft Visual Basic 6 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0415]
+License = Nieznana
+Description = Biblioteki uruchomieniowe Microsoft Visual Basic 6. Zawiera: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0418]
+License = Nespecificată
+Description = Pachet necesar pentru aplicațiile compilate cu Visual Basic 6. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Size = 1,02 Mo
+
+[Section.041f]
+Name = Microsoft Visual Basic 6 Yürütücü
+License = Bilinmiyor
+Description = Microsoft Visual Basic 6 Yürütücü. Şunları içerir: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Size = 1,02 MB
+
+[Section.0422]
+License = Невідома
+Description = Бібліотеки Microsoft Visual Basic 6. включає: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+
+[Section.0813]
+License = Ongekend
+Description = Microsoft Visual Basic 6 Runtime. Bevat: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.

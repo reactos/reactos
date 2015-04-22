@@ -1,0 +1,30 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = MikTEX 2.9
+Version = 2.9.5105
+License = Freeware
+Description = An up-to-date implementation of TeX/LaTeX and related programs for Windows.
+Size = 163.18 MB
+Category = 6
+URLSite = http://www.miktex.org/
+URLDownload = http://ftp.gwdg.de/pub/ctan/systems/win32/miktex/setup/basic-miktex-2.9.5105.exe
+CDPath = none
+
+[Section.0407]
+Description = Aktuelle Implementierung von TeX/LaTeX und zugehöriger Programme für Windows.
+
+[Section.0a]
+License = Gratuita
+Description = MikTEX es una implementación actualizada de TeX/LaTeX y otros programas.
+
+[Section.0418]
+License = Gratuită
+Description = MikTEX este o implementare actualizată de TeX/LaTeX și aprogramelor aferente.
+Size = 163,18 Mo
+
+[Section.041f]
+License = Ücretsiz
+Description = MiKTeX, Windows için, TeX'in, LaTeX'in ve ilişkili izlencelerin bir şimdiki uygulaması.
+Size = 163,18 MB

@@ -1,0 +1,24 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = RFSTool
+Version = 0.14
+License = GPL
+Description = Allows you to access ReiserFS partitions from a Windows system.
+Size = 54 kB
+Category = 12
+URLSite = http://p-nand-q.com/download/rfstool/index.html
+URLDownload = http://p-nand-q.com/download/rfstool/rfstool-0.14.zip
+CDPath = none
+
+[Section.0407]
+Description = Ermöglicht den Zugriff auf ReiserFS Partitionen unter Windows Systemen.
+
+[Section.041f]
+Description = Bir Windows dizgesinden ReiserFS bölümlerine erişmenize olanak sağlar.
+Size = 54 KB
+
+[Section.0418]
+Description = Utilitar pentru accesarea de partiții ReiserFS din sistemul Windows.
+Size = 54 ko

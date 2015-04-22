@@ -1,0 +1,42 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Microsoft .NET Framework Version 2.0 Redistributable Package
+Version = 2.0
+License = Unknown
+Description = Components needed to run managed Windows applications compiled in an Intermediate language like C#.
+Size = 22.42 MB
+Category = 14
+URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=0856eacb-4362-4b0d-8edd-aab15c5e04f5
+URLDownload = http://download.microsoft.com/download/5/6/7/567758a3-759e-473e-bf8f-52154438565a/dotnetfx.exe
+CDPath = none
+
+[Section.0407]
+Description = Runtime für C# Windows Anwendungen
+
+[Section.0a]
+Description = Componentes necesarios para ejecutar programas escritos en lenguajes intermedios como C#.
+License = Desconocida
+
+[Section.040c]
+Description = Paquet redistribuable.
+Size = 22,42 Mo
+
+[Section.0410]
+Description = Redistributable Package.
+Size = 22.42 MB
+
+[Section.0415]
+Description = Pakiet Dystrybucyjny.
+
+[Section.0418]
+License = Nespecificată
+Description = Pachet necesar pentru execuția în Windows a aplicațiilor gestionate, scrise într-un limbaj ca C#.
+Size = 22,42 Mo
+
+[Section.041f]
+Name = Microsoft .NET Çatısı Sürüm 2.0 Yeniden Dağıtılabilir Paket
+License = Bilinmiyor
+Description = Yeniden Dağıtılabilir Paket
+Size = 22,42 MB

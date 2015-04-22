@@ -1,0 +1,80 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = AC'97 Driver for VirtualBox
+Version = 5.10.00.3610
+License = Unknown
+Description = Audio driver for AC'97-compatible devices. Unzip in the ReactOS folder and restart twice.
+Size = 185.5 kB
+Category = 13
+URLDownload = http://svn.reactos.org/packages/ac97_vbox.exe
+CDPath = none
+
+[Section.0405]
+Name = Ovladač AC97 pro VirtualBox
+License = Neznámá
+Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
+
+[Section.0407]
+Name = AC97 Treiber für VirtualBox
+License = Unbekannt
+Description = Sound Treiber für AC'97-kompatible Geräte. Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+
+[Section.0410]
+Name = Driver AC97 per VirtualBox
+License = Sconosciuta
+Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOS due volte.
+
+[Section.0a]
+Name = Controlador AC'97 para VirtualBox
+License = Desconocida
+Description = Controlador de audio para dispositivos compatibles con AC'97. Se debe descomprimir en la carpeta «ReactOS» y reiniciar dos veces.
+
+[Section.040c]
+Name = Pilote AC97 pour VirtualBox
+License = Inconnue
+Description = Décompresser dans le dossier "ReactOS" puis redémarrer ReactOS deux fois.
+Size = 185,5 ko
+
+[Section.0410]
+Name = Driver AC97 per VirtualBox
+License = Sconosciuta
+Description = Decomprimere nella cartella "ReactOS" e riavviare ReactOS.
+
+[Section.0413]
+Name = AC97 Driver voor VirtualBox
+License = Ongekend
+Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op.
+
+[Section.0415]
+Name = Sterownik AC97 dla VirtualBox
+License = Nieznana
+Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
+
+[Section.0418]
+Name = Modúl-pilot AC97 pentru VirtualBox
+License = Nespecificată
+Description = Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
+Size = 185,5 ko
+
+[Section.0419]
+Name = Драйвер AC97 для VirtualBox
+License = Не указано
+Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+
+[Section.041f]
+Name = VirtualBox için AC97 Sürücüsü
+License = Bilinmiyor
+Description = ReactOS'un dizinine çıkartınız, sonra bilgisayarı iki kez yeniden başlatınız.
+Size = 185,5 KB
+
+[Section.0422]
+Name = Драйвер AC97 для VirtualBox
+License = Невідома
+Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+
+[Section.0813]
+Name = AC97 Driver voor VirtualBox
+License = Ongekend
+Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op.

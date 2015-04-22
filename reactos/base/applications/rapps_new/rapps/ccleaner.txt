@@ -1,0 +1,26 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = CCleaner
+Version = 5.04
+License = Freeware
+Description = Very good tool for cleaning your PC.
+Size = 5.1 MB
+Category = 12
+URLSite = http://www.piriform.com/ccleaner
+URLDownload = http://download.piriform.com/ccsetup504.exe
+CDPath = none
+
+[Section.0407]
+Description = Sehr gutes Bereinigungswerkzeug für den PC.
+
+[Section.041f]
+License = Ücretsiz
+Description = PC'nizi temizleme için çok iyi araç.
+Size = 5,1 MB
+
+[Section.0418]
+License = Gratuită
+Description = Utilitar pentru mentenanța ordinii în configurația sistemului.
+Size = 5,1 Mo

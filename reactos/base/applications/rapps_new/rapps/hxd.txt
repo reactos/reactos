@@ -1,0 +1,42 @@
+; UTF-8
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = HxD
+Version = 1.7.7.0
+License = Freeware
+Description = A good hexadecimal editor. You will need a tool like 7-Zip to extract it.
+Size = 852 kB
+Category = 7
+URLSite = http://mh-nexus.de/en/
+URLDownload = http://mh-nexus.de/downloads/HxDSetupEN.zip
+CDPath = none
+
+[Section.0407]
+Description = Guter Hexadezimal Editor. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
+Size = 854 kB
+URLSite = http://mh-nexus.de/de/
+URLDownload = http://mh-nexus.de/downloads/HxDSetupDE.zip
+
+[Section.0a]
+License = Gratuito
+Description = Un buen editor hexadecimal. Para extraerlo es necesario emplear una utilidad del estilo a 7-Zip.
+
+[Section.0415]
+Description = Dobry edytor Hex. Do wypakowania pliku potrzebny jest program archiwizujący np. 7-Zip.
+
+[Section.0410]
+Description = Un buon editor hexadecimale. Necessita 7-Zip o un programma simile per estrarlo.
+
+[Section.0418]
+License = Gratuită
+Description = Editor hexazecimal. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
+Size = 859 ko
+URLDownload = http://mh-nexus.de/downloads/HxDSetupROM.zip
+
+[Section.041f]
+License = Ücretsiz
+Description = İyi bir onaltılık düzenleyici. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.
+Size = 853 KB
+URLDownload = http://mh-nexus.de/downloads/HxDSetupTR.zip

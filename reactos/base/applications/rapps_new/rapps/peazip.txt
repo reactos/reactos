@@ -1,0 +1,34 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = PeaZip
+Version = 5.5.3
+License = LGPL v3, OpenCandy EULA
+Description = A free, cross-platform, open source file and archive manager. It supports over 150 archive formats.
+Size = 5.9 MB
+Category = 12
+URLSite = http://peazip.sourceforge.net/
+URLDownload = http://download.sourceforge.net/project/peazip/5.5.3/peazip-5.5.3.WINDOWS.exe
+CDPath = none
+
+[Section.0407]
+Description = Freier, plattformübergreifender, quelloffener Datei- und Archivmanager. Er unterstützt über 150 Archiv-Formate.
+
+[Section.0a]
+Description = Un administrador de archivos y compresor de código abierto y multiplataforma. Soporta más de 150 formatos de archivo.
+
+[Section.0410]
+Description = PeaZip è un manager di file e archivi gratis, multipiattaforma e open source. Supporta oltre 150 formati d'archivio.
+
+[Section.0415]
+PeaZip to darmowy, wieloplatformowy menedżer plików i archiwów, o otwartym źródle. Obsługuje ponad 150 formatów archiwów.
+
+[Section.0418]
+Description = Gestionar de fișiere și arhivare gratuit, multiplatformă, cu surse deschise. Recunoaște peste 150 tipuri de arhive.
+Size = 5,9 Mo
+
+[Section.041f]
+License = LGPL sürüm 3, OpenCandy EULA
+Description = PeaZip; ücretsiz, çapraz platform, açık kaynak kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.
+Size = 5,9 MB

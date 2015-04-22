@@ -1,0 +1,34 @@
+; UTF-8
+; Polish translation by wojo664
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Stamina
+Version = 2.5
+License = Freeware
+Description = Free typing tutor.
+URLSite = http://stamina.ru
+Size = 4.8 MB
+Category = 8
+URLDownload = http://stamina.ru/files/StaminaSetup.exe
+CDPath = none
+
+[Section.0407]
+Description = Freies Schreiblernprogramm.
+
+[Section.0a]
+Description = Programa para aprender a escribir a máquina.
+
+[Section.0410]
+Description = Tutore di scrittura gratuita.
+
+[Section.0415]
+Description = Darmowy program do nauki pisania na klawiaturze.
+
+[Section.0418]
+Description = Tutor gratuit pentru dactilografiere.
+Size = 4,8 Mo
+
+[Section.041f]
+Description = Ücretsiz düğme takımında yazma öğreticisi.
+Size = 4,8 MB

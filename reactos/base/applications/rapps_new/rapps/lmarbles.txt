@@ -1,0 +1,46 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = LMarbles
+Version = 1.0.6
+License = GPL
+Description = Atomix Clone using SDL libs.
+Size = 1.39 MB
+Category = 4
+URLSite = http://lgames.sourceforge.net/index.php?project=LMarbles
+URLDownload = http://download.sourceforge.net/project/lgames/binaries/lmarbles-1.0.6-win32.exe
+CDPath = none
+
+[Section.0407]
+Description = Atomix-Klon. Verwendet SDL Bibliotheken.
+
+[Section.0a]
+Description = Clon de Atomix usando las librerias SDL.
+
+[Section.040c]
+Description = Clone de Atomix utilisant la bibliothèque SDL.
+Size = 1,39 Mo
+
+[Section.0410]
+Description = Clone di Atomix che utilizza le librerie SDL.
+
+[Section.0413]
+Description = Atomix kloon, gebruikt SDL.
+
+[Section.0415]
+Description = Klon gry Atomix, używający biblioteki SDL.
+
+[Section.0418]
+Description = Clona Atomix utilizând bibliotecile SDL.
+Size = 1,39 Mo
+
+[Section.041f]
+Description = SDL kitaplıklarını kullanan Atomix taklidi.
+Size = 1,39 MB
+
+[Section.0422]
+Description = Клон гри Atomix, що використовує бібліотеки SDL.
+
+[Section.0813]
+Description = Atomix kloon, gebruikt SDL.

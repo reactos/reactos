@@ -1,0 +1,27 @@
+; UTF-8
+; Turkish translation by Erdem Ersoy (eersoy93) (erdemersoy@live.com)
+
+[Section]
+Name = Ghostscript
+Version = 9.16
+License = AGPL
+Description = An open interpreter for the PostScript language and for PDF.
+Size = 13.48 MB
+Category = 6
+URLSite =  http://www.ghostscript.com/
+URLDownload = http://downloads.ghostscript.com/public/gs916w32.exe
+CDPath = none
+
+[Section.0407]
+Description = Offener Interpreter für die PostScript Sprache und PDF.
+
+[Section.0a]
+Description = Un intérprete libre para el lenguaje PostScript y PDF.
+
+[Section.0418]
+Description = Interpretor pentru limbajul PostScript și pentru PDF.
+Size = 13,48 Mo
+
+[Section.041f]
+Description = PostScript dili ve PDF için bir açık kaynak yorumlayıcı.
+Size = 13,48 MB
