@@ -754,6 +754,7 @@ static void test_find_first_file(HINTERNET hFtp, HINTERNET hConnect)
     HINTERNET hSearch2;
     HINTERNET hOpenFile;
     DWORD error;
+    BOOL success;
 
     /* NULL as the search file ought to return the first file in the directory */
     SetLastError(0xdeadbeef);
@@ -773,13 +774,13 @@ static void test_find_first_file(HINTERNET hFtp, HINTERNET hConnect)
     /* Try a valid filename in a subdirectory search */
     SetLastError(0xdeadbeef);
     hSearch = FtpFindFirstFileA(hFtp, "pub/wine", &findData, 0, 0);
-    todo_wine ok ( hSearch != NULL, "Expected FtpFindFirstFileA to pass\n" );
+    ok( hSearch != NULL, "Expected FtpFindFirstFileA to pass\n" );
     InternetCloseHandle(hSearch);
 
     /* Try a valid filename in a subdirectory wildcard search */
     SetLastError(0xdeadbeef);
     hSearch = FtpFindFirstFileA(hFtp, "pub/w*", &findData, 0, 0);
-    todo_wine ok ( hSearch != NULL, "Expected FtpFindFirstFileA to pass\n" );
+    ok( hSearch != NULL, "Expected FtpFindFirstFileA to pass\n" );
     InternetCloseHandle(hSearch);
 
     /* Try an invalid wildcard search */
@@ -787,6 +788,24 @@ static void test_find_first_file(HINTERNET hFtp, HINTERNET hConnect)
     hSearch = FtpFindFirstFileA(hFtp, "*/w*", &findData, 0, 0);
     ok ( hSearch == NULL, "Expected FtpFindFirstFileA to fail\n" );
     InternetCloseHandle(hSearch); /* Just in case */
+
+    /* change current directory, and repeat those tests - this shows
+     * that the search string is interpreted as relative directory. */
+    success = FtpSetCurrentDirectoryA(hFtp, "pub");
+    ok( success, "Expected FtpSetCurrentDirectory to succeed\n" );
+
+    SetLastError(0xdeadbeef);
+    hSearch = FtpFindFirstFileA(hFtp, "wine", &findData, 0, 0);
+    ok( hSearch != NULL, "Expected FtpFindFirstFileA to pass\n" );
+    InternetCloseHandle(hSearch);
+
+    SetLastError(0xdeadbeef);
+    hSearch = FtpFindFirstFileA(hFtp, "w*", &findData, 0, 0);
+    ok( hSearch != NULL, "Expected FtpFindFirstFileA to pass\n" );
+    InternetCloseHandle(hSearch);
+
+    success = FtpSetCurrentDirectoryA(hFtp, "..");
+    ok( success, "Expected FtpSetCurrentDirectory to succeed\n" );
 
     /* Try FindFirstFile between FtpOpenFile and InternetCloseHandle */
     SetLastError(0xdeadbeef);

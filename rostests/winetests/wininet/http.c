@@ -2295,9 +2295,37 @@ static DWORD CALLBACK server_thread(LPVOID param)
             else if (strstr(buffer, "Cache-Control: no-cache\r\n")) send(c, okmsg, sizeof(okmsg)-1, 0);
             else send(c, notokmsg, sizeof(notokmsg)-1, 0);
         }
+        if (strstr(buffer, "/test_request_content_length"))
+        {
+            static char msg[] = "HTTP/1.1 200 OK\r\nConnection: Keep-Alive\r\n\r\n";
+            static int seen_content_length;
+
+            if (!seen_content_length)
+            {
+                if (strstr(buffer, "Content-Length: 0"))
+                {
+                    seen_content_length = 1;
+                    send(c, msg, sizeof msg-1, 0);
+                }
+                else send(c, notokmsg, sizeof notokmsg-1, 0);
+                WaitForSingleObject(hCompleteEvent, 5000);
+            }
+            else
+            {
+                if (strstr(buffer, "Content-Length: 0")) send(c, msg, sizeof msg-1, 0);
+                else send(c, notokmsg, sizeof notokmsg-1, 0);
+                WaitForSingleObject(hCompleteEvent, 5000);
+            }
+        }
         if (strstr(buffer, "GET /test_premature_disconnect"))
             trace("closing connection\n");
-
+        if (strstr(buffer, "/test_accept_encoding_http10"))
+        {
+            if (strstr(buffer, "Accept-Encoding: gzip"))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, notokmsg, sizeof notokmsg-1, 0);
+        }
         shutdown(c, 2);
         closesocket(c);
         c = -1;
@@ -4120,6 +4148,79 @@ static void test_cache_control_verb(int port)
     InternetCloseHandle(session);
 }
 
+static void test_request_content_length(int port)
+{
+    char data[] = {'t','e','s','t'};
+    HINTERNET ses, con, req;
+    BOOL ret;
+
+    hCompleteEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpen failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnect failed\n");
+
+    req = HttpOpenRequestA(con, "POST", "/test_request_content_length", NULL, NULL, NULL,
+                           INTERNET_FLAG_KEEP_CONNECTION, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequest failed %u\n", GetLastError());
+    test_status_code(req, 200);
+
+    SetEvent(hCompleteEvent);
+
+    ret = HttpSendRequestA(req, NULL, 0, data, sizeof(data));
+    ok(ret, "HttpSendRequest failed %u\n", GetLastError());
+    test_status_code(req, 200);
+
+    SetEvent(hCompleteEvent);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+    CloseHandle(hCompleteEvent);
+}
+
+static void test_accept_encoding(int port)
+{
+    HINTERNET ses, con, req;
+    BOOL ret;
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpen failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnect failed\n");
+
+    req = HttpOpenRequestA(con, "GET", "/test_accept_encoding_http10", "HTTP/1.0", NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpAddRequestHeadersA(req, "Accept-Encoding: gzip\r\n", ~0u, HTTP_ADDREQ_FLAG_REPLACE | HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL,  0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+
+    req = HttpOpenRequestA(con, "GET", "/test_accept_encoding_http10", "HTTP/1.0", NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ret = HttpSendRequestA(req, "Accept-Encoding: gzip", ~0u, NULL, 0);
+    ok(ret, "HttpSendRequestA failed\n");
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+}
+
 static void test_http_connection(void)
 {
     struct server_info si;
@@ -4165,6 +4266,8 @@ static void test_http_connection(void)
     test_cache_control_verb(si.port);
     test_successive_HttpSendRequest(si.port);
     test_head_request(si.port);
+    test_request_content_length(si.port);
+    test_accept_encoding(si.port);
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, "GET", "/quit");
@@ -4232,7 +4335,7 @@ static void test_cert_struct(HINTERNET req, const cert_struct_test_t *test)
     ok(!info.lpszSignatureAlgName, "lpszSignatureAlgName = %s\n", info.lpszSignatureAlgName);
     ok(!info.lpszEncryptionAlgName, "lpszEncryptionAlgName = %s\n", info.lpszEncryptionAlgName);
     ok(!info.lpszProtocolName, "lpszProtocolName = %s\n", info.lpszProtocolName);
-    ok(info.dwKeySize == 128 || info.dwKeySize == 256, "dwKeySize = %u\n", info.dwKeySize);
+    ok(info.dwKeySize >= 128 && info.dwKeySize <= 256, "dwKeySize = %u\n", info.dwKeySize);
 
     release_cert_info(&info);
 }
@@ -5484,6 +5587,55 @@ static void init_status_tests(void)
 #undef STATUS_STRING
 }
 
+static void WINAPI header_cb( HINTERNET handle, DWORD_PTR ctx, DWORD status, LPVOID info, DWORD len )
+{
+    if (status == INTERNET_STATUS_REQUEST_COMPLETE) SetEvent( (HANDLE)ctx );
+}
+
+static void test_concurrent_header_access(void)
+{
+    HINTERNET ses, con, req;
+    DWORD index, len, err;
+    BOOL ret;
+    char buf[128];
+    HANDLE wait = CreateEventW( NULL, FALSE, FALSE, NULL );
+
+    ses = InternetOpenA( "winetest", 0, NULL, NULL, INTERNET_FLAG_ASYNC );
+    ok( ses != NULL, "InternetOpenA failed\n" );
+
+    con = InternetConnectA( ses, "test.winehq.org", INTERNET_DEFAULT_HTTP_PORT, NULL, NULL,
+                            INTERNET_SERVICE_HTTP, 0, 0 );
+    ok( con != NULL, "InternetConnectA failed %u\n", GetLastError() );
+
+    req = HttpOpenRequestA( con, NULL, "/", NULL, NULL, NULL, 0, (DWORD_PTR)wait );
+    ok( req != NULL, "HttpOpenRequestA failed %u\n", GetLastError() );
+
+    pInternetSetStatusCallbackA( req, header_cb );
+
+    SetLastError( 0xdeadbeef );
+    ret = HttpSendRequestA( req, NULL, 0, NULL, 0 );
+    err = GetLastError();
+    ok( !ret, "HttpSendRequestA succeeded\n" );
+    ok( err == ERROR_IO_PENDING, "got %u\n", ERROR_IO_PENDING );
+
+    ret = HttpAddRequestHeadersA( req, "winetest: winetest", ~0u, HTTP_ADDREQ_FLAG_ADD );
+    ok( ret, "HttpAddRequestHeadersA failed %u\n", GetLastError() );
+
+    index = 0;
+    len = sizeof(buf);
+    ret = HttpQueryInfoA( req, HTTP_QUERY_RAW_HEADERS_CRLF|HTTP_QUERY_FLAG_REQUEST_HEADERS,
+                          buf, &len, &index );
+    ok( ret, "HttpQueryInfoA failed %u\n", GetLastError() );
+    ok( strstr( buf, "winetest: winetest" ) != NULL, "header missing\n" );
+
+    WaitForSingleObject( wait, 5000 );
+
+    InternetCloseHandle( req );
+    InternetCloseHandle( con );
+    InternetCloseHandle( ses );
+    CloseHandle( wait );
+}
+
 START_TEST(http)
 {
     HMODULE hdll;
@@ -5526,4 +5678,5 @@ START_TEST(http)
     InternetReadFile_test(INTERNET_FLAG_ASYNC, &test_data[3]);
     test_connection_failure();
     test_default_service_port();
+    test_concurrent_header_access();
 }
