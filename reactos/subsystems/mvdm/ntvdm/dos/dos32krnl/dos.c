@@ -2556,7 +2556,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             setES(0x0000);
             setBX(0x0000);
 
-            DPRINT1("INT 21h, AH=52h: This application requires the internal DOS List of lists (SYSVARS). UNIMPLEMENTED");
+            DPRINT1("INT 21h, AH=52h: This application requires the internal DOS List of lists (SYSVARS). UNIMPLEMENTED\n");
             break;
         }
 
