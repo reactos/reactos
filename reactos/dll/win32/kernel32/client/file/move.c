@@ -178,16 +178,312 @@ BasepMoveFileDelayed(IN PUNICODE_STRING ExistingPath,
 
 
 /*
- * @unimplemented
+ * @implemented
+ */
+DWORD
+WINAPI
+BasepGetComputerNameFromNtPath(IN PUNICODE_STRING NewPath,
+                               IN HANDLE NewHandle,
+                               OUT PWSTR ComputerName,
+                               IN OUT PULONG ComputerNameLength)
+{
+    BOOL Query = FALSE;
+    WCHAR Letter;
+    PWSTR AbsolutePath, EndOfName;
+    USHORT AbsolutePathLength, NameLength;
+    WCHAR TargetDevice[0x105];
+    WCHAR DeviceName[] = {'A', ':', '\0'}; /* Init to something, will be set later */
+    UNICODE_STRING UncString = RTL_CONSTANT_STRING(L"\\??\\UNC\\");
+    UNICODE_STRING GlobalString = RTL_CONSTANT_STRING(L"\\??\\");
+
+    DPRINT("BasepGetComputerNameFromNtPath(%wZ, %p, %p, %lu)\n", NewPath, NewHandle, ComputerName, ComputerNameLength);
+
+    /* If it's an UNC path */
+    if (RtlPrefixUnicodeString(&UncString, NewPath, TRUE))
+    {
+        /* Check for broken caller */
+        if (NewPath->Length <= UncString.Length)
+        {
+            return ERROR_BAD_PATHNAME;
+        }
+
+        /* Skip UNC prefix */
+        AbsolutePath = &NewPath->Buffer[UncString.Length / sizeof(WCHAR)];
+        AbsolutePathLength = NewPath->Length - UncString.Length;
+
+        /* And query DFS */
+        Query = TRUE;
+    }
+    /* Otherwise, we have to be in global (NT path!), with drive letter */
+    else if (RtlPrefixUnicodeString(&GlobalString, NewPath, TRUE) && NewPath->Buffer[5] == ':')
+    {
+        /* Path is like that: \??\C:\Complete Path\To File.ext */
+        /* Get the letter and upcase it if required */
+        Letter = NewPath->Buffer[4];
+        if (Letter >= 'a' && Letter <= 'z')
+        {
+            Letter -= ('a' - 'A');
+        }
+        DeviceName[0] = Letter;
+
+        /* Query the associated DOS device */
+        if (!QueryDosDeviceW(DeviceName, TargetDevice, ARRAYSIZE(TargetDevice)))
+        {
+            return GetLastError();
+        }
+
+        /* If that's a network share */
+        if (TargetDevice == wcsstr(TargetDevice, L"\\Device\\LanmanRedirector\\;"))
+        {
+            /* Path is like that: \Device\LanmanRedirector\;C:0000000000000000\Complete Path\To File.ext */
+            /* Check we have the correct drive letter */
+            if (TargetDevice[26] == DeviceName[0] &&
+                TargetDevice[27] == ':')
+            {
+                /* Check for the path begin, computer name is before */
+                PWSTR Path = wcschr(&TargetDevice[28], '\\');
+                if (Path == NULL)
+                {
+                    return ERROR_BAD_PATHNAME;
+                }
+
+                AbsolutePath = Path + 1;
+                AbsolutePathLength = sizeof(WCHAR) * (ARRAYSIZE(TargetDevice) - (AbsolutePath - TargetDevice));
+            }
+            else
+            {
+                return ERROR_BAD_PATHNAME;
+            }
+        }
+        /* If it's a local device */
+        else if (TargetDevice == wcsstr(TargetDevice, L"\\Device\\Harddisk")
+                 || TargetDevice == wcsstr(TargetDevice, L"\\Device\\CdRom")
+                 || TargetDevice == wcsstr(TargetDevice, L"\\Device\\Floppy"))
+        {
+            /* Just query the computer name */
+            if (!GetComputerNameW(ComputerName, ComputerNameLength))
+            {
+                return GetLastError();
+            }
+
+            return ERROR_SUCCESS;
+        }
+        /* If it's a DFS share */
+        else if (TargetDevice == wcsstr(TargetDevice, L"\\Device\\WinDfs\\"))
+        {
+            /* Obviously, query DFS */
+            Query = TRUE;
+        }
+        else
+        {
+            return ERROR_BAD_PATHNAME;
+        }
+    }
+    else
+    {
+        return ERROR_BAD_PATHNAME;
+    }
+
+    /* Query DFS, currently not implemented - shouldn't be missing in ReactOS yet ;-) */
+    if (Query)
+    {
+        UNIMPLEMENTED_DBGBREAK("Querying DFS not implemented!\n");
+        AbsolutePath = NULL;
+        AbsolutePathLength = 0;
+    }
+
+    /* Now, properly extract the computer name from the full path */
+    EndOfName = AbsolutePath;
+    if (AbsolutePathLength)
+    {
+        for (NameLength = 0; NameLength < AbsolutePathLength; NameLength += sizeof(WCHAR))
+        {
+            /* Look for the next \, it will be the end of computer name */
+            if (EndOfName[0] == '\\')
+            {
+                break;
+            }
+            /* Computer name cannot contain ., if we get to that point, something went wrong... */
+            else if (EndOfName[0] == '.')
+            {
+                return ERROR_BAD_PATHNAME;
+            }
+
+            ++EndOfName;
+        }
+    }
+
+    NameLength = EndOfName - AbsolutePath;
+    /* Check we didn't overflow and that our computer name isn't ill-formed */
+    if (NameLength >= AbsolutePathLength || NameLength >= MAX_COMPUTERNAME_LENGTH * sizeof(WCHAR))
+    {
+        return ERROR_BAD_PATHNAME;
+    }
+
+    /* Check we can fit */
+    if (NameLength + sizeof(UNICODE_NULL) > *ComputerNameLength * sizeof(WCHAR))
+    {
+        return ERROR_BUFFER_OVERFLOW;
+    }
+
+    /* Write, zero and done! */
+    RtlCopyMemory(ComputerName, AbsolutePath, NameLength);
+    *ComputerNameLength = NameLength / sizeof(WCHAR);
+    ComputerName[NameLength / sizeof(WCHAR)] = UNICODE_NULL;
+
+    return ERROR_SUCCESS;
+}
+
+
+/*
+ * @implemented
  */
 NTSTATUS
 WINAPI
-BasepNotifyTrackingService(IN PHANDLE ExistingHandle,
+BasepNotifyTrackingService(IN OUT PHANDLE ExistingHandle,
                            IN POBJECT_ATTRIBUTES ObjectAttributes,
                            IN HANDLE NewHandle,
                            IN PUNICODE_STRING NewPath)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG ComputerNameLength, FileAttributes;
+    WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    OEM_STRING ComputerNameStringA;
+    CHAR ComputerNameStringBuffer[0x105];
+    UNICODE_STRING ComputerNameStringW;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileBasicInfo;
+    HANDLE hFullWrite;
+    struct
+    {
+        FILE_TRACKING_INFORMATION;
+        CHAR Buffer[(MAX_COMPUTERNAME_LENGTH + 1) * sizeof(WCHAR)];
+    } FileTrackingInfo;
+
+    DPRINT("BasepNotifyTrackingService(%p, %p, %p, %wZ)\n", *ExistingHandle, ObjectAttributes, NewHandle, NewPath);
+
+    Status = STATUS_SUCCESS;
+    ComputerNameLength = ARRAYSIZE(ComputerName);
+
+    /* Attempt to get computer name of target handle */
+    if (BasepGetComputerNameFromNtPath(NewPath, NewHandle, ComputerName, &ComputerNameLength))
+    {
+        /* If we failed to get it, we will just notify with the handle */
+        FileTrackingInfo.ObjectInformationLength = 0;
+    }
+    else
+    {
+        /* Convert the retrieved computer name to ANSI and attach it to the notification */
+        ComputerNameStringA.Length = 0;
+        ComputerNameStringA.MaximumLength = ARRAYSIZE(ComputerNameStringBuffer);
+        ComputerNameStringA.Buffer = ComputerNameStringBuffer;
+
+        RtlInitUnicodeString(&ComputerNameStringW, ComputerName);
+        Status = RtlUnicodeStringToOemString(&ComputerNameStringA, &ComputerNameStringW, 0);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        RtlCopyMemory(FileTrackingInfo.ObjectInformation, ComputerNameStringA.Buffer, ComputerNameStringA.Length);
+        FileTrackingInfo.ObjectInformation[ComputerNameStringA.Length] = 0;
+        FileTrackingInfo.ObjectInformationLength = ComputerNameStringA.Length + 1;
+    }
+
+    /* Attach the handle we moved */
+    FileTrackingInfo.DestinationFile = NewHandle;
+
+    /* Final, notify */
+    Status = NtSetInformationFile(*ExistingHandle,
+                                  &IoStatusBlock,
+                                  &FileTrackingInfo,
+                                  sizeof(FileTrackingInfo),
+                                  FileTrackingInformation);
+    if (Status != STATUS_ACCESS_DENIED)
+    {
+        return Status;
+    }
+
+    /* If we get here, we got access denied error, this comes from a
+     * read-only flag. So, close the file, in order to reopen it with enough
+     * rights to remove said flag and reattempt notification
+     */
+    CloseHandle(*ExistingHandle);
+
+    /* Reopen it, to be able to change the destination file attributes */
+    Status = NtOpenFile(ExistingHandle,
+                        SYNCHRONIZE | FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+                        ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        *ExistingHandle = INVALID_HANDLE_VALUE;
+        return Status;
+    }
+
+    /* Get the file attributes */
+    Status = NtQueryInformationFile(*ExistingHandle,
+                                    &IoStatusBlock,
+                                    &FileBasicInfo,
+                                    sizeof(FileBasicInfo),
+                                    FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get rid of the read only flag */
+    FileAttributes = FileBasicInfo.FileAttributes & ~FILE_ATTRIBUTE_READONLY;
+    RtlZeroMemory(&FileBasicInfo, sizeof(FileBasicInfo));
+    FileBasicInfo.FileAttributes = FileAttributes;
+
+    /* Attempt... */
+    Status = NtSetInformationFile(*ExistingHandle,
+                                  &IoStatusBlock,
+                                  &FileBasicInfo,
+                                  sizeof(FileBasicInfo),
+                                  FileBasicInformation);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Now, reopen with maximum accesses to notify */
+    Status = NtOpenFile(&hFullWrite,
+                        GENERIC_WRITE | SYNCHRONIZE,
+                        ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (NT_SUCCESS(Status))
+    {
+        NtClose(*ExistingHandle);
+        *ExistingHandle = hFullWrite;
+
+        /* Full success, notify! */
+        Status = NtSetInformationFile(*ExistingHandle,
+                                      &IoStatusBlock,
+                                      &FileTrackingInfo,
+                                      sizeof(FileTrackingInfo),
+                                      FileTrackingInformation);
+    }
+
+    /* If opening with full access failed or if notify failed, restore read-only */
+    if (!NT_SUCCESS(Status))
+    {
+        FileBasicInfo.FileAttributes |= FILE_ATTRIBUTE_READONLY;
+
+        Status = NtSetInformationFile(*ExistingHandle,
+                                      &IoStatusBlock,
+                                      &FileBasicInfo,
+                                      sizeof(FileBasicInfo),
+                                      FileBasicInformation);
+    }
+
+    /* We're done */
+    return Status;
 }
 
 
