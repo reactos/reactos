@@ -996,6 +996,9 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
 {
     appinfo_t *lpwai = NULL;
 
+#ifdef __REACTOS__
+    init_winsock();
+#endif
     if (TRACE_ON(wininet)) {
 #define FE(x) { x, #x }
 	static const wininet_flag_info access_type[] = {
