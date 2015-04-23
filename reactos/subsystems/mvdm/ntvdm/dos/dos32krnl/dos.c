@@ -31,6 +31,8 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+#define INDOS_POINTER MAKELONG(0x00FE, 0x0070)
+
 CALLBACK16 DosContext;
 
 static DWORD DiskTransferArea;
@@ -39,6 +41,7 @@ static CHAR LastDrive = 'E';
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
 static DOS_SFT_ENTRY DosSystemFileTable[DOS_SFT_SIZE];
 static WORD DosErrorLevel = 0x0000;
+static PBYTE InDos;
 
 /* PUBLIC VARIABLES ***********************************************************/
 
@@ -1369,6 +1372,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
     PDOS_COUNTRY_CODE_BUFFER CountryCodeBuffer;
     INT Return;
 
+    (*InDos)++;
+
     /* Check the value in the AH register */
     switch (getAH())
     {
@@ -1546,7 +1551,12 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                         DosPrintCharacter(DOS_OUTPUT_HANDLE, '^');
                         DosPrintCharacter(DOS_OUTPUT_HANDLE, 'C');
 
-                        if (DosControlBreak()) return;
+                        if (DosControlBreak())
+                        {
+                            /* Set the character to a newline to exit the loop */
+                            Character = '\r';
+                        }
+
                         break;
                     }
 
@@ -1869,6 +1879,15 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 // /* Invalid subfunction */
                 // setAL(0xFF);
             // }
+
+            break;
+        }
+
+        /* Get Address of InDOS flag */
+        case 0x34:
+        {
+            setES(HIWORD(INDOS_POINTER));
+            setBX(LOWORD(INDOS_POINTER));
 
             break;
         }
@@ -2895,6 +2914,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
         }
     }
+
+    (*InDos)--;
 }
 
 VOID WINAPI DosBreakInterrupt(LPWORD Stack)
@@ -2984,6 +3005,10 @@ BOOLEAN DosKRNLInitialize(VOID)
 
     FILE *Stream;
     WCHAR Buffer[256];
+
+    /* Setup the InDOS flag */
+    InDos = (PBYTE)FAR_POINTER(INDOS_POINTER);
+    *InDos = 0;
 
     /* Clear the current directory buffer */
     RtlZeroMemory(CurrentDirectories, sizeof(CurrentDirectories));
