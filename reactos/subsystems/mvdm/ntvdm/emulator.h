@@ -134,6 +134,7 @@ VOID EmulatorTerminate(VOID);
 
 VOID EmulatorInterruptSignal(VOID);
 VOID EmulatorSetA20(BOOLEAN Enabled);
+BOOLEAN EmulatorGetA20(VOID);
 
 BOOLEAN EmulatorInitialize(HANDLE ConsoleInput, HANDLE ConsoleOutput);
 VOID EmulatorCleanup(VOID);

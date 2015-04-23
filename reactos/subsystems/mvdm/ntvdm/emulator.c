@@ -162,6 +162,11 @@ VOID EmulatorSetA20(BOOLEAN Enabled)
     A20Line = Enabled;
 }
 
+BOOLEAN EmulatorGetA20(VOID)
+{
+    return A20Line;
+}
+
 static VOID WINAPI EmulatorDebugBreakBop(LPWORD Stack)
 {
     DPRINT1("NTVDM: BOP_DEBUGGER\n");

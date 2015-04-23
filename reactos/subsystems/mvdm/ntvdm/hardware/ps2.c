@@ -181,7 +181,11 @@ static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
             /* Read controller output port */
             case 0xD0:
             {
-                // TODO: Not implemented
+                /* Bit 0 always set, and bit 1 is the A20 gate state */
+                OutputBuffer = (!!EmulatorGetA20() << 1) | 0x01;
+                // FIXME: Set the status of IRQ1 and IRQ12
+
+                StatusRegister |= (1 << 0); // There is something to read
                 break;
             }
 
@@ -230,6 +234,8 @@ static VOID WINAPI PS2WritePort(USHORT Port, BYTE Data)
 
                     /* Update the A20 line setting */
                     EmulatorSetA20(Data & (1 << 1));
+
+                    // FIXME: Add the status of IRQ1 and IRQ12
 
                     break;
                 }
