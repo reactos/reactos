@@ -488,16 +488,18 @@
  * AVI resources
  *
  * windows shell32 has 14 of them: 150-152 and 160-170
- * FIXME: Need to add them, but for now just let them use the same: searching.avi
- * (also to limit shell32's size)
+ * FIXME: Add 150-152
  */
-#define IDR_AVI_SEARCH       150
-#define IDR_AVI_SEARCHING    151
-#define IDR_AVI_FINDCOMPUTER 152
-#define IDR_AVI_FILEMOVE     160
-#define IDR_AVI_FILECOPY     161
-#define IDR_AVI_FILENUKE     163
-#define IDR_AVI_FILEDELETE   164
+
+#define IDA_SHELL_COPY          160
+#define IDA_SHELL_COPY1         161
+#define IDA_SHELL_COPY2         167
+#define IDA_SHELL_COPY3         168
+#define IDA_SHELL_RECYCLE       162
+#define IDA_SHELL_EMPTY_RECYCLE 163
+#define IDA_SHELL_DELETE        164
+#define IDA_SHELL_DELETE1       169
+#define IDA_SHELL_DOWNLOAD      170
 
 /* Desktop Browser commands */
 #define FCIDM_DESKBROWSER_CLOSE      0xA004

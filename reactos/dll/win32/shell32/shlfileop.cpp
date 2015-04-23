@@ -479,20 +479,24 @@ static void _SetOperationTitle(FILE_OPERATION *op) {
     if (op->progress == NULL)
         return;
     WCHAR szTitle[50], szPreflight[50];
+    UINT animation_id = NULL;
 
     switch (op->req->wFunc)
     {
         case FO_COPY:
             LoadStringW(shell32_hInstance, IDS_FILEOOP_COPYING, szTitle, sizeof(szTitle)/sizeof(WCHAR));
             LoadStringW(shell32_hInstance, IDS_FILEOOP_FROM_TO, op->szBuilderString, sizeof( op->szBuilderString)/sizeof(WCHAR));
+            animation_id = IDA_SHELL_COPY;
             break;
         case FO_DELETE:
             LoadStringW(shell32_hInstance, IDS_FILEOOP_DELETING, szTitle, sizeof(szTitle)/sizeof(WCHAR));
             LoadStringW(shell32_hInstance, IDS_FILEOOP_FROM, op->szBuilderString, sizeof( op->szBuilderString)/sizeof(WCHAR));
+            animation_id = IDA_SHELL_DELETE;
             break;
         case FO_MOVE:
             LoadStringW(shell32_hInstance, IDS_FILEOOP_MOVING, szTitle, sizeof(szTitle)/sizeof(WCHAR));
             LoadStringW(shell32_hInstance, IDS_FILEOOP_FROM_TO, op->szBuilderString, sizeof( op->szBuilderString)/sizeof(WCHAR));
+            animation_id = IDA_SHELL_COPY;
             break;
         default:
             return;
@@ -501,6 +505,7 @@ static void _SetOperationTitle(FILE_OPERATION *op) {
 
     op->progress->SetTitle(szTitle);
     op->progress->SetLine(1, szPreflight, false, NULL);
+    op->progress->SetAnimation(shell32_hInstance, animation_id);
 }
 
 static void _SetOperationTexts(FILE_OPERATION *op, LPCWSTR src, LPCWSTR dest) {

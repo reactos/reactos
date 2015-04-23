@@ -343,6 +343,13 @@ HRESULT WINAPI CProgressDialog::SetTitle(LPCWSTR pwzTitle)
 
 HRESULT WINAPI CProgressDialog::SetAnimation(HINSTANCE hInstance, UINT uiResourceId)
 {
+    HWND hAnimation = GetDlgItem(this->hwnd, IDD_PROGRESS_DLG);
+    SetWindowLongW(hAnimation, GWL_STYLE,
+        GetWindowLongW(hAnimation, GWL_STYLE)|ACS_TRANSPARENT|ACS_CENTER|ACS_AUTOPLAY);
+
+    if(!Animate_OpenEx(hAnimation,hInstance,MAKEINTRESOURCEW(uiResourceId)))
+        return S_FALSE;
+
     return S_OK;
 }
 
