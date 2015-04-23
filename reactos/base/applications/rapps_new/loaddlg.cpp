@@ -26,193 +26,146 @@
  */
 
 #include "rapps.h"
+
+#include <shlobj_undoc.h>
+#include <shlguid_undoc.h>
+
+#include <atlbase.h>
+#include <atlcom.h>
 #include <wininet.h>
-#include <shellapi.h>
+#include <shellutils.h>
 
 static PAPPLICATION_INFO AppInfo;
 static HICON hIcon = NULL;
 
-typedef struct _IBindStatusCallbackImpl
+class CDownloadDialog :
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IBindStatusCallback
 {
-    const IBindStatusCallbackVtbl *vtbl;
-    LONG ref;
-    HWND hDialog;
-    BOOL *pbCancelled;
-} IBindStatusCallbackImpl;
+    HWND m_hDialog;
+    PBOOL m_pbCancelled;
 
-static
-HRESULT WINAPI
-dlQueryInterface(IBindStatusCallback* This, REFIID riid, void** ppvObject)
-{
-    if (!ppvObject) return E_POINTER;
-
-    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IBindStatusCallback))
+public:
+    ~CDownloadDialog()
     {
-        IBindStatusCallback_AddRef(This);
-        *ppvObject = This;
+        DestroyWindow(m_hDialog);
+    }
+    
+    HRESULT Initialize(HWND Dlg, BOOL *pbCancelled)
+    {
+        m_hDialog = Dlg;
+        m_pbCancelled = pbCancelled;
         return S_OK;
     }
 
-    return E_NOINTERFACE;
-}
-
-static
-ULONG WINAPI
-dlAddRef(IBindStatusCallback* iface)
-{
-    IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl*) iface;
-    return InterlockedIncrement(&This->ref);
-}
-
-static
-ULONG WINAPI
-dlRelease(IBindStatusCallback* iface)
-{
-    IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl*) iface;
-    DWORD ref = InterlockedDecrement(&This->ref);
-
-    if (!ref)
+    virtual HRESULT STDMETHODCALLTYPE OnStartBinding(
+        DWORD dwReserved,
+        IBinding *pib)
     {
-        DestroyWindow(This->hDialog);
-        HeapFree(GetProcessHeap(), 0, This);
+        return S_OK;
     }
 
-    return ref;
-}
-
-static
-HRESULT WINAPI
-dlOnStartBinding(IBindStatusCallback* iface, DWORD dwReserved, IBinding* pib)
-{
-    return S_OK;
-}
-
-static
-HRESULT WINAPI
-dlGetPriority(IBindStatusCallback* iface, LONG* pnPriority)
-{
-    return S_OK;
-}
-
-static
-HRESULT WINAPI
-dlOnLowResource( IBindStatusCallback* iface, DWORD reserved)
-{
-    return S_OK;
-}
-
-static
-HRESULT WINAPI
-dlOnProgress(IBindStatusCallback* iface,
-             ULONG ulProgress,
-             ULONG ulProgressMax,
-             ULONG ulStatusCode,
-             LPCWSTR szStatusText)
-{
-    IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
-    HWND Item;
-    LONG r;
-    WCHAR OldText[100];
-
-    Item = GetDlgItem(This->hDialog, IDC_DOWNLOAD_PROGRESS);
-    if (Item && ulProgressMax)
+    virtual HRESULT STDMETHODCALLTYPE GetPriority(
+        LONG *pnPriority)
     {
-        SendMessageW(Item, PBM_SETPOS, ((ULONGLONG)ulProgress * 100) / ulProgressMax, 0);
+        return S_OK;
     }
 
-    Item = GetDlgItem(This->hDialog, IDC_DOWNLOAD_STATUS);
-    if (Item && szStatusText)
+    virtual HRESULT STDMETHODCALLTYPE OnLowResource(
+        DWORD reserved)
     {
-        SendMessageW(Item, WM_GETTEXT, sizeof(OldText) / sizeof(OldText[0]), (LPARAM) OldText);
-        if (sizeof(OldText) / sizeof(OldText[0]) - 1 <= wcslen(OldText) || 0 != wcscmp(OldText, szStatusText))
+        return S_OK;
+    }
+
+    virtual HRESULT STDMETHODCALLTYPE OnProgress(
+        ULONG ulProgress,
+        ULONG ulProgressMax,
+        ULONG ulStatusCode,
+        LPCWSTR szStatusText)
+    {
+        HWND Item;
+        LONG r;
+        WCHAR OldText[100];
+
+        Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_PROGRESS);
+        if (Item && ulProgressMax)
         {
-            SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) szStatusText);
+            SendMessageW(Item, PBM_SETPOS, MulDiv(ulProgress, 100, ulProgressMax), 0);
         }
+
+        Item = GetDlgItem(m_hDialog, IDC_DOWNLOAD_STATUS);
+        if (Item && szStatusText)
+        {
+            SendMessageW(Item, WM_GETTEXT, sizeof(OldText) / sizeof(OldText[0]), (LPARAM) OldText);
+            if (sizeof(OldText) / sizeof(OldText[0]) - 1 <= wcslen(OldText) || 0 != wcscmp(OldText, szStatusText))
+            {
+                SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) szStatusText);
+            }
+        }
+
+        SetLastError(0);
+        r = GetWindowLongPtrW(m_hDialog, GWLP_USERDATA);
+        if (0 != r || 0 != GetLastError())
+        {
+            *m_pbCancelled = TRUE;
+            return E_ABORT;
+        }
+
+        return S_OK;
     }
 
-    SetLastError(0);
-    r = GetWindowLongPtrW(This->hDialog, GWLP_USERDATA);
-    if (0 != r || 0 != GetLastError())
+    virtual HRESULT STDMETHODCALLTYPE OnStopBinding(
+        HRESULT hresult,
+        LPCWSTR szError)
     {
-        *This->pbCancelled = TRUE;
-        return E_ABORT;
+        return S_OK;
     }
 
-    return S_OK;
-}
+    virtual HRESULT STDMETHODCALLTYPE GetBindInfo(
+        DWORD *grfBINDF,
+        BINDINFO *pbindinfo)
+    {
+        return S_OK;
+    }
 
-static
-HRESULT WINAPI
-dlOnStopBinding(IBindStatusCallback* iface, HRESULT hresult, LPCWSTR szError)
-{
-    return S_OK;
-}
+    virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(
+        DWORD grfBSCF,
+        DWORD dwSize,
+        FORMATETC *pformatetc,
+        STGMEDIUM *pstgmed)
+    {
+        return S_OK;
+    }
 
-static
-HRESULT WINAPI
-dlGetBindInfo(IBindStatusCallback* iface, DWORD* grfBINDF, BINDINFO* pbindinfo)
-{
-    return S_OK;
-}
+    virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(
+        REFIID riid,
+        IUnknown *punk)
+    {
+        return S_OK;
+    }
 
-static
-HRESULT WINAPI
-dlOnDataAvailable(IBindStatusCallback* iface, DWORD grfBSCF,
-                DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed)
-{
-    return S_OK;
-}
-
-static
-HRESULT WINAPI
-dlOnObjectAvailable(IBindStatusCallback* iface, REFIID riid, IUnknown* punk)
-{
-    return S_OK;
-}
-
-static const IBindStatusCallbackVtbl dlVtbl =
-{
-    dlQueryInterface,
-    dlAddRef,
-    dlRelease,
-    dlOnStartBinding,
-    dlGetPriority,
-    dlOnLowResource,
-    dlOnProgress,
-    dlOnStopBinding,
-    dlGetBindInfo,
-    dlOnDataAvailable,
-    dlOnObjectAvailable
+    BEGIN_COM_MAP(CDownloadDialog)
+        COM_INTERFACE_ENTRY_IID(IID_IBindStatusCallback, IBindStatusCallback)
+    END_COM_MAP()
 };
 
-static IBindStatusCallback*
-CreateDl(HWND Dlg, BOOL *pbCancelled)
+extern "C"
+HRESULT WINAPI CDownloadDialog_Constructor(HWND Dlg, BOOL *pbCancelled, REFIID riid, LPVOID *ppv)
 {
-    IBindStatusCallbackImpl *This;
-
-    This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IBindStatusCallbackImpl));
-    if (!This)
-        return NULL;
-
-    This->vtbl = &dlVtbl;
-    This->ref = 1;
-    This->hDialog = Dlg;
-    This->pbCancelled = pbCancelled;
-
-    return (IBindStatusCallback*) This;
+    return ShellObjectCreatorInit<CDownloadDialog>(Dlg, pbCancelled, riid, ppv);
 }
 
 static
 DWORD WINAPI
 ThreadFunc(LPVOID Context)
 {
-    IBindStatusCallback *dl = NULL;
+    CComPtr<IBindStatusCallback> dl;
     WCHAR path[MAX_PATH];
     LPWSTR p;
     HWND Dlg = (HWND) Context;
-    DWORD dwContentLen, dwBytesWritten, dwBytesRead, dwStatus;
-    DWORD dwCurrentBytesRead = 0;
-    DWORD dwStatusLen = sizeof(dwStatus);
+    ULONG dwContentLen, dwBytesWritten, dwBytesRead, dwStatus;
+    ULONG dwCurrentBytesRead = 0;
+    ULONG dwStatusLen = sizeof(dwStatus);
     BOOL bCancelled = FALSE;
     BOOL bTempfile = FALSE;
     BOOL bCab = FALSE;
@@ -220,7 +173,7 @@ ThreadFunc(LPVOID Context)
     HINTERNET hFile = NULL;
     HANDLE hOut = INVALID_HANDLE_VALUE;
     unsigned char lpBuffer[4096];
-    const LPWSTR lpszAgent = L"RApps/1.0";
+    PCWSTR lpszAgent = L"RApps/1.0";
     URL_COMPONENTS urlComponents;
     size_t urlLength;
 
@@ -256,7 +209,7 @@ ThreadFunc(LPVOID Context)
 
     /* download it */
     bTempfile = TRUE;
-    dl = CreateDl(Context, &bCancelled);
+    CDownloadDialog_Constructor(Dlg, &bCancelled, IID_PPV_ARG(IBindStatusCallback, &dl));
 
     if (dl == NULL)
         goto end;
@@ -307,7 +260,7 @@ ThreadFunc(LPVOID Context)
         goto end;
     
     urlComponents.dwSchemeLength = urlLength*sizeof(WCHAR);
-    urlComponents.lpszScheme = malloc(urlComponents.dwSchemeLength);
+    urlComponents.lpszScheme = (PWSTR)malloc(urlComponents.dwSchemeLength);
     
     if(!InternetCrackUrlW(AppInfo->szUrlDownload, urlLength+1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         goto end;
@@ -330,7 +283,7 @@ ThreadFunc(LPVOID Context)
         if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead)) goto end;
         if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL)) goto end;
         dwCurrentBytesRead += dwBytesRead;
-        IBindStatusCallback_OnProgress(dl, dwCurrentBytesRead, dwContentLen, 0, AppInfo->szUrlDownload);
+        dl->OnProgress(dwCurrentBytesRead, dwContentLen, 0, AppInfo->szUrlDownload);
     }
     while (dwBytesRead);
 
@@ -352,9 +305,6 @@ end:
 
     InternetCloseHandle(hFile);
     InternetCloseHandle(hOpen);
-
-    if (dl)
-        IBindStatusCallback_Release(dl);
 
     if (bTempfile)
     {
@@ -437,7 +387,7 @@ DownloadApplication(INT Index)
 }
 
 VOID
-DownloadApplicationsDB(LPWSTR lpUrl)
+DownloadApplicationsDB(LPCWSTR lpUrl)
 {
     APPLICATION_INFO IntInfo;
 

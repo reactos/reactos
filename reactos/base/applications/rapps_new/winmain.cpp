@@ -9,6 +9,8 @@
 
 #include "rapps.h"
 
+#include <atlbase.h>
+#include <atlcom.h>
 #include <shellapi.h>
 
 #define SEARCH_TIMER_ID 'SR'
@@ -21,6 +23,40 @@ SETTINGS_INFO SettingsInfo;
 
 WCHAR szSearchPattern[MAX_STR_LEN] = L"";
 BOOL SearchEnabled = TRUE;
+
+class CRAppsModule : public CComModule
+{
+public:
+};
+
+BEGIN_OBJECT_MAP(ObjectMap)
+END_OBJECT_MAP()
+
+CRAppsModule                             gModule;
+CAtlWinModule                               gWinModule;
+
+void *operator new (size_t, void *buf)
+{
+    return buf;
+}
+
+static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
+{
+    if (bInitialize)
+    {
+        /* HACK - the global constructors don't run, so I placement new them here */
+        new (&gModule) CRAppsModule;
+        new (&gWinModule) CAtlWinModule;
+        new (&_AtlBaseModule) CAtlBaseModule;
+        new (&_AtlComModule) CAtlComModule;
+
+        gModule.Init(ObjectMap, hInstance, NULL);
+    }
+    else
+    {
+        gModule.Term();
+    }
+}
 
 BOOL
 SearchPatternMatch(PCWSTR szHaystack, PCWSTR szNeedle)
@@ -108,7 +144,7 @@ FreeInstalledAppList(VOID)
 
     while (Count >= 0)
     {
-        Info = ListViewGetlParam(Count);
+        Info = (PINSTALLED_INFO)ListViewGetlParam(Count);
         if (Info)
         {
             RegCloseKey(Info->hSubKey);
@@ -132,7 +168,7 @@ EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info)
         return TRUE;
     }
 
-    ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
+    ItemInfo = (PINSTALLED_INFO) HeapAlloc(GetProcessHeap(), 0, sizeof(INSTALLED_INFO));
     if (!ItemInfo)
     {
         RegCloseKey(Info->hSubKey);
@@ -203,7 +239,7 @@ UpdateApplicationsList(INT EnumType)
                                       GetSystemColorDepth() | ILC_MASK,
                                       0, 1);
 
-    hIcon = LoadImage(hInst,
+    hIcon = (HICON)LoadImage(hInst,
                       MAKEINTRESOURCE(IDI_MAIN),
                       IMAGE_ICON,
                       LISTVIEW_ICON_SIZE,
@@ -274,7 +310,7 @@ AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
     INT Index;
     HICON hIcon;
 
-    hIcon = LoadImage(hInst,
+    hIcon = (HICON)LoadImage(hInst,
                       MAKEINTRESOURCE(IconIndex),
                       IMAGE_ICON,
                       TREEVIEW_ICON_SIZE,
@@ -903,6 +939,8 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     HACCEL KeyBrd;
     MSG Msg;
 
+    InitializeAtlModule(hInstance, TRUE);
+
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -988,6 +1026,8 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
 Exit:
     if (hMutex)
         CloseHandle(hMutex);
+
+    InitializeAtlModule(hInstance, FALSE);
 
     return 0;
 }

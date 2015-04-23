@@ -45,7 +45,8 @@ typedef struct
     struct FILELIST *FilterList;
 } SESSION;
 
-HRESULT (WINAPI *pfnExtract)(SESSION *dest, LPCSTR szCabName);
+typedef HRESULT(WINAPI *fnExtract)(SESSION *dest, LPCSTR szCabName);
+fnExtract pfnExtract;
 
 
 INT
@@ -126,7 +127,7 @@ CopyTextToClipboard(LPCWSTR lpszText)
         EmptyClipboard();
         cchBuffer = wcslen(lpszText) + 1;
         ClipBuffer = GlobalAlloc(GMEM_DDESHARE, cchBuffer * sizeof(WCHAR));
-        Buffer = GlobalLock(ClipBuffer);
+        Buffer = (PWCHAR)GlobalLock(ClipBuffer);
         hr = StringCchCopyW(Buffer, cchBuffer, lpszText);
         GlobalUnlock(ClipBuffer);
 
@@ -268,7 +269,7 @@ ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
     hCabinetDll = LoadLibraryW(L"cabinet.dll");
     if (hCabinetDll)
     {
-        pfnExtract = (void *) GetProcAddress(hCabinetDll, "Extract");
+        pfnExtract = (fnExtract) GetProcAddress(hCabinetDll, "Extract");
         if (pfnExtract)
         {
             ZeroMemory(&Dest, sizeof(SESSION));

@@ -23,7 +23,7 @@ RichEditOnLink(HWND hwnd, ENLINK *Link)
         {
             if (pLink) HeapFree(GetProcessHeap(), 0, pLink);
 
-            pLink = HeapAlloc(GetProcessHeap(),
+            pLink = (PWSTR)HeapAlloc(GetProcessHeap(),
                               0,
                               (max(Link->chrg.cpMin, Link->chrg.cpMax) -
                                min(Link->chrg.cpMin, Link->chrg.cpMax) + 1) * sizeof(WCHAR));

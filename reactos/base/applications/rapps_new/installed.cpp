@@ -9,7 +9,7 @@
 #include "rapps.h"
 
 BOOL
-GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString)
+GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString)
 {
     DWORD dwSize = MAX_PATH;
 
@@ -137,7 +137,7 @@ BOOL
 ShowInstalledAppInfo(INT Index)
 {
     WCHAR szText[MAX_PATH], szInfo[MAX_PATH];
-    PINSTALLED_INFO Info = ListViewGetlParam(Index);
+    PINSTALLED_INFO Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
 
     if (!Info || !Info->hSubKey) return FALSE;
 
@@ -187,7 +187,7 @@ RemoveAppFromRegistry(INT Index)
     if (!IS_INSTALLED_ENUM(SelectedEnumType))
         return;
 
-    Info = ListViewGetlParam(Index);
+    Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
     if (!Info || !Info->hSubKey || (ItemIndex == -1)) return;
 
     if (!LoadStringW(hInst, IDS_APP_REG_REMOVE, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)) ||

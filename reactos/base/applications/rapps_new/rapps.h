@@ -1,6 +1,7 @@
 #ifndef _RAPPS_H
 #define _RAPPS_H
 
+#include <tchar.h>
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -16,6 +17,7 @@
 #include <winuser.h>
 #include <wincon.h>
 #include <richedit.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <stdio.h>
@@ -133,7 +135,7 @@ BOOL InstallApplication(INT Index);
 /* installed.c */
 typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, PINSTALLED_INFO Info);
 BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
-BOOL GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString);
+BOOL GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
 BOOL IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey);
@@ -158,7 +160,7 @@ PVOID ListViewGetlParam(INT Index);
 
 /* loaddlg.c */
 BOOL DownloadApplication(INT Index);
-VOID DownloadApplicationsDB(LPWSTR lpUrl);
+VOID DownloadApplicationsDB(LPCWSTR lpUrl);
 
 /* misc.c */
 INT GetSystemColorDepth(VOID);

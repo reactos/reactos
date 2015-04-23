@@ -67,9 +67,9 @@ ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt)
 VOID
 AddImageToImageList(HIMAGELIST hImageList, UINT ImageIndex)
 {
-    HANDLE hImage;
+    HICON hImage;
 
-    if (!(hImage = LoadImage(hInst,
+    if (!(hImage = (HICON) LoadImage(hInst,
                              MAKEINTRESOURCE(ImageIndex),
                              IMAGE_ICON,
                              TOOLBAR_HEIGHT,

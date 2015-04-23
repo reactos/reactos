@@ -223,7 +223,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
         }
 
         /* create a new entry */
-        Info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APPLICATION_INFO));
+        Info = (PAPPLICATION_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APPLICATION_INFO));
 
         if(!Info)
             break;
