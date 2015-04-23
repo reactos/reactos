@@ -1039,7 +1039,8 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
     CHAR PifFile[MAX_PATH];
     CHAR Desktop[MAX_PATH];
     CHAR Title[MAX_PATH];
-    CHAR Env[MAX_PATH];
+    ULONG EnvSize = 256;
+    PVOID Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
     STARTUPINFOA StartupInfo;
     PROCESS_INFORMATION ProcessInfo;
 
@@ -1098,16 +1099,24 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             CommandInfo.Env = Env;
             CommandInfo.EnvLen = sizeof(Env);
 
+Command:
             /* Get the VDM command information */
             if (!GetNextVDMCommand(&CommandInfo))
             {
+                if (CommandInfo.EnvLen > EnvSize)
+                {
+                    /* Expand the environment size */
+                    EnvSize = CommandInfo.EnvLen;
+                    CommandInfo.Env = Env = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
+
+                    /* Repeat the request */
+                    CommandInfo.VDMState |= VDM_FLAG_RETRY;
+                    goto Command;
+                }
+
                 /* Shouldn't happen */
                 ASSERT(FALSE);
             }
-
-            /* Increment the re-entry count */
-            CommandInfo.VDMState = VDM_INC_REENTER_COUNT;
-            GetNextVDMCommand(&CommandInfo);
 
             /* Load the executable */
             Result = DosLoadExecutable(LoadType,
@@ -1116,11 +1125,15 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
                                        Env,
                                        &Parameters->StackLocation,
                                        &Parameters->EntryPoint);
-            if (Result != ERROR_SUCCESS)
+            if (Result == ERROR_SUCCESS)
+            {
+                /* Increment the re-entry count */
+                CommandInfo.VDMState = VDM_INC_REENTER_COUNT;
+                GetNextVDMCommand(&CommandInfo);
+            }
+            else
             {
                 DisplayMessage(L"Could not load '%S'. Error: %u", AppName, Result);
-                // FIXME: Decrement the reenter count. Or, instead, just increment
-                // the VDM reenter count *only* if this call succeeds...
             }
 
             break;
@@ -1133,6 +1146,8 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
         }
     }
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Env);
 
     /* Close the handles */
     CloseHandle(ProcessInfo.hProcess);

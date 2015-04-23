@@ -1278,7 +1278,22 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
 
     if (CommandData != NULL)
     {
-        if (CommandData->VDMState & (VDM_NOT_LOADED | VDM_NOT_READY | VDM_READY))
+        if ((CommandData->VDMState == VDM_INC_REENTER_COUNT)
+            || (CommandData->VDMState == VDM_DEC_REENTER_COUNT))
+        {
+            /* Setup the input parameters */
+            SetReenterCount->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
+            SetReenterCount->fIncDec = CommandData->VDMState;
+
+            /* Call CSRSS */
+            Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                         NULL,
+                                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetReenterCount),
+                                         sizeof(BASE_SET_REENTER_COUNT));
+            BaseSetLastNTError(Status);
+            Result = NT_SUCCESS(Status);
+        }
+        else
         {
             /* Clear the structure */
             ZeroMemory(GetNextVdmCommand, sizeof(*GetNextVdmCommand));
@@ -1545,26 +1560,6 @@ GetNextVDMCommand(PVDM_COMMAND_INFO CommandData)
 
             /* It was successful */
             Result = TRUE;
-        }
-        else if ((CommandData->VDMState == VDM_INC_REENTER_COUNT)
-                 || (CommandData->VDMState == VDM_DEC_REENTER_COUNT))
-        {
-            /* Setup the input parameters */
-            SetReenterCount->ConsoleHandle = NtCurrentPeb()->ProcessParameters->ConsoleHandle;
-            SetReenterCount->fIncDec = CommandData->VDMState;
-
-            /* Call CSRSS */
-            Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                         NULL,
-                                         CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetReenterCount),
-                                         sizeof(BASE_SET_REENTER_COUNT));
-            BaseSetLastNTError(Status);
-            Result = NT_SUCCESS(Status);
-        }
-        else
-        {
-            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
-            Result = FALSE;
         }
     }
     else
