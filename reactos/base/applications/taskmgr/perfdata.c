@@ -331,20 +331,18 @@ void PerfDataRefresh(void)
 
     /* Now alloc a new PERFDATA array and fill in the data */
     pPerfData = (PPERFDATA)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(PERFDATA) * ProcessCount);
-    if (pPerfDataOld) {
-        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
-    }
-    pPerfDataOld = pPerfData;
 
     pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
     for (Idx=0; Idx<ProcessCount; Idx++) {
         /* Get the old perf data for this process (if any) */
         /* so that we can establish delta values */
         pPDOld = NULL;
-        for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
-            if (pPerfDataOld[Idx2].ProcessId == pSPI->UniqueProcessId) {
-                pPDOld = &pPerfDataOld[Idx2];
-                break;
+        if (pPerfDataOld) {
+            for (Idx2=0; Idx2<ProcessCountOld; Idx2++) {
+                if (pPerfDataOld[Idx2].ProcessId == pSPI->UniqueProcessId) {
+                    pPDOld = &pPerfDataOld[Idx2];
+                    break;
+                }
             }
         }
 
@@ -447,6 +445,10 @@ ClearInfo:
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
     }
     HeapFree(GetProcessHeap(), 0, pBuffer);
+    if (pPerfDataOld) {
+        HeapFree(GetProcessHeap(), 0, pPerfDataOld);
+    }
+    pPerfDataOld = pPerfData;
     LeaveCriticalSection(&PerfDataCriticalSection);
 }
 
