@@ -34,15 +34,15 @@ static VOID
 DoOpenFile(PINFO pInfo)
 {
     OPENFILENAMEW ofn;
-    WCHAR szFileName[MAX_PATH] = L"";
-    static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
+    WCHAR szFileName[MAX_PATH] = L"Default.rdp";
+    static WCHAR szFilter[] = L"Remote Desktop Files (*.RDP)\0*.rdp\0";
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize   = sizeof(OPENFILENAMEW);
     ofn.hwndOwner     = pInfo->hGeneralPage;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;
-    ofn.lpstrDefExt   = L"rdp";
+    ofn.lpstrDefExt   = L"RDP";
     ofn.lpstrFilter   = szFilter;
     ofn.lpstrFile     = szFileName;
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST;
@@ -60,15 +60,15 @@ static VOID
 DoSaveAs(PINFO pInfo)
 {
     OPENFILENAMEW ofn;
-    WCHAR szFileName[MAX_PATH] = L"";
-    static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
+    WCHAR szFileName[MAX_PATH] = L"Default.rdp";
+    static WCHAR szFilter[] = L"Remote Desktop Files (*.RDP)\0*.rdp\0";
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize   = sizeof(OPENFILENAMEW);
     ofn.hwndOwner     = pInfo->hGeneralPage;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;
-    ofn.lpstrDefExt   = L"rdp";
+    ofn.lpstrDefExt   = L"RDP";
     ofn.lpstrFilter   = szFilter;
     ofn.lpstrFile     = szFileName;
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
