@@ -882,7 +882,7 @@ static UINT save_table( MSIDATABASE *db, const MSITABLE *t, UINT bytes_per_strre
     }
 
     rawsize = 0;
-    for (i = 0; i < t->row_count; i++)
+    for (i = 0; i < row_count; i++)
     {
         UINT ofs = 0, ofs_mem = 0;
 
