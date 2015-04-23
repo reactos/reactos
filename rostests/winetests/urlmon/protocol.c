@@ -3772,27 +3772,12 @@ START_TEST(protocol)
     thread_id = GetCurrentThreadId();
 
     test_file_protocol();
-
-    if (!winetest_interactive)
-        skip("ROSTESTS-165: Skipping test_http_protocol() because of timeouts.\n");
-    else
-        test_http_protocol();
-
+    test_http_protocol();
     if(pCreateUri)
-    {
-        if (!winetest_interactive)
-            skip("ROSTESTS-165: Skipping test_https_protocol() because of timeouts.\n");
-        else
-            test_https_protocol();
-    }
+        test_https_protocol();
     else
         win_skip("Skipping https tests on too old platform\n");
-
-    if (!winetest_interactive)
-        skip("ROSTESTS-165: Skipping test_ftp_protocol() because of timeouts.\n");
-    else
-        test_ftp_protocol();
-
+    test_ftp_protocol();
     test_gopher_protocol();
     test_mk_protocol();
     test_CreateBinding();
