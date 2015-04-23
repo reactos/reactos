@@ -1068,8 +1068,7 @@ CSR_API(BaseSrvGetNextVDMCommand)
     }
 
     /* There is no command yet */
-    if ((GetNextVdmCommandRequest->VDMState & (VDM_FLAG_DONT_WAIT | VDM_FLAG_RETRY))
-        != (VDM_FLAG_DONT_WAIT | VDM_FLAG_RETRY))
+    if (!(GetNextVdmCommandRequest->VDMState & VDM_FLAG_DONT_WAIT))
     {
         if (ConsoleRecord->ServerEvent)
         {
