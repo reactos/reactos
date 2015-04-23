@@ -236,7 +236,7 @@ Test_PageFileSection(void)
     if (!NT_SUCCESS(Status))
         return;
 
-    ok(BaseAddress == UlongToPtr(0x40000000), "Invalid BaseAddress: %p", BaseAddress);
+    ok(BaseAddress == UlongToPtr(0x40000000), "Invalid BaseAddress: %p\n", BaseAddress);
 
     BaseAddress = (PVOID)0x40080000;
     SectionOffset.QuadPart = 0x10000;
@@ -253,7 +253,7 @@ Test_PageFileSection(void)
                                 PAGE_READWRITE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    ok(BaseAddress == (PVOID)0x40080000, "Invalid BaseAddress: %p", BaseAddress);
+    ok(BaseAddress == (PVOID)0x40080000, "Invalid BaseAddress: %p\n", BaseAddress);
 
     /* Commit a page in the section */
     BaseAddress = (PVOID)0x40000000;
@@ -401,7 +401,7 @@ Test_PageFileSection(void)
     _SEH2_END;
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    ok(*(PULONG)BaseAddress2 == 2, "Value in memory was wrong");
+    ok(*(PULONG)BaseAddress2 == 2, "Value in memory was wrong\n");
 
     /* Close the mapping */
     NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
@@ -444,7 +444,7 @@ Test_PageFileSection(void)
 #else
     /* WoW64 returns STATUS_INSUFFICIENT_RESOURCES */
     ok((Status == STATUS_INSUFFICIENT_RESOURCES) || (Status == STATUS_SECTION_TOO_BIG),
-       "got wrong Status: 0x%lx", Status);
+       "got wrong Status: 0x%lx\n", Status);
 #endif
 
     /* Try to create a even huger page file backed section, but only reserved */
@@ -488,7 +488,7 @@ Test_PageFileSection(void)
 #else
     /* WoW64 returns STATUS_INVALID_PARAMETER_4 */
     ok((Status == STATUS_INVALID_PARAMETER_4) || (Status == STATUS_INVALID_PARAMETER_3),
-       "got wrong Status: 0x%lx", Status);
+       "got wrong Status: 0x%lx\n", Status);
 #endif
 
     /* Pass 0 region size */
@@ -511,7 +511,7 @@ Test_PageFileSection(void)
 #else
     /* WoW64 returns STATUS_NO_MEMORY */
     ok((Status == STATUS_NO_MEMORY) || (Status == STATUS_INVALID_VIEW_SIZE),
-       "got wrong Status: 0x%lx", Status);
+       "got wrong Status: 0x%lx\n", Status);
     ok(ViewSize == 0, "wrong ViewSize: 0x%Ix\n", ViewSize);
 #endif
 
@@ -677,6 +677,11 @@ Test_ImageSection(void)
                         FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
     ok_ntstatus(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to open file\n");
+        return;
+    }
 
     /* Create a data section with write access */
     Status = NtCreateSection(&DataSectionHandle,
@@ -687,6 +692,12 @@ Test_ImageSection(void)
                              SEC_COMMIT, // AllocationAttributes
                              FileHandle);
     ok_ntstatus(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to create data section\n");
+        NtClose(FileHandle);
+        return;
+    }
 
     /* Map the data section as flat mapping */
     DataBase = NULL;
@@ -703,6 +714,13 @@ Test_ImageSection(void)
                                 PAGE_READWRITE);
     ok_ntstatus(Status, STATUS_SUCCESS);
     //ok(ViewSize == 0x3f95cc48, "ViewSize wrong: 0x%lx\n");
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to map view of data section\n");
+        NtClose(DataSectionHandle);
+        NtClose(FileHandle);
+        return;
+    }
 
     /* Check the original data */
     ok(*(ULONG*)DataBase == 0x00905a4d, "Header not ok\n");
@@ -725,6 +743,7 @@ Test_ImageSection(void)
                              SEC_IMAGE, // AllocationAttributes
                              FileHandle);
     ok_ntstatus(Status, STATUS_INVALID_IMAGE_NOT_MZ);
+    if (NT_SUCCESS(Status)) NtClose(ImageSectionHandle);
 
     /* Restore the original header */
     *(ULONG*)DataBase = 0x00905a4d;
@@ -742,6 +761,13 @@ Test_ImageSection(void)
                              SEC_IMAGE, // AllocationAttributes
                              FileHandle);
     ok_ntstatus(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to create image section\n");
+        NtClose(DataSectionHandle);
+        NtClose(FileHandle);
+        return;
+    }
 
     /* Map the image section */
     ImageBase = NULL;
@@ -761,6 +787,14 @@ Test_ImageSection(void)
 #else
     ok_ntstatus(Status, STATUS_IMAGE_MACHINE_TYPE_MISMATCH);
 #endif
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to map view of image section\n");
+        NtClose(ImageSectionHandle);
+        NtClose(DataSectionHandle);
+        NtClose(FileHandle);
+        return;
+    }
 
     /* Check the header */
     ok(*(ULONG*)DataBase == 0x00905a4d, "Header not ok\n");
@@ -813,6 +847,13 @@ Test_ImageSection(void)
                              SEC_IMAGE, // AllocationAttributes
                              FileHandle);
     ok_ntstatus(Status, STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to create image section\n");
+        NtClose(DataSectionHandle);
+        NtClose(FileHandle);
+        return;
+    }
 
     /* Map the image section again */
     ImageBase = NULL;
@@ -832,6 +873,14 @@ Test_ImageSection(void)
 #else
     ok_ntstatus(Status, STATUS_IMAGE_MACHINE_TYPE_MISMATCH);
 #endif
+    if (!NT_SUCCESS(Status))
+    {
+        skip("Failed to map view of image section\n");
+        NtClose(ImageSectionHandle);
+        NtClose(DataSectionHandle);
+        NtClose(FileHandle);
+        return;
+    }
 
     // This one doesn't always work, needs investigation
     /* Check the .data section again */

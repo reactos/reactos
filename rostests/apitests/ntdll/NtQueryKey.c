@@ -51,8 +51,9 @@ Test_KeyNameInformation(void)
     ok_size_t(InfoLength, FIELD_OFFSET(KEY_NAME_INFORMATION, Name[HKLM_Name.Length/sizeof(WCHAR)]));
     ok_size_t(NameInformation->NameLength, HKLM_Name.Length);
 
-    RtlInitUnicodeString(&InfoName, NameInformation->Name);
+    InfoName.Buffer = NameInformation->Name;
     InfoName.Length = NameInformation->NameLength;
+    InfoName.MaximumLength = NameInformation->NameLength;
     ok(RtlCompareUnicodeString(&InfoName, &HKLM_Name, TRUE) == 0, "%.*S\n",
         InfoName.Length, InfoName.Buffer);
 
@@ -82,8 +83,9 @@ Test_KeyNameInformation(void)
     ok_size_t(InfoLength, FIELD_OFFSET(KEY_NAME_INFORMATION, Name[HKLM_Software_Name.Length/sizeof(WCHAR)]));
     ok_size_t(NameInformation->NameLength, HKLM_Software_Name.Length);
 
-    RtlInitUnicodeString(&InfoName, NameInformation->Name);
+    InfoName.Buffer = NameInformation->Name;
     InfoName.Length = NameInformation->NameLength;
+    InfoName.MaximumLength = NameInformation->NameLength;
     ok(RtlCompareUnicodeString(&InfoName, &HKLM_Software_Name, TRUE) == 0, "%.*S\n",
         InfoName.Length, InfoName.Buffer);
 
