@@ -127,6 +127,7 @@ struct categoryCacheHeader
 };
 
 static const unsigned int                   folderOptionsPageCountMax = 20;
+static const long                           BTP_DONT_UPDATE_HISTORY = 0;
 static const long                           BTP_UPDATE_CUR_HISTORY = 1;
 static const long                           BTP_UPDATE_NEXT_HISTORY = 2;
 
@@ -3001,7 +3002,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::LoadHistory(IStream *pStream, IBindCtx 
     fHistoryObject = viewHistoryObject;
     fHistoryStream = pStream;
     fHistoryBindContext = pbc;
-    hResult = BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY);
+    hResult = BrowseToPIDL(pidl, BTP_DONT_UPDATE_HISTORY);
     fHistoryObject = NULL;
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
