@@ -694,7 +694,11 @@ PDOS_SFT_ENTRY DosGetSftEntry(WORD DosHandle)
     return &DosSystemFileTable[HandleTable[DosHandle]];
 }
 
-VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment)
+VOID DosInitializePsp(WORD PspSegment,
+                      LPCSTR CommandLine,
+                      WORD ProgramSize,
+                      WORD Environment,
+                      DWORD ReturnAddress)
 {
     PDOS_PSP PspBlock = SEGMENT_TO_PSP(PspSegment);
     LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
@@ -709,7 +713,7 @@ VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WOR
     PspBlock->LastParagraph = PspSegment + ProgramSize - 1;
 
     /* Save the interrupt vectors */
-    PspBlock->TerminateAddress = IntVecTable[0x22];
+    PspBlock->TerminateAddress = ReturnAddress;
     PspBlock->BreakAddress     = IntVecTable[0x23];
     PspBlock->CriticalAddress  = IntVecTable[0x24];
 
@@ -744,6 +748,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
                         IN LPCSTR ExecutablePath,
                         IN LPCSTR CommandLine,
                         IN LPCSTR Environment OPTIONAL,
+                        IN DWORD ReturnAddress OPTIONAL,
                         OUT PDWORD StackLocation OPTIONAL,
                         OUT PDWORD EntryPoint OPTIONAL)
 {
@@ -865,7 +870,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         DosInitializePsp(Segment,
                          CommandLine,
                          (WORD)ExeSize,
-                         EnvBlock);
+                         EnvBlock,
+                         ReturnAddress);
 
         /* The process owns its own memory */
         DosChangeMemoryOwner(Segment, Segment);
@@ -943,7 +949,8 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         DosInitializePsp(Segment,
                          CommandLine,
                          MaxAllocSize,
-                         EnvBlock);
+                         EnvBlock,
+                         ReturnAddress);
 
         if (LoadType == DOS_LOAD_AND_EXECUTE)
         {
@@ -993,11 +1000,13 @@ DWORD DosStartProcess(IN LPCSTR ExecutablePath,
                       IN LPCSTR Environment OPTIONAL)
 {
     DWORD Result;
+    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
 
     Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
                                ExecutablePath,
                                CommandLine,
                                Environment,
+                               IntVecTable[0x20], // Use INT 20h
                                NULL,
                                NULL);
 
@@ -1028,7 +1037,8 @@ Quit:
 #ifndef STANDALONE
 WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
                       LPCSTR ProgramName,
-                      PDOS_EXEC_PARAM_BLOCK Parameters)
+                      PDOS_EXEC_PARAM_BLOCK Parameters,
+                      DWORD ReturnAddress)
 {
     DWORD Result;
     DWORD BinaryType;
@@ -1097,7 +1107,7 @@ WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
             CommandInfo.Title = Title;
             CommandInfo.TitleLen = sizeof(Title);
             CommandInfo.Env = Env;
-            CommandInfo.EnvLen = sizeof(Env);
+            CommandInfo.EnvLen = EnvSize;
 
 Command:
             /* Get the VDM command information */
@@ -1123,6 +1133,7 @@ Command:
                                        AppName,
                                        CmdLine,
                                        Env,
+                                       ReturnAddress,
                                        &Parameters->StackLocation,
                                        &Parameters->EntryPoint);
             if (Result == ERROR_SUCCESS)
@@ -2486,7 +2497,8 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             DOS_EXEC_TYPE LoadType = (DOS_EXEC_TYPE)getAL();
             LPSTR ProgramName = SEG_OFF_TO_PTR(getDS(), getDX());
             PDOS_EXEC_PARAM_BLOCK ParamBlock = SEG_OFF_TO_PTR(getES(), getBX());
-            WORD ErrorCode = DosCreateProcess(LoadType, ProgramName, ParamBlock);
+            DWORD ReturnAddress = MAKELONG(Stack[STACK_IP], Stack[STACK_CS]);
+            WORD ErrorCode = DosCreateProcess(LoadType, ProgramName, ParamBlock, ReturnAddress);
 
             if (ErrorCode == ERROR_SUCCESS)
             {

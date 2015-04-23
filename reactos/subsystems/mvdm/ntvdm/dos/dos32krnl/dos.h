@@ -238,19 +238,27 @@ WORD DosSeekFile(WORD FileHandle,
                  LPDWORD NewOffset);
 BOOL DosFlushFileBuffers(WORD FileHandle);
 
-VOID DosInitializePsp(WORD PspSegment, LPCSTR CommandLine, WORD ProgramSize, WORD Environment);
+VOID DosInitializePsp(
+    WORD PspSegment,
+    LPCSTR CommandLine,
+    WORD ProgramSize,
+    WORD Environment,
+    DWORD ReturnAddress
+);
 DWORD DosLoadExecutable(
     IN DOS_EXEC_TYPE LoadType,
     IN LPCSTR ExecutablePath,
     IN LPCSTR CommandLine,
     IN LPCSTR Environment OPTIONAL,
+    IN DWORD ReturnAddress OPTIONAL,
     OUT PDWORD StackLocation OPTIONAL,
     OUT PDWORD EntryPoint OPTIONAL
 );
 WORD DosCreateProcess(
     DOS_EXEC_TYPE LoadType,
     LPCSTR ProgramName,
-    PDOS_EXEC_PARAM_BLOCK Parameters
+    PDOS_EXEC_PARAM_BLOCK Parameters,
+    DWORD ReturnAddress
 );
 DWORD DosStartProcess(
     IN LPCSTR ExecutablePath,
