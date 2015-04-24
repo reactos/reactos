@@ -713,7 +713,7 @@ GDIOBJ_ReferenceObjectByHandle(
     /* Check if the object is exclusively locked */
     if (pobj->cExclusiveLock != 0)
     {
-        DPRINT1("GDIOBJ: Cannot reference oject %p with exclusive lock.\n", hobj);
+        DPRINT1("GDIOBJ: Cannot reference object %p with exclusive lock.\n", hobj);
         GDIOBJ_vDereferenceObject(pobj);
         DBG_DUMP_EVENT_LIST(&pobj->slhLog);
         return NULL;

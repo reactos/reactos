@@ -110,8 +110,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         (ProcessHandle != NtCurrentProcess()))
     {
         /*
-         * Retreiving the process cookie is only allowed for the calling process
-         * itself! XP only allowes NtCurrentProcess() as process handles even if
+         * Retrieving the process cookie is only allowed for the calling process
+         * itself! XP only allows NtCurrentProcess() as process handles even if
          * a real handle actually represents the current process.
          */
         return STATUS_INVALID_PARAMETER;
