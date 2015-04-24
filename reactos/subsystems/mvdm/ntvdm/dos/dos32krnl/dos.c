@@ -1768,6 +1768,78 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Parse Filename into FCB */
+        case 0x29:
+        {
+            PCHAR FileName = (PCHAR)SEG_OFF_TO_PTR(getDS(), getSI());
+            PDOS_FCB Fcb = (PDOS_FCB)SEG_OFF_TO_PTR(getES(), getDI());
+            BYTE Options = getAL();
+            INT i;
+            CHAR FillChar = ' ';
+
+            if (FileName[1] == ':')
+            {
+                /* Set the drive number */
+                Fcb->DriveNumber = RtlUpperChar(FileName[0]) - 'A' + 1;
+
+                /* Skip to the file name part */
+                FileName += 2;
+            }
+            else
+            {
+                /* No drive number specified */
+                if (Options & (1 << 1)) Fcb->DriveNumber = CurrentDrive + 1;
+                else Fcb->DriveNumber = 0;
+            }
+
+            /* Parse the file name */
+            i = 0;
+            while (*FileName && (i < 8))
+            {
+                if (*FileName == '.') break;
+                else if (*FileName == '*')
+                {
+                    FillChar = '?';
+                    break;
+                }
+
+                Fcb->FileName[i++] = *FileName++;
+            }
+
+            /* Fill the whole field with blanks only if bit 2 is not set */
+            if ((FillChar != ' ') || (i != 0) || !(Options & (1 << 2)))
+            {
+                for (; i < 8; i++) Fcb->FileName[i] = FillChar;
+            }
+
+            /* Skip to the extension part */
+            while (*FileName && *FileName != '.') FileName++;
+            if (*FileName == '.') FileName++;
+
+            /* Now parse the extension */
+            i = 0;
+            FillChar = ' ';
+
+            while (*FileName && (i < 3))
+            {
+                if (*FileName == '*')
+                {
+                    FillChar = '?';
+                    break;
+                }
+
+                Fcb->FileExt[i++] = *FileName++;
+            }
+
+            /* Fill the whole field with blanks only if bit 3 is not set */
+            if ((FillChar != ' ') || (i != 0) || !(Options & (1 << 3)))
+            {
+                for (; i < 3; i++) Fcb->FileExt[i] = FillChar;
+            }
+
+            break;
+        }
+
         /* Get System Date */
         case 0x2A:
         {
@@ -2498,7 +2570,22 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             LPSTR ProgramName = SEG_OFF_TO_PTR(getDS(), getDX());
             PDOS_EXEC_PARAM_BLOCK ParamBlock = SEG_OFF_TO_PTR(getES(), getBX());
             DWORD ReturnAddress = MAKELONG(Stack[STACK_IP], Stack[STACK_CS]);
-            WORD ErrorCode = DosCreateProcess(LoadType, ProgramName, ParamBlock, ReturnAddress);
+            WORD ErrorCode;
+            
+            if (LoadType != DOS_LOAD_OVERLAY)
+            {
+                ErrorCode = DosCreateProcess(LoadType, ProgramName, ParamBlock, ReturnAddress);
+            }
+            else
+            {
+                ErrorCode = DosLoadExecutable(DOS_LOAD_OVERLAY,
+                                              ProgramName,
+                                              FAR_POINTER(ParamBlock->CommandLine),
+                                              SEG_OFF_TO_PTR(ParamBlock->Environment, 0),
+                                              ReturnAddress,
+                                              NULL,
+                                              NULL);
+            }
 
             if (ErrorCode == ERROR_SUCCESS)
             {
