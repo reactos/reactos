@@ -22,7 +22,7 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static CONST DWORD MemoryBase[]  = { 0xA0000, 0xA0000, 0xB0000, 0xB8000 };
-static CONST DWORD MemoryLimit[] = { 0xAFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
+static CONST DWORD MemoryLimit[] = { 0xBFFFF, 0xAFFFF, 0xB7FFF, 0xBFFFF };
 
 /*
  * Activate this line if you want to use the real
@@ -622,7 +622,7 @@ static inline DWORD VgaGetAddressSize(VOID)
 
 static inline DWORD VgaTranslateReadAddress(DWORD Address)
 {
-    DWORD Offset = Address - VgaGetVideoBaseAddress();
+    DWORD Offset = LOWORD(Address - VgaGetVideoBaseAddress());
     BYTE Plane;
 
     /* Check for chain-4 and odd-even mode */
@@ -649,7 +649,7 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
 
 static inline DWORD VgaTranslateWriteAddress(DWORD Address)
 {
-    DWORD Offset = Address - VgaGetVideoBaseAddress();
+    DWORD Offset = LOWORD(Address - VgaGetVideoBaseAddress());
 
     /* Check for chain-4 and odd-even mode */
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
@@ -1905,8 +1905,6 @@ VOID NTAPI VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaReadMemory: Address 0x%08X, Size %lu\n", Address, Size);
-    Address = min(max(Address, VgaGetVideoBaseAddress()), VgaGetVideoLimitAddress());
-    Size = min(Size, VgaGetVideoLimitAddress() - Address + 1);
 
     /* Ignore if video RAM access is disabled */
     if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return;
@@ -1934,8 +1932,6 @@ BOOLEAN NTAPI VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
     PUCHAR BufPtr = (PUCHAR)Buffer;
 
     DPRINT("VgaWriteMemory: Address 0x%08X, Size %lu\n", Address, Size);
-    Address = min(max(Address, VgaGetVideoBaseAddress()), VgaGetVideoLimitAddress());
-    Size = min(Size, VgaGetVideoLimitAddress() - Address + 1);
 
     /* Ignore if video RAM access is disabled */
     if ((VgaMiscRegister & VGA_MISC_RAM_ENABLED) == 0) return TRUE;
