@@ -768,14 +768,15 @@ QSI_DEF(SystemProcessInformation)
     PETHREAD CurrentThread;
     ANSI_STRING ImageName;
     ULONG CurrentSize;
-    USHORT ImageNameMaximumLength; // image name len in bytes
+    USHORT ImageNameMaximumLength; // image name length in bytes
     USHORT ImageNameLength;
     PLIST_ENTRY CurrentEntry;
     ULONG TotalSize = 0, ThreadsCount;
     ULONG TotalUser, TotalKernel;
     PUCHAR Current;
     NTSTATUS Status = STATUS_SUCCESS;
-    PUNICODE_STRING ProcessImageName;
+    PUNICODE_STRING TempProcessImageName;
+    _SEH2_VOLATILE PUNICODE_STRING ProcessImageName = NULL;
     PWCHAR szSrc;
     BOOLEAN Overflow = FALSE;
 
@@ -828,7 +829,8 @@ QSI_DEF(SystemProcessInformation)
             // size of the structure for every process
             CurrentSize = sizeof(SYSTEM_PROCESS_INFORMATION) + sizeof(SYSTEM_THREAD_INFORMATION) * ThreadsCount;
             ImageNameLength = 0;
-            Status = SeLocateProcessImageName(Process, &ProcessImageName);
+            Status = SeLocateProcessImageName(Process, &TempProcessImageName);
+            ProcessImageName = TempProcessImageName;
             szSrc = NULL;
             if (NT_SUCCESS(Status) && (ProcessImageName->Length > 0))
             {
@@ -870,7 +872,7 @@ QSI_DEF(SystemProcessInformation)
             /* Fill system information */
             if (!Overflow)
             {
-                SpiCurrent->NextEntryOffset = CurrentSize + ImageNameMaximumLength; // relative offset to the beginnnig of the next structure
+                SpiCurrent->NextEntryOffset = CurrentSize + ImageNameMaximumLength; // relative offset to the beginning of the next structure
                 SpiCurrent->NumberOfThreads = ThreadsCount;
                 SpiCurrent->CreateTime = Process->CreateTime;
                 SpiCurrent->ImageName.Length = ImageNameLength;
@@ -883,9 +885,6 @@ QSI_DEF(SystemProcessInformation)
                     if (szSrc)
                     {
                         RtlCopyMemory(SpiCurrent->ImageName.Buffer, szSrc, SpiCurrent->ImageName.Length);
-
-                        /* Release the memory allocated by SeLocateProcessImageName */
-                        ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
                     }
                     else
                     {
@@ -944,6 +943,13 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->KernelTime.QuadPart = UInt32x32To64(TotalKernel, KeMaximumIncrement);
             }
 
+            if (ProcessImageName)
+            {
+                /* Release the memory allocated by SeLocateProcessImageName */
+                ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
+                ProcessImageName = NULL;
+            }
+
             /* Handle idle process entry */
 Skip:
             if (Process == PsIdleProcess) Process = NULL;
@@ -968,6 +974,12 @@ Skip:
     {
         if(Process != NULL)
             ObDereferenceObject(Process);
+        if (ProcessImageName)
+        {
+            /* Release the memory allocated by SeLocateProcessImageName */
+            ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
+        }
+
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END
@@ -1190,7 +1202,7 @@ QSI_DEF(SystemHandleInformation)
 
     DPRINT("SystemHandleInformation 3\n");
 
-    /* Now get Handles from all processs. */
+    /* Now get Handles from all processes. */
     syspr = PsGetNextProcess(NULL);
     pr = syspr;
 
