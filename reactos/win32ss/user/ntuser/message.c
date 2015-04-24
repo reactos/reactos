@@ -1520,7 +1520,7 @@ co_IntSendMessageTimeout( HWND hWnd,
         }
     }
 
-    ExFreePool(Children);
+    ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
 
     return (LRESULT) TRUE;
 }
@@ -1888,7 +1888,7 @@ UserSendNotifyMessage( HWND hWnd,
 
                Ret = UserSendNotifyMessage(List[i], Msg, wParam, lParam);
             }
-            ExFreePool(List);
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
         }
     }
     else

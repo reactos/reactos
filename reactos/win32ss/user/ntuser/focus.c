@@ -165,7 +165,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                 }
                 phwndCurrent++;
             }
-            ExFreePool(phwndTopLevel);
+            ExFreePoolWithTag(phwndTopLevel, USERTAG_WINDOWLIST);
           }
       }
       ////

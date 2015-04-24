@@ -97,7 +97,7 @@ POLYGONFILL_DestroyEdgeList(FILL_EDGE_LIST* list)
 }
 
 /*
-** This makes and initiaizes an Edge struct for a line between two points.
+** This makes and initializes an Edge struct for a line between two points.
 */
 static
 FILL_EDGE*
