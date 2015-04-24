@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/init.c
+ * FILE:            ntoskrnl/ex/handle.c
  * PURPOSE:         Generic Executive Handle Tables
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller <w3seek@reactos.com>
@@ -516,7 +516,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
             Mid = ExpAllocateMidLevelTable(HandleTable, DoInit, &Low);
             if (!Mid)
             {
-                /* We failed, free the high level table as welll */
+                /* We failed, free the high level table as well */
                 ExpFreeTablePagedPool(HandleTable->QuotaProcess,
                                       High,
                                       SizeOfHandle(HIGH_LEVEL_ENTRIES));
@@ -928,7 +928,7 @@ ExDestroyHandleTable(IN PHANDLE_TABLE HandleTable,
     /* Remove the handle from the list */
     ExRemoveHandleTable(HandleTable);
 
-    /* Check if we have a desotry callback */
+    /* Check if we have a destroy callback */
     if (DestroyHandleProcedure)
     {
         /* FIXME: */

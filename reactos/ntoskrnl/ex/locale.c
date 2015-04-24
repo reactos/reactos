@@ -237,7 +237,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
         UserKey = NULL;
     }
 
-    /* Initailize the object attributes */
+    /* Initialize the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                               &KeyName,
                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,

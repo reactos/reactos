@@ -827,7 +827,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     if (BiosVersion) ExFreePoolWithTag(BiosVersion, TAG_CM);
 
 Quickie:
-    /* Close the procesor handle */
+    /* Close the processor handle */
     NtClose(KeyHandle);
     return STATUS_SUCCESS;
 }
