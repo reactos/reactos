@@ -1794,7 +1794,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             /* Parse the file name */
             i = 0;
-            while (*FileName && (i < 8))
+            while ((*FileName >= 0x20) && (i < 8))
             {
                 if (*FileName == '.') break;
                 else if (*FileName == '*')
@@ -1803,7 +1803,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                Fcb->FileName[i++] = *FileName++;
+                Fcb->FileName[i++] = RtlUpperChar(*FileName++);
             }
 
             /* Fill the whole field with blanks only if bit 2 is not set */
@@ -1813,14 +1813,14 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             }
 
             /* Skip to the extension part */
-            while (*FileName && *FileName != '.') FileName++;
+            while (*FileName >= 0x20 && *FileName != '.') FileName++;
             if (*FileName == '.') FileName++;
 
             /* Now parse the extension */
             i = 0;
             FillChar = ' ';
 
-            while (*FileName && (i < 3))
+            while ((*FileName >= 0x20) && (i < 3))
             {
                 if (*FileName == '*')
                 {
@@ -1828,7 +1828,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     break;
                 }
 
-                Fcb->FileExt[i++] = *FileName++;
+                Fcb->FileExt[i++] = RtlUpperChar(*FileName++);
             }
 
             /* Fill the whole field with blanks only if bit 3 is not set */
