@@ -487,7 +487,7 @@ NtUserCreateWindowStation(
 
    if (InputWindowStation == NULL)
    {
-      ERR("Initializeing input window station\n");
+      ERR("Initializing input window station\n");
       InputWindowStation = WindowStationObject;
 
       WindowStationObject->Flags &= ~WSS_NOIO;
@@ -1369,12 +1369,12 @@ BuildDesktopNameList(
  *       Size of buffer passed by caller.
  *
  *    lpBuffer
- *       Buffer passed by caller. If the function succedes, the buffer is
+ *       Buffer passed by caller. If the function succeeds, the buffer is
  *       filled with window station/desktop count (in first DWORD) and
  *       NULL-terminated window station/desktop names.
  *
  *    pRequiredSize
- *       If the function suceedes, this is the number of bytes copied.
+ *       If the function succeeds, this is the number of bytes copied.
  *       Otherwise it's size of buffer needed for function to succeed.
  *
  * Status
@@ -1495,7 +1495,7 @@ NtUserSetWindowStationUser(
 
    if (!NT_SUCCESS(Status))
    {
-      ExFreePoolWithTag(WindowStation->psidUser, 0);
+      ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
       WindowStation->psidUser = 0;
       goto Leave;
    }

@@ -1451,6 +1451,7 @@ NtUserBuildHwndList(
                dwCount++;
             }
          }
+         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
       }
 
       ObDereferenceObject(Thread);
@@ -2795,10 +2796,10 @@ IntFindWindow(PWND Parent,
                 (Child->strName.Length < 0xFFFF &&
                  !RtlCompareUnicodeString(WindowName, &CurrentWindowName, TRUE)))
              {
-            Ret = Child->head.h;
-            break;
+                Ret = Child->head.h;
+                break;
+             }
          }
-      }
       }
       ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }

@@ -823,7 +823,7 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
    PSHELL_HOOK_WINDOW Current;
    HWND* list;
 
-   /* FIXME: If we save nb elements in desktop, we dont have to loop to find nb entries */
+   /* FIXME: If we save nb elements in desktop, we don't have to loop to find nb entries */
    ListEntry = Desktop->ShellHookWindows.Flink;
    while (ListEntry != &Desktop->ShellHookWindows)
    {
