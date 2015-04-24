@@ -150,8 +150,12 @@ NtGdiGetDeviceGammaRamp(
     }
 
     Ret = IntGetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp);
-
-    if (!Ret) return Ret;
+    if (!Ret)
+    {
+        DC_UnlockDc(dc);
+        ExFreePoolWithTag(SafeRamp, GDITAG_ICM);
+        return Ret;
+    }
 
     _SEH2_TRY
     {
