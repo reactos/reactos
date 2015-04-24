@@ -21,6 +21,7 @@
 #include <commoncontrols.h>
 #include <shlwapi_undoc.h>
 #include <uxtheme.h>
+#include <vssym32.h>
 
 #include "CMenuBand.h"
 #include "CMenuToolbars.h"
@@ -159,7 +160,7 @@ HRESULT CMenuToolbarBase::OnCustomDraw(LPNMTBCUSTOMDRAW cdraw, LRESULT * theResu
         isHot = m_hotBar == this && (int) cdraw->nmcd.dwItemSpec == m_hotItem;
         isPopup = m_popupBar == this && (int) cdraw->nmcd.dwItemSpec == m_popupItem;
 
-        if (m_initFlags & SMINIT_VERTICAL || IsAppThemed())
+        if ((m_initFlags & SMINIT_VERTICAL))
         {
             COLORREF clrText;
             HBRUSH   bgBrush;
@@ -295,7 +296,10 @@ HRESULT CMenuToolbarBase::ShowDW(BOOL fShow)
     UpdateImageLists();
 
     // For custom-drawing
-    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+    if (IsAppThemed())
+        GetThemeSysBool(GetWindowTheme(m_hWnd), TMT_FLATMENUS);
+    else
+        SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
 
     return S_OK;
 }
@@ -383,7 +387,11 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
 
     SetWindowTheme(m_hWnd, L"", L"");
 
-    SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+    if (IsAppThemed())
+        GetThemeSysBool(GetWindowTheme(m_hWnd), TMT_FLATMENUS);
+    else
+        SystemParametersInfo(SPI_GETFLATMENU, 0, &m_useFlatMenus, 0);
+
     m_menuBand->AdjustForTheme(m_useFlatMenus);
 
     // If needed, create the pager.

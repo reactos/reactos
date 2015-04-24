@@ -1042,7 +1042,11 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
         }
     }
 
+#ifdef __REACTOS__
+    if (theme && !(dwItemCDFlag & TBCDRF_NOBACKGROUND))
+#else
     if (theme)
+#endif
     {
         int partId = drawSepDropDownArrow ? TP_SPLITBUTTON : TP_BUTTON;
         int stateId = TS_NORMAL;
@@ -1059,7 +1063,12 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
             
         DrawThemeBackground (theme, hdc, partId, stateId, &rc, NULL);
     }
+
+#ifdef __REACTOS__
+    if (!theme)
+#else
     else
+#endif
         TOOLBAR_DrawFrame(infoPtr, &tbcd, &rc, dwItemCDFlag);
 
     if (drawSepDropDownArrow)
