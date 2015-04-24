@@ -204,22 +204,9 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
                               IN ULONG ValueLength, IN PVOID Context, IN PVOID EntryContext)
 {
     NTSTATUS ret = STATUS_SUCCESS;
-    int ValueNameLength = 0;
-    LPSTR ValName = 0;
+
     trace("**Test %d**\n", CurrentTest);
-
-    if(ValueName)
-    {
-        ValueNameLength = lstrlenW(ValueName);
-
-        ValName = pRtlAllocateHeap(GetProcessHeap(), 0, ValueNameLength);
-
-        WideCharToMultiByte(CP_ACP, 0, ValueName, ValueNameLength+1, ValName, ValueNameLength, NULL, NULL);
-
-        trace("ValueName: %s\n", ValName);
-    }
-    else
-        trace("ValueName: (null)\n");
+    trace("ValueName: %s\n", wine_dbgstr_w(ValueName));
 
     switch(ValueType)
     {
@@ -261,9 +248,6 @@ static NTSTATUS WINAPI QueryRoutine (IN PCWSTR ValueName, IN ULONG ValueType, IN
         ok(!1, "Invalid Test Specified!\n");
 
     CurrentTest++;
-
-    if(ValName)
-        pRtlFreeHeap(GetProcessHeap(), 0, ValName);
 
     return ret;
 }

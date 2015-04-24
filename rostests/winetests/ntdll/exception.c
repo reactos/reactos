@@ -959,7 +959,15 @@ static void test_debugger(void)
         else if (de.dwDebugEventCode == OUTPUT_DEBUG_STRING_EVENT)
         {
             int stage;
+#ifdef __REACTOS__
+            /* This will catch our DPRINTs, such as
+             * "WARNING:  RtlpDphTargetDllsLogicInitialize at ..\..\lib\rtl\heappage.c:1283 is UNIMPLEMENTED!"
+             * so we need a full-size buffer to avoid a stack overflow
+             */
+            char buffer[513];
+#else
             char buffer[64];
+#endif
 
             status = pNtReadVirtualMemory(pi.hProcess, &test_stage, &stage,
                                           sizeof(stage), &size_read);
