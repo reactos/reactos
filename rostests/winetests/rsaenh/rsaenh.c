@@ -62,7 +62,7 @@ static const cryptdata cTestData[4] = {
        12,12,16}
 };
 
-static int win2k;
+static int win2k, nt4;
 
 /*
  * 1. Take the MD5 Hash of the container name (with an extra null byte)
@@ -200,7 +200,7 @@ static BOOL init_aes_environment(void)
     hProv = (HCRYPTPROV)INVALID_HANDLE_VALUE;
 
     /* we are using NULL as provider name for RSA_AES provider as the provider
-     * names are different in Windows XP and Vista. It's different to what
+     * names are different in Windows XP and Vista. This differs from what
      * is defined in the SDK on Windows XP.
      * This provider is available on Windows XP, Windows 2003 and Vista.      */
 
@@ -249,7 +249,10 @@ static void test_prov(void)
     SetLastError(0xdeadbeef);
     result = CryptGetProvParam(hProv, PP_SIG_KEYSIZE_INC, (BYTE*)&dwInc, &dwLen, 0);
     if (!result && GetLastError() == NTE_BAD_TYPE)
+    {
         skip("PP_SIG_KEYSIZE_INC is not supported (win9x or NT)\n");
+        nt4++;
+    }
     else
         ok(result && dwInc==8, "%08x, %d\n", GetLastError(), dwInc);
     
@@ -1472,16 +1475,16 @@ static void test_rc2(void)
         result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen);
         ok(result, "%08x\n", GetLastError());
 
-        /* Setting the salt also succeeds... */
+        /* Setting the salt value will not reset the salt length in base or strong providers */
         result = CryptSetKeyParam(hKey, KP_SALT, pbData, 0);
         ok(result, "setting salt failed: %08x\n", GetLastError());
-        /* but the resulting salt length is now zero? */
         dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
-        ok(dwLen == 0 ||
-           broken(dwLen == 11), /* Win9x/WinMe/NT4 */
-           "unexpected salt length %d\n", dwLen);
+        if (BASE_PROV || STRONG_PROV)
+            ok(dwLen == 11, "expected salt length 11, got %d\n", dwLen);
+        else
+            ok(dwLen == 0 || broken(nt4 && dwLen == 11), "expected salt length 0, got %d\n", dwLen);
         /* What sizes salt can I set? */
         salt.pbData = pbData;
         for (i=0; i<24; i++)
@@ -1719,16 +1722,16 @@ static void test_rc4(void)
         result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen);
         ok(result, "%08x\n", GetLastError());
 
-        /* Setting the salt also succeeds... */
+        /* Setting the salt value will not reset the salt length in base or strong providers */
         result = CryptSetKeyParam(hKey, KP_SALT, pbData, 0);
         ok(result, "setting salt failed: %08x\n", GetLastError());
-        /* but the resulting salt length is now zero? */
         dwLen = 0;
         result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
-        ok(dwLen == 0 ||
-           broken(dwLen == 11), /* Win9x/WinMe/NT4 */
-           "unexpected salt length %d\n", dwLen);
+        if (BASE_PROV || STRONG_PROV)
+            ok(dwLen == 11, "expected salt length 11, got %d\n", dwLen);
+        else
+            ok(dwLen == 0 || broken(nt4 && dwLen == 11), "expected salt length 0, got %d\n", dwLen);
         /* What sizes salt can I set? */
         salt.pbData = pbData;
         for (i=0; i<24; i++)
