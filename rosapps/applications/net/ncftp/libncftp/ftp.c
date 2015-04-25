@@ -10,7 +10,7 @@
 
 char gLibNcFTPVersion[64] = kLibraryVersion;
 
-#ifdef NO_SIGNALS
+/* #ifdef NO_SIGNALS
 static char gNoSignalsMarker[] = "@(#) LibNcFTP - NO_SIGNALS";
 #else
 
@@ -19,9 +19,9 @@ static int gGotSig = 0;
 static sigjmp_buf gCancelConnectJmp;
 #else
 static jmp_buf gCancelConnectJmp;
-#endif	/* HAVE_SIGSETJMP */
+#endif
 
-#endif	/* NO_SIGNALS */
+#endif */
 
 
 #ifndef lint

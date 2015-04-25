@@ -1375,7 +1375,7 @@ ListCmd(const int argc, const char **const argv, const CommandPtr cmdp, const Ar
 	char options[32];
 	char option[2];
 	volatile int listmode;
-	FILE *volatile stream;
+	FILE *stream;
 	volatile int paging;
 #if defined(WIN32) || defined(_WINDOWS)
 #else
@@ -1557,7 +1557,7 @@ LocalListCmd(const int argc, const char **const argv, const CommandPtr cmdp, con
 	char options[32];
 	char option[2];
 	volatile int listmode;
-	FILE *volatile stream;
+	FILE *stream;
 	volatile int paging;
 
 
@@ -1703,7 +1703,7 @@ LocalListCmd(const int argc, const char **const argv, const CommandPtr cmdp, con
 
 
 
-static void
+/* static void
 Sys(const int argc, const char **const argv, const ArgvInfoPtr aip, const char *syscmd, int noDQuote)
 {
 	char cmd[256];
@@ -1730,7 +1730,7 @@ Sys(const int argc, const char **const argv, const ArgvInfoPtr aip, const char *
 	Trace(0, "Sys: %s\n", cmd);
 	(void) system(cmd);
 #endif
-}	/* Sys */
+}*/
 
 
 

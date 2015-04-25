@@ -28,8 +28,8 @@ static const char copyright[] = "getline:  Copyright (C) 1991, 1992, 1993, Chris
 #	include <conio.h>
 #	include <io.h>
 #	include <fcntl.h>
-#	define strcasecmp stricmp
-#	define strncasecmp strnicmp
+// #	define strcasecmp stricmp
+// #	define strncasecmp strnicmp
 #	define sleep(a) Sleep(a * 1000)
 #	ifndef S_ISREG
 #		define S_ISREG(m)      (((m) & _S_IFMT) == _S_IFREG)
@@ -152,8 +152,8 @@ static char     gl_killbuf[GL_BUF_SIZE]=""; /* killed text */
 static const char *gl_prompt;		/* to save the prompt string */
 static char     gl_intrc = 0;		/* keyboard SIGINT char */
 static char     gl_quitc = 0;		/* keyboard SIGQUIT char */
-static char     gl_suspc = 0;		/* keyboard SIGTSTP char */
-static char     gl_dsuspc = 0;		/* delayed SIGTSTP char */
+// static char     gl_suspc = 0;		/* keyboard SIGTSTP char */
+// static char     gl_dsuspc = 0;		/* delayed SIGTSTP char */
 static int      gl_search_mode = 0;	/* search mode flag */
 static char   **gl_matchlist = 0;
 static char    *gl_home_dir = NULL;

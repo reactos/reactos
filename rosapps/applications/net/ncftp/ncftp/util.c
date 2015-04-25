@@ -1132,7 +1132,7 @@ void SysPerror(const char *const errMsg)
 		NULL
 		);
 
-	if (reason[strlen(reason) - 1] = '\n')
+	if (reason[strlen(reason) - 1] == '\n')
 		reason[strlen(reason) - 1] = '\0';
 	(void) fprintf(stderr, "%s: %s\n", errMsg, reason);
 }	/* SysPerror */

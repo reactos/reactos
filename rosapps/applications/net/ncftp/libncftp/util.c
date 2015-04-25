@@ -13,13 +13,13 @@ extern void GetSpecialDir(char *dst, size_t size, int whichDir);
 #endif
 
 
-static void *
+/* static void *
 Realloc(void *ptr, size_t siz)
 {
 	if (ptr == NULL)
 		return (void *) malloc(siz);
 	return ((void *) realloc(ptr, siz));
-}	/* Realloc */
+}*/
 
 
 /* Use getcwd/getwd to get the full path of the current local

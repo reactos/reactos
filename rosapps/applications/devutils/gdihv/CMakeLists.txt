@@ -1,6 +1,4 @@
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
 list(APPEND SOURCE
 	gdihv.c
 	gdihv.rc

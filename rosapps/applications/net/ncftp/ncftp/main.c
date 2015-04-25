@@ -122,7 +122,7 @@ InitConnectionInfo(void)
 	UseTrace();
 	(void) STRNCPY(gConn.user, "anonymous");
 	gConn.host[0] = '\0';
-	gConn.progress = gProgressMeter;
+	gConn.progress = NULL;
 	gTransferTypeInitialized = 0;
 	gTransferType = kTypeBinary;
 	gConn.leavePass = 1;		/* Don't let the lib zap it. */
