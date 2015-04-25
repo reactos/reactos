@@ -139,6 +139,7 @@ HRESULT get_typeinfo(tid_t tid, ITypeInfo **typeinfo)
     }
 
     *typeinfo = typeinfos[tid];
+    ITypeInfo_AddRef(typeinfos[tid]);
     return S_OK;
 }
 
