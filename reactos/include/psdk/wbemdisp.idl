@@ -53,6 +53,85 @@ interface ISWbemQualifierSet;
 interface ISWbemSecurity;
 interface ISWbemServices;
 
+typedef
+[
+    v1_enum,
+    uuid(bf078c2a-07d9-11d2-8b21-00600806d9b6)
+]
+enum WbemTimeout
+{
+    wbemTimeoutInfinite = 0xffffffff
+} WbemTimeout;
+
+typedef
+[
+    v1_enum,
+    uuid(4a249b72-fc9a-11d1-8b1e-00600806d9b6)
+]
+enum WbemChangeFlagEnum
+{
+    wbemChangeFlagCreateOrUpdate   = 0,
+    wbemChangeFlagUpdateOnly       = 0x00000001,
+    wbemChangeFlagCreateOnly       = 0x00000002,
+    wbemChangeFlagUpdateCompatible = 0x00000000,
+    wbemChangeFlagUpdateSafeMode   = 0x00000020,
+    wbemChangeFlagUpdateForceMode  = 0x00000040,
+    wbemChangeFlagStrongValidation = 0x00000080,
+    wbemChangeFlagAdvisory         = 0x00010000
+} WbemChangeFlagEnum;
+
+typedef
+[
+    v1_enum,
+    uuid(4a249b73-fc9a-11d1-8b1e-00600806d9b6)
+]
+enum WbemFlagEnum
+{
+    wbemFlagReturnImmediately    = 0x00010,
+    wbemFlagReturnWhenComplete   = 0,
+    wbemFlagBidirectional        = 0,
+    wbemFlagForwardOnly          = 0x00020,
+    wbemFlagNoErrorObject        = 0x00040,
+    wbemFlagReturnErrorObject    = 0,
+    wbemFlagSendStatus           = 0x00080,
+    wbemFlagDontSendStatus       = 0,
+    wbemFlagEnsureLocatable      = 0x00100,
+    wbemFlagDirectRead           = 0x00200,
+    wbemFlagSendOnlySelected     = 0,
+    wbemFlagUseAmendedQualifiers = 0x20000,
+    wbemFlagGetDefault           = 0x0,
+    wbemFlagSpawnInstance        = 0x00001,
+    wbemFlagUseCurrentTime       = 0x00001
+} WbemFlagEnum;
+
+typedef
+[
+    v1_enum,
+    uuid(4a249b76-fc9a-11d1-8b1e-00600806d9b6)
+]
+enum WbemQueryFlagEnum
+{
+    wbemQueryFlagDeep,
+    wbemQueryFlagShallow,
+    wbemQueryFlagPrototype
+} WbemQueryFlagEnum;
+
+typedef
+[
+    v1_enum,
+    uuid(4A249B79-FC9A-11d1-8B1E-00600806D9B6)
+]
+enum WbemComparisonFlagEnum
+{
+    wbemComparisonFlagIncludeAll          = 0,
+    wbemComparisonFlagIgnoreQualifiers    = 1,
+    wbemComparisonFlagIgnoreObjectSource  = 2,
+    wbemComparisonFlagIgnoreDefaultValues = 4,
+    wbemComparisonFlagIgnoreClass         = 8,
+    wbemComparisonFlagIgnoreCase          = 16,
+    wbemComparisonFlagIgnoreFlavor        = 32
+} WbemComparisonFlagEnum;
+
 [
     object,
     local,
@@ -66,7 +145,7 @@ interface ISWbemEventSource : IDispatch
 {
     [ id(1) ]
     HRESULT NextEvent(
-        [in] long iTimeoutMs,
+        [in, defaultvalue(wbemTimeoutInfinite)] long iTimeoutMs,
         [out, retval] ISWbemObject **objWbemObject);
 
     [ id(2), propget ]
@@ -87,19 +166,18 @@ interface ISWbemLocator : IDispatch
 {
     [ id(1) ]
     HRESULT ConnectServer(
-        [in] BSTR strServer,
-        [in] BSTR strNamespace,
-        [in] BSTR strUser,
-        [in] BSTR strPassword,
-        [in] BSTR strLocale,
-        [in] BSTR strAuthority,
-        [in] long iSecurityFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(".")] BSTR strServer,
+        [in, defaultvalue("")]  BSTR strNamespace,
+        [in, defaultvalue("")]  BSTR strUser,
+        [in, defaultvalue("")]  BSTR strPassword,
+        [in, defaultvalue("")]  BSTR strLocale,
+        [in, defaultvalue("")]  BSTR strAuthority,
+        [in, defaultvalue(0)]   long iSecurityFlags,
+        [in, defaultvalue(0)]   IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemServices **objWbemServices);
 
     [ id(2), propget ]
-    HRESULT Security_(
-        ISWbemSecurity **objWbemSecurity);
+    HRESULT Security_([out, retval] ISWbemSecurity **objWbemSecurity);
 };
 
 [
@@ -153,7 +231,7 @@ interface ISWbemMethodSet : IDispatch
     [ id(DISPID_VALUE) ]
     HRESULT Item(
         [in] BSTR strName,
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemMethod **objWbemMethod);
 
     [ id(1), propget ]
@@ -201,7 +279,7 @@ interface ISWbemNamedValueSet : IDispatch
     [ id(DISPID_VALUE) ]
     HRESULT Item(
         [in] BSTR strName,
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemNamedValue **objWbemNamedValue);
 
     [ id(1), propget ]
@@ -212,13 +290,13 @@ interface ISWbemNamedValueSet : IDispatch
     HRESULT Add(
         [in] BSTR strName,
         [in] VARIANT *varValue,
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemNamedValue **objWbemNamedValue);
 
     [ id(3) ]
     HRESULT Remove(
         [in] BSTR strName,
-        [in] long iFlags);
+        [in, defaultvalue(0)] long iFlags);
 
     [ id(4) ]
     HRESULT Clone(
@@ -240,123 +318,123 @@ interface ISWbemObject : IDispatch
 {
     [ id(1) ]
     HRESULT Put_(
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(wbemChangeFlagCreateOrUpdate)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectPath **objWbemObjectPath);
 
     [ id(2) ]
     HRESULT PutAsync_(
         [in] IDispatch *objWbemSink,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(wbemChangeFlagCreateOrUpdate)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id (3) ]
     HRESULT Delete_(
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet);
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet);
 
     [ id (4) ]
     HRESULT DeleteAsync_(
         [in] IDispatch *objWbemSink,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(5) ]
     HRESULT Instances_(
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(6) ]
     HRESULT InstancesAsync_(
         [in] IDispatch *objWbemSink,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(7) ]
     HRESULT Subclasses_(
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(wbemFlagReturnImmediately|wbemQueryFlagDeep)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(8) ]
     HRESULT SubclassesAsync_(
         [in] IDispatch *objWbemSink,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(wbemQueryFlagDeep)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(9) ]
     HRESULT Associators_(
-        [in] BSTR strAssocClass,
-        [in] BSTR strResultClass,
-        [in] BSTR strResultRole,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredAssocQualifier,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("")] BSTR strAssocClass,
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strResultRole,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredAssocQualifier,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(10) ]
     HRESULT AssociatorsAsync_(
         [in] IDispatch *objWbemSink,
-        [in] BSTR strAssocClass,
-        [in] BSTR strResultClass,
-        [in] BSTR strResultRole,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredAssocQualifier,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("")] BSTR strAssocClass,
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strResultRole,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredAssocQualifier,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(11) ]
     HRESULT References_(
-        [in] BSTR strResultClass,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(12) ]
     HRESULT ReferencesAsync_(
         [in] IDispatch *objWbemSink,
-        [in] BSTR strResultClass,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(13) ]
     HRESULT ExecMethod_(
         [in] BSTR strMethodName,
-        [in] IDispatch *objWbemInParameters,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemInParameters,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObject **objWbemOutParameters);
 
     [ id(14) ]
     HRESULT ExecMethodAsync_(
         [in] IDispatch *objWbemSink,
         [in] BSTR strMethodName,
-        [in] IDispatch *objWbemInParameters,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(0)] IDispatch *objWbemInParameters,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(15) ]
     HRESULT Clone_(
@@ -364,23 +442,23 @@ interface ISWbemObject : IDispatch
 
     [ id(16) ]
     HRESULT GetObjectText_(
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] BSTR *strObjectText);
 
     [ id(17) ]
     HRESULT SpawnDerivedClass_(
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemObject **objWbemObject);
 
     [ id(18) ]
     HRESULT SpawnInstance_(
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemObject **objWbemObject);
 
     [ id(19) ]
     HRESULT CompareTo_(
         [in] IDispatch *objWbemObject,
-        [in] long iFlags,
+        [in, defaultvalue(wbemComparisonFlagIncludeAll)] long iFlags,
         [out, retval] VARIANT_BOOL *bResult);
 
     [ id(20), propget ]
@@ -528,7 +606,7 @@ interface ISWbemObjectSet : IDispatch
     [ id(DISPID_VALUE) ]
     HRESULT Item(
         [in] BSTR strObjectPath,
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemObject **objWbemObject);
 
     [ id(1), propget ]
@@ -640,7 +718,7 @@ interface ISWbemPrivilegeSet : IDispatch
     [ id(2) ]
     HRESULT Add(
         [in] WbemPrivilegeEnum iPrivilege,
-        [in] VARIANT_BOOL bIsEnabled,
+        [in, defaultvalue(TRUE)] VARIANT_BOOL bIsEnabled,
         [out, retval] ISWbemPrivilege **objWbemPrivilege);
 
     [ id(3) ]
@@ -653,7 +731,7 @@ interface ISWbemPrivilegeSet : IDispatch
     [ id(5) ]
     HRESULT AddAsString(
         [in] BSTR strPrivilege,
-        [in] VARIANT_BOOL bIsEnabled,
+        [in, defaultvalue(TRUE)] VARIANT_BOOL bIsEnabled,
         [out, retval] ISWbemPrivilege **objWbemPrivilege);
 };
 
@@ -743,7 +821,7 @@ interface ISWbemPropertySet : IDispatch
     [ id(DISPID_VALUE) ]
     HRESULT Item(
         [in] BSTR strName,
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemProperty **objWbemProperty);
 
     [ id(1), propget ]
@@ -754,14 +832,14 @@ interface ISWbemPropertySet : IDispatch
     HRESULT Add(
         [in] BSTR strName,
         [in] WbemCimtypeEnum iCIMType,
-        [in] VARIANT_BOOL bIsArray,
-        [in] long iFlags,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bIsArray,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemProperty **objWbemProperty);
 
     [ id(3) ]
     HRESULT Remove(
         [in] BSTR strName,
-        [in] long iFlags);
+        [in, defaultvalue(0)] long iFlags);
 };
 
 [
@@ -839,7 +917,7 @@ interface ISWbemQualifierSet : IDispatch
     [ id(DISPID_VALUE) ]
     HRESULT Item(
         [in] BSTR name,
-        [in] long iFlags,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemQualifier **objWbemQualifier);
 
     [ id(1), propget ]
@@ -850,16 +928,16 @@ interface ISWbemQualifierSet : IDispatch
     HRESULT Add(
         [in] BSTR strName,
         [in] VARIANT *varVal,
-        [in] VARIANT_BOOL bPropagatesToSubclass,
-        [in] VARIANT_BOOL bPropagatesToInstance,
-        [in] VARIANT_BOOL bIsOverridable,
-        [in] long iFlags,
+        [in, defaultvalue(TRUE)] VARIANT_BOOL bPropagatesToSubclass,
+        [in, defaultvalue(TRUE)] VARIANT_BOOL bPropagatesToInstance,
+        [in, defaultvalue(TRUE)] VARIANT_BOOL bIsOverridable,
+        [in, defaultvalue(0)] long iFlags,
         [out, retval] ISWbemQualifier **objWbemQualifier);
 
     [ id(3) ]
     HRESULT Remove(
         [in] BSTR strName,
-        [in] long iFlags);
+        [in, defaultvalue(0)] long iFlags);
 };
 
 typedef
@@ -936,160 +1014,160 @@ interface ISWbemServices : IDispatch
 {
     [ id(1) ]
     HRESULT Get(
-        [in] BSTR strObjectPath,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("")] BSTR strObjectPath,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObject **objWbemObject);
 
     [ id(2) ]
     HRESULT GetAsync(
         [in] IDispatch *objWbemSink,
-        [in] BSTR strObjectPath,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("")] BSTR strObjectPath,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(3) ]
     HRESULT Delete(
         [in] BSTR strObjectPath,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet);
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet);
 
     [ id(4) ]
     HRESULT DeleteAsync(
         [in] IDispatch *objWbemSink,
         [in] BSTR strObjectPath,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(5) ]
     HRESULT InstancesOf(
         [in] BSTR strClass,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(6) ]
     HRESULT InstancesOfAsync(
         [in] IDispatch *objWbemSink,
         [in] BSTR strClass,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(7) ]
     HRESULT SubclassesOf(
-        [in]  BSTR strSuperclass,
-        [in]  long iFlags,
-        [in]  IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("")]  BSTR strSuperclass,
+        [in, defaultvalue(wbemFlagReturnImmediately|wbemQueryFlagDeep)]  long iFlags,
+        [in, defaultvalue(0)]  IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(8) ]
     HRESULT SubclassesOfAsync(
         [in] IDispatch *objWbemSink,
-        [in] BSTR strSuperclass,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("")] BSTR strSuperclass,
+        [in, defaultvalue(wbemQueryFlagDeep)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(9) ]
     HRESULT ExecQuery(
         [in] BSTR strQuery,
-        [in] BSTR strQueryLanguage,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("WQL")] BSTR strQueryLanguage,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(10) ]
     HRESULT ExecQueryAsync(
         [in] IDispatch *objWbemSink,
         [in] BSTR strQuery,
-        [in] BSTR strQueryLanguage,
-        [in] long lFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("WQL")] BSTR strQueryLanguage,
+        [in, defaultvalue(0)] long lFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(11) ]
     HRESULT AssociatorsOf(
         [in] BSTR strObjectPath,
-        [in] BSTR strAssocClass,
-        [in] BSTR strResultClass,
-        [in] BSTR strResultRole,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredAssocQualifier,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("")] BSTR strAssocClass,
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strResultRole,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredAssocQualifier,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(12) ]
     HRESULT AssociatorsOfAsync(
         [in] IDispatch *objWbemSink,
         [in] BSTR strObjectPath,
-        [in] BSTR strAssocClass,
-        [in] BSTR strResultClass,
-        [in] BSTR strResultRole,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredAssocQualifier,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("")] BSTR strAssocClass,
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strResultRole,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredAssocQualifier,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(13) ]
     HRESULT ReferencesTo(
         [in] BSTR strObjectPath,
-        [in] BSTR strResultClass,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(wbemFlagReturnImmediately)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObjectSet **objWbemObjectSet);
 
     [ id(14) ]
     HRESULT ReferencesToAsync(
         [in] IDispatch *objWbemSink,
         [in] BSTR strObjectPath,
-        [in] BSTR strResultClass,
-        [in] BSTR strRole,
-        [in] VARIANT_BOOL bClassesOnly,
-        [in] VARIANT_BOOL bSchemaOnly,
-        [in] BSTR strRequiredQualifier,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("")] BSTR strResultClass,
+        [in, defaultvalue("")] BSTR strRole,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bClassesOnly,
+        [in, defaultvalue(FALSE)] VARIANT_BOOL bSchemaOnly,
+        [in, defaultvalue("")] BSTR strRequiredQualifier,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(15) ]
     HRESULT ExecNotificationQuery(
         [in] BSTR strQuery,
-        [in] BSTR strQueryLanguage,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue("WQL")] BSTR strQueryLanguage,
+        [in, defaultvalue(wbemFlagReturnImmediately|wbemFlagForwardOnly)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemEventSource **objWbemEventSource);
 
     [ id(16) ]
     HRESULT ExecNotificationQueryAsync(
         [in] IDispatch *objWbemSink,
         [in] BSTR strQuery,
-        [in] BSTR strQueryLanguage,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue("WQL")] BSTR strQueryLanguage,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(17) ]
     HRESULT ExecMethod(
         [in] BSTR strObjectPath,
         [in] BSTR strMethodName,
-        [in] IDispatch *objWbemInParameters,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemInParameters,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
         [out, retval] ISWbemObject **objWbemOutParameters);
 
     [ id(18) ]
@@ -1097,10 +1175,10 @@ interface ISWbemServices : IDispatch
         [in] IDispatch *objWbemSink,
         [in] BSTR strObjectPath,
         [in] BSTR strMethodName,
-        [in] IDispatch *objWbemInParameters,
-        [in] long iFlags,
-        [in] IDispatch *objWbemNamedValueSet,
-        [in] IDispatch *objWbemAsyncContext);
+        [in, defaultvalue(0)] IDispatch *objWbemInParameters,
+        [in, defaultvalue(0)] long iFlags,
+        [in, defaultvalue(0)] IDispatch *objWbemNamedValueSet,
+        [in, defaultvalue(0)] IDispatch *objWbemAsyncContext);
 
     [ id(19), propget ]
     HRESULT Security_(
