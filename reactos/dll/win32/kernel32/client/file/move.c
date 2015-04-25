@@ -1495,17 +1495,15 @@ PrivMoveFileIdentityW(IN LPCWSTR lpSource, IN LPCWSTR lpDestination, IN DWORD dw
                                                 &ObjectAttributesSource,
                                                 DestinationHandle,
                                                 &NtDestination);
-#if 1 // ReactOS HACK
-            /* FIXME: To be removed once BasepNotifyTrackingService is implemented */
-            if (Status == STATUS_NOT_IMPLEMENTED)
-                Status = STATUS_SUCCESS;
-#endif
             if (!NT_SUCCESS(Status))
             {
                 if (dwFlags & PRIV_ALLOW_NON_TRACKABLE)
                 {
                     if (NT_SUCCESS(OldStatus))
                         OldStatus = Status;
+
+                    /* Reset status, we allow non trackable files */
+                    Status = STATUS_SUCCESS;
                 }
             }
         }
