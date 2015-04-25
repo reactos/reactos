@@ -199,6 +199,13 @@ void MSSTYLES_CloseThemeFile(PTHEME_FILE tf)
                     tf->classes = pcls->next;
                     while(pcls->partstate) {
                         PTHEME_PARTSTATE ps = pcls->partstate;
+
+                        while(ps->properties) {
+                            PTHEME_PROPERTY prop = ps->properties;
+                            ps->properties = prop->next;
+                            HeapFree(GetProcessHeap(), 0, prop);
+                        }
+
                         pcls->partstate = ps->next;
                         HeapFree(GetProcessHeap(), 0, ps);
                     }
