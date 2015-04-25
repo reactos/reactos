@@ -1669,6 +1669,191 @@ cleanup:
     RegCloseKey(subkey);
 }
 
+static void test_reg_query_info(void)
+{
+    HKEY subkey;
+    HKEY subsubkey;
+    LONG ret;
+    char classbuffer[32];
+    WCHAR classbufferW[32];
+    char subkey_class[] = "subkey class";
+    WCHAR subkey_classW[] = {'s','u','b','k','e','y',' ','c','l','a','s','s',0};
+    char subsubkey_class[] = "subsubkey class";
+    DWORD classlen;
+    DWORD subkeys, maxsubkeylen, maxclasslen;
+    DWORD values, maxvaluenamelen, maxvaluelen;
+    DWORD sdlen;
+    FILETIME lastwrite;
+
+    ret = RegCreateKeyExA(hkey_main, "subkey", 0, subkey_class, 0, KEY_ALL_ACCESS, NULL, &subkey, NULL);
+    ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
+
+    /* invalid parameters */
+    ret = RegQueryInfoKeyA(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_INVALID_HANDLE, "ret = %d\n", ret);
+
+    ret = RegQueryInfoKeyA(subkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+
+    /* empty key */
+    ret = RegQueryInfoKeyA(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
+    ok(subkeys == 0, "subkeys = %u\n", subkeys);
+    ok(maxsubkeylen == 0, "maxsubkeylen = %u\n", maxsubkeylen);
+    ok(maxclasslen == 0, "maxclasslen = %u\n", maxclasslen);
+    ok(values == 0, "values = %u\n", values);
+    ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
+    ok(maxvaluelen == 0, "maxvaluelen = %u\n", maxvaluelen);
+    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
+    ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
+
+    ret = RegQueryInfoKeyW(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
+    ok(subkeys == 0, "subkeys = %u\n", subkeys);
+    ok(maxsubkeylen == 0, "maxsubkeylen = %u\n", maxsubkeylen);
+    ok(maxclasslen == 0, "maxclasslen = %u\n", maxclasslen);
+    ok(values == 0, "values = %u\n", values);
+    ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
+    ok(maxvaluelen == 0, "maxvaluelen = %u\n", maxvaluelen);
+    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
+    ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
+
+    ret = RegCreateKeyExA(subkey, "subsubkey", 0, subsubkey_class, 0, KEY_ALL_ACCESS, NULL, &subsubkey, NULL);
+    ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
+
+    ret = RegSetValueExA(subkey, NULL, 0, REG_SZ, (BYTE*)"data", 5);
+    ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
+
+    /* with subkey & default value */
+    ret = RegQueryInfoKeyA(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
+    ok(subkeys == 1, "subkeys = %u\n", subkeys);
+    ok(maxsubkeylen == strlen("subsubkey"), "maxsubkeylen = %u\n", maxsubkeylen);
+    ok(maxclasslen == strlen(subsubkey_class), "maxclasslen = %u\n", maxclasslen);
+    ok(values == 1, "values = %u\n", values);
+    ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
+    ok(maxvaluelen == sizeof("data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
+    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
+    ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
+
+    ret = RegQueryInfoKeyW(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
+    ok(subkeys == 1, "subkeys = %u\n", subkeys);
+    ok(maxsubkeylen == strlen("subsubkey"), "maxsubkeylen = %u\n", maxsubkeylen);
+    ok(maxclasslen == strlen(subsubkey_class), "maxclasslen = %u\n", maxclasslen);
+    ok(values == 1, "values = %u\n", values);
+    ok(maxvaluenamelen == 0, "maxvaluenamelen = %u\n", maxvaluenamelen);
+    ok(maxvaluelen == sizeof("data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
+    ok(sdlen != 0, "sdlen = %u\n", sdlen);
+    ok(lastwrite.dwLowDateTime != 0, "lastwrite.dwLowDateTime = %u\n", lastwrite.dwLowDateTime);
+    ok(lastwrite.dwHighDateTime != 0, "lastwrite.dwHighDateTime = %u\n", lastwrite.dwHighDateTime);
+
+    ret = RegSetValueExA(subkey, "value one", 0, REG_SZ, (BYTE*)"first value data", 17);
+    ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
+
+    ret = RegSetValueExA(subkey, "value 2", 0, REG_SZ, (BYTE*)"second value data", 18);
+    ok(ret == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", ret);
+
+    /* with named value */
+    ret = RegQueryInfoKeyA(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(values == 3, "values = %u\n", values);
+    ok(maxvaluenamelen == strlen("value one"), "maxvaluenamelen = %u\n", maxvaluenamelen);
+    ok(maxvaluelen == sizeof("second value data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
+
+    ret = RegQueryInfoKeyW(subkey, NULL, &classlen, NULL, &subkeys, &maxsubkeylen, &maxclasslen, &values, &maxvaluenamelen, &maxvaluelen, &sdlen, &lastwrite);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(values == 3, "values = %u\n", values);
+    ok(maxvaluenamelen == strlen("value one"), "maxvaluenamelen = %u\n", maxvaluenamelen);
+    ok(maxvaluelen == sizeof("second value data") * sizeof(WCHAR), "maxvaluelen = %u\n", maxvaluelen);
+
+    /* class name with zero size buffer */
+    memset(classbuffer, 0x55, sizeof(classbuffer));
+    classlen = 0;
+    ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == 0, "classlen = %u\n", classlen);
+    ok(classbuffer[0] == 0x55, "classbuffer[0] = 0x%x\n", classbuffer[0]);
+
+    memset(classbufferW, 0x55, sizeof(classbufferW));
+    classlen = 0;
+    ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == 0, "classlen = %u\n", classlen);
+    ok(classbufferW[0] == 0x5555, "classbufferW[0] = 0x%x\n", classbufferW[0]);
+
+    /* class name with one char buffer */
+    memset(classbuffer, 0x55, sizeof(classbuffer));
+    classlen = 1;
+    ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_MORE_DATA, "ret = %d\n", ret);
+    ok(classlen == 0, "classlen = %u\n", classlen);
+    ok(classbuffer[0] == 0, "classbuffer[0] = 0x%x\n", classbuffer[0]);
+    ok(classbuffer[1] == 0x55, "classbuffer[1] = 0x%x\n", classbuffer[1]);
+
+    memset(classbufferW, 0x55, sizeof(classbufferW));
+    classlen = 1;
+    ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_INSUFFICIENT_BUFFER, "ret = %d\n", ret);
+    ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
+    ok(classbufferW[0] == 0x5555, "classbufferW[0] = 0x%x\n", classbufferW[0]);
+    ok(classbufferW[1] == 0x5555, "classbufferW[1] = 0x%x\n", classbufferW[1]);
+
+    /* class name with buffer one char too small */
+    memset(classbuffer, 0x55, sizeof(classbuffer));
+    classlen = sizeof(subkey_class) - 1;
+    ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_MORE_DATA, "ret = %d\n", ret);
+    ok(classlen == sizeof(subkey_class) - 2, "classlen = %u\n", classlen);
+    ok(classbuffer[0] == 's', "classbuffer[0] = 0x%x\n", classbuffer[0]);
+    ok(classbuffer[1] == 'u', "classbuffer[1] = 0x%x\n", classbuffer[1]);
+    ok(classbuffer[10] == 's', "classbuffer[10] = 0x%x\n", classbuffer[10]);
+    ok(classbuffer[11] == 0, "classbuffer[11] = 0x%x\n", classbuffer[11]);
+    ok(classbuffer[12] == 0x55, "classbuffer[12] = 0x%x\n", classbuffer[12]);
+
+    memset(classbufferW, 0x55, sizeof(classbufferW));
+    classlen = sizeof(subkey_class) - 1;
+    ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_INSUFFICIENT_BUFFER, "ret = %d\n", ret);
+    ok(classlen == strlen(subkey_class), "classlen = %u\n", classlen);
+    ok(classbufferW[0] == 0x5555, "classbufferW[0] = 0x%x\n", classbufferW[0]);
+    ok(classbufferW[1] == 0x5555, "classbufferW[1] = 0x%x\n", classbufferW[1]);
+    ok(classbufferW[10] == 0x5555, "classbufferW[10] = 0x%x\n", classbufferW[10]);
+    ok(classbufferW[11] == 0x5555, "classbufferW[11] = 0x%x\n", classbufferW[11]);
+    ok(classbufferW[12] == 0x5555, "classbufferW[12] = 0x%x\n", classbufferW[12]);
+
+    /* class name with large enough buffer */
+    memset(classbuffer, 0x55, sizeof(classbuffer));
+    classlen = sizeof(subkey_class);
+    ret = RegQueryInfoKeyA(subkey, classbuffer, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == sizeof(subkey_class) - 1, "classlen = %u\n", classlen);
+    ok(!strcmp(classbuffer, subkey_class), "classbuffer = %s\n", classbuffer);
+    ok(classbuffer[12] == 0, "classbuffer[12] = 0x%x\n", classbuffer[12]);
+    ok(classbuffer[13] == 0x55, "classbuffer[13] = 0x%x\n", classbuffer[13]);
+
+    memset(classbufferW, 0x55, sizeof(classbufferW));
+    classlen = sizeof(subkey_class);
+    ret = RegQueryInfoKeyW(subkey, classbufferW, &classlen, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "ret = %d\n", ret);
+    ok(classlen == sizeof(subkey_class) - 1, "classlen = %u\n", classlen);
+    ok(!lstrcmpW(classbufferW, subkey_classW), "classbufferW = %s\n", wine_dbgstr_w(classbufferW));
+    ok(classbufferW[12] == 0, "classbufferW[12] = 0x%x\n", classbufferW[12]);
+    ok(classbufferW[13] == 0x5555, "classbufferW[13] = 0x%x\n", classbufferW[13]);
+
+    RegDeleteKeyA(subsubkey, "");
+    RegCloseKey(subsubkey);
+    RegDeleteKeyA(subkey, "");
+    RegCloseKey(subkey);
+}
+
 static void test_string_termination(void)
 {
     HKEY subkey;
@@ -2962,6 +3147,7 @@ START_TEST(registry)
     test_reg_close_key();
     test_reg_delete_key();
     test_reg_query_value();
+    test_reg_query_info();
     test_string_termination();
     test_symlinks();
     test_redirection();
