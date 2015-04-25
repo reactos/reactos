@@ -3651,6 +3651,12 @@ InitOnceExecuteOnce(
   _Inout_opt_ PVOID Parameter,
   _Outptr_opt_result_maybenull_ LPVOID *Context);
 
+WINBASEAPI
+VOID
+WINAPI
+InitializeSListHead(
+    _Out_ PSLIST_HEADER ListHead);
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
