@@ -51,6 +51,7 @@ list(APPEND SOURCE
     GetTextExtentExPoint.c
     GetTextFace.c
     MaskBlt.c
+    NtGdiAddFontResource.c
     OffsetClipRgn.c
     OffsetRgn.c
     PaintRgn.c
@@ -71,7 +72,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(gdi32_apitest ${SOURCE})
-target_link_libraries(gdi32_apitest ${PSEH_LIB})
+target_link_libraries(gdi32_apitest ${PSEH_LIB} win32ksys)
 set_module_type(gdi32_apitest win32cui)
-add_importlibs(gdi32_apitest gdi32 user32 msvcrt kernel32)
+add_importlibs(gdi32_apitest gdi32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET gdi32_apitest DESTINATION reactos/bin FOR all)
