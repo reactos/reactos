@@ -29,28 +29,22 @@
 static const WCHAR wine1W[] =
     {'w','i','n','e',0};
 static const WCHAR wine2W[] =
-    {'w','i','n','e',',','v','e','r','s','i','o','n','=','\"','0','1','.','2','.','3','.','4','\"',',',
-     't','y','p','e','=','\"','w','i','n','3','2','\"',',',
-     'p','r','o','c','e','s','s','o','r','A','r','c','h','i','t','e','c','t','u','r','e','=',
-     '\"','x','8','6','\"',',','p','u','b','l','i','c','K','e','y','T','o','k','e','n','=',
-     '\"','1','2','3','4','5','6','7','8','9','0','A','B','C','D','E','F','\"',0};
-static const WCHAR wine3W[] =
     {'w','i','n','e',',','v','e','r','s','i','o','n','=','\"','1','.','2','.','3','.','4','\"',0};
-static const WCHAR wine4W[] =
+static const WCHAR wine3W[] =
     {'w','i','n','e',',','v','e','r','s','i','o','n','=','1','.','2','.','3','.','4',0};
-static const WCHAR wine5W[] =
+static const WCHAR wine4W[] =
     {'w','i','n','e',',',' ','v','e','r','s','i','o','n','=','\"','1','.','2','.','3','.','4','\"',0};
-static const WCHAR wine6W[] =
+static const WCHAR wine5W[] =
     {'w','i','n','e',',','v','e','r','s','i','o','n',' ','=','\"','1','.','2','.','3','.','4','\"',0};
-static const WCHAR wine7W[] =
+static const WCHAR wine6W[] =
     {'w','i','n','e',',','v','e','r','s','i','o','n','=',' ','\"','1','.','2','.','3','.','4','\"',0};
-static const WCHAR wine8W[] =
+static const WCHAR wine7W[] =
     {'w','i','n','e',' ',',','v','e','r','s','i','o','n','=','\"','1','.','2','.','3','.','4','\"',0};
-static const WCHAR wine9W[] =
+static const WCHAR wine8W[] =
     {'w','i','n','e',',','v','e','r','s','i','o','n',0};
-static const WCHAR wine10W[] =
+static const WCHAR wine9W[] =
     {'w','i','n','e',',','t','y','p','e','=','\"','\"',0};
-static const WCHAR wine11W[] =
+static const WCHAR wine10W[] =
     {'w','i','n','e',',','t','y','p','e','=','\"','w','i','n','3','2',0};
 
 static void test_CreateAssemblyNameObject( void )
@@ -172,14 +166,20 @@ static void test_CreateAssemblyNameObject( void )
     ok( !name, "expected NULL got %p\n", name );
 
     name = NULL;
-    hr = CreateAssemblyNameObject( &name, wine3W, CANOF_PARSE_DISPLAY_NAME, NULL );
+    hr = CreateAssemblyNameObject( &name, wine2W, CANOF_PARSE_DISPLAY_NAME, NULL );
     ok( hr == S_OK, "expected S_OK got %08x\n", hr );
     ok( name != NULL, "expected non-NULL name\n" );
     IAssemblyName_Release( name );
 
     name = (IAssemblyName *)0xdeadbeef;
-    hr = CreateAssemblyNameObject( &name, wine4W, CANOF_PARSE_DISPLAY_NAME, NULL );
+    hr = CreateAssemblyNameObject( &name, wine3W, CANOF_PARSE_DISPLAY_NAME, NULL );
     ok( hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr );
+    ok( !name, "expected NULL got %p\n", name );
+
+    name = (IAssemblyName *)0xdeadbeef;
+    hr = CreateAssemblyNameObject( &name, wine4W, CANOF_PARSE_DISPLAY_NAME, NULL );
+    ok( hr == HRESULT_FROM_WIN32( ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME ),
+        "expected ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME got %08x\n", hr );
     ok( !name, "expected NULL got %p\n", name );
 
     name = (IAssemblyName *)0xdeadbeef;
@@ -190,34 +190,28 @@ static void test_CreateAssemblyNameObject( void )
 
     name = (IAssemblyName *)0xdeadbeef;
     hr = CreateAssemblyNameObject( &name, wine6W, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == HRESULT_FROM_WIN32( ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME ),
-        "expected ERROR_SXS_INVALID_ASSEMBLY_IDENTITY_ATTRIBUTE_NAME got %08x\n", hr );
+    ok( hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr );
     ok( !name, "expected NULL got %p\n", name );
 
-    name = (IAssemblyName *)0xdeadbeef;
+    name = NULL;
     hr = CreateAssemblyNameObject( &name, wine7W, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr );
-    ok( !name, "expected NULL got %p\n", name );
+    ok( hr == S_OK, "expected S_OK got %08x\n", hr );
+    ok( name != NULL, "expected non-NULL name\n" );
+    IAssemblyName_Release( name );
 
-    name = NULL;
+    name = (IAssemblyName *)0xdeadbeef;
     hr = CreateAssemblyNameObject( &name, wine8W, CANOF_PARSE_DISPLAY_NAME, NULL );
-    ok( hr == S_OK, "expected S_OK got %08x\n", hr );
-    ok( name != NULL, "expected non-NULL name\n" );
-    IAssemblyName_Release( name );
-
-    name = (IAssemblyName *)0xdeadbeef;
-    hr = CreateAssemblyNameObject( &name, wine9W, CANOF_PARSE_DISPLAY_NAME, NULL );
     ok( hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr );
     ok( !name, "expected NULL got %p\n", name );
 
     name = NULL;
-    hr = CreateAssemblyNameObject( &name, wine10W, CANOF_PARSE_DISPLAY_NAME, NULL );
+    hr = CreateAssemblyNameObject( &name, wine9W, CANOF_PARSE_DISPLAY_NAME, NULL );
     ok( hr == S_OK, "expected S_OK got %08x\n", hr );
     ok( name != NULL, "expected non-NULL name\n" );
     IAssemblyName_Release( name );
 
     name = (IAssemblyName *)0xdeadbeef;
-    hr = CreateAssemblyNameObject( &name, wine11W, CANOF_PARSE_DISPLAY_NAME, NULL );
+    hr = CreateAssemblyNameObject( &name, wine10W, CANOF_PARSE_DISPLAY_NAME, NULL );
     ok( hr == E_INVALIDARG, "expected E_INVALIDARG got %08x\n", hr );
     ok( !name, "expected NULL got %p\n", name );
 }
