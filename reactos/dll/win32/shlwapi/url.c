@@ -899,7 +899,10 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	work = preliminary + base.cchProtocol+1+base.cchSuffix - 1;
         if (*work++ != '/')
             *(work++) = '/';
-	strcpyW(work, relative.pszSuffix);
+        if (relative.pszSuffix[0] == '.' && relative.pszSuffix[1] == 0)
+            *work = 0;
+        else
+            strcpyW(work, relative.pszSuffix);
 	break;
 
     default:

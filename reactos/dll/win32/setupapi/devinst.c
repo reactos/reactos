@@ -661,7 +661,7 @@ BOOL WINAPI SetupDiBuildClassInfoList(
  *              SetupDiBuildClassInfoListExA  (SETUPAPI.@)
  *
  * Returns a list of setup class GUIDs that identify the classes
- * that are installed on a local or remote macine.
+ * that are installed on a local or remote machine.
  *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
@@ -708,7 +708,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExA(
  *              SetupDiBuildClassInfoListExW  (SETUPAPI.@)
  *
  * Returns a list of setup class GUIDs that identify the classes
- * that are installed on a local or remote macine.
+ * that are installed on a local or remote machine.
  *
  * PARAMS
  *   Flags [I] control exclusion of classes from the list.
@@ -1258,7 +1258,7 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
  * Create an empty DeviceInfoSet list.
  *
  * PARAMS
- *   ClassGuid [I] if not NULL only devices with GUID ClcassGuid are associated
+ *   ClassGuid [I] if not NULL only devices with GUID ClassGuid are associated
  *                 with this list.
  *   hwndParent [I] hwnd needed for interface related actions.
  *   MachineName [I] name of machine to create emtpy DeviceInfoSet list, if NULL

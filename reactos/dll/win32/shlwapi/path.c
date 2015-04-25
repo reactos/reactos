@@ -3280,6 +3280,9 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
     if (!pszUrl || !pszPath || !pcchPath || !*pcchPath)
         return E_INVALIDARG;
 
+    if (lstrlenW(pszUrl) < 5)
+        return E_INVALIDARG;
+
     if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, pszUrl, 5,
                        file_colon, 5) != CSTR_EQUAL)
         return E_INVALIDARG;
@@ -3321,9 +3324,8 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
             src -= 1;
         break;
     case 2:
-        if (CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE, src, 9,
-                           localhost, 9) == CSTR_EQUAL &&
-            (src[9] == '/' || src[9] == '\\'))
+        if (lstrlenW(src) >= 10 && CompareStringW(LOCALE_INVARIANT, NORM_IGNORECASE,
+            src, 9, localhost, 9) == CSTR_EQUAL && (src[9] == '/' || src[9] == '\\'))
         {
             /* 'file://localhost/' + escaped DOS path */
             src += 10;
@@ -3835,13 +3837,13 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR lpszPath)
   WCHAR szSearch[MAX_PATH];
   DWORD dwLen;
   HANDLE hfind;
-  BOOL retVal = FALSE;
+  BOOL retVal = TRUE;
   WIN32_FIND_DATAW find_data;
 
   TRACE("(%s)\n",debugstr_w(lpszPath));
 
   if (!lpszPath || !PathIsDirectoryW(lpszPath))
-      return FALSE;
+    return FALSE;
 
   lstrcpynW(szSearch, lpszPath, MAX_PATH);
   PathAddBackslashW(szSearch);
@@ -3851,14 +3853,23 @@ BOOL WINAPI PathIsDirectoryEmptyW(LPCWSTR lpszPath)
 
   strcpyW(szSearch + dwLen, szAllFiles);
   hfind = FindFirstFileW(szSearch, &find_data);
-  if (hfind != INVALID_HANDLE_VALUE)
-  {
-    if (find_data.cFileName[0] == '.' && find_data.cFileName[1] == '.')
-      /* The only directory entry should be the parent */
-      retVal = !FindNextFileW(hfind, &find_data);
-    FindClose(hfind);
-  }
+  if (hfind == INVALID_HANDLE_VALUE)
+    return FALSE;
 
+  do
+  {
+    if (find_data.cFileName[0] == '.')
+    {
+      if (find_data.cFileName[1] == '\0') continue;
+      if (find_data.cFileName[1] == '.' && find_data.cFileName[2] == '\0') continue;
+    }
+
+    retVal = FALSE;
+    break;
+  }
+  while (FindNextFileW(hfind, &find_data));
+
+  FindClose(hfind);
   return retVal;
 }
 

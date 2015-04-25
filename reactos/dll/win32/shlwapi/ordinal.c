@@ -431,7 +431,7 @@ exit:
  *  Success: S_OK.   langbuf is set to the language string found.
  *  Failure: E_FAIL, If any arguments are invalid, error occurred, or Explorer
  *           does not contain the setting.
- *           HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), If the buffer is not big enough
+ *           E_NOT_SUFFICIENT_BUFFER, If the buffer is not big enough
  */
 HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 {
@@ -484,7 +484,7 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
     }
 
     *buflen = 0;
-    return __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+    return E_NOT_SUFFICIENT_BUFFER;
 }
 
 /*************************************************************************
@@ -5032,11 +5032,8 @@ INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
         {
             if ((fmt_flags & FDTF_LONGDATE) && (ret < size + 2))
             {
-                if (ret < size + 2)
-                {
-                   lstrcatW(&buf[ret-1], sep1);
-                   ret += 2;
-                }
+                lstrcatW(&buf[ret-1], sep1);
+                ret += 2;
             }
             else
             {
