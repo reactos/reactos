@@ -1961,7 +1961,7 @@ RegpApplyRestrictions(DWORD dwFlags,
  * NOTES
  *  - Unless RRF_NOEXPAND is specified, REG_EXPAND_SZ values are automatically
  *    expanded and pdwType is set to REG_SZ instead.
- *  - Restrictions are applied after expanding, using RRF_RT_REG_EXPAND_SZ 
+ *  - Restrictions are applied after expanding, using RRF_RT_REG_EXPAND_SZ
  *    without RRF_NOEXPAND is thus not allowed.
  *    An exception is the case where RRF_RT_ANY is specified, because then
  *    RRF_NOEXPAND is allowed.
@@ -2720,11 +2720,14 @@ RegEnumValueA(
     if ((lpData && !lpcbData) || lpdwReserved)
         return ERROR_INVALID_PARAMETER;
 
-    /* Get the size of the buffer we must use for the first call ro RegEnumValueW */
+    /* Get the size of the buffer we must use for the first call to RegEnumValueW */
     ErrorCode = RegQueryInfoKeyW(
         hKey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &NameBufferSize, NULL, NULL, NULL);
     if (ErrorCode != ERROR_SUCCESS)
         return ErrorCode;
+
+    /* Add space for the null terminator */
+    NameBufferSize++;
 
     /* Allocate the buffer for the unicode name */
     NameBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, NameBufferSize * sizeof(WCHAR));
@@ -3583,14 +3586,14 @@ ReadTokenSid:
 LONG WINAPI
 RegQueryInfoKeyA(HKEY hKey,
                  LPSTR lpClass,
-                 LPDWORD lpcbClass,
+                 LPDWORD lpcClass,
                  LPDWORD lpReserved,
                  LPDWORD lpcSubKeys,
-                 LPDWORD lpcbMaxSubKeyLen,
-                 LPDWORD lpcbMaxClassLen,
+                 LPDWORD lpcMaxSubKeyLen,
+                 LPDWORD lpcMaxClassLen,
                  LPDWORD lpcValues,
-                 LPDWORD lpcbMaxValueNameLen,
-                 LPDWORD lpcbMaxValueLen,
+                 LPDWORD lpcMaxValueNameLen,
+                 LPDWORD lpcMaxValueLen,
                  LPDWORD lpcbSecurityDescriptor,
                  PFILETIME lpftLastWriteTime)
 {
@@ -3598,38 +3601,51 @@ RegQueryInfoKeyA(HKEY hKey,
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     LONG ErrorCode;
+    NTSTATUS Status;
+    DWORD cClass = 0;
 
     RtlInitUnicodeString(&UnicodeString,
                          NULL);
     if (lpClass != NULL)
     {
-        UnicodeString.Buffer = &ClassName[0];
-        UnicodeString.MaximumLength = sizeof(ClassName);
-        AnsiString.MaximumLength = *lpcbClass;
+        RtlInitEmptyUnicodeString(&UnicodeString,
+                                  ClassName,
+                                  sizeof(ClassName));
+        cClass = sizeof(ClassName) / sizeof(WCHAR);
     }
 
     ErrorCode = RegQueryInfoKeyW(hKey,
                                  UnicodeString.Buffer,
-                                 lpcbClass,
+                                 &cClass,
                                  lpReserved,
                                  lpcSubKeys,
-                                 lpcbMaxSubKeyLen,
-                                 lpcbMaxClassLen,
+                                 lpcMaxSubKeyLen,
+                                 lpcMaxClassLen,
                                  lpcValues,
-                                 lpcbMaxValueNameLen,
-                                 lpcbMaxValueLen,
+                                 lpcMaxValueNameLen,
+                                 lpcMaxValueLen,
                                  lpcbSecurityDescriptor,
                                  lpftLastWriteTime);
     if ((ErrorCode == ERROR_SUCCESS) && (lpClass != NULL))
     {
-        AnsiString.Buffer = lpClass;
-        AnsiString.Length = 0;
-        UnicodeString.Length = *lpcbClass * sizeof(WCHAR);
-        RtlUnicodeStringToAnsiString(&AnsiString,
-                                     &UnicodeString,
-                                     FALSE);
-        *lpcbClass = AnsiString.Length;
-        lpClass[AnsiString.Length] = 0;
+        if (*lpcClass == 0)
+        {
+            return ErrorCode;
+        }
+
+        RtlInitEmptyAnsiString(&AnsiString, lpClass, *lpcClass);
+        UnicodeString.Length = cClass * sizeof(WCHAR);
+        Status = RtlUnicodeStringToAnsiString(&AnsiString,
+                                              &UnicodeString,
+                                              FALSE);
+        ErrorCode = RtlNtStatusToDosError(Status);
+        cClass = AnsiString.Length;
+        lpClass[*lpcClass - 1] = 0;
+    }
+
+    if (lpcClass != NULL)
+    {
+        *lpcClass = cClass;
     }
 
     return ErrorCode;
@@ -3644,14 +3660,14 @@ RegQueryInfoKeyA(HKEY hKey,
 LONG WINAPI
 RegQueryInfoKeyW(HKEY hKey,
                  LPWSTR lpClass,
-                 LPDWORD lpcbClass,
+                 LPDWORD lpcClass,
                  LPDWORD lpReserved,
                  LPDWORD lpcSubKeys,
-                 LPDWORD lpcbMaxSubKeyLen,
-                 LPDWORD lpcbMaxClassLen,
+                 LPDWORD lpcMaxSubKeyLen,
+                 LPDWORD lpcMaxClassLen,
                  LPDWORD lpcValues,
-                 LPDWORD lpcbMaxValueNameLen,
-                 LPDWORD lpcbMaxValueLen,
+                 LPDWORD lpcMaxValueNameLen,
+                 LPDWORD lpcMaxValueLen,
                  LPDWORD lpcbSecurityDescriptor,
                  PFILETIME lpftLastWriteTime)
 {
@@ -3664,7 +3680,7 @@ RegQueryInfoKeyW(HKEY hKey,
     ULONG Length;
     LONG ErrorCode = ERROR_SUCCESS;
 
-    if ((lpClass) && (!lpcbClass))
+    if ((lpClass) && (!lpcClass))
     {
         return ERROR_INVALID_PARAMETER;
     }
@@ -3678,9 +3694,9 @@ RegQueryInfoKeyW(HKEY hKey,
 
     if (lpClass != NULL)
     {
-        if (*lpcbClass > 0)
+        if (*lpcClass > 0)
         {
-            ClassLength = min(*lpcbClass - 1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
+            ClassLength = min(*lpcClass - 1, REG_MAX_NAME_SIZE) * sizeof(WCHAR);
         }
         else
         {
@@ -3696,16 +3712,12 @@ RegQueryInfoKeyW(HKEY hKey,
             ErrorCode = ERROR_OUTOFMEMORY;
             goto Cleanup;
         }
-
-        FullInfo->ClassLength = ClassLength;
     }
     else
     {
         FullInfoSize = sizeof(KEY_FULL_INFORMATION);
         FullInfo = &FullInfoBuffer;
-        FullInfo->ClassLength = 0;
     }
-    FullInfo->ClassOffset = FIELD_OFFSET(KEY_FULL_INFORMATION, Class);
 
     Status = NtQueryKey(KeyHandle,
                         KeyFullInformation,
@@ -3713,15 +3725,8 @@ RegQueryInfoKeyW(HKEY hKey,
                         FullInfoSize,
                         &Length);
     TRACE("NtQueryKey() returned status 0x%X\n", Status);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
     {
-        if (lpClass != NULL)
-        {
-            RtlFreeHeap(ProcessHeap,
-                        0,
-                        FullInfo);
-        }
-
         ErrorCode = RtlNtStatusToDosError(Status);
         goto Cleanup;
     }
@@ -3733,15 +3738,15 @@ RegQueryInfoKeyW(HKEY hKey,
     }
 
     TRACE("MaxNameLen %lu\n", FullInfo->MaxNameLen);
-    if (lpcbMaxSubKeyLen != NULL)
+    if (lpcMaxSubKeyLen != NULL)
     {
-        *lpcbMaxSubKeyLen = FullInfo->MaxNameLen / sizeof(WCHAR) + 1;
+        *lpcMaxSubKeyLen = FullInfo->MaxNameLen / sizeof(WCHAR);
     }
 
     TRACE("MaxClassLen %lu\n", FullInfo->MaxClassLen);
-    if (lpcbMaxClassLen != NULL)
+    if (lpcMaxClassLen != NULL)
     {
-        *lpcbMaxClassLen = FullInfo->MaxClassLen / sizeof(WCHAR) + 1;
+        *lpcMaxClassLen = FullInfo->MaxClassLen / sizeof(WCHAR);
     }
 
     TRACE("Values %lu\n", FullInfo->Values);
@@ -3751,15 +3756,15 @@ RegQueryInfoKeyW(HKEY hKey,
     }
 
     TRACE("MaxValueNameLen %lu\n", FullInfo->MaxValueNameLen);
-    if (lpcbMaxValueNameLen != NULL)
+    if (lpcMaxValueNameLen != NULL)
     {
-        *lpcbMaxValueNameLen = FullInfo->MaxValueNameLen / sizeof(WCHAR) + 1;
+        *lpcMaxValueNameLen = FullInfo->MaxValueNameLen / sizeof(WCHAR);
     }
 
     TRACE("MaxValueDataLen %lu\n", FullInfo->MaxValueDataLen);
-    if (lpcbMaxValueLen != NULL)
+    if (lpcMaxValueLen != NULL)
     {
-        *lpcbMaxValueLen = FullInfo->MaxValueDataLen;
+        *lpcMaxValueLen = FullInfo->MaxValueDataLen;
     }
 
     if (lpcbSecurityDescriptor != NULL)
@@ -3773,13 +3778,6 @@ RegQueryInfoKeyW(HKEY hKey,
                                        lpcbSecurityDescriptor);
         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
         {
-            if (lpClass != NULL)
-            {
-                RtlFreeHeap(ProcessHeap,
-                            0,
-                            FullInfo);
-            }
-
             ErrorCode = RtlNtStatusToDosError(Status);
             goto Cleanup;
         }
@@ -3791,27 +3789,40 @@ RegQueryInfoKeyW(HKEY hKey,
         lpftLastWriteTime->dwHighDateTime = FullInfo->LastWriteTime.u.HighPart;
     }
 
+    ErrorCode = ERROR_SUCCESS;
     if (lpClass != NULL)
     {
+        if (*lpcClass == 0)
+        {
+            goto Cleanup;
+        }
+
         if (FullInfo->ClassLength > ClassLength)
         {
-            ErrorCode = ERROR_BUFFER_OVERFLOW;
+            ErrorCode = ERROR_INSUFFICIENT_BUFFER;
         }
         else
         {
             RtlCopyMemory(lpClass,
                           FullInfo->Class,
                           FullInfo->ClassLength);
-            *lpcbClass = FullInfo->ClassLength / sizeof(WCHAR);
-            lpClass[*lpcbClass] = 0;
+            lpClass[FullInfo->ClassLength / sizeof(WCHAR)] = UNICODE_NULL;
         }
+    }
 
+    if (lpcClass != NULL)
+    {
+        *lpcClass = FullInfo->ClassLength / sizeof(WCHAR);
+    }
+
+Cleanup:
+    if (lpClass != NULL)
+    {
         RtlFreeHeap(ProcessHeap,
                     0,
                     FullInfo);
     }
 
-Cleanup:
     ClosePredefKey(KeyHandle);
 
     return ErrorCode;
@@ -3979,9 +3990,9 @@ RegQueryReflectionKey(IN HKEY hBase,
  *  Failure: ERROR_INVALID_HANDLE, if hkey is invalid.
  *           ERROR_INVALID_PARAMETER, if any other parameter is invalid.
  *           ERROR_MORE_DATA, if on input *count is too small to hold the contents.
- *                     
+ *
  * NOTES
- *   MSDN states that if data is too small it is partially filled. In reality 
+ *   MSDN states that if data is too small it is partially filled. In reality
  *   it remains untouched.
  */
 LONG
@@ -4218,15 +4229,15 @@ LSTATUS WINAPI RegQueryValueW( HKEY hkey, LPCWSTR name, LPWSTR data, LPLONG coun
     if (name && name[0])
     {
         ret = RegOpenKeyW( hkey, name, &subkey);
-        if (ret != ERROR_SUCCESS) 
+        if (ret != ERROR_SUCCESS)
         {
             return ret;
         }
     }
 
     ret = RegQueryValueExW( subkey, NULL, NULL, NULL, (LPBYTE)data, (LPDWORD)count );
-    
-    if (subkey != hkey) 
+
+    if (subkey != hkey)
     {
         RegCloseKey( subkey );
     }
@@ -4234,9 +4245,9 @@ LSTATUS WINAPI RegQueryValueW( HKEY hkey, LPCWSTR name, LPWSTR data, LPLONG coun
     if (ret == ERROR_FILE_NOT_FOUND)
     {
         /* return empty string if default value not found */
-        if (data) 
+        if (data)
             *data = 0;
-        if (count) 
+        if (count)
             *count = sizeof(WCHAR);
         ret = ERROR_SUCCESS;
     }
