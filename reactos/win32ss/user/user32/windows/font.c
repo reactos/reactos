@@ -1096,7 +1096,7 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 /* 
  * @implemented
  *
- * Synced with wine 1.1.32
+ * Synced with Wine Staging 1.7.37
  */
 INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                         LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
@@ -1116,12 +1116,12 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     int tabwidth /* to keep gcc happy */ = 0;
     int prefix_offset;
     ellipsis_data ellip;
-    int invert_y=0;
+    BOOL invert_y=FALSE;
 
     TRACE("%s, %d, [%s] %08x\n", debugstr_wn (str, count), count,
         wine_dbgstr_rect(rect), flags);
 
-   if (dtp) TRACE("Params: iTabLength=%d, iLeftMargin=%d, iRightMargin=%d\n",
+    if (dtp) TRACE("Params: iTabLength=%d, iLeftMargin=%d, iRightMargin=%d\n",
           dtp->iTabLength, dtp->iLeftMargin, dtp->iRightMargin);
 
     if (!str) return 0;
@@ -1143,6 +1143,15 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     if (dtp && dtp->cbSize != sizeof(DRAWTEXTPARAMS))
         return 0;
 
+    if (GetGraphicsMode(hdc) == GM_COMPATIBLE)
+    {
+        SIZE window_ext, viewport_ext;
+        GetWindowExtEx(hdc, &window_ext);
+        GetViewportExtEx(hdc, &viewport_ext);
+        if ((window_ext.cy > 0) != (viewport_ext.cy > 0))
+            invert_y = TRUE;
+    }
+
     if (count == -1)
     {
         count = strlenW(str);
@@ -1152,21 +1161,12 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
             {
                 rect->right = rect->left;
                 if( flags & DT_SINGLELINE)
-                    rect->bottom = rect->top + lh;
+                    rect->bottom = rect->top + (invert_y ? -lh : lh);
                 else
                     rect->bottom = rect->top;
             }
             return lh;
         }
-    }
-
-    if (GetGraphicsMode(hdc) == GM_COMPATIBLE)
-    {
-        SIZE window_ext, viewport_ext;
-        GetWindowExtEx(hdc, &window_ext);
-        GetViewportExtEx(hdc, &viewport_ext);
-        if ((window_ext.cy > 0) != (viewport_ext.cy > 0))
-            invert_y = 1;
     }
 
     if (dtp)
@@ -1215,9 +1215,10 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 
 	if (flags & DT_SINGLELINE)
 	{
-	    if (flags & DT_VCENTER) y = rect->top +
-	    	(rect->bottom - rect->top) / 2 - size.cy / 2;
-	    else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
+            if (flags & DT_VCENTER)
+                y = rect->top + (rect->bottom - rect->top) / 2 + (invert_y ? (size.cy / 2) : (-size.cy / 2));
+            else if (flags & DT_BOTTOM)
+                y = rect->bottom + (invert_y ? 0 : -size.cy);
         }
 
 	if (!(flags & DT_CALCRECT))
@@ -1234,7 +1235,10 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                     p = str; while (p < str+len && *p != TAB) p++;
                     len_seg = p - str;
                     if (len_seg != len && !GetTextExtentPointW(hdc, str, len_seg, &size))
+                    {
+                        HeapFree (GetProcessHeap(), 0, retstr);
                         return 0;
+                    }
                 }
                 else
                     len_seg = len;
@@ -1242,7 +1246,11 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                 if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
                                  ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
-                                 rect, str, len_seg, NULL ))  return 0;
+                                 rect, str, len_seg, NULL ))
+                {
+                    HeapFree (GetProcessHeap(), 0, retstr);
+                    return 0;
+                }
                 if (prefix_offset != -1 && prefix_offset < len_seg)
                 {
                     TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 1, str, prefix_offset, (flags & DT_NOCLIP) ? NULL : rect);
@@ -1271,14 +1279,11 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                     }
                 }
             }
-    }
-    else if (size.cx > max_width)
-        max_width = size.cx;
+	}
+	else if (size.cx > max_width)
+	    max_width = size.cx;
 
-        if (invert_y)
-	    y -= lh;
-        else
-	    y += lh;
+        y += invert_y ? -lh : lh;
         if (dtp)
             dtp->uiLengthDrawn += len;
     }
