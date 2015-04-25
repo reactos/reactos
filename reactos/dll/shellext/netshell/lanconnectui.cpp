@@ -590,7 +590,7 @@ CNetConnectionPropertyUi::AddPages(
     if (FAILED(hr))
         return hr;
 
-    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, (LPARAM)this, m_pProperties->pszwName);
+    hProp = InitializePropertySheetPage(MAKEINTRESOURCEW(IDD_NETPROPERTIES), LANPropertiesUIDlg, reinterpret_cast<LPARAM>(this), NULL);
     if (hProp)
     {
         ret = (*pfnAddPage)(hProp, lParam);
