@@ -639,8 +639,7 @@ static void test_PathCombineA(void)
     ok(str == NULL ||
        broken(str != NULL), /* Win95 and some W2K */
        "Expected str == NULL, got %p\n", str);
-    ok(lstrlenA(dest) == 0 ||
-       broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
+    ok(!dest[0] || broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
        "Expected 0 length, got %i\n", lstrlenA(dest));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -729,8 +728,7 @@ static void test_PathCombineA(void)
     lstrcpyA(dest, "control");
     str = PathCombineA(dest, "C:\\", too_long);
     ok(str == NULL, "Expected str == NULL, got %p\n", str);
-    ok(lstrlenA(dest) == 0 ||
-       broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
+    ok(!dest[0] || broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
        "Expected 0 length, got %i\n", lstrlenA(dest));
     todo_wine ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -739,8 +737,7 @@ static void test_PathCombineA(void)
     lstrcpyA(dest, "control");
     str = PathCombineA(dest, too_long, "one\\two\\three");
     ok(str == NULL, "Expected str == NULL, got %p\n", str);
-    ok(lstrlenA(dest) == 0 ||
-       broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
+    ok(!dest[0] || broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
        "Expected 0 length, got %i\n", lstrlenA(dest));
     todo_wine ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -754,8 +751,7 @@ static void test_PathCombineA(void)
     lstrcpyA(dest, "control");
     str = PathCombineA(dest, one, two);
     ok(str == NULL, "Expected str == NULL, got %p\n", str);
-    ok(lstrlenA(dest) == 0 ||
-       broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
+    ok(!dest[0] || broken(!lstrcmpA(dest, "control")), /* Win95 and some W2K */
        "Expected 0 length, got %i\n", lstrlenA(dest));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 }
@@ -777,7 +773,7 @@ static void test_PathAddBackslash(void)
     SetLastError(0xdeadbeef);
     str = PathAddBackslashA(path);
     ok(str == (path + lstrlenA(path)), "Expected str to point to end of path, got %p\n", str);
-    ok(lstrlenA(path) == 0, "Expected empty string, got %i\n", lstrlenA(path));
+    ok(!path[0], "Expected empty string, got %i\n", lstrlenA(path));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* try a relative path */
@@ -922,8 +918,7 @@ static void test_PathAppendA(void)
     res = PathAppendA(too_long, "two\\three");
     ok(!res, "Expected failure\n");
     todo_wine ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(lstrlenA(too_long) == 0 ||
-       broken(lstrlenA(too_long) == (LONG_LEN - 1)), /* Win95 and some W2K */
+    ok(!too_long[0] || broken(lstrlenA(too_long) == (LONG_LEN - 1)), /* Win95 and some W2K */
        "Expected length of too_long to be zero, got %i\n", lstrlenA(too_long));
 
     /* pszMore is too long */
@@ -934,8 +929,7 @@ static void test_PathAppendA(void)
     res = PathAppendA(path, too_long);
     ok(!res, "Expected failure\n");
     todo_wine ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
-    ok(lstrlenA(path) == 0 ||
-       broken(!lstrcmpA(path, "C:\\one")), /* Win95 and some W2K */
+    ok(!path[0] || broken(!lstrcmpA(path, "C:\\one")), /* Win95 and some W2K */
        "Expected length of path to be zero, got %i\n", lstrlenA(path));
 
     /* both params combined are too long */
@@ -946,8 +940,7 @@ static void test_PathAppendA(void)
     SetLastError(0xdeadbeef);
     res = PathAppendA(path, half);
     ok(!res, "Expected failure\n");
-    ok(lstrlenA(path) == 0 ||
-       broken(lstrlenA(path) == (HALF_LEN - 1)), /* Win95 and some W2K */
+    ok(!path[0] || broken(lstrlenA(path) == (HALF_LEN - 1)), /* Win95 and some W2K */
        "Expected length of path to be zero, got %i\n", lstrlenA(path));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 }
@@ -1097,7 +1090,7 @@ static void test_PathFindExtensionA(void)
     SetLastError(0xdeadbeef);
     ext = PathFindExtensionA(path);
     ok(ext == path, "Expected ext == path, got %p\n", ext);
-    ok(lstrlenA(ext) == 0, "Expected length 0, got %i\n", lstrlenA(ext));
+    ok(!ext[0], "Expected length 0, got %i\n", lstrlenA(ext));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* try a path without an extension */
@@ -1105,7 +1098,7 @@ static void test_PathFindExtensionA(void)
     SetLastError(0xdeadbeef);
     ext = PathFindExtensionA(path);
     ok(ext == path + lstrlenA(path), "Expected ext == path, got %p\n", ext);
-    ok(lstrlenA(ext) == 0, "Expected length 0, got %i\n", lstrlenA(ext));
+    ok(!ext[0], "Expected length 0, got %i\n", lstrlenA(ext));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
     /* try a path with an extension */
@@ -1174,8 +1167,7 @@ static void test_PathBuildRootA(void)
     lstrcpyA(path, "aaaaaaaaa");
     root = PathBuildRootA(path, -1);
     ok(root == path, "Expected root == path, got %p\n", root);
-    ok(!lstrcmpA(path, "aaaaaaaaa") ||
-       lstrlenA(path) == 0, /* Vista */
+    ok(!lstrcmpA(path, "aaaaaaaaa") || !path[0], /* Vista */
        "Expected aaaaaaaaa or empty string, got %s\n", path);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -1184,8 +1176,7 @@ static void test_PathBuildRootA(void)
     lstrcpyA(path, "aaaaaaaaa");
     root = PathBuildRootA(path, 26);
     ok(root == path, "Expected root == path, got %p\n", root);
-    ok(!lstrcmpA(path, "aaaaaaaaa") ||
-       lstrlenA(path) == 0, /* Vista */
+    ok(!lstrcmpA(path, "aaaaaaaaa") || !path[0], /* Vista */
        "Expected aaaaaaaaa or empty string, got %s\n", path);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -1243,8 +1234,8 @@ static void test_PathCommonPrefixA(void)
     lstrcpyA(out, "aaa");
     count = PathCommonPrefixA(path1, path2, out);
     ok(count == 0, "Expected 0, got %i\n", count);
-    ok(lstrlenA(out) == 0, "Expected 0 length out, got %i\n", lstrlenA(out));
-    ok(lstrlenA(path1) == 0, "Expected 0 length path1, got %i\n", lstrlenA(path1));
+    ok(!out[0], "Expected 0 length out, got %i\n", lstrlenA(out));
+    ok(!path1[0], "Expected 0 length path1, got %i\n", lstrlenA(path1));
     ok(!lstrcmpA(path2, "C:\\"), "Expected C:\\, got %s\n", path2);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -1255,8 +1246,8 @@ static void test_PathCommonPrefixA(void)
     lstrcpyA(out, "aaa");
     count = PathCommonPrefixA(path1, path2, out);
     ok(count == 0, "Expected 0, got %i\n", count);
-    ok(lstrlenA(out) == 0, "Expected 0 length out, got %i\n", lstrlenA(out));
-    ok(lstrlenA(path2) == 0, "Expected 0 length path2, got %i\n", lstrlenA(path2));
+    ok(!out[0], "Expected 0 length out, got %i\n", lstrlenA(out));
+    ok(!path2[0], "Expected 0 length path2, got %i\n", lstrlenA(path2));
     ok(!lstrcmpA(path1, "C:\\"), "Expected C:\\, got %s\n", path1);
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 
@@ -1411,7 +1402,7 @@ static void test_PathCommonPrefixA(void)
     ok(count == 0, "Expected 0, got %i\n", count);
     ok(!lstrcmpA(path1, "one\\..\\two"), "Expected one\\..\\two, got %s\n", path1);
     ok(!lstrcmpA(path2, "two"), "Expected two, got %s\n", path2);
-    ok(lstrlenA(out) == 0, "Expected 0 length out, got %i\n", lstrlenA(out));
+    ok(!out[0], "Expected 0 length out, got %i\n", lstrlenA(out));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 }
 
@@ -1631,7 +1622,7 @@ static void test_PathIsRelativeW(void)
     LPWSTR path;
 
     if (!pPathIsRelativeW) {
-        win_skip("PathIsRelativeA not available\n");
+        win_skip("PathIsRelativeW not available\n");
         return;
     }
 
