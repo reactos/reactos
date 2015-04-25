@@ -34,7 +34,7 @@
 #include <windef.h>
 #include <winbase.h>
 
-#include "win32err.h"
+#include "../win32err.h"
 
 #ifdef DISPLAY_VERSION
 static

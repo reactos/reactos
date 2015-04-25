@@ -46,8 +46,8 @@
 #include <fmifs/fmifs.h>
 #define _UNICODE 1
 #include <tchar.h>
-#include "config.h"
-#include "win32err.h"
+#include "../config.h"
+#include "../win32err.h"
 
 //
 // Globals
