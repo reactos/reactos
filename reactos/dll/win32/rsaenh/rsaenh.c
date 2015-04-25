@@ -3466,6 +3466,8 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
             switch (pCryptKey->aiAlgid) {
                 case CALG_RC2:
                 case CALG_RC4:
+                {
+                    KEYCONTAINER *pKeyContainer = get_key_container(pCryptKey->hProv);
                     if (!pbData)
                     {
                         SetLastError(ERROR_INVALID_PARAMETER);
@@ -3478,11 +3480,13 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
                            pbData, 11);
                     pCryptKey->dwSaltLen = 11;
                     setup_key(pCryptKey);
-                    /* Strange but true: salt length reset to 0 after setting
-                     * it via KP_SALT.
-                     */
-                    pCryptKey->dwSaltLen = 0;
+                    /* After setting the salt value if the provider is not base or
+                     * strong the salt length will be reset. */
+                    if (pKeyContainer->dwPersonality != RSAENH_PERSONALITY_BASE &&
+                        pKeyContainer->dwPersonality != RSAENH_PERSONALITY_STRONG)
+                        pCryptKey->dwSaltLen = 0;
                     break;
+                }
                 default:
                     SetLastError(NTE_BAD_KEY);
                     return FALSE;
