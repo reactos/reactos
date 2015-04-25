@@ -241,6 +241,9 @@ static HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iState
 
     imagenum = max (min (imagecount, iStateId), 1) - 1;
     GetObjectW(*hBmp, sizeof(bmp), &bmp);
+
+    if(imagecount < 1) imagecount = 1;
+
     if(imagelayout == IL_VERTICAL) {
         int height = bmp.bmHeight/imagecount;
         bmpRect->left = 0;
