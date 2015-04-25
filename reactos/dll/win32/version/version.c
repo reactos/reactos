@@ -976,7 +976,7 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
             len = WideCharToMultiByte(CP_ACP, 0, *lplpBuffer, -1,
                                       lpBufferA + pos, info->wLength - pos, NULL, NULL);
             *lplpBuffer = lpBufferA + pos;
-            *puLen = len;
+            if (puLen) *puLen = len;
         }
         return ret;
     }
@@ -1036,7 +1036,7 @@ BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
             len = MultiByteToWideChar(CP_ACP, 0, *lplpBuffer, -1,
                                       lpBufferW + pos, max/sizeof(WCHAR) - pos );
             *lplpBuffer = lpBufferW + pos;
-            *puLen = len;
+            if (puLen) *puLen = len;
         }
         return ret;
     }
@@ -1612,4 +1612,41 @@ DWORD WINAPI VerInstallFileW(
     HeapFree( GetProcessHeap(), 0, wtmpf );
     HeapFree( GetProcessHeap(), 0, wcurd );
     return ret;
+}
+
+/******************************************************************************
+ * GetFileVersionInfoSizeExA                    [VERSION.@]
+ */
+DWORD WINAPI GetFileVersionInfoSizeExA(DWORD flags, LPCSTR filename, LPDWORD handle)
+{
+    FIXME("semi-stub: %u %s %p\n", flags, wine_dbgstr_a(filename), handle);
+    return GetFileVersionInfoSizeA(filename, handle);
+
+}
+
+/******************************************************************************
+ * GetFileVersionInfoSizeExW                     [VERSION.@]
+ */
+DWORD WINAPI GetFileVersionInfoSizeExW(DWORD flags, LPCWSTR filename, LPDWORD handle)
+{
+    FIXME("semi-stub: %u %s %p\n", flags, wine_dbgstr_w(filename), handle);
+    return GetFileVersionInfoSizeW(filename, handle);
+}
+
+/******************************************************************************
+ * GetFileVersionInfoExA                     [VERSION.@]
+ */
+BOOL WINAPI GetFileVersionInfoExA(DWORD flags, LPCSTR filename, DWORD handle, DWORD len, LPVOID data)
+{
+    FIXME("semi-stub: %u %s %u %u %p\n", flags, wine_dbgstr_a(filename), handle, len, data);
+    return GetFileVersionInfoA(filename, handle, len, data);
+}
+
+/******************************************************************************
+ * GetFileVersionInfoExW                     [VERSION.@]
+ */
+BOOL WINAPI GetFileVersionInfoExW(DWORD flags, LPCWSTR filename, DWORD handle, DWORD len, LPVOID data)
+{
+    FIXME("semi-stub: %u %s %u %u %p\n", flags, wine_dbgstr_w(filename), handle, len, data);
+    return GetFileVersionInfoW(filename, handle, len, data);
 }
