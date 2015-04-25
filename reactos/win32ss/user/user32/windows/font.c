@@ -1313,7 +1313,7 @@ INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
  *
  * @implemented
  *
- * Synced with wine 1.1.32
+ * Synced with Wine Staging 1.7.37
  */
 INT WINAPI DrawTextExA( HDC hdc, LPSTR str, INT count,
                         LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
@@ -1390,6 +1390,7 @@ INT WINAPI DrawTextExA( HDC hdc, LPSTR str, INT count,
  *           DrawTextW    (USER32.@)
  *
  * @implemented
+ * Synced with Wine Staging 1.7.37
  */
 INT WINAPI DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
 {
@@ -1409,6 +1410,7 @@ INT WINAPI DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
  *           DrawTextA    (USER32.@)
  *
  * @implemented
+ * Synced with Wine Staging 1.7.37
  */
 INT WINAPI DrawTextA( HDC hdc, LPCSTR str, INT count, LPRECT rect, UINT flags )
 {
