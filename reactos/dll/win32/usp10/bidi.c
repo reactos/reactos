@@ -496,12 +496,6 @@ static inline int iso_previousValidChar(IsolatedRun *iso_run, int index)
     return index;
 }
 
-static inline int iso_previousChar(IsolatedRun *iso_run, int index)
-{
-    if (index <= 0) return -1;
-    return index --;
-}
-
 static inline void iso_dump_types(const char* header, IsolatedRun *iso_run)
 {
     int i, len = 0;
