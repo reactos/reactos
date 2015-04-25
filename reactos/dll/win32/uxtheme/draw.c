@@ -647,9 +647,9 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
                                     const DTBGOPTS *pOptions)
 {
     HRESULT hr = S_OK;
-    HBITMAP bmpSrc;
+    HBITMAP bmpSrc, bmpSrcResized = NULL;
     HGDIOBJ oldSrc;
-    HDC hdcSrc;
+    HDC hdcSrc, hdcOrigSrc = NULL;
     RECT rcSrc;
     RECT rcDst;
     POINT dstSize;
@@ -712,6 +712,34 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
         dstSize.y = abs(dstSize.y);
 
         GetThemeMargins(hTheme, hdc, iPartId, iStateId, TMT_SIZINGMARGINS, NULL, &sm);
+
+        /* Resize source image if destination smaller than margins */
+        if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y || sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
+            if (sm.cyTopHeight + sm.cyBottomHeight > dstSize.y) {
+                sm.cyTopHeight = MulDiv(sm.cyTopHeight, dstSize.y, srcSize.y);
+                sm.cyBottomHeight = dstSize.y - sm.cyTopHeight;
+                srcSize.y = dstSize.y;
+            }
+
+            if (sm.cxLeftWidth + sm.cxRightWidth > dstSize.x) {
+                sm.cxLeftWidth = MulDiv(sm.cxLeftWidth, dstSize.x, srcSize.x);
+                sm.cxRightWidth = dstSize.x - sm.cxLeftWidth;
+                srcSize.x = dstSize.x;
+            }
+
+            hdcOrigSrc = hdcSrc;
+            hdcSrc = CreateCompatibleDC(NULL);
+            bmpSrcResized = CreateBitmap(srcSize.x, srcSize.y, 1, 32, NULL);
+            SelectObject(hdcSrc, bmpSrcResized);
+
+            UXTHEME_StretchBlt(hdcSrc, 0, 0, srcSize.x, srcSize.y, hdcOrigSrc, rcSrc.left, rcSrc.top,
+                               rcSrc.right - rcSrc.left, rcSrc.bottom - rcSrc.top, transparent, transparentcolor);
+
+            rcSrc.left = 0;
+            rcSrc.top = 0;
+            rcSrc.right = srcSize.x;
+            rcSrc.bottom = srcSize.y;
+        }
 
         hdcDst = hdc;
         OffsetViewportOrgEx(hdcDst, rcDst.left, rcDst.top, &org);
@@ -817,6 +845,8 @@ draw_error:
     }
     SelectObject(hdcSrc, oldSrc);
     DeleteDC(hdcSrc);
+    if (bmpSrcResized) DeleteObject(bmpSrcResized);
+    if (hdcOrigSrc) DeleteDC(hdcOrigSrc);
     CopyRect(pRect, &rcDst);
     return hr;
 }
