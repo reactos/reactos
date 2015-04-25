@@ -245,6 +245,7 @@ typedef enum {
     X(empty,          1, 0,           0)          \
     X(enumnext,       0, ARG_ADDR,    ARG_BSTR)   \
     X(equal,          1, 0,           0)          \
+    X(hres,           1, ARG_UINT,    0)          \
     X(errmode,        1, ARG_INT,     0)          \
     X(eqv,            1, 0,           0)          \
     X(exp,            1, 0,           0)          \

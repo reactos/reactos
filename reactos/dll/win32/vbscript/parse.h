@@ -42,6 +42,7 @@ typedef enum {
     EXPR_NEG,
     EXPR_NEQUAL,
     EXPR_NEW,
+    EXPR_NOARG, /* not a real expression */
     EXPR_NOT,
     EXPR_NOTHING,
     EXPR_NULL,

@@ -1360,6 +1360,18 @@ static HRESULT interp_nothing(exec_ctx_t *ctx)
     return stack_push(ctx, &v);
 }
 
+static HRESULT interp_hres(exec_ctx_t *ctx)
+{
+    const unsigned arg = ctx->instr->arg1.uint;
+    VARIANT v;
+
+    TRACE("%d\n", arg);
+
+    V_VT(&v) = VT_ERROR;
+    V_ERROR(&v) = arg;
+    return stack_push(ctx, &v);
+}
+
 static HRESULT interp_not(exec_ctx_t *ctx)
 {
     variant_val_t val;
