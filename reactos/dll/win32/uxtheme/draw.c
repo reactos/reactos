@@ -463,7 +463,7 @@ static HRESULT UXTHEME_DrawImageGlyph(HTHEME hTheme, HDC hdc, int iPartId,
     HDC hdcSrc = NULL;
     HGDIOBJ oldSrc = NULL;
     RECT rcSrc;
-    INT transparent = FALSE;
+    INT transparent = 0;
     COLORREF transparentcolor;
     int valign = VA_CENTER;
     int halign = HA_CENTER;
