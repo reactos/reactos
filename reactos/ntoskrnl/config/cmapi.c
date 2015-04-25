@@ -606,7 +606,7 @@ CmpQueryKeyData(IN PHHIVE Hive,
                 }
 
                 /* Copy the class data */
-                NT_ASSERT(Length > Offset);
+                NT_ASSERT(Length >= Offset);
                 RtlCopyMemory(Info->KeyFullInformation.Class,
                               ClassData,
                               min(Node->ClassLength, Length - Offset));
