@@ -99,6 +99,7 @@ DEFINE_EXPECT(global_propargput_d);
 DEFINE_EXPECT(global_propargput_i);
 DEFINE_EXPECT(global_propargput1_d);
 DEFINE_EXPECT(global_propargput1_i);
+DEFINE_EXPECT(global_testoptionalarg_i);
 DEFINE_EXPECT(collectionobj_newenum_i);
 DEFINE_EXPECT(Next);
 DEFINE_EXPECT(GetWindow);
@@ -122,6 +123,7 @@ DEFINE_EXPECT(EnableModeless);
 #define DISPID_GLOBAL_DOUBLEASSTRING 1014
 #define DISPID_GLOBAL_TESTARRAY     1015
 #define DISPID_GLOBAL_THROWINT      1016
+#define DISPID_GLOBAL_TESTOPTIONALARG 1017
 
 #define DISPID_TESTOBJ_PROPGET      2000
 #define DISPID_TESTOBJ_PROPPUT      2001
@@ -1014,6 +1016,11 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
         *pid = DISPID_GLOBAL_THROWINT;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "testOptionalArg")) {
+        test_grfdex(grfdex, fdexNameCaseInsensitive);
+        *pid = DISPID_GLOBAL_TESTOPTIONALARG;
+        return S_OK;
+    }
 
     if(strict_dispid_check && strcmp_wa(bstrName, "x"))
         ok(0, "unexpected call %s %x\n", wine_dbgstr_w(bstrName), grfdex);
@@ -1051,7 +1058,7 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         return S_OK;
     }
 
-     case DISPID_GLOBAL_TRACE:
+    case DISPID_GLOBAL_TRACE:
         ok(wFlags == INVOKE_FUNC, "wFlags = %x\n", wFlags);
         ok(pdp != NULL, "pdp == NULL\n");
         ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
@@ -1326,6 +1333,30 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
         }
 
         return hres;
+    }
+
+    case DISPID_GLOBAL_TESTOPTIONALARG: {
+        VARIANT *v;
+        int opt;
+
+        CHECK_EXPECT(global_testoptionalarg_i);
+
+        ok(wFlags == INVOKE_FUNC, "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 3, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(!pvarRes, "pvarRes != NULL\n");
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_I2, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
+        opt = V_I2(pdp->rgvarg);
+        ok(opt == 1 || opt == 2, "opt = %d\n", opt);
+        v = pdp->rgvarg+pdp->cArgs-opt;
+        ok(V_VT(v) == VT_ERROR, "V_VT(v) = %d\n", V_VT(v));
+        ok(V_ERROR(v) == DISP_E_PARAMNOTFOUND, "V_ERROR(v) = %08x\n", V_ERROR(v));
+        return S_OK;
     }
     }
 
@@ -2081,6 +2112,18 @@ static void run_tests(void)
     /* E_NOTIMPL */
     hres = parse_script_ar("throwInt(&h80004001&)");
     ok(hres == MAKE_VBSERROR(445), "hres = %08x\n", hres);
+
+    SET_EXPECT(global_testoptionalarg_i);
+    parse_script_a("call testOptionalArg(1,,2)");
+    CHECK_CALLED(global_testoptionalarg_i);
+
+    SET_EXPECT(global_testoptionalarg_i);
+    parse_script_a("call testOptionalArg(,1,1)");
+    CHECK_CALLED(global_testoptionalarg_i);
+
+    SET_EXPECT(global_testoptionalarg_i);
+    parse_script_a("testOptionalArg 1,,2");
+    CHECK_CALLED(global_testoptionalarg_i);
 
     strict_dispid_check = FALSE;
 

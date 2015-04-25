@@ -234,6 +234,7 @@ if false then :
 if false then x = y : if true then call ok(false, "embedded if called")
 
 if false then x=1 else x=2 end if
+if true then x=1 end if
 
 x = false
 if false then x = true : x = true

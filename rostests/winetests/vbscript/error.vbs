@@ -75,6 +75,7 @@ const RPC_S_SERVER_UNAVAILABLE = &h800706BA&
 const CO_E_SERVER_EXEC_FAILURE = &h80080005&
 
 call ok(Err.Number = 0, "Err.Number = " & Err.Number)
+call ok(getVT(Err.Number) = "VT_I4", "getVT(Err.Number) = " & getVT(Err.Number))
 
 dim calledFunc
 
