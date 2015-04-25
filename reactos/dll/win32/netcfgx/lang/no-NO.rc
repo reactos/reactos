@@ -5,10 +5,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generielt"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 228, 27
+    LTEXT "Du kan få IP innstillinger automatisk hvis ditt nettverk støtter denne muligheten. Ellers, trenger du å spørre din nettverk administrator for å få IP innstillingene.", -1, 9, 9, 235, 27
     CONTROL "Motta IP addressen automatisk", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    CONTROL "&Bruk følgende IP addresse:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "IP addresse:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
     LTEXT "Subnet maske:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
     CONTROL "Motta DNS server addresse automatisk", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    CONTROL "&Bruk følgende DNS server addresser", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
     LTEXT "Forvalgt DNS server:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
     LTEXT "Alternativ DNS server:", -1, 14, 186, 135, 8
@@ -52,12 +52,12 @@ CAPTION "IP Innstillinger"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "IP addressen", -1, 5, 5, 240, 90
-    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "Legg til...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Rediger...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Fjern", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
     GROUPBOX "Standard gateway:", -1, 5, 100, 240, 90
-    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "Legg til...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Rediger...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Fjern", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
@@ -72,27 +72,27 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 50, LBS_NOTIFY
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
     LTEXT "D&NS server addresser, i system etter bruk:", -1, 5, 5, 180, 12
-    PUSHBUTTON "Opp", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Ned", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Legg til...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Rediger...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Fjern", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Opp", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Ned", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Legg til...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Rediger...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Fjern", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "Følgende tre innstillinger er brukt til alle tilkoblinger med TCP/IP aktivert. For beslutning av ukvalifisert navn:", -1, 5, 90, 220, 24
-    CONTROL "Legg til &primær og tilkobling spesifikt DNS suffikser", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "Legg til forelder  suffi&kser for primær DNS suffikser", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Vis d&isse DNS suffikser(i system):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    CONTROL "Legg til &primær og tilkobling spesifikt DNS suffikser", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Legg til forelder  suffi&kser for primær DNS suffikser", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Vis d&isse DNS suffikser(i system):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
-    PUSHBUTTON "Opp", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Ned", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Legg til...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Rediger...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "F&jern", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "DNS &suffiks for denne tilkoblingen:", -1, 5, 225, 110, 14
+    PUSHBUTTON "Opp", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Ned", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Legg til...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Rediger...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "F&jern", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "DNS &suffiks for denne tilkoblingen:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Register denne tilkoblings addressen i DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Bruk denne tilkoblingens DNS suffiks i DNS registrasjon", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Bruk denne tilkoblingens DNS suffiks i DNS registrasjon", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -102,7 +102,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "&Valgfri innstilling", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Egenskaper", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "&Egenskaper", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Beskrivelse:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END

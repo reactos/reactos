@@ -5,10 +5,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti è necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 228, 27
+    LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti è necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 235, 27
     CONTROL "Ottieni automaticamente l'indirizzo IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "&Usa il seguente indirizzo IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    CONTROL "&Usa il seguente indirizzo IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Indirizzo IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
     LTEXT "Subnet mask:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
     CONTROL "Ottieni automaticamente l'indirizzo dei server DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    CONTROL "&Usa i seguenti indirizzi DNS", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
     LTEXT "Server DNS preferito:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
     LTEXT "Server DNS alternativo:", -1, 14, 186, 135, 8
@@ -52,12 +52,12 @@ CAPTION "Impostazioni IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Indirizzo IP", -1, 5, 5, 240, 90
-    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "Aggiungi...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Modifica...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Rimuovi", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
     GROUPBOX "Default gateways:", -1, 5, 100, 240, 90
-    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "Aggiungi...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Modifica...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Rimuovi", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
@@ -72,27 +72,27 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 50, LBS_NOTIFY
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
     LTEXT "Indirizzi D&NS server in ordine di utilizzo:", -1, 5, 5, 180, 12
-    PUSHBUTTON "&Su", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Giù", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Aggiungi...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modifica...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Rimuovi", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Su", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Giù", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Aggiungi...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Modifica...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Rimuovi", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "Le tre impostazioni seguenti sono applicate a tutte le connessioni dotate di TCP/IP abilitato. Per la risoluzione di nomi non qualificati:", -1, 5, 90, 220, 24
-    CONTROL "Aggiungere suffissi DNS principali e specifici della connessione", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Aggiungere questi suffissi DNS(in ordine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    CONTROL "Aggiungere suffissi DNS principali e specifici della connessione", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Append parent suffi&xes of the primary DNS suffix", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Aggiungere questi suffissi DNS(in ordine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
-    PUSHBUTTON "Su", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Giù", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Aggiungi...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modifica...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Rimuovi", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
-    LTEXT "Suffisso DNS per questa connessione:", -1, 5, 225, 110, 14
+    PUSHBUTTON "Su", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Giù", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Aggiungi...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Modifica...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Rimuovi", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "Suffisso DNS per questa connessione:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Registrare nel DNS gli indirizzi di questa connessione", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Usare i suffissi DNS di questa connessione nella registrazione DNS", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Usare i suffissi DNS di questa connessione nella registrazione DNS", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -102,7 +102,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "&Impostazioni opzionali", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Proprietà", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "&Proprietà", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Descrizione:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END

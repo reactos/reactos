@@ -5,10 +5,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Параметри протоколу IP можуть призначатися автоматично, якщо мережа підтримує таку можливість. Інакше вам потрібно отримати ці параметри у адміністратора мережі.", -1, 9, 9, 228, 27
+    LTEXT "Параметри протоколу IP можуть призначатися автоматично, якщо мережа підтримує таку можливість. Інакше вам потрібно отримати ці параметри у адміністратора мережі.", -1, 9, 9, 235, 27
     CONTROL "Отримувати IP-адресу автоматично", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "&Використовувати наступну IP-адресу:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    CONTROL "&Використовувати наступну IP-адресу:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "IP-адреса:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
     LTEXT "Маска підмережі:", -1, 14, 90, 135, 8
@@ -17,7 +17,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
     CONTROL "Отримувати адресу DNS-сервера автоматично", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "В&икористовувати наступні адреси DNS-серверів", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    CONTROL "В&икористовувати наступні адреси DNS-серверів", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
     LTEXT "Основний DNS-сервер:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
     LTEXT "Альтернативний DNS-сервер:", -1, 14, 186, 135, 8
@@ -52,12 +52,12 @@ CAPTION "Параметри IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "IP-адреси", -1, 5, 5, 240, 90
-    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "Додати...", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Редагувати...", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "Видалити", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
     GROUPBOX "Основні шлюзи:", -1, 5, 100, 240, 90
-    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "Додати...", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Редагувати...", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "Видалити", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
@@ -72,23 +72,23 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 50, LBS_NOTIFY
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
     LTEXT "Адреси D&NS серверів в порядку використання:", -1, 5, 5, 180, 12
-    PUSHBUTTON "Вверх", IDC_DNSADDRUP, 190, 30, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Вниз", IDC_DNSADDRDOWN, 190, 50, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Додати...", IDC_DNSADDRADD, 30, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Редагувати...", IDC_DNSADDRMOD, 100, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Видалити", IDC_DNSADDRDEL, 170, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Вверх", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Вниз", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Додати...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Редагувати...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Видалити", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "Наступні три параметри застосовуються для всіх підключень, що використовують TCP/IP. Для дозволу невідомих імен:", -1, 5, 90, 220, 24
-    CONTROL "Додавати &основний DNS-суфікс і суфікс підключення", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 190, 12
-    CHECKBOX "Додавати &батьківські суфікси основного DNS-суфікса", IDC_TOPPRIMSUFFIX, 15, 125, 194, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Додавати &наступні DNS-суфікси (по порядку):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    CONTROL "Додавати &основний DNS-суфікс і суфікс підключення", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Додавати &батьківські суфікси основного DNS-суфікса", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Додавати &наступні DNS-суфікси (по порядку):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
-    PUSHBUTTON "Вверх", IDC_DNSSUFFIXUP, 190, 170, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Вниз", IDC_DNSSUFFIXDOWN, 190, 190, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Додати...", IDC_DNSSUFFIXADD, 30, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Редагувати...", IDC_DNSSUFFIXMOD, 100, 210, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Видалити", IDC_DNSSUFFIXDEL, 170, 210, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Вверх", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Вниз", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Додати...", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Редагувати...", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Видалити", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
     LTEXT "DNS-&суфікс цього підключення:", -1, 5, 228, 110, 14
     EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "&Зареєструвати адреси цього підключення в DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -102,7 +102,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "&Додаткові параметри", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Властивості", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "&Властивості", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Опис:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END

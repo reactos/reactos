@@ -12,10 +12,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Puteți obține automat configurarea adresei IP în rețelele cu DHCP. Altfel, este necesară configurarea manuală de către administratorul de rețea.", -1, 9, 9, 228, 27
+    LTEXT "Puteți obține automat configurarea adresei IP în rețelele cu DHCP. Altfel, este necesară configurarea manuală de către administratorul de rețea.", -1, 9, 9, 235, 27
     CONTROL "&Obține automat adresă IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
     GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
-    CONTROL "Folo&sește adresa următoare:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+    CONTROL "Folo&sește adresa următoare:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 120, 12
     LTEXT "Adresă &IP:", -1, 14, 75, 135, 8
     CONTROL "", IDC_IPADDR, "SysIPAddress32", WS_TABSTOP, 150, 75 - 2, 80, 12
     LTEXT "Mască de s&ubrețea:", -1, 14, 90, 135, 8
@@ -24,7 +24,7 @@ BEGIN
     CONTROL "", IDC_DEFGATEWAY, "SysIPAddress32", WS_TABSTOP, 150, 105 - 2, 80, 12
     CONTROL "O&bține automat adresa serverului DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
     GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
-    CONTROL "Folos&ește adresa DNS următoare", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
+    CONTROL "Folos&ește adresa DNS următoare", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 152, 12
     LTEXT "Server DNS p&referat:", -1, 14, 171, 135, 8
     CONTROL "", IDC_DNS1, "SysIPAddress32", WS_TABSTOP, 150, 171 - 2, 80, 12
     LTEXT "Server &DNS alternativ:", -1, 14, 186, 135, 8
@@ -59,12 +59,12 @@ CAPTION "Parametri IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Ad&resă IP", -1, 5, 5, 240, 90
-    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 210, 55
+    CONTROL "", IDC_IPLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 15, 215, 55
     PUSHBUTTON "&Adăugare…", IDC_IPADD, 60, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Modificare…", IDC_IPMOD, 120, 75, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Elimină", IDC_IPDEL, 180, 75, 50, 14, WS_TABSTOP
     GROUPBOX "&Servere „porți” implicite:", -1, 5, 100, 240, 90
-    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 210, 55
+    CONTROL "", IDC_GWLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 110, 215, 55
     PUSHBUTTON "A&dăugare…", IDC_GWADD, 60, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "M&odificare…", IDC_GWMOD, 120, 170, 50, 14, WS_TABSTOP
     PUSHBUTTON "E&limină", IDC_GWDEL, 180, 170, 50, 14, WS_TABSTOP
@@ -79,27 +79,27 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "DNS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX IDC_DNSADDRLIST, 5, 15, 180, 50, LBS_NOTIFY
+    LISTBOX IDC_DNSADDRLIST, 5, 17, 180, 50, LBS_NOTIFY
     LTEXT "Adrese de ser&vere DNS, în ordinea utilizării:", -1, 5, 5, 180, 12
     PUSHBUTTON "&Sus", IDC_DNSADDRUP, 190, 25, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Jos", IDC_DNSADDRDOWN, 190, 45, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Adăugare…", IDC_DNSADDRADD, 5, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Modificare…", IDC_DNSADDRMOD, 70, 70, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Elimină", IDC_DNSADDRDEL, 135, 70, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Adăugare…", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Modificare…", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
+    PUSHBUTTON "&Elimină", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
     LTEXT "Următoarele opțiuni sunt aplicate tuturor conexiunilor cu TCP/IP active. Pentru rezoluția numelor necalificate:", -1, 5, 90, 220, 24
-    CONTROL "In&clude sufixul DNS primar și de conexiune", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 160, 12
-    CHECKBOX "Include sufi&xul părinte al sufixului DNS primar", IDC_TOPPRIMSUFFIX, 15, 125, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CONTROL "Include urmă&toarele sufixe DNS (în orine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 190, 12
+    CONTROL "In&clude sufixul DNS primar și de conexiune", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
+    CHECKBOX "Include sufi&xul părinte al sufixului DNS primar", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "Include urmă&toarele sufixe DNS (în orine):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12
     LISTBOX IDC_DNSSUFFIXLIST, 5, 155, 180, 50, LBS_NOTIFY
-    PUSHBUTTON "S&us", IDC_DNSSUFFIXUP, 190, 160, 50, 14, WS_TABSTOP
+    PUSHBUTTON "S&us", IDC_DNSSUFFIXUP, 190, 163, 50, 14, WS_TABSTOP
     PUSHBUTTON "J&os", IDC_DNSSUFFIXDOWN, 190, 180, 50, 14, WS_TABSTOP
-    PUSHBUTTON "A&dăugare…", IDC_DNSSUFFIXADD, 5, 205, 50, 14, WS_TABSTOP
-    PUSHBUTTON "Mod&ificare…", IDC_DNSSUFFIXMOD, 70, 205, 50, 14, WS_TABSTOP
-    PUSHBUTTON "E&limină", IDC_DNSSUFFIXDEL, 135, 205, 50, 14, WS_TABSTOP
-    LTEXT "Sufixul DNS al conexiunii curente:", -1, 5, 225, 110, 14
-    EDITTEXT IDC_SUFFIX, 130, 225, 90, 12, WS_TABSTOP
+    PUSHBUTTON "A&dăugare…", IDC_DNSSUFFIXADD, 15, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "Mod&ificare…", IDC_DNSSUFFIXMOD, 75, 207, 50, 14, WS_TABSTOP
+    PUSHBUTTON "E&limină", IDC_DNSSUFFIXDEL, 135, 207, 50, 14, WS_TABSTOP
+    LTEXT "Sufixul DNS al conexiunii curente:", -1, 5, 228, 110, 14
+    EDITTEXT IDC_SUFFIX, 120, 225, 100, 12, WS_TABSTOP
     CHECKBOX "În&registrează adresele conexiunii în DNS", IDC_REGSUFFIX, 15, 240, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "La înregistrare, utili&zează sufixul DNS al conexiunii", IDC_USESUFFIX, 15, 255, 190, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "La înregistrare, utili&zează sufixul DNS al conexiunii", IDC_USESUFFIX, 15, 255, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_TCPIP_ADVOPT_DLG DIALOGEX 0, 0, 247, 247
@@ -109,7 +109,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX IDC_OPTLIST, 5, 30, 230, 70
     LTEXT "C&onfigurări opționale", -1, 5, 15, 130, 12
-    PUSHBUTTON "&Proprietăți", IDC_OPTPROP, 160, 100, 70, 14, WS_TABSTOP
+    PUSHBUTTON "&Proprietăți", IDC_OPTPROP, 165, 100, 70, 14, WS_TABSTOP
     GROUPBOX "Descriere:", -1, 5, 120, 240, 70
     LTEXT "", IDC_OPTDESC, 15, 130, 220, 33
 END
