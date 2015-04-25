@@ -25,7 +25,7 @@
 125 stdcall -noname RunInstallUninstallStubs()
 126 stub DoAddToFavDlg
 127 stub DoAddToFavDlgW
-128 stub DoFileDownload
+128 stdcall DoFileDownload(wstr)
 129 stub DoFileDownloadEx
 130 stdcall -noname RunInstallUninstallStubs2()
 131 stub -noname SHCreateSplashScreen
