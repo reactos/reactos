@@ -542,8 +542,8 @@ VOID ShowInfo(BOOL bAll)
 
             if (pAdapter->DhcpEnabled)
             {
-                _tprintf(_T("\tLease Obtained. . . . . . . . . . : %s\n"), _tasctime(localtime(&pAdapter->LeaseObtained)));
-                _tprintf(_T("\tLease Expires . . . . . . . . . . : %s\n"), _tasctime(localtime(&pAdapter->LeaseExpires)));
+                _tprintf(_T("\tLease Obtained. . . . . . . . . . : %s"), _tasctime(localtime(&pAdapter->LeaseObtained)));
+                _tprintf(_T("\tLease Expires . . . . . . . . . . : %s"), _tasctime(localtime(&pAdapter->LeaseExpires)));
             }
         }
         _tprintf(_T("\n"));
