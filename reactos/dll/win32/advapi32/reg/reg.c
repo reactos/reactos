@@ -3789,7 +3789,6 @@ RegQueryInfoKeyW(HKEY hKey,
         lpftLastWriteTime->dwHighDateTime = FullInfo->LastWriteTime.u.HighPart;
     }
 
-    ErrorCode = ERROR_SUCCESS;
     if (lpClass != NULL)
     {
         if (*lpcClass == 0)

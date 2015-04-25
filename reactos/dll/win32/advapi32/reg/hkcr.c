@@ -711,11 +711,12 @@ EnumHKCRKey(
         goto Exit;
     }
 
+    MaxFallbackSubKeyLen++;
     TRACE("Maxfallbacksubkeylen: %d\n", MaxFallbackSubKeyLen);
 
     /* Allocate our buffer */
     FallbackSubKeyName = RtlAllocateHeap(
-        RtlGetProcessHeap(), 0, (MaxFallbackSubKeyLen + 1) * sizeof(WCHAR));
+        RtlGetProcessHeap(), 0, MaxFallbackSubKeyLen * sizeof(WCHAR));
     if (!FallbackSubKeyName)
     {
         ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
@@ -925,11 +926,12 @@ EnumHKCRValue(
         goto Exit;
     }
 
+    MaxFallbackValueNameLen++;
     TRACE("Maxfallbacksubkeylen: %d\n", MaxFallbackValueNameLen);
 
     /* Allocate our buffer */
     FallbackValueName = RtlAllocateHeap(
-        RtlGetProcessHeap(), 0, (MaxFallbackValueNameLen + 1) * sizeof(WCHAR));
+        RtlGetProcessHeap(), 0, MaxFallbackValueNameLen * sizeof(WCHAR));
     if (!FallbackValueName)
     {
         ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
