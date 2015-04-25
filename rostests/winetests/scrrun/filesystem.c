@@ -892,7 +892,7 @@ static void test_FolderCollection(void)
 
     hr = IFolder_get_Path(folder, &str);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(!lstrcmpW(buffW, str), "got %s, expected %s\n", wine_dbgstr_w(str), wine_dbgstr_w(buffW));
+    ok(!lstrcmpiW(buffW, str), "got %s, expected %s\n", wine_dbgstr_w(str), wine_dbgstr_w(buffW));
     SysFreeString(str);
 
     lstrcpyW(pathW, buffW);
@@ -1577,6 +1577,7 @@ todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
     str = SysAllocString(aW);
     hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     SysFreeString(str);
     ITextStream_Release(stream);
 
@@ -1729,6 +1730,7 @@ todo_wine
     ok(hr == S_OK, "got 0x%08x\n", hr);
     str = SysAllocString(aW);
     hr = ITextStream_Write(stream, str);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     SysFreeString(str);
     ITextStream_Release(stream);
 
