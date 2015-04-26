@@ -1227,7 +1227,7 @@
 /* #undef SONAME_LIBGLU */
 
 /* Define to the soname of the libgnutls library. */
-#define SONAME_LIBGNUTLS L"libgnutls-28.dll"
+#define SONAME_LIBGNUTLS L"gnutls\\libgnutls-28.dll"
 
 /* Define to the soname of the libgsm library. */
 /* #undef SONAME_LIBGSM */

@@ -23,6 +23,7 @@
 
 #include <wine/config.h>
 #include <wine/port.h>
+#include <wine/library.h>
 #include <strsafe.h>
 
 #ifdef SONAME_LIBGNUTLS
@@ -510,7 +511,13 @@ BOOL schan_imp_init(void)
     wcscat(Path, L"\\");
     wcscat(Path, SONAME_LIBGNUTLS);
 */
-    static const WCHAR Path[] = L"C:\\Reactos\\system32\\gnutls\\libgnutls-28.dll";
+	WCHAR Path[MAX_PATH];
+	DWORD PathSize = sizeof(Path);
+	PathSize = GetSystemDirectoryW(Path, PathSize);
+	if(!PathSize)
+		return FALSE;
+    wcscat(Path, L"\\");
+    wcscat(Path, SONAME_LIBGNUTLS);
 
     libgnutls_handle = LoadLibraryExW(Path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
     if (!libgnutls_handle)
