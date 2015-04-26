@@ -55,8 +55,7 @@ static void test_query_recyclebin(void)
     HRESULT hr;
     HANDLE file;
     SHFILEOPSTRUCTA shfo;
-    const CHAR name[] = "test.txt";
-    CHAR buf[MAX_PATH + sizeof(name) + 1];
+    CHAR temp_path[MAX_PATH-14], buf[MAX_PATH+1];
     if(!pSHQueryRecycleBinA)
     {
         skip("SHQueryRecycleBinA does not exist\n");
@@ -67,18 +66,17 @@ static void test_query_recyclebin(void)
         skip("SHFileOperationA does not exist\n");
         return;
     }
-    GetCurrentDirectoryA(MAX_PATH, buf);
-    strcat(buf,"\\");
-    strcat(buf,name);
+    ok(GetTempPathA(sizeof(temp_path), temp_path), "GetTempPath failed\n");
+    ok(GetTempFileNameA(temp_path, "trash", 0, buf), "GetTempFileName failed\n");
     buf[strlen(buf) + 1] = '\0';
     hr = pSHQueryRecycleBinA(buf,&info1);
     ok(hr == S_OK, "SHQueryRecycleBinA failed with error 0x%x\n", hr);
     ok(info1.i64Size!=0xdeadbeef,"i64Size not set\n");
     ok(info1.i64NumItems!=0xdeadbeef,"i64NumItems not set\n");
     /*create and send a file to the recycle bin*/
-    file = CreateFileA(name,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,0,NULL);
-    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n",name);
-    WriteFile(file,name,strlen(name),&written,NULL);
+    file = CreateFileA(buf,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,0,NULL);
+    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n",buf);
+    WriteFile(file,buf,strlen(buf),&written,NULL);
     CloseHandle(file);
     shfo.hwnd = NULL;
     shfo.wFunc = FO_DELETE;
@@ -89,14 +87,9 @@ static void test_query_recyclebin(void)
     shfo.lpszProgressTitle = NULL;
     ok(!pSHFileOperationA(&shfo), "Deletion was not successful\n");
     hr = pSHQueryRecycleBinA(buf,&info2);
-    ok(hr == S_OK, "SHQueryRecycleBinW failed with error 0x%x\n", hr);
-    if(info2.i64Size!=info1.i64Size || info2.i64NumItems!=info1.i64NumItems) {
-      ok(info2.i64Size==info1.i64Size+written,"Expected recycle bin to have 0x%s bytes\n",str_from_int64(info1.i64Size+written));
-      ok(info2.i64NumItems==info1.i64NumItems+1,"Expected recycle bin to have 0x%s items\n",str_from_int64(info1.i64NumItems+1));
-    } else todo_wine {
-      ok(info2.i64Size==info1.i64Size+written,"Expected recycle bin to have 0x%s bytes\n",str_from_int64(info1.i64Size+written));
-      ok(info2.i64NumItems==info1.i64NumItems+1,"Expected recycle bin to have 0x%s items\n",str_from_int64(info1.i64NumItems+1));
-    }
+    ok(hr == S_OK, "SHQueryRecycleBinA failed with error 0x%x\n", hr);
+    ok(info2.i64Size==info1.i64Size+written,"Expected recycle bin to have 0x%s bytes\n",str_from_int64(info1.i64Size+written));
+    ok(info2.i64NumItems==info1.i64NumItems+1,"Expected recycle bin to have 0x%s items\n",str_from_int64(info1.i64NumItems+1));
 }
 
 

@@ -1381,7 +1381,7 @@ static void test_navigation(void)
     ok(pSHCreateShellItem != NULL, "pSHCreateShellItem unexpectedly missing.\n");
 
     GetCurrentDirectoryW(MAX_PATH, current_path);
-    if(!lstrlenW(current_path))
+    if(!current_path[0])
     {
         skip("Failed to create test-directory.\n");
         return;

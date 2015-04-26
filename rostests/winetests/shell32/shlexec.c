@@ -118,7 +118,7 @@ static INT_PTR shell_execute(LPCSTR verb, LPCSTR file, LPCSTR parameters, LPCSTR
      * association it displays the 'Open With' dialog and I could not find
      * a flag to prevent this.
      */
-    rc=(INT_PTR)ShellExecuteA(NULL, verb, file, parameters, directory, SW_SHOWNORMAL);
+    rc=(INT_PTR)ShellExecuteA(NULL, verb, file, parameters, directory, SW_HIDE);
 
     if (rc > 32)
     {
@@ -183,7 +183,7 @@ static INT_PTR shell_execute_ex(DWORD mask, LPCSTR verb, LPCSTR file,
         trace("%s\n", shell_call);
 
     sei.cbSize=sizeof(sei);
-    sei.fMask=SEE_MASK_NOCLOSEPROCESS | mask;
+    sei.fMask=SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NO_CONSOLE | mask;
     sei.hwnd=NULL;
     sei.lpVerb=verb;
     sei.lpFile=file;
@@ -857,6 +857,7 @@ static const char* testfiles[]=
     "%s\\masked",
     "%s\\test file.sde",
     "%s\\test file.exe",
+    "%s\\test file two.exe",
     "%s\\test2.exe",
     "%s\\simple.shlexec",
     "%s\\drawback_file.noassoc",
@@ -931,7 +932,7 @@ static void test_lpFile_parsed(void)
     /* existing "drawback_file.noassoc" prevents finding "drawback_file.noassoc foo.shlexec" on wine */
     sprintf(fileA, "%s\\drawback_file.noassoc foo.shlexec", tmpdir);
     rc=shell_execute(NULL, fileA, NULL, NULL);
-    todo_wine ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
+    ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
 
     /* if quoted, existing "drawback_file.noassoc" not prevents finding "drawback_file.noassoc foo.shlexec" on wine */
     sprintf(fileA, "\"%s\\drawback_file.noassoc foo.shlexec\"", tmpdir);
@@ -1159,6 +1160,8 @@ static BOOL test_one_cmdline(const cmdline_tests_t* test)
         win_skip("CommandLineToArgvW not implemented, skipping\n");
         return FALSE;
     }
+    ok(!argsW[cl2a_count] || broken(argsW[cl2a_count] != NULL) /* before Vista */,
+       "expected NULL-terminated list of commandline arguments\n");
 
     count = 0;
     while (test->args[count])
@@ -1218,6 +1221,8 @@ static void test_commandline2argv(void)
     *strW = 0;
     args = CommandLineToArgvW(strW, &numargs);
     ok(numargs == 1, "expected 1 args, got %d\n", numargs);
+    ok(!args || (!args[numargs] || broken(args[numargs] != NULL) /* before Vista */),
+       "expected NULL-terminated list of commandline arguments\n");
     if (numargs == 1)
     {
         GetModuleFileNameW(NULL, strW, sizeof(strW)/sizeof(*strW));
@@ -1543,7 +1548,7 @@ static void test_filename(void)
                "%s failed: rc=%ld err=%u\n", shell_call,
                rc, GetLastError());
         }
-        else todo_wine
+        else
         {
             ok(rc==test->rc, "%s failed: rc=%ld err=%u\n", shell_call,
                rc, GetLastError());
@@ -2090,6 +2095,7 @@ static void test_exes(void)
 {
     char filename[MAX_PATH];
     char params[1024];
+    DWORD retval;
     INT_PTR rc;
 
     sprintf(params, "shlexec \"%s\" Exec", child_file);
@@ -2116,6 +2122,32 @@ static void test_exes(void)
     {
         win_skip("Skipping shellexecute of file with unassociated extension\n");
     }
+
+    /* the directory with the test programs contain "test file.exe"
+     * and "test file two.exe". Check we do not start the first
+     * when we specify to start the second (see bug 19666)
+     */
+    sprintf(filename, "%s\\test file.exe", tmpdir);
+    retval = CopyFileA(argv0, filename, FALSE);
+    ok(retval, "CopyFile(\"%s\",\"%s\",FALSE) failed\n", argv0, filename);
+    sprintf(filename, "%s\\test file two.exe", tmpdir);
+    retval = CopyFileA(argv0, filename, FALSE);
+    ok(retval, "CopyFile(\"%s\",\"%s\",FALSE) failed\n", argv0, filename);
+    rc=shell_execute_ex(SEE_MASK_NOZONECHECKS, NULL, filename, params, NULL, NULL);
+    ok(rc > 32, "%s returned %lu\n", shell_call, rc);
+    okChildInt("argcA", 4);
+    okChildString("argvA0", filename);
+    okChildString("argvA3", "Exec");
+
+    /* check quoted filename */
+    sprintf(filename, "\"%s\\test file two.exe\"", tmpdir);
+    rc=shell_execute_ex(SEE_MASK_NOZONECHECKS, NULL, filename, params, NULL, NULL);
+    ok(rc > 32, "%s returned %lu\n", shell_call, rc);
+    okChildInt("argcA", 4);
+    /* strip the quotes for the compare */
+    sprintf(filename, "%s\\test file two.exe", tmpdir);
+    okChildString("argvA0", filename);
+    okChildString("argvA3", "Exec");
 }
 
 typedef struct

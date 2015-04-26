@@ -251,7 +251,7 @@ static void test_get_file_info(void)
     ok(rc == 1, "SHGetFileInfoA(c:\\nonexistent) should return 1, got 0x%x\n", rc);
     if (rc)
     {
-        ok(strcpy(shfi.szDisplayName, "dummy") != 0, "SHGetFileInfoA(c:\\nonexistent) displayname is not set\n");
+        ok(strcmp(shfi.szDisplayName, "dummy"), "SHGetFileInfoA(c:\\nonexistent) displayname is not set\n");
         ok(shfi.iIcon != 0xdeadbeef, "SHGetFileInfoA(c:\\nonexistent) iIcon is not set\n");
     }
 
@@ -622,7 +622,6 @@ static void test_delete(void)
     shfo.pFrom = "nonexistent.txt\0";
     shfo.wFunc = FO_DELETE;
     ret = SHFileOperationA(&shfo);
-    todo_wine
     ok(ret == 1026 ||
        ret == ERROR_FILE_NOT_FOUND || /* Vista */
        broken(ret == ERROR_SUCCESS), /* NT4 */
@@ -651,7 +650,6 @@ static void test_delete(void)
     shfo.pFrom = "test1.txt\0nonexistent.txt\0test2.txt\0";
     shfo.wFunc = FO_DELETE;
     ret = SHFileOperationA(&shfo);
-    todo_wine
     ok(ret == 1026 ||
        ret == ERROR_FILE_NOT_FOUND || /* Vista */
        broken(ret == ERROR_SUCCESS), /* NT4 */
@@ -664,14 +662,12 @@ static void test_delete(void)
     init_shfo_tests();
     shfo.pFrom = "testdir2\\nonexistent.txt\0";
     ret = SHFileOperationA(&shfo);
-    todo_wine
     ok(ret == ERROR_FILE_NOT_FOUND || /* Vista */
        broken(ret == 0x402) || /* XP */
        broken(ret == ERROR_SUCCESS), /* NT4 */
        "Expected 0x402 or ERROR_FILE_NOT_FOUND, got %x\n", ret);
     shfo.pFrom = "nonexistent\\one.txt\0";
     ret = SHFileOperationA(&shfo);
-    todo_wine
     ok(ret == DE_INVALIDFILES || /* Vista or later */
        broken(ret == 0x402), /* XP */
        "Expected 0x402 or DE_INVALIDFILES, got %x\n", ret);
@@ -898,13 +894,13 @@ static void test_copy(void)
     DeleteFileA("test7.txt");
     RemoveDirectoryA("test8.txt");
 
-    /* number of sources do not correspond to number of targets */
+    /* number of sources does not correspond to number of targets */
     set_curr_dir_path(from, "test1.txt\0test2.txt\0test4.txt\0");
     set_curr_dir_path(to, "test6.txt\0test7.txt\0");
     retval = SHFileOperationA(&shfo2);
     if (dir_exists("test6.txt"))
     {
-        /* Vista and W2K8 (broken or new behavior ?) */
+        /* Vista and W2K8 (broken or new behavior?) */
         ok(retval == DE_DESTSAMETREE, "Expected DE_DESTSAMETREE, got %d\n", retval);
         ok(DeleteFileA("test6.txt\\test1.txt"), "The file is not copied - many files "
            "are specified as a target\n");
@@ -1871,7 +1867,7 @@ static void test_move(void)
 
     init_shfo_tests();
 
-    /* number of sources do not correspond to number of targets,
+    /* number of sources does not correspond to number of targets,
        include directories */
     set_curr_dir_path(from, "test1.txt\0test2.txt\0test4.txt\0");
     set_curr_dir_path(to, "test6.txt\0test7.txt\0");
@@ -1904,7 +1900,7 @@ static void test_move(void)
     }
 
     init_shfo_tests();
-    /* number of sources do not correspond to number of targets,
+    /* number of sources does not correspond to number of targets,
        files only,
        from exceeds to */
     set_curr_dir_path(from, "test1.txt\0test2.txt\0test3.txt\0");
@@ -1939,7 +1935,7 @@ static void test_move(void)
     }
 
     init_shfo_tests();
-    /* number of sources do not correspond to number of targets,
+    /* number of sources does not correspond to number of targets,
        files only,
        too exceeds from */
     set_curr_dir_path(from, "test1.txt\0test2.txt\0");
@@ -1963,7 +1959,7 @@ static void test_move(void)
     }
 
     init_shfo_tests();
-    /* number of sources do not correspond to number of targets,
+    /* number of sources does not correspond to number of targets,
        target directories */
     set_curr_dir_path(from, "test1.txt\0test2.txt\0test3.txt\0");
     set_curr_dir_path(to, "test4.txt\0test5.txt\0");
@@ -1987,7 +1983,7 @@ static void test_move(void)
 
 
     init_shfo_tests();
-    /*  0 incomming files */
+    /*  0 incoming files */
     set_curr_dir_path(from, "\0\0");
     set_curr_dir_path(to, "test6.txt\0\0");
     retval = SHFileOperationA(&shfo2);

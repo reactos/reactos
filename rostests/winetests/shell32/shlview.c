@@ -485,11 +485,6 @@ static const struct message folderview_getfocused_seq[] = {
     { 0 }
 };
 
-static const struct message folderview_itemcount_seq[] = {
-    { LVM_GETITEMCOUNT, sent },
-    { 0 }
-};
-
 static void test_IShellView_CreateViewWindow(void)
 {
     IShellFolder *desktop;

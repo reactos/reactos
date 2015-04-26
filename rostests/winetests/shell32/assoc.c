@@ -57,21 +57,11 @@ static void test_IQueryAssociations_QueryInterface(void)
 }
 
 
-static void test_IApplicationAssociationRegistration_QueryInterface(void)
+static void test_IApplicationAssociationRegistration_QueryInterface(IApplicationAssociationRegistration *appreg)
 {
-    IApplicationAssociationRegistration *appreg;
     IApplicationAssociationRegistration *appreg2;
     IUnknown *unk;
     HRESULT hr;
-
-    /* this works since Vista */
-    hr = CoCreateInstance(&CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC_SERVER,
-                          &IID_IApplicationAssociationRegistration, (LPVOID*)&appreg);
-
-    if (FAILED(hr)) {
-        skip("IApplicationAssociationRegistration not created: 0x%x\n", hr);
-        return;
-    }
 
     hr = IApplicationAssociationRegistration_QueryInterface(appreg, &IID_IApplicationAssociationRegistration,
        (void**)&appreg2);
@@ -88,8 +78,6 @@ static void test_IApplicationAssociationRegistration_QueryInterface(void)
 
     hr = IApplicationAssociationRegistration_QueryInterface(appreg, &IID_IUnknown, NULL);
     ok(hr == E_POINTER, "got 0x%x (expected E_POINTER)\n", hr);
-
-    IApplicationAssociationRegistration_Release(appreg);
 }
 
 struct assoc_getstring_test
@@ -103,7 +91,6 @@ struct assoc_getstring_test
 };
 
 static const WCHAR httpW[] = {'h','t','t','p',0};
-static const WCHAR httpsW[] = {'h','t','t','p','s',0};
 static const WCHAR badW[] = {'b','a','d','b','a','d',0};
 
 static struct assoc_getstring_test getstring_tests[] =
@@ -190,9 +177,48 @@ static void test_IQueryAssociations_Init(void)
     IQueryAssociations_Release(assoc);
 }
 
+static void test_IApplicationAssociationRegistration_QueryCurrentDefault(IApplicationAssociationRegistration *appreg)
+{
+    static const WCHAR emptyW[] = {0};
+    static const WCHAR txtW[] = {'.','t','x','t',0};
+    static const WCHAR spacetxtW[] = {' ','.','t','x','t',0};
+    HRESULT hr;
+    LPWSTR assocprog = NULL;
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, emptyW, AT_URLPROTOCOL, AL_EFFECTIVE, &assocprog);
+    ok(hr == E_INVALIDARG, "got 0x%x\n", hr);
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, emptyW, AT_FILEEXTENSION, AL_EFFECTIVE, &assocprog);
+    ok(hr == E_INVALIDARG, "got 0x%x\n", hr);
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, spacetxtW, AT_FILEEXTENSION, AL_EFFECTIVE, &assocprog);
+    ok(hr == E_INVALIDARG || hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) /* Win8 */, "got 0x%x\n", hr);
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, httpW, AT_URLPROTOCOL, AL_EFFECTIVE, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%x\n", hr);
+
+    /* AT_FILEEXTENSION must start with a period */
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, txtW, AT_FILEEXTENSION, AL_EFFECTIVE, &assocprog);
+    ok(hr == S_OK, "got 0x%x\n", hr);
+    trace("%s\n", wine_dbgstr_w(assocprog));
+    CoTaskMemFree(assocprog);
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, emptyW, AT_STARTMENUCLIENT, AL_EFFECTIVE, &assocprog);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION), "got 0x%x\n", hr);
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, emptyW, AT_MIMETYPE, AL_EFFECTIVE, &assocprog);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION), "got 0x%x\n", hr);
+
+    hr = IApplicationAssociationRegistration_QueryCurrentDefault(appreg, httpW, AT_URLPROTOCOL, AL_EFFECTIVE, &assocprog);
+    todo_wine ok(hr == S_OK, "got 0x%x\n", hr);
+    trace("%s\n", wine_dbgstr_w(assocprog));
+    CoTaskMemFree(assocprog);
+}
+
 START_TEST(assoc)
 {
     IQueryAssociations *qa;
+    IApplicationAssociationRegistration *appreg;
     HRESULT hr;
 
     CoInitialize(NULL);
@@ -210,7 +236,18 @@ START_TEST(assoc)
     else
         win_skip("IQueryAssociations not supported, 0x%x\n", hr);
 
-    test_IApplicationAssociationRegistration_QueryInterface();
+    /* this works since Vista */
+    hr = CoCreateInstance(&CLSID_ApplicationAssociationRegistration, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IApplicationAssociationRegistration, (LPVOID *)&appreg);
+    if (hr == S_OK)
+    {
+        test_IApplicationAssociationRegistration_QueryInterface(appreg);
+        test_IApplicationAssociationRegistration_QueryCurrentDefault(appreg);
+
+        IApplicationAssociationRegistration_Release(appreg);
+    }
+    else
+        win_skip("IApplicationAssociationRegistration not supported: 0x%x\n", hr);
 
     CoUninitialize();
 }

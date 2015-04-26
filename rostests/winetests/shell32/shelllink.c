@@ -49,8 +49,6 @@ static const GUID _IID_IShellLinkDataList = {
     { 0xb9, 0x2f, 0x00, 0xa0, 0xc9, 0x03, 0x12, 0xe1 }
 };
 
-static const WCHAR notafile[]= { 'C',':','\\','n','o','n','e','x','i','s','t','e','n','t','\\','f','i','l','e',0 };
-
 
 /* For some reason SHILCreateFromPath does not work on Win98 and
  * SHSimpleIDListFromPathA does not work on NT4. But if we call both we
@@ -1153,6 +1151,41 @@ static void test_SHExtractIcons(void)
     for (i = 0; i < ret; i++) DestroyIcon(icons[i]);
 }
 
+static void test_propertystore(void)
+{
+    IShellLinkA *linkA;
+    IShellLinkW *linkW;
+    IPropertyStore *ps;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+                         &IID_IShellLinkA, (void**)&linkA);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IShellLinkA_QueryInterface(linkA, &IID_IShellLinkW, (void**)&linkW);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IShellLinkA_QueryInterface(linkA, &IID_IPropertyStore, (void**)&ps);
+    if (hr == S_OK) {
+        IPropertyStoreCache *pscache;
+
+        IPropertyStore_Release(ps);
+
+        hr = IShellLinkW_QueryInterface(linkW, &IID_IPropertyStore, (void**)&ps);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IPropertyStore_QueryInterface(ps, &IID_IPropertyStoreCache, (void**)&pscache);
+        ok(hr == E_NOINTERFACE, "got 0x%08x\n", hr);
+
+        IPropertyStore_Release(ps);
+    }
+    else
+        win_skip("IShellLink doesn't support IPropertyStore.\n");
+
+    IShellLinkA_Release(linkA);
+    IShellLinkW_Release(linkW);
+}
+
 START_TEST(shelllink)
 {
     HRESULT r;
@@ -1180,6 +1213,7 @@ START_TEST(shelllink)
     test_GetIconLocation();
     test_SHGetStockIconInfo();
     test_SHExtractIcons();
+    test_propertystore();
 
     CoUninitialize();
 }
