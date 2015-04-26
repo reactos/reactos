@@ -26,7 +26,7 @@
  //
 
 
-#define	CLASSNAME_STARTMENU		TEXT("ReactosStartmenuClass")
+#define	CLASSNAME_STARTMENU		TEXT("ReactOSStartmenuClass")
 #define	TITLE_STARTMENU			TEXT("Start Menu")
 
 
