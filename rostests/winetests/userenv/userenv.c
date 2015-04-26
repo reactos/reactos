@@ -25,6 +25,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
+#include "winreg.h"
 
 #include "userenv.h"
 
@@ -32,11 +33,13 @@
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 #define expect_env(EXPECTED,GOT,VAR) ok((GOT)==(EXPECTED), "Expected %d, got %d for %s (%d)\n", (EXPECTED), (GOT), (VAR), j)
+#define expect_gle(EXPECTED) ok(GetLastError() == (EXPECTED), "Expected %d, got %d\n", (EXPECTED), GetLastError())
+
+static BOOL (WINAPI *pIsWow64Process)(HANDLE,PBOOL);
 
 struct profile_item
 {
     const char * name;
-    const int todo[4];
 };
 
 /* Helper function for retrieving environment variables */
@@ -72,38 +75,46 @@ static BOOL get_env(const WCHAR * env, const char * var, char ** result)
 
 static void test_create_env(void)
 {
-    BOOL r;
+    BOOL r, is_wow64 = FALSE;
     HANDLE htok;
     WCHAR * env[4];
-    char * st;
+    char * st, systemroot[100];
     int i, j;
 
     static const struct profile_item common_vars[] = {
-        { "ComSpec", { 1, 1, 0, 0 } },
-        { "COMPUTERNAME", { 1, 1, 1, 1 } },
-        { "NUMBER_OF_PROCESSORS", { 1, 1, 0, 0 } },
-        { "OS", { 1, 1, 0, 0 } },
-        { "PROCESSOR_ARCHITECTURE", { 1, 1, 0, 0 } },
-        { "PROCESSOR_IDENTIFIER", { 1, 1, 0, 0 } },
-        { "PROCESSOR_LEVEL", { 1, 1, 0, 0 } },
-        { "PROCESSOR_REVISION", { 1, 1, 0, 0 } },
-        { "SystemDrive", { 1, 1, 0, 0 } },
-        { "SystemRoot", { 1, 1, 0, 0 } },
-        { "windir", { 1, 1, 0, 0 } }
+        { "ComSpec" },
+        { "COMPUTERNAME" },
+        { "NUMBER_OF_PROCESSORS" },
+        { "OS" },
+        { "PROCESSOR_ARCHITECTURE" },
+        { "PROCESSOR_IDENTIFIER" },
+        { "PROCESSOR_LEVEL" },
+        { "PROCESSOR_REVISION" },
+        { "SystemDrive" },
+        { "SystemRoot" },
+        { "windir" }
     };
     static const struct profile_item common_post_nt4_vars[] = {
-        { "ALLUSERSPROFILE", { 1, 1, 0, 0 } },
-        { "TEMP", { 1, 1, 0, 0 } },
-        { "TMP", { 1, 1, 0, 0 } },
-        { "CommonProgramFiles", { 1, 1, 0, 0 } },
-        { "ProgramFiles", { 1, 1, 0, 0 } }
+        { "ALLUSERSPROFILE" },
+        { "TEMP" },
+        { "TMP" },
+        { "CommonProgramFiles" },
+        { "ProgramFiles" },
+        { "PATH" },
+        { "USERPROFILE" }
     };
-    static const struct profile_item htok_vars[] = {
-        { "PATH", { 1, 1, 0, 0 } },
-        { "USERPROFILE", { 1, 1, 0, 0 } }
+    static const struct profile_item common_win64_vars[] = {
+        { "ProgramW6432" },
+        { "CommonProgramW6432" }
     };
 
     r = SetEnvironmentVariableA("WINE_XYZZY", "ZZYZX");
+    expect(TRUE, r);
+
+    r = GetEnvironmentVariableA("SystemRoot", systemroot, sizeof(systemroot));
+    ok(r != 0, "GetEnvironmentVariable failed (%d)\n", GetLastError());
+
+    r = SetEnvironmentVariableA("SystemRoot", "overwrite");
     expect(TRUE, r);
 
     if (0)
@@ -135,16 +146,24 @@ static void test_create_env(void)
     r = CreateEnvironmentBlock((LPVOID) &env[3], htok, TRUE);
     expect(TRUE, r);
 
+    r = SetEnvironmentVariableA("SystemRoot", systemroot);
+    expect(TRUE, r);
+
+    for(i=0; i<4; i++)
+    {
+        r = get_env(env[i], "SystemRoot", &st);
+        ok(!strcmp(st, "SystemRoot=overwrite"), "%s\n", st);
+        expect(TRUE, r);
+        HeapFree(GetProcessHeap(), 0, st);
+    }
+
     /* Test for common environment variables (NT4 and higher) */
     for (i = 0; i < sizeof(common_vars)/sizeof(common_vars[0]); i++)
     {
         for (j = 0; j < 4; j++)
         {
             r = get_env(env[j], common_vars[i].name, &st);
-            if (common_vars[i].todo[j])
-                todo_wine expect_env(TRUE, r, common_vars[i].name);
-            else
-                expect_env(TRUE, r, common_vars[i].name);
+            expect_env(TRUE, r, common_vars[i].name);
             if (r) HeapFree(GetProcessHeap(), 0, st);
         }
     }
@@ -161,26 +180,24 @@ static void test_create_env(void)
             for (j = 0; j < 4; j++)
             {
                 r = get_env(env[j], common_post_nt4_vars[i].name, &st);
-                if (common_post_nt4_vars[i].todo[j])
-                    todo_wine expect_env(TRUE, r, common_post_nt4_vars[i].name);
-                else
-                    expect_env(TRUE, r, common_post_nt4_vars[i].name);
+                expect_env(TRUE, r, common_post_nt4_vars[i].name);
                 if (r) HeapFree(GetProcessHeap(), 0, st);
             }
         }
     }
 
-    /* Test for environment variables with values that depends on htok */
-    for (i = 0; i < sizeof(htok_vars)/sizeof(htok_vars[0]); i++)
+    if(pIsWow64Process)
+        pIsWow64Process(GetCurrentProcess(), &is_wow64);
+    if (sizeof(void*)==8 || is_wow64)
     {
-        for (j = 0; j < 4; j++)
+        for (i = 0; i < sizeof(common_win64_vars)/sizeof(common_win64_vars[0]); i++)
         {
-            r = get_env(env[j], htok_vars[i].name, &st);
-            if (htok_vars[i].todo[j])
-                todo_wine expect_env(TRUE, r, htok_vars[i].name);
-            else
-                expect_env(TRUE, r, htok_vars[i].name);
-            if (r) HeapFree(GetProcessHeap(), 0, st);
+            for (j=0; j<4; j++)
+            {
+                r = get_env(env[j], common_win64_vars[i].name, &st);
+                ok(r || broken(!r)/* Vista,2k3,XP */, "Expected 1, got 0 for %s\n", common_win64_vars[i].name);
+                if (r) HeapFree(GetProcessHeap(), 0, st);
+            }
         }
     }
 
@@ -205,7 +222,190 @@ static void test_create_env(void)
     }
 }
 
+static void test_get_profiles_dir(void)
+{
+    static const char ProfileListA[] = "Software\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
+    static const char ProfilesDirectory[] = "ProfilesDirectory";
+    BOOL r;
+    DWORD cch, profiles_len;
+    LONG l;
+    HKEY key;
+    char *profiles_dir, *buf, small_buf[1];
+
+    l = RegOpenKeyExA(HKEY_LOCAL_MACHINE, ProfileListA, 0, KEY_READ, &key);
+    ok(!l, "RegOpenKeyExA failed: %d\n", GetLastError());
+
+    l = RegQueryValueExA(key, ProfilesDirectory, NULL, NULL, NULL, &cch);
+    if (l)
+    {
+        win_skip("No ProfilesDirectory value (NT4), skipping tests\n");
+        return;
+    }
+    buf = HeapAlloc(GetProcessHeap(), 0, cch);
+    RegQueryValueExA(key, ProfilesDirectory, NULL, NULL, (BYTE *)buf, &cch);
+    RegCloseKey(key);
+    profiles_len = ExpandEnvironmentStringsA(buf, NULL, 0);
+    profiles_dir = HeapAlloc(GetProcessHeap(), 0, profiles_len);
+    ExpandEnvironmentStringsA(buf, profiles_dir, profiles_len);
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    SetLastError(0xdeadbeef);
+    r = GetProfilesDirectoryA(NULL, NULL);
+    expect(FALSE, r);
+    expect_gle(ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    r = GetProfilesDirectoryA(NULL, &cch);
+    expect(FALSE, r);
+    expect_gle(ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    cch = 1;
+    r = GetProfilesDirectoryA(small_buf, &cch);
+    expect(FALSE, r);
+    expect_gle(ERROR_INSUFFICIENT_BUFFER);
+    /* MSDN claims the returned character count includes the NULL terminator
+     * when the buffer is too small, but that's not in fact what gets returned.
+     */
+    ok(cch == profiles_len - 1, "expected %d, got %d\n", profiles_len - 1, cch);
+    /* Allocate one more character than the return value to prevent a buffer
+     * overrun.
+     */
+    buf = HeapAlloc(GetProcessHeap(), 0, cch + 1);
+    r = GetProfilesDirectoryA(buf, &cch);
+    /* Rather than a BOOL, the return value is also the number of characters
+     * stored in the buffer.
+     */
+    expect(profiles_len - 1, r);
+    ok(!strcmp(buf, profiles_dir), "expected %s, got %s\n", profiles_dir, buf);
+
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, profiles_dir);
+
+    SetLastError(0xdeadbeef);
+    r = GetProfilesDirectoryW(NULL, NULL);
+    expect(FALSE, r);
+    expect_gle(ERROR_INVALID_PARAMETER);
+
+    cch = 0;
+    SetLastError(0xdeadbeef);
+    r = GetProfilesDirectoryW(NULL, &cch);
+    expect(FALSE, r);
+    expect_gle(ERROR_INSUFFICIENT_BUFFER);
+    ok(cch, "expected cch > 0\n");
+
+    SetLastError(0xdeadbeef);
+    r = GetProfilesDirectoryW(NULL, &cch);
+    expect(FALSE, r);
+    expect_gle(ERROR_INSUFFICIENT_BUFFER);
+}
+
+static void test_get_user_profile_dir(void)
+{
+    BOOL ret;
+    DWORD error, len;
+    HANDLE token;
+    char *dirA;
+    WCHAR *dirW;
+
+    if (!GetEnvironmentVariableA( "ALLUSERSPROFILE", NULL, 0 ))
+    {
+        win_skip("Skipping tests on NT4\n");
+        return;
+    }
+
+    ret = OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &token );
+    ok(ret, "expected success %u\n", GetLastError());
+
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryA( NULL, NULL, NULL );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryA( token, NULL, NULL );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    dirA = HeapAlloc( GetProcessHeap(), 0, 32 );
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryA( token, dirA, NULL );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+    HeapFree( GetProcessHeap(), 0, dirA );
+
+    len = 0;
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryA( token, NULL, &len );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+    ok(!len, "expected 0, got %u\n", len);
+
+    len = 0;
+    dirA = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 32 );
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryA( token, dirA, &len );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", error);
+    ok(len, "expected len > 0\n");
+    HeapFree( GetProcessHeap(), 0, dirA );
+
+    dirA = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, len );
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryA( token, dirA, &len );
+    ok(ret, "expected success %u\n", GetLastError());
+    ok(len, "expected len > 0\n");
+    ok(lstrlenA( dirA ) == len - 1, "length mismatch %d != %d - 1\n", lstrlenA( dirA ), len );
+    trace("%s\n", dirA);
+    HeapFree( GetProcessHeap(), 0, dirA );
+
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryW( NULL, NULL, NULL );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    todo_wine ok(error == ERROR_INVALID_HANDLE, "expected ERROR_INVALID_HANDLE, got %u\n", error);
+
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryW( token, NULL, NULL );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    dirW = HeapAlloc( GetProcessHeap(), 0, 32 );
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryW( token, dirW, NULL );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+    HeapFree( GetProcessHeap(), 0, dirW );
+
+    len = 0;
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryW( token, NULL, &len );
+    error = GetLastError();
+    ok(!ret, "expected failure\n");
+    ok(error == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", error);
+    ok(len, "expected len > 0\n");
+
+    dirW = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR) );
+    SetLastError( 0xdeadbeef );
+    ret = GetUserProfileDirectoryW( token, dirW, &len );
+    ok(ret, "expected success %u\n", GetLastError());
+    ok(len, "expected len > 0\n");
+    ok(lstrlenW( dirW ) == len - 1, "length mismatch %d != %d - 1\n", lstrlenW( dirW ), len );
+    HeapFree( GetProcessHeap(), 0, dirW );
+
+    CloseHandle( token );
+}
+
 START_TEST(userenv)
 {
+    pIsWow64Process = (void*)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process");
+
     test_create_env();
+    test_get_profiles_dir();
+    test_get_user_profile_dir();
 }
