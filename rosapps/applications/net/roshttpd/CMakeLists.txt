@@ -16,4 +16,4 @@ list(APPEND SOURCE
 add_executable(roshttpd ${SOURCE} common/roshttpd.rc)
 set_module_type(roshttpd win32cui)
 add_importlibs(roshttpd user32 ws2_32 msvcrt kernel32)
-add_cd_file(TARGET roshttpd DESTINATION reactos FOR all)
+add_cd_file(TARGET roshttpd DESTINATION reactos/system32 FOR all)
