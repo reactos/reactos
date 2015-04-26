@@ -76,7 +76,8 @@ void *http_post(wchar_t *url, void *data, int size, u_long *d_size)
 	char          *replay = NULL;
 	wchar_t        host[MAX_PATH];
 	wchar_t        path[MAX_PATH];
-	unsigned char *p, *d = data;
+	char *p = NULL;
+    char *d = data;
 
 	do
 	{
@@ -86,7 +87,7 @@ void *http_post(wchar_t *url, void *data, int size, u_long *d_size)
 		strcpy(q_data, "data="); p = q_data + 5;
 
 		while (size--) {
-			p += sprintf(p, "%%%0.2x", (u_long)*d++);
+			p += sprintf(p, "%%%.2x", (u_int)*d++);
 		}
 
 		url_cm.dwStructSize     = sizeof(url_cm);

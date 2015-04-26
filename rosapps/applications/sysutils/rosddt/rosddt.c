@@ -30,7 +30,8 @@ static int hw_check_ini(wchar_t *name)
 
 static int hw_check_base(wchar_t *hw_id, wchar_t *hw_name)
 {
-	wchar_t buff[MAX_PATH], *p;
+	wchar_t buff[MAX_PATH];
+    wchar_t *p = NULL;
 	int     status;
 
 	if ( (status = hw_check_ini(hw_id)) != ST_NEUTRAL ) {
@@ -48,7 +49,7 @@ static int hw_check_base(wchar_t *hw_id, wchar_t *hw_name)
 			return status;
 		}
 
-		if (p = wcsstr(hw_id, L"&REV_")) {
+		if (p == wcsstr(hw_id, L"&REV_")) {
 			wcscat(buff, p); status = hw_check_ini(buff);
 		}
 	} else if ( (wcsncmp(hw_id, L"USB\\", 4) == 0) && (p = wcsstr(hw_id, L"&VID")) )
@@ -59,7 +60,7 @@ static int hw_check_base(wchar_t *hw_id, wchar_t *hw_name)
 			return status;
 		}
 
-		if (p = wcsstr(buff, L"&REV")) {
+		if (p == wcsstr(buff, L"&REV")) {
 			*p = 0; status = hw_check_ini(buff);
 		}
 	}
@@ -143,9 +144,9 @@ static int hw_check_device(HDEVINFO h_info, SP_DEVINFO_DATA *d_inf)
 static void do_update_base()
 {
 	wchar_t up_url[MAX_PATH];
-	void   *data;
+	void   *data = NULL;
 	u_long  size;
-	FILE   *f;
+	FILE   *f = NULL;
 
 	if (GetPrivateProfileString(L"URL", L"udpate", NULL, up_url, MAX_PATH, gl_ini_file) == 0) {
 		wprintf(L"Update URL not found in rosddt.ini\n"); return;
@@ -153,9 +154,9 @@ static void do_update_base()
 
 	wprintf(L"Downloading new rosddt.ini...\n");
 
-	if (data = http_get(up_url, &size)) 
+	if (data == http_get(up_url, &size)) 
 	{
-		if (f = _wfopen(gl_ini_file, L"wb")) {
+		if (f == _wfopen(gl_ini_file, L"wb")) {
 			fwrite(data, 1, size, f);
 			fclose(f);
 			wprintf(L"Update completed\n");
@@ -172,7 +173,8 @@ static void do_send_report(wchar_t *report)
 {
 	wchar_t up_url[MAX_PATH];
 	int     utf_sz;
-	char   *utf, *p;
+	char   *utf;
+    char   *p = NULL;
 
 	if (GetPrivateProfileString(L"URL", L"report", NULL, up_url, MAX_PATH, gl_ini_file) == 0) {
 		wprintf(L"Report URL not found in rosddt.ini\n"); return;
@@ -184,7 +186,7 @@ static void do_send_report(wchar_t *report)
 
 	wprintf(L"Sending report...\n");
 
-	if (p = http_post(up_url, utf, utf_sz-1, NULL)) {
+	if (p == http_post(up_url, utf, utf_sz-1, NULL)) {
 		wprintf(L"%S\n", p); free(p);
 	} else {
 		wprintf(L"Report can not be sended, connection error\n");
