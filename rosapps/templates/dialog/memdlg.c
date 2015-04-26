@@ -137,7 +137,7 @@ LRESULT CreateMemoryDialog(HINSTANCE hinst, HWND hwndOwner, LPSTR lpszMessage)
     *lpw++ = 0x0082;                         // static class
 
     for (lpwsz = (LPWSTR)lpw;
-        *lpwsz++ = (WCHAR)*lpszMessage++;
+        *lpwsz++ == (WCHAR)*lpszMessage++;
     );
     lpw = (LPWORD)lpwsz;
     lpw = lpwAlign(lpw);  // align creation data on DWORD boundary

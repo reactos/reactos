@@ -70,12 +70,12 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
     MoveWindow(hMDIClient, prect->left-1,prect->top-1,prect->right+2,prect->bottom+1, TRUE);
 }
 
-static void resize_frame(HWND hWnd, int cx, int cy)
+/* static void resize_frame(HWND hWnd, int cx, int cy)
 {
     RECT rect = {0, 0, cx, cy};
 
     resize_frame_rect(hWnd, &rect);
-}
+}*/
 
 void resize_frame_client(HWND hWnd)
 {

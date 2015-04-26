@@ -92,28 +92,27 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     };
     ATOM hChildWndClass = RegisterClass(&wcChild); // register child windows class
 #else
-    WNDCLASSEX wcChild = {
-        sizeof(WNDCLASSEX),
-        CS_HREDRAW | CS_VREDRAW/*style*/,
-        ChildWndProc,
-        0/*cbClsExtra*/,
-        sizeof(HANDLE)/*cbWndExtra*/,
-        hInstance,
-        LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MDI_APP)),
-        LoadCursor(0, IDC_ARROW),
-        0/*hbrBackground*/,
-        0/*lpszMenuName*/,
-        szChildClass,
-        (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDC_MDI_APP), IMAGE_ICON,
-            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
-
-    };
-    ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
+    // WNDCLASSEX wcChild = {
+    //     sizeof(WNDCLASSEX),
+    //     CS_HREDRAW | CS_VREDRAW/*style*/,
+    //     ChildWndProc,
+    //     0/*cbClsExtra*/,
+    //     sizeof(HANDLE)/*cbWndExtra*/,
+    //     hInstance,
+    //     LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MDI_APP)),
+    //     LoadCursor(0, IDC_ARROW),
+    //     0/*hbrBackground*/,
+    //     0/*lpszMenuName*/,
+    //     szChildClass,
+    //     (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDC_MDI_APP), IMAGE_ICON,
+    //         GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
+    // };
+    // ATOM hChildWndClass = RegisterClassEx(&wcChild); // register child windows class
 #endif
 
     HMENU hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDC_MDI_APP));
     HMENU hMenuOptions = GetSubMenu(hMenu, ID_OPTIONS_MENU);
-    HMENU hChildMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDC_MDI_APP_CHILD));
+    // HMENU hChildMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDC_MDI_APP_CHILD));
 
     INITCOMMONCONTROLSEX icc = {
         sizeof(INITCOMMONCONTROLSEX),
