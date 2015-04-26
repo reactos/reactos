@@ -10,7 +10,7 @@ Beschreibung:\n\
 Parameterliste:\n\
   /S      System              Bestimmt das Remotesystem mit dem die Verbindung\n\
                               hergestellt werden soll.\n\n\
-  /U      [Domäne\]Benutzer   Bestimmt den Benutzerkontext unter dem\n\
+  /U      [Domäne\\]Benutzer   Bestimmt den Benutzerkontext unter dem\n\
                               der Befehl ausgeführt werden soll.\n\n\
   /P      [Passwort]          Bestimmt das Kennwort für den zugewiesenen\n\
                               Benutzerkontext. Bei Auslassung, wird dieses\n\

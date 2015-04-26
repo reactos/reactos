@@ -245,7 +245,7 @@ STRINGTABLE
     IDS_COL_SEC             "Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ"
 
     IDS_FREE_SPACE_FMT      "%1 РёР· %2 СЃРІРѕР±РѕРґРЅРѕ"
-    IDS_UNIT_KB             "РZРQ"
-    IDS_UNIT_MB             "Р\РQ"
-    IDS_UNIT_GB             "РSРQ"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }
