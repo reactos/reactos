@@ -1,6 +1,8 @@
 
 #define WIN32_NO_STATUS
 #include <wine/unicode.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /* Taken from Wine kernel32/locale.c */
