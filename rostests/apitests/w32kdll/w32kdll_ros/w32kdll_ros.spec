@@ -382,7 +382,7 @@
 @ stdcall NtUserEvent(long)
 @ stdcall NtUserExcludeUpdateRgn(ptr ptr)
 @ stdcall NtUserFillWindow(ptr ptr ptr ptr)
-@ stdcall NtUserFindExistingCursorIcon(ptr ptr ptr ptr) # FIXME: 3 on XP
+@ stdcall NtUserFindExistingCursorIcon(ptr ptr ptr)
 @ stdcall NtUserFindWindowEx(ptr ptr ptr ptr long)
 @ stdcall NtUserFlashWindowEx(ptr)
 @ stdcall NtUserGetAltTabInfo(ptr long ptr wstr long long)
@@ -518,7 +518,7 @@
 @ stdcall NtUserSetConsoleReserveKeys(long long)
 @ stdcall NtUserSetCursor(ptr)
 @ stdcall NtUserSetCursorContents(ptr ptr)
-; @ stdcall NtUserSetCursorIconData(ptr ptr ptr ptr) # FIXME 4 with new iconcursor / XP
+@ stdcall NtUserSetCursorIconData(ptr ptr ptr ptr)
 @ stdcall NtUserSetDbgTag(long long)
 @ stdcall NtUserSetFocus(ptr)
 @ stdcall NtUserSetImeHotKey(long long long long long)
