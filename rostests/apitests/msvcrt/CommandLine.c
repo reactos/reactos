@@ -304,7 +304,7 @@ START_TEST(CommandLine)
     else
         UtilityProgramDirectory[0] = 0; /* Suppress the executable.exe name */
 
-    wcscat(UtilityProgramDirectory, L"data\\CmdLineUtil.exe");
+    wcscat(UtilityProgramDirectory, L"testdata\\CmdLineUtil.exe");
 
     /* Close the opened quote if needed. */
     if (UtilityProgramDirectory[0] == L'"') wcscat(UtilityProgramDirectory, L"\"");
