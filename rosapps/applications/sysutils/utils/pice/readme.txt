@@ -3,12 +3,12 @@ a detailed manual later.
 
 BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA
 
-    PICE for Reactos is in early beta stage of development. It still has many bugs.
+    PICE for ReactOS is in early beta stage of development. It still has many bugs.
 
 BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA-BETA
 
 
-PICE is a kernel debugger that was ported for Reactos (the original Linux
+PICE is a kernel debugger that was ported for ReactOS (the original Linux
 project by Klaus P. Gerlicher and Goran Devic may be found here:
 http://pice.sourceforge.net).
 
@@ -22,7 +22,7 @@ be loaded after keyboard.sys driver. You should add:
 in ntoskrnl/ldr/loader.c after the line loading keyboard driver.
 
 2. You should copy pice.cfg and ntoskrnl.sym to \SystemRoot\symbols directory
-of Reactos.
+of ReactOS.
 
 3. If you want to add symbolic information you should use loader.exe to
 create .dbg file from the unstrippped version of exe or driver:
@@ -44,7 +44,7 @@ List of commands:
 
 gdt      display current global descriptor table
 idt	 display current interrupt descriptor table
-x 	 return to Reactos
+x 	 return to ReactOS
 t	 single step one instruction
 vma	 displays VMAs
 h	 list help on commands

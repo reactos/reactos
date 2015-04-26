@@ -18,7 +18,7 @@
 ;Author:
 ;
 ;    Klaus P. Gerlicher
-;    Reactos Port by Eugene Ingerman
+;    ReactOS Port by Eugene Ingerman
 ;
 ;Revision History:
 ;

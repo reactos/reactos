@@ -17,7 +17,7 @@ Environment:
 Author:
 
     Klaus P. Gerlicher
- 	Reactos Port: Eugene Ingerman
+ 	ReactOS Port: Eugene Ingerman
 
 Revision History:
 

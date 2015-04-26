@@ -847,7 +847,7 @@ void ShowRunningMsg(void)
     SetForegroundColor(COLOR_TEXT);
 	SetBackgroundColor(COLOR_CAPTION);
 	ClrLine(wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy);
-	PutChar(" Reactos is running... (Press CTRL-D to stop) ",1,wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy);
+	PutChar(" ReactOS is running... (Press CTRL-D to stop) ",1,wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy);
     ResetColor();
 
     LEAVE_FUNC();

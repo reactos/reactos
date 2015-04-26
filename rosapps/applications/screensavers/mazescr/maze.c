@@ -2,7 +2,7 @@
  * [ maze ] ...
  *
  * modified:  [ 03-08-15 ] Ge van Geldorp <ge@gse.nl>
- *		ported to Reactos
+ *		ported to ReactOS
  * modified:  [ 94-10-8 ] Ge van Geldorp <Ge.vanGeldorp@lr.tudelft.nl>
  *		ported to MS Windows
  * modified:  [ 3-7-93 ]  Jamie Zawinski <jwz@lucid.com>

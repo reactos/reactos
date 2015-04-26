@@ -175,7 +175,7 @@ LPSTR CommandGroups[]=
 CMDTABLE CmdTable[]={
 	{"gdt",ShowGdt,"display current global descriptor table"		,0,{0,0,0,0,0},"",COMMAND_GROUP_STRUCT},
 	{"idt",ShowIdt,"display current interrupt descriptor table"		,0,{0,0,0,0,0},"",COMMAND_GROUP_STRUCT},
-	{"x",LeaveIce,"return to Reactos"								,0,{0,0,0,0,0},"",COMMAND_GROUP_FLOW},
+	{"x",LeaveIce,"return to ReactOS"								,0,{0,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"t",SingleStep,"single step one instruction"					,0,{0,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"vma",ShowVirtualMemory,"displays VMAs"						,0,{0,0,0,0,0},"",COMMAND_GROUP_OS},
 	{"h",ShowHelp,"list help on commands"							,0,{0,0,0,0,0},"",COMMAND_GROUP_HELP},
@@ -2003,7 +2003,7 @@ COMMAND_PROTOTYPE(ShowVirtualMemory)
 COMMAND_PROTOTYPE(Ver)
 {
 	//ei add kernel version info??!!
-    PICE_sprintf(tempCmd,"pICE: version %u.%u (build %u) for Reactos\n",
+    PICE_sprintf(tempCmd,"pICE: version %u.%u (build %u) for ReactOS\n",
                  PICE_MAJOR_VERSION,
                  PICE_MINOR_VERSION,
                  PICE_BUILD);
@@ -2016,7 +2016,7 @@ COMMAND_PROTOTYPE(Ver)
  */
 	Print(OUTPUT_WINDOW,tempCmd);
 	Print(OUTPUT_WINDOW,"pICE: written by Klaus P. Gerlicher and Goran Devic.\n");
-	Print(OUTPUT_WINDOW,"pICE: ported to Reactos by Eugene Ingerman.\n");
+	Print(OUTPUT_WINDOW,"pICE: ported to ReactOS by Eugene Ingerman.\n");
 
 	return TRUE;
 }
