@@ -340,6 +340,7 @@ SetUserEnvironment(LPVOID *lpEnvironment,
     }
 
     /* Allocate buffers */
+    dwMaxValueNameLength++;
     lpValueName = LocalAlloc(LPTR,
                              dwMaxValueNameLength * sizeof(WCHAR));
     if (lpValueName == NULL)
