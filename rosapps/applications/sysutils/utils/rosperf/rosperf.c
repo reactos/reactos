@@ -858,9 +858,9 @@ ProcessCommandLine(PPERF_INFO PerfInfo, unsigned *TestCount, PTEST *Tests)
 }
 
 int WINAPI
-WinMain(HINSTANCE hInstance,
+wWinMain(HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
-	LPSTR lpszCmdLine,
+	LPWSTR lpszCmdLine,
 	int nCmdShow)
 {
   PTEST Tests;

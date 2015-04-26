@@ -50,8 +50,6 @@
 #		define lstat _stat
 #		define fstat _fstat
 #		define dup _dup
-#		define utime _utime
-#		define utimbuf _utimbuf
 #	endif
 #	ifndef unlink
 #		define unlink remove

@@ -13,6 +13,7 @@
 	/* Include "wincfg.h" in place of "config.h" */
 #	include "wincfg.h"
 #	include <winsock2.h>	/* includes <windows.h> */
+#	include <io.h>
 #	define _POSIX_ 1
 #	ifdef HAVE_UNISTD_H
 #		include <unistd.h>
@@ -28,7 +29,6 @@
 #	include <ctype.h>
 #	include <stdarg.h>
 #	include <time.h>
-#	include <io.h>
 #	include <sys/types.h>
 #	include <sys/stat.h>
 #	include <fcntl.h>

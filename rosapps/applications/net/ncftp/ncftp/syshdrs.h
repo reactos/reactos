@@ -44,6 +44,8 @@
 #	include <fcntl.h>
 #	include <signal.h>
 #	include <assert.h>
+#	include <utime.h>
+#	include <direct.h>
 #	undef strcasecmp
 #	define strcasecmp stricmp
 #	undef strncasecmp

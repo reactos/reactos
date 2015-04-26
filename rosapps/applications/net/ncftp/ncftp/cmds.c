@@ -1211,7 +1211,7 @@ RunBookmarkEditor(char *selectedBmName, size_t dsize)
 		SysPerror("CreateMailslot");
 		(void) fprintf(stderr, "Could not create communication channel with %s.\n", "ncftpbookmarks.exe");
 		(void) fprintf(stderr, "%s", "This means if you select a bookmark to connect to that NcFTP\n");
-		(void) fprintf(stderr, "%s", "will not get the message from %s.\n", "ncftpbookmarks.exe");
+		(void) fprintf(stderr, "%s", "will not get the message from %s.\n");
 	}
 
 	winExecResult = WinExec(prog, SW_SHOWNORMAL);
