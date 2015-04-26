@@ -17,10 +17,124 @@
 
 #include "dos.h"
 #include "dos/dem.h"
+#include "dosfiles.h"
+#include "handle.h"
 
 #include "bios/bios.h"
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+BYTE DosFindFreeDescriptor(VOID)
+{
+    UINT i;
+    BYTE Count = 0;
+    DWORD CurrentSft = SysVars->FirstSft;
+
+    while (LOWORD(CurrentSft) != 0xFFFF)
+    {
+        PDOS_SFT Sft = (PDOS_SFT)FAR_POINTER(CurrentSft);
+
+        for (i = 0; i < Sft->NumDescriptors; i++)
+        {
+            if (Sft->FileDescriptors[i].RefCount == 0) return Count;
+            Count++;
+        }
+
+        /* Go to the next table */
+        CurrentSft = Sft->Link;
+    }
+
+    /* Invalid ID */
+    return 0xFF;
+}
+
+BYTE DosFindWin32Descriptor(HANDLE Win32Handle)
+{
+    UINT i;
+    BYTE Count = 0;
+    DWORD CurrentSft = SysVars->FirstSft;
+
+    while (LOWORD(CurrentSft) != 0xFFFF)
+    {
+        PDOS_SFT Sft = (PDOS_SFT)FAR_POINTER(CurrentSft);
+
+        for (i = 0; i < Sft->NumDescriptors; i++)
+        {
+            if ((Sft->FileDescriptors[i].RefCount > 0)
+                && !(Sft->FileDescriptors[i].DeviceInfo & (1 << 7))
+                && (Sft->FileDescriptors[i].Win32Handle == Win32Handle))
+            {
+                return Count;
+            }
+
+            Count++;
+        }
+
+        /* Go to the next table */
+        CurrentSft = Sft->Link;
+    }
+
+    /* Invalid ID */
+    return 0xFF;
+}
+
+BYTE DosFindDeviceDescriptor(DWORD DevicePointer)
+{
+    UINT i;
+    BYTE Count = 0;
+    DWORD CurrentSft = SysVars->FirstSft;
+
+    while (LOWORD(CurrentSft) != 0xFFFF)
+    {
+        PDOS_SFT Sft = (PDOS_SFT)FAR_POINTER(CurrentSft);
+
+        for (i = 0; i < Sft->NumDescriptors; i++)
+        {
+            if ((Sft->FileDescriptors[i].RefCount > 0)
+                && (Sft->FileDescriptors[i].DeviceInfo & (1 << 7))
+                && (Sft->FileDescriptors[i].DevicePointer == DevicePointer))
+            {
+                return Count;
+            }
+
+            Count++;
+        }
+
+        /* Go to the next table */
+        CurrentSft = Sft->Link;
+    }
+
+    /* Invalid ID */
+    return 0xFF;
+}
+
+PDOS_FILE_DESCRIPTOR DosGetFileDescriptor(BYTE Id)
+{
+    DWORD CurrentSft = SysVars->FirstSft;
+
+    while (LOWORD(CurrentSft) != 0xFFFF)
+    {
+        PDOS_SFT Sft = (PDOS_SFT)FAR_POINTER(CurrentSft);
+
+        /* Return it if it's in this table */
+        if (Id <= Sft->NumDescriptors) return &Sft->FileDescriptors[Id];
+
+        /* Go to the next table */
+        Id -= Sft->NumDescriptors;
+        CurrentSft = Sft->Link;
+    }
+
+    /* Invalid ID */
+    return NULL;
+}
+
+PDOS_FILE_DESCRIPTOR DosGetHandleFileDescriptor(WORD DosHandle)
+{
+    BYTE DescriptorId = DosQueryHandle(DosHandle);
+    if (DescriptorId == 0xFF) return NULL;
+
+    return DosGetFileDescriptor(DescriptorId);
+}
 
 WORD DosCreateFileEx(LPWORD Handle,
                      LPWORD CreationStatus,
@@ -37,6 +151,8 @@ WORD DosCreateFileEx(LPWORD Handle,
     DWORD CreationDisposition = 0;
     BOOL InheritableFile = FALSE;
     SECURITY_ATTRIBUTES SecurityAttributes;
+    BYTE DescriptorId;
+    PDOS_FILE_DESCRIPTOR Descriptor;
 
     DPRINT1("DosCreateFileEx: FilePath \"%s\", AccessShareModes 0x%04X, CreateActionFlags 0x%04X, Attributes 0x%04X\n",
            FilePath, AccessShareModes, CreateActionFlags, Attributes);
@@ -228,8 +344,26 @@ WORD DosCreateFileEx(LPWORD Handle,
         }
     }
 
+    DescriptorId = DosFindFreeDescriptor();
+    if (DescriptorId == 0xFF)
+    {
+        /* Close the file and return the error code */
+        CloseHandle(FileHandle);
+        return ERROR_TOO_MANY_OPEN_FILES;
+    }
+
+    /* Set up the new descriptor */
+    Descriptor = DosGetFileDescriptor(DescriptorId);
+    RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+
+    Descriptor->OpenMode = AccessShareModes;
+    Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
+    Descriptor->Size = GetFileSize(FileHandle, NULL);
+    Descriptor->OwnerPsp = CurrentPsp;
+    Descriptor->Win32Handle = FileHandle;
+
     /* Open the DOS handle */
-    DosHandle = DosOpenHandle(FileHandle);
+    DosHandle = DosOpenHandle(DescriptorId);
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -249,6 +383,8 @@ WORD DosCreateFile(LPWORD Handle,
 {
     HANDLE FileHandle;
     WORD DosHandle;
+    BYTE DescriptorId;
+    PDOS_FILE_DESCRIPTOR Descriptor;
 
     DPRINT("DosCreateFile: FilePath \"%s\", CreationDisposition 0x%04X, Attributes 0x%04X\n",
            FilePath, CreationDisposition, Attributes);
@@ -267,8 +403,25 @@ WORD DosCreateFile(LPWORD Handle,
         return (WORD)GetLastError();
     }
 
+    DescriptorId = DosFindFreeDescriptor();
+    if (DescriptorId == 0xFF)
+    {
+        /* Close the file and return the error code */
+        CloseHandle(FileHandle);
+        return ERROR_TOO_MANY_OPEN_FILES;
+    }
+
+    /* Set up the new descriptor */
+    Descriptor = DosGetFileDescriptor(DescriptorId);
+    RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+
+    Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
+    Descriptor->Size = GetFileSize(FileHandle, NULL);
+    Descriptor->OwnerPsp = CurrentPsp;
+    Descriptor->Win32Handle = FileHandle;
+
     /* Open the DOS handle */
-    DosHandle = DosOpenHandle(FileHandle);
+    DosHandle = DosOpenHandle(DescriptorId);
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -285,12 +438,11 @@ WORD DosOpenFile(LPWORD Handle,
                  LPCSTR FilePath,
                  BYTE AccessShareModes)
 {
-    HANDLE FileHandle;
-    ACCESS_MASK AccessMode = 0;
-    DWORD ShareMode = 0;
-    BOOL InheritableFile = FALSE;
-    SECURITY_ATTRIBUTES SecurityAttributes;
+    HANDLE FileHandle = NULL;
+    PDOS_DEVICE_NODE Node;
     WORD DosHandle;
+    BYTE DescriptorId;
+    PDOS_FILE_DESCRIPTOR Descriptor;
 
     DPRINT("DosOpenFile: FilePath \"%s\", AccessShareModes 0x%04X\n",
            FilePath, AccessShareModes);
@@ -300,86 +452,125 @@ WORD DosOpenFile(LPWORD Handle,
     // explains what those AccessShareModes are (see the uStyle flag).
     //
 
-    /* Parse the access mode */
-    switch (AccessShareModes & 0x03)
+    Node = DosGetDevice(FilePath);
+    if (Node != NULL)
     {
-        /* Read-only */
-        case 0:
-            AccessMode = GENERIC_READ;
-            break;
+        if (Node->OpenRoutine) Node->OpenRoutine(Node);
+    }
+    else
+    {
+        ACCESS_MASK AccessMode = 0;
+        DWORD ShareMode = 0;
+        BOOL InheritableFile = FALSE;
+        SECURITY_ATTRIBUTES SecurityAttributes;
 
-        /* Write only */
-        case 1:
-            AccessMode = GENERIC_WRITE;
-            break;
+        /* Parse the access mode */
+        switch (AccessShareModes & 0x03)
+        {
+            /* Read-only */
+            case 0:
+                AccessMode = GENERIC_READ;
+                break;
 
-        /* Read and write */
-        case 2:
-            AccessMode = GENERIC_READ | GENERIC_WRITE;
-            break;
+            /* Write only */
+            case 1:
+                AccessMode = GENERIC_WRITE;
+                break;
 
-        /* Invalid */
-        default:
-            return ERROR_INVALID_PARAMETER;
+            /* Read and write */
+            case 2:
+                AccessMode = GENERIC_READ | GENERIC_WRITE;
+                break;
+
+            /* Invalid */
+            default:
+                return ERROR_INVALID_PARAMETER;
+        }
+
+        /* Parse the share mode */
+        switch ((AccessShareModes >> 4) & 0x07)
+        {
+            /* Compatibility mode */
+            case 0:
+                ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+                break;
+
+            /* No sharing "DenyAll" */
+            case 1:
+                ShareMode = 0;
+                break;
+
+            /* No write share "DenyWrite" */
+            case 2:
+                ShareMode = FILE_SHARE_READ;
+                break;
+
+            /* No read share "DenyRead" */
+            case 3:
+                ShareMode = FILE_SHARE_WRITE;
+                break;
+
+            /* Full share "DenyNone" */
+            case 4:
+                ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+                break;
+
+            /* Invalid */
+            default:
+                return ERROR_INVALID_PARAMETER;
+        }
+
+        /* Check for inheritance */
+        InheritableFile = ((AccessShareModes & 0x80) == 0);
+
+        /* Assign default security attributes to the file, and set the inheritance flag */
+        SecurityAttributes.nLength = sizeof(SecurityAttributes);
+        SecurityAttributes.lpSecurityDescriptor = NULL;
+        SecurityAttributes.bInheritHandle = InheritableFile;
+
+        /* Open the file */
+        FileHandle = CreateFileA(FilePath,
+                                 AccessMode,
+                                 ShareMode,
+                                 &SecurityAttributes,
+                                 OPEN_EXISTING,
+                                 FILE_ATTRIBUTE_NORMAL,
+                                 NULL);
+        if (FileHandle == INVALID_HANDLE_VALUE)
+        {
+            /* Return the error code */
+            return (WORD)GetLastError();
+        }
+    }
+ 
+    DescriptorId = DosFindFreeDescriptor();
+    if (DescriptorId == 0xFF)
+    {
+        /* Close the file and return the error code */
+        CloseHandle(FileHandle);
+        return ERROR_TOO_MANY_OPEN_FILES;
     }
 
-    /* Parse the share mode */
-    switch ((AccessShareModes >> 4) & 0x07)
+    /* Set up the new descriptor */
+    Descriptor = DosGetFileDescriptor(DescriptorId);
+    RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+
+    if (Node != NULL)
     {
-        /* Compatibility mode */
-        case 0:
-            ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-            break;
-
-        /* No sharing "DenyAll" */
-        case 1:
-            ShareMode = 0;
-            break;
-
-        /* No write share "DenyWrite" */
-        case 2:
-            ShareMode = FILE_SHARE_READ;
-            break;
-
-        /* No read share "DenyRead" */
-        case 3:
-            ShareMode = FILE_SHARE_WRITE;
-            break;
-
-        /* Full share "DenyNone" */
-        case 4:
-            ShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-            break;
-
-        /* Invalid */
-        default:
-            return ERROR_INVALID_PARAMETER;
+        Descriptor->DevicePointer = Node->Driver;
+        Descriptor->DeviceInfo = Node->DeviceAttributes | (1 << 7);
     }
-
-    /* Check for inheritance */
-    InheritableFile = ((AccessShareModes & 0x80) == 0);
-
-    /* Assign default security attributes to the file, and set the inheritance flag */
-    SecurityAttributes.nLength = sizeof(SecurityAttributes);
-    SecurityAttributes.lpSecurityDescriptor = NULL;
-    SecurityAttributes.bInheritHandle = InheritableFile;
-
-    /* Open the file */
-    FileHandle = CreateFileA(FilePath,
-                             AccessMode,
-                             ShareMode,
-                             &SecurityAttributes,
-                             OPEN_EXISTING,
-                             FILE_ATTRIBUTE_NORMAL,
-                             NULL);
-    if (FileHandle == INVALID_HANDLE_VALUE)
+    else
     {
-        /* Return the error code */
-        return (WORD)GetLastError();
+        Descriptor->OpenMode = AccessShareModes;
+        Descriptor->Attributes = LOBYTE(GetFileAttributesA(FilePath));
+        Descriptor->Size = GetFileSize(FileHandle, NULL);
+        Descriptor->OwnerPsp = CurrentPsp;
+        Descriptor->Win32Handle = FileHandle;
     }
 
     /* Open the DOS handle */
-    DosHandle = DosOpenHandle(FileHandle);
+    DosHandle = DosOpenHandle(DescriptorId);
     if (DosHandle == INVALID_DOS_HANDLE)
     {
         /* Close the file and return the error code */
@@ -398,27 +589,39 @@ WORD DosReadFile(WORD FileHandle,
                  LPWORD BytesRead)
 {
     WORD Result = ERROR_SUCCESS;
-    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
 
     DPRINT("DosReadFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
-    if (SftEntry == NULL)
+    if (Descriptor == NULL)
     {
         /* Invalid handle */
         return ERROR_INVALID_HANDLE;
     }
 
-    if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
+    if (Descriptor->DeviceInfo & (1 << 7))
+    {
+        PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
+        if (!Node->ReadRoutine) return ERROR_INVALID_FUNCTION;
+
+        /* Read the device */
+        Node->ReadRoutine(Node, Buffer, &Count);
+        *BytesRead = Count;
+    }
+    else
     {
         DWORD BytesRead32 = 0;
         LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
         ASSERT(LocalBuffer != NULL);
 
         /* Read the file */
-        if (ReadFile(SftEntry->Handle, LocalBuffer, Count, &BytesRead32, NULL))
+        if (ReadFile(Descriptor->Win32Handle, LocalBuffer, Count, &BytesRead32, NULL))
         {
             /* Write to the memory */
             MemWrite(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, LOWORD(BytesRead32));
+
+            /* Update the position */
+            Descriptor->Position += BytesRead32;
         }
         else
         {
@@ -429,19 +632,6 @@ WORD DosReadFile(WORD FileHandle,
         /* The number of bytes read is always 16-bit */
         *BytesRead = LOWORD(BytesRead32);
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
-    }
-    else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
-    {
-        if (!SftEntry->DeviceNode->ReadRoutine) return ERROR_INVALID_FUNCTION;
-
-        /* Read the device */
-        SftEntry->DeviceNode->ReadRoutine(SftEntry->DeviceNode, Buffer, &Count);
-        *BytesRead = Count;
-    }
-    else
-    {
-        /* Invalid handle */
-        return ERROR_INVALID_HANDLE;
     }
 
     /* Return the error code */
@@ -454,17 +644,26 @@ WORD DosWriteFile(WORD FileHandle,
                   LPWORD BytesWritten)
 {
     WORD Result = ERROR_SUCCESS;
-    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
 
     DPRINT("DosWriteFile: FileHandle 0x%04X, Count 0x%04X\n", FileHandle, Count);
 
-    if (SftEntry == NULL)
+    if (Descriptor == NULL)
     {
         /* Invalid handle */
         return ERROR_INVALID_HANDLE;
     }
 
-    if (SftEntry->Type == DOS_SFT_ENTRY_WIN32)
+    if (Descriptor->DeviceInfo & (1 << 7))
+    {
+        PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
+        if (!Node->WriteRoutine) return ERROR_INVALID_FUNCTION;
+
+        /* Read the device */
+        Node->WriteRoutine(Node, Buffer, &Count);
+        *BytesWritten = Count;
+    }
+    else
     {
         DWORD BytesWritten32 = 0;
         LPVOID LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count);
@@ -474,7 +673,13 @@ WORD DosWriteFile(WORD FileHandle,
         MemRead(TO_LINEAR(HIWORD(Buffer), LOWORD(Buffer)), LocalBuffer, Count);
 
         /* Write the file */
-        if (!WriteFile(SftEntry->Handle, LocalBuffer, Count, &BytesWritten32, NULL))
+        if (WriteFile(Descriptor->Win32Handle, LocalBuffer, Count, &BytesWritten32, NULL))
+        {
+            /* Update the position and size */
+            Descriptor->Position += BytesWritten32;
+            if (Descriptor->Position > Descriptor->Size) Descriptor->Size = Descriptor->Position;
+        }
+        else
         {
             /* Store the error code */
             Result = (WORD)GetLastError();
@@ -483,19 +688,6 @@ WORD DosWriteFile(WORD FileHandle,
         /* The number of bytes written is always 16-bit */
         *BytesWritten = LOWORD(BytesWritten32);
         RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
-    }
-    else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
-    {
-        if (!SftEntry->DeviceNode->WriteRoutine) return ERROR_INVALID_FUNCTION;
-
-        /* Read the device */
-        SftEntry->DeviceNode->WriteRoutine(SftEntry->DeviceNode, Buffer, &Count);
-        *BytesWritten = Count;
-    }
-    else
-    {
-        /* Invalid handle */
-        return ERROR_INVALID_HANDLE;
     }
 
     /* Return the error code */
@@ -509,25 +701,20 @@ WORD DosSeekFile(WORD FileHandle,
 {
     WORD Result = ERROR_SUCCESS;
     DWORD FilePointer;
-    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
 
     DPRINT("DosSeekFile: FileHandle 0x%04X, Offset 0x%08X, Origin 0x%02X\n",
            FileHandle,
            Offset,
            Origin);
 
-    if (SftEntry == NULL)
+    if (Descriptor == NULL)
     {
         /* Invalid handle */
         return ERROR_INVALID_HANDLE;
     }
 
-    if (SftEntry->Type == DOS_SFT_ENTRY_NONE)
-    {
-        /* Invalid handle */
-        return ERROR_INVALID_HANDLE;
-    }
-    else if (SftEntry->Type == DOS_SFT_ENTRY_DEVICE)
+    if (Descriptor->DeviceInfo & (1 << 7))
     {
         /* For character devices, always return success */
         return ERROR_SUCCESS;
@@ -539,7 +726,7 @@ WORD DosSeekFile(WORD FileHandle,
         return ERROR_INVALID_FUNCTION;
     }
 
-    FilePointer = SetFilePointer(SftEntry->Handle, Offset, NULL, Origin);
+    FilePointer = SetFilePointer(Descriptor->Win32Handle, Offset, NULL, Origin);
 
     /* Check if there's a possibility the operation failed */
     if (FilePointer == INVALID_SET_FILE_POINTER)
@@ -554,6 +741,9 @@ WORD DosSeekFile(WORD FileHandle,
         return Result;
     }
 
+    /* Update the descriptor */
+    Descriptor->Position = FilePointer;
+
     /* Return the file pointer, if requested */
     if (NewOffset) *NewOffset = FilePointer;
 
@@ -563,38 +753,164 @@ WORD DosSeekFile(WORD FileHandle,
 
 BOOL DosFlushFileBuffers(WORD FileHandle)
 {
-    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(FileHandle);
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
 
-    if (SftEntry == NULL)
+    if (Descriptor == NULL)
     {
         /* Invalid handle */
-        return ERROR_INVALID_HANDLE;
+        DosLastError = ERROR_INVALID_HANDLE;
+        return FALSE;
     }
 
-    switch (SftEntry->Type)
+    if (Descriptor->DeviceInfo & (1 << 7))
     {
-        case DOS_SFT_ENTRY_WIN32:
+        PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
+
+        if (Node->FlushInputRoutine) Node->FlushInputRoutine(Node);
+        if (Node->FlushOutputRoutine) Node->FlushOutputRoutine(Node);
+
+        return TRUE;
+    }
+    else
+    {
+        return FlushFileBuffers(Descriptor->Win32Handle);
+    }
+}
+
+BOOLEAN DosLockFile(WORD DosHandle, DWORD Offset, DWORD Size)
+{
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(DosHandle);
+
+    if (Descriptor == NULL)
+    {
+        /* Invalid handle */
+        DosLastError = ERROR_INVALID_HANDLE;
+        return FALSE;
+    }
+
+    /* Always succeed for character devices */
+    if (Descriptor->DeviceInfo & (1 << 7)) return TRUE;
+
+    if (!LockFile(Descriptor->Win32Handle, Offset, 0, Size, 0))
+    {
+        DosLastError = GetLastError();
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOLEAN DosUnlockFile(WORD DosHandle, DWORD Offset, DWORD Size)
+{
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(DosHandle);
+
+    if (Descriptor == NULL)
+    {
+        /* Invalid handle */
+        DosLastError = ERROR_INVALID_HANDLE;
+        return FALSE;
+    }
+
+    /* Always succeed for character devices */
+    if (Descriptor->DeviceInfo & (1 << 7)) return TRUE;
+
+    if (!UnlockFile(Descriptor->Win32Handle, Offset, 0, Size, 0))
+    {
+        DosLastError = GetLastError();
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWORD Length)
+{
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
+    PDOS_DEVICE_NODE Node = NULL;
+
+    if (!Descriptor)
+    {
+        DosLastError = ERROR_INVALID_HANDLE;
+        return FALSE;
+    }
+
+    if (Descriptor->DeviceInfo & (1 << 7))
+    {
+        Node = DosGetDriverNode(Descriptor->DevicePointer);
+    }
+
+    switch (ControlCode)
+    {
+        /* Get Device Information */
+        case 0x00:
         {
-            return FlushFileBuffers(SftEntry->Handle);
-        }
-
-        case DOS_SFT_ENTRY_DEVICE:
-        {
-            if (SftEntry->DeviceNode->FlushInputRoutine)
-                SftEntry->DeviceNode->FlushInputRoutine(SftEntry->DeviceNode);
-
-            if (SftEntry->DeviceNode->FlushOutputRoutine)
-                SftEntry->DeviceNode->FlushOutputRoutine(SftEntry->DeviceNode);
-
+            /*
+             * See Ralf Brown: http://www.ctyme.com/intr/rb-2820.htm
+             * for a list of possible flags.
+             */
+            setDX(Descriptor->DeviceInfo);
             return TRUE;
         }
-        
+
+        /* Set Device Information */
+        case 0x01:
+        {
+            // TODO: NOT IMPLEMENTED
+            UNIMPLEMENTED;
+
+            return FALSE;
+        }
+
+        /* Read From Device I/O Control Channel */
+        case 0x02:
+        {
+            if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
+            {
+                DosLastError = ERROR_INVALID_FUNCTION;
+                return FALSE;
+            }
+
+            /* Do nothing if there is no IOCTL routine */
+            if (!Node->IoctlReadRoutine)
+            {
+                *Length = 0;
+                return TRUE;
+            }
+
+            Node->IoctlReadRoutine(Node, Buffer, Length);
+            return TRUE;
+        }
+
+        /* Write To Device I/O Control Channel */
+        case 0x03:
+        {
+            if (Node == NULL || !(Node->DeviceAttributes & DOS_DEVATTR_IOCTL))
+            {
+                DosLastError = ERROR_INVALID_FUNCTION;
+                return FALSE;
+            }
+
+            /* Do nothing if there is no IOCTL routine */
+            if (!Node->IoctlWriteRoutine)
+            {
+                *Length = 0;
+                return TRUE;
+            }
+
+            Node->IoctlWriteRoutine(Node, Buffer, Length);
+            return TRUE;
+        }
+
+        /* Unsupported control code */
         default:
         {
-            /* Invalid handle */
+            DPRINT1("Unsupported IOCTL: 0x%02X\n", ControlCode);
+
+            DosLastError = ERROR_INVALID_PARAMETER;
             return FALSE;
         }
     }
 }
+
 
 /* EOF */

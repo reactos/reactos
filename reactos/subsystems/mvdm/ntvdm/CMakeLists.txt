@@ -33,6 +33,7 @@ list(APPEND SOURCE
     dos/dos32krnl/dos.c
     dos/dos32krnl/dosfiles.c
     dos/dos32krnl/emsdrv.c
+    dos/dos32krnl/handle.c
     dos/dos32krnl/himem.c
     dos/dos32krnl/memory.c
     dos/mouse32.c

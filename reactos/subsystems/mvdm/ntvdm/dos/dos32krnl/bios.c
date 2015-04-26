@@ -15,6 +15,7 @@
 #include "int32.h"
 
 #include "dos.h"
+#include "dosfiles.h"
 #include "memory.h"
 #include "bios/bios.h"
 
@@ -56,43 +57,33 @@ CHAR DosReadCharacter(WORD FileHandle)
 
 BOOLEAN DosCheckInput(VOID)
 {
-    PDOS_SFT_ENTRY SftEntry = DosGetSftEntry(DOS_INPUT_HANDLE);
+    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(DOS_INPUT_HANDLE);
 
-    if (SftEntry == NULL)
+    if (Descriptor == NULL)
     {
         /* Invalid handle */
         DosLastError = ERROR_INVALID_HANDLE; // ERROR_FILE_NOT_FOUND
         return FALSE;
     }
 
-    switch (SftEntry->Type)
+    if (Descriptor->DeviceInfo & (1 << 7))
     {
-        case DOS_SFT_ENTRY_WIN32:
-        {
-            DWORD FileSizeHigh;
-            DWORD FileSize = GetFileSize(SftEntry->Handle, &FileSizeHigh);
-            LONG LocationHigh = 0;
-            DWORD Location = SetFilePointer(SftEntry->Handle, 0, &LocationHigh, FILE_CURRENT);
+        WORD Result;
+        PDOS_DEVICE_NODE Node = DosGetDriverNode(Descriptor->DevicePointer);
 
-            return ((Location != FileSize) || (LocationHigh != FileSizeHigh));
-        }
+        if (!Node->InputStatusRoutine) return FALSE;
+        
+        Result = Node->InputStatusRoutine(Node);
+        return !(Result & DOS_DEVSTAT_BUSY);
+    }
+    else
+    {
+        DWORD FileSizeHigh;
+        DWORD FileSize = GetFileSize(Descriptor->Win32Handle, &FileSizeHigh);
+        LONG LocationHigh = 0;
+        DWORD Location = SetFilePointer(Descriptor->Win32Handle, 0, &LocationHigh, FILE_CURRENT);
 
-        case DOS_SFT_ENTRY_DEVICE:
-        {
-            WORD Result;
-
-            if (!SftEntry->DeviceNode->InputStatusRoutine) return FALSE;
-            
-            Result = SftEntry->DeviceNode->InputStatusRoutine(SftEntry->DeviceNode);
-            return !(Result & DOS_DEVSTAT_BUSY);
-        }
-
-        default:
-        {
-            /* Invalid handle */
-            DosLastError = ERROR_INVALID_HANDLE;
-            return FALSE;
-        }
+        return ((Location != FileSize) || (LocationHigh != FileSizeHigh));
     }
 }
 

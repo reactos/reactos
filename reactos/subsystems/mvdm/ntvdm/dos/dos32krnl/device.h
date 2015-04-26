@@ -194,6 +194,7 @@ typedef struct _DOS_OUTPUT_BUSY_REQUEST
 
 /* FUNCTIONS ******************************************************************/
 
+PDOS_DEVICE_NODE DosGetDriverNode(DWORD Driver);
 PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName);
 PDOS_DEVICE_NODE DosCreateDevice(WORD Attributes, PCHAR DeviceName);
 PDOS_DEVICE_NODE DosCreateDeviceEx

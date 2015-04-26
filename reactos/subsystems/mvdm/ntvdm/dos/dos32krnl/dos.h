@@ -30,6 +30,8 @@
 #define USER_MEMORY_SIZE (0x9FFE - FIRST_MCB_SEGMENT)
 #define SYSTEM_PSP 0x08
 #define SYSTEM_ENV_BLOCK 0x800
+#define DOS_DATA_SEGMENT 0xA0
+#define MASTER_SFT_OFFSET 0x100
 
 #define INVALID_DOS_HANDLE  0xFFFF
 #define DOS_INPUT_HANDLE    0
@@ -48,7 +50,6 @@
 #define NUM_DRIVES ('Z' - 'A' + 1)
 #define DOS_CHAR_ATTRIBUTE 0x07
 #define DOS_PROGRAM_NAME_TAG 0x0001
-#define DEFAULT_JFT_SIZE 20
 
 /* 16 MB of EMS memory */
 #define EMS_TOTAL_PAGES 1024
@@ -59,25 +60,6 @@ typedef enum
     DOS_LOAD_ONLY = 0x01,
     DOS_LOAD_OVERLAY = 0x03
 } DOS_EXEC_TYPE;
-
-typedef enum
-{
-    DOS_SFT_ENTRY_NONE,
-    DOS_SFT_ENTRY_WIN32,
-    DOS_SFT_ENTRY_DEVICE
-} DOS_SFT_ENTRY_TYPE;
-
-typedef struct _DOS_SFT_ENTRY
-{
-    DOS_SFT_ENTRY_TYPE Type;
-    WORD RefCount;
-
-    union
-    {
-        HANDLE Handle;
-        PDOS_DEVICE_NODE DeviceNode;
-    };
-} DOS_SFT_ENTRY, *PDOS_SFT_ENTRY;
 
 #pragma pack(push, 1)
 
@@ -95,6 +77,30 @@ typedef struct _DOS_FCB
     BYTE BlockRecord;
     BYTE RecordNumber[3];
 } DOS_FCB, *PDOS_FCB;
+
+typedef struct _DOS_SYSVARS
+{
+    DWORD OemHandler;
+    WORD Int21hReturn;
+    WORD ShareRetryCount;
+    WORD ShareRetryDelay;
+    DWORD DiskBuffer;
+    WORD UnreadConInput;
+    WORD FirstMcb;
+
+    /* This is where the SYSVARS really start */
+    DWORD FirstDpb;
+    DWORD FirstSft;
+    DWORD ActiveClock;
+    DWORD ActiveCon;
+    BYTE Reserved0[6];
+    DWORD CurrentDirs;
+    BYTE Reserved1[6];
+    BYTE NumBlockDevices;
+    BYTE NumLocalDrives;
+    DOS_DRIVER NullDevice;
+    BYTE NullDriverRoutine[7];
+} DOS_SYSVARS, *PDOS_SYSVARS;
 
 typedef struct _DOS_PSP
 {
@@ -127,15 +133,6 @@ typedef struct _DOS_INPUT_BUFFER
     BYTE Length;
     CHAR Buffer[ANYSIZE_ARRAY];
 } DOS_INPUT_BUFFER, *PDOS_INPUT_BUFFER;
-
-typedef struct _DOS_DRIVER_HEADER
-{
-    DWORD NextDriver;
-    WORD Attributes;
-    WORD StrategyEntry;
-    WORD InterruptEntry;
-    CHAR DeviceName[8];
-} DOS_DRIVER_HEADER, *PDOS_DRIVER_HEADER;
 
 typedef struct _DOS_FIND_FILE_BLOCK
 {
@@ -181,6 +178,7 @@ typedef struct _DOS_COUNTRY_CODE_BUFFER
 extern BOOLEAN DoEcho;
 extern WORD CurrentPsp;
 extern WORD DosLastError;
+extern PDOS_SYSVARS SysVars;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -208,35 +206,6 @@ VOID ConDrvCleanup(VOID);
  * DOS Kernel Functions
  * See dos.c
  */
-WORD DosOpenHandle(HANDLE Handle);
-PDOS_SFT_ENTRY DosGetSftEntry(WORD DosHandle);
-
-WORD DosCreateFileEx(LPWORD Handle,
-                     LPWORD CreationStatus,
-                     LPCSTR FilePath,
-                     BYTE AccessShareModes,
-                     WORD CreateActionFlags,
-                     WORD Attributes);
-WORD DosCreateFile(LPWORD Handle,
-                   LPCSTR FilePath,
-                   DWORD CreationDisposition,
-                   WORD Attributes);
-WORD DosOpenFile(LPWORD Handle,
-                 LPCSTR FilePath,
-                 BYTE AccessShareModes);
-WORD DosReadFile(WORD FileHandle,
-                 DWORD Buffer,
-                 WORD Count,
-                 LPWORD BytesRead);
-WORD DosWriteFile(WORD FileHandle,
-                  DWORD Buffer,
-                  WORD Count,
-                  LPWORD BytesWritten);
-WORD DosSeekFile(WORD FileHandle,
-                 LONG Offset,
-                 BYTE Origin,
-                 LPDWORD NewOffset);
-BOOL DosFlushFileBuffers(WORD FileHandle);
 
 VOID DosInitializePsp(
     WORD PspSegment,

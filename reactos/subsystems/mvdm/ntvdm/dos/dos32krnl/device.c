@@ -40,7 +40,6 @@ static const BYTE InterruptRoutine[] = {
 C_ASSERT((sizeof(StrategyRoutine) + sizeof(InterruptRoutine)) == DEVICE_CODE_SIZE);
 
 static LIST_ENTRY DeviceList = { &DeviceList, &DeviceList };
-static DWORD FirstDriver = 0xFFFFFFFF;
 static PDOS_REQUEST_HEADER DeviceRequest;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -213,17 +212,9 @@ static WORD NTAPI DosDriverDispatchOutputUntilBusy(PDOS_DEVICE_NODE DeviceNode,
 
 static VOID DosAddDriver(DWORD Driver)
 {
-    PDOS_DRIVER LastDriver;
+    PDOS_DRIVER LastDriver = &SysVars->NullDevice;
 
-    if (LOWORD(FirstDriver) == 0xFFFF)
-    {
-        /* This is the first driver */
-        FirstDriver = Driver;
-        return;
-    }
-
-    /* The list isn't empty, so find the last driver in it */
-    LastDriver = (PDOS_DRIVER)FAR_POINTER(FirstDriver);
+    /* Find the last driver in the list */
     while (LOWORD(LastDriver->Link) != 0xFFFF)
     {
         LastDriver = (PDOS_DRIVER)FAR_POINTER(LastDriver->Link);
@@ -231,18 +222,25 @@ static VOID DosAddDriver(DWORD Driver)
 
     /* Add the new driver to the list */
     LastDriver->Link = Driver;
+    LastDriver = (PDOS_DRIVER)FAR_POINTER(Driver);
+
+    if (LastDriver->DeviceAttributes & DOS_DEVATTR_CLOCK)
+    {
+        /* Update the active CLOCK driver */
+        SysVars->ActiveClock = Driver;
+    }
+
+    if (LastDriver->DeviceAttributes
+        & (DOS_DEVATTR_STDIN | DOS_DEVATTR_STDOUT | DOS_DEVATTR_CON))
+    {
+        /* Update the active CON driver */
+        SysVars->ActiveCon = Driver;
+    }
 }
 
 static VOID DosRemoveDriver(DWORD Driver)
 {
-    DWORD CurrentDriver = FirstDriver;
-
-    if (FirstDriver == Driver)
-    {
-        /* Update the first driver */
-        FirstDriver = ((PDOS_DRIVER)FAR_POINTER(FirstDriver))->Link;
-        return;
-    }
+    DWORD CurrentDriver = MAKELONG(FIELD_OFFSET(DOS_SYSVARS, NullDevice), DOS_DATA_SEGMENT);
 
     while (LOWORD(CurrentDriver) != 0xFFFF)
     {
@@ -289,48 +287,54 @@ static PDOS_DEVICE_NODE DosCreateDeviceNode(DWORD Driver)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName)
+PDOS_DEVICE_NODE DosGetDriverNode(DWORD Driver)
 {
     PLIST_ENTRY i;
-    DWORD CurrentDriver = FirstDriver;
+    PDOS_DEVICE_NODE Node;
+
+    for (i = DeviceList.Flink; i != &DeviceList; i = i->Flink)
+    {
+        Node = CONTAINING_RECORD(i, DOS_DEVICE_NODE, Entry);
+        if (Node->Driver == Driver) break;
+    }
+
+    if (i == &DeviceList)
+    {
+        DPRINT1("The driver at %04X:%04X has no associated device node. "
+                "Installing automagically.\n",
+                HIWORD(Driver),
+                LOWORD(Driver));
+
+        /* Create the device node */
+        Node = DosCreateDeviceNode(Driver);
+        Node->IoctlReadRoutine = DosDriverDispatchIoctlRead;
+        Node->ReadRoutine = DosDriverDispatchRead;
+        Node->PeekRoutine = DosDriverDispatchPeek;
+        Node->InputStatusRoutine = DosDriverDispatchInputStatus;
+        Node->FlushInputRoutine = DosDriverDispatchFlushInput;
+        Node->IoctlWriteRoutine = DosDriverDispatchIoctlWrite;
+        Node->WriteRoutine = DosDriverDispatchWrite;
+        Node->OutputStatusRoutine = DosDriverDispatchOutputStatus;
+        Node->FlushOutputRoutine = DosDriverDispatchFlushOutput;
+        Node->OpenRoutine = DosDriverDispatchOpen;
+        Node->CloseRoutine = DosDriverDispatchClose;
+        Node->OutputUntilBusyRoutine = DosDriverDispatchOutputUntilBusy;
+    }
+
+    return Node;
+}
+
+PDOS_DEVICE_NODE DosGetDevice(LPCSTR DeviceName)
+{
+    DWORD CurrentDriver = MAKELONG(FIELD_OFFSET(DOS_SYSVARS, NullDevice), DOS_DATA_SEGMENT);
     ANSI_STRING DeviceNameString;
 
     RtlInitAnsiString(&DeviceNameString, DeviceName);
 
     while (LOWORD(CurrentDriver) != 0xFFFF)
     {
-        PDOS_DEVICE_NODE Node;
+        PDOS_DEVICE_NODE Node = DosGetDriverNode(CurrentDriver);
         PDOS_DRIVER DriverHeader = (PDOS_DRIVER)FAR_POINTER(CurrentDriver);
-
-        /* Get the device node for this driver */
-        for (i = DeviceList.Flink; i != &DeviceList; i = i->Flink)
-        {
-            Node = CONTAINING_RECORD(i, DOS_DEVICE_NODE, Entry);
-            if (Node->Driver == CurrentDriver) break;
-        }
-
-        if (i == &DeviceList)
-        {
-            DPRINT1("The driver at %04X:%04X has no associated device node. "
-                    "Installing automagically.\n",
-                    HIWORD(CurrentDriver),
-                    LOWORD(CurrentDriver));
-
-            /* Create the device node */
-            Node = DosCreateDeviceNode(CurrentDriver);
-            Node->IoctlReadRoutine = DosDriverDispatchIoctlRead;
-            Node->ReadRoutine = DosDriverDispatchRead;
-            Node->PeekRoutine = DosDriverDispatchPeek;
-            Node->InputStatusRoutine = DosDriverDispatchInputStatus;
-            Node->FlushInputRoutine = DosDriverDispatchFlushInput;
-            Node->IoctlWriteRoutine = DosDriverDispatchIoctlWrite;
-            Node->WriteRoutine = DosDriverDispatchWrite;
-            Node->OutputStatusRoutine = DosDriverDispatchOutputStatus;
-            Node->FlushOutputRoutine = DosDriverDispatchFlushOutput;
-            Node->OpenRoutine = DosDriverDispatchOpen;
-            Node->CloseRoutine = DosDriverDispatchClose;
-            Node->OutputUntilBusyRoutine = DosDriverDispatchOutputUntilBusy;
-        }
 
         if (RtlEqualString(&Node->Name, &DeviceNameString, TRUE)) return Node;
         CurrentDriver = DriverHeader->Link;
