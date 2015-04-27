@@ -131,6 +131,7 @@ Next:
             {
                 /* Search low memory */
                 Segment = FIRST_MCB_SEGMENT;
+                SearchUmb = FALSE;
                 continue;
             }
 
