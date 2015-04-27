@@ -110,35 +110,6 @@ InitImageList(VOID)
     return hImageList;
 }
 
-static
-BOOL
-CreateSearchBar(VOID)
-{
-    WCHAR szBuf[MAX_STR_LEN];
-
-    hSearchBar = CreateWindowExW(WS_EX_CLIENTEDGE,
-                                 L"Edit",
-                                 NULL,
-                                 WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL, 
-                                 0,
-                                 5,
-                                 200,
-                                 22,
-                                 hToolBar,
-                                 (HMENU)0,
-                                 hInst,
-                                 0);
-
-    SendMessageW(hSearchBar, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), 0);
-
-    LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
-    SetWindowTextW(hSearchBar, szBuf);
-
-    SetParent(hSearchBar, hToolBar); 
-
-    return TRUE;
-}
-
 BOOL
 CreateToolBar(HWND hwnd)
 {
@@ -182,8 +153,6 @@ CreateToolBar(HWND hwnd)
                                                (LPARAM)hImageList));
 
     SendMessageW(hToolBar, TB_ADDBUTTONS, NumButtons, (LPARAM)Buttons);
-
-    CreateSearchBar();
 
     return TRUE;
 }

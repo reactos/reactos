@@ -7,15 +7,12 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 list(APPEND SOURCE
     aboutdlg.cpp
     available.cpp
+    gui.cpp
     installdlg.cpp
     installed.cpp
-    listview.cpp
     loaddlg.cpp
     misc.cpp
-    richedit.cpp
     settingsdlg.cpp
-    splitter.cpp
-    statusbar.cpp
     toolbar.cpp
     treeview.cpp
     winmain.cpp

@@ -149,15 +149,6 @@ extern SETTINGS_INFO SettingsInfo;
 VOID SaveSettings(HWND hwnd);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
-/* listview.c */
-extern HWND hListView;
-extern BOOL bAscending;
-BOOL CreateListView(HWND hwnd);
-BOOL ListViewAddColumn(INT Index, LPWSTR lpText, INT Width, INT Format);
-INT ListViewAddItem(INT ItemIndex, INT IconIndex, LPWSTR lpText, LPARAM lParam);
-INT CALLBACK ListViewCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-PVOID ListViewGetlParam(INT Index);
-
 /* loaddlg.c */
 BOOL DownloadApplication(INT Index);
 VOID DownloadApplicationsDB(LPCWSTR lpUrl);
@@ -181,29 +172,8 @@ BOOL WriteLogMessage(WORD wType, DWORD dwEventID, LPWSTR lpMsg);
 UINT ParserGetString(LPCWSTR lpKeyName, LPWSTR lpReturnedString, UINT nSize, LPCWSTR lpFileName);
 UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 
-/* richedit.c */
-extern HWND hRichEdit;
-extern PWSTR pLink;
-BOOL CreateRichEdit(HWND hwnd);
-VOID RichEditOnLink(HWND hwnd, ENLINK *Link);
-VOID InsertRichEditText(LPCWSTR lpszText, DWORD dwEffects);
-VOID NewRichEditText(LPCWSTR lpszText, DWORD dwEffects);
-
 /* settingsdlg.c */
 VOID CreateSettingsDlg(HWND hwnd);
-
-/* splitter.c */
-extern HWND hVSplitter;
-extern HWND hHSplitter;
-BOOL CreateVSplitBar(HWND hwnd);
-BOOL CreateHSplitBar(HWND hwnd);
-int GetHSplitterPos(VOID);
-VOID SetHSplitterPos(int Pos);
-
-/* statusbar.c */
-extern HWND hStatusBar;
-BOOL CreateStatusBar(HWND hwnd);
-VOID SetStatusBarText(LPCWSTR lpszText);
 
 /* toolbar.c */
 extern HWND hToolBar;
@@ -215,5 +185,15 @@ VOID ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt);
 extern HWND hTreeView;
 BOOL CreateTreeView(HWND hwnd);
 HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
+
+/* gui.cpp */
+HWND CreateMainWindow();
+DWORD_PTR ListViewGetlParam(INT item);
+INT ListViewAddItem(INT ItemIndex, INT IconIndex, PWSTR lpName, LPARAM lParam);
+VOID SetStatusBarText(PCWSTR szText);
+VOID NewRichEditText(PCWSTR szText, DWORD flags);
+VOID InsertRichEditText(PCWSTR szText, DWORD flags);
+extern HWND hListView;
+extern PWSTR pLink;
 
 #endif /* _RAPPS_H */

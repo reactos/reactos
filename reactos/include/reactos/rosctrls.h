@@ -112,7 +112,12 @@ public:
     {
         return (BOOL)SendMessage(LVM_SETITEM, 0, reinterpret_cast<LPARAM>(pitem));
     }
-    
+
+    BOOL FindItem(int iStart, const LV_FINDINFO * plvfi)
+    {
+        return (BOOL)SendMessage(LVM_FINDITEM, iStart, (LPARAM) plvfi);
+    }
+
     int GetItemCount()
     {
         return SendMessage(LVM_GETITEMCOUNT);
@@ -200,6 +205,15 @@ public:
         return GetItem(pItem);
     }
 
+    void GetItemText(int iItem, int iSubItem, LPTSTR pszText, int cchTextMax)
+    {
+        LV_ITEM itemInfo;
+        itemInfo.iSubItem = iSubItem;
+        itemInfo.pszText = pszText;
+        itemInfo.cchTextMax = cchTextMax;
+
+        SendMessage(LVM_GETITEMTEXT, iItem, (LPARAM) &itemInfo);
+    }
 };
 
 template<typename TItemData = DWORD_PTR>
@@ -398,4 +412,36 @@ public: // Utility methods
         info.lParam = (DWORD_PTR) data;
         return SetButtonInfo(index, &info);
     }
+};
+
+class CStatusBar :
+    public CWindowImplBaseT<CWindow>
+{
+    BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
+    {
+        theResult = 0;
+        return FALSE;
+    }
+
+public:
+    VOID SetText(LPCWSTR lpszText)
+    {
+        SendMessage(SB_SETTEXT, SBT_NOBORDERS, (LPARAM) lpszText);
+    }
+
+    HWND Create(HWND hwndParent, HMENU hMenu)
+    {
+        HWND hwnd = CreateWindowExW(0,
+            STATUSCLASSNAMEW,
+            NULL,
+            WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
+            0, 0, 0, 0,
+            hwndParent,
+            hMenu,
+            _AtlBaseModule.GetModuleInstance(),
+            NULL);
+        SubclassWindow(hwnd);
+        return hwnd;
+    }
+
 };
