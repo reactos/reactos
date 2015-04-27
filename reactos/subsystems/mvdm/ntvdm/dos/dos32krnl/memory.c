@@ -57,7 +57,7 @@ static VOID DosCombineFreeBlocks(WORD StartBlock)
 WORD DosAllocateMemory(WORD Size, WORD *MaxAvailable)
 {
     WORD Result = 0, Segment = FIRST_MCB_SEGMENT, MaxSize = 0;
-    PDOS_MCB CurrentMcb, NextMcb;
+    PDOS_MCB CurrentMcb;
     BOOLEAN SearchUmb = FALSE;
 
     DPRINT("DosAllocateMemory: Size 0x%04X\n", Size);
@@ -159,16 +159,37 @@ Done:
     if (CurrentMcb->Size > Size)
     {
         /* It is, split it into two blocks */
-        NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
+        if ((DosAllocStrategy & 0x3F) != DOS_ALLOC_LAST_FIT)
+        {
+            PDOS_MCB NextMcb = SEGMENT_TO_MCB(Result + Size + 1);
 
-        /* Initialize the new MCB structure */
-        NextMcb->BlockType = CurrentMcb->BlockType;
-        NextMcb->Size = CurrentMcb->Size - Size - 1;
-        NextMcb->OwnerPsp = 0;
+            /* Initialize the new MCB structure */
+            NextMcb->BlockType = CurrentMcb->BlockType;
+            NextMcb->Size = CurrentMcb->Size - Size - 1;
+            NextMcb->OwnerPsp = 0;
 
-        /* Update the current block */
-        CurrentMcb->BlockType = 'M';
-        CurrentMcb->Size = Size;
+            /* Update the current block */
+            CurrentMcb->BlockType = 'M';
+            CurrentMcb->Size = Size;
+        }
+        else
+        {
+            /* Save the location of the current MCB */
+            PDOS_MCB PreviousMcb = CurrentMcb;
+
+            /* Move the current MCB higher */
+            Result += CurrentMcb->Size - Size;
+            CurrentMcb = SEGMENT_TO_MCB(Result);
+
+            /* Initialize the new MCB structure */
+            CurrentMcb->BlockType = PreviousMcb->BlockType;
+            CurrentMcb->Size = Size;
+            CurrentMcb->OwnerPsp = 0;
+
+            /* Update the previous block */
+            PreviousMcb->BlockType = 'M';
+            PreviousMcb->Size -= Size + 1;
+        }
     }
 
     /* Take ownership of the block */
