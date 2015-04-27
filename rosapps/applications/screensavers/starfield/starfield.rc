@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <scrnsave.h>
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -10,18 +11,44 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
+#include <reactos/manifest_exe.rc>
+
 /* UTF-8 */
 #pragma code_page(65001)
 
-#include "lang/bg-BG.rc"
-#include "lang/de-DE.rc"
-#include "lang/en-US.rc"
-#include "lang/es-ES.rc"
-#include "lang/fr-FR.rc"
-#include "lang/lt-LT.rc"
-#include "lang/nl-NL.rc"
-#include "lang/no-NO.rc"
-#include "lang/pl-PL.rc"
-#include "lang/ro-RO.rc"
-#include "lang/sk-SK.rc"
-#include "lang/uk-UA.rc"
+#ifdef LANGUAGE_BG_BG
+    #include "lang/bg-BG.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/lt-LT.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/nl-NL.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "lang/sk-SK.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif
