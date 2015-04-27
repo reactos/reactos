@@ -1054,7 +1054,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             }
 
             /* Update the length */
-            InputBuffer->Length = Count - 1;
+            InputBuffer->Length = Count;
 
             break;
         }
