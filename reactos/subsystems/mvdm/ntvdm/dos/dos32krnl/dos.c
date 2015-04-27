@@ -1036,7 +1036,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                     {
                         /* Append it to the buffer */
                         InputBuffer->Buffer[Count] = Character;
-                        Count++; /* Carriage returns are also counted */
 
                         /* Check if this is a special character */
                         if (Character < 0x20 && Character != 0x0A && Character != 0x0D)
@@ -1051,10 +1050,11 @@ VOID WINAPI DosInt21h(LPWORD Stack)
                 }
 
                 if (Character == '\r') break;
+                Count++; /* Carriage returns are NOT counted */
             }
 
             /* Update the length */
-            InputBuffer->Length = Count;
+            InputBuffer->Length = Count - 1;
 
             break;
         }

@@ -20,6 +20,10 @@
 #define XMS_STATUS_OUT_OF_MEMORY   0xA0
 #define XMS_STATUS_OUT_OF_HANDLES  0xA1
 #define XMS_STATUS_INVALID_HANDLE  0xA2
+#define XMS_STATUS_BAD_SRC_HANDLE  0xA3
+#define XMS_STATUS_BAD_DEST_HANDLE 0xA4
+#define XMS_STATUS_BAD_SRC_OFFSET  0xA5
+#define XMS_STATUS_BAD_DEST_OFFSET 0xA6
 #define XMS_STATUS_NOT_LOCKED      0xAA
 #define XMS_STATUS_LOCKED          0xAB
 #define XMS_STATUS_LOCK_OVERFLOW   0xAC
@@ -32,6 +36,17 @@ typedef struct _XMS_HANDLE
     WORD Size;
     DWORD Address;
 } XMS_HANDLE, *PXMS_HANDLE;
+
+#pragma pack(push, 1)
+typedef struct _XMS_COPY_DATA
+{
+    DWORD Count;
+    WORD SourceHandle;
+    DWORD SourceOffset;
+    WORD DestHandle;
+    DWORD DestOffset;
+} XMS_COPY_DATA, *PXMS_COPY_DATA;
+#pragma pack(pop)
 
 /* FUNCTIONS ******************************************************************/
 

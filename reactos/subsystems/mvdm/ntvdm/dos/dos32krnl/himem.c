@@ -26,6 +26,15 @@
 /* BOP Identifiers */
 #define BOP_XMS 0x52
 
+ULONG
+NTAPI
+RtlFindLastBackwardRunClear
+(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG FromIndex,
+    OUT PULONG StartingRunIndex
+);
+
 /* PRIVATE VARIABLES **********************************************************/
 
 static const BYTE EntryProcedure[] = {
@@ -180,6 +189,9 @@ static CHAR XmsAlloc(WORD Size, PWORD Handle)
 {
     BYTE i;
     PXMS_HANDLE HandleEntry;
+    DWORD CurrentIndex = 0;
+    ULONG RunStart;
+    ULONG RunSize;
 
     if (Size > FreeBlocks) return XMS_STATUS_OUT_OF_MEMORY;
 
@@ -195,19 +207,63 @@ static CHAR XmsAlloc(WORD Size, PWORD Handle)
 
     if (i == XMS_MAX_HANDLES) return XMS_STATUS_OUT_OF_HANDLES;
 
-    HandleEntry->Handle = i + 1;
-    HandleEntry->LockCount = 0;
-    HandleEntry->Size = Size;
-    FreeBlocks -= Size;
+    /* Optimize blocks */
+    for (i = 0; i < XMS_MAX_HANDLES; i++)
+    {
+        /* Skip free and locked blocks */
+        if (HandleEntry->Handle == 0 || HandleEntry->LockCount > 0) continue;
 
-    return XMS_STATUS_SUCCESS;
+        CurrentIndex = (HandleEntry->Address - XMS_ADDRESS) / XMS_BLOCK_SIZE;
+
+        /* Check if there is any free space before this block */
+        RunSize = RtlFindLastBackwardRunClear(&AllocBitmap, CurrentIndex, &RunStart);
+        if (RunSize == 0) break;
+
+        /* Move this block back */
+        RtlMoveMemory((PVOID)REAL_TO_PHYS(HandleEntry->Address - RunSize * XMS_BLOCK_SIZE),
+                      (PVOID)REAL_TO_PHYS(HandleEntry->Address),
+                      RunSize * XMS_BLOCK_SIZE);
+
+        /* Update the address */
+        HandleEntry->Address -= RunSize * XMS_BLOCK_SIZE;
+    }
+
+    while (CurrentIndex < XMS_BLOCKS)
+    {
+        RunSize = RtlFindNextForwardRunClear(&AllocBitmap, CurrentIndex, &RunStart);
+        if (RunSize == 0) break;
+
+        if (RunSize >= HandleEntry->Size)
+        {
+            /* Allocate it here */
+            HandleEntry->Handle = i + 1;
+            HandleEntry->LockCount = 0;
+            HandleEntry->Size = Size;
+            HandleEntry->Address = XMS_ADDRESS + RunStart * XMS_BLOCK_SIZE;
+
+            FreeBlocks -= Size;
+            RtlSetBits(&AllocBitmap, RunStart, RunSize);
+
+            return XMS_STATUS_SUCCESS;
+        }
+
+        /* Keep searching */
+        CurrentIndex = RunStart + RunSize;
+    }
+
+    return XMS_STATUS_OUT_OF_MEMORY;
 }
 
 static CHAR XmsFree(WORD Handle)
 {
+    DWORD BlockNumber;
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
+
     if (HandleEntry == NULL) return XMS_STATUS_INVALID_HANDLE;
     if (HandleEntry->LockCount) return XMS_STATUS_LOCKED;
+
+    BlockNumber = (HandleEntry->Address - XMS_ADDRESS) / XMS_BLOCK_SIZE;
+    RtlClearBits(&AllocBitmap, BlockNumber, HandleEntry->Size);
 
     HandleEntry->Handle = 0;
     FreeBlocks += HandleEntry->Size;
@@ -217,57 +273,27 @@ static CHAR XmsFree(WORD Handle)
 
 static CHAR XmsLock(WORD Handle, PDWORD Address)
 {
-    DWORD CurrentIndex = 0;
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
     if (HandleEntry == NULL) return XMS_STATUS_INVALID_HANDLE;
     if (HandleEntry->LockCount == 0xFF) return XMS_STATUS_LOCK_OVERFLOW;
 
-    if (HandleEntry->LockCount)
-    {
-        /* Just increment the lock count */
-        HandleEntry->LockCount++;
-        return XMS_STATUS_SUCCESS;
-    }
+    /* Increment the lock count */
+    HandleEntry->LockCount++;
+    *Address = HandleEntry->Address;
 
-    while (CurrentIndex < XMS_BLOCKS)
-    {
-        ULONG RunStart;
-        ULONG RunSize = RtlFindNextForwardRunClear(&AllocBitmap, CurrentIndex, &RunStart);
-        if (RunSize == 0) break;
-
-        if (RunSize >= HandleEntry->Size)
-        {
-            /* Lock it here */
-            HandleEntry->LockCount++;
-            HandleEntry->Address = XMS_ADDRESS + RunStart * XMS_BLOCK_SIZE;
-
-            RtlSetBits(&AllocBitmap, RunStart, RunSize);
-            *Address = HandleEntry->Address;
-            return XMS_STATUS_SUCCESS;
-        }
-
-        /* Keep searching */
-        CurrentIndex = RunStart + RunSize;
-    }
-
-    /* Can't find any suitable range */
-    return XMS_STATUS_CANNOT_LOCK;
+    return XMS_STATUS_SUCCESS;
 }
 
 static CHAR XmsUnlock(WORD Handle)
 {
-    DWORD BlockNumber;
     PXMS_HANDLE HandleEntry = GetHandleRecord(Handle);
 
     if (HandleEntry == NULL) return XMS_STATUS_INVALID_HANDLE;
     if (!HandleEntry->LockCount) return XMS_STATUS_NOT_LOCKED;
 
-    /* Decrement the lock count and exit early if it's still locked */
-    if (--HandleEntry->LockCount) return XMS_STATUS_SUCCESS;
-
-    BlockNumber = (HandleEntry->Address - XMS_ADDRESS) / XMS_BLOCK_SIZE;
-    RtlClearBits(&AllocBitmap, BlockNumber, HandleEntry->Size);
+    /* Decrement the lock count */
+    HandleEntry->LockCount--;
 
     return XMS_STATUS_SUCCESS;
 }
@@ -388,6 +414,68 @@ static VOID WINAPI XmsBopProcedure(LPWORD Stack)
             setAX(Result >= 0);
             setBL(Result);
 
+            break;
+        }
+
+        /* Move Extended Memory Block */
+        case 0x0B:
+        {
+            PVOID SourceAddress, DestAddress;
+            PXMS_COPY_DATA CopyData = (PXMS_COPY_DATA)SEG_OFF_TO_PTR(getDS(), getSI());
+
+            if (CopyData->SourceHandle)
+            {
+                PXMS_HANDLE Entry = GetHandleRecord(CopyData->SourceHandle);
+                if (!Entry)
+                {
+                    setAX(0);
+                    setBL(XMS_STATUS_BAD_SRC_HANDLE);
+                    break;
+                }
+
+                if (CopyData->SourceOffset >= Entry->Size * XMS_BLOCK_SIZE)
+                {
+                    setAX(0);
+                    setBL(XMS_STATUS_BAD_SRC_OFFSET);
+                }
+
+                SourceAddress = (PVOID)REAL_TO_PHYS(Entry->Address + CopyData->SourceOffset);
+            }
+            else
+            {
+                /* The offset is actually a 16-bit segment:offset pointer */
+                SourceAddress = SEG_OFF_TO_PTR(HIWORD(CopyData->SourceOffset),
+                                               LOWORD(CopyData->SourceOffset));
+            }
+
+            if (CopyData->DestHandle)
+            {
+                PXMS_HANDLE Entry = GetHandleRecord(CopyData->DestHandle);
+                if (!Entry)
+                {
+                    setAX(0);
+                    setBL(XMS_STATUS_BAD_DEST_HANDLE);
+                    break;
+                }
+
+                if (CopyData->DestOffset >= Entry->Size * XMS_BLOCK_SIZE)
+                {
+                    setAX(0);
+                    setBL(XMS_STATUS_BAD_DEST_OFFSET);
+                }
+
+                DestAddress = (PVOID)REAL_TO_PHYS(Entry->Address + CopyData->DestOffset);
+            }
+            else
+            {
+                /* The offset is actually a 16-bit segment:offset pointer */
+                DestAddress = SEG_OFF_TO_PTR(HIWORD(CopyData->DestOffset),
+                                             LOWORD(CopyData->DestOffset));
+            }
+
+            setAX(1);
+            setBL(XMS_STATUS_SUCCESS);
+            RtlMoveMemory(DestAddress, SourceAddress, CopyData->Count);
             break;
         }
 
