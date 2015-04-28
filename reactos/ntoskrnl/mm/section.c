@@ -330,11 +330,13 @@ l_ReadHeaderFromFile:
     {
         ULONG cbOptHeaderOffsetSize = 0;
 
-        nStatus = STATUS_INVALID_IMAGE_FORMAT;
+        nStatus = STATUS_INVALID_IMAGE_PROTECT;
 
         /* don't trust an invalid NT header */
         if(pinhNtHeader->Signature != IMAGE_NT_SIGNATURE)
             DIE(("The file isn't a PE executable, Signature is %X\n", pinhNtHeader->Signature));
+
+        nStatus = STATUS_INVALID_IMAGE_FORMAT;
 
         if(!Intsafe_AddULong32(&cbOptHeaderOffsetSize, pidhDosHeader->e_lfanew, FIELD_OFFSET(IMAGE_NT_HEADERS32, OptionalHeader)))
             DIE(("The DOS stub is too large, e_lfanew is %X\n", pidhDosHeader->e_lfanew));
