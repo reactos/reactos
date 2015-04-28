@@ -629,19 +629,97 @@ typedef enum _KAPC_ENVIRONMENT
     InsertApcEnvironment
 } KAPC_ENVIRONMENT;
 
+typedef struct _KTIMER_TABLE_ENTRY
+{
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_M_ARM) || defined(_M_AMD64)
+    KSPIN_LOCK Lock;
+#endif
+    LIST_ENTRY Entry;
+    ULARGE_INTEGER Time;
+} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
+
+typedef struct _KTIMER_TABLE
+{
+    PKTIMER TimerExpiry[64];
+    KTIMER_TABLE_ENTRY TimerEntries[256];
+} KTIMER_TABLE, *PKTIMER_TABLE;
+
+typedef struct _KDPC_LIST
+{
+    SINGLE_LIST_ENTRY ListHead;
+    SINGLE_LIST_ENTRY* LastEntry;
+} KDPC_LIST, *PKDPC_LIST;
+
+typedef struct _SYNCH_COUNTERS
+{
+    ULONG SpinLockAcquireCount;
+    ULONG SpinLockContentionCount;
+    ULONG SpinLockSpinCount;
+    ULONG IpiSendRequestBroadcastCount;
+    ULONG IpiSendRequestRoutineCount;
+    ULONG IpiSendSoftwareInterruptCount;
+    ULONG ExInitializeResourceCount;
+    ULONG ExReInitializeResourceCount;
+    ULONG ExDeleteResourceCount;
+    ULONG ExecutiveResourceAcquiresCount;
+    ULONG ExecutiveResourceContentionsCount;
+    ULONG ExecutiveResourceReleaseExclusiveCount;
+    ULONG ExecutiveResourceReleaseSharedCount;
+    ULONG ExecutiveResourceConvertsCount;
+    ULONG ExAcqResExclusiveAttempts;
+    ULONG ExAcqResExclusiveAcquiresExclusive;
+    ULONG ExAcqResExclusiveAcquiresExclusiveRecursive;
+    ULONG ExAcqResExclusiveWaits;
+    ULONG ExAcqResExclusiveNotAcquires;
+    ULONG ExAcqResSharedAttempts;
+    ULONG ExAcqResSharedAcquiresExclusive;
+    ULONG ExAcqResSharedAcquiresShared;
+    ULONG ExAcqResSharedAcquiresSharedRecursive;
+    ULONG ExAcqResSharedWaits;
+    ULONG ExAcqResSharedNotAcquires;
+    ULONG ExAcqResSharedStarveExclusiveAttempts;
+    ULONG ExAcqResSharedStarveExclusiveAcquiresExclusive;
+    ULONG ExAcqResSharedStarveExclusiveAcquiresShared;
+    ULONG ExAcqResSharedStarveExclusiveAcquiresSharedRecursive;
+    ULONG ExAcqResSharedStarveExclusiveWaits;
+    ULONG ExAcqResSharedStarveExclusiveNotAcquires;
+    ULONG ExAcqResSharedWaitForExclusiveAttempts;
+    ULONG ExAcqResSharedWaitForExclusiveAcquiresExclusive;
+    ULONG ExAcqResSharedWaitForExclusiveAcquiresShared;
+    ULONG ExAcqResSharedWaitForExclusiveAcquiresSharedRecursive;
+    ULONG ExAcqResSharedWaitForExclusiveWaits;
+    ULONG ExAcqResSharedWaitForExclusiveNotAcquires;
+    ULONG ExSetResOwnerPointerExclusive;
+    ULONG ExSetResOwnerPointerSharedNew;
+    ULONG ExSetResOwnerPointerSharedOld;
+    ULONG ExTryToAcqExclusiveAttempts;
+    ULONG ExTryToAcqExclusiveAcquires;
+    ULONG ExBoostExclusiveOwner;
+    ULONG ExBoostSharedOwners;
+    ULONG ExEtwSynchTrackingNotificationsCount;
+    ULONG ExEtwSynchTrackingNotificationsAccountedCount;
+} SYNCH_COUNTERS, *PSYNCH_COUNTERS;
+
 //
 // PRCB DPC Data
 //
 typedef struct _KDPC_DATA
 {
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    KDPC_LIST DpcList;
+#else
     LIST_ENTRY DpcListHead;
+#endif
     ULONG_PTR DpcLock;
-#ifdef _M_AMD64
+#if defined(_M_AMD64) || defined(_M_ARM)
     volatile LONG DpcQueueDepth;
 #else
     volatile ULONG DpcQueueDepth;
 #endif
     ULONG DpcCount;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN) || defined(_M_ARM)
+    PKDPC ActiveDpc;
+#endif
 } KDPC_DATA, *PKDPC_DATA;
 
 //

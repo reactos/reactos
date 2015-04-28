@@ -54,12 +54,6 @@ typedef struct _KI_SAMPLE_MAP
     ULONG MHz;
 } KI_SAMPLE_MAP, *PKI_SAMPLE_MAP;
 
-typedef struct _KTIMER_TABLE_ENTRY
-{
-    LIST_ENTRY Entry;
-    ULARGE_INTEGER Time;
-} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
-
 #define MAX_TIMER_DPCS                      16
 
 typedef struct _DPC_QUEUE_ENTRY

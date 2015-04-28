@@ -906,21 +906,6 @@ typedef struct _KSWITCH_FRAME
     ULONG64 Return;
 } KSWITCH_FRAME, *PKSWITCH_FRAME;
 
-#if 0
-typedef struct _KTIMER_TABLE_ENTRY
-{
-    ULONG_PTR Lock;
-    LIST_ENTRY Entry;
-    ULARGE_INTEGER Time;
-} KTIMER_TABLE_ENTRY, *PKTIMER_TABLE_ENTRY;
-
-typedef struct _KTIMER_TABLE
-{
-    KTIMER* TimerExpiry[64];
-    KTIMER_TABLE_ENTRY TimerEntries[256];
-} KTIMER_TABLE, *PKTIMER_TABLE;
-#endif
-
 //
 // Inline function to get current KPRCB
 //
