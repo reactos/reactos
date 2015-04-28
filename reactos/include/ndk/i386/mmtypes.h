@@ -181,6 +181,22 @@ typedef struct _MMPTE_HARDWARE
 #define HARDWARE_PTE        HARDWARE_PTE_X86
 #define PHARDWARE_PTE       PHARDWARE_PTE_X86
 
+typedef struct _MMPTE
+{
+    union
+    {
+        ULONG_PTR Long;
+        HARDWARE_PTE Flush;
+        MMPTE_HARDWARE Hard;
+        MMPTE_PROTOTYPE Proto;
+        MMPTE_SOFTWARE Soft;
+        MMPTE_TRANSITION Trans;
+        MMPTE_SUBSECTION Subsect;
+        MMPTE_LIST List;
+    } u;
+} MMPTE, *PMMPTE,
+  MMPDE, *PMMPDE;
+
 #ifdef __cplusplus
 }; // extern "C"
 #endif

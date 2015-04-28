@@ -164,7 +164,7 @@ typedef struct _MMPTE_LIST
     ULONG Prototype:1;
 } MMPTE_LIST;
 
-typedef union _MMPTE_HARDWARE
+typedef struct _MMPTE_HARDWARE
 {
     ULONG NoExecute:1;
     ULONG Valid:1;
@@ -178,6 +178,28 @@ typedef union _MMPTE_HARDWARE
     ULONG NonGlobal:1;
     ULONG PageFrameNumber:20;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
+
+
+//
+// Use the right PTE structure
+//
+#define HARDWARE_PTE        HARDWARE_PTE_ARMV6
+#define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
+
+typedef struct _MMPTE
+{
+    union
+    {
+        ULONG_PTR Long;
+        HARDWARE_PTE Flush;
+        MMPTE_HARDWARE Hard;
+        MMPTE_PROTOTYPE Proto;
+        MMPTE_SOFTWARE Soft;
+        MMPTE_TRANSITION Trans;
+        MMPTE_SUBSECTION Subsect;
+        MMPTE_LIST List;
+    } u;
+} MMPTE, *PMMPTE;
 
 typedef union _MMPDE_HARDWARE
 {
@@ -199,12 +221,6 @@ typedef struct _MMPDE
         ULONG Long;
     } u;
 } MMPDE, *PMMPDE;
-
-//
-// Use the right PTE structure
-//
-#define HARDWARE_PTE        HARDWARE_PTE_ARMV6
-#define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
 
 #ifdef __cplusplus
 }; // extern "C"
