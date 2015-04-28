@@ -159,15 +159,6 @@ Author:
 #define PRCB_BUILD_UNIPROCESSOR 2
 
 //
-// Service Table
-//
-#define NUMBER_SERVICE_TABLES 2
-#define SERVICE_NUMBER_MASK 0xFFF
-#define SERVICE_TABLE_SHIFT 7
-#define SERVICE_TABLE_MASK 0x20
-#define SERVICE_TABLE_TEST 0x20
-
-//
 // HAL Variables
 //
 #define INITIAL_STALL_COUNT     100

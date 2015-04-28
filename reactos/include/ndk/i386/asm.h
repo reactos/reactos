@@ -611,11 +611,6 @@ Author:
 //
 // System Call Table definitions
 //
-#define NUMBER_SERVICE_TABLES                   0x0002
-#define SERVICE_NUMBER_MASK                     0x0FFF
-#define SERVICE_TABLE_SHIFT                     0x0008
-#define SERVICE_TABLE_MASK                      0x0010
-#define SERVICE_TABLE_TEST                      0x0010
 #define SERVICE_DESCRIPTOR_BASE                 0x0000
 #define SERVICE_DESCRIPTOR_COUNT                0x0004
 #define SERVICE_DESCRIPTOR_LIMIT                0x0008
