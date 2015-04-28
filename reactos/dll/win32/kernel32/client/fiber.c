@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS System Libraries
  * FILE:        lib/kernel32/thread/fiber.c
  * PURPOSE:     Fiber Implementation
- * PROGRAMMERS: 
+ * PROGRAMMERS:
  *              Alex Ionescu (alex@relsoft.net)
  *              KJK::Hyperion <noog@libero.it>
  */
@@ -12,19 +12,16 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct _FIBER                                      /* Field offsets:  */
-{                                                          /* 32 bit   64 bit */
-    /* this must be the first field */
-    PVOID Parameter;                                       /*   0x00     0x00 */
-    PEXCEPTION_REGISTRATION_RECORD ExceptionList;          /*   0x04     0x08 */
-    PVOID StackBase;                                       /*   0x08     0x10 */
-    PVOID StackLimit;                                      /*   0x0C     0x18 */
-    PVOID DeallocationStack;                               /*   0x10     0x20 */
-    CONTEXT Context;                                       /*   0x14     0x28 */
-    ULONG GuaranteedStackBytes;                            /*   0x2E0         */
-    PVOID FlsData;                                         /*   0x2E4         */
-    PACTIVATION_CONTEXT_STACK ActivationContextStack;      /*   0x2E8         */
-} FIBER, *PFIBER;
+#ifdef _M_IX86
+C_ASSERT(FIELD_OFFSET(FIBER, ExceptionList) == 0x04);
+C_ASSERT(FIELD_OFFSET(FIBER, StackBase) == 0x08);
+C_ASSERT(FIELD_OFFSET(FIBER, StackLimit) == 0x0C);
+C_ASSERT(FIELD_OFFSET(FIBER, DeallocationStack) == 0x10);
+C_ASSERT(FIELD_OFFSET(FIBER, Context) == 0x14);
+C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2E0);
+C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E4);
+C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStack) == 0x2E8);
+#endif // _M_IX86
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -76,7 +73,7 @@ ConvertFiberToThread(VOID)
  */
 LPVOID
 WINAPI
-ConvertThreadToFiberEx(LPVOID lpParameter, 
+ConvertThreadToFiberEx(LPVOID lpParameter,
                        DWORD dwFlags)
 {
     PTEB Teb;

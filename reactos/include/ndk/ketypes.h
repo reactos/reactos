@@ -168,6 +168,20 @@ Author:
 #define KI_EXCEPTION_INTERNAL           0x10000000
 #define KI_EXCEPTION_ACCESS_VIOLATION   (KI_EXCEPTION_INTERNAL | 0x04)
 
+typedef struct _FIBER                                      /* Field offsets:  */
+{                                                          /* 32 bit   64 bit */
+    /* this must be the first field */
+    PVOID Parameter;                                       /*   0x00     0x00 */
+    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;  /*   0x04     0x08 */
+    PVOID StackBase;                                       /*   0x08     0x10 */
+    PVOID StackLimit;                                      /*   0x0C     0x18 */
+    PVOID DeallocationStack;                               /*   0x10     0x20 */
+    CONTEXT Context;                                       /*   0x14     0x28 */
+    ULONG GuaranteedStackBytes;                            /*   0x2E0         */
+    PVOID FlsData;                                         /*   0x2E4         */
+    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStack;/*   0x2E8         */
+} FIBER, *PFIBER;
+
 #ifndef NTOS_MODE_USER
 //
 // Number of dispatch codes supported by KINTERRUPT
