@@ -762,7 +762,7 @@ LpcpCopyRequestData(
     PORT_MESSAGE CapturedMessage;
     PLPCP_PORT_OBJECT Port = NULL;
     PETHREAD ClientThread = NULL;
-    ULONG LocalReturnlength;
+    SIZE_T LocalReturnlength;
     PLPCP_MESSAGE InfoMessage;
     PLPCP_DATA_INFO DataInfo;
     PVOID DataInfoBaseAddress;

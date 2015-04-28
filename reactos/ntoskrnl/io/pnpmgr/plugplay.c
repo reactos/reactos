@@ -219,7 +219,7 @@ IopGetInterfaceDeviceList(PPLUGPLAY_CONTROL_INTERFACE_DEVICE_LIST_DATA DeviceLis
     PDEVICE_OBJECT DeviceObject = NULL;
     GUID FilterGuid;
     PZZWSTR SymbolicLinkList = NULL, LinkList;
-    ULONG TotalLength;
+    SIZE_T TotalLength;
 
     _SEH2_TRY
     {

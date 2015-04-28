@@ -203,7 +203,7 @@ IopDoNameTransmogrify(IN PIRP Irp,
         Length = DataBuffer->MountPointReparseBuffer.SubstituteNameLength;
 
         /* Check we don't overflow */
-        if ((MAXUSHORT - DataBuffer->Reserved) <= (Length + sizeof(UNICODE_NULL)))
+        if (((ULONG)MAXUSHORT - DataBuffer->Reserved) <= (Length + sizeof(UNICODE_NULL)))
         {
             Irp->IoStatus.Status = STATUS_IO_REPARSE_DATA_INVALID;
         }

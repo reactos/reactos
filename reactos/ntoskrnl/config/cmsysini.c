@@ -87,7 +87,7 @@ CmpLinkKeyToHive(
                            0,
                            REG_LINK,
                            TargetKeyName,
-                           wcslen(TargetKeyName) * sizeof(WCHAR));
+                           (ULONG)wcslen(TargetKeyName) * sizeof(WCHAR));
 
     /* Close the link key handle */
     ObCloseHandle(TargetKeyHandle, KernelMode);

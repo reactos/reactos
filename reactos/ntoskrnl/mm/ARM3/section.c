@@ -972,7 +972,15 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     /* Loop each PDE while holding the working set lock */
 //  MiLockWorkingSet(PsGetCurrentThread(),
 //                   &MmSessionSpace->GlobalVirtualAddress->Vm);
-#ifndef _M_AMD64
+#ifdef _M_AMD64
+_WARN("MiSessionCommitPageTables halfplemented for amd64")
+    DBG_UNREFERENCED_LOCAL_VARIABLE(OldIrql);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Color);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(TempPte);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(Pfn1);
+    DBG_UNREFERENCED_LOCAL_VARIABLE(PageFrameNumber);
+    ASSERT(FALSE);
+#else
     while (StartPde <= EndPde)
     {
         /* Check if we already have a page table */
@@ -2170,6 +2178,7 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
                 ASSERT(SystemMapPde->u.Hard.Valid == 1);
                 MI_WRITE_VALID_PDE(PointerPde, *SystemMapPde);
 #else
+                DBG_UNREFERENCED_LOCAL_VARIABLE(SystemMapPde);
                 ASSERT(FALSE);
 #endif
             }
