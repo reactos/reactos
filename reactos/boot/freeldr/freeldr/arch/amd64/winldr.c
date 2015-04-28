@@ -15,8 +15,6 @@
 
 //extern ULONG LoaderPagesSpanned;
 
-#define HYPER_SPACE_ENTRY       0x1EE
-
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
 /* GLOBALS ***************************************************************/
