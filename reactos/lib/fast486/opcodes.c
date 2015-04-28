@@ -3832,16 +3832,13 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovModrm)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovStoreSeg)
 {
-    BOOLEAN OperandSize, AddressSize;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
-
-    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x8C);
 
     TOGGLE_ADSIZE(AddressSize);
-    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3857,20 +3854,10 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovStoreSeg)
         return;
     }
 
-    if (OperandSize)
-    {
-        Fast486WriteModrmDwordOperands(State,
-                                       &ModRegRm,
-                                       FALSE,
-                                       State->SegmentRegs[ModRegRm.Register].Selector);
-    }
-    else
-    {
-        Fast486WriteModrmWordOperands(State,
-                                      &ModRegRm,
-                                      FALSE,
-                                      State->SegmentRegs[ModRegRm.Register].Selector);
-    }
+    Fast486WriteModrmWordOperands(State,
+                                  &ModRegRm,
+                                  FALSE,
+                                  State->SegmentRegs[ModRegRm.Register].Selector);
 }
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeLea)
@@ -3921,16 +3908,14 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeLea)
 
 FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
 {
-    BOOLEAN OperandSize, AddressSize;
+    BOOLEAN AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
     FAST486_MOD_REG_RM ModRegRm;
-
-    OperandSize = AddressSize = State->SegmentRegs[FAST486_REG_CS].Size;
+    USHORT Selector;
 
     /* Make sure this is the right instruction */
     ASSERT(Opcode == 0x8E);
 
     TOGGLE_ADSIZE(AddressSize);
-    TOGGLE_OPSIZE(OperandSize);
 
     /* Get the operands */
     if (!Fast486ParseModRegRm(State, AddressSize, &ModRegRm))
@@ -3947,37 +3932,16 @@ FAST486_OPCODE_HANDLER(Fast486OpcodeMovLoadSeg)
         return;
     }
 
-    if (OperandSize)
+    if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
     {
-        ULONG Selector;
-
-        if (!Fast486ReadModrmDwordOperands(State, &ModRegRm, NULL, &Selector))
-        {
-            /* Exception occurred */
-            return;
-        }
-
-        if (!Fast486LoadSegment(State, ModRegRm.Register, LOWORD(Selector)))
-        {
-            /* Exception occurred */
-            return;
-        }
+        /* Exception occurred */
+        return;
     }
-    else
+
+    if (!Fast486LoadSegment(State, ModRegRm.Register, Selector))
     {
-        USHORT Selector;
-
-        if (!Fast486ReadModrmWordOperands(State, &ModRegRm, NULL, &Selector))
-        {
-            /* Exception occurred */
-            return;
-        }
-
-        if (!Fast486LoadSegment(State, ModRegRm.Register, Selector))
-        {
-            /* Exception occurred */
-            return;
-        }
+        /* Exception occurred */
+        return;
     }
 
     if ((INT)ModRegRm.Register == FAST486_REG_SS)
