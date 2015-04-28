@@ -327,7 +327,7 @@ CHubController::QueryStatusChangeEndpoint(
 
 
         //
-        // If theres a flag in PortChange return TRUE so the SCE Irp will be completed
+        // If there's a flag in PortChange return TRUE so the SCE Irp will be completed
         //
         if (PortChange != 0)
         {
