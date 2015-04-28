@@ -17,10 +17,10 @@ C_ASSERT(FIELD_OFFSET(FIBER, ExceptionList) == 0x04);
 C_ASSERT(FIELD_OFFSET(FIBER, StackBase) == 0x08);
 C_ASSERT(FIELD_OFFSET(FIBER, StackLimit) == 0x0C);
 C_ASSERT(FIELD_OFFSET(FIBER, DeallocationStack) == 0x10);
-C_ASSERT(FIELD_OFFSET(FIBER, Context) == 0x14);
+C_ASSERT(FIELD_OFFSET(FIBER, FiberContext) == 0x14);
 C_ASSERT(FIELD_OFFSET(FIBER, GuaranteedStackBytes) == 0x2E0);
 C_ASSERT(FIELD_OFFSET(FIBER, FlsData) == 0x2E4);
-C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStack) == 0x2E8);
+C_ASSERT(FIELD_OFFSET(FIBER, ActivationContextStackPointer) == 0x2E8);
 #endif // _M_IX86
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -30,7 +30,7 @@ WINAPI
 BaseRundownFls(IN PVOID FlsData)
 {
     /* No FLS support yet */
-    
+
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -106,20 +106,20 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     }
 
     /* Copy some contextual data from the thread to the fiber */
-    Fiber->Parameter = lpParameter;
+    Fiber->FiberData = lpParameter;
     Fiber->ExceptionList = Teb->NtTib.ExceptionList;
     Fiber->StackBase = Teb->NtTib.StackBase;
     Fiber->StackLimit = Teb->NtTib.StackLimit;
     Fiber->DeallocationStack = Teb->DeallocationStack;
     Fiber->FlsData = Teb->FlsData;
     Fiber->GuaranteedStackBytes = Teb->GuaranteedStackBytes;
-    Fiber->ActivationContextStack = Teb->ActivationContextStackPointer;
-    Fiber->Context.ContextFlags = CONTEXT_FULL;
+    Fiber->ActivationContextStackPointer = Teb->ActivationContextStackPointer;
+    Fiber->FiberContext.ContextFlags = CONTEXT_FULL;
 
     /* Save FPU State if requested */
     if (dwFlags & FIBER_FLAG_FLOAT_SWITCH)
     {
-        Fiber->Context.ContextFlags |= CONTEXT_FLOATING_POINT;
+        Fiber->FiberContext.ContextFlags |= CONTEXT_FLOATING_POINT;
     }
 
     /* Associate the fiber to the current thread */
@@ -168,7 +168,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     PFIBER Fiber;
     NTSTATUS Status;
     INITIAL_TEB InitialTeb;
-    PACTIVATION_CONTEXT_STACK ActivationContextStack = NULL;
+    PACTIVATION_CONTEXT_STACK ActivationContextStackPointer = NULL;
     DPRINT("Creating Fiber\n");
 
     /* Check for invalid flags */
@@ -180,7 +180,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* Allocate the Activation Context Stack */
-    Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+    Status = RtlAllocateActivationContextStack(&ActivationContextStackPointer);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -193,7 +193,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     if (!Fiber)
     {
         /* Free the activation context stack */
-        RtlFreeActivationContextStack(ActivationContextStack);
+        RtlFreeActivationContextStack(ActivationContextStackPointer);
 
         /* Fail */
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -211,7 +211,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
         RtlFreeHeap(GetProcessHeap(), 0, Fiber);
 
         /* Free the activation context stack */
-        RtlFreeActivationContextStack(ActivationContextStack);
+        RtlFreeActivationContextStack(ActivationContextStackPointer);
 
         /* Failure */
         BaseSetLastNTError(Status);
@@ -219,24 +219,24 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* Clear the context */
-    RtlZeroMemory(&Fiber->Context, sizeof(CONTEXT));
+    RtlZeroMemory(&Fiber->FiberContext, sizeof(CONTEXT));
 
     /* Copy the data into the fiber */
     Fiber->StackBase = InitialTeb.StackBase;
     Fiber->StackLimit = InitialTeb.StackLimit;
     Fiber->DeallocationStack = InitialTeb.AllocatedStackBase;
-    Fiber->Parameter = lpParameter;
+    Fiber->FiberData = lpParameter;
     Fiber->ExceptionList = EXCEPTION_CHAIN_END;
     Fiber->GuaranteedStackBytes = 0;
     Fiber->FlsData = NULL;
-    Fiber->ActivationContextStack = ActivationContextStack;
-    Fiber->Context.ContextFlags = CONTEXT_FULL;
+    Fiber->ActivationContextStackPointer = ActivationContextStackPointer;
+    Fiber->FiberContext.ContextFlags = CONTEXT_FULL;
 
     /* Save FPU State if requested */
-    Fiber->Context.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ? CONTEXT_FLOATING_POINT : 0;
+    Fiber->FiberContext.ContextFlags = (dwFlags & FIBER_FLAG_FLOAT_SWITCH) ? CONTEXT_FLOATING_POINT : 0;
 
     /* initialize the context for the fiber */
-    BaseInitializeContext(&Fiber->Context,
+    BaseInitializeContext(&Fiber->FiberContext,
                           lpParameter,
                           lpStartAddress,
                           InitialTeb.StackBase,
@@ -271,7 +271,7 @@ DeleteFiber(LPVOID lpFiber)
     if (Fiber->FlsData) BaseRundownFls(Fiber->FlsData);
 
     /* Get rid of the activation context stack */
-    RtlFreeActivationContextStack(Fiber->ActivationContextStack);
+    RtlFreeActivationContextStack(Fiber->ActivationContextStackPointer);
 
     /* Free the fiber data */
     RtlFreeHeap(GetProcessHeap(), 0, lpFiber);

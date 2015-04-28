@@ -168,18 +168,25 @@ Author:
 #define KI_EXCEPTION_INTERNAL           0x10000000
 #define KI_EXCEPTION_ACCESS_VIOLATION   (KI_EXCEPTION_INTERNAL | 0x04)
 
-typedef struct _FIBER                                      /* Field offsets:  */
-{                                                          /* 32 bit   64 bit */
-    /* this must be the first field */
-    PVOID Parameter;                                       /*   0x00     0x00 */
-    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;  /*   0x04     0x08 */
-    PVOID StackBase;                                       /*   0x08     0x10 */
-    PVOID StackLimit;                                      /*   0x0C     0x18 */
-    PVOID DeallocationStack;                               /*   0x10     0x20 */
-    CONTEXT Context;                                       /*   0x14     0x28 */
-    ULONG GuaranteedStackBytes;                            /*   0x2E0         */
-    PVOID FlsData;                                         /*   0x2E4         */
-    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStack;/*   0x2E8         */
+typedef struct _FIBER                                    /* Field offsets:    */
+{                                                        /* i386  arm   x64   */
+    PVOID FiberData;                                     /* 0x000 0x000 0x000 */
+    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;/* 0x004 0x004 0x008 */
+    PVOID StackBase;                                     /* 0x008 0x008 0x010 */
+    PVOID StackLimit;                                    /* 0x00C 0x00C 0x018 */
+    PVOID DeallocationStack;                             /* 0x010 0x010 0x020 */
+    CONTEXT FiberContext;                                /* 0x014 0x018 0x030 */
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PVOID Wx86Tib;                                       /* 0x2E0 0x1b8 0x500 */
+    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer; /* 0x2E4 0x1bc 0x508 */
+    PVOID FlsData;                                       /* 0x2E8 0x1c0 0x510 */
+    ULONG GuaranteedStackBytes;                          /* 0x2EC 0x1c4 0x518 */
+    ULONG TebFlags;                                      /* 0x2F0 0x1c8 0x51C */
+#else
+    ULONG GuaranteedStackBytes;                          /* 0x2E0         */
+    PVOID FlsData;                                       /* 0x2E4         */
+    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer;
+#endif
 } FIBER, *PFIBER;
 
 #ifndef NTOS_MODE_USER
