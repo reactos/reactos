@@ -319,6 +319,7 @@ BOOLEAN DosFreeMemory(WORD BlockData)
     PDOS_MCB Mcb = SEGMENT_TO_MCB(BlockData - 1);
 
     DPRINT("DosFreeMemory: BlockData 0x%04X\n", BlockData);
+    if (BlockData == 0) return FALSE;
 
     /* Make sure the MCB is valid */
     if (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
