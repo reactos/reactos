@@ -297,6 +297,7 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     PDWORD RelocationTable;
     PWORD RelocWord;
     LPSTR CmdLinePtr = (LPSTR)CommandLine;
+    BYTE OldStrategy = DosAllocStrategy;
 
     DPRINT1("DosLoadExecutable(%d, %s, %s, %s, 0x%08X, 0x%08X)\n",
             LoadType,
@@ -381,6 +382,12 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
 
         /* Make sure it does not pass 0xFFFF */
         if (ExeSize > 0xFFFF) ExeSize = 0xFFFF;
+
+        if (Header->e_minalloc == 0 && Header->e_maxalloc == 0)
+        {
+            /* This program should be loaded high */
+            DosAllocStrategy = DOS_ALLOC_LAST_FIT;
+        }
 
         /* Try to allocate that much memory */
         Segment = DosAllocateMemory((WORD)ExeSize, &MaxAllocSize);
@@ -516,6 +523,9 @@ Cleanup:
         if (EnvBlock) DosFreeMemory(EnvBlock);
         if (Segment) DosFreeMemory(Segment);
     }
+
+    /* Restore the old allocation strategy */
+    DosAllocStrategy = OldStrategy;
 
     /* Unmap the file*/
     if (Address != NULL) UnmapViewOfFile(Address);
