@@ -292,12 +292,13 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
     WORD Segment = 0;
     WORD EnvBlock = 0;
     WORD MaxAllocSize;
-    DWORD i, FileSize, ExeSize;
+    WORD ExeSegment;
+    DWORD i, FileSize, BaseSize, TotalSize;
     PIMAGE_DOS_HEADER Header;
     PDWORD RelocationTable;
     PWORD RelocWord;
     LPSTR CmdLinePtr = (LPSTR)CommandLine;
-    BYTE OldStrategy = DosAllocStrategy;
+    BOOLEAN LoadHigh = FALSE;
 
     DPRINT1("DosLoadExecutable(%d, %s, %s, %s, 0x%08X, 0x%08X)\n",
             LoadType,
@@ -372,45 +373,46 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         Header = (PIMAGE_DOS_HEADER)Address;
 
         /* Get the base size of the file, in paragraphs (rounded up) */
-        ExeSize = (((Header->e_cp - 1) * 512) + Header->e_cblp + 0x0F) >> 4;
+        BaseSize = TotalSize = (((Header->e_cp - 1) * 512) + Header->e_cblp + 0x0F) >> 4;
 
         /* Add the PSP size, in paragraphs */
-        ExeSize += sizeof(DOS_PSP) >> 4;
+        TotalSize += sizeof(DOS_PSP) >> 4;
 
         /* Add the maximum size that should be allocated */
-        ExeSize += Header->e_maxalloc;
-
-        /* Make sure it does not pass 0xFFFF */
-        if (ExeSize > 0xFFFF) ExeSize = 0xFFFF;
+        TotalSize += Header->e_maxalloc;
 
         if (Header->e_minalloc == 0 && Header->e_maxalloc == 0)
         {
             /* This program should be loaded high */
-            DosAllocStrategy = DOS_ALLOC_LAST_FIT;
+            LoadHigh = TRUE;
+            TotalSize = 0xFFFF;
         }
 
+        /* Make sure it does not pass 0xFFFF */
+        if (TotalSize > 0xFFFF) TotalSize = 0xFFFF;
+
         /* Try to allocate that much memory */
-        Segment = DosAllocateMemory((WORD)ExeSize, &MaxAllocSize);
+        Segment = DosAllocateMemory((WORD)TotalSize, &MaxAllocSize);
 
         if (Segment == 0)
         {
             /* Check if there's at least enough memory for the minimum size */
-            if (MaxAllocSize < (ExeSize - Header->e_maxalloc + Header->e_minalloc))
+            if (MaxAllocSize < (BaseSize + (sizeof(DOS_PSP) >> 4) + Header->e_minalloc))
             {
                 Result = DosLastError;
                 goto Cleanup;
             }
 
             /* Allocate that minimum amount */
-            ExeSize = MaxAllocSize;
-            Segment = DosAllocateMemory((WORD)ExeSize, NULL);
+            TotalSize = MaxAllocSize;
+            Segment = DosAllocateMemory((WORD)TotalSize, NULL);
             ASSERT(Segment != 0);
         }
 
         /* Initialize the PSP */
         DosInitializePsp(Segment,
                          CommandLine,
-                         (WORD)ExeSize,
+                         (WORD)TotalSize,
                          EnvBlock,
                          ReturnAddress);
 
@@ -418,11 +420,14 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         DosChangeMemoryOwner(Segment, Segment);
         DosChangeMemoryOwner(EnvBlock, Segment);
 
-        /* Copy the program to Segment:0100 */
-        RtlCopyMemory(SEG_OFF_TO_PTR(Segment, 0x100),
+        /* Find the EXE segment */
+        if (!LoadHigh) ExeSegment = Segment + (sizeof(DOS_PSP) >> 4);
+        else ExeSegment = Segment + TotalSize - BaseSize;
+
+        /* Copy the program to the code segment */
+        RtlCopyMemory(SEG_OFF_TO_PTR(ExeSegment, 0),
                       Address + (Header->e_cparhdr << 4),
-                      min(FileSize - (Header->e_cparhdr << 4),
-                          (ExeSize << 4) - sizeof(DOS_PSP)));
+                      min(FileSize - (Header->e_cparhdr << 4), BaseSize << 4));
 
         /* Get the relocation table */
         RelocationTable = (PDWORD)(Address + Header->e_lfarlc);
@@ -431,11 +436,11 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
         for (i = 0; i < Header->e_crlc; i++)
         {
             /* Get a pointer to the word that needs to be patched */
-            RelocWord = (PWORD)SEG_OFF_TO_PTR(Segment + HIWORD(RelocationTable[i]),
-                                                0x100 + LOWORD(RelocationTable[i]));
+            RelocWord = (PWORD)SEG_OFF_TO_PTR(ExeSegment + HIWORD(RelocationTable[i]),
+                                              LOWORD(RelocationTable[i]));
 
             /* Add the number of the EXE segment to it */
-            *RelocWord += Segment + (sizeof(DOS_PSP) >> 4);
+            *RelocWord += ExeSegment;
         }
 
         if (LoadType == DOS_LOAD_AND_EXECUTE)
@@ -445,14 +450,13 @@ DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
             setES(Segment);
 
             /* Set the stack to the location from the header */
-            setSS(Segment + (sizeof(DOS_PSP) >> 4) + Header->e_ss);
+            setSS(ExeSegment + Header->e_ss);
             setSP(Header->e_sp);
 
             /* Execute */
             CurrentPsp = Segment;
             DiskTransferArea = MAKELONG(0x80, Segment);
-            CpuExecute(Segment + Header->e_cs + (sizeof(DOS_PSP) >> 4),
-                       Header->e_ip);
+            CpuExecute(ExeSegment + Header->e_cs, Header->e_ip);
         }
     }
     else
@@ -523,9 +527,6 @@ Cleanup:
         if (EnvBlock) DosFreeMemory(EnvBlock);
         if (Segment) DosFreeMemory(Segment);
     }
-
-    /* Restore the old allocation strategy */
-    DosAllocStrategy = OldStrategy;
 
     /* Unmap the file*/
     if (Address != NULL) UnmapViewOfFile(Address);
