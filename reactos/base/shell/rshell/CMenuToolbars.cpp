@@ -383,7 +383,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         rc.bottom = 1;
     }
 
-    SubclassWindow(Create(hwndParent, tbStyles, tbExStyles));
+    SubclassWindow(CToolbar::Create(hwndParent, tbStyles, tbExStyles));
 
     SetWindowTheme(m_hWnd, L"", L"");
 

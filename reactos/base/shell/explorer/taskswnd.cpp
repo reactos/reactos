@@ -103,7 +103,7 @@ typedef struct _TASK_ITEM
 } TASK_ITEM, *PTASK_ITEM;
 
 class CTaskToolbar :
-    public CToolbar<TASK_ITEM>
+    public CWindowImplBaseT< CToolbar<TASK_ITEM>, CControlWinTraits >
 {
 public:
     INT UpdateTbButtonSpacing(IN BOOL bHorizontal, IN BOOL bThemed, IN UINT uiRows = 0, IN UINT uiBtnsPerLine = 0)
@@ -170,7 +170,7 @@ public:
             TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_LIST | TBSTYLE_TRANSPARENT |
             CCS_TOP | CCS_NORESIZE | CCS_NODIVIDER;
 
-        return SubclassWindow(Create(hWndParent, styles));
+        return SubclassWindow(CToolbar::Create(hWndParent, styles));
     }
 };
 

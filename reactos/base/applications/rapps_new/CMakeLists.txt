@@ -13,8 +13,6 @@ list(APPEND SOURCE
     loaddlg.cpp
     misc.cpp
     settingsdlg.cpp
-    toolbar.cpp
-    treeview.cpp
     winmain.cpp
     rapps.h)
 

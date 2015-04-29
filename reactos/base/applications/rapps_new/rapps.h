@@ -175,17 +175,6 @@ UINT ParserGetInt(LPCWSTR lpKeyName, LPCWSTR lpFileName);
 /* settingsdlg.c */
 VOID CreateSettingsDlg(HWND hwnd);
 
-/* toolbar.c */
-extern HWND hToolBar;
-extern HWND hSearchBar;
-BOOL CreateToolBar(HWND hwnd);
-VOID ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt);
-
-/* treeview.c */
-extern HWND hTreeView;
-BOOL CreateTreeView(HWND hwnd);
-HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
-
 /* gui.cpp */
 HWND CreateMainWindow();
 DWORD_PTR ListViewGetlParam(INT item);
@@ -194,6 +183,11 @@ VOID SetStatusBarText(PCWSTR szText);
 VOID NewRichEditText(PCWSTR szText, DWORD flags);
 VOID InsertRichEditText(PCWSTR szText, DWORD flags);
 extern HWND hListView;
-extern PWSTR pLink;
+extern WCHAR szSearchPattern[MAX_STR_LEN];
+
+//extern HWND hTreeView;
+//BOOL CreateTreeView(HWND hwnd);
+//HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
+
 
 #endif /* _RAPPS_H */

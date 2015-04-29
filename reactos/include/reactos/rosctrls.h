@@ -190,9 +190,9 @@ public:
 
     DWORD_PTR GetItemData(int i)
     {
-        LVITEMW lvItem;
-        lvItem.iItem = i;
+        LVITEMW lvItem = { 0 };
         lvItem.mask = LVIF_PARAM;
+        lvItem.iItem = i;
         BOOL ret = GetItem(&lvItem);
         return (DWORD_PTR)(ret ? lvItem.lParam : NULL);
     }
@@ -218,7 +218,7 @@ public:
 
 template<typename TItemData = DWORD_PTR>
 class CToolbar :
-    public CWindowImplBaseT<CWindow>
+    public CWindow
 {
 public: // Configuration methods
 
@@ -415,14 +415,8 @@ public: // Utility methods
 };
 
 class CStatusBar :
-    public CWindowImplBaseT<CWindow>
+    public CWindow
 {
-    BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)
-    {
-        theResult = 0;
-        return FALSE;
-    }
-
 public:
     VOID SetText(LPCWSTR lpszText)
     {
@@ -431,7 +425,7 @@ public:
 
     HWND Create(HWND hwndParent, HMENU hMenu)
     {
-        HWND hwnd = CreateWindowExW(0,
+        m_hWnd = CreateWindowExW(0,
             STATUSCLASSNAMEW,
             NULL,
             WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP,
@@ -440,8 +434,140 @@ public:
             hMenu,
             _AtlBaseModule.GetModuleInstance(),
             NULL);
-        SubclassWindow(hwnd);
-        return hwnd;
+
+        return m_hWnd;
+    }
+
+};
+
+class CTreeView :
+    public CWindow
+{
+public:
+    HWND Create(HWND hwndParent)
+    {
+        m_hWnd = CreateWindowExW(WS_EX_CLIENTEDGE,
+            WC_TREEVIEWW,
+            L"",
+            WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_SHOWSELALWAYS,
+            0, 28, 200, 350,
+            hwndParent,
+            NULL,
+            _AtlBaseModule.GetModuleInstance(),
+            NULL);
+
+        return m_hWnd;
+    }
+
+    HTREEITEM AddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam)
+    {
+        TVINSERTSTRUCTW Insert;
+
+        ZeroMemory(&Insert, sizeof(TV_INSERTSTRUCT));
+
+        Insert.item.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+        Insert.hInsertAfter = TVI_LAST;
+        Insert.hParent = hParent;
+        Insert.item.iSelectedImage = SelectedImage;
+        Insert.item.iImage = Image;
+        Insert.item.lParam = lParam;
+        Insert.item.pszText = lpText;
+
+        return InsertItem(&Insert);
+    }
+
+    void SetRedraw(BOOL redraw)
+    {
+        SendMessage(WM_SETREDRAW, redraw);
+    }
+
+    BOOL SetBkColor(COLORREF cr)
+    {
+        return (BOOL) SendMessage(TVM_SETBKCOLOR, 0, cr);
+    }
+
+    BOOL SetTextColor(COLORREF cr)
+    {
+        return (BOOL) SendMessage(TVM_SETTEXTCOLOR, 0, cr);
+    }
+
+    HIMAGELIST SetImageList(HIMAGELIST himl, int iImageList)
+    {
+        return (HIMAGELIST) SendMessage(TVM_SETIMAGELIST, iImageList, reinterpret_cast<LPARAM>(himl));
+    }
+
+    HTREEITEM InsertItem(const TVINSERTSTRUCTW * pitem)
+    {
+        return (HTREEITEM) SendMessage(TVM_INSERTITEM, 0, reinterpret_cast<LPARAM>(pitem));
+    }
+
+    BOOL DeleteItem(HTREEITEM i)
+    {
+        return (BOOL) SendMessage(TVM_DELETEITEM, 0, (LPARAM)i);
+    }
+
+    BOOL GetItem(TV_ITEM* pitem)
+    {
+        return (BOOL) SendMessage(TVM_GETITEM, 0, reinterpret_cast<LPARAM>(pitem));
+    }
+
+    BOOL SetItem(const TV_ITEM * pitem)
+    {
+        return (BOOL) SendMessage(TVM_SETITEM, 0, reinterpret_cast<LPARAM>(pitem));
+    }
+
+    int GetItemCount()
+    {
+        return SendMessage(TVM_GETCOUNT);
+    }
+
+    BOOL EnsureVisible(HTREEITEM i)
+    {
+        return (BOOL) SendMessage(TVM_ENSUREVISIBLE, 0, (LPARAM)i);
+    }
+
+    HWND EditLabel(HTREEITEM i)
+    {
+        return (HWND) SendMessage(TVM_EDITLABEL, 0, (LPARAM)i);
+    }
+
+    HTREEITEM GetNextItem(HTREEITEM i, WORD flags)
+    {
+        return (HTREEITEM)SendMessage(TVM_GETNEXTITEM, flags, (LPARAM)i);
+    }
+
+    UINT GetItemState(int i, UINT mask)
+    {
+        return SendMessage(TVM_GETITEMSTATE, i, (LPARAM) mask);
+    }
+
+    HTREEITEM HitTest(TVHITTESTINFO * phtInfo)
+    {
+        return (HTREEITEM) SendMessage(TVM_HITTEST, 0, reinterpret_cast<LPARAM>(phtInfo));
+    }
+
+    DWORD_PTR GetItemData(HTREEITEM item)
+    {
+        TVITEMW lvItem;
+        lvItem.hItem = item;
+        lvItem.mask = TVIF_PARAM;
+        BOOL ret = GetItem(&lvItem);
+        return (DWORD_PTR) (ret ? lvItem.lParam : NULL);
+    }
+
+    HTREEITEM GetSelection()
+    {
+        return GetNextItem(NULL, TVGN_CARET);
+    }
+
+    BOOL Expand(HTREEITEM item, DWORD action)
+    {
+        return SendMessage(TVM_EXPAND, action, (LPARAM)item);
+    }
+
+    BOOL SelectItem(HTREEITEM item, DWORD action = TVGN_CARET)
+    {
+        return SendMessage(TVM_SELECTITEM, action, (LPARAM) item);
     }
 
 };

@@ -26,7 +26,7 @@ class CMenuFocusManager;
 #define WM_USER_CHANGETRACKEDITEM (WM_APP+42)
 
 class CMenuToolbarBase :
-    public CToolbar<DWORD_PTR>
+    public CWindowImplBaseT< CToolbar<DWORD_PTR>, CControlWinTraits >
 {
     CContainedWindow m_pager;
 private:

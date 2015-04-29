@@ -37,7 +37,7 @@ typedef struct _SYS_PAGER_COPY_DATA
 } SYS_PAGER_COPY_DATA, *PSYS_PAGER_COPY_DATA;
 
 class CNotifyToolbar :
-    public CToolbar<NOTIFYICONDATA>
+    public CWindowImplBaseT< CToolbar<NOTIFYICONDATA>, CControlWinTraits >
 {
     static const int ICON_SIZE = 16;
 
@@ -367,7 +367,7 @@ public:
             TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | TBSTYLE_WRAPABLE | TBSTYLE_TRANSPARENT |
             CCS_TOP | CCS_NORESIZE | CCS_NOPARENTALIGN | CCS_NODIVIDER;
 
-        SubclassWindow(Create(hWndParent, styles));
+        SubclassWindow(CToolbar::Create(hWndParent, styles));
 
         SetWindowTheme(m_hWnd, L"TrayNotify", NULL);
 
