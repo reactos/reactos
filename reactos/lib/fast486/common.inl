@@ -625,7 +625,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
 
             if (!GdtEntry.Present)
             {
-                Fast486ExceptionWithErrorCode(State, Exception, Selector);
+                Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
                 return FALSE;
             }
 
@@ -679,7 +679,7 @@ Fast486LoadSegmentInternal(PFAST486_STATE State,
 
                 if (!GdtEntry.Present)
                 {
-                    Fast486ExceptionWithErrorCode(State, Exception, Selector);
+                    Fast486ExceptionWithErrorCode(State, FAST486_EXCEPTION_NP, Selector);
                     return FALSE;
                 }
             }
