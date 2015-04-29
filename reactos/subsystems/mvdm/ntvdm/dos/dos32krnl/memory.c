@@ -210,7 +210,9 @@ BOOLEAN DosResizeMemory(WORD BlockData, WORD NewSize, WORD *MaxAvailable)
            NewSize);
 
     /* Make sure this is a valid, allocated block */
-    if ((Mcb->BlockType != 'M' && Mcb->BlockType != 'Z') || Mcb->OwnerPsp == 0)
+    if (BlockData == 0
+        || (Mcb->BlockType != 'M' && Mcb->BlockType != 'Z')
+        || Mcb->OwnerPsp == 0)
     {
         Success = FALSE;
         DosLastError = ERROR_INVALID_HANDLE;
