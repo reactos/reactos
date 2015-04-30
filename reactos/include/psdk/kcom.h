@@ -234,6 +234,12 @@ inline void __cdecl operator delete(
   if (pVoid) ExFreePool(pVoid);
 }
 
+inline void __cdecl operator delete(
+  PVOID pVoid, UINT unk)
+{
+  if (pVoid) ExFreePool(pVoid);
+}
+
 #endif /* _NEW_DELETE_OPERATORS_ */
 
 #if defined(_SYS_GUID_OPERATOR_EQ_)

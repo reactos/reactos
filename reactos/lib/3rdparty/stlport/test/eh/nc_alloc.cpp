@@ -264,6 +264,14 @@ void _STLP_CALL operator delete(void* s)
   }
 }
 
+#if defined (EH_DELETE_HAS_THROW_SPEC)
+void _STLP_CALL operator delete(void* s, unsigned int) throw()
+#else
+void _STLP_CALL operator delete(void* s, unsigned int)
+#endif
+{
+	::operator delete(s);
+}
 
 /*===================================================================================
   ClearAllocationSet  (private helper)

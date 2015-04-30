@@ -9,3 +9,8 @@ void operator delete(void *p)
 {
     LocalFree(p);
 }
+
+void operator delete(void *p, unsigned int)
+{
+    LocalFree(p);
+}

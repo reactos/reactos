@@ -10,6 +10,13 @@
 #ifndef __NDISSYS_H
 #define __NDISSYS_H
 
+/* portability fixes */
+#ifdef _M_AMD64
+#define KfReleaseSpinLock KeReleaseSpinLock
+#define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel
+#define KefReleaseSpinLockFromDpcLevel KeReleaseSpinLockFromDpcLevel
+#endif
+
 #include <ndis.h>
 
 #include "debug.h"
@@ -53,12 +60,5 @@ VOID
 NTAPI
 ExGetCurrentProcessorCpuUsage(
     PULONG CpuUsage);
-
-/* portability fixes */
-#ifdef _M_AMD64
-#define KfReleaseSpinLock KeReleaseSpinLock
-#define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel
-#define KefReleaseSpinLockFromDpcLevel KeReleaseSpinLockFromDpcLevel
-#endif
 
 #endif /* __NDISSYS_H */

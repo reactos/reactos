@@ -33,6 +33,11 @@ if(MSVC_VERSION GREATER 1799 AND NOT MSVC_IDE)
     add_compile_flags("/FS")
 endif ()
 
+# VS14+ tries to use thread-safe initialization
+if(MSVC_VERSION GREATER 1899)
+    add_compile_flags("/Zc:threadSafeInit-")
+endif ()
+
 # Disable overly sensitive warnings as well as those that generally aren't
 # useful to us.
 # - C4244: implicit integer truncation
