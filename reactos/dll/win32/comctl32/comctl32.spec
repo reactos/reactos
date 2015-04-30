@@ -178,3 +178,6 @@
 419 stdcall -noname GetTextExtentPointWrap(long wstr long ptr) gdi32.GetTextExtentPointW
 420 stdcall -noname GetTextExtentPoint32Wrap(long wstr long ptr) gdi32.GetTextExtentPoint32W
 421 stdcall -noname TextOutWrap(long long long wstr long) gdi32.TextOutW
+
+; Exported in v6 but not v5
+@ stdcall DrawShadowText(long wstr long ptr long long long long long)
