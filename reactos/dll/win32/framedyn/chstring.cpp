@@ -54,19 +54,6 @@ void operator delete(void* ptr)
     }
 }
 
-#if _MSC_VER >= 51900
-void __cdecl operator delete(void* ptr, unsigned int)
-{
-    // In Windows 2k3, they check for ptr being null.
-    // ISO, POSIX and even MSDN explains that it is allowed
-    // to call free with NULL pointer...
-    if (ptr)
-    {
-        free(ptr);
-    }
-}
-#endif
-
 // Implement our own new operator so that we can throw our own exception in case
 // of allocation failure.
 // It could have been done using set_new_handler(), but well. MS guys didn't do it

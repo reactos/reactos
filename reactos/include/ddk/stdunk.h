@@ -206,7 +206,7 @@ operator delete(
 
 inline void __cdecl
 operator delete(
-    PVOID ptr, UINT unk)
+    PVOID ptr, UINT)
 {
     ExFreePool(ptr);
 }
