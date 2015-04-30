@@ -1,6 +1,6 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS system libraries
+ * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
+ * PROJECT:           ReactOS CRT library
  * PURPOSE:           Implementation of __rt_udiv64
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
@@ -12,6 +12,7 @@
     IMPORT __rt_udiv64_worker
 
 /* CODE **********************************************************************/
+
     TEXTAREA
 
     NESTED_ENTRY __rt_udiv64
@@ -30,7 +31,7 @@
 Return
     /* Move result data into the appropriate registers and return */
     ldmia sp!,{r0,r1,r2,r3,pc}
-    ENTRY_END __rt_udiv64
+    NESTED_END __rt_udiv64
 
     END
 /* EOF */

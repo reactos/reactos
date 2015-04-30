@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:         BSD - See COPYING.ARM in the top level directory
  * PROJECT:           ReactOS CRT library
- * PURPOSE:           Implementation of __dtou64
+ * PURPOSE:           Implementation of tan
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -13,12 +13,12 @@
 
     TEXTAREA
 
-    LEAF_ENTRY __dtou64
+    LEAF_ENTRY tan
 
 	__assertfail
 	bx	lr
 
-    LEAF_END __dtou64
+    LEAF_END tan
 
     END
 /* EOF */
