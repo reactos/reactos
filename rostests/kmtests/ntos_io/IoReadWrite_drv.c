@@ -200,6 +200,7 @@ TestFastIoWrite(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    TestLastFastWriteKey = LockKey;
     UNIMPLEMENTED;
     return FALSE;
 }
