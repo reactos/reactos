@@ -174,7 +174,7 @@ typedef struct
 
 #define MAX_PATH                260
 
-typedef struct _CDFS_SHORT_NAME 
+typedef struct _CDFS_SHORT_NAME
 {
     LIST_ENTRY Entry;
     LARGE_INTEGER StreamOffset;
@@ -244,6 +244,7 @@ typedef struct
   PDEVICE_OBJECT DeviceObject;
   ULONG Flags;
   CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
+  FAST_IO_DISPATCH FastIoDispatch;
 } CDFS_GLOBAL_DATA, *PCDFS_GLOBAL_DATA;
 
 extern PCDFS_GLOBAL_DATA CdfsGlobalData;
@@ -429,9 +430,9 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
 
 VOID
 CdfsShortNameCacheGet
-(PFCB DirectoryFcb, 
- PLARGE_INTEGER StreamOffset, 
- PUNICODE_STRING LongName, 
+(PFCB DirectoryFcb,
+ PLARGE_INTEGER StreamOffset,
+ PUNICODE_STRING LongName,
  PUNICODE_STRING ShortName);
 
 /* rw.c */
@@ -479,5 +480,8 @@ CdfsAcquireForLazyWrite(IN PVOID Context,
 
 VOID NTAPI
 CdfsReleaseFromLazyWrite(IN PVOID Context);
+
+FAST_IO_READ CdfsFastIoRead;
+FAST_IO_WRITE CdfsFastIoWrite;
 
 #endif /* CDFS_H */

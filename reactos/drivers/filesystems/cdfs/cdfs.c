@@ -99,6 +99,10 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
         CdfsDeviceControl;
 
+    CdfsGlobalData->FastIoDispatch.FastIoRead = CdfsFastIoRead;
+    CdfsGlobalData->FastIoDispatch.FastIoWrite = CdfsFastIoWrite;
+    DriverObject->FastIoDispatch = &CdfsGlobalData->FastIoDispatch;
+
     DriverObject->DriverUnload = NULL;
 
     /* Cache manager */
@@ -140,4 +144,50 @@ CdfsReleaseFromLazyWrite(IN PVOID Context)
     DPRINT("CdfsReleaseFromLazyWrite(): Fcb %p\n", Fcb);
 
     ExReleaseResourceLite(&(Fcb->MainResource));
+}
+
+BOOLEAN
+NTAPI
+CdfsFastIoRead(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _Out_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    DBG_UNREFERENCED_PARAMETER(FileObject);
+    DBG_UNREFERENCED_PARAMETER(FileOffset);
+    DBG_UNREFERENCED_PARAMETER(Length);
+    DBG_UNREFERENCED_PARAMETER(Wait);
+    DBG_UNREFERENCED_PARAMETER(LockKey);
+    DBG_UNREFERENCED_PARAMETER(Buffer);
+    DBG_UNREFERENCED_PARAMETER(IoStatus);
+    DBG_UNREFERENCED_PARAMETER(DeviceObject);
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
+CdfsFastIoWrite(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ PLARGE_INTEGER FileOffset,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Wait,
+    _In_ ULONG LockKey,
+    _In_ PVOID Buffer,
+    _Out_ PIO_STATUS_BLOCK IoStatus,
+    _In_ PDEVICE_OBJECT DeviceObject)
+{
+    DBG_UNREFERENCED_PARAMETER(FileObject);
+    DBG_UNREFERENCED_PARAMETER(FileOffset);
+    DBG_UNREFERENCED_PARAMETER(Length);
+    DBG_UNREFERENCED_PARAMETER(Wait);
+    DBG_UNREFERENCED_PARAMETER(LockKey);
+    DBG_UNREFERENCED_PARAMETER(Buffer);
+    DBG_UNREFERENCED_PARAMETER(IoStatus);
+    DBG_UNREFERENCED_PARAMETER(DeviceObject);
+    return FALSE;
 }
