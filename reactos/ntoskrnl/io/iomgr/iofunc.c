@@ -346,7 +346,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, Event, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, EventObject, NULL);
 
     /* Setup the IRP */
     Irp->UserIosb = IoStatusBlock;
