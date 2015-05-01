@@ -599,6 +599,13 @@ VfatRead(
        goto ByeBye;
     }
 
+    if (Length == 0)
+    {
+        IrpContext->Irp->IoStatus.Information = 0;
+        Status = STATUS_SUCCESS;
+        goto ByeBye;
+    }
+
     if (ByteOffset.QuadPart >= Fcb->RFCB.FileSize.QuadPart)
     {
        IrpContext->Irp->IoStatus.Information = 0;
@@ -615,13 +622,6 @@ VfatRead(
             Status = STATUS_INVALID_PARAMETER;
             goto ByeBye;
         }
-    }
-
-    if (Length == 0)
-    {
-        IrpContext->Irp->IoStatus.Information = 0;
-        Status = STATUS_SUCCESS;
-        goto ByeBye;
     }
 
     if (Fcb->Flags & FCB_IS_VOLUME)
