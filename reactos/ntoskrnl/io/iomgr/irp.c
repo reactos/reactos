@@ -284,10 +284,18 @@ IopCompleteRequest(IN PKAPC Apc,
             (Irp->IoStatus.Status != STATUS_VERIFY_REQUIRED) &&
             !(NT_ERROR(Irp->IoStatus.Status)))
         {
-            /* Copy the buffer back to the user */
-            RtlCopyMemory(Irp->UserBuffer,
-                          Irp->AssociatedIrp.SystemBuffer,
-                          Irp->IoStatus.Information);
+            _SEH2_TRY
+            {
+                /* Copy the buffer back to the user */
+                RtlCopyMemory(Irp->UserBuffer,
+                              Irp->AssociatedIrp.SystemBuffer,
+                              Irp->IoStatus.Information);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Do nothing */
+            }
+            _SEH2_END;
         }
 
         /* Also check if we should de-allocate it */
@@ -317,10 +325,9 @@ IopCompleteRequest(IN PKAPC Apc,
      * (but warnings are OK!), or if it was completed with an error, but
      * did return from a pending I/O Operation and is not synchronous.
      */
-    if (!(NT_ERROR(Irp->IoStatus.Status)) ||
-         (NT_ERROR(Irp->IoStatus.Status) &&
-          (Irp->PendingReturned) &&
-          !(IsIrpSynchronous(Irp, FileObject))))
+    if (!NT_ERROR(Irp->IoStatus.Status) ||
+        (Irp->PendingReturned &&
+         !IsIrpSynchronous(Irp, FileObject)))
     {
         /* Get any information we need from the FO before we kill it */
         if ((FileObject) && (FileObject->CompletionContext))
