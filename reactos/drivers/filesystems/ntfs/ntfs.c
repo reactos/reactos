@@ -51,18 +51,28 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 {
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(DEVICE_NAME);
     NTSTATUS Status;
+    PDEVICE_OBJECT DeviceObject;
 
     TRACE_(NTFS, "DriverEntry(%p, '%wZ')\n", DriverObject, RegistryPath);
 
-    /* Initialize global data */
-    NtfsGlobalData = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_GLOBAL_DATA), 'GRDN');
-    if (!NtfsGlobalData)
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(NTFS_GLOBAL_DATA),
+                            &DeviceName,
+                            FILE_DEVICE_DISK_FILE_SYSTEM,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (!NT_SUCCESS(Status))
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto ErrorEnd;
+        WARN_(NTFS, "IoCreateDevice failed with status: %lx\n", Status);
+        return Status;
     }
 
+    /* Initialize global data */
+    NtfsGlobalData = DeviceObject->DeviceExtension;
     RtlZeroMemory(NtfsGlobalData, sizeof(NTFS_GLOBAL_DATA));
+
+    NtfsGlobalData->DeviceObject = DeviceObject;
     NtfsGlobalData->Identifier.Type = NTFS_TYPE_GLOBAL_DATA;
     NtfsGlobalData->Identifier.Size = sizeof(NTFS_GLOBAL_DATA);
 
@@ -89,34 +99,11 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     /* Driver can't be unloaded */
     DriverObject->DriverUnload = NULL;
 
-    Status = IoCreateDevice(DriverObject,
-                            sizeof(NTFS_GLOBAL_DATA),
-                            &DeviceName,
-                            FILE_DEVICE_DISK_FILE_SYSTEM,
-                            0,
-                            FALSE,
-                            &NtfsGlobalData->DeviceObject);
-    if (!NT_SUCCESS(Status))
-    {
-        WARN_(NTFS, "IoCreateDevice failed with status: %lx\n", Status);
-        goto ErrorEnd;
-    }
-
     NtfsGlobalData->DeviceObject->Flags |= DO_DIRECT_IO;
 
     /* Register file system */
     IoRegisterFileSystem(NtfsGlobalData->DeviceObject);
     ObReferenceObject(NtfsGlobalData->DeviceObject);
-
-ErrorEnd:
-    if (!NT_SUCCESS(Status))
-    {
-        if (NtfsGlobalData)
-        {
-            ExDeleteResourceLite(&NtfsGlobalData->Resource);
-            ExFreePoolWithTag(NtfsGlobalData, 'GRDN');
-        }
-    }
 
     return Status;
 }
