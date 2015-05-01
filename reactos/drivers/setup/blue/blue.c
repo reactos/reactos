@@ -792,6 +792,33 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
   return Status;
 }
 
+static DRIVER_DISPATCH ScrDispatch;
+static NTSTATUS NTAPI
+ScrDispatch(PDEVICE_OBJECT DeviceObject,
+        PIRP Irp)
+{
+    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS Status;
+
+    switch (stk->MajorFunction)
+    {
+        case IRP_MJ_CLOSE:
+            Status = STATUS_SUCCESS;
+            break;
+
+        default:
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest (Irp, IO_NO_INCREMENT);
+
+    return (Status);
+}
+
+
 /*
  * Module entry point
  */
