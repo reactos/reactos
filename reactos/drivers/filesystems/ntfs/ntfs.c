@@ -80,6 +80,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     NtfsGlobalData->CacheMgrCallbacks.AcquireForReadAhead = NtfsAcqReadAhead; 
     NtfsGlobalData->CacheMgrCallbacks.ReleaseFromReadAhead = NtfsRelReadAhead; 
 
+    NtfsGlobalData->FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
+    NtfsGlobalData->FastIoDispatch.FastIoCheckIfPossible = NtfsFastIoCheckIfPossible;
+    NtfsGlobalData->FastIoDispatch.FastIoRead = NtfsFastIoRead;
+    NtfsGlobalData->FastIoDispatch.FastIoWrite = NtfsFastIoWrite;
+    DriverObject->FastIoDispatch = &NtfsGlobalData->FastIoDispatch;
+
     /* Driver can't be unloaded */
     DriverObject->DriverUnload = NULL;
 

@@ -136,6 +136,7 @@ typedef struct
     PDEVICE_OBJECT DeviceObject;
     CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
     ULONG Flags;
+    FAST_IO_DISPATCH FastIoDispatch;
 } NTFS_GLOBAL_DATA, *PNTFS_GLOBAL_DATA;
 
 
@@ -565,6 +566,10 @@ NtfsAcqReadAhead(PVOID Context,
 
 VOID NTAPI
 NtfsRelReadAhead(PVOID Context);
+
+FAST_IO_CHECK_IF_POSSIBLE NtfsFastIoCheckIfPossible;
+FAST_IO_READ NtfsFastIoRead;
+FAST_IO_WRITE NtfsFastIoWrite;
 
 
 /* fcb.c */
