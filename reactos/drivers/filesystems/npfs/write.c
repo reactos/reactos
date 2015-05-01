@@ -104,10 +104,10 @@ NpCommonWrite(IN PFILE_OBJECT FileObject,
     EventBuffer = NonPagedCcb->EventBuffer[NamedPipeEnd];
 
     if ((WriteQueue->QueueState == ReadEntries &&
-        WriteQueue->BytesInQueue < DataSize &&
-        WriteQueue->Quota < DataSize - WriteQueue->BytesInQueue) ||
-        (WriteQueue->QueueState == ReadEntries &&
-        WriteQueue->Quota - WriteQueue->QuotaUsed < DataSize))
+         WriteQueue->BytesInQueue < DataSize &&
+         WriteQueue->Quota < DataSize - WriteQueue->BytesInQueue) ||
+        (WriteQueue->QueueState != ReadEntries &&
+         WriteQueue->Quota - WriteQueue->QuotaUsed < DataSize))
     {
         if (Ccb->Fcb->NamedPipeType == FILE_PIPE_MESSAGE_TYPE &&
             Ccb->CompletionMode[NamedPipeEnd] == FILE_PIPE_COMPLETE_OPERATION)
