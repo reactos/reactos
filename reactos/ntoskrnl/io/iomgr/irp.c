@@ -293,7 +293,8 @@ IopCompleteRequest(IN PKAPC Apc,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Do nothing */
+                /* Fail the IRP */
+                Irp->IoStatus.Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
         }
