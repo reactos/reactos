@@ -121,7 +121,8 @@ DriverEntry(
         RtlAppendUnicodeToString(&DeviceName, DeviceNameSuffix);
         Status = IoCreateDevice(DriverObject, 0, &DeviceName,
                                 FILE_DEVICE_UNKNOWN,
-                                FILE_DEVICE_SECURE_OPEN | FILE_READ_ONLY_DEVICE,
+                                FILE_DEVICE_SECURE_OPEN |
+                                    (Flags & TESTENTRY_NO_READONLY_DEVICE ? 0 : FILE_READ_ONLY_DEVICE),
                                 Flags & TESTENTRY_NO_EXCLUSIVE_DEVICE ? FALSE : TRUE,
                                 &TestDeviceObject);
 
@@ -130,6 +131,9 @@ DriverEntry(
             DPRINT1("Could not create device object %wZ\n", &DeviceName);
             goto cleanup;
         }
+
+        if (Flags & TESTENTRY_BUFFERED_IO_DEVICE)
+            TestDeviceObject->Flags |= DO_BUFFERED_IO;
 
         DPRINT("DriverEntry. Created DeviceObject %p\n",
                  TestDeviceObject);
