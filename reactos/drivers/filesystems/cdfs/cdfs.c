@@ -99,6 +99,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
         CdfsDeviceControl;
 
+    CdfsGlobalData->FastIoDispatch.SizeOfFastIoDispatch = sizeof(FAST_IO_DISPATCH);
     CdfsGlobalData->FastIoDispatch.FastIoRead = CdfsFastIoRead;
     CdfsGlobalData->FastIoDispatch.FastIoWrite = CdfsFastIoWrite;
     DriverObject->FastIoDispatch = &CdfsGlobalData->FastIoDispatch;
