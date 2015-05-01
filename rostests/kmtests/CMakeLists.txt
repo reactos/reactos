@@ -109,6 +109,7 @@ list(APPEND KMTEST_SOURCE
     example/Example_user.c
     kernel32/FindFile_user.c
     ntos_io/IoDeviceObject_user.c
+    ntos_io/IoReadWrite_user.c
     tcpip/TcpIp_user.c
     ${COMMON_SOURCE}
 
@@ -132,6 +133,7 @@ add_dependencies(kmtest_drivers
     example_drv
     iodeviceobject_drv
     iohelper_drv
+    ioreadwrite_drv
     tcpip_drv)
 
 add_custom_target(kmtest_all)

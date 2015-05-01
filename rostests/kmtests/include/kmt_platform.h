@@ -34,6 +34,7 @@
 #include <winreg.h>
 #include <winsvc.h>
 #include <ndk/cmfuncs.h>
+#include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>
