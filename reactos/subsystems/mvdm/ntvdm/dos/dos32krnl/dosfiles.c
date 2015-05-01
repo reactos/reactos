@@ -19,6 +19,7 @@
 #include "dos/dem.h"
 #include "dosfiles.h"
 #include "handle.h"
+#include "process.h"
 
 #include "bios/bios.h"
 

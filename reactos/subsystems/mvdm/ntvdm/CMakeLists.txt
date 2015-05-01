@@ -36,6 +36,7 @@ list(APPEND SOURCE
     dos/dos32krnl/handle.c
     dos/dos32krnl/himem.c
     dos/dos32krnl/memory.c
+    dos/dos32krnl/process.c
     dos/mouse32.c
     dos/dem.c
     clock.c

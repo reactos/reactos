@@ -11,6 +11,8 @@
 
 /* TYPEDEFS *******************************************************************/
 
+#define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
+
 enum DOS_ALLOC_STRATEGY
 {
     DOS_ALLOC_FIRST_FIT,

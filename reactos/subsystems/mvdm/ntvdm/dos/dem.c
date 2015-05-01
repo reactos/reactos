@@ -20,6 +20,7 @@
 
 #include "dem.h"
 #include "dos/dos32krnl/device.h"
+#include "dos/dos32krnl/process.h"
 #include "cpu/bop.h"
 
 #include "bios/bios.h"

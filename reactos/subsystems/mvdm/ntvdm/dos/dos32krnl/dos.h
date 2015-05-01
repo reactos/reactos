@@ -39,27 +39,16 @@
 #define DOS_ERROR_HANDLE    2
 
 #define DOS_SFT_SIZE 255
-#define SEGMENT_TO_MCB(seg) ((PDOS_MCB)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
-#define SEGMENT_TO_PSP(seg) ((PDOS_PSP)((ULONG_PTR)BaseAddress + TO_LINEAR((seg), 0)))
 #define UMB_START_SEGMENT 0xC000
 #define UMB_END_SEGMENT 0xDFFF
 #define DOS_ALLOC_HIGH 0x40
 #define DOS_ALLOC_HIGH_LOW 0x80
-#define DOS_CMDLINE_LENGTH 127
 #define DOS_DIR_LENGTH 64
 #define NUM_DRIVES ('Z' - 'A' + 1)
 #define DOS_CHAR_ATTRIBUTE 0x07
-#define DOS_PROGRAM_NAME_TAG 0x0001
 
 /* 16 MB of EMS memory */
 #define EMS_TOTAL_PAGES 1024
-
-typedef enum
-{
-    DOS_LOAD_AND_EXECUTE = 0x00,
-    DOS_LOAD_ONLY = 0x01,
-    DOS_LOAD_OVERLAY = 0x03
-} DOS_EXEC_TYPE;
 
 #pragma pack(push, 1)
 
@@ -102,31 +91,6 @@ typedef struct _DOS_SYSVARS
     BYTE NullDriverRoutine[7];
 } DOS_SYSVARS, *PDOS_SYSVARS;
 
-typedef struct _DOS_PSP
-{
-    BYTE Exit[2];
-    WORD LastParagraph;
-    BYTE Reserved0[6];
-    DWORD TerminateAddress;
-    DWORD BreakAddress;
-    DWORD CriticalAddress;
-    WORD ParentPsp;
-    BYTE HandleTable[20];
-    WORD EnvBlock;
-    DWORD LastStack;
-    WORD HandleTableSize;
-    DWORD HandleTablePtr;
-    DWORD PreviousPsp;
-    DWORD Reserved1;
-    WORD DosVersion;
-    BYTE Reserved2[14];
-    BYTE FarCall[3];
-    BYTE Reserved3[9];
-    DOS_FCB Fcb;
-    BYTE CommandLineSize;
-    CHAR CommandLine[DOS_CMDLINE_LENGTH];
-} DOS_PSP, *PDOS_PSP;
-
 typedef struct _DOS_INPUT_BUFFER
 {
     BYTE MaxLength;
@@ -150,19 +114,6 @@ typedef struct _DOS_FIND_FILE_BLOCK
     CHAR FileName[13];
 } DOS_FIND_FILE_BLOCK, *PDOS_FIND_FILE_BLOCK;
 
-typedef struct _DOS_EXEC_PARAM_BLOCK
-{
-    /* Input variables */
-    WORD Environment;
-    DWORD CommandLine;
-    DWORD FirstFcb;
-    DWORD SecondFcb;
-
-    /* Output variables */
-    DWORD StackLocation;
-    DWORD EntryPoint;
-} DOS_EXEC_PARAM_BLOCK, *PDOS_EXEC_PARAM_BLOCK;
-
 typedef struct _DOS_COUNTRY_CODE_BUFFER
 {
     WORD TimeFormat;
@@ -176,7 +127,8 @@ typedef struct _DOS_COUNTRY_CODE_BUFFER
 /* VARIABLES ******************************************************************/
 
 extern BOOLEAN DoEcho;
-extern WORD CurrentPsp;
+extern DWORD DiskTransferArea;
+extern WORD DosErrorLevel;
 extern WORD DosLastError;
 extern PDOS_SYSVARS SysVars;
 
@@ -206,36 +158,6 @@ VOID ConDrvCleanup(VOID);
  * DOS Kernel Functions
  * See dos.c
  */
-
-VOID DosInitializePsp(
-    WORD PspSegment,
-    LPCSTR CommandLine,
-    WORD ProgramSize,
-    WORD Environment,
-    DWORD ReturnAddress
-);
-DWORD DosLoadExecutable(
-    IN DOS_EXEC_TYPE LoadType,
-    IN LPCSTR ExecutablePath,
-    IN LPCSTR CommandLine,
-    IN LPCSTR Environment OPTIONAL,
-    IN DWORD ReturnAddress OPTIONAL,
-    OUT PDWORD StackLocation OPTIONAL,
-    OUT PDWORD EntryPoint OPTIONAL
-);
-WORD DosCreateProcess(
-    DOS_EXEC_TYPE LoadType,
-    LPCSTR ProgramName,
-    PDOS_EXEC_PARAM_BLOCK Parameters,
-    DWORD ReturnAddress
-);
-DWORD DosStartProcess(
-    IN LPCSTR ExecutablePath,
-    IN LPCSTR CommandLine,
-    IN LPCSTR Environment OPTIONAL
-);
-VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident);
-BOOLEAN DosHandleIoctl(BYTE ControlCode, WORD FileHandle);
 
 BOOLEAN DosKRNLInitialize(VOID);
 

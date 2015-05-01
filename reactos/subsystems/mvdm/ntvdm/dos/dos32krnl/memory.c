@@ -12,10 +12,11 @@
 
 #include "ntvdm.h"
 #include "emulator.h"
-#include "memory.h"
 
 #include "dos.h"
 #include "dos/dem.h"
+#include "memory.h"
+#include "process.h"
 
 /* PUBLIC VARIABLES ***********************************************************/
 

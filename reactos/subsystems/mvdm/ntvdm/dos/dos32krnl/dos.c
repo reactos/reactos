@@ -22,6 +22,7 @@
 #include "handle.h"
 #include "dosfiles.h"
 #include "memory.h"
+#include "process.h"
 #include "himem.h"
 
 #include "bios/bios.h"
@@ -37,11 +38,9 @@
 
 CALLBACK16 DosContext;
 
-static DWORD DiskTransferArea;
 /*static*/ BYTE CurrentDrive;
 static CHAR LastDrive = 'E';
 static CHAR CurrentDirectories[NUM_DRIVES][DOS_DIR_LENGTH];
-static WORD DosErrorLevel = 0x0000;
 static PBYTE InDos;
 
 /* PUBLIC VARIABLES ***********************************************************/
@@ -50,78 +49,12 @@ PDOS_SYSVARS SysVars;
 
 /* Echo state for INT 21h, AH = 01h and AH = 3Fh */
 BOOLEAN DoEcho = FALSE;
-WORD CurrentPsp = SYSTEM_PSP;
+
+DWORD DiskTransferArea;
+WORD DosErrorLevel = 0x0000;
 WORD DosLastError = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-static WORD DosCopyEnvironmentBlock(LPCSTR Environment OPTIONAL,
-                                    LPCSTR ProgramName)
-{
-    PCHAR Ptr, DestBuffer = NULL;
-    ULONG TotalSize = 0;
-    WORD DestSegment;
-
-    /* If we have an environment strings list, compute its size */
-    if (Environment)
-    {
-        /* Calculate the size of the environment block */
-        Ptr = (PCHAR)Environment;
-        while (*Ptr) Ptr += strlen(Ptr) + 1;
-        TotalSize = (ULONG_PTR)Ptr - (ULONG_PTR)Environment;
-    }
-    else
-    {
-        /* Empty environment string */
-        TotalSize = 1;
-    }
-    /* Add the final environment block NULL-terminator */
-    TotalSize++;
-
-    /* Add the two bytes for the program name tag */
-    TotalSize += 2;
-
-    /* Add the string buffer size */
-    TotalSize += strlen(ProgramName) + 1;
-
-    /* Allocate the memory for the environment block */
-    DestSegment = DosAllocateMemory((WORD)((TotalSize + 0x0F) >> 4), NULL);
-    if (!DestSegment) return 0;
-
-    DestBuffer = (PCHAR)SEG_OFF_TO_PTR(DestSegment, 0);
-
-    /* If we have an environment strings list, copy it */
-    if (Environment)
-    {
-        Ptr = (PCHAR)Environment;
-        while (*Ptr)
-        {
-            /* Copy the string and NULL-terminate it */
-            strcpy(DestBuffer, Ptr);
-            DestBuffer += strlen(Ptr);
-            *(DestBuffer++) = '\0';
-
-            /* Move to the next string */
-            Ptr += strlen(Ptr) + 1;
-        }
-    }
-    else
-    {
-        /* Empty environment string */
-        *(DestBuffer++) = '\0';
-    }
-    /* NULL-terminate the environment block */
-    *(DestBuffer++) = '\0';
-
-    /* Store the special program name tag */
-    *(DestBuffer++) = LOBYTE(DOS_PROGRAM_NAME_TAG);
-    *(DestBuffer++) = HIBYTE(DOS_PROGRAM_NAME_TAG);
-
-    /* Copy the program name after the environment block */
-    strcpy(DestBuffer, ProgramName);
-
-    return DestSegment;
-}
 
 static BOOLEAN DosChangeDrive(BYTE Drive)
 {
@@ -272,556 +205,13 @@ VOID DosInitializePsp(WORD PspSegment,
     PspBlock->FarCall[1] = 0x21;
     PspBlock->FarCall[2] = 0xCB; // retf
 
-    /* Set the command line */
-    PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH - 1);
-    RtlCopyMemory(PspBlock->CommandLine, CommandLine, PspBlock->CommandLineSize);
-    PspBlock->CommandLine[PspBlock->CommandLineSize] = '\r';
-}
-
-DWORD DosLoadExecutable(IN DOS_EXEC_TYPE LoadType,
-                        IN LPCSTR ExecutablePath,
-                        IN LPCSTR CommandLine,
-                        IN LPCSTR Environment OPTIONAL,
-                        IN DWORD ReturnAddress OPTIONAL,
-                        OUT PDWORD StackLocation OPTIONAL,
-                        OUT PDWORD EntryPoint OPTIONAL)
-{
-    DWORD Result = ERROR_SUCCESS;
-    HANDLE FileHandle = INVALID_HANDLE_VALUE, FileMapping = NULL;
-    LPBYTE Address = NULL;
-    WORD Segment = 0;
-    WORD EnvBlock = 0;
-    WORD MaxAllocSize;
-    WORD ExeSegment;
-    DWORD i, FileSize, BaseSize, TotalSize;
-    PIMAGE_DOS_HEADER Header;
-    PDWORD RelocationTable;
-    PWORD RelocWord;
-    LPSTR CmdLinePtr = (LPSTR)CommandLine;
-    BOOLEAN LoadHigh = FALSE;
-
-    DPRINT1("DosLoadExecutable(%d, %s, %s, %s, 0x%08X, 0x%08X)\n",
-            LoadType,
-            ExecutablePath,
-            CommandLine,
-            Environment ? Environment : "n/a",
-            StackLocation,
-            EntryPoint);
-
-    if (LoadType == DOS_LOAD_OVERLAY)
+    if (CommandLine)
     {
-        DPRINT1("Overlay loading is not supported yet.\n");
-        return ERROR_NOT_SUPPORTED;
+        /* Set the command line */
+        PspBlock->CommandLineSize = (BYTE)min(strlen(CommandLine), DOS_CMDLINE_LENGTH - 1);
+        RtlCopyMemory(PspBlock->CommandLine, CommandLine, PspBlock->CommandLineSize);
+        PspBlock->CommandLine[PspBlock->CommandLineSize] = '\r';
     }
-
-    /* NULL-terminate the command line by removing the return carriage character */
-    while (*CmdLinePtr && *CmdLinePtr != '\r') CmdLinePtr++;
-    *CmdLinePtr = '\0';
-
-    /* Open a handle to the executable */
-    FileHandle = CreateFileA(ExecutablePath,
-                             GENERIC_READ,
-                             FILE_SHARE_READ,
-                             NULL,
-                             OPEN_EXISTING,
-                             FILE_ATTRIBUTE_NORMAL,
-                             NULL);
-    if (FileHandle == INVALID_HANDLE_VALUE)
-    {
-        Result = GetLastError();
-        goto Cleanup;
-    }
-
-    /* Get the file size */
-    FileSize = GetFileSize(FileHandle, NULL);
-
-    /* Create a mapping object for the file */
-    FileMapping = CreateFileMapping(FileHandle,
-                                    NULL,
-                                    PAGE_READONLY,
-                                    0,
-                                    0,
-                                    NULL);
-    if (FileMapping == NULL)
-    {
-        Result = GetLastError();
-        goto Cleanup;
-    }
-
-    /* Map the file into memory */
-    Address = (LPBYTE)MapViewOfFile(FileMapping, FILE_MAP_READ, 0, 0, 0);
-    if (Address == NULL)
-    {
-        Result = GetLastError();
-        goto Cleanup;
-    }
-
-    /* Copy the environment block to DOS memory */
-    EnvBlock = DosCopyEnvironmentBlock(Environment, ExecutablePath);
-    if (EnvBlock == 0)
-    {
-        Result = ERROR_NOT_ENOUGH_MEMORY;
-        goto Cleanup;
-    }
-
-    /* Check if this is an EXE file or a COM file */
-    if (Address[0] == 'M' && Address[1] == 'Z')
-    {
-        /* EXE file */
-
-        /* Get the MZ header */
-        Header = (PIMAGE_DOS_HEADER)Address;
-
-        /* Get the base size of the file, in paragraphs (rounded up) */
-        BaseSize = TotalSize = (((Header->e_cp - 1) * 512) + Header->e_cblp + 0x0F) >> 4;
-
-        /* Add the PSP size, in paragraphs */
-        TotalSize += sizeof(DOS_PSP) >> 4;
-
-        /* Add the maximum size that should be allocated */
-        TotalSize += Header->e_maxalloc;
-
-        if (Header->e_minalloc == 0 && Header->e_maxalloc == 0)
-        {
-            /* This program should be loaded high */
-            LoadHigh = TRUE;
-            TotalSize = 0xFFFF;
-        }
-
-        /* Make sure it does not pass 0xFFFF */
-        if (TotalSize > 0xFFFF) TotalSize = 0xFFFF;
-
-        /* Try to allocate that much memory */
-        Segment = DosAllocateMemory((WORD)TotalSize, &MaxAllocSize);
-
-        if (Segment == 0)
-        {
-            /* Check if there's at least enough memory for the minimum size */
-            if (MaxAllocSize < (BaseSize + (sizeof(DOS_PSP) >> 4) + Header->e_minalloc))
-            {
-                Result = DosLastError;
-                goto Cleanup;
-            }
-
-            /* Allocate that minimum amount */
-            TotalSize = MaxAllocSize;
-            Segment = DosAllocateMemory((WORD)TotalSize, NULL);
-            ASSERT(Segment != 0);
-        }
-
-        /* Initialize the PSP */
-        DosInitializePsp(Segment,
-                         CommandLine,
-                         (WORD)TotalSize,
-                         EnvBlock,
-                         ReturnAddress);
-
-        /* The process owns its own memory */
-        DosChangeMemoryOwner(Segment, Segment);
-        DosChangeMemoryOwner(EnvBlock, Segment);
-
-        /* Find the EXE segment */
-        if (!LoadHigh) ExeSegment = Segment + (sizeof(DOS_PSP) >> 4);
-        else ExeSegment = Segment + TotalSize - BaseSize;
-
-        /* Copy the program to the code segment */
-        RtlCopyMemory(SEG_OFF_TO_PTR(ExeSegment, 0),
-                      Address + (Header->e_cparhdr << 4),
-                      min(FileSize - (Header->e_cparhdr << 4), BaseSize << 4));
-
-        /* Get the relocation table */
-        RelocationTable = (PDWORD)(Address + Header->e_lfarlc);
-
-        /* Perform relocations */
-        for (i = 0; i < Header->e_crlc; i++)
-        {
-            /* Get a pointer to the word that needs to be patched */
-            RelocWord = (PWORD)SEG_OFF_TO_PTR(ExeSegment + HIWORD(RelocationTable[i]),
-                                              LOWORD(RelocationTable[i]));
-
-            /* Add the number of the EXE segment to it */
-            *RelocWord += ExeSegment;
-        }
-
-        if (LoadType == DOS_LOAD_AND_EXECUTE)
-        {
-            /* Set the initial segment registers */
-            setDS(Segment);
-            setES(Segment);
-
-            /* Set the stack to the location from the header */
-            setSS(ExeSegment + Header->e_ss);
-            setSP(Header->e_sp);
-
-            /* Execute */
-            CurrentPsp = Segment;
-            DiskTransferArea = MAKELONG(0x80, Segment);
-            CpuExecute(ExeSegment + Header->e_cs, Header->e_ip);
-        }
-    }
-    else
-    {
-        /* COM file */
-
-        /* Find the maximum amount of memory that can be allocated */
-        DosAllocateMemory(0xFFFF, &MaxAllocSize);
-
-        /* Make sure it's enough for the whole program and the PSP */
-        if (((DWORD)MaxAllocSize << 4) < (FileSize + sizeof(DOS_PSP)))
-        {
-            Result = ERROR_NOT_ENOUGH_MEMORY;
-            goto Cleanup;
-        }
-
-        /* Allocate all of it */
-        Segment = DosAllocateMemory(MaxAllocSize, NULL);
-        if (Segment == 0)
-        {
-            Result = DosLastError;
-            goto Cleanup;
-        }
-
-        /* The process owns its own memory */
-        DosChangeMemoryOwner(Segment, Segment);
-        DosChangeMemoryOwner(EnvBlock, Segment);
-
-        /* Copy the program to Segment:0100 */
-        RtlCopyMemory(SEG_OFF_TO_PTR(Segment, 0x100),
-                      Address,
-                      FileSize);
-
-        /* Initialize the PSP */
-        DosInitializePsp(Segment,
-                         CommandLine,
-                         MaxAllocSize,
-                         EnvBlock,
-                         ReturnAddress);
-
-        if (LoadType == DOS_LOAD_AND_EXECUTE)
-        {
-            /* Set the initial segment registers */
-            setDS(Segment);
-            setES(Segment);
-
-            /* Set the stack to the last word of the segment */
-            setSS(Segment);
-            setSP(0xFFFE);
-
-            /*
-             * Set the value on the stack to 0, so that a near return
-             * jumps to PSP:0000 which has the exit code.
-             */
-            *((LPWORD)SEG_OFF_TO_PTR(Segment, 0xFFFE)) = 0;
-
-            /* Execute */
-            CurrentPsp = Segment;
-            DiskTransferArea = MAKELONG(0x80, Segment);
-            CpuExecute(Segment, 0x100);
-        }
-    }
-
-Cleanup:
-    if (Result != ERROR_SUCCESS)
-    {
-        /* It was not successful, cleanup the DOS memory */
-        if (EnvBlock) DosFreeMemory(EnvBlock);
-        if (Segment) DosFreeMemory(Segment);
-    }
-
-    /* Unmap the file*/
-    if (Address != NULL) UnmapViewOfFile(Address);
-
-    /* Close the file mapping object */
-    if (FileMapping != NULL) CloseHandle(FileMapping);
-
-    /* Close the file handle */
-    if (FileHandle != INVALID_HANDLE_VALUE) CloseHandle(FileHandle);
-
-    return Result;
-}
-
-DWORD DosStartProcess(IN LPCSTR ExecutablePath,
-                      IN LPCSTR CommandLine,
-                      IN LPCSTR Environment OPTIONAL)
-{
-    DWORD Result;
-    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
-
-    Result = DosLoadExecutable(DOS_LOAD_AND_EXECUTE,
-                               ExecutablePath,
-                               CommandLine,
-                               Environment,
-                               IntVecTable[0x20], // Use INT 20h
-                               NULL,
-                               NULL);
-
-    if (Result != ERROR_SUCCESS) goto Quit;
-
-    /* Attach to the console */
-    ConsoleAttach();
-    VidBiosAttachToConsole();
-
-    // HACK: Simulate a ENTER key release scancode on the PS/2 port because
-    // some apps expect to read a key release scancode (> 0x80) when they
-    // are started.
-    IOWriteB(PS2_CONTROL_PORT, 0xD2);     // Next write is for the first PS/2 port
-    IOWriteB(PS2_DATA_PORT, 0x80 | 0x1C); // ENTER key release
-
-    /* Start simulation */
-    SetEvent(VdmTaskEvent);
-    CpuSimulate();
-
-    /* Detach from the console */
-    VidBiosDetachFromConsole();
-    ConsoleDetach();
-
-Quit:
-    return Result;
-}
-
-#ifndef STANDALONE
-WORD DosCreateProcess(DOS_EXEC_TYPE LoadType,
-                      LPCSTR ProgramName,
-                      PDOS_EXEC_PARAM_BLOCK Parameters,
-                      DWORD ReturnAddress)
-{
-    DWORD Result;
-    DWORD BinaryType;
-    LPVOID Environment = NULL;
-    VDM_COMMAND_INFO CommandInfo;
-    CHAR CmdLine[MAX_PATH];
-    CHAR AppName[MAX_PATH];
-    CHAR PifFile[MAX_PATH];
-    CHAR Desktop[MAX_PATH];
-    CHAR Title[MAX_PATH];
-    ULONG EnvSize = 256;
-    PVOID Env = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, EnvSize);
-    STARTUPINFOA StartupInfo;
-    PROCESS_INFORMATION ProcessInfo;
-
-    /* Get the binary type */
-    if (!GetBinaryTypeA(ProgramName, &BinaryType)) return GetLastError();
-
-    /* Did the caller specify an environment segment? */
-    if (Parameters->Environment)
-    {
-        /* Yes, use it instead of the parent one */
-        Environment = SEG_OFF_TO_PTR(Parameters->Environment, 0);
-    }
-
-    /* Set up the startup info structure */
-    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-
-    /* Create the process */
-    if (!CreateProcessA(ProgramName,
-                        FAR_POINTER(Parameters->CommandLine),
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        Environment,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInfo))
-    {
-        return GetLastError();
-    }
-
-    /* Check the type of the program */
-    switch (BinaryType)
-    {
-        /* These are handled by NTVDM */
-        case SCS_DOS_BINARY:
-        case SCS_WOW_BINARY:
-        {
-            /* Clear the structure */
-            RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-            /* Initialize the structure members */
-            CommandInfo.TaskId = SessionId;
-            CommandInfo.VDMState = VDM_FLAG_NESTED_TASK | VDM_FLAG_DONT_WAIT;
-            CommandInfo.CmdLine = CmdLine;
-            CommandInfo.CmdLen = sizeof(CmdLine);
-            CommandInfo.AppName = AppName;
-            CommandInfo.AppLen = sizeof(AppName);
-            CommandInfo.PifFile = PifFile;
-            CommandInfo.PifLen = sizeof(PifFile);
-            CommandInfo.Desktop = Desktop;
-            CommandInfo.DesktopLen = sizeof(Desktop);
-            CommandInfo.Title = Title;
-            CommandInfo.TitleLen = sizeof(Title);
-            CommandInfo.Env = Env;
-            CommandInfo.EnvLen = EnvSize;
-
-Command:
-            /* Get the VDM command information */
-            if (!GetNextVDMCommand(&CommandInfo))
-            {
-                if (CommandInfo.EnvLen > EnvSize)
-                {
-                    /* Expand the environment size */
-                    EnvSize = CommandInfo.EnvLen;
-                    CommandInfo.Env = Env = RtlReAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Env, EnvSize);
-
-                    /* Repeat the request */
-                    CommandInfo.VDMState |= VDM_FLAG_RETRY;
-                    goto Command;
-                }
-
-                /* Shouldn't happen */
-                ASSERT(FALSE);
-            }
-
-            /* Load the executable */
-            Result = DosLoadExecutable(LoadType,
-                                       AppName,
-                                       CmdLine,
-                                       Env,
-                                       ReturnAddress,
-                                       &Parameters->StackLocation,
-                                       &Parameters->EntryPoint);
-            if (Result == ERROR_SUCCESS)
-            {
-                /* Increment the re-entry count */
-                CommandInfo.VDMState = VDM_INC_REENTER_COUNT;
-                GetNextVDMCommand(&CommandInfo);
-            }
-            else
-            {
-                DisplayMessage(L"Could not load '%S'. Error: %u", AppName, Result);
-            }
-
-            break;
-        }
-
-        /* Not handled by NTVDM */
-        default:
-        {
-            /* Wait for the process to finish executing */
-            WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
-        }
-    }
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Env);
-
-    /* Close the handles */
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
-
-    return ERROR_SUCCESS;
-}
-#endif
-
-VOID DosTerminateProcess(WORD Psp, BYTE ReturnCode, WORD KeepResident)
-{
-    WORD i;
-    WORD McbSegment = FIRST_MCB_SEGMENT;
-    PDOS_MCB CurrentMcb;
-    LPDWORD IntVecTable = (LPDWORD)((ULONG_PTR)BaseAddress);
-    PDOS_PSP PspBlock = SEGMENT_TO_PSP(Psp);
-
-    DPRINT("DosTerminateProcess: Psp 0x%04X, ReturnCode 0x%02X, KeepResident 0x%04X\n",
-           Psp,
-           ReturnCode,
-           KeepResident);
-
-    /* Check if this PSP is it's own parent */
-    if (PspBlock->ParentPsp == Psp) goto Done;
-
-    if (KeepResident == 0)
-    {
-        for (i = 0; i < PspBlock->HandleTableSize; i++)
-        {
-            /* Close the handle */
-            DosCloseHandle(i);
-        }
-    }
-
-    /* Free the memory used by the process */
-    while (TRUE)
-    {
-        /* Get a pointer to the MCB */
-        CurrentMcb = SEGMENT_TO_MCB(McbSegment);
-
-        /* Make sure the MCB is valid */
-        if (CurrentMcb->BlockType != 'M' && CurrentMcb->BlockType != 'Z') break;
-
-        /* Check if this block was allocated by the process */
-        if (CurrentMcb->OwnerPsp == Psp)
-        {
-            if (KeepResident == 0)
-            {
-                /* Free this entire block */
-                DosFreeMemory(McbSegment + 1);
-            }
-            else if (KeepResident < CurrentMcb->Size)
-            {
-                /* Reduce the size of the block */
-                DosResizeMemory(McbSegment + 1, KeepResident, NULL);
-
-                /* No further paragraphs need to stay resident */
-                KeepResident = 0;
-            }
-            else
-            {
-                /* Just reduce the amount of paragraphs we need to keep resident */
-                KeepResident -= CurrentMcb->Size;
-            }
-        }
-
-        /* If this was the last block, quit */
-        if (CurrentMcb->BlockType == 'Z') break;
-
-        /* Update the segment and continue */
-        McbSegment += CurrentMcb->Size + 1;
-    }
-
-Done:
-    /* Restore the interrupt vectors */
-    IntVecTable[0x22] = PspBlock->TerminateAddress;
-    IntVecTable[0x23] = PspBlock->BreakAddress;
-    IntVecTable[0x24] = PspBlock->CriticalAddress;
-
-    /* Update the current PSP */
-    if (Psp == CurrentPsp)
-    {
-        CurrentPsp = PspBlock->ParentPsp;
-        if (CurrentPsp == SYSTEM_PSP)
-        {
-            ResetEvent(VdmTaskEvent);
-            CpuUnsimulate();
-        }
-    }
-
-#ifndef STANDALONE
-    // FIXME: This is probably not the best way to do it
-    /* Check if this was a nested DOS task */
-    if (CurrentPsp != SYSTEM_PSP)
-    {
-        VDM_COMMAND_INFO CommandInfo;
-
-        /* Decrement the re-entry count */
-        CommandInfo.TaskId = SessionId;
-        CommandInfo.VDMState = VDM_DEC_REENTER_COUNT;
-        GetNextVDMCommand(&CommandInfo);
-
-        /* Clear the structure */
-        RtlZeroMemory(&CommandInfo, sizeof(CommandInfo));
-
-        /* Update the VDM state of the task */
-        CommandInfo.TaskId = SessionId;
-        CommandInfo.VDMState = VDM_FLAG_DONT_WAIT;
-        GetNextVDMCommand(&CommandInfo);
-    }
-#endif
-
-    /* Save the return code - Normal termination */
-    DosErrorLevel = MAKEWORD(ReturnCode, 0x00);
-
-    /* Return control to the parent process */
-    CpuExecute(HIWORD(PspBlock->TerminateAddress),
-               LOWORD(PspBlock->TerminateAddress));
 }
 
 VOID WINAPI DosInt20h(LPWORD Stack)
@@ -1205,7 +595,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Create New PSP */
         case 0x26:
         {
-            DPRINT1("INT 21h, AH = 26h - Create New PSP is UNIMPLEMENTED\n");
+            DosClonePsp(getDX(), getCS());
             break;
         }
 
@@ -1963,7 +1353,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
-#ifndef STANDALONE
         /* Execute */
         case 0x4B:
         {
@@ -1973,19 +1362,24 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             DWORD ReturnAddress = MAKELONG(Stack[STACK_IP], Stack[STACK_CS]);
             WORD ErrorCode;
             
-            if (LoadType != DOS_LOAD_OVERLAY)
+#ifndef STANDALONE
+            if (LoadType == DOS_LOAD_AND_EXECUTE)
             {
-                ErrorCode = DosCreateProcess(LoadType, ProgramName, ParamBlock, ReturnAddress);
+                /* Create a new process */
+                ErrorCode = DosCreateProcess(ProgramName, ParamBlock, ReturnAddress);
             }
             else
             {
-                ErrorCode = DosLoadExecutable(DOS_LOAD_OVERLAY,
+#else
+            {
+#endif
+                /* Just load an executable */
+                ErrorCode = DosLoadExecutable(LoadType,
                                               ProgramName,
-                                              FAR_POINTER(ParamBlock->CommandLine),
-                                              SEG_OFF_TO_PTR(ParamBlock->Environment, 0),
-                                              ReturnAddress,
+                                              ParamBlock,
                                               NULL,
-                                              NULL);
+                                              NULL,
+                                              ReturnAddress);
             }
 
             if (ErrorCode == ERROR_SUCCESS)
@@ -2000,7 +1394,6 @@ VOID WINAPI DosInt21h(LPWORD Stack)
 
             break;
         }
-#endif
 
         /* Terminate With Return Code */
         case 0x4C:
@@ -2057,8 +1450,7 @@ VOID WINAPI DosInt21h(LPWORD Stack)
         /* Internal - Set Current Process ID (Set PSP Address) */
         case 0x50:
         {
-            // FIXME: Is it really what it's done ??
-            CurrentPsp = getBX();
+            DosSetProcessContext(getBX());
             break;
         }
 
@@ -2090,6 +1482,13 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             setES(DOS_DATA_SEGMENT);
             setBX(FIELD_OFFSET(DOS_SYSVARS, FirstDpb));
 
+            break;
+        }
+
+        /* Create Child PSP */
+        case 0x55:
+        {
+            DosCreatePsp(getDX(), getSI());
             break;
         }
 

@@ -18,6 +18,7 @@
 #include "dosfiles.h"
 #include "handle.h"
 #include "memory.h"
+#include "process.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
