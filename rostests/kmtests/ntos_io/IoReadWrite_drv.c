@@ -43,7 +43,9 @@ TestEntry(
     UNREFERENCED_PARAMETER(RegistryPath);
 
     *DeviceName = L"IoReadWrite";
-    *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE | TESTENTRY_BUFFERED_IO_DEVICE;
+    *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE |
+             TESTENTRY_BUFFERED_IO_DEVICE |
+             TESTENTRY_NO_READONLY_DEVICE;
 
     TestFastIoDispatch.FastIoRead = TestFastIoRead;
     TestFastIoDispatch.FastIoWrite = TestFastIoWrite;
@@ -52,7 +54,7 @@ TestEntry(
     KmtRegisterIrpHandler(IRP_MJ_CREATE, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_CLEANUP, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_READ, NULL, TestIrpHandler);
-    //KmtRegisterIrpHandler(IRP_MJ_WRITE, NULL, TestIrpHandler);
+    KmtRegisterIrpHandler(IRP_MJ_WRITE, NULL, TestIrpHandler);
 
     return Status;
 }
@@ -188,6 +190,28 @@ TestFastIoRead(
 }
 
 static
+NTSTATUS
+TestCommonWrite(
+    _In_ PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ LONGLONG FileOffset,
+    _In_ ULONG LockKey,
+    _Out_ PIO_STATUS_BLOCK IoStatus)
+{
+    ULONG i;
+    PUCHAR BufferBytes = Buffer;
+
+    for (i = 0; i < Length; i++)
+        ok(BufferBytes[i] == KEY_GET_DATA(LockKey), "Buffer[%lu] = 0x%x, expected 0x%x\n", i, BufferBytes[i], KEY_GET_DATA(LockKey));
+    IoStatus->Status = TestGetReturnStatus(LockKey);
+    IoStatus->Information = Length;
+
+    if (LockKey & KEY_RETURN_PENDING)
+        return STATUS_PENDING;
+    return IoStatus->Status;
+}
+
+static
 BOOLEAN
 NTAPI
 TestFastIoWrite(
@@ -200,9 +224,38 @@ TestFastIoWrite(
     _Out_ PIO_STATUS_BLOCK IoStatus,
     _In_ PDEVICE_OBJECT DeviceObject)
 {
+    PTEST_FCB Fcb;
+    NTSTATUS Status;
+
+    //trace("FastIoWrite: %p %lx %p -> %I64d+%lu\n", FileObject, LockKey, Buffer, FileOffset->QuadPart, Length);
+    ok_eq_pointer(FileObject, TestFileObject);
+    ok_bool_true(Wait, "Wait is");
+    ok_eq_pointer(DeviceObject, TestDeviceObject);
+    Fcb = FileObject->FsContext;
+    ok_bool_true(Fcb->Cached, "Cached is");
+
     TestLastFastWriteKey = LockKey;
-    UNIMPLEMENTED;
-    return FALSE;
+    ok((ULONG_PTR)Buffer < MM_USER_PROBE_ADDRESS, "Buffer is %p\n", Buffer);
+    ok((ULONG_PTR)FileOffset > MM_USER_PROBE_ADDRESS, "FileOffset is %p\n", FileOffset);
+    ok((ULONG_PTR)IoStatus > MM_USER_PROBE_ADDRESS, "IoStatus is %p\n", IoStatus);
+    _SEH2_TRY
+    {
+        Status = TestCommonWrite(Buffer, Length, FileOffset->QuadPart, LockKey, IoStatus);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        IoStatus->Status = _SEH2_GetExceptionCode();
+        return FALSE;
+    }
+    _SEH2_END;
+
+    if (Status == STATUS_PENDING)
+        return FALSE;
+
+    if (LockKey & KEY_USE_FASTIO)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 static
@@ -291,10 +344,21 @@ TestIrpHandler(
     }
     else if (IoStack->MajorFunction == IRP_MJ_WRITE)
     {
+        //trace("IRP_MJ_WRITE: %p %lx %I64d+%lu -> %p\n", IoStack->FileObject, IoStack->Parameters.Write.Key, IoStack->Parameters.Write.ByteOffset.QuadPart, IoStack->Parameters.Write.Length, Irp->AssociatedIrp.SystemBuffer);
         ok_eq_pointer(DeviceObject, TestDeviceObject);
         ok_eq_pointer(IoStack->FileObject, TestFileObject);
-        UNIMPLEMENTED;
-        Status = STATUS_NOT_IMPLEMENTED;
+        Fcb = IoStack->FileObject->FsContext;
+        if (Fcb->Cached)
+            ok_eq_hex(IoStack->Parameters.Write.Key, TestLastFastWriteKey);
+        ok(Irp->AssociatedIrp.SystemBuffer == NULL ||
+           (ULONG_PTR)Irp->AssociatedIrp.SystemBuffer > MM_USER_PROBE_ADDRESS,
+           "Buffer is %p\n",
+           Irp->AssociatedIrp.SystemBuffer);
+        Status = TestCommonWrite(Irp->AssociatedIrp.SystemBuffer,
+                                 IoStack->Parameters.Write.Length,
+                                 IoStack->Parameters.Write.ByteOffset.QuadPart,
+                                 IoStack->Parameters.Write.Key,
+                                 &Irp->IoStatus);
     }
 
     if (Status == STATUS_PENDING)

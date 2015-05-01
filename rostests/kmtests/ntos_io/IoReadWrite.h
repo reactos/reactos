@@ -11,6 +11,10 @@
 #define TEST_FILE_SIZE 17
 
 #define KEY_SUCCEED                 0x00
+#define KEY_SUCCESS_WAIT1           0x01
+
+#define KEY_INFO_EXISTS             0x41
+
 #define KEY_FAIL_MISALIGNED         0x81
 #define KEY_FAIL_OVERFLOW           0x82
 #define KEY_FAIL_PARTIAL            0x83
@@ -28,7 +32,8 @@
 
 #define KEY_NEXT(key) ( (key) == KEY_FAIL_MISALIGNED_ERROR ? 0xff :                 \
                         (key) == KEY_FAIL_VERIFY_REQUIRED ? KEY_FAIL_UNSUCCESSFUL : \
-                        (key) == KEY_SUCCEED ? KEY_FAIL_MISALIGNED :                \
+                        (key) == KEY_INFO_EXISTS ? KEY_FAIL_MISALIGNED :            \
+                        (key) == KEY_SUCCESS_WAIT1 ? KEY_INFO_EXISTS :              \
                         (key) + 1 )
 #define KEY_ERROR(key) (((key) & 0xc0) == 0xc0)
 static
@@ -40,6 +45,11 @@ TestGetReturnStatus(
     {
         case KEY_SUCCEED:
             return STATUS_SUCCESS;
+        case KEY_SUCCESS_WAIT1:
+            return STATUS_WAIT_1;
+
+        case KEY_INFO_EXISTS:
+            return STATUS_OBJECT_NAME_EXISTS;
 
         case KEY_FAIL_MISALIGNED:
             return STATUS_DATATYPE_MISALIGNMENT;
