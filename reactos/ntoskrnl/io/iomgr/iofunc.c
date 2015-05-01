@@ -2359,7 +2359,7 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, EventObject, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -3279,7 +3279,7 @@ NtWriteFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, NULL);
+    if (!Irp) return IopCleanupFailedIrp(FileObject, EventObject, NULL);
 
     /* Set the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
