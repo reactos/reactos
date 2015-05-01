@@ -2255,6 +2255,10 @@ NtReadFile(IN HANDLE FileHandle,
     ULONG CapturedKey = 0;
     BOOLEAN Synchronous = FALSE;
     PMDL Mdl;
+    PFAST_IO_DISPATCH FastIoDispatch;
+    IO_STATUS_BLOCK KernelIosb;
+    BOOLEAN Success;
+
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
@@ -2324,19 +2328,77 @@ NtReadFile(IN HANDLE FileHandle,
         KeClearEvent(EventObject);
     }
 
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
         IopLockFileObject(FileObject);
 
-        /* Check if we don't have a byte offset avilable */
+        /* Check if we don't have a byte offset available */
         if (!(ByteOffset) ||
             ((CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION) &&
              (CapturedByteOffset.u.HighPart == -1)))
         {
             /* Use the Current Byte Offset instead */
             CapturedByteOffset = FileObject->CurrentByteOffset;
+        }
+
+        /* If the file is cached, try fast I/O */
+        if (FileObject->PrivateCacheMap)
+        {
+            /* Perform fast write */
+            FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+            Success = FastIoDispatch->FastIoRead(FileObject,
+                                                 &CapturedByteOffset,
+                                                 Length,
+                                                 TRUE,
+                                                 CapturedKey,
+                                                 Buffer,
+                                                 &KernelIosb,
+                                                 DeviceObject);
+
+            /* Only accept the result if we got a straightforward status */
+            if (Success &&
+                (KernelIosb.Status == STATUS_SUCCESS ||
+                 KernelIosb.Status == STATUS_BUFFER_OVERFLOW ||
+                 KernelIosb.Status == STATUS_END_OF_FILE))
+            {
+                /* Fast path -- update transfer & operation counts */
+                IopUpdateOperationCount(IopReadTransfer);
+                IopUpdateTransferCount(IopReadTransfer,
+                                       (ULONG)KernelIosb.Information);
+
+                /* Enter SEH to write the IOSB back */
+                _SEH2_TRY
+                {
+                    /* Write it back to the caller */
+                    *IoStatusBlock = KernelIosb;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* The caller's IOSB was invalid, so fail */
+                    if (EventObject) ObDereferenceObject(EventObject);
+                    IopUnlockFileObject(FileObject);
+                    ObDereferenceObject(FileObject);
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                }
+                _SEH2_END;
+
+                /* Signal the completion event */
+                if (EventObject)
+                {
+                    KeSetEvent(EventObject, 0, FALSE);
+                    ObDereferenceObject(EventObject);
+                }
+
+                /* Clean up */
+                IopUnlockFileObject(FileObject);
+                ObDereferenceObject(FileObject);
+                return KernelIosb.Status;
+            }
         }
 
         /* Remember we are sync */
@@ -2350,9 +2412,6 @@ NtReadFile(IN HANDLE FileHandle,
         ObDereferenceObject(FileObject);
         return STATUS_INVALID_PARAMETER;
     }
-
-    /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
     /* Clear the File Object's event */
     KeClearEvent(&FileObject->Event);
@@ -3150,6 +3209,10 @@ NtWriteFile(IN HANDLE FileHandle,
     BOOLEAN Synchronous = FALSE;
     PMDL Mdl;
     OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
+    PFAST_IO_DISPATCH FastIoDispatch;
+    IO_STATUS_BLOCK KernelIosb;
+    BOOLEAN Success;
+
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
@@ -3244,19 +3307,75 @@ NtWriteFile(IN HANDLE FileHandle,
         KeClearEvent(EventObject);
     }
 
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
         IopLockFileObject(FileObject);
 
-        /* Check if we don't have a byte offset avilable */
+        /* Check if we don't have a byte offset available */
         if (!(ByteOffset) ||
             ((CapturedByteOffset.u.LowPart == FILE_USE_FILE_POINTER_POSITION) &&
              (CapturedByteOffset.u.HighPart == -1)))
         {
             /* Use the Current Byte Offset instead */
             CapturedByteOffset = FileObject->CurrentByteOffset;
+        }
+
+        /* If the file is cached, try fast I/O */
+        if (FileObject->PrivateCacheMap)
+        {
+            /* Perform fast read */
+            FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+            Success = FastIoDispatch->FastIoWrite(FileObject,
+                                                  &CapturedByteOffset,
+                                                  Length,
+                                                  TRUE,
+                                                  CapturedKey,
+                                                  Buffer,
+                                                  &KernelIosb,
+                                                  DeviceObject);
+
+            /* Only accept the result if it was successful */
+            if (Success &&
+                KernelIosb.Status == STATUS_SUCCESS)
+            {
+                /* Fast path -- update transfer & operation counts */
+                IopUpdateOperationCount(IopWriteTransfer);
+                IopUpdateTransferCount(IopWriteTransfer,
+                                       (ULONG)KernelIosb.Information);
+
+                /* Enter SEH to write the IOSB back */
+                _SEH2_TRY
+                {
+                    /* Write it back to the caller */
+                    *IoStatusBlock = KernelIosb;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    /* The caller's IOSB was invalid, so fail */
+                    if (EventObject) ObDereferenceObject(EventObject);
+                    IopUnlockFileObject(FileObject);
+                    ObDereferenceObject(FileObject);
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                }
+                _SEH2_END;
+
+                /* Signal the completion event */
+                if (EventObject)
+                {
+                    KeSetEvent(EventObject, 0, FALSE);
+                    ObDereferenceObject(EventObject);
+                }
+
+                /* Clean up */
+                IopUnlockFileObject(FileObject);
+                ObDereferenceObject(FileObject);
+                return KernelIosb.Status;
+            }
         }
 
         /* Remember we are sync */
@@ -3270,9 +3389,6 @@ NtWriteFile(IN HANDLE FileHandle,
         ObDereferenceObject(FileObject);
         return STATUS_INVALID_PARAMETER;
     }
-
-    /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
     /* Clear the File Object's event */
     KeClearEvent(&FileObject->Event);
