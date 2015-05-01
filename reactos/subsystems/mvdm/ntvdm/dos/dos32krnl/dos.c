@@ -832,6 +832,38 @@ VOID WINAPI DosInt21h(LPWORD Stack)
             break;
         }
 
+        /* Get Free Disk Space */
+        case 0x36:
+        {
+            CHAR RootPath[3] = "X:\\";
+            DWORD SectorsPerCluster;
+            DWORD BytesPerSector;
+            DWORD NumberOfFreeClusters;
+            DWORD TotalNumberOfClusters;
+
+            if (getDL() == 0) RootPath[0] = 'A' + CurrentDrive;
+            else RootPath[0] = 'A' + getDL() - 1;
+
+            if (GetDiskFreeSpaceA(RootPath,
+                                  &SectorsPerCluster,
+                                  &BytesPerSector,
+                                  &NumberOfFreeClusters,
+                                  &TotalNumberOfClusters))
+            {
+                setAX(LOWORD(SectorsPerCluster));
+                setCX(LOWORD(BytesPerSector));
+                setBX(LOWORD(NumberOfFreeClusters));
+                setDX(LOWORD(TotalNumberOfClusters));
+            }
+            else
+            {
+                /* Error */
+                setAX(0xFFFF);
+            }
+
+            break;
+        }
+
         /* SWITCH character - AVAILDEV */
         case 0x37:
         {
