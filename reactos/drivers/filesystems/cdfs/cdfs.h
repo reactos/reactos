@@ -481,6 +481,7 @@ CdfsAcquireForLazyWrite(IN PVOID Context,
 VOID NTAPI
 CdfsReleaseFromLazyWrite(IN PVOID Context);
 
+FAST_IO_CHECK_IF_POSSIBLE CdfsFastIoCheckIfPossible;
 FAST_IO_READ CdfsFastIoRead;
 FAST_IO_WRITE CdfsFastIoWrite;
 
